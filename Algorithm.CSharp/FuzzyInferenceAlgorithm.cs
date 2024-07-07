@@ -14,9 +14,9 @@
 */
 
 using System;
+using Accord.Fuzzy;
 using QuantConnect.Data.Market;
 using QuantConnect.Indicators;
-using Accord.Fuzzy;
 
 namespace QuantConnect.Algorithm.CSharp
 {
@@ -50,9 +50,9 @@ namespace QuantConnect.Algorithm.CSharp
 
         public override void Initialize()
         {
-            SetStartDate(2015, 01, 01);  //Set Start Date
-            SetEndDate(2015, 06, 30);    //Set End Date
-            SetCash(100000);             //Set Strategy Cash
+            SetStartDate(2015, 01, 01); //Set Start Date
+            SetEndDate(2015, 06, 30); //Set End Date
+            SetCash(100000); //Set Strategy Cash
             AddEquity(_symbol, Resolution.Daily);
 
             _rsi = RSI(_symbol, 14, MovingAverageType.Simple, Resolution.Daily);
@@ -67,13 +67,18 @@ namespace QuantConnect.Algorithm.CSharp
             {
                 try
                 {
-                    var signal = _engine.DoInference((float)_mom.Current.Value, (float)_rsi.Current.Value);
+                    var signal = _engine.DoInference(
+                        (float)_mom.Current.Value,
+                        (float)_rsi.Current.Value
+                    );
 
                     if (!Portfolio.Invested)
                     {
                         if (signal > 30)
                         {
-                            var quantity = decimal.ToInt32(Portfolio.MarginRemaining / data[_symbol].Price);
+                            var quantity = decimal.ToInt32(
+                                Portfolio.MarginRemaining / data[_symbol].Price
+                            );
                             Buy(_symbol, quantity);
                             Debug("Purchased Stock: " + quantity + " shares");
                         }
@@ -94,7 +99,6 @@ namespace QuantConnect.Algorithm.CSharp
                     Debug("## rsi: " + _rsi + " mom: " + _mom);
                 }
             }
-
         }
     }
 
@@ -108,7 +112,6 @@ namespace QuantConnect.Algorithm.CSharp
             var momDown = new FuzzySet("Down", new TrapezoidalFunction(-20, 5, 5, 5));
             var momNeutral = new FuzzySet("Neutral", new TrapezoidalFunction(-20, 0, 0, 20));
             var momUp = new FuzzySet("Up", new TrapezoidalFunction(5, 20, 20, 20));
-
 
             // Linguistic labels (fuzzy sets) for RSI
             var rsiLow = new FuzzySet("Low", new TrapezoidalFunction(0, 30, 30, 30));

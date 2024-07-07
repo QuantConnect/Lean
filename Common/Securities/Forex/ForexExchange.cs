@@ -35,9 +35,11 @@ namespace QuantConnect.Securities.Forex
         /// derived from the market-hours-database for the FXCM Forex market
         /// </summary>
         public ForexExchange()
-            : base(MarketHoursDatabase.FromDataFolder().GetExchangeHours(Market.FXCM, null, SecurityType.Forex))
-        {
-        }
+            : base(
+                MarketHoursDatabase
+                    .FromDataFolder()
+                    .GetExchangeHours(Market.FXCM, null, SecurityType.Forex)
+            ) { }
 
         /// <summary>
         /// Initializes a new instance of the <see cref="ForexExchange"/> class using the specified
@@ -45,8 +47,6 @@ namespace QuantConnect.Securities.Forex
         /// </summary>
         /// <param name="exchangeHours">Contains the weekly exchange schedule plus holidays</param>
         public ForexExchange(SecurityExchangeHours exchangeHours)
-            : base(exchangeHours)
-        {
-        }
+            : base(exchangeHours) { }
     }
 }

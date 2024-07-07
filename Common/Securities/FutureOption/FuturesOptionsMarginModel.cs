@@ -30,29 +30,37 @@ namespace QuantConnect.Securities.Option
         /// <summary>
         /// Initial Overnight margin requirement for the contract effective from the date of change
         /// </summary>
-        public override decimal InitialOvernightMarginRequirement => GetMarginRequirement(_futureOption, base.InitialOvernightMarginRequirement);
+        public override decimal InitialOvernightMarginRequirement =>
+            GetMarginRequirement(_futureOption, base.InitialOvernightMarginRequirement);
 
         /// <summary>
         /// Maintenance Overnight margin requirement for the contract effective from the date of change
         /// </summary>
-        public override decimal MaintenanceOvernightMarginRequirement => GetMarginRequirement(_futureOption, base.MaintenanceOvernightMarginRequirement);
+        public override decimal MaintenanceOvernightMarginRequirement =>
+            GetMarginRequirement(_futureOption, base.MaintenanceOvernightMarginRequirement);
 
         /// <summary>
         /// Initial Intraday margin for the contract effective from the date of change
         /// </summary>
-        public override decimal InitialIntradayMarginRequirement => GetMarginRequirement(_futureOption, base.InitialIntradayMarginRequirement);
+        public override decimal InitialIntradayMarginRequirement =>
+            GetMarginRequirement(_futureOption, base.InitialIntradayMarginRequirement);
 
         /// <summary>
         /// Maintenance Intraday margin requirement for the contract effective from the date of change
         /// </summary>
-        public override decimal MaintenanceIntradayMarginRequirement => GetMarginRequirement(_futureOption, base.MaintenanceIntradayMarginRequirement);
+        public override decimal MaintenanceIntradayMarginRequirement =>
+            GetMarginRequirement(_futureOption, base.MaintenanceIntradayMarginRequirement);
 
         /// <summary>
         /// Creates an instance of FutureOptionMarginModel
         /// </summary>
         /// <param name="requiredFreeBuyingPowerPercent">The percentage used to determine the required unused buying power for the account.</param>
         /// <param name="futureOption">Option Security containing a Future security as the underlying</param>
-        public FuturesOptionsMarginModel(decimal requiredFreeBuyingPowerPercent = 0, Option futureOption = null) : base(requiredFreeBuyingPowerPercent, futureOption?.Underlying)
+        public FuturesOptionsMarginModel(
+            decimal requiredFreeBuyingPowerPercent = 0,
+            Option futureOption = null
+        )
+            : base(requiredFreeBuyingPowerPercent, futureOption?.Underlying)
         {
             _futureOption = futureOption;
         }
@@ -68,9 +76,13 @@ namespace QuantConnect.Securities.Option
         /// run when it comes to calculating the different market scenarios attempting to simulate VaR, resulting
         /// in a margin greater than the underlying's margin.
         /// </remarks>
-        public override MaintenanceMargin GetMaintenanceMargin(MaintenanceMarginParameters parameters)
+        public override MaintenanceMargin GetMaintenanceMargin(
+            MaintenanceMarginParameters parameters
+        )
         {
-            var underlyingRequirement = base.GetMaintenanceMargin(parameters.ForUnderlying(parameters.Quantity));
+            var underlyingRequirement = base.GetMaintenanceMargin(
+                parameters.ForUnderlying(parameters.Quantity)
+            );
             var positionSide = parameters.Quantity > 0 ? PositionSide.Long : PositionSide.Short;
             return GetMarginRequirement(_futureOption, underlyingRequirement, positionSide);
         }
@@ -86,12 +98,18 @@ namespace QuantConnect.Securities.Option
         /// run when it comes to calculating the different market scenarios attempting to simulate VaR, resulting
         /// in a margin greater than the underlying's margin.
         /// </remarks>
-        public override InitialMargin GetInitialMarginRequirement(InitialMarginParameters parameters)
+        public override InitialMargin GetInitialMarginRequirement(
+            InitialMarginParameters parameters
+        )
         {
-            var underlyingRequirement = base.GetInitialMarginRequirement(parameters.ForUnderlying()).Value;
+            var underlyingRequirement = base.GetInitialMarginRequirement(
+                parameters.ForUnderlying()
+            ).Value;
             var positionSide = parameters.Quantity > 0 ? PositionSide.Long : PositionSide.Short;
 
-            return new InitialMargin(GetMarginRequirement(_futureOption, underlyingRequirement, positionSide));
+            return new InitialMargin(
+                GetMarginRequirement(_futureOption, underlyingRequirement, positionSide)
+            );
         }
 
         /// <summary>
@@ -101,7 +119,11 @@ namespace QuantConnect.Securities.Option
         /// <param name="option">The future option contract to trade</param>
         /// <param name="underlyingRequirement">The underlying future associated margin requirement</param>
         /// <param name="positionSide">The position side to trade, long by default. This is because short positions require higher margin requirements</param>
-        public static int GetMarginRequirement(Option option, decimal underlyingRequirement, PositionSide positionSide = PositionSide.Long)
+        public static int GetMarginRequirement(
+            Option option,
+            decimal underlyingRequirement,
+            PositionSide positionSide = PositionSide.Long
+        )
         {
             var maximumValue = underlyingRequirement;
             var curveGrowthRate = -7.8m;
@@ -148,7 +170,14 @@ namespace QuantConnect.Securities.Option
 
             // we normalize the curve growth rate by dividing by the underlyings price
             // this way, contracts with different order of magnitude price and strike (like CL & ES) share this logic
-            var denominator = Math.Pow(Math.E, (double) (-curveGrowthRate * (option.ScaledStrikePrice - underlyingPrice) / underlyingPrice));
+            var denominator = Math.Pow(
+                Math.E,
+                (double)(
+                    -curveGrowthRate
+                    * (option.ScaledStrikePrice - underlyingPrice)
+                    / underlyingPrice
+                )
+            );
 
             if (double.IsInfinity(denominator))
             {
@@ -156,10 +185,10 @@ namespace QuantConnect.Securities.Option
             }
             if (denominator.IsNaNOrZero())
             {
-                return (int) maximumValue;
+                return (int)maximumValue;
             }
 
-            return (int) (maximumValue / (1 + denominator).SafeDecimalCast());
+            return (int)(maximumValue / (1 + denominator).SafeDecimalCast());
         }
     }
 }

@@ -27,8 +27,6 @@ namespace QuantConnect.Securities.Index
         /// <param name="security">The INDEX security being held</param>
         /// <param name="currencyConverter">A currency converter instance</param>
         public IndexHolding(Index security, ICurrencyConverter currencyConverter)
-            : base(security, currencyConverter)
-        {
-        }
+            : base(security, currencyConverter) { }
     }
 }

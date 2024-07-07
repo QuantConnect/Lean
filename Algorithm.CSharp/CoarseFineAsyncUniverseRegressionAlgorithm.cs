@@ -14,19 +14,21 @@
 */
 
 using System;
-using System.Linq;
-using QuantConnect.Interfaces;
 using System.Collections.Generic;
+using System.Linq;
+using QuantConnect.Algorithm.Framework.Selection;
 using QuantConnect.Data.Fundamental;
 using QuantConnect.Data.UniverseSelection;
-using QuantConnect.Algorithm.Framework.Selection;
+using QuantConnect.Interfaces;
 
 namespace QuantConnect.Algorithm.CSharp
 {
     /// <summary>
     /// Regression algorithm asserting that using separate coarse & fine selection with async universe settings is not allowed
     /// </summary>
-    public class CoarseFineAsyncUniverseRegressionAlgorithm : QCAlgorithm, IRegressionAlgorithmDefinition
+    public class CoarseFineAsyncUniverseRegressionAlgorithm
+        : QCAlgorithm,
+            IRegressionAlgorithmDefinition
     {
         /// <summary>
         /// Initialise the data and resolution required, as well as the cash and start-end dates for your algorithm. All algorithms must initialized.
@@ -51,10 +53,17 @@ namespace QuantConnect.Algorithm.CSharp
 
             if (!threwException)
             {
-                throw new RegressionTestException("Expected exception to be thrown for AddUniverse");
+                throw new RegressionTestException(
+                    "Expected exception to be thrown for AddUniverse"
+                );
             }
 
-            SetUniverseSelection(new FineFundamentalUniverseSelectionModel(CoarseSelectionFunction, FineSelectionFunction));
+            SetUniverseSelection(
+                new FineFundamentalUniverseSelectionModel(
+                    CoarseSelectionFunction,
+                    FineSelectionFunction
+                )
+            );
         }
 
         private IEnumerable<Symbol> CoarseSelectionFunction(IEnumerable<CoarseFundamental> coarse)
@@ -95,9 +104,10 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// This is used by the regression test system to indicate what the expected statistics are from running the algorithm
         /// </summary>
-        public Dictionary<string, string> ExpectedStatistics => new Dictionary<string, string>
-        {
-            {"OrderListHash", "d41d8cd98f00b204e9800998ecf8427e"}
-        };
+        public Dictionary<string, string> ExpectedStatistics =>
+            new Dictionary<string, string>
+            {
+                { "OrderListHash", "d41d8cd98f00b204e9800998ecf8427e" }
+            };
     }
 }

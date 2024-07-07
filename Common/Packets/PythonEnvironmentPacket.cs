@@ -28,9 +28,8 @@ namespace QuantConnect.Packets
         /// Default constructor for a PythonEnvironmentPacket
         /// </summary>
         /// <param name="type"></param>
-        protected PythonEnvironmentPacket(PacketType type) : base(type)
-        {
-        }
+        protected PythonEnvironmentPacket(PacketType type)
+            : base(type) { }
 
         /// <summary>
         /// Virtual environment ID used to find PythonEvironments

@@ -14,10 +14,10 @@
 */
 
 using System;
-using System.Globalization;
 using System.Collections.Generic;
-using QuantConnect.Data;
+using System.Globalization;
 using QuantConnect.Benchmarks;
+using QuantConnect.Data;
 using QuantConnect.Interfaces;
 
 namespace QuantConnect.Algorithm.CSharp
@@ -25,7 +25,9 @@ namespace QuantConnect.Algorithm.CSharp
     /// <summary>
     /// Regression algorithm to demonstrate the use of SetBenchmark() with custom data
     /// </summary>
-    public class CustomDataBenchmarkRegressionAlgorithm : QCAlgorithm, IRegressionAlgorithmDefinition
+    public class CustomDataBenchmarkRegressionAlgorithm
+        : QCAlgorithm,
+            IRegressionAlgorithmDefinition
     {
         public override void Initialize()
         {
@@ -34,7 +36,10 @@ namespace QuantConnect.Algorithm.CSharp
             SetCash(100000);
 
             AddEquity("SPY", Resolution.Hour);
-            var customSymbol = AddData<ExampleCustomData>("ExampleCustomData", Resolution.Hour).Symbol;
+            var customSymbol = AddData<ExampleCustomData>(
+                "ExampleCustomData",
+                Resolution.Hour
+            ).Symbol;
             SetBenchmark(customSymbol);
         }
 
@@ -51,7 +56,9 @@ namespace QuantConnect.Algorithm.CSharp
             var securityBenchmark = (SecurityBenchmark)Benchmark;
             if (securityBenchmark.Security.Price == 0)
             {
-                throw new RegressionTestException("Security benchmark price was not expected to be zero");
+                throw new RegressionTestException(
+                    "Security benchmark price was not expected to be zero"
+                );
             }
         }
 
@@ -83,36 +90,37 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// This is used by the regression test system to indicate what the expected statistics are from running the algorithm
         /// </summary>
-        public Dictionary<string, string> ExpectedStatistics => new Dictionary<string, string>
-        {
-            {"Total Orders", "1"},
-            {"Average Win", "0%"},
-            {"Average Loss", "0%"},
-            {"Compounding Annual Return", "29.610%"},
-            {"Drawdown", "0.600%"},
-            {"Expectancy", "0"},
-            {"Start Equity", "100000"},
-            {"End Equity", "100281.67"},
-            {"Net Profit", "0.282%"},
-            {"Sharpe Ratio", "7.023"},
-            {"Sortino Ratio", "0"},
-            {"Probabilistic Sharpe Ratio", "0%"},
-            {"Loss Rate", "0%"},
-            {"Win Rate", "0%"},
-            {"Profit-Loss Ratio", "0"},
-            {"Alpha", "0.094"},
-            {"Beta", "-0.016"},
-            {"Annual Standard Deviation", "0.007"},
-            {"Annual Variance", "0"},
-            {"Information Ratio", "-6.047"},
-            {"Tracking Error", "0.439"},
-            {"Treynor Ratio", "-3.13"},
-            {"Total Fees", "$2.21"},
-            {"Estimated Strategy Capacity", "$180000000.00"},
-            {"Lowest Capacity Asset", "SPY R735QTJ8XC9X"},
-            {"Portfolio Turnover", "24.86%"},
-            {"OrderListHash", "c07a9cae88eb3f47309fbf18216bc3cf"}
-        };
+        public Dictionary<string, string> ExpectedStatistics =>
+            new Dictionary<string, string>
+            {
+                { "Total Orders", "1" },
+                { "Average Win", "0%" },
+                { "Average Loss", "0%" },
+                { "Compounding Annual Return", "29.610%" },
+                { "Drawdown", "0.600%" },
+                { "Expectancy", "0" },
+                { "Start Equity", "100000" },
+                { "End Equity", "100281.67" },
+                { "Net Profit", "0.282%" },
+                { "Sharpe Ratio", "7.023" },
+                { "Sortino Ratio", "0" },
+                { "Probabilistic Sharpe Ratio", "0%" },
+                { "Loss Rate", "0%" },
+                { "Win Rate", "0%" },
+                { "Profit-Loss Ratio", "0" },
+                { "Alpha", "0.094" },
+                { "Beta", "-0.016" },
+                { "Annual Standard Deviation", "0.007" },
+                { "Annual Variance", "0" },
+                { "Information Ratio", "-6.047" },
+                { "Tracking Error", "0.439" },
+                { "Treynor Ratio", "-3.13" },
+                { "Total Fees", "$2.21" },
+                { "Estimated Strategy Capacity", "$180000000.00" },
+                { "Lowest Capacity Asset", "SPY R735QTJ8XC9X" },
+                { "Portfolio Turnover", "24.86%" },
+                { "OrderListHash", "c07a9cae88eb3f47309fbf18216bc3cf" }
+            };
 
         public class ExampleCustomData : BaseData
         {
@@ -121,19 +129,35 @@ namespace QuantConnect.Algorithm.CSharp
             public decimal Low { get; set; }
             public decimal Close { get; set; }
 
-            public override SubscriptionDataSource GetSource(SubscriptionDataConfig config, DateTime date, bool isLiveMode)
+            public override SubscriptionDataSource GetSource(
+                SubscriptionDataConfig config,
+                DateTime date,
+                bool isLiveMode
+            )
             {
-                var source = "https://www.dl.dropboxusercontent.com/s/d83xvd7mm9fzpk0/path_to_my_csv_data.csv?dl=0";
-                return new SubscriptionDataSource(source, SubscriptionTransportMedium.RemoteFile, FileFormat.Csv);
+                var source =
+                    "https://www.dl.dropboxusercontent.com/s/d83xvd7mm9fzpk0/path_to_my_csv_data.csv?dl=0";
+                return new SubscriptionDataSource(
+                    source,
+                    SubscriptionTransportMedium.RemoteFile,
+                    FileFormat.Csv
+                );
             }
 
-            public override BaseData Reader(SubscriptionDataConfig config, string line, DateTime date, bool isLiveMode)
+            public override BaseData Reader(
+                SubscriptionDataConfig config,
+                string line,
+                DateTime date,
+                bool isLiveMode
+            )
             {
                 var csv = line.Split(",");
                 var data = new ExampleCustomData()
                 {
                     Symbol = config.Symbol,
-                    Time = DateTime.ParseExact(csv[0], DateFormat.DB, CultureInfo.InvariantCulture).AddHours(20),
+                    Time = DateTime
+                        .ParseExact(csv[0], DateFormat.DB, CultureInfo.InvariantCulture)
+                        .AddHours(20),
                     Value = csv[4].ToDecimal(),
                     Open = csv[1].ToDecimal(),
                     High = csv[2].ToDecimal(),

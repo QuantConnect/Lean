@@ -53,14 +53,20 @@ namespace QuantConnect.Tests.Common.Securities
     {
         public List<BaseData> dataUpdate = new List<BaseData>();
         public override decimal Volatility { get; }
+
         public override void Update(Security security, BaseData data)
         {
             dataUpdate.Add(data);
         }
 
-        public override IEnumerable<HistoryRequest> GetHistoryRequirements(Security security, DateTime utcTime)
+        public override IEnumerable<HistoryRequest> GetHistoryRequirements(
+            Security security,
+            DateTime utcTime
+        )
         {
-            var configuration = SubscriptionDataConfigProvider.GetSubscriptionDataConfigs(security.Symbol).First();
+            var configuration = SubscriptionDataConfigProvider
+                .GetSubscriptionDataConfigs(security.Symbol)
+                .First();
 
             return new[]
             {
@@ -85,16 +91,29 @@ namespace QuantConnect.Tests.Common.Securities
     internal class TestHistoryProvider : HistoryProviderBase
     {
         public override int DataPointCount { get; }
+
         public override void Initialize(HistoryProviderInitializeParameters parameters)
         {
             throw new NotImplementedException();
         }
 
-        public override IEnumerable<Slice> GetHistory(IEnumerable<HistoryRequest> requests, DateTimeZone sliceTimeZone)
+        public override IEnumerable<Slice> GetHistory(
+            IEnumerable<HistoryRequest> requests,
+            DateTimeZone sliceTimeZone
+        )
         {
             var request = requests.First();
-            return new List<Slice>{ new Slice(DateTime.UtcNow,
-                new List<BaseData> {new TradeBar(DateTime.MinValue, request.Symbol, 1, 2, 3, 4, 5) }, DateTime.UtcNow)};
+            return new List<Slice>
+            {
+                new Slice(
+                    DateTime.UtcNow,
+                    new List<BaseData>
+                    {
+                        new TradeBar(DateTime.MinValue, request.Symbol, 1, 2, 3, 4, 5)
+                    },
+                    DateTime.UtcNow
+                )
+            };
         }
     }
 }

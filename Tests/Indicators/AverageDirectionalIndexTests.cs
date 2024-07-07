@@ -39,13 +39,31 @@ namespace QuantConnect.Tests.Indicators
             const double epsilon = .0001;
             var adx = CreateIndicator();
 
-            TestHelper.TestIndicator(adx, TestFileName, "+DI14",
-                (ind, expected) => Assert.AreEqual(expected, (double)((AverageDirectionalIndex)ind).PositiveDirectionalIndex.Current.Value, epsilon)
+            TestHelper.TestIndicator(
+                adx,
+                TestFileName,
+                "+DI14",
+                (ind, expected) =>
+                    Assert.AreEqual(
+                        expected,
+                        (double)
+                            ((AverageDirectionalIndex)ind).PositiveDirectionalIndex.Current.Value,
+                        epsilon
+                    )
             );
             adx.Reset();
 
-            TestHelper.TestIndicator(adx, TestFileName, "-DI14",
-                (ind, expected) => Assert.AreEqual(expected, (double)((AverageDirectionalIndex)ind).NegativeDirectionalIndex.Current.Value, epsilon)
+            TestHelper.TestIndicator(
+                adx,
+                TestFileName,
+                "-DI14",
+                (ind, expected) =>
+                    Assert.AreEqual(
+                        expected,
+                        (double)
+                            ((AverageDirectionalIndex)ind).NegativeDirectionalIndex.Current.Value,
+                        epsilon
+                    )
             );
         }
     }

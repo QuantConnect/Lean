@@ -26,7 +26,8 @@ namespace QuantConnect.Algorithm.CSharp
     public class CoarseNoLookAheadBiasAlgorithm : QCAlgorithm, IRegressionAlgorithmDefinition
     {
         private const int NumberOfSymbols = 1;
-        private static Dictionary<Symbol, decimal> _coarsePrices = new Dictionary<Symbol, decimal>();
+        private static Dictionary<Symbol, decimal> _coarsePrices =
+            new Dictionary<Symbol, decimal>();
 
         public override void Initialize()
         {
@@ -68,7 +69,9 @@ namespace QuantConnect.Algorithm.CSharp
             );
         }
 
-        private static IEnumerable<Symbol> CoarseSelectionFunction(IEnumerable<CoarseFundamental> coarse)
+        private static IEnumerable<Symbol> CoarseSelectionFunction(
+            IEnumerable<CoarseFundamental> coarse
+        )
         {
             var sortedByDollarVolume = coarse.OrderByDescending(x => x.DollarVolume);
             var top = sortedByDollarVolume.Take(NumberOfSymbols).ToList();
@@ -107,35 +110,36 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// This is used by the regression test system to indicate what the expected statistics are from running the algorithm
         /// </summary>
-        public Dictionary<string, string> ExpectedStatistics => new Dictionary<string, string>
-        {
-            {"Total Orders", "0"},
-            {"Average Win", "0%"},
-            {"Average Loss", "0%"},
-            {"Compounding Annual Return", "0%"},
-            {"Drawdown", "0%"},
-            {"Expectancy", "0"},
-            {"Start Equity", "50000"},
-            {"End Equity", "50000"},
-            {"Net Profit", "0%"},
-            {"Sharpe Ratio", "0"},
-            {"Sortino Ratio", "0"},
-            {"Probabilistic Sharpe Ratio", "0%"},
-            {"Loss Rate", "0%"},
-            {"Win Rate", "0%"},
-            {"Profit-Loss Ratio", "0"},
-            {"Alpha", "0"},
-            {"Beta", "0"},
-            {"Annual Standard Deviation", "0"},
-            {"Annual Variance", "0"},
-            {"Information Ratio", "-1.388"},
-            {"Tracking Error", "0.096"},
-            {"Treynor Ratio", "0"},
-            {"Total Fees", "$0.00"},
-            {"Estimated Strategy Capacity", "$0"},
-            {"Lowest Capacity Asset", ""},
-            {"Portfolio Turnover", "0%"},
-            {"OrderListHash", "d41d8cd98f00b204e9800998ecf8427e"}
-        };
+        public Dictionary<string, string> ExpectedStatistics =>
+            new Dictionary<string, string>
+            {
+                { "Total Orders", "0" },
+                { "Average Win", "0%" },
+                { "Average Loss", "0%" },
+                { "Compounding Annual Return", "0%" },
+                { "Drawdown", "0%" },
+                { "Expectancy", "0" },
+                { "Start Equity", "50000" },
+                { "End Equity", "50000" },
+                { "Net Profit", "0%" },
+                { "Sharpe Ratio", "0" },
+                { "Sortino Ratio", "0" },
+                { "Probabilistic Sharpe Ratio", "0%" },
+                { "Loss Rate", "0%" },
+                { "Win Rate", "0%" },
+                { "Profit-Loss Ratio", "0" },
+                { "Alpha", "0" },
+                { "Beta", "0" },
+                { "Annual Standard Deviation", "0" },
+                { "Annual Variance", "0" },
+                { "Information Ratio", "-1.388" },
+                { "Tracking Error", "0.096" },
+                { "Treynor Ratio", "0" },
+                { "Total Fees", "$0.00" },
+                { "Estimated Strategy Capacity", "$0" },
+                { "Lowest Capacity Asset", "" },
+                { "Portfolio Turnover", "0%" },
+                { "OrderListHash", "d41d8cd98f00b204e9800998ecf8427e" }
+            };
     }
 }

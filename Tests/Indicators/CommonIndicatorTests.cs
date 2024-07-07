@@ -1,11 +1,11 @@
 /*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
- * 
- * Licensed under the Apache License, Version 2.0 (the "License"); 
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -27,6 +27,7 @@ namespace QuantConnect.Tests.Indicators
         where T : IBaseData
     {
         protected Symbol Symbol { get; set; } = Symbols.SPY;
+
         [Test]
         public virtual void ComparesAgainstExternalData()
         {
@@ -48,13 +49,21 @@ namespace QuantConnect.Tests.Indicators
         {
             var indicator = CreateIndicator();
             if (indicator is IndicatorBase<IndicatorDataPoint>)
-                TestHelper.TestIndicatorReset(indicator as IndicatorBase<IndicatorDataPoint>, TestFileName);
+                TestHelper.TestIndicatorReset(
+                    indicator as IndicatorBase<IndicatorDataPoint>,
+                    TestFileName
+                );
             else if (indicator is IndicatorBase<IBaseDataBar>)
-                TestHelper.TestIndicatorReset(indicator as IndicatorBase<IBaseDataBar>, TestFileName);
+                TestHelper.TestIndicatorReset(
+                    indicator as IndicatorBase<IBaseDataBar>,
+                    TestFileName
+                );
             else if (indicator is IndicatorBase<TradeBar>)
                 TestHelper.TestIndicatorReset(indicator as IndicatorBase<TradeBar>, TestFileName);
             else
-                throw new NotSupportedException("ResetsProperly: Unsupported indicator data type: " + typeof(T));
+                throw new NotSupportedException(
+                    "ResetsProperly: Unsupported indicator data type: " + typeof(T)
+                );
         }
 
         [Test]
@@ -92,7 +101,7 @@ namespace QuantConnect.Tests.Indicators
                 var input = GetInput(startDate, i);
                 indicator.Update(input);
             }
-            
+
             Assert.AreEqual(1, indicator.Samples);
         }
 
@@ -100,10 +109,12 @@ namespace QuantConnect.Tests.Indicators
         public virtual void AcceptsRenkoBarsAsInput()
         {
             var indicator = CreateIndicator();
-            if (indicator is IndicatorBase<TradeBar> ||
-                indicator is IndicatorBase<IBaseData> ||
-                indicator is BarIndicator ||
-                indicator is IndicatorBase<IBaseDataBar>)
+            if (
+                indicator is IndicatorBase<TradeBar>
+                || indicator is IndicatorBase<IBaseData>
+                || indicator is BarIndicator
+                || indicator is IndicatorBase<IBaseDataBar>
+            )
             {
                 var renkoConsolidator = new RenkoConsolidator(RenkoBarSize);
                 renkoConsolidator.DataConsolidated += (sender, renkoBar) =>
@@ -123,10 +134,12 @@ namespace QuantConnect.Tests.Indicators
         public virtual void AcceptsVolumeRenkoBarsAsInput()
         {
             var indicator = CreateIndicator();
-            if (indicator is IndicatorBase<TradeBar> ||
-                indicator is IndicatorBase<IBaseData> ||
-                indicator is BarIndicator ||
-                indicator is IndicatorBase<IBaseDataBar>)
+            if (
+                indicator is IndicatorBase<TradeBar>
+                || indicator is IndicatorBase<IBaseData>
+                || indicator is BarIndicator
+                || indicator is IndicatorBase<IBaseDataBar>
+            )
             {
                 var volumeRenkoConsolidator = new VolumeRenkoConsolidator(VolumeRenkoBarSize);
                 volumeRenkoConsolidator.DataConsolidated += (sender, volumeRenkoBar) =>
@@ -153,7 +166,9 @@ namespace QuantConnect.Tests.Indicators
             for (int i = 0; i < 2 * period; i++)
             {
                 var value = (decimal)(random.NextDouble() * 0.000000000000000000000000000001);
-                Assert.DoesNotThrow(() => indicator.Update(GetInput(Symbol, time, i, value, value, value, value)));
+                Assert.DoesNotThrow(
+                    () => indicator.Update(GetInput(Symbol, time, i, value, value, value, value))
+                );
             }
         }
 
@@ -162,16 +177,28 @@ namespace QuantConnect.Tests.Indicators
             Assert.AreNotEqual(0, indicator.Current.Value);
         }
 
-        protected virtual void IndicatorValueIsNotZeroAfterReceiveVolumeRenkoBars(IndicatorBase indicator)
+        protected virtual void IndicatorValueIsNotZeroAfterReceiveVolumeRenkoBars(
+            IndicatorBase indicator
+        )
         {
             Assert.AreNotEqual(0, indicator.Current.Value);
         }
 
-        protected static IBaseData GetInput(DateTime startDate, int days) => GetInput(Symbols.SPY, startDate, days);
+        protected static IBaseData GetInput(DateTime startDate, int days) =>
+            GetInput(Symbols.SPY, startDate, days);
 
-        protected static IBaseData GetInput(Symbol symbol, DateTime startDate, int days) => GetInput(symbol, startDate, days, 100m + days, 105m + days, 95m + days, 100 + days);
+        protected static IBaseData GetInput(Symbol symbol, DateTime startDate, int days) =>
+            GetInput(symbol, startDate, days, 100m + days, 105m + days, 95m + days, 100 + days);
 
-        protected static IBaseData GetInput(Symbol symbol, DateTime startDate, int days, decimal open, decimal high, decimal low, decimal close)
+        protected static IBaseData GetInput(
+            Symbol symbol,
+            DateTime startDate,
+            int days,
+            decimal open,
+            decimal high,
+            decimal low,
+            decimal close
+        )
         {
             if (typeof(T) == typeof(IndicatorDataPoint))
             {
@@ -224,9 +251,12 @@ namespace QuantConnect.Tests.Indicators
                     indicator as IndicatorBase<TradeBar>,
                     TestFileName,
                     TestColumnName,
-                    Assertion as Action<IndicatorBase<TradeBar>, double>);
+                    Assertion as Action<IndicatorBase<TradeBar>, double>
+                );
             else
-                throw new NotSupportedException("RunTestIndicator: Unsupported indicator data type: " + typeof(T));
+                throw new NotSupportedException(
+                    "RunTestIndicator: Unsupported indicator data type: " + typeof(T)
+                );
         }
 
         /// <summary>
@@ -240,7 +270,9 @@ namespace QuantConnect.Tests.Indicators
                 {
                     Assert.AreEqual(expected, (double)indicator.Current.Value, 1e-3);
 
-                    var relativeDifference = Math.Abs(((double)indicator.Current.Value - expected) / expected);
+                    var relativeDifference = Math.Abs(
+                        ((double)indicator.Current.Value - expected) / expected
+                    );
                     Assert.LessOrEqual(relativeDifference, 1); // less than 1% error rate
                 };
             }

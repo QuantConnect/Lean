@@ -15,11 +15,11 @@
 
 using System;
 using QuantConnect.Data;
-using QuantConnect.Packets;
-using QuantConnect.Interfaces;
-using QuantConnect.Data.Market;
 using QuantConnect.Data.Fundamental;
+using QuantConnect.Data.Market;
 using QuantConnect.Data.UniverseSelection;
+using QuantConnect.Interfaces;
+using QuantConnect.Packets;
 
 namespace QuantConnect.Lean.Engine.DataFeeds
 {
@@ -32,16 +32,18 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         /// Initializes the instance with an algorithm node packet
         /// </summary>
         /// <param name="packet">Algorithm node packet</param>
-        public virtual void Initialize(AlgorithmNodePacket packet)
-        {
-        }
+        public virtual void Initialize(AlgorithmNodePacket packet) { }
 
         /// <summary>
         /// True if this subscription request should be streamed
         /// </summary>
         public virtual bool ShouldStreamSubscription(SubscriptionDataConfig config)
         {
-            return IsStreamingType(config) || !config.IsCustomData && config.Type != typeof(CoarseFundamental) && config.Type != typeof(Fundamental) && config.Type != typeof(MarginInterestRate);
+            return IsStreamingType(config)
+                || !config.IsCustomData
+                    && config.Type != typeof(CoarseFundamental)
+                    && config.Type != typeof(Fundamental)
+                    && config.Type != typeof(MarginInterestRate);
         }
 
         /// <summary>
@@ -51,7 +53,8 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         {
             var dataTypeInstance = configuration.Type.GetBaseDataInstance();
             var source = dataTypeInstance.GetSource(configuration, DateTime.UtcNow, true);
-            return source != null && source.TransportMedium == SubscriptionTransportMedium.Streaming;
+            return source != null
+                && source.TransportMedium == SubscriptionTransportMedium.Streaming;
         }
     }
 }

@@ -46,9 +46,7 @@ namespace QuantConnect
         /// <param name="utcDateTime">The initial time</param>
         /// <param name="timeZones">The time zones used to instantiate <see cref="LocalTimeKeeper"/> instances.</param>
         public TimeKeeper(DateTime utcDateTime, params DateTimeZone[] timeZones)
-            : this(utcDateTime, timeZones ?? Enumerable.Empty<DateTimeZone>())
-        {
-        }
+            : this(utcDateTime, timeZones ?? Enumerable.Empty<DateTimeZone>()) { }
 
         /// <summary>
         /// Initializes a new instance of the <see cref="TimeKeeper"/> class at the specified
@@ -60,7 +58,10 @@ namespace QuantConnect
         public TimeKeeper(DateTime utcDateTime, IEnumerable<DateTimeZone> timeZones)
         {
             _utcDateTime = utcDateTime;
-            _localTimeKeepers = timeZones.Distinct().Select(x => new LocalTimeKeeper(utcDateTime, x)).ToDictionary(x => x.TimeZone.Id);
+            _localTimeKeepers = timeZones
+                .Distinct()
+                .Select(x => new LocalTimeKeeper(utcDateTime, x))
+                .ToDictionary(x => x.TimeZone.Id);
         }
 
         /// <summary>

@@ -29,9 +29,7 @@ namespace QuantConnect.Securities.Forex
         /// <param name="security">The forex security being held</param>
         /// <param name="currencyConverter">A currency converter instance</param>
         public ForexHolding(Forex security, ICurrencyConverter currencyConverter)
-            : base(security, currencyConverter)
-        {
-        }
+            : base(security, currencyConverter) { }
 
         /// <summary>
         /// Profit in pips if we closed the holdings right now including the approximate fees

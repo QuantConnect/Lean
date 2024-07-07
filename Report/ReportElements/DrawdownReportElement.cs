@@ -35,7 +35,12 @@ namespace QuantConnect.Report.ReportElements
         /// <param name="key">Location of injection</param>
         /// <param name="backtest">Backtest result object</param>
         /// <param name="live">Live result object</param>
-        public DrawdownReportElement(string name, string key, BacktestResult backtest, LiveResult live)
+        public DrawdownReportElement(
+            string name,
+            string key,
+            BacktestResult backtest,
+            LiveResult live
+        )
         {
             _live = live;
             _backtest = backtest;
@@ -54,8 +59,13 @@ namespace QuantConnect.Report.ReportElements
             var liveSeries = new Series<DateTime, double>(livePoints.Keys, livePoints.Values);
             var strategySeries = DrawdownCollection.NormalizeResults(_backtest, _live);
 
-            var seriesUnderwaterPlot = DrawdownCollection.GetUnderwater(strategySeries).DropMissing();
-            var liveUnderwaterPlot = backtestPoints.Count == 0 ? seriesUnderwaterPlot : seriesUnderwaterPlot.After(backtestPoints.Last().Key);
+            var seriesUnderwaterPlot = DrawdownCollection
+                .GetUnderwater(strategySeries)
+                .DropMissing();
+            var liveUnderwaterPlot =
+                backtestPoints.Count == 0
+                    ? seriesUnderwaterPlot
+                    : seriesUnderwaterPlot.After(backtestPoints.Last().Key);
             var drawdownCollection = DrawdownCollection.FromResult(_backtest, _live, periods: 5);
 
             var base64 = "";
@@ -70,8 +80,18 @@ namespace QuantConnect.Report.ReportElements
                 }
                 else
                 {
-                    backtestList.Append(seriesUnderwaterPlot.Before(liveUnderwaterPlot.FirstKey()).Keys.ToList().ToPython());
-                    backtestList.Append(seriesUnderwaterPlot.Before(liveUnderwaterPlot.FirstKey()).Values.ToList().ToPython());
+                    backtestList.Append(
+                        seriesUnderwaterPlot
+                            .Before(liveUnderwaterPlot.FirstKey())
+                            .Keys.ToList()
+                            .ToPython()
+                    );
+                    backtestList.Append(
+                        seriesUnderwaterPlot
+                            .Before(liveUnderwaterPlot.FirstKey())
+                            .Values.ToList()
+                            .ToPython()
+                    );
                 }
 
                 var liveList = new PyList();
@@ -84,7 +104,14 @@ namespace QuantConnect.Report.ReportElements
                 foreach (var group in drawdownCollection.Drawdowns)
                 {
                     // Skip drawdown periods that are overlapping
-                    if (previousDrawdownPeriods.Where(kvp => (group.Start >= kvp.Key && group.Start <= kvp.Value) || (group.End >= kvp.Key && group.End <= kvp.Value)).Any())
+                    if (
+                        previousDrawdownPeriods
+                            .Where(kvp =>
+                                (group.Start >= kvp.Key && group.Start <= kvp.Value)
+                                || (group.End >= kvp.Key && group.End <= kvp.Value)
+                            )
+                            .Any()
+                    )
                     {
                         continue;
                     }
@@ -95,7 +122,9 @@ namespace QuantConnect.Report.ReportElements
                     worst.SetItem("Total", group.PeakToTrough.ToPython());
 
                     worstList.Append(worst);
-                    previousDrawdownPeriods.Add(new KeyValuePair<DateTime, DateTime>(group.Start, group.End));
+                    previousDrawdownPeriods.Add(
+                        new KeyValuePair<DateTime, DateTime>(group.Start, group.End)
+                    );
                 }
 
                 base64 = Charting.GetDrawdown(backtestList, liveList, worstList);

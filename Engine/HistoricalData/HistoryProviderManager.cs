@@ -13,6 +13,9 @@
  * limitations under the License.
 */
 
+using System;
+using System.Collections.Generic;
+using System.Linq;
 using NodaTime;
 using QuantConnect.Configuration;
 using QuantConnect.Data;
@@ -20,9 +23,6 @@ using QuantConnect.Interfaces;
 using QuantConnect.Lean.Engine.DataFeeds.Enumerators;
 using QuantConnect.Logging;
 using QuantConnect.Util;
-using System;
-using System.Collections.Generic;
-using System.Linq;
 using HistoryRequest = QuantConnect.Data.HistoryRequest;
 
 namespace QuantConnect.Lean.Engine.HistoricalData
@@ -65,34 +65,55 @@ namespace QuantConnect.Lean.Engine.HistoricalData
             if (_initialized)
             {
                 // let's make sure no one tries to change our parameters values
-                throw new InvalidOperationException("BrokerageHistoryProvider can only be initialized once");
+                throw new InvalidOperationException(
+                    "BrokerageHistoryProvider can only be initialized once"
+                );
             }
             _initialized = true;
 
-            var dataProvidersList = parameters.Job?.HistoryProvider.DeserializeList() ?? new List<string>();
+            var dataProvidersList =
+                parameters.Job?.HistoryProvider.DeserializeList() ?? new List<string>();
             if (dataProvidersList.IsNullOrEmpty())
             {
-                dataProvidersList.AddRange(Config.Get("history-provider", "SubscriptionDataReaderHistoryProvider").DeserializeList());
+                dataProvidersList.AddRange(
+                    Config
+                        .Get("history-provider", "SubscriptionDataReaderHistoryProvider")
+                        .DeserializeList()
+                );
             }
 
             foreach (var historyProviderName in dataProvidersList)
             {
                 IHistoryProvider historyProvider;
-                if (HistoryExtensions.TryGetBrokerageName(historyProviderName, out var brokerageName))
+                if (
+                    HistoryExtensions.TryGetBrokerageName(
+                        historyProviderName,
+                        out var brokerageName
+                    )
+                )
                 {
                     // we get the data queue handler if it already exists
-                    var dataQueueHandler = Composer.Instance.GetPart<IDataQueueHandler>((x) => x.GetType().Name == brokerageName);
+                    var dataQueueHandler = Composer.Instance.GetPart<IDataQueueHandler>(
+                        (x) => x.GetType().Name == brokerageName
+                    );
                     if (dataQueueHandler == null)
                     {
                         // we need to create the brokerage/data queue handler
-                        dataQueueHandler = Composer.Instance.GetExportedValueByTypeName<IDataQueueHandler>(brokerageName);
+                        dataQueueHandler =
+                            Composer.Instance.GetExportedValueByTypeName<IDataQueueHandler>(
+                                brokerageName
+                            );
                         // initialize it
                         dataQueueHandler.SetJob((Packets.LiveNodePacket)parameters.Job);
-                        Log.Trace($"HistoryProviderManager.Initialize(): Created and wrapped '{brokerageName}' as '{typeof(BrokerageHistoryProvider).Name}'");
+                        Log.Trace(
+                            $"HistoryProviderManager.Initialize(): Created and wrapped '{brokerageName}' as '{typeof(BrokerageHistoryProvider).Name}'"
+                        );
                     }
                     else
                     {
-                        Log.Trace($"HistoryProviderManager.Initialize(): Wrapping '{brokerageName}' instance as '{typeof(BrokerageHistoryProvider).Name}'");
+                        Log.Trace(
+                            $"HistoryProviderManager.Initialize(): Wrapping '{brokerageName}' instance as '{typeof(BrokerageHistoryProvider).Name}'"
+                        );
                     }
 
                     // wrap it
@@ -102,22 +123,42 @@ namespace QuantConnect.Lean.Engine.HistoricalData
                 }
                 else
                 {
-                    historyProvider = Composer.Instance.GetExportedValueByTypeName<IHistoryProvider>(historyProviderName);
+                    historyProvider =
+                        Composer.Instance.GetExportedValueByTypeName<IHistoryProvider>(
+                            historyProviderName
+                        );
                     if (historyProvider is BrokerageHistoryProvider)
                     {
                         (historyProvider as BrokerageHistoryProvider).SetBrokerage(_brokerage);
                     }
                 }
                 historyProvider.Initialize(parameters);
-                historyProvider.InvalidConfigurationDetected += (sender, args) => { OnInvalidConfigurationDetected(args); };
-                historyProvider.NumericalPrecisionLimited += (sender, args) => { OnNumericalPrecisionLimited(args); };
-                historyProvider.StartDateLimited += (sender, args) => { OnStartDateLimited(args); };
-                historyProvider.DownloadFailed += (sender, args) => { OnDownloadFailed(args); };
-                historyProvider.ReaderErrorDetected += (sender, args) => { OnReaderErrorDetected(args); };
+                historyProvider.InvalidConfigurationDetected += (sender, args) =>
+                {
+                    OnInvalidConfigurationDetected(args);
+                };
+                historyProvider.NumericalPrecisionLimited += (sender, args) =>
+                {
+                    OnNumericalPrecisionLimited(args);
+                };
+                historyProvider.StartDateLimited += (sender, args) =>
+                {
+                    OnStartDateLimited(args);
+                };
+                historyProvider.DownloadFailed += (sender, args) =>
+                {
+                    OnDownloadFailed(args);
+                };
+                historyProvider.ReaderErrorDetected += (sender, args) =>
+                {
+                    OnReaderErrorDetected(args);
+                };
                 _historyProviders.Add(historyProvider);
             }
 
-            Log.Trace($"HistoryProviderManager.Initialize(): history providers [{string.Join(",", _historyProviders.Select(x => x.GetType().Name))}]");
+            Log.Trace(
+                $"HistoryProviderManager.Initialize(): history providers [{string.Join(",", _historyProviders.Select(x => x.GetType().Name))}]"
+            );
         }
 
         /// <summary>
@@ -126,7 +167,10 @@ namespace QuantConnect.Lean.Engine.HistoricalData
         /// <param name="requests">The historical data requests</param>
         /// <param name="sliceTimeZone">The time zone used when time stamping the slice instances</param>
         /// <returns>An enumerable of the slices of data covering the span specified in each request</returns>
-        public override IEnumerable<Slice> GetHistory(IEnumerable<HistoryRequest> requests, DateTimeZone sliceTimeZone)
+        public override IEnumerable<Slice> GetHistory(
+            IEnumerable<HistoryRequest> requests,
+            DateTimeZone sliceTimeZone
+        )
         {
             List<IEnumerator<Slice>> historyEnumerators = new(_historyProviders.Count);
             var historyRequets = requests.ToList();

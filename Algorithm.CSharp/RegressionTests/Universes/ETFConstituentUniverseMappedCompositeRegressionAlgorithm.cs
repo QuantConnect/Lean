@@ -26,15 +26,19 @@ namespace QuantConnect.Algorithm.CSharp
     /// Tests the mapping of the ETF symbol that has a constituent universe attached to it and ensures
     /// that data is loaded after the mapping event takes place.
     /// </summary>
-    public class ETFConstituentUniverseMappedCompositeRegressionAlgorithm: QCAlgorithm, IRegressionAlgorithmDefinition
+    public class ETFConstituentUniverseMappedCompositeRegressionAlgorithm
+        : QCAlgorithm,
+            IRegressionAlgorithmDefinition
     {
         private Symbol _aapl;
         private Symbol _qqq;
-        private Dictionary<DateTime, int> _filterDateConstituentSymbolCount = new Dictionary<DateTime, int>();
-        private Dictionary<DateTime, bool> _constituentDataEncountered = new Dictionary<DateTime, bool>();
+        private Dictionary<DateTime, int> _filterDateConstituentSymbolCount =
+            new Dictionary<DateTime, int>();
+        private Dictionary<DateTime, bool> _constituentDataEncountered =
+            new Dictionary<DateTime, bool>();
         private HashSet<Symbol> _constituentSymbols = new HashSet<Symbol>();
         private bool _mappingEventOccurred;
-        
+
         /// <summary>
         /// Initialise the data and resolution required, as well as the cash and start-end dates for your algorithm. All algorithms must initialized.
         /// </summary>
@@ -58,13 +62,13 @@ namespace QuantConnect.Algorithm.CSharp
             {
                 throw new RegressionTestException("AAPL not found in QQQ constituents");
             }
-            
+
             _filterDateConstituentSymbolCount[UtcTime.Date] = constituentSymbols.Count;
             foreach (var symbol in constituentSymbols)
             {
                 _constituentSymbols.Add(symbol);
             }
-            
+
             return constituentSymbols;
         }
 
@@ -80,26 +84,32 @@ namespace QuantConnect.Algorithm.CSharp
                 {
                     if (symbolChanged.Symbol != _qqq)
                     {
-                        throw new RegressionTestException($"Mapped symbol is not QQQ. Instead, found: {symbolChanged.Symbol}");
+                        throw new RegressionTestException(
+                            $"Mapped symbol is not QQQ. Instead, found: {symbolChanged.Symbol}"
+                        );
                     }
                     if (symbolChanged.OldSymbol != "QQQQ")
                     {
-                        throw new RegressionTestException($"Old QQQ Symbol is not QQQQ. Instead, found: {symbolChanged.OldSymbol}");
+                        throw new RegressionTestException(
+                            $"Old QQQ Symbol is not QQQQ. Instead, found: {symbolChanged.OldSymbol}"
+                        );
                     }
                     if (symbolChanged.NewSymbol != "QQQ")
                     {
-                        throw new RegressionTestException($"New QQQ Symbol is not QQQ. Instead, found: {symbolChanged.NewSymbol}");
+                        throw new RegressionTestException(
+                            $"New QQQ Symbol is not QQQ. Instead, found: {symbolChanged.NewSymbol}"
+                        );
                     }
-                    
+
                     _mappingEventOccurred = true;
                 }
             }
-            
+
             if (slice.Keys.Count == 1 && slice.ContainsKey(_qqq))
             {
                 return;
             }
-            
+
             if (!_constituentDataEncountered.ContainsKey(UtcTime.Date))
             {
                 _constituentDataEncountered[UtcTime.Date] = false;
@@ -120,18 +130,24 @@ namespace QuantConnect.Algorithm.CSharp
         {
             if (_filterDateConstituentSymbolCount.Count != 2)
             {
-                throw new RegressionTestException($"ETF constituent filtering function was not called 2 times (actual: {_filterDateConstituentSymbolCount.Count}");
+                throw new RegressionTestException(
+                    $"ETF constituent filtering function was not called 2 times (actual: {_filterDateConstituentSymbolCount.Count}"
+                );
             }
             if (!_mappingEventOccurred)
             {
-                throw new RegressionTestException("No mapping/SymbolChangedEvent occurred. Expected for QQQ to be mapped from QQQQ -> QQQ");
+                throw new RegressionTestException(
+                    "No mapping/SymbolChangedEvent occurred. Expected for QQQ to be mapped from QQQQ -> QQQ"
+                );
             }
 
             foreach (var kvp in _filterDateConstituentSymbolCount)
             {
                 if (kvp.Value < 25)
                 {
-                    throw new RegressionTestException($"Expected 25 or more constituents in filter function on {kvp.Key:yyyy-MM-dd HH:mm:ss.fff}, found {kvp.Value}");
+                    throw new RegressionTestException(
+                        $"Expected 25 or more constituents in filter function on {kvp.Key:yyyy-MM-dd HH:mm:ss.fff}, found {kvp.Value}"
+                    );
                 }
             }
 
@@ -139,7 +155,9 @@ namespace QuantConnect.Algorithm.CSharp
             {
                 if (!kvp.Value)
                 {
-                    throw new RegressionTestException($"Received data in OnData(...) but it did not contain any constituent data on {kvp.Key:yyyy-MM-dd HH:mm:ss.fff}");
+                    throw new RegressionTestException(
+                        $"Received data in OnData(...) but it did not contain any constituent data on {kvp.Key:yyyy-MM-dd HH:mm:ss.fff}"
+                    );
                 }
             }
         }
@@ -172,35 +190,36 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// This is used by the regression test system to indicate what the expected statistics are from running the algorithm
         /// </summary>
-        public Dictionary<string, string> ExpectedStatistics => new Dictionary<string, string>
-        {
-            {"Total Orders", "1"},
-            {"Average Win", "0%"},
-            {"Average Loss", "0%"},
-            {"Compounding Annual Return", "-9.690%"},
-            {"Drawdown", "4.200%"},
-            {"Expectancy", "0"},
-            {"Start Equity", "100000"},
-            {"End Equity", "98257.31"},
-            {"Net Profit", "-1.743%"},
-            {"Sharpe Ratio", "-0.95"},
-            {"Sortino Ratio", "-0.832"},
-            {"Probabilistic Sharpe Ratio", "17.000%"},
-            {"Loss Rate", "0%"},
-            {"Win Rate", "0%"},
-            {"Profit-Loss Ratio", "0"},
-            {"Alpha", "-0.084"},
-            {"Beta", "0.591"},
-            {"Annual Standard Deviation", "0.078"},
-            {"Annual Variance", "0.006"},
-            {"Information Ratio", "-1.408"},
-            {"Tracking Error", "0.065"},
-            {"Treynor Ratio", "-0.125"},
-            {"Total Fees", "$22.93"},
-            {"Estimated Strategy Capacity", "$75000000.00"},
-            {"Lowest Capacity Asset", "AAPL R735QTJ8XC9X"},
-            {"Portfolio Turnover", "0.80%"},
-            {"OrderListHash", "69695fb7639b0c1bf243eec7425a9bd2"}
-        };
+        public Dictionary<string, string> ExpectedStatistics =>
+            new Dictionary<string, string>
+            {
+                { "Total Orders", "1" },
+                { "Average Win", "0%" },
+                { "Average Loss", "0%" },
+                { "Compounding Annual Return", "-9.690%" },
+                { "Drawdown", "4.200%" },
+                { "Expectancy", "0" },
+                { "Start Equity", "100000" },
+                { "End Equity", "98257.31" },
+                { "Net Profit", "-1.743%" },
+                { "Sharpe Ratio", "-0.95" },
+                { "Sortino Ratio", "-0.832" },
+                { "Probabilistic Sharpe Ratio", "17.000%" },
+                { "Loss Rate", "0%" },
+                { "Win Rate", "0%" },
+                { "Profit-Loss Ratio", "0" },
+                { "Alpha", "-0.084" },
+                { "Beta", "0.591" },
+                { "Annual Standard Deviation", "0.078" },
+                { "Annual Variance", "0.006" },
+                { "Information Ratio", "-1.408" },
+                { "Tracking Error", "0.065" },
+                { "Treynor Ratio", "-0.125" },
+                { "Total Fees", "$22.93" },
+                { "Estimated Strategy Capacity", "$75000000.00" },
+                { "Lowest Capacity Asset", "AAPL R735QTJ8XC9X" },
+                { "Portfolio Turnover", "0.80%" },
+                { "OrderListHash", "69695fb7639b0c1bf243eec7425a9bd2" }
+            };
     }
 }

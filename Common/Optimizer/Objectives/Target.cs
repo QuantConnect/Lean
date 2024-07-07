@@ -13,16 +13,16 @@
  * limitations under the License.
 */
 
+using System;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
-using System;
 
 namespace QuantConnect.Optimizer.Objectives
 {
     /// <summary>
     /// The optimization statistical target
     /// </summary>
-    public class Target: Objective
+    public class Target : Objective
     {
         /// <summary>
         /// Defines the direction of optimization, i.e. maximization or minimization
@@ -43,7 +43,8 @@ namespace QuantConnect.Optimizer.Objectives
         /// <summary>
         /// Creates a new instance
         /// </summary>
-        public Target(string target, Extremum extremum, decimal? targetValue): base(target, targetValue)
+        public Target(string target, Extremum extremum, decimal? targetValue)
+            : base(target, targetValue)
         {
             Extremum = extremum;
         }
@@ -51,10 +52,7 @@ namespace QuantConnect.Optimizer.Objectives
         /// <summary>
         /// Creates a new instance
         /// </summary>
-        public Target()
-        {
-
-        }
+        public Target() { }
 
         /// <summary>
         /// Pretty representation of this optimization target
@@ -73,7 +71,10 @@ namespace QuantConnect.Optimizer.Objectives
         {
             if (string.IsNullOrEmpty(jsonBacktestResult))
             {
-                throw new ArgumentNullException(nameof(jsonBacktestResult), $"Target.MoveAhead(): {Messages.OptimizerObjectivesCommon.NullOrEmptyBacktestResult}");
+                throw new ArgumentNullException(
+                    nameof(jsonBacktestResult),
+                    $"Target.MoveAhead(): {Messages.OptimizerObjectivesCommon.NullOrEmptyBacktestResult}"
+                );
             }
 
             var token = JObject.Parse(jsonBacktestResult).SelectToken(Target);
@@ -103,6 +104,12 @@ namespace QuantConnect.Optimizer.Objectives
             }
         }
 
-        private bool IsComplied() => TargetValue.HasValue && Current.HasValue && (TargetValue.Value == Current.Value || Extremum.Better(TargetValue.Value, Current.Value));
+        private bool IsComplied() =>
+            TargetValue.HasValue
+            && Current.HasValue
+            && (
+                TargetValue.Value == Current.Value
+                || Extremum.Better(TargetValue.Value, Current.Value)
+            );
     }
 }

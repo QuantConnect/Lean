@@ -62,7 +62,6 @@ namespace QuantConnect.Algorithm.CSharp
             // (1 call each minute is the free account limit for historical_data endpoint)
             IntrinioConfig.SetTimeIntervalBetweenCalls(TimeSpan.FromMinutes(1));
 
-
             // Find more symbols here: http://quantconnect.com/data
             // Forex, CFD, Equities Resolutions: Tick, Second, Minute, Hour, Daily.
             // Futures Resolution: Tick, Second, Minute
@@ -70,11 +69,20 @@ namespace QuantConnect.Algorithm.CSharp
             _uso = AddEquity("USO", Resolution.Daily, leverage: 2m).Symbol;
             _bno = AddEquity("BNO", Resolution.Daily, leverage: 2m).Symbol;
 
-            AddData<IntrinioEconomicData>(IntrinioEconomicDataSources.Commodities.CrudeOilWTI, Resolution.Daily);
-            AddData<IntrinioEconomicData>(IntrinioEconomicDataSources.Commodities.CrudeOilBrent, Resolution.Daily);
+            AddData<IntrinioEconomicData>(
+                IntrinioEconomicDataSources.Commodities.CrudeOilWTI,
+                Resolution.Daily
+            );
+            AddData<IntrinioEconomicData>(
+                IntrinioEconomicDataSources.Commodities.CrudeOilBrent,
+                Resolution.Daily
+            );
             _spread = _brent.Minus(_wti);
 
-            _emaWti = EMA(Securities[IntrinioEconomicDataSources.Commodities.CrudeOilWTI].Symbol, 10);
+            _emaWti = EMA(
+                Securities[IntrinioEconomicDataSources.Commodities.CrudeOilWTI].Symbol,
+                10
+            );
         }
 
         /// <summary>
@@ -84,11 +92,14 @@ namespace QuantConnect.Algorithm.CSharp
         public override void OnData(Slice slice)
         {
             var customData = slice.Get<IntrinioEconomicData>();
-            if (customData.Count == 0) return;
+            if (customData.Count == 0)
+                return;
 
             foreach (var economicData in customData.Values)
             {
-                if (economicData.Symbol.Value == IntrinioEconomicDataSources.Commodities.CrudeOilWTI)
+                if (
+                    economicData.Symbol.Value == IntrinioEconomicDataSources.Commodities.CrudeOilWTI
+                )
                 {
                     _wti.Update(economicData.Time, economicData.Price);
                 }
@@ -98,14 +109,16 @@ namespace QuantConnect.Algorithm.CSharp
                 }
             }
 
-            if (_spread > 0 && !Portfolio[_bno].IsLong ||
-                _spread < 0 && !Portfolio[_uso].IsShort)
+            if (_spread > 0 && !Portfolio[_bno].IsLong || _spread < 0 && !Portfolio[_uso].IsShort)
             {
-                var logText = _spread > 0 ?
-                    new[] {"higher", "long", "short"} :
-                    new[] {"lower", "short", "long"};
+                var logText =
+                    _spread > 0
+                        ? new[] { "higher", "long", "short" }
+                        : new[] { "lower", "short", "long" };
 
-                Log($"Brent Price is {logText[0]} than West Texas. Go {logText[1]} BNO and {logText[2]} USO. West Texas EMA: {_emaWti}");
+                Log(
+                    $"Brent Price is {logText[0]} than West Texas. Go {logText[1]} BNO and {logText[2]} USO. West Texas EMA: {_emaWti}"
+                );
                 SetHoldings(_bno, 0.25 * Math.Sign(_spread));
                 SetHoldings(_uso, -0.25 * Math.Sign(_spread));
             }
@@ -114,27 +127,28 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// This is used by the regression test system to indicate what the expected statistics are from running the algorithm
         /// </summary>
-        public Dictionary<string, string> ExpectedStatistics => new Dictionary<string, string>
-        {
-            {"Total Orders", "91"},
-            {"Average Win", "0.09%"},
-            {"Average Loss", "-0.01%"},
-            {"Compounding Annual Return", "5.732%"},
-            {"Drawdown", "4.800%"},
-            {"Expectancy", "1.846"},
-            {"Net Profit", "24.996%"},
-            {"Sharpe Ratio", "1.142"},
-            {"Loss Rate", "68%"},
-            {"Win Rate", "32%"},
-            {"Profit-Loss Ratio", "7.97"},
-            {"Alpha", "0.076"},
-            {"Beta", "-1.101"},
-            {"Annual Standard Deviation", "0.048"},
-            {"Annual Variance", "0.002"},
-            {"Information Ratio", "0.741"},
-            {"Tracking Error", "0.048"},
-            {"Treynor Ratio", "-0.05"},
-            {"Total Fees", "$102.64"}
-        };
+        public Dictionary<string, string> ExpectedStatistics =>
+            new Dictionary<string, string>
+            {
+                { "Total Orders", "91" },
+                { "Average Win", "0.09%" },
+                { "Average Loss", "-0.01%" },
+                { "Compounding Annual Return", "5.732%" },
+                { "Drawdown", "4.800%" },
+                { "Expectancy", "1.846" },
+                { "Net Profit", "24.996%" },
+                { "Sharpe Ratio", "1.142" },
+                { "Loss Rate", "68%" },
+                { "Win Rate", "32%" },
+                { "Profit-Loss Ratio", "7.97" },
+                { "Alpha", "0.076" },
+                { "Beta", "-1.101" },
+                { "Annual Standard Deviation", "0.048" },
+                { "Annual Variance", "0.002" },
+                { "Information Ratio", "0.741" },
+                { "Tracking Error", "0.048" },
+                { "Treynor Ratio", "-0.05" },
+                { "Total Fees", "$102.64" }
+            };
     }
 }

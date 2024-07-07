@@ -45,9 +45,17 @@ namespace QuantConnect.Securities
         /// <returns>A new <see cref="CashAmount"/> instance denominated in the account currency</returns>
         public CashAmount ConvertToAccountCurrency(CashAmount cashAmount)
         {
-            if (!string.Equals(cashAmount.Currency, AccountCurrency, StringComparison.InvariantCultureIgnoreCase))
+            if (
+                !string.Equals(
+                    cashAmount.Currency,
+                    AccountCurrency,
+                    StringComparison.InvariantCultureIgnoreCase
+                )
+            )
             {
-                throw new ArgumentException(Messages.IdentityCurrencyConverter.UnableToHandleCashInNonAccountCurrency);
+                throw new ArgumentException(
+                    Messages.IdentityCurrencyConverter.UnableToHandleCashInNonAccountCurrency
+                );
             }
 
             return cashAmount;

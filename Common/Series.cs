@@ -44,16 +44,15 @@ namespace QuantConnect
         /// <summary>
         /// Default constructor for chart series
         /// </summary>
-        public Series() : base() { }
+        public Series()
+            : base() { }
 
         /// <summary>
         /// Constructor method for Chart Series
         /// </summary>
         /// <param name="name">Name of the chart series</param>
         public Series(string name)
-            : base(name, SeriesType.Line)
-        {
-        }
+            : base(name, SeriesType.Line) { }
 
         /// <summary>
         /// Foundational constructor on the series class
@@ -62,9 +61,7 @@ namespace QuantConnect
         /// <param name="type">Type of the series</param>
         /// <param name="index">Index position on the chart of the series</param>
         public Series(string name, SeriesType type, int index)
-            : this(name, type, index, "$")
-        {
-        }
+            : this(name, type, index, "$") { }
 
         /// <summary>
         /// Foundational constructor on the series class
@@ -86,9 +83,7 @@ namespace QuantConnect
         /// <param name="type">Type of the chart series</param>
         /// <param name="unit">Unit of the series</param>
         public Series(string name, SeriesType type = SeriesType.Line, string unit = "$")
-            : this(name, type, unit, Color.Empty)
-        {
-        }
+            : this(name, type, unit, Color.Empty) { }
 
         /// <summary>
         /// Constructor method for Chart Series
@@ -98,9 +93,7 @@ namespace QuantConnect
         /// <param name="unit">Unit of the series</param>
         /// <param name="color">Color of the series</param>
         public Series(string name, SeriesType type, string unit, Color color)
-            : this(name, type, unit, color, ScatterMarkerSymbol.None)
-        {
-        }
+            : this(name, type, unit, color, ScatterMarkerSymbol.None) { }
 
         /// <summary>
         /// Constructor method for Chart Series
@@ -110,7 +103,13 @@ namespace QuantConnect
         /// <param name="unit">Unit of the series</param>
         /// <param name="color">Color of the series</param>
         /// <param name="symbol">Symbol for the marker in a scatter plot series</param>
-        public Series(string name, SeriesType type, string unit, Color color, ScatterMarkerSymbol symbol = ScatterMarkerSymbol.None)
+        public Series(
+            string name,
+            SeriesType type,
+            string unit,
+            Color color,
+            ScatterMarkerSymbol symbol = ScatterMarkerSymbol.None
+        )
             : base(name, type, 0, unit)
         {
             Color = color;
@@ -171,12 +170,13 @@ namespace QuantConnect
         /// <returns>The new chart point</returns>
         public override ISeriesPoint ConsolidateChartPoints()
         {
-            if (Values.Count <= 0) return null;
+            if (Values.Count <= 0)
+                return null;
 
             var sum = 0m;
             foreach (ChartPoint point in Values)
             {
-                if(point.y.HasValue)
+                if (point.y.HasValue)
                 {
                     sum += point.y.Value;
                 }
@@ -219,18 +219,23 @@ namespace QuantConnect
         /// Circle symbol (0)
         [EnumMember(Value = "none")]
         None,
+
         /// Circle symbol (1)
         [EnumMember(Value = "circle")]
         Circle,
+
         /// Square symbol (2)
         [EnumMember(Value = "square")]
         Square,
+
         /// Diamond symbol (3)
         [EnumMember(Value = "diamond")]
         Diamond,
+
         /// Triangle symbol (4)
         [EnumMember(Value = "triangle")]
         Triangle,
+
         /// Triangle-down symbol (5)
         [EnumMember(Value = "triangle-down")]
         TriangleDown

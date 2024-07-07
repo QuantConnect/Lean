@@ -28,7 +28,9 @@ namespace QuantConnect.Algorithm.CSharp
     /// <summary>
     /// Provides an example algorithm showcasing the <see cref="Security.Data"/> features
     /// </summary>
-    public class DynamicSecurityDataRegressionAlgorithm : QCAlgorithm, IRegressionAlgorithmDefinition
+    public class DynamicSecurityDataRegressionAlgorithm
+        : QCAlgorithm,
+            IRegressionAlgorithmDefinition
     {
         private Security Equity;
         private const string Ticker = "GOOGL";
@@ -43,23 +45,27 @@ namespace QuantConnect.Algorithm.CSharp
 
             // Adding linked data manually to cache for example purposes, since
             // LinkedData is a type used for testing and doesn't point to any real data.
-            Equity.Cache.AddDataList(new List<LinkedData>
-            {
-                new LinkedData
+            Equity.Cache.AddDataList(
+                new List<LinkedData>
                 {
-                    Count = 100,
+                    new LinkedData
+                    {
+                        Count = 100,
 
-                    Symbol = customLinkedEquity,
-                    EndTime = StartDate,
+                        Symbol = customLinkedEquity,
+                        EndTime = StartDate,
+                    },
+                    new LinkedData
+                    {
+                        Count = 50,
+
+                        Symbol = customLinkedEquity,
+                        EndTime = StartDate
+                    }
                 },
-                new LinkedData
-                {
-                    Count = 50,
-                    
-                    Symbol = customLinkedEquity,
-                    EndTime = StartDate
-                }
-            }, typeof(LinkedData), false);
+                typeof(LinkedData),
+                false
+            );
         }
 
         public override void OnData(Slice slice)
@@ -84,7 +90,7 @@ namespace QuantConnect.Algorithm.CSharp
                 Buy(Equity.Symbol, 10);
             }
         }
-        
+
         /// <summary>
         /// This is used by the regression test system to indicate if the open source Lean repository has the required data to run this algorithm.
         /// </summary>
@@ -113,35 +119,36 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// This is used by the regression test system to indicate what the expected statistics are from running the algorithm
         /// </summary>
-        public Dictionary<string, string> ExpectedStatistics => new Dictionary<string, string>
-        {
-            {"Total Orders", "1"},
-            {"Average Win", "0%"},
-            {"Average Loss", "0%"},
-            {"Compounding Annual Return", "28.411%"},
-            {"Drawdown", "0.100%"},
-            {"Expectancy", "0"},
-            {"Start Equity", "100000"},
-            {"End Equity", "100618.5"},
-            {"Net Profit", "0.618%"},
-            {"Sharpe Ratio", "8.473"},
-            {"Sortino Ratio", "0"},
-            {"Probabilistic Sharpe Ratio", "99.065%"},
-            {"Loss Rate", "0%"},
-            {"Win Rate", "0%"},
-            {"Profit-Loss Ratio", "0"},
-            {"Alpha", "0.114"},
-            {"Beta", "0.143"},
-            {"Annual Standard Deviation", "0.022"},
-            {"Annual Variance", "0"},
-            {"Information Ratio", "-3.746"},
-            {"Tracking Error", "0.084"},
-            {"Treynor Ratio", "1.296"},
-            {"Total Fees", "$1.00"},
-            {"Estimated Strategy Capacity", "$1000000000.00"},
-            {"Lowest Capacity Asset", "GOOG T1AZ164W5VTX"},
-            {"Portfolio Turnover", "0.75%"},
-            {"OrderListHash", "37cbc41970d27793ec2d1c401529cf05"}
-        };
+        public Dictionary<string, string> ExpectedStatistics =>
+            new Dictionary<string, string>
+            {
+                { "Total Orders", "1" },
+                { "Average Win", "0%" },
+                { "Average Loss", "0%" },
+                { "Compounding Annual Return", "28.411%" },
+                { "Drawdown", "0.100%" },
+                { "Expectancy", "0" },
+                { "Start Equity", "100000" },
+                { "End Equity", "100618.5" },
+                { "Net Profit", "0.618%" },
+                { "Sharpe Ratio", "8.473" },
+                { "Sortino Ratio", "0" },
+                { "Probabilistic Sharpe Ratio", "99.065%" },
+                { "Loss Rate", "0%" },
+                { "Win Rate", "0%" },
+                { "Profit-Loss Ratio", "0" },
+                { "Alpha", "0.114" },
+                { "Beta", "0.143" },
+                { "Annual Standard Deviation", "0.022" },
+                { "Annual Variance", "0" },
+                { "Information Ratio", "-3.746" },
+                { "Tracking Error", "0.084" },
+                { "Treynor Ratio", "1.296" },
+                { "Total Fees", "$1.00" },
+                { "Estimated Strategy Capacity", "$1000000000.00" },
+                { "Lowest Capacity Asset", "GOOG T1AZ164W5VTX" },
+                { "Portfolio Turnover", "0.75%" },
+                { "OrderListHash", "37cbc41970d27793ec2d1c401529cf05" }
+            };
     }
 }

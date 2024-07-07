@@ -40,9 +40,9 @@ namespace QuantConnect.Securities
 
         private sealed class NullMarginInterestRateModel : IMarginInterestRateModel
         {
-            public void ApplyMarginInterestRate(MarginInterestRateParameters marginInterestRateParameters)
-            {
-            }
+            public void ApplyMarginInterestRate(
+                MarginInterestRateParameters marginInterestRateParameters
+            ) { }
         }
     }
 }

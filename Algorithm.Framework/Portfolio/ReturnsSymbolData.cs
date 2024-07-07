@@ -32,7 +32,10 @@ namespace QuantConnect.Algorithm.Framework.Portfolio
         /// <summary>
         /// The symbol's asset rate of change indicator
         /// </summary>
-        public RateOfChange ROC { get {  return _roc; } }
+        public RateOfChange ROC
+        {
+            get { return _roc; }
+        }
 
         /// <summary>
         /// Initializes a new instance of the <see cref="ReturnsSymbolData"/> class
@@ -51,7 +54,8 @@ namespace QuantConnect.Algorithm.Framework.Portfolio
         /// <summary>
         /// Historical returns
         /// </summary>
-        public Dictionary<DateTime, double> Returns => _window.ToDictionary(x => x.EndTime, x => (double) x.Value);
+        public Dictionary<DateTime, double> Returns =>
+            _window.ToDictionary(x => x.EndTime, x => (double)x.Value);
 
         /// <summary>
         /// Adds an item to this window and shifts all other elements
@@ -121,9 +125,16 @@ namespace QuantConnect.Algorithm.Framework.Portfolio
         /// </summary>
         /// <param name="symbolData">Dictionary of <see cref="ReturnsSymbolData"/> keyed by <see cref="Symbol"/> to be converted into a matrix</param>
         /// <param name="symbols">List of <see cref="Symbol"/> to be included in the matrix</param>
-        public static double[,] FormReturnsMatrix(this Dictionary<Symbol, ReturnsSymbolData> symbolData, IEnumerable<Symbol> symbols)
+        public static double[,] FormReturnsMatrix(
+            this Dictionary<Symbol, ReturnsSymbolData> symbolData,
+            IEnumerable<Symbol> symbols
+        )
         {
-            var returnsByDate = (from s in symbols join sd in symbolData on s equals sd.Key select sd.Value.Returns).ToList();
+            var returnsByDate = (
+                from s in symbols
+                join sd in symbolData on s equals sd.Key
+                select sd.Value.Returns
+            ).ToList();
 
             // Consolidate by date
             var alldates = returnsByDate.SelectMany(r => r.Keys).Distinct().ToList();
@@ -133,21 +144,30 @@ namespace QuantConnect.Algorithm.Framework.Portfolio
             // Perfect match between the dates in the ReturnsSymbolData objects
             if (max == alldates.Count)
             {
-                return Accord.Math.Matrix.Create(alldates
-                    // if a return date isn't found for a symbol we use 'double.NaN'
-                    .Select(d => returnsByDate.Select(s => s.GetValueOrDefault(d, double.NaN)).ToArray())
-                    .Where(r => !r.Select(Math.Abs).Sum().IsNaNOrZero()) // remove empty rows
-                    .ToArray());
+                return Accord.Math.Matrix.Create(
+                    alldates
+                        // if a return date isn't found for a symbol we use 'double.NaN'
+                        .Select(d =>
+                            returnsByDate.Select(s => s.GetValueOrDefault(d, double.NaN)).ToArray()
+                        )
+                        .Where(r => !r.Select(Math.Abs).Sum().IsNaNOrZero()) // remove empty rows
+                        .ToArray()
+                );
             }
 
             // If it is not a match, we assume that each index correspond to the same point in time
             var returnsByIndex = returnsByDate.Select((doubles, i) => doubles.Values.ToArray());
 
-            return Accord.Math.Matrix.Create(Enumerable.Range(0, max)
-                // there is no guarantee that all symbols have the same amount of returns so we need to check range and use 'double.NaN' if required as above
-                .Select(d => returnsByIndex.Select(s => s.Length < (d + 1) ? double.NaN : s[d]).ToArray())
-                .Where(r => !r.Select(Math.Abs).Sum().IsNaNOrZero()) // remove empty rows
-                .ToArray());
+            return Accord.Math.Matrix.Create(
+                Enumerable
+                    .Range(0, max)
+                    // there is no guarantee that all symbols have the same amount of returns so we need to check range and use 'double.NaN' if required as above
+                    .Select(d =>
+                        returnsByIndex.Select(s => s.Length < (d + 1) ? double.NaN : s[d]).ToArray()
+                    )
+                    .Where(r => !r.Select(Math.Abs).Sum().IsNaNOrZero()) // remove empty rows
+                    .ToArray()
+            );
         }
     }
 }

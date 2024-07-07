@@ -36,33 +36,37 @@ namespace QuantConnect.Tests.Indicators
 
         protected override Action<IndicatorBase<IBaseDataBar>, double> Assertion =>
             (indicator, expected) =>
-                Assert.AreEqual(expected, (double) indicator.Current.Value, 1e-2);
+                Assert.AreEqual(expected, (double)indicator.Current.Value, 1e-2);
 
         [Test]
         public override void ResetsProperly()
         {
             var cci = new CommodityChannelIndex(2);
-            cci.Update(new TradeBar
-            {
-                Symbol = Symbols.SPY,
-                Time = DateTime.Today,
-                Open = 3m,
-                High = 7m,
-                Low = 2m,
-                Close = 5m,
-                Volume = 10
-            });
+            cci.Update(
+                new TradeBar
+                {
+                    Symbol = Symbols.SPY,
+                    Time = DateTime.Today,
+                    Open = 3m,
+                    High = 7m,
+                    Low = 2m,
+                    Close = 5m,
+                    Volume = 10
+                }
+            );
             Assert.IsFalse(cci.IsReady);
-            cci.Update(new TradeBar
-            {
-                Symbol = Symbols.SPY,
-                Time = DateTime.Today.AddSeconds(1),
-                Open = 3m,
-                High = 7m,
-                Low = 2m,
-                Close = 5m,
-                Volume = 10
-            });
+            cci.Update(
+                new TradeBar
+                {
+                    Symbol = Symbols.SPY,
+                    Time = DateTime.Today.AddSeconds(1),
+                    Open = 3m,
+                    High = 7m,
+                    Low = 2m,
+                    Close = 5m,
+                    Volume = 10
+                }
+            );
             Assert.IsTrue(cci.IsReady);
 
             cci.Reset();

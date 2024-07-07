@@ -13,13 +13,18 @@
  * limitations under the License.
 */
 
+using System;
+using System.Collections.Concurrent;
+using System.Collections.Generic;
 using NodaTime;
 using Python.Runtime;
 using QuantConnect.Algorithm;
 using QuantConnect.Algorithm.Framework.Alphas;
+using QuantConnect.Algorithm.Framework.Alphas.Analysis;
 using QuantConnect.Benchmarks;
 using QuantConnect.Brokerages;
 using QuantConnect.Data;
+using QuantConnect.Data.Market;
 using QuantConnect.Data.UniverseSelection;
 using QuantConnect.Exceptions;
 using QuantConnect.Interfaces;
@@ -30,13 +35,8 @@ using QuantConnect.Scheduling;
 using QuantConnect.Securities;
 using QuantConnect.Securities.Future;
 using QuantConnect.Securities.Option;
-using System;
-using System.Collections.Concurrent;
-using System.Collections.Generic;
-using QuantConnect.Storage;
 using QuantConnect.Statistics;
-using QuantConnect.Data.Market;
-using QuantConnect.Algorithm.Framework.Alphas.Analysis;
+using QuantConnect.Storage;
 
 namespace QuantConnect.AlgorithmFactory.Python.Wrappers
 {
@@ -88,11 +88,15 @@ namespace QuantConnect.AlgorithmFactory.Python.Wrappers
             {
                 using (Py.GIL())
                 {
-                    Logging.Log.Trace($"AlgorithmPythonWrapper(): Python version {PythonEngine.Version}: Importing python module {moduleName}");
+                    Logging.Log.Trace(
+                        $"AlgorithmPythonWrapper(): Python version {PythonEngine.Version}: Importing python module {moduleName}"
+                    );
 
                     var module = Py.Import(moduleName);
 
-                    Logging.Log.Trace($"AlgorithmPythonWrapper(): {moduleName} successfully imported.");
+                    Logging.Log.Trace(
+                        $"AlgorithmPythonWrapper(): {moduleName} successfully imported."
+                    );
 
                     var pyList = module.Dir();
                     foreach (var name in pyList)
@@ -101,11 +105,17 @@ namespace QuantConnect.AlgorithmFactory.Python.Wrappers
                         var attr = module.GetAttr(name.ToString());
                         var repr = attr.Repr().GetStringBetweenChars('\'', '\'');
 
-                        if (repr.StartsWith(moduleName) &&                // Must be defined in the module
-                            attr.TryConvert(out type, true) &&                  // Must be a Type
-                            typeof(QCAlgorithm).IsAssignableFrom(type))   // Must inherit from QCAlgorithm
+                        if (
+                            repr.StartsWith(moduleName)
+                            && // Must be defined in the module
+                            attr.TryConvert(out type, true)
+                            && // Must be a Type
+                            typeof(QCAlgorithm).IsAssignableFrom(type)
+                        ) // Must inherit from QCAlgorithm
                         {
-                            Logging.Log.Trace("AlgorithmPythonWrapper(): Creating IAlgorithm instance.");
+                            Logging.Log.Trace(
+                                "AlgorithmPythonWrapper(): Creating IAlgorithm instance."
+                            );
 
                             _algorithm = attr.Invoke();
                             SetPythonInstance(_algorithm);
@@ -155,9 +165,13 @@ namespace QuantConnect.AlgorithmFactory.Python.Wrappers
                             _onEndOfDay = _algorithm.GetMethod("OnEndOfDay");
                             _onMarginCallWarning = _algorithm.GetMethod("OnMarginCallWarning");
                             _onOrderEvent = _algorithm.GetMethod("OnOrderEvent");
-                            _onAssignmentOrderEvent = _algorithm.GetMethod("OnAssignmentOrderEvent");
+                            _onAssignmentOrderEvent = _algorithm.GetMethod(
+                                "OnAssignmentOrderEvent"
+                            );
                             _onSecuritiesChanged = _algorithm.GetMethod("OnSecuritiesChanged");
-                            _onFrameworkSecuritiesChanged = _algorithm.GetMethod("OnFrameworkSecuritiesChanged");
+                            _onFrameworkSecuritiesChanged = _algorithm.GetMethod(
+                                "OnFrameworkSecuritiesChanged"
+                            );
                         }
                         attr.Dispose();
                     }
@@ -166,17 +180,23 @@ namespace QuantConnect.AlgorithmFactory.Python.Wrappers
                     // If _algorithm could not be set, throw exception
                     if (_algorithm == null)
                     {
-                        throw new Exception("Please ensure that one class inherits from QCAlgorithm.");
+                        throw new Exception(
+                            "Please ensure that one class inherits from QCAlgorithm."
+                        );
                     }
                 }
             }
             catch (Exception e)
             {
                 // perform exception interpretation for error in module import
-                var interpreter = StackExceptionInterpreter.CreateFromAssemblies(AppDomain.CurrentDomain.GetAssemblies());
+                var interpreter = StackExceptionInterpreter.CreateFromAssemblies(
+                    AppDomain.CurrentDomain.GetAssemblies()
+                );
                 e = interpreter.Interpret(e, interpreter);
 
-                throw new Exception($"AlgorithmPythonWrapper(): {interpreter.GetExceptionMessageHeader(e)}");
+                throw new Exception(
+                    $"AlgorithmPythonWrapper(): {interpreter.GetExceptionMessageHeader(e)}"
+                );
             }
         }
 
@@ -197,15 +217,8 @@ namespace QuantConnect.AlgorithmFactory.Python.Wrappers
         /// </summary>
         public IBrokerageMessageHandler BrokerageMessageHandler
         {
-            get
-            {
-                return _baseAlgorithm.BrokerageMessageHandler;
-            }
-
-            set
-            {
-                SetBrokerageMessageHandler(value);
-            }
+            get { return _baseAlgorithm.BrokerageMessageHandler; }
+            set { SetBrokerageMessageHandler(value); }
         }
 
         /// <summary>
@@ -221,7 +234,8 @@ namespace QuantConnect.AlgorithmFactory.Python.Wrappers
         /// <summary>
         /// Gets the risk free interest rate model used to get the interest rates
         /// </summary>
-        public IRiskFreeInterestRateModel RiskFreeInterestRateModel => _baseAlgorithm.RiskFreeInterestRateModel;
+        public IRiskFreeInterestRateModel RiskFreeInterestRateModel =>
+            _baseAlgorithm.RiskFreeInterestRateModel;
 
         /// <summary>
         /// Debug messages from the strategy:
@@ -243,15 +257,8 @@ namespace QuantConnect.AlgorithmFactory.Python.Wrappers
         /// </summary>
         public IHistoryProvider HistoryProvider
         {
-            get
-            {
-                return _baseAlgorithm.HistoryProvider;
-            }
-
-            set
-            {
-                SetHistoryProvider(value);
-            }
+            get { return _baseAlgorithm.HistoryProvider; }
+            set { SetHistoryProvider(value); }
         }
 
         /// <summary>
@@ -285,14 +292,8 @@ namespace QuantConnect.AlgorithmFactory.Python.Wrappers
         /// <remarks>Not currently used but preserved for API integrity</remarks>
         public string Name
         {
-            get
-            {
-                return _baseAlgorithm.Name;
-            }
-            set
-            {
-                _baseAlgorithm.Name = value;
-            }
+            get { return _baseAlgorithm.Name; }
+            set { _baseAlgorithm.Name = value; }
         }
 
         /// <summary>
@@ -300,14 +301,8 @@ namespace QuantConnect.AlgorithmFactory.Python.Wrappers
         /// </summary>
         public HashSet<string> Tags
         {
-            get
-            {
-                return _baseAlgorithm.Tags;
-            }
-            set
-            {
-                _baseAlgorithm.Tags = value;
-            }
+            get { return _baseAlgorithm.Tags; }
+            set { _baseAlgorithm.Tags = value; }
         }
 
         /// <summary>
@@ -315,15 +310,8 @@ namespace QuantConnect.AlgorithmFactory.Python.Wrappers
         /// </summary>
         public event AlgorithmEvent<string> NameUpdated
         {
-            add
-            {
-                _baseAlgorithm.NameUpdated += value;
-            }
-
-            remove
-            {
-                _baseAlgorithm.NameUpdated -= value;
-            }
+            add { _baseAlgorithm.NameUpdated += value; }
+            remove { _baseAlgorithm.NameUpdated -= value; }
         }
 
         /// <summary>
@@ -331,15 +319,8 @@ namespace QuantConnect.AlgorithmFactory.Python.Wrappers
         /// </summary>
         public event AlgorithmEvent<HashSet<string>> TagsUpdated
         {
-            add
-            {
-                _baseAlgorithm.TagsUpdated += value;
-            }
-
-            remove
-            {
-                _baseAlgorithm.TagsUpdated -= value;
-            }
+            add { _baseAlgorithm.TagsUpdated += value; }
+            remove { _baseAlgorithm.TagsUpdated -= value; }
         }
 
         /// <summary>
@@ -359,21 +340,15 @@ namespace QuantConnect.AlgorithmFactory.Python.Wrappers
         /// </summary>
         public Exception RunTimeError
         {
-            get
-            {
-                return _baseAlgorithm.RunTimeError;
-            }
-
-            set
-            {
-                SetRunTimeError(value);
-            }
+            get { return _baseAlgorithm.RunTimeError; }
+            set { SetRunTimeError(value); }
         }
 
         /// <summary>
         /// Customizable dynamic statistics displayed during live trading:
         /// </summary>
-        public ConcurrentDictionary<string, string> RuntimeStatistics => _baseAlgorithm.RuntimeStatistics;
+        public ConcurrentDictionary<string, string> RuntimeStatistics =>
+            _baseAlgorithm.RuntimeStatistics;
 
         /// <summary>
         /// Gets schedule manager for adding/removing scheduled events
@@ -432,15 +407,8 @@ namespace QuantConnect.AlgorithmFactory.Python.Wrappers
         /// </summary>
         public AlgorithmStatus Status
         {
-            get
-            {
-                return _baseAlgorithm.Status;
-            }
-
-            set
-            {
-                SetStatus(value);
-            }
+            get { return _baseAlgorithm.Status; }
+            set { SetStatus(value); }
         }
 
         /// <summary>
@@ -453,34 +421,31 @@ namespace QuantConnect.AlgorithmFactory.Python.Wrappers
         /// Set the available <see cref="TickType"/> supported by each <see cref="SecurityType"/> in <see cref="SecurityManager"/>
         /// </summary>
         /// <param name="availableDataTypes">>The different <see cref="TickType"/> each <see cref="Security"/> supports</param>
-        public void SetAvailableDataTypes(Dictionary<SecurityType, List<TickType>> availableDataTypes) => _baseAlgorithm.SetAvailableDataTypes(availableDataTypes);
+        public void SetAvailableDataTypes(
+            Dictionary<SecurityType, List<TickType>> availableDataTypes
+        ) => _baseAlgorithm.SetAvailableDataTypes(availableDataTypes);
 
         /// <summary>
         /// Sets the option chain provider, used to get the list of option contracts for an underlying symbol
         /// </summary>
         /// <param name="optionChainProvider">The option chain provider</param>
-        public void SetOptionChainProvider(IOptionChainProvider optionChainProvider) => _baseAlgorithm.SetOptionChainProvider(optionChainProvider);
+        public void SetOptionChainProvider(IOptionChainProvider optionChainProvider) =>
+            _baseAlgorithm.SetOptionChainProvider(optionChainProvider);
 
         /// <summary>
         /// Sets the future chain provider, used to get the list of future contracts for an underlying symbol
         /// </summary>
         /// <param name="futureChainProvider">The future chain provider</param>
-        public void SetFutureChainProvider(IFutureChainProvider futureChainProvider) => _baseAlgorithm.SetFutureChainProvider(futureChainProvider);
+        public void SetFutureChainProvider(IFutureChainProvider futureChainProvider) =>
+            _baseAlgorithm.SetFutureChainProvider(futureChainProvider);
 
         /// <summary>
         /// Event fired when an algorithm generates a insight
         /// </summary>
         public event AlgorithmEvent<GeneratedInsightsCollection> InsightsGenerated
         {
-            add
-            {
-                _baseAlgorithm.InsightsGenerated += value;
-            }
-
-            remove
-            {
-                _baseAlgorithm.InsightsGenerated -= value;
-            }
+            add { _baseAlgorithm.InsightsGenerated += value; }
+            remove { _baseAlgorithm.InsightsGenerated -= value; }
         }
 
         /// <summary>
@@ -499,14 +464,8 @@ namespace QuantConnect.AlgorithmFactory.Python.Wrappers
         /// </summary>
         public int ProjectId
         {
-            set
-            {
-                _baseAlgorithm.ProjectId = value;
-            }
-            get
-            {
-                return _baseAlgorithm.ProjectId;
-            }
+            set { _baseAlgorithm.ProjectId = value; }
+            get { return _baseAlgorithm.ProjectId; }
         }
 
         /// <summary>
@@ -554,7 +513,8 @@ namespace QuantConnect.AlgorithmFactory.Python.Wrappers
         /// Sets the statistics service instance to be used by the algorithm
         /// </summary>
         /// <param name="statisticsService">The statistics service instance</param>
-        public void SetStatisticsService(IStatisticsService statisticsService) => _baseAlgorithm.SetStatisticsService(statisticsService);
+        public void SetStatisticsService(IStatisticsService statisticsService) =>
+            _baseAlgorithm.SetStatisticsService(statisticsService);
 
         /// <summary>
         /// The current statistics for the running algorithm.
@@ -573,10 +533,28 @@ namespace QuantConnect.AlgorithmFactory.Python.Wrappers
         /// <param name="extendedMarketHours">Use extended market hours data</param>
         /// <param name="dataMappingMode">The contract mapping mode to use for the security</param>
         /// <param name="dataNormalizationMode">The price scaling mode to use for the security</param>
-        public Security AddSecurity(SecurityType securityType, string symbol, Resolution? resolution, string market, bool fillForward, decimal leverage, bool extendedMarketHours,
-            DataMappingMode? dataMappingMode = null, DataNormalizationMode? dataNormalizationMode = null)
-            => _baseAlgorithm.AddSecurity(securityType, symbol, resolution, market, fillForward, leverage, extendedMarketHours, dataMappingMode, dataNormalizationMode);
-
+        public Security AddSecurity(
+            SecurityType securityType,
+            string symbol,
+            Resolution? resolution,
+            string market,
+            bool fillForward,
+            decimal leverage,
+            bool extendedMarketHours,
+            DataMappingMode? dataMappingMode = null,
+            DataNormalizationMode? dataNormalizationMode = null
+        ) =>
+            _baseAlgorithm.AddSecurity(
+                securityType,
+                symbol,
+                resolution,
+                market,
+                fillForward,
+                leverage,
+                extendedMarketHours,
+                dataMappingMode,
+                dataNormalizationMode
+            );
 
         /// <summary>
         /// Set a required SecurityType-symbol and resolution for algorithm
@@ -591,9 +569,26 @@ namespace QuantConnect.AlgorithmFactory.Python.Wrappers
         /// <param name="contractDepthOffset">The continuous contract desired offset from the current front month.
         /// For example, 0 (default) will use the front month, 1 will use the back month contract</param>
         /// <returns>The new Security that was added to the algorithm</returns>
-        public Security AddSecurity(Symbol symbol, Resolution? resolution = null, bool fillForward = true, decimal leverage = Security.NullLeverage, bool extendedMarketHours = false,
-            DataMappingMode? dataMappingMode = null, DataNormalizationMode? dataNormalizationMode = null, int contractDepthOffset = 0)
-            => _baseAlgorithm.AddSecurity(symbol, resolution, fillForward, leverage, extendedMarketHours, dataMappingMode, dataNormalizationMode, contractDepthOffset);
+        public Security AddSecurity(
+            Symbol symbol,
+            Resolution? resolution = null,
+            bool fillForward = true,
+            decimal leverage = Security.NullLeverage,
+            bool extendedMarketHours = false,
+            DataMappingMode? dataMappingMode = null,
+            DataNormalizationMode? dataNormalizationMode = null,
+            int contractDepthOffset = 0
+        ) =>
+            _baseAlgorithm.AddSecurity(
+                symbol,
+                resolution,
+                fillForward,
+                leverage,
+                extendedMarketHours,
+                dataMappingMode,
+                dataNormalizationMode,
+                contractDepthOffset
+            );
 
         /// <summary>
         /// Creates and adds a new single <see cref="Future"/> contract to the algorithm
@@ -604,9 +599,20 @@ namespace QuantConnect.AlgorithmFactory.Python.Wrappers
         /// <param name="leverage">The requested leverage for this equity. Default is set by <see cref="SecurityInitializer"/></param>
         /// <param name="extendedMarketHours">Use extended market hours data</param>
         /// <returns>The new <see cref="Future"/> security</returns>
-        public Future AddFutureContract(Symbol symbol, Resolution? resolution = null, bool fillForward = true, decimal leverage = 0m,
-            bool extendedMarketHours = false)
-            => _baseAlgorithm.AddFutureContract(symbol, resolution, fillForward, leverage, extendedMarketHours);
+        public Future AddFutureContract(
+            Symbol symbol,
+            Resolution? resolution = null,
+            bool fillForward = true,
+            decimal leverage = 0m,
+            bool extendedMarketHours = false
+        ) =>
+            _baseAlgorithm.AddFutureContract(
+                symbol,
+                resolution,
+                fillForward,
+                leverage,
+                extendedMarketHours
+            );
 
         /// <summary>
         /// Creates and adds a new single <see cref="Option"/> contract to the algorithm
@@ -617,8 +623,20 @@ namespace QuantConnect.AlgorithmFactory.Python.Wrappers
         /// <param name="leverage">The requested leverage for this equity. Default is set by <see cref="SecurityInitializer"/></param>
         /// <param name="extendedMarketHours">Use extended market hours data</param>
         /// <returns>The new <see cref="Option"/> security</returns>
-        public Option AddOptionContract(Symbol symbol, Resolution? resolution = null, bool fillForward = true, decimal leverage = 0m, bool extendedMarketHours = false)
-            => _baseAlgorithm.AddOptionContract(symbol, resolution, fillForward, leverage, extendedMarketHours);
+        public Option AddOptionContract(
+            Symbol symbol,
+            Resolution? resolution = null,
+            bool fillForward = true,
+            decimal leverage = 0m,
+            bool extendedMarketHours = false
+        ) =>
+            _baseAlgorithm.AddOptionContract(
+                symbol,
+                resolution,
+                fillForward,
+                leverage,
+                extendedMarketHours
+            );
 
         /// <summary>
         /// Invoked at the end of every time step. This allows the algorithm
@@ -652,7 +670,8 @@ namespace QuantConnect.AlgorithmFactory.Python.Wrappers
         /// </summary>
         /// <param name="clearChartData"></param>
         /// <returns>List of Chart Updates</returns>
-        public IEnumerable<Chart> GetChartUpdates(bool clearChartData = false) => _baseAlgorithm.GetChartUpdates(clearChartData);
+        public IEnumerable<Chart> GetChartUpdates(bool clearChartData = false) =>
+            _baseAlgorithm.GetChartUpdates(clearChartData);
 
         /// <summary>
         /// Gets whether or not this algorithm has been locked and fully initialized
@@ -662,7 +681,8 @@ namespace QuantConnect.AlgorithmFactory.Python.Wrappers
         /// <summary>
         /// Gets a read-only dictionary with all current parameters
         /// </summary>
-        public IReadOnlyDictionary<string, string> GetParameters() => _baseAlgorithm.GetParameters();
+        public IReadOnlyDictionary<string, string> GetParameters() =>
+            _baseAlgorithm.GetParameters();
 
         /// <summary>
         /// Gets the parameter with the specified name. If a parameter with the specified name does not exist,
@@ -671,7 +691,8 @@ namespace QuantConnect.AlgorithmFactory.Python.Wrappers
         /// <param name="name">The name of the parameter to get</param>
         /// <param name="defaultValue">The default value to return</param>
         /// <returns>The value of the specified parameter, or defaultValue if not found or null if there's no default value</returns>
-        public string GetParameter(string name, string defaultValue = null) => _baseAlgorithm.GetParameter(name, defaultValue);
+        public string GetParameter(string name, string defaultValue = null) =>
+            _baseAlgorithm.GetParameter(name, defaultValue);
 
         /// <summary>
         /// Gets the parameter with the specified name parsed as an integer. If a parameter with the specified name does not exist,
@@ -680,7 +701,8 @@ namespace QuantConnect.AlgorithmFactory.Python.Wrappers
         /// <param name="name">The name of the parameter to get</param>
         /// <param name="defaultValue">The default value to return</param>
         /// <returns>The value of the specified parameter, or defaultValue if not found or null if there's no default value</returns>
-        public int GetParameter(string name, int defaultValue) => _baseAlgorithm.GetParameter(name, defaultValue);
+        public int GetParameter(string name, int defaultValue) =>
+            _baseAlgorithm.GetParameter(name, defaultValue);
 
         /// <summary>
         /// Gets the parameter with the specified name parsed as a double. If a parameter with the specified name does not exist,
@@ -689,7 +711,8 @@ namespace QuantConnect.AlgorithmFactory.Python.Wrappers
         /// <param name="name">The name of the parameter to get</param>
         /// <param name="defaultValue">The default value to return</param>
         /// <returns>The value of the specified parameter, or defaultValue if not found or null if there's no default value</returns>
-        public double GetParameter(string name, double defaultValue) => _baseAlgorithm.GetParameter(name, defaultValue);
+        public double GetParameter(string name, double defaultValue) =>
+            _baseAlgorithm.GetParameter(name, defaultValue);
 
         /// <summary>
         /// Gets the parameter with the specified name parsed as a decimal. If a parameter with the specified name does not exist,
@@ -698,7 +721,8 @@ namespace QuantConnect.AlgorithmFactory.Python.Wrappers
         /// <param name="name">The name of the parameter to get</param>
         /// <param name="defaultValue">The default value to return</param>
         /// <returns>The value of the specified parameter, or defaultValue if not found or null if there's no default value</returns>
-        public decimal GetParameter(string name, decimal defaultValue) => _baseAlgorithm.GetParameter(name, defaultValue);
+        public decimal GetParameter(string name, decimal defaultValue) =>
+            _baseAlgorithm.GetParameter(name, defaultValue);
 
         /// <summary>
         /// Initialise the Algorithm and Prepare Required Data:
@@ -714,7 +738,8 @@ namespace QuantConnect.AlgorithmFactory.Python.Wrappers
         /// <param name="symbolToLiquidate">Specific asset to liquidate, defaults to all.</param>
         /// <param name="tag">Custom tag to know who is calling this.</param>
         /// <returns>list of order ids</returns>
-        public List<int> Liquidate(Symbol symbolToLiquidate = null, string tag = "Liquidated") => _baseAlgorithm.Liquidate(symbolToLiquidate, tag);
+        public List<int> Liquidate(Symbol symbolToLiquidate = null, string tag = "Liquidated") =>
+            _baseAlgorithm.Liquidate(symbolToLiquidate, tag);
 
         /// <summary>
         /// Save entry to the Log
@@ -831,7 +856,11 @@ namespace QuantConnect.AlgorithmFactory.Python.Wrappers
             // Only throws if there is an error in its implementation body
             catch (PythonException exception)
             {
-                if (!exception.Message.Contains("OnEndOfDay() missing 1 required positional argument"))
+                if (
+                    !exception.Message.Contains(
+                        "OnEndOfDay() missing 1 required positional argument"
+                    )
+                )
                 {
                     _baseAlgorithm.SetRunTimeError(exception);
                 }
@@ -856,7 +885,11 @@ namespace QuantConnect.AlgorithmFactory.Python.Wrappers
             // Only throws if there is an error in its implementation body
             catch (PythonException exception)
             {
-                if (!exception.Message.Contains("OnEndOfDay() takes 1 positional argument but 2 were given"))
+                if (
+                    !exception.Message.Contains(
+                        "OnEndOfDay() takes 1 positional argument but 2 were given"
+                    )
+                )
                 {
                     _baseAlgorithm.SetRunTimeError(exception);
                 }
@@ -879,7 +912,9 @@ namespace QuantConnect.AlgorithmFactory.Python.Wrappers
                     // If the method does not return or returns a non-iterable PyObject, throw an exception
                     if (result == null || !result.IsIterable())
                     {
-                        throw new Exception("OnMarginCall must return a non-empty list of SubmitOrderRequest");
+                        throw new Exception(
+                            "OnMarginCall must return a non-empty list of SubmitOrderRequest"
+                        );
                     }
 
                     requests.Clear();
@@ -897,7 +932,9 @@ namespace QuantConnect.AlgorithmFactory.Python.Wrappers
                     // If the PyObject is an empty list or its items are not SubmitOrderRequest objects, throw an exception
                     if (requests.Count == 0)
                     {
-                        throw new Exception("OnMarginCall must return a non-empty list of SubmitOrderRequest");
+                        throw new Exception(
+                            "OnMarginCall must return a non-empty list of SubmitOrderRequest"
+                        );
                     }
                 }
             }
@@ -988,7 +1025,8 @@ namespace QuantConnect.AlgorithmFactory.Python.Wrappers
         /// Set the algorithm Id for this backtest or live run. This can be used to identify the order and equity records.
         /// </summary>
         /// <param name="algorithmId">unique 32 character identifier for backtest or live server</param>
-        public void SetAlgorithmId(string algorithmId) => _baseAlgorithm.SetAlgorithmId(algorithmId);
+        public void SetAlgorithmId(string algorithmId) =>
+            _baseAlgorithm.SetAlgorithmId(algorithmId);
 
         /// <summary>
         /// Sets the implementation used to handle messages from the brokerage.
@@ -997,7 +1035,8 @@ namespace QuantConnect.AlgorithmFactory.Python.Wrappers
         /// is stopped.
         /// </summary>
         /// <param name="handler">The message handler to use</param>
-        public void SetBrokerageMessageHandler(IBrokerageMessageHandler handler) => _baseAlgorithm.SetBrokerageMessageHandler(handler);
+        public void SetBrokerageMessageHandler(IBrokerageMessageHandler handler) =>
+            _baseAlgorithm.SetBrokerageMessageHandler(handler);
 
         /// <summary>
         /// Sets the brokerage model used to resolve transaction models, settlement models,
@@ -1005,7 +1044,8 @@ namespace QuantConnect.AlgorithmFactory.Python.Wrappers
         /// </summary>
         /// <param name="brokerageModel">The brokerage model used to emulate the real
         /// brokerage</param>
-        public void SetBrokerageModel(IBrokerageModel brokerageModel) => _baseAlgorithm.SetBrokerageModel(brokerageModel);
+        public void SetBrokerageModel(IBrokerageModel brokerageModel) =>
+            _baseAlgorithm.SetBrokerageModel(brokerageModel);
 
         /// <summary>
         /// Sets the account currency cash symbol this algorithm is to manage, as well
@@ -1015,7 +1055,8 @@ namespace QuantConnect.AlgorithmFactory.Python.Wrappers
         /// calling <see cref="SetCash(decimal)"/> or adding any <see cref="Security"/></remarks>
         /// <param name="accountCurrency">The account currency cash symbol to set</param>
         /// <param name="startingCash">The account currency starting cash to set</param>
-        public void SetAccountCurrency(string accountCurrency, decimal? startingCash = null) => _baseAlgorithm.SetAccountCurrency(accountCurrency, startingCash);
+        public void SetAccountCurrency(string accountCurrency, decimal? startingCash = null) =>
+            _baseAlgorithm.SetAccountCurrency(accountCurrency, startingCash);
 
         /// <summary>
         /// Set the starting capital for the strategy
@@ -1029,7 +1070,8 @@ namespace QuantConnect.AlgorithmFactory.Python.Wrappers
         /// <param name="symbol">The cash symbol to set</param>
         /// <param name="startingCash">Decimal cash value of portfolio</param>
         /// <param name="conversionRate">The current conversion rate for the</param>
-        public void SetCash(string symbol, decimal startingCash, decimal conversionRate = 0) => _baseAlgorithm.SetCash(symbol, startingCash, conversionRate);
+        public void SetCash(string symbol, decimal startingCash, decimal conversionRate = 0) =>
+            _baseAlgorithm.SetCash(symbol, startingCash, conversionRate);
 
         /// <summary>
         /// Set the DateTime Frontier: This is the master time and is
@@ -1057,13 +1099,15 @@ namespace QuantConnect.AlgorithmFactory.Python.Wrappers
         /// </summary>
         /// <param name="security"><see cref="Security"/> object for which to retrieve historical data</param>
         /// <returns>A single <see cref="BaseData"/> object with the last known price</returns>
-        public BaseData GetLastKnownPrice(Security security) => _baseAlgorithm.GetLastKnownPrice(security);
+        public BaseData GetLastKnownPrice(Security security) =>
+            _baseAlgorithm.GetLastKnownPrice(security);
 
         /// <summary>
         /// Set the runtime error
         /// </summary>
         /// <param name="exception">Represents error that occur during execution</param>
-        public void SetRunTimeError(Exception exception) => _baseAlgorithm.SetRunTimeError(exception);
+        public void SetRunTimeError(Exception exception) =>
+            _baseAlgorithm.SetRunTimeError(exception);
 
         /// <summary>
         /// Sets <see cref="IsWarmingUp"/> to false to indicate this algorithm has finished its warm up
@@ -1080,7 +1124,8 @@ namespace QuantConnect.AlgorithmFactory.Python.Wrappers
         /// Set the historical data provider
         /// </summary>
         /// <param name="historyProvider">Historical data provider</param>
-        public void SetHistoryProvider(IHistoryProvider historyProvider) => _baseAlgorithm.SetHistoryProvider(historyProvider);
+        public void SetHistoryProvider(IHistoryProvider historyProvider) =>
+            _baseAlgorithm.SetHistoryProvider(historyProvider);
 
         /// <summary>
         /// Set live mode state of the algorithm run: Public setter for the algorithm property LiveMode.
@@ -1092,13 +1137,15 @@ namespace QuantConnect.AlgorithmFactory.Python.Wrappers
         /// Sets the algorithm running mode
         /// </summary>
         /// <param name="algorithmMode">Algorithm mode</param>
-        public void SetAlgorithmMode(AlgorithmMode algorithmMode) => _baseAlgorithm.SetAlgorithmMode(algorithmMode);
+        public void SetAlgorithmMode(AlgorithmMode algorithmMode) =>
+            _baseAlgorithm.SetAlgorithmMode(algorithmMode);
 
         /// <summary>
         /// Sets the algorithm deployment target
         /// </summary>
         /// <param name="deploymentTarget">Deployment target</param>
-        public void SetDeploymentTarget(DeploymentTarget deploymentTarget) => _baseAlgorithm.SetDeploymentTarget(deploymentTarget);
+        public void SetDeploymentTarget(DeploymentTarget deploymentTarget) =>
+            _baseAlgorithm.SetDeploymentTarget(deploymentTarget);
 
         /// <summary>
         /// Set the algorithm as initialized and locked. No more cash or security changes.
@@ -1115,7 +1162,8 @@ namespace QuantConnect.AlgorithmFactory.Python.Wrappers
         /// Sets the parameters from the dictionary
         /// </summary>
         /// <param name="parameters">Dictionary containing the parameter names to values</param>
-        public void SetParameters(Dictionary<string, string> parameters) => _baseAlgorithm.SetParameters(parameters);
+        public void SetParameters(Dictionary<string, string> parameters) =>
+            _baseAlgorithm.SetParameters(parameters);
 
         /// <summary>
         /// Tries to convert a PyObject into a C# object
@@ -1172,7 +1220,8 @@ namespace QuantConnect.AlgorithmFactory.Python.Wrappers
         /// Sets the object store
         /// </summary>
         /// <param name="objectStore">The object store</param>
-        public void SetObjectStore(IObjectStore objectStore) => _baseAlgorithm.SetObjectStore(objectStore);
+        public void SetObjectStore(IObjectStore objectStore) =>
+            _baseAlgorithm.SetObjectStore(objectStore);
 
         /// <summary>
         /// Determines if the Symbol is shortable at the brokerage

@@ -14,19 +14,19 @@
 */
 
 using System;
-using System.Linq;
-using Newtonsoft.Json;
-using System.Threading;
-using QuantConnect.Data;
-using QuantConnect.Orders;
-using QuantConnect.Logging;
-using System.Threading.Tasks;
-using QuantConnect.Interfaces;
-using QuantConnect.Securities;
-using QuantConnect.Orders.Fees;
-using System.Collections.Generic;
 using System.Collections.Concurrent;
+using System.Collections.Generic;
+using System.Linq;
+using System.Threading;
+using System.Threading.Tasks;
+using Newtonsoft.Json;
 using QuantConnect.Brokerages.CrossZero;
+using QuantConnect.Data;
+using QuantConnect.Interfaces;
+using QuantConnect.Logging;
+using QuantConnect.Orders;
+using QuantConnect.Orders.Fees;
+using QuantConnect.Securities;
 
 namespace QuantConnect.Brokerages
 {
@@ -244,7 +244,9 @@ namespace QuantConnect.Brokerages
         /// Event invocator for the NewBrokerageOrderNotification event
         /// </summary>
         /// <param name="e">The NewBrokerageOrderNotification event arguments</param>
-        protected virtual void OnNewBrokerageOrderNotification(NewBrokerageOrderNotificationEventArgs e)
+        protected virtual void OnNewBrokerageOrderNotification(
+            NewBrokerageOrderNotificationEventArgs e
+        )
         {
             try
             {
@@ -324,14 +326,21 @@ namespace QuantConnect.Brokerages
         /// </summary>
         /// <remarks>Holdings will removed from the provided collection on the first call, since this method is expected to be called only
         /// once on initialize, after which the algorithm should use Lean accounting</remarks>
-        protected virtual List<Holding> GetAccountHoldings(Dictionary<string, string> brokerageData, IEnumerable<Security> securities)
+        protected virtual List<Holding> GetAccountHoldings(
+            Dictionary<string, string> brokerageData,
+            IEnumerable<Security> securities
+        )
         {
             if (Log.DebuggingEnabled)
             {
                 Log.Debug("Brokerage.GetAccountHoldings(): starting...");
             }
 
-            if (brokerageData != null && brokerageData.Remove("live-holdings", out var value) && !string.IsNullOrEmpty(value))
+            if (
+                brokerageData != null
+                && brokerageData.Remove("live-holdings", out var value)
+                && !string.IsNullOrEmpty(value)
+            )
             {
                 // remove the key, we really only want to return the cached value on the first request
                 var result = JsonConvert.DeserializeObject<List<Holding>>(value);
@@ -339,13 +348,17 @@ namespace QuantConnect.Brokerages
                 {
                     return new List<Holding>();
                 }
-                Log.Trace($"Brokerage.GetAccountHoldings(): sourcing holdings from provided brokerage data, found {result.Count} entries");
+                Log.Trace(
+                    $"Brokerage.GetAccountHoldings(): sourcing holdings from provided brokerage data, found {result.Count} entries"
+                );
                 return result;
             }
 
-            return securities?.Where(security => security.Holdings.AbsoluteQuantity > 0)
-                .OrderBy(security => security.Symbol)
-                .Select(security => new Holding(security)).ToList() ?? new List<Holding>();
+            return securities
+                    ?.Where(security => security.Holdings.AbsoluteQuantity > 0)
+                    .OrderBy(security => security.Symbol)
+                    .Select(security => new Holding(security))
+                    .ToList() ?? new List<Holding>();
         }
 
         /// <summary>
@@ -353,14 +366,21 @@ namespace QuantConnect.Brokerages
         /// </summary>
         /// <remarks>Cash balance will removed from the provided collection on the first call, since this method is expected to be called only
         /// once on initialize, after which the algorithm should use Lean accounting</remarks>
-        protected virtual List<CashAmount> GetCashBalance(Dictionary<string, string> brokerageData, CashBook cashBook)
+        protected virtual List<CashAmount> GetCashBalance(
+            Dictionary<string, string> brokerageData,
+            CashBook cashBook
+        )
         {
             if (Log.DebuggingEnabled)
             {
                 Log.Debug("Brokerage.GetCashBalance(): starting...");
             }
 
-            if (brokerageData != null && brokerageData.Remove("live-cash-balance", out var value) && !string.IsNullOrEmpty(value))
+            if (
+                brokerageData != null
+                && brokerageData.Remove("live-cash-balance", out var value)
+                && !string.IsNullOrEmpty(value)
+            )
             {
                 // remove the key, we really only want to return the cached value on the first request
                 var result = JsonConvert.DeserializeObject<List<CashAmount>>(value);
@@ -368,11 +388,14 @@ namespace QuantConnect.Brokerages
                 {
                     return new List<CashAmount>();
                 }
-                Log.Trace($"Brokerage.GetCashBalance(): sourcing cash balance from provided brokerage data, found {result.Count} entries");
+                Log.Trace(
+                    $"Brokerage.GetCashBalance(): sourcing cash balance from provided brokerage data, found {result.Count} entries"
+                );
                 return result;
             }
 
-            return cashBook?.Select(x => new CashAmount(x.Value.Amount, x.Value.Symbol)).ToList() ?? new List<CashAmount>();
+            return cashBook?.Select(x => new CashAmount(x.Value.Amount, x.Value.Symbol)).ToList()
+                ?? new List<CashAmount>();
         }
 
         /// <summary>
@@ -422,13 +445,23 @@ namespace QuantConnect.Brokerages
         /// <param name="orderDirection">The order direction</param>
         /// <param name="holdingsQuantity">The current holdings quantity</param>
         /// <returns>The order position</returns>
-        protected static OrderPosition GetOrderPosition(OrderDirection orderDirection, decimal holdingsQuantity)
+        protected static OrderPosition GetOrderPosition(
+            OrderDirection orderDirection,
+            decimal holdingsQuantity
+        )
         {
             return orderDirection switch
             {
-                OrderDirection.Buy => holdingsQuantity >= 0 ? OrderPosition.BuyToOpen : OrderPosition.BuyToClose,
-                OrderDirection.Sell => holdingsQuantity <= 0 ? OrderPosition.SellToOpen : OrderPosition.SellToClose,
-                _ => throw new ArgumentOutOfRangeException(nameof(orderDirection), orderDirection, "Invalid order direction")
+                OrderDirection.Buy
+                    => holdingsQuantity >= 0 ? OrderPosition.BuyToOpen : OrderPosition.BuyToClose,
+                OrderDirection.Sell
+                    => holdingsQuantity <= 0 ? OrderPosition.SellToOpen : OrderPosition.SellToClose,
+                _
+                    => throw new ArgumentOutOfRangeException(
+                        nameof(orderDirection),
+                        orderDirection,
+                        "Invalid order direction"
+                    )
             };
         }
 
@@ -437,12 +470,14 @@ namespace QuantConnect.Brokerages
         /// <summary>
         /// Gets the date of the last sync (New York time zone)
         /// </summary>
-        protected DateTime LastSyncDate => LastSyncDateTimeUtc.ConvertFromUtc(TimeZones.NewYork).Date;
+        protected DateTime LastSyncDate =>
+            LastSyncDateTimeUtc.ConvertFromUtc(TimeZones.NewYork).Date;
 
         /// <summary>
         /// Gets the datetime of the last sync (UTC)
         /// </summary>
-        public DateTime LastSyncDateTimeUtc => new DateTime(Interlocked.Read(ref _lastSyncTimeTicks));
+        public DateTime LastSyncDateTimeUtc =>
+            new DateTime(Interlocked.Read(ref _lastSyncTimeTicks));
 
         /// <summary>
         /// Returns whether the brokerage should perform the cash synchronization
@@ -458,7 +493,8 @@ namespace QuantConnect.Brokerages
                 _syncedLiveBrokerageCashToday = false;
             }
 
-            return !_syncedLiveBrokerageCashToday && currentTimeNewYork.TimeOfDay >= LiveBrokerageCashSyncTime;
+            return !_syncedLiveBrokerageCashToday
+                && currentTimeNewYork.TimeOfDay >= LiveBrokerageCashSyncTime;
         }
 
         /// <summary>
@@ -468,14 +504,20 @@ namespace QuantConnect.Brokerages
         /// <param name="currentTimeUtc">The current time (UTC)</param>
         /// <param name="getTimeSinceLastFill">A function which returns the time elapsed since the last fill</param>
         /// <returns>True if the cash sync was performed successfully</returns>
-        public virtual bool PerformCashSync(IAlgorithm algorithm, DateTime currentTimeUtc, Func<TimeSpan> getTimeSinceLastFill)
+        public virtual bool PerformCashSync(
+            IAlgorithm algorithm,
+            DateTime currentTimeUtc,
+            Func<TimeSpan> getTimeSinceLastFill
+        )
         {
             try
             {
                 // prevent reentrance in this method
                 if (!Monitor.TryEnter(_performCashSyncReentranceGuard))
                 {
-                    Log.Trace("Brokerage.PerformCashSync(): Reentrant call, cash sync not performed");
+                    Log.Trace(
+                        "Brokerage.PerformCashSync(): Reentrant call, cash sync not performed"
+                    );
                     return false;
                 }
 
@@ -494,7 +536,9 @@ namespace QuantConnect.Brokerages
                 // empty cash balance is valid, if there was No error/exception
                 if (balances == null)
                 {
-                    Log.Trace("Brokerage.PerformCashSync(): No cash balances available, cash sync not performed");
+                    Log.Trace(
+                        "Brokerage.PerformCashSync(): No cash balances available, cash sync not performed"
+                    );
                     return false;
                 }
 
@@ -503,7 +547,10 @@ namespace QuantConnect.Brokerages
                 {
                     if (!algorithm.Portfolio.CashBook.ContainsKey(balance.Currency))
                     {
-                        Log.Trace($"Brokerage.PerformCashSync(): Unexpected cash found {balance.Currency} {balance.Amount}", true);
+                        Log.Trace(
+                            $"Brokerage.PerformCashSync(): Unexpected cash found {balance.Currency} {balance.Amount}",
+                            true
+                        );
                         algorithm.Portfolio.SetCash(balance.Currency, balance.Amount, 0);
                     }
                 }
@@ -520,17 +567,30 @@ namespace QuantConnect.Brokerages
                     {
                         // compare in account currency
                         var delta = cash.Amount - balanceCash.Amount;
-                        if (Math.Abs(algorithm.Portfolio.CashBook.ConvertToAccountCurrency(delta, cash.Symbol)) > totalPorfolioValueThreshold)
+                        if (
+                            Math.Abs(
+                                algorithm.Portfolio.CashBook.ConvertToAccountCurrency(
+                                    delta,
+                                    cash.Symbol
+                                )
+                            ) > totalPorfolioValueThreshold
+                        )
                         {
                             // log the delta between
-                            Log.Trace($"Brokerage.PerformCashSync(): {balanceCash.Currency} Delta: {delta:0.00}", true);
+                            Log.Trace(
+                                $"Brokerage.PerformCashSync(): {balanceCash.Currency} Delta: {delta:0.00}",
+                                true
+                            );
                         }
                         algorithm.Portfolio.CashBook[cash.Symbol].SetAmount(balanceCash.Amount);
                     }
                     else
                     {
                         //Set the cash amount to zero if cash entry not found in the balances
-                        Log.Trace($"Brokerage.PerformCashSync(): {cash.Symbol} was not found in brokerage cash balance, setting the amount to 0", true);
+                        Log.Trace(
+                            $"Brokerage.PerformCashSync(): {cash.Symbol} was not found in brokerage cash balance, setting the amount to 0",
+                            true
+                        );
                         algorithm.Portfolio.CashBook[cash.Symbol].SetAmount(0);
                     }
                 }
@@ -544,7 +604,8 @@ namespace QuantConnect.Brokerages
 
             // fire off this task to check if we've had recent fills, if we have then we'll invalidate the cash sync
             // and do it again until we're confident in it
-            Task.Delay(TimeSpan.FromSeconds(10)).ContinueWith(_ =>
+            Task.Delay(TimeSpan.FromSeconds(10))
+                .ContinueWith(_ =>
                 {
                     // we want to make sure this is a good value, so check for any recent fills
                     if (getTimeSinceLastFill() <= TimeSpan.FromSeconds(20))
@@ -553,7 +614,9 @@ namespace QuantConnect.Brokerages
                         // haven't processed a fill for +- 10 seconds of the set cash time
                         _syncedLiveBrokerageCashToday = false;
                         //_failedCashSyncAttempts = 0;
-                        Log.Trace("Brokerage.PerformCashSync(): Unverified cash sync - resync required.");
+                        Log.Trace(
+                            "Brokerage.PerformCashSync(): Unverified cash sync - resync required."
+                        );
                     }
                     else
                     {
@@ -573,7 +636,10 @@ namespace QuantConnect.Brokerages
         /// <summary>
         /// A dictionary to store the relationship between brokerage crossing orders and Lean orer id.
         /// </summary>
-        private readonly ConcurrentDictionary<int, CrossZeroSecondOrderRequest> _leanOrderByBrokerageCrossingOrders = new();
+        private readonly ConcurrentDictionary<
+            int,
+            CrossZeroSecondOrderRequest
+        > _leanOrderByBrokerageCrossingOrders = new();
 
         /// <summary>
         /// An object used to lock the critical section in the <see cref="TryGetOrRemoveCrossZeroOrder"/> method,
@@ -585,11 +651,14 @@ namespace QuantConnect.Brokerages
         /// A thread-safe dictionary that maps brokerage order IDs to their corresponding Order objects.
         /// </summary>
         /// <remarks>
-        /// This ConcurrentDictionary is used to maintain a mapping between Zero Cross brokerage order IDs and Lean Order objects. 
-        /// The dictionary is protected and read-only, ensuring that it can only be modified by the class that declares it and cannot 
+        /// This ConcurrentDictionary is used to maintain a mapping between Zero Cross brokerage order IDs and Lean Order objects.
+        /// The dictionary is protected and read-only, ensuring that it can only be modified by the class that declares it and cannot
         /// be assigned a new instance after initialization.
         /// </remarks>
-        protected ConcurrentDictionary<string, Order> LeanOrderByZeroCrossBrokerageOrderId { get; } = new();
+        protected ConcurrentDictionary<
+            string,
+            Order
+        > LeanOrderByZeroCrossBrokerageOrderId { get; } = new();
 
         /// <summary>
         /// Places an order that crosses zero (transitions from a short position to a long position or vice versa) and returns the response.
@@ -597,7 +666,7 @@ namespace QuantConnect.Brokerages
         /// </summary>
         /// <param name="crossZeroOrderRequest">The request object containing details of the cross zero order to be placed.</param>
         /// <param name="isPlaceOrderWithLeanEvent">
-        /// A boolean indicating whether the order should be placed with triggering a Lean event. 
+        /// A boolean indicating whether the order should be placed with triggering a Lean event.
         /// Default is <c>true</c>, meaning Lean events will be triggered.
         /// </param>
         /// <returns>
@@ -606,14 +675,19 @@ namespace QuantConnect.Brokerages
         /// <exception cref="NotImplementedException">
         /// Thrown if the method is not overridden in a derived class.
         /// </exception>
-        protected virtual CrossZeroOrderResponse PlaceCrossZeroOrder(CrossZeroFirstOrderRequest crossZeroOrderRequest, bool isPlaceOrderWithLeanEvent = true)
+        protected virtual CrossZeroOrderResponse PlaceCrossZeroOrder(
+            CrossZeroFirstOrderRequest crossZeroOrderRequest,
+            bool isPlaceOrderWithLeanEvent = true
+        )
         {
-            throw new NotImplementedException($"{nameof(PlaceCrossZeroOrder)} method should be overridden in the derived class to handle brokerage-specific logic.");
+            throw new NotImplementedException(
+                $"{nameof(PlaceCrossZeroOrder)} method should be overridden in the derived class to handle brokerage-specific logic."
+            );
         }
 
         /// <summary>
-        /// Attempts to place an order that may cross the zero position. 
-        /// If the order needs to be split into two parts due to crossing zero, 
+        /// Attempts to place an order that may cross the zero position.
+        /// If the order needs to be split into two parts due to crossing zero,
         /// this method handles the split and placement accordingly.
         /// </summary>
         /// <param name="order">The order to be placed. Must not be <c>null</c>.</param>
@@ -630,7 +704,10 @@ namespace QuantConnect.Brokerages
         {
             if (order == null)
             {
-                throw new ArgumentNullException(nameof(order), "The order parameter cannot be null.");
+                throw new ArgumentNullException(
+                    nameof(order),
+                    "The order parameter cannot be null."
+                );
             }
 
             // do we need to split the order into two pieces?
@@ -638,17 +715,31 @@ namespace QuantConnect.Brokerages
             if (crossesZero)
             {
                 // first we need an order to close out the current position
-                var (firstOrderQuantity, secondOrderQuantity) = GetQuantityOnCrossPosition(holdingQuantity, order.Quantity);
+                var (firstOrderQuantity, secondOrderQuantity) = GetQuantityOnCrossPosition(
+                    holdingQuantity,
+                    order.Quantity
+                );
 
                 // Note: original quantity - already sell
-                var firstOrderPartRequest = new CrossZeroFirstOrderRequest(order, order.Type, firstOrderQuantity, holdingQuantity,
-                    GetOrderPosition(order.Direction, holdingQuantity));
+                var firstOrderPartRequest = new CrossZeroFirstOrderRequest(
+                    order,
+                    order.Type,
+                    firstOrderQuantity,
+                    holdingQuantity,
+                    GetOrderPosition(order.Direction, holdingQuantity)
+                );
 
                 // we actually can't place this order until the closingOrder is filled
                 // create another order for the rest, but we'll convert the order type to not be a stop
-                // but a market or a limit order                
-                var secondOrderPartRequest = new CrossZeroSecondOrderRequest(order, order.Type, secondOrderQuantity, 0m,
-                    GetOrderPosition(order.Direction, 0m), firstOrderPartRequest);
+                // but a market or a limit order
+                var secondOrderPartRequest = new CrossZeroSecondOrderRequest(
+                    order,
+                    order.Type,
+                    secondOrderQuantity,
+                    0m,
+                    GetOrderPosition(order.Direction, 0m),
+                    firstOrderPartRequest
+                );
 
                 _leanOrderByBrokerageCrossingOrders.AddOrUpdate(order.Id, secondOrderPartRequest);
 
@@ -665,10 +756,17 @@ namespace QuantConnect.Brokerages
 
                 if (!response.IsOrderPlacedSuccessfully)
                 {
-                    OnOrderEvent(new OrderEvent(order, DateTime.UtcNow, OrderFee.Zero, $"{nameof(Brokerage)}: {response.Message}")
-                    {
-                        Status = OrderStatus.Invalid
-                    });
+                    OnOrderEvent(
+                        new OrderEvent(
+                            order,
+                            DateTime.UtcNow,
+                            OrderFee.Zero,
+                            $"{nameof(Brokerage)}: {response.Message}"
+                        )
+                        {
+                            Status = OrderStatus.Invalid
+                        }
+                    );
                     // remove the contingent order if we weren't successful in placing the first
                     //ContingentOrderQueue contingent;
                     _leanOrderByBrokerageCrossingOrders.TryRemove(order.Id, out _);
@@ -693,11 +791,19 @@ namespace QuantConnect.Brokerages
         {
             if (leanOrder == null)
             {
-                throw new ArgumentNullException(nameof(leanOrder), "The provided leanOrder cannot be null.");
+                throw new ArgumentNullException(
+                    nameof(leanOrder),
+                    "The provided leanOrder cannot be null."
+                );
             }
 
             // Check if the order is a CrossZeroOrder.
-            if (_leanOrderByBrokerageCrossingOrders.TryGetValue(leanOrder.Id, out var crossZeroOrderRequest))
+            if (
+                _leanOrderByBrokerageCrossingOrders.TryGetValue(
+                    leanOrder.Id,
+                    out var crossZeroOrderRequest
+                )
+            )
             {
                 // If it is a CrossZeroOrder, use the first part of the quantity for the update.
                 quantity = crossZeroOrderRequest.FirstPartCrossZeroOrder.OrderQuantity;
@@ -733,20 +839,33 @@ namespace QuantConnect.Brokerages
         /// If the order is filled, it is removed from the collection. If the order is partially filled,
         /// it is retrieved but not removed. If the order is not found, the method returns <c>false</c>.
         /// </remarks>
-        protected bool TryGetOrRemoveCrossZeroOrder(string brokerageOrderId, OrderStatus leanOrderStatus, out Order leanOrder)
+        protected bool TryGetOrRemoveCrossZeroOrder(
+            string brokerageOrderId,
+            OrderStatus leanOrderStatus,
+            out Order leanOrder
+        )
         {
             lock (_lockCrossZeroObject)
             {
-                if (LeanOrderByZeroCrossBrokerageOrderId.TryGetValue(brokerageOrderId, out leanOrder))
+                if (
+                    LeanOrderByZeroCrossBrokerageOrderId.TryGetValue(
+                        brokerageOrderId,
+                        out leanOrder
+                    )
+                )
                 {
                     switch (leanOrderStatus)
                     {
                         case OrderStatus.Filled:
                         case OrderStatus.Canceled:
                         case OrderStatus.Invalid:
-                            LeanOrderByZeroCrossBrokerageOrderId.TryRemove(brokerageOrderId, out var _);
+                            LeanOrderByZeroCrossBrokerageOrderId.TryRemove(
+                                brokerageOrderId,
+                                out var _
+                            );
                             break;
-                    };
+                    }
+                    ;
                     return true;
                 }
                 // Return false if the brokerage order ID does not correspond to a cross-zero order
@@ -761,7 +880,14 @@ namespace QuantConnect.Brokerages
         /// <param name="orderEvent">The event object containing order event details.</param>
         protected bool TryHandleRemainingCrossZeroOrder(Order leanOrder, OrderEvent orderEvent)
         {
-            if (leanOrder != null && orderEvent != null && _leanOrderByBrokerageCrossingOrders.TryGetValue(leanOrder.Id, out var brokerageOrder))
+            if (
+                leanOrder != null
+                && orderEvent != null
+                && _leanOrderByBrokerageCrossingOrders.TryGetValue(
+                    leanOrder.Id,
+                    out var brokerageOrder
+                )
+            )
             {
                 switch (orderEvent.Status)
                 {
@@ -777,7 +903,8 @@ namespace QuantConnect.Brokerages
                         return false;
                     default:
                         return false;
-                };
+                }
+                ;
 
                 OnOrderEvent(orderEvent);
 
@@ -789,14 +916,19 @@ namespace QuantConnect.Brokerages
                         var response = default(CrossZeroOrderResponse);
                         lock (_lockCrossZeroObject)
                         {
-                            Log.Trace($"{nameof(Brokerage)}.{nameof(TryHandleRemainingCrossZeroOrder)}: Submit the second part of cross order by Id:{leanOrder.Id}");
+                            Log.Trace(
+                                $"{nameof(Brokerage)}.{nameof(TryHandleRemainingCrossZeroOrder)}: Submit the second part of cross order by Id:{leanOrder.Id}"
+                            );
                             response = PlaceCrossZeroOrder(brokerageOrder, false);
 
                             if (response.IsOrderPlacedSuccessfully)
                             {
                                 // add the new brokerage id for retrieval later
                                 leanOrder.BrokerId.Add(response.BrokerageOrderId);
-                                LeanOrderByZeroCrossBrokerageOrderId.AddOrUpdate(response.BrokerageOrderId, leanOrder);
+                                LeanOrderByZeroCrossBrokerageOrderId.AddOrUpdate(
+                                    response.BrokerageOrderId,
+                                    leanOrder
+                                );
                             }
                         }
 
@@ -804,19 +936,45 @@ namespace QuantConnect.Brokerages
                         {
                             // if we failed to place this order I don't know what to do, we've filled the first part
                             // and failed to place the second... strange. Should we invalidate the rest of the order??
-                            Log.Error($"{nameof(Brokerage)}.{nameof(TryHandleRemainingCrossZeroOrder)}: Failed to submit contingent order.");
-                            var message = $"{leanOrder.Symbol} Failed submitting the second part of cross order for " +
-                                $"LeanOrderId: {leanOrder.Id.ToStringInvariant()} Filled - BrokerageOrderId: {response.BrokerageOrderId}. " +
-                                $"{response.Message}";
-                            OnMessage(new BrokerageMessageEvent(BrokerageMessageType.Warning, "CrossZeroFailed", message));
-                            OnOrderEvent(new OrderEvent(leanOrder, DateTime.UtcNow, OrderFee.Zero) { Status = OrderStatus.Canceled });
+                            Log.Error(
+                                $"{nameof(Brokerage)}.{nameof(TryHandleRemainingCrossZeroOrder)}: Failed to submit contingent order."
+                            );
+                            var message =
+                                $"{leanOrder.Symbol} Failed submitting the second part of cross order for "
+                                + $"LeanOrderId: {leanOrder.Id.ToStringInvariant()} Filled - BrokerageOrderId: {response.BrokerageOrderId}. "
+                                + $"{response.Message}";
+                            OnMessage(
+                                new BrokerageMessageEvent(
+                                    BrokerageMessageType.Warning,
+                                    "CrossZeroFailed",
+                                    message
+                                )
+                            );
+                            OnOrderEvent(
+                                new OrderEvent(leanOrder, DateTime.UtcNow, OrderFee.Zero)
+                                {
+                                    Status = OrderStatus.Canceled
+                                }
+                            );
                         }
                     }
                     catch (Exception err)
                     {
                         Log.Error(err);
-                        OnMessage(new BrokerageMessageEvent(BrokerageMessageType.Warning, "CrossZeroOrderError", "An error occurred while trying to submit an cross zero order: " + err));
-                        OnOrderEvent(new OrderEvent(leanOrder, DateTime.UtcNow, OrderFee.Zero) { Status = OrderStatus.Canceled });
+                        OnMessage(
+                            new BrokerageMessageEvent(
+                                BrokerageMessageType.Warning,
+                                "CrossZeroOrderError",
+                                "An error occurred while trying to submit an cross zero order: "
+                                    + err
+                            )
+                        );
+                        OnOrderEvent(
+                            new OrderEvent(leanOrder, DateTime.UtcNow, OrderFee.Zero)
+                            {
+                                Status = OrderStatus.Canceled
+                            }
+                        );
                     }
 #pragma warning restore CA1031 // Do not catch general exception types
                 });
@@ -841,7 +999,10 @@ namespace QuantConnect.Brokerages
         /// </item>
         /// </list>
         /// </returns>
-        private static (decimal closePostionQunatity, decimal newPositionQuantity) GetQuantityOnCrossPosition(decimal holdingQuantity, decimal orderQuantity)
+        private static (
+            decimal closePostionQunatity,
+            decimal newPositionQuantity
+        ) GetQuantityOnCrossPosition(decimal holdingQuantity, decimal orderQuantity)
         {
             // first we need an order to close out the current position
             var firstOrderQuantity = -holdingQuantity;

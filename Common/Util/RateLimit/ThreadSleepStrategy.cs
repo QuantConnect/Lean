@@ -35,7 +35,8 @@ namespace QuantConnect.Util.RateLimit
         /// the specified number of milliseconds
         /// </summary>
         /// <param name="milliseconds">The duration of time to sleep, in milliseconds</param>
-        public static ISleepStrategy Sleeping(int milliseconds) => new ThreadSleepStrategy(milliseconds);
+        public static ISleepStrategy Sleeping(int milliseconds) =>
+            new ThreadSleepStrategy(milliseconds);
 
         private readonly int _milliseconds;
 

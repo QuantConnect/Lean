@@ -14,9 +14,9 @@
 */
 
 using System;
-using NUnit.Framework;
 using System.Collections.Generic;
 using System.Linq;
+using NUnit.Framework;
 using QuantConnect.Algorithm;
 using QuantConnect.Data.Market;
 using QuantConnect.Orders;
@@ -32,25 +32,54 @@ namespace QuantConnect.Tests.Algorithm
         // Test class to enable calling protected methods
         public class TestSecurityMarginModel : SecurityMarginModel
         {
-            public TestSecurityMarginModel(decimal leverage) : base(leverage) { }
+            public TestSecurityMarginModel(decimal leverage)
+                : base(leverage) { }
 
             public new decimal GetInitialMarginRequiredForOrder(
-                InitialMarginRequiredForOrderParameters parameters)
+                InitialMarginRequiredForOrderParameters parameters
+            )
             {
                 return base.GetInitialMarginRequiredForOrder(parameters).Value;
             }
 
-            public new decimal GetMarginRemaining(SecurityPortfolioManager portfolio, Security security, OrderDirection direction)
+            public new decimal GetMarginRemaining(
+                SecurityPortfolioManager portfolio,
+                Security security,
+                OrderDirection direction
+            )
             {
                 return base.GetMarginRemaining(portfolio, security, direction);
             }
         }
 
-        public enum Position { Zero = 0, Long = 1, Short = -1 }
-        public enum FeeType { None, Small, Large, InteractiveBrokers }
-        public enum PriceMovement { Static, RisingSmall, FallingSmall, RisingLarge, FallingLarge }
+        public enum Position
+        {
+            Zero = 0,
+            Long = 1,
+            Short = -1
+        }
 
-        private readonly Dictionary<FeeType, IFeeModel> _feeModels = new Dictionary<FeeType, IFeeModel>
+        public enum FeeType
+        {
+            None,
+            Small,
+            Large,
+            InteractiveBrokers
+        }
+
+        public enum PriceMovement
+        {
+            Static,
+            RisingSmall,
+            FallingSmall,
+            RisingLarge,
+            FallingLarge
+        }
+
+        private readonly Dictionary<FeeType, IFeeModel> _feeModels = new Dictionary<
+            FeeType,
+            IFeeModel
+        >
         {
             { FeeType.None, new ConstantFeeModel(0) },
             { FeeType.Small, new ConstantFeeModel(1) },
@@ -68,7 +97,12 @@ namespace QuantConnect.Tests.Algorithm
 
         public class Permuter<T>
         {
-            private static void Permute(T[] row, int index, IReadOnlyList<List<T>> data, ICollection<T[]> result)
+            private static void Permute(
+                T[] row,
+                int index,
+                IReadOnlyList<List<T>> data,
+                ICollection<T[]> result
+            )
             {
                 foreach (var dataRow in data[index])
                 {
@@ -102,7 +136,9 @@ namespace QuantConnect.Tests.Algorithm
                 var initialPositions = Enum.GetValues(typeof(Position)).Cast<Position>().ToList();
                 var finalPositions = Enum.GetValues(typeof(Position)).Cast<Position>().ToList();
                 var feeTypes = Enum.GetValues(typeof(FeeType)).Cast<FeeType>().ToList();
-                var priceMovements = Enum.GetValues(typeof(PriceMovement)).Cast<PriceMovement>().ToList();
+                var priceMovements = Enum.GetValues(typeof(PriceMovement))
+                    .Cast<PriceMovement>()
+                    .ToList();
                 var leverages = new List<int> { 1, 100 };
 
                 var data = new List<List<object>>
@@ -116,8 +152,7 @@ namespace QuantConnect.Tests.Algorithm
                 var permutations = new List<object[]>();
                 Permuter<object>.Permute(data, permutations);
 
-                var ret = permutations
-                    .Where(row => (Position)row[0] != (Position)row[1]);     // initialPosition != finalPosition
+                var ret = permutations.Where(row => (Position)row[0] != (Position)row[1]); // initialPosition != finalPosition
 
                 return ret;
             }
@@ -167,13 +202,22 @@ namespace QuantConnect.Tests.Algorithm
             if (initialPosition != Position.Zero)
             {
                 targetPercentage = (decimal)initialPosition;
-                orderDirection = initialPosition == Position.Long ? OrderDirection.Buy : OrderDirection.Sell;
+                orderDirection =
+                    initialPosition == Position.Long ? OrderDirection.Buy : OrderDirection.Sell;
                 orderQuantity = algorithm.CalculateOrderQuantity(_symbol, targetPercentage);
                 order = new MarketOrder(_symbol, orderQuantity, DateTime.UtcNow);
-                freeMargin = buyingPowerModel.GetMarginRemaining(algorithm.Portfolio, security, orderDirection);
+                freeMargin = buyingPowerModel.GetMarginRemaining(
+                    algorithm.Portfolio,
+                    security,
+                    orderDirection
+                );
                 requiredMargin = buyingPowerModel.GetInitialMarginRequiredForOrder(
                     new InitialMarginRequiredForOrderParameters(
-                        new IdentityCurrencyConverter(algorithm.Portfolio.CashBook.AccountCurrency), security, order));
+                        new IdentityCurrencyConverter(algorithm.Portfolio.CashBook.AccountCurrency),
+                        security,
+                        order
+                    )
+                );
 
                 //Console.WriteLine("Current price: " + security.Price);
                 //Console.WriteLine("Target percentage: " + targetPercentage);
@@ -185,9 +229,12 @@ namespace QuantConnect.Tests.Algorithm
 
                 Assert.That(Math.Abs(requiredMargin) <= freeMargin);
 
-                orderFee = security.FeeModel.GetOrderFee(
-                    new OrderFeeParameters(security, order));
-                fill = new OrderEvent(order, DateTime.UtcNow, orderFee) { FillPrice = security.Price, FillQuantity = orderQuantity };
+                orderFee = security.FeeModel.GetOrderFee(new OrderFeeParameters(security, order));
+                fill = new OrderEvent(order, DateTime.UtcNow, orderFee)
+                {
+                    FillPrice = security.Price,
+                    FillQuantity = orderQuantity
+                };
                 algorithm.Portfolio.ProcessFills(new List<OrderEvent> { fill });
 
                 //Console.WriteLine("Portfolio.Cash: " + algorithm.Portfolio.Cash);
@@ -213,13 +260,25 @@ namespace QuantConnect.Tests.Algorithm
             }
 
             targetPercentage = (decimal)finalPosition;
-            orderDirection = finalPosition == Position.Long || (finalPosition == Position.Zero && initialPosition == Position.Short) ? OrderDirection.Buy : OrderDirection.Sell;
+            orderDirection =
+                finalPosition == Position.Long
+                || (finalPosition == Position.Zero && initialPosition == Position.Short)
+                    ? OrderDirection.Buy
+                    : OrderDirection.Sell;
             orderQuantity = algorithm.CalculateOrderQuantity(_symbol, targetPercentage);
             order = new MarketOrder(_symbol, orderQuantity, DateTime.UtcNow);
-            freeMargin = buyingPowerModel.GetMarginRemaining(algorithm.Portfolio, security, orderDirection);
+            freeMargin = buyingPowerModel.GetMarginRemaining(
+                algorithm.Portfolio,
+                security,
+                orderDirection
+            );
             requiredMargin = buyingPowerModel.GetInitialMarginRequiredForOrder(
                 new InitialMarginRequiredForOrderParameters(
-                    new IdentityCurrencyConverter(algorithm.Portfolio.CashBook.AccountCurrency), security, order));
+                    new IdentityCurrencyConverter(algorithm.Portfolio.CashBook.AccountCurrency),
+                    security,
+                    order
+                )
+            );
 
             //Console.WriteLine("Current price: " + security.Price);
             //Console.WriteLine("Target percentage: " + targetPercentage);
@@ -231,9 +290,12 @@ namespace QuantConnect.Tests.Algorithm
 
             Assert.That(Math.Abs(requiredMargin) <= freeMargin);
 
-            orderFee = security.FeeModel.GetOrderFee(
-                new OrderFeeParameters(security, order));
-            fill = new OrderEvent(order, DateTime.UtcNow, orderFee) { FillPrice = security.Price, FillQuantity = orderQuantity };
+            orderFee = security.FeeModel.GetOrderFee(new OrderFeeParameters(security, order));
+            fill = new OrderEvent(order, DateTime.UtcNow, orderFee)
+            {
+                FillPrice = security.Price,
+                FillQuantity = orderQuantity
+            };
             algorithm.Portfolio.ProcessFills(new List<OrderEvent> { fill });
 
             //Console.WriteLine("Portfolio.Cash: " + algorithm.Portfolio.Cash);
@@ -243,15 +305,17 @@ namespace QuantConnect.Tests.Algorithm
 
         private static void Update(Security security, decimal price)
         {
-            security.SetMarketPrice(new TradeBar
-            {
-                Time = DateTime.Now,
-                Symbol = security.Symbol,
-                Open = price,
-                High = price,
-                Low = price,
-                Close = price
-            });
+            security.SetMarketPrice(
+                new TradeBar
+                {
+                    Time = DateTime.Now,
+                    Symbol = security.Symbol,
+                    Open = price,
+                    High = price,
+                    Low = price,
+                    Close = price
+                }
+            );
         }
     }
 }

@@ -38,7 +38,7 @@ namespace QuantConnect.Securities.Positions
         public PositionGroupMaintenanceMarginParameters(
             SecurityPortfolioManager portfolio,
             IPositionGroup positionGroup
-            )
+        )
         {
             Portfolio = portfolio;
             PositionGroup = positionGroup;

@@ -14,9 +14,9 @@
 */
 
 using System;
+using System.Collections.Generic;
 using System.Threading;
 using QuantConnect.Util;
-using System.Collections.Generic;
 
 namespace QuantConnect.Lean.Engine.DataFeeds
 {
@@ -48,43 +48,47 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             _event = new ManualResetEvent(false);
             _work = new Queue<DateTime>();
             _pulseThread = new Thread(() =>
+            {
+                while (!_tokenSource.Token.IsCancellationRequested)
                 {
-                    while (!_tokenSource.Token.IsCancellationRequested)
+                    DateTime nextUtcScheduledEvent;
+                    lock (_work)
                     {
-                        DateTime nextUtcScheduledEvent;
-                        lock (_work)
-                        {
-                            _work.TryDequeue(out nextUtcScheduledEvent);
-                        }
-
-                        if (nextUtcScheduledEvent == default)
-                        {
-                            _event.WaitOne(_tokenSource.Token);
-                            _event.Reset();
-                            if (_tokenSource.Token.IsCancellationRequested)
-                            {
-                                return;
-                            }
-                            continue;
-                        }
-
-                        // testing has shown that it sometimes requires more than one loop
-                        var diff = nextUtcScheduledEvent - timeProvider.GetUtcNow();
-                        while (diff.Ticks > 0)
-                        {
-                            _tokenSource.Token.WaitHandle.WaitOne(diff);
-
-                            diff = nextUtcScheduledEvent - timeProvider.GetUtcNow();
-
-                            if (_tokenSource.Token.IsCancellationRequested)
-                            {
-                                return;
-                            }
-                        }
-
-                        NewEvent?.Invoke(this, EventArgs.Empty);
+                        _work.TryDequeue(out nextUtcScheduledEvent);
                     }
-                }) { IsBackground = true, Name = "RealTimeScheduleEventService" };
+
+                    if (nextUtcScheduledEvent == default)
+                    {
+                        _event.WaitOne(_tokenSource.Token);
+                        _event.Reset();
+                        if (_tokenSource.Token.IsCancellationRequested)
+                        {
+                            return;
+                        }
+                        continue;
+                    }
+
+                    // testing has shown that it sometimes requires more than one loop
+                    var diff = nextUtcScheduledEvent - timeProvider.GetUtcNow();
+                    while (diff.Ticks > 0)
+                    {
+                        _tokenSource.Token.WaitHandle.WaitOne(diff);
+
+                        diff = nextUtcScheduledEvent - timeProvider.GetUtcNow();
+
+                        if (_tokenSource.Token.IsCancellationRequested)
+                        {
+                            return;
+                        }
+                    }
+
+                    NewEvent?.Invoke(this, EventArgs.Empty);
+                }
+            })
+            {
+                IsBackground = true,
+                Name = "RealTimeScheduleEventService"
+            };
             _pulseThread.Start();
         }
 

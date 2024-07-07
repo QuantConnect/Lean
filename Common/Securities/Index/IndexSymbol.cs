@@ -22,7 +22,10 @@ namespace QuantConnect.Securities.Index
     /// </summary>
     public static class IndexSymbol
     {
-        private static readonly Dictionary<string, string> _indexMarket = new Dictionary<string, string>
+        private static readonly Dictionary<string, string> _indexMarket = new Dictionary<
+            string,
+            string
+        >
         {
             { "SPX", Market.CBOE },
             { "NDX", "NASDAQ" },
@@ -39,9 +42,7 @@ namespace QuantConnect.Securities.Index
         public static string GetIndexExchange(Symbol symbol)
         {
             string market;
-            return _indexMarket.TryGetValue(symbol.Value, out market)
-                ? market
-                : symbol.ID.Market;
+            return _indexMarket.TryGetValue(symbol.Value, out market) ? market : symbol.ID.Market;
         }
     }
 }

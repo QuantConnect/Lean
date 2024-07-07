@@ -124,9 +124,7 @@ namespace QuantConnect.Indicators
         /// </summary>
         /// <param name="limitMove">A decimal representing the limit move value for the period.</param>
         public WilderSwingIndex(decimal limitMove)
-            : this("SI", limitMove)
-        {
-        }
+            : this("SI", limitMove) { }
 
         /// <summary>
         /// Gets a flag indicating when this indicator is ready and fully initialized.
@@ -225,19 +223,22 @@ namespace QuantConnect.Indicators
             switch (expressionIndex)
             {
                 case 0:
-                    result = Math.Abs(_currentInput.High - _previousInput.Close)
+                    result =
+                        Math.Abs(_currentInput.High - _previousInput.Close)
                         - Math.Abs(0.5m * (_currentInput.Low - _previousInput.Close))
                         + Math.Abs(0.25m * (_previousInput.Close - _previousInput.Open));
                     break;
 
                 case 1:
-                    result = Math.Abs(_currentInput.Low - _previousInput.Close)
+                    result =
+                        Math.Abs(_currentInput.Low - _previousInput.Close)
                         - Math.Abs(0.5m * (_currentInput.High - _previousInput.Close))
                         + Math.Abs(0.25m * (_previousInput.Close - _previousInput.Open));
                     break;
 
                 case 2:
-                    result = Math.Abs(_currentInput.High - _currentInput.Low)
+                    result =
+                        Math.Abs(_currentInput.High - _currentInput.Low)
                         + Math.Abs(0.25m * (_previousInput.Close - _previousInput.Open));
                     break;
 

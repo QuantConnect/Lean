@@ -16,8 +16,8 @@
 using System;
 using NUnit.Framework;
 using QuantConnect.Data;
-using QuantConnect.Data.Market;
 using QuantConnect.Data.Consolidators;
+using QuantConnect.Data.Market;
 
 namespace QuantConnect.Tests.Common.Data
 {
@@ -34,9 +34,17 @@ namespace QuantConnect.Tests.Common.Data
             var localtime = timeKeeper.GetLocalTimeKeeper(TimeZones.NewYork);
             var increment = TimeSpan.FromSeconds(seconds);
             using var consolidator = new TestConsolidator();
-            using var wrapper = new ConsolidatorWrapper(consolidator, increment, timeKeeper, localtime);
+            using var wrapper = new ConsolidatorWrapper(
+                consolidator,
+                increment,
+                timeKeeper,
+                localtime
+            );
 
-            Assert.AreEqual(time.Add(increment < Time.OneSecond ? Time.OneSecond : increment), wrapper.UtcScanTime);
+            Assert.AreEqual(
+                time.Add(increment < Time.OneSecond ? Time.OneSecond : increment),
+                wrapper.UtcScanTime
+            );
         }
 
         [TestCase(2)]
@@ -48,7 +56,12 @@ namespace QuantConnect.Tests.Common.Data
             var localtime = timeKeeper.GetLocalTimeKeeper(TimeZones.NewYork);
             var increment = TimeSpan.FromSeconds(seconds);
             using var consolidator = new TestConsolidator();
-            using var wrapper = new ConsolidatorWrapper(consolidator, increment, timeKeeper, localtime);
+            using var wrapper = new ConsolidatorWrapper(
+                consolidator,
+                increment,
+                timeKeeper,
+                localtime
+            );
 
             var expected = time.Add(increment < Time.OneSecond ? Time.OneSecond : increment);
             Assert.AreEqual(expected, wrapper.UtcScanTime);
@@ -67,7 +80,12 @@ namespace QuantConnect.Tests.Common.Data
             var localtime = timeKeeper.GetLocalTimeKeeper(TimeZones.NewYork);
             var increment = TimeSpan.FromSeconds(seconds);
             using var consolidator = new TestConsolidator();
-            using var wrapper = new ConsolidatorWrapper(consolidator, increment, timeKeeper, localtime);
+            using var wrapper = new ConsolidatorWrapper(
+                consolidator,
+                increment,
+                timeKeeper,
+                localtime
+            );
 
             var expected = time.Add(increment < Time.OneSecond ? Time.OneSecond : increment);
             Assert.AreEqual(expected, wrapper.UtcScanTime);
@@ -108,14 +126,24 @@ namespace QuantConnect.Tests.Common.Data
             var localtime = timeKeeper.GetLocalTimeKeeper(tz);
             var increment = Time.OneHour;
             using var consolidator = new TestConsolidator();
-            using var wrapper = new ConsolidatorWrapper(consolidator, increment, timeKeeper, localtime);
+            using var wrapper = new ConsolidatorWrapper(
+                consolidator,
+                increment,
+                timeKeeper,
+                localtime
+            );
 
             var expected = time.Add(Time.OneHour);
             Assert.AreEqual(expected, wrapper.UtcScanTime);
 
-            consolidator.Consolidate(new TradeBar { Time = time.AddMinutes(100), Period = Time.OneDay });
+            consolidator.Consolidate(
+                new TradeBar { Time = time.AddMinutes(100), Period = Time.OneDay }
+            );
 
-            Assert.AreEqual(consolidator.Consolidated.EndTime.ConvertToUtc(tz) + Time.OneDay, wrapper.UtcScanTime);
+            Assert.AreEqual(
+                consolidator.Consolidated.EndTime.ConvertToUtc(tz) + Time.OneDay,
+                wrapper.UtcScanTime
+            );
         }
 
         [TestCase(-1, true)]
@@ -148,7 +176,12 @@ namespace QuantConnect.Tests.Common.Data
             var localtime = timeKeeper.GetLocalTimeKeeper(tz);
             var increment = Time.OneHour;
             using var consolidator = new TestConsolidator();
-            using var wrapper = new ConsolidatorWrapper(consolidator, increment, timeKeeper, localtime);
+            using var wrapper = new ConsolidatorWrapper(
+                consolidator,
+                increment,
+                timeKeeper,
+                localtime
+            );
 
             var expected = time.Add(Time.OneHour);
             Assert.AreEqual(expected, wrapper.UtcScanTime);
@@ -156,7 +189,11 @@ namespace QuantConnect.Tests.Common.Data
             timeKeeper.SetUtcDateTime(wrapper.UtcScanTime);
 
             // set a working bars
-            consolidator.WorkingData = new TradeBar { Time = time.AddMinutes(100), Period = Time.OneDay };
+            consolidator.WorkingData = new TradeBar
+            {
+                Time = time.AddMinutes(100),
+                Period = Time.OneDay
+            };
             wrapper.Scan();
 
             // after the scan we adjust the expected end time to the working bar
@@ -175,17 +212,11 @@ namespace QuantConnect.Tests.Common.Data
 
             public event DataConsolidatedHandler DataConsolidated;
 
-            public void Dispose()
-            {
-            }
+            public void Dispose() { }
 
-            public void Scan(DateTime currentLocalTime)
-            {
-            }
+            public void Scan(DateTime currentLocalTime) { }
 
-            public void Update(IBaseData data)
-            {
-            }
+            public void Update(IBaseData data) { }
 
             public void Consolidate(BaseData dataPoint)
             {

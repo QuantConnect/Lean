@@ -46,7 +46,11 @@ namespace QuantConnect.Securities.Option.StrategyMatcher
         /// <param name="right">The leg's contract right</param>
         /// <param name="quantity">The leg's unit quantity</param>
         /// <param name="predicates">The conditions a position must meet in order to match this definition</param>
-        public OptionStrategyLegDefinition(OptionRight right, int quantity, IEnumerable<OptionStrategyLegPredicate> predicates)
+        public OptionStrategyLegDefinition(
+            OptionRight right,
+            int quantity,
+            IEnumerable<OptionStrategyLegPredicate> predicates
+        )
         {
             Right = right;
             Quantity = quantity;
@@ -64,14 +68,15 @@ namespace QuantConnect.Securities.Option.StrategyMatcher
             OptionStrategyMatcherOptions options,
             IReadOnlyList<OptionPosition> legs,
             OptionPositionCollection positions
-            )
+        )
         {
             foreach (var position in options.Enumerate(Filter(legs, positions, false)))
             {
                 var multiplier = position.Quantity / Quantity;
                 if (multiplier != 0)
                 {
-                    yield return new OptionStrategyLegDefinitionMatch(multiplier,
+                    yield return new OptionStrategyLegDefinitionMatch(
+                        multiplier,
                         position.WithQuantity(multiplier * Quantity)
                     );
                 }
@@ -82,7 +87,11 @@ namespace QuantConnect.Securities.Option.StrategyMatcher
         /// Filters the provided <paramref name="positions"/> collection such that any remaining positions are all
         /// valid options that match this leg definition instance.
         /// </summary>
-        public OptionPositionCollection Filter(IReadOnlyList<OptionPosition> legs, OptionPositionCollection positions, bool includeUnderlying = true)
+        public OptionPositionCollection Filter(
+            IReadOnlyList<OptionPosition> legs,
+            OptionPositionCollection positions,
+            bool includeUnderlying = true
+        )
         {
             // first filter down to applicable right
             positions = positions.Slice(Right, includeUnderlying);
@@ -92,7 +101,7 @@ namespace QuantConnect.Securities.Option.StrategyMatcher
             }
 
             // second filter according to the required side
-            var side = (PositionSide) Math.Sign(Quantity);
+            var side = (PositionSide)Math.Sign(Quantity);
             positions = positions.Slice(side, includeUnderlying);
             if (positions.IsEmpty)
             {
@@ -120,10 +129,7 @@ namespace QuantConnect.Securities.Option.StrategyMatcher
         /// </summary>
         public OptionStrategy.LegData CreateLegData(OptionStrategyLegDefinitionMatch match)
         {
-            return CreateLegData(
-                match.Position.Symbol,
-                match.Position.Quantity / Quantity
-            );
+            return CreateLegData(match.Position.Symbol, match.Position.Quantity / Quantity);
         }
 
         /// <summary>
@@ -145,8 +151,7 @@ namespace QuantConnect.Securities.Option.StrategyMatcher
         /// </summary>
         public bool TryMatch(OptionPosition position, out OptionStrategy.LegData leg)
         {
-            if (Right != position.Right ||
-                Math.Sign(Quantity) != Math.Sign(position.Quantity))
+            if (Right != position.Right || Math.Sign(Quantity) != Math.Sign(position.Quantity))
             {
                 leg = null;
                 return false;
@@ -159,9 +164,11 @@ namespace QuantConnect.Securities.Option.StrategyMatcher
                 return false;
             }
 
-            leg = position.Symbol.SecurityType == SecurityType.Option
-                ? (OptionStrategy.LegData) OptionStrategy.OptionLegData.Create(quantity, position.Symbol)
-                : OptionStrategy.UnderlyingLegData.Create(quantity);
+            leg =
+                position.Symbol.SecurityType == SecurityType.Option
+                    ? (OptionStrategy.LegData)
+                        OptionStrategy.OptionLegData.Create(quantity, position.Symbol)
+                    : OptionStrategy.UnderlyingLegData.Create(quantity);
 
             return true;
         }
@@ -169,14 +176,22 @@ namespace QuantConnect.Securities.Option.StrategyMatcher
         /// <summary>
         /// Creates a new <see cref="OptionStrategyLegDefinition"/> matching the specified parameters
         /// </summary>
-        public static OptionStrategyLegDefinition Create(OptionRight right, int quantity,
-            IEnumerable<Expression<Func<IReadOnlyList<OptionPosition>, OptionPosition, bool>>> predicates
-            )
+        public static OptionStrategyLegDefinition Create(
+            OptionRight right,
+            int quantity,
+            IEnumerable<
+                Expression<Func<IReadOnlyList<OptionPosition>, OptionPosition, bool>>
+            > predicates
+        )
         {
-            return new OptionStrategyLegDefinition(right, quantity,
+            return new OptionStrategyLegDefinition(
+                right,
+                quantity,
                 // sort predicates such that indexed predicates are evaluated first
                 // this leaves fewer positions to be evaluated by the full table scan
-                predicates.Select(OptionStrategyLegPredicate.Create).OrderBy(p => p.IsIndexed ? 0 : 1)
+                predicates
+                    .Select(OptionStrategyLegPredicate.Create)
+                    .OrderBy(p => p.IsIndexed ? 0 : 1)
             );
         }
 

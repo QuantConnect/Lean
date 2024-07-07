@@ -15,10 +15,10 @@
 */
 
 using System;
-using System.Linq;
-using Python.Runtime;
-using Newtonsoft.Json;
 using System.Collections.Generic;
+using System.Linq;
+using Newtonsoft.Json;
+using Python.Runtime;
 using QuantConnect.Data.UniverseSelection;
 
 namespace QuantConnect.Data.Fundamental
@@ -37,12 +37,25 @@ namespace QuantConnect.Data.Fundamental
         /// Gets/sets the FiveYears period value for the field
         /// </summary>
         [JsonProperty("5Y")]
-        public double FiveYears => FundamentalService.Get<double>(TimeProvider.GetUtcNow(), SecurityIdentifier, FundamentalProperty.OperationRatios_ROA5YrAvg_FiveYears);
+        public double FiveYears =>
+            FundamentalService.Get<double>(
+                TimeProvider.GetUtcNow(),
+                SecurityIdentifier,
+                FundamentalProperty.OperationRatios_ROA5YrAvg_FiveYears
+            );
 
         /// <summary>
         /// Returns true if the field contains a value for the default period
         /// </summary>
-        public override bool HasValue => !BaseFundamentalDataProvider.IsNone(typeof(double), FundamentalService.Get<double>(TimeProvider.GetUtcNow(), SecurityIdentifier, FundamentalProperty.OperationRatios_ROA5YrAvg_FiveYears));
+        public override bool HasValue =>
+            !BaseFundamentalDataProvider.IsNone(
+                typeof(double),
+                FundamentalService.Get<double>(
+                    TimeProvider.GetUtcNow(),
+                    SecurityIdentifier,
+                    FundamentalProperty.OperationRatios_ROA5YrAvg_FiveYears
+                )
+            );
 
         /// <summary>
         /// Returns the default value for the field
@@ -51,7 +64,11 @@ namespace QuantConnect.Data.Fundamental
         {
             get
             {
-                var defaultValue = FundamentalService.Get<double>(TimeProvider.GetUtcNow(), SecurityIdentifier, FundamentalProperty.OperationRatios_ROA5YrAvg_FiveYears);
+                var defaultValue = FundamentalService.Get<double>(
+                    TimeProvider.GetUtcNow(),
+                    SecurityIdentifier,
+                    FundamentalProperty.OperationRatios_ROA5YrAvg_FiveYears
+                );
                 if (!BaseFundamentalDataProvider.IsNone(typeof(double), defaultValue))
                 {
                     return defaultValue;
@@ -67,9 +84,9 @@ namespace QuantConnect.Data.Fundamental
         public override IReadOnlyDictionary<string, double> GetPeriodValues()
         {
             var result = new Dictionary<string, double>();
-            foreach (var kvp in new[] { new Tuple<string, double>("5Y",FiveYears) })
+            foreach (var kvp in new[] { new Tuple<string, double>("5Y", FiveYears) })
             {
-                if(!BaseFundamentalDataProvider.IsNone(typeof(double), kvp.Item2))
+                if (!BaseFundamentalDataProvider.IsNone(typeof(double), kvp.Item2))
                 {
                     result[kvp.Item1] = kvp.Item2;
                 }
@@ -82,20 +99,24 @@ namespace QuantConnect.Data.Fundamental
         /// </summary>
         /// <param name="period">The requested period</param>
         /// <returns>The value for the period</returns>
-        public override double GetPeriodValue(string period) => FundamentalService.Get<double>(TimeProvider.GetUtcNow(), SecurityIdentifier, Enum.Parse<FundamentalProperty>($"OperationRatios_ROA5YrAvg_{ConvertPeriod(period)}"));
+        public override double GetPeriodValue(string period) =>
+            FundamentalService.Get<double>(
+                TimeProvider.GetUtcNow(),
+                SecurityIdentifier,
+                Enum.Parse<FundamentalProperty>(
+                    $"OperationRatios_ROA5YrAvg_{ConvertPeriod(period)}"
+                )
+            );
 
         /// <summary>
         /// Creates a new empty instance
         /// </summary>
-        public ROA5YrAvg()
-        {
-        }
+        public ROA5YrAvg() { }
 
         /// <summary>
         /// Creates a new instance for the given time and security
         /// </summary>
-        public ROA5YrAvg(ITimeProvider timeProvider, SecurityIdentifier securityIdentifier) : base(timeProvider, securityIdentifier)
-        {
-        }
+        public ROA5YrAvg(ITimeProvider timeProvider, SecurityIdentifier securityIdentifier)
+            : base(timeProvider, securityIdentifier) { }
     }
 }

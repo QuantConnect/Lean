@@ -65,12 +65,12 @@ namespace QuantConnect.Orders.Fees
             if (parameters.Security.Type == SecurityType.Forex)
             {
                 var commissionRate = _groupCommissionSchedule1.Contains(parameters.Security.Symbol)
-                    ? 0.04m : 0.06m;
+                    ? 0.04m
+                    : 0.06m;
 
                 fee = Math.Abs(commissionRate * parameters.Order.AbsoluteQuantity / 1000);
             }
-            return new OrderFee(new CashAmount(fee,
-                _currency));
+            return new OrderFee(new CashAmount(fee, _currency));
         }
     }
 }

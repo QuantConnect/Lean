@@ -50,17 +50,49 @@ namespace QuantConnect.Tests.Common.Securities.FutureOption
         [TestCase("ZC", Market.CBOT, 2032, 1, 19, 2032, 1, true)]
         [TestCase("ZS", Market.CBOT, 2035, 1, 19, 2035, 1, true)]
         [TestCase("ZW", Market.CBOT, 2037, 1, 19, 2037, 1, true)]
-        public void GetUnderlyingSymbolFromFutureOption(string futureTicker, string market, int year, int month, int day, int fopContractYear, int fopContractMonth, bool nullExpected)
+        public void GetUnderlyingSymbolFromFutureOption(
+            string futureTicker,
+            string market,
+            int year,
+            int month,
+            int day,
+            int fopContractYear,
+            int fopContractMonth,
+            bool nullExpected
+        )
         {
             var optionTicker = FuturesOptionsSymbolMappings.Map(futureTicker);
-            var expectedFuture = Symbol.CreateFuture(futureTicker, market, new DateTime(year, month, day));
-            var canonicalFutureOption = Symbol.CreateOption(expectedFuture, market, default(OptionStyle), default(OptionRight), default(decimal), SecurityIdentifier.DefaultDate);
+            var expectedFuture = Symbol.CreateFuture(
+                futureTicker,
+                market,
+                new DateTime(year, month, day)
+            );
+            var canonicalFutureOption = Symbol.CreateOption(
+                expectedFuture,
+                market,
+                default(OptionStyle),
+                default(OptionRight),
+                default(decimal),
+                SecurityIdentifier.DefaultDate
+            );
 
-            var futureContractMonthDelta = FuturesExpiryUtilityFunctions.GetDeltaBetweenContractMonthAndContractExpiry(futureTicker, expectedFuture.ID.Date);
+            var futureContractMonthDelta =
+                FuturesExpiryUtilityFunctions.GetDeltaBetweenContractMonthAndContractExpiry(
+                    futureTicker,
+                    expectedFuture.ID.Date
+                );
             var futureContractMonth = expectedFuture.ID.Date.AddMonths(futureContractMonthDelta);
-            var futuresOptionsExpiration = FuturesOptionsExpiryFunctions.FuturesOptionExpiry(canonicalFutureOption, futureContractMonth);
+            var futuresOptionsExpiration = FuturesOptionsExpiryFunctions.FuturesOptionExpiry(
+                canonicalFutureOption,
+                futureContractMonth
+            );
 
-            var actualFuture = FuturesOptionsUnderlyingMapper.GetUnderlyingFutureFromFutureOption(optionTicker, market, futuresOptionsExpiration, new DateTime(2021, 1, 1));
+            var actualFuture = FuturesOptionsUnderlyingMapper.GetUnderlyingFutureFromFutureOption(
+                optionTicker,
+                market,
+                futuresOptionsExpiration,
+                new DateTime(2021, 1, 1)
+            );
 
             if (nullExpected)
             {

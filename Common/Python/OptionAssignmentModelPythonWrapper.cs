@@ -21,16 +21,16 @@ namespace QuantConnect.Python
     /// <summary>
     /// Python wrapper for custom option assignment models
     /// </summary>
-    public class OptionAssignmentModelPythonWrapper : BasePythonWrapper<IOptionAssignmentModel>, IOptionAssignmentModel
+    public class OptionAssignmentModelPythonWrapper
+        : BasePythonWrapper<IOptionAssignmentModel>,
+            IOptionAssignmentModel
     {
         /// <summary>
         /// Creates a new instance
         /// </summary>
         /// <param name="model">The python model to wrapp</param>
         public OptionAssignmentModelPythonWrapper(PyObject model)
-            : base(model)
-        {
-        }
+            : base(model) { }
 
         /// <summary>
         /// Get's the option assignments to generate if any

@@ -15,13 +15,13 @@
 */
 
 using System;
-using System.Threading;
-using QuantConnect.Util;
-using QuantConnect.Data;
-using QuantConnect.Logging;
-using QuantConnect.Interfaces;
-using System.Collections.Generic;
 using System.Collections.Concurrent;
+using System.Collections.Generic;
+using System.Threading;
+using QuantConnect.Data;
+using QuantConnect.Interfaces;
+using QuantConnect.Logging;
+using QuantConnect.Util;
 
 namespace QuantConnect.Lean.Engine.DataFeeds
 {
@@ -97,9 +97,20 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         /// enumerator, defaults to always returning true</param>
         /// <param name="enumeratorFinished">Delegate called when the enumerator move next returns false</param>
         /// <param name="handleData">Handler for data if HandlesData=true</param>
-        public void AddEnumerator(Symbol symbol, IEnumerator<BaseData> enumerator, Func<bool> shouldMoveNext = null, Action<EnumeratorHandler> enumeratorFinished = null, Action<BaseData> handleData = null)
+        public void AddEnumerator(
+            Symbol symbol,
+            IEnumerator<BaseData> enumerator,
+            Func<bool> shouldMoveNext = null,
+            Action<EnumeratorHandler> enumeratorFinished = null,
+            Action<BaseData> handleData = null
+        )
         {
-            var enumeratorHandler = new EnumeratorHandler(symbol, enumerator, shouldMoveNext, handleData);
+            var enumeratorHandler = new EnumeratorHandler(
+                symbol,
+                enumerator,
+                shouldMoveNext,
+                handleData
+            );
             if (enumeratorFinished != null)
             {
                 enumeratorHandler.EnumeratorFinished += (sender, args) => enumeratorFinished(args);
@@ -149,7 +160,11 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                 manualEvent.Set();
                 Log.Trace($"BaseDataExchange({Name}) Starting...");
                 ConsumeEnumerators();
-            }) {  IsBackground = true, Name = Name };
+            })
+            {
+                IsBackground = true,
+                Name = Name
+            };
             _thread.Start();
 
             manualEvent.Wait();
@@ -187,7 +202,8 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                         var enumerator = enumeratorHandler.Enumerator;
 
                         // check to see if we should advance this enumerator
-                        if (!enumeratorHandler.ShouldMoveNext()) continue;
+                        if (!enumeratorHandler.ShouldMoveNext())
+                            continue;
 
                         if (!enumerator.MoveNext())
                         {
@@ -197,7 +213,8 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                             continue;
                         }
 
-                        if (enumerator.Current == null) continue;
+                        if (enumerator.Current == null)
+                            continue;
 
                         handled = true;
                         enumeratorHandler.HandleData(enumerator.Current);
@@ -207,7 +224,10 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                     {
                         // if we didn't handle anything on this past iteration, take a nap
                         // wait until we timeout, we are cancelled or there is a new enumerator added
-                        _manualResetEventSlim.Wait(Time.GetSecondUnevenWait((int)_sleepInterval), _cancellationTokenSource.Token);
+                        _manualResetEventSlim.Wait(
+                            Time.GetSecondUnevenWait((int)_sleepInterval),
+                            _cancellationTokenSource.Token
+                        );
                     }
                 }
                 catch (OperationCanceledException)
@@ -219,7 +239,9 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                     Log.Error(err);
                     if (_isFatalError(err))
                     {
-                        Log.Trace($"BaseDataExchange({Name}).ConsumeQueue(): Fatal error encountered. Exiting...");
+                        Log.Trace(
+                            $"BaseDataExchange({Name}).ConsumeQueue(): Fatal error encountered. Exiting..."
+                        );
                         return;
                     }
                 }
@@ -259,7 +281,12 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             /// <param name="shouldMoveNext">Predicate function used to determine if we should call move next
             /// on the symbol's enumerator</param>
             /// <param name="handleData">Handler for data if HandlesData=true</param>
-            public EnumeratorHandler(Symbol symbol, IEnumerator<BaseData> enumerator, Func<bool> shouldMoveNext = null, Action<BaseData> handleData = null)
+            public EnumeratorHandler(
+                Symbol symbol,
+                IEnumerator<BaseData> enumerator,
+                Func<bool> shouldMoveNext = null,
+                Action<BaseData> handleData = null
+            )
             {
                 Symbol = symbol;
                 Enumerator = enumerator;

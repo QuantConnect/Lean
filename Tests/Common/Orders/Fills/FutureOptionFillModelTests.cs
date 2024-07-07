@@ -36,44 +36,73 @@ namespace QuantConnect.Tests.Common.Orders.Fills
         [SetUp]
         public void Setup()
         {
-            TimeKeeper = new TimeKeeper(Noon.ConvertToUtc(TimeZones.NewYork), new[] { TimeZones.NewYork });
+            TimeKeeper = new TimeKeeper(
+                Noon.ConvertToUtc(TimeZones.NewYork),
+                new[] { TimeZones.NewYork }
+            );
         }
 
         [Test]
-        public void PerformsMarketFill([Values] bool isInternal,
+        public void PerformsMarketFill(
+            [Values] bool isInternal,
             [Values] bool extendedMarketHours,
-            [Values(OrderDirection.Buy, OrderDirection.Sell)] OrderDirection orderDirection)
+            [Values(OrderDirection.Buy, OrderDirection.Sell)] OrderDirection orderDirection
+        )
         {
             var model = new FutureFillModel();
             var quantity = orderDirection == OrderDirection.Buy ? 100 : -100;
             var time = extendedMarketHours ? Noon.AddHours(-12) : Noon; // Midgnight (extended hours) or Noon (regular hours)
-            var symbol = Symbols.CreateFutureOptionSymbol(Symbols.CreateFutureSymbol("ES", new DateTime(2020, 4, 28)), OptionRight.Call,
-                1000, new DateTime(2020, 3, 26));
+            var symbol = Symbols.CreateFutureOptionSymbol(
+                Symbols.CreateFutureSymbol("ES", new DateTime(2020, 4, 28)),
+                OptionRight.Call,
+                1000,
+                new DateTime(2020, 3, 26)
+            );
             var order = new MarketOrder(symbol, quantity, time);
             var config = CreateTradeBarConfig(symbol, isInternal, extendedMarketHours);
             var security = GetSecurity(config);
             security.SetLocalTimeKeeper(TimeKeeper.GetLocalTimeKeeper(TimeZones.NewYork));
             security.SetMarketPrice(new IndicatorDataPoint(symbol, time, 101.123m));
 
-            var fill = model.Fill(new FillModelParameters(
-                security,
-                order,
-                new MockSubscriptionDataConfigProvider(config),
-                Time.OneHour,
-                null)).Single();
+            var fill = model
+                .Fill(
+                    new FillModelParameters(
+                        security,
+                        order,
+                        new MockSubscriptionDataConfigProvider(config),
+                        Time.OneHour,
+                        null
+                    )
+                )
+                .Single();
             Assert.AreEqual(order.Quantity, fill.FillQuantity);
             Assert.AreEqual(security.Price, fill.FillPrice);
             Assert.AreEqual(OrderStatus.Filled, fill.Status);
         }
 
-        private SubscriptionDataConfig CreateTradeBarConfig(Symbol symbol, bool isInternal = false, bool extendedMarketHours = true)
+        private SubscriptionDataConfig CreateTradeBarConfig(
+            Symbol symbol,
+            bool isInternal = false,
+            bool extendedMarketHours = true
+        )
         {
-            return new SubscriptionDataConfig(typeof(TradeBar), symbol, Resolution.Minute, TimeZones.NewYork, TimeZones.NewYork, true, extendedMarketHours, isInternal);
+            return new SubscriptionDataConfig(
+                typeof(TradeBar),
+                symbol,
+                Resolution.Minute,
+                TimeZones.NewYork,
+                TimeZones.NewYork,
+                true,
+                extendedMarketHours,
+                isInternal
+            );
         }
 
         private Security GetSecurity(SubscriptionDataConfig config)
         {
-            var entry = MarketHoursDatabase.FromDataFolder().GetEntry(config.Symbol.ID.Market, config.Symbol, config.SecurityType);
+            var entry = MarketHoursDatabase
+                .FromDataFolder()
+                .GetEntry(config.Symbol.ID.Market, config.Symbol, config.SecurityType);
             var security = new Security(
                 entry.ExchangeHours,
                 config,

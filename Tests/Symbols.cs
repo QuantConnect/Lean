@@ -38,7 +38,7 @@ namespace QuantConnect.Tests
         public static readonly Symbol NFLX = CreateEquitySymbol("NFLX");
         public static readonly Symbol CAT = CreateEquitySymbol("CAT");
         public static readonly Symbol SGX = CreateEquitySymbol("SGX", Market.SGX);
-        public static readonly Symbol SBIN = CreateEquitySymbol("SBIN",Market.India);
+        public static readonly Symbol SBIN = CreateEquitySymbol("SBIN", Market.India);
         public static readonly Symbol IDEA = CreateEquitySymbol("IDEA", Market.India);
 
         public static readonly Symbol LOW = CreateEquitySymbol("LOW");
@@ -62,23 +62,47 @@ namespace QuantConnect.Tests
         public static readonly Symbol XAUJPY = CreateCfdSymbol("XAUJPY", Market.Oanda);
 
         public static readonly Symbol SPY_Option_Chain = CreateOptionsCanonicalSymbol("SPY");
-        public static readonly Symbol SPY_C_192_Feb19_2016 = CreateOptionSymbol("SPY", OptionRight.Call, 192m, new DateTime(2016, 02, 19));
-        public static readonly Symbol SPY_P_192_Feb19_2016 = CreateOptionSymbol("SPY", OptionRight.Put, 192m, new DateTime(2016, 02, 19));
+        public static readonly Symbol SPY_C_192_Feb19_2016 = CreateOptionSymbol(
+            "SPY",
+            OptionRight.Call,
+            192m,
+            new DateTime(2016, 02, 19)
+        );
+        public static readonly Symbol SPY_P_192_Feb19_2016 = CreateOptionSymbol(
+            "SPY",
+            OptionRight.Put,
+            192m,
+            new DateTime(2016, 02, 19)
+        );
 
-        public static readonly Symbol Fut_SPY_Feb19_2016 = CreateFutureSymbol(Futures.Indices.SP500EMini, new DateTime(2016, 02, 19));
-        public static readonly Symbol Fut_SPY_Mar19_2016 = CreateFutureSymbol(Futures.Indices.SP500EMini, new DateTime(2016, 03, 19));
+        public static readonly Symbol Fut_SPY_Feb19_2016 = CreateFutureSymbol(
+            Futures.Indices.SP500EMini,
+            new DateTime(2016, 02, 19)
+        );
+        public static readonly Symbol Fut_SPY_Mar19_2016 = CreateFutureSymbol(
+            Futures.Indices.SP500EMini,
+            new DateTime(2016, 03, 19)
+        );
 
-        public static readonly Symbol ES_Future_Chain = CreateFuturesCanonicalSymbol(Futures.Indices.SP500EMini);
-        public static readonly Symbol Future_ESZ18_Dec2018 = CreateFutureSymbol(Futures.Indices.SP500EMini, new DateTime(2018, 12, 21));
-        public static readonly Symbol Future_CLF19_Jan2019 = CreateFutureSymbol("CL", new DateTime(2018, 12, 19));
+        public static readonly Symbol ES_Future_Chain = CreateFuturesCanonicalSymbol(
+            Futures.Indices.SP500EMini
+        );
+        public static readonly Symbol Future_ESZ18_Dec2018 = CreateFutureSymbol(
+            Futures.Indices.SP500EMini,
+            new DateTime(2018, 12, 21)
+        );
+        public static readonly Symbol Future_CLF19_Jan2019 = CreateFutureSymbol(
+            "CL",
+            new DateTime(2018, 12, 19)
+        );
 
         public static readonly Symbol SPX = CreateIndexSymbol("SPX");
 
-        public static readonly ImmutableArray<Symbol> All =
-            typeof(Symbols).GetFields(BindingFlags.Public | BindingFlags.Static)
-                .Where(field => field.FieldType == typeof(Symbol))
-                .Select(field => (Symbol) field.GetValue(null))
-                .ToImmutableArray();
+        public static readonly ImmutableArray<Symbol> All = typeof(Symbols)
+            .GetFields(BindingFlags.Public | BindingFlags.Static)
+            .Where(field => field.FieldType == typeof(Symbol))
+            .Select(field => (Symbol)field.GetValue(null))
+            .ToImmutableArray();
 
         /// <summary>
         /// Can be supplied in TestCase attribute
@@ -112,7 +136,10 @@ namespace QuantConnect.Tests
         /// <remarks>Using reflection minimizes maintenance but is slower at runtime.</remarks>
         public static Symbol Lookup(SymbolsKey key)
         {
-            return (Symbol)typeof(Symbols).GetField(key.ToString(), BindingFlags.Public | BindingFlags.Static).GetValue(null);
+            return (Symbol)
+                typeof(Symbols)
+                    .GetField(key.ToString(), BindingFlags.Public | BindingFlags.Static)
+                    .GetValue(null);
         }
 
         /// <summary>
@@ -122,15 +149,24 @@ namespace QuantConnect.Tests
         {
             switch (type)
             {
-                case SecurityType.Equity:   return SPY;
-                case SecurityType.Option:   return SPY_C_192_Feb19_2016;
-                case SecurityType.Forex:    return EURUSD;
-                case SecurityType.Future:   return Future_CLF19_Jan2019;
-                case SecurityType.Cfd:      return XAGUSD;
-                case SecurityType.Crypto:   return BTCUSD;
-                case SecurityType.Index:    return SPX;
+                case SecurityType.Equity:
+                    return SPY;
+                case SecurityType.Option:
+                    return SPY_C_192_Feb19_2016;
+                case SecurityType.Forex:
+                    return EURUSD;
+                case SecurityType.Future:
+                    return Future_CLF19_Jan2019;
+                case SecurityType.Cfd:
+                    return XAGUSD;
+                case SecurityType.Crypto:
+                    return BTCUSD;
+                case SecurityType.Index:
+                    return SPX;
                 default:
-                    throw new NotImplementedException($"Symbols.GetBySecurityType({type}) is not implemented.");
+                    throw new NotImplementedException(
+                        $"Symbols.GetBySecurityType({type}) is not implemented."
+                    );
             }
         }
 
@@ -144,18 +180,36 @@ namespace QuantConnect.Tests
             TestGlobals.Initialize();
             return Symbol.Create(symbol, SecurityType.Equity, market);
         }
+
         public static Symbol CreateFutureSymbol(string symbol, DateTime expiry)
         {
             string market;
-            if (!SymbolPropertiesDatabase.FromDataFolder().TryGetMarket(symbol, SecurityType.Future, out market))
+            if (
+                !SymbolPropertiesDatabase
+                    .FromDataFolder()
+                    .TryGetMarket(symbol, SecurityType.Future, out market)
+            )
             {
                 market = DefaultBrokerageModel.DefaultMarketMap[SecurityType.Future];
             }
             return Symbol.CreateFuture(symbol, market, expiry);
         }
-        public static Symbol CreateFutureOptionSymbol(Symbol underlying, OptionRight right, decimal strike, DateTime expiry)
+
+        public static Symbol CreateFutureOptionSymbol(
+            Symbol underlying,
+            OptionRight right,
+            decimal strike,
+            DateTime expiry
+        )
         {
-            return Symbol.CreateOption(underlying, underlying.ID.Market, OptionStyle.American, right, strike, expiry);
+            return Symbol.CreateOption(
+                underlying,
+                underlying.ID.Market,
+                OptionStyle.American,
+                right,
+                strike,
+                expiry
+            );
         }
 
         private static Symbol CreateCfdSymbol(string symbol, string market)
@@ -163,7 +217,13 @@ namespace QuantConnect.Tests
             return Symbol.Create(symbol, SecurityType.Cfd, market);
         }
 
-        internal static Symbol CreateOptionSymbol(string symbol, OptionRight right, decimal strike, DateTime expiry, string market = Market.USA)
+        internal static Symbol CreateOptionSymbol(
+            string symbol,
+            OptionRight right,
+            decimal strike,
+            DateTime expiry,
+            string market = Market.USA
+        )
         {
             return Symbol.CreateOption(symbol, market, OptionStyle.American, right, strike, expiry);
         }
@@ -181,7 +241,11 @@ namespace QuantConnect.Tests
         public static Symbol CreateFuturesCanonicalSymbol(string ticker)
         {
             string market;
-            if (!SymbolPropertiesDatabase.FromDataFolder().TryGetMarket(ticker, SecurityType.Future, out market))
+            if (
+                !SymbolPropertiesDatabase
+                    .FromDataFolder()
+                    .TryGetMarket(ticker, SecurityType.Future, out market)
+            )
             {
                 market = DefaultBrokerageModel.DefaultMarketMap[SecurityType.Future];
             }

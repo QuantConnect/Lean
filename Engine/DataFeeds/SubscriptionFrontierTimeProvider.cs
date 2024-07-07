@@ -34,7 +34,10 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         /// </summary>
         /// <param name="utcNow">Initial UTC now time</param>
         /// <param name="subscriptionManager">Subscription manager. Will be used to obtain current subscriptions</param>
-        public SubscriptionFrontierTimeProvider(DateTime utcNow, IDataFeedSubscriptionManager subscriptionManager)
+        public SubscriptionFrontierTimeProvider(
+            DateTime utcNow,
+            IDataFeedSubscriptionManager subscriptionManager
+        )
         {
             _utcNow = utcNow;
             _subscriptionManager = subscriptionManager;
@@ -60,18 +63,19 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             foreach (var subscription in _subscriptionManager.DataFeedSubscriptions)
             {
                 // this if should just be 'subscription.Current == null' but its affected by GH issue 3914
-                if (// this is a data subscription we just added
+                if ( // this is a data subscription we just added
                     // lets move it next to find the initial emit time
                     subscription.Current == null
-                    && !subscription.IsUniverseSelectionSubscription
-                    && subscription.UtcStartTime == _utcNow
+                        && !subscription.IsUniverseSelectionSubscription
+                        && subscription.UtcStartTime == _utcNow
                     ||
                     // UserDefinedUniverse, through the AddData calls
                     // will add new universe selection data points when is has too
                     // so lets move it next to check if there is any
                     subscription.Current == null
-                    && subscription.IsUniverseSelectionSubscription
-                    && subscription.UtcStartTime != _utcNow)
+                        && subscription.IsUniverseSelectionSubscription
+                        && subscription.UtcStartTime != _utcNow
+                )
                 {
                     subscription.MoveNext();
                 }
@@ -85,7 +89,10 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                     else
                     {
                         // take the earliest between the next piece of data or the current earliest bird
-                        earlyBirdTicks = Math.Min(earlyBirdTicks, subscription.Current.EmitTimeUtc.Ticks);
+                        earlyBirdTicks = Math.Min(
+                            earlyBirdTicks,
+                            subscription.Current.EmitTimeUtc.Ticks
+                        );
                     }
                 }
             }

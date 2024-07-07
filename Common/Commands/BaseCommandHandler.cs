@@ -14,11 +14,11 @@
 */
 
 using System;
+using System.Collections.Generic;
 using System.Linq;
+using QuantConnect.Interfaces;
 using QuantConnect.Logging;
 using QuantConnect.Packets;
-using QuantConnect.Interfaces;
-using System.Collections.Generic;
 
 namespace QuantConnect.Commands
 {
@@ -52,7 +52,10 @@ namespace QuantConnect.Commands
         /// </summary>
         /// <param name="command">The command that was executed</param>
         /// <param name="commandResultPacket">The result</param>
-        protected virtual void Acknowledge(ICommand command, CommandResultPacket commandResultPacket)
+        protected virtual void Acknowledge(
+            ICommand command,
+            CommandResultPacket commandResultPacket
+        )
         {
             // nop
         }
@@ -67,7 +70,9 @@ namespace QuantConnect.Commands
             {
                 foreach (var command in GetCommands().Where(c => c != null))
                 {
-                    Log.Trace($"BaseCommandHandler.ProcessCommands(): {Messages.BaseCommandHandler.ExecutingCommand(command)}");
+                    Log.Trace(
+                        $"BaseCommandHandler.ProcessCommands(): {Messages.BaseCommandHandler.ExecutingCommand(command)}"
+                    );
                     CommandResultPacket result;
                     try
                     {
@@ -82,7 +87,7 @@ namespace QuantConnect.Commands
 
                     Acknowledge(command, result);
 
-                    if(resultPackets == null)
+                    if (resultPackets == null)
                     {
                         resultPackets = new List<CommandResultPacket>();
                     }

@@ -14,11 +14,11 @@
 */
 
 using System;
+using System.Collections.Generic;
 using QuantConnect.Data;
+using QuantConnect.Data.UniverseSelection;
 using QuantConnect.Interfaces;
 using QuantConnect.Securities;
-using System.Collections.Generic;
-using QuantConnect.Data.UniverseSelection;
 
 namespace QuantConnect.Algorithm.CSharp
 {
@@ -34,8 +34,12 @@ namespace QuantConnect.Algorithm.CSharp
         {
             SetStartDate(2013, 10, 08);
             SetEndDate(2013, 10, 10);
-            SetSecurityInitializer(new BrokerageModelSecurityInitializer(BrokerageModel,
-                new FuncSecuritySeeder(GetLastKnownPrices)));
+            SetSecurityInitializer(
+                new BrokerageModelSecurityInitializer(
+                    BrokerageModel,
+                    new FuncSecuritySeeder(GetLastKnownPrices)
+                )
+            );
             AddEquity("SPY", Resolution.Minute);
         }
 
@@ -55,7 +59,8 @@ namespace QuantConnect.Algorithm.CSharp
         {
             foreach (var addedSecurity in changes.AddedSecurities)
             {
-                if (!addedSecurity.HasData
+                if (
+                    !addedSecurity.HasData
                     || addedSecurity.AskPrice == 0
                     || addedSecurity.BidPrice == 0
                     || addedSecurity.BidSize == 0
@@ -65,9 +70,12 @@ namespace QuantConnect.Algorithm.CSharp
                     || addedSecurity.High == 0
                     || addedSecurity.Low == 0
                     || addedSecurity.Open == 0
-                    || addedSecurity.Close == 0)
+                    || addedSecurity.Close == 0
+                )
                 {
-                    throw new RegressionTestException($"Security {addedSecurity.Symbol} was not warmed up!");
+                    throw new RegressionTestException(
+                        $"Security {addedSecurity.Symbol} was not warmed up!"
+                    );
                 }
             }
         }
@@ -100,35 +108,36 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// This is used by the regression test system to indicate what the expected statistics are from running the algorithm
         /// </summary>
-        public Dictionary<string, string> ExpectedStatistics => new Dictionary<string, string>
-        {
-            {"Total Orders", "1"},
-            {"Average Win", "0%"},
-            {"Average Loss", "0%"},
-            {"Compounding Annual Return", "307.471%"},
-            {"Drawdown", "1.700%"},
-            {"Expectancy", "0"},
-            {"Start Equity", "100000"},
-            {"End Equity", "101031.62"},
-            {"Net Profit", "1.032%"},
-            {"Sharpe Ratio", "66.263"},
-            {"Sortino Ratio", "0"},
-            {"Probabilistic Sharpe Ratio", "0%"},
-            {"Loss Rate", "0%"},
-            {"Win Rate", "0%"},
-            {"Profit-Loss Ratio", "0"},
-            {"Alpha", "-0.116"},
-            {"Beta", "0.996"},
-            {"Annual Standard Deviation", "0.242"},
-            {"Annual Variance", "0.058"},
-            {"Information Ratio", "-198.985"},
-            {"Tracking Error", "0.001"},
-            {"Treynor Ratio", "16.083"},
-            {"Total Fees", "$3.44"},
-            {"Estimated Strategy Capacity", "$31000000.00"},
-            {"Lowest Capacity Asset", "SPY R735QTJ8XC9X"},
-            {"Portfolio Turnover", "33.62%"},
-            {"OrderListHash", "00636a25aed88acd2171c6221c747716"}
-        };
+        public Dictionary<string, string> ExpectedStatistics =>
+            new Dictionary<string, string>
+            {
+                { "Total Orders", "1" },
+                { "Average Win", "0%" },
+                { "Average Loss", "0%" },
+                { "Compounding Annual Return", "307.471%" },
+                { "Drawdown", "1.700%" },
+                { "Expectancy", "0" },
+                { "Start Equity", "100000" },
+                { "End Equity", "101031.62" },
+                { "Net Profit", "1.032%" },
+                { "Sharpe Ratio", "66.263" },
+                { "Sortino Ratio", "0" },
+                { "Probabilistic Sharpe Ratio", "0%" },
+                { "Loss Rate", "0%" },
+                { "Win Rate", "0%" },
+                { "Profit-Loss Ratio", "0" },
+                { "Alpha", "-0.116" },
+                { "Beta", "0.996" },
+                { "Annual Standard Deviation", "0.242" },
+                { "Annual Variance", "0.058" },
+                { "Information Ratio", "-198.985" },
+                { "Tracking Error", "0.001" },
+                { "Treynor Ratio", "16.083" },
+                { "Total Fees", "$3.44" },
+                { "Estimated Strategy Capacity", "$31000000.00" },
+                { "Lowest Capacity Asset", "SPY R735QTJ8XC9X" },
+                { "Portfolio Turnover", "33.62%" },
+                { "OrderListHash", "00636a25aed88acd2171c6221c747716" }
+            };
     }
 }

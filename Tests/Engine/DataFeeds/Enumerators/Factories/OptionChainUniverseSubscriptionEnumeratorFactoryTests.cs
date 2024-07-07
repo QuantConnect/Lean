@@ -43,7 +43,9 @@ namespace QuantConnect.Tests.Engine.DataFeeds.Enumerators.Factories
             var canonicalSymbol = Symbol.Create("SPY", SecurityType.Option, Market.USA, "?SPY");
 
             var quoteCurrency = new Cash(Currencies.USD, 0, 1);
-            var exchangeHours = MarketHoursDatabase.FromDataFolder().GetExchangeHours(Market.USA, canonicalSymbol, SecurityType.Option);
+            var exchangeHours = MarketHoursDatabase
+                .FromDataFolder()
+                .GetExchangeHours(Market.USA, canonicalSymbol, SecurityType.Option);
             var config = new SubscriptionDataConfig(
                 typeof(ZipEntryName),
                 canonicalSymbol,
@@ -73,26 +75,45 @@ namespace QuantConnect.Tests.Engine.DataFeeds.Enumerators.Factories
             var fillForwardResolution = Ref.CreateReadOnly(() => Resolution.Minute.ToTimeSpan());
             var symbolUniverse = new TestDataQueueUniverseProvider(timeProvider);
             EnqueueableEnumerator<BaseData> underlyingEnumerator = null;
-            Func<SubscriptionRequest, IEnumerator<BaseData>> underlyingEnumeratorFunc =
-                (req) =>
-                {
-                    underlyingEnumerator = new EnqueueableEnumerator<BaseData>();
-                    return new LiveFillForwardEnumerator(
-                        timeProvider,
-                        underlyingEnumerator,
-                        option.Exchange,
-                        fillForwardResolution,
-                        false,
-                        Time.EndOfTime,
-                        Resolution.Minute,
-                        TimeZones.Utc, false);
-                };
-            var factory = new OptionChainUniverseSubscriptionEnumeratorFactory(underlyingEnumeratorFunc, symbolUniverse, timeProvider);
+            Func<SubscriptionRequest, IEnumerator<BaseData>> underlyingEnumeratorFunc = (req) =>
+            {
+                underlyingEnumerator = new EnqueueableEnumerator<BaseData>();
+                return new LiveFillForwardEnumerator(
+                    timeProvider,
+                    underlyingEnumerator,
+                    option.Exchange,
+                    fillForwardResolution,
+                    false,
+                    Time.EndOfTime,
+                    Resolution.Minute,
+                    TimeZones.Utc,
+                    false
+                );
+            };
+            var factory = new OptionChainUniverseSubscriptionEnumeratorFactory(
+                underlyingEnumeratorFunc,
+                symbolUniverse,
+                timeProvider
+            );
 
-            var universeSettings = new UniverseSettings(Resolution.Minute, 0, true, false, TimeSpan.Zero);
+            var universeSettings = new UniverseSettings(
+                Resolution.Minute,
+                0,
+                true,
+                false,
+                TimeSpan.Zero
+            );
             using var universe = new OptionChainUniverse(option, universeSettings);
-            var request = new SubscriptionRequest(true, universe, option, config, startTime, Time.EndOfTime);
-            var enumerator = (DataQueueOptionChainUniverseDataCollectionEnumerator) factory.CreateEnumerator(request, TestGlobals.DataProvider);
+            var request = new SubscriptionRequest(
+                true,
+                universe,
+                option,
+                config,
+                startTime,
+                Time.EndOfTime
+            );
+            var enumerator = (DataQueueOptionChainUniverseDataCollectionEnumerator)
+                factory.CreateEnumerator(request, TestGlobals.DataProvider);
 
             // 2018-10-19 10:00 AM UTC
             underlyingEnumerator.Enqueue(new Tick { Symbol = Symbols.SPY, Value = 280m });
@@ -169,12 +190,33 @@ namespace QuantConnect.Tests.Engine.DataFeeds.Enumerators.Factories
         {
             private readonly Symbol[] _symbolList1 =
             {
-                Symbol.CreateOption("SPY", Market.USA, OptionStyle.American, OptionRight.Call, 280m, new DateTime(2018, 10, 19))
+                Symbol.CreateOption(
+                    "SPY",
+                    Market.USA,
+                    OptionStyle.American,
+                    OptionRight.Call,
+                    280m,
+                    new DateTime(2018, 10, 19)
+                )
             };
             private readonly Symbol[] _symbolList2 =
             {
-                Symbol.CreateOption("SPY", Market.USA, OptionStyle.American, OptionRight.Call, 280m, new DateTime(2018, 10, 19)),
-                Symbol.CreateOption("SPY", Market.USA, OptionStyle.American, OptionRight.Put, 280m, new DateTime(2018, 10, 19))
+                Symbol.CreateOption(
+                    "SPY",
+                    Market.USA,
+                    OptionStyle.American,
+                    OptionRight.Call,
+                    280m,
+                    new DateTime(2018, 10, 19)
+                ),
+                Symbol.CreateOption(
+                    "SPY",
+                    Market.USA,
+                    OptionStyle.American,
+                    OptionRight.Put,
+                    280m,
+                    new DateTime(2018, 10, 19)
+                )
             };
 
             private readonly ITimeProvider _timeProvider;
@@ -186,7 +228,11 @@ namespace QuantConnect.Tests.Engine.DataFeeds.Enumerators.Factories
                 _timeProvider = timeProvider;
             }
 
-            public IEnumerable<Symbol> LookupSymbols(Symbol symbol, bool includeExpired, string securityCurrency = null)
+            public IEnumerable<Symbol> LookupSymbols(
+                Symbol symbol,
+                bool includeExpired,
+                string securityCurrency = null
+            )
             {
                 TotalLookupCalls++;
 

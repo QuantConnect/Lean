@@ -26,7 +26,9 @@ namespace QuantConnect.Securities.Option.StrategyMatcher
         /// <summary>
         /// Enumerates the <paramref name="definitions"/> in the same order as provided.
         /// </summary>
-        public IEnumerable<OptionStrategyDefinition> Enumerate(IReadOnlyList<OptionStrategyDefinition> definitions)
+        public IEnumerable<OptionStrategyDefinition> Enumerate(
+            IReadOnlyList<OptionStrategyDefinition> definitions
+        )
         {
             return definitions;
         }

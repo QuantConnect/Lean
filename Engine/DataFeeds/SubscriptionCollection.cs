@@ -74,7 +74,10 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         {
             if (_subscriptions.TryAdd(subscription.Configuration, subscription))
             {
-                UpdateFillForwardResolution(FillForwardResolutionOperation.AfterAdd, subscription.Configuration);
+                UpdateFillForwardResolution(
+                    FillForwardResolutionOperation.AfterAdd,
+                    subscription.Configuration
+                );
                 _sortingSubscriptionRequired = true;
                 return true;
             }
@@ -106,7 +109,10 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                 // let's try to respect the users original FF enumerator request
                 if (!subscription.EndOfStream)
                 {
-                    UpdateFillForwardResolution(FillForwardResolutionOperation.AfterRemove, configuration);
+                    UpdateFillForwardResolution(
+                        FillForwardResolutionOperation.AfterRemove,
+                        configuration
+                    );
                 }
                 _sortingSubscriptionRequired = true;
                 return true;
@@ -141,11 +147,16 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         /// Gets and updates the fill forward resolution by checking specified subscription configurations and
         /// selecting the smallest resoluton not equal to tick
         /// </summary>
-        public Ref<TimeSpan> UpdateAndGetFillForwardResolution(SubscriptionDataConfig configuration = null)
+        public Ref<TimeSpan> UpdateAndGetFillForwardResolution(
+            SubscriptionDataConfig configuration = null
+        )
         {
             if (configuration != null)
             {
-                UpdateFillForwardResolution(FillForwardResolutionOperation.BeforeAdd, configuration);
+                UpdateFillForwardResolution(
+                    FillForwardResolutionOperation.BeforeAdd,
+                    configuration
+                );
             }
             return _fillForwardResolution;
         }
@@ -165,38 +176,60 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         {
             return !configuration.IsInternalFeed && configuration.Resolution != Resolution.Tick;
         }
+
         /// <summary>
         /// Gets and updates the fill forward resolution by checking specified subscription configurations and
         /// selecting the smallest resoluton not equal to tick
         /// </summary>
-        private void UpdateFillForwardResolution(FillForwardResolutionOperation operation, SubscriptionDataConfig configuration)
+        private void UpdateFillForwardResolution(
+            FillForwardResolutionOperation operation,
+            SubscriptionDataConfig configuration
+        )
         {
-            if(_frozen)
+            if (_frozen)
             {
                 return;
             }
 
             // Due to performance implications let's be jealous in updating the _fillForwardResolution
-            if (ValidateFillForwardResolution(configuration) &&
-                (
-                    ((FillForwardResolutionOperation.BeforeAdd == operation || FillForwardResolutionOperation.AfterAdd == operation)
-                     && configuration.Increment != _fillForwardResolution.Value) // check if the new Increment is different
-                ||
-                    (operation == FillForwardResolutionOperation.AfterRemove // We are removing
-                    && configuration.Increment == _fillForwardResolution.Value // True: We are removing the resolution we were using
-                    // False: there is at least another one equal, no need to update, but we only look at those valid configuration which are the ones which set the FF resolution
-                    && _subscriptions.Keys.All(x => !ValidateFillForwardResolution(x) || x.Resolution != configuration.Resolution)))
+            if (
+                ValidateFillForwardResolution(configuration)
+                && (
+                    (
+                        (
+                            FillForwardResolutionOperation.BeforeAdd == operation
+                            || FillForwardResolutionOperation.AfterAdd == operation
+                        )
+                        && configuration.Increment != _fillForwardResolution.Value
+                    ) // check if the new Increment is different
+                    || (
+                        operation == FillForwardResolutionOperation.AfterRemove // We are removing
+                        && configuration.Increment == _fillForwardResolution.Value // True: We are removing the resolution we were using
+                        // False: there is at least another one equal, no need to update, but we only look at those valid configuration which are the ones which set the FF resolution
+                        && _subscriptions.Keys.All(x =>
+                            !ValidateFillForwardResolution(x)
+                            || x.Resolution != configuration.Resolution
+                        )
+                    )
                 )
+            )
             {
-                var configurations = (operation == FillForwardResolutionOperation.BeforeAdd)
-                    ? _subscriptions.Keys.Concat(new[] { configuration }) : _subscriptions.Keys;
+                var configurations =
+                    (operation == FillForwardResolutionOperation.BeforeAdd)
+                        ? _subscriptions.Keys.Concat(new[] { configuration })
+                        : _subscriptions.Keys;
 
-                var eventArgs = new FillForwardResolutionChangedEvent { Old = _fillForwardResolution.Value };
-                _fillForwardResolution.Value = configurations.Where(ValidateFillForwardResolution)
-                                                             .Select(x => x.Resolution)
-                                                             .Distinct()
-                                                             .DefaultIfEmpty(Resolution.Minute)
-                                                             .Min().ToTimeSpan();
+                var eventArgs = new FillForwardResolutionChangedEvent
+                {
+                    Old = _fillForwardResolution.Value
+                };
+                _fillForwardResolution.Value = configurations
+                    .Where(ValidateFillForwardResolution)
+                    .Select(x => x.Resolution)
+                    .Distinct()
+                    .DefaultIfEmpty(Resolution.Minute)
+                    .Min()
+                    .ToTimeSpan();
                 if (_fillForwardResolution.Value != eventArgs.Old)
                 {
                     eventArgs.New = _fillForwardResolution.Value;

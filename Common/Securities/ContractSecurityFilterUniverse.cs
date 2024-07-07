@@ -15,10 +15,10 @@
 */
 
 using System;
-using System.Linq;
-using Python.Runtime;
 using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
+using Python.Runtime;
 
 namespace QuantConnect.Securities
 {
@@ -27,7 +27,7 @@ namespace QuantConnect.Securities
     /// Used by OptionFilterUniverse and FutureFilterUniverse
     /// </summary>
     public abstract class ContractSecurityFilterUniverse<T> : IDerivativeSecurityFilterUniverse
-        where T: ContractSecurityFilterUniverse<T>
+        where T : ContractSecurityFilterUniverse<T>
     {
         private bool _alreadyAppliedTypeFilters;
 
@@ -68,9 +68,7 @@ namespace QuantConnect.Securities
         /// <summary>
         /// Constructs ContractSecurityFilterUniverse
         /// </summary>
-        protected ContractSecurityFilterUniverse()
-        {
-        }
+        protected ContractSecurityFilterUniverse() { }
 
         /// <summary>
         /// Constructs ContractSecurityFilterUniverse
@@ -96,7 +94,7 @@ namespace QuantConnect.Securities
         {
             if (_alreadyAppliedTypeFilters)
             {
-                return (T) this;
+                return (T)this;
             }
 
             // memoization map for ApplyTypesFilter()
@@ -115,23 +113,25 @@ namespace QuantConnect.Securities
                 return res;
             };
 
-            AllSymbols = AllSymbols.Where(x =>
-            {
-                switch (Type)
+            AllSymbols = AllSymbols
+                .Where(x =>
                 {
-                    case ContractExpirationType.Weekly:
-                        return !memoizedIsStandardType(x);
-                    case ContractExpirationType.Standard:
-                        return memoizedIsStandardType(x);
-                    case ContractExpirationType.Standard | ContractExpirationType.Weekly:
-                        return true;
-                    default:
-                        return false;
-                }
-            }).ToList();
+                    switch (Type)
+                    {
+                        case ContractExpirationType.Weekly:
+                            return !memoizedIsStandardType(x);
+                        case ContractExpirationType.Standard:
+                            return memoizedIsStandardType(x);
+                        case ContractExpirationType.Standard | ContractExpirationType.Weekly:
+                            return true;
+                        default:
+                            return false;
+                    }
+                })
+                .ToList();
 
             _alreadyAppliedTypeFilters = true;
-            return (T) this;
+            return (T)this;
         }
 
         /// <summary>
@@ -156,8 +156,10 @@ namespace QuantConnect.Securities
         {
             if (_alreadyAppliedTypeFilters)
             {
-                throw new InvalidOperationException("Type filters have already been applied, " +
-                    "please call StandardsOnly() before applying other filters such as FrontMonth() or BackMonths()");
+                throw new InvalidOperationException(
+                    "Type filters have already been applied, "
+                        + "please call StandardsOnly() before applying other filters such as FrontMonth() or BackMonths()"
+                );
             }
 
             Type = ContractExpirationType.Standard;
@@ -172,8 +174,10 @@ namespace QuantConnect.Securities
         {
             if (_alreadyAppliedTypeFilters)
             {
-                throw new InvalidOperationException("Type filters have already been applied, " +
-                    "please call IncludeWeeklys() before applying other filters such as FrontMonth() or BackMonths()");
+                throw new InvalidOperationException(
+                    "Type filters have already been applied, "
+                        + "please call IncludeWeeklys() before applying other filters such as FrontMonth() or BackMonths()"
+                );
             }
 
             Type |= ContractExpirationType.Weekly;
@@ -198,11 +202,12 @@ namespace QuantConnect.Securities
         {
             ApplyTypesFilter();
             var ordered = this.OrderBy(x => x.ID.Date).ToList();
-            if (ordered.Count == 0) return (T) this;
+            if (ordered.Count == 0)
+                return (T)this;
             var frontMonth = ordered.TakeWhile(x => ordered[0].ID.Date == x.ID.Date);
 
             AllSymbols = frontMonth.ToList();
-            return (T) this;
+            return (T)this;
         }
 
         /// <summary>
@@ -213,11 +218,12 @@ namespace QuantConnect.Securities
         {
             ApplyTypesFilter();
             var ordered = this.OrderBy(x => x.ID.Date).ToList();
-            if (ordered.Count == 0) return (T) this;
+            if (ordered.Count == 0)
+                return (T)this;
             var backMonths = ordered.SkipWhile(x => ordered[0].ID.Date == x.ID.Date);
 
             AllSymbols = backMonths.ToList();
-            return (T) this;
+            return (T)this;
         }
 
         /// <summary>
@@ -241,19 +247,22 @@ namespace QuantConnect.Securities
         {
             if (LocalTime == default)
             {
-                return (T) this;
+                return (T)this;
             }
 
-            if (maxExpiry > Time.MaxTimeSpan) maxExpiry = Time.MaxTimeSpan;
+            if (maxExpiry > Time.MaxTimeSpan)
+                maxExpiry = Time.MaxTimeSpan;
 
             var minExpiryToDate = LocalTime.Date + minExpiry;
             var maxExpiryToDate = LocalTime.Date + maxExpiry;
 
             AllSymbols = AllSymbols
-                .Where(symbol => symbol.ID.Date.Date >= minExpiryToDate && symbol.ID.Date.Date <= maxExpiryToDate)
+                .Where(symbol =>
+                    symbol.ID.Date.Date >= minExpiryToDate && symbol.ID.Date.Date <= maxExpiryToDate
+                )
                 .ToList();
 
-            return (T) this;
+            return (T)this;
         }
 
         /// <summary>
@@ -278,7 +287,7 @@ namespace QuantConnect.Securities
         public T Contracts(PyObject contracts)
         {
             AllSymbols = contracts.ConvertToSymbolEnumerable();
-            return (T) this;
+            return (T)this;
         }
 
         /// <summary>
@@ -290,7 +299,7 @@ namespace QuantConnect.Securities
         public T Contracts(IEnumerable<Symbol> contracts)
         {
             AllSymbols = contracts.ToList();
-            return (T) this;
+            return (T)this;
         }
 
         /// <summary>
@@ -303,7 +312,7 @@ namespace QuantConnect.Securities
         {
             // force materialization using ToList
             AllSymbols = contractSelector(AllSymbols).ToList();
-            return (T) this;
+            return (T)this;
         }
 
         /// <summary>
@@ -311,10 +320,12 @@ namespace QuantConnect.Securities
         /// </summary>
         /// <returns>Universe with filter applied</returns>
         /// <remarks>Deprecated since filters are always non-dynamic now</remarks>
-        [Obsolete("Deprecated as of 2023-12-13. Filters are always non-dynamic as of now, which means they will only bee applied daily.")]
+        [Obsolete(
+            "Deprecated as of 2023-12-13. Filters are always non-dynamic as of now, which means they will only bee applied daily."
+        )]
         public T OnlyApplyFilterAtMarketOpen()
         {
-            return (T) this;
+            return (T)this;
         }
 
         /// <summary>

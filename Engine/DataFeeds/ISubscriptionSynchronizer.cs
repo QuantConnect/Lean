@@ -36,6 +36,9 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         /// </summary>
         /// <param name="subscriptions">The subscriptions to sync</param>
         /// <param name="cancellationToken">The cancellation token to stop enumeration</param>
-        IEnumerable<TimeSlice> Sync(IEnumerable<Subscription> subscriptions, CancellationToken cancellationToken);
+        IEnumerable<TimeSlice> Sync(
+            IEnumerable<Subscription> subscriptions,
+            CancellationToken cancellationToken
+        );
     }
 }

@@ -14,8 +14,8 @@
  *
 */
 
-using Newtonsoft.Json;
 using System.Collections.Generic;
+using Newtonsoft.Json;
 using QuantConnect.Notifications;
 
 namespace QuantConnect.Packets
@@ -38,7 +38,8 @@ namespace QuantConnect.Packets
         /// <summary>
         /// String-String Dictionary of Brokerage Data for this Live Job
         /// </summary>
-        public Dictionary<string, string> BrokerageData { get; set; } = new Dictionary<string, string>();
+        public Dictionary<string, string> BrokerageData { get; set; } =
+            new Dictionary<string, string>();
 
         /// <summary>
         /// String name of the DataQueueHandler or LiveDataProvider we're running with
@@ -76,10 +77,7 @@ namespace QuantConnect.Packets
         [JsonIgnore]
         public override AlgorithmMode AlgorithmMode
         {
-            get
-            {
-                return AlgorithmMode.Live;
-            }
+            get { return AlgorithmMode.Live; }
         }
 
         /// <summary>

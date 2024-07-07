@@ -14,10 +14,10 @@
 */
 
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using QuantConnect.Data;
 using QuantConnect.Interfaces;
-using System.Collections.Generic;
 
 namespace QuantConnect.Algorithm.CSharp
 {
@@ -51,7 +51,9 @@ namespace QuantConnect.Algorithm.CSharp
         /// <param name="slice">Slice object keyed by symbol containing the stock data</param>
         public override void OnData(Slice slice)
         {
-            Debug($"[{Time}] Warmup: {IsWarmingUp}. Invested: {Portfolio.Invested} {string.Join(",", Securities.Select(pair => $"{pair.Key.Value}:{pair.Value.Price}"))}");
+            Debug(
+                $"[{Time}] Warmup: {IsWarmingUp}. Invested: {Portfolio.Invested} {string.Join(",", Securities.Select(pair => $"{pair.Key.Value}:{pair.Value.Price}"))}"
+            );
             if (IsWarmingUp)
             {
                 _equityGotTradeBars |= slice.Bars.ContainsKey("SPY");
@@ -82,7 +84,9 @@ namespace QuantConnect.Algorithm.CSharp
             }
             if (Securities["AAPL"].Price == 0)
             {
-                throw new RegressionTestException("Security added after warmup didn't get any data!");
+                throw new RegressionTestException(
+                    "Security added after warmup didn't get any data!"
+                );
             }
         }
 
@@ -114,35 +118,36 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// This is used by the regression test system to indicate what the expected statistics are from running the algorithm
         /// </summary>
-        public virtual Dictionary<string, string> ExpectedStatistics => new Dictionary<string, string>
-        {
-            {"Total Orders", "1"},
-            {"Average Win", "0%"},
-            {"Average Loss", "0%"},
-            {"Compounding Annual Return", "106.090%"},
-            {"Drawdown", "0.600%"},
-            {"Expectancy", "0"},
-            {"Start Equity", "100000.0"},
-            {"End Equity", "100596.13"},
-            {"Net Profit", "0.596%"},
-            {"Sharpe Ratio", "123.324"},
-            {"Sortino Ratio", "0"},
-            {"Probabilistic Sharpe Ratio", "0%"},
-            {"Loss Rate", "0%"},
-            {"Win Rate", "0%"},
-            {"Profit-Loss Ratio", "0"},
-            {"Alpha", "0.394"},
-            {"Beta", "0.029"},
-            {"Annual Standard Deviation", "0.007"},
-            {"Annual Variance", "0"},
-            {"Information Ratio", "-65.071"},
-            {"Tracking Error", "0.236"},
-            {"Treynor Ratio", "29.932"},
-            {"Total Fees", "$0.00"},
-            {"Estimated Strategy Capacity", "$3000.00"},
-            {"Lowest Capacity Asset", "BTCUSD E3"},
-            {"Portfolio Turnover", "9.97%"},
-            {"OrderListHash", "98661718a82110916cdeceed756c5d37"}
-        };
+        public virtual Dictionary<string, string> ExpectedStatistics =>
+            new Dictionary<string, string>
+            {
+                { "Total Orders", "1" },
+                { "Average Win", "0%" },
+                { "Average Loss", "0%" },
+                { "Compounding Annual Return", "106.090%" },
+                { "Drawdown", "0.600%" },
+                { "Expectancy", "0" },
+                { "Start Equity", "100000.0" },
+                { "End Equity", "100596.13" },
+                { "Net Profit", "0.596%" },
+                { "Sharpe Ratio", "123.324" },
+                { "Sortino Ratio", "0" },
+                { "Probabilistic Sharpe Ratio", "0%" },
+                { "Loss Rate", "0%" },
+                { "Win Rate", "0%" },
+                { "Profit-Loss Ratio", "0" },
+                { "Alpha", "0.394" },
+                { "Beta", "0.029" },
+                { "Annual Standard Deviation", "0.007" },
+                { "Annual Variance", "0" },
+                { "Information Ratio", "-65.071" },
+                { "Tracking Error", "0.236" },
+                { "Treynor Ratio", "29.932" },
+                { "Total Fees", "$0.00" },
+                { "Estimated Strategy Capacity", "$3000.00" },
+                { "Lowest Capacity Asset", "BTCUSD E3" },
+                { "Portfolio Turnover", "9.97%" },
+                { "OrderListHash", "98661718a82110916cdeceed756c5d37" }
+            };
     }
 }

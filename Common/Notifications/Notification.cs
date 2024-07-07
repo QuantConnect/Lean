@@ -66,7 +66,11 @@ namespace QuantConnect.Notifications
         /// <param name="address">Address to send to</param>
         /// <param name="data">Data to send</param>
         /// <param name="headers">Optional headers to use</param>
-        public NotificationWeb(string address, object data = null, Dictionary<string, string> headers = null)
+        public NotificationWeb(
+            string address,
+            object data = null,
+            Dictionary<string, string> headers = null
+        )
         {
             Address = address;
             Data = data;
@@ -144,11 +148,19 @@ namespace QuantConnect.Notifications
         /// <param name="message">Message body of the email. Will set to <see cref="string.Empty"/> if null</param>
         /// <param name="data">Data to attach to the email. Will set to <see cref="string.Empty"/> if null</param>
         /// <param name="headers">Optional email headers to use</param>
-        public NotificationEmail(string address, string subject = "", string message = "", string data = "", Dictionary<string, string> headers = null)
+        public NotificationEmail(
+            string address,
+            string subject = "",
+            string message = "",
+            string data = "",
+            Dictionary<string, string> headers = null
+        )
         {
             if (!Validate.EmailAddress(address))
             {
-                throw new ArgumentException(Messages.NotificationEmail.InvalidEmailAddress(address));
+                throw new ArgumentException(
+                    Messages.NotificationEmail.InvalidEmailAddress(address)
+                );
             }
 
             Address = address;
@@ -204,7 +216,8 @@ namespace QuantConnect.Notifications
     /// </summary>
     public class NotificationFtp : Notification
     {
-        private static readonly Regex HostnameProtocolRegex = new(@"^[s]?ftp\:\/\/", RegexOptions.IgnoreCase | RegexOptions.Compiled);
+        private static readonly Regex HostnameProtocolRegex =
+            new(@"^[s]?ftp\:\/\/", RegexOptions.IgnoreCase | RegexOptions.Compiled);
 
         private const int DefaultPort = 21;
 
@@ -262,7 +275,14 @@ namespace QuantConnect.Notifications
         [JsonProperty("passphrase", DefaultValueHandling = DefaultValueHandling.Ignore)]
         public string PrivateKeyPassphrase { get; }
 
-        private NotificationFtp(string hostname, string username, string filePath, byte[] fileContent, bool secure, int? port)
+        private NotificationFtp(
+            string hostname,
+            string username,
+            string filePath,
+            byte[] fileContent,
+            bool secure,
+            int? port
+        )
         {
             Hostname = NormalizeHostname(hostname);
             Port = port ?? DefaultPort;
@@ -282,8 +302,15 @@ namespace QuantConnect.Notifications
         /// <param name="fileContent">The contents of the file</param>
         /// <param name="secure">Whether to use SFTP or FTP. Defaults to true</param>
         /// <param name="port">The FTP server port. Defaults to 21</param>
-        public NotificationFtp(string hostname, string username, string password, string filePath, byte[] fileContent,
-            bool secure = true, int? port = null)
+        public NotificationFtp(
+            string hostname,
+            string username,
+            string password,
+            string filePath,
+            byte[] fileContent,
+            bool secure = true,
+            int? port = null
+        )
             : this(hostname, username, filePath, fileContent, secure, port)
         {
             if (string.IsNullOrEmpty(password))
@@ -305,8 +332,15 @@ namespace QuantConnect.Notifications
         /// <param name="filePath">The path to file on the FTP server</param>
         /// <param name="fileContent">The contents of the file</param>
         /// <param name="port">The FTP server port. Defaults to 21</param>
-        public NotificationFtp(string hostname, string username, string privateKey, string privateKeyPassphrase,
-            string filePath, byte[] fileContent, int? port = null)
+        public NotificationFtp(
+            string hostname,
+            string username,
+            string privateKey,
+            string privateKeyPassphrase,
+            string filePath,
+            byte[] fileContent,
+            int? port = null
+        )
             : this(hostname, username, filePath, fileContent, true, port)
         {
             if (string.IsNullOrEmpty(privateKey))
@@ -328,11 +362,24 @@ namespace QuantConnect.Notifications
         /// <param name="fileContent">The contents of the file</param>
         /// <param name="secure">Whether to use SFTP or FTP. Defaults to true</param>
         /// <param name="port">The FTP server port. Defaults to 21</param>
-        public NotificationFtp(string hostname, string username, string password, string filePath, string fileContent,
-            bool secure = true, int? port = null)
-            : this(hostname, username, password, filePath, Encoding.ASCII.GetBytes(fileContent), secure, port)
-        {
-        }
+        public NotificationFtp(
+            string hostname,
+            string username,
+            string password,
+            string filePath,
+            string fileContent,
+            bool secure = true,
+            int? port = null
+        )
+            : this(
+                hostname,
+                username,
+                password,
+                filePath,
+                Encoding.ASCII.GetBytes(fileContent),
+                secure,
+                port
+            ) { }
 
         /// <summary>
         /// Constructor for a notification to sent as a file to an FTP server over SFTP using SSH keys.
@@ -345,11 +392,24 @@ namespace QuantConnect.Notifications
         /// <param name="filePath">The path to file on the FTP server</param>
         /// <param name="fileContent">The contents of the file</param>
         /// <param name="port">The FTP server port. Defaults to 21</param>
-        public NotificationFtp(string hostname, string username, string privateKey, string privateKeyPassphrase,
-            string filePath, string fileContent, int? port = null)
-            : this(hostname, username, privateKey, privateKeyPassphrase, filePath, Encoding.ASCII.GetBytes(fileContent), port)
-        {
-        }
+        public NotificationFtp(
+            string hostname,
+            string username,
+            string privateKey,
+            string privateKeyPassphrase,
+            string filePath,
+            string fileContent,
+            int? port = null
+        )
+            : this(
+                hostname,
+                username,
+                privateKey,
+                privateKeyPassphrase,
+                filePath,
+                Encoding.ASCII.GetBytes(fileContent),
+                port
+            ) { }
 
         private static string NormalizeHostname(string hostname)
         {
@@ -362,10 +422,25 @@ namespace QuantConnect.Notifications
         /// <summary>
         /// Factory method for Json deserialization: the file contents are already encoded
         /// </summary>
-        internal static NotificationFtp FromEncodedData(string hostname, string username, string password, string filePath, string encodedFileContent,
-            bool secure, int? port)
+        internal static NotificationFtp FromEncodedData(
+            string hostname,
+            string username,
+            string password,
+            string filePath,
+            string encodedFileContent,
+            bool secure,
+            int? port
+        )
         {
-            var notification = new NotificationFtp(hostname, username, password, filePath, Array.Empty<byte>(), secure, port);
+            var notification = new NotificationFtp(
+                hostname,
+                username,
+                password,
+                filePath,
+                Array.Empty<byte>(),
+                secure,
+                port
+            );
             notification.FileContent = encodedFileContent;
             return notification;
         }
@@ -373,10 +448,25 @@ namespace QuantConnect.Notifications
         /// <summary>
         /// Factory method for Json deserialization: the file contents are already encoded
         /// </summary>
-        internal static NotificationFtp FromEncodedData(string hostname, string username, string privateKey, string privateKeyPassphrase,
-            string filePath, string encodedFileContent, int? port)
+        internal static NotificationFtp FromEncodedData(
+            string hostname,
+            string username,
+            string privateKey,
+            string privateKeyPassphrase,
+            string filePath,
+            string encodedFileContent,
+            int? port
+        )
         {
-            var notification = new NotificationFtp(hostname, username, privateKey, privateKeyPassphrase, filePath, Array.Empty<byte>(), port);
+            var notification = new NotificationFtp(
+                hostname,
+                username,
+                privateKey,
+                privateKeyPassphrase,
+                filePath,
+                Array.Empty<byte>(),
+                port
+            );
             notification.FileContent = encodedFileContent;
             return notification;
         }
@@ -400,11 +490,11 @@ namespace QuantConnect.Notifications
             }
 
             var type = notification.GetType();
-            return type != typeof(NotificationEmail) &&
-                type != typeof(NotificationWeb) &&
-                type != typeof(NotificationSms) &&
-                type != typeof(NotificationTelegram) &&
-                type != typeof(NotificationFtp);
+            return type != typeof(NotificationEmail)
+                && type != typeof(NotificationWeb)
+                && type != typeof(NotificationSms)
+                && type != typeof(NotificationTelegram)
+                && type != typeof(NotificationFtp);
         }
     }
 }

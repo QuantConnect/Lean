@@ -17,10 +17,10 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
+using Python.Runtime;
 using QuantConnect.Interfaces;
 using QuantConnect.Logging;
 using QuantConnect.Orders;
-using Python.Runtime;
 
 namespace QuantConnect.Securities
 {
@@ -119,7 +119,9 @@ namespace QuantConnect.Securities
             {
                 lock (_transactionRecord)
                 {
-                    return _transactionRecord.Where(x => x.Value.IsWin).ToDictionary(x => x.Key, x => x.Value.ProfitLoss);
+                    return _transactionRecord
+                        .Where(x => x.Value.IsWin)
+                        .ToDictionary(x => x.Key, x => x.Value.ProfitLoss);
                 }
             }
         }
@@ -133,7 +135,9 @@ namespace QuantConnect.Securities
             {
                 lock (_transactionRecord)
                 {
-                    return _transactionRecord.Where(x => !x.Value.IsWin).ToDictionary(x => x.Key, x => x.Value.ProfitLoss);
+                    return _transactionRecord
+                        .Where(x => !x.Value.IsWin)
+                        .ToDictionary(x => x.Key, x => x.Value.ProfitLoss);
                 }
             }
         }
@@ -142,14 +146,18 @@ namespace QuantConnect.Securities
         /// Configurable minimum order value to ignore bad orders, or orders with unrealistic sizes
         /// </summary>
         /// <remarks>Default minimum order size is $0 value</remarks>
-        [Obsolete("MinimumOrderSize is obsolete and will not be used, please use Settings.MinimumOrderMarginPortfolioPercentage instead")]
+        [Obsolete(
+            "MinimumOrderSize is obsolete and will not be used, please use Settings.MinimumOrderMarginPortfolioPercentage instead"
+        )]
         public decimal MinimumOrderSize { get; }
 
         /// <summary>
         /// Configurable minimum order size to ignore bad orders, or orders with unrealistic sizes
         /// </summary>
         /// <remarks>Default minimum order size is 0 shares</remarks>
-        [Obsolete("MinimumOrderQuantity is obsolete and will not be used, please use Settings.MinimumOrderMarginPortfolioPercentage instead")]
+        [Obsolete(
+            "MinimumOrderQuantity is obsolete and will not be used, please use Settings.MinimumOrderMarginPortfolioPercentage instead"
+        )]
         public int MinimumOrderQuantity { get; }
 
         /// <summary>
@@ -157,10 +165,7 @@ namespace QuantConnect.Securities
         /// </summary>
         public int LastOrderId
         {
-            get
-            {
-                return _orderId;
-            }
+            get { return _orderId; }
         }
 
         /// <summary>
@@ -169,14 +174,8 @@ namespace QuantConnect.Securities
         /// <remarks>Default value is 5 seconds</remarks>
         public TimeSpan MarketOrderFillTimeout
         {
-            get
-            {
-                return _marketOrderFillTimeout;
-            }
-            set
-            {
-                _marketOrderFillTimeout = value;
-            }
+            get { return _marketOrderFillTimeout; }
+            set { _marketOrderFillTimeout = value; }
         }
 
         /// <summary>
@@ -251,13 +250,21 @@ namespace QuantConnect.Securities
         {
             if (_algorithm != null && _algorithm.IsWarmingUp)
             {
-                throw new InvalidOperationException(Messages.SecurityTransactionManager.CancelOpenOrdersNotAllowedOnInitializeOrWarmUp);
+                throw new InvalidOperationException(
+                    Messages
+                        .SecurityTransactionManager
+                        .CancelOpenOrdersNotAllowedOnInitializeOrWarmUp
+                );
             }
 
             var cancelledOrders = new List<OrderTicket>();
             foreach (var ticket in GetOpenOrderTickets())
             {
-                ticket.Cancel(Messages.SecurityTransactionManager.OrderCanceledByCancelOpenOrders(_algorithm.UtcTime));
+                ticket.Cancel(
+                    Messages.SecurityTransactionManager.OrderCanceledByCancelOpenOrders(
+                        _algorithm.UtcTime
+                    )
+                );
                 cancelledOrders.Add(ticket);
             }
             return cancelledOrders;
@@ -273,7 +280,11 @@ namespace QuantConnect.Securities
         {
             if (_algorithm != null && _algorithm.IsWarmingUp)
             {
-                throw new InvalidOperationException(Messages.SecurityTransactionManager.CancelOpenOrdersNotAllowedOnInitializeOrWarmUp);
+                throw new InvalidOperationException(
+                    Messages
+                        .SecurityTransactionManager
+                        .CancelOpenOrdersNotAllowedOnInitializeOrWarmUp
+                );
             }
 
             var cancelledOrders = new List<OrderTicket>();
@@ -292,7 +303,9 @@ namespace QuantConnect.Securities
         /// <param name="tag">Tag request</param>
         public OrderTicket RemoveOrder(int orderId, string tag = null)
         {
-            return ProcessRequest(new CancelOrderRequest(_securities.UtcTime, orderId, tag ?? string.Empty));
+            return ProcessRequest(
+                new CancelOrderRequest(_securities.UtcTime, orderId, tag ?? string.Empty)
+            );
         }
 
         /// <summary>
@@ -312,7 +325,9 @@ namespace QuantConnect.Securities
         /// <returns>An enumerable of <see cref="OrderTicket"/> matching the specified <paramref name="filter"/></returns>
         public IEnumerable<OrderTicket> GetOrderTickets(PyObject filter)
         {
-            return _orderProcessor.GetOrderTickets(filter.ConvertToDelegate<Func<OrderTicket, bool>>());
+            return _orderProcessor.GetOrderTickets(
+                filter.ConvertToDelegate<Func<OrderTicket, bool>>()
+            );
         }
 
         /// <summary>
@@ -350,7 +365,9 @@ namespace QuantConnect.Securities
             {
                 return GetOpenOrderTickets(pythonSymbol);
             }
-            return _orderProcessor.GetOpenOrderTickets(filter.ConvertToDelegate<Func<OrderTicket, bool>>());
+            return _orderProcessor.GetOpenOrderTickets(
+                filter.ConvertToDelegate<Func<OrderTicket, bool>>()
+            );
         }
 
         /// <summary>
@@ -416,17 +433,21 @@ namespace QuantConnect.Securities
             var orderTicket = GetOrderTicket(orderId);
             if (orderTicket == null)
             {
-                Log.Error($@"SecurityTransactionManager.WaitForOrder(): {
-                    Messages.SecurityTransactionManager.UnableToLocateOrderTicket(orderId)}");
+                Log.Error(
+                    $@"SecurityTransactionManager.WaitForOrder(): {
+                    Messages.SecurityTransactionManager.UnableToLocateOrderTicket(orderId)}"
+                );
 
                 return false;
             }
 
             if (!orderTicket.OrderClosed.WaitOne(_marketOrderFillTimeout))
             {
-                if(_marketOrderFillTimeout > TimeSpan.Zero)
+                if (_marketOrderFillTimeout > TimeSpan.Zero)
                 {
-                    Log.Error($@"SecurityTransactionManager.WaitForOrder(): {Messages.SecurityTransactionManager.OrderNotFilledWithinExpectedTime(_marketOrderFillTimeout)}");
+                    Log.Error(
+                        $@"SecurityTransactionManager.WaitForOrder(): {Messages.SecurityTransactionManager.OrderNotFilledWithinExpectedTime(_marketOrderFillTimeout)}"
+                    );
                 }
 
                 return false;
@@ -574,7 +595,10 @@ namespace QuantConnect.Securities
                 {
                     clone = clone.AddMilliseconds(1);
                 }
-                _transactionRecord.Add(clone, new TransactionRecordEntry { ProfitLoss = transactionProfitLoss, IsWin = isWin });
+                _transactionRecord.Add(
+                    clone,
+                    new TransactionRecordEntry { ProfitLoss = transactionProfitLoss, IsWin = isWin }
+                );
             }
         }
 
@@ -586,7 +610,7 @@ namespace QuantConnect.Securities
         {
             if (isLiveMode)
             {
-                if(MarketOrderFillTimeout == TimeSpan.MinValue)
+                if (MarketOrderFillTimeout == TimeSpan.MinValue)
                 {
                     // set default value in live trading
                     MarketOrderFillTimeout = TimeSpan.FromSeconds(5);

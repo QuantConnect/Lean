@@ -14,8 +14,8 @@
 */
 
 using System;
-using QuantConnect.Data;
 using System.Collections.Generic;
+using QuantConnect.Data;
 
 namespace QuantConnect
 {

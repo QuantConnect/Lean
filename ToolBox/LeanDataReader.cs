@@ -45,10 +45,22 @@ namespace QuantConnect.ToolBox
         /// <param name="resolution">The <see cref="Resolution"/> that will be read</param>
         /// <param name="date">The <see cref="DateTime"/> that will be read</param>
         /// <param name="dataFolder">The root data folder</param>
-        public LeanDataReader(SubscriptionDataConfig config, Symbol symbol, Resolution resolution, DateTime date, string dataFolder)
+        public LeanDataReader(
+            SubscriptionDataConfig config,
+            Symbol symbol,
+            Resolution resolution,
+            DateTime date,
+            string dataFolder
+        )
         {
             _date = date;
-            _zipPath = LeanData.GenerateZipFilePath(dataFolder, symbol, date,  resolution, config.TickType);
+            _zipPath = LeanData.GenerateZipFilePath(
+                dataFolder,
+                symbol,
+                date,
+                resolution,
+                config.TickType
+            );
             _zipentry = LeanData.GenerateZipEntryName(symbol, date, resolution, config.TickType);
             _config = config;
         }
@@ -78,7 +90,16 @@ namespace QuantConnect.ToolBox
             }
 
             var fileInfo = new FileInfo(filepath);
-            if (!LeanData.TryParsePath(fileInfo.FullName, out symbol, out date, out resolution, out var tickType, out var dataType))
+            if (
+                !LeanData.TryParsePath(
+                    fileInfo.FullName,
+                    out symbol,
+                    out date,
+                    out resolution,
+                    out var tickType,
+                    out var dataType
+                )
+            )
             {
                 throw new ArgumentException($"File {filepath} cannot be parsed.");
             }
@@ -89,12 +110,26 @@ namespace QuantConnect.ToolBox
             }
 
             var marketHoursDataBase = MarketHoursDatabase.FromDataFolder();
-            var dataTimeZone = marketHoursDataBase.GetDataTimeZone(symbol.ID.Market, symbol, symbol.SecurityType);
-            var exchangeTimeZone = marketHoursDataBase.GetExchangeHours(symbol.ID.Market, symbol, symbol.SecurityType).TimeZone;
+            var dataTimeZone = marketHoursDataBase.GetDataTimeZone(
+                symbol.ID.Market,
+                symbol,
+                symbol.SecurityType
+            );
+            var exchangeTimeZone = marketHoursDataBase
+                .GetExchangeHours(symbol.ID.Market, symbol, symbol.SecurityType)
+                .TimeZone;
 
-            var config = new SubscriptionDataConfig(dataType, symbol, resolution,
-                                                    dataTimeZone, exchangeTimeZone, tickType: tickType,
-                                                    fillForward: false, extendedHours: true, isInternalFeed: true);
+            var config = new SubscriptionDataConfig(
+                dataType,
+                symbol,
+                resolution,
+                dataTimeZone,
+                exchangeTimeZone,
+                tickType: tickType,
+                fillForward: false,
+                extendedHours: true,
+                isInternalFeed: true
+            );
 
             _date = date;
             _zipPath = fileInfo.FullName;
@@ -114,19 +149,39 @@ namespace QuantConnect.ToolBox
                 yield break;
             }
 
-            var factory = (BaseData) ObjectActivator.GetActivator(_config.Type).Invoke(new object[0]);
+            var factory = (BaseData)
+                ObjectActivator.GetActivator(_config.Type).Invoke(new object[0]);
 
             if (_config.Type.ImplementsStreamReader())
             {
                 using (var zip = new ZipFile(_zipPath))
                 {
-                    foreach (var zipEntry in zip.Where(x => _zipentry == null || string.Equals(x.FileName, _zipentry, StringComparison.OrdinalIgnoreCase)))
+                    foreach (
+                        var zipEntry in zip.Where(x =>
+                            _zipentry == null
+                            || string.Equals(
+                                x.FileName,
+                                _zipentry,
+                                StringComparison.OrdinalIgnoreCase
+                            )
+                        )
+                    )
                     {
                         // we get the contract symbol from the zip entry if not already provided with the zip entry
                         var symbol = _config.Symbol;
-                        if(_zipentry == null && (_config.SecurityType == SecurityType.Future || _config.SecurityType.IsOption()))
+                        if (
+                            _zipentry == null
+                            && (
+                                _config.SecurityType == SecurityType.Future
+                                || _config.SecurityType.IsOption()
+                            )
+                        )
                         {
-                            symbol = LeanData.ReadSymbolFromZipEntry(_config.Symbol, _config.Resolution, zipEntry.FileName);
+                            symbol = LeanData.ReadSymbolFromZipEntry(
+                                _config.Symbol,
+                                _config.Resolution,
+                                zipEntry.FileName
+                            );
                         }
                         using (var entryReader = new StreamReader(zipEntry.OpenReader()))
                         {
@@ -141,12 +196,19 @@ namespace QuantConnect.ToolBox
                 }
             }
             // for futures and options if no entry was provided we just read all
-            else if (_zipentry == null && (_config.SecurityType == SecurityType.Future || _config.SecurityType.IsOption()))
+            else if (
+                _zipentry == null
+                && (_config.SecurityType == SecurityType.Future || _config.SecurityType.IsOption())
+            )
             {
                 foreach (var entries in Compression.Unzip(_zipPath))
                 {
                     // we get the contract symbol from the zip entry
-                    var symbol = LeanData.ReadSymbolFromZipEntry(_config.Symbol, _config.Resolution, entries.Key);
+                    var symbol = LeanData.ReadSymbolFromZipEntry(
+                        _config.Symbol,
+                        _config.Resolution,
+                        entries.Key
+                    );
                     foreach (var line in entries.Value)
                     {
                         var dataPoint = factory.Reader(_config, line, _date, false);

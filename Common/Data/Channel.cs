@@ -17,13 +17,11 @@ using System;
 
 namespace QuantConnect.Data
 {
-
     /// <summary>
     /// Represents a subscription channel
     /// </summary>
     public class Channel
     {
-
         /// <summary>
         /// Represents an internal channel name for all brokerage channels in case we don't differentiate them
         /// </summary>
@@ -48,7 +46,10 @@ namespace QuantConnect.Data
         {
             if (string.IsNullOrEmpty(channelName))
             {
-                throw new ArgumentNullException(nameof(channelName), "Channel Name can't be null or empty");
+                throw new ArgumentNullException(
+                    nameof(channelName),
+                    "Channel Name can't be null or empty"
+                );
             }
 
             if (symbol == null)
@@ -69,8 +70,10 @@ namespace QuantConnect.Data
         /// </returns>
         public bool Equals(Channel other)
         {
-            if (ReferenceEquals(null, other)) return false;
-            if (ReferenceEquals(this, other)) return true;
+            if (ReferenceEquals(null, other))
+                return false;
+            if (ReferenceEquals(this, other))
+                return true;
             return string.Equals(Name, other?.Name) && Symbol.Equals(other.Symbol);
         }
 

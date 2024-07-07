@@ -27,7 +27,19 @@ namespace QuantConnect.Tests.Common.Securities
         [Test]
         public void UsesValueEqualsSemantics()
         {
-            var config1 = new SubscriptionDataConfig(typeof(TradeBar), Symbols.SPY, Resolution.Minute, TimeZones.NewYork, TimeZones.NewYork, false, false, false, false, TickType.Trade, false);
+            var config1 = new SubscriptionDataConfig(
+                typeof(TradeBar),
+                Symbols.SPY,
+                Resolution.Minute,
+                TimeZones.NewYork,
+                TimeZones.NewYork,
+                false,
+                false,
+                false,
+                false,
+                TickType.Trade,
+                false
+            );
             var config2 = new SubscriptionDataConfig(config1);
             Assert.AreEqual(config1, config2);
         }
@@ -36,7 +48,19 @@ namespace QuantConnect.Tests.Common.Securities
         public void UsedAsDictionaryKey()
         {
             var set = new HashSet<SubscriptionDataConfig>();
-            var config1 = new SubscriptionDataConfig(typeof(TradeBar), Symbols.SPY, Resolution.Minute, TimeZones.NewYork, TimeZones.NewYork, false, false, false, false, TickType.Trade, false);
+            var config1 = new SubscriptionDataConfig(
+                typeof(TradeBar),
+                Symbols.SPY,
+                Resolution.Minute,
+                TimeZones.NewYork,
+                TimeZones.NewYork,
+                false,
+                false,
+                false,
+                false,
+                TickType.Trade,
+                false
+            );
             Assert.IsTrue(set.Add(config1));
             var config2 = new SubscriptionDataConfig(config1);
             Assert.IsFalse(set.Add(config2));
@@ -45,7 +69,19 @@ namespace QuantConnect.Tests.Common.Securities
         [Test]
         public void CanRemoveConsolidatorWhileEnumeratingList()
         {
-            var config = new SubscriptionDataConfig(typeof(TradeBar), Symbols.SPY, Resolution.Minute, TimeZones.NewYork, TimeZones.NewYork, false, false, false, false, TickType.Trade, false);
+            var config = new SubscriptionDataConfig(
+                typeof(TradeBar),
+                Symbols.SPY,
+                Resolution.Minute,
+                TimeZones.NewYork,
+                TimeZones.NewYork,
+                false,
+                false,
+                false,
+                false,
+                TickType.Trade,
+                false
+            );
             var consolidator1 = new TradeBarConsolidator(1);
             var consolidator2 = new TradeBarConsolidator(2);
             config.Consolidators.Add(consolidator1);
@@ -58,11 +94,30 @@ namespace QuantConnect.Tests.Common.Securities
 
         [TestCase(1, 0, DataMappingMode.OpenInterest, DataMappingMode.OpenInterest)]
         [TestCase(0, 0, DataMappingMode.OpenInterest, DataMappingMode.FirstDayMonth)]
-        public void NotEqualsMappingAndOffset(int offsetA, int offsetB, DataMappingMode mappingModeA, DataMappingMode mappingModeB)
+        public void NotEqualsMappingAndOffset(
+            int offsetA,
+            int offsetB,
+            DataMappingMode mappingModeA,
+            DataMappingMode mappingModeB
+        )
         {
-            var configA = new SubscriptionDataConfig(typeof(TradeBar), Symbols.SPY, Resolution.Minute, TimeZones.NewYork,
-                TimeZones.NewYork, false, false, false, dataMappingMode: mappingModeA, contractDepthOffset: (uint)offsetA);
-            var configB = new SubscriptionDataConfig(configA, dataMappingMode: mappingModeB, contractDepthOffset: (uint)offsetB);
+            var configA = new SubscriptionDataConfig(
+                typeof(TradeBar),
+                Symbols.SPY,
+                Resolution.Minute,
+                TimeZones.NewYork,
+                TimeZones.NewYork,
+                false,
+                false,
+                false,
+                dataMappingMode: mappingModeA,
+                contractDepthOffset: (uint)offsetA
+            );
+            var configB = new SubscriptionDataConfig(
+                configA,
+                dataMappingMode: mappingModeB,
+                contractDepthOffset: (uint)offsetB
+            );
 
             Assert.AreNotEqual(configA, configB);
             Assert.AreNotEqual(configA.GetHashCode(), configB.GetHashCode());
@@ -72,8 +127,16 @@ namespace QuantConnect.Tests.Common.Securities
         [TestCase(true)]
         public void EqualityMapped(bool mapped)
         {
-            var configA = new SubscriptionDataConfig(typeof(TradeBar), Symbols.SPY, Resolution.Minute, TimeZones.NewYork,
-                TimeZones.NewYork, false, false, false);
+            var configA = new SubscriptionDataConfig(
+                typeof(TradeBar),
+                Symbols.SPY,
+                Resolution.Minute,
+                TimeZones.NewYork,
+                TimeZones.NewYork,
+                false,
+                false,
+                false
+            );
             var configB = new SubscriptionDataConfig(configA, mappedConfig: mapped);
 
             if (mapped)

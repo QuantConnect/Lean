@@ -1,11 +1,11 @@
 /*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
- * 
- * Licensed under the Apache License, Version 2.0 (the "License"); 
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -30,6 +30,7 @@ using QuantConnect.Tests;
 using QuantConnect.Util;
 
 [assembly: MaintainLogHandler()]
+
 namespace QuantConnect.Tests
 {
     [SetUpFixture]
@@ -69,20 +70,21 @@ namespace QuantConnect.Tests
             PythonInitializer.AddPythonPaths(
                 new[]
                 {
-                "./Alphas",
-                "./Execution",
-                "./Portfolio",
-                "./Risk",
-                "./Selection",
-                "./RegressionAlgorithms",
-                "./Research/RegressionScripts",
-                "./Python/PandasTests",
-                "../../../Algorithm",
-                "../../../Algorithm/Selection",
-                "../../../Algorithm.Framework",
-                "../../../Algorithm.Framework/Selection",
-                "../../../Algorithm.Python"
-                });
+                    "./Alphas",
+                    "./Execution",
+                    "./Portfolio",
+                    "./Risk",
+                    "./Selection",
+                    "./RegressionAlgorithms",
+                    "./Research/RegressionScripts",
+                    "./Python/PandasTests",
+                    "../../../Algorithm",
+                    "../../../Algorithm/Selection",
+                    "../../../Algorithm.Framework",
+                    "../../../Algorithm.Framework/Selection",
+                    "../../../Algorithm.Python"
+                }
+            );
         }
 
         private static void TryAddIconicDataSubTypes()
@@ -90,15 +92,19 @@ namespace QuantConnect.Tests
             try
             {
                 // Loading of custom data types into BaseData as subtypes will be primarily done at runtime.
-                RuntimeTypeModel.Default[typeof(BaseData)].AddSubType(1111, typeof(IndexedLinkedData));
-                RuntimeTypeModel.Default[typeof(BaseData)].AddSubType(1112, typeof(IndexedLinkedData2));
+                RuntimeTypeModel
+                    .Default[typeof(BaseData)]
+                    .AddSubType(1111, typeof(IndexedLinkedData));
+                RuntimeTypeModel
+                    .Default[typeof(BaseData)]
+                    .AddSubType(1112, typeof(IndexedLinkedData2));
                 RuntimeTypeModel.Default[typeof(BaseData)].AddSubType(1113, typeof(LinkedData));
                 RuntimeTypeModel.Default[typeof(BaseData)].AddSubType(1114, typeof(UnlinkedData));
-                RuntimeTypeModel.Default[typeof(TradeBar)].AddSubType(1115, typeof(UnlinkedDataTradeBar));
+                RuntimeTypeModel
+                    .Default[typeof(TradeBar)]
+                    .AddSubType(1115, typeof(UnlinkedDataTradeBar));
             }
-            catch
-            {
-            }
+            catch { }
         }
     }
 
@@ -144,7 +150,9 @@ namespace QuantConnect.Tests
             if (TestContext.Parameters.Exists("log-handler"))
             {
                 var logHandler = TestContext.Parameters["log-handler"];
-                Log.Trace($"QuantConnect.Tests.AssemblyInitialize(): Log handler test parameter loaded {logHandler}");
+                Log.Trace(
+                    $"QuantConnect.Tests.AssemblyInitialize(): Log handler test parameter loaded {logHandler}"
+                );
 
                 return Composer.Instance.GetExportedValueByTypeName<ILogHandler>(logHandler);
             }
@@ -154,5 +162,3 @@ namespace QuantConnect.Tests
         }
     }
 }
-
-

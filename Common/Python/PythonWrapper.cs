@@ -37,17 +37,23 @@ namespace QuantConnect.Python
             if (!typeof(TInterface).IsInterface)
             {
                 throw new ArgumentException(
-                    $"{nameof(PythonWrapper)}.{nameof(ValidateImplementationOf)}(): {Messages.PythonWrapper.ExpectedInterfaceTypeParameter}");
+                    $"{nameof(PythonWrapper)}.{nameof(ValidateImplementationOf)}(): {Messages.PythonWrapper.ExpectedInterfaceTypeParameter}"
+                );
             }
 
             var missingMembers = new List<string>();
-            var members = typeof(TInterface).GetMembers(BindingFlags.Public | BindingFlags.Instance);
+            var members = typeof(TInterface).GetMembers(
+                BindingFlags.Public | BindingFlags.Instance
+            );
             using (Py.GIL())
             {
                 foreach (var member in members)
                 {
-                    if ((member is not MethodInfo method || !method.IsSpecialName) &&
-                        !model.HasAttr(member.Name) && !model.HasAttr(member.Name.ToSnakeCase()))
+                    if (
+                        (member is not MethodInfo method || !method.IsSpecialName)
+                        && !model.HasAttr(member.Name)
+                        && !model.HasAttr(member.Name.ToSnakeCase())
+                    )
                     {
                         missingMembers.Add(member.Name);
                     }
@@ -56,7 +62,12 @@ namespace QuantConnect.Python
                 if (missingMembers.Any())
                 {
                     throw new NotImplementedException(
-                        Messages.PythonWrapper.InterfaceNotFullyImplemented(typeof(TInterface).Name, model.GetPythonType().Name, missingMembers));
+                        Messages.PythonWrapper.InterfaceNotFullyImplemented(
+                            typeof(TInterface).Name,
+                            model.GetPythonType().Name,
+                            missingMembers
+                        )
+                    );
                 }
             }
 
@@ -70,7 +81,11 @@ namespace QuantConnect.Python
         /// <param name="methodName">The name of the method to invoke</param>
         /// <param name="args">The arguments to call the method with</param>
         /// <returns>The return value of the called method converted into the <typeparamref name="T"/> type</returns>
-        public static T InvokeMethod<T>(this PyObject model, string methodName, params object[] args)
+        public static T InvokeMethod<T>(
+            this PyObject model,
+            string methodName,
+            params object[] args
+        )
         {
             using var _ = Py.GIL();
             return InvokeMethodImpl(model, methodName, args).GetAndDispose<T>();
@@ -82,7 +97,11 @@ namespace QuantConnect.Python
         /// <param name="model">The <see cref="PyObject"/> instance</param>
         /// <param name="methodName">The name of the method to invoke</param>
         /// <param name="args">The arguments to call the method with</param>
-        public static void InvokeMethod(this PyObject model, string methodName, params object[] args)
+        public static void InvokeMethod(
+            this PyObject model,
+            string methodName,
+            params object[] args
+        )
         {
             InvokeMethodImpl(model, methodName, args);
         }
@@ -109,7 +128,11 @@ namespace QuantConnect.Python
             return InvokeMethodImpl(method, args);
         }
 
-        private static PyObject InvokeMethodImpl(PyObject model, string methodName, params object[] args)
+        private static PyObject InvokeMethodImpl(
+            PyObject model,
+            string methodName,
+            params object[] args
+        )
         {
             using var _ = Py.GIL();
             PyObject method = model.GetMethod(methodName);

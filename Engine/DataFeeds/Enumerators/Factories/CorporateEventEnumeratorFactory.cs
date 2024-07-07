@@ -16,7 +16,6 @@
 
 using System;
 using System.Collections.Generic;
-
 using QuantConnect.Data;
 using QuantConnect.Data.Auxiliary;
 using QuantConnect.Interfaces;
@@ -54,9 +53,9 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators.Factories
             IMapFileProvider mapFileProvider,
             DateTime startTime,
             DateTime endTime,
-            bool enablePriceScaling = true)
+            bool enablePriceScaling = true
+        )
         {
-
             var tradableEventProviders = new List<ITradableDateEventProvider>();
 
             if (config.EmitSplitsAndDividends())
@@ -78,7 +77,8 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators.Factories
                 mapFileProvider,
                 tradableEventProviders.ToArray(),
                 tradableDayNotifier,
-                startTime);
+                startTime
+            );
 
             // avoid price scaling for backtesting; calculate it directly in worker
             // and allow subscription to extract the the data depending on config data mode
@@ -89,7 +89,8 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators.Factories
                     rawDataEnumerator,
                     config,
                     factorFileProvider,
-                    endDate: endTime);
+                    endDate: endTime
+                );
             }
 
             return new SynchronizingBaseDataEnumerator(dataEnumerator, enumerator);

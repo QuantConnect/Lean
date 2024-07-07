@@ -41,14 +41,18 @@ namespace QuantConnect.Algorithm.CSharp
             SetEndDate(2010, 10, 11);
             SetCash(250000);
 
-            var allSymbols = StressSymbols.StockSymbols.ToList();//.Concat(ForexSymbols).ToList();
-            if (TickSymbolsToRun + SecondSymbolsToRun + HourSymbolsToRun + DailySymbolsToRun > allSymbols.Count)
+            var allSymbols = StressSymbols.StockSymbols.ToList(); //.Concat(ForexSymbols).ToList();
+            if (
+                TickSymbolsToRun + SecondSymbolsToRun + HourSymbolsToRun + DailySymbolsToRun
+                > allSymbols.Count
+            )
             {
-                throw new RegressionTestException("Too many symbols, all symbols: " + allSymbols.Count);
+                throw new RegressionTestException(
+                    "Too many symbols, all symbols: " + allSymbols.Count
+                );
             }
 
-
-            var hash = new HashSet<string> {"DNY", "MLNK"};
+            var hash = new HashSet<string> { "DNY", "MLNK" };
             var ticks = GetRandomSymbols(allSymbols, hash, TickSymbolsToRun).ToList();
             var seconds = GetRandomSymbols(allSymbols, hash, SecondSymbolsToRun).ToList();
             var minutes = GetRandomSymbols(allSymbols, hash, MinuteSymbolsToRun).ToList();
@@ -68,17 +72,26 @@ namespace QuantConnect.Algorithm.CSharp
         {
             foreach (var symbol in symbols)
             {
-                var securityType = StressSymbols.ForexSymbols.Contains(symbol) ? SecurityType.Forex : SecurityType.Equity;
+                var securityType = StressSymbols.ForexSymbols.Contains(symbol)
+                    ? SecurityType.Forex
+                    : SecurityType.Equity;
                 AddSecurity(securityType, symbol, resolution);
             }
         }
 
-        private IEnumerable<string> GetRandomSymbols(List<string> allSymbols, HashSet<string> hash, int numberOfSymbols)
+        private IEnumerable<string> GetRandomSymbols(
+            List<string> allSymbols,
+            HashSet<string> hash,
+            int numberOfSymbols
+        )
         {
-            return Enumerable.Range(0, numberOfSymbols).Select(x => GetRandomItem(allSymbols, hash));
+            return Enumerable
+                .Range(0, numberOfSymbols)
+                .Select(x => GetRandomItem(allSymbols, hash));
         }
 
         private readonly Random _random = new Random();
+
         private string GetRandomItem(IReadOnlyList<string> list, HashSet<string> hash)
         {
             var count = 0;
@@ -87,17 +100,13 @@ namespace QuantConnect.Algorithm.CSharp
             {
                 item = list[_random.Next(list.Count)];
                 count++;
-            }
-            while (!hash.Add(item) && count < list.Count*2);
+            } while (!hash.Add(item) && count < list.Count * 2);
             return item;
         }
 
         /// <summary>
         /// TradeBar data event handler
         /// </summary>
-        public void OnData(TradeBars data)
-        {
-
-        }
+        public void OnData(TradeBars data) { }
     }
 }

@@ -51,7 +51,12 @@ namespace QuantConnect.Report
         /// Read Json and convert
         /// </summary>
         /// <returns>Resulting <see cref="Order"/></returns>
-        public override object ReadJson(JsonReader reader, Type objectType, object existingValue, JsonSerializer serializer)
+        public override object ReadJson(
+            JsonReader reader,
+            Type objectType,
+            object existingValue,
+            JsonSerializer serializer
+        )
         {
             var token = JToken.ReadFrom(reader);
             var jtokenType = token["Type"] ?? token["type"];
@@ -80,9 +85,9 @@ namespace QuantConnect.Report
         {
             var orderTypeValue = type.Value<string>();
             int orderTypeNumber;
-            return Parse.TryParse(orderTypeValue, NumberStyles.Any, out orderTypeNumber) ?
-                orderTypeNumber :
-                (int)(OrderType)Enum.Parse(typeof(OrderType), orderTypeValue, true);
+            return Parse.TryParse(orderTypeValue, NumberStyles.Any, out orderTypeNumber)
+                ? orderTypeNumber
+                : (int)(OrderType)Enum.Parse(typeof(OrderType), orderTypeValue, true);
         }
     }
 }

@@ -13,12 +13,12 @@
  * limitations under the License.
 */
 
-using QuantConnect.Util;
-using QuantConnect.Interfaces;
 using QuantConnect.Configuration;
-using QuantConnect.Lean.Engine.DataFeeds;
 using QuantConnect.Data.UniverseSelection;
+using QuantConnect.Interfaces;
+using QuantConnect.Lean.Engine.DataFeeds;
 using QuantConnect.Tests.Common.Data.Fundamental;
+using QuantConnect.Util;
 
 namespace QuantConnect.Tests
 {
@@ -29,12 +29,18 @@ namespace QuantConnect.Tests
     {
         private static bool _initialized;
 
-        public static IDataProvider DataProvider
-            = Composer.Instance.GetExportedValueByTypeName<IDataProvider>(Config.Get("data-provider", "DefaultDataProvider"));
-        public static IMapFileProvider MapFileProvider
-            = Composer.Instance.GetExportedValueByTypeName<IMapFileProvider>(Config.Get("map-file-provider", "LocalDiskMapFileProvider"));
-        public static IFactorFileProvider FactorFileProvider
-            = Composer.Instance.GetExportedValueByTypeName<IFactorFileProvider>(Config.Get("factor-file-provider", "LocalDiskFactorFileProvider"));
+        public static IDataProvider DataProvider =
+            Composer.Instance.GetExportedValueByTypeName<IDataProvider>(
+                Config.Get("data-provider", "DefaultDataProvider")
+            );
+        public static IMapFileProvider MapFileProvider =
+            Composer.Instance.GetExportedValueByTypeName<IMapFileProvider>(
+                Config.Get("map-file-provider", "LocalDiskMapFileProvider")
+            );
+        public static IFactorFileProvider FactorFileProvider =
+            Composer.Instance.GetExportedValueByTypeName<IFactorFileProvider>(
+                Config.Get("factor-file-provider", "LocalDiskFactorFileProvider")
+            );
 
         public static IDataCacheProvider DataCacheProvider = new ZipDataCacheProvider(DataProvider);
 
@@ -54,7 +60,11 @@ namespace QuantConnect.Tests
 
                 MapFileProvider.Initialize(DataProvider);
                 FactorFileProvider.Initialize(MapFileProvider, DataProvider);
-                FundamentalService.Initialize(DataProvider, new NullFundamentalDataProvider(), false);
+                FundamentalService.Initialize(
+                    DataProvider,
+                    new NullFundamentalDataProvider(),
+                    false
+                );
             }
         }
     }

@@ -28,17 +28,14 @@ namespace QuantConnect.Orders
         /// Post-only order (available when ordertype = limit)
         /// </summary>
         public bool PostOnly { get; set; }
-        
+
         /// <summary>
         /// If true or by default when selling, fees will be charged in base currency. If false will be ignored. Mutually exclusive with FeeInQuote.
         /// </summary>
         /// <remarks>See (https://support.kraken.com/hc/en-us/articles/202966956#howclosingtransactionswork) for more information about the currency selection.</remarks>
         public bool FeeInBase
         {
-            get
-            {
-                return _feeInBase;
-            }
+            get { return _feeInBase; }
             set
             {
                 if (value)
@@ -55,10 +52,7 @@ namespace QuantConnect.Orders
         /// <remarks>See (https://support.kraken.com/hc/en-us/articles/202966956#howclosingtransactionswork) for more information about the currency selection.</remarks>
         public bool FeeInQuote
         {
-            get
-            {
-                return _feeInQuote;
-            }
+            get { return _feeInQuote; }
             set
             {
                 if (value)
@@ -68,7 +62,7 @@ namespace QuantConnect.Orders
                 }
             }
         }
-        
+
         /// <summary>
         /// https://support.kraken.com/hc/en-us/articles/201648183-Market-Price-Protection
         /// </summary>

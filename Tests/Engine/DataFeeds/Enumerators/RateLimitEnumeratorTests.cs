@@ -33,7 +33,10 @@ namespace QuantConnect.Tests.Engine.DataFeeds.Enumerators
         {
             var currentTime = new DateTime(2015, 10, 10, 13, 6, 0);
             var timeProvider = new ManualTimeProvider(currentTime, TimeZones.Utc);
-            var data = Enumerable.Range(0, 100).Select(x => new Tick {Symbol = CreateSymbol(x)}).GetEnumerator();
+            var data = Enumerable
+                .Range(0, 100)
+                .Select(x => new Tick { Symbol = CreateSymbol(x) })
+                .GetEnumerator();
             var rateLimit = new RateLimitEnumerator<BaseData>(data, timeProvider, Time.OneSecond);
 
             Assert.IsTrue(rateLimit.MoveNext());
@@ -55,8 +58,13 @@ namespace QuantConnect.Tests.Engine.DataFeeds.Enumerators
         private static Symbol CreateSymbol(int x)
         {
             return new Symbol(
-                SecurityIdentifier.GenerateBase(null, x.ToString(CultureInfo.InvariantCulture), Market.USA),
-                 x.ToString(CultureInfo.InvariantCulture));
+                SecurityIdentifier.GenerateBase(
+                    null,
+                    x.ToString(CultureInfo.InvariantCulture),
+                    Market.USA
+                ),
+                x.ToString(CultureInfo.InvariantCulture)
+            );
         }
     }
 }

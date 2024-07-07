@@ -13,25 +13,25 @@
  * limitations under the License.
 */
 
-using System.Linq;
-using QuantConnect.Data;
-using QuantConnect.Util;
-using QuantConnect.Securities;
 using System.Collections.Generic;
-using QuantConnect.Data.UniverseSelection;
-using QuantConnect.Algorithm.Framework.Risk;
+using System.Linq;
 using QuantConnect.Algorithm.Framework.Alphas;
+using QuantConnect.Algorithm.Framework.Alphas.Analysis;
 using QuantConnect.Algorithm.Framework.Execution;
 using QuantConnect.Algorithm.Framework.Portfolio;
+using QuantConnect.Algorithm.Framework.Risk;
 using QuantConnect.Algorithm.Framework.Selection;
-using QuantConnect.Algorithm.Framework.Alphas.Analysis;
+using QuantConnect.Data;
+using QuantConnect.Data.UniverseSelection;
+using QuantConnect.Securities;
+using QuantConnect.Util;
 
 namespace QuantConnect.Algorithm
 {
     public partial class QCAlgorithm
     {
         // this is so that later during 'UniverseSelection.CreateUniverses' we wont remove the user universes from the UniverseManager
-        private readonly HashSet<Symbol> _universeSelectionUniverses = new ();
+        private readonly HashSet<Symbol> _universeSelectionUniverses = new();
         private bool _isEmitWarmupInsightWarningSent;
         private bool _isEmitDelistedInsightWarningSent;
 
@@ -93,7 +93,10 @@ namespace QuantConnect.Algorithm
 
             if (DebugMode)
             {
-                InsightsGenerated += (algorithm, data) => Log($"{Time}: {string.Join(" | ", data.Insights.OrderBy(i => i.Symbol.ToString()))}");
+                InsightsGenerated += (algorithm, data) =>
+                    Log(
+                        $"{Time}: {string.Join(" | ", data.Insights.OrderBy(i => i.Symbol.ToString()))}"
+                    );
             }
         }
 
@@ -152,8 +155,10 @@ namespace QuantConnect.Algorithm
             // insight timestamping handled via InsightsGenerated event handler
             var insightsEnumerable = Alpha.Update(this, slice);
             // for performance only call 'ToArray' if not empty enumerable (which is static)
-            var insights = insightsEnumerable == Enumerable.Empty<Insight>()
-                ? new Insight[] { } : insightsEnumerable.ToArray();
+            var insights =
+                insightsEnumerable == Enumerable.Empty<Insight>()
+                    ? new Insight[] { }
+                    : insightsEnumerable.ToArray();
 
             // only fire insights generated event if we actually have insights
             if (insights.Length != 0)
@@ -178,8 +183,10 @@ namespace QuantConnect.Algorithm
             // construct portfolio targets from insights
             var targetsEnumerable = PortfolioConstruction.CreateTargets(this, insights);
             // for performance only call 'ToArray' if not empty enumerable (which is static)
-            var targets = targetsEnumerable == Enumerable.Empty<IPortfolioTarget>()
-                ? new IPortfolioTarget[] {} : targetsEnumerable.ToArray();
+            var targets =
+                targetsEnumerable == Enumerable.Empty<IPortfolioTarget>()
+                    ? new IPortfolioTarget[] { }
+                    : targetsEnumerable.ToArray();
 
             // set security targets w/ those generated via portfolio construction module
             foreach (var target in targets)
@@ -193,14 +200,18 @@ namespace QuantConnect.Algorithm
                 // debug printing of generated targets
                 if (targets.Length > 0)
                 {
-                    Log($"{Time}: PORTFOLIO: {string.Join(" | ", targets.Select(t => t.ToString()).OrderBy(t => t))}");
+                    Log(
+                        $"{Time}: PORTFOLIO: {string.Join(" | ", targets.Select(t => t.ToString()).OrderBy(t => t))}"
+                    );
                 }
             }
 
             var riskTargetOverridesEnumerable = RiskManagement.ManageRisk(this, targets);
             // for performance only call 'ToArray' if not empty enumerable (which is static)
-            var riskTargetOverrides = riskTargetOverridesEnumerable == Enumerable.Empty<IPortfolioTarget>()
-                ? new IPortfolioTarget[] { } : riskTargetOverridesEnumerable.ToArray();
+            var riskTargetOverrides =
+                riskTargetOverridesEnumerable == Enumerable.Empty<IPortfolioTarget>()
+                    ? new IPortfolioTarget[] { }
+                    : riskTargetOverridesEnumerable.ToArray();
 
             // override security targets w/ those generated via risk management module
             foreach (var target in riskTargetOverrides)
@@ -214,17 +225,21 @@ namespace QuantConnect.Algorithm
                 // debug printing of generated risk target overrides
                 if (riskTargetOverrides.Length > 0)
                 {
-                    Log($"{Time}: RISK: {string.Join(" | ", riskTargetOverrides.Select(t => t.ToString()).OrderBy(t => t))}");
+                    Log(
+                        $"{Time}: RISK: {string.Join(" | ", riskTargetOverrides.Select(t => t.ToString()).OrderBy(t => t))}"
+                    );
                 }
             }
 
             IPortfolioTarget[] riskAdjustedTargets;
             // for performance we check the length before
-            if (riskTargetOverrides.Length != 0
-                || targets.Length != 0)
+            if (riskTargetOverrides.Length != 0 || targets.Length != 0)
             {
                 // execute on the targets, overriding targets for symbols w/ risk targets
-                riskAdjustedTargets = riskTargetOverrides.Concat(targets).DistinctBy(pt => pt.Symbol).ToArray();
+                riskAdjustedTargets = riskTargetOverrides
+                    .Concat(targets)
+                    .DistinctBy(pt => pt.Symbol)
+                    .ToArray();
             }
             else
             {
@@ -236,7 +251,9 @@ namespace QuantConnect.Algorithm
                 // only log adjusted targets if we've performed an adjustment
                 if (riskTargetOverrides.Length > 0)
                 {
-                    Log($"{Time}: RISK ADJUSTED TARGETS: {string.Join(" | ", riskAdjustedTargets.Select(t => t.ToString()).OrderBy(t => t))}");
+                    Log(
+                        $"{Time}: RISK ADJUSTED TARGETS: {string.Join(" | ", riskAdjustedTargets.Select(t => t.ToString()).OrderBy(t => t))}"
+                    );
                 }
             }
 
@@ -283,14 +300,18 @@ namespace QuantConnect.Algorithm
         {
             if (UniverseSelection.GetType() != typeof(NullUniverseSelectionModel))
             {
-                var compositeUniverseSelection = UniverseSelection as CompositeUniverseSelectionModel;
+                var compositeUniverseSelection =
+                    UniverseSelection as CompositeUniverseSelectionModel;
                 if (compositeUniverseSelection != null)
                 {
                     compositeUniverseSelection.AddUniverseSelection(universeSelection);
                 }
                 else
                 {
-                    UniverseSelection = new CompositeUniverseSelectionModel(UniverseSelection, universeSelection);
+                    UniverseSelection = new CompositeUniverseSelectionModel(
+                        UniverseSelection,
+                        universeSelection
+                    );
                 }
             }
             else
@@ -384,7 +405,10 @@ namespace QuantConnect.Algorithm
                 }
                 else
                 {
-                    RiskManagement = new CompositeRiskManagementModel(RiskManagement, riskManagement);
+                    RiskManagement = new CompositeRiskManagementModel(
+                        RiskManagement,
+                        riskManagement
+                    );
                 }
             }
             else
@@ -444,14 +468,16 @@ namespace QuantConnect.Algorithm
                 {
                     if (!_isEmitDelistedInsightWarningSent)
                     {
-                        Error($"QCAlgorithm.EmitInsights(): Warning: cannot emit insights for delisted securities, these will be discarded");
+                        Error(
+                            $"QCAlgorithm.EmitInsights(): Warning: cannot emit insights for delisted securities, these will be discarded"
+                        );
                         _isEmitDelistedInsightWarningSent = true;
                     }
 
                     // If this is our first invalid insight, create the list and fill it with previous values
                     if (validInsights == null)
                     {
-                        validInsights = new List<Insight>() {};
+                        validInsights = new List<Insight>() { };
                         for (var j = 0; j < i; j++)
                         {
                             validInsights.Add(insights[j]);
@@ -472,7 +498,6 @@ namespace QuantConnect.Algorithm
             }
 
             return validInsights == null ? insights : validInsights.ToArray();
-
         }
 
         /// <summary>
@@ -493,9 +518,15 @@ namespace QuantConnect.Algorithm
                     insight.ReferenceValue = security.VolatilityModel.Volatility;
                     break;
             }
-            insight.SourceModel = string.IsNullOrEmpty(insight.SourceModel) ? Alpha.GetModelName() : insight.SourceModel;
+            insight.SourceModel = string.IsNullOrEmpty(insight.SourceModel)
+                ? Alpha.GetModelName()
+                : insight.SourceModel;
 
-            var exchangeHours = MarketHoursDatabase.GetExchangeHours(insight.Symbol.ID.Market, insight.Symbol, insight.Symbol.SecurityType);
+            var exchangeHours = MarketHoursDatabase.GetExchangeHours(
+                insight.Symbol.ID.Market,
+                insight.Symbol,
+                insight.Symbol.SecurityType
+            );
             insight.SetPeriodAndCloseTime(exchangeHours);
             return insight;
         }

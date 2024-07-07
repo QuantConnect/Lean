@@ -14,11 +14,11 @@
 */
 
 using System;
-using System.Linq;
+using System.Collections.Generic;
 using System.Drawing;
+using System.Linq;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
-using System.Collections.Generic;
 
 namespace QuantConnect.Util
 {
@@ -27,7 +27,7 @@ namespace QuantConnect.Util
     /// </summary>
     public class SeriesJsonConverter : JsonConverter
     {
-        private ColorJsonConverter _colorJsonConverter = new ();
+        private ColorJsonConverter _colorJsonConverter = new();
 
         /// <summary>
         /// Write Series to Json
@@ -109,19 +109,31 @@ namespace QuantConnect.Util
         /// <summary>
         /// Reads series from Json
         /// </summary>
-        public override object ReadJson(JsonReader reader, Type objectType, object existingValue, JsonSerializer serializer)
+        public override object ReadJson(
+            JsonReader reader,
+            Type objectType,
+            object existingValue,
+            JsonSerializer serializer
+        )
         {
             var jObject = JObject.Load(reader);
 
             var name = (jObject["Name"] ?? jObject["name"]).Value<string>();
             var unit = (jObject["Unit"] ?? jObject["unit"]).Value<string>();
             var index = (jObject["Index"] ?? jObject["index"]).Value<int>();
-            var seriesType = (SeriesType)(jObject["SeriesType"] ?? jObject["seriesType"]).Value<int>();
+            var seriesType = (SeriesType)
+                (jObject["SeriesType"] ?? jObject["seriesType"]).Value<int>();
             var values = (JArray)(jObject["Values"] ?? jObject["values"]);
 
-            var zindex = jObject.TryGetPropertyValue<int?>("ZIndex") ?? jObject.TryGetPropertyValue<int?>("zIndex");
-            var indexName = jObject.TryGetPropertyValue<string>("IndexName") ?? jObject.TryGetPropertyValue<string>("indexName");
-            var tooltip = jObject.TryGetPropertyValue<string>("Tooltip") ?? jObject.TryGetPropertyValue<string>("tooltip");
+            var zindex =
+                jObject.TryGetPropertyValue<int?>("ZIndex")
+                ?? jObject.TryGetPropertyValue<int?>("zIndex");
+            var indexName =
+                jObject.TryGetPropertyValue<string>("IndexName")
+                ?? jObject.TryGetPropertyValue<string>("indexName");
+            var tooltip =
+                jObject.TryGetPropertyValue<string>("Tooltip")
+                ?? jObject.TryGetPropertyValue<string>("tooltip");
 
             if (seriesType == SeriesType.Candle)
             {
@@ -134,7 +146,11 @@ namespace QuantConnect.Util
                     Tooltip = tooltip,
                     IndexName = indexName,
                     SeriesType = seriesType,
-                    Values = values.ToObject<List<Candlestick>>(serializer).Where(x => x != null).Cast<ISeriesPoint>().ToList()
+                    Values = values
+                        .ToObject<List<Candlestick>>(serializer)
+                        .Where(x => x != null)
+                        .Cast<ISeriesPoint>()
+                        .ToList()
                 };
             }
 
@@ -147,17 +163,30 @@ namespace QuantConnect.Util
                 Tooltip = tooltip,
                 IndexName = indexName,
                 SeriesType = seriesType,
-                Color = (jObject["Color"] ?? jObject["color"])?.ToObject<Color>(serializer) ?? Color.Empty,
-                ScatterMarkerSymbol = (jObject["ScatterMarkerSymbol"] ?? jObject["scatterMarkerSymbol"])?.ToObject<ScatterMarkerSymbol>(serializer) ?? ScatterMarkerSymbol.None
+                Color =
+                    (jObject["Color"] ?? jObject["color"])?.ToObject<Color>(serializer)
+                    ?? Color.Empty,
+                ScatterMarkerSymbol =
+                    (
+                        jObject["ScatterMarkerSymbol"] ?? jObject["scatterMarkerSymbol"]
+                    )?.ToObject<ScatterMarkerSymbol>(serializer) ?? ScatterMarkerSymbol.None
             };
 
             if (seriesType == SeriesType.Scatter)
             {
-                result.Values = values.ToObject<List<ScatterChartPoint>>(serializer).Where(x => x != null).Cast<ISeriesPoint>().ToList();
+                result.Values = values
+                    .ToObject<List<ScatterChartPoint>>(serializer)
+                    .Where(x => x != null)
+                    .Cast<ISeriesPoint>()
+                    .ToList();
             }
             else
             {
-                result.Values = values.ToObject<List<ChartPoint>>(serializer).Where(x => x != null).Cast<ISeriesPoint>().ToList();
+                result.Values = values
+                    .ToObject<List<ChartPoint>>(serializer)
+                    .Where(x => x != null)
+                    .Cast<ISeriesPoint>()
+                    .ToList();
             }
             return result;
         }

@@ -54,7 +54,11 @@ namespace QuantConnect.Util
             {
                 try
                 {
-                    foreach (var action in _blockingCollection.GetConsumingEnumerable(_threadCancellationTokenSource.Token))
+                    foreach (
+                        var action in _blockingCollection.GetConsumingEnumerable(
+                            _threadCancellationTokenSource.Token
+                        )
+                    )
                     {
                         FinishedWorkItem.Reset();
                         try
@@ -63,7 +67,10 @@ namespace QuantConnect.Util
                         }
                         catch (Exception exception)
                         {
-                            Log.Error(exception, "WorkerThread(): exception thrown when running task");
+                            Log.Error(
+                                exception,
+                                "WorkerThread(): exception thrown when running task"
+                            );
                         }
                         FinishedWorkItem.Set();
                     }
@@ -100,7 +107,10 @@ namespace QuantConnect.Util
             try
             {
                 _blockingCollection.CompleteAdding();
-                _workerThread.StopSafely(TimeSpan.FromMilliseconds(50), _threadCancellationTokenSource);
+                _workerThread.StopSafely(
+                    TimeSpan.FromMilliseconds(50),
+                    _threadCancellationTokenSource
+                );
                 _threadCancellationTokenSource.DisposeSafely();
             }
             catch (Exception exception)

@@ -43,11 +43,18 @@ namespace QuantConnect.Tests.Common.Exceptions
                 {
                     return null;
                 }
-                return new Exception($"Projected {++count}: " + e.Message, _interpret(e.InnerException));
+                return new Exception(
+                    $"Projected {++count}: " + e.Message,
+                    _interpret(e.InnerException)
+                );
             };
         }
 
-        public FakeExceptionInterpreter(Func<Exception, bool> canInterpret, Func<Exception, Exception> interpret, int order = 0)
+        public FakeExceptionInterpreter(
+            Func<Exception, bool> canInterpret,
+            Func<Exception, Exception> interpret,
+            int order = 0
+        )
         {
             _canInterpret = canInterpret;
             _interpret = interpret;

@@ -60,7 +60,8 @@ namespace QuantConnect.Algorithm.CSharp
         /// <param name="slice">The current slice of data keyed by symbol string</param>
         public override void OnData(Slice slice)
         {
-            if (IsWarmingUp) return;
+            if (IsWarmingUp)
+                return;
             if (!Portfolio.Invested)
             {
                 foreach (var chain in slice.OptionChains)
@@ -68,19 +69,20 @@ namespace QuantConnect.Algorithm.CSharp
                     var underlying = Securities[chain.Key.Underlying];
                     foreach (var contract in chain.Value)
                     {
-                        Log($"{contract.Symbol.Value}," +
-                            $"Bid={contract.BidPrice.ToStringInvariant()} " +
-                            $"Ask={contract.AskPrice.ToStringInvariant()} " +
-                            $"Last={contract.LastPrice.ToStringInvariant()} " +
-                            $"OI={contract.OpenInterest.ToStringInvariant()} " +
-                            $"σ={underlying.VolatilityModel.Volatility.ToStringInvariant("0.000")} " +
-                            $"NPV={contract.TheoreticalPrice.ToStringInvariant("0.000")} " +
-                            $"Δ={contract.Greeks.Delta.ToStringInvariant("0.000")} " +
-                            $"Γ={contract.Greeks.Gamma.ToStringInvariant("0.000")} " +
-                            $"ν={contract.Greeks.Vega.ToStringInvariant("0.000")} " +
-                            $"ρ={contract.Greeks.Rho.ToStringInvariant("0.00")} " +
-                            $"Θ={(contract.Greeks.Theta / 365.0m).ToStringInvariant("0.00")} " +
-                            $"IV={contract.ImpliedVolatility.ToStringInvariant("0.000")}"
+                        Log(
+                            $"{contract.Symbol.Value},"
+                                + $"Bid={contract.BidPrice.ToStringInvariant()} "
+                                + $"Ask={contract.AskPrice.ToStringInvariant()} "
+                                + $"Last={contract.LastPrice.ToStringInvariant()} "
+                                + $"OI={contract.OpenInterest.ToStringInvariant()} "
+                                + $"σ={underlying.VolatilityModel.Volatility.ToStringInvariant("0.000")} "
+                                + $"NPV={contract.TheoreticalPrice.ToStringInvariant("0.000")} "
+                                + $"Δ={contract.Greeks.Delta.ToStringInvariant("0.000")} "
+                                + $"Γ={contract.Greeks.Gamma.ToStringInvariant("0.000")} "
+                                + $"ν={contract.Greeks.Vega.ToStringInvariant("0.000")} "
+                                + $"ρ={contract.Greeks.Rho.ToStringInvariant("0.00")} "
+                                + $"Θ={(contract.Greeks.Theta / 365.0m).ToStringInvariant("0.00")} "
+                                + $"IV={contract.ImpliedVolatility.ToStringInvariant("0.000")}"
                         );
                     }
                 }
@@ -92,7 +94,8 @@ namespace QuantConnect.Algorithm.CSharp
             foreach (var change in changes.AddedSecurities)
             {
                 // Only print options price
-                if (change.Symbol.Value == "GOOG") continue;
+                if (change.Symbol.Value == "GOOG")
+                    continue;
                 var history = History(change.Symbol, 10, Resolution.Minute);
 
                 foreach (var data in history.OrderByDescending(x => x.Time).Take(3))

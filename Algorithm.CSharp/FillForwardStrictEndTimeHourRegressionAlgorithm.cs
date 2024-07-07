@@ -15,17 +15,19 @@
 */
 
 using System;
+using System.Collections.Generic;
 using System.Text;
 using QuantConnect.Data;
 using QuantConnect.Interfaces;
-using System.Collections.Generic;
 
 namespace QuantConnect.Algorithm.CSharp
 {
     /// <summary>
     /// Regression algorithm asserting the behavior of fill forward when using daily strict end times
     /// </summary>
-    public class FillForwardStrictEndTimeHourRegressionAlgorithm : QCAlgorithm, IRegressionAlgorithmDefinition
+    public class FillForwardStrictEndTimeHourRegressionAlgorithm
+        : QCAlgorithm,
+            IRegressionAlgorithmDefinition
     {
         private readonly bool _updateExpectedData;
         private readonly StringBuilder _data = new();
@@ -56,7 +58,8 @@ namespace QuantConnect.Algorithm.CSharp
             if (slice.ContainsKey("SPX"))
             {
                 var spxData = slice.Bars["SPX"];
-                var message = $"{Time} ==== FF {spxData.IsFillForward}. {spxData} {spxData.Time:HH:mm:ss}->{spxData.EndTime:HH:mm:ss}";
+                var message =
+                    $"{Time} ==== FF {spxData.IsFillForward}. {spxData} {spxData.Time:HH:mm:ss}->{spxData.EndTime:HH:mm:ss}";
                 _data.AppendLine(message);
                 Debug(message);
             }
@@ -67,14 +70,20 @@ namespace QuantConnect.Algorithm.CSharp
             var data = _data.ToString();
             if (_updateExpectedData)
             {
-                Compression.ZipData(ExpectedDataFile, new Dictionary<string, string>() { { "zip_entry_name.txt", data } });
+                Compression.ZipData(
+                    ExpectedDataFile,
+                    new Dictionary<string, string>() { { "zip_entry_name.txt", data } }
+                );
                 return;
             }
 
-            var expected  = string.Join(';', Compression.ReadLines(ExpectedDataFile)).ReplaceLineEndings("");
+            var expected = string.Join(';', Compression.ReadLines(ExpectedDataFile))
+                .ReplaceLineEndings("");
             if (expected != data.ReplaceLineEndings(";").RemoveFromEnd(";"))
             {
-                throw new RegressionTestException($"Unexpected data: \"{data}\"{Environment.NewLine}Expected: \"{expected}\"");
+                throw new RegressionTestException(
+                    $"Unexpected data: \"{data}\"{Environment.NewLine}Expected: \"{expected}\""
+                );
             }
         }
 
@@ -106,35 +115,36 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// This is used by the regression test system to indicate what the expected statistics are from running the algorithm
         /// </summary>
-        public virtual Dictionary<string, string> ExpectedStatistics => new Dictionary<string, string>
-        {
-            {"Total Orders", "0"},
-            {"Average Win", "0%"},
-            {"Average Loss", "0%"},
-            {"Compounding Annual Return", "0%"},
-            {"Drawdown", "0%"},
-            {"Expectancy", "0"},
-            {"Start Equity", "100000"},
-            {"End Equity", "100000"},
-            {"Net Profit", "0%"},
-            {"Sharpe Ratio", "0"},
-            {"Sortino Ratio", "0"},
-            {"Probabilistic Sharpe Ratio", "0%"},
-            {"Loss Rate", "0%"},
-            {"Win Rate", "0%"},
-            {"Profit-Loss Ratio", "0"},
-            {"Alpha", "0"},
-            {"Beta", "0"},
-            {"Annual Standard Deviation", "0"},
-            {"Annual Variance", "0"},
-            {"Information Ratio", "-5.208"},
-            {"Tracking Error", "0.103"},
-            {"Treynor Ratio", "0"},
-            {"Total Fees", "$0.00"},
-            {"Estimated Strategy Capacity", "$0"},
-            {"Lowest Capacity Asset", ""},
-            {"Portfolio Turnover", "0%"},
-            {"OrderListHash", "d41d8cd98f00b204e9800998ecf8427e"}
-        };
+        public virtual Dictionary<string, string> ExpectedStatistics =>
+            new Dictionary<string, string>
+            {
+                { "Total Orders", "0" },
+                { "Average Win", "0%" },
+                { "Average Loss", "0%" },
+                { "Compounding Annual Return", "0%" },
+                { "Drawdown", "0%" },
+                { "Expectancy", "0" },
+                { "Start Equity", "100000" },
+                { "End Equity", "100000" },
+                { "Net Profit", "0%" },
+                { "Sharpe Ratio", "0" },
+                { "Sortino Ratio", "0" },
+                { "Probabilistic Sharpe Ratio", "0%" },
+                { "Loss Rate", "0%" },
+                { "Win Rate", "0%" },
+                { "Profit-Loss Ratio", "0" },
+                { "Alpha", "0" },
+                { "Beta", "0" },
+                { "Annual Standard Deviation", "0" },
+                { "Annual Variance", "0" },
+                { "Information Ratio", "-5.208" },
+                { "Tracking Error", "0.103" },
+                { "Treynor Ratio", "0" },
+                { "Total Fees", "$0.00" },
+                { "Estimated Strategy Capacity", "$0" },
+                { "Lowest Capacity Asset", "" },
+                { "Portfolio Turnover", "0%" },
+                { "OrderListHash", "d41d8cd98f00b204e9800998ecf8427e" }
+            };
     }
 }

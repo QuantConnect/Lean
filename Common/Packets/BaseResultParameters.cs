@@ -15,8 +15,8 @@
 */
 
 using System;
-using QuantConnect.Orders;
 using System.Collections.Generic;
+using QuantConnect.Orders;
 
 namespace QuantConnect.Packets
 {
@@ -68,14 +68,16 @@ namespace QuantConnect.Packets
         /// <summary>
         /// Creates a new instance
         /// </summary>
-        public BaseResultParameters(IDictionary<string, Chart> charts,
+        public BaseResultParameters(
+            IDictionary<string, Chart> charts,
             IDictionary<int, Order> orders,
             IDictionary<DateTime, decimal> profitLoss,
             IDictionary<string, string> statistics,
             IDictionary<string, string> runtimeStatistics,
             List<OrderEvent> orderEvents,
             AlgorithmConfiguration algorithmConfiguration = null,
-            IDictionary<string, string> state = null)
+            IDictionary<string, string> state = null
+        )
         {
             Charts = charts;
             Orders = orders;

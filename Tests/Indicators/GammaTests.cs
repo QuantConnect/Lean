@@ -13,29 +13,32 @@
  * limitations under the License.
 */
 
+using System.IO;
+using System.Linq;
 using NUnit.Framework;
 using QuantConnect.Algorithm;
 using QuantConnect.Data;
 using QuantConnect.Indicators;
-using System.IO;
-using System.Linq;
 
 namespace QuantConnect.Tests.Indicators
 {
     [TestFixture, Parallelizable(ParallelScope.Fixtures)]
     public class GammaTests : OptionBaseIndicatorTests<Gamma>
     {
-        protected override IndicatorBase<IndicatorDataPoint> CreateIndicator()
-            => new Gamma("testGammaIndicator", _symbol, 0.0403m, 0.0m);
+        protected override IndicatorBase<IndicatorDataPoint> CreateIndicator() =>
+            new Gamma("testGammaIndicator", _symbol, 0.0403m, 0.0m);
 
-        protected override OptionIndicatorBase CreateIndicator(IRiskFreeInterestRateModel riskFreeRateModel)
-            => new Gamma("testGammaIndicator", _symbol, riskFreeRateModel);
+        protected override OptionIndicatorBase CreateIndicator(
+            IRiskFreeInterestRateModel riskFreeRateModel
+        ) => new Gamma("testGammaIndicator", _symbol, riskFreeRateModel);
 
-        protected override OptionIndicatorBase CreateIndicator(IRiskFreeInterestRateModel riskFreeRateModel, IDividendYieldModel dividendYieldModel)
-            => new Gamma("testGammaIndicator", _symbol, riskFreeRateModel, dividendYieldModel);
+        protected override OptionIndicatorBase CreateIndicator(
+            IRiskFreeInterestRateModel riskFreeRateModel,
+            IDividendYieldModel dividendYieldModel
+        ) => new Gamma("testGammaIndicator", _symbol, riskFreeRateModel, dividendYieldModel);
 
-        protected override OptionIndicatorBase CreateIndicator(QCAlgorithm algorithm)
-            => algorithm.G(_symbol);
+        protected override OptionIndicatorBase CreateIndicator(QCAlgorithm algorithm) =>
+            algorithm.G(_symbol);
 
         [SetUp]
         public void SetUp()
@@ -49,8 +52,15 @@ namespace QuantConnect.Tests.Indicators
         [TestCase("american/third_party_1_greeks.csv", false, false, 0.12)]
         // Just placing the test and data here, we are unsure about the smoothing function and not going to reverse engineer
         [TestCase("american/third_party_2_greeks.csv", false, true, 10000, 0.002)]
-        public void ComparesAgainstExternalData(string subPath, bool reset, bool singleContract, double errorRate, double errorMargin = 1e-4,
-            int callColumn = 11, int putColumn = 10)
+        public void ComparesAgainstExternalData(
+            string subPath,
+            bool reset,
+            bool singleContract,
+            double errorRate,
+            double errorMargin = 1e-4,
+            int callColumn = 11,
+            int putColumn = 10
+        )
         {
             var path = Path.Combine("TestData", "greeksindicator", subPath);
             // skip last entry since for deep ITM, IV will not affect much on price. Thus root finding will not be optimizing a non-convex function.
@@ -61,13 +71,23 @@ namespace QuantConnect.Tests.Indicators
                 var interestRate = Parse.Decimal(items[^2]);
                 var dividendYield = Parse.Decimal(items[^1]);
 
-                var model = ParseSymbols(items, path.Contains("american"), out var call, out var put);
+                var model = ParseSymbols(
+                    items,
+                    path.Contains("american"),
+                    out var call,
+                    out var put
+                );
 
                 Gamma callIndicator;
                 Gamma putIndicator;
                 if (singleContract)
                 {
-                    callIndicator = new Gamma(call, interestRate, dividendYield, optionModel: model);
+                    callIndicator = new Gamma(
+                        call,
+                        interestRate,
+                        dividendYield,
+                        optionModel: model
+                    );
                     putIndicator = new Gamma(put, interestRate, dividendYield, optionModel: model);
                 }
                 else
@@ -76,14 +96,34 @@ namespace QuantConnect.Tests.Indicators
                     putIndicator = new Gamma(put, interestRate, dividendYield, call, model);
                 }
 
-                RunTestIndicator(call, put, callIndicator, putIndicator, items, callColumn, putColumn, errorRate, errorMargin);
+                RunTestIndicator(
+                    call,
+                    put,
+                    callIndicator,
+                    putIndicator,
+                    items,
+                    callColumn,
+                    putColumn,
+                    errorRate,
+                    errorMargin
+                );
 
                 if (reset == true)
                 {
                     callIndicator.Reset();
                     putIndicator.Reset();
 
-                    RunTestIndicator(call, put, callIndicator, putIndicator, items, callColumn, putColumn, errorRate, errorMargin);
+                    RunTestIndicator(
+                        call,
+                        put,
+                        callIndicator,
+                        putIndicator,
+                        items,
+                        callColumn,
+                        putColumn,
+                        errorRate,
+                        errorMargin
+                    );
                 }
             }
         }
@@ -113,11 +153,34 @@ namespace QuantConnect.Tests.Indicators
         [TestCase(0.409, 470.0, OptionRight.Put, 180, 0.0058, OptionStyle.American)]
         [TestCase(2.642, 430.0, OptionRight.Call, 180, 0.0193, OptionStyle.American)]
         [TestCase(27.772, 430.0, OptionRight.Put, 180, 0.0073, OptionStyle.American)]
-        public void ComparesAgainstExternalData2(decimal price, decimal spotPrice, OptionRight right, int expiry, double refGamma, OptionStyle style)
+        public void ComparesAgainstExternalData2(
+            decimal price,
+            decimal spotPrice,
+            OptionRight right,
+            int expiry,
+            double refGamma,
+            OptionStyle style
+        )
         {
-            var symbol = Symbol.CreateOption("SPY", Market.USA, style, right, 450m, _reference.AddDays(expiry));
-            var model = style == OptionStyle.European ? OptionPricingModelType.BlackScholes : OptionPricingModelType.BinomialCoxRossRubinstein;
-            var indicator = new Gamma(symbol, 0.0403m, 0.0m, optionModel: model, ivModel: OptionPricingModelType.BlackScholes);
+            var symbol = Symbol.CreateOption(
+                "SPY",
+                Market.USA,
+                style,
+                right,
+                450m,
+                _reference.AddDays(expiry)
+            );
+            var model =
+                style == OptionStyle.European
+                    ? OptionPricingModelType.BlackScholes
+                    : OptionPricingModelType.BinomialCoxRossRubinstein;
+            var indicator = new Gamma(
+                symbol,
+                0.0403m,
+                0.0m,
+                optionModel: model,
+                ivModel: OptionPricingModelType.BlackScholes
+            );
 
             var optionDataPoint = new IndicatorDataPoint(symbol, _reference, price);
             var spotDataPoint = new IndicatorDataPoint(symbol.Underlying, _reference, spotPrice);

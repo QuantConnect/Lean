@@ -14,10 +14,10 @@
 */
 
 using System;
-using Newtonsoft.Json;
-using QuantConnect.Statistics;
 using System.Collections.Generic;
+using Newtonsoft.Json;
 using QuantConnect.Optimizer.Parameters;
+using QuantConnect.Statistics;
 
 namespace QuantConnect.Api
 {
@@ -103,7 +103,6 @@ namespace QuantConnect.Api
     /// </summary>
     public class Backtest : BasicBacktest
     {
-
         /// <summary>
         /// Note on the backtest attached by the user
         /// </summary>

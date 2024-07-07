@@ -58,7 +58,8 @@ namespace QuantConnect.Indicators
         /// <param name="fastPeriod">The fast period of EMA of advance decline difference</param>
         /// <param name="slowPeriod">The slow period of EMA of advance decline difference</param>
         /// </summary>
-        public McClellanOscillator(string name, int fastPeriod = 19, int slowPeriod = 39) : base(name)
+        public McClellanOscillator(string name, int fastPeriod = 19, int slowPeriod = 39)
+            : base(name)
         {
             if (fastPeriod > slowPeriod)
             {
@@ -77,9 +78,7 @@ namespace QuantConnect.Indicators
         /// <param name="slowPeriod">The slow period of EMA of advance decline difference</param>
         /// </summary>
         public McClellanOscillator(int fastPeriod = 19, int slowPeriod = 39)
-            : this("McClellanOscillator", fastPeriod, slowPeriod)
-        {
-        }
+            : this("McClellanOscillator", fastPeriod, slowPeriod) { }
 
         /// <summary>
         /// Computes the next value of this indicator from the given state

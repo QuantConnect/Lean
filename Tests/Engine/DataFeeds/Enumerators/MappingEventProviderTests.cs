@@ -33,14 +33,16 @@ namespace QuantConnect.Tests.Engine.DataFeeds.Enumerators
         {
             var symbol = Symbol.Create("TFCFA", SecurityType.Equity, Market.USA);
 
-            _config = new SubscriptionDataConfig(typeof(TradeBar),
+            _config = new SubscriptionDataConfig(
+                typeof(TradeBar),
                 symbol,
                 Resolution.Daily,
                 TimeZones.NewYork,
                 TimeZones.NewYork,
                 true,
                 true,
-                false);
+                false
+            );
         }
 
         [Test]
@@ -50,10 +52,12 @@ namespace QuantConnect.Tests.Engine.DataFeeds.Enumerators
 
             Assert.AreEqual("TFCFA", _config.MappedSymbol);
 
-            provider.Initialize(_config,
+            provider.Initialize(
+                _config,
                 null,
                 TestGlobals.MapFileProvider,
-                new DateTime(2006, 1, 1));
+                new DateTime(2006, 1, 1)
+            );
 
             Assert.AreEqual("NWSA", _config.MappedSymbol);
         }
@@ -62,19 +66,26 @@ namespace QuantConnect.Tests.Engine.DataFeeds.Enumerators
         public void MappingEvent()
         {
             var provider = new MappingEventProvider();
-            provider.Initialize(_config,
+            provider.Initialize(
+                _config,
                 null,
                 TestGlobals.MapFileProvider,
-                new DateTime(2006, 1, 1));
+                new DateTime(2006, 1, 1)
+            );
 
             Assert.AreEqual("NWSA", _config.MappedSymbol);
 
-            var symbolEvent = (SymbolChangedEvent)provider
-                .GetEvents(new NewTradableDateEventArgs(
-                    new DateTime(2013, 6, 29),
-                    null,
-                    _config.Symbol,
-                    null)).Single();
+            var symbolEvent = (SymbolChangedEvent)
+                provider
+                    .GetEvents(
+                        new NewTradableDateEventArgs(
+                            new DateTime(2013, 6, 29),
+                            null,
+                            _config.Symbol,
+                            null
+                        )
+                    )
+                    .Single();
 
             Assert.AreEqual("FOXA", symbolEvent.NewSymbol);
             Assert.AreEqual("NWSA", symbolEvent.OldSymbol);

@@ -47,20 +47,24 @@ namespace QuantConnect.Tests.Engine.DataFeeds
                 TimeZones.NewYork,
                 true,
                 true,
-                false);
+                false
+            );
             _initialDate = new DateTime(2018, 1, 1);
         }
 
         [Test]
         public void CachedDataIsReturnedAsClone()
         {
-            using var singleEntryDataCacheProvider = new SingleEntryDataCacheProvider(TestGlobals.DataProvider);
+            using var singleEntryDataCacheProvider = new SingleEntryDataCacheProvider(
+                TestGlobals.DataProvider
+            );
             var reader = new TextSubscriptionDataSourceReader(
                 singleEntryDataCacheProvider,
                 _config,
                 _initialDate,
                 false,
-                null);
+                null
+            );
             var source = (new TradeBar()).GetSource(_config, _initialDate, false);
 
             var dataBars = reader.Read(source).First();
@@ -74,21 +78,26 @@ namespace QuantConnect.Tests.Engine.DataFeeds
         public void DataIsNotCachedForEphemeralDataCacheProvider()
         {
             var config = new SubscriptionDataConfig(
-                    typeof(TestTradeBarFactory),
-                    Symbol.Create("SymbolNonEphemeralTest1", SecurityType.Equity, Market.USA),
-                    Resolution.Daily,
-                    TimeZones.NewYork,
-                    TimeZones.NewYork,
-                    true,
-                    true,
-                    false);
-            using var dataCacheProvider = new CustomEphemeralDataCacheProvider { IsDataEphemeral = true};
+                typeof(TestTradeBarFactory),
+                Symbol.Create("SymbolNonEphemeralTest1", SecurityType.Equity, Market.USA),
+                Resolution.Daily,
+                TimeZones.NewYork,
+                TimeZones.NewYork,
+                true,
+                true,
+                false
+            );
+            using var dataCacheProvider = new CustomEphemeralDataCacheProvider
+            {
+                IsDataEphemeral = true
+            };
             var reader = new TextSubscriptionDataSourceReader(
                 dataCacheProvider,
                 config,
                 _initialDate,
                 false,
-                null);
+                null
+            );
             var source = (new TradeBar()).GetSource(config, _initialDate, false);
             dataCacheProvider.Data = "20000101 00:00,1,1,1,1,1";
             var dataBars = reader.Read(source).First();
@@ -111,14 +120,19 @@ namespace QuantConnect.Tests.Engine.DataFeeds
                 TimeZones.NewYork,
                 true,
                 true,
-                false);
-            using var dataCacheProvider = new CustomEphemeralDataCacheProvider { IsDataEphemeral = false };
+                false
+            );
+            using var dataCacheProvider = new CustomEphemeralDataCacheProvider
+            {
+                IsDataEphemeral = false
+            };
             var reader = new TextSubscriptionDataSourceReader(
                 dataCacheProvider,
                 config,
                 _initialDate,
                 false,
-                null);
+                null
+            );
             var source = (new TradeBar()).GetSource(config, _initialDate, false);
             dataCacheProvider.Data = "20000101 00:00,1,1,1,1,1";
             var dataBars = reader.Read(source).First();
@@ -134,45 +148,59 @@ namespace QuantConnect.Tests.Engine.DataFeeds
         [Test]
         public void DataIsCachedCorrectly()
         {
-            using var singleEntryDataCacheProvider = new SingleEntryDataCacheProvider(TestGlobals.DataProvider);
+            using var singleEntryDataCacheProvider = new SingleEntryDataCacheProvider(
+                TestGlobals.DataProvider
+            );
             var reader = new TextSubscriptionDataSourceReader(
                 singleEntryDataCacheProvider,
                 _config,
                 _initialDate,
                 false,
-                null);
+                null
+            );
             var source = (new TradeBar()).GetSource(_config, _initialDate, false);
 
             var dataBars = reader.Read(source).ToList();
             var dataBars2 = reader.Read(source).ToList();
 
             Assert.AreEqual(dataBars2.Count, dataBars.Count);
-            Assert.IsTrue(dataBars.SequenceEqual(dataBars2, new CustomComparer<BaseData>(
-                (data, baseData) =>
-                {
-                    if (data.EndTime == baseData.EndTime
-                        && data.Time == baseData.Time
-                        && data.Symbol == baseData.Symbol
-                        && data.Price == baseData.Price
-                        && data.DataType == baseData.DataType
-                        && data.Value == baseData.Value)
-                    {
-                        return 0;
-                    }
-                    return 1;
-                })));
+            Assert.IsTrue(
+                dataBars.SequenceEqual(
+                    dataBars2,
+                    new CustomComparer<BaseData>(
+                        (data, baseData) =>
+                        {
+                            if (
+                                data.EndTime == baseData.EndTime
+                                && data.Time == baseData.Time
+                                && data.Symbol == baseData.Symbol
+                                && data.Price == baseData.Price
+                                && data.DataType == baseData.DataType
+                                && data.Value == baseData.Value
+                            )
+                            {
+                                return 0;
+                            }
+                            return 1;
+                        }
+                    )
+                )
+            );
         }
 
         [Test]
         public void RespectsInitialDate()
         {
-            using var singleEntryDataCacheProvider = new SingleEntryDataCacheProvider(TestGlobals.DataProvider);
+            using var singleEntryDataCacheProvider = new SingleEntryDataCacheProvider(
+                TestGlobals.DataProvider
+            );
             var reader = new TextSubscriptionDataSourceReader(
                 singleEntryDataCacheProvider,
                 _config,
                 _initialDate,
                 false,
-                null);
+                null
+            );
             var source = (new TradeBar()).GetSource(_config, _initialDate, false);
             var dataBars = reader.Read(source).First();
 
@@ -181,13 +209,16 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             // 80 days after _initialDate
             var initialDate2 = _initialDate.AddDays(80);
             using var defaultDataProvider2 = new DefaultDataProvider();
-            using var singleEntryDataCacheProvider2 = new SingleEntryDataCacheProvider(defaultDataProvider2);
+            using var singleEntryDataCacheProvider2 = new SingleEntryDataCacheProvider(
+                defaultDataProvider2
+            );
             var reader2 = new TextSubscriptionDataSourceReader(
                 singleEntryDataCacheProvider2,
                 _config,
                 initialDate2,
                 false,
-                null);
+                null
+            );
             var source2 = (new TradeBar()).GetSource(_config, initialDate2, false);
             var dataBars2 = reader2.Read(source2).First();
 
@@ -196,13 +227,16 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             // 80 days before _initialDate
             var initialDate3 = _initialDate.AddDays(-80);
             using var defaultDataProvider3 = new DefaultDataProvider();
-            using var singleEntryDataCacheProvider3 = new SingleEntryDataCacheProvider(defaultDataProvider3);
+            using var singleEntryDataCacheProvider3 = new SingleEntryDataCacheProvider(
+                defaultDataProvider3
+            );
             var reader3 = new TextSubscriptionDataSourceReader(
                 singleEntryDataCacheProvider3,
                 _config,
                 initialDate3,
                 false,
-                null);
+                null
+            );
             var source3 = (new TradeBar()).GetSource(_config, initialDate3, false);
             var dataBars3 = reader3.Read(source3).First();
 
@@ -224,14 +258,19 @@ namespace QuantConnect.Tests.Engine.DataFeeds
                 TimeZones.NewYork,
                 true,
                 true,
-                false);
-            using var singleEntryDataCacheProvider = new SingleEntryDataCacheProvider(TestGlobals.DataProvider, isDataEphemeral: false);
+                false
+            );
+            using var singleEntryDataCacheProvider = new SingleEntryDataCacheProvider(
+                TestGlobals.DataProvider,
+                isDataEphemeral: false
+            );
             var reader = new TextSubscriptionDataSourceReader(
                 singleEntryDataCacheProvider,
                 _config,
                 new DateTime(2013, 10, 07),
                 false,
-                null);
+                null
+            );
             var source = (new TradeBar()).GetSource(_config, new DateTime(2013, 10, 07), false);
 
             // first call should cache
@@ -251,16 +290,21 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             using var cacheProvider = new CustomEphemeralDataCacheProvider();
 
             // we load SPY hour zip into memory and use it as the source of different fake tickers
-            var config = new SubscriptionDataConfig(typeof(TradeBar),
+            var config = new SubscriptionDataConfig(
+                typeof(TradeBar),
                 Symbols.SPY,
                 Resolution.Hour,
                 TimeZones.NewYork,
                 TimeZones.NewYork,
                 true,
                 true,
-                false);
+                false
+            );
             var fakeSource = factory.GetSource(config, new DateTime(2013, 10, 07), false);
-            cacheProvider.Data = string.Join(Environment.NewLine, QuantConnect.Compression.ReadLines(fakeSource.Source));
+            cacheProvider.Data = string.Join(
+                Environment.NewLine,
+                QuantConnect.Compression.ReadLines(fakeSource.Source)
+            );
 
             for (var i = 0; i < 500; i++)
             {
@@ -273,8 +317,15 @@ namespace QuantConnect.Tests.Engine.DataFeeds
                     TimeZones.NewYork,
                     true,
                     true,
-                    false);
-                var reader = new TextSubscriptionDataSourceReader(cacheProvider, fakeConfig, Time.EndOfTime, false, null);
+                    false
+                );
+                var reader = new TextSubscriptionDataSourceReader(
+                    cacheProvider,
+                    fakeConfig,
+                    Time.EndOfTime,
+                    false,
+                    null
+                );
 
                 var source = factory.GetSource(fakeConfig, Time.BeginningOfTime, false);
                 datas.Add(reader.Read(source));
@@ -282,27 +333,33 @@ namespace QuantConnect.Tests.Engine.DataFeeds
 
             var timer = new Stopwatch();
             timer.Start();
-            Parallel.ForEach(datas, enumerable =>
-            {
-                // after the first call should use the cache
-                foreach (var data in enumerable)
+            Parallel.ForEach(
+                datas,
+                enumerable =>
                 {
-                    Interlocked.Increment(ref counter);
+                    // after the first call should use the cache
+                    foreach (var data in enumerable)
+                    {
+                        Interlocked.Increment(ref counter);
+                    }
                 }
-            });
+            );
             timer.Stop();
             Log.Trace($"Took {timer.ElapsedMilliseconds}ms. Data count {counter}");
 
             timer.Reset();
             timer.Start();
-            Parallel.ForEach(datas, enumerable =>
-            {
-                // after the first call should use the cache
-                foreach (var data in enumerable)
+            Parallel.ForEach(
+                datas,
+                enumerable =>
                 {
-                    Interlocked.Increment(ref counter);
+                    // after the first call should use the cache
+                    foreach (var data in enumerable)
+                    {
+                        Interlocked.Increment(ref counter);
+                    }
                 }
-            });
+            );
             timer.Stop();
             Log.Trace($"Took2 {timer.ElapsedMilliseconds}ms. Data count {counter}");
         }
@@ -317,16 +374,21 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             using var cacheProvider = new CustomEphemeralDataCacheProvider();
 
             // we load SPY hour zip into memory and use it as the source of different fake tickers
-            var config = new SubscriptionDataConfig(typeof(TradeBar),
+            var config = new SubscriptionDataConfig(
+                typeof(TradeBar),
                 Symbols.SPY,
                 Resolution.Hour,
                 TimeZones.NewYork,
                 TimeZones.NewYork,
                 true,
                 true,
-                false);
+                false
+            );
             var fakeSource = factory.GetSource(config, new DateTime(2013, 10, 07), false);
-            cacheProvider.Data = string.Join(Environment.NewLine, QuantConnect.Compression.ReadLines(fakeSource.Source));
+            cacheProvider.Data = string.Join(
+                Environment.NewLine,
+                QuantConnect.Compression.ReadLines(fakeSource.Source)
+            );
 
             for (var i = 0; i < 500; i++)
             {
@@ -339,8 +401,15 @@ namespace QuantConnect.Tests.Engine.DataFeeds
                     TimeZones.NewYork,
                     true,
                     true,
-                    false);
-                var reader = new TextSubscriptionDataSourceReader(cacheProvider, fakeConfig, Time.EndOfTime, false, null);
+                    false
+                );
+                var reader = new TextSubscriptionDataSourceReader(
+                    cacheProvider,
+                    fakeConfig,
+                    Time.EndOfTime,
+                    false,
+                    null
+                );
 
                 var source = factory.GetSource(fakeConfig, Time.BeginningOfTime, false);
                 datas.Add(reader.Read(source));
@@ -348,22 +417,25 @@ namespace QuantConnect.Tests.Engine.DataFeeds
 
             var timer = new Stopwatch();
             timer.Start();
-            Parallel.ForEach(datas, enumerable =>
-            {
-                // after the first call should use the cache
-                foreach (var data in enumerable)
+            Parallel.ForEach(
+                datas,
+                enumerable =>
                 {
-                    Interlocked.Increment(ref counter);
+                    // after the first call should use the cache
+                    foreach (var data in enumerable)
+                    {
+                        Interlocked.Increment(ref counter);
+                    }
+                    foreach (var data in enumerable)
+                    {
+                        Interlocked.Increment(ref counter);
+                    }
+                    foreach (var data in enumerable)
+                    {
+                        Interlocked.Increment(ref counter);
+                    }
                 }
-                foreach (var data in enumerable)
-                {
-                    Interlocked.Increment(ref counter);
-                }
-                foreach (var data in enumerable)
-                {
-                    Interlocked.Increment(ref counter);
-                }
-            });
+            );
             timer.Stop();
             Log.Trace($"Took {timer.ElapsedMilliseconds}ms. Data count {counter}");
         }
@@ -375,12 +447,23 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             /// </summary>
             public static bool ReaderWasCalled { get; set; }
 
-            public override BaseData Reader(SubscriptionDataConfig config, string line, DateTime date, bool isLiveMode)
+            public override BaseData Reader(
+                SubscriptionDataConfig config,
+                string line,
+                DateTime date,
+                bool isLiveMode
+            )
             {
                 ReaderWasCalled = true;
                 return base.Reader(config, line, date, isLiveMode);
             }
-            public override BaseData Reader(SubscriptionDataConfig config, StreamReader streamReader, DateTime date, bool isLiveMode)
+
+            public override BaseData Reader(
+                SubscriptionDataConfig config,
+                StreamReader streamReader,
+                DateTime date,
+                bool isLiveMode
+            )
             {
                 ReaderWasCalled = true;
                 return base.Reader(config, streamReader, date, isLiveMode);
@@ -396,6 +479,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             {
                 throw new NotImplementedException();
             }
+
             public Stream Fetch(string key)
             {
                 var stream = new MemoryStream();
@@ -406,12 +490,10 @@ namespace QuantConnect.Tests.Engine.DataFeeds
                 writer.Dispose();
                 return stream;
             }
-            public void Store(string key, byte[] data)
-            {
-            }
-            public void Dispose()
-            {
-            }
+
+            public void Store(string key, byte[] data) { }
+
+            public void Dispose() { }
         }
     }
 }

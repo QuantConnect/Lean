@@ -16,7 +16,6 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-
 using QuantConnect.Interfaces;
 using QuantConnect.Orders;
 
@@ -25,7 +24,9 @@ namespace QuantConnect.Algorithm.CSharp
     /// <summary>
     /// Algorithm asserting that MarketOnOpen orders are filled with official open price.
     /// </summary>
-    public class MarketOnOpenOrderFillsOnOpenTradeWithTickResolutionAlgorithm : QCAlgorithm, IRegressionAlgorithmDefinition
+    public class MarketOnOpenOrderFillsOnOpenTradeWithTickResolutionAlgorithm
+        : QCAlgorithm,
+            IRegressionAlgorithmDefinition
     {
         private Symbol _symbol;
 
@@ -35,11 +36,18 @@ namespace QuantConnect.Algorithm.CSharp
             SetEndDate(2013, 10, 8);
             SetCash(1000000);
 
-            _symbol = AddEquity("SPY", Resolution.Tick, extendedMarketHours: true, dataNormalizationMode: DataNormalizationMode.Raw).Symbol;
+            _symbol = AddEquity(
+                "SPY",
+                Resolution.Tick,
+                extendedMarketHours: true,
+                dataNormalizationMode: DataNormalizationMode.Raw
+            ).Symbol;
 
-            Schedule.On(DateRules.EveryDay(_symbol),
+            Schedule.On(
+                DateRules.EveryDay(_symbol),
                 TimeRules.At(new TimeSpan(6, 0, 0), TimeZone),
-                () => MarketOnOpenOrder(_symbol, 1));
+                () => MarketOnOpenOrder(_symbol, 1)
+            );
         }
 
         public override void OnOrderEvent(OrderEvent orderEvent)
@@ -50,20 +58,26 @@ namespace QuantConnect.Algorithm.CSharp
 
                 if (orderEvent.Message != "")
                 {
-                    throw new RegressionTestException($"OrderEvent.Message should be empty, but is '{orderEvent.Message}'");
+                    throw new RegressionTestException(
+                        $"OrderEvent.Message should be empty, but is '{orderEvent.Message}'"
+                    );
                 }
 
                 var order = Transactions.GetOrderById(orderEvent.OrderId);
                 if (order.Tag != "")
                 {
-                    throw new RegressionTestException($"Order.Tag should be empty, but is '{order.Tag}'");
+                    throw new RegressionTestException(
+                        $"Order.Tag should be empty, but is '{order.Tag}'"
+                    );
                 }
 
-                var expectedFillPrice = orderEvent.UtcTime.Date == StartDate.Date ? 167.43m : 167.45m;
+                var expectedFillPrice =
+                    orderEvent.UtcTime.Date == StartDate.Date ? 167.43m : 167.45m;
                 if (orderEvent.FillPrice != expectedFillPrice)
                 {
                     throw new RegressionTestException(
-                        $"Expected {orderEvent.UtcTime.Date} order fill price to be {expectedFillPrice} but was {orderEvent.FillPrice}");
+                        $"Expected {orderEvent.UtcTime.Date} order fill price to be {expectedFillPrice} but was {orderEvent.FillPrice}"
+                    );
                 }
             }
         }
@@ -76,13 +90,16 @@ namespace QuantConnect.Algorithm.CSharp
             var expectedOrdersCount = 2;
             if (orders.Count != expectedOrdersCount)
             {
-                throw new RegressionTestException($"Expected {expectedOrdersCount} orders, but found {orders.Count}");
+                throw new RegressionTestException(
+                    $"Expected {expectedOrdersCount} orders, but found {orders.Count}"
+                );
             }
 
             if (orders.Any(x => x.Status != OrderStatus.Filled))
             {
                 throw new RegressionTestException(
-                    $"Expected all orders to be filled, but found {orders.Count(x => x.Status != OrderStatus.Filled)} unfilled orders");
+                    $"Expected all orders to be filled, but found {orders.Count(x => x.Status != OrderStatus.Filled)} unfilled orders"
+                );
             }
         }
 
@@ -114,35 +131,36 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// This is used by the regression test system to indicate what the expected statistics are from running the algorithm
         /// </summary>
-        public Dictionary<string, string> ExpectedStatistics => new()
-        {
-            {"Total Orders", "2"},
-            {"Average Win", "0%"},
-            {"Average Loss", "0%"},
-            {"Compounding Annual Return", "0%"},
-            {"Drawdown", "0%"},
-            {"Expectancy", "0"},
-            {"Start Equity", "1000000"},
-            {"End Equity", "999995.02"},
-            {"Net Profit", "0%"},
-            {"Sharpe Ratio", "0"},
-            {"Sortino Ratio", "0"},
-            {"Probabilistic Sharpe Ratio", "0%"},
-            {"Loss Rate", "0%"},
-            {"Win Rate", "0%"},
-            {"Profit-Loss Ratio", "0"},
-            {"Alpha", "0"},
-            {"Beta", "0"},
-            {"Annual Standard Deviation", "0"},
-            {"Annual Variance", "0"},
-            {"Information Ratio", "0"},
-            {"Tracking Error", "0"},
-            {"Treynor Ratio", "0"},
-            {"Total Fees", "$2.00"},
-            {"Estimated Strategy Capacity", "$0"},
-            {"Lowest Capacity Asset", "SPY R735QTJ8XC9X"},
-            {"Portfolio Turnover", "0.02%"},
-            {"OrderListHash", "8940204f430a8040b372cc22d80f1399"}
-        };
+        public Dictionary<string, string> ExpectedStatistics =>
+            new()
+            {
+                { "Total Orders", "2" },
+                { "Average Win", "0%" },
+                { "Average Loss", "0%" },
+                { "Compounding Annual Return", "0%" },
+                { "Drawdown", "0%" },
+                { "Expectancy", "0" },
+                { "Start Equity", "1000000" },
+                { "End Equity", "999995.02" },
+                { "Net Profit", "0%" },
+                { "Sharpe Ratio", "0" },
+                { "Sortino Ratio", "0" },
+                { "Probabilistic Sharpe Ratio", "0%" },
+                { "Loss Rate", "0%" },
+                { "Win Rate", "0%" },
+                { "Profit-Loss Ratio", "0" },
+                { "Alpha", "0" },
+                { "Beta", "0" },
+                { "Annual Standard Deviation", "0" },
+                { "Annual Variance", "0" },
+                { "Information Ratio", "0" },
+                { "Tracking Error", "0" },
+                { "Treynor Ratio", "0" },
+                { "Total Fees", "$2.00" },
+                { "Estimated Strategy Capacity", "$0" },
+                { "Lowest Capacity Asset", "SPY R735QTJ8XC9X" },
+                { "Portfolio Turnover", "0.02%" },
+                { "OrderListHash", "8940204f430a8040b372cc22d80f1399" }
+            };
     }
 }

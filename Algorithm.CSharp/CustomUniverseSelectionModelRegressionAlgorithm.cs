@@ -26,7 +26,9 @@ namespace QuantConnect.Algorithm.CSharp
     /// <summary>
     /// Regression algorithm showing how to implement a custom universe selection model and asserting it's behavior
     /// </summary>
-    public class CustomUniverseSelectionModelRegressionAlgorithm : QCAlgorithm, IRegressionAlgorithmDefinition
+    public class CustomUniverseSelectionModelRegressionAlgorithm
+        : QCAlgorithm,
+            IRegressionAlgorithmDefinition
     {
         /// <summary>
         /// Initialise the data and resolution required, as well as the cash and start-end dates for your algorithm. All algorithms must initialized.
@@ -54,15 +56,22 @@ namespace QuantConnect.Algorithm.CSharp
         private class CustomUniverseSelectionModel : FundamentalUniverseSelectionModel
         {
             private bool _selected;
-            public CustomUniverseSelectionModel(): base()
-            {
-            }
-            public override IEnumerable<Symbol> Select(QCAlgorithm algorithm, IEnumerable<Fundamental> fundamental)
+
+            public CustomUniverseSelectionModel()
+                : base() { }
+
+            public override IEnumerable<Symbol> Select(
+                QCAlgorithm algorithm,
+                IEnumerable<Fundamental> fundamental
+            )
             {
                 if (!_selected)
                 {
                     _selected = true;
-                    return new[] { QuantConnect.Symbol.Create("AAPL", SecurityType.Equity, Market.USA) };
+                    return new[]
+                    {
+                        QuantConnect.Symbol.Create("AAPL", SecurityType.Equity, Market.USA)
+                    };
                 }
                 return Data.UniverseSelection.Universe.Unchanged;
             }
@@ -96,35 +105,36 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// This is used by the regression test system to indicate what the expected statistics are from running the algorithm
         /// </summary>
-        public Dictionary<string, string> ExpectedStatistics => new Dictionary<string, string>
-        {
-            {"Total Orders", "1"},
-            {"Average Win", "0%"},
-            {"Average Loss", "0%"},
-            {"Compounding Annual Return", "-7.765%"},
-            {"Drawdown", "0.400%"},
-            {"Expectancy", "0"},
-            {"Start Equity", "100000"},
-            {"End Equity", "99668.37"},
-            {"Net Profit", "-0.332%"},
-            {"Sharpe Ratio", "-5.972"},
-            {"Sortino Ratio", "-7.125"},
-            {"Probabilistic Sharpe Ratio", "5.408%"},
-            {"Loss Rate", "0%"},
-            {"Win Rate", "0%"},
-            {"Profit-Loss Ratio", "0"},
-            {"Alpha", "-0.055"},
-            {"Beta", "0.1"},
-            {"Annual Standard Deviation", "0.011"},
-            {"Annual Variance", "0"},
-            {"Information Ratio", "0.413"},
-            {"Tracking Error", "0.087"},
-            {"Treynor Ratio", "-0.653"},
-            {"Total Fees", "$2.89"},
-            {"Estimated Strategy Capacity", "$1600000000.00"},
-            {"Lowest Capacity Asset", "AAPL R735QTJ8XC9X"},
-            {"Portfolio Turnover", "0.67%"},
-            {"OrderListHash", "d0880701c833c9b8521d634b7e1edf4d"}
-        };
+        public Dictionary<string, string> ExpectedStatistics =>
+            new Dictionary<string, string>
+            {
+                { "Total Orders", "1" },
+                { "Average Win", "0%" },
+                { "Average Loss", "0%" },
+                { "Compounding Annual Return", "-7.765%" },
+                { "Drawdown", "0.400%" },
+                { "Expectancy", "0" },
+                { "Start Equity", "100000" },
+                { "End Equity", "99668.37" },
+                { "Net Profit", "-0.332%" },
+                { "Sharpe Ratio", "-5.972" },
+                { "Sortino Ratio", "-7.125" },
+                { "Probabilistic Sharpe Ratio", "5.408%" },
+                { "Loss Rate", "0%" },
+                { "Win Rate", "0%" },
+                { "Profit-Loss Ratio", "0" },
+                { "Alpha", "-0.055" },
+                { "Beta", "0.1" },
+                { "Annual Standard Deviation", "0.011" },
+                { "Annual Variance", "0" },
+                { "Information Ratio", "0.413" },
+                { "Tracking Error", "0.087" },
+                { "Treynor Ratio", "-0.653" },
+                { "Total Fees", "$2.89" },
+                { "Estimated Strategy Capacity", "$1600000000.00" },
+                { "Lowest Capacity Asset", "AAPL R735QTJ8XC9X" },
+                { "Portfolio Turnover", "0.67%" },
+                { "OrderListHash", "d0880701c833c9b8521d634b7e1edf4d" }
+            };
     }
 }

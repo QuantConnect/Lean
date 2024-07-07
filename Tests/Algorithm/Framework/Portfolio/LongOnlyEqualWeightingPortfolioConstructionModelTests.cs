@@ -13,19 +13,23 @@
  * limitations under the License.
 */
 
+using System.Collections.Generic;
 using NUnit.Framework;
 using Python.Runtime;
 using QuantConnect.Algorithm.Framework.Portfolio;
-using System.Collections.Generic;
 
 namespace QuantConnect.Tests.Algorithm.Framework.Portfolio
 {
     [TestFixture]
-    public class LongOnlyEqualWeightingPortfolioConstructionModelTests : EqualWeightingPortfolioConstructionModelTests
+    public class LongOnlyEqualWeightingPortfolioConstructionModelTests
+        : EqualWeightingPortfolioConstructionModelTests
     {
         public override PortfolioBias PortfolioBias => PortfolioBias.Long;
 
-        public override IPortfolioConstructionModel GetPortfolioConstructionModel(Language language, dynamic paramenter = null)
+        public override IPortfolioConstructionModel GetPortfolioConstructionModel(
+            Language language,
+            dynamic paramenter = null
+        )
         {
             if (language == Language.CSharp)
             {
@@ -35,14 +39,19 @@ namespace QuantConnect.Tests.Algorithm.Framework.Portfolio
             using (Py.GIL())
             {
                 const string name = nameof(EqualWeightingPortfolioConstructionModel);
-                var instance = Py.Import(name).GetAttr(name).Invoke(((object)paramenter).ToPython(), ((int) PortfolioBias.Long).ToPython());
+                var instance = Py.Import(name)
+                    .GetAttr(name)
+                    .Invoke(((object)paramenter).ToPython(), ((int)PortfolioBias.Long).ToPython());
                 return new PortfolioConstructionModelPythonWrapper(instance);
             }
         }
 
         public override List<IPortfolioTarget> GetTargetsForSPY()
         {
-            return new List<IPortfolioTarget> { PortfolioTarget.Percent(Algorithm, Symbols.SPY, 0m) };
+            return new List<IPortfolioTarget>
+            {
+                PortfolioTarget.Percent(Algorithm, Symbols.SPY, 0m)
+            };
         }
     }
 }

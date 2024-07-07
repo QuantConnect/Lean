@@ -1,11 +1,11 @@
 /*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
- * 
- * Licensed under the Apache License, Version 2.0 (the "License"); 
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -13,8 +13,8 @@
  * limitations under the License.
 */
 
-using Python.Runtime;
 using System;
+using Python.Runtime;
 using QuantConnect.Data.Market;
 
 namespace QuantConnect.Data.Consolidators
@@ -45,7 +45,7 @@ namespace QuantConnect.Data.Consolidators
         /// <summary>
         /// Bar being created
         /// </summary>
-        protected virtual T CurrentBar {  get; set; }
+        protected virtual T CurrentBar { get; set; }
 
         /// <summary>
         /// Gets the most recently consolidated piece of data. This will be null if this consolidator
@@ -89,10 +89,15 @@ namespace QuantConnect.Data.Consolidators
         /// value is (x => x.Value) the <see cref="IBaseData.Value"/> property on <see cref="IBaseData"/></param>
         /// <param name="volumeSelector">Extracts the volume from a data instance. The default value is null which does
         /// not aggregate volume per bar.</param>
-        protected BaseTimelessConsolidator(Func<IBaseData, decimal> selector = null, Func<IBaseData, decimal> volumeSelector = null)
+        protected BaseTimelessConsolidator(
+            Func<IBaseData, decimal> selector = null,
+            Func<IBaseData, decimal> volumeSelector = null
+        )
         {
             Selector = selector ?? (x => x.Value);
-            VolumeSelector = volumeSelector ?? (x => x is TradeBar bar ? bar.Volume : (x is Tick tick ? tick.Quantity : 0));
+            VolumeSelector =
+                volumeSelector
+                ?? (x => x is TradeBar bar ? bar.Volume : (x is Tick tick ? tick.Quantity : 0));
         }
 
         /// <summary>
@@ -103,9 +108,10 @@ namespace QuantConnect.Data.Consolidators
         /// <param name="volumeSelector">Extracts the volume from a data instance. The default value is null which does
         /// not aggregate volume per bar.</param>
         protected BaseTimelessConsolidator(PyObject valueSelector, PyObject volumeSelector = null)
-            : this (TryToConvertSelector(valueSelector, nameof(valueSelector)), TryToConvertSelector(volumeSelector, nameof(volumeSelector)))
-        {
-        }
+            : this(
+                TryToConvertSelector(valueSelector, nameof(valueSelector)),
+                TryToConvertSelector(volumeSelector, nameof(volumeSelector))
+            ) { }
 
         /// <summary>
         /// Tries to convert the given python selector to a C# one. If the conversion is not
@@ -115,7 +121,10 @@ namespace QuantConnect.Data.Consolidators
         /// <param name="selectorName">The name of the selector to be used in case an exception is thrown</param>
         /// <exception cref="ArgumentException">This exception will be thrown if it's not possible to convert the
         /// given python selector to C#</exception>
-        private static Func<IBaseData, decimal> TryToConvertSelector(PyObject selector, string selectorName)
+        private static Func<IBaseData, decimal> TryToConvertSelector(
+            PyObject selector,
+            string selectorName
+        )
         {
             using (Py.GIL())
             {
@@ -125,7 +134,8 @@ namespace QuantConnect.Data.Consolidators
                     if (!selector.TryConvertToDelegate(out resultSelector))
                     {
                         throw new ArgumentException(
-                            $"Unable to convert parameter {selectorName} to delegate type Func<IBaseData, decimal>");
+                            $"Unable to convert parameter {selectorName} to delegate type Func<IBaseData, decimal>"
+                        );
                     }
                 }
                 else
@@ -203,8 +213,6 @@ namespace QuantConnect.Data.Consolidators
         /// Scans this consolidator to see if it should emit a bar due to time passing
         /// </summary>
         /// <param name="currentLocalTime">The current time in the local time zone (same as <see cref="BaseData.Time"/>)</param>
-        public void Scan(DateTime currentLocalTime)
-        {
-        }
+        public void Scan(DateTime currentLocalTime) { }
     }
 }

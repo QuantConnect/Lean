@@ -62,7 +62,9 @@ namespace QuantConnect.Lean.Engine.HistoricalData
             if (_initialized)
             {
                 // let's make sure no one tries to change our parameters values
-                throw new InvalidOperationException("SubscriptionDataReaderHistoryProvider can only be initialized once");
+                throw new InvalidOperationException(
+                    "SubscriptionDataReaderHistoryProvider can only be initialized once"
+                );
             }
             _initialized = true;
             _dataProvider = parameters.DataProvider;
@@ -85,7 +87,10 @@ namespace QuantConnect.Lean.Engine.HistoricalData
         /// <param name="requests">The historical data requests</param>
         /// <param name="sliceTimeZone">The time zone used when time stamping the slice instances</param>
         /// <returns>An enumerable of the slices of data covering the span specified in each request</returns>
-        public override IEnumerable<Slice> GetHistory(IEnumerable<HistoryRequest> requests, DateTimeZone sliceTimeZone)
+        public override IEnumerable<Slice> GetHistory(
+            IEnumerable<HistoryRequest> requests,
+            DateTimeZone sliceTimeZone
+        )
         {
             // create subscription objects from the configs
             var subscriptions = new List<Subscription>();
@@ -104,7 +109,11 @@ namespace QuantConnect.Lean.Engine.HistoricalData
         private Subscription CreateSubscription(HistoryRequest request)
         {
             var config = request.ToSubscriptionDataConfig();
-            DataPermissionManager.AssertConfiguration(config, request.StartTimeLocal, request.EndTimeLocal);
+            DataPermissionManager.AssertConfiguration(
+                config,
+                request.StartTimeLocal,
+                request.EndTimeLocal
+            );
 
             // this security is internal only we do not need to worry about a few of it's properties
             // TODO: we don't need fee/fill/BPM/etc either. Even better we should refactor & remove the need for the security
@@ -118,19 +127,36 @@ namespace QuantConnect.Lean.Engine.HistoricalData
                 _nullCache
             );
 
-            var dataReader = new SubscriptionDataReader(config,
+            var dataReader = new SubscriptionDataReader(
+                config,
                 request,
                 _mapFileProvider,
                 _factorFileProvider,
                 _dataCacheProvider,
                 _dataProvider,
-                _objectStore);
+                _objectStore
+            );
 
-            dataReader.InvalidConfigurationDetected += (sender, args) => { OnInvalidConfigurationDetected(args); };
-            dataReader.NumericalPrecisionLimited += (sender, args) => { OnNumericalPrecisionLimited(args); };
-            dataReader.StartDateLimited += (sender, args) => { OnStartDateLimited(args); };
-            dataReader.DownloadFailed += (sender, args) => { OnDownloadFailed(args); };
-            dataReader.ReaderErrorDetected += (sender, args) => { OnReaderErrorDetected(args); };
+            dataReader.InvalidConfigurationDetected += (sender, args) =>
+            {
+                OnInvalidConfigurationDetected(args);
+            };
+            dataReader.NumericalPrecisionLimited += (sender, args) =>
+            {
+                OnNumericalPrecisionLimited(args);
+            };
+            dataReader.StartDateLimited += (sender, args) =>
+            {
+                OnStartDateLimited(args);
+            };
+            dataReader.DownloadFailed += (sender, args) =>
+            {
+                OnDownloadFailed(args);
+            };
+            dataReader.ReaderErrorDetected += (sender, args) =>
+            {
+                OnReaderErrorDetected(args);
+            };
 
             IEnumerator<BaseData> reader = dataReader;
             var intraday = GetIntradayDataEnumerator(dataReader, request);
@@ -140,7 +166,12 @@ namespace QuantConnect.Lean.Engine.HistoricalData
                 reader = new ConcatEnumerator(true, reader, intraday);
             }
 
-            var useDailyStrictEndTimes = LeanData.UseDailyStrictEndTimes(AlgorithmSettings, request, config.Symbol, config.Increment);
+            var useDailyStrictEndTimes = LeanData.UseDailyStrictEndTimes(
+                AlgorithmSettings,
+                request,
+                config.Symbol,
+                config.Increment
+            );
             if (useDailyStrictEndTimes)
             {
                 // before corporate events which might yield data and we synchronize both feeds
@@ -154,7 +185,8 @@ namespace QuantConnect.Lean.Engine.HistoricalData
                 dataReader,
                 _mapFileProvider,
                 request.StartTimeLocal,
-                request.EndTimeLocal);
+                request.EndTimeLocal
+            );
 
             // optionally apply fill forward behavior
             if (request.FillForwardResolution.HasValue)
@@ -165,8 +197,19 @@ namespace QuantConnect.Lean.Engine.HistoricalData
                     reader = new QuoteBarFillForwardEnumerator(reader);
                 }
 
-                var readOnlyRef = Ref.CreateReadOnly(() => request.FillForwardResolution.Value.ToTimeSpan());
-                reader = new FillForwardEnumerator(reader, security.Exchange, readOnlyRef, request.IncludeExtendedMarketHours, request.EndTimeLocal, config.Increment, config.DataTimeZone, useDailyStrictEndTimes);
+                var readOnlyRef = Ref.CreateReadOnly(
+                    () => request.FillForwardResolution.Value.ToTimeSpan()
+                );
+                reader = new FillForwardEnumerator(
+                    reader,
+                    security.Exchange,
+                    readOnlyRef,
+                    request.IncludeExtendedMarketHours,
+                    request.EndTimeLocal,
+                    config.Increment,
+                    config.DataTimeZone,
+                    useDailyStrictEndTimes
+                );
             }
 
             // since the SubscriptionDataReader performs an any overlap condition on the trade bar's entire
@@ -174,7 +217,14 @@ namespace QuantConnect.Lean.Engine.HistoricalData
             // so to combat this we deliberately filter the results from the data reader to fix these cases
             // which only apply to non-tick data
 
-            reader = new SubscriptionFilterEnumerator(reader, security, request.EndTimeLocal, config.ExtendedMarketHours, false, request.ExchangeHours);
+            reader = new SubscriptionFilterEnumerator(
+                reader,
+                security,
+                request.EndTimeLocal,
+                config.ExtendedMarketHours,
+                false,
+                request.ExchangeHours
+            );
 
             // allow all ticks
             if (config.Resolution != Resolution.Tick)
@@ -183,18 +233,38 @@ namespace QuantConnect.Lean.Engine.HistoricalData
                 reader = new FilterEnumerator<BaseData>(reader, timeBasedFilter.Filter);
             }
 
-            var subscriptionRequest = new SubscriptionRequest(false, null, security, config, request.StartTimeUtc, request.EndTimeUtc);
+            var subscriptionRequest = new SubscriptionRequest(
+                false,
+                null,
+                security,
+                config,
+                request.StartTimeUtc,
+                request.EndTimeUtc
+            );
             if (_parallelHistoryRequestsEnabled)
             {
-                return SubscriptionUtils.CreateAndScheduleWorker(subscriptionRequest, reader, _factorFileProvider, false, AlgorithmSettings.DailyPreciseEndTime);
+                return SubscriptionUtils.CreateAndScheduleWorker(
+                    subscriptionRequest,
+                    reader,
+                    _factorFileProvider,
+                    false,
+                    AlgorithmSettings.DailyPreciseEndTime
+                );
             }
-            return SubscriptionUtils.Create(subscriptionRequest, reader, AlgorithmSettings.DailyPreciseEndTime);
+            return SubscriptionUtils.Create(
+                subscriptionRequest,
+                reader,
+                AlgorithmSettings.DailyPreciseEndTime
+            );
         }
 
         /// <summary>
         /// Gets the intraday data enumerator if any
         /// </summary>
-        protected virtual IEnumerator<BaseData> GetIntradayDataEnumerator(IEnumerator<BaseData> rawData, HistoryRequest request)
+        protected virtual IEnumerator<BaseData> GetIntradayDataEnumerator(
+            IEnumerator<BaseData> rawData,
+            HistoryRequest request
+        )
         {
             return null;
         }
@@ -207,18 +277,22 @@ namespace QuantConnect.Lean.Engine.HistoricalData
             public Type RequestedType { get; set; }
             public DateTime EndTimeLocal { get; set; }
             public DateTime StartTimeLocal { get; set; }
+
             public TimeBasedFilter(HistoryRequest request)
             {
                 RequestedType = request.DataType;
                 EndTimeLocal = request.EndTimeLocal;
                 StartTimeLocal = request.StartTimeLocal;
             }
+
             public bool Filter(BaseData data)
             {
                 // filter out all aux data, unless if we are asking for aux data
-                if (data.DataType == MarketDataType.Auxiliary && data.GetType() != RequestedType) return false;
+                if (data.DataType == MarketDataType.Auxiliary && data.GetType() != RequestedType)
+                    return false;
                 // filter out future data
-                if (data.EndTime > EndTimeLocal) return false;
+                if (data.EndTime > EndTimeLocal)
+                    return false;
                 // filter out data before the start
                 return data.EndTime > StartTimeLocal;
             }

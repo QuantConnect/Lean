@@ -1,11 +1,11 @@
 ﻿/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
- * 
- * Licensed under the Apache License, Version 2.0 (the "License"); 
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -40,20 +40,26 @@ namespace QuantConnect.Indicators.CandlestickPatterns
         /// Initializes a new instance of the <see cref="LongLineCandle"/> class using the specified name.
         /// </summary>
         /// <param name="name">The name of this indicator</param>
-        public LongLineCandle(string name) 
-            : base(name, Math.Max(CandleSettings.Get(CandleSettingType.BodyLong).AveragePeriod, CandleSettings.Get(CandleSettingType.ShadowShort).AveragePeriod) + 1)
+        public LongLineCandle(string name)
+            : base(
+                name,
+                Math.Max(
+                    CandleSettings.Get(CandleSettingType.BodyLong).AveragePeriod,
+                    CandleSettings.Get(CandleSettingType.ShadowShort).AveragePeriod
+                ) + 1
+            )
         {
             _bodyLongAveragePeriod = CandleSettings.Get(CandleSettingType.BodyLong).AveragePeriod;
-            _shadowShortAveragePeriod = CandleSettings.Get(CandleSettingType.ShadowShort).AveragePeriod;
+            _shadowShortAveragePeriod = CandleSettings
+                .Get(CandleSettingType.ShadowShort)
+                .AveragePeriod;
         }
 
         /// <summary>
         /// Initializes a new instance of the <see cref="LongLineCandle"/> class.
         /// </summary>
         public LongLineCandle()
-            : this("LONGLINECANDLE")
-        {
-        }
+            : this("LONGLINECANDLE") { }
 
         /// <summary>
         /// Gets a flag indicating when this indicator is ready and fully initialized
@@ -69,7 +75,10 @@ namespace QuantConnect.Indicators.CandlestickPatterns
         /// <param name="window">The window of data held in this indicator</param>
         /// <param name="input">The input given to the indicator</param>
         /// <returns>A new value for this indicator</returns>
-        protected override decimal ComputeNextValue(IReadOnlyWindow<IBaseDataBar> window, IBaseDataBar input)
+        protected override decimal ComputeNextValue(
+            IReadOnlyWindow<IBaseDataBar> window,
+            IBaseDataBar input
+        )
         {
             if (!IsReady)
             {
@@ -87,22 +96,36 @@ namespace QuantConnect.Indicators.CandlestickPatterns
             }
 
             decimal value;
-            if (GetRealBody(input) > GetCandleAverage(CandleSettingType.BodyLong, _bodyLongPeriodTotal, input) &&
-                GetUpperShadow(input) < GetCandleAverage(CandleSettingType.ShadowShort, _shadowShortPeriodTotal, input) &&
-                GetLowerShadow(input) < GetCandleAverage(CandleSettingType.ShadowShort, _shadowShortPeriodTotal, input)
-                )
+            if (
+                GetRealBody(input)
+                    > GetCandleAverage(CandleSettingType.BodyLong, _bodyLongPeriodTotal, input)
+                && GetUpperShadow(input)
+                    < GetCandleAverage(
+                        CandleSettingType.ShadowShort,
+                        _shadowShortPeriodTotal,
+                        input
+                    )
+                && GetLowerShadow(input)
+                    < GetCandleAverage(
+                        CandleSettingType.ShadowShort,
+                        _shadowShortPeriodTotal,
+                        input
+                    )
+            )
                 value = (int)GetCandleColor(input);
             else
                 value = 0m;
 
-            // add the current range and subtract the first range: this is done after the pattern recognition 
+            // add the current range and subtract the first range: this is done after the pattern recognition
             // when avgPeriod is not 0, that means "compare with the previous candles" (it excludes the current candle)
 
-            _bodyLongPeriodTotal += GetCandleRange(CandleSettingType.BodyLong, input) -
-                                    GetCandleRange(CandleSettingType.BodyLong, window[_bodyLongAveragePeriod]);
+            _bodyLongPeriodTotal +=
+                GetCandleRange(CandleSettingType.BodyLong, input)
+                - GetCandleRange(CandleSettingType.BodyLong, window[_bodyLongAveragePeriod]);
 
-            _shadowShortPeriodTotal += GetCandleRange(CandleSettingType.ShadowShort, input) -
-                                       GetCandleRange(CandleSettingType.ShadowShort, window[_shadowShortAveragePeriod]);
+            _shadowShortPeriodTotal +=
+                GetCandleRange(CandleSettingType.ShadowShort, input)
+                - GetCandleRange(CandleSettingType.ShadowShort, window[_shadowShortAveragePeriod]);
 
             return value;
         }

@@ -25,7 +25,7 @@ namespace QuantConnect.Orders.Fees
         /// Tier 1 maker fees
         /// </summary>
         public override decimal MakerFee => 0.001m;
-        
+
         /// <summary>
         /// Tier 1 taker fees
         /// </summary>

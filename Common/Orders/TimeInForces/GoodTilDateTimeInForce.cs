@@ -33,9 +33,7 @@ namespace QuantConnect.Orders.TimeInForces
         /// Initializes a new instance of the <see cref="GoodTilDateTimeInForce"/> class
         /// </summary>
         /// <remarks>This constructor is required for JSON deserialization</remarks>
-        private GoodTilDateTimeInForce()
-        {
-        }
+        private GoodTilDateTimeInForce() { }
 
         /// <summary>
         /// Initializes a new instance of the <see cref="GoodTilDateTimeInForce"/> class
@@ -65,7 +63,9 @@ namespace QuantConnect.Orders.TimeInForces
                     // With real brokerages (IB, Oanda, FXCM have been verified) FX orders expire at 5 PM NewYork time.
                     // For now we use this fixed cut-off time, in future we might get this value from brokerage models,
                     // to support custom brokerage implementations.
-                    expired = time.ConvertToUtc(exchangeHours.TimeZone) >= GetForexOrderExpiryDateTime(order);
+                    expired =
+                        time.ConvertToUtc(exchangeHours.TimeZone)
+                        >= GetForexOrderExpiryDateTime(order);
                     break;
 
                 case SecurityType.Crypto:

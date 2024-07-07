@@ -38,12 +38,11 @@ namespace QuantConnect.Util
     public class Composer
     {
         private static string PluginDirectory;
-        private static readonly Lazy<Composer> LazyComposer = new Lazy<Composer>(
-            () =>
-            {
-                PluginDirectory = Config.Get("plugin-directory");
-                return new Composer();
-            });
+        private static readonly Lazy<Composer> LazyComposer = new Lazy<Composer>(() =>
+        {
+            PluginDirectory = Config.Get("plugin-directory");
+            return new Composer();
+        });
 
         /// <summary>
         /// Gets the singleton instance
@@ -64,7 +63,12 @@ namespace QuantConnect.Util
             if (string.IsNullOrWhiteSpace(dllDirectoryString))
             {
                 // Check our appdomain directory for QC Dll's, for most cases this will be true and fine to use
-                if (!string.IsNullOrEmpty(AppDomain.CurrentDomain.BaseDirectory) && Directory.GetFiles(AppDomain.CurrentDomain.BaseDirectory, "QuantConnect.*.dll").Any())
+                if (
+                    !string.IsNullOrEmpty(AppDomain.CurrentDomain.BaseDirectory)
+                    && Directory
+                        .GetFiles(AppDomain.CurrentDomain.BaseDirectory, "QuantConnect.*.dll")
+                        .Any()
+                )
                 {
                     dllDirectoryString = AppDomain.CurrentDomain.BaseDirectory;
                 }
@@ -73,11 +77,16 @@ namespace QuantConnect.Util
                     // Otherwise check out our parent and current working directory
                     // this is helpful for research because kernel appdomain defaults to kernel location
                     var currentDirectory = Directory.GetCurrentDirectory();
-                    var parentDirectory = Directory.GetParent(currentDirectory)?.FullName ?? currentDirectory; // If parent == null will just use current
+                    var parentDirectory =
+                        Directory.GetParent(currentDirectory)?.FullName ?? currentDirectory; // If parent == null will just use current
 
                     // If our parent directory contains QC Dlls use it, otherwise default to current working directory
                     // In cloud and CLI research cases we expect the parent directory to contain the Dlls; but locally it's likely current directory
-                    dllDirectoryString = Directory.GetFiles(parentDirectory, "QuantConnect.*.dll").Any() ? parentDirectory : currentDirectory;
+                    dllDirectoryString = Directory
+                        .GetFiles(parentDirectory, "QuantConnect.*.dll")
+                        .Any()
+                        ? parentDirectory
+                        : currentDirectory;
                 }
             }
 
@@ -85,9 +94,10 @@ namespace QuantConnect.Util
             var primaryDllLookupDirectory = new DirectoryInfo(dllDirectoryString).FullName;
             Log.Trace($"Composer(): Loading Assemblies from {primaryDllLookupDirectory}");
 
-            var loadFromPluginDir = !string.IsNullOrWhiteSpace(PluginDirectory)
-                && Directory.Exists(PluginDirectory) &&
-                new DirectoryInfo(PluginDirectory).FullName != primaryDllLookupDirectory;
+            var loadFromPluginDir =
+                !string.IsNullOrWhiteSpace(PluginDirectory)
+                && Directory.Exists(PluginDirectory)
+                && new DirectoryInfo(PluginDirectory).FullName != primaryDllLookupDirectory;
             _composableParts = Task.Run(() =>
             {
                 try
@@ -119,10 +129,15 @@ namespace QuantConnect.Util
             // for performance we will load our assemblies and keep their exported types
             // which is much faster that using CompositionContainer which uses reflexion
             var exportedTypes = new ConcurrentBag<Type>();
-            var fileNames = Directory.EnumerateFiles(primaryDllLookupDirectory, $"{nameof(QuantConnect)}.*.dll");
+            var fileNames = Directory.EnumerateFiles(
+                primaryDllLookupDirectory,
+                $"{nameof(QuantConnect)}.*.dll"
+            );
             if (loadFromPluginDir)
             {
-                fileNames = fileNames.Concat(Directory.EnumerateFiles(PluginDirectory, $"{nameof(QuantConnect)}.*.dll"));
+                fileNames = fileNames.Concat(
+                    Directory.EnumerateFiles(PluginDirectory, $"{nameof(QuantConnect)}.*.dll")
+                );
             }
 
             // guarantee file name uniqueness
@@ -135,13 +150,19 @@ namespace QuantConnect.Util
                     files[fileName] = filePath;
                 }
             }
-            Parallel.ForEach(files.Values,
+            Parallel.ForEach(
+                files.Values,
                 file =>
                 {
                     try
                     {
-                        foreach (var type in
-                            Assembly.LoadFrom(file).ExportedTypes.Where(type => !type.IsAbstract && !type.IsInterface && !type.IsEnum))
+                        foreach (
+                            var type in Assembly
+                                .LoadFrom(file)
+                                .ExportedTypes.Where(type =>
+                                    !type.IsAbstract && !type.IsInterface && !type.IsEnum
+                                )
+                        )
                         {
                             exportedTypes.Add(type);
                         }
@@ -159,7 +180,8 @@ namespace QuantConnect.Util
         private readonly IReadOnlyList<Type> _exportedTypes;
         private readonly Task<List<ComposablePartDefinition>> _composableParts;
         private readonly object _exportedValuesLockObject = new object();
-        private readonly Dictionary<Type, IEnumerable> _exportedValues = new Dictionary<Type, IEnumerable>();
+        private readonly Dictionary<Type, IEnumerable> _exportedValues =
+            new Dictionary<Type, IEnumerable>();
 
         /// <summary>
         /// Gets the export matching the predicate
@@ -218,7 +240,9 @@ namespace QuantConnect.Util
                 IEnumerable values;
                 if (_exportedValues.TryGetValue(typeof(T), out values))
                 {
-                    return ((IList<T>)values).Where(x => filter == null || filter(x)).FirstOrDefault();
+                    return ((IList<T>)values)
+                        .Where(x => filter == null || filter(x))
+                        .FirstOrDefault();
                 }
                 return default(T);
             }
@@ -227,20 +251,21 @@ namespace QuantConnect.Util
         /// <summary>
         /// Will return all loaded types that are assignable to T type
         /// </summary>
-        public IEnumerable<Type> GetExportedTypes<T>() where T : class
+        public IEnumerable<Type> GetExportedTypes<T>()
+            where T : class
         {
             var type = typeof(T);
             return _exportedTypes.Where(type1 =>
+            {
+                try
                 {
-                    try
-                    {
-                        return type.IsAssignableFrom(type1);
-                    }
-                    catch
-                    {
-                        return false;
-                    }
-                });
+                    return type.IsAssignableFrom(type1);
+                }
+                catch
+                {
+                    return false;
+                }
+            });
         }
 
         /// <summary>
@@ -267,7 +292,11 @@ namespace QuantConnect.Util
                     if (_exportedValues.TryGetValue(type, out values))
                     {
                         // if we've already loaded this part, then just return the same one
-                        instance = values.OfType<T>().FirstOrDefault(x => !forceTypeNameOnExisting || x.GetType().MatchesTypeName(typeName));
+                        instance = values
+                            .OfType<T>()
+                            .FirstOrDefault(x =>
+                                !forceTypeNameOnExisting || x.GetType().MatchesTypeName(typeName)
+                            );
                         if (instance != null)
                         {
                             return instance;
@@ -275,7 +304,8 @@ namespace QuantConnect.Util
                     }
                 }
 
-                var typeT = _exportedTypes.Where(type1 =>
+                var typeT = _exportedTypes
+                    .Where(type1 =>
                     {
                         try
                         {
@@ -286,7 +316,7 @@ namespace QuantConnect.Util
                             return false;
                         }
                     })
-                .FirstOrDefault();
+                    .FirstOrDefault();
 
                 if (typeT != null)
                 {
@@ -296,47 +326,56 @@ namespace QuantConnect.Util
                 if (instance == null)
                 {
                     // we want to get the requested part without instantiating each one of that type
-                    var selectedPart = _composableParts.Result
-                        .Where(x =>
+                    var selectedPart = _composableParts
+                        .Result.Where(x =>
+                        {
+                            try
                             {
-                                try
-                                {
-                                    var xType = ReflectionModelServices.GetPartType(x).Value;
-                                    return type.IsAssignableFrom(xType) && xType.MatchesTypeName(typeName);
-                                }
-                                catch
-                                {
-                                    return false;
-                                }
+                                var xType = ReflectionModelServices.GetPartType(x).Value;
+                                return type.IsAssignableFrom(xType)
+                                    && xType.MatchesTypeName(typeName);
                             }
-                        )
+                            catch
+                            {
+                                return false;
+                            }
+                        })
                         .FirstOrDefault();
 
                     if (selectedPart == null)
                     {
                         throw new ArgumentException(
-                            $"Unable to locate any exports matching the requested typeName: {typeName}", nameof(typeName));
+                            $"Unable to locate any exports matching the requested typeName: {typeName}",
+                            nameof(typeName)
+                        );
                     }
 
-                    var exportDefinition =
-                        selectedPart.ExportDefinitions.First(
-                            x => x.ContractName == AttributedModelServices.GetContractName(type));
+                    var exportDefinition = selectedPart.ExportDefinitions.First(x =>
+                        x.ContractName == AttributedModelServices.GetContractName(type)
+                    );
                     instance = (T)selectedPart.CreatePart().GetExportedValue(exportDefinition);
                 }
 
-                var exportedParts = instance.GetType().GetInterfaces()
-                    .Where(interfaceType => interfaceType.GetCustomAttribute<InheritedExportAttribute>() != null);
+                var exportedParts = instance
+                    .GetType()
+                    .GetInterfaces()
+                    .Where(interfaceType =>
+                        interfaceType.GetCustomAttribute<InheritedExportAttribute>() != null
+                    );
 
                 lock (_exportedValuesLockObject)
                 {
                     foreach (var export in exportedParts)
                     {
-                        var exportList = _exportedValues.SingleOrDefault(kvp => kvp.Key == export).Value;
+                        var exportList = _exportedValues
+                            .SingleOrDefault(kvp => kvp.Key == export)
+                            .Value;
 
                         // cache the new value for next time
                         if (exportList == null)
                         {
-                            var list = (IList)Activator.CreateInstance(typeof(List<>).MakeGenericType(export));
+                            var list = (IList)
+                                Activator.CreateInstance(typeof(List<>).MakeGenericType(export));
                             list.Add(instance);
                             _exportedValues[export] = list;
                         }
@@ -357,11 +396,13 @@ namespace QuantConnect.Util
                     Log.Error(exception.ToString());
                 }
 
-                if (err.InnerException != null) Log.Error(err.InnerException);
+                if (err.InnerException != null)
+                    Log.Error(err.InnerException);
 
                 throw;
             }
         }
+
         /// <summary>
         /// Gets all exports of type T
         /// </summary>

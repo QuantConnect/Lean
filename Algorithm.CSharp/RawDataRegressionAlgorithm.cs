@@ -33,24 +33,36 @@ namespace QuantConnect.Algorithm.CSharp
     {
         private const string Ticker = "GOOGL";
         private CorporateFactorProvider _factorFile;
-        private readonly IEnumerator<decimal> _expectedRawPrices = new List<decimal> { 1157.93m, 1158.72m,
-            1131.97m, 1114.28m, 1120.15m, 1114.51m, 1134.89m, 567.55m, 571.50m, 545.25m, 540.63m }.GetEnumerator();
+        private readonly IEnumerator<decimal> _expectedRawPrices = new List<decimal>
+        {
+            1157.93m,
+            1158.72m,
+            1131.97m,
+            1114.28m,
+            1120.15m,
+            1114.51m,
+            1134.89m,
+            567.55m,
+            571.50m,
+            545.25m,
+            540.63m
+        }.GetEnumerator();
         private Symbol _googl;
 
         public override void Initialize()
         {
-            SetStartDate(2014, 3, 25);      //Set Start Date
-            SetEndDate(2014, 4, 7);         //Set End Date
-            SetCash(100000);                            //Set Strategy Cash
+            SetStartDate(2014, 3, 25); //Set Start Date
+            SetEndDate(2014, 4, 7); //Set End Date
+            SetCash(100000); //Set Strategy Cash
 
             // Set our DataNormalizationMode to raw
             UniverseSettings.DataNormalizationMode = DataNormalizationMode.Raw;
             _googl = AddEquity(Ticker, Resolution.Daily).Symbol;
 
             // Get our factor file for this regression
-            var dataProvider =
-                Composer.Instance.GetExportedValueByTypeName<IDataProvider>(Config.Get("data-provider",
-                    "DefaultDataProvider"));
+            var dataProvider = Composer.Instance.GetExportedValueByTypeName<IDataProvider>(
+                Config.Get("data-provider", "DefaultDataProvider")
+            );
 
             var mapFileProvider = new LocalDiskMapFileProvider();
             mapFileProvider.Initialize(dataProvider);
@@ -81,16 +93,23 @@ namespace QuantConnect.Algorithm.CSharp
                 if (_expectedRawPrices.Current != googlData.Close)
                 {
                     // Our values don't match lets try and give a reason why
-                    var dayFactor = _factorFile.GetPriceFactor(googlData.Time, DataNormalizationMode.Adjusted);
+                    var dayFactor = _factorFile.GetPriceFactor(
+                        googlData.Time,
+                        DataNormalizationMode.Adjusted
+                    );
                     var probableRawPrice = googlData.Close / dayFactor; // Undo adjustment
 
                     if (_expectedRawPrices.Current == probableRawPrice)
                     {
-                        throw new RegressionTestException($"Close price was incorrect; it appears to be the adjusted value");
+                        throw new RegressionTestException(
+                            $"Close price was incorrect; it appears to be the adjusted value"
+                        );
                     }
                     else
                     {
-                        throw new RegressionTestException($"Close price was incorrect; Data may have changed.");
+                        throw new RegressionTestException(
+                            $"Close price was incorrect; Data may have changed."
+                        );
                     }
                 }
 
@@ -127,35 +146,36 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// This is used by the regression test system to indicate what the expected statistics are from running the algorithm
         /// </summary>
-        public Dictionary<string, string> ExpectedStatistics => new Dictionary<string, string>
-        {
-            {"Total Orders", "1"},
-            {"Average Win", "0%"},
-            {"Average Loss", "0%"},
-            {"Compounding Annual Return", "-86.060%"},
-            {"Drawdown", "7.300%"},
-            {"Expectancy", "0"},
-            {"Start Equity", "100000"},
-            {"End Equity", "92720.82"},
-            {"Net Profit", "-7.279%"},
-            {"Sharpe Ratio", "-2.914"},
-            {"Sortino Ratio", "-2.855"},
-            {"Probabilistic Sharpe Ratio", "4.001%"},
-            {"Loss Rate", "0%"},
-            {"Win Rate", "0%"},
-            {"Profit-Loss Ratio", "0"},
-            {"Alpha", "-0.373"},
-            {"Beta", "1.927"},
-            {"Annual Standard Deviation", "0.254"},
-            {"Annual Variance", "0.064"},
-            {"Information Ratio", "-2.852"},
-            {"Tracking Error", "0.192"},
-            {"Treynor Ratio", "-0.384"},
-            {"Total Fees", "$1.00"},
-            {"Estimated Strategy Capacity", "$110000000.00"},
-            {"Lowest Capacity Asset", "GOOG T1AZ164W5VTX"},
-            {"Portfolio Turnover", "7.21%"},
-            {"OrderListHash", "a34fbe3e3812d3f453cd63924c06f89a"}
-        };
+        public Dictionary<string, string> ExpectedStatistics =>
+            new Dictionary<string, string>
+            {
+                { "Total Orders", "1" },
+                { "Average Win", "0%" },
+                { "Average Loss", "0%" },
+                { "Compounding Annual Return", "-86.060%" },
+                { "Drawdown", "7.300%" },
+                { "Expectancy", "0" },
+                { "Start Equity", "100000" },
+                { "End Equity", "92720.82" },
+                { "Net Profit", "-7.279%" },
+                { "Sharpe Ratio", "-2.914" },
+                { "Sortino Ratio", "-2.855" },
+                { "Probabilistic Sharpe Ratio", "4.001%" },
+                { "Loss Rate", "0%" },
+                { "Win Rate", "0%" },
+                { "Profit-Loss Ratio", "0" },
+                { "Alpha", "-0.373" },
+                { "Beta", "1.927" },
+                { "Annual Standard Deviation", "0.254" },
+                { "Annual Variance", "0.064" },
+                { "Information Ratio", "-2.852" },
+                { "Tracking Error", "0.192" },
+                { "Treynor Ratio", "-0.384" },
+                { "Total Fees", "$1.00" },
+                { "Estimated Strategy Capacity", "$110000000.00" },
+                { "Lowest Capacity Asset", "GOOG T1AZ164W5VTX" },
+                { "Portfolio Turnover", "7.21%" },
+                { "OrderListHash", "a34fbe3e3812d3f453cd63924c06f89a" }
+            };
     }
 }

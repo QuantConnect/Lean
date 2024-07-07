@@ -49,7 +49,8 @@ namespace QuantConnect.Algorithm.CSharp
             _dataCount += slice.Bars.Count;
 
             TradeBar bar;
-            if (!slice.Bars.TryGetValue(_symbol, out bar)) return;
+            if (!slice.Bars.TryGetValue(_symbol, out bar))
+                return;
 
             if (!Portfolio.Invested && Time.Date == EndDate.Date)
             {
@@ -67,13 +68,17 @@ namespace QuantConnect.Algorithm.CSharp
             else if (splits.Single().Value.Type == SplitType.SplitOccurred)
             {
                 _receivedOccurredEvent = true;
-                if (splits.Single().Value.Price != 645.5700m || splits.Single().Value.ReferencePrice != 645.5700m)
+                if (
+                    splits.Single().Value.Price != 645.5700m
+                    || splits.Single().Value.ReferencePrice != 645.5700m
+                )
                 {
                     throw new RegressionTestException("Did not receive expected price values");
                 }
                 Debug($"{splits.Single().Value}");
             }
         }
+
         public override void OnEndOfAlgorithm()
         {
             if (!_receivedOccurredEvent)
@@ -86,7 +91,9 @@ namespace QuantConnect.Algorithm.CSharp
             }
             if (_dataCount != 14)
             {
-                throw new RegressionTestException($"Unexpected data count {_dataCount}. Expected 14");
+                throw new RegressionTestException(
+                    $"Unexpected data count {_dataCount}. Expected 14"
+                );
             }
         }
 
@@ -118,35 +125,36 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// This is used by the regression test system to indicate what the expected statistics are from running the algorithm
         /// </summary>
-        public Dictionary<string, string> ExpectedStatistics => new Dictionary<string, string>
-        {
-            {"Total Orders", "1"},
-            {"Average Win", "0%"},
-            {"Average Loss", "0%"},
-            {"Compounding Annual Return", "-0.068%"},
-            {"Drawdown", "0.000%"},
-            {"Expectancy", "0"},
-            {"Start Equity", "100000"},
-            {"End Equity", "99999.31"},
-            {"Net Profit", "-0.001%"},
-            {"Sharpe Ratio", "-128.305"},
-            {"Sortino Ratio", "0"},
-            {"Probabilistic Sharpe Ratio", "0%"},
-            {"Loss Rate", "0%"},
-            {"Win Rate", "0%"},
-            {"Profit-Loss Ratio", "0"},
-            {"Alpha", "0"},
-            {"Beta", "0"},
-            {"Annual Standard Deviation", "0"},
-            {"Annual Variance", "0"},
-            {"Information Ratio", "-9.163"},
-            {"Tracking Error", "0"},
-            {"Treynor Ratio", "0"},
-            {"Total Fees", "$1.00"},
-            {"Estimated Strategy Capacity", "$160000000000.00"},
-            {"Lowest Capacity Asset", "AAPL R735QTJ8XC9X"},
-            {"Portfolio Turnover", "0.01%"},
-            {"OrderListHash", "21df8a4979f3a8b7abcffb471a0a4bb7"}
-        };
+        public Dictionary<string, string> ExpectedStatistics =>
+            new Dictionary<string, string>
+            {
+                { "Total Orders", "1" },
+                { "Average Win", "0%" },
+                { "Average Loss", "0%" },
+                { "Compounding Annual Return", "-0.068%" },
+                { "Drawdown", "0.000%" },
+                { "Expectancy", "0" },
+                { "Start Equity", "100000" },
+                { "End Equity", "99999.31" },
+                { "Net Profit", "-0.001%" },
+                { "Sharpe Ratio", "-128.305" },
+                { "Sortino Ratio", "0" },
+                { "Probabilistic Sharpe Ratio", "0%" },
+                { "Loss Rate", "0%" },
+                { "Win Rate", "0%" },
+                { "Profit-Loss Ratio", "0" },
+                { "Alpha", "0" },
+                { "Beta", "0" },
+                { "Annual Standard Deviation", "0" },
+                { "Annual Variance", "0" },
+                { "Information Ratio", "-9.163" },
+                { "Tracking Error", "0" },
+                { "Treynor Ratio", "0" },
+                { "Total Fees", "$1.00" },
+                { "Estimated Strategy Capacity", "$160000000000.00" },
+                { "Lowest Capacity Asset", "AAPL R735QTJ8XC9X" },
+                { "Portfolio Turnover", "0.01%" },
+                { "OrderListHash", "21df8a4979f3a8b7abcffb471a0a4bb7" }
+            };
     }
 }

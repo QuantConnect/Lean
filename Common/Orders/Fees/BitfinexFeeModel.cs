@@ -13,8 +13,8 @@
  * limitations under the License.
 */
 
-using QuantConnect.Util;
 using QuantConnect.Securities;
+using QuantConnect.Util;
 
 namespace QuantConnect.Orders.Fees
 {
@@ -29,6 +29,7 @@ namespace QuantConnect.Orders.Fees
         /// https://www.bitfinex.com/fees
         /// </summary>
         public const decimal MakerFee = 0.001m;
+
         /// <summary>
         /// Tier 1 taker fees
         /// Taker fees are paid when you remove liquidity from our order book by placing any order that is executed against an order of the order book.
@@ -51,9 +52,11 @@ namespace QuantConnect.Orders.Fees
             var fee = TakerFee;
             var props = order.Properties as BitfinexOrderProperties;
 
-            if (order.Type == OrderType.Limit &&
-                props?.Hidden != true &&
-                (props?.PostOnly == true || !order.IsMarketable))
+            if (
+                order.Type == OrderType.Limit
+                && props?.Hidden != true
+                && (props?.PostOnly == true || !order.IsMarketable)
+            )
             {
                 // limit order posted to the order book
                 fee = MakerFee;
@@ -67,7 +70,8 @@ namespace QuantConnect.Orders.Fees
             }
 
             // get order value in quote currency
-            var unitPrice = order.Direction == OrderDirection.Buy ? security.AskPrice : security.BidPrice;
+            var unitPrice =
+                order.Direction == OrderDirection.Buy ? security.AskPrice : security.BidPrice;
             if (order.Type == OrderType.Limit)
             {
                 // limit order posted to the order book
@@ -76,9 +80,12 @@ namespace QuantConnect.Orders.Fees
 
             unitPrice *= security.SymbolProperties.ContractMultiplier;
 
-            return new OrderFee(new CashAmount(
-                unitPrice * order.AbsoluteQuantity * fee,
-                security.QuoteCurrency.Symbol));
+            return new OrderFee(
+                new CashAmount(
+                    unitPrice * order.AbsoluteQuantity * fee,
+                    security.QuoteCurrency.Symbol
+                )
+            );
         }
     }
 }

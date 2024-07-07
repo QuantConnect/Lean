@@ -33,7 +33,8 @@ namespace QuantConnect.Data
         /// <returns>The highest resolution, <see cref="Resolution.Daily"/> if there
         /// are no subscriptions</returns>
         public static Resolution GetHighestResolution(
-            this IEnumerable<SubscriptionDataConfig> subscriptionDataConfigs)
+            this IEnumerable<SubscriptionDataConfig> subscriptionDataConfigs
+        )
         {
             return subscriptionDataConfigs
                 .Select(x => x.Resolution)
@@ -48,7 +49,8 @@ namespace QuantConnect.Data
         /// <param name="subscriptionDataConfigs"></param>
         /// <returns>True, at least one subscription has it enabled</returns>
         public static bool IsFillForward(
-            this IEnumerable<SubscriptionDataConfig> subscriptionDataConfigs)
+            this IEnumerable<SubscriptionDataConfig> subscriptionDataConfigs
+        )
         {
             return subscriptionDataConfigs.Any(x => x.FillDataForward);
         }
@@ -60,7 +62,8 @@ namespace QuantConnect.Data
         /// <param name="subscriptionDataConfigs"></param>
         /// <returns>True, at least one subscription has it enabled</returns>
         public static bool IsExtendedMarketHours(
-            this IEnumerable<SubscriptionDataConfig> subscriptionDataConfigs)
+            this IEnumerable<SubscriptionDataConfig> subscriptionDataConfigs
+        )
         {
             return subscriptionDataConfigs.Any(x => x.ExtendedMarketHours);
         }
@@ -72,7 +75,8 @@ namespace QuantConnect.Data
         /// <param name="subscriptionDataConfigs"></param>
         /// <returns>True, at least one subscription is custom data</returns>
         public static bool IsCustomData(
-            this IEnumerable<SubscriptionDataConfig> subscriptionDataConfigs)
+            this IEnumerable<SubscriptionDataConfig> subscriptionDataConfigs
+        )
         {
             return subscriptionDataConfigs.Any(x => x.IsCustomData);
         }
@@ -85,10 +89,11 @@ namespace QuantConnect.Data
         /// <returns>The first DataNormalizationMode,
         /// <see cref="DataNormalizationMode.Adjusted"/> if there  are no subscriptions</returns>
         public static DataNormalizationMode DataNormalizationMode(
-            this IEnumerable<SubscriptionDataConfig> subscriptionDataConfigs)
+            this IEnumerable<SubscriptionDataConfig> subscriptionDataConfigs
+        )
         {
-            return subscriptionDataConfigs.
-                Select(x => x.DataNormalizationMode)
+            return subscriptionDataConfigs
+                .Select(x => x.DataNormalizationMode)
                 .DefaultIfEmpty(QuantConnect.DataNormalizationMode.Adjusted)
                 .First();
         }
@@ -99,7 +104,8 @@ namespace QuantConnect.Data
         /// </summary>
         public static void SetDataNormalizationMode(
             this IEnumerable<SubscriptionDataConfig> subscriptionDataConfigs,
-            DataNormalizationMode mode)
+            DataNormalizationMode mode
+        )
         {
             foreach (var subscription in subscriptionDataConfigs)
             {
@@ -129,14 +135,17 @@ namespace QuantConnect.Data
         /// check and void code duplication and related issues</remarks>
         /// <param name="liveMode">True, is this is a live mode data stream</param>
         /// <returns>True if ticker prices should be scaled</returns>
-        public static bool PricesShouldBeScaled(this SubscriptionDataConfig config, bool liveMode = false)
+        public static bool PricesShouldBeScaled(
+            this SubscriptionDataConfig config,
+            bool liveMode = false
+        )
         {
             if (config.IsCustomData || config.Symbol.Value.Contains("UNIVERSE"))
             {
                 return false;
             }
 
-            if(config.SecurityType == SecurityType.Equity && !liveMode)
+            if (config.SecurityType == SecurityType.Equity && !liveMode)
             {
                 return true;
             }
@@ -157,7 +166,9 @@ namespace QuantConnect.Data
         /// <returns>True if this configuration requires split and divided handling</returns>
         public static bool EmitSplitsAndDividends(this SubscriptionDataConfig config)
         {
-            return !config.IsCustomData && !config.Symbol.Value.Contains("UNIVERSE") && config.SecurityType == SecurityType.Equity;
+            return !config.IsCustomData
+                && !config.Symbol.Value.Contains("UNIVERSE")
+                && config.SecurityType == SecurityType.Equity;
         }
 
         /// <summary>

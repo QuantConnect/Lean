@@ -14,20 +14,22 @@
  *
 */
 
+using System;
+using System.Collections.Generic;
 using QuantConnect.Data;
 using QuantConnect.Data.Consolidators;
 using QuantConnect.Data.Market;
 using QuantConnect.Data.UniverseSelection;
 using QuantConnect.Interfaces;
-using System;
-using System.Collections.Generic;
 
 namespace QuantConnect.Algorithm.CSharp
 {
     /// <summary>
     /// A demonstration of consolidating options data into larger bars for your algorithm.
     /// </summary>
-    public class BasicTemplateOptionsConsolidationAlgorithm: QCAlgorithm, IRegressionAlgorithmDefinition
+    public class BasicTemplateOptionsConsolidationAlgorithm
+        : QCAlgorithm,
+            IRegressionAlgorithmDefinition
     {
         private Dictionary<Symbol, IDataConsolidator> _consolidators = new();
 
@@ -55,36 +57,40 @@ namespace QuantConnect.Algorithm.CSharp
 
         public override void OnSecuritiesChanged(SecurityChanges changes)
         {
-            foreach(var security in changes.AddedSecurities)
+            foreach (var security in changes.AddedSecurities)
             {
                 IDataConsolidator consolidator;
                 if (security.Type == SecurityType.Equity)
                 {
                     consolidator = new TradeBarConsolidator(TimeSpan.FromMinutes(5));
-                    (consolidator as TradeBarConsolidator).DataConsolidated += OnTradeBarConsolidated;
+                    (consolidator as TradeBarConsolidator).DataConsolidated +=
+                        OnTradeBarConsolidated;
                 }
                 else
                 {
                     consolidator = new QuoteBarConsolidator(new TimeSpan(0, 5, 0));
-                    (consolidator as QuoteBarConsolidator).DataConsolidated += OnQuoteBarConsolidated;
+                    (consolidator as QuoteBarConsolidator).DataConsolidated +=
+                        OnQuoteBarConsolidated;
                 }
 
                 SubscriptionManager.AddConsolidator(security.Symbol, consolidator);
                 _consolidators[security.Symbol] = consolidator;
             }
 
-            foreach(var security in changes.RemovedSecurities)
+            foreach (var security in changes.RemovedSecurities)
             {
                 _consolidators.Remove(security.Symbol, out var consolidator);
                 SubscriptionManager.RemoveConsolidator(security.Symbol, consolidator);
 
                 if (security.Type == SecurityType.Equity)
                 {
-                    (consolidator as TradeBarConsolidator).DataConsolidated -= OnTradeBarConsolidated;
+                    (consolidator as TradeBarConsolidator).DataConsolidated -=
+                        OnTradeBarConsolidated;
                 }
                 else
                 {
-                    (consolidator as QuoteBarConsolidator).DataConsolidated -= OnQuoteBarConsolidated;
+                    (consolidator as QuoteBarConsolidator).DataConsolidated -=
+                        OnQuoteBarConsolidated;
                 }
             }
         }
@@ -117,35 +123,36 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// This is used by the regression test system to indicate what the expected statistics are from running the algorithm
         /// </summary>
-        public Dictionary<string, string> ExpectedStatistics => new Dictionary<string, string>
-        {
-            {"Total Orders", "0"},
-            {"Average Win", "0%"},
-            {"Average Loss", "0%"},
-            {"Compounding Annual Return", "0%"},
-            {"Drawdown", "0%"},
-            {"Expectancy", "0"},
-            {"Start Equity", "1000000"},
-            {"End Equity", "1000000"},
-            {"Net Profit", "0%"},
-            {"Sharpe Ratio", "0"},
-            {"Sortino Ratio", "0"},
-            {"Probabilistic Sharpe Ratio", "0%"},
-            {"Loss Rate", "0%"},
-            {"Win Rate", "0%"},
-            {"Profit-Loss Ratio", "0"},
-            {"Alpha", "0"},
-            {"Beta", "0"},
-            {"Annual Standard Deviation", "0"},
-            {"Annual Variance", "0"},
-            {"Information Ratio", "-8.91"},
-            {"Tracking Error", "0.223"},
-            {"Treynor Ratio", "0"},
-            {"Total Fees", "$0.00"},
-            {"Estimated Strategy Capacity", "$0"},
-            {"Lowest Capacity Asset", ""},
-            {"Portfolio Turnover", "0%"},
-            {"OrderListHash", "d41d8cd98f00b204e9800998ecf8427e"}
-        };
+        public Dictionary<string, string> ExpectedStatistics =>
+            new Dictionary<string, string>
+            {
+                { "Total Orders", "0" },
+                { "Average Win", "0%" },
+                { "Average Loss", "0%" },
+                { "Compounding Annual Return", "0%" },
+                { "Drawdown", "0%" },
+                { "Expectancy", "0" },
+                { "Start Equity", "1000000" },
+                { "End Equity", "1000000" },
+                { "Net Profit", "0%" },
+                { "Sharpe Ratio", "0" },
+                { "Sortino Ratio", "0" },
+                { "Probabilistic Sharpe Ratio", "0%" },
+                { "Loss Rate", "0%" },
+                { "Win Rate", "0%" },
+                { "Profit-Loss Ratio", "0" },
+                { "Alpha", "0" },
+                { "Beta", "0" },
+                { "Annual Standard Deviation", "0" },
+                { "Annual Variance", "0" },
+                { "Information Ratio", "-8.91" },
+                { "Tracking Error", "0.223" },
+                { "Treynor Ratio", "0" },
+                { "Total Fees", "$0.00" },
+                { "Estimated Strategy Capacity", "$0" },
+                { "Lowest Capacity Asset", "" },
+                { "Portfolio Turnover", "0%" },
+                { "OrderListHash", "d41d8cd98f00b204e9800998ecf8427e" }
+            };
     }
 }

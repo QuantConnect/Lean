@@ -13,6 +13,9 @@
  * limitations under the License.
 */
 
+using System;
+using System.Collections.Generic;
+using System.Linq;
 using Accord.Math;
 using NUnit.Framework;
 using Python.Runtime;
@@ -24,9 +27,6 @@ using QuantConnect.Data.Market;
 using QuantConnect.Data.UniverseSelection;
 using QuantConnect.Python;
 using QuantConnect.Securities;
-using System;
-using System.Collections.Generic;
-using System.Linq;
 using QuantConnect.Tests.Common.Data.UniverseSelection;
 
 namespace QuantConnect.Tests.Algorithm.Framework.Portfolio
@@ -50,11 +50,13 @@ namespace QuantConnect.Tests.Algorithm.Framework.Portfolio
 
             var returnsSymbolDatas = new Dictionary<Symbol, ReturnsSymbolData>
             {
-                {Symbols.EURGBP, returnsSymbolData},
-                {Symbols.BTCUSD, returnsSymbolData2},
+                { Symbols.EURGBP, returnsSymbolData },
+                { Symbols.BTCUSD, returnsSymbolData2 },
             };
 
-            var result = returnsSymbolDatas.FormReturnsMatrix(new List<Symbol> {Symbols.EURGBP, Symbols.BTCUSD });
+            var result = returnsSymbolDatas.FormReturnsMatrix(
+                new List<Symbol> { Symbols.EURGBP, Symbols.BTCUSD }
+            );
 
             Assert.AreEqual(4, result.Length);
 
@@ -83,8 +85,9 @@ namespace QuantConnect.Tests.Algorithm.Framework.Portfolio
         [TestCase(true)]
         public void ReturnsSymbolDataMatrixIsSimilarToPandasDataFrame(bool odd)
         {
-            var symbols = new[] { "A", "B", "C", "D", "E" }
-                .Select(x => Symbol.Create(x, SecurityType.Equity, Market.USA, x));
+            var symbols = new[] { "A", "B", "C", "D", "E" }.Select(x =>
+                Symbol.Create(x, SecurityType.Equity, Market.USA, x)
+            );
 
             var slices = GetHistory(symbols, odd);
 
@@ -141,11 +144,16 @@ namespace QuantConnect.Tests.Algorithm.Framework.Portfolio
             security.SetMarketPrice(new Tick(algorithm.Time, symbol, 1m, 1m));
             algorithm.Securities.Add(symbol, security);
 
-            algorithm.PortfolioConstruction.OnSecuritiesChanged(algorithm, SecurityChangesTests.AddedNonInternal(security));
+            algorithm.PortfolioConstruction.OnSecuritiesChanged(
+                algorithm,
+                SecurityChangesTests.AddedNonInternal(security)
+            );
 
-            var insights = new[] {Insight.Price(symbol, Time.OneMinute, InsightDirection.Up, .1)};
+            var insights = new[] { Insight.Price(symbol, Time.OneMinute, InsightDirection.Up, .1) };
 
-            Assert.DoesNotThrow(() => algorithm.PortfolioConstruction.CreateTargets(algorithm, insights));
+            Assert.DoesNotThrow(
+                () => algorithm.PortfolioConstruction.CreateTargets(algorithm, insights)
+            );
         }
 
         private List<Slice> GetHistory(IEnumerable<Symbol> symbols, bool odd)
@@ -154,27 +162,36 @@ namespace QuantConnect.Tests.Algorithm.Framework.Portfolio
             var rnd = new Random(reference.Second);
             var symbolsArray = symbols.ToArray();
 
-            return Enumerable.Range(0, 10).Select(t =>
-            {
-                var time = reference.AddDays(t);
-
-                var data = Enumerable.Range(0, symbolsArray.Length).Select(i =>
+            return Enumerable
+                .Range(0, 10)
+                .Select(t =>
                 {
-                    // Odd data means that one of the symbols have a different timestamp
-                    if (odd && i == symbolsArray.Length - 1)
-                    {
-                        time = time.AddMinutes(10);
-                    }
-                    return new Tick(time, symbolsArray[i], (decimal)rnd.NextDouble(), 0, 0) {TickType = TickType.Trade};
-                });
+                    var time = reference.AddDays(t);
 
-                return new Slice(time, data, time);
-            }).ToList();
+                    var data = Enumerable
+                        .Range(0, symbolsArray.Length)
+                        .Select(i =>
+                        {
+                            // Odd data means that one of the symbols have a different timestamp
+                            if (odd && i == symbolsArray.Length - 1)
+                            {
+                                time = time.AddMinutes(10);
+                            }
+                            return new Tick(time, symbolsArray[i], (decimal)rnd.NextDouble(), 0, 0)
+                            {
+                                TickType = TickType.Trade
+                            };
+                        });
+
+                    return new Slice(time, data, time);
+                })
+                .ToList();
         }
 
         private double GetExpectedValue(List<Slice> history)
         {
-            var code = @"
+            var code =
+                @"
 import numpy as np
 import pandas as pd
 import math
@@ -200,7 +217,8 @@ def GetDeterminantFromHistory(history):
 
             using (Py.GIL())
             {
-                dynamic GetDeterminantFromHistory = PyModule.FromString("GetDeterminantFromHistory", code)
+                dynamic GetDeterminantFromHistory = PyModule
+                    .FromString("GetDeterminantFromHistory", code)
                     .GetAttr("GetDeterminantFromHistory");
 
                 dynamic df = new PandasConverter().GetDataFrame(history);
@@ -210,9 +228,13 @@ def GetDeterminantFromHistory(history):
 
         private class DuplicateKeyPortfolioConstructionModel : IPortfolioConstructionModel
         {
-            private readonly Dictionary<Symbol, ReturnsSymbolData> _symbolDataDict = new Dictionary<Symbol, ReturnsSymbolData>();
+            private readonly Dictionary<Symbol, ReturnsSymbolData> _symbolDataDict =
+                new Dictionary<Symbol, ReturnsSymbolData>();
 
-            public IEnumerable<IPortfolioTarget> CreateTargets(QCAlgorithm algorithm, Insight[] insights)
+            public IEnumerable<IPortfolioTarget> CreateTargets(
+                QCAlgorithm algorithm,
+                Insight[] insights
+            )
             {
                 // Updates the ReturnsSymbolData with insights
                 foreach (var insight in insights)
@@ -224,7 +246,9 @@ def GetDeterminantFromHistory(history):
                     }
                 }
 
-                Assert.DoesNotThrow(() => _symbolDataDict.FormReturnsMatrix(insights.Select(x => x.Symbol)));
+                Assert.DoesNotThrow(
+                    () => _symbolDataDict.FormReturnsMatrix(insights.Select(x => x.Symbol))
+                );
 
                 return Enumerable.Empty<PortfolioTarget>();
             }

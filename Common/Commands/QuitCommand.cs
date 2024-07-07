@@ -24,8 +24,6 @@ namespace QuantConnect.Commands
         /// Initializes a new instance of the <see cref="QuitCommand"/>
         /// </summary>
         public QuitCommand()
-            : base(AlgorithmStatus.Stopped)
-        {
-        }
+            : base(AlgorithmStatus.Stopped) { }
     }
 }

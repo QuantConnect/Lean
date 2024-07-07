@@ -13,6 +13,7 @@
  * limitations under the License.
 */
 
+using System;
 using NUnit.Framework;
 using QuantConnect.Data;
 using QuantConnect.Data.Market;
@@ -20,7 +21,6 @@ using QuantConnect.Orders;
 using QuantConnect.Orders.Fees;
 using QuantConnect.Securities;
 using QuantConnect.Securities.Crypto;
-using System;
 
 namespace QuantConnect.Tests.Common.Orders.Fees
 {
@@ -45,8 +45,22 @@ namespace QuantConnect.Tests.Common.Orders.Fees
                 SecurityExchangeHours.AlwaysOpen(tz),
                 new Cash("USDT", 0, 1),
                 new Cash("XRP", 0, 0),
-                new SubscriptionDataConfig(typeof(TradeBar), Symbol.Create("XRPUSDT", SecurityType.Crypto, Market.FTX), Resolution.Minute, tz, tz, true, false, false),
-                spdb.GetSymbolProperties(Market.FTX, Symbol.Create("XRPUSDT", SecurityType.Crypto, Market.FTX), SecurityType.Crypto, "USDT"),
+                new SubscriptionDataConfig(
+                    typeof(TradeBar),
+                    Symbol.Create("XRPUSDT", SecurityType.Crypto, Market.FTX),
+                    Resolution.Minute,
+                    tz,
+                    tz,
+                    true,
+                    false,
+                    false
+                ),
+                spdb.GetSymbolProperties(
+                    Market.FTX,
+                    Symbol.Create("XRPUSDT", SecurityType.Crypto, Market.FTX),
+                    SecurityType.Crypto,
+                    "USDT"
+                ),
                 ErrorCurrencyConverter.Instance,
                 RegisteredSecurityDataTypesProvider.Null
             );
@@ -56,8 +70,22 @@ namespace QuantConnect.Tests.Common.Orders.Fees
                 SecurityExchangeHours.AlwaysOpen(tz),
                 new Cash(Currencies.USD, 0, 10),
                 new Cash("ETH", 0, 0),
-                new SubscriptionDataConfig(typeof(TradeBar), Symbol.Create("ETHUSD", SecurityType.Crypto, Market.FTX), Resolution.Minute, tz, tz, true, false, false),
-                spdb.GetSymbolProperties(Market.FTX, Symbol.Create("ETHUSD", SecurityType.Crypto, Market.FTX), SecurityType.Crypto, Currencies.USD),
+                new SubscriptionDataConfig(
+                    typeof(TradeBar),
+                    Symbol.Create("ETHUSD", SecurityType.Crypto, Market.FTX),
+                    Resolution.Minute,
+                    tz,
+                    tz,
+                    true,
+                    false,
+                    false
+                ),
+                spdb.GetSymbolProperties(
+                    Market.FTX,
+                    Symbol.Create("ETHUSD", SecurityType.Crypto, Market.FTX),
+                    SecurityType.Crypto,
+                    Currencies.USD
+                ),
                 ErrorCurrencyConverter.Instance,
                 RegisteredSecurityDataTypesProvider.Null
             );

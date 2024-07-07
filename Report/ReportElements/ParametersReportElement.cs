@@ -35,7 +35,13 @@ namespace QuantConnect.Report.ReportElements
         /// <param name="backtestConfiguration">The configuration of the backtest algorithm</param>
         /// <param name="liveConfiguration">The configuration of the live algorithm</param>
         /// <param name="template">HTML template to use</param>
-        public ParametersReportElement(string name, string key, AlgorithmConfiguration backtestConfiguration, AlgorithmConfiguration liveConfiguration, string template)
+        public ParametersReportElement(
+            string name,
+            string key,
+            AlgorithmConfiguration backtestConfiguration,
+            AlgorithmConfiguration liveConfiguration,
+            string template
+        )
         {
             Name = name;
             Key = key;
@@ -66,7 +72,7 @@ namespace QuantConnect.Report.ReportElements
             int parameterIndex;
             var columns = (new Regex(@"{{\$KEY(\d+?)}}")).Matches(_template).Count;
 
-            for (parameterIndex = 0; parameterIndex < _parameters.Count;)
+            for (parameterIndex = 0; parameterIndex < _parameters.Count; )
             {
                 var template = _template;
                 int column;
@@ -108,7 +114,7 @@ namespace QuantConnect.Report.ReportElements
                 return string.Empty;
             }
 
-            var parameters= string.Join("\n", items);
+            var parameters = string.Join("\n", items);
             return parameters;
         }
     }

@@ -574,7 +574,8 @@ namespace QuantConnect.Securities
             /// 3.5% Fuel Oil Barges FOB Rdam (Platts) Crack Spread (1000mt) Futures
             /// </summary>
             /// <returns>The symbol</returns>
-            public const string ThreePointFivePercentFuelOilBargesFOBRdamPlattsCrackSpread1000mt = "BOO";
+            public const string ThreePointFivePercentFuelOilBargesFOBRdamPlattsCrackSpread1000mt =
+                "BOO";
 
             /// <summary>
             /// Gasoline Euro-bob Oxy NWE Barges (Argus) BALMO Futures
@@ -658,7 +659,8 @@ namespace QuantConnect.Securities
             /// Singapore Fuel Oil 380 cst (Platts) vs. European 3.5% Fuel Oil Barges FOB Rdam (Platts) Futures
             /// </summary>
             /// <returns>The symbol</returns>
-            public const string SingaporeFuelOil380cstPlattsVsEuropeanThreePointFivePercentFuelOilBargesFOBRdamPlatts = "EVC";
+            public const string SingaporeFuelOil380cstPlattsVsEuropeanThreePointFivePercentFuelOilBargesFOBRdamPlatts =
+                "EVC";
 
             /// <summary>
             /// East-West Gasoline Spread (Platts-Argus) Futures
@@ -676,7 +678,8 @@ namespace QuantConnect.Securities
             /// RBOB Gasoline vs. Euro-bob Oxy NWE Barges (Argus) (350,000 gallons) Futures
             /// </summary>
             /// <returns>The symbol</returns>
-            public const string RBOBGasolineVsEurobobOxyNWEBargesArgusThreeHundredFiftyThousandGallons = "EXR";
+            public const string RBOBGasolineVsEurobobOxyNWEBargesArgusThreeHundredFiftyThousandGallons =
+                "EXR";
 
             /// <summary>
             /// 3.5% Fuel Oil Barges FOB Rdam (Platts) Crack Spread Futures
@@ -694,12 +697,14 @@ namespace QuantConnect.Securities
             /// 1% Fuel Oil Cargoes FOB NWE (Platts) vs. 3.5% Fuel Oil Barges FOB Rdam (Platts) Futures
             /// </summary>
             /// <returns>The symbol</returns>
-            public const string OnePercentFuelOilCargoesFOBNWEPlattsVsThreePointFivePercentFuelOilBargesFOBRdamPlatts = "FSS";
+            public const string OnePercentFuelOilCargoesFOBNWEPlattsVsThreePointFivePercentFuelOilBargesFOBRdamPlatts =
+                "FSS";
 
             /// <summary>
             /// Gulf Coast HSFO (Platts) vs. European 3.5% Fuel Oil Barges FOB Rdam (Platts) Futures
             /// </summary>
-            public const string GulfCoastHSFOPlattsVsEuropeanThreePointFivePercentFuelOilBargesFOBRdamPlatts = "GCU";
+            public const string GulfCoastHSFOPlattsVsEuropeanThreePointFivePercentFuelOilBargesFOBRdamPlatts =
+                "GCU";
 
             /// <summary>
             /// WTI Houston Crude Oil Futures
@@ -777,7 +782,8 @@ namespace QuantConnect.Securities
             /// Micro European FOB Rdam Marine Fuel 0.5% Barges (Platts) Futures
             /// </summary>
             /// <returns>The symbol</returns>
-            public const string MicroEuropeanFOBRdamMarineFuelZeroPointFivePercentBargesPlatts = "R5O";
+            public const string MicroEuropeanFOBRdamMarineFuelZeroPointFivePercentBargesPlatts =
+                "R5O";
 
             /// <summary>
             /// Micro European 3.5% Fuel Oil Barges FOB Rdam (Platts) Futures
@@ -801,7 +807,8 @@ namespace QuantConnect.Securities
             /// Micro European 3.5% Fuel Oil Cargoes FOB Med (Platts) Futures
             /// </summary>
             /// <returns>The symbol</returns>
-            public const string MicroEuropeanThreePointFivePercentFuelOilCargoesFOBMedPlatts = "M35";
+            public const string MicroEuropeanThreePointFivePercentFuelOilCargoesFOBMedPlatts =
+                "M35";
         }
 
         /// <summary>
@@ -1053,7 +1060,8 @@ namespace QuantConnect.Securities
             /// 3.5% Fuel Oil Barges FOB Rdam (Platts) Crack Spread (1000mt) Futures
             /// </summary>
             /// <returns>The symbol</returns>
-            public const string ThreePointFivePercentFuelOilBargesFOBRdamPlattsCrackSpread1000mt = "BOO";
+            public const string ThreePointFivePercentFuelOilBargesFOBRdamPlattsCrackSpread1000mt =
+                "BOO";
 
             /// <summary>
             /// Gasoline Euro-bob Oxy NWE Barges (Argus) BALMO Futures
@@ -1137,7 +1145,8 @@ namespace QuantConnect.Securities
             /// Singapore Fuel Oil 380 cst (Platts) vs. European 3.5% Fuel Oil Barges FOB Rdam (Platts) Futures
             /// </summary>
             /// <returns>The symbol</returns>
-            public const string SingaporeFuelOil380cstPlattsVsEuropeanThreePointFivePercentFuelOilBargesFOBRdamPlatts = "EVC";
+            public const string SingaporeFuelOil380cstPlattsVsEuropeanThreePointFivePercentFuelOilBargesFOBRdamPlatts =
+                "EVC";
 
             /// <summary>
             /// East-West Gasoline Spread (Platts-Argus) Futures
@@ -1155,7 +1164,8 @@ namespace QuantConnect.Securities
             /// RBOB Gasoline vs. Euro-bob Oxy NWE Barges (Argus) (350,000 gallons) Futures
             /// </summary>
             /// <returns>The symbol</returns>
-            public const string RBOBGasolineVsEurobobOxyNWEBargesArgusThreeHundredFiftyThousandGallons = "EXR";
+            public const string RBOBGasolineVsEurobobOxyNWEBargesArgusThreeHundredFiftyThousandGallons =
+                "EXR";
 
             /// <summary>
             /// 3.5% Fuel Oil Barges FOB Rdam (Platts) Crack Spread Futures
@@ -1173,12 +1183,14 @@ namespace QuantConnect.Securities
             /// 1% Fuel Oil Cargoes FOB NWE (Platts) vs. 3.5% Fuel Oil Barges FOB Rdam (Platts) Futures
             /// </summary>
             /// <returns>The symbol</returns>
-            public const string OnePercentFuelOilCargoesFOBNWEPlattsVsThreePointFivePercentFuelOilBargesFOBRdamPlatts = "FSS";
+            public const string OnePercentFuelOilCargoesFOBNWEPlattsVsThreePointFivePercentFuelOilBargesFOBRdamPlatts =
+                "FSS";
 
             /// <summary>
             /// Gulf Coast HSFO (Platts) vs. European 3.5% Fuel Oil Barges FOB Rdam (Platts) Futures
             /// </summary>
-            public const string GulfCoastHSFOPlattsVsEuropeanThreePointFivePercentFuelOilBargesFOBRdamPlatts = "GCU";
+            public const string GulfCoastHSFOPlattsVsEuropeanThreePointFivePercentFuelOilBargesFOBRdamPlatts =
+                "GCU";
 
             /// <summary>
             /// WTI Houston Crude Oil Futures
@@ -1256,7 +1268,8 @@ namespace QuantConnect.Securities
             /// Micro European FOB Rdam Marine Fuel 0.5% Barges (Platts) Futures
             /// </summary>
             /// <returns>The symbol</returns>
-            public const string MicroEuropeanFOBRdamMarineFuelZeroPointFivePercentBargesPlatts = "R5O";
+            public const string MicroEuropeanFOBRdamMarineFuelZeroPointFivePercentBargesPlatts =
+                "R5O";
 
             /// <summary>
             /// Micro European 3.5% Fuel Oil Barges FOB Rdam (Platts) Futures
@@ -1280,7 +1293,8 @@ namespace QuantConnect.Securities
             /// Micro European 3.5% Fuel Oil Cargoes FOB Med (Platts) Futures
             /// </summary>
             /// <returns>The symbol</returns>
-            public const string MicroEuropeanThreePointFivePercentFuelOilCargoesFOBMedPlatts = "M35";
+            public const string MicroEuropeanThreePointFivePercentFuelOilCargoesFOBMedPlatts =
+                "M35";
         }
 
         /// <summary>
@@ -1405,7 +1419,6 @@ namespace QuantConnect.Securities
             /// </summary>
             /// <returns>The symbol</returns>
             public const string Nikkei225YenCME = "NIY";
-
 
             // <summary>
             /// E-mini Nikkei 225 Yen denominated Futures on CME

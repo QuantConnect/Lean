@@ -22,16 +22,16 @@ using System.Linq;
 using Newtonsoft.Json;
 using NUnit.Framework;
 using QuantConnect.Algorithm.CSharp;
-using QuantConnect.Lean.Engine.DataFeeds;
-using QuantConnect.Logging;
-using QuantConnect.Util;
-using QuantConnect.Securities;
-using QuantConnect.Data.Fundamental;
+using QuantConnect.Data.Custom;
 using QuantConnect.Data.Custom.AlphaStreams;
 using QuantConnect.Data.Custom.IconicTypes;
 using QuantConnect.Data.Custom.Intrinio;
-using QuantConnect.Data.Custom;
 using QuantConnect.Data.Custom.Tiingo;
+using QuantConnect.Data.Fundamental;
+using QuantConnect.Lean.Engine.DataFeeds;
+using QuantConnect.Logging;
+using QuantConnect.Securities;
+using QuantConnect.Util;
 
 namespace QuantConnect.Tests.Common.Securities
 {
@@ -40,13 +40,32 @@ namespace QuantConnect.Tests.Common.Securities
     {
         private static SecurityIdentifier SPY
         {
-            get { return SecurityIdentifier.GenerateEquity(new DateTime(1998, 01, 02), "SPY", Market.USA); }
+            get
+            {
+                return SecurityIdentifier.GenerateEquity(
+                    new DateTime(1998, 01, 02),
+                    "SPY",
+                    Market.USA
+                );
+            }
         }
 
         // this is really not european style, but I'd prefer to test a value of 1 vs a value of 0
-        private readonly SecurityIdentifier SPY_Put_19550 = SecurityIdentifier.GenerateOption(new DateTime(2015, 09, 18), SPY, Market.USA, 195.50m, OptionRight.Put, OptionStyle.European);
+        private readonly SecurityIdentifier SPY_Put_19550 = SecurityIdentifier.GenerateOption(
+            new DateTime(2015, 09, 18),
+            SPY,
+            Market.USA,
+            195.50m,
+            OptionRight.Put,
+            OptionStyle.European
+        );
+
         // this is euro-dollar futures contract (for tests)
-        private readonly SecurityIdentifier ED_Dec_2020 = SecurityIdentifier.GenerateFuture(new DateTime(2020, 12, 15), "ED", Market.USA);
+        private readonly SecurityIdentifier ED_Dec_2020 = SecurityIdentifier.GenerateFuture(
+            new DateTime(2020, 12, 15),
+            "ED",
+            Market.USA
+        );
 
         [TestCase("SPY", "SPY", "20230403")]
         [TestCase("GOOG", "GOOG", "20140403")]
@@ -69,8 +88,14 @@ namespace QuantConnect.Tests.Common.Securities
         [Test]
         public void GenerateFailsOnInvalidDate()
         {
-            Assert.Throws<ArgumentOutOfRangeException>(() =>
-                SecurityIdentifier.GenerateEquity(Time.BeginningOfTime.AddDays(-1), "SPY", Market.USA));
+            Assert.Throws<ArgumentOutOfRangeException>(
+                () =>
+                    SecurityIdentifier.GenerateEquity(
+                        Time.BeginningOfTime.AddDays(-1),
+                        "SPY",
+                        Market.USA
+                    )
+            );
         }
 
         [Test]
@@ -104,7 +129,11 @@ namespace QuantConnect.Tests.Common.Securities
         [Test]
         public void GeneratesEquitySecurityIdentifier()
         {
-            var sid1 = SecurityIdentifier.GenerateEquity(new DateTime(1998, 01, 02), "SPY", Market.USA);
+            var sid1 = SecurityIdentifier.GenerateEquity(
+                new DateTime(1998, 01, 02),
+                "SPY",
+                Market.USA
+            );
 
             // verify various values
             Assert.AreEqual(new DateTime(1998, 01, 02), sid1.Date);
@@ -121,7 +150,10 @@ namespace QuantConnect.Tests.Common.Securities
             var eurusd = SecurityIdentifier.GenerateForex("EURUSD", Market.FXCM);
 
             // verify various values
-            Assert.Throws<InvalidOperationException>(() => { var x = eurusd.Date; });
+            Assert.Throws<InvalidOperationException>(() =>
+            {
+                var x = eurusd.Date;
+            });
             Assert.AreEqual(Market.FXCM, eurusd.Market);
             Assert.AreEqual(SecurityType.Forex, eurusd.SecurityType);
             Assert.AreEqual("EURUSD", eurusd.Symbol);
@@ -173,7 +205,10 @@ namespace QuantConnect.Tests.Common.Securities
             Assert.AreEqual(SecurityType.Option, option.SecurityType); // security type
             Assert.AreEqual("SPY", option.Symbol); // SPY in base36
             Assert.IsFalse(option.HasUnderlying);
-            Assert.Throws<InvalidOperationException>(() => { var x = option.Underlying; });
+            Assert.Throws<InvalidOperationException>(() =>
+            {
+                var x = option.Underlying;
+            });
             var equity = SecurityIdentifier.Parse(parts[1]);
             Assert.AreEqual(SPY, equity);
         }
@@ -194,10 +229,13 @@ namespace QuantConnect.Tests.Common.Securities
         [Test]
         public void InvalidSecurityType()
         {
-            Assert.Throws<ArgumentException>(() =>
-            {
-                var sid = new SecurityIdentifier("some-symbol", 0357960000000009915);
-            }, $"The provided properties do not match with a valid {nameof(SecurityType)}");
+            Assert.Throws<ArgumentException>(
+                () =>
+                {
+                    var sid = new SecurityIdentifier("some-symbol", 0357960000000009915);
+                },
+                $"The provided properties do not match with a valid {nameof(SecurityType)}"
+            );
         }
 
         [TestCaseSource(nameof(ValidSecurityTypes))]
@@ -218,10 +256,13 @@ namespace QuantConnect.Tests.Common.Securities
         [Test]
         public void OptionRightThrowsOnNonOptionSecurityType()
         {
-            Assert.Throws<InvalidOperationException>(() =>
-            {
-                var OptionRight = SPY.OptionRight;
-            }, "OptionRight is only defined for SecurityType.Option");
+            Assert.Throws<InvalidOperationException>(
+                () =>
+                {
+                    var OptionRight = SPY.OptionRight;
+                },
+                "OptionRight is only defined for SecurityType.Option"
+            );
         }
 
         [Test]
@@ -259,10 +300,13 @@ namespace QuantConnect.Tests.Common.Securities
         [Test]
         public void OptionStyleThrowsOnNonOptionSecurityType()
         {
-            Assert.Throws<InvalidOperationException>(() =>
-            {
-                var optionStyle = SPY.OptionStyle;
-            }, "OptionStyle is only defined for SecurityType.Option");
+            Assert.Throws<InvalidOperationException>(
+                () =>
+                {
+                    var optionStyle = SPY.OptionStyle;
+                },
+                "OptionStyle is only defined for SecurityType.Option"
+            );
         }
 
         [Test]
@@ -280,13 +324,19 @@ namespace QuantConnect.Tests.Common.Securities
         [Test]
         public void RoundTripEmptyParse()
         {
-            Assert.AreEqual(SecurityIdentifier.Empty, SecurityIdentifier.Parse(SecurityIdentifier.Empty.ToString()));
+            Assert.AreEqual(
+                SecurityIdentifier.Empty,
+                SecurityIdentifier.Parse(SecurityIdentifier.Empty.ToString())
+            );
         }
 
         [Test]
         public void RoundTripNoneParse()
         {
-            Assert.AreEqual(SecurityIdentifier.None, SecurityIdentifier.Parse(SecurityIdentifier.None.ToString()));
+            Assert.AreEqual(
+                SecurityIdentifier.None,
+                SecurityIdentifier.Parse(SecurityIdentifier.None.ToString())
+            );
         }
 
         [Test]
@@ -318,11 +368,13 @@ namespace QuantConnect.Tests.Common.Securities
         [Test]
         public void DeserializesFromSimpleStringWithinContainerClass()
         {
-            var sid = new Container{sid =SPY};
+            var sid = new Container { sid = SPY };
             var str =
-@"
+                @"
 {
-    'sid': '" + SPY + @"'
+    'sid': '"
+                + SPY
+                + @"'
 }";
             var deserialized = JsonConvert.DeserializeObject<Container>(str);
             Assert.AreEqual(sid.sid, deserialized.sid);
@@ -374,17 +426,25 @@ namespace QuantConnect.Tests.Common.Securities
         [Theory, TestCase("|"), TestCase(" ")]
         public void ThrowsOnInvalidSymbolCharacters(string input)
         {
-            Assert.Throws<ArgumentException>(() =>
-            {
-                new SecurityIdentifier(input, 0);
-            }, "must not contain the characters");
+            Assert.Throws<ArgumentException>(
+                () =>
+                {
+                    new SecurityIdentifier(input, 0);
+                },
+                "must not contain the characters"
+            );
         }
 
         [Test]
         public void GenerateEquityWithTickerUsingMapFile()
         {
             var expectedFirstDate = new DateTime(1998, 1, 2);
-            var sid = SecurityIdentifier.GenerateEquity("TWX", Market.USA, mapSymbol: true, mapFileProvider: TestGlobals.MapFileProvider);
+            var sid = SecurityIdentifier.GenerateEquity(
+                "TWX",
+                Market.USA,
+                mapSymbol: true,
+                mapFileProvider: TestGlobals.MapFileProvider
+            );
 
             Assert.AreEqual(sid.Date, expectedFirstDate);
             Assert.AreEqual(sid.Symbol, "AOL");
@@ -415,7 +475,7 @@ namespace QuantConnect.Tests.Common.Securities
         {
             var symbol = "BTC";
             var expected = "BTC";
-            var baseDataType = (Type) null;
+            var baseDataType = (Type)null;
             var sid = SecurityIdentifier.GenerateBase(baseDataType, symbol, Market.USA);
             Assert.AreEqual(expected, sid.Symbol);
         }
@@ -423,10 +483,7 @@ namespace QuantConnect.Tests.Common.Securities
         [Test]
         public void NegativeStrikePriceRoundTrip()
         {
-            var future = Symbol.CreateFuture(
-                "CL",
-                Market.NYMEX,
-                new DateTime(2020, 5, 20));
+            var future = Symbol.CreateFuture("CL", Market.NYMEX, new DateTime(2020, 5, 20));
 
             var option = Symbol.CreateOption(
                 future,
@@ -434,7 +491,8 @@ namespace QuantConnect.Tests.Common.Securities
                 OptionStyle.American,
                 OptionRight.Call,
                 -50,
-                new DateTime(2020, 4, 16));
+                new DateTime(2020, 4, 16)
+            );
 
             Assert.AreEqual(-50, option.ID.StrikePrice);
 
@@ -447,7 +505,11 @@ namespace QuantConnect.Tests.Common.Securities
         [TestCase(OptionStyle.American, OptionRight.Put, "AAPL 31DSLGKXI01PI|AAPL R735QTJ8XC9X")]
         [TestCase(OptionStyle.European, OptionRight.Call, "AAPL XEOOUQW0JB1I|AAPL R735QTJ8XC9X")]
         [TestCase(OptionStyle.European, OptionRight.Put, "AAPL 31DSP06V7T4FA|AAPL R735QTJ8XC9X")]
-        public void SymbolHashForOptionsBackwardsCompatibilityWholeNumber(OptionStyle style, OptionRight right, string expected)
+        public void SymbolHashForOptionsBackwardsCompatibilityWholeNumber(
+            OptionStyle style,
+            OptionRight right,
+            string expected
+        )
         {
             var equity = Symbol.Create("AAPL", SecurityType.Equity, Market.USA);
             var option = Symbol.CreateOption(
@@ -456,7 +518,8 @@ namespace QuantConnect.Tests.Common.Securities
                 style,
                 right,
                 100m,
-                new DateTime(2020, 5, 21));
+                new DateTime(2020, 5, 21)
+            );
 
             Assert.AreEqual(expected, option.ID.ToString());
             Assert.AreEqual(100m, option.ID.StrikePrice);
@@ -466,7 +529,11 @@ namespace QuantConnect.Tests.Common.Securities
         [TestCase(OptionStyle.American, OptionRight.Put, "AAPL 31DSLGKXHRH2E|AAPL R735QTJ8XC9X")]
         [TestCase(OptionStyle.European, OptionRight.Call, "AAPL XEOOUQW0AQEE|AAPL R735QTJ8XC9X")]
         [TestCase(OptionStyle.European, OptionRight.Put, "AAPL 31DSP06V7KJS6|AAPL R735QTJ8XC9X")]
-        public void SymbolHashForOptionsBackwardsCompatibilityFractionalNumber(OptionStyle style, OptionRight right, string expected)
+        public void SymbolHashForOptionsBackwardsCompatibilityFractionalNumber(
+            OptionStyle style,
+            OptionRight right,
+            string expected
+        )
         {
             var equity = Symbol.Create("AAPL", SecurityType.Equity, Market.USA);
             var option = Symbol.CreateOption(
@@ -475,7 +542,8 @@ namespace QuantConnect.Tests.Common.Securities
                 style,
                 right,
                 0.01m, // strike decimal precision is limited to 4 decimal places only
-                new DateTime(2020, 5, 21));
+                new DateTime(2020, 5, 21)
+            );
 
             Assert.AreEqual(expected, option.ID.ToString());
             Assert.AreEqual(0.01m, option.ID.StrikePrice);
@@ -493,7 +561,8 @@ namespace QuantConnect.Tests.Common.Securities
                     OptionStyle.American,
                     OptionRight.Call,
                     3600.75m, // strike decimal precision is limited to 4 decimal places only
-                    new DateTime(2020, 5, 21));
+                    new DateTime(2020, 5, 21)
+                );
             });
         }
 
@@ -511,7 +580,8 @@ namespace QuantConnect.Tests.Common.Securities
                 OptionStyle.American,
                 OptionRight.Call,
                 strike,
-                new DateTime(2020, 5, 21));
+                new DateTime(2020, 5, 21)
+            );
 
             // The SID specification states that the total width for the properties value
             // is at most 20 digits long. If we overflowed the SID, the strike price can and will
@@ -527,7 +597,7 @@ namespace QuantConnect.Tests.Common.Securities
             Assert.AreEqual(Market.USA, sid.Market);
             Assert.AreEqual(SecurityType.Option, sid.SecurityType);
 
-            Assert.AreEqual(option.ID.Date,sid.Date);
+            Assert.AreEqual(option.ID.Date, sid.Date);
             Assert.AreEqual(option.ID.StrikePrice, sid.StrikePrice);
             Assert.AreEqual(option.ID.OptionRight, sid.OptionRight);
             Assert.AreEqual(option.ID.OptionStyle, sid.OptionStyle);
@@ -552,14 +622,18 @@ namespace QuantConnect.Tests.Common.Securities
                     OptionStyle.American,
                     OptionRight.Call,
                     (decimal)strike, // strike decimal precision is limited to 4 decimal places only
-                    new DateTime(2020, 5, 21));
+                    new DateTime(2020, 5, 21)
+                );
             });
         }
 
         [Test, Ignore("Requires complete option data to validate chain")]
         public void ValidateAAPLOptionChainSecurityIdentifiers()
         {
-            var chainProvider = new BacktestingOptionChainProvider(TestGlobals.DataCacheProvider, TestGlobals.MapFileProvider);
+            var chainProvider = new BacktestingOptionChainProvider(
+                TestGlobals.DataCacheProvider,
+                TestGlobals.MapFileProvider
+            );
             var aapl = Symbol.Create("AAPL", SecurityType.Equity, Market.USA);
             var chains = new HashSet<Symbol>();
             var expectedChains = File.ReadAllLines("TestData/aapl_chain.csv")
@@ -573,10 +647,14 @@ namespace QuantConnect.Tests.Common.Securities
 
             foreach (var date in Time.EachDay(start, end))
             {
-                if (MarketHoursDatabase.FromDataFolder()
+                if (
+                    MarketHoursDatabase
+                        .FromDataFolder()
                         .GetEntry(Market.USA, (string)null, SecurityType.Equity)
-                        .ExchangeHours
-                        .Holidays.Contains(date) || date.DayOfWeek == DayOfWeek.Saturday || date.DayOfWeek == DayOfWeek.Sunday)
+                        .ExchangeHours.Holidays.Contains(date)
+                    || date.DayOfWeek == DayOfWeek.Saturday
+                    || date.DayOfWeek == DayOfWeek.Sunday
+                )
                 {
                     continue;
                 }
@@ -599,16 +677,22 @@ namespace QuantConnect.Tests.Common.Securities
                 fails.Add(chain);
             }
 
-            Assert.AreEqual(0, fails.Count, $"The following option Symbols were not found in the expected chain:    \n{string.Join("\n", fails.Select(x => x.ID.ToString()))}");
-            Assert.IsTrue(expectedChains.All(kvp => kvp.Value), $"The following option Symbols were not loaded:    \n{string.Join("\n", expectedChains.Where(kvp => !kvp.Value).Select(x => x.Key))}");
+            Assert.AreEqual(
+                0,
+                fails.Count,
+                $"The following option Symbols were not found in the expected chain:    \n{string.Join("\n", fails.Select(x => x.ID.ToString()))}"
+            );
+            Assert.IsTrue(
+                expectedChains.All(kvp => kvp.Value),
+                $"The following option Symbols were not loaded:    \n{string.Join("\n", expectedChains.Where(kvp => !kvp.Value).Select(x => x.Key))}"
+            );
         }
 
         [Test]
         public void SortsAccordingToStringRepresentation()
         {
             var sids = Symbols.All.ToList(s => s.ID);
-            var expected = sids
-                .Select(sid => new {symbol = sid, str = sid.ToString()})
+            var expected = sids.Select(sid => new { symbol = sid, str = sid.ToString() })
                 .OrderBy(item => item.str)
                 .ToList(item => item.symbol);
 
@@ -621,35 +705,45 @@ namespace QuantConnect.Tests.Common.Securities
         public void ReturnsExpectedCustomDataType(string symbol, Type expectedDataType)
         {
             SecurityIdentifier.GenerateBaseSymbol(expectedDataType, symbol.Split(".")[0]);
-            var result = SecurityIdentifier.TryGetCustomDataTypeInstance(symbol, out var obtainedDataType);
+            var result = SecurityIdentifier.TryGetCustomDataTypeInstance(
+                symbol,
+                out var obtainedDataType
+            );
 
             Assert.AreEqual(expectedDataType, obtainedDataType);
         }
 
         public static object[] ReturnsExpectedCustomDataTypeTestCases =
         {
-            new object[] {"BTC.Bitcoin", typeof(CustomDataBitcoinAlgorithm.Bitcoin)},
-            new object[] {"AAPL.FundamentalUniverse", typeof(FundamentalUniverse)},
-            new object[] {"AAPL.PlaceHolder", typeof(PlaceHolder)},
-            new object[] {"AAPL.LinkedData", typeof(LinkedData)},
-            new object[] {"AAPL.UnlinkedData", typeof(UnlinkedData)},
-            new object[] {"AAPL.UnlinkedDataTradeBar", typeof(UnlinkedDataTradeBar)},
-            new object[] {"AAPL.IndexedLinkedData", typeof(IndexedLinkedData)},
-            new object[] {"AAPL.IndexedLinkedData2", typeof(IndexedLinkedData2)},
-            new object[] {"AAPL.IntrinioEconomicDataSources", typeof(IntrinioEconomicDataSources)},
-            new object[] {"AAPL.IntrinioEconomicData", typeof(IntrinioEconomicData)},
-            new object[] {"AAPL.FxcmVolume", typeof(FxcmVolume)},
-            new object[] {"AAPL.Tiingo", typeof(Tiingo)},
-            new object[] {"AAPL.TiingoDailyData", typeof(TiingoDailyData)},
-            new object[] {"AAPL.TiingoPrice", typeof(TiingoPrice)},
+            new object[] { "BTC.Bitcoin", typeof(CustomDataBitcoinAlgorithm.Bitcoin) },
+            new object[] { "AAPL.FundamentalUniverse", typeof(FundamentalUniverse) },
+            new object[] { "AAPL.PlaceHolder", typeof(PlaceHolder) },
+            new object[] { "AAPL.LinkedData", typeof(LinkedData) },
+            new object[] { "AAPL.UnlinkedData", typeof(UnlinkedData) },
+            new object[] { "AAPL.UnlinkedDataTradeBar", typeof(UnlinkedDataTradeBar) },
+            new object[] { "AAPL.IndexedLinkedData", typeof(IndexedLinkedData) },
+            new object[] { "AAPL.IndexedLinkedData2", typeof(IndexedLinkedData2) },
+            new object[]
+            {
+                "AAPL.IntrinioEconomicDataSources",
+                typeof(IntrinioEconomicDataSources)
+            },
+            new object[] { "AAPL.IntrinioEconomicData", typeof(IntrinioEconomicData) },
+            new object[] { "AAPL.FxcmVolume", typeof(FxcmVolume) },
+            new object[] { "AAPL.Tiingo", typeof(Tiingo) },
+            new object[] { "AAPL.TiingoDailyData", typeof(TiingoDailyData) },
+            new object[] { "AAPL.TiingoPrice", typeof(TiingoPrice) },
         };
 
         class Container
         {
             public SecurityIdentifier sid;
         }
-        private static List<TestCaseData> ValidSecurityTypes =>
-            (from object value in Enum.GetValues(typeof(SecurityType)) select new TestCaseData((ulong)(0357960000000009900 + (int)value))).ToList();
 
+        private static List<TestCaseData> ValidSecurityTypes =>
+            (
+                from object value in Enum.GetValues(typeof(SecurityType))
+                select new TestCaseData((ulong)(0357960000000009900 + (int)value))
+            ).ToList();
     }
 }

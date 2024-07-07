@@ -13,8 +13,8 @@
  * limitations under the License.
 */
 
-using System.Linq;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace QuantConnect.Securities.Positions
 {
@@ -43,7 +43,11 @@ namespace QuantConnect.Securities.Positions
         /// <param name="currentPositions">The currently grouped positions</param>
         /// <param name="group">The grouped positions when this resolver is able to, otherwise null</param>
         /// <returns>True if this resolver can group the specified positions, otherwise false</returns>
-        public bool TryGroup(IReadOnlyCollection<IPosition> newPositions, PositionGroupCollection currentPositions, out IPositionGroup group)
+        public bool TryGroup(
+            IReadOnlyCollection<IPosition> newPositions,
+            PositionGroupCollection currentPositions,
+            out IPositionGroup group
+        )
         {
             // we can only create default groupings containing a single security
             if (newPositions.Count != 1)
@@ -54,7 +58,11 @@ namespace QuantConnect.Securities.Positions
 
             var key = new PositionGroupKey(_buyingPowerModel, newPositions);
             var position = newPositions.First();
-            group = new PositionGroup(key, position.GetGroupQuantity(), newPositions.ToDictionary(p => p.Symbol));
+            group = new PositionGroup(
+                key,
+                position.GetGroupQuantity(),
+                newPositions.ToDictionary(p => p.Symbol)
+            );
             return true;
         }
 
@@ -65,8 +73,14 @@ namespace QuantConnect.Securities.Positions
         /// <returns>An enumerable of position groups</returns>
         public PositionGroupCollection Resolve(PositionCollection positions)
         {
-            var result = new PositionGroupCollection(positions
-                .Select(position => new PositionGroup(_buyingPowerModel, position.GetGroupQuantity(), position)).ToList()
+            var result = new PositionGroupCollection(
+                positions
+                    .Select(position => new PositionGroup(
+                        _buyingPowerModel,
+                        position.GetGroupQuantity(),
+                        position
+                    ))
+                    .ToList()
             );
 
             positions.Clear();
@@ -87,7 +101,7 @@ namespace QuantConnect.Securities.Positions
         public IEnumerable<IPositionGroup> GetImpactedGroups(
             PositionGroupCollection groups,
             IReadOnlyCollection<IPosition> positions
-            )
+        )
         {
             var seen = new HashSet<PositionGroupKey>();
             foreach (var position in positions)

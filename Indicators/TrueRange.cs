@@ -33,18 +33,14 @@ namespace QuantConnect.Indicators
         /// Initializes a new instance of the <see cref="TrueRange"/> class using the specified name.
         /// </summary>
         public TrueRange()
-            : base("TR")
-        {
-        }
+            : base("TR") { }
 
         /// <summary>
         /// Initializes a new instance of the <see cref="TrueRange"/> class using the specified name.
         /// </summary>
         /// <param name="name">The name of this indicator</param>
         public TrueRange(string name)
-            : base(name)
-        {
-        }
+            : base(name) { }
 
         /// <summary>
         /// Gets a flag indicating when this indicator is ready and fully initialized
@@ -70,7 +66,7 @@ namespace QuantConnect.Indicators
             }
 
             var greatest = input.High - input.Low;
-            
+
             var value2 = Math.Abs(_previousInput.Close - input.High);
             if (value2 > greatest)
                 greatest = value2;

@@ -55,7 +55,13 @@ namespace QuantConnect.Brokerages
         /// <param name="bestBidSize">>The newly updated best bid size</param>
         /// <param name="bestAskPrice">The newly updated best ask price</param>
         /// <param name="bestAskSize">The newly updated best ask size</param>
-        public BestBidAskUpdatedEventArgs(Symbol symbol, decimal bestBidPrice, decimal bestBidSize, decimal bestAskPrice, decimal bestAskSize)
+        public BestBidAskUpdatedEventArgs(
+            Symbol symbol,
+            decimal bestBidPrice,
+            decimal bestBidSize,
+            decimal bestAskPrice,
+            decimal bestAskSize
+        )
         {
             Symbol = symbol;
             BestBidPrice = bestBidPrice;

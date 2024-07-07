@@ -60,10 +60,12 @@ namespace QuantConnect.Algorithm.CSharp
                 LimitOrder("IBM", 10, price * 0.1m);
                 StopMarketOrder("IBM", 10, price / 0.1m);
             }
-            
+
             if (_beta.Current.Value < 0m || _beta.Current.Value > 2.80m)
             {
-                throw new RegressionTestException($"_beta value was expected to be between 0 and 2.80 but was {_beta.Current.Value}");
+                throw new RegressionTestException(
+                    $"_beta value was expected to be between 0 and 2.80 but was {_beta.Current.Value}"
+                );
             }
 
             Log($"Beta between IBM and SPY is: {_beta.Current.Value}");
@@ -77,7 +79,11 @@ namespace QuantConnect.Algorithm.CSharp
 
             if (order.Status == OrderStatus.Filled)
             {
-                if (order.Type == OrderType.Limit && Math.Abs(_beta.Current.Value - 1) < 0.2m && goUpwards)
+                if (
+                    order.Type == OrderType.Limit
+                    && Math.Abs(_beta.Current.Value - 1) < 0.2m
+                    && goUpwards
+                )
                 {
                     Transactions.CancelOpenOrders(order.Symbol);
                 }
@@ -117,35 +123,36 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// This is used by the regression test system to indicate what the expected statistics are from running the algorithm
         /// </summary>
-        public Dictionary<string, string> ExpectedStatistics => new Dictionary<string, string>
-        {
-            {"Total Orders", "3"},
-            {"Average Win", "0%"},
-            {"Average Loss", "0%"},
-            {"Compounding Annual Return", "12.939%"},
-            {"Drawdown", "0.300%"},
-            {"Expectancy", "0"},
-            {"Start Equity", "10000"},
-            {"End Equity", "10028.93"},
-            {"Net Profit", "0.289%"},
-            {"Sharpe Ratio", "3.924"},
-            {"Sortino Ratio", "0"},
-            {"Probabilistic Sharpe Ratio", "68.349%"},
-            {"Loss Rate", "0%"},
-            {"Win Rate", "0%"},
-            {"Profit-Loss Ratio", "0"},
-            {"Alpha", "0.028"},
-            {"Beta", "0.122"},
-            {"Annual Standard Deviation", "0.024"},
-            {"Annual Variance", "0.001"},
-            {"Information Ratio", "-3.181"},
-            {"Tracking Error", "0.142"},
-            {"Treynor Ratio", "0.78"},
-            {"Total Fees", "$1.00"},
-            {"Estimated Strategy Capacity", "$35000000.00"},
-            {"Lowest Capacity Asset", "IBM R735QTJ8XC9X"},
-            {"Portfolio Turnover", "1.51%"},
-            {"OrderListHash", "1db1ce949db995bba20ed96ea5e2438a"}
-        };
+        public Dictionary<string, string> ExpectedStatistics =>
+            new Dictionary<string, string>
+            {
+                { "Total Orders", "3" },
+                { "Average Win", "0%" },
+                { "Average Loss", "0%" },
+                { "Compounding Annual Return", "12.939%" },
+                { "Drawdown", "0.300%" },
+                { "Expectancy", "0" },
+                { "Start Equity", "10000" },
+                { "End Equity", "10028.93" },
+                { "Net Profit", "0.289%" },
+                { "Sharpe Ratio", "3.924" },
+                { "Sortino Ratio", "0" },
+                { "Probabilistic Sharpe Ratio", "68.349%" },
+                { "Loss Rate", "0%" },
+                { "Win Rate", "0%" },
+                { "Profit-Loss Ratio", "0" },
+                { "Alpha", "0.028" },
+                { "Beta", "0.122" },
+                { "Annual Standard Deviation", "0.024" },
+                { "Annual Variance", "0.001" },
+                { "Information Ratio", "-3.181" },
+                { "Tracking Error", "0.142" },
+                { "Treynor Ratio", "0.78" },
+                { "Total Fees", "$1.00" },
+                { "Estimated Strategy Capacity", "$35000000.00" },
+                { "Lowest Capacity Asset", "IBM R735QTJ8XC9X" },
+                { "Portfolio Turnover", "1.51%" },
+                { "OrderListHash", "1db1ce949db995bba20ed96ea5e2438a" }
+            };
     }
 }

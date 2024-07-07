@@ -28,7 +28,9 @@ namespace QuantConnect.Algorithm.CSharp
     /// Regression algorithm to test universe additions and removals with open positions
     /// </summary>
     /// <meta name="tag" content="regression test" />
-    public class InceptionDateSelectionRegressionAlgorithm : QCAlgorithm, IRegressionAlgorithmDefinition
+    public class InceptionDateSelectionRegressionAlgorithm
+        : QCAlgorithm,
+            IRegressionAlgorithmDefinition
     {
         private SecurityChanges _changes = SecurityChanges.None;
 
@@ -44,9 +46,19 @@ namespace QuantConnect.Algorithm.CSharp
             UniverseSettings.Resolution = Resolution.Hour;
 
             // select IBM once a week, empty universe the other days
-            AddUniverseSelection(new CustomUniverseSelectionModel("my-custom-universe", dt => dt.Day % 7 == 0 ? new List<string> { "IBM" } : Enumerable.Empty<string>()));
+            AddUniverseSelection(
+                new CustomUniverseSelectionModel(
+                    "my-custom-universe",
+                    dt => dt.Day % 7 == 0 ? new List<string> { "IBM" } : Enumerable.Empty<string>()
+                )
+            );
             // Adds SPY 5 days after StartDate and keep it in Universe
-            AddUniverseSelection(new InceptionDateUniverseSelectionModel("spy-inception", new Dictionary<string, DateTime> {{"SPY", StartDate.AddDays(5)}}));
+            AddUniverseSelection(
+                new InceptionDateUniverseSelectionModel(
+                    "spy-inception",
+                    new Dictionary<string, DateTime> { { "SPY", StartDate.AddDays(5) } }
+                )
+            );
         }
 
         /// <summary>
@@ -55,7 +67,8 @@ namespace QuantConnect.Algorithm.CSharp
         /// <param name="slice">TradeBars dictionary object keyed by symbol containing the stock data</param>
         public override void OnData(Slice slice)
         {
-            if (_changes == SecurityChanges.None) return;
+            if (_changes == SecurityChanges.None)
+                return;
 
             // we'll simply go long each security we added to the universe
             foreach (var security in _changes.AddedSecurities)
@@ -109,35 +122,36 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// This is used by the regression test system to indicate what the expected statistics are from running the algorithm
         /// </summary>
-        public Dictionary<string, string> ExpectedStatistics => new Dictionary<string, string>
-        {
-            {"Total Orders", "9"},
-            {"Average Win", "0.11%"},
-            {"Average Loss", "-0.24%"},
-            {"Compounding Annual Return", "28.358%"},
-            {"Drawdown", "1.200%"},
-            {"Expectancy", "-0.267"},
-            {"Start Equity", "100000"},
-            {"End Equity", "102119.68"},
-            {"Net Profit", "2.120%"},
-            {"Sharpe Ratio", "3.201"},
-            {"Sortino Ratio", "5.22"},
-            {"Probabilistic Sharpe Ratio", "76.344%"},
-            {"Loss Rate", "50%"},
-            {"Win Rate", "50%"},
-            {"Profit-Loss Ratio", "0.47"},
-            {"Alpha", "0.015"},
-            {"Beta", "0.478"},
-            {"Annual Standard Deviation", "0.058"},
-            {"Annual Variance", "0.003"},
-            {"Information Ratio", "-2.771"},
-            {"Tracking Error", "0.063"},
-            {"Treynor Ratio", "0.392"},
-            {"Total Fees", "$16.73"},
-            {"Estimated Strategy Capacity", "$7000000.00"},
-            {"Lowest Capacity Asset", "IBM R735QTJ8XC9X"},
-            {"Portfolio Turnover", "14.45%"},
-            {"OrderListHash", "2ad4096d1a84660aca48ce080141cd23"}
-        };
+        public Dictionary<string, string> ExpectedStatistics =>
+            new Dictionary<string, string>
+            {
+                { "Total Orders", "9" },
+                { "Average Win", "0.11%" },
+                { "Average Loss", "-0.24%" },
+                { "Compounding Annual Return", "28.358%" },
+                { "Drawdown", "1.200%" },
+                { "Expectancy", "-0.267" },
+                { "Start Equity", "100000" },
+                { "End Equity", "102119.68" },
+                { "Net Profit", "2.120%" },
+                { "Sharpe Ratio", "3.201" },
+                { "Sortino Ratio", "5.22" },
+                { "Probabilistic Sharpe Ratio", "76.344%" },
+                { "Loss Rate", "50%" },
+                { "Win Rate", "50%" },
+                { "Profit-Loss Ratio", "0.47" },
+                { "Alpha", "0.015" },
+                { "Beta", "0.478" },
+                { "Annual Standard Deviation", "0.058" },
+                { "Annual Variance", "0.003" },
+                { "Information Ratio", "-2.771" },
+                { "Tracking Error", "0.063" },
+                { "Treynor Ratio", "0.392" },
+                { "Total Fees", "$16.73" },
+                { "Estimated Strategy Capacity", "$7000000.00" },
+                { "Lowest Capacity Asset", "IBM R735QTJ8XC9X" },
+                { "Portfolio Turnover", "14.45%" },
+                { "OrderListHash", "2ad4096d1a84660aca48ce080141cd23" }
+            };
     }
 }

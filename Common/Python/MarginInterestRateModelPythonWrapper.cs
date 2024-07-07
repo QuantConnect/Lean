@@ -21,22 +21,24 @@ namespace QuantConnect.Python
     /// <summary>
     /// Wraps a <see cref="PyObject"/> object that represents a security's margin interest rate model
     /// </summary>
-    public class MarginInterestRateModelPythonWrapper : BasePythonWrapper<IMarginInterestRateModel>, IMarginInterestRateModel
+    public class MarginInterestRateModelPythonWrapper
+        : BasePythonWrapper<IMarginInterestRateModel>,
+            IMarginInterestRateModel
     {
         /// <summary>
         /// Constructor for initializing the <see cref="MarginInterestRateModelPythonWrapper"/> class with wrapped <see cref="PyObject"/> object
         /// </summary>
         /// <param name="model">Represents a security's model of buying power</param>
         public MarginInterestRateModelPythonWrapper(PyObject model)
-            : base(model)
-        {
-        }
+            : base(model) { }
 
         /// <summary>
         /// Apply margin interest rates to the portfolio
         /// </summary>
         /// <param name="marginInterestRateParameters">The parameters to use</param>
-        public void ApplyMarginInterestRate(MarginInterestRateParameters marginInterestRateParameters)
+        public void ApplyMarginInterestRate(
+            MarginInterestRateParameters marginInterestRateParameters
+        )
         {
             InvokeMethod(nameof(ApplyMarginInterestRate), marginInterestRateParameters);
         }

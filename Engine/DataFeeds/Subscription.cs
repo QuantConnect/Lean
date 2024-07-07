@@ -47,9 +47,8 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         /// <summary>
         /// Gets the universe for this subscription
         /// </summary>
-        public IEnumerable<Universe> Universes => SubscriptionRequests
-            .Where(x => x.Universe != null)
-            .Select(x => x.Universe);
+        public IEnumerable<Universe> Universes =>
+            SubscriptionRequests.Where(x => x.Universe != null).Select(x => x.Universe);
 
         /// <summary>
         /// Gets the security this subscription points to
@@ -110,7 +109,8 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         public Subscription(
             SubscriptionRequest subscriptionRequest,
             IEnumerator<SubscriptionData> enumerator,
-            TimeZoneOffsetProvider timeZoneOffsetProvider)
+            TimeZoneOffsetProvider timeZoneOffsetProvider
+        )
         {
             SubscriptionRequests = new List<SubscriptionRequest> { subscriptionRequest };
             _enumerator = enumerator;
@@ -131,18 +131,21 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         /// <param name="subscriptionRequest">The <see cref="SubscriptionRequest"/> to add</param>
         public bool AddSubscriptionRequest(SubscriptionRequest subscriptionRequest)
         {
-            if (IsUniverseSelectionSubscription
-                || subscriptionRequest.IsUniverseSubscription)
+            if (IsUniverseSelectionSubscription || subscriptionRequest.IsUniverseSubscription)
             {
-                throw new Exception("Subscription.AddSubscriptionRequest(): Universe selection" +
-                    " subscriptions should not have more than 1 SubscriptionRequest");
+                throw new Exception(
+                    "Subscription.AddSubscriptionRequest(): Universe selection"
+                        + " subscriptions should not have more than 1 SubscriptionRequest"
+                );
             }
 
             // this shouldn't happen but just in case..
             if (subscriptionRequest.Configuration != Configuration)
             {
-                throw new Exception("Subscription.AddSubscriptionRequest(): Requesting to add" +
-                    "a different SubscriptionDataConfig");
+                throw new Exception(
+                    "Subscription.AddSubscriptionRequest(): Requesting to add"
+                        + "a different SubscriptionDataConfig"
+                );
             }
 
             // Only allow one subscription request per universe
@@ -169,13 +172,14 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             {
                 var subscriptionRequests = SubscriptionRequests;
                 SubscriptionRequests = new List<SubscriptionRequest>();
-                removedUniverses = subscriptionRequests.Where(x => x.Universe != null)
+                removedUniverses = subscriptionRequests
+                    .Where(x => x.Universe != null)
                     .Select(x => x.Universe);
             }
             else
             {
                 SubscriptionRequests.RemoveAll(x => x.Universe == universe);
-                removedUniverses = new[] {universe};
+                removedUniverses = new[] { universe };
             }
 
             var emptySubscription = !SubscriptionRequests.Any();

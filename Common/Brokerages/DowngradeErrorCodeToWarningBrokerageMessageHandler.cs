@@ -13,8 +13,8 @@
  * limitations under the License.
 */
 
-using System.Linq;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace QuantConnect.Brokerages
 {
@@ -31,7 +31,10 @@ namespace QuantConnect.Brokerages
         /// </summary>
         /// <param name="brokerageMessageHandler">The brokerage message handler to be wrapped</param>
         /// <param name="errorCodesToIgnore">The error codes to convert to warning messages</param>
-        public DowngradeErrorCodeToWarningBrokerageMessageHandler(IBrokerageMessageHandler brokerageMessageHandler, string[] errorCodesToIgnore)
+        public DowngradeErrorCodeToWarningBrokerageMessageHandler(
+            IBrokerageMessageHandler brokerageMessageHandler,
+            string[] errorCodesToIgnore
+        )
         {
             _brokerageMessageHandler = brokerageMessageHandler;
             _errorCodesToIgnore = errorCodesToIgnore.ToHashSet();
@@ -43,10 +46,17 @@ namespace QuantConnect.Brokerages
         /// <param name="message">The message to be handled</param>
         public void HandleMessage(BrokerageMessageEvent message)
         {
-            if (message.Type == BrokerageMessageType.Error && _errorCodesToIgnore.Contains(message.Code))
+            if (
+                message.Type == BrokerageMessageType.Error
+                && _errorCodesToIgnore.Contains(message.Code)
+            )
             {
                 // rewrite the ignored message as a warning message
-                message = new BrokerageMessageEvent(BrokerageMessageType.Warning, message.Code, message.Message);
+                message = new BrokerageMessageEvent(
+                    BrokerageMessageType.Warning,
+                    message.Code,
+                    message.Message
+                );
             }
 
             _brokerageMessageHandler.HandleMessage(message);

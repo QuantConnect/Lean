@@ -41,14 +41,19 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         public static Subscription Create(
             SubscriptionRequest request,
             IEnumerator<BaseData> enumerator,
-            bool dailyStrictEndTimeEnabled)
+            bool dailyStrictEndTimeEnabled
+        )
         {
             if (enumerator == null)
             {
                 return GetEndedSubscription(request);
             }
             var exchangeHours = request.Security.Exchange.Hours;
-            var timeZoneOffsetProvider = new TimeZoneOffsetProvider(request.Configuration.ExchangeTimeZone, request.StartTimeUtc, request.EndTimeUtc);
+            var timeZoneOffsetProvider = new TimeZoneOffsetProvider(
+                request.Configuration.ExchangeTimeZone,
+                request.StartTimeUtc,
+                request.EndTimeUtc
+            );
             var dataEnumerator = new SubscriptionDataEnumerator(
                 request.Configuration,
                 exchangeHours,
@@ -74,15 +79,20 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             IEnumerator<BaseData> enumerator,
             IFactorFileProvider factorFileProvider,
             bool enablePriceScale,
-            bool dailyStrictEndTimeEnabled)
+            bool dailyStrictEndTimeEnabled
+        )
         {
-            if(enumerator == null)
+            if (enumerator == null)
             {
                 return GetEndedSubscription(request);
             }
             var exchangeHours = request.Security.Exchange.Hours;
             var enqueueable = new EnqueueableEnumerator<SubscriptionData>(true);
-            var timeZoneOffsetProvider = new TimeZoneOffsetProvider(request.Configuration.ExchangeTimeZone, request.StartTimeUtc, request.EndTimeUtc);
+            var timeZoneOffsetProvider = new TimeZoneOffsetProvider(
+                request.Configuration.ExchangeTimeZone,
+                request.StartTimeUtc,
+                request.EndTimeUtc
+            );
             var subscription = new Subscription(request, enqueueable, timeZoneOffsetProvider);
             var config = subscription.Configuration;
             enablePriceScale = enablePriceScale && config.PricesShouldBeScaled();
@@ -106,7 +116,10 @@ namespace QuantConnect.Lean.Engine.DataFeeds
 
                         // Use our config filter to see if we should emit this
                         // This currently catches Auxiliary data that we don't want to emit
-                        if (data != null && !config.ShouldEmitData(data, request.IsUniverseSubscription))
+                        if (
+                            data != null
+                            && !config.ShouldEmitData(data, request.IsUniverseSubscription)
+                        )
                         {
                             continue;
                         }
@@ -118,27 +131,42 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                         var requestMode = config.DataNormalizationMode;
                         if (config.SecurityType == SecurityType.Equity)
                         {
-                            requestMode = requestMode != DataNormalizationMode.Raw ? requestMode : DataNormalizationMode.Adjusted;
+                            requestMode =
+                                requestMode != DataNormalizationMode.Raw
+                                    ? requestMode
+                                    : DataNormalizationMode.Adjusted;
                         }
 
                         var priceScaleFrontierDate = data.GetUpdatePriceScaleFrontier().Date;
 
                         // We update our price scale factor when the date changes for non fill forward bars or if we haven't initialized yet.
                         // We don't take into account auxiliary data because we don't scale it and because the underlying price data could be fill forwarded
-                        if (enablePriceScale && priceScaleFrontierDate > lastTradableDate && data.DataType != MarketDataType.Auxiliary && (!data.IsFillForward || lastTradableDate == DateTime.MinValue))
+                        if (
+                            enablePriceScale
+                            && priceScaleFrontierDate > lastTradableDate
+                            && data.DataType != MarketDataType.Auxiliary
+                            && (!data.IsFillForward || lastTradableDate == DateTime.MinValue)
+                        )
                         {
                             var factorFile = factorFileProvider.Get(request.Configuration.Symbol);
                             lastTradableDate = priceScaleFrontierDate;
-                            request.Configuration.PriceScaleFactor = factorFile.GetPriceScale(lastTradableDate, requestMode, config.ContractDepthOffset, config.DataMappingMode);
+                            request.Configuration.PriceScaleFactor = factorFile.GetPriceScale(
+                                lastTradableDate,
+                                requestMode,
+                                config.ContractDepthOffset,
+                                config.DataMappingMode
+                            );
                         }
 
-                        SubscriptionData subscriptionData = SubscriptionData.Create(dailyStrictEndTimeEnabled,
+                        SubscriptionData subscriptionData = SubscriptionData.Create(
+                            dailyStrictEndTimeEnabled,
                             config,
                             exchangeHours,
                             subscription.OffsetProvider,
                             data,
                             requestMode,
-                            enablePriceScale ? request.Configuration.PriceScaleFactor : null);
+                            enablePriceScale ? request.Configuration.PriceScaleFactor : null
+                        );
 
                         // drop the data into the back of the enqueueable
                         enqueueable.Enqueue(subscriptionData);
@@ -153,7 +181,10 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                 }
                 catch (Exception exception)
                 {
-                    Log.Error(exception, $"Subscription worker task exception {request.Configuration}.");
+                    Log.Error(
+                        exception,
+                        $"Subscription worker task exception {request.Configuration}."
+                    );
                 }
 
                 // we made it here because MoveNext returned false or we exploded, stop the enqueueable
@@ -163,7 +194,9 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                 return false;
             };
 
-            WeightedWorkScheduler.Instance.QueueWork(config.Symbol, produce,
+            WeightedWorkScheduler.Instance.QueueWork(
+                config.Symbol,
+                produce,
                 // if the subscription finished we return 0, so the work is prioritized and gets removed
                 () =>
                 {

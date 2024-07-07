@@ -28,9 +28,12 @@ namespace QuantConnect.Securities
         /// <summary>
         /// Provides a reference to an instance of <see cref="IRegisteredSecurityDataTypesProvider"/> that contains no registered types
         /// </summary>
-        public static readonly IRegisteredSecurityDataTypesProvider Null = new RegisteredSecurityDataTypesProvider();
+        public static readonly IRegisteredSecurityDataTypesProvider Null =
+            new RegisteredSecurityDataTypesProvider();
 
-        private readonly Dictionary<string, Type> _types = new Dictionary<string, Type>(StringComparer.OrdinalIgnoreCase);
+        private readonly Dictionary<string, Type> _types = new Dictionary<string, Type>(
+            StringComparer.OrdinalIgnoreCase
+        );
 
         /// <summary>
         /// Registers the specified type w/ the provider
@@ -47,7 +50,11 @@ namespace QuantConnect.Securities
                     {
                         // shouldn't happen but we want to know if it does
                         throw new InvalidOperationException(
-                            Messages.RegisteredSecurityDataTypesProvider.TwoDifferentTypesDetectedForTheSameTypeName(type, existingType));
+                            Messages.RegisteredSecurityDataTypesProvider.TwoDifferentTypesDetectedForTheSameTypeName(
+                                type,
+                                existingType
+                            )
+                        );
                     }
                     return true;
                 }

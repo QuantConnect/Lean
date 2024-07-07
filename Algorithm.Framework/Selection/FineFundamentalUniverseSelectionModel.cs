@@ -38,7 +38,8 @@ namespace QuantConnect.Algorithm.Framework.Selection
         public FineFundamentalUniverseSelectionModel(
             Func<IEnumerable<CoarseFundamental>, IEnumerable<Symbol>> coarseSelector,
             Func<IEnumerable<FineFundamental>, IEnumerable<Symbol>> fineSelector,
-            UniverseSettings universeSettings = null)
+            UniverseSettings universeSettings = null
+        )
             : base(true, universeSettings)
         {
             _coarseSelector = coarseSelector;
@@ -55,13 +56,15 @@ namespace QuantConnect.Algorithm.Framework.Selection
             PyObject coarseSelector,
             PyObject fineSelector,
             UniverseSettings universeSettings = null
-            )
+        )
             : base(true, universeSettings)
         {
             Func<IEnumerable<FineFundamental>, object> fineFunc;
             Func<IEnumerable<CoarseFundamental>, object> coarseFunc;
-            if (fineSelector.TryConvertToDelegate(out fineFunc) &&
-                coarseSelector.TryConvertToDelegate(out coarseFunc))
+            if (
+                fineSelector.TryConvertToDelegate(out fineFunc)
+                && coarseSelector.TryConvertToDelegate(out coarseFunc)
+            )
             {
                 _fineSelector = fineFunc.ConvertToUniverseSelectionSymbolDelegate();
                 _coarseSelector = coarseFunc.ConvertToUniverseSelectionSymbolDelegate();
@@ -69,13 +72,19 @@ namespace QuantConnect.Algorithm.Framework.Selection
         }
 
         /// <inheritdoc />
-        public override IEnumerable<Symbol> SelectCoarse(QCAlgorithm algorithm, IEnumerable<CoarseFundamental> coarse)
+        public override IEnumerable<Symbol> SelectCoarse(
+            QCAlgorithm algorithm,
+            IEnumerable<CoarseFundamental> coarse
+        )
         {
             return _coarseSelector(coarse);
         }
 
         /// <inheritdoc />
-        public override IEnumerable<Symbol> SelectFine(QCAlgorithm algorithm, IEnumerable<FineFundamental> fine)
+        public override IEnumerable<Symbol> SelectFine(
+            QCAlgorithm algorithm,
+            IEnumerable<FineFundamental> fine
+        )
         {
             return _fineSelector(fine);
         }

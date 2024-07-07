@@ -14,21 +14,23 @@
 */
 
 using System;
-using System.Linq;
 using System.Collections;
-using QuantConnect.Interfaces;
 using System.Collections.Generic;
+using System.Linq;
+using QuantConnect.Interfaces;
 
 namespace QuantConnect.Algorithm.Framework.Portfolio
 {
     /// <summary>
     /// Provides a collection for managing <see cref="IPortfolioTarget"/>s for each symbol
     /// </summary>
-    public class PortfolioTargetCollection : ICollection<IPortfolioTarget>, IDictionary<Symbol, IPortfolioTarget>
+    public class PortfolioTargetCollection
+        : ICollection<IPortfolioTarget>,
+            IDictionary<Symbol, IPortfolioTarget>
     {
         private List<IPortfolioTarget> _enumerable;
         private List<KeyValuePair<Symbol, IPortfolioTarget>> _kvpEnumerable;
-        private readonly Dictionary<Symbol, IPortfolioTarget> _targets = new ();
+        private readonly Dictionary<Symbol, IPortfolioTarget> _targets = new();
 
         /// <summary>
         /// Gets the number of targets in this collection
@@ -363,7 +365,9 @@ namespace QuantConnect.Algorithm.Framework.Portfolio
         /// Gets an enumerator to iterator over the symbol/target key value pairs in this collection.
         /// </summary>
         /// <returns>Symbol/target key value pair enumerator</returns>
-        IEnumerator<KeyValuePair<Symbol, IPortfolioTarget>> IEnumerable<KeyValuePair<Symbol, IPortfolioTarget>>.GetEnumerator()
+        IEnumerator<KeyValuePair<Symbol, IPortfolioTarget>> IEnumerable<
+            KeyValuePair<Symbol, IPortfolioTarget>
+        >.GetEnumerator()
         {
             var result = _kvpEnumerable;
             if (result == null)

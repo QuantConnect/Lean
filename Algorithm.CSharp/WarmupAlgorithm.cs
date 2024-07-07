@@ -31,13 +31,14 @@ namespace QuantConnect.Algorithm.CSharp
         private string _symbol = "SPY";
         private const int FastPeriod = 60;
         private const int SlowPeriod = 3600;
-        private ExponentialMovingAverage _fast, _slow;
+        private ExponentialMovingAverage _fast,
+            _slow;
 
         public override void Initialize()
         {
-            SetStartDate(2013, 10, 08);  //Set Start Date
-            SetEndDate(2013, 10, 11);    //Set End Date
-            SetCash(100000);             //Set Strategy Cash
+            SetStartDate(2013, 10, 08); //Set Start Date
+            SetEndDate(2013, 10, 11); //Set End Date
+            SetCash(100000); //Set Strategy Cash
             // Find more symbols here: http://quantconnect.com/data
             AddSecurity(SecurityType.Equity, _symbol, Resolution.Second);
 
@@ -46,6 +47,7 @@ namespace QuantConnect.Algorithm.CSharp
 
             SetWarmup(SlowPeriod);
         }
+
         /// <summary>
         /// OnData event is the primary entry point for your algorithm. Each new data point will be pumped in here.
         /// </summary>

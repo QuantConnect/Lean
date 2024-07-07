@@ -15,10 +15,10 @@
 */
 
 using System;
-using NodaTime;
-using QuantConnect.Data;
 using System.Collections;
 using System.Collections.Generic;
+using NodaTime;
+using QuantConnect.Data;
 
 namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
 {
@@ -50,11 +50,13 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
         /// <param name="frontierTimeProvider"></param>
         /// <param name="scheduleTimeZone"></param>
         /// <param name="startTime">the underlying request start time</param>
-        public ScheduledEnumerator(IEnumerator<BaseData> underlyingEnumerator,
+        public ScheduledEnumerator(
+            IEnumerator<BaseData> underlyingEnumerator,
             IEnumerable<DateTime> scheduledTimes,
             ITimeProvider frontierTimeProvider,
             DateTimeZone scheduleTimeZone,
-            DateTime startTime)
+            DateTime startTime
+        )
         {
             _scheduleTimeZone = scheduleTimeZone;
             _frontierTimeProvider = frontierTimeProvider;
@@ -81,7 +83,10 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
             // lets get our candidate data point to emit
             if (_underlyingCandidateDataPoint == null)
             {
-                if (_underlyingEnumerator.Current != null && _underlyingEnumerator.Current.EndTime <= _scheduledTimes.Current)
+                if (
+                    _underlyingEnumerator.Current != null
+                    && _underlyingEnumerator.Current.EndTime <= _scheduledTimes.Current
+                )
                 {
                     _underlyingCandidateDataPoint = _underlyingEnumerator.Current;
                 }
@@ -94,8 +99,10 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
             }
 
             // lets try to get a better candidate
-            if (_underlyingEnumerator.Current == null
-                || _underlyingEnumerator.Current.EndTime < _scheduledTimes.Current)
+            if (
+                _underlyingEnumerator.Current == null
+                || _underlyingEnumerator.Current.EndTime < _scheduledTimes.Current
+            )
             {
                 bool pullAgain;
                 do
@@ -132,10 +139,12 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
                 } while (pullAgain);
             }
 
-            if (_underlyingCandidateDataPoint != null
-            // if we are at or past the schedule time we try to emit, in backtest this emits right away, since time is data driven, in live though
-            // we don't emit right away because the underlying might provide us with a newer data point
-                && _scheduledTimes.Current.ConvertToUtc(_scheduleTimeZone) <= GetUtcNow())
+            if (
+                _underlyingCandidateDataPoint != null
+                // if we are at or past the schedule time we try to emit, in backtest this emits right away, since time is data driven, in live though
+                // we don't emit right away because the underlying might provide us with a newer data point
+                && _scheduledTimes.Current.ConvertToUtc(_scheduleTimeZone) <= GetUtcNow()
+            )
             {
                 Current = _underlyingCandidateDataPoint;
                 // we align the data endtime with the schedule, we respect the schedule above the data time. In backtesting,
@@ -190,8 +199,11 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
             do
             {
                 _scheduledTimesEnded = !_scheduledTimes.MoveNext();
-            }
-            while (!_scheduledTimesEnded && frontier.HasValue && _scheduledTimes.Current < frontier.Value);
+            } while (
+                !_scheduledTimesEnded
+                && frontier.HasValue
+                && _scheduledTimes.Current < frontier.Value
+            );
         }
     }
 }

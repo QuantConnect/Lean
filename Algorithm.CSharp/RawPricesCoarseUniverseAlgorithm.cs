@@ -13,12 +13,12 @@
  * limitations under the License.
 */
 
+using System.Collections.Generic;
+using System.Linq;
 using QuantConnect.Data.UniverseSelection;
 using QuantConnect.Orders;
 using QuantConnect.Orders.Fees;
 using QuantConnect.Securities;
-using System.Collections.Generic;
-using System.Linq;
 
 namespace QuantConnect.Algorithm.CSharp
 {
@@ -53,7 +53,7 @@ namespace QuantConnect.Algorithm.CSharp
         }
 
         /// <summary>
-        /// Initialize the security with raw prices and zero fees 
+        /// Initialize the security with raw prices and zero fees
         /// </summary>
         /// <param name="security">Security which characteristics we want to change</param>
         private void CustomSecurityInitializer(Security security)
@@ -63,7 +63,9 @@ namespace QuantConnect.Algorithm.CSharp
         }
 
         // sort the data by daily dollar volume and take the top 'NumberOfSymbols'
-        public static IEnumerable<Symbol> CoarseSelectionFunction(IEnumerable<CoarseFundamental> coarse)
+        public static IEnumerable<Symbol> CoarseSelectionFunction(
+            IEnumerable<CoarseFundamental> coarse
+        )
         {
             // sort descending by daily dollar volume
             var sortedByDollarVolume = coarse.OrderByDescending(x => x.DollarVolume);

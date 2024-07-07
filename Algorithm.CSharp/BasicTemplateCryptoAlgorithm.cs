@@ -16,11 +16,11 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using QuantConnect.Data;
 using QuantConnect.Brokerages;
+using QuantConnect.Data;
 using QuantConnect.Indicators;
-using QuantConnect.Orders;
 using QuantConnect.Interfaces;
+using QuantConnect.Orders;
 
 namespace QuantConnect.Algorithm.CSharp
 {
@@ -82,10 +82,12 @@ namespace QuantConnect.Algorithm.CSharp
         /// <param name="slice">Slice object keyed by symbol containing the stock data</param>
         public override void OnData(Slice slice)
         {
-            if (Portfolio.CashBook["EUR"].ConversionRate == 0
+            if (
+                Portfolio.CashBook["EUR"].ConversionRate == 0
                 || Portfolio.CashBook["BTC"].ConversionRate == 0
                 || Portfolio.CashBook["ETH"].ConversionRate == 0
-                || Portfolio.CashBook["LTC"].ConversionRate == 0)
+                || Portfolio.CashBook["LTC"].ConversionRate == 0
+            )
             {
                 Log($"EUR conversion rate: {Portfolio.CashBook["EUR"].ConversionRate}");
                 Log($"BTC conversion rate: {Portfolio.CashBook["BTC"].ConversionRate}");
@@ -114,9 +116,12 @@ namespace QuantConnect.Algorithm.CSharp
             {
                 // Get current USD available, subtracting amount reserved for buy open orders
                 var usdTotal = Portfolio.CashBook["USD"].Amount;
-                var usdReserved = Transactions.GetOpenOrders(x => x.Direction == OrderDirection.Buy && x.Type == OrderType.Limit)
+                var usdReserved = Transactions
+                    .GetOpenOrders(x =>
+                        x.Direction == OrderDirection.Buy && x.Type == OrderType.Limit
+                    )
                     .Where(x => x.Symbol == "BTCUSD" || x.Symbol == "ETHUSD")
-                    .Sum(x => x.Quantity * ((LimitOrder) x).LimitPrice);
+                    .Sum(x => x.Quantity * ((LimitOrder)x).LimitPrice);
                 var usdAvailable = usdTotal - usdReserved;
 
                 // Submit a marketable buy limit order for ETH at 1% above the current price
@@ -216,35 +221,36 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// This is used by the regression test system to indicate what the expected statistics are from running the algorithm
         /// </summary>
-        public Dictionary<string, string> ExpectedStatistics => new Dictionary<string, string>
-        {
-            {"Total Orders", "12"},
-            {"Average Win", "0%"},
-            {"Average Loss", "0%"},
-            {"Compounding Annual Return", "0%"},
-            {"Drawdown", "0%"},
-            {"Expectancy", "0"},
-            {"Start Equity", "31588.24"},
-            {"End Equity", "30866.71"},
-            {"Net Profit", "0%"},
-            {"Sharpe Ratio", "0"},
-            {"Sortino Ratio", "0"},
-            {"Probabilistic Sharpe Ratio", "0%"},
-            {"Loss Rate", "0%"},
-            {"Win Rate", "0%"},
-            {"Profit-Loss Ratio", "0"},
-            {"Alpha", "0"},
-            {"Beta", "0"},
-            {"Annual Standard Deviation", "0"},
-            {"Annual Variance", "0"},
-            {"Information Ratio", "0"},
-            {"Tracking Error", "0"},
-            {"Treynor Ratio", "0"},
-            {"Total Fees", "$85.34"},
-            {"Estimated Strategy Capacity", "$0"},
-            {"Lowest Capacity Asset", "BTCEUR 2XR"},
-            {"Portfolio Turnover", "118.08%"},
-            {"OrderListHash", "26b9a07ace86b6a0e0eb2ff8c168cee0"}
-        };
+        public Dictionary<string, string> ExpectedStatistics =>
+            new Dictionary<string, string>
+            {
+                { "Total Orders", "12" },
+                { "Average Win", "0%" },
+                { "Average Loss", "0%" },
+                { "Compounding Annual Return", "0%" },
+                { "Drawdown", "0%" },
+                { "Expectancy", "0" },
+                { "Start Equity", "31588.24" },
+                { "End Equity", "30866.71" },
+                { "Net Profit", "0%" },
+                { "Sharpe Ratio", "0" },
+                { "Sortino Ratio", "0" },
+                { "Probabilistic Sharpe Ratio", "0%" },
+                { "Loss Rate", "0%" },
+                { "Win Rate", "0%" },
+                { "Profit-Loss Ratio", "0" },
+                { "Alpha", "0" },
+                { "Beta", "0" },
+                { "Annual Standard Deviation", "0" },
+                { "Annual Variance", "0" },
+                { "Information Ratio", "0" },
+                { "Tracking Error", "0" },
+                { "Treynor Ratio", "0" },
+                { "Total Fees", "$85.34" },
+                { "Estimated Strategy Capacity", "$0" },
+                { "Lowest Capacity Asset", "BTCEUR 2XR" },
+                { "Portfolio Turnover", "118.08%" },
+                { "OrderListHash", "26b9a07ace86b6a0e0eb2ff8c168cee0" }
+            };
     }
 }

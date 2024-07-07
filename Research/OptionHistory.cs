@@ -14,11 +14,11 @@
 */
 
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using Python.Runtime;
 using QuantConnect.Data;
 using QuantConnect.Python;
-using System.Collections.Generic;
 
 namespace QuantConnect.Research
 {
@@ -31,9 +31,8 @@ namespace QuantConnect.Research
         /// Create a new instance of <see cref="OptionHistory"/>.
         /// </summary>
         /// <param name="data"></param>
-        public OptionHistory(IEnumerable<Slice> data) : base(data, new Lazy<PyObject>(() => new PandasConverter().GetDataFrame(data)))
-        {
-        }
+        public OptionHistory(IEnumerable<Slice> data)
+            : base(data, new Lazy<PyObject>(() => new PandasConverter().GetDataFrame(data))) { }
 
         /// <summary>
         /// Gets all data from the History Request that are written in a pandas.DataFrame
@@ -47,7 +46,11 @@ namespace QuantConnect.Research
         /// <returns></returns>
         public PyObject GetStrikes()
         {
-            var strikes = Data.SelectMany(x => x.OptionChains.SelectMany(y => y.Value.Contracts.Keys.Select(z => (double)z.ID.StrikePrice).Distinct()));
+            var strikes = Data.SelectMany(x =>
+                x.OptionChains.SelectMany(y =>
+                    y.Value.Contracts.Keys.Select(z => (double)z.ID.StrikePrice).Distinct()
+                )
+            );
             using (Py.GIL())
             {
                 return strikes.Distinct().ToList().ToPython();
@@ -60,7 +63,11 @@ namespace QuantConnect.Research
         /// <returns></returns>
         public PyObject GetExpiryDates()
         {
-            var expiry = Data.SelectMany(x => x.OptionChains.SelectMany(y => y.Value.Contracts.Keys.Select(z => z.ID.Date).Distinct()));
+            var expiry = Data.SelectMany(x =>
+                x.OptionChains.SelectMany(y =>
+                    y.Value.Contracts.Keys.Select(z => z.ID.Date).Distinct()
+                )
+            );
             using (Py.GIL())
             {
                 return expiry.Distinct().ToList().ToPython();

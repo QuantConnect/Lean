@@ -32,10 +32,17 @@ namespace QuantConnect.Data
         /// <param name="index">The index value for which we want to fetch the source</param>
         /// <param name="isLiveMode">true if we're in live mode, false for backtesting mode</param>
         /// <returns>The <see cref="SubscriptionDataSource"/> instance to use</returns>
-        public virtual SubscriptionDataSource GetSourceForAnIndex(SubscriptionDataConfig config, DateTime date, string index, bool isLiveMode)
+        public virtual SubscriptionDataSource GetSourceForAnIndex(
+            SubscriptionDataConfig config,
+            DateTime date,
+            string index,
+            bool isLiveMode
+        )
         {
-            throw new NotImplementedException($"{nameof(IndexedBaseData)} types should implement 'GetSourceForAnIndex'. " +
-                                              "The implementation should determine the source to use for a given index value.");
+            throw new NotImplementedException(
+                $"{nameof(IndexedBaseData)} types should implement 'GetSourceForAnIndex'. "
+                    + "The implementation should determine the source to use for a given index value."
+            );
         }
 
         /// <summary>
@@ -45,10 +52,16 @@ namespace QuantConnect.Data
         /// <param name="date">Date of this source file</param>
         /// <param name="isLiveMode">true if we're in live mode, false for backtesting mode</param>
         /// <returns>The <see cref="SubscriptionDataSource"/> instance to use</returns>
-        public override SubscriptionDataSource GetSource(SubscriptionDataConfig config, DateTime date, bool isLiveMode)
+        public override SubscriptionDataSource GetSource(
+            SubscriptionDataConfig config,
+            DateTime date,
+            bool isLiveMode
+        )
         {
-            throw new NotImplementedException($"{nameof(IndexedBaseData)} types should implement 'GetSource'. " +
-                                              "The implementation should determine the index source to use for a given date.");
+            throw new NotImplementedException(
+                $"{nameof(IndexedBaseData)} types should implement 'GetSource'. "
+                    + "The implementation should determine the index source to use for a given date."
+            );
         }
     }
 }

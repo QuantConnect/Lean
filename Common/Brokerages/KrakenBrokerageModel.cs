@@ -29,54 +29,56 @@ namespace QuantConnect.Brokerages
     /// </summary>
     public class KrakenBrokerageModel : DefaultBrokerageModel
     {
-        private readonly List<string> _fiatsAvailableMargin = new() {"USD", "EUR"};
-        private readonly List<string> _onlyFiatsAvailableMargin = new() {"BTC", "USDT", "USDC"};
-        private readonly List<string> _ethAvailableMargin = new() {"REP", "XTZ", "ADA", "EOS", "TRX", "LINK" };
+        private readonly List<string> _fiatsAvailableMargin = new() { "USD", "EUR" };
+        private readonly List<string> _onlyFiatsAvailableMargin = new() { "BTC", "USDT", "USDC" };
+        private readonly List<string> _ethAvailableMargin =
+            new() { "REP", "XTZ", "ADA", "EOS", "TRX", "LINK" };
 
-        private readonly HashSet<OrderType> _supportedOrderTypes = new()
-        {
-            OrderType.Limit,
-            OrderType.Market,
-            OrderType.StopMarket,
-            OrderType.StopLimit,
-            OrderType.LimitIfTouched
-        };
+        private readonly HashSet<OrderType> _supportedOrderTypes =
+            new()
+            {
+                OrderType.Limit,
+                OrderType.Market,
+                OrderType.StopMarket,
+                OrderType.StopLimit,
+                OrderType.LimitIfTouched
+            };
 
         /// <summary>
         /// Gets a map of the default markets to be used for each security type
         /// </summary>
-        public override IReadOnlyDictionary<SecurityType, string> DefaultMarkets { get; } = GetDefaultMarkets();
+        public override IReadOnlyDictionary<SecurityType, string> DefaultMarkets { get; } =
+            GetDefaultMarkets();
 
         /// <summary>
         /// Leverage map of different coins
         /// </summary>
-        public IReadOnlyDictionary<string, decimal> CoinLeverage { get; } = new Dictionary<string, decimal>
-        {
-            {"BTC", 5}, // only with fiats
-            {"ETH", 5},
-            {"USDT", 2}, // only with fiats
-            {"XMR", 2},
-            {"REP", 2}, // eth available
-            {"XRP", 3},
-            {"BCH", 2},
-            {"XTZ", 2}, // eth available
-            {"LTC", 3},
-            {"ADA", 3}, // eth available
-            {"EOS", 3}, // eth available
-            {"DASH", 3},
-            {"TRX", 3}, // eth available
-            {"LINK", 3}, // eth available
-            {"USDC", 3}, // only with fiats
-        };
+        public IReadOnlyDictionary<string, decimal> CoinLeverage { get; } =
+            new Dictionary<string, decimal>
+            {
+                { "BTC", 5 }, // only with fiats
+                { "ETH", 5 },
+                { "USDT", 2 }, // only with fiats
+                { "XMR", 2 },
+                { "REP", 2 }, // eth available
+                { "XRP", 3 },
+                { "BCH", 2 },
+                { "XTZ", 2 }, // eth available
+                { "LTC", 3 },
+                { "ADA", 3 }, // eth available
+                { "EOS", 3 }, // eth available
+                { "DASH", 3 },
+                { "TRX", 3 }, // eth available
+                { "LINK", 3 }, // eth available
+                { "USDC", 3 }, // only with fiats
+            };
 
         /// <summary>
         /// Constructor for Kraken brokerage model
         /// </summary>
         /// <param name="accountType">Cash or Margin</param>
-        public KrakenBrokerageModel(AccountType accountType = AccountType.Cash) : base(accountType)
-        {
-
-        }
+        public KrakenBrokerageModel(AccountType accountType = AccountType.Cash)
+            : base(accountType) { }
 
         /// <summary>
         /// Returns true if the brokerage could accept this order. This takes into account
@@ -89,7 +91,11 @@ namespace QuantConnect.Brokerages
         /// <param name="order">The order to be processed</param>
         /// <param name="message">If this function returns false, a brokerage message detailing why the order may not be submitted</param>
         /// <returns>True if the brokerage could process the order, false otherwise</returns>
-        public override bool CanSubmitOrder(Security security, Order order, out BrokerageMessageEvent message)
+        public override bool CanSubmitOrder(
+            Security security,
+            Order order,
+            out BrokerageMessageEvent message
+        )
         {
             if (!IsValidOrderSize(security, order.Quantity, out message))
             {
@@ -99,16 +105,26 @@ namespace QuantConnect.Brokerages
             message = null;
             if (security.Type != SecurityType.Crypto)
             {
-                message = new BrokerageMessageEvent(BrokerageMessageType.Warning, "NotSupported",
-                    Messages.DefaultBrokerageModel.UnsupportedSecurityType(this, security));
+                message = new BrokerageMessageEvent(
+                    BrokerageMessageType.Warning,
+                    "NotSupported",
+                    Messages.DefaultBrokerageModel.UnsupportedSecurityType(this, security)
+                );
 
                 return false;
             }
 
             if (!_supportedOrderTypes.Contains(order.Type))
             {
-                message = new BrokerageMessageEvent(BrokerageMessageType.Warning, "NotSupported",
-                    Messages.DefaultBrokerageModel.UnsupportedOrderType(this, order, _supportedOrderTypes));
+                message = new BrokerageMessageEvent(
+                    BrokerageMessageType.Warning,
+                    "NotSupported",
+                    Messages.DefaultBrokerageModel.UnsupportedOrderType(
+                        this,
+                        order,
+                        _supportedOrderTypes
+                    )
+                );
 
                 return false;
             }
@@ -124,9 +140,18 @@ namespace QuantConnect.Brokerages
         /// <param name="request">Update request</param>
         /// <param name="message">Outgoing message</param>
         /// <returns>Always false as Kraken does not support update of orders</returns>
-        public override bool CanUpdateOrder(Security security, Order order, UpdateOrderRequest request, out BrokerageMessageEvent message)
+        public override bool CanUpdateOrder(
+            Security security,
+            Order order,
+            UpdateOrderRequest request,
+            out BrokerageMessageEvent message
+        )
         {
-            message = new BrokerageMessageEvent(BrokerageMessageType.Warning, 0, Messages.DefaultBrokerageModel.OrderUpdateNotSupported);
+            message = new BrokerageMessageEvent(
+                BrokerageMessageType.Warning,
+                0,
+                Messages.DefaultBrokerageModel.OrderUpdateNotSupported
+            );
             return false;
         }
 
@@ -153,22 +178,46 @@ namespace QuantConnect.Brokerages
             }
 
             // first check whether this security support margin only with fiats.
-            foreach (var coin in _onlyFiatsAvailableMargin.Where(coin => security.Symbol.ID.Symbol.StartsWith(coin)).Where(coin => _fiatsAvailableMargin.Any(rightFiat => security.Symbol.Value.EndsWith(rightFiat))))
+            foreach (
+                var coin in _onlyFiatsAvailableMargin
+                    .Where(coin => security.Symbol.ID.Symbol.StartsWith(coin))
+                    .Where(coin =>
+                        _fiatsAvailableMargin.Any(rightFiat =>
+                            security.Symbol.Value.EndsWith(rightFiat)
+                        )
+                    )
+            )
             {
                 return CoinLeverage[coin];
             }
 
-            List<string> extendedCoinArray = new() {"BTC", "ETH"};
+            List<string> extendedCoinArray = new() { "BTC", "ETH" };
             extendedCoinArray.AddRange(_fiatsAvailableMargin);
             // Then check whether this security support margin with ETH.
-            foreach (var coin in _ethAvailableMargin.Where(coin => security.Symbol.ID.Symbol.StartsWith(coin)).Where(coin => extendedCoinArray.Any(rightFiat => security.Symbol.Value.EndsWith(rightFiat))))
+            foreach (
+                var coin in _ethAvailableMargin
+                    .Where(coin => security.Symbol.ID.Symbol.StartsWith(coin))
+                    .Where(coin =>
+                        extendedCoinArray.Any(rightFiat =>
+                            security.Symbol.Value.EndsWith(rightFiat)
+                        )
+                    )
+            )
             {
                 return CoinLeverage[coin];
             }
 
             extendedCoinArray.Remove("ETH");
             // At the end check all others.
-            foreach (var coin in CoinLeverage.Keys.Where(coin => security.Symbol.ID.Symbol.StartsWith(coin)).Where(coin => extendedCoinArray.Any(rightFiat => security.Symbol.Value.EndsWith(rightFiat))))
+            foreach (
+                var coin in CoinLeverage
+                    .Keys.Where(coin => security.Symbol.ID.Symbol.StartsWith(coin))
+                    .Where(coin =>
+                        extendedCoinArray.Any(rightFiat =>
+                            security.Symbol.Value.EndsWith(rightFiat)
+                        )
+                    )
+            )
             {
                 return CoinLeverage[coin];
             }

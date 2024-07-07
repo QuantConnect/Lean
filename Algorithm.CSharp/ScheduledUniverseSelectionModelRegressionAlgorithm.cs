@@ -20,15 +20,17 @@ using QuantConnect.Algorithm.Framework.Alphas;
 using QuantConnect.Algorithm.Framework.Portfolio;
 using QuantConnect.Algorithm.Framework.Selection;
 using QuantConnect.Data.UniverseSelection;
-using QuantConnect.Orders;
 using QuantConnect.Interfaces;
+using QuantConnect.Orders;
 
 namespace QuantConnect.Algorithm.CSharp
 {
     /// <summary>
     /// Regression algorithm for testing <see cref="ScheduledUniverseSelectionModel"/> scheduling functions
     /// </summary>
-    public class ScheduledUniverseSelectionModelRegressionAlgorithm : QCAlgorithm, IRegressionAlgorithmDefinition
+    public class ScheduledUniverseSelectionModelRegressionAlgorithm
+        : QCAlgorithm,
+            IRegressionAlgorithmDefinition
     {
         public override void Initialize()
         {
@@ -42,13 +44,17 @@ namespace QuantConnect.Algorithm.CSharp
             SetEndDate(2017, 02, 01);
 
             // selection will run on mon/tues/thurs at 00:00/12:00
-            SetUniverseSelection(new ScheduledUniverseSelectionModel(
-                DateRules.Every(DayOfWeek.Monday, DayOfWeek.Tuesday, DayOfWeek.Thursday),
-                TimeRules.Every(TimeSpan.FromHours(12)),
-                SelectSymbols
-            ));
+            SetUniverseSelection(
+                new ScheduledUniverseSelectionModel(
+                    DateRules.Every(DayOfWeek.Monday, DayOfWeek.Tuesday, DayOfWeek.Thursday),
+                    TimeRules.Every(TimeSpan.FromHours(12)),
+                    SelectSymbols
+                )
+            );
 
-            SetAlpha(new ConstantAlphaModel(InsightType.Price, InsightDirection.Up, TimeSpan.FromDays(1)));
+            SetAlpha(
+                new ConstantAlphaModel(InsightType.Price, InsightDirection.Up, TimeSpan.FromDays(1))
+            );
             SetPortfolioConstruction(new EqualWeightingPortfolioConstructionModel());
         }
 
@@ -86,6 +92,7 @@ namespace QuantConnect.Algorithm.CSharp
 
         // some days of the week have different behavior the first time -- less securities to remove
         private readonly HashSet<DayOfWeek> _seenDays = new HashSet<DayOfWeek>();
+
         public override void OnSecuritiesChanged(SecurityChanges changes)
         {
             Console.WriteLine($"{Time}: {changes}");
@@ -144,7 +151,9 @@ namespace QuantConnect.Algorithm.CSharp
         {
             if (tickers == null && changes.AddedSecurities.Count > 0)
             {
-                throw new RegressionTestException($"{Time}: Expected no additions: {Time.DayOfWeek}");
+                throw new RegressionTestException(
+                    $"{Time}: Expected no additions: {Time.DayOfWeek}"
+                );
             }
             if (tickers == null)
             {
@@ -155,7 +164,9 @@ namespace QuantConnect.Algorithm.CSharp
             {
                 if (changes.AddedSecurities.All(s => s.Symbol.Value != ticker))
                 {
-                    throw new RegressionTestException($"{Time}: Expected {ticker} to be added: {Time.DayOfWeek}");
+                    throw new RegressionTestException(
+                        $"{Time}: Expected {ticker} to be added: {Time.DayOfWeek}"
+                    );
                 }
             }
         }
@@ -164,7 +175,9 @@ namespace QuantConnect.Algorithm.CSharp
         {
             if (tickers == null && changes.RemovedSecurities.Count > 0)
             {
-                throw new RegressionTestException($"{Time}: Expected no removals: {Time.DayOfWeek}");
+                throw new RegressionTestException(
+                    $"{Time}: Expected no removals: {Time.DayOfWeek}"
+                );
             }
 
             if (tickers == null)
@@ -176,7 +189,9 @@ namespace QuantConnect.Algorithm.CSharp
             {
                 if (changes.RemovedSecurities.All(s => s.Symbol.Value != ticker))
                 {
-                    throw new RegressionTestException($"{Time}: Expected {ticker} to be removed: {Time.DayOfWeek}");
+                    throw new RegressionTestException(
+                        $"{Time}: Expected {ticker} to be removed: {Time.DayOfWeek}"
+                    );
                 }
             }
         }
@@ -209,35 +224,36 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// This is used by the regression test system to indicate what the expected statistics are from running the algorithm
         /// </summary>
-        public Dictionary<string, string> ExpectedStatistics => new Dictionary<string, string>
-        {
-            {"Total Orders", "59"},
-            {"Average Win", "0.28%"},
-            {"Average Loss", "-0.20%"},
-            {"Compounding Annual Return", "73.882%"},
-            {"Drawdown", "1.100%"},
-            {"Expectancy", "0.749"},
-            {"Start Equity", "100000"},
-            {"End Equity", "105049.17"},
-            {"Net Profit", "5.049%"},
-            {"Sharpe Ratio", "7.048"},
-            {"Sortino Ratio", "10.495"},
-            {"Probabilistic Sharpe Ratio", "96.425%"},
-            {"Loss Rate", "27%"},
-            {"Win Rate", "73%"},
-            {"Profit-Loss Ratio", "1.39"},
-            {"Alpha", "0.458"},
-            {"Beta", "0.044"},
-            {"Annual Standard Deviation", "0.066"},
-            {"Annual Variance", "0.004"},
-            {"Information Ratio", "3.893"},
-            {"Tracking Error", "0.083"},
-            {"Treynor Ratio", "10.5"},
-            {"Total Fees", "$35.53"},
-            {"Estimated Strategy Capacity", "$2600000.00"},
-            {"Lowest Capacity Asset", "EURUSD 8G"},
-            {"Portfolio Turnover", "87.56%"},
-            {"OrderListHash", "83c4317adaf75381b4c61138091abeb1"}
-        };
+        public Dictionary<string, string> ExpectedStatistics =>
+            new Dictionary<string, string>
+            {
+                { "Total Orders", "59" },
+                { "Average Win", "0.28%" },
+                { "Average Loss", "-0.20%" },
+                { "Compounding Annual Return", "73.882%" },
+                { "Drawdown", "1.100%" },
+                { "Expectancy", "0.749" },
+                { "Start Equity", "100000" },
+                { "End Equity", "105049.17" },
+                { "Net Profit", "5.049%" },
+                { "Sharpe Ratio", "7.048" },
+                { "Sortino Ratio", "10.495" },
+                { "Probabilistic Sharpe Ratio", "96.425%" },
+                { "Loss Rate", "27%" },
+                { "Win Rate", "73%" },
+                { "Profit-Loss Ratio", "1.39" },
+                { "Alpha", "0.458" },
+                { "Beta", "0.044" },
+                { "Annual Standard Deviation", "0.066" },
+                { "Annual Variance", "0.004" },
+                { "Information Ratio", "3.893" },
+                { "Tracking Error", "0.083" },
+                { "Treynor Ratio", "10.5" },
+                { "Total Fees", "$35.53" },
+                { "Estimated Strategy Capacity", "$2600000.00" },
+                { "Lowest Capacity Asset", "EURUSD 8G" },
+                { "Portfolio Turnover", "87.56%" },
+                { "OrderListHash", "83c4317adaf75381b4c61138091abeb1" }
+            };
     }
 }

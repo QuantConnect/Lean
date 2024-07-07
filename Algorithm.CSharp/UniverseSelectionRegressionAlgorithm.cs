@@ -18,9 +18,9 @@ using System.Collections.Generic;
 using System.Linq;
 using QuantConnect.Data;
 using QuantConnect.Data.UniverseSelection;
+using QuantConnect.Interfaces;
 using QuantConnect.Orders;
 using QuantConnect.Securities;
-using QuantConnect.Interfaces;
 
 namespace QuantConnect.Algorithm.CSharp
 {
@@ -32,6 +32,7 @@ namespace QuantConnect.Algorithm.CSharp
     {
         private HashSet<Symbol> _delistedSymbols = new HashSet<Symbol>();
         private SecurityChanges _changes;
+
         /// <summary>
         /// Initialise the data and resolution required, as well as the cash and start-end dates for your algorithm. All algorithms must initialized.
         /// </summary>
@@ -39,9 +40,9 @@ namespace QuantConnect.Algorithm.CSharp
         {
             UniverseSettings.Resolution = Resolution.Daily;
 
-            SetStartDate(2014, 03, 22);  //Set Start Date
-            SetEndDate(2014, 04, 07);    //Set End Date
-            SetCash(100000);             //Set Strategy Cash
+            SetStartDate(2014, 03, 22); //Set Start Date
+            SetEndDate(2014, 04, 07); //Set End Date
+            SetCash(100000); //Set Strategy Cash
             // Find more symbols here: http://quantconnect.com/data
 
             // security that exists with no mappings
@@ -53,9 +54,9 @@ namespace QuantConnect.Algorithm.CSharp
             {
                 // select the various google symbols over the period
                 return from c in coarse
-                       let sym = c.Symbol.Value
-                       where sym == "GOOG" || sym == "GOOCV" || sym == "GOOAV" || sym == "GOOGL"
-                       select c.Symbol;
+                    let sym = c.Symbol.Value
+                    where sym == "GOOG" || sym == "GOOCV" || sym == "GOOAV" || sym == "GOOGL"
+                    select c.Symbol;
 
                 // Before March 28th 2014:
                 // - Only GOOG  T1AZ164W5VTX existed
@@ -75,18 +76,27 @@ namespace QuantConnect.Algorithm.CSharp
         public override void OnData(Slice slice)
         {
             // can access the current set of active securitie through UniverseManager.ActiveSecurities
-            Log(Time + ": Active Securities: " + string.Join(", ", UniverseManager.ActiveSecurities.Keys));
+            Log(
+                Time
+                    + ": Active Securities: "
+                    + string.Join(", ", UniverseManager.ActiveSecurities.Keys)
+            );
 
             // verify we don't receive data for inactive securities
-            var inactiveSymbols = slice.Keys
-                .Where(sym => !UniverseManager.ActiveSecurities.ContainsKey(sym))
+            var inactiveSymbols = slice
+                .Keys.Where(sym => !UniverseManager.ActiveSecurities.ContainsKey(sym))
                 // on daily data we'll get the last data point and the delisting at the same time
-                .Where(sym => !slice.Delistings.ContainsKey(sym) || slice.Delistings[sym].Type != DelistingType.Delisted)
+                .Where(sym =>
+                    !slice.Delistings.ContainsKey(sym)
+                    || slice.Delistings[sym].Type != DelistingType.Delisted
+                )
                 .ToList();
             if (inactiveSymbols.Any())
             {
                 var symbols = string.Join(", ", inactiveSymbols);
-                throw new RegressionTestException($"Received data for non-active security: {symbols}.");
+                throw new RegressionTestException(
+                    $"Received data for non-active security: {symbols}."
+                );
             }
 
             if (Transactions.OrdersCount == 0)
@@ -99,7 +109,10 @@ namespace QuantConnect.Algorithm.CSharp
                 _delistedSymbols.Add(kvp.Key);
             }
 
-            if (_changes != null && _changes.AddedSecurities.All(x => slice.Bars.ContainsKey(x.Symbol)))
+            if (
+                _changes != null
+                && _changes.AddedSecurities.All(x => slice.Bars.ContainsKey(x.Symbol))
+            )
             {
                 foreach (var security in _changes.AddedSecurities)
                 {
@@ -153,7 +166,9 @@ namespace QuantConnect.Algorithm.CSharp
             if (actual != expected)
             {
                 var symbol = security.Symbol;
-                throw new RegressionTestException($"{symbol}({symbol.ID}) expected {expected.ToStringInvariant()}, but received {actual.ToStringInvariant()}.");
+                throw new RegressionTestException(
+                    $"{symbol}({symbol.ID}) expected {expected.ToStringInvariant()}, but received {actual.ToStringInvariant()}."
+                );
             }
         }
 
@@ -185,35 +200,36 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// This is used by the regression test system to indicate what the expected statistics are from running the algorithm
         /// </summary>
-        public Dictionary<string, string> ExpectedStatistics => new Dictionary<string, string>
-        {
-            {"Total Orders", "4"},
-            {"Average Win", "0.71%"},
-            {"Average Loss", "0%"},
-            {"Compounding Annual Return", "-55.953%"},
-            {"Drawdown", "3.700%"},
-            {"Expectancy", "0"},
-            {"Start Equity", "100000"},
-            {"End Equity", "96253.19"},
-            {"Net Profit", "-3.747%"},
-            {"Sharpe Ratio", "-2.713"},
-            {"Sortino Ratio", "-3.067"},
-            {"Probabilistic Sharpe Ratio", "13.421%"},
-            {"Loss Rate", "0%"},
-            {"Win Rate", "100%"},
-            {"Profit-Loss Ratio", "0"},
-            {"Alpha", "-0.266"},
-            {"Beta", "1.241"},
-            {"Annual Standard Deviation", "0.167"},
-            {"Annual Variance", "0.028"},
-            {"Information Ratio", "-2.443"},
-            {"Tracking Error", "0.124"},
-            {"Treynor Ratio", "-0.364"},
-            {"Total Fees", "$3.00"},
-            {"Estimated Strategy Capacity", "$870000.00"},
-            {"Lowest Capacity Asset", "GOOAV VP83T1ZUHROL"},
-            {"Portfolio Turnover", "11.16%"},
-            {"OrderListHash", "e8691cd69f5bf3381daa86933c7dfc4a"}
-        };
+        public Dictionary<string, string> ExpectedStatistics =>
+            new Dictionary<string, string>
+            {
+                { "Total Orders", "4" },
+                { "Average Win", "0.71%" },
+                { "Average Loss", "0%" },
+                { "Compounding Annual Return", "-55.953%" },
+                { "Drawdown", "3.700%" },
+                { "Expectancy", "0" },
+                { "Start Equity", "100000" },
+                { "End Equity", "96253.19" },
+                { "Net Profit", "-3.747%" },
+                { "Sharpe Ratio", "-2.713" },
+                { "Sortino Ratio", "-3.067" },
+                { "Probabilistic Sharpe Ratio", "13.421%" },
+                { "Loss Rate", "0%" },
+                { "Win Rate", "100%" },
+                { "Profit-Loss Ratio", "0" },
+                { "Alpha", "-0.266" },
+                { "Beta", "1.241" },
+                { "Annual Standard Deviation", "0.167" },
+                { "Annual Variance", "0.028" },
+                { "Information Ratio", "-2.443" },
+                { "Tracking Error", "0.124" },
+                { "Treynor Ratio", "-0.364" },
+                { "Total Fees", "$3.00" },
+                { "Estimated Strategy Capacity", "$870000.00" },
+                { "Lowest Capacity Asset", "GOOAV VP83T1ZUHROL" },
+                { "Portfolio Turnover", "11.16%" },
+                { "OrderListHash", "e8691cd69f5bf3381daa86933c7dfc4a" }
+            };
     }
 }

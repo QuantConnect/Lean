@@ -14,19 +14,19 @@
 */
 
 using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using NUnit.Framework;
 using System.Threading;
-using QuantConnect.Data;
-using QuantConnect.Util;
-using QuantConnect.Logging;
 using System.Threading.Tasks;
-using QuantConnect.Securities;
-using QuantConnect.Data.Market;
-using System.Collections.Generic;
-using DataFeed = QuantConnect.Lean.Engine.DataFeeds;
+using NUnit.Framework;
+using QuantConnect.Data;
 using QuantConnect.Data.Custom.IconicTypes;
+using QuantConnect.Data.Market;
+using QuantConnect.Logging;
+using QuantConnect.Securities;
+using QuantConnect.Util;
+using DataFeed = QuantConnect.Lean.Engine.DataFeeds;
 
 namespace QuantConnect.Tests.Engine.DataFeeds
 {
@@ -42,7 +42,13 @@ namespace QuantConnect.Tests.Engine.DataFeeds
 
             var date = new DateTime(2000, 3, 17);
             var dataSymbol = Symbol.Create("TEST", SecurityType.Equity, Market.USA);
-            var actualPath = LeanData.GenerateZipFilePath(Globals.DataFolder, dataSymbol, date, Resolution.Daily, TickType.Trade);
+            var actualPath = LeanData.GenerateZipFilePath(
+                Globals.DataFolder,
+                dataSymbol,
+                date,
+                Resolution.Daily,
+                TickType.Trade
+            );
 
             // the symbol of the data is the same
             for (var i = 0; i < 10; i++)
@@ -61,32 +67,45 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             for (var i = 0; i < taskCount; i++)
             {
                 var myLockId = i;
-                var task = new Task(() =>
-                {
-                    try
+                var task = new Task(
+                    () =>
                     {
-                        var count = 0;
-                        while (count++ < 10)
+                        try
                         {
-                            var requestSymbol = Symbol.Create($"TEST{count + Math.Pow(10, myLockId)}", SecurityType.Equity, Market.USA);
-                            var path = LeanData.GenerateZipFilePath(Globals.DataFolder, requestSymbol, date, Resolution.Daily, TickType.Trade);
-                            // we will get null back because the data is stored to another path, the 'dataSymbol' path which is read bellow
-                            Assert.IsNull(dataProvider.Fetch(path));
+                            var count = 0;
+                            while (count++ < 10)
+                            {
+                                var requestSymbol = Symbol.Create(
+                                    $"TEST{count + Math.Pow(10, myLockId)}",
+                                    SecurityType.Equity,
+                                    Market.USA
+                                );
+                                var path = LeanData.GenerateZipFilePath(
+                                    Globals.DataFolder,
+                                    requestSymbol,
+                                    date,
+                                    Resolution.Daily,
+                                    TickType.Trade
+                                );
+                                // we will get null back because the data is stored to another path, the 'dataSymbol' path which is read bellow
+                                Assert.IsNull(dataProvider.Fetch(path));
+                            }
                         }
-                    }
-                    catch (Exception exception)
-                    {
-                        Interlocked.Increment(ref failures);
-                        Log.Error(exception);
-                        cancellationToken.Cancel();
-                    }
+                        catch (Exception exception)
+                        {
+                            Interlocked.Increment(ref failures);
+                            Log.Error(exception);
+                            cancellationToken.Cancel();
+                        }
 
-                    if(Interlocked.Increment(ref endedCount) == taskCount)
-                    {
-                        // the end
-                        cancellationToken.Cancel();
-                    }
-                }, cancellationToken.Token);
+                        if (Interlocked.Increment(ref endedCount) == taskCount)
+                        {
+                            // the end
+                            cancellationToken.Cancel();
+                        }
+                    },
+                    cancellationToken.Token
+                );
                 task.Start();
             }
 
@@ -112,7 +131,13 @@ namespace QuantConnect.Tests.Engine.DataFeeds
 
             var customData = Symbol.CreateBase(typeof(LinkedData), Symbols.SPY, Market.USA);
             var date = new DateTime(2023, 3, 17);
-            var path = LeanData.GenerateZipFilePath(Globals.DataFolder + "fake", customData, date, Resolution.Minute, TickType.Trade);
+            var path = LeanData.GenerateZipFilePath(
+                Globals.DataFolder + "fake",
+                customData,
+                date,
+                Resolution.Minute,
+                TickType.Trade
+            );
             Assert.IsNull(dataProvider.Fetch(path));
 
             Assert.AreEqual(0, downloader.DataDownloaderGetParameters.Count);
@@ -168,7 +193,14 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             }
             else if (securityType == SecurityType.IndexOption)
             {
-                symbol = Symbol.CreateOption(Symbols.SPX, Symbols.SPX.ID.Market, OptionStyle.European, OptionRight.Call, 38000m, new DateTime(2021, 01, 15));
+                symbol = Symbol.CreateOption(
+                    Symbols.SPX,
+                    Symbols.SPX.ID.Market,
+                    OptionStyle.European,
+                    OptionRight.Call,
+                    38000m,
+                    new DateTime(2021, 01, 15)
+                );
                 expectedSymbol = symbol.Canonical;
             }
             else if (securityType == SecurityType.Crypto)
@@ -183,22 +215,38 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             }
             else if (securityType == SecurityType.FutureOption)
             {
-                symbol = Symbols.CreateFutureOptionSymbol(Symbols.Future_CLF19_Jan2019, OptionRight.Call, 10, new DateTime(2019, 1, 21));
+                symbol = Symbols.CreateFutureOptionSymbol(
+                    Symbols.Future_CLF19_Jan2019,
+                    OptionRight.Call,
+                    10,
+                    new DateTime(2019, 1, 21)
+                );
                 expectedSymbol = symbol.Canonical;
             }
 
             var date = new DateTime(2023, 3, 17);
-            var timezone = MarketHoursDatabase.FromDataFolder().GetDataTimeZone(symbol.ID.Market, symbol, symbol.SecurityType);
+            var timezone = MarketHoursDatabase
+                .FromDataFolder()
+                .GetDataTimeZone(symbol.ID.Market, symbol, symbol.SecurityType);
 
             // For options and index option in hour or daily resolution, the whole year is downloaded
-            if (resolution > Resolution.Minute && (securityType == SecurityType.Option || securityType == SecurityType.IndexOption))
+            if (
+                resolution > Resolution.Minute
+                && (securityType == SecurityType.Option || securityType == SecurityType.IndexOption)
+            )
             {
                 var expectedStartUtc = new DateTime(date.Year, 1, 1);
                 expectedLowResolutionStart = expectedStartUtc.ConvertFromUtc(timezone);
                 expectedLowResolutionEndUtc = expectedStartUtc.AddYears(1);
             }
 
-            var path = LeanData.GenerateZipFilePath(Globals.DataFolder + "fake", symbol, date, resolution, TickType.Trade);
+            var path = LeanData.GenerateZipFilePath(
+                Globals.DataFolder + "fake",
+                symbol,
+                date,
+                resolution,
+                TickType.Trade
+            );
             Assert.IsNull(dataProvider.Fetch(path));
 
             var arguments = downloader.DataDownloaderGetParameters.Single();
@@ -214,7 +262,10 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             else
             {
                 // the whole history
-                Assert.AreEqual(expectedLowResolutionStart.ConvertToUtc(timezone), arguments.StartUtc);
+                Assert.AreEqual(
+                    expectedLowResolutionStart.ConvertToUtc(timezone),
+                    arguments.StartUtc
+                );
                 Assert.AreEqual(expectedLowResolutionEndUtc, arguments.EndUtc);
             }
         }
@@ -222,17 +273,27 @@ namespace QuantConnect.Tests.Engine.DataFeeds
         private class DataDownloaderTest : IDataDownloader
         {
             public List<BaseData> Data { get; } = new();
-            public List<DataDownloaderGetParameters > DataDownloaderGetParameters { get; } = new ();
-            public IEnumerable<BaseData> Get(DataDownloaderGetParameters dataDownloaderGetParameters)
+            public List<DataDownloaderGetParameters> DataDownloaderGetParameters { get; } = new();
+
+            public IEnumerable<BaseData> Get(
+                DataDownloaderGetParameters dataDownloaderGetParameters
+            )
             {
-                lock(DataDownloaderGetParameters)
+                lock (DataDownloaderGetParameters)
                 {
                     DataDownloaderGetParameters.Add(dataDownloaderGetParameters);
 
-                    if (dataDownloaderGetParameters.Symbol.ID.Symbol.StartsWith("TEST", StringComparison.InvariantCultureIgnoreCase))
+                    if (
+                        dataDownloaderGetParameters.Symbol.ID.Symbol.StartsWith(
+                            "TEST",
+                            StringComparison.InvariantCultureIgnoreCase
+                        )
+                    )
                     {
                         // let's create some more data based on the symbol, so we can assert it's merged
-                        var id = int.Parse(dataDownloaderGetParameters.Symbol.ID.Symbol.RemoveFromStart("TEST"));
+                        var id = int.Parse(
+                            dataDownloaderGetParameters.Symbol.ID.Symbol.RemoveFromStart("TEST")
+                        );
                         return Data.Select(bar =>
                         {
                             var result = bar.Clone();

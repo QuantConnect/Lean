@@ -22,7 +22,8 @@ namespace QuantConnect.Algorithm.CSharp
     /// Regression algorithm reproducing issue #5160 where delisting order would be cancelled because it was placed at the market close on the delisting day,
     /// in the case of daily resolution.
     /// </summary>
-    public class DelistingFutureOptionDailyRegressionAlgorithm : DelistingFutureOptionRegressionAlgorithm
+    public class DelistingFutureOptionDailyRegressionAlgorithm
+        : DelistingFutureOptionRegressionAlgorithm
     {
         protected override Resolution Resolution => Resolution.Daily;
 
@@ -34,35 +35,36 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// This is used by the regression test system to indicate what the expected statistics are from running the algorithm
         /// </summary>
-        public override Dictionary<string, string> ExpectedStatistics => new Dictionary<string, string>
-        {
-            {"Total Orders", "16"},
-            {"Average Win", "0.01%"},
-            {"Average Loss", "-0.02%"},
-            {"Compounding Annual Return", "-0.111%"},
-            {"Drawdown", "0.100%"},
-            {"Expectancy", "-0.678"},
-            {"Start Equity", "10000000"},
-            {"End Equity", "9988860.24"},
-            {"Net Profit", "-0.111%"},
-            {"Sharpe Ratio", "-10.266"},
-            {"Sortino Ratio", "-0.941"},
-            {"Probabilistic Sharpe Ratio", "0.000%"},
-            {"Loss Rate", "80%"},
-            {"Win Rate", "20%"},
-            {"Profit-Loss Ratio", "0.61"},
-            {"Alpha", "-0.008"},
-            {"Beta", "-0.001"},
-            {"Annual Standard Deviation", "0.001"},
-            {"Annual Variance", "0"},
-            {"Information Ratio", "-1.073"},
-            {"Tracking Error", "0.107"},
-            {"Treynor Ratio", "14.418"},
-            {"Total Fees", "$19.76"},
-            {"Estimated Strategy Capacity", "$2400000.00"},
-            {"Lowest Capacity Asset", "DC V5E8PHPRCHJ8|DC V5E8P9SH0U0X"},
-            {"Portfolio Turnover", "0.00%"},
-            {"OrderListHash", "9521f1fae55a3ffab939592b9ae04855"}
-        };
+        public override Dictionary<string, string> ExpectedStatistics =>
+            new Dictionary<string, string>
+            {
+                { "Total Orders", "16" },
+                { "Average Win", "0.01%" },
+                { "Average Loss", "-0.02%" },
+                { "Compounding Annual Return", "-0.111%" },
+                { "Drawdown", "0.100%" },
+                { "Expectancy", "-0.678" },
+                { "Start Equity", "10000000" },
+                { "End Equity", "9988860.24" },
+                { "Net Profit", "-0.111%" },
+                { "Sharpe Ratio", "-10.266" },
+                { "Sortino Ratio", "-0.941" },
+                { "Probabilistic Sharpe Ratio", "0.000%" },
+                { "Loss Rate", "80%" },
+                { "Win Rate", "20%" },
+                { "Profit-Loss Ratio", "0.61" },
+                { "Alpha", "-0.008" },
+                { "Beta", "-0.001" },
+                { "Annual Standard Deviation", "0.001" },
+                { "Annual Variance", "0" },
+                { "Information Ratio", "-1.073" },
+                { "Tracking Error", "0.107" },
+                { "Treynor Ratio", "14.418" },
+                { "Total Fees", "$19.76" },
+                { "Estimated Strategy Capacity", "$2400000.00" },
+                { "Lowest Capacity Asset", "DC V5E8PHPRCHJ8|DC V5E8P9SH0U0X" },
+                { "Portfolio Turnover", "0.00%" },
+                { "OrderListHash", "9521f1fae55a3ffab939592b9ae04855" }
+            };
     }
 }

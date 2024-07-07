@@ -30,7 +30,9 @@ namespace QuantConnect.Algorithm.CSharp
     /// <meta name="tag" content="using data" />
     /// <meta name="tag" content="custom data" />
     /// <meta name="tag" content="regression test" />
-    public class CustomDataLinkedIconicTypeAddDataOnSecuritiesChangedRegressionAlgorithm : QCAlgorithm, IRegressionAlgorithmDefinition
+    public class CustomDataLinkedIconicTypeAddDataOnSecuritiesChangedRegressionAlgorithm
+        : QCAlgorithm,
+            IRegressionAlgorithmDefinition
     {
         private List<Symbol> _customSymbols = new List<Symbol>();
 
@@ -70,7 +72,9 @@ namespace QuantConnect.Algorithm.CSharp
             {
                 if (!ActiveSecurities.ContainsKey(customSymbol.Underlying))
                 {
-                    throw new RegressionTestException($"Custom data underlying ({customSymbol.Underlying}) Symbol was not found in active securities");
+                    throw new RegressionTestException(
+                        $"Custom data underlying ({customSymbol.Underlying}) Symbol was not found in active securities"
+                    );
                 }
             }
         }
@@ -117,35 +121,36 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// This is used by the regression test system to indicate what the expected statistics are from running the algorithm
         /// </summary>
-        public Dictionary<string, string> ExpectedStatistics => new Dictionary<string, string>
-        {
-            {"Total Orders", "1"},
-            {"Average Win", "0%"},
-            {"Average Loss", "0%"},
-            {"Compounding Annual Return", "-33.427%"},
-            {"Drawdown", "2.000%"},
-            {"Expectancy", "0"},
-            {"Start Equity", "100000"},
-            {"End Equity", "98341.86"},
-            {"Net Profit", "-1.658%"},
-            {"Sharpe Ratio", "-4.844"},
-            {"Sortino Ratio", "-5.768"},
-            {"Probabilistic Sharpe Ratio", "5.401%"},
-            {"Loss Rate", "0%"},
-            {"Win Rate", "0%"},
-            {"Profit-Loss Ratio", "0"},
-            {"Alpha", "-0.215"},
-            {"Beta", "0.503"},
-            {"Annual Standard Deviation", "0.055"},
-            {"Annual Variance", "0.003"},
-            {"Information Ratio", "-3.027"},
-            {"Tracking Error", "0.054"},
-            {"Treynor Ratio", "-0.529"},
-            {"Total Fees", "$14.45"},
-            {"Estimated Strategy Capacity", "$370000000.00"},
-            {"Lowest Capacity Asset", "AAPL R735QTJ8XC9X"},
-            {"Portfolio Turnover", "3.33%"},
-            {"OrderListHash", "4338282f0d992269ff5acaeba8667049"}
-        };
+        public Dictionary<string, string> ExpectedStatistics =>
+            new Dictionary<string, string>
+            {
+                { "Total Orders", "1" },
+                { "Average Win", "0%" },
+                { "Average Loss", "0%" },
+                { "Compounding Annual Return", "-33.427%" },
+                { "Drawdown", "2.000%" },
+                { "Expectancy", "0" },
+                { "Start Equity", "100000" },
+                { "End Equity", "98341.86" },
+                { "Net Profit", "-1.658%" },
+                { "Sharpe Ratio", "-4.844" },
+                { "Sortino Ratio", "-5.768" },
+                { "Probabilistic Sharpe Ratio", "5.401%" },
+                { "Loss Rate", "0%" },
+                { "Win Rate", "0%" },
+                { "Profit-Loss Ratio", "0" },
+                { "Alpha", "-0.215" },
+                { "Beta", "0.503" },
+                { "Annual Standard Deviation", "0.055" },
+                { "Annual Variance", "0.003" },
+                { "Information Ratio", "-3.027" },
+                { "Tracking Error", "0.054" },
+                { "Treynor Ratio", "-0.529" },
+                { "Total Fees", "$14.45" },
+                { "Estimated Strategy Capacity", "$370000000.00" },
+                { "Lowest Capacity Asset", "AAPL R735QTJ8XC9X" },
+                { "Portfolio Turnover", "3.33%" },
+                { "OrderListHash", "4338282f0d992269ff5acaeba8667049" }
+            };
     }
 }

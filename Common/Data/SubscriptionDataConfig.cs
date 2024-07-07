@@ -14,11 +14,11 @@
 */
 
 using System;
-using NodaTime;
-using QuantConnect.Util;
-using QuantConnect.Securities;
 using System.Collections.Generic;
+using NodaTime;
 using QuantConnect.Data.Consolidators;
+using QuantConnect.Securities;
+using QuantConnect.Util;
 using static QuantConnect.StringExtensions;
 
 namespace QuantConnect.Data
@@ -89,7 +89,7 @@ namespace QuantConnect.Data
         /// <summary>
         /// The sum of dividends accrued in this subscription, used for scaling total return prices
         /// </summary>
-        public decimal SumOfDividends{ get; set; }
+        public decimal SumOfDividends { get; set; }
 
         /// <summary>
         /// Gets the normalization mode used for this subscription
@@ -136,7 +136,7 @@ namespace QuantConnect.Data
             set
             {
                 var oldMappedValue = MappedSymbol;
-                if(ContractDepthOffset == 0 && oldMappedValue == value)
+                if (ContractDepthOffset == 0 && oldMappedValue == value)
                 {
                     // Do less if we can.
                     // We can only do this for sure if 'ContractDepthOffset' is 0 else the value we got might be outdated and will change bellow
@@ -197,7 +197,8 @@ namespace QuantConnect.Data
         /// <param name="dataMappingMode">The contract mapping mode to use for the security</param>
         /// <param name="contractDepthOffset">The continuous contract desired offset from the current front month.
         /// For example, 0 (default) will use the front month, 1 will use the back month contract</param>
-        public SubscriptionDataConfig(Type objectType,
+        public SubscriptionDataConfig(
+            Type objectType,
             Symbol symbol,
             Resolution resolution,
             DateTimeZone dataTimeZone,
@@ -211,12 +212,17 @@ namespace QuantConnect.Data
             DataNormalizationMode dataNormalizationMode = DataNormalizationMode.Adjusted,
             DataMappingMode dataMappingMode = DataMappingMode.OpenInterest,
             uint contractDepthOffset = 0,
-            bool mappedConfig = false)
+            bool mappedConfig = false
+        )
         {
-            if (objectType == null) throw new ArgumentNullException(nameof(objectType));
-            if (symbol == null) throw new ArgumentNullException(nameof(symbol));
-            if (dataTimeZone == null) throw new ArgumentNullException(nameof(dataTimeZone));
-            if (exchangeTimeZone == null) throw new ArgumentNullException(nameof(exchangeTimeZone));
+            if (objectType == null)
+                throw new ArgumentNullException(nameof(objectType));
+            if (symbol == null)
+                throw new ArgumentNullException(nameof(symbol));
+            if (dataTimeZone == null)
+                throw new ArgumentNullException(nameof(dataTimeZone));
+            if (exchangeTimeZone == null)
+                throw new ArgumentNullException(nameof(exchangeTimeZone));
 
             Type = objectType;
             Resolution = resolution;
@@ -235,7 +241,8 @@ namespace QuantConnect.Data
             Consolidators = new ConcurrentSet<IDataConsolidator>();
             DataNormalizationMode = dataNormalizationMode;
 
-            TickType = tickType ?? LeanData.GetCommonTickTypeForCommonDataTypes(objectType, SecurityType);
+            TickType =
+                tickType ?? LeanData.GetCommonTickTypeForCommonDataTypes(objectType, SecurityType);
 
             Increment = resolution.ToTimeSpan();
             //Ticks are individual sales and fillforward doesn't apply.
@@ -265,7 +272,8 @@ namespace QuantConnect.Data
         /// For example, 0 (default) will use the front month, 1 will use the back month contract</param>
         /// <param name="mappedConfig">True if this is created as a mapped config. This is useful for continuous contract at live trading
         /// where we subscribe to the mapped symbol but want to preserve uniqueness</param>
-        public SubscriptionDataConfig(SubscriptionDataConfig config,
+        public SubscriptionDataConfig(
+            SubscriptionDataConfig config,
             Type objectType = null,
             Symbol symbol = null,
             Resolution? resolution = null,
@@ -280,23 +288,24 @@ namespace QuantConnect.Data
             DataNormalizationMode? dataNormalizationMode = null,
             DataMappingMode? dataMappingMode = null,
             uint? contractDepthOffset = null,
-            bool? mappedConfig = null)
+            bool? mappedConfig = null
+        )
             : this(
-            objectType ?? config.Type,
-            symbol ?? config.Symbol,
-            resolution ?? config.Resolution,
-            dataTimeZone ?? config.DataTimeZone,
-            exchangeTimeZone ?? config.ExchangeTimeZone,
-            fillForward ?? config.FillDataForward,
-            extendedHours ?? config.ExtendedMarketHours,
-            isInternalFeed ?? config.IsInternalFeed,
-            isCustom ?? config.IsCustomData,
-            tickType ?? config.TickType,
-            isFilteredSubscription ?? config.IsFilteredSubscription,
-            dataNormalizationMode ?? config.DataNormalizationMode,
-            dataMappingMode ?? config.DataMappingMode,
-            contractDepthOffset ?? config.ContractDepthOffset,
-            mappedConfig ?? false
+                objectType ?? config.Type,
+                symbol ?? config.Symbol,
+                resolution ?? config.Resolution,
+                dataTimeZone ?? config.DataTimeZone,
+                exchangeTimeZone ?? config.ExchangeTimeZone,
+                fillForward ?? config.FillDataForward,
+                extendedHours ?? config.ExtendedMarketHours,
+                isInternalFeed ?? config.IsInternalFeed,
+                isCustom ?? config.IsCustomData,
+                tickType ?? config.TickType,
+                isFilteredSubscription ?? config.IsFilteredSubscription,
+                dataNormalizationMode ?? config.DataNormalizationMode,
+                dataMappingMode ?? config.DataMappingMode,
+                contractDepthOffset ?? config.ContractDepthOffset,
+                mappedConfig ?? false
             )
         {
             PriceScaleFactor = config.PriceScaleFactor;
@@ -313,9 +322,12 @@ namespace QuantConnect.Data
         /// <param name="other">An object to compare with this object.</param>
         public bool Equals(SubscriptionDataConfig other)
         {
-            if (ReferenceEquals(null, other)) return false;
-            if (ReferenceEquals(this, other)) return true;
-            return _sid.Equals(other._sid) && Type == other.Type
+            if (ReferenceEquals(null, other))
+                return false;
+            if (ReferenceEquals(this, other))
+                return true;
+            return _sid.Equals(other._sid)
+                && Type == other.Type
                 && TickType == other.TickType
                 && Resolution == other.Resolution
                 && FillDataForward == other.FillDataForward
@@ -339,10 +351,13 @@ namespace QuantConnect.Data
         /// <param name="obj">The object to compare with the current object. </param>
         public override bool Equals(object obj)
         {
-            if (ReferenceEquals(null, obj)) return false;
-            if (ReferenceEquals(this, obj)) return true;
-            if (obj.GetType() != GetType()) return false;
-            return Equals((SubscriptionDataConfig) obj);
+            if (ReferenceEquals(null, obj))
+                return false;
+            if (ReferenceEquals(this, obj))
+                return true;
+            if (obj.GetType() != GetType())
+                return false;
+            return Equals((SubscriptionDataConfig)obj);
         }
 
         /// <summary>
@@ -356,19 +371,19 @@ namespace QuantConnect.Data
             unchecked
             {
                 var hashCode = _sid.GetHashCode();
-                hashCode = (hashCode*397) ^ Type.GetHashCode();
-                hashCode = (hashCode*397) ^ (int) TickType;
-                hashCode = (hashCode*397) ^ (int) Resolution;
-                hashCode = (hashCode*397) ^ FillDataForward.GetHashCode();
-                hashCode = (hashCode*397) ^ ExtendedMarketHours.GetHashCode();
-                hashCode = (hashCode*397) ^ IsInternalFeed.GetHashCode();
-                hashCode = (hashCode*397) ^ IsCustomData.GetHashCode();
-                hashCode = (hashCode*397) ^ DataMappingMode.GetHashCode();
-                hashCode = (hashCode*397) ^ DataTimeZone.Id.GetHashCode();// timezone hash is expensive, use id instead
-                hashCode = (hashCode*397) ^ ExchangeTimeZone.Id.GetHashCode();// timezone hash is expensive, use id instead
-                hashCode = (hashCode*397) ^ ContractDepthOffset.GetHashCode();
-                hashCode = (hashCode*397) ^ IsFilteredSubscription.GetHashCode();
-                hashCode = (hashCode*397) ^ _mappedConfig.GetHashCode();
+                hashCode = (hashCode * 397) ^ Type.GetHashCode();
+                hashCode = (hashCode * 397) ^ (int)TickType;
+                hashCode = (hashCode * 397) ^ (int)Resolution;
+                hashCode = (hashCode * 397) ^ FillDataForward.GetHashCode();
+                hashCode = (hashCode * 397) ^ ExtendedMarketHours.GetHashCode();
+                hashCode = (hashCode * 397) ^ IsInternalFeed.GetHashCode();
+                hashCode = (hashCode * 397) ^ IsCustomData.GetHashCode();
+                hashCode = (hashCode * 397) ^ DataMappingMode.GetHashCode();
+                hashCode = (hashCode * 397) ^ DataTimeZone.Id.GetHashCode(); // timezone hash is expensive, use id instead
+                hashCode = (hashCode * 397) ^ ExchangeTimeZone.Id.GetHashCode(); // timezone hash is expensive, use id instead
+                hashCode = (hashCode * 397) ^ ContractDepthOffset.GetHashCode();
+                hashCode = (hashCode * 397) ^ IsFilteredSubscription.GetHashCode();
+                hashCode = (hashCode * 397) ^ _mappedConfig.GetHashCode();
                 return hashCode;
             }
         }
@@ -398,7 +413,9 @@ namespace QuantConnect.Data
         /// <filterpriority>2</filterpriority>
         public override string ToString()
         {
-            return Invariant($"{Symbol.Value},#{ContractDepthOffset},{MappedSymbol},{Resolution},{Type.Name},{TickType},{DataNormalizationMode},{DataMappingMode}{(IsInternalFeed ? ",Internal" : string.Empty)}");
+            return Invariant(
+                $"{Symbol.Value},#{ContractDepthOffset},{MappedSymbol},{Resolution},{Type.Name},{TickType},{DataNormalizationMode},{DataMappingMode}{(IsInternalFeed ? ",Internal" : string.Empty)}"
+            );
         }
 
         /// <summary>

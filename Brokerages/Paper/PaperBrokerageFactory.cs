@@ -33,17 +33,19 @@ namespace QuantConnect.Brokerages.Paper
         /// The implementation of this property will create the brokerage data dictionary required for
         /// running live jobs. See <see cref="IJobQueueHandler.NextJob"/>
         /// </remarks>
-        public override Dictionary<string, string> BrokerageData => new Dictionary<string, string>
-        {
-            { "live-cash-balance", Config.Get("live-cash-balance")},
-            { "live-holdings", Config.Get("live-holdings")},
-        };
+        public override Dictionary<string, string> BrokerageData =>
+            new Dictionary<string, string>
+            {
+                { "live-cash-balance", Config.Get("live-cash-balance") },
+                { "live-holdings", Config.Get("live-holdings") },
+            };
 
         /// <summary>
         /// Gets a new instance of the <see cref="InteractiveBrokersBrokerageModel"/>
         /// </summary>
         /// <param name="orderProvider">The order provider</param>
-        public override IBrokerageModel GetBrokerageModel(IOrderProvider orderProvider) => new DefaultBrokerageModel();
+        public override IBrokerageModel GetBrokerageModel(IOrderProvider orderProvider) =>
+            new DefaultBrokerageModel();
 
         /// <summary>
         /// Creates a new IBrokerage instance
@@ -69,8 +71,6 @@ namespace QuantConnect.Brokerages.Paper
         /// Initializes a new instance of the <see cref="PaperBrokerageFactory"/> class
         /// </summary>
         public PaperBrokerageFactory()
-            : base(typeof(PaperBrokerage))
-        {
-        }
+            : base(typeof(PaperBrokerage)) { }
     }
 }

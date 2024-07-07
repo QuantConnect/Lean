@@ -47,8 +47,10 @@ namespace QuantConnect.Optimizer.Parameters
         /// </returns>
         public bool Equals(OptimizationParameter other)
         {
-            if (ReferenceEquals(null, other)) return false;
-            if (ReferenceEquals(this, other)) return true;
+            if (ReferenceEquals(null, other))
+                return false;
+            if (ReferenceEquals(this, other))
+                return true;
             return string.Equals(Name, other?.Name);
         }
 

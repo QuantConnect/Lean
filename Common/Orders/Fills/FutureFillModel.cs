@@ -14,10 +14,10 @@
 */
 
 using System;
-using QuantConnect.Util;
 using QuantConnect.Data;
-using QuantConnect.Securities;
 using QuantConnect.Orders.Fees;
+using QuantConnect.Securities;
+using QuantConnect.Util;
 
 namespace QuantConnect.Orders.Fills
 {
@@ -38,10 +38,12 @@ namespace QuantConnect.Orders.Fills
             var utcTime = asset.LocalTime.ConvertToUtc(asset.Exchange.TimeZone);
             var fill = new OrderEvent(order, utcTime, OrderFee.Zero);
 
-            if (order.Status == OrderStatus.Canceled) return fill;
+            if (order.Status == OrderStatus.Canceled)
+                return fill;
 
             // make sure the exchange is open on regular/extended market hours before filling
-            if (!IsExchangeOpen(asset, true)) return fill;
+            if (!IsExchangeOpen(asset, true))
+                return fill;
 
             var prices = GetPricesCheckingPythonWrapper(asset, order.Direction);
             var pricesEndTimeUtc = prices.EndTime.ConvertToUtc(asset.Exchange.TimeZone);
@@ -104,12 +106,23 @@ namespace QuantConnect.Orders.Fills
             var fill = new OrderEvent(order, utcTime, OrderFee.Zero);
 
             //If its cancelled don't need anymore checks:
-            if (order.Status == OrderStatus.Canceled) return fill;
+            if (order.Status == OrderStatus.Canceled)
+                return fill;
 
             // Fill only if open or extended
             // even though data from internal configurations are not sent to the algorithm.OnData they still drive security cache and data
             // this is specially relevant for the continuous contract underlying mapped contracts which are internal configurations
-            if (!IsExchangeOpen(asset, Parameters.ConfigProvider.GetSubscriptionDataConfigs(asset.Symbol, includeInternalConfigs: true).IsExtendedMarketHours()))
+            if (
+                !IsExchangeOpen(
+                    asset,
+                    Parameters
+                        .ConfigProvider.GetSubscriptionDataConfigs(
+                            asset.Symbol,
+                            includeInternalConfigs: true
+                        )
+                        .IsExtendedMarketHours()
+                )
+            )
             {
                 return fill;
             }
@@ -119,7 +132,8 @@ namespace QuantConnect.Orders.Fills
             var pricesEndTime = prices.EndTime.ConvertToUtc(asset.Exchange.TimeZone);
 
             // do not fill on stale data
-            if (pricesEndTime <= order.Time) return fill;
+            if (pricesEndTime <= order.Time)
+                return fill;
 
             //Calculate the model slippage: e.g. 0.01c
             var slip = asset.SlippageModel.GetSlippageApproximation(asset, order);

@@ -14,11 +14,11 @@
 */
 
 using System;
-using QuantConnect.Util;
-using QuantConnect.Logging;
+using System.Collections.Generic;
 using System.Threading.Tasks;
 using QuantConnect.Interfaces;
-using System.Collections.Generic;
+using QuantConnect.Logging;
+using QuantConnect.Util;
 
 namespace QuantConnect.Data.Auxiliary
 {
@@ -68,7 +68,7 @@ namespace QuantConnect.Data.Auxiliary
             {
                 return;
             }
-            
+
             _dataProvider = dataProvider;
             StartExpirationTask();
         }
@@ -118,16 +118,30 @@ namespace QuantConnect.Data.Auxiliary
             var date = yesterdayNewYork;
             do
             {
-                var zipFileName = MapFileZipHelper.GetMapFileZipFileName(market, date, auxiliaryDataKey.SecurityType);
+                var zipFileName = MapFileZipHelper.GetMapFileZipFileName(
+                    market,
+                    date,
+                    auxiliaryDataKey.SecurityType
+                );
 
                 // Fetch a stream for our zip from our data provider
                 var stream = _dataProvider.Fetch(zipFileName);
 
-                // If we found a file we can read it 
+                // If we found a file we can read it
                 if (stream != null)
                 {
-                    Log.Trace("LocalZipMapFileProvider.Get({0}): Fetched map files for: {1} NY", market, date.ToShortDateString());
-                    var result =  new MapFileResolver(MapFileZipHelper.ReadMapFileZip(stream, market, auxiliaryDataKey.SecurityType));
+                    Log.Trace(
+                        "LocalZipMapFileProvider.Get({0}): Fetched map files for: {1} NY",
+                        market,
+                        date.ToShortDateString()
+                    );
+                    var result = new MapFileResolver(
+                        MapFileZipHelper.ReadMapFileZip(
+                            stream,
+                            market,
+                            auxiliaryDataKey.SecurityType
+                        )
+                    );
                     stream.DisposeSafely();
                     return result;
                 }
@@ -135,12 +149,13 @@ namespace QuantConnect.Data.Auxiliary
                 // prevent infinite recursion if something is wrong
                 if (count++ > 30)
                 {
-                    throw new InvalidOperationException($"LocalZipMapFileProvider couldn't find any map files going all the way back to {date} for {market}");
+                    throw new InvalidOperationException(
+                        $"LocalZipMapFileProvider couldn't find any map files going all the way back to {date} for {market}"
+                    );
                 }
 
                 date = date.AddDays(-1);
-            }
-            while (true);
+            } while (true);
         }
     }
 }

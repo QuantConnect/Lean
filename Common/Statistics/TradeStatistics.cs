@@ -290,7 +290,8 @@ namespace QuantConnect.Statistics
 
             foreach (var trade in trades)
             {
-                if (lastPeakTime == DateTime.MinValue) lastPeakTime = trade.EntryTime;
+                if (lastPeakTime == DateTime.MinValue)
+                    lastPeakTime = trade.EntryTime;
 
                 if (StartDateTime == null || trade.EntryTime < StartDateTime)
                     StartDateTime = trade.EntryTime;
@@ -303,8 +304,12 @@ namespace QuantConnect.Statistics
                 if (TotalProfitLoss + trade.MFE > maxTotalProfitLossWithMfe)
                     maxTotalProfitLossWithMfe = TotalProfitLoss + trade.MFE;
 
-                if (TotalProfitLoss + trade.MAE - maxTotalProfitLossWithMfe < MaximumIntraTradeDrawdown)
-                    MaximumIntraTradeDrawdown = TotalProfitLoss + trade.MAE - maxTotalProfitLossWithMfe;
+                if (
+                    TotalProfitLoss + trade.MAE - maxTotalProfitLossWithMfe
+                    < MaximumIntraTradeDrawdown
+                )
+                    MaximumIntraTradeDrawdown =
+                        TotalProfitLoss + trade.MAE - maxTotalProfitLossWithMfe;
 
                 if (trade.ProfitLoss > 0)
                 {
@@ -315,7 +320,10 @@ namespace QuantConnect.Statistics
                     TotalProfit += trade.ProfitLoss;
                     AverageProfit += (trade.ProfitLoss - AverageProfit) / NumberOfWinningTrades;
 
-                    AverageWinningTradeDuration += TimeSpan.FromSeconds((trade.Duration.TotalSeconds - AverageWinningTradeDuration.TotalSeconds) / NumberOfWinningTrades);
+                    AverageWinningTradeDuration += TimeSpan.FromSeconds(
+                        (trade.Duration.TotalSeconds - AverageWinningTradeDuration.TotalSeconds)
+                            / NumberOfWinningTrades
+                    );
 
                     winningTradeDurationsTicks.Add(trade.Duration.Ticks);
 
@@ -349,11 +357,18 @@ namespace QuantConnect.Statistics
                     var prevAverageLoss = AverageLoss;
                     AverageLoss += (trade.ProfitLoss - AverageLoss) / NumberOfLosingTrades;
 
-                    sumForDownsideVariance += (trade.ProfitLoss - prevAverageLoss) * (trade.ProfitLoss - AverageLoss);
-                    var downsideVariance = NumberOfLosingTrades > 1 ? sumForDownsideVariance / (NumberOfLosingTrades - 1) : 0;
+                    sumForDownsideVariance +=
+                        (trade.ProfitLoss - prevAverageLoss) * (trade.ProfitLoss - AverageLoss);
+                    var downsideVariance =
+                        NumberOfLosingTrades > 1
+                            ? sumForDownsideVariance / (NumberOfLosingTrades - 1)
+                            : 0;
                     ProfitLossDownsideDeviation = (decimal)Math.Sqrt((double)downsideVariance);
 
-                    AverageLosingTradeDuration += TimeSpan.FromSeconds((trade.Duration.TotalSeconds - AverageLosingTradeDuration.TotalSeconds) / NumberOfLosingTrades);
+                    AverageLosingTradeDuration += TimeSpan.FromSeconds(
+                        (trade.Duration.TotalSeconds - AverageLosingTradeDuration.TotalSeconds)
+                            / NumberOfLosingTrades
+                    );
 
                     losingTradeDurationsTicks.Add(trade.Duration.Ticks);
 
@@ -387,11 +402,17 @@ namespace QuantConnect.Statistics
                 var prevAverageProfitLoss = AverageProfitLoss;
                 AverageProfitLoss += (trade.ProfitLoss - AverageProfitLoss) / TotalNumberOfTrades;
 
-                sumForVariance += (trade.ProfitLoss - prevAverageProfitLoss) * (trade.ProfitLoss - AverageProfitLoss);
-                var variance = TotalNumberOfTrades > 1 ? sumForVariance / (TotalNumberOfTrades - 1) : 0;
+                sumForVariance +=
+                    (trade.ProfitLoss - prevAverageProfitLoss)
+                    * (trade.ProfitLoss - AverageProfitLoss);
+                var variance =
+                    TotalNumberOfTrades > 1 ? sumForVariance / (TotalNumberOfTrades - 1) : 0;
                 ProfitLossStandardDeviation = (decimal)Math.Sqrt((double)variance);
 
-                AverageTradeDuration += TimeSpan.FromSeconds((trade.Duration.TotalSeconds - AverageTradeDuration.TotalSeconds) / TotalNumberOfTrades);
+                AverageTradeDuration += TimeSpan.FromSeconds(
+                    (trade.Duration.TotalSeconds - AverageTradeDuration.TotalSeconds)
+                        / TotalNumberOfTrades
+                );
                 allTradeDurationsTicks.Add(trade.Duration.Ticks);
                 AverageMAE += (trade.MAE - AverageMAE) / TotalNumberOfTrades;
                 AverageMFE += (trade.MFE - AverageMFE) / TotalNumberOfTrades;
@@ -414,20 +435,44 @@ namespace QuantConnect.Statistics
             NumberOfLosingTrades -= numberOfITMOptionsWinningTrades;
 
             ProfitLossRatio = AverageLoss == 0 ? 0 : AverageProfit / Math.Abs(AverageLoss);
-            WinLossRatio = TotalNumberOfTrades == 0 ? 0 : (NumberOfLosingTrades > 0 ? (decimal)NumberOfWinningTrades / NumberOfLosingTrades : 10);
-            WinRate = TotalNumberOfTrades > 0 ? (decimal)NumberOfWinningTrades / TotalNumberOfTrades : 0;
+            WinLossRatio =
+                TotalNumberOfTrades == 0
+                    ? 0
+                    : (
+                        NumberOfLosingTrades > 0
+                            ? (decimal)NumberOfWinningTrades / NumberOfLosingTrades
+                            : 10
+                    );
+            WinRate =
+                TotalNumberOfTrades > 0 ? (decimal)NumberOfWinningTrades / TotalNumberOfTrades : 0;
             LossRate = TotalNumberOfTrades > 0 ? 1 - WinRate : 0;
-            ProfitFactor = TotalProfit == 0 ? 0 : (TotalLoss < 0 ? TotalProfit / Math.Abs(TotalLoss) : 10);
-            SharpeRatio = ProfitLossStandardDeviation > 0 ? AverageProfitLoss / ProfitLossStandardDeviation : 0;
-            SortinoRatio = ProfitLossDownsideDeviation > 0 ? AverageProfitLoss / ProfitLossDownsideDeviation : 0;
-            ProfitToMaxDrawdownRatio = TotalProfitLoss == 0 ? 0 : (MaximumClosedTradeDrawdown < 0 ? TotalProfitLoss / Math.Abs(MaximumClosedTradeDrawdown) : 10);
+            ProfitFactor =
+                TotalProfit == 0 ? 0 : (TotalLoss < 0 ? TotalProfit / Math.Abs(TotalLoss) : 10);
+            SharpeRatio =
+                ProfitLossStandardDeviation > 0
+                    ? AverageProfitLoss / ProfitLossStandardDeviation
+                    : 0;
+            SortinoRatio =
+                ProfitLossDownsideDeviation > 0
+                    ? AverageProfitLoss / ProfitLossDownsideDeviation
+                    : 0;
+            ProfitToMaxDrawdownRatio =
+                TotalProfitLoss == 0
+                    ? 0
+                    : (
+                        MaximumClosedTradeDrawdown < 0
+                            ? TotalProfitLoss / Math.Abs(MaximumClosedTradeDrawdown)
+                            : 10
+                    );
 
             AverageEndTradeDrawdown = AverageProfitLoss - AverageMFE;
 
             if (allTradeDurationsTicks.Count > 0)
                 MedianTradeDuration = TimeSpan.FromTicks(allTradeDurationsTicks.Median());
             if (winningTradeDurationsTicks.Count > 0)
-                MedianWinningTradeDuration = TimeSpan.FromTicks(winningTradeDurationsTicks.Median());
+                MedianWinningTradeDuration = TimeSpan.FromTicks(
+                    winningTradeDurationsTicks.Median()
+                );
             if (losingTradeDurationsTicks.Count > 0)
                 MedianLosingTradeDuration = TimeSpan.FromTicks(losingTradeDurationsTicks.Median());
         }
@@ -435,9 +480,6 @@ namespace QuantConnect.Statistics
         /// <summary>
         /// Initializes a new instance of the <see cref="TradeStatistics"/> class
         /// </summary>
-        public TradeStatistics()
-        {
-        }
-
+        public TradeStatistics() { }
     }
 }

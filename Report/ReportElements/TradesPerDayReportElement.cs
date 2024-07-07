@@ -32,7 +32,12 @@ namespace QuantConnect.Report.ReportElements
         /// <param name="key">Location of injection</param>
         /// <param name="backtest">Backtest result object</param>
         /// <param name="live">Live result object</param>
-        public TradesPerDayReportElement(string name, string key, BacktestResult backtest, LiveResult live)
+        public TradesPerDayReportElement(
+            string name,
+            string key,
+            BacktestResult backtest,
+            LiveResult live
+        )
         {
             _live = live;
             _backtest = backtest;
@@ -62,9 +67,7 @@ namespace QuantConnect.Report.ReportElements
                 return "-";
             }
 
-            var days = orders.Last().Time
-                .Subtract(orders.First().Time)
-                .TotalDays;
+            var days = orders.Last().Time.Subtract(orders.First().Time).TotalDays;
 
             if (days == 0)
             {

@@ -8,8 +8,6 @@ namespace QuantConnect.ToolBox.RandomDataGenerator
     public class RandomValueGeneratorException : ApplicationException
     {
         public RandomValueGeneratorException(string message)
-            : base(message)
-        {
-        }
+            : base(message) { }
     }
 }

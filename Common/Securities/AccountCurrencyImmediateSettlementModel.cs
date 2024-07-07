@@ -30,9 +30,14 @@ namespace QuantConnect.Securities
             var currency = applyFundsParameters.CashAmount.Currency;
             var amount = applyFundsParameters.CashAmount.Amount;
             var portfolio = applyFundsParameters.Portfolio;
-            var amountInAccountCurrency = portfolio.CashBook.ConvertToAccountCurrency(amount, currency);
+            var amountInAccountCurrency = portfolio.CashBook.ConvertToAccountCurrency(
+                amount,
+                currency
+            );
 
-            portfolio.CashBook[portfolio.CashBook.AccountCurrency].AddAmount(amountInAccountCurrency);
+            portfolio
+                .CashBook[portfolio.CashBook.AccountCurrency]
+                .AddAmount(amountInAccountCurrency);
         }
     }
 }

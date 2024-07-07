@@ -31,7 +31,10 @@ namespace QuantConnect.Algorithm.Framework
         /// </summary>
         /// <param name="securities">The securities collection to be updated with the changes</param>
         /// <param name="changes">The changes to be applied to the securities collection</param>
-        public static void UpdateCollection(ICollection<Security> securities, SecurityChanges changes)
+        public static void UpdateCollection(
+            ICollection<Security> securities,
+            SecurityChanges changes
+        )
         {
             Update(changes, securities.Add, removed => securities.Remove(removed));
         }
@@ -42,9 +45,17 @@ namespace QuantConnect.Algorithm.Framework
         /// <param name="securities">The securities collection to be updated with the changes</param>
         /// <param name="changes">The changes to be applied to the securities collection</param>
         /// <param name="valueFactory">Delegate used to create instances of <typeparamref name="TValue"/> from a <see cref="Security"/> object</param>
-        public static void UpdateCollection<TValue>(ICollection<TValue> securities, SecurityChanges changes, Func<Security, TValue> valueFactory)
+        public static void UpdateCollection<TValue>(
+            ICollection<TValue> securities,
+            SecurityChanges changes,
+            Func<Security, TValue> valueFactory
+        )
         {
-            Update(changes, added => securities.Add(valueFactory(added)), removed => securities.Remove(valueFactory(removed)));
+            Update(
+                changes,
+                added => securities.Add(valueFactory(added)),
+                removed => securities.Remove(valueFactory(removed))
+            );
         }
 
         /// <summary>
@@ -57,7 +68,7 @@ namespace QuantConnect.Algorithm.Framework
             IDictionary<Security, TValue> dictionary,
             SecurityChanges changes,
             Func<Security, TValue> valueFactory
-            )
+        )
         {
             UpdateDictionary(dictionary, changes, security => security, valueFactory);
         }
@@ -72,7 +83,7 @@ namespace QuantConnect.Algorithm.Framework
             IDictionary<Symbol, TValue> dictionary,
             SecurityChanges changes,
             Func<Security, TValue> valueFactory
-            )
+        )
         {
             UpdateDictionary(dictionary, changes, security => security.Symbol, valueFactory);
         }
@@ -91,9 +102,10 @@ namespace QuantConnect.Algorithm.Framework
             SecurityChanges changes,
             Func<Security, TKey> keyFactory,
             Func<Security, TValue> valueFactory
-            )
+        )
         {
-            Update(changes,
+            Update(
+                changes,
                 added => dictionary.Add(keyFactory(added), valueFactory(added)),
                 removed =>
                 {
@@ -104,7 +116,8 @@ namespace QuantConnect.Algorithm.Framework
                     // give the entry a chance to clean up after itself
                     var disposable = entry as IDisposable;
                     disposable.DisposeSafely();
-                });
+                }
+            );
         }
 
         /// <summary>
@@ -113,7 +126,11 @@ namespace QuantConnect.Algorithm.Framework
         /// <param name="changes">The security changes to process</param>
         /// <param name="add">Function called for each added security</param>
         /// <param name="remove">Function called for each removed security</param>
-        public static void Update(SecurityChanges changes, Action<Security> add, Action<Security> remove)
+        public static void Update(
+            SecurityChanges changes,
+            Action<Security> add,
+            Action<Security> remove
+        )
         {
             foreach (var added in changes.AddedSecurities)
             {

@@ -27,7 +27,8 @@ namespace QuantConnect.Tests.Common.Orders
         {
             using (Py.GIL())
             {
-                var module = PyModule.FromString("testModule",
+                var module = PyModule.FromString(
+                    "testModule",
                     @"
 from AlgorithmImports import *
 
@@ -43,7 +44,8 @@ def getOrderProperties() -> TerminalLinkOrderProperties:
     properties.Strategy = TerminalLinkOrderProperties.StrategyParameters(""VWAP"", strategyFields)
 
     return properties
-");
+"
+                );
 
                 dynamic getOrderProperties = module.GetAttr("getOrderProperties");
                 var orderProperties = (TerminalLinkOrderProperties)getOrderProperties();

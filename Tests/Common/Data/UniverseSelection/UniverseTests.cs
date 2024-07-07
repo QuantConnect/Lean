@@ -33,7 +33,8 @@ namespace QuantConnect.Tests.Common.Data.UniverseSelection
         [SetUp]
         public void SetUp()
         {
-            _config = new SubscriptionDataConfig(typeof(TradeBar),
+            _config = new SubscriptionDataConfig(
+                typeof(TradeBar),
                 Symbols.AAPL,
                 Resolution.Second,
                 TimeZones.NewYork,
@@ -43,7 +44,8 @@ namespace QuantConnect.Tests.Common.Data.UniverseSelection
                 false,
                 false,
                 TickType.Trade,
-                false);
+                false
+            );
             _security = new Security(
                 SecurityExchangeHours.AlwaysOpen(TimeZones.NewYork),
                 _config,
@@ -51,15 +53,20 @@ namespace QuantConnect.Tests.Common.Data.UniverseSelection
                 SymbolProperties.GetDefault(Currencies.USD),
                 ErrorCurrencyConverter.Instance,
                 RegisteredSecurityDataTypesProvider.Null,
-                new SecurityCache());
-            _security.SetMarketPrice(new TradeBar(new DateTime(2022, 10, 10), _security.Symbol, 1, 1, 1, 1, 1));
+                new SecurityCache()
+            );
+            _security.SetMarketPrice(
+                new TradeBar(new DateTime(2022, 10, 10), _security.Symbol, 1, 1, 1, 1, 1)
+            );
         }
 
         [Test]
         public void RoundsTimeWhenCheckingMinimumTimeInUniverse_Seconds()
         {
-            using var universe = new TestUniverse(_config,
-                new UniverseSettings(Resolution.Daily, 1, false, false, TimeSpan.FromSeconds(30)));
+            using var universe = new TestUniverse(
+                _config,
+                new UniverseSettings(Resolution.Daily, 1, false, false, TimeSpan.FromSeconds(30))
+            );
             var addedTime = new DateTime(2018, 1, 1);
             universe.AddMember(addedTime, _security, false);
 
@@ -73,8 +80,10 @@ namespace QuantConnect.Tests.Common.Data.UniverseSelection
         [Test]
         public void RoundsTimeWhenCheckingMinimumTimeInUniverse_Minutes()
         {
-            using var universe = new TestUniverse(_config,
-                new UniverseSettings(Resolution.Daily, 1, false, false, TimeSpan.FromMinutes(30)));
+            using var universe = new TestUniverse(
+                _config,
+                new UniverseSettings(Resolution.Daily, 1, false, false, TimeSpan.FromMinutes(30))
+            );
             var addedTime = new DateTime(2018, 1, 1);
             universe.AddMember(addedTime, _security, false);
 
@@ -88,8 +97,10 @@ namespace QuantConnect.Tests.Common.Data.UniverseSelection
         [Test]
         public void RoundsTimeWhenCheckingMinimumTimeInUniverse_Hour()
         {
-            using var universe = new TestUniverse(_config,
-                new UniverseSettings(Resolution.Daily, 1, false, false, TimeSpan.FromHours(6)));
+            using var universe = new TestUniverse(
+                _config,
+                new UniverseSettings(Resolution.Daily, 1, false, false, TimeSpan.FromHours(6))
+            );
             var addedTime = new DateTime(2018, 1, 1);
             universe.AddMember(addedTime, _security, false);
 
@@ -103,8 +114,10 @@ namespace QuantConnect.Tests.Common.Data.UniverseSelection
         [Test]
         public void RoundsTimeWhenCheckingMinimumTimeInUniverse_Daily()
         {
-            using var universe = new TestUniverse(_config,
-                new UniverseSettings(Resolution.Daily, 1, false, false, TimeSpan.FromDays(1)));
+            using var universe = new TestUniverse(
+                _config,
+                new UniverseSettings(Resolution.Daily, 1, false, false, TimeSpan.FromDays(1))
+            );
             var addedTime = new DateTime(2018, 1, 1);
             universe.AddMember(addedTime, _security, false);
 
@@ -118,8 +131,10 @@ namespace QuantConnect.Tests.Common.Data.UniverseSelection
         [Test]
         public void RoundsTimeWhenCheckingMinimumTimeInUniverse_SevenDays()
         {
-            using var universe = new TestUniverse(_config,
-                new UniverseSettings(Resolution.Daily, 1, false, false, TimeSpan.FromDays(7)));
+            using var universe = new TestUniverse(
+                _config,
+                new UniverseSettings(Resolution.Daily, 1, false, false, TimeSpan.FromDays(7))
+            );
             var addedTime = new DateTime(2018, 1, 1);
             universe.AddMember(addedTime, _security, false);
 
@@ -137,7 +152,11 @@ namespace QuantConnect.Tests.Common.Data.UniverseSelection
             {
                 UniverseSettings = universeSettings;
             }
-            public override IEnumerable<Symbol> SelectSymbols(DateTime utcTime, BaseDataCollection data)
+
+            public override IEnumerable<Symbol> SelectSymbols(
+                DateTime utcTime,
+                BaseDataCollection data
+            )
             {
                 throw new NotImplementedException();
             }

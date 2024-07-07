@@ -16,7 +16,6 @@
 using System.Runtime.CompilerServices;
 using QuantConnect.Commands;
 using QuantConnect.Orders;
-
 using static QuantConnect.StringExtensions;
 
 namespace QuantConnect
@@ -31,7 +30,8 @@ namespace QuantConnect
         /// </summary>
         public static class BaseCommand
         {
-            public static string MissingValuesToGetSymbol = "Please provide values for: Ticker, Market & SecurityType";
+            public static string MissingValuesToGetSymbol =
+                "Please provide values for: Ticker, Market & SecurityType";
         }
 
         /// <summary>
@@ -51,7 +51,8 @@ namespace QuantConnect
         /// </summary>
         public static class FileCommandHandler
         {
-            public static string NullOrEmptyCommandId = "Command Id is null or empty, will skip writing result file";
+            public static string NullOrEmptyCommandId =
+                "Command Id is null or empty, will skip writing result file";
 
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             public static string ReadingCommandFile(string commandFilePath)
@@ -72,7 +73,12 @@ namespace QuantConnect
         public static class OrderCommand
         {
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            public static string CommandInfo(OrderType orderType, QuantConnect.Symbol symbol, decimal quantity, Orders.OrderResponse response)
+            public static string CommandInfo(
+                OrderType orderType,
+                QuantConnect.Symbol symbol,
+                decimal quantity,
+                Orders.OrderResponse response
+            )
             {
                 return Invariant($"{orderType} for {quantity} units of {symbol}: {response}");
             }

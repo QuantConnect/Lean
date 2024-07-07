@@ -16,9 +16,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-
 using NodaTime;
-
 using QuantConnect.Data;
 using QuantConnect.Interfaces;
 
@@ -49,7 +47,8 @@ namespace QuantConnect.Securities.Volatility
             DateTime utcTime,
             DateTimeZone timeZone,
             bool liveMode,
-            DataNormalizationMode? dataNormalizationMode = null)
+            DataNormalizationMode? dataNormalizationMode = null
+        )
         {
             volatilityModel.WarmUp(
                 historyProvider,
@@ -58,7 +57,8 @@ namespace QuantConnect.Securities.Volatility
                 timeZone,
                 liveMode,
                 dataNormalizationMode,
-                () => volatilityModel.GetHistoryRequirements(security, utcTime));
+                () => volatilityModel.GetHistoryRequirements(security, utcTime)
+            );
         }
 
         /// <summary>
@@ -85,7 +85,8 @@ namespace QuantConnect.Securities.Volatility
             Resolution? resolution,
             int barCount,
             bool liveMode,
-            DataNormalizationMode? dataNormalizationMode = null)
+            DataNormalizationMode? dataNormalizationMode = null
+        )
         {
             volatilityModel.WarmUp(
                 historyProvider,
@@ -94,7 +95,9 @@ namespace QuantConnect.Securities.Volatility
                 timeZone,
                 liveMode,
                 dataNormalizationMode,
-                () => volatilityModel.GetHistoryRequirements(security, utcTime, resolution, barCount));
+                () =>
+                    volatilityModel.GetHistoryRequirements(security, utcTime, resolution, barCount)
+            );
         }
 
         /// <summary>
@@ -113,7 +116,8 @@ namespace QuantConnect.Securities.Volatility
             Security security,
             Resolution? resolution,
             int barCount,
-            DataNormalizationMode? dataNormalizationMode = null)
+            DataNormalizationMode? dataNormalizationMode = null
+        )
         {
             volatilityModel.WarmUp(
                 algorithm.HistoryProvider,
@@ -124,7 +128,8 @@ namespace QuantConnect.Securities.Volatility
                 resolution,
                 barCount,
                 algorithm.LiveMode,
-                dataNormalizationMode);
+                dataNormalizationMode
+            );
         }
 
         private static void WarmUp(
@@ -135,9 +140,14 @@ namespace QuantConnect.Securities.Volatility
             DateTimeZone timeZone,
             bool liveMode,
             DataNormalizationMode? dataNormalizationMode,
-            Func<IEnumerable<HistoryRequest>> getHistoryRequirementsFunc)
+            Func<IEnumerable<HistoryRequest>> getHistoryRequirementsFunc
+        )
         {
-            if (historyProvider == null || security == null || volatilityModel == VolatilityModel.Null)
+            if (
+                historyProvider == null
+                || security == null
+                || volatilityModel == VolatilityModel.Null
+            )
             {
                 return;
             }
@@ -146,12 +156,20 @@ namespace QuantConnect.Securities.Volatility
             // did not want to add IVolatilityModel.SetSubscriptionDataConfigProvider
             // to prevent breaking existing user models.
             var baseTypeModel = volatilityModel as BaseVolatilityModel;
-            baseTypeModel?.SetSubscriptionDataConfigProvider(subscriptionManager.SubscriptionDataConfigService);
+            baseTypeModel?.SetSubscriptionDataConfigProvider(
+                subscriptionManager.SubscriptionDataConfigService
+            );
             // end
 
             // Warm up
             var historyRequests = getHistoryRequirementsFunc().ToList();
-            if (liveMode || (dataNormalizationMode.HasValue && dataNormalizationMode == DataNormalizationMode.Raw))
+            if (
+                liveMode
+                || (
+                    dataNormalizationMode.HasValue
+                    && dataNormalizationMode == DataNormalizationMode.Raw
+                )
+            )
             {
                 // If we're in live mode or raw mode, we need to warm up the volatility model with scaled raw data
                 // to avoid jumps in volatility values due to price discontinuities on splits and dividends

@@ -15,11 +15,11 @@
 */
 
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using QuantConnect.Data;
 using QuantConnect.Interfaces;
 using QuantConnect.Securities;
-using System.Collections.Generic;
 
 namespace QuantConnect.Algorithm.CSharp
 {
@@ -30,7 +30,11 @@ namespace QuantConnect.Algorithm.CSharp
     {
         // S&P 500 EMini futures
         private const string RootSP500 = Futures.Indices.SP500EMini;
-        private readonly Symbol SP500 = QuantConnect.Symbol.Create(RootSP500, SecurityType.Future, Market.CME);
+        private readonly Symbol SP500 = QuantConnect.Symbol.Create(
+            RootSP500,
+            SecurityType.Future,
+            Market.CME
+        );
 
         protected List<DateTime> ContinuousWarmupTimes { get; } = new();
         protected List<DateTime> ChainWarmupTimes { get; } = new();
@@ -55,7 +59,7 @@ namespace QuantConnect.Algorithm.CSharp
         /// <param name="slice">The current slice of data keyed by symbol string</param>
         public override void OnData(Slice slice)
         {
-            if(IsWarmingUp && slice.ContainsKey(SP500))
+            if (IsWarmingUp && slice.ContainsKey(SP500))
             {
                 if (Securities[SP500].AskPrice == 0)
                 {
@@ -94,8 +98,16 @@ namespace QuantConnect.Algorithm.CSharp
 
         public override void OnEndOfAlgorithm()
         {
-            AssertDataTime(new DateTime(2013, 10, 07, 20, 0, 0), new DateTime(2013, 10, 08, 20, 0, 0), ChainWarmupTimes);
-            AssertDataTime(new DateTime(2013, 10, 07, 20, 0, 0), new DateTime(2013, 10, 08, 20, 0, 0), ContinuousWarmupTimes);
+            AssertDataTime(
+                new DateTime(2013, 10, 07, 20, 0, 0),
+                new DateTime(2013, 10, 08, 20, 0, 0),
+                ChainWarmupTimes
+            );
+            AssertDataTime(
+                new DateTime(2013, 10, 07, 20, 0, 0),
+                new DateTime(2013, 10, 08, 20, 0, 0),
+                ContinuousWarmupTimes
+            );
         }
 
         protected void AssertDataTime(DateTime start, DateTime end, List<DateTime> times)
@@ -107,7 +119,9 @@ namespace QuantConnect.Algorithm.CSharp
                 {
                     if (times[count] != start)
                     {
-                        throw new RegressionTestException($"Unexpected time {times[count]} expected {start}");
+                        throw new RegressionTestException(
+                            $"Unexpected time {times[count]} expected {start}"
+                        );
                     }
                     // if the market is closed there will be no data, so stop moving the index counter
                     count++;
@@ -120,8 +134,7 @@ namespace QuantConnect.Algorithm.CSharp
                 {
                     start = start.AddMinutes(1);
                 }
-            }
-            while (start < end);
+            } while (start < end);
         }
 
         /// <summary>
@@ -152,35 +165,36 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// This is used by the regression test system to indicate what the expected statistics are from running the algorithm
         /// </summary>
-        public virtual Dictionary<string, string> ExpectedStatistics => new Dictionary<string, string>
-        {
-            {"Total Orders", "1"},
-            {"Average Win", "0%"},
-            {"Average Loss", "0%"},
-            {"Compounding Annual Return", "130.234%"},
-            {"Drawdown", "1.400%"},
-            {"Expectancy", "0"},
-            {"Start Equity", "100000"},
-            {"End Equity", "100620.7"},
-            {"Net Profit", "0.621%"},
-            {"Sharpe Ratio", "47.958"},
-            {"Sortino Ratio", "0"},
-            {"Probabilistic Sharpe Ratio", "0%"},
-            {"Loss Rate", "0%"},
-            {"Win Rate", "0%"},
-            {"Profit-Loss Ratio", "0"},
-            {"Alpha", "-3.383"},
-            {"Beta", "0.742"},
-            {"Annual Standard Deviation", "0.18"},
-            {"Annual Variance", "0.032"},
-            {"Information Ratio", "-120.79"},
-            {"Tracking Error", "0.063"},
-            {"Treynor Ratio", "11.64"},
-            {"Total Fees", "$2.15"},
-            {"Estimated Strategy Capacity", "$120000000.00"},
-            {"Lowest Capacity Asset", "ES VP274HSU1AF5"},
-            {"Portfolio Turnover", "28.05%"},
-            {"OrderListHash", "1b8fcad46bd578e36bbecdf922b2deb0"}
-        };
+        public virtual Dictionary<string, string> ExpectedStatistics =>
+            new Dictionary<string, string>
+            {
+                { "Total Orders", "1" },
+                { "Average Win", "0%" },
+                { "Average Loss", "0%" },
+                { "Compounding Annual Return", "130.234%" },
+                { "Drawdown", "1.400%" },
+                { "Expectancy", "0" },
+                { "Start Equity", "100000" },
+                { "End Equity", "100620.7" },
+                { "Net Profit", "0.621%" },
+                { "Sharpe Ratio", "47.958" },
+                { "Sortino Ratio", "0" },
+                { "Probabilistic Sharpe Ratio", "0%" },
+                { "Loss Rate", "0%" },
+                { "Win Rate", "0%" },
+                { "Profit-Loss Ratio", "0" },
+                { "Alpha", "-3.383" },
+                { "Beta", "0.742" },
+                { "Annual Standard Deviation", "0.18" },
+                { "Annual Variance", "0.032" },
+                { "Information Ratio", "-120.79" },
+                { "Tracking Error", "0.063" },
+                { "Treynor Ratio", "11.64" },
+                { "Total Fees", "$2.15" },
+                { "Estimated Strategy Capacity", "$120000000.00" },
+                { "Lowest Capacity Asset", "ES VP274HSU1AF5" },
+                { "Portfolio Turnover", "28.05%" },
+                { "OrderListHash", "1b8fcad46bd578e36bbecdf922b2deb0" }
+            };
     }
 }

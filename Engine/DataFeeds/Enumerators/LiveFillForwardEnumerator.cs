@@ -15,11 +15,11 @@
 */
 
 using System;
+using System.Collections.Generic;
 using NodaTime;
 using QuantConnect.Data;
-using QuantConnect.Util;
 using QuantConnect.Securities;
-using System.Collections.Generic;
+using QuantConnect.Util;
 
 namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
 {
@@ -48,9 +48,27 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
         /// <param name="dataResolution">The source enumerator's data resolution</param>
         /// <param name="dataTimeZone">Time zone of the underlying source data</param>
         /// <param name="dailyStrictEndTimeEnabled">True if daily strict end times are enabled</param>
-        public LiveFillForwardEnumerator(ITimeProvider timeProvider, IEnumerator<BaseData> enumerator, SecurityExchange exchange, IReadOnlyRef<TimeSpan> fillForwardResolution,
-            bool isExtendedMarketHours, DateTime subscriptionEndTime, Resolution dataResolution, DateTimeZone dataTimeZone, bool dailyStrictEndTimeEnabled)
-            : base(enumerator, exchange, fillForwardResolution, isExtendedMarketHours, subscriptionEndTime, dataResolution.ToTimeSpan(), dataTimeZone, dailyStrictEndTimeEnabled)
+        public LiveFillForwardEnumerator(
+            ITimeProvider timeProvider,
+            IEnumerator<BaseData> enumerator,
+            SecurityExchange exchange,
+            IReadOnlyRef<TimeSpan> fillForwardResolution,
+            bool isExtendedMarketHours,
+            DateTime subscriptionEndTime,
+            Resolution dataResolution,
+            DateTimeZone dataTimeZone,
+            bool dailyStrictEndTimeEnabled
+        )
+            : base(
+                enumerator,
+                exchange,
+                fillForwardResolution,
+                isExtendedMarketHours,
+                subscriptionEndTime,
+                dataResolution.ToTimeSpan(),
+                dataTimeZone,
+                dailyStrictEndTimeEnabled
+            )
         {
             _timeProvider = timeProvider;
             _dataResolution = dataResolution.ToTimeSpan();
@@ -65,9 +83,16 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
         /// <param name="next">The next piece of data on the source enumerator, this may be null</param>
         /// <param name="fillForward">When this function returns true, this will have a non-null value, null when the function returns false</param>
         /// <returns>True when a new fill forward piece of data was produced and should be emitted by this enumerator</returns>
-        protected override bool RequiresFillForwardData(TimeSpan fillForwardResolution, BaseData previous, BaseData next, out BaseData fillForward)
+        protected override bool RequiresFillForwardData(
+            TimeSpan fillForwardResolution,
+            BaseData previous,
+            BaseData next,
+            out BaseData fillForward
+        )
         {
-            if (base.RequiresFillForwardData(fillForwardResolution, previous, next, out fillForward))
+            if (
+                base.RequiresFillForwardData(fillForwardResolution, previous, next, out fillForward)
+            )
             {
                 var underlyingTimeout = TimeSpan.Zero;
                 if (fillForwardResolution >= _dataResolution)
@@ -77,7 +102,9 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
                     underlyingTimeout = _underlyingTimeout;
                 }
 
-                var nextEndTimeUtc = (fillForward.EndTime + underlyingTimeout).ConvertToUtc(Exchange.TimeZone);
+                var nextEndTimeUtc = (fillForward.EndTime + underlyingTimeout).ConvertToUtc(
+                    Exchange.TimeZone
+                );
                 if (next != null || nextEndTimeUtc <= _timeProvider.GetUtcNow())
                 {
                     // we FF if next is here but in the future or next has not come yet and we've wait enough time

@@ -50,8 +50,10 @@ namespace QuantConnect.Securities
                 var amount = 0m;
                 Cash accountCurrency;
                 // remove previous account currency if any
-                if (!_accountCurrency.IsNullOrEmpty()
-                    && TryGetValue(_accountCurrency, out accountCurrency))
+                if (
+                    !_accountCurrency.IsNullOrEmpty()
+                    && TryGetValue(_accountCurrency, out accountCurrency)
+                )
                 {
                     amount = accountCurrency.Amount;
                     Remove(_accountCurrency);
@@ -74,10 +76,7 @@ namespace QuantConnect.Securities
         /// </summary>
         public decimal TotalValueInAccountCurrency
         {
-            get
-            {
-                return this.Aggregate(0m, (d, pair) => d + pair.Value.ValueInAccountCurrency);
-            }
+            get { return this.Aggregate(0m, (d, pair) => d + pair.Value.ValueInAccountCurrency); }
         }
 
         /// <summary>
@@ -114,12 +113,14 @@ namespace QuantConnect.Securities
         /// <param name="securityService">Will be used to create required new <see cref="Security"/></param>
         /// <param name="defaultResolution">The default resolution to use for the internal subscriptions</param>
         /// <returns>Returns a list of added currency <see cref="SubscriptionDataConfig"/></returns>
-        public List<SubscriptionDataConfig> EnsureCurrencyDataFeeds(SecurityManager securities,
+        public List<SubscriptionDataConfig> EnsureCurrencyDataFeeds(
+            SecurityManager securities,
             SubscriptionManager subscriptions,
             IReadOnlyDictionary<SecurityType, string> marketMap,
             SecurityChanges changes,
             ISecurityService securityService,
-            Resolution defaultResolution = Resolution.Minute)
+            Resolution defaultResolution = Resolution.Minute
+        )
         {
             var addedSubscriptionDataConfigs = new List<SubscriptionDataConfig>();
             foreach (var kvp in _currencies)
@@ -133,7 +134,8 @@ namespace QuantConnect.Securities
                     changes,
                     securityService,
                     AccountCurrency,
-                    defaultResolution);
+                    defaultResolution
+                );
                 if (subscriptionDataConfigs != null)
                 {
                     foreach (var subscriptionDataConfig in subscriptionDataConfigs)
@@ -152,7 +154,11 @@ namespace QuantConnect.Securities
         /// <param name="sourceCurrency">The source currency symbol</param>
         /// <param name="destinationCurrency">The destination currency symbol</param>
         /// <returns>The converted value</returns>
-        public decimal Convert(decimal sourceQuantity, string sourceCurrency, string destinationCurrency)
+        public decimal Convert(
+            decimal sourceQuantity,
+            string sourceCurrency,
+            string destinationCurrency
+        )
         {
             if (sourceQuantity == 0)
             {
@@ -164,12 +170,16 @@ namespace QuantConnect.Securities
 
             if (source.ConversionRate == 0)
             {
-                throw new ArgumentException(Messages.CashBook.ConversionRateNotFound(sourceCurrency));
+                throw new ArgumentException(
+                    Messages.CashBook.ConversionRateNotFound(sourceCurrency)
+                );
             }
 
             if (destination.ConversionRate == 0)
             {
-                throw new ArgumentException(Messages.CashBook.ConversionRateNotFound(destinationCurrency));
+                throw new ArgumentException(
+                    Messages.CashBook.ConversionRateNotFound(destinationCurrency)
+                );
             }
 
             var conversionRate = source.ConversionRate / destination.ConversionRate;
@@ -211,10 +221,7 @@ namespace QuantConnect.Securities
         /// <value>The count.</value>
         public int Count
         {
-            get
-            {
-                return _currencies.Count;
-            }
+            get { return _currencies.Count; }
         }
 
         /// <summary>
@@ -310,7 +317,7 @@ namespace QuantConnect.Securities
         /// <param name="arrayIndex">Array index.</param>
         public void CopyTo(KeyValuePair<string, Cash>[] array, int arrayIndex)
         {
-            ((IDictionary<string, Cash>) _currencies).CopyTo(array, arrayIndex);
+            ((IDictionary<string, Cash>)_currencies).CopyTo(array, arrayIndex);
         }
 
         /// <summary>
@@ -323,7 +330,9 @@ namespace QuantConnect.Securities
             {
                 if (symbol == Currencies.NullCurrency)
                 {
-                    throw new InvalidOperationException(Messages.CashBook.UnexpectedRequestForNullCurrency);
+                    throw new InvalidOperationException(
+                        Messages.CashBook.UnexpectedRequestForNullCurrency
+                    );
                 }
                 Cash cash;
                 if (!_currencies.TryGetValue(symbol, out cash))
@@ -332,10 +341,7 @@ namespace QuantConnect.Securities
                 }
                 return cash;
             }
-            set
-            {
-                Add(symbol, value);
-            }
+            set { Add(symbol, value); }
         }
 
         /// <summary>
@@ -398,10 +404,7 @@ namespace QuantConnect.Securities
                 // we link our Updated event with underlying cash instances
                 // so interested listeners just subscribe to our event
                 value.Updated += OnCashUpdate;
-                var newCurrencies = new Dictionary<string, Cash>(_currencies)
-                {
-                    [symbol] = value
-                };
+                var newCurrencies = new Dictionary<string, Cash>(_currencies) { [symbol] = value };
                 _currencies = newCurrencies;
 
                 OnUpdate(CashBookUpdateType.Added, value);
@@ -429,7 +432,9 @@ namespace QuantConnect.Securities
             {
                 if (!calledInternally)
                 {
-                    Log.Error("CashBook.Remove(): " + Messages.CashBook.FailedToRemoveRecord(symbol));
+                    Log.Error(
+                        "CashBook.Remove(): " + Messages.CashBook.FailedToRemoveRecord(symbol)
+                    );
                 }
             }
             else

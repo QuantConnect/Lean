@@ -51,7 +51,11 @@ namespace QuantConnect.Tests.Common
         [TestCase(ExpressionType.LessThanOrEqual, true, false)]
         [TestCase(ExpressionType.GreaterThan, false, true)]
         [TestCase(ExpressionType.GreaterThanOrEqual, true, true)]
-        public void EvaluatesFlippedOperandsComparison(ExpressionType type, bool expected1, bool expected2)
+        public void EvaluatesFlippedOperandsComparison(
+            ExpressionType type,
+            bool expected1,
+            bool expected2
+        )
         {
             const int left1 = 1;
             const int right1 = 1;

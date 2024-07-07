@@ -26,7 +26,9 @@ namespace QuantConnect.Indicators
     /// Source: https://www.cjournal.cz/files/308.pdf
     /// </summary>
     /// <seealso cref="IndicatorDataPoint" />
-    public class ArnaudLegouxMovingAverage : WindowIndicator<IndicatorDataPoint>, IIndicatorWarmUpPeriodProvider
+    public class ArnaudLegouxMovingAverage
+        : WindowIndicator<IndicatorDataPoint>,
+            IIndicatorWarmUpPeriodProvider
     {
         private readonly decimal[] _weightVector;
 
@@ -47,20 +49,31 @@ namespace QuantConnect.Indicators
         /// decimal - This parameter allows regulating the smoothness and high sensitivity of the
         /// Moving Average. The range for this parameter is [0, 1]. It affects the weight vector skewness.
         /// </param>
-        public ArnaudLegouxMovingAverage(string name, int period, int sigma = 6, decimal offset = 0.85m)
+        public ArnaudLegouxMovingAverage(
+            string name,
+            int period,
+            int sigma = 6,
+            decimal offset = 0.85m
+        )
             : base(name, period)
         {
-            if (offset < 0 || offset > 1) throw new ArgumentException($"Offset parameter range is [0,1]. Value: {offset}", nameof(offset));
+            if (offset < 0 || offset > 1)
+                throw new ArgumentException(
+                    $"Offset parameter range is [0,1]. Value: {offset}",
+                    nameof(offset)
+                );
 
             var m = Math.Floor(offset * (period - 1));
             var s = period * 1m / sigma;
 
-            var tmpVector = Enumerable.Range(0, period)
-                .Select(i => Math.Exp((double) (-(i - m) * (i - m) / (2 * s * s))))
+            var tmpVector = Enumerable
+                .Range(0, period)
+                .Select(i => Math.Exp((double)(-(i - m) * (i - m) / (2 * s * s))))
                 .ToArray();
 
             _weightVector = tmpVector
-                .Select(i => (decimal) (i / tmpVector.Sum())).Reverse()
+                .Select(i => (decimal)(i / tmpVector.Sum()))
+                .Reverse()
                 .ToArray();
         }
 
@@ -70,9 +83,7 @@ namespace QuantConnect.Indicators
         /// <param name="name">string - a name for the indicator</param>
         /// <param name="period">int - the number of periods to calculate the ALMA.</param>
         public ArnaudLegouxMovingAverage(string name, int period)
-            : this(name, period, 6)
-        {
-        }
+            : this(name, period, 6) { }
 
         /// <summary>
         /// Initializes a new instance of the <see cref="ArnaudLegouxMovingAverage" /> class.
@@ -87,18 +98,14 @@ namespace QuantConnect.Indicators
         /// Average. The range for this parameter is [0, 1]. It affects the weight vector skewness.
         /// </param>
         public ArnaudLegouxMovingAverage(int period, int sigma, decimal offset = 0.85m)
-            : this($"ALMA({period},{sigma},{offset})", period, sigma, offset)
-        {
-        }
+            : this($"ALMA({period},{sigma},{offset})", period, sigma, offset) { }
 
         /// <summary>
         /// Initializes a new instance of the <see cref="ArnaudLegouxMovingAverage" /> class.
         /// </summary>
         /// <param name="period">int - the number of periods to calculate the ALMA.</param>
         public ArnaudLegouxMovingAverage(int period)
-            : this(period, 6)
-        {
-        }
+            : this(period, 6) { }
 
         /// <summary>
         /// Computes the next value for this indicator from the given state.
@@ -109,10 +116,12 @@ namespace QuantConnect.Indicators
         /// A new value for this indicator
         /// </returns>
         /// <exception cref="System.NotImplementedException"></exception>
-        protected override decimal ComputeNextValue(IReadOnlyWindow<IndicatorDataPoint> window,
-            IndicatorDataPoint input)
+        protected override decimal ComputeNextValue(
+            IReadOnlyWindow<IndicatorDataPoint> window,
+            IndicatorDataPoint input
+        )
         {
-            return IsReady 
+            return IsReady
                 ? window.Select((t, i) => t.Price * _weightVector[i]).Sum()
                 : input.Value;
         }

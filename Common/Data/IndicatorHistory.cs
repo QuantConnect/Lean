@@ -14,10 +14,10 @@
 */
 
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using Python.Runtime;
 using QuantConnect.Indicators;
-using System.Collections.Generic;
 
 namespace QuantConnect.Data
 {
@@ -39,11 +39,17 @@ namespace QuantConnect.Data
         /// <param name="indicatorsDataPointsByTime">Indicators data points by time</param>
         /// <param name="indicatorsDataPointPerProperty">Indicators data points by property name</param>
         /// <param name="dataframe">The lazy data frame constructor</param>
-        public IndicatorHistory(List<IndicatorDataPoints> indicatorsDataPointsByTime, List<InternalIndicatorValues> indicatorsDataPointPerProperty, Lazy<PyObject> dataframe)
+        public IndicatorHistory(
+            List<IndicatorDataPoints> indicatorsDataPointsByTime,
+            List<InternalIndicatorValues> indicatorsDataPointPerProperty,
+            Lazy<PyObject> dataframe
+        )
             : base(indicatorsDataPointsByTime, dataframe)
         {
             // for the index accessor we enforce uniqueness by name
-            _pointsPerName = indicatorsDataPointPerProperty.DistinctBy(x => x.Name.ToLowerInvariant()).ToDictionary(x => x.Name.ToSnakeCase(), x => x.Values);
+            _pointsPerName = indicatorsDataPointPerProperty
+                .DistinctBy(x => x.Name.ToLowerInvariant())
+                .ToDictionary(x => x.Name.ToSnakeCase(), x => x.Values);
         }
 
         /// <summary>
@@ -53,7 +59,12 @@ namespace QuantConnect.Data
         {
             get
             {
-                if (_pointsPerName.TryGetValue(name.ToSnakeCase().ToLowerInvariant(), out var result))
+                if (
+                    _pointsPerName.TryGetValue(
+                        name.ToSnakeCase().ToLowerInvariant(),
+                        out var result
+                    )
+                )
                 {
                     return result;
                 }

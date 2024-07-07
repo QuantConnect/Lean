@@ -14,17 +14,20 @@
 */
 
 using System;
-using QuantConnect.Interfaces;
-using QuantConnect.Data.UniverseSelection;
 using QuantConnect.Data.Fundamental;
+using QuantConnect.Data.UniverseSelection;
+using QuantConnect.Interfaces;
 
 namespace QuantConnect.Tests.Common.Data.Fundamental
 {
     public class NullFundamentalDataProvider : IFundamentalDataProvider
     {
-        public T Get<T>(DateTime time, SecurityIdentifier securityIdentifier, FundamentalProperty name) => BaseFundamentalDataProvider.GetDefault<T>();
-        public void Initialize(IDataProvider dataProvider, bool liveMode)
-        {
-        }
+        public T Get<T>(
+            DateTime time,
+            SecurityIdentifier securityIdentifier,
+            FundamentalProperty name
+        ) => BaseFundamentalDataProvider.GetDefault<T>();
+
+        public void Initialize(IDataProvider dataProvider, bool liveMode) { }
     }
 }

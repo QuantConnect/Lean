@@ -13,20 +13,20 @@
  * limitations under the License.
 */
 
+using System;
 using Python.Runtime;
 using QuantConnect.Data;
 using QuantConnect.Data.Market;
 using QuantConnect.Python;
-using System;
 
 namespace QuantConnect.Indicators
 {
     /// <summary>
-    /// In financial analysis, the Alpha indicator is used to measure the performance of an investment (such as a stock or ETF) 
-    /// relative to a benchmark index, often representing the broader market. Alpha indicates the excess return of the investment 
-    /// compared to the return of the benchmark index. 
-    /// 
-    /// The S P 500 index is frequently used as a benchmark in Alpha calculations to represent the overall market performance. 
+    /// In financial analysis, the Alpha indicator is used to measure the performance of an investment (such as a stock or ETF)
+    /// relative to a benchmark index, often representing the broader market. Alpha indicates the excess return of the investment
+    /// compared to the return of the benchmark index.
+    ///
+    /// The S P 500 index is frequently used as a benchmark in Alpha calculations to represent the overall market performance.
     /// Alpha is an essential tool for investors to understand the idiosyncratic returns of their investment that aren't caused
     /// by movement in the underlying benchmark.
     /// </summary>
@@ -81,7 +81,8 @@ namespace QuantConnect.Indicators
         /// <summary>
         /// Gets a flag indicating when the indicator is ready and fully initialized
         /// </summary>
-        public override bool IsReady => _targetROC.IsReady && _beta.IsReady && _referenceROC.IsReady;
+        public override bool IsReady =>
+            _targetROC.IsReady && _beta.IsReady && _referenceROC.IsReady;
 
         /// <summary>
         /// Creates a new Alpha indicator with the specified name, target, reference, and period values
@@ -92,7 +93,14 @@ namespace QuantConnect.Indicators
         /// <param name="alphaPeriod">Period of the indicator - alpha</param>
         /// <param name="betaPeriod">Period of the indicator - beta</param>
         /// <param name="riskFreeRateModel">The risk free rate model of this indicator</param>
-        public Alpha(string name, Symbol targetSymbol, Symbol referenceSymbol, int alphaPeriod, int betaPeriod, IRiskFreeInterestRateModel riskFreeRateModel)
+        public Alpha(
+            string name,
+            Symbol targetSymbol,
+            Symbol referenceSymbol,
+            int alphaPeriod,
+            int betaPeriod,
+            IRiskFreeInterestRateModel riskFreeRateModel
+        )
             : base(name)
         {
             // Assert that the target and reference symbols are not the same
@@ -112,7 +120,7 @@ namespace QuantConnect.Indicators
             {
                 throw new ArgumentException("The beta period must be equal or greater than 2.");
             }
-            
+
             _targetSymbol = targetSymbol;
             _referenceSymbol = referenceSymbol;
             _alphaPeriod = alphaPeriod;
@@ -122,7 +130,7 @@ namespace QuantConnect.Indicators
             _referenceROC = new RateOfChange($"{name}_ReferenceROC", alphaPeriod);
 
             _beta = new Beta($"{name}_Beta", _targetSymbol, _referenceSymbol, betaPeriod);
-            
+
             WarmUpPeriod = alphaPeriod >= betaPeriod ? alphaPeriod + 1 : betaPeriod + 1;
 
             _alpha = 0m;
@@ -137,10 +145,22 @@ namespace QuantConnect.Indicators
         /// <param name="alphaPeriod">Period of the indicator - alpha</param>
         /// <param name="betaPeriod">Period of the indicator - beta</param>
         /// <param name="riskFreeRate">The risk free rate of this indicator for given period</param>
-        public Alpha(string name, Symbol targetSymbol, Symbol referenceSymbol, int alphaPeriod, int betaPeriod, decimal? riskFreeRate = null)
-            : this(name, targetSymbol, referenceSymbol, alphaPeriod, betaPeriod, new ConstantRiskFreeRateInterestRateModel(riskFreeRate ?? 0m))
-        {
-        }
+        public Alpha(
+            string name,
+            Symbol targetSymbol,
+            Symbol referenceSymbol,
+            int alphaPeriod,
+            int betaPeriod,
+            decimal? riskFreeRate = null
+        )
+            : this(
+                name,
+                targetSymbol,
+                referenceSymbol,
+                alphaPeriod,
+                betaPeriod,
+                new ConstantRiskFreeRateInterestRateModel(riskFreeRate ?? 0m)
+            ) { }
 
         /// <summary>
         /// Creates a new Alpha indicator with the specified target, reference, and period values
@@ -150,10 +170,21 @@ namespace QuantConnect.Indicators
         /// <param name="alphaPeriod">Period of the indicator - alpha</param>
         /// <param name="betaPeriod">Period of the indicator - beta</param>
         /// <param name="riskFreeRate">The risk free rate of this indicator for given period</param>
-        public Alpha(Symbol targetSymbol, Symbol referenceSymbol, int alphaPeriod, int betaPeriod, decimal? riskFreeRate = null)
-            : this($"ALPHA({targetSymbol},{referenceSymbol},{alphaPeriod},{betaPeriod},{riskFreeRate})", targetSymbol, referenceSymbol, alphaPeriod, betaPeriod, new ConstantRiskFreeRateInterestRateModel(riskFreeRate ?? 0m))
-        {
-        }
+        public Alpha(
+            Symbol targetSymbol,
+            Symbol referenceSymbol,
+            int alphaPeriod,
+            int betaPeriod,
+            decimal? riskFreeRate = null
+        )
+            : this(
+                $"ALPHA({targetSymbol},{referenceSymbol},{alphaPeriod},{betaPeriod},{riskFreeRate})",
+                targetSymbol,
+                referenceSymbol,
+                alphaPeriod,
+                betaPeriod,
+                new ConstantRiskFreeRateInterestRateModel(riskFreeRate ?? 0m)
+            ) { }
 
         /// <summary>
         /// Creates a new Alpha indicator with the specified target, reference, and period value
@@ -162,10 +193,20 @@ namespace QuantConnect.Indicators
         /// <param name="referenceSymbol">The reference symbol of this indicator</param>
         /// <param name="period">Period of the indicator - alpha and beta</param>
         /// <param name="riskFreeRate">The risk free rate of this indicator for given period</param>
-        public Alpha(Symbol targetSymbol, Symbol referenceSymbol, int period, decimal? riskFreeRate = null)
-            : this($"ALPHA({targetSymbol},{referenceSymbol},{period},{riskFreeRate})", targetSymbol, referenceSymbol, period, period, new ConstantRiskFreeRateInterestRateModel(riskFreeRate ?? 0m))
-        {
-        }
+        public Alpha(
+            Symbol targetSymbol,
+            Symbol referenceSymbol,
+            int period,
+            decimal? riskFreeRate = null
+        )
+            : this(
+                $"ALPHA({targetSymbol},{referenceSymbol},{period},{riskFreeRate})",
+                targetSymbol,
+                referenceSymbol,
+                period,
+                period,
+                new ConstantRiskFreeRateInterestRateModel(riskFreeRate ?? 0m)
+            ) { }
 
         /// <summary>
         /// Creates a new Alpha indicator with the specified name, target, reference, and period value
@@ -175,11 +216,22 @@ namespace QuantConnect.Indicators
         /// <param name="referenceSymbol"></param>
         /// <param name="period">Period of the indicator - alpha and beta</param>
         /// <param name="riskFreeRate">The risk free rate of this indicator for given period</param>
-        public Alpha(string name, Symbol targetSymbol, Symbol referenceSymbol, int period, decimal? riskFreeRate = null)
-            : this(name, targetSymbol, referenceSymbol, period, period, new ConstantRiskFreeRateInterestRateModel(riskFreeRate ?? 0m))
-        {
-        }
-        
+        public Alpha(
+            string name,
+            Symbol targetSymbol,
+            Symbol referenceSymbol,
+            int period,
+            decimal? riskFreeRate = null
+        )
+            : this(
+                name,
+                targetSymbol,
+                referenceSymbol,
+                period,
+                period,
+                new ConstantRiskFreeRateInterestRateModel(riskFreeRate ?? 0m)
+            ) { }
+
         /// <summary>
         /// Creates a new Alpha indicator with the specified target, reference, and period values
         /// </summary>
@@ -188,10 +240,21 @@ namespace QuantConnect.Indicators
         /// <param name="alphaPeriod">Period of the indicator - alpha</param>
         /// <param name="betaPeriod">Period of the indicator - beta</param>
         /// <param name="riskFreeRateModel">The risk free rate model of this indicator</param>
-        public Alpha(Symbol targetSymbol, Symbol referenceSymbol, int alphaPeriod, int betaPeriod, IRiskFreeInterestRateModel riskFreeRateModel)
-            : this($"ALPHA({targetSymbol},{referenceSymbol},{alphaPeriod},{betaPeriod})", targetSymbol, referenceSymbol, alphaPeriod, betaPeriod, riskFreeRateModel)
-        {
-        }
+        public Alpha(
+            Symbol targetSymbol,
+            Symbol referenceSymbol,
+            int alphaPeriod,
+            int betaPeriod,
+            IRiskFreeInterestRateModel riskFreeRateModel
+        )
+            : this(
+                $"ALPHA({targetSymbol},{referenceSymbol},{alphaPeriod},{betaPeriod})",
+                targetSymbol,
+                referenceSymbol,
+                alphaPeriod,
+                betaPeriod,
+                riskFreeRateModel
+            ) { }
 
         /// <summary>
         /// Creates a new Alpha indicator with the specified target, reference, and period value
@@ -200,10 +263,20 @@ namespace QuantConnect.Indicators
         /// <param name="referenceSymbol">The reference symbol of this indicator</param>
         /// <param name="period">Period of the indicator - alpha and beta</param>
         /// <param name="riskFreeRateModel">The risk free rate model of this indicator</param>
-        public Alpha(Symbol targetSymbol, Symbol referenceSymbol, int period, IRiskFreeInterestRateModel riskFreeRateModel)
-            : this($"ALPHA({targetSymbol},{referenceSymbol},{period})", targetSymbol, referenceSymbol, period, period, riskFreeRateModel)
-        {
-        }
+        public Alpha(
+            Symbol targetSymbol,
+            Symbol referenceSymbol,
+            int period,
+            IRiskFreeInterestRateModel riskFreeRateModel
+        )
+            : this(
+                $"ALPHA({targetSymbol},{referenceSymbol},{period})",
+                targetSymbol,
+                referenceSymbol,
+                period,
+                period,
+                riskFreeRateModel
+            ) { }
 
         /// <summary>
         /// Creates a new Alpha indicator with the specified name, target, reference, and period value
@@ -213,10 +286,14 @@ namespace QuantConnect.Indicators
         /// <param name="referenceSymbol"></param>
         /// <param name="period">Period of the indicator - alpha and beta</param>
         /// <param name="riskFreeRateModel">The risk free rate model of this indicator</param>
-        public Alpha(string name, Symbol targetSymbol, Symbol referenceSymbol, int period, IRiskFreeInterestRateModel riskFreeRateModel)
-            : this(name, targetSymbol, referenceSymbol, period, period, riskFreeRateModel)
-        {
-        }
+        public Alpha(
+            string name,
+            Symbol targetSymbol,
+            Symbol referenceSymbol,
+            int period,
+            IRiskFreeInterestRateModel riskFreeRateModel
+        )
+            : this(name, targetSymbol, referenceSymbol, period, period, riskFreeRateModel) { }
 
         /// <summary>
         /// Creates a new Alpha indicator with the specified name, target, reference, and period values
@@ -227,10 +304,22 @@ namespace QuantConnect.Indicators
         /// <param name="alphaPeriod">Period of the indicator - alpha</param>
         /// <param name="betaPeriod">Period of the indicator - beta</param>
         /// <param name="riskFreeRateModel">The risk free rate model of this indicator</param>
-        public Alpha(string name, Symbol targetSymbol, Symbol referenceSymbol, int alphaPeriod, int betaPeriod, PyObject riskFreeRateModel)
-            : this(name, targetSymbol, referenceSymbol, alphaPeriod, betaPeriod, RiskFreeInterestRateModelPythonWrapper.FromPyObject(riskFreeRateModel))
-        {
-        }
+        public Alpha(
+            string name,
+            Symbol targetSymbol,
+            Symbol referenceSymbol,
+            int alphaPeriod,
+            int betaPeriod,
+            PyObject riskFreeRateModel
+        )
+            : this(
+                name,
+                targetSymbol,
+                referenceSymbol,
+                alphaPeriod,
+                betaPeriod,
+                RiskFreeInterestRateModelPythonWrapper.FromPyObject(riskFreeRateModel)
+            ) { }
 
         /// <summary>
         /// Creates a new Alpha indicator with the specified target, reference, and period values
@@ -240,10 +329,21 @@ namespace QuantConnect.Indicators
         /// <param name="alphaPeriod">Period of the indicator - alpha</param>
         /// <param name="betaPeriod">Period of the indicator - beta</param>
         /// <param name="riskFreeRateModel">The risk free rate model of this indicator</param>
-        public Alpha(Symbol targetSymbol, Symbol referenceSymbol, int alphaPeriod, int betaPeriod, PyObject riskFreeRateModel)
-            : this($"ALPHA({targetSymbol},{referenceSymbol},{alphaPeriod},{betaPeriod})", targetSymbol, referenceSymbol, alphaPeriod, betaPeriod, RiskFreeInterestRateModelPythonWrapper.FromPyObject(riskFreeRateModel))
-        {
-        }
+        public Alpha(
+            Symbol targetSymbol,
+            Symbol referenceSymbol,
+            int alphaPeriod,
+            int betaPeriod,
+            PyObject riskFreeRateModel
+        )
+            : this(
+                $"ALPHA({targetSymbol},{referenceSymbol},{alphaPeriod},{betaPeriod})",
+                targetSymbol,
+                referenceSymbol,
+                alphaPeriod,
+                betaPeriod,
+                RiskFreeInterestRateModelPythonWrapper.FromPyObject(riskFreeRateModel)
+            ) { }
 
         /// <summary>
         /// Creates a new Alpha indicator with the specified target, reference, and period value
@@ -252,10 +352,20 @@ namespace QuantConnect.Indicators
         /// <param name="referenceSymbol">The reference symbol of this indicator</param>
         /// <param name="period">Period of the indicator - alpha and beta</param>
         /// <param name="riskFreeRateModel">The risk free rate model of this indicator</param>
-        public Alpha(Symbol targetSymbol, Symbol referenceSymbol, int period, PyObject riskFreeRateModel)
-            : this($"ALPHA({targetSymbol},{referenceSymbol},{period})", targetSymbol, referenceSymbol, period, period, RiskFreeInterestRateModelPythonWrapper.FromPyObject(riskFreeRateModel))
-        {
-        }
+        public Alpha(
+            Symbol targetSymbol,
+            Symbol referenceSymbol,
+            int period,
+            PyObject riskFreeRateModel
+        )
+            : this(
+                $"ALPHA({targetSymbol},{referenceSymbol},{period})",
+                targetSymbol,
+                referenceSymbol,
+                period,
+                period,
+                RiskFreeInterestRateModelPythonWrapper.FromPyObject(riskFreeRateModel)
+            ) { }
 
         /// <summary>
         /// Creates a new Alpha indicator with the specified name, target, reference, and period value
@@ -265,10 +375,21 @@ namespace QuantConnect.Indicators
         /// <param name="referenceSymbol"></param>
         /// <param name="period">Period of the indicator - alpha and beta</param>
         /// <param name="riskFreeRateModel">The risk free rate model of this indicator</param>
-        public Alpha(string name, Symbol targetSymbol, Symbol referenceSymbol, int period, PyObject riskFreeRateModel)
-            : this(name, targetSymbol, referenceSymbol, period, period, RiskFreeInterestRateModelPythonWrapper.FromPyObject(riskFreeRateModel))
-        {
-        }
+        public Alpha(
+            string name,
+            Symbol targetSymbol,
+            Symbol referenceSymbol,
+            int period,
+            PyObject riskFreeRateModel
+        )
+            : this(
+                name,
+                targetSymbol,
+                referenceSymbol,
+                period,
+                period,
+                RiskFreeInterestRateModelPythonWrapper.FromPyObject(riskFreeRateModel)
+            ) { }
 
         /// <summary>
         /// Computes the next value for this indicator from the given state.
@@ -294,11 +415,13 @@ namespace QuantConnect.Indicators
             }
             else
             {
-                throw new ArgumentException($"The input symbol {inputSymbol} is not the target or reference symbol.");
+                throw new ArgumentException(
+                    $"The input symbol {inputSymbol} is not the target or reference symbol."
+                );
             }
 
             _beta.Update(input);
-            
+
             if (_targetROC.Samples == _referenceROC.Samples && _referenceROC.Samples > 0)
             {
                 ComputeAlpha();
@@ -323,7 +446,8 @@ namespace QuantConnect.Indicators
 
             var riskFreeRate = _riskFreeInterestRateModel.GetInterestRate(_targetROC.Current.Time);
 
-            _alpha = targetMean - (riskFreeRate + _beta.Current.Value * (referenceMean - riskFreeRate));
+            _alpha =
+                targetMean - (riskFreeRate + _beta.Current.Value * (referenceMean - riskFreeRate));
         }
 
         /// <summary>

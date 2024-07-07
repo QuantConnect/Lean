@@ -35,7 +35,7 @@ namespace QuantConnect.Tests.Indicators
         {
             var time = DateTime.UtcNow;
 
-            foreach (var i in new[] {1, 2, 3})
+            foreach (var i in new[] { 1, 2, 3 })
             {
                 indicator.Update(time.AddDays(i), i);
             }
@@ -46,7 +46,7 @@ namespace QuantConnect.Tests.Indicators
         [Test]
         public override void ResetsProperly()
         {
-            var sum = (Sum) CreateIndicator();
+            var sum = (Sum)CreateIndicator();
             RunTestIndicator(sum);
 
             Assert.IsTrue(sum.IsReady);

@@ -43,7 +43,12 @@ namespace QuantConnect.Orders
         /// <param name="limitPrice">Associated limit price if any</param>
         public static Leg Create(Symbol symbol, int quantity, decimal? limitPrice = null)
         {
-            return new Leg { Symbol = symbol, Quantity = quantity, OrderPrice= limitPrice};
+            return new Leg
+            {
+                Symbol = symbol,
+                Quantity = quantity,
+                OrderPrice = limitPrice
+            };
         }
     }
 }

@@ -65,12 +65,17 @@ namespace QuantConnect.Tests.Common.Orders.Fills
         public void InheritImmediateFillModel_MarketFill()
         {
             var model = new TestFillModelInheritImmediateFillModel();
-            var result = model.Fill(
-                new FillModelParameters(_security,
-                    new MarketOrder(_security.Symbol, 1, orderDateTime),
-                    new MockSubscriptionDataConfigProvider(_config),
-                    Time.OneHour,
-                    null)).Single();
+            var result = model
+                .Fill(
+                    new FillModelParameters(
+                        _security,
+                        new MarketOrder(_security.Symbol, 1, orderDateTime),
+                        new MockSubscriptionDataConfigProvider(_config),
+                        Time.OneHour,
+                        null
+                    )
+                )
+                .Single();
 
             Assert.True(model.MarketFillWasCalled);
             Assert.AreEqual(OrderStatus.Filled, result.Status);
@@ -84,12 +89,17 @@ namespace QuantConnect.Tests.Common.Orders.Fills
         public void OldInterface_MarketFill()
         {
             var model = new TestFillModelInheritInterface();
-            var result = model.Fill(
-                new FillModelParameters(_security,
-                    new MarketOrder(_security.Symbol, 1, orderDateTime),
-                    new MockSubscriptionDataConfigProvider(_config),
-                    Time.OneHour,
-                    null)).Single();
+            var result = model
+                .Fill(
+                    new FillModelParameters(
+                        _security,
+                        new MarketOrder(_security.Symbol, 1, orderDateTime),
+                        new MockSubscriptionDataConfigProvider(_config),
+                        Time.OneHour,
+                        null
+                    )
+                )
+                .Single();
 
             Assert.True(model.MarketFillWasCalled);
             Assert.AreEqual(orderEvent, result);
@@ -99,12 +109,17 @@ namespace QuantConnect.Tests.Common.Orders.Fills
         public void OldInterface_StopMarketFill()
         {
             var model = new TestFillModelInheritInterface();
-            var result = model.Fill(
-                new FillModelParameters(_security,
-                    new StopMarketOrder(_security.Symbol, 1, 1, orderDateTime),
-                    new MockSubscriptionDataConfigProvider(_config),
-                    Time.OneHour,
-                    null)).Single();
+            var result = model
+                .Fill(
+                    new FillModelParameters(
+                        _security,
+                        new StopMarketOrder(_security.Symbol, 1, 1, orderDateTime),
+                        new MockSubscriptionDataConfigProvider(_config),
+                        Time.OneHour,
+                        null
+                    )
+                )
+                .Single();
 
             Assert.True(model.StopMarketFillWasCalled);
             Assert.AreEqual(orderEvent, result);
@@ -114,12 +129,17 @@ namespace QuantConnect.Tests.Common.Orders.Fills
         public void OldInterface_StopLimitFill()
         {
             var model = new TestFillModelInheritInterface();
-            var result = model.Fill(
-                new FillModelParameters(_security,
-                    new StopLimitOrder(_security.Symbol, 1, 1, 1, orderDateTime),
-                    new MockSubscriptionDataConfigProvider(_config),
-                    Time.OneHour,
-                    null)).Single();
+            var result = model
+                .Fill(
+                    new FillModelParameters(
+                        _security,
+                        new StopLimitOrder(_security.Symbol, 1, 1, 1, orderDateTime),
+                        new MockSubscriptionDataConfigProvider(_config),
+                        Time.OneHour,
+                        null
+                    )
+                )
+                .Single();
 
             Assert.True(model.StopLimitFillWasCalled);
             Assert.AreEqual(orderEvent, result);
@@ -129,12 +149,17 @@ namespace QuantConnect.Tests.Common.Orders.Fills
         public void OldInterface_LimitFill()
         {
             var model = new TestFillModelInheritInterface();
-            var result = model.Fill(
-                new FillModelParameters(_security,
-                    new LimitOrder(_security.Symbol, 1, 1, orderDateTime),
-                    new MockSubscriptionDataConfigProvider(_config),
-                    Time.OneHour,
-                    null)).Single();
+            var result = model
+                .Fill(
+                    new FillModelParameters(
+                        _security,
+                        new LimitOrder(_security.Symbol, 1, 1, orderDateTime),
+                        new MockSubscriptionDataConfigProvider(_config),
+                        Time.OneHour,
+                        null
+                    )
+                )
+                .Single();
 
             Assert.True(model.LimitFillWasCalled);
             Assert.AreEqual(orderEvent, result);
@@ -144,12 +169,17 @@ namespace QuantConnect.Tests.Common.Orders.Fills
         public void OldInterface_MarketOnOpenFill()
         {
             var model = new TestFillModelInheritInterface();
-            var result = model.Fill(
-                new FillModelParameters(_security,
-                    new MarketOnOpenOrder(_security.Symbol, 1, orderDateTime),
-                    new MockSubscriptionDataConfigProvider(_config),
-                    Time.OneHour,
-                    null)).Single();
+            var result = model
+                .Fill(
+                    new FillModelParameters(
+                        _security,
+                        new MarketOnOpenOrder(_security.Symbol, 1, orderDateTime),
+                        new MockSubscriptionDataConfigProvider(_config),
+                        Time.OneHour,
+                        null
+                    )
+                )
+                .Single();
 
             Assert.True(model.MarketOnOpenFillWasCalled);
             Assert.AreEqual(orderEvent, result);
@@ -159,12 +189,17 @@ namespace QuantConnect.Tests.Common.Orders.Fills
         public void OldInterface_MarketOnCloseFill()
         {
             var model = new TestFillModelInheritInterface();
-            var result = model.Fill(
-                new FillModelParameters(_security,
-                    new MarketOnCloseOrder(_security.Symbol, 1, orderDateTime),
-                    new MockSubscriptionDataConfigProvider(_config),
-                    Time.OneHour,
-                    null)).Single();
+            var result = model
+                .Fill(
+                    new FillModelParameters(
+                        _security,
+                        new MarketOnCloseOrder(_security.Symbol, 1, orderDateTime),
+                        new MockSubscriptionDataConfigProvider(_config),
+                        Time.OneHour,
+                        null
+                    )
+                )
+                .Single();
 
             Assert.True(model.MarketOnCloseFillWasCalled);
             Assert.AreEqual(orderEvent, result);
@@ -178,12 +213,17 @@ namespace QuantConnect.Tests.Common.Orders.Fills
         public void OldBaseFillModel_DoesNotOverride_MarketFill()
         {
             var model = new TestFillModelInheritBaseClassDoesNotOverride();
-            var result = model.Fill(
-                new FillModelParameters(_security,
-                    new MarketOrder(_security.Symbol, 1, orderDateTime),
-                    new MockSubscriptionDataConfigProvider(_config),
-                    Time.OneHour,
-                    null)).Single();
+            var result = model
+                .Fill(
+                    new FillModelParameters(
+                        _security,
+                        new MarketOrder(_security.Symbol, 1, orderDateTime),
+                        new MockSubscriptionDataConfigProvider(_config),
+                        Time.OneHour,
+                        null
+                    )
+                )
+                .Single();
 
             Assert.IsNotNull(result);
             Assert.True(model.GetPricesWasCalled);
@@ -194,12 +234,17 @@ namespace QuantConnect.Tests.Common.Orders.Fills
         public void OldBaseFillModel_MarketFill()
         {
             var model = new TestFillModelInheritBaseClass();
-            var result = model.Fill(
-                new FillModelParameters(_security,
-                    new MarketOrder(_security.Symbol, 1, orderDateTime),
-                    new MockSubscriptionDataConfigProvider(_config),
-                    Time.OneHour,
-                    null)).Single();
+            var result = model
+                .Fill(
+                    new FillModelParameters(
+                        _security,
+                        new MarketOrder(_security.Symbol, 1, orderDateTime),
+                        new MockSubscriptionDataConfigProvider(_config),
+                        Time.OneHour,
+                        null
+                    )
+                )
+                .Single();
 
             Assert.True(model.MarketFillWasCalled);
             Assert.IsNotNull(result);
@@ -211,12 +256,17 @@ namespace QuantConnect.Tests.Common.Orders.Fills
         public void OldBaseFillModel_StopMarketFill()
         {
             var model = new TestFillModelInheritBaseClass();
-            var result = model.Fill(
-                new FillModelParameters(_security,
-                    new StopMarketOrder(_security.Symbol, 1, 1, orderDateTime),
-                    new MockSubscriptionDataConfigProvider(_config),
-                    Time.OneHour,
-                    null)).Single();
+            var result = model
+                .Fill(
+                    new FillModelParameters(
+                        _security,
+                        new StopMarketOrder(_security.Symbol, 1, 1, orderDateTime),
+                        new MockSubscriptionDataConfigProvider(_config),
+                        Time.OneHour,
+                        null
+                    )
+                )
+                .Single();
 
             Assert.True(model.StopMarketFillWasCalled);
             Assert.IsNotNull(result);
@@ -228,12 +278,17 @@ namespace QuantConnect.Tests.Common.Orders.Fills
         public void OldBaseFillModel_StopLimitFill()
         {
             var model = new TestFillModelInheritBaseClass();
-            var result = model.Fill(
-                new FillModelParameters(_security,
-                    new StopLimitOrder(_security.Symbol, 1, 12344, 12346, orderDateTime),
-                    new MockSubscriptionDataConfigProvider(_config),
-                    Time.OneHour,
-                    null)).Single();
+            var result = model
+                .Fill(
+                    new FillModelParameters(
+                        _security,
+                        new StopLimitOrder(_security.Symbol, 1, 12344, 12346, orderDateTime),
+                        new MockSubscriptionDataConfigProvider(_config),
+                        Time.OneHour,
+                        null
+                    )
+                )
+                .Single();
 
             Assert.True(model.StopLimitFillWasCalled);
             Assert.IsNotNull(result);
@@ -245,12 +300,17 @@ namespace QuantConnect.Tests.Common.Orders.Fills
         public void OldBaseFillModel_LimitFill()
         {
             var model = new TestFillModelInheritBaseClass();
-            var result = model.Fill(
-                new FillModelParameters(_security,
-                    new LimitOrder(_security.Symbol, 1, 12346, orderDateTime),
-                    new MockSubscriptionDataConfigProvider(_config),
-                    Time.OneHour,
-                    null)).Single();
+            var result = model
+                .Fill(
+                    new FillModelParameters(
+                        _security,
+                        new LimitOrder(_security.Symbol, 1, 12346, orderDateTime),
+                        new MockSubscriptionDataConfigProvider(_config),
+                        Time.OneHour,
+                        null
+                    )
+                )
+                .Single();
 
             Assert.True(model.LimitFillWasCalled);
             Assert.IsNotNull(result);
@@ -268,10 +328,17 @@ namespace QuantConnect.Tests.Common.Orders.Fills
             var referenceUtc = reference.ConvertToUtc(TimeZones.NewYork);
             var timeKeeper = new TimeKeeper(referenceUtc);
             security.SetLocalTimeKeeper(timeKeeper.GetLocalTimeKeeper(TimeZones.NewYork));
-            security.SetMarketPrice(new Tick(orderDateTime, security.Symbol, 88, 88) { TickType = TickType.Trade });
+            security.SetMarketPrice(
+                new Tick(orderDateTime, security.Symbol, 88, 88) { TickType = TickType.Trade }
+            );
 
-            var args = new FillModelParameters(security, new MarketOnOpenOrder(security.Symbol, 1, orderDateTime),
-                new MockSubscriptionDataConfigProvider(_config), Time.OneHour, null);
+            var args = new FillModelParameters(
+                security,
+                new MarketOnOpenOrder(security.Symbol, 1, orderDateTime),
+                new MockSubscriptionDataConfigProvider(_config),
+                Time.OneHour,
+                null
+            );
             if (isMarketAlwaysOpen)
             {
                 Assert.Throws<InvalidOperationException>(() => model.Fill(args));
@@ -298,8 +365,13 @@ namespace QuantConnect.Tests.Common.Orders.Fills
             var timeKeeper = new TimeKeeper(referenceUtc);
             security.SetLocalTimeKeeper(timeKeeper.GetLocalTimeKeeper(TimeZones.NewYork));
 
-            var args = new FillModelParameters(security, new MarketOnCloseOrder(security.Symbol, 1, orderDateTime),
-                new MockSubscriptionDataConfigProvider(_config), Time.OneHour, null);
+            var args = new FillModelParameters(
+                security,
+                new MarketOnCloseOrder(security.Symbol, 1, orderDateTime),
+                new MockSubscriptionDataConfigProvider(_config),
+                Time.OneHour,
+                null
+            );
             if (isMarketAlwaysOpen)
             {
                 Assert.Throws<InvalidOperationException>(() => model.Fill(args));
@@ -324,25 +396,31 @@ namespace QuantConnect.Tests.Common.Orders.Fills
         {
             using (Py.GIL())
             {
-                var module = PyModule.FromString(Guid.NewGuid().ToString(),
-                    "from AlgorithmImports import *\n" +
-                    "class CustomFillModel(ImmediateFillModel):\n" +
-                    "   def __init__(self):\n" +
-                    "       self.MarketFillWasCalled = False\n" +
-                    "   def MarketFill(self, asset, order):\n" +
-                    "       self.MarketFillWasCalled = True\n" +
-                    "       return super().MarketFill(asset, order)");
+                var module = PyModule.FromString(
+                    Guid.NewGuid().ToString(),
+                    "from AlgorithmImports import *\n"
+                        + "class CustomFillModel(ImmediateFillModel):\n"
+                        + "   def __init__(self):\n"
+                        + "       self.MarketFillWasCalled = False\n"
+                        + "   def MarketFill(self, asset, order):\n"
+                        + "       self.MarketFillWasCalled = True\n"
+                        + "       return super().MarketFill(asset, order)"
+                );
 
                 var customFillModel = module.GetAttr("CustomFillModel").Invoke();
                 var wrapper = new FillModelPythonWrapper(customFillModel);
 
-                var result = wrapper.Fill(new FillModelParameters(
-                        _security,
-                        new MarketOrder(_security.Symbol, 1, orderDateTime),
-                        new MockSubscriptionDataConfigProvider(_config),
-                        Time.OneHour,
-                        null
-                    )).Single();
+                var result = wrapper
+                    .Fill(
+                        new FillModelParameters(
+                            _security,
+                            new MarketOrder(_security.Symbol, 1, orderDateTime),
+                            new MockSubscriptionDataConfigProvider(_config),
+                            Time.OneHour,
+                            null
+                        )
+                    )
+                    .Single();
 
                 bool called;
                 customFillModel.GetAttr("MarketFillWasCalled").TryConvert(out called);
@@ -357,25 +435,31 @@ namespace QuantConnect.Tests.Common.Orders.Fills
         {
             using (Py.GIL())
             {
-                var module = PyModule.FromString(Guid.NewGuid().ToString(),
-                    "from AlgorithmImports import *\n" +
-                    "class CustomFillModel(FillModel):\n" +
-                    "   def __init__(self):\n" +
-                    "       self.MarketFillWasCalled = False\n" +
-                    "   def MarketFill(self, asset, order):\n" +
-                    "       self.MarketFillWasCalled = True\n" +
-                    "       return super().MarketFill(asset, order)");
+                var module = PyModule.FromString(
+                    Guid.NewGuid().ToString(),
+                    "from AlgorithmImports import *\n"
+                        + "class CustomFillModel(FillModel):\n"
+                        + "   def __init__(self):\n"
+                        + "       self.MarketFillWasCalled = False\n"
+                        + "   def MarketFill(self, asset, order):\n"
+                        + "       self.MarketFillWasCalled = True\n"
+                        + "       return super().MarketFill(asset, order)"
+                );
 
                 var customFillModel = module.GetAttr("CustomFillModel").Invoke();
                 var wrapper = new FillModelPythonWrapper(customFillModel);
 
-                var result = wrapper.Fill(new FillModelParameters(
-                    _security,
-                    new MarketOrder(_security.Symbol, 1, orderDateTime),
-                    new MockSubscriptionDataConfigProvider(_config),
-                    Time.OneHour,
-                    null
-                )).Single();
+                var result = wrapper
+                    .Fill(
+                        new FillModelParameters(
+                            _security,
+                            new MarketOrder(_security.Symbol, 1, orderDateTime),
+                            new MockSubscriptionDataConfigProvider(_config),
+                            Time.OneHour,
+                            null
+                        )
+                    )
+                    .Single();
 
                 bool called;
                 customFillModel.GetAttr("MarketFillWasCalled").TryConvert(out called);
@@ -390,25 +474,31 @@ namespace QuantConnect.Tests.Common.Orders.Fills
         {
             using (Py.GIL())
             {
-                var module = PyModule.FromString(Guid.NewGuid().ToString(),
-                    "from AlgorithmImports import *\n" +
-                    "class CustomFillModel(FillModel):\n" +
-                    "   def __init__(self):\n" +
-                    "       self.FillWasCalled = False\n" +
-                    "   def Fill(self, parameters):\n" +
-                    "       self.FillWasCalled = True\n" +
-                    "       return super().Fill(parameters)");
+                var module = PyModule.FromString(
+                    Guid.NewGuid().ToString(),
+                    "from AlgorithmImports import *\n"
+                        + "class CustomFillModel(FillModel):\n"
+                        + "   def __init__(self):\n"
+                        + "       self.FillWasCalled = False\n"
+                        + "   def Fill(self, parameters):\n"
+                        + "       self.FillWasCalled = True\n"
+                        + "       return super().Fill(parameters)"
+                );
 
                 var customFillModel = module.GetAttr("CustomFillModel").Invoke();
                 var wrapper = new FillModelPythonWrapper(customFillModel);
 
-                var result = wrapper.Fill(new FillModelParameters(
-                    _security,
-                    new MarketOrder(_security.Symbol, 1, orderDateTime),
-                    new MockSubscriptionDataConfigProvider(_config),
-                    Time.OneHour,
-                    null
-                )).Single();
+                var result = wrapper
+                    .Fill(
+                        new FillModelParameters(
+                            _security,
+                            new MarketOrder(_security.Symbol, 1, orderDateTime),
+                            new MockSubscriptionDataConfigProvider(_config),
+                            Time.OneHour,
+                            null
+                        )
+                    )
+                    .Single();
 
                 bool called;
                 customFillModel.GetAttr("FillWasCalled").TryConvert(out called);
@@ -423,30 +513,36 @@ namespace QuantConnect.Tests.Common.Orders.Fills
         {
             using (Py.GIL())
             {
-                var module = PyModule.FromString(Guid.NewGuid().ToString(),
-                    "from AlgorithmImports import *\n" +
-                    "class CustomFillModel(FillModel):\n" +
-                    "   def __init__(self):\n" +
-                    "       self.FillWasCalled = False\n" +
-                    "       self.MarketFillWasCalled = False\n" +
-                    "   def Fill(self, parameters):\n" +
-                    "       self.FillWasCalled = True\n" +
-                    "       self.Parameters = parameters\n" +
-                    "       return Fill(self.MarketFill(parameters.Security, parameters.Order))\n" +
-                    "   def MarketFill(self, asset, order):\n" +
-                    "       self.MarketFillWasCalled = True\n" +
-                    "       return super().MarketFill(asset, order)");
+                var module = PyModule.FromString(
+                    Guid.NewGuid().ToString(),
+                    "from AlgorithmImports import *\n"
+                        + "class CustomFillModel(FillModel):\n"
+                        + "   def __init__(self):\n"
+                        + "       self.FillWasCalled = False\n"
+                        + "       self.MarketFillWasCalled = False\n"
+                        + "   def Fill(self, parameters):\n"
+                        + "       self.FillWasCalled = True\n"
+                        + "       self.Parameters = parameters\n"
+                        + "       return Fill(self.MarketFill(parameters.Security, parameters.Order))\n"
+                        + "   def MarketFill(self, asset, order):\n"
+                        + "       self.MarketFillWasCalled = True\n"
+                        + "       return super().MarketFill(asset, order)"
+                );
 
                 var customFillModel = module.GetAttr("CustomFillModel").Invoke();
                 var wrapper = new FillModelPythonWrapper(customFillModel);
 
-                var result = wrapper.Fill(new FillModelParameters(
-                    _security,
-                    new MarketOrder(_security.Symbol, 1, orderDateTime),
-                    new MockSubscriptionDataConfigProvider(_config),
-                    Time.OneHour,
-                    null
-                )).Single();
+                var result = wrapper
+                    .Fill(
+                        new FillModelParameters(
+                            _security,
+                            new MarketOrder(_security.Symbol, 1, orderDateTime),
+                            new MockSubscriptionDataConfigProvider(_config),
+                            Time.OneHour,
+                            null
+                        )
+                    )
+                    .Single();
 
                 bool called;
                 customFillModel.GetAttr("FillWasCalled").TryConvert(out called);
@@ -463,30 +559,36 @@ namespace QuantConnect.Tests.Common.Orders.Fills
         {
             using (Py.GIL())
             {
-                var module = PyModule.FromString(Guid.NewGuid().ToString(),
-                    "from AlgorithmImports import *\n" +
-                    "class CustomFillModel(FillModel):\n" +
-                    "   def __init__(self):\n" +
-                    "       self.FillWasCalled = False\n" +
-                    "       self.GetPricesWasCalled = False\n" +
-                    "   def Fill(self, parameters):\n" +
-                    "       self.FillWasCalled = True\n" +
-                    "       self.Parameters = parameters\n" +
-                    "       return Fill(super().MarketFill(parameters.Security, parameters.Order))\n" +
-                    "   def GetPrices(self, asset, direction):\n" +
-                    "       self.GetPricesWasCalled = True\n" +
-                    "       return super().GetPrices(asset, direction)");
+                var module = PyModule.FromString(
+                    Guid.NewGuid().ToString(),
+                    "from AlgorithmImports import *\n"
+                        + "class CustomFillModel(FillModel):\n"
+                        + "   def __init__(self):\n"
+                        + "       self.FillWasCalled = False\n"
+                        + "       self.GetPricesWasCalled = False\n"
+                        + "   def Fill(self, parameters):\n"
+                        + "       self.FillWasCalled = True\n"
+                        + "       self.Parameters = parameters\n"
+                        + "       return Fill(super().MarketFill(parameters.Security, parameters.Order))\n"
+                        + "   def GetPrices(self, asset, direction):\n"
+                        + "       self.GetPricesWasCalled = True\n"
+                        + "       return super().GetPrices(asset, direction)"
+                );
 
                 var customFillModel = module.GetAttr("CustomFillModel").Invoke();
                 var wrapper = new FillModelPythonWrapper(customFillModel);
 
-                var result = wrapper.Fill(new FillModelParameters(
-                    _security,
-                    new MarketOrder(_security.Symbol, 1, orderDateTime),
-                    new MockSubscriptionDataConfigProvider(_config),
-                    Time.OneHour,
-                    null
-                )).Single();
+                var result = wrapper
+                    .Fill(
+                        new FillModelParameters(
+                            _security,
+                            new MarketOrder(_security.Symbol, 1, orderDateTime),
+                            new MockSubscriptionDataConfigProvider(_config),
+                            Time.OneHour,
+                            null
+                        )
+                    )
+                    .Single();
 
                 bool called;
                 customFillModel.GetAttr("FillWasCalled").TryConvert(out called);
@@ -503,25 +605,31 @@ namespace QuantConnect.Tests.Common.Orders.Fills
         {
             using (Py.GIL())
             {
-                var module = PyModule.FromString(Guid.NewGuid().ToString(),
-                    "from AlgorithmImports import *\n" +
-                    "class CustomFillModel(ImmediateFillModel):\n" +
-                    "   def __init__(self):\n" +
-                    "       self.MarketFillWasCalled = False\n" +
-                    "   def MarketFill(self, asset, order):\n" +
-                    "       self.MarketFillWasCalled = True\n" +
-                    "       return super().MarketFill(asset, order)");
+                var module = PyModule.FromString(
+                    Guid.NewGuid().ToString(),
+                    "from AlgorithmImports import *\n"
+                        + "class CustomFillModel(ImmediateFillModel):\n"
+                        + "   def __init__(self):\n"
+                        + "       self.MarketFillWasCalled = False\n"
+                        + "   def MarketFill(self, asset, order):\n"
+                        + "       self.MarketFillWasCalled = True\n"
+                        + "       return super().MarketFill(asset, order)"
+                );
 
                 var customFillModel = module.GetAttr("CustomFillModel").Invoke();
                 var wrapper = new FillModelPythonWrapper(customFillModel);
 
-                var result = wrapper.Fill(new FillModelParameters(
-                    _security,
-                    new MarketOrder(_security.Symbol, 1, orderDateTime),
-                    new MockSubscriptionDataConfigProvider(_config),
-                    Time.OneHour,
-                    null
-                )).Single();
+                var result = wrapper
+                    .Fill(
+                        new FillModelParameters(
+                            _security,
+                            new MarketOrder(_security.Symbol, 1, orderDateTime),
+                            new MockSubscriptionDataConfigProvider(_config),
+                            Time.OneHour,
+                            null
+                        )
+                    )
+                    .Single();
 
                 bool called;
                 customFillModel.GetAttr("MarketFillWasCalled").TryConvert(out called);
@@ -585,28 +693,37 @@ namespace QuantConnect.Tests.Common.Orders.Fills
                 switch (order.Type)
                 {
                     case OrderType.Market:
-                        orderEvent =
-                            MarketFill(parameters.Security, parameters.Order as MarketOrder);
+                        orderEvent = MarketFill(
+                            parameters.Security,
+                            parameters.Order as MarketOrder
+                        );
                         break;
                     case OrderType.Limit:
-                        orderEvent =
-                            LimitFill(parameters.Security, parameters.Order as LimitOrder);
+                        orderEvent = LimitFill(parameters.Security, parameters.Order as LimitOrder);
                         break;
                     case OrderType.StopMarket:
-                        orderEvent =
-                            StopMarketFill(parameters.Security, parameters.Order as StopMarketOrder);
+                        orderEvent = StopMarketFill(
+                            parameters.Security,
+                            parameters.Order as StopMarketOrder
+                        );
                         break;
                     case OrderType.StopLimit:
-                        orderEvent =
-                            StopLimitFill(parameters.Security, parameters.Order as StopLimitOrder);
+                        orderEvent = StopLimitFill(
+                            parameters.Security,
+                            parameters.Order as StopLimitOrder
+                        );
                         break;
                     case OrderType.MarketOnOpen:
-                        orderEvent =
-                            MarketOnOpenFill(parameters.Security, parameters.Order as MarketOnOpenOrder);
+                        orderEvent = MarketOnOpenFill(
+                            parameters.Security,
+                            parameters.Order as MarketOnOpenOrder
+                        );
                         break;
                     case OrderType.MarketOnClose:
-                        orderEvent =
-                            MarketOnCloseFill(parameters.Security, parameters.Order as MarketOnCloseOrder);
+                        orderEvent = MarketOnCloseFill(
+                            parameters.Security,
+                            parameters.Order as MarketOnCloseOrder
+                        );
                         break;
                     default:
                         throw new ArgumentOutOfRangeException();
@@ -643,6 +760,7 @@ namespace QuantConnect.Tests.Common.Orders.Fills
                 StopLimitFillWasCalled = true;
                 return base.StopLimitFill(asset, order);
             }
+
             public override OrderEvent LimitIfTouchedFill(Security asset, LimitIfTouchedOrder order)
             {
                 LimitIfTouchFillWasCalled = true;

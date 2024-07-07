@@ -16,7 +16,6 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-
 using QuantConnect.Data;
 using QuantConnect.Indicators;
 using QuantConnect.Interfaces;
@@ -31,7 +30,8 @@ namespace QuantConnect.Algorithm.CSharp
     public class StatisticsResultsAlgorithm : QCAlgorithm, IRegressionAlgorithmDefinition
     {
         private const string MostTradedSecurityStatistic = "Most Traded Security";
-        private const string MostTradedSecurityTradeCountStatistic = "Most Traded Security Trade Count";
+        private const string MostTradedSecurityTradeCountStatistic =
+            "Most Traded Security Trade Count";
 
         private Symbol _spy;
 
@@ -65,7 +65,8 @@ namespace QuantConnect.Algorithm.CSharp
 
         public override void OnData(Slice slice)
         {
-            if (!_slowSpyEma.IsReady) return;
+            if (!_slowSpyEma.IsReady)
+                return;
 
             if (_fastSpyEma > _slowSpyEma)
             {
@@ -92,7 +93,10 @@ namespace QuantConnect.Algorithm.CSharp
             {
                 // We can access the statistics summary at runtime
                 var statistics = Statistics.Summary;
-                var statisticsStr = string.Join("\n\t", statistics.Select(kvp => $"{kvp.Key}: {kvp.Value}"));
+                var statisticsStr = string.Join(
+                    "\n\t",
+                    statistics.Select(kvp => $"{kvp.Key}: {kvp.Value}")
+                );
                 Debug($"\nStatistics after fill:\n\t{statisticsStr}");
 
                 // Access a single statistic
@@ -110,18 +114,26 @@ namespace QuantConnect.Algorithm.CSharp
                 {
                     if (statistics.ContainsKey(MostTradedSecurityStatistic))
                     {
-                        throw new RegressionTestException($"Statistic {MostTradedSecurityStatistic} should not be set yet");
+                        throw new RegressionTestException(
+                            $"Statistic {MostTradedSecurityStatistic} should not be set yet"
+                        );
                     }
                     if (statistics.ContainsKey(MostTradedSecurityTradeCountStatistic))
                     {
-                        throw new RegressionTestException($"Statistic {MostTradedSecurityTradeCountStatistic} should not be set yet");
+                        throw new RegressionTestException(
+                            $"Statistic {MostTradedSecurityTradeCountStatistic} should not be set yet"
+                        );
                     }
                 }
                 else
                 {
                     // The current most traded security should be set in the summary
                     mostTradeSecurityKvp = _tradeCounts.MaxBy(kvp => kvp.Value);
-                    CheckMostTradedSecurityStatistic(statistics, mostTradeSecurityKvp.Key, mostTradeSecurityKvp.Value);
+                    CheckMostTradedSecurityStatistic(
+                        statistics,
+                        mostTradeSecurityKvp.Key,
+                        mostTradeSecurityKvp.Value
+                    );
                 }
 
                 // Update the trade count
@@ -131,13 +143,20 @@ namespace QuantConnect.Algorithm.CSharp
                 // Set the most traded security
                 mostTradeSecurityKvp = _tradeCounts.MaxBy(kvp => kvp.Value);
                 SetSummaryStatistic(MostTradedSecurityStatistic, mostTradeSecurityKvp.Key);
-                SetSummaryStatistic(MostTradedSecurityTradeCountStatistic, mostTradeSecurityKvp.Value);
+                SetSummaryStatistic(
+                    MostTradedSecurityTradeCountStatistic,
+                    mostTradeSecurityKvp.Value
+                );
 
                 // Re-calculate statistics:
                 statistics = Statistics.Summary;
 
                 // Let's keep track of our custom summary statistics after the update
-                CheckMostTradedSecurityStatistic(statistics, mostTradeSecurityKvp.Key, mostTradeSecurityKvp.Value);
+                CheckMostTradedSecurityStatistic(
+                    statistics,
+                    mostTradeSecurityKvp.Key,
+                    mostTradeSecurityKvp.Value
+                );
             }
         }
 
@@ -146,30 +165,48 @@ namespace QuantConnect.Algorithm.CSharp
             var statistics = Statistics.Summary;
             if (!statistics.ContainsKey(MostTradedSecurityStatistic))
             {
-                throw new RegressionTestException($"Statistic {MostTradedSecurityStatistic} should be in the summary statistics");
+                throw new RegressionTestException(
+                    $"Statistic {MostTradedSecurityStatistic} should be in the summary statistics"
+                );
             }
             if (!statistics.ContainsKey(MostTradedSecurityTradeCountStatistic))
             {
-                throw new RegressionTestException($"Statistic {MostTradedSecurityTradeCountStatistic} should be in the summary statistics");
+                throw new RegressionTestException(
+                    $"Statistic {MostTradedSecurityTradeCountStatistic} should be in the summary statistics"
+                );
             }
             var mostTradeSecurityKvp = _tradeCounts.MaxBy(kvp => kvp.Value);
-            CheckMostTradedSecurityStatistic(statistics, mostTradeSecurityKvp.Key, mostTradeSecurityKvp.Value);
+            CheckMostTradedSecurityStatistic(
+                statistics,
+                mostTradeSecurityKvp.Key,
+                mostTradeSecurityKvp.Value
+            );
         }
 
-        private void CheckMostTradedSecurityStatistic(Dictionary<string, string> statistics, Symbol mostTradedSecurity, int tradeCount)
+        private void CheckMostTradedSecurityStatistic(
+            Dictionary<string, string> statistics,
+            Symbol mostTradedSecurity,
+            int tradeCount
+        )
         {
             var mostTradedSecurityStatistic = statistics[MostTradedSecurityStatistic];
-            var mostTradedSecurityTradeCountStatistic = statistics[MostTradedSecurityTradeCountStatistic];
+            var mostTradedSecurityTradeCountStatistic = statistics[
+                MostTradedSecurityTradeCountStatistic
+            ];
             Log($"Most traded security: {mostTradedSecurityStatistic}");
             Log($"Most traded security trade count: {mostTradedSecurityTradeCountStatistic}");
 
             if (mostTradedSecurityStatistic != mostTradedSecurity)
             {
-                throw new RegressionTestException($"Most traded security should be {mostTradedSecurity} but it is {mostTradedSecurityStatistic}");
+                throw new RegressionTestException(
+                    $"Most traded security should be {mostTradedSecurity} but it is {mostTradedSecurityStatistic}"
+                );
             }
             if (mostTradedSecurityTradeCountStatistic != tradeCount.ToStringInvariant())
             {
-                throw new RegressionTestException($"Most traded security trade count should be {tradeCount} but it is {mostTradedSecurityTradeCountStatistic}");
+                throw new RegressionTestException(
+                    $"Most traded security trade count should be {tradeCount} but it is {mostTradedSecurityTradeCountStatistic}"
+                );
             }
         }
 
@@ -201,37 +238,38 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// This is used by the regression test system to indicate what the expected statistics are from running the algorithm
         /// </summary>
-        public Dictionary<string, string> ExpectedStatistics => new Dictionary<string, string>
-        {
-            {"Total Orders", "94"},
-            {"Average Win", "0.09%"},
-            {"Average Loss", "-0.03%"},
-            {"Compounding Annual Return", "18.903%"},
-            {"Drawdown", "0.800%"},
-            {"Expectancy", "0.135"},
-            {"Start Equity", "100000"},
-            {"End Equity", "100221.61"},
-            {"Net Profit", "0.222%"},
-            {"Sharpe Ratio", "6.406"},
-            {"Sortino Ratio", "0"},
-            {"Probabilistic Sharpe Ratio", "69.072%"},
-            {"Loss Rate", "70%"},
-            {"Win Rate", "30%"},
-            {"Profit-Loss Ratio", "2.73"},
-            {"Alpha", "-0.144"},
-            {"Beta", "0.264"},
-            {"Annual Standard Deviation", "0.059"},
-            {"Annual Variance", "0.003"},
-            {"Information Ratio", "-9.751"},
-            {"Tracking Error", "0.164"},
-            {"Treynor Ratio", "1.43"},
-            {"Total Fees", "$114.39"},
-            {"Estimated Strategy Capacity", "$1100000.00"},
-            {"Lowest Capacity Asset", "IBM R735QTJ8XC9X"},
-            {"Portfolio Turnover", "549.26%"},
-            {"Most Traded Security Trade Count", "63"},
-            {"Most Traded Security", "IBM"},
-            {"OrderListHash", "8dd77e35338a81410a5b68dc8345f402"}
-        };
+        public Dictionary<string, string> ExpectedStatistics =>
+            new Dictionary<string, string>
+            {
+                { "Total Orders", "94" },
+                { "Average Win", "0.09%" },
+                { "Average Loss", "-0.03%" },
+                { "Compounding Annual Return", "18.903%" },
+                { "Drawdown", "0.800%" },
+                { "Expectancy", "0.135" },
+                { "Start Equity", "100000" },
+                { "End Equity", "100221.61" },
+                { "Net Profit", "0.222%" },
+                { "Sharpe Ratio", "6.406" },
+                { "Sortino Ratio", "0" },
+                { "Probabilistic Sharpe Ratio", "69.072%" },
+                { "Loss Rate", "70%" },
+                { "Win Rate", "30%" },
+                { "Profit-Loss Ratio", "2.73" },
+                { "Alpha", "-0.144" },
+                { "Beta", "0.264" },
+                { "Annual Standard Deviation", "0.059" },
+                { "Annual Variance", "0.003" },
+                { "Information Ratio", "-9.751" },
+                { "Tracking Error", "0.164" },
+                { "Treynor Ratio", "1.43" },
+                { "Total Fees", "$114.39" },
+                { "Estimated Strategy Capacity", "$1100000.00" },
+                { "Lowest Capacity Asset", "IBM R735QTJ8XC9X" },
+                { "Portfolio Turnover", "549.26%" },
+                { "Most Traded Security Trade Count", "63" },
+                { "Most Traded Security", "IBM" },
+                { "OrderListHash", "8dd77e35338a81410a5b68dc8345f402" }
+            };
     }
 }

@@ -14,13 +14,13 @@
 */
 
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using QuantConnect.Data;
-using QuantConnect.Securities;
-using QuantConnect.Interfaces;
-using System.Collections.Generic;
 using QuantConnect.Data.Fundamental;
 using QuantConnect.Data.UniverseSelection;
+using QuantConnect.Interfaces;
+using QuantConnect.Securities;
 
 namespace QuantConnect.Algorithm.CSharp
 {
@@ -54,7 +54,9 @@ namespace QuantConnect.Algorithm.CSharp
             var ibmFundamental = Fundamentals(ibm);
             if (Time != StartDate || Time != ibmFundamental.EndTime)
             {
-                throw new RegressionTestException($"Unexpected {nameof(Fundamental)} time {ibmFundamental.EndTime}");
+                throw new RegressionTestException(
+                    $"Unexpected {nameof(Fundamental)} time {ibmFundamental.EndTime}"
+                );
             }
             if (ibmFundamental.Price == 0)
             {
@@ -62,25 +64,31 @@ namespace QuantConnect.Algorithm.CSharp
             }
 
             var nb = QuantConnect.Symbol.Create("NB", SecurityType.Equity, Market.USA);
-            var fundamentals = Fundamentals(new List<Symbol>{ nb, ibm }).ToList();
+            var fundamentals = Fundamentals(new List<Symbol> { nb, ibm }).ToList();
             if (fundamentals.Count != 2)
             {
-                throw new RegressionTestException($"Unexpected {nameof(Fundamental)} count {fundamentals.Count}! Expected 2");
+                throw new RegressionTestException(
+                    $"Unexpected {nameof(Fundamental)} count {fundamentals.Count}! Expected 2"
+                );
             }
 
             // Request historical fundamental data for symbols
             var history = History<Fundamental>(Securities.Keys, new TimeSpan(2, 0, 0, 0)).ToList();
-            if(history.Count != 2)
+            if (history.Count != 2)
             {
-                throw new RegressionTestException($"Unexpected {nameof(Fundamental)} history count {history.Count}! Expected 2");
+                throw new RegressionTestException(
+                    $"Unexpected {nameof(Fundamental)} history count {history.Count}! Expected 2"
+                );
             }
 
             if (history[0].Values.Count != 2)
             {
-                throw new RegressionTestException($"Unexpected {nameof(Fundamental)} data count {history[0].Values.Count}, expected 2!");
+                throw new RegressionTestException(
+                    $"Unexpected {nameof(Fundamental)} data count {history[0].Values.Count}, expected 2!"
+                );
             }
 
-            foreach (var ticker in new[] {"AAPL", "SPY"})
+            foreach (var ticker in new[] { "AAPL", "SPY" })
             {
                 if (!history[0].TryGetValue(ticker, out var fundamental) || fundamental.Price == 0)
                 {
@@ -99,7 +107,9 @@ namespace QuantConnect.Algorithm.CSharp
                 var universeDataPerTime = History(_universe, new TimeSpan(2, 0, 0, 0)).ToList();
                 if (universeDataPerTime.Count != 2)
                 {
-                    throw new RegressionTestException($"Unexpected {nameof(Fundamentals)} history count {universeDataPerTime.Count}! Expected 1");
+                    throw new RegressionTestException(
+                        $"Unexpected {nameof(Fundamentals)} history count {universeDataPerTime.Count}! Expected 1"
+                    );
                 }
 
                 foreach (var universeDataCollection in universeDataPerTime)
@@ -109,7 +119,10 @@ namespace QuantConnect.Algorithm.CSharp
             }
 
             // Passing through the unvierse type and symbol
-            var enumerableOfDataDictionary = History<FundamentalUniverse>(new[] { _universe.Symbol }, 100);
+            var enumerableOfDataDictionary = History<FundamentalUniverse>(
+                new[] { _universe.Symbol },
+                100
+            );
             foreach (var selectionCollectionForADay in enumerableOfDataDictionary)
             {
                 AssertFundamentalEnumerator(selectionCollectionForADay[_universe.Symbol], "2");
@@ -126,12 +139,16 @@ namespace QuantConnect.Algorithm.CSharp
             }
             if (dataPointCount < 7000)
             {
-                throw new RegressionTestException($"Unexpected historical {nameof(Fundamentals)} data count {dataPointCount} case {caseName}! Expected > 7000");
+                throw new RegressionTestException(
+                    $"Unexpected historical {nameof(Fundamentals)} data count {dataPointCount} case {caseName}! Expected > 7000"
+                );
             }
         }
 
         // sort the data by daily dollar volume and take the top 'NumberOfSymbolsCoarse'
-        public IEnumerable<Symbol> FundamentalSelectionFunction(IEnumerable<Fundamental> fundamental)
+        public IEnumerable<Symbol> FundamentalSelectionFunction(
+            IEnumerable<Fundamental> fundamental
+        )
         {
             // select only symbols with fundamental data and sort descending by daily dollar volume
             var sortedByDollarVolume = fundamental
@@ -139,7 +156,9 @@ namespace QuantConnect.Algorithm.CSharp
                 .OrderByDescending(x => x.DollarVolume);
 
             // sort descending by P/E ratio
-            var sortedByPeRatio = sortedByDollarVolume.OrderByDescending(x => x.ValuationRatios.PERatio);
+            var sortedByPeRatio = sortedByDollarVolume.OrderByDescending(x =>
+                x.ValuationRatios.PERatio
+            );
 
             // take the top entries from our sorted collection
             var topFine = sortedByPeRatio.Take(NumberOfSymbolsFundamental);
@@ -151,7 +170,8 @@ namespace QuantConnect.Algorithm.CSharp
         public override void OnData(Slice slice)
         {
             // if we have no changes, do nothing
-            if (_changes == SecurityChanges.None) return;
+            if (_changes == SecurityChanges.None)
+                return;
 
             // liquidate removed securities
             foreach (var security in _changes.RemovedSecurities)
@@ -205,35 +225,36 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// This is used by the regression test system to indicate what the expected statistics are from running the algorithm
         /// </summary>
-        public Dictionary<string, string> ExpectedStatistics => new Dictionary<string, string>
-        {
-            {"Total Orders", "2"},
-            {"Average Win", "0%"},
-            {"Average Loss", "0%"},
-            {"Compounding Annual Return", "-2.572%"},
-            {"Drawdown", "0.100%"},
-            {"Expectancy", "0"},
-            {"Start Equity", "100000"},
-            {"End Equity", "99907.23"},
-            {"Net Profit", "-0.093%"},
-            {"Sharpe Ratio", "-4.883"},
-            {"Sortino Ratio", "-6.653"},
-            {"Probabilistic Sharpe Ratio", "22.758%"},
-            {"Loss Rate", "0%"},
-            {"Win Rate", "0%"},
-            {"Profit-Loss Ratio", "0"},
-            {"Alpha", "-0.014"},
-            {"Beta", "0.023"},
-            {"Annual Standard Deviation", "0.003"},
-            {"Annual Variance", "0"},
-            {"Information Ratio", "0.597"},
-            {"Tracking Error", "0.095"},
-            {"Treynor Ratio", "-0.694"},
-            {"Total Fees", "$2.00"},
-            {"Estimated Strategy Capacity", "$1500000000.00"},
-            {"Lowest Capacity Asset", "IBM R735QTJ8XC9X"},
-            {"Portfolio Turnover", "0.30%"},
-            {"OrderListHash", "0cf47831afc5b90519f77d5f7c4ecfa2"}
-        };
+        public Dictionary<string, string> ExpectedStatistics =>
+            new Dictionary<string, string>
+            {
+                { "Total Orders", "2" },
+                { "Average Win", "0%" },
+                { "Average Loss", "0%" },
+                { "Compounding Annual Return", "-2.572%" },
+                { "Drawdown", "0.100%" },
+                { "Expectancy", "0" },
+                { "Start Equity", "100000" },
+                { "End Equity", "99907.23" },
+                { "Net Profit", "-0.093%" },
+                { "Sharpe Ratio", "-4.883" },
+                { "Sortino Ratio", "-6.653" },
+                { "Probabilistic Sharpe Ratio", "22.758%" },
+                { "Loss Rate", "0%" },
+                { "Win Rate", "0%" },
+                { "Profit-Loss Ratio", "0" },
+                { "Alpha", "-0.014" },
+                { "Beta", "0.023" },
+                { "Annual Standard Deviation", "0.003" },
+                { "Annual Variance", "0" },
+                { "Information Ratio", "0.597" },
+                { "Tracking Error", "0.095" },
+                { "Treynor Ratio", "-0.694" },
+                { "Total Fees", "$2.00" },
+                { "Estimated Strategy Capacity", "$1500000000.00" },
+                { "Lowest Capacity Asset", "IBM R735QTJ8XC9X" },
+                { "Portfolio Turnover", "0.30%" },
+                { "OrderListHash", "0cf47831afc5b90519f77d5f7c4ecfa2" }
+            };
     }
 }

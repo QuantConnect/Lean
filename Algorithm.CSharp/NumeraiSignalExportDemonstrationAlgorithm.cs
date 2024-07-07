@@ -13,18 +13,18 @@
  * limitations under the License.
 */
 
+using System.Collections.Generic;
+using System.Linq;
 using QuantConnect.Algorithm.Framework.Portfolio;
 using QuantConnect.Algorithm.Framework.Portfolio.SignalExports;
-using QuantConnect.Securities;
-using System.Collections.Generic;
 using QuantConnect.Data.UniverseSelection;
-using System.Linq;
+using QuantConnect.Securities;
 
 namespace QuantConnect.Algorithm.CSharp
 {
     /// <summary>
     /// This algorithm sends an array of current portfolio targets to Numerai API
-    /// every time the ema indicators crosses between themselves. 
+    /// every time the ema indicators crosses between themselves.
     /// See (https://docs.numer.ai/numerai-signals/signals-overview) for more information
     /// about accepted symbols, signals, etc.
     /// </summary>
@@ -35,20 +35,30 @@ namespace QuantConnect.Algorithm.CSharp
     {
         private readonly List<Security> _securities = new();
         private Symbol _etfSymbol;
+
         public override void Initialize()
         {
-            SetStartDate(2020, 10, 7);   // Set Start Date
-            SetEndDate(2020, 10, 12);    // Set End Date
-            SetCash(100000);             // Set Strategy Cash
+            SetStartDate(2020, 10, 7); // Set Start Date
+            SetEndDate(2020, 10, 12); // Set End Date
+            SetCash(100000); // Set Strategy Cash
 
-            SetSecurityInitializer(new BrokerageModelSecurityInitializer(BrokerageModel, new FuncSecuritySeeder(GetLastKnownPrices)));
+            SetSecurityInitializer(
+                new BrokerageModelSecurityInitializer(
+                    BrokerageModel,
+                    new FuncSecuritySeeder(GetLastKnownPrices)
+                )
+            );
 
             // Add the CRSP US Total Market Index constituents, which represents approximately 100% of the investable US Equity market
             _etfSymbol = AddEquity("VTI").Symbol;
             AddUniverse(Universe.ETF(_etfSymbol));
 
             // Create a Scheduled Event to submit signals every trading day at 13:00 UTC
-            Schedule.On(DateRules.EveryDay(_etfSymbol), TimeRules.At(13, 0, TimeZones.Utc), SubmitSignals);
+            Schedule.On(
+                DateRules.EveryDay(_etfSymbol),
+                TimeRules.At(13, 0, TimeZones.Utc),
+                SubmitSignals
+            );
 
             // Add the Numerai signal export provider
             // Numerai Public ID: This value is provided by Numerai Signals in their main webpage once you've logged in
@@ -63,17 +73,25 @@ namespace QuantConnect.Algorithm.CSharp
             // and created a model. See (https://signals.numer.ai/models)
             var numeraiModelId = "";
 
-            var numeraiFilename = ""; // (Optional) Replace this value with your submission filename 
-            SignalExport.AddSignalExportProviders(new NumeraiSignalExport(numeraiPublicId, numeraiSecretId, numeraiModelId, numeraiFilename));
+            var numeraiFilename = ""; // (Optional) Replace this value with your submission filename
+            SignalExport.AddSignalExportProviders(
+                new NumeraiSignalExport(
+                    numeraiPublicId,
+                    numeraiSecretId,
+                    numeraiModelId,
+                    numeraiFilename
+                )
+            );
         }
 
         public void SubmitSignals()
         {
             // Select the subset of ETF constituents we can trade
-            var symbols = _securities.Where(security => security.HasData)
-                            .Select(security => security.Symbol)
-                            .OrderBy(symbol => symbol)
-                            .ToList();
+            var symbols = _securities
+                .Where(security => security.HasData)
+                .Select(security => security.Symbol)
+                .OrderBy(symbol => symbol)
+                .ToList();
             if (symbols.Count == 0)
             {
                 return;
@@ -86,7 +104,9 @@ namespace QuantConnect.Algorithm.CSharp
             //  Numerai requires that at least one of the signals have a unique weight
             //  To ensure they are all unique, this demo gives a linear allocation to each symbol (ie. 1/55, 2/55, ..., 10/55)
             var denominator = symbols.Count * (symbols.Count + 1) / 2.0m; // sum of 1, 2, ..., symbols.Count
-            var targets = symbols.Select((symbol, i) => new PortfolioTarget(symbol, (i + 1) / denominator)).ToList();
+            var targets = symbols
+                .Select((symbol, i) => new PortfolioTarget(symbol, (i + 1) / denominator))
+                .ToList();
 
             // (Optional) Place trades
             SetHoldings(targets);

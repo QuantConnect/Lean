@@ -13,6 +13,9 @@
  * limitations under the License.
 */
 
+using System;
+using System.Collections.Generic;
+using System.Linq;
 using QuantConnect.Algorithm.Framework.Alphas;
 using QuantConnect.Algorithm.Framework.Execution;
 using QuantConnect.Algorithm.Framework.Portfolio;
@@ -22,9 +25,6 @@ using QuantConnect.Data;
 using QuantConnect.Data.UniverseSelection;
 using QuantConnect.Indicators;
 using QuantConnect.Orders.Fees;
-using System;
-using System.Collections.Generic;
-using System.Linq;
 
 namespace QuantConnect.Algorithm.CSharp.Alphas
 {
@@ -50,7 +50,9 @@ namespace QuantConnect.Algorithm.CSharp.Alphas
 
             // Use Hourly Data For Simplicity
             UniverseSettings.Resolution = Resolution.Hour;
-            SetUniverseSelection(new CoarseFundamentalUniverseSelectionModel(CoarseSelectionFunction));
+            SetUniverseSelection(
+                new CoarseFundamentalUniverseSelectionModel(CoarseSelectionFunction)
+            );
 
             // Use MeanReversionLunchBreakAlphaModel to establish insights
             SetAlpha(new MeanReversionLunchBreakAlphaModel());
@@ -70,10 +72,12 @@ namespace QuantConnect.Algorithm.CSharp.Alphas
         /// </summary>
         private IEnumerable<Symbol> CoarseSelectionFunction(IEnumerable<CoarseFundamental> coarse)
         {
-            return (from cf in coarse
-                    where !cf.HasFundamentalData
-                    orderby cf.DollarVolume descending
-                    select cf.Symbol).Take(20);
+            return (
+                from cf in coarse
+                where !cf.HasFundamentalData
+                orderby cf.DollarVolume descending
+                select cf.Symbol
+            ).Take(20);
         }
 
         /// <summary>
@@ -146,7 +150,10 @@ namespace QuantConnect.Algorithm.CSharp.Alphas
             private class SymbolData
             {
                 // Mean value of returns for magnitude prediction
-                private readonly SimpleMovingAverage _meanOfPriceChange = new RateOfChangePercent(1).SMA(3);
+                private readonly SimpleMovingAverage _meanOfPriceChange = new RateOfChangePercent(
+                    1
+                ).SMA(3);
+
                 // Price change from close price the previous day
                 private readonly RateOfChangePercent _priceChange = new RateOfChangePercent(3);
 
@@ -159,7 +166,8 @@ namespace QuantConnect.Algorithm.CSharp.Alphas
                     {
                         // Emit "down" insight for the securities that increased in value and
                         // emit "up" insight for securities that have decreased in value
-                        var direction = _priceChange > 0 ? InsightDirection.Down : InsightDirection.Up;
+                        var direction =
+                            _priceChange > 0 ? InsightDirection.Down : InsightDirection.Up;
                         var magnitude = Convert.ToDouble(Math.Abs(_meanOfPriceChange));
                         return Insight.Price(_symbol, _period, direction, magnitude);
                     }
@@ -173,8 +181,8 @@ namespace QuantConnect.Algorithm.CSharp.Alphas
 
                 public bool Update(DateTime time, decimal value)
                 {
-                    return _meanOfPriceChange.Update(time, value) &
-                        _priceChange.Update(time, value);
+                    return _meanOfPriceChange.Update(time, value)
+                        & _priceChange.Update(time, value);
                 }
             }
         }

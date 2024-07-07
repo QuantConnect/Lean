@@ -13,41 +13,77 @@
  * limitations under the License.
 */
 
+using System;
 using NUnit.Framework;
 using QuantConnect.Data.Consolidators;
 using QuantConnect.Data.Market;
 using QuantConnect.Indicators;
-using System;
 using static QuantConnect.Tests.Indicators.TestHelper;
 
 namespace QuantConnect.Tests.Indicators
 {
     [TestFixture, Parallelizable(ParallelScope.Fixtures)]
     public class CorrelationPearsonTests : CommonIndicatorTests<IBaseDataBar>
-    { 
+    {
         protected override string TestFileName => "spy_qqq_corr.csv";
-        
+
         private DateTime _reference = new DateTime(2020, 1, 1);
 
         protected CorrelationType _correlationType { get; set; } = CorrelationType.Pearson;
-        protected override string TestColumnName => (_correlationType==CorrelationType.Pearson)?"Correlation_Pearson":"Correlation_Spearman";
+        protected override string TestColumnName =>
+            (_correlationType == CorrelationType.Pearson)
+                ? "Correlation_Pearson"
+                : "Correlation_Spearman";
+
         protected override IndicatorBase<IBaseDataBar> CreateIndicator()
         {
-            #pragma warning disable CS0618
-            var indicator = new QuantConnect.Indicators.Correlation("testCorrelationIndicator", Symbols.SPY, "QQQ RIWIV7K5Z9LX", 252, _correlationType);
-            #pragma warning restore CS0618
+#pragma warning disable CS0618
+            var indicator = new QuantConnect.Indicators.Correlation(
+                "testCorrelationIndicator",
+                Symbols.SPY,
+                "QQQ RIWIV7K5Z9LX",
+                252,
+                _correlationType
+            );
+#pragma warning restore CS0618
             return indicator;
         }
 
         [Test]
         public override void TimeMovesForward()
         {
-            var indicator = new QuantConnect.Indicators.Correlation("testCorrelationIndicator",  Symbols.IBM, Symbols.SPY, 5, _correlationType);
+            var indicator = new QuantConnect.Indicators.Correlation(
+                "testCorrelationIndicator",
+                Symbols.IBM,
+                Symbols.SPY,
+                5,
+                _correlationType
+            );
 
             for (var i = 10; i > 0; i--)
             {
-                indicator.Update(new TradeBar() { Symbol = Symbols.IBM, Low = 1, High = 2, Volume = 100, Close = 500, Time = _reference.AddDays(1 + i) });
-                indicator.Update(new TradeBar() { Symbol = Symbols.SPY, Low = 1, High = 2, Volume = 100, Close = 500, Time = _reference.AddDays(1 + i) });
+                indicator.Update(
+                    new TradeBar()
+                    {
+                        Symbol = Symbols.IBM,
+                        Low = 1,
+                        High = 2,
+                        Volume = 100,
+                        Close = 500,
+                        Time = _reference.AddDays(1 + i)
+                    }
+                );
+                indicator.Update(
+                    new TradeBar()
+                    {
+                        Symbol = Symbols.SPY,
+                        Low = 1,
+                        High = 2,
+                        Volume = 100,
+                        Close = 500,
+                        Time = _reference.AddDays(1 + i)
+                    }
+                );
             }
 
             Assert.AreEqual(2, indicator.Samples);
@@ -56,7 +92,13 @@ namespace QuantConnect.Tests.Indicators
         [Test]
         public override void WarmsUpProperly()
         {
-            var indicator = new QuantConnect.Indicators.Correlation("testCorrelationIndicator", Symbols.IBM, Symbols.SPY, 5, _correlationType);
+            var indicator = new QuantConnect.Indicators.Correlation(
+                "testCorrelationIndicator",
+                Symbols.IBM,
+                Symbols.SPY,
+                5,
+                _correlationType
+            );
             var period = (indicator as IIndicatorWarmUpPeriodProvider)?.WarmUpPeriod;
 
             if (!period.HasValue)
@@ -67,11 +109,31 @@ namespace QuantConnect.Tests.Indicators
 
             for (var i = 0; i < period.Value; i++)
             {
-                indicator.Update(new TradeBar() { Symbol = Symbols.IBM, Low = 1, High = 2, Volume = 100, Close = 500, Time = _reference.AddDays(1 + i) });
-                indicator.Update(new TradeBar() { Symbol = Symbols.SPY, Low = 1, High = 2, Volume = 100, Close = 500, Time = _reference.AddDays(1 + i) });
+                indicator.Update(
+                    new TradeBar()
+                    {
+                        Symbol = Symbols.IBM,
+                        Low = 1,
+                        High = 2,
+                        Volume = 100,
+                        Close = 500,
+                        Time = _reference.AddDays(1 + i)
+                    }
+                );
+                indicator.Update(
+                    new TradeBar()
+                    {
+                        Symbol = Symbols.SPY,
+                        Low = 1,
+                        High = 2,
+                        Volume = 100,
+                        Close = 500,
+                        Time = _reference.AddDays(1 + i)
+                    }
+                );
             }
-         
-            Assert.AreEqual(2*period.Value, indicator.Samples);
+
+            Assert.AreEqual(2 * period.Value, indicator.Samples);
         }
 
         [Test]
@@ -92,7 +154,6 @@ namespace QuantConnect.Tests.Indicators
             int counter = 0;
             foreach (var parts in GetCsvFileStream(TestFileName))
             {
-
                 var tradebar = parts.GetTradeBar();
                 if (tradebar.Symbol.Value == "SPY")
                 {
@@ -150,15 +211,37 @@ namespace QuantConnect.Tests.Indicators
             firstVolumeRenkoConsolidator.Dispose();
             secondVolumeRenkoConsolidator.Dispose();
         }
+
         [Test]
         public void AcceptsQuoteBarsAsInput()
         {
-            var indicator = new QuantConnect.Indicators.Correlation("testCorrelationIndicator", Symbols.IBM, Symbols.SPY, 5, _correlationType);
+            var indicator = new QuantConnect.Indicators.Correlation(
+                "testCorrelationIndicator",
+                Symbols.IBM,
+                Symbols.SPY,
+                5,
+                _correlationType
+            );
 
             for (var i = 10; i > 0; i--)
             {
-                indicator.Update(new QuoteBar { Symbol = Symbols.IBM, Ask = new Bar(1, 2, 1, 500), Bid = new Bar(1, 2, 1, 500), Time = _reference.AddDays(1 + i) });
-                indicator.Update(new QuoteBar { Symbol = Symbols.SPY, Ask = new Bar(1, 2, 1, 500), Time = _reference.AddDays(1 + i) });
+                indicator.Update(
+                    new QuoteBar
+                    {
+                        Symbol = Symbols.IBM,
+                        Ask = new Bar(1, 2, 1, 500),
+                        Bid = new Bar(1, 2, 1, 500),
+                        Time = _reference.AddDays(1 + i)
+                    }
+                );
+                indicator.Update(
+                    new QuoteBar
+                    {
+                        Symbol = Symbols.SPY,
+                        Ask = new Bar(1, 2, 1, 500),
+                        Time = _reference.AddDays(1 + i)
+                    }
+                );
             }
 
             Assert.AreEqual(2, indicator.Samples);
@@ -167,12 +250,38 @@ namespace QuantConnect.Tests.Indicators
         [Test]
         public void EqualCorrelationValue()
         {
-            var indicator = new QuantConnect.Indicators.Correlation("testCorrelationIndicator", Symbols.AAPL, Symbols.SPX, 3, _correlationType);
+            var indicator = new QuantConnect.Indicators.Correlation(
+                "testCorrelationIndicator",
+                Symbols.AAPL,
+                Symbols.SPX,
+                3,
+                _correlationType
+            );
 
-            for (int i = 0 ; i < 3 ; i++)
+            for (int i = 0; i < 3; i++)
             {
-                indicator.Update(new TradeBar() { Symbol = Symbols.AAPL, Low = 1, High = 2, Volume = 100, Close = i + 1 ,Time = _reference.AddDays(1 + i) });
-                indicator.Update(new TradeBar() { Symbol = Symbols.SPX, Low = 1, High = 2, Volume = 100, Close = i + 1, Time = _reference.AddDays(1 + i) });
+                indicator.Update(
+                    new TradeBar()
+                    {
+                        Symbol = Symbols.AAPL,
+                        Low = 1,
+                        High = 2,
+                        Volume = 100,
+                        Close = i + 1,
+                        Time = _reference.AddDays(1 + i)
+                    }
+                );
+                indicator.Update(
+                    new TradeBar()
+                    {
+                        Symbol = Symbols.SPX,
+                        Low = 1,
+                        High = 2,
+                        Volume = 100,
+                        Close = i + 1,
+                        Time = _reference.AddDays(1 + i)
+                    }
+                );
             }
 
             Assert.AreEqual(1, (double)indicator.Current.Value);
@@ -181,12 +290,38 @@ namespace QuantConnect.Tests.Indicators
         [Test]
         public void NotEqualCorrelationValue()
         {
-            var indicator = new QuantConnect.Indicators.Correlation("testCorrelationIndicator", Symbols.AAPL, Symbols.SPX, 3, _correlationType);
+            var indicator = new QuantConnect.Indicators.Correlation(
+                "testCorrelationIndicator",
+                Symbols.AAPL,
+                Symbols.SPX,
+                3,
+                _correlationType
+            );
 
             for (int i = 0; i < 3; i++)
             {
-                indicator.Update(new TradeBar() { Symbol = Symbols.AAPL, Low = 1, High = 2, Volume = 100, Close = i + 1, Time = _reference.AddDays(1 + i) });
-                indicator.Update(new TradeBar() { Symbol = Symbols.SPX, Low = 1, High = 2, Volume = 100, Close = i + 2, Time = _reference.AddDays(1 + i) });
+                indicator.Update(
+                    new TradeBar()
+                    {
+                        Symbol = Symbols.AAPL,
+                        Low = 1,
+                        High = 2,
+                        Volume = 100,
+                        Close = i + 1,
+                        Time = _reference.AddDays(1 + i)
+                    }
+                );
+                indicator.Update(
+                    new TradeBar()
+                    {
+                        Symbol = Symbols.SPX,
+                        Low = 1,
+                        High = 2,
+                        Volume = 100,
+                        Close = i + 2,
+                        Time = _reference.AddDays(1 + i)
+                    }
+                );
             }
 
             Assert.AreNotEqual(0, (double)indicator.Current.Value);

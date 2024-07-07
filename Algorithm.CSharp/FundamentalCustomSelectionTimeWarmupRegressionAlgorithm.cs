@@ -14,23 +14,29 @@
 */
 
 using System;
-using QuantConnect.Data;
-using QuantConnect.Interfaces;
 using System.Collections.Generic;
+using QuantConnect.Data;
 using QuantConnect.Data.Fundamental;
 using QuantConnect.Data.UniverseSelection;
+using QuantConnect.Interfaces;
 
 namespace QuantConnect.Algorithm.CSharp
 {
     /// <summary>
     /// Regression test algorithm for scheduled universe selection and warmup GH 3890
     /// </summary>
-    public class FundamentalCustomSelectionTimeWarmupRegressionAlgorithm : QCAlgorithm, IRegressionAlgorithmDefinition
+    public class FundamentalCustomSelectionTimeWarmupRegressionAlgorithm
+        : QCAlgorithm,
+            IRegressionAlgorithmDefinition
     {
         private readonly TimeSpan _warmupSpan = TimeSpan.FromDays(3);
         private int _specificDateSelection;
         private int _monthStartSelection;
-        private readonly Symbol _symbol = QuantConnect.Symbol.Create("SPY", SecurityType.Equity, Market.USA);
+        private readonly Symbol _symbol = QuantConnect.Symbol.Create(
+            "SPY",
+            SecurityType.Equity,
+            Market.USA
+        );
 
         /// <summary>
         /// Initialise the data and resolution required, as well as the cash and start-end dates for your algorithm. All algorithms must initialized.
@@ -43,12 +49,15 @@ namespace QuantConnect.Algorithm.CSharp
 
             AddUniverse(DateRules.MonthStart(), SelectionFunction_MonthStart);
 
-            UniverseSettings.Schedule.On(DateRules.On(
-                new DateTime(2013, 05, 9), // really old date will be ignored
-                new DateTime(2014, 03, 24), // data for this date will be used to trigger the initial selection
-                new DateTime(2014, 03, 26), // date during warmup
-                new DateTime(2014, 05, 9), // after warmup
-                new DateTime(2020, 05, 9))); // after backtest ends -> wont be executed
+            UniverseSettings.Schedule.On(
+                DateRules.On(
+                    new DateTime(2013, 05, 9), // really old date will be ignored
+                    new DateTime(2014, 03, 24), // data for this date will be used to trigger the initial selection
+                    new DateTime(2014, 03, 26), // date during warmup
+                    new DateTime(2014, 05, 9), // after warmup
+                    new DateTime(2020, 05, 9)
+                )
+            ); // after backtest ends -> wont be executed
             AddUniverse(FundamentalUniverse.USA(SelectionFunction_SpecificDate));
 
             SetWarmUp(_warmupSpan);
@@ -60,13 +69,16 @@ namespace QuantConnect.Algorithm.CSharp
             {
                 if (Time != StartDate.Add(-_warmupSpan))
                 {
-                    throw new RegressionTestException($"Month Start unexpected initial selection: {Time}");
+                    throw new RegressionTestException(
+                        $"Month Start unexpected initial selection: {Time}"
+                    );
                 }
             }
-            else if (Time != new DateTime(2014, 3, 26)
-                && Time != new DateTime(2014, 5, 9))
+            else if (Time != new DateTime(2014, 3, 26) && Time != new DateTime(2014, 5, 9))
             {
-                throw new RegressionTestException($"SelectionFunction_SpecificDate unexpected selection: {Time}");
+                throw new RegressionTestException(
+                    $"SelectionFunction_SpecificDate unexpected selection: {Time}"
+                );
             }
             return new[] { _symbol };
         }
@@ -77,11 +89,12 @@ namespace QuantConnect.Algorithm.CSharp
             {
                 if (Time != StartDate.Add(-_warmupSpan))
                 {
-                    throw new RegressionTestException($"Month Start unexpected initial selection: {Time}");
+                    throw new RegressionTestException(
+                        $"Month Start unexpected initial selection: {Time}"
+                    );
                 }
             }
-            else if (Time != new DateTime(2014, 4, 1)
-                && Time != new DateTime(2014, 5, 1))
+            else if (Time != new DateTime(2014, 4, 1) && Time != new DateTime(2014, 5, 1))
             {
                 throw new RegressionTestException($"Month Start unexpected selection: {Time}");
             }
@@ -105,11 +118,15 @@ namespace QuantConnect.Algorithm.CSharp
         {
             if (_monthStartSelection != 3)
             {
-                throw new RegressionTestException($"Month start unexpected selection count: {_monthStartSelection}");
+                throw new RegressionTestException(
+                    $"Month start unexpected selection count: {_monthStartSelection}"
+                );
             }
             if (_specificDateSelection != 3)
             {
-                throw new RegressionTestException($"Specific date unexpected selection count: {_specificDateSelection}");
+                throw new RegressionTestException(
+                    $"Specific date unexpected selection count: {_specificDateSelection}"
+                );
             }
         }
 
@@ -141,35 +158,36 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// This is used by the regression test system to indicate what the expected statistics are from running the algorithm
         /// </summary>
-        public Dictionary<string, string> ExpectedStatistics => new Dictionary<string, string>
-        {
-            {"Total Orders", "1"},
-            {"Average Win", "0%"},
-            {"Average Loss", "0%"},
-            {"Compounding Annual Return", "15.358%"},
-            {"Drawdown", "3.900%"},
-            {"Expectancy", "0"},
-            {"Start Equity", "100000"},
-            {"End Equity", "101737.18"},
-            {"Net Profit", "1.737%"},
-            {"Sharpe Ratio", "1.146"},
-            {"Sortino Ratio", "1.091"},
-            {"Probabilistic Sharpe Ratio", "52.443%"},
-            {"Loss Rate", "0%"},
-            {"Win Rate", "0%"},
-            {"Profit-Loss Ratio", "0"},
-            {"Alpha", "-0"},
-            {"Beta", "0.996"},
-            {"Annual Standard Deviation", "0.097"},
-            {"Annual Variance", "0.009"},
-            {"Information Ratio", "-1.353"},
-            {"Tracking Error", "0"},
-            {"Treynor Ratio", "0.111"},
-            {"Total Fees", "$3.09"},
-            {"Estimated Strategy Capacity", "$780000000.00"},
-            {"Lowest Capacity Asset", "SPY R735QTJ8XC9X"},
-            {"Portfolio Turnover", "2.26%"},
-            {"OrderListHash", "2f92fc1cf7fecf4f5fc736d92fdd22c1"}
-        };
+        public Dictionary<string, string> ExpectedStatistics =>
+            new Dictionary<string, string>
+            {
+                { "Total Orders", "1" },
+                { "Average Win", "0%" },
+                { "Average Loss", "0%" },
+                { "Compounding Annual Return", "15.358%" },
+                { "Drawdown", "3.900%" },
+                { "Expectancy", "0" },
+                { "Start Equity", "100000" },
+                { "End Equity", "101737.18" },
+                { "Net Profit", "1.737%" },
+                { "Sharpe Ratio", "1.146" },
+                { "Sortino Ratio", "1.091" },
+                { "Probabilistic Sharpe Ratio", "52.443%" },
+                { "Loss Rate", "0%" },
+                { "Win Rate", "0%" },
+                { "Profit-Loss Ratio", "0" },
+                { "Alpha", "-0" },
+                { "Beta", "0.996" },
+                { "Annual Standard Deviation", "0.097" },
+                { "Annual Variance", "0.009" },
+                { "Information Ratio", "-1.353" },
+                { "Tracking Error", "0" },
+                { "Treynor Ratio", "0.111" },
+                { "Total Fees", "$3.09" },
+                { "Estimated Strategy Capacity", "$780000000.00" },
+                { "Lowest Capacity Asset", "SPY R735QTJ8XC9X" },
+                { "Portfolio Turnover", "2.26%" },
+                { "OrderListHash", "2f92fc1cf7fecf4f5fc736d92fdd22c1" }
+            };
     }
 }

@@ -18,7 +18,8 @@ namespace QuantConnect.Algorithm.CSharp
     /// <summary>
     /// Regression algorithm reproducing GH issue 1046. Where scheduled events wouldn't work during warmup
     /// </summary>
-    public class WarmupScheduledEventsTimeSpanWarmupRegressionAlgorithm : WarmupScheduledEventsRegressionAlgorithm
+    public class WarmupScheduledEventsTimeSpanWarmupRegressionAlgorithm
+        : WarmupScheduledEventsRegressionAlgorithm
     {
         public override void Initialize()
         {

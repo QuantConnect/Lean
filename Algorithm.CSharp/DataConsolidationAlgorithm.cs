@@ -82,10 +82,14 @@ namespace QuantConnect.Algorithm.CSharp
             // here we combine them to make a new, 3 day trade bar. The SequentialConsolidator allows composition of consolidators.
             // it takes the consolidated output of one consolidator (in this case, the oneDayConsolidator) and pipes it through to
             // the threeCountConsolidator.  His output will be a 3 day bar.
-            var three_oneDayBar = new SequentialConsolidator(oneDayConsolidator, threeCountConsolidator);
+            var three_oneDayBar = new SequentialConsolidator(
+                oneDayConsolidator,
+                threeCountConsolidator
+            );
 
             // attach our handler
-            three_oneDayBar.DataConsolidated += (sender, consolidated) => ThreeDayBarConsolidatedHandler(sender, (TradeBar) consolidated);
+            three_oneDayBar.DataConsolidated += (sender, consolidated) =>
+                ThreeDayBarConsolidatedHandler(sender, (TradeBar)consolidated);
 
             // this call adds our 3 day to the manager to receive updates from the engine
             SubscriptionManager.AddConsolidator("SPY", three_oneDayBar);

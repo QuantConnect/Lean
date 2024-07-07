@@ -13,12 +13,11 @@
  * limitations under the License.
 */
 
-using System.IO;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using NUnit.Framework;
 using Python.Runtime;
-
 using QuantConnect.Python;
 
 namespace QuantConnect.Tests.Common.Python
@@ -33,11 +32,13 @@ namespace QuantConnect.Tests.Common.Python
             PythonInitializer.ResetAlgorithmLocationPath();
 
             var testDirectory = Directory.CreateDirectory("TestDir").FullName.Replace('\\', '/');
-            var algorithmDirectory = Directory.CreateDirectory("AlgoDir").FullName.Replace('\\', '/');
+            var algorithmDirectory = Directory
+                .CreateDirectory("AlgoDir")
+                .FullName.Replace('\\', '/');
 
             PythonInitializer.AddAlgorithmLocationPath(algorithmDirectory);
             PythonInitializer.AddPythonPaths(new string[] { testDirectory });
-            
+
             var paths = GetPythonPaths().ToList();
 
             Directory.Delete("TestDir", true);

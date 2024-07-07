@@ -15,10 +15,10 @@
 */
 
 using System;
-using NodaTime;
-using System.Linq;
-using QuantConnect.Securities;
 using System.Collections.Generic;
+using System.Linq;
+using NodaTime;
+using QuantConnect.Securities;
 using static QuantConnect.StringExtensions;
 
 namespace QuantConnect.Scheduling
@@ -34,10 +34,12 @@ namespace QuantConnect.Scheduling
         /// <param name="securities">The security manager</param>
         /// <param name="timeZone">The algorithm's default time zone</param>
         /// <param name="marketHoursDatabase">The market hours database instance to use</param>
-        public TimeRules(SecurityManager securities, DateTimeZone timeZone, MarketHoursDatabase marketHoursDatabase)
-            : base(securities, timeZone, marketHoursDatabase)
-        {
-        }
+        public TimeRules(
+            SecurityManager securities,
+            DateTimeZone timeZone,
+            MarketHoursDatabase marketHoursDatabase
+        )
+            : base(securities, timeZone, marketHoursDatabase) { }
 
         /// <summary>
         /// Sets the default time zone
@@ -51,26 +53,39 @@ namespace QuantConnect.Scheduling
         /// <summary>
         /// Specifies an event should fire at the current time
         /// </summary>
-        public ITimeRule Now => new FuncTimeRule("Now", dates => {
-            return dates.Select(date =>
-            {
-                // we ignore the given date and just use the current time, why? if the algorithm used 'DateRules.Today'
-                // we get the algorithms first 'Date', which during warmup might not be a complete date, depending on the warmup period
-                // and since Today returns dates we might get a time in the past which get's ignored. See 'WarmupTrainRegressionAlgorithm'
-                // which reproduces GH issue #6410
-                return Securities.UtcTime;
-            });
-        });
+        public ITimeRule Now =>
+            new FuncTimeRule(
+                "Now",
+                dates =>
+                {
+                    return dates.Select(date =>
+                    {
+                        // we ignore the given date and just use the current time, why? if the algorithm used 'DateRules.Today'
+                        // we get the algorithms first 'Date', which during warmup might not be a complete date, depending on the warmup period
+                        // and since Today returns dates we might get a time in the past which get's ignored. See 'WarmupTrainRegressionAlgorithm'
+                        // which reproduces GH issue #6410
+                        return Securities.UtcTime;
+                    });
+                }
+            );
 
         /// <summary>
         /// Convenience property for running a scheduled event at midnight in the algorithm time zone
         /// </summary>
-        public ITimeRule Midnight => new FuncTimeRule("Midnight", dates => dates.Select(date => date.ConvertToUtc(TimeZone)));
+        public ITimeRule Midnight =>
+            new FuncTimeRule(
+                "Midnight",
+                dates => dates.Select(date => date.ConvertToUtc(TimeZone))
+            );
 
         /// <summary>
         /// Convenience property for running a scheduled event at noon in the algorithm time zone
         /// </summary>
-        public ITimeRule Noon => new FuncTimeRule("Noon", dates => dates.Select(date => date.ConvertToUtc(TimeZone).AddHours(12)));
+        public ITimeRule Noon =>
+            new FuncTimeRule(
+                "Noon",
+                dates => dates.Select(date => date.ConvertToUtc(TimeZone).AddHours(12))
+            );
 
         /// <summary>
         /// Specifies an event should fire at the specified time of day in the algorithm's time zone
@@ -146,10 +161,13 @@ namespace QuantConnect.Scheduling
         {
             if (interval <= TimeSpan.Zero)
             {
-                throw new ArgumentException("TimeRules.Every(): time span interval can not be zero or less");
+                throw new ArgumentException(
+                    "TimeRules.Every(): time span interval can not be zero or less"
+                );
             }
             var name = Invariant($"Every {interval.TotalMinutes:0.##} min");
-            Func<IEnumerable<DateTime>, IEnumerable<DateTime>> applicator = dates => EveryIntervalIterator(dates, interval, TimeZone);
+            Func<IEnumerable<DateTime>, IEnumerable<DateTime>> applicator = dates =>
+                EveryIntervalIterator(dates, interval, TimeZone);
             return new FuncTimeRule(name, applicator);
         }
 
@@ -160,7 +178,11 @@ namespace QuantConnect.Scheduling
         /// <param name="minutesAfterOpen">The minutes after market open that the event should fire</param>
         /// <param name="extendedMarketOpen">True to use extended market open, false to use regular market open</param>
         /// <returns>A time rule that fires the specified number of minutes after the symbol's market open</returns>
-        public ITimeRule AfterMarketOpen(Symbol symbol, double minutesAfterOpen = 0, bool extendedMarketOpen = false)
+        public ITimeRule AfterMarketOpen(
+            Symbol symbol,
+            double minutesAfterOpen = 0,
+            bool extendedMarketOpen = false
+        )
         {
             var type = extendedMarketOpen ? "ExtendedMarketOpen" : "MarketOpen";
             var name = Invariant($"{symbol}: {minutesAfterOpen:0.##} min after {type}");
@@ -186,7 +208,11 @@ namespace QuantConnect.Scheduling
         /// <param name="minutesBeforeClose">The time before market close that the event should fire</param>
         /// <param name="extendedMarketClose">True to use extended market close, false to use regular market close</param>
         /// <returns>A time rule that fires the specified number of minutes before the symbol's market close</returns>
-        public ITimeRule BeforeMarketClose(Symbol symbol, double minutesBeforeClose = 0, bool extendedMarketClose = false)
+        public ITimeRule BeforeMarketClose(
+            Symbol symbol,
+            double minutesBeforeClose = 0,
+            bool extendedMarketClose = false
+        )
         {
             var type = extendedMarketClose ? "ExtendedMarketClose" : "MarketClose";
             var name = Invariant($"{symbol}: {minutesBeforeClose:0.##} min before {type}");
@@ -211,11 +237,17 @@ namespace QuantConnect.Scheduling
         /// <param name="dates">The dates for which we want to create the different intervals</param>
         /// <param name="interval">The interval value to use, can not be zero or less</param>
         /// <param name="timeZone">The time zone the date time is expressed in</param>
-        private static IEnumerable<DateTime> EveryIntervalIterator(IEnumerable<DateTime> dates, TimeSpan interval, DateTimeZone timeZone)
+        private static IEnumerable<DateTime> EveryIntervalIterator(
+            IEnumerable<DateTime> dates,
+            TimeSpan interval,
+            DateTimeZone timeZone
+        )
         {
             if (interval <= TimeSpan.Zero)
             {
-                throw new ArgumentException("TimeRules.EveryIntervalIterator(): time span interval can not be zero or less");
+                throw new ArgumentException(
+                    "TimeRules.EveryIntervalIterator(): time span interval can not be zero or less"
+                );
             }
             foreach (var date in dates)
             {

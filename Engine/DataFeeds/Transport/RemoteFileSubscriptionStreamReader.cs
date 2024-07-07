@@ -30,6 +30,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Transport
     {
         private readonly IStreamReader _streamReader;
         private static IDownloadProvider _downloader;
+
         // lock for multi thread scenarios where we are sharing the same cached file
         private static readonly object _fileSystemLock = new object();
 
@@ -55,7 +56,12 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Transport
         /// <param name="source">The remote url to be downloaded via web client</param>
         /// <param name="downloadDirectory">The local directory and destination of the download</param>
         /// <param name="headers">Defines header values to add to the request</param>
-        public RemoteFileSubscriptionStreamReader(IDataCacheProvider dataCacheProvider, string source, string downloadDirectory, IEnumerable<KeyValuePair<string, string>> headers)
+        public RemoteFileSubscriptionStreamReader(
+            IDataCacheProvider dataCacheProvider,
+            string source,
+            string downloadDirectory,
+            IEnumerable<KeyValuePair<string, string>> headers
+        )
         {
             // don't use cache if data is ephemeral
             // will be false for live history requests and live subscriptions
@@ -71,7 +77,11 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Transport
                 baseFileName = uri.OriginalString;
                 if (!string.IsNullOrEmpty(uri.Fragment))
                 {
-                    baseFileName = baseFileName.Replace(uri.Fragment, "", StringComparison.InvariantCulture);
+                    baseFileName = baseFileName.Replace(
+                        uri.Fragment,
+                        "",
+                        StringComparison.InvariantCulture
+                    );
                 }
                 extension = uri.AbsolutePath.GetExtension();
                 entryName = uri.Fragment;
@@ -82,7 +92,8 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Transport
                 extension = Path.GetExtension(baseFileName);
             }
 
-            var cacheFileName = (useCache ? baseFileName.ToMD5() : Guid.NewGuid().ToString()) + extension;
+            var cacheFileName =
+                (useCache ? baseFileName.ToMD5() : Guid.NewGuid().ToString()) + extension;
             LocalFileName = Path.Combine(downloadDirectory, cacheFileName);
 
             byte[] bytes = null;
@@ -116,7 +127,10 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Transport
             {
                 fileNameWithEntry += entryName;
             }
-            _streamReader = new LocalFileSubscriptionStreamReader(dataCacheProvider, fileNameWithEntry);
+            _streamReader = new LocalFileSubscriptionStreamReader(
+                dataCacheProvider,
+                fileNameWithEntry
+            );
         }
 
         /// <summary>

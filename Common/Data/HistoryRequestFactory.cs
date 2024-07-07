@@ -52,7 +52,8 @@ namespace QuantConnect.Data
         /// <param name="contractDepthOffset">The continuous contract desired offset from the current front month.
         /// For example, 0 will use the front month, 1 will use the back month contract</param>
         /// <returns>The new <see cref="HistoryRequest"/></returns>
-        public HistoryRequest CreateHistoryRequest(SubscriptionDataConfig subscription,
+        public HistoryRequest CreateHistoryRequest(
+            SubscriptionDataConfig subscription,
             DateTime startAlgoTz,
             DateTime endAlgoTz,
             SecurityExchangeHours exchangeHours,
@@ -61,7 +62,8 @@ namespace QuantConnect.Data
             bool? extendedMarketHours = null,
             DataMappingMode? dataMappingMode = null,
             DataNormalizationMode? dataNormalizationMode = null,
-            int? contractDepthOffset = null)
+            int? contractDepthOffset = null
+        )
         {
             resolution ??= subscription.Resolution;
 
@@ -69,7 +71,10 @@ namespace QuantConnect.Data
 
             // if we change resolution the data type can change, for example subscription being Tick type and resolution daily
             // data type here won't be Tick anymore, but TradeBar/QuoteBar
-            if (resolution.Value != subscription.Resolution && LeanData.IsCommonLeanDataType(dataType))
+            if (
+                resolution.Value != subscription.Resolution
+                && LeanData.IsCommonLeanDataType(dataType)
+            )
             {
                 dataType = LeanData.GetDataType(resolution.Value, subscription.TickType);
             }
@@ -80,10 +85,12 @@ namespace QuantConnect.Data
                 fillForwardResolution = fillForward.Value ? resolution : null;
             }
 
-            var request = new HistoryRequest(subscription,
+            var request = new HistoryRequest(
+                subscription,
                 exchangeHours,
                 startAlgoTz.ConvertToUtc(_algorithm.TimeZone),
-                endAlgoTz.ConvertToUtc(_algorithm.TimeZone))
+                endAlgoTz.ConvertToUtc(_algorithm.TimeZone)
+            )
             {
                 DataType = dataType,
                 Resolution = resolution.Value,
@@ -133,9 +140,18 @@ namespace QuantConnect.Data
             Resolution resolution,
             SecurityExchangeHours exchange,
             DateTimeZone dataTimeZone,
-            bool? extendedMarketHours = null)
+            bool? extendedMarketHours = null
+        )
         {
-            return GetStartTimeAlgoTz(_algorithm.UtcTime, symbol, periods, resolution, exchange, dataTimeZone, extendedMarketHours);
+            return GetStartTimeAlgoTz(
+                _algorithm.UtcTime,
+                symbol,
+                periods,
+                resolution,
+                exchange,
+                dataTimeZone,
+                extendedMarketHours
+            );
         }
 
         /// <summary>
@@ -159,7 +175,8 @@ namespace QuantConnect.Data
             Resolution resolution,
             SecurityExchangeHours exchange,
             DateTimeZone dataTimeZone,
-            bool? extendedMarketHours = null)
+            bool? extendedMarketHours = null
+        )
         {
             var isExtendedMarketHours = false;
             // hour resolution does no have extended market hours data
@@ -171,9 +188,10 @@ namespace QuantConnect.Data
                 }
                 else
                 {
-                    var configs = _algorithm.SubscriptionManager
-                        .SubscriptionDataConfigService
-                        .GetSubscriptionDataConfigs(symbol);
+                    var configs =
+                        _algorithm.SubscriptionManager.SubscriptionDataConfigService.GetSubscriptionDataConfigs(
+                            symbol
+                        );
                     isExtendedMarketHours = configs.IsExtendedMarketHours();
                 }
             }
@@ -188,7 +206,8 @@ namespace QuantConnect.Data
                 timeSpan,
                 periods,
                 isExtendedMarketHours,
-                dataTimeZone);
+                dataTimeZone
+            );
             return localStartTime.ConvertTo(exchange.TimeZone, _algorithm.TimeZone);
         }
     }

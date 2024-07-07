@@ -40,7 +40,10 @@ namespace QuantConnect.Util
         /// <param name="delimiter">The data delimiter character to use, default is ','</param>
         /// <returns>The decimal read from the stream</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static decimal GetDecimal(this StreamReader stream, char delimiter = DefaultDelimiter)
+        public static decimal GetDecimal(
+            this StreamReader stream,
+            char delimiter = DefaultDelimiter
+        )
         {
             return GetDecimal(stream, out _, delimiter);
         }
@@ -53,7 +56,11 @@ namespace QuantConnect.Util
         /// <param name="pastEndLine">True if end line was past, useful for consumers to know a line ended</param>
         /// <returns>The decimal read from the stream</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static decimal GetDecimal(this StreamReader stream, out bool pastEndLine, char delimiter = DefaultDelimiter)
+        public static decimal GetDecimal(
+            this StreamReader stream,
+            out bool pastEndLine,
+            char delimiter = DefaultDelimiter
+        )
         {
             long value = 0;
             var decimalPlaces = NoDecimalPlaces;
@@ -70,7 +77,10 @@ namespace QuantConnect.Util
                 current = (char)stream.Read();
             }
 
-            pastEndLine = current == '\n' || current == '\r' && (stream.Peek() != '\n' || stream.Read() == '\n') || current == NoMoreData;
+            pastEndLine =
+                current == '\n'
+                || current == '\r' && (stream.Peek() != '\n' || stream.Read() == '\n')
+                || current == NoMoreData;
             while (!(current == delimiter || pastEndLine || current == ' '))
             {
                 if (current == '.')
@@ -80,18 +90,27 @@ namespace QuantConnect.Util
                 else
                 {
                     value = value * 10 + (current - '0');
-                    if(decimalPlaces != NoDecimalPlaces)
+                    if (decimalPlaces != NoDecimalPlaces)
                     {
                         decimalPlaces++;
                     }
                 }
                 current = (char)stream.Read();
-                pastEndLine = current == '\n' || current == '\r' && (stream.Peek() != '\n' || stream.Read() == '\n') || current == NoMoreData;
+                pastEndLine =
+                    current == '\n'
+                    || current == '\r' && (stream.Peek() != '\n' || stream.Read() == '\n')
+                    || current == NoMoreData;
             }
 
             var lo = (int)value;
             var mid = (int)(value >> 32);
-            return new decimal(lo, mid, 0, isNegative, (byte)(decimalPlaces != NoDecimalPlaces ? decimalPlaces : 0));
+            return new decimal(
+                lo,
+                mid,
+                0,
+                isNegative,
+                (byte)(decimalPlaces != NoDecimalPlaces ? decimalPlaces : 0)
+            );
         }
 
         /// <summary>
@@ -102,7 +121,11 @@ namespace QuantConnect.Util
         /// <param name="delimiter">The data delimiter character to use, default is ','</param>
         /// <returns>The date time instance read</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static DateTime GetDateTime(this StreamReader stream, string format = DateFormat.TwelveCharacter, char delimiter = DefaultDelimiter)
+        public static DateTime GetDateTime(
+            this StreamReader stream,
+            string format = DateFormat.TwelveCharacter,
+            char delimiter = DefaultDelimiter
+        )
         {
             var current = (char)stream.Read();
             while (current == ' ')
@@ -113,15 +136,20 @@ namespace QuantConnect.Util
             var index = 0;
             // we know the exact format we want to parse so we can allocate the char array and not use an expensive string builder
             var data = new char[format.Length];
-            while (!(current == delimiter || current == '\n' || current == '\r' && (stream.Peek() != '\n' || stream.Read() == '\n') || current == NoMoreData))
+            while (
+                !(
+                    current == delimiter
+                    || current == '\n'
+                    || current == '\r' && (stream.Peek() != '\n' || stream.Read() == '\n')
+                    || current == NoMoreData
+                )
+            )
             {
                 data[index++] = current;
                 current = (char)stream.Read();
             }
 
-            return DateTime.ParseExact(data,
-                format,
-                CultureInfo.InvariantCulture);
+            return DateTime.ParseExact(data, format, CultureInfo.InvariantCulture);
         }
 
         /// <summary>
@@ -147,7 +175,15 @@ namespace QuantConnect.Util
                 current = (char)stream.Read();
             }
 
-            while (!(current == delimiter || current == '\n' || current == '\r' && (stream.Peek() != '\n' || stream.Read() == '\n') || current == NoMoreData || current == ' '))
+            while (
+                !(
+                    current == delimiter
+                    || current == '\n'
+                    || current == '\r' && (stream.Peek() != '\n' || stream.Read() == '\n')
+                    || current == NoMoreData
+                    || current == ' '
+                )
+            )
             {
                 result = (current - '0') + result * 10;
                 current = (char)stream.Read();
@@ -167,7 +203,14 @@ namespace QuantConnect.Util
             StringBuilder result = null;
             var current = (char)stream.Read();
 
-            while (!(current == delimiter || current == '\n' || current == '\r' && (stream.Peek() != '\n' || stream.Read() == '\n') || current == NoMoreData))
+            while (
+                !(
+                    current == delimiter
+                    || current == '\n'
+                    || current == '\r' && (stream.Peek() != '\n' || stream.Read() == '\n')
+                    || current == NoMoreData
+                )
+            )
             {
                 if (result == null)
                 {

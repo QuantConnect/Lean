@@ -14,27 +14,29 @@
 */
 
 using System;
-using System.Linq;
-using QuantConnect.Util;
-using QuantConnect.Data;
-using QuantConnect.Orders;
-using QuantConnect.Interfaces;
-using QuantConnect.Brokerages;
 using System.Collections.Generic;
+using System.Linq;
+using QuantConnect.Brokerages;
+using QuantConnect.Data;
+using QuantConnect.Interfaces;
+using QuantConnect.Orders;
+using QuantConnect.Util;
 
 namespace QuantConnect.Algorithm.CSharp
 {
     /// <summary>
     /// Base crypto account regression algorithm trading in and out
     /// </summary>
-    public abstract class CryptoBaseCurrencyFeeRegressionAlgorithm : QCAlgorithm, IRegressionAlgorithmDefinition
+    public abstract class CryptoBaseCurrencyFeeRegressionAlgorithm
+        : QCAlgorithm,
+            IRegressionAlgorithmDefinition
     {
         private Symbol _symbol;
 
         /// <summary>
         /// The target account type
         /// </summary>
-        protected abstract  AccountType AccountType { get; }
+        protected abstract AccountType AccountType { get; }
 
         /// <summary>
         /// The target brokerage model name
@@ -63,27 +65,47 @@ namespace QuantConnect.Algorithm.CSharp
         {
             if (!Portfolio.Invested)
             {
-                CurrencyPairUtil.DecomposeCurrencyPair(_symbol, out var baseCurrency, out var quoteCurrency);
+                CurrencyPairUtil.DecomposeCurrencyPair(
+                    _symbol,
+                    out var baseCurrency,
+                    out var quoteCurrency
+                );
 
                 var initialQuoteCurrency = Portfolio.CashBook[quoteCurrency].Amount;
                 var ticket = Buy(_symbol, 0.1m);
-                var filledEvent = ticket.OrderEvents.Single(orderEvent => orderEvent.Status == OrderStatus.Filled);
+                var filledEvent = ticket.OrderEvents.Single(orderEvent =>
+                    orderEvent.Status == OrderStatus.Filled
+                );
 
-                if (Portfolio.CashBook[baseCurrency].Amount != ticket.QuantityFilled
+                if (
+                    Portfolio.CashBook[baseCurrency].Amount != ticket.QuantityFilled
                     || filledEvent.FillQuantity != ticket.QuantityFilled
-                    || (0.1m - filledEvent.OrderFee.Value.Amount) != ticket.QuantityFilled)
+                    || (0.1m - filledEvent.OrderFee.Value.Amount) != ticket.QuantityFilled
+                )
                 {
-                    throw new RegressionTestException($"Unexpected BaseCurrency portfolio status. Event {filledEvent}. CashBook: {Portfolio.CashBook}. ");
+                    throw new RegressionTestException(
+                        $"Unexpected BaseCurrency portfolio status. Event {filledEvent}. CashBook: {Portfolio.CashBook}. "
+                    );
                 }
 
-                if (Portfolio.CashBook[quoteCurrency].Amount != (initialQuoteCurrency - 0.1m * filledEvent.FillPrice))
+                if (
+                    Portfolio.CashBook[quoteCurrency].Amount
+                    != (initialQuoteCurrency - 0.1m * filledEvent.FillPrice)
+                )
                 {
-                    throw new RegressionTestException($"Unexpected QuoteCurrency portfolio status. Event {filledEvent}. CashBook: {Portfolio.CashBook}. ");
+                    throw new RegressionTestException(
+                        $"Unexpected QuoteCurrency portfolio status. Event {filledEvent}. CashBook: {Portfolio.CashBook}. "
+                    );
                 }
 
-                if (Securities[_symbol].Holdings.Quantity != (0.1m - filledEvent.OrderFee.Value.Amount))
+                if (
+                    Securities[_symbol].Holdings.Quantity
+                    != (0.1m - filledEvent.OrderFee.Value.Amount)
+                )
                 {
-                    throw new RegressionTestException($"Unexpected Holdings: {Securities[_symbol].Holdings}. Event {filledEvent}");
+                    throw new RegressionTestException(
+                        $"Unexpected Holdings: {Securities[_symbol].Holdings}. Event {filledEvent}"
+                    );
                 }
             }
             else

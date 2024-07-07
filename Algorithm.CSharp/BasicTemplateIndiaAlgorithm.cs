@@ -13,8 +13,8 @@
  * limitations under the License.
 */
 
-using QuantConnect.Data;
 using System.Collections.Generic;
+using QuantConnect.Data;
 using QuantConnect.Interfaces;
 using QuantConnect.Orders;
 
@@ -34,10 +34,10 @@ namespace QuantConnect.Algorithm.CSharp
         /// </summary>
         public override void Initialize()
         {
-            SetAccountCurrency("INR");  //Set Account Currency
-            SetStartDate(2019, 1, 23);  //Set Start Date
-            SetEndDate(2019, 10, 31);   //Set End Date
-            SetCash(100000);            //Set Strategy Cash
+            SetAccountCurrency("INR"); //Set Account Currency
+            SetStartDate(2019, 1, 23); //Set Start Date
+            SetEndDate(2019, 10, 31); //Set End Date
+            SetCash(100000); //Set Strategy Cash
 
             // Find more symbols here: http://quantconnect.com/data
             // Equities Resolutions: Tick, Second, Minute, Hour, Daily.
@@ -100,35 +100,36 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// This is used by the regression test system to indicate what the expected statistics are from running the algorithm
         /// </summary>
-        public Dictionary<string, string> ExpectedStatistics => new Dictionary<string, string>
-        {
-            {"Total Orders", "1"},
-            {"Average Win", "0%"},
-            {"Average Loss", "0%"},
-            {"Compounding Annual Return", "-0.010%"},
-            {"Drawdown", "0.000%"},
-            {"Expectancy", "0"},
-            {"Start Equity", "100000"},
-            {"End Equity", "99992.45"},
-            {"Net Profit", "-0.008%"},
-            {"Sharpe Ratio", "-497.389"},
-            {"Sortino Ratio", "-73.22"},
-            {"Probabilistic Sharpe Ratio", "0.001%"},
-            {"Loss Rate", "0%"},
-            {"Win Rate", "0%"},
-            {"Profit-Loss Ratio", "0"},
-            {"Alpha", "0"},
-            {"Beta", "0"},
-            {"Annual Standard Deviation", "0"},
-            {"Annual Variance", "0"},
-            {"Information Ratio", "-1.183"},
-            {"Tracking Error", "0"},
-            {"Treynor Ratio", "0"},
-            {"Total Fees", "₹6.00"},
-            {"Estimated Strategy Capacity", "₹61000000000.00"},
-            {"Lowest Capacity Asset", "YESBANK UL"},
-            {"Portfolio Turnover", "0.00%"},
-            {"OrderListHash", "7a0257f08e3bb9143b825e07ab47fea0"}
-        };
+        public Dictionary<string, string> ExpectedStatistics =>
+            new Dictionary<string, string>
+            {
+                { "Total Orders", "1" },
+                { "Average Win", "0%" },
+                { "Average Loss", "0%" },
+                { "Compounding Annual Return", "-0.010%" },
+                { "Drawdown", "0.000%" },
+                { "Expectancy", "0" },
+                { "Start Equity", "100000" },
+                { "End Equity", "99992.45" },
+                { "Net Profit", "-0.008%" },
+                { "Sharpe Ratio", "-497.389" },
+                { "Sortino Ratio", "-73.22" },
+                { "Probabilistic Sharpe Ratio", "0.001%" },
+                { "Loss Rate", "0%" },
+                { "Win Rate", "0%" },
+                { "Profit-Loss Ratio", "0" },
+                { "Alpha", "0" },
+                { "Beta", "0" },
+                { "Annual Standard Deviation", "0" },
+                { "Annual Variance", "0" },
+                { "Information Ratio", "-1.183" },
+                { "Tracking Error", "0" },
+                { "Treynor Ratio", "0" },
+                { "Total Fees", "₹6.00" },
+                { "Estimated Strategy Capacity", "₹61000000000.00" },
+                { "Lowest Capacity Asset", "YESBANK UL" },
+                { "Portfolio Turnover", "0.00%" },
+                { "OrderListHash", "7a0257f08e3bb9143b825e07ab47fea0" }
+            };
     }
 }

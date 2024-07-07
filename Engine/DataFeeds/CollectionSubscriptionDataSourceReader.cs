@@ -13,11 +13,11 @@
  * limitations under the License.
 */
 using System;
-using QuantConnect.Data;
-using QuantConnect.Util;
-using QuantConnect.Interfaces;
 using System.Collections.Generic;
+using QuantConnect.Data;
 using QuantConnect.Data.UniverseSelection;
+using QuantConnect.Interfaces;
+using QuantConnect.Util;
 
 namespace QuantConnect.Lean.Engine.DataFeeds
 {
@@ -38,8 +38,14 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         /// <param name="config">The subscription's configuration</param>
         /// <param name="date">The date this factory was produced to read data for</param>
         /// <param name="isLiveMode">True if we're in live mode, false for backtesting</param>
-        public CollectionSubscriptionDataSourceReader(IDataCacheProvider dataCacheProvider, SubscriptionDataConfig config, DateTime date, bool isLiveMode, IObjectStore objectStore)
-            :base(dataCacheProvider, isLiveMode, objectStore)
+        public CollectionSubscriptionDataSourceReader(
+            IDataCacheProvider dataCacheProvider,
+            SubscriptionDataConfig config,
+            DateTime date,
+            bool isLiveMode,
+            IObjectStore objectStore
+        )
+            : base(dataCacheProvider, isLiveMode, objectStore)
         {
             _date = date;
             _config = config;
@@ -81,7 +87,12 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                         instances = result as BaseDataCollection;
                         if (instances == null && !reader.ShouldBeRateLimited)
                         {
-                            OnInvalidSource(source, new Exception("Reader must generate a BaseDataCollection with the FileFormat.Collection"));
+                            OnInvalidSource(
+                                source,
+                                new Exception(
+                                    "Reader must generate a BaseDataCollection with the FileFormat.Collection"
+                                )
+                            );
                             continue;
                         }
                     }
@@ -94,10 +105,12 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                         }
                     }
 
-                    if (IsLiveMode
+                    if (
+                        IsLiveMode
                         // this shouldn't happen, rest reader is the only one to be rate limited
                         // and in live mode, but just in case...
-                        || instances == null && reader.ShouldBeRateLimited)
+                        || instances == null && reader.ShouldBeRateLimited
+                    )
                     {
                         // in live trading these data points will be unrolled at the
                         // 'LiveCustomDataSubscriptionEnumeratorFactory' level
@@ -129,7 +142,8 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         private void OnReaderError(string line, Exception exception)
         {
             var handler = ReaderError;
-            if (handler != null) handler(this, new ReaderErrorEventArgs(line, exception));
+            if (handler != null)
+                handler(this, new ReaderErrorEventArgs(line, exception));
         }
     }
 }

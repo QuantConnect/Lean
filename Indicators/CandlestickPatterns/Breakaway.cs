@@ -1,11 +1,11 @@
 ﻿/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
- * 
- * Licensed under the Apache License, Version 2.0 (the "License"); 
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -42,7 +42,7 @@ namespace QuantConnect.Indicators.CandlestickPatterns
         /// Initializes a new instance of the <see cref="Breakaway"/> class using the specified name.
         /// </summary>
         /// <param name="name">The name of this indicator</param>
-        public Breakaway(string name) 
+        public Breakaway(string name)
             : base(name, CandleSettings.Get(CandleSettingType.BodyLong).AveragePeriod + 4 + 1)
         {
             _bodyLongAveragePeriod = CandleSettings.Get(CandleSettingType.BodyLong).AveragePeriod;
@@ -52,9 +52,7 @@ namespace QuantConnect.Indicators.CandlestickPatterns
         /// Initializes a new instance of the <see cref="Breakaway"/> class.
         /// </summary>
         public Breakaway()
-            : this("BREAKAWAY")
-        {
-        }
+            : this("BREAKAWAY") { }
 
         /// <summary>
         /// Gets a flag indicating when this indicator is ready and fully initialized
@@ -70,7 +68,10 @@ namespace QuantConnect.Indicators.CandlestickPatterns
         /// <param name="window">The window of data held in this indicator</param>
         /// <param name="input">The input given to the indicator</param>
         /// <returns>A new value for this indicator</returns>
-        protected override decimal ComputeNextValue(IReadOnlyWindow<IBaseDataBar> window, IBaseDataBar input)
+        protected override decimal ComputeNextValue(
+            IReadOnlyWindow<IBaseDataBar> window,
+            IBaseDataBar input
+        )
         {
             if (!IsReady)
             {
@@ -85,48 +86,64 @@ namespace QuantConnect.Indicators.CandlestickPatterns
             decimal value;
             if (
                 // 1st long
-                GetRealBody(window[4]) > GetCandleAverage(CandleSettingType.BodyLong, _bodyLongPeriodTotal, window[4]) &&
+                GetRealBody(window[4])
+                    > GetCandleAverage(CandleSettingType.BodyLong, _bodyLongPeriodTotal, window[4])
+                &&
                 // 1st, 2nd, 4th same color, 5th opposite
-                GetCandleColor(window[4]) == GetCandleColor(window[3]) &&
-                GetCandleColor(window[3]) == GetCandleColor(window[1]) &&
-                (int)GetCandleColor(window[1]) == -(int)GetCandleColor(input) &&
-                (
-                  (
-                    // when 1st is black:
-                    GetCandleColor(window[4]) == CandleColor.Black &&
-                    // 2nd gaps down
-                    GetRealBodyGapDown(window[3], window[4]) &&
-                    // 3rd has lower high and low than 2nd
-                    window[2].High < window[3].High && window[2].Low < window[3].Low &&
-                    // 4th has lower high and low than 3rd
-                    window[1].High < window[2].High && window[1].Low < window[2].Low &&
-                    // 5th closes inside the gap
-                    input.Close > window[3].Open && input.Close < window[4].Close
-                  )
-                  ||
-                  (
-                    // when 1st is white:
-                    GetCandleColor(window[4]) == CandleColor.White &&
-                    // 2nd gaps up
-                    GetRealBodyGapUp(window[3], window[4]) &&
-                    // 3rd has higher high and low than 2nd
-                    window[2].High > window[3].High && window[2].Low > window[3].Low &&
-                    // 4th has higher high and low than 3rd
-                    window[1].High > window[2].High && window[1].Low > window[2].Low &&
-                    // 5th closes inside the gap
-                    input.Close < window[3].Open && input.Close > window[4].Close
-                  )
+                GetCandleColor(window[4]) == GetCandleColor(window[3])
+                && GetCandleColor(window[3]) == GetCandleColor(window[1])
+                && (int)GetCandleColor(window[1]) == -(int)GetCandleColor(input)
+                && (
+                    (
+                        // when 1st is black:
+                        GetCandleColor(window[4]) == CandleColor.Black
+                        &&
+                        // 2nd gaps down
+                        GetRealBodyGapDown(window[3], window[4])
+                        &&
+                        // 3rd has lower high and low than 2nd
+                        window[2].High < window[3].High
+                        && window[2].Low < window[3].Low
+                        &&
+                        // 4th has lower high and low than 3rd
+                        window[1].High < window[2].High
+                        && window[1].Low < window[2].Low
+                        &&
+                        // 5th closes inside the gap
+                        input.Close > window[3].Open
+                        && input.Close < window[4].Close
+                    )
+                    || (
+                        // when 1st is white:
+                        GetCandleColor(window[4]) == CandleColor.White
+                        &&
+                        // 2nd gaps up
+                        GetRealBodyGapUp(window[3], window[4])
+                        &&
+                        // 3rd has higher high and low than 2nd
+                        window[2].High > window[3].High
+                        && window[2].Low > window[3].Low
+                        &&
+                        // 4th has higher high and low than 3rd
+                        window[1].High > window[2].High
+                        && window[1].Low > window[2].Low
+                        &&
+                        // 5th closes inside the gap
+                        input.Close < window[3].Open
+                        && input.Close > window[4].Close
+                    )
                 )
-              )
+            )
                 value = (int)GetCandleColor(input);
             else
                 value = 0m;
 
-            // add the current range and subtract the first range: this is done after the pattern recognition 
+            // add the current range and subtract the first range: this is done after the pattern recognition
             // when avgPeriod is not 0, that means "compare with the previous candles" (it excludes the current candle)
 
-            _bodyLongPeriodTotal += GetCandleRange(CandleSettingType.BodyLong, window[4]) -
-                                    GetCandleRange(CandleSettingType.BodyLong, window[4 + _bodyLongAveragePeriod]);
+            _bodyLongPeriodTotal +=
+                GetCandleRange(CandleSettingType.BodyLong, window[4])
+                - GetCandleRange(CandleSettingType.BodyLong, window[4 + _bodyLongAveragePeriod]);
 
             return value;
         }

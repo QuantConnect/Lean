@@ -52,7 +52,16 @@ namespace QuantConnect.Tests.Common.Securities
 
             var futureSecurity = new Future(
                 SecurityExchangeHours.AlwaysOpen(tz),
-                new SubscriptionDataConfig(typeof(TradeBar), symbol, Resolution.Minute, tz, tz, true, false, false),
+                new SubscriptionDataConfig(
+                    typeof(TradeBar),
+                    symbol,
+                    Resolution.Minute,
+                    tz,
+                    tz,
+                    true,
+                    false,
+                    false
+                ),
                 new Cash(Currencies.USD, 0, 1m),
                 new OptionSymbolProperties(SymbolProperties.GetDefault(Currencies.USD)),
                 ErrorCurrencyConverter.Instance,
@@ -65,7 +74,10 @@ namespace QuantConnect.Tests.Common.Securities
             futureSecurity.SetLocalTimeKeeper(timeKeeper.GetLocalTimeKeeper(tz));
 
             var buyingPowerModel = GetModel(futureSecurity, out _futureMarginModel);
-            Assert.AreEqual(_futureMarginModel.MaintenanceOvernightMarginRequirement, buyingPowerModel.GetMaintenanceMargin(futureSecurity));
+            Assert.AreEqual(
+                _futureMarginModel.MaintenanceOvernightMarginRequirement,
+                buyingPowerModel.GetMaintenanceMargin(futureSecurity)
+            );
         }
 
         [Test]
@@ -80,18 +92,33 @@ namespace QuantConnect.Tests.Common.Securities
             var ticker = "NOT-A-SYMBOL";
             var symbol = Symbol.CreateFuture(ticker, Market.USA, expDate);
 
-            var futureSecurity = new Future(SecurityExchangeHours.AlwaysOpen(tz),
-                new SubscriptionDataConfig(typeof(TradeBar), symbol, Resolution.Minute, tz, tz, true, false, false),
+            var futureSecurity = new Future(
+                SecurityExchangeHours.AlwaysOpen(tz),
+                new SubscriptionDataConfig(
+                    typeof(TradeBar),
+                    symbol,
+                    Resolution.Minute,
+                    tz,
+                    tz,
+                    true,
+                    false,
+                    false
+                ),
                 new Cash(Currencies.USD, 0, 1m),
                 new OptionSymbolProperties(SymbolProperties.GetDefault(Currencies.USD)),
                 ErrorCurrencyConverter.Instance,
-                RegisteredSecurityDataTypesProvider.Null);
+                RegisteredSecurityDataTypesProvider.Null
+            );
             futureSecurity.SetMarketPrice(new Tick { Value = price, Time = time });
             futureSecurity.Holdings.SetHoldings(1.5m, 1);
             var timeKeeper = new TimeKeeper(time.ConvertToUtc(tz));
             futureSecurity.SetLocalTimeKeeper(timeKeeper.GetLocalTimeKeeper(tz));
 
-            var buyingPowerModel = GetModel(futureSecurity, out _futureMarginModel, timeKeeper: timeKeeper);
+            var buyingPowerModel = GetModel(
+                futureSecurity,
+                out _futureMarginModel,
+                timeKeeper: timeKeeper
+            );
             Assert.AreEqual(0m, buyingPowerModel.GetMaintenanceMargin(futureSecurity));
         }
 
@@ -109,7 +136,16 @@ namespace QuantConnect.Tests.Common.Securities
 
             var futureSecurity = new Future(
                 SecurityExchangeHours.AlwaysOpen(tz),
-                new SubscriptionDataConfig(typeof(TradeBar), symbol, Resolution.Minute, tz, tz, true, false, false),
+                new SubscriptionDataConfig(
+                    typeof(TradeBar),
+                    symbol,
+                    Resolution.Minute,
+                    tz,
+                    tz,
+                    true,
+                    false,
+                    false
+                ),
                 new Cash(Currencies.USD, 0, 1m),
                 new OptionSymbolProperties(SymbolProperties.GetDefault(Currencies.USD)),
                 ErrorCurrencyConverter.Instance,
@@ -121,21 +157,33 @@ namespace QuantConnect.Tests.Common.Securities
             var timeKeeper = new TimeKeeper(time.ConvertToUtc(tz));
             futureSecurity.SetLocalTimeKeeper(timeKeeper.GetLocalTimeKeeper(tz));
 
-            var buyingPowerModel = GetModel(futureSecurity, out _futureMarginModel, timeKeeper: timeKeeper);
-            Assert.AreEqual(_futureMarginModel.MaintenanceOvernightMarginRequirement,
-                buyingPowerModel.GetMaintenanceMargin(futureSecurity));
+            var buyingPowerModel = GetModel(
+                futureSecurity,
+                out _futureMarginModel,
+                timeKeeper: timeKeeper
+            );
+            Assert.AreEqual(
+                _futureMarginModel.MaintenanceOvernightMarginRequirement,
+                buyingPowerModel.GetMaintenanceMargin(futureSecurity)
+            );
 
             // now we move forward to exact date when margin req changed
             time = new DateTime(2014, 06, 13);
             timeKeeper.SetUtcDateTime(time.ConvertToUtc(tz));
             futureSecurity.SetMarketPrice(new Tick { Value = price, Time = time });
-            Assert.AreEqual(_futureMarginModel.MaintenanceOvernightMarginRequirement, buyingPowerModel.GetMaintenanceMargin(futureSecurity));
+            Assert.AreEqual(
+                _futureMarginModel.MaintenanceOvernightMarginRequirement,
+                buyingPowerModel.GetMaintenanceMargin(futureSecurity)
+            );
 
             // now we fly beyond the last line of the history file (currently) to see how margin model resolves future dates
             time = new DateTime(2016, 06, 04);
             timeKeeper.SetUtcDateTime(time.ConvertToUtc(tz));
             futureSecurity.SetMarketPrice(new Tick { Value = price, Time = time });
-            Assert.AreEqual(_futureMarginModel.MaintenanceOvernightMarginRequirement, buyingPowerModel.GetMaintenanceMargin(futureSecurity));
+            Assert.AreEqual(
+                _futureMarginModel.MaintenanceOvernightMarginRequirement,
+                buyingPowerModel.GetMaintenanceMargin(futureSecurity)
+            );
         }
 
         [TestCase(1)]
@@ -156,12 +204,20 @@ namespace QuantConnect.Tests.Common.Securities
             futureSecurity.Holdings.SetHoldings(1.5m, quantity);
 
             var res = buyingPowerModel.GetMaintenanceMargin(futureSecurity);
-            Assert.AreEqual(_futureMarginModel.MaintenanceOvernightMarginRequirement * futureSecurity.Holdings.AbsoluteQuantity, res);
+            Assert.AreEqual(
+                _futureMarginModel.MaintenanceOvernightMarginRequirement
+                    * futureSecurity.Holdings.AbsoluteQuantity,
+                res
+            );
 
             // We increase the quantity * 2, maintenance margin should DOUBLE
             futureSecurity.Holdings.SetHoldings(1.5m, quantity * 2);
             res = buyingPowerModel.GetMaintenanceMargin(futureSecurity);
-            Assert.AreEqual(_futureMarginModel.MaintenanceOvernightMarginRequirement * futureSecurity.Holdings.AbsoluteQuantity, res);
+            Assert.AreEqual(
+                _futureMarginModel.MaintenanceOvernightMarginRequirement
+                    * futureSecurity.Holdings.AbsoluteQuantity,
+                res
+            );
         }
 
         [TestCase(1)]
@@ -179,7 +235,10 @@ namespace QuantConnect.Tests.Common.Securities
             futureSecurity.SetMarketPrice(new Tick { Value = price, Time = time });
             futureSecurity.Holdings.SetHoldings(1.5m, quantity);
 
-            var initialMargin = buyingPowerModel.GetInitialMarginRequirement(futureSecurity, futureSecurity.Holdings.Quantity);
+            var initialMargin = buyingPowerModel.GetInitialMarginRequirement(
+                futureSecurity,
+                futureSecurity.Holdings.Quantity
+            );
             var overnightMargin = Math.Abs(buyingPowerModel.GetMaintenanceMargin(futureSecurity));
 
             // initial margin is greater than the maintenance margin
@@ -201,16 +260,25 @@ namespace QuantConnect.Tests.Common.Securities
             futureSecurity.SetMarketPrice(new Tick { Value = price, Time = time });
             futureSecurity.Holdings.SetHoldings(1.5m, quantity);
 
-            var initialMargin = buyingPowerModel.GetInitialMarginRequiredForOrder(
-                new InitialMarginRequiredForOrderParameters(algorithm.Portfolio.CashBook,
-                    futureSecurity,
-                    new MarketOrder(futureSecurity.Symbol, quantity, algorithm.UtcTime))).Value;
+            var initialMargin = buyingPowerModel
+                .GetInitialMarginRequiredForOrder(
+                    new InitialMarginRequiredForOrderParameters(
+                        algorithm.Portfolio.CashBook,
+                        futureSecurity,
+                        new MarketOrder(futureSecurity.Symbol, quantity, algorithm.UtcTime)
+                    )
+                )
+                .Value;
 
-            var initialMarginExpected = buyingPowerModel.GetInitialMarginRequirement(futureSecurity, quantity);
+            var initialMarginExpected = buyingPowerModel.GetInitialMarginRequirement(
+                futureSecurity,
+                quantity
+            );
 
-            Assert.AreEqual(initialMarginExpected
-                            + 24.70m * Math.Sign(quantity), // fees -> 10 quantity * 2.47
-                initialMargin);
+            Assert.AreEqual(
+                initialMarginExpected + 24.70m * Math.Sign(quantity), // fees -> 10 quantity * 2.47
+                initialMargin
+            );
         }
 
         [TestCase(100)]
@@ -226,14 +294,20 @@ namespace QuantConnect.Tests.Common.Securities
             futureSecurity.Holdings.SetHoldings(20, quantity);
             Update(futureSecurity, 20, algorithm);
 
-            var marginForPosition = buyingPowerModel.GetReservedBuyingPowerForPosition(
-                new ReservedBuyingPowerForPositionParameters(futureSecurity)).AbsoluteUsedBuyingPower;
+            var marginForPosition = buyingPowerModel
+                .GetReservedBuyingPowerForPosition(
+                    new ReservedBuyingPowerForPositionParameters(futureSecurity)
+                )
+                .AbsoluteUsedBuyingPower;
 
             // Drop 40% price from $20 to $12
             Update(futureSecurity, 12, algorithm);
 
-            var marginForPositionAfter = buyingPowerModel.GetReservedBuyingPowerForPosition(
-                new ReservedBuyingPowerForPositionParameters(futureSecurity)).AbsoluteUsedBuyingPower;
+            var marginForPositionAfter = buyingPowerModel
+                .GetReservedBuyingPowerForPosition(
+                    new ReservedBuyingPowerForPositionParameters(futureSecurity)
+                )
+                .AbsoluteUsedBuyingPower;
 
             Assert.AreEqual(marginForPosition, marginForPositionAfter);
         }
@@ -251,14 +325,20 @@ namespace QuantConnect.Tests.Common.Securities
             futureSecurity.Holdings.SetHoldings(20, quantity);
             Update(futureSecurity, 20, algorithm);
 
-            var marginForPosition = buyingPowerModel.GetReservedBuyingPowerForPosition(
-                new ReservedBuyingPowerForPositionParameters(futureSecurity)).AbsoluteUsedBuyingPower;
+            var marginForPosition = buyingPowerModel
+                .GetReservedBuyingPowerForPosition(
+                    new ReservedBuyingPowerForPositionParameters(futureSecurity)
+                )
+                .AbsoluteUsedBuyingPower;
 
             // Increase from $20 to $40
             Update(futureSecurity, 40, algorithm);
 
-            var marginForPositionAfter = buyingPowerModel.GetReservedBuyingPowerForPosition(
-                new ReservedBuyingPowerForPositionParameters(futureSecurity)).AbsoluteUsedBuyingPower;
+            var marginForPositionAfter = buyingPowerModel
+                .GetReservedBuyingPowerForPosition(
+                    new ReservedBuyingPowerForPositionParameters(futureSecurity)
+                )
+                .AbsoluteUsedBuyingPower;
 
             Assert.AreEqual(marginForPosition, marginForPositionAfter);
         }
@@ -283,7 +363,8 @@ namespace QuantConnect.Tests.Common.Securities
             // Drop 40% price from $20 to $12
             Update(futureSecurity, 12, algorithm);
 
-            var expected = (12 - 20) * 100 * futureSecurity.SymbolProperties.ContractMultiplier - 2.47m * 100;
+            var expected =
+                (12 - 20) * 100 * futureSecurity.SymbolProperties.ContractMultiplier - 2.47m * 100;
             Assert.AreEqual(futureSecurity.Holdings.UnrealizedProfit, expected);
 
             // we have a massive loss because of futures leverage
@@ -314,7 +395,8 @@ namespace QuantConnect.Tests.Common.Securities
             // Increase from $20 to $40
             Update(futureSecurity, 40, algorithm);
 
-            var expected = (40 - 20) * 100 * futureSecurity.SymbolProperties.ContractMultiplier - 2.47m * 100;
+            var expected =
+                (40 - 20) * 100 * futureSecurity.SymbolProperties.ContractMultiplier - 2.47m * 100;
             Assert.AreEqual(futureSecurity.Holdings.UnrealizedProfit, expected);
 
             // we have a massive win because of futures leverage
@@ -349,7 +431,9 @@ namespace QuantConnect.Tests.Common.Securities
             var ticker = QuantConnect.Securities.Futures.Financials.EuroDollar;
             var futureSecurity = algorithm.AddFuture(ticker);
 
-            Assert.Throws<InvalidOperationException>(() => futureSecurity.BuyingPowerModel.SetLeverage(futureSecurity, leverage));
+            Assert.Throws<InvalidOperationException>(
+                () => futureSecurity.BuyingPowerModel.SetLeverage(futureSecurity, leverage)
+            );
         }
 
         [Test]
@@ -381,7 +465,9 @@ namespace QuantConnect.Tests.Common.Securities
 
         [TestCase(-1.1)]
         [TestCase(1.1)]
-        public void GetMaximumOrderQuantityForTargetBuyingPower_ThrowsForInvalidTarget(decimal target)
+        public void GetMaximumOrderQuantityForTargetBuyingPower_ThrowsForInvalidTarget(
+            decimal target
+        )
         {
             var algorithm = new QCAlgorithm();
             algorithm.SubscriptionManager.SetDataManager(new DataManagerStub(algorithm));
@@ -389,11 +475,17 @@ namespace QuantConnect.Tests.Common.Securities
             var ticker = QuantConnect.Securities.Futures.Financials.EuroDollar;
             var futureSecurity = algorithm.AddFuture(ticker);
 
-            Assert.Throws<InvalidOperationException>(() => futureSecurity.BuyingPowerModel.GetMaximumOrderQuantityForTargetBuyingPower(
-                new GetMaximumOrderQuantityForTargetBuyingPowerParameters(algorithm.Portfolio,
-                    futureSecurity,
-                    target,
-                    0)));
+            Assert.Throws<InvalidOperationException>(
+                () =>
+                    futureSecurity.BuyingPowerModel.GetMaximumOrderQuantityForTargetBuyingPower(
+                        new GetMaximumOrderQuantityForTargetBuyingPowerParameters(
+                            algorithm.Portfolio,
+                            futureSecurity,
+                            target,
+                            0
+                        )
+                    )
+            );
         }
 
         [TestCase(1)]
@@ -419,7 +511,10 @@ namespace QuantConnect.Tests.Common.Securities
 
             var quantity = algorithm.CalculateOrderQuantity(futureSecurity.Symbol, target);
 
-            var expected = (algorithm.Portfolio.TotalPortfolioValue * Math.Abs(target)) / _futureMarginModel.InitialOvernightMarginRequirement - 1 * Math.Abs(target); // -1 fees
+            var expected =
+                (algorithm.Portfolio.TotalPortfolioValue * Math.Abs(target))
+                    / _futureMarginModel.InitialOvernightMarginRequirement
+                - 1 * Math.Abs(target); // -1 fees
             expected -= expected % futureSecurity.SymbolProperties.LotSize;
 
             Assert.AreEqual(expected * Math.Sign(target), quantity);
@@ -428,10 +523,17 @@ namespace QuantConnect.Tests.Common.Securities
             request.SetOrderId(0);
             orderProcessor.AddTicket(new OrderTicket(algorithm.Transactions, request));
 
-            Assert.IsTrue(model.HasSufficientBuyingPowerForOrder(
-                new HasSufficientBuyingPowerForOrderParameters(algorithm.Portfolio,
-                    futureSecurity,
-                    new MarketOrder(futureSecurity.Symbol, expected, DateTime.UtcNow))).IsSufficient);
+            Assert.IsTrue(
+                model
+                    .HasSufficientBuyingPowerForOrder(
+                        new HasSufficientBuyingPowerForOrderParameters(
+                            algorithm.Portfolio,
+                            futureSecurity,
+                            new MarketOrder(futureSecurity.Symbol, expected, DateTime.UtcNow)
+                        )
+                    )
+                    .IsSufficient
+            );
         }
 
         [TestCase(1)]
@@ -457,11 +559,18 @@ namespace QuantConnect.Tests.Common.Securities
             request.SetOrderId(0);
             orderProcessor.AddTicket(new OrderTicket(algorithm.Transactions, request));
 
-            var result = model.HasSufficientBuyingPowerForOrder(new HasSufficientBuyingPowerForOrderParameters(
+            var result = model.HasSufficientBuyingPowerForOrder(
+                new HasSufficientBuyingPowerForOrderParameters(
                     algorithm.Portfolio,
                     futureSecurity,
                     // we get the maximum target value 1/-1 and add a lot size it shouldn't be a valid order
-                    new MarketOrder(futureSecurity.Symbol, quantity + futureSecurity.SymbolProperties.LotSize * Math.Sign(quantity), DateTime.UtcNow)));
+                    new MarketOrder(
+                        futureSecurity.Symbol,
+                        quantity + futureSecurity.SymbolProperties.LotSize * Math.Sign(quantity),
+                        DateTime.UtcNow
+                    )
+                )
+            );
 
             Assert.IsFalse(result.IsSufficient);
         }
@@ -478,12 +587,19 @@ namespace QuantConnect.Tests.Common.Securities
 
             var ticker = QuantConnect.Securities.Futures.Financials.EuroDollar;
             var futureSecurity = algorithm.AddFuture(ticker);
-            futureSecurity.BuyingPowerModel = GetModel(futureSecurity, out _futureMarginModel, algorithm.Portfolio);
+            futureSecurity.BuyingPowerModel = GetModel(
+                futureSecurity,
+                out _futureMarginModel,
+                algorithm.Portfolio
+            );
             // set closed market for simpler math
             var localTimeKeeper = new LocalTimeKeeper(new DateTime(2020, 2, 1), TimeZones.Utc);
             futureSecurity.Exchange.SetLocalDateTimeFrontierProvider(localTimeKeeper);
             Update(futureSecurity, 100, algorithm);
-            var expectedFinalQuantity = algorithm.CalculateOrderQuantity(futureSecurity.Symbol, target);
+            var expectedFinalQuantity = algorithm.CalculateOrderQuantity(
+                futureSecurity.Symbol,
+                target
+            );
 
             var quantity = algorithm.CalculateOrderQuantity(futureSecurity.Symbol, target / 2);
             futureSecurity.Holdings.SetHoldings(100, quantity);
@@ -495,10 +611,17 @@ namespace QuantConnect.Tests.Common.Securities
             request.SetOrderId(0);
             orderProcessor.AddTicket(new OrderTicket(algorithm.Transactions, request));
 
-            Assert.IsTrue(futureSecurity.BuyingPowerModel.HasSufficientBuyingPowerForOrder(
-                new HasSufficientBuyingPowerForOrderParameters(algorithm.Portfolio,
-                    futureSecurity,
-                    new MarketOrder(futureSecurity.Symbol, quantity2, DateTime.UtcNow))).IsSufficient);
+            Assert.IsTrue(
+                futureSecurity
+                    .BuyingPowerModel.HasSufficientBuyingPowerForOrder(
+                        new HasSufficientBuyingPowerForOrderParameters(
+                            algorithm.Portfolio,
+                            futureSecurity,
+                            new MarketOrder(futureSecurity.Symbol, quantity2, DateTime.UtcNow)
+                        )
+                    )
+                    .IsSufficient
+            );
 
             // two step operation is the same as 1 step
             Assert.AreEqual(expectedFinalQuantity, quantity + quantity2);
@@ -508,7 +631,9 @@ namespace QuantConnect.Tests.Common.Securities
         [TestCase(0.5)]
         [TestCase(-1)]
         [TestCase(-0.5)]
-        public void GetMaximumOrderQuantityForTargetBuyingPower_WithHoldingsSameDirection(decimal target)
+        public void GetMaximumOrderQuantityForTargetBuyingPower_WithHoldingsSameDirection(
+            decimal target
+        )
         {
             var algorithm = new QCAlgorithm();
             algorithm.SetFinishedWarmingUp();
@@ -528,8 +653,17 @@ namespace QuantConnect.Tests.Common.Securities
 
             var quantity = algorithm.CalculateOrderQuantity(futureSecurity.Symbol, target);
 
-            var expected = (algorithm.Portfolio.TotalPortfolioValue * Math.Abs(target) - Math.Abs(model.GetInitialMarginRequirement(futureSecurity, futureSecurity.Holdings.Quantity)))
-                           / _futureMarginModel.InitialOvernightMarginRequirement - 1 * Math.Abs(target); // -1 fees
+            var expected =
+                (
+                    algorithm.Portfolio.TotalPortfolioValue * Math.Abs(target)
+                    - Math.Abs(
+                        model.GetInitialMarginRequirement(
+                            futureSecurity,
+                            futureSecurity.Holdings.Quantity
+                        )
+                    )
+                ) / _futureMarginModel.InitialOvernightMarginRequirement
+                - 1 * Math.Abs(target); // -1 fees
             expected -= expected % futureSecurity.SymbolProperties.LotSize;
             Log.Trace($"Expected {expected}");
 
@@ -539,17 +673,30 @@ namespace QuantConnect.Tests.Common.Securities
             request.SetOrderId(0);
             orderProcessor.AddTicket(new OrderTicket(algorithm.Transactions, request));
 
-            Assert.IsTrue(model.HasSufficientBuyingPowerForOrder(
-                new HasSufficientBuyingPowerForOrderParameters(algorithm.Portfolio,
-                    futureSecurity,
-                    new MarketOrder(futureSecurity.Symbol, expected * Math.Sign(target), DateTime.UtcNow))).IsSufficient);
+            Assert.IsTrue(
+                model
+                    .HasSufficientBuyingPowerForOrder(
+                        new HasSufficientBuyingPowerForOrderParameters(
+                            algorithm.Portfolio,
+                            futureSecurity,
+                            new MarketOrder(
+                                futureSecurity.Symbol,
+                                expected * Math.Sign(target),
+                                DateTime.UtcNow
+                            )
+                        )
+                    )
+                    .IsSufficient
+            );
         }
 
         [TestCase(1)]
         [TestCase(0.5)]
         [TestCase(-1)]
         [TestCase(-0.5)]
-        public void GetMaximumOrderQuantityForTargetBuyingPower_WithHoldingsInverseDirection(decimal target)
+        public void GetMaximumOrderQuantityForTargetBuyingPower_WithHoldingsInverseDirection(
+            decimal target
+        )
         {
             var algorithm = new QCAlgorithm();
             algorithm.SetFinishedWarmingUp();
@@ -570,8 +717,17 @@ namespace QuantConnect.Tests.Common.Securities
 
             var quantity = algorithm.CalculateOrderQuantity(futureSecurity.Symbol, target);
 
-            var expected = (algorithm.Portfolio.TotalPortfolioValue * Math.Abs(target) + Math.Abs(model.GetInitialMarginRequirement(futureSecurity, futureSecurity.Holdings.Quantity)))
-                           / _futureMarginModel.InitialOvernightMarginRequirement - 1 * Math.Abs(target); // -1 fees
+            var expected =
+                (
+                    algorithm.Portfolio.TotalPortfolioValue * Math.Abs(target)
+                    + Math.Abs(
+                        model.GetInitialMarginRequirement(
+                            futureSecurity,
+                            futureSecurity.Holdings.Quantity
+                        )
+                    )
+                ) / _futureMarginModel.InitialOvernightMarginRequirement
+                - 1 * Math.Abs(target); // -1 fees
             expected -= expected % futureSecurity.SymbolProperties.LotSize;
             Log.Trace($"Expected {expected}");
 
@@ -581,10 +737,21 @@ namespace QuantConnect.Tests.Common.Securities
             request.SetOrderId(0);
             orderProcessor.AddTicket(new OrderTicket(algorithm.Transactions, request));
 
-            Assert.IsTrue(model.HasSufficientBuyingPowerForOrder(
-                new HasSufficientBuyingPowerForOrderParameters(algorithm.Portfolio,
-                    futureSecurity,
-                    new MarketOrder(futureSecurity.Symbol, expected * Math.Sign(target), DateTime.UtcNow))).IsSufficient);
+            Assert.IsTrue(
+                model
+                    .HasSufficientBuyingPowerForOrder(
+                        new HasSufficientBuyingPowerForOrderParameters(
+                            algorithm.Portfolio,
+                            futureSecurity,
+                            new MarketOrder(
+                                futureSecurity.Symbol,
+                                expected * Math.Sign(target),
+                                DateTime.UtcNow
+                            )
+                        )
+                    )
+                    .IsSufficient
+            );
         }
 
         [TestCase(1)]
@@ -608,18 +775,34 @@ namespace QuantConnect.Tests.Common.Securities
             var localTimeKeeper = new LocalTimeKeeper(new DateTime(2020, 2, 1), TimeZones.Utc);
             futureSecurity.Exchange.SetLocalDateTimeFrontierProvider(localTimeKeeper);
 
-            var quantityClosedMarket = algorithm.CalculateOrderQuantity(futureSecurity.Symbol, target);
-            Assert.AreEqual(quantityClosedMarket.DiscretelyRoundBy(lotSize), quantityClosedMarket,
+            var quantityClosedMarket = algorithm.CalculateOrderQuantity(
+                futureSecurity.Symbol,
+                target
+            );
+            Assert.AreEqual(
+                quantityClosedMarket.DiscretelyRoundBy(lotSize),
+                quantityClosedMarket,
                 "Calculated order quantity was not whole number multiple of the lot size"
             );
             var request = GetOrderRequest(futureSecurity.Symbol, quantityClosedMarket);
             request.SetOrderId(0);
             orderProcessor.AddTicket(new OrderTicket(algorithm.Transactions, request));
 
-            Assert.IsTrue(model.HasSufficientBuyingPowerForOrder(
-                new HasSufficientBuyingPowerForOrderParameters(algorithm.Portfolio,
-                    futureSecurity,
-                    new MarketOrder(futureSecurity.Symbol, quantityClosedMarket, DateTime.UtcNow))).IsSufficient);
+            Assert.IsTrue(
+                model
+                    .HasSufficientBuyingPowerForOrder(
+                        new HasSufficientBuyingPowerForOrderParameters(
+                            algorithm.Portfolio,
+                            futureSecurity,
+                            new MarketOrder(
+                                futureSecurity.Symbol,
+                                quantityClosedMarket,
+                                DateTime.UtcNow
+                            )
+                        )
+                    )
+                    .IsSufficient
+            );
 
             var initialOvernight = _futureMarginModel.InitialOvernightMarginRequirement;
             var maintenanceOvernight = _futureMarginModel.MaintenanceOvernightMarginRequirement;
@@ -631,13 +814,23 @@ namespace QuantConnect.Tests.Common.Securities
             futureSecurity.Holdings.SetHoldings(100, fourtyPercentQuantity);
 
             var halfQuantity = (quantityClosedMarket / 2).DiscretelyRoundBy(lotSize);
-            Assert.IsTrue(model.HasSufficientBuyingPowerForOrder(
-                new HasSufficientBuyingPowerForOrderParameters(algorithm.Portfolio,
-                    futureSecurity,
-                    new MarketOrder(futureSecurity.Symbol, halfQuantity, DateTime.UtcNow))).IsSufficient);
+            Assert.IsTrue(
+                model
+                    .HasSufficientBuyingPowerForOrder(
+                        new HasSufficientBuyingPowerForOrderParameters(
+                            algorithm.Portfolio,
+                            futureSecurity,
+                            new MarketOrder(futureSecurity.Symbol, halfQuantity, DateTime.UtcNow)
+                        )
+                    )
+                    .IsSufficient
+            );
 
             Assert.Greater(initialOvernight, _futureMarginModel.InitialIntradayMarginRequirement);
-            Assert.Greater(maintenanceOvernight, _futureMarginModel.MaintenanceIntradayMarginRequirement);
+            Assert.Greater(
+                maintenanceOvernight,
+                _futureMarginModel.MaintenanceIntradayMarginRequirement
+            );
         }
 
         [TestCase(1)]
@@ -670,18 +863,32 @@ namespace QuantConnect.Tests.Common.Securities
             request.SetOrderId(0);
             orderProcessor.AddTicket(new OrderTicket(algorithm.Transactions, request));
 
-            Assert.IsTrue(model.HasSufficientBuyingPowerForOrder(
-                new HasSufficientBuyingPowerForOrderParameters(algorithm.Portfolio,
-                    futureSecurity,
-                    new MarketOrder(futureSecurity.Symbol, quantity, DateTime.UtcNow))).IsSufficient);
+            Assert.IsTrue(
+                model
+                    .HasSufficientBuyingPowerForOrder(
+                        new HasSufficientBuyingPowerForOrderParameters(
+                            algorithm.Portfolio,
+                            futureSecurity,
+                            new MarketOrder(futureSecurity.Symbol, quantity, DateTime.UtcNow)
+                        )
+                    )
+                    .IsSufficient
+            );
 
             // Closing soon market
-            localTimeKeeper.UpdateTime(new DateTime(2020, 2, 3, 15,50, 0));
+            localTimeKeeper.UpdateTime(new DateTime(2020, 2, 3, 15, 50, 0));
 
-            Assert.IsFalse(model.HasSufficientBuyingPowerForOrder(
-                new HasSufficientBuyingPowerForOrderParameters(algorithm.Portfolio,
-                    futureSecurity,
-                    new MarketOrder(futureSecurity.Symbol, quantity, DateTime.UtcNow))).IsSufficient);
+            Assert.IsFalse(
+                model
+                    .HasSufficientBuyingPowerForOrder(
+                        new HasSufficientBuyingPowerForOrderParameters(
+                            algorithm.Portfolio,
+                            futureSecurity,
+                            new MarketOrder(futureSecurity.Symbol, quantity, DateTime.UtcNow)
+                        )
+                    )
+                    .IsSufficient
+            );
             Assert.IsTrue(futureSecurity.Exchange.ExchangeOpen);
             Assert.IsTrue(futureSecurity.Exchange.ClosingSoon);
 
@@ -689,10 +896,17 @@ namespace QuantConnect.Tests.Common.Securities
             localTimeKeeper.UpdateTime(new DateTime(2020, 2, 1));
             Assert.IsFalse(futureSecurity.Exchange.ExchangeOpen);
 
-            Assert.IsFalse(model.HasSufficientBuyingPowerForOrder(
-                new HasSufficientBuyingPowerForOrderParameters(algorithm.Portfolio,
-                    futureSecurity,
-                    new MarketOrder(futureSecurity.Symbol, quantity, DateTime.UtcNow))).IsSufficient);
+            Assert.IsFalse(
+                model
+                    .HasSufficientBuyingPowerForOrder(
+                        new HasSufficientBuyingPowerForOrderParameters(
+                            algorithm.Portfolio,
+                            futureSecurity,
+                            new MarketOrder(futureSecurity.Symbol, quantity, DateTime.UtcNow)
+                        )
+                    )
+                    .IsSufficient
+            );
         }
 
         [TestCase(Market.CME)]
@@ -704,53 +918,74 @@ namespace QuantConnect.Tests.Common.Securities
         [TestCase(Market.Globex)]
         public void FutureMarginModel_MarginEntriesValid(string market)
         {
-            var marginsDirectory = new DirectoryInfo(Path.Combine(Globals.DataFolder, "future", market, "margins"));
+            var marginsDirectory = new DirectoryInfo(
+                Path.Combine(Globals.DataFolder, "future", market, "margins")
+            );
             var minimumDate = new DateTime(1990, 1, 1);
 
             if (!marginsDirectory.Exists)
             {
                 return;
             }
-            foreach (var marginFile in marginsDirectory.GetFiles("*.csv", SearchOption.TopDirectoryOnly))
+            foreach (
+                var marginFile in marginsDirectory.GetFiles("*.csv", SearchOption.TopDirectoryOnly)
+            )
             {
                 var lineNumber = 0;
                 var errorMessageTemplate = $"Error encountered in file {marginFile.Name} on line ";
-                var csv = File.ReadLines(marginFile.FullName).Where(x => !x.StartsWithInvariant("#") && !string.IsNullOrWhiteSpace(x)).Skip(1).Select(x =>
-                {
-                    lineNumber++;
-
-                    var data = x.Split(',');
-
-                    if (data.Length < 3)
+                var csv = File.ReadLines(marginFile.FullName)
+                    .Where(x => !x.StartsWithInvariant("#") && !string.IsNullOrWhiteSpace(x))
+                    .Skip(1)
+                    .Select(x =>
                     {
-                        var errorMessage = errorMessageTemplate + lineNumber.ToStringInvariant();
-                        Assert.Fail(errorMessage);
-                    }
+                        lineNumber++;
 
-                    DateTime date;
-                    decimal initial;
-                    decimal maintenance;
+                        var data = x.Split(',');
 
-                    var dateValid = Parse.TryParseExact(data[0], DateFormat.EightCharacter, DateTimeStyles.None, out date);
-                    var initialValid = Parse.TryParse(data[1], NumberStyles.Any, out initial);
-                    var maintenanceValid = Parse.TryParse(data[2], NumberStyles.Any, out maintenance);
+                        if (data.Length < 3)
+                        {
+                            var errorMessage =
+                                errorMessageTemplate + lineNumber.ToStringInvariant();
+                            Assert.Fail(errorMessage);
+                        }
 
-                    if (!dateValid || !initialValid || !maintenanceValid)
-                    {
-                        var errorMessage = errorMessageTemplate + lineNumber.ToStringInvariant();
-                        Assert.Fail(errorMessage);
-                    }
+                        DateTime date;
+                        decimal initial;
+                        decimal maintenance;
 
-                    return new Tuple<DateTime, decimal, decimal>(date, initial, maintenance);
-                });
+                        var dateValid = Parse.TryParseExact(
+                            data[0],
+                            DateFormat.EightCharacter,
+                            DateTimeStyles.None,
+                            out date
+                        );
+                        var initialValid = Parse.TryParse(data[1], NumberStyles.Any, out initial);
+                        var maintenanceValid = Parse.TryParse(
+                            data[2],
+                            NumberStyles.Any,
+                            out maintenance
+                        );
+
+                        if (!dateValid || !initialValid || !maintenanceValid)
+                        {
+                            var errorMessage =
+                                errorMessageTemplate + lineNumber.ToStringInvariant();
+                            Assert.Fail(errorMessage);
+                        }
+
+                        return new Tuple<DateTime, decimal, decimal>(date, initial, maintenance);
+                    });
 
                 lineNumber = 0;
                 foreach (var line in csv)
                 {
                     lineNumber++;
-                    var dateInvalid = $"Date is less than 1998-01-01 in {marginFile.Name} on line {lineNumber}";
-                    var initialInvalid = $"Initial is <= 0 in {marginFile.Name} on line {lineNumber}";
-                    var maintenanceInvalid = $"Maintenance is <= 0 in {marginFile.Name} on line {lineNumber}";
+                    var dateInvalid =
+                        $"Date is less than 1998-01-01 in {marginFile.Name} on line {lineNumber}";
+                    var initialInvalid =
+                        $"Initial is <= 0 in {marginFile.Name} on line {lineNumber}";
+                    var maintenanceInvalid =
+                        $"Maintenance is <= 0 in {marginFile.Name} on line {lineNumber}";
 
                     Assert.GreaterOrEqual(line.Item1, minimumDate, dateInvalid);
                     Assert.Greater(line.Item2, 0m, initialInvalid);
@@ -768,24 +1003,36 @@ namespace QuantConnect.Tests.Common.Securities
         [TestCase(Market.Globex)]
         public void FutureMarginModel_MarginEntriesHaveIncrementingDates(string market)
         {
-            var marginsDirectory = new DirectoryInfo(Path.Combine(Globals.DataFolder, "future", market, "margins"));
+            var marginsDirectory = new DirectoryInfo(
+                Path.Combine(Globals.DataFolder, "future", market, "margins")
+            );
 
             if (!marginsDirectory.Exists)
             {
                 return;
             }
-            foreach (var marginFile in marginsDirectory.GetFiles("*.csv", SearchOption.TopDirectoryOnly))
+            foreach (
+                var marginFile in marginsDirectory.GetFiles("*.csv", SearchOption.TopDirectoryOnly)
+            )
             {
-                var csv = File.ReadLines(marginFile.FullName).Where(x => !x.StartsWithInvariant("#") && !string.IsNullOrWhiteSpace(x)).Skip(1).Select(x =>
-                {
-                    var data = x.Split(',');
-                    DateTime date;
-                    Parse.TryParseExact(data[0], DateFormat.EightCharacter, DateTimeStyles.None, out date);
-                    var initial = Parse.Decimal(data[1]);
-                    var maintenance = Parse.Decimal(data[2]);
+                var csv = File.ReadLines(marginFile.FullName)
+                    .Where(x => !x.StartsWithInvariant("#") && !string.IsNullOrWhiteSpace(x))
+                    .Skip(1)
+                    .Select(x =>
+                    {
+                        var data = x.Split(',');
+                        DateTime date;
+                        Parse.TryParseExact(
+                            data[0],
+                            DateFormat.EightCharacter,
+                            DateTimeStyles.None,
+                            out date
+                        );
+                        var initial = Parse.Decimal(data[1]);
+                        var maintenance = Parse.Decimal(data[2]);
 
-                    return new Tuple<DateTime, decimal, decimal>(date, initial, maintenance);
-                });
+                        return new Tuple<DateTime, decimal, decimal>(date, initial, maintenance);
+                    });
 
                 var previous = DateTime.MinValue;
 
@@ -806,7 +1053,9 @@ namespace QuantConnect.Tests.Common.Securities
         [TestCase(Market.Globex)]
         public void FutureMarginModel_MarginEntriesAreContinuous(string market)
         {
-            var marginsDirectory = new DirectoryInfo(Path.Combine(Globals.DataFolder, "future", market, "margins"));
+            var marginsDirectory = new DirectoryInfo(
+                Path.Combine(Globals.DataFolder, "future", market, "margins")
+            );
             if (!marginsDirectory.Exists)
             {
                 return;
@@ -844,22 +1093,35 @@ namespace QuantConnect.Tests.Common.Securities
             };
 
             var lines = new List<string>();
-            foreach (var marginFile in marginsDirectory.GetFiles("*.csv", SearchOption.TopDirectoryOnly))
+            foreach (
+                var marginFile in marginsDirectory.GetFiles("*.csv", SearchOption.TopDirectoryOnly)
+            )
             {
                 var greaterMessage = $"A jump less than -80% was encountered in {marginFile.Name}";
                 var lessMessage = $"A jump greater than +80% was encountered in {marginFile.Name}";
-                var maxExclusions = exclusions.ContainsKey(marginFile.Name) ? exclusions[marginFile.Name] : 0;
+                var maxExclusions = exclusions.ContainsKey(marginFile.Name)
+                    ? exclusions[marginFile.Name]
+                    : 0;
 
-                var csv = File.ReadLines(marginFile.FullName).Where(x => !x.StartsWithInvariant("#") && !string.IsNullOrWhiteSpace(x)).Skip(1).Select(x =>
-                {
-                    var data = x.Split(',');
-                    DateTime date;
-                    Parse.TryParseExact(data[0], DateFormat.EightCharacter, DateTimeStyles.None, out date);
-                    var initial = Parse.Decimal(data[1]);
-                    var maintenance = Parse.Decimal(data[2]);
+                var csv = File.ReadLines(marginFile.FullName)
+                    .Where(x => !x.StartsWithInvariant("#") && !string.IsNullOrWhiteSpace(x))
+                    .Skip(1)
+                    .Select(x =>
+                    {
+                        var data = x.Split(',');
+                        DateTime date;
+                        Parse.TryParseExact(
+                            data[0],
+                            DateFormat.EightCharacter,
+                            DateTimeStyles.None,
+                            out date
+                        );
+                        var initial = Parse.Decimal(data[1]);
+                        var maintenance = Parse.Decimal(data[2]);
 
-                    return new Tuple<DateTime, decimal, decimal>(date, initial, maintenance);
-                }).ToList();
+                        return new Tuple<DateTime, decimal, decimal>(date, initial, maintenance);
+                    })
+                    .ToList();
 
                 var errorsEncountered = 0;
                 for (var i = 1; i < csv.Count; i++)
@@ -891,25 +1153,38 @@ namespace QuantConnect.Tests.Common.Securities
         [TestCase(Market.Globex)]
         public void FutureMarginModel_InitialMarginGreaterThanMaintenance(string market)
         {
-            var marginsDirectory = new DirectoryInfo(Path.Combine(Globals.DataFolder, "future", market, "margins"));
+            var marginsDirectory = new DirectoryInfo(
+                Path.Combine(Globals.DataFolder, "future", market, "margins")
+            );
 
             if (!marginsDirectory.Exists)
             {
                 return;
             }
-            foreach (var marginFile in marginsDirectory.GetFiles("*.csv", SearchOption.TopDirectoryOnly))
+            foreach (
+                var marginFile in marginsDirectory.GetFiles("*.csv", SearchOption.TopDirectoryOnly)
+            )
             {
-                var errorMessage = $"Initial value greater than maintenance value in {marginFile.Name}";
-                var csv = File.ReadLines(marginFile.FullName).Where(x => !x.StartsWithInvariant("#") && !string.IsNullOrWhiteSpace(x)).Skip(1).Select(x =>
-                {
-                    var data = x.Split(',');
-                    DateTime date;
-                    Parse.TryParseExact(data[0], DateFormat.EightCharacter, DateTimeStyles.None, out date);
-                    var initial = Parse.Decimal(data[1]);
-                    var maintenance = Parse.Decimal(data[2]);
+                var errorMessage =
+                    $"Initial value greater than maintenance value in {marginFile.Name}";
+                var csv = File.ReadLines(marginFile.FullName)
+                    .Where(x => !x.StartsWithInvariant("#") && !string.IsNullOrWhiteSpace(x))
+                    .Skip(1)
+                    .Select(x =>
+                    {
+                        var data = x.Split(',');
+                        DateTime date;
+                        Parse.TryParseExact(
+                            data[0],
+                            DateFormat.EightCharacter,
+                            DateTimeStyles.None,
+                            out date
+                        );
+                        var initial = Parse.Decimal(data[1]);
+                        var maintenance = Parse.Decimal(data[2]);
 
-                    return new Tuple<DateTime, decimal, decimal>(date, initial, maintenance);
-                });
+                        return new Tuple<DateTime, decimal, decimal>(date, initial, maintenance);
+                    });
 
                 // Having an initial margin equal to the maintenance is a valid case.
                 // Using '>' and not '>=' here is intentional.
@@ -917,30 +1192,39 @@ namespace QuantConnect.Tests.Common.Securities
             }
         }
 
-        private static void Update(Security security, decimal close, QCAlgorithm algorithm, DateTime? time = null)
+        private static void Update(
+            Security security,
+            decimal close,
+            QCAlgorithm algorithm,
+            DateTime? time = null
+        )
         {
-            security.SetMarketPrice(new TradeBar
-            {
-                Time = time ?? new DateTime(2020, 5, 1),
-                Symbol = security.Symbol,
-                Open = close,
-                High = close,
-                Low = close,
-                Close = close
-            });
+            security.SetMarketPrice(
+                new TradeBar
+                {
+                    Time = time ?? new DateTime(2020, 5, 1),
+                    Symbol = security.Symbol,
+                    Open = close,
+                    High = close,
+                    Low = close,
+                    Close = close
+                }
+            );
             algorithm.Portfolio.InvalidateTotalPortfolioValue();
         }
 
         private static SubmitOrderRequest GetOrderRequest(Symbol symbol, decimal quantity)
         {
-            return new SubmitOrderRequest(OrderType.Market,
+            return new SubmitOrderRequest(
+                OrderType.Market,
                 SecurityType.Future,
                 symbol,
                 quantity,
                 1,
                 1,
                 DateTime.UtcNow,
-                "");
+                ""
+            );
         }
 
         private static IBuyingPowerModel GetModel(
@@ -948,11 +1232,14 @@ namespace QuantConnect.Tests.Common.Securities
             out FutureMarginModel futureMarginModel,
             SecurityPortfolioManager portfolio = null,
             TimeKeeper timeKeeper = null
-            )
+        )
         {
             futureMarginModel = security.BuyingPowerModel as FutureMarginModel;
-            return new BuyingPowerModelComparator(futureMarginModel,
-                new SecurityPositionGroupBuyingPowerModel(), portfolio, timeKeeper
+            return new BuyingPowerModelComparator(
+                futureMarginModel,
+                new SecurityPositionGroupBuyingPowerModel(),
+                portfolio,
+                timeKeeper
             );
         }
     }

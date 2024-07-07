@@ -14,8 +14,8 @@
 */
 
 using System;
-using Newtonsoft.Json;
 using System.Collections.Generic;
+using Newtonsoft.Json;
 
 namespace QuantConnect.Orders
 {
@@ -84,9 +84,7 @@ namespace QuantConnect.Orders
         /// <summary>
         /// Creates a new empty instance
         /// </summary>
-        public GroupOrderManager()
-        {
-        }
+        public GroupOrderManager() { }
 
         /// <summary>
         /// Creates a new instance
@@ -101,7 +99,7 @@ namespace QuantConnect.Orders
             Count = legCount;
             Quantity = quantity;
             LimitPrice = limitPrice;
-            OrderIds = new (capacity: legCount);
+            OrderIds = new(capacity: legCount);
         }
     }
 }

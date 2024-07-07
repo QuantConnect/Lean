@@ -23,9 +23,12 @@ namespace QuantConnect.Algorithm.CSharp
 {
     /// <summary>
     /// </summary>
-    public class OrderSubmissionDataRegressionAlgorithm : QCAlgorithm, IRegressionAlgorithmDefinition
+    public class OrderSubmissionDataRegressionAlgorithm
+        : QCAlgorithm,
+            IRegressionAlgorithmDefinition
     {
-        private Dictionary<string, OrderSubmissionData> _orderSubmissionData = new Dictionary<string, OrderSubmissionData>();
+        private Dictionary<string, OrderSubmissionData> _orderSubmissionData =
+            new Dictionary<string, OrderSubmissionData>();
 
         /// <summary>
         /// Initialise the data and resolution required, as well as the cash and start-end dates for your algorithm. All algorithms must initialized.
@@ -34,19 +37,24 @@ namespace QuantConnect.Algorithm.CSharp
         {
             SetStartDate(2013, 10, 07);
             SetEndDate(2013, 10, 11);
-            
+
             AddEquity("SPY");
             AddForex("EURUSD", Resolution.Hour);
 
-            Schedule.On(DateRules.EveryDay(), TimeRules.Noon, () =>
-            {
-                Liquidate();
-                foreach (var ticker in new[] {"SPY", "EURUSD"})
+            Schedule.On(
+                DateRules.EveryDay(),
+                TimeRules.Noon,
+                () =>
                 {
-                    PlaceTrade(ticker);
+                    Liquidate();
+                    foreach (var ticker in new[] { "SPY", "EURUSD" })
+                    {
+                        PlaceTrade(ticker);
+                    }
                 }
-            });
+            );
         }
+
         private void PlaceTrade(string ticker)
         {
             var ticket = MarketOrder(ticker, 1000);
@@ -60,7 +68,11 @@ namespace QuantConnect.Algorithm.CSharp
             if (_orderSubmissionData.ContainsKey(ticker))
             {
                 var previous = _orderSubmissionData[ticker];
-                if (previous.AskPrice == data.AskPrice || previous.BidPrice == data.BidPrice || previous.LastPrice == data.LastPrice)
+                if (
+                    previous.AskPrice == data.AskPrice
+                    || previous.BidPrice == data.BidPrice
+                    || previous.LastPrice == data.LastPrice
+                )
                 {
                     throw new RegressionTestException("Order Submission data didn't change");
                 }
@@ -96,35 +108,36 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// This is used by the regression test system to indicate what the expected statistics are from running the algorithm
         /// </summary>
-        public Dictionary<string, string> ExpectedStatistics => new Dictionary<string, string>
-        {
-            {"Total Orders", "18"},
-            {"Average Win", "0.83%"},
-            {"Average Loss", "-0.90%"},
-            {"Compounding Annual Return", "273.871%"},
-            {"Drawdown", "3.200%"},
-            {"Expectancy", "0.203"},
-            {"Start Equity", "100000.00"},
-            {"End Equity", "101715.67"},
-            {"Net Profit", "1.716%"},
-            {"Sharpe Ratio", "11.391"},
-            {"Sortino Ratio", "0"},
-            {"Probabilistic Sharpe Ratio", "67.016%"},
-            {"Loss Rate", "38%"},
-            {"Win Rate", "62%"},
-            {"Profit-Loss Ratio", "0.93"},
-            {"Alpha", "0.82"},
-            {"Beta", "1.464"},
-            {"Annual Standard Deviation", "0.326"},
-            {"Annual Variance", "0.106"},
-            {"Information Ratio", "16.804"},
-            {"Tracking Error", "0.103"},
-            {"Treynor Ratio", "2.535"},
-            {"Total Fees", "$45.00"},
-            {"Estimated Strategy Capacity", "$20000000.00"},
-            {"Lowest Capacity Asset", "EURUSD 8G"},
-            {"Portfolio Turnover", "264.72%"},
-            {"OrderListHash", "705cad7cbcf7fc0d38367dbaad3556f5"}
-        };
+        public Dictionary<string, string> ExpectedStatistics =>
+            new Dictionary<string, string>
+            {
+                { "Total Orders", "18" },
+                { "Average Win", "0.83%" },
+                { "Average Loss", "-0.90%" },
+                { "Compounding Annual Return", "273.871%" },
+                { "Drawdown", "3.200%" },
+                { "Expectancy", "0.203" },
+                { "Start Equity", "100000.00" },
+                { "End Equity", "101715.67" },
+                { "Net Profit", "1.716%" },
+                { "Sharpe Ratio", "11.391" },
+                { "Sortino Ratio", "0" },
+                { "Probabilistic Sharpe Ratio", "67.016%" },
+                { "Loss Rate", "38%" },
+                { "Win Rate", "62%" },
+                { "Profit-Loss Ratio", "0.93" },
+                { "Alpha", "0.82" },
+                { "Beta", "1.464" },
+                { "Annual Standard Deviation", "0.326" },
+                { "Annual Variance", "0.106" },
+                { "Information Ratio", "16.804" },
+                { "Tracking Error", "0.103" },
+                { "Treynor Ratio", "2.535" },
+                { "Total Fees", "$45.00" },
+                { "Estimated Strategy Capacity", "$20000000.00" },
+                { "Lowest Capacity Asset", "EURUSD 8G" },
+                { "Portfolio Turnover", "264.72%" },
+                { "OrderListHash", "705cad7cbcf7fc0d38367dbaad3556f5" }
+            };
     }
 }

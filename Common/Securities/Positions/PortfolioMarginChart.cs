@@ -15,11 +15,11 @@
 */
 
 using System;
-using System.Linq;
-using System.Drawing;
-using QuantConnect.Interfaces;
 using System.Collections.Generic;
+using System.Drawing;
+using System.Linq;
 using QuantConnect.Data.Auxiliary;
+using QuantConnect.Interfaces;
 
 namespace QuantConnect.Securities.Positions
 {
@@ -30,12 +30,20 @@ namespace QuantConnect.Securities.Positions
     {
         private static string PortfolioMarginTooltip = "{SERIES_NAME}: {VALUE}%";
         private static string PortfolioMarginIndexName = "Margin Used (%)";
-        private static readonly int _portfolioMarginSeriesCount = Configuration.Config.GetInt("portfolio-margin-series-count", 5);
+        private static readonly int _portfolioMarginSeriesCount = Configuration.Config.GetInt(
+            "portfolio-margin-series-count",
+            5
+        );
 
         /// <summary>
         /// Helper method to add the portfolio margin series into the given chart
         /// </summary>
-        public static void AddSample(Chart portfolioChart, PortfolioState portfolioState, IMapFileProvider mapFileProvider, DateTime currentTime)
+        public static void AddSample(
+            Chart portfolioChart,
+            PortfolioState portfolioState,
+            IMapFileProvider mapFileProvider,
+            DateTime currentTime
+        )
         {
             if (portfolioState == null || portfolioState.PositionGroups == null)
             {
@@ -43,10 +51,12 @@ namespace QuantConnect.Securities.Positions
             }
 
             var topSeries = new HashSet<string>(_portfolioMarginSeriesCount);
-            foreach (var positionGroup in portfolioState.PositionGroups
-                .OrderByDescending(x => x.PortfolioValuePercentage)
-                .DistinctBy(x => GetPositionGroupName(x, mapFileProvider, currentTime))
-                .Take(_portfolioMarginSeriesCount))
+            foreach (
+                var positionGroup in portfolioState
+                    .PositionGroups.OrderByDescending(x => x.PortfolioValuePercentage)
+                    .DistinctBy(x => GetPositionGroupName(x, mapFileProvider, currentTime))
+                    .Take(_portfolioMarginSeriesCount)
+            )
             {
                 topSeries.Add(positionGroup.Name);
             }
@@ -59,7 +69,12 @@ namespace QuantConnect.Securities.Positions
                 if (topSeries.Contains(name))
                 {
                     var series = GetOrAddSeries(portfolioChart, name, Color.Empty);
-                    series.AddPoint(new ChartPoint(portfolioState.Time, positionGroup.PortfolioValuePercentage * 100));
+                    series.AddPoint(
+                        new ChartPoint(
+                            portfolioState.Time,
+                            positionGroup.PortfolioValuePercentage * 100
+                        )
+                    );
                     continue;
                 }
 
@@ -81,14 +96,21 @@ namespace QuantConnect.Securities.Positions
             {
                 // let's add a null point for the series which have no value for this time
                 var lastPoint = series.Values.LastOrDefault() as ChartPoint;
-                if (lastPoint == null || lastPoint.Time != portfolioState.Time && lastPoint.Y.HasValue)
+                if (
+                    lastPoint == null
+                    || lastPoint.Time != portfolioState.Time && lastPoint.Y.HasValue
+                )
                 {
                     series.AddPoint(new ChartPoint(portfolioState.Time, null));
                 }
             }
         }
 
-        private static string GetPositionGroupName(PositionGroupState positionGroup, IMapFileProvider mapFileProvider, DateTime currentTime)
+        private static string GetPositionGroupName(
+            PositionGroupState positionGroup,
+            IMapFileProvider mapFileProvider,
+            DateTime currentTime
+        )
         {
             if (positionGroup.Positions.Count == 0)
             {
@@ -97,14 +119,17 @@ namespace QuantConnect.Securities.Positions
 
             if (string.IsNullOrEmpty(positionGroup.Name))
             {
-                positionGroup.Name = string.Join(", ", positionGroup.Positions.Select(x =>
-                {
-                    if (mapFileProvider == null)
+                positionGroup.Name = string.Join(
+                    ", ",
+                    positionGroup.Positions.Select(x =>
                     {
-                        return x.Symbol.Value;
-                    }
-                    return GetMappedSymbol(mapFileProvider, x.Symbol, currentTime).Value;
-                }));
+                        if (mapFileProvider == null)
+                        {
+                            return x.Symbol.Value;
+                        }
+                        return GetMappedSymbol(mapFileProvider, x.Symbol, currentTime).Value;
+                    })
+                );
             }
 
             return positionGroup.Name;
@@ -114,7 +139,12 @@ namespace QuantConnect.Securities.Positions
         {
             if (!portfolioChart.Series.TryGetValue(seriesName, out var series))
             {
-                series = portfolioChart.Series[seriesName] = new Series(seriesName, SeriesType.StackedArea, 0, "%")
+                series = portfolioChart.Series[seriesName] = new Series(
+                    seriesName,
+                    SeriesType.StackedArea,
+                    0,
+                    "%"
+                )
                 {
                     Color = color,
                     Tooltip = PortfolioMarginTooltip,
@@ -125,7 +155,11 @@ namespace QuantConnect.Securities.Positions
             return (Series)series;
         }
 
-        private static Symbol GetMappedSymbol(IMapFileProvider mapFileProvider, Symbol symbol, DateTime referenceTime)
+        private static Symbol GetMappedSymbol(
+            IMapFileProvider mapFileProvider,
+            Symbol symbol,
+            DateTime referenceTime
+        )
         {
             if (symbol.RequiresMapping())
             {
@@ -135,7 +169,9 @@ namespace QuantConnect.Securities.Positions
                     var mapFile = mapFileResolver.ResolveMapFile(symbol);
                     if (mapFile.Any())
                     {
-                        symbol = symbol.UpdateMappedSymbol(mapFile.GetMappedSymbol(referenceTime.Date, symbol.Value));
+                        symbol = symbol.UpdateMappedSymbol(
+                            mapFile.GetMappedSymbol(referenceTime.Date, symbol.Value)
+                        );
                     }
                 }
             }
@@ -148,8 +184,8 @@ namespace QuantConnect.Securities.Positions
         public static void RemoveSinglePointSeries(Chart portfolioChart)
         {
             // let's remove series which have a single value, since it's a area chart they can't be drawn
-            portfolioChart.Series = portfolioChart.Series.Values
-                .Where(x =>
+            portfolioChart.Series = portfolioChart
+                .Series.Values.Where(x =>
                 {
                     var notNullPointsCount = 0;
                     foreach (var point in x.Values.OfType<ChartPoint>())

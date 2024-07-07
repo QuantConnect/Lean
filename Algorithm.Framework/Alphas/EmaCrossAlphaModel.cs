@@ -15,8 +15,8 @@
 
 using System.Collections.Generic;
 using QuantConnect.Data;
-using QuantConnect.Data.UniverseSelection;
 using QuantConnect.Data.Consolidators;
+using QuantConnect.Data.UniverseSelection;
 using QuantConnect.Indicators;
 using QuantConnect.Securities;
 
@@ -47,7 +47,7 @@ namespace QuantConnect.Algorithm.Framework.Alphas
             int fastPeriod = 12,
             int slowPeriod = 26,
             Resolution resolution = Resolution.Daily
-            )
+        )
         {
             _fastPeriod = fastPeriod;
             _slowPeriod = slowPeriod;
@@ -76,14 +76,22 @@ namespace QuantConnect.Algorithm.Framework.Alphas
                     {
                         if (symbolData.Slow > symbolData.Fast)
                         {
-                            insights.Add(Insight.Price(symbolData.Symbol, insightPeriod, InsightDirection.Down));
+                            insights.Add(
+                                Insight.Price(
+                                    symbolData.Symbol,
+                                    insightPeriod,
+                                    InsightDirection.Down
+                                )
+                            );
                         }
                     }
                     else if (symbolData.SlowIsOverFast)
                     {
                         if (symbolData.Fast > symbolData.Slow)
                         {
-                            insights.Add(Insight.Price(symbolData.Symbol, insightPeriod, InsightDirection.Up));
+                            insights.Add(
+                                Insight.Price(symbolData.Symbol, insightPeriod, InsightDirection.Up)
+                            );
                         }
                     }
                 }
@@ -106,7 +114,13 @@ namespace QuantConnect.Algorithm.Framework.Alphas
                 SymbolData symbolData;
                 if (!SymbolDataBySymbol.TryGetValue(added.Symbol, out symbolData))
                 {
-                    SymbolDataBySymbol[added.Symbol] = new SymbolData(added, _fastPeriod, _slowPeriod, algorithm, _resolution);
+                    SymbolDataBySymbol[added.Symbol] = new SymbolData(
+                        added,
+                        _fastPeriod,
+                        _slowPeriod,
+                        algorithm,
+                        _resolution
+                    );
                 }
                 else
                 {
@@ -156,7 +170,8 @@ namespace QuantConnect.Algorithm.Framework.Alphas
                 int fastPeriod,
                 int slowPeriod,
                 QCAlgorithm algorithm,
-                Resolution resolution)
+                Resolution resolution
+            )
             {
                 _algorithm = algorithm;
                 _security = security;
@@ -168,8 +183,16 @@ namespace QuantConnect.Algorithm.Framework.Alphas
                 algorithm.SubscriptionManager.AddConsolidator(security.Symbol, _slowConsolidator);
 
                 // create fast/slow EMAs
-                _fast = new ExponentialMovingAverage(security.Symbol, fastPeriod, ExponentialMovingAverage.SmoothingFactorDefault(fastPeriod));
-                _slow = new ExponentialMovingAverage(security.Symbol, slowPeriod, ExponentialMovingAverage.SmoothingFactorDefault(slowPeriod));
+                _fast = new ExponentialMovingAverage(
+                    security.Symbol,
+                    fastPeriod,
+                    ExponentialMovingAverage.SmoothingFactorDefault(fastPeriod)
+                );
+                _slow = new ExponentialMovingAverage(
+                    security.Symbol,
+                    slowPeriod,
+                    ExponentialMovingAverage.SmoothingFactorDefault(slowPeriod)
+                );
 
                 algorithm.RegisterIndicator(security.Symbol, _fast, _fastConsolidator);
                 algorithm.RegisterIndicator(security.Symbol, _slow, _slowConsolidator);

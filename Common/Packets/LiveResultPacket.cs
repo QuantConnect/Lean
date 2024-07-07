@@ -15,12 +15,12 @@
 */
 
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using Newtonsoft.Json;
-using QuantConnect.Orders;
 using QuantConnect.Logging;
+using QuantConnect.Orders;
 using QuantConnect.Securities;
-using System.Collections.Generic;
 
 namespace QuantConnect.Packets
 {
@@ -68,8 +68,7 @@ namespace QuantConnect.Packets
         /// Default constructor for JSON Serialization
         /// </summary>
         public LiveResultPacket()
-            : base(PacketType.LiveResult)
-        { }
+            : base(PacketType.LiveResult) { }
 
         /// <summary>
         /// Compose the packet from a JSON string:
@@ -80,15 +79,15 @@ namespace QuantConnect.Packets
             try
             {
                 var packet = JsonConvert.DeserializeObject<LiveResultPacket>(json);
-                CompileId          = packet.CompileId;
-                Channel            = packet.Channel;
-                SessionId          = packet.SessionId;
-                DeployId           = packet.DeployId;
-                Type               = packet.Type;
-                UserId             = packet.UserId;
-                ProjectId          = packet.ProjectId;
-                Results            = packet.Results;
-                ProcessingTime     = packet.ProcessingTime;
+                CompileId = packet.CompileId;
+                Channel = packet.Channel;
+                SessionId = packet.SessionId;
+                DeployId = packet.DeployId;
+                Type = packet.Type;
+                UserId = packet.UserId;
+                ProjectId = packet.ProjectId;
+                Results = packet.Results;
+                ProcessingTime = packet.ProcessingTime;
             }
             catch (Exception err)
             {
@@ -102,7 +101,7 @@ namespace QuantConnect.Packets
         /// <param name="job">Job that started this request</param>
         /// <param name="results">Results class for the Backtest job</param>
         public LiveResultPacket(LiveNodePacket job, LiveResult results)
-            :base (PacketType.LiveResult)
+            : base(PacketType.LiveResult)
         {
             try
             {
@@ -115,7 +114,8 @@ namespace QuantConnect.Packets
                 SessionId = job.SessionId;
                 Channel = job.Channel;
             }
-            catch (Exception err) {
+            catch (Exception err)
+            {
                 Log.Error(err);
             }
         }
@@ -127,14 +127,26 @@ namespace QuantConnect.Packets
         /// <returns>An empty result packet</returns>
         public static LiveResultPacket CreateEmpty(LiveNodePacket job)
         {
-            return new LiveResultPacket(job, new LiveResult(new LiveResultParameters(
-                new Dictionary<string, Chart>(), new Dictionary<int, Order>(), new Dictionary<DateTime, decimal>(),
-                new Dictionary<string, Holding>(), new CashBook(), new Dictionary<string, string>(),
-                new SortedDictionary<string, string>(), new List<OrderEvent>(), new Dictionary<string, string>(),
-                new AlgorithmConfiguration(), new Dictionary<string, string>())));
+            return new LiveResultPacket(
+                job,
+                new LiveResult(
+                    new LiveResultParameters(
+                        new Dictionary<string, Chart>(),
+                        new Dictionary<int, Order>(),
+                        new Dictionary<DateTime, decimal>(),
+                        new Dictionary<string, Holding>(),
+                        new CashBook(),
+                        new Dictionary<string, string>(),
+                        new SortedDictionary<string, string>(),
+                        new List<OrderEvent>(),
+                        new Dictionary<string, string>(),
+                        new AlgorithmConfiguration(),
+                        new Dictionary<string, string>()
+                    )
+                )
+            );
         }
     } // End Queue Packet:
-
 
     /// <summary>
     /// Live results object class for packaging live result data.
@@ -155,17 +167,15 @@ namespace QuantConnect.Packets
         [JsonIgnore]
         public CashBook CashBook
         {
-            get
-            {
-                return _cashBook;
-            }
+            get { return _cashBook; }
             set
             {
                 _cashBook = value;
 
                 Cash = _cashBook?.ToDictionary(pair => pair.Key, pair => pair.Value);
                 AccountCurrency = CashBook?.AccountCurrency;
-                AccountCurrencySymbol = AccountCurrency != null ? Currencies.GetCurrencySymbol(AccountCurrency) : null;
+                AccountCurrencySymbol =
+                    AccountCurrency != null ? Currencies.GetCurrencySymbol(AccountCurrency) : null;
             }
         }
 
@@ -190,13 +200,13 @@ namespace QuantConnect.Packets
         /// <summary>
         /// Default Constructor
         /// </summary>
-        public LiveResult()
-        { }
+        public LiveResult() { }
 
         /// <summary>
         /// Constructor for the result class for dictionary objects
         /// </summary>
-        public LiveResult(LiveResultParameters parameters) : base(parameters)
+        public LiveResult(LiveResultParameters parameters)
+            : base(parameters)
         {
             Holdings = parameters.Holdings;
             CashBook = parameters.CashBook;

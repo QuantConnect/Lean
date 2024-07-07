@@ -28,10 +28,12 @@ namespace QuantConnect.Algorithm.CSharp
     /// <summary>
     /// Tests ETF constituents universe selection with the algorithm framework models (Alpha, PortfolioConstruction, Execution)
     /// </summary>
-    public class ETFConstituentUniverseFrameworkRegressionAlgorithm : QCAlgorithm, IRegressionAlgorithmDefinition
+    public class ETFConstituentUniverseFrameworkRegressionAlgorithm
+        : QCAlgorithm,
+            IRegressionAlgorithmDefinition
     {
         private List<ETFConstituentUniverse> ConstituentData = new List<ETFConstituentUniverse>();
-        
+
         /// <summary>
         /// Initializes the algorithm, setting up the framework classes and ETF constituent universe settings
         /// </summary>
@@ -40,7 +42,7 @@ namespace QuantConnect.Algorithm.CSharp
             SetStartDate(2020, 12, 1);
             SetEndDate(2021, 1, 31);
             SetCash(100000);
-            
+
             SetAlpha(new ETFConstituentAlphaModel());
             SetPortfolioConstruction(new ETFConstituentPortfolioModel());
             SetExecution(new ETFConstituentExecutionModel());
@@ -53,18 +55,24 @@ namespace QuantConnect.Algorithm.CSharp
 
         protected virtual void AddUniverseWrapper(Symbol symbol)
         {
-            var universe = AddUniverse(Universe.ETF(symbol, UniverseSettings, FilterETFConstituents));
+            var universe = AddUniverse(
+                Universe.ETF(symbol, UniverseSettings, FilterETFConstituents)
+            );
 
             var historicalData = History(universe, 1).ToList();
             if (historicalData.Count != 1)
             {
-                throw new RegressionTestException($"Unexpected history count {historicalData.Count}! Expected 1");
+                throw new RegressionTestException(
+                    $"Unexpected history count {historicalData.Count}! Expected 1"
+                );
             }
             foreach (var universeDataCollection in historicalData)
             {
                 if (universeDataCollection.Data.Count < 200)
                 {
-                    throw new RegressionTestException($"Unexpected universe DataCollection count {universeDataCollection.Data.Count}! Expected > 200");
+                    throw new RegressionTestException(
+                        $"Unexpected universe DataCollection count {universeDataCollection.Data.Count}! Expected > 200"
+                    );
                 }
             }
         }
@@ -74,25 +82,21 @@ namespace QuantConnect.Algorithm.CSharp
         /// </summary>
         /// <param name="constituents">ETF constituents</param>
         /// <returns>ETF constituent Symbols that we want to include in the algorithm</returns>
-        public IEnumerable<Symbol> FilterETFConstituents(IEnumerable<ETFConstituentUniverse> constituents)
+        public IEnumerable<Symbol> FilterETFConstituents(
+            IEnumerable<ETFConstituentUniverse> constituents
+        )
         {
-            var constituentData = constituents
-                .Where(x => (x.Weight ?? 0m) >= 0.001m)
-                .ToList();
+            var constituentData = constituents.Where(x => (x.Weight ?? 0m) >= 0.001m).ToList();
 
             ConstituentData = constituentData;
 
-            return constituentData
-                .Select(x => x.Symbol)
-                .ToList();
+            return constituentData.Select(x => x.Symbol).ToList();
         }
 
         /// <summary>
         /// no-op for performance
         /// </summary>
-        public override void OnData(Slice data)
-        {
-        }
+        public override void OnData(Slice data) { }
 
         /// <summary>
         /// Alpha model for ETF constituents, where we generate insights based on the weighting
@@ -100,9 +104,7 @@ namespace QuantConnect.Algorithm.CSharp
         /// </summary>
         private class ETFConstituentAlphaModel : IAlphaModel
         {
-            public void OnSecuritiesChanged(QCAlgorithm algorithm, SecurityChanges changes)
-            {
-            }
+            public void OnSecuritiesChanged(QCAlgorithm algorithm, SecurityChanges changes) { }
 
             /// <summary>
             /// Creates new insights based on constituent data and their weighting
@@ -110,20 +112,23 @@ namespace QuantConnect.Algorithm.CSharp
             /// </summary>
             public IEnumerable<Insight> Update(QCAlgorithm algorithm, Slice data)
             {
-                var algo = (ETFConstituentUniverseFrameworkRegressionAlgorithm) algorithm;
-                
+                var algo = (ETFConstituentUniverseFrameworkRegressionAlgorithm)algorithm;
+
                 foreach (var constituent in algo.ConstituentData)
                 {
-                    if (!data.Bars.ContainsKey(constituent.Symbol) &&
-                        !data.QuoteBars.ContainsKey(constituent.Symbol))
+                    if (
+                        !data.Bars.ContainsKey(constituent.Symbol)
+                        && !data.QuoteBars.ContainsKey(constituent.Symbol)
+                    )
                     {
                         continue;
                     }
-                    
-                    var insightDirection = constituent.Weight != null && constituent.Weight >= 0.01m
-                        ? InsightDirection.Up
-                        : InsightDirection.Down;
-                    
+
+                    var insightDirection =
+                        constituent.Weight != null && constituent.Weight >= 0.01m
+                            ? InsightDirection.Up
+                            : InsightDirection.Down;
+
                     yield return new Insight(
                         algorithm.UtcTime,
                         constituent.Symbol,
@@ -132,7 +137,8 @@ namespace QuantConnect.Algorithm.CSharp
                         insightDirection,
                         1 * (double)insightDirection,
                         1.0,
-                        weight: (double)(constituent.Weight ?? 0));
+                        weight: (double)(constituent.Weight ?? 0)
+                    );
                 }
             }
         }
@@ -144,7 +150,7 @@ namespace QuantConnect.Algorithm.CSharp
         private class ETFConstituentPortfolioModel : IPortfolioConstructionModel
         {
             private bool _hasAdded;
-            
+
             /// <summary>
             /// Securities changed, detects if we've got new additions to the universe
             /// so that we don't try to trade every loop
@@ -159,7 +165,10 @@ namespace QuantConnect.Algorithm.CSharp
             /// Emits portfolio targets setting the quantity to the weight of the constituent
             /// in its respective ETF.
             /// </summary>
-            public IEnumerable<IPortfolioTarget> CreateTargets(QCAlgorithm algorithm, Insight[] insights)
+            public IEnumerable<IPortfolioTarget> CreateTargets(
+                QCAlgorithm algorithm,
+                Insight[] insights
+            )
             {
                 if (!_hasAdded)
                 {
@@ -168,7 +177,10 @@ namespace QuantConnect.Algorithm.CSharp
 
                 foreach (var insight in insights)
                 {
-                    yield return new PortfolioTarget(insight.Symbol, (decimal) (insight.Weight ?? 0));
+                    yield return new PortfolioTarget(
+                        insight.Symbol,
+                        (decimal)(insight.Weight ?? 0)
+                    );
                     _hasAdded = false;
                 }
             }
@@ -204,7 +216,7 @@ namespace QuantConnect.Algorithm.CSharp
                 }
             }
         }
-        
+
         /// <summary>
         /// This is used by the regression test system to indicate if the open source Lean repository has the required data to run this algorithm.
         /// </summary>
@@ -213,7 +225,8 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// This is used by the regression test system to indicate which languages this algorithm is written in.
         /// </summary>
-        public virtual List<Language> Languages { get; } = new() { Language.CSharp, Language.Python };
+        public virtual List<Language> Languages { get; } =
+            new() { Language.CSharp, Language.Python };
 
         /// <summary>
         /// Data Points count of all timeslices of algorithm
@@ -233,35 +246,36 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// This is used by the regression test system to indicate what the expected statistics are from running the algorithm
         /// </summary>
-        public Dictionary<string, string> ExpectedStatistics => new Dictionary<string, string>
-        {
-            {"Total Orders", "3"},
-            {"Average Win", "0%"},
-            {"Average Loss", "0%"},
-            {"Compounding Annual Return", "3.006%"},
-            {"Drawdown", "0.700%"},
-            {"Expectancy", "0"},
-            {"Start Equity", "100000"},
-            {"End Equity", "100485.34"},
-            {"Net Profit", "0.485%"},
-            {"Sharpe Ratio", "1.055"},
-            {"Sortino Ratio", "1.53"},
-            {"Probabilistic Sharpe Ratio", "53.609%"},
-            {"Loss Rate", "0%"},
-            {"Win Rate", "0%"},
-            {"Profit-Loss Ratio", "0"},
-            {"Alpha", "0.012"},
-            {"Beta", "0.096"},
-            {"Annual Standard Deviation", "0.017"},
-            {"Annual Variance", "0"},
-            {"Information Ratio", "-0.544"},
-            {"Tracking Error", "0.096"},
-            {"Treynor Ratio", "0.191"},
-            {"Total Fees", "$3.00"},
-            {"Estimated Strategy Capacity", "$1400000000.00"},
-            {"Lowest Capacity Asset", "IBM R735QTJ8XC9X"},
-            {"Portfolio Turnover", "0.12%"},
-            {"OrderListHash", "2b2f7874b8056f64f08974ad50aae71d"}
-        };
+        public Dictionary<string, string> ExpectedStatistics =>
+            new Dictionary<string, string>
+            {
+                { "Total Orders", "3" },
+                { "Average Win", "0%" },
+                { "Average Loss", "0%" },
+                { "Compounding Annual Return", "3.006%" },
+                { "Drawdown", "0.700%" },
+                { "Expectancy", "0" },
+                { "Start Equity", "100000" },
+                { "End Equity", "100485.34" },
+                { "Net Profit", "0.485%" },
+                { "Sharpe Ratio", "1.055" },
+                { "Sortino Ratio", "1.53" },
+                { "Probabilistic Sharpe Ratio", "53.609%" },
+                { "Loss Rate", "0%" },
+                { "Win Rate", "0%" },
+                { "Profit-Loss Ratio", "0" },
+                { "Alpha", "0.012" },
+                { "Beta", "0.096" },
+                { "Annual Standard Deviation", "0.017" },
+                { "Annual Variance", "0" },
+                { "Information Ratio", "-0.544" },
+                { "Tracking Error", "0.096" },
+                { "Treynor Ratio", "0.191" },
+                { "Total Fees", "$3.00" },
+                { "Estimated Strategy Capacity", "$1400000000.00" },
+                { "Lowest Capacity Asset", "IBM R735QTJ8XC9X" },
+                { "Portfolio Turnover", "0.12%" },
+                { "OrderListHash", "2b2f7874b8056f64f08974ad50aae71d" }
+            };
     }
 }

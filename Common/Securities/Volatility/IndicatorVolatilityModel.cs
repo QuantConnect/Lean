@@ -58,7 +58,10 @@ namespace QuantConnect.Securities
         /// </summary>
         /// <param name="indicator">The auto-updating indicator</param>
         /// <param name="indicatorUpdate">Function delegate used to update the indicator on each call to <see cref="Update"/></param>
-        public IndicatorVolatilityModel(IIndicator indicator, Action<Security, BaseData, IIndicator> indicatorUpdate)
+        public IndicatorVolatilityModel(
+            IIndicator indicator,
+            Action<Security, BaseData, IIndicator> indicatorUpdate
+        )
         {
             _indicator = indicator;
             _indicatorUpdate = indicatorUpdate;

@@ -14,8 +14,8 @@
 */
 
 using System;
-using QuantConnect.Data.Market;
 using Python.Runtime;
+using QuantConnect.Data.Market;
 
 namespace QuantConnect.Data.Consolidators
 {
@@ -30,18 +30,14 @@ namespace QuantConnect.Data.Consolidators
         /// </summary>
         /// <param name="period">The minimum span of time before emitting a consolidated bar</param>
         public TickConsolidator(TimeSpan period)
-            : base(period)
-        {
-        }
+            : base(period) { }
 
         /// <summary>
         /// Creates a consolidator to produce a new 'TradeBar' representing the last count pieces of data
         /// </summary>
         /// <param name="maxCount">The number of pieces to accept before emitting a consolidated bar</param>
         public TickConsolidator(int maxCount)
-            : base(maxCount)
-        {
-        }
+            : base(maxCount) { }
 
         /// <summary>
         /// Creates a consolidator to produce a new 'TradeBar' representing the last count pieces of data or the period, whichever comes first
@@ -49,27 +45,21 @@ namespace QuantConnect.Data.Consolidators
         /// <param name="maxCount">The number of pieces to accept before emitting a consolidated bar</param>
         /// <param name="period">The minimum span of time before emitting a consolidated bar</param>
         public TickConsolidator(int maxCount, TimeSpan period)
-            : base(maxCount, period)
-        {
-        }
+            : base(maxCount, period) { }
 
         /// <summary>
         /// Initializes a new instance of the <see cref="TickQuoteBarConsolidator"/> class
         /// </summary>
         /// <param name="func">Func that defines the start time of a consolidated data</param>
         public TickConsolidator(Func<DateTime, CalendarInfo> func)
-            : base(func)
-        {
-        }
+            : base(func) { }
 
         /// <summary>
         /// Creates a consolidator to produce a new 'TradeBar' representing the last count pieces of data or the period, whichever comes first
         /// </summary>
         /// <param name="pyfuncobj">Python function object that defines the start time of a consolidated data</param>
         public TickConsolidator(PyObject pyfuncobj)
-            : base(pyfuncobj)
-        {
-        }
+            : base(pyfuncobj) { }
 
         /// <summary>
         /// Determines whether or not the specified data should be processed
@@ -91,22 +81,26 @@ namespace QuantConnect.Data.Consolidators
         {
             if (workingBar == null)
             {
-                workingBar = new TradeBar(GetRoundedBarTime(data),
+                workingBar = new TradeBar(
+                    GetRoundedBarTime(data),
                     data.Symbol,
                     data.Value,
                     data.Value,
                     data.Value,
                     data.Value,
                     data.Quantity,
-                    Period);
+                    Period
+                );
             }
             else
             {
                 //Aggregate the working bar
                 workingBar.Close = data.Value;
                 workingBar.Volume += data.Quantity;
-                if (data.Value < workingBar.Low) workingBar.Low = data.Value;
-                if (data.Value > workingBar.High) workingBar.High = data.Value;
+                if (data.Value < workingBar.Low)
+                    workingBar.Low = data.Value;
+                if (data.Value > workingBar.High)
+                    workingBar.High = data.Value;
             }
         }
     }

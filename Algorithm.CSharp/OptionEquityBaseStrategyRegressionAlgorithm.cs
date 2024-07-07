@@ -15,10 +15,10 @@
 */
 
 using System;
-using System.Linq;
-using QuantConnect.Orders;
-using QuantConnect.Interfaces;
 using System.Collections.Generic;
+using System.Linq;
+using QuantConnect.Interfaces;
+using QuantConnect.Orders;
 using QuantConnect.Securities.Option;
 using QuantConnect.Securities.Positions;
 
@@ -27,7 +27,9 @@ namespace QuantConnect.Algorithm.CSharp
     /// <summary>
     /// Base class for equity option strategy regression algorithms which holds some basic shared setup logic
     /// </summary>
-    public abstract class OptionEquityBaseStrategyRegressionAlgorithm : QCAlgorithm, IRegressionAlgorithmDefinition
+    public abstract class OptionEquityBaseStrategyRegressionAlgorithm
+        : QCAlgorithm,
+            IRegressionAlgorithmDefinition
     {
         protected decimal _paidFees { get; set; }
         protected Symbol _optionSymbol { get; set; }
@@ -43,17 +45,28 @@ namespace QuantConnect.Algorithm.CSharp
             _optionSymbol = option.Symbol;
 
             // set our strike/expiry filter for this option chain
-            option.SetFilter(u => u.Strikes(-2, +2)
-                                   // Expiration method accepts TimeSpan objects or integer for days.
-                                   // The following statements yield the same filtering criteria
-                                   .Expiration(0, 180));
+            option.SetFilter(u =>
+                u.Strikes(-2, +2)
+                    // Expiration method accepts TimeSpan objects or integer for days.
+                    // The following statements yield the same filtering criteria
+                    .Expiration(0, 180)
+            );
         }
 
         protected void AssertOptionStrategyIsPresent(string name, int? quantity = null)
         {
-            if (Portfolio.Positions.Groups.Where(group => group.BuyingPowerModel is OptionStrategyPositionGroupBuyingPowerModel)
-                .Count(group => ((OptionStrategyPositionGroupBuyingPowerModel)@group.BuyingPowerModel).ToString() == name
-                    && (!quantity.HasValue || Math.Abs(group.Quantity) == quantity)) != 1)
+            if (
+                Portfolio
+                    .Positions.Groups.Where(group =>
+                        group.BuyingPowerModel is OptionStrategyPositionGroupBuyingPowerModel
+                    )
+                    .Count(group =>
+                        (
+                            (OptionStrategyPositionGroupBuyingPowerModel)@group.BuyingPowerModel
+                        ).ToString() == name
+                        && (!quantity.HasValue || Math.Abs(group.Quantity) == quantity)
+                    ) != 1
+            )
             {
                 throw new RegressionTestException($"Option strategy: '{name}' was not found!");
             }
@@ -61,10 +74,21 @@ namespace QuantConnect.Algorithm.CSharp
 
         protected void AssertDefaultGroup(Symbol symbol, decimal quantity)
         {
-            if (Portfolio.Positions.Groups.Where(group => group.BuyingPowerModel is SecurityPositionGroupBuyingPowerModel)
-                .Count(group => group.Positions.Any(position => position.Symbol == symbol && position.Quantity == quantity)) != 1)
+            if (
+                Portfolio
+                    .Positions.Groups.Where(group =>
+                        group.BuyingPowerModel is SecurityPositionGroupBuyingPowerModel
+                    )
+                    .Count(group =>
+                        group.Positions.Any(position =>
+                            position.Symbol == symbol && position.Quantity == quantity
+                        )
+                    ) != 1
+            )
             {
-                throw new RegressionTestException($"Default groupd for symbol '{symbol}' and quantity '{quantity}' was not found!");
+                throw new RegressionTestException(
+                    $"Default groupd for symbol '{symbol}' and quantity '{quantity}' was not found!"
+                );
             }
         }
 
@@ -83,11 +107,12 @@ namespace QuantConnect.Algorithm.CSharp
                         spread = security.Price - security.AskPrice;
                     }
                 }
-                else if(security.BidPrice != 0)
+                else if (security.BidPrice != 0)
                 {
                     spread = security.BidPrice - security.Price;
                 }
-                spreadPaid += spread * actualQuantity * security.SymbolProperties.ContractMultiplier;
+                spreadPaid +=
+                    spread * actualQuantity * security.SymbolProperties.ContractMultiplier;
             }
 
             return spreadPaid;
@@ -106,7 +131,10 @@ namespace QuantConnect.Algorithm.CSharp
                 if (orderEvent.Symbol.SecurityType.IsOption())
                 {
                     var security = Securities[orderEvent.Symbol];
-                    var premiumPaid = orderEvent.Quantity * orderEvent.FillPrice * security.SymbolProperties.ContractMultiplier;
+                    var premiumPaid =
+                        orderEvent.Quantity
+                        * orderEvent.FillPrice
+                        * security.SymbolProperties.ContractMultiplier;
                     Log($"{orderEvent}. Premium paid: {premiumPaid}");
                     return;
                 }

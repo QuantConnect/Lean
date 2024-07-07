@@ -70,9 +70,13 @@ namespace QuantConnect.Algorithm.CSharp
                 OptionChain chain;
                 if (slice.OptionChains.TryGetValue(_optionSymbol, out chain))
                 {
-                    var contract =
-                        chain.OrderBy(x => x.Expiry)
-                        .Where(x => x.Right == OptionRight.Call && x.Strike == 33 && x.Expiry.Date == new DateTime(2013, 08, 17))
+                    var contract = chain
+                        .OrderBy(x => x.Expiry)
+                        .Where(x =>
+                            x.Right == OptionRight.Call
+                            && x.Strike == 33
+                            && x.Expiry.Date == new DateTime(2013, 08, 17)
+                        )
                         .FirstOrDefault();
 
                     if (contract != null)
@@ -88,17 +92,23 @@ namespace QuantConnect.Algorithm.CSharp
                         // Check
                         if (slice.Time != new DateTime(2013, 6, 28))
                         {
-                            throw new RegressionTestException(@"Received first contract at {slice.Time}; Expected at 6/28/2013 12AM.");
+                            throw new RegressionTestException(
+                                @"Received first contract at {slice.Time}; Expected at 6/28/2013 12AM."
+                            );
                         }
 
                         if (contract.AskPrice != 1.15m)
                         {
-                            throw new RegressionTestException("Current ask price was not loaded from NWSA backtest file and is not $1.1");
+                            throw new RegressionTestException(
+                                "Current ask price was not loaded from NWSA backtest file and is not $1.1"
+                            );
                         }
 
                         if (contract.UnderlyingSymbol.Value != "NWSA")
                         {
-                            throw new RegressionTestException("Contract underlying symbol was not NWSA as expected");
+                            throw new RegressionTestException(
+                                "Contract underlying symbol was not NWSA as expected"
+                            );
                         }
                     }
                 }
@@ -114,17 +124,25 @@ namespace QuantConnect.Algorithm.CSharp
                 {
                     if (chain.Underlying.Symbol.Value != "FOXA")
                     {
-                        throw new RegressionTestException("Chain underlying symbol was not FOXA as expected");
+                        throw new RegressionTestException(
+                            "Chain underlying symbol was not FOXA as expected"
+                        );
                     }
 
-                    var contract =
-                        chain.OrderBy(x => x.Expiry)
-                        .Where(x => x.Right == OptionRight.Call && x.Strike == 33 && x.Expiry.Date == new DateTime(2013, 08, 17))
+                    var contract = chain
+                        .OrderBy(x => x.Expiry)
+                        .Where(x =>
+                            x.Right == OptionRight.Call
+                            && x.Strike == 33
+                            && x.Expiry.Date == new DateTime(2013, 08, 17)
+                        )
                         .FirstOrDefault();
 
                     if (contract.BidPrice != 0.05m)
                     {
-                        throw new RegressionTestException("Current bid price was not loaded from FOXA file and is not $0.05");
+                        throw new RegressionTestException(
+                            "Current bid price was not loaded from FOXA file and is not $0.05"
+                        );
                     }
                 }
             }
@@ -168,35 +186,36 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// This is used by the regression test system to indicate what the expected statistics are from running the algorithm
         /// </summary>
-        public Dictionary<string, string> ExpectedStatistics => new Dictionary<string, string>
-        {
-            {"Total Orders", "4"},
-            {"Average Win", "0%"},
-            {"Average Loss", "0%"},
-            {"Compounding Annual Return", "-0.273%"},
-            {"Drawdown", "0.000%"},
-            {"Expectancy", "0"},
-            {"Start Equity", "1000000"},
-            {"End Equity", "999955"},
-            {"Net Profit", "-0.004%"},
-            {"Sharpe Ratio", "-9.76"},
-            {"Sortino Ratio", "0"},
-            {"Probabilistic Sharpe Ratio", "32.662%"},
-            {"Loss Rate", "0%"},
-            {"Win Rate", "0%"},
-            {"Profit-Loss Ratio", "0"},
-            {"Alpha", "0"},
-            {"Beta", "0"},
-            {"Annual Standard Deviation", "0.001"},
-            {"Annual Variance", "0"},
-            {"Information Ratio", "-2.264"},
-            {"Tracking Error", "0.001"},
-            {"Treynor Ratio", "0"},
-            {"Total Fees", "$2.00"},
-            {"Estimated Strategy Capacity", "$0"},
-            {"Lowest Capacity Asset", "NWSA VJ5IKAXU7WBQ|NWSA T3MO1488O0H1"},
-            {"Portfolio Turnover", "0.06%"},
-            {"OrderListHash", "ef4813fff4cb00c59eb70c9e0bdb2b05"}
-        };
+        public Dictionary<string, string> ExpectedStatistics =>
+            new Dictionary<string, string>
+            {
+                { "Total Orders", "4" },
+                { "Average Win", "0%" },
+                { "Average Loss", "0%" },
+                { "Compounding Annual Return", "-0.273%" },
+                { "Drawdown", "0.000%" },
+                { "Expectancy", "0" },
+                { "Start Equity", "1000000" },
+                { "End Equity", "999955" },
+                { "Net Profit", "-0.004%" },
+                { "Sharpe Ratio", "-9.76" },
+                { "Sortino Ratio", "0" },
+                { "Probabilistic Sharpe Ratio", "32.662%" },
+                { "Loss Rate", "0%" },
+                { "Win Rate", "0%" },
+                { "Profit-Loss Ratio", "0" },
+                { "Alpha", "0" },
+                { "Beta", "0" },
+                { "Annual Standard Deviation", "0.001" },
+                { "Annual Variance", "0" },
+                { "Information Ratio", "-2.264" },
+                { "Tracking Error", "0.001" },
+                { "Treynor Ratio", "0" },
+                { "Total Fees", "$2.00" },
+                { "Estimated Strategy Capacity", "$0" },
+                { "Lowest Capacity Asset", "NWSA VJ5IKAXU7WBQ|NWSA T3MO1488O0H1" },
+                { "Portfolio Turnover", "0.06%" },
+                { "OrderListHash", "ef4813fff4cb00c59eb70c9e0bdb2b05" }
+            };
     }
 }

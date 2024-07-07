@@ -15,7 +15,6 @@
 
 using System;
 using System.Collections.Generic;
-
 using QuantConnect.Data;
 using QuantConnect.Data.Market;
 using QuantConnect.Interfaces;
@@ -26,7 +25,9 @@ namespace QuantConnect.Algorithm.CSharp
     /// <summary>
     /// Regression test for asserting that splits are applied to the <see cref="QCAlgorithm.TradeBuilder"/>
     /// </summary>
-    public class SplitOnTradeBuilderRegressionAlgorithm : QCAlgorithm, IRegressionAlgorithmDefinition
+    public class SplitOnTradeBuilderRegressionAlgorithm
+        : QCAlgorithm,
+            IRegressionAlgorithmDefinition
     {
         private Symbol _symbol;
         private Split _split;
@@ -39,12 +40,19 @@ namespace QuantConnect.Algorithm.CSharp
             SetCash(100000);
             SetBenchmark(x => 0);
 
-            _symbol = AddEquity("AAPL", Resolution.Hour, dataNormalizationMode: DataNormalizationMode.Raw).Symbol;
+            _symbol = AddEquity(
+                "AAPL",
+                Resolution.Hour,
+                dataNormalizationMode: DataNormalizationMode.Raw
+            ).Symbol;
         }
 
         public override void OnData(Slice slice)
         {
-            if (slice.Splits.TryGetValue(_symbol, out var split) && split.Type == SplitType.SplitOccurred)
+            if (
+                slice.Splits.TryGetValue(_symbol, out var split)
+                && split.Type == SplitType.SplitOccurred
+            )
             {
                 _split = split;
                 Debug($"Split occurred on {split.Time}: {split}");
@@ -68,7 +76,10 @@ namespace QuantConnect.Algorithm.CSharp
 
         public override void OnOrderEvent(OrderEvent orderEvent)
         {
-            if (orderEvent.Status == OrderStatus.Filled && orderEvent.Direction == OrderDirection.Buy)
+            if (
+                orderEvent.Status == OrderStatus.Filled
+                && orderEvent.Direction == OrderDirection.Buy
+            )
             {
                 _buyFillEvent = orderEvent;
             }
@@ -83,12 +94,16 @@ namespace QuantConnect.Algorithm.CSharp
 
             if (_buyFillEvent == null)
             {
-                throw new RegressionTestException("Buy order either never filled or was never placed.");
+                throw new RegressionTestException(
+                    "Buy order either never filled or was never placed."
+                );
             }
 
             if (TradeBuilder.ClosedTrades.Count != 1)
             {
-                throw new RegressionTestException($"Expected 1 closed trade, but found {TradeBuilder.ClosedTrades.Count}");
+                throw new RegressionTestException(
+                    $"Expected 1 closed trade, but found {TradeBuilder.ClosedTrades.Count}"
+                );
             }
 
             var trade = TradeBuilder.ClosedTrades[0];
@@ -96,13 +111,17 @@ namespace QuantConnect.Algorithm.CSharp
             var expectedEntryPrice = _buyFillEvent.FillPrice * _split.SplitFactor;
             if (trade.EntryPrice != expectedEntryPrice)
             {
-                throw new RegressionTestException($"Expected closed trade entry price of {expectedEntryPrice}, but found {trade.EntryPrice}");
+                throw new RegressionTestException(
+                    $"Expected closed trade entry price of {expectedEntryPrice}, but found {trade.EntryPrice}"
+                );
             }
 
             var expectedTradeQuantity = (int)(_buyFillEvent.FillQuantity / _split.SplitFactor);
             if (trade.Quantity != expectedTradeQuantity)
             {
-                throw new RegressionTestException($"Expected closed trade quantity of {expectedTradeQuantity}, but found {trade.Quantity}");
+                throw new RegressionTestException(
+                    $"Expected closed trade quantity of {expectedTradeQuantity}, but found {trade.Quantity}"
+                );
             }
         }
 
@@ -134,35 +153,36 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// This is used by the regression test system to indicate what the expected statistics are from running the algorithm
         /// </summary>
-        public Dictionary<string, string> ExpectedStatistics => new Dictionary<string, string>
-        {
-            {"Total Orders", "2"},
-            {"Average Win", "0.09%"},
-            {"Average Loss", "0%"},
-            {"Compounding Annual Return", "6.103%"},
-            {"Drawdown", "0.400%"},
-            {"Expectancy", "0"},
-            {"Start Equity", "100000"},
-            {"End Equity", "100092.01"},
-            {"Net Profit", "0.092%"},
-            {"Sharpe Ratio", "7.379"},
-            {"Sortino Ratio", "0"},
-            {"Probabilistic Sharpe Ratio", "95.713%"},
-            {"Loss Rate", "0%"},
-            {"Win Rate", "100%"},
-            {"Profit-Loss Ratio", "0"},
-            {"Alpha", "0"},
-            {"Beta", "0"},
-            {"Annual Standard Deviation", "0.023"},
-            {"Annual Variance", "0.001"},
-            {"Information Ratio", "7.707"},
-            {"Tracking Error", "0.023"},
-            {"Treynor Ratio", "0"},
-            {"Total Fees", "$4.50"},
-            {"Estimated Strategy Capacity", "$61000000.00"},
-            {"Lowest Capacity Asset", "AAPL R735QTJ8XC9X"},
-            {"Portfolio Turnover", "21.61%"},
-            {"OrderListHash", "859e58c90d9e044632326db8d128ea98"}
-        };
+        public Dictionary<string, string> ExpectedStatistics =>
+            new Dictionary<string, string>
+            {
+                { "Total Orders", "2" },
+                { "Average Win", "0.09%" },
+                { "Average Loss", "0%" },
+                { "Compounding Annual Return", "6.103%" },
+                { "Drawdown", "0.400%" },
+                { "Expectancy", "0" },
+                { "Start Equity", "100000" },
+                { "End Equity", "100092.01" },
+                { "Net Profit", "0.092%" },
+                { "Sharpe Ratio", "7.379" },
+                { "Sortino Ratio", "0" },
+                { "Probabilistic Sharpe Ratio", "95.713%" },
+                { "Loss Rate", "0%" },
+                { "Win Rate", "100%" },
+                { "Profit-Loss Ratio", "0" },
+                { "Alpha", "0" },
+                { "Beta", "0" },
+                { "Annual Standard Deviation", "0.023" },
+                { "Annual Variance", "0.001" },
+                { "Information Ratio", "7.707" },
+                { "Tracking Error", "0.023" },
+                { "Treynor Ratio", "0" },
+                { "Total Fees", "$4.50" },
+                { "Estimated Strategy Capacity", "$61000000.00" },
+                { "Lowest Capacity Asset", "AAPL R735QTJ8XC9X" },
+                { "Portfolio Turnover", "21.61%" },
+                { "OrderListHash", "859e58c90d9e044632326db8d128ea98" }
+            };
     }
 }

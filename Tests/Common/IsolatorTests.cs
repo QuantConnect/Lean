@@ -38,7 +38,7 @@ namespace QuantConnect.Tests.Common
                         executed = true;
                     },
                     5000,
-                    workerThread:worker
+                    workerThread: worker
                 );
                 Assert.IsTrue(result);
                 Assert.IsTrue(executed);
@@ -93,9 +93,6 @@ namespace QuantConnect.Tests.Common
             }
         }
 
-        private class TestWorkerThread : WorkerThread
-        {
-
-        }
+        private class TestWorkerThread : WorkerThread { }
     }
 }

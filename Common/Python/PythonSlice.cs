@@ -13,11 +13,11 @@
  * limitations under the License.
 */
 
+using System.Collections.Generic;
 using Python.Runtime;
 using QuantConnect.Data;
 using QuantConnect.Data.Custom.IconicTypes;
 using QuantConnect.Data.Market;
-using System.Collections.Generic;
 
 namespace QuantConnect.Python
 {
@@ -34,20 +34,21 @@ namespace QuantConnect.Python
             using (Py.GIL())
             {
                 // Python Data class: Converts custom data (PythonData) into a python object'''
-                _converter = PyModule.FromString("converter",
-                    "class Data(object):\n" +
-                    "    def __init__(self, data):\n" +
-                    "        self.data = data\n" +
-                    "        members = [attr for attr in dir(data) if not callable(attr) and not attr.startswith(\"__\")]\n" +
-                    "        for member in members:\n" +
-                    "            setattr(self, member, getattr(data, member))\n" +
-                    "        for kvp in data.GetStorageDictionary():\n" +
-                    "           name = kvp.Key.replace('-',' ').replace('.',' ').title().replace(' ', '')\n" +
-                    "           value = kvp.Value if isinstance(kvp.Value, float) else kvp.Value\n" +
-                    "           setattr(self, name, value)\n" +
-
-                    "    def __str__(self):\n" +
-                    "        return self.data.ToString()");
+                _converter = PyModule.FromString(
+                    "converter",
+                    "class Data(object):\n"
+                        + "    def __init__(self, data):\n"
+                        + "        self.data = data\n"
+                        + "        members = [attr for attr in dir(data) if not callable(attr) and not attr.startswith(\"__\")]\n"
+                        + "        for member in members:\n"
+                        + "            setattr(self, member, getattr(data, member))\n"
+                        + "        for kvp in data.GetStorageDictionary():\n"
+                        + "           name = kvp.Key.replace('-',' ').replace('.',' ').title().replace(' ', '')\n"
+                        + "           value = kvp.Value if isinstance(kvp.Value, float) else kvp.Value\n"
+                        + "           setattr(self, name, value)\n"
+                        + "    def __str__(self):\n"
+                        + "        return self.data.ToString()"
+                );
             }
         }
 
@@ -131,7 +132,10 @@ namespace QuantConnect.Python
                     {
                         using (Py.GIL())
                         {
-                            return _converter.InvokeMethod("Data", new[] { dynamicData.ToPython() });
+                            return _converter.InvokeMethod(
+                                "Data",
+                                new[] { dynamicData.ToPython() }
+                            );
                         }
                     }
                     catch

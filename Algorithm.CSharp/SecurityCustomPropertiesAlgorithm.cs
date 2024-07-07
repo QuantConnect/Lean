@@ -76,7 +76,10 @@ namespace QuantConnect.Algorithm.CSharp
                 }
             }
             // Using the generic interface to access the custom properties
-            else if (_spy.Get<ExponentialMovingAverage>("SlowEma") < _spy.Get<ExponentialMovingAverage>("FastEma"))
+            else if (
+                _spy.Get<ExponentialMovingAverage>("SlowEma")
+                < _spy.Get<ExponentialMovingAverage>("FastEma")
+            )
             {
                 Liquidate(_spy.Symbol);
             }
@@ -91,10 +94,15 @@ namespace QuantConnect.Algorithm.CSharp
             if (orderEvent.Status == OrderStatus.Filled)
             {
                 var fee = orderEvent.OrderFee;
-                var expectedFee = _dynamicSpy.OrdersFeesPrices[orderEvent.OrderId] * orderEvent.AbsoluteFillQuantity * _dynamicSpy.FeeFactor;
+                var expectedFee =
+                    _dynamicSpy.OrdersFeesPrices[orderEvent.OrderId]
+                    * orderEvent.AbsoluteFillQuantity
+                    * _dynamicSpy.FeeFactor;
                 if (fee.Value.Amount != expectedFee)
                 {
-                    throw new RegressionTestException($"Custom fee model failed to set the correct fee. Expected: {expectedFee}. Actual: {fee.Value.Amount}");
+                    throw new RegressionTestException(
+                        $"Custom fee model failed to set the correct fee. Expected: {expectedFee}. Actual: {fee.Value.Amount}"
+                    );
                 }
             }
         }
@@ -112,9 +120,7 @@ namespace QuantConnect.Algorithm.CSharp
         /// </summary>
         private class CustomFeeModel : FeeModel
         {
-            public CustomFeeModel()
-            {
-            }
+            public CustomFeeModel() { }
 
             public override OrderFee GetOrderFee(OrderFeeParameters parameters)
             {
@@ -129,7 +135,10 @@ namespace QuantConnect.Algorithm.CSharp
                 // Store the price used to calculate the fee for this order
                 ((dynamic)security).OrdersFeesPrices[parameters.Order.Id] = security.Price;
 
-                var fee = Math.Max(1m, security.Price * parameters.Order.AbsoluteQuantity * feeFactor);
+                var fee = Math.Max(
+                    1m,
+                    security.Price * parameters.Order.AbsoluteQuantity * feeFactor
+                );
 
                 return new OrderFee(new CashAmount(fee, "USD"));
             }
@@ -163,35 +172,36 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// This is used by the regression test system to indicate what the expected statistics are from running the algorithm
         /// </summary>
-        public Dictionary<string, string> ExpectedStatistics => new Dictionary<string, string>
-        {
-            {"Total Orders", "31"},
-            {"Average Win", "0.43%"},
-            {"Average Loss", "-0.08%"},
-            {"Compounding Annual Return", "84.608%"},
-            {"Drawdown", "0.800%"},
-            {"Expectancy", "0.628"},
-            {"Start Equity", "100000"},
-            {"End Equity", "100786.91"},
-            {"Net Profit", "0.787%"},
-            {"Sharpe Ratio", "12.062"},
-            {"Sortino Ratio", "0"},
-            {"Probabilistic Sharpe Ratio", "88.912%"},
-            {"Loss Rate", "73%"},
-            {"Win Rate", "27%"},
-            {"Profit-Loss Ratio", "5.11"},
-            {"Alpha", "0.258"},
-            {"Beta", "0.342"},
-            {"Annual Standard Deviation", "0.077"},
-            {"Annual Variance", "0.006"},
-            {"Information Ratio", "-7.082"},
-            {"Tracking Error", "0.147"},
-            {"Treynor Ratio", "2.73"},
-            {"Total Fees", "$59.78"},
-            {"Estimated Strategy Capacity", "$7300000.00"},
-            {"Lowest Capacity Asset", "SPY R735QTJ8XC9X"},
-            {"Portfolio Turnover", "597.29%"},
-            {"OrderListHash", "947ae7fbc63fb8cc499f96ac92ee3394"}
-        };
+        public Dictionary<string, string> ExpectedStatistics =>
+            new Dictionary<string, string>
+            {
+                { "Total Orders", "31" },
+                { "Average Win", "0.43%" },
+                { "Average Loss", "-0.08%" },
+                { "Compounding Annual Return", "84.608%" },
+                { "Drawdown", "0.800%" },
+                { "Expectancy", "0.628" },
+                { "Start Equity", "100000" },
+                { "End Equity", "100786.91" },
+                { "Net Profit", "0.787%" },
+                { "Sharpe Ratio", "12.062" },
+                { "Sortino Ratio", "0" },
+                { "Probabilistic Sharpe Ratio", "88.912%" },
+                { "Loss Rate", "73%" },
+                { "Win Rate", "27%" },
+                { "Profit-Loss Ratio", "5.11" },
+                { "Alpha", "0.258" },
+                { "Beta", "0.342" },
+                { "Annual Standard Deviation", "0.077" },
+                { "Annual Variance", "0.006" },
+                { "Information Ratio", "-7.082" },
+                { "Tracking Error", "0.147" },
+                { "Treynor Ratio", "2.73" },
+                { "Total Fees", "$59.78" },
+                { "Estimated Strategy Capacity", "$7300000.00" },
+                { "Lowest Capacity Asset", "SPY R735QTJ8XC9X" },
+                { "Portfolio Turnover", "597.29%" },
+                { "OrderListHash", "947ae7fbc63fb8cc499f96ac92ee3394" }
+            };
     }
 }

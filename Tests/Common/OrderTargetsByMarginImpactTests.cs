@@ -33,7 +33,7 @@ namespace QuantConnect.Tests.Common
         public void LessThanLotSizeIsIgnored_NoHoldings(bool targetIsDelta)
         {
             var algorithm = GetAlgorithm();
-            var collection = new[] {new PortfolioTarget(Symbols.AAPL, 0.9m)};
+            var collection = new[] { new PortfolioTarget(Symbols.AAPL, 0.9m) };
 
             var result = collection.OrderTargetsByMarginImpact(algorithm, targetIsDelta).ToList();
             Assert.AreEqual(0, result.Count);
@@ -43,7 +43,7 @@ namespace QuantConnect.Tests.Common
         [TestCase(true)]
         public void LessThanLotSizeIsIgnored_WithHoldings(bool targetIsDelta)
         {
-            var algorithm = GetAlgorithm(holdings:1m);
+            var algorithm = GetAlgorithm(holdings: 1m);
             var collection = new[] { new PortfolioTarget(Symbols.AAPL, 1.9m) };
 
             var result = collection.OrderTargetsByMarginImpact(algorithm, targetIsDelta).ToList();
@@ -66,8 +66,11 @@ namespace QuantConnect.Tests.Common
 
             // SPY won't have any data and should be ignored
             algorithm.AddEquity(Symbols.SPY.Value);
-            var collection = new[] {new PortfolioTarget(Symbols.SPY, 5000m),
-                new PortfolioTarget(Symbols.AAPL, 1m)};
+            var collection = new[]
+            {
+                new PortfolioTarget(Symbols.SPY, 5000m),
+                new PortfolioTarget(Symbols.AAPL, 1m)
+            };
 
             var result = collection.OrderTargetsByMarginImpact(algorithm).ToList();
             Assert.AreEqual(1, result.Count);
@@ -81,8 +84,11 @@ namespace QuantConnect.Tests.Common
             var spy = algorithm.AddEquity(Symbols.SPY.Value);
             Update(spy, 1);
 
-            var collection = new[] {new PortfolioTarget(Symbols.SPY, 5m),
-                new PortfolioTarget(Symbols.AAPL, 1m)};
+            var collection = new[]
+            {
+                new PortfolioTarget(Symbols.SPY, 5m),
+                new PortfolioTarget(Symbols.AAPL, 1m)
+            };
 
             var result = collection.OrderTargetsByMarginImpact(algorithm).ToList();
             Assert.AreEqual(2, result.Count);
@@ -102,8 +108,11 @@ namespace QuantConnect.Tests.Common
             Update(spy, 1);
 
             var target = direction == OrderDirection.Sell ? -1 : 1;
-            var collection = new[] {new PortfolioTarget(Symbols.SPY, 5m),
-                new PortfolioTarget(Symbols.AAPL, target)};
+            var collection = new[]
+            {
+                new PortfolioTarget(Symbols.SPY, 5m),
+                new PortfolioTarget(Symbols.AAPL, target)
+            };
 
             var result = collection.OrderTargetsByMarginImpact(algorithm, targetIsDelta).ToList();
 
@@ -124,8 +133,11 @@ namespace QuantConnect.Tests.Common
             Update(spy, 1);
 
             var target = direction == OrderDirection.Sell ? -2.5m : 2.5m;
-            var collection = new[] {new PortfolioTarget(Symbols.SPY, 5m),
-                new PortfolioTarget(Symbols.AAPL, target)};
+            var collection = new[]
+            {
+                new PortfolioTarget(Symbols.SPY, 5m),
+                new PortfolioTarget(Symbols.AAPL, target)
+            };
 
             var result = collection.OrderTargetsByMarginImpact(algorithm, targetIsDelta).ToList();
 
@@ -155,8 +167,11 @@ namespace QuantConnect.Tests.Common
             var spy = algorithm.AddEquity(Symbols.SPY.Value);
             Update(spy, 1);
 
-            var collection = new[] {new PortfolioTarget(Symbols.SPY, 20m),
-                new PortfolioTarget(Symbols.AAPL, value * 21m)};
+            var collection = new[]
+            {
+                new PortfolioTarget(Symbols.SPY, 20m),
+                new PortfolioTarget(Symbols.AAPL, value * 21m)
+            };
 
             var result = collection.OrderTargetsByMarginImpact(algorithm, targetIsDelta).ToList();
 
@@ -187,8 +202,11 @@ namespace QuantConnect.Tests.Common
             var spy = algorithm.AddEquity(Symbols.SPY.Value);
             Update(spy, 1);
 
-            var collection = new[] {new PortfolioTarget(Symbols.SPY, 20m),
-                new PortfolioTarget(Symbols.AAPL, value * 20.1m)};
+            var collection = new[]
+            {
+                new PortfolioTarget(Symbols.SPY, 20m),
+                new PortfolioTarget(Symbols.AAPL, value * 20.1m)
+            };
 
             var result = collection.OrderTargetsByMarginImpact(algorithm, targetIsDelta).ToList();
 
@@ -201,15 +219,17 @@ namespace QuantConnect.Tests.Common
 
         private static void Update(Security security, decimal close)
         {
-            security.SetMarketPrice(new TradeBar
-            {
-                Time = DateTime.Now,
-                Symbol = security.Symbol,
-                Open = close,
-                High = close,
-                Low = close,
-                Close = close
-            });
+            security.SetMarketPrice(
+                new TradeBar
+                {
+                    Time = DateTime.Now,
+                    Symbol = security.Symbol,
+                    Open = close,
+                    High = close,
+                    Low = close,
+                    Close = close
+                }
+            );
         }
 
         private QCAlgorithm GetAlgorithm(decimal? holdings = null)

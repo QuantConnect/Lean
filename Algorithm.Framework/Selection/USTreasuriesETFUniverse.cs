@@ -46,35 +46,32 @@ namespace QuantConnect.Algorithm.Framework.Selection
         /// <summary>
         /// Initializes a new instance of the USTreasuriesETFUniverse class
         /// </summary>
-        public USTreasuriesETFUniverse() :
-            base(
+        public USTreasuriesETFUniverse()
+            : base(
                 "qc-us-treasuries-etf-basket",
                 new Dictionary<string, DateTime>()
                 {
-                    {"IEF", new DateTime(2002, 7, 26)},
-                    {"SHY", new DateTime(2002, 7, 26)},
-                    {"TLT", new DateTime(2002, 7, 26)},
-                    {"IEI", new DateTime(2007, 1, 11)},
-                    {"SHV", new DateTime(2007, 1, 11)},
-                    {"TLH", new DateTime(2007, 1, 11)},
-                    {"EDV", new DateTime(2007, 12, 10)},
-                    {"BIL", new DateTime(2007, 5, 30)},
-                    {"SPTL", new DateTime(2007, 5, 30)},
-                    {"TBT", new DateTime(2008, 5, 1)},
-                    {"TMF", new DateTime(2009, 4, 16)},
-                    {"TMV", new DateTime(2009, 4, 16)},
-                    {"TBF", new DateTime(2009, 8, 20)},
-                    {"VGSH", new DateTime(2009, 11, 23)},
-                    {"VGIT", new DateTime(2009, 11, 23)},
-                    {"VGLT", new DateTime(2009, 11, 24)},
-                    {"SCHO", new DateTime(2010, 8, 6)},
-                    {"SCHR", new DateTime(2010, 8, 6)},
-                    {"SPTS", new DateTime(2011, 12, 1)},
-                    {"GOVT", new DateTime(2012, 2, 24)}
+                    { "IEF", new DateTime(2002, 7, 26) },
+                    { "SHY", new DateTime(2002, 7, 26) },
+                    { "TLT", new DateTime(2002, 7, 26) },
+                    { "IEI", new DateTime(2007, 1, 11) },
+                    { "SHV", new DateTime(2007, 1, 11) },
+                    { "TLH", new DateTime(2007, 1, 11) },
+                    { "EDV", new DateTime(2007, 12, 10) },
+                    { "BIL", new DateTime(2007, 5, 30) },
+                    { "SPTL", new DateTime(2007, 5, 30) },
+                    { "TBT", new DateTime(2008, 5, 1) },
+                    { "TMF", new DateTime(2009, 4, 16) },
+                    { "TMV", new DateTime(2009, 4, 16) },
+                    { "TBF", new DateTime(2009, 8, 20) },
+                    { "VGSH", new DateTime(2009, 11, 23) },
+                    { "VGIT", new DateTime(2009, 11, 23) },
+                    { "VGLT", new DateTime(2009, 11, 24) },
+                    { "SCHO", new DateTime(2010, 8, 6) },
+                    { "SCHR", new DateTime(2010, 8, 6) },
+                    { "SPTS", new DateTime(2011, 12, 1) },
+                    { "GOVT", new DateTime(2012, 2, 24) }
                 }
-            )
-        {
-
-        }
+            ) { }
     }
 }

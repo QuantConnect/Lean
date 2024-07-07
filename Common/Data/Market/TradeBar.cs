@@ -14,12 +14,12 @@
 */
 
 using System;
-using ProtoBuf;
+using System.Globalization;
 using System.IO;
 using System.Threading;
-using QuantConnect.Util;
-using System.Globalization;
+using ProtoBuf;
 using QuantConnect.Logging;
+using QuantConnect.Util;
 using static QuantConnect.StringExtensions;
 
 namespace QuantConnect.Data.Market
@@ -166,7 +166,16 @@ namespace QuantConnect.Data.Market
         /// <param name="close">Decimal Close price of this bar</param>
         /// <param name="volume">Volume sum over day</param>
         /// <param name="period">The period of this bar, specify null for default of 1 minute</param>
-        public TradeBar(DateTime time, Symbol symbol, decimal open, decimal high, decimal low, decimal close, decimal volume, TimeSpan? period = null)
+        public TradeBar(
+            DateTime time,
+            Symbol symbol,
+            decimal open,
+            decimal high,
+            decimal low,
+            decimal close,
+            decimal volume,
+            TimeSpan? period = null
+        )
         {
             Time = time;
             Symbol = symbol;
@@ -189,7 +198,12 @@ namespace QuantConnect.Data.Market
         /// <param name="date">Date of this reader request</param>
         /// <param name="isLiveMode">true if we're in live mode, false for backtesting mode</param>
         /// <returns>Enumerable iterator for returning each line of the required data.</returns>
-        public override BaseData Reader(SubscriptionDataConfig config, string line, DateTime date, bool isLiveMode)
+        public override BaseData Reader(
+            SubscriptionDataConfig config,
+            string line,
+            DateTime date,
+            bool isLiveMode
+        )
         {
             //Handle end of file:
             if (line == null)
@@ -231,13 +245,17 @@ namespace QuantConnect.Data.Market
 
                     case SecurityType.Future:
                         return ParseFuture(config, line, date);
-
                 }
             }
             catch (Exception err)
             {
-                Log.Error(Invariant($"TradeBar.Reader(): Error parsing line: '{line}', Symbol: {config.Symbol.Value}, SecurityType: ") +
-                    Invariant($"{config.SecurityType}, Resolution: {config.Resolution}, Date: {date:yyyy-MM-dd}, Message: {err}")
+                Log.Error(
+                    Invariant(
+                        $"TradeBar.Reader(): Error parsing line: '{line}', Symbol: {config.Symbol.Value}, SecurityType: "
+                    )
+                        + Invariant(
+                            $"{config.SecurityType}, Resolution: {config.Resolution}, Date: {date:yyyy-MM-dd}, Message: {err}"
+                        )
                 );
             }
 
@@ -253,7 +271,12 @@ namespace QuantConnect.Data.Market
         /// <param name="date">Date of this reader request</param>
         /// <param name="isLiveMode">true if we're in live mode, false for backtesting mode</param>
         /// <returns>Enumerable iterator for returning each line of the required data.</returns>
-        public override BaseData Reader(SubscriptionDataConfig config, StreamReader stream, DateTime date, bool isLiveMode)
+        public override BaseData Reader(
+            SubscriptionDataConfig config,
+            StreamReader stream,
+            DateTime date,
+            bool isLiveMode
+        )
         {
             //Handle end of file:
             if (stream == null || stream.EndOfStream)
@@ -294,13 +317,17 @@ namespace QuantConnect.Data.Market
 
                     case SecurityType.Future:
                         return ParseFuture(config, stream, date);
-
                 }
             }
             catch (Exception err)
             {
-                Log.Error(Invariant($"TradeBar.Reader(): Error parsing stream, Symbol: {config.Symbol.Value}, SecurityType: ") +
-                          Invariant($"{config.SecurityType}, Resolution: {config.Resolution}, Date: {date:yyyy-MM-dd}, Message: {err}")
+                Log.Error(
+                    Invariant(
+                        $"TradeBar.Reader(): Error parsing stream, Symbol: {config.Symbol.Value}, SecurityType: "
+                    )
+                        + Invariant(
+                            $"{config.SecurityType}, Resolution: {config.Resolution}, Date: {date:yyyy-MM-dd}, Message: {err}"
+                        )
                 );
             }
 
@@ -344,11 +371,7 @@ namespace QuantConnect.Data.Market
         public static T ParseEquity<T>(SubscriptionDataConfig config, string line, DateTime date)
             where T : TradeBar, new()
         {
-            var tradeBar = new T
-            {
-                Symbol = config.Symbol,
-                Period = config.Increment
-            };
+            var tradeBar = new T { Symbol = config.Symbol, Period = config.Increment };
 
             ParseEquity(tradeBar, config, line, date);
 
@@ -362,19 +385,24 @@ namespace QuantConnect.Data.Market
         /// <param name="streamReader">The data stream of the requested file</param>
         /// <param name="date">Date of this reader request</param>
         /// <returns></returns>
-        public static TradeBar ParseEquity(SubscriptionDataConfig config, StreamReader streamReader, DateTime date)
+        public static TradeBar ParseEquity(
+            SubscriptionDataConfig config,
+            StreamReader streamReader,
+            DateTime date
+        )
         {
-            var tradeBar = new TradeBar
-            {
-                Symbol = config.Symbol,
-                Period = config.Increment
-            };
+            var tradeBar = new TradeBar { Symbol = config.Symbol, Period = config.Increment };
             StreamParseScale(config, streamReader, date, useScaleFactor: true, tradeBar, true);
 
             return tradeBar;
         }
 
-        private static void ParseEquity(TradeBar tradeBar, SubscriptionDataConfig config, string line, DateTime date)
+        private static void ParseEquity(
+            TradeBar tradeBar,
+            SubscriptionDataConfig config,
+            string line,
+            DateTime date
+        )
         {
             LineParseScale(config, line, date, useScaleFactor: true, tradeBar, hasVolume: true);
         }
@@ -386,13 +414,13 @@ namespace QuantConnect.Data.Market
         /// <param name="line">Line from the data file requested</param>
         /// <param name="date">Date of this reader request</param>
         /// <returns></returns>
-        public static TradeBar ParseEquity(SubscriptionDataConfig config, string line, DateTime date)
+        public static TradeBar ParseEquity(
+            SubscriptionDataConfig config,
+            string line,
+            DateTime date
+        )
         {
-            var tradeBar = new TradeBar
-            {
-                Symbol = config.Symbol,
-                Period = config.Increment
-            };
+            var tradeBar = new TradeBar { Symbol = config.Symbol, Period = config.Increment };
             ParseEquity(tradeBar, config, line, date);
             return tradeBar;
         }
@@ -408,11 +436,7 @@ namespace QuantConnect.Data.Market
         public static T ParseForex<T>(SubscriptionDataConfig config, string line, DateTime date)
             where T : TradeBar, new()
         {
-            var tradeBar = new T
-            {
-                Symbol = config.Symbol,
-                Period = config.Increment
-            };
+            var tradeBar = new T { Symbol = config.Symbol, Period = config.Increment };
             LineParseNoScale(config, line, date, tradeBar, hasVolume: false);
 
             return tradeBar;
@@ -428,11 +452,7 @@ namespace QuantConnect.Data.Market
         public static T ParseCrypto<T>(SubscriptionDataConfig config, string line, DateTime date)
             where T : TradeBar, new()
         {
-            var tradeBar = new T
-            {
-                Symbol = config.Symbol,
-                Period = config.Increment
-            };
+            var tradeBar = new T { Symbol = config.Symbol, Period = config.Increment };
             LineParseNoScale(config, line, date, tradeBar);
 
             return tradeBar;
@@ -444,7 +464,11 @@ namespace QuantConnect.Data.Market
         /// <param name="config">Symbols, Resolution, DataType, </param>
         /// <param name="line">Line from the data file requested</param>
         /// <param name="date">The base data used to compute the time of the bar since the line specifies a milliseconds since midnight</param>
-        public static TradeBar ParseCrypto(SubscriptionDataConfig config, string line, DateTime date)
+        public static TradeBar ParseCrypto(
+            SubscriptionDataConfig config,
+            string line,
+            DateTime date
+        )
         {
             return LineParseNoScale(config, line, date);
         }
@@ -455,7 +479,11 @@ namespace QuantConnect.Data.Market
         /// <param name="config">Symbols, Resolution, DataType, </param>
         /// <param name="streamReader">The data stream of the requested file</param>
         /// <param name="date">The base data used to compute the time of the bar since the line specifies a milliseconds since midnight</param>
-        public static TradeBar ParseCrypto(SubscriptionDataConfig config, StreamReader streamReader, DateTime date)
+        public static TradeBar ParseCrypto(
+            SubscriptionDataConfig config,
+            StreamReader streamReader,
+            DateTime date
+        )
         {
             return StreamParseNoScale(config, streamReader, date);
         }
@@ -479,7 +507,11 @@ namespace QuantConnect.Data.Market
         /// <param name="streamReader">The data stream of the requested file</param>
         /// <param name="date">The base data used to compute the time of the bar since the line specifies a milliseconds since midnight</param>
         /// <returns></returns>
-        public static TradeBar ParseForex(SubscriptionDataConfig config, StreamReader streamReader, DateTime date)
+        public static TradeBar ParseForex(
+            SubscriptionDataConfig config,
+            StreamReader streamReader,
+            DateTime date
+        )
         {
             return StreamParseNoScale(config, streamReader, date, hasVolume: false);
         }
@@ -519,7 +551,11 @@ namespace QuantConnect.Data.Market
         /// <param name="streamReader">The data stream of the requested file</param>
         /// <param name="date">The base data used to compute the time of the bar since the line specifies a milliseconds since midnight</param>
         /// <returns></returns>
-        public static TradeBar ParseCfd(SubscriptionDataConfig config, StreamReader streamReader, DateTime date)
+        public static TradeBar ParseCfd(
+            SubscriptionDataConfig config,
+            StreamReader streamReader,
+            DateTime date
+        )
         {
             // CFD has the same data format as Forex
             return ParseForex(config, streamReader, date);
@@ -536,12 +572,15 @@ namespace QuantConnect.Data.Market
         public static T ParseOption<T>(SubscriptionDataConfig config, string line, DateTime date)
             where T : TradeBar, new()
         {
-            var tradeBar = new T
-            {
-                Period = config.Increment,
-                Symbol = config.Symbol
-            };
-            LineParseScale(config, line, date, useScaleFactor: LeanData.OptionUseScaleFactor(config.Symbol), tradeBar, hasVolume: true);
+            var tradeBar = new T { Period = config.Increment, Symbol = config.Symbol };
+            LineParseScale(
+                config,
+                line,
+                date,
+                useScaleFactor: LeanData.OptionUseScaleFactor(config.Symbol),
+                tradeBar,
+                hasVolume: true
+            );
 
             return tradeBar;
         }
@@ -554,15 +593,22 @@ namespace QuantConnect.Data.Market
         /// <param name="streamReader">The data stream of the requested file</param>
         /// <param name="date">The base data used to compute the time of the bar since the line specifies a milliseconds since midnight</param>
         /// <returns></returns>
-        public static T ParseOption<T>(SubscriptionDataConfig config, StreamReader streamReader, DateTime date)
+        public static T ParseOption<T>(
+            SubscriptionDataConfig config,
+            StreamReader streamReader,
+            DateTime date
+        )
             where T : TradeBar, new()
         {
-            var tradeBar = new T
-            {
-                Period = config.Increment,
-                Symbol = config.Symbol
-            };
-            StreamParseScale(config, streamReader, date, useScaleFactor: LeanData.OptionUseScaleFactor(config.Symbol), tradeBar, true);
+            var tradeBar = new T { Period = config.Increment, Symbol = config.Symbol };
+            StreamParseScale(
+                config,
+                streamReader,
+                date,
+                useScaleFactor: LeanData.OptionUseScaleFactor(config.Symbol),
+                tradeBar,
+                true
+            );
 
             return tradeBar;
         }
@@ -575,14 +621,14 @@ namespace QuantConnect.Data.Market
         /// <param name="streamReader">The data stream of the requested file</param>
         /// <param name="date">The base data used to compute the time of the bar since the line specifies a milliseconds since midnight</param>
         /// <returns></returns>
-        public static T ParseFuture<T>(SubscriptionDataConfig config, StreamReader streamReader, DateTime date)
+        public static T ParseFuture<T>(
+            SubscriptionDataConfig config,
+            StreamReader streamReader,
+            DateTime date
+        )
             where T : TradeBar, new()
         {
-            var tradeBar = new T
-            {
-                Period = config.Increment,
-                Symbol = config.Symbol
-            };
+            var tradeBar = new T { Period = config.Increment, Symbol = config.Symbol };
             StreamParseNoScale(config, streamReader, date, tradeBar);
 
             return tradeBar;
@@ -599,11 +645,7 @@ namespace QuantConnect.Data.Market
         public static T ParseFuture<T>(SubscriptionDataConfig config, string line, DateTime date)
             where T : TradeBar, new()
         {
-            var tradeBar = new T
-            {
-                Period = config.Increment,
-                Symbol = config.Symbol
-            };
+            var tradeBar = new T { Period = config.Increment, Symbol = config.Symbol };
             LineParseNoScale(config, line, date, tradeBar);
 
             return tradeBar;
@@ -620,24 +662,31 @@ namespace QuantConnect.Data.Market
         /// <summary>
         /// Parse an index bar from the LEAN disk format
         /// </summary>
-        private static TradeBar LineParseNoScale(SubscriptionDataConfig config, string line, DateTime date, TradeBar bar = null, bool hasVolume = true)
+        private static TradeBar LineParseNoScale(
+            SubscriptionDataConfig config,
+            string line,
+            DateTime date,
+            TradeBar bar = null,
+            bool hasVolume = true
+        )
         {
-            var tradeBar = bar ?? new TradeBar
-            {
-                Period = config.Increment,
-                Symbol = config.Symbol
-            };
+            var tradeBar =
+                bar ?? new TradeBar { Period = config.Increment, Symbol = config.Symbol };
 
             var csv = line.ToCsv(hasVolume ? 6 : 5);
             if (config.Resolution == Resolution.Daily || config.Resolution == Resolution.Hour)
             {
                 // hourly and daily have different time format, and can use slow, robust c# parser.
-                tradeBar.Time = DateTime.ParseExact(csv[0], DateFormat.TwelveCharacter, CultureInfo.InvariantCulture).ConvertTo(config.DataTimeZone, config.ExchangeTimeZone);
+                tradeBar.Time = DateTime
+                    .ParseExact(csv[0], DateFormat.TwelveCharacter, CultureInfo.InvariantCulture)
+                    .ConvertTo(config.DataTimeZone, config.ExchangeTimeZone);
             }
             else
             {
                 // Using custom "ToDecimal" conversion for speed on high resolution data.
-                tradeBar.Time = date.Date.AddMilliseconds(csv[0].ToInt32()).ConvertTo(config.DataTimeZone, config.ExchangeTimeZone);
+                tradeBar.Time = date
+                    .Date.AddMilliseconds(csv[0].ToInt32())
+                    .ConvertTo(config.DataTimeZone, config.ExchangeTimeZone);
             }
             tradeBar.Open = csv[1].ToDecimal();
             tradeBar.High = csv[2].ToDecimal();
@@ -653,23 +702,30 @@ namespace QuantConnect.Data.Market
         /// <summary>
         /// Parse an index bar from the LEAN disk format
         /// </summary>
-        private static TradeBar StreamParseNoScale(SubscriptionDataConfig config, StreamReader streamReader, DateTime date, TradeBar bar = null, bool hasVolume = true)
+        private static TradeBar StreamParseNoScale(
+            SubscriptionDataConfig config,
+            StreamReader streamReader,
+            DateTime date,
+            TradeBar bar = null,
+            bool hasVolume = true
+        )
         {
-            var tradeBar = bar ?? new TradeBar
-            {
-                Period = config.Increment,
-                Symbol = config.Symbol
-            };
+            var tradeBar =
+                bar ?? new TradeBar { Period = config.Increment, Symbol = config.Symbol };
 
             if (config.Resolution == Resolution.Daily || config.Resolution == Resolution.Hour)
             {
                 // hourly and daily have different time format, and can use slow, robust c# parser.
-                tradeBar.Time = streamReader.GetDateTime().ConvertTo(config.DataTimeZone, config.ExchangeTimeZone);
+                tradeBar.Time = streamReader
+                    .GetDateTime()
+                    .ConvertTo(config.DataTimeZone, config.ExchangeTimeZone);
             }
             else
             {
                 // Using custom "ToDecimal" conversion for speed on high resolution data.
-                tradeBar.Time = date.Date.AddMilliseconds(streamReader.GetInt32()).ConvertTo(config.DataTimeZone, config.ExchangeTimeZone);
+                tradeBar.Time = date
+                    .Date.AddMilliseconds(streamReader.GetInt32())
+                    .ConvertTo(config.DataTimeZone, config.ExchangeTimeZone);
             }
             tradeBar.Open = streamReader.GetDecimal();
             tradeBar.High = streamReader.GetDecimal();
@@ -682,13 +738,17 @@ namespace QuantConnect.Data.Market
             return tradeBar;
         }
 
-        private static TradeBar LineParseScale(SubscriptionDataConfig config, string line, DateTime date, bool useScaleFactor, TradeBar bar = null, bool hasVolume = true)
+        private static TradeBar LineParseScale(
+            SubscriptionDataConfig config,
+            string line,
+            DateTime date,
+            bool useScaleFactor,
+            TradeBar bar = null,
+            bool hasVolume = true
+        )
         {
-            var tradeBar = bar ?? new TradeBar
-            {
-                Period = config.Increment,
-                Symbol = config.Symbol
-            };
+            var tradeBar =
+                bar ?? new TradeBar { Period = config.Increment, Symbol = config.Symbol };
 
             LineParseNoScale(config, line, date, tradeBar, hasVolume);
             if (useScaleFactor)
@@ -702,13 +762,17 @@ namespace QuantConnect.Data.Market
             return tradeBar;
         }
 
-        private static TradeBar StreamParseScale(SubscriptionDataConfig config, StreamReader streamReader, DateTime date, bool useScaleFactor, TradeBar bar = null, bool hasVolume = true)
+        private static TradeBar StreamParseScale(
+            SubscriptionDataConfig config,
+            StreamReader streamReader,
+            DateTime date,
+            bool useScaleFactor,
+            TradeBar bar = null,
+            bool hasVolume = true
+        )
         {
-            var tradeBar = bar ?? new TradeBar
-            {
-                Period = config.Increment,
-                Symbol = config.Symbol
-            };
+            var tradeBar =
+                bar ?? new TradeBar { Period = config.Increment, Symbol = config.Symbol };
 
             StreamParseNoScale(config, streamReader, date, tradeBar, hasVolume);
             if (useScaleFactor)
@@ -725,7 +789,11 @@ namespace QuantConnect.Data.Market
         /// <summary>
         /// Parse an index bar from the LEAN disk format
         /// </summary>
-        public static TradeBar ParseIndex(SubscriptionDataConfig config, StreamReader streamReader, DateTime date)
+        public static TradeBar ParseIndex(
+            SubscriptionDataConfig config,
+            StreamReader streamReader,
+            DateTime date
+        )
         {
             return StreamParseNoScale(config, streamReader, date);
         }
@@ -737,7 +805,11 @@ namespace QuantConnect.Data.Market
         /// <param name="line">Line from the data file requested</param>
         /// <param name="date">The base data used to compute the time of the bar since the line specifies a milliseconds since midnight</param>
         /// <returns></returns>
-        public static TradeBar ParseOption(SubscriptionDataConfig config, string line, DateTime date)
+        public static TradeBar ParseOption(
+            SubscriptionDataConfig config,
+            string line,
+            DateTime date
+        )
         {
             return ParseOption<TradeBar>(config, line, date);
         }
@@ -749,7 +821,11 @@ namespace QuantConnect.Data.Market
         /// <param name="streamReader">The data stream of the requested file</param>
         /// <param name="date">The base data used to compute the time of the bar since the line specifies a milliseconds since midnight</param>
         /// <returns></returns>
-        public static TradeBar ParseOption(SubscriptionDataConfig config, StreamReader streamReader, DateTime date)
+        public static TradeBar ParseOption(
+            SubscriptionDataConfig config,
+            StreamReader streamReader,
+            DateTime date
+        )
         {
             return ParseOption<TradeBar>(config, streamReader, date);
         }
@@ -761,7 +837,11 @@ namespace QuantConnect.Data.Market
         /// <param name="line">Line from the data file requested</param>
         /// <param name="date">The base data used to compute the time of the bar since the line specifies a milliseconds since midnight</param>
         /// <returns></returns>
-        public static TradeBar ParseFuture(SubscriptionDataConfig config, string line, DateTime date)
+        public static TradeBar ParseFuture(
+            SubscriptionDataConfig config,
+            string line,
+            DateTime date
+        )
         {
             return ParseFuture<TradeBar>(config, line, date);
         }
@@ -773,7 +853,11 @@ namespace QuantConnect.Data.Market
         /// <param name="streamReader">The data stream of the requested file</param>
         /// <param name="date">The base data used to compute the time of the bar since the line specifies a milliseconds since midnight</param>
         /// <returns></returns>
-        public static TradeBar ParseFuture(SubscriptionDataConfig config, StreamReader streamReader, DateTime date)
+        public static TradeBar ParseFuture(
+            SubscriptionDataConfig config,
+            StreamReader streamReader,
+            DateTime date
+        )
         {
             return ParseFuture<TradeBar>(config, streamReader, date);
         }
@@ -787,11 +871,20 @@ namespace QuantConnect.Data.Market
         /// <param name="volume">Volume of this trade</param>
         /// <param name="bidSize">The size of the current bid, if available</param>
         /// <param name="askSize">The size of the current ask, if available</param>
-        public override void Update(decimal lastTrade, decimal bidPrice, decimal askPrice, decimal volume, decimal bidSize, decimal askSize)
+        public override void Update(
+            decimal lastTrade,
+            decimal bidPrice,
+            decimal askPrice,
+            decimal volume,
+            decimal bidSize,
+            decimal askSize
+        )
         {
             Initialize(lastTrade);
-            if (lastTrade > High) High = lastTrade;
-            if (lastTrade < Low) Low = lastTrade;
+            if (lastTrade > High)
+                High = lastTrade;
+            if (lastTrade < Low)
+                Low = lastTrade;
             //Volume is the total summed volume of trades in this bar:
             Volume += volume;
             //Always set the closing price;
@@ -806,20 +899,44 @@ namespace QuantConnect.Data.Market
         /// <param name="date">Date of this source request if source spread across multiple files</param>
         /// <param name="isLiveMode">true if we're in live mode, false for backtesting mode</param>
         /// <returns>String source location of the file</returns>
-        public override SubscriptionDataSource GetSource(SubscriptionDataConfig config, DateTime date, bool isLiveMode)
+        public override SubscriptionDataSource GetSource(
+            SubscriptionDataConfig config,
+            DateTime date,
+            bool isLiveMode
+        )
         {
             if (isLiveMode)
             {
                 // this data type is streamed in live mode
-                return new SubscriptionDataSource(string.Empty, SubscriptionTransportMedium.Streaming);
+                return new SubscriptionDataSource(
+                    string.Empty,
+                    SubscriptionTransportMedium.Streaming
+                );
             }
 
-            var source = LeanData.GenerateZipFilePath(Globals.DataFolder, config.Symbol, date, config.Resolution, config.TickType);
+            var source = LeanData.GenerateZipFilePath(
+                Globals.DataFolder,
+                config.Symbol,
+                date,
+                config.Resolution,
+                config.TickType
+            );
             if (config.SecurityType == SecurityType.Future || config.SecurityType.IsOption())
             {
-                source += "#" + LeanData.GenerateZipEntryName(config.Symbol, date, config.Resolution, config.TickType);
+                source +=
+                    "#"
+                    + LeanData.GenerateZipEntryName(
+                        config.Symbol,
+                        date,
+                        config.Resolution,
+                        config.TickType
+                    );
             }
-            return new SubscriptionDataSource(source, SubscriptionTransportMedium.LocalFile, FileFormat.Csv);
+            return new SubscriptionDataSource(
+                source,
+                SubscriptionTransportMedium.LocalFile,
+                FileFormat.Csv
+            );
         }
 
         /// <summary>
@@ -854,12 +971,12 @@ namespace QuantConnect.Data.Market
         /// <returns>string - a string formatted as SPY: 167.753</returns>
         public override string ToString()
         {
-            return $"{Symbol}: " +
-                   $"O: {Open.SmartRounding()} " +
-                   $"H: {High.SmartRounding()} " +
-                   $"L: {Low.SmartRounding()} " +
-                   $"C: {Close.SmartRounding()} " +
-                   $"V: {Volume.SmartRounding()}";
+            return $"{Symbol}: "
+                + $"O: {Open.SmartRounding()} "
+                + $"H: {High.SmartRounding()} "
+                + $"L: {Low.SmartRounding()} "
+                + $"C: {Close.SmartRounding()} "
+                + $"V: {Volume.SmartRounding()}";
         }
 
         /// <summary>

@@ -25,7 +25,8 @@ using QuantConnect.Indicators;
 namespace QuantConnect.Tests.Indicators
 {
     [TestFixture]
-    public class AutoregressiveIntegratedMovingAverageTests : CommonIndicatorTests<IndicatorDataPoint>
+    public class AutoregressiveIntegratedMovingAverageTests
+        : CommonIndicatorTests<IndicatorDataPoint>
     {
         private static List<decimal> betweenMethods;
         private double _ssIndicator;
@@ -38,19 +39,31 @@ namespace QuantConnect.Tests.Indicators
         public override void ComparesAgainstExternalData()
         {
             var ARIMA = CreateIndicator();
-            TestHelper.TestIndicator(ARIMA, TestFileName, TestColumnName,
-                (ind, expected) => Assert.AreEqual(expected, (double) ARIMA.Current.Value, 10d));
+            TestHelper.TestIndicator(
+                ARIMA,
+                TestFileName,
+                TestColumnName,
+                (ind, expected) => Assert.AreEqual(expected, (double)ARIMA.Current.Value, 10d)
+            );
         }
 
         [Test]
         public override void ComparesAgainstExternalDataAfterReset()
         {
             var ARIMA = CreateIndicator();
-            TestHelper.TestIndicator(ARIMA, TestFileName, TestColumnName,
-                (ind, expected) => Assert.AreEqual(expected, (double) ARIMA.Current.Value, 10d));
+            TestHelper.TestIndicator(
+                ARIMA,
+                TestFileName,
+                TestColumnName,
+                (ind, expected) => Assert.AreEqual(expected, (double)ARIMA.Current.Value, 10d)
+            );
             ARIMA.Reset();
-            TestHelper.TestIndicator(ARIMA, TestFileName, TestColumnName,
-                (ind, expected) => Assert.AreEqual(expected, (double) ARIMA.Current.Value, 10d));
+            TestHelper.TestIndicator(
+                ARIMA,
+                TestFileName,
+                TestColumnName,
+                (ind, expected) => Assert.AreEqual(expected, (double)ARIMA.Current.Value, 10d)
+            );
         }
 
         [Test]
@@ -60,7 +73,7 @@ namespace QuantConnect.Tests.Indicators
             {
                 betweenMethods = FillDataPerMethod();
             }
-            
+
             // Testing predictive performance vs. external.
             Assert.LessOrEqual(_ssIndicator, _ssTest);
         }
@@ -93,9 +106,12 @@ namespace QuantConnect.Tests.Indicators
             {
                 betweenMethods = FillDataPerMethod();
             }
-            
+
             Assert.LessOrEqual(1.39080827453985, betweenMethods.Average()); // Mean difference
-            Assert.LessOrEqual(1.19542348709062, betweenMethods.ToDoubleArray().StandardDeviation()); // Std. Dev
+            Assert.LessOrEqual(
+                1.19542348709062,
+                betweenMethods.ToDoubleArray().StandardDeviation()
+            ); // Std. Dev
         }
 
         [Test]
@@ -124,14 +140,18 @@ namespace QuantConnect.Tests.Indicators
                 {
                     var close = val["Close"];
                     realValues.Add(decimal.Parse(val["Close"], new NumberFormatInfo()));
-                    ARIMA.Update(new IndicatorDataPoint(Convert.ToDateTime(val["Date"], new DateTimeFormatInfo()),
-                        Convert.ToDecimal(close, new NumberFormatInfo())));
+                    ARIMA.Update(
+                        new IndicatorDataPoint(
+                            Convert.ToDateTime(val["Date"], new DateTimeFormatInfo()),
+                            Convert.ToDecimal(close, new NumberFormatInfo())
+                        )
+                    );
                 }
 
                 if (val[TestColumnName] != string.Empty)
                 {
                     var fromTest = decimal.Parse(val[TestColumnName], new NumberFormatInfo());
-                    testValues.Add(new[] {ARIMA.Current.Value, fromTest});
+                    testValues.Add(new[] { ARIMA.Current.Value, fromTest });
                 }
             }
 
@@ -141,8 +161,8 @@ namespace QuantConnect.Tests.Indicators
             {
                 var test = realValues[i];
                 var arimas = testValues[i - 50];
-                _ssIndicator += Math.Pow((double) (arimas[0] - test), 2);
-                _ssTest += Math.Pow((double) (arimas[1] - test), 2);
+                _ssIndicator += Math.Pow((double)(arimas[0] - test), 2);
+                _ssTest += Math.Pow((double)(arimas[1] - test), 2);
                 betweenMethods.Add(Math.Abs(arimas[0] - arimas[1]));
             }
 

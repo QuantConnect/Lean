@@ -23,8 +23,14 @@ namespace QuantConnect.Tests.API
     [TestFixture]
     public class AccountTests
     {
-        [TestCase("{\"organizationId\":\"organizationID\",\"creditBalance\":111.56,\"card\":{\"brand\":\"visa\",\"expiration\":\"12\\/27\",\"last4\":\"0001\"},\"success\":true}", true)]
-        [TestCase("{\"organizationId\":\"organizationID\",\"creditBalance\":111.56,\"card\":null,\"success\":true}", false)]
+        [TestCase(
+            "{\"organizationId\":\"organizationID\",\"creditBalance\":111.56,\"card\":{\"brand\":\"visa\",\"expiration\":\"12\\/27\",\"last4\":\"0001\"},\"success\":true}",
+            true
+        )]
+        [TestCase(
+            "{\"organizationId\":\"organizationID\",\"creditBalance\":111.56,\"card\":null,\"success\":true}",
+            false
+        )]
         public void Deserialize(string response, bool hasCard)
         {
             var account = JsonConvert.DeserializeObject<Account>(response);

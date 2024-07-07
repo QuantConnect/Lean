@@ -14,8 +14,8 @@
 */
 
 using System;
-using System.Linq;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace QuantConnect.Securities.Option.StrategyMatcher
 {
@@ -50,7 +50,7 @@ namespace QuantConnect.Securities.Option.StrategyMatcher
             OptionStrategyDefinition definition,
             IReadOnlyList<OptionStrategyLegDefinitionMatch> legs,
             int multiplier
-            )
+        )
         {
             Legs = legs;
             Multiplier = multiplier;
@@ -65,10 +65,15 @@ namespace QuantConnect.Securities.Option.StrategyMatcher
             var optionPositions = Legs.Select(leg => leg.CreateOptionPosition(Multiplier));
             if (Definition.UnderlyingLots != 0)
             {
-                optionPositions = optionPositions.Concat(new[]
-                {
-                    new OptionPosition(Legs[0].Position.Symbol.Underlying, Definition.UnderlyingLots * Multiplier)
-                });
+                optionPositions = optionPositions.Concat(
+                    new[]
+                    {
+                        new OptionPosition(
+                            Legs[0].Position.Symbol.Underlying,
+                            Definition.UnderlyingLots * Multiplier
+                        )
+                    }
+                );
             }
             return positions.RemoveRange(optionPositions);
         }
@@ -79,7 +84,8 @@ namespace QuantConnect.Securities.Option.StrategyMatcher
         public OptionStrategy CreateStrategy()
         {
             var legs = Legs.Select(leg => leg.CreateOptionStrategyLeg(Multiplier));
-            var strategy = new OptionStrategy {
+            var strategy = new OptionStrategy
+            {
                 Name = Definition.Name,
                 Underlying = Legs[0].Position.Underlying
             };
@@ -93,7 +99,10 @@ namespace QuantConnect.Securities.Option.StrategyMatcher
             {
                 strategy.UnderlyingLegs = new List<OptionStrategy.UnderlyingLegData>
                 {
-                    OptionStrategy.UnderlyingLegData.Create(Definition.UnderlyingLots * Multiplier, Legs[0].Position.Underlying)
+                    OptionStrategy.UnderlyingLegData.Create(
+                        Definition.UnderlyingLots * Multiplier,
+                        Legs[0].Position.Underlying
+                    )
                 };
             }
 
@@ -159,7 +168,7 @@ namespace QuantConnect.Securities.Option.StrategyMatcher
                 return false;
             }
 
-            return Equals((OptionStrategyDefinitionMatch) obj);
+            return Equals((OptionStrategyDefinitionMatch)obj);
         }
 
         /// <summary>Serves as the default hash function. </summary>
@@ -201,7 +210,10 @@ namespace QuantConnect.Securities.Option.StrategyMatcher
         /// OptionStrategyDefinitionMatch == Operator
         /// </summary>
         /// <returns>True if they are the same</returns>
-        public static bool operator ==(OptionStrategyDefinitionMatch left, OptionStrategyDefinitionMatch right)
+        public static bool operator ==(
+            OptionStrategyDefinitionMatch left,
+            OptionStrategyDefinitionMatch right
+        )
         {
             return Equals(left, right);
         }
@@ -210,7 +222,10 @@ namespace QuantConnect.Securities.Option.StrategyMatcher
         /// OptionStrategyDefinitionMatch != Operator
         /// </summary>
         /// <returns>True if they are not the same</returns>
-        public static bool operator !=(OptionStrategyDefinitionMatch left, OptionStrategyDefinitionMatch right)
+        public static bool operator !=(
+            OptionStrategyDefinitionMatch left,
+            OptionStrategyDefinitionMatch right
+        )
         {
             return !Equals(left, right);
         }

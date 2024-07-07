@@ -38,7 +38,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds.Enumerators
             Assert.IsTrue(enumerator.MoveNext());
             Assert.IsNull(enumerator.Current);
 
-            var tick1 = new Tick(currentTime, Symbols.SPY, 199.55m, 199, 200) {Quantity = 10};
+            var tick1 = new Tick(currentTime, Symbols.SPY, 199.55m, 199, 200) { Quantity = 10 };
             enumerator.Enqueue(tick1);
             Assert.IsTrue(enumerator.MoveNext());
             Assert.AreEqual(tick1, enumerator.Current);
@@ -46,7 +46,10 @@ namespace QuantConnect.Tests.Engine.DataFeeds.Enumerators
             Assert.IsTrue(enumerator.MoveNext());
             Assert.IsNull(enumerator.Current);
 
-            var tick2 = new Tick(currentTime, Symbols.SPY, 199.56m, 199.21m, 200.02m) {Quantity = 5};
+            var tick2 = new Tick(currentTime, Symbols.SPY, 199.56m, 199.21m, 200.02m)
+            {
+                Quantity = 5
+            };
             enumerator.Enqueue(tick2);
             Assert.IsTrue(enumerator.MoveNext());
             Assert.AreEqual(tick2, enumerator.Current);

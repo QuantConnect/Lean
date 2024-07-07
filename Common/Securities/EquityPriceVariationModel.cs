@@ -30,12 +30,18 @@ namespace QuantConnect.Securities
         /// </summary>
         /// <param name="parameters">An object containing the method parameters</param>
         /// <returns>Decimal minimum price variation of a given security</returns>
-        public override decimal GetMinimumPriceVariation(GetMinimumPriceVariationParameters parameters)
+        public override decimal GetMinimumPriceVariation(
+            GetMinimumPriceVariationParameters parameters
+        )
         {
             if (parameters.Security.Type != SecurityType.Equity)
             {
-                throw new ArgumentException("EquityPriceVariationModel.GetMinimumPriceVariation(): " +
-                    Messages.EquityPriceVariationModel.InvalidSecurityType(parameters.Security));
+                throw new ArgumentException(
+                    "EquityPriceVariationModel.GetMinimumPriceVariation(): "
+                        + Messages.EquityPriceVariationModel.InvalidSecurityType(
+                            parameters.Security
+                        )
+                );
             }
 
             // If the quotation is priced less than $1.00 per share, the minimum pricing increment is $0.0001.

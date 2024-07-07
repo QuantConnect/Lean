@@ -42,13 +42,15 @@ namespace QuantConnect.Tests.Engine.DataFeeds
         [SetUp]
         public void SetUp()
         {
-            _security = new Security(Symbols.SPY,
+            _security = new Security(
+                Symbols.SPY,
                 SecurityExchangeHours.AlwaysOpen(TimeZones.Utc),
                 new Cash(Currencies.USD, 0, 0),
                 SymbolProperties.GetDefault(Currencies.USD),
                 new IdentityCurrencyConverter(Currencies.USD),
                 RegisteredSecurityDataTypesProvider.Null,
-                new SecurityCache());
+                new SecurityCache()
+            );
 
             _config = new SubscriptionDataConfig(
                 typeof(TradeBar),
@@ -56,7 +58,10 @@ namespace QuantConnect.Tests.Engine.DataFeeds
                 Resolution.Daily,
                 TimeZones.NewYork,
                 TimeZones.NewYork,
-                true, true, false);
+                true,
+                true,
+                false
+            );
 
             _factorFileProvider = TestGlobals.FactorFileProvider;
         }
@@ -66,7 +71,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
         {
             var dataPoints = 10;
             using var enumerator = new TestDataEnumerator { MoveNextTrueCount = dataPoints };
-            #pragma warning disable CA2000
+#pragma warning disable CA2000
             var subscription = SubscriptionUtils.CreateAndScheduleWorker(
                 new SubscriptionRequest(
                     false,
@@ -78,8 +83,10 @@ namespace QuantConnect.Tests.Engine.DataFeeds
                 ),
                 enumerator,
                 _factorFileProvider,
-                false, false);
-            #pragma warning restore CA2000
+                false,
+                false
+            );
+#pragma warning restore CA2000
 
             var count = 0;
             while (enumerator.MoveNextTrueCount > 8)
@@ -98,7 +105,11 @@ namespace QuantConnect.Tests.Engine.DataFeeds
         [Test]
         public void ThrowingEnumeratorStackDisposesOfSubscription()
         {
-            using var enumerator = new TestDataEnumerator { MoveNextTrueCount = 10, ThrowException = true};
+            using var enumerator = new TestDataEnumerator
+            {
+                MoveNextTrueCount = 10,
+                ThrowException = true
+            };
 
             using var subscription = SubscriptionUtils.CreateAndScheduleWorker(
                 new SubscriptionRequest(
@@ -111,7 +122,9 @@ namespace QuantConnect.Tests.Engine.DataFeeds
                 ),
                 enumerator,
                 _factorFileProvider,
-                false, false);
+                false,
+                false
+            );
 
             var count = 0;
             while (enumerator.MoveNextTrueCount != 9)
@@ -146,8 +159,8 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             {
                 var dataPoints = 10;
 
-                using var enumerator = new TestDataEnumerator {MoveNextTrueCount = dataPoints};
-                #pragma warning disable CA2000
+                using var enumerator = new TestDataEnumerator { MoveNextTrueCount = dataPoints };
+#pragma warning disable CA2000
                 var subscription = SubscriptionUtils.CreateAndScheduleWorker(
                     new SubscriptionRequest(
                         false,
@@ -159,11 +172,13 @@ namespace QuantConnect.Tests.Engine.DataFeeds
                     ),
                     enumerator,
                     _factorFileProvider,
-                    false, false);
-                #pragma warning restore CA2000
+                    false,
+                    false
+                );
+#pragma warning restore CA2000
                 for (var j = 0; j < dataPoints; j++)
                 {
-                   Assert.IsTrue(subscription.MoveNext());
+                    Assert.IsTrue(subscription.MoveNext());
                 }
                 Assert.IsFalse(subscription.MoveNext());
                 subscription.DisposeSafely();
@@ -183,14 +198,18 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             var enumerator = new List<BaseData> { point2, point3 }.GetEnumerator();
             var factorFileProfider = new Mock<IFactorFileProvider>();
 
-            var factorFile = new CorporateFactorProvider(_security.Symbol.Value, new[]
-            {
-                new CorporateFactorRow(referenceTime, 0.5m, 1),
-                new CorporateFactorRow(referenceTime.AddDays(1), 1m, 1)
-            }, referenceTime);
+            var factorFile = new CorporateFactorProvider(
+                _security.Symbol.Value,
+                new[]
+                {
+                    new CorporateFactorRow(referenceTime, 0.5m, 1),
+                    new CorporateFactorRow(referenceTime.AddDays(1), 1m, 1)
+                },
+                referenceTime
+            );
 
             factorFileProfider.Setup(s => s.Get(It.IsAny<Symbol>())).Returns(factorFile);
-            #pragma warning disable CA2000
+#pragma warning disable CA2000
             var subscription = SubscriptionUtils.CreateAndScheduleWorker(
                 new SubscriptionRequest(
                     false,
@@ -202,8 +221,10 @@ namespace QuantConnect.Tests.Engine.DataFeeds
                 ),
                 enumerator,
                 factorFileProfider.Object,
-                true, false);
-            #pragma warning restore CA2000
+                true,
+                false
+            );
+#pragma warning restore CA2000
             Assert.IsTrue(subscription.MoveNext());
             // we do expect it to pick up the prev factor file scale
             Assert.AreEqual(1, (subscription.Current.Data as Tick).AskPrice);
@@ -228,14 +249,18 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             var enumerator = new List<BaseData> { point, point2, point3 }.GetEnumerator();
             var factorFileProfider = new Mock<IFactorFileProvider>();
 
-            var factorFile = new CorporateFactorProvider(_security.Symbol.Value, new[]
-            {
-                new CorporateFactorRow(referenceTime, 0.5m, 1),
-                new CorporateFactorRow(referenceTime.AddDays(1), 1m, 1)
-            }, referenceTime);
+            var factorFile = new CorporateFactorProvider(
+                _security.Symbol.Value,
+                new[]
+                {
+                    new CorporateFactorRow(referenceTime, 0.5m, 1),
+                    new CorporateFactorRow(referenceTime.AddDays(1), 1m, 1)
+                },
+                referenceTime
+            );
 
             factorFileProfider.Setup(s => s.Get(It.IsAny<Symbol>())).Returns(factorFile);
-            #pragma warning disable CA2000
+#pragma warning disable CA2000
             var subscription = SubscriptionUtils.CreateAndScheduleWorker(
                 new SubscriptionRequest(
                     false,
@@ -247,8 +272,10 @@ namespace QuantConnect.Tests.Engine.DataFeeds
                 ),
                 enumerator,
                 factorFileProfider.Object,
-                true, false);
-            #pragma warning restore CA2000
+                true,
+                false
+            );
+#pragma warning restore CA2000
             Assert.IsTrue(subscription.MoveNext());
             Assert.AreEqual(1, (subscription.Current.Data as Tick).AskPrice);
             Assert.IsFalse((subscription.Current.Data as Tick).IsFillForward);
@@ -269,12 +296,24 @@ namespace QuantConnect.Tests.Engine.DataFeeds
         [TestCase(typeof(QuoteBar), false)]
         public void SubscriptionEmitsAuxData(Type typeOfConfig, bool shouldReceiveAuxData)
         {
-            var config = new SubscriptionDataConfig(typeOfConfig, _security.Symbol, Resolution.Hour, TimeZones.NewYork, TimeZones.NewYork, true, true, false);
+            var config = new SubscriptionDataConfig(
+                typeOfConfig,
+                _security.Symbol,
+                Resolution.Hour,
+                TimeZones.NewYork,
+                TimeZones.NewYork,
+                true,
+                true,
+                false
+            );
 
             var totalPoints = 8;
             var time = new DateTime(2010, 1, 1);
-            var enumerator = Enumerable.Range(0, totalPoints).Select(x => new Delisting { Time = time.AddHours(x) }).GetEnumerator();
-            #pragma warning disable CA2000
+            var enumerator = Enumerable
+                .Range(0, totalPoints)
+                .Select(x => new Delisting { Time = time.AddHours(x) })
+                .GetEnumerator();
+#pragma warning disable CA2000
             var subscription = SubscriptionUtils.CreateAndScheduleWorker(
                 new SubscriptionRequest(
                     false,
@@ -286,15 +325,20 @@ namespace QuantConnect.Tests.Engine.DataFeeds
                 ),
                 enumerator,
                 _factorFileProvider,
-                false, false);
-            #pragma warning restore CA2000
+                false,
+                false
+            );
+#pragma warning restore CA2000
             // Test our subscription stream to see if it emits the aux data it should be filtered
             // by the SubscriptionUtils produce function if the config isn't for a TradeBar
             int dataReceivedCount = 0;
             while (subscription.MoveNext())
             {
                 dataReceivedCount++;
-                if (subscription.Current != null && subscription.Current.Data.DataType == MarketDataType.Auxiliary)
+                if (
+                    subscription.Current != null
+                    && subscription.Current.Data.DataType == MarketDataType.Auxiliary
+                )
                 {
                     Assert.IsTrue(shouldReceiveAuxData);
                 }
@@ -325,7 +369,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
 
             public bool MoveNext()
             {
-                Current = new Tick(DateTime.UtcNow,Symbols.SPY, 1, 2);
+                Current = new Tick(DateTime.UtcNow, Symbols.SPY, 1, 2);
                 var result = --MoveNextTrueCount >= 0;
                 if (ThrowException)
                 {
@@ -334,9 +378,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
                 return result;
             }
 
-            public void Reset()
-            {
-            }
+            public void Reset() { }
 
             public BaseData Current { get; set; }
 

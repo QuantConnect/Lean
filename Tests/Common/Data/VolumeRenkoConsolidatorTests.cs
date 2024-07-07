@@ -43,16 +43,24 @@ namespace QuantConnect.Tests.Common.Data
             };
 
             var reference = new DateTime(2013, 10, 1);
-            consolidator.Update(new Tick(reference, Symbol.Empty, String.Empty, String.Empty, 2m, 1m));
+            consolidator.Update(
+                new Tick(reference, Symbol.Empty, String.Empty, String.Empty, 2m, 1m)
+            );
             Assert.IsNull(bar);
 
-            consolidator.Update(new Tick(reference.AddHours(1), Symbol.Empty, String.Empty, String.Empty, 3m, 2m));
+            consolidator.Update(
+                new Tick(reference.AddHours(1), Symbol.Empty, String.Empty, String.Empty, 3m, 2m)
+            );
             Assert.IsNull(bar);
 
-            consolidator.Update(new Tick(reference.AddHours(2), Symbol.Empty, String.Empty, String.Empty, 3m, 3m));
+            consolidator.Update(
+                new Tick(reference.AddHours(2), Symbol.Empty, String.Empty, String.Empty, 3m, 3m)
+            );
             Assert.IsNull(bar);
 
-            consolidator.Update(new Tick(reference.AddHours(3), Symbol.Empty, String.Empty, String.Empty, 2m, 2m));
+            consolidator.Update(
+                new Tick(reference.AddHours(3), Symbol.Empty, String.Empty, String.Empty, 2m, 2m)
+            );
             Assert.IsNotNull(bar);
 
             Assert.AreEqual(1m, bar.Open);
@@ -72,22 +80,57 @@ namespace QuantConnect.Tests.Common.Data
         {
             VolumeRenkoBar bar = null;
             using var consolidator = new VolumeRenkoConsolidator(10);
-            consolidator.DataConsolidated += (sender, consolidated) => 
+            consolidator.DataConsolidated += (sender, consolidated) =>
             {
                 bar = consolidated;
             };
 
             var reference = new DateTime(2013, 10, 1);
-            consolidator.Update(new TradeBar(reference, Symbol.Empty, 1m, 2m, 0.5m, 1.5m, 2m, new TimeSpan(1, 0, 0)));
+            consolidator.Update(
+                new TradeBar(reference, Symbol.Empty, 1m, 2m, 0.5m, 1.5m, 2m, new TimeSpan(1, 0, 0))
+            );
             Assert.IsNull(bar);
 
-            consolidator.Update(new TradeBar(reference.AddHours(1), Symbol.Empty, 1.5m, 3m, 1m, 3m, 3m, new TimeSpan(1, 0, 0)));
+            consolidator.Update(
+                new TradeBar(
+                    reference.AddHours(1),
+                    Symbol.Empty,
+                    1.5m,
+                    3m,
+                    1m,
+                    3m,
+                    3m,
+                    new TimeSpan(1, 0, 0)
+                )
+            );
             Assert.IsNull(bar);
 
-            consolidator.Update(new TradeBar(reference.AddHours(2), Symbol.Empty, 3m, 3m, 1m, 2m, 3m, new TimeSpan(1, 0, 0)));
+            consolidator.Update(
+                new TradeBar(
+                    reference.AddHours(2),
+                    Symbol.Empty,
+                    3m,
+                    3m,
+                    1m,
+                    2m,
+                    3m,
+                    new TimeSpan(1, 0, 0)
+                )
+            );
             Assert.IsNull(bar);
 
-            consolidator.Update(new TradeBar(reference.AddHours(3), Symbol.Empty, 2m, 4m, 1.5m, 2.5m, 2m, new TimeSpan(1, 0, 0)));
+            consolidator.Update(
+                new TradeBar(
+                    reference.AddHours(3),
+                    Symbol.Empty,
+                    2m,
+                    4m,
+                    1.5m,
+                    2.5m,
+                    2m,
+                    new TimeSpan(1, 0, 0)
+                )
+            );
             Assert.IsNotNull(bar);
 
             Assert.AreEqual(1m, bar.Open);
@@ -108,8 +151,20 @@ namespace QuantConnect.Tests.Common.Data
             using var consolidator = new VolumeRenkoConsolidator(10);
 
             var reference = new DateTime(2013, 10, 1);
-            Assert.Throws<ArgumentException>(() => 
-                consolidator.Update(new QuoteBar(reference, Symbol.Empty, new Bar(1m, 1m, 1m, 1m), 1m, new Bar(1m, 1m, 1m, 1m), 1m, TimeSpan.MinValue)));
+            Assert.Throws<ArgumentException>(
+                () =>
+                    consolidator.Update(
+                        new QuoteBar(
+                            reference,
+                            Symbol.Empty,
+                            new Bar(1m, 1m, 1m, 1m),
+                            1m,
+                            new Bar(1m, 1m, 1m, 1m),
+                            1m,
+                            TimeSpan.MinValue
+                        )
+                    )
+            );
         }
 
         [Test]
@@ -120,10 +175,22 @@ namespace QuantConnect.Tests.Common.Data
             var time = new DateTime(2016, 1, 1);
             var testValues = new List<decimal[]>
             {
-                new decimal[]{5m, 5m}, new decimal[]{5m, 3m}, new decimal[]{5m, 7m}, new decimal[]{5m, 6m},
-                new decimal[]{5m, 5m}, new decimal[]{5m, 3m}, new decimal[]{5m, 7m}, new decimal[]{5m, 6m},
-                new decimal[]{5m, 5m}, new decimal[]{5m, 3m}, new decimal[]{5m, 7m}, new decimal[]{5m, 6m},
-                new decimal[]{5m, 5m}, new decimal[]{5m, 3m}, new decimal[]{5m, 7m}, new decimal[]{5m, 6m}
+                new decimal[] { 5m, 5m },
+                new decimal[] { 5m, 3m },
+                new decimal[] { 5m, 7m },
+                new decimal[] { 5m, 6m },
+                new decimal[] { 5m, 5m },
+                new decimal[] { 5m, 3m },
+                new decimal[] { 5m, 7m },
+                new decimal[] { 5m, 6m },
+                new decimal[] { 5m, 5m },
+                new decimal[] { 5m, 3m },
+                new decimal[] { 5m, 7m },
+                new decimal[] { 5m, 6m },
+                new decimal[] { 5m, 5m },
+                new decimal[] { 5m, 3m },
+                new decimal[] { 5m, 7m },
+                new decimal[] { 5m, 6m }
             };
 
             var consolidator1 = new VolumeRenkoConsolidator(20m);
@@ -133,7 +200,14 @@ namespace QuantConnect.Tests.Common.Data
             // Update each of our consolidators starting at different indexes of test values
             for (int i = 0; i < testValues.Count; i++)
             {
-                var data = new Tick(time.AddSeconds(i), Symbol.Empty, String.Empty, String.Empty, testValues[i][0], testValues[i][1]);
+                var data = new Tick(
+                    time.AddSeconds(i),
+                    Symbol.Empty,
+                    String.Empty,
+                    String.Empty,
+                    testValues[i][0],
+                    testValues[i][1]
+                );
                 consolidator1.Update(data);
 
                 if (i > 3)
@@ -172,16 +246,24 @@ namespace QuantConnect.Tests.Common.Data
             };
 
             var reference = new DateTime(2013, 10, 1);
-            consolidator.Update(new Tick(reference, Symbol.Empty, String.Empty, String.Empty, 2m, 1m));
+            consolidator.Update(
+                new Tick(reference, Symbol.Empty, String.Empty, String.Empty, 2m, 1m)
+            );
             Assert.IsNull(bar);
 
-            consolidator.Update(new Tick(reference.AddHours(1), Symbol.Empty, String.Empty, String.Empty, 3m, 2m));
+            consolidator.Update(
+                new Tick(reference.AddHours(1), Symbol.Empty, String.Empty, String.Empty, 3m, 2m)
+            );
             Assert.IsNull(bar);
 
-            consolidator.Update(new Tick(reference.AddHours(2), Symbol.Empty, String.Empty, String.Empty, 3m, 3m));
+            consolidator.Update(
+                new Tick(reference.AddHours(2), Symbol.Empty, String.Empty, String.Empty, 3m, 3m)
+            );
             Assert.IsNull(bar);
 
-            consolidator.Update(new Tick(reference.AddHours(3), Symbol.Empty, String.Empty, String.Empty, 2m, 2m));
+            consolidator.Update(
+                new Tick(reference.AddHours(3), Symbol.Empty, String.Empty, String.Empty, 2m, 2m)
+            );
             Assert.IsNotNull(bar);
 
             Assert.AreEqual(1m, bar.Open);
@@ -195,11 +277,17 @@ namespace QuantConnect.Tests.Common.Data
             Assert.AreEqual(reference.AddHours(3), bar.EndTime);
             Assert.IsTrue(bar.IsClosed);
 
-            consolidator.Update(new Tick(reference.AddHours(4), Symbol.Empty, String.Empty, String.Empty, 4m, 1m));
+            consolidator.Update(
+                new Tick(reference.AddHours(4), Symbol.Empty, String.Empty, String.Empty, 4m, 1m)
+            );
 
-            consolidator.Update(new Tick(reference.AddHours(5), Symbol.Empty, String.Empty, String.Empty, 3m, 2m));
+            consolidator.Update(
+                new Tick(reference.AddHours(5), Symbol.Empty, String.Empty, String.Empty, 3m, 2m)
+            );
 
-            consolidator.Update(new Tick(reference.AddHours(6), Symbol.Empty, String.Empty, String.Empty, 4m, 3m));
+            consolidator.Update(
+                new Tick(reference.AddHours(6), Symbol.Empty, String.Empty, String.Empty, 4m, 3m)
+            );
 
             Assert.AreEqual(2m, bar.Open);
             Assert.AreEqual(3m, bar.High);
@@ -210,9 +298,11 @@ namespace QuantConnect.Tests.Common.Data
             Assert.AreEqual(Symbol.Empty, bar.Symbol);
             Assert.AreEqual(reference.AddHours(3), bar.Start);
             Assert.AreEqual(reference.AddHours(6), bar.EndTime);
-            Assert.IsTrue(bar.IsClosed);    // bar is always closed since it is the consolidated bar instance
+            Assert.IsTrue(bar.IsClosed); // bar is always closed since it is the consolidated bar instance
 
-            consolidator.Update(new Tick(reference.AddHours(7), Symbol.Empty, String.Empty, String.Empty, 5m, 10m));
+            consolidator.Update(
+                new Tick(reference.AddHours(7), Symbol.Empty, String.Empty, String.Empty, 5m, 10m)
+            );
 
             // Not yet consolidated, so bar is not updated yet
             Assert.AreEqual(2m, bar.Open);

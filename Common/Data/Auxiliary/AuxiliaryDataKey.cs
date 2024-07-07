@@ -24,7 +24,8 @@ namespace QuantConnect.Data.Auxiliary
         /// <summary>
         /// USA equities market corporate actions key definition
         /// </summary>
-        public static AuxiliaryDataKey EquityUsa { get; } = new (QuantConnect.Market.USA, SecurityType.Equity);
+        public static AuxiliaryDataKey EquityUsa { get; } =
+            new(QuantConnect.Market.USA, SecurityType.Equity);
 
         /// <summary>
         /// The market associated with these corporate actions
@@ -53,7 +54,7 @@ namespace QuantConnect.Data.Auxiliary
             unchecked
             {
                 var hashCode = Market.GetHashCode();
-                return (hashCode*397) ^ SecurityType.GetHashCode();
+                return (hashCode * 397) ^ SecurityType.GetHashCode();
             }
         }
 
@@ -66,13 +67,14 @@ namespace QuantConnect.Data.Auxiliary
         /// <param name="obj">The object to compare with the current object. </param><filterpriority>2</filterpriority>
         public override bool Equals(object? obj)
         {
-            if (ReferenceEquals(null, obj)) return false;
-            if (obj.GetType() != GetType()) return false;
+            if (ReferenceEquals(null, obj))
+                return false;
+            if (obj.GetType() != GetType())
+                return false;
 
             var other = (AuxiliaryDataKey)obj;
 
-            return other.Market == Market
-                && other.SecurityType == SecurityType;
+            return other.Market == Market && other.SecurityType == SecurityType;
         }
 
         public override string ToString()
@@ -83,14 +85,17 @@ namespace QuantConnect.Data.Auxiliary
         /// <summary>
         /// Helper method to create a new instance from a Symbol
         /// </summary>
-        public static AuxiliaryDataKey Create(Symbol symbol) => Create(symbol.HasUnderlying ? symbol.Underlying.ID : symbol.ID);
+        public static AuxiliaryDataKey Create(Symbol symbol) =>
+            Create(symbol.HasUnderlying ? symbol.Underlying.ID : symbol.ID);
 
         /// <summary>
         /// Helper method to create a new instance from a SecurityIdentifier
         /// </summary>
         public static AuxiliaryDataKey Create(SecurityIdentifier securityIdentifier)
         {
-            securityIdentifier = securityIdentifier.HasUnderlying ? securityIdentifier.Underlying : securityIdentifier;
+            securityIdentifier = securityIdentifier.HasUnderlying
+                ? securityIdentifier.Underlying
+                : securityIdentifier;
             return new AuxiliaryDataKey(securityIdentifier.Market, securityIdentifier.SecurityType);
         }
     }

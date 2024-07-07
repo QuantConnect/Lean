@@ -14,13 +14,13 @@
 */
 
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using QuantConnect.Data;
-using QuantConnect.Orders;
-using QuantConnect.Interfaces;
-using QuantConnect.Securities;
 using QuantConnect.Data.Market;
-using System.Collections.Generic;
+using QuantConnect.Interfaces;
+using QuantConnect.Orders;
+using QuantConnect.Securities;
 using QuantConnect.Securities.Future;
 
 namespace QuantConnect.Algorithm.CSharp
@@ -28,7 +28,9 @@ namespace QuantConnect.Algorithm.CSharp
     /// <summary>
     /// Continuous Futures Back Month #1 Regression algorithm. Asserting and showcasing the behavior of adding a continuous future
     /// </summary>
-    public class ContinuousFutureBackMonthRegressionAlgorithm : QCAlgorithm, IRegressionAlgorithmDefinition
+    public class ContinuousFutureBackMonthRegressionAlgorithm
+        : QCAlgorithm,
+            IRegressionAlgorithmDefinition
     {
         private List<SymbolChangedEvent> _mappings = new();
         private Future _continuousContract;
@@ -44,19 +46,23 @@ namespace QuantConnect.Algorithm.CSharp
 
             try
             {
-                AddFuture(Futures.Indices.SP500EMini,
+                AddFuture(
+                    Futures.Indices.SP500EMini,
                     dataNormalizationMode: DataNormalizationMode.BackwardsPanamaCanal,
                     dataMappingMode: DataMappingMode.OpenInterest,
                     contractDepthOffset: 5
                 );
-                throw new RegressionTestException("Expected out of rage exception. We don't support that many back months");
+                throw new RegressionTestException(
+                    "Expected out of rage exception. We don't support that many back months"
+                );
             }
             catch (ArgumentOutOfRangeException)
             {
                 // expected
             }
 
-            _continuousContract = AddFuture(Futures.Indices.SP500EMini,
+            _continuousContract = AddFuture(
+                Futures.Indices.SP500EMini,
                 dataNormalizationMode: DataNormalizationMode.BackwardsPanamaCanal,
                 dataMappingMode: DataMappingMode.OpenInterest,
                 contractDepthOffset: 1
@@ -71,7 +77,9 @@ namespace QuantConnect.Algorithm.CSharp
         {
             if (slice.Keys.Count != 1)
             {
-                throw new RegressionTestException($"We are getting data for more than one symbols! {string.Join(",", slice.Keys.Select(symbol => symbol))}");
+                throw new RegressionTestException(
+                    $"We are getting data for more than one symbols! {string.Join(",", slice.Keys.Select(symbol => symbol))}"
+                );
             }
 
             foreach (var changedEvent in slice.SymbolChangedEvents.Values)
@@ -82,17 +90,23 @@ namespace QuantConnect.Algorithm.CSharp
                     Log($"SymbolChanged event: {changedEvent}");
 
                     var backMonthExpiration = changedEvent.Symbol.Underlying.ID.Date;
-                    var frontMonthExpiration = FuturesExpiryFunctions.FuturesExpiryFunction(_continuousContract.Symbol)(Time.AddMonths(1));
+                    var frontMonthExpiration = FuturesExpiryFunctions.FuturesExpiryFunction(
+                        _continuousContract.Symbol
+                    )(Time.AddMonths(1));
 
                     if (backMonthExpiration <= frontMonthExpiration.Date)
                     {
-                        throw new RegressionTestException($"Unexpected current mapped contract expiration {backMonthExpiration}" +
-                            $" @ {Time} it should be AFTER front month expiration {frontMonthExpiration}");
+                        throw new RegressionTestException(
+                            $"Unexpected current mapped contract expiration {backMonthExpiration}"
+                                + $" @ {Time} it should be AFTER front month expiration {frontMonthExpiration}"
+                        );
                     }
 
                     if (_continuousContract.Mapped != changedEvent.Symbol.Underlying)
                     {
-                        throw new RegressionTestException($"Unexpected mapped continuous contract {_continuousContract.Mapped} expected {changedEvent.Symbol.Underlying}");
+                        throw new RegressionTestException(
+                            $"Unexpected mapped continuous contract {_continuousContract.Mapped} expected {changedEvent.Symbol.Underlying}"
+                        );
                     }
                 }
             }
@@ -111,10 +125,10 @@ namespace QuantConnect.Algorithm.CSharp
                     else
                     {
                         Buy(_continuousContract.Mapped, 1);
-                }
+                    }
                 }
 
-                if(Time.Month == 1 && Time.Year == 2013)
+                if (Time.Month == 1 && Time.Year == 2013)
                 {
                     var response = History(new[] { _continuousContract.Symbol }, 60 * 24 * 90);
                     if (!response.Any())
@@ -138,7 +152,9 @@ namespace QuantConnect.Algorithm.CSharp
             var expectedMappingCounts = 2;
             if (_mappings.Count != expectedMappingCounts)
             {
-                throw new RegressionTestException($"Unexpected symbol changed events: {_mappings.Count}, was expecting {expectedMappingCounts}");
+                throw new RegressionTestException(
+                    $"Unexpected symbol changed events: {_mappings.Count}, was expecting {expectedMappingCounts}"
+                );
             }
         }
 
@@ -170,35 +186,36 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// This is used by the regression test system to indicate what the expected statistics are from running the algorithm
         /// </summary>
-        public Dictionary<string, string> ExpectedStatistics => new Dictionary<string, string>
-        {
-            {"Total Orders", "3"},
-            {"Average Win", "1.48%"},
-            {"Average Loss", "0%"},
-            {"Compounding Annual Return", "4.603%"},
-            {"Drawdown", "1.600%"},
-            {"Expectancy", "0"},
-            {"Start Equity", "100000"},
-            {"End Equity", "102291.4"},
-            {"Net Profit", "2.291%"},
-            {"Sharpe Ratio", "0.892"},
-            {"Sortino Ratio", "0.312"},
-            {"Probabilistic Sharpe Ratio", "55.781%"},
-            {"Loss Rate", "0%"},
-            {"Win Rate", "100%"},
-            {"Profit-Loss Ratio", "0"},
-            {"Alpha", "-0.006"},
-            {"Beta", "0.14"},
-            {"Annual Standard Deviation", "0.028"},
-            {"Annual Variance", "0.001"},
-            {"Information Ratio", "-2.584"},
-            {"Tracking Error", "0.075"},
-            {"Treynor Ratio", "0.175"},
-            {"Total Fees", "$6.45"},
-            {"Estimated Strategy Capacity", "$230000000.00"},
-            {"Lowest Capacity Asset", "ES VP274HSU1AF5"},
-            {"Portfolio Turnover", "1.39%"},
-            {"OrderListHash", "795bfb3ab8565e759e98e43a49b0a91d"}
-        };
+        public Dictionary<string, string> ExpectedStatistics =>
+            new Dictionary<string, string>
+            {
+                { "Total Orders", "3" },
+                { "Average Win", "1.48%" },
+                { "Average Loss", "0%" },
+                { "Compounding Annual Return", "4.603%" },
+                { "Drawdown", "1.600%" },
+                { "Expectancy", "0" },
+                { "Start Equity", "100000" },
+                { "End Equity", "102291.4" },
+                { "Net Profit", "2.291%" },
+                { "Sharpe Ratio", "0.892" },
+                { "Sortino Ratio", "0.312" },
+                { "Probabilistic Sharpe Ratio", "55.781%" },
+                { "Loss Rate", "0%" },
+                { "Win Rate", "100%" },
+                { "Profit-Loss Ratio", "0" },
+                { "Alpha", "-0.006" },
+                { "Beta", "0.14" },
+                { "Annual Standard Deviation", "0.028" },
+                { "Annual Variance", "0.001" },
+                { "Information Ratio", "-2.584" },
+                { "Tracking Error", "0.075" },
+                { "Treynor Ratio", "0.175" },
+                { "Total Fees", "$6.45" },
+                { "Estimated Strategy Capacity", "$230000000.00" },
+                { "Lowest Capacity Asset", "ES VP274HSU1AF5" },
+                { "Portfolio Turnover", "1.39%" },
+                { "OrderListHash", "795bfb3ab8565e759e98e43a49b0a91d" }
+            };
     }
 }

@@ -32,51 +32,32 @@ namespace QuantConnect.Lean.Engine.Setup
         /// <summary>
         /// The worker thread instance the setup handler should use
         /// </summary>
-        WorkerThread WorkerThread
-        {
-            set;
-        }
+        WorkerThread WorkerThread { set; }
 
         /// <summary>
         /// Any errors from the initialization stored here:
         /// </summary>
-        List<Exception> Errors
-        {
-            get;
-            set;
-        }
+        List<Exception> Errors { get; set; }
 
         /// <summary>
         /// Get the maximum runtime for this algorithm job.
         /// </summary>
-        TimeSpan MaximumRuntime
-        {
-            get;
-        }
+        TimeSpan MaximumRuntime { get; }
 
         /// <summary>
         /// Algorithm starting capital for statistics calculations
         /// </summary>
-        decimal StartingPortfolioValue
-        {
-            get;
-        }
+        decimal StartingPortfolioValue { get; }
 
         /// <summary>
         /// Start date for analysis loops to search for data.
         /// </summary>
-        DateTime StartingDate
-        {
-            get;
-        }
+        DateTime StartingDate { get; }
 
         /// <summary>
         /// Maximum number of orders for the algorithm run -- applicable for backtests only.
         /// </summary>
-        int MaxOrders
-        {
-            get;
-        }
+        int MaxOrders { get; }
 
         /// <summary>
         /// Create a new instance of an algorithm from a physical dll path.
@@ -84,7 +65,10 @@ namespace QuantConnect.Lean.Engine.Setup
         /// <param name="assemblyPath">The path to the assembly's location</param>
         /// <param name="algorithmNodePacket">Details of the task required</param>
         /// <returns>A new instance of IAlgorithm, or throws an exception if there was an error</returns>
-        IAlgorithm CreateAlgorithmInstance(AlgorithmNodePacket algorithmNodePacket, string assemblyPath);
+        IAlgorithm CreateAlgorithmInstance(
+            AlgorithmNodePacket algorithmNodePacket,
+            string assemblyPath
+        );
 
         /// <summary>
         /// Creates the brokerage as specified by the job packet
@@ -93,7 +77,11 @@ namespace QuantConnect.Lean.Engine.Setup
         /// <param name="uninitializedAlgorithm">The algorithm instance before Initialize has been called</param>
         /// <param name="factory">The brokerage factory</param>
         /// <returns>The brokerage instance, or throws if error creating instance</returns>
-        IBrokerage CreateBrokerage(AlgorithmNodePacket algorithmNodePacket, IAlgorithm uninitializedAlgorithm, out IBrokerageFactory factory);
+        IBrokerage CreateBrokerage(
+            AlgorithmNodePacket algorithmNodePacket,
+            IAlgorithm uninitializedAlgorithm,
+            out IBrokerageFactory factory
+        );
 
         /// <summary>
         /// Primary entry point to setup a new algorithm

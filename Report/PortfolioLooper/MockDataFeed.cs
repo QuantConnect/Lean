@@ -45,9 +45,7 @@ namespace QuantConnect.Report
             IDataFeedSubscriptionManager subscriptionManager,
             IDataFeedTimeProvider dataFeedTimeProvider,
             IDataChannelProvider dataChannelProvider
-            )
-        {
-        }
+        ) { }
 
         /// <summary>
         /// Create Subscription
@@ -63,15 +61,11 @@ namespace QuantConnect.Report
         /// Remove Subscription; Not implemented
         /// </summary>
         /// <param name="subscription">Subscription to remove</param>
-        public void RemoveSubscription(Subscription subscription)
-        {
-        }
+        public void RemoveSubscription(Subscription subscription) { }
 
         /// <summary>
         /// DataFeed Exit
         /// </summary>
-        public void Exit()
-        {
-        }
+        public void Exit() { }
     }
 }

@@ -43,9 +43,7 @@ namespace QuantConnect.Indicators
         /// </summary>
         /// <param name="period">The period of the Wilder Moving Average</param>
         public WilderMovingAverage(int period)
-            : this("WWMA" + period, period)
-        {
-        }
+            : this("WWMA" + period, period) { }
 
         /// <summary>
         /// Gets a flag indicating when this indicator is ready and fully initialized

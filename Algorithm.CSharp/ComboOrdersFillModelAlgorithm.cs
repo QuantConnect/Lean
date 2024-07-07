@@ -50,33 +50,47 @@ namespace QuantConnect.Algorithm.CSharp
         {
             if (!Portfolio.Invested)
             {
-                var legs = new List<Leg>() { Leg.Create(_spy.Symbol, 1), Leg.Create(_ibm.Symbol, -1)};
+                var legs = new List<Leg>()
+                {
+                    Leg.Create(_spy.Symbol, 1),
+                    Leg.Create(_ibm.Symbol, -1)
+                };
                 ComboMarketOrder(legs, 100);
                 ComboLimitOrder(legs, 100, Math.Round(_spy.BidPrice));
 
-                legs = new List<Leg>() { Leg.Create(_spy.Symbol, 1, Math.Round(_spy.BidPrice) + 1), Leg.Create(_ibm.Symbol, -1, Math.Round(_ibm.BidPrice) + 1) };
+                legs = new List<Leg>()
+                {
+                    Leg.Create(_spy.Symbol, 1, Math.Round(_spy.BidPrice) + 1),
+                    Leg.Create(_ibm.Symbol, -1, Math.Round(_ibm.BidPrice) + 1)
+                };
                 ComboLegLimitOrder(legs, 100);
             }
         }
 
         public override void OnOrderEvent(OrderEvent orderEvent)
         {
-            if(orderEvent.Status == OrderStatus.Filled)
+            if (orderEvent.Status == OrderStatus.Filled)
             {
                 var orderType = Transactions.GetOrderById(orderEvent.OrderId).Type;
                 if (orderType == OrderType.ComboMarket && orderEvent.AbsoluteFillQuantity != 50)
                 {
-                    throw new RegressionTestException($"The absolute quantity filled for all combo market orders should be 50, but for order {orderEvent.OrderId} was {orderEvent.AbsoluteFillQuantity}");
+                    throw new RegressionTestException(
+                        $"The absolute quantity filled for all combo market orders should be 50, but for order {orderEvent.OrderId} was {orderEvent.AbsoluteFillQuantity}"
+                    );
                 }
 
                 if (orderType == OrderType.ComboLimit && orderEvent.AbsoluteFillQuantity != 20)
                 {
-                    throw new RegressionTestException($"The absolute quantity filled for all combo limit orders should be 20, but for order {orderEvent.OrderId} was {orderEvent.AbsoluteFillQuantity}");
+                    throw new RegressionTestException(
+                        $"The absolute quantity filled for all combo limit orders should be 20, but for order {orderEvent.OrderId} was {orderEvent.AbsoluteFillQuantity}"
+                    );
                 }
 
                 if (orderType == OrderType.ComboLegLimit && orderEvent.AbsoluteFillQuantity != 10)
                 {
-                    throw new RegressionTestException($"The absolute quantity filled for all combo leg limit orders should be 20, but for order {orderEvent.OrderId} was {orderEvent.AbsoluteFillQuantity}");
+                    throw new RegressionTestException(
+                        $"The absolute quantity filled for all combo leg limit orders should be 20, but for order {orderEvent.OrderId} was {orderEvent.AbsoluteFillQuantity}"
+                    );
                 }
 
                 _orderTypes[orderType] = 1;
@@ -87,22 +101,30 @@ namespace QuantConnect.Algorithm.CSharp
         {
             if (_orderTypes.Keys.Count != 3)
             {
-                throw new RegressionTestException($"Just 3 different types of order were submitted in this algorithm, but the amount of order types was {_orderTypes.Count}");
+                throw new RegressionTestException(
+                    $"Just 3 different types of order were submitted in this algorithm, but the amount of order types was {_orderTypes.Count}"
+                );
             }
 
             if (!_orderTypes.Keys.Contains(OrderType.ComboMarket))
             {
-                throw new RegressionTestException($"One Combo Market Order should have been submitted but it was not");
+                throw new RegressionTestException(
+                    $"One Combo Market Order should have been submitted but it was not"
+                );
             }
 
             if (!_orderTypes.Keys.Contains(OrderType.ComboLimit))
             {
-                throw new RegressionTestException($"One Combo Limit Order should have been submitted but it was not");
+                throw new RegressionTestException(
+                    $"One Combo Limit Order should have been submitted but it was not"
+                );
             }
 
             if (!_orderTypes.Keys.Contains(OrderType.ComboLegLimit))
             {
-                throw new RegressionTestException($"One Combo Leg Limit Order should have been submitted but it was not");
+                throw new RegressionTestException(
+                    $"One Combo Leg Limit Order should have been submitted but it was not"
+                );
             }
         }
 
@@ -134,36 +156,37 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// This is used by the regression test system to indicate what the expected statistics are from running the algorithm
         /// </summary>
-        public Dictionary<string, string> ExpectedStatistics => new Dictionary<string, string>
-        {
-            {"Total Orders", "6"},
-            {"Average Win", "0%"},
-            {"Average Loss", "0%"},
-            {"Compounding Annual Return", "162.471%"},
-            {"Drawdown", "1.800%"},
-            {"Expectancy", "0"},
-            {"Start Equity", "100000"},
-            {"End Equity", "104781.43"},
-            {"Net Profit", "4.781%"},
-            {"Sharpe Ratio", "8.272"},
-            {"Sortino Ratio", "6.986"},
-            {"Probabilistic Sharpe Ratio", "87.028%"},
-            {"Loss Rate", "0%"},
-            {"Win Rate", "0%"},
-            {"Profit-Loss Ratio", "0"},
-            {"Alpha", "-0.049"},
-            {"Beta", "0.646"},
-            {"Annual Standard Deviation", "0.119"},
-            {"Annual Variance", "0.014"},
-            {"Information Ratio", "-8.927"},
-            {"Tracking Error", "0.069"},
-            {"Treynor Ratio", "1.519"},
-            {"Total Fees", "$6.00"},
-            {"Estimated Strategy Capacity", "$250000.00"},
-            {"Lowest Capacity Asset", "IBM R735QTJ8XC9X"},
-            {"Portfolio Turnover", "9.81%"},
-            {"OrderListHash", "397d4e81b8c7fa9258e18c4bcf4154e1"}
-        };
+        public Dictionary<string, string> ExpectedStatistics =>
+            new Dictionary<string, string>
+            {
+                { "Total Orders", "6" },
+                { "Average Win", "0%" },
+                { "Average Loss", "0%" },
+                { "Compounding Annual Return", "162.471%" },
+                { "Drawdown", "1.800%" },
+                { "Expectancy", "0" },
+                { "Start Equity", "100000" },
+                { "End Equity", "104781.43" },
+                { "Net Profit", "4.781%" },
+                { "Sharpe Ratio", "8.272" },
+                { "Sortino Ratio", "6.986" },
+                { "Probabilistic Sharpe Ratio", "87.028%" },
+                { "Loss Rate", "0%" },
+                { "Win Rate", "0%" },
+                { "Profit-Loss Ratio", "0" },
+                { "Alpha", "-0.049" },
+                { "Beta", "0.646" },
+                { "Annual Standard Deviation", "0.119" },
+                { "Annual Variance", "0.014" },
+                { "Information Ratio", "-8.927" },
+                { "Tracking Error", "0.069" },
+                { "Treynor Ratio", "1.519" },
+                { "Total Fees", "$6.00" },
+                { "Estimated Strategy Capacity", "$250000.00" },
+                { "Lowest Capacity Asset", "IBM R735QTJ8XC9X" },
+                { "Portfolio Turnover", "9.81%" },
+                { "OrderListHash", "397d4e81b8c7fa9258e18c4bcf4154e1" }
+            };
     }
 
     public class CustomPartialFillModel : FillModel
@@ -175,7 +198,11 @@ namespace QuantConnect.Algorithm.CSharp
             _absoluteRemainingByOrderId = new Dictionary<int, decimal>();
         }
 
-        private List<OrderEvent> FillOrdersPartially(FillModelParameters parameters, List<OrderEvent> fills, int quantity)
+        private List<OrderEvent> FillOrdersPartially(
+            FillModelParameters parameters,
+            List<OrderEvent> fills,
+            int quantity
+        )
         {
             var partialFills = new List<OrderEvent>();
             if (fills.Count == 0)
@@ -205,7 +232,8 @@ namespace QuantConnect.Algorithm.CSharp
                 else
                 {
                     fill.Status = OrderStatus.PartiallyFilled;
-                    _absoluteRemainingByOrderId[order.Id] = absoluteRemaining - Math.Abs(fill.FillQuantity);
+                    _absoluteRemainingByOrderId[order.Id] =
+                        absoluteRemaining - Math.Abs(fill.FillQuantity);
                     var price = fill.FillPrice;
                     //_algorithm.Debug($"{_algorithm.Time} - Partial Fill - Remaining {_absoluteRemainingByOrderId[order.Id]} Price - {price}");
                 }
@@ -216,7 +244,10 @@ namespace QuantConnect.Algorithm.CSharp
             return partialFills;
         }
 
-        public override List<OrderEvent> ComboMarketFill(Order order, FillModelParameters parameters)
+        public override List<OrderEvent> ComboMarketFill(
+            Order order,
+            FillModelParameters parameters
+        )
         {
             var fills = base.ComboMarketFill(order, parameters);
             var partialFills = FillOrdersPartially(parameters, fills, 50);
@@ -230,7 +261,10 @@ namespace QuantConnect.Algorithm.CSharp
             return partialFills;
         }
 
-        public override List<OrderEvent> ComboLegLimitFill(Order order, FillModelParameters parameters)
+        public override List<OrderEvent> ComboLegLimitFill(
+            Order order,
+            FillModelParameters parameters
+        )
         {
             var fills = base.ComboLegLimitFill(order, parameters);
             var partialFills = FillOrdersPartially(parameters, fills, 10);

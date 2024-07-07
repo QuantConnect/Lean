@@ -22,15 +22,15 @@ namespace QuantConnect.Python
     /// <summary>
     /// Provides an implementation of <see cref="ISettlementModel"/> that wraps a <see cref="PyObject"/> object
     /// </summary>
-    public class SettlementModelPythonWrapper : BasePythonWrapper<ISettlementModel>, ISettlementModel
+    public class SettlementModelPythonWrapper
+        : BasePythonWrapper<ISettlementModel>,
+            ISettlementModel
     {
         /// Constructor for initialising the <see cref="SettlementModelPythonWrapper"/> class with wrapped <see cref="PyObject"/> object
         /// </summary>
         /// <param name="model">Settlement Python Model</param>
         public SettlementModelPythonWrapper(PyObject model)
-            : base(model)
-        {
-        }
+            : base(model) { }
 
         /// <summary>
         /// Applies cash settlement rules using the method defined in the Python class

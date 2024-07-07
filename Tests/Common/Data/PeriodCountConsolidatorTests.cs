@@ -26,14 +26,14 @@ namespace QuantConnect.Tests.Common.Data
     {
         private static readonly object[] PeriodCases =
         {
-            new [] { TimeSpan.FromDays(100), TimeSpan.FromDays(10) },
-            new [] { TimeSpan.FromDays(30), TimeSpan.FromDays(1) },     //GH Issue #4915
-            new [] { TimeSpan.FromDays(10), TimeSpan.FromDays(1) },
-            new [] { TimeSpan.FromDays(1), TimeSpan.FromHours(1) },
-            new [] { TimeSpan.FromHours(10), TimeSpan.FromHours(1) },
-            new [] { TimeSpan.FromMinutes(10), TimeSpan.FromMinutes(1) },
-            new [] { TimeSpan.FromMinutes(1), TimeSpan.FromSeconds(10) },
-            new [] { TimeSpan.FromSeconds(1), TimeSpan.FromSeconds(0.1) }
+            new[] { TimeSpan.FromDays(100), TimeSpan.FromDays(10) },
+            new[] { TimeSpan.FromDays(30), TimeSpan.FromDays(1) }, //GH Issue #4915
+            new[] { TimeSpan.FromDays(10), TimeSpan.FromDays(1) },
+            new[] { TimeSpan.FromDays(1), TimeSpan.FromHours(1) },
+            new[] { TimeSpan.FromHours(10), TimeSpan.FromHours(1) },
+            new[] { TimeSpan.FromMinutes(10), TimeSpan.FromMinutes(1) },
+            new[] { TimeSpan.FromMinutes(1), TimeSpan.FromSeconds(10) },
+            new[] { TimeSpan.FromSeconds(1), TimeSpan.FromSeconds(0.1) }
         };
 
         [TestCaseSource(nameof(PeriodCases))]
@@ -43,7 +43,7 @@ namespace QuantConnect.Tests.Common.Data
             using var consolidator = new BaseDataConsolidator(barSpan);
             consolidator.DataConsolidated += (sender, bar) =>
             {
-                Assert.AreEqual(barSpan, bar.Period);              // The period matches our span
+                Assert.AreEqual(barSpan, bar.Period); // The period matches our span
                 consolidated = bar;
             };
 
@@ -67,9 +67,9 @@ namespace QuantConnect.Tests.Common.Data
                 }
 
                 // Our asserts
-                Assert.IsNotNull(consolidated);                                 // We have a bar
-                Assert.AreEqual(dataTime, consolidated.EndTime);    // New bar time should be dataTime
-                Assert.AreEqual(barSpan, consolidated.EndTime - lastBarTime);      // The difference between the bars is the span
+                Assert.IsNotNull(consolidated); // We have a bar
+                Assert.AreEqual(dataTime, consolidated.EndTime); // New bar time should be dataTime
+                Assert.AreEqual(barSpan, consolidated.EndTime - lastBarTime); // The difference between the bars is the span
 
                 nextBarTime = dataTime + barSpan;
                 lastBarTime = consolidated.EndTime;
@@ -83,7 +83,7 @@ namespace QuantConnect.Tests.Common.Data
             using var consolidator = new QuoteBarConsolidator(barSpan);
             consolidator.DataConsolidated += (sender, bar) =>
             {
-                Assert.AreEqual(barSpan, bar.Period);                  // The period matches our span
+                Assert.AreEqual(barSpan, bar.Period); // The period matches our span
                 consolidated = bar;
             };
 
@@ -107,9 +107,9 @@ namespace QuantConnect.Tests.Common.Data
                 }
 
                 // Our asserts
-                Assert.IsNotNull(consolidated);                                 // We have a bar
-                Assert.AreEqual(dataTime, consolidated.EndTime);    // New bar time should be dataTime
-                Assert.AreEqual(barSpan, consolidated.EndTime - lastBarTime);      // The difference between the bars is the span
+                Assert.IsNotNull(consolidated); // We have a bar
+                Assert.AreEqual(dataTime, consolidated.EndTime); // New bar time should be dataTime
+                Assert.AreEqual(barSpan, consolidated.EndTime - lastBarTime); // The difference between the bars is the span
 
                 nextBarTime = dataTime + barSpan;
                 lastBarTime = consolidated.EndTime;
@@ -120,7 +120,7 @@ namespace QuantConnect.Tests.Common.Data
         public void ConsolidatorEmitsOffsetBarsCorrectly()
         {
             // This test is to cover an issue seen with the live data stack
-            // The consolidator would fail to emit every other bar because of a 
+            // The consolidator would fail to emit every other bar because of a
             // ms delay in data from a live stream
             var period = TimeSpan.FromHours(2);
             using var consolidator = new TradeBarConsolidator(period);
@@ -139,7 +139,7 @@ namespace QuantConnect.Tests.Common.Data
             // So add a random ms offset to the scan time
             consolidator.Update(new TradeBar { Time = time, Period = Time.OneHour });
             time = time.Add(period);
-            consolidator.Scan(time.AddMilliseconds(random.Next(800))); 
+            consolidator.Scan(time.AddMilliseconds(random.Next(800)));
 
             consolidator.Update(new TradeBar { Time = time, Period = Time.OneHour });
             time = time.Add(period);
@@ -154,7 +154,7 @@ namespace QuantConnect.Tests.Common.Data
             consolidator.Scan(time.AddMilliseconds(random.Next(800)));
 
             // We should expect to see 4 bars emitted from the consolidator
-            Assert.AreEqual(4,consolidatedBarsCount);
+            Assert.AreEqual(4, consolidatedBarsCount);
         }
 
         [Test]
@@ -178,7 +178,7 @@ namespace QuantConnect.Tests.Common.Data
             var time = new DateTime(2015, 04, 13);
 
             // Update this consolidator with minute tradebars but one less than 60, which would trigger emit
-            PushBarsThrough( 59, Time.OneMinute, consolidator, ref time);
+            PushBarsThrough(59, Time.OneMinute, consolidator, ref time);
 
             // No bars should be emitted, lets assert the current time and count
             Assert.IsTrue(time == new DateTime(2015, 04, 13, 0, 59, 0));
@@ -190,7 +190,9 @@ namespace QuantConnect.Tests.Common.Data
             // Push one bar through at 3:59AM and check that we still get the 12AM - 1AM Bar emitted
             PushBarsThrough(1, Time.OneMinute, consolidator, ref time);
             Assert.AreEqual(1, consolidatedBarsCount);
-            Assert.IsTrue(latestConsolidated != null && latestConsolidated.Time == new DateTime(2015, 04, 13));
+            Assert.IsTrue(
+                latestConsolidated != null && latestConsolidated.Time == new DateTime(2015, 04, 13)
+            );
 
             // Check the new working bar is 3AM to 4AM, This is because we pushed a bar in at 3:59AM
             Assert.IsTrue(consolidator.WorkingBar.Time == new DateTime(2015, 04, 13, 3, 0, 0));
@@ -228,7 +230,10 @@ namespace QuantConnect.Tests.Common.Data
             // Call scan with current time, it should emit the 12AM - 1AM Bar without any update
             consolidator.Scan(time);
             Assert.AreEqual(1, consolidatedBarsCount);
-            Assert.IsTrue(latestConsolidated != null && latestConsolidated.Time == new DateTime(2015, 04, 13, 0, 0, 0));
+            Assert.IsTrue(
+                latestConsolidated != null
+                    && latestConsolidated.Time == new DateTime(2015, 04, 13, 0, 0, 0)
+            );
 
             // WorkingBar should be null, ready for whatever data comes through next
             Assert.IsTrue(consolidator.WorkingBar == null);
@@ -257,7 +262,7 @@ namespace QuantConnect.Tests.Common.Data
             Assert.AreEqual(500, consolidatedBarsCount);
         }
 
-        [TestCase (14)] // 2PM
+        [TestCase(14)] // 2PM
         [TestCase(15)] // 3PM
         [TestCase(16)] // 4PM
         public void BarsEmitOnTime(int hour)
@@ -278,7 +283,9 @@ namespace QuantConnect.Tests.Common.Data
 
             // Update with one tradebar that ends at this time
             // This is to simulate getting a data bar for the last period
-            consolidator.Update(new TradeBar{ Time = time.Subtract(Time.OneMinute), Period = Time.OneMinute });
+            consolidator.Update(
+                new TradeBar { Time = time.Subtract(Time.OneMinute), Period = Time.OneMinute }
+            );
 
             // Assert that the bar hasn't emitted
             Assert.IsNull(latestBar);
@@ -287,16 +294,21 @@ namespace QuantConnect.Tests.Common.Data
             // Scan afterwards (Like algorithmManager does)
             consolidator.Scan(time);
 
-            // Assert that the bar emitted 
+            // Assert that the bar emitted
             Assert.IsNotNull(latestBar);
             Assert.IsTrue(latestBar.EndTime == time);
             Assert.AreEqual(1, consolidatedBarsCount);
         }
 
-        private static void PushBarsThrough (int barCount, TimeSpan period, TradeBarConsolidator consolidator, ref DateTime time)
+        private static void PushBarsThrough(
+            int barCount,
+            TimeSpan period,
+            TradeBarConsolidator consolidator,
+            ref DateTime time
+        )
         {
             TradeBar bar;
-            
+
             for (int i = 0; i < barCount; i++)
             {
                 bar = new TradeBar { Time = time, Period = period };

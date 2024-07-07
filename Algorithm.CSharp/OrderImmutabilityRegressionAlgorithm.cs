@@ -31,7 +31,11 @@ namespace QuantConnect.Algorithm.CSharp
     /// <meta name="tag" content="options" />
     public class OrderImmutabilityRegressionAlgorithm : QCAlgorithm, IRegressionAlgorithmDefinition
     {
-        private readonly Symbol _spy = QuantConnect.Symbol.Create("SPY", SecurityType.Equity, Market.USA);
+        private readonly Symbol _spy = QuantConnect.Symbol.Create(
+            "SPY",
+            SecurityType.Equity,
+            Market.USA
+        );
         private OrderTicket _ticket;
         private Order _originalOrder;
 
@@ -40,9 +44,9 @@ namespace QuantConnect.Algorithm.CSharp
         /// </summary>
         public override void Initialize()
         {
-            SetStartDate(2013, 10, 07);  //Set Start Date
-            SetEndDate(2013, 10, 09);    //Set End Date
-            SetCash(100000);             //Set Strategy Cash
+            SetStartDate(2013, 10, 07); //Set Start Date
+            SetEndDate(2013, 10, 09); //Set End Date
+            SetCash(100000); //Set Strategy Cash
             AddEquity("SPY", Resolution.Daily);
         }
 
@@ -62,7 +66,12 @@ namespace QuantConnect.Algorithm.CSharp
                 _originalOrder = Transactions.GetOrderById(_ticket.OrderId);
 
                 // Create an UpdateOrderRequest and send it to the ticket
-                var updateFields = new UpdateOrderFields { Quantity = 20, Tag = "Pepe", LimitPrice = slice[_spy].Low};
+                var updateFields = new UpdateOrderFields
+                {
+                    Quantity = 20,
+                    Tag = "Pepe",
+                    LimitPrice = slice[_spy].Low
+                };
                 var response = _ticket.Update(updateFields);
 
                 // Test order time
@@ -82,7 +91,6 @@ namespace QuantConnect.Algorithm.CSharp
         /// <param name="orderEvent">OrderEvent object that contains all the information about the event</param>
         public override void OnOrderEvent(OrderEvent orderEvent)
         {
-
             // Get the order twice, since they are clones they should NOT be the same
             var orderV1 = Transactions.GetOrderById(orderEvent.OrderId);
             var orderV2 = Transactions.GetOrderById(orderEvent.OrderId);
@@ -107,7 +115,11 @@ namespace QuantConnect.Algorithm.CSharp
             //Try and manipulate the orderV1 using UpdateOrderRequest
             //NOTICE: Orders should only be updated through their tickets!
             var updateFields = new UpdateOrderFields { Quantity = 99, Tag = "Pepe2!" };
-            var updateRequest = new UpdateOrderRequest(DateTime.Now, orderEvent.OrderId, updateFields);
+            var updateRequest = new UpdateOrderRequest(
+                DateTime.Now,
+                orderEvent.OrderId,
+                updateFields
+            );
             orderV1.ApplyUpdateOrderRequest(updateRequest);
             var orderV4 = Transactions.GetOrderById(orderEvent.OrderId);
 
@@ -174,35 +186,36 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// This is used by the regression test system to indicate what the expected statistics are from running the algorithm
         /// </summary>
-        public Dictionary<string, string> ExpectedStatistics => new Dictionary<string, string>
-        {
-            {"Total Orders", "1"},
-            {"Average Win", "0%"},
-            {"Average Loss", "0%"},
-            {"Compounding Annual Return", "-3.591%"},
-            {"Drawdown", "0.000%"},
-            {"Expectancy", "0"},
-            {"Start Equity", "100000"},
-            {"End Equity", "99969.95"},
-            {"Net Profit", "-0.030%"},
-            {"Sharpe Ratio", "-11.996"},
-            {"Sortino Ratio", "0"},
-            {"Probabilistic Sharpe Ratio", "0%"},
-            {"Loss Rate", "0%"},
-            {"Win Rate", "0%"},
-            {"Profit-Loss Ratio", "0"},
-            {"Alpha", "-0.024"},
-            {"Beta", "0.027"},
-            {"Annual Standard Deviation", "0.004"},
-            {"Annual Variance", "0"},
-            {"Information Ratio", "5.399"},
-            {"Tracking Error", "0.132"},
-            {"Treynor Ratio", "-1.634"},
-            {"Total Fees", "$1.00"},
-            {"Estimated Strategy Capacity", "$34000000000.00"},
-            {"Lowest Capacity Asset", "SPY R735QTJ8XC9X"},
-            {"Portfolio Turnover", "0.96%"},
-            {"OrderListHash", "ef870dda527c0e929592a17fb1027c87"}
-        };
+        public Dictionary<string, string> ExpectedStatistics =>
+            new Dictionary<string, string>
+            {
+                { "Total Orders", "1" },
+                { "Average Win", "0%" },
+                { "Average Loss", "0%" },
+                { "Compounding Annual Return", "-3.591%" },
+                { "Drawdown", "0.000%" },
+                { "Expectancy", "0" },
+                { "Start Equity", "100000" },
+                { "End Equity", "99969.95" },
+                { "Net Profit", "-0.030%" },
+                { "Sharpe Ratio", "-11.996" },
+                { "Sortino Ratio", "0" },
+                { "Probabilistic Sharpe Ratio", "0%" },
+                { "Loss Rate", "0%" },
+                { "Win Rate", "0%" },
+                { "Profit-Loss Ratio", "0" },
+                { "Alpha", "-0.024" },
+                { "Beta", "0.027" },
+                { "Annual Standard Deviation", "0.004" },
+                { "Annual Variance", "0" },
+                { "Information Ratio", "5.399" },
+                { "Tracking Error", "0.132" },
+                { "Treynor Ratio", "-1.634" },
+                { "Total Fees", "$1.00" },
+                { "Estimated Strategy Capacity", "$34000000000.00" },
+                { "Lowest Capacity Asset", "SPY R735QTJ8XC9X" },
+                { "Portfolio Turnover", "0.96%" },
+                { "OrderListHash", "ef870dda527c0e929592a17fb1027c87" }
+            };
     }
 }

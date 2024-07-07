@@ -15,12 +15,12 @@
 */
 
 using System;
+using System.Collections;
+using System.Collections.Generic;
 using System.Linq;
 using QuantConnect.Data;
-using QuantConnect.Util;
-using System.Collections;
 using QuantConnect.Logging;
-using System.Collections.Generic;
+using QuantConnect.Util;
 
 namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
 {
@@ -54,9 +54,10 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
         /// <param name="skipDuplicateEndTimes">True will skip data points from enumerators if before or at the last end time</param>
         /// <param name="enumerators">The sequence of enumerators to concatenate. Note that the order here matters, it will consume enumerators
         /// and dispose of them, even if they return true and their current is null, except for the last which will be kept!</param>
-        public ConcatEnumerator(bool skipDuplicateEndTimes,
+        public ConcatEnumerator(
+            bool skipDuplicateEndTimes,
             params IEnumerator<BaseData>[] enumerators
-            )
+        )
         {
             CanEmitNull = true;
             _skipDuplicateEndTimes = skipDuplicateEndTimes;
@@ -74,7 +75,10 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
                 var enumerator = _enumerators[_currentIndex];
                 while (enumerator.MoveNext())
                 {
-                    if (enumerator.Current == null && (_currentIndex < _enumerators.Count - 1 || !CanEmitNull))
+                    if (
+                        enumerator.Current == null
+                        && (_currentIndex < _enumerators.Count - 1 || !CanEmitNull)
+                    )
                     {
                         // if there are more enumerators and the current stopped providing data drop it
                         // in live trading, some enumerators will always return true (see TimeTriggeredUniverseSubscriptionEnumeratorFactory & InjectionEnumerator)
@@ -83,10 +87,12 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
                         break;
                     }
 
-                    if (_skipDuplicateEndTimes
+                    if (
+                        _skipDuplicateEndTimes
                         && _lastEnumeratorEndTime.HasValue
                         && enumerator.Current != null
-                        && enumerator.Current.EndTime <= _lastEnumeratorEndTime)
+                        && enumerator.Current.EndTime <= _lastEnumeratorEndTime
+                    )
                     {
                         continue;
                     }
@@ -99,7 +105,9 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
 
                 if (Log.DebuggingEnabled)
                 {
-                    Log.Debug($"ConcatEnumerator.MoveNext(): disposing enumerator at position: {_currentIndex} Name: {enumerator.GetType().Name}");
+                    Log.Debug(
+                        $"ConcatEnumerator.MoveNext(): disposing enumerator at position: {_currentIndex} Name: {enumerator.GetType().Name}"
+                    );
                 }
 
                 // we wont be using this enumerator again, dispose of it and clear reference

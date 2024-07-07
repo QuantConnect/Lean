@@ -19,8 +19,8 @@ using System.Collections.Generic;
 using System.Linq;
 using QuantConnect.Data;
 using QuantConnect.Data.Market;
-using QuantConnect.Orders;
 using QuantConnect.Interfaces;
+using QuantConnect.Orders;
 
 namespace QuantConnect.Algorithm.CSharp
 {
@@ -31,10 +31,16 @@ namespace QuantConnect.Algorithm.CSharp
     /// <meta name="tag" content="options" />
     /// <meta name="tag" content="using data" />
     /// <meta name="tag" content="filter selection" />
-    public class OptionChainConsistencyRegressionAlgorithm : QCAlgorithm, IRegressionAlgorithmDefinition
+    public class OptionChainConsistencyRegressionAlgorithm
+        : QCAlgorithm,
+            IRegressionAlgorithmDefinition
     {
         private const string UnderlyingTicker = "GOOG";
-        private readonly Symbol _optionSymbol = QuantConnect.Symbol.Create(UnderlyingTicker, SecurityType.Option, Market.USA);
+        private readonly Symbol _optionSymbol = QuantConnect.Symbol.Create(
+            UnderlyingTicker,
+            SecurityType.Option,
+            Market.USA
+        );
 
         public override void Initialize()
         {
@@ -46,9 +52,9 @@ namespace QuantConnect.Algorithm.CSharp
             var option = AddOption(UnderlyingTicker);
 
             // set our strike/expiry filter for this option chain
-            option.SetFilter(u => u.IncludeWeeklys()
-                                    .Strikes(-2, +2)
-                                    .Expiration(TimeSpan.Zero, TimeSpan.FromDays(10)));
+            option.SetFilter(u =>
+                u.IncludeWeeklys().Strikes(-2, +2).Expiration(TimeSpan.Zero, TimeSpan.FromDays(10))
+            );
 
             // use the underlying equity as the benchmark
             SetBenchmark(equity.Symbol);
@@ -71,8 +77,9 @@ namespace QuantConnect.Algorithm.CSharp
                         if (!Securities.ContainsKey(o.Symbol))
                         {
                             // inconsistency found: option chains contains contract information that is not available in securities manager and not available for trading
-                            throw new RegressionTestException("inconsistency found: option chains contains contract " +
-                                $"{o.Symbol.Value} that is not available in securities manager and not available for trading"
+                            throw new RegressionTestException(
+                                "inconsistency found: option chains contains contract "
+                                    + $"{o.Symbol.Value} that is not available in securities manager and not available for trading"
                             );
                         }
                     }
@@ -84,7 +91,9 @@ namespace QuantConnect.Algorithm.CSharp
                         where optionContract.Expiry == Time.Date
                         where optionContract.Strike < chain.Underlying.Price
                         select optionContract
-                        ).Skip(2).FirstOrDefault();
+                    )
+                        .Skip(2)
+                        .FirstOrDefault();
 
                     if (contract != null)
                     {
@@ -133,35 +142,36 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// This is used by the regression test system to indicate what the expected statistics are from running the algorithm
         /// </summary>
-        public Dictionary<string, string> ExpectedStatistics => new Dictionary<string, string>
-        {
-            {"Total Orders", "2"},
-            {"Average Win", "0%"},
-            {"Average Loss", "0%"},
-            {"Compounding Annual Return", "0%"},
-            {"Drawdown", "0%"},
-            {"Expectancy", "0"},
-            {"Start Equity", "10000"},
-            {"End Equity", "9613"},
-            {"Net Profit", "0%"},
-            {"Sharpe Ratio", "0"},
-            {"Sortino Ratio", "0"},
-            {"Probabilistic Sharpe Ratio", "0%"},
-            {"Loss Rate", "0%"},
-            {"Win Rate", "0%"},
-            {"Profit-Loss Ratio", "0"},
-            {"Alpha", "0"},
-            {"Beta", "0"},
-            {"Annual Standard Deviation", "0"},
-            {"Annual Variance", "0"},
-            {"Information Ratio", "0"},
-            {"Tracking Error", "0"},
-            {"Treynor Ratio", "0"},
-            {"Total Fees", "$2.00"},
-            {"Estimated Strategy Capacity", "$5000.00"},
-            {"Lowest Capacity Asset", "GOOCV W6NBKPFL0ACM|GOOCV VP83T1ZUHROL"},
-            {"Portfolio Turnover", "9.93%"},
-            {"OrderListHash", "8887ac32d29175b21e40f335437cee61"}
-        };
+        public Dictionary<string, string> ExpectedStatistics =>
+            new Dictionary<string, string>
+            {
+                { "Total Orders", "2" },
+                { "Average Win", "0%" },
+                { "Average Loss", "0%" },
+                { "Compounding Annual Return", "0%" },
+                { "Drawdown", "0%" },
+                { "Expectancy", "0" },
+                { "Start Equity", "10000" },
+                { "End Equity", "9613" },
+                { "Net Profit", "0%" },
+                { "Sharpe Ratio", "0" },
+                { "Sortino Ratio", "0" },
+                { "Probabilistic Sharpe Ratio", "0%" },
+                { "Loss Rate", "0%" },
+                { "Win Rate", "0%" },
+                { "Profit-Loss Ratio", "0" },
+                { "Alpha", "0" },
+                { "Beta", "0" },
+                { "Annual Standard Deviation", "0" },
+                { "Annual Variance", "0" },
+                { "Information Ratio", "0" },
+                { "Tracking Error", "0" },
+                { "Treynor Ratio", "0" },
+                { "Total Fees", "$2.00" },
+                { "Estimated Strategy Capacity", "$5000.00" },
+                { "Lowest Capacity Asset", "GOOCV W6NBKPFL0ACM|GOOCV VP83T1ZUHROL" },
+                { "Portfolio Turnover", "9.93%" },
+                { "OrderListHash", "8887ac32d29175b21e40f335437cee61" }
+            };
     }
 }

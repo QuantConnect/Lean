@@ -19,8 +19,8 @@ using System.Collections.Generic;
 using System.Linq;
 using QuantConnect.Data;
 using QuantConnect.Data.Market;
-using QuantConnect.Orders;
 using QuantConnect.Interfaces;
+using QuantConnect.Orders;
 
 namespace QuantConnect.Algorithm.CSharp
 {
@@ -70,9 +70,13 @@ namespace QuantConnect.Algorithm.CSharp
                     OptionChain chain;
                     if (slice.OptionChains.TryGetValue(_optionSymbol, out chain))
                     {
-                        var contract =
-                            chain.OrderBy(x => x.Expiry)
-                            .Where(x => x.Right == OptionRight.Call && x.Strike == 33 && x.Expiry.Date == new DateTime(2013, 08, 17))
+                        var contract = chain
+                            .OrderBy(x => x.Expiry)
+                            .Where(x =>
+                                x.Right == OptionRight.Call
+                                && x.Strike == 33
+                                && x.Expiry.Date == new DateTime(2013, 08, 17)
+                            )
                             .FirstOrDefault();
 
                         if (contract != null)
@@ -87,7 +91,9 @@ namespace QuantConnect.Algorithm.CSharp
                             // checks
                             if (contract.AskPrice != 1.1m)
                             {
-                                throw new RegressionTestException("Regression test failed: current ask price was not loaded from NWSA backtest file and is not $1.1");
+                                throw new RegressionTestException(
+                                    "Regression test failed: current ask price was not loaded from NWSA backtest file and is not $1.1"
+                                );
                             }
                         }
                     }
@@ -104,14 +110,20 @@ namespace QuantConnect.Algorithm.CSharp
                     OptionChain chain;
                     if (slice.OptionChains.TryGetValue(_optionSymbol, out chain))
                     {
-                        var contract =
-                            chain.OrderBy(x => x.Expiry)
-                            .Where(x => x.Right == OptionRight.Call && x.Strike == 33 && x.Expiry.Date == new DateTime(2013, 08, 17))
+                        var contract = chain
+                            .OrderBy(x => x.Expiry)
+                            .Where(x =>
+                                x.Right == OptionRight.Call
+                                && x.Strike == 33
+                                && x.Expiry.Date == new DateTime(2013, 08, 17)
+                            )
                             .FirstOrDefault();
 
                         if (contract.BidPrice != 0.05m)
                         {
-                            throw new RegressionTestException("Regression test failed: current bid price was not loaded from FOXA file and is not $0.05");
+                            throw new RegressionTestException(
+                                "Regression test failed: current bid price was not loaded from FOXA file and is not $0.05"
+                            );
                         }
                     }
                 }
@@ -156,35 +168,36 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// This is used by the regression test system to indicate what the expected statistics are from running the algorithm
         /// </summary>
-        public Dictionary<string, string> ExpectedStatistics => new Dictionary<string, string>
-        {
-            {"Total Orders", "4"},
-            {"Average Win", "0%"},
-            {"Average Loss", "-0.02%"},
-            {"Compounding Annual Return", "-0.492%"},
-            {"Drawdown", "0.000%"},
-            {"Expectancy", "-1"},
-            {"Start Equity", "1000000"},
-            {"End Equity", "999937"},
-            {"Net Profit", "-0.006%"},
-            {"Sharpe Ratio", "-9.182"},
-            {"Sortino Ratio", "0"},
-            {"Probabilistic Sharpe Ratio", "29.496%"},
-            {"Loss Rate", "100%"},
-            {"Win Rate", "0%"},
-            {"Profit-Loss Ratio", "0"},
-            {"Alpha", "0"},
-            {"Beta", "0"},
-            {"Annual Standard Deviation", "0.001"},
-            {"Annual Variance", "0"},
-            {"Information Ratio", "-3.318"},
-            {"Tracking Error", "0.001"},
-            {"Treynor Ratio", "0"},
-            {"Total Fees", "$4.00"},
-            {"Estimated Strategy Capacity", "$620000.00"},
-            {"Lowest Capacity Asset", "NWSA VJ5IKAXU7WBQ|NWSA T3MO1488O0H1"},
-            {"Portfolio Turnover", "0.13%"},
-            {"OrderListHash", "83dfb4b2f1d41429273d83335b63426c"}
-        };
+        public Dictionary<string, string> ExpectedStatistics =>
+            new Dictionary<string, string>
+            {
+                { "Total Orders", "4" },
+                { "Average Win", "0%" },
+                { "Average Loss", "-0.02%" },
+                { "Compounding Annual Return", "-0.492%" },
+                { "Drawdown", "0.000%" },
+                { "Expectancy", "-1" },
+                { "Start Equity", "1000000" },
+                { "End Equity", "999937" },
+                { "Net Profit", "-0.006%" },
+                { "Sharpe Ratio", "-9.182" },
+                { "Sortino Ratio", "0" },
+                { "Probabilistic Sharpe Ratio", "29.496%" },
+                { "Loss Rate", "100%" },
+                { "Win Rate", "0%" },
+                { "Profit-Loss Ratio", "0" },
+                { "Alpha", "0" },
+                { "Beta", "0" },
+                { "Annual Standard Deviation", "0.001" },
+                { "Annual Variance", "0" },
+                { "Information Ratio", "-3.318" },
+                { "Tracking Error", "0.001" },
+                { "Treynor Ratio", "0" },
+                { "Total Fees", "$4.00" },
+                { "Estimated Strategy Capacity", "$620000.00" },
+                { "Lowest Capacity Asset", "NWSA VJ5IKAXU7WBQ|NWSA T3MO1488O0H1" },
+                { "Portfolio Turnover", "0.13%" },
+                { "OrderListHash", "83dfb4b2f1d41429273d83335b63426c" }
+            };
     }
 }

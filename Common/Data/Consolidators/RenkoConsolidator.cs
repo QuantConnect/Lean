@@ -31,7 +31,7 @@ namespace QuantConnect.Data.Consolidators
         private DataConsolidatedHandler _dataConsolidatedHandler;
         private RenkoBar _currentBar;
         private IBaseData _consolidated;
-        
+
         /// <summary>
         /// Time of consolidated close.
         /// </summary>
@@ -126,7 +126,9 @@ namespace QuantConnect.Data.Consolidators
         {
             if (barSize <= 0)
             {
-                throw new ArgumentException("Renko consolidator BarSize must be strictly greater than zero");
+                throw new ArgumentException(
+                    "Renko consolidator BarSize must be strictly greater than zero"
+                );
             }
 
             BarSize = barSize;
@@ -182,8 +184,16 @@ namespace QuantConnect.Data.Consolidators
 
                     if (CloseRate > limit)
                     {
-                        var wicko = new RenkoBar(data.Symbol, OpenOn, CloseOn, BarSize, _lastWicko.Open, limit,
-                            LowRate, limit);
+                        var wicko = new RenkoBar(
+                            data.Symbol,
+                            OpenOn,
+                            CloseOn,
+                            BarSize,
+                            _lastWicko.Open,
+                            limit,
+                            LowRate,
+                            limit
+                        );
 
                         _lastWicko = wicko;
 
@@ -208,8 +218,16 @@ namespace QuantConnect.Data.Consolidators
 
                     if (CloseRate < limit)
                     {
-                        var wicko = new RenkoBar(data.Symbol, OpenOn, CloseOn, BarSize, _lastWicko.Open, HighRate,
-                            limit, limit);
+                        var wicko = new RenkoBar(
+                            data.Symbol,
+                            OpenOn,
+                            CloseOn,
+                            BarSize,
+                            _lastWicko.Open,
+                            HighRate,
+                            limit,
+                            limit
+                        );
 
                         _lastWicko = wicko;
 
@@ -229,9 +247,7 @@ namespace QuantConnect.Data.Consolidators
         /// Scans this consolidator to see if it should emit a bar due to time passing
         /// </summary>
         /// <param name="currentLocalTime">The current time in the local time zone (same as <see cref="BaseData.Time"/>)</param>
-        public void Scan(DateTime currentLocalTime)
-        {
-        }
+        public void Scan(DateTime currentLocalTime) { }
 
         /// <summary>Performs application-defined tasks associated with freeing, releasing, or resetting unmanaged resources.</summary>
         /// <filterpriority>2</filterpriority>
@@ -260,7 +276,16 @@ namespace QuantConnect.Data.Consolidators
 
             while (CloseRate > (limit = OpenRate + BarSize))
             {
-                var wicko = new RenkoBar(data.Symbol, OpenOn, CloseOn, BarSize, OpenRate, limit, LowRate, limit);
+                var wicko = new RenkoBar(
+                    data.Symbol,
+                    OpenOn,
+                    CloseOn,
+                    BarSize,
+                    OpenRate,
+                    limit,
+                    LowRate,
+                    limit
+                );
 
                 _lastWicko = wicko;
 
@@ -278,7 +303,16 @@ namespace QuantConnect.Data.Consolidators
 
             while (CloseRate < (limit = OpenRate - BarSize))
             {
-                var wicko = new RenkoBar(data.Symbol, OpenOn, CloseOn, BarSize, OpenRate, HighRate, limit, limit);
+                var wicko = new RenkoBar(
+                    data.Symbol,
+                    OpenOn,
+                    CloseOn,
+                    BarSize,
+                    OpenRate,
+                    HighRate,
+                    limit,
+                    limit
+                );
 
                 _lastWicko = wicko;
 
@@ -322,9 +356,7 @@ namespace QuantConnect.Data.Consolidators
         /// </summary>
         /// <param name="barSize">The constant value size of each bar</param>
         public RenkoConsolidator(decimal barSize)
-            : base(barSize)
-        {
-        }
+            : base(barSize) { }
 
         /// <summary>
         /// Updates this consolidator with the specified data.
@@ -351,9 +383,7 @@ namespace QuantConnect.Data.Consolidators
         /// </summary>
         /// <param name="barSize">The constant value size of each bar</param>
         public WickedRenkoConsolidator(decimal barSize)
-            : base(barSize)
-        {
-        }
+            : base(barSize) { }
     }
 
     /// <summary>
@@ -370,8 +400,6 @@ namespace QuantConnect.Data.Consolidators
         /// </summary>
         /// <param name="barSize">The constant value size of each bar</param>
         public WickedRenkoConsolidator(decimal barSize)
-            : base(barSize)
-        {
-        }
+            : base(barSize) { }
     }
 }

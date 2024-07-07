@@ -14,8 +14,8 @@
  *
 */
 
-using QuantConnect.Data.Market;
 using System;
+using QuantConnect.Data.Market;
 
 namespace QuantConnect.Indicators
 {
@@ -48,9 +48,7 @@ namespace QuantConnect.Indicators
         /// </summary>
         /// <param name="period">The period of the WMA</param>
         public FisherTransform(int period)
-            : this($"FISH({period})", period)
-        {
-        }
+            : this($"FISH({period})", period) { }
 
         /// <summary>
         /// A Fisher Transform of Prices
@@ -92,7 +90,8 @@ namespace QuantConnect.Indicators
             _medianMin.Update(input.Time, price);
             _medianMax.Update(input.Time, price);
 
-            if (!IsReady) return 0;
+            if (!IsReady)
+                return 0;
 
             var x = 0.0;
             var y = 0.0;
@@ -101,7 +100,9 @@ namespace QuantConnect.Indicators
 
             if (minL != maxH)
             {
-                x = _alpha * 2 * ((double)((price - minL) / (maxH - minL)) - .5) + (1 - _alpha) * _previous;
+                x =
+                    _alpha * 2 * ((double)((price - minL) / (maxH - minL)) - .5)
+                    + (1 - _alpha) * _previous;
                 y = FisherTransformFunction(x);
             }
             _previous = x;

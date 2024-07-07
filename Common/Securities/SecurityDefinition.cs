@@ -15,10 +15,9 @@
 */
 
 using System;
-using System.IO;
-using System.Globalization;
 using System.Collections.Generic;
-
+using System.Globalization;
+using System.IO;
 using QuantConnect.Interfaces;
 
 namespace QuantConnect.Securities
@@ -76,7 +75,10 @@ namespace QuantConnect.Securities
         /// <param name="dataProvider">Data provider used to obtain symbol mappings data</param>
         /// <param name="securitiesDefinitionKey">Location to read the securities definition data from</param>
         /// <returns>List of security definitions</returns>
-        public static List<SecurityDefinition> Read(IDataProvider dataProvider, string securitiesDefinitionKey)
+        public static List<SecurityDefinition> Read(
+            IDataProvider dataProvider,
+            string securitiesDefinitionKey
+        )
         {
             using var stream = dataProvider.Fetch(securitiesDefinitionKey);
             using var reader = new StreamReader(stream);
@@ -86,7 +88,10 @@ namespace QuantConnect.Securities
             string line;
             while ((line = reader.ReadLine()) != null)
             {
-                if (string.IsNullOrWhiteSpace(line) || line.StartsWith("#", StringComparison.InvariantCulture))
+                if (
+                    string.IsNullOrWhiteSpace(line)
+                    || line.StartsWith("#", StringComparison.InvariantCulture)
+                )
                 {
                     continue;
                 }
@@ -104,7 +109,11 @@ namespace QuantConnect.Securities
         /// <param name="securitiesDatabaseKey">Location of the file to read from</param>
         /// <param name="securityDefinitions">Security definitions read</param>
         /// <returns>true if data was read successfully, false otherwise</returns>
-        public static bool TryRead(IDataProvider dataProvider, string securitiesDatabaseKey, out List<SecurityDefinition> securityDefinitions)
+        public static bool TryRead(
+            IDataProvider dataProvider,
+            string securitiesDatabaseKey,
+            out List<SecurityDefinition> securityDefinitions
+        )
         {
             try
             {
@@ -133,7 +142,10 @@ namespace QuantConnect.Securities
                 CompositeFIGI = string.IsNullOrWhiteSpace(csv[2]) ? null : csv[2],
                 SEDOL = string.IsNullOrWhiteSpace(csv[3]) ? null : csv[3],
                 ISIN = string.IsNullOrWhiteSpace(csv[4]) ? null : csv[4],
-                CIK = (csv.Length <= 5 || string.IsNullOrWhiteSpace(csv[5])) ? null : int.Parse(csv[5], CultureInfo.InvariantCulture)
+                CIK =
+                    (csv.Length <= 5 || string.IsNullOrWhiteSpace(csv[5]))
+                        ? null
+                        : int.Parse(csv[5], CultureInfo.InvariantCulture)
             };
         }
     }

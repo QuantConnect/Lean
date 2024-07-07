@@ -13,10 +13,10 @@
  * limitations under the License.
 */
 
-using QuantConnect.Configuration;
 using System.IO;
 using System.Runtime.CompilerServices;
 using System.Text.RegularExpressions;
+using QuantConnect.Configuration;
 
 namespace QuantConnect
 {
@@ -25,8 +25,14 @@ namespace QuantConnect
     /// </summary>
     public static class FileExtension
     {
-        public static readonly string ReservedWordsPrefix = Config.Get("reserved-words-prefix", "@");
-        private static readonly Regex ToValidWindowsPathRegex = new Regex("((?<=(\\\\|/|^))(CON|PRN|AUX|NUL|(COM[0-9])|(LPT[0-9]))(?=(\\.|\\\\|/|$)))", RegexOptions.IgnoreCase | RegexOptions.Compiled);
+        public static readonly string ReservedWordsPrefix = Config.Get(
+            "reserved-words-prefix",
+            "@"
+        );
+        private static readonly Regex ToValidWindowsPathRegex = new Regex(
+            "((?<=(\\\\|/|^))(CON|PRN|AUX|NUL|(COM[0-9])|(LPT[0-9]))(?=(\\.|\\\\|/|$)))",
+            RegexOptions.IgnoreCase | RegexOptions.Compiled
+        );
         private static readonly string _fixPathRegex = ReservedWordsPrefix + "$&"; // The string "$&" gets the matched word
         private static readonly bool _isWindows = OS.IsWindows;
 

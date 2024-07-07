@@ -13,11 +13,11 @@
  * limitations under the License.
 */
 
-using QuantConnect.Interfaces;
-using QuantConnect.Util;
 using System;
 using System.Collections.Generic;
 using System.Net.Http;
+using QuantConnect.Interfaces;
+using QuantConnect.Util;
 
 namespace QuantConnect.Algorithm.Framework.Portfolio.SignalExports
 {
@@ -93,7 +93,9 @@ namespace QuantConnect.Algorithm.Framework.Portfolio.SignalExports
             {
                 if (!AllowedSecurityTypes.Contains(signal.Symbol.SecurityType))
                 {
-                    parameters.Algorithm.Debug($"{signal.Symbol.SecurityType} security type is not supported by {Name}. Allowed security types: [{string.Join(",", AllowedSecurityTypes)}]");
+                    parameters.Algorithm.Debug(
+                        $"{signal.Symbol.SecurityType} security type is not supported by {Name}. Allowed security types: [{string.Join(",", AllowedSecurityTypes)}]"
+                    );
                     return false;
                 }
             }

@@ -62,7 +62,9 @@ namespace QuantConnect.Algorithm.CSharp
             var tiingoData = slice.Get<TiingoPrice>();
             foreach (var row in tiingoData.Values)
             {
-                Log($"{Time} - {row.Symbol.Value} - {row.Close} {row.Value} {row.Price} - EmaFast:{_emaFast} - EmaSlow:{_emaSlow}");
+                Log(
+                    $"{Time} - {row.Symbol.Value} - {row.Close} {row.Value} {row.Price} - EmaFast:{_emaFast} - EmaSlow:{_emaSlow}"
+                );
             }
 
             // Simple EMA cross

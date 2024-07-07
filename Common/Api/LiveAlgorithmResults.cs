@@ -13,11 +13,11 @@
  * limitations under the License.
 */
 
+using System;
+using System.Collections.Generic;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Converters;
 using QuantConnect.Packets;
-using System;
-using System.Collections.Generic;
 
 namespace QuantConnect.Api
 {

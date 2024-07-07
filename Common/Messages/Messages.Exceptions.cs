@@ -33,9 +33,9 @@ namespace QuantConnect
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             public static string DynamicLinkLibraryNotFound(string dllName, string platform)
             {
-                return $"The dynamic-link library for {dllName} could not be found. " +
-                    "Please visit https://github.com/QuantConnect/Lean/blob/master/Algorithm.Python/readme.md for instructions " +
-                    $"on how to enable python support in {platform}";
+                return $"The dynamic-link library for {dllName} could not be found. "
+                    + "Please visit https://github.com/QuantConnect/Lean/blob/master/Algorithm.Python/readme.md for instructions "
+                    + $"on how to enable python support in {platform}";
             }
         }
 
@@ -51,8 +51,9 @@ namespace QuantConnect
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             public static string InterpretException(PythonException exception)
             {
-                var message = "Trying to include an invalid token/character in any statement throws a SyntaxError exception. " +
-                    "To prevent the exception, ensure no invalid token are mistakenly included (e.g: leading zero).";
+                var message =
+                    "Trying to include an invalid token/character in any statement throws a SyntaxError exception. "
+                    + "To prevent the exception, ensure no invalid token are mistakenly included (e.g: leading zero).";
                 var errorLine = exception.Message.GetStringBetweenChars('(', ')');
 
                 return $"{message}{Environment.NewLine}  in {errorLine}{Environment.NewLine}";
@@ -67,8 +68,8 @@ namespace QuantConnect
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             public static string KeyNotFoundInCollection(string key)
             {
-                return "Trying to retrieve an element from a collection using a key that does not exist " +
-                    $@"in that collection throws a KeyError exception. To prevent the exception, ensure that the {
+                return "Trying to retrieve an element from a collection using a key that does not exist "
+                    + $@"in that collection throws a KeyError exception. To prevent the exception, ensure that the {
                         key} key exist in the collection and/or that collection is not empty.";
             }
         }
@@ -83,8 +84,8 @@ namespace QuantConnect
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             public static string AttemptedToAccessMethodThatDoesNotExist(string methodName)
             {
-                return "Trying to dynamically access a method that does not exist throws a TypeError exception. " +
-                    $@"To prevent the exception, ensure each parameter type matches those required by the {
+                return "Trying to dynamically access a method that does not exist throws a TypeError exception. "
+                    + $@"To prevent the exception, ensure each parameter type matches those required by the {
                         methodName} method. Please checkout the API documentation.";
             }
         }
@@ -124,7 +125,8 @@ namespace QuantConnect
             /// <summary>
             /// Unsupported Operand Type Expected substring
             /// </summary>
-            public static string UnsupportedOperandTypeExpectedSubstring = "unsupported operand type";
+            public static string UnsupportedOperandTypeExpectedSubstring =
+                "unsupported operand type";
 
             /// <summary>
             /// Returns a message for invalid object types for operation

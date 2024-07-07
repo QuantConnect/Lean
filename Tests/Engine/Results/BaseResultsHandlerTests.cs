@@ -92,39 +92,80 @@ namespace QuantConnect.Tests.Engine.Results
             var protectedMockResultHandler = mockResultHandler.Protected();
 
             protectedMockResultHandler.Setup("SampleEquity", ItExpr.IsAny<DateTime>());
-            protectedMockResultHandler.Setup("SampleBenchmark", ItExpr.IsAny<DateTime>(), ItExpr.IsAny<decimal>());
+            protectedMockResultHandler.Setup(
+                "SampleBenchmark",
+                ItExpr.IsAny<DateTime>(),
+                ItExpr.IsAny<decimal>()
+            );
             protectedMockResultHandler
                 .Setup<decimal>("GetBenchmarkValue", ItExpr.IsAny<DateTime>())
                 .Returns(0m);
-            protectedMockResultHandler.Setup("SamplePerformance", ItExpr.IsAny<DateTime>(), ItExpr.IsAny<decimal>());
-            protectedMockResultHandler.Setup("SampleDrawdown", ItExpr.IsAny<DateTime>(), ItExpr.IsAny<decimal>());
+            protectedMockResultHandler.Setup(
+                "SamplePerformance",
+                ItExpr.IsAny<DateTime>(),
+                ItExpr.IsAny<decimal>()
+            );
+            protectedMockResultHandler.Setup(
+                "SampleDrawdown",
+                ItExpr.IsAny<DateTime>(),
+                ItExpr.IsAny<decimal>()
+            );
             protectedMockResultHandler.Setup("SampleSalesVolume", ItExpr.IsAny<DateTime>());
             protectedMockResultHandler.Setup("SampleCapacity", ItExpr.IsAny<DateTime>());
-            protectedMockResultHandler.Setup("SamplePortfolioTurnover", ItExpr.IsAny<DateTime>(), ItExpr.IsAny<decimal>());
+            protectedMockResultHandler.Setup(
+                "SamplePortfolioTurnover",
+                ItExpr.IsAny<DateTime>(),
+                ItExpr.IsAny<decimal>()
+            );
 
             var sampleInvocations = new List<SampleParams>();
             protectedMockResultHandler
-                .Setup("Sample", ItExpr.IsAny<string>(), ItExpr.IsAny<string>(), ItExpr.IsAny<int>(), ItExpr.IsAny<SeriesType>(),
-                    ItExpr.IsAny<ISeriesPoint>(), ItExpr.IsAny<string>())
-                .Callback((string chartName, string seriesName, int seriesIndex, SeriesType seriesType, ISeriesPoint value, string unit) =>
-                {
-                    sampleInvocations.Add(new SampleParams
+                .Setup(
+                    "Sample",
+                    ItExpr.IsAny<string>(),
+                    ItExpr.IsAny<string>(),
+                    ItExpr.IsAny<int>(),
+                    ItExpr.IsAny<SeriesType>(),
+                    ItExpr.IsAny<ISeriesPoint>(),
+                    ItExpr.IsAny<string>()
+                )
+                .Callback(
+                    (
+                        string chartName,
+                        string seriesName,
+                        int seriesIndex,
+                        SeriesType seriesType,
+                        ISeriesPoint value,
+                        string unit
+                    ) =>
                     {
-                        ChartName = chartName,
-                        SeriesName = seriesName,
-                        SeriesIndex = seriesIndex,
-                        SeriesType = seriesType,
-                        Value = value,
-                        Unit = unit
-                    });
-                })
+                        sampleInvocations.Add(
+                            new SampleParams
+                            {
+                                ChartName = chartName,
+                                SeriesName = seriesName,
+                                SeriesIndex = seriesIndex,
+                                SeriesType = seriesType,
+                                Value = value,
+                                Unit = unit
+                            }
+                        );
+                    }
+                )
                 .Verifiable();
 
             // Now set everything up for the SampleExposure method
-            var timeKeeper = new TimeKeeper(new DateTime(2014, 6, 24, 12, 0, 0).ConvertToUtc(TimeZones.NewYork), new[] { TimeZones.NewYork });
+            var timeKeeper = new TimeKeeper(
+                new DateTime(2014, 6, 24, 12, 0, 0).ConvertToUtc(TimeZones.NewYork),
+                new[] { TimeZones.NewYork }
+            );
             var securities = new SecurityManager(timeKeeper);
             var transactions = new SecurityTransactionManager(null, securities);
-            var portfolio = new SecurityPortfolioManager(securities, transactions, new AlgorithmSettings());
+            var portfolio = new SecurityPortfolioManager(
+                securities,
+                transactions,
+                new AlgorithmSettings()
+            );
 
             var algorithm = new QCAlgorithm();
             algorithm.Securities = securities;
@@ -133,12 +174,18 @@ namespace QuantConnect.Tests.Engine.Results
             algorithm.SubscriptionManager.SetDataManager(new DataManagerStub(algorithm));
 
             var spy = algorithm.AddEquity("SPY");
-            spy.Holdings = new SecurityHolding(spy, new IdentityCurrencyConverter(algorithm.AccountCurrency));
+            spy.Holdings = new SecurityHolding(
+                spy,
+                new IdentityCurrencyConverter(algorithm.AccountCurrency)
+            );
             spy.Holdings.UpdateMarketPrice(100m);
             spy.Holdings.SetHoldings(100m, holdingsQuantity);
             portfolio.InvalidateTotalPortfolioValue();
 
-            protectedMockResultHandler.SetupGet<IAlgorithm>("Algorithm").Returns(algorithm).Verifiable();
+            protectedMockResultHandler
+                .SetupGet<IAlgorithm>("Algorithm")
+                .Returns(algorithm)
+                .Verifiable();
 
             mockResultHandler.Object.Sample(timeKeeper.UtcTime);
 
@@ -147,8 +194,16 @@ namespace QuantConnect.Tests.Engine.Results
             protectedMockResultHandler.VerifyGet<IAlgorithm>("Algorithm", Times.Exactly(5));
 
             // Sample should've been called twice, by BaseResultHandler.SampleExposure(), once for the long and once for the short positions
-            protectedMockResultHandler.Verify("Sample", Times.Exactly(2), ItExpr.IsAny<string>(), ItExpr.IsAny<string>(),
-                ItExpr.IsAny<int>(), ItExpr.IsAny<SeriesType>(), ItExpr.IsAny<ISeriesPoint>(), ItExpr.IsAny<string>());
+            protectedMockResultHandler.Verify(
+                "Sample",
+                Times.Exactly(2),
+                ItExpr.IsAny<string>(),
+                ItExpr.IsAny<string>(),
+                ItExpr.IsAny<int>(),
+                ItExpr.IsAny<SeriesType>(),
+                ItExpr.IsAny<ISeriesPoint>(),
+                ItExpr.IsAny<string>()
+            );
             Assert.AreEqual(2, sampleInvocations.Count);
 
             var positionSides = new[] { PositionSide.Long, PositionSide.Short };
@@ -173,7 +228,10 @@ namespace QuantConnect.Tests.Engine.Results
             }
             else
             {
-                var expectedExposure = Math.Round(spy.Holdings.HoldingsValue / portfolio.TotalPortfolioValue, 4);
+                var expectedExposure = Math.Round(
+                    spy.Holdings.HoldingsValue / portfolio.TotalPortfolioValue,
+                    4
+                );
                 if (holdingsQuantity > 0)
                 {
                     Assert.AreEqual(expectedExposure, ((ChartPoint)longInvocation.Value).y);
@@ -198,7 +256,9 @@ namespace QuantConnect.Tests.Engine.Results
             {
                 ResultsDestinationFolder = folder;
             }
+
             public string GetResultsDestinationFolder => ResultsDestinationFolder;
+
             protected override void Run()
             {
                 throw new NotImplementedException();
@@ -209,19 +269,19 @@ namespace QuantConnect.Tests.Engine.Results
                 throw new NotImplementedException();
             }
 
-            protected override void Sample(string chartName,
-                                           string seriesName,
-                                           int seriesIndex,
-                                           SeriesType seriesType,
-                                           ISeriesPoint value,
-                                           string unit = "$")
+            protected override void Sample(
+                string chartName,
+                string seriesName,
+                int seriesIndex,
+                SeriesType seriesType,
+                ISeriesPoint value,
+                string unit = "$"
+            )
             {
                 throw new NotImplementedException();
             }
 
-            protected override void AddToLogStore(string message)
-            {
-            }
+            protected override void AddToLogStore(string message) { }
         }
 
         private struct SampleParams

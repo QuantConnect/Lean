@@ -39,17 +39,32 @@ namespace QuantConnect.Tests.Common.Securities.FutureOption
                 default(OptionStyle),
                 default(OptionRight),
                 default(decimal),
-                SecurityIdentifier.DefaultDate);
+                SecurityIdentifier.DefaultDate
+            );
 
-            var futureOptionExpiry = FuturesOptionsExpiryFunctions.FuturesOptionExpiry(option, contractMonth);
+            var futureOptionExpiry = FuturesOptionsExpiryFunctions.FuturesOptionExpiry(
+                option,
+                contractMonth
+            );
             Assert.AreEqual(expectedDelta, contractMonth.Month - futureOptionExpiry.Month);
         }
 
         [TestCaseSource(nameof(ExpiryTestCases))]
-        public void ExpiryFunctionsReturnExpectedResults(string futureTicker, string market, DateTime expected)
+        public void ExpiryFunctionsReturnExpectedResults(
+            string futureTicker,
+            string market,
+            DateTime expected
+        )
         {
             var future = Symbol.Create(futureTicker, SecurityType.Future, market);
-            var futureOption = Symbol.CreateOption(future, market, default(OptionStyle), default(OptionRight), default(decimal), SecurityIdentifier.DefaultDate);
+            var futureOption = Symbol.CreateOption(
+                future,
+                market,
+                default(OptionStyle),
+                default(OptionRight),
+                default(decimal),
+                SecurityIdentifier.DefaultDate
+            );
 
             var december = new DateTime(2020, 12, 1);
             var actual = FuturesOptionsExpiryFunctions.FuturesOptionExpiry(futureOption, december);

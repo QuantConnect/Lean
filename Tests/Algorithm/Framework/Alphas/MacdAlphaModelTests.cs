@@ -13,13 +13,13 @@
  * limitations under the License.
 */
 
+using System;
+using System.Collections.Generic;
 using NUnit.Framework;
 using Python.Runtime;
 using QuantConnect.Algorithm.Framework.Alphas;
-using System;
-using System.Collections.Generic;
-using QuantConnect.Data.UniverseSelection;
 using QuantConnect.Algorithm.Framework.Selection;
+using QuantConnect.Data.UniverseSelection;
 using QuantConnect.Tests.Common.Data.UniverseSelection;
 using QuantConnect.Util;
 
@@ -69,7 +69,10 @@ namespace QuantConnect.Tests.Algorithm.Framework.Alphas
             Algorithm.SetAlpha(model);
             Algorithm.SetUniverseSelection(new ManualUniverseSelectionModel());
 
-            var changes = SecurityChangesTests.CreateNonInternal(AddedSecurities, RemovedSecurities);
+            var changes = SecurityChangesTests.CreateNonInternal(
+                AddedSecurities,
+                RemovedSecurities
+            );
             Algorithm.OnFrameworkSecuritiesChanged(changes);
 
             // Get the dictionary of macd indicators
@@ -103,7 +106,10 @@ namespace QuantConnect.Tests.Algorithm.Framework.Alphas
                 var instance = model();
                 Algorithm.SetAlpha(instance);
 
-                var changes = SecurityChangesTests.CreateNonInternal(AddedSecurities, RemovedSecurities);
+                var changes = SecurityChangesTests.CreateNonInternal(
+                    AddedSecurities,
+                    RemovedSecurities
+                );
                 Algorithm.OnFrameworkSecuritiesChanged(changes);
 
                 // Get the dictionary of macd indicators

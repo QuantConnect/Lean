@@ -13,18 +13,18 @@
  * limitations under the License.
 */
 
-using Newtonsoft.Json.Linq;
-using NUnit.Framework;
-using QuantConnect.Configuration;
-using QuantConnect.Interfaces;
-using QuantConnect.Logging;
-using QuantConnect.Util;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Text.RegularExpressions;
+using Newtonsoft.Json.Linq;
+using NUnit.Framework;
+using QuantConnect.Configuration;
+using QuantConnect.Interfaces;
+using QuantConnect.Logging;
+using QuantConnect.Util;
 
 namespace QuantConnect.Tests
 {
@@ -40,12 +40,20 @@ namespace QuantConnect.Tests
     public class ResearchRegressionTests
     {
         // Update in config.json when template expected result needs to be updated
-        private static readonly bool _updateResearchRegressionOutput = Config.GetBool("research-regression-update-output", false);
+        private static readonly bool _updateResearchRegressionOutput = Config.GetBool(
+            "research-regression-update-output",
+            false
+        );
 
         [Test, TestCaseSource(nameof(GetResearchRegressionTestParameters))]
         public void ResearchRegression(ResearchRegressionTestParameters parameters)
         {
-            var actualOutput = RunResearchNotebookAndGetOutput(parameters.NotebookPath, parameters.NotebookOutputPath, Directory.GetCurrentDirectory(), out Process process);
+            var actualOutput = RunResearchNotebookAndGetOutput(
+                parameters.NotebookPath,
+                parameters.NotebookOutputPath,
+                Directory.GetCurrentDirectory(),
+                out Process process
+            );
 
             // Update expected result if required.
             if (_updateResearchRegressionOutput)
@@ -54,12 +62,18 @@ namespace QuantConnect.Tests
             }
             var actualCells = JToken.Parse(CleanDispensableEscapeCharacters(actualOutput))["cells"];
             var expectedCells = JToken.Parse(parameters.ExpectedOutput)["cells"];
-            var expectedAndActualCells = expectedCells.Zip(actualCells, (e, a) => new { Expected = e, Actual = a });
+            var expectedAndActualCells = expectedCells.Zip(
+                actualCells,
+                (e, a) => new { Expected = e, Actual = a }
+            );
 
             foreach (var cell in expectedAndActualCells)
             {
                 // Assert Notebook Cell Input
-                Assert.AreEqual(cell.Expected["source"].ToString(), cell.Actual["source"].ToString());
+                Assert.AreEqual(
+                    cell.Expected["source"].ToString(),
+                    cell.Actual["source"].ToString()
+                );
 
                 // Assert Notebook Cell Output
                 var expectedCellOutputs = cell.Expected["outputs"];
@@ -71,21 +85,33 @@ namespace QuantConnect.Tests
                         Assert.Fail("Shouldn't be null when expected is not null");
                     }
                     // Iterate over all outputs for the given notebook cell
-                    var expectedCellOutputsAndActualCellOutputs = expectedCellOutputs.Zip(actualCellOutputs, (e, a) => new { Expected = e, Actual = a });
+                    var expectedCellOutputsAndActualCellOutputs = expectedCellOutputs.Zip(
+                        actualCellOutputs,
+                        (e, a) => new { Expected = e, Actual = a }
+                    );
                     foreach (var cellOutputsItem in expectedCellOutputsAndActualCellOutputs)
                     {
-                        if (cellOutputsItem.Expected["data"] != null && cellOutputsItem.Expected["data"]["text/html"] != null)
+                        if (
+                            cellOutputsItem.Expected["data"] != null
+                            && cellOutputsItem.Expected["data"]["text/html"] != null
+                        )
                         {
                             continue;
                         }
-                        else if (cellOutputsItem.Expected["name"]?.ToString() == "stdout" && cellOutputsItem.Expected["text"] != null)
+                        else if (
+                            cellOutputsItem.Expected["name"]?.ToString() == "stdout"
+                            && cellOutputsItem.Expected["text"] != null
+                        )
                         {
                             if (!IsDeterministic(cellOutputsItem.Expected["text"].ToString()))
                             {
                                 continue;
                             }
                         }
-                        Assert.AreEqual(cellOutputsItem.Expected.ToString(), cellOutputsItem.Actual.ToString());
+                        Assert.AreEqual(
+                            cellOutputsItem.Expected.ToString(),
+                            cellOutputsItem.Actual.ToString()
+                        );
                     }
                 }
             }
@@ -102,7 +128,11 @@ namespace QuantConnect.Tests
             public string ExpectedOutput { get; init; }
             public string NotebookOutputPath { get; init; }
 
-            public ResearchRegressionTestParameters(string notebookName, string notebookPath, string expectedOutput)
+            public ResearchRegressionTestParameters(
+                string notebookName,
+                string notebookPath,
+                string expectedOutput
+            )
             {
                 NotebookName = notebookName;
                 NotebookPath = notebookPath;
@@ -111,9 +141,18 @@ namespace QuantConnect.Tests
             }
         }
 
-        private static void UpdateResearchRegressionOutputInSourceFile(string templateName, string expectedOutput)
+        private static void UpdateResearchRegressionOutputInSourceFile(
+            string templateName,
+            string expectedOutput
+        )
         {
-            var templatePath = Directory.EnumerateFiles("../../Research/RegressionTemplates", $"*{templateName}.cs", SearchOption.AllDirectories).Single();
+            var templatePath = Directory
+                .EnumerateFiles(
+                    "../../Research/RegressionTemplates",
+                    $"*{templateName}.cs",
+                    SearchOption.AllDirectories
+                )
+                .Single();
             var file = File.ReadAllLines(templatePath).ToList().GetEnumerator();
             var lines = new List<string>();
             while (file.MoveNext())
@@ -177,7 +216,7 @@ namespace QuantConnect.Tests
         private static List<string> SplitIntoMultipleLines(string longInput, int maxChunkSize)
         {
             List<string> resultLines = new();
-            for (int i = 0; i < longInput.Length;)
+            for (int i = 0; i < longInput.Length; )
             {
                 var chunk = longInput.Substring(i, Math.Min(maxChunkSize, longInput.Length - i));
                 i += maxChunkSize;
@@ -197,8 +236,7 @@ namespace QuantConnect.Tests
 
         private static string CleanDispensableEscapeCharacters(string json)
         {
-            json = json
-                .Replace("\\n", string.Empty)
+            json = json.Replace("\\n", string.Empty)
                 .Replace("\n", string.Empty)
                 .Replace("\\r", string.Empty)
                 .Replace("\r", string.Empty)
@@ -207,9 +245,15 @@ namespace QuantConnect.Tests
             return json;
         }
 
-        private static string RunResearchNotebookAndGetOutput(string notebookPath, string notebookoutputPath, string workingDirectoryForNotebook, out Process process)
+        private static string RunResearchNotebookAndGetOutput(
+            string notebookPath,
+            string notebookoutputPath,
+            string workingDirectoryForNotebook,
+            out Process process
+        )
         {
-            var args = $"-m papermill \"{notebookPath}\" \"{notebookoutputPath}\" --log-output --cwd {workingDirectoryForNotebook}";
+            var args =
+                $"-m papermill \"{notebookPath}\" \"{notebookoutputPath}\" --log-output --cwd {workingDirectoryForNotebook}";
 
             TestProcess.RunPythonProcess(args, out process);
 
@@ -218,7 +262,8 @@ namespace QuantConnect.Tests
 
         private static bool IsDeterministic(string input)
         {
-            Regex rgxDateTime = new(@"(\d{4})(\d{2})(\d{2}) (\d{2}):(\d{2}):(\d{2}).(\d{3}) TRACE::");
+            Regex rgxDateTime =
+                new(@"(\d{4})(\d{2})(\d{2}) (\d{2}):(\d{2}):(\d{2}).(\d{3}) TRACE::");
             if (input.Contains("Initialize.csx"))
             {
                 return false;
@@ -240,17 +285,28 @@ namespace QuantConnect.Tests
 
         private static ResearchRegressionTestParameters[] GetResearchTemplates()
         {
-            return Composer.Instance.GetExportedTypes<IRegressionResearchDefinition>()
-                .Where(type =>
-                    !type.IsAbstract &&
-                    type.GetConstructor(Array.Empty<Type>()) != null)
+            return Composer
+                .Instance.GetExportedTypes<IRegressionResearchDefinition>()
+                .Where(type => !type.IsAbstract && type.GetConstructor(Array.Empty<Type>()) != null)
                 .Select(type => new
                 {
                     instance = (IRegressionResearchDefinition)Activator.CreateInstance(type),
                     name = type.Name,
-                    path = Path.GetFullPath(Path.Combine(Path.Combine(type.Assembly.Location, @"../Research/RegressionTemplates"), type.Name + ".ipynb"))
+                    path = Path.GetFullPath(
+                        Path.Combine(
+                            Path.Combine(
+                                type.Assembly.Location,
+                                @"../Research/RegressionTemplates"
+                            ),
+                            type.Name + ".ipynb"
+                        )
+                    )
                 })
-                .Select(tempObj => new ResearchRegressionTestParameters(tempObj.name, tempObj.path, tempObj.instance.ExpectedOutput))
+                .Select(tempObj => new ResearchRegressionTestParameters(
+                    tempObj.name,
+                    tempObj.path,
+                    tempObj.instance.ExpectedOutput
+                ))
                 .ToArray();
         }
 
@@ -263,7 +319,8 @@ namespace QuantConnect.Tests
                 // generate test cases from test parameters
                 .Select(x => new TestCaseData(x).SetName(x.NotebookName))
                 .ToArray();
-            return result; ;
+            return result;
+            ;
         }
     }
 }

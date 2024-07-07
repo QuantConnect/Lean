@@ -13,15 +13,15 @@
  * limitations under the License.
 */
 
+using System;
+using System.Collections.Generic;
+using System.Linq;
 using NodaTime;
 using QuantConnect.Data;
 using QuantConnect.Data.Market;
 using QuantConnect.Data.UniverseSelection;
 using QuantConnect.Lean.Engine.DataFeeds;
 using QuantConnect.Securities;
-using System;
-using System.Collections.Generic;
-using System.Linq;
 using HistoryRequest = QuantConnect.Data.HistoryRequest;
 
 namespace QuantConnect.Lean.Engine.HistoricalData
@@ -52,9 +52,7 @@ namespace QuantConnect.Lean.Engine.HistoricalData
         /// Initializes this history provider to work for the specified job
         /// </summary>
         /// <param name="parameters">The initialization parameters</param>
-        public override void Initialize(HistoryProviderInitializeParameters parameters)
-        {
-        }
+        public override void Initialize(HistoryProviderInitializeParameters parameters) { }
 
         /// <summary>
         /// Gets the history for the requested securities
@@ -62,7 +60,10 @@ namespace QuantConnect.Lean.Engine.HistoricalData
         /// <param name="requests">The historical data requests</param>
         /// <param name="sliceTimeZone">The time zone used when time stamping the slice instances</param>
         /// <returns>An enumerable of the slices of data covering the span specified in each request</returns>
-        public override IEnumerable<Slice> GetHistory(IEnumerable<HistoryRequest> requests, DateTimeZone sliceTimeZone)
+        public override IEnumerable<Slice> GetHistory(
+            IEnumerable<HistoryRequest> requests,
+            DateTimeZone sliceTimeZone
+        )
         {
             var configsByDateTime = GetSubscriptionDataConfigByDateTime(requests);
             var count = configsByDateTime.Count;
@@ -72,7 +73,9 @@ namespace QuantConnect.Lean.Engine.HistoricalData
             {
                 var utcDateTime = kvp.Key;
                 var configs = kvp.Value;
-                var last = Convert.ToDecimal(100 + 10 * Math.Sin(Math.PI * (360 - count + i) / 180.0));
+                var last = Convert.ToDecimal(
+                    100 + 10 * Math.Sin(Math.PI * (360 - count + i) / 180.0)
+                );
                 var high = last * 1.005m;
                 var low = last / 1.005m;
 
@@ -88,18 +91,36 @@ namespace QuantConnect.Lean.Engine.HistoricalData
 
                     var period = config.Resolution.ToTimeSpan();
                     var time = (utcDateTime - period).ConvertFromUtc(config.DataTimeZone);
-                    var data = new TradeBar(time, config.Symbol, last, high, last, last, 1000, period);
+                    var data = new TradeBar(
+                        time,
+                        config.Symbol,
+                        last,
+                        high,
+                        last,
+                        last,
+                        1000,
+                        period
+                    );
                     security.SetMarketPrice(data);
                     packets.Add(new DataFeedPacket(security, config, new List<BaseData> { data }));
                 }
 
                 i++;
-                yield return timeSliceFactory.Create(utcDateTime, packets, _securityChanges, new Dictionary<Universe, BaseDataCollection>()).Slice;
+                yield return timeSliceFactory
+                    .Create(
+                        utcDateTime,
+                        packets,
+                        _securityChanges,
+                        new Dictionary<Universe, BaseDataCollection>()
+                    )
+                    .Slice;
             }
         }
 
-        private Dictionary<DateTime, List<SubscriptionDataConfig>> GetSubscriptionDataConfigByDateTime(
-            IEnumerable<HistoryRequest> requests)
+        private Dictionary<
+            DateTime,
+            List<SubscriptionDataConfig>
+        > GetSubscriptionDataConfigByDateTime(IEnumerable<HistoryRequest> requests)
         {
             var dictionary = new Dictionary<DateTime, List<SubscriptionDataConfig>>();
 

@@ -14,7 +14,6 @@
 */
 
 using System.Collections.Generic;
-
 using QuantConnect.Data;
 using QuantConnect.Indicators;
 using QuantConnect.Interfaces;
@@ -51,12 +50,15 @@ namespace QuantConnect.Algorithm.CSharp
         public void OnData(Slice slice)
         {
             // Let's wait for our indicator to fully initialize and have a full window of history data
-            if (!_bollingerBands.Window.IsReady) return;
+            if (!_bollingerBands.Window.IsReady)
+                return;
 
             // We can access the current and oldest (in our period) values of the indicator
             Log($"Current BB value: {_bollingerBands[0].EndTime} - {_bollingerBands[0].Value}");
-            Log($@"Oldest BB value: {_bollingerBands[_bollingerBands.Window.Count - 1].EndTime} - {
-                _bollingerBands[_bollingerBands.Window.Count - 1].Value}");
+            Log(
+                $@"Oldest BB value: {_bollingerBands[_bollingerBands.Window.Count - 1].EndTime} - {
+                _bollingerBands[_bollingerBands.Window.Count - 1].Value}"
+            );
 
             // Let's log the BB values for the last 20 days, for demonstration purposes on how it can be enumerated
             foreach (var dataPoint in _bollingerBands)
@@ -67,8 +69,10 @@ namespace QuantConnect.Algorithm.CSharp
             // We can also do the same for internal indicators:
             var middleBand = _bollingerBands.MiddleBand;
             Log($"Current BB Middle Band value: {middleBand[0].EndTime} - {middleBand[0].Value}");
-            Log($@"Oldest BB Middle Band value: {middleBand[middleBand.Window.Count - 1].EndTime} - {
-                middleBand[middleBand.Window.Count - 1].Value}");
+            Log(
+                $@"Oldest BB Middle Band value: {middleBand[middleBand.Window.Count - 1].EndTime} - {
+                middleBand[middleBand.Window.Count - 1].Value}"
+            );
             foreach (var dataPoint in middleBand)
             {
                 Log($"BB Middle Band @{dataPoint.EndTime}: {dataPoint.Value}");
@@ -106,35 +110,36 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// This is used by the regression test system to indicate what the expected statistics are from running the algorithm
         /// </summary>
-        public Dictionary<string, string> ExpectedStatistics => new Dictionary<string, string>
-        {
-            {"Total Orders", "0"},
-            {"Average Win", "0%"},
-            {"Average Loss", "0%"},
-            {"Compounding Annual Return", "0%"},
-            {"Drawdown", "0%"},
-            {"Expectancy", "0"},
-            {"Start Equity", "25000"},
-            {"End Equity", "25000"},
-            {"Net Profit", "0%"},
-            {"Sharpe Ratio", "0"},
-            {"Sortino Ratio", "0"},
-            {"Probabilistic Sharpe Ratio", "0%"},
-            {"Loss Rate", "0%"},
-            {"Win Rate", "0%"},
-            {"Profit-Loss Ratio", "0"},
-            {"Alpha", "0"},
-            {"Beta", "0"},
-            {"Annual Standard Deviation", "0"},
-            {"Annual Variance", "0"},
-            {"Information Ratio", "-7.209"},
-            {"Tracking Error", "0.087"},
-            {"Treynor Ratio", "0"},
-            {"Total Fees", "$0.00"},
-            {"Estimated Strategy Capacity", "$0"},
-            {"Lowest Capacity Asset", ""},
-            {"Portfolio Turnover", "0%"},
-            {"OrderListHash", "d41d8cd98f00b204e9800998ecf8427e"}
-        };
+        public Dictionary<string, string> ExpectedStatistics =>
+            new Dictionary<string, string>
+            {
+                { "Total Orders", "0" },
+                { "Average Win", "0%" },
+                { "Average Loss", "0%" },
+                { "Compounding Annual Return", "0%" },
+                { "Drawdown", "0%" },
+                { "Expectancy", "0" },
+                { "Start Equity", "25000" },
+                { "End Equity", "25000" },
+                { "Net Profit", "0%" },
+                { "Sharpe Ratio", "0" },
+                { "Sortino Ratio", "0" },
+                { "Probabilistic Sharpe Ratio", "0%" },
+                { "Loss Rate", "0%" },
+                { "Win Rate", "0%" },
+                { "Profit-Loss Ratio", "0" },
+                { "Alpha", "0" },
+                { "Beta", "0" },
+                { "Annual Standard Deviation", "0" },
+                { "Annual Variance", "0" },
+                { "Information Ratio", "-7.209" },
+                { "Tracking Error", "0.087" },
+                { "Treynor Ratio", "0" },
+                { "Total Fees", "$0.00" },
+                { "Estimated Strategy Capacity", "$0" },
+                { "Lowest Capacity Asset", "" },
+                { "Portfolio Turnover", "0%" },
+                { "OrderListHash", "d41d8cd98f00b204e9800998ecf8427e" }
+            };
     }
 }

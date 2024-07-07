@@ -15,11 +15,11 @@
 */
 
 using System;
-using QuantConnect.Data;
-using QuantConnect.Interfaces;
 using System.Collections.Generic;
+using QuantConnect.Data;
 using QuantConnect.Data.Auxiliary;
 using QuantConnect.Data.UniverseSelection;
+using QuantConnect.Interfaces;
 
 namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators.Factories
 {
@@ -38,7 +38,10 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators.Factories
         /// </summary>
         /// <param name="optionChainProvider">The option chain provider</param>
         /// <param name="futureChainProvider">The future chain provider</param>
-        public BaseDataSubscriptionEnumeratorFactory(IOptionChainProvider optionChainProvider, IFutureChainProvider futureChainProvider)
+        public BaseDataSubscriptionEnumeratorFactory(
+            IOptionChainProvider optionChainProvider,
+            IFutureChainProvider futureChainProvider
+        )
         {
             _futureChainProvider = futureChainProvider;
             _optionChainProvider = optionChainProvider;
@@ -51,7 +54,10 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators.Factories
         /// <param name="request">The subscription request to be read</param>
         /// <param name="dataProvider">Provider used to get data when it is not present on disk</param>
         /// <returns>An enumerator reading the subscription request</returns>
-        public IEnumerator<BaseData> CreateEnumerator(SubscriptionRequest request, IDataProvider dataProvider)
+        public IEnumerator<BaseData> CreateEnumerator(
+            SubscriptionRequest request,
+            IDataProvider dataProvider
+        )
         {
             // We decide to use the ZipDataCacheProvider instead of the SingleEntryDataCacheProvider here
             // for resiliency and as a fix for an issue preventing us from reading non-equity options data.
@@ -63,20 +69,31 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators.Factories
                 IEnumerable<Symbol> symbols;
                 if (request.Configuration.SecurityType.IsOption())
                 {
-                    symbols = _optionChainProvider.GetOptionContractList(request.Configuration.Symbol, date);
+                    symbols = _optionChainProvider.GetOptionContractList(
+                        request.Configuration.Symbol,
+                        date
+                    );
                 }
                 else if (request.Configuration.SecurityType == SecurityType.Future)
                 {
-                    symbols = _futureChainProvider.GetFutureContractList(request.Configuration.Symbol, date);
+                    symbols = _futureChainProvider.GetFutureContractList(
+                        request.Configuration.Symbol,
+                        date
+                    );
                 }
                 else
                 {
-                    throw new NotImplementedException($"{request.Configuration.SecurityType} is not supported");
+                    throw new NotImplementedException(
+                        $"{request.Configuration.SecurityType} is not supported"
+                    );
                 }
 
                 // we are going to use these symbols to create a collection that for options will also have the underlying that will be emitted in exchange time zone
                 // note the merging of the data will happen based on their end time so time zones are important to respect
-                var exchangeTimeZoneDate = date.ConvertTo(request.Configuration.DataTimeZone, request.ExchangeHours.TimeZone);
+                var exchangeTimeZoneDate = date.ConvertTo(
+                    request.Configuration.DataTimeZone,
+                    request.ExchangeHours.TimeZone
+                );
                 foreach (var symbol in symbols)
                 {
                     yield return new ZipEntryName { Symbol = symbol, Time = exchangeTimeZoneDate };

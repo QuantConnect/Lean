@@ -13,8 +13,8 @@
  * limitations under the License.
 */
 
-using QuantConnect.Orders;
 using System.Collections.Generic;
+using QuantConnect.Orders;
 
 namespace QuantConnect.Securities.Positions
 {
@@ -31,7 +31,7 @@ namespace QuantConnect.Securities.Positions
             this IPositionGroupBuyingPowerModel model,
             SecurityPortfolioManager portfolio,
             IPositionGroup positionGroup
-            )
+        )
         {
             return model.GetMaintenanceMargin(
                 new PositionGroupMaintenanceMarginParameters(portfolio, positionGroup)
@@ -45,11 +45,13 @@ namespace QuantConnect.Securities.Positions
             this IPositionGroupBuyingPowerModel model,
             SecurityPortfolioManager portfolio,
             IPositionGroup positionGroup
-            )
+        )
         {
-            return model.GetInitialMarginRequirement(
-                new PositionGroupInitialMarginParameters(portfolio, positionGroup)
-            ).Value;
+            return model
+                .GetInitialMarginRequirement(
+                    new PositionGroupInitialMarginParameters(portfolio, positionGroup)
+                )
+                .Value;
         }
 
         /// <summary>
@@ -60,11 +62,17 @@ namespace QuantConnect.Securities.Positions
             SecurityPortfolioManager portfolio,
             IPositionGroup positionGroup,
             Order order
-            )
+        )
         {
-            return model.GetInitialMarginRequiredForOrder(
-                new PositionGroupInitialMarginForOrderParameters(portfolio, positionGroup, order)
-            ).Value;
+            return model
+                .GetInitialMarginRequiredForOrder(
+                    new PositionGroupInitialMarginForOrderParameters(
+                        portfolio,
+                        positionGroup,
+                        order
+                    )
+                )
+                .Value;
         }
 
         /// <summary>
@@ -74,11 +82,13 @@ namespace QuantConnect.Securities.Positions
             this IPositionGroupBuyingPowerModel model,
             SecurityPortfolioManager portfolio,
             IPositionGroup positionGroup
-            )
+        )
         {
-            return model.GetReservedBuyingPowerForPositionGroup(
-                new ReservedBuyingPowerForPositionGroupParameters(portfolio, positionGroup)
-            ).AbsoluteUsedBuyingPower;
+            return model
+                .GetReservedBuyingPowerForPositionGroup(
+                    new ReservedBuyingPowerForPositionGroupParameters(portfolio, positionGroup)
+                )
+                .AbsoluteUsedBuyingPower;
         }
 
         /// <summary>
@@ -89,11 +99,15 @@ namespace QuantConnect.Securities.Positions
             SecurityPortfolioManager portfolio,
             IPositionGroup positionGroup,
             List<Order> orders
-            )
+        )
         {
-            return model.HasSufficientBuyingPowerForOrder(new HasSufficientPositionGroupBuyingPowerForOrderParameters(
-                portfolio, positionGroup, orders
-            ));
+            return model.HasSufficientBuyingPowerForOrder(
+                new HasSufficientPositionGroupBuyingPowerForOrderParameters(
+                    portfolio,
+                    positionGroup,
+                    orders
+                )
+            );
         }
 
         /// <summary>
@@ -104,11 +118,11 @@ namespace QuantConnect.Securities.Positions
             SecurityPortfolioManager portfolio,
             IPositionGroup positionGroup,
             OrderDirection direction
-            )
+        )
         {
-            return model.GetPositionGroupBuyingPower(new PositionGroupBuyingPowerParameters(
-                portfolio, positionGroup, direction
-            ));
+            return model.GetPositionGroupBuyingPower(
+                new PositionGroupBuyingPowerParameters(portfolio, positionGroup, direction)
+            );
         }
     }
 }

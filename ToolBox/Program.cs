@@ -12,6 +12,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
 */
+using System;
+using System.IO;
 using QuantConnect.Configuration;
 using QuantConnect.Interfaces;
 using QuantConnect.Logging;
@@ -20,8 +22,6 @@ using QuantConnect.ToolBox.CoarseUniverseGenerator;
 using QuantConnect.ToolBox.KaikoDataConverter;
 using QuantConnect.ToolBox.RandomDataGenerator;
 using QuantConnect.Util;
-using System;
-using System.IO;
 using static QuantConnect.Configuration.ApplicationParser;
 
 namespace QuantConnect.ToolBox
@@ -37,7 +37,9 @@ namespace QuantConnect.ToolBox
                 Directory.CreateDirectory(destinationDir);
                 Log.FilePath = Path.Combine(destinationDir, "log.txt");
             }
-            Log.LogHandler = Composer.Instance.GetExportedValueByTypeName<ILogHandler>(Config.Get("log-handler", "CompositeLogHandler"));
+            Log.LogHandler = Composer.Instance.GetExportedValueByTypeName<ILogHandler>(
+                Config.Get("log-handler", "CompositeLogHandler")
+            );
 
             var optionsObject = ToolboxArgumentParser.ParseArguments(args);
             if (optionsObject.Count == 0)
@@ -45,12 +47,16 @@ namespace QuantConnect.ToolBox
                 PrintMessageAndExit();
             }
 
-            var dataProvider
-                = Composer.Instance.GetExportedValueByTypeName<IDataProvider>(Config.Get("data-provider", "DefaultDataProvider"));
-            var mapFileProvider
-                = Composer.Instance.GetExportedValueByTypeName<IMapFileProvider>(Config.Get("map-file-provider", "LocalDiskMapFileProvider"));
-            var factorFileProvider
-                = Composer.Instance.GetExportedValueByTypeName<IFactorFileProvider>(Config.Get("factor-file-provider", "LocalDiskFactorFileProvider"));
+            var dataProvider = Composer.Instance.GetExportedValueByTypeName<IDataProvider>(
+                Config.Get("data-provider", "DefaultDataProvider")
+            );
+            var mapFileProvider = Composer.Instance.GetExportedValueByTypeName<IMapFileProvider>(
+                Config.Get("map-file-provider", "LocalDiskMapFileProvider")
+            );
+            var factorFileProvider =
+                Composer.Instance.GetExportedValueByTypeName<IFactorFileProvider>(
+                    Config.Get("factor-file-provider", "LocalDiskFactorFileProvider")
+                );
 
             mapFileProvider.Initialize(dataProvider);
             factorFileProvider.Initialize(mapFileProvider, dataProvider);
@@ -58,10 +64,19 @@ namespace QuantConnect.ToolBox
             var targetApp = GetParameterOrExit(optionsObject, "app").ToLowerInvariant();
             if (targetApp.Contains("download") || targetApp.EndsWith("dl"))
             {
-                var fromDate = Parse.DateTimeExact(GetParameterOrExit(optionsObject, "from-date"), "yyyyMMdd-HH:mm:ss");
-                var resolution = optionsObject.ContainsKey("resolution") ? optionsObject["resolution"].ToString() : "";
-                var market = optionsObject.ContainsKey("market") ? optionsObject["market"].ToString() : "";
-                var securityType = optionsObject.ContainsKey("security-type") ? optionsObject["security-type"].ToString() : "";
+                var fromDate = Parse.DateTimeExact(
+                    GetParameterOrExit(optionsObject, "from-date"),
+                    "yyyyMMdd-HH:mm:ss"
+                );
+                var resolution = optionsObject.ContainsKey("resolution")
+                    ? optionsObject["resolution"].ToString()
+                    : "";
+                var market = optionsObject.ContainsKey("market")
+                    ? optionsObject["market"].ToString()
+                    : "";
+                var securityType = optionsObject.ContainsKey("security-type")
+                    ? optionsObject["security-type"].ToString()
+                    : "";
                 var tickers = ToolboxArgumentParser.GetTickers(optionsObject);
                 var toDate = optionsObject.ContainsKey("to-date")
                     ? Parse.DateTimeExact(optionsObject["to-date"].ToString(), "yyyyMMdd-HH:mm:ss")
@@ -79,13 +94,17 @@ namespace QuantConnect.ToolBox
                 {
                     case "asfc":
                     case "algoseekfuturesconverter":
-                        AlgoSeekFuturesProgram.AlgoSeekFuturesConverter(GetParameterOrExit(optionsObject, "date"));
+                        AlgoSeekFuturesProgram.AlgoSeekFuturesConverter(
+                            GetParameterOrExit(optionsObject, "date")
+                        );
                         break;
                     case "kdc":
                     case "kaikodataconverter":
-                        KaikoDataConverterProgram.KaikoDataConverter(GetParameterOrExit(optionsObject, "source-dir"),
-                                                                     GetParameterOrExit(optionsObject, "date"),
-                                                                     GetParameterOrDefault(optionsObject, "exchange", string.Empty));
+                        KaikoDataConverterProgram.KaikoDataConverter(
+                            GetParameterOrExit(optionsObject, "source-dir"),
+                            GetParameterOrExit(optionsObject, "date"),
+                            GetParameterOrDefault(optionsObject, "exchange", string.Empty)
+                        );
                         break;
                     case "cug":
                     case "coarseuniversegenerator":
@@ -109,9 +128,21 @@ namespace QuantConnect.ToolBox
                             GetParameterOrDefault(optionsObject, "rename-percentage", "30.0"),
                             GetParameterOrDefault(optionsObject, "splits-percentage", "15.0"),
                             GetParameterOrDefault(optionsObject, "dividends-percentage", "60.0"),
-                            GetParameterOrDefault(optionsObject, "dividend-every-quarter-percentage", "30.0"),
-                            GetParameterOrDefault(optionsObject, "option-price-engine", "BaroneAdesiWhaleyApproximationEngine"),
-                            GetParameterOrDefault(optionsObject, "volatility-model-resolution", "Daily"),
+                            GetParameterOrDefault(
+                                optionsObject,
+                                "dividend-every-quarter-percentage",
+                                "30.0"
+                            ),
+                            GetParameterOrDefault(
+                                optionsObject,
+                                "option-price-engine",
+                                "BaroneAdesiWhaleyApproximationEngine"
+                            ),
+                            GetParameterOrDefault(
+                                optionsObject,
+                                "volatility-model-resolution",
+                                "Daily"
+                            ),
                             GetParameterOrDefault(optionsObject, "chain-symbol-count", "1"),
                             tickers
                         );

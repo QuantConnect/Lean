@@ -26,7 +26,10 @@ namespace QuantConnect.Tests.Common.Data
         [Test]
         public void IsSparseData_ReturnsTrue_WhenSecurityTypeIsBase()
         {
-            var baseData = new DataType {Symbol = Symbol.Create("ticker", SecurityType.Base, QuantConnect.Market.USA)};
+            var baseData = new DataType
+            {
+                Symbol = Symbol.Create("ticker", SecurityType.Base, QuantConnect.Market.USA)
+            };
             Assert.IsTrue(baseData.IsSparseData());
         }
 
@@ -41,8 +44,18 @@ namespace QuantConnect.Tests.Common.Data
             {
                 var baseData = new DataType();
 
-                try { baseData.Symbol = Symbol.Create("ticker", securityType, QuantConnect.Market.USA); }
-                catch (NotImplementedException) { continue; }
+                try
+                {
+                    baseData.Symbol = Symbol.Create(
+                        "ticker",
+                        securityType,
+                        QuantConnect.Market.USA
+                    );
+                }
+                catch (NotImplementedException)
+                {
+                    continue;
+                }
 
                 Assert.IsFalse(baseData.IsSparseData(), securityType.ToString());
             }

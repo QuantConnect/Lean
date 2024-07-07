@@ -59,7 +59,8 @@ namespace QuantConnect.Securities.Equity
         /// use QCAlgorithm's ShortableQuantity property instead.
         /// </summary>
         /// <returns>Zero if not shortable, null if infinitely shortable, or a number greater than zero if shortable</returns>
-        public long? TotalShortableQuantity => ShortableProvider.ShortableQuantity(Symbol, LocalTime);
+        public long? TotalShortableQuantity =>
+            ShortableProvider.ShortableQuantity(Symbol, LocalTime);
 
         /// <summary>
         /// Equity primary exchange.
@@ -69,15 +70,18 @@ namespace QuantConnect.Securities.Equity
         /// <summary>
         /// Construct the Equity Object
         /// </summary>
-        public Equity(Symbol symbol,
+        public Equity(
+            Symbol symbol,
             SecurityExchangeHours exchangeHours,
             Cash quoteCurrency,
             SymbolProperties symbolProperties,
             ICurrencyConverter currencyConverter,
             IRegisteredSecurityDataTypesProvider registeredTypes,
             SecurityCache securityCache,
-            Exchange primaryExchange = null)
-            : base(symbol,
+            Exchange primaryExchange = null
+        )
+            : base(
+                symbol,
                 quoteCurrency,
                 symbolProperties,
                 new EquityExchange(exchangeHours),
@@ -94,7 +98,7 @@ namespace QuantConnect.Securities.Equity
                 currencyConverter,
                 registeredTypes,
                 Securities.MarginInterestRateModel.Null
-                )
+            )
         {
             Holdings = new EquityHolding(this, currencyConverter);
             PrimaryExchange = primaryExchange ?? QuantConnect.Exchange.UNKNOWN;
@@ -103,13 +107,15 @@ namespace QuantConnect.Securities.Equity
         /// <summary>
         /// Construct the Equity Object
         /// </summary>
-        public Equity(SecurityExchangeHours exchangeHours,
+        public Equity(
+            SecurityExchangeHours exchangeHours,
             SubscriptionDataConfig config,
             Cash quoteCurrency,
             SymbolProperties symbolProperties,
             ICurrencyConverter currencyConverter,
             IRegisteredSecurityDataTypesProvider registeredTypes,
-            Exchange primaryExchange = null)
+            Exchange primaryExchange = null
+        )
             : base(
                 config,
                 quoteCurrency,
@@ -128,10 +134,11 @@ namespace QuantConnect.Securities.Equity
                 currencyConverter,
                 registeredTypes,
                 Securities.MarginInterestRateModel.Null
-                )
+            )
         {
             Holdings = new EquityHolding(this, currencyConverter);
-            PrimaryExchange = primaryExchange ?? QuantConnect.Exchange.UNKNOWN;;
+            PrimaryExchange = primaryExchange ?? QuantConnect.Exchange.UNKNOWN;
+            ;
         }
 
         /// <summary>

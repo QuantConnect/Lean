@@ -27,19 +27,20 @@ namespace QuantConnect.Securities
         /// Initializes a new instance of the <see cref="PatternDayTradingMarginModel" />
         /// </summary>
         public PatternDayTradingMarginModel()
-            : this(2.0m, 4.0m)
-        {
-        }
+            : this(2.0m, 4.0m) { }
 
         /// <summary>
         /// Initializes a new instance of the <see cref="PatternDayTradingMarginModel" />
         /// </summary>
         /// <param name="closedMarketLeverage">Leverage used outside regular market hours</param>
         /// <param name="openMarketLeverage">Leverage used during regular market hours</param>
-        public PatternDayTradingMarginModel(decimal closedMarketLeverage, decimal openMarketLeverage)
+        public PatternDayTradingMarginModel(
+            decimal closedMarketLeverage,
+            decimal openMarketLeverage
+        )
             : base(openMarketLeverage)
         {
-            _closedMarginCorrectionFactor = openMarketLeverage/closedMarketLeverage;
+            _closedMarginCorrectionFactor = openMarketLeverage / closedMarketLeverage;
         }
 
         /// <summary>
@@ -50,9 +51,7 @@ namespace QuantConnect.Securities
         /// </remarks>
         /// <param name="security">The security to set leverage to</param>
         /// <param name="leverage">The new leverage</param>
-        public override void SetLeverage(Security security, decimal leverage)
-        {
-        }
+        public override void SetLeverage(Security security, decimal leverage) { }
 
         /// <summary>
         /// Gets the current leverage of the security
@@ -67,19 +66,25 @@ namespace QuantConnect.Securities
         /// <summary>
         /// The percentage of an order's absolute cost that must be held in free cash in order to place the order
         /// </summary>
-        public override InitialMargin GetInitialMarginRequirement(InitialMarginParameters parameters)
+        public override InitialMargin GetInitialMarginRequirement(
+            InitialMarginParameters parameters
+        )
         {
-            return new InitialMargin(base.GetInitialMarginRequirement(parameters).Value
-                * GetMarginCorrectionFactor(parameters.Security)
+            return new InitialMargin(
+                base.GetInitialMarginRequirement(parameters).Value
+                    * GetMarginCorrectionFactor(parameters.Security)
             );
         }
 
         /// <summary>
         /// The percentage of the holding's absolute cost that must be held in free cash in order to avoid a margin call
         /// </summary>
-        public override MaintenanceMargin GetMaintenanceMargin(MaintenanceMarginParameters parameters)
+        public override MaintenanceMargin GetMaintenanceMargin(
+            MaintenanceMarginParameters parameters
+        )
         {
-            return base.GetMaintenanceMargin(parameters) * GetMarginCorrectionFactor(parameters.Security);
+            return base.GetMaintenanceMargin(parameters)
+                * GetMarginCorrectionFactor(parameters.Security);
         }
 
         /// <summary>
@@ -91,7 +96,9 @@ namespace QuantConnect.Securities
         {
             // when the market is open the base type returns the correct values
             // when the market is closed or when its closing soon, we need to multiply by a correction factor
-            return security.Exchange.ExchangeOpen && !security.Exchange.ClosingSoon ? 1m :_closedMarginCorrectionFactor;
+            return security.Exchange.ExchangeOpen && !security.Exchange.ClosingSoon
+                ? 1m
+                : _closedMarginCorrectionFactor;
         }
     }
 }

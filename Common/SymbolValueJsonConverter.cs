@@ -50,9 +50,16 @@ namespace QuantConnect
         /// <returns>
         /// The object value.
         /// </returns>
-        public override object ReadJson(JsonReader reader, Type objectType, object existingValue, JsonSerializer serializer)
+        public override object ReadJson(
+            JsonReader reader,
+            Type objectType,
+            object existingValue,
+            JsonSerializer serializer
+        )
         {
-            throw new NotImplementedException(Messages.SymbolValueJsonConverter.ConverterIsWriteOnly);
+            throw new NotImplementedException(
+                Messages.SymbolValueJsonConverter.ConverterIsWriteOnly
+            );
         }
 
         /// <summary>
@@ -64,7 +71,9 @@ namespace QuantConnect
         /// </returns>
         public override bool CanConvert(Type objectType)
         {
-            throw new NotImplementedException(Messages.SymbolValueJsonConverter.ConverterIsIntendedToBeDirectlyDecoratedInMember);
+            throw new NotImplementedException(
+                Messages.SymbolValueJsonConverter.ConverterIsIntendedToBeDirectlyDecoratedInMember
+            );
         }
     }
 }

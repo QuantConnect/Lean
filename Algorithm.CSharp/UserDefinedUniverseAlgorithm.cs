@@ -31,7 +31,14 @@ namespace QuantConnect.Algorithm.CSharp
     {
         private static readonly IReadOnlyList<string> Symbols = new List<string>
         {
-            "SPY", "GOOG", "IBM", "AAPL", "MSFT", "CSCO", "ADBE", "WMT",
+            "SPY",
+            "GOOG",
+            "IBM",
+            "AAPL",
+            "MSFT",
+            "CSCO",
+            "ADBE",
+            "WMT",
         };
 
         public override void Initialize()
@@ -41,17 +48,19 @@ namespace QuantConnect.Algorithm.CSharp
             SetStartDate(2015, 01, 01);
             SetEndDate(2015, 12, 01);
 
-            AddUniverse("my-universe-name", Resolution.Hour, time =>
-            {
-                var hour = time.Hour;
-                var index = hour%Symbols.Count;
-                return new List<string> {Symbols[index]};
-            });
+            AddUniverse(
+                "my-universe-name",
+                Resolution.Hour,
+                time =>
+                {
+                    var hour = time.Hour;
+                    var index = hour % Symbols.Count;
+                    return new List<string> { Symbols[index] };
+                }
+            );
         }
 
-        public override void OnData(Slice slice)
-        {
-        }
+        public override void OnData(Slice slice) { }
 
         public override void OnSecuritiesChanged(SecurityChanges changes)
         {
@@ -65,7 +74,7 @@ namespace QuantConnect.Algorithm.CSharp
 
             foreach (var added in changes.AddedSecurities)
             {
-                SetHoldings(added.Symbol, 1/(decimal)changes.AddedSecurities.Count);
+                SetHoldings(added.Symbol, 1 / (decimal)changes.AddedSecurities.Count);
             }
         }
     }

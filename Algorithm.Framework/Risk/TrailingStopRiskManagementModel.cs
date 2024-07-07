@@ -27,7 +27,8 @@ namespace QuantConnect.Algorithm.Framework.Risk
     public class TrailingStopRiskManagementModel : RiskManagementModel
     {
         private readonly decimal _maximumDrawdownPercent;
-        private readonly Dictionary<Symbol, HoldingsState> _trailingAbsoluteHoldingsState = new Dictionary<Symbol, HoldingsState>();
+        private readonly Dictionary<Symbol, HoldingsState> _trailingAbsoluteHoldingsState =
+            new Dictionary<Symbol, HoldingsState>();
 
         /// <summary>
         /// Initializes a new instance of the <see cref="TrailingStopRiskManagementModel"/> class
@@ -43,7 +44,10 @@ namespace QuantConnect.Algorithm.Framework.Risk
         /// </summary>
         /// <param name="algorithm">The algorithm instance</param>
         /// <param name="targets">The current portfolio targets to be assessed for risk</param>
-        public override IEnumerable<IPortfolioTarget> ManageRisk(QCAlgorithm algorithm, IPortfolioTarget[] targets)
+        public override IEnumerable<IPortfolioTarget> ManageRisk(
+            QCAlgorithm algorithm,
+            IPortfolioTarget[] targets
+        )
         {
             foreach (var kvp in algorithm.Securities)
             {
@@ -62,23 +66,41 @@ namespace QuantConnect.Algorithm.Framework.Risk
                 HoldingsState trailingAbsoluteHoldingsState;
 
                 // Add newly invested security (if doesn't exist) or reset holdings state (if position changed)
-                if (!_trailingAbsoluteHoldingsState.TryGetValue(symbol, out trailingAbsoluteHoldingsState) ||
-                    position != trailingAbsoluteHoldingsState.Position)
+                if (
+                    !_trailingAbsoluteHoldingsState.TryGetValue(
+                        symbol,
+                        out trailingAbsoluteHoldingsState
+                    )
+                    || position != trailingAbsoluteHoldingsState.Position
+                )
                 {
-                    _trailingAbsoluteHoldingsState[symbol] = trailingAbsoluteHoldingsState = new HoldingsState(position, security.Holdings.AbsoluteHoldingsCost);
+                    _trailingAbsoluteHoldingsState[symbol] = trailingAbsoluteHoldingsState =
+                        new HoldingsState(position, security.Holdings.AbsoluteHoldingsCost);
                 }
 
-                var trailingAbsoluteHoldingsValue = trailingAbsoluteHoldingsState.AbsoluteHoldingsValue;
+                var trailingAbsoluteHoldingsValue =
+                    trailingAbsoluteHoldingsState.AbsoluteHoldingsValue;
 
                 // Check for new max (for long position) or min (for short position) absolute holdings value
-                if ((position == PositionSide.Long && trailingAbsoluteHoldingsValue < absoluteHoldingsValue) ||
-                    (position == PositionSide.Short && trailingAbsoluteHoldingsValue > absoluteHoldingsValue))
+                if (
+                    (
+                        position == PositionSide.Long
+                        && trailingAbsoluteHoldingsValue < absoluteHoldingsValue
+                    )
+                    || (
+                        position == PositionSide.Short
+                        && trailingAbsoluteHoldingsValue > absoluteHoldingsValue
+                    )
+                )
                 {
                     trailingAbsoluteHoldingsState.AbsoluteHoldingsValue = absoluteHoldingsValue;
                     continue;
                 }
 
-                var drawdown = Math.Abs((trailingAbsoluteHoldingsValue - absoluteHoldingsValue) / trailingAbsoluteHoldingsValue);
+                var drawdown = Math.Abs(
+                    (trailingAbsoluteHoldingsValue - absoluteHoldingsValue)
+                        / trailingAbsoluteHoldingsValue
+                );
 
                 if (_maximumDrawdownPercent < drawdown)
                 {

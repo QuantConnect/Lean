@@ -31,15 +31,21 @@ using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
+using Microsoft.IO;
 using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 using NodaTime;
+using NodaTime.TimeZones;
 using ProtoBuf;
 using Python.Runtime;
 using QuantConnect.Algorithm.Framework.Alphas;
 using QuantConnect.Algorithm.Framework.Portfolio;
-using QuantConnect.Data.UniverseSelection;
+using QuantConnect.Configuration;
 using QuantConnect.Data;
+using QuantConnect.Data.Auxiliary;
 using QuantConnect.Data.Market;
+using QuantConnect.Data.UniverseSelection;
+using QuantConnect.Exceptions;
 using QuantConnect.Interfaces;
 using QuantConnect.Logging;
 using QuantConnect.Orders;
@@ -47,18 +53,12 @@ using QuantConnect.Packets;
 using QuantConnect.Python;
 using QuantConnect.Scheduling;
 using QuantConnect.Securities;
-using QuantConnect.Util;
-using Timer = System.Timers.Timer;
-using Microsoft.IO;
-using NodaTime.TimeZones;
-using QuantConnect.Configuration;
-using QuantConnect.Data.Auxiliary;
-using QuantConnect.Exceptions;
 using QuantConnect.Securities.Future;
 using QuantConnect.Securities.FutureOption;
 using QuantConnect.Securities.Option;
 using QuantConnect.Statistics;
-using Newtonsoft.Json.Linq;
+using QuantConnect.Util;
+using Timer = System.Timers.Timer;
 
 namespace QuantConnect
 {
@@ -67,15 +67,22 @@ namespace QuantConnect
     /// </summary>
     public static class Extensions
     {
-        private static readonly Regex LeanPathRegex = new Regex("(?:\\S*?\\\\pythonnet\\\\)|(?:\\S*?\\\\Lean\\\\)|(?:\\S*?/Lean/)|(?:\\S*?/pythonnet/)", RegexOptions.Compiled);
-        private static readonly Dictionary<string, bool> _emptyDirectories = new ();
+        private static readonly Regex LeanPathRegex = new Regex(
+            "(?:\\S*?\\\\pythonnet\\\\)|(?:\\S*?\\\\Lean\\\\)|(?:\\S*?/Lean/)|(?:\\S*?/pythonnet/)",
+            RegexOptions.Compiled
+        );
+        private static readonly Dictionary<string, bool> _emptyDirectories = new();
         private static readonly HashSet<string> InvalidSecurityTypes = new HashSet<string>();
         private static readonly Regex DateCheck = new Regex(@"\d{8}", RegexOptions.Compiled);
-        private static RecyclableMemoryStreamManager MemoryManager = new RecyclableMemoryStreamManager();
-        private static readonly int DataUpdatePeriod = Config.GetInt("downloader-data-update-period", 7);
+        private static RecyclableMemoryStreamManager MemoryManager =
+            new RecyclableMemoryStreamManager();
+        private static readonly int DataUpdatePeriod = Config.GetInt(
+            "downloader-data-update-period",
+            7
+        );
 
-        private static readonly Dictionary<IntPtr, PythonActivator> PythonActivators
-            = new Dictionary<IntPtr, PythonActivator>();
+        private static readonly Dictionary<IntPtr, PythonActivator> PythonActivators =
+            new Dictionary<IntPtr, PythonActivator>();
 
         /// <summary>
         /// Maintains old behavior of NodaTime's (&lt; 2.0) daylight savings mapping.
@@ -85,7 +92,11 @@ namespace QuantConnect
         ///
         /// More info can be found in the summary of the <see cref="Resolvers.LenientResolver"/> delegate.
         /// </summary>
-        private static readonly ZoneLocalMappingResolver _mappingResolver = Resolvers.CreateMappingResolver(Resolvers.ReturnLater, Resolvers.ReturnStartOfIntervalAfter);
+        private static readonly ZoneLocalMappingResolver _mappingResolver =
+            Resolvers.CreateMappingResolver(
+                Resolvers.ReturnLater,
+                Resolvers.ReturnStartOfIntervalAfter
+            );
 
         /// <summary>
         /// The offset span from the market close to liquidate or exercise a security on the delisting date
@@ -94,7 +105,8 @@ namespace QuantConnect
         /// <remarks>By default span is negative 15 minutes. We want to liquidate before market closes if not, in some cases
         /// like future options the market close would match the delisted event time and would cancel all orders and mark the security
         /// as non tradable and delisted.</remarks>
-        public static TimeSpan DelistingMarketCloseOffsetSpan { get; set; } = TimeSpan.FromMinutes(-15);
+        public static TimeSpan DelistingMarketCloseOffsetSpan { get; set; } =
+            TimeSpan.FromMinutes(-15);
 
         /// <summary>
         /// Helper method to get a property in a jobject if available
@@ -129,7 +141,9 @@ namespace QuantConnect
         {
             var fileName = Path.GetFileName(filepath);
             // helper to determine if file is date based using regex, matches a 8 digit value because we expect YYYYMMDD
-            return !DateCheck.IsMatch(fileName) && DateTime.Now - TimeSpan.FromDays(DataUpdatePeriod) > File.GetLastWriteTime(filepath);
+            return !DateCheck.IsMatch(fileName)
+                && DateTime.Now - TimeSpan.FromDays(DataUpdatePeriod)
+                    > File.GetLastWriteTime(filepath);
         }
 
         /// <summary>
@@ -156,7 +170,7 @@ namespace QuantConnect
         {
             lock (_emptyDirectories)
             {
-                if(!_emptyDirectories.TryGetValue(directoryPath, out var result))
+                if (!_emptyDirectories.TryGetValue(directoryPath, out var result))
                 {
                     // is empty unless it exists and it has at least 1 file or directory in it
                     result = true;
@@ -175,7 +189,9 @@ namespace QuantConnect
                     _emptyDirectories[directoryPath] = result;
                     if (result)
                     {
-                        Log.Trace($"Extensions.IsDirectoryEmpty(): directory '{directoryPath}' not found or empty");
+                        Log.Trace(
+                            $"Extensions.IsDirectoryEmpty(): directory '{directoryPath}' not found or empty"
+                        );
                     }
                 }
 
@@ -189,18 +205,34 @@ namespace QuantConnect
         /// <param name="marketHoursDatabase">The market hours data base instance</param>
         /// <param name="symbol">The symbol to get the entry for</param>
         /// <param name="dataTypes">For custom data types can optionally provide data type so that a new entry is added</param>
-        public static MarketHoursDatabase.Entry GetEntry(this MarketHoursDatabase marketHoursDatabase, Symbol symbol, IEnumerable<Type> dataTypes)
+        public static MarketHoursDatabase.Entry GetEntry(
+            this MarketHoursDatabase marketHoursDatabase,
+            Symbol symbol,
+            IEnumerable<Type> dataTypes
+        )
         {
             if (symbol.SecurityType == SecurityType.Base)
             {
-                if (!marketHoursDatabase.TryGetEntry(symbol.ID.Market, symbol, symbol.ID.SecurityType, out var entry))
+                if (
+                    !marketHoursDatabase.TryGetEntry(
+                        symbol.ID.Market,
+                        symbol,
+                        symbol.ID.SecurityType,
+                        out var entry
+                    )
+                )
                 {
                     var type = dataTypes.Single();
                     var baseInstance = type.GetBaseDataInstance();
                     baseInstance.Symbol = symbol;
                     SecurityIdentifier.TryGetCustomDataType(symbol.ID.Symbol, out var customType);
                     // for custom types we will add an entry for that type
-                    entry = marketHoursDatabase.SetEntryAlwaysOpen(symbol.ID.Market, customType != null ? $"TYPE.{customType}" : null, SecurityType.Base, baseInstance.DataTimeZone());
+                    entry = marketHoursDatabase.SetEntryAlwaysOpen(
+                        symbol.ID.Market,
+                        customType != null ? $"TYPE.{customType}" : null,
+                        SecurityType.Base,
+                        baseInstance.DataTimeZone()
+                    );
                 }
                 return entry;
             }
@@ -223,7 +255,7 @@ namespace QuantConnect
                 }
                 result = JsonConvert.DeserializeObject<List<string>>(jsonArray);
             }
-            catch(JsonReaderException)
+            catch (JsonReaderException)
             {
                 result.Add(jsonArray);
             }
@@ -237,7 +269,11 @@ namespace QuantConnect
         /// <param name="client">The http client to use</param>
         /// <param name="url">The url to download data from</param>
         /// <param name="headers">Add custom headers for the request</param>
-        public static string DownloadData(this HttpClient client, string url, Dictionary<string, string> headers = null)
+        public static string DownloadData(
+            this HttpClient client,
+            string url,
+            Dictionary<string, string> headers = null
+        )
         {
             if (headers != null)
             {
@@ -268,7 +304,10 @@ namespace QuantConnect
         /// </summary>
         /// <param name="url">The url to download data from</param>
         /// <param name="headers">Add custom headers for the request</param>
-        public static string DownloadData(this string url, Dictionary<string, string> headers = null)
+        public static string DownloadData(
+            this string url,
+            Dictionary<string, string> headers = null
+        )
         {
             using var client = new HttpClient();
             return client.DownloadData(url, headers);
@@ -288,7 +327,10 @@ namespace QuantConnect
                 }
                 catch (Exception ex)
                 {
-                    Log.Error(ex, $"DownloadByteArray(): {Messages.Extensions.DownloadDataFailed(url)}");
+                    Log.Error(
+                        ex,
+                        $"DownloadByteArray(): {Messages.Extensions.DownloadDataFailed(url)}"
+                    );
                     return null;
                 }
             }
@@ -302,7 +344,8 @@ namespace QuantConnect
         public static decimal SafeMultiply100(this decimal value)
         {
             const decimal max = decimal.MaxValue / 100m;
-            if (value >= max) return decimal.MaxValue;
+            if (value >= max)
+                return decimal.MaxValue;
             return value * 100m;
         }
 
@@ -362,16 +405,36 @@ namespace QuantConnect
             switch (baseData.DataType)
             {
                 case MarketDataType.Tick:
-                    Serializer.SerializeWithLengthPrefix(stream, baseData as Tick, PrefixStyle.Base128, 1);
+                    Serializer.SerializeWithLengthPrefix(
+                        stream,
+                        baseData as Tick,
+                        PrefixStyle.Base128,
+                        1
+                    );
                     break;
                 case MarketDataType.QuoteBar:
-                    Serializer.SerializeWithLengthPrefix(stream, baseData as QuoteBar, PrefixStyle.Base128, 1);
+                    Serializer.SerializeWithLengthPrefix(
+                        stream,
+                        baseData as QuoteBar,
+                        PrefixStyle.Base128,
+                        1
+                    );
                     break;
                 case MarketDataType.TradeBar:
-                    Serializer.SerializeWithLengthPrefix(stream, baseData as TradeBar, PrefixStyle.Base128, 1);
+                    Serializer.SerializeWithLengthPrefix(
+                        stream,
+                        baseData as TradeBar,
+                        PrefixStyle.Base128,
+                        1
+                    );
                     break;
                 default:
-                    Serializer.SerializeWithLengthPrefix(stream, baseData as BaseData, PrefixStyle.Base128, 1);
+                    Serializer.SerializeWithLengthPrefix(
+                        stream,
+                        baseData as BaseData,
+                        PrefixStyle.Base128,
+                        1
+                    );
                     break;
             }
         }
@@ -454,8 +517,10 @@ namespace QuantConnect
 
                         // GroupBy guarantees to respect original order, so we want to get the last order instance per order id
                         // this way we only keep the most updated version
-                        resultPacket.Orders = resultPacket.Orders.GroupBy(order => order.Id)
-                            .Select(ordersGroup => ordersGroup.Last()).ToList();
+                        resultPacket.Orders = resultPacket
+                            .Orders.GroupBy(order => order.Id)
+                            .Select(ordersGroup => ordersGroup.Last())
+                            .ToList();
                     }
                 }
             }
@@ -468,7 +533,11 @@ namespace QuantConnect
         /// <param name="thread">The thread to stop</param>
         /// <param name="timeout">The timeout to wait till the thread ends after which abort will be called</param>
         /// <param name="token">Cancellation token source to use if any</param>
-        public static void StopSafely(this Thread thread, TimeSpan timeout, CancellationTokenSource token = null)
+        public static void StopSafely(
+            this Thread thread,
+            TimeSpan timeout,
+            CancellationTokenSource token = null
+        )
         {
             if (thread != null)
             {
@@ -478,11 +547,15 @@ namespace QuantConnect
                     {
                         token.Cancel(false);
                     }
-                    Log.Trace($"StopSafely(): {Messages.Extensions.WaitingForThreadToStopSafely(thread.Name)}");
+                    Log.Trace(
+                        $"StopSafely(): {Messages.Extensions.WaitingForThreadToStopSafely(thread.Name)}"
+                    );
                     // just in case we add a time out
                     if (!thread.Join(timeout))
                     {
-                        Log.Error($"StopSafely(): {Messages.Extensions.TimeoutWaitingForThreadToStopSafely(thread.Name)}");
+                        Log.Error(
+                            $"StopSafely(): {Messages.Extensions.TimeoutWaitingForThreadToStopSafely(thread.Name)}"
+                        );
                     }
                 }
                 catch (Exception exception)
@@ -505,40 +578,41 @@ namespace QuantConnect
                 orders
                     .OrderBy(pair => pair.Key)
                     .Select(pair =>
+                    {
+                        // this is required to avoid any small differences between python and C#
+                        var order = pair.Value;
+                        order.Price = order.Price.SmartRounding();
+                        var limit = order as LimitOrder;
+                        if (limit != null)
                         {
-                            // this is required to avoid any small differences between python and C#
-                            var order = pair.Value;
-                            order.Price = order.Price.SmartRounding();
-                            var limit = order as LimitOrder;
-                            if (limit != null)
-                            {
-                                limit.LimitPrice = limit.LimitPrice.SmartRounding();
-                            }
-                            var stopLimit = order as StopLimitOrder;
-                            if (stopLimit != null)
-                            {
-                                stopLimit.LimitPrice = stopLimit.LimitPrice.SmartRounding();
-                                stopLimit.StopPrice = stopLimit.StopPrice.SmartRounding();
-                            }
-                            var trailingStop = order as TrailingStopOrder;
-                            if (trailingStop != null)
-                            {
-                                trailingStop.TrailingAmount = trailingStop.TrailingAmount.SmartRounding();
-                            }
-                            var stopMarket = order as StopMarketOrder;
-                            if (stopMarket != null)
-                            {
-                                stopMarket.StopPrice = stopMarket.StopPrice.SmartRounding();
-                            }
-                            var limitIfTouched = order as LimitIfTouchedOrder;
-                            if (limitIfTouched != null)
-                            {
-                                limitIfTouched.LimitPrice = limitIfTouched.LimitPrice.SmartRounding();
-                                limitIfTouched.TriggerPrice = limitIfTouched.TriggerPrice.SmartRounding();
-                            }
-                            return JsonConvert.SerializeObject(pair.Value, Formatting.None);
+                            limit.LimitPrice = limit.LimitPrice.SmartRounding();
                         }
-                    )
+                        var stopLimit = order as StopLimitOrder;
+                        if (stopLimit != null)
+                        {
+                            stopLimit.LimitPrice = stopLimit.LimitPrice.SmartRounding();
+                            stopLimit.StopPrice = stopLimit.StopPrice.SmartRounding();
+                        }
+                        var trailingStop = order as TrailingStopOrder;
+                        if (trailingStop != null)
+                        {
+                            trailingStop.TrailingAmount =
+                                trailingStop.TrailingAmount.SmartRounding();
+                        }
+                        var stopMarket = order as StopMarketOrder;
+                        if (stopMarket != null)
+                        {
+                            stopMarket.StopPrice = stopMarket.StopPrice.SmartRounding();
+                        }
+                        var limitIfTouched = order as LimitIfTouchedOrder;
+                        if (limitIfTouched != null)
+                        {
+                            limitIfTouched.LimitPrice = limitIfTouched.LimitPrice.SmartRounding();
+                            limitIfTouched.TriggerPrice =
+                                limitIfTouched.TriggerPrice.SmartRounding();
+                        }
+                        return JsonConvert.SerializeObject(pair.Value, Formatting.None);
+                    })
             );
 
             return joinedOrders.ToMD5();
@@ -626,14 +700,14 @@ namespace QuantConnect
 
                 method = instance.GetAttr(name);
                 var pythonType = method.GetPythonType();
-                var isPythonDefined = pythonType.Repr().Equals("<class \'method\'>", StringComparison.Ordinal);
+                var isPythonDefined = pythonType
+                    .Repr()
+                    .Equals("<class \'method\'>", StringComparison.Ordinal);
 
                 if (isPythonDefined)
                 {
                     return method;
                 }
-
-
 
                 return null;
             }
@@ -682,11 +756,15 @@ namespace QuantConnect
             using (Py.GIL())
             {
                 int argCount;
-                var pyArgCount = PyModule.FromString(Guid.NewGuid().ToString(),
-                    "from inspect import signature\n" +
-                    "def GetArgCount(method):\n" +
-                    "   return len(signature(method).parameters)\n"
-                ).GetAttr("GetArgCount").Invoke(method);
+                var pyArgCount = PyModule
+                    .FromString(
+                        Guid.NewGuid().ToString(),
+                        "from inspect import signature\n"
+                            + "def GetArgCount(method):\n"
+                            + "   return len(signature(method).parameters)\n"
+                    )
+                    .GetAttr("GetArgCount")
+                    .Invoke(method);
                 pyArgCount.TryConvert(out argCount);
 
                 return argCount;
@@ -707,14 +785,16 @@ namespace QuantConnect
         public static IEnumerable<IPortfolioTarget> OrderTargetsByMarginImpact(
             this IEnumerable<IPortfolioTarget> targets,
             IAlgorithm algorithm,
-            bool targetIsDelta = false)
+            bool targetIsDelta = false
+        )
         {
             if (algorithm.IsWarmingUp)
             {
                 return Enumerable.Empty<IPortfolioTarget>();
             }
 
-            return targets.Select(x =>
+            return targets
+                .Select(x =>
                 {
                     var security = algorithm.Securities[x.Symbol];
                     return new
@@ -722,21 +802,36 @@ namespace QuantConnect
                         PortfolioTarget = x,
                         TargetQuantity = OrderSizing.AdjustByLotSize(security, x.Quantity),
                         ExistingQuantity = security.Holdings.Quantity
-                            + algorithm.Transactions.GetOpenOrderTickets(x.Symbol)
+                            + algorithm
+                                .Transactions.GetOpenOrderTickets(x.Symbol)
                                 .Aggregate(0m, (d, t) => d + t.Quantity - t.QuantityFilled),
                         Security = security
                     };
                 })
-                .Where(x => x.Security.HasData
-                            && x.Security.IsTradable
-                            && (targetIsDelta ? Math.Abs(x.TargetQuantity) : Math.Abs(x.TargetQuantity - x.ExistingQuantity))
-                            >= x.Security.SymbolProperties.LotSize
+                .Where(x =>
+                    x.Security.HasData
+                    && x.Security.IsTradable
+                    && (
+                        targetIsDelta
+                            ? Math.Abs(x.TargetQuantity)
+                            : Math.Abs(x.TargetQuantity - x.ExistingQuantity)
+                    ) >= x.Security.SymbolProperties.LotSize
                 )
-                .Select(x => new {
+                .Select(x => new
+                {
                     x.PortfolioTarget,
-                    OrderValue = Math.Abs((targetIsDelta ? x.TargetQuantity : (x.TargetQuantity - x.ExistingQuantity)) * x.Security.Price),
+                    OrderValue = Math.Abs(
+                        (targetIsDelta ? x.TargetQuantity : (x.TargetQuantity - x.ExistingQuantity))
+                            * x.Security.Price
+                    ),
                     IsReducingPosition = x.ExistingQuantity != 0
-                                         && Math.Abs((targetIsDelta ? (x.TargetQuantity + x.ExistingQuantity) : x.TargetQuantity)) < Math.Abs(x.ExistingQuantity)
+                        && Math.Abs(
+                            (
+                                targetIsDelta
+                                    ? (x.TargetQuantity + x.ExistingQuantity)
+                                    : x.TargetQuantity
+                            )
+                        ) < Math.Abs(x.ExistingQuantity)
                 })
                 .OrderByDescending(x => x.IsReducingPosition)
                 .ThenByDescending(x => x.OrderValue)
@@ -754,11 +849,13 @@ namespace QuantConnect
             var objectActivator = ObjectActivator.GetActivator(type);
             if (objectActivator == null)
             {
-                throw new ArgumentException(Messages.Extensions.DataTypeMissingParameterlessConstructor(type));
+                throw new ArgumentException(
+                    Messages.Extensions.DataTypeMissingParameterlessConstructor(type)
+                );
             }
 
             var instance = objectActivator.Invoke(new object[] { type });
-            if(instance == null)
+            if (instance == null)
             {
                 // shouldn't happen but just in case...
                 throw new ArgumentException(Messages.Extensions.FailedToCreateInstanceOfType(type));
@@ -805,7 +902,8 @@ namespace QuantConnect
         {
             var oItem = list[oldIndex];
             list.RemoveAt(oldIndex);
-            if (newIndex > oldIndex) newIndex--;
+            if (newIndex > oldIndex)
+                newIndex--;
             list.Insert(newIndex, oItem);
         }
 
@@ -842,7 +940,8 @@ namespace QuantConnect
         public static void Clear<T>(this ConcurrentQueue<T> queue)
         {
             T item;
-            while (queue.TryDequeue(out item)) {
+            while (queue.TryDequeue(out item))
+            {
                 // NOP
             }
         }
@@ -855,7 +954,8 @@ namespace QuantConnect
         /// <returns>String from bytes.</returns>
         public static string GetString(this byte[] bytes, Encoding encoding = null)
         {
-            if (encoding == null) encoding = Encoding.ASCII;
+            if (encoding == null)
+                encoding = Encoding.ASCII;
 
             return encoding.GetString(bytes);
         }
@@ -907,9 +1007,7 @@ namespace QuantConnect
             while (data != 0)
             {
                 var value = data % 36;
-                var c = value < 10
-                    ? (char)(value + '0')
-                    : (char)(value - 10 + 'A');
+                var c = value < 10 ? (char)(value + '0') : (char)(value - 10 + 'A');
 
                 stack.Push(c);
                 data /= 36;
@@ -929,9 +1027,7 @@ namespace QuantConnect
                 var c = symbol[i];
 
                 // assumes alpha numeric upper case only strings
-                var value = (uint)(c <= 57
-                    ? c - '0'
-                    : c - 'A' + 10);
+                var value = (uint)(c <= 57 ? c - '0' : c - 'A' + 10);
 
                 result += baseValue * value;
                 baseValue *= 36;
@@ -1017,7 +1113,11 @@ namespace QuantConnect
         /// <param name="dictionary">Dictionary object we're operating on</param>
         /// <param name="key">Key we want to add or update.</param>
         /// <param name="value">Value we want to set.</param>
-        public static void AddOrUpdate<K, V>(this ConcurrentDictionary<K, V> dictionary, K key, V value)
+        public static void AddOrUpdate<K, V>(
+            this ConcurrentDictionary<K, V> dictionary,
+            K key,
+            V value
+        )
         {
             dictionary.AddOrUpdate(key, value, (oldkey, oldvalue) => value);
         }
@@ -1031,9 +1131,18 @@ namespace QuantConnect
         /// <param name="key">Key we want to add or update.</param>
         /// <param name="addValueFactory">The function used to generate a value for an absent key</param>
         /// <param name="updateValueFactory">The function used to generate a new value for an existing key based on the key's existing value</param>
-        public static TValue AddOrUpdate<TKey, TValue>(this ConcurrentDictionary<TKey, Lazy<TValue>> dictionary, TKey key, Func<TKey, TValue> addValueFactory, Func<TKey, TValue, TValue> updateValueFactory)
+        public static TValue AddOrUpdate<TKey, TValue>(
+            this ConcurrentDictionary<TKey, Lazy<TValue>> dictionary,
+            TKey key,
+            Func<TKey, TValue> addValueFactory,
+            Func<TKey, TValue, TValue> updateValueFactory
+        )
         {
-            var result = dictionary.AddOrUpdate(key, new Lazy<TValue>(() => addValueFactory(key)), (key2, old) => new Lazy<TValue>(() => updateValueFactory(key2, old.Value)));
+            var result = dictionary.AddOrUpdate(
+                key,
+                new Lazy<TValue>(() => addValueFactory(key)),
+                (key2, old) => new Lazy<TValue>(() => updateValueFactory(key2, old.Value))
+            );
             return result.Value;
         }
 
@@ -1047,7 +1156,11 @@ namespace QuantConnect
         /// <param name="dictionary">The source dictionary to be added to</param>
         /// <param name="key">The key</param>
         /// <param name="element">The element to be added</param>
-        public static void Add<TKey, TElement, TCollection>(this IDictionary<TKey, TCollection> dictionary, TKey key, TElement element)
+        public static void Add<TKey, TElement, TCollection>(
+            this IDictionary<TKey, TCollection> dictionary,
+            TKey key,
+            TElement element
+        )
             where TCollection : ICollection<TElement>, new()
         {
             TCollection list;
@@ -1072,7 +1185,7 @@ namespace QuantConnect
             this ImmutableDictionary<TKey, ImmutableHashSet<TElement>> dictionary,
             TKey key,
             TElement element
-            )
+        )
         {
             ImmutableHashSet<TElement> set;
             if (!dictionary.TryGetValue(key, out set))
@@ -1093,11 +1206,14 @@ namespace QuantConnect
         /// <param name="dictionary">The source dictionary to be added to</param>
         /// <param name="key">The key</param>
         /// <param name="element">The element to be added</param>
-        public static ImmutableSortedDictionary<TKey, ImmutableHashSet<TElement>> Add<TKey, TElement>(
+        public static ImmutableSortedDictionary<TKey, ImmutableHashSet<TElement>> Add<
+            TKey,
+            TElement
+        >(
             this ImmutableSortedDictionary<TKey, ImmutableHashSet<TElement>> dictionary,
             TKey key,
             TElement element
-            )
+        )
         {
             ImmutableHashSet<TElement> set;
             if (!dictionary.TryGetValue(key, out set))
@@ -1134,8 +1250,9 @@ namespace QuantConnect
         /// <returns>New double rounded to digits-significant figures</returns>
         public static decimal RoundToSignificantDigits(this decimal d, int digits)
         {
-            if (d == 0) return 0;
-            var scale = (decimal)Math.Pow(10, Math.Floor(Math.Log10((double) Math.Abs(d))) + 1);
+            if (d == 0)
+                return 0;
+            var scale = (decimal)Math.Pow(10, Math.Floor(Math.Log10((double)Math.Abs(d))) + 1);
             return scale * Math.Round(d / scale, digits);
         }
 
@@ -1194,7 +1311,11 @@ namespace QuantConnect
         /// <param name="quanta">The maximum precision allowed by the value</param>
         /// <param name="mode">Specifies how to handle the rounding of half value, defaulting to away from zero.</param>
         /// <returns></returns>
-        public static decimal DiscretelyRoundBy(this decimal value, decimal quanta, MidpointRounding mode = MidpointRounding.AwayFromZero)
+        public static decimal DiscretelyRoundBy(
+            this decimal value,
+            decimal quanta,
+            MidpointRounding mode = MidpointRounding.AwayFromZero
+        )
         {
             if (quanta == 0m)
             {
@@ -1216,9 +1337,7 @@ namespace QuantConnect
         public static decimal TruncateTo3DecimalPlaces(this decimal value)
         {
             // we will multiply by 1k bellow, if its bigger it will stack overflow
-            if (value >= decimal.MaxValue / 1000
-                || value <= decimal.MinValue / 1000
-                || value == 0)
+            if (value >= decimal.MaxValue / 1000 || value <= decimal.MinValue / 1000 || value == 0)
             {
                 return value;
             }
@@ -1275,9 +1394,11 @@ namespace QuantConnect
                 );
             }
 
-            if (input <= (double) decimal.MinValue) return decimal.MinValue;
-            if (input >= (double) decimal.MaxValue) return decimal.MaxValue;
-            return (decimal) input;
+            if (input <= (double)decimal.MinValue)
+                return decimal.MinValue;
+            if (input >= (double)decimal.MaxValue)
+                return decimal.MaxValue;
+            return (decimal)input;
         }
 
         /// <summary>
@@ -1393,7 +1514,11 @@ namespace QuantConnect
         /// <returns>Decimal value of the string</returns>
         public static decimal ToDecimalAllowExponent(this string str)
         {
-            return decimal.Parse(str, NumberStyles.AllowExponent | NumberStyles.AllowDecimalPoint, CultureInfo.InvariantCulture);
+            return decimal.Parse(
+                str,
+                NumberStyles.AllowExponent | NumberStyles.AllowDecimalPoint,
+                CultureInfo.InvariantCulture
+            );
         }
 
         /// <summary>
@@ -1440,13 +1565,25 @@ namespace QuantConnect
         public static bool ImplementsStreamReader(this Type baseDataType)
         {
             // we know these type implement the streamReader interface lets avoid dynamic reflection call to figure it out
-            if (baseDataType == typeof(TradeBar) || baseDataType == typeof(QuoteBar) || baseDataType == typeof(Tick))
+            if (
+                baseDataType == typeof(TradeBar)
+                || baseDataType == typeof(QuoteBar)
+                || baseDataType == typeof(Tick)
+            )
             {
                 return true;
             }
 
-            var method = baseDataType.GetMethod("Reader",
-                new[] { typeof(SubscriptionDataConfig), typeof(StreamReader), typeof(DateTime), typeof(bool) });
+            var method = baseDataType.GetMethod(
+                "Reader",
+                new[]
+                {
+                    typeof(SubscriptionDataConfig),
+                    typeof(StreamReader),
+                    typeof(DateTime),
+                    typeof(bool)
+                }
+            );
             if (method != null && method.DeclaringType == baseDataType)
             {
                 return true;
@@ -1468,12 +1605,14 @@ namespace QuantConnect
             {
                 if (str[i] == ',')
                 {
-                    if (last != 0) last = last + 1;
+                    if (last != 0)
+                        last = last + 1;
                     csv.Add(str.Substring(last, i - last));
                     last = i;
                 }
             }
-            if (last != 0) last = last + 1;
+            if (last != 0)
+                last = last + 1;
             csv.Add(str.Substring(last));
             return csv;
         }
@@ -1550,7 +1689,8 @@ namespace QuantConnect
         /// </summary>
         /// <param name="str">String we're looking for the extension for.</param>
         /// <returns>Last 4 character string of string.</returns>
-        public static string GetExtension(this string str) {
+        public static string GetExtension(this string str)
+        {
             var ext = str.Substring(Math.Max(0, str.Length - 4));
             var allowedExt = new List<string> { ".zip", ".csv", ".json", ".tsv" };
             if (!allowedExt.Contains(ext))
@@ -1582,7 +1722,11 @@ namespace QuantConnect
         /// <param name="roundingInterval">Rounding Unit</param>
         /// <param name="roundingType">Rounding method</param>
         /// <returns>Rounded timespan</returns>
-        public static TimeSpan Round(this TimeSpan time, TimeSpan roundingInterval, MidpointRounding roundingType)
+        public static TimeSpan Round(
+            this TimeSpan time,
+            TimeSpan roundingInterval,
+            MidpointRounding roundingType
+        )
         {
             if (roundingInterval == TimeSpan.Zero)
             {
@@ -1591,13 +1735,11 @@ namespace QuantConnect
             }
 
             return new TimeSpan(
-                Convert.ToInt64(Math.Round(
-                    time.Ticks / (decimal)roundingInterval.Ticks,
-                    roundingType
-                )) * roundingInterval.Ticks
+                Convert.ToInt64(
+                    Math.Round(time.Ticks / (decimal)roundingInterval.Ticks, roundingType)
+                ) * roundingInterval.Ticks
             );
         }
-
 
         /// <summary>
         /// Extension method to round timespan to nearest timespan period.
@@ -1646,10 +1788,17 @@ namespace QuantConnect
         /// <param name="roundingTimeZone">Time zone in which the rounding is performed</param>
         /// <returns>The rounded date time in the source time zone</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static DateTime RoundDownInTimeZone(this DateTime dateTime, TimeSpan roundingInterval, DateTimeZone sourceTimeZone, DateTimeZone roundingTimeZone)
+        public static DateTime RoundDownInTimeZone(
+            this DateTime dateTime,
+            TimeSpan roundingInterval,
+            DateTimeZone sourceTimeZone,
+            DateTimeZone roundingTimeZone
+        )
         {
             var dateTimeInRoundingTimeZone = dateTime.ConvertTo(sourceTimeZone, roundingTimeZone);
-            var roundedDateTimeInRoundingTimeZone = dateTimeInRoundingTimeZone.RoundDown(roundingInterval);
+            var roundedDateTimeInRoundingTimeZone = dateTimeInRoundingTimeZone.RoundDown(
+                roundingInterval
+            );
             return roundedDateTimeInRoundingTimeZone.ConvertTo(roundingTimeZone, sourceTimeZone);
         }
 
@@ -1666,10 +1815,16 @@ namespace QuantConnect
         /// <param name="extendedMarketHours">True for extended market hours, otherwise false</param>
         /// <returns>Rounded datetime</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static DateTime ExchangeRoundDown(this DateTime dateTime, TimeSpan interval, SecurityExchangeHours exchangeHours, bool extendedMarketHours)
+        public static DateTime ExchangeRoundDown(
+            this DateTime dateTime,
+            TimeSpan interval,
+            SecurityExchangeHours exchangeHours,
+            bool extendedMarketHours
+        )
         {
             // can't round against a zero interval
-            if (interval == TimeSpan.Zero) return dateTime;
+            if (interval == TimeSpan.Zero)
+                return dateTime;
 
             var rounded = dateTime.RoundDown(interval);
             while (!exchangeHours.IsOpen(rounded, rounded + interval, extendedMarketHours))
@@ -1691,14 +1846,27 @@ namespace QuantConnect
         /// <param name="extendedMarketHours">True for extended market hours, otherwise false</param>
         /// <returns>Rounded datetime</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static DateTime ExchangeRoundDownInTimeZone(this DateTime dateTime, TimeSpan interval, SecurityExchangeHours exchangeHours, DateTimeZone roundingTimeZone, bool extendedMarketHours)
+        public static DateTime ExchangeRoundDownInTimeZone(
+            this DateTime dateTime,
+            TimeSpan interval,
+            SecurityExchangeHours exchangeHours,
+            DateTimeZone roundingTimeZone,
+            bool extendedMarketHours
+        )
         {
             // can't round against a zero interval
-            if (interval == TimeSpan.Zero) return dateTime;
+            if (interval == TimeSpan.Zero)
+                return dateTime;
 
-            var dateTimeInRoundingTimeZone = dateTime.ConvertTo(exchangeHours.TimeZone, roundingTimeZone);
+            var dateTimeInRoundingTimeZone = dateTime.ConvertTo(
+                exchangeHours.TimeZone,
+                roundingTimeZone
+            );
             var roundedDateTimeInRoundingTimeZone = dateTimeInRoundingTimeZone.RoundDown(interval);
-            var rounded = roundedDateTimeInRoundingTimeZone.ConvertTo(roundingTimeZone, exchangeHours.TimeZone);
+            var rounded = roundedDateTimeInRoundingTimeZone.ConvertTo(
+                roundingTimeZone,
+                exchangeHours.TimeZone
+            );
 
             while (!exchangeHours.IsOpen(rounded, rounded + interval, extendedMarketHours))
             {
@@ -1709,7 +1877,10 @@ namespace QuantConnect
 
                 dateTimeInRoundingTimeZone -= interval;
                 roundedDateTimeInRoundingTimeZone = dateTimeInRoundingTimeZone.RoundDown(interval);
-                rounded = roundedDateTimeInRoundingTimeZone.ConvertTo(roundingTimeZone, exchangeHours.TimeZone);
+                rounded = roundedDateTimeInRoundingTimeZone.ConvertTo(
+                    roundingTimeZone,
+                    exchangeHours.TimeZone
+                );
             }
             return rounded;
         }
@@ -1732,9 +1903,14 @@ namespace QuantConnect
         /// <param name="utcTime">The current UTC time</param>
         /// <param name="extendedMarketHours">True if should consider extended market hours</param>
         /// <returns>True if the market is open</returns>
-        public static bool IsMarketOpen(this Symbol symbol, DateTime utcTime, bool extendedMarketHours)
+        public static bool IsMarketOpen(
+            this Symbol symbol,
+            DateTime utcTime,
+            bool extendedMarketHours
+        )
         {
-            var exchangeHours = MarketHoursDatabase.FromDataFolder()
+            var exchangeHours = MarketHoursDatabase
+                .FromDataFolder()
                 .GetExchangeHours(symbol.ID.Market, symbol, symbol.SecurityType);
 
             var time = utcTime.ConvertFromUtc(exchangeHours.TimeZone);
@@ -1771,7 +1947,9 @@ namespace QuantConnect
                 return time;
             }
 
-            return new DateTime(((time.Ticks + interval.Ticks - 1) / interval.Ticks) * interval.Ticks);
+            return new DateTime(
+                ((time.Ticks + interval.Ticks - 1) / interval.Ticks) * interval.Ticks
+            );
         }
 
         /// <summary>
@@ -1783,15 +1961,23 @@ namespace QuantConnect
         /// <param name="strict">True for strict conversion, this will throw during ambiguitities, false for lenient conversion</param>
         /// <returns>The time in terms of the to time zone</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static DateTime ConvertTo(this DateTime time, DateTimeZone from, DateTimeZone to, bool strict = false)
+        public static DateTime ConvertTo(
+            this DateTime time,
+            DateTimeZone from,
+            DateTimeZone to,
+            bool strict = false
+        )
         {
             if (strict)
             {
-                return from.AtStrictly(LocalDateTime.FromDateTime(time)).WithZone(to).ToDateTimeUnspecified();
+                return from.AtStrictly(LocalDateTime.FromDateTime(time))
+                    .WithZone(to)
+                    .ToDateTimeUnspecified();
             }
 
             // `InZone` sets the LocalDateTime's timezone, `WithZone` is the tz the time will be converted into.
-            return LocalDateTime.FromDateTime(time)
+            return LocalDateTime
+                .FromDateTime(time)
                 .InZone(from, _mappingResolver)
                 .WithZone(to)
                 .ToDateTimeUnspecified();
@@ -1804,7 +1990,11 @@ namespace QuantConnect
         /// <param name="to">The destinatio time zone</param>
         /// <param name="strict">True for strict conversion, this will throw during ambiguitities, false for lenient conversion</param>
         /// <returns>The time in terms of the <paramref name="to"/> time zone</returns>
-        public static DateTime ConvertFromUtc(this DateTime time, DateTimeZone to, bool strict = false)
+        public static DateTime ConvertFromUtc(
+            this DateTime time,
+            DateTimeZone to,
+            bool strict = false
+        )
         {
             return time.ConvertTo(TimeZones.Utc, to, strict);
         }
@@ -1817,7 +2007,11 @@ namespace QuantConnect
         /// <param name="strict">True for strict conversion, this will throw during ambiguitities, false for lenient conversion</param>
         /// <returns>The time in terms of the to time zone</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static DateTime ConvertToUtc(this DateTime time, DateTimeZone from, bool strict = false)
+        public static DateTime ConvertToUtc(
+            this DateTime time,
+            DateTimeZone from,
+            bool strict = false
+        )
         {
             if (strict)
             {
@@ -1825,9 +2019,7 @@ namespace QuantConnect
             }
 
             // Set the local timezone with `InZone` and convert to UTC
-            return LocalDateTime.FromDateTime(time)
-                .InZone(from, _mappingResolver)
-                .ToDateTimeUtc();
+            return LocalDateTime.FromDateTime(time).InZone(from, _mappingResolver).ToDateTimeUtc();
         }
 
         /// <summary>
@@ -1916,7 +2108,10 @@ namespace QuantConnect
             {
                 var genericArguments = type.GetGenericArguments();
                 var toBeReplaced = "`" + (genericArguments.Length);
-                name = name.Replace(toBeReplaced, $"<{string.Join(", ", genericArguments.Select(x => x.GetBetterTypeName()))}>");
+                name = name.Replace(
+                    toBeReplaced,
+                    $"<{string.Join(", ", genericArguments.Select(x => x.GetBetterTypeName()))}>"
+                );
             }
             return name;
         }
@@ -1955,23 +2150,37 @@ namespace QuantConnect
         /// <param name="timeSpan">The time span to convert to resolution</param>
         /// <param name="requireExactMatch">True to throw an exception if an exact match is not found</param>
         /// <returns>The resolution</returns>
-        public static Resolution ToHigherResolutionEquivalent(this TimeSpan timeSpan, bool requireExactMatch)
+        public static Resolution ToHigherResolutionEquivalent(
+            this TimeSpan timeSpan,
+            bool requireExactMatch
+        )
         {
             if (requireExactMatch)
             {
-                if (TimeSpan.Zero == timeSpan)  return Resolution.Tick;
-                if (Time.OneSecond == timeSpan) return Resolution.Second;
-                if (Time.OneMinute == timeSpan) return Resolution.Minute;
-                if (Time.OneHour   == timeSpan) return Resolution.Hour;
-                if (Time.OneDay    == timeSpan) return Resolution.Daily;
-                throw new InvalidOperationException(Messages.Extensions.UnableToConvertTimeSpanToResolution(timeSpan));
+                if (TimeSpan.Zero == timeSpan)
+                    return Resolution.Tick;
+                if (Time.OneSecond == timeSpan)
+                    return Resolution.Second;
+                if (Time.OneMinute == timeSpan)
+                    return Resolution.Minute;
+                if (Time.OneHour == timeSpan)
+                    return Resolution.Hour;
+                if (Time.OneDay == timeSpan)
+                    return Resolution.Daily;
+                throw new InvalidOperationException(
+                    Messages.Extensions.UnableToConvertTimeSpanToResolution(timeSpan)
+                );
             }
 
             // for non-perfect matches
-            if (Time.OneSecond > timeSpan) return Resolution.Tick;
-            if (Time.OneMinute > timeSpan) return Resolution.Second;
-            if (Time.OneHour   > timeSpan) return Resolution.Minute;
-            if (Time.OneDay    > timeSpan) return Resolution.Hour;
+            if (Time.OneSecond > timeSpan)
+                return Resolution.Tick;
+            if (Time.OneMinute > timeSpan)
+                return Resolution.Second;
+            if (Time.OneHour > timeSpan)
+                return Resolution.Minute;
+            if (Time.OneDay > timeSpan)
+                return Resolution.Hour;
 
             return Resolution.Daily;
         }
@@ -1986,7 +2195,11 @@ namespace QuantConnect
         /// <remarks>
         /// Logs once if we've encountered an invalid SecurityType
         /// </remarks>
-        public static bool TryParseSecurityType(this string value, out SecurityType securityType, bool ignoreCase = true)
+        public static bool TryParseSecurityType(
+            this string value,
+            out SecurityType securityType,
+            bool ignoreCase = true
+        )
         {
             if (Enum.TryParse(value, ignoreCase, out securityType))
             {
@@ -1995,11 +2208,12 @@ namespace QuantConnect
 
             if (InvalidSecurityTypes.Add(value))
             {
-                Log.Error($"Extensions.TryParseSecurityType(): {Messages.Extensions.UnableToParseUnknownSecurityType(value)}");
+                Log.Error(
+                    $"Extensions.TryParseSecurityType(): {Messages.Extensions.UnableToParseUnknownSecurityType(value)}"
+                );
             }
 
             return false;
-
         }
 
         /// <summary>
@@ -2010,7 +2224,7 @@ namespace QuantConnect
         /// <returns>The converted value</returns>
         public static T ConvertTo<T>(this string value)
         {
-            return (T) value.ConvertTo(typeof (T));
+            return (T)value.ConvertTo(typeof(T));
         }
 
         /// <summary>
@@ -2026,16 +2240,16 @@ namespace QuantConnect
                 return Enum.Parse(type, value, true);
             }
 
-            if (typeof (IConvertible).IsAssignableFrom(type))
+            if (typeof(IConvertible).IsAssignableFrom(type))
             {
                 return Convert.ChangeType(value, type, CultureInfo.InvariantCulture);
             }
 
             // try and find a static parse method
-            var parse = type.GetMethod("Parse", new[] {typeof (string)});
+            var parse = type.GetMethod("Parse", new[] { typeof(string) });
             if (parse != null)
             {
-                var result = parse.Invoke(null, new object[] {value});
+                var result = parse.Invoke(null, new object[] { value });
                 return result;
             }
 
@@ -2068,9 +2282,13 @@ namespace QuantConnect
         /// <exception cref="T:System.Threading.OperationCanceledException"><paramref name="cancellationToken"/> was canceled.</exception>
         /// <exception cref="T:System.ArgumentOutOfRangeException"><paramref name="timeout"/> is a negative number other than -1 milliseconds, which represents an infinite time-out -or- timeout is greater than <see cref="F:System.Int32.MaxValue"/>.</exception>
         /// <exception cref="T:System.InvalidOperationException">The maximum number of waiters has been exceeded. </exception><exception cref="T:System.ObjectDisposedException">The object has already been disposed or the <see cref="T:System.Threading.CancellationTokenSource"/> that created <paramref name="cancellationToken"/> has been disposed.</exception>
-        public static bool WaitOne(this WaitHandle waitHandle, TimeSpan timeout, CancellationToken cancellationToken)
+        public static bool WaitOne(
+            this WaitHandle waitHandle,
+            TimeSpan timeout,
+            CancellationToken cancellationToken
+        )
         {
-            return waitHandle.WaitOne((int) timeout.TotalMilliseconds, cancellationToken);
+            return waitHandle.WaitOne((int)timeout.TotalMilliseconds, cancellationToken);
         }
 
         /// <summary>
@@ -2087,9 +2305,16 @@ namespace QuantConnect
         /// <exception cref="T:System.ArgumentOutOfRangeException"><paramref name="millisecondsTimeout"/> is a negative number other than -1, which represents an infinite time-out.</exception>
         /// <exception cref="T:System.InvalidOperationException">The maximum number of waiters has been exceeded.</exception>
         /// <exception cref="T:System.ObjectDisposedException">The object has already been disposed or the <see cref="T:System.Threading.CancellationTokenSource"/> that created <paramref name="cancellationToken"/> has been disposed.</exception>
-        public static bool WaitOne(this WaitHandle waitHandle, int millisecondsTimeout, CancellationToken cancellationToken)
+        public static bool WaitOne(
+            this WaitHandle waitHandle,
+            int millisecondsTimeout,
+            CancellationToken cancellationToken
+        )
         {
-            return WaitHandle.WaitAny(new[] { waitHandle, cancellationToken.WaitHandle }, millisecondsTimeout) == 0;
+            return WaitHandle.WaitAny(
+                    new[] { waitHandle, cancellationToken.WaitHandle },
+                    millisecondsTimeout
+                ) == 0;
         }
 
         /// <summary>
@@ -2112,11 +2337,17 @@ namespace QuantConnect
         /// <returns>The same source string but with anchor tags around substrings matching a link regex</returns>
         public static string WithEmbeddedHtmlAnchors(this string source)
         {
-            var regx = new Regex("http(s)?://([\\w+?\\.\\w+])+([a-zA-Z0-9\\~\\!\\@\\#\\$\\%\\^\\&amp;\\*\\(\\)_\\-\\=\\+\\\\\\/\\?\\.\\:\\;\\'\\,]*([a-zA-Z0-9\\?\\#\\=\\/]){1})?", RegexOptions.IgnoreCase);
+            var regx = new Regex(
+                "http(s)?://([\\w+?\\.\\w+])+([a-zA-Z0-9\\~\\!\\@\\#\\$\\%\\^\\&amp;\\*\\(\\)_\\-\\=\\+\\\\\\/\\?\\.\\:\\;\\'\\,]*([a-zA-Z0-9\\?\\#\\=\\/]){1})?",
+                RegexOptions.IgnoreCase
+            );
             var matches = regx.Matches(source);
             foreach (Match match in matches)
             {
-                source = source.Replace(match.Value, $"<a href=\'{match.Value}\' target=\'blank\'>{match.Value}</a>");
+                source = source.Replace(
+                    match.Value,
+                    $"<a href=\'{match.Value}\' target=\'blank\'>{match.Value}</a>"
+                );
             }
             return source;
         }
@@ -2147,15 +2378,23 @@ namespace QuantConnect
         /// <param name="names">The list of class names</param>
         /// <param name="algorithmTypeName">The configured algorithm type name from the config</param>
         /// <returns>The name of the class being run</returns>
-        public static string SingleOrAlgorithmTypeName(this List<string> names, string algorithmTypeName)
+        public static string SingleOrAlgorithmTypeName(
+            this List<string> names,
+            string algorithmTypeName
+        )
         {
             // If there's only one name use that guy
-            if (names.Count == 1) { return names.Single(); }
+            if (names.Count == 1)
+            {
+                return names.Single();
+            }
 
             // If we have multiple names we need to search the names based on the given algorithmTypeName
             // If the given name already contains dots (fully named) use it as it is
             // otherwise add a dot to the beginning to avoid matching any subsets of other names
-            var searchName = algorithmTypeName.Contains(".") ? algorithmTypeName : "." + algorithmTypeName;
+            var searchName = algorithmTypeName.Contains(".")
+                ? algorithmTypeName
+                : "." + algorithmTypeName;
             return names.SingleOrDefault(x => x.EndsWith(searchName));
         }
 
@@ -2250,7 +2489,9 @@ namespace QuantConnect
         {
             if (!securityType.HasOptions() && !securityType.IsOption())
             {
-                throw new ArgumentException(Messages.Extensions.NoDefaultOptionStyleForSecurityType(securityType));
+                throw new ArgumentException(
+                    Messages.Extensions.NoDefaultOptionStyleForSecurityType(securityType)
+                );
             }
 
             switch (securityType)
@@ -2279,7 +2520,9 @@ namespace QuantConnect
                 case "european":
                     return OptionStyle.European;
                 default:
-                    throw new ArgumentException(Messages.Extensions.UnknownOptionStyle(optionStyle));
+                    throw new ArgumentException(
+                        Messages.Extensions.UnknownOptionStyle(optionStyle)
+                    );
             }
         }
 
@@ -2298,7 +2541,9 @@ namespace QuantConnect
                 case "put":
                     return OptionRight.Put;
                 default:
-                    throw new ArgumentException(Messages.Extensions.UnknownOptionRight(optionRight));
+                    throw new ArgumentException(
+                        Messages.Extensions.UnknownOptionRight(optionRight)
+                    );
             }
         }
 
@@ -2337,7 +2582,9 @@ namespace QuantConnect
                 case OptionRight.Put:
                     return "put";
                 default:
-                    throw new ArgumentException(Messages.Extensions.UnknownOptionRight(optionRight));
+                    throw new ArgumentException(
+                        Messages.Extensions.UnknownOptionRight(optionRight)
+                    );
             }
         }
 
@@ -2356,7 +2603,9 @@ namespace QuantConnect
                 case OptionStyle.European:
                     return "european";
                 default:
-                    throw new ArgumentException(Messages.Extensions.UnknownOptionStyle(optionStyle));
+                    throw new ArgumentException(
+                        Messages.Extensions.UnknownOptionStyle(optionStyle)
+                    );
             }
         }
 
@@ -2387,7 +2636,9 @@ namespace QuantConnect
                 case "openinterestannual":
                     return DataMappingMode.OpenInterestAnnual;
                 default:
-                    throw new ArgumentException(Messages.Extensions.UnknownDataMappingMode(dataMappingMode));
+                    throw new ArgumentException(
+                        Messages.Extensions.UnknownDataMappingMode(dataMappingMode)
+                    );
             }
         }
 
@@ -2485,7 +2736,10 @@ namespace QuantConnect
         /// <param name="order">The <see cref="Order"/> being converted</param>
         /// <param name="transactionManager">The transaction manager, <see cref="SecurityTransactionManager"/></param>
         /// <returns></returns>
-        public static OrderTicket ToOrderTicket(this Order order, SecurityTransactionManager transactionManager)
+        public static OrderTicket ToOrderTicket(
+            this Order order,
+            SecurityTransactionManager transactionManager
+        )
         {
             var limitPrice = 0m;
             var stopPrice = 0m;
@@ -2538,7 +2792,8 @@ namespace QuantConnect
                     throw new ArgumentOutOfRangeException();
             }
 
-            var submitOrderRequest = new SubmitOrderRequest(order.Type,
+            var submitOrderRequest = new SubmitOrderRequest(
+                order.Type,
                 order.SecurityType,
                 order.Symbol,
                 order.Quantity,
@@ -2550,7 +2805,8 @@ namespace QuantConnect
                 order.Time,
                 order.Tag,
                 order.Properties,
-                order.GroupOrderManager);
+                order.GroupOrderManager
+            );
 
             submitOrderRequest.SetOrderId(order.Id);
             var orderTicket = new OrderTicket(transactionManager, submitOrderRequest);
@@ -2564,7 +2820,10 @@ namespace QuantConnect
         /// <typeparam name="T"></typeparam>
         /// <param name="collection">Collection to process</param>
         /// <param name="handler">Handler to process those items with</param>
-        public static void ProcessUntilEmpty<T>(this IProducerConsumerCollection<T> collection, Action<T> handler)
+        public static void ProcessUntilEmpty<T>(
+            this IProducerConsumerCollection<T> collection,
+            Action<T> handler
+        )
         {
             T item;
             while (collection.TryTake(out item))
@@ -2625,7 +2884,11 @@ namespace QuantConnect
         /// <param name="result">Managed object </param>
         /// <param name="allowPythonDerivative">True will convert python subclasses of T</param>
         /// <returns>True if successful conversion</returns>
-        public static bool TryConvert<T>(this PyObject pyObject, out T result, bool allowPythonDerivative = false)
+        public static bool TryConvert<T>(
+            this PyObject pyObject,
+            out T result,
+            bool allowPythonDerivative = false
+        )
         {
             result = default(T);
             var type = typeof(T);
@@ -2653,7 +2916,7 @@ namespace QuantConnect
                     {
                         result = (T)pyObject.AsManagedObject(type);
                         // pyObject is a C# object wrapped in PyObject, in this case return true
-                        if(!pyObject.HasAttr("__name__"))
+                        if (!pyObject.HasAttr("__name__"))
                         {
                             return true;
                         }
@@ -2727,7 +2990,12 @@ namespace QuantConnect
 
             if (!typeof(MulticastDelegate).IsAssignableFrom(type))
             {
-                throw new ArgumentException(Messages.Extensions.ConvertToDelegateCannotConverPyObjectToType("TryConvertToDelegate", type));
+                throw new ArgumentException(
+                    Messages.Extensions.ConvertToDelegateCannotConverPyObjectToType(
+                        "TryConvertToDelegate",
+                        type
+                    )
+                );
             }
 
             result = default(T);
@@ -2780,13 +3048,17 @@ namespace QuantConnect
         /// <param name="pyObject">PyObject to convert to managed</param>
         /// <param name="typeToConvertTo">The target type to convert to</param>
         /// <returns>The resulting ManagedObject</returns>
-        public static dynamic SafeAsManagedObject(this PyObject pyObject, Type typeToConvertTo = null)
+        public static dynamic SafeAsManagedObject(
+            this PyObject pyObject,
+            Type typeToConvertTo = null
+        )
         {
             using (Py.GIL())
             {
                 if (typeToConvertTo == null)
                 {
-                    typeToConvertTo = pyObject.GetPythonType().AsManagedObject(typeof(Type)) as Type;
+                    typeToConvertTo =
+                        pyObject.GetPythonType().AsManagedObject(typeof(Type)) as Type;
                 }
 
                 return pyObject.AsManagedObject(typeToConvertTo);
@@ -2798,12 +3070,19 @@ namespace QuantConnect
         /// </summary>
         /// <param name="universeFilterFunc">Universe filter function from Python</param>
         /// <returns>Function that provides <typeparamref name="T"/> and returns an enumerable of Symbols</returns>
-        public static Func<IEnumerable<T>, IEnumerable<Symbol>> ConvertPythonUniverseFilterFunction<T>(this PyObject universeFilterFunc) where T : BaseData
+        public static Func<
+            IEnumerable<T>,
+            IEnumerable<Symbol>
+        > ConvertPythonUniverseFilterFunction<T>(this PyObject universeFilterFunc)
+            where T : BaseData
         {
             Func<IEnumerable<T>, object> convertedFunc;
             Func<IEnumerable<T>, IEnumerable<Symbol>> filterFunc = null;
 
-            if (universeFilterFunc != null && universeFilterFunc.TryConvertToDelegate(out convertedFunc))
+            if (
+                universeFilterFunc != null
+                && universeFilterFunc.TryConvertToDelegate(out convertedFunc)
+            )
             {
                 filterFunc = convertedFunc.ConvertToUniverseSelectionSymbolDelegate();
             }
@@ -2818,7 +3097,11 @@ namespace QuantConnect
         /// <remarks>This method is a work around for the fact that currently we can not create a delegate which returns
         /// an <see cref="IEnumerable{Symbol}"/> from a python method returning an array, plus the fact that
         /// <see cref="Universe.Unchanged"/> can not be cast to an array</remarks>
-        public static Func<IEnumerable<T>, IEnumerable<Symbol>> ConvertToUniverseSelectionSymbolDelegate<T>(this Func<IEnumerable<T>, object> selector) where T : BaseData
+        public static Func<
+            IEnumerable<T>,
+            IEnumerable<Symbol>
+        > ConvertToUniverseSelectionSymbolDelegate<T>(this Func<IEnumerable<T>, object> selector)
+            where T : BaseData
         {
             if (selector == null)
             {
@@ -2834,7 +3117,9 @@ namespace QuantConnect
         /// <remarks>This method is a work around for the fact that currently we can not create a delegate which returns
         /// an <see cref="IEnumerable{Symbol}"/> from a python method returning an array, plus the fact that
         /// <see cref="Universe.Unchanged"/> can not be cast to an array</remarks>
-        public static Func<T, IEnumerable<Symbol>> ConvertSelectionSymbolDelegate<T>(this Func<T, object> selector)
+        public static Func<T, IEnumerable<Symbol>> ConvertSelectionSymbolDelegate<T>(
+            this Func<T, object> selector
+        )
         {
             return data =>
             {
@@ -2859,13 +3144,16 @@ namespace QuantConnect
         /// <remarks>This method is a work around for the fact that currently we can not create a delegate which returns
         /// an <see cref="IEnumerable{String}"/> from a python method returning an array, plus the fact that
         /// <see cref="Universe.Unchanged"/> can not be cast to an array</remarks>
-        public static Func<T, IEnumerable<string>> ConvertToUniverseSelectionStringDelegate<T>(this Func<T, object> selector)
+        public static Func<T, IEnumerable<string>> ConvertToUniverseSelectionStringDelegate<T>(
+            this Func<T, object> selector
+        )
         {
             return data =>
             {
                 var result = selector(data);
                 return ReferenceEquals(result, Universe.Unchanged)
-                    ? Universe.Unchanged : ((object[])result).Select(x => (string)x);
+                    ? Universe.Unchanged
+                    : ((object[])result).Select(x => (string)x);
             };
         }
 
@@ -2884,7 +3172,12 @@ namespace QuantConnect
             }
             else
             {
-                throw new ArgumentException(Messages.Extensions.ConvertToDelegateCannotConverPyObjectToType("ConvertToDelegate", typeof(T)));
+                throw new ArgumentException(
+                    Messages.Extensions.ConvertToDelegateCannotConverPyObjectToType(
+                        "ConvertToDelegate",
+                        typeof(T)
+                    )
+                );
             }
         }
 
@@ -2895,7 +3188,9 @@ namespace QuantConnect
         /// <typeparam name="TValue">Target type of the resulting dictionary value</typeparam>
         /// <param name="pyObject">PyObject to be converted</param>
         /// <returns>Dictionary of TValue keyed by TKey</returns>
-        public static Dictionary<TKey, TValue> ConvertToDictionary<TKey, TValue>(this PyObject pyObject)
+        public static Dictionary<TKey, TValue> ConvertToDictionary<TKey, TValue>(
+            this PyObject pyObject
+        )
         {
             var result = new List<KeyValuePair<TKey, TValue>>();
             using (Py.GIL())
@@ -2922,7 +3217,14 @@ namespace QuantConnect
                 }
                 catch (Exception e)
                 {
-                    throw new ArgumentException(Messages.Extensions.ConvertToDictionaryFailed(inputType, targetType, e.Message), e);
+                    throw new ArgumentException(
+                        Messages.Extensions.ConvertToDictionaryFailed(
+                            inputType,
+                            targetType,
+                            e.Message
+                        ),
+                        e
+                    );
                 }
             }
 
@@ -3046,7 +3348,9 @@ namespace QuantConnect
             {
                 using (Py.GIL())
                 {
-                    throw new ArgumentException($"GetEnumString(): {Messages.Extensions.ObjectFromPythonIsNotACSharpType(pyObject.Repr())}");
+                    throw new ArgumentException(
+                        $"GetEnumString(): {Messages.Extensions.ObjectFromPythonIsNotACSharpType(pyObject.Repr())}"
+                    );
                 }
             }
         }
@@ -3082,7 +3386,6 @@ namespace QuantConnect
             return true;
         }
 
-
         /// <summary>
         /// Creates a type with a given name, if PyObject is not a CLR type. Otherwise, convert it.
         /// </summary>
@@ -3104,7 +3407,11 @@ namespace QuantConnect
                     .DefineDynamicAssembly(assemblyName, AssemblyBuilderAccess.Run)
                     .DefineDynamicModule("MainModule")
                     // creating the type as public is required to allow 'dynamic' to be able to bind at runtime
-                    .DefineType(assemblyName.Name, TypeAttributes.Class | TypeAttributes.Public, type);
+                    .DefineType(
+                        assemblyName.Name,
+                        TypeAttributes.Class | TypeAttributes.Public,
+                        type
+                    );
 
                 pythonType = new PythonActivator(typeBuilder.CreateType(), pyObject);
 
@@ -3145,7 +3452,7 @@ namespace QuantConnect
                 {
                     if (list == null)
                     {
-                        list = new List<T> {enumerator.Current};
+                        list = new List<T> { enumerator.Current };
                     }
                     else if (list.Count < batchSize)
                     {
@@ -3154,7 +3461,7 @@ namespace QuantConnect
                     else
                     {
                         yield return list;
-                        list = new List<T> {enumerator.Current};
+                        list = new List<T> { enumerator.Current };
                     }
                 }
 
@@ -3232,7 +3539,11 @@ namespace QuantConnect
         /// <returns>Substring with start removed</returns>
         public static string RemoveFromStart(this string s, string start)
         {
-            if (!string.IsNullOrEmpty(s) && !string.IsNullOrEmpty(start) && s.StartsWith(start, StringComparison.InvariantCulture))
+            if (
+                !string.IsNullOrEmpty(s)
+                && !string.IsNullOrEmpty(start)
+                && s.StartsWith(start, StringComparison.InvariantCulture)
+            )
             {
                 return s.Substring(start.Length);
             }
@@ -3249,7 +3560,11 @@ namespace QuantConnect
         public static bool TryGetLiveSubscriptionSymbol(this Symbol symbol, out Symbol mapped)
         {
             mapped = null;
-            if (symbol.SecurityType == SecurityType.Future && symbol.IsCanonical() && symbol.HasUnderlying)
+            if (
+                symbol.SecurityType == SecurityType.Future
+                && symbol.IsCanonical()
+                && symbol.HasUnderlying
+            )
             {
                 mapped = symbol.Underlying;
                 return true;
@@ -3303,7 +3618,9 @@ namespace QuantConnect
         {
             if (symbol.SecurityType != SecurityType.Future || symbol.IsCanonical())
             {
-                throw new InvalidOperationException(Messages.Extensions.ErrorAdjustingSymbolByOffset);
+                throw new InvalidOperationException(
+                    Messages.Extensions.ErrorAdjustingSymbolByOffset
+                );
             }
 
             var expiration = symbol.ID.Date;
@@ -3329,11 +3646,18 @@ namespace QuantConnect
         /// <summary>
         /// Helper method to unsubscribe a given configuration, handling any required mapping
         /// </summary>
-        public static void UnsubscribeWithMapping(this IDataQueueHandler dataQueueHandler, SubscriptionDataConfig dataConfig)
+        public static void UnsubscribeWithMapping(
+            this IDataQueueHandler dataQueueHandler,
+            SubscriptionDataConfig dataConfig
+        )
         {
             if (dataConfig.Symbol.TryGetLiveSubscriptionSymbol(out var mappedSymbol))
             {
-                dataConfig = new SubscriptionDataConfig(dataConfig, symbol: mappedSymbol, mappedConfig: true);
+                dataConfig = new SubscriptionDataConfig(
+                    dataConfig,
+                    symbol: mappedSymbol,
+                    mappedConfig: true
+                );
             }
             dataQueueHandler.Unsubscribe(dataConfig);
         }
@@ -3341,16 +3665,22 @@ namespace QuantConnect
         /// <summary>
         /// Helper method to subscribe a given configuration, handling any required mapping
         /// </summary>
-        public static IEnumerator<BaseData> SubscribeWithMapping(this IDataQueueHandler dataQueueHandler,
+        public static IEnumerator<BaseData> SubscribeWithMapping(
+            this IDataQueueHandler dataQueueHandler,
             SubscriptionDataConfig dataConfig,
             EventHandler newDataAvailableHandler,
             Func<SubscriptionDataConfig, bool> isExpired,
-            out SubscriptionDataConfig subscribedConfig)
+            out SubscriptionDataConfig subscribedConfig
+        )
         {
             subscribedConfig = dataConfig;
             if (dataConfig.Symbol.TryGetLiveSubscriptionSymbol(out var mappedSymbol))
             {
-                subscribedConfig = new SubscriptionDataConfig(dataConfig, symbol: mappedSymbol, mappedConfig: true);
+                subscribedConfig = new SubscriptionDataConfig(
+                    dataConfig,
+                    symbol: mappedSymbol,
+                    mappedConfig: true
+                );
             }
 
             // during warmup we might get requested to add some asset which has already expired in which case the live enumerator will be empty
@@ -3361,7 +3691,9 @@ namespace QuantConnect
             }
             else
             {
-                Log.Trace($"SubscribeWithMapping(): skip live subscription for expired asset {subscribedConfig}");
+                Log.Trace(
+                    $"SubscribeWithMapping(): skip live subscription for expired asset {subscribedConfig}"
+                );
             }
             return result ?? Enumerable.Empty<BaseData>().GetEnumerator();
         }
@@ -3374,7 +3706,7 @@ namespace QuantConnect
         /// <returns>Enumeration of lines in file</returns>
         public static IEnumerable<string> ReadLines(this IDataProvider dataProvider, string file)
         {
-            if(dataProvider == null)
+            if (dataProvider == null)
             {
                 throw new ArgumentException(Messages.Extensions.NullDataProvider);
             }
@@ -3394,8 +3726,7 @@ namespace QuantConnect
                     {
                         yield return line;
                     }
-                }
-                while (line != null);
+                } while (line != null);
             }
         }
 
@@ -3409,7 +3740,13 @@ namespace QuantConnect
         /// <param name="sumOfDividends">The current dividend sum</param>
         /// <remarks>Volume values are rounded to the nearest integer, lot size purposefully not considered
         /// as scaling only applies to equities</remarks>
-        public static BaseData Scale(this BaseData data, Func<decimal, decimal, decimal, decimal> factorFunc, decimal volumeFactor, decimal factor, decimal sumOfDividends)
+        public static BaseData Scale(
+            this BaseData data,
+            Func<decimal, decimal, decimal, decimal> factorFunc,
+            decimal volumeFactor,
+            decimal factor,
+            decimal sumOfDividends
+        )
         {
             switch (data.DataType)
             {
@@ -3426,9 +3763,11 @@ namespace QuantConnect
                     break;
                 case MarketDataType.Tick:
                     var securityType = data.Symbol.SecurityType;
-                    if (securityType != SecurityType.Equity &&
-                        securityType != SecurityType.Future &&
-                        !securityType.IsOption())
+                    if (
+                        securityType != SecurityType.Equity
+                        && securityType != SecurityType.Future
+                        && !securityType.IsOption()
+                    )
                     {
                         break;
                     }
@@ -3446,9 +3785,11 @@ namespace QuantConnect
                         break;
                     }
 
-                    tick.BidPrice = tick.BidPrice != 0 ? factorFunc(tick.BidPrice, factor, sumOfDividends) : 0;
+                    tick.BidPrice =
+                        tick.BidPrice != 0 ? factorFunc(tick.BidPrice, factor, sumOfDividends) : 0;
                     tick.BidSize = Math.Round(tick.BidSize * volumeFactor);
-                    tick.AskPrice = tick.AskPrice != 0 ? factorFunc(tick.AskPrice, factor, sumOfDividends) : 0;
+                    tick.AskPrice =
+                        tick.AskPrice != 0 ? factorFunc(tick.AskPrice, factor, sumOfDividends) : 0;
                     tick.AskSize = Math.Round(tick.AskSize * volumeFactor);
 
                     if (tick.BidPrice == 0)
@@ -3470,17 +3811,41 @@ namespace QuantConnect
                     {
                         if (quoteBar.Ask != null)
                         {
-                            quoteBar.Ask.Open = factorFunc(quoteBar.Ask.Open, factor, sumOfDividends);
-                            quoteBar.Ask.High = factorFunc(quoteBar.Ask.High, factor, sumOfDividends);
+                            quoteBar.Ask.Open = factorFunc(
+                                quoteBar.Ask.Open,
+                                factor,
+                                sumOfDividends
+                            );
+                            quoteBar.Ask.High = factorFunc(
+                                quoteBar.Ask.High,
+                                factor,
+                                sumOfDividends
+                            );
                             quoteBar.Ask.Low = factorFunc(quoteBar.Ask.Low, factor, sumOfDividends);
-                            quoteBar.Ask.Close = factorFunc(quoteBar.Ask.Close, factor, sumOfDividends);
+                            quoteBar.Ask.Close = factorFunc(
+                                quoteBar.Ask.Close,
+                                factor,
+                                sumOfDividends
+                            );
                         }
                         if (quoteBar.Bid != null)
                         {
-                            quoteBar.Bid.Open = factorFunc(quoteBar.Bid.Open, factor, sumOfDividends);
-                            quoteBar.Bid.High = factorFunc(quoteBar.Bid.High, factor, sumOfDividends);
+                            quoteBar.Bid.Open = factorFunc(
+                                quoteBar.Bid.Open,
+                                factor,
+                                sumOfDividends
+                            );
+                            quoteBar.Bid.High = factorFunc(
+                                quoteBar.Bid.High,
+                                factor,
+                                sumOfDividends
+                            );
                             quoteBar.Bid.Low = factorFunc(quoteBar.Bid.Low, factor, sumOfDividends);
-                            quoteBar.Bid.Close = factorFunc(quoteBar.Bid.Close, factor, sumOfDividends);
+                            quoteBar.Bid.Close = factorFunc(
+                                quoteBar.Bid.Close,
+                                factor,
+                                sumOfDividends
+                            );
                         }
                         quoteBar.Value = quoteBar.Close;
                         quoteBar.LastAskSize = Math.Round(quoteBar.LastAskSize * volumeFactor);
@@ -3506,7 +3871,12 @@ namespace QuantConnect
         /// <param name="normalizationMode">The price scaling normalization mode</param>
         /// <param name="sumOfDividends">The current dividend sum</param>
         /// <returns>The provided data point adjusted</returns>
-        public static BaseData Normalize(this BaseData data, decimal factor, DataNormalizationMode normalizationMode, decimal sumOfDividends)
+        public static BaseData Normalize(
+            this BaseData data,
+            decimal factor,
+            DataNormalizationMode normalizationMode,
+            decimal sumOfDividends
+        )
         {
             switch (normalizationMode)
             {
@@ -3576,8 +3946,9 @@ namespace QuantConnect
         /// </summary>
         /// <remarks>See https://stackoverflow.com/questions/47630824/is-c-sharp-linq-orderby-threadsafe-when-used-with-concurrentdictionarytkey-tva</remarks>
         public static IOrderedEnumerable<KeyValuePair<TSource, TKey>> OrderBySafe<TSource, TKey>(
-            this ConcurrentDictionary<TSource, TKey> source, Func<KeyValuePair<TSource, TKey>, TSource> keySelector
-            )
+            this ConcurrentDictionary<TSource, TKey> source,
+            Func<KeyValuePair<TSource, TKey>, TSource> keySelector
+        )
         {
             return source.SafeEnumeration().OrderBy(keySelector);
         }
@@ -3587,8 +3958,9 @@ namespace QuantConnect
         /// </summary>
         /// <remarks>See https://stackoverflow.com/questions/47630824/is-c-sharp-linq-orderby-threadsafe-when-used-with-concurrentdictionarytkey-tva</remarks>
         public static IOrderedEnumerable<KeyValuePair<TSource, TKey>> OrderBySafe<TSource, TKey>(
-            this ConcurrentDictionary<TSource, TKey> source, Func<KeyValuePair<TSource, TKey>, TKey> keySelector
-            )
+            this ConcurrentDictionary<TSource, TKey> source,
+            Func<KeyValuePair<TSource, TKey>, TKey> keySelector
+        )
         {
             return source.SafeEnumeration().OrderBy(keySelector);
         }
@@ -3598,7 +3970,8 @@ namespace QuantConnect
         /// </summary>
         /// <remarks>See https://stackoverflow.com/questions/47630824/is-c-sharp-linq-orderby-threadsafe-when-used-with-concurrentdictionarytkey-tva</remarks>
         public static IEnumerable<KeyValuePair<TSource, TKey>> SafeEnumeration<TSource, TKey>(
-            this ConcurrentDictionary<TSource, TKey> source)
+            this ConcurrentDictionary<TSource, TKey> source
+        )
         {
             foreach (var kvp in source)
             {
@@ -3609,14 +3982,21 @@ namespace QuantConnect
         /// <summary>
         /// Helper method to determine the right data normalization mode to use by default
         /// </summary>
-        public static DataNormalizationMode GetUniverseNormalizationModeOrDefault(this UniverseSettings universeSettings, SecurityType securityType)
+        public static DataNormalizationMode GetUniverseNormalizationModeOrDefault(
+            this UniverseSettings universeSettings,
+            SecurityType securityType
+        )
         {
             switch (securityType)
             {
                 case SecurityType.Future:
-                    if (universeSettings.DataNormalizationMode is DataNormalizationMode.BackwardsRatio
-                        or DataNormalizationMode.BackwardsPanamaCanal or DataNormalizationMode.ForwardPanamaCanal
-                        or DataNormalizationMode.Raw)
+                    if (
+                        universeSettings.DataNormalizationMode
+                        is DataNormalizationMode.BackwardsRatio
+                            or DataNormalizationMode.BackwardsPanamaCanal
+                            or DataNormalizationMode.ForwardPanamaCanal
+                            or DataNormalizationMode.Raw
+                    )
                     {
                         return universeSettings.DataNormalizationMode;
                     }
@@ -3635,7 +4015,9 @@ namespace QuantConnect
         {
             if (source == null || source.Length == 0)
             {
-                throw new ArgumentException(Messages.Extensions.NullOrEmptySourceToConvertToHexString);
+                throw new ArgumentException(
+                    Messages.Extensions.NullOrEmptySourceToConvertToHexString
+                );
             }
 
             var hex = new StringBuilder(source.Length * 2);
@@ -3674,9 +4056,12 @@ namespace QuantConnect
             var sign = Math.Sign(quantity);
             switch (sign)
             {
-                case 1: return OrderDirection.Buy;
-                case 0: return OrderDirection.Hold;
-                case -1: return OrderDirection.Sell;
+                case 1:
+                    return OrderDirection.Buy;
+                case 0:
+                    return OrderDirection.Hold;
+                case -1:
+                    return OrderDirection.Sell;
                 default:
                     throw new ApplicationException(
                         $"The skies are falling and the oceans are rising! Math.Sign({quantity}) returned {sign} :/"
@@ -3687,7 +4072,10 @@ namespace QuantConnect
         /// <summary>
         /// Helper method to process an algorithms security changes, will add and remove securities according to them
         /// </summary>
-        public static void ProcessSecurityChanges(this IAlgorithm algorithm, SecurityChanges securityChanges)
+        public static void ProcessSecurityChanges(
+            this IAlgorithm algorithm,
+            SecurityChanges securityChanges
+        )
         {
             foreach (var security in securityChanges.AddedSecurities)
             {
@@ -3710,9 +4098,16 @@ namespace QuantConnect
         /// <summary>
         /// Helper method to set an algorithm runtime exception in a normalized fashion
         /// </summary>
-        public static void SetRuntimeError(this IAlgorithm algorithm, Exception exception, string context)
+        public static void SetRuntimeError(
+            this IAlgorithm algorithm,
+            Exception exception,
+            string context
+        )
         {
-            Log.Error(exception, $"Extensions.SetRuntimeError(): {Messages.Extensions.RuntimeError(algorithm, context)}");
+            Log.Error(
+                exception,
+                $"Extensions.SetRuntimeError(): {Messages.Extensions.RuntimeError(algorithm, context)}"
+            );
             exception = StackExceptionInterpreter.Instance.Value.Interpret(exception);
             algorithm.RunTimeError = exception;
             algorithm.SetStatus(AlgorithmStatus.RuntimeError);
@@ -3726,7 +4121,12 @@ namespace QuantConnect
         /// <param name="filter">The option filter to use</param>
         /// <param name="universeSettings">The universe settings, will use algorithm settings if null</param>
         /// <returns><see cref="OptionChainUniverse"/> for the given symbol</returns>
-        public static OptionChainUniverse CreateOptionChain(this IAlgorithm algorithm, Symbol symbol, PyObject filter, UniverseSettings universeSettings = null)
+        public static OptionChainUniverse CreateOptionChain(
+            this IAlgorithm algorithm,
+            Symbol symbol,
+            PyObject filter,
+            UniverseSettings universeSettings = null
+        )
         {
             var result = CreateOptionChain(algorithm, symbol, out var option, universeSettings);
             option.SetFilter(filter);
@@ -3741,7 +4141,12 @@ namespace QuantConnect
         /// <param name="filter">The option filter to use</param>
         /// <param name="universeSettings">The universe settings, will use algorithm settings if null</param>
         /// <returns><see cref="OptionChainUniverse"/> for the given symbol</returns>
-        public static OptionChainUniverse CreateOptionChain(this IAlgorithm algorithm, Symbol symbol, Func<OptionFilterUniverse, OptionFilterUniverse> filter, UniverseSettings universeSettings = null)
+        public static OptionChainUniverse CreateOptionChain(
+            this IAlgorithm algorithm,
+            Symbol symbol,
+            Func<OptionFilterUniverse, OptionFilterUniverse> filter,
+            UniverseSettings universeSettings = null
+        )
         {
             var result = CreateOptionChain(algorithm, symbol, out var option, universeSettings);
             option.SetFilter(filter);
@@ -3755,19 +4160,36 @@ namespace QuantConnect
         /// <param name="symbol">Symbol of the option</param>
         /// <param name="universeSettings">The universe settings, will use algorithm settings if null</param>
         /// <returns><see cref="OptionChainUniverse"/> for the given symbol</returns>
-        private static OptionChainUniverse CreateOptionChain(this IAlgorithm algorithm, Symbol symbol, out Option option, UniverseSettings universeSettings = null)
+        private static OptionChainUniverse CreateOptionChain(
+            this IAlgorithm algorithm,
+            Symbol symbol,
+            out Option option,
+            UniverseSettings universeSettings = null
+        )
         {
             if (!symbol.SecurityType.IsOption())
             {
-                throw new ArgumentException(Messages.Extensions.CreateOptionChainRequiresOptionSymbol);
+                throw new ArgumentException(
+                    Messages.Extensions.CreateOptionChainRequiresOptionSymbol
+                );
             }
 
             // resolve defaults if not specified
             var settings = universeSettings ?? algorithm.UniverseSettings;
 
-            option = (Option)algorithm.AddSecurity(symbol.Canonical, settings.Resolution, settings.FillForward, settings.Leverage, settings.ExtendedMarketHours);
+            option = (Option)
+                algorithm.AddSecurity(
+                    symbol.Canonical,
+                    settings.Resolution,
+                    settings.FillForward,
+                    settings.Leverage,
+                    settings.ExtendedMarketHours
+                );
 
-            return (OptionChainUniverse)algorithm.UniverseManager.Values.Single(universe => universe.Configuration.Symbol == symbol.Canonical);
+            return (OptionChainUniverse)
+                algorithm.UniverseManager.Values.Single(universe =>
+                    universe.Configuration.Symbol == symbol.Canonical
+                );
         }
 
         /// <summary>
@@ -3777,7 +4199,12 @@ namespace QuantConnect
         /// <param name="symbol">Symbol of the future</param>
         /// <param name="filter">The future filter to use</param>
         /// <param name="universeSettings">The universe settings, will use algorithm settings if null</param>
-        public static IEnumerable<Universe> CreateFutureChain(this IAlgorithm algorithm, Symbol symbol, PyObject filter, UniverseSettings universeSettings = null)
+        public static IEnumerable<Universe> CreateFutureChain(
+            this IAlgorithm algorithm,
+            Symbol symbol,
+            PyObject filter,
+            UniverseSettings universeSettings = null
+        )
         {
             var result = CreateFutureChain(algorithm, symbol, out var future, universeSettings);
             future.SetFilter(filter);
@@ -3791,7 +4218,12 @@ namespace QuantConnect
         /// <param name="symbol">Symbol of the future</param>
         /// <param name="filter">The future filter to use</param>
         /// <param name="universeSettings">The universe settings, will use algorithm settings if null</param>
-        public static IEnumerable<Universe> CreateFutureChain(this IAlgorithm algorithm, Symbol symbol, Func<FutureFilterUniverse, FutureFilterUniverse> filter, UniverseSettings universeSettings = null)
+        public static IEnumerable<Universe> CreateFutureChain(
+            this IAlgorithm algorithm,
+            Symbol symbol,
+            Func<FutureFilterUniverse, FutureFilterUniverse> filter,
+            UniverseSettings universeSettings = null
+        )
         {
             var result = CreateFutureChain(algorithm, symbol, out var future, universeSettings);
             future.SetFilter(filter);
@@ -3801,38 +4233,61 @@ namespace QuantConnect
         /// <summary>
         /// Creates a <see cref="FuturesChainUniverse"/> for a given symbol
         /// </summary>
-        private static IEnumerable<Universe> CreateFutureChain(this IAlgorithm algorithm, Symbol symbol, out Future future, UniverseSettings universeSettings = null)
+        private static IEnumerable<Universe> CreateFutureChain(
+            this IAlgorithm algorithm,
+            Symbol symbol,
+            out Future future,
+            UniverseSettings universeSettings = null
+        )
         {
             if (symbol.SecurityType != SecurityType.Future)
             {
-                throw new ArgumentException(Messages.Extensions.CreateFutureChainRequiresFutureSymbol);
+                throw new ArgumentException(
+                    Messages.Extensions.CreateFutureChainRequiresFutureSymbol
+                );
             }
 
             // resolve defaults if not specified
             var settings = universeSettings ?? algorithm.UniverseSettings;
 
-            var dataNormalizationMode = settings.GetUniverseNormalizationModeOrDefault(symbol.SecurityType);
+            var dataNormalizationMode = settings.GetUniverseNormalizationModeOrDefault(
+                symbol.SecurityType
+            );
 
-            future = (Future)algorithm.AddSecurity(symbol.Canonical, settings.Resolution, settings.FillForward, settings.Leverage, settings.ExtendedMarketHours,
-                settings.DataMappingMode, dataNormalizationMode, settings.ContractDepthOffset);
+            future = (Future)
+                algorithm.AddSecurity(
+                    symbol.Canonical,
+                    settings.Resolution,
+                    settings.FillForward,
+                    settings.Leverage,
+                    settings.ExtendedMarketHours,
+                    settings.DataMappingMode,
+                    dataNormalizationMode,
+                    settings.ContractDepthOffset
+                );
 
             // let's yield back both the future chain and the continuous future universe
-            return algorithm.UniverseManager.Values.Where(universe => universe.Configuration.Symbol == symbol.Canonical || ContinuousContractUniverse.CreateSymbol(symbol.Canonical) == universe.Configuration.Symbol);
+            return algorithm.UniverseManager.Values.Where(universe =>
+                universe.Configuration.Symbol == symbol.Canonical
+                || ContinuousContractUniverse.CreateSymbol(symbol.Canonical)
+                    == universe.Configuration.Symbol
+            );
         }
 
         private static bool _notifiedUniverseSettingsUsed;
-        private static readonly HashSet<SecurityType> _supportedSecurityTypes = new()
-        {
-            SecurityType.Equity,
-            SecurityType.Forex,
-            SecurityType.Cfd,
-            SecurityType.Option,
-            SecurityType.Future,
-            SecurityType.FutureOption,
-            SecurityType.IndexOption,
-            SecurityType.Crypto,
-            SecurityType.CryptoFuture
-        };
+        private static readonly HashSet<SecurityType> _supportedSecurityTypes =
+            new()
+            {
+                SecurityType.Equity,
+                SecurityType.Forex,
+                SecurityType.Cfd,
+                SecurityType.Option,
+                SecurityType.Future,
+                SecurityType.FutureOption,
+                SecurityType.IndexOption,
+                SecurityType.Crypto,
+                SecurityType.CryptoFuture
+            };
 
         /// <summary>
         /// Gets the security for the specified symbol from the algorithm's securities collection.
@@ -3844,14 +4299,23 @@ namespace QuantConnect
         /// <param name="security">The found or added security instance</param>
         /// <param name="onError">Callback to invoke in case of unsupported security type</param>
         /// <returns>True if the security was found or added</returns>
-        public static bool GetOrAddUnrequestedSecurity(this IAlgorithm algorithm, Symbol symbol, out Security security,
-            Action<IReadOnlyCollection<SecurityType>> onError = null)
+        public static bool GetOrAddUnrequestedSecurity(
+            this IAlgorithm algorithm,
+            Symbol symbol,
+            out Security security,
+            Action<IReadOnlyCollection<SecurityType>> onError = null
+        )
         {
             if (!algorithm.Securities.TryGetValue(symbol, out security))
             {
                 if (!_supportedSecurityTypes.Contains(symbol.SecurityType))
                 {
-                    Log.Error("GetOrAddUnrequestedSecurity(): Unsupported security type: " + symbol.SecurityType + "-" + symbol.Value);
+                    Log.Error(
+                        "GetOrAddUnrequestedSecurity(): Unsupported security type: "
+                            + symbol.SecurityType
+                            + "-"
+                            + symbol.Value
+                    );
                     onError?.Invoke(_supportedSecurityTypes);
                     return false;
                 }
@@ -3871,26 +4335,50 @@ namespace QuantConnect
                     {
                         leverageMsg = $" Leverage = default;";
                     }
-                    algorithm.Debug($"Will use UniverseSettings for automatically added securities for open orders and holdings. UniverseSettings:" +
-                        $" Resolution = {resolution};{leverageMsg} FillForward = {fillForward}; ExtendedHours = {extendedHours}");
+                    algorithm.Debug(
+                        $"Will use UniverseSettings for automatically added securities for open orders and holdings. UniverseSettings:"
+                            + $" Resolution = {resolution};{leverageMsg} FillForward = {fillForward}; ExtendedHours = {extendedHours}"
+                    );
                 }
 
-                Log.Trace("GetOrAddUnrequestedSecurity(): Adding unrequested security: " + symbol.Value);
+                Log.Trace(
+                    "GetOrAddUnrequestedSecurity(): Adding unrequested security: " + symbol.Value
+                );
 
                 if (symbol.SecurityType.IsOption())
                 {
                     // add current option contract to the system
-                    security = algorithm.AddOptionContract(symbol, resolution, fillForward, leverage, extendedHours);
+                    security = algorithm.AddOptionContract(
+                        symbol,
+                        resolution,
+                        fillForward,
+                        leverage,
+                        extendedHours
+                    );
                 }
                 else if (symbol.SecurityType == SecurityType.Future)
                 {
                     // add current future contract to the system
-                    security = algorithm.AddFutureContract(symbol, resolution, fillForward, leverage, extendedHours);
+                    security = algorithm.AddFutureContract(
+                        symbol,
+                        resolution,
+                        fillForward,
+                        leverage,
+                        extendedHours
+                    );
                 }
                 else
                 {
                     // for items not directly requested set leverage to 1 and at the min resolution
-                    security = algorithm.AddSecurity(symbol.SecurityType, symbol.Value, resolution, symbol.ID.Market, fillForward, leverage, extendedHours);
+                    security = algorithm.AddSecurity(
+                        symbol.SecurityType,
+                        symbol.Value,
+                        resolution,
+                        symbol.ID.Market,
+                        fillForward,
+                        leverage,
+                        extendedHours
+                    );
                 }
             }
             return true;
@@ -3903,8 +4391,10 @@ namespace QuantConnect
         {
             switch (right)
             {
-                case OptionRight.Call: return OptionRight.Put;
-                case OptionRight.Put:  return OptionRight.Call;
+                case OptionRight.Call:
+                    return OptionRight.Put;
+                case OptionRight.Put:
+                    return OptionRight.Call;
                 default:
                     throw new ArgumentOutOfRangeException(nameof(right), right, null);
             }
@@ -3918,7 +4408,8 @@ namespace QuantConnect
         /// <param name="arg1">The first value</param>
         /// <param name="arg2">The second value</param>
         /// <returns>Returns true if its left-hand operand meets the operator value to its right-hand operand, false otherwise</returns>
-        public static bool Compare<T>(this ComparisonOperatorTypes op, T arg1, T arg2) where T : IComparable
+        public static bool Compare<T>(this ComparisonOperatorTypes op, T arg1, T arg2)
+            where T : IComparable
         {
             return ComparisonOperator.Compare(op, arg1, arg2);
         }
@@ -3933,9 +4424,14 @@ namespace QuantConnect
         /// </param>
         /// <param name="isFilteredSubscription">True if this subscription should have filters applied to it (market hours/user filters from security), false otherwise</param>
         /// <returns>Subscription data configuration</returns>
-        public static SubscriptionDataConfig ToSubscriptionDataConfig(this Data.HistoryRequest request, bool isInternalFeed = false, bool isFilteredSubscription = true)
+        public static SubscriptionDataConfig ToSubscriptionDataConfig(
+            this Data.HistoryRequest request,
+            bool isInternalFeed = false,
+            bool isFilteredSubscription = true
+        )
         {
-            return new SubscriptionDataConfig(request.DataType,
+            return new SubscriptionDataConfig(
+                request.DataType,
                 request.Symbol,
                 request.Resolution,
                 request.DataTimeZone,
@@ -3968,7 +4464,11 @@ namespace QuantConnect
         /// dependency with the FF enumerators requiring that they receive aux data to properly handle delistings.
         /// Otherwise we would have issues with delisted symbols continuing to fill forward after expiry/delisting.
         /// Reference PR #5485 and related issues for more.</remarks>
-        public static bool ShouldEmitData(this SubscriptionDataConfig config, BaseData data, bool isUniverse = false)
+        public static bool ShouldEmitData(
+            this SubscriptionDataConfig config,
+            BaseData data,
+            bool isUniverse = false
+        )
         {
             // For now we are only filtering Auxiliary data; so if its another type just return true or if it's a margin interest rate which we want to emit always
             if (data.DataType != MarketDataType.Auxiliary)
@@ -3981,8 +4481,12 @@ namespace QuantConnect
             var expectedType = type.IsAssignableTo(config.Type);
 
             // Check our config type first to be lazy about using data.GetType() unless required
-            var configTypeFilter = (config.Type == typeof(TradeBar) || config.Type == typeof(ZipEntryName) ||
-                config.Type == typeof(Tick) && config.TickType == TickType.Trade || config.IsCustomData);
+            var configTypeFilter = (
+                config.Type == typeof(TradeBar)
+                || config.Type == typeof(ZipEntryName)
+                || config.Type == typeof(Tick) && config.TickType == TickType.Trade
+                || config.IsCustomData
+            );
 
             if (!configTypeFilter)
             {
@@ -4018,9 +4522,12 @@ namespace QuantConnect
         {
             switch (side)
             {
-                case PositionSide.Short: return OrderDirection.Sell;
-                case PositionSide.None: return OrderDirection.Hold;
-                case PositionSide.Long: return OrderDirection.Buy;
+                case PositionSide.Short:
+                    return OrderDirection.Sell;
+                case PositionSide.None:
+                    return OrderDirection.Hold;
+                case PositionSide.Long:
+                    return OrderDirection.Buy;
                 default:
                     throw new ArgumentOutOfRangeException(nameof(side), side, null);
             }
@@ -4040,21 +4547,35 @@ namespace QuantConnect
                 case PositionSide.Short:
                     switch (direction)
                     {
-                        case OrderDirection.Buy: return true;
-                        case OrderDirection.Sell: return false;
-                        case OrderDirection.Hold: return false;
+                        case OrderDirection.Buy:
+                            return true;
+                        case OrderDirection.Sell:
+                            return false;
+                        case OrderDirection.Hold:
+                            return false;
                         default:
-                            throw new ArgumentOutOfRangeException(nameof(direction), direction, null);
+                            throw new ArgumentOutOfRangeException(
+                                nameof(direction),
+                                direction,
+                                null
+                            );
                     }
 
                 case PositionSide.Long:
                     switch (direction)
                     {
-                        case OrderDirection.Buy: return false;
-                        case OrderDirection.Sell: return true;
-                        case OrderDirection.Hold: return false;
+                        case OrderDirection.Buy:
+                            return false;
+                        case OrderDirection.Sell:
+                            return true;
+                        case OrderDirection.Hold:
+                            return false;
                         default:
-                            throw new ArgumentOutOfRangeException(nameof(direction), direction, null);
+                            throw new ArgumentOutOfRangeException(
+                                nameof(direction),
+                                direction,
+                                null
+                            );
                     }
 
                 case PositionSide.None:
@@ -4147,7 +4668,10 @@ namespace QuantConnect
         public static bool IsWin(this OrderEvent fill, Security security, decimal profitLoss)
         {
             // For non-options or non-exercise orders, the trade is a win if the profit-loss is positive
-            if (!fill.Symbol.SecurityType.IsOption() || fill.Ticket.OrderType != OrderType.OptionExercise)
+            if (
+                !fill.Symbol.SecurityType.IsOption()
+                || fill.Ticket.OrderType != OrderType.OptionExercise
+            )
             {
                 return profitLoss > 0;
             }
@@ -4158,11 +4682,13 @@ namespace QuantConnect
             if (fill.Direction == OrderDirection.Sell)
             {
                 // If the option is ITM, the trade is a win only if the profit is greater than the ITM amount
-                return fill.IsInTheMoney && Math.Abs(profitLoss) < option.InTheMoneyAmount(fill.FillQuantity);
+                return fill.IsInTheMoney
+                    && Math.Abs(profitLoss) < option.InTheMoneyAmount(fill.FillQuantity);
             }
 
             // It is a win if the buyer paid more than what they saved (the ITM amount)
-            return !fill.IsInTheMoney || Math.Abs(profitLoss) > option.InTheMoneyAmount(fill.FillQuantity);
+            return !fill.IsInTheMoney
+                || Math.Abs(profitLoss) > option.InTheMoneyAmount(fill.FillQuantity);
         }
 
         /// <summary>
@@ -4174,7 +4700,10 @@ namespace QuantConnect
         /// <remarks>The returned value can be negative, which would mean the option is actually OTM.</remarks>
         public static ConvertibleCashAmount InTheMoneyAmount(this Option option, decimal quantity)
         {
-            return option.Holdings.GetQuantityValue(Math.Abs(quantity), option.GetPayOff(option.Underlying.Price));
+            return option.Holdings.GetQuantityValue(
+                Math.Abs(quantity),
+                option.GetPayOff(option.Underlying.Price)
+            );
         }
 
         /// <summary>
@@ -4226,7 +4755,11 @@ namespace QuantConnect
         /// <param name="failValue">Value to be returned if the denominator is zero</param>
         /// <returns>The numerator divided by the denominator if the denominator is not
         /// zero. Otherwise, the default failValue or the provided one</returns>
-        public static decimal SafeDivision(this decimal numerator, decimal denominator, decimal failValue = 0)
+        public static decimal SafeDivision(
+            this decimal numerator,
+            decimal denominator,
+            decimal failValue = 0
+        )
         {
             try
             {
@@ -4242,7 +4775,9 @@ namespace QuantConnect
         {
             if (PyString.IsStringType(item))
             {
-                return SymbolCache.GetSymbol(dispose ? item.GetAndDispose<string>() : item.As<string>());
+                return SymbolCache.GetSymbol(
+                    dispose ? item.GetAndDispose<string>() : item.As<string>()
+                );
             }
             else
             {
@@ -4253,7 +4788,10 @@ namespace QuantConnect
                 }
                 catch (Exception e)
                 {
-                    throw new ArgumentException(Messages.Extensions.ConvertToSymbolEnumerableFailed(item), e);
+                    throw new ArgumentException(
+                        Messages.Extensions.ConvertToSymbolEnumerableFailed(item),
+                        e
+                    );
                 }
                 return symbol;
             }

@@ -32,13 +32,13 @@ namespace QuantConnect.Orders.Fees
         /// https://www.kraken.com/features/fee-schedule#kraken-pro
         /// </summary>
         public const decimal MakerTier1CryptoFee = 0.0016m;
-        
+
         /// <summary>
         /// We don't use 30 day model, so using only tier1 fees.
         /// https://www.kraken.com/features/fee-schedule#kraken-pro
         /// </summary>
         public const decimal TakerTier1CryptoFee = 0.0026m;
-        
+
         /// <summary>
         /// We don't use 30 day model, so using only tier1 fees.
         /// https://www.kraken.com/features/fee-schedule#stablecoin-fx-pairs
@@ -48,8 +48,9 @@ namespace QuantConnect.Orders.Fees
         /// <summary>
         /// Fiats and stablecoins list that have own fee.
         /// </summary>
-        public List<string> FxStablecoinList { get; init; } = new() {"CAD", "EUR", "GBP", "JPY", "USD", "USDT", "DAI", "USDC"};
- 
+        public List<string> FxStablecoinList { get; init; } =
+            new() { "CAD", "EUR", "GBP", "JPY", "USD", "USDT", "DAI", "USDC" };
+
         /// <summary>
         /// Get the fee for this order.
         /// If sell - fees in base currency
@@ -72,15 +73,14 @@ namespace QuantConnect.Orders.Fees
                 // limit order posted to the order book
                 unitPrice = ((LimitOrder)order).LimitPrice;
             }
-            
+
             unitPrice *= security.SymbolProperties.ContractMultiplier;
 
             var fee = TakerTier1CryptoFee;
 
             var props = order.Properties as KrakenOrderProperties;
-            
-            if (order.Type == OrderType.Limit &&
-                (props?.PostOnly == true || !order.IsMarketable))
+
+            if (order.Type == OrderType.Limit && (props?.PostOnly == true || !order.IsMarketable))
             {
                 // limit order posted to the order book
                 fee = MakerTier1CryptoFee;
@@ -90,7 +90,7 @@ namespace QuantConnect.Orders.Fees
             {
                 isBuy = false;
             }
-            
+
             if (!isBuy && props?.FeeInQuote == true)
             {
                 isBuy = true;
@@ -103,11 +103,20 @@ namespace QuantConnect.Orders.Fees
             string actualBaseCurrency;
             string actualQuoteCurrency;
 
-            CurrencyPairUtil.DecomposeCurrencyPair(security.Symbol, out actualBaseCurrency, out actualQuoteCurrency);
-            
-            return new OrderFee(new CashAmount(
-                isBuy ? unitPrice * order.AbsoluteQuantity * fee : 1 * order.AbsoluteQuantity * fee,
-                isBuy ? actualQuoteCurrency : actualBaseCurrency));
+            CurrencyPairUtil.DecomposeCurrencyPair(
+                security.Symbol,
+                out actualBaseCurrency,
+                out actualQuoteCurrency
+            );
+
+            return new OrderFee(
+                new CashAmount(
+                    isBuy
+                        ? unitPrice * order.AbsoluteQuantity * fee
+                        : 1 * order.AbsoluteQuantity * fee,
+                    isBuy ? actualQuoteCurrency : actualBaseCurrency
+                )
+            );
         }
     }
 }

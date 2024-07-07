@@ -13,13 +13,13 @@
  * limitations under the License.
 */
 
+using System;
+using System.Collections.Generic;
+using System.Linq;
 using NUnit.Framework;
 using QuantConnect.Data;
 using QuantConnect.Data.Market;
 using QuantConnect.Securities;
-using System;
-using System.Collections.Generic;
-using System.Linq;
 
 namespace QuantConnect.Tests.Common.Securities
 {
@@ -29,8 +29,14 @@ namespace QuantConnect.Tests.Common.Securities
         [Test]
         public void ComputesUnrealizedProfit()
         {
-            var security = GetSecurity<QuantConnect.Securities.Equity.Equity>(Symbols.SPY, Resolution.Daily);
-            var holding = new SecurityHolding(security, new IdentityCurrencyConverter(Currencies.USD));
+            var security = GetSecurity<QuantConnect.Securities.Equity.Equity>(
+                Symbols.SPY,
+                Resolution.Daily
+            );
+            var holding = new SecurityHolding(
+                security,
+                new IdentityCurrencyConverter(Currencies.USD)
+            );
 
             var last = 100m;
             var bid = 99m;
@@ -56,7 +62,10 @@ namespace QuantConnect.Tests.Common.Securities
         public void Raises_QuantityChanged_WhenSetHoldingsCalled()
         {
             var arguments = new List<SecurityHoldingQuantityChangedEventArgs>();
-            var security = GetSecurity<QuantConnect.Securities.Equity.Equity>(Symbols.SPY, Resolution.Daily);
+            var security = GetSecurity<QuantConnect.Securities.Equity.Equity>(
+                Symbols.SPY,
+                Resolution.Daily
+            );
             security.Holdings.QuantityChanged += (sender, args) => arguments.Add(args);
 
             // invoke int overload
@@ -92,7 +101,8 @@ namespace QuantConnect.Tests.Common.Securities
                 TimeZones.Utc,
                 true,
                 true,
-                false);
+                false
+            );
 
             var security = new Security(
                 SecurityExchangeHours.AlwaysOpen(TimeZones.Utc),
@@ -107,7 +117,9 @@ namespace QuantConnect.Tests.Common.Securities
             var reference = DateTime.Now;
             var referenceUtc = reference.ConvertToUtc(subscriptionDataConfig.DataTimeZone);
             var timeKeeper = new TimeKeeper(referenceUtc);
-            security.SetLocalTimeKeeper(timeKeeper.GetLocalTimeKeeper(subscriptionDataConfig.DataTimeZone));
+            security.SetLocalTimeKeeper(
+                timeKeeper.GetLocalTimeKeeper(subscriptionDataConfig.DataTimeZone)
+            );
 
             return security;
         }

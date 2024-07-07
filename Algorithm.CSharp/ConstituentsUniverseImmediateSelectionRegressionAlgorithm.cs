@@ -24,13 +24,16 @@ namespace QuantConnect.Algorithm.CSharp
     /// <summary>
     /// Assert that constituents universe selection happens right away after algorithm starts
     /// </summary>
-    public class ConstituentsUniverseImmediateSelectionRegressionAlgorithm : QCAlgorithm, IRegressionAlgorithmDefinition
+    public class ConstituentsUniverseImmediateSelectionRegressionAlgorithm
+        : QCAlgorithm,
+            IRegressionAlgorithmDefinition
     {
-        private readonly List<Symbol> _expectedConstituents = new()
-        {
-            QuantConnect.Symbol.Create("AAPL", SecurityType.Equity, Market.USA),
-            QuantConnect.Symbol.Create("QQQ", SecurityType.Equity, Market.USA)
-        };
+        private readonly List<Symbol> _expectedConstituents =
+            new()
+            {
+                QuantConnect.Symbol.Create("AAPL", SecurityType.Equity, Market.USA),
+                QuantConnect.Symbol.Create("QQQ", SecurityType.Equity, Market.USA)
+            };
 
         private bool _securitiesChanged;
 
@@ -46,8 +49,10 @@ namespace QuantConnect.Algorithm.CSharp
                 SecurityIdentifier.GenerateConstituentIdentifier(
                     "constituents-universe-qctest",
                     SecurityType.Equity,
-                    Market.USA),
-                "constituents-universe-qctest");
+                    Market.USA
+                ),
+                "constituents-universe-qctest"
+            );
 
             AddUniverse(new ConstituentsUniverse(customUniverseSymbol, UniverseSettings));
         }
@@ -59,20 +64,30 @@ namespace QuantConnect.Algorithm.CSharp
                 // Selection should be happening right on algorithm start
                 if (Time != StartDate)
                 {
-                    throw new RegressionTestException($"Universe selection should have been triggered right away on {StartDate} " +
-                        $"but happened on {Time}");
+                    throw new RegressionTestException(
+                        $"Universe selection should have been triggered right away on {StartDate} "
+                            + $"but happened on {Time}"
+                    );
                 }
 
                 // Constituents should have been added to the algorithm
                 if (changes.AddedSecurities.Count != _expectedConstituents.Count)
                 {
-                    throw new RegressionTestException($"Expected {_expectedConstituents.Count} stocks to be added to the algorithm, " +
-                        $"instead added: {changes.AddedSecurities.Count}");
+                    throw new RegressionTestException(
+                        $"Expected {_expectedConstituents.Count} stocks to be added to the algorithm, "
+                            + $"instead added: {changes.AddedSecurities.Count}"
+                    );
                 }
 
-                if (!_expectedConstituents.All(constituent => changes.AddedSecurities.Any(security => security.Symbol == constituent)))
+                if (
+                    !_expectedConstituents.All(constituent =>
+                        changes.AddedSecurities.Any(security => security.Symbol == constituent)
+                    )
+                )
                 {
-                    throw new RegressionTestException("Not all constituents were added to the algorithm");
+                    throw new RegressionTestException(
+                        "Not all constituents were added to the algorithm"
+                    );
                 }
 
                 _securitiesChanged = true;
@@ -115,35 +130,36 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// This is used by the regression test system to indicate what the expected statistics are from running the algorithm
         /// </summary>
-        public Dictionary<string, string> ExpectedStatistics => new Dictionary<string, string>
-        {
-            {"Total Orders", "0"},
-            {"Average Win", "0%"},
-            {"Average Loss", "0%"},
-            {"Compounding Annual Return", "0%"},
-            {"Drawdown", "0%"},
-            {"Expectancy", "0"},
-            {"Start Equity", "100000"},
-            {"End Equity", "100000"},
-            {"Net Profit", "0%"},
-            {"Sharpe Ratio", "0"},
-            {"Sortino Ratio", "0"},
-            {"Probabilistic Sharpe Ratio", "0%"},
-            {"Loss Rate", "0%"},
-            {"Win Rate", "0%"},
-            {"Profit-Loss Ratio", "0"},
-            {"Alpha", "0"},
-            {"Beta", "0"},
-            {"Annual Standard Deviation", "0"},
-            {"Annual Variance", "0"},
-            {"Information Ratio", "0"},
-            {"Tracking Error", "0"},
-            {"Treynor Ratio", "0"},
-            {"Total Fees", "$0.00"},
-            {"Estimated Strategy Capacity", "$0"},
-            {"Lowest Capacity Asset", ""},
-            {"Portfolio Turnover", "0%"},
-            {"OrderListHash", "d41d8cd98f00b204e9800998ecf8427e"}
-        };
+        public Dictionary<string, string> ExpectedStatistics =>
+            new Dictionary<string, string>
+            {
+                { "Total Orders", "0" },
+                { "Average Win", "0%" },
+                { "Average Loss", "0%" },
+                { "Compounding Annual Return", "0%" },
+                { "Drawdown", "0%" },
+                { "Expectancy", "0" },
+                { "Start Equity", "100000" },
+                { "End Equity", "100000" },
+                { "Net Profit", "0%" },
+                { "Sharpe Ratio", "0" },
+                { "Sortino Ratio", "0" },
+                { "Probabilistic Sharpe Ratio", "0%" },
+                { "Loss Rate", "0%" },
+                { "Win Rate", "0%" },
+                { "Profit-Loss Ratio", "0" },
+                { "Alpha", "0" },
+                { "Beta", "0" },
+                { "Annual Standard Deviation", "0" },
+                { "Annual Variance", "0" },
+                { "Information Ratio", "0" },
+                { "Tracking Error", "0" },
+                { "Treynor Ratio", "0" },
+                { "Total Fees", "$0.00" },
+                { "Estimated Strategy Capacity", "$0" },
+                { "Lowest Capacity Asset", "" },
+                { "Portfolio Turnover", "0%" },
+                { "OrderListHash", "d41d8cd98f00b204e9800998ecf8427e" }
+            };
     }
 }

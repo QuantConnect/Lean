@@ -41,7 +41,12 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
         /// <param name="timeProvider">A time provider used to determine age of data</param>
         /// <param name="timeZone">The data's time zone</param>
         /// <param name="maximumDataAge">The maximum age of data allowed</param>
-        public FastForwardEnumerator(IEnumerator<BaseData> enumerator, ITimeProvider timeProvider, DateTimeZone timeZone, TimeSpan maximumDataAge)
+        public FastForwardEnumerator(
+            IEnumerator<BaseData> enumerator,
+            ITimeProvider timeProvider,
+            DateTimeZone timeZone,
+            TimeSpan maximumDataAge
+        )
         {
             _enumerator = enumerator;
             _timeProvider = timeProvider;
@@ -74,7 +79,9 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
                 }
 
                 // comute the age of the data, if within limits we're done
-                var age = _timeProvider.GetUtcNow().ConvertFromUtc(_timeZone) - _enumerator.Current.EndTime;
+                var age =
+                    _timeProvider.GetUtcNow().ConvertFromUtc(_timeZone)
+                    - _enumerator.Current.EndTime;
                 if (age <= _maximumDataAge)
                 {
                     _current = _enumerator.Current;
@@ -127,6 +134,5 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
         {
             _enumerator.Dispose();
         }
-
     }
 }

@@ -86,7 +86,8 @@ namespace QuantConnect
         /// <remarks>
         /// Dollar volume is in account currency, but name is used for consistency with financial literature.
         /// </remarks>
-        public decimal MarketCapacityDollarVolume => _marketCapacityDollarVolume * _resolutionScaleFactor;
+        public decimal MarketCapacityDollarVolume =>
+            _marketCapacityDollarVolume * _resolutionScaleFactor;
 
         /// <summary>
         /// Creates a new SymbolCapacity object, capable of determining market capacity for a Symbol
@@ -100,9 +101,10 @@ namespace QuantConnect
             _symbol = symbol;
 
             _isInternal = _algorithm
-                .SubscriptionManager
-                .SubscriptionDataConfigService
-                .GetSubscriptionDataConfigs(symbol, includeInternalConfigs: true)
+                .SubscriptionManager.SubscriptionDataConfigService.GetSubscriptionDataConfigs(
+                    symbol,
+                    includeInternalConfigs: true
+                )
                 .All(config => config.IsInternalFeed);
         }
 
@@ -113,13 +115,29 @@ namespace QuantConnect
         /// <param name="orderEvent">Parent class filters out other events so only fill events reach this method.</param>
         public void OnOrderEvent(OrderEvent orderEvent)
         {
-            SaleVolume += Security.QuoteCurrency.ConversionRate * orderEvent.FillPrice * orderEvent.AbsoluteFillQuantity * Security.SymbolProperties.ContractMultiplier;
+            SaleVolume +=
+                Security.QuoteCurrency.ConversionRate
+                * orderEvent.FillPrice
+                * orderEvent.AbsoluteFillQuantity
+                * Security.SymbolProperties.ContractMultiplier;
 
             // To reduce the capacity of high frequency strategies, we scale down the
             // volume captured on each bar proportional to the trades per day.
             // Default to -1 day for the first order to not reduce the volume of the first order.
-            _fastTradingVolumeDiscountFactor = _fastTradingVolumeScalingFactor * ((decimal)((orderEvent.UtcTime - (_previousOrderEvent?.UtcTime ?? orderEvent.UtcTime.AddDays(-1))).TotalMinutes) / 390m);
-            _fastTradingVolumeDiscountFactor = _fastTradingVolumeDiscountFactor > 1 ? 1 : Math.Max(0.20m, _fastTradingVolumeDiscountFactor);
+            _fastTradingVolumeDiscountFactor =
+                _fastTradingVolumeScalingFactor
+                * (
+                    (decimal)(
+                        (
+                            orderEvent.UtcTime
+                            - (_previousOrderEvent?.UtcTime ?? orderEvent.UtcTime.AddDays(-1))
+                        ).TotalMinutes
+                    ) / 390m
+                );
+            _fastTradingVolumeDiscountFactor =
+                _fastTradingVolumeDiscountFactor > 1
+                    ? 1
+                    : Math.Max(0.20m, _fastTradingVolumeDiscountFactor);
 
             if (_resetMarketCapacityDollarVolume)
             {
@@ -152,31 +170,35 @@ namespace QuantConnect
                 case Resolution.Tick:
                 case Resolution.Second:
                     dollarVolumeScaleFactor = dollarVolumeScaleFactor / 60;
-                    k = _averageDollarVolume != 0
-                        ? dollarVolumeScaleFactor / _averageDollarVolume
-                        : 10;
+                    k =
+                        _averageDollarVolume != 0
+                            ? dollarVolumeScaleFactor / _averageDollarVolume
+                            : 10;
 
                     var timeoutPeriod = k > 120 ? 120 : (int)Math.Max(5, (double)k);
                     timeout = _previousOrderEvent.UtcTime.AddMinutes(timeoutPeriod);
                     break;
 
                 case Resolution.Minute:
-                    k = _averageDollarVolume != 0
-                        ? dollarVolumeScaleFactor / _averageDollarVolume
-                        : 10;
+                    k =
+                        _averageDollarVolume != 0
+                            ? dollarVolumeScaleFactor / _averageDollarVolume
+                            : 10;
 
                     var timeoutMinutes = k > 120 ? 120 : (int)Math.Max(1, (double)k);
                     timeout = _previousOrderEvent.UtcTime.AddMinutes(timeoutMinutes);
                     break;
 
                 case Resolution.Hour:
-                    return _algorithm.UtcTime == _previousOrderEvent.UtcTime.RoundUp(resolution.ToTimeSpan());
+                    return _algorithm.UtcTime
+                        == _previousOrderEvent.UtcTime.RoundUp(resolution.ToTimeSpan());
 
                 case Resolution.Daily:
                     // At the end of a daily bar, the EndTime is the next day.
                     // Increment the order by one day to match it
-                    return _algorithm.UtcTime == _previousOrderEvent.UtcTime ||
-                        _algorithm.UtcTime.Date == _previousOrderEvent.UtcTime.RoundUp(resolution.ToTimeSpan());
+                    return _algorithm.UtcTime == _previousOrderEvent.UtcTime
+                        || _algorithm.UtcTime.Date
+                            == _previousOrderEvent.UtcTime.RoundUp(resolution.ToTimeSpan());
 
                 default:
                     timeout = _previousOrderEvent.UtcTime.AddHours(1);
@@ -209,7 +231,9 @@ namespace QuantConnect
             }
             else
             {
-                _averageDollarVolume = ((bar.Close * conversionRate) * (bar.Volume + _previousVolume)) / timeBetweenBars;
+                _averageDollarVolume =
+                    ((bar.Close * conversionRate) * (bar.Volume + _previousVolume))
+                    / timeBetweenBars;
             }
 
             _previousTime = utcTime;
@@ -219,7 +243,12 @@ namespace QuantConnect
             if (includeMarketVolume)
             {
                 _resolutionScaleFactor = ResolutionScaleFactor(resolution);
-                _marketCapacityDollarVolume += bar.Close * _fastTradingVolumeDiscountFactor * bar.Volume * conversionRate * Security.SymbolProperties.ContractMultiplier;
+                _marketCapacityDollarVolume +=
+                    bar.Close
+                    * _fastTradingVolumeDiscountFactor
+                    * bar.Volume
+                    * conversionRate
+                    * Security.SymbolProperties.ContractMultiplier;
             }
 
             // When we've finished including market volume, signal completed
@@ -255,7 +284,6 @@ namespace QuantConnect
                         volume = _cfdMinuteVolume;
                         break;
                 }
-                
 
                 return new TradeBar(
                     quote.Time,
@@ -265,7 +293,8 @@ namespace QuantConnect
                     quote.Low,
                     quote.Close,
                     volume,
-                    quote.Period);
+                    quote.Period
+                );
             }
 
             if (!_isInternal)
@@ -275,8 +304,11 @@ namespace QuantConnect
             // internal subscriptions, like mapped continuous future contract won't be sent through the slice
             // but will be available in the security cache, if not present will return null
             var result = Security.Cache.GetData<TradeBar>();
-            if (result != null
-                && _algorithm.UtcTime == result.EndTime.ConvertToUtc(Security.Exchange.Hours.TimeZone))
+            if (
+                result != null
+                && _algorithm.UtcTime
+                    == result.EndTime.ConvertToUtc(Security.Exchange.Hours.TimeZone)
+            )
             {
                 return result;
             }
@@ -320,7 +352,10 @@ namespace QuantConnect
         /// </summary>
         public bool ShouldRemove()
         {
-            if (Security.Invested || _algorithm.UtcTime < _previousOrderEvent.UtcTime + CapacityEffectPeriod)
+            if (
+                Security.Invested
+                || _algorithm.UtcTime < _previousOrderEvent.UtcTime + CapacityEffectPeriod
+            )
             {
                 return false;
             }

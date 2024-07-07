@@ -14,9 +14,9 @@
 */
 
 using System;
+using System.Collections.Generic;
 using Python.Runtime;
 using QuantConnect.Interfaces;
-using System.Collections.Generic;
 
 namespace QuantConnect.Algorithm.Framework.Alphas.Analysis
 {

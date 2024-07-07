@@ -13,28 +13,29 @@
  * limitations under the License.
 */
 
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using NodaTime;
+using Python.Runtime;
+using QuantConnect.Brokerages;
 using QuantConnect.Data;
 using QuantConnect.Data.Consolidators;
-using QuantConnect.Data.Market;
-using QuantConnect.Indicators;
-using System;
-using QuantConnect.Securities;
-using NodaTime;
-using System.Collections.Generic;
-using QuantConnect.Python;
-using Python.Runtime;
-using QuantConnect.Data.UniverseSelection;
 using QuantConnect.Data.Fundamental;
-using System.Linq;
-using QuantConnect.Brokerages;
+using QuantConnect.Data.Market;
+using QuantConnect.Data.UniverseSelection;
+using QuantConnect.Indicators;
+using QuantConnect.Python;
 using QuantConnect.Scheduling;
+using QuantConnect.Securities;
 using QuantConnect.Util;
 
 namespace QuantConnect.Algorithm
 {
     public partial class QCAlgorithm
     {
-        private readonly Dictionary<IntPtr, PythonIndicator> _pythonIndicators = new Dictionary<IntPtr, PythonIndicator>();
+        private readonly Dictionary<IntPtr, PythonIndicator> _pythonIndicators =
+            new Dictionary<IntPtr, PythonIndicator>();
 
         /// <summary>
         /// PandasConverter for this Algorithm
@@ -102,7 +103,14 @@ namespace QuantConnect.Algorithm
         /// <param name="leverage">Custom leverage per security</param>
         /// <returns>The new <see cref="Security"/></returns>
         [DocumentationAttribute(AddingData)]
-        public Security AddData(PyObject type, string ticker, Resolution? resolution, DateTimeZone timeZone, bool fillForward = false, decimal leverage = 1.0m)
+        public Security AddData(
+            PyObject type,
+            string ticker,
+            Resolution? resolution,
+            DateTimeZone timeZone,
+            bool fillForward = false,
+            decimal leverage = 1.0m
+        )
         {
             return AddData(type.CreateType(), ticker, resolution, timeZone, fillForward, leverage);
         }
@@ -128,9 +136,23 @@ namespace QuantConnect.Algorithm
         /// due to pythonnet's method precedence, as viewable here: https://github.com/QuantConnect/pythonnet/blob/9e29755c54e6008cb016e3dd9d75fbd8cd19fcf7/src/runtime/methodbinder.cs#L215
         /// </remarks>
         [DocumentationAttribute(AddingData)]
-        public Security AddData(PyObject type, Symbol underlying, Resolution? resolution, DateTimeZone timeZone, bool fillForward = false, decimal leverage = 1.0m)
+        public Security AddData(
+            PyObject type,
+            Symbol underlying,
+            Resolution? resolution,
+            DateTimeZone timeZone,
+            bool fillForward = false,
+            decimal leverage = 1.0m
+        )
         {
-            return AddData(type.CreateType(), underlying, resolution, timeZone, fillForward, leverage);
+            return AddData(
+                type.CreateType(),
+                underlying,
+                resolution,
+                timeZone,
+                fillForward,
+                leverage
+            );
         }
 
         /// <summary>
@@ -146,25 +168,40 @@ namespace QuantConnect.Algorithm
         /// <param name="leverage">Custom leverage per security</param>
         /// <returns>The new <see cref="Security"/></returns>
         [DocumentationAttribute(AddingData)]
-        public Security AddData(Type dataType, string ticker, Resolution? resolution, DateTimeZone timeZone, bool fillForward = false, decimal leverage = 1.0m)
+        public Security AddData(
+            Type dataType,
+            string ticker,
+            Resolution? resolution,
+            DateTimeZone timeZone,
+            bool fillForward = false,
+            decimal leverage = 1.0m
+        )
         {
             // NOTE: Invoking methods on BaseData w/out setting the symbol may provide unexpected behavior
             var baseInstance = dataType.GetBaseDataInstance();
             if (!baseInstance.RequiresMapping())
             {
                 var symbol = new Symbol(
-                    SecurityIdentifier.GenerateBase(dataType, ticker, Market.USA, baseInstance.RequiresMapping()),
-                    ticker);
+                    SecurityIdentifier.GenerateBase(
+                        dataType,
+                        ticker,
+                        Market.USA,
+                        baseInstance.RequiresMapping()
+                    ),
+                    ticker
+                );
                 return AddDataImpl(dataType, symbol, resolution, timeZone, fillForward, leverage);
             }
             // If we need a mappable ticker and we can't find one in the SymbolCache, throw
             Symbol underlying;
             if (!SymbolCache.TryGetSymbol(ticker, out underlying))
             {
-                throw new InvalidOperationException($"The custom data type {dataType.Name} requires mapping, but the provided ticker is not in the cache. " +
-                                                    $"Please add this custom data type using a Symbol or perform this call after " +
-                                                    $"a Security has been added using AddEquity, AddForex, AddCfd, AddCrypto, AddFuture, AddOption or AddSecurity. " +
-                                                    $"An example use case can be found in CustomDataAddDataRegressionAlgorithm");
+                throw new InvalidOperationException(
+                    $"The custom data type {dataType.Name} requires mapping, but the provided ticker is not in the cache. "
+                        + $"Please add this custom data type using a Symbol or perform this call after "
+                        + $"a Security has been added using AddEquity, AddForex, AddCfd, AddCrypto, AddFuture, AddOption or AddSecurity. "
+                        + $"An example use case can be found in CustomDataAddDataRegressionAlgorithm"
+                );
             }
 
             return AddData(dataType, underlying, resolution, timeZone, fillForward, leverage);
@@ -191,7 +228,14 @@ namespace QuantConnect.Algorithm
         /// due to pythonnet's method precedence, as viewable here: https://github.com/QuantConnect/pythonnet/blob/9e29755c54e6008cb016e3dd9d75fbd8cd19fcf7/src/runtime/methodbinder.cs#L215
         /// </remarks>
         [DocumentationAttribute(AddingData)]
-        public Security AddData(Type dataType, Symbol underlying, Resolution? resolution = null, DateTimeZone timeZone = null, bool fillForward = false, decimal leverage = 1.0m)
+        public Security AddData(
+            Type dataType,
+            Symbol underlying,
+            Resolution? resolution = null,
+            DateTimeZone timeZone = null,
+            bool fillForward = false,
+            decimal leverage = 1.0m
+        )
         {
             var symbol = QuantConnect.Symbol.CreateBase(dataType, underlying, underlying.ID.Market);
             return AddDataImpl(dataType, symbol, resolution, timeZone, fillForward, leverage);
@@ -211,7 +255,15 @@ namespace QuantConnect.Algorithm
         /// <param name="leverage">Custom leverage per security</param>
         /// <returns>The new <see cref="Security"/></returns>
         [DocumentationAttribute(AddingData)]
-        public Security AddData(PyObject type, string ticker, SymbolProperties properties, SecurityExchangeHours exchangeHours, Resolution? resolution = null, bool fillForward = false, decimal leverage = 1.0m)
+        public Security AddData(
+            PyObject type,
+            string ticker,
+            SymbolProperties properties,
+            SecurityExchangeHours exchangeHours,
+            Resolution? resolution = null,
+            bool fillForward = false,
+            decimal leverage = 1.0m
+        )
         {
             // Get the right key for storage of base type symbols
             var dataType = type.CreateType();
@@ -237,7 +289,9 @@ namespace QuantConnect.Algorithm
             Func<OptionFilterUniverse, OptionFilterUniverse> optionFilterUniverse;
             if (!optionFilter.TryConvertToDelegate(out optionFilterUniverse))
             {
-                throw new ArgumentException("Option contract universe filter provided is not a function");
+                throw new ArgumentException(
+                    "Option contract universe filter provided is not a function"
+                );
             }
 
             AddFutureOption(futureSymbol, optionFilterUniverse);
@@ -255,7 +309,14 @@ namespace QuantConnect.Algorithm
         /// <param name="fillForward">When no data available on a tradebar, return the last data that was generated</param>
         /// <param name="leverage">Custom leverage per security</param>
         /// <returns>The new <see cref="Security"/></returns>
-        private Security AddDataImpl(Type dataType, Symbol symbol, Resolution? resolution, DateTimeZone timeZone, bool fillForward, decimal leverage)
+        private Security AddDataImpl(
+            Type dataType,
+            Symbol symbol,
+            Resolution? resolution,
+            DateTimeZone timeZone,
+            bool fillForward,
+            decimal leverage
+        )
         {
             var alias = symbol.ID.Symbol;
             SymbolCache.Set(alias, symbol);
@@ -263,7 +324,12 @@ namespace QuantConnect.Algorithm
             if (timeZone != null)
             {
                 // user set time zone
-                MarketHoursDatabase.SetEntryAlwaysOpen(symbol.ID.Market, alias, SecurityType.Base, timeZone);
+                MarketHoursDatabase.SetEntryAlwaysOpen(
+                    symbol.ID.Market,
+                    alias,
+                    SecurityType.Base,
+                    timeZone
+                );
             }
 
             //Add this new generic data as a tradeable security:
@@ -273,8 +339,14 @@ namespace QuantConnect.Algorithm
                 resolution,
                 fillForward,
                 isCustomData: true,
-                extendedMarketHours: true);
-            var security = Securities.CreateSecurity(symbol, config, leverage, addToSymbolCache: false);
+                extendedMarketHours: true
+            );
+            var security = Securities.CreateSecurity(
+                symbol,
+                config,
+                leverage,
+                addToSymbolCache: false
+            );
 
             return AddToUserDefinedUniverse(security, new List<SubscriptionDataConfig> { config });
         }
@@ -295,7 +367,7 @@ namespace QuantConnect.Algorithm
                 return AddUniverse(pyObject, null, null);
             }
             // TODO: to be removed when https://github.com/QuantConnect/pythonnet/issues/62 is solved
-            else if(pyObject.TryConvert(out universe))
+            else if (pyObject.TryConvert(out universe))
             {
                 return AddUniverse(universe);
             }
@@ -311,7 +383,9 @@ namespace QuantConnect.Algorithm
             {
                 using (Py.GIL())
                 {
-                    throw new ArgumentException($"QCAlgorithm.AddUniverse: {pyObject.Repr()} is not a valid argument.");
+                    throw new ArgumentException(
+                        $"QCAlgorithm.AddUniverse: {pyObject.Repr()} is not a valid argument."
+                    );
                 }
             }
         }
@@ -340,7 +414,10 @@ namespace QuantConnect.Algorithm
 
                 if (pyfine.TryConvertToDelegate(out coarseFunc))
                 {
-                    return AddUniverse(dateRule, coarseFunc.ConvertToUniverseSelectionSymbolDelegate());
+                    return AddUniverse(
+                        dateRule,
+                        coarseFunc.ConvertToUniverseSelectionSymbolDelegate()
+                    );
                 }
             }
             catch (InvalidCastException)
@@ -352,20 +429,30 @@ namespace QuantConnect.Algorithm
             {
                 return AddUniverse(pyObject, null, pyfine);
             }
-            else if (pyObject.TryConvert(out Universe universe) && pyfine.TryConvertToDelegate(out fineFunc))
+            else if (
+                pyObject.TryConvert(out Universe universe)
+                && pyfine.TryConvertToDelegate(out fineFunc)
+            )
             {
                 return AddUniverse(universe, fineFunc.ConvertToUniverseSelectionSymbolDelegate());
             }
-            else if (pyObject.TryConvertToDelegate(out coarseFunc) && pyfine.TryConvertToDelegate(out fineFunc))
+            else if (
+                pyObject.TryConvertToDelegate(out coarseFunc)
+                && pyfine.TryConvertToDelegate(out fineFunc)
+            )
             {
-                return AddUniverse(coarseFunc.ConvertToUniverseSelectionSymbolDelegate(),
-                    fineFunc.ConvertToUniverseSelectionSymbolDelegate());
+                return AddUniverse(
+                    coarseFunc.ConvertToUniverseSelectionSymbolDelegate(),
+                    fineFunc.ConvertToUniverseSelectionSymbolDelegate()
+                );
             }
             else
             {
                 using (Py.GIL())
                 {
-                    throw new ArgumentException($"QCAlgorithm.AddUniverse: {pyObject.Repr()} or {pyfine.Repr()} is not a valid argument.");
+                    throw new ArgumentException(
+                        $"QCAlgorithm.AddUniverse: {pyObject.Repr()} or {pyfine.Repr()} is not a valid argument."
+                    );
                 }
             }
         }
@@ -381,7 +468,11 @@ namespace QuantConnect.Algorithm
         public Universe AddUniverse(string name, Resolution resolution, PyObject pySelector)
         {
             var selector = pySelector.ConvertToDelegate<Func<DateTime, object>>();
-            return AddUniverse(name, resolution, selector.ConvertToUniverseSelectionStringDelegate());
+            return AddUniverse(
+                name,
+                resolution,
+                selector.ConvertToUniverseSelectionStringDelegate()
+            );
         }
 
         /// <summary>
@@ -407,10 +498,24 @@ namespace QuantConnect.Algorithm
         /// <param name="universeSettings">The subscription settings used for securities added from this universe</param>
         /// <param name="pySelector">Function delegate that accepts a DateTime and returns a collection of string symbols</param>
         [DocumentationAttribute(Universes)]
-        public Universe AddUniverse(SecurityType securityType, string name, Resolution resolution, string market, UniverseSettings universeSettings, PyObject pySelector)
+        public Universe AddUniverse(
+            SecurityType securityType,
+            string name,
+            Resolution resolution,
+            string market,
+            UniverseSettings universeSettings,
+            PyObject pySelector
+        )
         {
             var selector = pySelector.ConvertToDelegate<Func<DateTime, object>>();
-            return AddUniverse(securityType, name, resolution, market, universeSettings, selector.ConvertToUniverseSelectionStringDelegate());
+            return AddUniverse(
+                securityType,
+                name,
+                resolution,
+                market,
+                universeSettings,
+                selector.ConvertToUniverseSelectionStringDelegate()
+            );
         }
 
         /// <summary>
@@ -437,7 +542,12 @@ namespace QuantConnect.Algorithm
         /// <param name="resolution">The expected resolution of the universe data</param>
         /// <param name="selector">Function delegate that performs selection on the universe data</param>
         [DocumentationAttribute(Universes)]
-        public Universe AddUniverse(PyObject T, string name, Resolution resolution, PyObject selector)
+        public Universe AddUniverse(
+            PyObject T,
+            string name,
+            Resolution resolution,
+            PyObject selector
+        )
         {
             return AddUniverse(T.CreateType(), null, name, resolution, null, null, selector);
         }
@@ -453,9 +563,23 @@ namespace QuantConnect.Algorithm
         /// <param name="universeSettings">The settings used for securities added by this universe</param>
         /// <param name="selector">Function delegate that performs selection on the universe data</param>
         [DocumentationAttribute(Universes)]
-        public Universe AddUniverse(PyObject T, string name, Resolution resolution, UniverseSettings universeSettings, PyObject selector)
+        public Universe AddUniverse(
+            PyObject T,
+            string name,
+            Resolution resolution,
+            UniverseSettings universeSettings,
+            PyObject selector
+        )
         {
-            return AddUniverse(T.CreateType(), null, name, resolution, null, universeSettings, selector);
+            return AddUniverse(
+                T.CreateType(),
+                null,
+                name,
+                resolution,
+                null,
+                universeSettings,
+                selector
+            );
         }
 
         /// <summary>
@@ -468,7 +592,12 @@ namespace QuantConnect.Algorithm
         /// <param name="universeSettings">The settings used for securities added by this universe</param>
         /// <param name="selector">Function delegate that performs selection on the universe data</param>
         [DocumentationAttribute(Universes)]
-        public Universe AddUniverse(PyObject T, string name, UniverseSettings universeSettings, PyObject selector)
+        public Universe AddUniverse(
+            PyObject T,
+            string name,
+            UniverseSettings universeSettings,
+            PyObject selector
+        )
         {
             return AddUniverse(T.CreateType(), null, name, null, null, universeSettings, selector);
         }
@@ -484,9 +613,24 @@ namespace QuantConnect.Algorithm
         /// <param name="market">The market for selected symbols</param>
         /// <param name="selector">Function delegate that performs selection on the universe data</param>
         [DocumentationAttribute(Universes)]
-        public Universe AddUniverse(PyObject T, SecurityType securityType, string name, Resolution resolution, string market, PyObject selector)
+        public Universe AddUniverse(
+            PyObject T,
+            SecurityType securityType,
+            string name,
+            Resolution resolution,
+            string market,
+            PyObject selector
+        )
         {
-            return AddUniverse(T.CreateType(), securityType, name, resolution, market, null, selector);
+            return AddUniverse(
+                T.CreateType(),
+                securityType,
+                name,
+                resolution,
+                market,
+                null,
+                selector
+            );
         }
 
         /// <summary>
@@ -500,9 +644,25 @@ namespace QuantConnect.Algorithm
         /// <param name="universeSettings">The subscription settings to use for newly created subscriptions</param>
         /// <param name="selector">Function delegate that performs selection on the universe data</param>
         [DocumentationAttribute(Universes)]
-        public Universe AddUniverse(PyObject T, SecurityType securityType, string name, Resolution resolution, string market, UniverseSettings universeSettings, PyObject selector)
+        public Universe AddUniverse(
+            PyObject T,
+            SecurityType securityType,
+            string name,
+            Resolution resolution,
+            string market,
+            UniverseSettings universeSettings,
+            PyObject selector
+        )
         {
-            return AddUniverse(T.CreateType(), securityType, name, resolution, market, universeSettings, selector);
+            return AddUniverse(
+                T.CreateType(),
+                securityType,
+                name,
+                resolution,
+                market,
+                universeSettings,
+                selector
+            );
         }
 
         /// <summary>
@@ -516,7 +676,15 @@ namespace QuantConnect.Algorithm
         /// <param name="universeSettings">The subscription settings to use for newly created subscriptions</param>
         /// <param name="pySelector">Function delegate that performs selection on the universe data</param>
         [DocumentationAttribute(Universes)]
-        public Universe AddUniverse(Type dataType, SecurityType? securityType = null, string name = null, Resolution? resolution = null, string market = null, UniverseSettings universeSettings = null, PyObject pySelector = null)
+        public Universe AddUniverse(
+            Type dataType,
+            SecurityType? securityType = null,
+            string name = null,
+            Resolution? resolution = null,
+            string market = null,
+            UniverseSettings universeSettings = null,
+            PyObject pySelector = null
+        )
         {
             if (market.IsNullOrEmpty())
             {
@@ -534,10 +702,26 @@ namespace QuantConnect.Algorithm
                     {
                         return Universe.Unchanged;
                     }
-                    return ((object[])result).Select(x => x is Symbol symbol ? symbol : QuantConnect.Symbol.Create((string)x, securityType.Value, market, baseDataType: dataType));
+                    return ((object[])result).Select(x =>
+                        x is Symbol symbol
+                            ? symbol
+                            : QuantConnect.Symbol.Create(
+                                (string)x,
+                                securityType.Value,
+                                market,
+                                baseDataType: dataType
+                            )
+                    );
                 };
             }
-            return AddUniverseSymbolSelector(dataType, name, resolution, market, universeSettings, wrappedSelector);
+            return AddUniverseSymbolSelector(
+                dataType,
+                name,
+                resolution,
+                market,
+                universeSettings,
+                wrappedSelector
+            );
         }
 
         /// <summary>
@@ -552,7 +736,10 @@ namespace QuantConnect.Algorithm
             Func<OptionFilterUniverse, OptionFilterUniverse> convertedOptionChain;
             Universe universeToChain;
 
-            if (universe.TryConvert(out universeToChain) && optionFilter.TryConvertToDelegate(out convertedOptionChain))
+            if (
+                universe.TryConvert(out universeToChain)
+                && optionFilter.TryConvertToDelegate(out convertedOptionChain)
+            )
             {
                 AddUniverseOptions(universeToChain, convertedOptionChain);
             }
@@ -560,7 +747,9 @@ namespace QuantConnect.Algorithm
             {
                 using (Py.GIL())
                 {
-                    throw new ArgumentException($"QCAlgorithm.AddChainedEquityOptionUniverseSelectionModel: {universe.Repr()} or {optionFilter.Repr()} is not a valid argument.");
+                    throw new ArgumentException(
+                        $"QCAlgorithm.AddChainedEquityOptionUniverseSelectionModel: {universe.Repr()} or {optionFilter.Repr()} is not a valid argument."
+                    );
                 }
             }
         }
@@ -575,7 +764,12 @@ namespace QuantConnect.Algorithm
         /// <param name="selector">Selects a value from the BaseData send into the indicator, if null defaults to a cast (x => (T)x)</param>
         [DocumentationAttribute(Indicators)]
         [DocumentationAttribute(ConsolidatingData)]
-        public void RegisterIndicator(Symbol symbol, PyObject indicator, Resolution? resolution = null, PyObject selector = null)
+        public void RegisterIndicator(
+            Symbol symbol,
+            PyObject indicator,
+            Resolution? resolution = null,
+            PyObject selector = null
+        )
         {
             RegisterIndicator(symbol, indicator, ResolveConsolidator(symbol, resolution), selector);
         }
@@ -590,7 +784,12 @@ namespace QuantConnect.Algorithm
         /// <param name="selector">Selects a value from the BaseData send into the indicator, if null defaults to a cast (x => (T)x)</param>
         [DocumentationAttribute(Indicators)]
         [DocumentationAttribute(ConsolidatingData)]
-        public void RegisterIndicator(Symbol symbol, PyObject indicator, TimeSpan? resolution = null, PyObject selector = null)
+        public void RegisterIndicator(
+            Symbol symbol,
+            PyObject indicator,
+            TimeSpan? resolution = null,
+            PyObject selector = null
+        )
         {
             RegisterIndicator(symbol, indicator, ResolveConsolidator(symbol, resolution), selector);
         }
@@ -605,7 +804,12 @@ namespace QuantConnect.Algorithm
         /// <param name="selector">Selects a value from the BaseData send into the indicator, if null defaults to a cast (x => (T)x)</param>
         [DocumentationAttribute(Indicators)]
         [DocumentationAttribute(ConsolidatingData)]
-        public void RegisterIndicator(Symbol symbol, PyObject indicator, PyObject pyObject, PyObject selector = null)
+        public void RegisterIndicator(
+            Symbol symbol,
+            PyObject indicator,
+            PyObject pyObject,
+            PyObject selector = null
+        )
         {
             // First check if this is just a regular IDataConsolidator
             IDataConsolidator dataConsolidator;
@@ -637,7 +841,10 @@ namespace QuantConnect.Algorithm
                     }
                     catch (Exception e)
                     {
-                        throw new ArgumentException("Invalid third argument, should be either a valid consolidator or timedelta object. The following exception was thrown: ", e);
+                        throw new ArgumentException(
+                            "Invalid third argument, should be either a valid consolidator or timedelta object. The following exception was thrown: ",
+                            e
+                        );
                     }
                 }
             }
@@ -655,7 +862,12 @@ namespace QuantConnect.Algorithm
         /// <param name="selector">Selects a value from the BaseData send into the indicator, if null defaults to a cast (x => (T)x)</param>
         [DocumentationAttribute(Indicators)]
         [DocumentationAttribute(ConsolidatingData)]
-        public void RegisterIndicator(Symbol symbol, PyObject indicator, IDataConsolidator consolidator, PyObject selector = null)
+        public void RegisterIndicator(
+            Symbol symbol,
+            PyObject indicator,
+            IDataConsolidator consolidator,
+            PyObject selector = null
+        )
         {
             // TODO: to be removed when https://github.com/QuantConnect/pythonnet/issues/62 is solved
             IndicatorBase<IndicatorDataPoint> indicatorDataPoint;
@@ -664,21 +876,41 @@ namespace QuantConnect.Algorithm
 
             if (indicator.TryConvert(out indicatorDataPoint))
             {
-                RegisterIndicator(symbol, indicatorDataPoint, consolidator, selector?.ConvertToDelegate<Func<IBaseData, decimal>>());
+                RegisterIndicator(
+                    symbol,
+                    indicatorDataPoint,
+                    consolidator,
+                    selector?.ConvertToDelegate<Func<IBaseData, decimal>>()
+                );
                 return;
             }
             else if (indicator.TryConvert(out indicatorDataBar))
             {
-                RegisterIndicator(symbol, indicatorDataBar, consolidator, selector?.ConvertToDelegate<Func<IBaseData, IBaseDataBar>>());
+                RegisterIndicator(
+                    symbol,
+                    indicatorDataBar,
+                    consolidator,
+                    selector?.ConvertToDelegate<Func<IBaseData, IBaseDataBar>>()
+                );
                 return;
             }
             else if (indicator.TryConvert(out indicatorTradeBar))
             {
-                RegisterIndicator(symbol, indicatorTradeBar, consolidator, selector?.ConvertToDelegate<Func<IBaseData, TradeBar>>());
+                RegisterIndicator(
+                    symbol,
+                    indicatorTradeBar,
+                    consolidator,
+                    selector?.ConvertToDelegate<Func<IBaseData, TradeBar>>()
+                );
                 return;
             }
 
-            RegisterIndicator(symbol, WrapPythonIndicator(indicator), consolidator, selector?.ConvertToDelegate<Func<IBaseData, IBaseData>>());
+            RegisterIndicator(
+                symbol,
+                WrapPythonIndicator(indicator),
+                consolidator,
+                selector?.ConvertToDelegate<Func<IBaseData, IBaseData>>()
+            );
         }
 
         /// <summary>
@@ -690,27 +922,52 @@ namespace QuantConnect.Algorithm
         /// <param name="selector">Selects a value from the BaseData send into the indicator, if null defaults to a cast (x => (T)x)</param>
         [DocumentationAttribute(Indicators)]
         [DocumentationAttribute(HistoricalData)]
-        public void WarmUpIndicator(Symbol symbol, PyObject indicator, Resolution? resolution = null, PyObject selector = null)
+        public void WarmUpIndicator(
+            Symbol symbol,
+            PyObject indicator,
+            Resolution? resolution = null,
+            PyObject selector = null
+        )
         {
             // TODO: to be removed when https://github.com/QuantConnect/pythonnet/issues/62 is solved
 
             if (indicator.TryConvert(out IndicatorBase<IndicatorDataPoint> indicatorDataPoint))
             {
-                WarmUpIndicator(symbol, indicatorDataPoint, resolution, selector?.ConvertToDelegate<Func<IBaseData, decimal>>());
+                WarmUpIndicator(
+                    symbol,
+                    indicatorDataPoint,
+                    resolution,
+                    selector?.ConvertToDelegate<Func<IBaseData, decimal>>()
+                );
                 return;
             }
             if (indicator.TryConvert(out IndicatorBase<IBaseDataBar> indicatorDataBar))
             {
-                WarmUpIndicator(symbol, indicatorDataBar, resolution, selector?.ConvertToDelegate<Func<IBaseData, IBaseDataBar>>());
+                WarmUpIndicator(
+                    symbol,
+                    indicatorDataBar,
+                    resolution,
+                    selector?.ConvertToDelegate<Func<IBaseData, IBaseDataBar>>()
+                );
                 return;
             }
             if (indicator.TryConvert(out IndicatorBase<TradeBar> indicatorTradeBar))
             {
-                WarmUpIndicator(symbol, indicatorTradeBar, resolution, selector?.ConvertToDelegate<Func<IBaseData, TradeBar>>());
+                WarmUpIndicator(
+                    symbol,
+                    indicatorTradeBar,
+                    resolution,
+                    selector?.ConvertToDelegate<Func<IBaseData, TradeBar>>()
+                );
                 return;
             }
 
-            WarmUpIndicator(symbol, WrapPythonIndicator(indicator), resolution, selector?.ConvertToDelegate<Func<IBaseData, IBaseData>>());
+            WarmUpIndicator(
+                symbol,
+                WrapPythonIndicator(indicator),
+                resolution,
+                selector?.ConvertToDelegate<Func<IBaseData, IBaseData>>()
+            );
         }
 
         /// <summary>
@@ -732,13 +989,17 @@ namespace QuantConnect.Algorithm
                 {
                     try
                     {
-                        var value = (((dynamic)pyObject).Value as PyObject).GetAndDispose<decimal>();
+                        var value = (
+                            ((dynamic)pyObject).Value as PyObject
+                        ).GetAndDispose<decimal>();
                         Plot(series, value);
                     }
                     catch
                     {
                         var pythonType = pyObject.GetPythonType().Repr();
-                        throw new ArgumentException($"QCAlgorithm.Plot(): The last argument should be a QuantConnect Indicator object, {pythonType} was provided.");
+                        throw new ArgumentException(
+                            $"QCAlgorithm.Plot(): The last argument should be a QuantConnect Indicator object, {pythonType} was provided."
+                        );
                     }
                 }
             }
@@ -754,7 +1015,13 @@ namespace QuantConnect.Algorithm
         /// <param name="fourth">The fourth indicator to plot</param>
         /// <seealso cref="Plot(string,string,decimal)"/>
         [DocumentationAttribute(Charting)]
-        public void Plot(string chart, Indicator first, Indicator second = null, Indicator third = null, Indicator fourth = null)
+        public void Plot(
+            string chart,
+            Indicator first,
+            Indicator second = null,
+            Indicator third = null,
+            Indicator fourth = null
+        )
         {
             Plot(chart, new[] { first, second, third, fourth }.Where(x => x != null).ToArray());
         }
@@ -769,7 +1036,13 @@ namespace QuantConnect.Algorithm
         /// <param name="fourth">The fourth indicator to plot</param>
         /// <seealso cref="Plot(string,string,decimal)"/>
         [DocumentationAttribute(Charting)]
-        public void Plot(string chart, BarIndicator first, BarIndicator second = null, BarIndicator third = null, BarIndicator fourth = null)
+        public void Plot(
+            string chart,
+            BarIndicator first,
+            BarIndicator second = null,
+            BarIndicator third = null,
+            BarIndicator fourth = null
+        )
         {
             Plot(chart, new[] { first, second, third, fourth }.Where(x => x != null).ToArray());
         }
@@ -784,7 +1057,13 @@ namespace QuantConnect.Algorithm
         /// <param name="fourth">The fourth indicator to plot</param>
         /// <seealso cref="Plot(string,string,decimal)"/>
         [DocumentationAttribute(Charting)]
-        public void Plot(string chart, TradeBarIndicator first, TradeBarIndicator second = null, TradeBarIndicator third = null, TradeBarIndicator fourth = null)
+        public void Plot(
+            string chart,
+            TradeBarIndicator first,
+            TradeBarIndicator second = null,
+            TradeBarIndicator third = null,
+            TradeBarIndicator fourth = null
+        )
         {
             Plot(chart, new[] { first, second, third, fourth }.Where(x => x != null).ToArray());
         }
@@ -794,7 +1073,13 @@ namespace QuantConnect.Algorithm
         /// </summary>
         [DocumentationAttribute(Charting)]
         [DocumentationAttribute(Indicators)]
-        public void PlotIndicator(string chart, PyObject first, PyObject second = null, PyObject third = null, PyObject fourth = null)
+        public void PlotIndicator(
+            string chart,
+            PyObject first,
+            PyObject second = null,
+            PyObject third = null,
+            PyObject fourth = null
+        )
         {
             var array = GetIndicatorArray(first, second, third, fourth);
             PlotIndicator(chart, array[0], array[1], array[2], array[3]);
@@ -805,7 +1090,14 @@ namespace QuantConnect.Algorithm
         /// </summary>
         [DocumentationAttribute(Charting)]
         [DocumentationAttribute(Indicators)]
-        public void PlotIndicator(string chart, bool waitForReady, PyObject first, PyObject second = null, PyObject third = null, PyObject fourth = null)
+        public void PlotIndicator(
+            string chart,
+            bool waitForReady,
+            PyObject first,
+            PyObject second = null,
+            PyObject third = null,
+            PyObject fourth = null
+        )
         {
             var array = GetIndicatorArray(first, second, third, fourth);
             PlotIndicator(chart, waitForReady, array[0], array[1], array[2], array[3]);
@@ -821,7 +1113,12 @@ namespace QuantConnect.Algorithm
         /// <param name="fieldName">The name of the field being selected</param>
         /// <returns>A new FilteredIdentity indicator for the specified symbol and selector</returns>
         [DocumentationAttribute(Indicators)]
-        public FilteredIdentity FilteredIdentity(Symbol symbol, PyObject selector = null, PyObject filter = null, string fieldName = null)
+        public FilteredIdentity FilteredIdentity(
+            Symbol symbol,
+            PyObject selector = null,
+            PyObject filter = null,
+            string fieldName = null
+        )
         {
             var resolution = GetSubscription(symbol).Resolution;
             return FilteredIdentity(symbol, resolution, selector, filter, fieldName);
@@ -838,7 +1135,13 @@ namespace QuantConnect.Algorithm
         /// <param name="fieldName">The name of the field being selected</param>
         /// <returns>A new FilteredIdentity indicator for the specified symbol and selector</returns>
         [DocumentationAttribute(Indicators)]
-        public FilteredIdentity FilteredIdentity(Symbol symbol, Resolution resolution, PyObject selector = null, PyObject filter = null, string fieldName = null)
+        public FilteredIdentity FilteredIdentity(
+            Symbol symbol,
+            Resolution resolution,
+            PyObject selector = null,
+            PyObject filter = null,
+            string fieldName = null
+        )
         {
             var name = CreateIndicatorName(symbol, fieldName ?? "close", resolution);
             var pyselector = PythonUtil.ToFunc<IBaseData, IBaseDataBar>(selector);
@@ -859,13 +1162,24 @@ namespace QuantConnect.Algorithm
         /// <param name="fieldName">The name of the field being selected</param>
         /// <returns>A new FilteredIdentity indicator for the specified symbol and selector</returns>
         [DocumentationAttribute(Indicators)]
-        public FilteredIdentity FilteredIdentity(Symbol symbol, TimeSpan resolution, PyObject selector = null, PyObject filter = null, string fieldName = null)
+        public FilteredIdentity FilteredIdentity(
+            Symbol symbol,
+            TimeSpan resolution,
+            PyObject selector = null,
+            PyObject filter = null,
+            string fieldName = null
+        )
         {
             var name = $"{symbol}({fieldName ?? "close"}_{resolution.ToStringInvariant(null)})";
             var pyselector = PythonUtil.ToFunc<IBaseData, IBaseDataBar>(selector);
             var pyfilter = PythonUtil.ToFunc<IBaseData, bool>(filter);
             var filteredIdentity = new FilteredIdentity(name, pyfilter);
-            RegisterIndicator(symbol, filteredIdentity, ResolveConsolidator(symbol, resolution), pyselector);
+            RegisterIndicator(
+                symbol,
+                filteredIdentity,
+                ResolveConsolidator(symbol, resolution),
+                pyselector
+            );
             return filteredIdentity;
         }
 
@@ -884,30 +1198,69 @@ namespace QuantConnect.Algorithm
         /// For example, 0 will use the front month, 1 will use the back month contract</param>
         /// <returns>A python dictionary with pandas DataFrame containing the requested historical data</returns>
         [DocumentationAttribute(HistoricalData)]
-        public PyObject History(PyObject tickers, int periods, Resolution? resolution = null, bool? fillForward = null,
-            bool? extendedMarketHours = null, DataMappingMode? dataMappingMode = null, DataNormalizationMode? dataNormalizationMode = null,
-            int? contractDepthOffset = null)
+        public PyObject History(
+            PyObject tickers,
+            int periods,
+            Resolution? resolution = null,
+            bool? fillForward = null,
+            bool? extendedMarketHours = null,
+            DataMappingMode? dataMappingMode = null,
+            DataNormalizationMode? dataNormalizationMode = null,
+            int? contractDepthOffset = null
+        )
         {
             if (tickers.TryConvert<Universe>(out var universe))
             {
                 resolution ??= universe.Configuration.Resolution;
-                var requests = CreateBarCountHistoryRequests(new[] { universe.Symbol }, universe.DataType, periods, resolution, fillForward, extendedMarketHours,
-                    dataMappingMode, dataNormalizationMode, contractDepthOffset);
+                var requests = CreateBarCountHistoryRequests(
+                    new[] { universe.Symbol },
+                    universe.DataType,
+                    periods,
+                    resolution,
+                    fillForward,
+                    extendedMarketHours,
+                    dataMappingMode,
+                    dataNormalizationMode,
+                    contractDepthOffset
+                );
                 // we pass in 'BaseDataCollection' type so we clean up the dataframe if we can
-                return GetDataFrame(History(requests.Where(x => x != null)), typeof(BaseDataCollection));
+                return GetDataFrame(
+                    History(requests.Where(x => x != null)),
+                    typeof(BaseDataCollection)
+                );
             }
             if (tickers.TryCreateType(out var type))
             {
-                var requests = CreateBarCountHistoryRequests(Securities.Keys, type, periods, resolution, fillForward, extendedMarketHours,
-                    dataMappingMode, dataNormalizationMode, contractDepthOffset);
+                var requests = CreateBarCountHistoryRequests(
+                    Securities.Keys,
+                    type,
+                    periods,
+                    resolution,
+                    fillForward,
+                    extendedMarketHours,
+                    dataMappingMode,
+                    dataNormalizationMode,
+                    contractDepthOffset
+                );
                 return GetDataFrame(History(requests.Where(x => x != null)), type);
             }
 
             var symbols = tickers.ConvertToSymbolEnumerable().ToArray();
             var dataType = GetCustomDataTypeFromSymbols(symbols);
 
-            return GetDataFrame(History(symbols, periods, resolution, fillForward, extendedMarketHours, dataMappingMode, dataNormalizationMode,
-                contractDepthOffset), dataType);
+            return GetDataFrame(
+                History(
+                    symbols,
+                    periods,
+                    resolution,
+                    fillForward,
+                    extendedMarketHours,
+                    dataMappingMode,
+                    dataNormalizationMode,
+                    contractDepthOffset
+                ),
+                dataType
+            );
         }
 
         /// <summary>
@@ -925,11 +1278,28 @@ namespace QuantConnect.Algorithm
         /// For example, 0 will use the front month, 1 will use the back month contract</param>
         /// <returns>A python dictionary with pandas DataFrame containing the requested historical data</returns>
         [DocumentationAttribute(HistoricalData)]
-        public PyObject History(PyObject tickers, TimeSpan span, Resolution? resolution = null, bool? fillForward = null,
-            bool? extendedMarketHours = null, DataMappingMode? dataMappingMode = null, DataNormalizationMode? dataNormalizationMode = null,
-            int? contractDepthOffset = null)
+        public PyObject History(
+            PyObject tickers,
+            TimeSpan span,
+            Resolution? resolution = null,
+            bool? fillForward = null,
+            bool? extendedMarketHours = null,
+            DataMappingMode? dataMappingMode = null,
+            DataNormalizationMode? dataNormalizationMode = null,
+            int? contractDepthOffset = null
+        )
         {
-            return History(tickers, Time - span, Time, resolution, fillForward, extendedMarketHours, dataMappingMode, dataNormalizationMode, contractDepthOffset);
+            return History(
+                tickers,
+                Time - span,
+                Time,
+                resolution,
+                fillForward,
+                extendedMarketHours,
+                dataMappingMode,
+                dataNormalizationMode,
+                contractDepthOffset
+            );
         }
 
         /// <summary>
@@ -947,30 +1317,73 @@ namespace QuantConnect.Algorithm
         /// For example, 0 will use the front month, 1 will use the back month contract</param>
         /// <returns>A python dictionary with a pandas DataFrame containing the requested historical data</returns>
         [DocumentationAttribute(HistoricalData)]
-        public PyObject History(PyObject tickers, DateTime start, DateTime end, Resolution? resolution = null, bool? fillForward = null,
-            bool? extendedMarketHours = null, DataMappingMode? dataMappingMode = null, DataNormalizationMode? dataNormalizationMode = null,
-            int? contractDepthOffset = null)
+        public PyObject History(
+            PyObject tickers,
+            DateTime start,
+            DateTime end,
+            Resolution? resolution = null,
+            bool? fillForward = null,
+            bool? extendedMarketHours = null,
+            DataMappingMode? dataMappingMode = null,
+            DataNormalizationMode? dataNormalizationMode = null,
+            int? contractDepthOffset = null
+        )
         {
             if (tickers.TryConvert<Universe>(out var universe))
             {
                 resolution ??= universe.Configuration.Resolution;
-                var requests = CreateDateRangeHistoryRequests(new[] { universe.Symbol }, universe.DataType, start, end, resolution, fillForward, extendedMarketHours,
-                    dataMappingMode, dataNormalizationMode, contractDepthOffset);
+                var requests = CreateDateRangeHistoryRequests(
+                    new[] { universe.Symbol },
+                    universe.DataType,
+                    start,
+                    end,
+                    resolution,
+                    fillForward,
+                    extendedMarketHours,
+                    dataMappingMode,
+                    dataNormalizationMode,
+                    contractDepthOffset
+                );
                 // we pass in 'BaseDataCollection' type so we clean up the dataframe if we can
-                return GetDataFrame(History(requests.Where(x => x != null)), typeof(BaseDataCollection));
+                return GetDataFrame(
+                    History(requests.Where(x => x != null)),
+                    typeof(BaseDataCollection)
+                );
             }
             if (tickers.TryCreateType(out var type))
             {
-                var requests = CreateDateRangeHistoryRequests(Securities.Keys, type, start, end, resolution, fillForward, extendedMarketHours,
-                    dataMappingMode, dataNormalizationMode, contractDepthOffset);
+                var requests = CreateDateRangeHistoryRequests(
+                    Securities.Keys,
+                    type,
+                    start,
+                    end,
+                    resolution,
+                    fillForward,
+                    extendedMarketHours,
+                    dataMappingMode,
+                    dataNormalizationMode,
+                    contractDepthOffset
+                );
                 return GetDataFrame(History(requests.Where(x => x != null)), type);
             }
 
             var symbols = tickers.ConvertToSymbolEnumerable().ToArray();
             var dataType = GetCustomDataTypeFromSymbols(symbols);
 
-            return GetDataFrame(History(symbols, start, end, resolution, fillForward, extendedMarketHours, dataMappingMode,
-                dataNormalizationMode, contractDepthOffset), dataType);
+            return GetDataFrame(
+                History(
+                    symbols,
+                    start,
+                    end,
+                    resolution,
+                    fillForward,
+                    extendedMarketHours,
+                    dataMappingMode,
+                    dataNormalizationMode,
+                    contractDepthOffset
+                ),
+                dataType
+            );
         }
 
         /// <summary>
@@ -989,14 +1402,33 @@ namespace QuantConnect.Algorithm
         /// For example, 0 will use the front month, 1 will use the back month contract</param>
         /// <returns>pandas.DataFrame containing the requested historical data</returns>
         [DocumentationAttribute(HistoricalData)]
-        public PyObject History(PyObject type, PyObject tickers, DateTime start, DateTime end, Resolution? resolution = null,
-            bool? fillForward = null, bool? extendedMarketHours = null, DataMappingMode? dataMappingMode = null,
-            DataNormalizationMode? dataNormalizationMode = null, int? contractDepthOffset = null)
+        public PyObject History(
+            PyObject type,
+            PyObject tickers,
+            DateTime start,
+            DateTime end,
+            Resolution? resolution = null,
+            bool? fillForward = null,
+            bool? extendedMarketHours = null,
+            DataMappingMode? dataMappingMode = null,
+            DataNormalizationMode? dataNormalizationMode = null,
+            int? contractDepthOffset = null
+        )
         {
             var symbols = tickers.ConvertToSymbolEnumerable();
             var requestedType = type.CreateType();
-            var requests = CreateDateRangeHistoryRequests(symbols, requestedType, start, end, resolution, fillForward, extendedMarketHours,
-                dataMappingMode, dataNormalizationMode, contractDepthOffset);
+            var requests = CreateDateRangeHistoryRequests(
+                symbols,
+                requestedType,
+                start,
+                end,
+                resolution,
+                fillForward,
+                extendedMarketHours,
+                dataMappingMode,
+                dataNormalizationMode,
+                contractDepthOffset
+            );
             return GetDataFrame(History(requests.Where(x => x != null)), requestedType);
         }
 
@@ -1017,16 +1449,33 @@ namespace QuantConnect.Algorithm
         /// For example, 0 will use the front month, 1 will use the back month contract</param>
         /// <returns>pandas.DataFrame containing the requested historical data</returns>
         [DocumentationAttribute(HistoricalData)]
-        public PyObject History(PyObject type, PyObject tickers, int periods, Resolution? resolution = null, bool? fillForward = null,
-            bool? extendedMarketHours = null, DataMappingMode? dataMappingMode = null, DataNormalizationMode? dataNormalizationMode = null,
-            int? contractDepthOffset = null)
+        public PyObject History(
+            PyObject type,
+            PyObject tickers,
+            int periods,
+            Resolution? resolution = null,
+            bool? fillForward = null,
+            bool? extendedMarketHours = null,
+            DataMappingMode? dataMappingMode = null,
+            DataNormalizationMode? dataNormalizationMode = null,
+            int? contractDepthOffset = null
+        )
         {
             var symbols = tickers.ConvertToSymbolEnumerable();
             var requestedType = type.CreateType();
             CheckPeriodBasedHistoryRequestResolution(symbols, resolution, requestedType);
 
-            var requests = CreateBarCountHistoryRequests(symbols, requestedType, periods, resolution, fillForward, extendedMarketHours,
-                dataMappingMode, dataNormalizationMode, contractDepthOffset);
+            var requests = CreateBarCountHistoryRequests(
+                symbols,
+                requestedType,
+                periods,
+                resolution,
+                fillForward,
+                extendedMarketHours,
+                dataMappingMode,
+                dataNormalizationMode,
+                contractDepthOffset
+            );
 
             return GetDataFrame(History(requests.Where(x => x != null)), requestedType);
         }
@@ -1047,12 +1496,30 @@ namespace QuantConnect.Algorithm
         /// For example, 0 will use the front month, 1 will use the back month contract</param>
         /// <returns>pandas.DataFrame containing the requested historical data</returns>
         [DocumentationAttribute(HistoricalData)]
-        public PyObject History(PyObject type, PyObject tickers, TimeSpan span, Resolution? resolution = null, bool? fillForward = null,
-            bool? extendedMarketHours = null, DataMappingMode? dataMappingMode = null, DataNormalizationMode? dataNormalizationMode = null,
-            int? contractDepthOffset = null)
+        public PyObject History(
+            PyObject type,
+            PyObject tickers,
+            TimeSpan span,
+            Resolution? resolution = null,
+            bool? fillForward = null,
+            bool? extendedMarketHours = null,
+            DataMappingMode? dataMappingMode = null,
+            DataNormalizationMode? dataNormalizationMode = null,
+            int? contractDepthOffset = null
+        )
         {
-            return History(type, tickers, Time - span, Time, resolution, fillForward, extendedMarketHours, dataMappingMode, dataNormalizationMode,
-                contractDepthOffset);
+            return History(
+                type,
+                tickers,
+                Time - span,
+                Time,
+                resolution,
+                fillForward,
+                extendedMarketHours,
+                dataMappingMode,
+                dataNormalizationMode,
+                contractDepthOffset
+            );
         }
 
         /// <summary>
@@ -1071,12 +1538,31 @@ namespace QuantConnect.Algorithm
         /// For example, 0 will use the front month, 1 will use the back month contract</param>
         /// <returns>pandas.DataFrame containing the requested historical data</returns>
         [DocumentationAttribute(HistoricalData)]
-        public PyObject History(PyObject type, Symbol symbol, DateTime start, DateTime end, Resolution? resolution = null, bool? fillForward = null,
-            bool? extendedMarketHours = null, DataMappingMode? dataMappingMode = null, DataNormalizationMode? dataNormalizationMode = null,
-            int? contractDepthOffset = null)
+        public PyObject History(
+            PyObject type,
+            Symbol symbol,
+            DateTime start,
+            DateTime end,
+            Resolution? resolution = null,
+            bool? fillForward = null,
+            bool? extendedMarketHours = null,
+            DataMappingMode? dataMappingMode = null,
+            DataNormalizationMode? dataNormalizationMode = null,
+            int? contractDepthOffset = null
+        )
         {
-            return History(type.CreateType(), symbol, start, end, resolution, fillForward, extendedMarketHours, dataMappingMode,
-                dataNormalizationMode, contractDepthOffset);
+            return History(
+                type.CreateType(),
+                symbol,
+                start,
+                end,
+                resolution,
+                fillForward,
+                extendedMarketHours,
+                dataMappingMode,
+                dataNormalizationMode,
+                contractDepthOffset
+            );
         }
 
         /// <summary>
@@ -1094,16 +1580,37 @@ namespace QuantConnect.Algorithm
         /// <param name="contractDepthOffset">The continuous contract desired offset from the current front month.
         /// For example, 0 will use the front month, 1 will use the back month contract</param>
         /// <returns>pandas.DataFrame containing the requested historical data</returns>
-        private PyObject History(Type type, Symbol symbol, DateTime start, DateTime end, Resolution? resolution, bool? fillForward,
-            bool? extendedMarketHours, DataMappingMode? dataMappingMode, DataNormalizationMode? dataNormalizationMode,
-            int? contractDepthOffset)
+        private PyObject History(
+            Type type,
+            Symbol symbol,
+            DateTime start,
+            DateTime end,
+            Resolution? resolution,
+            bool? fillForward,
+            bool? extendedMarketHours,
+            DataMappingMode? dataMappingMode,
+            DataNormalizationMode? dataNormalizationMode,
+            int? contractDepthOffset
+        )
         {
-            var requests = CreateDateRangeHistoryRequests(new[] { symbol }, type, start, end, resolution, fillForward,
-                extendedMarketHours, dataMappingMode, dataNormalizationMode, contractDepthOffset);
+            var requests = CreateDateRangeHistoryRequests(
+                new[] { symbol },
+                type,
+                start,
+                end,
+                resolution,
+                fillForward,
+                extendedMarketHours,
+                dataMappingMode,
+                dataNormalizationMode,
+                contractDepthOffset
+            );
             if (requests.IsNullOrEmpty())
             {
-                throw new ArgumentException($"No history data could be fetched. " +
-                    $"This could be due to the specified security not being of the requested type. Symbol: {symbol} Requested Type: {type.Name}");
+                throw new ArgumentException(
+                    $"No history data could be fetched. "
+                        + $"This could be due to the specified security not being of the requested type. Symbol: {symbol} Requested Type: {type.Name}"
+                );
             }
 
             return GetDataFrame(History(requests), type);
@@ -1126,19 +1633,43 @@ namespace QuantConnect.Algorithm
         /// For example, 0 will use the front month, 1 will use the back month contract</param>
         /// <returns>pandas.DataFrame containing the requested historical data</returns>
         [DocumentationAttribute(HistoricalData)]
-        public PyObject History(PyObject type, Symbol symbol, int periods, Resolution? resolution = null, bool? fillForward = null,
-            bool? extendedMarketHours = null, DataMappingMode? dataMappingMode = null, DataNormalizationMode? dataNormalizationMode = null,
-            int? contractDepthOffset = null)
+        public PyObject History(
+            PyObject type,
+            Symbol symbol,
+            int periods,
+            Resolution? resolution = null,
+            bool? fillForward = null,
+            bool? extendedMarketHours = null,
+            DataMappingMode? dataMappingMode = null,
+            DataNormalizationMode? dataNormalizationMode = null,
+            int? contractDepthOffset = null
+        )
         {
             var managedType = type.CreateType();
             resolution = GetResolution(symbol, resolution, managedType);
             CheckPeriodBasedHistoryRequestResolution(new[] { symbol }, resolution, managedType);
 
             var marketHours = GetMarketHours(symbol, managedType);
-            var start = _historyRequestFactory.GetStartTimeAlgoTz(symbol, periods, resolution.Value, marketHours.ExchangeHours,
-                marketHours.DataTimeZone, extendedMarketHours);
-            return History(managedType, symbol, start, Time, resolution, fillForward, extendedMarketHours, dataMappingMode, dataNormalizationMode,
-                contractDepthOffset);
+            var start = _historyRequestFactory.GetStartTimeAlgoTz(
+                symbol,
+                periods,
+                resolution.Value,
+                marketHours.ExchangeHours,
+                marketHours.DataTimeZone,
+                extendedMarketHours
+            );
+            return History(
+                managedType,
+                symbol,
+                start,
+                Time,
+                resolution,
+                fillForward,
+                extendedMarketHours,
+                dataMappingMode,
+                dataNormalizationMode,
+                contractDepthOffset
+            );
         }
 
         /// <summary>
@@ -1157,12 +1688,30 @@ namespace QuantConnect.Algorithm
         /// For example, 0 will use the front month, 1 will use the back month contract</param>
         /// <returns>pandas.DataFrame containing the requested historical data</returns>
         [DocumentationAttribute(HistoricalData)]
-        public PyObject History(PyObject type, Symbol symbol, TimeSpan span, Resolution? resolution = null, bool? fillForward = null,
-            bool? extendedMarketHours = null, DataMappingMode? dataMappingMode = null, DataNormalizationMode? dataNormalizationMode = null,
-            int? contractDepthOffset = null)
+        public PyObject History(
+            PyObject type,
+            Symbol symbol,
+            TimeSpan span,
+            Resolution? resolution = null,
+            bool? fillForward = null,
+            bool? extendedMarketHours = null,
+            DataMappingMode? dataMappingMode = null,
+            DataNormalizationMode? dataNormalizationMode = null,
+            int? contractDepthOffset = null
+        )
         {
-            return History(type, symbol, Time - span, Time, resolution, fillForward, extendedMarketHours, dataMappingMode, dataNormalizationMode,
-                contractDepthOffset);
+            return History(
+                type,
+                symbol,
+                Time - span,
+                Time,
+                resolution,
+                fillForward,
+                extendedMarketHours,
+                dataMappingMode,
+                dataNormalizationMode,
+                contractDepthOffset
+            );
         }
 
         /// <summary>
@@ -1230,7 +1779,9 @@ namespace QuantConnect.Algorithm
         [DocumentationAttribute(Modeling)]
         public void SetRiskFreeInterestRateModel(PyObject model)
         {
-            SetRiskFreeInterestRateModel(RiskFreeInterestRateModelPythonWrapper.FromPyObject(model));
+            SetRiskFreeInterestRateModel(
+                RiskFreeInterestRateModelPythonWrapper.FromPyObject(model)
+            );
         }
 
         /// <summary>
@@ -1260,7 +1811,8 @@ namespace QuantConnect.Algorithm
         /// <returns>The requested resource as a <see cref="string"/></returns>
         [DocumentationAttribute(AddingData)]
         [DocumentationAttribute(MachineLearning)]
-        public string Download(string address, PyObject headers) => Download(address, headers, null, null);
+        public string Download(string address, PyObject headers) =>
+            Download(address, headers, null, null);
 
         /// <summary>
         /// Downloads the requested resource as a <see cref="string"/>.
@@ -1289,13 +1841,16 @@ namespace QuantConnect.Algorithm
                         foreach (PyObject pyKey in iterator)
                         {
                             var key = (string)pyKey.AsManagedObject(typeof(string));
-                            var value = (string)headers.GetItem(pyKey).AsManagedObject(typeof(string));
+                            var value = (string)
+                                headers.GetItem(pyKey).AsManagedObject(typeof(string));
                             dict.Add(key, value);
                         }
                     }
                     else
                     {
-                        throw new ArgumentException($"QCAlgorithm.Fetch(): Invalid argument. {headers.Repr()} is not a dict");
+                        throw new ArgumentException(
+                            $"QCAlgorithm.Fetch(): Invalid argument. {headers.Repr()} is not a dict"
+                        );
                     }
                 }
             }
@@ -1370,7 +1925,12 @@ namespace QuantConnect.Algorithm
         /// <param name="handler">Data handler receives new consolidated data when generated</param>
         /// <returns>A new consolidator matching the requested parameters with the handler already registered</returns>
         [DocumentationAttribute(ConsolidatingData)]
-        public IDataConsolidator Consolidate(Symbol symbol, Resolution period, TickType? tickType, PyObject handler)
+        public IDataConsolidator Consolidate(
+            Symbol symbol,
+            Resolution period,
+            TickType? tickType,
+            PyObject handler
+        )
         {
             return Consolidate(symbol, period.ToTimeSpan(), tickType, handler);
         }
@@ -1397,22 +1957,42 @@ namespace QuantConnect.Algorithm
         /// <param name="handler">Data handler receives new consolidated data when generated</param>
         /// <returns>A new consolidator matching the requested parameters with the handler already registered</returns>
         [DocumentationAttribute(ConsolidatingData)]
-        public IDataConsolidator Consolidate(Symbol symbol, TimeSpan period, TickType? tickType, PyObject handler)
+        public IDataConsolidator Consolidate(
+            Symbol symbol,
+            TimeSpan period,
+            TickType? tickType,
+            PyObject handler
+        )
         {
             // resolve consolidator input subscription
             var type = GetSubscription(symbol, tickType).Type;
 
             if (type == typeof(TradeBar))
             {
-                return Consolidate(symbol, period, tickType, handler.ConvertToDelegate<Action<TradeBar>>());
+                return Consolidate(
+                    symbol,
+                    period,
+                    tickType,
+                    handler.ConvertToDelegate<Action<TradeBar>>()
+                );
             }
 
             if (type == typeof(QuoteBar))
             {
-                return Consolidate(symbol, period, tickType, handler.ConvertToDelegate<Action<QuoteBar>>());
+                return Consolidate(
+                    symbol,
+                    period,
+                    tickType,
+                    handler.ConvertToDelegate<Action<QuoteBar>>()
+                );
             }
 
-            return Consolidate(symbol, period, tickType, handler.ConvertToDelegate<Action<BaseData>>());
+            return Consolidate(
+                symbol,
+                period,
+                tickType,
+                handler.ConvertToDelegate<Action<BaseData>>()
+            );
         }
 
         /// <summary>
@@ -1423,7 +2003,11 @@ namespace QuantConnect.Algorithm
         /// <param name="handler">Data handler receives new consolidated data when generated</param>
         /// <returns>A new consolidator matching the requested parameters with the handler already registered</returns>
         [DocumentationAttribute(ConsolidatingData)]
-        public IDataConsolidator Consolidate(Symbol symbol, Func<DateTime, CalendarInfo> calendar, PyObject handler)
+        public IDataConsolidator Consolidate(
+            Symbol symbol,
+            Func<DateTime, CalendarInfo> calendar,
+            PyObject handler
+        )
         {
             return Consolidate(symbol, calendar, null, handler);
         }
@@ -1461,22 +2045,42 @@ namespace QuantConnect.Algorithm
         /// <param name="handler">Data handler receives new consolidated data when generated</param>
         /// <returns>A new consolidator matching the requested parameters with the handler already registered</returns>
         [DocumentationAttribute(ConsolidatingData)]
-        public IDataConsolidator Consolidate(Symbol symbol, Func<DateTime, CalendarInfo> calendar, TickType? tickType, PyObject handler)
+        public IDataConsolidator Consolidate(
+            Symbol symbol,
+            Func<DateTime, CalendarInfo> calendar,
+            TickType? tickType,
+            PyObject handler
+        )
         {
             // resolve consolidator input subscription
             var type = GetSubscription(symbol, tickType).Type;
 
             if (type == typeof(TradeBar))
             {
-                return Consolidate(symbol, calendar, tickType, handler.ConvertToDelegate<Action<TradeBar>>());
+                return Consolidate(
+                    symbol,
+                    calendar,
+                    tickType,
+                    handler.ConvertToDelegate<Action<TradeBar>>()
+                );
             }
 
             if (type == typeof(QuoteBar))
             {
-                return Consolidate(symbol, calendar, tickType, handler.ConvertToDelegate<Action<QuoteBar>>());
+                return Consolidate(
+                    symbol,
+                    calendar,
+                    tickType,
+                    handler.ConvertToDelegate<Action<QuoteBar>>()
+                );
             }
 
-            return Consolidate(symbol, calendar, tickType, handler.ConvertToDelegate<Action<BaseData>>());
+            return Consolidate(
+                symbol,
+                calendar,
+                tickType,
+                handler.ConvertToDelegate<Action<BaseData>>()
+            );
         }
 
         /// <summary>
@@ -1489,22 +2093,52 @@ namespace QuantConnect.Algorithm
         /// <param name="resolution">The resolution to request</param>
         /// <param name="selector">Selects a value from the BaseData to send into the indicator, if null defaults to the Value property of BaseData (x => x.Value)</param>
         /// <returns>pandas.DataFrame of historical data of an indicator</returns>
-        public IndicatorHistory IndicatorHistory(PyObject indicator, PyObject symbol, int period, Resolution? resolution = null, PyObject selector = null)
+        public IndicatorHistory IndicatorHistory(
+            PyObject indicator,
+            PyObject symbol,
+            int period,
+            Resolution? resolution = null,
+            PyObject selector = null
+        )
         {
             var symbols = symbol.ConvertToSymbolEnumerable();
             if (indicator.TryConvert(out IndicatorBase<IndicatorDataPoint> indicatorDataPoint))
             {
-                return IndicatorHistory(indicatorDataPoint, symbols, period, resolution, selector?.ConvertToDelegate<Func<IBaseData, decimal>>());
+                return IndicatorHistory(
+                    indicatorDataPoint,
+                    symbols,
+                    period,
+                    resolution,
+                    selector?.ConvertToDelegate<Func<IBaseData, decimal>>()
+                );
             }
             else if (indicator.TryConvert(out IndicatorBase<IBaseDataBar> indicatorBar))
             {
-                return IndicatorHistory(indicatorBar, symbols, period, resolution, selector?.ConvertToDelegate<Func<IBaseData, IBaseDataBar>>());
+                return IndicatorHistory(
+                    indicatorBar,
+                    symbols,
+                    period,
+                    resolution,
+                    selector?.ConvertToDelegate<Func<IBaseData, IBaseDataBar>>()
+                );
             }
             else if (indicator.TryConvert(out IndicatorBase<TradeBar> indicatorTradeBar))
             {
-                return IndicatorHistory(indicatorTradeBar, symbols, period, resolution, selector?.ConvertToDelegate<Func<IBaseData, TradeBar>>());
+                return IndicatorHistory(
+                    indicatorTradeBar,
+                    symbols,
+                    period,
+                    resolution,
+                    selector?.ConvertToDelegate<Func<IBaseData, TradeBar>>()
+                );
             }
-            return IndicatorHistory(WrapPythonIndicator(indicator), symbols, period, resolution, selector?.ConvertToDelegate<Func<IBaseData, IBaseData>>());
+            return IndicatorHistory(
+                WrapPythonIndicator(indicator),
+                symbols,
+                period,
+                resolution,
+                selector?.ConvertToDelegate<Func<IBaseData, IBaseData>>()
+            );
         }
 
         /// <summary>
@@ -1517,7 +2151,13 @@ namespace QuantConnect.Algorithm
         /// <param name="resolution">The resolution to request</param>
         /// <param name="selector">Selects a value from the BaseData to send into the indicator, if null defaults to the Value property of BaseData (x => x.Value)</param>
         /// <returns>pandas.DataFrame of historical data of an indicator</returns>
-        public IndicatorHistory IndicatorHistory(PyObject indicator, PyObject symbol, TimeSpan span, Resolution? resolution = null, PyObject selector = null)
+        public IndicatorHistory IndicatorHistory(
+            PyObject indicator,
+            PyObject symbol,
+            TimeSpan span,
+            Resolution? resolution = null,
+            PyObject selector = null
+        )
         {
             return IndicatorHistory(indicator, symbol, Time - span, Time, resolution, selector);
         }
@@ -1533,22 +2173,57 @@ namespace QuantConnect.Algorithm
         /// <param name="resolution">The resolution to request</param>
         /// <param name="selector">Selects a value from the BaseData to send into the indicator, if null defaults to the Value property of BaseData (x => x.Value)</param>
         /// <returns>pandas.DataFrame of historical data of an indicator</returns>
-        public IndicatorHistory IndicatorHistory(PyObject indicator, PyObject symbol, DateTime start, DateTime end, Resolution? resolution = null, PyObject selector = null)
+        public IndicatorHistory IndicatorHistory(
+            PyObject indicator,
+            PyObject symbol,
+            DateTime start,
+            DateTime end,
+            Resolution? resolution = null,
+            PyObject selector = null
+        )
         {
             var symbols = symbol.ConvertToSymbolEnumerable();
             if (indicator.TryConvert(out IndicatorBase<IndicatorDataPoint> indicatorDataPoint))
             {
-                return IndicatorHistory(indicatorDataPoint, symbols, start, end, resolution, selector?.ConvertToDelegate<Func<IBaseData, decimal>>());
+                return IndicatorHistory(
+                    indicatorDataPoint,
+                    symbols,
+                    start,
+                    end,
+                    resolution,
+                    selector?.ConvertToDelegate<Func<IBaseData, decimal>>()
+                );
             }
             else if (indicator.TryConvert(out IndicatorBase<IBaseDataBar> indicatorBar))
             {
-                return IndicatorHistory(indicatorBar, symbols, start, end, resolution, selector?.ConvertToDelegate<Func<IBaseData, IBaseDataBar>>());
+                return IndicatorHistory(
+                    indicatorBar,
+                    symbols,
+                    start,
+                    end,
+                    resolution,
+                    selector?.ConvertToDelegate<Func<IBaseData, IBaseDataBar>>()
+                );
             }
             else if (indicator.TryConvert(out IndicatorBase<TradeBar> indicatorTradeBar))
             {
-                return IndicatorHistory(indicatorTradeBar, symbols, start, end, resolution, selector?.ConvertToDelegate<Func<IBaseData, TradeBar>>());
+                return IndicatorHistory(
+                    indicatorTradeBar,
+                    symbols,
+                    start,
+                    end,
+                    resolution,
+                    selector?.ConvertToDelegate<Func<IBaseData, TradeBar>>()
+                );
             }
-            return IndicatorHistory(WrapPythonIndicator(indicator), symbols, start, end, resolution, selector?.ConvertToDelegate<Func<IBaseData, IBaseData>>());
+            return IndicatorHistory(
+                WrapPythonIndicator(indicator),
+                symbols,
+                start,
+                end,
+                resolution,
+                selector?.ConvertToDelegate<Func<IBaseData, IBaseData>>()
+            );
         }
 
         /// <summary>
@@ -1558,21 +2233,41 @@ namespace QuantConnect.Algorithm
         /// <param name="history">Historical data used to calculate the indicator</param>
         /// <param name="selector">Selects a value from the BaseData to send into the indicator, if null defaults to the Value property of BaseData (x => x.Value)</param>
         /// <returns>pandas.DataFrame containing the historical data of <paramref name="indicator"/></returns>
-        public IndicatorHistory IndicatorHistory(PyObject indicator, IEnumerable<Slice> history, PyObject selector = null)
+        public IndicatorHistory IndicatorHistory(
+            PyObject indicator,
+            IEnumerable<Slice> history,
+            PyObject selector = null
+        )
         {
             if (indicator.TryConvert(out IndicatorBase<IndicatorDataPoint> indicatorDataPoint))
             {
-                return IndicatorHistory(indicatorDataPoint, history, selector?.ConvertToDelegate<Func<IBaseData, decimal>>());
+                return IndicatorHistory(
+                    indicatorDataPoint,
+                    history,
+                    selector?.ConvertToDelegate<Func<IBaseData, decimal>>()
+                );
             }
             else if (indicator.TryConvert(out IndicatorBase<IBaseDataBar> indicatorBar))
             {
-                return IndicatorHistory(indicatorBar, history, selector?.ConvertToDelegate<Func<IBaseData, IBaseDataBar>>());
+                return IndicatorHistory(
+                    indicatorBar,
+                    history,
+                    selector?.ConvertToDelegate<Func<IBaseData, IBaseDataBar>>()
+                );
             }
             else if (indicator.TryConvert(out IndicatorBase<TradeBar> indicatorTradeBar))
             {
-                return IndicatorHistory(indicatorTradeBar, history, selector?.ConvertToDelegate<Func<IBaseData, TradeBar>>());
+                return IndicatorHistory(
+                    indicatorTradeBar,
+                    history,
+                    selector?.ConvertToDelegate<Func<IBaseData, TradeBar>>()
+                );
             }
-            return IndicatorHistory(WrapPythonIndicator(indicator), history, selector?.ConvertToDelegate<Func<IBaseData, IBaseData>>());
+            return IndicatorHistory(
+                WrapPythonIndicator(indicator),
+                history,
+                selector?.ConvertToDelegate<Func<IBaseData, IBaseData>>()
+            );
         }
 
         /// <summary>
@@ -1593,28 +2288,38 @@ namespace QuantConnect.Algorithm
         /// Converts the sequence of PyObject objects into an array of dynamic objects that represent indicators of the same type
         /// </summary>
         /// <returns>Array of dynamic objects with indicator</returns>
-        private dynamic[] GetIndicatorArray(PyObject first, PyObject second = null, PyObject third = null, PyObject fourth = null)
+        private dynamic[] GetIndicatorArray(
+            PyObject first,
+            PyObject second = null,
+            PyObject third = null,
+            PyObject fourth = null
+        )
         {
             using (Py.GIL())
             {
-                var array = new[] {first, second, third, fourth}
-                    .Select(
-                        x =>
-                        {
-                            if (x == null) return null;
+                var array = new[] { first, second, third, fourth }
+                    .Select(x =>
+                    {
+                        if (x == null)
+                            return null;
 
-                            Type type;
-                            return x.GetPythonType().TryConvert(out type)
-                                ? x.AsManagedObject(type)
-                                : WrapPythonIndicator(x);
-                        }
-                    ).ToArray();
+                        Type type;
+                        return x.GetPythonType().TryConvert(out type)
+                            ? x.AsManagedObject(type)
+                            : WrapPythonIndicator(x);
+                    })
+                    .ToArray();
 
-                var types = array.Where(x => x != null).Select(x => GetIndicatorBaseType(x.GetType())).Distinct();
+                var types = array
+                    .Where(x => x != null)
+                    .Select(x => GetIndicatorBaseType(x.GetType()))
+                    .Distinct();
 
                 if (types.Count() > 1)
                 {
-                    throw new Exception("QCAlgorithm.GetIndicatorArray(). All indicators must be of the same type: data point, bar or tradebar.");
+                    throw new Exception(
+                        "QCAlgorithm.GetIndicatorArray(). All indicators must be of the same type: data point, bar or tradebar."
+                    );
                 }
 
                 return array;
@@ -1709,8 +2414,19 @@ namespace QuantConnect.Algorithm
         {
             if (symbols.Any())
             {
-                if (!SecurityIdentifier.TryGetCustomDataTypeInstance(symbols[0].ID.Symbol, out var dataType)
-                    || symbols.Any(x => !SecurityIdentifier.TryGetCustomDataTypeInstance(x.ID.Symbol, out var customDataType) || customDataType != dataType))
+                if (
+                    !SecurityIdentifier.TryGetCustomDataTypeInstance(
+                        symbols[0].ID.Symbol,
+                        out var dataType
+                    )
+                    || symbols.Any(x =>
+                        !SecurityIdentifier.TryGetCustomDataTypeInstance(
+                            x.ID.Symbol,
+                            out var customDataType
+                        )
+                        || customDataType != dataType
+                    )
+                )
                 {
                     return null;
                 }

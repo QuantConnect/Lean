@@ -22,16 +22,16 @@ namespace QuantConnect.Python
     /// <summary>
     /// Wraps a <see cref="PyObject"/> object that represents a risk-free interest rate model
     /// </summary>
-    public class RiskFreeInterestRateModelPythonWrapper : BasePythonWrapper<IRiskFreeInterestRateModel>, IRiskFreeInterestRateModel
+    public class RiskFreeInterestRateModelPythonWrapper
+        : BasePythonWrapper<IRiskFreeInterestRateModel>,
+            IRiskFreeInterestRateModel
     {
         /// <summary>
         /// Constructor for initializing the <see cref="RiskFreeInterestRateModelPythonWrapper"/> class with wrapped <see cref="PyObject"/> object
         /// </summary>
         /// <param name="model">Represents a security's model of buying power</param>
         public RiskFreeInterestRateModelPythonWrapper(PyObject model)
-            : base(model)
-        {
-        }
+            : base(model) { }
 
         /// <summary>
         /// Get interest rate by a given date

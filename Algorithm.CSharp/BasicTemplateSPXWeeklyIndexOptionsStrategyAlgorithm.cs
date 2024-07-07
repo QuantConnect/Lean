@@ -14,14 +14,14 @@
  *
 */
 
+using System;
+using System.Collections.Generic;
 using System.Linq;
 using QuantConnect.Data;
-using QuantConnect.Orders;
-using QuantConnect.Interfaces;
 using QuantConnect.Data.Market;
-using System.Collections.Generic;
+using QuantConnect.Interfaces;
+using QuantConnect.Orders;
 using QuantConnect.Securities.Option;
-using System;
 
 namespace QuantConnect.Algorithm.CSharp
 {
@@ -31,7 +31,9 @@ namespace QuantConnect.Algorithm.CSharp
     /// <meta name="tag" content="using data" />
     /// <meta name="tag" content="options" />
     /// <meta name="tag" content="indexes" />
-    public class BasicTemplateSPXWeeklyIndexOptionsStrategyAlgorithm : QCAlgorithm, IRegressionAlgorithmDefinition
+    public class BasicTemplateSPXWeeklyIndexOptionsStrategyAlgorithm
+        : QCAlgorithm,
+            IRegressionAlgorithmDefinition
     {
         private Symbol _spxOption;
 
@@ -48,10 +50,12 @@ namespace QuantConnect.Algorithm.CSharp
 
             // weekly option SPX contracts
             var spxw = AddIndexOption(spx, "SPXW");
-            spxw.SetFilter(u => u.Strikes(-1, +1)
-                 // single week ahead since there are many SPXW contracts and we want to preserve performance
-                 .Expiration(0, 7)
-                 .IncludeWeeklys());
+            spxw.SetFilter(u =>
+                u.Strikes(-1, +1)
+                    // single week ahead since there are many SPXW contracts and we want to preserve performance
+                    .Expiration(0, 7)
+                    .IncludeWeeklys()
+            );
 
             _spxOption = spxw.Symbol;
         }
@@ -81,7 +85,12 @@ namespace QuantConnect.Algorithm.CSharp
                     var higherStrike = contracts[1];
 
                     // if found, buy until it expires
-                    var optionStrategy = OptionStrategies.BearCallSpread(_spxOption, smallerStrike.Strike, higherStrike.Strike, smallerStrike.Expiry);
+                    var optionStrategy = OptionStrategies.BearCallSpread(
+                        _spxOption,
+                        smallerStrike.Strike,
+                        higherStrike.Strike,
+                        smallerStrike.Expiry
+                    );
                     Buy(optionStrategy, 1);
                 }
             }
@@ -124,35 +133,36 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// This is used by the regression test system to indicate what the expected statistics are from running the algorithm
         /// </summary>
-        public virtual Dictionary<string, string> ExpectedStatistics => new Dictionary<string, string>
-        {
-            {"Total Orders", "10"},
-            {"Average Win", "0.47%"},
-            {"Average Loss", "-0.01%"},
-            {"Compounding Annual Return", "101.998%"},
-            {"Drawdown", "0.100%"},
-            {"Expectancy", "24.484"},
-            {"Start Equity", "1000000"},
-            {"End Equity", "1009050"},
-            {"Net Profit", "0.905%"},
-            {"Sharpe Ratio", "8.44"},
-            {"Sortino Ratio", "0"},
-            {"Probabilistic Sharpe Ratio", "95.546%"},
-            {"Loss Rate", "50%"},
-            {"Win Rate", "50%"},
-            {"Profit-Loss Ratio", "49.97"},
-            {"Alpha", "-2.01"},
-            {"Beta", "0.307"},
-            {"Annual Standard Deviation", "0.021"},
-            {"Annual Variance", "0"},
-            {"Information Ratio", "-144.654"},
-            {"Tracking Error", "0.048"},
-            {"Treynor Ratio", "0.589"},
-            {"Total Fees", "$0.00"},
-            {"Estimated Strategy Capacity", "$13000000.00"},
-            {"Lowest Capacity Asset", "SPXW XKX6S2GM9PGU|SPX 31"},
-            {"Portfolio Turnover", "0.28%"},
-            {"OrderListHash", "c1a9bc141ae25c9542b93a887e79dafe"}
-        };
+        public virtual Dictionary<string, string> ExpectedStatistics =>
+            new Dictionary<string, string>
+            {
+                { "Total Orders", "10" },
+                { "Average Win", "0.47%" },
+                { "Average Loss", "-0.01%" },
+                { "Compounding Annual Return", "101.998%" },
+                { "Drawdown", "0.100%" },
+                { "Expectancy", "24.484" },
+                { "Start Equity", "1000000" },
+                { "End Equity", "1009050" },
+                { "Net Profit", "0.905%" },
+                { "Sharpe Ratio", "8.44" },
+                { "Sortino Ratio", "0" },
+                { "Probabilistic Sharpe Ratio", "95.546%" },
+                { "Loss Rate", "50%" },
+                { "Win Rate", "50%" },
+                { "Profit-Loss Ratio", "49.97" },
+                { "Alpha", "-2.01" },
+                { "Beta", "0.307" },
+                { "Annual Standard Deviation", "0.021" },
+                { "Annual Variance", "0" },
+                { "Information Ratio", "-144.654" },
+                { "Tracking Error", "0.048" },
+                { "Treynor Ratio", "0.589" },
+                { "Total Fees", "$0.00" },
+                { "Estimated Strategy Capacity", "$13000000.00" },
+                { "Lowest Capacity Asset", "SPXW XKX6S2GM9PGU|SPX 31" },
+                { "Portfolio Turnover", "0.28%" },
+                { "OrderListHash", "c1a9bc141ae25c9542b93a887e79dafe" }
+            };
     }
 }

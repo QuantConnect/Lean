@@ -58,7 +58,10 @@ namespace QuantConnect.Orders.Fees
         /// <param name="makerFee">Maker fee value</param>
         /// <param name="takerFee">Taker fee value</param>
         /// <remarks>By default: use Level Advanced 1 fees</remarks>
-        public CoinbaseFeeModel(decimal makerFee = MakerAdvanced1, decimal takerFee = TakerAdvanced1)
+        public CoinbaseFeeModel(
+            decimal makerFee = MakerAdvanced1,
+            decimal takerFee = TakerAdvanced1
+        )
         {
             _makerFee = makerFee;
             _takerFee = takerFee;
@@ -74,7 +77,10 @@ namespace QuantConnect.Orders.Fees
         {
             if (parameters == null)
             {
-                throw new ArgumentNullException(nameof(parameters), "The 'parameters' argument cannot be null.");
+                throw new ArgumentNullException(
+                    nameof(parameters),
+                    "The 'parameters' argument cannot be null."
+                );
             }
 
             var order = parameters.Order;
@@ -82,15 +88,24 @@ namespace QuantConnect.Orders.Fees
             var props = order.Properties as CoinbaseOrderProperties;
 
             // marketable limit orders are considered takers
-            var isMaker = order.Type == OrderType.Limit && ((props != null && props.PostOnly) || !order.IsMarketable);
+            var isMaker =
+                order.Type == OrderType.Limit
+                && ((props != null && props.PostOnly) || !order.IsMarketable);
 
             // Check if the current symbol is a StableCoin
             var isStableCoin = Currencies.StablePairsCoinbase.Contains(security.Symbol.Value);
 
-            var feePercentage = GetFeePercentage(order.Time, isMaker, isStableCoin, _makerFee, _takerFee);
+            var feePercentage = GetFeePercentage(
+                order.Time,
+                isMaker,
+                isStableCoin,
+                _makerFee,
+                _takerFee
+            );
 
             // get order value in quote currency, then apply maker/taker fee factor
-            var unitPrice = order.Direction == OrderDirection.Buy ? security.AskPrice : security.BidPrice;
+            var unitPrice =
+                order.Direction == OrderDirection.Buy ? security.AskPrice : security.BidPrice;
             unitPrice *= security.SymbolProperties.ContractMultiplier;
 
             // currently we do not model 30-day volume, so we use the first tier
@@ -109,13 +124,19 @@ namespace QuantConnect.Orders.Fees
         /// <param name="makerFee">maker fee amount</param>
         /// <param name="takerFee">taker fee amount</param>
         /// <returns>The fee percentage</returns>
-        protected static decimal GetFeePercentage(DateTime utcTime, bool isMaker, bool isStableCoin, decimal makerFee, decimal takerFee)
+        protected static decimal GetFeePercentage(
+            DateTime utcTime,
+            bool isMaker,
+            bool isStableCoin,
+            decimal makerFee,
+            decimal takerFee
+        )
         {
             if (isStableCoin && utcTime < new DateTime(2022, 6, 1))
-            {                
+            {
                 return isMaker ? 0m : 0.001m;
             }
-            else if(isStableCoin)
+            else if (isStableCoin)
             {
                 return isMaker ? MakerStablePairs : TakerStableParis;
             }

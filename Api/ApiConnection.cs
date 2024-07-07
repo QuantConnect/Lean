@@ -14,11 +14,11 @@
 */
 
 using System;
-using RestSharp;
-using Newtonsoft.Json;
-using QuantConnect.Orders;
-using QuantConnect.Logging;
 using System.Threading.Tasks;
+using Newtonsoft.Json;
+using QuantConnect.Logging;
+using QuantConnect.Orders;
+using RestSharp;
 using RestSharp.Authenticators;
 
 namespace QuantConnect.Api
@@ -28,7 +28,11 @@ namespace QuantConnect.Api
     /// </summary>
     public class ApiConnection
     {
-        private readonly static JsonSerializerSettings _jsonSettings = new() { Converters = { new LiveAlgorithmResultsJsonConverter(), new OrderJsonConverter() } };
+        private static readonly JsonSerializerSettings _jsonSettings =
+            new()
+            {
+                Converters = { new LiveAlgorithmResultsJsonConverter(), new OrderJsonConverter() }
+            };
 
         /// <summary>
         /// Authorized client to use for requests.
@@ -106,7 +110,9 @@ namespace QuantConnect.Api
                 //Verify success
                 if (restsharpResponse.ErrorException != null)
                 {
-                    Log.Error($"ApiConnection.TryRequest({request.Resource}): Error: {restsharpResponse.ErrorException.Message}");
+                    Log.Error(
+                        $"ApiConnection.TryRequest({request.Resource}): Error: {restsharpResponse.ErrorException.Message}"
+                    );
                     return new Tuple<bool, T>(false, null);
                 }
 
@@ -126,7 +132,9 @@ namespace QuantConnect.Api
             }
             catch (Exception err)
             {
-                Log.Error($"ApiConnection.TryRequest({request.Resource}): Error: {err.Message}, Response content: {responseContent}");
+                Log.Error(
+                    $"ApiConnection.TryRequest({request.Resource}): Error: {err.Message}, Response content: {responseContent}"
+                );
                 return new Tuple<bool, T>(false, null);
             }
 
@@ -158,6 +166,7 @@ namespace QuantConnect.Api
             public int TimeStamp { get; }
             public string TimeStampStr { get; }
             public HttpBasicAuthenticator Authenticator { get; }
+
             public LeanAuthenticator(HttpBasicAuthenticator authenticator, int timeStamp)
             {
                 TimeStamp = timeStamp;

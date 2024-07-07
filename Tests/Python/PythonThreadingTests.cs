@@ -15,11 +15,11 @@
 */
 
 using System;
-using Python.Runtime;
-using NUnit.Framework;
 using System.Threading;
-using QuantConnect.Python;
 using System.Threading.Tasks;
+using NUnit.Framework;
+using Python.Runtime;
+using QuantConnect.Python;
 
 namespace QuantConnect.Tests.Python
 {
@@ -43,7 +43,9 @@ namespace QuantConnect.Tests.Python
             PyObject propertyWrapper;
             using (Py.GIL())
             {
-                var module = PyModule.FromString("ReleaseGil", $@"
+                var module = PyModule.FromString(
+                    "ReleaseGil",
+                    $@"
 from clr import AddReference
 AddReference('QuantConnect.Tests')
 
@@ -61,7 +63,8 @@ def PropertyCaller(tookGil, tookLock, useInstance):
         return instance.Instance{target}
     else:
         return PythonThreadingTests.TestPropertyWrapper.{target}
-");
+"
+                );
                 method = module.GetAttr("Method");
                 propertyWrapper = module.GetAttr("PropertyCaller");
             }
@@ -113,34 +116,34 @@ def PropertyCaller(tookGil, tookLock, useInstance):
             PythonInitializer.Initialize();
 
             Task.Factory.StartNew(() =>
-            {
-                using (Py.GIL())
                 {
-                    var module = Py.Import("Test_MethodOverload");
-                    module.GetAttr("Test_MethodOverload").Invoke();
-                }
-            }).Wait();
+                    using (Py.GIL())
+                    {
+                        var module = Py.Import("Test_MethodOverload");
+                        module.GetAttr("Test_MethodOverload").Invoke();
+                    }
+                })
+                .Wait();
 
             PythonInitializer.Initialize();
             Task.Factory.StartNew(() =>
-            {
-                using (Py.GIL())
                 {
-                    var module = Py.Import("Test_AlgorithmPythonWrapper");
-                    module.GetAttr("Test_AlgorithmPythonWrapper").Invoke();
-                }
-            }).Wait();
+                    using (Py.GIL())
+                    {
+                        var module = Py.Import("Test_AlgorithmPythonWrapper");
+                        module.GetAttr("Test_AlgorithmPythonWrapper").Invoke();
+                    }
+                })
+                .Wait();
         }
+
         public class TestPropertyWrapper
         {
             public static Func<int> Func { get; set; }
             public static int Field => Func();
             public static int Property
             {
-                get
-                {
-                    return Func();
-                }
+                get { return Func(); }
             }
 
             public Func<int> InstanceFunc => Func;

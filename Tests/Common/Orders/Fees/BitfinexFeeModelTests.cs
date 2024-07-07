@@ -39,7 +39,16 @@ namespace QuantConnect.Tests.Common.Orders.Fees
                 SecurityExchangeHours.AlwaysOpen(tz),
                 new Cash(Currencies.USD, 0, 1),
                 new Cash("BTC", 0, 0),
-                new SubscriptionDataConfig(typeof(TradeBar), Symbols.BTCUSD, Resolution.Minute, tz, tz, true, false, false),
+                new SubscriptionDataConfig(
+                    typeof(TradeBar),
+                    Symbols.BTCUSD,
+                    Resolution.Minute,
+                    tz,
+                    tz,
+                    true,
+                    false,
+                    false
+                ),
                 new SymbolProperties("BTCUSD", Currencies.USD, 1, 0.01m, 0.00000001m, string.Empty),
                 ErrorCurrencyConverter.Instance,
                 RegisteredSecurityDataTypesProvider.Null
@@ -50,7 +59,16 @@ namespace QuantConnect.Tests.Common.Orders.Fees
                 SecurityExchangeHours.AlwaysOpen(tz),
                 new Cash("EUR", 0, 10),
                 new Cash("BTC", 0, 0),
-                new SubscriptionDataConfig(typeof(TradeBar), Symbols.BTCEUR, Resolution.Minute, tz, tz, true, false, false),
+                new SubscriptionDataConfig(
+                    typeof(TradeBar),
+                    Symbols.BTCEUR,
+                    Resolution.Minute,
+                    tz,
+                    tz,
+                    true,
+                    false,
+                    false
+                ),
                 new SymbolProperties("BTCEUR", "EUR", 1, 0.01m, 0.00000001m, string.Empty),
                 ErrorCurrencyConverter.Instance,
                 RegisteredSecurityDataTypesProvider.Null

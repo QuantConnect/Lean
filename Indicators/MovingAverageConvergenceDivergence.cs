@@ -38,7 +38,7 @@ namespace QuantConnect.Indicators
         public IndicatorBase<IndicatorDataPoint> Signal { get; }
 
         /// <summary>
-        /// Developed by Thomas Aspray in 1986, the MACD-Histogram measures the distance between MACD and its signal line, 
+        /// Developed by Thomas Aspray in 1986, the MACD-Histogram measures the distance between MACD and its signal line,
         /// is an oscillator that fluctuates above and below the zero line.
         /// Bullish or bearish divergences in the MACD-Histogram can alert chartists to an imminent signal line crossover in MACD.
         /// </summary>
@@ -61,10 +61,19 @@ namespace QuantConnect.Indicators
         /// <param name="slowPeriod">The slow moving average period</param>
         /// <param name="signalPeriod">The signal period</param>
         /// <param name="type">The type of moving averages to use</param>
-        public MovingAverageConvergenceDivergence(int fastPeriod, int slowPeriod, int signalPeriod, MovingAverageType type = MovingAverageType.Exponential)
-            : this($"MACD({fastPeriod},{slowPeriod},{signalPeriod})", fastPeriod, slowPeriod, signalPeriod, type)
-        {
-        }
+        public MovingAverageConvergenceDivergence(
+            int fastPeriod,
+            int slowPeriod,
+            int signalPeriod,
+            MovingAverageType type = MovingAverageType.Exponential
+        )
+            : this(
+                $"MACD({fastPeriod},{slowPeriod},{signalPeriod})",
+                fastPeriod,
+                slowPeriod,
+                signalPeriod,
+                type
+            ) { }
 
         /// <summary>
         /// Creates a new MACD with the specified parameters
@@ -74,14 +83,23 @@ namespace QuantConnect.Indicators
         /// <param name="slowPeriod">The slow moving average period</param>
         /// <param name="signalPeriod">The signal period</param>
         /// <param name="type">The type of moving averages to use</param>
-        public MovingAverageConvergenceDivergence(string name, int fastPeriod, int slowPeriod, int signalPeriod, MovingAverageType type = MovingAverageType.Exponential)
+        public MovingAverageConvergenceDivergence(
+            string name,
+            int fastPeriod,
+            int slowPeriod,
+            int signalPeriod,
+            MovingAverageType type = MovingAverageType.Exponential
+        )
             : base(name)
         {
             if (fastPeriod >= slowPeriod)
             {
-                throw new ArgumentException("MovingAverageConvergenceDivergence: fastPeriod must be less than slowPeriod", $"{nameof(fastPeriod)}, {nameof(slowPeriod)}");
+                throw new ArgumentException(
+                    "MovingAverageConvergenceDivergence: fastPeriod must be less than slowPeriod",
+                    $"{nameof(fastPeriod)}, {nameof(slowPeriod)}"
+                );
             }
-            
+
             Fast = type.AsIndicator(name + "_Fast", fastPeriod);
             Slow = type.AsIndicator(name + "_Slow", slowPeriod);
             Signal = type.AsIndicator(name + "_Signal", signalPeriod);

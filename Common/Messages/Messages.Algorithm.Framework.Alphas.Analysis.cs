@@ -15,7 +15,6 @@
 
 using System;
 using System.Runtime.CompilerServices;
-
 using static QuantConnect.StringExtensions;
 
 namespace QuantConnect
@@ -30,12 +29,18 @@ namespace QuantConnect
         /// </summary>
         public static class InsightManager
         {
-            public static string InvalidExtraAnalysisPeriodRatio = "extraAnalysisPeriodRatio must be greater than or equal to zero.";
+            public static string InvalidExtraAnalysisPeriodRatio =
+                "extraAnalysisPeriodRatio must be greater than or equal to zero.";
 
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            public static string ZeroInitialPriceValue(DateTime frontierTimeUtc, Algorithm.Framework.Alphas.Insight insight)
+            public static string ZeroInitialPriceValue(
+                DateTime frontierTimeUtc,
+                Algorithm.Framework.Alphas.Insight insight
+            )
             {
-                return Invariant($"InsightManager.Step(): Warning {frontierTimeUtc} UTC: insight {insight} initial price value is 0");
+                return Invariant(
+                    $"InsightManager.Step(): Warning {frontierTimeUtc} UTC: insight {insight} initial price value is 0"
+                );
             }
         }
 

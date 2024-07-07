@@ -14,17 +14,19 @@
 */
 
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using QuantConnect.Data;
 using QuantConnect.Interfaces;
-using System.Collections.Generic;
 
 namespace QuantConnect.Algorithm.CSharp
 {
     /// <summary>
     /// Regression algorithm reproducing the root issue of GH #6885, where multiple universes share the same security using different configurations
     /// </summary>
-    public class MultiUniverseSharedSecurityRegressionAlgorithm : QCAlgorithm, IRegressionAlgorithmDefinition
+    public class MultiUniverseSharedSecurityRegressionAlgorithm
+        : QCAlgorithm,
+            IRegressionAlgorithmDefinition
     {
         /// <summary>
         /// Initialise the data and resolution required, as well as the cash and start-end dates for your algorithm. All algorithms must initialized.
@@ -38,14 +40,17 @@ namespace QuantConnect.Algorithm.CSharp
 
             // the universe bellow will use 'Hour' resolution so that the data feed configuration is different that the above
             UniverseSettings.Resolution = Resolution.Hour;
-            AddUniverse("my-universe", x =>
-            {
-                if (x.Day == 8)
+            AddUniverse(
+                "my-universe",
+                x =>
                 {
-                    return new List<string> { "SPY" };
+                    if (x.Day == 8)
+                    {
+                        return new List<string> { "SPY" };
+                    }
+                    return Enumerable.Empty<string>();
                 }
-                return Enumerable.Empty<string>();
-            });
+            );
         }
 
         /// <summary>
@@ -57,7 +62,9 @@ namespace QuantConnect.Algorithm.CSharp
             var spy = Securities["SPY"];
             if (!spy.IsTradable || spy.Price == 0)
             {
-                throw new RegressionTestException("'SPY' should always be tradable and have a price even if removed by the custom universe!");
+                throw new RegressionTestException(
+                    "'SPY' should always be tradable and have a price even if removed by the custom universe!"
+                );
             }
         }
 
@@ -89,35 +96,36 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// This is used by the regression test system to indicate what the expected statistics are from running the algorithm
         /// </summary>
-        public Dictionary<string, string> ExpectedStatistics => new Dictionary<string, string>
-        {
-            {"Total Orders", "0"},
-            {"Average Win", "0%"},
-            {"Average Loss", "0%"},
-            {"Compounding Annual Return", "0%"},
-            {"Drawdown", "0%"},
-            {"Expectancy", "0"},
-            {"Start Equity", "100000"},
-            {"End Equity", "100000"},
-            {"Net Profit", "0%"},
-            {"Sharpe Ratio", "0"},
-            {"Sortino Ratio", "0"},
-            {"Probabilistic Sharpe Ratio", "0%"},
-            {"Loss Rate", "0%"},
-            {"Win Rate", "0%"},
-            {"Profit-Loss Ratio", "0"},
-            {"Alpha", "0"},
-            {"Beta", "0"},
-            {"Annual Standard Deviation", "0"},
-            {"Annual Variance", "0"},
-            {"Information Ratio", "-8.91"},
-            {"Tracking Error", "0.223"},
-            {"Treynor Ratio", "0"},
-            {"Total Fees", "$0.00"},
-            {"Estimated Strategy Capacity", "$0"},
-            {"Lowest Capacity Asset", ""},
-            {"Portfolio Turnover", "0%"},
-            {"OrderListHash", "d41d8cd98f00b204e9800998ecf8427e"}
-        };
+        public Dictionary<string, string> ExpectedStatistics =>
+            new Dictionary<string, string>
+            {
+                { "Total Orders", "0" },
+                { "Average Win", "0%" },
+                { "Average Loss", "0%" },
+                { "Compounding Annual Return", "0%" },
+                { "Drawdown", "0%" },
+                { "Expectancy", "0" },
+                { "Start Equity", "100000" },
+                { "End Equity", "100000" },
+                { "Net Profit", "0%" },
+                { "Sharpe Ratio", "0" },
+                { "Sortino Ratio", "0" },
+                { "Probabilistic Sharpe Ratio", "0%" },
+                { "Loss Rate", "0%" },
+                { "Win Rate", "0%" },
+                { "Profit-Loss Ratio", "0" },
+                { "Alpha", "0" },
+                { "Beta", "0" },
+                { "Annual Standard Deviation", "0" },
+                { "Annual Variance", "0" },
+                { "Information Ratio", "-8.91" },
+                { "Tracking Error", "0.223" },
+                { "Treynor Ratio", "0" },
+                { "Total Fees", "$0.00" },
+                { "Estimated Strategy Capacity", "$0" },
+                { "Lowest Capacity Asset", "" },
+                { "Portfolio Turnover", "0%" },
+                { "OrderListHash", "d41d8cd98f00b204e9800998ecf8427e" }
+            };
     }
 }

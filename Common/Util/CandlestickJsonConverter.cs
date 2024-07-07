@@ -54,29 +54,51 @@ namespace QuantConnect.Util
         /// <summary>
         /// Json reader implementation which handles backwards compatiblity for old equity chart points
         /// </summary>
-        public override object ReadJson(JsonReader reader, Type objectType, object existingValue, JsonSerializer serializer)
+        public override object ReadJson(
+            JsonReader reader,
+            Type objectType,
+            object existingValue,
+            JsonSerializer serializer
+        )
         {
-            if(reader.TokenType == JsonToken.StartObject)
+            if (reader.TokenType == JsonToken.StartObject)
             {
                 var chartPoint = serializer.Deserialize<ChartPoint>(reader);
-                if(chartPoint == null)
+                if (chartPoint == null)
                 {
                     return null;
                 }
-                return new Candlestick(chartPoint.X, chartPoint.Y, chartPoint.Y, chartPoint.Y, chartPoint.Y);
+                return new Candlestick(
+                    chartPoint.X,
+                    chartPoint.Y,
+                    chartPoint.Y,
+                    chartPoint.Y,
+                    chartPoint.Y
+                );
             }
             var jArray = JArray.Load(reader);
-            if(jArray.Count <= 2)
+            if (jArray.Count <= 2)
             {
                 var chartPoint = jArray.ToObject<ChartPoint>();
                 if (chartPoint == null)
                 {
                     return null;
                 }
-                return new Candlestick(chartPoint.X, chartPoint.Y, chartPoint.Y, chartPoint.Y, chartPoint.Y);
+                return new Candlestick(
+                    chartPoint.X,
+                    chartPoint.Y,
+                    chartPoint.Y,
+                    chartPoint.Y,
+                    chartPoint.Y
+                );
             }
-            return new Candlestick(jArray[0].Value<long>(), jArray[1].Value<decimal?>(), jArray[2].Value<decimal?>(),
-                jArray[3].Value<decimal?>(), jArray[4].Value<decimal?>());
+            return new Candlestick(
+                jArray[0].Value<long>(),
+                jArray[1].Value<decimal?>(),
+                jArray[2].Value<decimal?>(),
+                jArray[3].Value<decimal?>(),
+                jArray[4].Value<decimal?>()
+            );
         }
 
         /// <summary>

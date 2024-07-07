@@ -117,7 +117,10 @@ namespace QuantConnect.Orders.Serialization
         /// <summary>
         /// Any message from the exchange.
         /// </summary>
-        [DefaultValue(""), JsonProperty("message", DefaultValueHandling = DefaultValueHandling.Ignore)]
+        [
+            DefaultValue(""),
+            JsonProperty("message", DefaultValueHandling = DefaultValueHandling.Ignore)
+        ]
         public string Message { get; set; }
 
         /// <summary>
@@ -153,9 +156,7 @@ namespace QuantConnect.Orders.Serialization
         /// <summary>
         /// Empty constructor required for JSON converter.
         /// </summary>
-        public SerializedOrderEvent()
-        {
-        }
+        public SerializedOrderEvent() { }
 
         /// <summary>
         /// Creates a new instances based on the provided order event and algorithm Id
@@ -192,114 +193,85 @@ namespace QuantConnect.Orders.Serialization
         [JsonProperty("algorithm-id")]
         string OldAlgorithmId
         {
-            set
-            {
-                AlgorithmId = value;
-            }
+            set { AlgorithmId = value; }
         }
+
         [JsonProperty("order-id")]
         int OldOrderId
         {
-            set
-            {
-                OrderId = value;
-            }
+            set { OrderId = value; }
         }
+
         [JsonProperty("order-event-id")]
         int OldOrderEventId
         {
-            set
-            {
-                OrderEventId = value;
-            }
+            set { OrderEventId = value; }
         }
+
         [JsonProperty(PropertyName = "symbol-value")]
         string OldSymbolValue
         {
-            set
-            {
-                SymbolValue = value;
-            }
+            set { SymbolValue = value; }
         }
+
         [JsonProperty(PropertyName = "symbol-permtick")]
         string OldSymbolPermtick
         {
-            set
-            {
-                SymbolPermtick = value;
-            }
+            set { SymbolPermtick = value; }
         }
+
         [JsonProperty("order-fee-amount", DefaultValueHandling = DefaultValueHandling.Ignore)]
         decimal? OldOrderFeeAmount
         {
-            set
-            {
-                OrderFeeAmount = value;
-            }
+            set { OrderFeeAmount = value; }
         }
+
         [JsonProperty("order-fee-currency", DefaultValueHandling = DefaultValueHandling.Ignore)]
         string OldOrderFeeCurrency
         {
-            set
-            {
-                OrderFeeCurrency = value;
-            }
+            set { OrderFeeCurrency = value; }
         }
+
         [JsonProperty("fill-price")]
         decimal OldFillPrice
         {
-            set
-            {
-                FillPrice = value;
-            }
+            set { FillPrice = value; }
         }
+
         [JsonProperty("fill-price-currency")]
         string OldFillPriceCurrency
         {
-            set
-            {
-                FillPriceCurrency = value;
-            }
+            set { FillPriceCurrency = value; }
         }
+
         [JsonProperty("fill-quantity")]
         decimal OldFillQuantity
         {
-            set
-            {
-                FillQuantity = value;
-            }
+            set { FillQuantity = value; }
         }
+
         [JsonProperty("is-assignment")]
         bool OldIsAssignment
         {
-            set
-            {
-                IsAssignment = value;
-            }
+            set { IsAssignment = value; }
         }
+
         [JsonProperty("stop-price", DefaultValueHandling = DefaultValueHandling.Ignore)]
         decimal? OldStopPrice
         {
-            set
-            {
-                StopPrice = value;
-            }
+            set { StopPrice = value; }
         }
+
         [JsonProperty("limit-price", DefaultValueHandling = DefaultValueHandling.Ignore)]
         decimal? OldLimitPrice
         {
-            set
-            {
-                LimitPrice = value;
-            }
+            set { LimitPrice = value; }
         }
+
         [JsonProperty("is-in-the-money", DefaultValueHandling = DefaultValueHandling.Ignore)]
         bool OldIsInTheMoney
         {
-            set
-            {
-                IsInTheMoney = value;
-            }
+            set { IsInTheMoney = value; }
         }
         #endregion
     }

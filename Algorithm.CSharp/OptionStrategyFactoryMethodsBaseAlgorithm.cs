@@ -17,7 +17,6 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-
 using QuantConnect.Data;
 using QuantConnect.Data.Market;
 using QuantConnect.Interfaces;
@@ -30,7 +29,9 @@ namespace QuantConnect.Algorithm.CSharp
     /// <summary>
     /// This base algorithm demonstrates how to use OptionStrategies helper class to batch send orders for common strategies.
     /// </summary>
-    public abstract class OptionStrategyFactoryMethodsBaseAlgorithm : QCAlgorithm, IRegressionAlgorithmDefinition
+    public abstract class OptionStrategyFactoryMethodsBaseAlgorithm
+        : QCAlgorithm,
+            IRegressionAlgorithmDefinition
     {
         protected Symbol _optionSymbol { get; set; }
 
@@ -64,11 +65,14 @@ namespace QuantConnect.Algorithm.CSharp
                 // Verify that the strategy was traded
                 var positionGroup = Portfolio.Positions.Groups.Single();
 
-                var buyingPowerModel = positionGroup.BuyingPowerModel as OptionStrategyPositionGroupBuyingPowerModel;
+                var buyingPowerModel =
+                    positionGroup.BuyingPowerModel as OptionStrategyPositionGroupBuyingPowerModel;
                 if (buyingPowerModel == null)
                 {
-                    throw new RegressionTestException($@"Expected position group buying power model type: {nameof(OptionStrategyPositionGroupBuyingPowerModel)
-                        }. Actual: {positionGroup.BuyingPowerModel.GetType()}");
+                    throw new RegressionTestException(
+                        $@"Expected position group buying power model type: {nameof(OptionStrategyPositionGroupBuyingPowerModel)
+                        }. Actual: {positionGroup.BuyingPowerModel.GetType()}"
+                    );
                 }
 
                 AssertStrategyPositionGroup(positionGroup);
@@ -88,12 +92,16 @@ namespace QuantConnect.Algorithm.CSharp
                 throw new RegressionTestException("Expected no holdings at end of algorithm");
             }
 
-            var ordersCount = Transactions.GetOrders((order) => order.Status == OrderStatus.Filled).Count();
+            var ordersCount = Transactions
+                .GetOrders((order) => order.Status == OrderStatus.Filled)
+                .Count();
             if (ordersCount != ExpectedOrdersCount)
             {
-                throw new RegressionTestException($@"Expected {ExpectedOrdersCount
+                throw new RegressionTestException(
+                    $@"Expected {ExpectedOrdersCount
                     } orders to have been submitted and filled, half for buying the strategy and the other half for the liquidation. Actual {
-                    ordersCount}");
+                    ordersCount}"
+                );
             }
         }
 

@@ -21,7 +21,9 @@ namespace QuantConnect.Indicators
     /// <summary>
     /// The base class for any Time Series-type indicator, containing methods common to most of such models.
     /// </summary>
-    public abstract class TimeSeriesIndicator : IndicatorBase<IndicatorDataPoint>, IIndicatorWarmUpPeriodProvider
+    public abstract class TimeSeriesIndicator
+        : IndicatorBase<IndicatorDataPoint>,
+            IIndicatorWarmUpPeriodProvider
     {
         /// <summary>
         /// "Integration" constants
@@ -38,9 +40,7 @@ namespace QuantConnect.Indicators
         /// </summary>
         /// <param name="name">The name of this indicator</param>
         protected TimeSeriesIndicator(string name)
-            : base(name)
-        {
-        }
+            : base(name) { }
 
         /// <summary>
         /// Differences a time series d times.

@@ -14,12 +14,12 @@
 */
 
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using Python.Runtime;
-using QuantConnect.Securities;
-using System.Collections.Generic;
 using QuantConnect.Data.Fundamental;
 using QuantConnect.Data.UniverseSelection;
+using QuantConnect.Securities;
 
 namespace QuantConnect.Algorithm.Framework.Selection
 {
@@ -60,9 +60,7 @@ namespace QuantConnect.Algorithm.Framework.Selection
         /// </summary>
         /// <param name="universeSettings">Universe settings define attributes of created subscriptions, such as their resolution and the minimum time in universe before they can be removed</param>
         public FundamentalUniverseSelectionModel(UniverseSettings universeSettings)
-           : this(Market.USA, universeSettings)
-        {
-        }
+            : this(Market.USA, universeSettings) { }
 
         /// <summary>
         /// Initializes a new instance of the <see cref="FundamentalUniverseSelectionModel"/> class
@@ -70,7 +68,11 @@ namespace QuantConnect.Algorithm.Framework.Selection
         /// <param name="market">The target market</param>
         /// <param name="selector">Selects symbols from the provided fundamental data set</param>
         /// <param name="universeSettings">Universe settings define attributes of created subscriptions, such as their resolution and the minimum time in universe before they can be removed</param>
-        public FundamentalUniverseSelectionModel(string market, Func<IEnumerable<Fundamental>, IEnumerable<Symbol>> selector, UniverseSettings universeSettings = null)
+        public FundamentalUniverseSelectionModel(
+            string market,
+            Func<IEnumerable<Fundamental>, IEnumerable<Symbol>> selector,
+            UniverseSettings universeSettings = null
+        )
         {
             _market = market;
             _selector = selector;
@@ -83,10 +85,11 @@ namespace QuantConnect.Algorithm.Framework.Selection
         /// </summary>
         /// <param name="selector">Selects symbols from the provided fundamental data set</param>
         /// <param name="universeSettings">Universe settings define attributes of created subscriptions, such as their resolution and the minimum time in universe before they can be removed</param>
-        public FundamentalUniverseSelectionModel(Func<IEnumerable<Fundamental>, IEnumerable<Symbol>> selector, UniverseSettings universeSettings = null)
-           : this(Market.USA, selector, universeSettings)
-        {
-        }
+        public FundamentalUniverseSelectionModel(
+            Func<IEnumerable<Fundamental>, IEnumerable<Symbol>> selector,
+            UniverseSettings universeSettings = null
+        )
+            : this(Market.USA, selector, universeSettings) { }
 
         /// <summary>
         /// Initializes a new instance of the <see cref="FundamentalUniverseSelectionModel"/> class
@@ -94,7 +97,12 @@ namespace QuantConnect.Algorithm.Framework.Selection
         /// <param name="market">The target market</param>
         /// <param name="selector">Selects symbols from the provided fundamental data set</param>
         /// <param name="universeSettings">Universe settings define attributes of created subscriptions, such as their resolution and the minimum time in universe before they can be removed</param>
-        public FundamentalUniverseSelectionModel(string market, PyObject selector, UniverseSettings universeSettings = null) : this(universeSettings)
+        public FundamentalUniverseSelectionModel(
+            string market,
+            PyObject selector,
+            UniverseSettings universeSettings = null
+        )
+            : this(universeSettings)
         {
             _market = market;
             Func<IEnumerable<Fundamental>, object> selectorFunc;
@@ -109,28 +117,34 @@ namespace QuantConnect.Algorithm.Framework.Selection
         /// </summary>
         /// <param name="selector">Selects symbols from the provided fundamental data set</param>
         /// <param name="universeSettings">Universe settings define attributes of created subscriptions, such as their resolution and the minimum time in universe before they can be removed</param>
-        public FundamentalUniverseSelectionModel(PyObject selector, UniverseSettings universeSettings = null)
-           : this(Market.USA, selector, universeSettings)
-        {
-        }
+        public FundamentalUniverseSelectionModel(
+            PyObject selector,
+            UniverseSettings universeSettings = null
+        )
+            : this(Market.USA, selector, universeSettings) { }
 
         /// <summary>
         /// Initializes a new instance of the <see cref="FundamentalUniverseSelectionModel"/> class
         /// </summary>
         /// <param name="filterFineData">True to also filter using fine fundamental data, false to only filter on coarse data</param>
-        [Obsolete("Fine and Coarse selection are merged, please use 'FundamentalUniverseSelectionModel()'")]
+        [Obsolete(
+            "Fine and Coarse selection are merged, please use 'FundamentalUniverseSelectionModel()'"
+        )]
         protected FundamentalUniverseSelectionModel(bool filterFineData)
-            : this(filterFineData, null)
-        {
-        }
+            : this(filterFineData, null) { }
 
         /// <summary>
         /// Initializes a new instance of the <see cref="FundamentalUniverseSelectionModel"/> class
         /// </summary>
         /// <param name="filterFineData">True to also filter using fine fundamental data, false to only filter on coarse data</param>
         /// <param name="universeSettings">The settings used when adding symbols to the algorithm, specify null to use algorithm.UniverseSettings</param>
-        [Obsolete("Fine and Coarse selection are merged, please use 'FundamentalUniverseSelectionModel(UniverseSettings)'")]
-        protected FundamentalUniverseSelectionModel(bool filterFineData, UniverseSettings universeSettings)
+        [Obsolete(
+            "Fine and Coarse selection are merged, please use 'FundamentalUniverseSelectionModel(UniverseSettings)'"
+        )]
+        protected FundamentalUniverseSelectionModel(
+            bool filterFineData,
+            UniverseSettings universeSettings
+        )
         {
             _market = Market.USA;
             _filterFineData = filterFineData;
@@ -147,7 +161,11 @@ namespace QuantConnect.Algorithm.Framework.Selection
             if (_fundamentalData)
             {
                 var universeSettings = _universeSettings ?? algorithm.UniverseSettings;
-                yield return new FundamentalUniverseFactory(_market, universeSettings, fundamental => Select(algorithm, fundamental));
+                yield return new FundamentalUniverseFactory(
+                    _market,
+                    universeSettings,
+                    fundamental => Select(algorithm, fundamental)
+                );
             }
             else
             {
@@ -155,12 +173,20 @@ namespace QuantConnect.Algorithm.Framework.Selection
                 var universe = CreateCoarseFundamentalUniverse(algorithm);
                 if (_filterFineData)
                 {
-                    if (universe.UniverseSettings.Asynchronous.HasValue && universe.UniverseSettings.Asynchronous.Value)
+                    if (
+                        universe.UniverseSettings.Asynchronous.HasValue
+                        && universe.UniverseSettings.Asynchronous.Value
+                    )
                     {
-                        throw new ArgumentException("Asynchronous universe setting is not supported for coarse & fine selections, please use the new Fundamental single pass selection");
+                        throw new ArgumentException(
+                            "Asynchronous universe setting is not supported for coarse & fine selections, please use the new Fundamental single pass selection"
+                        );
                     }
 #pragma warning disable CS0618 // Type or member is obsolete
-                    universe = new FineFundamentalFilteredUniverse(universe, fine => SelectFine(algorithm, fine));
+                    universe = new FineFundamentalFilteredUniverse(
+                        universe,
+                        fine => SelectFine(algorithm, fine)
+                    );
 #pragma warning restore CS0618 // Type or member is obsolete
                 }
                 yield return universe;
@@ -176,18 +202,21 @@ namespace QuantConnect.Algorithm.Framework.Selection
         public virtual Universe CreateCoarseFundamentalUniverse(QCAlgorithm algorithm)
         {
             var universeSettings = _universeSettings ?? algorithm.UniverseSettings;
-            return new CoarseFundamentalUniverse(universeSettings, coarse =>
-            {
-                // if we're using fine fundamental selection than exclude symbols without fine data
-                if (_filterFineData)
+            return new CoarseFundamentalUniverse(
+                universeSettings,
+                coarse =>
                 {
-                    coarse = coarse.Where(c => c.HasFundamentalData);
-                }
+                    // if we're using fine fundamental selection than exclude symbols without fine data
+                    if (_filterFineData)
+                    {
+                        coarse = coarse.Where(c => c.HasFundamentalData);
+                    }
 
 #pragma warning disable CS0618 // Type or member is obsolete
-                return SelectCoarse(algorithm, coarse);
+                    return SelectCoarse(algorithm, coarse);
 #pragma warning restore CS0618 // Type or member is obsolete
-            });
+                }
+            );
         }
 
         /// <summary>
@@ -196,11 +225,16 @@ namespace QuantConnect.Algorithm.Framework.Selection
         /// <param name="algorithm">The algorithm instance</param>
         /// <param name="fundamental">The fundamental data used to perform filtering</param>
         /// <returns>An enumerable of symbols passing the filter</returns>
-        public virtual IEnumerable<Symbol> Select(QCAlgorithm algorithm, IEnumerable<Fundamental> fundamental)
+        public virtual IEnumerable<Symbol> Select(
+            QCAlgorithm algorithm,
+            IEnumerable<Fundamental> fundamental
+        )
         {
-            if(_selector == null)
+            if (_selector == null)
             {
-                throw new NotImplementedException("If inheriting, please overrride the 'Select' fundamental function, else provide it as a constructor parameter");
+                throw new NotImplementedException(
+                    "If inheriting, please overrride the 'Select' fundamental function, else provide it as a constructor parameter"
+                );
             }
             return _selector(fundamental);
         }
@@ -211,8 +245,13 @@ namespace QuantConnect.Algorithm.Framework.Selection
         /// <param name="algorithm">The algorithm instance</param>
         /// <param name="coarse">The coarse fundamental data used to perform filtering</param>
         /// <returns>An enumerable of symbols passing the filter</returns>
-        [Obsolete("Fine and Coarse selection are merged, please use 'Select(QCAlgorithm, IEnumerable<Fundamental>)'")]
-        public virtual IEnumerable<Symbol> SelectCoarse(QCAlgorithm algorithm, IEnumerable<CoarseFundamental> coarse)
+        [Obsolete(
+            "Fine and Coarse selection are merged, please use 'Select(QCAlgorithm, IEnumerable<Fundamental>)'"
+        )]
+        public virtual IEnumerable<Symbol> SelectCoarse(
+            QCAlgorithm algorithm,
+            IEnumerable<CoarseFundamental> coarse
+        )
         {
             throw new NotImplementedException("Please overrride the 'Select' fundamental function");
         }
@@ -223,8 +262,13 @@ namespace QuantConnect.Algorithm.Framework.Selection
         /// <param name="algorithm">The algorithm instance</param>
         /// <param name="fine">The fine fundamental data used to perform filtering</param>
         /// <returns>An enumerable of symbols passing the filter</returns>
-        [Obsolete("Fine and Coarse selection are merged, please use 'Select(QCAlgorithm, IEnumerable<Fundamental>)'")]
-        public virtual IEnumerable<Symbol> SelectFine(QCAlgorithm algorithm, IEnumerable<FineFundamental> fine)
+        [Obsolete(
+            "Fine and Coarse selection are merged, please use 'Select(QCAlgorithm, IEnumerable<Fundamental>)'"
+        )]
+        public virtual IEnumerable<Symbol> SelectFine(
+            QCAlgorithm algorithm,
+            IEnumerable<FineFundamental> fine
+        )
         {
             // default impl performs no filtering of fine data
             return fine.Select(f => f.Symbol);
@@ -235,8 +279,12 @@ namespace QuantConnect.Algorithm.Framework.Selection
         /// </summary>
         /// <param name="coarseSelector">Selects symbols from the provided coarse data set</param>
         /// <returns>A new universe selection model that will select US equities according to the selection function specified</returns>
-        [Obsolete("Fine and Coarse selection are merged, please use 'Fundamental(Func<IEnumerable<Fundamental>, IEnumerable<Symbol>>)'")]
-        public static IUniverseSelectionModel Coarse(Func<IEnumerable<CoarseFundamental>, IEnumerable<Symbol>> coarseSelector)
+        [Obsolete(
+            "Fine and Coarse selection are merged, please use 'Fundamental(Func<IEnumerable<Fundamental>, IEnumerable<Symbol>>)'"
+        )]
+        public static IUniverseSelectionModel Coarse(
+            Func<IEnumerable<CoarseFundamental>, IEnumerable<Symbol>> coarseSelector
+        )
         {
             return new CoarseFundamentalUniverseSelectionModel(coarseSelector);
         }
@@ -247,8 +295,13 @@ namespace QuantConnect.Algorithm.Framework.Selection
         /// <param name="coarseSelector">Selects symbols from the provided coarse data set</param>
         /// <param name="fineSelector">Selects symbols from the provided fine data set (this set has already been filtered according to the coarse selection)</param>
         /// <returns>A new universe selection model that will select US equities according to the selection functions specified</returns>
-        [Obsolete("Fine and Coarse selection are merged, please use 'Fundamental(Func<IEnumerable<Fundamental>, IEnumerable<Symbol>>)'")]
-        public static IUniverseSelectionModel Fine(Func<IEnumerable<CoarseFundamental>, IEnumerable<Symbol>> coarseSelector, Func<IEnumerable<FineFundamental>, IEnumerable<Symbol>> fineSelector)
+        [Obsolete(
+            "Fine and Coarse selection are merged, please use 'Fundamental(Func<IEnumerable<Fundamental>, IEnumerable<Symbol>>)'"
+        )]
+        public static IUniverseSelectionModel Fine(
+            Func<IEnumerable<CoarseFundamental>, IEnumerable<Symbol>> coarseSelector,
+            Func<IEnumerable<FineFundamental>, IEnumerable<Symbol>> fineSelector
+        )
         {
             return new FineFundamentalUniverseSelectionModel(coarseSelector, fineSelector);
         }
@@ -258,7 +311,9 @@ namespace QuantConnect.Algorithm.Framework.Selection
         /// </summary>
         /// <param name="selector">Selects symbols from the provided fundamental data set</param>
         /// <returns>A new universe selection model that will select US equities according to the selection functions specified</returns>
-        public static IUniverseSelectionModel Fundamental(Func<IEnumerable<Fundamental>, IEnumerable<Symbol>> selector)
+        public static IUniverseSelectionModel Fundamental(
+            Func<IEnumerable<Fundamental>, IEnumerable<Symbol>> selector
+        )
         {
             return new FundamentalUniverseSelectionModel(selector);
         }

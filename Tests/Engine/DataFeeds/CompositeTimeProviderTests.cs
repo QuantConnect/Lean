@@ -26,7 +26,9 @@ namespace QuantConnect.Tests.Engine.DataFeeds
         [Test]
         public void NoProviderGiven()
         {
-            var compositeTimeProvider = new CompositeTimeProvider(Enumerable.Empty<ITimeProvider>());
+            var compositeTimeProvider = new CompositeTimeProvider(
+                Enumerable.Empty<ITimeProvider>()
+            );
 
             var utcNow = DateTime.UtcNow;
 
@@ -45,7 +47,9 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             var timeProvider3 = new ManualTimeProvider();
             timeProvider3.SetCurrentTimeUtc(time.AddYears(2));
 
-            var compositeTimeProvider = new CompositeTimeProvider(new[] { timeProvider1 , timeProvider2, timeProvider3 });
+            var compositeTimeProvider = new CompositeTimeProvider(
+                new[] { timeProvider1, timeProvider2, timeProvider3 }
+            );
 
             Assert.LessOrEqual(time, compositeTimeProvider.GetUtcNow());
         }

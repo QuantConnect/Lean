@@ -18,17 +18,17 @@ using System.Collections.Generic;
 using System.Linq;
 using NUnit.Framework;
 using Python.Runtime;
-using QuantConnect.Brokerages;
 using QuantConnect.Algorithm;
-using QuantConnect.Data.Market;
-using QuantConnect.Orders;
-using QuantConnect.Tests.Engine.DataFeeds;
-using QuantConnect.Securities;
 using QuantConnect.Benchmarks;
+using QuantConnect.Brokerages;
+using QuantConnect.Data.Market;
+using QuantConnect.Interfaces;
+using QuantConnect.Orders;
 using QuantConnect.Orders.Fees;
 using QuantConnect.Orders.Fills;
-using QuantConnect.Interfaces;
 using QuantConnect.Orders.Slippage;
+using QuantConnect.Securities;
+using QuantConnect.Tests.Engine.DataFeeds;
 
 namespace QuantConnect.Tests.Algorithm
 {
@@ -65,7 +65,6 @@ namespace QuantConnect.Tests.Algorithm
         {
             var forex = _algo.AddForex(ForexSym);
 
-
             Assert.IsTrue(forex.Symbol.ID.Market == Market.Oanda);
             Assert.IsTrue(_algo.BrokerageModel.GetType() == typeof(DefaultBrokerageModel));
         }
@@ -77,7 +76,9 @@ namespace QuantConnect.Tests.Algorithm
             {
                 var model = new AlphaStreamsBrokerageModel().ToPython();
                 _algo.SetBrokerageModel(model);
-                Assert.DoesNotThrow(() => _algo.BrokerageModel.ApplySplit(new List<OrderTicket>(), new Split()));
+                Assert.DoesNotThrow(
+                    () => _algo.BrokerageModel.ApplySplit(new List<OrderTicket>(), new Split())
+                );
             }
         }
 
@@ -86,17 +87,23 @@ namespace QuantConnect.Tests.Algorithm
         {
             using (Py.GIL())
             {
-                var model = PyModule.FromString("testModule",
-                    @"
+                var model = PyModule
+                    .FromString(
+                        "testModule",
+                        @"
 from AlgorithmImports import *
 
 class Test(AlphaStreamsBrokerageModel):
     def GetLeverage(self, security):
-        return 12").GetAttr("Test");
+        return 12"
+                    )
+                    .GetAttr("Test");
                 _algo.SetBrokerageModel(model.Invoke());
 
                 var equity = _algo.AddEquity(Sym);
-                Assert.DoesNotThrow(() => _algo.BrokerageModel.ApplySplit(new List<OrderTicket>(), new Split()));
+                Assert.DoesNotThrow(
+                    () => _algo.BrokerageModel.ApplySplit(new List<OrderTicket>(), new Split())
+                );
                 Assert.AreEqual(12m, _algo.BrokerageModel.GetLeverage(equity));
             }
         }
@@ -109,7 +116,6 @@ class Test(AlphaStreamsBrokerageModel):
         {
             var equity = _algo.AddEquity(Sym);
 
-
             Assert.IsTrue(equity.Symbol.ID.Market == Market.USA);
             Assert.IsTrue(_algo.BrokerageModel.GetType() == typeof(DefaultBrokerageModel));
         }
@@ -121,7 +127,6 @@ class Test(AlphaStreamsBrokerageModel):
         public void DefaultBrokerageModel_IsUSA_ForOption()
         {
             var option = _algo.AddOption(Sym);
-
 
             Assert.IsTrue(option.Symbol.ID.Market == Market.USA);
             Assert.IsTrue(_algo.BrokerageModel.GetType() == typeof(DefaultBrokerageModel));
@@ -139,7 +144,6 @@ class Test(AlphaStreamsBrokerageModel):
 
             string brokerage = GetDefaultBrokerageForSecurityType(SecurityType.Forex);
 
-
             Assert.IsTrue(forex.Symbol.ID.Market == Market.Oanda);
             Assert.IsTrue(_algo.BrokerageModel.GetType() == typeof(OandaBrokerageModel));
             Assert.IsTrue(brokerage == Market.Oanda);
@@ -155,10 +159,9 @@ class Test(AlphaStreamsBrokerageModel):
 
             string brokerage = GetDefaultBrokerageForSecurityType(SecurityType.Forex);
 
-
             Assert.IsTrue(forex.Symbol.ID.Market == Market.FXCM);
             Assert.IsTrue(_algo.BrokerageModel.GetType() == typeof(DefaultBrokerageModel));
-            Assert.IsTrue(brokerage == Market.Oanda);  // Doesn't change brokerage defined in BrokerageModel.DefaultMarkets
+            Assert.IsTrue(brokerage == Market.Oanda); // Doesn't change brokerage defined in BrokerageModel.DefaultMarkets
         }
 
         /// <summary>
@@ -173,7 +176,6 @@ class Test(AlphaStreamsBrokerageModel):
 
             string equityBrokerage = GetDefaultBrokerageForSecurityType(SecurityType.Equity);
 
-
             Assert.IsTrue(equity.Symbol.ID.Market == Market.USA);
             Assert.IsTrue(_algo.BrokerageModel.GetType() == typeof(DefaultBrokerageModel));
             Assert.IsTrue(equityBrokerage == Market.USA);
@@ -181,21 +183,43 @@ class Test(AlphaStreamsBrokerageModel):
             // Set Brokerage
             _algo.SetBrokerageModel(BrokerageName.OandaBrokerage);
 
-            var sec = _algo.AddSecurity(SecurityType.Forex, ForexSym, Resolution.Daily, false, 1, false);
+            var sec = _algo.AddSecurity(
+                SecurityType.Forex,
+                ForexSym,
+                Resolution.Daily,
+                false,
+                1,
+                false
+            );
 
             string forexBrokerage = GetDefaultBrokerageForSecurityType(SecurityType.Forex);
 
-
             Assert.IsTrue(sec.Symbol.ID.Market == Market.Oanda);
             Assert.IsTrue(_algo.BrokerageModel.GetType() == typeof(OandaBrokerageModel));
-            Assert.IsTrue(forexBrokerage ==  Market.Oanda);
+            Assert.IsTrue(forexBrokerage == Market.Oanda);
         }
 
         [Test]
         public void AddSecurityCanAddWithSameTickerAndDifferentMarket()
         {
-            var fxcmSecurity = _algo.AddSecurity(SecurityType.Forex, "EURUSD", Resolution.Minute, Market.FXCM, true, 1m, true);
-            var oandaSecurity = _algo.AddSecurity(SecurityType.Forex, "EURUSD", Resolution.Minute, Market.Oanda, true, 1m, true);
+            var fxcmSecurity = _algo.AddSecurity(
+                SecurityType.Forex,
+                "EURUSD",
+                Resolution.Minute,
+                Market.FXCM,
+                true,
+                1m,
+                true
+            );
+            var oandaSecurity = _algo.AddSecurity(
+                SecurityType.Forex,
+                "EURUSD",
+                Resolution.Minute,
+                Market.Oanda,
+                true,
+                1m,
+                true
+            );
 
             Assert.AreEqual(2, _algo.Securities.Count);
             Assert.IsNotNull(_algo.Securities.Single(pair => pair.Key.ID.Market == Market.FXCM));
@@ -238,7 +262,8 @@ class Test(AlphaStreamsBrokerageModel):
             {
                 using (Py.GIL())
                 {
-                    var testModule = PyModule.FromString("testModule",
+                    var testModule = PyModule.FromString(
+                        "testModule",
                         @"
 from AlgorithmImports import *
 
@@ -250,7 +275,8 @@ def setBrokerageModel(algorithm, brokerageModel):
 
 def getBrokerageName(algorithm):
     return algorithm.BrokerageName
-        ");
+        "
+                    );
 
                     var getAlgorithm = testModule.GetAttr("getAlgorithm");
                     var algorithm = getAlgorithm.Invoke();
@@ -258,16 +284,31 @@ def getBrokerageName(algorithm):
                     var setBrokerageModel = testModule.GetAttr("setBrokerageModel");
                     var getBrokerageName = testModule.GetAttr("getBrokerageName");
 
-                    Assert.AreEqual(BrokerageName.Default, getBrokerageName.Invoke(algorithm).AsManagedObject(typeof(BrokerageName)));
+                    Assert.AreEqual(
+                        BrokerageName.Default,
+                        getBrokerageName.Invoke(algorithm).AsManagedObject(typeof(BrokerageName))
+                    );
 
                     setBrokerageModel.Invoke(algorithm, BrokerageName.OandaBrokerage.ToPython());
-                    Assert.AreEqual(BrokerageName.OandaBrokerage, getBrokerageName.Invoke(algorithm).AsManagedObject(typeof(BrokerageName)));
+                    Assert.AreEqual(
+                        BrokerageName.OandaBrokerage,
+                        getBrokerageName.Invoke(algorithm).AsManagedObject(typeof(BrokerageName))
+                    );
 
-                    setBrokerageModel.Invoke(algorithm, new InteractiveBrokersBrokerageModel().ToPython());
-                    Assert.AreEqual(BrokerageName.InteractiveBrokersBrokerage, getBrokerageName.Invoke(algorithm).AsManagedObject(typeof(BrokerageName)));
+                    setBrokerageModel.Invoke(
+                        algorithm,
+                        new InteractiveBrokersBrokerageModel().ToPython()
+                    );
+                    Assert.AreEqual(
+                        BrokerageName.InteractiveBrokersBrokerage,
+                        getBrokerageName.Invoke(algorithm).AsManagedObject(typeof(BrokerageName))
+                    );
 
                     setBrokerageModel.Invoke(algorithm, new CustomBrokerageModel().ToPython());
-                    Assert.AreEqual(BrokerageName.Default, getBrokerageName.Invoke(algorithm).AsManagedObject(typeof(BrokerageName)));
+                    Assert.AreEqual(
+                        BrokerageName.Default,
+                        getBrokerageName.Invoke(algorithm).AsManagedObject(typeof(BrokerageName))
+                    );
                 }
             }
         }
@@ -288,9 +329,11 @@ def getBrokerageName(algorithm):
         {
             public AccountType AccountType => throw new System.NotImplementedException();
 
-            public decimal RequiredFreeBuyingPowerPercent => throw new System.NotImplementedException();
+            public decimal RequiredFreeBuyingPowerPercent =>
+                throw new System.NotImplementedException();
 
-            public IReadOnlyDictionary<SecurityType, string> DefaultMarkets => throw new System.NotImplementedException();
+            public IReadOnlyDictionary<SecurityType, string> DefaultMarkets =>
+                throw new System.NotImplementedException();
 
             public void ApplySplit(List<OrderTicket> tickets, Split split)
             {
@@ -302,12 +345,21 @@ def getBrokerageName(algorithm):
                 throw new System.NotImplementedException();
             }
 
-            public bool CanSubmitOrder(Security security, Order order, out BrokerageMessageEvent message)
+            public bool CanSubmitOrder(
+                Security security,
+                Order order,
+                out BrokerageMessageEvent message
+            )
             {
                 throw new System.NotImplementedException();
             }
 
-            public bool CanUpdateOrder(Security security, Order order, UpdateOrderRequest request, out BrokerageMessageEvent message)
+            public bool CanUpdateOrder(
+                Security security,
+                Order order,
+                UpdateOrderRequest request,
+                out BrokerageMessageEvent message
+            )
             {
                 throw new System.NotImplementedException();
             }

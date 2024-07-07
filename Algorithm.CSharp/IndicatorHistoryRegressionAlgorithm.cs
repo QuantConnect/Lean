@@ -58,29 +58,39 @@ namespace QuantConnect.Algorithm.CSharp
             // we ask for 50 data points
             if (indicatorHistory.Count != 50)
             {
-                throw new RegressionTestException($"Unexpected indicators values {indicatorHistory.Count}");
+                throw new RegressionTestException(
+                    $"Unexpected indicators values {indicatorHistory.Count}"
+                );
             }
 
             foreach (var indicatorDataPoints in indicatorHistory)
             {
                 var upperBand = ((dynamic)indicatorDataPoints).UpperBand;
-                Debug($"BB @{indicatorDataPoints.Current}: middleband: {indicatorDataPoints["middleband"]} upperBand {upperBand}");
+                Debug(
+                    $"BB @{indicatorDataPoints.Current}: middleband: {indicatorDataPoints["middleband"]} upperBand {upperBand}"
+                );
 
                 if (indicatorDataPoints == 0)
                 {
-                    throw new RegressionTestException($"Unexpected indicators point {indicatorDataPoints}");
+                    throw new RegressionTestException(
+                        $"Unexpected indicators point {indicatorDataPoints}"
+                    );
                 }
             }
 
             var currentValues = indicatorHistory.Current;
             if (currentValues.Count != 50 || currentValues.Any(x => x.Value == 0))
             {
-                throw new RegressionTestException($"Unexpected indicators current values {currentValues.Count}");
+                throw new RegressionTestException(
+                    $"Unexpected indicators current values {currentValues.Count}"
+                );
             }
             var upperBandPoints = indicatorHistory["UpperBand"];
             if (upperBandPoints.Count != 50 || upperBandPoints.Any(x => x.Value == 0))
             {
-                throw new RegressionTestException($"Unexpected indicators upperBandPoints values {upperBandPoints.Count}");
+                throw new RegressionTestException(
+                    $"Unexpected indicators upperBandPoints values {upperBandPoints.Count}"
+                );
             }
 
             // We are done now!
@@ -115,35 +125,36 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// This is used by the regression test system to indicate what the expected statistics are from running the algorithm
         /// </summary>
-        public Dictionary<string, string> ExpectedStatistics => new Dictionary<string, string>
-        {
-            {"Total Orders", "0"},
-            {"Average Win", "0%"},
-            {"Average Loss", "0%"},
-            {"Compounding Annual Return", "0%"},
-            {"Drawdown", "0%"},
-            {"Expectancy", "0"},
-            {"Start Equity", "100000"},
-            {"End Equity", "100000"},
-            {"Net Profit", "0%"},
-            {"Sharpe Ratio", "0"},
-            {"Sortino Ratio", "0"},
-            {"Probabilistic Sharpe Ratio", "0%"},
-            {"Loss Rate", "0%"},
-            {"Win Rate", "0%"},
-            {"Profit-Loss Ratio", "0"},
-            {"Alpha", "0"},
-            {"Beta", "0"},
-            {"Annual Standard Deviation", "0"},
-            {"Annual Variance", "0"},
-            {"Information Ratio", "0"},
-            {"Tracking Error", "0"},
-            {"Treynor Ratio", "0"},
-            {"Total Fees", "$0.00"},
-            {"Estimated Strategy Capacity", "$0"},
-            {"Lowest Capacity Asset", ""},
-            {"Portfolio Turnover", "0%"},
-            {"OrderListHash", "d41d8cd98f00b204e9800998ecf8427e"}
-        };
+        public Dictionary<string, string> ExpectedStatistics =>
+            new Dictionary<string, string>
+            {
+                { "Total Orders", "0" },
+                { "Average Win", "0%" },
+                { "Average Loss", "0%" },
+                { "Compounding Annual Return", "0%" },
+                { "Drawdown", "0%" },
+                { "Expectancy", "0" },
+                { "Start Equity", "100000" },
+                { "End Equity", "100000" },
+                { "Net Profit", "0%" },
+                { "Sharpe Ratio", "0" },
+                { "Sortino Ratio", "0" },
+                { "Probabilistic Sharpe Ratio", "0%" },
+                { "Loss Rate", "0%" },
+                { "Win Rate", "0%" },
+                { "Profit-Loss Ratio", "0" },
+                { "Alpha", "0" },
+                { "Beta", "0" },
+                { "Annual Standard Deviation", "0" },
+                { "Annual Variance", "0" },
+                { "Information Ratio", "0" },
+                { "Tracking Error", "0" },
+                { "Treynor Ratio", "0" },
+                { "Total Fees", "$0.00" },
+                { "Estimated Strategy Capacity", "$0" },
+                { "Lowest Capacity Asset", "" },
+                { "Portfolio Turnover", "0%" },
+                { "OrderListHash", "d41d8cd98f00b204e9800998ecf8427e" }
+            };
     }
 }

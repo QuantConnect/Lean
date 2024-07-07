@@ -13,9 +13,9 @@
  * limitations under the License.
 */
 
+using System;
 using NUnit.Framework;
 using QuantConnect.ToolBox.RandomDataGenerator;
-using System;
 
 namespace QuantConnect.Tests.ToolBox.RandomDataGenerator
 {
@@ -31,7 +31,8 @@ namespace QuantConnect.Tests.ToolBox.RandomDataGenerator
         [TestCase(1, 0.03162277660168379)]
         public void GetsExpectedLowerBound(int months, double expectedLowerBound)
         {
-            var lowerBound = (double)DividendSplitMapGenerator.GetLowerBoundForPreviousSplitFactor(months);
+            var lowerBound = (double)
+                DividendSplitMapGenerator.GetLowerBoundForPreviousSplitFactor(months);
             Assert.AreEqual(expectedLowerBound, lowerBound, delta: 0.0000000000001);
             Assert.IsTrue(Math.Pow(lowerBound, lowerBound * 2) >= 0.0009);
         }
@@ -47,9 +48,18 @@ namespace QuantConnect.Tests.ToolBox.RandomDataGenerator
         {
             var lowerBound = DividendSplitMapGenerator.GetLowerBoundForPreviousSplitFactor(months);
             var upperBound = 1;
-            var nextPreviousSplitFactor = DividendSplitMapGenerator.GetNextPreviousSplitFactor(new Random(), lowerBound, upperBound);
-            Assert.IsTrue(lowerBound <= nextPreviousSplitFactor && nextPreviousSplitFactor <= upperBound);
-            Assert.IsTrue(0.001 <= Math.Pow((double)nextPreviousSplitFactor, 2 * (double)months) && Math.Pow((double)nextPreviousSplitFactor, 2 * (double)months) <= 1);
+            var nextPreviousSplitFactor = DividendSplitMapGenerator.GetNextPreviousSplitFactor(
+                new Random(),
+                lowerBound,
+                upperBound
+            );
+            Assert.IsTrue(
+                lowerBound <= nextPreviousSplitFactor && nextPreviousSplitFactor <= upperBound
+            );
+            Assert.IsTrue(
+                0.001 <= Math.Pow((double)nextPreviousSplitFactor, 2 * (double)months)
+                    && Math.Pow((double)nextPreviousSplitFactor, 2 * (double)months) <= 1
+            );
         }
 
         [TestCase(240)]
@@ -65,10 +75,23 @@ namespace QuantConnect.Tests.ToolBox.RandomDataGenerator
             var minPossiblePrice = 0.0001m;
             var lowerBound = DividendSplitMapGenerator.GetLowerBoundForPreviousSplitFactor(months);
             var upperBound = 1;
-            var nextPreviousSplitFactor = DividendSplitMapGenerator.GetNextPreviousSplitFactor(new Random(), lowerBound, upperBound);
-            var finalSplitFactor = (decimal)Math.Pow((double)nextPreviousSplitFactor, 2 * (double)months);
-            Assert.IsTrue(0.0001m <= (maxPossiblePrice / finalSplitFactor) && (maxPossiblePrice / finalSplitFactor) <= 1000000000m, (maxPossiblePrice / finalSplitFactor).ToString());
-            Assert.IsTrue(0.0001m <= (minPossiblePrice / finalSplitFactor) && (minPossiblePrice / finalSplitFactor) <= 1000000000m, (minPossiblePrice / finalSplitFactor).ToString());
+            var nextPreviousSplitFactor = DividendSplitMapGenerator.GetNextPreviousSplitFactor(
+                new Random(),
+                lowerBound,
+                upperBound
+            );
+            var finalSplitFactor = (decimal)
+                Math.Pow((double)nextPreviousSplitFactor, 2 * (double)months);
+            Assert.IsTrue(
+                0.0001m <= (maxPossiblePrice / finalSplitFactor)
+                    && (maxPossiblePrice / finalSplitFactor) <= 1000000000m,
+                (maxPossiblePrice / finalSplitFactor).ToString()
+            );
+            Assert.IsTrue(
+                0.0001m <= (minPossiblePrice / finalSplitFactor)
+                    && (minPossiblePrice / finalSplitFactor) <= 1000000000m,
+                (minPossiblePrice / finalSplitFactor).ToString()
+            );
         }
     }
 }

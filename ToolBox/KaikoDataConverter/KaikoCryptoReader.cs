@@ -14,15 +14,15 @@
  * limitations under the License.
 */
 
-using QuantConnect.Data;
-using QuantConnect.Data.Market;
-using QuantConnect.Logging;
 using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
 using System.IO.Compression;
 using System.Linq;
+using QuantConnect.Data;
+using QuantConnect.Data.Market;
+using QuantConnect.Logging;
 using ZipEntry = Ionic.Zip.ZipEntry;
 
 namespace QuantConnect.ToolBox.KaikoDataConverter
@@ -54,7 +54,9 @@ namespace QuantConnect.ToolBox.KaikoDataConverter
         public IEnumerable<BaseData> GetTicksFromZipEntry(ZipEntry zipEntry)
         {
             var rawData = GetRawDataStreamFromEntry(zipEntry);
-            return _tickType == TickType.Trade ? ParseKaikoTradeFile(rawData) : ParseKaikoQuoteFile(rawData);
+            return _tickType == TickType.Trade
+                ? ParseKaikoTradeFile(rawData)
+                : ParseKaikoQuoteFile(rawData);
         }
 
         /// <summary>
@@ -65,7 +67,9 @@ namespace QuantConnect.ToolBox.KaikoDataConverter
         private IEnumerable<string> GetRawDataStreamFromEntry(ZipEntry zipEntry)
         {
             using (var outerStream = new StreamReader(zipEntry.OpenReader()))
-            using (var innerStream = new GZipStream(outerStream.BaseStream, CompressionMode.Decompress))
+            using (
+                var innerStream = new GZipStream(outerStream.BaseStream, CompressionMode.Decompress)
+            )
             using (var outputStream = new StreamReader(innerStream))
             {
                 string line;
@@ -97,7 +101,8 @@ namespace QuantConnect.ToolBox.KaikoDataConverter
 
             foreach (var line in rawDataLines.Skip(1))
             {
-                if (line == null || line == string.Empty) continue;
+                if (line == null || line == string.Empty)
+                    continue;
 
                 var lineParts = line.Split(',');
 
@@ -113,7 +118,9 @@ namespace QuantConnect.ToolBox.KaikoDataConverter
                 }
                 catch (Exception ex)
                 {
-                    Log.Error($"KaikoDataConverter.ParseKaikoQuoteFile(): Raw data corrupted. Line {string.Join(" ", lineParts)}, Exception {ex}");
+                    Log.Error(
+                        $"KaikoDataConverter.ParseKaikoQuoteFile(): Raw data corrupted. Line {string.Join(" ", lineParts)}, Exception {ex}"
+                    );
                     continue;
                 }
 
@@ -128,9 +135,13 @@ namespace QuantConnect.ToolBox.KaikoDataConverter
 
                 if (currentEpoch != tickEpoch)
                 {
-                    var quoteTick = CreateQuoteTick(Time.UnixMillisecondTimeStampToDateTime(currentEpoch), currentEpochTicks);
+                    var quoteTick = CreateQuoteTick(
+                        Time.UnixMillisecondTimeStampToDateTime(currentEpoch),
+                        currentEpochTicks
+                    );
 
-                    if (quoteTick != null) yield return quoteTick;
+                    if (quoteTick != null)
+                        yield return quoteTick;
 
                     currentEpochTicks.Clear();
                     currentEpoch = tickEpoch;
@@ -149,14 +160,16 @@ namespace QuantConnect.ToolBox.KaikoDataConverter
         private Tick CreateQuoteTick(DateTime date, List<KaikoTick> currentEpcohTicks)
         {
             // lowest ask
-            var bestAsk = currentEpcohTicks.Where(x => x.OrderDirection == "a")
-                                        .OrderBy(x => x.Value)
-                                        .FirstOrDefault();
+            var bestAsk = currentEpcohTicks
+                .Where(x => x.OrderDirection == "a")
+                .OrderBy(x => x.Value)
+                .FirstOrDefault();
 
             // highest bid
-            var bestBid = currentEpcohTicks.Where(x => x.OrderDirection == "b")
-                                        .OrderByDescending(x => x.Value)
-                                        .FirstOrDefault();
+            var bestBid = currentEpcohTicks
+                .Where(x => x.OrderDirection == "b")
+                .OrderByDescending(x => x.Value)
+                .FirstOrDefault();
 
             if (bestAsk == null && bestBid == null)
             {
@@ -201,7 +214,8 @@ namespace QuantConnect.ToolBox.KaikoDataConverter
 
             foreach (var line in rawDataLines.Skip(1))
             {
-                if (line == null || line == string.Empty) continue;
+                if (line == null || line == string.Empty)
+                    continue;
 
                 var lineParts = line.Split(',');
 
@@ -215,7 +229,9 @@ namespace QuantConnect.ToolBox.KaikoDataConverter
                 }
                 catch (Exception ex)
                 {
-                    Log.Error($"KaikoDataConverter.ParseKaikoTradeFile(): Raw data corrupted. Line {string.Join(" ", lineParts)}, Exception {ex}");
+                    Log.Error(
+                        $"KaikoDataConverter.ParseKaikoTradeFile(): Raw data corrupted. Line {string.Join(" ", lineParts)}, Exception {ex}"
+                    );
                     continue;
                 }
 
@@ -223,7 +239,9 @@ namespace QuantConnect.ToolBox.KaikoDataConverter
                 {
                     Symbol = _symbol,
                     TickType = TickType.Trade,
-                    Time = Time.UnixMillisecondTimeStampToDateTime(Parse.Long(lineParts[dateColumn])),
+                    Time = Time.UnixMillisecondTimeStampToDateTime(
+                        Parse.Long(lineParts[dateColumn])
+                    ),
                     Quantity = quantity,
                     Value = price
                 };

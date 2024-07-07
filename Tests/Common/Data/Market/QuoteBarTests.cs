@@ -44,7 +44,7 @@ namespace QuantConnect.Tests.Common.Data.Market
             Assert.AreEqual(10, bar.Close);
 
             bar = new QuoteBar();
-            bar.Ask = new Bar(11,11,11,11);
+            bar.Ask = new Bar(11, 11, 11, 11);
             Assert.AreEqual(11, bar.Open);
             Assert.AreEqual(11, bar.High);
             Assert.AreEqual(11, bar.Low);
@@ -54,9 +54,19 @@ namespace QuantConnect.Tests.Common.Data.Market
         [Test]
         public void QuoteBarReader_CanParseMalformattedData_Successfully()
         {
-            var config = new SubscriptionDataConfig(typeof(TradeBar), Symbols.SPY, Resolution.Second, TimeZones.NewYork, TimeZones.NewYork, false, false, false);
+            var config = new SubscriptionDataConfig(
+                typeof(TradeBar),
+                Symbols.SPY,
+                Resolution.Second,
+                TimeZones.NewYork,
+                TimeZones.NewYork,
+                false,
+                false,
+                false
+            );
             // Neither a quote or a trade
-            var line = "14340000,1.10907,1.109075,1.108985,1.1090214400000,1.109005,1.109005,1.10884,1.10887";
+            var line =
+                "14340000,1.10907,1.109075,1.108985,1.1090214400000,1.109005,1.109005,1.10884,1.10887";
             var date = DateTime.MaxValue;
             var isLiveMode = false;
 
@@ -79,7 +89,16 @@ namespace QuantConnect.Tests.Common.Data.Market
         [Test]
         public void QuoteBarReader_CanParseQuoteBar_Successfully()
         {
-            var config = new SubscriptionDataConfig(typeof(TradeBar), Symbols.SPY, Resolution.Second, TimeZones.NewYork, TimeZones.NewYork, false, false, false);
+            var config = new SubscriptionDataConfig(
+                typeof(TradeBar),
+                Symbols.SPY,
+                Resolution.Second,
+                TimeZones.NewYork,
+                TimeZones.NewYork,
+                false,
+                false,
+                false
+            );
             // Neither a quote or a trade
             var line = "14340000,11090,11090,11089,11090,100,11090,11088,11088,11090,10000";
             var date = DateTime.MaxValue;
@@ -104,7 +123,16 @@ namespace QuantConnect.Tests.Common.Data.Market
         [Test]
         public void QuoteBar_CanParseEquity_Successfully()
         {
-            var config = new SubscriptionDataConfig(typeof(QuoteBar), Symbols.SPY, Resolution.Second, TimeZones.NewYork, TimeZones.NewYork, false, false, false);
+            var config = new SubscriptionDataConfig(
+                typeof(QuoteBar),
+                Symbols.SPY,
+                Resolution.Second,
+                TimeZones.NewYork,
+                TimeZones.NewYork,
+                false,
+                false,
+                false
+            );
 
             var line = "14340000,10000,20000,30000,40000,0,50000,60000,70000,80000,1";
 
@@ -126,7 +154,16 @@ namespace QuantConnect.Tests.Common.Data.Market
         [Test]
         public void QuoteBar_CanParseForex_Successfully()
         {
-            var config = new SubscriptionDataConfig(typeof(QuoteBar), Symbols.EURUSD, Resolution.Second, TimeZones.NewYork, TimeZones.NewYork, false, false, false);
+            var config = new SubscriptionDataConfig(
+                typeof(QuoteBar),
+                Symbols.EURUSD,
+                Resolution.Second,
+                TimeZones.NewYork,
+                TimeZones.NewYork,
+                false,
+                false,
+                false
+            );
 
             var line = "14340000,1,2,3,4,0,5,6,7,8,1";
 
@@ -148,7 +185,16 @@ namespace QuantConnect.Tests.Common.Data.Market
         [Test]
         public void QuoteBar_CanParseCfd_Successfully()
         {
-            var config = new SubscriptionDataConfig(typeof(QuoteBar), Symbols.DE10YBEUR, Resolution.Second, TimeZones.NewYork, TimeZones.NewYork, false, false, false);
+            var config = new SubscriptionDataConfig(
+                typeof(QuoteBar),
+                Symbols.DE10YBEUR,
+                Resolution.Second,
+                TimeZones.NewYork,
+                TimeZones.NewYork,
+                false,
+                false,
+                false
+            );
 
             var line = "14340000,1,2,3,4,0,5,6,7,8,1";
 
@@ -170,7 +216,16 @@ namespace QuantConnect.Tests.Common.Data.Market
         [Test]
         public void QuoteBar_CanParseOption_Successfully()
         {
-            var config = new SubscriptionDataConfig(typeof(QuoteBar), Symbols.SPY_C_192_Feb19_2016, Resolution.Second, TimeZones.NewYork, TimeZones.NewYork, false, false, false);
+            var config = new SubscriptionDataConfig(
+                typeof(QuoteBar),
+                Symbols.SPY_C_192_Feb19_2016,
+                Resolution.Second,
+                TimeZones.NewYork,
+                TimeZones.NewYork,
+                false,
+                false,
+                false
+            );
 
             var line = "14340000,10000,20000,30000,40000,0,50000,60000,70000,80000,1";
 
@@ -192,7 +247,16 @@ namespace QuantConnect.Tests.Common.Data.Market
         [Test]
         public void QuoteBar_CanParseFuture_Successfully()
         {
-            var config = new SubscriptionDataConfig(typeof(QuoteBar), Symbols.Fut_SPY_Feb19_2016, Resolution.Second, TimeZones.NewYork, TimeZones.NewYork, false, false, false);
+            var config = new SubscriptionDataConfig(
+                typeof(QuoteBar),
+                Symbols.Fut_SPY_Feb19_2016,
+                Resolution.Second,
+                TimeZones.NewYork,
+                TimeZones.NewYork,
+                false,
+                false,
+                false
+            );
 
             var line = "14340000,1,2,3,4,0,5,6,7,8,1";
 
@@ -222,7 +286,8 @@ namespace QuantConnect.Tests.Common.Data.Market
                 OptionStyle.American,
                 OptionRight.Put,
                 4200m,
-                SecurityIdentifier.DefaultDate);
+                SecurityIdentifier.DefaultDate
+            );
 
             var config = new SubscriptionDataConfig(
                 typeof(QuoteBar),
@@ -236,13 +301,18 @@ namespace QuantConnect.Tests.Common.Data.Market
                 false,
                 TickType.Quote,
                 true,
-                DataNormalizationMode.Raw);
+                DataNormalizationMode.Raw
+            );
 
             var quoteLine = "40560000,10000,15000,10000,15000,90,10000,15000,10000,15000,100";
-            using var stream = new StreamReader(new MemoryStream(Encoding.UTF8.GetBytes(quoteLine)));
+            using var stream = new StreamReader(
+                new MemoryStream(Encoding.UTF8.GetBytes(quoteLine))
+            );
 
-            var quoteBarFromLine = (QuoteBar)factory.Reader(config, quoteLine, new DateTime(2020, 9, 22), false);
-            var quoteBarFromStream = (QuoteBar)factory.Reader(config, stream, new DateTime(2020, 9, 22), false);
+            var quoteBarFromLine = (QuoteBar)
+                factory.Reader(config, quoteLine, new DateTime(2020, 9, 22), false);
+            var quoteBarFromStream = (QuoteBar)
+                factory.Reader(config, stream, new DateTime(2020, 9, 22), false);
 
             Assert.AreEqual(new DateTime(2020, 9, 22, 11, 17, 0), quoteBarFromLine.EndTime);
             Assert.AreEqual(optionSymbol, quoteBarFromLine.Symbol);
@@ -275,14 +345,19 @@ namespace QuantConnect.Tests.Common.Data.Market
         public void QuoteBarParseDoesNotScaleOptionsWithNonEquityUnderlying()
         {
             var factory = new QuoteBar();
-            var underlying = Symbol.CreateFuture("ES", QuantConnect.Market.CME, new DateTime(2021, 3, 19));
+            var underlying = Symbol.CreateFuture(
+                "ES",
+                QuantConnect.Market.CME,
+                new DateTime(2021, 3, 19)
+            );
             var optionSymbol = Symbol.CreateOption(
                 underlying,
                 QuantConnect.Market.CME,
                 OptionStyle.American,
                 OptionRight.Put,
                 4200m,
-                SecurityIdentifier.DefaultDate);
+                SecurityIdentifier.DefaultDate
+            );
 
             var config = new SubscriptionDataConfig(
                 typeof(QuoteBar),
@@ -296,13 +371,18 @@ namespace QuantConnect.Tests.Common.Data.Market
                 false,
                 TickType.Quote,
                 true,
-                DataNormalizationMode.Raw);
+                DataNormalizationMode.Raw
+            );
 
             var quoteLine = "40560000,1.0,1.5,1.0,1.5,90.0,1.0,1.5,1.0,1.5,100.0";
-            using var stream = new StreamReader(new MemoryStream(Encoding.UTF8.GetBytes(quoteLine)));
+            using var stream = new StreamReader(
+                new MemoryStream(Encoding.UTF8.GetBytes(quoteLine))
+            );
 
-            var unscaledQuoteBarFromLine = (QuoteBar)factory.Reader(config, quoteLine, new DateTime(2020, 9, 22), false);
-            var unscaledQuoteBarFromStream = (QuoteBar)factory.Reader(config, stream, new DateTime(2020, 9, 22), false);
+            var unscaledQuoteBarFromLine = (QuoteBar)
+                factory.Reader(config, quoteLine, new DateTime(2020, 9, 22), false);
+            var unscaledQuoteBarFromStream = (QuoteBar)
+                factory.Reader(config, stream, new DateTime(2020, 9, 22), false);
 
             Assert.AreEqual(new DateTime(2020, 9, 22, 11, 17, 0), unscaledQuoteBarFromLine.EndTime);
             Assert.AreEqual(optionSymbol, unscaledQuoteBarFromLine.Symbol);
@@ -317,7 +397,10 @@ namespace QuantConnect.Tests.Common.Data.Market
             Assert.AreEqual(1.5m, unscaledQuoteBarFromLine.Ask.Close);
             Assert.AreEqual(100m, unscaledQuoteBarFromLine.LastAskSize);
 
-            Assert.AreEqual(new DateTime(2020, 9, 22, 11, 17, 0), unscaledQuoteBarFromStream.EndTime);
+            Assert.AreEqual(
+                new DateTime(2020, 9, 22, 11, 17, 0),
+                unscaledQuoteBarFromStream.EndTime
+            );
             Assert.AreEqual(optionSymbol, unscaledQuoteBarFromStream.Symbol);
             Assert.AreEqual(1m, unscaledQuoteBarFromStream.Bid.Open);
             Assert.AreEqual(1.5m, unscaledQuoteBarFromStream.Bid.High);

@@ -16,27 +16,25 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-
 using Moq;
 using NUnit.Framework;
-
 using QuantConnect.Brokerages;
+using QuantConnect.Data;
 using QuantConnect.Data.Market;
 using QuantConnect.Orders;
 using QuantConnect.Securities;
-using QuantConnect.Data;
-using QuantConnect.Securities.Option;
-using QuantConnect.Securities.Forex;
-using QuantConnect.Tests.Engine.DataFeeds;
 using QuantConnect.Securities.Cfd;
+using QuantConnect.Securities.Forex;
+using QuantConnect.Securities.Option;
+using QuantConnect.Tests.Engine.DataFeeds;
 
 namespace QuantConnect.Tests.Common.Brokerages
 {
-
     [TestFixture, Parallelizable(ParallelScope.All)]
     public class InteractiveBrokersBrokerageModelTests
     {
-        private readonly InteractiveBrokersBrokerageModel _interactiveBrokersBrokerageModel = new InteractiveBrokersBrokerageModel();
+        private readonly InteractiveBrokersBrokerageModel _interactiveBrokersBrokerageModel =
+            new InteractiveBrokersBrokerageModel();
 
         [TestCaseSource(nameof(GetUnsupportedOptions))]
         public void CannotSubmitOrder_IndexOptionExercise(Security security)
@@ -44,7 +42,11 @@ namespace QuantConnect.Tests.Common.Brokerages
             var order = new Mock<OptionExerciseOrder>();
             order.Setup(x => x.Type).Returns(OrderType.OptionExercise);
 
-            var canSubmit = _interactiveBrokersBrokerageModel.CanSubmitOrder(security, order.Object, out var message);
+            var canSubmit = _interactiveBrokersBrokerageModel.CanSubmitOrder(
+                security,
+                order.Object,
+                out var message
+            );
 
             Assert.IsFalse(canSubmit, message.Message);
             Assert.AreEqual(BrokerageMessageType.Warning, message.Type);
@@ -53,11 +55,19 @@ namespace QuantConnect.Tests.Common.Brokerages
         }
 
         [TestCaseSource(nameof(GetForexOrderTestCases))]
-        public void CanSubmitOrder_ForexWithinAllowableOrderSize(Forex security, decimal quantity, bool shouldSubmit)
+        public void CanSubmitOrder_ForexWithinAllowableOrderSize(
+            Forex security,
+            decimal quantity,
+            bool shouldSubmit
+        )
         {
             var order = new MarketOrder(security.Symbol, quantity, new DateTime(2023, 1, 20));
 
-            var canSubmit = _interactiveBrokersBrokerageModel.CanSubmitOrder(security, order, out var message);
+            var canSubmit = _interactiveBrokersBrokerageModel.CanSubmitOrder(
+                security,
+                order,
+                out var message
+            );
 
             Assert.AreEqual(shouldSubmit, canSubmit);
 
@@ -69,7 +79,10 @@ namespace QuantConnect.Tests.Common.Brokerages
             {
                 Assert.AreEqual(BrokerageMessageType.Warning, message.Type);
                 Assert.AreEqual("OrderSizeLimit", message.Code);
-                StringAssert.Contains("minimum and maximum limits for the allowable order size are", message.Message);
+                StringAssert.Contains(
+                    "minimum and maximum limits for the allowable order size are",
+                    message.Message
+                );
             }
         }
 
@@ -83,32 +96,43 @@ namespace QuantConnect.Tests.Common.Brokerages
             if (securityType == SecurityType.FutureOption)
             {
                 var underlyingFuture = Symbol.CreateFuture(
-                QuantConnect.Securities.Futures.Indices.SP500EMini,
-                Market.CME,
-                new DateTime(2021, 3, 19));
+                    QuantConnect.Securities.Futures.Indices.SP500EMini,
+                    Market.CME,
+                    new DateTime(2021, 3, 19)
+                );
 
-                var futureOption = Symbol.CreateOption(underlyingFuture,
+                var futureOption = Symbol.CreateOption(
+                    underlyingFuture,
                     Market.CME,
                     OptionStyle.American,
                     OptionRight.Call,
                     2550m,
-                    new DateTime(2021, 3, 19));
+                    new DateTime(2021, 3, 19)
+                );
 
                 security = new QuantConnect.Securities.FutureOption.FutureOption(
                     futureOption,
-                    MarketHoursDatabase.FromDataFolder().GetExchangeHours(Market.CME, futureOption, futureOption.SecurityType),
+                    MarketHoursDatabase
+                        .FromDataFolder()
+                        .GetExchangeHours(Market.CME, futureOption, futureOption.SecurityType),
                     new Cash("USD", 100000m, 1m),
                     new OptionSymbolProperties(string.Empty, "USD", 1m, 0.01m, 1m),
                     new CashBook(),
                     new RegisteredSecurityDataTypesProvider(),
                     new SecurityCache(),
-                    null);
+                    null
+                );
             }
 
             var order = new MarketOnCloseOrder(security.Symbol, 1, DateTime.UtcNow);
-            var result = _interactiveBrokersBrokerageModel.CanSubmitOrder(security, order, out var message);
+            var result = _interactiveBrokersBrokerageModel.CanSubmitOrder(
+                security,
+                order,
+                out var message
+            );
             Assert.IsFalse(result);
-            var expectedMessage = "InteractiveBrokers does not support Market-on-Close orders for other security types different than Future and Equity.";
+            var expectedMessage =
+                "InteractiveBrokers does not support Market-on-Close orders for other security types different than Future and Equity.";
             Assert.AreEqual(expectedMessage, message.Message);
         }
 
@@ -120,24 +144,37 @@ namespace QuantConnect.Tests.Common.Brokerages
             var security = algo.AddSecurity(securityType, ticker);
 
             var order = new MarketOnCloseOrder(security.Symbol, 1, DateTime.UtcNow);
-            var result = _interactiveBrokersBrokerageModel.CanSubmitOrder(security, order, out var message);
+            var result = _interactiveBrokersBrokerageModel.CanSubmitOrder(
+                security,
+                order,
+                out var message
+            );
             Assert.IsFalse(result);
-            var expectedMessage = "InteractiveBrokers does not support Market-on-Close orders for other security types different than Future and Equity.";
+            var expectedMessage =
+                "InteractiveBrokers does not support Market-on-Close orders for other security types different than Future and Equity.";
             Assert.AreEqual(expectedMessage, message.Message);
         }
 
         [TestCase("EURGBP", SecurityType.Forex)]
         [TestCase("DE10YBEUR", SecurityType.Cfd)]
         [TestCase("ES", SecurityType.Future)]
-        public void CannotSubmitMOOOrdersForForexCfdAndFutureOrders(string ticker, SecurityType securityType)
+        public void CannotSubmitMOOOrdersForForexCfdAndFutureOrders(
+            string ticker,
+            SecurityType securityType
+        )
         {
             var algo = new AlgorithmStub();
             var security = algo.AddSecurity(securityType, ticker);
 
             var order = new MarketOnOpenOrder(security.Symbol, 1, DateTime.UtcNow);
-            var result = _interactiveBrokersBrokerageModel.CanSubmitOrder(security, order, out var message);
+            var result = _interactiveBrokersBrokerageModel.CanSubmitOrder(
+                security,
+                order,
+                out var message
+            );
             Assert.IsFalse(result);
-            var expectedMessage = "InteractiveBrokers does not support Market-on-Open orders for other security types different than Option and Equity.";
+            var expectedMessage =
+                "InteractiveBrokers does not support Market-on-Open orders for other security types different than Option and Equity.";
             Assert.AreEqual(expectedMessage, message.Message);
         }
 
@@ -149,7 +186,11 @@ namespace QuantConnect.Tests.Common.Brokerages
             var security = algo.AddSecurity(securityType, ticker);
 
             var order = new MarketOnOpenOrder(security.Symbol, 1, DateTime.UtcNow);
-            var result = _interactiveBrokersBrokerageModel.CanSubmitOrder(security, order, out var message);
+            var result = _interactiveBrokersBrokerageModel.CanSubmitOrder(
+                security,
+                order,
+                out var message
+            );
             Assert.IsTrue(result);
         }
 
@@ -161,7 +202,11 @@ namespace QuantConnect.Tests.Common.Brokerages
             var security = algo.AddSecurity(securityType, ticker);
 
             var order = new MarketOnCloseOrder(security.Symbol, 1, DateTime.UtcNow);
-            var result = _interactiveBrokersBrokerageModel.CanSubmitOrder(security, order, out var message);
+            var result = _interactiveBrokersBrokerageModel.CanSubmitOrder(
+                security,
+                order,
+                out var message
+            );
             Assert.IsTrue(result);
         }
 
@@ -170,13 +215,15 @@ namespace QuantConnect.Tests.Common.Brokerages
         public void GetsCorrectLeverageForCfds(AccountType accounType, decimal expectedLeverage)
         {
             var brokerageModel = new InteractiveBrokersBrokerageModel(accounType);
-            var security = new Cfd(Symbols.DE10YBEUR,
+            var security = new Cfd(
+                Symbols.DE10YBEUR,
                 SecurityExchangeHours.AlwaysOpen(TimeZones.NewYork),
                 new Cash("USD", 0, 0),
                 SymbolProperties.GetDefault("USD"),
                 ErrorCurrencyConverter.Instance,
                 RegisteredSecurityDataTypesProvider.Null,
-                new SecurityCache());
+                new SecurityCache()
+            );
 
             Assert.AreEqual(expectedLeverage, brokerageModel.GetLeverage(security));
         }
@@ -184,16 +231,22 @@ namespace QuantConnect.Tests.Common.Brokerages
         [Test]
         public void CanSubmitCfdOrder()
         {
-            var security = new Cfd(Symbols.DE10YBEUR,
+            var security = new Cfd(
+                Symbols.DE10YBEUR,
                 SecurityExchangeHours.AlwaysOpen(TimeZones.NewYork),
                 new Cash("USD", 0, 0),
                 SymbolProperties.GetDefault("USD"),
                 ErrorCurrencyConverter.Instance,
                 RegisteredSecurityDataTypesProvider.Null,
-                new SecurityCache());
+                new SecurityCache()
+            );
             var order = new MarketOrder(security.Symbol, 1, new DateTime(2023, 1, 20));
 
-            var canSubmit = _interactiveBrokersBrokerageModel.CanSubmitOrder(security, order, out var message);
+            var canSubmit = _interactiveBrokersBrokerageModel.CanSubmitOrder(
+                security,
+                order,
+                out var message
+            );
 
             Assert.IsTrue(canSubmit);
         }
@@ -204,25 +257,45 @@ namespace QuantConnect.Tests.Common.Brokerages
             var spxSymbol = Symbol.Create("SPX", SecurityType.IndexOption, Market.USA);
             var spx = new Security(
                 SecurityExchangeHours.AlwaysOpen(TimeZones.Utc),
-                new SubscriptionDataConfig(typeof(TradeBar), spxSymbol, Resolution.Minute, TimeZones.Utc, TimeZones.Utc, false, true, false),
+                new SubscriptionDataConfig(
+                    typeof(TradeBar),
+                    spxSymbol,
+                    Resolution.Minute,
+                    TimeZones.Utc,
+                    TimeZones.Utc,
+                    false,
+                    true,
+                    false
+                ),
                 new Cash("USD", 1000, 1),
                 SymbolProperties.GetDefault(Currencies.USD),
                 ErrorCurrencyConverter.Instance,
                 RegisteredSecurityDataTypesProvider.Null,
-                new SecurityCache());
+                new SecurityCache()
+            );
 
             //Cash settled option
             var vixSymbol = Symbol.Create("VIX", SecurityType.Option, Market.USA);
             var vix = new Option(
                 SecurityExchangeHours.AlwaysOpen(TimeZones.Utc),
-                new SubscriptionDataConfig(typeof(TradeBar), vixSymbol, Resolution.Minute, TimeZones.Utc, TimeZones.Utc, false, true, false),
+                new SubscriptionDataConfig(
+                    typeof(TradeBar),
+                    vixSymbol,
+                    Resolution.Minute,
+                    TimeZones.Utc,
+                    TimeZones.Utc,
+                    false,
+                    true,
+                    false
+                ),
                 new Cash("USD", 1000, 1),
                 new OptionSymbolProperties(SymbolProperties.GetDefault(Currencies.USD)),
                 ErrorCurrencyConverter.Instance,
-                RegisteredSecurityDataTypesProvider.Null);
+                RegisteredSecurityDataTypesProvider.Null
+            );
             vix.ExerciseSettlement = SettlementType.Cash;
 
-            return new() {spx, vix};
+            return new() { spx, vix };
         }
 
         private static TestCaseData[] GetForexOrderTestCases()
@@ -253,66 +326,71 @@ namespace QuantConnect.Tests.Common.Brokerages
                 Tuple.Create("ZARUSD", 350000m, 100000000m),
                 Tuple.Create("INRUSD", 0m, 0m) // not in the limits dictionary, should always return false
             }
-            .Select(x =>
-            {
-                var currencyPair = x.Item1;
-                Forex.DecomposeCurrencyPair(currencyPair, out var baseCurrency, out var quoteCurrency);
-                var forexSymbol = Symbol.Create(currencyPair, SecurityType.Forex, Market.USA);
-                var forex = new Forex(
-                    forexSymbol,
-                    SecurityExchangeHours.AlwaysOpen(TimeZones.Utc),
-                    new Cash(quoteCurrency, 0, 0.7m),
-                    new Cash(baseCurrency, 0, 1),
-                    SymbolProperties.GetDefault(quoteCurrency),
-                    ErrorCurrencyConverter.Instance,
-                    RegisteredSecurityDataTypesProvider.Null,
-                    new ForexCache());
-
-                var min = x.Item2;
-                var max = x.Item3;
-
-                if (min != 0m || max != 0)
+                .Select(x =>
                 {
-                    if (min == 0m)
+                    var currencyPair = x.Item1;
+                    Forex.DecomposeCurrencyPair(
+                        currencyPair,
+                        out var baseCurrency,
+                        out var quoteCurrency
+                    );
+                    var forexSymbol = Symbol.Create(currencyPair, SecurityType.Forex, Market.USA);
+                    var forex = new Forex(
+                        forexSymbol,
+                        SecurityExchangeHours.AlwaysOpen(TimeZones.Utc),
+                        new Cash(quoteCurrency, 0, 0.7m),
+                        new Cash(baseCurrency, 0, 1),
+                        SymbolProperties.GetDefault(quoteCurrency),
+                        ErrorCurrencyConverter.Instance,
+                        RegisteredSecurityDataTypesProvider.Null,
+                        new ForexCache()
+                    );
+
+                    var min = x.Item2;
+                    var max = x.Item3;
+
+                    if (min != 0m || max != 0)
                     {
+                        if (min == 0m)
+                        {
+                            return new[]
+                            {
+                                // buy
+                                new TestCaseData(forex, min, false),
+                                new TestCaseData(forex, max * 1.001m, false),
+                                new TestCaseData(forex, 0.001m, true),
+                                new TestCaseData(forex, max, true),
+                                new TestCaseData(forex, max / 2, true),
+                                // sell
+                                new TestCaseData(forex, -max * 1.001m, false),
+                                new TestCaseData(forex, -0.001m, true),
+                                new TestCaseData(forex, -max, true),
+                                new TestCaseData(forex, -max / 2, true)
+                            };
+                        }
+
                         return new[]
                         {
                             // buy
-                            new TestCaseData(forex, min, false),
+                            new TestCaseData(forex, min * 0.999m, false),
                             new TestCaseData(forex, max * 1.001m, false),
-                            new TestCaseData(forex, 0.001m, true),
+                            new TestCaseData(forex, min, true),
                             new TestCaseData(forex, max, true),
-                            new TestCaseData(forex, max / 2, true),
+                            new TestCaseData(forex, (min + max) / 2, true),
                             // sell
+                            new TestCaseData(forex, -min * 0.999m, false),
                             new TestCaseData(forex, -max * 1.001m, false),
-                            new TestCaseData(forex, -0.001m, true),
+                            new TestCaseData(forex, -min, true),
                             new TestCaseData(forex, -max, true),
-                            new TestCaseData(forex, -max / 2, true)
+                            new TestCaseData(forex, -(min + max) / 2, true)
                         };
                     }
 
-                    return new[]
-                    {
-                        // buy
-                        new TestCaseData(forex, min * 0.999m, false),
-                        new TestCaseData(forex, max * 1.001m, false),
-                        new TestCaseData(forex, min, true),
-                        new TestCaseData(forex, max, true),
-                        new TestCaseData(forex, (min + max) / 2, true),
-                        // sell
-                        new TestCaseData(forex, -min * 0.999m, false),
-                        new TestCaseData(forex, -max * 1.001m, false),
-                        new TestCaseData(forex, -min, true),
-                        new TestCaseData(forex, -max, true),
-                        new TestCaseData(forex, -(min + max) / 2, true)
-                    };
-                }
-
-                // min and max are 0, need market price in USD or EUR, we don't support yet
-                return new[] { new TestCaseData(forex, 100000m, false) };
-            })
-            .SelectMany(x => x)
-            .ToArray();
+                    // min and max are 0, need market price in USD or EUR, we don't support yet
+                    return new[] { new TestCaseData(forex, 100000m, false) };
+                })
+                .SelectMany(x => x)
+                .ToArray();
         }
     }
 }

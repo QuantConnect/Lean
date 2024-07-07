@@ -14,13 +14,13 @@
 */
 
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using QuantConnect.Data;
-using QuantConnect.Logging;
-using QuantConnect.Interfaces;
-using System.Collections.Generic;
 using QuantConnect.Data.Fundamental;
 using QuantConnect.Data.UniverseSelection;
+using QuantConnect.Interfaces;
+using QuantConnect.Logging;
 
 namespace QuantConnect.Lean.Engine.DataFeeds
 {
@@ -37,7 +37,8 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         private bool _shouldCacheDataPoints;
 
         private static int CacheSize = 100;
-        private static volatile Dictionary<string, List<BaseData>> BaseDataSourceCache = new Dictionary<string, List<BaseData>>(100);
+        private static volatile Dictionary<string, List<BaseData>> BaseDataSourceCache =
+            new Dictionary<string, List<BaseData>>(100);
         private static Queue<string> CacheKeys = new Queue<string>(100);
 
         /// <summary>
@@ -58,14 +59,23 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         /// <param name="config">The subscription's configuration</param>
         /// <param name="date">The date this factory was produced to read data for</param>
         /// <param name="isLiveMode">True if we're in live mode, false for backtesting</param>
-        public TextSubscriptionDataSourceReader(IDataCacheProvider dataCacheProvider, SubscriptionDataConfig config, DateTime date, bool isLiveMode,
-            IObjectStore objectStore)
+        public TextSubscriptionDataSourceReader(
+            IDataCacheProvider dataCacheProvider,
+            SubscriptionDataConfig config,
+            DateTime date,
+            bool isLiveMode,
+            IObjectStore objectStore
+        )
             : base(dataCacheProvider, isLiveMode, objectStore)
         {
             _date = date;
             Config = config;
-            _shouldCacheDataPoints = !Config.IsCustomData && Config.Resolution >= Resolution.Hour
-                && Config.Type != typeof(FineFundamental) && Config.Type != typeof(CoarseFundamental) && Config.Type != typeof(Fundamental)
+            _shouldCacheDataPoints =
+                !Config.IsCustomData
+                && Config.Resolution >= Resolution.Hour
+                && Config.Type != typeof(FineFundamental)
+                && Config.Type != typeof(CoarseFundamental)
+                && Config.Type != typeof(Fundamental)
                 // don't cache universe data, doesn't make much sense and we don't want to change the symbol of the clone
                 && !Config.Type.IsAssignableTo(typeof(BaseDataCollection))
                 && !DataCacheProvider.IsDataEphemeral;
@@ -81,7 +91,9 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         public override IEnumerable<BaseData> Read(SubscriptionDataSource source)
         {
             List<BaseData> cache = null;
-            _shouldCacheDataPoints = _shouldCacheDataPoints &&
+            _shouldCacheDataPoints =
+                _shouldCacheDataPoints
+                &&
                 // only cache local files
                 source.TransportMedium == SubscriptionTransportMedium.LocalFile;
 
@@ -116,7 +128,12 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                         {
                             if (reader.StreamReader != null && _implementsStreamReader)
                             {
-                                instance = _factory.Reader(Config, reader.StreamReader, _date, IsLiveMode);
+                                instance = _factory.Reader(
+                                    Config,
+                                    reader.StreamReader,
+                                    _date,
+                                    IsLiveMode
+                                );
                             }
                             else
                             {
@@ -157,7 +174,10 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                 {
                     CacheKeys.Enqueue(cacheKey);
                     // we create a new dictionary, so we don't have to take locks when reading, and add our new item
-                    var newCache = new Dictionary<string, List<BaseData>>(BaseDataSourceCache) { [cacheKey] = cache };
+                    var newCache = new Dictionary<string, List<BaseData>>(BaseDataSourceCache)
+                    {
+                        [cacheKey] = cache
+                    };
 
                     if (BaseDataSourceCache.Count > CacheSize)
                     {
@@ -203,7 +223,8 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         private void OnReaderError(string line, Exception exception)
         {
             var handler = ReaderError;
-            if (handler != null) handler(this, new ReaderErrorEventArgs(line, exception));
+            if (handler != null)
+                handler(this, new ReaderErrorEventArgs(line, exception));
         }
 
         /// <summary>
@@ -216,7 +237,9 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             {
                 // we take worst case scenario, each entry is 12 MB
                 CacheSize = megaBytesToUse / 12;
-                Log.Trace($"TextSubscriptionDataSourceReader.SetCacheSize(): Setting cache size to {CacheSize} items");
+                Log.Trace(
+                    $"TextSubscriptionDataSourceReader.SetCacheSize(): Setting cache size to {CacheSize} items"
+                );
             }
         }
 

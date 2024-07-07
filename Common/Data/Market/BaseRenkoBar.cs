@@ -1,11 +1,11 @@
 /*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
- * 
- * Licensed under the Apache License, Version 2.0 (the "License"); 
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -35,7 +35,7 @@ namespace QuantConnect.Data.Market
         /// <summary>
         /// The preset size of the consolidated bar
         /// </summary>
-        public decimal BrickSize  { get; protected set; }
+        public decimal BrickSize { get; protected set; }
 
         /// <summary>
         /// Gets the end time of this renko bar or the most recent update time if it <see cref="IsClosed"/>
@@ -66,9 +66,16 @@ namespace QuantConnect.Data.Market
         /// <param name="line">Line.</param>
         /// <param name="date">Date.</param>
         /// <param name="isLiveMode">true if we're in live mode, false for backtesting mode</param>
-        public override BaseData Reader(SubscriptionDataConfig config, string line, DateTime date, bool isLiveMode)
+        public override BaseData Reader(
+            SubscriptionDataConfig config,
+            string line,
+            DateTime date,
+            bool isLiveMode
+        )
         {
-            throw new NotSupportedException("RenkoBar does not support the Reader function. This function should never be called on this type.");
+            throw new NotSupportedException(
+                "RenkoBar does not support the Reader function. This function should never be called on this type."
+            );
         }
 
         /// <summary>
@@ -78,9 +85,15 @@ namespace QuantConnect.Data.Market
         /// <param name="date">Date of this source file</param>
         /// <param name="isLiveMode">true if we're in live mode, false for backtesting mode</param>
         /// <returns>String URL of source file.</returns>
-        public override SubscriptionDataSource GetSource(SubscriptionDataConfig config, DateTime date, bool isLiveMode)
+        public override SubscriptionDataSource GetSource(
+            SubscriptionDataConfig config,
+            DateTime date,
+            bool isLiveMode
+        )
         {
-            throw new NotSupportedException("RenkoBar does not support the GetSource function. This function should never be called on this type.");
+            throw new NotSupportedException(
+                "RenkoBar does not support the GetSource function. This function should never be called on this type."
+            );
         }
     }
 }

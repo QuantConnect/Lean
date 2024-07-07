@@ -15,22 +15,22 @@
 */
 
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using Newtonsoft.Json;
+using QuantConnect.AlgorithmFactory;
+using QuantConnect.Brokerages;
+using QuantConnect.Configuration;
 using QuantConnect.Data;
-using QuantConnect.Util;
+using QuantConnect.Data.UniverseSelection;
+using QuantConnect.Interfaces;
+using QuantConnect.Lean.Engine.DataFeeds;
+using QuantConnect.Lean.Engine.DataFeeds.WorkScheduling;
 using QuantConnect.Logging;
 using QuantConnect.Packets;
-using QuantConnect.Interfaces;
-using QuantConnect.Brokerages;
-using System.Collections.Generic;
-using QuantConnect.Configuration;
-using QuantConnect.AlgorithmFactory;
-using QuantConnect.Lean.Engine.DataFeeds;
-using QuantConnect.Data.UniverseSelection;
-using QuantConnect.Lean.Engine.DataFeeds.WorkScheduling;
-using HistoryRequest = QuantConnect.Data.HistoryRequest;
 using QuantConnect.Securities;
+using QuantConnect.Util;
+using HistoryRequest = QuantConnect.Data.HistoryRequest;
 
 namespace QuantConnect.Lean.Engine.Setup
 {
@@ -43,7 +43,8 @@ namespace QuantConnect.Lean.Engine.Setup
         /// <summary>
         /// Get the maximum time that the creation of an algorithm can take
         /// </summary>
-        public static TimeSpan AlgorithmCreationTimeout { get; } = TimeSpan.FromSeconds(Config.GetDouble("algorithm-creation-timeout", 90));
+        public static TimeSpan AlgorithmCreationTimeout { get; } =
+            TimeSpan.FromSeconds(Config.GetDouble("algorithm-creation-timeout", 90));
 
         /// <summary>
         /// Will first check and add all the required conversion rate securities
@@ -59,17 +60,21 @@ namespace QuantConnect.Lean.Engine.Setup
         public static void SetupCurrencyConversions(
             IAlgorithm algorithm,
             UniverseSelection universeSelection,
-            IReadOnlyCollection<string> currenciesToUpdateWhiteList = null)
+            IReadOnlyCollection<string> currenciesToUpdateWhiteList = null
+        )
         {
             // this is needed to have non-zero currency conversion rates during warmup
             // will also set the Cash.ConversionRateSecurity
             universeSelection.EnsureCurrencyDataFeeds(SecurityChanges.None);
 
             // now set conversion rates
-            Func<Cash, bool> cashToUpdateFilter = currenciesToUpdateWhiteList == null
-                ? (x) => x.CurrencyConversion != null && x.ConversionRate == 0
-                : (x) => currenciesToUpdateWhiteList.Contains(x.Symbol);
-            var cashToUpdate = algorithm.Portfolio.CashBook.Values.Where(cashToUpdateFilter).ToList();
+            Func<Cash, bool> cashToUpdateFilter =
+                currenciesToUpdateWhiteList == null
+                    ? (x) => x.CurrencyConversion != null && x.ConversionRate == 0
+                    : (x) => currenciesToUpdateWhiteList.Contains(x.Symbol);
+            var cashToUpdate = algorithm
+                .Portfolio.CashBook.Values.Where(cashToUpdateFilter)
+                .ToList();
 
             var securitiesToUpdate = cashToUpdate
                 .SelectMany(x => x.CurrencyConversion.ConversionRateSecurities)
@@ -80,11 +85,11 @@ namespace QuantConnect.Lean.Engine.Setup
             var historyRequests = new List<HistoryRequest>();
             foreach (var security in securitiesToUpdate)
             {
-                var configs = algorithm
-                    .SubscriptionManager
-                    .SubscriptionDataConfigService
-                    .GetSubscriptionDataConfigs(security.Symbol,
-                        includeInternalConfigs: true);
+                var configs =
+                    algorithm.SubscriptionManager.SubscriptionDataConfigService.GetSubscriptionDataConfigs(
+                        security.Symbol,
+                        includeInternalConfigs: true
+                    );
 
                 // we need to order and select a specific configuration type
                 // so the conversion rate is deterministic
@@ -97,15 +102,19 @@ namespace QuantConnect.Lean.Engine.Setup
                     60,
                     resolution,
                     hours,
-                    configToUse.DataTimeZone);
+                    configToUse.DataTimeZone
+                );
                 var endTime = algorithm.Time;
 
-                historyRequests.Add(historyRequestFactory.CreateHistoryRequest(
-                    configToUse,
-                    startTime,
-                    endTime,
-                    security.Exchange.Hours,
-                    resolution));
+                historyRequests.Add(
+                    historyRequestFactory.CreateHistoryRequest(
+                        configToUse,
+                        startTime,
+                        endTime,
+                        security.Exchange.Hours,
+                        resolution
+                    )
+                );
             }
 
             // Attempt to get history for these requests and update cash
@@ -128,28 +137,43 @@ namespace QuantConnect.Lean.Engine.Setup
             if (unassignedCash.Any())
             {
                 Log.Trace(
-                    $"Failed to assign conversion rates for the following cash: {string.Join(",", unassignedCash.Select(x => x.Symbol))}." +
-                    $" Attempting to request daily resolution history to resolve conversion rate");
+                    $"Failed to assign conversion rates for the following cash: {string.Join(",", unassignedCash.Select(x => x.Symbol))}."
+                        + $" Attempting to request daily resolution history to resolve conversion rate"
+                );
 
                 var unassignedCashSymbols = unassignedCash
                     .SelectMany(x => x.SecuritySymbols)
                     .ToHashSet();
 
                 var replacementHistoryRequests = new List<HistoryRequest>();
-                foreach (var request in historyRequests.Where(x =>
-                    unassignedCashSymbols.Contains(x.Symbol) && x.Resolution < Resolution.Daily))
+                foreach (
+                    var request in historyRequests.Where(x =>
+                        unassignedCashSymbols.Contains(x.Symbol) && x.Resolution < Resolution.Daily
+                    )
+                )
                 {
-                    var newRequest = new HistoryRequest(request.EndTimeUtc.AddDays(-10), request.EndTimeUtc,
+                    var newRequest = new HistoryRequest(
+                        request.EndTimeUtc.AddDays(-10),
+                        request.EndTimeUtc,
                         request.DataType,
-                        request.Symbol, Resolution.Daily, request.ExchangeHours, request.DataTimeZone,
+                        request.Symbol,
+                        Resolution.Daily,
+                        request.ExchangeHours,
+                        request.DataTimeZone,
                         request.FillForwardResolution,
-                        request.IncludeExtendedMarketHours, request.IsCustomData, request.DataNormalizationMode,
-                        request.TickType);
+                        request.IncludeExtendedMarketHours,
+                        request.IsCustomData,
+                        request.DataNormalizationMode,
+                        request.TickType
+                    );
 
                     replacementHistoryRequests.Add(newRequest);
                 }
 
-                slices = algorithm.HistoryProvider.GetHistory(replacementHistoryRequests, algorithm.TimeZone);
+                slices = algorithm.HistoryProvider.GetHistory(
+                    replacementHistoryRequests,
+                    algorithm.TimeZone
+                );
                 slices.PushThrough(data =>
                 {
                     foreach (var security in securitiesToUpdate.Where(x => x.Symbol == data.Symbol))
@@ -164,8 +188,10 @@ namespace QuantConnect.Lean.Engine.Setup
                 }
             }
 
-            Log.Trace($"BaseSetupHandler.SetupCurrencyConversions():{Environment.NewLine}" +
-                $"Account Type: {algorithm.BrokerageModel.AccountType}{Environment.NewLine}{Environment.NewLine}{algorithm.Portfolio.CashBook}");
+            Log.Trace(
+                $"BaseSetupHandler.SetupCurrencyConversions():{Environment.NewLine}"
+                    + $"Account Type: {algorithm.BrokerageModel.AccountType}{Environment.NewLine}{Environment.NewLine}{algorithm.Portfolio.CashBook}"
+            );
             // this is useful for debugging
             algorithm.Portfolio.LogMarginInformation();
         }
@@ -175,22 +201,33 @@ namespace QuantConnect.Lean.Engine.Setup
         /// </summary>
         /// <param name="algorithmNodePacket">The algorithm node packet</param>
         /// <param name="workerThread">The worker thread instance to use</param>
-        public static bool InitializeDebugging(AlgorithmNodePacket algorithmNodePacket, WorkerThread workerThread)
+        public static bool InitializeDebugging(
+            AlgorithmNodePacket algorithmNodePacket,
+            WorkerThread workerThread
+        )
         {
             var isolator = new Isolator();
-            return isolator.ExecuteWithTimeLimit(TimeSpan.FromMinutes(5),
-                () => {
-                    DebuggerHelper.Initialize(algorithmNodePacket.Language, out var workersInitializationCallback);
+            return isolator.ExecuteWithTimeLimit(
+                TimeSpan.FromMinutes(5),
+                () =>
+                {
+                    DebuggerHelper.Initialize(
+                        algorithmNodePacket.Language,
+                        out var workersInitializationCallback
+                    );
 
-                    if(workersInitializationCallback != null)
+                    if (workersInitializationCallback != null)
                     {
                         // initialize workers for debugging if required
-                        WeightedWorkScheduler.Instance.AddSingleCallForAll(workersInitializationCallback);
+                        WeightedWorkScheduler.Instance.AddSingleCallForAll(
+                            workersInitializationCallback
+                        );
                     }
                 },
                 algorithmNodePacket.RamAllocation,
                 sleepIntervalMillis: 100,
-                workerThread: workerThread);
+                workerThread: workerThread
+            );
         }
 
         /// <summary>
@@ -216,7 +253,10 @@ namespace QuantConnect.Lean.Engine.Setup
         /// Sets the account currency the algorithm should use if set in the job packet
         /// </summary>
         /// <remarks>Should be called before initialize <see cref="LoadBacktestJobCashAmount"/></remarks>
-        public static void LoadBacktestJobAccountCurrency(IAlgorithm algorithm, BacktestNodePacket job)
+        public static void LoadBacktestJobAccountCurrency(
+            IAlgorithm algorithm,
+            BacktestNodePacket job
+        )
         {
             // set account currency if present in the job
             if (job.CashAmount.HasValue)
@@ -234,7 +274,9 @@ namespace QuantConnect.Lean.Engine.Setup
 
             if (!dataFeedsConfigString.IsNullOrEmpty())
             {
-                var dataFeeds = JsonConvert.DeserializeObject<Dictionary<SecurityType, List<TickType>>>(dataFeedsConfigString);
+                var dataFeeds = JsonConvert.DeserializeObject<
+                    Dictionary<SecurityType, List<TickType>>
+                >(dataFeedsConfigString);
                 return dataFeeds;
             }
 
@@ -263,7 +305,8 @@ namespace QuantConnect.Lean.Engine.Setup
                 or BitfinexBrokerageModel
                 or BybitBrokerageModel
                 or FTXBrokerageModel
-                or KrakenBrokerageModel => 365,
+                or KrakenBrokerageModel
+                    => 365,
                 _ => 252
             };
         }

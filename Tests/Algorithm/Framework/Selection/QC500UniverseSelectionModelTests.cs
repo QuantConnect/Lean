@@ -13,6 +13,9 @@
  * limitations under the License.
 */
 
+using System;
+using System.Collections.Generic;
+using System.Linq;
 using NUnit.Framework;
 using Python.Runtime;
 using QuantConnect.Algorithm;
@@ -21,9 +24,6 @@ using QuantConnect.Data.Fundamental;
 using QuantConnect.Data.UniverseSelection;
 using QuantConnect.Interfaces;
 using QuantConnect.Tests.Common.Data.Fundamental;
-using System;
-using System.Collections.Generic;
-using System.Linq;
 using static QuantConnect.Data.UniverseSelection.CoarseFundamentalDataProvider;
 
 namespace QuantConnect.Tests.Algorithm.Framework.Selection
@@ -31,13 +31,21 @@ namespace QuantConnect.Tests.Algorithm.Framework.Selection
     [TestFixture]
     public class QC500UniverseSelectionModelTests
     {
-        private readonly Dictionary<char, string> _industryTemplateCodeDict =
-            new Dictionary<char, string>
-            {
-                {'0', "B"}, {'1', "I"}, {'2', "M"}, {'3', "N"}, {'4', "T"}, {'5', "U"}
-            };
+        private readonly Dictionary<char, string> _industryTemplateCodeDict = new Dictionary<
+            char,
+            string
+        >
+        {
+            { '0', "B" },
+            { '1', "I" },
+            { '2', "M" },
+            { '3', "N" },
+            { '4', "T" },
+            { '5', "U" }
+        };
 
-        private readonly List<Symbol> _symbols = Enumerable.Range(0, 6000)
+        private readonly List<Symbol> _symbols = Enumerable
+            .Range(0, 6000)
             .Select(x => Symbol.Create($"{x:0000}", SecurityType.Equity, Market.USA))
             .ToList();
 
@@ -49,24 +57,24 @@ namespace QuantConnect.Tests.Algorithm.Framework.Selection
             Dictionary<DateTime, int> coarseCountByDateTime;
             Dictionary<DateTime, int> fineCountByDateTime;
 
-            RunSimulation(language,
-                (symbol, time) => new CoarseFundamentalSource
-                {
-                    Symbol = symbol,
-                    EndTime = time,
-                    Value = 100,
-                    VolumeSetter = 1000,
-                    DollarVolumeSetter = 100000 * double.Parse(symbol.Value.Substring(3)),
-                    HasFundamentalDataSetter = true
-                },
-                (symbol, time) => new FineFundamental(time, symbol)
-                {
-                    Value = 100
-                },
+            RunSimulation(
+                language,
+                (symbol, time) =>
+                    new CoarseFundamentalSource
+                    {
+                        Symbol = symbol,
+                        EndTime = time,
+                        Value = 100,
+                        VolumeSetter = 1000,
+                        DollarVolumeSetter = 100000 * double.Parse(symbol.Value.Substring(3)),
+                        HasFundamentalDataSetter = true
+                    },
+                (symbol, time) => new FineFundamental(time, symbol) { Value = 100 },
                 new TestFundamentalDataProvider(_industryTemplateCodeDict),
                 out algorithm,
                 out coarseCountByDateTime,
-                out fineCountByDateTime);
+                out fineCountByDateTime
+            );
 
             var months = (algorithm.EndDate - algorithm.StartDate).Days / 30;
             // Universe Changed 4 times
@@ -85,17 +93,16 @@ namespace QuantConnect.Tests.Algorithm.Framework.Selection
             Dictionary<DateTime, int> coarseCountByDateTime;
             Dictionary<DateTime, int> fineCountByDateTime;
 
-            RunSimulation(language,
-                (symbol, time) => new CoarseFundamentalSource
-                {
-                    Symbol = symbol,
-                    EndTime = time,
-                },
+            RunSimulation(
+                language,
+                (symbol, time) => new CoarseFundamentalSource { Symbol = symbol, EndTime = time, },
                 (symbol, time) => new FineFundamental(time, symbol),
                 new TestFundamentalDataProvider(_industryTemplateCodeDict),
                 out algorithm,
                 out coarseCountByDateTime,
-                out fineCountByDateTime); ;
+                out fineCountByDateTime
+            );
+            ;
 
             // No Universe Changes
             Assert.AreEqual(0, coarseCountByDateTime.Count);
@@ -110,24 +117,24 @@ namespace QuantConnect.Tests.Algorithm.Framework.Selection
             Dictionary<DateTime, int> coarseCountByDateTime;
             Dictionary<DateTime, int> fineCountByDateTime;
 
-            RunSimulation(language,
-                (symbol, time) => new CoarseFundamentalSource
-                {
-                    Symbol = symbol,
-                    EndTime = time,
-                    Value = 100,
-                    VolumeSetter = 1000,
-                    DollarVolumeSetter = 100000 * double.Parse(symbol.Value.Substring(3)),
-                    HasFundamentalDataSetter = true
-                },
-                (symbol, time) => new FineFundamental(time, symbol)
-                {
-                    Value = 100
-                },
+            RunSimulation(
+                language,
+                (symbol, time) =>
+                    new CoarseFundamentalSource
+                    {
+                        Symbol = symbol,
+                        EndTime = time,
+                        Value = 100,
+                        VolumeSetter = 1000,
+                        DollarVolumeSetter = 100000 * double.Parse(symbol.Value.Substring(3)),
+                        HasFundamentalDataSetter = true
+                    },
+                (symbol, time) => new FineFundamental(time, symbol) { Value = 100 },
                 new NullFundamentalDataProvider(),
                 out algorithm,
                 out coarseCountByDateTime,
-                out fineCountByDateTime);
+                out fineCountByDateTime
+            );
 
             // Coarse Fundamental called every day.
             Assert.Greater(coarseCountByDateTime.Count, 4);
@@ -136,13 +143,15 @@ namespace QuantConnect.Tests.Algorithm.Framework.Selection
             Assert.AreEqual(0, fineCountByDateTime.Count);
         }
 
-        private void RunSimulation(Language language,
+        private void RunSimulation(
+            Language language,
             Func<Symbol, DateTime, CoarseFundamental> getCoarseFundamental,
             Func<Symbol, DateTime, FineFundamental> getFineFundamental,
             IFundamentalDataProvider fundamentalDataProvider,
             out QCAlgorithm algorithm,
             out Dictionary<DateTime, int> coarseCountByDateTime,
-            out Dictionary<DateTime, int> fineCountByDateTime)
+            out Dictionary<DateTime, int> fineCountByDateTime
+        )
         {
             algorithm = new QCAlgorithm();
             algorithm.SetStartDate(2019, 10, 1);
@@ -186,7 +195,8 @@ namespace QuantConnect.Tests.Algorithm.Framework.Selection
         private void GetUniverseSelectionModel(
             Language language,
             out Func<QCAlgorithm, IEnumerable<CoarseFundamental>, IEnumerable<Symbol>> SelectCoarse,
-            out Func<QCAlgorithm, IEnumerable<FineFundamental>, IEnumerable<Symbol>> SelectFine)
+            out Func<QCAlgorithm, IEnumerable<FineFundamental>, IEnumerable<Symbol>> SelectFine
+        )
         {
             if (language == Language.CSharp)
             {
@@ -200,12 +210,20 @@ namespace QuantConnect.Tests.Algorithm.Framework.Selection
             {
                 var name = "QC500UniverseSelectionModel";
                 dynamic model = Py.Import(name).GetAttr(name).Invoke();
-                SelectCoarse = ConvertToUniverseSelectionSymbolDelegate<IEnumerable<CoarseFundamental>>(model.select_coarse);
-                SelectFine = ConvertToUniverseSelectionSymbolDelegate<IEnumerable<FineFundamental>>(model.select_fine);
+                SelectCoarse = ConvertToUniverseSelectionSymbolDelegate<
+                    IEnumerable<CoarseFundamental>
+                >(model.select_coarse);
+                SelectFine = ConvertToUniverseSelectionSymbolDelegate<IEnumerable<FineFundamental>>(
+                    model.select_fine
+                );
             }
         }
 
-        public static Func<QCAlgorithm, T, IEnumerable<Symbol>> ConvertToUniverseSelectionSymbolDelegate<T>(PyObject pySelector)
+        public static Func<
+            QCAlgorithm,
+            T,
+            IEnumerable<Symbol>
+        > ConvertToUniverseSelectionSymbolDelegate<T>(PyObject pySelector)
         {
             Func<QCAlgorithm, T, object> selector;
             pySelector.TryConvertToDelegate(out selector);
@@ -227,7 +245,12 @@ namespace QuantConnect.Tests.Algorithm.Framework.Selection
             {
                 _industryTemplateCodeDict = industryTemplateCodeDict;
             }
-            public T Get<T>(DateTime time, SecurityIdentifier securityIdentifier, FundamentalProperty name)
+
+            public T Get<T>(
+                DateTime time,
+                SecurityIdentifier securityIdentifier,
+                FundamentalProperty name
+            )
             {
                 if (securityIdentifier == SecurityIdentifier.Empty)
                 {
@@ -236,7 +259,11 @@ namespace QuantConnect.Tests.Algorithm.Framework.Selection
                 return Get(time, securityIdentifier, name);
             }
 
-            private dynamic Get(DateTime time, SecurityIdentifier securityIdentifier, FundamentalProperty enumName)
+            private dynamic Get(
+                DateTime time,
+                SecurityIdentifier securityIdentifier,
+                FundamentalProperty enumName
+            )
             {
                 var name = Enum.GetName(enumName);
                 switch (name)
@@ -257,9 +284,7 @@ namespace QuantConnect.Tests.Algorithm.Framework.Selection
                 return null;
             }
 
-            public void Initialize(IDataProvider dataProvider, bool liveMode)
-            {
-            }
+            public void Initialize(IDataProvider dataProvider, bool liveMode) { }
         }
     }
 }

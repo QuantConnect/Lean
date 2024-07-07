@@ -94,7 +94,9 @@ namespace QuantConnect.Algorithm
             }
             else
             {
-                PortfolioConstruction = new PortfolioConstructionModelPythonWrapper(portfolioConstruction);
+                PortfolioConstruction = new PortfolioConstructionModelPythonWrapper(
+                    portfolioConstruction
+                );
             }
         }
 

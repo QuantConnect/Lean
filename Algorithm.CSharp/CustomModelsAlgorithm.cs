@@ -58,7 +58,8 @@ namespace QuantConnect.Algorithm.CSharp
         public override void OnData(Slice slice)
         {
             var openOrders = Transactions.GetOpenOrders(_spy);
-            if (openOrders.Count != 0) return;
+            if (openOrders.Count != 0)
+                return;
 
             if (Time.Day > 10 && _security.Holdings.Quantity <= 0)
             {
@@ -78,7 +79,8 @@ namespace QuantConnect.Algorithm.CSharp
         {
             private readonly QCAlgorithm _algorithm;
             private readonly Random _random = new Random(387510346); // seed it for reproducibility
-            private readonly Dictionary<long, decimal> _absoluteRemainingByOrderId = new Dictionary<long, decimal>();
+            private readonly Dictionary<long, decimal> _absoluteRemainingByOrderId =
+                new Dictionary<long, decimal>();
 
             public CustomFillModel(QCAlgorithm algorithm)
             {
@@ -97,7 +99,9 @@ namespace QuantConnect.Algorithm.CSharp
                 }
 
                 var fill = base.MarketFill(asset, order);
-                var absoluteFillQuantity = (int) (Math.Min(absoluteRemaining, _random.Next(0, 2*(int)order.AbsoluteQuantity)));
+                var absoluteFillQuantity = (int)(
+                    Math.Min(absoluteRemaining, _random.Next(0, 2 * (int)order.AbsoluteQuantity))
+                );
                 fill.FillQuantity = Math.Sign(order.Quantity) * absoluteFillQuantity;
 
                 if (absoluteRemaining == absoluteFillQuantity)
@@ -132,7 +136,8 @@ namespace QuantConnect.Algorithm.CSharp
                 // custom fee math
                 var fee = Math.Max(
                     1m,
-                    parameters.Security.Price*parameters.Order.AbsoluteQuantity*0.00001m);
+                    parameters.Security.Price * parameters.Order.AbsoluteQuantity * 0.00001m
+                );
 
                 _algorithm.Log($"CustomFeeModel: {fee}");
                 return new OrderFee(new CashAmount(fee, "USD"));
@@ -151,7 +156,8 @@ namespace QuantConnect.Algorithm.CSharp
             public decimal GetSlippageApproximation(Security asset, Order order)
             {
                 // custom slippage math
-                var slippage = asset.Price*0.0001m*(decimal) Math.Log10(2*(double) order.AbsoluteQuantity);
+                var slippage =
+                    asset.Price * 0.0001m * (decimal)Math.Log10(2 * (double)order.AbsoluteQuantity);
 
                 _algorithm.Log($"CustomSlippageModel: {slippage}");
                 return slippage;
@@ -168,18 +174,22 @@ namespace QuantConnect.Algorithm.CSharp
             }
 
             public override HasSufficientBuyingPowerForOrderResult HasSufficientBuyingPowerForOrder(
-                HasSufficientBuyingPowerForOrderParameters parameters)
+                HasSufficientBuyingPowerForOrderParameters parameters
+            )
             {
                 // custom behavior: this model will assume that there is always enough buying power
-                var hasSufficientBuyingPowerForOrderResult = new HasSufficientBuyingPowerForOrderResult(true);
-                _algorithm.Log($"CustomBuyingPowerModel: {hasSufficientBuyingPowerForOrderResult.IsSufficient}");
+                var hasSufficientBuyingPowerForOrderResult =
+                    new HasSufficientBuyingPowerForOrderResult(true);
+                _algorithm.Log(
+                    $"CustomBuyingPowerModel: {hasSufficientBuyingPowerForOrderResult.IsSufficient}"
+                );
 
                 return hasSufficientBuyingPowerForOrderResult;
             }
         }
 
         /// <summary>
-        /// The simple fill model shows how to implement a simpler version of 
+        /// The simple fill model shows how to implement a simpler version of
         /// the most popular order fills: Market, Stop Market and Limit
         /// </summary>
         public class SimpleCustomFillModel : FillModel
@@ -190,7 +200,11 @@ namespace QuantConnect.Algorithm.CSharp
                 return new OrderEvent(order, utcTime, OrderFee.Zero);
             }
 
-            private static OrderEvent SetOrderEventToFilled(OrderEvent fill, decimal fillPrice, decimal fillQuantity)
+            private static OrderEvent SetOrderEventToFilled(
+                OrderEvent fill,
+                decimal fillPrice,
+                decimal fillQuantity
+            )
             {
                 fill.Status = OrderStatus.Filled;
                 fill.FillQuantity = fillQuantity;
@@ -201,8 +215,9 @@ namespace QuantConnect.Algorithm.CSharp
             private static TradeBar GetTradeBar(Security asset, OrderDirection orderDirection)
             {
                 var tradeBar = asset.Cache.GetData<TradeBar>();
-                if (tradeBar != null) return tradeBar;
-                
+                if (tradeBar != null)
+                    return tradeBar;
+
                 // Tick-resolution data doesn't have TradeBar, use the asset price
                 var price = asset.Price;
                 return new TradeBar(asset.LocalTime, asset.Symbol, price, price, price, price, 0);
@@ -211,31 +226,37 @@ namespace QuantConnect.Algorithm.CSharp
             public override OrderEvent MarketFill(Security asset, MarketOrder order)
             {
                 var fill = CreateOrderEvent(asset, order);
-                if (order.Status == OrderStatus.Canceled) return fill;
+                if (order.Status == OrderStatus.Canceled)
+                    return fill;
 
-                return SetOrderEventToFilled(fill,
+                return SetOrderEventToFilled(
+                    fill,
                     order.Direction == OrderDirection.Buy
                         ? asset.Cache.AskPrice
                         : asset.Cache.BidPrice,
-                    order.Quantity);
+                    order.Quantity
+                );
             }
 
             public override OrderEvent StopMarketFill(Security asset, StopMarketOrder order)
             {
                 var fill = CreateOrderEvent(asset, order);
-                if (order.Status == OrderStatus.Canceled) return fill;
+                if (order.Status == OrderStatus.Canceled)
+                    return fill;
 
                 var stopPrice = order.StopPrice;
                 var tradeBar = GetTradeBar(asset, order.Direction);
-                
+
                 return order.Direction switch
                 {
-                    OrderDirection.Buy => tradeBar.Low < stopPrice
-                        ? SetOrderEventToFilled(fill, stopPrice, order.Quantity)
-                        : fill,
-                    OrderDirection.Sell => tradeBar.High > stopPrice
-                        ? SetOrderEventToFilled(fill, stopPrice, order.Quantity)
-                        : fill,
+                    OrderDirection.Buy
+                        => tradeBar.Low < stopPrice
+                            ? SetOrderEventToFilled(fill, stopPrice, order.Quantity)
+                            : fill,
+                    OrderDirection.Sell
+                        => tradeBar.High > stopPrice
+                            ? SetOrderEventToFilled(fill, stopPrice, order.Quantity)
+                            : fill,
                     _ => fill
                 };
             }
@@ -243,19 +264,22 @@ namespace QuantConnect.Algorithm.CSharp
             public override OrderEvent LimitFill(Security asset, LimitOrder order)
             {
                 var fill = CreateOrderEvent(asset, order);
-                if (order.Status == OrderStatus.Canceled) return fill;
+                if (order.Status == OrderStatus.Canceled)
+                    return fill;
 
                 var limitPrice = order.LimitPrice;
                 var tradeBar = GetTradeBar(asset, order.Direction);
 
                 return order.Direction switch
                 {
-                    OrderDirection.Buy => tradeBar.High > limitPrice
-                        ? SetOrderEventToFilled(fill, limitPrice, order.Quantity)
-                        : fill,
-                    OrderDirection.Sell => tradeBar.Low < limitPrice
-                        ? SetOrderEventToFilled(fill, limitPrice, order.Quantity)
-                        : fill,
+                    OrderDirection.Buy
+                        => tradeBar.High > limitPrice
+                            ? SetOrderEventToFilled(fill, limitPrice, order.Quantity)
+                            : fill,
+                    OrderDirection.Sell
+                        => tradeBar.Low < limitPrice
+                            ? SetOrderEventToFilled(fill, limitPrice, order.Quantity)
+                            : fill,
                     _ => fill
                 };
             }
@@ -289,35 +313,36 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// This is used by the regression test system to indicate what the expected statistics are from running the algorithm
         /// </summary>
-        public Dictionary<string, string> ExpectedStatistics => new Dictionary<string, string>
-        {
-            {"Total Orders", "63"},
-            {"Average Win", "0.11%"},
-            {"Average Loss", "-0.06%"},
-            {"Compounding Annual Return", "-7.236%"},
-            {"Drawdown", "2.400%"},
-            {"Expectancy", "-0.187"},
-            {"Start Equity", "100000"},
-            {"End Equity", "99370.95"},
-            {"Net Profit", "-0.629%"},
-            {"Sharpe Ratio", "-1.47"},
-            {"Sortino Ratio", "-2.086"},
-            {"Probabilistic Sharpe Ratio", "21.874%"},
-            {"Loss Rate", "70%"},
-            {"Win Rate", "30%"},
-            {"Profit-Loss Ratio", "1.73"},
-            {"Alpha", "-0.102"},
-            {"Beta", "0.122"},
-            {"Annual Standard Deviation", "0.04"},
-            {"Annual Variance", "0.002"},
-            {"Information Ratio", "-4.126"},
-            {"Tracking Error", "0.102"},
-            {"Treynor Ratio", "-0.479"},
-            {"Total Fees", "$62.25"},
-            {"Estimated Strategy Capacity", "$52000000.00"},
-            {"Lowest Capacity Asset", "SPY R735QTJ8XC9X"},
-            {"Portfolio Turnover", "197.95%"},
-            {"OrderListHash", "709bbf9af9ec6b43a10617dc192a6a5b"}
-        };
+        public Dictionary<string, string> ExpectedStatistics =>
+            new Dictionary<string, string>
+            {
+                { "Total Orders", "63" },
+                { "Average Win", "0.11%" },
+                { "Average Loss", "-0.06%" },
+                { "Compounding Annual Return", "-7.236%" },
+                { "Drawdown", "2.400%" },
+                { "Expectancy", "-0.187" },
+                { "Start Equity", "100000" },
+                { "End Equity", "99370.95" },
+                { "Net Profit", "-0.629%" },
+                { "Sharpe Ratio", "-1.47" },
+                { "Sortino Ratio", "-2.086" },
+                { "Probabilistic Sharpe Ratio", "21.874%" },
+                { "Loss Rate", "70%" },
+                { "Win Rate", "30%" },
+                { "Profit-Loss Ratio", "1.73" },
+                { "Alpha", "-0.102" },
+                { "Beta", "0.122" },
+                { "Annual Standard Deviation", "0.04" },
+                { "Annual Variance", "0.002" },
+                { "Information Ratio", "-4.126" },
+                { "Tracking Error", "0.102" },
+                { "Treynor Ratio", "-0.479" },
+                { "Total Fees", "$62.25" },
+                { "Estimated Strategy Capacity", "$52000000.00" },
+                { "Lowest Capacity Asset", "SPY R735QTJ8XC9X" },
+                { "Portfolio Turnover", "197.95%" },
+                { "OrderListHash", "709bbf9af9ec6b43a10617dc192a6a5b" }
+            };
     }
 }

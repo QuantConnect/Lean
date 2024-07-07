@@ -26,7 +26,8 @@ namespace QuantConnect.Algorithm.CSharp
     /// <summary>
     /// Regression algorithm of filtering with Put Spread option strategy and asserting it's being detected by Lean and works as expected
     /// </summary>
-    public class OptionStrategyFilteringUniversePutSpreadRegressionAlgorithm : OptionStrategyFilteringUniverseBaseAlgorithm
+    public class OptionStrategyFilteringUniversePutSpreadRegressionAlgorithm
+        : OptionStrategyFilteringUniverseBaseAlgorithm
     {
         public override void Initialize()
         {
@@ -41,7 +42,9 @@ namespace QuantConnect.Algorithm.CSharp
             var count = chain.Count();
             if (count != ExpectedCount)
             {
-                throw new RegressionTestException($"Number of contract returned does not match expectation, {count}, {ExpectedCount}");
+                throw new RegressionTestException(
+                    $"Number of contract returned does not match expectation, {count}, {ExpectedCount}"
+                );
             }
 
             var right = OptionRight.Put;
@@ -49,22 +52,23 @@ namespace QuantConnect.Algorithm.CSharp
             var lowerStrike = 737.50m;
             var expiry = new DateTime(2016, 1, 22);
 
-            var higherStrikeContract = chain.SingleOrDefault(x => 
-                x.Right == right &&
-                x.Strike == higherStrike &&
-                x.Expiry == expiry
+            var higherStrikeContract = chain.SingleOrDefault(x =>
+                x.Right == right && x.Strike == higherStrike && x.Expiry == expiry
             );
             var lowerStrikeContract = chain.SingleOrDefault(x =>
-                x.Right == right &&
-                x.Strike == lowerStrike &&
-                x.Expiry == expiry
+                x.Right == right && x.Strike == lowerStrike && x.Expiry == expiry
             );
             if (higherStrikeContract == null || lowerStrikeContract == null)
             {
                 throw new RegressionTestException($"No contract returned match condition");
             }
 
-            var strategy = OptionStrategies.BullPutSpread(OptionSymbol, higherStrike, lowerStrike, expiry);
+            var strategy = OptionStrategies.BullPutSpread(
+                OptionSymbol,
+                higherStrike,
+                lowerStrike,
+                expiry
+            );
             Buy(strategy, 1);
 
             /* we can obtain the same result from market orders
@@ -88,35 +92,36 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// This is used by the regression test system to indicate what the expected statistics are from running the algorithm
         /// </summary>
-        public override Dictionary<string, string> ExpectedStatistics => new Dictionary<string, string>
-        {
-            {"Total Orders", "2"},
-            {"Average Win", "0%"},
-            {"Average Loss", "0%"},
-            {"Compounding Annual Return", "0%"},
-            {"Drawdown", "0%"},
-            {"Expectancy", "0"},
-            {"Start Equity", "200000"},
-            {"End Equity", "199638"},
-            {"Net Profit", "0%"},
-            {"Sharpe Ratio", "0"},
-            {"Sortino Ratio", "0"},
-            {"Probabilistic Sharpe Ratio", "0%"},
-            {"Loss Rate", "0%"},
-            {"Win Rate", "0%"},
-            {"Profit-Loss Ratio", "0"},
-            {"Alpha", "0"},
-            {"Beta", "0"},
-            {"Annual Standard Deviation", "0"},
-            {"Annual Variance", "0"},
-            {"Information Ratio", "0"},
-            {"Tracking Error", "0"},
-            {"Treynor Ratio", "0"},
-            {"Total Fees", "$2.00"},
-            {"Estimated Strategy Capacity", "$2000000.00"},
-            {"Lowest Capacity Asset", "GOOCV 306JVPPH5QXMU|GOOCV VP83T1ZUHROL"},
-            {"Portfolio Turnover", "1.60%"},
-            {"OrderListHash", "7600923ed8d7dae66e7827fde5421cbe"}
-        };
+        public override Dictionary<string, string> ExpectedStatistics =>
+            new Dictionary<string, string>
+            {
+                { "Total Orders", "2" },
+                { "Average Win", "0%" },
+                { "Average Loss", "0%" },
+                { "Compounding Annual Return", "0%" },
+                { "Drawdown", "0%" },
+                { "Expectancy", "0" },
+                { "Start Equity", "200000" },
+                { "End Equity", "199638" },
+                { "Net Profit", "0%" },
+                { "Sharpe Ratio", "0" },
+                { "Sortino Ratio", "0" },
+                { "Probabilistic Sharpe Ratio", "0%" },
+                { "Loss Rate", "0%" },
+                { "Win Rate", "0%" },
+                { "Profit-Loss Ratio", "0" },
+                { "Alpha", "0" },
+                { "Beta", "0" },
+                { "Annual Standard Deviation", "0" },
+                { "Annual Variance", "0" },
+                { "Information Ratio", "0" },
+                { "Tracking Error", "0" },
+                { "Treynor Ratio", "0" },
+                { "Total Fees", "$2.00" },
+                { "Estimated Strategy Capacity", "$2000000.00" },
+                { "Lowest Capacity Asset", "GOOCV 306JVPPH5QXMU|GOOCV VP83T1ZUHROL" },
+                { "Portfolio Turnover", "1.60%" },
+                { "OrderListHash", "7600923ed8d7dae66e7827fde5421cbe" }
+            };
     }
 }

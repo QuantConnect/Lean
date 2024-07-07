@@ -13,12 +13,12 @@
  * limitations under the License.
 */
 
-using Newtonsoft.Json;
-using Newtonsoft.Json.Linq;
-using QuantConnect.Util;
 using System;
+using Newtonsoft.Json;
 using Newtonsoft.Json.Converters;
+using Newtonsoft.Json.Linq;
 using Newtonsoft.Json.Serialization;
+using QuantConnect.Util;
 
 namespace QuantConnect.Optimizer.Objectives
 {
@@ -34,21 +34,22 @@ namespace QuantConnect.Optimizer.Objectives
         [JsonConverter(typeof(StringEnumConverter))]
         public ComparisonOperatorTypes Operator { get; set; }
 
-        public Constraint()
-        {
-
-        }
+        public Constraint() { }
 
         /// <summary>
         /// Creates a new instance
         /// </summary>
-        public Constraint(string target, ComparisonOperatorTypes @operator, decimal? targetValue) : base(target, targetValue)
+        public Constraint(string target, ComparisonOperatorTypes @operator, decimal? targetValue)
+            : base(target, targetValue)
         {
             Operator = @operator;
 
             if (!TargetValue.HasValue)
             {
-                throw new ArgumentNullException(nameof(targetValue), Messages.Constraint.ConstraintTargetValueNotSpecified);
+                throw new ArgumentNullException(
+                    nameof(targetValue),
+                    Messages.Constraint.ConstraintTargetValueNotSpecified
+                );
             }
         }
 
@@ -59,7 +60,10 @@ namespace QuantConnect.Optimizer.Objectives
         {
             if (string.IsNullOrEmpty(jsonBacktestResult))
             {
-                throw new ArgumentNullException(nameof(jsonBacktestResult), $"Constraint.IsMet(): {Messages.OptimizerObjectivesCommon.NullOrEmptyBacktestResult}");
+                throw new ArgumentNullException(
+                    nameof(jsonBacktestResult),
+                    $"Constraint.IsMet(): {Messages.OptimizerObjectivesCommon.NullOrEmptyBacktestResult}"
+                );
             }
 
             var token = JObject.Parse(jsonBacktestResult).SelectToken(Target);
@@ -68,9 +72,7 @@ namespace QuantConnect.Optimizer.Objectives
                 return false;
             }
 
-            return Operator.Compare(
-                token.Value<string>().ToNormalizedDecimal(),
-                TargetValue.Value);
+            return Operator.Compare(token.Value<string>().ToNormalizedDecimal(), TargetValue.Value);
         }
 
         /// <summary>

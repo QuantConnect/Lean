@@ -36,13 +36,30 @@ namespace QuantConnect.Tests.Common
     [TestFixture, Parallelizable(ParallelScope.All)]
     public class ProtobufSerializationTests
     {
-        private static readonly Dictionary<Type, BaseData> _iconicInstances = new Dictionary<Type, BaseData>
+        private static readonly Dictionary<Type, BaseData> _iconicInstances = new Dictionary<
+            Type,
+            BaseData
+        >
         {
-            { typeof(IndexedLinkedData), new IndexedLinkedData { Count = 1024 } },
-            { typeof(IndexedLinkedData2), new IndexedLinkedData2 { Count = 2048 } },
-            { typeof(LinkedData), new LinkedData { Count = 4096 } },
-            { typeof(UnlinkedData), new UnlinkedData { Ticker = "ABCDEF" } },
-            { typeof(UnlinkedDataTradeBar), new UnlinkedDataTradeBar
+            {
+                typeof(IndexedLinkedData),
+                new IndexedLinkedData { Count = 1024 }
+            },
+            {
+                typeof(IndexedLinkedData2),
+                new IndexedLinkedData2 { Count = 2048 }
+            },
+            {
+                typeof(LinkedData),
+                new LinkedData { Count = 4096 }
+            },
+            {
+                typeof(UnlinkedData),
+                new UnlinkedData { Ticker = "ABCDEF" }
+            },
+            {
+                typeof(UnlinkedDataTradeBar),
+                new UnlinkedDataTradeBar
                 {
                     Open = 10m,
                     High = 11m,
@@ -52,7 +69,7 @@ namespace QuantConnect.Tests.Common
                 }
             }
         };
-        
+
         [TestCase(typeof(IndexedLinkedData), true)]
         [TestCase(typeof(IndexedLinkedData2), true)]
         [TestCase(typeof(LinkedData), true)]
@@ -62,14 +79,14 @@ namespace QuantConnect.Tests.Common
         {
             var item = CreateNewInstance(baseDataType, hasUnderlyingSymbol);
             var serialized = item.ProtobufSerialize(new Guid());
-            
+
             using (var stream = new MemoryStream(serialized))
             {
                 var deserialized = Serializer.Deserialize<IEnumerable<BaseData>>(stream).Single();
                 AssertAreEqual(item, deserialized);
             }
         }
-        
+
         [Test]
         public void SymbolRoundTrip()
         {
@@ -193,7 +210,7 @@ namespace QuantConnect.Tests.Common
             // verify its correct
             using (var stream = new MemoryStream(serializedTick))
             {
-                var result = (Tick) Serializer.Deserialize<IEnumerable<BaseData>>(stream).First();
+                var result = (Tick)Serializer.Deserialize<IEnumerable<BaseData>>(stream).First();
 
                 Assert.AreEqual(tick.AskPrice, result.AskPrice);
                 Assert.AreEqual(tick.AskSize, result.AskSize);
@@ -231,7 +248,8 @@ namespace QuantConnect.Tests.Common
             using (var stream = new MemoryStream(serializedTradeBar))
             {
                 // verify its correct
-                var result = (TradeBar) Serializer.Deserialize<IEnumerable<BaseData>>(stream).First();
+                var result = (TradeBar)
+                    Serializer.Deserialize<IEnumerable<BaseData>>(stream).First();
 
                 Assert.AreEqual(tradeBar.Time, result.Time);
                 Assert.AreEqual(tradeBar.DataType, result.DataType);
@@ -266,7 +284,8 @@ namespace QuantConnect.Tests.Common
             using (var stream = new MemoryStream(serializedQuoteBar))
             {
                 // verify its correct
-                var result = (QuoteBar)Serializer.Deserialize<IEnumerable<BaseData>>(stream).First();
+                var result = (QuoteBar)
+                    Serializer.Deserialize<IEnumerable<BaseData>>(stream).First();
 
                 Assert.AreEqual(quoteBar.Time, result.Time);
                 Assert.AreEqual(quoteBar.DataType, result.DataType);
@@ -307,7 +326,8 @@ namespace QuantConnect.Tests.Common
             var serializedDividend = dividend.ProtobufSerialize(new Guid());
             using (var stream = new MemoryStream(serializedDividend))
             {
-                var result = (Dividend)Serializer.Deserialize<IEnumerable<BaseData>>(stream).First();
+                var result = (Dividend)
+                    Serializer.Deserialize<IEnumerable<BaseData>>(stream).First();
 
                 Assert.AreEqual(dividend.DataType, result.DataType);
                 Assert.AreEqual(dividend.Distribution, result.Distribution);
@@ -321,7 +341,13 @@ namespace QuantConnect.Tests.Common
         [Test]
         public void SplitRoundTrip()
         {
-            var split = new Split(Symbols.AAPL, DateTime.UtcNow, decimal.MaxValue, decimal.MinValue, SplitType.SplitOccurred);
+            var split = new Split(
+                Symbols.AAPL,
+                DateTime.UtcNow,
+                decimal.MaxValue,
+                decimal.MinValue,
+                SplitType.SplitOccurred
+            );
 
             var serializedSplit = split.ProtobufSerialize(new Guid());
             using (var stream = new MemoryStream(serializedSplit))
@@ -349,7 +375,14 @@ namespace QuantConnect.Tests.Common
                 Symbol.Create("BTCUSD", SecurityType.Crypto, Market.Bitfinex),
                 Symbol.Create("EURUSD", SecurityType.Forex, Market.FXCM),
                 Symbol.Create("EURUSD", SecurityType.Forex, Market.Oanda),
-                Symbol.CreateOption("SPY", Market.USA, OptionStyle.American, OptionRight.Call, 1, DateTime.UtcNow),
+                Symbol.CreateOption(
+                    "SPY",
+                    Market.USA,
+                    OptionStyle.American,
+                    OptionRight.Call,
+                    1,
+                    DateTime.UtcNow
+                ),
                 Symbol.CreateFuture(Futures.Indices.SP500EMini, Market.CME, DateTime.UtcNow)
             };
 
@@ -359,22 +392,24 @@ namespace QuantConnect.Tests.Common
             {
                 foreach (var symbol in symbols)
                 {
-                    ticks.Add(new Tick
-                    {
-                        Symbol = symbol,
-                        AskPrice = i * 10,
-                        AskSize = i * 10,
-                        Time = now,
-                        Quantity = 10,
-                        DataType = MarketDataType.Tick,
-                        Exchange = "Pinocho",
-                        SaleCondition = "VerySold",
-                        TickType = TickType.Quote,
-                        EndTime = now,
-                        Value = i * 10,
-                        BidPrice = i * 100,
-                        BidSize = i * 100
-                    });
+                    ticks.Add(
+                        new Tick
+                        {
+                            Symbol = symbol,
+                            AskPrice = i * 10,
+                            AskSize = i * 10,
+                            Time = now,
+                            Quantity = 10,
+                            DataType = MarketDataType.Tick,
+                            Exchange = "Pinocho",
+                            SaleCondition = "VerySold",
+                            TickType = TickType.Quote,
+                            EndTime = now,
+                            Value = i * 10,
+                            BidPrice = i * 100,
+                            BidSize = i * 100
+                        }
+                    );
                 }
             }
 
@@ -415,13 +450,18 @@ namespace QuantConnect.Tests.Common
         private static BaseData CreateNewInstance(Type baseDataType, bool hasUnderlyingSymbol)
         {
             var instance = _iconicInstances[baseDataType];
-            
+
             instance.Symbol = hasUnderlyingSymbol
                 ? Symbol.CreateBase(baseDataType, Symbols.AAPL, QuantConnect.Market.USA)
-                : Symbol.Create("ABCDEF", SecurityType.Base, Market.USA, baseDataType: baseDataType);
-            
+                : Symbol.Create(
+                    "ABCDEF",
+                    SecurityType.Base,
+                    Market.USA,
+                    baseDataType: baseDataType
+                );
+
             instance.Time = new DateTime(2021, 6, 5);
-            
+
             return instance;
         }
 
@@ -429,14 +469,18 @@ namespace QuantConnect.Tests.Common
         {
             foreach (var propertyInfo in expected.GetType().GetProperties())
             {
-                if (propertyInfo.CustomAttributes.Any(data => data.AttributeType == typeof(ProtoMemberAttribute)))
+                if (
+                    propertyInfo.CustomAttributes.Any(data =>
+                        data.AttributeType == typeof(ProtoMemberAttribute)
+                    )
+                )
                 {
                     var expectedValue = propertyInfo.GetValue(expected);
                     var resultValue = propertyInfo.GetValue(result);
                     if (expectedValue is IList)
                     {
-                        var expectedValueList = (IList) expectedValue;
-                        var resultValueList = (IList) resultValue;
+                        var expectedValueList = (IList)expectedValue;
+                        var resultValueList = (IList)resultValue;
                         for (var i = 0; i < expectedValueList.Count; i++)
                         {
                             AssertAreEqual(expectedValueList[i], resultValueList[i]);
@@ -444,8 +488,8 @@ namespace QuantConnect.Tests.Common
                     }
                     else if (expectedValue is IDictionary)
                     {
-                        var expectedValueDictionary = (IDictionary) expectedValue;
-                        var resultValueDictionary = (IDictionary) resultValue;
+                        var expectedValueDictionary = (IDictionary)expectedValue;
+                        var resultValueDictionary = (IDictionary)resultValue;
                         foreach (dynamic kvp in expectedValueDictionary)
                         {
                             AssertAreEqual(kvp.Key, resultValueDictionary.Contains(kvp.Key));
@@ -467,7 +511,11 @@ namespace QuantConnect.Tests.Common
             }
             foreach (var fieldInfo in expected.GetType().GetFields())
             {
-                if (fieldInfo.CustomAttributes.Any(data => data.AttributeType == typeof(ProtoMemberAttribute)))
+                if (
+                    fieldInfo.CustomAttributes.Any(data =>
+                        data.AttributeType == typeof(ProtoMemberAttribute)
+                    )
+                )
                 {
                     Assert.AreEqual(fieldInfo.GetValue(expected), fieldInfo.GetValue(result));
                 }

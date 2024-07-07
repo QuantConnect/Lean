@@ -13,12 +13,12 @@
  * limitations under the License.
 */
 
-using NodaTime;
-using QuantConnect.Data;
 using System;
 using System.Collections.Generic;
 using System.IO;
+using NodaTime;
 using ProtoBuf;
+using QuantConnect.Data;
 using QuantConnect.Data.Market;
 
 namespace QuantConnect.Data.Custom.IconicTypes
@@ -51,7 +51,11 @@ namespace QuantConnect.Data.Custom.IconicTypes
         /// <param name="date">Date of this source request if source spread across multiple files</param>
         /// <param name="isLiveMode">true if we're in live mode, false for backtesting mode</param>
         /// <returns>String source location of the file</returns>
-        public override SubscriptionDataSource GetSource(SubscriptionDataConfig config, DateTime date, bool isLiveMode)
+        public override SubscriptionDataSource GetSource(
+            SubscriptionDataConfig config,
+            DateTime date,
+            bool isLiveMode
+        )
         {
             return new SubscriptionDataSource(
                 Path.Combine(
@@ -60,7 +64,8 @@ namespace QuantConnect.Data.Custom.IconicTypes
                     AnyTicker ? "data.csv" : $"{config.Symbol.Value.ToLowerInvariant()}.csv"
                 ),
                 SubscriptionTransportMedium.LocalFile,
-                FileFormat.Csv);
+                FileFormat.Csv
+            );
         }
 
         /// <summary>
@@ -71,7 +76,12 @@ namespace QuantConnect.Data.Custom.IconicTypes
         /// <param name="date">Date of this reader request</param>
         /// <param name="isLiveMode">true if we're in live mode, false for backtesting mode</param>
         /// <returns>Enumerable iterator for returning each line of the required data.</returns>
-        public override BaseData Reader(SubscriptionDataConfig config, string line, DateTime date, bool isLiveMode)
+        public override BaseData Reader(
+            SubscriptionDataConfig config,
+            string line,
+            DateTime date,
+            bool isLiveMode
+        )
         {
             return new UnlinkedDataTradeBar
             {
@@ -80,7 +90,7 @@ namespace QuantConnect.Data.Custom.IconicTypes
                 Low = 1m,
                 Close = 1.5m,
                 Volume = 0m,
-                
+
                 Symbol = config.Symbol,
                 EndTime = date
             };

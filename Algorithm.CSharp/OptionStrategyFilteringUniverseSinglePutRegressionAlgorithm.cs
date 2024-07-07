@@ -26,7 +26,8 @@ namespace QuantConnect.Algorithm.CSharp
     /// <summary>
     /// Regression algorithm of filtering with Naked Put option strategy and asserting it's being detected by Lean and works as expected
     /// </summary>
-    public class OptionStrategyFilteringUniverseSinglePutRegressionAlgorithm : OptionStrategyFilteringUniverseBaseAlgorithm
+    public class OptionStrategyFilteringUniverseSinglePutRegressionAlgorithm
+        : OptionStrategyFilteringUniverseBaseAlgorithm
     {
         public override void Initialize()
         {
@@ -41,17 +42,17 @@ namespace QuantConnect.Algorithm.CSharp
             var count = chain.Count();
             if (count != ExpectedCount)
             {
-                throw new RegressionTestException($"Number of contract returned does not match expectation, {count}, {ExpectedCount}");
+                throw new RegressionTestException(
+                    $"Number of contract returned does not match expectation, {count}, {ExpectedCount}"
+                );
             }
 
             var right = OptionRight.Put;
             var strike = 747.50m;
             var expiry = new DateTime(2016, 1, 22);
 
-            var contract = chain.SingleOrDefault(x => 
-                x.Right == right &&
-                x.Strike == strike &&
-                x.Expiry == expiry
+            var contract = chain.SingleOrDefault(x =>
+                x.Right == right && x.Strike == strike && x.Expiry == expiry
             );
             if (contract == null)
             {
@@ -81,35 +82,36 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// This is used by the regression test system to indicate what the expected statistics are from running the algorithm
         /// </summary>
-        public override Dictionary<string, string> ExpectedStatistics => new Dictionary<string, string>
-        {
-            {"Total Orders", "1"},
-            {"Average Win", "0%"},
-            {"Average Loss", "0%"},
-            {"Compounding Annual Return", "0%"},
-            {"Drawdown", "0%"},
-            {"Expectancy", "0"},
-            {"Start Equity", "200000"},
-            {"End Equity", "199809"},
-            {"Net Profit", "0%"},
-            {"Sharpe Ratio", "0"},
-            {"Sortino Ratio", "0"},
-            {"Probabilistic Sharpe Ratio", "0%"},
-            {"Loss Rate", "0%"},
-            {"Win Rate", "0%"},
-            {"Profit-Loss Ratio", "0"},
-            {"Alpha", "0"},
-            {"Beta", "0"},
-            {"Annual Standard Deviation", "0"},
-            {"Annual Variance", "0"},
-            {"Information Ratio", "0"},
-            {"Tracking Error", "0"},
-            {"Treynor Ratio", "0"},
-            {"Total Fees", "$1.00"},
-            {"Estimated Strategy Capacity", "$5300000.00"},
-            {"Lowest Capacity Asset", "GOOCV 306JVPPXP4EKM|GOOCV VP83T1ZUHROL"},
-            {"Portfolio Turnover", "0.77%"},
-            {"OrderListHash", "5ebd6e00d06329e3c7151407527e449f"}
-        };
+        public override Dictionary<string, string> ExpectedStatistics =>
+            new Dictionary<string, string>
+            {
+                { "Total Orders", "1" },
+                { "Average Win", "0%" },
+                { "Average Loss", "0%" },
+                { "Compounding Annual Return", "0%" },
+                { "Drawdown", "0%" },
+                { "Expectancy", "0" },
+                { "Start Equity", "200000" },
+                { "End Equity", "199809" },
+                { "Net Profit", "0%" },
+                { "Sharpe Ratio", "0" },
+                { "Sortino Ratio", "0" },
+                { "Probabilistic Sharpe Ratio", "0%" },
+                { "Loss Rate", "0%" },
+                { "Win Rate", "0%" },
+                { "Profit-Loss Ratio", "0" },
+                { "Alpha", "0" },
+                { "Beta", "0" },
+                { "Annual Standard Deviation", "0" },
+                { "Annual Variance", "0" },
+                { "Information Ratio", "0" },
+                { "Tracking Error", "0" },
+                { "Treynor Ratio", "0" },
+                { "Total Fees", "$1.00" },
+                { "Estimated Strategy Capacity", "$5300000.00" },
+                { "Lowest Capacity Asset", "GOOCV 306JVPPXP4EKM|GOOCV VP83T1ZUHROL" },
+                { "Portfolio Turnover", "0.77%" },
+                { "OrderListHash", "5ebd6e00d06329e3c7151407527e449f" }
+            };
     }
 }

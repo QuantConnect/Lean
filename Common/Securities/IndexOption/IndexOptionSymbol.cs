@@ -14,8 +14,8 @@
 */
 
 using System;
-using System.Linq;
 using System.Collections.Generic;
+using System.Linq;
 using QuantConnect.Securities.Future;
 
 namespace QuantConnect.Securities.IndexOption
@@ -25,32 +25,39 @@ namespace QuantConnect.Securities.IndexOption
     /// </summary>
     public static class IndexOptionSymbol
     {
-        private static readonly Dictionary<string, string> _nonStandardOptionToIndex = new()
-        {
-            { "SPXW", "SPX" },
-            { "VIXW", "VIX" },
-            { "NDXP", "NDX" },
-            { "NQX", "NDX" },
-        };
+        private static readonly Dictionary<string, string> _nonStandardOptionToIndex =
+            new()
+            {
+                { "SPXW", "SPX" },
+                { "VIXW", "VIX" },
+                { "NDXP", "NDX" },
+                { "NQX", "NDX" },
+            };
 
         /// <summary>
         /// These are known assets that are weeklies or end-of-month settled contracts.
         /// </summary>
-        private static readonly HashSet<string> _nonStandardIndexOptionTickers = new()
-        {
-            // Weeklies
-            "SPXW",
-            "VIXW",
-            // PM-Settled
-            "NDXP",
-            // reduced value index options, 20%
-            "NQX"
-        };
+        private static readonly HashSet<string> _nonStandardIndexOptionTickers =
+            new()
+            {
+                // Weeklies
+                "SPXW",
+                "VIXW",
+                // PM-Settled
+                "NDXP",
+                // reduced value index options, 20%
+                "NQX"
+            };
 
         /// <summary>
         /// Supported index option tickers
         /// </summary>
-        public static readonly HashSet<string> SupportedIndexOptionTickers = new string[] { "SPX", "NDX", "VIX" }
+        public static readonly HashSet<string> SupportedIndexOptionTickers = new string[]
+        {
+            "SPX",
+            "NDX",
+            "VIX"
+        }
             .Union(_nonStandardIndexOptionTickers)
             .ToHashSet();
 
@@ -73,7 +80,8 @@ namespace QuantConnect.Securities.IndexOption
                     // they have weeklies and monthly contracts
                     // NQX https://www.nasdaq.com/docs/NQXFactSheet.pdf
                     // SPXW https://www.cboe.com/tradable_products/sp_500/spx_weekly_options/specifications/
-                    return FuturesExpiryUtilityFunctions.ThirdFriday(symbol.ID.Date) == symbol.ID.Date;
+                    return FuturesExpiryUtilityFunctions.ThirdFriday(symbol.ID.Date)
+                        == symbol.ID.Date;
                 default:
                     // NDX/SPX/NQX/VIX/VIXW/NDXP are all normal contracts
                     return true;
@@ -103,7 +111,7 @@ namespace QuantConnect.Securities.IndexOption
         /// <returns>Index ticker</returns>
         public static string MapToUnderlying(string indexOption)
         {
-            if(_nonStandardOptionToIndex.TryGetValue(indexOption.LazyToUpper(), out var index))
+            if (_nonStandardOptionToIndex.TryGetValue(indexOption.LazyToUpper(), out var index))
             {
                 return index;
             }

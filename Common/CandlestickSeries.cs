@@ -13,10 +13,10 @@
  * limitations under the License.
 */
 
-using System.Collections.Generic;
 using System;
-using QuantConnect.Data.Market;
+using System.Collections.Generic;
 using Newtonsoft.Json;
+using QuantConnect.Data.Market;
 using QuantConnect.Util;
 
 namespace QuantConnect
@@ -30,7 +30,8 @@ namespace QuantConnect
         /// <summary>
         /// Default constructor for chart series
         /// </summary>
-        public CandlestickSeries() : base()
+        public CandlestickSeries()
+            : base()
         {
             SeriesType = SeriesType.Candle;
         }
@@ -40,9 +41,7 @@ namespace QuantConnect
         /// </summary>
         /// <param name="name">Name of the chart series</param>
         public CandlestickSeries(string name)
-            : base(name, SeriesType.Candle)
-        {
-        }
+            : base(name, SeriesType.Candle) { }
 
         /// <summary>
         /// Foundational constructor on the series class
@@ -50,9 +49,7 @@ namespace QuantConnect
         /// <param name="name">Name of the series</param>
         /// <param name="index">Index position on the chart of the series</param>
         public CandlestickSeries(string name, int index)
-            : this(name, index, "$")
-        {
-        }
+            : this(name, index, "$") { }
 
         /// <summary>
         /// Foundational constructor on the series class
@@ -106,7 +103,9 @@ namespace QuantConnect
         {
             if (point as Candlestick == null)
             {
-                throw new ArgumentException("CandlestickSeries.AddPoint requires a Candlestick object");
+                throw new ArgumentException(
+                    "CandlestickSeries.AddPoint requires a Candlestick object"
+                );
             }
 
             base.AddPoint(point);
@@ -121,7 +120,9 @@ namespace QuantConnect
         {
             if (values.Count != 4)
             {
-                throw new ArgumentException("CandlestickSeries.AddPoint requires 4 values (open, high, low, close)");
+                throw new ArgumentException(
+                    "CandlestickSeries.AddPoint requires 4 values (open, high, low, close)"
+                );
             }
 
             base.AddPoint(new Candlestick(time, values[0], values[1], values[2], values[3]));
@@ -133,7 +134,8 @@ namespace QuantConnect
         /// <returns>The new candlestick</returns>
         public override ISeriesPoint ConsolidateChartPoints()
         {
-            if (Values.Count <= 0) return null;
+            if (Values.Count <= 0)
+                return null;
 
             decimal? openSum = null;
             decimal? highSum = null;
@@ -173,7 +175,12 @@ namespace QuantConnect
         /// <returns></returns>
         public override BaseSeries Clone(bool empty = false)
         {
-            var series = new CandlestickSeries(Name, Index, Unit) { ZIndex = ZIndex, IndexName = IndexName, Tooltip = Tooltip };
+            var series = new CandlestickSeries(Name, Index, Unit)
+            {
+                ZIndex = ZIndex,
+                IndexName = IndexName,
+                Tooltip = Tooltip
+            };
 
             if (!empty)
             {

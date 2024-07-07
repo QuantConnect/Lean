@@ -68,7 +68,11 @@ namespace QuantConnect.Brokerages
         /// <summary>
         /// Gets a brokerage message handler
         /// </summary>
-        public virtual IBrokerageMessageHandler CreateBrokerageMessageHandler(IAlgorithm algorithm, AlgorithmNodePacket job, IApi api)
+        public virtual IBrokerageMessageHandler CreateBrokerageMessageHandler(
+            IAlgorithm algorithm,
+            AlgorithmNodePacket job,
+            IApi api
+        )
         {
             return new DefaultBrokerageMessageHandler(algorithm, job, api);
         }
@@ -85,7 +89,11 @@ namespace QuantConnect.Brokerages
         /// <summary>
         /// Reads a value from the brokerage data, adding an error if the key is not found
         /// </summary>
-        protected static T Read<T>(IReadOnlyDictionary<string, string> brokerageData, string key, ICollection<string> errors)
+        protected static T Read<T>(
+            IReadOnlyDictionary<string, string> brokerageData,
+            string key,
+            ICollection<string> errors
+        )
             where T : IConvertible
         {
             string value;
@@ -101,7 +109,9 @@ namespace QuantConnect.Brokerages
             }
             catch (Exception err)
             {
-                errors.Add($"BrokerageFactory.CreateBrokerage(): Error converting key '{key}' with value '{value}'. {err.Message}");
+                errors.Add(
+                    $"BrokerageFactory.CreateBrokerage(): Error converting key '{key}' with value '{value}'. {err.Message}"
+                );
                 return default(T);
             }
         }

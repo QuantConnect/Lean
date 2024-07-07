@@ -29,18 +29,14 @@ namespace QuantConnect.Data.Consolidators
         /// </summary>
         /// <param name="period">The minimum span of time before emitting a consolidated bar</param>
         public DynamicDataConsolidator(TimeSpan period)
-            : base(period)
-        {
-        }
+            : base(period) { }
 
         /// <summary>
         /// Creates a consolidator to produce a new 'TradeBar' representing the last count pieces of data.
         /// </summary>
         /// <param name="maxCount">The number of pieces to accept before emiting a consolidated bar</param>
         public DynamicDataConsolidator(int maxCount)
-            : base(maxCount)
-        {
-        }
+            : base(maxCount) { }
 
         /// <summary>
         /// Creates a consolidator to produce a new 'TradeBar' representing the last count pieces of data or the period, whichever comes first.
@@ -48,18 +44,14 @@ namespace QuantConnect.Data.Consolidators
         /// <param name="maxCount">The number of pieces to accept before emiting a consolidated bar</param>
         /// <param name="period">The minimum span of time before emitting a consolidated bar</param>
         public DynamicDataConsolidator(int maxCount, TimeSpan period)
-            : base(maxCount, period)
-        {
-        }
+            : base(maxCount, period) { }
 
         /// <summary>
         /// Creates a consolidator to produce a new 'TradeBar' representing the last count pieces of data or the period, whichever comes first.
         /// </summary>
         /// <param name="func">Func that defines the start time of a consolidated data</param>
         public DynamicDataConsolidator(Func<DateTime, CalendarInfo> func)
-            : base(func)
-        {
-        }
+            : base(func) { }
 
         /// <summary>
         /// Aggregates the new 'data' into the 'workingBar'. The 'workingBar' will be
@@ -98,12 +90,17 @@ namespace QuantConnect.Data.Consolidators
                 //Aggregate the working bar
                 workingBar.Close = close;
                 workingBar.Volume += volume;
-                if (low < workingBar.Low) workingBar.Low = low;
-                if (high > workingBar.High) workingBar.High = high;
+                if (low < workingBar.Low)
+                    workingBar.Low = low;
+                if (high > workingBar.High)
+                    workingBar.High = high;
             }
         }
 
-        private static decimal GetNamedPropertyOrValueProperty(DynamicData data, string propertyName)
+        private static decimal GetNamedPropertyOrValueProperty(
+            DynamicData data,
+            string propertyName
+        )
         {
             if (!data.HasProperty(propertyName))
             {

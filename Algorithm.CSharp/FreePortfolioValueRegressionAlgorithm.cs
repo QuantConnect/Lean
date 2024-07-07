@@ -19,8 +19,8 @@ using QuantConnect.Algorithm.Framework.Alphas;
 using QuantConnect.Algorithm.Framework.Execution;
 using QuantConnect.Algorithm.Framework.Portfolio;
 using QuantConnect.Algorithm.Framework.Selection;
-using QuantConnect.Orders;
 using QuantConnect.Interfaces;
+using QuantConnect.Orders;
 
 namespace QuantConnect.Algorithm.CSharp
 {
@@ -42,10 +42,18 @@ namespace QuantConnect.Algorithm.CSharp
 
             UniverseSettings.Leverage = 1;
             SetUniverseSelection(
-                new ManualUniverseSelectionModel(QuantConnect.Symbol.Create("SPY", SecurityType.Equity, Market.USA))
+                new ManualUniverseSelectionModel(
+                    QuantConnect.Symbol.Create("SPY", SecurityType.Equity, Market.USA)
+                )
             );
             SetAlpha(
-                new ConstantAlphaModel(InsightType.Price, InsightDirection.Up, QuantConnect.Time.OneDay, 0.025, null)
+                new ConstantAlphaModel(
+                    InsightType.Price,
+                    InsightDirection.Up,
+                    QuantConnect.Time.OneDay,
+                    0.025,
+                    null
+                )
             );
             SetPortfolioConstruction(new EqualWeightingPortfolioConstructionModel());
             SetExecution(new ImmediateExecutionModel());
@@ -53,16 +61,22 @@ namespace QuantConnect.Algorithm.CSharp
 
         public override void OnEndOfAlgorithm()
         {
-            var freePortfolioValue = Portfolio.TotalPortfolioValue - Portfolio.TotalPortfolioValueLessFreeBuffer;
-            if (freePortfolioValue != Portfolio.TotalPortfolioValue * Settings.FreePortfolioValuePercentage)
+            var freePortfolioValue =
+                Portfolio.TotalPortfolioValue - Portfolio.TotalPortfolioValueLessFreeBuffer;
+            if (
+                freePortfolioValue
+                != Portfolio.TotalPortfolioValue * Settings.FreePortfolioValuePercentage
+            )
             {
-                throw new RegressionTestException($"Unexpected FreePortfolioValue value: {freePortfolioValue}");
+                throw new RegressionTestException(
+                    $"Unexpected FreePortfolioValue value: {freePortfolioValue}"
+                );
             }
         }
 
         public override void OnOrderEvent(OrderEvent orderEvent)
         {
-             Debug($"OnOrderEvent: {orderEvent}");
+            Debug($"OnOrderEvent: {orderEvent}");
         }
 
         /// <summary>
@@ -93,35 +107,36 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// This is used by the regression test system to indicate what the expected statistics are from running the algorithm
         /// </summary>
-        public virtual Dictionary<string, string> ExpectedStatistics => new Dictionary<string, string>
-        {
-            {"Total Orders", "4"},
-            {"Average Win", "0.06%"},
-            {"Average Loss", "-0.01%"},
-            {"Compounding Annual Return", "8.173%"},
-            {"Drawdown", "55.100%"},
-            {"Expectancy", "2.639"},
-            {"Start Equity", "1000000"},
-            {"End Equity", "2254609.41"},
-            {"Net Profit", "125.461%"},
-            {"Sharpe Ratio", "0.36"},
-            {"Sortino Ratio", "0.365"},
-            {"Probabilistic Sharpe Ratio", "1.164%"},
-            {"Loss Rate", "50%"},
-            {"Win Rate", "50%"},
-            {"Profit-Loss Ratio", "6.28"},
-            {"Alpha", "-0"},
-            {"Beta", "0.998"},
-            {"Annual Standard Deviation", "0.164"},
-            {"Annual Variance", "0.027"},
-            {"Information Ratio", "-0.192"},
-            {"Tracking Error", "0.001"},
-            {"Treynor Ratio", "0.059"},
-            {"Total Fees", "$45.46"},
-            {"Estimated Strategy Capacity", "$190000000.00"},
-            {"Lowest Capacity Asset", "SPY R735QTJ8XC9X"},
-            {"Portfolio Turnover", "0.03%"},
-            {"OrderListHash", "97f4131cf8573eaabfab2de9e35c4101"}
-        };
+        public virtual Dictionary<string, string> ExpectedStatistics =>
+            new Dictionary<string, string>
+            {
+                { "Total Orders", "4" },
+                { "Average Win", "0.06%" },
+                { "Average Loss", "-0.01%" },
+                { "Compounding Annual Return", "8.173%" },
+                { "Drawdown", "55.100%" },
+                { "Expectancy", "2.639" },
+                { "Start Equity", "1000000" },
+                { "End Equity", "2254609.41" },
+                { "Net Profit", "125.461%" },
+                { "Sharpe Ratio", "0.36" },
+                { "Sortino Ratio", "0.365" },
+                { "Probabilistic Sharpe Ratio", "1.164%" },
+                { "Loss Rate", "50%" },
+                { "Win Rate", "50%" },
+                { "Profit-Loss Ratio", "6.28" },
+                { "Alpha", "-0" },
+                { "Beta", "0.998" },
+                { "Annual Standard Deviation", "0.164" },
+                { "Annual Variance", "0.027" },
+                { "Information Ratio", "-0.192" },
+                { "Tracking Error", "0.001" },
+                { "Treynor Ratio", "0.059" },
+                { "Total Fees", "$45.46" },
+                { "Estimated Strategy Capacity", "$190000000.00" },
+                { "Lowest Capacity Asset", "SPY R735QTJ8XC9X" },
+                { "Portfolio Turnover", "0.03%" },
+                { "OrderListHash", "97f4131cf8573eaabfab2de9e35c4101" }
+            };
     }
 }

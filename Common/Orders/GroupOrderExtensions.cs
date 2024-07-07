@@ -14,10 +14,10 @@
 */
 
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using QuantConnect.Logging;
 using QuantConnect.Securities;
-using System.Collections.Generic;
 
 namespace QuantConnect.Orders
 {
@@ -34,14 +34,22 @@ namespace QuantConnect.Orders
         /// <param name="orders">List of orders in the combo</param>
         /// <returns>False if any of the orders in the combo is not yet found in the order provider. True otherwise</returns>
         /// <remarks>If the target order is not a combo order, the resulting list will contain that single order alone</remarks>
-        public static bool TryGetGroupOrders(this Order order, Func<int, Order> orderProvider, out List<Order> orders)
+        public static bool TryGetGroupOrders(
+            this Order order,
+            Func<int, Order> orderProvider,
+            out List<Order> orders
+        )
         {
             orders = new List<Order> { order };
             if (order.GroupOrderManager != null)
             {
                 lock (order.GroupOrderManager.OrderIds)
                 {
-                    foreach (var otherOrdersId in order.GroupOrderManager.OrderIds.Where(id => id != order.Id))
+                    foreach (
+                        var otherOrdersId in order.GroupOrderManager.OrderIds.Where(id =>
+                            id != order.Id
+                        )
+                    )
                     {
                         var otherOrder = orderProvider(otherOrdersId);
                         if (otherOrder != null)
@@ -60,8 +68,10 @@ namespace QuantConnect.Orders
                 {
                     if (Log.DebuggingEnabled)
                     {
-                        Log.Debug($"GroupOrderExtensions.TryGetGroupOrders(): missing orders of group {order.GroupOrderManager.Id}." +
-                            $" We have {orders.Count}/{order.GroupOrderManager.Count} orders will skip");
+                        Log.Debug(
+                            $"GroupOrderExtensions.TryGetGroupOrders(): missing orders of group {order.GroupOrderManager.Id}."
+                                + $" We have {orders.Count}/{order.GroupOrderManager.Count} orders will skip"
+                        );
                     }
                     return false;
                 }
@@ -79,7 +89,11 @@ namespace QuantConnect.Orders
         /// <param name="securityProvider">The security provider to use</param>
         /// <param name="securities">The resulting map of order to security</param>
         /// <returns>True if the mapping is successful, false otherwise.</returns>
-        public static bool TryGetGroupOrdersSecurities(this List<Order> orders, ISecurityProvider securityProvider, out Dictionary<Order, Security> securities)
+        public static bool TryGetGroupOrdersSecurities(
+            this List<Order> orders,
+            ISecurityProvider securityProvider,
+            out Dictionary<Order, Security> securities
+        )
         {
             securities = new(orders.Count);
             for (var i = 0; i < orders.Count; i++)
@@ -87,7 +101,7 @@ namespace QuantConnect.Orders
                 var order = orders[i];
                 var security = securityProvider.GetSecurity(order.Symbol);
 
-                if(security == null)
+                if (security == null)
                 {
                     return false;
                 }
@@ -96,9 +110,15 @@ namespace QuantConnect.Orders
             return true;
         }
 
-        public static string GetErrorMessage(this Dictionary<Order, Security> securities, HasSufficientBuyingPowerForOrderResult hasSufficientBuyingPowerResult)
+        public static string GetErrorMessage(
+            this Dictionary<Order, Security> securities,
+            HasSufficientBuyingPowerForOrderResult hasSufficientBuyingPowerResult
+        )
         {
-            return Messages.GroupOrderExtensions.InsufficientBuyingPowerForOrders(securities, hasSufficientBuyingPowerResult);
+            return Messages.GroupOrderExtensions.InsufficientBuyingPowerForOrders(
+                securities,
+                hasSufficientBuyingPowerResult
+            );
         }
 
         /// <summary>
@@ -108,7 +128,10 @@ namespace QuantConnect.Orders
         /// <param name="legRatio">The leg ratio</param>
         /// <param name="groupOrderManager">The group order manager</param>
         /// <returns>The total number of shares to be bought/sold from this leg</returns>
-        public static decimal GetOrderLegGroupQuantity(this decimal legRatio, GroupOrderManager groupOrderManager)
+        public static decimal GetOrderLegGroupQuantity(
+            this decimal legRatio,
+            GroupOrderManager groupOrderManager
+        )
         {
             return groupOrderManager != null ? legRatio * groupOrderManager.Quantity : legRatio;
         }
@@ -121,9 +144,14 @@ namespace QuantConnect.Orders
         /// </param>
         /// <param name="groupOrderManager">The group order manager</param>
         /// <returns>The ratio of this combo order leg</returns>
-        public static decimal GetOrderLegRatio(this decimal legGroupQuantity, GroupOrderManager groupOrderManager)
+        public static decimal GetOrderLegRatio(
+            this decimal legGroupQuantity,
+            GroupOrderManager groupOrderManager
+        )
         {
-            return groupOrderManager != null ? legGroupQuantity / groupOrderManager.Quantity : legGroupQuantity;
+            return groupOrderManager != null
+                ? legGroupQuantity / groupOrderManager.Quantity
+                : legGroupQuantity;
         }
     }
 }

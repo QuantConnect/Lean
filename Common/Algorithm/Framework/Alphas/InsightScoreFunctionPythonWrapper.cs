@@ -23,16 +23,16 @@ namespace QuantConnect.Algorithm.Framework.Alphas
     /// <summary>
     /// A python implementation insight evaluator wrapper
     /// </summary>
-    public class InsightScoreFunctionPythonWrapper : BasePythonWrapper<IInsightScoreFunction>, IInsightScoreFunction
+    public class InsightScoreFunctionPythonWrapper
+        : BasePythonWrapper<IInsightScoreFunction>,
+            IInsightScoreFunction
     {
         /// <summary>
         /// Creates a new python wrapper instance
         /// </summary>
         /// <param name="insightEvaluator">The python instance to wrap</param>
         public InsightScoreFunctionPythonWrapper(PyObject insightEvaluator)
-            : base(insightEvaluator)
-        {
-        }
+            : base(insightEvaluator) { }
 
         /// <summary>
         /// Method to evaluate and score insights for each time step

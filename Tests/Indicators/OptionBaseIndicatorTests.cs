@@ -38,50 +38,106 @@ namespace QuantConnect.Tests.Indicators
         protected int DividendYieldUpdatesPerIteration { get; set; }
 
         protected static DateTime _reference = new DateTime(2023, 8, 1, 10, 0, 0);
-        protected static Symbol _symbol = Symbol.CreateOption("SPY", Market.USA, OptionStyle.American, OptionRight.Call, 450m, new DateTime(2023, 9, 1));
+        protected static Symbol _symbol = Symbol.CreateOption(
+            "SPY",
+            Market.USA,
+            OptionStyle.American,
+            OptionRight.Call,
+            450m,
+            new DateTime(2023, 9, 1)
+        );
         protected Symbol _underlying => _symbol.Underlying;
 
         protected override IndicatorBase<IndicatorDataPoint> CreateIndicator()
         {
-            throw new NotImplementedException("method `CreateIndicator()` is required to be set up");
+            throw new NotImplementedException(
+                "method `CreateIndicator()` is required to be set up"
+            );
         }
 
-        protected virtual OptionIndicatorBase CreateIndicator(IRiskFreeInterestRateModel riskFreeRateModel)
+        protected virtual OptionIndicatorBase CreateIndicator(
+            IRiskFreeInterestRateModel riskFreeRateModel
+        )
         {
-            throw new NotImplementedException("method `CreateIndicator(IRiskFreeInterestRateModel riskFreeRateModel)` is required to be set up");
+            throw new NotImplementedException(
+                "method `CreateIndicator(IRiskFreeInterestRateModel riskFreeRateModel)` is required to be set up"
+            );
         }
 
-        protected virtual OptionIndicatorBase CreateIndicator(IRiskFreeInterestRateModel riskFreeRateModel, IDividendYieldModel dividendYieldModel)
+        protected virtual OptionIndicatorBase CreateIndicator(
+            IRiskFreeInterestRateModel riskFreeRateModel,
+            IDividendYieldModel dividendYieldModel
+        )
         {
-            throw new NotImplementedException("method `CreateIndicator(IRiskFreeInterestRateModel riskFreeRateModel, IDividendYieldModel dividendYieldModel)` is required to be set up");
+            throw new NotImplementedException(
+                "method `CreateIndicator(IRiskFreeInterestRateModel riskFreeRateModel, IDividendYieldModel dividendYieldModel)` is required to be set up"
+            );
         }
 
         protected virtual OptionIndicatorBase CreateIndicator(QCAlgorithm algorithm)
         {
-            throw new NotImplementedException("method `CreateIndicator(QCAlgorithm algorithm)` is required to be set up");
+            throw new NotImplementedException(
+                "method `CreateIndicator(QCAlgorithm algorithm)` is required to be set up"
+            );
         }
 
-        protected OptionPricingModelType ParseSymbols(string[] items, bool american, out Symbol call, out Symbol put)
+        protected OptionPricingModelType ParseSymbols(
+            string[] items,
+            bool american,
+            out Symbol call,
+            out Symbol put
+        )
         {
             var ticker = items[0];
-            var expiry = DateTime.ParseExact(items[1], "dd/MM/yyyy HH:mm:ss", CultureInfo.InvariantCulture);
+            var expiry = DateTime.ParseExact(
+                items[1],
+                "dd/MM/yyyy HH:mm:ss",
+                CultureInfo.InvariantCulture
+            );
             var strike = Parse.Decimal(items[2]);
             var style = american ? OptionStyle.American : OptionStyle.European;
 
             call = Symbol.CreateOption(ticker, Market.USA, style, OptionRight.Call, strike, expiry);
             put = Symbol.CreateOption(ticker, Market.USA, style, OptionRight.Put, strike, expiry);
 
-            return american ? OptionPricingModelType.ForwardTree : OptionPricingModelType.BlackScholes;
+            return american
+                ? OptionPricingModelType.ForwardTree
+                : OptionPricingModelType.BlackScholes;
         }
 
-        protected void RunTestIndicator(Symbol call, Symbol put, OptionIndicatorBase callIndicator, OptionIndicatorBase putIndicator,
-            string[] items, int callColumn, int putColumn, double errorRate, double errorMargin = 1e-4)
+        protected void RunTestIndicator(
+            Symbol call,
+            Symbol put,
+            OptionIndicatorBase callIndicator,
+            OptionIndicatorBase putIndicator,
+            string[] items,
+            int callColumn,
+            int putColumn,
+            double errorRate,
+            double errorMargin = 1e-4
+        )
         {
-            var time = DateTime.ParseExact(items[3], "dd/MM/yyyy HH:mm:ss", CultureInfo.InvariantCulture);
+            var time = DateTime.ParseExact(
+                items[3],
+                "dd/MM/yyyy HH:mm:ss",
+                CultureInfo.InvariantCulture
+            );
 
-            var callDataPoint = new IndicatorDataPoint(call, time, decimal.Parse(items[5], NumberStyles.Any, CultureInfo.InvariantCulture));
-            var putDataPoint = new IndicatorDataPoint(put, time, decimal.Parse(items[4], NumberStyles.Any, CultureInfo.InvariantCulture));
-            var underlyingDataPoint = new IndicatorDataPoint(call.Underlying, time, decimal.Parse(items[^4], NumberStyles.Any, CultureInfo.InvariantCulture));
+            var callDataPoint = new IndicatorDataPoint(
+                call,
+                time,
+                decimal.Parse(items[5], NumberStyles.Any, CultureInfo.InvariantCulture)
+            );
+            var putDataPoint = new IndicatorDataPoint(
+                put,
+                time,
+                decimal.Parse(items[4], NumberStyles.Any, CultureInfo.InvariantCulture)
+            );
+            var underlyingDataPoint = new IndicatorDataPoint(
+                call.Underlying,
+                time,
+                decimal.Parse(items[^4], NumberStyles.Any, CultureInfo.InvariantCulture)
+            );
 
             callIndicator.Update(callDataPoint);
             callIndicator.Update(underlyingDataPoint);
@@ -89,9 +145,13 @@ namespace QuantConnect.Tests.Indicators
             {
                 callIndicator.Update(putDataPoint);
             }
-            
-            var expected = double.Parse(items[callColumn], NumberStyles.Any, CultureInfo.InvariantCulture);
-            var acceptance = Math.Max(errorRate * Math.Abs(expected), errorMargin);     // percentage error
+
+            var expected = double.Parse(
+                items[callColumn],
+                NumberStyles.Any,
+                CultureInfo.InvariantCulture
+            );
+            var acceptance = Math.Max(errorRate * Math.Abs(expected), errorMargin); // percentage error
             Assert.AreEqual(expected, (double)callIndicator.Current.Value, acceptance);
 
             putIndicator.Update(putDataPoint);
@@ -101,8 +161,12 @@ namespace QuantConnect.Tests.Indicators
                 putIndicator.Update(callDataPoint);
             }
 
-            expected = double.Parse(items[putColumn], NumberStyles.Any, CultureInfo.InvariantCulture);
-            acceptance = Math.Max(errorRate * Math.Abs(expected), errorMargin);     // percentage error
+            expected = double.Parse(
+                items[putColumn],
+                NumberStyles.Any,
+                CultureInfo.InvariantCulture
+            );
+            acceptance = Math.Max(errorRate * Math.Abs(expected), errorMargin); // percentage error
             Assert.AreEqual(expected, (double)putIndicator.Current.Value, acceptance);
         }
 
@@ -110,7 +174,7 @@ namespace QuantConnect.Tests.Indicators
         public void ZeroGreeksIfExpired()
         {
             var indicator = CreateIndicator();
-            var date = new DateTime(2099, 1, 1);    // date that the option must be expired already
+            var date = new DateTime(2099, 1, 1); // date that the option must be expired already
             var price = 500m;
             var optionPrice = 10m;
 
@@ -130,8 +194,12 @@ namespace QuantConnect.Tests.Indicators
                 var price = 500m;
                 var optionPrice = Math.Max(price - 450, 0) * 1.1m;
 
-                indicator.Update(new IndicatorDataPoint(_symbol, _reference.AddDays(1 + i), optionPrice));
-                indicator.Update(new IndicatorDataPoint(_underlying, _reference.AddDays(1 + i), price));
+                indicator.Update(
+                    new IndicatorDataPoint(_symbol, _reference.AddDays(1 + i), optionPrice)
+                );
+                indicator.Update(
+                    new IndicatorDataPoint(_underlying, _reference.AddDays(1 + i), price)
+                );
             }
 
             Assert.IsTrue(indicator.IsReady);
@@ -151,8 +219,12 @@ namespace QuantConnect.Tests.Indicators
                 var price = 500m;
                 var optionPrice = Math.Max(price - 450, 0) * 1.1m;
 
-                indicator.Update(new IndicatorDataPoint(_symbol, _reference.AddDays(1 + i), optionPrice));
-                indicator.Update(new IndicatorDataPoint(_underlying, _reference.AddDays(1 + i), price));
+                indicator.Update(
+                    new IndicatorDataPoint(_symbol, _reference.AddDays(1 + i), optionPrice)
+                );
+                indicator.Update(
+                    new IndicatorDataPoint(_underlying, _reference.AddDays(1 + i), price)
+                );
             }
 
             Assert.AreEqual(2, indicator.Samples);
@@ -200,15 +272,24 @@ namespace QuantConnect.Tests.Indicators
         public void UsesRiskFreeInterestRateModel()
         {
             const int count = 20;
-            var dates = Enumerable.Range(0, count).Select(i => new DateTime(2022, 11, 21, 10, 0, 0) + TimeSpan.FromDays(i)).ToList();
-            var interestRateValues = Enumerable.Range(0, count).Select(i => 0m + (10 - 0m) * (i / (count - 1m))).ToList();
+            var dates = Enumerable
+                .Range(0, count)
+                .Select(i => new DateTime(2022, 11, 21, 10, 0, 0) + TimeSpan.FromDays(i))
+                .ToList();
+            var interestRateValues = Enumerable
+                .Range(0, count)
+                .Select(i => 0m + (10 - 0m) * (i / (count - 1m)))
+                .ToList();
 
             var interestRateProviderMock = new Mock<IRiskFreeInterestRateModel>();
 
             // Set up
             for (int i = 0; i < count; i++)
             {
-                interestRateProviderMock.Setup(x => x.GetInterestRate(dates[i])).Returns(interestRateValues[i]).Verifiable();
+                interestRateProviderMock
+                    .Setup(x => x.GetInterestRate(dates[i]))
+                    .Returns(interestRateValues[i])
+                    .Verifiable();
             }
 
             var indicator = CreateIndicator(interestRateProviderMock.Object);
@@ -222,10 +303,16 @@ namespace QuantConnect.Tests.Indicators
 
             // Assert
             Assert.IsTrue(indicator.IsReady);
-            interestRateProviderMock.Verify(x => x.GetInterestRate(It.IsAny<DateTime>()), Times.Exactly(dates.Count * RiskFreeRateUpdatesPerIteration));
+            interestRateProviderMock.Verify(
+                x => x.GetInterestRate(It.IsAny<DateTime>()),
+                Times.Exactly(dates.Count * RiskFreeRateUpdatesPerIteration)
+            );
             for (int i = 0; i < count; i++)
             {
-                interestRateProviderMock.Verify(x => x.GetInterestRate(dates[i]), Times.Exactly(RiskFreeRateUpdatesPerIteration));
+                interestRateProviderMock.Verify(
+                    x => x.GetInterestRate(dates[i]),
+                    Times.Exactly(RiskFreeRateUpdatesPerIteration)
+                );
             }
         }
 
@@ -234,7 +321,9 @@ namespace QuantConnect.Tests.Indicators
         {
             using var _ = Py.GIL();
 
-            var module = PyModule.FromString(Guid.NewGuid().ToString(), $@"
+            var module = PyModule.FromString(
+                Guid.NewGuid().ToString(),
+                $@"
 from AlgorithmImports import *
 
 class TestRiskFreeInterestRateModel:
@@ -246,17 +335,32 @@ class TestRiskFreeInterestRateModel:
 
 def getOptionIndicatorBaseIndicator(symbol: Symbol) -> OptionIndicatorBase:
     return {typeof(T).Name}(symbol, TestRiskFreeInterestRateModel())
-            ");
+            "
+            );
 
-            var iv = module.GetAttr("getOptionIndicatorBaseIndicator").Invoke(_symbol.ToPython()).GetAndDispose<T>();
+            var iv = module
+                .GetAttr("getOptionIndicatorBaseIndicator")
+                .Invoke(_symbol.ToPython())
+                .GetAndDispose<T>();
             var modelClass = module.GetAttr("TestRiskFreeInterestRateModel");
 
             var reference = new DateTime(2022, 11, 21, 10, 0, 0);
             for (int i = 0; i < 20; i++)
             {
-                iv.Update(new IndicatorDataPoint(_symbol, reference + TimeSpan.FromMinutes(i), 10m + i));
-                iv.Update(new IndicatorDataPoint(_underlying, reference + TimeSpan.FromMinutes(i), 1000m + i));
-                Assert.AreEqual((i + 1) * RiskFreeRateUpdatesPerIteration, modelClass.GetAttr("CallCount").GetAndDispose<int>());
+                iv.Update(
+                    new IndicatorDataPoint(_symbol, reference + TimeSpan.FromMinutes(i), 10m + i)
+                );
+                iv.Update(
+                    new IndicatorDataPoint(
+                        _underlying,
+                        reference + TimeSpan.FromMinutes(i),
+                        1000m + i
+                    )
+                );
+                Assert.AreEqual(
+                    (i + 1) * RiskFreeRateUpdatesPerIteration,
+                    modelClass.GetAttr("CallCount").GetAndDispose<int>()
+                );
             }
         }
 
@@ -267,9 +371,21 @@ def getOptionIndicatorBaseIndicator(symbol: Symbol) -> OptionIndicatorBase:
             algorithm.SubscriptionManager.SetDataManager(new DataManagerStub(algorithm));
 
             var historyProvider = new SubscriptionDataReaderHistoryProvider();
-            historyProvider.Initialize(new HistoryProviderInitializeParameters(null, null,
-                TestGlobals.DataProvider, TestGlobals.DataCacheProvider, TestGlobals.MapFileProvider, TestGlobals.FactorFileProvider,
-                null, true, new DataPermissionManager(), algorithm.ObjectStore, algorithm.Settings));
+            historyProvider.Initialize(
+                new HistoryProviderInitializeParameters(
+                    null,
+                    null,
+                    TestGlobals.DataProvider,
+                    TestGlobals.DataCacheProvider,
+                    TestGlobals.MapFileProvider,
+                    TestGlobals.FactorFileProvider,
+                    null,
+                    true,
+                    new DataPermissionManager(),
+                    algorithm.ObjectStore,
+                    algorithm.Settings
+                )
+            );
             algorithm.SetHistoryProvider(historyProvider);
 
             algorithm.SetDateTime(_reference);
@@ -299,25 +415,40 @@ def getOptionIndicatorBaseIndicator(symbol: Symbol) -> OptionIndicatorBase:
             indicator.Update(new IndicatorDataPoint(_underlying, _reference.AddDays(1), 300m));
 
             // Our interest rate provider should have been called once by each update
-            interestRateProviderMock.Verify(x => x.GetInterestRate(_reference.AddDays(1)), Times.Exactly(RiskFreeRateUpdatesPerIteration));
+            interestRateProviderMock.Verify(
+                x => x.GetInterestRate(_reference.AddDays(1)),
+                Times.Exactly(RiskFreeRateUpdatesPerIteration)
+            );
         }
 
         [Test]
         public void UsesDividendYieldModel()
         {
             const int count = 20;
-            var dates = Enumerable.Range(0, count).Select(i => new DateTime(2022, 11, 21, 10, 0, 0) + TimeSpan.FromDays(i)).ToList();
-            var dividends = Enumerable.Range(0, count).Select(i => 0m + (10 - 0m) * (i / (count - 1m))).ToList();
+            var dates = Enumerable
+                .Range(0, count)
+                .Select(i => new DateTime(2022, 11, 21, 10, 0, 0) + TimeSpan.FromDays(i))
+                .ToList();
+            var dividends = Enumerable
+                .Range(0, count)
+                .Select(i => 0m + (10 - 0m) * (i / (count - 1m)))
+                .ToList();
 
             var dividendYieldProviderMock = new Mock<IDividendYieldModel>();
 
             // Set up
             for (int i = 0; i < count; i++)
             {
-                dividendYieldProviderMock.Setup(x => x.GetDividendYield(dates[i])).Returns(dividends[i]).Verifiable();
+                dividendYieldProviderMock
+                    .Setup(x => x.GetDividendYield(dates[i]))
+                    .Returns(dividends[i])
+                    .Verifiable();
             }
 
-            var indicator = CreateIndicator(new ConstantRiskFreeRateInterestRateModel(0.05m), dividendYieldProviderMock.Object);
+            var indicator = CreateIndicator(
+                new ConstantRiskFreeRateInterestRateModel(0.05m),
+                dividendYieldProviderMock.Object
+            );
 
             for (int i = 0; i < count; i++)
             {
@@ -328,10 +459,16 @@ def getOptionIndicatorBaseIndicator(symbol: Symbol) -> OptionIndicatorBase:
 
             // Assert
             Assert.IsTrue(indicator.IsReady);
-            dividendYieldProviderMock.Verify(x => x.GetDividendYield(It.IsAny<DateTime>()), Times.Exactly(dates.Count * DividendYieldUpdatesPerIteration));
+            dividendYieldProviderMock.Verify(
+                x => x.GetDividendYield(It.IsAny<DateTime>()),
+                Times.Exactly(dates.Count * DividendYieldUpdatesPerIteration)
+            );
             for (int i = 0; i < count; i++)
             {
-                dividendYieldProviderMock.Verify(x => x.GetDividendYield(dates[i]), Times.Exactly(DividendYieldUpdatesPerIteration));
+                dividendYieldProviderMock.Verify(
+                    x => x.GetDividendYield(dates[i]),
+                    Times.Exactly(DividendYieldUpdatesPerIteration)
+                );
             }
         }
 
@@ -340,7 +477,9 @@ def getOptionIndicatorBaseIndicator(symbol: Symbol) -> OptionIndicatorBase:
         {
             using var _ = Py.GIL();
 
-            var module = PyModule.FromString(Guid.NewGuid().ToString(), $@"
+            var module = PyModule.FromString(
+                Guid.NewGuid().ToString(),
+                $@"
 from AlgorithmImports import *
 
 class TestDividendYieldModel:
@@ -352,17 +491,32 @@ class TestDividendYieldModel:
 
 def getOptionIndicatorBaseIndicator(symbol: Symbol) -> OptionIndicatorBase:
     return {typeof(T).Name}(symbol, InterestRateProvider(), TestDividendYieldModel())
-            ");
+            "
+            );
 
-            var indicator = module.GetAttr("getOptionIndicatorBaseIndicator").Invoke(_symbol.ToPython()).GetAndDispose<T>();
+            var indicator = module
+                .GetAttr("getOptionIndicatorBaseIndicator")
+                .Invoke(_symbol.ToPython())
+                .GetAndDispose<T>();
             var modelClass = module.GetAttr("TestDividendYieldModel");
 
             var reference = new DateTime(2022, 11, 21, 10, 0, 0);
             for (int i = 0; i < 20; i++)
             {
-                indicator.Update(new IndicatorDataPoint(_symbol, reference + TimeSpan.FromMinutes(i), 10m + i));
-                indicator.Update(new IndicatorDataPoint(_underlying, reference + TimeSpan.FromMinutes(i), 1000m + i));
-                Assert.AreEqual((i + 1) * DividendYieldUpdatesPerIteration, modelClass.GetAttr("CallCount").GetAndDispose<int>());
+                indicator.Update(
+                    new IndicatorDataPoint(_symbol, reference + TimeSpan.FromMinutes(i), 10m + i)
+                );
+                indicator.Update(
+                    new IndicatorDataPoint(
+                        _underlying,
+                        reference + TimeSpan.FromMinutes(i),
+                        1000m + i
+                    )
+                );
+                Assert.AreEqual(
+                    (i + 1) * DividendYieldUpdatesPerIteration,
+                    modelClass.GetAttr("CallCount").GetAndDispose<int>()
+                );
             }
         }
 

@@ -15,11 +15,11 @@
 */
 
 using System;
-using QuantConnect.Data;
-using QuantConnect.Util;
-using QuantConnect.Interfaces;
 using System.Collections.Generic;
+using QuantConnect.Data;
 using QuantConnect.Data.UniverseSelection;
+using QuantConnect.Interfaces;
+using QuantConnect.Util;
 
 namespace QuantConnect.Lean.Engine.DataFeeds
 {
@@ -38,8 +38,13 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         /// <param name="config">The subscription's configuration</param>
         /// <param name="date">The date this factory was produced to read data for</param>
         /// <param name="isLiveMode">True if we're in live mode, false for backtesting</param>
-        public BaseDataCollectionAggregatorReader(IDataCacheProvider dataCacheProvider, SubscriptionDataConfig config, DateTime date,
-            bool isLiveMode, IObjectStore objectStore)
+        public BaseDataCollectionAggregatorReader(
+            IDataCacheProvider dataCacheProvider,
+            SubscriptionDataConfig config,
+            DateTime date,
+            bool isLiveMode,
+            IObjectStore objectStore
+        )
             : base(dataCacheProvider, config, date, isLiveMode, objectStore)
         {
             _collectionType = config.Type;

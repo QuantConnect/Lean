@@ -43,8 +43,13 @@ namespace QuantConnect.Algorithm.Framework.Selection
         /// <param name="futureChainSymbolSelector">Selects symbols from the provided future chain</param>
         /// <param name="chainContractsLookupLimit">Limit on how many contracts to query for open interest</param>
         /// <param name="resultsLimit">Limit on how many contracts will be part of the universe</param>
-        public OpenInterestFutureUniverseSelectionModel(IAlgorithm algorithm, Func<DateTime, IEnumerable<Symbol>> futureChainSymbolSelector, int? chainContractsLookupLimit = 6,
-            int? resultsLimit = 1) : base(TimeSpan.FromDays(1), futureChainSymbolSelector)
+        public OpenInterestFutureUniverseSelectionModel(
+            IAlgorithm algorithm,
+            Func<DateTime, IEnumerable<Symbol>> futureChainSymbolSelector,
+            int? chainContractsLookupLimit = 6,
+            int? resultsLimit = 1
+        )
+            : base(TimeSpan.FromDays(1), futureChainSymbolSelector)
         {
             _marketHoursDatabase = MarketHoursDatabase.FromDataFolder();
             if (algorithm == null)
@@ -64,17 +69,32 @@ namespace QuantConnect.Algorithm.Framework.Selection
         /// <param name="futureChainSymbolSelector">Selects symbols from the provided future chain</param>
         /// <param name="chainContractsLookupLimit">Limit on how many contracts to query for open interest</param>
         /// <param name="resultsLimit">Limit on how many contracts will be part of the universe</param>
-        public OpenInterestFutureUniverseSelectionModel(IAlgorithm algorithm, PyObject futureChainSymbolSelector, int? chainContractsLookupLimit = 6,
-            int? resultsLimit = 1) : this(algorithm, ConvertFutureChainSymbolSelectorToFunc(futureChainSymbolSelector), chainContractsLookupLimit, resultsLimit)
-        {
-        }
+        public OpenInterestFutureUniverseSelectionModel(
+            IAlgorithm algorithm,
+            PyObject futureChainSymbolSelector,
+            int? chainContractsLookupLimit = 6,
+            int? resultsLimit = 1
+        )
+            : this(
+                algorithm,
+                ConvertFutureChainSymbolSelectorToFunc(futureChainSymbolSelector),
+                chainContractsLookupLimit,
+                resultsLimit
+            ) { }
 
         /// <summary>
         ///     Defines the future chain universe filter
         /// </summary>
         protected override FutureFilterUniverse Filter(FutureFilterUniverse filter)
         {
-            return filter.Contracts(FilterByOpenInterest(filter.ToDictionary(x => x, x => _marketHoursDatabase.GetEntry(x.ID.Market, x, x.ID.SecurityType))));
+            return filter.Contracts(
+                FilterByOpenInterest(
+                    filter.ToDictionary(
+                        x => x,
+                        x => _marketHoursDatabase.GetEntry(x.ID.Market, x, x.ID.SecurityType)
+                    )
+                )
+            );
         }
 
         /// <summary>
@@ -82,10 +102,19 @@ namespace QuantConnect.Algorithm.Framework.Selection
         /// </summary>
         /// <param name="contracts">Contracts to filter</param>
         /// <returns>Filtered set</returns>
-        public IEnumerable<Symbol> FilterByOpenInterest(IReadOnlyDictionary<Symbol, MarketHoursDatabase.Entry> contracts)
+        public IEnumerable<Symbol> FilterByOpenInterest(
+            IReadOnlyDictionary<Symbol, MarketHoursDatabase.Entry> contracts
+        )
         {
-            var symbols = new List<Symbol>(_chainContractsLookupLimit.HasValue ? contracts.Keys.OrderBy(x => x.ID.Date).Take(_chainContractsLookupLimit.Value) : contracts.Keys);
-            var openInterest = symbols.GroupBy(x => contracts[x]).SelectMany(g => GetOpenInterest(g.Key, g.Select(i => i))).ToDictionary(x => x.Key, x => x.Value);
+            var symbols = new List<Symbol>(
+                _chainContractsLookupLimit.HasValue
+                    ? contracts.Keys.OrderBy(x => x.ID.Date).Take(_chainContractsLookupLimit.Value)
+                    : contracts.Keys
+            );
+            var openInterest = symbols
+                .GroupBy(x => contracts[x])
+                .SelectMany(g => GetOpenInterest(g.Key, g.Select(i => i)))
+                .ToDictionary(x => x.Key, x => x.Value);
 
             if (openInterest.Count == 0)
             {
@@ -95,7 +124,10 @@ namespace QuantConnect.Algorithm.Framework.Selection
                 return Enumerable.Empty<Symbol>();
             }
 
-            var filtered = openInterest.OrderByDescending(x => x.Value).ThenBy(x => x.Key.ID.Date).Select(x => x.Key);
+            var filtered = openInterest
+                .OrderByDescending(x => x.Value)
+                .ThenBy(x => x.Key.ID.Date)
+                .Select(x => x.Key);
             if (_resultsLimit.HasValue)
             {
                 filtered = filtered.Take(_resultsLimit.Value);
@@ -104,34 +136,52 @@ namespace QuantConnect.Algorithm.Framework.Selection
             return filtered;
         }
 
-        private Dictionary<Symbol, decimal> GetOpenInterest(MarketHoursDatabase.Entry marketHours, IEnumerable<Symbol> symbols)
+        private Dictionary<Symbol, decimal> GetOpenInterest(
+            MarketHoursDatabase.Entry marketHours,
+            IEnumerable<Symbol> symbols
+        )
         {
             var current = _algorithm.UtcTime;
             var exchangeHours = marketHours.ExchangeHours;
-            var endTime = Instant.FromDateTimeUtc(_algorithm.UtcTime).InZone(exchangeHours.TimeZone).ToDateTimeUnspecified();
-            var previousDay = Time.GetStartTimeForTradeBars(exchangeHours, endTime, Time.OneDay, 1, true, marketHours.DataTimeZone);
-            var requests = symbols.Select(
-                    symbol => new HistoryRequest(
-                        previousDay,
-                        current,
-                        typeof(Tick),
-                        symbol,
-                        Resolution.Tick,
-                        exchangeHours,
-                        exchangeHours.TimeZone,
-                        null,
-                        true,
-                        false,
-                        DataNormalizationMode.Raw,
-                        TickType.OpenInterest
-                    )
-                )
+            var endTime = Instant
+                .FromDateTimeUtc(_algorithm.UtcTime)
+                .InZone(exchangeHours.TimeZone)
+                .ToDateTimeUnspecified();
+            var previousDay = Time.GetStartTimeForTradeBars(
+                exchangeHours,
+                endTime,
+                Time.OneDay,
+                1,
+                true,
+                marketHours.DataTimeZone
+            );
+            var requests = symbols
+                .Select(symbol => new HistoryRequest(
+                    previousDay,
+                    current,
+                    typeof(Tick),
+                    symbol,
+                    Resolution.Tick,
+                    exchangeHours,
+                    exchangeHours.TimeZone,
+                    null,
+                    true,
+                    false,
+                    DataNormalizationMode.Raw,
+                    TickType.OpenInterest
+                ))
                 .ToArray();
-            return _algorithm.HistoryProvider.GetHistory(requests, exchangeHours.TimeZone)
+            return _algorithm
+                .HistoryProvider.GetHistory(requests, exchangeHours.TimeZone)
                 .Where(s => s.HasData && s.Ticks.Keys.Count > 0)
-                .SelectMany(s => s.Ticks.Select(x => new Tuple<Symbol, Tick>(x.Key, x.Value.LastOrDefault())))
+                .SelectMany(s =>
+                    s.Ticks.Select(x => new Tuple<Symbol, Tick>(x.Key, x.Value.LastOrDefault()))
+                )
                 .GroupBy(x => x.Item1)
-                .ToDictionary(x => x.Key, x => x.OrderByDescending(i => i.Item2.Time).LastOrDefault().Item2.Value);
+                .ToDictionary(
+                    x => x.Key,
+                    x => x.OrderByDescending(i => i.Item2.Time).LastOrDefault().Item2.Value
+                );
         }
 
         /// <summary>
@@ -140,9 +190,15 @@ namespace QuantConnect.Algorithm.Framework.Selection
         /// <param name="futureChainSymbolSelector">Python lambda function that selects symbols from the provided future chain</param>
         /// <returns>Given Python future chain symbol selector as a func objet</returns>
         /// <exception cref="ArgumentException"></exception>
-        private static Func<DateTime, IEnumerable<Symbol>> ConvertFutureChainSymbolSelectorToFunc(PyObject futureChainSymbolSelector)
+        private static Func<DateTime, IEnumerable<Symbol>> ConvertFutureChainSymbolSelectorToFunc(
+            PyObject futureChainSymbolSelector
+        )
         {
-            if (futureChainSymbolSelector.TryConvertToDelegate(out Func<DateTime, IEnumerable<Symbol>> futureSelector))
+            if (
+                futureChainSymbolSelector.TryConvertToDelegate(
+                    out Func<DateTime, IEnumerable<Symbol>> futureSelector
+                )
+            )
             {
                 return futureSelector;
             }
@@ -150,7 +206,9 @@ namespace QuantConnect.Algorithm.Framework.Selection
             {
                 using (Py.GIL())
                 {
-                    throw new ArgumentException($"FutureUniverseSelectionModel.ConvertFutureChainSymbolSelectorToFunc: {futureChainSymbolSelector.Repr()} is not a valid argument.");
+                    throw new ArgumentException(
+                        $"FutureUniverseSelectionModel.ConvertFutureChainSymbolSelectorToFunc: {futureChainSymbolSelector.Repr()} is not a valid argument."
+                    );
                 }
             }
         }

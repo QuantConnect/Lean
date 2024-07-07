@@ -42,10 +42,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
         /// <returns>
         /// The element in the collection at the current position of the enumerator.
         /// </returns>
-        public T Current
-        {
-            get; private set;
-        }
+        public T Current { get; private set; }
 
         /// <summary>
         /// Gets the current element in the collection.
@@ -64,9 +61,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
         /// <param name="enumerators">The enumerators to be synchronized. NOTE: Assumes the same time zone for all data</param>
         /// <typeparam name="T">The type of data we want, for example, <see cref="BaseData"/> or <see cref="Slice"/>, ect...</typeparam>
         protected SynchronizingEnumerator(params IEnumerator<T>[] enumerators)
-            : this ((IEnumerable<IEnumerator<T>>)enumerators)
-        {
-        }
+            : this((IEnumerable<IEnumerator<T>>)enumerators) { }
 
         /// <summary>
         /// Initializes a new instance of the <see cref="SynchronizingEnumerator{T}"/> class
@@ -88,7 +83,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
         /// <exception cref="T:System.InvalidOperationException">The collection was modified after the enumerator was created. </exception>
         public bool MoveNext()
         {
-            var moveNext =  _syncer.MoveNext();
+            var moveNext = _syncer.MoveNext();
             Current = moveNext ? _syncer.Current : default(T);
             return moveNext;
         }
@@ -161,7 +156,10 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
                 var nextFrontierTicks = DateTime.MaxValue.Ticks;
                 foreach (var enumerator in collection)
                 {
-                    while (enumerator.Current == null || GetInstanceTime(enumerator.Current) <= frontier)
+                    while (
+                        enumerator.Current == null
+                        || GetInstanceTime(enumerator.Current) <= frontier
+                    )
                     {
                         if (enumerator.Current != null)
                         {
@@ -180,7 +178,10 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
 
                     if (enumerator.Current != null)
                     {
-                        nextFrontierTicks = Math.Min(nextFrontierTicks, GetInstanceTime(enumerator.Current).Ticks);
+                        nextFrontierTicks = Math.Min(
+                            nextFrontierTicks,
+                            GetInstanceTime(enumerator.Current).Ticks
+                        );
                     }
                 }
 

@@ -16,7 +16,7 @@
 namespace QuantConnect.Indicators
 {
     /// <summary>
-    /// This indicator computes the Triangular Moving Average (TRIMA). 
+    /// This indicator computes the Triangular Moving Average (TRIMA).
     /// The Triangular Moving Average is calculated with the following formula:
     /// (1) When the period is even, TRIMA(x,period)=SMA(SMA(x,period/2),(period/2)+1)
     /// (2) When the period is odd,  TRIMA(x,period)=SMA(SMA(x,(period+1)/2),(period+1)/2)
@@ -29,7 +29,7 @@ namespace QuantConnect.Indicators
 
         /// <summary>
         /// Initializes a new instance of the <see cref="TriangularMovingAverage"/> class using the specified name and period.
-        /// </summary> 
+        /// </summary>
         /// <param name="name">The name of this indicator</param>
         /// <param name="period">The period of the indicator</param>
         public TriangularMovingAverage(string name, int period)
@@ -46,12 +46,10 @@ namespace QuantConnect.Indicators
 
         /// <summary>
         /// Initializes a new instance of the <see cref="TriangularMovingAverage"/> class using the specified period.
-        /// </summary> 
+        /// </summary>
         /// <param name="period">The period of the indicator</param>
         public TriangularMovingAverage(int period)
-            : this($"TRIMA({period})", period)
-        {
-        }
+            : this($"TRIMA({period})", period) { }
 
         /// <summary>
         /// Gets a flag indicating when this indicator is ready and fully initialized

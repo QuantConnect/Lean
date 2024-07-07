@@ -13,12 +13,12 @@
  * limitations under the License.
 */
 
-using Newtonsoft.Json;
-using QuantConnect.Interfaces;
-using QuantConnect.Util;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using Newtonsoft.Json;
+using QuantConnect.Interfaces;
+using QuantConnect.Util;
 
 namespace QuantConnect
 {
@@ -84,7 +84,13 @@ namespace QuantConnect
         [JsonProperty(PropertyName = "failed-universe-data-requests-percentage")]
         public double FailedUniverseDataRequestsPercentage
         {
-            get { return GetPercentage(TotalUniverseDataRequestsCount, FailedUniverseDataRequestsCount); }
+            get
+            {
+                return GetPercentage(
+                    TotalUniverseDataRequestsCount,
+                    FailedUniverseDataRequestsCount
+                );
+            }
         }
 
         /// <summary>
@@ -96,9 +102,7 @@ namespace QuantConnect
         /// <summary>
         /// Initializes an empty instance of the <see cref="DataMonitorReport"/> class
         /// </summary>
-        public DataMonitorReport()
-        {
-        }
+        public DataMonitorReport() { }
 
         /// <summary>
         /// Initializes a new instance of the <see cref="DataMonitorReport"/> class
@@ -108,11 +112,13 @@ namespace QuantConnect
         /// <param name="succeededUniverseDataRequestsCount">Number of universe data paths that were requested and successfuly served</param>
         /// <param name="failedUniverseDataRequestsCount">Number of universe data paths that were requested but could not be served</param>
         /// <param name="dataRequestRates">Rates at which data requests were made per second</param>
-        public DataMonitorReport(long succeededDataRequestsCount, 
-            long failedDataRequestsCount, 
-            long succeededUniverseDataRequestsCount, 
-            long failedUniverseDataRequestsCount, 
-            IReadOnlyList<double> dataRequestRates)
+        public DataMonitorReport(
+            long succeededDataRequestsCount,
+            long failedDataRequestsCount,
+            long succeededUniverseDataRequestsCount,
+            long failedUniverseDataRequestsCount,
+            IReadOnlyList<double> dataRequestRates
+        )
         {
             SucceededDataRequestsCount = succeededDataRequestsCount;
             FailedDataRequestsCount = failedDataRequestsCount;
@@ -120,7 +126,7 @@ namespace QuantConnect
             FailedUniverseDataRequestsCount = failedUniverseDataRequestsCount;
             DataRequestRates = dataRequestRates;
         }
-        
+
         private static double GetPercentage(long total, long value)
         {
             if (total == 0)

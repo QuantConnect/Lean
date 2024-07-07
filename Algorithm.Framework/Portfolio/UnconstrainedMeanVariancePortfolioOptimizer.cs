@@ -30,7 +30,11 @@ namespace QuantConnect.Algorithm.Framework.Portfolio
         /// <param name="expectedReturns">Array of double with the portfolio annualized expected returns (size: K x 1).</param>
         /// <param name="covariance">Multi-dimensional array of double with the portfolio covariance of annualized returns (size: K x K).</param>
         /// <returns>Array of double with the portfolio weights (size: K x 1)</returns>
-        public double[] Optimize(double[,] historicalReturns, double[] expectedReturns = null, double[,] covariance = null)
+        public double[] Optimize(
+            double[,] historicalReturns,
+            double[] expectedReturns = null,
+            double[,] covariance = null
+        )
         {
             var Π = (expectedReturns ?? historicalReturns.Mean(0));
             var Σ = covariance ?? historicalReturns.Covariance();

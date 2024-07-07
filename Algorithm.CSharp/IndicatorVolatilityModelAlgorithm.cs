@@ -15,7 +15,6 @@
 
 using System;
 using System.Collections.Generic;
-
 using QuantConnect.Data;
 using QuantConnect.Data.Market;
 using QuantConnect.Indicators;
@@ -49,20 +48,29 @@ namespace QuantConnect.Algorithm.CSharp
             SetEndDate(2014, 12, 31);
             SetCash(100000);
 
-            var equity = AddEquity("AAPL", Resolution.Daily, dataNormalizationMode: _dataNormalizationMode);
+            var equity = AddEquity(
+                "AAPL",
+                Resolution.Daily,
+                dataNormalizationMode: _dataNormalizationMode
+            );
             _aapl = equity.Symbol;
 
             var std = new StandardDeviation(_indicatorPeriods);
             var mean = new SimpleMovingAverage(_indicatorPeriods);
             _indicator = std.Over(mean);
-            equity.SetVolatilityModel(new IndicatorVolatilityModel(_indicator, (_, data, _) =>
-            {
-                if (data.Price > 0)
-                {
-                    std.Update(data.Time, data.Price);
-                    mean.Update(data.Time, data.Price);
-                }
-            }));
+            equity.SetVolatilityModel(
+                new IndicatorVolatilityModel(
+                    _indicator,
+                    (_, data, _) =>
+                    {
+                        if (data.Price > 0)
+                        {
+                            std.Update(data.Time, data.Price);
+                            mean.Update(data.Time, data.Price);
+                        }
+                    }
+                )
+            );
         }
 
         public override void OnData(Slice slice)
@@ -76,7 +84,13 @@ namespace QuantConnect.Algorithm.CSharp
                 _indicator.Reset();
                 var equity = Securities[_aapl];
                 var volatilityModel = equity.VolatilityModel as IndicatorVolatilityModel;
-                volatilityModel.WarmUp(this, equity, equity.Resolution, _indicatorPeriods, _dataNormalizationMode);
+                volatilityModel.WarmUp(
+                    this,
+                    equity,
+                    equity.Resolution,
+                    _indicatorPeriods,
+                    _dataNormalizationMode
+                );
             }
         }
 
@@ -95,8 +109,9 @@ namespace QuantConnect.Algorithm.CSharp
             if (volatility <= 0 || volatility > 0.05m)
             {
                 throw new RegressionTestException(
-                    "Expected volatility to stay less than 0.05 (not big jumps due to price discontinuities on splits and dividends), " +
-                    $"but got {volatility}");
+                    "Expected volatility to stay less than 0.05 (not big jumps due to price discontinuities on splits and dividends), "
+                        + $"but got {volatility}"
+                );
             }
         }
 
@@ -104,7 +119,9 @@ namespace QuantConnect.Algorithm.CSharp
         {
             if (_splitsAndDividendsCount == 0)
             {
-                throw new RegressionTestException("Expected to get at least one split or dividend event");
+                throw new RegressionTestException(
+                    "Expected to get at least one split or dividend event"
+                );
             }
 
             if (!_volatilityChecked)
@@ -148,35 +165,36 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// This is used by the regression test system to indicate what the expected statistics are from running the algorithm
         /// </summary>
-        public Dictionary<string, string> ExpectedStatistics => new Dictionary<string, string>
-        {
-            {"Total Orders", "0"},
-            {"Average Win", "0%"},
-            {"Average Loss", "0%"},
-            {"Compounding Annual Return", "0%"},
-            {"Drawdown", "0%"},
-            {"Expectancy", "0"},
-            {"Start Equity", "100000"},
-            {"End Equity", "100000"},
-            {"Net Profit", "0%"},
-            {"Sharpe Ratio", "0"},
-            {"Sortino Ratio", "0"},
-            {"Probabilistic Sharpe Ratio", "0%"},
-            {"Loss Rate", "0%"},
-            {"Win Rate", "0%"},
-            {"Profit-Loss Ratio", "0"},
-            {"Alpha", "0"},
-            {"Beta", "0"},
-            {"Annual Standard Deviation", "0"},
-            {"Annual Variance", "0"},
-            {"Information Ratio", "-1.025"},
-            {"Tracking Error", "0.094"},
-            {"Treynor Ratio", "0"},
-            {"Total Fees", "$0.00"},
-            {"Estimated Strategy Capacity", "$0"},
-            {"Lowest Capacity Asset", ""},
-            {"Portfolio Turnover", "0%"},
-            {"OrderListHash", "d41d8cd98f00b204e9800998ecf8427e"}
-        };
+        public Dictionary<string, string> ExpectedStatistics =>
+            new Dictionary<string, string>
+            {
+                { "Total Orders", "0" },
+                { "Average Win", "0%" },
+                { "Average Loss", "0%" },
+                { "Compounding Annual Return", "0%" },
+                { "Drawdown", "0%" },
+                { "Expectancy", "0" },
+                { "Start Equity", "100000" },
+                { "End Equity", "100000" },
+                { "Net Profit", "0%" },
+                { "Sharpe Ratio", "0" },
+                { "Sortino Ratio", "0" },
+                { "Probabilistic Sharpe Ratio", "0%" },
+                { "Loss Rate", "0%" },
+                { "Win Rate", "0%" },
+                { "Profit-Loss Ratio", "0" },
+                { "Alpha", "0" },
+                { "Beta", "0" },
+                { "Annual Standard Deviation", "0" },
+                { "Annual Variance", "0" },
+                { "Information Ratio", "-1.025" },
+                { "Tracking Error", "0.094" },
+                { "Treynor Ratio", "0" },
+                { "Total Fees", "$0.00" },
+                { "Estimated Strategy Capacity", "$0" },
+                { "Lowest Capacity Asset", "" },
+                { "Portfolio Turnover", "0%" },
+                { "OrderListHash", "d41d8cd98f00b204e9800998ecf8427e" }
+            };
     }
 }

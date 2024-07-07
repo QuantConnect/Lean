@@ -1,11 +1,11 @@
 ﻿/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
- * 
- * Licensed under the Apache License, Version 2.0 (the "License"); 
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -41,18 +41,14 @@ namespace QuantConnect.Indicators.CandlestickPatterns
         /// Initializes a new instance of the <see cref="Hikkake"/> class using the specified name.
         /// </summary>
         /// <param name="name">The name of this indicator</param>
-        public Hikkake(string name) 
-            : base(name, 5 + 1)
-        {
-        }
+        public Hikkake(string name)
+            : base(name, 5 + 1) { }
 
         /// <summary>
         /// Initializes a new instance of the <see cref="Hikkake"/> class.
         /// </summary>
         public Hikkake()
-            : this("HIKKAKE")
-        {
-        }
+            : this("HIKKAKE") { }
 
         /// <summary>
         /// Gets a flag indicating when this indicator is ready and fully initialized
@@ -68,7 +64,10 @@ namespace QuantConnect.Indicators.CandlestickPatterns
         /// <param name="window">The window of data held in this indicator</param>
         /// <param name="input">The input given to the indicator</param>
         /// <returns>A new value for this indicator</returns>
-        protected override decimal ComputeNextValue(IReadOnlyWindow<IBaseDataBar> window, IBaseDataBar input)
+        protected override decimal ComputeNextValue(
+            IReadOnlyWindow<IBaseDataBar> window,
+            IBaseDataBar input
+        )
         {
             if (!IsReady)
             {
@@ -76,12 +75,16 @@ namespace QuantConnect.Indicators.CandlestickPatterns
                 {
                     // copy here the pattern recognition code below
                     // 1st + 2nd: lower high and higher low
-                    if (window[1].High < window[2].High && window[1].Low > window[2].Low &&
+                    if (
+                        window[1].High < window[2].High
+                        && window[1].Low > window[2].Low
+                        &&
                         // (bull) 3rd: lower high and lower low
-                        ((input.High < window[1].High && input.Low < window[1].Low)
-                          ||
-                          // (bear) 3rd: higher high and higher low
-                          (input.High > window[1].High && input.Low > window[1].Low)
+                        (
+                            (input.High < window[1].High && input.Low < window[1].Low)
+                            ||
+                            // (bear) 3rd: higher high and higher low
+                            (input.High > window[1].High && input.Low > window[1].Low)
                         )
                     )
                     {
@@ -89,15 +92,24 @@ namespace QuantConnect.Indicators.CandlestickPatterns
                         _patternIndex = (int)Samples - 1;
                     }
                     else
-                        // search for confirmation if hikkake was no more than 3 bars ago
-                        if (Samples <= _patternIndex + 4 &&
-                            // close higher than the high of 2nd
-                            ((_patternResult > 0 && input.Close > window[(int)Samples - _patternIndex].High)
-                              ||
-                              // close lower than the low of 2nd
-                              (_patternResult < 0 && input.Close < window[(int)Samples - _patternIndex].Low)
+                    // search for confirmation if hikkake was no more than 3 bars ago
+                    if (
+                        Samples <= _patternIndex + 4
+                        &&
+                        // close higher than the high of 2nd
+                        (
+                            (
+                                _patternResult > 0
+                                && input.Close > window[(int)Samples - _patternIndex].High
+                            )
+                            ||
+                            // close lower than the low of 2nd
+                            (
+                                _patternResult < 0
+                                && input.Close < window[(int)Samples - _patternIndex].Low
                             )
                         )
+                    )
                         _patternIndex = 0;
                 }
 
@@ -106,30 +118,43 @@ namespace QuantConnect.Indicators.CandlestickPatterns
 
             decimal value;
             // 1st + 2nd: lower high and higher low
-            if (window[1].High < window[2].High && window[1].Low > window[2].Low &&
+            if (
+                window[1].High < window[2].High
+                && window[1].Low > window[2].Low
+                &&
                 // (bull) 3rd: lower high and lower low
-                ((input.High < window[1].High && input.Low < window[1].Low)
-                 ||
-                 // (bear) 3rd: higher high and higher low
-                 (input.High > window[1].High && input.Low > window[1].Low)
-                    )
+                (
+                    (input.High < window[1].High && input.Low < window[1].Low)
+                    ||
+                    // (bear) 3rd: higher high and higher low
+                    (input.High > window[1].High && input.Low > window[1].Low)
                 )
+            )
             {
                 _patternResult = (input.High < window[1].High ? 1 : -1);
-                _patternIndex = (int) Samples - 1;
+                _patternIndex = (int)Samples - 1;
                 value = _patternResult;
             }
             else
             {
                 // search for confirmation if hikkake was no more than 3 bars ago
-                if (Samples <= _patternIndex + 4 &&
+                if (
+                    Samples <= _patternIndex + 4
+                    &&
                     // close higher than the high of 2nd
-                    ((_patternResult > 0 && input.Close > window[(int) Samples - _patternIndex].High)
-                     ||
-                     // close lower than the low of 2nd
-                     (_patternResult < 0 && input.Close < window[(int) Samples - _patternIndex].Low)
+                    (
+                        (
+                            _patternResult > 0
+                            && input.Close > window[(int)Samples - _patternIndex].High
+                        )
+                        ||
+                        // close lower than the low of 2nd
+                        (
+                            _patternResult < 0
+                            && input.Close < window[(int)Samples - _patternIndex].Low
                         )
                     )
+                )
                 {
                     value = _patternResult + (_patternResult > 0 ? 1 : -1);
                     _patternIndex = 0;

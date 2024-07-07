@@ -13,16 +13,16 @@
  * limitations under the License.
 */
 
+using System;
+using System.Collections.Concurrent;
+using System.Collections.Generic;
+using System.Linq;
 using QuantConnect.Data;
 using QuantConnect.Data.Common;
 using QuantConnect.Data.Consolidators;
 using QuantConnect.Data.Market;
 using QuantConnect.Lean.Engine.DataFeeds.Enumerators;
 using QuantConnect.Logging;
-using System;
-using System.Collections.Concurrent;
-using System.Collections.Generic;
-using System.Linq;
 
 namespace QuantConnect.Lean.Engine.DataFeeds
 {
@@ -32,8 +32,14 @@ namespace QuantConnect.Lean.Engine.DataFeeds
     /// </summary>
     public class AggregationManager : IDataAggregator
     {
-        private readonly ConcurrentDictionary<SecurityIdentifier, List<KeyValuePair<SubscriptionDataConfig, ScannableEnumerator<BaseData>>>> _enumerators
-            = new ConcurrentDictionary<SecurityIdentifier, List<KeyValuePair<SubscriptionDataConfig, ScannableEnumerator<BaseData>>>>();
+        private readonly ConcurrentDictionary<
+            SecurityIdentifier,
+            List<KeyValuePair<SubscriptionDataConfig, ScannableEnumerator<BaseData>>>
+        > _enumerators =
+            new ConcurrentDictionary<
+                SecurityIdentifier,
+                List<KeyValuePair<SubscriptionDataConfig, ScannableEnumerator<BaseData>>>
+            >();
         private bool _dailyStrictEndTimeEnabled;
 
         /// <summary>
@@ -48,7 +54,9 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         public void Initialize(DataAggregatorInitializeParameters parameters)
         {
             _dailyStrictEndTimeEnabled = parameters.AlgorithmSettings.DailyPreciseEndTime;
-            Log.Trace($"AggregationManager.Initialize(): daily strict end times: {_dailyStrictEndTimeEnabled}");
+            Log.Trace(
+                $"AggregationManager.Initialize(): daily strict end times: {_dailyStrictEndTimeEnabled}"
+            );
         }
 
         /// <summary>
@@ -57,19 +65,50 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         /// <param name="dataConfig">defines the parameters to subscribe to a data feed</param>
         /// <param name="newDataAvailableHandler">handler to be fired on new data available</param>
         /// <returns>The new enumerator for this subscription request</returns>
-        public IEnumerator<BaseData> Add(SubscriptionDataConfig dataConfig, EventHandler newDataAvailableHandler)
+        public IEnumerator<BaseData> Add(
+            SubscriptionDataConfig dataConfig,
+            EventHandler newDataAvailableHandler
+        )
         {
             var consolidator = GetConsolidator(dataConfig);
-            var isPeriodBased = (dataConfig.Type.Name == nameof(QuoteBar) ||
-                    dataConfig.Type.Name == nameof(TradeBar) ||
-                    dataConfig.Type.Name == nameof(OpenInterest)) &&
-                dataConfig.Resolution != Resolution.Tick;
-            var enumerator = new ScannableEnumerator<BaseData>(consolidator, dataConfig.ExchangeTimeZone, TimeProvider, newDataAvailableHandler, isPeriodBased);
+            var isPeriodBased =
+                (
+                    dataConfig.Type.Name == nameof(QuoteBar)
+                    || dataConfig.Type.Name == nameof(TradeBar)
+                    || dataConfig.Type.Name == nameof(OpenInterest)
+                )
+                && dataConfig.Resolution != Resolution.Tick;
+            var enumerator = new ScannableEnumerator<BaseData>(
+                consolidator,
+                dataConfig.ExchangeTimeZone,
+                TimeProvider,
+                newDataAvailableHandler,
+                isPeriodBased
+            );
 
             _enumerators.AddOrUpdate(
                 dataConfig.Symbol.ID,
-                new List<KeyValuePair<SubscriptionDataConfig, ScannableEnumerator<BaseData>>> { new KeyValuePair<SubscriptionDataConfig, ScannableEnumerator<BaseData>>(dataConfig, enumerator) },
-                (k, v) => { return v.Concat(new[] { new KeyValuePair<SubscriptionDataConfig, ScannableEnumerator<BaseData>>(dataConfig, enumerator) }).ToList(); });
+                new List<KeyValuePair<SubscriptionDataConfig, ScannableEnumerator<BaseData>>>
+                {
+                    new KeyValuePair<SubscriptionDataConfig, ScannableEnumerator<BaseData>>(
+                        dataConfig,
+                        enumerator
+                    )
+                },
+                (k, v) =>
+                {
+                    return v.Concat(
+                            new[]
+                            {
+                                new KeyValuePair<
+                                    SubscriptionDataConfig,
+                                    ScannableEnumerator<BaseData>
+                                >(dataConfig, enumerator)
+                            }
+                        )
+                        .ToList();
+                }
+            );
 
             return enumerator;
         }
@@ -85,18 +124,24 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             {
                 if (enumerators.Count == 1)
                 {
-                    List<KeyValuePair<SubscriptionDataConfig, ScannableEnumerator<BaseData>>> output;
+                    List<
+                        KeyValuePair<SubscriptionDataConfig, ScannableEnumerator<BaseData>>
+                    > output;
                     return _enumerators.TryRemove(dataConfig.Symbol.ID, out output);
                 }
                 else
                 {
-                    _enumerators[dataConfig.Symbol.ID] = enumerators.Where(pair => pair.Key != dataConfig).ToList();
+                    _enumerators[dataConfig.Symbol.ID] = enumerators
+                        .Where(pair => pair.Key != dataConfig)
+                        .ToList();
                     return true;
                 }
             }
             else
             {
-                Log.Debug($"AggregationManager.Update(): IDataConsolidator for symbol ({dataConfig.Symbol.Value}) was not found.");
+                Log.Debug(
+                    $"AggregationManager.Update(): IDataConsolidator for symbol ({dataConfig.Symbol.Value}) was not found."
+                );
                 return false;
             }
         }
@@ -109,7 +154,9 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         {
             try
             {
-                List<KeyValuePair<SubscriptionDataConfig, ScannableEnumerator<BaseData>>> enumerators;
+                List<
+                    KeyValuePair<SubscriptionDataConfig, ScannableEnumerator<BaseData>>
+                > enumerators;
                 if (_enumerators.TryGetValue(input.Symbol.ID, out enumerators))
                 {
                     for (var i = 0; i < enumerators.Count; i++)
@@ -147,11 +194,20 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         protected virtual IDataConsolidator GetConsolidator(SubscriptionDataConfig config)
         {
             var period = config.Resolution.ToTimeSpan();
-            if (config.Resolution == Resolution.Daily && (config.Type == typeof(QuoteBar) || config.Type == typeof(TradeBar)))
+            if (
+                config.Resolution == Resolution.Daily
+                && (config.Type == typeof(QuoteBar) || config.Type == typeof(TradeBar))
+            )
             {
                 // let's build daily bars that respect market hours data as requested by 'ExtendedMarketHours',
                 // also this allows us to enable the daily strict end times if required
-                return new MarketHourAwareConsolidator(_dailyStrictEndTimeEnabled, config.Resolution, typeof(Tick), config.TickType, config.ExtendedMarketHours);
+                return new MarketHourAwareConsolidator(
+                    _dailyStrictEndTimeEnabled,
+                    config.Resolution,
+                    typeof(Tick),
+                    config.TickType,
+                    config.ExtendedMarketHours
+                );
             }
             if (config.Type == typeof(QuoteBar))
             {
@@ -179,7 +235,9 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             }
 
             // streaming custom data subscriptions can pass right through
-            return new FilteredIdentityDataConsolidator<BaseData>(data => data.GetType() == config.Type);
+            return new FilteredIdentityDataConsolidator<BaseData>(data =>
+                data.GetType() == config.Type
+            );
         }
     }
 }

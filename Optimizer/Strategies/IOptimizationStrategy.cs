@@ -42,8 +42,13 @@ namespace QuantConnect.Optimizer.Strategies
         /// <param name="constraints">The optimization constraints to apply on backtest results</param>
         /// <param name="parameters">optimization parameters</param>
         /// <param name="settings">optimization strategy advanced settings</param>
-        void Initialize(Target target, IReadOnlyList<Constraint> constraints, HashSet<OptimizationParameter> parameters, OptimizationStrategySettings settings);
-        
+        void Initialize(
+            Target target,
+            IReadOnlyList<Constraint> constraints,
+            HashSet<OptimizationParameter> parameters,
+            OptimizationStrategySettings settings
+        );
+
         /// <summary>
         /// Callback when lean compute job completed.
         /// </summary>

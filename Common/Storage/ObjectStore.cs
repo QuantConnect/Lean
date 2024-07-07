@@ -155,7 +155,11 @@ namespace QuantConnect.Storage
         /// <param name="encoding">The string encoding used</param>
         /// <param name="settings">The settings used by the JSON deserializer</param>
         /// <returns>An object containing the data</returns>
-        public T ReadJson<T>(string path, Encoding encoding = null, JsonSerializerSettings settings = null)
+        public T ReadJson<T>(
+            string path,
+            Encoding encoding = null,
+            JsonSerializerSettings settings = null
+        )
         {
             encoding = encoding ?? Encoding.UTF8;
 
@@ -194,7 +198,9 @@ namespace QuantConnect.Storage
             var filePath = GetFilePath(path);
             if (!File.Exists(filePath))
             {
-                throw new ArgumentException($"There is no file associated with path {path} in '{filePath}'");
+                throw new ArgumentException(
+                    $"There is no file associated with path {path} in '{filePath}'"
+                );
             }
             var bytes = File.ReadAllBytes(filePath);
 
@@ -236,7 +242,12 @@ namespace QuantConnect.Storage
         /// <param name="encoding">The string encoding used</param>
         /// <param name="settings">The settings used by the JSON serializer</param>
         /// <returns>True if the object was saved successfully</returns>
-        public bool SaveJson<T>(string path, T obj, Encoding encoding = null, JsonSerializerSettings settings = null)
+        public bool SaveJson<T>(
+            string path,
+            T obj,
+            Encoding encoding = null,
+            JsonSerializerSettings settings = null
+        )
         {
             encoding = encoding ?? Encoding.UTF8;
 
@@ -278,7 +289,7 @@ namespace QuantConnect.Storage
         /// <filterpriority>2</filterpriority>
         IEnumerator IEnumerable.GetEnumerator()
         {
-            return ((IEnumerable) _store).GetEnumerator();
+            return ((IEnumerable)_store).GetEnumerator();
         }
 
         /// <summary>Performs application-defined tasks associated with freeing, releasing, or resetting unmanaged resources.</summary>

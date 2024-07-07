@@ -13,12 +13,12 @@
  * limitations under the License.
 */
 
-using NodaTime;
-using QuantConnect.Data;
 using System;
 using System.Collections.Generic;
 using System.IO;
+using NodaTime;
 using ProtoBuf;
+using QuantConnect.Data;
 
 namespace QuantConnect.Data.Custom.IconicTypes
 {
@@ -34,7 +34,11 @@ namespace QuantConnect.Data.Custom.IconicTypes
         [ProtoMember(55)]
         public int Count { get; set; }
 
-        public override SubscriptionDataSource GetSource(SubscriptionDataConfig config, DateTime date, bool isLiveMode)
+        public override SubscriptionDataSource GetSource(
+            SubscriptionDataConfig config,
+            DateTime date,
+            bool isLiveMode
+        )
         {
             return new SubscriptionDataSource(
                 Path.Combine(
@@ -43,10 +47,16 @@ namespace QuantConnect.Data.Custom.IconicTypes
                     $"{config.Symbol.Underlying.Value.ToLowerInvariant()}.csv"
                 ),
                 SubscriptionTransportMedium.LocalFile,
-                FileFormat.Csv);
+                FileFormat.Csv
+            );
         }
 
-        public override BaseData Reader(SubscriptionDataConfig config, string line, DateTime date, bool isLiveMode)
+        public override BaseData Reader(
+            SubscriptionDataConfig config,
+            string line,
+            DateTime date,
+            bool isLiveMode
+        )
         {
             return new LinkedData
             {

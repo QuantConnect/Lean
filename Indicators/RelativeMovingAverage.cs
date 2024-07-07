@@ -52,7 +52,7 @@ namespace QuantConnect.Indicators
         /// </summary>
         /// <param name="name">The name of this indicator</param>
         /// <param name="period">The period of the RMA</param>
-        public RelativeMovingAverage(string name, int period) 
+        public RelativeMovingAverage(string name, int period)
             : base(name)
         {
             ShortAverage = new SimpleMovingAverage(name + "_Short", period);
@@ -65,9 +65,7 @@ namespace QuantConnect.Indicators
         /// </summary>
         /// <param name="period"></param>
         public RelativeMovingAverage(int period)
-            : this($"RMA({period})", period)
-        {
-        }
+            : this($"RMA({period})", period) { }
 
         /// <summary>
         /// Copmutes the next value for this indicator from the given state.
@@ -80,7 +78,9 @@ namespace QuantConnect.Indicators
             MediumAverage.Update(input);
             LongAverage.Update(input);
 
-            return LongAverage.Current.Value - MediumAverage.Current.Value + ShortAverage.Current.Value;
+            return LongAverage.Current.Value
+                - MediumAverage.Current.Value
+                + ShortAverage.Current.Value;
         }
 
         /// <summary>

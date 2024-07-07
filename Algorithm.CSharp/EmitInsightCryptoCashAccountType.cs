@@ -15,8 +15,8 @@
 
 using System.Collections.Generic;
 using QuantConnect.Algorithm.Framework.Alphas;
-using QuantConnect.Data;
 using QuantConnect.Brokerages;
+using QuantConnect.Data;
 using QuantConnect.Interfaces;
 
 namespace QuantConnect.Algorithm.CSharp
@@ -84,35 +84,36 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// This is used by the regression test system to indicate what the expected statistics are from running the algorithm
         /// </summary>
-        public Dictionary<string, string> ExpectedStatistics => new Dictionary<string, string>
-        {
-            {"Total Orders", "1"},
-            {"Average Win", "0%"},
-            {"Average Loss", "0%"},
-            {"Compounding Annual Return", "0%"},
-            {"Drawdown", "0%"},
-            {"Expectancy", "0"},
-            {"Start Equity", "10000.00"},
-            {"End Equity", "9619.78"},
-            {"Net Profit", "0%"},
-            {"Sharpe Ratio", "0"},
-            {"Sortino Ratio", "0"},
-            {"Probabilistic Sharpe Ratio", "0%"},
-            {"Loss Rate", "0%"},
-            {"Win Rate", "0%"},
-            {"Profit-Loss Ratio", "0"},
-            {"Alpha", "0"},
-            {"Beta", "0"},
-            {"Annual Standard Deviation", "0"},
-            {"Annual Variance", "0"},
-            {"Information Ratio", "0"},
-            {"Tracking Error", "0"},
-            {"Treynor Ratio", "0"},
-            {"Total Fees", "€14.92"},
-            {"Estimated Strategy Capacity", "€85000.00"},
-            {"Lowest Capacity Asset", "BTCEUR 2XR"},
-            {"Portfolio Turnover", "51.69%"},
-            {"OrderListHash", "ee1a5ef96ba00c234f4e31c6772d7a19"}
-        };
+        public Dictionary<string, string> ExpectedStatistics =>
+            new Dictionary<string, string>
+            {
+                { "Total Orders", "1" },
+                { "Average Win", "0%" },
+                { "Average Loss", "0%" },
+                { "Compounding Annual Return", "0%" },
+                { "Drawdown", "0%" },
+                { "Expectancy", "0" },
+                { "Start Equity", "10000.00" },
+                { "End Equity", "9619.78" },
+                { "Net Profit", "0%" },
+                { "Sharpe Ratio", "0" },
+                { "Sortino Ratio", "0" },
+                { "Probabilistic Sharpe Ratio", "0%" },
+                { "Loss Rate", "0%" },
+                { "Win Rate", "0%" },
+                { "Profit-Loss Ratio", "0" },
+                { "Alpha", "0" },
+                { "Beta", "0" },
+                { "Annual Standard Deviation", "0" },
+                { "Annual Variance", "0" },
+                { "Information Ratio", "0" },
+                { "Tracking Error", "0" },
+                { "Treynor Ratio", "0" },
+                { "Total Fees", "€14.92" },
+                { "Estimated Strategy Capacity", "€85000.00" },
+                { "Lowest Capacity Asset", "BTCEUR 2XR" },
+                { "Portfolio Turnover", "51.69%" },
+                { "OrderListHash", "ee1a5ef96ba00c234f4e31c6772d7a19" }
+            };
     }
 }

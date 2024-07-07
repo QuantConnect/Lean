@@ -29,13 +29,13 @@ namespace QuantConnect.Indicators
     /// L = low
     /// C = close
     /// Vol = volume
-    /// 
+    ///
     /// https://www.fidelity.com/learning-center/trading-investing/technical-analysis/technical-indicator-guide/cmf
     /// </summary>
     public class ChaikinMoneyFlow : TradeBarIndicator, IIndicatorWarmUpPeriodProvider
     {
         /// <summary>
-        /// Holds the point-wise flow-sum and volume terms. 
+        /// Holds the point-wise flow-sum and volume terms.
         /// </summary>
         private readonly Sum _flowRatioSum;
 
@@ -82,9 +82,12 @@ namespace QuantConnect.Indicators
         protected override decimal ComputeNextValue(TradeBar input)
         {
             var denominator = (input.High - input.Low);
-            var flowRatio = denominator > 0
-                ? input.Volume * (input.Close - input.Low - (input.High - input.Close)) / denominator
-                : 0m;
+            var flowRatio =
+                denominator > 0
+                    ? input.Volume
+                        * (input.Close - input.Low - (input.High - input.Close))
+                        / denominator
+                    : 0m;
 
             _flowRatioSum.Update(input.EndTime, flowRatio);
             _volumeSum.Update(input.EndTime, input.Volume);

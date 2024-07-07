@@ -54,36 +54,41 @@ namespace QuantConnect.Tests.Engine
         {
             AlgorithmManagerAlgorithmStatusTest.Loops = 0;
             AlgorithmManagerAlgorithmStatusTest.AlgorithmStatus = algorithmStatus;
-            var parameter = new RegressionTests.AlgorithmStatisticsTestParameters("QuantConnect.Tests.Engine.AlgorithmManagerTests+AlgorithmManagerAlgorithmStatusTest",
-                new Dictionary<string, string> {
-                    {PerformanceMetrics.TotalOrders, "0"},
-                    {"Average Win", "0%"},
-                    {"Average Loss", "0%"},
-                    {"Compounding Annual Return", "0%"},
-                    {"Drawdown", "0%"},
-                    {"Expectancy", "0"},
-                    {"Net Profit", "0%"},
-                    {"Sharpe Ratio", "0"},
-                    {"Loss Rate", "0%"},
-                    {"Win Rate", "0%"},
-                    {"Profit-Loss Ratio", "0"},
-                    {"Alpha", "0"},
-                    {"Beta", "0"},
-                    {"Annual Standard Deviation", "0"},
-                    {"Annual Variance", "0"},
-                    {"Information Ratio", "0"},
-                    {"Tracking Error", "0"},
-                    {"Treynor Ratio", "0"},
-                    {"Total Fees", "$0.00"}
+            var parameter = new RegressionTests.AlgorithmStatisticsTestParameters(
+                "QuantConnect.Tests.Engine.AlgorithmManagerTests+AlgorithmManagerAlgorithmStatusTest",
+                new Dictionary<string, string>
+                {
+                    { PerformanceMetrics.TotalOrders, "0" },
+                    { "Average Win", "0%" },
+                    { "Average Loss", "0%" },
+                    { "Compounding Annual Return", "0%" },
+                    { "Drawdown", "0%" },
+                    { "Expectancy", "0" },
+                    { "Net Profit", "0%" },
+                    { "Sharpe Ratio", "0" },
+                    { "Loss Rate", "0%" },
+                    { "Win Rate", "0%" },
+                    { "Profit-Loss Ratio", "0" },
+                    { "Alpha", "0" },
+                    { "Beta", "0" },
+                    { "Annual Standard Deviation", "0" },
+                    { "Annual Variance", "0" },
+                    { "Information Ratio", "0" },
+                    { "Tracking Error", "0" },
+                    { "Treynor Ratio", "0" },
+                    { "Total Fees", "$0.00" }
                 },
                 Language.CSharp,
-                AlgorithmStatus.Completed);
+                AlgorithmStatus.Completed
+            );
 
-            AlgorithmRunner.RunLocalBacktest(parameter.Algorithm,
+            AlgorithmRunner.RunLocalBacktest(
+                parameter.Algorithm,
                 parameter.Statistics,
                 parameter.Language,
                 parameter.ExpectedFinalStatus,
-                algorithmLocation: "QuantConnect.Tests.dll");
+                algorithmLocation: "QuantConnect.Tests.dll"
+            );
 
             Assert.AreEqual(1, AlgorithmManagerAlgorithmStatusTest.Loops);
         }
@@ -93,28 +98,40 @@ namespace QuantConnect.Tests.Engine
         {
             var algorithm = PerformanceBenchmarkAlgorithms.SingleSecurity_Second;
             var algorithmManager = new AlgorithmManager(false);
-            var job = new BacktestNodePacket(1, 2, "3", null, 9m, $"{nameof(AlgorithmManagerTests)}.{nameof(TestAlgorithmManagerSpeed)}");
+            var job = new BacktestNodePacket(
+                1,
+                2,
+                "3",
+                null,
+                9m,
+                $"{nameof(AlgorithmManagerTests)}.{nameof(TestAlgorithmManagerSpeed)}"
+            );
             var feed = new MockDataFeed();
             var marketHoursDatabase = MarketHoursDatabase.FromDataFolder();
             var symbolPropertiesDataBase = SymbolPropertiesDatabase.FromDataFolder();
             var dataPermissionManager = new DataPermissionManager();
-            var dataManager = new DataManager(feed,
+            var dataManager = new DataManager(
+                feed,
                 new UniverseSelection(
                     algorithm,
-                    new SecurityService(algorithm.Portfolio.CashBook,
+                    new SecurityService(
+                        algorithm.Portfolio.CashBook,
                         marketHoursDatabase,
                         symbolPropertiesDataBase,
                         algorithm,
                         RegisteredSecurityDataTypesProvider.Null,
-                        new SecurityCacheProvider(algorithm.Portfolio)),
+                        new SecurityCacheProvider(algorithm.Portfolio)
+                    ),
                     dataPermissionManager,
-                    TestGlobals.DataProvider),
+                    TestGlobals.DataProvider
+                ),
                 algorithm,
                 algorithm.TimeKeeper,
                 marketHoursDatabase,
                 false,
                 RegisteredSecurityDataTypesProvider.Null,
-                dataPermissionManager);
+                dataPermissionManager
+            );
             algorithm.SubscriptionManager.SetDataManager(dataManager);
             var transactions = new BacktestingTransactionHandler();
             var results = new BacktestingResultHandler();
@@ -128,56 +145,57 @@ namespace QuantConnect.Tests.Engine
 
             using var messaging = new QuantConnect.Messaging.Messaging();
             using var api = new Api.Api();
-            results.Initialize(new (job, messaging, api, transactions, null));
+            results.Initialize(new(job, messaging, api, transactions, null));
             results.SetAlgorithm(algorithm, algorithm.Portfolio.TotalPortfolioValue);
             using var backtestingBrokerage = new BacktestingBrokerage(algorithm);
             transactions.Initialize(algorithm, backtestingBrokerage, results);
             feed.Initialize(algorithm, job, results, null, null, null, dataManager, null, null);
 
-            Log.Trace("Starting algorithm manager loop to process " + nullSynchronizer.Count + " time slices");
+            Log.Trace(
+                "Starting algorithm manager loop to process "
+                    + nullSynchronizer.Count
+                    + " time slices"
+            );
             var sw = Stopwatch.StartNew();
-            algorithmManager.Run(job, algorithm, nullSynchronizer, transactions, results, realtime, leanManager, token);
+            algorithmManager.Run(
+                job,
+                algorithm,
+                nullSynchronizer,
+                transactions,
+                results,
+                realtime,
+                leanManager,
+                token
+            );
             sw.Stop();
 
             realtime.Exit();
             results.Exit();
             var thousands = nullSynchronizer.Count / 1000d;
             var seconds = sw.Elapsed.TotalSeconds;
-            Log.Trace("COUNT: " + nullSynchronizer.Count + "  KPS: " + thousands/seconds);
+            Log.Trace("COUNT: " + nullSynchronizer.Count + "  KPS: " + thousands / seconds);
         }
 
         public class NullLeanManager : ILeanManager
         {
-            public void Dispose()
-            {
-            }
+            public void Dispose() { }
 
-            public void Initialize(LeanEngineSystemHandlers systemHandlers,
+            public void Initialize(
+                LeanEngineSystemHandlers systemHandlers,
                 LeanEngineAlgorithmHandlers algorithmHandlers,
                 AlgorithmNodePacket job,
-                AlgorithmManager algorithmManager)
-            {
-            }
+                AlgorithmManager algorithmManager
+            ) { }
 
-            public void SetAlgorithm(IAlgorithm algorithm)
-            {
-            }
+            public void SetAlgorithm(IAlgorithm algorithm) { }
 
-            public void Update()
-            {
-            }
+            public void Update() { }
 
-            public void OnAlgorithmStart()
-            {
-            }
+            public void OnAlgorithmStart() { }
 
-            public void OnAlgorithmEnd()
-            {
-            }
+            public void OnAlgorithmEnd() { }
 
-            public void OnSecuritiesChanged(SecurityChanges changes)
-            {
-            }
+            public void OnSecuritiesChanged(SecurityChanges changes) { }
         }
 
         class NullResultHandler : IResultHandler
@@ -185,130 +203,79 @@ namespace QuantConnect.Tests.Engine
             public ConcurrentQueue<Packet> Messages { get; set; }
             public bool IsActive { get; }
 
-            public void OnSecuritiesChanged(SecurityChanges changes)
-            {
-            }
+            public void OnSecuritiesChanged(SecurityChanges changes) { }
 
-            public void DebugMessage(string message)
-            {
-            }
+            public void DebugMessage(string message) { }
 
-            public void SystemDebugMessage(string message)
-            {
-            }
+            public void SystemDebugMessage(string message) { }
 
-            public void SecurityType(List<SecurityType> types)
-            {
-            }
+            public void SecurityType(List<SecurityType> types) { }
 
-            public void LogMessage(string message)
-            {
-            }
+            public void LogMessage(string message) { }
 
-            public void ErrorMessage(string error, string stacktrace = "")
-            {
-            }
+            public void ErrorMessage(string error, string stacktrace = "") { }
 
-            public void RuntimeError(string message, string stacktrace = "")
-            {
-            }
+            public void RuntimeError(string message, string stacktrace = "") { }
 
-            public void BrokerageMessage(BrokerageMessageEvent brokerageMessageEvent)
-            {
-            }
+            public void BrokerageMessage(BrokerageMessageEvent brokerageMessageEvent) { }
 
-            public void Sample(DateTime time)
-            {
-            }
+            public void Sample(DateTime time) { }
 
-            public void SetAlgorithm(IAlgorithm algorithm, decimal startingPortfolioValue)
-            {
-            }
+            public void SetAlgorithm(IAlgorithm algorithm, decimal startingPortfolioValue) { }
 
-            public void SendStatusUpdate(AlgorithmStatus status, string message = "")
-            {
-            }
+            public void SendStatusUpdate(AlgorithmStatus status, string message = "") { }
 
-            public void RuntimeStatistic(string key, string value)
-            {
-            }
+            public void RuntimeStatistic(string key, string value) { }
 
-            public void OrderEvent(OrderEvent newEvent)
-            {
-            }
+            public void OrderEvent(OrderEvent newEvent) { }
 
-            public void Exit()
-            {
-            }
+            public void Exit() { }
 
-            public void ProcessSynchronousEvents(bool forceProcess = false)
-            {
-            }
+            public void ProcessSynchronousEvents(bool forceProcess = false) { }
 
-            public void SaveResults(string name, Result result)
-            {
-            }
+            public void SaveResults(string name, Result result) { }
 
-            public void SetDataManager(IDataFeedSubscriptionManager dataManager)
-            {
-            }
+            public void SetDataManager(IDataFeedSubscriptionManager dataManager) { }
 
             public StatisticsResults StatisticsResults()
             {
                 return new StatisticsResults();
             }
 
-            public void SetSummaryStatistic(string name, string value)
-            {
-            }
+            public void SetSummaryStatistic(string name, string value) { }
 
-            public void AlgorithmTagsUpdated(HashSet<string> tags)
-            {
-            }
+            public void AlgorithmTagsUpdated(HashSet<string> tags) { }
 
-            public void AlgorithmNameUpdated(string name)
-            {
-            }
+            public void AlgorithmNameUpdated(string name) { }
 
-            public void Initialize(ResultHandlerInitializeParameters parameters)
-            {
-            }
+            public void Initialize(ResultHandlerInitializeParameters parameters) { }
         }
 
         class NullRealTimeHandler : IRealTimeHandler
         {
-            public void Add(ScheduledEvent scheduledEvent)
-            {
-            }
+            public void Add(ScheduledEvent scheduledEvent) { }
 
-            public void Remove(ScheduledEvent scheduledEvent)
-            {
-            }
+            public void Remove(ScheduledEvent scheduledEvent) { }
 
             public bool IsActive { get; }
-            public void Setup(IAlgorithm algorithm, AlgorithmNodePacket job, IResultHandler resultHandler, IApi api, IIsolatorLimitResultProvider isolatorLimitProvider)
-            {
-            }
 
-            public void Run()
-            {
-            }
+            public void Setup(
+                IAlgorithm algorithm,
+                AlgorithmNodePacket job,
+                IResultHandler resultHandler,
+                IApi api,
+                IIsolatorLimitResultProvider isolatorLimitProvider
+            ) { }
 
-            public void SetTime(DateTime time)
-            {
-            }
+            public void Run() { }
 
-            public void ScanPastEvents(DateTime time)
-            {
-            }
+            public void SetTime(DateTime time) { }
 
-            public void Exit()
-            {
-            }
+            public void ScanPastEvents(DateTime time) { }
 
-            public void OnSecuritiesChanged(SecurityChanges changes)
-            {
-            }
+            public void Exit() { }
+
+            public void OnSecuritiesChanged(SecurityChanges changes) { }
         }
 
         class NullSynchronizer : ISynchronizer
@@ -316,10 +283,12 @@ namespace QuantConnect.Tests.Engine
             private DateTime _frontierUtc;
             private readonly DateTime _endTimeUtc;
             private readonly List<BaseData> _data = new List<BaseData>();
-            private readonly List<UpdateData<SubscriptionDataConfig>> _consolidatorUpdateData = new List<UpdateData<SubscriptionDataConfig>>();
+            private readonly List<UpdateData<SubscriptionDataConfig>> _consolidatorUpdateData =
+                new List<UpdateData<SubscriptionDataConfig>>();
             private readonly List<TimeSlice> _timeSlices = new List<TimeSlice>();
             private readonly TimeSpan _frontierStepSize = TimeSpan.FromSeconds(1);
-            private readonly List<UpdateData<ISecurityPrice>> _securitiesUpdateData = new List<UpdateData<ISecurityPrice>>();
+            private readonly List<UpdateData<ISecurityPrice>> _securitiesUpdateData =
+                new List<UpdateData<ISecurityPrice>>();
             public int Count => _timeSlices.Count;
 
             public NullSynchronizer(IAlgorithm algorithm)
@@ -335,8 +304,22 @@ namespace QuantConnect.Tests.Engine
                         EndTime = _frontierUtc.ConvertFromUtc(security.Exchange.TimeZone)
                     };
                     _data.Add(tick);
-                    _securitiesUpdateData.Add(new UpdateData<ISecurityPrice>(security, typeof(Tick), new BaseData[] { tick }, false));
-                    _consolidatorUpdateData.Add(new UpdateData<SubscriptionDataConfig>(security.Subscriptions.First(), typeof(Tick), new BaseData[] { tick }, false));
+                    _securitiesUpdateData.Add(
+                        new UpdateData<ISecurityPrice>(
+                            security,
+                            typeof(Tick),
+                            new BaseData[] { tick },
+                            false
+                        )
+                    );
+                    _consolidatorUpdateData.Add(
+                        new UpdateData<SubscriptionDataConfig>(
+                            security.Subscriptions.First(),
+                            typeof(Tick),
+                            new BaseData[] { tick },
+                            false
+                        )
+                    );
                 }
 
                 _timeSlices.AddRange(GenerateTimeSlices().Take(int.MaxValue / 1000));
@@ -364,12 +347,35 @@ namespace QuantConnect.Tests.Engine
                 var changes = SecurityChanges.None;
                 do
                 {
-                    var slice = new Slice(default(DateTime), _data, bars, quotes, ticks, options, futures, splits, dividends, delistings, symbolChanges, marginInterestRates, default(DateTime));
-                    var timeSlice = new TimeSlice(_frontierUtc, _data.Count, slice, dataFeedPackets, _securitiesUpdateData, _consolidatorUpdateData, customData, changes, new Dictionary<Universe, BaseDataCollection>());
+                    var slice = new Slice(
+                        default(DateTime),
+                        _data,
+                        bars,
+                        quotes,
+                        ticks,
+                        options,
+                        futures,
+                        splits,
+                        dividends,
+                        delistings,
+                        symbolChanges,
+                        marginInterestRates,
+                        default(DateTime)
+                    );
+                    var timeSlice = new TimeSlice(
+                        _frontierUtc,
+                        _data.Count,
+                        slice,
+                        dataFeedPackets,
+                        _securitiesUpdateData,
+                        _consolidatorUpdateData,
+                        customData,
+                        changes,
+                        new Dictionary<Universe, BaseDataCollection>()
+                    );
                     yield return timeSlice;
                     _frontierUtc += _frontierStepSize;
-                }
-                while (_frontierUtc <= _endTimeUtc);
+                } while (_frontierUtc <= _endTimeUtc);
             }
         }
 
@@ -378,9 +384,9 @@ namespace QuantConnect.Tests.Engine
             public static int Loops { get; set; }
             public static AlgorithmStatus AlgorithmStatus { get; set; }
 
-            public AlgorithmManagerAlgorithmStatusTest() : base()
-            {
-            }
+            public AlgorithmManagerAlgorithmStatusTest()
+                : base() { }
+
             public override void OnData(Slice data)
             {
                 ++Loops;

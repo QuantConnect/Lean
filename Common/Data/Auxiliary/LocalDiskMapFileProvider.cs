@@ -14,11 +14,11 @@
  *
 */
 
+using System.Collections.Concurrent;
 using System.IO;
 using System.Threading;
-using QuantConnect.Logging;
 using QuantConnect.Interfaces;
-using System.Collections.Concurrent;
+using QuantConnect.Logging;
 
 namespace QuantConnect.Data.Auxiliary
 {
@@ -65,19 +65,24 @@ namespace QuantConnect.Data.Auxiliary
             var securityType = key.SecurityType;
             var market = key.Market;
 
-            var mapFileDirectory = Globals.GetDataFolderPath(MapFile.GetRelativeMapFilePath(market, securityType));
+            var mapFileDirectory = Globals.GetDataFolderPath(
+                MapFile.GetRelativeMapFilePath(market, securityType)
+            );
             if (!Directory.Exists(mapFileDirectory))
             {
                 // only write this message once per application instance
                 if (Interlocked.CompareExchange(ref _wroteTraceStatement, 1, 0) == 0)
                 {
-                    Log.Error($"LocalDiskMapFileProvider.GetMapFileResolver({market}): " +
-                        $"The specified directory does not exist: {mapFileDirectory}"
+                    Log.Error(
+                        $"LocalDiskMapFileProvider.GetMapFileResolver({market}): "
+                            + $"The specified directory does not exist: {mapFileDirectory}"
                     );
                 }
                 return MapFileResolver.Empty;
             }
-            return new MapFileResolver(MapFile.GetMapFiles(mapFileDirectory, market, securityType, _dataProvider));
+            return new MapFileResolver(
+                MapFile.GetMapFiles(mapFileDirectory, market, securityType, _dataProvider)
+            );
         }
     }
 }

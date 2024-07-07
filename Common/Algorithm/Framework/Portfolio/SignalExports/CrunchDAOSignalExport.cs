@@ -13,12 +13,12 @@
  * limitations under the License.
 */
 
-using Newtonsoft.Json.Linq;
-using QuantConnect.Interfaces;
 using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Net.Http;
+using Newtonsoft.Json.Linq;
+using QuantConnect.Interfaces;
 
 namespace QuantConnect.Algorithm.Framework.Portfolio.SignalExports
 {
@@ -61,10 +61,8 @@ namespace QuantConnect.Algorithm.Framework.Portfolio.SignalExports
         /// <summary>
         /// HashSet of allowed SecurityTypes for CrunchDAO
         /// </summary>
-        private readonly HashSet<SecurityType> _allowedSecurityTypes = new()
-        {
-            SecurityType.Equity
-        };
+        private readonly HashSet<SecurityType> _allowedSecurityTypes =
+            new() { SecurityType.Equity };
 
         /// <summary>
         /// The name of this signal export
@@ -84,19 +82,26 @@ namespace QuantConnect.Algorithm.Framework.Portfolio.SignalExports
         /// <param name="model">Model ID or Name</param>
         /// <param name="submissionName">Submission Name (Optional)</param>
         /// <param name="comment">Comment (Optional)</param>
-        public CrunchDAOSignalExport(string apiKey, string model, string submissionName = "", string comment = "")
+        public CrunchDAOSignalExport(
+            string apiKey,
+            string model,
+            string submissionName = "",
+            string comment = ""
+        )
         {
             _apiKey = apiKey;
             _model = model;
             _submissionName = submissionName;
             _comment = comment;
-            _destination = new Uri($"https://api.tournament.crunchdao.com/v3/alpha-submissions?apiKey={apiKey}");
+            _destination = new Uri(
+                $"https://api.tournament.crunchdao.com/v3/alpha-submissions?apiKey={apiKey}"
+            );
         }
 
         /// <summary>
         /// Verifies every holding is a stock, creates a message with the desired positions
         /// using the expected CrunchDAO API format, verifies there is an open round and then
-        /// sends the positions with the other required body features. If another signal was 
+        /// sends the positions with the other required body features. If another signal was
         /// submitted before, it deletes the last signal and sends the new one</summary>
         /// <param name="parameters">A list of holdings from the portfolio,
         /// expected to be sent to CrunchDAO API and the algorithm being ran</param>
@@ -120,7 +125,9 @@ namespace QuantConnect.Algorithm.Framework.Portfolio.SignalExports
 
             if (GetLastSubmissionId(currentRoundId, out int lastSubmissionId))
             {
-                _algorithm.Debug($"You have already submitted a signal for round {currentRoundId}. Your last submission is going to be overwritten with the new one");
+                _algorithm.Debug(
+                    $"You have already submitted a signal for round {currentRoundId}. Your last submission is going to be overwritten with the new one"
+                );
                 if (!DeleteLastSubmission(lastSubmissionId))
                 {
                     return false;
@@ -138,7 +145,10 @@ namespace QuantConnect.Algorithm.Framework.Portfolio.SignalExports
         /// expected to be sent to CrunchDAO API and the algorithm being ran</param>
         /// <param name="positions">A CSV format string of the given holdings with the required features(ticker, date, signal)</param>
         /// <returns>True if a string message with the positions could be obtained, false otherwise</returns>
-        protected bool ConvertToCSVFormat(SignalExportTargetParameters parameters, out string positions)
+        protected bool ConvertToCSVFormat(
+            SignalExportTargetParameters parameters,
+            out string positions
+        )
         {
             var holdings = parameters.Targets;
             _algorithm = parameters.Algorithm;
@@ -148,13 +158,16 @@ namespace QuantConnect.Algorithm.Framework.Portfolio.SignalExports
             {
                 if (holding.Quantity < 0 || holding.Quantity > 1)
                 {
-                    _algorithm.Error($"All signals must be between 0 and 1, but {holding.Symbol.Value} signal was {holding.Quantity}");
+                    _algorithm.Error(
+                        $"All signals must be between 0 and 1, but {holding.Symbol.Value} signal was {holding.Quantity}"
+                    );
                     return false;
                 }
 
-                positions += $"{_algorithm.Ticker(holding.Symbol)},{_algorithm.Securities[holding.Symbol].LocalTime.ToString("yyyy-MM-dd")},{holding.Quantity.ToStringInvariant()}\n";
+                positions +=
+                    $"{_algorithm.Ticker(holding.Symbol)},{_algorithm.Securities[holding.Symbol].LocalTime.ToString("yyyy-MM-dd")},{holding.Quantity.ToStringInvariant()}\n";
             }
-            
+
             return true;
         }
 
@@ -189,18 +202,27 @@ namespace QuantConnect.Algorithm.Framework.Portfolio.SignalExports
             };
 
             // Send the httpMessage
-            using HttpResponseMessage response = HttpClient.PostAsync(_destination, httpMessage).Result;
-            if (response.StatusCode == System.Net.HttpStatusCode.Locked || response.StatusCode == System.Net.HttpStatusCode.Forbidden)
+            using HttpResponseMessage response = HttpClient
+                .PostAsync(_destination, httpMessage)
+                .Result;
+            if (
+                response.StatusCode == System.Net.HttpStatusCode.Locked
+                || response.StatusCode == System.Net.HttpStatusCode.Forbidden
+            )
             {
                 var responseContent = response.Content.ReadAsStringAsync().Result;
                 var parsedResponseContent = JObject.Parse(responseContent);
-                _algorithm.Error($"CrunchDAO API returned code: {parsedResponseContent["code"]} message:{parsedResponseContent["message"]}");
+                _algorithm.Error(
+                    $"CrunchDAO API returned code: {parsedResponseContent["code"]} message:{parsedResponseContent["message"]}"
+                );
                 return false;
             }
 
             if (!response.IsSuccessStatusCode)
             {
-                _algorithm.Error($"CrunchDAO API returned HttpRequestException {response.StatusCode}");
+                _algorithm.Error(
+                    $"CrunchDAO API returned HttpRequestException {response.StatusCode}"
+                );
                 return false;
             }
 
@@ -217,17 +239,23 @@ namespace QuantConnect.Algorithm.Framework.Portfolio.SignalExports
         {
             // Assign a default value to currentRoundId
             currentRoundId = -1;
-            using HttpResponseMessage roundIdResponse = HttpClient.GetAsync("https://api.tournament.crunchdao.com/v2/rounds/@current").Result;
+            using HttpResponseMessage roundIdResponse = HttpClient
+                .GetAsync("https://api.tournament.crunchdao.com/v2/rounds/@current")
+                .Result;
             if (roundIdResponse.StatusCode == System.Net.HttpStatusCode.NotFound)
             {
                 var responseContent = roundIdResponse.Content.ReadAsStringAsync().Result;
                 var parsedResponseContent = JObject.Parse(responseContent);
-                _algorithm.Error($"CrunchDAO API returned code: {parsedResponseContent["code"]} message:{parsedResponseContent["message"]}");
+                _algorithm.Error(
+                    $"CrunchDAO API returned code: {parsedResponseContent["code"]} message:{parsedResponseContent["message"]}"
+                );
                 return false;
-            } 
+            }
             else if (!roundIdResponse.IsSuccessStatusCode)
             {
-                _algorithm.Error($"CrunchDAO API returned HttpRequestException {roundIdResponse.StatusCode}");
+                _algorithm.Error(
+                    $"CrunchDAO API returned HttpRequestException {roundIdResponse.StatusCode}"
+                );
                 return false;
             }
 
@@ -245,16 +273,24 @@ namespace QuantConnect.Algorithm.Framework.Portfolio.SignalExports
         /// <returns>True if there's a submission for the current round, false otherwise</returns>
         private bool GetLastSubmissionId(int currentRoundId, out int lastSubmissionId)
         {
-            using HttpResponseMessage submissionIdResponse = HttpClient.GetAsync($"https://tournament.crunchdao.com/api/v3/alpha-submissions?includeAll=false&roundId={currentRoundId}&apiKey={_apiKey}").Result;
+            using HttpResponseMessage submissionIdResponse = HttpClient
+                .GetAsync(
+                    $"https://tournament.crunchdao.com/api/v3/alpha-submissions?includeAll=false&roundId={currentRoundId}&apiKey={_apiKey}"
+                )
+                .Result;
 
             if (!submissionIdResponse.IsSuccessStatusCode)
             {
-                _algorithm.Error($"CrunchDAO API returned the following Error Code: {submissionIdResponse.StatusCode}");
+                _algorithm.Error(
+                    $"CrunchDAO API returned the following Error Code: {submissionIdResponse.StatusCode}"
+                );
                 lastSubmissionId = -1;
                 return false;
             }
 
-            var submissionIdResponseContent = submissionIdResponse.Content.ReadAsStringAsync().Result;
+            var submissionIdResponseContent = submissionIdResponse
+                .Content.ReadAsStringAsync()
+                .Result;
             var parsedSubmissionIdResponseContent = JArray.Parse(submissionIdResponseContent);
             if (!parsedSubmissionIdResponseContent.HasValues)
             {
@@ -274,12 +310,18 @@ namespace QuantConnect.Algorithm.Framework.Portfolio.SignalExports
         /// <returns>True if the last submission could be deleted sucessfully, false otherwise</returns>
         private bool DeleteLastSubmission(int lastSubmissionId)
         {
-            using HttpResponseMessage deleteSubmissionResponse = HttpClient.DeleteAsync($"https://tournament.crunchdao.com/api/v3/alpha-submissions/{lastSubmissionId}?&apiKey={_apiKey}").Result;
+            using HttpResponseMessage deleteSubmissionResponse = HttpClient
+                .DeleteAsync(
+                    $"https://tournament.crunchdao.com/api/v3/alpha-submissions/{lastSubmissionId}?&apiKey={_apiKey}"
+                )
+                .Result;
             if (!deleteSubmissionResponse.IsSuccessStatusCode)
             {
                 var responseContent = deleteSubmissionResponse.Content.ReadAsStringAsync().Result;
                 var parsedResponseContent = JObject.Parse(responseContent);
-                _algorithm.Error($"CrunchDAO API returned code: {parsedResponseContent["code"]} message:{parsedResponseContent["message"]}. Last submission could not be deleted");
+                _algorithm.Error(
+                    $"CrunchDAO API returned code: {parsedResponseContent["code"]} message:{parsedResponseContent["message"]}. Last submission could not be deleted"
+                );
                 return false;
             }
 

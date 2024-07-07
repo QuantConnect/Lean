@@ -43,8 +43,10 @@ namespace QuantConnect.Algorithm.CSharp
         private MovingAverageConvergenceDivergence _macd;
         private RelativeStrengthIndex _rsi = new RelativeStrengthIndex(14);
         private readonly ArrayList _symbols = new ArrayList();
-        private readonly Dictionary<string, RelativeStrengthIndex> _rsiDic = new Dictionary<string, RelativeStrengthIndex>();
-        private readonly Dictionary<string, MovingAverageConvergenceDivergence> _macdDic = new Dictionary<string, MovingAverageConvergenceDivergence>();
+        private readonly Dictionary<string, RelativeStrengthIndex> _rsiDic =
+            new Dictionary<string, RelativeStrengthIndex>();
+        private readonly Dictionary<string, MovingAverageConvergenceDivergence> _macdDic =
+            new Dictionary<string, MovingAverageConvergenceDivergence>();
 
         /// <summary>
         /// Called at the start of your algorithm to setup your requirements:
@@ -106,13 +108,16 @@ namespace QuantConnect.Algorithm.CSharp
             {
                 Array.Copy(_c, _cCopy, 4);
                 Array.Sort(_cCopy);
-                if (_cCopy[0] > _currCape) _newLow = true;
+                if (_cCopy[0] > _currCape)
+                    _newLow = true;
                 _c[_counter2++] = _currCape;
-                if (_counter2 == 4) _counter2 = 0;
+                if (_counter2 == 4)
+                    _counter2 = 0;
             }
 
             Debug("Current Cape: " + _currCape + " on " + data.Time);
-            if (_newLow) Debug("New Low has been hit on " + data.Time);
+            if (_newLow)
+                Debug("New Low has been hit on " + data.Time);
         }
 
         /// <summary>
@@ -129,42 +134,57 @@ namespace QuantConnect.Algorithm.CSharp
                     {
                         //Order stock based on MACD
                         //During market hours, stock is trading, and sufficient cash
-                        if (Securities[stock].Holdings.Quantity == 0 && _rsiDic[stock] < 70
-                            && Securities[stock].Price != 0 && Portfolio.Cash > Securities[stock].Price * 100
-                            && Time.Hour == 9 && Time.Minute == 31)
+                        if (
+                            Securities[stock].Holdings.Quantity == 0
+                            && _rsiDic[stock] < 70
+                            && Securities[stock].Price != 0
+                            && Portfolio.Cash > Securities[stock].Price * 100
+                            && Time.Hour == 9
+                            && Time.Minute == 31
+                        )
                         {
                             Buy(stock);
                         }
                         //Utilize RSI for overbought territories and liquidate that stock
-                        if (_rsiDic[stock] > 70 && Securities[stock].Holdings.Quantity > 0
-                                && Time.Hour == 9 && Time.Minute == 31)
+                        if (
+                            _rsiDic[stock] > 70
+                            && Securities[stock].Holdings.Quantity > 0
+                            && Time.Hour == 9
+                            && Time.Minute == 31
+                        )
                         {
                             Sell(stock);
                         }
                     }
                 }
-
                 // Undervalued territory
                 else if (_newLow)
                 {
                     foreach (string stock in _symbols)
                     {
-
                         //Sell stock based on MACD
-                        if (Securities[stock].Holdings.Quantity > 0 && _rsiDic[stock] > 30
-                            && Time.Hour == 9 && Time.Minute == 31)
+                        if (
+                            Securities[stock].Holdings.Quantity > 0
+                            && _rsiDic[stock] > 30
+                            && Time.Hour == 9
+                            && Time.Minute == 31
+                        )
                         {
                             Sell(stock);
                         }
                         //Utilize RSI and MACD to understand oversold territories
-                        else if (Securities[stock].Holdings.Quantity == 0 && _rsiDic[stock] < 30
-                            && Securities[stock].Price != 0 && Portfolio.Cash > Securities[stock].Price * 100
-                            && Time.Hour == 9 && Time.Minute == 31)
+                        else if (
+                            Securities[stock].Holdings.Quantity == 0
+                            && _rsiDic[stock] < 30
+                            && Securities[stock].Price != 0
+                            && Portfolio.Cash > Securities[stock].Price * 100
+                            && Time.Hour == 9
+                            && Time.Minute == 31
+                        )
                         {
                             Buy(stock);
                         }
                     }
-
                 }
                 // Cape Ratio is missing from original data
                 // Most recent cape data is most likely to be missing
@@ -180,7 +200,6 @@ namespace QuantConnect.Algorithm.CSharp
             }
         }
 
-
         /// <summary>
         /// Buy this symbol
         /// </summary>
@@ -191,8 +210,18 @@ namespace QuantConnect.Algorithm.CSharp
             {
                 SetHoldings(symbol, 1);
 
-                Debug("Purchasing: " + symbol + "   MACD: " + _macdDic[symbol] + "   RSI: " + _rsiDic[symbol]
-                    + "   Price: " + Math.Round(Securities[symbol].Price, 2) + "   Quantity: " + s.Quantity);
+                Debug(
+                    "Purchasing: "
+                        + symbol
+                        + "   MACD: "
+                        + _macdDic[symbol]
+                        + "   RSI: "
+                        + _rsiDic[symbol]
+                        + "   Price: "
+                        + Math.Round(Securities[symbol].Price, 2)
+                        + "   Quantity: "
+                        + s.Quantity
+                );
             }
         }
 
@@ -207,8 +236,18 @@ namespace QuantConnect.Algorithm.CSharp
             {
                 Liquidate(symbol);
 
-                Debug("Selling: " + symbol + " at sell MACD: " + _macdDic[symbol] + "   RSI: " + _rsiDic[symbol]
-                    + "   Price: " + Math.Round(Securities[symbol].Price, 2) + "   Profit from sale: " + s.LastTradeProfit);
+                Debug(
+                    "Selling: "
+                        + symbol
+                        + " at sell MACD: "
+                        + _macdDic[symbol]
+                        + "   RSI: "
+                        + _rsiDic[symbol]
+                        + "   Price: "
+                        + Math.Round(Securities[symbol].Price, 2)
+                        + "   Profit from sale: "
+                        + s.LastTradeProfit
+                );
             }
         }
     }
@@ -239,10 +278,17 @@ namespace QuantConnect.Algorithm.CSharp
         /// <param name="date">Date of this source file</param>
         /// <param name="isLiveMode">true if we're in live mode, false for backtesting mode</param>
         /// <returns>String URL of source file.</returns>
-        public override SubscriptionDataSource GetSource(SubscriptionDataConfig config, DateTime date, bool isLiveMode)
+        public override SubscriptionDataSource GetSource(
+            SubscriptionDataConfig config,
+            DateTime date,
+            bool isLiveMode
+        )
         {
             // Remember to add the "?dl=1" for dropbox links
-            return new SubscriptionDataSource("https://www.dropbox.com/s/ggt6blmib54q36e/CAPE.csv?dl=1", SubscriptionTransportMedium.RemoteFile);
+            return new SubscriptionDataSource(
+                "https://www.dropbox.com/s/ggt6blmib54q36e/CAPE.csv?dl=1",
+                SubscriptionTransportMedium.RemoteFile
+            );
         }
 
         /// <summary>
@@ -255,7 +301,12 @@ namespace QuantConnect.Algorithm.CSharp
         /// <param name="line">Line.</param>
         /// <param name="date">Date.</param>
         /// <param name="isLiveMode">true if we're in live mode, false for backtesting mode</param>
-        public override BaseData Reader(SubscriptionDataConfig config, string line, DateTime date, bool isLiveMode)
+        public override BaseData Reader(
+            SubscriptionDataConfig config,
+            string line,
+            DateTime date,
+            bool isLiveMode
+        )
         {
             var index = new CAPE();
 
@@ -273,10 +324,7 @@ namespace QuantConnect.Algorithm.CSharp
                 index.Symbol = "CAPE";
                 index.Value = index.Cape;
             }
-            catch
-            {
-
-            }
+            catch { }
             return index;
         }
     }

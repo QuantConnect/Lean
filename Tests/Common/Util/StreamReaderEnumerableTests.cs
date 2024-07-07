@@ -31,7 +31,11 @@ namespace QuantConnect.Tests.Common.Util
         {
             var lines = Enumerable.Range(0, 10).Select(i => $"line {i}").ToArray();
             var content = string.Join(Environment.NewLine, lines);
-            using (var streamReader = new StreamReader(new MemoryStream(Encoding.Default.GetBytes(content))))
+            using (
+                var streamReader = new StreamReader(
+                    new MemoryStream(Encoding.Default.GetBytes(content))
+                )
+            )
             {
                 using var enumerable = new StreamReaderEnumerable(streamReader);
                 var actualLines = enumerable.ToList();
@@ -43,7 +47,9 @@ namespace QuantConnect.Tests.Common.Util
         public void DisposesWhenEnumerationIsCompleted()
         {
             var disposable = new TestDisposable();
-            using var memoryStream = new TestMemoryStream(Encoding.Default.GetBytes("line1\r\nline2\r\nline3"));
+            using var memoryStream = new TestMemoryStream(
+                Encoding.Default.GetBytes("line1\r\nline2\r\nline3")
+            );
             using var streamReader = new TestStreamReader(memoryStream);
             using var enumerable = new StreamReaderEnumerable(streamReader, disposable);
 
@@ -63,7 +69,10 @@ namespace QuantConnect.Tests.Common.Util
         {
             public bool DisposeCalled { get; private set; }
             public bool DisposeCalledDisposingValue { get; private set; }
-            public TestMemoryStream(byte[] bytes) : base(bytes) { }
+
+            public TestMemoryStream(byte[] bytes)
+                : base(bytes) { }
+
             protected override void Dispose(bool disposing)
             {
                 base.Dispose(disposing);
@@ -76,7 +85,10 @@ namespace QuantConnect.Tests.Common.Util
         {
             public bool DisposeCalled { get; private set; }
             public bool DisposeCalledDisposingValue { get; private set; }
-            public TestStreamReader(Stream stream) : base(stream) { }
+
+            public TestStreamReader(Stream stream)
+                : base(stream) { }
+
             protected override void Dispose(bool disposing)
             {
                 base.Dispose(disposing);
@@ -88,7 +100,11 @@ namespace QuantConnect.Tests.Common.Util
         class TestDisposable : IDisposable
         {
             public bool DisposeCalled { get; private set; }
-            public void Dispose() { DisposeCalled = true; }
+
+            public void Dispose()
+            {
+                DisposeCalled = true;
+            }
         }
     }
 }

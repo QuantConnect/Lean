@@ -13,13 +13,13 @@
  * limitations under the License.
 */
 
-using NodaTime;
-using System.Linq;
-using QuantConnect.Data;
-using QuantConnect.Interfaces;
-using QuantConnect.Data.Market;
 using System.Collections.Generic;
+using System.Linq;
+using NodaTime;
+using QuantConnect.Data;
 using QuantConnect.Data.Auxiliary;
+using QuantConnect.Data.Market;
+using QuantConnect.Interfaces;
 using QuantConnect.Lean.Engine.DataFeeds.Queues;
 
 namespace QuantConnect.Lean.Engine.HistoricalData
@@ -40,9 +40,7 @@ namespace QuantConnect.Lean.Engine.HistoricalData
         /// Initializes this history provider to work for the specified job
         /// </summary>
         /// <param name="parameters">The initialization parameters</param>
-        public override void Initialize(HistoryProviderInitializeParameters parameters)
-        {
-        }
+        public override void Initialize(HistoryProviderInitializeParameters parameters) { }
 
         /// <summary>
         /// Gets the history for the requested securities
@@ -50,7 +48,10 @@ namespace QuantConnect.Lean.Engine.HistoricalData
         /// <param name="requests">The historical data requests</param>
         /// <param name="sliceTimeZone">The time zone used when time stamping the slice instances</param>
         /// <returns>An enumerable of the slices of data covering the span specified in each request</returns>
-        public override IEnumerable<Slice> GetHistory(IEnumerable<HistoryRequest> requests, DateTimeZone sliceTimeZone)
+        public override IEnumerable<Slice> GetHistory(
+            IEnumerable<HistoryRequest> requests,
+            DateTimeZone sliceTimeZone
+        )
         {
             var single = requests.FirstOrDefault();
             if (single == null)
@@ -61,7 +62,9 @@ namespace QuantConnect.Lean.Engine.HistoricalData
             var currentLocalTime = single.StartTimeLocal;
             while (currentLocalTime < single.EndTimeLocal)
             {
-                if (single.ExchangeHours.IsOpen(currentLocalTime, single.IncludeExtendedMarketHours))
+                if (
+                    single.ExchangeHours.IsOpen(currentLocalTime, single.IncludeExtendedMarketHours)
+                )
                 {
                     _historyCount++;
 
@@ -86,8 +89,18 @@ namespace QuantConnect.Lean.Engine.HistoricalData
                         {
                             Symbol = single.Symbol,
                             Time = currentLocalTime,
-                            Ask = new Bar(_historyCount, _historyCount, _historyCount, _historyCount),
-                            Bid = new Bar(_historyCount, _historyCount, _historyCount, _historyCount),
+                            Ask = new Bar(
+                                _historyCount,
+                                _historyCount,
+                                _historyCount,
+                                _historyCount
+                            ),
+                            Bid = new Bar(
+                                _historyCount,
+                                _historyCount,
+                                _historyCount,
+                                _historyCount
+                            ),
                             Period = single.Resolution.ToTimeSpan()
                         };
                     }
@@ -97,7 +110,11 @@ namespace QuantConnect.Lean.Engine.HistoricalData
                         {
                             data = new ZipEntryName
                             {
-                                Symbol = Symbol.CreateFuture(single.Symbol.ID.Symbol, single.Symbol.ID.Market, currentLocalTime.AddDays(20)),
+                                Symbol = Symbol.CreateFuture(
+                                    single.Symbol.ID.Symbol,
+                                    single.Symbol.ID.Market,
+                                    currentLocalTime.AddDays(20)
+                                ),
                                 Time = currentLocalTime
                             };
                         }
@@ -105,12 +122,14 @@ namespace QuantConnect.Lean.Engine.HistoricalData
                         {
                             data = new ZipEntryName
                             {
-                                Symbol = Symbol.CreateOption(single.Symbol.Underlying.ID.Symbol,
+                                Symbol = Symbol.CreateOption(
+                                    single.Symbol.Underlying.ID.Symbol,
                                     single.Symbol.ID.Market,
                                     single.Symbol.Underlying.SecurityType.DefaultOptionStyle(),
                                     default(OptionRight),
                                     0m,
-                                    currentLocalTime.AddDays(20)),
+                                    currentLocalTime.AddDays(20)
+                                ),
                                 Time = currentLocalTime
                             };
                         }
@@ -124,7 +143,11 @@ namespace QuantConnect.Lean.Engine.HistoricalData
                         yield break;
                     }
 
-                    yield return new Slice(data.EndTime, new BaseData[] { data }, data.EndTime.ConvertFromUtc(single.ExchangeHours.TimeZone));
+                    yield return new Slice(
+                        data.EndTime,
+                        new BaseData[] { data },
+                        data.EndTime.ConvertFromUtc(single.ExchangeHours.TimeZone)
+                    );
                 }
 
                 currentLocalTime = currentLocalTime.Add(single.Resolution.ToTimeSpan());

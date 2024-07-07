@@ -61,7 +61,9 @@ namespace QuantConnect.Securities.Option
         public override void SetLeverage(Security security, decimal leverage)
         {
             // Options are leveraged products and different leverage cannot be set by user.
-            throw new InvalidOperationException("Options are leveraged products and different leverage cannot be set by user");
+            throw new InvalidOperationException(
+                "Options are leveraged products and different leverage cannot be set by user"
+            );
         }
 
         /// <summary>
@@ -71,7 +73,7 @@ namespace QuantConnect.Securities.Option
         /// <returns>The total margin in terms of the currency quoted in the order</returns>
         public override InitialMargin GetInitialMarginRequiredForOrder(
             InitialMarginRequiredForOrderParameters parameters
-            )
+        )
         {
             //Get the order value from the non-abstract order classes (MarketOrder, LimitOrder, StopMarketOrder)
             //Market order is approximated from the current security price and set in the MarketOrder Method in QCAlgorithm.
@@ -80,10 +82,13 @@ namespace QuantConnect.Securities.Option
                 new OrderFeeParameters(parameters.Security, parameters.Order)
             );
 
-            var feesInAccountCurrency = parameters.CurrencyConverter.ConvertToAccountCurrency(fees.Value);
+            var feesInAccountCurrency = parameters.CurrencyConverter.ConvertToAccountCurrency(
+                fees.Value
+            );
 
             var value = parameters.Order.GetValue(parameters.Security);
-            var orderMargin = value * GetMarginRequirement(parameters.Security, parameters.Order.Quantity, value);
+            var orderMargin =
+                value * GetMarginRequirement(parameters.Security, parameters.Order.Quantity, value);
 
             return orderMargin + Math.Sign(orderMargin) * feesInAccountCurrency.Amount;
         }
@@ -93,27 +98,39 @@ namespace QuantConnect.Securities.Option
         /// </summary>
         /// <param name="parameters">An object containing the security</param>
         /// <returns>The maintenance margin required for the provided holdings quantity/cost/value</returns>
-        public override MaintenanceMargin GetMaintenanceMargin(MaintenanceMarginParameters parameters)
+        public override MaintenanceMargin GetMaintenanceMargin(
+            MaintenanceMarginParameters parameters
+        )
         {
             // Long options have zero maintenance margin requirement
-            return parameters.Quantity >= 0 ? 0 : parameters.AbsoluteHoldingsCost * GetMaintenanceMarginRequirement(parameters);
+            return parameters.Quantity >= 0
+                ? 0
+                : parameters.AbsoluteHoldingsCost * GetMaintenanceMarginRequirement(parameters);
         }
 
         /// <summary>
         /// The margin that must be held in order to increase the position by the provided quantity
         /// </summary>
         /// <returns>The initial margin required for the provided security and quantity</returns>
-        public override InitialMargin GetInitialMarginRequirement(InitialMarginParameters parameters)
+        public override InitialMargin GetInitialMarginRequirement(
+            InitialMarginParameters parameters
+        )
         {
             var security = parameters.Security;
             var quantity = parameters.Quantity;
-            var value = security.QuoteCurrency.ConversionRate
-                        * security.SymbolProperties.ContractMultiplier
-                        * security.Price
-                        * quantity;
+            var value =
+                security.QuoteCurrency.ConversionRate
+                * security.SymbolProperties.ContractMultiplier
+                * security.Price
+                * quantity;
 
             // Initial margin requirement for long options is only the premium that is paid upfront
-            return new OptionInitialMargin(parameters.Quantity >= 0 ? 0 : value * GetMarginRequirement(security, quantity, value), value);
+            return new OptionInitialMargin(
+                parameters.Quantity >= 0
+                    ? 0
+                    : value * GetMarginRequirement(security, quantity, value),
+                value
+            );
         }
 
         /// <summary>
@@ -121,7 +138,11 @@ namespace QuantConnect.Securities.Option
         /// </summary>
         private decimal GetMaintenanceMarginRequirement(MaintenanceMarginParameters parameters)
         {
-            return GetMarginRequirement(parameters.Security, parameters.Quantity, parameters.HoldingsCost);
+            return GetMarginRequirement(
+                parameters.Security,
+                parameters.Quantity,
+                parameters.HoldingsCost
+            );
         }
 
         /// <summary>
@@ -135,11 +156,13 @@ namespace QuantConnect.Securities.Option
         {
             var option = (Option)security;
 
-            if (value == 0m ||
-                option.Close == 0m ||
-                option.StrikePrice == 0m ||
-                option.Underlying == null ||
-                option.Underlying.Close == 0m)
+            if (
+                value == 0m
+                || option.Close == 0m
+                || option.StrikePrice == 0m
+                || option.Underlying == null
+                || option.Underlying.Close == 0m
+            )
             {
                 return 0m;
             }
@@ -154,13 +177,17 @@ namespace QuantConnect.Securities.Option
             var underlying = option.Underlying;
 
             // inferring ratios of the option and its underlying to get underlying security value
-            var multiplierRatio = underlying.SymbolProperties.ContractMultiplier / optionProperties.ContractMultiplier;
+            var multiplierRatio =
+                underlying.SymbolProperties.ContractMultiplier
+                / optionProperties.ContractMultiplier;
             var quantityRatio = optionProperties.ContractUnitOfTrade;
 
             // Some options are based on a fraction of their underlying security value, such as NQX for example. Thus,
             // for them we need to scale the underlying value so that the later comparisons made with the option's strike
             // value are correct
-            var priceRatio = (underlying.Close / option.SymbolProperties.StrikeMultiplier) / (absValue / quantityRatio);
+            var priceRatio =
+                (underlying.Close / option.SymbolProperties.StrikeMultiplier)
+                / (absValue / quantityRatio);
             var underlyingValueRatio = multiplierRatio * quantityRatio * priceRatio;
 
             // calculating underlying security value less out-of-the-money amount
@@ -171,16 +198,21 @@ namespace QuantConnect.Securities.Option
             var strikePriceRatio = option.StrikePrice / (absValue / quantityRatio);
             strikePriceRatio = multiplierRatio * quantityRatio * strikePriceRatio;
 
-            var nakedMarginRequirement = option.Right == OptionRight.Call
-                ? NakedPositionMarginRequirement * underlyingValueRatio
-                : NakedPositionMarginRequirement * strikePriceRatio;
-            var nakedMarginRequirementOtm = security.Type == SecurityType.Option
-                ? EquityOptionNakedPositionMarginRequirementOtm
-                : IndexOptionNakedPositionMarginRequirementOtm;
+            var nakedMarginRequirement =
+                option.Right == OptionRight.Call
+                    ? NakedPositionMarginRequirement * underlyingValueRatio
+                    : NakedPositionMarginRequirement * strikePriceRatio;
+            var nakedMarginRequirementOtm =
+                security.Type == SecurityType.Option
+                    ? EquityOptionNakedPositionMarginRequirementOtm
+                    : IndexOptionNakedPositionMarginRequirementOtm;
 
-            return OptionMarginRequirement +
-                   Math.Abs(quantity) * Math.Max(nakedMarginRequirement,
-                       nakedMarginRequirementOtm * underlyingValueRatio - underlyingValueRatioOTM);
+            return OptionMarginRequirement
+                + Math.Abs(quantity)
+                    * Math.Max(
+                        nakedMarginRequirement,
+                        nakedMarginRequirementOtm * underlyingValueRatio - underlyingValueRatioOTM
+                    );
         }
     }
 }

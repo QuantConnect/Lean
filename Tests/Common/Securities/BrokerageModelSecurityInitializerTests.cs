@@ -36,35 +36,39 @@ namespace QuantConnect.Tests.Common.Securities
         private QCAlgorithm _algo;
         private BrokerageModelSecurityInitializer _brokerageInitializer;
         private Security _tradeBarSecurity;
-        private readonly SubscriptionDataConfig _tradeBarConfig = new SubscriptionDataConfig(typeof(TradeBar),
-                                                                                     Symbols.SPY,
-                                                                                     Resolution.Second,
-                                                                                     TimeZones.NewYork,
-                                                                                     TimeZones.NewYork,
-                                                                                     false,
-                                                                                     false,
-                                                                                     false,
-                                                                                     false,
-                                                                                     TickType.Trade,
-                                                                                     false);
+        private readonly SubscriptionDataConfig _tradeBarConfig = new SubscriptionDataConfig(
+            typeof(TradeBar),
+            Symbols.SPY,
+            Resolution.Second,
+            TimeZones.NewYork,
+            TimeZones.NewYork,
+            false,
+            false,
+            false,
+            false,
+            TickType.Trade,
+            false
+        );
 
         private Security _quoteBarSecurity;
-        private readonly SubscriptionDataConfig _quoteBarConfig = new SubscriptionDataConfig(typeof(QuoteBar),
-                                                                                     Symbols.EURUSD,
-                                                                                     Resolution.Second,
-                                                                                     DateTimeZone.ForOffset(Offset.FromHours(-5)),
-                                                                                     DateTimeZone.ForOffset(Offset.FromHours(-5)),
-                                                                                     false,
-                                                                                     false,
-                                                                                     false,
-                                                                                     false,
-                                                                                     TickType.Quote,
-                                                                                     false);
+        private readonly SubscriptionDataConfig _quoteBarConfig = new SubscriptionDataConfig(
+            typeof(QuoteBar),
+            Symbols.EURUSD,
+            Resolution.Second,
+            DateTimeZone.ForOffset(Offset.FromHours(-5)),
+            DateTimeZone.ForOffset(Offset.FromHours(-5)),
+            false,
+            false,
+            false,
+            false,
+            TickType.Quote,
+            false
+        );
 
         [SetUp]
         public void Setup()
         {
-            _algo =  new QCAlgorithm();
+            _algo = new QCAlgorithm();
             var historyProvider = new SubscriptionDataReaderHistoryProvider();
 
             historyProvider.Initialize(
@@ -105,8 +109,10 @@ namespace QuantConnect.Tests.Common.Securities
                 new SecurityCache()
             );
 
-            _brokerageInitializer = new BrokerageModelSecurityInitializer(new DefaultBrokerageModel(),
-                                                                          new FuncSecuritySeeder(_algo.GetLastKnownPrice));
+            _brokerageInitializer = new BrokerageModelSecurityInitializer(
+                new DefaultBrokerageModel(),
+                new FuncSecuritySeeder(_algo.GetLastKnownPrice)
+            );
         }
 
         [Test]
@@ -165,13 +171,14 @@ namespace QuantConnect.Tests.Common.Securities
         public void BrokerageModelSecurityInitializer_SetLeverageForBuyingPowerModel_Successfully()
         {
             var brokerageModel = new DefaultBrokerageModel(AccountType.Cash);
-            var localBrokerageInitializer = new BrokerageModelSecurityInitializer(brokerageModel,
-                new FuncSecuritySeeder(_algo.GetLastKnownPrice));
+            var localBrokerageInitializer = new BrokerageModelSecurityInitializer(
+                brokerageModel,
+                new FuncSecuritySeeder(_algo.GetLastKnownPrice)
+            );
             Assert.AreEqual(1.0, _tradeBarSecurity.Leverage);
             localBrokerageInitializer.Initialize(_tradeBarSecurity);
             Assert.AreEqual(1.0, _tradeBarSecurity.Leverage);
             Assert.AreEqual(1.0, _tradeBarSecurity.BuyingPowerModel.GetLeverage(_tradeBarSecurity));
         }
-
     }
 }

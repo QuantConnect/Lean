@@ -30,7 +30,7 @@ namespace QuantConnect.Tests.Brokerages
             decimal lowLimit,
             IOrderProperties properties = null,
             OrderSubmissionData orderSubmissionData = null
-            )
+        )
             : base(symbol, properties, orderSubmissionData)
         {
             _highLimit = highLimit;
@@ -39,8 +39,14 @@ namespace QuantConnect.Tests.Brokerages
 
         public override Order CreateShortOrder(decimal quantity)
         {
-            return new LimitIfTouchedOrder(Symbol, -Math.Abs(quantity), _lowLimit, _highLimit, DateTime.UtcNow,
-                properties: Properties)
+            return new LimitIfTouchedOrder(
+                Symbol,
+                -Math.Abs(quantity),
+                _lowLimit,
+                _highLimit,
+                DateTime.UtcNow,
+                properties: Properties
+            )
             {
                 OrderSubmissionData = OrderSubmissionData
             };
@@ -48,30 +54,55 @@ namespace QuantConnect.Tests.Brokerages
 
         public override Order CreateLongOrder(decimal quantity)
         {
-            return new LimitIfTouchedOrder(Symbol, Math.Abs(quantity), _highLimit, _lowLimit, DateTime.UtcNow,
-                properties: Properties)
+            return new LimitIfTouchedOrder(
+                Symbol,
+                Math.Abs(quantity),
+                _highLimit,
+                _lowLimit,
+                DateTime.UtcNow,
+                properties: Properties
+            )
             {
                 OrderSubmissionData = OrderSubmissionData
             };
         }
 
-        public override bool ModifyOrderToFill(IBrokerage brokerage, Order order, decimal lastMarketPrice)
+        public override bool ModifyOrderToFill(
+            IBrokerage brokerage,
+            Order order,
+            decimal lastMarketPrice
+        )
         {
-            var symbolProperties = SPDB.GetSymbolProperties(order.Symbol.ID.Market, order.Symbol, order.SecurityType, order.PriceCurrency);
+            var symbolProperties = SPDB.GetSymbolProperties(
+                order.Symbol.ID.Market,
+                order.Symbol,
+                order.SecurityType,
+                order.PriceCurrency
+            );
             var roundOffPlaces = symbolProperties.MinimumPriceVariation.GetDecimalPlaces();
-            var stop = (LimitIfTouchedOrder) order;
+            var stop = (LimitIfTouchedOrder)order;
             var previousStop = stop.TriggerPrice;
             if (order.Quantity > 0)
             {
                 // for buys we need to decrease the trigger price
-                stop.TriggerPrice = Math.Min(stop.TriggerPrice,
-                    Math.Max(stop.TriggerPrice / 2, Math.Round(lastMarketPrice, roundOffPlaces, MidpointRounding.AwayFromZero)));
+                stop.TriggerPrice = Math.Min(
+                    stop.TriggerPrice,
+                    Math.Max(
+                        stop.TriggerPrice / 2,
+                        Math.Round(lastMarketPrice, roundOffPlaces, MidpointRounding.AwayFromZero)
+                    )
+                );
             }
             else
             {
                 // for sells we need to increase the trigger price
-                stop.TriggerPrice = Math.Max(stop.TriggerPrice,
-                    Math.Min(stop.TriggerPrice * 2, Math.Round(lastMarketPrice, roundOffPlaces, MidpointRounding.AwayFromZero)));
+                stop.TriggerPrice = Math.Max(
+                    stop.TriggerPrice,
+                    Math.Min(
+                        stop.TriggerPrice * 2,
+                        Math.Round(lastMarketPrice, roundOffPlaces, MidpointRounding.AwayFromZero)
+                    )
+                );
             }
 
             stop.LimitPrice = stop.TriggerPrice;
@@ -83,14 +114,17 @@ namespace QuantConnect.Tests.Brokerages
 
         public override bool ExpectedCancellationResult => true;
     }
-    
+
     // to be used with brokerages which do not support UpdateOrder
     public class NonUpdateableLimitIfTouchedOrderTestParameters : LimitIfTouchedOrderTestParameters
     {
-        public NonUpdateableLimitIfTouchedOrderTestParameters(Symbol symbol, decimal highLimit, decimal lowLimit, IOrderProperties properties = null)
-            : base(symbol, highLimit, lowLimit, properties)
-        {
-        }
+        public NonUpdateableLimitIfTouchedOrderTestParameters(
+            Symbol symbol,
+            decimal highLimit,
+            decimal lowLimit,
+            IOrderProperties properties = null
+        )
+            : base(symbol, highLimit, lowLimit, properties) { }
 
         public override bool ModifyUntilFilled => false;
     }

@@ -13,11 +13,11 @@
  * limitations under the License.
 */
 
+using System.Diagnostics;
 using System.IO;
 using NUnit.Framework;
-using System.Diagnostics;
-using QuantConnect.Logging;
 using QuantConnect.Configuration;
+using QuantConnect.Logging;
 
 namespace QuantConnect.Tests
 {
@@ -26,12 +26,21 @@ namespace QuantConnect.Tests
         // Update in config.json to specify the alternate path to python.exe
         private static readonly string _pythonLocation = Config.Get("python-location", "python");
 
-        public static void RunPythonProcess(string args, out Process process, int timeout = 1000 * 45)
+        public static void RunPythonProcess(
+            string args,
+            out Process process,
+            int timeout = 1000 * 45
+        )
         {
             RunProcess(_pythonLocation, args, out process, timeout);
         }
 
-        public static void RunProcess(string targetProcess, string args, out Process process, int timeout = 1000 * 45)
+        public static void RunProcess(
+            string targetProcess,
+            string args,
+            out Process process,
+            int timeout = 1000 * 45
+        )
         {
             Log.Trace($"TestProcess.RunProcess(): running '{targetProcess}' args {args}");
 
@@ -46,10 +55,7 @@ namespace QuantConnect.Tests
                 WorkingDirectory = Directory.GetCurrentDirectory()
             };
 
-            process = new Process
-            {
-                StartInfo = startInfo,
-            };
+            process = new Process { StartInfo = startInfo, };
 
             // real-time stream process output
             process.OutputDataReceived += DebugLog;

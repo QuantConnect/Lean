@@ -13,13 +13,13 @@
  * limitations under the License.
 */
 
+using System;
 using NUnit.Framework;
 using QuantConnect.Data.Market;
 using QuantConnect.Orders;
 using QuantConnect.Orders.Fees;
 using QuantConnect.Securities;
 using QuantConnect.Securities.Equity;
-using System;
 
 namespace QuantConnect.Tests.Common.Orders.Fees
 {
@@ -33,7 +33,9 @@ namespace QuantConnect.Tests.Common.Orders.Fees
         public void Initialize()
         {
             var quoteCurrency = new Cash(Currencies.INR, 0, 1);
-            var exchangeHours = MarketHoursDatabase.FromDataFolder().GetExchangeHours(Market.India, Symbols.SBIN, SecurityType.Equity);
+            var exchangeHours = MarketHoursDatabase
+                .FromDataFolder()
+                .GetExchangeHours(Market.India, Symbols.SBIN, SecurityType.Equity);
             _sbininr = new Equity(
                 Symbols.SBIN,
                 exchangeHours,
@@ -43,17 +45,16 @@ namespace QuantConnect.Tests.Common.Orders.Fees
                 RegisteredSecurityDataTypesProvider.Null,
                 new SecurityCache()
             );
-            _sbininr.SetMarketPrice(new TradeBar(DateTime.Now, Symbols.SBIN, 100m, 100m, 100m, 100m, 1));
+            _sbininr.SetMarketPrice(
+                new TradeBar(DateTime.Now, Symbols.SBIN, 100m, 100m, 100m, 100m, 1)
+            );
         }
 
         [Test]
         public void ReturnsFeeInQuoteCurrencyInAccountCurrency()
         {
             var fee = _feeModel.GetOrderFee(
-                new OrderFeeParameters(
-                    _sbininr,
-                    new MarketOrder(_sbininr.Symbol, 1, DateTime.Now)
-                )
+                new OrderFeeParameters(_sbininr, new MarketOrder(_sbininr.Symbol, 1, DateTime.Now))
             );
 
             Assert.AreEqual(Currencies.INR, fee.Value.Currency);

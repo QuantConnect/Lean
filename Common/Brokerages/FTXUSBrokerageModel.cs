@@ -32,22 +32,21 @@ namespace QuantConnect.Brokerages
         /// <summary>
         /// Gets a map of the default markets to be used for each security type
         /// </summary>
-        public override IReadOnlyDictionary<SecurityType, string> DefaultMarkets { get; } = GetDefaultMarkets(Market.FTXUS);
+        public override IReadOnlyDictionary<SecurityType, string> DefaultMarkets { get; } =
+            GetDefaultMarkets(Market.FTXUS);
 
         /// <summary>
         /// Creates an instance of <see cref="FTXUSBrokerageModel"/> class
         /// </summary>
         /// <param name="accountType">Cash or Margin</param>
-        public FTXUSBrokerageModel(AccountType accountType = AccountType.Margin) : base(accountType)
-        {
-        }
+        public FTXUSBrokerageModel(AccountType accountType = AccountType.Margin)
+            : base(accountType) { }
 
         /// <summary>
         /// Provides FTX.US fee model
         /// </summary>
         /// <param name="security">The security to get a fee model for</param>
         /// <returns>The new fee model for this brokerage</returns>
-        public override IFeeModel GetFeeModel(Security security)
-            => new FTXUSFeeModel();
+        public override IFeeModel GetFeeModel(Security security) => new FTXUSFeeModel();
     }
 }

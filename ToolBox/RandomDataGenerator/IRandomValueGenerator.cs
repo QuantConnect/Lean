@@ -13,8 +13,8 @@
  * limitations under the License.
 */
 
-using QuantConnect.Securities;
 using System;
+using QuantConnect.Securities;
 
 namespace QuantConnect.ToolBox.RandomDataGenerator
 {
@@ -78,7 +78,11 @@ namespace QuantConnect.ToolBox.RandomDataGenerator
         /// <param name="maximumPercentDeviation">The maximum percent deviation. This value is in percent space,
         ///     so a value of 1m is equal to 1%.</param>
         /// <returns>A new decimal suitable for usage as price within the specified deviation from the reference price</returns>
-        decimal NextPrice(SecurityType securityType, string market, decimal referencePrice, decimal maximumPercentDeviation);
-
+        decimal NextPrice(
+            SecurityType securityType,
+            string market,
+            decimal referencePrice,
+            decimal maximumPercentDeviation
+        );
     }
 }

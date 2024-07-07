@@ -27,56 +27,39 @@ namespace QuantConnect.Data.Market
     /// </summary>
     public class FuturesChain : BaseData, IEnumerable<FuturesContract>
     {
-        private readonly Dictionary<Type, Dictionary<Symbol, List<BaseData>>> _auxiliaryData = new Dictionary<Type, Dictionary<Symbol, List<BaseData>>>();
+        private readonly Dictionary<Type, Dictionary<Symbol, List<BaseData>>> _auxiliaryData =
+            new Dictionary<Type, Dictionary<Symbol, List<BaseData>>>();
 
         /// <summary>
         /// Gets the most recent trade information for the underlying. This may
         /// be a <see cref="Tick"/> or a <see cref="TradeBar"/>
         /// </summary>
-        public BaseData Underlying
-        {
-            get; internal set;
-        }
+        public BaseData Underlying { get; internal set; }
 
         /// <summary>
         /// Gets all ticks for every futures contract in this chain, keyed by symbol
         /// </summary>
-        public Ticks Ticks
-        {
-            get; private set;
-        }
+        public Ticks Ticks { get; private set; }
 
         /// <summary>
         /// Gets all trade bars for every futures contract in this chain, keyed by symbol
         /// </summary>
-        public TradeBars TradeBars
-        {
-            get; private set;
-        }
+        public TradeBars TradeBars { get; private set; }
 
         /// <summary>
         /// Gets all quote bars for every futures contract in this chain, keyed by symbol
         /// </summary>
-        public QuoteBars QuoteBars
-        {
-            get; private set;
-        }
+        public QuoteBars QuoteBars { get; private set; }
 
         /// <summary>
         /// Gets all contracts in the chain, keyed by symbol
         /// </summary>
-        public FuturesContracts Contracts
-        {
-            get; private set;
-        }
+        public FuturesContracts Contracts { get; private set; }
 
         /// <summary>
         /// Gets the set of symbols that passed the <see cref="Future.ContractFilter"/>
         /// </summary>
-        public HashSet<Symbol> FilteredContracts
-        {
-            get; private set;
-        }
+        public HashSet<Symbol> FilteredContracts { get; private set; }
 
         /// <summary>
         /// Initializes a new default instance of the <see cref="FuturesChain"/> class
@@ -112,7 +95,14 @@ namespace QuantConnect.Data.Market
         /// <param name="quotes">All quote data for the entire futures chain</param>
         /// <param name="contracts">All contracts for this futures chain</param>
         /// <param name="filteredContracts">The filtered list of contracts for this futures chain</param>
-        public FuturesChain(Symbol canonicalFutureSymbol, DateTime time, IEnumerable<BaseData> trades, IEnumerable<BaseData> quotes, IEnumerable<FuturesContract> contracts, IEnumerable<Symbol> filteredContracts)
+        public FuturesChain(
+            Symbol canonicalFutureSymbol,
+            DateTime time,
+            IEnumerable<BaseData> trades,
+            IEnumerable<BaseData> quotes,
+            IEnumerable<FuturesContract> contracts,
+            IEnumerable<Symbol> filteredContracts
+        )
         {
             Time = time;
             Symbol = canonicalFutureSymbol;
@@ -182,7 +172,10 @@ namespace QuantConnect.Data.Market
         {
             List<BaseData> list;
             Dictionary<Symbol, List<BaseData>> dictionary;
-            if (!_auxiliaryData.TryGetValue(typeof(T), out dictionary) || !dictionary.TryGetValue(symbol, out list))
+            if (
+                !_auxiliaryData.TryGetValue(typeof(T), out dictionary)
+                || !dictionary.TryGetValue(symbol, out list)
+            )
             {
                 return default(T);
             }
@@ -238,7 +231,10 @@ namespace QuantConnect.Data.Market
         {
             List<BaseData> list;
             Dictionary<Symbol, List<BaseData>> dictionary;
-            if (!_auxiliaryData.TryGetValue(typeof(T), out dictionary) || !dictionary.TryGetValue(symbol, out list))
+            if (
+                !_auxiliaryData.TryGetValue(typeof(T), out dictionary)
+                || !dictionary.TryGetValue(symbol, out list)
+            )
             {
                 return new List<T>();
             }

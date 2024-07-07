@@ -15,8 +15,8 @@
 */
 
 using System;
-using QuantConnect.Data;
 using System.Collections.Generic;
+using QuantConnect.Data;
 using QuantConnect.Indicators;
 using QuantConnect.Interfaces;
 
@@ -76,9 +76,16 @@ namespace QuantConnect.Algorithm.CSharp
             {
                 foreach (var contract in chain.Contracts.Values)
                 {
-                    if (contract.Expiry.Month == 3 && contract.Symbol.ID.StrikePrice == 3700m && contract.Right == OptionRight.Call && slice.QuoteBars.ContainsKey(contract.Symbol))
+                    if (
+                        contract.Expiry.Month == 3
+                        && contract.Symbol.ID.StrikePrice == 3700m
+                        && contract.Right == OptionRight.Call
+                        && slice.QuoteBars.ContainsKey(contract.Symbol)
+                    )
                     {
-                        Log($"{Time} {contract.Strike}{(contract.Right == OptionRight.Call ? 'C' : 'P')} -- {slice.QuoteBars[contract.Symbol]}");
+                        Log(
+                            $"{Time} {contract.Strike}{(contract.Right == OptionRight.Call ? 'C' : 'P')} -- {slice.QuoteBars[contract.Symbol]}"
+                        );
                     }
 
                     if (Portfolio.Invested)
@@ -108,7 +115,9 @@ namespace QuantConnect.Algorithm.CSharp
             }
             if (Portfolio.TotalSaleVolume == 0)
             {
-                throw new RegressionTestException("Trade volume should be greater than zero by the end of this algorithm");
+                throw new RegressionTestException(
+                    "Trade volume should be greater than zero by the end of this algorithm"
+                );
             }
         }
 
@@ -120,7 +129,8 @@ namespace QuantConnect.Algorithm.CSharp
                 symbol.ID.OptionStyle,
                 symbol.ID.OptionRight == OptionRight.Call ? OptionRight.Put : OptionRight.Call,
                 symbol.ID.StrikePrice,
-                symbol.ID.Date);
+                symbol.ID.Date
+            );
         }
 
         /// <summary>
@@ -131,7 +141,8 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// This is used by the regression test system to indicate which languages this algorithm is written in.
         /// </summary>
-        public virtual List<Language> Languages { get; } = new() { Language.CSharp, Language.Python };
+        public virtual List<Language> Languages { get; } =
+            new() { Language.CSharp, Language.Python };
 
         /// <summary>
         /// Data Points count of all timeslices of algorithm
@@ -151,49 +162,50 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// This is used by the regression test system to indicate what the expected statistics are from running the algorithm
         /// </summary>
-        public virtual Dictionary<string, string> ExpectedStatistics => new Dictionary<string, string>
-        {
-            {"Total Orders", "8220"},
-            {"Average Win", "0.00%"},
-            {"Average Loss", "0.00%"},
-            {"Compounding Annual Return", "-100.000%"},
-            {"Drawdown", "13.500%"},
-            {"Expectancy", "-0.818"},
-            {"Net Profit", "-13.517%"},
-            {"Sharpe Ratio", "-2.678"},
-            {"Probabilistic Sharpe Ratio", "0%"},
-            {"Loss Rate", "89%"},
-            {"Win Rate", "11%"},
-            {"Profit-Loss Ratio", "0.69"},
-            {"Alpha", "4.398"},
-            {"Beta", "-0.989"},
-            {"Annual Standard Deviation", "0.373"},
-            {"Annual Variance", "0.139"},
-            {"Information Ratio", "-12.816"},
-            {"Tracking Error", "0.504"},
-            {"Treynor Ratio", "1.011"},
-            {"Total Fees", "$15207.00"},
-            {"Estimated Strategy Capacity", "$8800000.00"},
-            {"Fitness Score", "0.033"},
-            {"Kelly Criterion Estimate", "0"},
-            {"Kelly Criterion Probability Value", "0"},
-            {"Sortino Ratio", "-8.62"},
-            {"Return Over Maximum Drawdown", "-7.81"},
-            {"Portfolio Turnover", "302.321"},
-            {"Total Insights Generated", "0"},
-            {"Total Insights Closed", "0"},
-            {"Total Insights Analysis Completed", "0"},
-            {"Long Insight Count", "0"},
-            {"Short Insight Count", "0"},
-            {"Long/Short Ratio", "100%"},
-            {"Estimated Monthly Alpha Value", "$0"},
-            {"Total Accumulated Estimated Alpha Value", "$0"},
-            {"Mean Population Estimated Insight Value", "$0"},
-            {"Mean Population Direction", "0%"},
-            {"Mean Population Magnitude", "0%"},
-            {"Rolling Averaged Population Direction", "0%"},
-            {"Rolling Averaged Population Magnitude", "0%"},
-            {"OrderListHash", "35b3f4b7a225468d42ca085386a2383e"}
-        };
+        public virtual Dictionary<string, string> ExpectedStatistics =>
+            new Dictionary<string, string>
+            {
+                { "Total Orders", "8220" },
+                { "Average Win", "0.00%" },
+                { "Average Loss", "0.00%" },
+                { "Compounding Annual Return", "-100.000%" },
+                { "Drawdown", "13.500%" },
+                { "Expectancy", "-0.818" },
+                { "Net Profit", "-13.517%" },
+                { "Sharpe Ratio", "-2.678" },
+                { "Probabilistic Sharpe Ratio", "0%" },
+                { "Loss Rate", "89%" },
+                { "Win Rate", "11%" },
+                { "Profit-Loss Ratio", "0.69" },
+                { "Alpha", "4.398" },
+                { "Beta", "-0.989" },
+                { "Annual Standard Deviation", "0.373" },
+                { "Annual Variance", "0.139" },
+                { "Information Ratio", "-12.816" },
+                { "Tracking Error", "0.504" },
+                { "Treynor Ratio", "1.011" },
+                { "Total Fees", "$15207.00" },
+                { "Estimated Strategy Capacity", "$8800000.00" },
+                { "Fitness Score", "0.033" },
+                { "Kelly Criterion Estimate", "0" },
+                { "Kelly Criterion Probability Value", "0" },
+                { "Sortino Ratio", "-8.62" },
+                { "Return Over Maximum Drawdown", "-7.81" },
+                { "Portfolio Turnover", "302.321" },
+                { "Total Insights Generated", "0" },
+                { "Total Insights Closed", "0" },
+                { "Total Insights Analysis Completed", "0" },
+                { "Long Insight Count", "0" },
+                { "Short Insight Count", "0" },
+                { "Long/Short Ratio", "100%" },
+                { "Estimated Monthly Alpha Value", "$0" },
+                { "Total Accumulated Estimated Alpha Value", "$0" },
+                { "Mean Population Estimated Insight Value", "$0" },
+                { "Mean Population Direction", "0%" },
+                { "Mean Population Magnitude", "0%" },
+                { "Rolling Averaged Population Direction", "0%" },
+                { "Rolling Averaged Population Magnitude", "0%" },
+                { "OrderListHash", "35b3f4b7a225468d42ca085386a2383e" }
+            };
     }
 }

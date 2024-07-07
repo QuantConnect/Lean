@@ -18,12 +18,12 @@ using System.Collections.Generic;
 using System.Linq;
 using QuantConnect.Benchmarks;
 using QuantConnect.Data;
+using QuantConnect.Data.Fundamental;
 using QuantConnect.Data.UniverseSelection;
 using QuantConnect.Interfaces;
 using QuantConnect.Logging;
 using QuantConnect.Securities;
 using QuantConnect.Util;
-using QuantConnect.Data.Fundamental;
 
 namespace QuantConnect.Lean.Engine.DataFeeds
 {
@@ -35,7 +35,10 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         private IDataFeedSubscriptionManager _dataManager;
         private readonly IAlgorithm _algorithm;
         private readonly ISecurityService _securityService;
-        private readonly Dictionary<DateTime, Dictionary<Symbol, Security>> _pendingSecurityAdditions = new Dictionary<DateTime, Dictionary<Symbol, Security>>();
+        private readonly Dictionary<
+            DateTime,
+            Dictionary<Symbol, Security>
+        > _pendingSecurityAdditions = new Dictionary<DateTime, Dictionary<Symbol, Security>>();
         private readonly PendingRemovalsManager _pendingRemovalsManager;
         private readonly CurrencySubscriptionDataConfigManager _currencySubscriptionDataConfigManager;
         private readonly InternalSubscriptionManager _internalSubscriptionManager;
@@ -57,19 +60,25 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             ISecurityService securityService,
             IDataPermissionManager dataPermissionManager,
             IDataProvider dataProvider,
-            Resolution internalConfigResolution = Resolution.Minute)
+            Resolution internalConfigResolution = Resolution.Minute
+        )
         {
             _dataProvider = dataProvider;
             _algorithm = algorithm;
             _securityService = securityService;
             _pendingRemovalsManager = new PendingRemovalsManager(algorithm.Transactions);
-            _currencySubscriptionDataConfigManager = new CurrencySubscriptionDataConfigManager(algorithm.Portfolio.CashBook,
+            _currencySubscriptionDataConfigManager = new CurrencySubscriptionDataConfigManager(
+                algorithm.Portfolio.CashBook,
                 algorithm.Securities,
                 algorithm.SubscriptionManager,
                 _securityService,
-                Resolution.Minute);
+                Resolution.Minute
+            );
             // TODO: next step is to merge currency internal subscriptions under the same 'internal manager' instance and we could move this directly into the DataManager class
-            _internalSubscriptionManager = new InternalSubscriptionManager(_algorithm, internalConfigResolution);
+            _internalSubscriptionManager = new InternalSubscriptionManager(
+                _algorithm,
+                internalConfigResolution
+            );
             _securityChangesConstructor = new SecurityChangesConstructor();
         }
 
@@ -100,7 +109,11 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         /// <param name="universe">The universe to perform selection on</param>
         /// <param name="dateTimeUtc">The current date time in utc</param>
         /// <param name="universeData">The data provided to perform selection with</param>
-        public SecurityChanges ApplyUniverseSelection(Universe universe, DateTime dateTimeUtc, BaseDataCollection universeData)
+        public SecurityChanges ApplyUniverseSelection(
+            Universe universe,
+            DateTime dateTimeUtc,
+            BaseDataCollection universeData
+        )
         {
             var algorithmEndDateUtc = _algorithm.EndDate.ConvertToUtc(_algorithm.TimeZone);
             if (dateTimeUtc > algorithmEndDateUtc)
@@ -111,14 +124,18 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             IEnumerable<Symbol> selectSymbolsResult;
 
             // check if this universe must be filtered with fine fundamental data
-            Universe fineFiltered = (universe as FineFundamentalFilteredUniverse)?.FineFundamentalUniverse;
+            Universe fineFiltered = (
+                universe as FineFundamentalFilteredUniverse
+            )?.FineFundamentalUniverse;
             fineFiltered ??= (universe as FundamentalFilteredUniverse)?.FundamentalUniverse;
 
-            if (fineFiltered != null
+            if (
+                fineFiltered != null
                 // if the universe has been disposed we don't perform selection. This us handled bellow by 'Universe.PerformSelection'
                 // but in this case we directly call 'SelectSymbols' because we want to perform fine selection even if coarse returns the same
                 // symbols, see 'Universe.PerformSelection', which detects this and returns 'Universe.Unchanged'
-                && !universe.DisposeRequested)
+                && !universe.DisposeRequested
+            )
             {
                 // perform initial filtering and limit the result
                 selectSymbolsResult = universe.SelectSymbols(dateTimeUtc, universeData);
@@ -129,8 +146,9 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                     var fineCollection = new BaseDataCollection();
 
                     // if the input is already fundamental data we just need to filter it and pass it through
-                    var hasFundamentalData = universeData.Data.Count > 0 && universeData.Data[0] is Fundamental;
-                    if(hasFundamentalData)
+                    var hasFundamentalData =
+                        universeData.Data.Count > 0 && universeData.Data[0] is Fundamental;
+                    if (hasFundamentalData)
                     {
                         // Remove selected symbols that does not have fine fundamental data
                         var anyDoesNotHaveFundamentalData = false;
@@ -139,23 +157,33 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                         // which do not use coarse data as underlying, in which case it could happen that we try to load fine fundamental data that is missing, but no problem,
                         // 'FineFundamentalSubscriptionEnumeratorFactory' won't emit it
                         var set = selectSymbolsResult.ToHashSet();
-                        fineCollection.Data.AddRange(universeData.Data.OfType<Fundamental>().Where(fundamental => {
-                            // we remove to we distict by symbol
-                            if (set.Remove(fundamental.Symbol))
-                            {
-                                if (!fundamental.HasFundamentalData)
+                        fineCollection.Data.AddRange(
+                            universeData
+                                .Data.OfType<Fundamental>()
+                                .Where(fundamental =>
                                 {
-                                    anyDoesNotHaveFundamentalData = true;
+                                    // we remove to we distict by symbol
+                                    if (set.Remove(fundamental.Symbol))
+                                    {
+                                        if (!fundamental.HasFundamentalData)
+                                        {
+                                            anyDoesNotHaveFundamentalData = true;
+                                            return false;
+                                        }
+                                        return true;
+                                    }
                                     return false;
-                                }
-                                return true;
-                            }
-                            return false;
-                        }));
+                                })
+                        );
 
-                        if (!_anyDoesNotHaveFundamentalDataWarningLogged && anyDoesNotHaveFundamentalData)
+                        if (
+                            !_anyDoesNotHaveFundamentalDataWarningLogged
+                            && anyDoesNotHaveFundamentalData
+                        )
                         {
-                            _algorithm.Debug("Note: Your coarse selection filter was updated to exclude symbols without fine fundamental data. Make sure your coarse filter excludes symbols where HasFundamental is false.");
+                            _algorithm.Debug(
+                                "Note: Your coarse selection filter was updated to exclude symbols without fine fundamental data. Make sure your coarse filter excludes symbols where HasFundamental is false."
+                            );
                             _anyDoesNotHaveFundamentalDataWarningLogged = true;
                         }
                     }
@@ -171,7 +199,10 @@ namespace QuantConnect.Lean.Engine.DataFeeds
 
                     universeData.Data = fineCollection.Data;
                     // perform the fine fundamental universe selection
-                    selectSymbolsResult = fineFiltered.PerformSelection(dateTimeUtc, fineCollection);
+                    selectSymbolsResult = fineFiltered.PerformSelection(
+                        dateTimeUtc,
+                        fineCollection
+                    );
                 }
             }
             else
@@ -191,7 +222,8 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             RemoveSecurityFromUniverse(
                 _pendingRemovalsManager.CheckPendingRemovals(universe.Selected, universe),
                 dateTimeUtc,
-                algorithmEndDateUtc);
+                algorithmEndDateUtc
+            );
 
             // check for no changes second
             if (ReferenceEquals(selectSymbolsResult, Universe.Unchanged))
@@ -200,14 +232,20 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             }
 
             // determine which data subscriptions need to be removed from this universe
-            foreach (var member in universe.Securities.Values.OrderBy(member => member.Security.Symbol.SecurityType).ThenBy(x => x.Security.Symbol.ID))
+            foreach (
+                var member in universe
+                    .Securities.Values.OrderBy(member => member.Security.Symbol.SecurityType)
+                    .ThenBy(x => x.Security.Symbol.ID)
+            )
             {
                 var security = member.Security;
                 // if we've selected this subscription again, keep it
-                if (universe.Selected.Contains(security.Symbol)) continue;
+                if (universe.Selected.Contains(security.Symbol))
+                    continue;
 
                 // don't remove if the universe wants to keep him in
-                if (!universe.CanRemoveMember(dateTimeUtc, security)) continue;
+                if (!universe.CanRemoveMember(dateTimeUtc, security))
+                    continue;
 
                 if (!member.Security.IsDelisted)
                 {
@@ -215,9 +253,11 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                     _securityChangesConstructor.Remove(member.Security, member.IsInternal);
                 }
 
-                RemoveSecurityFromUniverse(_pendingRemovalsManager.TryRemoveMember(security, universe),
+                RemoveSecurityFromUniverse(
+                    _pendingRemovalsManager.TryRemoveMember(security, universe),
                     dateTimeUtc,
-                    algorithmEndDateUtc);
+                    algorithmEndDateUtc
+                );
             }
 
             Dictionary<Symbol, Security> pendingAdditions;
@@ -243,28 +283,50 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                 Security underlying = null;
                 if (symbol.HasUnderlying)
                 {
-                    underlying = GetOrCreateSecurity(pendingAdditions, symbol.Underlying, universe.UniverseSettings);
+                    underlying = GetOrCreateSecurity(
+                        pendingAdditions,
+                        symbol.Underlying,
+                        universe.UniverseSettings
+                    );
                 }
                 // create the new security, the algorithm thread will add this at the appropriate time
-                var security = GetOrCreateSecurity(pendingAdditions, symbol, universe.UniverseSettings, underlying);
+                var security = GetOrCreateSecurity(
+                    pendingAdditions,
+                    symbol,
+                    universe.UniverseSettings,
+                    underlying
+                );
 
                 var addedSubscription = false;
                 var dataFeedAdded = false;
                 var internalFeed = true;
-                foreach (var request in universe.GetSubscriptionRequests(security, dateTimeUtc, algorithmEndDateUtc,
-                                                                         _algorithm.SubscriptionManager.SubscriptionDataConfigService))
+                foreach (
+                    var request in universe.GetSubscriptionRequests(
+                        security,
+                        dateTimeUtc,
+                        algorithmEndDateUtc,
+                        _algorithm.SubscriptionManager.SubscriptionDataConfigService
+                    )
+                )
                 {
-                    if (security.Symbol == request.Configuration.Symbol // Just in case check its the same symbol, else AddData will throw.
-                        && !security.Subscriptions.Contains(request.Configuration))
+                    if (
+                        security.Symbol == request.Configuration.Symbol // Just in case check its the same symbol, else AddData will throw.
+                        && !security.Subscriptions.Contains(request.Configuration)
+                    )
                     {
                         // For now this is required for retro compatibility with usages of security.Subscriptions
                         security.AddData(request.Configuration);
                     }
 
-                    var toRemove = _currencySubscriptionDataConfigManager.GetSubscriptionDataConfigToRemove(request.Configuration.Symbol);
+                    var toRemove =
+                        _currencySubscriptionDataConfigManager.GetSubscriptionDataConfigToRemove(
+                            request.Configuration.Symbol
+                        );
                     if (toRemove != null)
                     {
-                        Log.Trace($"UniverseSelection.ApplyUniverseSelection(): Removing internal currency data feed {toRemove}");
+                        Log.Trace(
+                            $"UniverseSelection.ApplyUniverseSelection(): Removing internal currency data feed {toRemove}"
+                        );
                         _dataManager.RemoveSubscription(toRemove);
                     }
 
@@ -305,7 +367,12 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             {
                 // for performance lets not create the message string if debugging is not enabled
                 // this can be executed many times and its in the algorithm thread
-                Log.Debug("UniverseSelection.ApplyUniverseSelection(): " + dateTimeUtc + ": " + securityChanges);
+                Log.Debug(
+                    "UniverseSelection.ApplyUniverseSelection(): "
+                        + dateTimeUtc
+                        + ": "
+                        + securityChanges
+                );
             }
 
             return securityChanges;
@@ -329,7 +396,13 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                     var resolution = _algorithm.LiveMode ? Resolution.Minute : Resolution.Hour;
 
                     // Check that the tradebar subscription we are using can support this resolution GH #5893
-                    var subscriptionType = _algorithm.SubscriptionManager.SubscriptionDataConfigService.LookupSubscriptionConfigDataTypes(securityBenchmark.Security.Type, resolution, securityBenchmark.Security.Symbol.IsCanonical()).First();
+                    var subscriptionType = _algorithm
+                        .SubscriptionManager.SubscriptionDataConfigService.LookupSubscriptionConfigDataTypes(
+                            securityBenchmark.Security.Type,
+                            resolution,
+                            securityBenchmark.Security.Symbol.IsCanonical()
+                        )
+                        .First();
                     var symbol = securityBenchmark.Security.Symbol;
                     var isCustomData = false;
 
@@ -337,10 +410,16 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                     // type
                     if (symbol.SecurityType == SecurityType.Base)
                     {
-                        var symbolDataConfigs = _algorithm.SubscriptionManager.SubscriptionDataConfigService.GetSubscriptionDataConfigs(symbol);
+                        var symbolDataConfigs =
+                            _algorithm.SubscriptionManager.SubscriptionDataConfigService.GetSubscriptionDataConfigs(
+                                symbol
+                            );
                         if (symbolDataConfigs.Any())
                         {
-                            subscriptionType = new Tuple<Type, TickType>(symbolDataConfigs.First().Type, TickType.Trade);
+                            subscriptionType = new Tuple<Type, TickType>(
+                                symbolDataConfigs.First().Type,
+                                TickType.Trade
+                            );
                             isCustomData = true;
                         }
                     }
@@ -353,54 +432,71 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                         resolution = supportedResolutions.OrderByDescending(x => x).First();
                     }
 
-                    var subscriptionList = new List<Tuple<Type, TickType>>() {subscriptionType};
-                    var dataConfig = _algorithm.SubscriptionManager.SubscriptionDataConfigService.Add(
-                        securityBenchmark.Security.Symbol,
-                        resolution,
-                        isInternalFeed: true,
-                        fillForward: false,
-                        isCustomData: isCustomData,
-                        subscriptionDataTypes: subscriptionList
-                        ).First();
+                    var subscriptionList = new List<Tuple<Type, TickType>>() { subscriptionType };
+                    var dataConfig = _algorithm
+                        .SubscriptionManager.SubscriptionDataConfigService.Add(
+                            securityBenchmark.Security.Symbol,
+                            resolution,
+                            isInternalFeed: true,
+                            fillForward: false,
+                            isCustomData: isCustomData,
+                            subscriptionDataTypes: subscriptionList
+                        )
+                        .First();
 
                     // we want to start from the previous tradable bar so the benchmark security
                     // never has 0 price
                     var previousTradableBar = Time.GetStartTimeForTradeBars(
-                        securityBenchmark.Security.Exchange.Hours,
-                        utcStart.ConvertFromUtc(securityBenchmark.Security.Exchange.TimeZone),
-                        _algorithm.LiveMode ? Time.OneMinute : Time.OneDay,
-                        1,
-                        false,
-                        dataConfig.DataTimeZone).ConvertToUtc(securityBenchmark.Security.Exchange.TimeZone);
+                            securityBenchmark.Security.Exchange.Hours,
+                            utcStart.ConvertFromUtc(securityBenchmark.Security.Exchange.TimeZone),
+                            _algorithm.LiveMode ? Time.OneMinute : Time.OneDay,
+                            1,
+                            false,
+                            dataConfig.DataTimeZone
+                        )
+                        .ConvertToUtc(securityBenchmark.Security.Exchange.TimeZone);
 
                     if (dataConfig != null)
                     {
-                        added |= _dataManager.AddSubscription(new SubscriptionRequest(
-                            false,
-                            null,
-                            securityBenchmark.Security,
-                            dataConfig,
-                            previousTradableBar,
-                            _algorithm.EndDate.ConvertToUtc(_algorithm.TimeZone)));
+                        added |= _dataManager.AddSubscription(
+                            new SubscriptionRequest(
+                                false,
+                                null,
+                                securityBenchmark.Security,
+                                dataConfig,
+                                previousTradableBar,
+                                _algorithm.EndDate.ConvertToUtc(_algorithm.TimeZone)
+                            )
+                        );
 
-                        Log.Trace($"UniverseSelection.AddPendingInternalDataFeeds(): Adding internal benchmark data feed {dataConfig}");
+                        Log.Trace(
+                            $"UniverseSelection.AddPendingInternalDataFeeds(): Adding internal benchmark data feed {dataConfig}"
+                        );
                     }
                 }
             }
 
-            if (_currencySubscriptionDataConfigManager.UpdatePendingSubscriptionDataConfigs(_algorithm.BrokerageModel))
+            if (
+                _currencySubscriptionDataConfigManager.UpdatePendingSubscriptionDataConfigs(
+                    _algorithm.BrokerageModel
+                )
+            )
             {
-                foreach (var subscriptionDataConfig in _currencySubscriptionDataConfigManager
-                    .GetPendingSubscriptionDataConfigs())
+                foreach (
+                    var subscriptionDataConfig in _currencySubscriptionDataConfigManager.GetPendingSubscriptionDataConfigs()
+                )
                 {
                     var security = _algorithm.Securities[subscriptionDataConfig.Symbol];
-                    added |= _dataManager.AddSubscription(new SubscriptionRequest(
-                        false,
-                        null,
-                        security,
-                        subscriptionDataConfig,
-                        utcStart,
-                        _algorithm.EndDate.ConvertToUtc(_algorithm.TimeZone)));
+                    added |= _dataManager.AddSubscription(
+                        new SubscriptionRequest(
+                            false,
+                            null,
+                            security,
+                            subscriptionDataConfig,
+                            utcStart,
+                            _algorithm.EndDate.ConvertToUtc(_algorithm.TimeZone)
+                        )
+                    );
                 }
             }
             return added;
@@ -411,7 +507,10 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         /// </summary>
         public void EnsureCurrencyDataFeeds(SecurityChanges securityChanges)
         {
-            _currencySubscriptionDataConfigManager.EnsureCurrencySubscriptionDataConfigs(securityChanges, _algorithm.BrokerageModel);
+            _currencySubscriptionDataConfigManager.EnsureCurrencySubscriptionDataConfigs(
+                securityChanges,
+                _algorithm.BrokerageModel
+            );
         }
 
         public SecurityChanges HandleDelisting(BaseData data, bool isInternalFeed)
@@ -436,7 +535,8 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         private void RemoveSecurityFromUniverse(
             List<PendingRemovalsManager.RemovedMember> removedMembers,
             DateTime dateTimeUtc,
-            DateTime algorithmEndDateUtc)
+            DateTime algorithmEndDateUtc
+        )
         {
             if (removedMembers == null)
             {
@@ -450,9 +550,17 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                 // safe to remove the member from the universe
                 universe.RemoveMember(dateTimeUtc, member);
 
-                var isActive = _algorithm.UniverseManager.ActiveSecurities.ContainsKey(member.Symbol);
-                foreach (var subscription in universe.GetSubscriptionRequests(member, dateTimeUtc, algorithmEndDateUtc,
-                                                                              _algorithm.SubscriptionManager.SubscriptionDataConfigService))
+                var isActive = _algorithm.UniverseManager.ActiveSecurities.ContainsKey(
+                    member.Symbol
+                );
+                foreach (
+                    var subscription in universe.GetSubscriptionRequests(
+                        member,
+                        dateTimeUtc,
+                        algorithmEndDateUtc,
+                        _algorithm.SubscriptionManager.SubscriptionDataConfigService
+                    )
+                )
                 {
                     if (_dataManager.RemoveSubscription(subscription.Configuration, universe))
                     {
@@ -475,13 +583,27 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             }
         }
 
-        private Security GetOrCreateSecurity(Dictionary<Symbol, Security> pendingAdditions, Symbol symbol, UniverseSettings universeSettings, Security underlying = null)
+        private Security GetOrCreateSecurity(
+            Dictionary<Symbol, Security> pendingAdditions,
+            Symbol symbol,
+            UniverseSettings universeSettings,
+            Security underlying = null
+        )
         {
             // create the new security, the algorithm thread will add this at the appropriate time
             Security security;
-            if (!pendingAdditions.TryGetValue(symbol, out security) && !_algorithm.Securities.TryGetValue(symbol, out security))
+            if (
+                !pendingAdditions.TryGetValue(symbol, out security)
+                && !_algorithm.Securities.TryGetValue(symbol, out security)
+            )
             {
-                security = _securityService.CreateSecurity(symbol, new List<SubscriptionDataConfig>(), universeSettings.Leverage, symbol.ID.SecurityType.IsOption(), underlying);
+                security = _securityService.CreateSecurity(
+                    symbol,
+                    new List<SubscriptionDataConfig>(),
+                    universeSettings.Leverage,
+                    symbol.ID.SecurityType.IsOption(),
+                    underlying
+                );
 
                 pendingAdditions.Add(symbol, security);
             }

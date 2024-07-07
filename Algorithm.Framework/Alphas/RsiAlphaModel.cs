@@ -28,7 +28,8 @@ namespace QuantConnect.Algorithm.Framework.Alphas
     /// </summary>
     public class RsiAlphaModel : AlphaModel
     {
-        private readonly Dictionary<Symbol, SymbolData> _symbolDataBySymbol = new Dictionary<Symbol, SymbolData>();
+        private readonly Dictionary<Symbol, SymbolData> _symbolDataBySymbol =
+            new Dictionary<Symbol, SymbolData>();
 
         private readonly int _period;
         private readonly Resolution _resolution;
@@ -38,10 +39,7 @@ namespace QuantConnect.Algorithm.Framework.Alphas
         /// </summary>
         /// <param name="period">The RSI indicator period</param>
         /// <param name="resolution">The resolution of data sent into the RSI indicator</param>
-        public RsiAlphaModel(
-            int period = 14,
-            Resolution resolution = Resolution.Daily
-            )
+        public RsiAlphaModel(int period = 14, Resolution resolution = Resolution.Daily)
         {
             _period = period;
             _resolution = resolution;
@@ -76,7 +74,9 @@ namespace QuantConnect.Algorithm.Framework.Alphas
                             break;
 
                         case State.TrippedHigh:
-                            insights.Add(Insight.Price(symbol, insightPeriod, InsightDirection.Down));
+                            insights.Add(
+                                Insight.Price(symbol, insightPeriod, InsightDirection.Down)
+                            );
                             break;
                     }
                 }
@@ -121,7 +121,8 @@ namespace QuantConnect.Algorithm.Framework.Alphas
             if (addedSymbols.Count > 0)
             {
                 // warmup our indicators by pushing history through the consolidators
-                algorithm.History(addedSymbols, _period, _resolution)
+                algorithm
+                    .History(addedSymbols, _period, _resolution)
                     .PushThrough(data =>
                     {
                         SymbolData symbolData;
@@ -179,7 +180,12 @@ namespace QuantConnect.Algorithm.Framework.Alphas
             private QCAlgorithm _algorithm;
             private IDataConsolidator _consolidator;
 
-            public SymbolData(QCAlgorithm algorithm, Symbol symbol, int period, Resolution resolution)
+            public SymbolData(
+                QCAlgorithm algorithm,
+                Symbol symbol,
+                int period,
+                Resolution resolution
+            )
             {
                 _algorithm = algorithm;
                 _symbol = symbol;

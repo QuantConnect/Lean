@@ -37,9 +37,10 @@ namespace QuantConnect.Orders.Fees
         /// </summary>
         /// <param name="mFee">Maker fee value</param>
         /// <param name="tFee">Taker fee value</param>
-        public BinanceCoinFuturesFeeModel(decimal mFee = MakerTier1Fee, decimal tFee = TakerTier1Fee)
-            : base(mFee, tFee)
-        {
-        }
+        public BinanceCoinFuturesFeeModel(
+            decimal mFee = MakerTier1Fee,
+            decimal tFee = TakerTier1Fee
+        )
+            : base(mFee, tFee) { }
     }
 }

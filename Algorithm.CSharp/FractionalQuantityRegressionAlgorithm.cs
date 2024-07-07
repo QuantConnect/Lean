@@ -13,13 +13,13 @@
  * limitations under the License.
 */
 
-using QuantConnect.Data.Consolidators;
-using QuantConnect.Data.Market;
 using System;
 using System.Collections.Generic;
 using QuantConnect.Brokerages;
-using QuantConnect.Securities;
+using QuantConnect.Data.Consolidators;
+using QuantConnect.Data.Market;
 using QuantConnect.Interfaces;
+using QuantConnect.Securities;
 
 namespace QuantConnect.Algorithm.CSharp
 {
@@ -41,7 +41,15 @@ namespace QuantConnect.Algorithm.CSharp
             SetBrokerageModel(BrokerageName.GDAX, AccountType.Cash);
 
             SetTimeZone(NodaTime.DateTimeZone.Utc);
-            var security = AddSecurity(SecurityType.Crypto, "BTCUSD", Resolution.Daily, Market.GDAX, false, 1, true);
+            var security = AddSecurity(
+                SecurityType.Crypto,
+                "BTCUSD",
+                Resolution.Daily,
+                Market.GDAX,
+                false,
+                1,
+                true
+            );
 
             // The default buying power model for the Crypto security type is now CashBuyingPowerModel.
             // Since this test algorithm uses leverage we need to set a buying power model with margin.
@@ -55,7 +63,9 @@ namespace QuantConnect.Algorithm.CSharp
 
         private void DataConsolidated(object sender, TradeBar e)
         {
-            var quantity = Math.Truncate((Portfolio.Cash + Portfolio.TotalFees) / Math.Abs(e.Value + 1));
+            var quantity = Math.Truncate(
+                (Portfolio.Cash + Portfolio.TotalFees) / Math.Abs(e.Value + 1)
+            );
             if (!Portfolio.Invested)
             {
                 Order("BTCUSD", quantity);
@@ -111,35 +121,36 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// This is used by the regression test system to indicate what the expected statistics are from running the algorithm
         /// </summary>
-        public Dictionary<string, string> ExpectedStatistics => new Dictionary<string, string>
-        {
-            {"Total Orders", "7"},
-            {"Average Win", "6.02%"},
-            {"Average Loss", "-2.40%"},
-            {"Compounding Annual Return", "1497.266%"},
-            {"Drawdown", "5.500%"},
-            {"Expectancy", "1.339"},
-            {"Start Equity", "100000.0"},
-            {"End Equity", "113775.23"},
-            {"Net Profit", "13.775%"},
-            {"Sharpe Ratio", "4.906"},
-            {"Sortino Ratio", "11.482"},
-            {"Probabilistic Sharpe Ratio", "63.428%"},
-            {"Loss Rate", "33%"},
-            {"Win Rate", "67%"},
-            {"Profit-Loss Ratio", "2.51"},
-            {"Alpha", "0"},
-            {"Beta", "0"},
-            {"Annual Standard Deviation", "0.456"},
-            {"Annual Variance", "0.208"},
-            {"Information Ratio", "4.922"},
-            {"Tracking Error", "0.456"},
-            {"Treynor Ratio", "0"},
-            {"Total Fees", "$2650.41"},
-            {"Estimated Strategy Capacity", "$30000.00"},
-            {"Lowest Capacity Asset", "BTCUSD 2XR"},
-            {"Portfolio Turnover", "46.79%"},
-            {"OrderListHash", "864a3590199bfde14bed81bfbb8fcf70"}
-        };
+        public Dictionary<string, string> ExpectedStatistics =>
+            new Dictionary<string, string>
+            {
+                { "Total Orders", "7" },
+                { "Average Win", "6.02%" },
+                { "Average Loss", "-2.40%" },
+                { "Compounding Annual Return", "1497.266%" },
+                { "Drawdown", "5.500%" },
+                { "Expectancy", "1.339" },
+                { "Start Equity", "100000.0" },
+                { "End Equity", "113775.23" },
+                { "Net Profit", "13.775%" },
+                { "Sharpe Ratio", "4.906" },
+                { "Sortino Ratio", "11.482" },
+                { "Probabilistic Sharpe Ratio", "63.428%" },
+                { "Loss Rate", "33%" },
+                { "Win Rate", "67%" },
+                { "Profit-Loss Ratio", "2.51" },
+                { "Alpha", "0" },
+                { "Beta", "0" },
+                { "Annual Standard Deviation", "0.456" },
+                { "Annual Variance", "0.208" },
+                { "Information Ratio", "4.922" },
+                { "Tracking Error", "0.456" },
+                { "Treynor Ratio", "0" },
+                { "Total Fees", "$2650.41" },
+                { "Estimated Strategy Capacity", "$30000.00" },
+                { "Lowest Capacity Asset", "BTCUSD 2XR" },
+                { "Portfolio Turnover", "46.79%" },
+                { "OrderListHash", "864a3590199bfde14bed81bfbb8fcf70" }
+            };
     }
 }

@@ -26,9 +26,12 @@ namespace QuantConnect.Algorithm.CSharp
     /// Algorithm which reproduces GH issue 3861, where in some cases 2 consolidators were added when
     /// using the automatic indicator warmup feature
     /// </summary>
-    public class AutomaticIndicatorWarmupRegressionAlgorithm : QCAlgorithm, IRegressionAlgorithmDefinition
+    public class AutomaticIndicatorWarmupRegressionAlgorithm
+        : QCAlgorithm,
+            IRegressionAlgorithmDefinition
     {
         private Symbol _spy;
+
         public override void Initialize()
         {
             SetStartDate(2013, 10, 07);
@@ -46,7 +49,7 @@ namespace QuantConnect.Algorithm.CSharp
 
             // Test case 2
             var indicator = new CustomIndicator(10);
-            RegisterIndicator(_spy, indicator, Resolution.Minute, (Func<IBaseData, decimal>) null);
+            RegisterIndicator(_spy, indicator, Resolution.Minute, (Func<IBaseData, decimal>)null);
 
             if (indicator.IsReady)
             {
@@ -67,12 +70,16 @@ namespace QuantConnect.Algorithm.CSharp
         {
             if (!Portfolio.Invested)
             {
-                var subscription = SubscriptionManager.SubscriptionDataConfigService.GetSubscriptionDataConfigs(_spy).First(config => config.TickType == TickType.Trade);
+                var subscription = SubscriptionManager
+                    .SubscriptionDataConfigService.GetSubscriptionDataConfigs(_spy)
+                    .First(config => config.TickType == TickType.Trade);
 
                 // we expect 1 consolidator per indicator
                 if (subscription.Consolidators.Count != 2)
                 {
-                    throw new RegressionTestException($"Unexpected consolidator count for subscription: {subscription.Consolidators.Count}");
+                    throw new RegressionTestException(
+                        $"Unexpected consolidator count for subscription: {subscription.Consolidators.Count}"
+                    );
                 }
                 SetHoldings(_spy, 1);
             }
@@ -81,14 +88,20 @@ namespace QuantConnect.Algorithm.CSharp
         private class CustomIndicator : SimpleMovingAverage
         {
             private IndicatorDataPoint _previous;
-            public CustomIndicator(int period) : base(period)
-            {
-            }
-            protected override decimal ComputeNextValue(IReadOnlyWindow<IndicatorDataPoint> window, IndicatorDataPoint input)
+
+            public CustomIndicator(int period)
+                : base(period) { }
+
+            protected override decimal ComputeNextValue(
+                IReadOnlyWindow<IndicatorDataPoint> window,
+                IndicatorDataPoint input
+            )
             {
                 if (_previous != null && input.EndTime == _previous.EndTime)
                 {
-                    throw new RegressionTestException($"Unexpected indicator double data point call: {_previous}");
+                    throw new RegressionTestException(
+                        $"Unexpected indicator double data point call: {_previous}"
+                    );
                 }
                 _previous = input;
                 return base.ComputeNextValue(window, input);
@@ -123,35 +136,36 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// This is used by the regression test system to indicate what the expected statistics are from running the algorithm
         /// </summary>
-        public Dictionary<string, string> ExpectedStatistics => new Dictionary<string, string>
-        {
-            {"Total Orders", "1"},
-            {"Average Win", "0%"},
-            {"Average Loss", "0%"},
-            {"Compounding Annual Return", "271.453%"},
-            {"Drawdown", "2.200%"},
-            {"Expectancy", "0"},
-            {"Start Equity", "100000"},
-            {"End Equity", "101691.92"},
-            {"Net Profit", "1.692%"},
-            {"Sharpe Ratio", "8.854"},
-            {"Sortino Ratio", "0"},
-            {"Probabilistic Sharpe Ratio", "67.609%"},
-            {"Loss Rate", "0%"},
-            {"Win Rate", "0%"},
-            {"Profit-Loss Ratio", "0"},
-            {"Alpha", "-0.005"},
-            {"Beta", "0.996"},
-            {"Annual Standard Deviation", "0.222"},
-            {"Annual Variance", "0.049"},
-            {"Information Ratio", "-14.565"},
-            {"Tracking Error", "0.001"},
-            {"Treynor Ratio", "1.97"},
-            {"Total Fees", "$3.44"},
-            {"Estimated Strategy Capacity", "$56000000.00"},
-            {"Lowest Capacity Asset", "SPY R735QTJ8XC9X"},
-            {"Portfolio Turnover", "19.93%"},
-            {"OrderListHash", "3da9fa60bf95b9ed148b95e02e0cfc9e"}
-        };
+        public Dictionary<string, string> ExpectedStatistics =>
+            new Dictionary<string, string>
+            {
+                { "Total Orders", "1" },
+                { "Average Win", "0%" },
+                { "Average Loss", "0%" },
+                { "Compounding Annual Return", "271.453%" },
+                { "Drawdown", "2.200%" },
+                { "Expectancy", "0" },
+                { "Start Equity", "100000" },
+                { "End Equity", "101691.92" },
+                { "Net Profit", "1.692%" },
+                { "Sharpe Ratio", "8.854" },
+                { "Sortino Ratio", "0" },
+                { "Probabilistic Sharpe Ratio", "67.609%" },
+                { "Loss Rate", "0%" },
+                { "Win Rate", "0%" },
+                { "Profit-Loss Ratio", "0" },
+                { "Alpha", "-0.005" },
+                { "Beta", "0.996" },
+                { "Annual Standard Deviation", "0.222" },
+                { "Annual Variance", "0.049" },
+                { "Information Ratio", "-14.565" },
+                { "Tracking Error", "0.001" },
+                { "Treynor Ratio", "1.97" },
+                { "Total Fees", "$3.44" },
+                { "Estimated Strategy Capacity", "$56000000.00" },
+                { "Lowest Capacity Asset", "SPY R735QTJ8XC9X" },
+                { "Portfolio Turnover", "19.93%" },
+                { "OrderListHash", "3da9fa60bf95b9ed148b95e02e0cfc9e" }
+            };
     }
 }

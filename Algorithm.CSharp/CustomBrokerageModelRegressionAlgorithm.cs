@@ -13,21 +13,23 @@
  * limitations under the License.
 */
 
+using System;
+using System.Collections.Generic;
 using QuantConnect.Brokerages;
 using QuantConnect.Data;
 using QuantConnect.Interfaces;
 using QuantConnect.Orders;
 using QuantConnect.Securities;
 using QuantConnect.Util;
-using System;
-using System.Collections.Generic;
 
 namespace QuantConnect.Algorithm.CSharp
 {
     /// <summary>
     /// Regression algorithm to test we can specify a custom brokerage model, and override some of its methods
     /// </summary>
-    public class CustomBrokerageModelRegressionAlgorithm : QCAlgorithm, IRegressionAlgorithmDefinition
+    public class CustomBrokerageModelRegressionAlgorithm
+        : QCAlgorithm,
+            IRegressionAlgorithmDefinition
     {
         private OrderTicket _spyTicket;
         private OrderTicket _aigTicket;
@@ -46,11 +48,15 @@ namespace QuantConnect.Algorithm.CSharp
 
             if (BrokerageModel.DefaultMarkets[SecurityType.Equity] != Market.USA)
             {
-                throw new RegressionTestException($"The default market for Equity should be {Market.USA}");
+                throw new RegressionTestException(
+                    $"The default market for Equity should be {Market.USA}"
+                );
             }
             if (BrokerageModel.DefaultMarkets[SecurityType.Crypto] != Market.Binance)
             {
-                throw new RegressionTestException($"The default market for Crypto should be {Market.Binance}");
+                throw new RegressionTestException(
+                    $"The default market for Crypto should be {Market.Binance}"
+                );
             }
         }
 
@@ -78,34 +84,50 @@ namespace QuantConnect.Algorithm.CSharp
 
         public override void OnEndOfAlgorithm()
         {
-            var submitExpectedMessage = "BrokerageModel declared unable to submit order: [2] Information - Code:  - Symbol AIG can not be submitted";
+            var submitExpectedMessage =
+                "BrokerageModel declared unable to submit order: [2] Information - Code:  - Symbol AIG can not be submitted";
             if (_aigTicket.SubmitRequest.Response.ErrorMessage != submitExpectedMessage)
             {
-                throw new RegressionTestException($"Order with ID: {_aigTicket.OrderId} should not have submitted symbol AIG");
+                throw new RegressionTestException(
+                    $"Order with ID: {_aigTicket.OrderId} should not have submitted symbol AIG"
+                );
             }
 
-            var updateExpectedMessage = "OrderID: 1 Information - Code:  - This order can not be updated";
+            var updateExpectedMessage =
+                "OrderID: 1 Information - Code:  - This order can not be updated";
             if (_spyTicket.UpdateRequests[0].Response.ErrorMessage != updateExpectedMessage)
             {
-                throw new RegressionTestException($"Order with ID: {_spyTicket.OrderId} should have been updated");
+                throw new RegressionTestException(
+                    $"Order with ID: {_spyTicket.OrderId} should have been updated"
+                );
             }
         }
 
         class CustomBrokerageModel : DefaultBrokerageModel
         {
-            private static readonly IReadOnlyDictionary<SecurityType, string> _defaultMarketMap = new Dictionary<SecurityType, string>
-            {
-                {SecurityType.Equity, Market.USA},
-                {SecurityType.Crypto, Market.Binance }
-            }.ToReadOnlyDictionary();
+            private static readonly IReadOnlyDictionary<SecurityType, string> _defaultMarketMap =
+                new Dictionary<SecurityType, string>
+                {
+                    { SecurityType.Equity, Market.USA },
+                    { SecurityType.Crypto, Market.Binance }
+                }.ToReadOnlyDictionary();
 
-            public override IReadOnlyDictionary<SecurityType, string> DefaultMarkets => _defaultMarketMap;
+            public override IReadOnlyDictionary<SecurityType, string> DefaultMarkets =>
+                _defaultMarketMap;
 
-            public override bool CanSubmitOrder(Security security, Order order, out BrokerageMessageEvent message)
+            public override bool CanSubmitOrder(
+                Security security,
+                Order order,
+                out BrokerageMessageEvent message
+            )
             {
                 if (security.Symbol.Value == "AIG")
                 {
-                    message = new BrokerageMessageEvent(BrokerageMessageType.Information, "", "Symbol AIG can not be submitted");
+                    message = new BrokerageMessageEvent(
+                        BrokerageMessageType.Information,
+                        "",
+                        "Symbol AIG can not be submitted"
+                    );
                     return false;
                 }
 
@@ -113,9 +135,18 @@ namespace QuantConnect.Algorithm.CSharp
                 return true;
             }
 
-            public override bool CanUpdateOrder(Security security, Order order, UpdateOrderRequest request, out BrokerageMessageEvent message)
+            public override bool CanUpdateOrder(
+                Security security,
+                Order order,
+                UpdateOrderRequest request,
+                out BrokerageMessageEvent message
+            )
             {
-                message = new BrokerageMessageEvent(BrokerageMessageType.Information, "", "This order can not be updated");
+                message = new BrokerageMessageEvent(
+                    BrokerageMessageType.Information,
+                    "",
+                    "This order can not be updated"
+                );
                 return false;
             }
         }
@@ -148,35 +179,36 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// This is used by the regression test system to indicate what the expected statistics are from running the algorithm
         /// </summary>
-        public Dictionary<string, string> ExpectedStatistics => new Dictionary<string, string>
-        {
-            {"Total Orders", "2"},
-            {"Average Win", "0%"},
-            {"Average Loss", "0%"},
-            {"Compounding Annual Return", "19.594%"},
-            {"Drawdown", "0.200%"},
-            {"Expectancy", "0"},
-            {"Start Equity", "100000"},
-            {"End Equity", "100245.42"},
-            {"Net Profit", "0.245%"},
-            {"Sharpe Ratio", "4.962"},
-            {"Sortino Ratio", "0"},
-            {"Probabilistic Sharpe Ratio", "66.956%"},
-            {"Loss Rate", "0%"},
-            {"Win Rate", "0%"},
-            {"Profit-Loss Ratio", "0"},
-            {"Alpha", "-0.126"},
-            {"Beta", "0.145"},
-            {"Annual Standard Deviation", "0.032"},
-            {"Annual Variance", "0.001"},
-            {"Information Ratio", "-9.54"},
-            {"Tracking Error", "0.19"},
-            {"Treynor Ratio", "1.104"},
-            {"Total Fees", "$1.00"},
-            {"Estimated Strategy Capacity", "$4100000000.00"},
-            {"Lowest Capacity Asset", "SPY R735QTJ8XC9X"},
-            {"Portfolio Turnover", "2.90%"},
-            {"OrderListHash", "2fceb6050a91cafd083d19579e482b82"}
-        };
+        public Dictionary<string, string> ExpectedStatistics =>
+            new Dictionary<string, string>
+            {
+                { "Total Orders", "2" },
+                { "Average Win", "0%" },
+                { "Average Loss", "0%" },
+                { "Compounding Annual Return", "19.594%" },
+                { "Drawdown", "0.200%" },
+                { "Expectancy", "0" },
+                { "Start Equity", "100000" },
+                { "End Equity", "100245.42" },
+                { "Net Profit", "0.245%" },
+                { "Sharpe Ratio", "4.962" },
+                { "Sortino Ratio", "0" },
+                { "Probabilistic Sharpe Ratio", "66.956%" },
+                { "Loss Rate", "0%" },
+                { "Win Rate", "0%" },
+                { "Profit-Loss Ratio", "0" },
+                { "Alpha", "-0.126" },
+                { "Beta", "0.145" },
+                { "Annual Standard Deviation", "0.032" },
+                { "Annual Variance", "0.001" },
+                { "Information Ratio", "-9.54" },
+                { "Tracking Error", "0.19" },
+                { "Treynor Ratio", "1.104" },
+                { "Total Fees", "$1.00" },
+                { "Estimated Strategy Capacity", "$4100000000.00" },
+                { "Lowest Capacity Asset", "SPY R735QTJ8XC9X" },
+                { "Portfolio Turnover", "2.90%" },
+                { "OrderListHash", "2fceb6050a91cafd083d19579e482b82" }
+            };
     }
 }

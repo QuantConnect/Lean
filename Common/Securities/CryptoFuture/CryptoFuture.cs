@@ -45,22 +45,27 @@ namespace QuantConnect.Securities.CryptoFuture
         /// instances into units of the account currency</param>
         /// <param name="registeredTypes">Provides all data types registered in the algorithm</param>
         /// <param name="cache">The security cache</param>
-        public CryptoFuture(Symbol symbol,
+        public CryptoFuture(
+            Symbol symbol,
             SecurityExchangeHours exchangeHours,
             Cash quoteCurrency,
             Cash baseCurrency,
             SymbolProperties symbolProperties,
             ICurrencyConverter currencyConverter,
             IRegisteredSecurityDataTypesProvider registeredTypes,
-            SecurityCache cache)
-            : base(symbol,
+            SecurityCache cache
+        )
+            : base(
+                symbol,
                 quoteCurrency,
                 symbolProperties,
                 new CryptoFutureExchange(exchangeHours),
                 cache,
                 new SecurityPortfolioModel(),
                 new ImmediateFillModel(),
-                IsCryptoCoinFuture(quoteCurrency.Symbol) ? new BinanceCoinFuturesFeeModel() : new BinanceFuturesFeeModel(),
+                IsCryptoCoinFuture(quoteCurrency.Symbol)
+                    ? new BinanceCoinFuturesFeeModel()
+                    : new BinanceFuturesFeeModel(),
                 NullSlippageModel.Instance,
                 new ImmediateSettlementModel(),
                 Securities.VolatilityModel.Null,
@@ -70,8 +75,10 @@ namespace QuantConnect.Securities.CryptoFuture
                 currencyConverter,
                 registeredTypes,
                 // only applies for perpetual futures
-                symbol.ID.Date == SecurityIdentifier.DefaultDate ? new BinanceFutureMarginInterestRateModel() : Securities.MarginInterestRateModel.Null
-                )
+                symbol.ID.Date == SecurityIdentifier.DefaultDate
+                    ? new BinanceFutureMarginInterestRateModel()
+                    : Securities.MarginInterestRateModel.Null
+            )
         {
             BaseCurrency = baseCurrency;
             Holdings = new CryptoFutureHolding(this, currencyConverter);

@@ -13,11 +13,11 @@
  * limitations under the License.
 */
 
+using System;
 using NUnit.Framework;
 using QuantConnect.Data;
 using QuantConnect.Data.Market;
 using QuantConnect.Indicators;
-using System;
 
 namespace QuantConnect.Tests.Indicators
 {
@@ -43,8 +43,13 @@ namespace QuantConnect.Tests.Indicators
                 abands,
                 "spy_acceleration_bands_20_4.txt",
                 "LowerBand",
-                (ind, expected) => Assert.AreEqual(expected, (double) ((AccelerationBands) ind).LowerBand.Current.Value,
-                    delta: 1e-4, message: "Lower band test fail.")
+                (ind, expected) =>
+                    Assert.AreEqual(
+                        expected,
+                        (double)((AccelerationBands)ind).LowerBand.Current.Value,
+                        delta: 1e-4,
+                        message: "Lower band test fail."
+                    )
             );
         }
 
@@ -56,8 +61,13 @@ namespace QuantConnect.Tests.Indicators
                 abands,
                 "spy_acceleration_bands_20_4.txt",
                 "UpperBand",
-                (ind, expected) => Assert.AreEqual(expected, (double) ((AccelerationBands) ind).UpperBand.Current.Value,
-                    delta: 1e-4, message: "Upper band test fail.")
+                (ind, expected) =>
+                    Assert.AreEqual(
+                        expected,
+                        (double)((AccelerationBands)ind).UpperBand.Current.Value,
+                        delta: 1e-4,
+                        message: "Upper band test fail."
+                    )
             );
         }
 
@@ -67,10 +77,20 @@ namespace QuantConnect.Tests.Indicators
             var abands = CreateIndicator();
             var random = new Random();
             var time = DateTime.UtcNow;
-            for(int i = 0; i < 40; i++)
+            for (int i = 0; i < 40; i++)
             {
                 var value = random.NextDouble() * 0.000000000000000000000000000001;
-                Assert.DoesNotThrow(() => abands.Update(new TradeBar { High = (decimal)value, Low = (decimal)value, Time = time.AddDays(i)}));
+                Assert.DoesNotThrow(
+                    () =>
+                        abands.Update(
+                            new TradeBar
+                            {
+                                High = (decimal)value,
+                                Low = (decimal)value,
+                                Time = time.AddDays(i)
+                            }
+                        )
+                );
             }
         }
     }

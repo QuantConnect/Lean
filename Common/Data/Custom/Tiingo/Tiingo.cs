@@ -36,7 +36,8 @@ namespace QuantConnect.Data.Custom.Tiingo
         /// <param name="authCode">The Tiingo API token</param>
         public static void SetAuthCode(string authCode)
         {
-            if (string.IsNullOrWhiteSpace(authCode)) return;
+            if (string.IsNullOrWhiteSpace(authCode))
+                return;
 
             AuthCode = authCode;
             IsAuthCodeSet = true;

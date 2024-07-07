@@ -13,6 +13,9 @@
  * limitations under the License.
 */
 
+using System;
+using System.Collections.Generic;
+using System.Linq;
 using QuantConnect.Algorithm.Framework.Alphas;
 using QuantConnect.Algorithm.Framework.Execution;
 using QuantConnect.Algorithm.Framework.Portfolio;
@@ -24,9 +27,6 @@ using QuantConnect.Data.Fundamental;
 using QuantConnect.Data.UniverseSelection;
 using QuantConnect.Indicators;
 using QuantConnect.Orders.Fees;
-using System;
-using System.Collections.Generic;
-using System.Linq;
 
 namespace QuantConnect.Algorithm.CSharp.Alphas
 {
@@ -83,7 +83,8 @@ namespace QuantConnect.Algorithm.CSharp.Alphas
 
             public RateOfChangeAlphaModel(
                 int lookback = 1,
-                Resolution resolution = Resolution.Daily)
+                Resolution resolution = Resolution.Daily
+            )
             {
                 _lookback = lookback;
                 _resolution = resolution;
@@ -101,7 +102,14 @@ namespace QuantConnect.Algorithm.CSharp.Alphas
                     if (symbolData.CanEmit)
                     {
                         var magnitude = Convert.ToDouble(Math.Abs(symbolData.Return));
-                        insights.Add(Insight.Price(kvp.Key, _predictionInterval, InsightDirection.Up, magnitude));
+                        insights.Add(
+                            Insight.Price(
+                                kvp.Key,
+                                _predictionInterval,
+                                InsightDirection.Up,
+                                magnitude
+                            )
+                        );
                     }
                 }
 
@@ -165,7 +173,12 @@ namespace QuantConnect.Algorithm.CSharp.Alphas
                     }
                 }
 
-                public SymbolData(QCAlgorithm algorithm, Symbol symbol, int lookback, Resolution resolution)
+                public SymbolData(
+                    QCAlgorithm algorithm,
+                    Symbol symbol,
+                    int lookback,
+                    Resolution resolution
+                )
                 {
                     _symbol = symbol;
                     Return = new RateOfChange($"{symbol}.ROC({lookback})", lookback);
@@ -189,7 +202,8 @@ namespace QuantConnect.Algorithm.CSharp.Alphas
         /// Defines a universe according to Joel Greenblatt's Magic Formula, as a universe selection model for the framework algorithm.
         /// From the universe QC500, stocks are ranked using the valuation ratios, Enterprise Value to EBITDA(EV/EBITDA) and Return on Assets(ROA).
         /// </summary>
-        private class GreenBlattMagicFormulaUniverseSelectionModel : FundamentalUniverseSelectionModel
+        private class GreenBlattMagicFormulaUniverseSelectionModel
+            : FundamentalUniverseSelectionModel
         {
             private const int _numberOfSymbolsCoarse = 500;
             private const int _numberOfSymbolsFine = 20;
@@ -197,9 +211,10 @@ namespace QuantConnect.Algorithm.CSharp.Alphas
             private int _lastMonth = -1;
             private Dictionary<Symbol, double> _dollarVolumeBySymbol;
 
-            public GreenBlattMagicFormulaUniverseSelectionModel() : base(true)
+            public GreenBlattMagicFormulaUniverseSelectionModel()
+                : base(true)
             {
-                _dollarVolumeBySymbol = new ();
+                _dollarVolumeBySymbol = new();
             }
 
             /// <summary>
@@ -208,7 +223,10 @@ namespace QuantConnect.Algorithm.CSharp.Alphas
             /// The stock must have positive previous-day close price
             /// The stock must have positive volume on the previous trading day
             /// </summary>
-            public override IEnumerable<Symbol> SelectCoarse(QCAlgorithm algorithm, IEnumerable<CoarseFundamental> coarse)
+            public override IEnumerable<Symbol> SelectCoarse(
+                QCAlgorithm algorithm,
+                IEnumerable<CoarseFundamental> coarse
+            )
             {
                 if (algorithm.Time.Month == _lastMonth)
                 {
@@ -221,7 +239,7 @@ namespace QuantConnect.Algorithm.CSharp.Alphas
                     where cf.HasFundamentalData
                     orderby cf.DollarVolume descending
                     select new { cf.Symbol, cf.DollarVolume }
-                    )
+                )
                     .Take(_numberOfSymbolsCoarse)
                     .ToDictionary(x => x.Symbol, x => x.DollarVolume);
 
@@ -238,14 +256,23 @@ namespace QuantConnect.Algorithm.CSharp.Alphas
             /// Magic Formula: Rank stocks by Enterprise Value to EBITDA(EV/EBITDA)
             /// Rank subset of previously ranked stocks(EV/EBITDA), using the valuation ratio Return on Assets(ROA)
             /// </summary>
-            public override IEnumerable<Symbol> SelectFine(QCAlgorithm algorithm, IEnumerable<FineFundamental> fine)
+            public override IEnumerable<Symbol> SelectFine(
+                QCAlgorithm algorithm,
+                IEnumerable<FineFundamental> fine
+            )
             {
                 var filteredFine =
                     from x in fine
                     where x.CompanyReference.CountryId == "USA"
-                    where x.CompanyReference.PrimaryExchangeID == "NYS" || x.CompanyReference.PrimaryExchangeID == "NAS"
+                    where
+                        x.CompanyReference.PrimaryExchangeID == "NYS"
+                        || x.CompanyReference.PrimaryExchangeID == "NAS"
                     where (algorithm.Time - x.SecurityReference.IPODate).TotalDays > 180
-                    where x.EarningReports.BasicAverageShares.ThreeMonths * x.EarningReports.BasicEPS.TwelveMonths * x.ValuationRatios.PERatio > 5e8
+                    where
+                        x.EarningReports.BasicAverageShares.ThreeMonths
+                            * x.EarningReports.BasicEPS.TwelveMonths
+                            * x.ValuationRatios.PERatio
+                        > 5e8
                     select x;
 
                 double count = filteredFine.Count();
@@ -267,8 +294,7 @@ namespace QuantConnect.Algorithm.CSharp.Alphas
                     )
                     let c = (int)Math.Ceiling(y.Count() * percent)
                     select new { g.Key, Value = y.Take(c) }
-                    )
-                    .ToDictionary(x => x.Key, x => x.Value);
+                ).ToDictionary(x => x.Key, x => x.Value);
 
                 // Stocks in QC500 universe
                 var topFine = myDict.Values.SelectMany(x => x);

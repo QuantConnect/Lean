@@ -1,11 +1,11 @@
 ﻿/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
- * 
- * Licensed under the Apache License, Version 2.0 (the "License"); 
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -65,10 +65,13 @@ namespace QuantConnect.Util
         /// <returns>A new instance with read-only semantics/gaurantees</returns>
         public IReadOnlyRef<T> AsReadOnly()
         {
-            return new Ref<T>(_getter, value =>
-            {
-                throw new InvalidOperationException("This instance is read-only.");
-            });
+            return new Ref<T>(
+                _getter,
+                value =>
+                {
+                    throw new InvalidOperationException("This instance is read-only.");
+                }
+            );
         }
     }
 
@@ -84,16 +87,21 @@ namespace QuantConnect.Util
         {
             return new Ref<T>(getter, setter);
         }
+
         /// <summary>
         /// Creates a new <see cref="IReadOnlyRef{T}"/> instance
         /// </summary>
         public static IReadOnlyRef<T> CreateReadOnly<T>(Func<T> getter)
         {
-            return new Ref<T>(getter, value =>
-            {
-                throw new InvalidOperationException("This instance is read-only.");
-            });
+            return new Ref<T>(
+                getter,
+                value =>
+                {
+                    throw new InvalidOperationException("This instance is read-only.");
+                }
+            );
         }
+
         /// <summary>
         /// Creates a new <see cref="Ref{T}"/> instance by closing over
         /// the specified <paramref name="initialValue"/> variable.
@@ -103,7 +111,13 @@ namespace QuantConnect.Util
         /// </summary>
         public static Ref<T> Create<T>(T initialValue)
         {
-            return new Ref<T>(() => initialValue, value => { initialValue = value; });
+            return new Ref<T>(
+                () => initialValue,
+                value =>
+                {
+                    initialValue = value;
+                }
+            );
         }
     }
 }

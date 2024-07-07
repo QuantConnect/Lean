@@ -13,13 +13,13 @@
  * limitations under the License.
 */
 
+using System;
+using System.Collections.Generic;
 using NodaTime;
 using Python.Runtime;
 using QuantConnect.Data.Market;
 using QuantConnect.Scheduling;
 using QuantConnect.Securities;
-using System;
-using System.Collections.Generic;
 
 namespace QuantConnect.Data.UniverseSelection
 {
@@ -40,7 +40,13 @@ namespace QuantConnect.Data.UniverseSelection
         /// <param name="timeRule">Time rule defines what times on each day selected by date rule the universe selection function will be invoked</param>
         /// <param name="selector">Selector function accepting the date time firing time and returning the universe selected symbols</param>
         /// <param name="settings">Universe settings for subscriptions added via this universe, null will default to algorithm's universe settings</param>
-        public ScheduledUniverse(DateTimeZone timeZone, IDateRule dateRule, ITimeRule timeRule, Func<DateTime, IEnumerable<Symbol>> selector, UniverseSettings settings = null)
+        public ScheduledUniverse(
+            DateTimeZone timeZone,
+            IDateRule dateRule,
+            ITimeRule timeRule,
+            Func<DateTime, IEnumerable<Symbol>> selector,
+            UniverseSettings settings = null
+        )
             : base(CreateConfiguration(timeZone, dateRule, timeRule))
         {
             _dateRule = dateRule;
@@ -56,10 +62,13 @@ namespace QuantConnect.Data.UniverseSelection
         /// <param name="timeRule">Time rule defines what times on each day selected by date rule the universe selection function will be invoked</param>
         /// <param name="selector">Selector function accepting the date time firing time and returning the universe selected symbols</param>
         /// <param name="settings">Universe settings for subscriptions added via this universe, null will default to algorithm's universe settings</param>
-        public ScheduledUniverse(IDateRule dateRule, ITimeRule timeRule, Func<DateTime, IEnumerable<Symbol>> selector, UniverseSettings settings = null)
-            : this(TimeZones.Utc, dateRule, timeRule, selector, settings)
-        {
-        }
+        public ScheduledUniverse(
+            IDateRule dateRule,
+            ITimeRule timeRule,
+            Func<DateTime, IEnumerable<Symbol>> selector,
+            UniverseSettings settings = null
+        )
+            : this(TimeZones.Utc, dateRule, timeRule, selector, settings) { }
 
         /// <summary>
         /// Initializes a new instance of the <see cref="ScheduledUniverse"/> class
@@ -69,7 +78,13 @@ namespace QuantConnect.Data.UniverseSelection
         /// <param name="timeRule">Time rule defines what times on each day selected by date rule the universe selection function will be invoked</param>
         /// <param name="selector">Selector function accepting the date time firing time and returning the universe selected symbols</param>
         /// <param name="settings">Universe settings for subscriptions added via this universe, null will default to algorithm's universe settings</param>
-        public ScheduledUniverse(DateTimeZone timeZone, IDateRule dateRule, ITimeRule timeRule, PyObject selector, UniverseSettings settings = null)
+        public ScheduledUniverse(
+            DateTimeZone timeZone,
+            IDateRule dateRule,
+            ITimeRule timeRule,
+            PyObject selector,
+            UniverseSettings settings = null
+        )
             : base(CreateConfiguration(timeZone, dateRule, timeRule))
         {
             Func<DateTime, object> func;
@@ -87,10 +102,13 @@ namespace QuantConnect.Data.UniverseSelection
         /// <param name="timeRule">Time rule defines what times on each day selected by date rule the universe selection function will be invoked</param>
         /// <param name="selector">Selector function accepting the date time firing time and returning the universe selected symbols</param>
         /// <param name="settings">Universe settings for subscriptions added via this universe, null will default to algorithm's universe settings</param>
-        public ScheduledUniverse(IDateRule dateRule, ITimeRule timeRule, PyObject selector, UniverseSettings settings = null)
-            : this(TimeZones.Utc, dateRule, timeRule, selector, settings)
-        {
-        }
+        public ScheduledUniverse(
+            IDateRule dateRule,
+            ITimeRule timeRule,
+            PyObject selector,
+            UniverseSettings settings = null
+        )
+            : this(TimeZones.Utc, dateRule, timeRule, selector, settings) { }
 
         /// <summary>
         /// Performs universe selection using the data specified
@@ -109,7 +127,11 @@ namespace QuantConnect.Data.UniverseSelection
         /// <param name="startTimeUtc">The start time of the range in UTC</param>
         /// <param name="endTimeUtc">The end time of the range in UTC</param>
         /// <returns>An enumerator of UTC DateTimes that defines when this universe will be invoked</returns>
-        public IEnumerable<DateTime> GetTriggerTimes(DateTime startTimeUtc, DateTime endTimeUtc, MarketHoursDatabase marketHoursDatabase)
+        public IEnumerable<DateTime> GetTriggerTimes(
+            DateTime startTimeUtc,
+            DateTime endTimeUtc,
+            MarketHoursDatabase marketHoursDatabase
+        )
         {
             var startTimeLocal = startTimeUtc.ConvertFromUtc(Configuration.ExchangeTimeZone);
             var endTimeLocal = endTimeUtc.ConvertFromUtc(Configuration.ExchangeTimeZone);
@@ -127,19 +149,21 @@ namespace QuantConnect.Data.UniverseSelection
                     times.Dispose();
                     yield break;
                 }
-            }
-            while (times.Current < startTimeUtc);
+            } while (times.Current < startTimeUtc);
 
             // Start yielding times
             do
             {
                 yield return times.Current;
-            }
-            while (times.MoveNext());
+            } while (times.MoveNext());
             times.Dispose();
         }
 
-        private static SubscriptionDataConfig CreateConfiguration(DateTimeZone timeZone, IDateRule dateRule, ITimeRule timeRule)
+        private static SubscriptionDataConfig CreateConfiguration(
+            DateTimeZone timeZone,
+            IDateRule dateRule,
+            ITimeRule timeRule
+        )
         {
             // remove forbidden characters
             var ticker = $"{dateRule.Name}_{timeRule.Name}";
@@ -149,7 +173,8 @@ namespace QuantConnect.Data.UniverseSelection
             }
 
             var symbol = Symbol.Create(ticker, SecurityType.Base, QuantConnect.Market.USA);
-            var config = new SubscriptionDataConfig(typeof(Tick),
+            var config = new SubscriptionDataConfig(
+                typeof(Tick),
                 symbol: symbol,
                 resolution: Resolution.Daily,
                 dataTimeZone: timeZone,
@@ -163,8 +188,14 @@ namespace QuantConnect.Data.UniverseSelection
             );
 
             // force always open hours so we don't inadvertently mess with the scheduled firing times
-            MarketHoursDatabase.FromDataFolder()
-                .SetEntryAlwaysOpen(config.Market, config.Symbol.Value, config.SecurityType, config.ExchangeTimeZone);
+            MarketHoursDatabase
+                .FromDataFolder()
+                .SetEntryAlwaysOpen(
+                    config.Market,
+                    config.Symbol.Value,
+                    config.SecurityType,
+                    config.ExchangeTimeZone
+                );
 
             return config;
         }

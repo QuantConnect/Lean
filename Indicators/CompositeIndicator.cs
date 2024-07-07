@@ -64,7 +64,8 @@ namespace QuantConnect.Indicators
         /// <summary>
         /// Resets this indicator to its initial state
         /// </summary>
-        public override void Reset() {
+        public override void Reset()
+        {
             Left.Reset();
             Right.Reset();
             base.Reset();
@@ -78,7 +79,12 @@ namespace QuantConnect.Indicators
         /// <param name="left">The left indicator for the 'composer'</param>
         /// <param name="right">The right indicator for the 'composer'</param>
         /// <param name="composer">Function used to compose the left and right indicators</param>
-        public CompositeIndicator(string name, IndicatorBase left, IndicatorBase right, IndicatorComposer composer)
+        public CompositeIndicator(
+            string name,
+            IndicatorBase left,
+            IndicatorBase right,
+            IndicatorComposer composer
+        )
             : base(name)
         {
             _composer = composer;
@@ -94,9 +100,12 @@ namespace QuantConnect.Indicators
         /// <param name="left">The left indicator for the 'composer'</param>
         /// <param name="right">The right indicator for the 'composer'</param>
         /// <param name="composer">Function used to compose the left and right indicators</param>
-        public CompositeIndicator(IndicatorBase left, IndicatorBase right, IndicatorComposer composer)
-            : this($"COMPOSE({left.Name},{right.Name})", left, right, composer)
-        { }
+        public CompositeIndicator(
+            IndicatorBase left,
+            IndicatorBase right,
+            IndicatorComposer composer
+        )
+            : this($"COMPOSE({left.Name},{right.Name})", left, right, composer) { }
 
         /// <summary>
         /// Computes the next value of this indicator from the given state
@@ -130,8 +139,8 @@ namespace QuantConnect.Indicators
         private void ConfigureEventHandlers()
         {
             // if either of these are constants then there's no reason
-            bool leftIsConstant = Left.GetType().IsSubclassOfGeneric(typeof (ConstantIndicator<>));
-            bool rightIsConstant = Right.GetType().IsSubclassOfGeneric(typeof (ConstantIndicator<>));
+            bool leftIsConstant = Left.GetType().IsSubclassOfGeneric(typeof(ConstantIndicator<>));
+            bool rightIsConstant = Right.GetType().IsSubclassOfGeneric(typeof(ConstantIndicator<>));
 
             // wire up the Updated events such that when we get a new piece of data from both left and right
             // we'll call update on this indicator. It's important to note that the CompositeIndicator only uses
@@ -173,7 +182,12 @@ namespace QuantConnect.Indicators
 
         private DateTime MaxTime(IndicatorDataPoint updated)
         {
-            return new DateTime(Math.Max(updated.Time.Ticks, Math.Max(Right.Current.Time.Ticks, Left.Current.Time.Ticks)));
+            return new DateTime(
+                Math.Max(
+                    updated.Time.Ticks,
+                    Math.Max(Right.Current.Time.Ticks, Left.Current.Time.Ticks)
+                )
+            );
         }
     }
 }

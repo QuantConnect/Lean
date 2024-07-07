@@ -40,11 +40,24 @@ namespace QuantConnect.ToolBox
                 ? TickType.Trade
                 : TickType.Quote;
 
-            var dataType = GetDataType(pathComponents.SecurityType, pathComponents.Resolution, tickType);
-            var factory = (BaseData) Activator.CreateInstance(dataType);
+            var dataType = GetDataType(
+                pathComponents.SecurityType,
+                pathComponents.Resolution,
+                tickType
+            );
+            var factory = (BaseData)Activator.CreateInstance(dataType);
 
             // ignore time zones here, i.e, we're going to emit data in the data time zone
-            var config = new SubscriptionDataConfig(dataType, pathComponents.Symbol, pathComponents.Resolution, TimeZones.Utc, TimeZones.Utc, false, true, false);
+            var config = new SubscriptionDataConfig(
+                dataType,
+                pathComponents.Symbol,
+                pathComponents.Resolution,
+                TimeZones.Utc,
+                TimeZones.Utc,
+                false,
+                true,
+                false
+            );
             using (var reader = new StreamReader(stream))
             {
                 string line;
@@ -58,37 +71,43 @@ namespace QuantConnect.ToolBox
         /// <summary>
         /// Performs application-defined tasks associated with freeing, releasing, or resetting unmanaged resources.
         /// </summary>
-        public void Dispose()
-        {
-        }
+        public void Dispose() { }
 
-        private Type GetDataType(SecurityType securityType, Resolution resolution, TickType tickType)
+        private Type GetDataType(
+            SecurityType securityType,
+            Resolution resolution,
+            TickType tickType
+        )
         {
             if (resolution == Resolution.Tick)
             {
-                return typeof (Tick);
+                return typeof(Tick);
             }
 
             switch (securityType)
             {
                 case SecurityType.Base:
                 case SecurityType.Equity:
-                    return typeof (TradeBar);
+                    return typeof(TradeBar);
 
                 case SecurityType.Cfd:
                 case SecurityType.Forex:
                 case SecurityType.Crypto:
-                    return typeof (QuoteBar);
+                    return typeof(QuoteBar);
 
                 case SecurityType.Option:
                 case SecurityType.FutureOption:
                 case SecurityType.IndexOption:
-                    if (tickType == TickType.Trade) return typeof (TradeBar);
-                    if (tickType == TickType.Quote) return typeof (QuoteBar);
+                    if (tickType == TickType.Trade)
+                        return typeof(TradeBar);
+                    if (tickType == TickType.Quote)
+                        return typeof(QuoteBar);
                     break;
             }
             var parameters = string.Join(" | ", securityType, resolution, tickType);
-            throw new NotImplementedException("LeanParser.GetDataType has not yet implemented: " + parameters);
+            throw new NotImplementedException(
+                "LeanParser.GetDataType has not yet implemented: " + parameters
+            );
         }
     }
 }

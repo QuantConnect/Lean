@@ -45,21 +45,14 @@ namespace QuantConnect.Data.UniverseSelection
         /// <summary>
         /// Gets the internal security collection used to define membership in this universe
         /// </summary>
-        public virtual ConcurrentDictionary<Symbol, Member> Securities
-        {
-            get;
-            private set;
-        }
+        public virtual ConcurrentDictionary<Symbol, Member> Securities { get; private set; }
 
         /// <summary>
         /// The currently selected symbol set
         /// </summary>
         /// <remarks>This set might be different than <see cref="Securities"/> which might hold members that are no longer selected
         /// but have not been removed yet, this can be because they have some open position, orders, haven't completed the minimum time in universe</remarks>
-        public HashSet<Symbol> Selected
-        {
-            get; set;
-        }
+        public HashSet<Symbol> Selected { get; set; }
 
         /// <summary>
         /// True if this universe filter can run async in the data stack
@@ -74,10 +67,7 @@ namespace QuantConnect.Data.UniverseSelection
                 }
                 return false;
             }
-            set
-            {
-                UniverseSettings.Asynchronous = value;
-            }
+            set { UniverseSettings.Asynchronous = value; }
         }
 
         /// <summary>
@@ -108,27 +98,17 @@ namespace QuantConnect.Data.UniverseSelection
         /// <summary>
         /// Flag indicating if disposal of this universe has been requested
         /// </summary>
-        public virtual bool DisposeRequested
-        {
-            get;
-            protected set;
-        }
+        public virtual bool DisposeRequested { get; protected set; }
 
         /// <summary>
         /// Gets the settings used for subscriptions added for this universe
         /// </summary>
-        public virtual UniverseSettings UniverseSettings
-        {
-            get; set;
-        }
+        public virtual UniverseSettings UniverseSettings { get; set; }
 
         /// <summary>
         /// Gets the configuration used to get universe data
         /// </summary>
-        public virtual SubscriptionDataConfig Configuration
-        {
-            get; private set;
-        }
+        public virtual SubscriptionDataConfig Configuration { get; private set; }
 
         /// <summary>
         /// Gets the current listing of members in this universe. Modifications
@@ -185,8 +165,10 @@ namespace QuantConnect.Data.UniverseSelection
                 }
 
                 var timeInUniverse = utcTime - member.Added;
-                if (timeInUniverse.Round(_minimumTimeInUniverseRoundingInterval.Value)
-                    >= UniverseSettings.MinimumTimeInUniverse)
+                if (
+                    timeInUniverse.Round(_minimumTimeInUniverseRoundingInterval.Value)
+                    >= UniverseSettings.MinimumTimeInUniverse
+                )
                 {
                     return true;
                 }
@@ -241,7 +223,10 @@ namespace QuantConnect.Data.UniverseSelection
         /// <param name="utcTime">The current utc time</param>
         /// <param name="data">The symbols to remain in the universe</param>
         /// <returns>The data that passes the filter</returns>
-        public abstract IEnumerable<Symbol> SelectSymbols(DateTime utcTime, BaseDataCollection data);
+        public abstract IEnumerable<Symbol> SelectSymbols(
+            DateTime utcTime,
+            BaseDataCollection data
+        );
 
         /// <summary>
         /// Creates and configures a security for the specified symbol
@@ -252,11 +237,20 @@ namespace QuantConnect.Data.UniverseSelection
         /// <param name="symbolPropertiesDatabase">The symbol properties database</param>
         /// <returns>The newly initialized security object</returns>
         /// <obsolete>The CreateSecurity won't be called</obsolete>
-        [Obsolete("CreateSecurity is obsolete and will not be called. The system will create the required Securities based on selected symbols")]
-        public virtual Security CreateSecurity(Symbol symbol, IAlgorithm algorithm, MarketHoursDatabase marketHoursDatabase, SymbolPropertiesDatabase symbolPropertiesDatabase)
+        [Obsolete(
+            "CreateSecurity is obsolete and will not be called. The system will create the required Securities based on selected symbols"
+        )]
+        public virtual Security CreateSecurity(
+            Symbol symbol,
+            IAlgorithm algorithm,
+            MarketHoursDatabase marketHoursDatabase,
+            SymbolPropertiesDatabase symbolPropertiesDatabase
+        )
         {
-            throw new InvalidOperationException("CreateSecurity is obsolete and should not be called." +
-                "The system will create the required Securities based on selected symbols");
+            throw new InvalidOperationException(
+                "CreateSecurity is obsolete and should not be called."
+                    + "The system will create the required Securities based on selected symbols"
+            );
         }
 
         /// <summary>
@@ -266,13 +260,20 @@ namespace QuantConnect.Data.UniverseSelection
         /// <param name="currentTimeUtc">The current time in utc. This is the frontier time of the algorithm</param>
         /// <param name="maximumEndTimeUtc">The max end time</param>
         /// <returns>All subscriptions required by this security</returns>
-        [Obsolete("This overload is obsolete and will not be called. It was not capable of creating new SubscriptionDataConfig due to lack of information")]
-        public virtual IEnumerable<SubscriptionRequest> GetSubscriptionRequests(Security security, DateTime currentTimeUtc, DateTime maximumEndTimeUtc)
+        [Obsolete(
+            "This overload is obsolete and will not be called. It was not capable of creating new SubscriptionDataConfig due to lack of information"
+        )]
+        public virtual IEnumerable<SubscriptionRequest> GetSubscriptionRequests(
+            Security security,
+            DateTime currentTimeUtc,
+            DateTime maximumEndTimeUtc
+        )
         {
-            throw new InvalidOperationException("This overload is obsolete and should not be called." +
-                "It was not capable of creating new SubscriptionDataConfig due to lack of information");
+            throw new InvalidOperationException(
+                "This overload is obsolete and should not be called."
+                    + "It was not capable of creating new SubscriptionDataConfig due to lack of information"
+            );
         }
-
 
         /// <summary>
         /// Gets the subscription requests to be added for the specified security
@@ -282,25 +283,31 @@ namespace QuantConnect.Data.UniverseSelection
         /// <param name="maximumEndTimeUtc">The max end time</param>
         /// <param name="subscriptionService">Instance which implements <see cref="ISubscriptionDataConfigService"/> interface</param>
         /// <returns>All subscriptions required by this security</returns>
-        public virtual IEnumerable<SubscriptionRequest> GetSubscriptionRequests(Security security,
+        public virtual IEnumerable<SubscriptionRequest> GetSubscriptionRequests(
+            Security security,
             DateTime currentTimeUtc,
             DateTime maximumEndTimeUtc,
-            ISubscriptionDataConfigService subscriptionService)
+            ISubscriptionDataConfigService subscriptionService
+        )
         {
-            var result = subscriptionService.Add(security.Symbol,
+            var result = subscriptionService.Add(
+                security.Symbol,
                 UniverseSettings.Resolution,
                 UniverseSettings.FillForward,
                 UniverseSettings.ExtendedMarketHours,
                 dataNormalizationMode: UniverseSettings.DataNormalizationMode,
                 subscriptionDataTypes: UniverseSettings.SubscriptionDataTypes,
                 dataMappingMode: UniverseSettings.DataMappingMode,
-                contractDepthOffset: (uint)Math.Abs(UniverseSettings.ContractDepthOffset));
-            return result.Select(config => new SubscriptionRequest(isUniverseSubscription: false,
+                contractDepthOffset: (uint)Math.Abs(UniverseSettings.ContractDepthOffset)
+            );
+            return result.Select(config => new SubscriptionRequest(
+                isUniverseSubscription: false,
                 universe: this,
                 security: security,
                 configuration: config,
                 startTimeUtc: currentTimeUtc,
-                endTimeUtc: maximumEndTimeUtc));
+                endTimeUtc: maximumEndTimeUtc
+            ));
         }
 
         /// <summary>
@@ -370,7 +377,10 @@ namespace QuantConnect.Data.UniverseSelection
         /// <param name="selection">The current universe selection</param>
         protected void OnSelectionChanged(HashSet<Symbol> selection = null)
         {
-            SelectionChanged?.Invoke(this, new SelectionEventArgs(selection ?? new HashSet<Symbol>()));
+            SelectionChanged?.Invoke(
+                this,
+                new SelectionEventArgs(selection ?? new HashSet<Symbol>())
+            );
         }
 
         /// <summary>
@@ -383,10 +393,23 @@ namespace QuantConnect.Data.UniverseSelection
             /// Read-only instance of the <see cref="UnchangedUniverse"/> value
             /// </summary>
             public static readonly UnchangedUniverse Instance = new UnchangedUniverse();
+
             private UnchangedUniverse() { }
-            IEnumerator<Symbol> IEnumerable<Symbol>.GetEnumerator() { yield break; }
-            IEnumerator<string> IEnumerable<string>.GetEnumerator() { yield break; }
-            IEnumerator IEnumerable.GetEnumerator() { yield break; }
+
+            IEnumerator<Symbol> IEnumerable<Symbol>.GetEnumerator()
+            {
+                yield break;
+            }
+
+            IEnumerator<string> IEnumerable<string>.GetEnumerator()
+            {
+                yield break;
+            }
+
+            IEnumerator IEnumerable.GetEnumerator()
+            {
+                yield break;
+            }
         }
 
         /// <summary>

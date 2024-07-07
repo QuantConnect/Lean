@@ -13,9 +13,9 @@
  * limitations under the License.
 */
 
+using System;
 using NUnit.Framework;
 using Python.Runtime;
-using System;
 using QuantConnect.Logging;
 using QuantConnect.Securities;
 
@@ -52,7 +52,13 @@ namespace QuantConnect.Tests.Research
         [TestCase(2013, 10, 11, SecurityType.Equity, "SPY")]
         [TestCase(2014, 5, 9, SecurityType.Forex, "EURUSD")]
         [TestCase(2016, 10, 9, SecurityType.Crypto, "BTCUSD")]
-        public void QuantBookIndicatorTests(int year, int month, int day, SecurityType securityType, string symbol)
+        public void QuantBookIndicatorTests(
+            int year,
+            int month,
+            int day,
+            SecurityType securityType,
+            string symbol
+        )
         {
             using (Py.GIL())
             {
@@ -63,11 +69,15 @@ namespace QuantConnect.Tests.Research
                 startDate = endDate.AddYears(-1);
 
                 // Tests a data point indicator
-                var dfBB = indicatorTest.test_bollinger_bands(symbol, startDate, endDate, Resolution.Daily).DataFrame;
+                var dfBB = indicatorTest
+                    .test_bollinger_bands(symbol, startDate, endDate, Resolution.Daily)
+                    .DataFrame;
                 Assert.IsTrue(GetDataFrameLength(dfBB) > 0);
 
                 // Tests a bar indicator
-                var dfATR = indicatorTest.test_average_true_range(symbol, startDate, endDate, Resolution.Daily).DataFrame;
+                var dfATR = indicatorTest
+                    .test_average_true_range(symbol, startDate, endDate, Resolution.Daily)
+                    .DataFrame;
                 Assert.IsTrue(GetDataFrameLength(dfATR) > 0);
 
                 if (securityType == SecurityType.Forex)
@@ -76,7 +86,9 @@ namespace QuantConnect.Tests.Research
                 }
 
                 // Tests a trade bar indicator
-                var dfOBV = indicatorTest.test_on_balance_volume(symbol, startDate, endDate, Resolution.Daily).DataFrame;
+                var dfOBV = indicatorTest
+                    .test_on_balance_volume(symbol, startDate, endDate, Resolution.Daily)
+                    .DataFrame;
                 Assert.IsTrue(GetDataFrameLength(dfOBV) > 0);
             }
         }
@@ -84,7 +96,13 @@ namespace QuantConnect.Tests.Research
         [TestCase(2013, 10, 11, SecurityType.Equity, "SPY")]
         [TestCase(2014, 5, 9, SecurityType.Forex, "EURUSD")]
         [TestCase(2016, 10, 9, SecurityType.Crypto, "BTCUSD")]
-        public void QuantBookIndicatorTests_BackwardsCompatibility(int year, int month, int day, SecurityType securityType, string symbol)
+        public void QuantBookIndicatorTests_BackwardsCompatibility(
+            int year,
+            int month,
+            int day,
+            SecurityType securityType,
+            string symbol
+        )
         {
             using (Py.GIL())
             {
@@ -95,11 +113,21 @@ namespace QuantConnect.Tests.Research
                 startDate = endDate.AddYears(-1);
 
                 // Tests a data point indicator
-                var dfBB = indicatorTest.test_bollinger_bands_backwards_compatibility(symbol, startDate, endDate, Resolution.Daily);
+                var dfBB = indicatorTest.test_bollinger_bands_backwards_compatibility(
+                    symbol,
+                    startDate,
+                    endDate,
+                    Resolution.Daily
+                );
                 Assert.IsTrue(GetDataFrameLength(dfBB) > 0);
 
                 // Tests a bar indicator
-                var dfATR = indicatorTest.test_average_true_range_backwards_compatibility(symbol, startDate, endDate, Resolution.Daily);
+                var dfATR = indicatorTest.test_average_true_range_backwards_compatibility(
+                    symbol,
+                    startDate,
+                    endDate,
+                    Resolution.Daily
+                );
                 Assert.IsTrue(GetDataFrameLength(dfATR) > 0);
 
                 if (securityType == SecurityType.Forex)
@@ -108,11 +136,17 @@ namespace QuantConnect.Tests.Research
                 }
 
                 // Tests a trade bar indicator
-                var dfOBV = indicatorTest.test_on_balance_volume_backwards_compatibility(symbol, startDate, endDate, Resolution.Daily);
+                var dfOBV = indicatorTest.test_on_balance_volume_backwards_compatibility(
+                    symbol,
+                    startDate,
+                    endDate,
+                    Resolution.Daily
+                );
                 Assert.IsTrue(GetDataFrameLength(dfOBV) > 0);
             }
         }
 
-        internal static int GetDataFrameLength(dynamic df) => (int)(df.shape[0] as PyObject).AsManagedObject(typeof(int));
+        internal static int GetDataFrameLength(dynamic df) =>
+            (int)(df.shape[0] as PyObject).AsManagedObject(typeof(int));
     }
 }

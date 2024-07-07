@@ -27,7 +27,9 @@ namespace QuantConnect.Algorithm.CSharp
     ///
     /// This specific algorithm tests this for minute resolution and is intended to be used as a base class for the other resolutions.
     /// </summary>
-    public class FillOutsideHoursMinuteResolutionAlgorithm : QCAlgorithm, IRegressionAlgorithmDefinition
+    public class FillOutsideHoursMinuteResolutionAlgorithm
+        : QCAlgorithm,
+            IRegressionAlgorithmDefinition
     {
         protected virtual Resolution Resolution => Resolution.Minute;
 
@@ -39,25 +41,44 @@ namespace QuantConnect.Algorithm.CSharp
 
             var spy = AddEquity("SPY", Resolution);
 
-            Schedule.On(DateRules.Today, TimeRules.At(new TimeSpan(23, 0, 0)), () =>
-            {
-                if (!Portfolio.Invested && spy.HasData)
+            Schedule.On(
+                DateRules.Today,
+                TimeRules.At(new TimeSpan(23, 0, 0)),
+                () =>
                 {
-                    var ticket = SubmitOrderRequest(new SubmitOrderRequest(OrderType.Market, spy.Type, spy.Symbol, 1, 0, 0, Time, ""));
-
-                    if (Resolution == Resolution.Daily)
+                    if (!Portfolio.Invested && spy.HasData)
                     {
-                        if (ticket.Status != OrderStatus.Filled)
+                        var ticket = SubmitOrderRequest(
+                            new SubmitOrderRequest(
+                                OrderType.Market,
+                                spy.Type,
+                                spy.Symbol,
+                                1,
+                                0,
+                                0,
+                                Time,
+                                ""
+                            )
+                        );
+
+                        if (Resolution == Resolution.Daily)
                         {
-                            throw new RegressionTestException($"Order was expected to be filled on {Time}. Resolution: {Resolution}");
+                            if (ticket.Status != OrderStatus.Filled)
+                            {
+                                throw new RegressionTestException(
+                                    $"Order was expected to be filled on {Time}. Resolution: {Resolution}"
+                                );
+                            }
+                        }
+                        else if (ticket.Status.IsFill())
+                        {
+                            throw new RegressionTestException(
+                                $"Order was not expected to be filled on {Time}. Resolution: {Resolution}"
+                            );
                         }
                     }
-                    else if (ticket.Status.IsFill())
-                    {
-                        throw new RegressionTestException($"Order was not expected to be filled on {Time}. Resolution: {Resolution}");
-                    }
                 }
-            });
+            );
         }
 
         /// <summary>
@@ -88,35 +109,36 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// This is used by the regression test system to indicate what the expected statistics are from running the algorithm
         /// </summary>
-        public virtual Dictionary<string, string> ExpectedStatistics => new Dictionary<string, string>
-        {
-            {"Total Orders", "1"},
-            {"Average Win", "0%"},
-            {"Average Loss", "0%"},
-            {"Compounding Annual Return", "0%"},
-            {"Drawdown", "0%"},
-            {"Expectancy", "0"},
-            {"Start Equity", "100000"},
-            {"End Equity", "99997.25"},
-            {"Net Profit", "0%"},
-            {"Sharpe Ratio", "0"},
-            {"Sortino Ratio", "0"},
-            {"Probabilistic Sharpe Ratio", "0%"},
-            {"Loss Rate", "0%"},
-            {"Win Rate", "0%"},
-            {"Profit-Loss Ratio", "0"},
-            {"Alpha", "0"},
-            {"Beta", "0"},
-            {"Annual Standard Deviation", "0"},
-            {"Annual Variance", "0"},
-            {"Information Ratio", "0"},
-            {"Tracking Error", "0"},
-            {"Treynor Ratio", "0"},
-            {"Total Fees", "$1.00"},
-            {"Estimated Strategy Capacity", "$12000000000.00"},
-            {"Lowest Capacity Asset", "SPY R735QTJ8XC9X"},
-            {"Portfolio Turnover", "0.07%"},
-            {"OrderListHash", "6a55ff7bccb41a538e1733ccbde482b3"}
-        };
+        public virtual Dictionary<string, string> ExpectedStatistics =>
+            new Dictionary<string, string>
+            {
+                { "Total Orders", "1" },
+                { "Average Win", "0%" },
+                { "Average Loss", "0%" },
+                { "Compounding Annual Return", "0%" },
+                { "Drawdown", "0%" },
+                { "Expectancy", "0" },
+                { "Start Equity", "100000" },
+                { "End Equity", "99997.25" },
+                { "Net Profit", "0%" },
+                { "Sharpe Ratio", "0" },
+                { "Sortino Ratio", "0" },
+                { "Probabilistic Sharpe Ratio", "0%" },
+                { "Loss Rate", "0%" },
+                { "Win Rate", "0%" },
+                { "Profit-Loss Ratio", "0" },
+                { "Alpha", "0" },
+                { "Beta", "0" },
+                { "Annual Standard Deviation", "0" },
+                { "Annual Variance", "0" },
+                { "Information Ratio", "0" },
+                { "Tracking Error", "0" },
+                { "Treynor Ratio", "0" },
+                { "Total Fees", "$1.00" },
+                { "Estimated Strategy Capacity", "$12000000000.00" },
+                { "Lowest Capacity Asset", "SPY R735QTJ8XC9X" },
+                { "Portfolio Turnover", "0.07%" },
+                { "OrderListHash", "6a55ff7bccb41a538e1733ccbde482b3" }
+            };
     }
 }

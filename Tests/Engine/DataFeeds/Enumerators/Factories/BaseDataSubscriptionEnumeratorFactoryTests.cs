@@ -34,7 +34,19 @@ namespace QuantConnect.Tests.Engine.DataFeeds.Enumerators.Factories
         public void DoesNotLeakMemory()
         {
             var symbol = Symbols.SPY_Option_Chain;
-            var config = new SubscriptionDataConfig(typeof(TradeBar), symbol, Resolution.Daily, TimeZones.NewYork, TimeZones.NewYork, false, false, false, false, TickType.Trade, false);
+            var config = new SubscriptionDataConfig(
+                typeof(TradeBar),
+                symbol,
+                Resolution.Daily,
+                TimeZones.NewYork,
+                TimeZones.NewYork,
+                false,
+                false,
+                false,
+                false,
+                TickType.Trade,
+                false
+            );
             var security = new Security(
                 SecurityExchangeHours.AlwaysOpen(TimeZones.NewYork),
                 config,
@@ -47,7 +59,10 @@ namespace QuantConnect.Tests.Engine.DataFeeds.Enumerators.Factories
 
             var fileProvider = TestGlobals.DataProvider;
             var cache = TestGlobals.DataCacheProvider;
-            var factory = new BaseDataSubscriptionEnumeratorFactory(new BacktestingOptionChainProvider(cache, TestGlobals.MapFileProvider), new BacktestingFutureChainProvider(cache));
+            var factory = new BaseDataSubscriptionEnumeratorFactory(
+                new BacktestingOptionChainProvider(cache, TestGlobals.MapFileProvider),
+                new BacktestingFutureChainProvider(cache)
+            );
 
             GC.Collect();
             var ramUsageBeforeLoop = OS.TotalPhysicalMemoryUsed;
@@ -68,10 +83,11 @@ namespace QuantConnect.Tests.Engine.DataFeeds.Enumerators.Factories
             GC.Collect();
             var ramUsageAfterLoop = OS.TotalPhysicalMemoryUsed;
 
-            Log.Trace($"RAM usage - before: {ramUsageBeforeLoop} MB, after: {ramUsageAfterLoop} MB");
+            Log.Trace(
+                $"RAM usage - before: {ramUsageBeforeLoop} MB, after: {ramUsageAfterLoop} MB"
+            );
 
             Assert.IsTrue(ramUsageAfterLoop - ramUsageBeforeLoop < 10);
         }
-
     }
 }

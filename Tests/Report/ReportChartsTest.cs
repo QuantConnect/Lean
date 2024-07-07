@@ -13,15 +13,15 @@
  * limitations under the License.
 */
 
-using NUnit.Framework;
 using System;
-using System.IO;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
+using Newtonsoft.Json;
+using NUnit.Framework;
 using Python.Runtime;
 using QuantConnect.Packets;
 using QuantConnect.Report;
-using Newtonsoft.Json;
 
 namespace QuantConnect.Tests.Report
 {
@@ -45,7 +45,16 @@ namespace QuantConnect.Tests.Report
             var backtestResult = GetBacktestResult();
             QuantConnect.Report.Report report = null;
 
-            Assert.DoesNotThrow(() => report = new QuantConnect.Report.Report("Report", "Report", "v1.0.0", backtestResult, (LiveResult)null));
+            Assert.DoesNotThrow(
+                () =>
+                    report = new QuantConnect.Report.Report(
+                        "Report",
+                        "Report",
+                        "v1.0.0",
+                        backtestResult,
+                        (LiveResult)null
+                    )
+            );
             string html = "";
             Assert.DoesNotThrow(() => report.Compile(out html, out _));
             Assert.IsNotEmpty(html);
@@ -70,7 +79,10 @@ namespace QuantConnect.Tests.Report
                 {
                     if (security.ToString() != "Base" && security.ToString() != "Index")
                     {
-                        Assert.IsTrue(chartSecurities.Contains(security.ToString()), $"{security} SecurityType is not present in ReportCharts.py color_map dictionary");
+                        Assert.IsTrue(
+                            chartSecurities.Contains(security.ToString()),
+                            $"{security} SecurityType is not present in ReportCharts.py color_map dictionary"
+                        );
                     }
                 }
             }
@@ -81,23 +93,34 @@ namespace QuantConnect.Tests.Report
         {
             var backtestResult = new BacktestResult()
             {
-                Statistics = new Dictionary<string, string>(){ { "Estimated Strategy Capacity", $"{currencySymbol}1,000,000.00" } }
+                Statistics = new Dictionary<string, string>()
+                {
+                    { "Estimated Strategy Capacity", $"{currencySymbol}1,000,000.00" }
+                }
             };
-            QuantConnect.Report.ReportElements.EstimatedCapacityReportElement element = new("", "", backtestResult, new LiveResult());
+            QuantConnect.Report.ReportElements.EstimatedCapacityReportElement element =
+                new("", "", backtestResult, new LiveResult());
 
             Assert.DoesNotThrow(() => element.Render());
         }
 
         [Test, Sequential]
         public void ProperlyRendersEstimatedCapacity(
-            [Values(999d, 9999d, 99999d, 999999d, 9999999d, 99999999d, 999999999d, 9999999999d)] decimal capacity,
-            [Values("1K", "10K", "100K", "1M", "10M", "100M", "1B", "10B")] string expectedRenderedCapacity)
+            [Values(999d, 9999d, 99999d, 999999d, 9999999d, 99999999d, 999999999d, 9999999999d)]
+                decimal capacity,
+            [Values("1K", "10K", "100K", "1M", "10M", "100M", "1B", "10B")]
+                string expectedRenderedCapacity
+        )
         {
             var backtestResult = new BacktestResult()
             {
-                Statistics = new Dictionary<string, string>() { { "Estimated Strategy Capacity", $"${capacity}" } }
+                Statistics = new Dictionary<string, string>()
+                {
+                    { "Estimated Strategy Capacity", $"${capacity}" }
+                }
             };
-            QuantConnect.Report.ReportElements.EstimatedCapacityReportElement element = new("", "", backtestResult, new LiveResult());
+            QuantConnect.Report.ReportElements.EstimatedCapacityReportElement element =
+                new("", "", backtestResult, new LiveResult());
 
             string renderedCapacity = element.Render();
             Assert.AreEqual(expectedRenderedCapacity, renderedCapacity);
@@ -110,10 +133,23 @@ namespace QuantConnect.Tests.Report
         {
             var backtestResult = GetBacktestResult();
             var capacity = backtestResult.Statistics["Estimated Strategy Capacity"];
-            backtestResult.Statistics["Estimated Strategy Capacity"] = capacity.Replace("$", currencySymbol, StringComparison.Ordinal);
+            backtestResult.Statistics["Estimated Strategy Capacity"] = capacity.Replace(
+                "$",
+                currencySymbol,
+                StringComparison.Ordinal
+            );
             QuantConnect.Report.Report report = null;
 
-            Assert.DoesNotThrow(() => report = new QuantConnect.Report.Report("Report", "Report", "v1.0.0", backtestResult, (LiveResult)null));
+            Assert.DoesNotThrow(
+                () =>
+                    report = new QuantConnect.Report.Report(
+                        "Report",
+                        "Report",
+                        "v1.0.0",
+                        backtestResult,
+                        (LiveResult)null
+                    )
+            );
             string html = "";
             Assert.DoesNotThrow(() => report.Compile(out html, out _));
             Assert.IsNotEmpty(html);
@@ -123,11 +159,16 @@ namespace QuantConnect.Tests.Report
         {
             var backtestSettings = new JsonSerializerSettings
             {
-                Converters = new List<JsonConverter> { new NullResultValueTypeJsonConverter<BacktestResult>() },
+                Converters = new List<JsonConverter>
+                {
+                    new NullResultValueTypeJsonConverter<BacktestResult>()
+                },
                 FloatParseHandling = FloatParseHandling.Decimal
             };
             var backtest = JsonConvert.DeserializeObject<BacktestResult>(
-                File.ReadAllText(Path.Combine("TestData", "test_report_data.json")), backtestSettings);
+                File.ReadAllText(Path.Combine("TestData", "test_report_data.json")),
+                backtestSettings
+            );
 
             return backtest;
         }

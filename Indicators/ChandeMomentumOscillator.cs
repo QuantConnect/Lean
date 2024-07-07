@@ -22,7 +22,9 @@ namespace QuantConnect.Indicators
     /// RSI = gain / (gain+loss)
     /// CMO = (gain-loss) / (gain+loss)
     /// </summary>
-    public class ChandeMomentumOscillator : WindowIndicator<IndicatorDataPoint>, IIndicatorWarmUpPeriodProvider
+    public class ChandeMomentumOscillator
+        : WindowIndicator<IndicatorDataPoint>,
+            IIndicatorWarmUpPeriodProvider
     {
         private decimal _prevValue;
         private decimal _prevGain;
@@ -30,22 +32,18 @@ namespace QuantConnect.Indicators
 
         /// <summary>
         /// Initializes a new instance of the <see cref="ChandeMomentumOscillator"/> class using the specified period.
-        /// </summary> 
+        /// </summary>
         /// <param name="period">The period of the indicator</param>
         public ChandeMomentumOscillator(int period)
-            : this($"CMO({period})", period)
-        {
-        }
+            : this($"CMO({period})", period) { }
 
         /// <summary>
         /// Initializes a new instance of the <see cref="ChandeMomentumOscillator"/> class using the specified name and period.
-        /// </summary> 
+        /// </summary>
         /// <param name="name">The name of this indicator</param>
         /// <param name="period">The period of the indicator</param>
         public ChandeMomentumOscillator(string name, int period)
-            : base(name, period)
-        {
-        }
+            : base(name, period) { }
 
         /// <summary>
         /// Gets a flag indicating when this indicator is ready and fully initialized
@@ -63,7 +61,10 @@ namespace QuantConnect.Indicators
         /// <param name="input">The input given to the indicator</param>
         /// <param name="window">The window for the input history</param>
         /// <returns>A new value for this indicator</returns>
-        protected override decimal ComputeNextValue(IReadOnlyWindow<IndicatorDataPoint> window, IndicatorDataPoint input)
+        protected override decimal ComputeNextValue(
+            IReadOnlyWindow<IndicatorDataPoint> window,
+            IndicatorDataPoint input
+        )
         {
             if (Samples == 1)
             {

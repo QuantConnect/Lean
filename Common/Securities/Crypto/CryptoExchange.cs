@@ -21,15 +21,16 @@ namespace QuantConnect.Securities.Crypto
     /// <seealso cref="SecurityExchange"/>
     public class CryptoExchange : SecurityExchange
     {
-
         /// <summary>
         /// Initializes a new instance of the <see cref="CryptoExchange"/> class using market hours
         /// derived from the market-hours-database for the Crypto market
         /// </summary>
         public CryptoExchange(string market)
-            : base(MarketHoursDatabase.FromDataFolder().GetExchangeHours(market, null, SecurityType.Crypto))
-        {
-        }
+            : base(
+                MarketHoursDatabase
+                    .FromDataFolder()
+                    .GetExchangeHours(market, null, SecurityType.Crypto)
+            ) { }
 
         /// <summary>
         /// Initializes a new instance of the <see cref="CryptoExchange"/> class using the specified
@@ -37,8 +38,6 @@ namespace QuantConnect.Securities.Crypto
         /// </summary>
         /// <param name="exchangeHours">Contains the weekly exchange schedule plus holidays</param>
         public CryptoExchange(SecurityExchangeHours exchangeHours)
-            : base(exchangeHours)
-        {
-        }
+            : base(exchangeHours) { }
     }
 }

@@ -45,7 +45,8 @@ namespace QuantConnect.Report.ReportElements
             BacktestResult backtest,
             LiveResult live,
             List<PointInTimePortfolio> backtestPortfolios,
-            List<PointInTimePortfolio> livePortfolios)
+            List<PointInTimePortfolio> livePortfolios
+        )
         {
             _backtest = backtest;
             _backtestPortfolios = backtestPortfolios;
@@ -65,11 +66,13 @@ namespace QuantConnect.Report.ReportElements
             var longLiveFrame = Metrics.Exposure(_livePortfolios, OrderDirection.Buy);
             var shortLiveFrame = Metrics.Exposure(_livePortfolios, OrderDirection.Sell);
 
-            var backtestFrame = longBacktestFrame.Join(shortBacktestFrame)
+            var backtestFrame = longBacktestFrame
+                .Join(shortBacktestFrame)
                 .FillMissing(Direction.Forward)
                 .FillMissing(0.0);
 
-            var liveFrame = longLiveFrame.Join(shortLiveFrame)
+            var liveFrame = longLiveFrame
+                .Join(shortLiveFrame)
                 .FillMissing(Direction.Forward)
                 .FillMissing(0.0);
 
@@ -99,15 +102,35 @@ namespace QuantConnect.Report.ReportElements
             using (Py.GIL())
             {
                 var time = backtestFrame.RowKeys.ToList().ToPython();
-                var longSecurities = longBacktestFrame.ColumnKeys.Select(x => x.Item1.ToStringInvariant()).ToList().ToPython();
-                var shortSecurities = shortBacktestFrame.ColumnKeys.Select(x => x.Item1.ToStringInvariant()).ToList().ToPython();
-                var longData = longBacktestFrame.ColumnKeys.Select(x => longBacktestFrame[x].Values.ToList().ToPython()).ToPython();
-                var shortData = shortBacktestFrame.ColumnKeys.Select(x => shortBacktestFrame[x].Values.ToList().ToPython()).ToPython();
+                var longSecurities = longBacktestFrame
+                    .ColumnKeys.Select(x => x.Item1.ToStringInvariant())
+                    .ToList()
+                    .ToPython();
+                var shortSecurities = shortBacktestFrame
+                    .ColumnKeys.Select(x => x.Item1.ToStringInvariant())
+                    .ToList()
+                    .ToPython();
+                var longData = longBacktestFrame
+                    .ColumnKeys.Select(x => longBacktestFrame[x].Values.ToList().ToPython())
+                    .ToPython();
+                var shortData = shortBacktestFrame
+                    .ColumnKeys.Select(x => shortBacktestFrame[x].Values.ToList().ToPython())
+                    .ToPython();
                 var liveTime = liveFrame.RowKeys.ToList().ToPython();
-                var liveLongSecurities = longLiveFrame.ColumnKeys.Select(x => x.Item1.ToStringInvariant()).ToList().ToPython();
-                var liveShortSecurities = shortLiveFrame.ColumnKeys.Select(x => x.Item1.ToStringInvariant()).ToList().ToPython();
-                var liveLongData = longLiveFrame.ColumnKeys.Select(x => longLiveFrame[x].Values.ToList().ToPython()).ToPython();
-                var liveShortData = shortLiveFrame.ColumnKeys.Select(x => shortLiveFrame[x].Values.ToList().ToPython()).ToPython();
+                var liveLongSecurities = longLiveFrame
+                    .ColumnKeys.Select(x => x.Item1.ToStringInvariant())
+                    .ToList()
+                    .ToPython();
+                var liveShortSecurities = shortLiveFrame
+                    .ColumnKeys.Select(x => x.Item1.ToStringInvariant())
+                    .ToList()
+                    .ToPython();
+                var liveLongData = longLiveFrame
+                    .ColumnKeys.Select(x => longLiveFrame[x].Values.ToList().ToPython())
+                    .ToPython();
+                var liveShortData = shortLiveFrame
+                    .ColumnKeys.Select(x => shortLiveFrame[x].Values.ToList().ToPython())
+                    .ToPython();
 
                 base64 = Charting.GetExposure(
                     time,

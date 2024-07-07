@@ -13,12 +13,12 @@
  * limitations under the License.
 */
 
+using System;
 using NUnit.Framework;
 using QuantConnect.Data;
 using QuantConnect.Data.Consolidators;
 using QuantConnect.Data.Market;
 using QuantConnect.Indicators;
-using System;
 using static QuantConnect.Tests.Indicators.TestHelper;
 
 namespace QuantConnect.Tests.Indicators
@@ -34,11 +34,12 @@ namespace QuantConnect.Tests.Indicators
 
         protected override IndicatorBase<IBaseDataBar> CreateIndicator()
         {
-            #pragma warning disable CS0618
+#pragma warning disable CS0618
             var indicator = new Alpha("testAlphaIndicator", "AMZN 2T", "SPX 2T", 5);
-            #pragma warning restore CS0618
+#pragma warning restore CS0618
             return indicator;
         }
+
         [Test]
         public override void TimeMovesForward()
         {
@@ -46,8 +47,28 @@ namespace QuantConnect.Tests.Indicators
 
             for (var i = 10; i > 0; i--)
             {
-                indicator.Update(new TradeBar() { Symbol = Symbols.IBM, Low = 1, High = 2, Volume = 100, Close = 500, Time = _reference.AddDays(1 + i) });
-                indicator.Update(new TradeBar() { Symbol = Symbols.SPY, Low = 1, High = 2, Volume = 100, Close = 500, Time = _reference.AddDays(1 + i) });
+                indicator.Update(
+                    new TradeBar()
+                    {
+                        Symbol = Symbols.IBM,
+                        Low = 1,
+                        High = 2,
+                        Volume = 100,
+                        Close = 500,
+                        Time = _reference.AddDays(1 + i)
+                    }
+                );
+                indicator.Update(
+                    new TradeBar()
+                    {
+                        Symbol = Symbols.SPY,
+                        Low = 1,
+                        High = 2,
+                        Volume = 100,
+                        Close = 500,
+                        Time = _reference.AddDays(1 + i)
+                    }
+                );
             }
 
             Assert.AreEqual(2, indicator.Samples);
@@ -69,11 +90,31 @@ namespace QuantConnect.Tests.Indicators
             // warmup period is 5 + 1
             for (var i = 1; i <= warmUpPeriod.Value; i++)
             {
-                indicator.Update(new TradeBar() { Symbol = Symbols.IBM, Low = 1, High = 2, Volume = 100, Close = 500, Time = _reference.AddDays(1 + i) });
+                indicator.Update(
+                    new TradeBar()
+                    {
+                        Symbol = Symbols.IBM,
+                        Low = 1,
+                        High = 2,
+                        Volume = 100,
+                        Close = 500,
+                        Time = _reference.AddDays(1 + i)
+                    }
+                );
 
                 Assert.IsFalse(indicator.IsReady);
 
-                indicator.Update(new TradeBar() { Symbol = Symbols.SPY, Low = 1, High = 2, Volume = 100, Close = 500, Time = _reference.AddDays(1 + i) });
+                indicator.Update(
+                    new TradeBar()
+                    {
+                        Symbol = Symbols.SPY,
+                        Low = 1,
+                        High = 2,
+                        Volume = 100,
+                        Close = 500,
+                        Time = _reference.AddDays(1 + i)
+                    }
+                );
 
                 if (i < warmUpPeriod.Value)
                 {
@@ -83,7 +124,6 @@ namespace QuantConnect.Tests.Indicators
                 {
                     Assert.IsTrue(indicator.IsReady);
                 }
-
             }
 
             Assert.AreEqual(2 * warmUpPeriod.Value, indicator.Samples);
@@ -100,8 +140,34 @@ namespace QuantConnect.Tests.Indicators
             for (int i = 0; i < 2 * warmUpPeriod; i++)
             {
                 var value = (decimal)(random.NextDouble() * 0.000000000000000000000000000001);
-                Assert.DoesNotThrow(() => indicator.Update(new TradeBar() { Symbol = Symbols.IBM, Low = value, High = value, Volume = 100, Close = value, Time = _reference.AddDays(1 + i) }));
-                Assert.DoesNotThrow(() => indicator.Update(new TradeBar() { Symbol = Symbols.SPY, Low = value, High = value, Volume = 100, Close = value, Time = _reference.AddDays(1 + i) }));
+                Assert.DoesNotThrow(
+                    () =>
+                        indicator.Update(
+                            new TradeBar()
+                            {
+                                Symbol = Symbols.IBM,
+                                Low = value,
+                                High = value,
+                                Volume = 100,
+                                Close = value,
+                                Time = _reference.AddDays(1 + i)
+                            }
+                        )
+                );
+                Assert.DoesNotThrow(
+                    () =>
+                        indicator.Update(
+                            new TradeBar()
+                            {
+                                Symbol = Symbols.SPY,
+                                Low = value,
+                                High = value,
+                                Volume = 100,
+                                Close = value,
+                                Time = _reference.AddDays(1 + i)
+                            }
+                        )
+                );
             }
         }
 
@@ -182,8 +248,23 @@ namespace QuantConnect.Tests.Indicators
 
             for (var i = 10; i > 0; i--)
             {
-                indicator.Update(new QuoteBar { Symbol = Symbols.IBM, Ask = new Bar(1, 2, 1, 500), Bid = new Bar(1, 2, 1, 500), Time = _reference.AddDays(1 + i) });
-                indicator.Update(new QuoteBar { Symbol = Symbols.SPY, Ask = new Bar(1, 2, 1, 500), Time = _reference.AddDays(1 + i) });
+                indicator.Update(
+                    new QuoteBar
+                    {
+                        Symbol = Symbols.IBM,
+                        Ask = new Bar(1, 2, 1, 500),
+                        Bid = new Bar(1, 2, 1, 500),
+                        Time = _reference.AddDays(1 + i)
+                    }
+                );
+                indicator.Update(
+                    new QuoteBar
+                    {
+                        Symbol = Symbols.SPY,
+                        Ask = new Bar(1, 2, 1, 500),
+                        Time = _reference.AddDays(1 + i)
+                    }
+                );
             }
 
             Assert.AreEqual(2, indicator.Samples);
@@ -197,11 +278,31 @@ namespace QuantConnect.Tests.Indicators
 
             for (int i = 0; i <= period; i++)
             {
-                indicator.Update(new TradeBar() { Symbol = Symbols.AAPL, Low = 1, High = 2, Volume = 100, Close = 100 + i, Time = _reference.AddDays(1 + i) });
+                indicator.Update(
+                    new TradeBar()
+                    {
+                        Symbol = Symbols.AAPL,
+                        Low = 1,
+                        High = 2,
+                        Volume = 100,
+                        Close = 100 + i,
+                        Time = _reference.AddDays(1 + i)
+                    }
+                );
 
                 Assert.AreEqual(0.0, (double)indicator.Current.Value, 0.0000000001);
 
-                indicator.Update(new TradeBar() { Symbol = Symbols.SPX, Low = 1, High = 2, Volume = 100, Close = 200 + i * 3, Time = _reference.AddDays(1 + i) });
+                indicator.Update(
+                    new TradeBar()
+                    {
+                        Symbol = Symbols.SPX,
+                        Low = 1,
+                        High = 2,
+                        Volume = 100,
+                        Close = 200 + i * 3,
+                        Time = _reference.AddDays(1 + i)
+                    }
+                );
 
                 if (i < period)
                 {
@@ -211,7 +312,6 @@ namespace QuantConnect.Tests.Indicators
                 {
                     Assert.AreEqual(0.0032053150, (double)indicator.Current.Value, 0.0000000001);
                 }
-
             }
         }
 
@@ -220,15 +320,41 @@ namespace QuantConnect.Tests.Indicators
         {
             decimal riskFreeRate = 0.0002m;
             int period = 5;
-            var indicator = new Alpha("testAlphaIndicator", Symbols.AAPL, Symbols.SPX, period, riskFreeRate);
+            var indicator = new Alpha(
+                "testAlphaIndicator",
+                Symbols.AAPL,
+                Symbols.SPX,
+                period,
+                riskFreeRate
+            );
 
             for (int i = 0; i <= period; i++)
             {
-                indicator.Update(new TradeBar() { Symbol = Symbols.AAPL, Low = 1, High = 2, Volume = 100, Close = 100 + i, Time = _reference.AddDays(1 + i) });
+                indicator.Update(
+                    new TradeBar()
+                    {
+                        Symbol = Symbols.AAPL,
+                        Low = 1,
+                        High = 2,
+                        Volume = 100,
+                        Close = 100 + i,
+                        Time = _reference.AddDays(1 + i)
+                    }
+                );
 
                 Assert.AreEqual(0.0, (double)indicator.Current.Value, 0.0000000001);
 
-                indicator.Update(new TradeBar() { Symbol = Symbols.SPX, Low = 1, High = 2, Volume = 100, Close = 200 + i * 3, Time = _reference.AddDays(1 + i) });
+                indicator.Update(
+                    new TradeBar()
+                    {
+                        Symbol = Symbols.SPX,
+                        Low = 1,
+                        High = 2,
+                        Volume = 100,
+                        Close = 200 + i * 3,
+                        Time = _reference.AddDays(1 + i)
+                    }
+                );
 
                 if (i < period)
                 {
@@ -238,7 +364,6 @@ namespace QuantConnect.Tests.Indicators
                 {
                     Assert.AreEqual(0.0030959108, (double)indicator.Current.Value, 0.0000000001);
                 }
-
             }
         }
 
@@ -248,15 +373,42 @@ namespace QuantConnect.Tests.Indicators
             int alphaPeriod = 1;
             int betaPeriod = 252;
             decimal riskFreeRate = 0.0025m;
-            var indicator = new Alpha("testAlphaIndicator", Symbols.AAPL, Symbols.SPX, alphaPeriod, betaPeriod, riskFreeRate);
+            var indicator = new Alpha(
+                "testAlphaIndicator",
+                Symbols.AAPL,
+                Symbols.SPX,
+                alphaPeriod,
+                betaPeriod,
+                riskFreeRate
+            );
 
             for (int i = 0; i <= betaPeriod; i++)
             {
-                indicator.Update(new TradeBar() { Symbol = Symbols.AAPL, Low = 1, High = 2, Volume = 100, Close = 100 + i, Time = _reference.AddDays(1 + i) });
+                indicator.Update(
+                    new TradeBar()
+                    {
+                        Symbol = Symbols.AAPL,
+                        Low = 1,
+                        High = 2,
+                        Volume = 100,
+                        Close = 100 + i,
+                        Time = _reference.AddDays(1 + i)
+                    }
+                );
 
                 Assert.AreEqual(0.0, (double)indicator.Current.Value, 0.0000000001);
 
-                indicator.Update(new TradeBar() { Symbol = Symbols.SPX, Low = 1, High = 2, Volume = 100, Close = 200 + i * 3, Time = _reference.AddDays(1 + i) });
+                indicator.Update(
+                    new TradeBar()
+                    {
+                        Symbol = Symbols.SPX,
+                        Low = 1,
+                        High = 2,
+                        Volume = 100,
+                        Close = 200 + i * 3,
+                        Time = _reference.AddDays(1 + i)
+                    }
+                );
 
                 if (i < betaPeriod)
                 {
@@ -266,7 +418,6 @@ namespace QuantConnect.Tests.Indicators
                 {
                     Assert.AreEqual(-0.0000620852, (double)indicator.Current.Value, 0.0000000001);
                 }
-
             }
         }
 
@@ -275,15 +426,41 @@ namespace QuantConnect.Tests.Indicators
         {
             int alphaPeriod = 1;
             int betaPeriod = 252;
-            var indicator = new Alpha("testAlphaIndicator", Symbols.AAPL, Symbols.SPX, alphaPeriod, betaPeriod);
+            var indicator = new Alpha(
+                "testAlphaIndicator",
+                Symbols.AAPL,
+                Symbols.SPX,
+                alphaPeriod,
+                betaPeriod
+            );
 
             for (int i = 0; i <= betaPeriod; i++)
             {
-                indicator.Update(new TradeBar() { Symbol = Symbols.AAPL, Low = 1, High = 2, Volume = 100, Close = 100 + i, Time = _reference.AddDays(1 + i) });
+                indicator.Update(
+                    new TradeBar()
+                    {
+                        Symbol = Symbols.AAPL,
+                        Low = 1,
+                        High = 2,
+                        Volume = 100,
+                        Close = 100 + i,
+                        Time = _reference.AddDays(1 + i)
+                    }
+                );
 
                 Assert.AreEqual(0.0, (double)indicator.Current.Value, 0.0000000001);
 
-                indicator.Update(new TradeBar() { Symbol = Symbols.SPX, Low = 1, High = 2, Volume = 100, Close = 200 + i * 3, Time = _reference.AddDays(1 + i) });
+                indicator.Update(
+                    new TradeBar()
+                    {
+                        Symbol = Symbols.SPX,
+                        Low = 1,
+                        High = 2,
+                        Volume = 100,
+                        Close = 200 + i * 3,
+                        Time = _reference.AddDays(1 + i)
+                    }
+                );
 
                 if (i < betaPeriod)
                 {
@@ -293,7 +470,6 @@ namespace QuantConnect.Tests.Indicators
                 {
                     Assert.AreEqual(0.0008518139, (double)indicator.Current.Value, 0.0000000001);
                 }
-
             }
         }
 
@@ -302,16 +478,44 @@ namespace QuantConnect.Tests.Indicators
         {
             int alphaPeriod = 1;
             int betaPeriod = 252;
-            IRiskFreeInterestRateModel riskFreeRateModel = new ConstantRiskFreeRateInterestRateModel(0.0m);
-            var indicator = new Alpha("testAlphaIndicator", Symbols.AAPL, Symbols.SPX, alphaPeriod, betaPeriod, riskFreeRateModel);
+            IRiskFreeInterestRateModel riskFreeRateModel =
+                new ConstantRiskFreeRateInterestRateModel(0.0m);
+            var indicator = new Alpha(
+                "testAlphaIndicator",
+                Symbols.AAPL,
+                Symbols.SPX,
+                alphaPeriod,
+                betaPeriod,
+                riskFreeRateModel
+            );
 
             for (int i = 0; i <= betaPeriod; i++)
             {
-                indicator.Update(new TradeBar() { Symbol = Symbols.AAPL, Low = 1, High = 2, Volume = 100, Close = 100 + i, Time = _reference.AddDays(1 + i) });
+                indicator.Update(
+                    new TradeBar()
+                    {
+                        Symbol = Symbols.AAPL,
+                        Low = 1,
+                        High = 2,
+                        Volume = 100,
+                        Close = 100 + i,
+                        Time = _reference.AddDays(1 + i)
+                    }
+                );
 
                 Assert.AreEqual(0.0, (double)indicator.Current.Value, 0.0000000001);
 
-                indicator.Update(new TradeBar() { Symbol = Symbols.SPX, Low = 1, High = 2, Volume = 100, Close = 200 + i * 3, Time = _reference.AddDays(1 + i) });
+                indicator.Update(
+                    new TradeBar()
+                    {
+                        Symbol = Symbols.SPX,
+                        Low = 1,
+                        High = 2,
+                        Volume = 100,
+                        Close = 200 + i * 3,
+                        Time = _reference.AddDays(1 + i)
+                    }
+                );
 
                 if (i < betaPeriod)
                 {
@@ -321,7 +525,6 @@ namespace QuantConnect.Tests.Indicators
                 {
                     Assert.AreEqual(0.0008518139, (double)indicator.Current.Value, 0.0000000001);
                 }
-
             }
         }
 
@@ -330,16 +533,44 @@ namespace QuantConnect.Tests.Indicators
         {
             int alphaPeriod = 1;
             int betaPeriod = 252;
-            IRiskFreeInterestRateModel riskFreeRateModel = new ConstantRiskFreeRateInterestRateModel(0.0025m);
-            var indicator = new Alpha("testAlphaIndicator", Symbols.AAPL, Symbols.SPX, alphaPeriod, betaPeriod, riskFreeRateModel);
+            IRiskFreeInterestRateModel riskFreeRateModel =
+                new ConstantRiskFreeRateInterestRateModel(0.0025m);
+            var indicator = new Alpha(
+                "testAlphaIndicator",
+                Symbols.AAPL,
+                Symbols.SPX,
+                alphaPeriod,
+                betaPeriod,
+                riskFreeRateModel
+            );
 
             for (int i = 0; i <= betaPeriod; i++)
             {
-                indicator.Update(new TradeBar() { Symbol = Symbols.AAPL, Low = 1, High = 2, Volume = 100, Close = 100 + i, Time = _reference.AddDays(1 + i) });
+                indicator.Update(
+                    new TradeBar()
+                    {
+                        Symbol = Symbols.AAPL,
+                        Low = 1,
+                        High = 2,
+                        Volume = 100,
+                        Close = 100 + i,
+                        Time = _reference.AddDays(1 + i)
+                    }
+                );
 
                 Assert.AreEqual(0.0, (double)indicator.Current.Value, 0.0000000001);
 
-                indicator.Update(new TradeBar() { Symbol = Symbols.SPX, Low = 1, High = 2, Volume = 100, Close = 200 + i * 3, Time = _reference.AddDays(1 + i) });
+                indicator.Update(
+                    new TradeBar()
+                    {
+                        Symbol = Symbols.SPX,
+                        Low = 1,
+                        High = 2,
+                        Volume = 100,
+                        Close = 200 + i * 3,
+                        Time = _reference.AddDays(1 + i)
+                    }
+                );
 
                 if (i < betaPeriod)
                 {
@@ -349,7 +580,6 @@ namespace QuantConnect.Tests.Indicators
                 {
                     Assert.AreEqual(-0.0000620852, (double)indicator.Current.Value, 0.0000000001);
                 }
-
             }
         }
 
@@ -358,15 +588,42 @@ namespace QuantConnect.Tests.Indicators
         {
             int alphaPeriod = 1;
             int betaPeriod = 252;
-            var indicator = new Alpha("testAlphaIndicator", Symbols.AAPL, Symbols.SPX, alphaPeriod, betaPeriod, riskFreeRate: null);
+            var indicator = new Alpha(
+                "testAlphaIndicator",
+                Symbols.AAPL,
+                Symbols.SPX,
+                alphaPeriod,
+                betaPeriod,
+                riskFreeRate: null
+            );
 
             for (int i = 0; i <= betaPeriod; i++)
             {
-                indicator.Update(new TradeBar() { Symbol = Symbols.AAPL, Low = 1, High = 2, Volume = 100, Close = 100 + i, Time = _reference.AddDays(1 + i) });
+                indicator.Update(
+                    new TradeBar()
+                    {
+                        Symbol = Symbols.AAPL,
+                        Low = 1,
+                        High = 2,
+                        Volume = 100,
+                        Close = 100 + i,
+                        Time = _reference.AddDays(1 + i)
+                    }
+                );
 
                 Assert.AreEqual(0.0, (double)indicator.Current.Value, 0.0000000001);
 
-                indicator.Update(new TradeBar() { Symbol = Symbols.SPX, Low = 1, High = 2, Volume = 100, Close = 200 + i * 3, Time = _reference.AddDays(1 + i) });
+                indicator.Update(
+                    new TradeBar()
+                    {
+                        Symbol = Symbols.SPX,
+                        Low = 1,
+                        High = 2,
+                        Volume = 100,
+                        Close = 200 + i * 3,
+                        Time = _reference.AddDays(1 + i)
+                    }
+                );
 
                 if (i < betaPeriod)
                 {
@@ -376,7 +633,6 @@ namespace QuantConnect.Tests.Indicators
                 {
                     Assert.AreEqual(0.0008518139, (double)indicator.Current.Value, 0.0000000001);
                 }
-
             }
         }
     }

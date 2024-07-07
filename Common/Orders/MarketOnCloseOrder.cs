@@ -52,9 +52,7 @@ namespace QuantConnect.Orders
         /// <summary>
         /// Intiializes a new instance of the <see cref="MarketOnCloseOrder"/> class.
         /// </summary>
-        public MarketOnCloseOrder()
-        {
-        }
+        public MarketOnCloseOrder() { }
 
         /// <summary>
         /// Intiializes a new instance of the <see cref="MarketOnCloseOrder"/> class.
@@ -64,10 +62,14 @@ namespace QuantConnect.Orders
         /// <param name="time">The current time</param>
         /// <param name="tag">A user defined tag for the order</param>
         /// <param name="properties">The order properties for this order</param>
-        public MarketOnCloseOrder(Symbol symbol, decimal quantity, DateTime time, string tag = "", IOrderProperties properties = null)
-            : base(symbol, quantity, time, tag, properties)
-        {
-        }
+        public MarketOnCloseOrder(
+            Symbol symbol,
+            decimal quantity,
+            DateTime time,
+            string tag = "",
+            IOrderProperties properties = null
+        )
+            : base(symbol, quantity, time, tag, properties) { }
 
         /// <summary>
         /// Gets the order value in units of the security's quote currency
@@ -75,7 +77,7 @@ namespace QuantConnect.Orders
         /// <param name="security">The security matching this order's symbol</param>
         protected override decimal GetValueImpl(Security security)
         {
-            return Quantity*security.Price;
+            return Quantity * security.Price;
         }
 
         /// <summary>

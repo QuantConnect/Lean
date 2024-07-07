@@ -32,26 +32,24 @@ namespace QuantConnect.Brokerages
         /// <summary>
         /// The default markets for the fxcm brokerage
         /// </summary>
-        public new static readonly IReadOnlyDictionary<SecurityType, string> DefaultMarketMap = new Dictionary<SecurityType, string>
-        {
-            {SecurityType.Base, Market.USA},
-            {SecurityType.Equity, Market.USA},
-            {SecurityType.Option, Market.USA},
-            {SecurityType.Forex, Market.FXCM},
-            {SecurityType.Cfd, Market.FXCM}
-        }.ToReadOnlyDictionary();
+        public new static readonly IReadOnlyDictionary<SecurityType, string> DefaultMarketMap =
+            new Dictionary<SecurityType, string>
+            {
+                { SecurityType.Base, Market.USA },
+                { SecurityType.Equity, Market.USA },
+                { SecurityType.Option, Market.USA },
+                { SecurityType.Forex, Market.FXCM },
+                { SecurityType.Cfd, Market.FXCM }
+            }.ToReadOnlyDictionary();
 
-        private readonly HashSet<OrderType> _supportedOrderTypes = new()
-        {
-            OrderType.Limit,
-            OrderType.Market,
-            OrderType.StopMarket
-        };
+        private readonly HashSet<OrderType> _supportedOrderTypes =
+            new() { OrderType.Limit, OrderType.Market, OrderType.StopMarket };
 
         /// <summary>
         /// Gets a map of the default markets to be used for each security type
         /// </summary>
-        public override IReadOnlyDictionary<SecurityType, string> DefaultMarkets => DefaultMarketMap;
+        public override IReadOnlyDictionary<SecurityType, string> DefaultMarkets =>
+            DefaultMarketMap;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="DefaultBrokerageModel"/> class
@@ -59,9 +57,7 @@ namespace QuantConnect.Brokerages
         /// <param name="accountType">The type of account to be modelled, defaults to
         /// <see cref="AccountType.Margin"/></param>
         public FxcmBrokerageModel(AccountType accountType = AccountType.Margin)
-            : base(accountType)
-        {
-        }
+            : base(accountType) { }
 
         /// <summary>
         /// Returns true if the brokerage could accept this order. This takes into account
@@ -74,15 +70,22 @@ namespace QuantConnect.Brokerages
         /// <param name="order">The order to be processed</param>
         /// <param name="message">If this function returns false, a brokerage message detailing why the order may not be submitted</param>
         /// <returns>True if the brokerage could process the order, false otherwise</returns>
-        public override bool CanSubmitOrder(Security security, Order order, out BrokerageMessageEvent message)
+        public override bool CanSubmitOrder(
+            Security security,
+            Order order,
+            out BrokerageMessageEvent message
+        )
         {
             message = null;
 
             // validate security type
             if (security.Type != SecurityType.Forex && security.Type != SecurityType.Cfd)
             {
-                message = new BrokerageMessageEvent(BrokerageMessageType.Warning, "NotSupported",
-                    Messages.DefaultBrokerageModel.UnsupportedSecurityType(this, security));
+                message = new BrokerageMessageEvent(
+                    BrokerageMessageType.Warning,
+                    "NotSupported",
+                    Messages.DefaultBrokerageModel.UnsupportedSecurityType(this, security)
+                );
 
                 return false;
             }
@@ -90,8 +93,15 @@ namespace QuantConnect.Brokerages
             // validate order type
             if (!_supportedOrderTypes.Contains(order.Type))
             {
-                message = new BrokerageMessageEvent(BrokerageMessageType.Warning, "NotSupported",
-                    Messages.DefaultBrokerageModel.UnsupportedOrderType(this, order, _supportedOrderTypes));
+                message = new BrokerageMessageEvent(
+                    BrokerageMessageType.Warning,
+                    "NotSupported",
+                    Messages.DefaultBrokerageModel.UnsupportedOrderType(
+                        this,
+                        order,
+                        _supportedOrderTypes
+                    )
+                );
 
                 return false;
             }
@@ -99,8 +109,11 @@ namespace QuantConnect.Brokerages
             // validate order quantity
             if (order.Quantity % security.SymbolProperties.LotSize != 0)
             {
-                message = new BrokerageMessageEvent(BrokerageMessageType.Warning, "NotSupported",
-                    Messages.FxcmBrokerageModel.InvalidOrderQuantityForLotSize(security));
+                message = new BrokerageMessageEvent(
+                    BrokerageMessageType.Warning,
+                    "NotSupported",
+                    Messages.FxcmBrokerageModel.InvalidOrderQuantityForLotSize(security)
+                );
 
                 return false;
             }
@@ -109,20 +122,37 @@ namespace QuantConnect.Brokerages
             var limit = order as LimitOrder;
             if (limit != null)
             {
-                return IsValidOrderPrices(security, OrderType.Limit, limit.Direction, security.Price, limit.LimitPrice, ref message);
+                return IsValidOrderPrices(
+                    security,
+                    OrderType.Limit,
+                    limit.Direction,
+                    security.Price,
+                    limit.LimitPrice,
+                    ref message
+                );
             }
 
             var stopMarket = order as StopMarketOrder;
             if (stopMarket != null)
             {
-                return IsValidOrderPrices(security, OrderType.StopMarket, stopMarket.Direction, stopMarket.StopPrice, security.Price, ref message);
+                return IsValidOrderPrices(
+                    security,
+                    OrderType.StopMarket,
+                    stopMarket.Direction,
+                    stopMarket.StopPrice,
+                    security.Price,
+                    ref message
+                );
             }
 
             // validate time in force
             if (order.TimeInForce != TimeInForce.GoodTilCanceled)
             {
-                message = new BrokerageMessageEvent(BrokerageMessageType.Warning, "NotSupported",
-                    Messages.DefaultBrokerageModel.UnsupportedTimeInForce(this, order));
+                message = new BrokerageMessageEvent(
+                    BrokerageMessageType.Warning,
+                    "NotSupported",
+                    Messages.DefaultBrokerageModel.UnsupportedTimeInForce(this, order)
+                );
 
                 return false;
             }
@@ -138,15 +168,26 @@ namespace QuantConnect.Brokerages
         /// <param name="request">The requested update to be made to the order</param>
         /// <param name="message">If this function returns false, a brokerage message detailing why the order may not be updated</param>
         /// <returns>True if the brokerage would allow updating the order, false otherwise</returns>
-        public override bool CanUpdateOrder(Security security, Order order, UpdateOrderRequest request, out BrokerageMessageEvent message)
+        public override bool CanUpdateOrder(
+            Security security,
+            Order order,
+            UpdateOrderRequest request,
+            out BrokerageMessageEvent message
+        )
         {
             message = null;
 
             // validate order quantity
-            if (request.Quantity != null && request.Quantity % security.SymbolProperties.LotSize != 0)
+            if (
+                request.Quantity != null
+                && request.Quantity % security.SymbolProperties.LotSize != 0
+            )
             {
-                message = new BrokerageMessageEvent(BrokerageMessageType.Warning, "NotSupported",
-                    Messages.FxcmBrokerageModel.InvalidOrderQuantityForLotSize(security));
+                message = new BrokerageMessageEvent(
+                    BrokerageMessageType.Warning,
+                    "NotSupported",
+                    Messages.FxcmBrokerageModel.InvalidOrderQuantityForLotSize(security)
+                );
 
                 return false;
             }
@@ -159,7 +200,14 @@ namespace QuantConnect.Brokerages
             var stopPrice = request.StopPrice ?? security.Price;
             var limitPrice = request.LimitPrice ?? security.Price;
 
-            return IsValidOrderPrices(security, order.Type, direction, stopPrice, limitPrice, ref message);
+            return IsValidOrderPrices(
+                security,
+                order.Type,
+                direction,
+                stopPrice,
+                limitPrice,
+                ref message
+            );
         }
 
         /// <summary>
@@ -191,25 +239,44 @@ namespace QuantConnect.Brokerages
         public override ISettlementModel GetSettlementModel(Security security)
         {
             return security.Type == SecurityType.Cfd
-                ? new AccountCurrencyImmediateSettlementModel() :
-                (ISettlementModel)new ImmediateSettlementModel();
+                ? new AccountCurrencyImmediateSettlementModel()
+                : (ISettlementModel)new ImmediateSettlementModel();
         }
 
         /// <summary>
         /// Validates limit/stopmarket order prices, pass security.Price for limit/stop if n/a
         /// </summary>
-        private static bool IsValidOrderPrices(Security security, OrderType orderType, OrderDirection orderDirection, decimal stopPrice, decimal limitPrice, ref BrokerageMessageEvent message)
+        private static bool IsValidOrderPrices(
+            Security security,
+            OrderType orderType,
+            OrderDirection orderDirection,
+            decimal stopPrice,
+            decimal limitPrice,
+            ref BrokerageMessageEvent message
+        )
         {
             // validate order price
-            var invalidPrice = orderType == OrderType.Limit && orderDirection == OrderDirection.Buy && limitPrice > security.Price ||
-                orderType == OrderType.Limit && orderDirection == OrderDirection.Sell && limitPrice < security.Price ||
-                orderType == OrderType.StopMarket && orderDirection == OrderDirection.Buy && stopPrice < security.Price ||
-                orderType == OrderType.StopMarket && orderDirection == OrderDirection.Sell && stopPrice > security.Price;
+            var invalidPrice =
+                orderType == OrderType.Limit
+                    && orderDirection == OrderDirection.Buy
+                    && limitPrice > security.Price
+                || orderType == OrderType.Limit
+                    && orderDirection == OrderDirection.Sell
+                    && limitPrice < security.Price
+                || orderType == OrderType.StopMarket
+                    && orderDirection == OrderDirection.Buy
+                    && stopPrice < security.Price
+                || orderType == OrderType.StopMarket
+                    && orderDirection == OrderDirection.Sell
+                    && stopPrice > security.Price;
 
             if (invalidPrice)
             {
-                message = new BrokerageMessageEvent(BrokerageMessageType.Warning, "NotSupported",
-                    Messages.FxcmBrokerageModel.InvalidOrderPrice);
+                message = new BrokerageMessageEvent(
+                    BrokerageMessageType.Warning,
+                    "NotSupported",
+                    Messages.FxcmBrokerageModel.InvalidOrderPrice
+                );
 
                 return false;
             }
@@ -219,23 +286,43 @@ namespace QuantConnect.Brokerages
             // whichever comes first (for most pairs, 50% rule comes first)
             var maxDistance = Math.Min(
                 // MinimumPriceVariation is 1/10th of a pip
-                security.SymbolProperties.MinimumPriceVariation * 10 * 15000,
-                security.Price / 2);
+                security.SymbolProperties.MinimumPriceVariation
+                    * 10
+                    * 15000,
+                security.Price / 2
+            );
             var currentPrice = security.Price;
             var minPrice = currentPrice - maxDistance;
             var maxPrice = currentPrice + maxDistance;
 
-            var outOfRangePrice = orderType == OrderType.Limit && orderDirection == OrderDirection.Buy && limitPrice < minPrice ||
-                                  orderType == OrderType.Limit && orderDirection == OrderDirection.Sell && limitPrice > maxPrice ||
-                                  orderType == OrderType.StopMarket && orderDirection == OrderDirection.Buy && stopPrice > maxPrice ||
-                                  orderType == OrderType.StopMarket && orderDirection == OrderDirection.Sell && stopPrice < minPrice;
+            var outOfRangePrice =
+                orderType == OrderType.Limit
+                    && orderDirection == OrderDirection.Buy
+                    && limitPrice < minPrice
+                || orderType == OrderType.Limit
+                    && orderDirection == OrderDirection.Sell
+                    && limitPrice > maxPrice
+                || orderType == OrderType.StopMarket
+                    && orderDirection == OrderDirection.Buy
+                    && stopPrice > maxPrice
+                || orderType == OrderType.StopMarket
+                    && orderDirection == OrderDirection.Sell
+                    && stopPrice < minPrice;
 
             if (outOfRangePrice)
             {
                 var orderPrice = orderType == OrderType.Limit ? limitPrice : stopPrice;
 
-                message = new BrokerageMessageEvent(BrokerageMessageType.Warning, "NotSupported",
-                    Messages.FxcmBrokerageModel.PriceOutOfRange(orderType, orderDirection, orderPrice, currentPrice));
+                message = new BrokerageMessageEvent(
+                    BrokerageMessageType.Warning,
+                    "NotSupported",
+                    Messages.FxcmBrokerageModel.PriceOutOfRange(
+                        orderType,
+                        orderDirection,
+                        orderPrice,
+                        currentPrice
+                    )
+                );
 
                 return false;
             }

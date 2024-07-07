@@ -27,7 +27,9 @@ namespace QuantConnect.Securities
         /// </summary>
         /// <param name="parameters">An object containing the method parameters</param>
         /// <returns>Zero</returns>
-        public virtual decimal GetMinimumPriceVariation(GetMinimumPriceVariationParameters parameters)
+        public virtual decimal GetMinimumPriceVariation(
+            GetMinimumPriceVariationParameters parameters
+        )
         {
             return 0;
         }

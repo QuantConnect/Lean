@@ -40,7 +40,8 @@ public class HilbertTransformTests : CommonIndicatorTests<IndicatorDataPoint>
             TestFileName,
             "InPhase",
             (_, expected) =>
-                Assert.AreEqual(expected, (double)hilbertTransform.InPhase.Current.Value, 1e-3));
+                Assert.AreEqual(expected, (double)hilbertTransform.InPhase.Current.Value, 1e-3)
+        );
     }
 
     [Test]
@@ -52,7 +53,8 @@ public class HilbertTransformTests : CommonIndicatorTests<IndicatorDataPoint>
             TestFileName,
             "Quadrature",
             (actual, expected) =>
-                Assert.AreEqual(expected, (double)hilbertTransform.Quadrature.Current.Value, 1e-3));
+                Assert.AreEqual(expected, (double)hilbertTransform.Quadrature.Current.Value, 1e-3)
+        );
     }
 
     [Test]

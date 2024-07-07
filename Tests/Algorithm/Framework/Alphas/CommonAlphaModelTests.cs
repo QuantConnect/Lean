@@ -13,7 +13,11 @@
  * limitations under the License.
 */
 
+using System;
+using System.Collections.Generic;
+using System.Linq;
 using NUnit.Framework;
+using QuantConnect.Algorithm;
 using QuantConnect.Algorithm.Framework.Alphas;
 using QuantConnect.Algorithm.Framework.Portfolio;
 using QuantConnect.Algorithm.Framework.Selection;
@@ -22,12 +26,8 @@ using QuantConnect.Data.Market;
 using QuantConnect.Data.UniverseSelection;
 using QuantConnect.Lean.Engine.DataFeeds;
 using QuantConnect.Lean.Engine.HistoricalData;
-using QuantConnect.Securities;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using QuantConnect.Algorithm;
 using QuantConnect.Python;
+using QuantConnect.Securities;
 using QuantConnect.Tests.Common.Data.UniverseSelection;
 using QuantConnect.Tests.Engine.DataFeeds;
 using QuantConnect.Util;
@@ -61,9 +61,11 @@ namespace QuantConnect.Tests.Algorithm.Framework.Alphas
             IAlphaModel model;
             IAlphaModel model2 = null;
             IAlphaModel model3 = null;
-            if (!TryCreateModel(language, out model)
+            if (
+                !TryCreateModel(language, out model)
                 || !TryCreateModel(language, out model2)
-                || !TryCreateModel(language, out model3))
+                || !TryCreateModel(language, out model3)
+            )
             {
                 Assert.Ignore($"Ignore {GetType().Name}: Could not create {language} model.");
             }
@@ -74,7 +76,10 @@ namespace QuantConnect.Tests.Algorithm.Framework.Alphas
             Algorithm.AddAlpha(model3);
             Algorithm.SetUniverseSelection(new ManualUniverseSelectionModel());
 
-            var changes = SecurityChangesTests.CreateNonInternal(AddedSecurities, RemovedSecurities);
+            var changes = SecurityChangesTests.CreateNonInternal(
+                AddedSecurities,
+                RemovedSecurities
+            );
             Algorithm.OnFrameworkSecuritiesChanged(changes);
 
             var actualInsights = new List<Insight>();
@@ -82,7 +87,9 @@ namespace QuantConnect.Tests.Algorithm.Framework.Alphas
 
             var expectedInsights = ExpectedInsights().ToList();
 
-            var consolidators = Algorithm.Securities.SelectMany(kvp => kvp.Value.Subscriptions).SelectMany(x => x.Consolidators);
+            var consolidators = Algorithm
+                .Securities.SelectMany(kvp => kvp.Value.Subscriptions)
+                .SelectMany(x => x.Consolidators);
             var slices = CreateSlices();
 
             foreach (var slice in slices.ToList())
@@ -114,7 +121,7 @@ namespace QuantConnect.Tests.Algorithm.Framework.Alphas
                     Assert.AreEqual(expected.Symbol, actual.Symbol);
                     Assert.AreEqual(expected.Type, actual.Type);
                     Assert.AreEqual(expected.Direction, actual.Direction);
-                    Assert.LessOrEqual(expected.Period, actual.Period);         // It can be canceled and discarded early
+                    Assert.LessOrEqual(expected.Period, actual.Period); // It can be canceled and discarded early
                     Assert.AreEqual(expected.Magnitude, actual.Magnitude);
                     Assert.AreEqual(expected.Confidence, actual.Confidence);
                 }
@@ -136,7 +143,10 @@ namespace QuantConnect.Tests.Algorithm.Framework.Alphas
             Algorithm.SetAlpha(model);
             Algorithm.SetUniverseSelection(new ManualUniverseSelectionModel());
 
-            var changes = SecurityChangesTests.CreateNonInternal(AddedSecurities, RemovedSecurities);
+            var changes = SecurityChangesTests.CreateNonInternal(
+                AddedSecurities,
+                RemovedSecurities
+            );
             Algorithm.OnFrameworkSecuritiesChanged(changes);
 
             var actualInsights = new List<Insight>();
@@ -144,7 +154,9 @@ namespace QuantConnect.Tests.Algorithm.Framework.Alphas
 
             var expectedInsights = ExpectedInsights().ToList();
 
-            var consolidators = Algorithm.Securities.SelectMany(kvp => kvp.Value.Subscriptions).SelectMany(x => x.Consolidators);
+            var consolidators = Algorithm
+                .Securities.SelectMany(kvp => kvp.Value.Subscriptions)
+                .SelectMany(x => x.Consolidators);
             var slices = CreateSlices();
 
             foreach (var slice in slices.ToList())
@@ -174,7 +186,7 @@ namespace QuantConnect.Tests.Algorithm.Framework.Alphas
                 Assert.AreEqual(expected.Symbol, actual.Symbol);
                 Assert.AreEqual(expected.Type, actual.Type);
                 Assert.AreEqual(expected.Direction, actual.Direction);
-                Assert.LessOrEqual(expected.Period, actual.Period);         // It can be canceled and discarded early
+                Assert.LessOrEqual(expected.Period, actual.Period); // It can be canceled and discarded early
                 Assert.AreEqual(expected.Magnitude, actual.Magnitude);
                 Assert.AreEqual(expected.Confidence, actual.Confidence);
             }
@@ -191,7 +203,10 @@ namespace QuantConnect.Tests.Algorithm.Framework.Alphas
                 Assert.Ignore($"Ignore {GetType().Name}: Could not create {language} model.");
             }
 
-            var changes = SecurityChangesTests.CreateNonInternal(AddedSecurities, RemovedSecurities);
+            var changes = SecurityChangesTests.CreateNonInternal(
+                AddedSecurities,
+                RemovedSecurities
+            );
 
             Assert.DoesNotThrow(() => model.OnSecuritiesChanged(Algorithm, changes));
         }
@@ -211,7 +226,10 @@ namespace QuantConnect.Tests.Algorithm.Framework.Alphas
 
             // We have to add some security if we then want to remove it, that's why we cannot use here
             // RemovedSecurities, because it doesn't contain any security
-            var changes = SecurityChangesTests.CreateNonInternal(removedSecurities, AddedSecurities);
+            var changes = SecurityChangesTests.CreateNonInternal(
+                removedSecurities,
+                AddedSecurities
+            );
 
             Assert.DoesNotThrow(() => model.OnSecuritiesChanged(Algorithm, changes));
         }
@@ -294,8 +312,10 @@ namespace QuantConnect.Tests.Algorithm.Framework.Alphas
                 {
                     var security = kvp.Value;
                     var exchange = security.Exchange.Hours;
-                    var configs = Algorithm.SubscriptionManager.SubscriptionDataConfigService
-                        .GetSubscriptionDataConfigs(security.Symbol);
+                    var configs =
+                        Algorithm.SubscriptionManager.SubscriptionDataConfigService.GetSubscriptionDataConfigs(
+                            security.Symbol
+                        );
                     var extendedMarket = configs.IsExtendedMarketHours();
                     var localDateTime = utcDateTime.ConvertFromUtc(exchange.TimeZone);
                     if (!exchange.IsOpen(localDateTime, extendedMarket))
@@ -305,13 +325,31 @@ namespace QuantConnect.Tests.Algorithm.Framework.Alphas
                     var configuration = security.Subscriptions.FirstOrDefault();
                     var period = configs.GetHighestResolution().ToTimeSpan();
                     var time = (utcDateTime - period).ConvertFromUtc(configuration.DataTimeZone);
-                    var tradeBar = new TradeBar(time, security.Symbol, last, high, low, last, 1000, period);
-                    packets.Add(new DataFeedPacket(security, configuration, new List<BaseData> { tradeBar }));
+                    var tradeBar = new TradeBar(
+                        time,
+                        security.Symbol,
+                        last,
+                        high,
+                        low,
+                        last,
+                        1000,
+                        period
+                    );
+                    packets.Add(
+                        new DataFeedPacket(security, configuration, new List<BaseData> { tradeBar })
+                    );
                 }
 
                 if (packets.Count > 0)
                 {
-                    yield return timeSliceFactory.Create(utcDateTime, packets, changes, new Dictionary<Universe, BaseDataCollection>()).Slice;
+                    yield return timeSliceFactory
+                        .Create(
+                            utcDateTime,
+                            packets,
+                            changes,
+                            new Dictionary<Universe, BaseDataCollection>()
+                        )
+                        .Slice;
                 }
             }
         }
@@ -322,18 +360,21 @@ namespace QuantConnect.Tests.Algorithm.Framework.Alphas
         protected void SetUpHistoryProvider()
         {
             Algorithm.HistoryProvider = new SubscriptionDataReaderHistoryProvider();
-            Algorithm.HistoryProvider.Initialize(new HistoryProviderInitializeParameters(
-                null,
-                null,
-                TestGlobals.DataProvider,
-                TestGlobals.DataCacheProvider,
-                TestGlobals.MapFileProvider,
-                TestGlobals.FactorFileProvider,
-                null,
-                false,
-                new DataPermissionManager(),
-                Algorithm.ObjectStore,
-                Algorithm.Settings));
+            Algorithm.HistoryProvider.Initialize(
+                new HistoryProviderInitializeParameters(
+                    null,
+                    null,
+                    TestGlobals.DataProvider,
+                    TestGlobals.DataCacheProvider,
+                    TestGlobals.MapFileProvider,
+                    TestGlobals.FactorFileProvider,
+                    null,
+                    false,
+                    new DataPermissionManager(),
+                    Algorithm.ObjectStore,
+                    Algorithm.Settings
+                )
+            );
         }
 
         /// <summary>
@@ -352,8 +393,10 @@ namespace QuantConnect.Tests.Algorithm.Framework.Alphas
                 foreach (var kvp in Algorithm.Securities)
                 {
                     var security = kvp.Value;
-                    var configs = Algorithm.SubscriptionManager.SubscriptionDataConfigService
-                        .GetSubscriptionDataConfigs(security.Symbol);
+                    var configs =
+                        Algorithm.SubscriptionManager.SubscriptionDataConfigService.GetSubscriptionDataConfigs(
+                            security.Symbol
+                        );
                     var resolution = configs.GetHighestResolution().ToTimeSpan();
                     utcDateTime = utcDateTime.Add(resolution);
                     if (resolution == Time.OneDay && utcDateTime.TimeOfDay == TimeSpan.Zero)

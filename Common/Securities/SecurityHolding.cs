@@ -14,9 +14,9 @@
 */
 
 using System;
+using QuantConnect.Algorithm.Framework.Portfolio;
 using QuantConnect.Orders;
 using QuantConnect.Orders.Fees;
-using QuantConnect.Algorithm.Framework.Portfolio;
 
 namespace QuantConnect.Securities
 {
@@ -79,33 +79,21 @@ namespace QuantConnect.Securities
         /// </summary>
         protected Security Security
         {
-            get
-            {
-                return _security;
-            }
+            get { return _security; }
         }
 
         /// <summary>
         /// Gets the current target holdings for this security
         /// </summary>
-        public IPortfolioTarget Target
-        {
-            get; set;
-        }
+        public IPortfolioTarget Target { get; set; }
 
         /// <summary>
         /// Average price of the security holdings.
         /// </summary>
         public decimal AveragePrice
         {
-            get
-            {
-                return _averagePrice;
-            }
-            protected set
-            {
-                _averagePrice = value;
-            }
+            get { return _averagePrice; }
+            protected set { _averagePrice = value; }
         }
 
         /// <summary>
@@ -115,10 +103,7 @@ namespace QuantConnect.Securities
         /// <seealso cref="AbsoluteQuantity"/>
         public decimal Quantity
         {
-            get
-            {
-                return _quantity;
-            }
+            get { return _quantity; }
             protected set
             {
                 _invested = value != 0;
@@ -131,10 +116,7 @@ namespace QuantConnect.Securities
         /// </summary>
         public Symbol Symbol
         {
-            get
-            {
-                return _security.Symbol;
-            }
+            get { return _security.Symbol; }
         }
 
         /// <summary>
@@ -142,10 +124,7 @@ namespace QuantConnect.Securities
         /// </summary>
         public SecurityType Type
         {
-            get
-            {
-                return _security.Type;
-            }
+            get { return _security.Type; }
         }
 
         /// <summary>
@@ -153,10 +132,7 @@ namespace QuantConnect.Securities
         /// </summary>
         public virtual decimal Leverage
         {
-            get
-            {
-                return _security.BuyingPowerModel.GetLeverage(_security);
-            }
+            get { return _security.BuyingPowerModel.GetLeverage(_security); }
         }
 
         /// <summary>
@@ -179,7 +155,7 @@ namespace QuantConnect.Securities
         /// </summary>
         public virtual decimal UnleveredHoldingsCost
         {
-            get { return HoldingsCost/Leverage; }
+            get { return HoldingsCost / Leverage; }
         }
 
         /// <summary>
@@ -187,14 +163,8 @@ namespace QuantConnect.Securities
         /// </summary>
         public virtual decimal Price
         {
-            get
-            {
-                return _price;
-            }
-            protected set
-            {
-                _price = value;
-            }
+            get { return _price; }
+            protected set { _price = value; }
         }
 
         /// <summary>
@@ -203,10 +173,7 @@ namespace QuantConnect.Securities
         /// <seealso cref="HoldingsCost"/>
         public virtual decimal AbsoluteHoldingsCost
         {
-            get
-            {
-                return Math.Abs(HoldingsCost);
-            }
+            get { return Math.Abs(HoldingsCost); }
         }
 
         /// <summary>
@@ -214,10 +181,7 @@ namespace QuantConnect.Securities
         /// </summary>
         public virtual decimal UnleveredAbsoluteHoldingsCost
         {
-            get
-            {
-                return Math.Abs(UnleveredHoldingsCost);
-            }
+            get { return Math.Abs(UnleveredHoldingsCost); }
         }
 
         /// <summary>
@@ -287,10 +251,7 @@ namespace QuantConnect.Securities
         /// <seealso cref="IsShort"/>
         public virtual bool IsLong
         {
-            get
-            {
-                return Quantity > 0;
-            }
+            get { return Quantity > 0; }
         }
 
         /// <summary>
@@ -299,10 +260,7 @@ namespace QuantConnect.Securities
         /// <seealso cref="IsLong"/>
         public virtual bool IsShort
         {
-            get
-            {
-                return Quantity < 0;
-            }
+            get { return Quantity < 0; }
         }
 
         /// <summary>
@@ -311,10 +269,7 @@ namespace QuantConnect.Securities
         /// <seealso cref="Quantity"/>
         public virtual decimal AbsoluteQuantity
         {
-            get
-            {
-                return Math.Abs(Quantity);
-            }
+            get { return Math.Abs(Quantity); }
         }
 
         /// <summary>
@@ -322,10 +277,7 @@ namespace QuantConnect.Securities
         /// </summary>
         public virtual decimal LastTradeProfit
         {
-            get
-            {
-                return _lastTradeProfit;
-            }
+            get { return _lastTradeProfit; }
         }
 
         /// <summary>
@@ -344,10 +296,7 @@ namespace QuantConnect.Securities
         /// <seealso cref="TotalFees"/>
         public virtual decimal NetProfit
         {
-            get
-            {
-                return Profit - TotalFees;
-            }
+            get { return Profit - TotalFees; }
         }
 
         /// <summary>
@@ -357,8 +306,9 @@ namespace QuantConnect.Securities
         {
             get
             {
-                if (AbsoluteHoldingsCost == 0) return 0m;
-                return UnrealizedProfit/AbsoluteHoldingsCost;
+                if (AbsoluteHoldingsCost == 0)
+                    return 0m;
+                return UnrealizedProfit / AbsoluteHoldingsCost;
             }
         }
 
@@ -420,7 +370,7 @@ namespace QuantConnect.Securities
         /// </summary>
         public virtual void SetHoldings(decimal averagePrice, int quantity)
         {
-            SetHoldings(averagePrice, (decimal) quantity);
+            SetHoldings(averagePrice, (decimal)quantity);
         }
 
         /// <summary>
@@ -474,7 +424,12 @@ namespace QuantConnect.Securities
         /// Profit if we closed the holdings right now including the approximate fees in units of the account's currency.
         /// </summary>
         /// <remarks>Does not use the transaction model for market fills but should.</remarks>
-        public virtual decimal TotalCloseProfit(bool includeFees = true, decimal? exitPrice = null, decimal? entryPrice = null, decimal? quantity = null)
+        public virtual decimal TotalCloseProfit(
+            bool includeFees = true,
+            decimal? exitPrice = null,
+            decimal? entryPrice = null,
+            decimal? quantity = null
+        )
         {
             var quantityToUse = quantity ?? Quantity;
             if (quantityToUse == 0)
@@ -483,17 +438,27 @@ namespace QuantConnect.Securities
             }
 
             // this is in the account currency
-            var marketOrder = new MarketOrder(_security.Symbol, -quantityToUse, _security.LocalTime.ConvertToUtc(_security.Exchange.TimeZone));
+            var marketOrder = new MarketOrder(
+                _security.Symbol,
+                -quantityToUse,
+                _security.LocalTime.ConvertToUtc(_security.Exchange.TimeZone)
+            );
 
             var feesInAccountCurrency = 0m;
             if (includeFees)
             {
-                var orderFee = _security.FeeModel.GetOrderFee(
-                    new OrderFeeParameters(_security, marketOrder)).Value;
-                feesInAccountCurrency = _currencyConverter.ConvertToAccountCurrency(orderFee).Amount;
+                var orderFee = _security
+                    .FeeModel.GetOrderFee(new OrderFeeParameters(_security, marketOrder))
+                    .Value;
+                feesInAccountCurrency = _currencyConverter
+                    .ConvertToAccountCurrency(orderFee)
+                    .Amount;
             }
 
-            var price = marketOrder.Direction == OrderDirection.Sell ? _security.BidPrice : _security.AskPrice;
+            var price =
+                marketOrder.Direction == OrderDirection.Sell
+                    ? _security.BidPrice
+                    : _security.AskPrice;
             if (price == 0)
             {
                 // Bid/Ask prices can both be equal to 0. This usually happens when we request our holdings from
@@ -501,8 +466,14 @@ namespace QuantConnect.Securities
                 price = _security.Price;
             }
 
-            var entryValue = GetQuantityValue(quantityToUse, entryPrice ?? AveragePrice).InAccountCurrency;
-            var potentialExitValue = GetQuantityValue(quantityToUse, exitPrice ?? price).InAccountCurrency;
+            var entryValue = GetQuantityValue(
+                quantityToUse,
+                entryPrice ?? AveragePrice
+            ).InAccountCurrency;
+            var potentialExitValue = GetQuantityValue(
+                quantityToUse,
+                exitPrice ?? price
+            ).InAccountCurrency;
             return potentialExitValue - entryValue - feesInAccountCurrency;
         }
 
@@ -517,11 +488,19 @@ namespace QuantConnect.Securities
         /// <summary>
         /// Event invocator for the <see cref="QuantityChanged"/> event
         /// </summary>
-        protected virtual void OnQuantityChanged(decimal previousAveragePrice, decimal previousQuantity)
+        protected virtual void OnQuantityChanged(
+            decimal previousAveragePrice,
+            decimal previousQuantity
+        )
         {
-            QuantityChanged?.Invoke(this, new SecurityHoldingQuantityChangedEventArgs(
-                _security, previousAveragePrice, previousQuantity
-            ));
+            QuantityChanged?.Invoke(
+                this,
+                new SecurityHoldingQuantityChangedEventArgs(
+                    _security,
+                    previousAveragePrice,
+                    previousQuantity
+                )
+            );
         }
     }
 }

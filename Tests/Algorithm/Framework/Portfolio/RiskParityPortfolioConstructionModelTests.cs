@@ -50,18 +50,21 @@ namespace QuantConnect.Tests.Algorithm.Framework.Portfolio
             var historyProvider = new SubscriptionDataReaderHistoryProvider();
             _algorithm.SetHistoryProvider(historyProvider);
 
-            historyProvider.Initialize(new HistoryProviderInitializeParameters(
-                new BacktestNodePacket(),
-                null,
-                TestGlobals.DataProvider,
-                TestGlobals.DataCacheProvider,
-                TestGlobals.MapFileProvider,
-                TestGlobals.FactorFileProvider,
-                i => { },
-                true,
-                new DataPermissionManager(),
-                _algorithm.ObjectStore,
-                _algorithm.Settings));
+            historyProvider.Initialize(
+                new HistoryProviderInitializeParameters(
+                    new BacktestNodePacket(),
+                    null,
+                    TestGlobals.DataProvider,
+                    TestGlobals.DataCacheProvider,
+                    TestGlobals.MapFileProvider,
+                    TestGlobals.FactorFileProvider,
+                    i => { },
+                    true,
+                    new DataPermissionManager(),
+                    _algorithm.ObjectStore,
+                    _algorithm.Settings
+                )
+            );
         }
 
         [TestCase(Language.CSharp)]
@@ -75,7 +78,18 @@ namespace QuantConnect.Tests.Algorithm.Framework.Portfolio
 
             SetPortfolioConstruction(language, PortfolioBias.Long);
 
-            var insights = new[] { new Insight(_nowUtc, Symbols.SPY, TimeSpan.FromDays(1), InsightType.Price, InsightDirection.Up, null, null) };
+            var insights = new[]
+            {
+                new Insight(
+                    _nowUtc,
+                    Symbols.SPY,
+                    TimeSpan.FromDays(1),
+                    InsightType.Price,
+                    InsightDirection.Up,
+                    null,
+                    null
+                )
+            };
             var actualTargets = algorithm.PortfolioConstruction.CreateTargets(algorithm, insights);
 
             Assert.AreEqual(0, actualTargets.Count());
@@ -89,11 +103,18 @@ namespace QuantConnect.Tests.Algorithm.Framework.Portfolio
         {
             if (bias == PortfolioBias.Short)
             {
-                var throwsConstraint = language == Language.CSharp
-                    ? Throws.InstanceOf<ArgumentException>()
-                    : Throws.InstanceOf<ClrBubbledException>().With.InnerException.InstanceOf<ArgumentException>();
-                Assert.That(() => GetPortfolioConstructionModel(language, bias, Resolution.Daily),
-                    throwsConstraint.And.Message.EqualTo("Long position must be allowed in RiskParityPortfolioConstructionModel."));
+                var throwsConstraint =
+                    language == Language.CSharp
+                        ? Throws.InstanceOf<ArgumentException>()
+                        : Throws
+                            .InstanceOf<ClrBubbledException>()
+                            .With.InnerException.InstanceOf<ArgumentException>();
+                Assert.That(
+                    () => GetPortfolioConstructionModel(language, bias, Resolution.Daily),
+                    throwsConstraint.And.Message.EqualTo(
+                        "Long position must be allowed in RiskParityPortfolioConstructionModel."
+                    )
+                );
                 return;
             }
 
@@ -106,15 +127,36 @@ namespace QuantConnect.Tests.Algorithm.Framework.Portfolio
             {
                 equity.SetMarketPrice(new Tick(_nowUtc, equity.Symbol, 10, 10));
             }
-            _algorithm.PortfolioConstruction.OnSecuritiesChanged(_algorithm, SecurityChangesTests.AddedNonInternal(aapl, spy));
+            _algorithm.PortfolioConstruction.OnSecuritiesChanged(
+                _algorithm,
+                SecurityChangesTests.AddedNonInternal(aapl, spy)
+            );
 
             var insights = new[]
             {
-                new Insight(_nowUtc, aapl.Symbol, TimeSpan.FromDays(1), InsightType.Price, InsightDirection.Up, null, null),
-                new Insight(_nowUtc, spy.Symbol, TimeSpan.FromDays(1), InsightType.Price, InsightDirection.Down, null, null)
+                new Insight(
+                    _nowUtc,
+                    aapl.Symbol,
+                    TimeSpan.FromDays(1),
+                    InsightType.Price,
+                    InsightDirection.Up,
+                    null,
+                    null
+                ),
+                new Insight(
+                    _nowUtc,
+                    spy.Symbol,
+                    TimeSpan.FromDays(1),
+                    InsightType.Price,
+                    InsightDirection.Down,
+                    null,
+                    null
+                )
             };
 
-            foreach (var target in _algorithm.PortfolioConstruction.CreateTargets(_algorithm, insights))
+            foreach (
+                var target in _algorithm.PortfolioConstruction.CreateTargets(_algorithm, insights)
+            )
             {
                 if (target.Quantity == 0)
                 {
@@ -140,24 +182,50 @@ namespace QuantConnect.Tests.Algorithm.Framework.Portfolio
             aapl.SetMarketPrice(new Tick(_nowUtc.AddDays(2), aapl.Symbol, 13, 13));
             spy.SetMarketPrice(new Tick(_nowUtc.AddDays(2), spy.Symbol, 30, 30));
 
-            _algorithm.PortfolioConstruction.OnSecuritiesChanged(_algorithm, SecurityChangesTests.AddedNonInternal(aapl, spy));
+            _algorithm.PortfolioConstruction.OnSecuritiesChanged(
+                _algorithm,
+                SecurityChangesTests.AddedNonInternal(aapl, spy)
+            );
 
             var insights = new[]
             {
-                new Insight(_nowUtc.AddDays(2), aapl.Symbol, TimeSpan.FromDays(1), InsightType.Price, InsightDirection.Up, null, null),
-                new Insight(_nowUtc.AddDays(2), spy.Symbol, TimeSpan.FromDays(1), InsightType.Price, InsightDirection.Up, null, null)
+                new Insight(
+                    _nowUtc.AddDays(2),
+                    aapl.Symbol,
+                    TimeSpan.FromDays(1),
+                    InsightType.Price,
+                    InsightDirection.Up,
+                    null,
+                    null
+                ),
+                new Insight(
+                    _nowUtc.AddDays(2),
+                    spy.Symbol,
+                    TimeSpan.FromDays(1),
+                    InsightType.Price,
+                    InsightDirection.Up,
+                    null,
+                    null
+                )
             };
 
             _algorithm.Insights.AddRange(insights);
 
-            var targets = _algorithm.PortfolioConstruction.CreateTargets(_algorithm, insights).ToArray();
-            Assert.AreEqual(targets[0].Quantity, 30m);      // AAPL
-            Assert.AreEqual(targets[1].Quantity, 18m);      // SPY
+            var targets = _algorithm
+                .PortfolioConstruction.CreateTargets(_algorithm, insights)
+                .ToArray();
+            Assert.AreEqual(targets[0].Quantity, 30m); // AAPL
+            Assert.AreEqual(targets[1].Quantity, 18m); // SPY
         }
 
-        protected void SetPortfolioConstruction(Language language, PortfolioBias bias, IPortfolioConstructionModel defaultModel = null)
+        protected void SetPortfolioConstruction(
+            Language language,
+            PortfolioBias bias,
+            IPortfolioConstructionModel defaultModel = null
+        )
         {
-            var model = defaultModel ?? GetPortfolioConstructionModel(language, bias, Resolution.Daily);
+            var model =
+                defaultModel ?? GetPortfolioConstructionModel(language, bias, Resolution.Daily);
             _algorithm.SetPortfolioConstruction(model);
 
             foreach (var kvp in _algorithm.Portfolio)
@@ -165,22 +233,41 @@ namespace QuantConnect.Tests.Algorithm.Framework.Portfolio
                 kvp.Value.SetHoldings(kvp.Value.Price, 0);
             }
 
-            var changes = SecurityChangesTests.AddedNonInternal(_algorithm.Securities.Values.ToArray());
+            var changes = SecurityChangesTests.AddedNonInternal(
+                _algorithm.Securities.Values.ToArray()
+            );
             _algorithm.PortfolioConstruction.OnSecuritiesChanged(_algorithm, changes);
         }
 
-        public IPortfolioConstructionModel GetPortfolioConstructionModel(Language language, PortfolioBias bias, Resolution resolution)
+        public IPortfolioConstructionModel GetPortfolioConstructionModel(
+            Language language,
+            PortfolioBias bias,
+            Resolution resolution
+        )
         {
             if (language == Language.CSharp)
             {
-                return new RiskParityPortfolioConstructionModel(resolution, bias, 1, 252, resolution);
+                return new RiskParityPortfolioConstructionModel(
+                    resolution,
+                    bias,
+                    1,
+                    252,
+                    resolution
+                );
             }
 
             using (Py.GIL())
             {
                 const string name = nameof(RiskParityPortfolioConstructionModel);
-                var instance = Py.Import(name).GetAttr(name)
-                    .Invoke(((int)resolution).ToPython(), ((int)bias).ToPython(), 1.ToPython(), 252.ToPython(), ((int)resolution).ToPython());
+                var instance = Py.Import(name)
+                    .GetAttr(name)
+                    .Invoke(
+                        ((int)resolution).ToPython(),
+                        ((int)bias).ToPython(),
+                        1.ToPython(),
+                        252.ToPython(),
+                        ((int)resolution).ToPython()
+                    );
                 return new PortfolioConstructionModelPythonWrapper(instance);
             }
         }

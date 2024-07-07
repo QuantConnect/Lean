@@ -41,17 +41,18 @@ namespace QuantConnect.Logging
         {
             _useTimestampPrefix = useTimestampPrefix;
             _writer = new Lazy<TextWriter>(
-                () => new StreamWriter(File.Open(filepath, FileMode.Append, FileAccess.Write, FileShare.Read))
-                );
+                () =>
+                    new StreamWriter(
+                        File.Open(filepath, FileMode.Append, FileAccess.Write, FileShare.Read)
+                    )
+            );
         }
 
         /// <summary>
         /// Initializes a new instance of the <see cref="FileLogHandler"/> class using 'log.txt' for the filepath.
         /// </summary>
         public FileLogHandler()
-            : this(Log.FilePath)
-        {
-        }
+            : this(Log.FilePath) { }
 
         /// <summary>
         /// Write error message to log
@@ -119,7 +120,8 @@ namespace QuantConnect.Logging
             var message = CreateMessage(text, level);
             lock (_lock)
             {
-                if (_disposed) return;
+                if (_disposed)
+                    return;
                 _writer.Value.WriteLine(message);
                 _writer.Value.Flush();
             }

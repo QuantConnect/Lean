@@ -40,11 +40,15 @@ namespace QuantConnect.Algorithm.CSharp
             _spy = AddEquity("SPY", Resolution.Daily, leverage: 1).Symbol;
             _appl = AddEquity("AAPL", Resolution.Daily, leverage: 1);
 
-            Schedule.On(DateRules.EveryDay(), TimeRules.Noon, () =>
-            {
-                Plot("Info", "Portfolio.MarginRemaining", Portfolio.MarginRemaining);
-                Plot("Info", "Portfolio.Cash", Portfolio.Cash);
-            });
+            Schedule.On(
+                DateRules.EveryDay(),
+                TimeRules.Noon,
+                () =>
+                {
+                    Plot("Info", "Portfolio.MarginRemaining", Portfolio.MarginRemaining);
+                    Plot("Info", "Portfolio.Cash", Portfolio.Cash);
+                }
+            );
         }
 
         public override void OnData(Slice slice)
@@ -58,7 +62,9 @@ namespace QuantConnect.Algorithm.CSharp
 
             if (Portfolio.MarginRemaining <= 0)
             {
-                throw new RegressionTestException($"Unexpected margin remaining value {Portfolio.MarginRemaining}");
+                throw new RegressionTestException(
+                    $"Unexpected margin remaining value {Portfolio.MarginRemaining}"
+                );
             }
 
             // in the 2009 dip buy AAPL
@@ -98,35 +104,36 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// This is used by the regression test system to indicate what the expected statistics are from running the algorithm
         /// </summary>
-        public Dictionary<string, string> ExpectedStatistics => new Dictionary<string, string>
-        {
-            {"Total Orders", "2"},
-            {"Average Win", "0%"},
-            {"Average Loss", "0%"},
-            {"Compounding Annual Return", "7.042%"},
-            {"Drawdown", "40.400%"},
-            {"Expectancy", "0"},
-            {"Start Equity", "100000"},
-            {"End Equity", "122672.45"},
-            {"Net Profit", "22.672%"},
-            {"Sharpe Ratio", "0.2"},
-            {"Sortino Ratio", "0.227"},
-            {"Probabilistic Sharpe Ratio", "8.886%"},
-            {"Loss Rate", "0%"},
-            {"Win Rate", "0%"},
-            {"Profit-Loss Ratio", "0"},
-            {"Alpha", "0.064"},
-            {"Beta", "0.707"},
-            {"Annual Standard Deviation", "0.177"},
-            {"Annual Variance", "0.031"},
-            {"Information Ratio", "0.872"},
-            {"Tracking Error", "0.087"},
-            {"Treynor Ratio", "0.05"},
-            {"Total Fees", "$47.03"},
-            {"Estimated Strategy Capacity", "$100000000.00"},
-            {"Lowest Capacity Asset", "AAPL R735QTJ8XC9X"},
-            {"Portfolio Turnover", "0.09%"},
-            {"OrderListHash", "a28b7d8e73d4a59f484f2fec5f884039"}
-        };
+        public Dictionary<string, string> ExpectedStatistics =>
+            new Dictionary<string, string>
+            {
+                { "Total Orders", "2" },
+                { "Average Win", "0%" },
+                { "Average Loss", "0%" },
+                { "Compounding Annual Return", "7.042%" },
+                { "Drawdown", "40.400%" },
+                { "Expectancy", "0" },
+                { "Start Equity", "100000" },
+                { "End Equity", "122672.45" },
+                { "Net Profit", "22.672%" },
+                { "Sharpe Ratio", "0.2" },
+                { "Sortino Ratio", "0.227" },
+                { "Probabilistic Sharpe Ratio", "8.886%" },
+                { "Loss Rate", "0%" },
+                { "Win Rate", "0%" },
+                { "Profit-Loss Ratio", "0" },
+                { "Alpha", "0.064" },
+                { "Beta", "0.707" },
+                { "Annual Standard Deviation", "0.177" },
+                { "Annual Variance", "0.031" },
+                { "Information Ratio", "0.872" },
+                { "Tracking Error", "0.087" },
+                { "Treynor Ratio", "0.05" },
+                { "Total Fees", "$47.03" },
+                { "Estimated Strategy Capacity", "$100000000.00" },
+                { "Lowest Capacity Asset", "AAPL R735QTJ8XC9X" },
+                { "Portfolio Turnover", "0.09%" },
+                { "OrderListHash", "a28b7d8e73d4a59f484f2fec5f884039" }
+            };
     }
 }

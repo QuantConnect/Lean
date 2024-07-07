@@ -27,9 +27,7 @@ namespace QuantConnect.Securities.CryptoFuture
         /// <param name="security">The crypto future security being held</param>
         /// <param name="currencyConverter">A currency converter instance</param>
         public CryptoFutureHolding(Security security, ICurrencyConverter currencyConverter)
-            : base(security, currencyConverter)
-        {
-        }
+            : base(security, currencyConverter) { }
 
         /// <summary>
         /// Gets the total value of the specified <paramref name="quantity"/> of shares of this security
@@ -49,7 +47,8 @@ namespace QuantConnect.Securities.CryptoFuture
             {
                 // https://www.binance.com/en/support/faq/how-to-calculate-cost-required-to-open-a-position-in-perpetual-futures-contracts-87fa7ee33b574f7084d42bd2ce2e463b
                 // example BTCUSDT: (9,253.30 * 1 BTC) = 9,253.3 USDT
-                notionalPositionValue = price * quantity * cryptoFuture.SymbolProperties.ContractMultiplier;
+                notionalPositionValue =
+                    price * quantity * cryptoFuture.SymbolProperties.ContractMultiplier;
 
                 // USDT is the QUOTE currency we will need to convert it into account currency
                 cash = cryptoFuture.QuoteCurrency;
@@ -58,7 +57,8 @@ namespace QuantConnect.Securities.CryptoFuture
             {
                 // https://www.binance.com/en/support/faq/leverage-and-margin-in-coin-margined-futures-contracts-be2c7d9d95b04a7e8044ed02dd7dfe5c
                 // example BTCUSD: [ (10*100 USD) / 9,800 USD ] = 0.10204 BTC
-                notionalPositionValue = quantity * cryptoFuture.SymbolProperties.ContractMultiplier / price;
+                notionalPositionValue =
+                    quantity * cryptoFuture.SymbolProperties.ContractMultiplier / price;
 
                 // BTC is the BASE currency we will need to convert it into account currency
                 cash = cryptoFuture.BaseCurrency;

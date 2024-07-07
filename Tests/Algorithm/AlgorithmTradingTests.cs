@@ -15,21 +15,21 @@
 
 using System;
 using System.Collections.Generic;
+using System.Linq;
+using Moq;
 using NUnit.Framework;
 using QuantConnect.Algorithm;
-using QuantConnect.Data.Market;
-using QuantConnect.Securities;
 using QuantConnect.Brokerages;
-using Moq;
+using QuantConnect.Data;
+using QuantConnect.Data.Market;
+using QuantConnect.Indicators;
 using QuantConnect.Interfaces;
 using QuantConnect.Lean.Engine.TransactionHandlers;
 using QuantConnect.Orders;
 using QuantConnect.Orders.Fees;
+using QuantConnect.Securities;
 using QuantConnect.Tests.Common.Securities;
 using QuantConnect.Tests.Engine.DataFeeds;
-using System.Linq;
-using QuantConnect.Data;
-using QuantConnect.Indicators;
 
 namespace QuantConnect.Tests.Algorithm
 {
@@ -52,13 +52,7 @@ namespace QuantConnect.Tests.Algorithm
 
         private static TestCaseData[] TestParametersDifferentMargins
         {
-            get
-            {
-                return new[]
-                {
-                    new TestCaseData(0.5m, 0.25m),
-                };
-            }
+            get { return new[] { new TestCaseData(0.5m, 0.25m), }; }
         }
 
         /*****************************************************/
@@ -228,7 +222,10 @@ namespace QuantConnect.Tests.Algorithm
             algo.Portfolio.SetCash(112302.5m);
             algo.Settings.FreePortfolioValue = 0;
             algo.Portfolio[Symbols.MSFT].SetHoldings(66.5m, -190);
-            var actual = algo.CalculateOrderQuantity(Symbols.MSFT, 0.4987458298843655153385005142m * 2);
+            var actual = algo.CalculateOrderQuantity(
+                Symbols.MSFT,
+                0.4987458298843655153385005142m * 2
+            );
 
             Assert.AreEqual(1684, actual);
             Assert.IsTrue(HasSufficientBuyingPowerForOrder(actual, msft, algo));
@@ -593,10 +590,18 @@ namespace QuantConnect.Tests.Algorithm
         }
 
         [Test, TestCaseSource(nameof(TestParametersDifferentMargins))]
-        public void SetHoldings_HalfLongToHalfShort_DifferentMargins(decimal initialMarginRequirement, decimal maintenanceMarginRequirement)
+        public void SetHoldings_HalfLongToHalfShort_DifferentMargins(
+            decimal initialMarginRequirement,
+            decimal maintenanceMarginRequirement
+        )
         {
             Security msft;
-            var algo = GetAlgorithm(out msft, initialMarginRequirement, maintenanceMarginRequirement, 0);
+            var algo = GetAlgorithm(
+                out msft,
+                initialMarginRequirement,
+                maintenanceMarginRequirement,
+                0
+            );
             //Set price to $25
             Update(msft, 25);
             //Half cash spent on 2000 MSFT shares.
@@ -611,10 +616,18 @@ namespace QuantConnect.Tests.Algorithm
         }
 
         [Test, TestCaseSource(nameof(TestParametersDifferentMargins))]
-        public void SetHoldings_HalfLongToHalfShort_SmallConstantFeeStructure_DifferentMargins(decimal initialMarginRequirement, decimal maintenanceMarginRequirement)
+        public void SetHoldings_HalfLongToHalfShort_SmallConstantFeeStructure_DifferentMargins(
+            decimal initialMarginRequirement,
+            decimal maintenanceMarginRequirement
+        )
         {
             Security msft;
-            var algo = GetAlgorithm(out msft, initialMarginRequirement, maintenanceMarginRequirement, 1);
+            var algo = GetAlgorithm(
+                out msft,
+                initialMarginRequirement,
+                maintenanceMarginRequirement,
+                1
+            );
             //Set price to $25
             Update(msft, 25);
             //Half cash spent on 2000 MSFT shares.
@@ -629,10 +642,18 @@ namespace QuantConnect.Tests.Algorithm
         }
 
         [Test, TestCaseSource(nameof(TestParametersDifferentMargins))]
-        public void SetHoldings_HalfLongToHalfShort_HighConstantFeeStructure_DifferentMargins(decimal initialMarginRequirement, decimal maintenanceMarginRequirement)
+        public void SetHoldings_HalfLongToHalfShort_HighConstantFeeStructure_DifferentMargins(
+            decimal initialMarginRequirement,
+            decimal maintenanceMarginRequirement
+        )
         {
             Security msft;
-            var algo = GetAlgorithm(out msft, initialMarginRequirement, maintenanceMarginRequirement, 10000);
+            var algo = GetAlgorithm(
+                out msft,
+                initialMarginRequirement,
+                maintenanceMarginRequirement,
+                10000
+            );
             //Set price to $25
             Update(msft, 25);
             //Half cash spent on 2000 MSFT shares.
@@ -647,10 +668,18 @@ namespace QuantConnect.Tests.Algorithm
         }
 
         [Test, TestCaseSource(nameof(TestParametersDifferentMargins))]
-        public void SetHoldings_HalfLongToFullShort_DifferentMargins(decimal initialMarginRequirement, decimal maintenanceMarginRequirement)
+        public void SetHoldings_HalfLongToFullShort_DifferentMargins(
+            decimal initialMarginRequirement,
+            decimal maintenanceMarginRequirement
+        )
         {
             Security msft;
-            var algo = GetAlgorithm(out msft, initialMarginRequirement, maintenanceMarginRequirement, 0);
+            var algo = GetAlgorithm(
+                out msft,
+                initialMarginRequirement,
+                maintenanceMarginRequirement,
+                0
+            );
             //Set price to $25
             Update(msft, 25);
             //Half cash spent on 2000 MSFT shares.
@@ -664,10 +693,18 @@ namespace QuantConnect.Tests.Algorithm
         }
 
         [Test, TestCaseSource(nameof(TestParametersDifferentMargins))]
-        public void SetHoldings_HalfLongToFullShort_SmallConstantFeeStructure_DifferentMargins(decimal initialMarginRequirement, decimal maintenanceMarginRequirement)
+        public void SetHoldings_HalfLongToFullShort_SmallConstantFeeStructure_DifferentMargins(
+            decimal initialMarginRequirement,
+            decimal maintenanceMarginRequirement
+        )
         {
             Security msft;
-            var algo = GetAlgorithm(out msft, initialMarginRequirement, maintenanceMarginRequirement, 1);
+            var algo = GetAlgorithm(
+                out msft,
+                initialMarginRequirement,
+                maintenanceMarginRequirement,
+                1
+            );
             //Set price to $25
             Update(msft, 25);
             //Half cash spent on 2000 MSFT shares.
@@ -681,10 +718,18 @@ namespace QuantConnect.Tests.Algorithm
         }
 
         [Test, TestCaseSource(nameof(TestParametersDifferentMargins))]
-        public void SetHoldings_HalfLongToFullShort_HighConstantFeeStructure_DifferentMargins(decimal initialMarginRequirement, decimal maintenanceMarginRequirement)
+        public void SetHoldings_HalfLongToFullShort_HighConstantFeeStructure_DifferentMargins(
+            decimal initialMarginRequirement,
+            decimal maintenanceMarginRequirement
+        )
         {
             Security msft;
-            var algo = GetAlgorithm(out msft, initialMarginRequirement, maintenanceMarginRequirement, 10000);
+            var algo = GetAlgorithm(
+                out msft,
+                initialMarginRequirement,
+                maintenanceMarginRequirement,
+                10000
+            );
             //Set price to $25
             Update(msft, 25);
             //Half cash spent on 2000 MSFT shares.
@@ -699,10 +744,18 @@ namespace QuantConnect.Tests.Algorithm
         }
 
         [Test, TestCaseSource(nameof(TestParametersDifferentMargins))]
-        public void SetHoldings_HalfLongToFull2xShort_DifferentMargins(decimal initialMarginRequirement, decimal maintenanceMarginRequirement)
+        public void SetHoldings_HalfLongToFull2xShort_DifferentMargins(
+            decimal initialMarginRequirement,
+            decimal maintenanceMarginRequirement
+        )
         {
             Security msft;
-            var algo = GetAlgorithm(out msft, initialMarginRequirement, maintenanceMarginRequirement, 0);
+            var algo = GetAlgorithm(
+                out msft,
+                initialMarginRequirement,
+                maintenanceMarginRequirement,
+                0
+            );
             //Set price to $25
             Update(msft, 25);
             //Half cash spent on 2000 MSFT shares.
@@ -717,10 +770,18 @@ namespace QuantConnect.Tests.Algorithm
         }
 
         [Test, TestCaseSource(nameof(TestParametersDifferentMargins))]
-        public void SetHoldings_HalfLongToFull2xShort_SmallConstantFeeStructure_DifferentMargins(decimal initialMarginRequirement, decimal maintenanceMarginRequirement)
+        public void SetHoldings_HalfLongToFull2xShort_SmallConstantFeeStructure_DifferentMargins(
+            decimal initialMarginRequirement,
+            decimal maintenanceMarginRequirement
+        )
         {
             Security msft;
-            var algo = GetAlgorithm(out msft, initialMarginRequirement, maintenanceMarginRequirement, 1);
+            var algo = GetAlgorithm(
+                out msft,
+                initialMarginRequirement,
+                maintenanceMarginRequirement,
+                1
+            );
             //Set price to $25
             Update(msft, 25);
             //Half cash spent on 2000 MSFT shares.
@@ -735,10 +796,18 @@ namespace QuantConnect.Tests.Algorithm
         }
 
         [Test, TestCaseSource(nameof(TestParametersDifferentMargins))]
-        public void SetHoldings_HalfLongToFull2xShort_HighConstantFeeStructure_DifferentMargins(decimal initialMarginRequirement, decimal maintenanceMarginRequirement)
+        public void SetHoldings_HalfLongToFull2xShort_HighConstantFeeStructure_DifferentMargins(
+            decimal initialMarginRequirement,
+            decimal maintenanceMarginRequirement
+        )
         {
             Security msft;
-            var algo = GetAlgorithm(out msft, initialMarginRequirement, maintenanceMarginRequirement, 10000);
+            var algo = GetAlgorithm(
+                out msft,
+                initialMarginRequirement,
+                maintenanceMarginRequirement,
+                10000
+            );
             //Set price to $25
             Update(msft, 25);
             //Half cash spent on 2000 MSFT shares.
@@ -753,10 +822,18 @@ namespace QuantConnect.Tests.Algorithm
         }
 
         [Test, TestCaseSource(nameof(TestParametersDifferentMargins))]
-        public void SetHoldings_ZeroToFullShort_SmallConstantFeeStructure_DifferentMargins(decimal initialMarginRequirement, decimal maintenanceMarginRequirement)
+        public void SetHoldings_ZeroToFullShort_SmallConstantFeeStructure_DifferentMargins(
+            decimal initialMarginRequirement,
+            decimal maintenanceMarginRequirement
+        )
         {
             Security msft;
-            var algo = GetAlgorithm(out msft, initialMarginRequirement, maintenanceMarginRequirement, 10000);
+            var algo = GetAlgorithm(
+                out msft,
+                initialMarginRequirement,
+                maintenanceMarginRequirement,
+                10000
+            );
             //Set price to $25
             Update(msft, 25);
 
@@ -767,10 +844,18 @@ namespace QuantConnect.Tests.Algorithm
         }
 
         [Test, TestCaseSource(nameof(TestParametersDifferentMargins))]
-        public void SetHoldings_ZeroToAlmostFullShort_SmallConstantFeeStructure_DifferentMargins(decimal initialMarginRequirement, decimal maintenanceMarginRequirement)
+        public void SetHoldings_ZeroToAlmostFullShort_SmallConstantFeeStructure_DifferentMargins(
+            decimal initialMarginRequirement,
+            decimal maintenanceMarginRequirement
+        )
         {
             Security msft;
-            var algo = GetAlgorithm(out msft, initialMarginRequirement, maintenanceMarginRequirement, 10000);
+            var algo = GetAlgorithm(
+                out msft,
+                initialMarginRequirement,
+                maintenanceMarginRequirement,
+                10000
+            );
             //Set price to $25
             Update(msft, 25);
 
@@ -781,10 +866,18 @@ namespace QuantConnect.Tests.Algorithm
         }
 
         [Test, TestCaseSource(nameof(TestParametersDifferentMargins))]
-        public void SetHoldings_ZeroToFullLong_SmallConstantFeeStructure_DifferentMargins(decimal initialMarginRequirement, decimal maintenanceMarginRequirement)
+        public void SetHoldings_ZeroToFullLong_SmallConstantFeeStructure_DifferentMargins(
+            decimal initialMarginRequirement,
+            decimal maintenanceMarginRequirement
+        )
         {
             Security msft;
-            var algo = GetAlgorithm(out msft, initialMarginRequirement, maintenanceMarginRequirement, 10000);
+            var algo = GetAlgorithm(
+                out msft,
+                initialMarginRequirement,
+                maintenanceMarginRequirement,
+                10000
+            );
             //Set price to $25
             Update(msft, 25);
 
@@ -795,10 +888,18 @@ namespace QuantConnect.Tests.Algorithm
         }
 
         [Test, TestCaseSource(nameof(TestParametersDifferentMargins))]
-        public void SetHoldings_ZeroToAlmostFullLong_SmallConstantFeeStructure_DifferentMargins(decimal initialMarginRequirement, decimal maintenanceMarginRequirement)
+        public void SetHoldings_ZeroToAlmostFullLong_SmallConstantFeeStructure_DifferentMargins(
+            decimal initialMarginRequirement,
+            decimal maintenanceMarginRequirement
+        )
         {
             Security msft;
-            var algo = GetAlgorithm(out msft, initialMarginRequirement, maintenanceMarginRequirement, 10000);
+            var algo = GetAlgorithm(
+                out msft,
+                initialMarginRequirement,
+                maintenanceMarginRequirement,
+                10000
+            );
             //Set price to $25
             Update(msft, 25);
 
@@ -807,7 +908,6 @@ namespace QuantConnect.Tests.Algorithm
             Assert.AreEqual(5386m, actual);
             Assert.IsTrue(HasSufficientBuyingPowerForOrder(actual, msft, algo));
         }
-
 
         /*****************************************************/
         //  Rising market conditions tests.
@@ -1110,8 +1210,6 @@ namespace QuantConnect.Tests.Algorithm
             Assert.IsTrue(HasSufficientBuyingPowerForOrder(actual, msft, algo));
         }
 
-
-
         /*****************************************************/
         //  Falling market conditions tests.
         /*****************************************************/
@@ -1331,9 +1429,22 @@ namespace QuantConnect.Tests.Algorithm
             algo.Portfolio.SetCash(150000);
 
             var mock = new Mock<ITransactionHandler>();
-            var request = new Mock<SubmitOrderRequest>(null, null, null, null, null, null, null, null, null, null);
-            mock.Setup(m => m.Process(It.IsAny<OrderRequest>())).Returns(new OrderTicket(null, request.Object));
-            mock.Setup(m => m.GetOpenOrders(It.IsAny<Func<Order, bool>>())).Returns(new List<Order>());
+            var request = new Mock<SubmitOrderRequest>(
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null
+            );
+            mock.Setup(m => m.Process(It.IsAny<OrderRequest>()))
+                .Returns(new OrderTicket(null, request.Object));
+            mock.Setup(m => m.GetOpenOrders(It.IsAny<Func<Order, bool>>()))
+                .Returns(new List<Order>());
             algo.Transactions.SetOrderProcessor(mock.Object);
 
             algo.Buy(Symbols.MSFT, 1);
@@ -1402,19 +1513,43 @@ namespace QuantConnect.Tests.Algorithm
             var algo = GetAlgorithm(out _, 1, 0);
 
             var mockOrderProcessor = new Mock<ITransactionHandler>();
-            var mockRequest = new Mock<SubmitOrderRequest>(null, null, null, null, null, null, null, null, null, null);
+            var mockRequest = new Mock<SubmitOrderRequest>(
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null
+            );
             var mockTicket = new OrderTicket(algo.Transactions, mockRequest.Object);
             mockOrderProcessor.Setup(m => m.Process(It.IsAny<OrderRequest>())).Returns(mockTicket);
             mockOrderProcessor.Setup(m => m.GetOrderTicket(It.IsAny<int>())).Returns(mockTicket);
             algo.Transactions.SetOrderProcessor(mockOrderProcessor.Object);
 
             var es20h20 = algo.AddFutureContract(
-                QuantConnect.Symbol.CreateFuture(Futures.Indices.SP500EMini, Market.CME, new DateTime(2020, 3, 20)),
+                QuantConnect.Symbol.CreateFuture(
+                    Futures.Indices.SP500EMini,
+                    Market.CME,
+                    new DateTime(2020, 3, 20)
+                ),
                 Resolution.Minute,
-                extendedMarketHours: true);
+                extendedMarketHours: true
+            );
             var es20h20FOP = algo.AddFutureOptionContract(
-                Symbol.CreateOption(es20h20.Symbol, Market.CME, OptionStyle.American, OptionRight.Call, 2550m, new DateTime(2020, 3, 20)),
-                Resolution.Minute);
+                Symbol.CreateOption(
+                    es20h20.Symbol,
+                    Market.CME,
+                    OptionStyle.American,
+                    OptionRight.Call,
+                    2550m,
+                    new DateTime(2020, 3, 20)
+                ),
+                Resolution.Minute
+            );
 
             //Set price to $25
             Update(es20h20, 25);
@@ -1426,14 +1561,30 @@ namespace QuantConnect.Tests.Algorithm
                 algo.SetDateTime(dateTime);
 
                 var ticket = algo.Buy(es20h20.Symbol, 1);
-                Assert.AreEqual(OrderStatus.New, ticket.Status, $"Future buy market order status should be new at {dateTime}, but was {ticket.Status}");
+                Assert.AreEqual(
+                    OrderStatus.New,
+                    ticket.Status,
+                    $"Future buy market order status should be new at {dateTime}, but was {ticket.Status}"
+                );
                 ticket = algo.Sell(es20h20.Symbol, 1);
-                Assert.AreEqual(OrderStatus.New, ticket.Status, $"Future sell market order status should be new at {dateTime}, but was {ticket.Status}");
+                Assert.AreEqual(
+                    OrderStatus.New,
+                    ticket.Status,
+                    $"Future sell market order status should be new at {dateTime}, but was {ticket.Status}"
+                );
 
                 ticket = algo.Buy(es20h20FOP.Symbol, 1);
-                Assert.AreEqual(OrderStatus.New, ticket.Status, $"Future option buy market order status should be new at {dateTime}, but was {ticket.Status}");
+                Assert.AreEqual(
+                    OrderStatus.New,
+                    ticket.Status,
+                    $"Future option buy market order status should be new at {dateTime}, but was {ticket.Status}"
+                );
                 ticket = algo.Sell(es20h20FOP.Symbol, 1);
-                Assert.AreEqual(OrderStatus.New, ticket.Status, $"Future option sell market order status should be new at {dateTime}, but was {ticket.Status}");
+                Assert.AreEqual(
+                    OrderStatus.New,
+                    ticket.Status,
+                    $"Future option sell market order status should be new at {dateTime}, but was {ticket.Status}"
+                );
             };
 
             // October 7 to 11 (monday to friday). Testing pre-market hours
@@ -1454,8 +1605,13 @@ namespace QuantConnect.Tests.Algorithm
         {
             var algo = GetAlgorithm(out _, 1, 0);
             var es20h20 = algo.AddFutureContract(
-                QuantConnect.Symbol.CreateFuture(Futures.Indices.SP500EMini, Market.CME, new DateTime(2020, 3, 20)),
-                Resolution.Minute);
+                QuantConnect.Symbol.CreateFuture(
+                    Futures.Indices.SP500EMini,
+                    Market.CME,
+                    new DateTime(2020, 3, 20)
+                ),
+                Resolution.Minute
+            );
 
             var ticket = algo.MarketOnOpenOrder(es20h20.Symbol, 1);
             Assert.That(ticket, Has.Property("Status").EqualTo(OrderStatus.Invalid));
@@ -1467,20 +1623,44 @@ namespace QuantConnect.Tests.Algorithm
             var algo = GetAlgorithm(out _, 1, 0);
             var aapl = algo.AddEquity("AAPL");
             var applOptionContract = algo.AddOptionContract(
-                Symbol.CreateOption(aapl.Symbol, Market.USA, OptionStyle.American, OptionRight.Call, 40m, new DateTime(2014, 07, 19)));
+                Symbol.CreateOption(
+                    aapl.Symbol,
+                    Market.USA,
+                    OptionStyle.American,
+                    OptionRight.Call,
+                    40m,
+                    new DateTime(2014, 07, 19)
+                )
+            );
 
             var splitDate = new DateTime(2014, 06, 09);
             aapl.SetMarketPrice(new IndicatorDataPoint(splitDate, 650m));
             applOptionContract.SetMarketPrice(new IndicatorDataPoint(splitDate, 5m));
 
-            algo.SetCurrentSlice(new Slice(splitDate, new[] { new Split(aapl.Symbol, splitDate, 650m, 1 / 7, SplitType.SplitOccurred) }, splitDate));
+            algo.SetCurrentSlice(
+                new Slice(
+                    splitDate,
+                    new[]
+                    {
+                        new Split(aapl.Symbol, splitDate, 650m, 1 / 7, SplitType.SplitOccurred)
+                    },
+                    splitDate
+                )
+            );
 
             var ticket = algo.MarketOrder(applOptionContract.Symbol, 1);
             Assert.AreEqual(OrderStatus.Invalid, ticket.Status);
             Assert.IsTrue(ticket.SubmitRequest.Response.IsError);
-            Assert.AreEqual(OrderResponseErrorCode.OptionOrderOnStockSplit, ticket.SubmitRequest.Response.ErrorCode);
-            Assert.IsTrue(ticket.SubmitRequest.Response.ErrorMessage.Contains(
-                "Options orders are not allowed when a split occurred for its underlying stock", StringComparison.InvariantCulture));
+            Assert.AreEqual(
+                OrderResponseErrorCode.OptionOrderOnStockSplit,
+                ticket.SubmitRequest.Response.ErrorCode
+            );
+            Assert.IsTrue(
+                ticket.SubmitRequest.Response.ErrorMessage.Contains(
+                    "Options orders are not allowed when a split occurred for its underlying stock",
+                    StringComparison.InvariantCulture
+                )
+            );
         }
 
         [TestCase(OrderType.MarketOnOpen)]
@@ -1490,25 +1670,38 @@ namespace QuantConnect.Tests.Algorithm
             var algorithm = GetAlgorithm(out var msft, 1, 0);
             Update(msft, 25);
 
-            var orderProperties = new OrderProperties() { TimeInForce = TimeInForce.GoodTilDate(algorithm.Time.AddDays(1)) };
+            var orderProperties = new OrderProperties()
+            {
+                TimeInForce = TimeInForce.GoodTilDate(algorithm.Time.AddDays(1))
+            };
 
             OrderTicket ticket;
             switch (orderType)
             {
                 case OrderType.MarketOnOpen:
-                    ticket = algorithm.MarketOnOpenOrder(msft.Symbol, 1, orderProperties: orderProperties);
+                    ticket = algorithm.MarketOnOpenOrder(
+                        msft.Symbol,
+                        1,
+                        orderProperties: orderProperties
+                    );
                     break;
                 case OrderType.MarketOnClose:
-                    ticket = algorithm.MarketOnCloseOrder(msft.Symbol, 1, orderProperties: orderProperties);
+                    ticket = algorithm.MarketOnCloseOrder(
+                        msft.Symbol,
+                        1,
+                        orderProperties: orderProperties
+                    );
                     break;
                 default:
                     Assert.Fail("Unexpected order type");
                     return;
             }
 
-
             Assert.AreEqual(OrderStatus.New, ticket.Status);
-            Assert.AreEqual(TimeInForce.GoodTilCanceled, ticket.SubmitRequest.OrderProperties.TimeInForce);
+            Assert.AreEqual(
+                TimeInForce.GoodTilCanceled,
+                ticket.SubmitRequest.OrderProperties.TimeInForce
+            );
         }
 
         [Test]
@@ -1519,16 +1712,33 @@ namespace QuantConnect.Tests.Algorithm
             var optionExpiry = new DateTime(2020, 3, 20);
 
             var indexSymbol = Symbol.Create("SPX", SecurityType.Index, Market.USA);
-            var optionSymbol = Symbol.CreateOption(indexSymbol, Market.USA, OptionStyle.European, OptionRight.Call, 1, optionExpiry);
+            var optionSymbol = Symbol.CreateOption(
+                indexSymbol,
+                Market.USA,
+                OptionStyle.European,
+                OptionRight.Call,
+                1,
+                optionExpiry
+            );
             var europeanOptionContract = algo.AddOptionContract(optionSymbol, Resolution.Minute);
-            europeanOptionContract.SetMarketPrice(new TradeBar() { Symbol = europeanOptionContract.Symbol, Value = 1, Time = algo.Time });
+            europeanOptionContract.SetMarketPrice(
+                new TradeBar()
+                {
+                    Symbol = europeanOptionContract.Symbol,
+                    Value = 1,
+                    Time = algo.Time
+                }
+            );
 
             europeanOptionContract.Holdings.SetHoldings(1, 1);
 
             algo.SetDateTime(optionExpiry.AddDays(-1).AddHours(15));
             var ticket = algo.ExerciseOption(europeanOptionContract.Symbol, 1);
             Assert.AreEqual(OrderStatus.Invalid, ticket.Status);
-            Assert.AreEqual(OrderResponseErrorCode.EuropeanOptionNotExpiredOnExercise, ticket.SubmitRequest.Response.ErrorCode);
+            Assert.AreEqual(
+                OrderResponseErrorCode.EuropeanOptionNotExpiredOnExercise,
+                ticket.SubmitRequest.Response.ErrorCode
+            );
 
             algo.SetDateTime(optionExpiry.AddHours(15));
             ticket = algo.ExerciseOption(europeanOptionContract.Symbol, 1);
@@ -1541,17 +1751,20 @@ namespace QuantConnect.Tests.Algorithm
             var start = DateTime.UtcNow;
             var algo = new AlgorithmStub();
             algo.SetFinishedWarmingUp();
-            algo.AddEquity("SPY").SetMarketPrice(new TradeBar
-            {
-                Time = algo.Time,
-                Open = 10m,
-                High = 10,
-                Low = 10,
-                Close = 10,
-                Volume = 0,
-                Symbol = Symbols.SPY,
-                DataType = MarketDataType.TradeBar
-            });
+            algo.AddEquity("SPY")
+                .SetMarketPrice(
+                    new TradeBar
+                    {
+                        Time = algo.Time,
+                        Open = 10m,
+                        High = 10,
+                        Low = 10,
+                        Close = 10,
+                        Volume = 0,
+                        Symbol = Symbols.SPY,
+                        DataType = MarketDataType.TradeBar
+                    }
+                );
 
             algo.AddOptionContract(Symbols.SPY_C_192_Feb19_2016);
             var legs = new List<Leg>
@@ -1566,7 +1779,11 @@ namespace QuantConnect.Tests.Algorithm
             Assert.AreEqual(1, result.Count);
             Assert.AreEqual(OrderStatus.Invalid, result.Single().Status);
             Assert.IsTrue(result.Single().SubmitRequest.Response.IsError);
-            Assert.IsTrue(result.Single().SubmitRequest.Response.ErrorMessage.Contains("does not have an accurate price"));
+            Assert.IsTrue(
+                result
+                    .Single()
+                    .SubmitRequest.Response.ErrorMessage.Contains("does not have an accurate price")
+            );
 
             Assert.IsTrue(DateTime.UtcNow - start < TimeSpan.FromMilliseconds(500));
         }
@@ -1590,21 +1807,35 @@ namespace QuantConnect.Tests.Algorithm
             {
                 Assert.Throws<ArgumentException>(() => algo.ComboMarketOrder(legs, 1));
                 Assert.Throws<ArgumentException>(() => algo.ComboLimitOrder(legs, 1, 100));
-                Assert.Throws<ArgumentException>(() => algo.ComboLegLimitOrder(legs.Select(leg =>
-                {
-                    leg.OrderPrice = 10;
-                    return leg;
-                }).ToList(), 1));
+                Assert.Throws<ArgumentException>(
+                    () =>
+                        algo.ComboLegLimitOrder(
+                            legs.Select(leg =>
+                                {
+                                    leg.OrderPrice = 10;
+                                    return leg;
+                                })
+                                .ToList(),
+                            1
+                        )
+                );
             }
             else
             {
                 Assert.DoesNotThrow(() => algo.ComboMarketOrder(legs, 1));
                 Assert.DoesNotThrow(() => algo.ComboLimitOrder(legs, 1, 100));
-                Assert.DoesNotThrow(() => algo.ComboLegLimitOrder(legs.Select(leg =>
-                {
-                    leg.OrderPrice = 10;
-                    return leg;
-                }).ToList(), 1));
+                Assert.DoesNotThrow(
+                    () =>
+                        algo.ComboLegLimitOrder(
+                            legs.Select(leg =>
+                                {
+                                    leg.OrderPrice = 10;
+                                    return leg;
+                                })
+                                .ToList(),
+                            1
+                        )
+                );
             }
         }
 
@@ -1616,27 +1847,42 @@ namespace QuantConnect.Tests.Algorithm
             algo.SetDateTime(new DateTime(2023, 02, 16));
 
             var es20h20 = algo.AddFutureContract(
-                Symbol.CreateFuture(Futures.Indices.SP500EMini, Market.CME, new DateTime(2020, 3, 20)),
-                Resolution.Minute);
+                Symbol.CreateFuture(
+                    Futures.Indices.SP500EMini,
+                    Market.CME,
+                    new DateTime(2020, 3, 20)
+                ),
+                Resolution.Minute
+            );
             es20h20.SetMarketPrice(new Tick(algo.Time, es20h20.Symbol, 1, 1));
 
-            var dateTimeInExchangeTimeZone = algo.Time.Date + new TimeSpan(17, 0, 0) - MarketOnCloseOrder.SubmissionTimeBuffer;
+            var dateTimeInExchangeTimeZone =
+                algo.Time.Date + new TimeSpan(17, 0, 0) - MarketOnCloseOrder.SubmissionTimeBuffer;
             if (!beforeLatestSubmissionTime)
             {
                 dateTimeInExchangeTimeZone += TimeSpan.FromSeconds(1);
             }
-            algo.SetDateTime(dateTimeInExchangeTimeZone.ConvertTo(es20h20.Exchange.TimeZone, algo.TimeZone));
+            algo.SetDateTime(
+                dateTimeInExchangeTimeZone.ConvertTo(es20h20.Exchange.TimeZone, algo.TimeZone)
+            );
 
             var ticket = algo.MarketOnCloseOrder(es20h20.Symbol, 1);
 
             if (!beforeLatestSubmissionTime)
             {
                 Assert.AreEqual(OrderStatus.Invalid, ticket.Status);
-                Assert.AreEqual(OrderResponseErrorCode.MarketOnCloseOrderTooLate, ticket.SubmitRequest.Response.ErrorCode);
+                Assert.AreEqual(
+                    OrderResponseErrorCode.MarketOnCloseOrderTooLate,
+                    ticket.SubmitRequest.Response.ErrorCode
+                );
             }
             else
             {
-                Assert.AreNotEqual(OrderStatus.Invalid, ticket.Status, ticket.SubmitRequest.Response.ErrorMessage);
+                Assert.AreNotEqual(
+                    OrderStatus.Invalid,
+                    ticket.Status,
+                    ticket.SubmitRequest.Response.ErrorMessage
+                );
             }
         }
 
@@ -1655,11 +1901,18 @@ namespace QuantConnect.Tests.Algorithm
             algo.Transactions.SetOrderProcessor(_fakeOrderProcessor);
             msft = algo.Securities[Symbols.MSFT];
             msft.SetLeverage(leverage);
-            algo.SetCurrentSlice(new Slice(DateTime.MinValue, Enumerable.Empty<BaseData>(), DateTime.MinValue));
+            algo.SetCurrentSlice(
+                new Slice(DateTime.MinValue, Enumerable.Empty<BaseData>(), DateTime.MinValue)
+            );
             return algo;
         }
 
-        private QCAlgorithm GetAlgorithm(out Security msft, decimal initialMarginRequirement, decimal maintenanceMarginRequirement, decimal fee)
+        private QCAlgorithm GetAlgorithm(
+            out Security msft,
+            decimal initialMarginRequirement,
+            decimal maintenanceMarginRequirement,
+            decimal fee
+        )
         {
             //Initialize algorithm
             var algo = new QCAlgorithm();
@@ -1671,29 +1924,43 @@ namespace QuantConnect.Tests.Algorithm
             _fakeOrderProcessor = new FakeOrderProcessor();
             algo.Transactions.SetOrderProcessor(_fakeOrderProcessor);
             msft = algo.Securities[Symbols.MSFT];
-            msft.BuyingPowerModel = new SecurityMarginModel(initialMarginRequirement, maintenanceMarginRequirement, 0);
+            msft.BuyingPowerModel = new SecurityMarginModel(
+                initialMarginRequirement,
+                maintenanceMarginRequirement,
+                0
+            );
             return algo;
         }
 
         private void Update(Security security, decimal close)
         {
-            security.SetMarketPrice(new TradeBar
-            {
-                Time = DateTime.Now,
-                Symbol = security.Symbol,
-                Open = close,
-                High = close,
-                Low = close,
-                Close = close
-            });
+            security.SetMarketPrice(
+                new TradeBar
+                {
+                    Time = DateTime.Now,
+                    Symbol = security.Symbol,
+                    Open = close,
+                    High = close,
+                    Low = close,
+                    Close = close
+                }
+            );
         }
 
-        private bool HasSufficientBuyingPowerForOrder(decimal orderQuantity, Security security, IAlgorithm algo)
+        private bool HasSufficientBuyingPowerForOrder(
+            decimal orderQuantity,
+            Security security,
+            IAlgorithm algo
+        )
         {
             var order = new MarketOrder(security.Symbol, orderQuantity, DateTime.UtcNow);
             _fakeOrderProcessor.AddTicket(order.ToOrderTicket(algo.Transactions));
-            var hashSufficientBuyingPower = security.BuyingPowerModel.HasSufficientBuyingPowerForOrder(algo.Portfolio,
-                security, new MarketOrder(security.Symbol, orderQuantity, DateTime.UtcNow));
+            var hashSufficientBuyingPower =
+                security.BuyingPowerModel.HasSufficientBuyingPowerForOrder(
+                    algo.Portfolio,
+                    security,
+                    new MarketOrder(security.Symbol, orderQuantity, DateTime.UtcNow)
+                );
             return hashSufficientBuyingPower.IsSufficient;
         }
     }

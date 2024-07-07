@@ -14,38 +14,49 @@
 */
 
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using QuantConnect.Data;
+using QuantConnect.Data.Market;
+using QuantConnect.Interfaces;
 using QuantConnect.Orders;
 using QuantConnect.Securities;
-using QuantConnect.Interfaces;
-using QuantConnect.Data.Market;
-using System.Collections.Generic;
 using QuantConnect.Securities.Future;
 
 namespace QuantConnect.Algorithm.CSharp
 {
     /// <summary>
-    /// Continuous Futures Regression algorithm. 
-    /// Asserting the behavior of stop market order <see cref="StopMarketOrder"/> in extended market hours 
+    /// Continuous Futures Regression algorithm.
+    /// Asserting the behavior of stop market order <see cref="StopMarketOrder"/> in extended market hours
     /// <seealso cref="Data.UniverseSelection.UniverseSettings.ExtendedMarketHours"/>
     /// </summary>
-    public class FutureStopMarketOrderOnExtendedHoursRegressionAlgorithm : QCAlgorithm, IRegressionAlgorithmDefinition
+    public class FutureStopMarketOrderOnExtendedHoursRegressionAlgorithm
+        : QCAlgorithm,
+            IRegressionAlgorithmDefinition
     {
         private OrderTicket _ticket;
         private Future _SP500EMini;
+
         public override void Initialize()
         {
             SetStartDate(2013, 10, 6);
             SetEndDate(2013, 10, 12);
 
-            _SP500EMini = AddFuture(Futures.Indices.SP500EMini, Resolution.Minute, extendedMarketHours: true);
+            _SP500EMini = AddFuture(
+                Futures.Indices.SP500EMini,
+                Resolution.Minute,
+                extendedMarketHours: true
+            );
 
-            Schedule.On(DateRules.EveryDay(), TimeRules.At(19, 0), () =>
-            {
-                MarketOrder(_SP500EMini.Mapped, 1);
-                _ticket = StopMarketOrder(_SP500EMini.Mapped, -1, _SP500EMini.Price * 1.1m);
-            });
+            Schedule.On(
+                DateRules.EveryDay(),
+                TimeRules.At(19, 0),
+                () =>
+                {
+                    MarketOrder(_SP500EMini.Mapped, 1);
+                    _ticket = StopMarketOrder(_SP500EMini.Mapped, -1, _SP500EMini.Price * 1.1m);
+                }
+            );
         }
 
         /// <summary>
@@ -85,7 +96,9 @@ namespace QuantConnect.Algorithm.CSharp
 
                 if (!time.IsOpen(orderEvent.UtcTime, _SP500EMini.IsExtendedMarketHours))
                 {
-                    throw new RegressionTestException($"The Exchange hours was closed, verify 'extendedMarketHours' flag in {nameof(Initialize)} when added new security(ies).");
+                    throw new RegressionTestException(
+                        $"The Exchange hours was closed, verify 'extendedMarketHours' flag in {nameof(Initialize)} when added new security(ies)."
+                    );
                 }
             }
         }
@@ -96,7 +109,9 @@ namespace QuantConnect.Algorithm.CSharp
 
             if (stopMarketOrders.Any(x => x.Status != OrderStatus.Filled))
             {
-                throw new RegressionTestException("The Algorithms was not handled any StopMarketOrders");
+                throw new RegressionTestException(
+                    "The Algorithms was not handled any StopMarketOrders"
+                );
             }
         }
 
@@ -128,35 +143,36 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// This is used by the regression test system to indicate what the expected statistics are from running the algorithm
         /// </summary>
-        public Dictionary<string, string> ExpectedStatistics => new Dictionary<string, string>
-        {
-            {"Total Orders", "10"},
-            {"Average Win", "0%"},
-            {"Average Loss", "-0.02%"},
-            {"Compounding Annual Return", "-6.736%"},
-            {"Drawdown", "0.100%"},
-            {"Expectancy", "-1"},
-            {"Start Equity", "100000"},
-            {"End Equity", "99891"},
-            {"Net Profit", "-0.109%"},
-            {"Sharpe Ratio", "-22.29"},
-            {"Sortino Ratio", "-26.651"},
-            {"Probabilistic Sharpe Ratio", "0.016%"},
-            {"Loss Rate", "100%"},
-            {"Win Rate", "0%"},
-            {"Profit-Loss Ratio", "0"},
-            {"Alpha", "-0.05"},
-            {"Beta", "-0.006"},
-            {"Annual Standard Deviation", "0.002"},
-            {"Annual Variance", "0"},
-            {"Information Ratio", "-2.76"},
-            {"Tracking Error", "0.215"},
-            {"Treynor Ratio", "8.829"},
-            {"Total Fees", "$21.50"},
-            {"Estimated Strategy Capacity", "$3400000.00"},
-            {"Lowest Capacity Asset", "ES VMKLFZIH2MTD"},
-            {"Portfolio Turnover", "138.95%"},
-            {"OrderListHash", "957191893a3de4975ec14b2a3b2490de"}
-        };
+        public Dictionary<string, string> ExpectedStatistics =>
+            new Dictionary<string, string>
+            {
+                { "Total Orders", "10" },
+                { "Average Win", "0%" },
+                { "Average Loss", "-0.02%" },
+                { "Compounding Annual Return", "-6.736%" },
+                { "Drawdown", "0.100%" },
+                { "Expectancy", "-1" },
+                { "Start Equity", "100000" },
+                { "End Equity", "99891" },
+                { "Net Profit", "-0.109%" },
+                { "Sharpe Ratio", "-22.29" },
+                { "Sortino Ratio", "-26.651" },
+                { "Probabilistic Sharpe Ratio", "0.016%" },
+                { "Loss Rate", "100%" },
+                { "Win Rate", "0%" },
+                { "Profit-Loss Ratio", "0" },
+                { "Alpha", "-0.05" },
+                { "Beta", "-0.006" },
+                { "Annual Standard Deviation", "0.002" },
+                { "Annual Variance", "0" },
+                { "Information Ratio", "-2.76" },
+                { "Tracking Error", "0.215" },
+                { "Treynor Ratio", "8.829" },
+                { "Total Fees", "$21.50" },
+                { "Estimated Strategy Capacity", "$3400000.00" },
+                { "Lowest Capacity Asset", "ES VMKLFZIH2MTD" },
+                { "Portfolio Turnover", "138.95%" },
+                { "OrderListHash", "957191893a3de4975ec14b2a3b2490de" }
+            };
     }
 }

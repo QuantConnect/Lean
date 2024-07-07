@@ -14,22 +14,24 @@
 */
 
 using System;
+using System.Collections.Generic;
 using QuantConnect.Algorithm.Framework.Portfolio.SignalExports;
 using QuantConnect.Data;
 using QuantConnect.Indicators;
 using QuantConnect.Interfaces;
-using System.Collections.Generic;
 
 namespace QuantConnect.Algorithm.CSharp
 {
     /// <summary>
-    /// This algorithm sends a list of portfolio targets from algorithm's Portfolio 
+    /// This algorithm sends a list of portfolio targets from algorithm's Portfolio
     /// to Collective2 API every time the ema indicators crosses between themselves
     /// </summary>
     /// <meta name="tag" content="using data" />
     /// <meta name="tag" content="using quantconnect" />
     /// <meta name="tag" content="securities and portfolio" />
-    public class Collective2PortfolioSignalExportDemonstrationAlgorithm : QCAlgorithm, IRegressionAlgorithmDefinition
+    public class Collective2PortfolioSignalExportDemonstrationAlgorithm
+        : QCAlgorithm,
+            IRegressionAlgorithmDefinition
     {
         /// <summary>
         /// Collective2 APIv4 KEY: This value is provided by Collective2 in their webpage in your account section (See https://collective2.com/account-info)
@@ -50,15 +52,28 @@ namespace QuantConnect.Algorithm.CSharp
 
         /// <summary>
         /// Symbols accepted by Collective2. Collective2 accepts stock,
-        /// future, forex and US stock option symbols 
+        /// future, forex and US stock option symbols
         /// </summary>
-        private List<Symbol> _symbols = new()
-        {   
-            QuantConnect.Symbol.Create("SPY", SecurityType.Equity, Market.USA, null, null),
-            QuantConnect.Symbol.Create("EURUSD", SecurityType.Forex, Market.Oanda, null, null),
-            QuantConnect.Symbol.CreateFuture("ES", Market.CME, new DateTime(2023, 12, 15), null),
-            QuantConnect.Symbol.CreateOption("GOOG", Market.USA, OptionStyle.American, OptionRight.Call, 130, new DateTime(2023, 9, 1)),
-        };
+        private List<Symbol> _symbols =
+            new()
+            {
+                QuantConnect.Symbol.Create("SPY", SecurityType.Equity, Market.USA, null, null),
+                QuantConnect.Symbol.Create("EURUSD", SecurityType.Forex, Market.Oanda, null, null),
+                QuantConnect.Symbol.CreateFuture(
+                    "ES",
+                    Market.CME,
+                    new DateTime(2023, 12, 15),
+                    null
+                ),
+                QuantConnect.Symbol.CreateOption(
+                    "GOOG",
+                    Market.USA,
+                    OptionStyle.American,
+                    OptionRight.Call,
+                    130,
+                    new DateTime(2023, 9, 1)
+                ),
+            };
 
         /// <summary>
         /// Initialize the date and add all equity symbols present in _symbols list
@@ -81,20 +96,23 @@ namespace QuantConnect.Algorithm.CSharp
             _emaFastIsNotSet = true;
 
             // Set Collective2 signal export provider
-            SignalExport.AddSignalExportProviders(new Collective2SignalExport(_collective2ApiKey, _collective2SystemId));
+            SignalExport.AddSignalExportProviders(
+                new Collective2SignalExport(_collective2ApiKey, _collective2SystemId)
+            );
 
             SetWarmUp(100);
         }
 
         /// <summary>
-        /// Reduce the quantity of holdings for SPY or increase it, depending the case, 
-        /// when the EMA's indicators crosses between themselves, then send a signal to 
+        /// Reduce the quantity of holdings for SPY or increase it, depending the case,
+        /// when the EMA's indicators crosses between themselves, then send a signal to
         /// Collective2 API
         /// </summary>
         /// <param name="slice"></param>
         public override void OnData(Slice slice)
         {
-            if (IsWarmingUp) return;
+            if (IsWarmingUp)
+                return;
 
             // Place an order as soon as possible to send a signal.
             if (_firstCall)
@@ -141,7 +159,8 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// This is used by the regression test system to indicate which languages this algorithm is written in.
         /// </summary>
-        public virtual List<Language> Languages { get; } = new() { Language.CSharp, Language.Python };
+        public virtual List<Language> Languages { get; } =
+            new() { Language.CSharp, Language.Python };
 
         /// <summary>
         /// Data Points count of all timeslices of algorithm
@@ -161,35 +180,36 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// This is used by the regression test system to indicate what the expected statistics are from running the algorithm
         /// </summary>
-        public Dictionary<string, string> ExpectedStatistics => new Dictionary<string, string>
-        {
-            {"Total Orders", "2"},
-            {"Average Win", "0%"},
-            {"Average Loss", "0%"},
-            {"Compounding Annual Return", "14.180%"},
-            {"Drawdown", "0.200%"},
-            {"Expectancy", "0"},
-            {"Start Equity", "100000.00"},
-            {"End Equity", "100169.68"},
-            {"Net Profit", "0.170%"},
-            {"Sharpe Ratio", "4.88"},
-            {"Sortino Ratio", "0"},
-            {"Probabilistic Sharpe Ratio", "67.725%"},
-            {"Loss Rate", "0%"},
-            {"Win Rate", "0%"},
-            {"Profit-Loss Ratio", "0"},
-            {"Alpha", "-0.088"},
-            {"Beta", "0.099"},
-            {"Annual Standard Deviation", "0.022"},
-            {"Annual Variance", "0"},
-            {"Information Ratio", "-9.315"},
-            {"Tracking Error", "0.201"},
-            {"Treynor Ratio", "1.086"},
-            {"Total Fees", "$2.00"},
-            {"Estimated Strategy Capacity", "$260000000.00"},
-            {"Lowest Capacity Asset", "SPY R735QTJ8XC9X"},
-            {"Portfolio Turnover", "2.00%"},
-            {"OrderListHash", "006af1a065fca33ac1f1e9cd6bd02c11"}
-        };
+        public Dictionary<string, string> ExpectedStatistics =>
+            new Dictionary<string, string>
+            {
+                { "Total Orders", "2" },
+                { "Average Win", "0%" },
+                { "Average Loss", "0%" },
+                { "Compounding Annual Return", "14.180%" },
+                { "Drawdown", "0.200%" },
+                { "Expectancy", "0" },
+                { "Start Equity", "100000.00" },
+                { "End Equity", "100169.68" },
+                { "Net Profit", "0.170%" },
+                { "Sharpe Ratio", "4.88" },
+                { "Sortino Ratio", "0" },
+                { "Probabilistic Sharpe Ratio", "67.725%" },
+                { "Loss Rate", "0%" },
+                { "Win Rate", "0%" },
+                { "Profit-Loss Ratio", "0" },
+                { "Alpha", "-0.088" },
+                { "Beta", "0.099" },
+                { "Annual Standard Deviation", "0.022" },
+                { "Annual Variance", "0" },
+                { "Information Ratio", "-9.315" },
+                { "Tracking Error", "0.201" },
+                { "Treynor Ratio", "1.086" },
+                { "Total Fees", "$2.00" },
+                { "Estimated Strategy Capacity", "$260000000.00" },
+                { "Lowest Capacity Asset", "SPY R735QTJ8XC9X" },
+                { "Portfolio Turnover", "2.00%" },
+                { "OrderListHash", "006af1a065fca33ac1f1e9cd6bd02c11" }
+            };
     }
 }

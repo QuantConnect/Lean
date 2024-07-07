@@ -30,7 +30,7 @@ namespace QuantConnect.Orders
 
         /// <summary>
         /// Gets or sets a value indicating whether self-trade prevention is enabled for this order.
-        /// Self-trade prevention helps prevent an order from crossing against the same user, 
+        /// Self-trade prevention helps prevent an order from crossing against the same user,
         /// reducing the risk of unintentional trades within the same account.
         /// </summary>
         public bool SelfTradePreventionId { get; set; }

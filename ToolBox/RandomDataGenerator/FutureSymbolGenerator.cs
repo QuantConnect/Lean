@@ -28,7 +28,10 @@ namespace QuantConnect.ToolBox.RandomDataGenerator
         private readonly DateTime _maxExpiry;
         private readonly string _market;
 
-        public FutureSymbolGenerator(RandomDataGeneratorSettings settings, IRandomValueGenerator random)
+        public FutureSymbolGenerator(
+            RandomDataGeneratorSettings settings,
+            IRandomValueGenerator random
+        )
             : base(settings, random)
         {
             _minExpiry = settings.Start;
@@ -50,7 +53,11 @@ namespace QuantConnect.ToolBox.RandomDataGenerator
                 ticker = NextTickerFromSymbolPropertiesDatabase(SecurityType.Future, _market);
             }
 
-            var marketHours = MarketHoursDatabase.GetExchangeHours(_market, ticker, SecurityType.Future);
+            var marketHours = MarketHoursDatabase.GetExchangeHours(
+                _market,
+                ticker,
+                SecurityType.Future
+            );
             var expiry = GetRandomExpiration(marketHours, _minExpiry, _maxExpiry);
 
             yield return Symbol.CreateFuture(ticker, _market, expiry);

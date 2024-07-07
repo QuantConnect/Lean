@@ -14,14 +14,14 @@
 */
 
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using QuantConnect.Data;
-using QuantConnect.Orders;
-using QuantConnect.Interfaces;
-using QuantConnect.Securities;
-using System.Collections.Generic;
-using QuantConnect.Securities.Future;
 using QuantConnect.Data.UniverseSelection;
+using QuantConnect.Interfaces;
+using QuantConnect.Orders;
+using QuantConnect.Securities;
+using QuantConnect.Securities.Future;
 
 namespace QuantConnect.Algorithm.CSharp
 {
@@ -29,7 +29,9 @@ namespace QuantConnect.Algorithm.CSharp
     /// Continuous Futures Regression algorithm. Asserting and showcasing the behavior of adding a continuous future
     /// and a future contract at the same time
     /// </summary>
-    public class AddFutureContractWithContinuousRegressionAlgorithm : QCAlgorithm, IRegressionAlgorithmDefinition
+    public class AddFutureContractWithContinuousRegressionAlgorithm
+        : QCAlgorithm,
+            IRegressionAlgorithmDefinition
     {
         private Symbol _currentMappedSymbol;
         private Future _continuousContract;
@@ -44,13 +46,16 @@ namespace QuantConnect.Algorithm.CSharp
             SetStartDate(2013, 10, 6);
             SetEndDate(2013, 10, 10);
 
-            _continuousContract = AddFuture(Futures.Indices.SP500EMini,
+            _continuousContract = AddFuture(
+                Futures.Indices.SP500EMini,
                 dataNormalizationMode: DataNormalizationMode.BackwardsRatio,
                 dataMappingMode: DataMappingMode.LastTradingDay,
                 contractDepthOffset: 0
             );
 
-            _futureContract = AddFutureContract(FutureChainProvider.GetFutureContractList(_continuousContract.Symbol, Time).First());
+            _futureContract = AddFutureContract(
+                FutureChainProvider.GetFutureContractList(_continuousContract.Symbol, Time).First()
+            );
         }
 
         /// <summary>
@@ -65,11 +70,15 @@ namespace QuantConnect.Algorithm.CSharp
             }
             if (slice.Keys.Count > 2)
             {
-                throw new RegressionTestException($"Getting data for more than 2 symbols! {string.Join(",", slice.Keys.Select(symbol => symbol))}");
+                throw new RegressionTestException(
+                    $"Getting data for more than 2 symbols! {string.Join(",", slice.Keys.Select(symbol => symbol))}"
+                );
             }
             if (UniverseManager.Count != 3)
             {
-                throw new RegressionTestException($"Expecting 3 universes (chain, continuous and user defined) but have {UniverseManager.Count}");
+                throw new RegressionTestException(
+                    $"Expecting 3 universes (chain, continuous and user defined) but have {UniverseManager.Count}"
+                );
             }
 
             if (!Portfolio.Invested)
@@ -96,10 +105,20 @@ namespace QuantConnect.Algorithm.CSharp
         {
             Debug($"{Time}-{changes}");
 
-            if (changes.AddedSecurities.Any(security => security.Symbol != _continuousContract.Symbol && security.Symbol != _futureContract.Symbol)
-                || changes.RemovedSecurities.Any(security => security.Symbol != _continuousContract.Symbol && security.Symbol != _futureContract.Symbol))
+            if (
+                changes.AddedSecurities.Any(security =>
+                    security.Symbol != _continuousContract.Symbol
+                    && security.Symbol != _futureContract.Symbol
+                )
+                || changes.RemovedSecurities.Any(security =>
+                    security.Symbol != _continuousContract.Symbol
+                    && security.Symbol != _futureContract.Symbol
+                )
+            )
             {
-                throw new RegressionTestException($"We got an unexpected security changes {changes}");
+                throw new RegressionTestException(
+                    $"We got an unexpected security changes {changes}"
+                );
             }
         }
 
@@ -131,35 +150,36 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// This is used by the regression test system to indicate what the expected statistics are from running the algorithm
         /// </summary>
-        public Dictionary<string, string> ExpectedStatistics => new Dictionary<string, string>
-        {
-            {"Total Orders", "3"},
-            {"Average Win", "0%"},
-            {"Average Loss", "-0.03%"},
-            {"Compounding Annual Return", "-2.594%"},
-            {"Drawdown", "0.000%"},
-            {"Expectancy", "-1"},
-            {"Start Equity", "100000"},
-            {"End Equity", "99966.4"},
-            {"Net Profit", "-0.034%"},
-            {"Sharpe Ratio", "-10.666"},
-            {"Sortino Ratio", "0"},
-            {"Probabilistic Sharpe Ratio", "1.216%"},
-            {"Loss Rate", "100%"},
-            {"Win Rate", "0%"},
-            {"Profit-Loss Ratio", "0"},
-            {"Alpha", "-0.029"},
-            {"Beta", "0.004"},
-            {"Annual Standard Deviation", "0.003"},
-            {"Annual Variance", "0"},
-            {"Information Ratio", "-0.768"},
-            {"Tracking Error", "0.241"},
-            {"Treynor Ratio", "-6.368"},
-            {"Total Fees", "$8.60"},
-            {"Estimated Strategy Capacity", "$5500000.00"},
-            {"Lowest Capacity Asset", "ES VMKLFZIH2MTD"},
-            {"Portfolio Turnover", "66.80%"},
-            {"OrderListHash", "579e2e83dd7e5e7648c47e9eff132460"}
-        };
+        public Dictionary<string, string> ExpectedStatistics =>
+            new Dictionary<string, string>
+            {
+                { "Total Orders", "3" },
+                { "Average Win", "0%" },
+                { "Average Loss", "-0.03%" },
+                { "Compounding Annual Return", "-2.594%" },
+                { "Drawdown", "0.000%" },
+                { "Expectancy", "-1" },
+                { "Start Equity", "100000" },
+                { "End Equity", "99966.4" },
+                { "Net Profit", "-0.034%" },
+                { "Sharpe Ratio", "-10.666" },
+                { "Sortino Ratio", "0" },
+                { "Probabilistic Sharpe Ratio", "1.216%" },
+                { "Loss Rate", "100%" },
+                { "Win Rate", "0%" },
+                { "Profit-Loss Ratio", "0" },
+                { "Alpha", "-0.029" },
+                { "Beta", "0.004" },
+                { "Annual Standard Deviation", "0.003" },
+                { "Annual Variance", "0" },
+                { "Information Ratio", "-0.768" },
+                { "Tracking Error", "0.241" },
+                { "Treynor Ratio", "-6.368" },
+                { "Total Fees", "$8.60" },
+                { "Estimated Strategy Capacity", "$5500000.00" },
+                { "Lowest Capacity Asset", "ES VMKLFZIH2MTD" },
+                { "Portfolio Turnover", "66.80%" },
+                { "OrderListHash", "579e2e83dd7e5e7648c47e9eff132460" }
+            };
     }
 }

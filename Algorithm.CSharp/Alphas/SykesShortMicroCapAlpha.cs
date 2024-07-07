@@ -13,6 +13,9 @@
  * limitations under the License.
 */
 
+using System;
+using System.Collections.Generic;
+using System.Linq;
 using QuantConnect.Algorithm.Framework.Alphas;
 using QuantConnect.Algorithm.Framework.Execution;
 using QuantConnect.Algorithm.Framework.Portfolio;
@@ -21,9 +24,6 @@ using QuantConnect.Algorithm.Framework.Selection;
 using QuantConnect.Data;
 using QuantConnect.Data.UniverseSelection;
 using QuantConnect.Orders.Fees;
-using System;
-using System.Collections.Generic;
-using System.Linq;
 
 namespace QuantConnect.Algorithm.CSharp.Alphas
 {
@@ -71,11 +71,13 @@ namespace QuantConnect.Algorithm.CSharp.Alphas
             private const int _numberOfSymbolsCoarse = 500;
             private int _lastMonth = -1;
 
-            public PennyStockUniverseSelectionModel() : base(false)
-            {
-            }
+            public PennyStockUniverseSelectionModel()
+                : base(false) { }
 
-            public override IEnumerable<Symbol> SelectCoarse(QCAlgorithm algorithm, IEnumerable<CoarseFundamental> coarse)
+            public override IEnumerable<Symbol> SelectCoarse(
+                QCAlgorithm algorithm,
+                IEnumerable<CoarseFundamental> coarse
+            )
             {
                 var month = algorithm.Time.Month;
                 if (month == _lastMonth)
@@ -84,13 +86,15 @@ namespace QuantConnect.Algorithm.CSharp.Alphas
                 }
                 _lastMonth = month;
 
-                return (from cf in coarse
-                        where cf.HasFundamentalData
-                        where cf.Volume < 1000000
-                        where cf.Volume > 10000
-                        where cf.Price < 5
-                        orderby cf.DollarVolume descending
-                        select cf.Symbol).Take(_numberOfSymbolsCoarse);
+                return (
+                    from cf in coarse
+                    where cf.HasFundamentalData
+                    where cf.Volume < 1000000
+                    where cf.Volume > 10000
+                    where cf.Price < 5
+                    orderby cf.DollarVolume descending
+                    select cf.Symbol
+                ).Take(_numberOfSymbolsCoarse);
             }
         }
 
@@ -105,7 +109,8 @@ namespace QuantConnect.Algorithm.CSharp.Alphas
             public SykesShortMicroCapAlphaModel(
                 int lookback = 1,
                 int numberOfStocks = 10,
-                Resolution resolution = Resolution.Daily)
+                Resolution resolution = Resolution.Daily
+            )
             {
                 _numberOfStocks = numberOfStocks;
                 _predictionInterval = resolution.ToTimeSpan().Multiply(lookback);
@@ -120,9 +125,15 @@ namespace QuantConnect.Algorithm.CSharp.Alphas
                     // Rank penny stocks on one day price change
                     let Magnitude = security.Close / security.Open - 1
                     orderby Math.Round(Magnitude, 6), security.Symbol descending
-                    select Insight.Price(security.Symbol, _predictionInterval, InsightDirection.Down, Math.Abs((double)Magnitude)))
-                    // Retrieve list of _numberOfStocks "pumped" penny stocks
-                    .Take(_numberOfStocks);
+                    select Insight.Price(
+                        security.Symbol,
+                        _predictionInterval,
+                        InsightDirection.Down,
+                        Math.Abs((double)Magnitude)
+                    )
+                )
+                // Retrieve list of _numberOfStocks "pumped" penny stocks
+                .Take(_numberOfStocks);
             }
         }
     }

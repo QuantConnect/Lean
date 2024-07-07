@@ -36,7 +36,15 @@ namespace QuantConnect.Optimizer.Objectives
             get => _target;
             set
             {
-                _target = value != null ? string.Join(".", value.Split('.').Select(s => _targetTemplate.Match(s).Success ? s : $"['{s}']")) : value;
+                _target =
+                    value != null
+                        ? string.Join(
+                            ".",
+                            value
+                                .Split('.')
+                                .Select(s => _targetTemplate.Match(s).Success ? s : $"['{s}']")
+                        )
+                        : value;
             }
         }
 
@@ -50,10 +58,7 @@ namespace QuantConnect.Optimizer.Objectives
         /// <summary>
         /// Creates a new instance of Objective class
         /// </summary>
-        protected Objective()
-        {
-
-        }
+        protected Objective() { }
 
         /// <summary>
         /// Creates a new instance
@@ -62,7 +67,10 @@ namespace QuantConnect.Optimizer.Objectives
         {
             if (string.IsNullOrEmpty(target))
             {
-                throw new ArgumentNullException(nameof(target), Messages.Objective.NullOrEmptyObjective);
+                throw new ArgumentNullException(
+                    nameof(target),
+                    Messages.Objective.NullOrEmptyObjective
+                );
             }
 
             var objective = target;
@@ -85,10 +93,7 @@ namespace QuantConnect.Optimizer.Objectives
         [JsonProperty("target-value")]
         private decimal? OldTargetValue
         {
-            set
-            {
-                TargetValue = value;
-            }
+            set { TargetValue = value; }
         }
         #endregion
     }

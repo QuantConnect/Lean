@@ -13,30 +13,38 @@
  * limitations under the License.
 */
 
-using QuantConnect.Data.Market;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using QuantConnect.Data.Market;
 
 namespace QuantConnect.Indicators
 {
     /// <summary>
-    /// The advance-decline indicator compares the number of stocks 
-    /// that closed higher against the number of stocks 
+    /// The advance-decline indicator compares the number of stocks
+    /// that closed higher against the number of stocks
     /// that closed lower than their previous day's closing prices.
     /// </summary>
-    public abstract class AdvanceDeclineIndicator : TradeBarIndicator, IIndicatorWarmUpPeriodProvider
+    public abstract class AdvanceDeclineIndicator
+        : TradeBarIndicator,
+            IIndicatorWarmUpPeriodProvider
     {
-        private IDictionary<SecurityIdentifier, TradeBar> _previousPeriod = new Dictionary<SecurityIdentifier, TradeBar>();
-        private IDictionary<SecurityIdentifier, TradeBar> _currentPeriod = new Dictionary<SecurityIdentifier, TradeBar>();
+        private IDictionary<SecurityIdentifier, TradeBar> _previousPeriod =
+            new Dictionary<SecurityIdentifier, TradeBar>();
+        private IDictionary<SecurityIdentifier, TradeBar> _currentPeriod =
+            new Dictionary<SecurityIdentifier, TradeBar>();
         private readonly Func<IEnumerable<TradeBar>, decimal> _computeSubValue;
         private readonly Func<decimal, decimal, decimal> _computeMainValue;
         private DateTime? _currentPeriodTime = null;
-        
+
         /// <summary>
         /// Initializes a new instance of the <see cref="AdvanceDeclineRatio"/> class
         /// </summary>
-        public AdvanceDeclineIndicator(string name, Func<IEnumerable<TradeBar>, decimal> computeSub, Func<decimal, decimal, decimal> computeMain)
+        public AdvanceDeclineIndicator(
+            string name,
+            Func<IEnumerable<TradeBar>, decimal> computeSub,
+            Func<decimal, decimal, decimal> computeMain
+        )
             : base(name)
         {
             _computeSubValue = computeSub;
@@ -173,7 +181,10 @@ namespace QuantConnect.Indicators
                 _currentPeriodTime = input.Time;
             }
 
-            if (_currentPeriod.ContainsKey(input.Symbol.ID) && (!_currentPeriodTime.HasValue || input.Time == _currentPeriodTime))
+            if (
+                _currentPeriod.ContainsKey(input.Symbol.ID)
+                && (!_currentPeriodTime.HasValue || input.Time == _currentPeriodTime)
+            )
             {
                 _currentPeriod[input.Symbol.ID] = input;
                 if (!_currentPeriodTime.HasValue)

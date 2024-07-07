@@ -13,8 +13,8 @@
  * limitations under the License.
 */
 
-using QuantConnect.Interfaces;
 using System;
+using QuantConnect.Interfaces;
 
 namespace QuantConnect.Commands
 {

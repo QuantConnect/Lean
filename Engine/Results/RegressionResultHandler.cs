@@ -52,16 +52,22 @@ namespace QuantConnect.Lean.Engine.Results
 
         // this defaults to false since it can create massive files. a full regression run takes about 800MB
         // for each folder (800MB for ./passed and 800MB for ./regression)
-        private static readonly bool HighFidelityLogging = Config.GetBool("regression-high-fidelity-logging", false);
+        private static readonly bool HighFidelityLogging = Config.GetBool(
+            "regression-high-fidelity-logging",
+            false
+        );
 
-        private static readonly bool IsTest = !Process.GetCurrentProcess().ProcessName.Contains("Lean.Launcher");
+        private static readonly bool IsTest = !Process
+            .GetCurrentProcess()
+            .ProcessName.Contains("Lean.Launcher");
 
         /// <summary>
         /// Gets the path used for logging all portfolio changing events, such as orders, TPV, daily holdings values
         /// </summary>
-        public string LogFilePath => IsTest
-            ? $"./regression/{AlgorithmId}.{Language.ToLower()}.details.log"
-            : $"./{AlgorithmId}/{DateTime.Now:yyyy-MM-dd-hh-mm-ss}.{Language.ToLower()}.details.log";
+        public string LogFilePath =>
+            IsTest
+                ? $"./regression/{AlgorithmId}.{Language.ToLower()}.details.log"
+                : $"./{AlgorithmId}/{DateTime.Now:yyyy-MM-dd-hh-mm-ss}.{Language.ToLower()}.details.log";
 
         /// <summary>
         /// True if there was a runtime error running the algorithm
@@ -113,7 +119,9 @@ namespace QuantConnect.Lean.Engine.Results
         {
             lock (_sync)
             {
-                WriteLine($"{Algorithm.UtcTime}: Total Portfolio Value: {Algorithm.Portfolio.TotalPortfolioValue}");
+                WriteLine(
+                    $"{Algorithm.UtcTime}: Total Portfolio Value: {Algorithm.Portfolio.TotalPortfolioValue}"
+                );
 
                 // write the entire cashbook each day, includes current conversion rates and total value of cash holdings
                 WriteLine($"{Environment.NewLine}{Algorithm.Portfolio.CashBook}");
@@ -129,12 +137,12 @@ namespace QuantConnect.Lean.Engine.Results
 
                     // detailed logging of security holdings
                     WriteLine(
-                        $"{Algorithm.UtcTime}: " +
-                        $"Holdings: {symbol.Value} ({symbol.ID}): " +
-                        $"Price: {security.Price} " +
-                        $"Quantity: {security.Holdings.Quantity} " +
-                        $"Value: {security.Holdings.HoldingsValue} " +
-                        $"LastData: {security.GetLastData()}"
+                        $"{Algorithm.UtcTime}: "
+                            + $"Holdings: {symbol.Value} ({symbol.ID}): "
+                            + $"Price: {security.Price} "
+                            + $"Quantity: {security.Holdings.Quantity} "
+                            + $"Value: {security.Holdings.HoldingsValue} "
+                            + $"LastData: {security.GetLastData()}"
                     );
                 }
             }
@@ -160,7 +168,13 @@ namespace QuantConnect.Lean.Engine.Results
                 WriteLine($"     Event: {newEvent}");
                 WriteLine($"  Position: {Algorithm.Portfolio[newEvent.Symbol].Quantity}");
                 SecurityHolding underlyingHolding;
-                if (newEvent.Symbol.HasUnderlying && Algorithm.Portfolio.TryGetValue(newEvent.Symbol.Underlying, out underlyingHolding))
+                if (
+                    newEvent.Symbol.HasUnderlying
+                    && Algorithm.Portfolio.TryGetValue(
+                        newEvent.Symbol.Underlying,
+                        out underlyingHolding
+                    )
+                )
                 {
                     WriteLine($"Underlying: {underlyingHolding.Quantity}");
                 }
@@ -258,7 +272,10 @@ namespace QuantConnect.Lean.Engine.Results
                     _lastRuntimeStatisticsDate = Algorithm.Time.Date;
 
                     string existingValue;
-                    if (!_currentRuntimeStatistics.TryGetValue(key, out existingValue) || existingValue != value)
+                    if (
+                        !_currentRuntimeStatistics.TryGetValue(key, out existingValue)
+                        || existingValue != value
+                    )
                     {
                         _currentRuntimeStatistics[key] = value;
                         WriteLine($"RuntimeStatistic: {key}: {value}");
@@ -293,8 +310,8 @@ namespace QuantConnect.Lean.Engine.Results
 
             if (changes.AddedSecurities.Count > 0)
             {
-                var added = changes.AddedSecurities
-                    .Select(security => security.Symbol.ToString())
+                var added = changes
+                    .AddedSecurities.Select(security => security.Symbol.ToString())
                     .OrderBy(symbol => symbol);
 
                 WriteLine($"OnSecuritiesChanged:ADD: {string.Join("|", added)}");
@@ -302,8 +319,8 @@ namespace QuantConnect.Lean.Engine.Results
 
             if (changes.RemovedSecurities.Count > 0)
             {
-                var removed = changes.RemovedSecurities
-                    .Select(security => security.Symbol.ToString())
+                var removed = changes
+                    .RemovedSecurities.Select(security => security.Symbol.ToString())
                     .OrderBy(symbol => symbol);
 
                 WriteLine($"OnSecuritiesChanged:REM: {string.Join("|", removed)}");
@@ -328,7 +345,7 @@ namespace QuantConnect.Lean.Engine.Results
                         var data = new Dictionary<Symbol, List<BaseData>>();
                         foreach (var kvp in slice.Bars)
                         {
-                            data.Add(kvp.Key, (BaseData) kvp.Value);
+                            data.Add(kvp.Key, (BaseData)kvp.Value);
                         }
 
                         foreach (var kvp in slice.QuoteBars)
@@ -340,35 +357,37 @@ namespace QuantConnect.Lean.Engine.Results
                         {
                             foreach (var tick in kvp.Value)
                             {
-                                data.Add(kvp.Key, (BaseData) tick);
+                                data.Add(kvp.Key, (BaseData)tick);
                             }
                         }
 
                         foreach (var kvp in slice.Delistings)
                         {
-                            data.Add(kvp.Key, (BaseData) kvp.Value);
+                            data.Add(kvp.Key, (BaseData)kvp.Value);
                         }
 
                         foreach (var kvp in slice.Splits)
                         {
-                            data.Add(kvp.Key, (BaseData) kvp.Value);
+                            data.Add(kvp.Key, (BaseData)kvp.Value);
                         }
 
                         foreach (var kvp in slice.SymbolChangedEvents)
                         {
-                            data.Add(kvp.Key, (BaseData) kvp.Value);
+                            data.Add(kvp.Key, (BaseData)kvp.Value);
                         }
 
                         foreach (var kvp in slice.Dividends)
                         {
-                            data.Add(kvp.Key, (BaseData) kvp.Value);
+                            data.Add(kvp.Key, (BaseData)kvp.Value);
                         }
 
                         foreach (var kvp in data.OrderBy(kvp => kvp.Key))
                         {
                             foreach (var item in kvp.Value)
                             {
-                                WriteLine($"{Algorithm.UtcTime}: Slice: DataTime: {item.EndTime} {item}");
+                                WriteLine(
+                                    $"{Algorithm.UtcTime}: Slice: DataTime: {item.EndTime} {item}"
+                                );
                             }
                         }
                     }
@@ -394,8 +413,11 @@ namespace QuantConnect.Lean.Engine.Results
         {
             if (!ExitTriggered && Algorithm != null)
             {
-                var holdings = Algorithm.Portfolio.Values.Where(holding => holding.Invested).Select(holding => $"HOLDINGS:: {holding}").ToList();
-                if(holdings.Count > 0)
+                var holdings = Algorithm
+                    .Portfolio.Values.Where(holding => holding.Invested)
+                    .Select(holding => $"HOLDINGS:: {holding}")
+                    .ToList();
+                if (holdings.Count > 0)
                 {
                     Log.Trace($"{Environment.NewLine}{string.Join(Environment.NewLine, holdings)}");
                 }
@@ -414,12 +436,14 @@ namespace QuantConnect.Lean.Engine.Results
                     // only log final statistics and we want them to all be together
                     foreach (var kvp in RuntimeStatistics.OrderBy(kvp => kvp.Key))
                     {
-                        WriteLine($"{kvp.Key,-15}\t{kvp.Value}");
+                        WriteLine($"{kvp.Key, -15}\t{kvp.Value}");
                     }
 
                     var end = DateTime.UtcNow;
                     var delta = end - _testStartTime;
-                    WriteLine($"{end}: Completed regression test, took: {delta.TotalSeconds:0.0} seconds");
+                    WriteLine(
+                        $"{end}: Completed regression test, took: {delta.TotalSeconds:0.0} seconds"
+                    );
                     _writer.DisposeSafely();
                     _writer = null;
                 }
@@ -447,30 +471,38 @@ namespace QuantConnect.Lean.Engine.Results
             if (Config.GetBool("forward-console-messages", true))
             {
                 // we need to forward Console.Write messages to the algorithm's Debug function
-                Console.SetOut(new FuncTextWriter(msg =>
-                {
-                    algorithm.Debug(msg);
-                    WriteLine($"DEBUG: {msg}");
-                }));
-                Console.SetError(new FuncTextWriter(msg =>
-                {
-                    algorithm.Error(msg);
-                    WriteLine($"ERROR: {msg}");
-                }));
+                Console.SetOut(
+                    new FuncTextWriter(msg =>
+                    {
+                        algorithm.Debug(msg);
+                        WriteLine($"DEBUG: {msg}");
+                    })
+                );
+                Console.SetError(
+                    new FuncTextWriter(msg =>
+                    {
+                        algorithm.Error(msg);
+                        WriteLine($"ERROR: {msg}");
+                    })
+                );
             }
             else
             {
                 // we need to forward Console.Write messages to the standard Log functions
-                Console.SetOut(new FuncTextWriter(msg =>
-                {
-                    Log.Trace(msg);
-                    WriteLine($"DEBUG: {msg}");
-                }));
-                Console.SetError(new FuncTextWriter(msg =>
-                {
-                    Log.Error(msg);
-                    WriteLine($"ERROR: {msg}");
-                }));
+                Console.SetOut(
+                    new FuncTextWriter(msg =>
+                    {
+                        Log.Trace(msg);
+                        WriteLine($"DEBUG: {msg}");
+                    })
+                );
+                Console.SetError(
+                    new FuncTextWriter(msg =>
+                    {
+                        Log.Error(msg);
+                        WriteLine($"ERROR: {msg}");
+                    })
+                );
             }
         }
 

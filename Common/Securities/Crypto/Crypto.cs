@@ -13,13 +13,13 @@
  * limitations under the License.
 */
 
+using System;
 using QuantConnect.Data;
 using QuantConnect.Data.Market;
 using QuantConnect.Orders.Fees;
 using QuantConnect.Orders.Fills;
 using QuantConnect.Orders.Slippage;
 using QuantConnect.Securities.Forex;
-using System;
 
 namespace QuantConnect.Securities.Crypto
 {
@@ -49,14 +49,17 @@ namespace QuantConnect.Securities.Crypto
         /// <param name="currencyConverter">Currency converter used to convert <see cref="CashAmount"/>
         /// instances into units of the account currency</param>
         /// <param name="registeredTypes">Provides all data types registered in the algorithm</param>
-        public Crypto(SecurityExchangeHours exchangeHours,
+        public Crypto(
+            SecurityExchangeHours exchangeHours,
             Cash quoteCurrency,
             Cash baseCurrency,
             SubscriptionDataConfig config,
             SymbolProperties symbolProperties,
             ICurrencyConverter currencyConverter,
-            IRegisteredSecurityDataTypesProvider registeredTypes)
-            : base(config,
+            IRegisteredSecurityDataTypesProvider registeredTypes
+        )
+            : base(
+                config,
                 quoteCurrency,
                 symbolProperties,
                 new CryptoExchange(exchangeHours),
@@ -73,7 +76,7 @@ namespace QuantConnect.Securities.Crypto
                 currencyConverter,
                 registeredTypes,
                 Securities.MarginInterestRateModel.Null
-                )
+            )
         {
             BaseCurrency = baseCurrency;
             Holdings = new CryptoHolding(this, currencyConverter);
@@ -91,15 +94,18 @@ namespace QuantConnect.Securities.Crypto
         /// instances into units of the account currency</param>
         /// <param name="registeredTypes">Provides all data types registered in the algorithm</param>
         /// <param name="securityCache">Cache to store <see cref="Security"/> data</param>
-        public Crypto(Symbol symbol,
+        public Crypto(
+            Symbol symbol,
             SecurityExchangeHours exchangeHours,
             Cash quoteCurrency,
             Cash baseCurrency,
             SymbolProperties symbolProperties,
             ICurrencyConverter currencyConverter,
             IRegisteredSecurityDataTypesProvider registeredTypes,
-            SecurityCache securityCache)
-            : base(symbol,
+            SecurityCache securityCache
+        )
+            : base(
+                symbol,
                 quoteCurrency,
                 symbolProperties,
                 new CryptoExchange(exchangeHours),
@@ -116,7 +122,7 @@ namespace QuantConnect.Securities.Crypto
                 currencyConverter,
                 registeredTypes,
                 Securities.MarginInterestRateModel.Null
-                )
+            )
         {
             BaseCurrency = baseCurrency;
             Holdings = new CryptoHolding(this, currencyConverter);
@@ -134,7 +140,12 @@ namespace QuantConnect.Securities.Crypto
         /// <param name="symbolProperties">The symbol properties for this security</param>
         /// <param name="baseCurrency">The output base currency</param>
         /// <param name="quoteCurrency">The output quote currency</param>
-        public static void DecomposeCurrencyPair(Symbol symbol, SymbolProperties symbolProperties, out string baseCurrency, out string quoteCurrency)
+        public static void DecomposeCurrencyPair(
+            Symbol symbol,
+            SymbolProperties symbolProperties,
+            out string baseCurrency,
+            out string quoteCurrency
+        )
         {
             quoteCurrency = symbolProperties.QuoteCurrency;
             if (symbol.Value.EndsWith(quoteCurrency))

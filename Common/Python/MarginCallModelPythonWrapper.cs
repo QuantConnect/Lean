@@ -13,27 +13,27 @@
  * limitations under the License.
 */
 
+using System;
+using System.Collections.Generic;
 using Python.Runtime;
 using QuantConnect.Orders;
 using QuantConnect.Securities;
-using System;
-using System.Collections.Generic;
 
 namespace QuantConnect.Python
 {
     /// <summary>
     /// Provides a margin call model that wraps a <see cref="PyObject"/> object that represents the model responsible for picking which orders should be executed during a margin call
     /// </summary>
-    public class MarginCallModelPythonWrapper : BasePythonWrapper<IMarginCallModel>, IMarginCallModel
+    public class MarginCallModelPythonWrapper
+        : BasePythonWrapper<IMarginCallModel>,
+            IMarginCallModel
     {
         /// <summary>
         /// Constructor for initialising the <see cref="MarginCallModelPythonWrapper"/> class with wrapped <see cref="PyObject"/> object
         /// </summary>
         /// <param name="model">Represents the model responsible for picking which orders should be executed during a margin call</param>
         public MarginCallModelPythonWrapper(PyObject model)
-            : base(model)
-        {
-        }
+            : base(model) { }
 
         /// <summary>
         /// Executes synchronous orders to bring the account within margin requirements.
@@ -41,11 +41,16 @@ namespace QuantConnect.Python
         /// <param name="generatedMarginCallOrders">These are the margin call orders that were generated
         /// by individual security margin models.</param>
         /// <returns>The list of orders that were actually executed</returns>
-        public List<OrderTicket> ExecuteMarginCall(IEnumerable<SubmitOrderRequest> generatedMarginCallOrders)
+        public List<OrderTicket> ExecuteMarginCall(
+            IEnumerable<SubmitOrderRequest> generatedMarginCallOrders
+        )
         {
             using (Py.GIL())
             {
-                var marginCalls = InvokeMethod(nameof(ExecuteMarginCall), generatedMarginCallOrders);
+                var marginCalls = InvokeMethod(
+                    nameof(ExecuteMarginCall),
+                    generatedMarginCallOrders
+                );
 
                 // Since ExecuteMarginCall may return a python list
                 // Need to convert to C# list
@@ -82,8 +87,10 @@ namespace QuantConnect.Python
                 // a tuple where the out parameter comes after the other returned values
                 if (!PyTuple.IsTupleType(value))
                 {
-                    throw new ArgumentException($@"{(Instance as dynamic).__class__.__name__}.GetMarginCallOrders(): {
-                        Messages.MarginCallModelPythonWrapper.GetMarginCallOrdersMustReturnTuple}");
+                    throw new ArgumentException(
+                        $@"{(Instance as dynamic).__class__.__name__}.GetMarginCallOrders(): {
+                        Messages.MarginCallModelPythonWrapper.GetMarginCallOrdersMustReturnTuple}"
+                    );
                 }
 
                 // In this case, the first item holds the list of margin calls

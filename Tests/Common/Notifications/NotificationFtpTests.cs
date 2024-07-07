@@ -13,10 +13,10 @@
  * limitations under the License.
 */
 
-using NUnit.Framework;
-using QuantConnect.Notifications;
 using System;
 using System.Text;
+using NUnit.Framework;
+using QuantConnect.Notifications;
 
 namespace QuantConnect.Tests.Common.Notifications
 {
@@ -28,7 +28,13 @@ namespace QuantConnect.Tests.Common.Notifications
         [Test]
         public void PortDefaultsTo21()
         {
-            var notification = new NotificationFtp("qc.com", "username", "password", "path/to/file.json", _testContent);
+            var notification = new NotificationFtp(
+                "qc.com",
+                "username",
+                "password",
+                "path/to/file.json",
+                _testContent
+            );
             Assert.AreEqual(21, notification.Port);
         }
 
@@ -36,14 +42,33 @@ namespace QuantConnect.Tests.Common.Notifications
         [TestCase("")]
         public void ThrowsOnMissingPassword(string password)
         {
-            Assert.Throws<ArgumentException>(() => new NotificationFtp("qc.com", "username", password, "path/to/file.json", _testContent));
+            Assert.Throws<ArgumentException>(
+                () =>
+                    new NotificationFtp(
+                        "qc.com",
+                        "username",
+                        password,
+                        "path/to/file.json",
+                        _testContent
+                    )
+            );
         }
 
         [TestCase(null)]
         [TestCase("")]
         public void ThrowsOnMissingSSHKeys(string privateKey)
         {
-            Assert.Throws<ArgumentException>(() => new NotificationFtp("qc.com", "username", privateKey, "", "path/to/file.json", _testContent));
+            Assert.Throws<ArgumentException>(
+                () =>
+                    new NotificationFtp(
+                        "qc.com",
+                        "username",
+                        privateKey,
+                        "",
+                        "path/to/file.json",
+                        _testContent
+                    )
+            );
         }
 
         // Protocol as in a URI
@@ -58,24 +83,44 @@ namespace QuantConnect.Tests.Common.Notifications
         [TestCase(@"qc.com")]
         public void NormalizesHostname(string hostname)
         {
-            var notification = new NotificationFtp(hostname, "username", "password", "path/to/file.json", _testContent);
+            var notification = new NotificationFtp(
+                hostname,
+                "username",
+                "password",
+                "path/to/file.json",
+                _testContent
+            );
             Assert.AreEqual("qc.com", notification.Hostname);
         }
 
         [Test]
         public void EncodesBytesFileContent()
         {
-            var contentStr = @"{""someKey"": ""this is a sample json file"", ""anotherKey"": 123456}";
+            var contentStr =
+                @"{""someKey"": ""this is a sample json file"", ""anotherKey"": 123456}";
             var contentBytes = Encoding.ASCII.GetBytes(contentStr);
-            var notification = new NotificationFtp("qc.com", "username", "password", "path/to/file.json", contentBytes);
+            var notification = new NotificationFtp(
+                "qc.com",
+                "username",
+                "password",
+                "path/to/file.json",
+                contentBytes
+            );
             AssertEncoding(contentStr, notification);
         }
 
         [Test]
         public void EncodesStringFileContent()
         {
-            var contentStr = @"{""someKey"": ""this is a sample json file"", ""anotherKey"": 123456}";
-            var notification = new NotificationFtp("qc.com", "username", "password", "path/to/file.json", contentStr);
+            var contentStr =
+                @"{""someKey"": ""this is a sample json file"", ""anotherKey"": 123456}";
+            var notification = new NotificationFtp(
+                "qc.com",
+                "username",
+                "password",
+                "path/to/file.json",
+                contentStr
+            );
             AssertEncoding(contentStr, notification);
         }
 

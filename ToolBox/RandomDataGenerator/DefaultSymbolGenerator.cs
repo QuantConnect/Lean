@@ -38,7 +38,10 @@ namespace QuantConnect.ToolBox.RandomDataGenerator
         /// </summary>
         /// <param name="settings">random data generation run settings</param>
         /// <param name="random">produces random values for use in random data generation</param>
-        public DefaultSymbolGenerator(RandomDataGeneratorSettings settings, IRandomValueGenerator random)
+        public DefaultSymbolGenerator(
+            RandomDataGeneratorSettings settings,
+            IRandomValueGenerator random
+        )
             : base(settings, random)
         {
             _market = settings.Market;
@@ -46,7 +49,7 @@ namespace QuantConnect.ToolBox.RandomDataGenerator
         }
 
         /// <summary>
-        /// Generates a single-item list at a time using base random implementation 
+        /// Generates a single-item list at a time using base random implementation
         /// </summary>
         /// <returns></returns>
         protected override IEnumerable<Symbol> GenerateAsset(string ticker = null)
@@ -64,7 +67,11 @@ namespace QuantConnect.ToolBox.RandomDataGenerator
             // check the Symbol properties database to determine how many symbols we can generate
             // if there is a wildcard entry, we can generate as many symbols as we want
             // if there is no wildcard entry, we can only generate as many symbols as there are entries
-            return SymbolPropertiesDatabase.ContainsKey(_market, SecurityDatabaseKey.Wildcard, _securityType)
+            return SymbolPropertiesDatabase.ContainsKey(
+                _market,
+                SecurityDatabaseKey.Wildcard,
+                _securityType
+            )
                 ? int.MaxValue
                 : SymbolPropertiesDatabase.GetSymbolPropertiesList(_market, _securityType).Count();
         }

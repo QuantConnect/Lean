@@ -15,9 +15,9 @@
 */
 
 using System;
+using Newtonsoft.Json;
 using ProtoBuf;
 using Python.Runtime;
-using Newtonsoft.Json;
 using QuantConnect.Securities;
 
 namespace QuantConnect
@@ -31,9 +31,11 @@ namespace QuantConnect
     [ProtoContract(SkipConstructor = true)]
     public sealed class Symbol : IEquatable<Symbol>, IComparable
     {
-        private static readonly Lazy<SecurityDefinitionSymbolResolver> _securityDefinitionSymbolResolver = new (() => SecurityDefinitionSymbolResolver.GetInstance());
+        private static readonly Lazy<SecurityDefinitionSymbolResolver> _securityDefinitionSymbolResolver =
+            new(() => SecurityDefinitionSymbolResolver.GetInstance());
 
         private Symbol _canonical;
+
         // for performance we register how we compare with empty
         private bool? _isEmpty;
 
@@ -59,7 +61,13 @@ namespace QuantConnect
         /// adding the same security from different markets</param>
         /// <param name="baseDataType">Optional for <see cref="SecurityType.Base"/> and used for generating the base data SID</param>
         /// <returns>A new Symbol object for the specified ticker</returns>
-        public static Symbol Create(string ticker, SecurityType securityType, string market, string alias = null, Type baseDataType = null)
+        public static Symbol Create(
+            string ticker,
+            SecurityType securityType,
+            string market,
+            string alias = null,
+            Type baseDataType = null
+        )
         {
             SecurityIdentifier sid;
 
@@ -86,10 +94,21 @@ namespace QuantConnect
                     break;
 
                 case SecurityType.Option:
-                    return CreateOption(ticker, market, default, default, default, SecurityIdentifier.DefaultDate);
+                    return CreateOption(
+                        ticker,
+                        market,
+                        default,
+                        default,
+                        default,
+                        SecurityIdentifier.DefaultDate
+                    );
 
                 case SecurityType.Future:
-                    sid = SecurityIdentifier.GenerateFuture(SecurityIdentifier.DefaultDate, ticker, market);
+                    sid = SecurityIdentifier.GenerateFuture(
+                        SecurityIdentifier.DefaultDate,
+                        ticker,
+                        market
+                    );
                     break;
 
                 case SecurityType.Crypto:
@@ -97,7 +116,11 @@ namespace QuantConnect
                     break;
 
                 case SecurityType.CryptoFuture:
-                    sid = SecurityIdentifier.GenerateCryptoFuture(SecurityIdentifier.DefaultDate, ticker, market);
+                    sid = SecurityIdentifier.GenerateCryptoFuture(
+                        SecurityIdentifier.DefaultDate,
+                        ticker,
+                        market
+                    );
                     break;
 
                 case SecurityType.IndexOption:
@@ -107,14 +130,19 @@ namespace QuantConnect
                         OptionStyle.European,
                         default,
                         default,
-                        SecurityIdentifier.DefaultDate);
+                        SecurityIdentifier.DefaultDate
+                    );
 
                 case SecurityType.FutureOption:
-                    throw new NotImplementedException(Messages.Symbol.InsufficientInformationToCreateFutureOptionSymbol);
+                    throw new NotImplementedException(
+                        Messages.Symbol.InsufficientInformationToCreateFutureOptionSymbol
+                    );
 
                 case SecurityType.Commodity:
                 default:
-                    throw new NotImplementedException(Messages.Symbol.SecurityTypeNotImplementedYet(securityType));
+                    throw new NotImplementedException(
+                        Messages.Symbol.SecurityTypeNotImplementedYet(securityType)
+                    );
             }
 
             return new Symbol(sid, alias ?? ticker);
@@ -155,14 +183,21 @@ namespace QuantConnect
         {
             // The SID Date is only defined for the following security types: base, equity, future, option.
             // Default to SecurityIdentifier.DefaultDate if there's no matching SecurityType
-            var firstDate = underlying.SecurityType == SecurityType.Equity ||
-                underlying.SecurityType.IsOption() ||
-                underlying.SecurityType == SecurityType.Future ||
-                underlying.SecurityType == SecurityType.Base
+            var firstDate =
+                underlying.SecurityType == SecurityType.Equity
+                || underlying.SecurityType.IsOption()
+                || underlying.SecurityType == SecurityType.Future
+                || underlying.SecurityType == SecurityType.Base
                     ? underlying.ID.Date
                     : (DateTime?)null;
 
-            var sid = SecurityIdentifier.GenerateBase(baseType, underlying.ID.Symbol, market ?? Market.USA, mapSymbol: false, date: firstDate);
+            var sid = SecurityIdentifier.GenerateBase(
+                baseType,
+                underlying.ID.Symbol,
+                market ?? Market.USA,
+                mapSymbol: false,
+                date: firstDate
+            );
             return new Symbol(sid, underlying.Value, underlying);
         }
 
@@ -179,7 +214,16 @@ namespace QuantConnect
         /// adding the same security from different markets</param>
         /// <param name="mapSymbol">Specifies if symbol should be mapped using map file provider</param>
         /// <returns>A new Symbol object for the specified option contract</returns>
-        public static Symbol CreateOption(string underlying, string market, OptionStyle style, OptionRight right, decimal strike, DateTime expiry, string alias = null, bool mapSymbol = true)
+        public static Symbol CreateOption(
+            string underlying,
+            string market,
+            OptionStyle style,
+            OptionRight right,
+            decimal strike,
+            DateTime expiry,
+            string alias = null,
+            bool mapSymbol = true
+        )
         {
             var underlyingSid = SecurityIdentifier.GenerateEquity(underlying, market, mapSymbol);
             var underlyingSymbol = new Symbol(underlyingSid, underlying);
@@ -199,9 +243,26 @@ namespace QuantConnect
         /// <param name="alias">An alias to be used for the symbol cache. Required when
         /// adding the same security from diferent markets</param>
         /// <returns>A new Symbol object for the specified option contract</returns>
-        public static Symbol CreateOption(Symbol underlyingSymbol, string market, OptionStyle style, OptionRight right, decimal strike, DateTime expiry, string alias = null)
+        public static Symbol CreateOption(
+            Symbol underlyingSymbol,
+            string market,
+            OptionStyle style,
+            OptionRight right,
+            decimal strike,
+            DateTime expiry,
+            string alias = null
+        )
         {
-            return CreateOption(underlyingSymbol, null, market, style, right, strike, expiry, alias);
+            return CreateOption(
+                underlyingSymbol,
+                null,
+                market,
+                style,
+                right,
+                strike,
+                expiry,
+                alias
+            );
         }
 
         /// <summary>
@@ -217,9 +278,26 @@ namespace QuantConnect
         /// <param name="alias">An alias to be used for the symbol cache. Required when
         /// adding the same security from diferent markets</param>
         /// <returns>A new Symbol object for the specified option contract</returns>
-        public static Symbol CreateOption(Symbol underlyingSymbol, string targetOption, string market, OptionStyle style, OptionRight right, decimal strike, DateTime expiry, string alias = null)
+        public static Symbol CreateOption(
+            Symbol underlyingSymbol,
+            string targetOption,
+            string market,
+            OptionStyle style,
+            OptionRight right,
+            decimal strike,
+            DateTime expiry,
+            string alias = null
+        )
         {
-            var sid = SecurityIdentifier.GenerateOption(expiry, underlyingSymbol.ID, targetOption, market, strike, right, style);
+            var sid = SecurityIdentifier.GenerateOption(
+                expiry,
+                underlyingSymbol.ID,
+                targetOption,
+                market,
+                strike,
+                right,
+                style
+            );
 
             return new Symbol(sid, alias ?? GetAlias(sid, underlyingSymbol), underlyingSymbol);
         }
@@ -232,7 +310,11 @@ namespace QuantConnect
         /// <param name="alias">An alias to be used for the symbol cache. Required when
         /// adding the same security from different markets</param>
         /// <returns>New Canonical Option</returns>
-        public static Symbol CreateCanonicalOption(Symbol underlyingSymbol, string market = null, string alias = null)
+        public static Symbol CreateCanonicalOption(
+            Symbol underlyingSymbol,
+            string market = null,
+            string alias = null
+        )
         {
             return CreateCanonicalOption(underlyingSymbol, null, market, alias);
         }
@@ -246,21 +328,27 @@ namespace QuantConnect
         /// <param name="alias">An alias to be used for the symbol cache. Required when
         /// adding the same security from different markets</param>
         /// <returns>New Canonical Option</returns>
-        public static Symbol CreateCanonicalOption(Symbol underlyingSymbol, string targetOption, string market = null, string alias = null)
+        public static Symbol CreateCanonicalOption(
+            Symbol underlyingSymbol,
+            string targetOption,
+            string market = null,
+            string alias = null
+        )
         {
             var optionType = GetOptionTypeFromUnderlying(underlyingSymbol);
             market ??= underlyingSymbol.ID.Market;
 
-            return CreateOption(underlyingSymbol,
+            return CreateOption(
+                underlyingSymbol,
                 targetOption,
                 market,
                 optionType.DefaultOptionStyle(),
                 default,
                 default,
                 SecurityIdentifier.DefaultDate,
-                alias);
+                alias
+            );
         }
-
 
         /// <summary>
         /// Provides a convenience method for creating a future Symbol.
@@ -271,7 +359,12 @@ namespace QuantConnect
         /// <param name="alias">An alias to be used for the symbol cache. Required when
         /// adding the same security from different markets</param>
         /// <returns>A new Symbol object for the specified future contract</returns>
-        public static Symbol CreateFuture(string ticker, string market, DateTime expiry, string alias = null)
+        public static Symbol CreateFuture(
+            string ticker,
+            string market,
+            DateTime expiry,
+            string alias = null
+        )
         {
             var sid = SecurityIdentifier.GenerateFuture(expiry, ticker, market);
 
@@ -284,10 +377,11 @@ namespace QuantConnect
         /// <returns>true, if symbol is a derivative canonical symbol</returns>
         public bool IsCanonical()
         {
-            return
-                (ID.SecurityType == SecurityType.Future ||
-                (ID.SecurityType.IsOption() && HasUnderlying)) &&
-                ID.Date == SecurityIdentifier.DefaultDate;
+            return (
+                    ID.SecurityType == SecurityType.Future
+                    || (ID.SecurityType.IsOption() && HasUnderlying)
+                )
+                && ID.Date == SecurityIdentifier.DefaultDate;
         }
 
         /// <summary>
@@ -328,7 +422,8 @@ namespace QuantConnect
         /// </summary>
         public bool HasCanonical()
         {
-            return !IsCanonical() && (SecurityType.IsOption() || SecurityType == SecurityType.Future);
+            return !IsCanonical()
+                && (SecurityType.IsOption() || SecurityType == SecurityType.Future);
         }
 
         /// <summary>
@@ -381,7 +476,6 @@ namespace QuantConnect
         [ProtoMember(3)]
         public Symbol Underlying { get; private set; }
 
-
         /// <summary>
         /// Gets the security type of the symbol
         /// </summary>
@@ -393,27 +487,42 @@ namespace QuantConnect
         /// <summary>
         /// The Committee on Uniform Securities Identification Procedures (CUSIP) number corresponding to this <see cref="Symbol"/>
         /// </summary>
-        public string CUSIP { get { return _securityDefinitionSymbolResolver.Value.CUSIP(this); } }
+        public string CUSIP
+        {
+            get { return _securityDefinitionSymbolResolver.Value.CUSIP(this); }
+        }
 
         /// <summary>
         /// The composite Financial Instrument Global Identifier (FIGI) corresponding to this <see cref="Symbol"/>
         /// </summary>
-        public string CompositeFIGI { get { return _securityDefinitionSymbolResolver.Value.CompositeFIGI(this); } }
+        public string CompositeFIGI
+        {
+            get { return _securityDefinitionSymbolResolver.Value.CompositeFIGI(this); }
+        }
 
         /// <summary>
         /// The Stock Exchange Daily Official List (SEDOL) security identifier corresponding to this <see cref="Symbol"/>
         /// </summary>
-        public string SEDOL { get { return _securityDefinitionSymbolResolver.Value.SEDOL(this); } }
+        public string SEDOL
+        {
+            get { return _securityDefinitionSymbolResolver.Value.SEDOL(this); }
+        }
 
         /// <summary>
         /// The International Securities Identification Number (ISIN) corresponding to this <see cref="Symbol"/>
         /// </summary>
-        public string ISIN { get { return _securityDefinitionSymbolResolver.Value.ISIN(this); } }
+        public string ISIN
+        {
+            get { return _securityDefinitionSymbolResolver.Value.ISIN(this); }
+        }
 
         /// <summary>
         /// The Central Index Key number (CIK) corresponding to this <see cref="Symbol"/>
         /// </summary>
-        public int? CIK { get { return _securityDefinitionSymbolResolver.Value.CIK(this); } }
+        public int? CIK
+        {
+            get { return _securityDefinitionSymbolResolver.Value.CIK(this); }
+        }
 
         #endregion
 
@@ -448,10 +557,12 @@ namespace QuantConnect
             // Throw for any option SecurityType that is not for equities, we don't support mapping for them (FOPs and Index Options)
             if (ID.SecurityType.IsOption() && SecurityType != SecurityType.Option)
             {
-                throw new ArgumentException(Messages.Symbol.SecurityTypeCannotBeMapped(ID.SecurityType));
+                throw new ArgumentException(
+                    Messages.Symbol.SecurityTypeCannotBeMapped(ID.SecurityType)
+                );
             }
 
-            if(ID.SecurityType == SecurityType.Future)
+            if (ID.SecurityType == SecurityType.Future)
             {
                 if (mappedSymbol == Value)
                 {
@@ -491,7 +602,12 @@ namespace QuantConnect
             if (SecurityType == SecurityType.Option)
             {
                 mappedSymbol = !IsCanonical()
-                    ? SymbolRepresentation.GenerateOptionTickerOSI(mappedSymbol, ID.OptionRight, ID.StrikePrice, ID.Date)
+                    ? SymbolRepresentation.GenerateOptionTickerOSI(
+                        mappedSymbol,
+                        ID.OptionRight,
+                        ID.StrikePrice,
+                        ID.Date
+                    )
                     : Value;
             }
 
@@ -526,7 +642,9 @@ namespace QuantConnect
                 case SecurityType.Index:
                     return SecurityType.IndexOption;
                 default:
-                    throw new ArgumentException(Messages.Symbol.NoOptionTypeForUnderlying(securityType));
+                    throw new ArgumentException(
+                        Messages.Symbol.NoOptionTypeForUnderlying(securityType)
+                    );
             }
         }
 
@@ -547,7 +665,9 @@ namespace QuantConnect
                 case SecurityType.IndexOption:
                     return SecurityType.Index;
                 default:
-                    throw new ArgumentException(Messages.Symbol.NoUnderlyingForOption(securityType));
+                    throw new ArgumentException(
+                        Messages.Symbol.NoUnderlyingForOption(securityType)
+                    );
             }
         }
 
@@ -581,8 +701,10 @@ namespace QuantConnect
         /// <param name="obj">The object to compare with the current object. </param><filterpriority>2</filterpriority>
         public override bool Equals(object obj)
         {
-            if (ReferenceEquals(null, obj)) return false;
-            if (ReferenceEquals(this, obj)) return true;
+            if (ReferenceEquals(null, obj))
+                return false;
+            if (ReferenceEquals(this, obj))
+                return true;
 
             // compare strings just as you would a symbol object
             var sidString = obj as string;
@@ -598,10 +720,11 @@ namespace QuantConnect
             // compare a sid just as you would a symbol object
             if (obj is SecurityIdentifier)
             {
-                return ID.Equals((SecurityIdentifier) obj);
+                return ID.Equals((SecurityIdentifier)obj);
             }
 
-            if (obj.GetType() != GetType()) return false;
+            if (obj.GetType() != GetType())
+                return false;
             return Equals((Symbol)obj);
         }
 
@@ -615,7 +738,10 @@ namespace QuantConnect
         public override int GetHashCode()
         {
             // only SID is used for comparisons
-            unchecked { return ID.GetHashCode(); }
+            unchecked
+            {
+                return ID.GetHashCode();
+            }
         }
 
         /// <summary>
@@ -666,10 +792,10 @@ namespace QuantConnect
         /// <param name="other">An object to compare with this object.</param>
         public bool Equals(Symbol other)
         {
-            if (ReferenceEquals(this, other)) return true;
+            if (ReferenceEquals(this, other))
+                return true;
 
-            if (ReferenceEquals(other, null)
-                || ReferenceEquals(other, Empty))
+            if (ReferenceEquals(other, null) || ReferenceEquals(other, Empty))
             {
                 // other is null or empty (equivalents)
                 // so we need to know how We compare with Empty
@@ -762,15 +888,34 @@ namespace QuantConnect
         // we'll redirect a few common string methods to Value, but mark obsolete
 #pragma warning disable 1591
         [Obsolete("Symbol.Contains is a pass-through for Symbol.Value.Contains")]
-        public bool Contains(string value) { return Value.Contains(value); }
+        public bool Contains(string value)
+        {
+            return Value.Contains(value);
+        }
+
         [Obsolete("Symbol.EndsWith is a pass-through for Symbol.Value.EndsWith")]
-        public bool EndsWith(string value) { return Value.EndsWithInvariant(value); }
+        public bool EndsWith(string value)
+        {
+            return Value.EndsWithInvariant(value);
+        }
+
         [Obsolete("Symbol.StartsWith is a pass-through for Symbol.Value.StartsWith")]
-        public bool StartsWith(string value) { return Value.StartsWithInvariant(value); }
+        public bool StartsWith(string value)
+        {
+            return Value.StartsWithInvariant(value);
+        }
+
         [Obsolete("Symbol.ToLower is a pass-through for Symbol.Value.ToLower")]
-        public string ToLower() { return Value.ToLowerInvariant(); }
+        public string ToLower()
+        {
+            return Value.ToLowerInvariant();
+        }
+
         [Obsolete("Symbol.ToUpper is a pass-through for Symbol.Value.ToUpper")]
-        public string ToUpper() { return Value.LazyToUpper(); }
+        public string ToUpper()
+        {
+            return Value.LazyToUpper();
+        }
 #pragma warning restore 1591
 
         #endregion
@@ -778,7 +923,10 @@ namespace QuantConnect
         /// <summary>
         /// Centralized helper method to resolve alias for a symbol
         /// </summary>
-        public static string GetAlias(SecurityIdentifier securityIdentifier, Symbol underlying = null)
+        public static string GetAlias(
+            SecurityIdentifier securityIdentifier,
+            Symbol underlying = null
+        )
         {
             string sym;
             switch (securityIdentifier.SecurityType)
@@ -804,9 +952,15 @@ namespace QuantConnect
                         return $"?{sym.LazyToUpper()}";
                     }
 
-                    if (sym.Length > 5) sym += " ";
+                    if (sym.Length > 5)
+                        sym += " ";
 
-                    return SymbolRepresentation.GenerateOptionTickerOSI(sym, securityIdentifier.OptionRight, securityIdentifier.StrikePrice, securityIdentifier.Date);
+                    return SymbolRepresentation.GenerateOptionTickerOSI(
+                        sym,
+                        securityIdentifier.OptionRight,
+                        securityIdentifier.StrikePrice,
+                        securityIdentifier.Date
+                    );
                 case SecurityType.Future:
                     sym = securityIdentifier.Symbol;
                     if (securityIdentifier.Date == SecurityIdentifier.DefaultDate)

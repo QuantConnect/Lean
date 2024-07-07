@@ -54,7 +54,13 @@ namespace QuantConnect.Securities.Option
 
             // check if the expiration date is within the week containing 3rd Friday
             // we exclude monday, wednesday, and friday weeklys
-            return firstFriday + 7 + 5 /*sat -> wed */ < date.Day && date.Day < firstFriday + 2 * 7 + 2 /* sat, sun*/;
+            return firstFriday + 7 + 5 /*sat -> wed */
+                    < date.Day
+                && date.Day
+                    < firstFriday
+                        + 2 * 7
+                        + 2 /* sat, sun*/
+            ;
         }
 
         /// <summary>
@@ -75,7 +81,7 @@ namespace QuantConnect.Securities.Option
         /// <returns>The underlying ticker</returns>
         public static string MapToUnderlying(string optionTicker, SecurityType securityType)
         {
-            if(securityType == SecurityType.FutureOption || securityType == SecurityType.Future)
+            if (securityType == SecurityType.FutureOption || securityType == SecurityType.Future)
             {
                 return FuturesOptionsSymbolMappings.MapFromOption(optionTicker);
             }
@@ -101,16 +107,19 @@ namespace QuantConnect.Securities.Option
             int daysBefore = 0;
             var symbolDateTime = symbol.ID.Date;
 
-            if (IsStandard(symbol) &&
-                symbolDateTime.DayOfWeek == DayOfWeek.Saturday &&
-                symbolDateTime < new DateTime(2015, 2, 1))
+            if (
+                IsStandard(symbol)
+                && symbolDateTime.DayOfWeek == DayOfWeek.Saturday
+                && symbolDateTime < new DateTime(2015, 2, 1)
+            )
             {
                 daysBefore--;
             }
 
-            var exchangeHours = MarketHoursDatabase.FromDataFolder()
-                                              .GetEntry(symbol.ID.Market, symbol, symbol.SecurityType)
-                                              .ExchangeHours;
+            var exchangeHours = MarketHoursDatabase
+                .FromDataFolder()
+                .GetEntry(symbol.ID.Market, symbol, symbol.SecurityType)
+                .ExchangeHours;
 
             while (!exchangeHours.IsDateOpen(symbolDateTime.AddDays(daysBefore)))
             {
@@ -133,12 +142,13 @@ namespace QuantConnect.Securities.Option
                 return false;
             }
 
-            var exchangeHours = MarketHoursDatabase.FromDataFolder()
+            var exchangeHours = MarketHoursDatabase
+                .FromDataFolder()
                 .GetExchangeHours(symbol.ID.Market, symbol, symbol.SecurityType);
 
             var currentTime = currentTimeUtc.ConvertFromUtc(exchangeHours.TimeZone);
 
-            // Ideally we can calculate expiry on the date of the symbol ID, but if that exchange is not open on that day we 
+            // Ideally we can calculate expiry on the date of the symbol ID, but if that exchange is not open on that day we
             // will consider expired on the last trading day close before this; Example in AddOptionContractExpiresRegressionAlgorithm
             var expiryDay = exchangeHours.IsDateOpen(symbol.ID.Date)
                 ? symbol.ID.Date
@@ -153,11 +163,18 @@ namespace QuantConnect.Securities.Option
             {
                 lock (_optionExpirationErrorLog)
                 {
-                    if (symbol.ID.Underlying != null
+                    if (
+                        symbol.ID.Underlying != null
                         // let's log this once per underlying and expiration date: avoiding the same log for multiple option contracts with different strikes/rights
-                        && _optionExpirationErrorLog.TryAdd($"{symbol.ID.Underlying}-{symbol.ID.Date}", 1))
+                        && _optionExpirationErrorLog.TryAdd(
+                            $"{symbol.ID.Underlying}-{symbol.ID.Date}",
+                            1
+                        )
+                    )
                     {
-                        Logging.Log.Error($"OptionSymbol.IsOptionContractExpired(): limiting unexpected option expiration time for symbol {symbol.ID}. Symbol.ID.Date {symbol.ID.Date}. ExpiryTime: {expiryTime}");
+                        Logging.Log.Error(
+                            $"OptionSymbol.IsOptionContractExpired(): limiting unexpected option expiration time for symbol {symbol.ID}. Symbol.ID.Date {symbol.ID.Date}. ExpiryTime: {expiryTime}"
+                        );
                     }
                 }
                 expiryTime = symbol.ID.Date.AddDays(1).Date;

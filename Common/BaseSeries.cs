@@ -128,9 +128,7 @@ namespace QuantConnect
         /// <param name="type">Type of the chart series</param>
         /// <param name="unit">Unit of the series</param>
         protected BaseSeries(string name, SeriesType type, string unit)
-            : this(name, type, 0, unit)
-        {
-        }
+            : this(name, type, 0, unit) { }
 
         /// <summary>
         /// Add a new point to this series
@@ -237,11 +235,19 @@ namespace QuantConnect
         /// A <see cref="CandlestickSeries"/> if <paramref name="seriesType"/> is <see cref="SeriesType.Candle"/>.
         /// A <see cref="Series"/> otherwise.
         /// </returns>
-        public static BaseSeries Create(SeriesType seriesType, string name, int index = 0, string unit = "$")
+        public static BaseSeries Create(
+            SeriesType seriesType,
+            string name,
+            int index = 0,
+            string unit = "$"
+        )
         {
             if (!Enum.IsDefined(typeof(SeriesType), seriesType))
             {
-                throw new ArgumentOutOfRangeException(nameof(seriesType), "Series type out of range");
+                throw new ArgumentOutOfRangeException(
+                    nameof(seriesType),
+                    "Series type out of range"
+                );
             }
 
             if (seriesType == SeriesType.Candle)
@@ -260,22 +266,31 @@ namespace QuantConnect
     {
         /// Line Plot for Value Types (0)
         Line,
+
         /// Scatter Plot for Chart Distinct Types (1)
         Scatter,
+
         /// Charts (2)
         Candle,
+
         /// Bar chart (3)
         Bar,
+
         /// Flag indicators (4)
         Flag,
+
         /// 100% area chart showing relative proportions of series values at each time index (5)
         StackedArea,
+
         /// Pie chart (6)
         Pie,
+
         /// Treemap Plot (7)
         Treemap,
+
         /// Heatmap Plot (9) -- NOTE: 8 is reserved
         Heatmap = 9,
+
         /// Scatter 3D Plot (10)
         Scatter3d
     }

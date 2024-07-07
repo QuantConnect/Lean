@@ -13,11 +13,11 @@
  * limitations under the License.
 */
 
+using System;
+using System.Linq;
 using NUnit.Framework;
 using QuantConnect.Data.Market;
 using QuantConnect.Indicators;
-using System;
-using System.Linq;
 
 namespace QuantConnect.Tests.Indicators
 {
@@ -41,7 +41,19 @@ namespace QuantConnect.Tests.Indicators
             var days = 1;
             foreach (var p in prices)
             {
-                Assert.DoesNotThrow(() => indicator.Update(new TradeBar() { Time=time.AddDays(days), Close = (decimal)p, Low = (decimal)p, High = (decimal)p, Value = (decimal)p}));
+                Assert.DoesNotThrow(
+                    () =>
+                        indicator.Update(
+                            new TradeBar()
+                            {
+                                Time = time.AddDays(days),
+                                Close = (decimal)p,
+                                Low = (decimal)p,
+                                High = (decimal)p,
+                                Value = (decimal)p
+                            }
+                        )
+                );
                 days++;
             }
 

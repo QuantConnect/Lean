@@ -26,9 +26,6 @@ namespace QuantConnect.Interfaces
         /// <summary>
         /// Gets an instance that is to be used to initialize newly created securities.
         /// </summary>
-        ISecurityInitializer SecurityInitializer
-        {
-            get;
-        }
+        ISecurityInitializer SecurityInitializer { get; }
     }
 }

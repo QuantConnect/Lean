@@ -32,9 +32,8 @@ namespace QuantConnect.Orders
         /// <summary>
         /// Added a default constructor for JSON Deserialization:
         /// </summary>
-        public ComboMarketOrder() : base()
-        {
-        }
+        public ComboMarketOrder()
+            : base() { }
 
         /// <summary>
         /// New market order constructor
@@ -45,11 +44,15 @@ namespace QuantConnect.Orders
         /// <param name="groupOrderManager">Manager for the orders in the group</param>
         /// <param name="tag">User defined data tag for this order</param>
         /// <param name="properties">The order properties for this order</param>
-        public ComboMarketOrder(Symbol symbol, decimal quantity, DateTime time, GroupOrderManager groupOrderManager, string tag = "",
-            IOrderProperties properties = null)
-            : base(symbol, quantity, time, groupOrderManager, tag, properties)
-        {
-        }
+        public ComboMarketOrder(
+            Symbol symbol,
+            decimal quantity,
+            DateTime time,
+            GroupOrderManager groupOrderManager,
+            string tag = "",
+            IOrderProperties properties = null
+        )
+            : base(symbol, quantity, time, groupOrderManager, tag, properties) { }
 
         /// <summary>
         /// Gets the order value in units of the security's quote currency

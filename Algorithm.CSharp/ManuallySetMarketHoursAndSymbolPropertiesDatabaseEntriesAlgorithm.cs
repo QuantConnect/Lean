@@ -24,7 +24,9 @@ namespace QuantConnect.Algorithm.CSharp
     /// This specific case illustrates how to do it for CFDs to match InteractiveBrokers brokerage, which has different market hours
     /// depending on the CFD underlying asset.
     /// </summary>
-    public class ManuallySetMarketHoursAndSymbolPropertiesDatabaseEntriesAlgorithm : QCAlgorithm, IRegressionAlgorithmDefinition
+    public class ManuallySetMarketHoursAndSymbolPropertiesDatabaseEntriesAlgorithm
+        : QCAlgorithm,
+            IRegressionAlgorithmDefinition
     {
         public override void Initialize()
         {
@@ -39,44 +41,95 @@ namespace QuantConnect.Algorithm.CSharp
             // we can set the MarketHoursDatabase entry for the CFDs.
 
             // Equity CFDs are usually traded the same hours as the equity market.
-            var equityMarketHoursEntry = MarketHoursDatabase.GetEntry(Market.USA, (string)null, SecurityType.Equity);
-            MarketHoursDatabase.SetEntry(Market.InteractiveBrokers, null, SecurityType.Cfd,
-                equityMarketHoursEntry.ExchangeHours, equityMarketHoursEntry.DataTimeZone);
+            var equityMarketHoursEntry = MarketHoursDatabase.GetEntry(
+                Market.USA,
+                (string)null,
+                SecurityType.Equity
+            );
+            MarketHoursDatabase.SetEntry(
+                Market.InteractiveBrokers,
+                null,
+                SecurityType.Cfd,
+                equityMarketHoursEntry.ExchangeHours,
+                equityMarketHoursEntry.DataTimeZone
+            );
 
             // The same can be done for the symbol properties, in case they are different depending on the underlying
-            var equitySymbolProperties = SymbolPropertiesDatabase.GetSymbolProperties(Market.USA, null, SecurityType.Equity, Currencies.USD);
-            SymbolPropertiesDatabase.SetEntry(Market.InteractiveBrokers, null, SecurityType.Cfd, equitySymbolProperties);
+            var equitySymbolProperties = SymbolPropertiesDatabase.GetSymbolProperties(
+                Market.USA,
+                null,
+                SecurityType.Equity,
+                Currencies.USD
+            );
+            SymbolPropertiesDatabase.SetEntry(
+                Market.InteractiveBrokers,
+                null,
+                SecurityType.Cfd,
+                equitySymbolProperties
+            );
 
             var spyCfd = AddCfd("SPY", market: Market.InteractiveBrokers);
 
             if (!ReferenceEquals(spyCfd.Exchange.Hours, equityMarketHoursEntry.ExchangeHours))
             {
-                throw new RegressionTestException("Expected the SPY CFD market hours to be the same as the underlying equity market hours.");
+                throw new RegressionTestException(
+                    "Expected the SPY CFD market hours to be the same as the underlying equity market hours."
+                );
             }
 
             if (!ReferenceEquals(spyCfd.SymbolProperties, equitySymbolProperties))
             {
-                throw new RegressionTestException("Expected the SPY CFD symbol properties to be the same as the underlying equity symbol properties.");
+                throw new RegressionTestException(
+                    "Expected the SPY CFD symbol properties to be the same as the underlying equity symbol properties."
+                );
             }
 
             // We can also do it for a specific ticker:
-            var audUsdForexMarketHoursEntry = MarketHoursDatabase.GetEntry(Market.Oanda, (string)null, SecurityType.Forex);
-            MarketHoursDatabase.SetEntry(Market.InteractiveBrokers, "AUDUSD", SecurityType.Cfd,
-                audUsdForexMarketHoursEntry.ExchangeHours, audUsdForexMarketHoursEntry.DataTimeZone);
+            var audUsdForexMarketHoursEntry = MarketHoursDatabase.GetEntry(
+                Market.Oanda,
+                (string)null,
+                SecurityType.Forex
+            );
+            MarketHoursDatabase.SetEntry(
+                Market.InteractiveBrokers,
+                "AUDUSD",
+                SecurityType.Cfd,
+                audUsdForexMarketHoursEntry.ExchangeHours,
+                audUsdForexMarketHoursEntry.DataTimeZone
+            );
 
-            var audUsdForexSymbolProperties = SymbolPropertiesDatabase.GetSymbolProperties(Market.Oanda, "AUDUSD", SecurityType.Forex, Currencies.USD);
-            SymbolPropertiesDatabase.SetEntry(Market.InteractiveBrokers, "AUDUSD", SecurityType.Cfd, audUsdForexSymbolProperties);
+            var audUsdForexSymbolProperties = SymbolPropertiesDatabase.GetSymbolProperties(
+                Market.Oanda,
+                "AUDUSD",
+                SecurityType.Forex,
+                Currencies.USD
+            );
+            SymbolPropertiesDatabase.SetEntry(
+                Market.InteractiveBrokers,
+                "AUDUSD",
+                SecurityType.Cfd,
+                audUsdForexSymbolProperties
+            );
 
             var audUsdCfd = AddCfd("AUDUSD", market: Market.InteractiveBrokers);
 
-            if (!ReferenceEquals(audUsdCfd.Exchange.Hours, audUsdForexMarketHoursEntry.ExchangeHours))
+            if (
+                !ReferenceEquals(
+                    audUsdCfd.Exchange.Hours,
+                    audUsdForexMarketHoursEntry.ExchangeHours
+                )
+            )
             {
-                throw new RegressionTestException("Expected the AUDUSD CFD market hours to be the same as the underlying forex market hours.");
+                throw new RegressionTestException(
+                    "Expected the AUDUSD CFD market hours to be the same as the underlying forex market hours."
+                );
             }
 
             if (!ReferenceEquals(audUsdCfd.SymbolProperties, audUsdForexSymbolProperties))
             {
-                throw new RegressionTestException("Expected the AUDUSD CFD symbol properties to be the same as the underlying forex symbol properties.");
+                throw new RegressionTestException(
+                    "Expected the AUDUSD CFD symbol properties to be the same as the underlying forex symbol properties."
+                );
             }
         }
 
@@ -108,35 +161,36 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// This is used by the regression test system to indicate what the expected statistics are from running the algorithm
         /// </summary>
-        public Dictionary<string, string> ExpectedStatistics => new Dictionary<string, string>
-        {
-            {"Total Orders", "0"},
-            {"Average Win", "0%"},
-            {"Average Loss", "0%"},
-            {"Compounding Annual Return", "0%"},
-            {"Drawdown", "0%"},
-            {"Expectancy", "0"},
-            {"Start Equity", "100000"},
-            {"End Equity", "100000"},
-            {"Net Profit", "0%"},
-            {"Sharpe Ratio", "0"},
-            {"Sortino Ratio", "0"},
-            {"Probabilistic Sharpe Ratio", "0%"},
-            {"Loss Rate", "0%"},
-            {"Win Rate", "0%"},
-            {"Profit-Loss Ratio", "0"},
-            {"Alpha", "0"},
-            {"Beta", "0"},
-            {"Annual Standard Deviation", "0"},
-            {"Annual Variance", "0"},
-            {"Information Ratio", "0"},
-            {"Tracking Error", "0"},
-            {"Treynor Ratio", "0"},
-            {"Total Fees", "$0.00"},
-            {"Estimated Strategy Capacity", "$0"},
-            {"Lowest Capacity Asset", ""},
-            {"Portfolio Turnover", "0%"},
-            {"OrderListHash", "d41d8cd98f00b204e9800998ecf8427e"}
-        };
+        public Dictionary<string, string> ExpectedStatistics =>
+            new Dictionary<string, string>
+            {
+                { "Total Orders", "0" },
+                { "Average Win", "0%" },
+                { "Average Loss", "0%" },
+                { "Compounding Annual Return", "0%" },
+                { "Drawdown", "0%" },
+                { "Expectancy", "0" },
+                { "Start Equity", "100000" },
+                { "End Equity", "100000" },
+                { "Net Profit", "0%" },
+                { "Sharpe Ratio", "0" },
+                { "Sortino Ratio", "0" },
+                { "Probabilistic Sharpe Ratio", "0%" },
+                { "Loss Rate", "0%" },
+                { "Win Rate", "0%" },
+                { "Profit-Loss Ratio", "0" },
+                { "Alpha", "0" },
+                { "Beta", "0" },
+                { "Annual Standard Deviation", "0" },
+                { "Annual Variance", "0" },
+                { "Information Ratio", "0" },
+                { "Tracking Error", "0" },
+                { "Treynor Ratio", "0" },
+                { "Total Fees", "$0.00" },
+                { "Estimated Strategy Capacity", "$0" },
+                { "Lowest Capacity Asset", "" },
+                { "Portfolio Turnover", "0%" },
+                { "OrderListHash", "d41d8cd98f00b204e9800998ecf8427e" }
+            };
     }
 }

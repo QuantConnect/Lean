@@ -13,6 +13,9 @@
  * limitations under the License.
 */
 
+using System;
+using System.Collections.Generic;
+using System.Linq;
 using QuantConnect.Algorithm.Framework.Alphas;
 using QuantConnect.Algorithm.Framework.Execution;
 using QuantConnect.Algorithm.Framework.Portfolio;
@@ -20,9 +23,6 @@ using QuantConnect.Algorithm.Framework.Selection;
 using QuantConnect.Brokerages;
 using QuantConnect.Data;
 using QuantConnect.Data.UniverseSelection;
-using System;
-using System.Collections.Generic;
-using System.Linq;
 
 namespace QuantConnect.Algorithm.CSharp
 {
@@ -72,7 +72,8 @@ namespace QuantConnect.Algorithm.CSharp
                 return;
             }
 
-            var insights = _symbols.Where(x => Securities[x].Price > 0)
+            var insights = _symbols
+                .Where(x => Securities[x].Price > 0)
                 .Select(x => Insight.Price(x, TimeSpan.FromDays(1), InsightDirection.Up))
                 .ToArray();
 

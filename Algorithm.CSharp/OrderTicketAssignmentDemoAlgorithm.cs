@@ -1,4 +1,3 @@
-
 /*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
@@ -16,7 +15,6 @@
 
 using System;
 using System.Collections.Generic;
-
 using QuantConnect.Data.Market;
 using QuantConnect.Interfaces;
 using QuantConnect.Orders;
@@ -42,14 +40,18 @@ namespace QuantConnect.Algorithm.CSharp
 
             _symbol = AddEquity("SPY", Resolution.Minute).Symbol;
 
-            Consolidate(_symbol, TimeSpan.FromHours(1), (TradeBar bar) =>
-            {
-                // Reset _ticket to null on each new bar
-                _ticket = null;
-                _ticket = MarketOrder(_symbol, 1, asynchronous: true);
-                Debug($"{Time}: Buy: Price {bar.Price}, orderId: {_ticket.OrderId}");
-                _tradeCount++;
-            });
+            Consolidate(
+                _symbol,
+                TimeSpan.FromHours(1),
+                (TradeBar bar) =>
+                {
+                    // Reset _ticket to null on each new bar
+                    _ticket = null;
+                    _ticket = MarketOrder(_symbol, 1, asynchronous: true);
+                    Debug($"{Time}: Buy: Price {bar.Price}, orderId: {_ticket.OrderId}");
+                    _tradeCount++;
+                }
+            );
         }
 
         public override void OnOrderEvent(OrderEvent orderEvent)
@@ -59,11 +61,15 @@ namespace QuantConnect.Algorithm.CSharp
             var ticket = orderEvent.Ticket;
             if (ticket == null)
             {
-                throw new RegressionTestException("Expected order ticket in order event to not be null");
+                throw new RegressionTestException(
+                    "Expected order ticket in order event to not be null"
+                );
             }
             if (orderEvent.Status == OrderStatus.Submitted && _ticket != null)
             {
-                throw new RegressionTestException("Field _ticket not expected no be assigned on the first order event");
+                throw new RegressionTestException(
+                    "Field _ticket not expected no be assigned on the first order event"
+                );
             }
 
             Debug(ticket.ToString());
@@ -74,7 +80,9 @@ namespace QuantConnect.Algorithm.CSharp
             // Just checking that orders were placed
             if (!Portfolio.Invested || _tradeCount != Transactions.OrdersCount)
             {
-                throw new RegressionTestException($"Expected the portfolio to have holdings and to have {_tradeCount} trades, but had {Transactions.OrdersCount}");
+                throw new RegressionTestException(
+                    $"Expected the portfolio to have holdings and to have {_tradeCount} trades, but had {Transactions.OrdersCount}"
+                );
             }
         }
 
@@ -106,35 +114,36 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// This is used by the regression test system to indicate what the expected statistics are from running the algorithm
         /// </summary>
-        public Dictionary<string, string> ExpectedStatistics => new Dictionary<string, string>
-        {
-            {"Total Orders", "35"},
-            {"Average Win", "0%"},
-            {"Average Loss", "0%"},
-            {"Compounding Annual Return", "3.632%"},
-            {"Drawdown", "0.000%"},
-            {"Expectancy", "0"},
-            {"Start Equity", "100000"},
-            {"End Equity", "100045.62"},
-            {"Net Profit", "0.046%"},
-            {"Sharpe Ratio", "4.618"},
-            {"Sortino Ratio", "13.697"},
-            {"Probabilistic Sharpe Ratio", "73.517%"},
-            {"Loss Rate", "0%"},
-            {"Win Rate", "0%"},
-            {"Profit-Loss Ratio", "0"},
-            {"Alpha", "-0.025"},
-            {"Beta", "0.027"},
-            {"Annual Standard Deviation", "0.006"},
-            {"Annual Variance", "0"},
-            {"Information Ratio", "-8.991"},
-            {"Tracking Error", "0.217"},
-            {"Treynor Ratio", "1.042"},
-            {"Total Fees", "$34.00"},
-            {"Estimated Strategy Capacity", "$36000000.00"},
-            {"Lowest Capacity Asset", "SPY R735QTJ8XC9X"},
-            {"Portfolio Turnover", "0.99%"},
-            {"OrderListHash", "ac3803a8abaf1d1e77e009c418ba68e2"}
-        };
+        public Dictionary<string, string> ExpectedStatistics =>
+            new Dictionary<string, string>
+            {
+                { "Total Orders", "35" },
+                { "Average Win", "0%" },
+                { "Average Loss", "0%" },
+                { "Compounding Annual Return", "3.632%" },
+                { "Drawdown", "0.000%" },
+                { "Expectancy", "0" },
+                { "Start Equity", "100000" },
+                { "End Equity", "100045.62" },
+                { "Net Profit", "0.046%" },
+                { "Sharpe Ratio", "4.618" },
+                { "Sortino Ratio", "13.697" },
+                { "Probabilistic Sharpe Ratio", "73.517%" },
+                { "Loss Rate", "0%" },
+                { "Win Rate", "0%" },
+                { "Profit-Loss Ratio", "0" },
+                { "Alpha", "-0.025" },
+                { "Beta", "0.027" },
+                { "Annual Standard Deviation", "0.006" },
+                { "Annual Variance", "0" },
+                { "Information Ratio", "-8.991" },
+                { "Tracking Error", "0.217" },
+                { "Treynor Ratio", "1.042" },
+                { "Total Fees", "$34.00" },
+                { "Estimated Strategy Capacity", "$36000000.00" },
+                { "Lowest Capacity Asset", "SPY R735QTJ8XC9X" },
+                { "Portfolio Turnover", "0.99%" },
+                { "OrderListHash", "ac3803a8abaf1d1e77e009c418ba68e2" }
+            };
     }
 }

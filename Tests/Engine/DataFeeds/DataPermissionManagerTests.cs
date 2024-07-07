@@ -46,16 +46,20 @@ namespace QuantConnect.Tests.Engine.DataFeeds
         [Test]
         public void InvalidConfigurationAddSecurity()
         {
-            var parameter = new RegressionTests.AlgorithmStatisticsTestParameters(nameof(BasicTemplateDailyAlgorithm),
+            var parameter = new RegressionTests.AlgorithmStatisticsTestParameters(
+                nameof(BasicTemplateDailyAlgorithm),
                 new Dictionary<string, string>(),
                 Language.CSharp,
                 // will throw on initialization
-                AlgorithmStatus.Running);
+                AlgorithmStatus.Running
+            );
 
-            var result = AlgorithmRunner.RunLocalBacktest(parameter.Algorithm,
+            var result = AlgorithmRunner.RunLocalBacktest(
+                parameter.Algorithm,
                 parameter.Statistics,
                 parameter.Language,
-                parameter.ExpectedFinalStatus);
+                parameter.ExpectedFinalStatus
+            );
 
             // algorithm was never set
             Assert.IsEmpty(result.AlgorithmManager.AlgorithmId);
@@ -64,17 +68,21 @@ namespace QuantConnect.Tests.Engine.DataFeeds
         [Test]
         public void InvalidConfigurationHistoryRequest()
         {
-            var parameter = new RegressionTests.AlgorithmStatisticsTestParameters(nameof(TestInvalidConfigurationAlgorithm),
+            var parameter = new RegressionTests.AlgorithmStatisticsTestParameters(
+                nameof(TestInvalidConfigurationAlgorithm),
                 new Dictionary<string, string>(),
                 Language.CSharp,
                 // will throw on initialization
-                AlgorithmStatus.Running);
+                AlgorithmStatus.Running
+            );
 
-            var result = AlgorithmRunner.RunLocalBacktest(parameter.Algorithm,
+            var result = AlgorithmRunner.RunLocalBacktest(
+                parameter.Algorithm,
                 parameter.Statistics,
                 parameter.Language,
                 parameter.ExpectedFinalStatus,
-                setupHandler: "TestInvalidConfigurationSetupHandler");
+                setupHandler: "TestInvalidConfigurationSetupHandler"
+            );
 
             // algorithm was never set
             Assert.IsEmpty(result.AlgorithmManager.AlgorithmId);
@@ -84,7 +92,11 @@ namespace QuantConnect.Tests.Engine.DataFeeds
 
         public class TestDataPermissionManager : DataPermissionManager
         {
-            public override void AssertConfiguration(SubscriptionDataConfig subscriptionDataConfig, DateTime startTimeLocal, DateTime endTimeLocal)
+            public override void AssertConfiguration(
+                SubscriptionDataConfig subscriptionDataConfig,
+                DateTime startTimeLocal,
+                DateTime endTimeLocal
+            )
             {
                 throw new InvalidOperationException("Invalid configuration");
             }
@@ -93,19 +105,24 @@ namespace QuantConnect.Tests.Engine.DataFeeds
         public class TestInvalidConfigurationAlgorithm : BasicTemplateDailyAlgorithm
         {
             public static int Count;
+
             public override void Initialize()
             {
                 Count++;
-                #pragma warning disable CS0618
+#pragma warning disable CS0618
                 History("SPY", 1, Resolution.Tick).ToList();
-                #pragma warning restore CS0618
+#pragma warning restore CS0618
                 Count++;
             }
         }
-        
-        public class TestInvalidConfigurationSetupHandler : AlgorithmRunner.RegressionSetupHandlerWrapper
+
+        public class TestInvalidConfigurationSetupHandler
+            : AlgorithmRunner.RegressionSetupHandlerWrapper
         {
-            public override IAlgorithm CreateAlgorithmInstance(AlgorithmNodePacket algorithmNodePacket, string assemblyPath)
+            public override IAlgorithm CreateAlgorithmInstance(
+                AlgorithmNodePacket algorithmNodePacket,
+                string assemblyPath
+            )
             {
                 Algorithm = new TestInvalidConfigurationAlgorithm();
                 return Algorithm;

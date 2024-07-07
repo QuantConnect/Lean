@@ -13,12 +13,12 @@
  * limitations under the License.
 */
 
-using NUnit.Framework;
-using Python.Runtime;
-using QuantConnect.Algorithm;
 using System;
 using System.Collections.Generic;
 using System.Text;
+using NUnit.Framework;
+using Python.Runtime;
+using QuantConnect.Algorithm;
 
 namespace QuantConnect.Tests.Algorithm
 {
@@ -47,11 +47,16 @@ namespace QuantConnect.Tests.Algorithm
             var byteKey = Encoding.ASCII.GetBytes($"UserName:Password");
             var headers = new List<KeyValuePair<string, string>>
             {
-                new KeyValuePair<string, string>("Authorization", $"Basic ({Convert.ToBase64String(byteKey)})")
+                new KeyValuePair<string, string>(
+                    "Authorization",
+                    $"Basic ({Convert.ToBase64String(byteKey)})"
+                )
             };
 
             var content = string.Empty;
-            Assert.DoesNotThrow(() => content = algo.Download("https://www.quantconnect.com/", headers));
+            Assert.DoesNotThrow(
+                () => content = algo.Download("https://www.quantconnect.com/", headers)
+            );
             Assert.IsNotEmpty(content);
         }
 
@@ -71,7 +76,9 @@ namespace QuantConnect.Tests.Algorithm
                 headers.SetItem("Authorization".ToPython(), value.ToPython());
 
                 var content = string.Empty;
-                Assert.DoesNotThrow(() => content = algo.Download("https://www.quantconnect.com/", headers));
+                Assert.DoesNotThrow(
+                    () => content = algo.Download("https://www.quantconnect.com/", headers)
+                );
                 Assert.IsNotEmpty(content);
             }
         }

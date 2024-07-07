@@ -65,7 +65,10 @@ namespace QuantConnect.Algorithm.CSharp
         {
             if (slice.ContainsKey("USDINR"))
             {
-                _today = new CorrelationPair(Time) { CurrencyPrice = Convert.ToDouble(slice["USDINR"].Close) };
+                _today = new CorrelationPair(Time)
+                {
+                    CurrencyPrice = Convert.ToDouble(slice["USDINR"].Close)
+                };
             }
 
             if (!slice.ContainsKey("NIFTY"))
@@ -75,7 +78,6 @@ namespace QuantConnect.Algorithm.CSharp
 
             try
             {
-
                 _today.NiftyPrice = Convert.ToDouble(slice["NIFTY"].Close);
                 if (_today.Date == slice["NIFTY"].Time)
                 {
@@ -102,12 +104,38 @@ namespace QuantConnect.Algorithm.CSharp
                     if (Convert.ToDouble(slice["NIFTY"].Open) >= highestNifty)
                     {
                         var code = Order("NIFTY", quantity - Portfolio["NIFTY"].Quantity);
-                        Debug("LONG " + code + " Time: " + Time.ToShortDateString() + " Quantity: " + quantity + " Portfolio:" + Portfolio["NIFTY"].Quantity + " Nifty: " + slice["NIFTY"].Close + " Buying Power: " + Portfolio.TotalPortfolioValue);
+                        Debug(
+                            "LONG "
+                                + code
+                                + " Time: "
+                                + Time.ToShortDateString()
+                                + " Quantity: "
+                                + quantity
+                                + " Portfolio:"
+                                + Portfolio["NIFTY"].Quantity
+                                + " Nifty: "
+                                + slice["NIFTY"].Close
+                                + " Buying Power: "
+                                + Portfolio.TotalPortfolioValue
+                        );
                     }
                     else if (Convert.ToDouble(slice["NIFTY"].Open) <= lowestNifty)
                     {
                         var code = Order("NIFTY", -quantity - Portfolio["NIFTY"].Quantity);
-                        Debug("SHORT " + code + " Time: " + Time.ToShortDateString() + " Quantity: " + quantity + " Portfolio:" + Portfolio["NIFTY"].Quantity + " Nifty: " + slice["NIFTY"].Close + " Buying Power: " + Portfolio.TotalPortfolioValue);
+                        Debug(
+                            "SHORT "
+                                + code
+                                + " Time: "
+                                + Time.ToShortDateString()
+                                + " Quantity: "
+                                + quantity
+                                + " Portfolio:"
+                                + Portfolio["NIFTY"].Quantity
+                                + " Nifty: "
+                                + slice["NIFTY"].Close
+                                + " Buying Power: "
+                                + Portfolio.TotalPortfolioValue
+                        );
                     }
                 }
             }
@@ -136,14 +164,17 @@ namespace QuantConnect.Algorithm.CSharp
         /// Opening Price
         /// </summary>
         public decimal Open { get; set; }
+
         /// <summary>
         /// High Price
         /// </summary>
         public decimal High { get; set; }
+
         /// <summary>
         /// Low Price
         /// </summary>
         public decimal Low { get; set; }
+
         /// <summary>
         /// Closing Price
         /// </summary>
@@ -160,16 +191,28 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// Return the URL string source of the file. This will be converted to a stream
         /// </summary>
-        public override SubscriptionDataSource GetSource(SubscriptionDataConfig config, DateTime date, bool isLiveMode)
+        public override SubscriptionDataSource GetSource(
+            SubscriptionDataConfig config,
+            DateTime date,
+            bool isLiveMode
+        )
         {
-            return new SubscriptionDataSource("https://www.dropbox.com/s/rsmg44jr6wexn2h/CNXNIFTY.csv?dl=1", SubscriptionTransportMedium.RemoteFile);
+            return new SubscriptionDataSource(
+                "https://www.dropbox.com/s/rsmg44jr6wexn2h/CNXNIFTY.csv?dl=1",
+                SubscriptionTransportMedium.RemoteFile
+            );
         }
 
         /// <summary>
         /// Reader converts each line of the data source into BaseData objects. Each data type creates its own factory method, and returns a new instance of the object
         /// each time it is called.
         /// </summary>
-        public override BaseData Reader(SubscriptionDataConfig config, string line, DateTime date, bool isLiveMode)
+        public override BaseData Reader(
+            SubscriptionDataConfig config,
+            string line,
+            DateTime date,
+            bool isLiveMode
+        )
         {
             //New Nifty object
             var index = new Nifty();
@@ -189,13 +232,10 @@ namespace QuantConnect.Algorithm.CSharp
                 index.Symbol = "NIFTY";
                 index.Value = index.Close;
             }
-            catch
-            {
-            }
+            catch { }
             return index;
         }
     }
-
 
     /// <summary>
     /// Dollar Rupe is a custom data type we create for this algorithm
@@ -206,14 +246,17 @@ namespace QuantConnect.Algorithm.CSharp
         /// Open Price
         /// </summary>
         public decimal Open { get; set; } = 0;
+
         /// <summary>
         /// High Price
         /// </summary>
         public decimal High { get; set; } = 0;
+
         /// <summary>
         /// Low Price
         /// </summary>
         public decimal Low { get; set; } = 0;
+
         /// <summary>
         /// Closing Price
         /// </summary>
@@ -230,16 +273,28 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// Return the URL string source of the file. This will be converted to a stream
         /// </summary>
-        public override SubscriptionDataSource GetSource(SubscriptionDataConfig config, DateTime date, bool isLiveMode)
+        public override SubscriptionDataSource GetSource(
+            SubscriptionDataConfig config,
+            DateTime date,
+            bool isLiveMode
+        )
         {
-            return new SubscriptionDataSource("https://www.dropbox.com/s/m6ecmkg9aijwzy2/USDINR.csv?dl=1", SubscriptionTransportMedium.RemoteFile);
+            return new SubscriptionDataSource(
+                "https://www.dropbox.com/s/m6ecmkg9aijwzy2/USDINR.csv?dl=1",
+                SubscriptionTransportMedium.RemoteFile
+            );
         }
 
         /// <summary>
         /// Reader converts each line of the data source into BaseData objects. Each data type creates its own factory method, and returns a new instance of the object
         /// each time it is called.
         /// </summary>
-        public override BaseData Reader(SubscriptionDataConfig config, string line, DateTime date, bool isLiveMode)
+        public override BaseData Reader(
+            SubscriptionDataConfig config,
+            string line,
+            DateTime date,
+            bool isLiveMode
+        )
         {
             //New USDINR object
             var currency = new DollarRupee();
@@ -253,9 +308,7 @@ namespace QuantConnect.Algorithm.CSharp
                 currency.Symbol = "USDINR";
                 currency.Value = currency.Close;
             }
-            catch
-            {
-            }
+            catch { }
             return currency;
         }
     }
@@ -283,8 +336,7 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// Default initializer
         /// </summary>
-        public CorrelationPair()
-        { }
+        public CorrelationPair() { }
 
         /// <summary>
         /// Date based correlation pair initializer

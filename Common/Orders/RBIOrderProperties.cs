@@ -19,7 +19,5 @@ namespace QuantConnect.Orders
     /// <summary>
     /// RBI order properties
     /// </summary>
-    public class RBIOrderProperties : OrderProperties
-    {
-    }
+    public class RBIOrderProperties : OrderProperties { }
 }

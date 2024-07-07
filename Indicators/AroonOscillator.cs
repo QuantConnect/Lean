@@ -13,8 +13,8 @@
  * limitations under the License.
 */
 
-using QuantConnect.Data.Market;
 using System;
+using QuantConnect.Data.Market;
 
 namespace QuantConnect.Indicators
 {
@@ -52,9 +52,7 @@ namespace QuantConnect.Indicators
         /// <param name="upPeriod">The lookback period to determine the highest high for the AroonDown</param>
         /// <param name="downPeriod">The lookback period to determine the lowest low for the AroonUp</param>
         public AroonOscillator(int upPeriod, int downPeriod)
-            : this($"AROON({upPeriod},{downPeriod})", upPeriod, downPeriod)
-        {
-        }
+            : this($"AROON({upPeriod},{downPeriod})", upPeriod, downPeriod) { }
 
         /// <summary>
         /// Creates a new AroonOscillator from the specified up/down periods.
@@ -66,18 +64,20 @@ namespace QuantConnect.Indicators
             : base(name)
         {
             var max = new Maximum(name + "_Max", upPeriod + 1);
-            AroonUp = new FunctionalIndicator<IndicatorDataPoint>(name + "_AroonUp",
+            AroonUp = new FunctionalIndicator<IndicatorDataPoint>(
+                name + "_AroonUp",
                 input => ComputeAroonUp(upPeriod, max, input),
                 aroonUp => max.IsReady,
                 () => max.Reset()
-                );
+            );
 
             var min = new Minimum(name + "_Min", downPeriod + 1);
-            AroonDown = new FunctionalIndicator<IndicatorDataPoint>(name + "_AroonDown",
+            AroonDown = new FunctionalIndicator<IndicatorDataPoint>(
+                name + "_AroonDown",
                 input => ComputeAroonDown(downPeriod, min, input),
                 aroonDown => min.IsReady,
                 () => min.Reset()
-                );
+            );
 
             WarmUpPeriod = 1 + Math.Max(upPeriod, downPeriod);
         }
@@ -115,7 +115,11 @@ namespace QuantConnect.Indicators
         /// <param name="min">A Minimum indicator used to compute periods since min</param>
         /// <param name="input">The next input data</param>
         /// <returns>The AroonDown value</returns>
-        private static decimal ComputeAroonDown(int downPeriod, Minimum min, IndicatorDataPoint input)
+        private static decimal ComputeAroonDown(
+            int downPeriod,
+            Minimum min,
+            IndicatorDataPoint input
+        )
         {
             min.Update(input);
             return 100m * (downPeriod - min.PeriodsSinceMinimum) / downPeriod;

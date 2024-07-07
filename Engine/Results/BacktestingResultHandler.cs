@@ -88,7 +88,10 @@ namespace QuantConnect.Lean.Engine.Results
             State["Name"] = _job.Name;
             _algorithmId = _job.AlgorithmId;
             _projectId = _job.ProjectId;
-            if (_job == null) throw new Exception("BacktestingResultHandler.Constructor(): Submitted Job type invalid.");
+            if (_job == null)
+                throw new Exception(
+                    "BacktestingResultHandler.Constructor(): Submitted Job type invalid."
+                );
             base.Initialize(parameters);
         }
 
@@ -118,7 +121,6 @@ namespace QuantConnect.Lean.Engine.Results
 
                     //2. Update the packet scanner:
                     Update();
-
                 } // While !End.
             }
             catch (Exception err)
@@ -144,9 +146,16 @@ namespace QuantConnect.Lean.Engine.Results
                 }
 
                 var utcNow = DateTime.UtcNow;
-                if (utcNow <= _nextUpdate || _progressMonitor.ProcessedDays < _daysProcessedFrontier) return;
+                if (
+                    utcNow <= _nextUpdate
+                    || _progressMonitor.ProcessedDays < _daysProcessedFrontier
+                )
+                    return;
 
-                var deltaOrders = GetDeltaOrders(LastDeltaOrderPosition, shouldStop: orderCount => orderCount >= 50);
+                var deltaOrders = GetDeltaOrders(
+                    LastDeltaOrderPosition,
+                    shouldStop: orderCount => orderCount >= 50
+                );
                 // Deliberately skip to the end of order event collection to prevent overloading backtesting UX
                 LastDeltaOrderPosition = TransactionHandler.OrderEvents.Count();
 
@@ -193,7 +202,10 @@ namespace QuantConnect.Lean.Engine.Results
                 }
 
                 //Get the runtime statistics from the user algorithm:
-                var summary = GenerateStatisticsResults(performanceCharts, estimatedStrategyCapacity: _capacityEstimate).Summary;
+                var summary = GenerateStatisticsResults(
+                    performanceCharts,
+                    estimatedStrategyCapacity: _capacityEstimate
+                ).Summary;
                 var runtimeStatistics = GetAlgorithmRuntimeStatistics(summary, _capacityEstimate);
 
                 var progress = _progressMonitor.Progress;
@@ -206,23 +218,45 @@ namespace QuantConnect.Lean.Engine.Results
                     const int maxOrders = 100;
                     var orderCount = TransactionHandler.Orders.Count;
 
-                    var completeResult = new BacktestResult(new BacktestResultParameters(
-                        Charts,
-                        orderCount > maxOrders ? TransactionHandler.Orders.Skip(orderCount - maxOrders).ToDictionary() : TransactionHandler.Orders.ToDictionary(),
-                        Algorithm.Transactions.TransactionRecord,
-                        new Dictionary<string, string>(),
-                        runtimeStatistics,
-                        new Dictionary<string, AlgorithmPerformance>(),
-                        // we store the last 100 order events, the final packet will contain the full list
-                        TransactionHandler.OrderEvents.Reverse().Take(100).ToList(), state: GetAlgorithmState()));
+                    var completeResult = new BacktestResult(
+                        new BacktestResultParameters(
+                            Charts,
+                            orderCount > maxOrders
+                                ? TransactionHandler
+                                    .Orders.Skip(orderCount - maxOrders)
+                                    .ToDictionary()
+                                : TransactionHandler.Orders.ToDictionary(),
+                            Algorithm.Transactions.TransactionRecord,
+                            new Dictionary<string, string>(),
+                            runtimeStatistics,
+                            new Dictionary<string, AlgorithmPerformance>(),
+                            // we store the last 100 order events, the final packet will contain the full list
+                            TransactionHandler.OrderEvents.Reverse().Take(100).ToList(),
+                            state: GetAlgorithmState()
+                        )
+                    );
 
-                    StoreResult(new BacktestResultPacket(_job, completeResult, Algorithm.EndDate, Algorithm.StartDate, progress));
+                    StoreResult(
+                        new BacktestResultPacket(
+                            _job,
+                            completeResult,
+                            Algorithm.EndDate,
+                            Algorithm.StartDate,
+                            progress
+                        )
+                    );
 
                     _nextS3Update = DateTime.UtcNow.AddSeconds(30);
                 }
 
                 //2. Backtest Update -> Send the truncated packet to the backtester:
-                var splitPackets = SplitPackets(deltaCharts, deltaOrders, runtimeStatistics, progress, serverStatistics);
+                var splitPackets = SplitPackets(
+                    deltaCharts,
+                    deltaOrders,
+                    runtimeStatistics,
+                    progress,
+                    serverStatistics
+                );
 
                 foreach (var backtestingPacket in splitPackets)
                 {
@@ -241,31 +275,61 @@ namespace QuantConnect.Lean.Engine.Results
         /// <summary>
         /// Run over all the data and break it into smaller packets to ensure they all arrive at the terminal
         /// </summary>
-        public virtual IEnumerable<BacktestResultPacket> SplitPackets(Dictionary<string, Chart> deltaCharts, Dictionary<int, Order> deltaOrders, SortedDictionary<string, string> runtimeStatistics, decimal progress, Dictionary<string, string> serverStatistics)
+        public virtual IEnumerable<BacktestResultPacket> SplitPackets(
+            Dictionary<string, Chart> deltaCharts,
+            Dictionary<int, Order> deltaOrders,
+            SortedDictionary<string, string> runtimeStatistics,
+            decimal progress,
+            Dictionary<string, string> serverStatistics
+        )
         {
             // break the charts into groups
             var splitPackets = new List<BacktestResultPacket>();
             foreach (var chart in deltaCharts.Values)
             {
-                splitPackets.Add(new BacktestResultPacket(_job, new BacktestResult
-                {
-                    Charts = new Dictionary<string, Chart>
-                    {
-                        {chart.Name, chart}
-                    }
-                }, Algorithm.EndDate, Algorithm.StartDate, progress));
+                splitPackets.Add(
+                    new BacktestResultPacket(
+                        _job,
+                        new BacktestResult
+                        {
+                            Charts = new Dictionary<string, Chart> { { chart.Name, chart } }
+                        },
+                        Algorithm.EndDate,
+                        Algorithm.StartDate,
+                        progress
+                    )
+                );
             }
 
             // only send orders if there is actually any update
             if (deltaOrders.Count > 0)
             {
                 // Add the orders into the charting packet:
-                splitPackets.Add(new BacktestResultPacket(_job, new BacktestResult { Orders = deltaOrders }, Algorithm.EndDate, Algorithm.StartDate, progress));
+                splitPackets.Add(
+                    new BacktestResultPacket(
+                        _job,
+                        new BacktestResult { Orders = deltaOrders },
+                        Algorithm.EndDate,
+                        Algorithm.StartDate,
+                        progress
+                    )
+                );
             }
 
             //Add any user runtime statistics into the backtest.
-            splitPackets.Add(new BacktestResultPacket(_job, new BacktestResult { ServerStatistics = serverStatistics, RuntimeStatistics = runtimeStatistics }, Algorithm.EndDate, Algorithm.StartDate, progress));
-
+            splitPackets.Add(
+                new BacktestResultPacket(
+                    _job,
+                    new BacktestResult
+                    {
+                        ServerStatistics = serverStatistics,
+                        RuntimeStatistics = runtimeStatistics
+                    },
+                    Algorithm.EndDate,
+                    Algorithm.StartDate,
+                    progress
+                )
+            );
 
             return splitPackets;
         }
@@ -279,7 +343,8 @@ namespace QuantConnect.Lean.Engine.Results
             try
             {
                 // Make sure this is the right type of packet:
-                if (packet.Type != PacketType.BacktestResult) return;
+                if (packet.Type != PacketType.BacktestResult)
+                    return;
 
                 // Port to packet format:
                 var result = packet as BacktestResultPacket;
@@ -292,19 +357,30 @@ namespace QuantConnect.Lean.Engine.Results
                     BacktestResult results;
                     lock (ChartLock)
                     {
-                        results = new BacktestResult(new BacktestResultParameters(
-                            result.Results.Charts.ToDictionary(x => x.Key, x => x.Value.Clone()),
-                            result.Results.Orders,
-                            result.Results.ProfitLoss,
-                            result.Results.Statistics,
-                            result.Results.RuntimeStatistics,
-                            result.Results.RollingWindow,
-                            null, // null order events, we store them separately
-                            result.Results.TotalPerformance,
-                            result.Results.AlgorithmConfiguration,
-                            result.Results.State));
+                        results = new BacktestResult(
+                            new BacktestResultParameters(
+                                result.Results.Charts.ToDictionary(
+                                    x => x.Key,
+                                    x => x.Value.Clone()
+                                ),
+                                result.Results.Orders,
+                                result.Results.ProfitLoss,
+                                result.Results.Statistics,
+                                result.Results.RuntimeStatistics,
+                                result.Results.RollingWindow,
+                                null, // null order events, we store them separately
+                                result.Results.TotalPerformance,
+                                result.Results.AlgorithmConfiguration,
+                                result.Results.State
+                            )
+                        );
 
-                        if (result.Results.Charts.TryGetValue(PortfolioMarginKey, out var marginChart))
+                        if (
+                            result.Results.Charts.TryGetValue(
+                                PortfolioMarginKey,
+                                out var marginChart
+                            )
+                        )
                         {
                             PortfolioMarginChart.RemoveSinglePointSeries(marginChart);
                         }
@@ -313,7 +389,10 @@ namespace QuantConnect.Lean.Engine.Results
                     SaveResults(key, results);
 
                     // Store Order Events in a separate file
-                    StoreOrderEvents(Algorithm?.UtcTime ?? DateTime.UtcNow, result.Results.OrderEvents);
+                    StoreOrderEvents(
+                        Algorithm?.UtcTime ?? DateTime.UtcNow,
+                        result.Results.OrderEvents
+                    );
                 }
                 else
                 {
@@ -341,9 +420,18 @@ namespace QuantConnect.Lean.Engine.Results
                     //Convert local dictionary:
                     var charts = new Dictionary<string, Chart>(Charts);
                     var orders = new Dictionary<int, Order>(TransactionHandler.Orders);
-                    var profitLoss = new SortedDictionary<DateTime, decimal>(Algorithm.Transactions.TransactionRecord);
-                    var statisticsResults = GenerateStatisticsResults(charts, profitLoss, _capacityEstimate);
-                    var runtime = GetAlgorithmRuntimeStatistics(statisticsResults.Summary, capacityEstimate: _capacityEstimate);
+                    var profitLoss = new SortedDictionary<DateTime, decimal>(
+                        Algorithm.Transactions.TransactionRecord
+                    );
+                    var statisticsResults = GenerateStatisticsResults(
+                        charts,
+                        profitLoss,
+                        _capacityEstimate
+                    );
+                    var runtime = GetAlgorithmRuntimeStatistics(
+                        statisticsResults.Summary,
+                        capacityEstimate: _capacityEstimate
+                    );
 
                     FinalStatistics = statisticsResults.Summary;
 
@@ -354,11 +442,25 @@ namespace QuantConnect.Lean.Engine.Results
                     }
                     var orderEvents = TransactionHandler.OrderEvents.ToList();
                     //Create a result packet to send to the browser.
-                    result = new BacktestResultPacket(_job,
-                        new BacktestResult(new BacktestResultParameters(charts, orders, profitLoss, statisticsResults.Summary, runtime,
-                            statisticsResults.RollingPerformances, orderEvents, statisticsResults.TotalPerformance,
-                            AlgorithmConfiguration.Create(Algorithm, _job), GetAlgorithmState(endTime))),
-                        Algorithm.EndDate, Algorithm.StartDate);
+                    result = new BacktestResultPacket(
+                        _job,
+                        new BacktestResult(
+                            new BacktestResultParameters(
+                                charts,
+                                orders,
+                                profitLoss,
+                                statisticsResults.Summary,
+                                runtime,
+                                statisticsResults.RollingPerformances,
+                                orderEvents,
+                                statisticsResults.TotalPerformance,
+                                AlgorithmConfiguration.Create(Algorithm, _job),
+                                GetAlgorithmState(endTime)
+                            )
+                        ),
+                        Algorithm.EndDate,
+                        Algorithm.StartDate
+                    );
                 }
                 else
                 {
@@ -407,9 +509,15 @@ namespace QuantConnect.Lean.Engine.Results
 
             //Get the resample period:
             var totalMinutes = (algorithm.EndDate - algorithm.StartDate).TotalMinutes;
-            var resampleMinutes = totalMinutes < MinimumSamplePeriod * Samples ? MinimumSamplePeriod : totalMinutes / Samples; // Space out the sampling every
+            var resampleMinutes =
+                totalMinutes < MinimumSamplePeriod * Samples
+                    ? MinimumSamplePeriod
+                    : totalMinutes / Samples; // Space out the sampling every
             ResamplePeriod = TimeSpan.FromMinutes(resampleMinutes);
-            Log.Trace("BacktestingResultHandler(): Sample Period Set: " + resampleMinutes.ToStringInvariant("00.00"));
+            Log.Trace(
+                "BacktestingResultHandler(): Sample Period Set: "
+                    + resampleMinutes.ToStringInvariant("00.00")
+            );
 
             //Set the security / market types.
             var types = new List<SecurityType>();
@@ -417,7 +525,8 @@ namespace QuantConnect.Lean.Engine.Results
             {
                 var security = kvp.Value;
 
-                if (!types.Contains(security.Type)) types.Add(security.Type);
+                if (!types.Contains(security.Type))
+                    types.Add(security.Type);
             }
             SecurityType(types);
 
@@ -482,9 +591,10 @@ namespace QuantConnect.Lean.Engine.Results
         /// <param name="message">Message to add</param>
         protected override void AddToLogStore(string message)
         {
-            var messageToLog = Algorithm != null
-                ? Algorithm.Time.ToStringInvariant(DateFormat.UI) + " " + message
-                : "Algorithm Initialization: " + message;
+            var messageToLog =
+                Algorithm != null
+                    ? Algorithm.Time.ToStringInvariant(DateFormat.UI) + " " + message
+                    : "Algorithm Initialization: " + message;
 
             base.AddToLogStore(messageToLog);
         }
@@ -494,10 +604,7 @@ namespace QuantConnect.Lean.Engine.Results
         /// </summary>
         public virtual void SecurityType(List<SecurityType> types)
         {
-            var packet = new SecurityTypesPacket
-            {
-                Types = types
-            };
+            var packet = new SecurityTypesPacket { Types = types };
             Messages.Enqueue(packet);
         }
 
@@ -508,8 +615,10 @@ namespace QuantConnect.Lean.Engine.Results
         /// <param name="stacktrace">Stacktrace information string</param>
         public virtual void ErrorMessage(string message, string stacktrace = "")
         {
-            if (message == _errorMessage) return;
-            if (Messages.Count > 500) return;
+            if (message == _errorMessage)
+                return;
+            if (Messages.Count > 500)
+                return;
             Messages.Enqueue(new HandledErrorPacket(AlgorithmId, message, stacktrace));
             _errorMessage = message;
         }
@@ -545,8 +654,14 @@ namespace QuantConnect.Lean.Engine.Results
         /// <param name="seriesType">Series type for the chart.</param>
         /// <param name="value">Value for the chart sample.</param>
         /// <param name="unit">Unit of the sample</param>
-        protected override void Sample(string chartName, string seriesName, int seriesIndex, SeriesType seriesType, ISeriesPoint value,
-            string unit = "$")
+        protected override void Sample(
+            string chartName,
+            string seriesName,
+            int seriesIndex,
+            SeriesType seriesType,
+            ISeriesPoint value,
+            string unit = "$"
+        )
         {
             // Sampling during warming up period skews statistics
             if (Algorithm.IsWarmingUp)
@@ -573,9 +688,12 @@ namespace QuantConnect.Lean.Engine.Results
                 }
 
                 //Add our value:
-                if (series.Values.Count == 0 || value.Time > series.Values[series.Values.Count - 1].Time
+                if (
+                    series.Values.Count == 0
+                    || value.Time > series.Values[series.Values.Count - 1].Time
                     // always sample portfolio turnover and use latest value
-                    || chartName == PortfolioTurnoverKey)
+                    || chartName == PortfolioTurnoverKey
+                )
                 {
                     series.AddPoint(value);
                 }
@@ -590,7 +708,14 @@ namespace QuantConnect.Lean.Engine.Results
         {
             // Sample strategy capacity, round to 1k
             var roundedCapacity = _capacityEstimate.Capacity;
-            Sample("Capacity", "Strategy Capacity", 0, SeriesType.Line, new ChartPoint(time, roundedCapacity), AlgorithmCurrencySymbol);
+            Sample(
+                "Capacity",
+                "Strategy Capacity",
+                0,
+                SeriesType.Line,
+                new ChartPoint(time, roundedCapacity),
+                AlgorithmCurrencySymbol
+            );
         }
 
         /// <summary>
@@ -622,17 +747,23 @@ namespace QuantConnect.Lean.Engine.Results
                         else if (!_chartSeriesCount.Contains(series.Name))
                         {
                             // above the limit and this is a new series
-                            if(!_chartSeriesCountExceededError)
+                            if (!_chartSeriesCountExceededError)
                             {
                                 _chartSeriesCountExceededError = true;
-                                DebugMessage($"Exceeded maximum chart series count for organization tier, new series will be ignored. Limit is currently set at {_job.Controls.MaximumChartSeries}. https://qnt.co/docs-charting-quotas");
+                                DebugMessage(
+                                    $"Exceeded maximum chart series count for organization tier, new series will be ignored. Limit is currently set at {_job.Controls.MaximumChartSeries}. https://qnt.co/docs-charting-quotas"
+                                );
                             }
                             continue;
                         }
 
                         if (series.Values.Count > 0)
                         {
-                            var thisSeries = chart.TryAddAndGetSeries(series.Name, series, forceAddNew: false);
+                            var thisSeries = chart.TryAddAndGetSeries(
+                                series.Name,
+                                series,
+                                forceAddNew: false
+                            );
                             if (series.SeriesType == SeriesType.Pie)
                             {
                                 var dataPoint = series.ConsolidateChartPoints();
@@ -644,16 +775,25 @@ namespace QuantConnect.Lean.Engine.Results
                             else
                             {
                                 var values = thisSeries.Values;
-                                if ((values.Count + series.Values.Count) <= _job.Controls.MaximumDataPointsPerChartSeries) // check chart data point limit first
+                                if (
+                                    (values.Count + series.Values.Count)
+                                    <= _job.Controls.MaximumDataPointsPerChartSeries
+                                ) // check chart data point limit first
                                 {
                                     //We already have this record, so just the new samples to the end:
                                     values.AddRange(series.Values);
                                 }
-                                else if (!_chartSeriesExceededDataPoints.Contains(chart.Name + series.Name))
+                                else if (
+                                    !_chartSeriesExceededDataPoints.Contains(
+                                        chart.Name + series.Name
+                                    )
+                                )
                                 {
                                     _chartSeriesExceededDataPoints.Add(chart.Name + series.Name);
-                                    DebugMessage($"Exceeded maximum data points per series for organization tier, chart update skipped. Chart Name {update.Name}. Series name {series.Name}. https://qnt.co/docs-charting-quotas" +
-                                                 $"Limit is currently set at {_job.Controls.MaximumDataPointsPerChartSeries}");
+                                    DebugMessage(
+                                        $"Exceeded maximum data points per series for organization tier, chart update skipped. Chart Name {update.Name}. Series name {series.Name}. https://qnt.co/docs-charting-quotas"
+                                            + $"Limit is currently set at {_job.Controls.MaximumDataPointsPerChartSeries}"
+                                    );
                                 }
                             }
                         }
@@ -679,7 +819,9 @@ namespace QuantConnect.Lean.Engine.Results
                 ProcessSynchronousEvents(true);
                 Log.Trace("BacktestingResultHandler.Exit(): Saving logs...");
                 var logLocation = SaveLogs(_algorithmId, copy);
-                SystemDebugMessage("Your log was successfully created and can be retrieved from: " + logLocation);
+                SystemDebugMessage(
+                    "Your log was successfully created and can be retrieved from: " + logLocation
+                );
 
                 // Set exit flag, update task will send any message before stopping
                 ExitTriggered = true;
@@ -700,7 +842,10 @@ namespace QuantConnect.Lean.Engine.Results
         /// <param name="message">Additional optional status message.</param>
         public virtual void SendStatusUpdate(AlgorithmStatus status, string message = "")
         {
-            var statusPacket = new AlgorithmStatusPacket(_algorithmId, _projectId, status, message) { OptimizationId = _job.OptimizationId };
+            var statusPacket = new AlgorithmStatusPacket(_algorithmId, _projectId, status, message)
+            {
+                OptimizationId = _job.OptimizationId
+            };
             MessagingHandler.Send(statusPacket);
         }
 
@@ -734,7 +879,8 @@ namespace QuantConnect.Lean.Engine.Results
         /// <remarks>Prime candidate for putting into a base class. Is identical across all result handlers.</remarks>
         public virtual void ProcessSynchronousEvents(bool forceProcess = false)
         {
-            if (Algorithm == null) return;
+            if (Algorithm == null)
+                return;
 
             _capacityEstimate.UpdateMarketCapacity(forceProcess);
 

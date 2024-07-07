@@ -22,13 +22,18 @@ namespace QuantConnect.Algorithm.CSharp
     /// <summary>
     /// Regression algorithm to assert the behavior of <see cref="MaximumUnrealizedProfitPercentPerSecurity"/> Risk Management Model
     /// </summary>
-    public class MaximumUnrealizedProfitPercentPerSecurityFrameworkRegressionAlgorithm : BaseFrameworkRegressionAlgorithm
+    public class MaximumUnrealizedProfitPercentPerSecurityFrameworkRegressionAlgorithm
+        : BaseFrameworkRegressionAlgorithm
     {
         public override void Initialize()
         {
             base.Initialize();
-            SetUniverseSelection(new ManualUniverseSelectionModel(QuantConnect.Symbol.Create("AAPL", SecurityType.Equity, Market.USA)));
-            
+            SetUniverseSelection(
+                new ManualUniverseSelectionModel(
+                    QuantConnect.Symbol.Create("AAPL", SecurityType.Equity, Market.USA)
+                )
+            );
+
             SetRiskManagement(new MaximumUnrealizedProfitPercentPerSecurity(0.004m));
         }
 
@@ -40,35 +45,36 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// This is used by the regression test system to indicate what the expected statistics are from running the algorithm
         /// </summary>
-        public override Dictionary<string, string> ExpectedStatistics => new()
-        {
-            {"Total Orders", "2"},
-            {"Average Win", "0.73%"},
-            {"Average Loss", "0%"},
-            {"Compounding Annual Return", "9.396%"},
-            {"Drawdown", "0.000%"},
-            {"Expectancy", "0"},
-            {"Start Equity", "100000"},
-            {"End Equity", "100732.58"},
-            {"Net Profit", "0.733%"},
-            {"Sharpe Ratio", "2.696"},
-            {"Sortino Ratio", "0"},
-            {"Probabilistic Sharpe Ratio", "90.684%"},
-            {"Loss Rate", "0%"},
-            {"Win Rate", "100%"},
-            {"Profit-Loss Ratio", "0"},
-            {"Alpha", "0.054"},
-            {"Beta", "0.021"},
-            {"Annual Standard Deviation", "0.022"},
-            {"Annual Variance", "0"},
-            {"Information Ratio", "-2.56"},
-            {"Tracking Error", "0.052"},
-            {"Treynor Ratio", "2.791"},
-            {"Total Fees", "$2.00"},
-            {"Estimated Strategy Capacity", "$46000000.00"},
-            {"Lowest Capacity Asset", "AAPL R735QTJ8XC9X"},
-            {"Portfolio Turnover", "6.62%"},
-            {"OrderListHash", "9333eb1583a74e97965049e47d9b93a4"}
-        };
+        public override Dictionary<string, string> ExpectedStatistics =>
+            new()
+            {
+                { "Total Orders", "2" },
+                { "Average Win", "0.73%" },
+                { "Average Loss", "0%" },
+                { "Compounding Annual Return", "9.396%" },
+                { "Drawdown", "0.000%" },
+                { "Expectancy", "0" },
+                { "Start Equity", "100000" },
+                { "End Equity", "100732.58" },
+                { "Net Profit", "0.733%" },
+                { "Sharpe Ratio", "2.696" },
+                { "Sortino Ratio", "0" },
+                { "Probabilistic Sharpe Ratio", "90.684%" },
+                { "Loss Rate", "0%" },
+                { "Win Rate", "100%" },
+                { "Profit-Loss Ratio", "0" },
+                { "Alpha", "0.054" },
+                { "Beta", "0.021" },
+                { "Annual Standard Deviation", "0.022" },
+                { "Annual Variance", "0" },
+                { "Information Ratio", "-2.56" },
+                { "Tracking Error", "0.052" },
+                { "Treynor Ratio", "2.791" },
+                { "Total Fees", "$2.00" },
+                { "Estimated Strategy Capacity", "$46000000.00" },
+                { "Lowest Capacity Asset", "AAPL R735QTJ8XC9X" },
+                { "Portfolio Turnover", "6.62%" },
+                { "OrderListHash", "9333eb1583a74e97965049e47d9b93a4" }
+            };
     }
 }

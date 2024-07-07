@@ -34,7 +34,10 @@ namespace QuantConnect.Interfaces
         /// <param name="dataConfig">defines the parameters to subscribe to a data feed</param>
         /// <param name="newDataAvailableHandler">handler to be fired on new data available</param>
         /// <returns>The new enumerator for this subscription request</returns>
-        IEnumerator<BaseData> Subscribe(SubscriptionDataConfig dataConfig, EventHandler newDataAvailableHandler);
+        IEnumerator<BaseData> Subscribe(
+            SubscriptionDataConfig dataConfig,
+            EventHandler newDataAvailableHandler
+        );
 
         /// <summary>
         /// Removes the specified configuration

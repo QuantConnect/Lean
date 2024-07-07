@@ -65,7 +65,9 @@ namespace QuantConnect.Util
             // can't share the underlying stream instance -- barf
             if (Interlocked.CompareExchange(ref _createdEnumerator, 1, 0) == 1)
             {
-                throw new InvalidOperationException("A StreamReaderEnumerable may only be enumerated once. Consider using memoization or materialization.");
+                throw new InvalidOperationException(
+                    "A StreamReaderEnumerable may only be enumerated once. Consider using memoization or materialization."
+                );
             }
 
             return new Enumerator(this);

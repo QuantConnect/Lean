@@ -13,8 +13,8 @@
  * limitations under the License.
 */
 
-using QuantConnect.Orders;
 using System;
+using QuantConnect.Orders;
 
 namespace QuantConnect.Brokerages.CrossZero
 {
@@ -64,7 +64,13 @@ namespace QuantConnect.Brokerages.CrossZero
         /// <param name="orderQuantity">The quantity of the order.</param>
         /// <param name="orderQuantityHolding">The current holding quantity of the order's symbol.</param>
         /// <param name="orderPosition">The position of the order, which depends on the <paramref name="orderQuantityHolding"/>.</param>
-        public CrossZeroFirstOrderRequest(Order leanOrder, OrderType orderType, decimal orderQuantity, decimal orderQuantityHolding, OrderPosition orderPosition)
+        public CrossZeroFirstOrderRequest(
+            Order leanOrder,
+            OrderType orderType,
+            decimal orderQuantity,
+            decimal orderQuantityHolding,
+            OrderPosition orderPosition
+        )
         {
             LeanOrder = leanOrder;
             OrderType = orderType;

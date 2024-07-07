@@ -25,9 +25,12 @@ namespace QuantConnect.Tests.Common.Exceptions
         [Test]
         public void InterpreterCorrectly()
         {
-            var result = SystemExceptionInterpreter.TryGetLineAndFile(@"   at QuantConnect.Algorithm.CSharp.BasicTemplateAlgorithm.Initialize() in D:\QuantConnect\MyLean\Lean\Algorithm.CSharp\BasicTemplateAlgorithm.cs:line 50
+            var result = SystemExceptionInterpreter.TryGetLineAndFile(
+                @"   at QuantConnect.Algorithm.CSharp.BasicTemplateAlgorithm.Initialize() in D:\QuantConnect\MyLean\Lean\Algorithm.CSharp\BasicTemplateAlgorithm.cs:line 50
    at QuantConnect.Lean.Engine.Setup.BacktestingSetupHandler.<>c__DisplayClass27_0.<Setup>b__0() in D:\QuantConnect\MyLean\Lean\Engine\Setup\BacktestingSetupHandler.cs:line 186
-", out var fileAndLine);
+",
+                out var fileAndLine
+            );
 
             Assert.IsTrue(result);
             Assert.AreEqual(" in BasicTemplateAlgorithm.cs:line 50", fileAndLine);
@@ -38,17 +41,22 @@ namespace QuantConnect.Tests.Common.Exceptions
         {
             var interpreter = new SystemExceptionInterpreter();
 
-            var message = "The ticker AAPL was not found in the SymbolCache. Use the Symbol object as key instead. Accessing the securities collection/slice object by string ticker is only available for" +
-                " securities added with the AddSecurity-family methods. For more details, please check out the documentation.";
-            var stackTrace = "   at QuantConnect.ExtendedDictionary`1.get_Item(String ticker) in D:\\QuantConnect\\MyLean\\Lean\\Common\\ExtendedDictionary.cs:line 121\r\n   at QuantConnect.Algorithm.CSh" +
-                "arp.BasicTemplateAlgorithm.OnData(Slice data) in D:\\QuantConnect\\MyLean\\Lean\\Algorithm.CSharp\\BasicTemplateAlgorithm.cs:line 58\r\n   at QuantConnect.Lean.Engine.AlgorithmManager.R" +
-                "un(AlgorithmNodePacket job, IAlgorithm algorithm, ISynchronizer synchronizer, ITransactionHandler transactions, IResultHandler results, IRealTimeHandler realtime, ILeanManager leanMana" +
-                "ger, CancellationToken token) in D:\\QuantConnect\\MyLean\\Lean\\Engine\\AlgorithmManager.cs:line 525";
+            var message =
+                "The ticker AAPL was not found in the SymbolCache. Use the Symbol object as key instead. Accessing the securities collection/slice object by string ticker is only available for"
+                + " securities added with the AddSecurity-family methods. For more details, please check out the documentation.";
+            var stackTrace =
+                "   at QuantConnect.ExtendedDictionary`1.get_Item(String ticker) in D:\\QuantConnect\\MyLean\\Lean\\Common\\ExtendedDictionary.cs:line 121\r\n   at QuantConnect.Algorithm.CSh"
+                + "arp.BasicTemplateAlgorithm.OnData(Slice data) in D:\\QuantConnect\\MyLean\\Lean\\Algorithm.CSharp\\BasicTemplateAlgorithm.cs:line 58\r\n   at QuantConnect.Lean.Engine.AlgorithmManager.R"
+                + "un(AlgorithmNodePacket job, IAlgorithm algorithm, ISynchronizer synchronizer, ITransactionHandler transactions, IResultHandler results, IRealTimeHandler realtime, ILeanManager leanMana"
+                + "ger, CancellationToken token) in D:\\QuantConnect\\MyLean\\Lean\\Engine\\AlgorithmManager.cs:line 525";
             var result = interpreter.Interpret(new TestException(message, stackTrace), null);
 
-            Assert.AreEqual("   at QuantConnect.ExtendedDictionary`1.get_Item(String ticker) in Common\\ExtendedDictionary.cs:line 121\r\n   at QuantConnect.Algorithm.CSharp.BasicTemplateAlgorithm.OnData(" +
-                "Slice data) in Algorithm.CSharp\\BasicTemplateAlgorithm.cs:line 58\r\n   at QuantConnect.Lean.Engine.AlgorithmManager.Run(AlgorithmNodePacket job, IAlgorithm algorithm, ISynchronizer sync" +
-                "hronizer, ITransactionHandler transactions, IResultHandler results, IRealTimeHandler realtime, ILeanManager leanManager, CancellationToken token) in Engine\\AlgorithmManager.cs:line 525", result.InnerException.StackTrace);
+            Assert.AreEqual(
+                "   at QuantConnect.ExtendedDictionary`1.get_Item(String ticker) in Common\\ExtendedDictionary.cs:line 121\r\n   at QuantConnect.Algorithm.CSharp.BasicTemplateAlgorithm.OnData("
+                    + "Slice data) in Algorithm.CSharp\\BasicTemplateAlgorithm.cs:line 58\r\n   at QuantConnect.Lean.Engine.AlgorithmManager.Run(AlgorithmNodePacket job, IAlgorithm algorithm, ISynchronizer sync"
+                    + "hronizer, ITransactionHandler transactions, IResultHandler results, IRealTimeHandler realtime, ILeanManager leanManager, CancellationToken token) in Engine\\AlgorithmManager.cs:line 525",
+                result.InnerException.StackTrace
+            );
         }
 
         [TestCase("")]

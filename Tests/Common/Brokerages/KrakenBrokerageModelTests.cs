@@ -16,8 +16,8 @@
 using Moq;
 using NUnit.Framework;
 using QuantConnect.Brokerages;
-using QuantConnect.Tests.Brokerages;
 using QuantConnect.Orders;
+using QuantConnect.Tests.Brokerages;
 
 namespace QuantConnect.Tests.Common.Brokerages
 {
@@ -28,13 +28,23 @@ namespace QuantConnect.Tests.Common.Brokerages
 
         [TestCase(0.01, true)]
         [TestCase(0.00009, false)]
-        public void CanSubmitOrder_WhenQuantityIsLargeEnough(decimal orderQuantity, bool isValidOrderQuantity)
+        public void CanSubmitOrder_WhenQuantityIsLargeEnough(
+            decimal orderQuantity,
+            bool isValidOrderQuantity
+        )
         {
             BrokerageMessageEvent message;
             var order = new Mock<Order>();
             order.Setup(x => x.Quantity).Returns(orderQuantity);
 
-            Assert.AreEqual(isValidOrderQuantity, _krakenBrokerageModel.CanSubmitOrder(TestsHelpers.GetSecurity(market: Market.Kraken), order.Object, out message));
+            Assert.AreEqual(
+                isValidOrderQuantity,
+                _krakenBrokerageModel.CanSubmitOrder(
+                    TestsHelpers.GetSecurity(market: Market.Kraken),
+                    order.Object,
+                    out message
+                )
+            );
         }
     }
 }

@@ -14,11 +14,11 @@
 */
 
 using System;
-using QuantConnect.Util;
-using QuantConnect.Logging;
-using QuantConnect.Interfaces;
-using QuantConnect.Securities;
 using System.Collections.Generic;
+using QuantConnect.Interfaces;
+using QuantConnect.Logging;
+using QuantConnect.Securities;
+using QuantConnect.Util;
 
 namespace QuantConnect.Lean.Engine.DataFeeds
 {
@@ -28,8 +28,18 @@ namespace QuantConnect.Lean.Engine.DataFeeds
     public abstract class BacktestingChainProvider
     {
         // see https://github.com/QuantConnect/Lean/issues/6384
-        private static readonly TickType[] DataTypes = new[] { TickType.Quote, TickType.OpenInterest, TickType.Trade };
-        private static readonly Resolution[] Resolutions = new[] { Resolution.Minute, Resolution.Hour, Resolution.Daily };
+        private static readonly TickType[] DataTypes = new[]
+        {
+            TickType.Quote,
+            TickType.OpenInterest,
+            TickType.Trade
+        };
+        private static readonly Resolution[] Resolutions = new[]
+        {
+            Resolution.Minute,
+            Resolution.Hour,
+            Resolution.Daily
+        };
         private bool _loggedPreviousTradableDate;
 
         /// <summary>
@@ -67,17 +77,38 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             if (entries == null)
             {
                 var mhdb = MarketHoursDatabase.FromDataFolder();
-                if (mhdb.TryGetEntry(canonicalSymbol.ID.Market, canonicalSymbol, canonicalSymbol.SecurityType, out var entry) && !entry.ExchangeHours.IsDateOpen(date))
+                if (
+                    mhdb.TryGetEntry(
+                        canonicalSymbol.ID.Market,
+                        canonicalSymbol,
+                        canonicalSymbol.SecurityType,
+                        out var entry
+                    ) && !entry.ExchangeHours.IsDateOpen(date)
+                )
                 {
                     if (!_loggedPreviousTradableDate)
                     {
                         _loggedPreviousTradableDate = true;
-                        Log.Trace($"BacktestingCacheProvider.GetSymbols(): {date} is not a tradable date for {canonicalSymbol}. When requesting contracts" +
-                            $" for non tradable dates, will return contracts of previous tradable date.");
+                        Log.Trace(
+                            $"BacktestingCacheProvider.GetSymbols(): {date} is not a tradable date for {canonicalSymbol}. When requesting contracts"
+                                + $" for non tradable dates, will return contracts of previous tradable date."
+                        );
                     }
 
                     // be user friendly, will return contracts from the previous tradable date
-                    foreach (var symbol in GetSymbols(canonicalSymbol, Time.GetStartTimeForTradeBars(entry.ExchangeHours, date, Time.OneDay, 1, false, entry.DataTimeZone)))
+                    foreach (
+                        var symbol in GetSymbols(
+                            canonicalSymbol,
+                            Time.GetStartTimeForTradeBars(
+                                entry.ExchangeHours,
+                                date,
+                                Time.OneDay,
+                                1,
+                                false,
+                                entry.DataTimeZone
+                            )
+                        )
+                    )
                     {
                         yield return symbol;
                     }
@@ -86,7 +117,9 @@ namespace QuantConnect.Lean.Engine.DataFeeds
 
                 if (Log.DebuggingEnabled)
                 {
-                    Log.Debug($"BacktestingCacheProvider.GetSymbols(): found no source of contracts for {canonicalSymbol} for date {date.ToString(DateFormat.EightCharacter)} for any tick type");
+                    Log.Debug(
+                        $"BacktestingCacheProvider.GetSymbols(): found no source of contracts for {canonicalSymbol} for date {date.ToString(DateFormat.EightCharacter)} for any tick type"
+                    );
                 }
                 yield break;
             }
@@ -94,7 +127,11 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             // generate and return the contract symbol for each zip entry
             foreach (var zipEntryName in entries)
             {
-                var symbol = LeanData.ReadSymbolFromZipEntry(canonicalSymbol, usedResolution, zipEntryName);
+                var symbol = LeanData.ReadSymbolFromZipEntry(
+                    canonicalSymbol,
+                    usedResolution,
+                    zipEntryName
+                );
                 // do not return expired contracts, because we are potentially sourcing this information from daily/hour files we could pick up already expired contracts
                 if (!IsContractExpired(symbol, date))
                 {
@@ -111,12 +148,22 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             return symbol.ID.Date.Date < date.Date;
         }
 
-        private IEnumerable<string> GetZipEntries(Symbol canonicalSymbol, DateTime date, Resolution resolution)
+        private IEnumerable<string> GetZipEntries(
+            Symbol canonicalSymbol,
+            DateTime date,
+            Resolution resolution
+        )
         {
             foreach (var tickType in DataTypes)
             {
                 // build the zip file name and fetch it with our provider
-                var zipFileName = LeanData.GenerateZipFilePath(Globals.DataFolder, canonicalSymbol, date, resolution, tickType);
+                var zipFileName = LeanData.GenerateZipFilePath(
+                    Globals.DataFolder,
+                    canonicalSymbol,
+                    date,
+                    resolution,
+                    tickType
+                );
                 try
                 {
                     return DataCacheProvider.GetZipEntries(zipFileName);

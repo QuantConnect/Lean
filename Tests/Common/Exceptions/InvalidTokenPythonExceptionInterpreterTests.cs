@@ -13,12 +13,12 @@
  * limitations under the License.
 */
 
+using System;
+using System.Collections.Generic;
 using NUnit.Framework;
 using NUnit.Framework.Constraints;
 using Python.Runtime;
 using QuantConnect.Exceptions;
-using System;
-using System.Collections.Generic;
 
 namespace QuantConnect.Tests.Common.Exceptions
 {
@@ -49,10 +49,17 @@ namespace QuantConnect.Tests.Common.Exceptions
         [TestCase(typeof(DivideByZeroException), false)]
         [TestCase(typeof(InvalidOperationException), false)]
         [TestCase(typeof(PythonException), true)]
-        public void CanInterpretReturnsTrueForOnlyInvalidTokenPythonExceptionType(Type exceptionType, bool expectedResult)
+        public void CanInterpretReturnsTrueForOnlyInvalidTokenPythonExceptionType(
+            Type exceptionType,
+            bool expectedResult
+        )
         {
             var exception = CreateExceptionFromType(exceptionType);
-            Assert.AreEqual(expectedResult, new InvalidTokenPythonExceptionInterpreter().CanInterpret(exception), $"Unexpected response for: {exception}");
+            Assert.AreEqual(
+                expectedResult,
+                new InvalidTokenPythonExceptionInterpreter().CanInterpret(exception),
+                $"Unexpected response for: {exception}"
+            );
         }
 
         [TestCase(typeof(Exception), true)]
@@ -60,12 +67,18 @@ namespace QuantConnect.Tests.Common.Exceptions
         [TestCase(typeof(DivideByZeroException), true)]
         [TestCase(typeof(InvalidOperationException), true)]
         [TestCase(typeof(PythonException), false)]
-        public void InterpretThrowsForNonInvalidTokenPythonExceptionTypes(Type exceptionType, bool expectThrow)
+        public void InterpretThrowsForNonInvalidTokenPythonExceptionTypes(
+            Type exceptionType,
+            bool expectThrow
+        )
         {
             var exception = CreateExceptionFromType(exceptionType);
             var interpreter = new InvalidTokenPythonExceptionInterpreter();
             var constraint = expectThrow ? (IResolveConstraint)Throws.Exception : Throws.Nothing;
-            Assert.That(() => interpreter.Interpret(exception, NullExceptionInterpreter.Instance), constraint);
+            Assert.That(
+                () => interpreter.Interpret(exception, NullExceptionInterpreter.Instance),
+                constraint
+            );
         }
 
         [Test]
@@ -78,6 +91,9 @@ namespace QuantConnect.Tests.Common.Exceptions
             Assert.True(exception.Message.Contains("x = 01"));
         }
 
-        private Exception CreateExceptionFromType(Type type) => type == typeof(PythonException) ? _pythonException : (Exception)Activator.CreateInstance(type);
+        private Exception CreateExceptionFromType(Type type) =>
+            type == typeof(PythonException)
+                ? _pythonException
+                : (Exception)Activator.CreateInstance(type);
     }
 }

@@ -50,9 +50,6 @@ namespace QuantConnect.Packets
         /// Default constructor for JSON
         /// </summary>
         public SecurityTypesPacket()
-            : base (PacketType.SecurityTypes)
-        { }
-
+            : base(PacketType.SecurityTypes) { }
     } // End Work Packet:
-
 } // End of Namespace:

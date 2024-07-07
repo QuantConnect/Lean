@@ -14,6 +14,7 @@
  *
 */
 
+using System.Linq;
 using Moq;
 using NUnit.Framework;
 using Python.Runtime;
@@ -22,7 +23,6 @@ using QuantConnect.Algorithm.Framework.Portfolio;
 using QuantConnect.Algorithm.Framework.Risk;
 using QuantConnect.Securities;
 using QuantConnect.Securities.Equity;
-using System.Linq;
 
 namespace QuantConnect.Tests.Algorithm.Framework.Risk
 {
@@ -42,15 +42,29 @@ namespace QuantConnect.Tests.Algorithm.Framework.Risk
             Language language,
             bool invested,
             decimal absoluteHoldingsCost,
-            bool shouldLiquidate)
+            bool shouldLiquidate
+        )
         {
             var algorithm = CreateAlgorithm(language, 0.1m);
-            var targets = algorithm.RiskManagement.ManageRisk(algorithm, new PortfolioTarget[] { new PortfolioTarget(Symbols.AAPL, 10) }).ToList();
+            var targets = algorithm
+                .RiskManagement.ManageRisk(
+                    algorithm,
+                    new PortfolioTarget[] { new PortfolioTarget(Symbols.AAPL, 10) }
+                )
+                .ToList();
             Assert.AreEqual(0, targets.Count);
 
-            algorithm.Securities.Add(Symbols.AAPL, GetSecurity(Symbols.AAPL, invested, absoluteHoldingsCost));
+            algorithm.Securities.Add(
+                Symbols.AAPL,
+                GetSecurity(Symbols.AAPL, invested, absoluteHoldingsCost)
+            );
             algorithm.Portfolio.InvalidateTotalPortfolioValue();
-            targets = algorithm.RiskManagement.ManageRisk(algorithm, new PortfolioTarget[] { new PortfolioTarget(Symbols.AAPL, 10)}).ToList();
+            targets = algorithm
+                .RiskManagement.ManageRisk(
+                    algorithm,
+                    new PortfolioTarget[] { new PortfolioTarget(Symbols.AAPL, 10) }
+                )
+                .ToList();
 
             if (shouldLiquidate)
             {
@@ -69,17 +83,32 @@ namespace QuantConnect.Tests.Algorithm.Framework.Risk
         public void ReturnsExpectedPortfolioTargetsAfterReset(Language language)
         {
             var algorithm = CreateAlgorithm(language, 0.1m);
-            var targets = algorithm.RiskManagement.ManageRisk(algorithm, new PortfolioTarget[] { new PortfolioTarget(Symbols.AAPL, 10) }).ToList();
+            var targets = algorithm
+                .RiskManagement.ManageRisk(
+                    algorithm,
+                    new PortfolioTarget[] { new PortfolioTarget(Symbols.AAPL, 10) }
+                )
+                .ToList();
             algorithm.Securities.Add(Symbols.AAPL, GetSecurity(Symbols.AAPL, true, -10001));
             algorithm.Portfolio.InvalidateTotalPortfolioValue();
-            targets = algorithm.RiskManagement.ManageRisk(algorithm, new PortfolioTarget[] { new PortfolioTarget(Symbols.AAPL, 10) }).ToList();
+            targets = algorithm
+                .RiskManagement.ManageRisk(
+                    algorithm,
+                    new PortfolioTarget[] { new PortfolioTarget(Symbols.AAPL, 10) }
+                )
+                .ToList();
 
             Assert.AreEqual(1, targets.Count);
             Assert.AreEqual(Symbols.AAPL, targets[0].Symbol);
             Assert.AreEqual(0, targets[0].Quantity);
 
             algorithm.Securities.Add(Symbols.AAPL, GetSecurity(Symbols.AAPL, true, 10001));
-            targets = algorithm.RiskManagement.ManageRisk(algorithm, new PortfolioTarget[] { new PortfolioTarget(Symbols.AAPL, 10) }).ToList();
+            targets = algorithm
+                .RiskManagement.ManageRisk(
+                    algorithm,
+                    new PortfolioTarget[] { new PortfolioTarget(Symbols.AAPL, 10) }
+                )
+                .ToList();
             Assert.AreEqual(0, targets.Count);
         }
 
@@ -87,22 +116,35 @@ namespace QuantConnect.Tests.Algorithm.Framework.Risk
         [TestCase(Language.Python)]
         public void ReturnsMoreThanOnePortfolioTarget(Language language)
         {
-            var targetSymbols = new PortfolioTarget[] {
+            var targetSymbols = new PortfolioTarget[]
+            {
                 new PortfolioTarget(Symbols.AAPL, 10),
                 new PortfolioTarget(Symbols.SPY, 100),
                 new PortfolioTarget(Symbols.MSFT, 1000),
                 new PortfolioTarget(Symbols.GOOG, 10000),
-                new PortfolioTarget(Symbols.IBM, 100000)};
+                new PortfolioTarget(Symbols.IBM, 100000)
+            };
 
             var algorithm = CreateAlgorithm(language, 0.1m);
-            var returnedTargets = algorithm.RiskManagement.ManageRisk(algorithm, targetSymbols).ToList();
+            var returnedTargets = algorithm
+                .RiskManagement.ManageRisk(algorithm, targetSymbols)
+                .ToList();
 
-            targetSymbols.ToList().ForEach(x => algorithm.Securities.Add(x.Symbol, GetSecurity( x.Symbol, true, -x.Quantity)));
+            targetSymbols
+                .ToList()
+                .ForEach(x =>
+                    algorithm.Securities.Add(x.Symbol, GetSecurity(x.Symbol, true, -x.Quantity))
+                );
             algorithm.Portfolio.InvalidateTotalPortfolioValue();
-            returnedTargets = algorithm.RiskManagement.ManageRisk(algorithm, targetSymbols).ToList();
+            returnedTargets = algorithm
+                .RiskManagement.ManageRisk(algorithm, targetSymbols)
+                .ToList();
 
             Assert.AreEqual(targetSymbols.Length, returnedTargets.Count);
-            Assert.AreEqual(targetSymbols.Select(x => x.Symbol), returnedTargets.Select(x => x.Symbol));
+            Assert.AreEqual(
+                targetSymbols.Select(x => x.Symbol),
+                returnedTargets.Select(x => x.Symbol)
+            );
             Assert.IsTrue(returnedTargets.All(x => x.Quantity == 0));
         }
 
@@ -116,7 +158,9 @@ namespace QuantConnect.Tests.Algorithm.Framework.Risk
                 using (Py.GIL())
                 {
                     const string name = nameof(MaximumDrawdownPercentPortfolio);
-                    var instance = Py.Import(name).GetAttr(name).Invoke(maxDrawdownPercent.ToPython());
+                    var instance = Py.Import(name)
+                        .GetAttr(name)
+                        .Invoke(maxDrawdownPercent.ToPython());
                     var model = new RiskManagementModelPythonWrapper(instance);
                     algorithm.SetRiskManagement(model);
                 }
@@ -143,8 +187,10 @@ namespace QuantConnect.Tests.Algorithm.Framework.Risk
                 new SecurityCache(),
                 Exchange.UNKNOWN
             );
-            var holding = new Mock<EquityHolding>(security.Object,
-                new IdentityCurrencyConverter(Currencies.USD));
+            var holding = new Mock<EquityHolding>(
+                security.Object,
+                new IdentityCurrencyConverter(Currencies.USD)
+            );
             holding.Setup(m => m.Invested).Returns(invested);
             holding.Setup(m => m.HoldingsValue).Returns(absoluteHoldingsCost);
 

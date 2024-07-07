@@ -13,27 +13,30 @@
  * limitations under the License.
 */
 using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using NodaTime;
 using NUnit.Framework;
 using QuantConnect.Data;
-using QuantConnect.Util;
-using QuantConnect.Securities;
 using QuantConnect.Data.Market;
-using System.Collections.Generic;
-using NodaTime;
 using QuantConnect.Interfaces;
 using QuantConnect.Lean.Engine.DataFeeds;
 using QuantConnect.Lean.Engine.HistoricalData;
+using QuantConnect.Securities;
 using QuantConnect.Tests.Algorithm;
 using QuantConnect.ToolBox;
+using QuantConnect.Util;
 
 namespace QuantConnect.Tests.ToolBox
 {
     [TestFixture]
     public class LeanDataWriterTests
     {
-        private readonly string _dataDirectory = Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString());
+        private readonly string _dataDirectory = Path.Combine(
+            Path.GetTempPath(),
+            Guid.NewGuid().ToString()
+        );
         private Symbol _forex;
         private Symbol _cfd;
         private Symbol _equity;
@@ -64,41 +67,88 @@ namespace QuantConnect.Tests.ToolBox
         {
             return new List<QuoteBar>()
             {
-                new QuoteBar(Parse.DateTime("3/16/2017 12:00:00 PM"), sym, new Bar(1m, 2m, 3m, 4m),  1, new Bar(5m, 6m, 7m, 8m),  2),
-                new QuoteBar(Parse.DateTime("3/16/2017 12:00:01 PM"), sym, new Bar(11m, 21m, 31m, 41m),  3, new Bar(51m, 61m, 71m, 81m), 4),
-                new QuoteBar(Parse.DateTime("3/16/2017 12:00:02 PM"), sym, new Bar(10m, 20m, 30m, 40m),  5, new Bar(50m, 60m, 70m, 80m),  6),
+                new QuoteBar(
+                    Parse.DateTime("3/16/2017 12:00:00 PM"),
+                    sym,
+                    new Bar(1m, 2m, 3m, 4m),
+                    1,
+                    new Bar(5m, 6m, 7m, 8m),
+                    2
+                ),
+                new QuoteBar(
+                    Parse.DateTime("3/16/2017 12:00:01 PM"),
+                    sym,
+                    new Bar(11m, 21m, 31m, 41m),
+                    3,
+                    new Bar(51m, 61m, 71m, 81m),
+                    4
+                ),
+                new QuoteBar(
+                    Parse.DateTime("3/16/2017 12:00:02 PM"),
+                    sym,
+                    new Bar(10m, 20m, 30m, 40m),
+                    5,
+                    new Bar(50m, 60m, 70m, 80m),
+                    6
+                ),
             };
         }
 
         [Test]
         public void LeanDataWriter_MultipleDays()
         {
-            var leanDataWriter = new LeanDataWriter(Resolution.Second, _forex, _dataDirectory, TickType.Quote);
+            var leanDataWriter = new LeanDataWriter(
+                Resolution.Second,
+                _forex,
+                _dataDirectory,
+                TickType.Quote
+            );
             var sourceData = new List<QuoteBar>
             {
-                new (Parse.DateTime("3/16/2021 12:00:00 PM"), _forex, new Bar(1m, 2m, 3m, 4m),  1, new Bar(5m, 6m, 7m, 8m),  2)
+                new(
+                    Parse.DateTime("3/16/2021 12:00:00 PM"),
+                    _forex,
+                    new Bar(1m, 2m, 3m, 4m),
+                    1,
+                    new Bar(5m, 6m, 7m, 8m),
+                    2
+                )
             };
 
             for (var i = 1; i < 100; i++)
             {
-                sourceData.Add(new QuoteBar(sourceData.Last().Time.AddDays(1),
-                    _forex,
-                    new Bar(1m, 2m, 3m, 4m),
-                    1, new Bar(5m, 6m, 7m, 8m),
-                    2));
+                sourceData.Add(
+                    new QuoteBar(
+                        sourceData.Last().Time.AddDays(1),
+                        _forex,
+                        new Bar(1m, 2m, 3m, 4m),
+                        1,
+                        new Bar(5m, 6m, 7m, 8m),
+                        2
+                    )
+                );
             }
             leanDataWriter.Write(sourceData);
 
             foreach (var bar in sourceData)
             {
-                var filePath = LeanData.GenerateZipFilePath(_dataDirectory, _forex, bar.Time, Resolution.Second, TickType.Quote);
+                var filePath = LeanData.GenerateZipFilePath(
+                    _dataDirectory,
+                    _forex,
+                    bar.Time,
+                    Resolution.Second,
+                    TickType.Quote
+                );
                 Assert.IsTrue(File.Exists(filePath));
                 Assert.IsFalse(File.Exists(filePath + ".tmp"));
 
                 var data = QuantConnect.Compression.Unzip(filePath).Single();
 
                 Assert.AreEqual(1, data.Value.Count());
-                Assert.IsTrue(data.Key.Contains(bar.Time.ToStringInvariant(DateFormat.EightCharacter)), $"Key {data.Key} BarTime: {bar.Time}");
+                Assert.IsTrue(
+                    data.Key.Contains(bar.Time.ToStringInvariant(DateFormat.EightCharacter)),
+                    $"Key {data.Key} BarTime: {bar.Time}"
+                );
             }
         }
 
@@ -106,15 +156,23 @@ namespace QuantConnect.Tests.ToolBox
         [TestCase(false)]
         public void Mapping(bool mapSymbol)
         {
-            LeanDataWriter.MapFileProvider = new Lazy<IMapFileProvider>(TestGlobals.MapFileProvider);
+            LeanDataWriter.MapFileProvider = new Lazy<IMapFileProvider>(
+                TestGlobals.MapFileProvider
+            );
 
             // asset got mapped on 20080929 to SPWRA
             var symbol = Symbol.Create("SPWR", SecurityType.Equity, Market.USA);
-            var leanDataWriter = new LeanDataWriter(Resolution.Daily, symbol, _dataDirectory, TickType.Trade, mapSymbol: mapSymbol);
+            var leanDataWriter = new LeanDataWriter(
+                Resolution.Daily,
+                symbol,
+                _dataDirectory,
+                TickType.Trade,
+                mapSymbol: mapSymbol
+            );
             var sourceData = new List<TradeBar>
             {
-                new (new DateTime(2008, 9, 29), symbol, 10, 11, 12, 13, 2),
-                new (new DateTime(2008, 9, 30), symbol, 10, 11, 12, 13, 2),
+                new(new DateTime(2008, 9, 29), symbol, 10, 11, 12, 13, 2),
+                new(new DateTime(2008, 9, 30), symbol, 10, 11, 12, 13, 2),
             };
             leanDataWriter.Write(sourceData);
 
@@ -124,24 +182,53 @@ namespace QuantConnect.Tests.ToolBox
                 var expectedTicker = (i == 0 || !mapSymbol) ? "SPWR" : "SPWRA";
                 symbol = symbol.UpdateMappedSymbol(expectedTicker);
 
-                var filePath = LeanData.GenerateZipFilePath(_dataDirectory, symbol, bar.Time, Resolution.Daily, TickType.Trade);
+                var filePath = LeanData.GenerateZipFilePath(
+                    _dataDirectory,
+                    symbol,
+                    bar.Time,
+                    Resolution.Daily,
+                    TickType.Trade
+                );
                 Assert.IsTrue(File.Exists(filePath));
                 Assert.IsFalse(File.Exists(filePath + ".tmp"));
 
                 var data = QuantConnect.Compression.Unzip(filePath).Single();
 
                 Assert.AreEqual(!mapSymbol ? 2 : 1, data.Value.Count);
-                Assert.AreEqual($"{expectedTicker}.csv".ToLower(), data.Key, $"Key {data.Key} BarTime: {bar.Time}");
-                Assert.IsTrue(data.Value.Any(point => point.StartsWith(bar.Time.ToStringInvariant(DateFormat.TwelveCharacter), StringComparison.Ordinal)), $"Key {data.Key} BarTime: {bar.Time}");
+                Assert.AreEqual(
+                    $"{expectedTicker}.csv".ToLower(),
+                    data.Key,
+                    $"Key {data.Key} BarTime: {bar.Time}"
+                );
+                Assert.IsTrue(
+                    data.Value.Any(point =>
+                        point.StartsWith(
+                            bar.Time.ToStringInvariant(DateFormat.TwelveCharacter),
+                            StringComparison.Ordinal
+                        )
+                    ),
+                    $"Key {data.Key} BarTime: {bar.Time}"
+                );
             }
         }
 
         [Test]
         public void LeanDataWriter_CanWriteForex()
         {
-            var filePath = LeanData.GenerateZipFilePath(_dataDirectory, _forex, _date, Resolution.Second, TickType.Quote);
+            var filePath = LeanData.GenerateZipFilePath(
+                _dataDirectory,
+                _forex,
+                _date,
+                Resolution.Second,
+                TickType.Quote
+            );
 
-            var leanDataWriter = new LeanDataWriter(Resolution.Second, _forex, _dataDirectory, TickType.Quote);
+            var leanDataWriter = new LeanDataWriter(
+                Resolution.Second,
+                _forex,
+                _dataDirectory,
+                TickType.Quote
+            );
             leanDataWriter.Write(GetQuoteBars(_forex));
 
             Assert.IsTrue(File.Exists(filePath));
@@ -158,44 +245,107 @@ namespace QuantConnect.Tests.ToolBox
         [TestCase(SecurityType.Option, Resolution.Daily)]
         [TestCase(SecurityType.Future, Resolution.Daily)]
         [TestCase(SecurityType.FutureOption, Resolution.Daily)]
-        public void LeanDataWriter_CanWriteZipWithMultipleContracts(SecurityType securityType, Resolution resolution)
+        public void LeanDataWriter_CanWriteZipWithMultipleContracts(
+            SecurityType securityType,
+            Resolution resolution
+        )
         {
             Symbol contract1;
             Symbol contract2;
             if (securityType == SecurityType.Future)
             {
-                contract1 = Symbol.CreateFuture(Futures.Indices.SP500EMini, Market.CME, new DateTime(2020, 02, 01));
-                contract2 = Symbol.CreateFuture(Futures.Indices.SP500EMini, Market.CME, new DateTime(2020, 03, 01));
+                contract1 = Symbol.CreateFuture(
+                    Futures.Indices.SP500EMini,
+                    Market.CME,
+                    new DateTime(2020, 02, 01)
+                );
+                contract2 = Symbol.CreateFuture(
+                    Futures.Indices.SP500EMini,
+                    Market.CME,
+                    new DateTime(2020, 03, 01)
+                );
             }
             else if (securityType == SecurityType.Option)
             {
-                contract1 = Symbol.CreateOption("AAPL", Market.USA, OptionStyle.American, OptionRight.Call, 1, new DateTime(2020, 02, 01));
-                contract2 = Symbol.CreateOption("AAPL", Market.USA, OptionStyle.American, OptionRight.Call, 1, new DateTime(2020, 03, 01));
+                contract1 = Symbol.CreateOption(
+                    "AAPL",
+                    Market.USA,
+                    OptionStyle.American,
+                    OptionRight.Call,
+                    1,
+                    new DateTime(2020, 02, 01)
+                );
+                contract2 = Symbol.CreateOption(
+                    "AAPL",
+                    Market.USA,
+                    OptionStyle.American,
+                    OptionRight.Call,
+                    1,
+                    new DateTime(2020, 03, 01)
+                );
             }
             else if (securityType == SecurityType.FutureOption)
             {
                 var underlying = Symbols.ES_Future_Chain;
-                contract1 = Symbol.CreateOption(underlying, Market.CME, OptionStyle.American, OptionRight.Call, 1, new DateTime(2020, 02, 01));
-                contract2 = Symbol.CreateOption(underlying, Market.CME, OptionStyle.American, OptionRight.Call, 1, new DateTime(2020, 03, 01));
+                contract1 = Symbol.CreateOption(
+                    underlying,
+                    Market.CME,
+                    OptionStyle.American,
+                    OptionRight.Call,
+                    1,
+                    new DateTime(2020, 02, 01)
+                );
+                contract2 = Symbol.CreateOption(
+                    underlying,
+                    Market.CME,
+                    OptionStyle.American,
+                    OptionRight.Call,
+                    1,
+                    new DateTime(2020, 03, 01)
+                );
             }
             else
             {
                 throw new NotImplementedException($"{securityType} not implemented!");
             }
 
-            var filePath1 = LeanData.GenerateZipFilePath(_dataDirectory, contract1, _date, resolution, TickType.Quote);
-            var leanDataWriter1 = new LeanDataWriter(resolution, contract1, _dataDirectory, TickType.Quote);
+            var filePath1 = LeanData.GenerateZipFilePath(
+                _dataDirectory,
+                contract1,
+                _date,
+                resolution,
+                TickType.Quote
+            );
+            var leanDataWriter1 = new LeanDataWriter(
+                resolution,
+                contract1,
+                _dataDirectory,
+                TickType.Quote
+            );
             leanDataWriter1.Write(GetQuoteBars(contract1));
 
-            var filePath2 = LeanData.GenerateZipFilePath(_dataDirectory, contract2, _date, resolution, TickType.Quote);
-            var leanDataWriter2 = new LeanDataWriter(resolution, contract2, _dataDirectory, TickType.Quote);
+            var filePath2 = LeanData.GenerateZipFilePath(
+                _dataDirectory,
+                contract2,
+                _date,
+                resolution,
+                TickType.Quote
+            );
+            var leanDataWriter2 = new LeanDataWriter(
+                resolution,
+                contract2,
+                _dataDirectory,
+                TickType.Quote
+            );
             leanDataWriter2.Write(GetQuoteBars(contract2));
 
             Assert.AreEqual(filePath1, filePath2);
             Assert.IsTrue(File.Exists(filePath1));
             Assert.IsFalse(File.Exists(filePath1 + ".tmp"));
 
-            var data = QuantConnect.Compression.Unzip(filePath1).ToDictionary(x => x.Key, x => x.Value.ToList());
+            var data = QuantConnect
+                .Compression.Unzip(filePath1)
+                .ToDictionary(x => x.Key, x => x.Value.ToList());
             Assert.AreEqual(2, data.Count);
             Assert.That(data.Values, Has.All.Count.EqualTo(3));
         }
@@ -203,9 +353,20 @@ namespace QuantConnect.Tests.ToolBox
         [Test]
         public void LeanDataWriter_CanWriteCfd()
         {
-            var filePath = LeanData.GenerateZipFilePath(_dataDirectory, _cfd, _date, Resolution.Minute, TickType.Quote);
+            var filePath = LeanData.GenerateZipFilePath(
+                _dataDirectory,
+                _cfd,
+                _date,
+                Resolution.Minute,
+                TickType.Quote
+            );
 
-            var leanDataWriter = new LeanDataWriter(Resolution.Minute, _cfd, _dataDirectory, TickType.Quote);
+            var leanDataWriter = new LeanDataWriter(
+                Resolution.Minute,
+                _cfd,
+                _dataDirectory,
+                TickType.Quote
+            );
             leanDataWriter.Write(GetQuoteBars(_cfd));
 
             Assert.IsTrue(File.Exists(filePath));
@@ -219,7 +380,13 @@ namespace QuantConnect.Tests.ToolBox
         [Test]
         public void LeanDataWriter_CanWriteEquity()
         {
-            var filePath = LeanData.GenerateZipFilePath(_dataDirectory, _equity, _date, Resolution.Tick, TickType.Trade);
+            var filePath = LeanData.GenerateZipFilePath(
+                _dataDirectory,
+                _equity,
+                _date,
+                Resolution.Tick,
+                TickType.Trade
+            );
 
             var leanDataWriter = new LeanDataWriter(Resolution.Tick, _equity, _dataDirectory);
             leanDataWriter.Write(GetTicks(_equity));
@@ -260,7 +427,15 @@ namespace QuantConnect.Tests.ToolBox
         public void LeanDataWriterHandlesWindowsInvalidNames(string ticker)
         {
             var symbol = Symbol.Create(ticker, SecurityType.Equity, Market.USA);
-            var filePath = FileExtension.ToNormalizedPath(LeanData.GenerateZipFilePath(_dataDirectory, symbol, _date, Resolution.Tick, TickType.Trade));
+            var filePath = FileExtension.ToNormalizedPath(
+                LeanData.GenerateZipFilePath(
+                    _dataDirectory,
+                    symbol,
+                    _date,
+                    Resolution.Tick,
+                    TickType.Trade
+                )
+            );
 
             var leanDataWriter = new LeanDataWriter(Resolution.Tick, symbol, _dataDirectory);
             leanDataWriter.Write(GetTicks(symbol));
@@ -281,7 +456,13 @@ namespace QuantConnect.Tests.ToolBox
         [TestCase(WritePolicy.Overwrite, Resolution.Second)]
         public void RespectsWritePolicy(WritePolicy? writePolicy, Resolution resolution)
         {
-            var filePath = LeanData.GenerateZipFilePath(_dataDirectory, _crypto, _date, resolution, TickType.Quote);
+            var filePath = LeanData.GenerateZipFilePath(
+                _dataDirectory,
+                _crypto,
+                _date,
+                resolution,
+                TickType.Quote
+            );
             if (File.Exists(filePath))
             {
                 File.Delete(filePath);
@@ -291,9 +472,21 @@ namespace QuantConnect.Tests.ToolBox
             var dataPointsPerLoop = 2;
             for (var i = 0; i < loopCount; i++)
             {
-                var leanDataWriter = new LeanDataWriter(resolution, _crypto, _dataDirectory, TickType.Quote, writePolicy: writePolicy);
-                var quoteBar = new QuoteBar(Parse.DateTime("3/16/2017 12:00:00 PM").AddHours(i), _crypto, new Bar(1m, 2m, 3m, 4m), 1,
-                    new Bar(5m, 6m, 7m, 8m), 2);
+                var leanDataWriter = new LeanDataWriter(
+                    resolution,
+                    _crypto,
+                    _dataDirectory,
+                    TickType.Quote,
+                    writePolicy: writePolicy
+                );
+                var quoteBar = new QuoteBar(
+                    Parse.DateTime("3/16/2017 12:00:00 PM").AddHours(i),
+                    _crypto,
+                    new Bar(1m, 2m, 3m, 4m),
+                    1,
+                    new Bar(5m, 6m, 7m, 8m),
+                    2
+                );
 
                 // same quote twice! it has the same time, so it will be dropped when merging
                 leanDataWriter.Write(Enumerable.Repeat(quoteBar, dataPointsPerLoop));
@@ -303,7 +496,6 @@ namespace QuantConnect.Tests.ToolBox
             }
 
             var data = QuantConnect.Compression.Unzip(filePath).First().Value;
-
 
             switch (writePolicy)
             {
@@ -336,9 +528,20 @@ namespace QuantConnect.Tests.ToolBox
         [Test]
         public void LeanDataWriter_CanWriteCrypto()
         {
-            var filePath = LeanData.GenerateZipFilePath(_dataDirectory, _crypto, _date, Resolution.Second, TickType.Quote);
+            var filePath = LeanData.GenerateZipFilePath(
+                _dataDirectory,
+                _crypto,
+                _date,
+                Resolution.Second,
+                TickType.Quote
+            );
 
-            var leanDataWriter = new LeanDataWriter(Resolution.Second, _crypto, _dataDirectory, TickType.Quote);
+            var leanDataWriter = new LeanDataWriter(
+                Resolution.Second,
+                _crypto,
+                _dataDirectory,
+                TickType.Quote
+            );
             leanDataWriter.Write(GetQuoteBars(_crypto));
 
             Assert.IsTrue(File.Exists(filePath));
@@ -358,7 +561,11 @@ namespace QuantConnect.Tests.ToolBox
         [TestCase(SecurityType.Crypto, TickType.Trade, Resolution.Minute)]
         [TestCase(SecurityType.Option, TickType.Quote, Resolution.Minute)]
         [TestCase(SecurityType.Option, TickType.Trade, Resolution.Minute)]
-        public void CanDownloadAndSave(SecurityType securityType, TickType tickType, Resolution resolution)
+        public void CanDownloadAndSave(
+            SecurityType securityType,
+            TickType tickType,
+            Resolution resolution
+        )
         {
             var symbol = Symbols.GetBySecurityType(securityType);
             var startTimeUtc = GetRepoDataDates(securityType, resolution);
@@ -366,24 +573,36 @@ namespace QuantConnect.Tests.ToolBox
             // Override for this case because symbol from Symbols does not have data included
             if (securityType == SecurityType.Option)
             {
-                symbol = Symbols.CreateOptionSymbol("GOOG", OptionRight.Call, 770, new DateTime(2015, 12, 24));
+                symbol = Symbols.CreateOptionSymbol(
+                    "GOOG",
+                    OptionRight.Call,
+                    770,
+                    new DateTime(2015, 12, 24)
+                );
                 startTimeUtc = new DateTime(2015, 12, 23);
             }
 
             // EndTime based on start, only do 1 day for anything less than hour because we compare datafiles below
             // and minute and finer resolutions store by day
-            var endTimeUtc = startTimeUtc + TimeSpan.FromDays(resolution >= Resolution.Hour ? 15 : 1);
+            var endTimeUtc =
+                startTimeUtc + TimeSpan.FromDays(resolution >= Resolution.Hour ? 15 : 1);
 
             // Create our writer and LocalHistory brokerage to "download" from
             var writer = new LeanDataWriter(_dataDirectory, resolution, securityType, tickType);
             var brokerage = new LocalHistoryBrokerage();
-            var symbols = new List<Symbol>() {symbol};
+            var symbols = new List<Symbol>() { symbol };
 
             // "Download" and write to file
             writer.DownloadAndSave(brokerage, symbols, startTimeUtc, endTimeUtc);
 
             // Verify the file exists where we expect
-            var filePath = LeanData.GenerateZipFilePath(_dataDirectory, symbol, startTimeUtc, resolution, tickType);
+            var filePath = LeanData.GenerateZipFilePath(
+                _dataDirectory,
+                symbol,
+                startTimeUtc,
+                resolution,
+                tickType
+            );
             Assert.IsTrue(File.Exists(filePath));
 
             // Read the file and data
@@ -395,8 +614,19 @@ namespace QuantConnect.Tests.ToolBox
             Assert.IsTrue(dataFromFile.All(x => x.Symbol == symbol));
 
             // Get history directly ourselves and compare with the data in the file
-            var history = GetHistory(brokerage, resolution, securityType, symbol, tickType, startTimeUtc, endTimeUtc);
-            CollectionAssert.AreEqual(history.Select(x => x.Time), dataFromFile.Select(x => x.Time));
+            var history = GetHistory(
+                brokerage,
+                resolution,
+                securityType,
+                symbol,
+                tickType,
+                startTimeUtc,
+                endTimeUtc
+            );
+            CollectionAssert.AreEqual(
+                history.Select(x => x.Time),
+                dataFromFile.Select(x => x.Time)
+            );
 
             brokerage.Dispose();
         }
@@ -405,7 +635,15 @@ namespace QuantConnect.Tests.ToolBox
         /// Helper to get history for tests from a brokerage implementation
         /// </summary>
         /// <returns>List of data points from history request</returns>
-        private List<BaseData> GetHistory(IBrokerage brokerage, Resolution resolution, SecurityType securityType, Symbol symbol, TickType tickType, DateTime startTimeUtc, DateTime endTimeUtc)
+        private List<BaseData> GetHistory(
+            IBrokerage brokerage,
+            Resolution resolution,
+            SecurityType securityType,
+            Symbol symbol,
+            TickType tickType,
+            DateTime startTimeUtc,
+            DateTime endTimeUtc
+        )
         {
             var dataType = LeanData.GetDataType(resolution, tickType);
 
@@ -416,8 +654,16 @@ namespace QuantConnect.Tests.ToolBox
 
             var canonicalSymbol = Symbol.Create(ticker, securityType, market);
 
-            var exchangeHours = marketHoursDatabase.GetExchangeHours(canonicalSymbol.ID.Market, canonicalSymbol, securityType);
-            var dataTimeZone = marketHoursDatabase.GetDataTimeZone(canonicalSymbol.ID.Market, canonicalSymbol, securityType);
+            var exchangeHours = marketHoursDatabase.GetExchangeHours(
+                canonicalSymbol.ID.Market,
+                canonicalSymbol,
+                securityType
+            );
+            var dataTimeZone = marketHoursDatabase.GetDataTimeZone(
+                canonicalSymbol.ID.Market,
+                canonicalSymbol,
+                securityType
+            );
 
             var historyRequest = new HistoryRequest(
                 startTimeUtc,
@@ -434,14 +680,14 @@ namespace QuantConnect.Tests.ToolBox
                 tickType
             );
 
-            return brokerage.GetHistory(historyRequest)
-                .Select(
-                    x =>
-                    {
-                        // Convert to date timezone before we write it
-                        x.Time = x.Time.ConvertTo(exchangeHours.TimeZone, dataTimeZone);
-                        return x;
-                    })
+            return brokerage
+                .GetHistory(historyRequest)
+                .Select(x =>
+                {
+                    // Convert to date timezone before we write it
+                    x.Time = x.Time.ConvertTo(exchangeHours.TimeZone, dataTimeZone);
+                    return x;
+                })
                 .ToList();
         }
 
@@ -467,13 +713,17 @@ namespace QuantConnect.Tests.ToolBox
                 case SecurityType.Crypto: // Coinbase (deprecated: GDAX) BTCUSD Daily/Minute/Second
                     if (resolution == Resolution.Hour || resolution == Resolution.Tick)
                     {
-                        throw new ArgumentException($"GDAX BTC Crypto does not have data for this resolution {resolution}");
+                        throw new ArgumentException(
+                            $"GDAX BTC Crypto does not have data for this resolution {resolution}"
+                        );
                     }
                     return new DateTime(2017, 9, 3);
                 case SecurityType.Option: // No Data for the default symbol...
                     return DateTime.MinValue;
                 default:
-                    throw new NotImplementedException("This has only implemented a few security types (Equity/Crypto/Option)");
+                    throw new NotImplementedException(
+                        "This has only implemented a few security types (Equity/Crypto/Option)"
+                    );
             }
         }
 
@@ -514,7 +764,7 @@ namespace QuantConnect.Tests.ToolBox
 
             public override IEnumerable<BaseData> GetHistory(HistoryRequest request)
             {
-                var requests = new List<HistoryRequest> {request};
+                var requests = new List<HistoryRequest> { request };
                 var slices = _historyProvider.GetHistory(requests, DateTimeZone.Utc);
 
                 // Grab all the bar values for this

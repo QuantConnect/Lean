@@ -47,7 +47,13 @@ namespace QuantConnect.Tests.Common.Data.Auxiliary
         public void AppliesSplitWithPreviousTradingDateEqualToRowDate()
         {
             var row = new CorporateFactorRow(new DateTime(2018, 08, 23), 1m, 2m, 123m);
-            var dividend = new Split(Symbols.SPY, row.Date.AddDays(1), 123m, 2m, SplitType.SplitOccurred);
+            var dividend = new Split(
+                Symbols.SPY,
+                row.Date.AddDays(1),
+                123m,
+                2m,
+                SplitType.SplitOccurred
+            );
             var updated = row.Apply(dividend, SecurityExchangeHours.AlwaysOpen(TimeZones.NewYork));
             Assert.AreEqual("20180823,1,4,123", updated.GetFileFormat());
         }

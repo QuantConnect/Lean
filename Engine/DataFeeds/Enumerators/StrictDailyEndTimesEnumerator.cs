@@ -14,14 +14,14 @@
 */
 
 using System;
-using QuantConnect.Data;
-using QuantConnect.Util;
 using System.Collections;
-using QuantConnect.Securities;
 using System.Collections.Generic;
-using QuantConnect.Data.Market;
+using QuantConnect.Data;
 using QuantConnect.Data.Auxiliary;
+using QuantConnect.Data.Market;
 using QuantConnect.Data.UniverseSelection;
+using QuantConnect.Securities;
+using QuantConnect.Util;
 
 namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
 {
@@ -30,11 +30,15 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
     /// </summary>
     public class StrictDailyEndTimesEnumerator : IEnumerator<BaseData>
     {
-        private static readonly HashSet<Type> _types = new()
-        {
-            // the underlying could yield auxiliary data which we don't want to change
-            typeof(TradeBar), typeof(QuoteBar), typeof(ZipEntryName), typeof(BaseDataCollection)
-        };
+        private static readonly HashSet<Type> _types =
+            new()
+            {
+                // the underlying could yield auxiliary data which we don't want to change
+                typeof(TradeBar),
+                typeof(QuoteBar),
+                typeof(ZipEntryName),
+                typeof(BaseDataCollection)
+            };
 
         private readonly SecurityExchangeHours _securityExchange;
         private readonly IEnumerator<BaseData> _underlying;
@@ -49,7 +53,10 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
         /// <summary>
         /// Creates a new instance
         /// </summary>
-        public StrictDailyEndTimesEnumerator(IEnumerator<BaseData> underlying, SecurityExchangeHours securityExchangeHours)
+        public StrictDailyEndTimesEnumerator(
+            IEnumerator<BaseData> underlying,
+            SecurityExchangeHours securityExchangeHours
+        )
         {
             _underlying = underlying;
             _securityExchange = securityExchangeHours;

@@ -14,8 +14,8 @@
 */
 
 using System;
-using System.Linq;
 using System.Collections.Generic;
+using System.Linq;
 using QuantConnect.Data;
 using QuantConnect.Interfaces;
 using QuantConnect.Securities;
@@ -26,7 +26,9 @@ namespace QuantConnect.Algorithm.CSharp
     /// <summary>
     /// This regression algorithm asserts that futures have data at extended market hours when this is enabled.
     /// </summary>
-    public class FuturesExtendedMarketHoursRegressionAlgorithm : QCAlgorithm, IRegressionAlgorithmDefinition
+    public class FuturesExtendedMarketHoursRegressionAlgorithm
+        : QCAlgorithm,
+            IRegressionAlgorithmDefinition
     {
         private Future _es;
         private Future _gc;
@@ -40,10 +42,20 @@ namespace QuantConnect.Algorithm.CSharp
             SetStartDate(2013, 10, 6);
             SetEndDate(2013, 10, 11);
 
-            _es = AddFuture(Futures.Indices.SP500EMini, Resolution.Hour, fillForward: true, extendedMarketHours: true);
+            _es = AddFuture(
+                Futures.Indices.SP500EMini,
+                Resolution.Hour,
+                fillForward: true,
+                extendedMarketHours: true
+            );
             _es.SetFilter(0, 180);
 
-            _gc = AddFuture(Futures.Metals.Gold, Resolution.Hour, fillForward: true, extendedMarketHours: false);
+            _gc = AddFuture(
+                Futures.Metals.Gold,
+                Resolution.Hour,
+                fillForward: true,
+                extendedMarketHours: false
+            );
             _gc.SetFilter(0, 180);
         }
 
@@ -56,24 +68,44 @@ namespace QuantConnect.Algorithm.CSharp
 
             var esIsInRegularHours = _es.Exchange.Hours.IsOpen(Time, false);
             var esIsInExtendedHours = !esIsInRegularHours && _es.Exchange.Hours.IsOpen(Time, true);
-            var sliceHasESData = sliceSymbols.Any(symbol => symbol == _es.Symbol || symbol.Canonical == _es.Symbol);
+            var sliceHasESData = sliceSymbols.Any(symbol =>
+                symbol == _es.Symbol || symbol.Canonical == _es.Symbol
+            );
             _esRanOnRegularHours |= esIsInRegularHours && sliceHasESData;
             _esRanOnExtendedHours |= esIsInExtendedHours && sliceHasESData;
 
             var gcIsInRegularHours = _gc.Exchange.Hours.IsOpen(Time, false);
             var gcIsInExtendedHours = !gcIsInRegularHours && _gc.Exchange.Hours.IsOpen(Time, true);
-            var sliceHasGCData = sliceSymbols.Any(symbol => symbol == _gc.Symbol || symbol.Canonical == _gc.Symbol);
+            var sliceHasGCData = sliceSymbols.Any(symbol =>
+                symbol == _gc.Symbol || symbol.Canonical == _gc.Symbol
+            );
             _gcRanOnRegularHours |= gcIsInRegularHours && sliceHasGCData;
             _gcRanOnExtendedHours |= gcIsInExtendedHours && sliceHasGCData;
 
-            var currentTimeIsRegularHours = (Time.TimeOfDay >= new TimeSpan(9, 30, 0) && Time.TimeOfDay < new TimeSpan(16, 15, 0)) ||
-                (Time.TimeOfDay >= new TimeSpan(16, 30, 0) && Time.TimeOfDay < new TimeSpan(17, 0, 0));
-            var currentTimeIsExtendedHours = !currentTimeIsRegularHours
-                && (Time.TimeOfDay < new TimeSpan(9, 30, 0) || Time.TimeOfDay >= new TimeSpan(18, 0, 0));
+            var currentTimeIsRegularHours =
+                (
+                    Time.TimeOfDay >= new TimeSpan(9, 30, 0)
+                    && Time.TimeOfDay < new TimeSpan(16, 15, 0)
+                )
+                || (
+                    Time.TimeOfDay >= new TimeSpan(16, 30, 0)
+                    && Time.TimeOfDay < new TimeSpan(17, 0, 0)
+                );
+            var currentTimeIsExtendedHours =
+                !currentTimeIsRegularHours
+                && (
+                    Time.TimeOfDay < new TimeSpan(9, 30, 0)
+                    || Time.TimeOfDay >= new TimeSpan(18, 0, 0)
+                );
 
-            if (esIsInRegularHours != currentTimeIsRegularHours || esIsInExtendedHours != currentTimeIsExtendedHours)
+            if (
+                esIsInRegularHours != currentTimeIsRegularHours
+                || esIsInExtendedHours != currentTimeIsExtendedHours
+            )
             {
-                throw new RegressionTestException($"At {Time}, {_es.Symbol} is either in regular hours but current time is in extended hours, or viceversa");
+                throw new RegressionTestException(
+                    $"At {Time}, {_es.Symbol} is either in regular hours but current time is in extended hours, or viceversa"
+                );
             }
         }
 
@@ -81,22 +113,30 @@ namespace QuantConnect.Algorithm.CSharp
         {
             if (!_esRanOnRegularHours)
             {
-                throw new RegressionTestException($"Algorithm should have run on regular hours for {_es.Symbol} future, which enabled extended market hours");
+                throw new RegressionTestException(
+                    $"Algorithm should have run on regular hours for {_es.Symbol} future, which enabled extended market hours"
+                );
             }
 
             if (!_esRanOnExtendedHours)
             {
-                throw new RegressionTestException($"Algorithm should have run on extended hours for {_es.Symbol} future, which enabled extended market hours");
+                throw new RegressionTestException(
+                    $"Algorithm should have run on extended hours for {_es.Symbol} future, which enabled extended market hours"
+                );
             }
 
             if (!_gcRanOnRegularHours)
             {
-                throw new RegressionTestException($"Algorithm should have run on regular hours for {_gc.Symbol} future, which did not enable extended market hours");
+                throw new RegressionTestException(
+                    $"Algorithm should have run on regular hours for {_gc.Symbol} future, which did not enable extended market hours"
+                );
             }
 
             if (_gcRanOnExtendedHours)
             {
-                throw new RegressionTestException($"Algorithm should have not run on extended hours for {_gc.Symbol} future, which did not enable extended market hours");
+                throw new RegressionTestException(
+                    $"Algorithm should have not run on extended hours for {_gc.Symbol} future, which did not enable extended market hours"
+                );
             }
         }
 
@@ -128,35 +168,36 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// This is used by the regression test system to indicate what the expected statistics are from running the algorithm
         /// </summary>
-        public Dictionary<string, string> ExpectedStatistics => new Dictionary<string, string>
-        {
-            {"Total Orders", "0"},
-            {"Average Win", "0%"},
-            {"Average Loss", "0%"},
-            {"Compounding Annual Return", "0%"},
-            {"Drawdown", "0%"},
-            {"Expectancy", "0"},
-            {"Start Equity", "100000"},
-            {"End Equity", "100000"},
-            {"Net Profit", "0%"},
-            {"Sharpe Ratio", "0"},
-            {"Sortino Ratio", "0"},
-            {"Probabilistic Sharpe Ratio", "0%"},
-            {"Loss Rate", "0%"},
-            {"Win Rate", "0%"},
-            {"Profit-Loss Ratio", "0"},
-            {"Alpha", "0"},
-            {"Beta", "0"},
-            {"Annual Standard Deviation", "0"},
-            {"Annual Variance", "0"},
-            {"Information Ratio", "-2.564"},
-            {"Tracking Error", "0.214"},
-            {"Treynor Ratio", "0"},
-            {"Total Fees", "$0.00"},
-            {"Estimated Strategy Capacity", "$0"},
-            {"Lowest Capacity Asset", ""},
-            {"Portfolio Turnover", "0%"},
-            {"OrderListHash", "d41d8cd98f00b204e9800998ecf8427e"}
-        };
+        public Dictionary<string, string> ExpectedStatistics =>
+            new Dictionary<string, string>
+            {
+                { "Total Orders", "0" },
+                { "Average Win", "0%" },
+                { "Average Loss", "0%" },
+                { "Compounding Annual Return", "0%" },
+                { "Drawdown", "0%" },
+                { "Expectancy", "0" },
+                { "Start Equity", "100000" },
+                { "End Equity", "100000" },
+                { "Net Profit", "0%" },
+                { "Sharpe Ratio", "0" },
+                { "Sortino Ratio", "0" },
+                { "Probabilistic Sharpe Ratio", "0%" },
+                { "Loss Rate", "0%" },
+                { "Win Rate", "0%" },
+                { "Profit-Loss Ratio", "0" },
+                { "Alpha", "0" },
+                { "Beta", "0" },
+                { "Annual Standard Deviation", "0" },
+                { "Annual Variance", "0" },
+                { "Information Ratio", "-2.564" },
+                { "Tracking Error", "0.214" },
+                { "Treynor Ratio", "0" },
+                { "Total Fees", "$0.00" },
+                { "Estimated Strategy Capacity", "$0" },
+                { "Lowest Capacity Asset", "" },
+                { "Portfolio Turnover", "0%" },
+                { "OrderListHash", "d41d8cd98f00b204e9800998ecf8427e" }
+            };
     }
 }

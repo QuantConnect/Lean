@@ -23,16 +23,16 @@ namespace QuantConnect.Securities
     /// <summary>
     /// Python Wrapper for custom security data filters from Python
     /// </summary>
-    public class SecurityDataFilterPythonWrapper : BasePythonWrapper<ISecurityDataFilter>, ISecurityDataFilter
+    public class SecurityDataFilterPythonWrapper
+        : BasePythonWrapper<ISecurityDataFilter>,
+            ISecurityDataFilter
     {
         /// <summary>
         /// Creates a new instance
         /// </summary>
         /// <param name="dataFilter">The Python class to wrapp</param>
         public SecurityDataFilterPythonWrapper(PyObject dataFilter)
-            : base(dataFilter)
-        {
-        }
+            : base(dataFilter) { }
 
         /// <summary>
         /// Performs Filter method from Python instance returning true to accept, or false to fail/reject the data point.

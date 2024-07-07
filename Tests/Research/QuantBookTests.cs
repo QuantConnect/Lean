@@ -13,10 +13,10 @@
  * limitations under the License.
 */
 
-using NUnit.Framework;
-using QuantConnect.Research;
-using QuantConnect.Configuration;
 using Newtonsoft.Json.Linq;
+using NUnit.Framework;
+using QuantConnect.Configuration;
+using QuantConnect.Research;
 
 namespace QuantConnect.Tests.Research
 {
@@ -52,4 +52,3 @@ namespace QuantConnect.Tests.Research
         }
     }
 }
-

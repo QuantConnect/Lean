@@ -47,11 +47,13 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         /// <param name="subscriptionManager">The SubscriptionManager, required by the cash book for creating new subscription data configs</param>
         /// <param name="securityService">The SecurityService, required by the cash book for creating new securities</param>
         /// <param name="defaultResolution">The default resolution to use for the internal subscriptions</param>
-        public CurrencySubscriptionDataConfigManager(CashBook cashBook,
+        public CurrencySubscriptionDataConfigManager(
+            CashBook cashBook,
             SecurityManager securityManager,
             SubscriptionManager subscriptionManager,
             ISecurityService securityService,
-            Resolution defaultResolution)
+            Resolution defaultResolution
+        )
         {
             cashBook.Updated += (sender, args) =>
             {
@@ -79,13 +81,16 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         /// <returns>The SubscriptionDataConfig to be removed, null if none</returns>
         public SubscriptionDataConfig GetSubscriptionDataConfigToRemove(Symbol addedSymbol)
         {
-            if (addedSymbol.SecurityType == SecurityType.Crypto
+            if (
+                addedSymbol.SecurityType == SecurityType.Crypto
                 || addedSymbol.SecurityType == SecurityType.CryptoFuture
                 || addedSymbol.SecurityType == SecurityType.Forex
-                || addedSymbol.SecurityType == SecurityType.Cfd)
+                || addedSymbol.SecurityType == SecurityType.Cfd
+            )
             {
-                var currencyDataFeed = _addedCurrencySubscriptionDataConfigs
-                    .FirstOrDefault(x => x.Symbol == addedSymbol);
+                var currencyDataFeed = _addedCurrencySubscriptionDataConfigs.FirstOrDefault(x =>
+                    x.Symbol == addedSymbol
+                );
                 if (currencyDataFeed != null)
                 {
                     return currencyDataFeed;
@@ -131,12 +136,16 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         /// <summary>
         /// Checks the current <see cref="SubscriptionDataConfig"/> and adds new necessary currency pair feeds to provide real time conversion data
         /// </summary>
-        public void EnsureCurrencySubscriptionDataConfigs(SecurityChanges securityChanges, IBrokerageModel brokerageModel)
+        public void EnsureCurrencySubscriptionDataConfigs(
+            SecurityChanges securityChanges,
+            IBrokerageModel brokerageModel
+        )
         {
             _ensureCurrencyDataFeeds = false;
             // remove any 'to be added' if the security has already been added
-            _toBeAddedCurrencySubscriptionDataConfigs.RemoveWhere(
-                config => securityChanges.AddedSecurities.Any(x => x.Symbol == config.Symbol));
+            _toBeAddedCurrencySubscriptionDataConfigs.RemoveWhere(config =>
+                securityChanges.AddedSecurities.Any(x => x.Symbol == config.Symbol)
+            );
 
             var newConfigs = _cashBook.EnsureCurrencyDataFeeds(
                 _securityManager,
@@ -144,7 +153,8 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                 brokerageModel.DefaultMarkets,
                 securityChanges,
                 _securityService,
-                _defaultResolution);
+                _defaultResolution
+            );
             foreach (var config in newConfigs)
             {
                 _toBeAddedCurrencySubscriptionDataConfigs.Add(config);

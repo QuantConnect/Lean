@@ -18,7 +18,7 @@ using QuantConnect.Data.Market;
 namespace QuantConnect.Indicators
 {
     /// <summary>
-    /// Super trend indicator. 
+    /// Super trend indicator.
     /// Formula can be found here via the excel file:
     /// https://tradingtuitions.com/supertrend-indicator-excel-sheet-with-realtime-buy-sell-signals/
     /// </summary>
@@ -75,7 +75,12 @@ namespace QuantConnect.Indicators
         /// <param name="period">The smoothing period used by average true range</param>
         /// <param name="multiplier">The coefficient used in calculations of basic upper and lower bands</param>
         /// <param name="movingAverageType">The type of smoothing used to smooth the true range values</param>
-        public SuperTrend(string name, int period, decimal multiplier, MovingAverageType movingAverageType = MovingAverageType.Wilders)
+        public SuperTrend(
+            string name,
+            int period,
+            decimal multiplier,
+            MovingAverageType movingAverageType = MovingAverageType.Wilders
+        )
             : base(name)
         {
             _averageTrueRange = new AverageTrueRange(period, movingAverageType);
@@ -90,10 +95,12 @@ namespace QuantConnect.Indicators
         /// <param name="period">The smoothing period used in average true range</param>
         /// <param name="multiplier">The coefficient used in calculations of basic upper and lower bands</param>
         /// <param name="movingAverageType">The type of smoothing used to smooth the true range values</param>
-        public SuperTrend(int period, decimal multiplier, MovingAverageType movingAverageType = MovingAverageType.Wilders)
-            : this($"SuperTrend({period},{multiplier})", period, multiplier, movingAverageType)
-        {
-        }
+        public SuperTrend(
+            int period,
+            decimal multiplier,
+            MovingAverageType movingAverageType = MovingAverageType.Wilders
+        )
+            : this($"SuperTrend({period},{multiplier})", period, multiplier, movingAverageType) { }
 
         /// <summary>
         /// Computes the next value of this indicator from the given state
@@ -109,19 +116,39 @@ namespace QuantConnect.Indicators
             }
 
             _currentClose = input.Close;
-            BasicLowerBand = ((input.High + input.Low) / 2) - (_multiplier * _averageTrueRange.Current.Value);
-            BasicUpperBand = ((input.High + input.Low) / 2) + (_multiplier * _averageTrueRange.Current.Value);
+            BasicLowerBand =
+                ((input.High + input.Low) / 2) - (_multiplier * _averageTrueRange.Current.Value);
+            BasicUpperBand =
+                ((input.High + input.Low) / 2) + (_multiplier * _averageTrueRange.Current.Value);
 
-            CurrentTrailingLowerBand = ((BasicLowerBand > _previousTrailingLowerBand) || (_previousClose < _previousTrailingLowerBand)) ? BasicLowerBand : _previousTrailingLowerBand;
-            CurrentTrailingUpperBand = ((BasicUpperBand < _previousTrailingUpperBand) || (_previousClose > _previousTrailingUpperBand)) ? BasicUpperBand : _previousTrailingUpperBand;
+            CurrentTrailingLowerBand =
+                (
+                    (BasicLowerBand > _previousTrailingLowerBand)
+                    || (_previousClose < _previousTrailingLowerBand)
+                )
+                    ? BasicLowerBand
+                    : _previousTrailingLowerBand;
+            CurrentTrailingUpperBand =
+                (
+                    (BasicUpperBand < _previousTrailingUpperBand)
+                    || (_previousClose > _previousTrailingUpperBand)
+                )
+                    ? BasicUpperBand
+                    : _previousTrailingUpperBand;
 
             if ((_prevSuper == -1) || (_prevSuper == _previousTrailingUpperBand))
             {
-                _superTrend = (_currentClose <= CurrentTrailingUpperBand) ? CurrentTrailingUpperBand : CurrentTrailingLowerBand;
+                _superTrend =
+                    (_currentClose <= CurrentTrailingUpperBand)
+                        ? CurrentTrailingUpperBand
+                        : CurrentTrailingLowerBand;
             }
             else if (_prevSuper == _previousTrailingLowerBand)
             {
-                _superTrend = (_currentClose >= CurrentTrailingLowerBand) ? CurrentTrailingLowerBand : CurrentTrailingUpperBand;
+                _superTrend =
+                    (_currentClose >= CurrentTrailingLowerBand)
+                        ? CurrentTrailingLowerBand
+                        : CurrentTrailingUpperBand;
             }
 
             // Save the values to be used in next iteration.

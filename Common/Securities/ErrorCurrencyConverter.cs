@@ -30,7 +30,9 @@ namespace QuantConnect.Securities
         {
             get
             {
-                throw new InvalidOperationException(Messages.ErrorCurrencyConverter.AccountCurrencyUnexpectedUsage);
+                throw new InvalidOperationException(
+                    Messages.ErrorCurrencyConverter.AccountCurrencyUnexpectedUsage
+                );
             }
         }
 
@@ -40,9 +42,7 @@ namespace QuantConnect.Securities
         /// </summary>
         public static ICurrencyConverter Instance = new ErrorCurrencyConverter();
 
-        private ErrorCurrencyConverter()
-        {
-        }
+        private ErrorCurrencyConverter() { }
 
         /// <summary>
         /// Converts a cash amount to the account currency
@@ -51,7 +51,9 @@ namespace QuantConnect.Securities
         /// <returns>A new <see cref="CashAmount"/> instance denominated in the account currency</returns>
         public CashAmount ConvertToAccountCurrency(CashAmount cashAmount)
         {
-            throw new InvalidOperationException(Messages.ErrorCurrencyConverter.ConvertToAccountCurrencyPurposefullyThrow);
+            throw new InvalidOperationException(
+                Messages.ErrorCurrencyConverter.ConvertToAccountCurrencyPurposefullyThrow
+            );
         }
     }
 }

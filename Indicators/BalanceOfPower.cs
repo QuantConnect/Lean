@@ -28,18 +28,14 @@ namespace QuantConnect.Indicators
         /// Initializes a new instance of the <see cref="BalanceOfPower"/> class using the specified name.
         /// </summary>
         public BalanceOfPower()
-            : this("BOP")
-        {
-        }
+            : this("BOP") { }
 
         /// <summary>
         /// Initializes a new instance of the <see cref="BalanceOfPower"/> class using the specified name.
         /// </summary>
         /// <param name="name">The name of this indicator</param>
         public BalanceOfPower(string name)
-            : base(name)
-        {
-        }
+            : base(name) { }
 
         /// <summary>
         /// Gets a flag indicating when this indicator is ready and fully initialized

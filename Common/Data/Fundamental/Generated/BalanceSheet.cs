@@ -15,10 +15,10 @@
 */
 
 using System;
-using System.Linq;
-using Python.Runtime;
-using Newtonsoft.Json;
 using System.Collections.Generic;
+using System.Linq;
+using Newtonsoft.Json;
+using Python.Runtime;
 using QuantConnect.Data.UniverseSelection;
 
 namespace QuantConnect.Data.Fundamental
@@ -35,7 +35,8 @@ namespace QuantConnect.Data.Fundamental
         /// Morningstar DataId: 23542
         /// </remarks>
         [JsonProperty("23542")]
-        public BalanceSheetFileDate BSFileDate => _bSFileDate ??= new(_timeProvider, _securityIdentifier);
+        public BalanceSheetFileDate BSFileDate =>
+            _bSFileDate ??= new(_timeProvider, _securityIdentifier);
         private BalanceSheetFileDate _bSFileDate;
 
         /// <summary>
@@ -45,7 +46,8 @@ namespace QuantConnect.Data.Fundamental
         /// Morningstar DataId: 23000
         /// </remarks>
         [JsonProperty("23000")]
-        public AccountsPayableBalanceSheet AccountsPayable => _accountsPayable ??= new(_timeProvider, _securityIdentifier);
+        public AccountsPayableBalanceSheet AccountsPayable =>
+            _accountsPayable ??= new(_timeProvider, _securityIdentifier);
         private AccountsPayableBalanceSheet _accountsPayable;
 
         /// <summary>
@@ -55,7 +57,8 @@ namespace QuantConnect.Data.Fundamental
         /// Morningstar DataId: 23001
         /// </remarks>
         [JsonProperty("23001")]
-        public AccountsReceivableBalanceSheet AccountsReceivable => _accountsReceivable ??= new(_timeProvider, _securityIdentifier);
+        public AccountsReceivableBalanceSheet AccountsReceivable =>
+            _accountsReceivable ??= new(_timeProvider, _securityIdentifier);
         private AccountsReceivableBalanceSheet _accountsReceivable;
 
         /// <summary>
@@ -65,7 +68,8 @@ namespace QuantConnect.Data.Fundamental
         /// Morningstar DataId: 23004
         /// </remarks>
         [JsonProperty("23004")]
-        public CurrentAccruedExpensesBalanceSheet CurrentAccruedExpenses => _currentAccruedExpenses ??= new(_timeProvider, _securityIdentifier);
+        public CurrentAccruedExpensesBalanceSheet CurrentAccruedExpenses =>
+            _currentAccruedExpenses ??= new(_timeProvider, _securityIdentifier);
         private CurrentAccruedExpensesBalanceSheet _currentAccruedExpenses;
 
         /// <summary>
@@ -75,7 +79,8 @@ namespace QuantConnect.Data.Fundamental
         /// Morningstar DataId: 23005
         /// </remarks>
         [JsonProperty("23005")]
-        public NonCurrentAccruedExpensesBalanceSheet NonCurrentAccruedExpenses => _nonCurrentAccruedExpenses ??= new(_timeProvider, _securityIdentifier);
+        public NonCurrentAccruedExpensesBalanceSheet NonCurrentAccruedExpenses =>
+            _nonCurrentAccruedExpenses ??= new(_timeProvider, _securityIdentifier);
         private NonCurrentAccruedExpensesBalanceSheet _nonCurrentAccruedExpenses;
 
         /// <summary>
@@ -85,7 +90,8 @@ namespace QuantConnect.Data.Fundamental
         /// Morningstar DataId: 23007
         /// </remarks>
         [JsonProperty("23007")]
-        public AccruedInvestmentIncomeBalanceSheet AccruedInvestmentIncome => _accruedInvestmentIncome ??= new(_timeProvider, _securityIdentifier);
+        public AccruedInvestmentIncomeBalanceSheet AccruedInvestmentIncome =>
+            _accruedInvestmentIncome ??= new(_timeProvider, _securityIdentifier);
         private AccruedInvestmentIncomeBalanceSheet _accruedInvestmentIncome;
 
         /// <summary>
@@ -95,7 +101,8 @@ namespace QuantConnect.Data.Fundamental
         /// Morningstar DataId: 23008
         /// </remarks>
         [JsonProperty("23008")]
-        public AccumulatedDepreciationBalanceSheet AccumulatedDepreciation => _accumulatedDepreciation ??= new(_timeProvider, _securityIdentifier);
+        public AccumulatedDepreciationBalanceSheet AccumulatedDepreciation =>
+            _accumulatedDepreciation ??= new(_timeProvider, _securityIdentifier);
         private AccumulatedDepreciationBalanceSheet _accumulatedDepreciation;
 
         /// <summary>
@@ -105,7 +112,8 @@ namespace QuantConnect.Data.Fundamental
         /// Morningstar DataId: 23009
         /// </remarks>
         [JsonProperty("23009")]
-        public GainsLossesNotAffectingRetainedEarningsBalanceSheet GainsLossesNotAffectingRetainedEarnings => _gainsLossesNotAffectingRetainedEarnings ??= new(_timeProvider, _securityIdentifier);
+        public GainsLossesNotAffectingRetainedEarningsBalanceSheet GainsLossesNotAffectingRetainedEarnings =>
+            _gainsLossesNotAffectingRetainedEarnings ??= new(_timeProvider, _securityIdentifier);
         private GainsLossesNotAffectingRetainedEarningsBalanceSheet _gainsLossesNotAffectingRetainedEarnings;
 
         /// <summary>
@@ -115,7 +123,8 @@ namespace QuantConnect.Data.Fundamental
         /// Morningstar DataId: 23012
         /// </remarks>
         [JsonProperty("23012")]
-        public AdditionalPaidInCapitalBalanceSheet AdditionalPaidInCapital => _additionalPaidInCapital ??= new(_timeProvider, _securityIdentifier);
+        public AdditionalPaidInCapitalBalanceSheet AdditionalPaidInCapital =>
+            _additionalPaidInCapital ??= new(_timeProvider, _securityIdentifier);
         private AdditionalPaidInCapitalBalanceSheet _additionalPaidInCapital;
 
         /// <summary>
@@ -125,7 +134,8 @@ namespace QuantConnect.Data.Fundamental
         /// Morningstar DataId: 23016
         /// </remarks>
         [JsonProperty("23016")]
-        public AllowanceForLoansAndLeaseLossesBalanceSheet AllowanceForLoansAndLeaseLosses => _allowanceForLoansAndLeaseLosses ??= new(_timeProvider, _securityIdentifier);
+        public AllowanceForLoansAndLeaseLossesBalanceSheet AllowanceForLoansAndLeaseLosses =>
+            _allowanceForLoansAndLeaseLosses ??= new(_timeProvider, _securityIdentifier);
         private AllowanceForLoansAndLeaseLossesBalanceSheet _allowanceForLoansAndLeaseLosses;
 
         /// <summary>
@@ -135,7 +145,8 @@ namespace QuantConnect.Data.Fundamental
         /// Morningstar DataId: 23020
         /// </remarks>
         [JsonProperty("23020")]
-        public AvailableForSaleSecuritiesBalanceSheet AvailableForSaleSecurities => _availableForSaleSecurities ??= new(_timeProvider, _securityIdentifier);
+        public AvailableForSaleSecuritiesBalanceSheet AvailableForSaleSecurities =>
+            _availableForSaleSecurities ??= new(_timeProvider, _securityIdentifier);
         private AvailableForSaleSecuritiesBalanceSheet _availableForSaleSecurities;
 
         /// <summary>
@@ -145,7 +156,8 @@ namespace QuantConnect.Data.Fundamental
         /// Morningstar DataId: 23027
         /// </remarks>
         [JsonProperty("23027")]
-        public CapitalStockBalanceSheet CapitalStock => _capitalStock ??= new(_timeProvider, _securityIdentifier);
+        public CapitalStockBalanceSheet CapitalStock =>
+            _capitalStock ??= new(_timeProvider, _securityIdentifier);
         private CapitalStockBalanceSheet _capitalStock;
 
         /// <summary>
@@ -165,7 +177,8 @@ namespace QuantConnect.Data.Fundamental
         /// Morningstar DataId: 23029
         /// </remarks>
         [JsonProperty("23029")]
-        public CashEquivalentsBalanceSheet CashEquivalents => _cashEquivalents ??= new(_timeProvider, _securityIdentifier);
+        public CashEquivalentsBalanceSheet CashEquivalents =>
+            _cashEquivalents ??= new(_timeProvider, _securityIdentifier);
         private CashEquivalentsBalanceSheet _cashEquivalents;
 
         /// <summary>
@@ -175,7 +188,8 @@ namespace QuantConnect.Data.Fundamental
         /// Morningstar DataId: 23030
         /// </remarks>
         [JsonProperty("23030")]
-        public CashAndCashEquivalentsBalanceSheet CashAndCashEquivalents => _cashAndCashEquivalents ??= new(_timeProvider, _securityIdentifier);
+        public CashAndCashEquivalentsBalanceSheet CashAndCashEquivalents =>
+            _cashAndCashEquivalents ??= new(_timeProvider, _securityIdentifier);
         private CashAndCashEquivalentsBalanceSheet _cashAndCashEquivalents;
 
         /// <summary>
@@ -185,7 +199,8 @@ namespace QuantConnect.Data.Fundamental
         /// Morningstar DataId: 23031
         /// </remarks>
         [JsonProperty("23031")]
-        public CashAndDueFromBanksBalanceSheet CashAndDueFromBanks => _cashAndDueFromBanks ??= new(_timeProvider, _securityIdentifier);
+        public CashAndDueFromBanksBalanceSheet CashAndDueFromBanks =>
+            _cashAndDueFromBanks ??= new(_timeProvider, _securityIdentifier);
         private CashAndDueFromBanksBalanceSheet _cashAndDueFromBanks;
 
         /// <summary>
@@ -195,7 +210,8 @@ namespace QuantConnect.Data.Fundamental
         /// Morningstar DataId: 23032
         /// </remarks>
         [JsonProperty("23032")]
-        public CashCashEquivalentsAndFederalFundsSoldBalanceSheet CashCashEquivalentsAndFederalFundsSold => _cashCashEquivalentsAndFederalFundsSold ??= new(_timeProvider, _securityIdentifier);
+        public CashCashEquivalentsAndFederalFundsSoldBalanceSheet CashCashEquivalentsAndFederalFundsSold =>
+            _cashCashEquivalentsAndFederalFundsSold ??= new(_timeProvider, _securityIdentifier);
         private CashCashEquivalentsAndFederalFundsSoldBalanceSheet _cashCashEquivalentsAndFederalFundsSold;
 
         /// <summary>
@@ -205,7 +221,8 @@ namespace QuantConnect.Data.Fundamental
         /// Morningstar DataId: 23033
         /// </remarks>
         [JsonProperty("23033")]
-        public CashCashEquivalentsAndMarketableSecuritiesBalanceSheet CashCashEquivalentsAndMarketableSecurities => _cashCashEquivalentsAndMarketableSecurities ??= new(_timeProvider, _securityIdentifier);
+        public CashCashEquivalentsAndMarketableSecuritiesBalanceSheet CashCashEquivalentsAndMarketableSecurities =>
+            _cashCashEquivalentsAndMarketableSecurities ??= new(_timeProvider, _securityIdentifier);
         private CashCashEquivalentsAndMarketableSecuritiesBalanceSheet _cashCashEquivalentsAndMarketableSecurities;
 
         /// <summary>
@@ -215,7 +232,8 @@ namespace QuantConnect.Data.Fundamental
         /// Morningstar DataId: 23038
         /// </remarks>
         [JsonProperty("23038")]
-        public CommonStockBalanceSheet CommonStock => _commonStock ??= new(_timeProvider, _securityIdentifier);
+        public CommonStockBalanceSheet CommonStock =>
+            _commonStock ??= new(_timeProvider, _securityIdentifier);
         private CommonStockBalanceSheet _commonStock;
 
         /// <summary>
@@ -225,7 +243,8 @@ namespace QuantConnect.Data.Fundamental
         /// Morningstar DataId: 23044
         /// </remarks>
         [JsonProperty("23044")]
-        public CurrentAssetsBalanceSheet CurrentAssets => _currentAssets ??= new(_timeProvider, _securityIdentifier);
+        public CurrentAssetsBalanceSheet CurrentAssets =>
+            _currentAssets ??= new(_timeProvider, _securityIdentifier);
         private CurrentAssetsBalanceSheet _currentAssets;
 
         /// <summary>
@@ -235,7 +254,8 @@ namespace QuantConnect.Data.Fundamental
         /// Morningstar DataId: 23045
         /// </remarks>
         [JsonProperty("23045")]
-        public CurrentDebtBalanceSheet CurrentDebt => _currentDebt ??= new(_timeProvider, _securityIdentifier);
+        public CurrentDebtBalanceSheet CurrentDebt =>
+            _currentDebt ??= new(_timeProvider, _securityIdentifier);
         private CurrentDebtBalanceSheet _currentDebt;
 
         /// <summary>
@@ -245,7 +265,8 @@ namespace QuantConnect.Data.Fundamental
         /// Morningstar DataId: 23046
         /// </remarks>
         [JsonProperty("23046")]
-        public CurrentDebtAndCapitalLeaseObligationBalanceSheet CurrentDebtAndCapitalLeaseObligation => _currentDebtAndCapitalLeaseObligation ??= new(_timeProvider, _securityIdentifier);
+        public CurrentDebtAndCapitalLeaseObligationBalanceSheet CurrentDebtAndCapitalLeaseObligation =>
+            _currentDebtAndCapitalLeaseObligation ??= new(_timeProvider, _securityIdentifier);
         private CurrentDebtAndCapitalLeaseObligationBalanceSheet _currentDebtAndCapitalLeaseObligation;
 
         /// <summary>
@@ -255,7 +276,8 @@ namespace QuantConnect.Data.Fundamental
         /// Morningstar DataId: 23047
         /// </remarks>
         [JsonProperty("23047")]
-        public CurrentLiabilitiesBalanceSheet CurrentLiabilities => _currentLiabilities ??= new(_timeProvider, _securityIdentifier);
+        public CurrentLiabilitiesBalanceSheet CurrentLiabilities =>
+            _currentLiabilities ??= new(_timeProvider, _securityIdentifier);
         private CurrentLiabilitiesBalanceSheet _currentLiabilities;
 
         /// <summary>
@@ -265,7 +287,8 @@ namespace QuantConnect.Data.Fundamental
         /// Morningstar DataId: 23048
         /// </remarks>
         [JsonProperty("23048")]
-        public CurrentCapitalLeaseObligationBalanceSheet CurrentCapitalLeaseObligation => _currentCapitalLeaseObligation ??= new(_timeProvider, _securityIdentifier);
+        public CurrentCapitalLeaseObligationBalanceSheet CurrentCapitalLeaseObligation =>
+            _currentCapitalLeaseObligation ??= new(_timeProvider, _securityIdentifier);
         private CurrentCapitalLeaseObligationBalanceSheet _currentCapitalLeaseObligation;
 
         /// <summary>
@@ -275,7 +298,8 @@ namespace QuantConnect.Data.Fundamental
         /// Morningstar DataId: 23052
         /// </remarks>
         [JsonProperty("23052")]
-        public DeferredAssetsBalanceSheet DeferredAssets => _deferredAssets ??= new(_timeProvider, _securityIdentifier);
+        public DeferredAssetsBalanceSheet DeferredAssets =>
+            _deferredAssets ??= new(_timeProvider, _securityIdentifier);
         private DeferredAssetsBalanceSheet _deferredAssets;
 
         /// <summary>
@@ -285,7 +309,8 @@ namespace QuantConnect.Data.Fundamental
         /// Morningstar DataId: 23054
         /// </remarks>
         [JsonProperty("23054")]
-        public DeferredCostsBalanceSheet DeferredCosts => _deferredCosts ??= new(_timeProvider, _securityIdentifier);
+        public DeferredCostsBalanceSheet DeferredCosts =>
+            _deferredCosts ??= new(_timeProvider, _securityIdentifier);
         private DeferredCostsBalanceSheet _deferredCosts;
 
         /// <summary>
@@ -295,7 +320,8 @@ namespace QuantConnect.Data.Fundamental
         /// Morningstar DataId: 23057
         /// </remarks>
         [JsonProperty("23057")]
-        public NonCurrentDeferredLiabilitiesBalanceSheet NonCurrentDeferredLiabilities => _nonCurrentDeferredLiabilities ??= new(_timeProvider, _securityIdentifier);
+        public NonCurrentDeferredLiabilitiesBalanceSheet NonCurrentDeferredLiabilities =>
+            _nonCurrentDeferredLiabilities ??= new(_timeProvider, _securityIdentifier);
         private NonCurrentDeferredLiabilitiesBalanceSheet _nonCurrentDeferredLiabilities;
 
         /// <summary>
@@ -305,7 +331,8 @@ namespace QuantConnect.Data.Fundamental
         /// Morningstar DataId: 23058
         /// </remarks>
         [JsonProperty("23058")]
-        public CurrentDeferredLiabilitiesBalanceSheet CurrentDeferredLiabilities => _currentDeferredLiabilities ??= new(_timeProvider, _securityIdentifier);
+        public CurrentDeferredLiabilitiesBalanceSheet CurrentDeferredLiabilities =>
+            _currentDeferredLiabilities ??= new(_timeProvider, _securityIdentifier);
         private CurrentDeferredLiabilitiesBalanceSheet _currentDeferredLiabilities;
 
         /// <summary>
@@ -315,7 +342,8 @@ namespace QuantConnect.Data.Fundamental
         /// Morningstar DataId: 23059
         /// </remarks>
         [JsonProperty("23059")]
-        public DeferredPolicyAcquisitionCostsBalanceSheet DeferredPolicyAcquisitionCosts => _deferredPolicyAcquisitionCosts ??= new(_timeProvider, _securityIdentifier);
+        public DeferredPolicyAcquisitionCostsBalanceSheet DeferredPolicyAcquisitionCosts =>
+            _deferredPolicyAcquisitionCosts ??= new(_timeProvider, _securityIdentifier);
         private DeferredPolicyAcquisitionCostsBalanceSheet _deferredPolicyAcquisitionCosts;
 
         /// <summary>
@@ -325,7 +353,8 @@ namespace QuantConnect.Data.Fundamental
         /// Morningstar DataId: 23061
         /// </remarks>
         [JsonProperty("23061")]
-        public CurrentDeferredRevenueBalanceSheet CurrentDeferredRevenue => _currentDeferredRevenue ??= new(_timeProvider, _securityIdentifier);
+        public CurrentDeferredRevenueBalanceSheet CurrentDeferredRevenue =>
+            _currentDeferredRevenue ??= new(_timeProvider, _securityIdentifier);
         private CurrentDeferredRevenueBalanceSheet _currentDeferredRevenue;
 
         /// <summary>
@@ -335,7 +364,8 @@ namespace QuantConnect.Data.Fundamental
         /// Morningstar DataId: 23062
         /// </remarks>
         [JsonProperty("23062")]
-        public NonCurrentDeferredRevenueBalanceSheet NonCurrentDeferredRevenue => _nonCurrentDeferredRevenue ??= new(_timeProvider, _securityIdentifier);
+        public NonCurrentDeferredRevenueBalanceSheet NonCurrentDeferredRevenue =>
+            _nonCurrentDeferredRevenue ??= new(_timeProvider, _securityIdentifier);
         private NonCurrentDeferredRevenueBalanceSheet _nonCurrentDeferredRevenue;
 
         /// <summary>
@@ -345,7 +375,8 @@ namespace QuantConnect.Data.Fundamental
         /// Morningstar DataId: 23063
         /// </remarks>
         [JsonProperty("23063")]
-        public DeferredTaxAssetsBalanceSheet DeferredTaxAssets => _deferredTaxAssets ??= new(_timeProvider, _securityIdentifier);
+        public DeferredTaxAssetsBalanceSheet DeferredTaxAssets =>
+            _deferredTaxAssets ??= new(_timeProvider, _securityIdentifier);
         private DeferredTaxAssetsBalanceSheet _deferredTaxAssets;
 
         /// <summary>
@@ -355,7 +386,8 @@ namespace QuantConnect.Data.Fundamental
         /// Morningstar DataId: 23064
         /// </remarks>
         [JsonProperty("23064")]
-        public CurrentDeferredTaxesAssetsBalanceSheet CurrentDeferredTaxesAssets => _currentDeferredTaxesAssets ??= new(_timeProvider, _securityIdentifier);
+        public CurrentDeferredTaxesAssetsBalanceSheet CurrentDeferredTaxesAssets =>
+            _currentDeferredTaxesAssets ??= new(_timeProvider, _securityIdentifier);
         private CurrentDeferredTaxesAssetsBalanceSheet _currentDeferredTaxesAssets;
 
         /// <summary>
@@ -365,7 +397,8 @@ namespace QuantConnect.Data.Fundamental
         /// Morningstar DataId: 23065
         /// </remarks>
         [JsonProperty("23065")]
-        public CurrentDeferredTaxesLiabilitiesBalanceSheet CurrentDeferredTaxesLiabilities => _currentDeferredTaxesLiabilities ??= new(_timeProvider, _securityIdentifier);
+        public CurrentDeferredTaxesLiabilitiesBalanceSheet CurrentDeferredTaxesLiabilities =>
+            _currentDeferredTaxesLiabilities ??= new(_timeProvider, _securityIdentifier);
         private CurrentDeferredTaxesLiabilitiesBalanceSheet _currentDeferredTaxesLiabilities;
 
         /// <summary>
@@ -375,7 +408,8 @@ namespace QuantConnect.Data.Fundamental
         /// Morningstar DataId: 23066
         /// </remarks>
         [JsonProperty("23066")]
-        public NonCurrentDeferredTaxesAssetsBalanceSheet NonCurrentDeferredTaxesAssets => _nonCurrentDeferredTaxesAssets ??= new(_timeProvider, _securityIdentifier);
+        public NonCurrentDeferredTaxesAssetsBalanceSheet NonCurrentDeferredTaxesAssets =>
+            _nonCurrentDeferredTaxesAssets ??= new(_timeProvider, _securityIdentifier);
         private NonCurrentDeferredTaxesAssetsBalanceSheet _nonCurrentDeferredTaxesAssets;
 
         /// <summary>
@@ -385,7 +419,8 @@ namespace QuantConnect.Data.Fundamental
         /// Morningstar DataId: 23067
         /// </remarks>
         [JsonProperty("23067")]
-        public NonCurrentDeferredTaxesLiabilitiesBalanceSheet NonCurrentDeferredTaxesLiabilities => _nonCurrentDeferredTaxesLiabilities ??= new(_timeProvider, _securityIdentifier);
+        public NonCurrentDeferredTaxesLiabilitiesBalanceSheet NonCurrentDeferredTaxesLiabilities =>
+            _nonCurrentDeferredTaxesLiabilities ??= new(_timeProvider, _securityIdentifier);
         private NonCurrentDeferredTaxesLiabilitiesBalanceSheet _nonCurrentDeferredTaxesLiabilities;
 
         /// <summary>
@@ -395,7 +430,8 @@ namespace QuantConnect.Data.Fundamental
         /// Morningstar DataId: 23076
         /// </remarks>
         [JsonProperty("23076")]
-        public EquityInvestmentsBalanceSheet EquityInvestments => _equityInvestments ??= new(_timeProvider, _securityIdentifier);
+        public EquityInvestmentsBalanceSheet EquityInvestments =>
+            _equityInvestments ??= new(_timeProvider, _securityIdentifier);
         private EquityInvestmentsBalanceSheet _equityInvestments;
 
         /// <summary>
@@ -405,7 +441,11 @@ namespace QuantConnect.Data.Fundamental
         /// Morningstar DataId: 23079
         /// </remarks>
         [JsonProperty("23079")]
-        public FederalFundsPurchasedAndSecuritiesSoldUnderAgreementToRepurchaseBalanceSheet FederalFundsPurchasedAndSecuritiesSoldUnderAgreementToRepurchase => _federalFundsPurchasedAndSecuritiesSoldUnderAgreementToRepurchase ??= new(_timeProvider, _securityIdentifier);
+        public FederalFundsPurchasedAndSecuritiesSoldUnderAgreementToRepurchaseBalanceSheet FederalFundsPurchasedAndSecuritiesSoldUnderAgreementToRepurchase =>
+            _federalFundsPurchasedAndSecuritiesSoldUnderAgreementToRepurchase ??= new(
+                _timeProvider,
+                _securityIdentifier
+            );
         private FederalFundsPurchasedAndSecuritiesSoldUnderAgreementToRepurchaseBalanceSheet _federalFundsPurchasedAndSecuritiesSoldUnderAgreementToRepurchase;
 
         /// <summary>
@@ -415,7 +455,11 @@ namespace QuantConnect.Data.Fundamental
         /// Morningstar DataId: 23081
         /// </remarks>
         [JsonProperty("23081")]
-        public FederalFundsSoldAndSecuritiesPurchaseUnderAgreementsToResellBalanceSheet FederalFundsSoldAndSecuritiesPurchaseUnderAgreementsToResell => _federalFundsSoldAndSecuritiesPurchaseUnderAgreementsToResell ??= new(_timeProvider, _securityIdentifier);
+        public FederalFundsSoldAndSecuritiesPurchaseUnderAgreementsToResellBalanceSheet FederalFundsSoldAndSecuritiesPurchaseUnderAgreementsToResell =>
+            _federalFundsSoldAndSecuritiesPurchaseUnderAgreementsToResell ??= new(
+                _timeProvider,
+                _securityIdentifier
+            );
         private FederalFundsSoldAndSecuritiesPurchaseUnderAgreementsToResellBalanceSheet _federalFundsSoldAndSecuritiesPurchaseUnderAgreementsToResell;
 
         /// <summary>
@@ -425,7 +469,8 @@ namespace QuantConnect.Data.Fundamental
         /// Morningstar DataId: 23089
         /// </remarks>
         [JsonProperty("23089")]
-        public FixedMaturityInvestmentsBalanceSheet FixedMaturityInvestments => _fixedMaturityInvestments ??= new(_timeProvider, _securityIdentifier);
+        public FixedMaturityInvestmentsBalanceSheet FixedMaturityInvestments =>
+            _fixedMaturityInvestments ??= new(_timeProvider, _securityIdentifier);
         private FixedMaturityInvestmentsBalanceSheet _fixedMaturityInvestments;
 
         /// <summary>
@@ -435,7 +480,8 @@ namespace QuantConnect.Data.Fundamental
         /// Morningstar DataId: 23095
         /// </remarks>
         [JsonProperty("23095")]
-        public FuturePolicyBenefitsBalanceSheet FuturePolicyBenefits => _futurePolicyBenefits ??= new(_timeProvider, _securityIdentifier);
+        public FuturePolicyBenefitsBalanceSheet FuturePolicyBenefits =>
+            _futurePolicyBenefits ??= new(_timeProvider, _securityIdentifier);
         private FuturePolicyBenefitsBalanceSheet _futurePolicyBenefits;
 
         /// <summary>
@@ -445,7 +491,8 @@ namespace QuantConnect.Data.Fundamental
         /// Morningstar DataId: 23096
         /// </remarks>
         [JsonProperty("23096")]
-        public GeneralPartnershipCapitalBalanceSheet GeneralPartnershipCapital => _generalPartnershipCapital ??= new(_timeProvider, _securityIdentifier);
+        public GeneralPartnershipCapitalBalanceSheet GeneralPartnershipCapital =>
+            _generalPartnershipCapital ??= new(_timeProvider, _securityIdentifier);
         private GeneralPartnershipCapitalBalanceSheet _generalPartnershipCapital;
 
         /// <summary>
@@ -455,7 +502,8 @@ namespace QuantConnect.Data.Fundamental
         /// Morningstar DataId: 23097
         /// </remarks>
         [JsonProperty("23097")]
-        public GoodwillBalanceSheet Goodwill => _goodwill ??= new(_timeProvider, _securityIdentifier);
+        public GoodwillBalanceSheet Goodwill =>
+            _goodwill ??= new(_timeProvider, _securityIdentifier);
         private GoodwillBalanceSheet _goodwill;
 
         /// <summary>
@@ -465,7 +513,8 @@ namespace QuantConnect.Data.Fundamental
         /// Morningstar DataId: 23098
         /// </remarks>
         [JsonProperty("23098")]
-        public GoodwillAndOtherIntangibleAssetsBalanceSheet GoodwillAndOtherIntangibleAssets => _goodwillAndOtherIntangibleAssets ??= new(_timeProvider, _securityIdentifier);
+        public GoodwillAndOtherIntangibleAssetsBalanceSheet GoodwillAndOtherIntangibleAssets =>
+            _goodwillAndOtherIntangibleAssets ??= new(_timeProvider, _securityIdentifier);
         private GoodwillAndOtherIntangibleAssetsBalanceSheet _goodwillAndOtherIntangibleAssets;
 
         /// <summary>
@@ -475,7 +524,8 @@ namespace QuantConnect.Data.Fundamental
         /// Morningstar DataId: 23099
         /// </remarks>
         [JsonProperty("23099")]
-        public GrossLoanBalanceSheet GrossLoan => _grossLoan ??= new(_timeProvider, _securityIdentifier);
+        public GrossLoanBalanceSheet GrossLoan =>
+            _grossLoan ??= new(_timeProvider, _securityIdentifier);
         private GrossLoanBalanceSheet _grossLoan;
 
         /// <summary>
@@ -485,7 +535,8 @@ namespace QuantConnect.Data.Fundamental
         /// Morningstar DataId: 23100
         /// </remarks>
         [JsonProperty("23100")]
-        public GrossPPEBalanceSheet GrossPPE => _grossPPE ??= new(_timeProvider, _securityIdentifier);
+        public GrossPPEBalanceSheet GrossPPE =>
+            _grossPPE ??= new(_timeProvider, _securityIdentifier);
         private GrossPPEBalanceSheet _grossPPE;
 
         /// <summary>
@@ -495,7 +546,8 @@ namespace QuantConnect.Data.Fundamental
         /// Morningstar DataId: 23102
         /// </remarks>
         [JsonProperty("23102")]
-        public HeldToMaturitySecuritiesBalanceSheet HeldToMaturitySecurities => _heldToMaturitySecurities ??= new(_timeProvider, _securityIdentifier);
+        public HeldToMaturitySecuritiesBalanceSheet HeldToMaturitySecurities =>
+            _heldToMaturitySecurities ??= new(_timeProvider, _securityIdentifier);
         private HeldToMaturitySecuritiesBalanceSheet _heldToMaturitySecurities;
 
         /// <summary>
@@ -505,7 +557,8 @@ namespace QuantConnect.Data.Fundamental
         /// Morningstar DataId: 23103
         /// </remarks>
         [JsonProperty("23103")]
-        public IncomeTaxPayableBalanceSheet IncomeTaxPayable => _incomeTaxPayable ??= new(_timeProvider, _securityIdentifier);
+        public IncomeTaxPayableBalanceSheet IncomeTaxPayable =>
+            _incomeTaxPayable ??= new(_timeProvider, _securityIdentifier);
         private IncomeTaxPayableBalanceSheet _incomeTaxPayable;
 
         /// <summary>
@@ -515,7 +568,8 @@ namespace QuantConnect.Data.Fundamental
         /// Morningstar DataId: 23105
         /// </remarks>
         [JsonProperty("23105")]
-        public InterestBearingDepositsLiabilitiesBalanceSheet InterestBearingDepositsLiabilities => _interestBearingDepositsLiabilities ??= new(_timeProvider, _securityIdentifier);
+        public InterestBearingDepositsLiabilitiesBalanceSheet InterestBearingDepositsLiabilities =>
+            _interestBearingDepositsLiabilities ??= new(_timeProvider, _securityIdentifier);
         private InterestBearingDepositsLiabilitiesBalanceSheet _interestBearingDepositsLiabilities;
 
         /// <summary>
@@ -525,7 +579,8 @@ namespace QuantConnect.Data.Fundamental
         /// Morningstar DataId: 23106
         /// </remarks>
         [JsonProperty("23106")]
-        public InterestPayableBalanceSheet InterestPayable => _interestPayable ??= new(_timeProvider, _securityIdentifier);
+        public InterestPayableBalanceSheet InterestPayable =>
+            _interestPayable ??= new(_timeProvider, _securityIdentifier);
         private InterestPayableBalanceSheet _interestPayable;
 
         /// <summary>
@@ -535,7 +590,8 @@ namespace QuantConnect.Data.Fundamental
         /// Morningstar DataId: 23107
         /// </remarks>
         [JsonProperty("23107")]
-        public InterestBearingDepositsAssetsBalanceSheet InterestBearingDepositsAssets => _interestBearingDepositsAssets ??= new(_timeProvider, _securityIdentifier);
+        public InterestBearingDepositsAssetsBalanceSheet InterestBearingDepositsAssets =>
+            _interestBearingDepositsAssets ??= new(_timeProvider, _securityIdentifier);
         private InterestBearingDepositsAssetsBalanceSheet _interestBearingDepositsAssets;
 
         /// <summary>
@@ -545,7 +601,8 @@ namespace QuantConnect.Data.Fundamental
         /// Morningstar DataId: 23108
         /// </remarks>
         [JsonProperty("23108")]
-        public InventoryBalanceSheet Inventory => _inventory ??= new(_timeProvider, _securityIdentifier);
+        public InventoryBalanceSheet Inventory =>
+            _inventory ??= new(_timeProvider, _securityIdentifier);
         private InventoryBalanceSheet _inventory;
 
         /// <summary>
@@ -555,7 +612,8 @@ namespace QuantConnect.Data.Fundamental
         /// Morningstar DataId: 23111
         /// </remarks>
         [JsonProperty("23111")]
-        public InvestmentsAndAdvancesBalanceSheet InvestmentsAndAdvances => _investmentsAndAdvances ??= new(_timeProvider, _securityIdentifier);
+        public InvestmentsAndAdvancesBalanceSheet InvestmentsAndAdvances =>
+            _investmentsAndAdvances ??= new(_timeProvider, _securityIdentifier);
         private InvestmentsAndAdvancesBalanceSheet _investmentsAndAdvances;
 
         /// <summary>
@@ -565,7 +623,8 @@ namespace QuantConnect.Data.Fundamental
         /// Morningstar DataId: 23118
         /// </remarks>
         [JsonProperty("23118")]
-        public LimitedPartnershipCapitalBalanceSheet LimitedPartnershipCapital => _limitedPartnershipCapital ??= new(_timeProvider, _securityIdentifier);
+        public LimitedPartnershipCapitalBalanceSheet LimitedPartnershipCapital =>
+            _limitedPartnershipCapital ??= new(_timeProvider, _securityIdentifier);
         private LimitedPartnershipCapitalBalanceSheet _limitedPartnershipCapital;
 
         /// <summary>
@@ -575,7 +634,8 @@ namespace QuantConnect.Data.Fundamental
         /// Morningstar DataId: 23123
         /// </remarks>
         [JsonProperty("23123")]
-        public LongTermDebtBalanceSheet LongTermDebt => _longTermDebt ??= new(_timeProvider, _securityIdentifier);
+        public LongTermDebtBalanceSheet LongTermDebt =>
+            _longTermDebt ??= new(_timeProvider, _securityIdentifier);
         private LongTermDebtBalanceSheet _longTermDebt;
 
         /// <summary>
@@ -585,7 +645,8 @@ namespace QuantConnect.Data.Fundamental
         /// Morningstar DataId: 23124
         /// </remarks>
         [JsonProperty("23124")]
-        public LongTermDebtAndCapitalLeaseObligationBalanceSheet LongTermDebtAndCapitalLeaseObligation => _longTermDebtAndCapitalLeaseObligation ??= new(_timeProvider, _securityIdentifier);
+        public LongTermDebtAndCapitalLeaseObligationBalanceSheet LongTermDebtAndCapitalLeaseObligation =>
+            _longTermDebtAndCapitalLeaseObligation ??= new(_timeProvider, _securityIdentifier);
         private LongTermDebtAndCapitalLeaseObligationBalanceSheet _longTermDebtAndCapitalLeaseObligation;
 
         /// <summary>
@@ -595,7 +656,8 @@ namespace QuantConnect.Data.Fundamental
         /// Morningstar DataId: 23126
         /// </remarks>
         [JsonProperty("23126")]
-        public LongTermInvestmentsBalanceSheet LongTermInvestments => _longTermInvestments ??= new(_timeProvider, _securityIdentifier);
+        public LongTermInvestmentsBalanceSheet LongTermInvestments =>
+            _longTermInvestments ??= new(_timeProvider, _securityIdentifier);
         private LongTermInvestmentsBalanceSheet _longTermInvestments;
 
         /// <summary>
@@ -605,7 +667,8 @@ namespace QuantConnect.Data.Fundamental
         /// Morningstar DataId: 23127
         /// </remarks>
         [JsonProperty("23127")]
-        public LongTermCapitalLeaseObligationBalanceSheet LongTermCapitalLeaseObligation => _longTermCapitalLeaseObligation ??= new(_timeProvider, _securityIdentifier);
+        public LongTermCapitalLeaseObligationBalanceSheet LongTermCapitalLeaseObligation =>
+            _longTermCapitalLeaseObligation ??= new(_timeProvider, _securityIdentifier);
         private LongTermCapitalLeaseObligationBalanceSheet _longTermCapitalLeaseObligation;
 
         /// <summary>
@@ -615,7 +678,8 @@ namespace QuantConnect.Data.Fundamental
         /// Morningstar DataId: 23132
         /// </remarks>
         [JsonProperty("23132")]
-        public MinorityInterestBalanceSheet MinorityInterest => _minorityInterest ??= new(_timeProvider, _securityIdentifier);
+        public MinorityInterestBalanceSheet MinorityInterest =>
+            _minorityInterest ??= new(_timeProvider, _securityIdentifier);
         private MinorityInterestBalanceSheet _minorityInterest;
 
         /// <summary>
@@ -625,7 +689,8 @@ namespace QuantConnect.Data.Fundamental
         /// Morningstar DataId: 23133
         /// </remarks>
         [JsonProperty("23133")]
-        public MoneyMarketInvestmentsBalanceSheet MoneyMarketInvestments => _moneyMarketInvestments ??= new(_timeProvider, _securityIdentifier);
+        public MoneyMarketInvestmentsBalanceSheet MoneyMarketInvestments =>
+            _moneyMarketInvestments ??= new(_timeProvider, _securityIdentifier);
         private MoneyMarketInvestmentsBalanceSheet _moneyMarketInvestments;
 
         /// <summary>
@@ -655,7 +720,8 @@ namespace QuantConnect.Data.Fundamental
         /// Morningstar DataId: 23142
         /// </remarks>
         [JsonProperty("23142")]
-        public NonInterestBearingDepositsBalanceSheet NonInterestBearingDeposits => _nonInterestBearingDeposits ??= new(_timeProvider, _securityIdentifier);
+        public NonInterestBearingDepositsBalanceSheet NonInterestBearingDeposits =>
+            _nonInterestBearingDeposits ??= new(_timeProvider, _securityIdentifier);
         private NonInterestBearingDepositsBalanceSheet _nonInterestBearingDeposits;
 
         /// <summary>
@@ -665,7 +731,8 @@ namespace QuantConnect.Data.Fundamental
         /// Morningstar DataId: 23143
         /// </remarks>
         [JsonProperty("23143")]
-        public CurrentNotesPayableBalanceSheet CurrentNotesPayable => _currentNotesPayable ??= new(_timeProvider, _securityIdentifier);
+        public CurrentNotesPayableBalanceSheet CurrentNotesPayable =>
+            _currentNotesPayable ??= new(_timeProvider, _securityIdentifier);
         private CurrentNotesPayableBalanceSheet _currentNotesPayable;
 
         /// <summary>
@@ -675,7 +742,8 @@ namespace QuantConnect.Data.Fundamental
         /// Morningstar DataId: 23144
         /// </remarks>
         [JsonProperty("23144")]
-        public NotesReceivableBalanceSheet NotesReceivable => _notesReceivable ??= new(_timeProvider, _securityIdentifier);
+        public NotesReceivableBalanceSheet NotesReceivable =>
+            _notesReceivable ??= new(_timeProvider, _securityIdentifier);
         private NotesReceivableBalanceSheet _notesReceivable;
 
         /// <summary>
@@ -685,7 +753,8 @@ namespace QuantConnect.Data.Fundamental
         /// Morningstar DataId: 23146
         /// </remarks>
         [JsonProperty("23146")]
-        public NonCurrentNoteReceivablesBalanceSheet NonCurrentNoteReceivables => _nonCurrentNoteReceivables ??= new(_timeProvider, _securityIdentifier);
+        public NonCurrentNoteReceivablesBalanceSheet NonCurrentNoteReceivables =>
+            _nonCurrentNoteReceivables ??= new(_timeProvider, _securityIdentifier);
         private NonCurrentNoteReceivablesBalanceSheet _nonCurrentNoteReceivables;
 
         /// <summary>
@@ -695,7 +764,8 @@ namespace QuantConnect.Data.Fundamental
         /// Morningstar DataId: 23151
         /// </remarks>
         [JsonProperty("23151")]
-        public OtherCurrentLiabilitiesBalanceSheet OtherCurrentLiabilities => _otherCurrentLiabilities ??= new(_timeProvider, _securityIdentifier);
+        public OtherCurrentLiabilitiesBalanceSheet OtherCurrentLiabilities =>
+            _otherCurrentLiabilities ??= new(_timeProvider, _securityIdentifier);
         private OtherCurrentLiabilitiesBalanceSheet _otherCurrentLiabilities;
 
         /// <summary>
@@ -705,7 +775,8 @@ namespace QuantConnect.Data.Fundamental
         /// Morningstar DataId: 23155
         /// </remarks>
         [JsonProperty("23155")]
-        public OtherIntangibleAssetsBalanceSheet OtherIntangibleAssets => _otherIntangibleAssets ??= new(_timeProvider, _securityIdentifier);
+        public OtherIntangibleAssetsBalanceSheet OtherIntangibleAssets =>
+            _otherIntangibleAssets ??= new(_timeProvider, _securityIdentifier);
         private OtherIntangibleAssetsBalanceSheet _otherIntangibleAssets;
 
         /// <summary>
@@ -715,7 +786,8 @@ namespace QuantConnect.Data.Fundamental
         /// Morningstar DataId: 23163
         /// </remarks>
         [JsonProperty("23163")]
-        public OtherShortTermInvestmentsBalanceSheet OtherShortTermInvestments => _otherShortTermInvestments ??= new(_timeProvider, _securityIdentifier);
+        public OtherShortTermInvestmentsBalanceSheet OtherShortTermInvestments =>
+            _otherShortTermInvestments ??= new(_timeProvider, _securityIdentifier);
         private OtherShortTermInvestmentsBalanceSheet _otherShortTermInvestments;
 
         /// <summary>
@@ -725,7 +797,8 @@ namespace QuantConnect.Data.Fundamental
         /// Morningstar DataId: 23165
         /// </remarks>
         [JsonProperty("23165")]
-        public PayablesBalanceSheet Payables => _payables ??= new(_timeProvider, _securityIdentifier);
+        public PayablesBalanceSheet Payables =>
+            _payables ??= new(_timeProvider, _securityIdentifier);
         private PayablesBalanceSheet _payables;
 
         /// <summary>
@@ -735,7 +808,8 @@ namespace QuantConnect.Data.Fundamental
         /// Morningstar DataId: 23166
         /// </remarks>
         [JsonProperty("23166")]
-        public PayablesAndAccruedExpensesBalanceSheet PayablesAndAccruedExpenses => _payablesAndAccruedExpenses ??= new(_timeProvider, _securityIdentifier);
+        public PayablesAndAccruedExpensesBalanceSheet PayablesAndAccruedExpenses =>
+            _payablesAndAccruedExpenses ??= new(_timeProvider, _securityIdentifier);
         private PayablesAndAccruedExpensesBalanceSheet _payablesAndAccruedExpenses;
 
         /// <summary>
@@ -745,7 +819,8 @@ namespace QuantConnect.Data.Fundamental
         /// Morningstar DataId: 23169
         /// </remarks>
         [JsonProperty("23169")]
-        public PolicyReservesBenefitsBalanceSheet PolicyReservesBenefits => _policyReservesBenefits ??= new(_timeProvider, _securityIdentifier);
+        public PolicyReservesBenefitsBalanceSheet PolicyReservesBenefits =>
+            _policyReservesBenefits ??= new(_timeProvider, _securityIdentifier);
         private PolicyReservesBenefitsBalanceSheet _policyReservesBenefits;
 
         /// <summary>
@@ -755,7 +830,8 @@ namespace QuantConnect.Data.Fundamental
         /// Morningstar DataId: 23171
         /// </remarks>
         [JsonProperty("23171")]
-        public PolicyholderFundsBalanceSheet PolicyholderFunds => _policyholderFunds ??= new(_timeProvider, _securityIdentifier);
+        public PolicyholderFundsBalanceSheet PolicyholderFunds =>
+            _policyholderFunds ??= new(_timeProvider, _securityIdentifier);
         private PolicyholderFundsBalanceSheet _policyholderFunds;
 
         /// <summary>
@@ -765,7 +841,8 @@ namespace QuantConnect.Data.Fundamental
         /// Morningstar DataId: 23172
         /// </remarks>
         [JsonProperty("23172")]
-        public PreferredSecuritiesOutsideStockEquityBalanceSheet PreferredSecuritiesOutsideStockEquity => _preferredSecuritiesOutsideStockEquity ??= new(_timeProvider, _securityIdentifier);
+        public PreferredSecuritiesOutsideStockEquityBalanceSheet PreferredSecuritiesOutsideStockEquity =>
+            _preferredSecuritiesOutsideStockEquity ??= new(_timeProvider, _securityIdentifier);
         private PreferredSecuritiesOutsideStockEquityBalanceSheet _preferredSecuritiesOutsideStockEquity;
 
         /// <summary>
@@ -775,7 +852,8 @@ namespace QuantConnect.Data.Fundamental
         /// Morningstar DataId: 23174
         /// </remarks>
         [JsonProperty("23174")]
-        public PreferredStockBalanceSheet PreferredStock => _preferredStock ??= new(_timeProvider, _securityIdentifier);
+        public PreferredStockBalanceSheet PreferredStock =>
+            _preferredStock ??= new(_timeProvider, _securityIdentifier);
         private PreferredStockBalanceSheet _preferredStock;
 
         /// <summary>
@@ -785,7 +863,8 @@ namespace QuantConnect.Data.Fundamental
         /// Morningstar DataId: 23179
         /// </remarks>
         [JsonProperty("23179")]
-        public PrepaidAssetsBalanceSheet PrepaidAssets => _prepaidAssets ??= new(_timeProvider, _securityIdentifier);
+        public PrepaidAssetsBalanceSheet PrepaidAssets =>
+            _prepaidAssets ??= new(_timeProvider, _securityIdentifier);
         private PrepaidAssetsBalanceSheet _prepaidAssets;
 
         /// <summary>
@@ -795,7 +874,8 @@ namespace QuantConnect.Data.Fundamental
         /// Morningstar DataId: 23180
         /// </remarks>
         [JsonProperty("23180")]
-        public NonCurrentPrepaidAssetsBalanceSheet NonCurrentPrepaidAssets => _nonCurrentPrepaidAssets ??= new(_timeProvider, _securityIdentifier);
+        public NonCurrentPrepaidAssetsBalanceSheet NonCurrentPrepaidAssets =>
+            _nonCurrentPrepaidAssets ??= new(_timeProvider, _securityIdentifier);
         private NonCurrentPrepaidAssetsBalanceSheet _nonCurrentPrepaidAssets;
 
         /// <summary>
@@ -805,7 +885,8 @@ namespace QuantConnect.Data.Fundamental
         /// Morningstar DataId: 23189
         /// </remarks>
         [JsonProperty("23189")]
-        public ReceivablesBalanceSheet Receivables => _receivables ??= new(_timeProvider, _securityIdentifier);
+        public ReceivablesBalanceSheet Receivables =>
+            _receivables ??= new(_timeProvider, _securityIdentifier);
         private ReceivablesBalanceSheet _receivables;
 
         /// <summary>
@@ -815,7 +896,8 @@ namespace QuantConnect.Data.Fundamental
         /// Morningstar DataId: 23196
         /// </remarks>
         [JsonProperty("23196")]
-        public ReinsuranceRecoverableBalanceSheet ReinsuranceRecoverable => _reinsuranceRecoverable ??= new(_timeProvider, _securityIdentifier);
+        public ReinsuranceRecoverableBalanceSheet ReinsuranceRecoverable =>
+            _reinsuranceRecoverable ??= new(_timeProvider, _securityIdentifier);
         private ReinsuranceRecoverableBalanceSheet _reinsuranceRecoverable;
 
         /// <summary>
@@ -825,7 +907,8 @@ namespace QuantConnect.Data.Fundamental
         /// Morningstar DataId: 23204
         /// </remarks>
         [JsonProperty("23204")]
-        public RetainedEarningsBalanceSheet RetainedEarnings => _retainedEarnings ??= new(_timeProvider, _securityIdentifier);
+        public RetainedEarningsBalanceSheet RetainedEarnings =>
+            _retainedEarnings ??= new(_timeProvider, _securityIdentifier);
         private RetainedEarningsBalanceSheet _retainedEarnings;
 
         /// <summary>
@@ -835,7 +918,8 @@ namespace QuantConnect.Data.Fundamental
         /// Morningstar DataId: 23205
         /// </remarks>
         [JsonProperty("23205")]
-        public SecuritiesLendingCollateralBalanceSheet SecuritiesLendingCollateral => _securitiesLendingCollateral ??= new(_timeProvider, _securityIdentifier);
+        public SecuritiesLendingCollateralBalanceSheet SecuritiesLendingCollateral =>
+            _securitiesLendingCollateral ??= new(_timeProvider, _securityIdentifier);
         private SecuritiesLendingCollateralBalanceSheet _securitiesLendingCollateral;
 
         /// <summary>
@@ -845,7 +929,8 @@ namespace QuantConnect.Data.Fundamental
         /// Morningstar DataId: 23207
         /// </remarks>
         [JsonProperty("23207")]
-        public SecurityAgreeToBeResellBalanceSheet SecurityAgreeToBeResell => _securityAgreeToBeResell ??= new(_timeProvider, _securityIdentifier);
+        public SecurityAgreeToBeResellBalanceSheet SecurityAgreeToBeResell =>
+            _securityAgreeToBeResell ??= new(_timeProvider, _securityIdentifier);
         private SecurityAgreeToBeResellBalanceSheet _securityAgreeToBeResell;
 
         /// <summary>
@@ -855,7 +940,8 @@ namespace QuantConnect.Data.Fundamental
         /// Morningstar DataId: 23208
         /// </remarks>
         [JsonProperty("23208")]
-        public SecuritySoldNotYetRepurchasedBalanceSheet SecuritySoldNotYetRepurchased => _securitySoldNotYetRepurchased ??= new(_timeProvider, _securityIdentifier);
+        public SecuritySoldNotYetRepurchasedBalanceSheet SecuritySoldNotYetRepurchased =>
+            _securitySoldNotYetRepurchased ??= new(_timeProvider, _securityIdentifier);
         private SecuritySoldNotYetRepurchasedBalanceSheet _securitySoldNotYetRepurchased;
 
         /// <summary>
@@ -865,7 +951,8 @@ namespace QuantConnect.Data.Fundamental
         /// Morningstar DataId: 23209
         /// </remarks>
         [JsonProperty("23209")]
-        public SeparateAccountAssetsBalanceSheet SeparateAccountAssets => _separateAccountAssets ??= new(_timeProvider, _securityIdentifier);
+        public SeparateAccountAssetsBalanceSheet SeparateAccountAssets =>
+            _separateAccountAssets ??= new(_timeProvider, _securityIdentifier);
         private SeparateAccountAssetsBalanceSheet _separateAccountAssets;
 
         /// <summary>
@@ -875,7 +962,8 @@ namespace QuantConnect.Data.Fundamental
         /// Morningstar DataId: 23210
         /// </remarks>
         [JsonProperty("23210")]
-        public SeparateAccountBusinessBalanceSheet SeparateAccountBusiness => _separateAccountBusiness ??= new(_timeProvider, _securityIdentifier);
+        public SeparateAccountBusinessBalanceSheet SeparateAccountBusiness =>
+            _separateAccountBusiness ??= new(_timeProvider, _securityIdentifier);
         private SeparateAccountBusinessBalanceSheet _separateAccountBusiness;
 
         /// <summary>
@@ -885,7 +973,8 @@ namespace QuantConnect.Data.Fundamental
         /// Morningstar DataId: 23212
         /// </remarks>
         [JsonProperty("23212")]
-        public ShortTermInvestmentsAvailableForSaleBalanceSheet ShortTermInvestmentsAvailableForSale => _shortTermInvestmentsAvailableForSale ??= new(_timeProvider, _securityIdentifier);
+        public ShortTermInvestmentsAvailableForSaleBalanceSheet ShortTermInvestmentsAvailableForSale =>
+            _shortTermInvestmentsAvailableForSale ??= new(_timeProvider, _securityIdentifier);
         private ShortTermInvestmentsAvailableForSaleBalanceSheet _shortTermInvestmentsAvailableForSale;
 
         /// <summary>
@@ -895,7 +984,8 @@ namespace QuantConnect.Data.Fundamental
         /// Morningstar DataId: 23213
         /// </remarks>
         [JsonProperty("23213")]
-        public ShortTermInvestmentsHeldToMaturityBalanceSheet ShortTermInvestmentsHeldToMaturity => _shortTermInvestmentsHeldToMaturity ??= new(_timeProvider, _securityIdentifier);
+        public ShortTermInvestmentsHeldToMaturityBalanceSheet ShortTermInvestmentsHeldToMaturity =>
+            _shortTermInvestmentsHeldToMaturity ??= new(_timeProvider, _securityIdentifier);
         private ShortTermInvestmentsHeldToMaturityBalanceSheet _shortTermInvestmentsHeldToMaturity;
 
         /// <summary>
@@ -905,7 +995,8 @@ namespace QuantConnect.Data.Fundamental
         /// Morningstar DataId: 23214
         /// </remarks>
         [JsonProperty("23214")]
-        public ShortTermInvestmentsTradingBalanceSheet ShortTermInvestmentsTrading => _shortTermInvestmentsTrading ??= new(_timeProvider, _securityIdentifier);
+        public ShortTermInvestmentsTradingBalanceSheet ShortTermInvestmentsTrading =>
+            _shortTermInvestmentsTrading ??= new(_timeProvider, _securityIdentifier);
         private ShortTermInvestmentsTradingBalanceSheet _shortTermInvestmentsTrading;
 
         /// <summary>
@@ -915,7 +1006,8 @@ namespace QuantConnect.Data.Fundamental
         /// Morningstar DataId: 23215
         /// </remarks>
         [JsonProperty("23215")]
-        public StockholdersEquityBalanceSheet StockholdersEquity => _stockholdersEquity ??= new(_timeProvider, _securityIdentifier);
+        public StockholdersEquityBalanceSheet StockholdersEquity =>
+            _stockholdersEquity ??= new(_timeProvider, _securityIdentifier);
         private StockholdersEquityBalanceSheet _stockholdersEquity;
 
         /// <summary>
@@ -925,7 +1017,8 @@ namespace QuantConnect.Data.Fundamental
         /// Morningstar DataId: 23217
         /// </remarks>
         [JsonProperty("23217")]
-        public TotalTaxPayableBalanceSheet TotalTaxPayable => _totalTaxPayable ??= new(_timeProvider, _securityIdentifier);
+        public TotalTaxPayableBalanceSheet TotalTaxPayable =>
+            _totalTaxPayable ??= new(_timeProvider, _securityIdentifier);
         private TotalTaxPayableBalanceSheet _totalTaxPayable;
 
         /// <summary>
@@ -935,7 +1028,8 @@ namespace QuantConnect.Data.Fundamental
         /// Morningstar DataId: 23220
         /// </remarks>
         [JsonProperty("23220")]
-        public TotalAssetsBalanceSheet TotalAssets => _totalAssets ??= new(_timeProvider, _securityIdentifier);
+        public TotalAssetsBalanceSheet TotalAssets =>
+            _totalAssets ??= new(_timeProvider, _securityIdentifier);
         private TotalAssetsBalanceSheet _totalAssets;
 
         /// <summary>
@@ -945,7 +1039,8 @@ namespace QuantConnect.Data.Fundamental
         /// Morningstar DataId: 23223
         /// </remarks>
         [JsonProperty("23223")]
-        public TotalDepositsBalanceSheet TotalDeposits => _totalDeposits ??= new(_timeProvider, _securityIdentifier);
+        public TotalDepositsBalanceSheet TotalDeposits =>
+            _totalDeposits ??= new(_timeProvider, _securityIdentifier);
         private TotalDepositsBalanceSheet _totalDeposits;
 
         /// <summary>
@@ -955,7 +1050,8 @@ namespace QuantConnect.Data.Fundamental
         /// Morningstar DataId: 23224
         /// </remarks>
         [JsonProperty("23224")]
-        public TotalInvestmentsBalanceSheet TotalInvestments => _totalInvestments ??= new(_timeProvider, _securityIdentifier);
+        public TotalInvestmentsBalanceSheet TotalInvestments =>
+            _totalInvestments ??= new(_timeProvider, _securityIdentifier);
         private TotalInvestmentsBalanceSheet _totalInvestments;
 
         /// <summary>
@@ -965,7 +1061,8 @@ namespace QuantConnect.Data.Fundamental
         /// Morningstar DataId: 23226
         /// </remarks>
         [JsonProperty("23226")]
-        public TotalNonCurrentAssetsBalanceSheet TotalNonCurrentAssets => _totalNonCurrentAssets ??= new(_timeProvider, _securityIdentifier);
+        public TotalNonCurrentAssetsBalanceSheet TotalNonCurrentAssets =>
+            _totalNonCurrentAssets ??= new(_timeProvider, _securityIdentifier);
         private TotalNonCurrentAssetsBalanceSheet _totalNonCurrentAssets;
 
         /// <summary>
@@ -975,7 +1072,8 @@ namespace QuantConnect.Data.Fundamental
         /// Morningstar DataId: 23228
         /// </remarks>
         [JsonProperty("23228")]
-        public TotalPartnershipCapitalBalanceSheet TotalPartnershipCapital => _totalPartnershipCapital ??= new(_timeProvider, _securityIdentifier);
+        public TotalPartnershipCapitalBalanceSheet TotalPartnershipCapital =>
+            _totalPartnershipCapital ??= new(_timeProvider, _securityIdentifier);
         private TotalPartnershipCapitalBalanceSheet _totalPartnershipCapital;
 
         /// <summary>
@@ -985,7 +1083,8 @@ namespace QuantConnect.Data.Fundamental
         /// Morningstar DataId: 23229
         /// </remarks>
         [JsonProperty("23229")]
-        public TradingAssetsBalanceSheet TradingAssets => _tradingAssets ??= new(_timeProvider, _securityIdentifier);
+        public TradingAssetsBalanceSheet TradingAssets =>
+            _tradingAssets ??= new(_timeProvider, _securityIdentifier);
         private TradingAssetsBalanceSheet _tradingAssets;
 
         /// <summary>
@@ -995,7 +1094,8 @@ namespace QuantConnect.Data.Fundamental
         /// Morningstar DataId: 23230
         /// </remarks>
         [JsonProperty("23230")]
-        public TradingLiabilitiesBalanceSheet TradingLiabilities => _tradingLiabilities ??= new(_timeProvider, _securityIdentifier);
+        public TradingLiabilitiesBalanceSheet TradingLiabilities =>
+            _tradingLiabilities ??= new(_timeProvider, _securityIdentifier);
         private TradingLiabilitiesBalanceSheet _tradingLiabilities;
 
         /// <summary>
@@ -1005,7 +1105,8 @@ namespace QuantConnect.Data.Fundamental
         /// Morningstar DataId: 23231
         /// </remarks>
         [JsonProperty("23231")]
-        public TradingSecuritiesBalanceSheet TradingSecurities => _tradingSecurities ??= new(_timeProvider, _securityIdentifier);
+        public TradingSecuritiesBalanceSheet TradingSecurities =>
+            _tradingSecurities ??= new(_timeProvider, _securityIdentifier);
         private TradingSecuritiesBalanceSheet _tradingSecurities;
 
         /// <summary>
@@ -1015,7 +1116,8 @@ namespace QuantConnect.Data.Fundamental
         /// Morningstar DataId: 23232
         /// </remarks>
         [JsonProperty("23232")]
-        public TreasuryStockBalanceSheet TreasuryStock => _treasuryStock ??= new(_timeProvider, _securityIdentifier);
+        public TreasuryStockBalanceSheet TreasuryStock =>
+            _treasuryStock ??= new(_timeProvider, _securityIdentifier);
         private TreasuryStockBalanceSheet _treasuryStock;
 
         /// <summary>
@@ -1025,7 +1127,8 @@ namespace QuantConnect.Data.Fundamental
         /// Morningstar DataId: 23235
         /// </remarks>
         [JsonProperty("23235")]
-        public UnearnedIncomeBalanceSheet UnearnedIncome => _unearnedIncome ??= new(_timeProvider, _securityIdentifier);
+        public UnearnedIncomeBalanceSheet UnearnedIncome =>
+            _unearnedIncome ??= new(_timeProvider, _securityIdentifier);
         private UnearnedIncomeBalanceSheet _unearnedIncome;
 
         /// <summary>
@@ -1035,7 +1138,8 @@ namespace QuantConnect.Data.Fundamental
         /// Morningstar DataId: 23236
         /// </remarks>
         [JsonProperty("23236")]
-        public UnearnedPremiumsBalanceSheet UnearnedPremiums => _unearnedPremiums ??= new(_timeProvider, _securityIdentifier);
+        public UnearnedPremiumsBalanceSheet UnearnedPremiums =>
+            _unearnedPremiums ??= new(_timeProvider, _securityIdentifier);
         private UnearnedPremiumsBalanceSheet _unearnedPremiums;
 
         /// <summary>
@@ -1045,7 +1149,8 @@ namespace QuantConnect.Data.Fundamental
         /// Morningstar DataId: 23237
         /// </remarks>
         [JsonProperty("23237")]
-        public UnpaidLossAndLossReserveBalanceSheet UnpaidLossAndLossReserve => _unpaidLossAndLossReserve ??= new(_timeProvider, _securityIdentifier);
+        public UnpaidLossAndLossReserveBalanceSheet UnpaidLossAndLossReserve =>
+            _unpaidLossAndLossReserve ??= new(_timeProvider, _securityIdentifier);
         private UnpaidLossAndLossReserveBalanceSheet _unpaidLossAndLossReserve;
 
         /// <summary>
@@ -1055,7 +1160,8 @@ namespace QuantConnect.Data.Fundamental
         /// Morningstar DataId: 23245
         /// </remarks>
         [JsonProperty("23245")]
-        public InvestedCapitalBalanceSheet InvestedCapital => _investedCapital ??= new(_timeProvider, _securityIdentifier);
+        public InvestedCapitalBalanceSheet InvestedCapital =>
+            _investedCapital ??= new(_timeProvider, _securityIdentifier);
         private InvestedCapitalBalanceSheet _investedCapital;
 
         /// <summary>
@@ -1065,7 +1171,8 @@ namespace QuantConnect.Data.Fundamental
         /// Morningstar DataId: 23252
         /// </remarks>
         [JsonProperty("23252")]
-        public CurrentDeferredAssetsBalanceSheet CurrentDeferredAssets => _currentDeferredAssets ??= new(_timeProvider, _securityIdentifier);
+        public CurrentDeferredAssetsBalanceSheet CurrentDeferredAssets =>
+            _currentDeferredAssets ??= new(_timeProvider, _securityIdentifier);
         private CurrentDeferredAssetsBalanceSheet _currentDeferredAssets;
 
         /// <summary>
@@ -1075,7 +1182,8 @@ namespace QuantConnect.Data.Fundamental
         /// Morningstar DataId: 23253
         /// </remarks>
         [JsonProperty("23253")]
-        public NonCurrentDeferredAssetsBalanceSheet NonCurrentDeferredAssets => _nonCurrentDeferredAssets ??= new(_timeProvider, _securityIdentifier);
+        public NonCurrentDeferredAssetsBalanceSheet NonCurrentDeferredAssets =>
+            _nonCurrentDeferredAssets ??= new(_timeProvider, _securityIdentifier);
         private NonCurrentDeferredAssetsBalanceSheet _nonCurrentDeferredAssets;
 
         /// <summary>
@@ -1085,7 +1193,8 @@ namespace QuantConnect.Data.Fundamental
         /// Morningstar DataId: 23258
         /// </remarks>
         [JsonProperty("23258")]
-        public SecuritiesAndInvestmentsBalanceSheet SecuritiesAndInvestments => _securitiesAndInvestments ??= new(_timeProvider, _securityIdentifier);
+        public SecuritiesAndInvestmentsBalanceSheet SecuritiesAndInvestments =>
+            _securitiesAndInvestments ??= new(_timeProvider, _securityIdentifier);
         private SecuritiesAndInvestmentsBalanceSheet _securitiesAndInvestments;
 
         /// <summary>
@@ -1095,7 +1204,8 @@ namespace QuantConnect.Data.Fundamental
         /// Morningstar DataId: 23259
         /// </remarks>
         [JsonProperty("23259")]
-        public TotalLiabilitiesNetMinorityInterestBalanceSheet TotalLiabilitiesNetMinorityInterest => _totalLiabilitiesNetMinorityInterest ??= new(_timeProvider, _securityIdentifier);
+        public TotalLiabilitiesNetMinorityInterestBalanceSheet TotalLiabilitiesNetMinorityInterest =>
+            _totalLiabilitiesNetMinorityInterest ??= new(_timeProvider, _securityIdentifier);
         private TotalLiabilitiesNetMinorityInterestBalanceSheet _totalLiabilitiesNetMinorityInterest;
 
         /// <summary>
@@ -1105,7 +1215,11 @@ namespace QuantConnect.Data.Fundamental
         /// Morningstar DataId: 23260
         /// </remarks>
         [JsonProperty("23260")]
-        public TotalNonCurrentLiabilitiesNetMinorityInterestBalanceSheet TotalNonCurrentLiabilitiesNetMinorityInterest => _totalNonCurrentLiabilitiesNetMinorityInterest ??= new(_timeProvider, _securityIdentifier);
+        public TotalNonCurrentLiabilitiesNetMinorityInterestBalanceSheet TotalNonCurrentLiabilitiesNetMinorityInterest =>
+            _totalNonCurrentLiabilitiesNetMinorityInterest ??= new(
+                _timeProvider,
+                _securityIdentifier
+            );
         private TotalNonCurrentLiabilitiesNetMinorityInterestBalanceSheet _totalNonCurrentLiabilitiesNetMinorityInterest;
 
         /// <summary>
@@ -1115,7 +1229,8 @@ namespace QuantConnect.Data.Fundamental
         /// Morningstar DataId: 23261
         /// </remarks>
         [JsonProperty("23261")]
-        public TotalEquityGrossMinorityInterestBalanceSheet TotalEquityGrossMinorityInterest => _totalEquityGrossMinorityInterest ??= new(_timeProvider, _securityIdentifier);
+        public TotalEquityGrossMinorityInterestBalanceSheet TotalEquityGrossMinorityInterest =>
+            _totalEquityGrossMinorityInterest ??= new(_timeProvider, _securityIdentifier);
         private TotalEquityGrossMinorityInterestBalanceSheet _totalEquityGrossMinorityInterest;
 
         /// <summary>
@@ -1125,7 +1240,8 @@ namespace QuantConnect.Data.Fundamental
         /// Morningstar DataId: 23262
         /// </remarks>
         [JsonProperty("23262")]
-        public GrossAccountsReceivableBalanceSheet GrossAccountsReceivable => _grossAccountsReceivable ??= new(_timeProvider, _securityIdentifier);
+        public GrossAccountsReceivableBalanceSheet GrossAccountsReceivable =>
+            _grossAccountsReceivable ??= new(_timeProvider, _securityIdentifier);
         private GrossAccountsReceivableBalanceSheet _grossAccountsReceivable;
 
         /// <summary>
@@ -1135,7 +1251,8 @@ namespace QuantConnect.Data.Fundamental
         /// Morningstar DataId: 23263
         /// </remarks>
         [JsonProperty("23263")]
-        public NonCurrentAccountsReceivableBalanceSheet NonCurrentAccountsReceivable => _nonCurrentAccountsReceivable ??= new(_timeProvider, _securityIdentifier);
+        public NonCurrentAccountsReceivableBalanceSheet NonCurrentAccountsReceivable =>
+            _nonCurrentAccountsReceivable ??= new(_timeProvider, _securityIdentifier);
         private NonCurrentAccountsReceivableBalanceSheet _nonCurrentAccountsReceivable;
 
         /// <summary>
@@ -1145,7 +1262,8 @@ namespace QuantConnect.Data.Fundamental
         /// Morningstar DataId: 23264
         /// </remarks>
         [JsonProperty("23264")]
-        public AccruedInterestReceivableBalanceSheet AccruedInterestReceivable => _accruedInterestReceivable ??= new(_timeProvider, _securityIdentifier);
+        public AccruedInterestReceivableBalanceSheet AccruedInterestReceivable =>
+            _accruedInterestReceivable ??= new(_timeProvider, _securityIdentifier);
         private AccruedInterestReceivableBalanceSheet _accruedInterestReceivable;
 
         /// <summary>
@@ -1155,7 +1273,8 @@ namespace QuantConnect.Data.Fundamental
         /// Morningstar DataId: 23265
         /// </remarks>
         [JsonProperty("23265")]
-        public AdvanceFromFederalHomeLoanBanksBalanceSheet AdvanceFromFederalHomeLoanBanks => _advanceFromFederalHomeLoanBanks ??= new(_timeProvider, _securityIdentifier);
+        public AdvanceFromFederalHomeLoanBanksBalanceSheet AdvanceFromFederalHomeLoanBanks =>
+            _advanceFromFederalHomeLoanBanks ??= new(_timeProvider, _securityIdentifier);
         private AdvanceFromFederalHomeLoanBanksBalanceSheet _advanceFromFederalHomeLoanBanks;
 
         /// <summary>
@@ -1165,7 +1284,8 @@ namespace QuantConnect.Data.Fundamental
         /// Morningstar DataId: 23266
         /// </remarks>
         [JsonProperty("23266")]
-        public AllowanceForDoubtfulAccountsReceivableBalanceSheet AllowanceForDoubtfulAccountsReceivable => _allowanceForDoubtfulAccountsReceivable ??= new(_timeProvider, _securityIdentifier);
+        public AllowanceForDoubtfulAccountsReceivableBalanceSheet AllowanceForDoubtfulAccountsReceivable =>
+            _allowanceForDoubtfulAccountsReceivable ??= new(_timeProvider, _securityIdentifier);
         private AllowanceForDoubtfulAccountsReceivableBalanceSheet _allowanceForDoubtfulAccountsReceivable;
 
         /// <summary>
@@ -1175,7 +1295,8 @@ namespace QuantConnect.Data.Fundamental
         /// Morningstar DataId: 23267
         /// </remarks>
         [JsonProperty("23267")]
-        public AllowanceForNotesReceivableBalanceSheet AllowanceForNotesReceivable => _allowanceForNotesReceivable ??= new(_timeProvider, _securityIdentifier);
+        public AllowanceForNotesReceivableBalanceSheet AllowanceForNotesReceivable =>
+            _allowanceForNotesReceivable ??= new(_timeProvider, _securityIdentifier);
         private AllowanceForNotesReceivableBalanceSheet _allowanceForNotesReceivable;
 
         /// <summary>
@@ -1185,7 +1306,8 @@ namespace QuantConnect.Data.Fundamental
         /// Morningstar DataId: 23268
         /// </remarks>
         [JsonProperty("23268")]
-        public AssetsHeldForSaleBalanceSheet AssetsHeldForSale => _assetsHeldForSale ??= new(_timeProvider, _securityIdentifier);
+        public AssetsHeldForSaleBalanceSheet AssetsHeldForSale =>
+            _assetsHeldForSale ??= new(_timeProvider, _securityIdentifier);
         private AssetsHeldForSaleBalanceSheet _assetsHeldForSale;
 
         /// <summary>
@@ -1195,7 +1317,8 @@ namespace QuantConnect.Data.Fundamental
         /// Morningstar DataId: 23269
         /// </remarks>
         [JsonProperty("23269")]
-        public AssetsOfDiscontinuedOperationsBalanceSheet AssetsOfDiscontinuedOperations => _assetsOfDiscontinuedOperations ??= new(_timeProvider, _securityIdentifier);
+        public AssetsOfDiscontinuedOperationsBalanceSheet AssetsOfDiscontinuedOperations =>
+            _assetsOfDiscontinuedOperations ??= new(_timeProvider, _securityIdentifier);
         private AssetsOfDiscontinuedOperationsBalanceSheet _assetsOfDiscontinuedOperations;
 
         /// <summary>
@@ -1205,7 +1328,8 @@ namespace QuantConnect.Data.Fundamental
         /// Morningstar DataId: 23271
         /// </remarks>
         [JsonProperty("23271")]
-        public BankIndebtednessBalanceSheet BankIndebtedness => _bankIndebtedness ??= new(_timeProvider, _securityIdentifier);
+        public BankIndebtednessBalanceSheet BankIndebtedness =>
+            _bankIndebtedness ??= new(_timeProvider, _securityIdentifier);
         private BankIndebtednessBalanceSheet _bankIndebtedness;
 
         /// <summary>
@@ -1215,7 +1339,8 @@ namespace QuantConnect.Data.Fundamental
         /// Morningstar DataId: 23273
         /// </remarks>
         [JsonProperty("23273")]
-        public BankOwnedLifeInsuranceBalanceSheet BankOwnedLifeInsurance => _bankOwnedLifeInsurance ??= new(_timeProvider, _securityIdentifier);
+        public BankOwnedLifeInsuranceBalanceSheet BankOwnedLifeInsurance =>
+            _bankOwnedLifeInsurance ??= new(_timeProvider, _securityIdentifier);
         private BankOwnedLifeInsuranceBalanceSheet _bankOwnedLifeInsurance;
 
         /// <summary>
@@ -1225,7 +1350,8 @@ namespace QuantConnect.Data.Fundamental
         /// Morningstar DataId: 23274
         /// </remarks>
         [JsonProperty("23274")]
-        public SecurityBorrowedBalanceSheet SecurityBorrowed => _securityBorrowed ??= new(_timeProvider, _securityIdentifier);
+        public SecurityBorrowedBalanceSheet SecurityBorrowed =>
+            _securityBorrowed ??= new(_timeProvider, _securityIdentifier);
         private SecurityBorrowedBalanceSheet _securityBorrowed;
 
         /// <summary>
@@ -1235,7 +1361,8 @@ namespace QuantConnect.Data.Fundamental
         /// Morningstar DataId: 23275
         /// </remarks>
         [JsonProperty("23275")]
-        public BuildingsAndImprovementsBalanceSheet BuildingsAndImprovements => _buildingsAndImprovements ??= new(_timeProvider, _securityIdentifier);
+        public BuildingsAndImprovementsBalanceSheet BuildingsAndImprovements =>
+            _buildingsAndImprovements ??= new(_timeProvider, _securityIdentifier);
         private BuildingsAndImprovementsBalanceSheet _buildingsAndImprovements;
 
         /// <summary>
@@ -1245,7 +1372,8 @@ namespace QuantConnect.Data.Fundamental
         /// Morningstar DataId: 23278
         /// </remarks>
         [JsonProperty("23278")]
-        public CommercialLoanBalanceSheet CommercialLoan => _commercialLoan ??= new(_timeProvider, _securityIdentifier);
+        public CommercialLoanBalanceSheet CommercialLoan =>
+            _commercialLoan ??= new(_timeProvider, _securityIdentifier);
         private CommercialLoanBalanceSheet _commercialLoan;
 
         /// <summary>
@@ -1255,7 +1383,8 @@ namespace QuantConnect.Data.Fundamental
         /// Morningstar DataId: 23279
         /// </remarks>
         [JsonProperty("23279")]
-        public CommercialPaperBalanceSheet CommercialPaper => _commercialPaper ??= new(_timeProvider, _securityIdentifier);
+        public CommercialPaperBalanceSheet CommercialPaper =>
+            _commercialPaper ??= new(_timeProvider, _securityIdentifier);
         private CommercialPaperBalanceSheet _commercialPaper;
 
         /// <summary>
@@ -1265,7 +1394,8 @@ namespace QuantConnect.Data.Fundamental
         /// Morningstar DataId: 23280
         /// </remarks>
         [JsonProperty("23280")]
-        public CommonStockEquityBalanceSheet CommonStockEquity => _commonStockEquity ??= new(_timeProvider, _securityIdentifier);
+        public CommonStockEquityBalanceSheet CommonStockEquity =>
+            _commonStockEquity ??= new(_timeProvider, _securityIdentifier);
         private CommonStockEquityBalanceSheet _commonStockEquity;
 
         /// <summary>
@@ -1275,7 +1405,8 @@ namespace QuantConnect.Data.Fundamental
         /// Morningstar DataId: 23282
         /// </remarks>
         [JsonProperty("23282")]
-        public ConstructionInProgressBalanceSheet ConstructionInProgress => _constructionInProgress ??= new(_timeProvider, _securityIdentifier);
+        public ConstructionInProgressBalanceSheet ConstructionInProgress =>
+            _constructionInProgress ??= new(_timeProvider, _securityIdentifier);
         private ConstructionInProgressBalanceSheet _constructionInProgress;
 
         /// <summary>
@@ -1285,7 +1416,8 @@ namespace QuantConnect.Data.Fundamental
         /// Morningstar DataId: 23283
         /// </remarks>
         [JsonProperty("23283")]
-        public ConsumerLoanBalanceSheet ConsumerLoan => _consumerLoan ??= new(_timeProvider, _securityIdentifier);
+        public ConsumerLoanBalanceSheet ConsumerLoan =>
+            _consumerLoan ??= new(_timeProvider, _securityIdentifier);
         private ConsumerLoanBalanceSheet _consumerLoan;
 
         /// <summary>
@@ -1295,7 +1427,8 @@ namespace QuantConnect.Data.Fundamental
         /// Morningstar DataId: 23284
         /// </remarks>
         [JsonProperty("23284")]
-        public MinimumPensionLiabilitiesBalanceSheet MinimumPensionLiabilities => _minimumPensionLiabilities ??= new(_timeProvider, _securityIdentifier);
+        public MinimumPensionLiabilitiesBalanceSheet MinimumPensionLiabilities =>
+            _minimumPensionLiabilities ??= new(_timeProvider, _securityIdentifier);
         private MinimumPensionLiabilitiesBalanceSheet _minimumPensionLiabilities;
 
         /// <summary>
@@ -1305,7 +1438,8 @@ namespace QuantConnect.Data.Fundamental
         /// Morningstar DataId: 23285
         /// </remarks>
         [JsonProperty("23285")]
-        public CustomerAcceptancesBalanceSheet CustomerAcceptances => _customerAcceptances ??= new(_timeProvider, _securityIdentifier);
+        public CustomerAcceptancesBalanceSheet CustomerAcceptances =>
+            _customerAcceptances ??= new(_timeProvider, _securityIdentifier);
         private CustomerAcceptancesBalanceSheet _customerAcceptances;
 
         /// <summary>
@@ -1315,7 +1449,8 @@ namespace QuantConnect.Data.Fundamental
         /// Morningstar DataId: 23288
         /// </remarks>
         [JsonProperty("23288")]
-        public DefinedPensionBenefitBalanceSheet DefinedPensionBenefit => _definedPensionBenefit ??= new(_timeProvider, _securityIdentifier);
+        public DefinedPensionBenefitBalanceSheet DefinedPensionBenefit =>
+            _definedPensionBenefit ??= new(_timeProvider, _securityIdentifier);
         private DefinedPensionBenefitBalanceSheet _definedPensionBenefit;
 
         /// <summary>
@@ -1325,7 +1460,8 @@ namespace QuantConnect.Data.Fundamental
         /// Morningstar DataId: 23289
         /// </remarks>
         [JsonProperty("23289")]
-        public DerivativeProductLiabilitiesBalanceSheet DerivativeProductLiabilities => _derivativeProductLiabilities ??= new(_timeProvider, _securityIdentifier);
+        public DerivativeProductLiabilitiesBalanceSheet DerivativeProductLiabilities =>
+            _derivativeProductLiabilities ??= new(_timeProvider, _securityIdentifier);
         private DerivativeProductLiabilitiesBalanceSheet _derivativeProductLiabilities;
 
         /// <summary>
@@ -1335,7 +1471,8 @@ namespace QuantConnect.Data.Fundamental
         /// Morningstar DataId: 23290
         /// </remarks>
         [JsonProperty("23290")]
-        public DerivativeAssetsBalanceSheet DerivativeAssets => _derivativeAssets ??= new(_timeProvider, _securityIdentifier);
+        public DerivativeAssetsBalanceSheet DerivativeAssets =>
+            _derivativeAssets ??= new(_timeProvider, _securityIdentifier);
         private DerivativeAssetsBalanceSheet _derivativeAssets;
 
         /// <summary>
@@ -1345,7 +1482,8 @@ namespace QuantConnect.Data.Fundamental
         /// Morningstar DataId: 23291
         /// </remarks>
         [JsonProperty("23291")]
-        public DividendsPayableBalanceSheet DividendsPayable => _dividendsPayable ??= new(_timeProvider, _securityIdentifier);
+        public DividendsPayableBalanceSheet DividendsPayable =>
+            _dividendsPayable ??= new(_timeProvider, _securityIdentifier);
         private DividendsPayableBalanceSheet _dividendsPayable;
 
         /// <summary>
@@ -1355,7 +1493,8 @@ namespace QuantConnect.Data.Fundamental
         /// Morningstar DataId: 23293
         /// </remarks>
         [JsonProperty("23293")]
-        public EmployeeBenefitsBalanceSheet EmployeeBenefits => _employeeBenefits ??= new(_timeProvider, _securityIdentifier);
+        public EmployeeBenefitsBalanceSheet EmployeeBenefits =>
+            _employeeBenefits ??= new(_timeProvider, _securityIdentifier);
         private EmployeeBenefitsBalanceSheet _employeeBenefits;
 
         /// <summary>
@@ -1365,7 +1504,8 @@ namespace QuantConnect.Data.Fundamental
         /// Morningstar DataId: 23295
         /// </remarks>
         [JsonProperty("23295")]
-        public FederalFundsPurchasedBalanceSheet FederalFundsPurchased => _federalFundsPurchased ??= new(_timeProvider, _securityIdentifier);
+        public FederalFundsPurchasedBalanceSheet FederalFundsPurchased =>
+            _federalFundsPurchased ??= new(_timeProvider, _securityIdentifier);
         private FederalFundsPurchasedBalanceSheet _federalFundsPurchased;
 
         /// <summary>
@@ -1375,7 +1515,8 @@ namespace QuantConnect.Data.Fundamental
         /// Morningstar DataId: 23296
         /// </remarks>
         [JsonProperty("23296")]
-        public FederalFundsSoldBalanceSheet FederalFundsSold => _federalFundsSold ??= new(_timeProvider, _securityIdentifier);
+        public FederalFundsSoldBalanceSheet FederalFundsSold =>
+            _federalFundsSold ??= new(_timeProvider, _securityIdentifier);
         private FederalFundsSoldBalanceSheet _federalFundsSold;
 
         /// <summary>
@@ -1385,7 +1526,8 @@ namespace QuantConnect.Data.Fundamental
         /// Morningstar DataId: 23297
         /// </remarks>
         [JsonProperty("23297")]
-        public FederalHomeLoanBankStockBalanceSheet FederalHomeLoanBankStock => _federalHomeLoanBankStock ??= new(_timeProvider, _securityIdentifier);
+        public FederalHomeLoanBankStockBalanceSheet FederalHomeLoanBankStock =>
+            _federalHomeLoanBankStock ??= new(_timeProvider, _securityIdentifier);
         private FederalHomeLoanBankStockBalanceSheet _federalHomeLoanBankStock;
 
         /// <summary>
@@ -1395,7 +1537,8 @@ namespace QuantConnect.Data.Fundamental
         /// Morningstar DataId: 23298
         /// </remarks>
         [JsonProperty("23298")]
-        public FinancialAssetsBalanceSheet FinancialAssets => _financialAssets ??= new(_timeProvider, _securityIdentifier);
+        public FinancialAssetsBalanceSheet FinancialAssets =>
+            _financialAssets ??= new(_timeProvider, _securityIdentifier);
         private FinancialAssetsBalanceSheet _financialAssets;
 
         /// <summary>
@@ -1405,7 +1548,11 @@ namespace QuantConnect.Data.Fundamental
         /// Morningstar DataId: 23299
         /// </remarks>
         [JsonProperty("23299")]
-        public FinancialInstrumentsSoldUnderAgreementsToRepurchaseBalanceSheet FinancialInstrumentsSoldUnderAgreementsToRepurchase => _financialInstrumentsSoldUnderAgreementsToRepurchase ??= new(_timeProvider, _securityIdentifier);
+        public FinancialInstrumentsSoldUnderAgreementsToRepurchaseBalanceSheet FinancialInstrumentsSoldUnderAgreementsToRepurchase =>
+            _financialInstrumentsSoldUnderAgreementsToRepurchase ??= new(
+                _timeProvider,
+                _securityIdentifier
+            );
         private FinancialInstrumentsSoldUnderAgreementsToRepurchaseBalanceSheet _financialInstrumentsSoldUnderAgreementsToRepurchase;
 
         /// <summary>
@@ -1415,7 +1562,8 @@ namespace QuantConnect.Data.Fundamental
         /// Morningstar DataId: 23300
         /// </remarks>
         [JsonProperty("23300")]
-        public FinishedGoodsBalanceSheet FinishedGoods => _finishedGoods ??= new(_timeProvider, _securityIdentifier);
+        public FinishedGoodsBalanceSheet FinishedGoods =>
+            _finishedGoods ??= new(_timeProvider, _securityIdentifier);
         private FinishedGoodsBalanceSheet _finishedGoods;
 
         /// <summary>
@@ -1425,7 +1573,8 @@ namespace QuantConnect.Data.Fundamental
         /// Morningstar DataId: 23301
         /// </remarks>
         [JsonProperty("23301")]
-        public FlightFleetVehicleAndRelatedEquipmentsBalanceSheet FlightFleetVehicleAndRelatedEquipments => _flightFleetVehicleAndRelatedEquipments ??= new(_timeProvider, _securityIdentifier);
+        public FlightFleetVehicleAndRelatedEquipmentsBalanceSheet FlightFleetVehicleAndRelatedEquipments =>
+            _flightFleetVehicleAndRelatedEquipments ??= new(_timeProvider, _securityIdentifier);
         private FlightFleetVehicleAndRelatedEquipmentsBalanceSheet _flightFleetVehicleAndRelatedEquipments;
 
         /// <summary>
@@ -1435,7 +1584,8 @@ namespace QuantConnect.Data.Fundamental
         /// Morningstar DataId: 23302
         /// </remarks>
         [JsonProperty("23302")]
-        public ForeclosedAssetsBalanceSheet ForeclosedAssets => _foreclosedAssets ??= new(_timeProvider, _securityIdentifier);
+        public ForeclosedAssetsBalanceSheet ForeclosedAssets =>
+            _foreclosedAssets ??= new(_timeProvider, _securityIdentifier);
         private ForeclosedAssetsBalanceSheet _foreclosedAssets;
 
         /// <summary>
@@ -1445,7 +1595,8 @@ namespace QuantConnect.Data.Fundamental
         /// Morningstar DataId: 23304
         /// </remarks>
         [JsonProperty("23304")]
-        public ForeignCurrencyTranslationAdjustmentsBalanceSheet ForeignCurrencyTranslationAdjustments => _foreignCurrencyTranslationAdjustments ??= new(_timeProvider, _securityIdentifier);
+        public ForeignCurrencyTranslationAdjustmentsBalanceSheet ForeignCurrencyTranslationAdjustments =>
+            _foreignCurrencyTranslationAdjustments ??= new(_timeProvider, _securityIdentifier);
         private ForeignCurrencyTranslationAdjustmentsBalanceSheet _foreignCurrencyTranslationAdjustments;
 
         /// <summary>
@@ -1455,7 +1606,8 @@ namespace QuantConnect.Data.Fundamental
         /// Morningstar DataId: 23307
         /// </remarks>
         [JsonProperty("23307")]
-        public InventoriesAdjustmentsAllowancesBalanceSheet InventoriesAdjustmentsAllowances => _inventoriesAdjustmentsAllowances ??= new(_timeProvider, _securityIdentifier);
+        public InventoriesAdjustmentsAllowancesBalanceSheet InventoriesAdjustmentsAllowances =>
+            _inventoriesAdjustmentsAllowances ??= new(_timeProvider, _securityIdentifier);
         private InventoriesAdjustmentsAllowancesBalanceSheet _inventoriesAdjustmentsAllowances;
 
         /// <summary>
@@ -1465,7 +1617,11 @@ namespace QuantConnect.Data.Fundamental
         /// Morningstar DataId: 23310
         /// </remarks>
         [JsonProperty("23310")]
-        public InvestmentsInOtherVenturesUnderEquityMethodBalanceSheet InvestmentsInOtherVenturesUnderEquityMethod => _investmentsInOtherVenturesUnderEquityMethod ??= new(_timeProvider, _securityIdentifier);
+        public InvestmentsInOtherVenturesUnderEquityMethodBalanceSheet InvestmentsInOtherVenturesUnderEquityMethod =>
+            _investmentsInOtherVenturesUnderEquityMethod ??= new(
+                _timeProvider,
+                _securityIdentifier
+            );
         private InvestmentsInOtherVenturesUnderEquityMethodBalanceSheet _investmentsInOtherVenturesUnderEquityMethod;
 
         /// <summary>
@@ -1475,7 +1631,8 @@ namespace QuantConnect.Data.Fundamental
         /// Morningstar DataId: 23312
         /// </remarks>
         [JsonProperty("23312")]
-        public LandAndImprovementsBalanceSheet LandAndImprovements => _landAndImprovements ??= new(_timeProvider, _securityIdentifier);
+        public LandAndImprovementsBalanceSheet LandAndImprovements =>
+            _landAndImprovements ??= new(_timeProvider, _securityIdentifier);
         private LandAndImprovementsBalanceSheet _landAndImprovements;
 
         /// <summary>
@@ -1495,7 +1652,8 @@ namespace QuantConnect.Data.Fundamental
         /// Morningstar DataId: 23314
         /// </remarks>
         [JsonProperty("23314")]
-        public LiabilitiesOfDiscontinuedOperationsBalanceSheet LiabilitiesOfDiscontinuedOperations => _liabilitiesOfDiscontinuedOperations ??= new(_timeProvider, _securityIdentifier);
+        public LiabilitiesOfDiscontinuedOperationsBalanceSheet LiabilitiesOfDiscontinuedOperations =>
+            _liabilitiesOfDiscontinuedOperations ??= new(_timeProvider, _securityIdentifier);
         private LiabilitiesOfDiscontinuedOperationsBalanceSheet _liabilitiesOfDiscontinuedOperations;
 
         /// <summary>
@@ -1505,7 +1663,8 @@ namespace QuantConnect.Data.Fundamental
         /// Morningstar DataId: 23316
         /// </remarks>
         [JsonProperty("23316")]
-        public LineOfCreditBalanceSheet LineOfCredit => _lineOfCredit ??= new(_timeProvider, _securityIdentifier);
+        public LineOfCreditBalanceSheet LineOfCredit =>
+            _lineOfCredit ??= new(_timeProvider, _securityIdentifier);
         private LineOfCreditBalanceSheet _lineOfCredit;
 
         /// <summary>
@@ -1515,7 +1674,8 @@ namespace QuantConnect.Data.Fundamental
         /// Morningstar DataId: 23317
         /// </remarks>
         [JsonProperty("23317")]
-        public LoansHeldForSaleBalanceSheet LoansHeldForSale => _loansHeldForSale ??= new(_timeProvider, _securityIdentifier);
+        public LoansHeldForSaleBalanceSheet LoansHeldForSale =>
+            _loansHeldForSale ??= new(_timeProvider, _securityIdentifier);
         private LoansHeldForSaleBalanceSheet _loansHeldForSale;
 
         /// <summary>
@@ -1525,7 +1685,8 @@ namespace QuantConnect.Data.Fundamental
         /// Morningstar DataId: 23318
         /// </remarks>
         [JsonProperty("23318")]
-        public LoansReceivableBalanceSheet LoansReceivable => _loansReceivable ??= new(_timeProvider, _securityIdentifier);
+        public LoansReceivableBalanceSheet LoansReceivable =>
+            _loansReceivable ??= new(_timeProvider, _securityIdentifier);
         private LoansReceivableBalanceSheet _loansReceivable;
 
         /// <summary>
@@ -1535,7 +1696,8 @@ namespace QuantConnect.Data.Fundamental
         /// Morningstar DataId: 23319
         /// </remarks>
         [JsonProperty("23319")]
-        public MachineryFurnitureEquipmentBalanceSheet MachineryFurnitureEquipment => _machineryFurnitureEquipment ??= new(_timeProvider, _securityIdentifier);
+        public MachineryFurnitureEquipmentBalanceSheet MachineryFurnitureEquipment =>
+            _machineryFurnitureEquipment ??= new(_timeProvider, _securityIdentifier);
         private MachineryFurnitureEquipmentBalanceSheet _machineryFurnitureEquipment;
 
         /// <summary>
@@ -1545,7 +1707,8 @@ namespace QuantConnect.Data.Fundamental
         /// Morningstar DataId: 23320
         /// </remarks>
         [JsonProperty("23320")]
-        public MaterialsAndSuppliesBalanceSheet MaterialsAndSupplies => _materialsAndSupplies ??= new(_timeProvider, _securityIdentifier);
+        public MaterialsAndSuppliesBalanceSheet MaterialsAndSupplies =>
+            _materialsAndSupplies ??= new(_timeProvider, _securityIdentifier);
         private MaterialsAndSuppliesBalanceSheet _materialsAndSupplies;
 
         /// <summary>
@@ -1555,7 +1718,8 @@ namespace QuantConnect.Data.Fundamental
         /// Morningstar DataId: 23321
         /// </remarks>
         [JsonProperty("23321")]
-        public MineralPropertiesBalanceSheet MineralProperties => _mineralProperties ??= new(_timeProvider, _securityIdentifier);
+        public MineralPropertiesBalanceSheet MineralProperties =>
+            _mineralProperties ??= new(_timeProvider, _securityIdentifier);
         private MineralPropertiesBalanceSheet _mineralProperties;
 
         /// <summary>
@@ -1565,7 +1729,8 @@ namespace QuantConnect.Data.Fundamental
         /// Morningstar DataId: 23322
         /// </remarks>
         [JsonProperty("23322")]
-        public MortgageLoanBalanceSheet MortgageLoan => _mortgageLoan ??= new(_timeProvider, _securityIdentifier);
+        public MortgageLoanBalanceSheet MortgageLoan =>
+            _mortgageLoan ??= new(_timeProvider, _securityIdentifier);
         private MortgageLoanBalanceSheet _mortgageLoan;
 
         /// <summary>
@@ -1575,7 +1740,8 @@ namespace QuantConnect.Data.Fundamental
         /// Morningstar DataId: 23323
         /// </remarks>
         [JsonProperty("23323")]
-        public MortgageAndConsumerloansBalanceSheet MortgageAndConsumerloans => _mortgageAndConsumerloans ??= new(_timeProvider, _securityIdentifier);
+        public MortgageAndConsumerloansBalanceSheet MortgageAndConsumerloans =>
+            _mortgageAndConsumerloans ??= new(_timeProvider, _securityIdentifier);
         private MortgageAndConsumerloansBalanceSheet _mortgageAndConsumerloans;
 
         /// <summary>
@@ -1585,7 +1751,8 @@ namespace QuantConnect.Data.Fundamental
         /// Morningstar DataId: 23328
         /// </remarks>
         [JsonProperty("23328")]
-        public GrossNotesReceivableBalanceSheet GrossNotesReceivable => _grossNotesReceivable ??= new(_timeProvider, _securityIdentifier);
+        public GrossNotesReceivableBalanceSheet GrossNotesReceivable =>
+            _grossNotesReceivable ??= new(_timeProvider, _securityIdentifier);
         private GrossNotesReceivableBalanceSheet _grossNotesReceivable;
 
         /// <summary>
@@ -1595,7 +1762,8 @@ namespace QuantConnect.Data.Fundamental
         /// Morningstar DataId: 23329
         /// </remarks>
         [JsonProperty("23329")]
-        public OtherAssetsBalanceSheet OtherAssets => _otherAssets ??= new(_timeProvider, _securityIdentifier);
+        public OtherAssetsBalanceSheet OtherAssets =>
+            _otherAssets ??= new(_timeProvider, _securityIdentifier);
         private OtherAssetsBalanceSheet _otherAssets;
 
         /// <summary>
@@ -1605,7 +1773,8 @@ namespace QuantConnect.Data.Fundamental
         /// Morningstar DataId: 23330
         /// </remarks>
         [JsonProperty("23330")]
-        public OtherCapitalStockBalanceSheet OtherCapitalStock => _otherCapitalStock ??= new(_timeProvider, _securityIdentifier);
+        public OtherCapitalStockBalanceSheet OtherCapitalStock =>
+            _otherCapitalStock ??= new(_timeProvider, _securityIdentifier);
         private OtherCapitalStockBalanceSheet _otherCapitalStock;
 
         /// <summary>
@@ -1615,7 +1784,8 @@ namespace QuantConnect.Data.Fundamental
         /// Morningstar DataId: 23331
         /// </remarks>
         [JsonProperty("23331")]
-        public OtherCurrentAssetsBalanceSheet OtherCurrentAssets => _otherCurrentAssets ??= new(_timeProvider, _securityIdentifier);
+        public OtherCurrentAssetsBalanceSheet OtherCurrentAssets =>
+            _otherCurrentAssets ??= new(_timeProvider, _securityIdentifier);
         private OtherCurrentAssetsBalanceSheet _otherCurrentAssets;
 
         /// <summary>
@@ -1625,7 +1795,8 @@ namespace QuantConnect.Data.Fundamental
         /// Morningstar DataId: 23332
         /// </remarks>
         [JsonProperty("23332")]
-        public OtherCurrentBorrowingsBalanceSheet OtherCurrentBorrowings => _otherCurrentBorrowings ??= new(_timeProvider, _securityIdentifier);
+        public OtherCurrentBorrowingsBalanceSheet OtherCurrentBorrowings =>
+            _otherCurrentBorrowings ??= new(_timeProvider, _securityIdentifier);
         private OtherCurrentBorrowingsBalanceSheet _otherCurrentBorrowings;
 
         /// <summary>
@@ -1635,7 +1806,8 @@ namespace QuantConnect.Data.Fundamental
         /// Morningstar DataId: 23335
         /// </remarks>
         [JsonProperty("23335")]
-        public OtherEquityAdjustmentsBalanceSheet OtherEquityAdjustments => _otherEquityAdjustments ??= new(_timeProvider, _securityIdentifier);
+        public OtherEquityAdjustmentsBalanceSheet OtherEquityAdjustments =>
+            _otherEquityAdjustments ??= new(_timeProvider, _securityIdentifier);
         private OtherEquityAdjustmentsBalanceSheet _otherEquityAdjustments;
 
         /// <summary>
@@ -1645,7 +1817,8 @@ namespace QuantConnect.Data.Fundamental
         /// Morningstar DataId: 23337
         /// </remarks>
         [JsonProperty("23337")]
-        public OtherInventoriesBalanceSheet OtherInventories => _otherInventories ??= new(_timeProvider, _securityIdentifier);
+        public OtherInventoriesBalanceSheet OtherInventories =>
+            _otherInventories ??= new(_timeProvider, _securityIdentifier);
         private OtherInventoriesBalanceSheet _otherInventories;
 
         /// <summary>
@@ -1655,7 +1828,8 @@ namespace QuantConnect.Data.Fundamental
         /// Morningstar DataId: 23338
         /// </remarks>
         [JsonProperty("23338")]
-        public OtherInvestedAssetsBalanceSheet OtherInvestedAssets => _otherInvestedAssets ??= new(_timeProvider, _securityIdentifier);
+        public OtherInvestedAssetsBalanceSheet OtherInvestedAssets =>
+            _otherInvestedAssets ??= new(_timeProvider, _securityIdentifier);
         private OtherInvestedAssetsBalanceSheet _otherInvestedAssets;
 
         /// <summary>
@@ -1665,7 +1839,8 @@ namespace QuantConnect.Data.Fundamental
         /// Morningstar DataId: 23339
         /// </remarks>
         [JsonProperty("23339")]
-        public OtherNonCurrentAssetsBalanceSheet OtherNonCurrentAssets => _otherNonCurrentAssets ??= new(_timeProvider, _securityIdentifier);
+        public OtherNonCurrentAssetsBalanceSheet OtherNonCurrentAssets =>
+            _otherNonCurrentAssets ??= new(_timeProvider, _securityIdentifier);
         private OtherNonCurrentAssetsBalanceSheet _otherNonCurrentAssets;
 
         /// <summary>
@@ -1675,7 +1850,8 @@ namespace QuantConnect.Data.Fundamental
         /// Morningstar DataId: 23340
         /// </remarks>
         [JsonProperty("23340")]
-        public OtherPropertiesBalanceSheet OtherProperties => _otherProperties ??= new(_timeProvider, _securityIdentifier);
+        public OtherPropertiesBalanceSheet OtherProperties =>
+            _otherProperties ??= new(_timeProvider, _securityIdentifier);
         private OtherPropertiesBalanceSheet _otherProperties;
 
         /// <summary>
@@ -1685,7 +1861,8 @@ namespace QuantConnect.Data.Fundamental
         /// Morningstar DataId: 23341
         /// </remarks>
         [JsonProperty("23341")]
-        public OtherRealEstateOwnedBalanceSheet OtherRealEstateOwned => _otherRealEstateOwned ??= new(_timeProvider, _securityIdentifier);
+        public OtherRealEstateOwnedBalanceSheet OtherRealEstateOwned =>
+            _otherRealEstateOwned ??= new(_timeProvider, _securityIdentifier);
         private OtherRealEstateOwnedBalanceSheet _otherRealEstateOwned;
 
         /// <summary>
@@ -1695,7 +1872,8 @@ namespace QuantConnect.Data.Fundamental
         /// Morningstar DataId: 23342
         /// </remarks>
         [JsonProperty("23342")]
-        public OtherReceivablesBalanceSheet OtherReceivables => _otherReceivables ??= new(_timeProvider, _securityIdentifier);
+        public OtherReceivablesBalanceSheet OtherReceivables =>
+            _otherReceivables ??= new(_timeProvider, _securityIdentifier);
         private OtherReceivablesBalanceSheet _otherReceivables;
 
         /// <summary>
@@ -1705,7 +1883,11 @@ namespace QuantConnect.Data.Fundamental
         /// Morningstar DataId: 23344
         /// </remarks>
         [JsonProperty("23344")]
-        public NonCurrentPensionAndOtherPostretirementBenefitPlansBalanceSheet NonCurrentPensionAndOtherPostretirementBenefitPlans => _nonCurrentPensionAndOtherPostretirementBenefitPlans ??= new(_timeProvider, _securityIdentifier);
+        public NonCurrentPensionAndOtherPostretirementBenefitPlansBalanceSheet NonCurrentPensionAndOtherPostretirementBenefitPlans =>
+            _nonCurrentPensionAndOtherPostretirementBenefitPlans ??= new(
+                _timeProvider,
+                _securityIdentifier
+            );
         private NonCurrentPensionAndOtherPostretirementBenefitPlansBalanceSheet _nonCurrentPensionAndOtherPostretirementBenefitPlans;
 
         /// <summary>
@@ -1715,7 +1897,8 @@ namespace QuantConnect.Data.Fundamental
         /// Morningstar DataId: 23345
         /// </remarks>
         [JsonProperty("23345")]
-        public PolicyLoansBalanceSheet PolicyLoans => _policyLoans ??= new(_timeProvider, _securityIdentifier);
+        public PolicyLoansBalanceSheet PolicyLoans =>
+            _policyLoans ??= new(_timeProvider, _securityIdentifier);
         private PolicyLoansBalanceSheet _policyLoans;
 
         /// <summary>
@@ -1725,7 +1908,8 @@ namespace QuantConnect.Data.Fundamental
         /// Morningstar DataId: 23347
         /// </remarks>
         [JsonProperty("23347")]
-        public PreferredStockEquityBalanceSheet PreferredStockEquity => _preferredStockEquity ??= new(_timeProvider, _securityIdentifier);
+        public PreferredStockEquityBalanceSheet PreferredStockEquity =>
+            _preferredStockEquity ??= new(_timeProvider, _securityIdentifier);
         private PreferredStockEquityBalanceSheet _preferredStockEquity;
 
         /// <summary>
@@ -1735,7 +1919,8 @@ namespace QuantConnect.Data.Fundamental
         /// Morningstar DataId: 23351
         /// </remarks>
         [JsonProperty("23351")]
-        public PropertiesBalanceSheet Properties => _properties ??= new(_timeProvider, _securityIdentifier);
+        public PropertiesBalanceSheet Properties =>
+            _properties ??= new(_timeProvider, _securityIdentifier);
         private PropertiesBalanceSheet _properties;
 
         /// <summary>
@@ -1745,7 +1930,8 @@ namespace QuantConnect.Data.Fundamental
         /// Morningstar DataId: 23352
         /// </remarks>
         [JsonProperty("23352")]
-        public CurrentProvisionsBalanceSheet CurrentProvisions => _currentProvisions ??= new(_timeProvider, _securityIdentifier);
+        public CurrentProvisionsBalanceSheet CurrentProvisions =>
+            _currentProvisions ??= new(_timeProvider, _securityIdentifier);
         private CurrentProvisionsBalanceSheet _currentProvisions;
 
         /// <summary>
@@ -1755,7 +1941,8 @@ namespace QuantConnect.Data.Fundamental
         /// Morningstar DataId: 23353
         /// </remarks>
         [JsonProperty("23353")]
-        public LongTermProvisionsBalanceSheet LongTermProvisions => _longTermProvisions ??= new(_timeProvider, _securityIdentifier);
+        public LongTermProvisionsBalanceSheet LongTermProvisions =>
+            _longTermProvisions ??= new(_timeProvider, _securityIdentifier);
         private LongTermProvisionsBalanceSheet _longTermProvisions;
 
         /// <summary>
@@ -1765,7 +1952,8 @@ namespace QuantConnect.Data.Fundamental
         /// Morningstar DataId: 23355
         /// </remarks>
         [JsonProperty("23355")]
-        public RawMaterialsBalanceSheet RawMaterials => _rawMaterials ??= new(_timeProvider, _securityIdentifier);
+        public RawMaterialsBalanceSheet RawMaterials =>
+            _rawMaterials ??= new(_timeProvider, _securityIdentifier);
         private RawMaterialsBalanceSheet _rawMaterials;
 
         /// <summary>
@@ -1775,7 +1963,8 @@ namespace QuantConnect.Data.Fundamental
         /// Morningstar DataId: 23358
         /// </remarks>
         [JsonProperty("23358")]
-        public ReceivablesAdjustmentsAllowancesBalanceSheet ReceivablesAdjustmentsAllowances => _receivablesAdjustmentsAllowances ??= new(_timeProvider, _securityIdentifier);
+        public ReceivablesAdjustmentsAllowancesBalanceSheet ReceivablesAdjustmentsAllowances =>
+            _receivablesAdjustmentsAllowances ??= new(_timeProvider, _securityIdentifier);
         private ReceivablesAdjustmentsAllowancesBalanceSheet _receivablesAdjustmentsAllowances;
 
         /// <summary>
@@ -1785,7 +1974,8 @@ namespace QuantConnect.Data.Fundamental
         /// Morningstar DataId: 23359
         /// </remarks>
         [JsonProperty("23359")]
-        public RegulatoryAssetsBalanceSheet RegulatoryAssets => _regulatoryAssets ??= new(_timeProvider, _securityIdentifier);
+        public RegulatoryAssetsBalanceSheet RegulatoryAssets =>
+            _regulatoryAssets ??= new(_timeProvider, _securityIdentifier);
         private RegulatoryAssetsBalanceSheet _regulatoryAssets;
 
         /// <summary>
@@ -1795,7 +1985,8 @@ namespace QuantConnect.Data.Fundamental
         /// Morningstar DataId: 23360
         /// </remarks>
         [JsonProperty("23360")]
-        public RegulatoryLiabilitiesBalanceSheet RegulatoryLiabilities => _regulatoryLiabilities ??= new(_timeProvider, _securityIdentifier);
+        public RegulatoryLiabilitiesBalanceSheet RegulatoryLiabilities =>
+            _regulatoryLiabilities ??= new(_timeProvider, _securityIdentifier);
         private RegulatoryLiabilitiesBalanceSheet _regulatoryLiabilities;
 
         /// <summary>
@@ -1805,7 +1996,8 @@ namespace QuantConnect.Data.Fundamental
         /// Morningstar DataId: 23361
         /// </remarks>
         [JsonProperty("23361")]
-        public ReinsuranceBalancesPayableBalanceSheet ReinsuranceBalancesPayable => _reinsuranceBalancesPayable ??= new(_timeProvider, _securityIdentifier);
+        public ReinsuranceBalancesPayableBalanceSheet ReinsuranceBalancesPayable =>
+            _reinsuranceBalancesPayable ??= new(_timeProvider, _securityIdentifier);
         private ReinsuranceBalancesPayableBalanceSheet _reinsuranceBalancesPayable;
 
         /// <summary>
@@ -1815,7 +2007,8 @@ namespace QuantConnect.Data.Fundamental
         /// Morningstar DataId: 23365
         /// </remarks>
         [JsonProperty("23365")]
-        public RestrictedCashBalanceSheet RestrictedCash => _restrictedCash ??= new(_timeProvider, _securityIdentifier);
+        public RestrictedCashBalanceSheet RestrictedCash =>
+            _restrictedCash ??= new(_timeProvider, _securityIdentifier);
         private RestrictedCashBalanceSheet _restrictedCash;
 
         /// <summary>
@@ -1825,7 +2018,8 @@ namespace QuantConnect.Data.Fundamental
         /// Morningstar DataId: 23366
         /// </remarks>
         [JsonProperty("23366")]
-        public RestrictedCashAndCashEquivalentsBalanceSheet RestrictedCashAndCashEquivalents => _restrictedCashAndCashEquivalents ??= new(_timeProvider, _securityIdentifier);
+        public RestrictedCashAndCashEquivalentsBalanceSheet RestrictedCashAndCashEquivalents =>
+            _restrictedCashAndCashEquivalents ??= new(_timeProvider, _securityIdentifier);
         private RestrictedCashAndCashEquivalentsBalanceSheet _restrictedCashAndCashEquivalents;
 
         /// <summary>
@@ -1835,7 +2029,8 @@ namespace QuantConnect.Data.Fundamental
         /// Morningstar DataId: 23367
         /// </remarks>
         [JsonProperty("23367")]
-        public RestrictedCashAndInvestmentsBalanceSheet RestrictedCashAndInvestments => _restrictedCashAndInvestments ??= new(_timeProvider, _securityIdentifier);
+        public RestrictedCashAndInvestmentsBalanceSheet RestrictedCashAndInvestments =>
+            _restrictedCashAndInvestments ??= new(_timeProvider, _securityIdentifier);
         private RestrictedCashAndInvestmentsBalanceSheet _restrictedCashAndInvestments;
 
         /// <summary>
@@ -1845,7 +2040,8 @@ namespace QuantConnect.Data.Fundamental
         /// Morningstar DataId: 23368
         /// </remarks>
         [JsonProperty("23368")]
-        public RestrictedCommonStockBalanceSheet RestrictedCommonStock => _restrictedCommonStock ??= new(_timeProvider, _securityIdentifier);
+        public RestrictedCommonStockBalanceSheet RestrictedCommonStock =>
+            _restrictedCommonStock ??= new(_timeProvider, _securityIdentifier);
         private RestrictedCommonStockBalanceSheet _restrictedCommonStock;
 
         /// <summary>
@@ -1855,7 +2051,8 @@ namespace QuantConnect.Data.Fundamental
         /// Morningstar DataId: 23369
         /// </remarks>
         [JsonProperty("23369")]
-        public RestrictedInvestmentsBalanceSheet RestrictedInvestments => _restrictedInvestments ??= new(_timeProvider, _securityIdentifier);
+        public RestrictedInvestmentsBalanceSheet RestrictedInvestments =>
+            _restrictedInvestments ??= new(_timeProvider, _securityIdentifier);
         private RestrictedInvestmentsBalanceSheet _restrictedInvestments;
 
         /// <summary>
@@ -1865,7 +2062,8 @@ namespace QuantConnect.Data.Fundamental
         /// Morningstar DataId: 23372
         /// </remarks>
         [JsonProperty("23372")]
-        public TaxesReceivableBalanceSheet TaxesReceivable => _taxesReceivable ??= new(_timeProvider, _securityIdentifier);
+        public TaxesReceivableBalanceSheet TaxesReceivable =>
+            _taxesReceivable ??= new(_timeProvider, _securityIdentifier);
         private TaxesReceivableBalanceSheet _taxesReceivable;
 
         /// <summary>
@@ -1875,7 +2073,8 @@ namespace QuantConnect.Data.Fundamental
         /// Morningstar DataId: 23374
         /// </remarks>
         [JsonProperty("23374")]
-        public TotalCapitalizationBalanceSheet TotalCapitalization => _totalCapitalization ??= new(_timeProvider, _securityIdentifier);
+        public TotalCapitalizationBalanceSheet TotalCapitalization =>
+            _totalCapitalization ??= new(_timeProvider, _securityIdentifier);
         private TotalCapitalizationBalanceSheet _totalCapitalization;
 
         /// <summary>
@@ -1885,7 +2084,11 @@ namespace QuantConnect.Data.Fundamental
         /// Morningstar DataId: 23375
         /// </remarks>
         [JsonProperty("23375")]
-        public TotalDeferredCreditsAndOtherNonCurrentLiabilitiesBalanceSheet TotalDeferredCreditsAndOtherNonCurrentLiabilities => _totalDeferredCreditsAndOtherNonCurrentLiabilities ??= new(_timeProvider, _securityIdentifier);
+        public TotalDeferredCreditsAndOtherNonCurrentLiabilitiesBalanceSheet TotalDeferredCreditsAndOtherNonCurrentLiabilities =>
+            _totalDeferredCreditsAndOtherNonCurrentLiabilities ??= new(
+                _timeProvider,
+                _securityIdentifier
+            );
         private TotalDeferredCreditsAndOtherNonCurrentLiabilitiesBalanceSheet _totalDeferredCreditsAndOtherNonCurrentLiabilities;
 
         /// <summary>
@@ -1895,7 +2098,8 @@ namespace QuantConnect.Data.Fundamental
         /// Morningstar DataId: 23376
         /// </remarks>
         [JsonProperty("23376")]
-        public UnbilledReceivablesBalanceSheet UnbilledReceivables => _unbilledReceivables ??= new(_timeProvider, _securityIdentifier);
+        public UnbilledReceivablesBalanceSheet UnbilledReceivables =>
+            _unbilledReceivables ??= new(_timeProvider, _securityIdentifier);
         private UnbilledReceivablesBalanceSheet _unbilledReceivables;
 
         /// <summary>
@@ -1905,7 +2109,8 @@ namespace QuantConnect.Data.Fundamental
         /// Morningstar DataId: 23377
         /// </remarks>
         [JsonProperty("23377")]
-        public UnrealizedGainLossBalanceSheet UnrealizedGainLoss => _unrealizedGainLoss ??= new(_timeProvider, _securityIdentifier);
+        public UnrealizedGainLossBalanceSheet UnrealizedGainLoss =>
+            _unrealizedGainLoss ??= new(_timeProvider, _securityIdentifier);
         private UnrealizedGainLossBalanceSheet _unrealizedGainLoss;
 
         /// <summary>
@@ -1915,7 +2120,8 @@ namespace QuantConnect.Data.Fundamental
         /// Morningstar DataId: 23378
         /// </remarks>
         [JsonProperty("23378")]
-        public WorkInProcessBalanceSheet WorkInProcess => _workInProcess ??= new(_timeProvider, _securityIdentifier);
+        public WorkInProcessBalanceSheet WorkInProcess =>
+            _workInProcess ??= new(_timeProvider, _securityIdentifier);
         private WorkInProcessBalanceSheet _workInProcess;
 
         /// <summary>
@@ -1925,7 +2131,8 @@ namespace QuantConnect.Data.Fundamental
         /// Morningstar DataId: 23379
         /// </remarks>
         [JsonProperty("23379")]
-        public OtherNonCurrentLiabilitiesBalanceSheet OtherNonCurrentLiabilities => _otherNonCurrentLiabilities ??= new(_timeProvider, _securityIdentifier);
+        public OtherNonCurrentLiabilitiesBalanceSheet OtherNonCurrentLiabilities =>
+            _otherNonCurrentLiabilities ??= new(_timeProvider, _securityIdentifier);
         private OtherNonCurrentLiabilitiesBalanceSheet _otherNonCurrentLiabilities;
 
         /// <summary>
@@ -1935,7 +2142,8 @@ namespace QuantConnect.Data.Fundamental
         /// Morningstar DataId: 23380
         /// </remarks>
         [JsonProperty("23380")]
-        public CapitalLeaseObligationsBalanceSheet CapitalLeaseObligations => _capitalLeaseObligations ??= new(_timeProvider, _securityIdentifier);
+        public CapitalLeaseObligationsBalanceSheet CapitalLeaseObligations =>
+            _capitalLeaseObligations ??= new(_timeProvider, _securityIdentifier);
         private CapitalLeaseObligationsBalanceSheet _capitalLeaseObligations;
 
         /// <summary>
@@ -1945,7 +2153,8 @@ namespace QuantConnect.Data.Fundamental
         /// Morningstar DataId: 23381
         /// </remarks>
         [JsonProperty("23381")]
-        public OtherLiabilitiesBalanceSheet OtherLiabilities => _otherLiabilities ??= new(_timeProvider, _securityIdentifier);
+        public OtherLiabilitiesBalanceSheet OtherLiabilities =>
+            _otherLiabilities ??= new(_timeProvider, _securityIdentifier);
         private OtherLiabilitiesBalanceSheet _otherLiabilities;
 
         /// <summary>
@@ -1955,7 +2164,8 @@ namespace QuantConnect.Data.Fundamental
         /// Morningstar DataId: 23382
         /// </remarks>
         [JsonProperty("23382")]
-        public OtherPayableBalanceSheet OtherPayable => _otherPayable ??= new(_timeProvider, _securityIdentifier);
+        public OtherPayableBalanceSheet OtherPayable =>
+            _otherPayable ??= new(_timeProvider, _securityIdentifier);
         private OtherPayableBalanceSheet _otherPayable;
 
         /// <summary>
@@ -1965,7 +2175,8 @@ namespace QuantConnect.Data.Fundamental
         /// Morningstar DataId: 23383
         /// </remarks>
         [JsonProperty("23383")]
-        public TangibleBookValueBalanceSheet TangibleBookValue => _tangibleBookValue ??= new(_timeProvider, _securityIdentifier);
+        public TangibleBookValueBalanceSheet TangibleBookValue =>
+            _tangibleBookValue ??= new(_timeProvider, _securityIdentifier);
         private TangibleBookValueBalanceSheet _tangibleBookValue;
 
         /// <summary>
@@ -1975,7 +2186,8 @@ namespace QuantConnect.Data.Fundamental
         /// Morningstar DataId: 23384
         /// </remarks>
         [JsonProperty("23384")]
-        public TotalEquityBalanceSheet TotalEquity => _totalEquity ??= new(_timeProvider, _securityIdentifier);
+        public TotalEquityBalanceSheet TotalEquity =>
+            _totalEquity ??= new(_timeProvider, _securityIdentifier);
         private TotalEquityBalanceSheet _totalEquity;
 
         /// <summary>
@@ -1985,7 +2197,8 @@ namespace QuantConnect.Data.Fundamental
         /// Morningstar DataId: 23385
         /// </remarks>
         [JsonProperty("23385")]
-        public WorkingCapitalBalanceSheet WorkingCapital => _workingCapital ??= new(_timeProvider, _securityIdentifier);
+        public WorkingCapitalBalanceSheet WorkingCapital =>
+            _workingCapital ??= new(_timeProvider, _securityIdentifier);
         private WorkingCapitalBalanceSheet _workingCapital;
 
         /// <summary>
@@ -1995,7 +2208,8 @@ namespace QuantConnect.Data.Fundamental
         /// Morningstar DataId: 23386
         /// </remarks>
         [JsonProperty("23386")]
-        public TotalDebtBalanceSheet TotalDebt => _totalDebt ??= new(_timeProvider, _securityIdentifier);
+        public TotalDebtBalanceSheet TotalDebt =>
+            _totalDebt ??= new(_timeProvider, _securityIdentifier);
         private TotalDebtBalanceSheet _totalDebt;
 
         /// <summary>
@@ -2005,7 +2219,8 @@ namespace QuantConnect.Data.Fundamental
         /// Morningstar DataId: 23388
         /// </remarks>
         [JsonProperty("23388")]
-        public CommonUtilityPlantBalanceSheet CommonUtilityPlant => _commonUtilityPlant ??= new(_timeProvider, _securityIdentifier);
+        public CommonUtilityPlantBalanceSheet CommonUtilityPlant =>
+            _commonUtilityPlant ??= new(_timeProvider, _securityIdentifier);
         private CommonUtilityPlantBalanceSheet _commonUtilityPlant;
 
         /// <summary>
@@ -2015,7 +2230,8 @@ namespace QuantConnect.Data.Fundamental
         /// Morningstar DataId: 23389
         /// </remarks>
         [JsonProperty("23389")]
-        public ElectricUtilityPlantBalanceSheet ElectricUtilityPlant => _electricUtilityPlant ??= new(_timeProvider, _securityIdentifier);
+        public ElectricUtilityPlantBalanceSheet ElectricUtilityPlant =>
+            _electricUtilityPlant ??= new(_timeProvider, _securityIdentifier);
         private ElectricUtilityPlantBalanceSheet _electricUtilityPlant;
 
         /// <summary>
@@ -2025,7 +2241,8 @@ namespace QuantConnect.Data.Fundamental
         /// Morningstar DataId: 23390
         /// </remarks>
         [JsonProperty("23390")]
-        public NaturalGasFuelAndOtherBalanceSheet NaturalGasFuelAndOther => _naturalGasFuelAndOther ??= new(_timeProvider, _securityIdentifier);
+        public NaturalGasFuelAndOtherBalanceSheet NaturalGasFuelAndOther =>
+            _naturalGasFuelAndOther ??= new(_timeProvider, _securityIdentifier);
         private NaturalGasFuelAndOtherBalanceSheet _naturalGasFuelAndOther;
 
         /// <summary>
@@ -2035,7 +2252,8 @@ namespace QuantConnect.Data.Fundamental
         /// Morningstar DataId: 23391
         /// </remarks>
         [JsonProperty("23391")]
-        public NetUtilityPlantBalanceSheet NetUtilityPlant => _netUtilityPlant ??= new(_timeProvider, _securityIdentifier);
+        public NetUtilityPlantBalanceSheet NetUtilityPlant =>
+            _netUtilityPlant ??= new(_timeProvider, _securityIdentifier);
         private NetUtilityPlantBalanceSheet _netUtilityPlant;
 
         /// <summary>
@@ -2045,7 +2263,8 @@ namespace QuantConnect.Data.Fundamental
         /// Morningstar DataId: 23392
         /// </remarks>
         [JsonProperty("23392")]
-        public WaterProductionBalanceSheet WaterProduction => _waterProduction ??= new(_timeProvider, _securityIdentifier);
+        public WaterProductionBalanceSheet WaterProduction =>
+            _waterProduction ??= new(_timeProvider, _securityIdentifier);
         private WaterProductionBalanceSheet _waterProduction;
 
         /// <summary>
@@ -2055,7 +2274,8 @@ namespace QuantConnect.Data.Fundamental
         /// Morningstar DataId: 23393
         /// </remarks>
         [JsonProperty("23393")]
-        public OrdinarySharesNumberBalanceSheet OrdinarySharesNumber => _ordinarySharesNumber ??= new(_timeProvider, _securityIdentifier);
+        public OrdinarySharesNumberBalanceSheet OrdinarySharesNumber =>
+            _ordinarySharesNumber ??= new(_timeProvider, _securityIdentifier);
         private OrdinarySharesNumberBalanceSheet _ordinarySharesNumber;
 
         /// <summary>
@@ -2065,7 +2285,8 @@ namespace QuantConnect.Data.Fundamental
         /// Morningstar DataId: 23394
         /// </remarks>
         [JsonProperty("23394")]
-        public PreferredSharesNumberBalanceSheet PreferredSharesNumber => _preferredSharesNumber ??= new(_timeProvider, _securityIdentifier);
+        public PreferredSharesNumberBalanceSheet PreferredSharesNumber =>
+            _preferredSharesNumber ??= new(_timeProvider, _securityIdentifier);
         private PreferredSharesNumberBalanceSheet _preferredSharesNumber;
 
         /// <summary>
@@ -2075,7 +2296,8 @@ namespace QuantConnect.Data.Fundamental
         /// Morningstar DataId: 23395
         /// </remarks>
         [JsonProperty("23395")]
-        public TreasurySharesNumberBalanceSheet TreasurySharesNumber => _treasurySharesNumber ??= new(_timeProvider, _securityIdentifier);
+        public TreasurySharesNumberBalanceSheet TreasurySharesNumber =>
+            _treasurySharesNumber ??= new(_timeProvider, _securityIdentifier);
         private TreasurySharesNumberBalanceSheet _treasurySharesNumber;
 
         /// <summary>
@@ -2085,7 +2307,8 @@ namespace QuantConnect.Data.Fundamental
         /// Morningstar DataId: 23399
         /// </remarks>
         [JsonProperty("23399")]
-        public TradingAndOtherReceivableBalanceSheet TradingAndOtherReceivable => _tradingAndOtherReceivable ??= new(_timeProvider, _securityIdentifier);
+        public TradingAndOtherReceivableBalanceSheet TradingAndOtherReceivable =>
+            _tradingAndOtherReceivable ??= new(_timeProvider, _securityIdentifier);
         private TradingAndOtherReceivableBalanceSheet _tradingAndOtherReceivable;
 
         /// <summary>
@@ -2095,7 +2318,8 @@ namespace QuantConnect.Data.Fundamental
         /// Morningstar DataId: 23400
         /// </remarks>
         [JsonProperty("23400")]
-        public EquityAttributableToOwnersOfParentBalanceSheet EquityAttributableToOwnersOfParent => _equityAttributableToOwnersOfParent ??= new(_timeProvider, _securityIdentifier);
+        public EquityAttributableToOwnersOfParentBalanceSheet EquityAttributableToOwnersOfParent =>
+            _equityAttributableToOwnersOfParent ??= new(_timeProvider, _securityIdentifier);
         private EquityAttributableToOwnersOfParentBalanceSheet _equityAttributableToOwnersOfParent;
 
         /// <summary>
@@ -2105,7 +2329,8 @@ namespace QuantConnect.Data.Fundamental
         /// Morningstar DataId: 23401
         /// </remarks>
         [JsonProperty("23401")]
-        public SecuritiesLoanedBalanceSheet SecuritiesLoaned => _securitiesLoaned ??= new(_timeProvider, _securityIdentifier);
+        public SecuritiesLoanedBalanceSheet SecuritiesLoaned =>
+            _securitiesLoaned ??= new(_timeProvider, _securityIdentifier);
         private SecuritiesLoanedBalanceSheet _securitiesLoaned;
 
         /// <summary>
@@ -2115,7 +2340,8 @@ namespace QuantConnect.Data.Fundamental
         /// Morningstar DataId: 23403
         /// </remarks>
         [JsonProperty("23403")]
-        public NetTangibleAssetsBalanceSheet NetTangibleAssets => _netTangibleAssets ??= new(_timeProvider, _securityIdentifier);
+        public NetTangibleAssetsBalanceSheet NetTangibleAssets =>
+            _netTangibleAssets ??= new(_timeProvider, _securityIdentifier);
         private NetTangibleAssetsBalanceSheet _netTangibleAssets;
 
         /// <summary>
@@ -2125,7 +2351,8 @@ namespace QuantConnect.Data.Fundamental
         /// Morningstar DataId: 23404
         /// </remarks>
         [JsonProperty("23404")]
-        public DuefromRelatedPartiesCurrentBalanceSheet DuefromRelatedPartiesCurrent => _duefromRelatedPartiesCurrent ??= new(_timeProvider, _securityIdentifier);
+        public DuefromRelatedPartiesCurrentBalanceSheet DuefromRelatedPartiesCurrent =>
+            _duefromRelatedPartiesCurrent ??= new(_timeProvider, _securityIdentifier);
         private DuefromRelatedPartiesCurrentBalanceSheet _duefromRelatedPartiesCurrent;
 
         /// <summary>
@@ -2135,7 +2362,8 @@ namespace QuantConnect.Data.Fundamental
         /// Morningstar DataId: 23405
         /// </remarks>
         [JsonProperty("23405")]
-        public DuefromRelatedPartiesNonCurrentBalanceSheet DuefromRelatedPartiesNonCurrent => _duefromRelatedPartiesNonCurrent ??= new(_timeProvider, _securityIdentifier);
+        public DuefromRelatedPartiesNonCurrentBalanceSheet DuefromRelatedPartiesNonCurrent =>
+            _duefromRelatedPartiesNonCurrent ??= new(_timeProvider, _securityIdentifier);
         private DuefromRelatedPartiesNonCurrentBalanceSheet _duefromRelatedPartiesNonCurrent;
 
         /// <summary>
@@ -2145,7 +2373,8 @@ namespace QuantConnect.Data.Fundamental
         /// Morningstar DataId: 23406
         /// </remarks>
         [JsonProperty("23406")]
-        public DuetoRelatedPartiesBalanceSheet DuetoRelatedParties => _duetoRelatedParties ??= new(_timeProvider, _securityIdentifier);
+        public DuetoRelatedPartiesBalanceSheet DuetoRelatedParties =>
+            _duetoRelatedParties ??= new(_timeProvider, _securityIdentifier);
         private DuetoRelatedPartiesBalanceSheet _duetoRelatedParties;
 
         /// <summary>
@@ -2155,7 +2384,8 @@ namespace QuantConnect.Data.Fundamental
         /// Morningstar DataId: 23407
         /// </remarks>
         [JsonProperty("23407")]
-        public DuetoRelatedPartiesCurrentBalanceSheet DuetoRelatedPartiesCurrent => _duetoRelatedPartiesCurrent ??= new(_timeProvider, _securityIdentifier);
+        public DuetoRelatedPartiesCurrentBalanceSheet DuetoRelatedPartiesCurrent =>
+            _duetoRelatedPartiesCurrent ??= new(_timeProvider, _securityIdentifier);
         private DuetoRelatedPartiesCurrentBalanceSheet _duetoRelatedPartiesCurrent;
 
         /// <summary>
@@ -2165,7 +2395,8 @@ namespace QuantConnect.Data.Fundamental
         /// Morningstar DataId: 23408
         /// </remarks>
         [JsonProperty("23408")]
-        public DuetoRelatedPartiesNonCurrentBalanceSheet DuetoRelatedPartiesNonCurrent => _duetoRelatedPartiesNonCurrent ??= new(_timeProvider, _securityIdentifier);
+        public DuetoRelatedPartiesNonCurrentBalanceSheet DuetoRelatedPartiesNonCurrent =>
+            _duetoRelatedPartiesNonCurrent ??= new(_timeProvider, _securityIdentifier);
         private DuetoRelatedPartiesNonCurrentBalanceSheet _duetoRelatedPartiesNonCurrent;
 
         /// <summary>
@@ -2175,7 +2406,8 @@ namespace QuantConnect.Data.Fundamental
         /// Morningstar DataId: 23410
         /// </remarks>
         [JsonProperty("23410")]
-        public InvestmentPropertiesBalanceSheet InvestmentProperties => _investmentProperties ??= new(_timeProvider, _securityIdentifier);
+        public InvestmentPropertiesBalanceSheet InvestmentProperties =>
+            _investmentProperties ??= new(_timeProvider, _securityIdentifier);
         private InvestmentPropertiesBalanceSheet _investmentProperties;
 
         /// <summary>
@@ -2185,7 +2417,8 @@ namespace QuantConnect.Data.Fundamental
         /// Morningstar DataId: 23411
         /// </remarks>
         [JsonProperty("23411")]
-        public InvestmentsinSubsidiariesatCostBalanceSheet InvestmentsinSubsidiariesatCost => _investmentsinSubsidiariesatCost ??= new(_timeProvider, _securityIdentifier);
+        public InvestmentsinSubsidiariesatCostBalanceSheet InvestmentsinSubsidiariesatCost =>
+            _investmentsinSubsidiariesatCost ??= new(_timeProvider, _securityIdentifier);
         private InvestmentsinSubsidiariesatCostBalanceSheet _investmentsinSubsidiariesatCost;
 
         /// <summary>
@@ -2195,7 +2428,8 @@ namespace QuantConnect.Data.Fundamental
         /// Morningstar DataId: 23412
         /// </remarks>
         [JsonProperty("23412")]
-        public InvestmentsinAssociatesatCostBalanceSheet InvestmentsinAssociatesatCost => _investmentsinAssociatesatCost ??= new(_timeProvider, _securityIdentifier);
+        public InvestmentsinAssociatesatCostBalanceSheet InvestmentsinAssociatesatCost =>
+            _investmentsinAssociatesatCost ??= new(_timeProvider, _securityIdentifier);
         private InvestmentsinAssociatesatCostBalanceSheet _investmentsinAssociatesatCost;
 
         /// <summary>
@@ -2205,7 +2439,8 @@ namespace QuantConnect.Data.Fundamental
         /// Morningstar DataId: 23413
         /// </remarks>
         [JsonProperty("23413")]
-        public InvestmentsinJointVenturesatCostBalanceSheet InvestmentsinJointVenturesatCost => _investmentsinJointVenturesatCost ??= new(_timeProvider, _securityIdentifier);
+        public InvestmentsinJointVenturesatCostBalanceSheet InvestmentsinJointVenturesatCost =>
+            _investmentsinJointVenturesatCost ??= new(_timeProvider, _securityIdentifier);
         private InvestmentsinJointVenturesatCostBalanceSheet _investmentsinJointVenturesatCost;
 
         /// <summary>
@@ -2215,7 +2450,8 @@ namespace QuantConnect.Data.Fundamental
         /// Morningstar DataId: 23414
         /// </remarks>
         [JsonProperty("23414")]
-        public InvestmentinFinancialAssetsBalanceSheet InvestmentinFinancialAssets => _investmentinFinancialAssets ??= new(_timeProvider, _securityIdentifier);
+        public InvestmentinFinancialAssetsBalanceSheet InvestmentinFinancialAssets =>
+            _investmentinFinancialAssets ??= new(_timeProvider, _securityIdentifier);
         private InvestmentinFinancialAssetsBalanceSheet _investmentinFinancialAssets;
 
         /// <summary>
@@ -2225,7 +2461,8 @@ namespace QuantConnect.Data.Fundamental
         /// Morningstar DataId: 23415
         /// </remarks>
         [JsonProperty("23415")]
-        public FinanceLeaseReceivablesBalanceSheet FinanceLeaseReceivables => _financeLeaseReceivables ??= new(_timeProvider, _securityIdentifier);
+        public FinanceLeaseReceivablesBalanceSheet FinanceLeaseReceivables =>
+            _financeLeaseReceivables ??= new(_timeProvider, _securityIdentifier);
         private FinanceLeaseReceivablesBalanceSheet _financeLeaseReceivables;
 
         /// <summary>
@@ -2235,7 +2472,8 @@ namespace QuantConnect.Data.Fundamental
         /// Morningstar DataId: 23418
         /// </remarks>
         [JsonProperty("23418")]
-        public ConvertibleLoansCurrentBalanceSheet ConvertibleLoansCurrent => _convertibleLoansCurrent ??= new(_timeProvider, _securityIdentifier);
+        public ConvertibleLoansCurrentBalanceSheet ConvertibleLoansCurrent =>
+            _convertibleLoansCurrent ??= new(_timeProvider, _securityIdentifier);
         private ConvertibleLoansCurrentBalanceSheet _convertibleLoansCurrent;
 
         /// <summary>
@@ -2245,7 +2483,8 @@ namespace QuantConnect.Data.Fundamental
         /// Morningstar DataId: 23419
         /// </remarks>
         [JsonProperty("23419")]
-        public BankLoansCurrentBalanceSheet BankLoansCurrent => _bankLoansCurrent ??= new(_timeProvider, _securityIdentifier);
+        public BankLoansCurrentBalanceSheet BankLoansCurrent =>
+            _bankLoansCurrent ??= new(_timeProvider, _securityIdentifier);
         private BankLoansCurrentBalanceSheet _bankLoansCurrent;
 
         /// <summary>
@@ -2255,7 +2494,8 @@ namespace QuantConnect.Data.Fundamental
         /// Morningstar DataId: 23420
         /// </remarks>
         [JsonProperty("23420")]
-        public OtherLoansCurrentBalanceSheet OtherLoansCurrent => _otherLoansCurrent ??= new(_timeProvider, _securityIdentifier);
+        public OtherLoansCurrentBalanceSheet OtherLoansCurrent =>
+            _otherLoansCurrent ??= new(_timeProvider, _securityIdentifier);
         private OtherLoansCurrentBalanceSheet _otherLoansCurrent;
 
         /// <summary>
@@ -2265,7 +2505,8 @@ namespace QuantConnect.Data.Fundamental
         /// Morningstar DataId: 23422
         /// </remarks>
         [JsonProperty("23422")]
-        public AccruedandDeferredIncomeBalanceSheet AccruedandDeferredIncome => _accruedandDeferredIncome ??= new(_timeProvider, _securityIdentifier);
+        public AccruedandDeferredIncomeBalanceSheet AccruedandDeferredIncome =>
+            _accruedandDeferredIncome ??= new(_timeProvider, _securityIdentifier);
         private AccruedandDeferredIncomeBalanceSheet _accruedandDeferredIncome;
 
         /// <summary>
@@ -2275,7 +2516,8 @@ namespace QuantConnect.Data.Fundamental
         /// Morningstar DataId: 23426
         /// </remarks>
         [JsonProperty("23426")]
-        public BankLoansNonCurrentBalanceSheet BankLoansNonCurrent => _bankLoansNonCurrent ??= new(_timeProvider, _securityIdentifier);
+        public BankLoansNonCurrentBalanceSheet BankLoansNonCurrent =>
+            _bankLoansNonCurrent ??= new(_timeProvider, _securityIdentifier);
         private BankLoansNonCurrentBalanceSheet _bankLoansNonCurrent;
 
         /// <summary>
@@ -2285,7 +2527,8 @@ namespace QuantConnect.Data.Fundamental
         /// Morningstar DataId: 23427
         /// </remarks>
         [JsonProperty("23427")]
-        public OtherLoansNonCurrentBalanceSheet OtherLoansNonCurrent => _otherLoansNonCurrent ??= new(_timeProvider, _securityIdentifier);
+        public OtherLoansNonCurrentBalanceSheet OtherLoansNonCurrent =>
+            _otherLoansNonCurrent ??= new(_timeProvider, _securityIdentifier);
         private OtherLoansNonCurrentBalanceSheet _otherLoansNonCurrent;
 
         /// <summary>
@@ -2295,7 +2538,8 @@ namespace QuantConnect.Data.Fundamental
         /// Morningstar DataId: 23430
         /// </remarks>
         [JsonProperty("23430")]
-        public OtherReservesBalanceSheet OtherReserves => _otherReserves ??= new(_timeProvider, _securityIdentifier);
+        public OtherReservesBalanceSheet OtherReserves =>
+            _otherReserves ??= new(_timeProvider, _securityIdentifier);
         private OtherReservesBalanceSheet _otherReserves;
 
         /// <summary>
@@ -2305,7 +2549,8 @@ namespace QuantConnect.Data.Fundamental
         /// Morningstar DataId: 23432
         /// </remarks>
         [JsonProperty("23432")]
-        public LoansandAdvancestoBankBalanceSheet LoansandAdvancestoBank => _loansandAdvancestoBank ??= new(_timeProvider, _securityIdentifier);
+        public LoansandAdvancestoBankBalanceSheet LoansandAdvancestoBank =>
+            _loansandAdvancestoBank ??= new(_timeProvider, _securityIdentifier);
         private LoansandAdvancestoBankBalanceSheet _loansandAdvancestoBank;
 
         /// <summary>
@@ -2315,7 +2560,8 @@ namespace QuantConnect.Data.Fundamental
         /// Morningstar DataId: 23433
         /// </remarks>
         [JsonProperty("23433")]
-        public LoansandAdvancestoCustomerBalanceSheet LoansandAdvancestoCustomer => _loansandAdvancestoCustomer ??= new(_timeProvider, _securityIdentifier);
+        public LoansandAdvancestoCustomerBalanceSheet LoansandAdvancestoCustomer =>
+            _loansandAdvancestoCustomer ??= new(_timeProvider, _securityIdentifier);
         private LoansandAdvancestoCustomerBalanceSheet _loansandAdvancestoCustomer;
 
         /// <summary>
@@ -2325,7 +2571,8 @@ namespace QuantConnect.Data.Fundamental
         /// Morningstar DataId: 23434
         /// </remarks>
         [JsonProperty("23434")]
-        public TreasuryBillsandOtherEligibleBillsBalanceSheet TreasuryBillsandOtherEligibleBills => _treasuryBillsandOtherEligibleBills ??= new(_timeProvider, _securityIdentifier);
+        public TreasuryBillsandOtherEligibleBillsBalanceSheet TreasuryBillsandOtherEligibleBills =>
+            _treasuryBillsandOtherEligibleBills ??= new(_timeProvider, _securityIdentifier);
         private TreasuryBillsandOtherEligibleBillsBalanceSheet _treasuryBillsandOtherEligibleBills;
 
         /// <summary>
@@ -2335,7 +2582,8 @@ namespace QuantConnect.Data.Fundamental
         /// Morningstar DataId: 23435
         /// </remarks>
         [JsonProperty("23435")]
-        public EquitySharesInvestmentsBalanceSheet EquitySharesInvestments => _equitySharesInvestments ??= new(_timeProvider, _securityIdentifier);
+        public EquitySharesInvestmentsBalanceSheet EquitySharesInvestments =>
+            _equitySharesInvestments ??= new(_timeProvider, _securityIdentifier);
         private EquitySharesInvestmentsBalanceSheet _equitySharesInvestments;
 
         /// <summary>
@@ -2345,7 +2593,8 @@ namespace QuantConnect.Data.Fundamental
         /// Morningstar DataId: 23436
         /// </remarks>
         [JsonProperty("23436")]
-        public DepositsbyBankBalanceSheet DepositsbyBank => _depositsbyBank ??= new(_timeProvider, _securityIdentifier);
+        public DepositsbyBankBalanceSheet DepositsbyBank =>
+            _depositsbyBank ??= new(_timeProvider, _securityIdentifier);
         private DepositsbyBankBalanceSheet _depositsbyBank;
 
         /// <summary>
@@ -2355,7 +2604,8 @@ namespace QuantConnect.Data.Fundamental
         /// Morningstar DataId: 23437
         /// </remarks>
         [JsonProperty("23437")]
-        public CustomerAccountsBalanceSheet CustomerAccounts => _customerAccounts ??= new(_timeProvider, _securityIdentifier);
+        public CustomerAccountsBalanceSheet CustomerAccounts =>
+            _customerAccounts ??= new(_timeProvider, _securityIdentifier);
         private CustomerAccountsBalanceSheet _customerAccounts;
 
         /// <summary>
@@ -2365,7 +2615,8 @@ namespace QuantConnect.Data.Fundamental
         /// Morningstar DataId: 23438
         /// </remarks>
         [JsonProperty("23438")]
-        public ItemsinTheCourseofTransmissiontoOtherBanksBalanceSheet ItemsinTheCourseofTransmissiontoOtherBanks => _itemsinTheCourseofTransmissiontoOtherBanks ??= new(_timeProvider, _securityIdentifier);
+        public ItemsinTheCourseofTransmissiontoOtherBanksBalanceSheet ItemsinTheCourseofTransmissiontoOtherBanks =>
+            _itemsinTheCourseofTransmissiontoOtherBanks ??= new(_timeProvider, _securityIdentifier);
         private ItemsinTheCourseofTransmissiontoOtherBanksBalanceSheet _itemsinTheCourseofTransmissiontoOtherBanks;
 
         /// <summary>
@@ -2375,7 +2626,8 @@ namespace QuantConnect.Data.Fundamental
         /// Morningstar DataId: 23439
         /// </remarks>
         [JsonProperty("23439")]
-        public TradingandFinancialLiabilitiesBalanceSheet TradingandFinancialLiabilities => _tradingandFinancialLiabilities ??= new(_timeProvider, _securityIdentifier);
+        public TradingandFinancialLiabilitiesBalanceSheet TradingandFinancialLiabilities =>
+            _tradingandFinancialLiabilities ??= new(_timeProvider, _securityIdentifier);
         private TradingandFinancialLiabilitiesBalanceSheet _tradingandFinancialLiabilities;
 
         /// <summary>
@@ -2385,7 +2637,8 @@ namespace QuantConnect.Data.Fundamental
         /// Morningstar DataId: 23440
         /// </remarks>
         [JsonProperty("23440")]
-        public DebtSecuritiesinIssueBalanceSheet DebtSecuritiesinIssue => _debtSecuritiesinIssue ??= new(_timeProvider, _securityIdentifier);
+        public DebtSecuritiesinIssueBalanceSheet DebtSecuritiesinIssue =>
+            _debtSecuritiesinIssue ??= new(_timeProvider, _securityIdentifier);
         private DebtSecuritiesinIssueBalanceSheet _debtSecuritiesinIssue;
 
         /// <summary>
@@ -2395,7 +2648,8 @@ namespace QuantConnect.Data.Fundamental
         /// Morningstar DataId: 23441
         /// </remarks>
         [JsonProperty("23441")]
-        public SubordinatedLiabilitiesBalanceSheet SubordinatedLiabilities => _subordinatedLiabilities ??= new(_timeProvider, _securityIdentifier);
+        public SubordinatedLiabilitiesBalanceSheet SubordinatedLiabilities =>
+            _subordinatedLiabilities ??= new(_timeProvider, _securityIdentifier);
         private SubordinatedLiabilitiesBalanceSheet _subordinatedLiabilities;
 
         /// <summary>
@@ -2405,7 +2659,8 @@ namespace QuantConnect.Data.Fundamental
         /// Morningstar DataId: 23443
         /// </remarks>
         [JsonProperty("23443")]
-        public ProvisionsTotalBalanceSheet ProvisionsTotal => _provisionsTotal ??= new(_timeProvider, _securityIdentifier);
+        public ProvisionsTotalBalanceSheet ProvisionsTotal =>
+            _provisionsTotal ??= new(_timeProvider, _securityIdentifier);
         private ProvisionsTotalBalanceSheet _provisionsTotal;
 
         /// <summary>
@@ -2415,7 +2670,8 @@ namespace QuantConnect.Data.Fundamental
         /// Morningstar DataId: 23444
         /// </remarks>
         [JsonProperty("23444")]
-        public OperatingLeaseAssetsBalanceSheet OperatingLeaseAssets => _operatingLeaseAssets ??= new(_timeProvider, _securityIdentifier);
+        public OperatingLeaseAssetsBalanceSheet OperatingLeaseAssets =>
+            _operatingLeaseAssets ??= new(_timeProvider, _securityIdentifier);
         private OperatingLeaseAssetsBalanceSheet _operatingLeaseAssets;
 
         /// <summary>
@@ -2425,7 +2681,8 @@ namespace QuantConnect.Data.Fundamental
         /// Morningstar DataId: 23445
         /// </remarks>
         [JsonProperty("23445")]
-        public ClaimsOutstandingBalanceSheet ClaimsOutstanding => _claimsOutstanding ??= new(_timeProvider, _securityIdentifier);
+        public ClaimsOutstandingBalanceSheet ClaimsOutstanding =>
+            _claimsOutstanding ??= new(_timeProvider, _securityIdentifier);
         private ClaimsOutstandingBalanceSheet _claimsOutstanding;
 
         /// <summary>
@@ -2435,7 +2692,8 @@ namespace QuantConnect.Data.Fundamental
         /// Morningstar DataId: 23452
         /// </remarks>
         [JsonProperty("23452")]
-        public LiabilitiesHeldforSaleCurrentBalanceSheet LiabilitiesHeldforSaleCurrent => _liabilitiesHeldforSaleCurrent ??= new(_timeProvider, _securityIdentifier);
+        public LiabilitiesHeldforSaleCurrentBalanceSheet LiabilitiesHeldforSaleCurrent =>
+            _liabilitiesHeldforSaleCurrent ??= new(_timeProvider, _securityIdentifier);
         private LiabilitiesHeldforSaleCurrentBalanceSheet _liabilitiesHeldforSaleCurrent;
 
         /// <summary>
@@ -2445,7 +2703,8 @@ namespace QuantConnect.Data.Fundamental
         /// Morningstar DataId: 23453
         /// </remarks>
         [JsonProperty("23453")]
-        public LiabilitiesHeldforSaleNonCurrentBalanceSheet LiabilitiesHeldforSaleNonCurrent => _liabilitiesHeldforSaleNonCurrent ??= new(_timeProvider, _securityIdentifier);
+        public LiabilitiesHeldforSaleNonCurrentBalanceSheet LiabilitiesHeldforSaleNonCurrent =>
+            _liabilitiesHeldforSaleNonCurrent ??= new(_timeProvider, _securityIdentifier);
         private LiabilitiesHeldforSaleNonCurrentBalanceSheet _liabilitiesHeldforSaleNonCurrent;
 
         /// <summary>
@@ -2455,7 +2714,8 @@ namespace QuantConnect.Data.Fundamental
         /// Morningstar DataId: 23455
         /// </remarks>
         [JsonProperty("23455")]
-        public DebtSecuritiesBalanceSheet DebtSecurities => _debtSecurities ??= new(_timeProvider, _securityIdentifier);
+        public DebtSecuritiesBalanceSheet DebtSecurities =>
+            _debtSecurities ??= new(_timeProvider, _securityIdentifier);
         private DebtSecuritiesBalanceSheet _debtSecurities;
 
         /// <summary>
@@ -2465,7 +2725,8 @@ namespace QuantConnect.Data.Fundamental
         /// Morningstar DataId: 23456
         /// </remarks>
         [JsonProperty("23456")]
-        public TotalFinancialLeaseObligationsBalanceSheet TotalFinancialLeaseObligations => _totalFinancialLeaseObligations ??= new(_timeProvider, _securityIdentifier);
+        public TotalFinancialLeaseObligationsBalanceSheet TotalFinancialLeaseObligations =>
+            _totalFinancialLeaseObligations ??= new(_timeProvider, _securityIdentifier);
         private TotalFinancialLeaseObligationsBalanceSheet _totalFinancialLeaseObligations;
 
         /// <summary>
@@ -2475,7 +2736,8 @@ namespace QuantConnect.Data.Fundamental
         /// Morningstar DataId: 23457
         /// </remarks>
         [JsonProperty("23457")]
-        public AccruedandDeferredIncomeCurrentBalanceSheet AccruedandDeferredIncomeCurrent => _accruedandDeferredIncomeCurrent ??= new(_timeProvider, _securityIdentifier);
+        public AccruedandDeferredIncomeCurrentBalanceSheet AccruedandDeferredIncomeCurrent =>
+            _accruedandDeferredIncomeCurrent ??= new(_timeProvider, _securityIdentifier);
         private AccruedandDeferredIncomeCurrentBalanceSheet _accruedandDeferredIncomeCurrent;
 
         /// <summary>
@@ -2485,7 +2747,8 @@ namespace QuantConnect.Data.Fundamental
         /// Morningstar DataId: 23458
         /// </remarks>
         [JsonProperty("23458")]
-        public AccruedandDeferredIncomeNonCurrentBalanceSheet AccruedandDeferredIncomeNonCurrent => _accruedandDeferredIncomeNonCurrent ??= new(_timeProvider, _securityIdentifier);
+        public AccruedandDeferredIncomeNonCurrentBalanceSheet AccruedandDeferredIncomeNonCurrent =>
+            _accruedandDeferredIncomeNonCurrent ??= new(_timeProvider, _securityIdentifier);
         private AccruedandDeferredIncomeNonCurrentBalanceSheet _accruedandDeferredIncomeNonCurrent;
 
         /// <summary>
@@ -2495,7 +2758,8 @@ namespace QuantConnect.Data.Fundamental
         /// Morningstar DataId: 23459
         /// </remarks>
         [JsonProperty("23459")]
-        public FinanceLeaseReceivablesCurrentBalanceSheet FinanceLeaseReceivablesCurrent => _financeLeaseReceivablesCurrent ??= new(_timeProvider, _securityIdentifier);
+        public FinanceLeaseReceivablesCurrentBalanceSheet FinanceLeaseReceivablesCurrent =>
+            _financeLeaseReceivablesCurrent ??= new(_timeProvider, _securityIdentifier);
         private FinanceLeaseReceivablesCurrentBalanceSheet _financeLeaseReceivablesCurrent;
 
         /// <summary>
@@ -2505,7 +2769,8 @@ namespace QuantConnect.Data.Fundamental
         /// Morningstar DataId: 23460
         /// </remarks>
         [JsonProperty("23460")]
-        public FinanceLeaseReceivablesNonCurrentBalanceSheet FinanceLeaseReceivablesNonCurrent => _financeLeaseReceivablesNonCurrent ??= new(_timeProvider, _securityIdentifier);
+        public FinanceLeaseReceivablesNonCurrentBalanceSheet FinanceLeaseReceivablesNonCurrent =>
+            _financeLeaseReceivablesNonCurrent ??= new(_timeProvider, _securityIdentifier);
         private FinanceLeaseReceivablesNonCurrentBalanceSheet _financeLeaseReceivablesNonCurrent;
 
         /// <summary>
@@ -2515,7 +2780,8 @@ namespace QuantConnect.Data.Fundamental
         /// Morningstar DataId: 23462
         /// </remarks>
         [JsonProperty("23462")]
-        public FinancialLiabilitiesCurrentBalanceSheet FinancialLiabilitiesCurrent => _financialLiabilitiesCurrent ??= new(_timeProvider, _securityIdentifier);
+        public FinancialLiabilitiesCurrentBalanceSheet FinancialLiabilitiesCurrent =>
+            _financialLiabilitiesCurrent ??= new(_timeProvider, _securityIdentifier);
         private FinancialLiabilitiesCurrentBalanceSheet _financialLiabilitiesCurrent;
 
         /// <summary>
@@ -2525,7 +2791,8 @@ namespace QuantConnect.Data.Fundamental
         /// Morningstar DataId: 23463
         /// </remarks>
         [JsonProperty("23463")]
-        public FinancialLiabilitiesNonCurrentBalanceSheet FinancialLiabilitiesNonCurrent => _financialLiabilitiesNonCurrent ??= new(_timeProvider, _securityIdentifier);
+        public FinancialLiabilitiesNonCurrentBalanceSheet FinancialLiabilitiesNonCurrent =>
+            _financialLiabilitiesNonCurrent ??= new(_timeProvider, _securityIdentifier);
         private FinancialLiabilitiesNonCurrentBalanceSheet _financialLiabilitiesNonCurrent;
 
         /// <summary>
@@ -2535,7 +2802,11 @@ namespace QuantConnect.Data.Fundamental
         /// Morningstar DataId: 23466
         /// </remarks>
         [JsonProperty("23466")]
-        public FinancialAssetsDesignatedasFairValueThroughProfitorLossTotalBalanceSheet FinancialAssetsDesignatedasFairValueThroughProfitorLossTotal => _financialAssetsDesignatedasFairValueThroughProfitorLossTotal ??= new(_timeProvider, _securityIdentifier);
+        public FinancialAssetsDesignatedasFairValueThroughProfitorLossTotalBalanceSheet FinancialAssetsDesignatedasFairValueThroughProfitorLossTotal =>
+            _financialAssetsDesignatedasFairValueThroughProfitorLossTotal ??= new(
+                _timeProvider,
+                _securityIdentifier
+            );
         private FinancialAssetsDesignatedasFairValueThroughProfitorLossTotalBalanceSheet _financialAssetsDesignatedasFairValueThroughProfitorLossTotal;
 
         /// <summary>
@@ -2545,7 +2816,8 @@ namespace QuantConnect.Data.Fundamental
         /// Morningstar DataId: 23468
         /// </remarks>
         [JsonProperty("23468")]
-        public TaxesAssetsCurrentBalanceSheet TaxesAssetsCurrent => _taxesAssetsCurrent ??= new(_timeProvider, _securityIdentifier);
+        public TaxesAssetsCurrentBalanceSheet TaxesAssetsCurrent =>
+            _taxesAssetsCurrent ??= new(_timeProvider, _securityIdentifier);
         private TaxesAssetsCurrentBalanceSheet _taxesAssetsCurrent;
 
         /// <summary>
@@ -2555,7 +2827,8 @@ namespace QuantConnect.Data.Fundamental
         /// Morningstar DataId: 23469
         /// </remarks>
         [JsonProperty("23469")]
-        public OtherEquityInterestBalanceSheet OtherEquityInterest => _otherEquityInterest ??= new(_timeProvider, _securityIdentifier);
+        public OtherEquityInterestBalanceSheet OtherEquityInterest =>
+            _otherEquityInterest ??= new(_timeProvider, _securityIdentifier);
         private OtherEquityInterestBalanceSheet _otherEquityInterest;
 
         /// <summary>
@@ -2565,7 +2838,8 @@ namespace QuantConnect.Data.Fundamental
         /// Morningstar DataId: 23470
         /// </remarks>
         [JsonProperty("23470")]
-        public InterestBearingBorrowingsNonCurrentBalanceSheet InterestBearingBorrowingsNonCurrent => _interestBearingBorrowingsNonCurrent ??= new(_timeProvider, _securityIdentifier);
+        public InterestBearingBorrowingsNonCurrentBalanceSheet InterestBearingBorrowingsNonCurrent =>
+            _interestBearingBorrowingsNonCurrent ??= new(_timeProvider, _securityIdentifier);
         private InterestBearingBorrowingsNonCurrentBalanceSheet _interestBearingBorrowingsNonCurrent;
 
         /// <summary>
@@ -2575,7 +2849,8 @@ namespace QuantConnect.Data.Fundamental
         /// Morningstar DataId: 23471
         /// </remarks>
         [JsonProperty("23471")]
-        public NonInterestBearingBorrowingsNonCurrentBalanceSheet NonInterestBearingBorrowingsNonCurrent => _nonInterestBearingBorrowingsNonCurrent ??= new(_timeProvider, _securityIdentifier);
+        public NonInterestBearingBorrowingsNonCurrentBalanceSheet NonInterestBearingBorrowingsNonCurrent =>
+            _nonInterestBearingBorrowingsNonCurrent ??= new(_timeProvider, _securityIdentifier);
         private NonInterestBearingBorrowingsNonCurrentBalanceSheet _nonInterestBearingBorrowingsNonCurrent;
 
         /// <summary>
@@ -2585,7 +2860,8 @@ namespace QuantConnect.Data.Fundamental
         /// Morningstar DataId: 23472
         /// </remarks>
         [JsonProperty("23472")]
-        public TradeandOtherPayablesNonCurrentBalanceSheet TradeandOtherPayablesNonCurrent => _tradeandOtherPayablesNonCurrent ??= new(_timeProvider, _securityIdentifier);
+        public TradeandOtherPayablesNonCurrentBalanceSheet TradeandOtherPayablesNonCurrent =>
+            _tradeandOtherPayablesNonCurrent ??= new(_timeProvider, _securityIdentifier);
         private TradeandOtherPayablesNonCurrentBalanceSheet _tradeandOtherPayablesNonCurrent;
 
         /// <summary>
@@ -2595,7 +2871,8 @@ namespace QuantConnect.Data.Fundamental
         /// Morningstar DataId: 23474
         /// </remarks>
         [JsonProperty("23474")]
-        public NonInterestBearingBorrowingsCurrentBalanceSheet NonInterestBearingBorrowingsCurrent => _nonInterestBearingBorrowingsCurrent ??= new(_timeProvider, _securityIdentifier);
+        public NonInterestBearingBorrowingsCurrentBalanceSheet NonInterestBearingBorrowingsCurrent =>
+            _nonInterestBearingBorrowingsCurrent ??= new(_timeProvider, _securityIdentifier);
         private NonInterestBearingBorrowingsCurrentBalanceSheet _nonInterestBearingBorrowingsCurrent;
 
         /// <summary>
@@ -2605,7 +2882,11 @@ namespace QuantConnect.Data.Fundamental
         /// Morningstar DataId: 23475
         /// </remarks>
         [JsonProperty("23475")]
-        public PensionandOtherPostRetirementBenefitPlansCurrentBalanceSheet PensionandOtherPostRetirementBenefitPlansCurrent => _pensionandOtherPostRetirementBenefitPlansCurrent ??= new(_timeProvider, _securityIdentifier);
+        public PensionandOtherPostRetirementBenefitPlansCurrentBalanceSheet PensionandOtherPostRetirementBenefitPlansCurrent =>
+            _pensionandOtherPostRetirementBenefitPlansCurrent ??= new(
+                _timeProvider,
+                _securityIdentifier
+            );
         private PensionandOtherPostRetirementBenefitPlansCurrentBalanceSheet _pensionandOtherPostRetirementBenefitPlansCurrent;
 
         /// <summary>
@@ -2615,7 +2896,8 @@ namespace QuantConnect.Data.Fundamental
         /// Morningstar DataId: 23478
         /// </remarks>
         [JsonProperty("23478")]
-        public OtherLoanAssetsBalanceSheet OtherLoanAssets => _otherLoanAssets ??= new(_timeProvider, _securityIdentifier);
+        public OtherLoanAssetsBalanceSheet OtherLoanAssets =>
+            _otherLoanAssets ??= new(_timeProvider, _securityIdentifier);
         private OtherLoanAssetsBalanceSheet _otherLoanAssets;
 
         /// <summary>
@@ -2625,7 +2907,11 @@ namespace QuantConnect.Data.Fundamental
         /// Morningstar DataId: 23480
         /// </remarks>
         [JsonProperty("23480")]
-        public AssetsPledgedasCollateralSubjecttoSaleorRepledgingTotalBalanceSheet AssetsPledgedasCollateralSubjecttoSaleorRepledgingTotal => _assetsPledgedasCollateralSubjecttoSaleorRepledgingTotal ??= new(_timeProvider, _securityIdentifier);
+        public AssetsPledgedasCollateralSubjecttoSaleorRepledgingTotalBalanceSheet AssetsPledgedasCollateralSubjecttoSaleorRepledgingTotal =>
+            _assetsPledgedasCollateralSubjecttoSaleorRepledgingTotal ??= new(
+                _timeProvider,
+                _securityIdentifier
+            );
         private AssetsPledgedasCollateralSubjecttoSaleorRepledgingTotalBalanceSheet _assetsPledgedasCollateralSubjecttoSaleorRepledgingTotal;
 
         /// <summary>
@@ -2635,7 +2921,8 @@ namespace QuantConnect.Data.Fundamental
         /// Morningstar DataId: 23481
         /// </remarks>
         [JsonProperty("23481")]
-        public TaxAssetsTotalBalanceSheet TaxAssetsTotal => _taxAssetsTotal ??= new(_timeProvider, _securityIdentifier);
+        public TaxAssetsTotalBalanceSheet TaxAssetsTotal =>
+            _taxAssetsTotal ??= new(_timeProvider, _securityIdentifier);
         private TaxAssetsTotalBalanceSheet _taxAssetsTotal;
 
         /// <summary>
@@ -2645,7 +2932,8 @@ namespace QuantConnect.Data.Fundamental
         /// Morningstar DataId: 23482
         /// </remarks>
         [JsonProperty("23482")]
-        public AdvancesfromCentralBanksBalanceSheet AdvancesfromCentralBanks => _advancesfromCentralBanks ??= new(_timeProvider, _securityIdentifier);
+        public AdvancesfromCentralBanksBalanceSheet AdvancesfromCentralBanks =>
+            _advancesfromCentralBanks ??= new(_timeProvider, _securityIdentifier);
         private AdvancesfromCentralBanksBalanceSheet _advancesfromCentralBanks;
 
         /// <summary>
@@ -2655,7 +2943,8 @@ namespace QuantConnect.Data.Fundamental
         /// Morningstar DataId: 23484
         /// </remarks>
         [JsonProperty("23484")]
-        public DepositCertificatesBalanceSheet DepositCertificates => _depositCertificates ??= new(_timeProvider, _securityIdentifier);
+        public DepositCertificatesBalanceSheet DepositCertificates =>
+            _depositCertificates ??= new(_timeProvider, _securityIdentifier);
         private DepositCertificatesBalanceSheet _depositCertificates;
 
         /// <summary>
@@ -2665,7 +2954,8 @@ namespace QuantConnect.Data.Fundamental
         /// Morningstar DataId: 23487
         /// </remarks>
         [JsonProperty("23487")]
-        public NonInterestBearingBorrowingsTotalBalanceSheet NonInterestBearingBorrowingsTotal => _nonInterestBearingBorrowingsTotal ??= new(_timeProvider, _securityIdentifier);
+        public NonInterestBearingBorrowingsTotalBalanceSheet NonInterestBearingBorrowingsTotal =>
+            _nonInterestBearingBorrowingsTotal ??= new(_timeProvider, _securityIdentifier);
         private NonInterestBearingBorrowingsTotalBalanceSheet _nonInterestBearingBorrowingsTotal;
 
         /// <summary>
@@ -2675,7 +2965,8 @@ namespace QuantConnect.Data.Fundamental
         /// Morningstar DataId: 23488
         /// </remarks>
         [JsonProperty("23488")]
-        public OtherBorrowedFundsBalanceSheet OtherBorrowedFunds => _otherBorrowedFunds ??= new(_timeProvider, _securityIdentifier);
+        public OtherBorrowedFundsBalanceSheet OtherBorrowedFunds =>
+            _otherBorrowedFunds ??= new(_timeProvider, _securityIdentifier);
         private OtherBorrowedFundsBalanceSheet _otherBorrowedFunds;
 
         /// <summary>
@@ -2685,7 +2976,11 @@ namespace QuantConnect.Data.Fundamental
         /// Morningstar DataId: 23490
         /// </remarks>
         [JsonProperty("23490")]
-        public FinancialLiabilitiesDesignatedasFairValueThroughProfitorLossTotalBalanceSheet FinancialLiabilitiesDesignatedasFairValueThroughProfitorLossTotal => _financialLiabilitiesDesignatedasFairValueThroughProfitorLossTotal ??= new(_timeProvider, _securityIdentifier);
+        public FinancialLiabilitiesDesignatedasFairValueThroughProfitorLossTotalBalanceSheet FinancialLiabilitiesDesignatedasFairValueThroughProfitorLossTotal =>
+            _financialLiabilitiesDesignatedasFairValueThroughProfitorLossTotal ??= new(
+                _timeProvider,
+                _securityIdentifier
+            );
         private FinancialLiabilitiesDesignatedasFairValueThroughProfitorLossTotalBalanceSheet _financialLiabilitiesDesignatedasFairValueThroughProfitorLossTotal;
 
         /// <summary>
@@ -2695,7 +2990,11 @@ namespace QuantConnect.Data.Fundamental
         /// Morningstar DataId: 23491
         /// </remarks>
         [JsonProperty("23491")]
-        public FinancialLiabilitiesMeasuredatAmortizedCostTotalBalanceSheet FinancialLiabilitiesMeasuredatAmortizedCostTotal => _financialLiabilitiesMeasuredatAmortizedCostTotal ??= new(_timeProvider, _securityIdentifier);
+        public FinancialLiabilitiesMeasuredatAmortizedCostTotalBalanceSheet FinancialLiabilitiesMeasuredatAmortizedCostTotal =>
+            _financialLiabilitiesMeasuredatAmortizedCostTotal ??= new(
+                _timeProvider,
+                _securityIdentifier
+            );
         private FinancialLiabilitiesMeasuredatAmortizedCostTotalBalanceSheet _financialLiabilitiesMeasuredatAmortizedCostTotal;
 
         /// <summary>
@@ -2705,7 +3004,8 @@ namespace QuantConnect.Data.Fundamental
         /// Morningstar DataId: 23495
         /// </remarks>
         [JsonProperty("23495")]
-        public AccruedLiabilitiesTotalBalanceSheet AccruedLiabilitiesTotal => _accruedLiabilitiesTotal ??= new(_timeProvider, _securityIdentifier);
+        public AccruedLiabilitiesTotalBalanceSheet AccruedLiabilitiesTotal =>
+            _accruedLiabilitiesTotal ??= new(_timeProvider, _securityIdentifier);
         private AccruedLiabilitiesTotalBalanceSheet _accruedLiabilitiesTotal;
 
         /// <summary>
@@ -2715,7 +3015,8 @@ namespace QuantConnect.Data.Fundamental
         /// Morningstar DataId: 23496
         /// </remarks>
         [JsonProperty("23496")]
-        public DeferredIncomeTotalBalanceSheet DeferredIncomeTotal => _deferredIncomeTotal ??= new(_timeProvider, _securityIdentifier);
+        public DeferredIncomeTotalBalanceSheet DeferredIncomeTotal =>
+            _deferredIncomeTotal ??= new(_timeProvider, _securityIdentifier);
         private DeferredIncomeTotalBalanceSheet _deferredIncomeTotal;
 
         /// <summary>
@@ -2725,7 +3026,8 @@ namespace QuantConnect.Data.Fundamental
         /// Morningstar DataId: 23497
         /// </remarks>
         [JsonProperty("23497")]
-        public DeferredTaxLiabilitiesTotalBalanceSheet DeferredTaxLiabilitiesTotal => _deferredTaxLiabilitiesTotal ??= new(_timeProvider, _securityIdentifier);
+        public DeferredTaxLiabilitiesTotalBalanceSheet DeferredTaxLiabilitiesTotal =>
+            _deferredTaxLiabilitiesTotal ??= new(_timeProvider, _securityIdentifier);
         private DeferredTaxLiabilitiesTotalBalanceSheet _deferredTaxLiabilitiesTotal;
 
         /// <summary>
@@ -2735,7 +3037,8 @@ namespace QuantConnect.Data.Fundamental
         /// Morningstar DataId: 23499
         /// </remarks>
         [JsonProperty("23499")]
-        public ReinsuranceAssetsBalanceSheet ReinsuranceAssets => _reinsuranceAssets ??= new(_timeProvider, _securityIdentifier);
+        public ReinsuranceAssetsBalanceSheet ReinsuranceAssets =>
+            _reinsuranceAssets ??= new(_timeProvider, _securityIdentifier);
         private ReinsuranceAssetsBalanceSheet _reinsuranceAssets;
 
         /// <summary>
@@ -2745,7 +3048,11 @@ namespace QuantConnect.Data.Fundamental
         /// Morningstar DataId: 23502
         /// </remarks>
         [JsonProperty("23502")]
-        public DepositsMadeunderAssumedReinsuranceContractBalanceSheet DepositsMadeunderAssumedReinsuranceContract => _depositsMadeunderAssumedReinsuranceContract ??= new(_timeProvider, _securityIdentifier);
+        public DepositsMadeunderAssumedReinsuranceContractBalanceSheet DepositsMadeunderAssumedReinsuranceContract =>
+            _depositsMadeunderAssumedReinsuranceContract ??= new(
+                _timeProvider,
+                _securityIdentifier
+            );
         private DepositsMadeunderAssumedReinsuranceContractBalanceSheet _depositsMadeunderAssumedReinsuranceContract;
 
         /// <summary>
@@ -2755,7 +3062,8 @@ namespace QuantConnect.Data.Fundamental
         /// Morningstar DataId: 23503
         /// </remarks>
         [JsonProperty("23503")]
-        public InsuranceContractAssetsBalanceSheet InsuranceContractAssets => _insuranceContractAssets ??= new(_timeProvider, _securityIdentifier);
+        public InsuranceContractAssetsBalanceSheet InsuranceContractAssets =>
+            _insuranceContractAssets ??= new(_timeProvider, _securityIdentifier);
         private InsuranceContractAssetsBalanceSheet _insuranceContractAssets;
 
         /// <summary>
@@ -2765,7 +3073,8 @@ namespace QuantConnect.Data.Fundamental
         /// Morningstar DataId: 23505
         /// </remarks>
         [JsonProperty("23505")]
-        public InsuranceContractLiabilitiesBalanceSheet InsuranceContractLiabilities => _insuranceContractLiabilities ??= new(_timeProvider, _securityIdentifier);
+        public InsuranceContractLiabilitiesBalanceSheet InsuranceContractLiabilities =>
+            _insuranceContractLiabilities ??= new(_timeProvider, _securityIdentifier);
         private InsuranceContractLiabilitiesBalanceSheet _insuranceContractLiabilities;
 
         /// <summary>
@@ -2775,7 +3084,11 @@ namespace QuantConnect.Data.Fundamental
         /// Morningstar DataId: 23508
         /// </remarks>
         [JsonProperty("23508")]
-        public DepositsReceivedunderCededInsuranceContractBalanceSheet DepositsReceivedunderCededInsuranceContract => _depositsReceivedunderCededInsuranceContract ??= new(_timeProvider, _securityIdentifier);
+        public DepositsReceivedunderCededInsuranceContractBalanceSheet DepositsReceivedunderCededInsuranceContract =>
+            _depositsReceivedunderCededInsuranceContract ??= new(
+                _timeProvider,
+                _securityIdentifier
+            );
         private DepositsReceivedunderCededInsuranceContractBalanceSheet _depositsReceivedunderCededInsuranceContract;
 
         /// <summary>
@@ -2785,7 +3098,8 @@ namespace QuantConnect.Data.Fundamental
         /// Morningstar DataId: 23509
         /// </remarks>
         [JsonProperty("23509")]
-        public InvestmentContractLiabilitiesBalanceSheet InvestmentContractLiabilities => _investmentContractLiabilities ??= new(_timeProvider, _securityIdentifier);
+        public InvestmentContractLiabilitiesBalanceSheet InvestmentContractLiabilities =>
+            _investmentContractLiabilities ??= new(_timeProvider, _securityIdentifier);
         private InvestmentContractLiabilitiesBalanceSheet _investmentContractLiabilities;
 
         /// <summary>
@@ -2795,7 +3109,11 @@ namespace QuantConnect.Data.Fundamental
         /// Morningstar DataId: 23515
         /// </remarks>
         [JsonProperty("23515")]
-        public PensionAndOtherPostretirementBenefitPlansTotalBalanceSheet PensionAndOtherPostretirementBenefitPlansTotal => _pensionAndOtherPostretirementBenefitPlansTotal ??= new(_timeProvider, _securityIdentifier);
+        public PensionAndOtherPostretirementBenefitPlansTotalBalanceSheet PensionAndOtherPostretirementBenefitPlansTotal =>
+            _pensionAndOtherPostretirementBenefitPlansTotal ??= new(
+                _timeProvider,
+                _securityIdentifier
+            );
         private PensionAndOtherPostretirementBenefitPlansTotalBalanceSheet _pensionAndOtherPostretirementBenefitPlansTotal;
 
         /// <summary>
@@ -2805,7 +3123,8 @@ namespace QuantConnect.Data.Fundamental
         /// Morningstar DataId: 23516
         /// </remarks>
         [JsonProperty("23516")]
-        public LiabilitiesHeldforSaleTotalBalanceSheet LiabilitiesHeldforSaleTotal => _liabilitiesHeldforSaleTotal ??= new(_timeProvider, _securityIdentifier);
+        public LiabilitiesHeldforSaleTotalBalanceSheet LiabilitiesHeldforSaleTotal =>
+            _liabilitiesHeldforSaleTotal ??= new(_timeProvider, _securityIdentifier);
         private LiabilitiesHeldforSaleTotalBalanceSheet _liabilitiesHeldforSaleTotal;
 
         /// <summary>
@@ -2815,7 +3134,8 @@ namespace QuantConnect.Data.Fundamental
         /// Morningstar DataId: 23518
         /// </remarks>
         [JsonProperty("23518")]
-        public HedgingAssetsCurrentBalanceSheet HedgingAssetsCurrent => _hedgingAssetsCurrent ??= new(_timeProvider, _securityIdentifier);
+        public HedgingAssetsCurrentBalanceSheet HedgingAssetsCurrent =>
+            _hedgingAssetsCurrent ??= new(_timeProvider, _securityIdentifier);
         private HedgingAssetsCurrentBalanceSheet _hedgingAssetsCurrent;
 
         /// <summary>
@@ -2825,7 +3145,8 @@ namespace QuantConnect.Data.Fundamental
         /// Morningstar DataId: 23519
         /// </remarks>
         [JsonProperty("23519")]
-        public ConvertibleLoansTotalBalanceSheet ConvertibleLoansTotal => _convertibleLoansTotal ??= new(_timeProvider, _securityIdentifier);
+        public ConvertibleLoansTotalBalanceSheet ConvertibleLoansTotal =>
+            _convertibleLoansTotal ??= new(_timeProvider, _securityIdentifier);
         private ConvertibleLoansTotalBalanceSheet _convertibleLoansTotal;
 
         /// <summary>
@@ -2835,7 +3156,8 @@ namespace QuantConnect.Data.Fundamental
         /// Morningstar DataId: 23520
         /// </remarks>
         [JsonProperty("23520")]
-        public BankLoansTotalBalanceSheet BankLoansTotal => _bankLoansTotal ??= new(_timeProvider, _securityIdentifier);
+        public BankLoansTotalBalanceSheet BankLoansTotal =>
+            _bankLoansTotal ??= new(_timeProvider, _securityIdentifier);
         private BankLoansTotalBalanceSheet _bankLoansTotal;
 
         /// <summary>
@@ -2845,7 +3167,8 @@ namespace QuantConnect.Data.Fundamental
         /// Morningstar DataId: 23521
         /// </remarks>
         [JsonProperty("23521")]
-        public OtherLoansTotalBalanceSheet OtherLoansTotal => _otherLoansTotal ??= new(_timeProvider, _securityIdentifier);
+        public OtherLoansTotalBalanceSheet OtherLoansTotal =>
+            _otherLoansTotal ??= new(_timeProvider, _securityIdentifier);
         private OtherLoansTotalBalanceSheet _otherLoansTotal;
 
         /// <summary>
@@ -2855,7 +3178,8 @@ namespace QuantConnect.Data.Fundamental
         /// Morningstar DataId: 23524
         /// </remarks>
         [JsonProperty("23524")]
-        public InsuranceFundsNonCurrentBalanceSheet InsuranceFundsNonCurrent => _insuranceFundsNonCurrent ??= new(_timeProvider, _securityIdentifier);
+        public InsuranceFundsNonCurrentBalanceSheet InsuranceFundsNonCurrent =>
+            _insuranceFundsNonCurrent ??= new(_timeProvider, _securityIdentifier);
         private InsuranceFundsNonCurrentBalanceSheet _insuranceFundsNonCurrent;
 
         /// <summary>
@@ -2865,7 +3189,8 @@ namespace QuantConnect.Data.Fundamental
         /// Morningstar DataId: 23528
         /// </remarks>
         [JsonProperty("23528")]
-        public DebtTotalBalanceSheet DebtTotal => _debtTotal ??= new(_timeProvider, _securityIdentifier);
+        public DebtTotalBalanceSheet DebtTotal =>
+            _debtTotal ??= new(_timeProvider, _securityIdentifier);
         private DebtTotalBalanceSheet _debtTotal;
 
         /// <summary>
@@ -2875,7 +3200,8 @@ namespace QuantConnect.Data.Fundamental
         /// Morningstar DataId: 23529
         /// </remarks>
         [JsonProperty("23529")]
-        public ComTreShaNumBalanceSheet ComTreShaNum => _comTreShaNum ??= new(_timeProvider, _securityIdentifier);
+        public ComTreShaNumBalanceSheet ComTreShaNum =>
+            _comTreShaNum ??= new(_timeProvider, _securityIdentifier);
         private ComTreShaNumBalanceSheet _comTreShaNum;
 
         /// <summary>
@@ -2885,7 +3211,8 @@ namespace QuantConnect.Data.Fundamental
         /// Morningstar DataId: 23530
         /// </remarks>
         [JsonProperty("23530")]
-        public PreTreShaNumBalanceSheet PreTreShaNum => _preTreShaNum ??= new(_timeProvider, _securityIdentifier);
+        public PreTreShaNumBalanceSheet PreTreShaNum =>
+            _preTreShaNum ??= new(_timeProvider, _securityIdentifier);
         private PreTreShaNumBalanceSheet _preTreShaNum;
 
         /// <summary>
@@ -2905,7 +3232,8 @@ namespace QuantConnect.Data.Fundamental
         /// Morningstar DataId: 23532
         /// </remarks>
         [JsonProperty("23532")]
-        public ShareIssuedBalanceSheet ShareIssued => _shareIssued ??= new(_timeProvider, _securityIdentifier);
+        public ShareIssuedBalanceSheet ShareIssued =>
+            _shareIssued ??= new(_timeProvider, _securityIdentifier);
         private ShareIssuedBalanceSheet _shareIssued;
 
         /// <summary>
@@ -2915,7 +3243,8 @@ namespace QuantConnect.Data.Fundamental
         /// Morningstar DataId: 23533
         /// </remarks>
         [JsonProperty("23533")]
-        public AssetsHeldForSaleCurrentBalanceSheet AssetsHeldForSaleCurrent => _assetsHeldForSaleCurrent ??= new(_timeProvider, _securityIdentifier);
+        public AssetsHeldForSaleCurrentBalanceSheet AssetsHeldForSaleCurrent =>
+            _assetsHeldForSaleCurrent ??= new(_timeProvider, _securityIdentifier);
         private AssetsHeldForSaleCurrentBalanceSheet _assetsHeldForSaleCurrent;
 
         /// <summary>
@@ -2925,7 +3254,8 @@ namespace QuantConnect.Data.Fundamental
         /// Morningstar DataId: 23534
         /// </remarks>
         [JsonProperty("23534")]
-        public AssetsHeldForSaleNonCurrentBalanceSheet AssetsHeldForSaleNonCurrent => _assetsHeldForSaleNonCurrent ??= new(_timeProvider, _securityIdentifier);
+        public AssetsHeldForSaleNonCurrentBalanceSheet AssetsHeldForSaleNonCurrent =>
+            _assetsHeldForSaleNonCurrent ??= new(_timeProvider, _securityIdentifier);
         private AssetsHeldForSaleNonCurrentBalanceSheet _assetsHeldForSaleNonCurrent;
 
         /// <summary>
@@ -2935,7 +3265,8 @@ namespace QuantConnect.Data.Fundamental
         /// Morningstar DataId: 23535
         /// </remarks>
         [JsonProperty("23535")]
-        public BiologicalAssetsBalanceSheet BiologicalAssets => _biologicalAssets ??= new(_timeProvider, _securityIdentifier);
+        public BiologicalAssetsBalanceSheet BiologicalAssets =>
+            _biologicalAssets ??= new(_timeProvider, _securityIdentifier);
         private BiologicalAssetsBalanceSheet _biologicalAssets;
 
         /// <summary>
@@ -2945,7 +3276,8 @@ namespace QuantConnect.Data.Fundamental
         /// Morningstar DataId: 23536
         /// </remarks>
         [JsonProperty("23536")]
-        public CashRestrictedOrPledgedBalanceSheet CashRestrictedOrPledged => _cashRestrictedOrPledged ??= new(_timeProvider, _securityIdentifier);
+        public CashRestrictedOrPledgedBalanceSheet CashRestrictedOrPledged =>
+            _cashRestrictedOrPledged ??= new(_timeProvider, _securityIdentifier);
         private CashRestrictedOrPledgedBalanceSheet _cashRestrictedOrPledged;
 
         /// <summary>
@@ -2955,7 +3287,8 @@ namespace QuantConnect.Data.Fundamental
         /// Morningstar DataId: 23537
         /// </remarks>
         [JsonProperty("23537")]
-        public ConvertibleLoansNonCurrentBalanceSheet ConvertibleLoansNonCurrent => _convertibleLoansNonCurrent ??= new(_timeProvider, _securityIdentifier);
+        public ConvertibleLoansNonCurrentBalanceSheet ConvertibleLoansNonCurrent =>
+            _convertibleLoansNonCurrent ??= new(_timeProvider, _securityIdentifier);
         private ConvertibleLoansNonCurrentBalanceSheet _convertibleLoansNonCurrent;
 
         /// <summary>
@@ -2965,7 +3298,11 @@ namespace QuantConnect.Data.Fundamental
         /// Morningstar DataId: 23538
         /// </remarks>
         [JsonProperty("23538")]
-        public FinancialOrDerivativeInvestmentCurrentLiabilitiesBalanceSheet FinancialOrDerivativeInvestmentCurrentLiabilities => _financialOrDerivativeInvestmentCurrentLiabilities ??= new(_timeProvider, _securityIdentifier);
+        public FinancialOrDerivativeInvestmentCurrentLiabilitiesBalanceSheet FinancialOrDerivativeInvestmentCurrentLiabilities =>
+            _financialOrDerivativeInvestmentCurrentLiabilities ??= new(
+                _timeProvider,
+                _securityIdentifier
+            );
         private FinancialOrDerivativeInvestmentCurrentLiabilitiesBalanceSheet _financialOrDerivativeInvestmentCurrentLiabilities;
 
         /// <summary>
@@ -2975,7 +3312,8 @@ namespace QuantConnect.Data.Fundamental
         /// Morningstar DataId: 23540
         /// </remarks>
         [JsonProperty("23540")]
-        public OtherInvestmentsBalanceSheet OtherInvestments => _otherInvestments ??= new(_timeProvider, _securityIdentifier);
+        public OtherInvestmentsBalanceSheet OtherInvestments =>
+            _otherInvestments ??= new(_timeProvider, _securityIdentifier);
         private OtherInvestmentsBalanceSheet _otherInvestments;
 
         /// <summary>
@@ -2985,7 +3323,8 @@ namespace QuantConnect.Data.Fundamental
         /// Morningstar DataId: 23541
         /// </remarks>
         [JsonProperty("23541")]
-        public TradeAndOtherReceivablesNonCurrentBalanceSheet TradeAndOtherReceivablesNonCurrent => _tradeAndOtherReceivablesNonCurrent ??= new(_timeProvider, _securityIdentifier);
+        public TradeAndOtherReceivablesNonCurrentBalanceSheet TradeAndOtherReceivablesNonCurrent =>
+            _tradeAndOtherReceivablesNonCurrent ??= new(_timeProvider, _securityIdentifier);
         private TradeAndOtherReceivablesNonCurrentBalanceSheet _tradeAndOtherReceivablesNonCurrent;
 
         /// <summary>
@@ -2995,7 +3334,8 @@ namespace QuantConnect.Data.Fundamental
         /// Morningstar DataId: 23543
         /// </remarks>
         [JsonProperty("23543")]
-        public DueFromRelatedPartiesBalanceSheet DueFromRelatedParties => _dueFromRelatedParties ??= new(_timeProvider, _securityIdentifier);
+        public DueFromRelatedPartiesBalanceSheet DueFromRelatedParties =>
+            _dueFromRelatedParties ??= new(_timeProvider, _securityIdentifier);
         private DueFromRelatedPartiesBalanceSheet _dueFromRelatedParties;
 
         /// <summary>
@@ -3005,7 +3345,8 @@ namespace QuantConnect.Data.Fundamental
         /// Morningstar DataId: 23546
         /// </remarks>
         [JsonProperty("23546")]
-        public UnallocatedSurplusBalanceSheet UnallocatedSurplus => _unallocatedSurplus ??= new(_timeProvider, _securityIdentifier);
+        public UnallocatedSurplusBalanceSheet UnallocatedSurplus =>
+            _unallocatedSurplus ??= new(_timeProvider, _securityIdentifier);
         private UnallocatedSurplusBalanceSheet _unallocatedSurplus;
 
         /// <summary>
@@ -3015,7 +3356,8 @@ namespace QuantConnect.Data.Fundamental
         /// Morningstar DataId: 23547
         /// </remarks>
         [JsonProperty("23547")]
-        public DebtDueInYear1BalanceSheet DebtDueInYear1 => _debtDueInYear1 ??= new(_timeProvider, _securityIdentifier);
+        public DebtDueInYear1BalanceSheet DebtDueInYear1 =>
+            _debtDueInYear1 ??= new(_timeProvider, _securityIdentifier);
         private DebtDueInYear1BalanceSheet _debtDueInYear1;
 
         /// <summary>
@@ -3025,7 +3367,8 @@ namespace QuantConnect.Data.Fundamental
         /// Morningstar DataId: 23548
         /// </remarks>
         [JsonProperty("23548")]
-        public DebtDueInYear2BalanceSheet DebtDueInYear2 => _debtDueInYear2 ??= new(_timeProvider, _securityIdentifier);
+        public DebtDueInYear2BalanceSheet DebtDueInYear2 =>
+            _debtDueInYear2 ??= new(_timeProvider, _securityIdentifier);
         private DebtDueInYear2BalanceSheet _debtDueInYear2;
 
         /// <summary>
@@ -3035,7 +3378,8 @@ namespace QuantConnect.Data.Fundamental
         /// Morningstar DataId: 23549
         /// </remarks>
         [JsonProperty("23549")]
-        public DebtDueInYear5BalanceSheet DebtDueInYear5 => _debtDueInYear5 ??= new(_timeProvider, _securityIdentifier);
+        public DebtDueInYear5BalanceSheet DebtDueInYear5 =>
+            _debtDueInYear5 ??= new(_timeProvider, _securityIdentifier);
         private DebtDueInYear5BalanceSheet _debtDueInYear5;
 
         /// <summary>
@@ -3045,7 +3389,8 @@ namespace QuantConnect.Data.Fundamental
         /// Morningstar DataId: 23550
         /// </remarks>
         [JsonProperty("23550")]
-        public DebtDueBeyondBalanceSheet DebtDueBeyond => _debtDueBeyond ??= new(_timeProvider, _securityIdentifier);
+        public DebtDueBeyondBalanceSheet DebtDueBeyond =>
+            _debtDueBeyond ??= new(_timeProvider, _securityIdentifier);
         private DebtDueBeyondBalanceSheet _debtDueBeyond;
 
         /// <summary>
@@ -3055,7 +3400,8 @@ namespace QuantConnect.Data.Fundamental
         /// Morningstar DataId: 23551
         /// </remarks>
         [JsonProperty("23551")]
-        public TotalDebtInMaturityScheduleBalanceSheet TotalDebtInMaturitySchedule => _totalDebtInMaturitySchedule ??= new(_timeProvider, _securityIdentifier);
+        public TotalDebtInMaturityScheduleBalanceSheet TotalDebtInMaturitySchedule =>
+            _totalDebtInMaturitySchedule ??= new(_timeProvider, _securityIdentifier);
         private TotalDebtInMaturityScheduleBalanceSheet _totalDebtInMaturitySchedule;
 
         /// <summary>
@@ -3065,7 +3411,8 @@ namespace QuantConnect.Data.Fundamental
         /// Morningstar DataId: 23552
         /// </remarks>
         [JsonProperty("23552")]
-        public FixedAssetsRevaluationReserveBalanceSheet FixedAssetsRevaluationReserve => _fixedAssetsRevaluationReserve ??= new(_timeProvider, _securityIdentifier);
+        public FixedAssetsRevaluationReserveBalanceSheet FixedAssetsRevaluationReserve =>
+            _fixedAssetsRevaluationReserve ??= new(_timeProvider, _securityIdentifier);
         private FixedAssetsRevaluationReserveBalanceSheet _fixedAssetsRevaluationReserve;
 
         /// <summary>
@@ -3075,7 +3422,8 @@ namespace QuantConnect.Data.Fundamental
         /// Morningstar DataId: 23553
         /// </remarks>
         [JsonProperty("23553")]
-        public CurrentOtherFinancialLiabilitiesBalanceSheet CurrentOtherFinancialLiabilities => _currentOtherFinancialLiabilities ??= new(_timeProvider, _securityIdentifier);
+        public CurrentOtherFinancialLiabilitiesBalanceSheet CurrentOtherFinancialLiabilities =>
+            _currentOtherFinancialLiabilities ??= new(_timeProvider, _securityIdentifier);
         private CurrentOtherFinancialLiabilitiesBalanceSheet _currentOtherFinancialLiabilities;
 
         /// <summary>
@@ -3085,7 +3433,8 @@ namespace QuantConnect.Data.Fundamental
         /// Morningstar DataId: 23554
         /// </remarks>
         [JsonProperty("23554")]
-        public NonCurrentOtherFinancialLiabilitiesBalanceSheet NonCurrentOtherFinancialLiabilities => _nonCurrentOtherFinancialLiabilities ??= new(_timeProvider, _securityIdentifier);
+        public NonCurrentOtherFinancialLiabilitiesBalanceSheet NonCurrentOtherFinancialLiabilities =>
+            _nonCurrentOtherFinancialLiabilities ??= new(_timeProvider, _securityIdentifier);
         private NonCurrentOtherFinancialLiabilitiesBalanceSheet _nonCurrentOtherFinancialLiabilities;
 
         /// <summary>
@@ -3095,7 +3444,8 @@ namespace QuantConnect.Data.Fundamental
         /// Morningstar DataId: 23555
         /// </remarks>
         [JsonProperty("23555")]
-        public OtherFinancialLiabilitiesBalanceSheet OtherFinancialLiabilities => _otherFinancialLiabilities ??= new(_timeProvider, _securityIdentifier);
+        public OtherFinancialLiabilitiesBalanceSheet OtherFinancialLiabilities =>
+            _otherFinancialLiabilities ??= new(_timeProvider, _securityIdentifier);
         private OtherFinancialLiabilitiesBalanceSheet _otherFinancialLiabilities;
 
         /// <summary>
@@ -3105,7 +3455,8 @@ namespace QuantConnect.Data.Fundamental
         /// Morningstar DataId: 23556
         /// </remarks>
         [JsonProperty("23556")]
-        public TotalLiabilitiesAsReportedBalanceSheet TotalLiabilitiesAsReported => _totalLiabilitiesAsReported ??= new(_timeProvider, _securityIdentifier);
+        public TotalLiabilitiesAsReportedBalanceSheet TotalLiabilitiesAsReported =>
+            _totalLiabilitiesAsReported ??= new(_timeProvider, _securityIdentifier);
         private TotalLiabilitiesAsReportedBalanceSheet _totalLiabilitiesAsReported;
 
         /// <summary>
@@ -3115,7 +3466,8 @@ namespace QuantConnect.Data.Fundamental
         /// Morningstar DataId: 23557
         /// </remarks>
         [JsonProperty("23557")]
-        public TotalEquityAsReportedBalanceSheet TotalEquityAsReported => _totalEquityAsReported ??= new(_timeProvider, _securityIdentifier);
+        public TotalEquityAsReportedBalanceSheet TotalEquityAsReported =>
+            _totalEquityAsReported ??= new(_timeProvider, _securityIdentifier);
         private TotalEquityAsReportedBalanceSheet _totalEquityAsReported;
 
         private readonly ITimeProvider _timeProvider;

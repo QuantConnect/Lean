@@ -22,16 +22,16 @@ namespace QuantConnect.Algorithm.Framework.Portfolio
     /// <summary>
     /// Python wrapper for custom portfolio optimizer
     /// </summary>
-    public class PortfolioOptimizerPythonWrapper : BasePythonWrapper<IPortfolioOptimizer>, IPortfolioOptimizer
+    public class PortfolioOptimizerPythonWrapper
+        : BasePythonWrapper<IPortfolioOptimizer>,
+            IPortfolioOptimizer
     {
         /// <summary>
         /// Creates a new instance
         /// </summary>
         /// <param name="portfolioOptimizer">The python model to wrapp</param>
         public PortfolioOptimizerPythonWrapper(PyObject portfolioOptimizer)
-            : base(portfolioOptimizer)
-        {
-        }
+            : base(portfolioOptimizer) { }
 
         /// <summary>
         /// Perform portfolio optimization for a provided matrix of historical returns and an array of expected returns
@@ -40,9 +40,18 @@ namespace QuantConnect.Algorithm.Framework.Portfolio
         /// <param name="expectedReturns">Array of double with the portfolio annualized expected returns (size: K x 1).</param>
         /// <param name="covariance">Multi-dimensional array of double with the portfolio covariance of annualized returns (size: K x K).</param>
         /// <returns>Array of double with the portfolio weights (size: K x 1)</returns>
-        public double[] Optimize(double[,] historicalReturns, double[] expectedReturns = null, double[,] covariance = null)
+        public double[] Optimize(
+            double[,] historicalReturns,
+            double[] expectedReturns = null,
+            double[,] covariance = null
+        )
         {
-            return InvokeMethod<double[]>(nameof(Optimize), historicalReturns, expectedReturns, covariance);
+            return InvokeMethod<double[]>(
+                nameof(Optimize),
+                historicalReturns,
+                expectedReturns,
+                covariance
+            );
         }
     }
 }

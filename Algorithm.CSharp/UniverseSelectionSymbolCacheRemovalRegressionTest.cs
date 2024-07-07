@@ -1,4 +1,3 @@
- 
 /*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
@@ -26,7 +25,9 @@ namespace QuantConnect.Algorithm.CSharp
     /// Regression algorithm reproducing github issue #5191 where the symbol was removed from the cache
     /// even if a subscription is still present
     /// </summary>
-    public class UniverseSelectionSymbolCacheRemovalRegressionTest : QCAlgorithm, IRegressionAlgorithmDefinition
+    public class UniverseSelectionSymbolCacheRemovalRegressionTest
+        : QCAlgorithm,
+            IRegressionAlgorithmDefinition
     {
         private bool _optionWasRemoved;
         private Symbol _optionContract;
@@ -43,7 +44,9 @@ namespace QuantConnect.Algorithm.CSharp
             AddEquity("AAPL", Resolution.Daily);
             _equitySymbol = AddEquity("TWX", Resolution.Minute).Symbol;
 
-            var contracts = OptionChainProvider.GetOptionContractList(_equitySymbol, UtcTime).ToList();
+            var contracts = OptionChainProvider
+                .GetOptionContractList(_equitySymbol, UtcTime)
+                .ToList();
 
             var callOptionSymbol = contracts
                 .Where(c => c.ID.OptionRight == OptionRight.Call)
@@ -64,7 +67,11 @@ namespace QuantConnect.Algorithm.CSharp
                 throw new RegressionTestException("Unexpected removal of symbol from cache!");
             }
 
-            foreach (var dataDelisting in slice.Delistings.Where(pair => pair.Value.Type == DelistingType.Delisted))
+            foreach (
+                var dataDelisting in slice.Delistings.Where(pair =>
+                    pair.Value.Type == DelistingType.Delisted
+                )
+            )
             {
                 if (dataDelisting.Key != _optionContract)
                 {
@@ -115,35 +122,36 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// This is used by the regression test system to indicate what the expected statistics are from running the algorithm
         /// </summary>
-        public Dictionary<string, string> ExpectedStatistics => new Dictionary<string, string>
-        {
-            {"Total Orders", "1"},
-            {"Average Win", "0%"},
-            {"Average Loss", "0%"},
-            {"Compounding Annual Return", "-3.098%"},
-            {"Drawdown", "0.400%"},
-            {"Expectancy", "0"},
-            {"Start Equity", "100000"},
-            {"End Equity", "99836.31"},
-            {"Net Profit", "-0.164%"},
-            {"Sharpe Ratio", "-2.736"},
-            {"Sortino Ratio", "-3.496"},
-            {"Probabilistic Sharpe Ratio", "21.013%"},
-            {"Loss Rate", "0%"},
-            {"Win Rate", "0%"},
-            {"Profit-Loss Ratio", "0"},
-            {"Alpha", "-0.044"},
-            {"Beta", "0.065"},
-            {"Annual Standard Deviation", "0.012"},
-            {"Annual Variance", "0"},
-            {"Information Ratio", "-4.529"},
-            {"Tracking Error", "0.046"},
-            {"Treynor Ratio", "-0.494"},
-            {"Total Fees", "$2.40"},
-            {"Estimated Strategy Capacity", "$2100000000.00"},
-            {"Lowest Capacity Asset", "AAPL R735QTJ8XC9X"},
-            {"Portfolio Turnover", "0.53%"},
-            {"OrderListHash", "2280f695629f53faaad33f5acfffb06d"}
-        };
+        public Dictionary<string, string> ExpectedStatistics =>
+            new Dictionary<string, string>
+            {
+                { "Total Orders", "1" },
+                { "Average Win", "0%" },
+                { "Average Loss", "0%" },
+                { "Compounding Annual Return", "-3.098%" },
+                { "Drawdown", "0.400%" },
+                { "Expectancy", "0" },
+                { "Start Equity", "100000" },
+                { "End Equity", "99836.31" },
+                { "Net Profit", "-0.164%" },
+                { "Sharpe Ratio", "-2.736" },
+                { "Sortino Ratio", "-3.496" },
+                { "Probabilistic Sharpe Ratio", "21.013%" },
+                { "Loss Rate", "0%" },
+                { "Win Rate", "0%" },
+                { "Profit-Loss Ratio", "0" },
+                { "Alpha", "-0.044" },
+                { "Beta", "0.065" },
+                { "Annual Standard Deviation", "0.012" },
+                { "Annual Variance", "0" },
+                { "Information Ratio", "-4.529" },
+                { "Tracking Error", "0.046" },
+                { "Treynor Ratio", "-0.494" },
+                { "Total Fees", "$2.40" },
+                { "Estimated Strategy Capacity", "$2100000000.00" },
+                { "Lowest Capacity Asset", "AAPL R735QTJ8XC9X" },
+                { "Portfolio Turnover", "0.53%" },
+                { "OrderListHash", "2280f695629f53faaad33f5acfffb06d" }
+            };
     }
 }

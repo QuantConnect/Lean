@@ -27,7 +27,9 @@ namespace QuantConnect.Algorithm.CSharp
     /// <summary>
     /// Test algorithm using <see cref="QCAlgorithm.AddUniverseSelection(IUniverseSelectionModel)"/>
     /// </summary>
-    public class AddUniverseSelectionModelCoarseAlgorithm : QCAlgorithm, IRegressionAlgorithmDefinition
+    public class AddUniverseSelectionModelCoarseAlgorithm
+        : QCAlgorithm,
+            IRegressionAlgorithmDefinition
     {
         /// <summary>
         /// Initialise the data and resolution required, as well as the cash and start-end dates for your algorithm. All algorithms must initialized.
@@ -46,22 +48,39 @@ namespace QuantConnect.Algorithm.CSharp
             SetCash(100000);
 
             // set algorithm framework models
-            SetAlpha(new ConstantAlphaModel(InsightType.Price, InsightDirection.Up, TimeSpan.FromMinutes(20), 0.025, null));
+            SetAlpha(
+                new ConstantAlphaModel(
+                    InsightType.Price,
+                    InsightDirection.Up,
+                    TimeSpan.FromMinutes(20),
+                    0.025,
+                    null
+                )
+            );
             SetPortfolioConstruction(new EqualWeightingPortfolioConstructionModel());
             SetExecution(new ImmediateExecutionModel());
 
-            SetUniverseSelection(new CoarseFundamentalUniverseSelectionModel(
-                enumerable => enumerable
-                    .Select(fundamental => fundamental.Symbol)
-                    .Where(symbol => symbol.Value == "AAPL")));
-            AddUniverseSelection(new CoarseFundamentalUniverseSelectionModel(
-                enumerable => enumerable
-                    .Select(fundamental => fundamental.Symbol)
-                    .Where(symbol => symbol.Value == "SPY")));
-            AddUniverseSelection(new CoarseFundamentalUniverseSelectionModel(
-                enumerable => enumerable
-                    .Select(fundamental => fundamental.Symbol)
-                    .Where(symbol => symbol.Value == "FB")));
+            SetUniverseSelection(
+                new CoarseFundamentalUniverseSelectionModel(enumerable =>
+                    enumerable
+                        .Select(fundamental => fundamental.Symbol)
+                        .Where(symbol => symbol.Value == "AAPL")
+                )
+            );
+            AddUniverseSelection(
+                new CoarseFundamentalUniverseSelectionModel(enumerable =>
+                    enumerable
+                        .Select(fundamental => fundamental.Symbol)
+                        .Where(symbol => symbol.Value == "SPY")
+                )
+            );
+            AddUniverseSelection(
+                new CoarseFundamentalUniverseSelectionModel(enumerable =>
+                    enumerable
+                        .Select(fundamental => fundamental.Symbol)
+                        .Where(symbol => symbol.Value == "FB")
+                )
+            );
         }
 
         public override void OnEndOfAlgorithm()
@@ -70,10 +89,12 @@ namespace QuantConnect.Algorithm.CSharp
             {
                 throw new RegressionTestException("Unexpected universe count");
             }
-            if (UniverseManager.ActiveSecurities.Count != 3
+            if (
+                UniverseManager.ActiveSecurities.Count != 3
                 || UniverseManager.ActiveSecurities.Keys.All(symbol => symbol.Value != "SPY")
                 || UniverseManager.ActiveSecurities.Keys.All(symbol => symbol.Value != "AAPL")
-                || UniverseManager.ActiveSecurities.Keys.All(symbol => symbol.Value != "FB"))
+                || UniverseManager.ActiveSecurities.Keys.All(symbol => symbol.Value != "FB")
+            )
             {
                 throw new RegressionTestException("Unexpected active securities");
             }
@@ -107,35 +128,36 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// This is used by the regression test system to indicate what the expected statistics are from running the algorithm
         /// </summary>
-        public Dictionary<string, string> ExpectedStatistics => new Dictionary<string, string>
-        {
-            {"Total Orders", "23"},
-            {"Average Win", "0.00%"},
-            {"Average Loss", "-0.01%"},
-            {"Compounding Annual Return", "-75.275%"},
-            {"Drawdown", "5.800%"},
-            {"Expectancy", "-0.609"},
-            {"Start Equity", "100000"},
-            {"End Equity", "94419.21"},
-            {"Net Profit", "-5.581%"},
-            {"Sharpe Ratio", "-3.288"},
-            {"Sortino Ratio", "-3.828"},
-            {"Probabilistic Sharpe Ratio", "5.546%"},
-            {"Loss Rate", "73%"},
-            {"Win Rate", "27%"},
-            {"Profit-Loss Ratio", "0.43"},
-            {"Alpha", "-0.495"},
-            {"Beta", "1.484"},
-            {"Annual Standard Deviation", "0.196"},
-            {"Annual Variance", "0.039"},
-            {"Information Ratio", "-3.843"},
-            {"Tracking Error", "0.141"},
-            {"Treynor Ratio", "-0.435"},
-            {"Total Fees", "$31.25"},
-            {"Estimated Strategy Capacity", "$550000000.00"},
-            {"Lowest Capacity Asset", "AAPL R735QTJ8XC9X"},
-            {"Portfolio Turnover", "7.33%"},
-            {"OrderListHash", "2add92a1f922c6730d8c20ff65934a46"}
-        };
+        public Dictionary<string, string> ExpectedStatistics =>
+            new Dictionary<string, string>
+            {
+                { "Total Orders", "23" },
+                { "Average Win", "0.00%" },
+                { "Average Loss", "-0.01%" },
+                { "Compounding Annual Return", "-75.275%" },
+                { "Drawdown", "5.800%" },
+                { "Expectancy", "-0.609" },
+                { "Start Equity", "100000" },
+                { "End Equity", "94419.21" },
+                { "Net Profit", "-5.581%" },
+                { "Sharpe Ratio", "-3.288" },
+                { "Sortino Ratio", "-3.828" },
+                { "Probabilistic Sharpe Ratio", "5.546%" },
+                { "Loss Rate", "73%" },
+                { "Win Rate", "27%" },
+                { "Profit-Loss Ratio", "0.43" },
+                { "Alpha", "-0.495" },
+                { "Beta", "1.484" },
+                { "Annual Standard Deviation", "0.196" },
+                { "Annual Variance", "0.039" },
+                { "Information Ratio", "-3.843" },
+                { "Tracking Error", "0.141" },
+                { "Treynor Ratio", "-0.435" },
+                { "Total Fees", "$31.25" },
+                { "Estimated Strategy Capacity", "$550000000.00" },
+                { "Lowest Capacity Asset", "AAPL R735QTJ8XC9X" },
+                { "Portfolio Turnover", "7.33%" },
+                { "OrderListHash", "2add92a1f922c6730d8c20ff65934a46" }
+            };
     }
 }

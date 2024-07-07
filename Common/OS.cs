@@ -14,12 +14,12 @@
 */
 
 using System;
-using System.IO;
-using System.Threading;
-using System.Reflection;
-using QuantConnect.Util;
-using System.Diagnostics;
 using System.Collections.Generic;
+using System.Diagnostics;
+using System.IO;
+using System.Reflection;
+using System.Threading;
+using QuantConnect.Util;
 using static QuantConnect.StringExtensions;
 
 namespace QuantConnect
@@ -128,7 +128,7 @@ namespace QuantConnect
         {
             get
             {
-                if(CpuPerformanceCounter != null)
+                if (CpuPerformanceCounter != null)
                 {
                     return (decimal)CpuPerformanceCounter.CpuPercentage;
                 }
@@ -143,11 +143,11 @@ namespace QuantConnect
         {
             return new Dictionary<string, string>
             {
-                { Messages.OS.CPUUsageKey, Invariant($"{CpuUsage:0.0}%")},
+                { Messages.OS.CPUUsageKey, Invariant($"{CpuUsage:0.0}%") },
                 { Messages.OS.UsedRAMKey, TotalPhysicalMemoryUsed.ToStringInvariant() },
                 { Messages.OS.TotalRAMKey, "" },
                 { Messages.OS.HostnameKey, Environment.MachineName },
-                { Messages.OS.LEANVersionKey, $"v{Globals.Version}"}
+                { Messages.OS.LEANVersionKey, $"v{Globals.Version}" }
             };
         }
 
@@ -187,7 +187,11 @@ namespace QuantConnect
             public CpuPerformance()
             {
                 _cancellationToken = new CancellationTokenSource();
-                _cpuThread = new Thread(CalculateCpu) { IsBackground = true, Name = "CpuPerformance" };
+                _cpuThread = new Thread(CalculateCpu)
+                {
+                    IsBackground = true,
+                    Name = "CpuPerformance"
+                };
                 _cpuThread.Start();
             }
 
@@ -202,7 +206,11 @@ namespace QuantConnect
                     var startTime = DateTime.UtcNow;
                     var startCpuUsage = process.TotalProcessorTime;
 
-                    if (_cancellationToken.Token.WaitHandle.WaitOne(startTime.GetSecondUnevenWait(5000)))
+                    if (
+                        _cancellationToken.Token.WaitHandle.WaitOne(
+                            startTime.GetSecondUnevenWait(5000)
+                        )
+                    )
                     {
                         return;
                     }

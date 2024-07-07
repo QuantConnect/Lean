@@ -18,8 +18,8 @@ using System.Collections.Generic;
 using System.Linq;
 using QuantConnect.Brokerages;
 using QuantConnect.Data;
-using QuantConnect.Orders;
 using QuantConnect.Interfaces;
+using QuantConnect.Orders;
 
 namespace QuantConnect.Algorithm.CSharp
 {
@@ -33,9 +33,9 @@ namespace QuantConnect.Algorithm.CSharp
         /// </summary>
         public override void Initialize()
         {
-            SetStartDate(2017, 9, 3);  //Set Start Date
-            SetEndDate(2017, 9, 3);    //Set End Date
-            SetCash(1000);             //Set Strategy Cash
+            SetStartDate(2017, 9, 3); //Set Start Date
+            SetEndDate(2017, 9, 3); //Set End Date
+            SetCash(1000); //Set Strategy Cash
 
             SetBrokerageModel(BrokerageName.GDAX, AccountType.Cash);
 
@@ -49,7 +49,8 @@ namespace QuantConnect.Algorithm.CSharp
         /// <param name="data">Slice object keyed by symbol containing the stock data</param>
         public override void OnData(Slice slice)
         {
-            if (UtcTime.Hour != 6) return;
+            if (UtcTime.Hour != 6)
+                return;
 
             if (UtcTime.Minute == 0)
             {
@@ -93,13 +94,22 @@ namespace QuantConnect.Algorithm.CSharp
         public override void OnEndOfAlgorithm()
         {
             const int expectedOrders = 5;
-            var expectedStatus = new[] { OrderStatus.Invalid, OrderStatus.Filled, OrderStatus.Canceled, OrderStatus.Canceled, OrderStatus.Filled };
+            var expectedStatus = new[]
+            {
+                OrderStatus.Invalid,
+                OrderStatus.Filled,
+                OrderStatus.Canceled,
+                OrderStatus.Canceled,
+                OrderStatus.Filled
+            };
 
             var orders = Transactions.GetOrders(x => true).ToList();
 
             if (orders.Count != expectedOrders)
             {
-                throw new RegressionTestException($"Expected orders: {expectedOrders}, actual orders: {orders.Count}");
+                throw new RegressionTestException(
+                    $"Expected orders: {expectedOrders}, actual orders: {orders.Count}"
+                );
             }
 
             for (var i = 0; i < expectedOrders; i++)
@@ -107,7 +117,9 @@ namespace QuantConnect.Algorithm.CSharp
                 var order = orders[i];
                 if (order.Status != expectedStatus[i])
                 {
-                    throw new RegressionTestException($"Invalid status for order {order.Id}, Expected: {expectedStatus[i]}, actual: {order.Status}");
+                    throw new RegressionTestException(
+                        $"Invalid status for order {order.Id}, Expected: {expectedStatus[i]}, actual: {order.Status}"
+                    );
                 }
             }
         }
@@ -140,35 +152,36 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// This is used by the regression test system to indicate what the expected statistics are from running the algorithm
         /// </summary>
-        public Dictionary<string, string> ExpectedStatistics => new Dictionary<string, string>
-        {
-            {"Total Orders", "5"},
-            {"Average Win", "0%"},
-            {"Average Loss", "0%"},
-            {"Compounding Annual Return", "0%"},
-            {"Drawdown", "0%"},
-            {"Expectancy", "0"},
-            {"Start Equity", "1000.00"},
-            {"End Equity", "955.69"},
-            {"Net Profit", "0%"},
-            {"Sharpe Ratio", "0"},
-            {"Sortino Ratio", "0"},
-            {"Probabilistic Sharpe Ratio", "0%"},
-            {"Loss Rate", "0%"},
-            {"Win Rate", "0%"},
-            {"Profit-Loss Ratio", "0"},
-            {"Alpha", "0"},
-            {"Beta", "0"},
-            {"Annual Standard Deviation", "0"},
-            {"Annual Variance", "0"},
-            {"Information Ratio", "0"},
-            {"Tracking Error", "0"},
-            {"Treynor Ratio", "0"},
-            {"Total Fees", "$0.00"},
-            {"Estimated Strategy Capacity", "$370000.00"},
-            {"Lowest Capacity Asset", "ETHUSD 2XR"},
-            {"Portfolio Turnover", "104.59%"},
-            {"OrderListHash", "5277847166fcd10cde634e3986e1d285"}
-        };
+        public Dictionary<string, string> ExpectedStatistics =>
+            new Dictionary<string, string>
+            {
+                { "Total Orders", "5" },
+                { "Average Win", "0%" },
+                { "Average Loss", "0%" },
+                { "Compounding Annual Return", "0%" },
+                { "Drawdown", "0%" },
+                { "Expectancy", "0" },
+                { "Start Equity", "1000.00" },
+                { "End Equity", "955.69" },
+                { "Net Profit", "0%" },
+                { "Sharpe Ratio", "0" },
+                { "Sortino Ratio", "0" },
+                { "Probabilistic Sharpe Ratio", "0%" },
+                { "Loss Rate", "0%" },
+                { "Win Rate", "0%" },
+                { "Profit-Loss Ratio", "0" },
+                { "Alpha", "0" },
+                { "Beta", "0" },
+                { "Annual Standard Deviation", "0" },
+                { "Annual Variance", "0" },
+                { "Information Ratio", "0" },
+                { "Tracking Error", "0" },
+                { "Treynor Ratio", "0" },
+                { "Total Fees", "$0.00" },
+                { "Estimated Strategy Capacity", "$370000.00" },
+                { "Lowest Capacity Asset", "ETHUSD 2XR" },
+                { "Portfolio Turnover", "104.59%" },
+                { "OrderListHash", "5277847166fcd10cde634e3986e1d285" }
+            };
     }
 }

@@ -16,15 +16,15 @@
 using System;
 using System.Net;
 using System.Net.Sockets;
+using NetMQ;
+using NetMQ.Sockets;
 using Newtonsoft.Json;
 using QuantConnect.Configuration;
 using QuantConnect.Interfaces;
 using QuantConnect.Logging;
 using QuantConnect.Notifications;
-using QuantConnect.Packets;
-using NetMQ;
-using NetMQ.Sockets;
 using QuantConnect.Orders.Serialization;
+using QuantConnect.Packets;
 
 namespace QuantConnect.Messaging
 {
@@ -74,7 +74,10 @@ namespace QuantConnect.Messaging
         {
             if (!notification.CanSend())
             {
-                Log.Error("Messaging.SendNotification(): Send not implemented for notification of type: " + notification.GetType().Name);
+                Log.Error(
+                    "Messaging.SendNotification(): Send not implemented for notification of type: "
+                        + notification.GetType().Name
+                );
                 return;
             }
             notification.Send();
@@ -85,7 +88,7 @@ namespace QuantConnect.Messaging
         /// </summary>
         public void Send(Packet packet)
         {
-           Transmit(packet);
+            Transmit(packet);
         }
 
         /// <summary>
@@ -116,16 +119,16 @@ namespace QuantConnect.Messaging
             }
             catch
             {
-                throw new Exception("The port configured in config.json is either being used or blocked by a firewall." +
-                    "Please choose a new port or open the port in the firewall.");
+                throw new Exception(
+                    "The port configured in config.json is either being used or blocked by a firewall."
+                        + "Please choose a new port or open the port in the firewall."
+                );
             }
         }
 
         /// <summary>
         /// Dispose any resources used before destruction
         /// </summary>
-        public void Dispose()
-        {
-        }
+        public void Dispose() { }
     }
 }

@@ -41,9 +41,10 @@ namespace QuantConnect.Securities
         /// Read-only dictionary containing all active securities. An active security is
         /// a security that is currently selected by the universe or has holdings or open orders.
         /// </summary>
-        public IReadOnlyDictionary<Symbol, Security> ActiveSecurities => this
-            .SelectMany(ukvp => ukvp.Value.Members.Select(mkvp => mkvp.Value))
-            .DistinctBy(s => s.Symbol).ToDictionary(s => s.Symbol);
+        public IReadOnlyDictionary<Symbol, Security> ActiveSecurities =>
+            this.SelectMany(ukvp => ukvp.Value.Members.Select(mkvp => mkvp.Value))
+                .DistinctBy(s => s.Symbol)
+                .ToDictionary(s => s.Symbol);
 
         /// <summary>
         /// Initializes a new instance of the <see cref="UniverseManager"/> class
@@ -173,9 +174,14 @@ namespace QuantConnect.Securities
         {
             if (_universes.TryAdd(key, value))
             {
-                lock(_pendingChanges)
+                lock (_pendingChanges)
                 {
-                    _pendingChanges.Enqueue(new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Add, value));
+                    _pendingChanges.Enqueue(
+                        new NotifyCollectionChangedEventArgs(
+                            NotifyCollectionChangedAction.Add,
+                            value
+                        )
+                    );
                 }
             }
         }
@@ -197,8 +203,7 @@ namespace QuantConnect.Securities
                 {
                     OnCollectionChanged(universeChange);
                 }
-            }
-            while (universeChange != null);
+            } while (universeChange != null);
         }
 
         /// <summary>
@@ -214,7 +219,12 @@ namespace QuantConnect.Securities
             if (_universes.TryRemove(key, out universe))
             {
                 universe.Dispose();
-                OnCollectionChanged(new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Remove, universe));
+                OnCollectionChanged(
+                    new NotifyCollectionChangedEventArgs(
+                        NotifyCollectionChangedAction.Remove,
+                        universe
+                    )
+                );
                 return true;
             }
             return false;
@@ -245,7 +255,9 @@ namespace QuantConnect.Securities
             {
                 if (!_universes.ContainsKey(symbol))
                 {
-                    throw new KeyNotFoundException($"This universe symbol ({symbol}) was not found in your universe list. Please add this security or check it exists before using it with 'Universes.ContainsKey(\"{SymbolCache.GetTicker(symbol)}\")'");
+                    throw new KeyNotFoundException(
+                        $"This universe symbol ({symbol}) was not found in your universe list. Please add this security or check it exists before using it with 'Universes.ContainsKey(\"{SymbolCache.GetTicker(symbol)}\")'"
+                    );
                 }
                 return _universes[symbol];
             }
@@ -254,7 +266,9 @@ namespace QuantConnect.Securities
                 Universe existing;
                 if (_universes.TryGetValue(symbol, out existing) && existing != value)
                 {
-                    throw new ArgumentException($"Unable to over write existing Universe: {symbol.Value}");
+                    throw new ArgumentException(
+                        $"Unable to over write existing Universe: {symbol.Value}"
+                    );
                 }
 
                 // no security exists for the specified symbol key, add it now

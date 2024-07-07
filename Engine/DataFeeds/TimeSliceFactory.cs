@@ -15,13 +15,13 @@
 */
 
 using System;
+using System.Collections.Generic;
 using NodaTime;
 using QuantConnect.Data;
-using QuantConnect.Logging;
-using QuantConnect.Interfaces;
 using QuantConnect.Data.Market;
-using System.Collections.Generic;
 using QuantConnect.Data.UniverseSelection;
+using QuantConnect.Interfaces;
+using QuantConnect.Logging;
 
 namespace QuantConnect.Lean.Engine.DataFeeds
 {
@@ -34,7 +34,8 @@ namespace QuantConnect.Lean.Engine.DataFeeds
 
         // performance: these collections are not always used so keep a reference to an empty
         // instance to use and avoid unnecessary constructors and allocations
-        private readonly List<UpdateData<ISecurityPrice>> _emptyCustom = new List<UpdateData<ISecurityPrice>>();
+        private readonly List<UpdateData<ISecurityPrice>> _emptyCustom =
+            new List<UpdateData<ISecurityPrice>>();
         private readonly TradeBars _emptyTradeBars = new TradeBars();
         private readonly QuoteBars _emptyQuoteBars = new QuoteBars();
         private readonly Ticks _emptyTicks = new Ticks();
@@ -65,7 +66,8 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         {
             // setting all data collections to null, this time slice shouldn't be used
             // for its data, we want to see fireworks it someone tries
-            return new TimeSlice(utcDateTime,
+            return new TimeSlice(
+                utcDateTime,
                 0,
                 null,
                 null,
@@ -74,7 +76,8 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                 null,
                 SecurityChanges.None,
                 null,
-                isTimePulse:true);
+                isTimePulse: true
+            );
         }
 
         /// <summary>
@@ -85,10 +88,12 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         /// <param name="changes">The new changes that are seen in this time slice as a result of universe selection</param>
         /// <param name="universeData"></param>
         /// <returns>A new <see cref="TimeSlice"/> containing the specified data</returns>
-        public TimeSlice Create(DateTime utcDateTime,
+        public TimeSlice Create(
+            DateTime utcDateTime,
             List<DataFeedPacket> data,
             SecurityChanges changes,
-            Dictionary<Universe, BaseDataCollection> universeData)
+            Dictionary<Universe, BaseDataCollection> universeData
+        )
         {
             int count = 0;
             var security = new List<UpdateData<ISecurityPrice>>(data.Count);
@@ -144,7 +149,8 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                 var list = packet.Data;
                 var symbol = packet.Configuration.Symbol;
 
-                if (list.Count == 0) continue;
+                if (list.Count == 0)
+                    continue;
 
                 // keep count of all data points
                 if (list.Count == 1 && list[0] is BaseDataCollection)
@@ -168,7 +174,14 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                         custom = new List<UpdateData<ISecurityPrice>>(1);
                     }
                     // This is all the custom data
-                    custom.Add(new UpdateData<ISecurityPrice>(packet.Security, packet.Configuration.Type, list, packet.Configuration.IsInternalFeed));
+                    custom.Add(
+                        new UpdateData<ISecurityPrice>(
+                            packet.Security,
+                            packet.Configuration.Type,
+                            list,
+                            packet.Configuration.IsInternalFeed
+                        )
+                    );
                 }
 
                 var securityUpdate = new List<BaseData>(list.Count);
@@ -214,8 +227,13 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                                     // if we have an existing bar keep the highest resolution one
                                     // e.g Hour and Minute resolution subscriptions for the same symbol
                                     // see CustomUniverseWithBenchmarkRegressionAlgorithm
-                                    if (!tradeBars.TryGetValue(baseData.Symbol, out existingTradeBar)
-                                        || existingTradeBar.Period > newTradeBar.Period)
+                                    if (
+                                        !tradeBars.TryGetValue(
+                                            baseData.Symbol,
+                                            out existingTradeBar
+                                        )
+                                        || existingTradeBar.Period > newTradeBar.Period
+                                    )
                                     {
                                         tradeBars[baseData.Symbol] = newTradeBar;
                                     }
@@ -232,8 +250,13 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                                     // if we have an existing bar keep the highest resolution one
                                     // e.g Hour and Minute resolution subscriptions for the same symbol
                                     // see CustomUniverseWithBenchmarkRegressionAlgorithm
-                                    if (!quoteBars.TryGetValue(baseData.Symbol, out existingQuoteBar)
-                                        || existingQuoteBar.Period > newQuoteBar.Period)
+                                    if (
+                                        !quoteBars.TryGetValue(
+                                            baseData.Symbol,
+                                            out existingQuoteBar
+                                        )
+                                        || existingQuoteBar.Period > newQuoteBar.Period
+                                    )
                                     {
                                         quoteBars[baseData.Symbol] = newQuoteBar;
                                     }
@@ -279,7 +302,17 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                             {
                                 optionChains[baseData.Symbol] = (OptionChain)baseData;
                             }
-                            else if (optionChains != null && !HandleOptionData(algorithmTime, baseData, optionChains, packet.Security, sliceFuture, optionUnderlyingUpdates))
+                            else if (
+                                optionChains != null
+                                && !HandleOptionData(
+                                    algorithmTime,
+                                    baseData,
+                                    optionChains,
+                                    packet.Security,
+                                    sliceFuture,
+                                    optionUnderlyingUpdates
+                                )
+                            )
                             {
                                 continue;
                             }
@@ -287,7 +320,11 @@ namespace QuantConnect.Lean.Engine.DataFeeds
 
                         // special handling of futures data to build the futures chain. Don't push canonical continuous contract
                         // We don't push internal feeds because it could be a continuous mapping future not part of the requested chain
-                        if (symbol.SecurityType == SecurityType.Future && !symbol.IsCanonical() && !packet.Configuration.IsInternalFeed)
+                        if (
+                            symbol.SecurityType == SecurityType.Future
+                            && !symbol.IsCanonical()
+                            && !packet.Configuration.IsInternalFeed
+                        )
                         {
                             if (futuresChains == null)
                             {
@@ -297,7 +334,15 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                             {
                                 futuresChains[baseData.Symbol] = (FuturesChain)baseData;
                             }
-                            else if (futuresChains != null && !HandleFuturesData(algorithmTime, baseData, futuresChains, packet.Security))
+                            else if (
+                                futuresChains != null
+                                && !HandleFuturesData(
+                                    algorithmTime,
+                                    baseData,
+                                    futuresChains,
+                                    packet.Security
+                                )
+                            )
                             {
                                 continue;
                             }
@@ -305,7 +350,8 @@ namespace QuantConnect.Lean.Engine.DataFeeds
 
                         // this is the data used set market prices
                         // do not add it if it is a Suspicious tick
-                        if (tick != null && tick.Suspicious) continue;
+                        if (tick != null && tick.Suspicious)
+                            continue;
 
                         securityUpdate.Add(baseData);
 
@@ -361,23 +407,72 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                         }
 
                         // let's make it available to the user through the cache
-                        security.Add(new UpdateData<ISecurityPrice>(packet.Security, baseData.GetType(), new List<BaseData> { baseData }, packet.Configuration.IsInternalFeed, baseData.IsFillForward));
+                        security.Add(
+                            new UpdateData<ISecurityPrice>(
+                                packet.Security,
+                                baseData.GetType(),
+                                new List<BaseData> { baseData },
+                                packet.Configuration.IsInternalFeed,
+                                baseData.IsFillForward
+                            )
+                        );
                     }
                 }
 
                 if (securityUpdate.Count > 0)
                 {
-                    security.Add(new UpdateData<ISecurityPrice>(packet.Security, packet.Configuration.Type, securityUpdate, packet.Configuration.IsInternalFeed, containsFillForwardData));
+                    security.Add(
+                        new UpdateData<ISecurityPrice>(
+                            packet.Security,
+                            packet.Configuration.Type,
+                            securityUpdate,
+                            packet.Configuration.IsInternalFeed,
+                            containsFillForwardData
+                        )
+                    );
                 }
                 if (consolidatorUpdate.Count > 0)
                 {
-                    consolidator.Add(new UpdateData<SubscriptionDataConfig>(packet.Configuration, packet.Configuration.Type, consolidatorUpdate, packet.Configuration.IsInternalFeed, containsFillForwardData));
+                    consolidator.Add(
+                        new UpdateData<SubscriptionDataConfig>(
+                            packet.Configuration,
+                            packet.Configuration.Type,
+                            consolidatorUpdate,
+                            packet.Configuration.IsInternalFeed,
+                            containsFillForwardData
+                        )
+                    );
                 }
             }
 
-            slice = new Slice(algorithmTime, allDataForAlgorithm, tradeBars ?? _emptyTradeBars, quoteBars ?? _emptyQuoteBars, ticks ?? _emptyTicks, optionChains ?? _emptyOptionChains, futuresChains ?? _emptyFuturesChains, splits ?? _emptySplits, dividends ?? _emptyDividends, delistings ?? _emptyDelistings, symbolChanges ?? _emptySymbolChangedEvents, marginInterestRates ?? _emptyMarginInterestRates, utcDateTime, allDataForAlgorithm.Count > 0);
+            slice = new Slice(
+                algorithmTime,
+                allDataForAlgorithm,
+                tradeBars ?? _emptyTradeBars,
+                quoteBars ?? _emptyQuoteBars,
+                ticks ?? _emptyTicks,
+                optionChains ?? _emptyOptionChains,
+                futuresChains ?? _emptyFuturesChains,
+                splits ?? _emptySplits,
+                dividends ?? _emptyDividends,
+                delistings ?? _emptyDelistings,
+                symbolChanges ?? _emptySymbolChangedEvents,
+                marginInterestRates ?? _emptyMarginInterestRates,
+                utcDateTime,
+                allDataForAlgorithm.Count > 0
+            );
 
-            return new TimeSlice(utcDateTime, count, slice, data, security, consolidator, custom ?? _emptyCustom, changes, universeData);
+            return new TimeSlice(
+                utcDateTime,
+                count,
+                slice,
+                data,
+                security,
+                consolidator,
+                custom ?? _emptyCustom,
+                changes,
+                universeData
+            );
         }
 
         private void UpdateEmptyCollections(DateTime algorithmTime)
@@ -395,20 +490,28 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             _emptyMarginInterestRates.Clear();
 
 #pragma warning disable 0618 // DataDictionary.Time is deprecated, ignore until removed entirely
-            _emptyTradeBars.Time
-                = _emptyQuoteBars.Time
-                = _emptyTicks.Time
-                = _emptySplits.Time
-                = _emptyDividends.Time
-                = _emptyDelistings.Time
-                = _emptyOptionChains.Time
-                = _emptyFuturesChains.Time
-                = _emptySymbolChangedEvents.Time
-                = _emptyMarginInterestRates.Time = algorithmTime;
+            _emptyTradeBars.Time =
+                _emptyQuoteBars.Time =
+                _emptyTicks.Time =
+                _emptySplits.Time =
+                _emptyDividends.Time =
+                _emptyDelistings.Time =
+                _emptyOptionChains.Time =
+                _emptyFuturesChains.Time =
+                _emptySymbolChangedEvents.Time =
+                _emptyMarginInterestRates.Time =
+                    algorithmTime;
 #pragma warning restore 0618
         }
 
-        private bool HandleOptionData(DateTime algorithmTime, BaseData baseData, OptionChains optionChains, ISecurityPrice security, Lazy<Slice> sliceFuture, IReadOnlyDictionary<Symbol, BaseData> optionUnderlyingUpdates)
+        private bool HandleOptionData(
+            DateTime algorithmTime,
+            BaseData baseData,
+            OptionChains optionChains,
+            ISecurityPrice security,
+            Lazy<Slice> sliceFuture,
+            IReadOnlyDictionary<Symbol, BaseData> optionUnderlyingUpdates
+        )
         {
             var symbol = baseData.Symbol;
 
@@ -426,19 +529,28 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             {
                 if (option.Underlying == null)
                 {
-                    Log.Error($"TimeSlice.HandleOptionData(): {algorithmTime}: Option underlying is null");
+                    Log.Error(
+                        $"TimeSlice.HandleOptionData(): {algorithmTime}: Option underlying is null"
+                    );
                     return false;
                 }
 
                 BaseData underlyingData;
-                if (!optionUnderlyingUpdates.TryGetValue(option.Underlying.Symbol, out underlyingData))
+                if (
+                    !optionUnderlyingUpdates.TryGetValue(
+                        option.Underlying.Symbol,
+                        out underlyingData
+                    )
+                )
                 {
                     underlyingData = option.Underlying.GetLastData();
                 }
 
                 if (underlyingData == null)
                 {
-                    Log.Error($"TimeSlice.HandleOptionData(): {algorithmTime}: Option underlying GetLastData returned null");
+                    Log.Error(
+                        $"TimeSlice.HandleOptionData(): {algorithmTime}: Option underlying GetLastData returned null"
+                    );
                     return false;
                 }
                 chain.Underlying = underlyingData;
@@ -470,7 +582,9 @@ namespace QuantConnect.Lean.Engine.DataFeeds
 
                 if (option != null)
                 {
-                    contract.SetOptionPriceModel(() => option.EvaluatePriceModel(sliceFuture.Value, contract));
+                    contract.SetOptionPriceModel(
+                        () => option.EvaluatePriceModel(sliceFuture.Value, contract)
+                    );
                 }
             }
 
@@ -502,8 +616,12 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             return true;
         }
 
-
-        private bool HandleFuturesData(DateTime algorithmTime, BaseData baseData, FuturesChains futuresChains, ISecurityPrice security)
+        private bool HandleFuturesData(
+            DateTime algorithmTime,
+            BaseData baseData,
+            FuturesChains futuresChains,
+            ISecurityPrice security
+        )
         {
             var symbol = baseData.Symbol;
 
@@ -615,7 +733,8 @@ namespace QuantConnect.Lean.Engine.DataFeeds
 
         private static void UpdateContract(OptionContract contract, TradeBar tradeBar)
         {
-            if (tradeBar.Close == 0m) return;
+            if (tradeBar.Close == 0m)
+                return;
             contract.LastPrice = tradeBar.Close;
             contract.Volume = (long)tradeBar.Volume;
         }
@@ -664,7 +783,8 @@ namespace QuantConnect.Lean.Engine.DataFeeds
 
         private static void UpdateContract(FuturesContract contract, TradeBar tradeBar)
         {
-            if (tradeBar.Close == 0m) return;
+            if (tradeBar.Close == 0m)
+                return;
             contract.LastPrice = tradeBar.Close;
             contract.Volume = (long)tradeBar.Volume;
         }

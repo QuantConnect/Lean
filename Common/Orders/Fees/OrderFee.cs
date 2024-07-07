@@ -36,9 +36,7 @@ namespace QuantConnect.Orders.Fees
         /// <param name="orderFee">The order fee</param>
         public OrderFee(CashAmount orderFee)
         {
-            Value = new CashAmount(
-                orderFee.Amount.Normalize(),
-                orderFee.Currency);
+            Value = new CashAmount(orderFee.Amount.Normalize(), orderFee.Currency);
         }
 
         /// <summary>
@@ -70,7 +68,8 @@ namespace QuantConnect.Orders.Fees
         /// <summary>
         /// Gets an instance of <see cref="OrderFee"/> that represents zero.
         /// </summary>
-        public static readonly OrderFee Zero =
-            new OrderFee(new CashAmount(0, Currencies.NullCurrency));
+        public static readonly OrderFee Zero = new OrderFee(
+            new CashAmount(0, Currencies.NullCurrency)
+        );
     }
 }

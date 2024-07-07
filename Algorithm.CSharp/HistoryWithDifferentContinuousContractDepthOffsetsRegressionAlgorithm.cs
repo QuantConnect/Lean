@@ -14,19 +14,21 @@
 */
 
 using System;
-using System.Linq;
 using System.Collections.Generic;
+using System.Linq;
+using QuantConnect.Data.Market;
 using QuantConnect.Interfaces;
 using QuantConnect.Securities;
 using QuantConnect.Securities.Future;
-using QuantConnect.Data.Market;
 
 namespace QuantConnect.Algorithm.CSharp
 {
     /// <summary>
     /// Regression algorithm illustrating how to request history data for continuous contracts with different depth offsets.
     /// </summary>
-    public class HistoryWithDifferentContinuousContractDepthOffsetsRegressionAlgorithm : QCAlgorithm, IRegressionAlgorithmDefinition
+    public class HistoryWithDifferentContinuousContractDepthOffsetsRegressionAlgorithm
+        : QCAlgorithm,
+            IRegressionAlgorithmDefinition
     {
         private Symbol _continuousContractSymbol;
 
@@ -34,20 +36,34 @@ namespace QuantConnect.Algorithm.CSharp
         {
             SetStartDate(2013, 10, 6);
             SetEndDate(2014, 1, 1);
-            _continuousContractSymbol = AddFuture(Futures.Indices.SP500EMini, Resolution.Daily).Symbol;
+            _continuousContractSymbol = AddFuture(
+                Futures.Indices.SP500EMini,
+                Resolution.Daily
+            ).Symbol;
         }
 
         public override void OnEndOfAlgorithm()
         {
             var contractDepthOffsets = Enumerable.Range(0, 3).ToList();
-            var historyResults = contractDepthOffsets.Select(contractDepthOffset =>
-            {
-                return History(new [] { _continuousContractSymbol }, StartDate, EndDate, Resolution.Daily, contractDepthOffset: contractDepthOffset).ToList();
-            }).ToList();
+            var historyResults = contractDepthOffsets
+                .Select(contractDepthOffset =>
+                {
+                    return History(
+                            new[] { _continuousContractSymbol },
+                            StartDate,
+                            EndDate,
+                            Resolution.Daily,
+                            contractDepthOffset: contractDepthOffset
+                        )
+                        .ToList();
+                })
+                .ToList();
 
             if (historyResults.Any(x => x.Count == 0 || x.Count != historyResults[0].Count))
             {
-                throw new RegressionTestException("History results are empty or bar counts did not match");
+                throw new RegressionTestException(
+                    "History results are empty or bar counts did not match"
+                );
             }
 
             // Check that all history results at least one mapping and that different contracts are used for each offset (which can be checked by
@@ -64,22 +80,28 @@ namespace QuantConnect.Algorithm.CSharp
                     if (underlyings.Add(underlying) && underlyings.Count > 1)
                     {
                         var currentExpiration = underlying.ID.Date;
-                        var frontMonthExpiration = FuturesExpiryFunctions.FuturesExpiryFunction(_continuousContractSymbol)(slice.Time.AddMonths(1));
+                        var frontMonthExpiration = FuturesExpiryFunctions.FuturesExpiryFunction(
+                            _continuousContractSymbol
+                        )(slice.Time.AddMonths(1));
 
-                        if (contractDepthOffsets[i] == 0)   // Front month
+                        if (contractDepthOffsets[i] == 0) // Front month
                         {
                             if (currentExpiration != frontMonthExpiration.Date)
                             {
-                                throw new RegressionTestException($"Unexpected current mapped contract expiration {currentExpiration}" +
-                                    $" @ {Time} it should be AT front month expiration {frontMonthExpiration}");
+                                throw new RegressionTestException(
+                                    $"Unexpected current mapped contract expiration {currentExpiration}"
+                                        + $" @ {Time} it should be AT front month expiration {frontMonthExpiration}"
+                                );
                             }
                         }
-                        else    // Back month
+                        else // Back month
                         {
                             if (currentExpiration <= frontMonthExpiration.Date)
                             {
-                                throw new RegressionTestException($"Unexpected current mapped contract expiration {currentExpiration}" +
-                                    $" @ {Time} it should be AFTER front month expiration {frontMonthExpiration}");
+                                throw new RegressionTestException(
+                                    $"Unexpected current mapped contract expiration {currentExpiration}"
+                                        + $" @ {Time} it should be AFTER front month expiration {frontMonthExpiration}"
+                                );
                             }
                         }
                     }
@@ -87,7 +109,9 @@ namespace QuantConnect.Algorithm.CSharp
 
                 if (underlyings.Count == 0)
                 {
-                    throw new RegressionTestException($"History results for contractDepthOffset={contractDepthOffsets[i]} did not contain any mappings");
+                    throw new RegressionTestException(
+                        $"History results for contractDepthOffset={contractDepthOffsets[i]} did not contain any mappings"
+                    );
                 }
 
                 underlyingsPerHistory.Add(underlyings);
@@ -100,7 +124,9 @@ namespace QuantConnect.Algorithm.CSharp
                 {
                     if (underlyingsPerHistory[i].SetEquals(underlyingsPerHistory[j]))
                     {
-                        throw new RegressionTestException($"History results for contractDepthOffset={contractDepthOffsets[i]} and {contractDepthOffsets[j]} contain the same underlying");
+                        throw new RegressionTestException(
+                            $"History results for contractDepthOffset={contractDepthOffsets[i]} and {contractDepthOffsets[j]} contain the same underlying"
+                        );
                     }
                 }
             }
@@ -108,10 +134,14 @@ namespace QuantConnect.Algorithm.CSharp
             // Check that prices at each time are different for different contract depth offsets
             for (int j = 0; j < historyResults[0].Count; j++)
             {
-                var closePrices = historyResults.Select(hr => hr[j].Bars.Values.SingleOrDefault(new TradeBar()).Close).ToHashSet();
+                var closePrices = historyResults
+                    .Select(hr => hr[j].Bars.Values.SingleOrDefault(new TradeBar()).Close)
+                    .ToHashSet();
                 if (closePrices.Count != contractDepthOffsets.Count)
                 {
-                    throw new RegressionTestException($"History results close prices should have been different for each contract depth offset at each time");
+                    throw new RegressionTestException(
+                        $"History results close prices should have been different for each contract depth offset at each time"
+                    );
                 }
             }
         }
@@ -144,35 +174,36 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// This is used by the regression test system to indicate what the expected statistics are from running the algorithm
         /// </summary>
-        public Dictionary<string, string> ExpectedStatistics => new Dictionary<string, string>
-        {
-            {"Total Orders", "0"},
-            {"Average Win", "0%"},
-            {"Average Loss", "0%"},
-            {"Compounding Annual Return", "0%"},
-            {"Drawdown", "0%"},
-            {"Expectancy", "0"},
-            {"Start Equity", "100000"},
-            {"End Equity", "100000"},
-            {"Net Profit", "0%"},
-            {"Sharpe Ratio", "0"},
-            {"Sortino Ratio", "0"},
-            {"Probabilistic Sharpe Ratio", "0%"},
-            {"Loss Rate", "0%"},
-            {"Win Rate", "0%"},
-            {"Profit-Loss Ratio", "0"},
-            {"Alpha", "0"},
-            {"Beta", "0"},
-            {"Annual Standard Deviation", "0"},
-            {"Annual Variance", "0"},
-            {"Information Ratio", "-3.681"},
-            {"Tracking Error", "0.086"},
-            {"Treynor Ratio", "0"},
-            {"Total Fees", "$0.00"},
-            {"Estimated Strategy Capacity", "$0"},
-            {"Lowest Capacity Asset", ""},
-            {"Portfolio Turnover", "0%"},
-            {"OrderListHash", "d41d8cd98f00b204e9800998ecf8427e"}
-        };
+        public Dictionary<string, string> ExpectedStatistics =>
+            new Dictionary<string, string>
+            {
+                { "Total Orders", "0" },
+                { "Average Win", "0%" },
+                { "Average Loss", "0%" },
+                { "Compounding Annual Return", "0%" },
+                { "Drawdown", "0%" },
+                { "Expectancy", "0" },
+                { "Start Equity", "100000" },
+                { "End Equity", "100000" },
+                { "Net Profit", "0%" },
+                { "Sharpe Ratio", "0" },
+                { "Sortino Ratio", "0" },
+                { "Probabilistic Sharpe Ratio", "0%" },
+                { "Loss Rate", "0%" },
+                { "Win Rate", "0%" },
+                { "Profit-Loss Ratio", "0" },
+                { "Alpha", "0" },
+                { "Beta", "0" },
+                { "Annual Standard Deviation", "0" },
+                { "Annual Variance", "0" },
+                { "Information Ratio", "-3.681" },
+                { "Tracking Error", "0.086" },
+                { "Treynor Ratio", "0" },
+                { "Total Fees", "$0.00" },
+                { "Estimated Strategy Capacity", "$0" },
+                { "Lowest Capacity Asset", "" },
+                { "Portfolio Turnover", "0%" },
+                { "OrderListHash", "d41d8cd98f00b204e9800998ecf8427e" }
+            };
     }
 }

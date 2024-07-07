@@ -13,9 +13,9 @@
  * limitations under the License.
 */
 
+using System.Collections.Generic;
 using Newtonsoft.Json;
 using NUnit.Framework;
-using System.Collections.Generic;
 using QuantConnect.Optimizer.Parameters;
 
 namespace QuantConnect.Tests.API
@@ -23,7 +23,8 @@ namespace QuantConnect.Tests.API
     [TestFixture]
     public class ParameterSetJsonConverterTests
     {
-        private const string ValidSerialization = "{\"parameterSet\":{\"pinocho\":\"19\",\"pepe\":\"-1\"}}";
+        private const string ValidSerialization =
+            "{\"parameterSet\":{\"pinocho\":\"19\",\"pepe\":\"-1\"}}";
 
         [Test]
         public void SerializationNulls()
@@ -37,12 +38,10 @@ namespace QuantConnect.Tests.API
         [Test]
         public void Serialization()
         {
-            var parameterSet = new ParameterSet(18,
-                new Dictionary<string, string>
-                {
-                    { "pinocho", "19" },
-                    { "pepe", "-1" }
-                });
+            var parameterSet = new ParameterSet(
+                18,
+                new Dictionary<string, string> { { "pinocho", "19" }, { "pepe", "-1" } }
+            );
 
             var serialized = JsonConvert.SerializeObject(parameterSet);
 

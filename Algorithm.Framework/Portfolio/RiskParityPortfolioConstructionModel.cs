@@ -48,15 +48,22 @@ namespace QuantConnect.Algorithm.Framework.Portfolio
         /// <param name="period">The time interval of history price to calculate the weight</param>
         /// <param name="resolution">The resolution of the history price</param>
         /// <param name="optimizer">The portfolio optimization algorithm. If the algorithm is not provided then the default will be mean-variance optimization.</param>
-        public RiskParityPortfolioConstructionModel(IDateRule rebalancingDateRules,
+        public RiskParityPortfolioConstructionModel(
+            IDateRule rebalancingDateRules,
             PortfolioBias portfolioBias = PortfolioBias.LongShort,
             int lookback = 1,
             int period = 252,
             Resolution resolution = Resolution.Daily,
-            IPortfolioOptimizer optimizer = null)
-            : this(rebalancingDateRules.ToFunc(), portfolioBias, lookback, period, resolution, optimizer)
-        {
-        }
+            IPortfolioOptimizer optimizer = null
+        )
+            : this(
+                rebalancingDateRules.ToFunc(),
+                portfolioBias,
+                lookback,
+                period,
+                resolution,
+                optimizer
+            ) { }
 
         /// <summary>
         /// Initialize the model
@@ -67,15 +74,22 @@ namespace QuantConnect.Algorithm.Framework.Portfolio
         /// <param name="period">The time interval of history price to calculate the weight</param>
         /// <param name="resolution">The resolution of the history price</param>
         /// <param name="optimizer">The portfolio optimization algorithm. If the algorithm is not provided then the default will be mean-variance optimization.</param>
-        public RiskParityPortfolioConstructionModel(Resolution rebalanceResolution = Resolution.Daily,
+        public RiskParityPortfolioConstructionModel(
+            Resolution rebalanceResolution = Resolution.Daily,
             PortfolioBias portfolioBias = PortfolioBias.LongShort,
             int lookback = 1,
             int period = 252,
             Resolution resolution = Resolution.Daily,
-            IPortfolioOptimizer optimizer = null)
-            : this(rebalanceResolution.ToTimeSpan(), portfolioBias, lookback, period, resolution, optimizer)
-        {
-        }
+            IPortfolioOptimizer optimizer = null
+        )
+            : this(
+                rebalanceResolution.ToTimeSpan(),
+                portfolioBias,
+                lookback,
+                period,
+                resolution,
+                optimizer
+            ) { }
 
         /// <summary>
         /// Initialize the model
@@ -86,15 +100,16 @@ namespace QuantConnect.Algorithm.Framework.Portfolio
         /// <param name="period">The time interval of history price to calculate the weight</param>
         /// <param name="resolution">The resolution of the history price</param>
         /// <param name="optimizer">The portfolio optimization algorithm. If the algorithm is not provided then the default will be mean-variance optimization.</param>
-        public RiskParityPortfolioConstructionModel(TimeSpan timeSpan,
+        public RiskParityPortfolioConstructionModel(
+            TimeSpan timeSpan,
             PortfolioBias portfolioBias = PortfolioBias.LongShort,
             int lookback = 1,
             int period = 252,
             Resolution resolution = Resolution.Daily,
-            IPortfolioOptimizer optimizer = null)
+            IPortfolioOptimizer optimizer = null
+        )
             : this(dt => dt.Add(timeSpan), portfolioBias, lookback, period, resolution, optimizer)
-        {
-        }
+        { }
 
         /// <summary>
         /// Initialize the model
@@ -111,13 +126,22 @@ namespace QuantConnect.Algorithm.Framework.Portfolio
         /// <remarks>This is required since python net can not convert python methods into func nor resolve the correct
         /// constructor for the date rules parameter.
         /// For performance we prefer python algorithms using the C# implementation</remarks>
-        public RiskParityPortfolioConstructionModel(PyObject rebalance,
+        public RiskParityPortfolioConstructionModel(
+            PyObject rebalance,
             PortfolioBias portfolioBias = PortfolioBias.LongShort,
             int lookback = 1,
             int period = 252,
             Resolution resolution = Resolution.Daily,
-            IPortfolioOptimizer optimizer = null)
-            : this((Func<DateTime, DateTime?>)null, portfolioBias, lookback, period, resolution, optimizer)
+            IPortfolioOptimizer optimizer = null
+        )
+            : this(
+                (Func<DateTime, DateTime?>)null,
+                portfolioBias,
+                lookback,
+                period,
+                resolution,
+                optimizer
+            )
         {
             SetRebalancingFunc(rebalance);
         }
@@ -132,20 +156,24 @@ namespace QuantConnect.Algorithm.Framework.Portfolio
         /// <param name="period">The time interval of history price to calculate the weight</param>
         /// <param name="resolution">The resolution of the history price</param>
         /// <param name="optimizer">The portfolio optimization algorithm. If the algorithm is not provided then the default will be mean-variance optimization.</param>
-        public RiskParityPortfolioConstructionModel(Func<DateTime, DateTime> rebalancingFunc,
+        public RiskParityPortfolioConstructionModel(
+            Func<DateTime, DateTime> rebalancingFunc,
             PortfolioBias portfolioBias = PortfolioBias.LongShort,
             int lookback = 1,
             int period = 252,
             Resolution resolution = Resolution.Daily,
-            IPortfolioOptimizer optimizer = null)
-            : this(rebalancingFunc != null ? (Func<DateTime, DateTime?>)(timeUtc => rebalancingFunc(timeUtc)) : null,
+            IPortfolioOptimizer optimizer = null
+        )
+            : this(
+                rebalancingFunc != null
+                    ? (Func<DateTime, DateTime?>)(timeUtc => rebalancingFunc(timeUtc))
+                    : null,
                 portfolioBias,
                 lookback,
                 period,
                 resolution,
-                optimizer)
-        {
-        }
+                optimizer
+            ) { }
 
         /// <summary>
         /// Initialize the model
@@ -158,17 +186,21 @@ namespace QuantConnect.Algorithm.Framework.Portfolio
         /// <param name="period">The time interval of history price to calculate the weight</param>
         /// <param name="resolution">The resolution of the history price</param>
         /// <param name="optimizer">The portfolio optimization algorithm. If the algorithm is not provided then the default will be mean-variance optimization.</param>
-        public RiskParityPortfolioConstructionModel(Func<DateTime, DateTime?> rebalancingFunc,
+        public RiskParityPortfolioConstructionModel(
+            Func<DateTime, DateTime?> rebalancingFunc,
             PortfolioBias portfolioBias = PortfolioBias.LongShort,
             int lookback = 1,
             int period = 252,
             Resolution resolution = Resolution.Daily,
-            IPortfolioOptimizer optimizer = null)
+            IPortfolioOptimizer optimizer = null
+        )
             : base(rebalancingFunc)
         {
             if (portfolioBias == PortfolioBias.Short)
             {
-                throw new ArgumentException("Long position must be allowed in RiskParityPortfolioConstructionModel.");
+                throw new ArgumentException(
+                    "Long position must be allowed in RiskParityPortfolioConstructionModel."
+                );
             }
 
             _lookback = lookback;
@@ -185,7 +217,9 @@ namespace QuantConnect.Algorithm.Framework.Portfolio
         /// </summary>
         /// <param name="activeInsights">The active insights to generate a target for</param>
         /// <returns>A target percent for each insight</returns>
-        protected override Dictionary<Insight, double> DetermineTargetPercent(List<Insight> activeInsights)
+        protected override Dictionary<Insight, double> DetermineTargetPercent(
+            List<Insight> activeInsights
+        )
         {
             var targets = new Dictionary<Insight, double>();
 
@@ -251,7 +285,12 @@ namespace QuantConnect.Algorithm.Framework.Portfolio
             }
 
             // warmup our indicators by pushing history through the consolidators
-            algorithm.History(changes.AddedSecurities.Select(security => security.Symbol), _lookback * _period, _resolution)
+            algorithm
+                .History(
+                    changes.AddedSecurities.Select(security => security.Symbol),
+                    _lookback * _period,
+                    _resolution
+                )
                 .PushThrough(bar =>
                 {
                     ReturnsSymbolData symbolData;

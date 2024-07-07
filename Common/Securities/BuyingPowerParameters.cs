@@ -43,7 +43,11 @@ namespace QuantConnect.Securities
         /// <param name="portfolio">The algorithm's portfolio</param>
         /// <param name="security">The security</param>
         /// <param name="direction">The direction to compute buying power in</param>
-        public BuyingPowerParameters(SecurityPortfolioManager portfolio, Security security, OrderDirection direction)
+        public BuyingPowerParameters(
+            SecurityPortfolioManager portfolio,
+            Security security,
+            OrderDirection direction
+        )
         {
             Portfolio = portfolio;
             Security = security;

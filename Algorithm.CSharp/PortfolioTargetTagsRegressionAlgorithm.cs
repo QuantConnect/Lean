@@ -27,7 +27,9 @@ namespace QuantConnect.Algorithm.CSharp
     /// <summary>
     /// Algorithm demonstrating the portfolio target tags usage
     /// </summary>
-    public class PortfolioTargetTagsRegressionAlgorithm : QCAlgorithm, IRegressionAlgorithmDefinition
+    public class PortfolioTargetTagsRegressionAlgorithm
+        : QCAlgorithm,
+            IRegressionAlgorithmDefinition
     {
         private bool _targetsTagChecked;
 
@@ -37,8 +39,20 @@ namespace QuantConnect.Algorithm.CSharp
             SetEndDate(2013, 10, 11);
             SetCash(100000);
 
-            SetUniverseSelection(new ManualUniverseSelectionModel(QuantConnect.Symbol.Create("SPY", SecurityType.Equity, Market.USA)));
-            SetAlpha(new ConstantAlphaModel(InsightType.Price, InsightDirection.Up, TimeSpan.FromMinutes(20), 0.025, null));
+            SetUniverseSelection(
+                new ManualUniverseSelectionModel(
+                    QuantConnect.Symbol.Create("SPY", SecurityType.Equity, Market.USA)
+                )
+            );
+            SetAlpha(
+                new ConstantAlphaModel(
+                    InsightType.Price,
+                    InsightDirection.Up,
+                    TimeSpan.FromMinutes(20),
+                    0.025,
+                    null
+                )
+            );
 
             SetPortfolioConstruction(new CustomPortfolioConstructionModel());
             SetExecution(new CustomExecutionModel(() => _targetsTagChecked = true));
@@ -55,16 +69,22 @@ namespace QuantConnect.Algorithm.CSharp
 
         private class CustomPortfolioConstructionModel : EqualWeightingPortfolioConstructionModel
         {
-            public CustomPortfolioConstructionModel() : base(Resolution.Daily)
-            {
-            }
+            public CustomPortfolioConstructionModel()
+                : base(Resolution.Daily) { }
 
-            public override IEnumerable<IPortfolioTarget> CreateTargets(QCAlgorithm algorithm, Insight[] insights)
+            public override IEnumerable<IPortfolioTarget> CreateTargets(
+                QCAlgorithm algorithm,
+                Insight[] insights
+            )
             {
                 var targets = base.CreateTargets(algorithm, insights);
                 foreach (var target in targets)
                 {
-                    yield return new PortfolioTarget(target.Symbol, target.Quantity, tag: GeneratePortfolioTargetTag(target));
+                    yield return new PortfolioTarget(
+                        target.Symbol,
+                        target.Quantity,
+                        tag: GeneratePortfolioTargetTag(target)
+                    );
                 }
             }
 
@@ -76,17 +96,22 @@ namespace QuantConnect.Algorithm.CSharp
 
         private class CustomRiskManagementModel : MaximumDrawdownPercentPerSecurity
         {
-            public CustomRiskManagementModel() : base(0.01m)
-            {
-            }
+            public CustomRiskManagementModel()
+                : base(0.01m) { }
 
-            public override IEnumerable<IPortfolioTarget> ManageRisk(QCAlgorithm algorithm, IPortfolioTarget[] targets)
+            public override IEnumerable<IPortfolioTarget> ManageRisk(
+                QCAlgorithm algorithm,
+                IPortfolioTarget[] targets
+            )
             {
                 var riskManagedTargets = base.ManageRisk(algorithm, targets);
                 foreach (var target in riskManagedTargets)
                 {
-                    yield return new PortfolioTarget(target.Symbol, target.Quantity,
-                        tag: CustomPortfolioConstructionModel.GeneratePortfolioTargetTag(target));
+                    yield return new PortfolioTarget(
+                        target.Symbol,
+                        target.Quantity,
+                        tag: CustomPortfolioConstructionModel.GeneratePortfolioTargetTag(target)
+                    );
                 }
             }
         }
@@ -109,10 +134,14 @@ namespace QuantConnect.Algorithm.CSharp
 
                 foreach (var target in targets)
                 {
-                    var expectedTag = CustomPortfolioConstructionModel.GeneratePortfolioTargetTag(target);
+                    var expectedTag = CustomPortfolioConstructionModel.GeneratePortfolioTargetTag(
+                        target
+                    );
                     if (target.Tag != expectedTag)
                     {
-                        throw new RegressionTestException($"Unexpected portfolio target tag: {target.Tag} - Expected: {expectedTag}");
+                        throw new RegressionTestException(
+                            $"Unexpected portfolio target tag: {target.Tag} - Expected: {expectedTag}"
+                        );
                     }
                 }
 
@@ -128,7 +157,8 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// This is used by the regression test system to indicate which languages this algorithm is written in.
         /// </summary>
-        public virtual List<Language> Languages { get; } = new() { Language.CSharp, Language.Python };
+        public virtual List<Language> Languages { get; } =
+            new() { Language.CSharp, Language.Python };
 
         /// <summary>
         /// Data Points count of all timeslices of algorithm
@@ -148,35 +178,36 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// This is used by the regression test system to indicate what the expected statistics are from running the algorithm
         /// </summary>
-        public Dictionary<string, string> ExpectedStatistics => new Dictionary<string, string>
-        {
-            {"Total Orders", "3"},
-            {"Average Win", "0%"},
-            {"Average Loss", "-1.01%"},
-            {"Compounding Annual Return", "261.134%"},
-            {"Drawdown", "2.200%"},
-            {"Expectancy", "-1"},
-            {"Start Equity", "100000"},
-            {"End Equity", "101655.30"},
-            {"Net Profit", "1.655%"},
-            {"Sharpe Ratio", "8.472"},
-            {"Sortino Ratio", "0"},
-            {"Probabilistic Sharpe Ratio", "66.840%"},
-            {"Loss Rate", "100%"},
-            {"Win Rate", "0%"},
-            {"Profit-Loss Ratio", "0"},
-            {"Alpha", "-0.091"},
-            {"Beta", "1.006"},
-            {"Annual Standard Deviation", "0.224"},
-            {"Annual Variance", "0.05"},
-            {"Information Ratio", "-33.445"},
-            {"Tracking Error", "0.002"},
-            {"Treynor Ratio", "1.885"},
-            {"Total Fees", "$10.32"},
-            {"Estimated Strategy Capacity", "$27000000.00"},
-            {"Lowest Capacity Asset", "SPY R735QTJ8XC9X"},
-            {"Portfolio Turnover", "59.86%"},
-            {"OrderListHash", "f209ed42701b0419858e0100595b40c0"}
-        };
+        public Dictionary<string, string> ExpectedStatistics =>
+            new Dictionary<string, string>
+            {
+                { "Total Orders", "3" },
+                { "Average Win", "0%" },
+                { "Average Loss", "-1.01%" },
+                { "Compounding Annual Return", "261.134%" },
+                { "Drawdown", "2.200%" },
+                { "Expectancy", "-1" },
+                { "Start Equity", "100000" },
+                { "End Equity", "101655.30" },
+                { "Net Profit", "1.655%" },
+                { "Sharpe Ratio", "8.472" },
+                { "Sortino Ratio", "0" },
+                { "Probabilistic Sharpe Ratio", "66.840%" },
+                { "Loss Rate", "100%" },
+                { "Win Rate", "0%" },
+                { "Profit-Loss Ratio", "0" },
+                { "Alpha", "-0.091" },
+                { "Beta", "1.006" },
+                { "Annual Standard Deviation", "0.224" },
+                { "Annual Variance", "0.05" },
+                { "Information Ratio", "-33.445" },
+                { "Tracking Error", "0.002" },
+                { "Treynor Ratio", "1.885" },
+                { "Total Fees", "$10.32" },
+                { "Estimated Strategy Capacity", "$27000000.00" },
+                { "Lowest Capacity Asset", "SPY R735QTJ8XC9X" },
+                { "Portfolio Turnover", "59.86%" },
+                { "OrderListHash", "f209ed42701b0419858e0100595b40c0" }
+            };
     }
 }

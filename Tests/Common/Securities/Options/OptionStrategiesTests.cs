@@ -16,7 +16,6 @@
 using System;
 using System.Linq;
 using NUnit.Framework;
-
 using QuantConnect.Securities.Option;
 using QuantConnect.Securities.Option.StrategyMatcher;
 
@@ -60,7 +59,11 @@ namespace QuantConnect.Tests.Common.Securities.Options
             var strike = 350m;
             var expiration = new DateTime(2023, 08, 18);
 
-            var strategy = OptionStrategies.ProtectiveCall(canonicalOptionSymbol, strike, expiration);
+            var strategy = OptionStrategies.ProtectiveCall(
+                canonicalOptionSymbol,
+                strike,
+                expiration
+            );
 
             Assert.AreEqual(OptionStrategyDefinitions.ProtectiveCall.Name, strategy.Name);
             Assert.AreEqual(underlying, strategy.Underlying);
@@ -114,7 +117,11 @@ namespace QuantConnect.Tests.Common.Securities.Options
             var strike = 350m;
             var expiration = new DateTime(2023, 08, 18);
 
-            var strategy = OptionStrategies.ProtectivePut(canonicalOptionSymbol, strike, expiration);
+            var strategy = OptionStrategies.ProtectivePut(
+                canonicalOptionSymbol,
+                strike,
+                expiration
+            );
 
             Assert.AreEqual(OptionStrategyDefinitions.ProtectivePut.Name, strategy.Name);
             Assert.AreEqual(underlying, strategy.Underlying);
@@ -142,7 +149,12 @@ namespace QuantConnect.Tests.Common.Securities.Options
             var putStrike = 300m;
             var expiration = new DateTime(2023, 08, 18);
 
-            var strategy = OptionStrategies.ProtectiveCollar(canonicalOptionSymbol, callStrike, putStrike, expiration);
+            var strategy = OptionStrategies.ProtectiveCollar(
+                canonicalOptionSymbol,
+                callStrike,
+                putStrike,
+                expiration
+            );
 
             Assert.AreEqual(OptionStrategyDefinitions.ProtectiveCollar.Name, strategy.Name);
             Assert.AreEqual(underlying, strategy.Underlying);
@@ -208,7 +220,11 @@ namespace QuantConnect.Tests.Common.Securities.Options
             var strike = 350m;
             var expiration = new DateTime(2023, 08, 18);
 
-            var strategy = OptionStrategies.ReverseConversion(canonicalOptionSymbol, strike, expiration);
+            var strategy = OptionStrategies.ReverseConversion(
+                canonicalOptionSymbol,
+                strike,
+                expiration
+            );
 
             Assert.AreEqual(OptionStrategyDefinitions.ReverseConversion.Name, strategy.Name);
             Assert.AreEqual(underlying, strategy.Underlying);
@@ -292,7 +308,11 @@ namespace QuantConnect.Tests.Common.Securities.Options
             var strike = 350m;
             var expiration = new DateTime(2023, 08, 18);
 
-            var strategy = OptionStrategies.ShortStraddle(canonicalOptionSymbol, strike, expiration);
+            var strategy = OptionStrategies.ShortStraddle(
+                canonicalOptionSymbol,
+                strike,
+                expiration
+            );
 
             Assert.AreEqual(OptionStrategyDefinitions.ShortStraddle.Name, strategy.Name);
             Assert.AreEqual(underlying, strategy.Underlying);
@@ -320,12 +340,28 @@ namespace QuantConnect.Tests.Common.Securities.Options
             // Same strikes
             var callStrike = 350m;
             var putStrike = 350m;
-            Assert.Throws<ArgumentException>(() => OptionStrategies.Strangle(canonicalOptionSymbol, callStrike, putStrike, expiration));
+            Assert.Throws<ArgumentException>(
+                () =>
+                    OptionStrategies.Strangle(
+                        canonicalOptionSymbol,
+                        callStrike,
+                        putStrike,
+                        expiration
+                    )
+            );
 
             // Call strike < put strike
             callStrike = 340m;
             putStrike = 350m;
-            Assert.Throws<ArgumentException>(() => OptionStrategies.Strangle(canonicalOptionSymbol, callStrike, putStrike, expiration));
+            Assert.Throws<ArgumentException>(
+                () =>
+                    OptionStrategies.Strangle(
+                        canonicalOptionSymbol,
+                        callStrike,
+                        putStrike,
+                        expiration
+                    )
+            );
         }
 
         [Test]
@@ -337,7 +373,12 @@ namespace QuantConnect.Tests.Common.Securities.Options
             var putStrike = 340m;
             var expiration = new DateTime(2023, 08, 18);
 
-            var strategy = OptionStrategies.Strangle(canonicalOptionSymbol, callStrike, putStrike, expiration);
+            var strategy = OptionStrategies.Strangle(
+                canonicalOptionSymbol,
+                callStrike,
+                putStrike,
+                expiration
+            );
 
             Assert.AreEqual(OptionStrategyDefinitions.Strangle.Name, strategy.Name);
             Assert.AreEqual(underlying, strategy.Underlying);
@@ -365,7 +406,12 @@ namespace QuantConnect.Tests.Common.Securities.Options
             var putStrike = 340m;
             var expiration = new DateTime(2023, 08, 18);
 
-            var strategy = OptionStrategies.ShortStrangle(canonicalOptionSymbol, callStrike, putStrike, expiration);
+            var strategy = OptionStrategies.ShortStrangle(
+                canonicalOptionSymbol,
+                callStrike,
+                putStrike,
+                expiration
+            );
 
             Assert.AreEqual(OptionStrategyDefinitions.ShortStrangle.Name, strategy.Name);
             Assert.AreEqual(underlying, strategy.Underlying);
@@ -421,21 +467,77 @@ namespace QuantConnect.Tests.Common.Securities.Options
 
             // Unordered strikes
             Assert.Throws<ArgumentException>(
-                () => OptionStrategies.ButterflyCall(canonicalOptionSymbol, lowerStrike, middleStrike, higherStrike, expiration));
+                () =>
+                    OptionStrategies.ButterflyCall(
+                        canonicalOptionSymbol,
+                        lowerStrike,
+                        middleStrike,
+                        higherStrike,
+                        expiration
+                    )
+            );
             Assert.Throws<ArgumentException>(
-                () => OptionStrategies.ButterflyCall(canonicalOptionSymbol, lowerStrike, higherStrike, middleStrike, expiration));
+                () =>
+                    OptionStrategies.ButterflyCall(
+                        canonicalOptionSymbol,
+                        lowerStrike,
+                        higherStrike,
+                        middleStrike,
+                        expiration
+                    )
+            );
             Assert.Throws<ArgumentException>(
-                () => OptionStrategies.ButterflyCall(canonicalOptionSymbol, middleStrike, lowerStrike, higherStrike, expiration));
+                () =>
+                    OptionStrategies.ButterflyCall(
+                        canonicalOptionSymbol,
+                        middleStrike,
+                        lowerStrike,
+                        higherStrike,
+                        expiration
+                    )
+            );
             Assert.Throws<ArgumentException>(
-                () => OptionStrategies.ButterflyCall(canonicalOptionSymbol, middleStrike, higherStrike, lowerStrike, expiration));
+                () =>
+                    OptionStrategies.ButterflyCall(
+                        canonicalOptionSymbol,
+                        middleStrike,
+                        higherStrike,
+                        lowerStrike,
+                        expiration
+                    )
+            );
             Assert.Throws<ArgumentException>(
-                () => OptionStrategies.ButterflyCall(canonicalOptionSymbol, higherStrike, lowerStrike, middleStrike, expiration));
+                () =>
+                    OptionStrategies.ButterflyCall(
+                        canonicalOptionSymbol,
+                        higherStrike,
+                        lowerStrike,
+                        middleStrike,
+                        expiration
+                    )
+            );
 
             // Uneven inter-strike distances
             Assert.Throws<ArgumentException>(
-                () => OptionStrategies.ButterflyCall(canonicalOptionSymbol, lowerStrike, middleStrike + 1, higherStrike, expiration));
+                () =>
+                    OptionStrategies.ButterflyCall(
+                        canonicalOptionSymbol,
+                        lowerStrike,
+                        middleStrike + 1,
+                        higherStrike,
+                        expiration
+                    )
+            );
             Assert.Throws<ArgumentException>(
-                () => OptionStrategies.ButterflyCall(canonicalOptionSymbol, lowerStrike, middleStrike - 1, higherStrike, expiration));
+                () =>
+                    OptionStrategies.ButterflyCall(
+                        canonicalOptionSymbol,
+                        lowerStrike,
+                        middleStrike - 1,
+                        higherStrike,
+                        expiration
+                    )
+            );
         }
 
         [Test]
@@ -448,7 +550,13 @@ namespace QuantConnect.Tests.Common.Securities.Options
             var middleStrike = 325m;
             var expiration = new DateTime(2023, 08, 18);
 
-            var strategy = OptionStrategies.ButterflyCall(canonicalOptionSymbol, higherStrike, middleStrike, lowerStrike, expiration);
+            var strategy = OptionStrategies.ButterflyCall(
+                canonicalOptionSymbol,
+                higherStrike,
+                middleStrike,
+                lowerStrike,
+                expiration
+            );
 
             Assert.AreEqual(OptionStrategyDefinitions.ButterflyCall.Name, strategy.Name);
             Assert.AreEqual(underlying, strategy.Underlying);
@@ -483,7 +591,13 @@ namespace QuantConnect.Tests.Common.Securities.Options
             var middleStrike = 325m;
             var expiration = new DateTime(2023, 08, 18);
 
-            var strategy = OptionStrategies.ShortButterflyCall(canonicalOptionSymbol, higherStrike, middleStrike, lowerStrike, expiration);
+            var strategy = OptionStrategies.ShortButterflyCall(
+                canonicalOptionSymbol,
+                higherStrike,
+                middleStrike,
+                lowerStrike,
+                expiration
+            );
 
             Assert.AreEqual(OptionStrategyDefinitions.ShortButterflyCall.Name, strategy.Name);
             Assert.AreEqual(underlying, strategy.Underlying);
@@ -521,21 +635,77 @@ namespace QuantConnect.Tests.Common.Securities.Options
 
             // Unordered strikes
             Assert.Throws<ArgumentException>(
-                () => OptionStrategies.ButterflyPut(canonicalOptionSymbol, lowerStrike, middleStrike, higherStrike, expiration));
+                () =>
+                    OptionStrategies.ButterflyPut(
+                        canonicalOptionSymbol,
+                        lowerStrike,
+                        middleStrike,
+                        higherStrike,
+                        expiration
+                    )
+            );
             Assert.Throws<ArgumentException>(
-                () => OptionStrategies.ButterflyPut(canonicalOptionSymbol, lowerStrike, higherStrike, middleStrike, expiration));
+                () =>
+                    OptionStrategies.ButterflyPut(
+                        canonicalOptionSymbol,
+                        lowerStrike,
+                        higherStrike,
+                        middleStrike,
+                        expiration
+                    )
+            );
             Assert.Throws<ArgumentException>(
-                () => OptionStrategies.ButterflyPut(canonicalOptionSymbol, middleStrike, lowerStrike, higherStrike, expiration));
+                () =>
+                    OptionStrategies.ButterflyPut(
+                        canonicalOptionSymbol,
+                        middleStrike,
+                        lowerStrike,
+                        higherStrike,
+                        expiration
+                    )
+            );
             Assert.Throws<ArgumentException>(
-                () => OptionStrategies.ButterflyPut(canonicalOptionSymbol, middleStrike, higherStrike, lowerStrike, expiration));
+                () =>
+                    OptionStrategies.ButterflyPut(
+                        canonicalOptionSymbol,
+                        middleStrike,
+                        higherStrike,
+                        lowerStrike,
+                        expiration
+                    )
+            );
             Assert.Throws<ArgumentException>(
-                () => OptionStrategies.ButterflyPut(canonicalOptionSymbol, higherStrike, lowerStrike, middleStrike, expiration));
+                () =>
+                    OptionStrategies.ButterflyPut(
+                        canonicalOptionSymbol,
+                        higherStrike,
+                        lowerStrike,
+                        middleStrike,
+                        expiration
+                    )
+            );
 
             // Uneven inter-strike distances
             Assert.Throws<ArgumentException>(
-                () => OptionStrategies.ButterflyPut(canonicalOptionSymbol, lowerStrike, middleStrike + 1, higherStrike, expiration));
+                () =>
+                    OptionStrategies.ButterflyPut(
+                        canonicalOptionSymbol,
+                        lowerStrike,
+                        middleStrike + 1,
+                        higherStrike,
+                        expiration
+                    )
+            );
             Assert.Throws<ArgumentException>(
-                () => OptionStrategies.ButterflyPut(canonicalOptionSymbol, lowerStrike, middleStrike - 1, higherStrike, expiration));
+                () =>
+                    OptionStrategies.ButterflyPut(
+                        canonicalOptionSymbol,
+                        lowerStrike,
+                        middleStrike - 1,
+                        higherStrike,
+                        expiration
+                    )
+            );
         }
 
         [Test]
@@ -548,7 +718,13 @@ namespace QuantConnect.Tests.Common.Securities.Options
             var middleStrike = 325m;
             var expiration = new DateTime(2023, 08, 18);
 
-            var strategy = OptionStrategies.ButterflyPut(canonicalOptionSymbol, higherStrike, middleStrike, lowerStrike, expiration);
+            var strategy = OptionStrategies.ButterflyPut(
+                canonicalOptionSymbol,
+                higherStrike,
+                middleStrike,
+                lowerStrike,
+                expiration
+            );
 
             Assert.AreEqual(OptionStrategyDefinitions.ButterflyPut.Name, strategy.Name);
             Assert.AreEqual(underlying, strategy.Underlying);
@@ -583,7 +759,13 @@ namespace QuantConnect.Tests.Common.Securities.Options
             var middleStrike = 325m;
             var expiration = new DateTime(2023, 08, 18);
 
-            var strategy = OptionStrategies.ShortButterflyPut(canonicalOptionSymbol, higherStrike, middleStrike, lowerStrike, expiration);
+            var strategy = OptionStrategies.ShortButterflyPut(
+                canonicalOptionSymbol,
+                higherStrike,
+                middleStrike,
+                lowerStrike,
+                expiration
+            );
 
             Assert.AreEqual(OptionStrategyDefinitions.ShortButterflyPut.Name, strategy.Name);
             Assert.AreEqual(underlying, strategy.Underlying);
@@ -619,22 +801,63 @@ namespace QuantConnect.Tests.Common.Securities.Options
 
             // Invalid expiration dates
             Assert.Throws<ArgumentException>(
-                () => OptionStrategies.CallCalendarSpread(canonicalOptionSymbol, strike, DateTime.MinValue, farExpiration));
+                () =>
+                    OptionStrategies.CallCalendarSpread(
+                        canonicalOptionSymbol,
+                        strike,
+                        DateTime.MinValue,
+                        farExpiration
+                    )
+            );
             Assert.Throws<ArgumentException>(
-                () => OptionStrategies.CallCalendarSpread(canonicalOptionSymbol, strike, DateTime.MaxValue, farExpiration));
+                () =>
+                    OptionStrategies.CallCalendarSpread(
+                        canonicalOptionSymbol,
+                        strike,
+                        DateTime.MaxValue,
+                        farExpiration
+                    )
+            );
             Assert.Throws<ArgumentException>(
-                () => OptionStrategies.CallCalendarSpread(canonicalOptionSymbol, strike, nearExpiration, DateTime.MinValue));
+                () =>
+                    OptionStrategies.CallCalendarSpread(
+                        canonicalOptionSymbol,
+                        strike,
+                        nearExpiration,
+                        DateTime.MinValue
+                    )
+            );
             Assert.Throws<ArgumentException>(
-                () => OptionStrategies.CallCalendarSpread(canonicalOptionSymbol, strike, nearExpiration, DateTime.MaxValue));
+                () =>
+                    OptionStrategies.CallCalendarSpread(
+                        canonicalOptionSymbol,
+                        strike,
+                        nearExpiration,
+                        DateTime.MaxValue
+                    )
+            );
 
             // Switched expiration dates
             Assert.Throws<ArgumentException>(
-                () => OptionStrategies.CallCalendarSpread(canonicalOptionSymbol, strike, farExpiration, nearExpiration));
+                () =>
+                    OptionStrategies.CallCalendarSpread(
+                        canonicalOptionSymbol,
+                        strike,
+                        farExpiration,
+                        nearExpiration
+                    )
+            );
 
             // Same expiration dates
             Assert.Throws<ArgumentException>(
-                () => OptionStrategies.CallCalendarSpread(canonicalOptionSymbol, strike, nearExpiration, nearExpiration));
-
+                () =>
+                    OptionStrategies.CallCalendarSpread(
+                        canonicalOptionSymbol,
+                        strike,
+                        nearExpiration,
+                        nearExpiration
+                    )
+            );
         }
 
         [Test]
@@ -646,7 +869,12 @@ namespace QuantConnect.Tests.Common.Securities.Options
             var nearExpiration = new DateTime(2023, 08, 18);
             var farExpiration = new DateTime(2023, 09, 18);
 
-            var strategy = OptionStrategies.CallCalendarSpread(canonicalOptionSymbol, strike, nearExpiration, farExpiration);
+            var strategy = OptionStrategies.CallCalendarSpread(
+                canonicalOptionSymbol,
+                strike,
+                nearExpiration,
+                farExpiration
+            );
 
             Assert.AreEqual(OptionStrategyDefinitions.CallCalendarSpread.Name, strategy.Name);
             Assert.AreEqual(underlying, strategy.Underlying);
@@ -675,7 +903,12 @@ namespace QuantConnect.Tests.Common.Securities.Options
             var nearExpiration = new DateTime(2023, 08, 18);
             var farExpiration = new DateTime(2023, 09, 18);
 
-            var strategy = OptionStrategies.ShortCallCalendarSpread(canonicalOptionSymbol, strike, nearExpiration, farExpiration);
+            var strategy = OptionStrategies.ShortCallCalendarSpread(
+                canonicalOptionSymbol,
+                strike,
+                nearExpiration,
+                farExpiration
+            );
 
             Assert.AreEqual(OptionStrategyDefinitions.ShortCallCalendarSpread.Name, strategy.Name);
             Assert.AreEqual(underlying, strategy.Underlying);
@@ -706,22 +939,63 @@ namespace QuantConnect.Tests.Common.Securities.Options
 
             // Invalid expiration dates
             Assert.Throws<ArgumentException>(
-                () => OptionStrategies.PutCalendarSpread(canonicalOptionSymbol, strike, DateTime.MinValue, farExpiration));
+                () =>
+                    OptionStrategies.PutCalendarSpread(
+                        canonicalOptionSymbol,
+                        strike,
+                        DateTime.MinValue,
+                        farExpiration
+                    )
+            );
             Assert.Throws<ArgumentException>(
-                () => OptionStrategies.PutCalendarSpread(canonicalOptionSymbol, strike, DateTime.MaxValue, farExpiration));
+                () =>
+                    OptionStrategies.PutCalendarSpread(
+                        canonicalOptionSymbol,
+                        strike,
+                        DateTime.MaxValue,
+                        farExpiration
+                    )
+            );
             Assert.Throws<ArgumentException>(
-                () => OptionStrategies.PutCalendarSpread(canonicalOptionSymbol, strike, nearExpiration, DateTime.MinValue));
+                () =>
+                    OptionStrategies.PutCalendarSpread(
+                        canonicalOptionSymbol,
+                        strike,
+                        nearExpiration,
+                        DateTime.MinValue
+                    )
+            );
             Assert.Throws<ArgumentException>(
-                () => OptionStrategies.PutCalendarSpread(canonicalOptionSymbol, strike, nearExpiration, DateTime.MaxValue));
+                () =>
+                    OptionStrategies.PutCalendarSpread(
+                        canonicalOptionSymbol,
+                        strike,
+                        nearExpiration,
+                        DateTime.MaxValue
+                    )
+            );
 
             // Switched expiration dates
             Assert.Throws<ArgumentException>(
-                () => OptionStrategies.PutCalendarSpread(canonicalOptionSymbol, strike, farExpiration, nearExpiration));
+                () =>
+                    OptionStrategies.PutCalendarSpread(
+                        canonicalOptionSymbol,
+                        strike,
+                        farExpiration,
+                        nearExpiration
+                    )
+            );
 
             // Same expiration dates
             Assert.Throws<ArgumentException>(
-                () => OptionStrategies.PutCalendarSpread(canonicalOptionSymbol, strike, nearExpiration, nearExpiration));
-
+                () =>
+                    OptionStrategies.PutCalendarSpread(
+                        canonicalOptionSymbol,
+                        strike,
+                        nearExpiration,
+                        nearExpiration
+                    )
+            );
         }
 
         [Test]
@@ -733,7 +1007,12 @@ namespace QuantConnect.Tests.Common.Securities.Options
             var nearExpiration = new DateTime(2023, 08, 18);
             var farExpiration = new DateTime(2023, 09, 18);
 
-            var strategy = OptionStrategies.PutCalendarSpread(canonicalOptionSymbol, strike, nearExpiration, farExpiration);
+            var strategy = OptionStrategies.PutCalendarSpread(
+                canonicalOptionSymbol,
+                strike,
+                nearExpiration,
+                farExpiration
+            );
 
             Assert.AreEqual(OptionStrategyDefinitions.PutCalendarSpread.Name, strategy.Name);
             Assert.AreEqual(underlying, strategy.Underlying);
@@ -762,7 +1041,12 @@ namespace QuantConnect.Tests.Common.Securities.Options
             var nearExpiration = new DateTime(2023, 08, 18);
             var farExpiration = new DateTime(2023, 09, 18);
 
-            var strategy = OptionStrategies.ShortPutCalendarSpread(canonicalOptionSymbol, strike, nearExpiration, farExpiration);
+            var strategy = OptionStrategies.ShortPutCalendarSpread(
+                canonicalOptionSymbol,
+                strike,
+                nearExpiration,
+                farExpiration
+            );
 
             Assert.AreEqual(OptionStrategyDefinitions.ShortPutCalendarSpread.Name, strategy.Name);
             Assert.AreEqual(underlying, strategy.Underlying);
@@ -796,17 +1080,65 @@ namespace QuantConnect.Tests.Common.Securities.Options
 
             // Unordered and non-equal interval strikes
             Assert.Throws<ArgumentException>(
-                () => OptionStrategies.IronButterfly(canonicalOptionSymbol, strike1, strike4, strike2, expiration));
+                () =>
+                    OptionStrategies.IronButterfly(
+                        canonicalOptionSymbol,
+                        strike1,
+                        strike4,
+                        strike2,
+                        expiration
+                    )
+            );
             Assert.Throws<ArgumentException>(
-                () => OptionStrategies.IronButterfly(canonicalOptionSymbol, strike2, strike1, strike4, expiration));
+                () =>
+                    OptionStrategies.IronButterfly(
+                        canonicalOptionSymbol,
+                        strike2,
+                        strike1,
+                        strike4,
+                        expiration
+                    )
+            );
             Assert.Throws<ArgumentException>(
-                () => OptionStrategies.IronButterfly(canonicalOptionSymbol, strike2, strike4, strike1, expiration));
+                () =>
+                    OptionStrategies.IronButterfly(
+                        canonicalOptionSymbol,
+                        strike2,
+                        strike4,
+                        strike1,
+                        expiration
+                    )
+            );
             Assert.Throws<ArgumentException>(
-                () => OptionStrategies.IronButterfly(canonicalOptionSymbol, strike4, strike1, strike2, expiration));
+                () =>
+                    OptionStrategies.IronButterfly(
+                        canonicalOptionSymbol,
+                        strike4,
+                        strike1,
+                        strike2,
+                        expiration
+                    )
+            );
             Assert.Throws<ArgumentException>(
-                () => OptionStrategies.IronButterfly(canonicalOptionSymbol, strike4, strike2, strike1, expiration));
+                () =>
+                    OptionStrategies.IronButterfly(
+                        canonicalOptionSymbol,
+                        strike4,
+                        strike2,
+                        strike1,
+                        expiration
+                    )
+            );
             Assert.Throws<ArgumentException>(
-                () => OptionStrategies.IronButterfly(canonicalOptionSymbol, strike1, strike3, strike4, expiration));
+                () =>
+                    OptionStrategies.IronButterfly(
+                        canonicalOptionSymbol,
+                        strike1,
+                        strike3,
+                        strike4,
+                        expiration
+                    )
+            );
         }
 
         [Test]
@@ -819,7 +1151,13 @@ namespace QuantConnect.Tests.Common.Securities.Options
             var strike3 = 350m;
             var expiration = new DateTime(2023, 08, 18);
 
-            var strategy = OptionStrategies.IronButterfly(canonicalOptionSymbol, strike1, strike2, strike3, expiration);
+            var strategy = OptionStrategies.IronButterfly(
+                canonicalOptionSymbol,
+                strike1,
+                strike2,
+                strike3,
+                expiration
+            );
 
             Assert.AreEqual(OptionStrategyDefinitions.IronButterfly.Name, strategy.Name);
             Assert.AreEqual(underlying, strategy.Underlying);
@@ -833,11 +1171,15 @@ namespace QuantConnect.Tests.Common.Securities.Options
             Assert.AreEqual(expiration, longPutLeg.Expiration);
             Assert.AreEqual(+1, longPutLeg.Quantity);
 
-            var shortPutLeg = strategy.OptionLegs.Single(x => x.Strike == strike2 && x.Right == OptionRight.Put);
+            var shortPutLeg = strategy.OptionLegs.Single(x =>
+                x.Strike == strike2 && x.Right == OptionRight.Put
+            );
             Assert.AreEqual(expiration, shortPutLeg.Expiration);
             Assert.AreEqual(-1, shortPutLeg.Quantity);
 
-            var shortCallLeg = strategy.OptionLegs.Single(x => x.Strike == strike2 && x.Right == OptionRight.Call);
+            var shortCallLeg = strategy.OptionLegs.Single(x =>
+                x.Strike == strike2 && x.Right == OptionRight.Call
+            );
             Assert.AreEqual(expiration, shortCallLeg.Expiration);
             Assert.AreEqual(-1, shortCallLeg.Quantity);
 
@@ -846,7 +1188,6 @@ namespace QuantConnect.Tests.Common.Securities.Options
             Assert.AreEqual(expiration, longCallLeg.Expiration);
             Assert.AreEqual(+1, longCallLeg.Quantity);
         }
-
 
         [Test]
         public void BuildsShortIronButterflyStrategy()
@@ -858,7 +1199,13 @@ namespace QuantConnect.Tests.Common.Securities.Options
             var strike3 = 350m;
             var expiration = new DateTime(2023, 08, 18);
 
-            var strategy = OptionStrategies.ShortIronButterfly(canonicalOptionSymbol, strike1, strike2, strike3, expiration);
+            var strategy = OptionStrategies.ShortIronButterfly(
+                canonicalOptionSymbol,
+                strike1,
+                strike2,
+                strike3,
+                expiration
+            );
 
             Assert.AreEqual(OptionStrategyDefinitions.ShortIronButterfly.Name, strategy.Name);
             Assert.AreEqual(underlying, strategy.Underlying);
@@ -872,11 +1219,15 @@ namespace QuantConnect.Tests.Common.Securities.Options
             Assert.AreEqual(expiration, shortPutLeg.Expiration);
             Assert.AreEqual(-1, shortPutLeg.Quantity);
 
-            var longPutLeg = strategy.OptionLegs.Single(x => x.Strike == strike2 && x.Right == OptionRight.Put);
+            var longPutLeg = strategy.OptionLegs.Single(x =>
+                x.Strike == strike2 && x.Right == OptionRight.Put
+            );
             Assert.AreEqual(expiration, longPutLeg.Expiration);
             Assert.AreEqual(1, longPutLeg.Quantity);
 
-            var longCallLeg = strategy.OptionLegs.Single(x => x.Strike == strike2 && x.Right == OptionRight.Call);
+            var longCallLeg = strategy.OptionLegs.Single(x =>
+                x.Strike == strike2 && x.Right == OptionRight.Call
+            );
             Assert.AreEqual(expiration, longCallLeg.Expiration);
             Assert.AreEqual(1, longCallLeg.Quantity);
 
@@ -885,6 +1236,7 @@ namespace QuantConnect.Tests.Common.Securities.Options
             Assert.AreEqual(expiration, shortCallLeg.Expiration);
             Assert.AreEqual(-1, shortCallLeg.Quantity);
         }
+
         [Test]
         public void FailsBuildingIronCondorStrategy()
         {
@@ -899,15 +1251,60 @@ namespace QuantConnect.Tests.Common.Securities.Options
 
             // Unordered and repeated strikes
             Assert.Throws<ArgumentException>(
-                () => OptionStrategies.IronCondor(canonicalOptionSymbol, strike4, strike3, strike2, strike1, expiration));
+                () =>
+                    OptionStrategies.IronCondor(
+                        canonicalOptionSymbol,
+                        strike4,
+                        strike3,
+                        strike2,
+                        strike1,
+                        expiration
+                    )
+            );
             Assert.Throws<ArgumentException>(
-                () => OptionStrategies.IronCondor(canonicalOptionSymbol, strike1, strike1, strike3, strike4, expiration));
+                () =>
+                    OptionStrategies.IronCondor(
+                        canonicalOptionSymbol,
+                        strike1,
+                        strike1,
+                        strike3,
+                        strike4,
+                        expiration
+                    )
+            );
             Assert.Throws<ArgumentException>(
-                () => OptionStrategies.IronCondor(canonicalOptionSymbol, strike2, strike1, strike3, strike4, expiration));
+                () =>
+                    OptionStrategies.IronCondor(
+                        canonicalOptionSymbol,
+                        strike2,
+                        strike1,
+                        strike3,
+                        strike4,
+                        expiration
+                    )
+            );
             Assert.Throws<ArgumentException>(
-                () => OptionStrategies.IronCondor(canonicalOptionSymbol, strike1, strike3, strike2, strike4, expiration));
+                () =>
+                    OptionStrategies.IronCondor(
+                        canonicalOptionSymbol,
+                        strike1,
+                        strike3,
+                        strike2,
+                        strike4,
+                        expiration
+                    )
+            );
             Assert.Throws<ArgumentException>(
-                () => OptionStrategies.IronCondor(canonicalOptionSymbol, strike1, strike2, strike4, strike3, expiration));
+                () =>
+                    OptionStrategies.IronCondor(
+                        canonicalOptionSymbol,
+                        strike1,
+                        strike2,
+                        strike4,
+                        strike3,
+                        expiration
+                    )
+            );
         }
 
         [Test]
@@ -921,7 +1318,14 @@ namespace QuantConnect.Tests.Common.Securities.Options
             var strike4 = 375m;
             var expiration = new DateTime(2023, 08, 18);
 
-            var strategy = OptionStrategies.IronCondor(canonicalOptionSymbol, strike1, strike2, strike3, strike4, expiration);
+            var strategy = OptionStrategies.IronCondor(
+                canonicalOptionSymbol,
+                strike1,
+                strike2,
+                strike3,
+                strike4,
+                expiration
+            );
 
             Assert.AreEqual(OptionStrategyDefinitions.IronCondor.Name, strategy.Name);
             Assert.AreEqual(underlying, strategy.Underlying);
@@ -962,7 +1366,14 @@ namespace QuantConnect.Tests.Common.Securities.Options
             var strike4 = 375m;
             var expiration = new DateTime(2023, 08, 18);
 
-            var strategy = OptionStrategies.ShortIronCondor(canonicalOptionSymbol, strike1, strike2, strike3, strike4, expiration);
+            var strategy = OptionStrategies.ShortIronCondor(
+                canonicalOptionSymbol,
+                strike1,
+                strike2,
+                strike3,
+                strike4,
+                expiration
+            );
 
             Assert.AreEqual(OptionStrategyDefinitions.ShortIronCondor.Name, strategy.Name);
             Assert.AreEqual(underlying, strategy.Underlying);
@@ -1004,9 +1415,13 @@ namespace QuantConnect.Tests.Common.Securities.Options
 
             // Unordered and repeated strikes
             Assert.Throws<ArgumentException>(
-                () => OptionStrategies.BoxSpread(canonicalOptionSymbol, strike1, strike2, expiration));
+                () =>
+                    OptionStrategies.BoxSpread(canonicalOptionSymbol, strike1, strike2, expiration)
+            );
             Assert.Throws<ArgumentException>(
-                () => OptionStrategies.BoxSpread(canonicalOptionSymbol, strike1, strike1, expiration));
+                () =>
+                    OptionStrategies.BoxSpread(canonicalOptionSymbol, strike1, strike1, expiration)
+            );
         }
 
         [Test]
@@ -1018,7 +1433,12 @@ namespace QuantConnect.Tests.Common.Securities.Options
             var lowerStrike = 300m;
             var expiration = new DateTime(2023, 08, 18);
 
-            var strategy = OptionStrategies.BoxSpread(canonicalOptionSymbol, higherStrike, lowerStrike, expiration);
+            var strategy = OptionStrategies.BoxSpread(
+                canonicalOptionSymbol,
+                higherStrike,
+                lowerStrike,
+                expiration
+            );
 
             Assert.AreEqual(OptionStrategyDefinitions.BoxSpread.Name, strategy.Name);
             Assert.AreEqual(underlying, strategy.Underlying);
@@ -1027,19 +1447,27 @@ namespace QuantConnect.Tests.Common.Securities.Options
             Assert.AreEqual(4, strategy.OptionLegs.Count);
             Assert.AreEqual(0, strategy.UnderlyingLegs.Count);
 
-            var longPutLeg = strategy.OptionLegs.Single(x => x.Right == OptionRight.Put && x.Strike == higherStrike);
+            var longPutLeg = strategy.OptionLegs.Single(x =>
+                x.Right == OptionRight.Put && x.Strike == higherStrike
+            );
             Assert.AreEqual(expiration, longPutLeg.Expiration);
             Assert.AreEqual(1, longPutLeg.Quantity);
 
-            var shortPutLeg = strategy.OptionLegs.Single(x => x.Right == OptionRight.Put && x.Strike == lowerStrike);
+            var shortPutLeg = strategy.OptionLegs.Single(x =>
+                x.Right == OptionRight.Put && x.Strike == lowerStrike
+            );
             Assert.AreEqual(expiration, shortPutLeg.Expiration);
             Assert.AreEqual(-1, shortPutLeg.Quantity);
 
-            var shortCallLeg = strategy.OptionLegs.Single(x => x.Right == OptionRight.Call && x.Strike == higherStrike);
+            var shortCallLeg = strategy.OptionLegs.Single(x =>
+                x.Right == OptionRight.Call && x.Strike == higherStrike
+            );
             Assert.AreEqual(expiration, shortCallLeg.Expiration);
             Assert.AreEqual(-1, shortCallLeg.Quantity);
 
-            var longCallLeg = strategy.OptionLegs.Single(x => x.Right == OptionRight.Call && x.Strike == lowerStrike);
+            var longCallLeg = strategy.OptionLegs.Single(x =>
+                x.Right == OptionRight.Call && x.Strike == lowerStrike
+            );
             Assert.AreEqual(expiration, longCallLeg.Expiration);
             Assert.AreEqual(1, longCallLeg.Quantity);
         }
@@ -1053,7 +1481,12 @@ namespace QuantConnect.Tests.Common.Securities.Options
             var lowerStrike = 300m;
             var expiration = new DateTime(2023, 08, 18);
 
-            var strategy = OptionStrategies.ShortBoxSpread(canonicalOptionSymbol, higherStrike, lowerStrike, expiration);
+            var strategy = OptionStrategies.ShortBoxSpread(
+                canonicalOptionSymbol,
+                higherStrike,
+                lowerStrike,
+                expiration
+            );
 
             Assert.AreEqual(OptionStrategyDefinitions.ShortBoxSpread.Name, strategy.Name);
             Assert.AreEqual(underlying, strategy.Underlying);
@@ -1062,19 +1495,27 @@ namespace QuantConnect.Tests.Common.Securities.Options
             Assert.AreEqual(4, strategy.OptionLegs.Count);
             Assert.AreEqual(0, strategy.UnderlyingLegs.Count);
 
-            var longPutLeg = strategy.OptionLegs.Single(x => x.Right == OptionRight.Put && x.Strike == lowerStrike);
+            var longPutLeg = strategy.OptionLegs.Single(x =>
+                x.Right == OptionRight.Put && x.Strike == lowerStrike
+            );
             Assert.AreEqual(expiration, longPutLeg.Expiration);
             Assert.AreEqual(1, longPutLeg.Quantity);
 
-            var shortPutLeg = strategy.OptionLegs.Single(x => x.Right == OptionRight.Put && x.Strike == higherStrike);
+            var shortPutLeg = strategy.OptionLegs.Single(x =>
+                x.Right == OptionRight.Put && x.Strike == higherStrike
+            );
             Assert.AreEqual(expiration, shortPutLeg.Expiration);
             Assert.AreEqual(-1, shortPutLeg.Quantity);
 
-            var shortCallLeg = strategy.OptionLegs.Single(x => x.Right == OptionRight.Call && x.Strike == lowerStrike);
+            var shortCallLeg = strategy.OptionLegs.Single(x =>
+                x.Right == OptionRight.Call && x.Strike == lowerStrike
+            );
             Assert.AreEqual(expiration, shortCallLeg.Expiration);
             Assert.AreEqual(-1, shortCallLeg.Quantity);
 
-            var longCallLeg = strategy.OptionLegs.Single(x => x.Right == OptionRight.Call && x.Strike == higherStrike);
+            var longCallLeg = strategy.OptionLegs.Single(x =>
+                x.Right == OptionRight.Call && x.Strike == higherStrike
+            );
             Assert.AreEqual(expiration, longCallLeg.Expiration);
             Assert.AreEqual(1, longCallLeg.Quantity);
         }
@@ -1090,21 +1531,63 @@ namespace QuantConnect.Tests.Common.Securities.Options
 
             // Invalid expiration dates
             Assert.Throws<ArgumentException>(
-                () => OptionStrategies.JellyRoll(canonicalOptionSymbol, strike, DateTime.MinValue, farExpiration));
+                () =>
+                    OptionStrategies.JellyRoll(
+                        canonicalOptionSymbol,
+                        strike,
+                        DateTime.MinValue,
+                        farExpiration
+                    )
+            );
             Assert.Throws<ArgumentException>(
-                () => OptionStrategies.JellyRoll(canonicalOptionSymbol, strike, DateTime.MaxValue, farExpiration));
+                () =>
+                    OptionStrategies.JellyRoll(
+                        canonicalOptionSymbol,
+                        strike,
+                        DateTime.MaxValue,
+                        farExpiration
+                    )
+            );
             Assert.Throws<ArgumentException>(
-                () => OptionStrategies.JellyRoll(canonicalOptionSymbol, strike, nearExpiration, DateTime.MinValue));
+                () =>
+                    OptionStrategies.JellyRoll(
+                        canonicalOptionSymbol,
+                        strike,
+                        nearExpiration,
+                        DateTime.MinValue
+                    )
+            );
             Assert.Throws<ArgumentException>(
-                () => OptionStrategies.JellyRoll(canonicalOptionSymbol, strike, nearExpiration, DateTime.MaxValue));
+                () =>
+                    OptionStrategies.JellyRoll(
+                        canonicalOptionSymbol,
+                        strike,
+                        nearExpiration,
+                        DateTime.MaxValue
+                    )
+            );
 
             // Switched expiration dates
             Assert.Throws<ArgumentException>(
-                () => OptionStrategies.JellyRoll(canonicalOptionSymbol, strike, farExpiration, nearExpiration));
+                () =>
+                    OptionStrategies.JellyRoll(
+                        canonicalOptionSymbol,
+                        strike,
+                        farExpiration,
+                        nearExpiration
+                    )
+            );
 
             // Same expiration dates
             Assert.Throws<ArgumentException>(
-                () => OptionStrategies.JellyRoll(canonicalOptionSymbol, strike, nearExpiration, nearExpiration));
+                () =>
+                    OptionStrategies.JellyRoll(
+                        canonicalOptionSymbol,
+                        strike,
+                        nearExpiration,
+                        nearExpiration
+                    )
+            );
         }
 
         [Test]
@@ -1116,7 +1599,12 @@ namespace QuantConnect.Tests.Common.Securities.Options
             var nearExpiration = new DateTime(2023, 08, 18);
             var farExpiration = new DateTime(2023, 09, 18);
 
-            var strategy = OptionStrategies.JellyRoll(canonicalOptionSymbol, strike, nearExpiration, farExpiration);
+            var strategy = OptionStrategies.JellyRoll(
+                canonicalOptionSymbol,
+                strike,
+                nearExpiration,
+                farExpiration
+            );
 
             Assert.AreEqual(OptionStrategyDefinitions.JellyRoll.Name, strategy.Name);
             Assert.AreEqual(underlying, strategy.Underlying);
@@ -1125,23 +1613,27 @@ namespace QuantConnect.Tests.Common.Securities.Options
             Assert.AreEqual(4, strategy.OptionLegs.Count);
             Assert.AreEqual(0, strategy.UnderlyingLegs.Count);
 
-            var nearExpirationCall = strategy.OptionLegs.Single(x => 
-                x.Expiration == nearExpiration && x.Right == OptionRight.Call);
+            var nearExpirationCall = strategy.OptionLegs.Single(x =>
+                x.Expiration == nearExpiration && x.Right == OptionRight.Call
+            );
             Assert.AreEqual(strike, nearExpirationCall.Strike);
             Assert.AreEqual(-1, nearExpirationCall.Quantity);
 
             var farExpirationCall = strategy.OptionLegs.Single(x =>
-                x.Expiration == farExpiration && x.Right == OptionRight.Call);
+                x.Expiration == farExpiration && x.Right == OptionRight.Call
+            );
             Assert.AreEqual(strike, farExpirationCall.Strike);
             Assert.AreEqual(+1, farExpirationCall.Quantity);
 
             var nearExpirationPut = strategy.OptionLegs.Single(x =>
-                x.Expiration == nearExpiration && x.Right == OptionRight.Put);
+                x.Expiration == nearExpiration && x.Right == OptionRight.Put
+            );
             Assert.AreEqual(strike, nearExpirationPut.Strike);
             Assert.AreEqual(+1, nearExpirationPut.Quantity);
 
             var farExpirationPut = strategy.OptionLegs.Single(x =>
-                x.Expiration == farExpiration && x.Right == OptionRight.Put);
+                x.Expiration == farExpiration && x.Right == OptionRight.Put
+            );
             Assert.AreEqual(strike, farExpirationPut.Strike);
             Assert.AreEqual(-1, farExpirationPut.Quantity);
         }
@@ -1155,7 +1647,12 @@ namespace QuantConnect.Tests.Common.Securities.Options
             var nearExpiration = new DateTime(2023, 08, 18);
             var farExpiration = new DateTime(2023, 09, 18);
 
-            var strategy = OptionStrategies.ShortJellyRoll(canonicalOptionSymbol, strike, nearExpiration, farExpiration);
+            var strategy = OptionStrategies.ShortJellyRoll(
+                canonicalOptionSymbol,
+                strike,
+                nearExpiration,
+                farExpiration
+            );
 
             Assert.AreEqual(OptionStrategyDefinitions.ShortJellyRoll.Name, strategy.Name);
             Assert.AreEqual(underlying, strategy.Underlying);
@@ -1165,26 +1662,30 @@ namespace QuantConnect.Tests.Common.Securities.Options
             Assert.AreEqual(0, strategy.UnderlyingLegs.Count);
 
             var nearExpirationCall = strategy.OptionLegs.Single(x =>
-                x.Expiration == nearExpiration && x.Right == OptionRight.Call);
+                x.Expiration == nearExpiration && x.Right == OptionRight.Call
+            );
             Assert.AreEqual(strike, nearExpirationCall.Strike);
             Assert.AreEqual(+1, nearExpirationCall.Quantity);
 
             var farExpirationCall = strategy.OptionLegs.Single(x =>
-                x.Expiration == farExpiration && x.Right == OptionRight.Call);
+                x.Expiration == farExpiration && x.Right == OptionRight.Call
+            );
             Assert.AreEqual(strike, farExpirationCall.Strike);
             Assert.AreEqual(-1, farExpirationCall.Quantity);
 
             var nearExpirationPut = strategy.OptionLegs.Single(x =>
-                x.Expiration == nearExpiration && x.Right == OptionRight.Put);
+                x.Expiration == nearExpiration && x.Right == OptionRight.Put
+            );
             Assert.AreEqual(strike, nearExpirationPut.Strike);
             Assert.AreEqual(-1, nearExpirationPut.Quantity);
 
             var farExpirationPut = strategy.OptionLegs.Single(x =>
-                x.Expiration == farExpiration && x.Right == OptionRight.Put);
+                x.Expiration == farExpiration && x.Right == OptionRight.Put
+            );
             Assert.AreEqual(strike, farExpirationPut.Strike);
             Assert.AreEqual(+1, farExpirationPut.Quantity);
         }
-        
+
         [Test]
         public void FailsBuildingBearCallLadderStrategy()
         {
@@ -1198,13 +1699,45 @@ namespace QuantConnect.Tests.Common.Securities.Options
 
             // Unordered and repeated strikes
             Assert.Throws<ArgumentException>(
-                () => OptionStrategies.BearCallLadder(canonicalOptionSymbol, strike3, strike2, strike1, expiration));
+                () =>
+                    OptionStrategies.BearCallLadder(
+                        canonicalOptionSymbol,
+                        strike3,
+                        strike2,
+                        strike1,
+                        expiration
+                    )
+            );
             Assert.Throws<ArgumentException>(
-                () => OptionStrategies.BearCallLadder(canonicalOptionSymbol, strike1, strike1, strike3, expiration));
+                () =>
+                    OptionStrategies.BearCallLadder(
+                        canonicalOptionSymbol,
+                        strike1,
+                        strike1,
+                        strike3,
+                        expiration
+                    )
+            );
             Assert.Throws<ArgumentException>(
-                () => OptionStrategies.BearCallLadder(canonicalOptionSymbol, strike2, strike1, strike3, expiration));
+                () =>
+                    OptionStrategies.BearCallLadder(
+                        canonicalOptionSymbol,
+                        strike2,
+                        strike1,
+                        strike3,
+                        expiration
+                    )
+            );
             Assert.Throws<ArgumentException>(
-                () => OptionStrategies.BearCallLadder(canonicalOptionSymbol, strike1, strike3, strike2, expiration));
+                () =>
+                    OptionStrategies.BearCallLadder(
+                        canonicalOptionSymbol,
+                        strike1,
+                        strike3,
+                        strike2,
+                        expiration
+                    )
+            );
         }
 
         [Test]
@@ -1217,7 +1750,13 @@ namespace QuantConnect.Tests.Common.Securities.Options
             var strike3 = 350m;
             var expiration = new DateTime(2023, 08, 18);
 
-            var strategy = OptionStrategies.BearCallLadder(canonicalOptionSymbol, strike1, strike2, strike3, expiration);
+            var strategy = OptionStrategies.BearCallLadder(
+                canonicalOptionSymbol,
+                strike1,
+                strike2,
+                strike3,
+                expiration
+            );
 
             Assert.AreEqual(OptionStrategyDefinitions.BearCallLadder.Name, strategy.Name);
             Assert.AreEqual(underlying, strategy.Underlying);
@@ -1241,7 +1780,7 @@ namespace QuantConnect.Tests.Common.Securities.Options
             Assert.AreEqual(expiration, highStrikeLeg.Expiration);
             Assert.AreEqual(1, highStrikeLeg.Quantity);
         }
-        
+
         [Test]
         public void FailsBuildingBearPutLadderStrategy()
         {
@@ -1255,13 +1794,45 @@ namespace QuantConnect.Tests.Common.Securities.Options
 
             // Unordered and repeated strikes
             Assert.Throws<ArgumentException>(
-                () => OptionStrategies.BearPutLadder(canonicalOptionSymbol, strike3, strike2, strike1, expiration));
+                () =>
+                    OptionStrategies.BearPutLadder(
+                        canonicalOptionSymbol,
+                        strike3,
+                        strike2,
+                        strike1,
+                        expiration
+                    )
+            );
             Assert.Throws<ArgumentException>(
-                () => OptionStrategies.BearPutLadder(canonicalOptionSymbol, strike1, strike1, strike3, expiration));
+                () =>
+                    OptionStrategies.BearPutLadder(
+                        canonicalOptionSymbol,
+                        strike1,
+                        strike1,
+                        strike3,
+                        expiration
+                    )
+            );
             Assert.Throws<ArgumentException>(
-                () => OptionStrategies.BearPutLadder(canonicalOptionSymbol, strike2, strike1, strike3, expiration));
+                () =>
+                    OptionStrategies.BearPutLadder(
+                        canonicalOptionSymbol,
+                        strike2,
+                        strike1,
+                        strike3,
+                        expiration
+                    )
+            );
             Assert.Throws<ArgumentException>(
-                () => OptionStrategies.BearPutLadder(canonicalOptionSymbol, strike1, strike3, strike2, expiration));
+                () =>
+                    OptionStrategies.BearPutLadder(
+                        canonicalOptionSymbol,
+                        strike1,
+                        strike3,
+                        strike2,
+                        expiration
+                    )
+            );
         }
 
         [Test]
@@ -1274,7 +1845,13 @@ namespace QuantConnect.Tests.Common.Securities.Options
             var strike3 = 300m;
             var expiration = new DateTime(2023, 08, 18);
 
-            var strategy = OptionStrategies.BearPutLadder(canonicalOptionSymbol, strike1, strike2, strike3, expiration);
+            var strategy = OptionStrategies.BearPutLadder(
+                canonicalOptionSymbol,
+                strike1,
+                strike2,
+                strike3,
+                expiration
+            );
 
             Assert.AreEqual(OptionStrategyDefinitions.BearPutLadder.Name, strategy.Name);
             Assert.AreEqual(underlying, strategy.Underlying);
@@ -1298,7 +1875,7 @@ namespace QuantConnect.Tests.Common.Securities.Options
             Assert.AreEqual(expiration, lowStrikeLeg.Expiration);
             Assert.AreEqual(-1, lowStrikeLeg.Quantity);
         }
-        
+
         [Test]
         public void FailsBuildingBullCallLadderStrategy()
         {
@@ -1312,13 +1889,45 @@ namespace QuantConnect.Tests.Common.Securities.Options
 
             // Unordered and repeated strikes
             Assert.Throws<ArgumentException>(
-                () => OptionStrategies.BullCallLadder(canonicalOptionSymbol, strike3, strike2, strike1, expiration));
+                () =>
+                    OptionStrategies.BullCallLadder(
+                        canonicalOptionSymbol,
+                        strike3,
+                        strike2,
+                        strike1,
+                        expiration
+                    )
+            );
             Assert.Throws<ArgumentException>(
-                () => OptionStrategies.BullCallLadder(canonicalOptionSymbol, strike1, strike1, strike3, expiration));
+                () =>
+                    OptionStrategies.BullCallLadder(
+                        canonicalOptionSymbol,
+                        strike1,
+                        strike1,
+                        strike3,
+                        expiration
+                    )
+            );
             Assert.Throws<ArgumentException>(
-                () => OptionStrategies.BullCallLadder(canonicalOptionSymbol, strike2, strike1, strike3, expiration));
+                () =>
+                    OptionStrategies.BullCallLadder(
+                        canonicalOptionSymbol,
+                        strike2,
+                        strike1,
+                        strike3,
+                        expiration
+                    )
+            );
             Assert.Throws<ArgumentException>(
-                () => OptionStrategies.BullCallLadder(canonicalOptionSymbol, strike1, strike3, strike2, expiration));
+                () =>
+                    OptionStrategies.BullCallLadder(
+                        canonicalOptionSymbol,
+                        strike1,
+                        strike3,
+                        strike2,
+                        expiration
+                    )
+            );
         }
 
         [Test]
@@ -1331,7 +1940,13 @@ namespace QuantConnect.Tests.Common.Securities.Options
             var strike3 = 350m;
             var expiration = new DateTime(2023, 08, 18);
 
-            var strategy = OptionStrategies.BullCallLadder(canonicalOptionSymbol, strike1, strike2, strike3, expiration);
+            var strategy = OptionStrategies.BullCallLadder(
+                canonicalOptionSymbol,
+                strike1,
+                strike2,
+                strike3,
+                expiration
+            );
 
             Assert.AreEqual(OptionStrategyDefinitions.BullCallLadder.Name, strategy.Name);
             Assert.AreEqual(underlying, strategy.Underlying);
@@ -1355,7 +1970,7 @@ namespace QuantConnect.Tests.Common.Securities.Options
             Assert.AreEqual(expiration, highStrikeLeg.Expiration);
             Assert.AreEqual(-1, highStrikeLeg.Quantity);
         }
-        
+
         [Test]
         public void FailsBuildingBullPutLadderStrategy()
         {
@@ -1369,13 +1984,45 @@ namespace QuantConnect.Tests.Common.Securities.Options
 
             // Unordered and repeated strikes
             Assert.Throws<ArgumentException>(
-                () => OptionStrategies.BullPutLadder(canonicalOptionSymbol, strike3, strike2, strike1, expiration));
+                () =>
+                    OptionStrategies.BullPutLadder(
+                        canonicalOptionSymbol,
+                        strike3,
+                        strike2,
+                        strike1,
+                        expiration
+                    )
+            );
             Assert.Throws<ArgumentException>(
-                () => OptionStrategies.BullPutLadder(canonicalOptionSymbol, strike1, strike1, strike3, expiration));
+                () =>
+                    OptionStrategies.BullPutLadder(
+                        canonicalOptionSymbol,
+                        strike1,
+                        strike1,
+                        strike3,
+                        expiration
+                    )
+            );
             Assert.Throws<ArgumentException>(
-                () => OptionStrategies.BullPutLadder(canonicalOptionSymbol, strike2, strike1, strike3, expiration));
+                () =>
+                    OptionStrategies.BullPutLadder(
+                        canonicalOptionSymbol,
+                        strike2,
+                        strike1,
+                        strike3,
+                        expiration
+                    )
+            );
             Assert.Throws<ArgumentException>(
-                () => OptionStrategies.BullPutLadder(canonicalOptionSymbol, strike1, strike3, strike2, expiration));
+                () =>
+                    OptionStrategies.BullPutLadder(
+                        canonicalOptionSymbol,
+                        strike1,
+                        strike3,
+                        strike2,
+                        expiration
+                    )
+            );
         }
 
         [Test]
@@ -1388,7 +2035,13 @@ namespace QuantConnect.Tests.Common.Securities.Options
             var strike3 = 300m;
             var expiration = new DateTime(2023, 08, 18);
 
-            var strategy = OptionStrategies.BullPutLadder(canonicalOptionSymbol, strike1, strike2, strike3, expiration);
+            var strategy = OptionStrategies.BullPutLadder(
+                canonicalOptionSymbol,
+                strike1,
+                strike2,
+                strike3,
+                expiration
+            );
 
             Assert.AreEqual(OptionStrategyDefinitions.BullPutLadder.Name, strategy.Name);
             Assert.AreEqual(underlying, strategy.Underlying);

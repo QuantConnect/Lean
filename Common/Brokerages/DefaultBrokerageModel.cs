@@ -41,29 +41,26 @@ namespace QuantConnect.Brokerages
         /// <summary>
         /// The default markets for the backtesting brokerage
         /// </summary>
-        public static readonly IReadOnlyDictionary<SecurityType, string> DefaultMarketMap = new Dictionary<SecurityType, string>
-        {
-            {SecurityType.Base, Market.USA},
-            {SecurityType.Equity, Market.USA},
-            {SecurityType.Option, Market.USA},
-            {SecurityType.Future, Market.CME},
-            {SecurityType.FutureOption, Market.CME},
-            {SecurityType.Forex, Market.Oanda},
-            {SecurityType.Cfd, Market.Oanda},
-            {SecurityType.Crypto, Market.Coinbase},
-            {SecurityType.CryptoFuture, Market.Binance},
-            {SecurityType.Index, Market.USA},
-            {SecurityType.IndexOption, Market.USA}
-        }.ToReadOnlyDictionary();
+        public static readonly IReadOnlyDictionary<SecurityType, string> DefaultMarketMap =
+            new Dictionary<SecurityType, string>
+            {
+                { SecurityType.Base, Market.USA },
+                { SecurityType.Equity, Market.USA },
+                { SecurityType.Option, Market.USA },
+                { SecurityType.Future, Market.CME },
+                { SecurityType.FutureOption, Market.CME },
+                { SecurityType.Forex, Market.Oanda },
+                { SecurityType.Cfd, Market.Oanda },
+                { SecurityType.Crypto, Market.Coinbase },
+                { SecurityType.CryptoFuture, Market.Binance },
+                { SecurityType.Index, Market.USA },
+                { SecurityType.IndexOption, Market.USA }
+            }.ToReadOnlyDictionary();
 
         /// <summary>
         /// Gets or sets the account type used by this model
         /// </summary>
-        public virtual AccountType AccountType
-        {
-            get;
-            private set;
-        }
+        public virtual AccountType AccountType { get; private set; }
 
         /// <summary>
         /// Gets the brokerages model percentage factor used to determine the required unused buying power for the account.
@@ -100,12 +97,24 @@ namespace QuantConnect.Brokerages
         /// <param name="order">The order to be processed</param>
         /// <param name="message">If this function returns false, a brokerage message detailing why the order may not be submitted</param>
         /// <returns>True if the brokerage could process the order, false otherwise</returns>
-        public virtual bool CanSubmitOrder(Security security, Order order, out BrokerageMessageEvent message)
+        public virtual bool CanSubmitOrder(
+            Security security,
+            Order order,
+            out BrokerageMessageEvent message
+        )
         {
-            if ((security.Type == SecurityType.Future || security.Type == SecurityType.FutureOption) && order.Type == OrderType.MarketOnOpen)
+            if (
+                (security.Type == SecurityType.Future || security.Type == SecurityType.FutureOption)
+                && order.Type == OrderType.MarketOnOpen
+            )
             {
-                message = new BrokerageMessageEvent(BrokerageMessageType.Warning, "NotSupported",
-                    Messages.DefaultBrokerageModel.UnsupportedMarketOnOpenOrdersForFuturesAndFutureOptions);
+                message = new BrokerageMessageEvent(
+                    BrokerageMessageType.Warning,
+                    "NotSupported",
+                    Messages
+                        .DefaultBrokerageModel
+                        .UnsupportedMarketOnOpenOrdersForFuturesAndFutureOptions
+                );
                 return false;
             }
 
@@ -121,7 +130,12 @@ namespace QuantConnect.Brokerages
         /// <param name="request">The requested update to be made to the order</param>
         /// <param name="message">If this function returns false, a brokerage message detailing why the order may not be updated</param>
         /// <returns>True if the brokerage would allow updating the order, false otherwise</returns>
-        public virtual bool CanUpdateOrder(Security security, Order order, UpdateOrderRequest request, out BrokerageMessageEvent message)
+        public virtual bool CanUpdateOrder(
+            Security security,
+            Order order,
+            UpdateOrderRequest request,
+            out BrokerageMessageEvent message
+        )
         {
             message = null;
             return true;
@@ -154,14 +168,29 @@ namespace QuantConnect.Brokerages
         {
             // by default we'll just update the orders to have the same notional value
             var splitFactor = split.SplitFactor;
-            tickets.ForEach(ticket => ticket.Update(new UpdateOrderFields
-            {
-                Quantity = (int?) (ticket.Quantity/splitFactor),
-                LimitPrice = ticket.OrderType.IsLimitOrder() ? ticket.Get(OrderField.LimitPrice)*splitFactor : (decimal?) null,
-                StopPrice = ticket.OrderType.IsStopOrder() ? ticket.Get(OrderField.StopPrice)*splitFactor : (decimal?) null,
-                TriggerPrice = ticket.OrderType == OrderType.LimitIfTouched ? ticket.Get(OrderField.TriggerPrice) * splitFactor : (decimal?) null,
-                TrailingAmount = ticket.OrderType == OrderType.TrailingStop && !ticket.Get<bool>(OrderField.TrailingAsPercentage) ? ticket.Get(OrderField.TrailingAmount) * splitFactor : (decimal?) null
-            }));
+            tickets.ForEach(ticket =>
+                ticket.Update(
+                    new UpdateOrderFields
+                    {
+                        Quantity = (int?)(ticket.Quantity / splitFactor),
+                        LimitPrice = ticket.OrderType.IsLimitOrder()
+                            ? ticket.Get(OrderField.LimitPrice) * splitFactor
+                            : (decimal?)null,
+                        StopPrice = ticket.OrderType.IsStopOrder()
+                            ? ticket.Get(OrderField.StopPrice) * splitFactor
+                            : (decimal?)null,
+                        TriggerPrice =
+                            ticket.OrderType == OrderType.LimitIfTouched
+                                ? ticket.Get(OrderField.TriggerPrice) * splitFactor
+                                : (decimal?)null,
+                        TrailingAmount =
+                            ticket.OrderType == OrderType.TrailingStop
+                            && !ticket.Get<bool>(OrderField.TrailingAsPercentage)
+                                ? ticket.Get(OrderField.TrailingAmount) * splitFactor
+                                : (decimal?)null
+                    }
+                )
+            );
         }
 
         /// <summary>
@@ -240,7 +269,12 @@ namespace QuantConnect.Brokerages
                 case SecurityType.IndexOption:
                     return new ImmediateFillModel();
                 default:
-                    throw new ArgumentOutOfRangeException(Messages.DefaultBrokerageModel.InvalidSecurityTypeToGetFillModel(this, security));
+                    throw new ArgumentOutOfRangeException(
+                        Messages.DefaultBrokerageModel.InvalidSecurityTypeToGetFillModel(
+                            this,
+                            security
+                        )
+                    );
             }
         }
 
@@ -295,14 +329,20 @@ namespace QuantConnect.Brokerages
                 switch (security.Type)
                 {
                     case SecurityType.Equity:
-                        return new DelayedSettlementModel(Equity.DefaultSettlementDays, Equity.DefaultSettlementTime);
+                        return new DelayedSettlementModel(
+                            Equity.DefaultSettlementDays,
+                            Equity.DefaultSettlementTime
+                        );
 
                     case SecurityType.Option:
-                        return new DelayedSettlementModel(Option.DefaultSettlementDays, Option.DefaultSettlementTime);
+                        return new DelayedSettlementModel(
+                            Option.DefaultSettlementDays,
+                            Option.DefaultSettlementTime
+                        );
                 }
             }
 
-            if(security.Symbol.SecurityType == SecurityType.Future)
+            if (security.Symbol.SecurityType == SecurityType.Future)
             {
                 return new FutureSettlementModel();
             }
@@ -333,15 +373,23 @@ namespace QuantConnect.Brokerages
             IBuyingPowerModel getCurrencyBuyingPowerModel() =>
                 AccountType == AccountType.Cash
                     ? new CashBuyingPowerModel()
-                    : new SecurityMarginModel(GetLeverage(security), RequiredFreeBuyingPowerPercent);
+                    : new SecurityMarginModel(
+                        GetLeverage(security),
+                        RequiredFreeBuyingPowerPercent
+                    );
 
             return security?.Type switch
             {
                 SecurityType.Crypto => getCurrencyBuyingPowerModel(),
                 SecurityType.Forex => getCurrencyBuyingPowerModel(),
                 SecurityType.CryptoFuture => new CryptoFutureMarginModel(GetLeverage(security)),
-                SecurityType.Future => new FutureMarginModel(RequiredFreeBuyingPowerPercent, security),
-                SecurityType.FutureOption => new FuturesOptionsMarginModel(RequiredFreeBuyingPowerPercent, (Option)security),
+                SecurityType.Future
+                    => new FutureMarginModel(RequiredFreeBuyingPowerPercent, security),
+                SecurityType.FutureOption
+                    => new FuturesOptionsMarginModel(
+                        RequiredFreeBuyingPowerPercent,
+                        (Option)security
+                    ),
                 SecurityType.IndexOption => new OptionMarginModel(RequiredFreeBuyingPowerPercent),
                 SecurityType.Option => new OptionMarginModel(RequiredFreeBuyingPowerPercent),
                 _ => new SecurityMarginModel(GetLeverage(security), RequiredFreeBuyingPowerPercent)
@@ -389,13 +437,20 @@ namespace QuantConnect.Brokerages
         /// <param name="orderQuantity">The quantity of the order to be processed</param>
         /// <param name="message">If this function returns false, a brokerage message detailing why the order may be invalid</param>
         /// <returns>True if the order quantity is bigger than the minimum allowed, false otherwise</returns>
-        public static bool IsValidOrderSize(Security security, decimal orderQuantity, out BrokerageMessageEvent message)
+        public static bool IsValidOrderSize(
+            Security security,
+            decimal orderQuantity,
+            out BrokerageMessageEvent message
+        )
         {
             var minimumOrderSize = security.SymbolProperties.MinimumOrderSize;
             if (minimumOrderSize != null && Math.Abs(orderQuantity) < minimumOrderSize)
             {
-                message = new BrokerageMessageEvent(BrokerageMessageType.Warning, "NotSupported",
-                    Messages.DefaultBrokerageModel.InvalidOrderQuantity(security, orderQuantity));
+                message = new BrokerageMessageEvent(
+                    BrokerageMessageType.Warning,
+                    "NotSupported",
+                    Messages.DefaultBrokerageModel.InvalidOrderQuantity(security, orderQuantity)
+                );
 
                 return false;
             }

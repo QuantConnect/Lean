@@ -36,7 +36,9 @@ namespace QuantConnect.Securities
             _initializer = PythonUtil.ToAction<Security>(initializer);
             if (_initializer == null)
             {
-                throw new InvalidOperationException("FuncSecurityInitializer constructor requires an action taking a single security instance as an argument");
+                throw new InvalidOperationException(
+                    "FuncSecurityInitializer constructor requires an action taking a single security instance as an argument"
+                );
             }
         }
 

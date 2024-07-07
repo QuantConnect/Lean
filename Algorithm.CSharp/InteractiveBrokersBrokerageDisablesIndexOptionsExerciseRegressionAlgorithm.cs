@@ -28,7 +28,9 @@ namespace QuantConnect.Algorithm.CSharp
     /// <summary>
     /// Regression algorithm asserting that InteractiveBrokers brokerage model does not support index options exercise
     /// </summary>
-    public class InteractiveBrokersBrokerageDisablesIndexOptionsExerciseRegressionAlgorithm : QCAlgorithm, IRegressionAlgorithmDefinition
+    public class InteractiveBrokersBrokerageDisablesIndexOptionsExerciseRegressionAlgorithm
+        : QCAlgorithm,
+            IRegressionAlgorithmDefinition
     {
         private Option _option;
 
@@ -67,7 +69,10 @@ namespace QuantConnect.Algorithm.CSharp
             if (_contract == null)
             {
                 OptionChain contracts;
-                if (!slice.OptionChains.TryGetValue(_option.Symbol, out contracts) || !contracts.Any())
+                if (
+                    !slice.OptionChains.TryGetValue(_option.Symbol, out contracts)
+                    || !contracts.Any()
+                )
                 {
                     return;
                 }
@@ -93,8 +98,10 @@ namespace QuantConnect.Algorithm.CSharp
             {
                 if (ExerciseOption(_contract.Symbol, 1).Status == OrderStatus.Filled)
                 {
-                    throw new RegressionTestException($"Expected index option to not be exercisable on its expiration date. " +
-                                        $"Time: {UtcTime}. Expiry: {_contract.Expiry.ConvertToUtc(_option.Exchange.TimeZone)}");
+                    throw new RegressionTestException(
+                        $"Expected index option to not be exercisable on its expiration date. "
+                            + $"Time: {UtcTime}. Expiry: {_contract.Expiry.ConvertToUtc(_option.Exchange.TimeZone)}"
+                    );
                 }
 
                 _triedExercise = true;
@@ -104,15 +111,19 @@ namespace QuantConnect.Algorithm.CSharp
         public override void OnOrderEvent(OrderEvent orderEvent)
         {
             // The manual exercise failed and we are not placing any other orders, so this is the automatic exercise
-            if (orderEvent.Status == OrderStatus.Filled &&
-                _marketOrderDone &&
-                _triedExercise &&
-                UtcTime.Date >= _contract.Expiry.ConvertToUtc(_option.Exchange.TimeZone).Date)
+            if (
+                orderEvent.Status == OrderStatus.Filled
+                && _marketOrderDone
+                && _triedExercise
+                && UtcTime.Date >= _contract.Expiry.ConvertToUtc(_option.Exchange.TimeZone).Date
+            )
             {
                 var profit = Portfolio.TotalPortfolioValue - _initialCash;
                 if (profit < 0)
                 {
-                    throw new RegressionTestException($"Expected profit to be positive. Actual: {profit}");
+                    throw new RegressionTestException(
+                        $"Expected profit to be positive. Actual: {profit}"
+                    );
                 }
 
                 _automaticallyExercised = true;
@@ -123,12 +134,16 @@ namespace QuantConnect.Algorithm.CSharp
         {
             if (!_triedExercise)
             {
-                throw new RegressionTestException("Expected to try to exercise index option before and on expiry");
+                throw new RegressionTestException(
+                    "Expected to try to exercise index option before and on expiry"
+                );
             }
 
             if (!_automaticallyExercised || Portfolio.Cash <= _initialCash)
             {
-                throw new RegressionTestException("Expected index option to have ben automatically exercised on expiry and to have received cash");
+                throw new RegressionTestException(
+                    "Expected index option to have ben automatically exercised on expiry and to have received cash"
+                );
             }
         }
 
@@ -160,35 +175,36 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// This is used by the regression test system to indicate what the expected statistics are from running the algorithm
         /// </summary>
-        public Dictionary<string, string> ExpectedStatistics => new Dictionary<string, string>
-        {
-            {"Total Orders", "3"},
-            {"Average Win", "0%"},
-            {"Average Loss", "-4.10%"},
-            {"Compounding Annual Return", "10.046%"},
-            {"Drawdown", "1.900%"},
-            {"Expectancy", "0"},
-            {"Start Equity", "200000"},
-            {"End Equity", "201353"},
-            {"Net Profit", "0.676%"},
-            {"Sharpe Ratio", "3.253"},
-            {"Sortino Ratio", "0"},
-            {"Probabilistic Sharpe Ratio", "86.292%"},
-            {"Loss Rate", "0%"},
-            {"Win Rate", "100%"},
-            {"Profit-Loss Ratio", "0"},
-            {"Alpha", "0"},
-            {"Beta", "0"},
-            {"Annual Standard Deviation", "0.081"},
-            {"Annual Variance", "0.007"},
-            {"Information Ratio", "3.284"},
-            {"Tracking Error", "0.081"},
-            {"Treynor Ratio", "0"},
-            {"Total Fees", "$1.00"},
-            {"Estimated Strategy Capacity", "$1700000.00"},
-            {"Lowest Capacity Asset", "SPX XL80P3HB5O6M|SPX 31"},
-            {"Portfolio Turnover", "0.16%"},
-            {"OrderListHash", "d0ff308d240d80eb3774f0307a64ac7e"}
-        };
+        public Dictionary<string, string> ExpectedStatistics =>
+            new Dictionary<string, string>
+            {
+                { "Total Orders", "3" },
+                { "Average Win", "0%" },
+                { "Average Loss", "-4.10%" },
+                { "Compounding Annual Return", "10.046%" },
+                { "Drawdown", "1.900%" },
+                { "Expectancy", "0" },
+                { "Start Equity", "200000" },
+                { "End Equity", "201353" },
+                { "Net Profit", "0.676%" },
+                { "Sharpe Ratio", "3.253" },
+                { "Sortino Ratio", "0" },
+                { "Probabilistic Sharpe Ratio", "86.292%" },
+                { "Loss Rate", "0%" },
+                { "Win Rate", "100%" },
+                { "Profit-Loss Ratio", "0" },
+                { "Alpha", "0" },
+                { "Beta", "0" },
+                { "Annual Standard Deviation", "0.081" },
+                { "Annual Variance", "0.007" },
+                { "Information Ratio", "3.284" },
+                { "Tracking Error", "0.081" },
+                { "Treynor Ratio", "0" },
+                { "Total Fees", "$1.00" },
+                { "Estimated Strategy Capacity", "$1700000.00" },
+                { "Lowest Capacity Asset", "SPX XL80P3HB5O6M|SPX 31" },
+                { "Portfolio Turnover", "0.16%" },
+                { "OrderListHash", "d0ff308d240d80eb3774f0307a64ac7e" }
+            };
     }
 }

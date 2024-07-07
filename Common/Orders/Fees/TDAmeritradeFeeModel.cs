@@ -34,15 +34,20 @@ namespace QuantConnect.Orders.Fees
             var order = parameters.Order;
             var symbolSecurityType = order.Symbol.SecurityType;
 
-            switch(symbolSecurityType)
+            switch (symbolSecurityType)
             {
                 case SecurityType.Equity:
                     return new OrderFee(new CashAmount(0m, Currencies.USD));
                 case SecurityType.Option:
-                    return new OrderFee(new CashAmount(0.65m * order.AbsoluteQuantity, Currencies.USD));
-            };
+                    return new OrderFee(
+                        new CashAmount(0.65m * order.AbsoluteQuantity, Currencies.USD)
+                    );
+            }
+            ;
 
-            throw new System.ArgumentException(Messages.TDAmeritradeFeeModel.UnsupportedSecurityType(symbolSecurityType));
+            throw new System.ArgumentException(
+                Messages.TDAmeritradeFeeModel.UnsupportedSecurityType(symbolSecurityType)
+            );
         }
     }
 }

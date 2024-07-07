@@ -68,7 +68,7 @@ namespace QuantConnect.Securities.Positions
             IReadOnlyCollection<IPositionGroup> impactedGroups,
             IReadOnlyCollection<IPosition> contemplatedChanges,
             IReadOnlyCollection<IPositionGroup> contemplatedGroups
-            )
+        )
         {
             Current = current;
             Contemplated = contemplated;

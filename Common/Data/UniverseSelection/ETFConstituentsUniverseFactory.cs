@@ -33,10 +33,16 @@ namespace QuantConnect.Data.UniverseSelection
         /// <param name="symbol">The ETF to load constituents for</param>
         /// <param name="universeSettings">Universe settings</param>
         /// <param name="constituentsFilter">The filter function used to filter out ETF constituents from the universe</param>
-        public ETFConstituentsUniverseFactory(Symbol symbol, UniverseSettings universeSettings, Func<IEnumerable<ETFConstituentUniverse>, IEnumerable<Symbol>> constituentsFilter = null)
-            : base(CreateConstituentUniverseETFSymbol(symbol), universeSettings, constituentsFilter ?? (constituents => constituents.Select(c => c.Symbol)))
-        {
-        }
+        public ETFConstituentsUniverseFactory(
+            Symbol symbol,
+            UniverseSettings universeSettings,
+            Func<IEnumerable<ETFConstituentUniverse>, IEnumerable<Symbol>> constituentsFilter = null
+        )
+            : base(
+                CreateConstituentUniverseETFSymbol(symbol),
+                universeSettings,
+                constituentsFilter ?? (constituents => constituents.Select(c => c.Symbol))
+            ) { }
 
         /// <summary>
         /// Creates a new universe for the constituents of the ETF provided as <paramref name="symbol"/>
@@ -44,10 +50,16 @@ namespace QuantConnect.Data.UniverseSelection
         /// <param name="symbol">The ETF to load constituents for</param>
         /// <param name="universeSettings">Universe settings</param>
         /// <param name="constituentsFilter">The filter function used to filter out ETF constituents from the universe</param>
-        public ETFConstituentsUniverseFactory(Symbol symbol, UniverseSettings universeSettings, PyObject constituentsFilter)
-            : this(symbol, universeSettings, constituentsFilter.ConvertPythonUniverseFilterFunction<ETFConstituentUniverse>())
-        {
-        }
+        public ETFConstituentsUniverseFactory(
+            Symbol symbol,
+            UniverseSettings universeSettings,
+            PyObject constituentsFilter
+        )
+            : this(
+                symbol,
+                universeSettings,
+                constituentsFilter.ConvertPythonUniverseFilterFunction<ETFConstituentUniverse>()
+            ) { }
 
         /// <summary>
         /// Creates a universe Symbol for constituent ETFs
@@ -63,9 +75,11 @@ namespace QuantConnect.Data.UniverseSelection
                 SecurityIdentifier.GenerateConstituentIdentifier(
                     universeTicker,
                     compositeSymbol.SecurityType,
-                    compositeSymbol.ID.Market),
+                    compositeSymbol.ID.Market
+                ),
                 universeTicker,
-                compositeSymbol);
+                compositeSymbol
+            );
         }
     }
 }

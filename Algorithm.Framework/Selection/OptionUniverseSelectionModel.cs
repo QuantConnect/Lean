@@ -42,10 +42,11 @@ namespace QuantConnect.Algorithm.Framework.Selection
         /// </summary>
         /// <param name="refreshInterval">Time interval between universe refreshes</param>
         /// <param name="optionChainSymbolSelector">Selects symbols from the provided option chain</param>
-        public OptionUniverseSelectionModel(TimeSpan refreshInterval, Func<DateTime, IEnumerable<Symbol>> optionChainSymbolSelector)
-            : this(refreshInterval, optionChainSymbolSelector, null)
-        {
-        }
+        public OptionUniverseSelectionModel(
+            TimeSpan refreshInterval,
+            Func<DateTime, IEnumerable<Symbol>> optionChainSymbolSelector
+        )
+            : this(refreshInterval, optionChainSymbolSelector, null) { }
 
         /// <summary>
         /// Creates a new instance of <see cref="OptionUniverseSelectionModel"/>
@@ -57,7 +58,7 @@ namespace QuantConnect.Algorithm.Framework.Selection
             TimeSpan refreshInterval,
             Func<DateTime, IEnumerable<Symbol>> optionChainSymbolSelector,
             UniverseSettings universeSettings
-            )
+        )
         {
             _nextRefreshTimeUtc = DateTime.MinValue;
 
@@ -80,13 +81,19 @@ namespace QuantConnect.Algorithm.Framework.Selection
             {
                 if (!optionSymbol.SecurityType.IsOption())
                 {
-                    throw new ArgumentException("optionChainSymbolSelector must return option, index options, or futures options symbols.");
+                    throw new ArgumentException(
+                        "optionChainSymbolSelector must return option, index options, or futures options symbols."
+                    );
                 }
 
                 // prevent creating duplicate option chains -- one per underlying
                 if (uniqueUnderlyingSymbols.Add(optionSymbol.Underlying))
                 {
-                    yield return algorithm.CreateOptionChain(optionSymbol, Filter, _universeSettings);
+                    yield return algorithm.CreateOptionChain(
+                        optionSymbol,
+                        Filter,
+                        _universeSettings
+                    );
                 }
             }
         }

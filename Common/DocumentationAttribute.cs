@@ -15,8 +15,8 @@
 
 using System;
 using System.Linq;
-using Newtonsoft.Json;
 using System.Reflection;
+using Newtonsoft.Json;
 
 namespace QuantConnect
 {
@@ -27,10 +27,13 @@ namespace QuantConnect
     [DocumentationAttribute("Reference")]
     public sealed class DocumentationAttribute : Attribute
     {
-        private static readonly DocumentationAttribute Attribute =
-            typeof(DocumentationAttribute).GetCustomAttributes<DocumentationAttribute>().Single();
-        private static readonly string BasePath =
-            Attribute.FileName.Substring(0, Attribute.FileName.LastIndexOf("Common", StringComparison.Ordinal));
+        private static readonly DocumentationAttribute Attribute = typeof(DocumentationAttribute)
+            .GetCustomAttributes<DocumentationAttribute>()
+            .Single();
+        private static readonly string BasePath = Attribute.FileName.Substring(
+            0,
+            Attribute.FileName.LastIndexOf("Common", StringComparison.Ordinal)
+        );
 
         /// <summary>
         /// The documentation tag
@@ -65,9 +68,12 @@ namespace QuantConnect
         /// <summary>
         /// Creates a new instance
         /// </summary>
-        public DocumentationAttribute(string tag, int weight = 0,
+        public DocumentationAttribute(
+            string tag,
+            int weight = 0,
             [System.Runtime.CompilerServices.CallerLineNumber] int line = 0,
-            [System.Runtime.CompilerServices.CallerFilePath] string fileName = "")
+            [System.Runtime.CompilerServices.CallerFilePath] string fileName = ""
+        )
         {
             Tag = tag;
             Line = line;
@@ -75,7 +81,11 @@ namespace QuantConnect
             // will be null for the attribute of DocumentationAttribute itself
             if (BasePath != null)
             {
-                FileName = fileName.Replace(BasePath, string.Empty, StringComparison.InvariantCultureIgnoreCase);
+                FileName = fileName.Replace(
+                    BasePath,
+                    string.Empty,
+                    StringComparison.InvariantCultureIgnoreCase
+                );
             }
             else
             {

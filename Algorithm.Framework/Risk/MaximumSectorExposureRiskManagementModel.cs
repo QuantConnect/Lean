@@ -35,13 +35,13 @@ namespace QuantConnect.Algorithm.Framework.Risk
         /// Initializes a new instance of the <see cref="MaximumSectorExposureRiskManagementModel"/> class
         /// </summary>
         /// <param name="maximumSectorExposure">The maximum exposure for any sector, defaults to 20% sector exposure.</param>
-        public MaximumSectorExposureRiskManagementModel(
-            decimal maximumSectorExposure = 0.20m
-            )
+        public MaximumSectorExposureRiskManagementModel(decimal maximumSectorExposure = 0.20m)
         {
             if (maximumSectorExposure <= 0)
             {
-                throw new ArgumentOutOfRangeException("MaximumSectorExposureRiskManagementModel: the maximum sector exposure cannot be a non-positive value.");
+                throw new ArgumentOutOfRangeException(
+                    "MaximumSectorExposureRiskManagementModel: the maximum sector exposure cannot be a non-positive value."
+                );
             }
 
             _maximumSectorExposure = maximumSectorExposure;
@@ -53,15 +53,21 @@ namespace QuantConnect.Algorithm.Framework.Risk
         /// </summary>
         /// <param name="algorithm">The algorithm instance</param>
         /// <param name="targets">The current portfolio targets to be assessed for risk</param>
-        public override IEnumerable<IPortfolioTarget> ManageRisk(QCAlgorithm algorithm, IPortfolioTarget[] targets)
+        public override IEnumerable<IPortfolioTarget> ManageRisk(
+            QCAlgorithm algorithm,
+            IPortfolioTarget[] targets
+        )
         {
-            var maximumSectorExposureValue = algorithm.Portfolio.TotalPortfolioValue * _maximumSectorExposure;
+            var maximumSectorExposureValue =
+                algorithm.Portfolio.TotalPortfolioValue * _maximumSectorExposure;
 
             _targetsCollection.AddRange(targets);
 
             // Group the securities by their sector
-            var groupBySector = algorithm.UniverseManager.ActiveSecurities
-                .Where(x => x.Value.Fundamentals != null && x.Value.Fundamentals.HasFundamentalData)
+            var groupBySector = algorithm
+                .UniverseManager.ActiveSecurities.Where(x =>
+                    x.Value.Fundamentals != null && x.Value.Fundamentals.HasFundamentalData
+                )
                 .GroupBy(x => x.Value.Fundamentals.CompanyReference.IndustryTemplateCode);
 
             foreach (var securities in groupBySector)
@@ -78,9 +84,11 @@ namespace QuantConnect.Algorithm.Framework.Risk
                     IPortfolioTarget target;
                     if (_targetsCollection.TryGetValue(security.Value.Symbol, out target))
                     {
-                        absoluteHoldingsValue = security.Value.Price * Math.Abs(target.Quantity) *
-                            security.Value.SymbolProperties.ContractMultiplier *
-                            security.Value.QuoteCurrency.ConversionRate;
+                        absoluteHoldingsValue =
+                            security.Value.Price
+                            * Math.Abs(target.Quantity)
+                            * security.Value.SymbolProperties.ContractMultiplier
+                            * security.Value.QuoteCurrency.ConversionRate;
                     }
 
                     sectorAbsoluteHoldingsValue += absoluteHoldingsValue;
@@ -119,12 +127,15 @@ namespace QuantConnect.Algorithm.Framework.Risk
         /// <param name="changes">The security additions and removals from the algorithm</param>
         public override void OnSecuritiesChanged(QCAlgorithm algorithm, SecurityChanges changes)
         {
-            var anyFundamentalData = algorithm.ActiveSecurities
-                .Any(kvp => kvp.Value.Fundamentals != null && kvp.Value.Fundamentals.HasFundamentalData);
+            var anyFundamentalData = algorithm.ActiveSecurities.Any(kvp =>
+                kvp.Value.Fundamentals != null && kvp.Value.Fundamentals.HasFundamentalData
+            );
 
             if (!anyFundamentalData)
             {
-                throw new Exception("MaximumSectorExposureRiskManagementModel.OnSecuritiesChanged: Please select a portfolio selection model that selects securities with fundamental data.");
+                throw new Exception(
+                    "MaximumSectorExposureRiskManagementModel.OnSecuritiesChanged: Please select a portfolio selection model that selects securities with fundamental data."
+                );
             }
         }
     }

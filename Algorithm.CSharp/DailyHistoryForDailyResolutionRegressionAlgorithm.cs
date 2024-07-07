@@ -26,9 +26,12 @@ namespace QuantConnect.Algorithm.CSharp
     /// <summary>
     /// Algorithm simply fetch one-day history prior current time.
     /// </summary>
-    public class DailyHistoryForDailyResolutionRegressionAlgorithm : QCAlgorithm, IRegressionAlgorithmDefinition
+    public class DailyHistoryForDailyResolutionRegressionAlgorithm
+        : QCAlgorithm,
+            IRegressionAlgorithmDefinition
     {
-        private Symbol[] _symbols = {
+        private Symbol[] _symbols =
+        {
             QuantConnect.Symbol.Create("GBPUSD", SecurityType.Forex, market: Market.FXCM),
             QuantConnect.Symbol.Create("EURUSD", SecurityType.Forex, market: Market.Oanda),
             QuantConnect.Symbol.Create("AAPL", SecurityType.Equity, market: Market.USA),
@@ -62,14 +65,23 @@ namespace QuantConnect.Algorithm.CSharp
 
                     if (current.Value.DataType == MarketDataType.QuoteBar)
                     {
-                        history = History(1, Resolution.Daily).Get<QuoteBar>(symbol).Cast<BaseData>().ToList();
+                        history = History(1, Resolution.Daily)
+                            .Get<QuoteBar>(symbol)
+                            .Cast<BaseData>()
+                            .ToList();
                     }
                     else
                     {
-                        history = History(1, Resolution.Daily).Get<TradeBar>(symbol).Cast<BaseData>().ToList();
+                        history = History(1, Resolution.Daily)
+                            .Get<TradeBar>(symbol)
+                            .Cast<BaseData>()
+                            .ToList();
                     }
 
-                    if (!history.Any()) throw new RegressionTestException($"No {symbol} data on the eve of {Time} {Time.DayOfWeek}");
+                    if (!history.Any())
+                        throw new RegressionTestException(
+                            $"No {symbol} data on the eve of {Time} {Time.DayOfWeek}"
+                        );
                 }
             }
         }
@@ -78,10 +90,11 @@ namespace QuantConnect.Algorithm.CSharp
         {
             if (_received.Count != _symbols.Length)
             {
-                throw new RegressionTestException($"Data for symbols {string.Join(",", _symbols.Except(_received))} were not received");
+                throw new RegressionTestException(
+                    $"Data for symbols {string.Join(",", _symbols.Except(_received))} were not received"
+                );
             }
         }
-
 
         /// <summary>
         /// This is used by the regression test system to indicate if the open source Lean repository has the required data to run this algorithm.
@@ -111,35 +124,36 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// This is used by the regression test system to indicate what the expected statistics are from running the algorithm
         /// </summary>
-        public Dictionary<string, string> ExpectedStatistics => new Dictionary<string, string>
-        {
-            {"Total Orders", "0"},
-            {"Average Win", "0%"},
-            {"Average Loss", "0%"},
-            {"Compounding Annual Return", "0%"},
-            {"Drawdown", "0%"},
-            {"Expectancy", "0"},
-            {"Start Equity", "100000.00"},
-            {"End Equity", "100000"},
-            {"Net Profit", "0%"},
-            {"Sharpe Ratio", "0"},
-            {"Sortino Ratio", "0"},
-            {"Probabilistic Sharpe Ratio", "0%"},
-            {"Loss Rate", "0%"},
-            {"Win Rate", "0%"},
-            {"Profit-Loss Ratio", "0"},
-            {"Alpha", "0"},
-            {"Beta", "0"},
-            {"Annual Standard Deviation", "0"},
-            {"Annual Variance", "0"},
-            {"Information Ratio", "-0.101"},
-            {"Tracking Error", "0.185"},
-            {"Treynor Ratio", "0"},
-            {"Total Fees", "$0.00"},
-            {"Estimated Strategy Capacity", "$0"},
-            {"Lowest Capacity Asset", ""},
-            {"Portfolio Turnover", "0%"},
-            {"OrderListHash", "d41d8cd98f00b204e9800998ecf8427e"}
-        };
+        public Dictionary<string, string> ExpectedStatistics =>
+            new Dictionary<string, string>
+            {
+                { "Total Orders", "0" },
+                { "Average Win", "0%" },
+                { "Average Loss", "0%" },
+                { "Compounding Annual Return", "0%" },
+                { "Drawdown", "0%" },
+                { "Expectancy", "0" },
+                { "Start Equity", "100000.00" },
+                { "End Equity", "100000" },
+                { "Net Profit", "0%" },
+                { "Sharpe Ratio", "0" },
+                { "Sortino Ratio", "0" },
+                { "Probabilistic Sharpe Ratio", "0%" },
+                { "Loss Rate", "0%" },
+                { "Win Rate", "0%" },
+                { "Profit-Loss Ratio", "0" },
+                { "Alpha", "0" },
+                { "Beta", "0" },
+                { "Annual Standard Deviation", "0" },
+                { "Annual Variance", "0" },
+                { "Information Ratio", "-0.101" },
+                { "Tracking Error", "0.185" },
+                { "Treynor Ratio", "0" },
+                { "Total Fees", "$0.00" },
+                { "Estimated Strategy Capacity", "$0" },
+                { "Lowest Capacity Asset", "" },
+                { "Portfolio Turnover", "0%" },
+                { "OrderListHash", "d41d8cd98f00b204e9800998ecf8427e" }
+            };
     }
 }

@@ -16,7 +16,7 @@
 namespace QuantConnect.Indicators
 {
     /// <summary>
-    /// The signal for the Relative Vigor Index, itself an indicator. 
+    /// The signal for the Relative Vigor Index, itself an indicator.
     /// </summary>
     public class RelativeVigorIndexSignal : Indicator, IIndicatorWarmUpPeriodProvider
     {
@@ -52,7 +52,8 @@ namespace QuantConnect.Indicators
         {
             if (IsReady)
             {
-                var output = (input.Value + 2 * (_rollingRvi[0] + _rollingRvi[1]) + _rollingRvi[2]) / 6;
+                var output =
+                    (input.Value + 2 * (_rollingRvi[0] + _rollingRvi[1]) + _rollingRvi[2]) / 6;
                 _rollingRvi.Add(input);
                 return output;
             }

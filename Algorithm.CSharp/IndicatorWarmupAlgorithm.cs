@@ -30,11 +30,11 @@ namespace QuantConnect.Algorithm.CSharp
     /// <meta name="tag" content="warm up" />
     public class IndicatorWarmupAlgorithm : QCAlgorithm
     {
-        private const string SPY    = "SPY";
-        private const string GOOG   = "GOOG";
-        private const string IBM    = "IBM";
-        private const string BAC    = "BAC";
-        private const string GOOGL  = "GOOGL";
+        private const string SPY = "SPY";
+        private const string GOOG = "GOOG";
+        private const string IBM = "IBM";
+        private const string BAC = "BAC";
+        private const string GOOGL = "GOOGL";
 
         private readonly Dictionary<Symbol, SymbolData> _sd = new Dictionary<Symbol, SymbolData>();
 
@@ -64,7 +64,8 @@ namespace QuantConnect.Algorithm.CSharp
         public override void OnData(Slice slice)
         {
             // we are only using warmup for indicator spooling, so wait for us to be warm then continue
-            if (IsWarmingUp) return;
+            if (IsWarmingUp)
+                return;
 
             foreach (var sd in _sd.Values)
             {
@@ -136,8 +137,7 @@ namespace QuantConnect.Algorithm.CSharp
                 {
                     const decimal tolerance = 1 + PercentTolerance;
 
-                    return MACD.Signal > MACD*tolerance
-                        && EMA > Close*tolerance;
+                    return MACD.Signal > MACD * tolerance && EMA > Close * tolerance;
                 }
             }
 
@@ -147,8 +147,7 @@ namespace QuantConnect.Algorithm.CSharp
                 {
                     const decimal tolerance = 1 - PercentTolerance;
 
-                    return MACD.Signal < MACD*tolerance
-                        && EMA < Close*tolerance;
+                    return MACD.Signal < MACD * tolerance && EMA < Close * tolerance;
                 }
             }
 
@@ -163,10 +162,15 @@ namespace QuantConnect.Algorithm.CSharp
                 if (Security.Invested)
                 {
                     var stop = Security.Holdings.IsLong
-                        ? fill.FillPrice*(1 - PercentGlobalStopLoss)
-                        : fill.FillPrice*(1 + PercentGlobalStopLoss);
+                        ? fill.FillPrice * (1 - PercentGlobalStopLoss)
+                        : fill.FillPrice * (1 + PercentGlobalStopLoss);
 
-                    _currentStopLoss = _algorithm.StopMarketOrder(Symbol, -Quantity, stop, "StopLoss at: " + stop);
+                    _currentStopLoss = _algorithm.StopMarketOrder(
+                        Symbol,
+                        -Quantity,
+                        stop,
+                        "StopLoss at: " + stop
+                    );
                 }
                 // check for an exit, cancel the stop loss
                 else
@@ -228,17 +232,22 @@ namespace QuantConnect.Algorithm.CSharp
                 }
 
                 decimal limit = 0m;
-                if (Security.Holdings.IsLong && Close*exitTolerance < EMA)
+                if (Security.Holdings.IsLong && Close * exitTolerance < EMA)
                 {
                     limit = Security.High;
                 }
-                else if (Security.Holdings.IsShort && Close > EMA*exitTolerance)
+                else if (Security.Holdings.IsShort && Close > EMA * exitTolerance)
                 {
                     limit = Security.Low;
                 }
                 if (limit != 0)
                 {
-                    ticket = _algorithm.LimitOrder(Symbol, -Quantity, limit, "TryExit at: " + limit);
+                    ticket = _algorithm.LimitOrder(
+                        Symbol,
+                        -Quantity,
+                        limit,
+                        "TryExit at: " + limit
+                    );
                 }
                 return -Quantity != 0;
             }

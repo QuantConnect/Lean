@@ -34,11 +34,7 @@ namespace QuantConnect.Messaging
         /// Gets or sets whether this messaging handler has any current subscribers.
         /// When set to false, messages won't be sent.
         /// </summary>
-        public bool HasSubscribers
-        {
-            get;
-            set;
-        }
+        public bool HasSubscribers { get; set; }
 
         /// <summary>
         /// Initialize the Messaging System Plugin.
@@ -48,7 +44,10 @@ namespace QuantConnect.Messaging
         {
             _queue = new Queue<Packet>();
 
-            ConsumerReadyEvent += () => { _loaded = true; };
+            ConsumerReadyEvent += () =>
+            {
+                _loaded = true;
+            };
         }
 
         /// <summary>
@@ -123,7 +122,10 @@ namespace QuantConnect.Messaging
         {
             if (!notification.CanSend())
             {
-                Log.Error("Messaging.SendNotification(): Send not implemented for notification of type: " + notification.GetType().Name);
+                Log.Error(
+                    "Messaging.SendNotification(): Send not implemented for notification of type: "
+                        + notification.GetType().Name
+                );
                 return;
             }
             notification.Send();
@@ -193,7 +195,6 @@ namespace QuantConnect.Messaging
             }
         }
 
-
         /// <summary>
         /// Raise a system debug event safely
         /// </summary>
@@ -206,7 +207,6 @@ namespace QuantConnect.Messaging
                 handler(packet);
             }
         }
-
 
         /// <summary>
         /// Handler for consumer ready code.
@@ -271,8 +271,6 @@ namespace QuantConnect.Messaging
         /// <summary>
         /// Dispose of any resources
         /// </summary>
-        public virtual void Dispose()
-        {
-        }
+        public virtual void Dispose() { }
     }
 }

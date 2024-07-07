@@ -30,7 +30,7 @@ namespace QuantConnect.Tests.Common.Securities
     {
         private SecurityCacheProvider _cacheProvider;
         private Dictionary<Symbol, Security> _securities;
-        
+
         [SetUp]
         public void Setup()
         {
@@ -54,11 +54,12 @@ namespace QuantConnect.Tests.Common.Securities
             var baseSecurity = new Security(
                 baseSymbol,
                 SecurityExchangeHours.AlwaysOpen(DateTimeZone.Utc),
-                new Cash("USA", 0m, 1m), 
+                new Cash("USA", 0m, 1m),
                 SymbolProperties.GetDefault("USA"),
-                new IdentityCurrencyConverter("USA"), 
+                new IdentityCurrencyConverter("USA"),
                 RegisteredSecurityDataTypesProvider.Null,
-                baseCache);
+                baseCache
+            );
             _securities.Add(baseSymbol, baseSecurity);
             // add some data to its cache
             var dataToStore = new List<TradeBar>
@@ -76,7 +77,7 @@ namespace QuantConnect.Tests.Common.Securities
             Assert.AreEqual(dataToStore, data);
 
             // we add some data to the custom cache
-            var newData = new List<UnlinkedData> {new UnlinkedData()};
+            var newData = new List<UnlinkedData> { new UnlinkedData() };
             baseCache.StoreData(newData, typeof(UnlinkedData));
 
             // the data should also be in the underlying cache
@@ -95,7 +96,8 @@ namespace QuantConnect.Tests.Common.Securities
                 SymbolProperties.GetDefault("USA"),
                 new IdentityCurrencyConverter("USA"),
                 RegisteredSecurityDataTypesProvider.Null,
-                underlyingCache);
+                underlyingCache
+            );
             _securities.Add(Symbols.SPY, underlyingSecurity);
 
             // add base using underlying
@@ -103,7 +105,8 @@ namespace QuantConnect.Tests.Common.Securities
             var baseCache = _cacheProvider.GetSecurityCache(baseSymbol);
 
             // we store data in the underlying cache and expect it to be available through the base cache too
-            var dataToStore = new List<TradeBar> {
+            var dataToStore = new List<TradeBar>
+            {
                 new TradeBar(DateTime.UtcNow, Symbols.SPY, 10m, 20m, 5m, 15m, 10000)
             };
             underlyingCache.StoreData(dataToStore, typeof(TradeBar));

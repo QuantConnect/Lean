@@ -37,7 +37,9 @@ namespace QuantConnect.Notifications
         /// <param name="writer">The <see cref="T:Newtonsoft.Json.JsonWriter"/> to write to.</param><param name="value">The value.</param><param name="serializer">The calling serializer.</param>
         public override void WriteJson(JsonWriter writer, object value, JsonSerializer serializer)
         {
-            throw new NotImplementedException(Messages.NotificationJsonConverter.WriteNotImplemented);
+            throw new NotImplementedException(
+                Messages.NotificationJsonConverter.WriteNotImplemented
+            );
         }
 
         /// <summary>
@@ -47,60 +49,161 @@ namespace QuantConnect.Notifications
         /// <returns>
         /// The object value.
         /// </returns>
-        public override object ReadJson(JsonReader reader, Type objectType, object existingValue, JsonSerializer serializer)
+        public override object ReadJson(
+            JsonReader reader,
+            Type objectType,
+            object existingValue,
+            JsonSerializer serializer
+        )
         {
             var jObject = JObject.Load(reader);
 
             JToken token;
-            if (jObject.TryGetValue("PhoneNumber", StringComparison.InvariantCultureIgnoreCase, out token))
+            if (
+                jObject.TryGetValue(
+                    "PhoneNumber",
+                    StringComparison.InvariantCultureIgnoreCase,
+                    out token
+                )
+            )
             {
-                var message = jObject.GetValue("Message", StringComparison.InvariantCultureIgnoreCase);
+                var message = jObject.GetValue(
+                    "Message",
+                    StringComparison.InvariantCultureIgnoreCase
+                );
 
                 return new NotificationSms(token.ToString(), message?.ToString());
             }
-            else if (jObject.TryGetValue("Subject", StringComparison.InvariantCultureIgnoreCase, out token))
+            else if (
+                jObject.TryGetValue(
+                    "Subject",
+                    StringComparison.InvariantCultureIgnoreCase,
+                    out token
+                )
+            )
             {
                 var data = jObject.GetValue("Data", StringComparison.InvariantCultureIgnoreCase);
-                var message = jObject.GetValue("Message", StringComparison.InvariantCultureIgnoreCase);
-                var address = jObject.GetValue("Address", StringComparison.InvariantCultureIgnoreCase);
-                var headers= jObject.GetValue("Headers", StringComparison.InvariantCultureIgnoreCase);
+                var message = jObject.GetValue(
+                    "Message",
+                    StringComparison.InvariantCultureIgnoreCase
+                );
+                var address = jObject.GetValue(
+                    "Address",
+                    StringComparison.InvariantCultureIgnoreCase
+                );
+                var headers = jObject.GetValue(
+                    "Headers",
+                    StringComparison.InvariantCultureIgnoreCase
+                );
 
-                return new NotificationEmail(address?.ToString(), token.ToString(), message?.ToString(), data?.ToString(), headers?.ToObject<Dictionary<string, string>>());
+                return new NotificationEmail(
+                    address?.ToString(),
+                    token.ToString(),
+                    message?.ToString(),
+                    data?.ToString(),
+                    headers?.ToObject<Dictionary<string, string>>()
+                );
             }
-            else if (jObject.TryGetValue("Address", StringComparison.InvariantCultureIgnoreCase, out token))
+            else if (
+                jObject.TryGetValue(
+                    "Address",
+                    StringComparison.InvariantCultureIgnoreCase,
+                    out token
+                )
+            )
             {
-                var headers = jObject.GetValue("Headers", StringComparison.InvariantCultureIgnoreCase);
+                var headers = jObject.GetValue(
+                    "Headers",
+                    StringComparison.InvariantCultureIgnoreCase
+                );
                 var data = jObject.GetValue("Data", StringComparison.InvariantCultureIgnoreCase);
 
-                return new NotificationWeb(token.ToString(), data?.ToString(), headers?.ToObject<Dictionary<string, string>>());
+                return new NotificationWeb(
+                    token.ToString(),
+                    data?.ToString(),
+                    headers?.ToObject<Dictionary<string, string>>()
+                );
             }
-            else if (jObject.TryGetValue("Id", StringComparison.InvariantCultureIgnoreCase, out token))
+            else if (
+                jObject.TryGetValue("Id", StringComparison.InvariantCultureIgnoreCase, out token)
+            )
             {
-                var message = jObject.GetValue("Message", StringComparison.InvariantCultureIgnoreCase);
-                var botToken = jObject.GetValue("Token", StringComparison.InvariantCultureIgnoreCase);
-                return new NotificationTelegram(token.ToString(), message?.ToString(), botToken?.ToString());
+                var message = jObject.GetValue(
+                    "Message",
+                    StringComparison.InvariantCultureIgnoreCase
+                );
+                var botToken = jObject.GetValue(
+                    "Token",
+                    StringComparison.InvariantCultureIgnoreCase
+                );
+                return new NotificationTelegram(
+                    token.ToString(),
+                    message?.ToString(),
+                    botToken?.ToString()
+                );
             }
-            else if (jObject.TryGetValue("host", StringComparison.InvariantCultureIgnoreCase, out token))
+            else if (
+                jObject.TryGetValue("host", StringComparison.InvariantCultureIgnoreCase, out token)
+            )
             {
                 // This is an FTP notification
                 var hostname = token.ToString();
-                var port = jObject.GetValue("port", StringComparison.InvariantCultureIgnoreCase)?.ToObject<int?>();
-                var username = jObject.GetValue("username", StringComparison.InvariantCultureIgnoreCase)?.ToString();
-                var filePath = jObject.GetValue("fileDestinationPath", StringComparison.InvariantCultureIgnoreCase)?.ToString();
-                var fileContent = jObject.GetValue("fileContent", StringComparison.InvariantCultureIgnoreCase)?.ToString();
+                var port = jObject
+                    .GetValue("port", StringComparison.InvariantCultureIgnoreCase)
+                    ?.ToObject<int?>();
+                var username = jObject
+                    .GetValue("username", StringComparison.InvariantCultureIgnoreCase)
+                    ?.ToString();
+                var filePath = jObject
+                    .GetValue("fileDestinationPath", StringComparison.InvariantCultureIgnoreCase)
+                    ?.ToString();
+                var fileContent = jObject
+                    .GetValue("fileContent", StringComparison.InvariantCultureIgnoreCase)
+                    ?.ToString();
 
-                if (jObject.TryGetValue("password", StringComparison.InvariantCultureIgnoreCase, out var password))
+                if (
+                    jObject.TryGetValue(
+                        "password",
+                        StringComparison.InvariantCultureIgnoreCase,
+                        out var password
+                    )
+                )
                 {
-                    var secure = jObject.GetValue("secure", StringComparison.InvariantCultureIgnoreCase)?.ToObject<bool>() ?? true;
-                    return NotificationFtp.FromEncodedData(hostname, username, password.ToString(), filePath, fileContent, secure, port);
+                    var secure =
+                        jObject
+                            .GetValue("secure", StringComparison.InvariantCultureIgnoreCase)
+                            ?.ToObject<bool>() ?? true;
+                    return NotificationFtp.FromEncodedData(
+                        hostname,
+                        username,
+                        password.ToString(),
+                        filePath,
+                        fileContent,
+                        secure,
+                        port
+                    );
                 }
 
-                var privateKey = jObject.GetValue("privateKey", StringComparison.InvariantCultureIgnoreCase)?.ToString();
-                var passphrase = jObject.GetValue("passphrase", StringComparison.InvariantCultureIgnoreCase)?.ToString();
-                return NotificationFtp.FromEncodedData(hostname, username, privateKey, passphrase, filePath, fileContent, port);
+                var privateKey = jObject
+                    .GetValue("privateKey", StringComparison.InvariantCultureIgnoreCase)
+                    ?.ToString();
+                var passphrase = jObject
+                    .GetValue("passphrase", StringComparison.InvariantCultureIgnoreCase)
+                    ?.ToString();
+                return NotificationFtp.FromEncodedData(
+                    hostname,
+                    username,
+                    privateKey,
+                    passphrase,
+                    filePath,
+                    fileContent,
+                    port
+                );
             }
 
-            throw new NotImplementedException(Messages.NotificationJsonConverter.UnexpectedJsonObject(jObject));
+            throw new NotImplementedException(
+                Messages.NotificationJsonConverter.UnexpectedJsonObject(jObject)
+            );
         }
 
         /// <summary>

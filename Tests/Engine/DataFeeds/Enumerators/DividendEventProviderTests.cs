@@ -14,12 +14,12 @@
 */
 
 using System;
+using System.Globalization;
 using System.Linq;
 using NUnit.Framework;
 using QuantConnect.Data;
-using System.Globalization;
-using QuantConnect.Data.Market;
 using QuantConnect.Data.Auxiliary;
+using QuantConnect.Data.Market;
 using QuantConnect.Interfaces;
 using QuantConnect.Lean.Engine.DataFeeds.Enumerators;
 
@@ -55,13 +55,30 @@ namespace QuantConnect.Tests.Engine.DataFeeds.Enumerators
         public void DividendsDistribution(string exDividendDateStr, decimal expectedDistribution)
         {
             var dividendProvider = new DividendEventProvider();
-            var config = new SubscriptionDataConfig(typeof(TradeBar), Symbols.AAPL, Resolution.Second, TimeZones.NewYork, TimeZones.NewYork,
-                false, false, false);
+            var config = new SubscriptionDataConfig(
+                typeof(TradeBar),
+                Symbols.AAPL,
+                Resolution.Second,
+                TimeZones.NewYork,
+                TimeZones.NewYork,
+                false,
+                false,
+                false
+            );
 
             var start = new DateTime(1998, 01, 02);
-            dividendProvider.Initialize(config, TestGlobals.FactorFileProvider, TestGlobals.MapFileProvider, start);
+            dividendProvider.Initialize(
+                config,
+                TestGlobals.FactorFileProvider,
+                TestGlobals.MapFileProvider,
+                start
+            );
 
-            var exDividendDate = DateTime.ParseExact(exDividendDateStr, DateFormat.EightCharacter, CultureInfo.InvariantCulture);
+            var exDividendDate = DateTime.ParseExact(
+                exDividendDateStr,
+                DateFormat.EightCharacter,
+                CultureInfo.InvariantCulture
+            );
 
             var events = dividendProvider
                 .GetEvents(new NewTradableDateEventArgs(exDividendDate, null, Symbols.AAPL, null))
@@ -70,7 +87,14 @@ namespace QuantConnect.Tests.Engine.DataFeeds.Enumerators
             Assert.AreEqual(0, events.Count);
 
             events = dividendProvider
-                .GetEvents(new NewTradableDateEventArgs(exDividendDate.AddDays(1), null, Symbols.AAPL, null))
+                .GetEvents(
+                    new NewTradableDateEventArgs(
+                        exDividendDate.AddDays(1),
+                        null,
+                        Symbols.AAPL,
+                        null
+                    )
+                )
                 .ToList();
 
             Assert.AreEqual(1, events.Count);
@@ -84,8 +108,16 @@ namespace QuantConnect.Tests.Engine.DataFeeds.Enumerators
         public void ThrowsWhenEmptyReferencePrice()
         {
             var dividendProvider = new DividendEventProvider();
-            var config = new SubscriptionDataConfig(typeof(TradeBar), Symbols.AAPL, Resolution.Second, TimeZones.NewYork, TimeZones.NewYork,
-                false, false, false);
+            var config = new SubscriptionDataConfig(
+                typeof(TradeBar),
+                Symbols.AAPL,
+                Resolution.Second,
+                TimeZones.NewYork,
+                TimeZones.NewYork,
+                false,
+                false,
+                false
+            );
             var start = new DateTime(1998, 01, 02);
             var row1 = new DateTime(2000, 01, 02);
             var row2 = new DateTime(2001, 01, 02);
@@ -93,21 +125,32 @@ namespace QuantConnect.Tests.Engine.DataFeeds.Enumerators
 
             var factorFileProvider = new TestFactorFileProvider
             {
-                FactorFile = new CorporateFactorProvider("AAPL", new []
-                {
-                    new CorporateFactorRow(row1, 0.693m, 1),
-                    new CorporateFactorRow(row2, 0.77m, 1),
-                    new CorporateFactorRow(row3, 0.85555m, 1)
-                }, start)
+                FactorFile = new CorporateFactorProvider(
+                    "AAPL",
+                    new[]
+                    {
+                        new CorporateFactorRow(row1, 0.693m, 1),
+                        new CorporateFactorRow(row2, 0.77m, 1),
+                        new CorporateFactorRow(row3, 0.85555m, 1)
+                    },
+                    start
+                )
             };
 
-            dividendProvider.Initialize(config, factorFileProvider, TestGlobals.MapFileProvider, start);
+            dividendProvider.Initialize(
+                config,
+                factorFileProvider,
+                TestGlobals.MapFileProvider,
+                start
+            );
 
             foreach (var row in factorFileProvider.FactorFile.Take(1))
             {
                 var lastRawPrice = 100;
                 var events = dividendProvider
-                    .GetEvents(new NewTradableDateEventArgs(row.Date, null, Symbols.AAPL, lastRawPrice))
+                    .GetEvents(
+                        new NewTradableDateEventArgs(row.Date, null, Symbols.AAPL, lastRawPrice)
+                    )
                     .ToList();
                 // ex dividend date does not emit anything
                 Assert.AreEqual(0, events.Count);
@@ -115,7 +158,14 @@ namespace QuantConnect.Tests.Engine.DataFeeds.Enumerators
                 Assert.Throws<InvalidOperationException>(() =>
                 {
                     dividendProvider
-                        .GetEvents(new NewTradableDateEventArgs(row.Date.AddDays(1), null, Symbols.AAPL, lastRawPrice))
+                        .GetEvents(
+                            new NewTradableDateEventArgs(
+                                row.Date.AddDays(1),
+                                null,
+                                Symbols.AAPL,
+                                lastRawPrice
+                            )
+                        )
                         .ToList();
                 });
             }
@@ -124,9 +174,8 @@ namespace QuantConnect.Tests.Engine.DataFeeds.Enumerators
         private class TestFactorFileProvider : IFactorFileProvider
         {
             public CorporateFactorProvider FactorFile { get; set; }
-            public void Initialize(IMapFileProvider mapFileProvider, IDataProvider dataProvider)
-            {
-            }
+
+            public void Initialize(IMapFileProvider mapFileProvider, IDataProvider dataProvider) { }
 
             public IFactorProvider Get(Symbol symbol)
             {

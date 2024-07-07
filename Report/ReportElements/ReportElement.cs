@@ -33,7 +33,12 @@ namespace QuantConnect.Report.ReportElements
         /// <summary>
         /// Normalizes the key into a JSON-friendly key
         /// </summary>
-        public string JsonKey => Key.Replace("KPI-", "").Replace("$", "").Replace("{", "").Replace("}", "") .ToLowerInvariant();
+        public string JsonKey =>
+            Key.Replace("KPI-", "")
+                .Replace("$", "")
+                .Replace("{", "")
+                .Replace("}", "")
+                .ToLowerInvariant();
 
         /// <summary>
         /// Result of the render as an object for serialization to JSON

@@ -85,7 +85,8 @@ namespace QuantConnect.Lean.Engine.Setup
         /// <param name="realTimeHandler">The configured real time handler</param>
         /// <param name="dataCacheProvider">The configured data cache provider</param>
         /// <param name="mapFileProvider">The map file provider</param>
-        public SetupHandlerParameters(UniverseSelection universeSelection,
+        public SetupHandlerParameters(
+            UniverseSelection universeSelection,
             IAlgorithm algorithm,
             IBrokerage brokerage,
             AlgorithmNodePacket algorithmNodePacket,
@@ -94,7 +95,7 @@ namespace QuantConnect.Lean.Engine.Setup
             IRealTimeHandler realTimeHandler,
             IDataCacheProvider dataCacheProvider,
             IMapFileProvider mapFileProvider
-            )
+        )
         {
             UniverseSelection = universeSelection;
             Algorithm = algorithm;

@@ -36,9 +36,21 @@ namespace QuantConnect.Brokerages.CrossZero
         /// <param name="orderQuantityHolding">The current holding quantity of the order's symbol.</param>
         /// <param name="orderPosition">The position of the order, which depends on the <paramref name="orderQuantityHolding"/>.</param>
         /// <param name="crossZeroFirstOrder">The first part of the cross zero order.</param>
-        public CrossZeroSecondOrderRequest(Order leanOrder, OrderType orderType, decimal orderQuantity, decimal orderQuantityHolding,
-            OrderPosition orderPosition, CrossZeroFirstOrderRequest crossZeroFirstOrder)
-            : base(leanOrder, ConvertStopCrossingOrderType(orderType), orderQuantity, orderQuantityHolding, orderPosition)
+        public CrossZeroSecondOrderRequest(
+            Order leanOrder,
+            OrderType orderType,
+            decimal orderQuantity,
+            decimal orderQuantityHolding,
+            OrderPosition orderPosition,
+            CrossZeroFirstOrderRequest crossZeroFirstOrder
+        )
+            : base(
+                leanOrder,
+                ConvertStopCrossingOrderType(orderType),
+                orderQuantity,
+                orderQuantityHolding,
+                orderPosition
+            )
         {
             FirstPartCrossZeroOrder = crossZeroFirstOrder;
         }
@@ -48,15 +60,16 @@ namespace QuantConnect.Brokerages.CrossZero
         /// </summary>
         /// <param name="orderType">The original order type to be converted.</param>
         /// <returns>
-        /// The converted order type. If the original order type is <see cref="OrderType.StopMarket"/>, 
+        /// The converted order type. If the original order type is <see cref="OrderType.StopMarket"/>,
         /// it returns <see cref="OrderType.Market"/>. If the original order type is <see cref="OrderType.StopLimit"/>,
         /// it returns <see cref="OrderType.Limit"/>. Otherwise, it returns the original order type.
         /// </returns>
-        private static OrderType ConvertStopCrossingOrderType(OrderType orderType) => orderType switch
-        {
-            OrderType.StopMarket => OrderType.Market,
-            OrderType.StopLimit => OrderType.Limit,
-            _ => orderType
-        };
+        private static OrderType ConvertStopCrossingOrderType(OrderType orderType) =>
+            orderType switch
+            {
+                OrderType.StopMarket => OrderType.Market,
+                OrderType.StopLimit => OrderType.Limit,
+                _ => orderType
+            };
     }
 }

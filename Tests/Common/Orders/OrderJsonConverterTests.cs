@@ -27,18 +27,22 @@ namespace QuantConnect.Tests.Common.Orders
     [TestFixture]
     public class OrderJsonConverterTests
     {
-
         [TestCase(Symbols.SymbolsKey.SPY)]
         [TestCase(Symbols.SymbolsKey.EURUSD)]
         [TestCase(Symbols.SymbolsKey.BTCUSD)]
         public void DeserializesMarketOrder(Symbols.SymbolsKey key)
         {
-            var expected = new MarketOrder(Symbols.Lookup(key), 100, new DateTime(2015, 11, 23, 17, 15, 37), "now")
+            var expected = new MarketOrder(
+                Symbols.Lookup(key),
+                100,
+                new DateTime(2015, 11, 23, 17, 15, 37),
+                "now"
+            )
             {
                 Id = 12345,
                 Price = 209.03m,
                 ContingentId = 123456,
-                BrokerId = new List<string> {"727", "54970"}
+                BrokerId = new List<string> { "727", "54970" }
             };
 
             TestOrderType(expected);
@@ -53,7 +57,13 @@ namespace QuantConnect.Tests.Common.Orders
             groupOrderManager.OrderIds.Add(12345);
             groupOrderManager.OrderIds.Add(12346);
 
-            var expected = new ComboMarketOrder(Symbols.Lookup(key), 100, new DateTime(2015, 11, 23, 17, 15, 37), groupOrderManager, "now")
+            var expected = new ComboMarketOrder(
+                Symbols.Lookup(key),
+                100,
+                new DateTime(2015, 11, 23, 17, 15, 37),
+                groupOrderManager,
+                "now"
+            )
             {
                 Id = 12345,
                 Price = 209.03m,
@@ -74,7 +84,14 @@ namespace QuantConnect.Tests.Common.Orders
             groupOrderManager.OrderIds.Add(12346);
             groupOrderManager.LimitPrice = 201.1m;
 
-            var expected = new ComboLimitOrder(Symbols.Lookup(key), 100, 210.1m, new DateTime(2015, 11, 23, 17, 15, 37), groupOrderManager, "now")
+            var expected = new ComboLimitOrder(
+                Symbols.Lookup(key),
+                100,
+                210.1m,
+                new DateTime(2015, 11, 23, 17, 15, 37),
+                groupOrderManager,
+                "now"
+            )
             {
                 Id = 12345,
                 Price = 209.03m,
@@ -94,7 +111,14 @@ namespace QuantConnect.Tests.Common.Orders
             groupOrderManager.OrderIds.Add(12345);
             groupOrderManager.OrderIds.Add(12346);
 
-            var expected = new ComboLegLimitOrder(Symbols.Lookup(key), 100, 210.1m, new DateTime(2015, 11, 23, 17, 15, 37), groupOrderManager, "now")
+            var expected = new ComboLegLimitOrder(
+                Symbols.Lookup(key),
+                100,
+                210.1m,
+                new DateTime(2015, 11, 23, 17, 15, 37),
+                groupOrderManager,
+                "now"
+            )
             {
                 Id = 12345,
                 Price = 209.03m,
@@ -110,12 +134,17 @@ namespace QuantConnect.Tests.Common.Orders
         [TestCase(Symbols.SymbolsKey.BTCUSD)]
         public void DeserializesMarketOnOpenOrder(Symbols.SymbolsKey key)
         {
-            var expected = new MarketOnOpenOrder(Symbols.Lookup(key), 100, new DateTime(2015, 11, 23, 17, 15, 37), "now")
+            var expected = new MarketOnOpenOrder(
+                Symbols.Lookup(key),
+                100,
+                new DateTime(2015, 11, 23, 17, 15, 37),
+                "now"
+            )
             {
                 Id = 12345,
                 Price = 209.03m,
                 ContingentId = 123456,
-                BrokerId = new List<string> {"727", "54970"}
+                BrokerId = new List<string> { "727", "54970" }
             };
 
             TestOrderType(expected);
@@ -126,12 +155,17 @@ namespace QuantConnect.Tests.Common.Orders
         [TestCase(Symbols.SymbolsKey.BTCUSD)]
         public void DeserializesMarketOnCloseOrder(Symbols.SymbolsKey key)
         {
-            var expected = new MarketOnCloseOrder(Symbols.Lookup(key), 100, new DateTime(2015, 11, 23, 17, 15, 37), "now")
+            var expected = new MarketOnCloseOrder(
+                Symbols.Lookup(key),
+                100,
+                new DateTime(2015, 11, 23, 17, 15, 37),
+                "now"
+            )
             {
                 Id = 12345,
                 Price = 209.03m,
                 ContingentId = 123456,
-                BrokerId = new List<string> {"727", "54970"}
+                BrokerId = new List<string> { "727", "54970" }
             };
 
             TestOrderType(expected);
@@ -142,12 +176,18 @@ namespace QuantConnect.Tests.Common.Orders
         [TestCase(Symbols.SymbolsKey.BTCUSD)]
         public void DeserializesLimitOrder(Symbols.SymbolsKey key)
         {
-            var expected = new LimitOrder(Symbols.Lookup(key), 100, 210.10m, new DateTime(2015, 11, 23, 17, 15, 37), "now")
+            var expected = new LimitOrder(
+                Symbols.Lookup(key),
+                100,
+                210.10m,
+                new DateTime(2015, 11, 23, 17, 15, 37),
+                "now"
+            )
             {
                 Id = 12345,
                 Price = 209.03m,
                 ContingentId = 123456,
-                BrokerId = new List<string> {"727", "54970"}
+                BrokerId = new List<string> { "727", "54970" }
             };
 
             var actual = TestOrderType(expected);
@@ -160,12 +200,18 @@ namespace QuantConnect.Tests.Common.Orders
         [TestCase(Symbols.SymbolsKey.BTCUSD)]
         public void DeserializesStopMarketOrder(Symbols.SymbolsKey key)
         {
-            var expected = new StopMarketOrder(Symbols.Lookup(key), 100, 210.10m, new DateTime(2015, 11, 23, 17, 15, 37), "now")
+            var expected = new StopMarketOrder(
+                Symbols.Lookup(key),
+                100,
+                210.10m,
+                new DateTime(2015, 11, 23, 17, 15, 37),
+                "now"
+            )
             {
                 Id = 12345,
                 Price = 209.03m,
                 ContingentId = 123456,
-                BrokerId = new List<string> {"727", "54970"}
+                BrokerId = new List<string> { "727", "54970" }
             };
 
             var actual = TestOrderType(expected);
@@ -178,7 +224,15 @@ namespace QuantConnect.Tests.Common.Orders
         [TestCase(Symbols.SymbolsKey.BTCUSD)]
         public void DeserializesTrailingStopOrder(Symbols.SymbolsKey key)
         {
-            var expected = new TrailingStopOrder(Symbols.Lookup(key), 100, 210.10m, 0.1m, true, new DateTime(2015, 11, 23, 17, 15, 37), "now")
+            var expected = new TrailingStopOrder(
+                Symbols.Lookup(key),
+                100,
+                210.10m,
+                0.1m,
+                true,
+                new DateTime(2015, 11, 23, 17, 15, 37),
+                "now"
+            )
             {
                 Id = 12345,
                 Price = 209.03m,
@@ -198,12 +252,19 @@ namespace QuantConnect.Tests.Common.Orders
         [TestCase(Symbols.SymbolsKey.BTCUSD)]
         public void DeserializesStopLimitOrder(Symbols.SymbolsKey key)
         {
-            var expected = new StopLimitOrder(Symbols.Lookup(key), 100, 210.10m, 200.23m, new DateTime(2015, 11, 23, 17, 15, 37), "now")
+            var expected = new StopLimitOrder(
+                Symbols.Lookup(key),
+                100,
+                210.10m,
+                200.23m,
+                new DateTime(2015, 11, 23, 17, 15, 37),
+                "now"
+            )
             {
                 Id = 12345,
                 Price = 209.03m,
                 ContingentId = 123456,
-                BrokerId = new List<string> {"727", "54970"}
+                BrokerId = new List<string> { "727", "54970" }
             };
 
             var actual = TestOrderType(expected);
@@ -217,12 +278,19 @@ namespace QuantConnect.Tests.Common.Orders
         [TestCase(Symbols.SymbolsKey.BTCUSD)]
         public void DeserializesLimitIfTouchedOrder(Symbols.SymbolsKey key)
         {
-            var expected = new LimitIfTouchedOrder(Symbols.Lookup(key), 100, 210.10m, 200.23m, new DateTime(2015, 11, 23, 17, 15, 37), "now")
+            var expected = new LimitIfTouchedOrder(
+                Symbols.Lookup(key),
+                100,
+                210.10m,
+                200.23m,
+                new DateTime(2015, 11, 23, 17, 15, 37),
+                "now"
+            )
             {
                 Id = 12345,
                 Price = 209.03m,
                 ContingentId = 123456,
-                BrokerId = new List<string> {"727", "54970"}
+                BrokerId = new List<string> { "727", "54970" }
             };
 
             var actual = TestOrderType(expected);
@@ -234,7 +302,12 @@ namespace QuantConnect.Tests.Common.Orders
         [Test]
         public void DeserializesOptionExpireOrder()
         {
-            var expected = new OptionExerciseOrder(Symbols.SPY_P_192_Feb19_2016, 100, new DateTime(2015, 11, 23, 17, 15, 37), "now")
+            var expected = new OptionExerciseOrder(
+                Symbols.SPY_P_192_Feb19_2016,
+                100,
+                new DateTime(2015, 11, 23, 17, 15, 37),
+                "now"
+            )
             {
                 Id = 12345,
                 ContingentId = 123456,
@@ -250,7 +323,8 @@ namespace QuantConnect.Tests.Common.Orders
         [Test]
         public void DeserializesNullLastFillTimeAndLastUpdateTime()
         {
-            const string json = @"{
+            const string json =
+                @"{
     'Type': 4,
     'Id': 1,
     'ContingentId': 0,
@@ -287,7 +361,8 @@ namespace QuantConnect.Tests.Common.Orders
     'IsMarketable': false
 }";
 
-            const string json2 = @"{
+            const string json2 =
+                @"{
     'Type': 4,
     'Id': 1,
     'ContingentId': 0,
@@ -324,11 +399,24 @@ namespace QuantConnect.Tests.Common.Orders
     'IsMarketable': false
 }";
 
-            var time = DateTime.SpecifyKind(new DateTime(2019, 12, 24, 14, 31, 0), DateTimeKind.Utc);
-            var fillTime = DateTime.SpecifyKind(new DateTime(2019, 12, 26, 14, 31, 0), DateTimeKind.Utc);
-            var updateTime = DateTime.SpecifyKind(new DateTime(2019, 12, 25, 14, 31, 0), DateTimeKind.Utc);
+            var time = DateTime.SpecifyKind(
+                new DateTime(2019, 12, 24, 14, 31, 0),
+                DateTimeKind.Utc
+            );
+            var fillTime = DateTime.SpecifyKind(
+                new DateTime(2019, 12, 26, 14, 31, 0),
+                DateTimeKind.Utc
+            );
+            var updateTime = DateTime.SpecifyKind(
+                new DateTime(2019, 12, 25, 14, 31, 0),
+                DateTimeKind.Utc
+            );
 
-            var expected1 = new MarketOnOpenOrder(Symbol.Create("SPY", SecurityType.Equity, Market.USA), 1m, time)
+            var expected1 = new MarketOnOpenOrder(
+                Symbol.Create("SPY", SecurityType.Equity, Market.USA),
+                1m,
+                time
+            )
             {
                 Id = 1,
                 ContingentId = 0,
@@ -341,7 +429,11 @@ namespace QuantConnect.Tests.Common.Orders
                 OrderSubmissionData = new OrderSubmissionData(321.47m, 321.47m, 321.47m),
             };
 
-            var expected2 = new MarketOnOpenOrder(Symbol.Create("SPY", SecurityType.Equity, Market.USA), 1m, time)
+            var expected2 = new MarketOnOpenOrder(
+                Symbol.Create("SPY", SecurityType.Equity, Market.USA),
+                1m,
+                time
+            )
             {
                 Id = 1,
                 ContingentId = 0,
@@ -353,7 +445,6 @@ namespace QuantConnect.Tests.Common.Orders
                 Status = OrderStatus.Filled,
                 OrderSubmissionData = new OrderSubmissionData(321.47m, 321.47m, 321.47m),
             };
-
 
             var actual1 = (MarketOnOpenOrder)DeserializeOrder<MarketOnOpenOrder>(json);
             var actual2 = (MarketOnOpenOrder)DeserializeOrder<MarketOnOpenOrder>(json2);
@@ -367,7 +458,8 @@ namespace QuantConnect.Tests.Common.Orders
         [Test]
         public void DeserializesStringStatusAndNullTime()
         {
-            const string stringStatusJson = @"{
+            const string stringStatusJson =
+                @"{
     'Type': 4,
     'Id': 1,
     'ContingentId': 0,
@@ -404,7 +496,8 @@ namespace QuantConnect.Tests.Common.Orders
     'IsMarketable': false
 }";
 
-            const string nullTimeJson = @"{
+            const string nullTimeJson =
+                @"{
     'Type': 4,
     'Id': 1,
     'ContingentId': 0,
@@ -441,11 +534,24 @@ namespace QuantConnect.Tests.Common.Orders
     'IsMarketable': false
 }";
 
-            var time = DateTime.SpecifyKind(new DateTime(2019, 12, 24, 14, 31, 0), DateTimeKind.Utc);
-            var fillTime = DateTime.SpecifyKind(new DateTime(2019, 12, 26, 14, 31, 0), DateTimeKind.Utc);
-            var updateTime = DateTime.SpecifyKind(new DateTime(2019, 12, 25, 14, 31, 0), DateTimeKind.Utc);
+            var time = DateTime.SpecifyKind(
+                new DateTime(2019, 12, 24, 14, 31, 0),
+                DateTimeKind.Utc
+            );
+            var fillTime = DateTime.SpecifyKind(
+                new DateTime(2019, 12, 26, 14, 31, 0),
+                DateTimeKind.Utc
+            );
+            var updateTime = DateTime.SpecifyKind(
+                new DateTime(2019, 12, 25, 14, 31, 0),
+                DateTimeKind.Utc
+            );
 
-            var expected1 = new MarketOnOpenOrder(Symbol.Create("SPY", SecurityType.Equity, Market.USA), 1m, time)
+            var expected1 = new MarketOnOpenOrder(
+                Symbol.Create("SPY", SecurityType.Equity, Market.USA),
+                1m,
+                time
+            )
             {
                 Id = 1,
                 ContingentId = 0,
@@ -458,7 +564,11 @@ namespace QuantConnect.Tests.Common.Orders
                 OrderSubmissionData = new OrderSubmissionData(321.47m, 321.47m, 321.47m),
             };
 
-            var expected2 = new MarketOnOpenOrder(Symbol.Create("SPY", SecurityType.Equity, Market.USA), 1m, time)
+            var expected2 = new MarketOnOpenOrder(
+                Symbol.Create("SPY", SecurityType.Equity, Market.USA),
+                1m,
+                time
+            )
             {
                 Id = 1,
                 ContingentId = 0,
@@ -470,7 +580,6 @@ namespace QuantConnect.Tests.Common.Orders
                 Status = OrderStatus.Filled,
                 OrderSubmissionData = new OrderSubmissionData(321.47m, 321.47m, 321.47m),
             };
-
 
             var actual1 = (MarketOnOpenOrder)DeserializeOrder<MarketOnOpenOrder>(stringStatusJson);
             var actual2 = (MarketOnOpenOrder)DeserializeOrder<MarketOnOpenOrder>(nullTimeJson);
@@ -484,7 +593,7 @@ namespace QuantConnect.Tests.Common.Orders
         [TestCase("Day")]
         [TestCase("GoodTilCanceled")]
         [TestCase("GoodTilDate")]
-        public void RoundTripUsingJsonConverter(string  timeInForceStr)
+        public void RoundTripUsingJsonConverter(string timeInForceStr)
         {
             TimeInForce timeInForce = null;
             switch (timeInForceStr)
@@ -499,7 +608,11 @@ namespace QuantConnect.Tests.Common.Orders
                     timeInForce = TimeInForce.GoodTilDate(DateTime.UtcNow);
                     break;
             }
-            var expected = new MarketOnOpenOrder(Symbol.Create("SPY", SecurityType.Equity, Market.USA), 1m, DateTime.UtcNow)
+            var expected = new MarketOnOpenOrder(
+                Symbol.Create("SPY", SecurityType.Equity, Market.USA),
+                1m,
+                DateTime.UtcNow
+            )
             {
                 Id = 1,
                 ContingentId = 0,
@@ -540,16 +653,26 @@ namespace QuantConnect.Tests.Common.Orders
             Assert.AreEqual(expected.Quantity, actual.Quantity);
             Assert.AreEqual(expected.TimeInForce.GetType(), actual.TimeInForce.GetType());
             Assert.AreEqual(expected.Symbol.ID.Market, actual.Symbol.ID.Market);
-            Assert.AreEqual(expected.OrderSubmissionData.AskPrice, actual.OrderSubmissionData.AskPrice);
-            Assert.AreEqual(expected.OrderSubmissionData.BidPrice, actual.OrderSubmissionData.BidPrice);
-            Assert.AreEqual(expected.OrderSubmissionData.LastPrice, actual.OrderSubmissionData.LastPrice);
+            Assert.AreEqual(
+                expected.OrderSubmissionData.AskPrice,
+                actual.OrderSubmissionData.AskPrice
+            );
+            Assert.AreEqual(
+                expected.OrderSubmissionData.BidPrice,
+                actual.OrderSubmissionData.BidPrice
+            );
+            Assert.AreEqual(
+                expected.OrderSubmissionData.LastPrice,
+                actual.OrderSubmissionData.LastPrice
+            );
             Assert.AreEqual(expected.PriceAdjustmentMode, actual.PriceAdjustmentMode);
         }
 
         [Test]
         public void DeserializesOldSymbol()
         {
-            const string json = @"{'Type':0,
+            const string json =
+                @"{'Type':0,
 'Value':99986.827413672,
 'Id':1,
 'ContingentId':0,
@@ -566,7 +689,6 @@ namespace QuantConnect.Tests.Common.Orders
 'Direction':0,
 'AbsoluteQuantity':999}";
 
-
             var order = DeserializeOrder<MarketOrder>(json);
             var actual = order.Symbol;
 
@@ -577,12 +699,11 @@ namespace QuantConnect.Tests.Common.Orders
         [Test]
         public void WorksWithJsonConvert()
         {
-            JsonConvert.DefaultSettings = () => new JsonSerializerSettings
-            {
-                Converters = {new OrderJsonConverter()}
-            };
+            JsonConvert.DefaultSettings = () =>
+                new JsonSerializerSettings { Converters = { new OrderJsonConverter() } };
 
-            const string json = @"{'Type':0,
+            const string json =
+                @"{'Type':0,
 'Value':99986.827413672,
 'Id':1,
 'ContingentId':0,
@@ -608,14 +729,13 @@ namespace QuantConnect.Tests.Common.Orders
         [Test]
         public void DeserializesOldDurationProperty()
         {
-            JsonConvert.DefaultSettings = () => new JsonSerializerSettings
-            {
-                Converters = { new OrderJsonConverter() }
-            };
+            JsonConvert.DefaultSettings = () =>
+                new JsonSerializerSettings { Converters = { new OrderJsonConverter() } };
 
             // The Duration property has been renamed to TimeInForce,
             // we still want to deserialize old JSON files containing Duration.
-            const string json = @"{'Type':0,
+            const string json =
+                @"{'Type':0,
 'Value':99986.827413672,
 'Id':1,
 'ContingentId':0,
@@ -641,14 +761,13 @@ namespace QuantConnect.Tests.Common.Orders
         [Test]
         public void DeserializesOldDurationValueProperty()
         {
-            JsonConvert.DefaultSettings = () => new JsonSerializerSettings
-            {
-                Converters = { new OrderJsonConverter() }
-            };
+            JsonConvert.DefaultSettings = () =>
+                new JsonSerializerSettings { Converters = { new OrderJsonConverter() } };
 
             // The DurationValue property has been moved to GoodTilDateTimeInforce.Expiry,
             // we still want to deserialize old JSON files containing Duration.
-            const string json = @"{'Type':0,
+            const string json =
+                @"{'Type':0,
 'Value':99986.827413672,
 'Id':1,
 'ContingentId':0,
@@ -686,7 +805,13 @@ namespace QuantConnect.Tests.Common.Orders
         public void DeserializesOrderGoodTilCanceledTimeInForce()
         {
             var orderProperties = new OrderProperties { TimeInForce = TimeInForce.GoodTilCanceled };
-            var expected = new MarketOrder(Symbols.BTCUSD, 0.123m, DateTime.Today, "", orderProperties);
+            var expected = new MarketOrder(
+                Symbols.BTCUSD,
+                0.123m,
+                DateTime.Today,
+                "",
+                orderProperties
+            );
             TestOrderType(expected);
         }
 
@@ -694,7 +819,13 @@ namespace QuantConnect.Tests.Common.Orders
         public void DeserializesOrderDayTimeInForce()
         {
             var orderProperties = new OrderProperties { TimeInForce = TimeInForce.Day };
-            var expected = new MarketOrder(Symbols.BTCUSD, 0.123m, DateTime.Today, "", orderProperties);
+            var expected = new MarketOrder(
+                Symbols.BTCUSD,
+                0.123m,
+                DateTime.Today,
+                "",
+                orderProperties
+            );
             TestOrderType(expected);
         }
 
@@ -702,8 +833,17 @@ namespace QuantConnect.Tests.Common.Orders
         public void DeserializesOrderGoodTilDateTimeInForce()
         {
             var expiry = new DateTime(2018, 5, 26);
-            var orderProperties = new OrderProperties { TimeInForce = TimeInForce.GoodTilDate(expiry) };
-            var expected = new MarketOrder(Symbols.BTCUSD, 0.123m, DateTime.Today, "", orderProperties);
+            var orderProperties = new OrderProperties
+            {
+                TimeInForce = TimeInForce.GoodTilDate(expiry)
+            };
+            var expected = new MarketOrder(
+                Symbols.BTCUSD,
+                0.123m,
+                DateTime.Today,
+                "",
+                orderProperties
+            );
             TestOrderType(expected);
 
             var json = JsonConvert.SerializeObject(expected);
@@ -716,12 +856,16 @@ namespace QuantConnect.Tests.Common.Orders
         [Test]
         public void JsonIgnores()
         {
-            var json = JsonConvert.SerializeObject(new MarketOrder(Symbols.BTCUSD, 0.123m, DateTime.Today));
+            var json = JsonConvert.SerializeObject(
+                new MarketOrder(Symbols.BTCUSD, 0.123m, DateTime.Today)
+            );
 
             Assert.IsFalse(json.Contains("Tag"));
             Assert.IsFalse(json.Contains("AbsoluteQuantity"));
 
-            json = JsonConvert.SerializeObject(new MarketOrder(Symbols.BTCUSD, 0.123m, DateTime.Today, "This is a Tag"));
+            json = JsonConvert.SerializeObject(
+                new MarketOrder(Symbols.BTCUSD, 0.123m, DateTime.Today, "This is a Tag")
+            );
 
             Assert.IsTrue(json.Contains("Tag"));
             Assert.IsTrue(json.Contains("This is a Tag"));
@@ -730,12 +874,11 @@ namespace QuantConnect.Tests.Common.Orders
         [Test]
         public void TimeInForceInProperties()
         {
-            JsonConvert.DefaultSettings = () => new JsonSerializerSettings
-            {
-                Converters = { new OrderJsonConverter() }
-            };
+            JsonConvert.DefaultSettings = () =>
+                new JsonSerializerSettings { Converters = { new OrderJsonConverter() } };
 
-            const string json = @"{'Type':0,
+            const string json =
+                @"{'Type':0,
 'Value':99986.827413672,
 'Id':1,
 'ContingentId':0,
@@ -789,10 +932,13 @@ namespace QuantConnect.Tests.Common.Orders
 
             TestGroupOrderManager(expected.GroupOrderManager, actual.GroupOrderManager);
 
-            return (T) actual;
+            return (T)actual;
         }
 
-        private static void TestGroupOrderManager(GroupOrderManager expected, GroupOrderManager actual)
+        private static void TestGroupOrderManager(
+            GroupOrderManager expected,
+            GroupOrderManager actual
+        )
         {
             if (expected == null)
             {
@@ -809,7 +955,8 @@ namespace QuantConnect.Tests.Common.Orders
             CollectionAssert.AreEqual(expected.OrderIds, actual.OrderIds);
         }
 
-        private static Order DeserializeOrder<T>(string json) where T : Order
+        private static Order DeserializeOrder<T>(string json)
+            where T : Order
         {
             var converter = new OrderJsonConverter();
             using var reader = new JsonTextReader(new StringReader(json));

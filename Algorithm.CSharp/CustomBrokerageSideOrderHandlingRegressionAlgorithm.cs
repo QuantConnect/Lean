@@ -49,7 +49,9 @@ namespace QuantConnect.Algorithm.CSharp
 
             if (Transactions.OrdersCount == 0)
             {
-                throw new RegressionTestException("Expected orders to be added from brokerage side");
+                throw new RegressionTestException(
+                    "Expected orders to be added from brokerage side"
+                );
             }
 
             if (Portfolio.Positions.Groups.Count != 1)
@@ -61,7 +63,11 @@ namespace QuantConnect.Algorithm.CSharp
         public class CustomBrokerageMessageHandler : IBrokerageMessageHandler
         {
             private readonly IAlgorithm _algorithm;
-            public CustomBrokerageMessageHandler(IAlgorithm algo) { _algorithm = algo; }
+
+            public CustomBrokerageMessageHandler(IAlgorithm algo)
+            {
+                _algorithm = algo;
+            }
 
             /// <summary>
             /// Process the brokerage message event. Trigger any actions in the algorithm or notifications system required.
@@ -69,7 +75,9 @@ namespace QuantConnect.Algorithm.CSharp
             /// <param name="message">Message object</param>
             public void HandleMessage(BrokerageMessageEvent message)
             {
-                _algorithm.Debug($"{_algorithm.Time.ToStringInvariant("o")} Event: {message.Message}");
+                _algorithm.Debug(
+                    $"{_algorithm.Time.ToStringInvariant("o")} Event: {message.Message}"
+                );
             }
 
             /// <summary>
@@ -80,9 +88,19 @@ namespace QuantConnect.Algorithm.CSharp
             public bool HandleOrder(NewBrokerageOrderNotificationEventArgs eventArgs)
             {
                 var order = eventArgs.Order;
-                if (string.IsNullOrEmpty(order.Tag) || !int.TryParse(order.Tag, NumberStyles.Integer, CultureInfo.InvariantCulture, out var value))
+                if (
+                    string.IsNullOrEmpty(order.Tag)
+                    || !int.TryParse(
+                        order.Tag,
+                        NumberStyles.Integer,
+                        CultureInfo.InvariantCulture,
+                        out var value
+                    )
+                )
                 {
-                    throw new RegressionTestException("Expected all new brokerage-side orders to have a valid tag");
+                    throw new RegressionTestException(
+                        "Expected all new brokerage-side orders to have a valid tag"
+                    );
                 }
 
                 // We will only process orders with even tags

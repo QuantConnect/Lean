@@ -40,11 +40,12 @@ namespace QuantConnect.Tests.Indicators
                 CreateIndicator(),
                 TestFileName,
                 "Keltner Channels 20 Top",
-                (ind, expected) => Assert.AreEqual(
-                    expected,
-                    (double) ((KeltnerChannels) ind).UpperBand.Current.Value,
-                    1e-3
-                )
+                (ind, expected) =>
+                    Assert.AreEqual(
+                        expected,
+                        (double)((KeltnerChannels)ind).UpperBand.Current.Value,
+                        1e-3
+                    )
             );
         }
 
@@ -55,11 +56,12 @@ namespace QuantConnect.Tests.Indicators
                 CreateIndicator(),
                 TestFileName,
                 "Keltner Channels 20 Bottom",
-                (ind, expected) => Assert.AreEqual(
-                    expected,
-                    (double) ((KeltnerChannels) ind).LowerBand.Current.Value,
-                    1e-3
-                )
+                (ind, expected) =>
+                    Assert.AreEqual(
+                        expected,
+                        (double)((KeltnerChannels)ind).LowerBand.Current.Value,
+                        1e-3
+                    )
             );
         }
 
@@ -70,10 +72,11 @@ namespace QuantConnect.Tests.Indicators
                 CreateIndicator(),
                 TestFileName,
                 "Middle Band",
-                (ind, expected) => Assert.AreEqual(
-                    ((KeltnerChannels)ind).Current.EndTime,
-                    ((KeltnerChannels)ind).MiddleBand.Current.EndTime
-                )
+                (ind, expected) =>
+                    Assert.AreEqual(
+                        ((KeltnerChannels)ind).Current.EndTime,
+                        ((KeltnerChannels)ind).MiddleBand.Current.EndTime
+                    )
             );
         }
 
@@ -83,7 +86,7 @@ namespace QuantConnect.Tests.Indicators
             var kch = CreateIndicator() as KeltnerChannels;
             foreach (var data in TestHelper.GetTradeBarStream(TestFileName, false))
             {
-               kch.Update(data);
+                kch.Update(data);
             }
 
             Assert.IsTrue(kch.IsReady);

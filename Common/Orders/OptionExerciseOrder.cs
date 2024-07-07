@@ -28,9 +28,7 @@ namespace QuantConnect.Orders
         /// <summary>
         /// Added a default constructor for JSON Deserialization:
         /// </summary>
-        public OptionExerciseOrder()
-        {
-        }
+        public OptionExerciseOrder() { }
 
         /// <summary>
         /// New option exercise order constructor. We model option exercising as an underlying asset long/short order with strike equal to limit price.
@@ -41,10 +39,14 @@ namespace QuantConnect.Orders
         /// <param name="time">Time the order was placed</param>
         /// <param name="tag">User defined data tag for this order</param>
         /// <param name="properties">The order properties for this order</param>
-        public OptionExerciseOrder(Symbol symbol, decimal quantity, DateTime time, string tag = "", IOrderProperties properties = null)
-            : base(symbol, quantity, time, tag, properties)
-        {
-        }
+        public OptionExerciseOrder(
+            Symbol symbol,
+            decimal quantity,
+            DateTime time,
+            string tag = "",
+            IOrderProperties properties = null
+        )
+            : base(symbol, quantity, time, tag, properties) { }
 
         /// <summary>
         /// Option Exercise Order Type
@@ -62,7 +64,9 @@ namespace QuantConnect.Orders
         {
             var option = (Option)security;
 
-            return option.GetExerciseQuantity(Quantity) * Price  / option.SymbolProperties.ContractMultiplier;
+            return option.GetExerciseQuantity(Quantity)
+                * Price
+                / option.SymbolProperties.ContractMultiplier;
         }
 
         /// <summary>

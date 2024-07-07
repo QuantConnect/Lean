@@ -14,17 +14,19 @@
 */
 
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using QuantConnect.Data;
 using QuantConnect.Interfaces;
-using System.Collections.Generic;
 
 namespace QuantConnect.Algorithm.CSharp
 {
     /// <summary>
     /// Regression algorithm testing doing some history requests outside market hours, reproducing GH issue #4783
     /// </summary>
-    public class ExtendedMarketHoursHistoryRegressionAlgorithm : QCAlgorithm, IRegressionAlgorithmDefinition
+    public class ExtendedMarketHoursHistoryRegressionAlgorithm
+        : QCAlgorithm,
+            IRegressionAlgorithmDefinition
     {
         private int _minuteHistoryCount;
         private int _hourHistoryCount;
@@ -39,9 +41,14 @@ namespace QuantConnect.Algorithm.CSharp
             SetEndDate(2013, 10, 09);
             SetCash(100000);
 
-            AddEquity("SPY", Resolution.Minute, extendedMarketHours:true, fillForward:false);
+            AddEquity("SPY", Resolution.Minute, extendedMarketHours: true, fillForward: false);
 
-            Schedule.On("RunHistoryCall", DateRules.EveryDay(), TimeRules.Every(TimeSpan.FromHours(1)), RunHistoryCall);
+            Schedule.On(
+                "RunHistoryCall",
+                DateRules.EveryDay(),
+                TimeRules.Every(TimeSpan.FromHours(1)),
+                RunHistoryCall
+            );
         }
 
         private void RunHistoryCall()
@@ -98,17 +105,23 @@ namespace QuantConnect.Algorithm.CSharp
         {
             if (_minuteHistoryCount != 3 * 6)
             {
-                throw new RegressionTestException($"Unexpected minute history requests count {_minuteHistoryCount}");
+                throw new RegressionTestException(
+                    $"Unexpected minute history requests count {_minuteHistoryCount}"
+                );
             }
             // 6 pre market from 4am to 9am + 4 post market 4pm to 7pm
             if (_hourHistoryCount != 3 * 10)
             {
-                throw new RegressionTestException($"Unexpected hour history requests count {_hourHistoryCount}");
+                throw new RegressionTestException(
+                    $"Unexpected hour history requests count {_hourHistoryCount}"
+                );
             }
             // 0am to 3am + 8pm to 11pm, last day ends at 8pm
             if (_dailyHistoryCount != (2 * 8 + 5))
             {
-                throw new RegressionTestException($"Unexpected Daily history requests count: {_dailyHistoryCount}");
+                throw new RegressionTestException(
+                    $"Unexpected Daily history requests count: {_dailyHistoryCount}"
+                );
             }
         }
 
@@ -140,35 +153,36 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// This is used by the regression test system to indicate what the expected statistics are from running the algorithm
         /// </summary>
-        public Dictionary<string, string> ExpectedStatistics => new Dictionary<string, string>
-        {
-            {"Total Orders", "19"},
-            {"Average Win", "0%"},
-            {"Average Loss", "0.00%"},
-            {"Compounding Annual Return", "-73.997%"},
-            {"Drawdown", "2.500%"},
-            {"Expectancy", "-1"},
-            {"Start Equity", "100000"},
-            {"End Equity", "98959.88"},
-            {"Net Profit", "-1.040%"},
-            {"Sharpe Ratio", "-9.402"},
-            {"Sortino Ratio", "-9.402"},
-            {"Probabilistic Sharpe Ratio", "0%"},
-            {"Loss Rate", "100%"},
-            {"Win Rate", "0%"},
-            {"Profit-Loss Ratio", "0"},
-            {"Alpha", "-0.286"},
-            {"Beta", "0.55"},
-            {"Annual Standard Deviation", "0.075"},
-            {"Annual Variance", "0.006"},
-            {"Information Ratio", "0.914"},
-            {"Tracking Error", "0.061"},
-            {"Treynor Ratio", "-1.28"},
-            {"Total Fees", "$21.45"},
-            {"Estimated Strategy Capacity", "$830000.00"},
-            {"Lowest Capacity Asset", "SPY R735QTJ8XC9X"},
-            {"Portfolio Turnover", "34.15%"},
-            {"OrderListHash", "6ebe462373e2ecc22de8eb2fe114d704"}
-        };
+        public Dictionary<string, string> ExpectedStatistics =>
+            new Dictionary<string, string>
+            {
+                { "Total Orders", "19" },
+                { "Average Win", "0%" },
+                { "Average Loss", "0.00%" },
+                { "Compounding Annual Return", "-73.997%" },
+                { "Drawdown", "2.500%" },
+                { "Expectancy", "-1" },
+                { "Start Equity", "100000" },
+                { "End Equity", "98959.88" },
+                { "Net Profit", "-1.040%" },
+                { "Sharpe Ratio", "-9.402" },
+                { "Sortino Ratio", "-9.402" },
+                { "Probabilistic Sharpe Ratio", "0%" },
+                { "Loss Rate", "100%" },
+                { "Win Rate", "0%" },
+                { "Profit-Loss Ratio", "0" },
+                { "Alpha", "-0.286" },
+                { "Beta", "0.55" },
+                { "Annual Standard Deviation", "0.075" },
+                { "Annual Variance", "0.006" },
+                { "Information Ratio", "0.914" },
+                { "Tracking Error", "0.061" },
+                { "Treynor Ratio", "-1.28" },
+                { "Total Fees", "$21.45" },
+                { "Estimated Strategy Capacity", "$830000.00" },
+                { "Lowest Capacity Asset", "SPY R735QTJ8XC9X" },
+                { "Portfolio Turnover", "34.15%" },
+                { "OrderListHash", "6ebe462373e2ecc22de8eb2fe114d704" }
+            };
     }
 }

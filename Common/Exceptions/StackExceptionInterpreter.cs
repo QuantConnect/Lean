@@ -14,10 +14,10 @@
 */
 
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using QuantConnect.Logging;
-using System.Collections.Generic;
 
 namespace QuantConnect.Exceptions
 {
@@ -31,8 +31,13 @@ namespace QuantConnect.Exceptions
         /// <summary>
         /// Stack interpreter instance
         /// </summary>
-        public static readonly Lazy<StackExceptionInterpreter> Instance = new Lazy<StackExceptionInterpreter>(
-            () => StackExceptionInterpreter.CreateFromAssemblies(AppDomain.CurrentDomain.GetAssemblies()));
+        public static readonly Lazy<StackExceptionInterpreter> Instance =
+            new Lazy<StackExceptionInterpreter>(
+                () =>
+                    StackExceptionInterpreter.CreateFromAssemblies(
+                        AppDomain.CurrentDomain.GetAssemblies()
+                    )
+            );
 
         /// <summary>
         /// Determines the order that an instance of this class should be called
@@ -72,7 +77,10 @@ namespace QuantConnect.Exceptions
         /// configured in the <see cref="StackExceptionInterpreter"/>. Individual implementations *may* ignore
         /// this value if required.</param>
         /// <returns>The interpreted exception</returns>
-        public Exception Interpret(Exception exception, IExceptionInterpreter innerInterpreter = null)
+        public Exception Interpret(
+            Exception exception,
+            IExceptionInterpreter innerInterpreter = null
+        )
         {
             if (exception == null)
             {
@@ -113,7 +121,9 @@ namespace QuantConnect.Exceptions
         /// </summary>
         /// <param name="assemblies">The assemblies to scan</param>
         /// <returns>A new <see cref="StackExceptionInterpreter"/> containing interpreters from the specified assemblies</returns>
-        public static StackExceptionInterpreter CreateFromAssemblies(IEnumerable<Assembly> assemblies)
+        public static StackExceptionInterpreter CreateFromAssemblies(
+            IEnumerable<Assembly> assemblies
+        )
         {
             var interpreters =
                 from assembly in assemblies
@@ -123,18 +133,21 @@ namespace QuantConnect.Exceptions
                 // type implements IExceptionInterpreter
                 where typeof(IExceptionInterpreter).IsAssignableFrom(type)
                 // type is not mocked with MOQ library
-                where type.FullName != null && !type.FullName.StartsWith("Castle.Proxies.ObjectProxy")
+                where
+                    type.FullName != null && !type.FullName.StartsWith("Castle.Proxies.ObjectProxy")
                 // type has default parameterless ctor
                 where type.GetConstructor(new Type[0]) != null
                 // provide guarantee of deterministic ordering
                 orderby type.FullName
-                select (IExceptionInterpreter) Activator.CreateInstance(type);
+                select (IExceptionInterpreter)Activator.CreateInstance(type);
 
             var stackExceptionInterpreter = new StackExceptionInterpreter(interpreters);
 
             foreach (var interpreter in stackExceptionInterpreter.Interpreters)
             {
-                Log.Debug(Messages.StackExceptionInterpreter.LoadedExceptionInterpreter(interpreter));
+                Log.Debug(
+                    Messages.StackExceptionInterpreter.LoadedExceptionInterpreter(interpreter)
+                );
             }
 
             return stackExceptionInterpreter;

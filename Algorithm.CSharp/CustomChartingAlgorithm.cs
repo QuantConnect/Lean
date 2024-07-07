@@ -80,12 +80,15 @@ namespace QuantConnect.Algorithm.CSharp
             dailySpyPlot.AddSeries(spyCandlesticks);
             AddChart(dailySpyPlot);
 
-            Consolidate<TradeBar>(spy, TimeSpan.FromDays(1), (bar) =>
-            {
-                Plot("Daily SPY", "SPY", bar);
-            });
+            Consolidate<TradeBar>(
+                spy,
+                TimeSpan.FromDays(1),
+                (bar) =>
+                {
+                    Plot("Daily SPY", "SPY", bar);
+                }
+            );
         }
-
 
         /// <summary>
         /// OnEndOfDay Event Handler - At the end of each trading day we fire this code.
@@ -97,7 +100,6 @@ namespace QuantConnect.Algorithm.CSharp
             Plot("Trade Plot", "Price", _lastPrice);
         }
 
-
         /// <summary>
         /// On receiving new tradebar data it will be passed into this function. The general pattern is:
         /// "public void OnData( CustomType name ) {...s"
@@ -107,8 +109,10 @@ namespace QuantConnect.Algorithm.CSharp
         {
             _lastPrice = data["SPY"].Close;
 
-            if (_fastMa == 0) _fastMa = _lastPrice;
-            if (_slowMa == 0) _slowMa = _lastPrice;
+            if (_fastMa == 0)
+                _fastMa = _lastPrice;
+            if (_slowMa == 0)
+                _slowMa = _lastPrice;
 
             _fastMa = (0.01m * _lastPrice) + (0.99m * _fastMa);
             _slowMa = (0.001m * _lastPrice) + (0.999m * _slowMa);
@@ -119,7 +123,6 @@ namespace QuantConnect.Algorithm.CSharp
                 Plot("Strategy Equity", "FastMA", _fastMa);
                 Plot("Strategy Equity", "SlowMA", _slowMa);
             }
-
 
             //On the 5th days when not invested buy:
             if (!Portfolio.Invested && Time.Day % 13 == 0)

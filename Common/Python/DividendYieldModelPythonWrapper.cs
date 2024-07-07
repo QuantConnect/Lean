@@ -22,16 +22,16 @@ namespace QuantConnect.Python
     /// <summary>
     /// Wraps a <see cref="PyObject"/> object that represents a dividend yield model
     /// </summary>
-    public class DividendYieldModelPythonWrapper : BasePythonWrapper<IDividendYieldModel>, IDividendYieldModel
+    public class DividendYieldModelPythonWrapper
+        : BasePythonWrapper<IDividendYieldModel>,
+            IDividendYieldModel
     {
         /// <summary>
         /// Constructor for initializing the <see cref="DividendYieldModelPythonWrapper"/> class with wrapped <see cref="PyObject"/> object
         /// </summary>
         /// <param name="model">Represents a security's model of dividend yield</param>
         public DividendYieldModelPythonWrapper(PyObject model)
-            : base(model)
-        {
-        }
+            : base(model) { }
 
         /// <summary>
         /// Get dividend yield by a given date of a given symbol

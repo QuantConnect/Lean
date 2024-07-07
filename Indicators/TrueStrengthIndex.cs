@@ -14,6 +14,7 @@
 */
 
 using System;
+
 namespace QuantConnect.Indicators
 {
     /// <summary>
@@ -64,10 +65,19 @@ namespace QuantConnect.Indicators
         /// <param name="longTermPeriod">Period used for the second (double) price change smoothing</param>
         /// <param name="signalPeriod">The signal period</param>
         /// <param name="signalType">The type of moving average to use for the signal</param>
-        public TrueStrengthIndex(int longTermPeriod = 25, int shortTermPeriod = 13, int signalPeriod = 7, MovingAverageType signalType = MovingAverageType.Exponential)
-            : this($"TSI({longTermPeriod},{shortTermPeriod},{signalPeriod})", longTermPeriod, shortTermPeriod, signalPeriod, signalType)
-        {
-        }
+        public TrueStrengthIndex(
+            int longTermPeriod = 25,
+            int shortTermPeriod = 13,
+            int signalPeriod = 7,
+            MovingAverageType signalType = MovingAverageType.Exponential
+        )
+            : this(
+                $"TSI({longTermPeriod},{shortTermPeriod},{signalPeriod})",
+                longTermPeriod,
+                shortTermPeriod,
+                signalPeriod,
+                signalType
+            ) { }
 
         /// <summary>
         /// Initializes a new instance of the <see cref="TrueStrengthIndex"/> class using the specified name, the short and long term smoothing periods, and the signal period and type.
@@ -77,13 +87,25 @@ namespace QuantConnect.Indicators
         /// <param name="longTermPeriod">Period used for the second (double) price change smoothing</param>
         /// <param name="signalPeriod">The signal period</param>
         /// <param name="signalType">The type of moving average to use for the signal</param>
-        public TrueStrengthIndex(string name, int longTermPeriod = 25, int shortTermPeriod = 13, int signalPeriod = 7, MovingAverageType signalType = MovingAverageType.Exponential)
+        public TrueStrengthIndex(
+            string name,
+            int longTermPeriod = 25,
+            int shortTermPeriod = 13,
+            int signalPeriod = 7,
+            MovingAverageType signalType = MovingAverageType.Exponential
+        )
             : base(name)
         {
             _priceChangeEma = new ExponentialMovingAverage(name + "_PC_EMA", longTermPeriod);
             _absPriceChangeEma = new ExponentialMovingAverage(name + "_APC_EMA", longTermPeriod);
-            _priceChangeEmaEma = new ExponentialMovingAverage(name + "_PC_EMA_EMA", shortTermPeriod).Of(_priceChangeEma, true);
-            _absPriceChangeEmaEma = new ExponentialMovingAverage(name + "_APC_EMA_EMA", shortTermPeriod).Of(_absPriceChangeEma, true);
+            _priceChangeEmaEma = new ExponentialMovingAverage(
+                name + "_PC_EMA_EMA",
+                shortTermPeriod
+            ).Of(_priceChangeEma, true);
+            _absPriceChangeEmaEma = new ExponentialMovingAverage(
+                name + "_APC_EMA_EMA",
+                shortTermPeriod
+            ).Of(_absPriceChangeEma, true);
             _tsi = _priceChangeEmaEma.Over(_absPriceChangeEmaEma).Times(100m);
             Signal = signalType.AsIndicator(name + "_Signal", signalPeriod).Of(_tsi, true);
             WarmUpPeriod = longTermPeriod + shortTermPeriod;

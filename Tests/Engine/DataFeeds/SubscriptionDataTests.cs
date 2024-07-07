@@ -14,12 +14,12 @@
  *
 */
 
+using System;
 using NUnit.Framework;
 using QuantConnect.Data;
 using QuantConnect.Data.Market;
 using QuantConnect.Lean.Engine.DataFeeds;
 using QuantConnect.Securities;
-using System;
 
 namespace QuantConnect.Tests.Engine.DataFeeds
 {
@@ -48,9 +48,20 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             );
 
             var exchangeHours = SecurityExchangeHours.AlwaysOpen(TimeZones.Utc);
-            var offsetProvider = new TimeZoneOffsetProvider(TimeZones.Utc, new DateTime(2020, 5, 21), new DateTime(2020, 5, 22));
+            var offsetProvider = new TimeZoneOffsetProvider(
+                TimeZones.Utc,
+                new DateTime(2020, 5, 21),
+                new DateTime(2020, 5, 22)
+            );
 
-            var subscription = SubscriptionData.Create(false, config, exchangeHours, offsetProvider, tb, config.DataNormalizationMode);
+            var subscription = SubscriptionData.Create(
+                false,
+                config,
+                exchangeHours,
+                offsetProvider,
+                tb,
+                config.DataNormalizationMode
+            );
 
             Assert.AreEqual(new DateTime(2020, 5, 21, 8, 0, 0), subscription.Data.Time);
             Assert.AreEqual(new DateTime(2020, 5, 21, 9, 0, 0), subscription.Data.EndTime);
@@ -77,9 +88,20 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             );
 
             var exchangeHours = SecurityExchangeHours.AlwaysOpen(TimeZones.Utc);
-            var offsetProvider = new TimeZoneOffsetProvider(TimeZones.Utc, new DateTime(2020, 5, 21), new DateTime(2020, 5, 22));
+            var offsetProvider = new TimeZoneOffsetProvider(
+                TimeZones.Utc,
+                new DateTime(2020, 5, 21),
+                new DateTime(2020, 5, 22)
+            );
 
-            var subscription = SubscriptionData.Create(false, config, exchangeHours, offsetProvider, data, config.DataNormalizationMode);
+            var subscription = SubscriptionData.Create(
+                false,
+                config,
+                exchangeHours,
+                offsetProvider,
+                data,
+                config.DataNormalizationMode
+            );
 
             Assert.AreEqual(new DateTime(2020, 5, 21, 8, 9, 0), subscription.Data.Time);
             Assert.AreEqual(new DateTime(2020, 5, 21, 8, 9, 0), subscription.Data.EndTime);
@@ -114,13 +136,19 @@ namespace QuantConnect.Tests.Engine.DataFeeds
                 Close = 400
             };
 
-            var data = SubscriptionData.Create(false,
+            var data = SubscriptionData.Create(
+                false,
                 config,
                 SecurityExchangeHours.AlwaysOpen(TimeZones.Utc),
-                new TimeZoneOffsetProvider(TimeZones.NewYork, new DateTime(2015, 1, 1), new DateTime(2016, 1, 1)),
+                new TimeZoneOffsetProvider(
+                    TimeZones.NewYork,
+                    new DateTime(2015, 1, 1),
+                    new DateTime(2016, 1, 1)
+                ),
                 tb,
                 config.DataNormalizationMode,
-                scale);
+                scale
+            );
 
             Assert.True(data.GetType() == typeof(SubscriptionData));
 
@@ -159,13 +187,19 @@ namespace QuantConnect.Tests.Engine.DataFeeds
                 Close = 400
             };
 
-            var data = SubscriptionData.Create(false,
+            var data = SubscriptionData.Create(
+                false,
                 config,
                 SecurityExchangeHours.AlwaysOpen(TimeZones.Utc),
-                new TimeZoneOffsetProvider(TimeZones.NewYork, new DateTime(2015, 1, 1), new DateTime(2016, 1, 1)),
+                new TimeZoneOffsetProvider(
+                    TimeZones.NewYork,
+                    new DateTime(2015, 1, 1),
+                    new DateTime(2016, 1, 1)
+                ),
                 tb,
                 config.DataNormalizationMode,
-                scale);
+                scale
+            );
 
             Assert.True(data.GetType() == type);
 
@@ -204,13 +238,19 @@ namespace QuantConnect.Tests.Engine.DataFeeds
                 Close = 400
             };
 
-            var data = SubscriptionData.Create(false,
+            var data = SubscriptionData.Create(
+                false,
                 config,
                 SecurityExchangeHours.AlwaysOpen(TimeZones.Utc),
-                new TimeZoneOffsetProvider(TimeZones.NewYork, new DateTime(2015, 1, 1), new DateTime(2016, 1, 1)),
+                new TimeZoneOffsetProvider(
+                    TimeZones.NewYork,
+                    new DateTime(2015, 1, 1),
+                    new DateTime(2016, 1, 1)
+                ),
                 tb,
                 config.DataNormalizationMode,
-                scale);
+                scale
+            );
 
             Assert.True(data.GetType() == type);
 
@@ -250,20 +290,29 @@ namespace QuantConnect.Tests.Engine.DataFeeds
                 Close = 400
             };
 
-            var data = SubscriptionData.Create(false,
+            var data = SubscriptionData.Create(
+                false,
                 config,
                 SecurityExchangeHours.AlwaysOpen(TimeZones.Utc),
-                new TimeZoneOffsetProvider(TimeZones.NewYork, new DateTime(2015, 1, 1), new DateTime(2016, 1, 1)),
+                new TimeZoneOffsetProvider(
+                    TimeZones.NewYork,
+                    new DateTime(2015, 1, 1),
+                    new DateTime(2016, 1, 1)
+                ),
                 tb,
                 config.DataNormalizationMode,
-                scale);
+                scale
+            );
 
             Assert.True(data.GetType() == type);
 
             Assert.AreEqual(tb.Open * scale + config.SumOfDividends, (data.Data as TradeBar).Open);
             Assert.AreEqual(tb.High * scale + config.SumOfDividends, (data.Data as TradeBar).High);
             Assert.AreEqual(tb.Low * scale + config.SumOfDividends, (data.Data as TradeBar).Low);
-            Assert.AreEqual(tb.Close * scale + config.SumOfDividends, (data.Data as TradeBar).Close);
+            Assert.AreEqual(
+                tb.Close * scale + config.SumOfDividends,
+                (data.Data as TradeBar).Close
+            );
         }
 
         [TestCase(true, typeof(TradeBar))]
@@ -294,12 +343,20 @@ namespace QuantConnect.Tests.Engine.DataFeeds
                 data = data.Clone(isFillForward);
             }
 
-            var subscriptionData = (PrecalculatedSubscriptionData) SubscriptionData.Create(false, config,
-                SecurityExchangeHours.AlwaysOpen(TimeZones.Utc),
-                new TimeZoneOffsetProvider(TimeZones.NewYork, new DateTime(2015, 1, 1), new DateTime(2016, 1, 1)),
-                data,
-                config.DataNormalizationMode,
-                scale);
+            var subscriptionData = (PrecalculatedSubscriptionData)
+                SubscriptionData.Create(
+                    false,
+                    config,
+                    SecurityExchangeHours.AlwaysOpen(TimeZones.Utc),
+                    new TimeZoneOffsetProvider(
+                        TimeZones.NewYork,
+                        new DateTime(2015, 1, 1),
+                        new DateTime(2016, 1, 1)
+                    ),
+                    data,
+                    config.DataNormalizationMode,
+                    scale
+                );
 
             config.DataNormalizationMode = DataNormalizationMode.Raw;
             Assert.AreEqual(isFillForward, subscriptionData.Data.IsFillForward);
@@ -308,8 +365,6 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             Assert.AreEqual(isFillForward, subscriptionData.Data.IsFillForward);
         }
 
-        internal class MyCustomData : BaseData
-        {
-        }
+        internal class MyCustomData : BaseData { }
     }
 }

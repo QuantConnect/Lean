@@ -14,10 +14,8 @@
 */
 
 using System.Runtime.CompilerServices;
-
 using QuantConnect.Interfaces;
 using QuantConnect.Securities.Positions;
-
 using static QuantConnect.StringExtensions;
 
 namespace QuantConnect
@@ -35,28 +33,41 @@ namespace QuantConnect
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             public static string InvalidTargetPercent(IAlgorithm algorithm, decimal percent)
             {
-                return Invariant($@"The portfolio target percent: {
+                return Invariant(
+                    $@"The portfolio target percent: {
                     percent}, does not comply with the current 'Algorithm.Settings' 'MaxAbsolutePortfolioTargetPercentage': {
                     algorithm.Settings.MaxAbsolutePortfolioTargetPercentage} or 'MinAbsolutePortfolioTargetPercentage': {
-                    algorithm.Settings.MinAbsolutePortfolioTargetPercentage}. Skipping");
+                    algorithm.Settings.MinAbsolutePortfolioTargetPercentage}. Skipping"
+                );
             }
 
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             public static string SymbolNotFound(QuantConnect.Symbol symbol)
             {
-                return Invariant($"{symbol} not found in portfolio. Request this data when initializing the algorithm.");
+                return Invariant(
+                    $"{symbol} not found in portfolio. Request this data when initializing the algorithm."
+                );
             }
 
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            public static string UnableToComputeOrderQuantityDueToNullResult(QuantConnect.Symbol symbol, GetMaximumLotsResult result)
+            public static string UnableToComputeOrderQuantityDueToNullResult(
+                QuantConnect.Symbol symbol,
+                GetMaximumLotsResult result
+            )
             {
-                return Invariant($"Unable to compute order quantity of {symbol}. Reason: {result.Reason} Returning null.");
+                return Invariant(
+                    $"Unable to compute order quantity of {symbol}. Reason: {result.Reason} Returning null."
+                );
             }
 
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            public static string ToString(Algorithm.Framework.Portfolio.PortfolioTarget portfolioTarget)
+            public static string ToString(
+                Algorithm.Framework.Portfolio.PortfolioTarget portfolioTarget
+            )
             {
-                var str = Invariant($"{portfolioTarget.Symbol}: {portfolioTarget.Quantity.Normalize()}");
+                var str = Invariant(
+                    $"{portfolioTarget.Symbol}: {portfolioTarget.Quantity.Normalize()}"
+                );
                 if (!string.IsNullOrEmpty(portfolioTarget.Tag))
                 {
                     str += $" ({portfolioTarget.Tag})";

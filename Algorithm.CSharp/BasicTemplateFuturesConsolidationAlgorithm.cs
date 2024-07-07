@@ -15,11 +15,11 @@
 */
 
 using System;
+using System.Collections.Generic;
 using QuantConnect.Data;
+using QuantConnect.Data.Consolidators;
 using QuantConnect.Data.Market;
 using QuantConnect.Securities;
-using System.Collections.Generic;
-using QuantConnect.Data.Consolidators;
 
 namespace QuantConnect.Algorithm.CSharp
 {

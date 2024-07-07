@@ -14,14 +14,14 @@
 */
 
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using Newtonsoft.Json;
-using QuantConnect.Util;
-using QuantConnect.Orders;
 using Newtonsoft.Json.Linq;
+using QuantConnect.Orders;
 using QuantConnect.Packets;
 using QuantConnect.Securities;
-using System.Collections.Generic;
+using QuantConnect.Util;
 
 namespace QuantConnect.Api
 {
@@ -47,7 +47,9 @@ namespace QuantConnect.Api
         /// <param name="writer">The <see cref="T:Newtonsoft.Json.JsonWriter"/> to write to.</param><param name="value">The value.</param><param name="serializer">The calling serializer.</param>
         public override void WriteJson(JsonWriter writer, object value, JsonSerializer serializer)
         {
-            throw new NotImplementedException("The LiveAlgorithmResultsJsonConverter does not implement a WriteJson method.");
+            throw new NotImplementedException(
+                "The LiveAlgorithmResultsJsonConverter does not implement a WriteJson method."
+            );
         }
 
         /// <summary>
@@ -62,7 +64,6 @@ namespace QuantConnect.Api
             return typeof(LiveAlgorithmResults).IsAssignableFrom(objectType);
         }
 
-
         /// <summary>
         /// Reads the JSON representation of the object.
         /// </summary>
@@ -70,7 +71,12 @@ namespace QuantConnect.Api
         /// <returns>
         /// The object value.
         /// </returns>
-        public override object ReadJson(JsonReader reader, Type objectType, object existingValue, JsonSerializer serializer)
+        public override object ReadJson(
+            JsonReader reader,
+            Type objectType,
+            object existingValue,
+            JsonSerializer serializer
+        )
         {
             var jObject = JObject.Load(reader);
 
@@ -95,7 +101,10 @@ namespace QuantConnect.Api
             if (!liveAlgoResults.Success)
             {
                 // Either there was an error in the running algorithm or the algorithm hasn't started
-                liveAlgoResults.Errors = jObject.Last.Children().Select(error => error.ToString()).ToList();
+                liveAlgoResults.Errors = jObject
+                    .Last.Children()
+                    .Select(error => error.ToString())
+                    .ToList();
                 return liveAlgoResults;
             }
 
@@ -105,9 +114,11 @@ namespace QuantConnect.Api
             if (charts != null)
             {
                 var stringCharts = jObject["charts"]?.ToString() ?? jObject["Charts"].ToString();
-                if(!string.IsNullOrEmpty(stringCharts))
+                if (!string.IsNullOrEmpty(stringCharts))
                 {
-                    chartDictionary = JsonConvert.DeserializeObject<Dictionary<string, Chart>>(stringCharts);
+                    chartDictionary = JsonConvert.DeserializeObject<Dictionary<string, Chart>>(
+                        stringCharts
+                    );
                 }
             }
 

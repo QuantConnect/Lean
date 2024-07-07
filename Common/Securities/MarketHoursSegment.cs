@@ -85,12 +85,14 @@ namespace QuantConnect.Securities
             TimeSpan marketOpen,
             TimeSpan marketClose,
             TimeSpan extendedMarketClose
-            )
+        )
         {
             // perform some sanity checks
             if (marketOpen < extendedMarketOpen)
             {
-                throw new ArgumentException(Messages.MarketHoursSegment.InvalidExtendedMarketOpenTime);
+                throw new ArgumentException(
+                    Messages.MarketHoursSegment.InvalidExtendedMarketOpenTime
+                );
             }
             if (marketClose < marketOpen)
             {
@@ -98,24 +100,40 @@ namespace QuantConnect.Securities
             }
             if (extendedMarketClose < marketClose)
             {
-                throw new ArgumentException(Messages.MarketHoursSegment.InvalidExtendedMarketCloseTime);
+                throw new ArgumentException(
+                    Messages.MarketHoursSegment.InvalidExtendedMarketCloseTime
+                );
             }
 
             var segments = new List<MarketHoursSegment>();
 
             if (extendedMarketOpen != marketOpen)
             {
-                segments.Add(new MarketHoursSegment(MarketHoursState.PreMarket, extendedMarketOpen, marketOpen));
+                segments.Add(
+                    new MarketHoursSegment(
+                        MarketHoursState.PreMarket,
+                        extendedMarketOpen,
+                        marketOpen
+                    )
+                );
             }
 
             if (marketOpen != TimeSpan.Zero || marketClose != TimeSpan.Zero)
             {
-                segments.Add(new MarketHoursSegment(MarketHoursState.Market, marketOpen, marketClose));
+                segments.Add(
+                    new MarketHoursSegment(MarketHoursState.Market, marketOpen, marketClose)
+                );
             }
 
             if (marketClose != extendedMarketClose)
             {
-                segments.Add(new MarketHoursSegment(MarketHoursState.PostMarket, marketClose, extendedMarketClose));
+                segments.Add(
+                    new MarketHoursSegment(
+                        MarketHoursState.PostMarket,
+                        marketClose,
+                        extendedMarketClose
+                    )
+                );
             }
 
             return segments.ToArray();

@@ -15,15 +15,15 @@
 */
 
 using System;
+using System.Collections.Generic;
 using NUnit.Framework;
 using QuantConnect.Data;
-using QuantConnect.Interfaces;
-using QuantConnect.Securities;
-using System.Collections.Generic;
 using QuantConnect.Data.Auxiliary;
-using QuantConnect.Lean.Engine.DataFeeds;
 using QuantConnect.Data.UniverseSelection;
+using QuantConnect.Interfaces;
+using QuantConnect.Lean.Engine.DataFeeds;
 using QuantConnect.Lean.Engine.DataFeeds.Enumerators;
+using QuantConnect.Securities;
 
 namespace QuantConnect.Tests.Engine.DataFeeds.Enumerators
 {
@@ -35,13 +35,16 @@ namespace QuantConnect.Tests.Engine.DataFeeds.Enumerators
         [TestCase(Resolution.Minute, "20181017 05:00", 5)]
         [TestCase(Resolution.Hour, "20181017 05:00", 5)]
         [TestCase(Resolution.Daily, "20181017 05:00", 5)]
-
         [TestCase(Resolution.Tick, "20181017 10:00", 10)]
         [TestCase(Resolution.Second, "20181017 10:00", 10)]
         [TestCase(Resolution.Minute, "20181017 10:00", 10)]
         [TestCase(Resolution.Hour, "20181017 10:00", 10)]
         [TestCase(Resolution.Daily, "20181017 10:00", 10)]
-        public void RefreshesFutureChainUniverseOnDateChange(Resolution resolution, string dateTime, int expectedStartHour)
+        public void RefreshesFutureChainUniverseOnDateChange(
+            Resolution resolution,
+            string dateTime,
+            int expectedStartHour
+        )
         {
             var startTime = Time.ParseDate(dateTime);
             Assert.AreEqual(expectedStartHour, startTime.Hour);
@@ -49,10 +52,19 @@ namespace QuantConnect.Tests.Engine.DataFeeds.Enumerators
 
             var symbolUniverse = new TestDataQueueUniverseProvider(timeProvider);
 
-            var canonicalSymbol = Symbol.Create(Futures.Indices.VIX, SecurityType.Future, Market.CFE, "/VX");
+            var canonicalSymbol = Symbol.Create(
+                Futures.Indices.VIX,
+                SecurityType.Future,
+                Market.CFE,
+                "/VX"
+            );
 
             var request = GetRequest(canonicalSymbol, startTime, resolution);
-            var enumerator = new DataQueueFuturesChainUniverseDataCollectionEnumerator(request, symbolUniverse, timeProvider);
+            var enumerator = new DataQueueFuturesChainUniverseDataCollectionEnumerator(
+                request,
+                symbolUniverse,
+                timeProvider
+            );
 
             Assert.IsTrue(enumerator.MoveNext());
             Assert.IsNotNull(enumerator.Current);
@@ -92,9 +104,15 @@ namespace QuantConnect.Tests.Engine.DataFeeds.Enumerators
             request.Universe.Dispose();
         }
 
-        private static SubscriptionRequest GetRequest(Symbol canonicalSymbol, DateTime startTime, Resolution resolution)
+        private static SubscriptionRequest GetRequest(
+            Symbol canonicalSymbol,
+            DateTime startTime,
+            Resolution resolution
+        )
         {
-            var entry = MarketHoursDatabase.FromDataFolder().GetEntry(canonicalSymbol.ID.Market, canonicalSymbol, canonicalSymbol.SecurityType);
+            var entry = MarketHoursDatabase
+                .FromDataFolder()
+                .GetEntry(canonicalSymbol.ID.Market, canonicalSymbol, canonicalSymbol.SecurityType);
             var config = new SubscriptionDataConfig(
                 typeof(ZipEntryName),
                 canonicalSymbol,
@@ -117,7 +135,14 @@ namespace QuantConnect.Tests.Engine.DataFeeds.Enumerators
 #pragma warning disable CA2000
             var universe = new FuturesChainUniverse(future, universeSettings);
 #pragma warning restore CA2000
-            return new SubscriptionRequest(true, universe, future, config, startTime, Time.EndOfTime);
+            return new SubscriptionRequest(
+                true,
+                universe,
+                future,
+                config,
+                startTime,
+                Time.EndOfTime
+            );
         }
 
         private class TestDataQueueUniverseProvider : IDataQueueUniverseProvider
@@ -141,7 +166,11 @@ namespace QuantConnect.Tests.Engine.DataFeeds.Enumerators
                 _timeProvider = timeProvider;
             }
 
-            public IEnumerable<Symbol> LookupSymbols(Symbol symbol, bool includeExpired, string securityCurrency = null)
+            public IEnumerable<Symbol> LookupSymbols(
+                Symbol symbol,
+                bool includeExpired,
+                string securityCurrency = null
+            )
             {
                 TotalLookupCalls++;
                 return _timeProvider.GetUtcNow().Date.Day >= 18 ? _symbolList2 : _symbolList1;

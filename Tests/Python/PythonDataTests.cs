@@ -14,13 +14,13 @@
 */
 
 using System;
-using NodaTime;
-using Python.Runtime;
-using NUnit.Framework;
-using QuantConnect.Data;
-using QuantConnect.Python;
 using System.Collections.Generic;
 using System.Reflection;
+using NodaTime;
+using NUnit.Framework;
+using Python.Runtime;
+using QuantConnect.Data;
+using QuantConnect.Python;
 
 namespace QuantConnect.Tests.Python
 {
@@ -33,7 +33,8 @@ namespace QuantConnect.Tests.Python
         {
             using (Py.GIL())
             {
-                dynamic testModule = PyModule.FromString("testModule",
+                dynamic testModule = PyModule.FromString(
+                    "testModule",
                     $@"
 from AlgorithmImports import *
 
@@ -44,7 +45,8 @@ class CustomDataTest(PythonData):
         result.{value} = 10
         result.time = datetime.strptime(""2022-05-05"", ""%Y-%m-%d"")
         result.end_time = datetime.strptime(""2022-05-15"", ""%Y-%m-%d"")
-        return result");
+        return result"
+                );
 
                 var data = GetDataFromModule(testModule);
 
@@ -65,7 +67,8 @@ class CustomDataTest(PythonData):
         {
             using (Py.GIL())
             {
-                dynamic testModule = PyModule.FromString("testModule",
+                dynamic testModule = PyModule.FromString(
+                    "testModule",
                     $@"
 from AlgorithmImports import *
 
@@ -76,7 +79,8 @@ class CustomDataTest(PythonData):
         result.Value = 10
         result.{time} = datetime.strptime(""2022-05-05"", ""%Y-%m-%d"")
         result.{endtime} = datetime.strptime(""2022-05-15"", ""%Y-%m-%d"")
-        return result");
+        return result"
+                );
 
                 var data = GetDataFromModule(testModule);
 
@@ -92,7 +96,8 @@ class CustomDataTest(PythonData):
         {
             using (Py.GIL())
             {
-                dynamic testModule = PyModule.FromString("testModule",
+                dynamic testModule = PyModule.FromString(
+                    "testModule",
                     $@"
 from AlgorithmImports import *
 
@@ -102,7 +107,8 @@ class CustomDataTest(PythonData):
         result.Symbol = config.Symbol
         result.Value = 10
         result.{endtime} = datetime.strptime(""2022-05-05"", ""%Y-%m-%d"")
-        return result");
+        return result"
+                );
 
                 var data = GetDataFromModule(testModule);
 
@@ -117,7 +123,8 @@ class CustomDataTest(PythonData):
         {
             using (Py.GIL())
             {
-                dynamic testModule = PyModule.FromString("testModule",
+                dynamic testModule = PyModule.FromString(
+                    "testModule",
                     $@"
 from AlgorithmImports import *
 
@@ -127,7 +134,8 @@ class CustomDataTest(PythonData):
         result.Symbol = config.Symbol
         result.Value = 10
         result.{time} = datetime.strptime(""2022-05-05"", ""%Y-%m-%d"")
-        return result");
+        return result"
+                );
 
                 var data = GetDataFromModule(testModule);
 
@@ -167,13 +175,22 @@ class CustomDataTest(PythonData):
                 return new List<Resolution> { Resolution.Daily };
             }
 
-            public override BaseData Reader(SubscriptionDataConfig config, string line, DateTime date, bool isLiveMode)
+            public override BaseData Reader(
+                SubscriptionDataConfig config,
+                string line,
+                DateTime date,
+                bool isLiveMode
+            )
             {
                 Throw();
                 return new TestPythonData();
             }
 
-            public override SubscriptionDataSource GetSource(SubscriptionDataConfig config, DateTime date, bool isLiveMode)
+            public override SubscriptionDataSource GetSource(
+                SubscriptionDataConfig config,
+                DateTime date,
+                bool isLiveMode
+            )
             {
                 Throw();
                 return new SubscriptionDataSource("test", SubscriptionTransportMedium.LocalFile);
@@ -190,14 +207,16 @@ class CustomDataTest(PythonData):
         {
             using (Py.GIL())
             {
-                dynamic testModule = PyModule.FromString("testModule",
+                dynamic testModule = PyModule.FromString(
+                    "testModule",
                     $@"
 from AlgorithmImports import *
 
 from QuantConnect.Tests.Python import *
 
 class CustomDataClass(PythonDataTests.TestPythonData):
-    pass");
+    pass"
+                );
 
                 var customDataClass = testModule.GetAttr("CustomDataClass");
                 var type = Extensions.CreateType(customDataClass);
@@ -207,20 +226,52 @@ class CustomDataClass(PythonDataTests.TestPythonData):
                 var methodArgsType = Array.Empty<Type>();
                 if (methodName.Equals("Reader", StringComparison.OrdinalIgnoreCase))
                 {
-                    var config = new SubscriptionDataConfig(type, Symbols.SPY, Resolution.Daily, DateTimeZone.Utc,
-                        DateTimeZone.Utc, false, false, false, isCustom: true);
+                    var config = new SubscriptionDataConfig(
+                        type,
+                        Symbols.SPY,
+                        Resolution.Daily,
+                        DateTimeZone.Utc,
+                        DateTimeZone.Utc,
+                        false,
+                        false,
+                        false,
+                        isCustom: true
+                    );
                     args = new object[] { config, "line", DateTime.MinValue, false };
-                    methodArgsType = new[] { typeof(SubscriptionDataConfig), typeof(string), typeof(DateTime), typeof(bool) };
+                    methodArgsType = new[]
+                    {
+                        typeof(SubscriptionDataConfig),
+                        typeof(string),
+                        typeof(DateTime),
+                        typeof(bool)
+                    };
                 }
                 else if (methodName.Equals("GetSource", StringComparison.OrdinalIgnoreCase))
                 {
-                    var config = new SubscriptionDataConfig(type, Symbols.SPY, Resolution.Daily, DateTimeZone.Utc,
-                        DateTimeZone.Utc, false, false, false, isCustom: true);
+                    var config = new SubscriptionDataConfig(
+                        type,
+                        Symbols.SPY,
+                        Resolution.Daily,
+                        DateTimeZone.Utc,
+                        DateTimeZone.Utc,
+                        false,
+                        false,
+                        false,
+                        isCustom: true
+                    );
                     args = new object[] { config, DateTime.MinValue, false };
-                    methodArgsType = new[] { typeof(SubscriptionDataConfig), typeof(DateTime), typeof(bool) };
+                    methodArgsType = new[]
+                    {
+                        typeof(SubscriptionDataConfig),
+                        typeof(DateTime),
+                        typeof(bool)
+                    };
                 }
 
-                var exception = Assert.Throws<TargetInvocationException>(() => typeof(PythonData).GetMethod(methodName, methodArgsType).Invoke(data, args));
+                var exception = Assert.Throws<TargetInvocationException>(
+                    () =>
+                        typeof(PythonData).GetMethod(methodName, methodArgsType).Invoke(data, args)
+                );
                 Assert.AreEqual($"TestPythonData.Throw()", exception.InnerException.Message);
             }
         }
@@ -229,8 +280,17 @@ class CustomDataClass(PythonDataTests.TestPythonData):
         {
             var type = Extensions.CreateType(testModule.GetAttr("CustomDataTest"));
             var customDataTest = new PythonData(testModule.GetAttr("CustomDataTest")());
-            var config = new SubscriptionDataConfig(type, Symbols.SPY, Resolution.Daily, DateTimeZone.Utc,
-                DateTimeZone.Utc, false, false, false, isCustom: true);
+            var config = new SubscriptionDataConfig(
+                type,
+                Symbols.SPY,
+                Resolution.Daily,
+                DateTimeZone.Utc,
+                DateTimeZone.Utc,
+                false,
+                false,
+                false,
+                isCustom: true
+            );
             return customDataTest.Reader(config, "something", DateTime.UtcNow, false);
         }
     }

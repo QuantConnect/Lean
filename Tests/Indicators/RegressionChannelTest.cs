@@ -13,9 +13,9 @@
  * limitations under the License.
 */
 
+using System;
 using NUnit.Framework;
 using QuantConnect.Indicators;
-using System;
 
 namespace QuantConnect.Tests.Indicators
 {

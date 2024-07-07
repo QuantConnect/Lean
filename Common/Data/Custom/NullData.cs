@@ -20,7 +20,5 @@ namespace QuantConnect.DataSource
     /// <summary>
     /// Represents a custom data type place holder
     /// </summary>
-    public class NullData : BaseData
-    {
-    }
+    public class NullData : BaseData { }
 }

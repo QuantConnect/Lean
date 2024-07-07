@@ -36,15 +36,18 @@ namespace QuantConnect.Securities.FutureOption
         /// <param name="registeredTypes">Provides all data types registered to the algorithm</param>
         /// <param name="securityCache">Cache of security objects</param>
         /// <param name="underlying">Future underlying security</param>
-        public FutureOption(Symbol symbol,
+        public FutureOption(
+            Symbol symbol,
             SecurityExchangeHours exchangeHours,
             Cash quoteCurrency,
             OptionSymbolProperties symbolProperties,
             ICurrencyConverter currencyConverter,
             IRegisteredSecurityDataTypesProvider registeredTypes,
             SecurityCache securityCache,
-            Security underlying)
-            : base(symbol,
+            Security underlying
+        )
+            : base(
+                symbol,
                 quoteCurrency,
                 symbolProperties,
                 new OptionExchange(exchangeHours),
@@ -61,7 +64,7 @@ namespace QuantConnect.Securities.FutureOption
                 currencyConverter,
                 registeredTypes,
                 underlying
-        )
+            )
         {
             BuyingPowerModel = new FuturesOptionsMarginModel(0, this);
         }

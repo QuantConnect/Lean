@@ -15,10 +15,10 @@
 */
 
 using System;
-using System.Linq;
-using Python.Runtime;
-using Newtonsoft.Json;
 using System.Collections.Generic;
+using System.Linq;
+using Newtonsoft.Json;
+using Python.Runtime;
 using QuantConnect.Data.UniverseSelection;
 
 namespace QuantConnect.Data.Fundamental
@@ -37,30 +37,58 @@ namespace QuantConnect.Data.Fundamental
         /// Gets/sets the OneYear period value for the field
         /// </summary>
         [JsonProperty("1Y")]
-        public double OneYear => FundamentalService.Get<double>(TimeProvider.GetUtcNow(), SecurityIdentifier, FundamentalProperty.EarningRatios_EquityPerShareGrowth_OneYear);
+        public double OneYear =>
+            FundamentalService.Get<double>(
+                TimeProvider.GetUtcNow(),
+                SecurityIdentifier,
+                FundamentalProperty.EarningRatios_EquityPerShareGrowth_OneYear
+            );
 
         /// <summary>
         /// Gets/sets the ThreeMonths period value for the field
         /// </summary>
         [JsonProperty("3M")]
-        public double ThreeMonths => FundamentalService.Get<double>(TimeProvider.GetUtcNow(), SecurityIdentifier, FundamentalProperty.EarningRatios_EquityPerShareGrowth_ThreeMonths);
+        public double ThreeMonths =>
+            FundamentalService.Get<double>(
+                TimeProvider.GetUtcNow(),
+                SecurityIdentifier,
+                FundamentalProperty.EarningRatios_EquityPerShareGrowth_ThreeMonths
+            );
 
         /// <summary>
         /// Gets/sets the ThreeYears period value for the field
         /// </summary>
         [JsonProperty("3Y")]
-        public double ThreeYears => FundamentalService.Get<double>(TimeProvider.GetUtcNow(), SecurityIdentifier, FundamentalProperty.EarningRatios_EquityPerShareGrowth_ThreeYears);
+        public double ThreeYears =>
+            FundamentalService.Get<double>(
+                TimeProvider.GetUtcNow(),
+                SecurityIdentifier,
+                FundamentalProperty.EarningRatios_EquityPerShareGrowth_ThreeYears
+            );
 
         /// <summary>
         /// Gets/sets the FiveYears period value for the field
         /// </summary>
         [JsonProperty("5Y")]
-        public double FiveYears => FundamentalService.Get<double>(TimeProvider.GetUtcNow(), SecurityIdentifier, FundamentalProperty.EarningRatios_EquityPerShareGrowth_FiveYears);
+        public double FiveYears =>
+            FundamentalService.Get<double>(
+                TimeProvider.GetUtcNow(),
+                SecurityIdentifier,
+                FundamentalProperty.EarningRatios_EquityPerShareGrowth_FiveYears
+            );
 
         /// <summary>
         /// Returns true if the field contains a value for the default period
         /// </summary>
-        public override bool HasValue => !BaseFundamentalDataProvider.IsNone(typeof(double), FundamentalService.Get<double>(TimeProvider.GetUtcNow(), SecurityIdentifier, FundamentalProperty.EarningRatios_EquityPerShareGrowth_OneYear));
+        public override bool HasValue =>
+            !BaseFundamentalDataProvider.IsNone(
+                typeof(double),
+                FundamentalService.Get<double>(
+                    TimeProvider.GetUtcNow(),
+                    SecurityIdentifier,
+                    FundamentalProperty.EarningRatios_EquityPerShareGrowth_OneYear
+                )
+            );
 
         /// <summary>
         /// Returns the default value for the field
@@ -69,7 +97,11 @@ namespace QuantConnect.Data.Fundamental
         {
             get
             {
-                var defaultValue = FundamentalService.Get<double>(TimeProvider.GetUtcNow(), SecurityIdentifier, FundamentalProperty.EarningRatios_EquityPerShareGrowth_OneYear);
+                var defaultValue = FundamentalService.Get<double>(
+                    TimeProvider.GetUtcNow(),
+                    SecurityIdentifier,
+                    FundamentalProperty.EarningRatios_EquityPerShareGrowth_OneYear
+                );
                 if (!BaseFundamentalDataProvider.IsNone(typeof(double), defaultValue))
                 {
                     return defaultValue;
@@ -85,9 +117,17 @@ namespace QuantConnect.Data.Fundamental
         public override IReadOnlyDictionary<string, double> GetPeriodValues()
         {
             var result = new Dictionary<string, double>();
-            foreach (var kvp in new[] { new Tuple<string, double>("1Y",OneYear), new Tuple<string, double>("3M",ThreeMonths), new Tuple<string, double>("3Y",ThreeYears), new Tuple<string, double>("5Y",FiveYears) })
+            foreach (
+                var kvp in new[]
+                {
+                    new Tuple<string, double>("1Y", OneYear),
+                    new Tuple<string, double>("3M", ThreeMonths),
+                    new Tuple<string, double>("3Y", ThreeYears),
+                    new Tuple<string, double>("5Y", FiveYears)
+                }
+            )
             {
-                if(!BaseFundamentalDataProvider.IsNone(typeof(double), kvp.Item2))
+                if (!BaseFundamentalDataProvider.IsNone(typeof(double), kvp.Item2))
                 {
                     result[kvp.Item1] = kvp.Item2;
                 }
@@ -100,20 +140,27 @@ namespace QuantConnect.Data.Fundamental
         /// </summary>
         /// <param name="period">The requested period</param>
         /// <returns>The value for the period</returns>
-        public override double GetPeriodValue(string period) => FundamentalService.Get<double>(TimeProvider.GetUtcNow(), SecurityIdentifier, Enum.Parse<FundamentalProperty>($"EarningRatios_EquityPerShareGrowth_{ConvertPeriod(period)}"));
+        public override double GetPeriodValue(string period) =>
+            FundamentalService.Get<double>(
+                TimeProvider.GetUtcNow(),
+                SecurityIdentifier,
+                Enum.Parse<FundamentalProperty>(
+                    $"EarningRatios_EquityPerShareGrowth_{ConvertPeriod(period)}"
+                )
+            );
 
         /// <summary>
         /// Creates a new empty instance
         /// </summary>
-        public EquityPerShareGrowth()
-        {
-        }
+        public EquityPerShareGrowth() { }
 
         /// <summary>
         /// Creates a new instance for the given time and security
         /// </summary>
-        public EquityPerShareGrowth(ITimeProvider timeProvider, SecurityIdentifier securityIdentifier) : base(timeProvider, securityIdentifier)
-        {
-        }
+        public EquityPerShareGrowth(
+            ITimeProvider timeProvider,
+            SecurityIdentifier securityIdentifier
+        )
+            : base(timeProvider, securityIdentifier) { }
     }
 }

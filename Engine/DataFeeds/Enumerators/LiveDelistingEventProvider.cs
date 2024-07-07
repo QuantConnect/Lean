@@ -14,10 +14,10 @@
  *
 */
 
+using System.Collections.Generic;
 using System.Linq;
 using QuantConnect.Data;
 using QuantConnect.Logging;
-using System.Collections.Generic;
 
 namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
 {
@@ -40,8 +40,10 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
 
             if (currentInstance?.LastOrDefault()?.Date != newInstance?.LastOrDefault()?.Date)
             {
-                Log.Trace($"LiveDelistingEventProvider({Config}): new tradable date {eventArgs.Date:yyyyMMdd}. " +
-                    $"MapFile.LastDate Old: {currentInstance?.LastOrDefault()?.Date:yyyyMMdd} New: {newInstance?.LastOrDefault()?.Date:yyyyMMdd}");
+                Log.Trace(
+                    $"LiveDelistingEventProvider({Config}): new tradable date {eventArgs.Date:yyyyMMdd}. "
+                        + $"MapFile.LastDate Old: {currentInstance?.LastOrDefault()?.Date:yyyyMMdd} New: {newInstance?.LastOrDefault()?.Date:yyyyMMdd}"
+                );
             }
 
             return base.GetEvents(eventArgs);

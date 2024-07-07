@@ -15,10 +15,10 @@
 */
 
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using QuantConnect.Data;
 using QuantConnect.Interfaces;
-using System.Collections.Generic;
 
 namespace QuantConnect.Algorithm.CSharp
 {
@@ -67,7 +67,7 @@ namespace QuantConnect.Algorithm.CSharp
                     // This bar would also be emitted by lean if no warmup was set and daily resolution used, see 'BasicTemplateDailyAlgorithm'
                     if (Time <= StartDate)
                     {
-                        if(atmContract.LastPrice == 0)
+                        if (atmContract.LastPrice == 0)
                         {
                             throw new RegressionTestException("Contract price is not set!");
                         }
@@ -92,12 +92,13 @@ namespace QuantConnect.Algorithm.CSharp
             {
                 if (OptionWarmupTimes[count] != start)
                 {
-                    throw new RegressionTestException($"Unexpected time {OptionWarmupTimes[count]} expected {start}");
+                    throw new RegressionTestException(
+                        $"Unexpected time {OptionWarmupTimes[count]} expected {start}"
+                    );
                 }
                 count++;
                 start = start.AddMinutes(1);
-            }
-            while (start < end);
+            } while (start < end);
         }
 
         /// <summary>
@@ -128,35 +129,36 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// This is used by the regression test system to indicate what the expected statistics are from running the algorithm
         /// </summary>
-        public virtual Dictionary<string, string> ExpectedStatistics => new Dictionary<string, string>
-        {
-            {"Total Orders", "2"},
-            {"Average Win", "0%"},
-            {"Average Loss", "0%"},
-            {"Compounding Annual Return", "0%"},
-            {"Drawdown", "0%"},
-            {"Expectancy", "0"},
-            {"Start Equity", "100000"},
-            {"End Equity", "99718"},
-            {"Net Profit", "0%"},
-            {"Sharpe Ratio", "0"},
-            {"Sortino Ratio", "0"},
-            {"Probabilistic Sharpe Ratio", "0%"},
-            {"Loss Rate", "0%"},
-            {"Win Rate", "0%"},
-            {"Profit-Loss Ratio", "0"},
-            {"Alpha", "0"},
-            {"Beta", "0"},
-            {"Annual Standard Deviation", "0"},
-            {"Annual Variance", "0"},
-            {"Information Ratio", "0"},
-            {"Tracking Error", "0"},
-            {"Treynor Ratio", "0"},
-            {"Total Fees", "$2.00"},
-            {"Estimated Strategy Capacity", "$1300000.00"},
-            {"Lowest Capacity Asset", "GOOCV 30AKMEIPOSS1Y|GOOCV VP83T1ZUHROL"},
-            {"Portfolio Turnover", "10.71%"},
-            {"OrderListHash", "8a36462ee0349c04d01d464e592dd347"}
-        };
+        public virtual Dictionary<string, string> ExpectedStatistics =>
+            new Dictionary<string, string>
+            {
+                { "Total Orders", "2" },
+                { "Average Win", "0%" },
+                { "Average Loss", "0%" },
+                { "Compounding Annual Return", "0%" },
+                { "Drawdown", "0%" },
+                { "Expectancy", "0" },
+                { "Start Equity", "100000" },
+                { "End Equity", "99718" },
+                { "Net Profit", "0%" },
+                { "Sharpe Ratio", "0" },
+                { "Sortino Ratio", "0" },
+                { "Probabilistic Sharpe Ratio", "0%" },
+                { "Loss Rate", "0%" },
+                { "Win Rate", "0%" },
+                { "Profit-Loss Ratio", "0" },
+                { "Alpha", "0" },
+                { "Beta", "0" },
+                { "Annual Standard Deviation", "0" },
+                { "Annual Variance", "0" },
+                { "Information Ratio", "0" },
+                { "Tracking Error", "0" },
+                { "Treynor Ratio", "0" },
+                { "Total Fees", "$2.00" },
+                { "Estimated Strategy Capacity", "$1300000.00" },
+                { "Lowest Capacity Asset", "GOOCV 30AKMEIPOSS1Y|GOOCV VP83T1ZUHROL" },
+                { "Portfolio Turnover", "10.71%" },
+                { "OrderListHash", "8a36462ee0349c04d01d464e592dd347" }
+            };
     }
 }

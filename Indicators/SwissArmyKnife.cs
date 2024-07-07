@@ -26,18 +26,22 @@ namespace QuantConnect.Indicators
         /// Two Pole Gaussian Filter (0)
         /// </summary>
         Gauss,
+
         /// <summary>
         /// Two Pole Butterworth Filter (1)
         /// </summary>
         Butter,
+
         /// <summary>
         /// High Pass Filter (2)
         /// </summary>
         HighPass,
+
         /// <summary>
         /// Two Pole High Pass Filter (3)
         /// </summary>
         TwoPoleHighPass,
+
         /// <summary>
         /// BandPass Filter (4)
         /// </summary>
@@ -67,9 +71,7 @@ namespace QuantConnect.Indicators
         /// <param name="delta"></param>
         /// <param name="tool"></param>
         public SwissArmyKnife(int period, double delta, SwissArmyKnifeTool tool)
-            : this($"Swiss({period},{delta},{tool})", period, delta, tool)
-        {
-        }
+            : this($"Swiss({period},{delta},{tool})", period, delta, tool) { }
 
         /// <summary>
         /// Swiss Army Knife indicator by John Ehlers
@@ -81,7 +83,7 @@ namespace QuantConnect.Indicators
         public SwissArmyKnife(string name, int period, double delta, SwissArmyKnifeTool tool)
             : base(name)
         {
-            _filt = new RollingWindow<double>(2) {0, 0};
+            _filt = new RollingWindow<double>(2) { 0, 0 };
             _price = new RollingWindow<double>(3);
             _period = period;
             var beta = 2.415 * (1 - Math.Cos(2 * Math.PI / period));
@@ -102,7 +104,9 @@ namespace QuantConnect.Indicators
                     _a2 = -(1 - alpha) * (1 - alpha);
                     break;
                 case SwissArmyKnifeTool.HighPass:
-                    alpha = (Math.Cos(2 * Math.PI / period) + Math.Sin(2 * Math.PI / period) - 1) / Math.Cos(2 * Math.PI / period);
+                    alpha =
+                        (Math.Cos(2 * Math.PI / period) + Math.Sin(2 * Math.PI / period) - 1)
+                        / Math.Cos(2 * Math.PI / period);
                     _c0 = (1 + alpha) / 2;
                     _b1 = -1;
                     _a1 = 1 - alpha;
@@ -125,7 +129,11 @@ namespace QuantConnect.Indicators
                     _a2 = alpha;
                     break;
                 default:
-                    throw new ArgumentOutOfRangeException(nameof(tool), tool, "Invalid SwissArmyKnifeTool");
+                    throw new ArgumentOutOfRangeException(
+                        nameof(tool),
+                        tool,
+                        "Invalid SwissArmyKnifeTool"
+                    );
             }
         }
 
@@ -154,7 +162,9 @@ namespace QuantConnect.Indicators
                 _price.Add(_price[0]);
             }
 
-            var signal = _a0 * _c0 * (_b0 * _price[0] + _b1 * _price[1] + _b2 * _price[2]) + _a0 * (_a1 * _filt[0] + _a2 * _filt[1]);
+            var signal =
+                _a0 * _c0 * (_b0 * _price[0] + _b1 * _price[1] + _b2 * _price[2])
+                + _a0 * (_a1 * _filt[0] + _a2 * _filt[1]);
 
             _filt.Add(signal);
 

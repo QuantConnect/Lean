@@ -31,10 +31,7 @@ namespace QuantConnect.Securities.Future
         /// </summary>
         public virtual decimal UnsettledProfit
         {
-            get
-            {
-                return TotalCloseProfit() - SettledProfit;
-            }
+            get { return TotalCloseProfit() - SettledProfit; }
         }
 
         /// <summary>
@@ -43,8 +40,6 @@ namespace QuantConnect.Securities.Future
         /// <param name="security">The future security being held</param>
         /// <param name="currencyConverter">A currency converter instance</param>
         public FutureHolding(Security security, ICurrencyConverter currencyConverter)
-            : base(security, currencyConverter)
-        {
-        }
+            : base(security, currencyConverter) { }
     }
 }

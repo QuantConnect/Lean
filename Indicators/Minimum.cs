@@ -42,9 +42,7 @@ namespace QuantConnect.Indicators
         /// </summary>
         /// <param name="period">The period over which to look back</param>
         public Minimum(int period)
-            : base($"MIN({period})", period)
-        {
-        }
+            : base($"MIN({period})", period) { }
 
         /// <summary>
         /// Creates a new Minimum indicator with the specified period
@@ -52,12 +50,13 @@ namespace QuantConnect.Indicators
         /// <param name="name">The name of this indicator</param>
         /// <param name="period">The period over which to look back</param>
         public Minimum(string name, int period)
-            : base(name, period)
-        {
-        }
+            : base(name, period) { }
 
         /// <inheritdoc />
-        protected override decimal ComputeNextValue(IReadOnlyWindow<IndicatorDataPoint> window, IndicatorDataPoint input)
+        protected override decimal ComputeNextValue(
+            IReadOnlyWindow<IndicatorDataPoint> window,
+            IndicatorDataPoint input
+        )
         {
             if (Samples == 1 || input.Value <= Current.Value)
             {
@@ -77,11 +76,10 @@ namespace QuantConnect.Indicators
                 // minimum, so when one falls off, we have the other... but then we would also need the 'next, next'
                 // minimum, so on and so forth, for now this works.
 
-                var minimum = window.Select((v, i) => new
-                {
-                    Value = v,
-                    Index = i
-                }).OrderBy(x => x.Value.Value).First();
+                var minimum = window
+                    .Select((v, i) => new { Value = v, Index = i })
+                    .OrderBy(x => x.Value.Value)
+                    .First();
 
                 PeriodsSinceMinimum = minimum.Index;
                 return minimum.Value.Value;

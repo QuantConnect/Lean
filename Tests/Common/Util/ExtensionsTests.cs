@@ -87,7 +87,9 @@ namespace QuantConnect.Tests.Common.Util
                 }
                 else if (testCase == "pylist")
                 {
-                    source = new PyList((new[] { Symbols.SPY.ToPython(), Symbols.AAPL.ToPython() }));
+                    source = new PyList(
+                        (new[] { Symbols.SPY.ToPython(), Symbols.AAPL.ToPython() })
+                    );
                 }
                 else
                 {
@@ -189,7 +191,10 @@ namespace QuantConnect.Tests.Common.Util
         public void ToSha256()
         {
             var result = "pinochopinochopino   ".ToSHA256();
-            Assert.AreEqual("327a5a3b33aef00daf26e414542e12bf4205adb716475fa22e53a178e5d8baca", result);
+            Assert.AreEqual(
+                "327a5a3b33aef00daf26e414542e12bf4205adb716475fa22e53a178e5d8baca",
+                result
+            );
         }
 
         [TestCase("1000", 0)]
@@ -210,23 +215,24 @@ namespace QuantConnect.Tests.Common.Util
         [TestCase(0, 10, 110)]
         [TestCase(900, 10, 110)]
         [TestCase(500, 10, 10)]
-
         [TestCase(0, 100, 100)]
         [TestCase(100, 100, 100)]
         [TestCase(500, 100, 100)]
         [TestCase(990, 100, 200)]
         [TestCase(900, 100, 200)]
-
         [TestCase(0, 1000, 1500)]
         [TestCase(100, 1000, 1000)]
         [TestCase(500, 1000, 1000)]
         [TestCase(990, 1000, 1500)]
-
         [TestCase(0, 10000, 10500)]
         [TestCase(100, 10000, 10000)]
         [TestCase(500, 10000, 10000)]
         [TestCase(990, 10000, 10500)]
-        public void UnevenSecondWaitTime(int nowMilliseconds, int waitInterval, int expectedWaitInterval)
+        public void UnevenSecondWaitTime(
+            int nowMilliseconds,
+            int waitInterval,
+            int expectedWaitInterval
+        )
         {
             var nowUtc = new DateTime(2022, 04, 1);
             nowUtc = nowUtc.AddMilliseconds(nowMilliseconds);
@@ -240,17 +246,19 @@ namespace QuantConnect.Tests.Common.Util
         [TestCase(SecurityType.Forex, "20501231", false)]
         [TestCase(SecurityType.Crypto, "20501231", false)]
         [TestCase(SecurityType.Index, "20501231", false)]
-
         [TestCase(SecurityType.Option, null, false)]
         [TestCase(SecurityType.Future, null, false)]
         [TestCase(SecurityType.FutureOption, null, false)]
         [TestCase(SecurityType.IndexOption, null, false)]
-
         [TestCase(SecurityType.Option, "20501231", true)]
         [TestCase(SecurityType.Future, "20501231", true)]
         [TestCase(SecurityType.FutureOption, "20501231", true)]
         [TestCase(SecurityType.IndexOption, "20501231", true)]
-        public void GetDelistingDate(SecurityType securityType, string expectedExpiration, bool isChain)
+        public void GetDelistingDate(
+            SecurityType securityType,
+            string expectedExpiration,
+            bool isChain
+        )
         {
             Symbol symbol = null;
 
@@ -270,7 +278,10 @@ namespace QuantConnect.Tests.Common.Util
                     }
                     else
                     {
-                        expectedExpiration = symbol.ID.Date.ToString(DateFormat.EightCharacter, CultureInfo.InvariantCulture);
+                        expectedExpiration = symbol.ID.Date.ToString(
+                            DateFormat.EightCharacter,
+                            CultureInfo.InvariantCulture
+                        );
                     }
                     break;
                 case SecurityType.Forex:
@@ -284,7 +295,10 @@ namespace QuantConnect.Tests.Common.Util
                     }
                     else
                     {
-                        expectedExpiration = symbol.ID.Date.ToString(DateFormat.EightCharacter, CultureInfo.InvariantCulture);
+                        expectedExpiration = symbol.ID.Date.ToString(
+                            DateFormat.EightCharacter,
+                            CultureInfo.InvariantCulture
+                        );
                     }
                     break;
                 case SecurityType.Cfd:
@@ -294,34 +308,54 @@ namespace QuantConnect.Tests.Common.Util
                     symbol = Symbols.BTCEUR;
                     break;
                 case SecurityType.FutureOption:
-                    symbol = Symbols.CreateFutureOptionSymbol(Symbols.Fut_SPY_Feb19_2016, OptionRight.Call, 10, new DateTime(2022, 05, 01));
+                    symbol = Symbols.CreateFutureOptionSymbol(
+                        Symbols.Fut_SPY_Feb19_2016,
+                        OptionRight.Call,
+                        10,
+                        new DateTime(2022, 05, 01)
+                    );
                     if (isChain)
                     {
                         symbol = symbol.Canonical;
                     }
                     else
                     {
-                        expectedExpiration = symbol.ID.Date.ToString(DateFormat.EightCharacter, CultureInfo.InvariantCulture);
+                        expectedExpiration = symbol.ID.Date.ToString(
+                            DateFormat.EightCharacter,
+                            CultureInfo.InvariantCulture
+                        );
                     }
                     break;
                 case SecurityType.Index:
                     symbol = Symbols.SPX;
                     break;
                 case SecurityType.IndexOption:
-                    symbol = Symbol.CreateOption(Symbols.SPX, Symbols.SPX.ID.Market, OptionStyle.European, OptionRight.Call, 1, new DateTime(2022, 05, 02));
+                    symbol = Symbol.CreateOption(
+                        Symbols.SPX,
+                        Symbols.SPX.ID.Market,
+                        OptionStyle.European,
+                        OptionRight.Call,
+                        1,
+                        new DateTime(2022, 05, 02)
+                    );
                     if (isChain)
                     {
                         symbol = symbol.Canonical;
                     }
                     else
                     {
-                        expectedExpiration = symbol.ID.Date.ToString(DateFormat.EightCharacter, CultureInfo.InvariantCulture);
+                        expectedExpiration = symbol.ID.Date.ToString(
+                            DateFormat.EightCharacter,
+                            CultureInfo.InvariantCulture
+                        );
                     }
                     break;
                 default:
                     break;
             }
-            var mapFile = TestGlobals.MapFileProvider.Get(AuxiliaryDataKey.Create(symbol)).ResolveMapFile(symbol);
+            var mapFile = TestGlobals
+                .MapFileProvider.Get(AuxiliaryDataKey.Create(symbol))
+                .ResolveMapFile(symbol);
             Assert.AreEqual(Time.ParseDate(expectedExpiration), symbol.GetDelistingDate(mapFile));
         }
 
@@ -332,7 +366,12 @@ namespace QuantConnect.Tests.Common.Util
         [TestCase("20220103 07:31", false, false, Resolution.Daily)]
         [TestCase("20220103 07:31", true, true, Resolution.Daily)]
         [TestCase("20220103 08:31", true, true, Resolution.Daily)]
-        public void IsMarketOpenSecurity(string exchangeTime, bool expectedResult, bool extendedMarketHours, Resolution resolution)
+        public void IsMarketOpenSecurity(
+            string exchangeTime,
+            bool expectedResult,
+            bool extendedMarketHours,
+            Resolution resolution
+        )
         {
             var security = CreateSecurity(Symbols.SPY);
             var utcTime = Time.ParseDate(exchangeTime).ConvertToUtc(security.Exchange.TimeZone);
@@ -402,15 +441,56 @@ namespace QuantConnect.Tests.Common.Util
             var btcusd = Symbol.Create("BTCUSD", SecurityType.Crypto, Market.Coinbase);
             var insights = new List<Insight>
             {
-                new Insight(DateTime.UtcNow, btcusd, Time.OneMillisecond, InsightType.Price, InsightDirection.Up, 1, 2, "sourceModel1"),
-                new Insight(DateTime.UtcNow, btcusd, Time.OneSecond, InsightType.Price, InsightDirection.Down, 1, 2, "sourceModel1")
+                new Insight(
+                    DateTime.UtcNow,
+                    btcusd,
+                    Time.OneMillisecond,
+                    InsightType.Price,
+                    InsightDirection.Up,
+                    1,
+                    2,
+                    "sourceModel1"
+                ),
+                new Insight(
+                    DateTime.UtcNow,
+                    btcusd,
+                    Time.OneSecond,
+                    InsightType.Price,
+                    InsightDirection.Down,
+                    1,
+                    2,
+                    "sourceModel1"
+                )
             };
             var orderEvents = new List<OrderEvent>
             {
-                new OrderEvent(1, btcusd, DateTime.UtcNow, OrderStatus.Submitted, OrderDirection.Buy, 0, 0, OrderFee.Zero, message: "OrderEvent1"),
-                new OrderEvent(1, btcusd, DateTime.UtcNow, OrderStatus.Filled, OrderDirection.Buy, 1, 1000, OrderFee.Zero, message: "OrderEvent2")
+                new OrderEvent(
+                    1,
+                    btcusd,
+                    DateTime.UtcNow,
+                    OrderStatus.Submitted,
+                    OrderDirection.Buy,
+                    0,
+                    0,
+                    OrderFee.Zero,
+                    message: "OrderEvent1"
+                ),
+                new OrderEvent(
+                    1,
+                    btcusd,
+                    DateTime.UtcNow,
+                    OrderStatus.Filled,
+                    OrderDirection.Buy,
+                    1,
+                    1000,
+                    OrderFee.Zero,
+                    message: "OrderEvent2"
+                )
             };
-            var orders = new List<Order> { new MarketOrder(btcusd, 1000, DateTime.UtcNow, "ExpensiveOrder") { Id = 1 } };
+            var orders = new List<Order>
+            {
+                new MarketOrder(btcusd, 1000, DateTime.UtcNow, "ExpensiveOrder") { Id = 1 }
+            };
 
             var packet1 = new AlphaResultPacket("1", 1, insights: insights);
             var packet2 = new AlphaResultPacket("1", 1, orders: orders);
@@ -466,7 +546,9 @@ namespace QuantConnect.Tests.Common.Util
         public void SeriesIsNotEmpty()
         {
             var series = new Series("SadSeries")
-                { Values = new List<ISeriesPoint> { new ChartPoint(1, 1) } };
+            {
+                Values = new List<ISeriesPoint> { new ChartPoint(1, 1) }
+            };
 
             Assert.IsFalse(series.IsEmpty());
         }
@@ -486,18 +568,35 @@ namespace QuantConnect.Tests.Common.Util
         [Test]
         public void ChartIsEmptyWithEmptySeries()
         {
-            Assert.IsTrue((new Chart("HappyChart")
-                { Series = new Dictionary<string, BaseSeries> { { "SadSeries", new Series("SadSeries") } }}).IsEmpty());
+            Assert.IsTrue(
+                (
+                    new Chart("HappyChart")
+                    {
+                        Series = new Dictionary<string, BaseSeries>
+                        {
+                            { "SadSeries", new Series("SadSeries") }
+                        }
+                    }
+                ).IsEmpty()
+            );
         }
 
         [Test]
         public void ChartIsNotEmptyWithNonEmptySeries()
         {
             var series = new Series("SadSeries")
-                { Values = new List<ISeriesPoint> { new ChartPoint(1, 1) } };
+            {
+                Values = new List<ISeriesPoint> { new ChartPoint(1, 1) }
+            };
 
-            Assert.IsFalse((new Chart("HappyChart")
-                { Series = new Dictionary<string, BaseSeries> { { "SadSeries", series } } }).IsEmpty());
+            Assert.IsFalse(
+                (
+                    new Chart("HappyChart")
+                    {
+                        Series = new Dictionary<string, BaseSeries> { { "SadSeries", series } }
+                    }
+                ).IsEmpty()
+            );
         }
 
         [Test]
@@ -531,7 +630,7 @@ namespace QuantConnect.Tests.Common.Util
         [Test]
         public void GetBetterTypeNameHandlesRecursiveGenericTypes()
         {
-            var type = typeof (Dictionary<List<int>, Dictionary<int, string>>);
+            var type = typeof(Dictionary<List<int>, Dictionary<int, string>>);
             const string expected = "Dictionary<List<Int32>, Dictionary<Int32, String>>";
             var actual = type.GetBetterTypeName();
             Assert.AreEqual(expected, actual);
@@ -542,7 +641,9 @@ namespace QuantConnect.Tests.Common.Util
         {
             var time = new DateTime(2015, 05, 02, 18, 01, 00);
             var expected = new DateTime(2015, 05, 01);
-            var hours = MarketHoursDatabase.FromDataFolder().GetExchangeHours(Market.FXCM, null, SecurityType.Forex);
+            var hours = MarketHoursDatabase
+                .FromDataFolder()
+                .GetExchangeHours(Market.FXCM, null, SecurityType.Forex);
             var exchangeRounded = time.ExchangeRoundDown(Time.OneDay, hours, false);
             Assert.AreEqual(expected, exchangeRounded);
         }
@@ -552,7 +653,9 @@ namespace QuantConnect.Tests.Common.Util
         {
             var time = new DateTime(2016, 1, 25, 9, 31, 0);
             var expected = time.Date;
-            var hours = MarketHoursDatabase.FromDataFolder().GetExchangeHours(Market.USA, null, SecurityType.Equity);
+            var hours = MarketHoursDatabase
+                .FromDataFolder()
+                .GetExchangeHours(Market.USA, null, SecurityType.Equity);
             var exchangeRounded = time.ExchangeRoundDown(Time.OneDay, hours, false);
             Assert.AreEqual(expected, exchangeRounded);
         }
@@ -561,8 +664,14 @@ namespace QuantConnect.Tests.Common.Util
         public void ConvertToSkipsDiscontinuitiesBecauseOfDaylightSavingsStart_AddingOneHour()
         {
             var expected = new DateTime(2014, 3, 9, 3, 0, 0);
-            var time = new DateTime(2014, 3, 9, 2, 0, 0).ConvertTo(TimeZones.NewYork, TimeZones.NewYork);
-            var time2 = new DateTime(2014, 3, 9, 2, 0, 1).ConvertTo(TimeZones.NewYork, TimeZones.NewYork);
+            var time = new DateTime(2014, 3, 9, 2, 0, 0).ConvertTo(
+                TimeZones.NewYork,
+                TimeZones.NewYork
+            );
+            var time2 = new DateTime(2014, 3, 9, 2, 0, 1).ConvertTo(
+                TimeZones.NewYork,
+                TimeZones.NewYork
+            );
             Assert.AreEqual(expected, time);
             Assert.AreEqual(expected, time2);
         }
@@ -588,8 +697,15 @@ namespace QuantConnect.Tests.Common.Util
             // moment before EST market open in UTC (time + one day)
             var time = new DateTime(2017, 10, 01, 9, 29, 59).ConvertToUtc(TimeZones.NewYork);
             var expected = new DateTime(2017, 09, 29).ConvertFromUtc(TimeZones.NewYork);
-            var hours = MarketHoursDatabase.FromDataFolder().GetExchangeHours(Market.USA, null, SecurityType.Equity);
-            var exchangeRounded = time.ExchangeRoundDownInTimeZone(Time.OneDay, hours, TimeZones.Utc, false);
+            var hours = MarketHoursDatabase
+                .FromDataFolder()
+                .GetExchangeHours(Market.USA, null, SecurityType.Equity);
+            var exchangeRounded = time.ExchangeRoundDownInTimeZone(
+                Time.OneDay,
+                hours,
+                TimeZones.Utc,
+                false
+            );
             Assert.AreEqual(expected, exchangeRounded);
         }
 
@@ -599,8 +715,15 @@ namespace QuantConnect.Tests.Common.Util
         {
             var time = new DateTime(2014, 3, 9, 16, 0, 1);
             var expected = new DateTime(2014, 3, 7, 16, 0, 0);
-            var hours = MarketHoursDatabase.FromDataFolder().GetExchangeHours(Market.Oanda, null, SecurityType.Forex);
-            var exchangeRounded = time.ExchangeRoundDownInTimeZone(Time.OneHour, hours, TimeZones.Utc, false);
+            var hours = MarketHoursDatabase
+                .FromDataFolder()
+                .GetExchangeHours(Market.Oanda, null, SecurityType.Forex);
+            var exchangeRounded = time.ExchangeRoundDownInTimeZone(
+                Time.OneHour,
+                hours,
+                TimeZones.Utc,
+                false
+            );
             Assert.AreEqual(expected, exchangeRounded);
         }
 
@@ -610,8 +733,15 @@ namespace QuantConnect.Tests.Common.Util
         {
             var time = new DateTime(2014, 11, 2, 2, 0, 1);
             var expected = new DateTime(2014, 10, 31, 16, 0, 0);
-            var hours = MarketHoursDatabase.FromDataFolder().GetExchangeHours(Market.Oanda, null, SecurityType.Forex);
-            var exchangeRounded = time.ExchangeRoundDownInTimeZone(Time.OneHour, hours, TimeZones.Utc, false);
+            var hours = MarketHoursDatabase
+                .FromDataFolder()
+                .GetExchangeHours(Market.Oanda, null, SecurityType.Forex);
+            var exchangeRounded = time.ExchangeRoundDownInTimeZone(
+                Time.OneHour,
+                hours,
+                TimeZones.Utc,
+                false
+            );
             Assert.AreEqual(expected, exchangeRounded);
         }
 
@@ -620,8 +750,15 @@ namespace QuantConnect.Tests.Common.Util
         {
             var time = new DateTime(2014, 3, 9, 2, 0, 1);
             var expected = new DateTime(2014, 3, 9, 2, 0, 0);
-            var hours = MarketHoursDatabase.FromDataFolder().GetExchangeHours(Market.Coinbase, null, SecurityType.Crypto);
-            var exchangeRounded = time.ExchangeRoundDownInTimeZone(Time.OneHour, hours, TimeZones.Utc, true);
+            var hours = MarketHoursDatabase
+                .FromDataFolder()
+                .GetExchangeHours(Market.Coinbase, null, SecurityType.Crypto);
+            var exchangeRounded = time.ExchangeRoundDownInTimeZone(
+                Time.OneHour,
+                hours,
+                TimeZones.Utc,
+                true
+            );
             Assert.AreEqual(expected, exchangeRounded);
         }
 
@@ -630,8 +767,15 @@ namespace QuantConnect.Tests.Common.Util
         {
             var time = new DateTime(2014, 11, 2, 2, 0, 1);
             var expected = new DateTime(2014, 11, 2, 2, 0, 0);
-            var hours = MarketHoursDatabase.FromDataFolder().GetExchangeHours(Market.Coinbase, null, SecurityType.Crypto);
-            var exchangeRounded = time.ExchangeRoundDownInTimeZone(Time.OneHour, hours, TimeZones.Utc, true);
+            var hours = MarketHoursDatabase
+                .FromDataFolder()
+                .GetExchangeHours(Market.Coinbase, null, SecurityType.Crypto);
+            var exchangeRounded = time.ExchangeRoundDownInTimeZone(
+                Time.OneHour,
+                hours,
+                TimeZones.Utc,
+                true
+            );
             Assert.AreEqual(expected, exchangeRounded);
         }
 
@@ -669,7 +813,11 @@ namespace QuantConnect.Tests.Common.Util
             var timeAt = new DateTime(2019, 10, 6, 10, 0, 0);
             var expected = new DateTime(2019, 10, 5, 10, 0, 0);
 
-            var exchangeRoundedAt = timeAt.RoundDownInTimeZone(Time.OneDay, TimeZones.Sydney, TimeZones.Utc);
+            var exchangeRoundedAt = timeAt.RoundDownInTimeZone(
+                Time.OneDay,
+                TimeZones.Sydney,
+                TimeZones.Utc
+            );
             // even though there is an entire 'roundingInterval' unit (1 day) between 'timeAt' and 'expected' round down
             // is affected by daylight savings and rounds down the timeAt
             Assert.AreEqual(expected, exchangeRoundedAt);
@@ -677,7 +825,11 @@ namespace QuantConnect.Tests.Common.Util
             timeAt = new DateTime(2019, 10, 7, 10, 0, 0);
             expected = new DateTime(2019, 10, 6, 11, 0, 0);
 
-            exchangeRoundedAt = timeAt.RoundDownInTimeZone(Time.OneDay, TimeZones.Sydney, TimeZones.Utc);
+            exchangeRoundedAt = timeAt.RoundDownInTimeZone(
+                Time.OneDay,
+                TimeZones.Sydney,
+                TimeZones.Utc
+            );
             Assert.AreEqual(expected, exchangeRoundedAt);
         }
 
@@ -689,12 +841,31 @@ namespace QuantConnect.Tests.Common.Util
             var timeBefore = new DateTime(2014, 3, 9, 1, 59, 59);
             var timeAfterDaylightTimeChanges = new DateTime(2014, 3, 9, 3, 0, 0);
 
-            var hours = MarketHoursDatabase.FromDataFolder().GetExchangeHours(Market.Oanda, null, SecurityType.Forex);
+            var hours = MarketHoursDatabase
+                .FromDataFolder()
+                .GetExchangeHours(Market.Oanda, null, SecurityType.Forex);
 
-            var exchangeRoundedAt = timeAt.RoundDownInTimeZone(Time.OneSecond, hours.TimeZone, TimeZones.Utc);
-            var exchangeRoundedAfter = timeAfter.RoundDownInTimeZone(Time.OneSecond, hours.TimeZone, TimeZones.Utc);
-            var exchangeRoundedBefore = timeBefore.RoundDownInTimeZone(Time.OneSecond, hours.TimeZone, TimeZones.Utc);
-            var exchangeRoundedAfterDaylightTimeChanges = timeAfterDaylightTimeChanges.RoundDownInTimeZone(Time.OneSecond, hours.TimeZone, TimeZones.Utc);
+            var exchangeRoundedAt = timeAt.RoundDownInTimeZone(
+                Time.OneSecond,
+                hours.TimeZone,
+                TimeZones.Utc
+            );
+            var exchangeRoundedAfter = timeAfter.RoundDownInTimeZone(
+                Time.OneSecond,
+                hours.TimeZone,
+                TimeZones.Utc
+            );
+            var exchangeRoundedBefore = timeBefore.RoundDownInTimeZone(
+                Time.OneSecond,
+                hours.TimeZone,
+                TimeZones.Utc
+            );
+            var exchangeRoundedAfterDaylightTimeChanges =
+                timeAfterDaylightTimeChanges.RoundDownInTimeZone(
+                    Time.OneSecond,
+                    hours.TimeZone,
+                    TimeZones.Utc
+                );
 
             var expected = new DateTime(2014, 3, 9, 3, 0, 0);
             Assert.AreEqual(expected, exchangeRoundedAt);
@@ -711,12 +882,31 @@ namespace QuantConnect.Tests.Common.Util
             var timeBefore = new DateTime(2014, 11, 2, 1, 59, 59);
             var timeAfterDaylightTimeChanges = new DateTime(2014, 11, 2, 3, 0, 0);
 
-            var hours = MarketHoursDatabase.FromDataFolder().GetExchangeHours(Market.Oanda, null, SecurityType.Forex);
+            var hours = MarketHoursDatabase
+                .FromDataFolder()
+                .GetExchangeHours(Market.Oanda, null, SecurityType.Forex);
 
-            var exchangeRoundedAt = timeAt.RoundDownInTimeZone(Time.OneSecond, hours.TimeZone, TimeZones.Utc);
-            var exchangeRoundedAfter = timeAfter.RoundDownInTimeZone(Time.OneSecond, hours.TimeZone, TimeZones.Utc);
-            var exchangeRoundedBefore = timeBefore.RoundDownInTimeZone(Time.OneSecond, hours.TimeZone, TimeZones.Utc);
-            var exchangeRoundedAfterDaylightTimeChanges = timeAfterDaylightTimeChanges.RoundDownInTimeZone(Time.OneSecond, hours.TimeZone, TimeZones.Utc);
+            var exchangeRoundedAt = timeAt.RoundDownInTimeZone(
+                Time.OneSecond,
+                hours.TimeZone,
+                TimeZones.Utc
+            );
+            var exchangeRoundedAfter = timeAfter.RoundDownInTimeZone(
+                Time.OneSecond,
+                hours.TimeZone,
+                TimeZones.Utc
+            );
+            var exchangeRoundedBefore = timeBefore.RoundDownInTimeZone(
+                Time.OneSecond,
+                hours.TimeZone,
+                TimeZones.Utc
+            );
+            var exchangeRoundedAfterDaylightTimeChanges =
+                timeAfterDaylightTimeChanges.RoundDownInTimeZone(
+                    Time.OneSecond,
+                    hours.TimeZone,
+                    TimeZones.Utc
+                );
 
             Assert.AreEqual(timeAt, exchangeRoundedAt);
             Assert.AreEqual(timeAfter, exchangeRoundedAfter);
@@ -729,8 +919,15 @@ namespace QuantConnect.Tests.Common.Util
         {
             var time = new DateTime(2014, 3, 9, 16, 0, 1);
             var expected = new DateTime(2014, 3, 7, 16, 0, 0);
-            var hours = MarketHoursDatabase.FromDataFolder().GetExchangeHours(Market.Oanda, null, SecurityType.Forex);
-            var exchangeRounded = time.ExchangeRoundDownInTimeZone(Time.OneHour, hours, TimeZones.NewYork, false);
+            var hours = MarketHoursDatabase
+                .FromDataFolder()
+                .GetExchangeHours(Market.Oanda, null, SecurityType.Forex);
+            var exchangeRounded = time.ExchangeRoundDownInTimeZone(
+                Time.OneHour,
+                hours,
+                TimeZones.NewYork,
+                false
+            );
             Assert.AreEqual(expected, exchangeRounded);
         }
 
@@ -739,8 +936,15 @@ namespace QuantConnect.Tests.Common.Util
         {
             var time = new DateTime(2014, 11, 2, 2, 0, 1);
             var expected = new DateTime(2014, 10, 31, 16, 0, 0);
-            var hours = MarketHoursDatabase.FromDataFolder().GetExchangeHours(Market.Oanda, null, SecurityType.Forex);
-            var exchangeRounded = time.ExchangeRoundDownInTimeZone(Time.OneHour, hours, TimeZones.NewYork, false);
+            var hours = MarketHoursDatabase
+                .FromDataFolder()
+                .GetExchangeHours(Market.Oanda, null, SecurityType.Forex);
+            var exchangeRounded = time.ExchangeRoundDownInTimeZone(
+                Time.OneHour,
+                hours,
+                TimeZones.NewYork,
+                false
+            );
             Assert.AreEqual(expected, exchangeRounded);
         }
 
@@ -749,8 +953,15 @@ namespace QuantConnect.Tests.Common.Util
         {
             var time = new DateTime(2014, 3, 9, 2, 0, 1);
             var expected = new DateTime(2014, 3, 9, 2, 0, 0);
-            var hours = MarketHoursDatabase.FromDataFolder().GetExchangeHours(Market.Coinbase, null, SecurityType.Crypto);
-            var exchangeRounded = time.ExchangeRoundDownInTimeZone(Time.OneHour, hours, TimeZones.NewYork, true);
+            var hours = MarketHoursDatabase
+                .FromDataFolder()
+                .GetExchangeHours(Market.Coinbase, null, SecurityType.Crypto);
+            var exchangeRounded = time.ExchangeRoundDownInTimeZone(
+                Time.OneHour,
+                hours,
+                TimeZones.NewYork,
+                true
+            );
             Assert.AreEqual(expected, exchangeRounded);
         }
 
@@ -759,8 +970,15 @@ namespace QuantConnect.Tests.Common.Util
         {
             var time = new DateTime(2014, 11, 2, 2, 0, 1);
             var expected = new DateTime(2014, 11, 2, 2, 0, 0);
-            var hours = MarketHoursDatabase.FromDataFolder().GetExchangeHours(Market.Coinbase, null, SecurityType.Crypto);
-            var exchangeRounded = time.ExchangeRoundDownInTimeZone(Time.OneHour, hours, TimeZones.NewYork, true);
+            var hours = MarketHoursDatabase
+                .FromDataFolder()
+                .GetExchangeHours(Market.Coinbase, null, SecurityType.Crypto);
+            var exchangeRounded = time.ExchangeRoundDownInTimeZone(
+                Time.OneHour,
+                hours,
+                TimeZones.NewYork,
+                true
+            );
             Assert.AreEqual(expected, exchangeRounded);
         }
 
@@ -772,12 +990,31 @@ namespace QuantConnect.Tests.Common.Util
             var timeBefore = new DateTime(2014, 3, 9, 1, 59, 59);
             var timeAfterDaylightTimeChanges = new DateTime(2014, 3, 9, 3, 0, 0);
 
-            var hours = MarketHoursDatabase.FromDataFolder().GetExchangeHours(Market.Oanda, null, SecurityType.Forex);
+            var hours = MarketHoursDatabase
+                .FromDataFolder()
+                .GetExchangeHours(Market.Oanda, null, SecurityType.Forex);
 
-            var exchangeRoundedAt = timeAt.RoundDownInTimeZone(Time.OneSecond, hours.TimeZone, TimeZones.NewYork);
-            var exchangeRoundedAfter = timeAfter.RoundDownInTimeZone(Time.OneSecond, hours.TimeZone, TimeZones.NewYork);
-            var exchangeRoundedBefore = timeBefore.RoundDownInTimeZone(Time.OneSecond, hours.TimeZone, TimeZones.NewYork);
-            var exchangeRoundedAfterDaylightTimeChanges = timeAfterDaylightTimeChanges.RoundDownInTimeZone(Time.OneSecond, hours.TimeZone, TimeZones.NewYork);
+            var exchangeRoundedAt = timeAt.RoundDownInTimeZone(
+                Time.OneSecond,
+                hours.TimeZone,
+                TimeZones.NewYork
+            );
+            var exchangeRoundedAfter = timeAfter.RoundDownInTimeZone(
+                Time.OneSecond,
+                hours.TimeZone,
+                TimeZones.NewYork
+            );
+            var exchangeRoundedBefore = timeBefore.RoundDownInTimeZone(
+                Time.OneSecond,
+                hours.TimeZone,
+                TimeZones.NewYork
+            );
+            var exchangeRoundedAfterDaylightTimeChanges =
+                timeAfterDaylightTimeChanges.RoundDownInTimeZone(
+                    Time.OneSecond,
+                    hours.TimeZone,
+                    TimeZones.NewYork
+                );
 
             var expected = new DateTime(2014, 3, 9, 3, 0, 0);
             Assert.AreEqual(expected, exchangeRoundedAt);
@@ -794,12 +1031,31 @@ namespace QuantConnect.Tests.Common.Util
             var timeBefore = new DateTime(2014, 11, 2, 1, 59, 59);
             var timeAfterDaylightTimeChanges = new DateTime(2014, 11, 2, 3, 0, 0);
 
-            var hours = MarketHoursDatabase.FromDataFolder().GetExchangeHours(Market.Oanda, null, SecurityType.Forex);
+            var hours = MarketHoursDatabase
+                .FromDataFolder()
+                .GetExchangeHours(Market.Oanda, null, SecurityType.Forex);
 
-            var exchangeRoundedAt = timeAt.RoundDownInTimeZone(Time.OneSecond, hours.TimeZone, TimeZones.NewYork);
-            var exchangeRoundedAfter = timeAfter.RoundDownInTimeZone(Time.OneSecond, hours.TimeZone, TimeZones.NewYork);
-            var exchangeRoundedBefore = timeBefore.RoundDownInTimeZone(Time.OneSecond, hours.TimeZone, TimeZones.NewYork);
-            var exchangeRoundedAfterDaylightTimeChanges = timeAfterDaylightTimeChanges.RoundDownInTimeZone(Time.OneSecond, hours.TimeZone, TimeZones.NewYork);
+            var exchangeRoundedAt = timeAt.RoundDownInTimeZone(
+                Time.OneSecond,
+                hours.TimeZone,
+                TimeZones.NewYork
+            );
+            var exchangeRoundedAfter = timeAfter.RoundDownInTimeZone(
+                Time.OneSecond,
+                hours.TimeZone,
+                TimeZones.NewYork
+            );
+            var exchangeRoundedBefore = timeBefore.RoundDownInTimeZone(
+                Time.OneSecond,
+                hours.TimeZone,
+                TimeZones.NewYork
+            );
+            var exchangeRoundedAfterDaylightTimeChanges =
+                timeAfterDaylightTimeChanges.RoundDownInTimeZone(
+                    Time.OneSecond,
+                    hours.TimeZone,
+                    TimeZones.NewYork
+                );
 
             Assert.AreEqual(timeAt, exchangeRoundedAt);
             Assert.AreEqual(timeAfter, exchangeRoundedAfter);
@@ -1000,7 +1256,7 @@ namespace QuantConnect.Tests.Common.Util
         [Test]
         public void ConvertsDictionaryFromString()
         {
-            var expected = new Dictionary<string, int> {{"a", 1}, {"b", 2}};
+            var expected = new Dictionary<string, int> { { "a", 1 }, { "b", 2 } };
             var input = JsonConvert.SerializeObject(expected);
             var actual = input.ConvertTo<Dictionary<string, int>>();
             CollectionAssert.AreEqual(expected, actual);
@@ -1010,8 +1266,8 @@ namespace QuantConnect.Tests.Common.Util
         public void DictionaryAddsItemToExistsList()
         {
             const int key = 0;
-            var list = new List<int> {1, 2};
-            var dictionary = new Dictionary<int, List<int>> {{key, list}};
+            var list = new List<int> { 1, 2 };
+            var dictionary = new Dictionary<int, List<int>> { { key, list } };
             Extensions.Add(dictionary, key, 3);
             Assert.AreEqual(3, list.Count);
             Assert.AreEqual(3, list[2]);
@@ -1040,7 +1296,7 @@ namespace QuantConnect.Tests.Common.Util
         [Test]
         public void SafeDecimalCastRespectsUpperBound()
         {
-            var input = (double) decimal.MaxValue;
+            var input = (double)decimal.MaxValue;
             var output = input.SafeDecimalCast();
             Assert.AreEqual(decimal.MaxValue, output);
         }
@@ -1048,7 +1304,7 @@ namespace QuantConnect.Tests.Common.Util
         [Test]
         public void SafeDecimalCastRespectsLowerBound()
         {
-            var input = (double) decimal.MinValue;
+            var input = (double)decimal.MinValue;
             var output = input.SafeDecimalCast();
             Assert.AreEqual(decimal.MinValue, output);
         }
@@ -1210,13 +1466,17 @@ namespace QuantConnect.Tests.Common.Util
             using (Py.GIL())
             {
                 // Try to convert a python class which inherits from a C# object
-                value = PyModule.FromString("testModule",
-                    @"
+                value = PyModule
+                    .FromString(
+                        "testModule",
+                        @"
 from AlgorithmImports import *
 
 class Test(PythonData):
     def __init__(self):
-        return 0;").GetAttr("Test");
+        return 0;"
+                    )
+                    .GetAttr("Test");
             }
 
             Type type;
@@ -1230,8 +1490,9 @@ class Test(PythonData):
             using (Py.GIL())
             {
                 // Wrap a Symbol Array around a PyObject and convert it back
-                using PyObject value = new PyList(new[] { Symbols.SPY.ToPython(), Symbols.AAPL.ToPython() });
-            
+                using PyObject value = new PyList(
+                    new[] { Symbols.SPY.ToPython(), Symbols.AAPL.ToPython() }
+                );
 
                 Symbol[] symbols;
                 var canConvert = value.TryConvert(out symbols);
@@ -1277,13 +1538,17 @@ class Test(PythonData):
             using (Py.GIL())
             {
                 // Try to convert a python class which inherits from a C# object
-                value = PyModule.FromString("testModule",
-                    @"
+                value = PyModule
+                    .FromString(
+                        "testModule",
+                        @"
 from AlgorithmImports import *
 
 class Test(PythonData):
     def __init__(self):
-        return 0;").GetAttr("Test");
+        return 0;"
+                    )
+                    .GetAttr("Test");
             }
 
             Type type;
@@ -1292,8 +1557,12 @@ class Test(PythonData):
         }
 
         [Test]
-        [TestCase("coarseSelector = lambda coarse: [ x.Symbol for x in coarse if x.Price % 2 == 0 ]")]
-        [TestCase("def coarseSelector(coarse): return [ x.Symbol for x in coarse if x.Price % 2 == 0 ]")]
+        [TestCase(
+            "coarseSelector = lambda coarse: [ x.Symbol for x in coarse if x.Price % 2 == 0 ]"
+        )]
+        [TestCase(
+            "def coarseSelector(coarse): return [ x.Symbol for x in coarse if x.Price % 2 == 0 ]"
+        )]
         public void PyObjectTryConvertToFunc(string code)
         {
             Func<IEnumerable<CoarseFundamental>, Symbol[]> coarseSelector;
@@ -1308,7 +1577,11 @@ class Test(PythonData):
 
             var coarse = Enumerable
                 .Range(0, 9)
-                .Select(x => new CoarseFundamental { Symbol = Symbol.Create(x.ToStringInvariant(), SecurityType.Equity, Market.USA), Value = x });
+                .Select(x => new CoarseFundamental
+                {
+                    Symbol = Symbol.Create(x.ToStringInvariant(), SecurityType.Equity, Market.USA),
+                    Value = x
+                });
 
             var symbols = coarseSelector(coarse);
 
@@ -1441,7 +1714,9 @@ class Test(PythonData):
         {
             using (Py.GIL())
             {
-                Assert.Throws<ArgumentException>(() => new PyInt(1).ConvertToSymbolEnumerable().ToList());
+                Assert.Throws<ArgumentException>(
+                    () => new PyInt(1).ConvertToSymbolEnumerable().ToList()
+                );
             }
         }
 
@@ -1450,23 +1725,26 @@ class Test(PythonData):
         {
             using (Py.GIL())
             {
-                var actualDictionary = PyModule.FromString(
-                    "PyObjectDictionaryConvertToDictionary_Success",
-                    @"
+                var actualDictionary = PyModule
+                    .FromString(
+                        "PyObjectDictionaryConvertToDictionary_Success",
+                        @"
 from datetime import datetime as dt
 actualDictionary = dict()
 actualDictionary.update({'SPY': dt(2019,10,3)})
 actualDictionary.update({'QQQ': dt(2019,10,4)})
 actualDictionary.update({'IBM': dt(2019,10,5)})
 "
-                ).GetAttr("actualDictionary").ConvertToDictionary<string, DateTime>();
+                    )
+                    .GetAttr("actualDictionary")
+                    .ConvertToDictionary<string, DateTime>();
 
                 Assert.AreEqual(3, actualDictionary.Count);
                 var expectedDictionary = new Dictionary<string, DateTime>
                 {
-                    {"SPY", new DateTime(2019,10,3) },
-                    {"QQQ", new DateTime(2019,10,4) },
-                    {"IBM", new DateTime(2019,10,5) },
+                    { "SPY", new DateTime(2019, 10, 3) },
+                    { "QQQ", new DateTime(2019, 10, 4) },
+                    { "IBM", new DateTime(2019, 10, 5) },
                 };
 
                 foreach (var kvp in expectedDictionary)
@@ -1483,12 +1761,16 @@ actualDictionary.update({'IBM': dt(2019,10,5)})
         {
             using (Py.GIL())
             {
-                var pyObject = PyModule.FromString(
-                    "PyObjectDictionaryConvertToDictionary_FailNotDictionary",
-                    "actualDictionary = list()"
-                ).GetAttr("actualDictionary");
+                var pyObject = PyModule
+                    .FromString(
+                        "PyObjectDictionaryConvertToDictionary_FailNotDictionary",
+                        "actualDictionary = list()"
+                    )
+                    .GetAttr("actualDictionary");
 
-                Assert.Throws<ArgumentException>(() => pyObject.ConvertToDictionary<string, DateTime>());
+                Assert.Throws<ArgumentException>(
+                    () => pyObject.ConvertToDictionary<string, DateTime>()
+                );
             }
         }
 
@@ -1497,17 +1779,21 @@ actualDictionary.update({'IBM': dt(2019,10,5)})
         {
             using (Py.GIL())
             {
-                var pyObject = PyModule.FromString(
-                    "PyObjectDictionaryConvertToDictionary_FailWrongItemType",
-                    @"
+                var pyObject = PyModule
+                    .FromString(
+                        "PyObjectDictionaryConvertToDictionary_FailWrongItemType",
+                        @"
 actualDictionary = dict()
 actualDictionary.update({'SPY': 3})
 actualDictionary.update({'QQQ': 4})
 actualDictionary.update({'IBM': 5})
 "
-                ).GetAttr("actualDictionary");
+                    )
+                    .GetAttr("actualDictionary");
 
-                Assert.Throws<ArgumentException>(() => pyObject.ConvertToDictionary<string, DateTime>());
+                Assert.Throws<ArgumentException>(
+                    () => pyObject.ConvertToDictionary<string, DateTime>()
+                );
             }
         }
 
@@ -1533,7 +1819,8 @@ from QuantConnect.Tests.Common.Util import ExtensionsTests
 
 def GetGenericClassObject():
     return ExtensionsTests.GetGenericClassObject()
-");
+"
+                );
 
                 var genericObject = module.GetAttr("GetGenericClassObject").Invoke();
                 var result = genericObject.TryConvert<TestGenericClass<int>>(out var _);
@@ -1542,7 +1829,9 @@ def GetGenericClassObject():
         }
 
         [Test]
-        public void PyObjectConvertPythonTypeDerivedFromCSharpType([Values] bool allowPythonDerivative)
+        public void PyObjectConvertPythonTypeDerivedFromCSharpType(
+            [Values] bool allowPythonDerivative
+        )
         {
             using (Py.GIL())
             {
@@ -1553,7 +1842,8 @@ from AlgorithmImports import *
 
 class TestPythonDerivedClass(PythonData):
     pass
-");
+"
+                );
 
                 var obj = module.GetAttr("TestPythonDerivedClass").Invoke();
                 var result = obj.TryConvert<PythonData>(out var _, allowPythonDerivative);
@@ -1565,7 +1855,7 @@ class TestPythonDerivedClass(PythonData):
         [Test]
         public void BatchByDoesNotDropItems()
         {
-            var list = new List<int> {1, 2, 3, 4, 5};
+            var list = new List<int> { 1, 2, 3, 4, 5 };
             var by2 = list.BatchBy(2).ToList();
             Assert.AreEqual(3, by2.Count);
             Assert.AreEqual(2, by2[0].Count);
@@ -1577,7 +1867,16 @@ class TestPythonDerivedClass(PythonData):
         [Test]
         public void ToOrderTicketCreatesCorrectTicket()
         {
-            var orderRequest = new SubmitOrderRequest(OrderType.Limit, SecurityType.Equity, Symbols.USDJPY, 1000, 0, 1.11m, DateTime.Now, "Pepe");
+            var orderRequest = new SubmitOrderRequest(
+                OrderType.Limit,
+                SecurityType.Equity,
+                Symbols.USDJPY,
+                1000,
+                0,
+                1.11m,
+                DateTime.Now,
+                "Pepe"
+            );
             var order = Order.CreateOrder(orderRequest);
             order.Status = OrderStatus.Submitted;
             order.Id = 11;
@@ -1646,8 +1945,11 @@ class TestPythonDerivedClass(PythonData):
         public void DateRulesToFunc()
         {
             var mhdb = MarketHoursDatabase.FromDataFolder();
-            var dateRules = new DateRules(new SecurityManager(
-                new TimeKeeper(new DateTime(2015, 1, 1), DateTimeZone.Utc)), DateTimeZone.Utc, mhdb);
+            var dateRules = new DateRules(
+                new SecurityManager(new TimeKeeper(new DateTime(2015, 1, 1), DateTimeZone.Utc)),
+                DateTimeZone.Utc,
+                mhdb
+            );
             var first = new DateTime(2015, 1, 10);
             var second = new DateTime(2015, 1, 30);
             var dateRule = dateRules.On(first, second);
@@ -1680,28 +1982,30 @@ class TestPythonDerivedClass(PythonData):
             var algo = new QCAlgorithm();
             var dataFeed = new NullDataFeed();
 
-            algo.SubscriptionManager.SetDataManager(new DataManager(
-                dataFeed,
-                new UniverseSelection(
-                    algo,
-                    new SecurityService(
-                        new CashBook(),
-                        MarketHoursDatabase.FromDataFolder(),
-                        SymbolPropertiesDatabase.FromDataFolder(),
+            algo.SubscriptionManager.SetDataManager(
+                new DataManager(
+                    dataFeed,
+                    new UniverseSelection(
                         algo,
-                        null,
-                        null
+                        new SecurityService(
+                            new CashBook(),
+                            MarketHoursDatabase.FromDataFolder(),
+                            SymbolPropertiesDatabase.FromDataFolder(),
+                            algo,
+                            null,
+                            null
+                        ),
+                        new DataPermissionManager(),
+                        TestGlobals.DataProvider
                     ),
-                    new DataPermissionManager(),
-                    TestGlobals.DataProvider
-                ),
-                algo,
-                new TimeKeeper(DateTime.UtcNow),
-                MarketHoursDatabase.FromDataFolder(),
-                false,
-                null,
-                new DataPermissionManager()
-            ));
+                    algo,
+                    new TimeKeeper(DateTime.UtcNow),
+                    MarketHoursDatabase.FromDataFolder(),
+                    false,
+                    null,
+                    new DataPermissionManager()
+                )
+            );
 
             algo.HistoryProvider = new SubscriptionDataReaderHistoryProvider();
             algo.HistoryProvider.Initialize(
@@ -1712,15 +2016,23 @@ class TestPythonDerivedClass(PythonData):
                     TestGlobals.DataCacheProvider,
                     TestGlobals.MapFileProvider,
                     TestGlobals.FactorFileProvider,
-                    (_) => {},
+                    (_) => { },
                     false,
                     new DataPermissionManager(),
                     algo.ObjectStore,
-                    algo.Settings));
+                    algo.Settings
+                )
+            );
 
             algo.SetStartDate(DateTime.UtcNow.AddDays(-1));
 
-            var history = algo.History(new[] { Symbols.IBM }, new DateTime(2013, 10, 7), new DateTime(2013, 10, 8), Resolution.Tick).ToList();
+            var history = algo.History(
+                    new[] { Symbols.IBM },
+                    new DateTime(2013, 10, 7),
+                    new DateTime(2013, 10, 8),
+                    Resolution.Tick
+                )
+                .ToList();
             Assert.AreEqual(57460, history.Count);
 
             foreach (var slice in history)
@@ -1771,8 +2083,8 @@ class TestPythonDerivedClass(PythonData):
         [Test]
         public void ListEquals()
         {
-            var left = new[] {1, 2, 3};
-            var right = new[] {1, 2, 3};
+            var left = new[] { 1, 2, 3 };
+            var right = new[] { 1, 2, 3 };
             Assert.IsTrue(left.ListEquals(right));
 
             right[2] = 4;
@@ -1782,10 +2094,10 @@ class TestPythonDerivedClass(PythonData):
         [Test]
         public void GetListHashCode()
         {
-            var ints1 = new[] {1, 2, 3};
-            var ints2 = new[] {1, 3, 2};
-            var longs = new[] {1L, 2L, 3L};
-            var decimals = new[] {1m, 2m, 3m};
+            var ints1 = new[] { 1, 2, 3 };
+            var ints2 = new[] { 1, 3, 2 };
+            var longs = new[] { 1L, 2L, 3L };
+            var decimals = new[] { 1m, 2m, 3m };
 
             // ordering dependent
             Assert.AreNotEqual(ints1.GetListHashCode(), ints2.GetListHashCode());
@@ -1798,7 +2110,7 @@ class TestPythonDerivedClass(PythonData):
             Assert.AreEqual(ints1.GetListHashCode(), longs.GetListHashCode());
 
             // deterministic
-            Assert.AreEqual(ints1.GetListHashCode(), new[] {1, 2, 3}.GetListHashCode());
+            Assert.AreEqual(ints1.GetListHashCode(), new[] { 1, 2, 3 }.GetListHashCode());
         }
 
         [Test]
@@ -1814,7 +2126,11 @@ class TestPythonDerivedClass(PythonData):
         [TestCase("-0.975", "0.15", "-1.05")]
         [TestCase("-1.0", "0.15", "-1.05")]
         [TestCase("-1.05", "0.15", "-1.05")]
-        public void DiscretelyRoundBy(string valueString, string quantaString, string expectedString)
+        public void DiscretelyRoundBy(
+            string valueString,
+            string quantaString,
+            string expectedString
+        )
         {
             var value = decimal.Parse(valueString, CultureInfo.InvariantCulture);
             var quanta = decimal.Parse(quantaString, CultureInfo.InvariantCulture);
@@ -1853,10 +2169,15 @@ def select_symbol(fundamental):
 "
                 );
                 var selectSymbolPythonMethod = module.GetAttr("select_symbol");
-                Assert.IsTrue(selectSymbolPythonMethod.TryConvertToDelegate(out Func<IEnumerable<Fundamental>, object> selectSymbols));
+                Assert.IsTrue(
+                    selectSymbolPythonMethod.TryConvertToDelegate(
+                        out Func<IEnumerable<Fundamental>, object> selectSymbols
+                    )
+                );
                 Assert.IsNotNull(selectSymbols);
 
-                var selectSymbolsUniverseDelegate = selectSymbols.ConvertToUniverseSelectionSymbolDelegate();
+                var selectSymbolsUniverseDelegate =
+                    selectSymbols.ConvertToUniverseSelectionSymbolDelegate();
 
                 var reference = new DateTime(2024, 2, 1);
                 var fundamentals = new List<Fundamental>()
@@ -1868,9 +2189,14 @@ def select_symbol(fundamental):
                 };
 
                 List<Symbol> symbols = null;
-                Assert.DoesNotThrow(() => symbols = selectSymbolsUniverseDelegate(fundamentals).ToList());
+                Assert.DoesNotThrow(
+                    () => symbols = selectSymbolsUniverseDelegate(fundamentals).ToList()
+                );
                 CollectionAssert.IsNotEmpty(symbols);
-                Assert.That(symbols, Is.All.Matches<Symbol>(x => fundamentals.Any(fund => fund.Symbol == x)));
+                Assert.That(
+                    symbols,
+                    Is.All.Matches<Symbol>(x => fundamentals.Any(fund => fund.Symbol == x))
+                );
             }
         }
 
@@ -1897,14 +2223,39 @@ def select_symbol(fundamental):
         [TestCase("GOOG", "2014/01/01", "2024/03/01", 2, "GOOCV,GOOG")]
         [TestCase("SPWR", "2005/11/17", "2024/03/01", 3, "SPWR,SPWRA,SPWR")] // IPO: November 17, 2005
         [TestCase("SPWR", "2023/11/16", "2024/03/01", 1, "SPWR")]
-        [TestCase("NFLX", "2023/11/16", "2024/03/01", 0, null, Description = "The Symbol is not mapped")]
-        public void GetHistoricalSymbolNamesByDateRequest(string ticker, DateTime startDateTime, DateTime endDateTime, int expectedAmount, string expectedTickers)
+        [TestCase(
+            "NFLX",
+            "2023/11/16",
+            "2024/03/01",
+            0,
+            null,
+            Description = "The Symbol is not mapped"
+        )]
+        public void GetHistoricalSymbolNamesByDateRequest(
+            string ticker,
+            DateTime startDateTime,
+            DateTime endDateTime,
+            int expectedAmount,
+            string expectedTickers
+        )
         {
             var symbol = Symbol.Create(ticker, SecurityType.Equity, Market.USA);
 
-            var request = TestsHelpers.GetHistoryRequest(symbol, startDateTime, endDateTime, Resolution.Daily, TickType.Trade);
+            var request = TestsHelpers.GetHistoryRequest(
+                symbol,
+                startDateTime,
+                endDateTime,
+                Resolution.Daily,
+                TickType.Trade
+            );
 
-            var tickers = TestGlobals.MapFileProvider.RetrieveSymbolHistoricalDefinitionsInDateRange(symbol, request.StartTimeUtc, request.EndTimeUtc).ToList();
+            var tickers = TestGlobals
+                .MapFileProvider.RetrieveSymbolHistoricalDefinitionsInDateRange(
+                    symbol,
+                    request.StartTimeUtc,
+                    request.EndTimeUtc
+                )
+                .ToList();
 
             Assert.That(tickers.Count, Is.EqualTo(expectedAmount));
 
@@ -1915,7 +2266,12 @@ def select_symbol(fundamental):
 
                 if (expectedTickers != null)
                 {
-                    foreach (var (actualTicker, expectedTicker) in tickers.Zip(expectedTickers.Split(','), (t, et) => (t.Ticker, et)))
+                    foreach (
+                        var (actualTicker, expectedTicker) in tickers.Zip(
+                            expectedTickers.Split(','),
+                            (t, et) => (t.Ticker, et)
+                        )
+                    )
                     {
                         Assert.That(actualTicker, Is.EqualTo(expectedTicker));
                     }
@@ -1924,13 +2280,27 @@ def select_symbol(fundamental):
         }
 
         [TestCase(Futures.Indices.SP500EMini, "2023/11/16", 1)]
-        [TestCase(Futures.Metals.Gold,"2023/11/16", 0, Description = "The startDateTime is not mapped")]
-        public void GetHistoricalFutureSymbolNamesByDateRequest(string ticker, DateTime expiryTickerDate, int expectedAmount)
+        [TestCase(
+            Futures.Metals.Gold,
+            "2023/11/16",
+            0,
+            Description = "The startDateTime is not mapped"
+        )]
+        public void GetHistoricalFutureSymbolNamesByDateRequest(
+            string ticker,
+            DateTime expiryTickerDate,
+            int expectedAmount
+        )
         {
             var futureSymbol = Symbols.CreateFutureSymbol(ticker, expiryTickerDate);
 
-            var tickers =
-                TestGlobals.MapFileProvider.RetrieveSymbolHistoricalDefinitionsInDateRange(futureSymbol, new DateTime(2023, 11, 5), expiryTickerDate).ToList();
+            var tickers = TestGlobals
+                .MapFileProvider.RetrieveSymbolHistoricalDefinitionsInDateRange(
+                    futureSymbol,
+                    new DateTime(2023, 11, 5),
+                    expiryTickerDate
+                )
+                .ToList();
 
             Assert.That(tickers.Count, Is.EqualTo(expectedAmount));
         }
@@ -1943,24 +2313,20 @@ def select_symbol(fundamental):
             }
         }
 
-        private class Super<T>
-        {
-        }
+        private class Super<T> { }
 
-        private class Derived1 : Super<int>
-        {
-        }
+        private class Derived1 : Super<int> { }
 
-        private class Derived2 : Derived1
-        {
-        }
+        private class Derived2 : Derived1 { }
 
         private static Security CreateSecurity(Symbol symbol)
         {
-            var entry = MarketHoursDatabase.FromDataFolder()
+            var entry = MarketHoursDatabase
+                .FromDataFolder()
                 .GetEntry(symbol.ID.Market, symbol, symbol.SecurityType);
 
-            return new Security(symbol,
+            return new Security(
+                symbol,
                 entry.ExchangeHours,
                 new Cash(Currencies.USD, 0, 1),
                 SymbolProperties.GetDefault(Currencies.USD),

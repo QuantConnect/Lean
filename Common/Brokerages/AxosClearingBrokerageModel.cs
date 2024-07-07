@@ -13,8 +13,8 @@
  * limitations under the License.
 */
 
-using System.Linq;
 using System.Collections.Generic;
+using System.Linq;
 using QuantConnect.Benchmarks;
 using QuantConnect.Data.Shortable;
 using QuantConnect.Interfaces;
@@ -31,32 +31,29 @@ namespace QuantConnect.Brokerages
     /// </summary>
     public class AxosClearingBrokerageModel : DefaultBrokerageModel
     {
-        private readonly HashSet<OrderType> _supportedOrderTypes = new()
-        {
-            OrderType.Limit,
-            OrderType.Market,
-            OrderType.MarketOnClose
-        };
+        private readonly HashSet<OrderType> _supportedOrderTypes =
+            new() { OrderType.Limit, OrderType.Market, OrderType.MarketOnClose };
 
         /// <summary>
         /// The default markets for Trading Technologies
         /// </summary>
-        public new static readonly IReadOnlyDictionary<SecurityType, string> DefaultMarketMap = new Dictionary<SecurityType, string>
-        {
-            {SecurityType.Equity, Market.USA}
-        }.ToReadOnlyDictionary();
+        public new static readonly IReadOnlyDictionary<SecurityType, string> DefaultMarketMap =
+            new Dictionary<SecurityType, string>
+            {
+                { SecurityType.Equity, Market.USA }
+            }.ToReadOnlyDictionary();
 
         /// <summary>
         /// Creates a new instance
         /// </summary>
-        public AxosClearingBrokerageModel(AccountType accountType = AccountType.Margin) : base(accountType)
-        {
-        }
+        public AxosClearingBrokerageModel(AccountType accountType = AccountType.Margin)
+            : base(accountType) { }
 
         /// <summary>
         /// Gets a map of the default markets to be used for each security type
         /// </summary>
-        public override IReadOnlyDictionary<SecurityType, string> DefaultMarkets => DefaultMarketMap;
+        public override IReadOnlyDictionary<SecurityType, string> DefaultMarkets =>
+            DefaultMarketMap;
 
         /// <summary>
         /// Provides Axos fee model
@@ -74,7 +71,7 @@ namespace QuantConnect.Brokerages
         /// <returns>Shortable provider</returns>
         public override IShortableProvider GetShortableProvider(Security security)
         {
-            if(security.Type == SecurityType.Equity)
+            if (security.Type == SecurityType.Equity)
             {
                 return new LocalDiskShortableProvider("axos");
             }
@@ -99,15 +96,22 @@ namespace QuantConnect.Brokerages
         /// <param name="order">The order to be processed</param>
         /// <param name="message">If this function returns false, a brokerage message detailing why the order may not be submitted</param>
         /// <returns>True if the brokerage could process the order, false otherwise</returns>
-        public override bool CanSubmitOrder(Security security, Order order, out BrokerageMessageEvent message)
+        public override bool CanSubmitOrder(
+            Security security,
+            Order order,
+            out BrokerageMessageEvent message
+        )
         {
             message = null;
 
             // validate security type
             if (!DefaultMarketMap.ContainsKey(security.Type))
             {
-                message = new BrokerageMessageEvent(BrokerageMessageType.Warning, "NotSupported",
-                    Messages.DefaultBrokerageModel.UnsupportedSecurityType(this, security));
+                message = new BrokerageMessageEvent(
+                    BrokerageMessageType.Warning,
+                    "NotSupported",
+                    Messages.DefaultBrokerageModel.UnsupportedSecurityType(this, security)
+                );
 
                 return false;
             }
@@ -115,8 +119,15 @@ namespace QuantConnect.Brokerages
             // validate order type
             if (!_supportedOrderTypes.Contains(order.Type))
             {
-                message = new BrokerageMessageEvent(BrokerageMessageType.Warning, "NotSupported",
-                    Messages.DefaultBrokerageModel.UnsupportedOrderType(this, order, _supportedOrderTypes));
+                message = new BrokerageMessageEvent(
+                    BrokerageMessageType.Warning,
+                    "NotSupported",
+                    Messages.DefaultBrokerageModel.UnsupportedOrderType(
+                        this,
+                        order,
+                        _supportedOrderTypes
+                    )
+                );
 
                 return false;
             }
@@ -124,8 +135,11 @@ namespace QuantConnect.Brokerages
             // validate orders quantity
             if (order.AbsoluteQuantity % 1 != 0)
             {
-                message = new BrokerageMessageEvent(BrokerageMessageType.Warning, "NotSupported",
-                    Messages.AxosBrokerageModel.NonIntegerOrderQuantity(order));
+                message = new BrokerageMessageEvent(
+                    BrokerageMessageType.Warning,
+                    "NotSupported",
+                    Messages.AxosBrokerageModel.NonIntegerOrderQuantity(order)
+                );
 
                 return false;
             }
@@ -141,7 +155,12 @@ namespace QuantConnect.Brokerages
         /// <param name="request">The requested update to be made to the order</param>
         /// <param name="message">If this function returns false, a brokerage message detailing why the order may not be updated</param>
         /// <returns>True if the brokerage would allow updating the order, false otherwise</returns>
-        public override bool CanUpdateOrder(Security security, Order order, UpdateOrderRequest request, out BrokerageMessageEvent message)
+        public override bool CanUpdateOrder(
+            Security security,
+            Order order,
+            UpdateOrderRequest request,
+            out BrokerageMessageEvent message
+        )
         {
             message = null;
 

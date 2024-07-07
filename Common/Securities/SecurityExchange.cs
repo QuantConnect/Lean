@@ -14,10 +14,10 @@
 */
 
 using System;
-using NodaTime;
-using System.Linq;
-using QuantConnect.Util;
 using System.Collections.Generic;
+using System.Linq;
+using NodaTime;
+using QuantConnect.Util;
 
 namespace QuantConnect.Securities
 {
@@ -57,7 +57,7 @@ namespace QuantConnect.Securities
         /// <summary>
         /// Boolean property for quickly testing if the exchange is 10 minutes away from closing.
         /// </summary>
-        public bool ClosingSoon => IsClosingSoon(minutesToClose:10);
+        public bool ClosingSoon => IsClosingSoon(minutesToClose: 10);
 
         /// <summary>
         /// Initializes a new instance of the <see cref="SecurityExchange"/> class using the specified
@@ -102,7 +102,11 @@ namespace QuantConnect.Securities
         /// <summary>
         /// Determines if the exchange was open at any time between start and stop
         /// </summary>
-        public bool IsOpenDuringBar(DateTime barStartTime, DateTime barEndTime, bool isExtendedMarketHours)
+        public bool IsOpenDuringBar(
+            DateTime barStartTime,
+            DateTime barEndTime,
+            bool isExtendedMarketHours
+        )
         {
             return Hours.IsOpen(barStartTime, barEndTime, isExtendedMarketHours);
         }
@@ -123,19 +127,30 @@ namespace QuantConnect.Securities
         /// </summary>
         /// <param name="marketHoursSegments">Specifies each segment of the market hours, such as premarket/market/postmark</param>
         /// <param name="days">The days of the week to set these times for</param>
-        public void SetMarketHours(IEnumerable<MarketHoursSegment> marketHoursSegments, params DayOfWeek[] days)
+        public void SetMarketHours(
+            IEnumerable<MarketHoursSegment> marketHoursSegments,
+            params DayOfWeek[] days
+        )
         {
-            if (days.IsNullOrEmpty()) days = Enum.GetValues(typeof(DayOfWeek)).OfType<DayOfWeek>().ToArray();
+            if (days.IsNullOrEmpty())
+                days = Enum.GetValues(typeof(DayOfWeek)).OfType<DayOfWeek>().ToArray();
 
             var marketHours = Hours.MarketHours.ToDictionary();
-            marketHoursSegments = marketHoursSegments as IList<MarketHoursSegment> ?? marketHoursSegments.ToList();
+            marketHoursSegments =
+                marketHoursSegments as IList<MarketHoursSegment> ?? marketHoursSegments.ToList();
             foreach (var day in days)
             {
                 marketHours[day] = new LocalMarketHours(day, marketHoursSegments);
             }
 
             // create a new exchange hours instance for the new hours
-            Hours = new SecurityExchangeHours(Hours.TimeZone, Hours.Holidays, marketHours, Hours.EarlyCloses, Hours.LateOpens);
+            Hours = new SecurityExchangeHours(
+                Hours.TimeZone,
+                Hours.Holidays,
+                marketHours,
+                Hours.EarlyCloses,
+                Hours.LateOpens
+            );
         }
     }
 }

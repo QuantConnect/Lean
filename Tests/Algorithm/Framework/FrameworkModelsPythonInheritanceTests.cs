@@ -14,13 +14,13 @@
  *
 */
 
+using System;
+using System.Linq;
 using NUnit.Framework;
 using Python.Runtime;
 using QuantConnect.Algorithm;
 using QuantConnect.Algorithm.Framework.Selection;
 using QuantConnect.Data.UniverseSelection;
-using System;
-using System.Linq;
 
 namespace QuantConnect.Tests.Algorithm.Framework
 {
@@ -30,7 +30,8 @@ namespace QuantConnect.Tests.Algorithm.Framework
         [Test]
         public void ManualUniverseSelectionModelCanBeInherited()
         {
-            var code = @"
+            var code =
+                @"
 from clr import AddReference
 AddReference('QuantConnect.Common')
 
@@ -43,7 +44,8 @@ class MockUniverseSelectionModel(ManualUniverseSelectionModel):
 
             using (Py.GIL())
             {
-                dynamic pyModel = PyModule.FromString(Guid.NewGuid().ToString(), code)
+                dynamic pyModel = PyModule
+                    .FromString(Guid.NewGuid().ToString(), code)
                     .GetAttr("MockUniverseSelectionModel");
 
                 var model = new UniverseSelectionModelPythonWrapper(pyModel());
@@ -64,7 +66,8 @@ class MockUniverseSelectionModel(ManualUniverseSelectionModel):
         [Test]
         public void FundamentalUniverseSelectionModelCanBeInherited()
         {
-            var code = @"
+            var code =
+                @"
 from AlgorithmImports import *
 from Selection.FundamentalUniverseSelectionModel import FundamentalUniverseSelectionModel
 
@@ -76,7 +79,8 @@ class MockUniverseSelectionModel(FundamentalUniverseSelectionModel):
 
             using (Py.GIL())
             {
-                dynamic pyModel = PyModule.FromString(Guid.NewGuid().ToString(), code)
+                dynamic pyModel = PyModule
+                    .FromString(Guid.NewGuid().ToString(), code)
                     .GetAttr("MockUniverseSelectionModel");
 
                 var model = new UniverseSelectionModelPythonWrapper(pyModel());

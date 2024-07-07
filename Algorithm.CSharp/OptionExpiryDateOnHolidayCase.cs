@@ -25,8 +25,13 @@ namespace QuantConnect.Algorithm.CSharp
     public class OptionExpiryDateOnHolidayCase : QCAlgorithm, IRegressionAlgorithmDefinition
     {
         private const string UnderlyingTicker = "SPY";
-        public Symbol Underlying { get; init; } = QuantConnect.Symbol.Create(UnderlyingTicker, SecurityType.Equity, Market.USA);
-        private readonly Symbol _optionSymbol = QuantConnect.Symbol.Create(UnderlyingTicker, SecurityType.Option, Market.USA);
+        public Symbol Underlying { get; init; } =
+            QuantConnect.Symbol.Create(UnderlyingTicker, SecurityType.Equity, Market.USA);
+        private readonly Symbol _optionSymbol = QuantConnect.Symbol.Create(
+            UnderlyingTicker,
+            SecurityType.Option,
+            Market.USA
+        );
         private OptionContract _optionContract;
         private List<Delisting> _delistings = new List<Delisting>();
 
@@ -49,8 +54,11 @@ namespace QuantConnect.Algorithm.CSharp
             {
                 if (slice.OptionChains.TryGetValue(_optionSymbol, out chain))
                 {
-                    _optionContract = chain.FirstOrDefault(c => c.Expiry.Date == new DateTime(2014, 04, 19) && c.OpenInterest > 0);
-                    if (_optionContract != null) MarketOrder(_optionContract.Symbol, 1);
+                    _optionContract = chain.FirstOrDefault(c =>
+                        c.Expiry.Date == new DateTime(2014, 04, 19) && c.OpenInterest > 0
+                    );
+                    if (_optionContract != null)
+                        MarketOrder(_optionContract.Symbol, 1);
                 }
             }
 
@@ -64,28 +72,44 @@ namespace QuantConnect.Algorithm.CSharp
 
         public override void OnEndOfAlgorithm()
         {
-            if (!(_delistings.Count == 2 &&
-                  _delistings.Any(d => d.Type == DelistingType.Warning) &&
-                  _delistings.Any(d => d.Type == DelistingType.Delisted)))
+            if (
+                !(
+                    _delistings.Count == 2
+                    && _delistings.Any(d => d.Type == DelistingType.Warning)
+                    && _delistings.Any(d => d.Type == DelistingType.Delisted)
+                )
+            )
             {
-                throw new RegressionTestException($"Option contract {_optionContract.Symbol} was not correctly delisted.");
+                throw new RegressionTestException(
+                    $"Option contract {_optionContract.Symbol} was not correctly delisted."
+                );
             }
 
-            if (_delistings.FirstOrDefault(d => d.Type == DelistingType.Warning).EndTime.Date !=
-                new DateTime(2014, 04, 16))
+            if (
+                _delistings.FirstOrDefault(d => d.Type == DelistingType.Warning).EndTime.Date
+                != new DateTime(2014, 04, 16)
+            )
             {
-                throw new RegressionTestException($"Option contract {_optionContract.Symbol} delisting warning was not fired the right date.");
+                throw new RegressionTestException(
+                    $"Option contract {_optionContract.Symbol} delisting warning was not fired the right date."
+                );
             }
 
-            if (_delistings.FirstOrDefault(d => d.Type == DelistingType.Delisted).EndTime.Date !=
-                new DateTime(2014, 04, 17))
+            if (
+                _delistings.FirstOrDefault(d => d.Type == DelistingType.Delisted).EndTime.Date
+                != new DateTime(2014, 04, 17)
+            )
             {
-                throw new RegressionTestException($"Option contract {_optionContract.Symbol} was not delisted the right date.");
+                throw new RegressionTestException(
+                    $"Option contract {_optionContract.Symbol} was not delisted the right date."
+                );
             }
 
             if (Portfolio[_optionContract.Symbol].Invested)
             {
-                throw new RegressionTestException($"Option contract {_optionContract.Symbol} was not wasn't liquidated as part of delisting.");
+                throw new RegressionTestException(
+                    $"Option contract {_optionContract.Symbol} was not wasn't liquidated as part of delisting."
+                );
             }
         }
 
@@ -117,27 +141,28 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// This is used by the regression test system to indicate what the expected statistics are from running the algorithm
         /// </summary>
-        public Dictionary<string, string> ExpectedStatistics => new Dictionary<string, string>
-        {
-            {"Total Orders", "2"},
-            {"Average Win", "0%"},
-            {"Average Loss", "-0.54%"},
-            {"Compounding Annual Return", "23.156%"},
-            {"Drawdown", "0.200%"},
-            {"Expectancy", "-1"},
-            {"Net Profit", "0.448%"},
-            {"Sharpe Ratio", "15.59"},
-            {"Loss Rate", "100%"},
-            {"Win Rate", "0%"},
-            {"Profit-Loss Ratio", "0"},
-            {"Alpha", "0.171"},
-            {"Beta", "-0.65"},
-            {"Annual Standard Deviation", "0.01"},
-            {"Annual Variance", "0"},
-            {"Information Ratio", "13.971"},
-            {"Tracking Error", "0.01"},
-            {"Treynor Ratio", "-0.248"},
-            {"Total Fees", "$1.00"}
-        };
+        public Dictionary<string, string> ExpectedStatistics =>
+            new Dictionary<string, string>
+            {
+                { "Total Orders", "2" },
+                { "Average Win", "0%" },
+                { "Average Loss", "-0.54%" },
+                { "Compounding Annual Return", "23.156%" },
+                { "Drawdown", "0.200%" },
+                { "Expectancy", "-1" },
+                { "Net Profit", "0.448%" },
+                { "Sharpe Ratio", "15.59" },
+                { "Loss Rate", "100%" },
+                { "Win Rate", "0%" },
+                { "Profit-Loss Ratio", "0" },
+                { "Alpha", "0.171" },
+                { "Beta", "-0.65" },
+                { "Annual Standard Deviation", "0.01" },
+                { "Annual Variance", "0" },
+                { "Information Ratio", "13.971" },
+                { "Tracking Error", "0.01" },
+                { "Treynor Ratio", "-0.248" },
+                { "Total Fees", "$1.00" }
+            };
     }
 }

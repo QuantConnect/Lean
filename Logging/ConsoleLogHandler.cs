@@ -33,9 +33,7 @@ namespace QuantConnect.Logging
         /// Initializes a new instance of the <see cref="QuantConnect.Logging.ConsoleLogHandler"/> class.
         /// </summary>
         public ConsoleLogHandler()
-            : this(DefaultDateFormat)
-        {
-        }
+            : this(DefaultDateFormat) { }
 
         /// <summary>
         /// Initializes a new instance of the <see cref="QuantConnect.Logging.ConsoleLogHandler"/> class.
@@ -59,7 +57,9 @@ namespace QuantConnect.Logging
 #if DEBUG
             Console.ForegroundColor = ConsoleColor.Red;
 #endif
-            _error.WriteLine($"{DateTime.UtcNow.ToString(_dateFormat, CultureInfo.InvariantCulture)} ERROR:: {text}");
+            _error.WriteLine(
+                $"{DateTime.UtcNow.ToString(_dateFormat, CultureInfo.InvariantCulture)} ERROR:: {text}"
+            );
 #if DEBUG
             Console.ResetColor();
 #endif
@@ -71,7 +71,9 @@ namespace QuantConnect.Logging
         /// <param name="text">The debug text to log</param>
         public virtual void Debug(string text)
         {
-            _trace.WriteLine($"{DateTime.UtcNow.ToString(_dateFormat, CultureInfo.InvariantCulture)} DEBUG:: {text}");
+            _trace.WriteLine(
+                $"{DateTime.UtcNow.ToString(_dateFormat, CultureInfo.InvariantCulture)} DEBUG:: {text}"
+            );
         }
 
         /// <summary>
@@ -80,15 +82,15 @@ namespace QuantConnect.Logging
         /// <param name="text">The trace text to log</param>
         public virtual void Trace(string text)
         {
-            _trace.WriteLine($"{DateTime.UtcNow.ToString(_dateFormat, CultureInfo.InvariantCulture)} TRACE:: {text}");
+            _trace.WriteLine(
+                $"{DateTime.UtcNow.ToString(_dateFormat, CultureInfo.InvariantCulture)} TRACE:: {text}"
+            );
         }
 
         /// <summary>
         /// Performs application-defined tasks associated with freeing, releasing, or resetting unmanaged resources.
         /// </summary>
         /// <filterpriority>2</filterpriority>
-        public void Dispose()
-        {
-        }
+        public void Dispose() { }
     }
 }

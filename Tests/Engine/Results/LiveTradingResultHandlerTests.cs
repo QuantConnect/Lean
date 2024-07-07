@@ -17,16 +17,16 @@
 using System;
 using System.Linq;
 using NUnit.Framework;
+using QuantConnect.Data.Custom.IconicTypes;
+using QuantConnect.Data.UniverseSelection;
+using QuantConnect.Interfaces;
+using QuantConnect.Lean.Engine.DataFeeds;
+using QuantConnect.Lean.Engine.Results;
+using QuantConnect.Lean.Engine.TransactionHandlers;
 using QuantConnect.Packets;
 using QuantConnect.Securities;
-using QuantConnect.Interfaces;
-using QuantConnect.Lean.Engine.Results;
-using QuantConnect.Lean.Engine.DataFeeds;
-using QuantConnect.Data.UniverseSelection;
-using QuantConnect.Tests.Engine.DataFeeds;
-using QuantConnect.Lean.Engine.TransactionHandlers;
 using QuantConnect.Tests.Common.Data.UniverseSelection;
-using QuantConnect.Data.Custom.IconicTypes;
+using QuantConnect.Tests.Engine.DataFeeds;
 
 namespace QuantConnect.Tests.Engine.Results
 {
@@ -41,7 +41,11 @@ namespace QuantConnect.Tests.Engine.Results
             var equity = algorithm.AddEquity("SPY");
             var customData = algorithm.AddData<UnlinkedData>("SPY");
             equity.Holdings.SetHoldings(1, 10);
-            var result = LiveTradingResultHandler.GetHoldings(algorithm.Securities.Values, algorithm.SubscriptionManager.SubscriptionDataConfigService, invested);
+            var result = LiveTradingResultHandler.GetHoldings(
+                algorithm.Securities.Values,
+                algorithm.SubscriptionManager.SubscriptionDataConfigService,
+                invested
+            );
 
             if (invested)
             {
@@ -63,7 +67,15 @@ namespace QuantConnect.Tests.Engine.Results
         {
             using var messagging = new QuantConnect.Messaging.Messaging();
             var result = new LiveTradingResultHandler();
-            result.Initialize(new(new LiveNodePacket(), messagging, null, new BacktestingTransactionHandler(), null));
+            result.Initialize(
+                new(
+                    new LiveNodePacket(),
+                    messagging,
+                    null,
+                    new BacktestingTransactionHandler(),
+                    null
+                )
+            );
 
             var algorithm = new AlgorithmStub();
             algorithm.AddEquity("SPY");
@@ -80,7 +92,11 @@ namespace QuantConnect.Tests.Engine.Results
             var future = algorithm.AddFuture(Futures.Indices.SP500EMini);
             var equity = algorithm.AddEquity("SPY");
             equity.Holdings.SetHoldings(1, 10);
-            var result = LiveTradingResultHandler.GetHoldings(algorithm.Securities.Values, algorithm.SubscriptionManager.SubscriptionDataConfigService, invested);
+            var result = LiveTradingResultHandler.GetHoldings(
+                algorithm.Securities.Values,
+                algorithm.SubscriptionManager.SubscriptionDataConfigService,
+                invested
+            );
 
             if (invested)
             {
@@ -104,7 +120,11 @@ namespace QuantConnect.Tests.Engine.Results
             var algorithm = new AlgorithmStub();
             var future = algorithm.AddFuture(Futures.Indices.SP500EMini);
             var equity = algorithm.AddEquity("SPY");
-            var result = LiveTradingResultHandler.GetHoldings(algorithm.Securities.Values, algorithm.SubscriptionManager.SubscriptionDataConfigService, invested);
+            var result = LiveTradingResultHandler.GetHoldings(
+                algorithm.Securities.Values,
+                algorithm.SubscriptionManager.SubscriptionDataConfigService,
+                invested
+            );
 
             if (invested)
             {
@@ -127,7 +147,11 @@ namespace QuantConnect.Tests.Engine.Results
             var algorithm = new AlgorithmStub();
             var equity = algorithm.AddEquity("SPY");
             algorithm.AddOption("SPY");
-            var result = LiveTradingResultHandler.GetHoldings(algorithm.Securities.Values, algorithm.SubscriptionManager.SubscriptionDataConfigService, invested);
+            var result = LiveTradingResultHandler.GetHoldings(
+                algorithm.Securities.Values,
+                algorithm.SubscriptionManager.SubscriptionDataConfigService,
+                invested
+            );
 
             if (invested)
             {
@@ -149,9 +173,17 @@ namespace QuantConnect.Tests.Engine.Results
             using var messagging = new QuantConnect.Messaging.Messaging();
             var referenceDate = new DateTime(2020, 11, 25);
             var resultHandler = new LiveTradingResultHandler();
-            resultHandler.Initialize(new (new LiveNodePacket(), messagging, api, new BacktestingTransactionHandler(), null));
+            resultHandler.Initialize(
+                new(
+                    new LiveNodePacket(),
+                    messagging,
+                    api,
+                    new BacktestingTransactionHandler(),
+                    null
+                )
+            );
 
-            var algo = new AlgorithmStub(createDataManager:false);
+            var algo = new AlgorithmStub(createDataManager: false);
             algo.SetFinishedWarmingUp();
             var dataManager = new DataManagerStub(new TestDataFeed(), algo);
             algo.SubscriptionManager.SetDataManager(dataManager);
@@ -166,9 +198,13 @@ namespace QuantConnect.Tests.Engine.Results
 
             resultHandler.Sample(referenceDate.AddHours(15));
             Assert.IsTrue(resultHandler.Charts.ContainsKey("Strategy Equity"));
-            Assert.AreEqual(1, resultHandler.Charts["Strategy Equity"].Series["Equity"].Values.Count);
+            Assert.AreEqual(
+                1,
+                resultHandler.Charts["Strategy Equity"].Series["Equity"].Values.Count
+            );
 
-            var currentEquityValue = (Candlestick)resultHandler.Charts["Strategy Equity"].Series["Equity"].Values.Last();
+            var currentEquityValue = (Candlestick)
+                resultHandler.Charts["Strategy Equity"].Series["Equity"].Values.Last();
             Assert.AreEqual(101000, currentEquityValue.Close);
 
             // Add value to portfolio, see if portfolio updates with new sample
@@ -177,9 +213,13 @@ namespace QuantConnect.Tests.Engine.Results
             algo.Portfolio.InvalidateTotalPortfolioValue();
 
             resultHandler.Sample(referenceDate.AddHours(22));
-            Assert.AreEqual(2, resultHandler.Charts["Strategy Equity"].Series["Equity"].Values.Count);
+            Assert.AreEqual(
+                2,
+                resultHandler.Charts["Strategy Equity"].Series["Equity"].Values.Count
+            );
 
-            currentEquityValue = (Candlestick)resultHandler.Charts["Strategy Equity"].Series["Equity"].Values.Last();
+            currentEquityValue = (Candlestick)
+                resultHandler.Charts["Strategy Equity"].Series["Equity"].Values.Last();
             Assert.AreEqual(extendedMarketHoursEnabled ? 111000 : 101000, currentEquityValue.Close);
 
             resultHandler.Exit();
@@ -199,19 +239,16 @@ namespace QuantConnect.Tests.Engine.Results
                 IDataFeedSubscriptionManager subscriptionManager,
                 IDataFeedTimeProvider dataFeedTimeProvider,
                 IDataChannelProvider dataChannelProvider
-                )
-            {
-            }
+            ) { }
+
             public Subscription CreateSubscription(SubscriptionRequest request)
             {
                 return null;
             }
-            public void RemoveSubscription(Subscription subscription)
-            {
-            }
-            public void Exit()
-            {
-            }
+
+            public void RemoveSubscription(Subscription subscription) { }
+
+            public void Exit() { }
         }
     }
 }

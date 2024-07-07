@@ -111,35 +111,36 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// This is used by the regression test system to indicate what the expected statistics are from running the algorithm
         /// </summary>
-        public Dictionary<string, string> ExpectedStatistics => new Dictionary<string, string>
-        {
-            {"Total Orders", "7"},
-            {"Average Win", "0%"},
-            {"Average Loss", "-6.17%"},
-            {"Compounding Annual Return", "-100.000%"},
-            {"Drawdown", "72.300%"},
-            {"Expectancy", "-1"},
-            {"Start Equity", "100000"},
-            {"End Equity", "50554.98"},
-            {"Net Profit", "-49.445%"},
-            {"Sharpe Ratio", "-1.155"},
-            {"Sortino Ratio", "0"},
-            {"Probabilistic Sharpe Ratio", "0.982%"},
-            {"Loss Rate", "100%"},
-            {"Win Rate", "0%"},
-            {"Profit-Loss Ratio", "0"},
-            {"Alpha", "-0.961"},
-            {"Beta", "1.583"},
-            {"Annual Standard Deviation", "0.87"},
-            {"Annual Variance", "0.756"},
-            {"Information Ratio", "-1.135"},
-            {"Tracking Error", "0.861"},
-            {"Treynor Ratio", "-0.635"},
-            {"Total Fees", "$91.53"},
-            {"Estimated Strategy Capacity", "$8000.00"},
-            {"Lowest Capacity Asset", "GOOCV VP83T1ZUHROL"},
-            {"Portfolio Turnover", "2904.79%"},
-            {"OrderListHash", "fd4d435c47fe44b4b2b867eee3bd5f69"}
-        };
+        public Dictionary<string, string> ExpectedStatistics =>
+            new Dictionary<string, string>
+            {
+                { "Total Orders", "7" },
+                { "Average Win", "0%" },
+                { "Average Loss", "-6.17%" },
+                { "Compounding Annual Return", "-100.000%" },
+                { "Drawdown", "72.300%" },
+                { "Expectancy", "-1" },
+                { "Start Equity", "100000" },
+                { "End Equity", "50554.98" },
+                { "Net Profit", "-49.445%" },
+                { "Sharpe Ratio", "-1.155" },
+                { "Sortino Ratio", "0" },
+                { "Probabilistic Sharpe Ratio", "0.982%" },
+                { "Loss Rate", "100%" },
+                { "Win Rate", "0%" },
+                { "Profit-Loss Ratio", "0" },
+                { "Alpha", "-0.961" },
+                { "Beta", "1.583" },
+                { "Annual Standard Deviation", "0.87" },
+                { "Annual Variance", "0.756" },
+                { "Information Ratio", "-1.135" },
+                { "Tracking Error", "0.861" },
+                { "Treynor Ratio", "-0.635" },
+                { "Total Fees", "$91.53" },
+                { "Estimated Strategy Capacity", "$8000.00" },
+                { "Lowest Capacity Asset", "GOOCV VP83T1ZUHROL" },
+                { "Portfolio Turnover", "2904.79%" },
+                { "OrderListHash", "fd4d435c47fe44b4b2b867eee3bd5f69" }
+            };
     }
 }

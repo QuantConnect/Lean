@@ -53,7 +53,11 @@ namespace QuantConnect.ToolBox.AlgoSeekFuturesConverter
         /// <param name="file">BZ File for AlgoSeek</param>
         /// <param name="symbolMultipliers">Symbol price multiplier</param>
         /// <param name="symbolFilter">Symbol filter to apply, if any</param>
-        public AlgoSeekFuturesReader(string file, Dictionary<string, decimal> symbolMultipliers, HashSet<string> symbolFilter = null)
+        public AlgoSeekFuturesReader(
+            string file,
+            Dictionary<string, decimal> symbolMultipliers,
+            HashSet<string> symbolFilter = null
+        )
         {
             var streamProvider = StreamProvider.ForExtension(Path.GetExtension(file));
             _stream = streamProvider.Open(file).First();
@@ -75,13 +79,22 @@ namespace QuantConnect.ToolBox.AlgoSeekFuturesConverter
                 _columnQuantity = header.FindIndex(x => x == "Quantity");
                 _columnPrice = header.FindIndex(x => x == "Price");
 
-                _columnsCount = new[] { _columnTimestamp, _columnTicker, _columnType, _columnSide, _columnSecID, _columnQuantity, _columnPrice }.Max();
+                _columnsCount = new[]
+                {
+                    _columnTimestamp,
+                    _columnTicker,
+                    _columnType,
+                    _columnSide,
+                    _columnSecID,
+                    _columnQuantity,
+                    _columnPrice
+                }.Max();
             }
             //Prime the data pump, set the current.
             Current = null;
             MoveNext();
         }
-        
+
         /// <summary>
         /// Parse the next line of the algoseek future file.
         /// </summary>
@@ -156,7 +169,7 @@ namespace QuantConnect.ToolBox.AlgoSeekFuturesConverter
                 var ticker = csv[_columnTicker];
 
                 // we filter out options and spreads
-                if (ticker.IndexOfAny(new [] { ' ', '-' }) != -1)
+                if (ticker.IndexOfAny(new[] { ' ', '-' }) != -1)
                 {
                     return null;
                 }
@@ -170,12 +183,23 @@ namespace QuantConnect.ToolBox.AlgoSeekFuturesConverter
 
                 // ignoring time zones completely -- this is all in the 'data-time-zone'
                 var timeString = csv[_columnTimestamp];
-                var time = DateTime.ParseExact(timeString, "yyyyMMddHHmmssFFF", CultureInfo.InvariantCulture);
+                var time = DateTime.ParseExact(
+                    timeString,
+                    "yyyyMMddHHmmssFFF",
+                    CultureInfo.InvariantCulture
+                );
 
                 var symbol = SymbolRepresentation.ParseFutureSymbol(ticker, time.Year);
 
-                if (symbol == null || !_symbolMultipliers.ContainsKey(symbol.ID.Symbol) ||
-                    _symbolFilter != null && !_symbolFilter.Contains(symbol.ID.Symbol, StringComparer.InvariantCultureIgnoreCase))
+                if (
+                    symbol == null
+                    || !_symbolMultipliers.ContainsKey(symbol.ID.Symbol)
+                    || _symbolFilter != null
+                        && !_symbolFilter.Contains(
+                            symbol.ID.Symbol,
+                            StringComparer.InvariantCultureIgnoreCase
+                        )
+                )
                 {
                     return null;
                 }

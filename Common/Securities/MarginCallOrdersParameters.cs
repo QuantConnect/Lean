@@ -43,7 +43,11 @@ namespace QuantConnect.Securities
         /// <param name="positionGroup">The position group</param>
         /// <param name="totalPortfolioValue">The algorithm's total portfolio value</param>
         /// <param name="totalUsedMargin">The total used margin</param>
-        public MarginCallOrdersParameters(IPositionGroup positionGroup, decimal totalPortfolioValue, decimal totalUsedMargin)
+        public MarginCallOrdersParameters(
+            IPositionGroup positionGroup,
+            decimal totalPortfolioValue,
+            decimal totalUsedMargin
+        )
         {
             PositionGroup = positionGroup;
             TotalPortfolioValue = totalPortfolioValue;

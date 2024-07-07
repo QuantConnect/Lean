@@ -163,7 +163,7 @@ namespace QuantConnect.Brokerages
         /// Transaction and submit/execution rules will use Axos models
         /// </summary>
         Axos,
-        
+
         /// <summary>
         /// Transaction and submit/execution rules will use Coinbase broker's model
         /// </summary>

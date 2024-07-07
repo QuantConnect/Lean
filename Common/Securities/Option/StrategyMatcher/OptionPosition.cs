@@ -29,8 +29,7 @@ namespace QuantConnect.Securities.Option.StrategyMatcher
         /// <summary>
         /// Gets a new <see cref="OptionPosition"/> with zero <see cref="Quantity"/>
         /// </summary>
-        public static OptionPosition Empty(Symbol symbol)
-            => new OptionPosition(symbol, 0);
+        public static OptionPosition Empty(Symbol symbol) => new OptionPosition(symbol, 0);
 
         /// <summary>
         /// Determines whether or not this position has any quantity
@@ -70,7 +69,9 @@ namespace QuantConnect.Securities.Option.StrategyMatcher
                     return Symbol.ID.Date;
                 }
 
-                throw new InvalidOperationException($"{nameof(Expiration)} is not valid for underlying symbols: {Symbol}");
+                throw new InvalidOperationException(
+                    $"{nameof(Expiration)} is not valid for underlying symbols: {Symbol}"
+                );
             }
         }
 
@@ -86,7 +87,9 @@ namespace QuantConnect.Securities.Option.StrategyMatcher
                     return Symbol.ID.StrikePrice;
                 }
 
-                throw new InvalidOperationException($"{nameof(Strike)} is not valid for underlying symbols: {Symbol}");
+                throw new InvalidOperationException(
+                    $"{nameof(Strike)} is not valid for underlying symbols: {Symbol}"
+                );
             }
         }
 
@@ -102,14 +105,16 @@ namespace QuantConnect.Securities.Option.StrategyMatcher
                     return Symbol.ID.OptionRight;
                 }
 
-                throw new InvalidOperationException($"{nameof(Right)} is not valid for underlying symbols: {Symbol}");
+                throw new InvalidOperationException(
+                    $"{nameof(Right)} is not valid for underlying symbols: {Symbol}"
+                );
             }
         }
 
         /// <summary>
         /// Gets whether this position is short/long/none
         /// </summary>
-        public PositionSide Side => (PositionSide) Math.Sign(Quantity);
+        public PositionSide Side => (PositionSide)Math.Sign(Quantity);
 
         /// <summary>
         /// Initializes a new instance of the <see cref="OptionPosition"/> structure
@@ -162,7 +167,7 @@ namespace QuantConnect.Securities.Option.StrategyMatcher
                 return false;
             }
 
-            return Equals((OptionPosition) obj);
+            return Equals((OptionPosition)obj);
         }
 
         /// <summary>Returns the hash code for this instance.</summary>
@@ -228,7 +233,9 @@ namespace QuantConnect.Securities.Option.StrategyMatcher
                     return left;
                 }
 
-                throw new InvalidOperationException("Unable to add OptionPosition instances with different symbols");
+                throw new InvalidOperationException(
+                    "Unable to add OptionPosition instances with different symbols"
+                );
             }
 
             return new OptionPosition(left.Symbol, left.Quantity + right.Quantity);
@@ -254,7 +261,9 @@ namespace QuantConnect.Securities.Option.StrategyMatcher
                     return left;
                 }
 
-                throw new InvalidOperationException("Unable to subtract OptionPosition instances with different symbols");
+                throw new InvalidOperationException(
+                    "Unable to subtract OptionPosition instances with different symbols"
+                );
             }
 
             return new OptionPosition(left.Symbol, left.Quantity - right.Quantity);

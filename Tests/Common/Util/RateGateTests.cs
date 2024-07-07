@@ -13,12 +13,12 @@
  * limitations under the License.
 */
 
-using NUnit.Framework;
-using QuantConnect.Util;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Threading.Tasks;
+using NUnit.Framework;
+using QuantConnect.Util;
 
 namespace QuantConnect.Tests.Common.Util
 {
@@ -30,7 +30,7 @@ namespace QuantConnect.Tests.Common.Util
         public void RateGateWithTimeout(int count)
         {
             var rate = TimeSpan.FromMilliseconds(500);
-            using var gate  = new RateGate(1, rate);
+            using var gate = new RateGate(1, rate);
             var timer = Stopwatch.StartNew();
 
             for (var i = 0; i <= count; i++)
@@ -45,7 +45,11 @@ namespace QuantConnect.Tests.Common.Util
             var lowerBound = expectedDelay - expectedDelay * 0.25;
             var upperBound = expectedDelay + expectedDelay * 0.25;
 
-            Assert.GreaterOrEqual(elapsed, lowerBound, $"RateGate was early: {lowerBound - elapsed}");
+            Assert.GreaterOrEqual(
+                elapsed,
+                lowerBound,
+                $"RateGate was early: {lowerBound - elapsed}"
+            );
             Assert.LessOrEqual(elapsed, upperBound, $"RateGate was late: {elapsed - upperBound}");
         }
 

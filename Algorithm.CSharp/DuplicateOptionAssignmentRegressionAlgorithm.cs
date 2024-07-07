@@ -27,7 +27,9 @@ namespace QuantConnect.Algorithm.CSharp
     /// Regression algorithm asserting that open orders are canceled when the option is assigned and delisted,
     /// also making sure the assignment happens and its processed regardless of the existing of an open order for said option.
     /// </summary>
-    public class DuplicateOptionAssignmentRegressionAlgorithm : QCAlgorithm, IRegressionAlgorithmDefinition
+    public class DuplicateOptionAssignmentRegressionAlgorithm
+        : QCAlgorithm,
+            IRegressionAlgorithmDefinition
     {
         private Symbol _stock;
         private Symbol _option;
@@ -47,7 +49,14 @@ namespace QuantConnect.Algorithm.CSharp
 
             _stock = AddEquity("GOOG").Symbol;
 
-            _option = QuantConnect.Symbol.CreateOption(_stock, Market.USA, OptionStyle.American, OptionRight.Put, 800m, new DateTime(2015, 12, 24));
+            _option = QuantConnect.Symbol.CreateOption(
+                _stock,
+                Market.USA,
+                OptionStyle.American,
+                OptionRight.Put,
+                800m,
+                new DateTime(2015, 12, 24)
+            );
 
             AddOptionContract(_option);
         }
@@ -82,18 +91,29 @@ namespace QuantConnect.Algorithm.CSharp
                 // This is the assignment
                 else if (!_optionAssigned)
                 {
-                    if (orderEvent.Ticket.OrderType != OrderType.OptionExercise || !orderEvent.IsAssignment)
+                    if (
+                        orderEvent.Ticket.OrderType != OrderType.OptionExercise
+                        || !orderEvent.IsAssignment
+                    )
                     {
-                        throw new RegressionTestException($"Expected option assignment but got: {orderEvent}");
+                        throw new RegressionTestException(
+                            $"Expected option assignment but got: {orderEvent}"
+                        );
                     }
 
                     _optionAssigned = true;
                 }
                 else if (!_stockAssigned)
                 {
-                    if (orderEvent.Ticket.OrderType != OrderType.OptionExercise || orderEvent.IsAssignment || orderEvent.Symbol != _stock)
+                    if (
+                        orderEvent.Ticket.OrderType != OrderType.OptionExercise
+                        || orderEvent.IsAssignment
+                        || orderEvent.Symbol != _stock
+                    )
                     {
-                        throw new RegressionTestException($"Expected stock assignment but got: {orderEvent}");
+                        throw new RegressionTestException(
+                            $"Expected stock assignment but got: {orderEvent}"
+                        );
                     }
 
                     _stockAssigned = true;
@@ -106,15 +126,28 @@ namespace QuantConnect.Algorithm.CSharp
             else if (orderEvent.Status == OrderStatus.CancelPending)
             {
                 // We receive the delisting warning before the order cancel is requested
-                if (!_optionSold || !_optionAssigned || !_stockAssigned || !_optionDelistedWarningReceived)
+                if (
+                    !_optionSold
+                    || !_optionAssigned
+                    || !_stockAssigned
+                    || !_optionDelistedWarningReceived
+                )
                 {
-                    throw new RegressionTestException($"Unexpected cancel pending event: {orderEvent}");
+                    throw new RegressionTestException(
+                        $"Unexpected cancel pending event: {orderEvent}"
+                    );
                 }
             }
             else if (orderEvent.Status == OrderStatus.Canceled)
             {
                 // The delisted event is received before the order is canceled
-                if (!_optionSold || !_optionAssigned || !_stockAssigned || !_optionDelistedWarningReceived || !_optionDelisted)
+                if (
+                    !_optionSold
+                    || !_optionAssigned
+                    || !_stockAssigned
+                    || !_optionDelistedWarningReceived
+                    || !_optionDelisted
+                )
                 {
                     throw new RegressionTestException($"Unexpected cancel event: {orderEvent}");
                 }
@@ -132,16 +165,29 @@ namespace QuantConnect.Algorithm.CSharp
 
             if (delisting.Type == DelistingType.Warning)
             {
-                if (!_optionSold || !_optionAssigned || !_stockAssigned || _optionDelistedWarningReceived)
+                if (
+                    !_optionSold
+                    || !_optionAssigned
+                    || !_stockAssigned
+                    || _optionDelistedWarningReceived
+                )
                 {
-                    throw new RegressionTestException($"Unexpected delisting warning event: {delisting}");
+                    throw new RegressionTestException(
+                        $"Unexpected delisting warning event: {delisting}"
+                    );
                 }
 
                 _optionDelistedWarningReceived = true;
             }
             else
             {
-                if (!_optionSold || !_optionAssigned || !_stockAssigned || !_optionDelistedWarningReceived || _optionDelisted)
+                if (
+                    !_optionSold
+                    || !_optionAssigned
+                    || !_stockAssigned
+                    || !_optionDelistedWarningReceived
+                    || _optionDelisted
+                )
                 {
                     throw new RegressionTestException($"Unexpected delisting event: {delisting}");
                 }
@@ -228,35 +274,36 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// This is used by the regression test system to indicate what the expected statistics are from running the algorithm
         /// </summary>
-        public Dictionary<string, string> ExpectedStatistics => new Dictionary<string, string>
-        {
-            {"Total Orders", "3"},
-            {"Average Win", "4.48%"},
-            {"Average Loss", "0%"},
-            {"Compounding Annual Return", "-19.248%"},
-            {"Drawdown", "1.100%"},
-            {"Expectancy", "-1"},
-            {"Start Equity", "100000"},
-            {"End Equity", "99319"},
-            {"Net Profit", "-0.681%"},
-            {"Sharpe Ratio", "-6.361"},
-            {"Sortino Ratio", "-4.623"},
-            {"Probabilistic Sharpe Ratio", "0.018%"},
-            {"Loss Rate", "100%"},
-            {"Win Rate", "0%"},
-            {"Profit-Loss Ratio", "0"},
-            {"Alpha", "-0.139"},
-            {"Beta", "-0.082"},
-            {"Annual Standard Deviation", "0.024"},
-            {"Annual Variance", "0.001"},
-            {"Information Ratio", "-2.525"},
-            {"Tracking Error", "0.137"},
-            {"Treynor Ratio", "1.883"},
-            {"Total Fees", "$1.00"},
-            {"Estimated Strategy Capacity", "$1300000.00"},
-            {"Lowest Capacity Asset", "GOOCV 305RBQ20WHPNQ|GOOCV VP83T1ZUHROL"},
-            {"Portfolio Turnover", "7.07%"},
-            {"OrderListHash", "f0ce9bade48d8eb13a1dbd77aeeb485c"}
-        };
+        public Dictionary<string, string> ExpectedStatistics =>
+            new Dictionary<string, string>
+            {
+                { "Total Orders", "3" },
+                { "Average Win", "4.48%" },
+                { "Average Loss", "0%" },
+                { "Compounding Annual Return", "-19.248%" },
+                { "Drawdown", "1.100%" },
+                { "Expectancy", "-1" },
+                { "Start Equity", "100000" },
+                { "End Equity", "99319" },
+                { "Net Profit", "-0.681%" },
+                { "Sharpe Ratio", "-6.361" },
+                { "Sortino Ratio", "-4.623" },
+                { "Probabilistic Sharpe Ratio", "0.018%" },
+                { "Loss Rate", "100%" },
+                { "Win Rate", "0%" },
+                { "Profit-Loss Ratio", "0" },
+                { "Alpha", "-0.139" },
+                { "Beta", "-0.082" },
+                { "Annual Standard Deviation", "0.024" },
+                { "Annual Variance", "0.001" },
+                { "Information Ratio", "-2.525" },
+                { "Tracking Error", "0.137" },
+                { "Treynor Ratio", "1.883" },
+                { "Total Fees", "$1.00" },
+                { "Estimated Strategy Capacity", "$1300000.00" },
+                { "Lowest Capacity Asset", "GOOCV 305RBQ20WHPNQ|GOOCV VP83T1ZUHROL" },
+                { "Portfolio Turnover", "7.07%" },
+                { "OrderListHash", "f0ce9bade48d8eb13a1dbd77aeeb485c" }
+            };
     }
 }

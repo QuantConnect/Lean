@@ -15,10 +15,10 @@
 */
 
 using System;
-using System.Linq;
-using Python.Runtime;
-using Newtonsoft.Json;
 using System.Collections.Generic;
+using System.Linq;
+using Newtonsoft.Json;
+using Python.Runtime;
 using QuantConnect.Data.UniverseSelection;
 
 namespace QuantConnect.Data.Fundamental
@@ -37,42 +37,80 @@ namespace QuantConnect.Data.Fundamental
         /// Gets/sets the OneMonth period value for the field
         /// </summary>
         [JsonProperty("1M")]
-        public long OneMonth => FundamentalService.Get<long>(TimeProvider.GetUtcNow(), SecurityIdentifier, FundamentalProperty.FinancialStatements_NumberOfShareHolders_OneMonth);
+        public long OneMonth =>
+            FundamentalService.Get<long>(
+                TimeProvider.GetUtcNow(),
+                SecurityIdentifier,
+                FundamentalProperty.FinancialStatements_NumberOfShareHolders_OneMonth
+            );
 
         /// <summary>
         /// Gets/sets the TwoMonths period value for the field
         /// </summary>
         [JsonProperty("2M")]
-        public long TwoMonths => FundamentalService.Get<long>(TimeProvider.GetUtcNow(), SecurityIdentifier, FundamentalProperty.FinancialStatements_NumberOfShareHolders_TwoMonths);
+        public long TwoMonths =>
+            FundamentalService.Get<long>(
+                TimeProvider.GetUtcNow(),
+                SecurityIdentifier,
+                FundamentalProperty.FinancialStatements_NumberOfShareHolders_TwoMonths
+            );
 
         /// <summary>
         /// Gets/sets the ThreeMonths period value for the field
         /// </summary>
         [JsonProperty("3M")]
-        public long ThreeMonths => FundamentalService.Get<long>(TimeProvider.GetUtcNow(), SecurityIdentifier, FundamentalProperty.FinancialStatements_NumberOfShareHolders_ThreeMonths);
+        public long ThreeMonths =>
+            FundamentalService.Get<long>(
+                TimeProvider.GetUtcNow(),
+                SecurityIdentifier,
+                FundamentalProperty.FinancialStatements_NumberOfShareHolders_ThreeMonths
+            );
 
         /// <summary>
         /// Gets/sets the SixMonths period value for the field
         /// </summary>
         [JsonProperty("6M")]
-        public long SixMonths => FundamentalService.Get<long>(TimeProvider.GetUtcNow(), SecurityIdentifier, FundamentalProperty.FinancialStatements_NumberOfShareHolders_SixMonths);
+        public long SixMonths =>
+            FundamentalService.Get<long>(
+                TimeProvider.GetUtcNow(),
+                SecurityIdentifier,
+                FundamentalProperty.FinancialStatements_NumberOfShareHolders_SixMonths
+            );
 
         /// <summary>
         /// Gets/sets the NineMonths period value for the field
         /// </summary>
         [JsonProperty("9M")]
-        public long NineMonths => FundamentalService.Get<long>(TimeProvider.GetUtcNow(), SecurityIdentifier, FundamentalProperty.FinancialStatements_NumberOfShareHolders_NineMonths);
+        public long NineMonths =>
+            FundamentalService.Get<long>(
+                TimeProvider.GetUtcNow(),
+                SecurityIdentifier,
+                FundamentalProperty.FinancialStatements_NumberOfShareHolders_NineMonths
+            );
 
         /// <summary>
         /// Gets/sets the TwelveMonths period value for the field
         /// </summary>
         [JsonProperty("12M")]
-        public long TwelveMonths => FundamentalService.Get<long>(TimeProvider.GetUtcNow(), SecurityIdentifier, FundamentalProperty.FinancialStatements_NumberOfShareHolders_TwelveMonths);
+        public long TwelveMonths =>
+            FundamentalService.Get<long>(
+                TimeProvider.GetUtcNow(),
+                SecurityIdentifier,
+                FundamentalProperty.FinancialStatements_NumberOfShareHolders_TwelveMonths
+            );
 
         /// <summary>
         /// Returns true if the field contains a value for the default period
         /// </summary>
-        public override bool HasValue => !BaseFundamentalDataProvider.IsNone(typeof(long), FundamentalService.Get<long>(TimeProvider.GetUtcNow(), SecurityIdentifier, FundamentalProperty.FinancialStatements_NumberOfShareHolders_TwelveMonths));
+        public override bool HasValue =>
+            !BaseFundamentalDataProvider.IsNone(
+                typeof(long),
+                FundamentalService.Get<long>(
+                    TimeProvider.GetUtcNow(),
+                    SecurityIdentifier,
+                    FundamentalProperty.FinancialStatements_NumberOfShareHolders_TwelveMonths
+                )
+            );
 
         /// <summary>
         /// Returns the default value for the field
@@ -81,7 +119,11 @@ namespace QuantConnect.Data.Fundamental
         {
             get
             {
-                var defaultValue = FundamentalService.Get<long>(TimeProvider.GetUtcNow(), SecurityIdentifier, FundamentalProperty.FinancialStatements_NumberOfShareHolders_TwelveMonths);
+                var defaultValue = FundamentalService.Get<long>(
+                    TimeProvider.GetUtcNow(),
+                    SecurityIdentifier,
+                    FundamentalProperty.FinancialStatements_NumberOfShareHolders_TwelveMonths
+                );
                 if (!BaseFundamentalDataProvider.IsNone(typeof(long), defaultValue))
                 {
                     return defaultValue;
@@ -97,7 +139,17 @@ namespace QuantConnect.Data.Fundamental
         public override IReadOnlyDictionary<string, long> GetPeriodValues()
         {
             var result = new Dictionary<string, long>();
-            foreach (var kvp in new[] { new Tuple<string, long>("1M", OneMonth), new Tuple<string, long>("2M", TwoMonths), new Tuple<string, long>("3M", ThreeMonths), new Tuple<string, long>("6M", SixMonths), new Tuple<string, long>("9M", NineMonths), new Tuple<string, long>("12M", TwelveMonths) })
+            foreach (
+                var kvp in new[]
+                {
+                    new Tuple<string, long>("1M", OneMonth),
+                    new Tuple<string, long>("2M", TwoMonths),
+                    new Tuple<string, long>("3M", ThreeMonths),
+                    new Tuple<string, long>("6M", SixMonths),
+                    new Tuple<string, long>("9M", NineMonths),
+                    new Tuple<string, long>("12M", TwelveMonths)
+                }
+            )
             {
                 if (!BaseFundamentalDataProvider.IsNone(typeof(long), kvp.Item2))
                 {
@@ -112,20 +164,27 @@ namespace QuantConnect.Data.Fundamental
         /// </summary>
         /// <param name="period">The requested period</param>
         /// <returns>The value for the period</returns>
-        public override long GetPeriodValue(string period) => FundamentalService.Get<long>(TimeProvider.GetUtcNow(), SecurityIdentifier, Enum.Parse<FundamentalProperty>($"FinancialStatements_NumberOfShareHolders_{ConvertPeriod(period)}"));
+        public override long GetPeriodValue(string period) =>
+            FundamentalService.Get<long>(
+                TimeProvider.GetUtcNow(),
+                SecurityIdentifier,
+                Enum.Parse<FundamentalProperty>(
+                    $"FinancialStatements_NumberOfShareHolders_{ConvertPeriod(period)}"
+                )
+            );
 
         /// <summary>
         /// Creates a new empty instance
         /// </summary>
-        public NumberOfShareHolders()
-        {
-        }
+        public NumberOfShareHolders() { }
 
         /// <summary>
         /// Creates a new instance for the given time and security
         /// </summary>
-        public NumberOfShareHolders(ITimeProvider timeProvider, SecurityIdentifier securityIdentifier) : base(timeProvider, securityIdentifier)
-        {
-        }
+        public NumberOfShareHolders(
+            ITimeProvider timeProvider,
+            SecurityIdentifier securityIdentifier
+        )
+            : base(timeProvider, securityIdentifier) { }
     }
 }

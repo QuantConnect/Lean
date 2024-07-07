@@ -79,7 +79,10 @@ namespace QuantConnect.Tests.Common.Data
             Assert.AreEqual(bar3.Value, newTradeBar.Low);
             Assert.AreEqual(bar4.Value, newTradeBar.Close);
             Assert.AreEqual(bar4.EndTime, newTradeBar.EndTime);
-            Assert.AreEqual(bar1.Quantity + bar2.Quantity + bar3.Quantity + bar4.Quantity, newTradeBar.Volume);
+            Assert.AreEqual(
+                bar1.Quantity + bar2.Quantity + bar3.Quantity + bar4.Quantity,
+                newTradeBar.Volume
+            );
         }
 
         [Test]
@@ -109,7 +112,9 @@ namespace QuantConnect.Tests.Common.Data
 
             consolidator.Update(tick1);
 
-            Exception ex = Assert.Throws<InvalidOperationException>(() => consolidator.Update(tick2));
+            Exception ex = Assert.Throws<InvalidOperationException>(
+                () => consolidator.Update(tick2)
+            );
             Assert.IsTrue(ex.Message.Contains("is not the same"));
         }
 
@@ -124,20 +129,20 @@ namespace QuantConnect.Tests.Common.Data
             };
 
             var reference = new DateTime(2015, 04, 13);
-            consolidator.Update(new Tick { Time = reference});
+            consolidator.Update(new Tick { Time = reference });
             Assert.IsNull(consolidated);
 
-            consolidator.Update(new Tick { Time = reference.AddMilliseconds(1)});
+            consolidator.Update(new Tick { Time = reference.AddMilliseconds(1) });
             Assert.IsNotNull(consolidated);
 
             // sadly the first emit will be off by the data resolution since we 'swallow' a point, so to
             Assert.AreEqual(TimeSpan.FromMilliseconds(1), consolidated.Period);
             consolidated = null;
 
-            consolidator.Update(new Tick { Time = reference.AddMilliseconds(2)});
+            consolidator.Update(new Tick { Time = reference.AddMilliseconds(2) });
             Assert.IsNull(consolidated);
 
-            consolidator.Update(new Tick { Time = reference.AddMilliseconds(3)});
+            consolidator.Update(new Tick { Time = reference.AddMilliseconds(3) });
             Assert.IsNotNull(consolidated);
 
             Assert.AreEqual(TimeSpan.FromMilliseconds(2), consolidated.Period);
@@ -154,20 +159,20 @@ namespace QuantConnect.Tests.Common.Data
             };
 
             var reference = new DateTime(2015, 04, 13);
-            consolidator.Update(new Tick { Time = reference});
+            consolidator.Update(new Tick { Time = reference });
             Assert.IsNull(consolidated);
 
-            consolidator.Update(new Tick { Time = reference.AddDays(1)});
+            consolidator.Update(new Tick { Time = reference.AddDays(1) });
             Assert.IsNotNull(consolidated);
             Assert.AreEqual(TimeSpan.FromDays(1), consolidated.Period);
             consolidated = null;
 
-            consolidator.Update(new Tick { Time = reference.AddDays(2)});
+            consolidator.Update(new Tick { Time = reference.AddDays(2) });
             Assert.IsNotNull(consolidated);
             Assert.AreEqual(TimeSpan.FromDays(1), consolidated.Period);
             consolidated = null;
 
-            consolidator.Update(new Tick { Time = reference.AddDays(3)});
+            consolidator.Update(new Tick { Time = reference.AddDays(3) });
             Assert.IsNotNull(consolidated);
             Assert.AreEqual(TimeSpan.FromDays(1), consolidated.Period);
         }
@@ -331,6 +336,5 @@ namespace QuantConnect.Tests.Common.Data
             Assert.AreEqual(consolidated.Open, tick1.Value);
             Assert.AreEqual(consolidated.Close, tick1.Value);
         }
-
     }
 }

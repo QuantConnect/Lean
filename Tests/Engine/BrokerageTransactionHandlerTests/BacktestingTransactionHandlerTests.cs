@@ -58,15 +58,31 @@ namespace QuantConnect.Tests.Engine.BrokerageTransactionHandlerTests
             //Initializes the transaction handler
             var transactionHandler = new BacktestingTransactionHandler();
             using var backtestingBrokerage = new BacktestingBrokerage(_algorithm);
-            transactionHandler.Initialize(_algorithm, backtestingBrokerage, new BacktestingResultHandler());
+            transactionHandler.Initialize(
+                _algorithm,
+                backtestingBrokerage,
+                new BacktestingResultHandler()
+            );
 
             // Creates the order
             var security = _algorithm.Securities[Ticker];
-            var orderRequest = new SubmitOrderRequest(OrderType.Market, security.Type, security.Symbol, 600, 0, 0, 0, DateTime.Now, "");
+            var orderRequest = new SubmitOrderRequest(
+                OrderType.Market,
+                security.Type,
+                security.Symbol,
+                600,
+                0,
+                0,
+                0,
+                DateTime.Now,
+                ""
+            );
 
             // Mock the the order processor
             var orderProcessorMock = new Mock<IOrderProcessor>();
-            orderProcessorMock.Setup(m => m.GetOrderTicket(It.IsAny<int>())).Returns(new OrderTicket(_algorithm.Transactions, orderRequest));
+            orderProcessorMock
+                .Setup(m => m.GetOrderTicket(It.IsAny<int>()))
+                .Returns(new OrderTicket(_algorithm.Transactions, orderRequest));
             _algorithm.Transactions.SetOrderProcessor(orderProcessorMock.Object);
 
             var ticket = transactionHandler.AddOrder(orderRequest);
@@ -76,8 +92,11 @@ namespace QuantConnect.Tests.Engine.BrokerageTransactionHandlerTests
             // 600 after round off becomes 0 -> order is not placed
             Assert.IsTrue(orderRequest.Response.IsProcessed);
             Assert.IsTrue(orderRequest.Response.IsError);
-            Assert.IsTrue(orderRequest.Response.ErrorMessage
-                .Contains("Cannot process submit request because order with id {0} already exists"));
+            Assert.IsTrue(
+                orderRequest.Response.ErrorMessage.Contains(
+                    "Cannot process submit request because order with id {0} already exists"
+                )
+            );
         }
 
         [Test]
@@ -91,16 +110,42 @@ namespace QuantConnect.Tests.Engine.BrokerageTransactionHandlerTests
             // Creates a market order
             var security = _algorithm.Securities[Ticker];
             var price = 1.12m;
-            security.SetMarketPrice(new Tick(DateTime.UtcNow.AddDays(-1), security.Symbol, price, price, price));
-            var orderRequest = new SubmitOrderRequest(OrderType.Market, security.Type, security.Symbol, 1000, 0, 0, 0, DateTime.UtcNow, "");
-            var orderRequest2 = new SubmitOrderRequest(OrderType.Market, security.Type, security.Symbol, -1000, 0, 0, 0, DateTime.UtcNow, "");
+            security.SetMarketPrice(
+                new Tick(DateTime.UtcNow.AddDays(-1), security.Symbol, price, price, price)
+            );
+            var orderRequest = new SubmitOrderRequest(
+                OrderType.Market,
+                security.Type,
+                security.Symbol,
+                1000,
+                0,
+                0,
+                0,
+                DateTime.UtcNow,
+                ""
+            );
+            var orderRequest2 = new SubmitOrderRequest(
+                OrderType.Market,
+                security.Type,
+                security.Symbol,
+                -1000,
+                0,
+                0,
+                0,
+                DateTime.UtcNow,
+                ""
+            );
             orderRequest.SetOrderId(1);
             orderRequest2.SetOrderId(2);
 
             // Mock the the order processor
             var orderProcessorMock = new Mock<IOrderProcessor>();
-            orderProcessorMock.Setup(m => m.GetOrderTicket(It.Is<int>(i => i == 1))).Returns(new OrderTicket(_algorithm.Transactions, orderRequest));
-            orderProcessorMock.Setup(m => m.GetOrderTicket(It.Is<int>(i => i == 2))).Returns(new OrderTicket(_algorithm.Transactions, orderRequest2));
+            orderProcessorMock
+                .Setup(m => m.GetOrderTicket(It.Is<int>(i => i == 1)))
+                .Returns(new OrderTicket(_algorithm.Transactions, orderRequest));
+            orderProcessorMock
+                .Setup(m => m.GetOrderTicket(It.Is<int>(i => i == 2)))
+                .Returns(new OrderTicket(_algorithm.Transactions, orderRequest2));
             _algorithm.Transactions.SetOrderProcessor(orderProcessorMock.Object);
 
             var orderEventCalls = 0;
@@ -164,16 +209,42 @@ namespace QuantConnect.Tests.Engine.BrokerageTransactionHandlerTests
             security.FillModel = new TestPartialFilledModel();
 
             var price = 1.12m;
-            security.SetMarketPrice(new Tick(DateTime.UtcNow.AddDays(-1), security.Symbol, price, price, price));
-            var orderRequest = new SubmitOrderRequest(OrderType.Market, security.Type, security.Symbol, 2000, 0, 0, 9, DateTime.UtcNow, "");
-            var orderRequest2 = new SubmitOrderRequest(OrderType.Market, security.Type, security.Symbol, -2000, 0, 0, 9, DateTime.UtcNow, "");
+            security.SetMarketPrice(
+                new Tick(DateTime.UtcNow.AddDays(-1), security.Symbol, price, price, price)
+            );
+            var orderRequest = new SubmitOrderRequest(
+                OrderType.Market,
+                security.Type,
+                security.Symbol,
+                2000,
+                0,
+                0,
+                9,
+                DateTime.UtcNow,
+                ""
+            );
+            var orderRequest2 = new SubmitOrderRequest(
+                OrderType.Market,
+                security.Type,
+                security.Symbol,
+                -2000,
+                0,
+                0,
+                9,
+                DateTime.UtcNow,
+                ""
+            );
             orderRequest.SetOrderId(1);
             orderRequest2.SetOrderId(2);
 
             // Mock the the order processor
             var orderProcessorMock = new Mock<IOrderProcessor>();
-            orderProcessorMock.Setup(m => m.GetOrderTicket(It.Is<int>(i => i == 1))).Returns(new OrderTicket(_algorithm.Transactions, orderRequest));
-            orderProcessorMock.Setup(m => m.GetOrderTicket(It.Is<int>(i => i == 2))).Returns(new OrderTicket(_algorithm.Transactions, orderRequest2));
+            orderProcessorMock
+                .Setup(m => m.GetOrderTicket(It.Is<int>(i => i == 1)))
+                .Returns(new OrderTicket(_algorithm.Transactions, orderRequest));
+            orderProcessorMock
+                .Setup(m => m.GetOrderTicket(It.Is<int>(i => i == 2)))
+                .Returns(new OrderTicket(_algorithm.Transactions, orderRequest2));
             _algorithm.Transactions.SetOrderProcessor(orderProcessorMock.Object);
 
             var orderEventCalls = 0;
@@ -245,12 +316,14 @@ namespace QuantConnect.Tests.Engine.BrokerageTransactionHandlerTests
                     status = OrderStatus.Filled;
                 }
                 FilledOrders[order.Id] = order;
-                return new Fill(new OrderEvent(order, DateTime.UtcNow, OrderFee.Zero)
-                {
-                    FillPrice = parameters.Security.Price,
-                    FillQuantity = order.Quantity / 2,
-                    Status = status
-                });
+                return new Fill(
+                    new OrderEvent(order, DateTime.UtcNow, OrderFee.Zero)
+                    {
+                        FillPrice = parameters.Security.Price,
+                        FillQuantity = order.Quantity / 2,
+                        Status = status
+                    }
+                );
             }
         }
     }

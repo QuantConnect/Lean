@@ -15,7 +15,8 @@
 
 namespace QuantConnect.Algorithm.CSharp
 {
-    public class WarmupDataTypesBarCountWarmupRegressionAlgorithm : WarmupDataTypesRegressionAlgorithm
+    public class WarmupDataTypesBarCountWarmupRegressionAlgorithm
+        : WarmupDataTypesRegressionAlgorithm
     {
         /// <summary>
         /// Initialise the data and resolution required, as well as the cash and start-end dates for your algorithm. All algorithms must initialized.

@@ -96,24 +96,42 @@ namespace QuantConnect.Tests.Common.Orders.Fills
             var equity = CreateEquity(configTick);
 
             var time = new DateTime(2018, 9, 24, 9, 30, 0);
-            var timeKeeper = new TimeKeeper(time.ConvertToUtc(TimeZones.NewYork), TimeZones.NewYork);
+            var timeKeeper = new TimeKeeper(
+                time.ConvertToUtc(TimeZones.NewYork),
+                TimeZones.NewYork
+            );
             equity.SetLocalTimeKeeper(timeKeeper.GetLocalTimeKeeper(TimeZones.NewYork));
 
             // The order will not fill with this price
-            var tradeTick = new Tick { TickType = TickType.Trade, Time = time, Value = 291m };
+            var tradeTick = new Tick
+            {
+                TickType = TickType.Trade,
+                Time = time,
+                Value = 291m
+            };
             equity.SetMarketPrice(tradeTick);
 
             time += TimeSpan.FromMinutes(1);
             timeKeeper.SetUtcDateTime(time.ConvertToUtc(TimeZones.NewYork));
 
-            var order = new LimitOrder(Symbols.SPY, orderQuantity, limitPrice, time.ConvertToUtc(TimeZones.NewYork));
+            var order = new LimitOrder(
+                Symbols.SPY,
+                orderQuantity,
+                limitPrice,
+                time.ConvertToUtc(TimeZones.NewYork)
+            );
 
-            var fill = fillModel.Fill(new FillModelParameters(
-                equity,
-                order,
-                new MockSubscriptionDataConfigProvider(configTick),
-                Time.OneHour,
-                null)).Single();
+            var fill = fillModel
+                .Fill(
+                    new FillModelParameters(
+                        equity,
+                        order,
+                        new MockSubscriptionDataConfigProvider(configTick),
+                        Time.OneHour,
+                        null
+                    )
+                )
+                .Single();
 
             // Do not fill on stale data
             Assert.AreEqual(0, fill.FillQuantity);
@@ -126,12 +144,12 @@ namespace QuantConnect.Tests.Common.Orders.Fills
             // Create a series of price where the last value will not fill
             // and the fill model need to use the minimum/maximum instead
             var trades = new[] { 0m, -0.1m, 0m, 0.1m, 0m }
-                .Select(delta => new Tick 
-                    { 
-                        TickType = TickType.Trade,
-                        Time = time, 
-                        Value = limitPrice - delta * Math.Sign(orderQuantity)
-                    })
+                .Select(delta => new Tick
+                {
+                    TickType = TickType.Trade,
+                    Time = time,
+                    Value = limitPrice - delta * Math.Sign(orderQuantity)
+                })
                 .ToList();
 
             equity.Update(trades, typeof(Tick));
@@ -148,18 +166,34 @@ namespace QuantConnect.Tests.Common.Orders.Fills
         public void LimitOrderDoesNotFillUsingQuoteBar(decimal orderQuantity, decimal limitPrice)
         {
             var time = new DateTime(2018, 9, 24, 9, 30, 0);
-            var timeKeeper = new TimeKeeper(time.ConvertToUtc(TimeZones.NewYork), TimeZones.NewYork);
+            var timeKeeper = new TimeKeeper(
+                time.ConvertToUtc(TimeZones.NewYork),
+                TimeZones.NewYork
+            );
 
             var fillModel = new EquityFillModel();
-            var order = new LimitOrder(Symbols.SPY, orderQuantity, limitPrice, time.ConvertToUtc(TimeZones.NewYork));
+            var order = new LimitOrder(
+                Symbols.SPY,
+                orderQuantity,
+                limitPrice,
+                time.ConvertToUtc(TimeZones.NewYork)
+            );
 
             var parameters = GetFillModelParameters(order);
-            
+
             var equity = parameters.Security;
             equity.SetLocalTimeKeeper(timeKeeper.GetLocalTimeKeeper(TimeZones.NewYork));
 
             // The order will not fill with these prices
-            var tradeBar = new TradeBar(time.AddMinutes(-10), Symbols.SPY, 291m, 291m, 291m, 291m, 12345);
+            var tradeBar = new TradeBar(
+                time.AddMinutes(-10),
+                Symbols.SPY,
+                291m,
+                291m,
+                291m,
+                291m,
+                12345
+            );
             equity.SetMarketPrice(tradeBar);
 
             var fill = fillModel.Fill(parameters).Single();
@@ -171,10 +205,15 @@ namespace QuantConnect.Tests.Common.Orders.Fills
 
             time += TimeSpan.FromMinutes(2);
             timeKeeper.SetUtcDateTime(time.ConvertToUtc(TimeZones.NewYork));
-            
-            var quoteBar = new QuoteBar(time, Symbols.SPY, 
-                new Bar(290m, 292m, 289m, 291m), 12345,
-                new Bar(290m, 292m, 289m, 291m), 12345);
+
+            var quoteBar = new QuoteBar(
+                time,
+                Symbols.SPY,
+                new Bar(290m, 292m, 289m, 291m),
+                12345,
+                new Bar(290m, 292m, 289m, 291m),
+                12345
+            );
             equity.SetMarketPrice(quoteBar);
 
             fill = fillModel.LimitFill(equity, order);
@@ -187,13 +226,24 @@ namespace QuantConnect.Tests.Common.Orders.Fills
 
         [TestCase(100, 290.50)]
         [TestCase(-100, 291.50)]
-        public void LimitOrderDoesNotFillUsingTickTypeQuote(decimal orderQuantity, decimal limitPrice)
+        public void LimitOrderDoesNotFillUsingTickTypeQuote(
+            decimal orderQuantity,
+            decimal limitPrice
+        )
         {
             var time = new DateTime(2018, 9, 24, 9, 30, 0);
-            var timeKeeper = new TimeKeeper(time.ConvertToUtc(TimeZones.NewYork), TimeZones.NewYork);
+            var timeKeeper = new TimeKeeper(
+                time.ConvertToUtc(TimeZones.NewYork),
+                TimeZones.NewYork
+            );
 
             var fillModel = new EquityFillModel();
-            var order = new LimitOrder(Symbols.SPY, orderQuantity, limitPrice, time.ConvertToUtc(TimeZones.NewYork));
+            var order = new LimitOrder(
+                Symbols.SPY,
+                orderQuantity,
+                limitPrice,
+                time.ConvertToUtc(TimeZones.NewYork)
+            );
 
             var configTick = CreateTickConfig(Symbols.SPY);
             var equity = CreateEquity(configTick);
@@ -201,15 +251,25 @@ namespace QuantConnect.Tests.Common.Orders.Fills
             equity.SetLocalTimeKeeper(timeKeeper.GetLocalTimeKeeper(TimeZones.NewYork));
 
             // The order will not fill with this price
-            var tradeTick = new Tick { TickType = TickType.Trade, Time = time, Value = 291m };
+            var tradeTick = new Tick
+            {
+                TickType = TickType.Trade,
+                Time = time,
+                Value = 291m
+            };
             equity.SetMarketPrice(tradeTick);
 
-            var fill = fillModel.Fill(new FillModelParameters(
-                equity,
-                order,
-                new MockSubscriptionDataConfigProvider(configTick),
-                Time.OneHour,
-                null)).Single();
+            var fill = fillModel
+                .Fill(
+                    new FillModelParameters(
+                        equity,
+                        order,
+                        new MockSubscriptionDataConfigProvider(configTick),
+                        Time.OneHour,
+                        null
+                    )
+                )
+                .Single();
 
             // Do not fill on stale data
             Assert.AreEqual(0, fill.FillQuantity);
@@ -220,9 +280,15 @@ namespace QuantConnect.Tests.Common.Orders.Fills
             timeKeeper.SetUtcDateTime(time.ConvertToUtc(TimeZones.NewYork));
 
             var price = limitPrice - 0.1m * Math.Sign(orderQuantity);
-            var quoteTick = new Tick { TickType = TickType.Quote, Time = time, BidPrice = price, AskPrice = price };
+            var quoteTick = new Tick
+            {
+                TickType = TickType.Quote,
+                Time = time,
+                BidPrice = price,
+                AskPrice = price
+            };
             equity.SetMarketPrice(quoteTick);
-            
+
             fill = fillModel.LimitFill(equity, order);
 
             // Limit orders don't fill with TickType.Quote:
@@ -233,15 +299,26 @@ namespace QuantConnect.Tests.Common.Orders.Fills
 
         [TestCase(100, 290.50)]
         [TestCase(-100, 291.50)]
-        public void LimitOrderFillsAtLimitPriceWithFavorableGap(decimal orderQuantity, decimal limitPrice)
+        public void LimitOrderFillsAtLimitPriceWithFavorableGap(
+            decimal orderQuantity,
+            decimal limitPrice
+        )
         {
             // See https://github.com/QuantConnect/Lean/issues/963
 
             var time = new DateTime(2018, 9, 24, 9, 30, 0);
-            var timeKeeper = new TimeKeeper(time.ConvertToUtc(TimeZones.NewYork), TimeZones.NewYork);
+            var timeKeeper = new TimeKeeper(
+                time.ConvertToUtc(TimeZones.NewYork),
+                TimeZones.NewYork
+            );
 
             var fillModel = new EquityFillModel();
-            var order = new LimitOrder(Symbols.SPY, orderQuantity, limitPrice, time.ConvertToUtc(TimeZones.NewYork));
+            var order = new LimitOrder(
+                Symbols.SPY,
+                orderQuantity,
+                limitPrice,
+                time.ConvertToUtc(TimeZones.NewYork)
+            );
 
             var parameters = GetFillModelParameters(order);
 
@@ -249,7 +326,9 @@ namespace QuantConnect.Tests.Common.Orders.Fills
             equity.SetLocalTimeKeeper(timeKeeper.GetLocalTimeKeeper(TimeZones.NewYork));
 
             // The order will not fill with these prices
-            equity.SetMarketPrice(new TradeBar(time.AddMinutes(-10), Symbols.SPY, 291m, 291m, 291m, 291m, 12345));
+            equity.SetMarketPrice(
+                new TradeBar(time.AddMinutes(-10), Symbols.SPY, 291m, 291m, 291m, 291m, 12345)
+            );
 
             var fill = fillModel.Fill(parameters).Single();
 
@@ -262,9 +341,27 @@ namespace QuantConnect.Tests.Common.Orders.Fills
             timeKeeper.SetUtcDateTime(time.ConvertToUtc(TimeZones.NewYork));
 
             var tradeBar = Math.Sign(orderQuantity) switch
-            { 
-                1 => new TradeBar(time, Symbols.SPY, limitPrice + 1, limitPrice + 1, limitPrice - 2, limitPrice + 1, 12345),
-                -1 => new TradeBar(time, Symbols.SPY, limitPrice - 1, limitPrice + 2, limitPrice - 1, limitPrice - 1, 12345),
+            {
+                1
+                    => new TradeBar(
+                        time,
+                        Symbols.SPY,
+                        limitPrice + 1,
+                        limitPrice + 1,
+                        limitPrice - 2,
+                        limitPrice + 1,
+                        12345
+                    ),
+                -1
+                    => new TradeBar(
+                        time,
+                        Symbols.SPY,
+                        limitPrice - 1,
+                        limitPrice + 2,
+                        limitPrice - 1,
+                        limitPrice - 1,
+                        12345
+                    ),
             };
 
             equity.SetMarketPrice(tradeBar);
@@ -284,10 +381,18 @@ namespace QuantConnect.Tests.Common.Orders.Fills
             // See https://github.com/QuantConnect/Lean/issues/7052
 
             var time = new DateTime(2018, 9, 24, 9, 30, 0);
-            var timeKeeper = new TimeKeeper(time.ConvertToUtc(TimeZones.NewYork), TimeZones.NewYork);
+            var timeKeeper = new TimeKeeper(
+                time.ConvertToUtc(TimeZones.NewYork),
+                TimeZones.NewYork
+            );
 
             var fillModel = new EquityFillModel();
-            var order = new LimitOrder(Symbols.SPY, orderQuantity, limitPrice, time.ConvertToUtc(TimeZones.NewYork));
+            var order = new LimitOrder(
+                Symbols.SPY,
+                orderQuantity,
+                limitPrice,
+                time.ConvertToUtc(TimeZones.NewYork)
+            );
 
             var parameters = GetFillModelParameters(order);
 
@@ -295,7 +400,9 @@ namespace QuantConnect.Tests.Common.Orders.Fills
             equity.SetLocalTimeKeeper(timeKeeper.GetLocalTimeKeeper(TimeZones.NewYork));
 
             // The order will not fill with these prices
-            equity.SetMarketPrice(new TradeBar(time.AddMinutes(-10), Symbols.SPY, 291m, 291m, 291m, 291m, 12345));
+            equity.SetMarketPrice(
+                new TradeBar(time.AddMinutes(-10), Symbols.SPY, 291m, 291m, 291m, 291m, 12345)
+            );
 
             var fill = fillModel.Fill(parameters).Single();
 
@@ -311,8 +418,26 @@ namespace QuantConnect.Tests.Common.Orders.Fills
             var open = limitPrice - Math.Sign(orderQuantity);
             var gapTradeBar = Math.Sign(orderQuantity) switch
             {
-                1 => new TradeBar(time, Symbols.SPY, open, limitPrice - 1, limitPrice - 2, limitPrice - 1, 12345),
-                -1 => new TradeBar(time, Symbols.SPY, open, limitPrice + 2, limitPrice + 1, limitPrice + 1, 12345),
+                1
+                    => new TradeBar(
+                        time,
+                        Symbols.SPY,
+                        open,
+                        limitPrice - 1,
+                        limitPrice - 2,
+                        limitPrice - 1,
+                        12345
+                    ),
+                -1
+                    => new TradeBar(
+                        time,
+                        Symbols.SPY,
+                        open,
+                        limitPrice + 2,
+                        limitPrice + 1,
+                        limitPrice + 1,
+                        12345
+                    ),
             };
 
             equity.SetMarketPrice(gapTradeBar);
@@ -328,20 +453,39 @@ namespace QuantConnect.Tests.Common.Orders.Fills
 
         [TestCase(100, 290.50)]
         [TestCase(-100, 291.50)]
-        public void LimitOrderDoesNotFillUsingDataBeforeSubmitTime(decimal orderQuantity, decimal limitPrice)
+        public void LimitOrderDoesNotFillUsingDataBeforeSubmitTime(
+            decimal orderQuantity,
+            decimal limitPrice
+        )
         {
             var time = new DateTime(2018, 9, 24, 9, 30, 0);
-            var timeKeeper = new TimeKeeper(time.ConvertToUtc(TimeZones.NewYork), TimeZones.NewYork);
+            var timeKeeper = new TimeKeeper(
+                time.ConvertToUtc(TimeZones.NewYork),
+                TimeZones.NewYork
+            );
 
             var fillModel = new EquityFillModel();
-            var order = new LimitOrder(Symbols.SPY, orderQuantity, limitPrice, time.ConvertToUtc(TimeZones.NewYork));
+            var order = new LimitOrder(
+                Symbols.SPY,
+                orderQuantity,
+                limitPrice,
+                time.ConvertToUtc(TimeZones.NewYork)
+            );
 
             var parameters = GetFillModelParameters(order);
             var equity = parameters.Security;
 
             equity.SetLocalTimeKeeper(timeKeeper.GetLocalTimeKeeper(TimeZones.NewYork));
 
-            var tradeBar = new TradeBar(time.AddMinutes(-10), Symbols.SPY, 290m, 292m, 289m, 291m, 12345);
+            var tradeBar = new TradeBar(
+                time.AddMinutes(-10),
+                Symbols.SPY,
+                290m,
+                292m,
+                289m,
+                291m,
+                12345
+            );
             equity.SetMarketPrice(tradeBar);
 
             time += TimeSpan.FromMinutes(1);

@@ -15,17 +15,19 @@
 */
 
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using QuantConnect.Data;
 using QuantConnect.Interfaces;
-using System.Collections.Generic;
 
 namespace QuantConnect.Algorithm.CSharp
 {
     /// <summary>
     /// Regression test asserting behavior of <see cref="Symbol.Canonical"/>
     /// </summary>
-    public class OptionSymbolCanonicalRegressionAlgorithm : QCAlgorithm, IRegressionAlgorithmDefinition
+    public class OptionSymbolCanonicalRegressionAlgorithm
+        : QCAlgorithm,
+            IRegressionAlgorithmDefinition
     {
         private Symbol _optionContract;
         private Symbol _canonicalOptionContract;
@@ -36,7 +38,9 @@ namespace QuantConnect.Algorithm.CSharp
             SetEndDate(2014, 06, 09);
 
             var equitySymbol = AddEquity("TWX").Symbol;
-            var contracts = OptionChainProvider.GetOptionContractList(equitySymbol, UtcTime).ToList();
+            var contracts = OptionChainProvider
+                .GetOptionContractList(equitySymbol, UtcTime)
+                .ToList();
 
             var callOptionSymbol = contracts
                 .Where(c => c.ID.OptionRight == OptionRight.Call)
@@ -92,35 +96,36 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// This is used by the regression test system to indicate what the expected statistics are from running the algorithm
         /// </summary>
-        public Dictionary<string, string> ExpectedStatistics => new Dictionary<string, string>
-        {
-            {"Total Orders", "1"},
-            {"Average Win", "0%"},
-            {"Average Loss", "0%"},
-            {"Compounding Annual Return", "-11.148%"},
-            {"Drawdown", "0.200%"},
-            {"Expectancy", "0"},
-            {"Start Equity", "100000"},
-            {"End Equity", "99849"},
-            {"Net Profit", "-0.151%"},
-            {"Sharpe Ratio", "0"},
-            {"Sortino Ratio", "0"},
-            {"Probabilistic Sharpe Ratio", "0%"},
-            {"Loss Rate", "0%"},
-            {"Win Rate", "0%"},
-            {"Profit-Loss Ratio", "0"},
-            {"Alpha", "0"},
-            {"Beta", "0"},
-            {"Annual Standard Deviation", "0"},
-            {"Annual Variance", "0"},
-            {"Information Ratio", "-11.639"},
-            {"Tracking Error", "0.037"},
-            {"Treynor Ratio", "0"},
-            {"Total Fees", "$1.00"},
-            {"Estimated Strategy Capacity", "$5700000.00"},
-            {"Lowest Capacity Asset", "AOL VRKS95ENLBYE|AOL R735QTJ8XC9X"},
-            {"Portfolio Turnover", "0.59%"},
-            {"OrderListHash", "cf5752ad13afe5294a9a8aad660d015a"}
-        };
+        public Dictionary<string, string> ExpectedStatistics =>
+            new Dictionary<string, string>
+            {
+                { "Total Orders", "1" },
+                { "Average Win", "0%" },
+                { "Average Loss", "0%" },
+                { "Compounding Annual Return", "-11.148%" },
+                { "Drawdown", "0.200%" },
+                { "Expectancy", "0" },
+                { "Start Equity", "100000" },
+                { "End Equity", "99849" },
+                { "Net Profit", "-0.151%" },
+                { "Sharpe Ratio", "0" },
+                { "Sortino Ratio", "0" },
+                { "Probabilistic Sharpe Ratio", "0%" },
+                { "Loss Rate", "0%" },
+                { "Win Rate", "0%" },
+                { "Profit-Loss Ratio", "0" },
+                { "Alpha", "0" },
+                { "Beta", "0" },
+                { "Annual Standard Deviation", "0" },
+                { "Annual Variance", "0" },
+                { "Information Ratio", "-11.639" },
+                { "Tracking Error", "0.037" },
+                { "Treynor Ratio", "0" },
+                { "Total Fees", "$1.00" },
+                { "Estimated Strategy Capacity", "$5700000.00" },
+                { "Lowest Capacity Asset", "AOL VRKS95ENLBYE|AOL R735QTJ8XC9X" },
+                { "Portfolio Turnover", "0.59%" },
+                { "OrderListHash", "cf5752ad13afe5294a9a8aad660d015a" }
+            };
     }
 }

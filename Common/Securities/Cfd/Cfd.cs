@@ -37,13 +37,16 @@ namespace QuantConnect.Securities.Cfd
         /// <param name="currencyConverter">Currency converter used to convert <see cref="CashAmount"/>
         /// instances into units of the account currency</param>
         /// <param name="registeredTypes">Provides all data types registered in the algorithm</param>
-        public Cfd(SecurityExchangeHours exchangeHours,
+        public Cfd(
+            SecurityExchangeHours exchangeHours,
             Cash quoteCurrency,
             SubscriptionDataConfig config,
             SymbolProperties symbolProperties,
             ICurrencyConverter currencyConverter,
-            IRegisteredSecurityDataTypesProvider registeredTypes)
-            : base(config,
+            IRegisteredSecurityDataTypesProvider registeredTypes
+        )
+            : base(
+                config,
                 quoteCurrency,
                 symbolProperties,
                 new CfdExchange(exchangeHours),
@@ -60,7 +63,7 @@ namespace QuantConnect.Securities.Cfd
                 currencyConverter,
                 registeredTypes,
                 Securities.MarginInterestRateModel.Null
-                )
+            )
         {
             Holdings = new CfdHolding(this, currencyConverter);
         }
@@ -76,14 +79,17 @@ namespace QuantConnect.Securities.Cfd
         /// instances into units of the account currency</param>
         /// <param name="registeredTypes">Provides all data types registered in the algorithm</param>
         /// <param name="securityCache">Cache for storing Security data</param>
-        public Cfd(Symbol symbol,
+        public Cfd(
+            Symbol symbol,
             SecurityExchangeHours exchangeHours,
             Cash quoteCurrency,
             SymbolProperties symbolProperties,
             ICurrencyConverter currencyConverter,
             IRegisteredSecurityDataTypesProvider registeredTypes,
-            SecurityCache securityCache)
-            : base(symbol,
+            SecurityCache securityCache
+        )
+            : base(
+                symbol,
                 quoteCurrency,
                 symbolProperties,
                 new CfdExchange(exchangeHours),
@@ -100,7 +106,7 @@ namespace QuantConnect.Securities.Cfd
                 currencyConverter,
                 registeredTypes,
                 Securities.MarginInterestRateModel.Null
-                )
+            )
         {
             Holdings = new CfdHolding(this, currencyConverter);
         }
@@ -128,7 +134,12 @@ namespace QuantConnect.Securities.Cfd
         /// <param name="symbolProperties">The symbol properties for this security</param>
         /// <param name="baseCurrency">The output base currency</param>
         /// <param name="quoteCurrency">The output quote currency</param>
-        public static void DecomposeCurrencyPair(Symbol symbol, SymbolProperties symbolProperties, out string baseCurrency, out string quoteCurrency)
+        public static void DecomposeCurrencyPair(
+            Symbol symbol,
+            SymbolProperties symbolProperties,
+            out string baseCurrency,
+            out string quoteCurrency
+        )
         {
             quoteCurrency = symbolProperties.QuoteCurrency;
             if (symbol.Value.EndsWith(quoteCurrency))

@@ -15,11 +15,11 @@
 
 using System;
 using System.Collections.Generic;
-using QuantConnect.Data;
 using QuantConnect.Brokerages;
+using QuantConnect.Data;
 using QuantConnect.Indicators;
-using QuantConnect.Orders;
 using QuantConnect.Interfaces;
+using QuantConnect.Orders;
 
 namespace QuantConnect.Algorithm.CSharp
 {
@@ -62,7 +62,10 @@ namespace QuantConnect.Algorithm.CSharp
 
         public override void OnData(Slice slice)
         {
-            if (Portfolio.CashBook["USDT"].ConversionRate == 0 || Portfolio.CashBook["BTC"].ConversionRate == 0)
+            if (
+                Portfolio.CashBook["USDT"].ConversionRate == 0
+                || Portfolio.CashBook["BTC"].ConversionRate == 0
+            )
             {
                 Log($"USDT conversion rate: {Portfolio.CashBook["USDT"].ConversionRate}");
                 Log($"BTC conversion rate: {Portfolio.CashBook["BTC"].ConversionRate}");
@@ -74,7 +77,6 @@ namespace QuantConnect.Algorithm.CSharp
             {
                 return;
             }
-
 
             var btcAmount = Portfolio.CashBook["BTC"].Amount;
             if (_fast > _slow)
@@ -113,7 +115,9 @@ namespace QuantConnect.Algorithm.CSharp
             var btcAmount = Portfolio.CashBook["BTC"].Amount;
             if (btcAmount > 0)
             {
-                throw new RegressionTestException($"BTC holdings should be zero at the end of the algorithm, but was {btcAmount}");
+                throw new RegressionTestException(
+                    $"BTC holdings should be zero at the end of the algorithm, but was {btcAmount}"
+                );
             }
         }
 
@@ -145,35 +149,36 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// This is used by the regression test system to indicate what the expected statistics are from running the algorithm
         /// </summary>
-        public Dictionary<string, string> ExpectedStatistics => new Dictionary<string, string>
-        {
-            {"Total Orders", "3"},
-            {"Average Win", "0%"},
-            {"Average Loss", "0%"},
-            {"Compounding Annual Return", "0%"},
-            {"Drawdown", "0%"},
-            {"Expectancy", "0"},
-            {"Start Equity", "117171.12"},
-            {"End Equity", "117244.50"},
-            {"Net Profit", "0%"},
-            {"Sharpe Ratio", "0"},
-            {"Sortino Ratio", "0"},
-            {"Probabilistic Sharpe Ratio", "0%"},
-            {"Loss Rate", "0%"},
-            {"Win Rate", "0%"},
-            {"Profit-Loss Ratio", "0"},
-            {"Alpha", "0"},
-            {"Beta", "0"},
-            {"Annual Standard Deviation", "0"},
-            {"Annual Variance", "0"},
-            {"Information Ratio", "0"},
-            {"Tracking Error", "0"},
-            {"Treynor Ratio", "0"},
-            {"Total Fees", "₮51.65"},
-            {"Estimated Strategy Capacity", "₮560000.00"},
-            {"Lowest Capacity Asset", "BTCUSDT 2UZ"},
-            {"Portfolio Turnover", "44.04%"},
-            {"OrderListHash", "7426da82dca9e493acbc53c7b9f449f0"}
-        };
+        public Dictionary<string, string> ExpectedStatistics =>
+            new Dictionary<string, string>
+            {
+                { "Total Orders", "3" },
+                { "Average Win", "0%" },
+                { "Average Loss", "0%" },
+                { "Compounding Annual Return", "0%" },
+                { "Drawdown", "0%" },
+                { "Expectancy", "0" },
+                { "Start Equity", "117171.12" },
+                { "End Equity", "117244.50" },
+                { "Net Profit", "0%" },
+                { "Sharpe Ratio", "0" },
+                { "Sortino Ratio", "0" },
+                { "Probabilistic Sharpe Ratio", "0%" },
+                { "Loss Rate", "0%" },
+                { "Win Rate", "0%" },
+                { "Profit-Loss Ratio", "0" },
+                { "Alpha", "0" },
+                { "Beta", "0" },
+                { "Annual Standard Deviation", "0" },
+                { "Annual Variance", "0" },
+                { "Information Ratio", "0" },
+                { "Tracking Error", "0" },
+                { "Treynor Ratio", "0" },
+                { "Total Fees", "₮51.65" },
+                { "Estimated Strategy Capacity", "₮560000.00" },
+                { "Lowest Capacity Asset", "BTCUSDT 2UZ" },
+                { "Portfolio Turnover", "44.04%" },
+                { "OrderListHash", "7426da82dca9e493acbc53c7b9f449f0" }
+            };
     }
 }

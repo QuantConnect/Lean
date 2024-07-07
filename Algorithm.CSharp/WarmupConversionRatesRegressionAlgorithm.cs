@@ -24,7 +24,9 @@ namespace QuantConnect.Algorithm.CSharp
     /// <summary>
     /// This regression algorithm is a test case for validation of conversion rates during warm up.
     /// </summary>
-    public class WarmupConversionRatesRegressionAlgorithm : QCAlgorithm, IRegressionAlgorithmDefinition
+    public class WarmupConversionRatesRegressionAlgorithm
+        : QCAlgorithm,
+            IRegressionAlgorithmDefinition
     {
         /// <summary>
         /// Initialise the data and resolution required, as well as the cash and start-end dates for your algorithm. All algorithms must initialized.
@@ -47,9 +49,11 @@ namespace QuantConnect.Algorithm.CSharp
         /// <param name="slice">Slice object keyed by symbol containing the stock data</param>
         public override void OnData(Slice slice)
         {
-            if (Portfolio.CashBook["EUR"].ConversionRate == 0
+            if (
+                Portfolio.CashBook["EUR"].ConversionRate == 0
                 || Portfolio.CashBook["BTC"].ConversionRate == 0
-                || Portfolio.CashBook["LTC"].ConversionRate == 0)
+                || Portfolio.CashBook["LTC"].ConversionRate == 0
+            )
             {
                 Log($"BTCEUR current price: {Securities["BTCEUR"].Price}");
                 Log($"LTCUSD current price: {Securities["LTCUSD"].Price}");
@@ -60,7 +64,8 @@ namespace QuantConnect.Algorithm.CSharp
                 throw new RegressionTestException("Conversion rate is 0");
             }
 
-            if (IsWarmingUp) return;
+            if (IsWarmingUp)
+                return;
             if (!Portfolio.Invested)
             {
                 SetHoldings("LTCUSD", 1);
@@ -96,35 +101,36 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// This is used by the regression test system to indicate what the expected statistics are from running the algorithm
         /// </summary>
-        public Dictionary<string, string> ExpectedStatistics => new Dictionary<string, string>
-        {
-            {"Total Orders", "1"},
-            {"Average Win", "0%"},
-            {"Average Loss", "0%"},
-            {"Compounding Annual Return", "0%"},
-            {"Drawdown", "0%"},
-            {"Expectancy", "0"},
-            {"Start Equity", "10000.00"},
-            {"End Equity", "9884.48"},
-            {"Net Profit", "0%"},
-            {"Sharpe Ratio", "0"},
-            {"Sortino Ratio", "0"},
-            {"Probabilistic Sharpe Ratio", "0%"},
-            {"Loss Rate", "0%"},
-            {"Win Rate", "0%"},
-            {"Profit-Loss Ratio", "0"},
-            {"Alpha", "0"},
-            {"Beta", "0"},
-            {"Annual Standard Deviation", "0"},
-            {"Annual Variance", "0"},
-            {"Information Ratio", "0"},
-            {"Tracking Error", "0"},
-            {"Treynor Ratio", "0"},
-            {"Total Fees", "$29.84"},
-            {"Estimated Strategy Capacity", "$410000.00"},
-            {"Lowest Capacity Asset", "LTCUSD 2XR"},
-            {"Portfolio Turnover", "100.61%"},
-            {"OrderListHash", "716b5757844f607d1402a5571f015aea"}
-        };
+        public Dictionary<string, string> ExpectedStatistics =>
+            new Dictionary<string, string>
+            {
+                { "Total Orders", "1" },
+                { "Average Win", "0%" },
+                { "Average Loss", "0%" },
+                { "Compounding Annual Return", "0%" },
+                { "Drawdown", "0%" },
+                { "Expectancy", "0" },
+                { "Start Equity", "10000.00" },
+                { "End Equity", "9884.48" },
+                { "Net Profit", "0%" },
+                { "Sharpe Ratio", "0" },
+                { "Sortino Ratio", "0" },
+                { "Probabilistic Sharpe Ratio", "0%" },
+                { "Loss Rate", "0%" },
+                { "Win Rate", "0%" },
+                { "Profit-Loss Ratio", "0" },
+                { "Alpha", "0" },
+                { "Beta", "0" },
+                { "Annual Standard Deviation", "0" },
+                { "Annual Variance", "0" },
+                { "Information Ratio", "0" },
+                { "Tracking Error", "0" },
+                { "Treynor Ratio", "0" },
+                { "Total Fees", "$29.84" },
+                { "Estimated Strategy Capacity", "$410000.00" },
+                { "Lowest Capacity Asset", "LTCUSD 2XR" },
+                { "Portfolio Turnover", "100.61%" },
+                { "OrderListHash", "716b5757844f607d1402a5571f015aea" }
+            };
     }
 }

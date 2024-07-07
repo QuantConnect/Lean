@@ -15,10 +15,10 @@
 */
 
 using System;
-using QuantConnect.Data;
-using QuantConnect.Interfaces;
 using System.Collections.Generic;
+using QuantConnect.Data;
 using QuantConnect.Data.UniverseSelection;
+using QuantConnect.Interfaces;
 
 namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators.Factories
 {
@@ -47,7 +47,10 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators.Factories
         /// <param name="request">The subscription request to be read</param>
         /// <param name="dataProvider">Provider used to get data when it is not present on disk</param>
         /// <returns>An enumerator reading the subscription request</returns>
-        public IEnumerator<BaseData> CreateEnumerator(SubscriptionRequest request, IDataProvider dataProvider)
+        public IEnumerator<BaseData> CreateEnumerator(
+            SubscriptionRequest request,
+            IDataProvider dataProvider
+        )
         {
             using (var dataCacheProvider = new SingleEntryDataCacheProvider(dataProvider))
             {
@@ -62,11 +65,23 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators.Factories
                 foreach (var date in request.TradableDaysInDataTimeZone)
                 {
                     var source = sourceFactory.GetSource(configuration, date, false);
-                    var factory = SubscriptionDataSourceReader.ForSource(source, dataCacheProvider, configuration, date, false, sourceFactory,
-                        dataProvider, _objectStore);
+                    var factory = SubscriptionDataSourceReader.ForSource(
+                        source,
+                        dataCacheProvider,
+                        configuration,
+                        date,
+                        false,
+                        sourceFactory,
+                        dataProvider,
+                        _objectStore
+                    );
                     var coarseFundamentalForDate = factory.Read(source);
                     //  shift all date of emitting the file forward one day to model emitting coarse midnight the next day.
-                    yield return new BaseDataCollection(date.AddDays(1), configuration.Symbol, coarseFundamentalForDate);
+                    yield return new BaseDataCollection(
+                        date.AddDays(1),
+                        configuration.Symbol,
+                        coarseFundamentalForDate
+                    );
                 }
             }
         }

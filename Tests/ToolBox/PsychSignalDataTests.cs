@@ -14,11 +14,11 @@
  * limitations under the License.
 */
 
-using NUnit.Framework;
 using System;
 using System.Globalization;
 using System.IO;
 using System.Linq;
+using NUnit.Framework;
 
 namespace QuantConnect.Tests.ToolBox
 {
@@ -30,7 +30,11 @@ namespace QuantConnect.Tests.ToolBox
         {
             var rawPath = Path.Combine("raw", "alternative", "psychsignal");
 
-            foreach (var file in Directory.GetFiles(rawPath, "*.csv", SearchOption.TopDirectoryOnly).ToList())
+            foreach (
+                var file in Directory
+                    .GetFiles(rawPath, "*.csv", SearchOption.TopDirectoryOnly)
+                    .ToList()
+            )
             {
                 var fileSplit = file.Split('_');
 
@@ -49,7 +53,11 @@ namespace QuantConnect.Tests.ToolBox
         [Test]
         public void FileHourMatchesFakeDataTime()
         {
-            var line = File.ReadLines(Path.Combine("TestData", "00010101_05_example_psychsignal_testdata.csv")).Last().Split(',');
+            var line = File.ReadLines(
+                    Path.Combine("TestData", "00010101_05_example_psychsignal_testdata.csv")
+                )
+                .Last()
+                .Split(',');
             var hour = 5;
 
             var date = Parse.DateTime(line[2]).ToUniversalTime();

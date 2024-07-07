@@ -25,15 +25,19 @@ namespace QuantConnect.Tests.Python
         [Test]
         public void SelectUniverseSymbolsFromIDRegressionAlgorithm()
         {
-            var parameters = new RegressionTests.AlgorithmStatisticsTestParameters("SelectUniverseSymbolsFromIDRegressionAlgorithm",
-                new Dictionary<string, string> { {PerformanceMetrics.TotalOrders, "0"} },
+            var parameters = new RegressionTests.AlgorithmStatisticsTestParameters(
+                "SelectUniverseSymbolsFromIDRegressionAlgorithm",
+                new Dictionary<string, string> { { PerformanceMetrics.TotalOrders, "0" } },
                 Language.Python,
-                AlgorithmStatus.Completed);
+                AlgorithmStatus.Completed
+            );
 
-            AlgorithmRunner.RunLocalBacktest(parameters.Algorithm,
+            AlgorithmRunner.RunLocalBacktest(
+                parameters.Algorithm,
                 parameters.Statistics,
                 parameters.Language,
-                parameters.ExpectedFinalStatus);
+                parameters.ExpectedFinalStatus
+            );
         }
     }
 }

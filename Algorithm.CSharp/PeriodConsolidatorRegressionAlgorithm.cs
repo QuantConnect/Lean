@@ -14,11 +14,11 @@
 */
 
 using System;
-using QuantConnect.Data;
-using QuantConnect.Interfaces;
-using QuantConnect.Data.Market;
 using System.Collections.Generic;
+using QuantConnect.Data;
 using QuantConnect.Data.Consolidators;
+using QuantConnect.Data.Market;
+using QuantConnect.Interfaces;
 
 namespace QuantConnect.Algorithm.CSharp
 {
@@ -34,7 +34,7 @@ namespace QuantConnect.Algorithm.CSharp
         {
             SetStartDate(2013, 10, 07);
             SetEndDate(2013, 10, 08);
-            
+
             var symbol = AddEquity("SPY").Symbol;
 
             var periodConsolidator = new TradeBarConsolidator(Resolution.Minute.ToTimeSpan());
@@ -50,6 +50,7 @@ namespace QuantConnect.Algorithm.CSharp
         {
             _periodConsolidation.Enqueue($"{Time} - {e.EndTime} {e}");
         }
+
         private void CountConsolidator_DataConsolidated(object sender, TradeBar e)
         {
             _countConsolidation.Enqueue($"{Time} - {e.EndTime} {e}");
@@ -57,9 +58,14 @@ namespace QuantConnect.Algorithm.CSharp
 
         public override void OnEndOfAlgorithm()
         {
-            if (_countConsolidation.Count == 0 || _countConsolidation.Count != _periodConsolidation.Count)
+            if (
+                _countConsolidation.Count == 0
+                || _countConsolidation.Count != _periodConsolidation.Count
+            )
             {
-                throw new RegressionTestException($"Unexpected consolidated data count. Period: {_periodConsolidation.Count} Count: {_countConsolidation.Count}");
+                throw new RegressionTestException(
+                    $"Unexpected consolidated data count. Period: {_periodConsolidation.Count} Count: {_countConsolidation.Count}"
+                );
             }
 
             while (_countConsolidation.TryDequeue(out var countData))
@@ -67,7 +73,9 @@ namespace QuantConnect.Algorithm.CSharp
                 var periodData = _periodConsolidation.Dequeue();
                 if (periodData != countData)
                 {
-                    throw new RegressionTestException($"Unexpected consolidated data. Period: '{periodData}' != Count: '{countData}'");
+                    throw new RegressionTestException(
+                        $"Unexpected consolidated data. Period: '{periodData}' != Count: '{countData}'"
+                    );
                 }
             }
             _periodConsolidation.Clear();
@@ -102,35 +110,36 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// This is used by the regression test system to indicate what the expected statistics are from running the algorithm
         /// </summary>
-        public Dictionary<string, string> ExpectedStatistics => new Dictionary<string, string>
-        {
-            {"Total Orders", "0"},
-            {"Average Win", "0%"},
-            {"Average Loss", "0%"},
-            {"Compounding Annual Return", "0%"},
-            {"Drawdown", "0%"},
-            {"Expectancy", "0"},
-            {"Start Equity", "100000"},
-            {"End Equity", "100000"},
-            {"Net Profit", "0%"},
-            {"Sharpe Ratio", "0"},
-            {"Sortino Ratio", "0"},
-            {"Probabilistic Sharpe Ratio", "0%"},
-            {"Loss Rate", "0%"},
-            {"Win Rate", "0%"},
-            {"Profit-Loss Ratio", "0"},
-            {"Alpha", "0"},
-            {"Beta", "0"},
-            {"Annual Standard Deviation", "0"},
-            {"Annual Variance", "0"},
-            {"Information Ratio", "0"},
-            {"Tracking Error", "0"},
-            {"Treynor Ratio", "0"},
-            {"Total Fees", "$0.00"},
-            {"Estimated Strategy Capacity", "$0"},
-            {"Lowest Capacity Asset", ""},
-            {"Portfolio Turnover", "0%"},
-            {"OrderListHash", "d41d8cd98f00b204e9800998ecf8427e"}
-        };
+        public Dictionary<string, string> ExpectedStatistics =>
+            new Dictionary<string, string>
+            {
+                { "Total Orders", "0" },
+                { "Average Win", "0%" },
+                { "Average Loss", "0%" },
+                { "Compounding Annual Return", "0%" },
+                { "Drawdown", "0%" },
+                { "Expectancy", "0" },
+                { "Start Equity", "100000" },
+                { "End Equity", "100000" },
+                { "Net Profit", "0%" },
+                { "Sharpe Ratio", "0" },
+                { "Sortino Ratio", "0" },
+                { "Probabilistic Sharpe Ratio", "0%" },
+                { "Loss Rate", "0%" },
+                { "Win Rate", "0%" },
+                { "Profit-Loss Ratio", "0" },
+                { "Alpha", "0" },
+                { "Beta", "0" },
+                { "Annual Standard Deviation", "0" },
+                { "Annual Variance", "0" },
+                { "Information Ratio", "0" },
+                { "Tracking Error", "0" },
+                { "Treynor Ratio", "0" },
+                { "Total Fees", "$0.00" },
+                { "Estimated Strategy Capacity", "$0" },
+                { "Lowest Capacity Asset", "" },
+                { "Portfolio Turnover", "0%" },
+                { "OrderListHash", "d41d8cd98f00b204e9800998ecf8427e" }
+            };
     }
 }

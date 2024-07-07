@@ -13,6 +13,9 @@
  * limitations under the License.
 */
 
+using System;
+using System.Collections.Generic;
+using System.Linq;
 using QuantConnect.Algorithm.Framework.Alphas;
 using QuantConnect.Algorithm.Framework.Execution;
 using QuantConnect.Algorithm.Framework.Portfolio;
@@ -21,9 +24,6 @@ using QuantConnect.Algorithm.Framework.Selection;
 using QuantConnect.Data;
 using QuantConnect.Indicators;
 using QuantConnect.Orders.Fees;
-using System;
-using System.Collections.Generic;
-using System.Linq;
 
 namespace QuantConnect.Algorithm.CSharp.Alphas
 {
@@ -53,8 +53,9 @@ namespace QuantConnect.Algorithm.CSharp.Alphas
             SetWarmUp(20);
 
             // Setup Universe settings and tickers to be used
-            var symbols = new[] { "VIA", "VIAB" }
-                .Select(x => QuantConnect.Symbol.Create(x, SecurityType.Equity, Market.USA));
+            var symbols = new[] { "VIA", "VIAB" }.Select(x =>
+                QuantConnect.Symbol.Create(x, SecurityType.Equity, Market.USA)
+            );
 
             // Set requested data resolution
             UniverseSettings.Resolution = Resolution.Minute;
@@ -87,11 +88,14 @@ namespace QuantConnect.Algorithm.CSharp.Alphas
 
             public ShareClassMeanReversionAlphaModel(
                 IEnumerable<Symbol> symbols,
-                Resolution resolution = Resolution.Minute)
+                Resolution resolution = Resolution.Minute
+            )
             {
                 if (symbols.Count() != 2)
                 {
-                    throw new ArgumentException("ShareClassMeanReversionAlphaModel: symbols parameter must contain 2 elements");
+                    throw new ArgumentException(
+                        "ShareClassMeanReversionAlphaModel: symbols parameter must contain 2 elements"
+                    );
                 }
                 _longSymbol = symbols.ToArray()[0];
                 _shortSymbol = symbols.ToArray()[1];
@@ -128,19 +132,43 @@ namespace QuantConnect.Algorithm.CSharp.Alphas
 
                     if (_positionWindow[0] > _sma)
                     {
-                        return Insight.Group(new[]
-                        {
-                            Insight.Price(_longSymbol, _insightPeriod, InsightDirection.Down, _insightMagnitude),
-                            Insight.Price(_shortSymbol, _insightPeriod, InsightDirection.Up, _insightMagnitude),
-                        });
+                        return Insight.Group(
+                            new[]
+                            {
+                                Insight.Price(
+                                    _longSymbol,
+                                    _insightPeriod,
+                                    InsightDirection.Down,
+                                    _insightMagnitude
+                                ),
+                                Insight.Price(
+                                    _shortSymbol,
+                                    _insightPeriod,
+                                    InsightDirection.Up,
+                                    _insightMagnitude
+                                ),
+                            }
+                        );
                     }
                     else
                     {
-                        return Insight.Group(new[]
-                    {
-                            Insight.Price(_longSymbol, _insightPeriod, InsightDirection.Up, _insightMagnitude),
-                            Insight.Price(_shortSymbol, _insightPeriod, InsightDirection.Down, _insightMagnitude),
-                        });
+                        return Insight.Group(
+                            new[]
+                            {
+                                Insight.Price(
+                                    _longSymbol,
+                                    _insightPeriod,
+                                    InsightDirection.Up,
+                                    _insightMagnitude
+                                ),
+                                Insight.Price(
+                                    _shortSymbol,
+                                    _insightPeriod,
+                                    InsightDirection.Down,
+                                    _insightMagnitude
+                                ),
+                            }
+                        );
                     }
                 }
                 // If the portfolio is invested and crossed back over the SMA, then emit flat insights
@@ -168,7 +196,8 @@ namespace QuantConnect.Algorithm.CSharp.Alphas
             /// </summary>
             private bool UpdateIndicators(Slice data)
             {
-                var positionValue = (_alpha * data[_longSymbol].Close) - (_beta * data[_shortSymbol].Close);
+                var positionValue =
+                    (_alpha * data[_longSymbol].Close) - (_beta * data[_shortSymbol].Close);
                 _sma.Update(data[_longSymbol].EndTime, positionValue);
                 _positionWindow.Add(positionValue);
                 return _sma.IsReady && _positionWindow.IsReady;

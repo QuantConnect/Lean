@@ -14,33 +14,41 @@
 */
 
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using NUnit.Framework;
-using QuantConnect.Securities.Future;
 using QuantConnect.Securities;
-using System.Collections.Generic;
+using QuantConnect.Securities.Future;
 
 namespace QuantConnect.Tests.Common.Securities.Futures
 {
     [TestFixture, Parallelizable(ParallelScope.All)]
     public class FuturesExpiryUtilityFunctionsTests
     {
-        private HashSet<DateTime> _holidays = MarketHoursDatabase.FromDataFolder()
-                        .GetEntry(Market.CME, (string)null, SecurityType.Future)
-                        .ExchangeHours
-                        .Holidays;
+        private HashSet<DateTime> _holidays = MarketHoursDatabase
+            .FromDataFolder()
+            .GetEntry(Market.CME, (string)null, SecurityType.Future)
+            .ExchangeHours.Holidays;
 
         [TestCase("08/05/2017 00:00:01", 4, "12/05/2017 00:00:01")]
         [TestCase("10/05/2017 00:00:01", 5, "17/05/2017 00:00:01")]
         [TestCase("24/12/2017 00:00:01", 3, "28/12/2017 00:00:01")]
-        public void AddBusinessDays_WithPositiveInput_ShouldReturnNthSucceedingBusinessDay(string time, int n, string actual)
+        public void AddBusinessDays_WithPositiveInput_ShouldReturnNthSucceedingBusinessDay(
+            string time,
+            int n,
+            string actual
+        )
         {
             //Arrange
             var inputTime = Parse.DateTimeExact(time, "dd/MM/yyyy HH:mm:ss");
             var actualDate = Parse.DateTimeExact(actual, "dd/MM/yyyy HH:mm:ss");
 
             //Act
-            var calculatedDate = FuturesExpiryUtilityFunctions.AddBusinessDays(inputTime, n, _holidays);
+            var calculatedDate = FuturesExpiryUtilityFunctions.AddBusinessDays(
+                inputTime,
+                n,
+                _holidays
+            );
 
             //Assert
             Assert.AreEqual(actualDate, calculatedDate);
@@ -49,23 +57,45 @@ namespace QuantConnect.Tests.Common.Securities.Futures
         [TestCase("11/05/2017 00:00:01", -2, "09/05/2017 00:00:01")]
         [TestCase("15/05/2017 00:00:01", -3, "10/05/2017 00:00:01")]
         [TestCase("26/12/2017 00:00:01", -5, "18/12/2017 00:00:01")]
-        public void AddBusinessDays_WithNegativeInput_ShouldReturnNthPrecedingBusinessDay(string time, int n, string actual)
+        public void AddBusinessDays_WithNegativeInput_ShouldReturnNthPrecedingBusinessDay(
+            string time,
+            int n,
+            string actual
+        )
         {
             //Arrange
             var inputTime = Parse.DateTimeExact(time, "dd/MM/yyyy HH:mm:ss");
             var actualDate = Parse.DateTimeExact(actual, "dd/MM/yyyy HH:mm:ss");
 
             //Act
-            var calculatedDate = FuturesExpiryUtilityFunctions.AddBusinessDays(inputTime, n, _holidays);
+            var calculatedDate = FuturesExpiryUtilityFunctions.AddBusinessDays(
+                inputTime,
+                n,
+                _holidays
+            );
 
             //Assert
             Assert.AreEqual(actualDate, calculatedDate);
         }
 
         [TestCase("08/05/2017 00:00:01", 4, "15/05/2017 00:00:01", "12/05/2017 00:00:01")]
-        [TestCase("08/05/2017 00:00:01", 5, "22/05/2017 00:00:01", "15/05/2017 00:00:01", "16/05/2017 00:00:01", "17/05/2017 00:00:01", "18/05/2017 00:00:01", "19/05/2017 00:00:01")]
+        [TestCase(
+            "08/05/2017 00:00:01",
+            5,
+            "22/05/2017 00:00:01",
+            "15/05/2017 00:00:01",
+            "16/05/2017 00:00:01",
+            "17/05/2017 00:00:01",
+            "18/05/2017 00:00:01",
+            "19/05/2017 00:00:01"
+        )]
         [TestCase("24/12/2017 00:00:01", 3, "27/12/2017 00:00:01")]
-        public void AddBusinessDays_WithPositiveInput_ShouldReturnNthSucceedingBusinessDay_ExcludingCustomHolidays(string time, int n, string actual, params string[] holidays)
+        public void AddBusinessDays_WithPositiveInput_ShouldReturnNthSucceedingBusinessDay_ExcludingCustomHolidays(
+            string time,
+            int n,
+            string actual,
+            params string[] holidays
+        )
         {
             //Arrange
             var inputTime = Parse.DateTimeExact(time, "dd/MM/yyyy HH:mm:ss");
@@ -75,16 +105,37 @@ namespace QuantConnect.Tests.Common.Securities.Futures
             var calculatedDate = FuturesExpiryUtilityFunctions.AddBusinessDays(
                 inputTime,
                 n,
-                holidays.Select(x => Parse.DateTimeExact(x, "dd/MM/yyyy HH:mm:ss").Date).ToHashSet());
+                holidays.Select(x => Parse.DateTimeExact(x, "dd/MM/yyyy HH:mm:ss").Date).ToHashSet()
+            );
 
             //Assert
             Assert.AreEqual(actualDate, calculatedDate);
         }
 
         [TestCase("11/05/2017 00:00:01", -1, "09/05/2017 00:00:01", "10/05/2017 00:00:01")]
-        [TestCase("15/05/2017 00:00:01", -1, "10/05/2017 00:00:01", "11/05/2017 00:00:01", "12/05/2017 00:00:01")]
-        [TestCase("26/12/2017 00:00:01", -1, "18/12/2017 00:00:01", "25/12/2017 00:00:01", "22/12/2017 00:00:01", "21/12/2017 00:00:01", "20/12/2017 00:00:01", "19/12/2017 00:00:01")]
-        public void AddBusinessDays_WithNegativeInput_ShouldReturnNthPrecedingBusinessDay_ExcludingCustomHolidays(string time, int n, string actual, params string[] holidays)
+        [TestCase(
+            "15/05/2017 00:00:01",
+            -1,
+            "10/05/2017 00:00:01",
+            "11/05/2017 00:00:01",
+            "12/05/2017 00:00:01"
+        )]
+        [TestCase(
+            "26/12/2017 00:00:01",
+            -1,
+            "18/12/2017 00:00:01",
+            "25/12/2017 00:00:01",
+            "22/12/2017 00:00:01",
+            "21/12/2017 00:00:01",
+            "20/12/2017 00:00:01",
+            "19/12/2017 00:00:01"
+        )]
+        public void AddBusinessDays_WithNegativeInput_ShouldReturnNthPrecedingBusinessDay_ExcludingCustomHolidays(
+            string time,
+            int n,
+            string actual,
+            params string[] holidays
+        )
         {
             //Arrange
             var inputTime = Parse.DateTimeExact(time, "dd/MM/yyyy HH:mm:ss");
@@ -94,7 +145,8 @@ namespace QuantConnect.Tests.Common.Securities.Futures
             var calculatedDate = FuturesExpiryUtilityFunctions.AddBusinessDays(
                 inputTime,
                 n,
-                holidays.Select(x => Parse.DateTimeExact(x, "dd/MM/yyyy HH:mm:ss").Date).ToHashSet());
+                holidays.Select(x => Parse.DateTimeExact(x, "dd/MM/yyyy HH:mm:ss").Date).ToHashSet()
+            );
 
             //Assert
             Assert.AreEqual(actualDate, calculatedDate);
@@ -103,14 +155,22 @@ namespace QuantConnect.Tests.Common.Securities.Futures
         [TestCase("01/03/2016 00:00:01", 5, "24/03/2016 00:00:00")]
         [TestCase("01/02/2014 00:00:01", 3, "26/02/2014 00:00:00")]
         [TestCase("05/07/2017 00:00:01", 7, "21/07/2017 00:00:00")]
-        public void NthLastBusinessDay_WithInputsLessThanDaysInMonth_ShouldReturnNthLastBusinessDay(string time, int numberOfDays, string actual)
+        public void NthLastBusinessDay_WithInputsLessThanDaysInMonth_ShouldReturnNthLastBusinessDay(
+            string time,
+            int numberOfDays,
+            string actual
+        )
         {
             //Arrange
             var inputDate = Parse.DateTimeExact(time, "dd/MM/yyyy HH:mm:ss");
             var actualDate = Parse.DateTimeExact(actual, "dd/MM/yyyy HH:mm:ss");
 
             //Act
-            var calculatedDate = FuturesExpiryUtilityFunctions.NthLastBusinessDay(inputDate, numberOfDays, _holidays);
+            var calculatedDate = FuturesExpiryUtilityFunctions.NthLastBusinessDay(
+                inputDate,
+                numberOfDays,
+                _holidays
+            );
 
             //Assert
             Assert.AreEqual(actualDate, calculatedDate);
@@ -118,7 +178,10 @@ namespace QuantConnect.Tests.Common.Securities.Futures
 
         [TestCase("01/03/2016 00:00:00", 45)]
         [TestCase("05/02/2017 00:00:00", 30)]
-        public void NthLastBusinessDay_WithInputsMoreThanDaysInMonth_ShouldThrowException(string time, int numberOfDays)
+        public void NthLastBusinessDay_WithInputsMoreThanDaysInMonth_ShouldThrowException(
+            string time,
+            int numberOfDays
+        )
         {
             //Arrange
             var inputDate = Parse.DateTimeExact(time, "dd/MM/yyyy HH:mm:ss");
@@ -126,7 +189,11 @@ namespace QuantConnect.Tests.Common.Securities.Futures
             //Act
             Assert.Throws<ArgumentOutOfRangeException>(() =>
             {
-                FuturesExpiryUtilityFunctions.NthLastBusinessDay(inputDate, numberOfDays, _holidays);
+                FuturesExpiryUtilityFunctions.NthLastBusinessDay(
+                    inputDate,
+                    numberOfDays,
+                    _holidays
+                );
             });
         }
 
@@ -135,26 +202,63 @@ namespace QuantConnect.Tests.Common.Securities.Futures
         [TestCase("01/01/2019 00:00:01", 1, "01/02/2019 00:00:00")]
         [TestCase("06/01/2019 00:00:01", 1, "06/03/2019 00:00:00")]
         [TestCase("07/01/2019 00:00:01", 5, "07/05/2019 00:00:00")]
-        public void NthBusinessDay_ShouldReturnAccurateBusinessDay(string testDate, int nthBusinessDay, string actualDate)
+        public void NthBusinessDay_ShouldReturnAccurateBusinessDay(
+            string testDate,
+            int nthBusinessDay,
+            string actualDate
+        )
         {
             var inputDate = Parse.DateTimeExact(testDate, "MM/dd/yyyy HH:mm:ss");
             var expectedResult = Parse.DateTimeExact(actualDate, "MM/dd/yyyy HH:mm:ss");
 
-            var actual = FuturesExpiryUtilityFunctions.NthBusinessDay(inputDate, nthBusinessDay, _holidays);
+            var actual = FuturesExpiryUtilityFunctions.NthBusinessDay(
+                inputDate,
+                nthBusinessDay,
+                _holidays
+            );
 
             Assert.AreEqual(expectedResult, actual);
         }
 
-        [TestCase("01/01/2016 00:00:01", 1, "01/05/2016 00:00:00", "01/01/2016 00:00:01", "01/04/2016 00:00:01")]
-        [TestCase("02/01/2019 00:00:01", 12, "02/20/2019 00:00:00", "02/18/2019 00:00:01", "02/19/2019 00:00:01")]
-        [TestCase("01/01/2019 00:00:01", 1, "01/07/2019 00:00:00", "01/01/2019 00:00:01", "01/02/2019 00:00:01", "01/03/2019 00:00:01", "01/04/2019 00:00:01")]
-        public void NthBusinessDay_ShouldReturnAccurateBusinessDay_WithHolidays(string testDate, int nthBusinessDay, string actualDate, params string[] holidayDates)
+        [TestCase(
+            "01/01/2016 00:00:01",
+            1,
+            "01/05/2016 00:00:00",
+            "01/01/2016 00:00:01",
+            "01/04/2016 00:00:01"
+        )]
+        [TestCase(
+            "02/01/2019 00:00:01",
+            12,
+            "02/20/2019 00:00:00",
+            "02/18/2019 00:00:01",
+            "02/19/2019 00:00:01"
+        )]
+        [TestCase(
+            "01/01/2019 00:00:01",
+            1,
+            "01/07/2019 00:00:00",
+            "01/01/2019 00:00:01",
+            "01/02/2019 00:00:01",
+            "01/03/2019 00:00:01",
+            "01/04/2019 00:00:01"
+        )]
+        public void NthBusinessDay_ShouldReturnAccurateBusinessDay_WithHolidays(
+            string testDate,
+            int nthBusinessDay,
+            string actualDate,
+            params string[] holidayDates
+        )
         {
             var inputDate = Parse.DateTimeExact(testDate, "MM/dd/yyyy HH:mm:ss");
             var expectedResult = Parse.DateTimeExact(actualDate, "MM/dd/yyyy HH:mm:ss");
             var holidays = holidayDates.Select(x => Parse.DateTimeExact(x, "MM/dd/yyyy HH:mm:ss"));
 
-            var actual = FuturesExpiryUtilityFunctions.NthBusinessDay(inputDate, nthBusinessDay, holidayList: holidays);
+            var actual = FuturesExpiryUtilityFunctions.NthBusinessDay(
+                inputDate,
+                nthBusinessDay,
+                holidayList: holidays
+            );
 
             Assert.AreEqual(expectedResult, actual);
         }
@@ -178,7 +282,10 @@ namespace QuantConnect.Tests.Common.Securities.Futures
         [TestCase("04/2017", "19/04/2017 00:00:00")]
         [TestCase("02/2015", "18/02/2015 00:00:00")]
         [TestCase("01/2003", "15/01/2003 00:00:00")]
-        public void ThirdWednesday_WithNormalMonth_ShouldReturnThirdWednesday(string time, string actual)
+        public void ThirdWednesday_WithNormalMonth_ShouldReturnThirdWednesday(
+            string time,
+            string actual
+        )
         {
             //Arrange
             var inputMonth = Parse.DateTimeExact(time, "MM/yyyy");
@@ -238,13 +345,18 @@ namespace QuantConnect.Tests.Common.Securities.Futures
 
         [TestCase("13/04/2017 00:00:01")]
         [TestCase("14/02/2002 00:00:01")]
-        public void NotPrecededByHoliday_ForThursdayWithNoHolidayInFourPrecedingDays_ShouldReturnTrue(string day)
+        public void NotPrecededByHoliday_ForThursdayWithNoHolidayInFourPrecedingDays_ShouldReturnTrue(
+            string day
+        )
         {
             //Arrange
             var inputDate = Parse.DateTimeExact(day, "dd/MM/yyyy HH:mm:ss");
 
             //Act
-            var calculatedOutput = FuturesExpiryUtilityFunctions.NotPrecededByHoliday(inputDate, _holidays);
+            var calculatedOutput = FuturesExpiryUtilityFunctions.NotPrecededByHoliday(
+                inputDate,
+                _holidays
+            );
 
             //Assert
             Assert.AreEqual(calculatedOutput, true);
@@ -252,13 +364,18 @@ namespace QuantConnect.Tests.Common.Securities.Futures
 
         [TestCase("31/03/2016 00:00:01")]
         [TestCase("30/05/2002 00:00:01")]
-        public void NotPrecededByHoliday_ForThursdayWithHolidayInFourPrecedingDays_ShouldReturnFalse(string day)
+        public void NotPrecededByHoliday_ForThursdayWithHolidayInFourPrecedingDays_ShouldReturnFalse(
+            string day
+        )
         {
             //Arrange
             var inputDate = Parse.DateTimeExact(day, "dd/MM/yyyy HH:mm:ss");
 
             //Act
-            var calculatedOutput = FuturesExpiryUtilityFunctions.NotPrecededByHoliday(inputDate, _holidays);
+            var calculatedOutput = FuturesExpiryUtilityFunctions.NotPrecededByHoliday(
+                inputDate,
+                _holidays
+            );
 
             //Assert
             Assert.AreEqual(calculatedOutput, false);
@@ -267,22 +384,34 @@ namespace QuantConnect.Tests.Common.Securities.Futures
         [TestCase("01/05/2019", "01/30/2019", "17:10:00")]
         [TestCase("01/31/2019", "01/30/2019", "12:00:00")]
         [TestCase("03/01/2012", "04/02/2012", "17:10:00")]
-        public void DairyReportDates_ShouldNormalizeDateTimeAndReturnCorrectReportDate(string contractMonth, string reportDate, string lastTradeTime)
+        public void DairyReportDates_ShouldNormalizeDateTimeAndReturnCorrectReportDate(
+            string contractMonth,
+            string reportDate,
+            string lastTradeTime
+        )
         {
             var actual = FuturesExpiryUtilityFunctions.DairyLastTradeDate(
                 Parse.DateTimeExact(contractMonth, "MM/dd/yyyy"),
                 _holidays,
-                lastTradeTime: Parse.TimeSpan(lastTradeTime));
+                lastTradeTime: Parse.TimeSpan(lastTradeTime)
+            );
 
-            var expected = Parse.DateTimeExact(reportDate, "MM/dd/yyyy")
-                .AddDays(-1).Add(Parse.TimeSpan(lastTradeTime));
+            var expected = Parse
+                .DateTimeExact(reportDate, "MM/dd/yyyy")
+                .AddDays(-1)
+                .Add(Parse.TimeSpan(lastTradeTime));
 
             Assert.AreEqual(expected, actual);
         }
 
         [TestCase("17/06/2020 00:00:01", DayOfWeek.Friday, 1, "05/06/2020 00:00:00")]
         [TestCase("30/08/2017 00:00:01", DayOfWeek.Monday, 2, "14/08/2017 00:00:00")]
-        public void Nth_WeekDay_ShouldReturnCorrectDate(string contractDate, DayOfWeek dayOfWeek, int n, string expectedOutput)
+        public void Nth_WeekDay_ShouldReturnCorrectDate(
+            string contractDate,
+            DayOfWeek dayOfWeek,
+            int n,
+            string expectedOutput
+        )
         {
             // Arrange
             var inputDate = Parse.DateTimeExact(contractDate, "dd/MM/yyyy HH:mm:ss");
@@ -294,7 +423,11 @@ namespace QuantConnect.Tests.Common.Securities.Futures
 
         [TestCase("17/06/2020 00:00:01", DayOfWeek.Friday, -2)]
         [TestCase("30/08/2017 00:00:01", DayOfWeek.Monday, 7)]
-        public void Nth_WeekDay_ShouldHandShouldThrowException(string contractDate, DayOfWeek dayOfWeek, int n)
+        public void Nth_WeekDay_ShouldHandShouldThrowException(
+            string contractDate,
+            DayOfWeek dayOfWeek,
+            int n
+        )
         {
             // Arrange
             var inputDate = Parse.DateTimeExact(contractDate, "dd/MM/yyyy HH:mm:ss");
@@ -312,7 +445,11 @@ namespace QuantConnect.Tests.Common.Securities.Futures
         [TestCase("06/01/2016 00:00:01", DayOfWeek.Friday, "29/01/2016 00:00:00")]
         [TestCase("06/07/2016 00:00:01", DayOfWeek.Thursday, "28/07/2016 00:00:00")]
         [TestCase("06/05/2017 00:00:01", DayOfWeek.Wednesday, "31/05/2017 00:00:00")]
-        public void Last_WeekDay_ShouldReturnCorrectDate(string contractDate, DayOfWeek dayOfWeek, string expectedOutput)
+        public void Last_WeekDay_ShouldReturnCorrectDate(
+            string contractDate,
+            DayOfWeek dayOfWeek,
+            string expectedOutput
+        )
         {
             // Arrange
             var inputDate = Parse.DateTimeExact(contractDate, "dd/MM/yyyy HH:mm:ss");
@@ -332,7 +469,11 @@ namespace QuantConnect.Tests.Common.Securities.Futures
         [TestCase(2023, 4, 7)]
         [TestCase(2024, 3, 29)]
         [TestCase(2025, 4, 18)]
-        public void GetGoodFriday_ForYear_ShouldReturnGoodFridayDate(int year, int expectedMonth, int expectedDay)
+        public void GetGoodFriday_ForYear_ShouldReturnGoodFridayDate(
+            int year,
+            int expectedMonth,
+            int expectedDay
+        )
         {
             // Arrange
             var expected = new DateTime(year, expectedMonth, expectedDay);

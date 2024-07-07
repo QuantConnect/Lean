@@ -68,7 +68,11 @@ namespace QuantConnect.Brokerages
         /// <returns>A brokerage disconnect message</returns>
         public static BrokerageMessageEvent Disconnected(string message)
         {
-            return new BrokerageMessageEvent(BrokerageMessageType.Disconnect, Messages.BrokerageMessageEvent.DisconnectCode, message);
+            return new BrokerageMessageEvent(
+                BrokerageMessageType.Disconnect,
+                Messages.BrokerageMessageEvent.DisconnectCode,
+                message
+            );
         }
 
         /// <summary>
@@ -78,7 +82,11 @@ namespace QuantConnect.Brokerages
         /// <returns>A brokerage reconnect message</returns>
         public static BrokerageMessageEvent Reconnected(string message)
         {
-            return new BrokerageMessageEvent(BrokerageMessageType.Reconnect, Messages.BrokerageMessageEvent.ReconnectCode, message);
+            return new BrokerageMessageEvent(
+                BrokerageMessageType.Reconnect,
+                Messages.BrokerageMessageEvent.ReconnectCode,
+                message
+            );
         }
 
         /// <summary>

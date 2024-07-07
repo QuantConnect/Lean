@@ -16,12 +16,12 @@
 
 
 using System;
-using Newtonsoft.Json;
-using NUnit.Framework;
-using QuantConnect.Optimizer.Parameters;
 using System.Collections.Generic;
 using System.Linq;
+using Newtonsoft.Json;
 using Newtonsoft.Json.Serialization;
+using NUnit.Framework;
+using QuantConnect.Optimizer.Parameters;
 
 namespace QuantConnect.Tests.Optimizer.Parameters
 {
@@ -31,17 +31,23 @@ namespace QuantConnect.Tests.Optimizer.Parameters
         [TestFixture]
         public class StepParameter
         {
-            private static TestCaseData[] OptimizationParameters => new[]
-            {
-                new TestCaseData(new OptimizationStepParameter("ema-fast", 1, 100, 1m)),
-                new TestCaseData(new OptimizationStepParameter("ema-fast", 1, 100, 1m, 0.0005m))
-            };
+            private static TestCaseData[] OptimizationParameters =>
+                new[]
+                {
+                    new TestCaseData(new OptimizationStepParameter("ema-fast", 1, 100, 1m)),
+                    new TestCaseData(new OptimizationStepParameter("ema-fast", 1, 100, 1m, 0.0005m))
+                };
 
             [TestCase(5)]
             [TestCase(0.5)]
             public void StepShouldBePositiveAlways(double step)
             {
-                var optimizationParameter = new OptimizationStepParameter("ema-fast", 1, 100, new decimal(step));
+                var optimizationParameter = new OptimizationStepParameter(
+                    "ema-fast",
+                    1,
+                    100,
+                    new decimal(step)
+                );
 
                 Assert.NotNull(optimizationParameter.Step);
                 Assert.Positive(optimizationParameter.Step.Value);
@@ -56,7 +62,12 @@ namespace QuantConnect.Tests.Optimizer.Parameters
             {
                 Assert.Throws<ArgumentException>(() =>
                 {
-                    var optimizationParameter = new OptimizationStepParameter("ema-fast", 1, 100, new decimal(step));
+                    var optimizationParameter = new OptimizationStepParameter(
+                        "ema-fast",
+                        1,
+                        100,
+                        new decimal(step)
+                    );
                 });
             }
 
@@ -64,7 +75,13 @@ namespace QuantConnect.Tests.Optimizer.Parameters
             [TestCase(5, 5)]
             public void StepShouldBeGreatOrEqualThanMinStep(decimal step, decimal minStep)
             {
-                var optimizationParameter = new OptimizationStepParameter("ema-fast", 1, 100, step, minStep);
+                var optimizationParameter = new OptimizationStepParameter(
+                    "ema-fast",
+                    1,
+                    100,
+                    step,
+                    minStep
+                );
 
                 var actual = Math.Max(Math.Abs(step), Math.Abs(minStep));
                 Assert.AreEqual(actual, optimizationParameter.Step);
@@ -76,7 +93,13 @@ namespace QuantConnect.Tests.Optimizer.Parameters
             {
                 Assert.Throws<ArgumentException>(() =>
                 {
-                    var optimizationParameter = new OptimizationStepParameter("ema-fast", 1, 100, step, minStep);
+                    var optimizationParameter = new OptimizationStepParameter(
+                        "ema-fast",
+                        1,
+                        100,
+                        step,
+                        minStep
+                    );
                 });
             }
 
@@ -87,7 +110,13 @@ namespace QuantConnect.Tests.Optimizer.Parameters
             {
                 Assert.Throws<ArgumentException>(() =>
                 {
-                    var optimizationParameter = new OptimizationStepParameter("ema-fast", 1, 100, step, minStep);
+                    var optimizationParameter = new OptimizationStepParameter(
+                        "ema-fast",
+                        1,
+                        100,
+                        step,
+                        minStep
+                    );
                 });
             }
 
@@ -95,7 +124,9 @@ namespace QuantConnect.Tests.Optimizer.Parameters
             public void Serialize(OptimizationStepParameter parameterSet)
             {
                 var json = JsonConvert.SerializeObject(parameterSet);
-                var optimizationParameter = JsonConvert.DeserializeObject<OptimizationParameter>(json) as OptimizationStepParameter;
+                var optimizationParameter =
+                    JsonConvert.DeserializeObject<OptimizationParameter>(json)
+                    as OptimizationStepParameter;
 
                 Assert.NotNull(optimizationParameter);
                 Assert.AreEqual(parameterSet.Name, optimizationParameter.Name);
@@ -108,8 +139,12 @@ namespace QuantConnect.Tests.Optimizer.Parameters
             [Test, TestCaseSource(nameof(OptimizationParameters))]
             public void SerializeCollection(OptimizationStepParameter parameterSet)
             {
-                var json = JsonConvert.SerializeObject(new[] { parameterSet as OptimizationParameter });
-                var optimizationParameters = JsonConvert.DeserializeObject<List<OptimizationParameter>>(json);
+                var json = JsonConvert.SerializeObject(
+                    new[] { parameterSet as OptimizationParameter }
+                );
+                var optimizationParameters = JsonConvert.DeserializeObject<
+                    List<OptimizationParameter>
+                >(json);
 
                 Assert.AreEqual(1, optimizationParameters.Count);
 
@@ -127,23 +162,28 @@ namespace QuantConnect.Tests.Optimizer.Parameters
             {
                 var expected = "{\"value\":\"50.0\",\"name\":\"ema-fast\"}";
 
-                var staticParameter = JsonConvert.DeserializeObject<StaticOptimizationParameter>(expected);
+                var staticParameter = JsonConvert.DeserializeObject<StaticOptimizationParameter>(
+                    expected
+                );
 
                 Assert.IsNotNull(staticParameter);
                 Assert.AreEqual("50.0", staticParameter.Value);
                 Assert.AreEqual("ema-fast", staticParameter.Name);
 
-                var serialized = JsonConvert.SerializeObject(staticParameter, new JsonSerializerSettings()
-                {
-                    ContractResolver = new DefaultContractResolver
+                var serialized = JsonConvert.SerializeObject(
+                    staticParameter,
+                    new JsonSerializerSettings()
                     {
-                        NamingStrategy = new CamelCaseNamingStrategy
+                        ContractResolver = new DefaultContractResolver
                         {
-                            ProcessDictionaryKeys = false,
-                            OverrideSpecifiedNames = true
+                            NamingStrategy = new CamelCaseNamingStrategy
+                            {
+                                ProcessDictionaryKeys = false,
+                                OverrideSpecifiedNames = true
+                            }
                         }
                     }
-                });
+                );
 
                 Assert.AreEqual(expected, serialized);
             }
@@ -151,7 +191,8 @@ namespace QuantConnect.Tests.Optimizer.Parameters
             [Test]
             public void DeserializeSingle()
             {
-                var json = @"
+                var json =
+                    @"
                     {
                         ""name"":""ema-fast"",
                         ""min"": 50,
@@ -159,7 +200,9 @@ namespace QuantConnect.Tests.Optimizer.Parameters
                         ""step"": 50,
                     }";
 
-                var optimizationParameter = JsonConvert.DeserializeObject<OptimizationParameter>(json) as OptimizationStepParameter;
+                var optimizationParameter =
+                    JsonConvert.DeserializeObject<OptimizationParameter>(json)
+                    as OptimizationStepParameter;
 
                 Assert.NotNull(optimizationParameter);
                 Assert.AreEqual("ema-fast", optimizationParameter.Name);
@@ -172,7 +215,8 @@ namespace QuantConnect.Tests.Optimizer.Parameters
             [Test]
             public void DeserializeSingleCaseInsensitive()
             {
-                var json = @"
+                var json =
+                    @"
                     {
                         ""Name"":""ema-fast"",
                         ""mIn"": 50,
@@ -180,7 +224,9 @@ namespace QuantConnect.Tests.Optimizer.Parameters
                         ""STEP"": 50,
                     }";
 
-                var optimizationParameter = JsonConvert.DeserializeObject<OptimizationParameter>(json) as OptimizationStepParameter;
+                var optimizationParameter =
+                    JsonConvert.DeserializeObject<OptimizationParameter>(json)
+                    as OptimizationStepParameter;
 
                 Assert.NotNull(optimizationParameter);
                 Assert.AreEqual("ema-fast", optimizationParameter.Name);
@@ -192,7 +238,8 @@ namespace QuantConnect.Tests.Optimizer.Parameters
             [Test]
             public void DeserializeSingleWithOptional()
             {
-                var json = @"
+                var json =
+                    @"
                     {
                         ""name"":""ema-fast"",
                         ""min"": 50,
@@ -201,7 +248,9 @@ namespace QuantConnect.Tests.Optimizer.Parameters
                         ""min-step"": 0.001
                     }";
 
-                var optimizationParameter = JsonConvert.DeserializeObject<OptimizationParameter>(json) as OptimizationStepParameter;
+                var optimizationParameter =
+                    JsonConvert.DeserializeObject<OptimizationParameter>(json)
+                    as OptimizationStepParameter;
 
                 Assert.NotNull(optimizationParameter);
                 Assert.AreEqual("ema-fast", optimizationParameter.Name);
@@ -214,7 +263,8 @@ namespace QuantConnect.Tests.Optimizer.Parameters
             [Test]
             public void DeserializeCollection()
             {
-                var json = @"[
+                var json =
+                    @"[
                     {
                         ""name"":""ema-fast"",
                         ""min"": 50,
@@ -227,7 +277,8 @@ namespace QuantConnect.Tests.Optimizer.Parameters
                         ""step"": 10,
                     }]";
 
-                var optimizationParameters = JsonConvert.DeserializeObject<List<OptimizationParameter>>(json)
+                var optimizationParameters = JsonConvert
+                    .DeserializeObject<List<OptimizationParameter>>(json)
                     .OfType<OptimizationStepParameter>()
                     .ToList();
 
@@ -246,7 +297,8 @@ namespace QuantConnect.Tests.Optimizer.Parameters
             [Test]
             public void ThrowIfNotStepParameter()
             {
-                var json = @"
+                var json =
+                    @"
                     {
                         ""name"":""ema-fast"",
                         ""values"": [""a"",""b"",""c"",""d""]

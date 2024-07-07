@@ -1,11 +1,11 @@
 ﻿/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
- * 
- * Licensed under the Apache License, Version 2.0 (the "License"); 
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -38,18 +38,14 @@ namespace QuantConnect.Indicators.CandlestickPatterns
         /// Initializes a new instance of the <see cref="UpDownGapThreeMethods"/> class using the specified name.
         /// </summary>
         /// <param name="name">The name of this indicator</param>
-        public UpDownGapThreeMethods(string name) 
-            : base(name, 2 + 1)
-        {
-        }
+        public UpDownGapThreeMethods(string name)
+            : base(name, 2 + 1) { }
 
         /// <summary>
         /// Initializes a new instance of the <see cref="UpDownGapThreeMethods"/> class.
         /// </summary>
         public UpDownGapThreeMethods()
-            : this("UPDOWNGAPTHREEMETHODS")
-        {
-        }
+            : this("UPDOWNGAPTHREEMETHODS") { }
 
         /// <summary>
         /// Gets a flag indicating when this indicator is ready and fully initialized
@@ -65,7 +61,10 @@ namespace QuantConnect.Indicators.CandlestickPatterns
         /// <param name="window">The window of data held in this indicator</param>
         /// <param name="input">The input given to the indicator</param>
         /// <returns>A new value for this indicator</returns>
-        protected override decimal ComputeNextValue(IReadOnlyWindow<IBaseDataBar> window, IBaseDataBar input)
+        protected override decimal ComputeNextValue(
+            IReadOnlyWindow<IBaseDataBar> window,
+            IBaseDataBar input
+        )
         {
             if (!IsReady)
             {
@@ -75,27 +74,33 @@ namespace QuantConnect.Indicators.CandlestickPatterns
             decimal value;
             if (
                 // 1st and 2nd of same color
-                GetCandleColor(window[2]) == GetCandleColor(window[1]) &&
+                GetCandleColor(window[2]) == GetCandleColor(window[1])
+                &&
                 // 3rd opposite color
-                (int)GetCandleColor(window[1]) == -(int)GetCandleColor(input) &&
+                (int)GetCandleColor(window[1]) == -(int)GetCandleColor(input)
+                &&
                 // 3rd opens within 2nd rb
-                input.Open < Math.Max(window[1].Close, window[1].Open) &&
-                input.Open > Math.Min(window[1].Close, window[1].Open) &&
+                input.Open < Math.Max(window[1].Close, window[1].Open)
+                && input.Open > Math.Min(window[1].Close, window[1].Open)
+                &&
                 // 3rd closes within 1st rb
-                input.Close < Math.Max(window[2].Close, window[2].Open) &&
-                input.Close > Math.Min(window[2].Close, window[2].Open) &&
-                ((
-                    // when 1st is white
-                    GetCandleColor(window[2]) == CandleColor.White &&
-                    // upside gap
-                    GetRealBodyGapUp(window[1], window[2])
-                  ) ||
-                  (
-                    // when 1st is black
-                    GetCandleColor(window[2]) == CandleColor.Black &&
-                    // downside gap
-                    GetRealBodyGapDown(window[1], window[2])
-                  )
+                input.Close < Math.Max(window[2].Close, window[2].Open)
+                && input.Close > Math.Min(window[2].Close, window[2].Open)
+                && (
+                    (
+                        // when 1st is white
+                        GetCandleColor(window[2]) == CandleColor.White
+                        &&
+                        // upside gap
+                        GetRealBodyGapUp(window[1], window[2])
+                    )
+                    || (
+                        // when 1st is black
+                        GetCandleColor(window[2]) == CandleColor.Black
+                        &&
+                        // downside gap
+                        GetRealBodyGapDown(window[1], window[2])
+                    )
                 )
             )
                 value = (int)GetCandleColor(window[2]);

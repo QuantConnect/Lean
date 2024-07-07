@@ -16,11 +16,11 @@
 using System;
 using System.Linq;
 using NUnit.Framework;
-using QuantConnect.Util;
 using QuantConnect.Data;
 using QuantConnect.Data.Market;
-using QuantConnect.Lean.Engine.DataFeeds;
 using QuantConnect.Data.UniverseSelection;
+using QuantConnect.Lean.Engine.DataFeeds;
+using QuantConnect.Util;
 
 namespace QuantConnect.Tests.Engine.DataFeeds
 {
@@ -28,14 +28,19 @@ namespace QuantConnect.Tests.Engine.DataFeeds
     public class BaseDataCollectionAggregatorReaderTests
     {
         [TestCase(Resolution.Daily, 1, true, true)]
-        [TestCase( Resolution.Hour, 1, true, true)]
+        [TestCase(Resolution.Hour, 1, true, true)]
         [TestCase(Resolution.Daily, 5849, false, true)]
         [TestCase(Resolution.Hour, 40832, false, true)]
         [TestCase(Resolution.Daily, 1, true, false)]
         [TestCase(Resolution.Hour, 1, true, false)]
         [TestCase(Resolution.Daily, 5849, false, false)]
         [TestCase(Resolution.Hour, 40832, false, false)]
-        public void AggregatesDataPerTime(Resolution resolution, int expectedCount, bool singleDate, bool isDataEphemeral)
+        public void AggregatesDataPerTime(
+            Resolution resolution,
+            int expectedCount,
+            bool singleDate,
+            bool isDataEphemeral
+        )
         {
             var reader = Initialize(false, resolution, isDataEphemeral, out var dataSource);
             TestBaseDataCollection.SingleDate = singleDate;
@@ -50,24 +55,43 @@ namespace QuantConnect.Tests.Engine.DataFeeds
                 var collection = result[0] as TestBaseDataCollection;
                 Assert.IsNotNull(collection);
                 Assert.GreaterOrEqual(collection.Data.Count, 5000);
-                Assert.AreEqual(expectedCount, collection.Data.DistinctBy(data => data.Time).Count());
+                Assert.AreEqual(
+                    expectedCount,
+                    collection.Data.DistinctBy(data => data.Time).Count()
+                );
                 Assert.IsTrue(collection.Data.All(x => x.Symbol == Symbols.AAPL));
             }
         }
 
-        private static ISubscriptionDataSourceReader Initialize(bool liveMode, Resolution resolution, bool isDataEphemeral,  out SubscriptionDataSource source)
+        private static ISubscriptionDataSourceReader Initialize(
+            bool liveMode,
+            Resolution resolution,
+            bool isDataEphemeral,
+            out SubscriptionDataSource source
+        )
         {
-            using var cache = new ZipDataCacheProvider(TestGlobals.DataProvider, isDataEphemeral: isDataEphemeral);
-            var config = new SubscriptionDataConfig(typeof(TestBaseDataCollection),
+            using var cache = new ZipDataCacheProvider(
+                TestGlobals.DataProvider,
+                isDataEphemeral: isDataEphemeral
+            );
+            var config = new SubscriptionDataConfig(
+                typeof(TestBaseDataCollection),
                 Symbols.SPY,
                 resolution,
                 TimeZones.NewYork,
                 TimeZones.NewYork,
                 false,
                 false,
-                false);
+                false
+            );
             var date = DateTime.MinValue;
-            var path = LeanData.GenerateZipFilePath(Globals.DataFolder, config.Symbol, date, resolution, TickType.Trade);
+            var path = LeanData.GenerateZipFilePath(
+                Globals.DataFolder,
+                config.Symbol,
+                date,
+                resolution,
+                TickType.Trade
+            );
             source = new SubscriptionDataSource(path, SubscriptionTransportMedium.LocalFile);
             return new BaseDataCollectionAggregatorReader(cache, config, date, liveMode, null);
         }
@@ -76,7 +100,13 @@ namespace QuantConnect.Tests.Engine.DataFeeds
         {
             public static volatile bool SingleDate;
             private static readonly TradeBar _factory = new TradeBar();
-            public override BaseData Reader(SubscriptionDataConfig config, string line, DateTime date, bool isLiveMode)
+
+            public override BaseData Reader(
+                SubscriptionDataConfig config,
+                string line,
+                DateTime date,
+                bool isLiveMode
+            )
             {
                 var dataPoint = _factory.Reader(config, line, date, isLiveMode);
                 if (SingleDate)
@@ -89,7 +119,11 @@ namespace QuantConnect.Tests.Engine.DataFeeds
                 return dataPoint;
             }
 
-            public override SubscriptionDataSource GetSource(SubscriptionDataConfig config, DateTime date, bool isLiveMode)
+            public override SubscriptionDataSource GetSource(
+                SubscriptionDataConfig config,
+                DateTime date,
+                bool isLiveMode
+            )
             {
                 return _factory.GetSource(config, date, isLiveMode);
             }

@@ -14,17 +14,17 @@
 */
 
 using System;
-using QuantConnect.Data.Market;
 using MathNet.Numerics.Statistics;
+using QuantConnect.Data.Market;
 
 namespace QuantConnect.Indicators
 {
     /// <summary>
-    /// In technical analysis Beta indicator is used to measure volatility or risk of a target (ETF) relative to the overall 
-    /// risk (volatility) of the reference (market indexes). The Beta indicators compares target's price movement to the 
+    /// In technical analysis Beta indicator is used to measure volatility or risk of a target (ETF) relative to the overall
+    /// risk (volatility) of the reference (market indexes). The Beta indicators compares target's price movement to the
     /// movements of the indexes over the same period of time.
-    /// 
-    /// It is common practice to use the SPX index as a benchmark of the overall reference market when it comes to Beta 
+    ///
+    /// It is common practice to use the SPX index as a benchmark of the overall reference market when it comes to Beta
     /// calculations.
     /// </summary>
     public class Beta : BarIndicator, IIndicatorWarmUpPeriodProvider
@@ -72,10 +72,12 @@ namespace QuantConnect.Indicators
         /// <summary>
         /// Gets a flag indicating when the indicator is ready and fully initialized
         /// </summary>
-        public override bool IsReady => _targetDataPoints.Samples >= WarmUpPeriod && _referenceDataPoints.Samples >= WarmUpPeriod;
+        public override bool IsReady =>
+            _targetDataPoints.Samples >= WarmUpPeriod
+            && _referenceDataPoints.Samples >= WarmUpPeriod;
 
         /// <summary>
-        /// Creates a new Beta indicator with the specified name, target, reference,  
+        /// Creates a new Beta indicator with the specified name, target, reference,
         /// and period values
         /// </summary>
         /// <param name="name">The name of this indicator</param>
@@ -88,7 +90,9 @@ namespace QuantConnect.Indicators
             // Assert the period is greater than two, otherwise the beta can not be computed
             if (period < 2)
             {
-                throw new ArgumentException($"Period parameter for Beta indicator must be greater than 2 but was {period}");
+                throw new ArgumentException(
+                    $"Period parameter for Beta indicator must be greater than 2 but was {period}"
+                );
             }
 
             WarmUpPeriod = period + 1;
@@ -104,19 +108,17 @@ namespace QuantConnect.Indicators
         }
 
         /// <summary>
-        /// Creates a new Beta indicator with the specified target, reference,  
+        /// Creates a new Beta indicator with the specified target, reference,
         /// and period values
         /// </summary>
         /// <param name="targetSymbol">The target symbol of this indicator</param>
         /// <param name="period">The period of this indicator</param>
         /// <param name="referenceSymbol">The reference symbol of this indicator</param>
         public Beta(Symbol targetSymbol, Symbol referenceSymbol, int period)
-            : this($"B({period})", targetSymbol, referenceSymbol, period)
-        {
-        }
+            : this($"B({period})", targetSymbol, referenceSymbol, period) { }
 
         /// <summary>
-        /// Creates a new Beta indicator with the specified name, period, target and 
+        /// Creates a new Beta indicator with the specified name, period, target and
         /// reference values
         /// </summary>
         /// <param name="name">The name of this indicator</param>
@@ -125,13 +127,11 @@ namespace QuantConnect.Indicators
         /// <param name="referenceSymbol">The reference symbol of this indicator</param>
         /// <remarks>Constructor overload for backward compatibility.</remarks>
         public Beta(string name, int period, Symbol targetSymbol, Symbol referenceSymbol)
-            : this(name, targetSymbol, referenceSymbol, period)
-        {
-        }
+            : this(name, targetSymbol, referenceSymbol, period) { }
 
         /// <summary>
         /// Computes the next value for this indicator from the given state.
-        /// 
+        ///
         /// As this indicator is receiving data points from two different symbols,
         /// it's going to compute the next value when the amount of data points
         /// of each of them is the same. Otherwise, it will return the last beta
@@ -146,8 +146,8 @@ namespace QuantConnect.Indicators
             if (inputSymbol == _targetSymbol)
             {
                 _targetDataPoints.Add(input.Close);
-            } 
-            else if(inputSymbol == _referenceSymbol)
+            }
+            else if (inputSymbol == _referenceSymbol)
             {
                 _referenceDataPoints.Add(input.Close);
             }
@@ -156,7 +156,10 @@ namespace QuantConnect.Indicators
                 throw new ArgumentException("The given symbol was not target or reference symbol");
             }
 
-            if (_targetDataPoints.Samples == _referenceDataPoints.Samples && _referenceDataPoints.Count > 1)
+            if (
+                _targetDataPoints.Samples == _referenceDataPoints.Samples
+                && _referenceDataPoints.Count > 1
+            )
             {
                 _targetReturns.Add(GetNewReturn(_targetDataPoints));
                 _referenceReturns.Add(GetNewReturn(_referenceDataPoints));
@@ -174,7 +177,7 @@ namespace QuantConnect.Indicators
         /// <returns>The returns with the new given data point</returns>
         private static double GetNewReturn(RollingWindow<decimal> rollingWindow)
         {
-            return (double) ((rollingWindow[0].SafeDivision(rollingWindow[1]) - 1));
+            return (double)((rollingWindow[0].SafeDivision(rollingWindow[1]) - 1));
         }
 
         /// <summary>
@@ -189,7 +192,7 @@ namespace QuantConnect.Indicators
             // Avoid division with NaN or by zero
             var variance = !varianceComputed.IsNaNOrZero() ? varianceComputed : 1;
             var covariance = !covarianceComputed.IsNaNOrZero() ? covarianceComputed : 0;
-            _beta = (decimal) (covariance / variance);
+            _beta = (decimal)(covariance / variance);
         }
 
         /// <summary>

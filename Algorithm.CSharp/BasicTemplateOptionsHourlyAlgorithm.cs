@@ -19,8 +19,8 @@ using System.Collections.Generic;
 using System.Linq;
 using QuantConnect.Data;
 using QuantConnect.Data.Market;
-using QuantConnect.Orders;
 using QuantConnect.Interfaces;
+using QuantConnect.Orders;
 
 namespace QuantConnect.Algorithm.CSharp
 {
@@ -48,10 +48,12 @@ namespace QuantConnect.Algorithm.CSharp
             _optionSymbol = option.Symbol;
 
             // set our strike/expiry filter for this option chain
-            option.SetFilter(u => u.Strikes(-2, +2)
-                                   // Expiration method accepts TimeSpan objects or integer for days.
-                                   // The following statements yield the same filtering criteria
-                                   .Expiration(0, 180));
+            option.SetFilter(u =>
+                u.Strikes(-2, +2)
+                    // Expiration method accepts TimeSpan objects or integer for days.
+                    // The following statements yield the same filtering criteria
+                    .Expiration(0, 180)
+            );
             // .Expiration(TimeSpan.Zero, TimeSpan.FromDays(180)));
 
             // use the underlying equity as the benchmark
@@ -124,35 +126,36 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// This is used by the regression test system to indicate what the expected statistics are from running the algorithm
         /// </summary>
-        public Dictionary<string, string> ExpectedStatistics => new Dictionary<string, string>
-        {
-            {"Total Orders", "5"},
-            {"Average Win", "0%"},
-            {"Average Loss", "-0.07%"},
-            {"Compounding Annual Return", "-12.496%"},
-            {"Drawdown", "0.200%"},
-            {"Expectancy", "-1"},
-            {"Start Equity", "100000"},
-            {"End Equity", "99866"},
-            {"Net Profit", "-0.134%"},
-            {"Sharpe Ratio", "-9.78"},
-            {"Sortino Ratio", "0"},
-            {"Probabilistic Sharpe Ratio", "0%"},
-            {"Loss Rate", "100%"},
-            {"Win Rate", "0%"},
-            {"Profit-Loss Ratio", "0"},
-            {"Alpha", "0.075"},
-            {"Beta", "-0.054"},
-            {"Annual Standard Deviation", "0.008"},
-            {"Annual Variance", "0"},
-            {"Information Ratio", "-18.699"},
-            {"Tracking Error", "0.155"},
-            {"Treynor Ratio", "1.434"},
-            {"Total Fees", "$4.00"},
-            {"Estimated Strategy Capacity", "$1000.00"},
-            {"Lowest Capacity Asset", "AAPL 2ZTXYMUAHCIAU|AAPL R735QTJ8XC9X"},
-            {"Portfolio Turnover", "2.28%"},
-            {"OrderListHash", "7804b3dcf20d3096a2265a289fa81cd3"}
-        };
+        public Dictionary<string, string> ExpectedStatistics =>
+            new Dictionary<string, string>
+            {
+                { "Total Orders", "5" },
+                { "Average Win", "0%" },
+                { "Average Loss", "-0.07%" },
+                { "Compounding Annual Return", "-12.496%" },
+                { "Drawdown", "0.200%" },
+                { "Expectancy", "-1" },
+                { "Start Equity", "100000" },
+                { "End Equity", "99866" },
+                { "Net Profit", "-0.134%" },
+                { "Sharpe Ratio", "-9.78" },
+                { "Sortino Ratio", "0" },
+                { "Probabilistic Sharpe Ratio", "0%" },
+                { "Loss Rate", "100%" },
+                { "Win Rate", "0%" },
+                { "Profit-Loss Ratio", "0" },
+                { "Alpha", "0.075" },
+                { "Beta", "-0.054" },
+                { "Annual Standard Deviation", "0.008" },
+                { "Annual Variance", "0" },
+                { "Information Ratio", "-18.699" },
+                { "Tracking Error", "0.155" },
+                { "Treynor Ratio", "1.434" },
+                { "Total Fees", "$4.00" },
+                { "Estimated Strategy Capacity", "$1000.00" },
+                { "Lowest Capacity Asset", "AAPL 2ZTXYMUAHCIAU|AAPL R735QTJ8XC9X" },
+                { "Portfolio Turnover", "2.28%" },
+                { "OrderListHash", "7804b3dcf20d3096a2265a289fa81cd3" }
+            };
     }
 }

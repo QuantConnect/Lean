@@ -1,11 +1,11 @@
 ﻿/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
- * 
- * Licensed under the Apache License, Version 2.0 (the "License"); 
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -28,10 +28,8 @@ namespace QuantConnect.Indicators.CandlestickPatterns
         /// </summary>
         /// <param name="name">The name of this indicator</param>
         /// <param name="period">The number of data points to hold in the window</param>
-        protected CandlestickPattern(string name, int period) 
-            : base(name, period)
-        {
-        }
+        protected CandlestickPattern(string name, int period)
+            : base(name, period) { }
 
         /// <summary>
         /// Returns the candle color of a candle
@@ -71,7 +69,7 @@ namespace QuantConnect.Indicators.CandlestickPatterns
             {
                 case CandleRangeType.RealBody:
                     return GetRealBody(tradeBar);
-                    
+
                 case CandleRangeType.HighLow:
                     return GetHighLowRange(tradeBar);
 
@@ -104,7 +102,8 @@ namespace QuantConnect.Indicators.CandlestickPatterns
         /// </summary>
         protected static bool GetRealBodyGapUp(IBaseDataBar tradeBar, IBaseDataBar previousBar)
         {
-            return Math.Min(tradeBar.Open, tradeBar.Close) > Math.Max(previousBar.Open, previousBar.Close);
+            return Math.Min(tradeBar.Open, tradeBar.Close)
+                > Math.Max(previousBar.Open, previousBar.Close);
         }
 
         /// <summary>
@@ -112,7 +111,8 @@ namespace QuantConnect.Indicators.CandlestickPatterns
         /// </summary>
         protected static bool GetRealBodyGapDown(IBaseDataBar tradeBar, IBaseDataBar previousBar)
         {
-            return Math.Max(tradeBar.Open, tradeBar.Close) < Math.Min(previousBar.Open, previousBar.Close);
+            return Math.Max(tradeBar.Open, tradeBar.Close)
+                < Math.Min(previousBar.Open, previousBar.Close);
         }
 
         /// <summary>
@@ -121,7 +121,8 @@ namespace QuantConnect.Indicators.CandlestickPatterns
         /// <param name="tradeBar">The input candle</param>
         protected static decimal GetLowerShadow(IBaseDataBar tradeBar)
         {
-            return (tradeBar.Close >= tradeBar.Open ? tradeBar.Open : tradeBar.Close) - tradeBar.Low;
+            return (tradeBar.Close >= tradeBar.Open ? tradeBar.Open : tradeBar.Close)
+                - tradeBar.Low;
         }
 
         /// <summary>
@@ -130,7 +131,8 @@ namespace QuantConnect.Indicators.CandlestickPatterns
         /// <param name="tradeBar">The input candle</param>
         protected static decimal GetUpperShadow(IBaseDataBar tradeBar)
         {
-            return tradeBar.High - (tradeBar.Close >= tradeBar.Open ? tradeBar.Close : tradeBar.Open);
+            return tradeBar.High
+                - (tradeBar.Close >= tradeBar.Open ? tradeBar.Close : tradeBar.Open);
         }
 
         /// <summary>
@@ -139,13 +141,21 @@ namespace QuantConnect.Indicators.CandlestickPatterns
         /// <param name="type">The type of setting to use</param>
         /// <param name="sum">The sum of the previous candles ranges</param>
         /// <param name="tradeBar">The input candle</param>
-        protected static decimal GetCandleAverage(CandleSettingType type, decimal sum, IBaseDataBar tradeBar)
+        protected static decimal GetCandleAverage(
+            CandleSettingType type,
+            decimal sum,
+            IBaseDataBar tradeBar
+        )
         {
             var defaultSetting = CandleSettings.Get(type);
 
-            return defaultSetting.Factor *
-                (defaultSetting.AveragePeriod != 0 ? sum / defaultSetting.AveragePeriod : GetCandleRange(type, tradeBar)) /
-                (defaultSetting.RangeType == CandleRangeType.Shadows ? 2.0m : 1.0m);
+            return defaultSetting.Factor
+                * (
+                    defaultSetting.AveragePeriod != 0
+                        ? sum / defaultSetting.AveragePeriod
+                        : GetCandleRange(type, tradeBar)
+                )
+                / (defaultSetting.RangeType == CandleRangeType.Shadows ? 2.0m : 1.0m);
         }
     }
 }

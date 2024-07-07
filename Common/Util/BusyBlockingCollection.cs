@@ -69,9 +69,7 @@ namespace QuantConnect.Util
         /// with a bounded capacity of <see cref="int.MaxValue"/>
         /// </summary>
         public BusyBlockingCollection()
-            : this(int.MaxValue)
-        {
-        }
+            : this(int.MaxValue) { }
 
         /// <summary>
         /// Initializes a new instance of the <see cref="BusyBlockingCollection{T}"/> class
@@ -163,7 +161,6 @@ namespace QuantConnect.Util
                     yield return item;
                     continue;
                 }
-
 
                 // we need to lock this with the Add method since we need to model the act of
                 // taking/flipping the switch and adding/flipping the switch as one operation

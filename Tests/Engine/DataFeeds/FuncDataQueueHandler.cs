@@ -45,7 +45,11 @@ namespace QuantConnect.Tests.Engine.DataFeeds
         /// </summary>
         public List<SubscriptionDataConfig> SubscriptionDataConfigs
         {
-            get { lock (_subscriptions) return _subscriptions.ToList(); }
+            get
+            {
+                lock (_subscriptions)
+                    return _subscriptions.ToList();
+            }
         }
 
         /// <summary>
@@ -64,59 +68,68 @@ namespace QuantConnect.Tests.Engine.DataFeeds
         /// </summary>
         /// <param name="getNextTicksFunction">The functional implementation to get ticks function</param>
         /// <param name="timeProvider">The time provider to use</param>
-        public FuncDataQueueHandler(Func<FuncDataQueueHandler, IEnumerable<BaseData>> getNextTicksFunction, ITimeProvider timeProvider, IAlgorithmSettings algorithmSettings)
+        public FuncDataQueueHandler(
+            Func<FuncDataQueueHandler, IEnumerable<BaseData>> getNextTicksFunction,
+            ITimeProvider timeProvider,
+            IAlgorithmSettings algorithmSettings
+        )
         {
             _subscriptions = new HashSet<SubscriptionDataConfig>();
             _cancellationTokenSource = new CancellationTokenSource();
             _aggregationManager = new TestAggregationManager(timeProvider);
-            _aggregationManager.Initialize(new DataAggregatorInitializeParameters() { AlgorithmSettings = algorithmSettings });
-            _subscriptionManager = new FakeDataQueuehandlerSubscriptionManager((t) => "quote-trade");
+            _aggregationManager.Initialize(
+                new DataAggregatorInitializeParameters() { AlgorithmSettings = algorithmSettings }
+            );
+            _subscriptionManager = new FakeDataQueuehandlerSubscriptionManager(
+                (t) => "quote-trade"
+            );
 
-            Task.Factory.StartNew(() =>
-            {
-                while (!_cancellationTokenSource.IsCancellationRequested)
+            Task.Factory.StartNew(
+                () =>
                 {
-                    var emitted = false;
-                    try
+                    while (!_cancellationTokenSource.IsCancellationRequested)
                     {
-                        foreach (var baseData in getNextTicksFunction(this))
+                        var emitted = false;
+                        try
                         {
-                            if (_cancellationTokenSource.IsCancellationRequested)
+                            foreach (var baseData in getNextTicksFunction(this))
                             {
-                                break;
+                                if (_cancellationTokenSource.IsCancellationRequested)
+                                {
+                                    break;
+                                }
+                                emitted = true;
+                                _aggregationManager.Update(baseData);
                             }
-                            emitted = true;
-                            _aggregationManager.Update(baseData);
                         }
-                    }
-                    catch (Exception exception)
-                    {
-                        if (exception is ObjectDisposedException)
+                        catch (Exception exception)
                         {
-                            return;
+                            if (exception is ObjectDisposedException)
+                            {
+                                return;
+                            }
+                            Log.Error(exception);
                         }
-                        Log.Error(exception);
-                    }
 
-                    if (!emitted)
-                    {
-                        Thread.Sleep(50);
+                        if (!emitted)
+                        {
+                            Thread.Sleep(50);
+                        }
+                        else
+                        {
+                            Thread.Sleep(10);
+                        }
                     }
-                    else
-                    {
-                        Thread.Sleep(10);
-                    }
-                }
-            }, TaskCreationOptions.LongRunning);
+                },
+                TaskCreationOptions.LongRunning
+            );
         }
 
         /// <summary>
         /// Sets the job we're subscribing for
         /// </summary>
         /// <param name="job">Job we're subscribing for</param>
-        public void SetJob(LiveNodePacket job)
-        {
-        }
+        public void SetJob(LiveNodePacket job) { }
 
         /// <summary>
         /// Adds the specified symbols to the subscription
@@ -124,7 +137,10 @@ namespace QuantConnect.Tests.Engine.DataFeeds
         /// <param name="dataConfig">defines the parameters to subscribe to a data feed</param>
         /// <param name="newDataAvailableHandler">handler to be fired on new data available</param>
         /// <returns>The new enumerator for this subscription request</returns>
-        public IEnumerator<BaseData> Subscribe(SubscriptionDataConfig dataConfig, EventHandler newDataAvailableHandler)
+        public IEnumerator<BaseData> Subscribe(
+            SubscriptionDataConfig dataConfig,
+            EventHandler newDataAvailableHandler
+        )
         {
             var enumerator = _aggregationManager.Add(dataConfig, newDataAvailableHandler);
             lock (_subscriptions)

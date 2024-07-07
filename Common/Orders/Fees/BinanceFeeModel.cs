@@ -13,8 +13,8 @@
 * limitations under the License.
 */
 
-using QuantConnect.Util;
 using QuantConnect.Securities;
+using QuantConnect.Util;
 
 namespace QuantConnect.Orders.Fees
 {
@@ -61,10 +61,15 @@ namespace QuantConnect.Orders.Fees
 
             var fee = GetFee(order);
 
-            if(security.Symbol.ID.SecurityType == SecurityType.CryptoFuture)
+            if (security.Symbol.ID.SecurityType == SecurityType.CryptoFuture)
             {
-                var positionValue = security.Holdings.GetQuantityValue(order.AbsoluteQuantity, security.Price);
-                return new OrderFee(new CashAmount(positionValue.Amount * fee, positionValue.Cash.Symbol));
+                var positionValue = security.Holdings.GetQuantityValue(
+                    order.AbsoluteQuantity,
+                    security.Price
+                );
+                return new OrderFee(
+                    new CashAmount(positionValue.Amount * fee, positionValue.Cash.Symbol)
+                );
             }
 
             if (order.Direction == OrderDirection.Buy)
@@ -75,7 +80,8 @@ namespace QuantConnect.Orders.Fees
             }
 
             // get order value in quote currency
-            var unitPrice = order.Direction == OrderDirection.Buy ? security.AskPrice : security.BidPrice;
+            var unitPrice =
+                order.Direction == OrderDirection.Buy ? security.AskPrice : security.BidPrice;
             if (order.Type == OrderType.Limit)
             {
                 // limit order posted to the order book
@@ -84,9 +90,12 @@ namespace QuantConnect.Orders.Fees
 
             unitPrice *= security.SymbolProperties.ContractMultiplier;
 
-            return new OrderFee(new CashAmount(
-                unitPrice * order.AbsoluteQuantity * fee,
-                security.QuoteCurrency.Symbol));
+            return new OrderFee(
+                new CashAmount(
+                    unitPrice * order.AbsoluteQuantity * fee,
+                    security.QuoteCurrency.Symbol
+                )
+            );
         }
 
         /// <summary>
@@ -105,7 +114,10 @@ namespace QuantConnect.Orders.Fees
             var fee = takerFee;
             var props = order.Properties as BinanceOrderProperties;
 
-            if (order.Type == OrderType.Limit && ((props != null && props.PostOnly) || !order.IsMarketable))
+            if (
+                order.Type == OrderType.Limit
+                && ((props != null && props.PostOnly) || !order.IsMarketable)
+            )
             {
                 // limit order posted to the order book
                 fee = makerFee;

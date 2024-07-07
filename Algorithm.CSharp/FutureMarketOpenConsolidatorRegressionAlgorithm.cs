@@ -15,8 +15,8 @@
 
 using System;
 using System.Collections.Generic;
-using QuantConnect.Interfaces;
 using QuantConnect.Data;
+using QuantConnect.Interfaces;
 using QuantConnect.Util;
 
 namespace QuantConnect.Algorithm.CSharp
@@ -25,29 +25,33 @@ namespace QuantConnect.Algorithm.CSharp
     /// Regression algorithm using a consolidator to check GetNextMarketClose() and GetNextMarketOpen()
     /// are returning the correct market close and open times
     /// </summary>
-    public class FutureMarketOpenConsolidatorRegressionAlgorithm : QCAlgorithm, IRegressionAlgorithmDefinition
+    public class FutureMarketOpenConsolidatorRegressionAlgorithm
+        : QCAlgorithm,
+            IRegressionAlgorithmDefinition
     {
         protected virtual bool ExtendedMarketHours => false;
-        protected virtual List<DateTime> ExpectedOpens => new List<DateTime>()
-        {
-            new DateTime(2013, 10, 07, 9, 30, 0),
-            new DateTime(2013, 10, 08, 9, 30, 0),
-            new DateTime(2013, 10, 09, 9, 30, 0),
-            new DateTime(2013, 10, 10, 9, 30, 0),
-            new DateTime(2013, 10, 11, 9, 30, 0),
-            new DateTime(2013, 10, 14, 9, 30, 0),
-            new DateTime(2013, 10, 14, 9, 30, 0),
-        };
-        protected virtual List<DateTime> ExpectedCloses => new List<DateTime>()
-        {
-            new DateTime(2013, 10, 07, 17, 0, 0),
-            new DateTime(2013, 10, 08, 17, 0, 0),
-            new DateTime(2013, 10, 09, 17, 0, 0),
-            new DateTime(2013, 10, 10, 17, 0, 0),
-            new DateTime(2013, 10, 11, 17, 0, 0),
-            new DateTime(2013, 10, 14, 17, 0, 0),
-            new DateTime(2013, 10, 14, 17, 0, 0),
-        };
+        protected virtual List<DateTime> ExpectedOpens =>
+            new List<DateTime>()
+            {
+                new DateTime(2013, 10, 07, 9, 30, 0),
+                new DateTime(2013, 10, 08, 9, 30, 0),
+                new DateTime(2013, 10, 09, 9, 30, 0),
+                new DateTime(2013, 10, 10, 9, 30, 0),
+                new DateTime(2013, 10, 11, 9, 30, 0),
+                new DateTime(2013, 10, 14, 9, 30, 0),
+                new DateTime(2013, 10, 14, 9, 30, 0),
+            };
+        protected virtual List<DateTime> ExpectedCloses =>
+            new List<DateTime>()
+            {
+                new DateTime(2013, 10, 07, 17, 0, 0),
+                new DateTime(2013, 10, 08, 17, 0, 0),
+                new DateTime(2013, 10, 09, 17, 0, 0),
+                new DateTime(2013, 10, 10, 17, 0, 0),
+                new DateTime(2013, 10, 11, 17, 0, 0),
+                new DateTime(2013, 10, 14, 17, 0, 0),
+                new DateTime(2013, 10, 14, 17, 0, 0),
+            };
 
         private Queue<DateTime> _expectedOpensQueue;
         private Queue<DateTime> _expectedClosesQueue;
@@ -57,16 +61,24 @@ namespace QuantConnect.Algorithm.CSharp
             SetStartDate(2013, 10, 06);
             SetEndDate(2013, 10, 14);
 
-            var es = AddSecurity(SecurityType.Future, "ES", extendedMarketHours: ExtendedMarketHours);
+            var es = AddSecurity(
+                SecurityType.Future,
+                "ES",
+                extendedMarketHours: ExtendedMarketHours
+            );
 
             _expectedOpensQueue = new Queue<DateTime>(ExpectedOpens);
             _expectedClosesQueue = new Queue<DateTime>(ExpectedCloses);
 
-            Consolidate<BaseData>(es.Symbol, dataTime =>
-            {
-                // based on the given data time we return the start time of it's bar and the expected period size
-                return LeanData.GetDailyCalendar(dataTime, es.Exchange, ExtendedMarketHours);
-            }, bar => Assert(bar));
+            Consolidate<BaseData>(
+                es.Symbol,
+                dataTime =>
+                {
+                    // based on the given data time we return the start time of it's bar and the expected period size
+                    return LeanData.GetDailyCalendar(dataTime, es.Exchange, ExtendedMarketHours);
+                },
+                bar => Assert(bar)
+            );
         }
 
         public void Assert(BaseData bar)
@@ -76,8 +88,10 @@ namespace QuantConnect.Algorithm.CSharp
 
             if (open != bar.Time || close != bar.EndTime)
             {
-                throw new RegressionTestException($"Bar span was expected to be from {open} to {close}. " +
-                    $"\n But was from {bar.Time} to {bar.EndTime}.");
+                throw new RegressionTestException(
+                    $"Bar span was expected to be from {open} to {close}. "
+                        + $"\n But was from {bar.Time} to {bar.EndTime}."
+                );
             }
 
             Logging.Log.Debug($"Consolidator Event span. Start {bar.Time} End : {bar.EndTime}");
@@ -108,35 +122,36 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// This is used by the regression test system to indicate what the expected statistics are from running the algorithm
         /// </summary>
-        public virtual Dictionary<string, string> ExpectedStatistics => new Dictionary<string, string>
-        {
-            {"Total Orders", "0"},
-            {"Average Win", "0%"},
-            {"Average Loss", "0%"},
-            {"Compounding Annual Return", "0%"},
-            {"Drawdown", "0%"},
-            {"Expectancy", "0"},
-            {"Start Equity", "100000"},
-            {"End Equity", "100000"},
-            {"Net Profit", "0%"},
-            {"Sharpe Ratio", "0"},
-            {"Sortino Ratio", "0"},
-            {"Probabilistic Sharpe Ratio", "0%"},
-            {"Loss Rate", "0%"},
-            {"Win Rate", "0%"},
-            {"Profit-Loss Ratio", "0"},
-            {"Alpha", "0"},
-            {"Beta", "0"},
-            {"Annual Standard Deviation", "0"},
-            {"Annual Variance", "0"},
-            {"Information Ratio", "-3.108"},
-            {"Tracking Error", "0.163"},
-            {"Treynor Ratio", "0"},
-            {"Total Fees", "$0.00"},
-            {"Estimated Strategy Capacity", "$0"},
-            {"Lowest Capacity Asset", ""},
-            {"Portfolio Turnover", "0%"},
-            {"OrderListHash", "d41d8cd98f00b204e9800998ecf8427e"}
-        };
+        public virtual Dictionary<string, string> ExpectedStatistics =>
+            new Dictionary<string, string>
+            {
+                { "Total Orders", "0" },
+                { "Average Win", "0%" },
+                { "Average Loss", "0%" },
+                { "Compounding Annual Return", "0%" },
+                { "Drawdown", "0%" },
+                { "Expectancy", "0" },
+                { "Start Equity", "100000" },
+                { "End Equity", "100000" },
+                { "Net Profit", "0%" },
+                { "Sharpe Ratio", "0" },
+                { "Sortino Ratio", "0" },
+                { "Probabilistic Sharpe Ratio", "0%" },
+                { "Loss Rate", "0%" },
+                { "Win Rate", "0%" },
+                { "Profit-Loss Ratio", "0" },
+                { "Alpha", "0" },
+                { "Beta", "0" },
+                { "Annual Standard Deviation", "0" },
+                { "Annual Variance", "0" },
+                { "Information Ratio", "-3.108" },
+                { "Tracking Error", "0.163" },
+                { "Treynor Ratio", "0" },
+                { "Total Fees", "$0.00" },
+                { "Estimated Strategy Capacity", "$0" },
+                { "Lowest Capacity Asset", "" },
+                { "Portfolio Turnover", "0%" },
+                { "OrderListHash", "d41d8cd98f00b204e9800998ecf8427e" }
+            };
     }
 }

@@ -29,9 +29,14 @@ namespace QuantConnect.ToolBox.RandomDataGenerator
         private readonly int _symbolChainSize;
         private readonly decimal _underlyingPrice;
         private readonly decimal _maximumStrikePriceDeviation;
-        private readonly SecurityType _underlyingSecurityType  = SecurityType.Equity;
+        private readonly SecurityType _underlyingSecurityType = SecurityType.Equity;
 
-        public OptionSymbolGenerator(RandomDataGeneratorSettings settings, IRandomValueGenerator random, decimal underlyingPrice, decimal maximumStrikePriceDeviation)
+        public OptionSymbolGenerator(
+            RandomDataGeneratorSettings settings,
+            IRandomValueGenerator random,
+            decimal underlyingPrice,
+            decimal maximumStrikePriceDeviation
+        )
             : base(settings, random)
         {
             // We add seven days more because TickGenerator for options needs first three underlying data points to warm up
@@ -64,7 +69,11 @@ namespace QuantConnect.ToolBox.RandomDataGenerator
             var underlying = NextSymbol(_underlyingSecurityType, _market, ticker);
             yield return underlying;
 
-            var marketHours = MarketHoursDatabase.GetExchangeHours(_market, underlying, _underlyingSecurityType);
+            var marketHours = MarketHoursDatabase.GetExchangeHours(
+                _market,
+                underlying,
+                _underlyingSecurityType
+            );
             var expiry = GetRandomExpiration(marketHours, _minExpiry, _maxExpiry);
 
             var strikes = new HashSet<decimal>();
@@ -75,8 +84,12 @@ namespace QuantConnect.ToolBox.RandomDataGenerator
                 {
                     // generate a random strike while respecting the maximum deviation from the underlying's price
                     // since these are underlying prices, use Equity as the security type
-                    strike = Random.NextPrice(_underlyingSecurityType, _market, _underlyingPrice,
-                        _maximumStrikePriceDeviation);
+                    strike = Random.NextPrice(
+                        _underlyingSecurityType,
+                        _market,
+                        _underlyingPrice,
+                        _maximumStrikePriceDeviation
+                    );
 
                     // round the strike price to something reasonable
                     var order = 1 + Math.Log10((double)strike);
@@ -85,10 +98,17 @@ namespace QuantConnect.ToolBox.RandomDataGenerator
                 // don't allow duplicate strikes
                 while (!strikes.Add(strike));
 
-                foreach (var optionRight in new [] { OptionRight.Put, OptionRight.Call })
+                foreach (var optionRight in new[] { OptionRight.Put, OptionRight.Call })
                 {
                     // when providing a null option w/ an expiry, it will automatically create the OSI ticker string for the Value
-                    yield return Symbol.CreateOption(underlying, _market, underlying.SecurityType.DefaultOptionStyle(), optionRight, strike, expiry);
+                    yield return Symbol.CreateOption(
+                        underlying,
+                        _market,
+                        underlying.SecurityType.DefaultOptionStyle(),
+                        optionRight,
+                        strike,
+                        expiry
+                    );
                 }
             }
         }

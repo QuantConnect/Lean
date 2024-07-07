@@ -52,16 +52,24 @@ namespace QuantConnect.Algorithm.Framework.Portfolio
         /// <param name="resolution">The resolution of the history price</param>
         /// <param name="targetReturn">The target portfolio return</param>
         /// <param name="optimizer">The portfolio optimization algorithm. If the algorithm is not provided then the default will be mean-variance optimization.</param>
-        public MeanVarianceOptimizationPortfolioConstructionModel(IDateRule rebalancingDateRules,
+        public MeanVarianceOptimizationPortfolioConstructionModel(
+            IDateRule rebalancingDateRules,
             PortfolioBias portfolioBias = PortfolioBias.LongShort,
             int lookback = 1,
             int period = 63,
             Resolution resolution = Resolution.Daily,
             double targetReturn = 0.02,
-            IPortfolioOptimizer optimizer = null)
-            : this(rebalancingDateRules.ToFunc(), portfolioBias, lookback, period, resolution, targetReturn, optimizer)
-        {
-        }
+            IPortfolioOptimizer optimizer = null
+        )
+            : this(
+                rebalancingDateRules.ToFunc(),
+                portfolioBias,
+                lookback,
+                period,
+                resolution,
+                targetReturn,
+                optimizer
+            ) { }
 
         /// <summary>
         /// Initialize the model
@@ -73,16 +81,24 @@ namespace QuantConnect.Algorithm.Framework.Portfolio
         /// <param name="resolution">The resolution of the history price</param>
         /// <param name="targetReturn">The target portfolio return</param>
         /// <param name="optimizer">The portfolio optimization algorithm. If the algorithm is not provided then the default will be mean-variance optimization.</param>
-        public MeanVarianceOptimizationPortfolioConstructionModel(Resolution rebalanceResolution = Resolution.Daily,
+        public MeanVarianceOptimizationPortfolioConstructionModel(
+            Resolution rebalanceResolution = Resolution.Daily,
             PortfolioBias portfolioBias = PortfolioBias.LongShort,
             int lookback = 1,
             int period = 63,
             Resolution resolution = Resolution.Daily,
             double targetReturn = 0.02,
-            IPortfolioOptimizer optimizer = null)
-            : this(rebalanceResolution.ToTimeSpan(), portfolioBias, lookback, period, resolution, targetReturn, optimizer)
-        {
-        }
+            IPortfolioOptimizer optimizer = null
+        )
+            : this(
+                rebalanceResolution.ToTimeSpan(),
+                portfolioBias,
+                lookback,
+                period,
+                resolution,
+                targetReturn,
+                optimizer
+            ) { }
 
         /// <summary>
         /// Initialize the model
@@ -94,16 +110,24 @@ namespace QuantConnect.Algorithm.Framework.Portfolio
         /// <param name="resolution">The resolution of the history price</param>
         /// <param name="targetReturn">The target portfolio return</param>
         /// <param name="optimizer">The portfolio optimization algorithm. If the algorithm is not provided then the default will be mean-variance optimization.</param>
-        public MeanVarianceOptimizationPortfolioConstructionModel(TimeSpan timeSpan,
+        public MeanVarianceOptimizationPortfolioConstructionModel(
+            TimeSpan timeSpan,
             PortfolioBias portfolioBias = PortfolioBias.LongShort,
             int lookback = 1,
             int period = 63,
             Resolution resolution = Resolution.Daily,
             double targetReturn = 0.02,
-            IPortfolioOptimizer optimizer = null)
-            : this(dt => dt.Add(timeSpan), portfolioBias, lookback, period, resolution, targetReturn, optimizer)
-        {
-        }
+            IPortfolioOptimizer optimizer = null
+        )
+            : this(
+                dt => dt.Add(timeSpan),
+                portfolioBias,
+                lookback,
+                period,
+                resolution,
+                targetReturn,
+                optimizer
+            ) { }
 
         /// <summary>
         /// Initialize the model
@@ -121,14 +145,24 @@ namespace QuantConnect.Algorithm.Framework.Portfolio
         /// <remarks>This is required since python net can not convert python methods into func nor resolve the correct
         /// constructor for the date rules parameter.
         /// For performance we prefer python algorithms using the C# implementation</remarks>
-        public MeanVarianceOptimizationPortfolioConstructionModel(PyObject rebalance,
+        public MeanVarianceOptimizationPortfolioConstructionModel(
+            PyObject rebalance,
             PortfolioBias portfolioBias = PortfolioBias.LongShort,
             int lookback = 1,
             int period = 63,
             Resolution resolution = Resolution.Daily,
             double targetReturn = 0.02,
-            PyObject optimizer = null)
-            : this((Func<DateTime, DateTime?>)null, portfolioBias, lookback, period, resolution, targetReturn, null)
+            PyObject optimizer = null
+        )
+            : this(
+                (Func<DateTime, DateTime?>)null,
+                portfolioBias,
+                lookback,
+                period,
+                resolution,
+                targetReturn,
+                null
+            )
         {
             SetRebalancingFunc(rebalance);
 
@@ -156,22 +190,26 @@ namespace QuantConnect.Algorithm.Framework.Portfolio
         /// <param name="resolution">The resolution of the history price</param>
         /// <param name="targetReturn">The target portfolio return</param>
         /// <param name="optimizer">The portfolio optimization algorithm. If the algorithm is not provided then the default will be mean-variance optimization.</param>
-        public MeanVarianceOptimizationPortfolioConstructionModel(Func<DateTime, DateTime> rebalancingFunc,
+        public MeanVarianceOptimizationPortfolioConstructionModel(
+            Func<DateTime, DateTime> rebalancingFunc,
             PortfolioBias portfolioBias = PortfolioBias.LongShort,
             int lookback = 1,
             int period = 63,
             Resolution resolution = Resolution.Daily,
             double targetReturn = 0.02,
-            IPortfolioOptimizer optimizer = null)
-            : this(rebalancingFunc != null ? (Func<DateTime, DateTime?>)(timeUtc => rebalancingFunc(timeUtc)) : null,
+            IPortfolioOptimizer optimizer = null
+        )
+            : this(
+                rebalancingFunc != null
+                    ? (Func<DateTime, DateTime?>)(timeUtc => rebalancingFunc(timeUtc))
+                    : null,
                 portfolioBias,
                 lookback,
                 period,
                 resolution,
                 targetReturn,
-                optimizer)
-        {
-        }
+                optimizer
+            ) { }
 
         /// <summary>
         /// Initialize the model
@@ -185,13 +223,15 @@ namespace QuantConnect.Algorithm.Framework.Portfolio
         /// <param name="resolution">The resolution of the history price</param>
         /// <param name="targetReturn">The target portfolio return</param>
         /// <param name="optimizer">The portfolio optimization algorithm. If the algorithm is not provided then the default will be mean-variance optimization.</param>
-        public MeanVarianceOptimizationPortfolioConstructionModel(Func<DateTime, DateTime?> rebalancingFunc,
+        public MeanVarianceOptimizationPortfolioConstructionModel(
+            Func<DateTime, DateTime?> rebalancingFunc,
             PortfolioBias portfolioBias = PortfolioBias.LongShort,
             int lookback = 1,
             int period = 63,
             Resolution resolution = Resolution.Daily,
             double targetReturn = 0.02,
-            IPortfolioOptimizer optimizer = null)
+            IPortfolioOptimizer optimizer = null
+        )
             : base(rebalancingFunc)
         {
             _lookback = lookback;
@@ -201,7 +241,8 @@ namespace QuantConnect.Algorithm.Framework.Portfolio
 
             var lower = portfolioBias == PortfolioBias.Long ? 0 : -1;
             var upper = portfolioBias == PortfolioBias.Short ? 0 : 1;
-            _optimizer = optimizer ?? new MinimumVariancePortfolioOptimizer(lower, upper, targetReturn);
+            _optimizer =
+                optimizer ?? new MinimumVariancePortfolioOptimizer(lower, upper, targetReturn);
 
             _symbolDataDict = new Dictionary<Symbol, ReturnsSymbolData>();
         }
@@ -214,7 +255,8 @@ namespace QuantConnect.Algorithm.Framework.Portfolio
         /// <returns>True if the portfolio should create a target for the insight</returns>
         protected override bool ShouldCreateTargetForInsight(Insight insight)
         {
-            var filteredInsight = FilterInvalidInsightMagnitude(Algorithm, new[] { insight }).FirstOrDefault();
+            var filteredInsight = FilterInvalidInsightMagnitude(Algorithm, new[] { insight })
+                .FirstOrDefault();
             if (filteredInsight == null)
             {
                 return false;
@@ -228,8 +270,11 @@ namespace QuantConnect.Algorithm.Framework.Portfolio
                     Algorithm.SetRunTimeError(
                         new ArgumentNullException(
                             insight.Symbol.Value,
-                            "MeanVarianceOptimizationPortfolioConstructionModel does not accept 'null' as Insight.Magnitude. " +
-                            "Please checkout the selected Alpha Model specifications: " + insight.SourceModel));
+                            "MeanVarianceOptimizationPortfolioConstructionModel does not accept 'null' as Insight.Magnitude. "
+                                + "Please checkout the selected Alpha Model specifications: "
+                                + insight.SourceModel
+                        )
+                    );
                     return false;
                 }
                 data.Add(Algorithm.Time, insight.Magnitude.Value.SafeDecimalCast());
@@ -243,7 +288,9 @@ namespace QuantConnect.Algorithm.Framework.Portfolio
         /// </summary>
         /// <param name="activeInsights">The active insights to generate a target for</param>
         /// <returns>A target percent for each insight</returns>
-        protected override Dictionary<Insight, double> DetermineTargetPercent(List<Insight> activeInsights)
+        protected override Dictionary<Insight, double> DetermineTargetPercent(
+            List<Insight> activeInsights
+        )
         {
             var targets = new Dictionary<Insight, double>();
 
@@ -256,7 +303,7 @@ namespace QuantConnect.Algorithm.Framework.Portfolio
             var symbols = activeInsights.Select(x => x.Symbol).ToList();
 
             // Get symbols' returns, we use simple return according to
-            // Meucci, Attilio, Quant Nugget 2: Linear vs. Compounded Returns – Common Pitfalls in Portfolio Management (May 1, 2010). 
+            // Meucci, Attilio, Quant Nugget 2: Linear vs. Compounded Returns – Common Pitfalls in Portfolio Management (May 1, 2010).
             // GARP Risk Professional, pp. 49-51, April 2010 , Available at SSRN: https://ssrn.com/abstract=1586656
             var returns = _symbolDataDict.FormReturnsMatrix(symbols);
 
@@ -272,8 +319,10 @@ namespace QuantConnect.Algorithm.Framework.Portfolio
                     var weight = w[sidx];
 
                     // don't trust the optimizer
-                    if (_portfolioBias != PortfolioBias.LongShort
-                        && Math.Sign(weight) != (int)_portfolioBias)
+                    if (
+                        _portfolioBias != PortfolioBias.LongShort
+                        && Math.Sign(weight) != (int)_portfolioBias
+                    )
                     {
                         weight = 0;
                     }
@@ -319,7 +368,12 @@ namespace QuantConnect.Algorithm.Framework.Portfolio
             }
 
             // warmup our indicators by pushing history through the consolidators
-            algorithm.History(changes.AddedSecurities.Select(security => security.Symbol), _lookback * _period, _resolution)
+            algorithm
+                .History(
+                    changes.AddedSecurities.Select(security => security.Symbol),
+                    _lookback * _period,
+                    _resolution
+                )
                 .PushThrough(bar =>
                 {
                     ReturnsSymbolData symbolData;

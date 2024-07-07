@@ -14,8 +14,8 @@
 */
 
 using System;
-using System.Linq;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace QuantConnect.Securities.Positions
 {
@@ -46,7 +46,8 @@ namespace QuantConnect.Securities.Positions
         /// <param name="security">The security</param>
         public PositionGroupKey(IPositionGroupBuyingPowerModel buyingPowerModel, Security security)
         {
-            IsDefaultGroup = buyingPowerModel.GetType() == typeof(SecurityPositionGroupBuyingPowerModel);
+            IsDefaultGroup =
+                buyingPowerModel.GetType() == typeof(SecurityPositionGroupBuyingPowerModel);
             BuyingPowerModel = buyingPowerModel;
             UnitQuantities = new[]
             {
@@ -59,23 +60,28 @@ namespace QuantConnect.Securities.Positions
         /// </summary>
         /// <param name="buyingPowerModel">The group's buying power model</param>
         /// <param name="positions">The positions comprising the group</param>
-        public PositionGroupKey(IPositionGroupBuyingPowerModel buyingPowerModel, IReadOnlyCollection<IPosition> positions)
+        public PositionGroupKey(
+            IPositionGroupBuyingPowerModel buyingPowerModel,
+            IReadOnlyCollection<IPosition> positions
+        )
         {
             BuyingPowerModel = buyingPowerModel;
-            if(positions.Count == 1)
+            if (positions.Count == 1)
             {
                 var position = positions.First();
-                UnitQuantities = new[]
-                {
-                    Tuple.Create(position.Symbol, position.UnitQuantity)
-                };
+                UnitQuantities = new[] { Tuple.Create(position.Symbol, position.UnitQuantity) };
             }
             else
             {
                 // these have to be sorted for determinism
-                UnitQuantities = positions.OrderBy(x => x.Symbol).Select(p => Tuple.Create(p.Symbol, p.UnitQuantity)).ToList();
+                UnitQuantities = positions
+                    .OrderBy(x => x.Symbol)
+                    .Select(p => Tuple.Create(p.Symbol, p.UnitQuantity))
+                    .ToList();
             }
-            IsDefaultGroup = UnitQuantities.Count == 1 && BuyingPowerModel.GetType() == typeof(SecurityPositionGroupBuyingPowerModel);
+            IsDefaultGroup =
+                UnitQuantities.Count == 1
+                && BuyingPowerModel.GetType() == typeof(SecurityPositionGroupBuyingPowerModel);
         }
 
         /// <summary>
@@ -126,7 +132,7 @@ namespace QuantConnect.Securities.Positions
                 return true;
             }
 
-            return obj is PositionGroupKey && Equals((PositionGroupKey) obj);
+            return obj is PositionGroupKey && Equals((PositionGroupKey)obj);
         }
 
         /// <summary>Serves as the default hash function. </summary>

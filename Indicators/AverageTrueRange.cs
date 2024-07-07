@@ -58,21 +58,28 @@ namespace QuantConnect.Indicators
         /// <param name="name">The name of this indicator</param>
         /// <param name="period">The smoothing period used to smooth the true range values</param>
         /// <param name="movingAverageType">The type of smoothing used to smooth the true range values</param>
-        public AverageTrueRange(string name, int period, MovingAverageType movingAverageType = MovingAverageType.Wilders)
+        public AverageTrueRange(
+            string name,
+            int period,
+            MovingAverageType movingAverageType = MovingAverageType.Wilders
+        )
             : base(name)
         {
             WarmUpPeriod = period;
 
             _smoother = movingAverageType.AsIndicator($"{name}_{movingAverageType}", period);
 
-            TrueRange = new FunctionalIndicator<IBaseDataBar>(name + "_TrueRange", currentBar =>
-            {
-                // in our ComputeNextValue function we'll just call the ComputeTrueRange
-                var nextValue = ComputeTrueRange(_previous, currentBar);
-                _previous = currentBar;
-                return nextValue;
-            }   // in our IsReady function we just need at least one sample
-            , trueRangeIndicator => trueRangeIndicator.Samples >= 1
+            TrueRange = new FunctionalIndicator<IBaseDataBar>(
+                name + "_TrueRange",
+                currentBar =>
+                {
+                    // in our ComputeNextValue function we'll just call the ComputeTrueRange
+                    var nextValue = ComputeTrueRange(_previous, currentBar);
+                    _previous = currentBar;
+                    return nextValue;
+                } // in our IsReady function we just need at least one sample
+                ,
+                trueRangeIndicator => trueRangeIndicator.Samples >= 1
             );
         }
 
@@ -81,10 +88,11 @@ namespace QuantConnect.Indicators
         /// </summary>
         /// <param name="period">The smoothing period used to smooth the true range values</param>
         /// <param name="movingAverageType">The type of smoothing used to smooth the true range values</param>
-        public AverageTrueRange(int period, MovingAverageType movingAverageType = MovingAverageType.Wilders)
-            : this($"ATR({period})", period, movingAverageType)
-        {
-        }
+        public AverageTrueRange(
+            int period,
+            MovingAverageType movingAverageType = MovingAverageType.Wilders
+        )
+            : this($"ATR({period})", period, movingAverageType) { }
 
         /// <summary>
         /// Computes the TrueRange from the current and previous trade bars

@@ -14,17 +14,17 @@
 */
 
 using System;
+using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
 using NUnit.Framework;
 using QuantConnect.Data;
-using System.Globalization;
-using QuantConnect.Securities;
-using QuantConnect.Interfaces;
-using QuantConnect.Data.Market;
-using System.Collections.Generic;
 using QuantConnect.Data.Auxiliary;
+using QuantConnect.Data.Market;
+using QuantConnect.Interfaces;
 using QuantConnect.Lean.Engine.DataFeeds;
 using QuantConnect.Lean.Engine.DataFeeds.Enumerators;
+using QuantConnect.Securities;
 
 namespace QuantConnect.Tests.Engine.DataFeeds.Enumerators
 {
@@ -37,9 +37,14 @@ namespace QuantConnect.Tests.Engine.DataFeeds.Enumerators
         [TestCase(DataMappingMode.OpenInterest, "20130616", true)]
         [TestCase(DataMappingMode.FirstDayMonth, "20130602", true)]
         [TestCase(DataMappingMode.LastTradingDay, "20130623", true)]
-        public void EmitsMappingEventsBasedOnCurrentMapFileAndTime(DataMappingMode dataMappingMode, string mappingDate, bool delayed)
+        public void EmitsMappingEventsBasedOnCurrentMapFileAndTime(
+            DataMappingMode dataMappingMode,
+            string mappingDate,
+            bool delayed
+        )
         {
-            var config = new SubscriptionDataConfig(typeof(TradeBar),
+            var config = new SubscriptionDataConfig(
+                typeof(TradeBar),
                 Symbols.ES_Future_Chain,
                 Resolution.Daily,
                 TimeZones.NewYork,
@@ -47,7 +52,8 @@ namespace QuantConnect.Tests.Engine.DataFeeds.Enumerators
                 true,
                 true,
                 false,
-                dataMappingMode: dataMappingMode);
+                dataMappingMode: dataMappingMode
+            );
             var symbolMaps = new List<SubscriptionDataConfig.NewSymbolEventArgs>();
             config.NewSymbol += (sender, args) => symbolMaps.Add(args);
             var time = new DateTime(2013, 05, 28);
@@ -57,16 +63,44 @@ namespace QuantConnect.Tests.Engine.DataFeeds.Enumerators
             var timeProvider = new ManualTimeProvider(time);
 
             var futureTicker1 = "es vhle2yxr5blt";
-            TestMapFileResolver.MapFile = new MapFile(Futures.Indices.SP500EMini, new[]
-            {
-                new MapFileRow(Time.BeginningOfTime, Futures.Indices.SP500EMini, Exchange.CME),
-                new MapFileRow(new DateTime(2013,06,01), futureTicker1, Exchange.CME, DataMappingMode.FirstDayMonth),
-                new MapFileRow(new DateTime(2013,06,15), futureTicker1, Exchange.CME, DataMappingMode.OpenInterest),
-                new MapFileRow(new DateTime(2013,06,22), futureTicker1, Exchange.CME, DataMappingMode.LastTradingDay),
-            });
+            TestMapFileResolver.MapFile = new MapFile(
+                Futures.Indices.SP500EMini,
+                new[]
+                {
+                    new MapFileRow(Time.BeginningOfTime, Futures.Indices.SP500EMini, Exchange.CME),
+                    new MapFileRow(
+                        new DateTime(2013, 06, 01),
+                        futureTicker1,
+                        Exchange.CME,
+                        DataMappingMode.FirstDayMonth
+                    ),
+                    new MapFileRow(
+                        new DateTime(2013, 06, 15),
+                        futureTicker1,
+                        Exchange.CME,
+                        DataMappingMode.OpenInterest
+                    ),
+                    new MapFileRow(
+                        new DateTime(2013, 06, 22),
+                        futureTicker1,
+                        Exchange.CME,
+                        DataMappingMode.LastTradingDay
+                    ),
+                }
+            );
 
             IEnumerator<BaseData> enumerator;
-            Assert.IsTrue(LiveAuxiliaryDataEnumerator.TryCreate(config, timeProvider, cache, new TestMapFileProvider(), TestGlobals.FactorFileProvider, time, out enumerator));
+            Assert.IsTrue(
+                LiveAuxiliaryDataEnumerator.TryCreate(
+                    config,
+                    timeProvider,
+                    cache,
+                    new TestMapFileProvider(),
+                    TestGlobals.FactorFileProvider,
+                    time,
+                    out enumerator
+                )
+            );
 
             // get's mapped right away!
             Assert.AreEqual(futureTicker1.ToUpper(), config.MappedSymbol);
@@ -80,11 +114,19 @@ namespace QuantConnect.Tests.Engine.DataFeeds.Enumerators
             Assert.IsTrue(enumerator.MoveNext());
             Assert.IsNull(enumerator.Current);
 
-            var expectedMappingDate = DateTime.ParseExact(mappingDate, DateFormat.EightCharacter, CultureInfo.InvariantCulture);
+            var expectedMappingDate = DateTime.ParseExact(
+                mappingDate,
+                DateFormat.EightCharacter,
+                CultureInfo.InvariantCulture
+            );
             if (delayed)
             {
                 // we advance to the mapping date, without any new mapFile!
-                timeProvider.Advance(expectedMappingDate.ConvertToUtc(config.ExchangeTimeZone) - timeProvider.GetUtcNow() + Time.LiveAuxiliaryDataOffset);
+                timeProvider.Advance(
+                    expectedMappingDate.ConvertToUtc(config.ExchangeTimeZone)
+                        - timeProvider.GetUtcNow()
+                        + Time.LiveAuxiliaryDataOffset
+                );
             }
             else
             {
@@ -96,13 +138,32 @@ namespace QuantConnect.Tests.Engine.DataFeeds.Enumerators
             Assert.IsNull(enumerator.Current);
 
             var futureTicker2 = "es vk2zrh843z7l";
-            TestMapFileResolver.MapFile = new MapFile(Futures.Indices.SP500EMini, TestMapFileResolver.MapFile.Concat(
-                new[]
-                {
-                    new MapFileRow(new DateTime(2013,09,01), futureTicker2, Exchange.CME, DataMappingMode.FirstDayMonth),
-                    new MapFileRow(new DateTime(2013,09,14), futureTicker2, Exchange.CME, DataMappingMode.OpenInterest),
-                    new MapFileRow(new DateTime(2013,09,21), futureTicker2, Exchange.CME, DataMappingMode.LastTradingDay),
-                }));
+            TestMapFileResolver.MapFile = new MapFile(
+                Futures.Indices.SP500EMini,
+                TestMapFileResolver.MapFile.Concat(
+                    new[]
+                    {
+                        new MapFileRow(
+                            new DateTime(2013, 09, 01),
+                            futureTicker2,
+                            Exchange.CME,
+                            DataMappingMode.FirstDayMonth
+                        ),
+                        new MapFileRow(
+                            new DateTime(2013, 09, 14),
+                            futureTicker2,
+                            Exchange.CME,
+                            DataMappingMode.OpenInterest
+                        ),
+                        new MapFileRow(
+                            new DateTime(2013, 09, 21),
+                            futureTicker2,
+                            Exchange.CME,
+                            DataMappingMode.LastTradingDay
+                        ),
+                    }
+                )
+            );
 
             Assert.IsTrue(enumerator.MoveNext());
             Assert.IsNull(enumerator.Current);
@@ -115,7 +176,11 @@ namespace QuantConnect.Tests.Engine.DataFeeds.Enumerators
             else
             {
                 // we advance to the mapping date
-                timeProvider.Advance(expectedMappingDate.ConvertToUtc(config.ExchangeTimeZone) - timeProvider.GetUtcNow() + Time.LiveAuxiliaryDataOffset);
+                timeProvider.Advance(
+                    expectedMappingDate.ConvertToUtc(config.ExchangeTimeZone)
+                        - timeProvider.GetUtcNow()
+                        + Time.LiveAuxiliaryDataOffset
+                );
             }
 
             Assert.IsTrue(enumerator.MoveNext());
@@ -129,10 +194,19 @@ namespace QuantConnect.Tests.Engine.DataFeeds.Enumerators
 
             Assert.AreEqual(futureTicker2.ToUpper(), config.MappedSymbol);
 
-            Assert.AreEqual(futureTicker2.ToUpper(), (enumerator.Current as SymbolChangedEvent).NewSymbol);
-            Assert.AreEqual(futureTicker1.ToUpper(), (enumerator.Current as SymbolChangedEvent).OldSymbol);
+            Assert.AreEqual(
+                futureTicker2.ToUpper(),
+                (enumerator.Current as SymbolChangedEvent).NewSymbol
+            );
+            Assert.AreEqual(
+                futureTicker1.ToUpper(),
+                (enumerator.Current as SymbolChangedEvent).OldSymbol
+            );
             Assert.AreEqual(config.Symbol, (enumerator.Current as SymbolChangedEvent).Symbol);
-            Assert.AreEqual(timeProvider.GetUtcNow().Date, (enumerator.Current as SymbolChangedEvent).Time);
+            Assert.AreEqual(
+                timeProvider.GetUtcNow().Date,
+                (enumerator.Current as SymbolChangedEvent).Time
+            );
 
             Assert.IsTrue(enumerator.MoveNext());
             Assert.IsNull(enumerator.Current);
@@ -142,14 +216,16 @@ namespace QuantConnect.Tests.Engine.DataFeeds.Enumerators
         [Test]
         public void EmitsDelistingEventsBasedOnCurrentTime()
         {
-            var config = new SubscriptionDataConfig(typeof(TradeBar),
+            var config = new SubscriptionDataConfig(
+                typeof(TradeBar),
                 Symbols.SPY_C_192_Feb19_2016,
                 Resolution.Daily,
                 TimeZones.NewYork,
                 TimeZones.NewYork,
                 true,
                 true,
-                false);
+                false
+            );
             var delistingDate = config.Symbol.GetDelistingDate();
             var time = delistingDate.AddDays(-10);
             var cache = new SecurityCache();
@@ -157,7 +233,17 @@ namespace QuantConnect.Tests.Engine.DataFeeds.Enumerators
             var timeProvider = new ManualTimeProvider(time);
 
             IEnumerator<BaseData> enumerator;
-            Assert.IsTrue(LiveAuxiliaryDataEnumerator.TryCreate(config, timeProvider, cache, TestGlobals.MapFileProvider, TestGlobals.FactorFileProvider, config.Symbol.ID.Date, out enumerator));
+            Assert.IsTrue(
+                LiveAuxiliaryDataEnumerator.TryCreate(
+                    config,
+                    timeProvider,
+                    cache,
+                    TestGlobals.MapFileProvider,
+                    TestGlobals.FactorFileProvider,
+                    config.Symbol.ID.Date,
+                    out enumerator
+                )
+            );
 
             Assert.IsTrue(enumerator.MoveNext());
             Assert.IsNull(enumerator.Current);
@@ -196,28 +282,43 @@ namespace QuantConnect.Tests.Engine.DataFeeds.Enumerators
         [TestCase(true)]
         public void EquityEmitsDelistingEventsBasedOnCurrentTime(bool delayed)
         {
-            var config = new SubscriptionDataConfig(typeof(TradeBar),
+            var config = new SubscriptionDataConfig(
+                typeof(TradeBar),
                 Symbols.SPY,
                 Resolution.Daily,
                 TimeZones.NewYork,
                 TimeZones.NewYork,
                 true,
                 true,
-                false);
+                false
+            );
             var time = new DateTime(2013, 05, 28);
             var cache = new SecurityCache();
 
             cache.AddData(new Tick(time, config.Symbol, 20, 10));
             var timeProvider = new ManualTimeProvider(time);
 
-            TestMapFileResolver.MapFile = new MapFile(config.Symbol.ID.Symbol, new[]
-            {
-                new MapFileRow(Time.BeginningOfTime, config.Symbol.ID.Symbol),
-                new MapFileRow(Time.EndOfTime, config.Symbol.ID.Symbol),
-            });
+            TestMapFileResolver.MapFile = new MapFile(
+                config.Symbol.ID.Symbol,
+                new[]
+                {
+                    new MapFileRow(Time.BeginningOfTime, config.Symbol.ID.Symbol),
+                    new MapFileRow(Time.EndOfTime, config.Symbol.ID.Symbol),
+                }
+            );
 
             IEnumerator<BaseData> enumerator;
-            Assert.IsTrue(LiveAuxiliaryDataEnumerator.TryCreate(config, timeProvider, cache, new TestMapFileProvider(), TestGlobals.FactorFileProvider, time, out enumerator));
+            Assert.IsTrue(
+                LiveAuxiliaryDataEnumerator.TryCreate(
+                    config,
+                    timeProvider,
+                    cache,
+                    new TestMapFileProvider(),
+                    TestGlobals.FactorFileProvider,
+                    time,
+                    out enumerator
+                )
+            );
 
             // get's mapped right away!
             Assert.AreEqual("SPY", config.MappedSymbol);
@@ -226,11 +327,14 @@ namespace QuantConnect.Tests.Engine.DataFeeds.Enumerators
             Assert.IsNull(enumerator.Current);
 
             var delistingDate = time.AddDays(2);
-            var delistedMapFile = new MapFile(config.Symbol.ID.Symbol, new[]
-            {
-                new MapFileRow(Time.BeginningOfTime, config.Symbol.ID.Symbol),
-                new MapFileRow(delistingDate, config.Symbol.ID.Symbol),
-            });
+            var delistedMapFile = new MapFile(
+                config.Symbol.ID.Symbol,
+                new[]
+                {
+                    new MapFileRow(Time.BeginningOfTime, config.Symbol.ID.Symbol),
+                    new MapFileRow(delistingDate, config.Symbol.ID.Symbol),
+                }
+            );
 
             // just advance a day to show nothing happens until mapping time
             timeProvider.Advance(TimeSpan.FromDays(1));
@@ -244,7 +348,11 @@ namespace QuantConnect.Tests.Engine.DataFeeds.Enumerators
             }
 
             // we advance to the mapping date, without any new mapFile!
-            timeProvider.Advance(delistingDate.ConvertToUtc(config.ExchangeTimeZone) - timeProvider.GetUtcNow() + Time.LiveAuxiliaryDataOffset);
+            timeProvider.Advance(
+                delistingDate.ConvertToUtc(config.ExchangeTimeZone)
+                    - timeProvider.GetUtcNow()
+                    + Time.LiveAuxiliaryDataOffset
+            );
 
             if (delayed)
             {
@@ -284,9 +392,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds.Enumerators
 
         private class TestMapFileProvider : IMapFileProvider
         {
-            public void Initialize(IDataProvider dataProvider)
-            {
-            }
+            public void Initialize(IDataProvider dataProvider) { }
 
             public MapFileResolver Get(AuxiliaryDataKey auxiliaryDataKey)
             {
@@ -297,10 +403,9 @@ namespace QuantConnect.Tests.Engine.DataFeeds.Enumerators
         private class TestMapFileResolver : MapFileResolver
         {
             public static MapFile MapFile { get; set; }
+
             public TestMapFileResolver()
-                : base(new[] { MapFile })
-            {
-            }
+                : base(new[] { MapFile }) { }
         }
     }
 }

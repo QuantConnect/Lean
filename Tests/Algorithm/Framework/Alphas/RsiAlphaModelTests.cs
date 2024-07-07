@@ -13,11 +13,11 @@
  * limitations under the License.
 */
 
+using System;
+using System.Collections.Generic;
 using NUnit.Framework;
 using Python.Runtime;
 using QuantConnect.Algorithm.Framework.Alphas;
-using System;
-using System.Collections.Generic;
 
 namespace QuantConnect.Tests.Algorithm.Framework.Alphas
 {

@@ -27,22 +27,18 @@ namespace QuantConnect.Indicators
 
         /// <summary>
         /// Initializes a new instance of the <see cref="Variance"/> class using the specified period.
-        /// </summary> 
+        /// </summary>
         /// <param name="period">The period of the indicator</param>
         public Variance(int period)
-            : this($"VAR({period})", period)
-        {
-        }
+            : this($"VAR({period})", period) { }
 
         /// <summary>
         /// Initializes a new instance of the <see cref="Variance"/> class using the specified name and period.
-        /// </summary> 
+        /// </summary>
         /// <param name="name">The name of this indicator</param>
         /// <param name="period">The period of the indicator</param>
         public Variance(string name, int period)
-            : base(name, period)
-        {
-        }
+            : base(name, period) { }
 
         /// <summary>
         /// Required period, in data points, for the indicator to be ready and fully initialized.
@@ -55,7 +51,10 @@ namespace QuantConnect.Indicators
         /// <param name="input">The input given to the indicator</param>
         /// <param name="window">The window for the input history</param>
         /// <returns>A new value for this indicator</returns>
-        protected override decimal ComputeNextValue(IReadOnlyWindow<IndicatorDataPoint> window, IndicatorDataPoint input)
+        protected override decimal ComputeNextValue(
+            IReadOnlyWindow<IndicatorDataPoint> window,
+            IndicatorDataPoint input
+        )
         {
             _rollingSum += input.Value;
             _rollingSumOfSquares += input.Value * input.Value;

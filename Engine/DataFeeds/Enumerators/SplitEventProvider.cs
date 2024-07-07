@@ -56,7 +56,8 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
             SubscriptionDataConfig config,
             IFactorFileProvider factorFileProvider,
             IMapFileProvider mapFileProvider,
-            DateTime startTime)
+            DateTime startTime
+        )
         {
             Config = config;
             _factorFileProvider = factorFileProvider;
@@ -71,9 +72,11 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
         /// <returns>New split event if any</returns>
         public virtual IEnumerable<BaseData> GetEvents(NewTradableDateEventArgs eventArgs)
         {
-            if (Config.Symbol == eventArgs.Symbol
+            if (
+                Config.Symbol == eventArgs.Symbol
                 && FactorFile != null
-                && _mapFile.HasData(eventArgs.Date))
+                && _mapFile.HasData(eventArgs.Date)
+            )
             {
                 var factor = _splitFactor;
                 if (factor != null)
@@ -81,7 +84,9 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
                     var close = _referencePrice;
                     if (close == 0)
                     {
-                        throw new InvalidOperationException($"Zero reference price for {Config.Symbol} split at {eventArgs.Date}");
+                        throw new InvalidOperationException(
+                            $"Zero reference price for {Config.Symbol} split at {eventArgs.Date}"
+                        );
                     }
 
                     _splitFactor = null;
@@ -91,12 +96,19 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
                         eventArgs.Date,
                         close,
                         factor.Value,
-                        SplitType.SplitOccurred);
+                        SplitType.SplitOccurred
+                    );
                 }
 
                 decimal splitFactor;
                 decimal referencePrice;
-                if (FactorFile.HasSplitEventOnNextTradingDay(eventArgs.Date, out splitFactor, out referencePrice))
+                if (
+                    FactorFile.HasSplitEventOnNextTradingDay(
+                        eventArgs.Date,
+                        out splitFactor,
+                        out referencePrice
+                    )
+                )
                 {
                     _splitFactor = splitFactor;
                     _referencePrice = referencePrice;
@@ -105,7 +117,8 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
                         eventArgs.Date,
                         eventArgs.LastRawPrice ?? 0,
                         splitFactor,
-                        SplitType.Warning);
+                        SplitType.Warning
+                    );
                 }
             }
         }

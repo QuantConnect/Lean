@@ -33,7 +33,9 @@ namespace QuantConnect.Util
         /// <typeparam name="V">The value type</typeparam>
         /// <param name="enumerable">The IEnumerable of KeyValuePair instances to convert to a dictionary</param>
         /// <returns>A dictionary holding the same data as the enumerable</returns>
-        public static Dictionary<K, V> ToDictionary<K, V>(this IEnumerable<KeyValuePair<K, V>> enumerable)
+        public static Dictionary<K, V> ToDictionary<K, V>(
+            this IEnumerable<KeyValuePair<K, V>> enumerable
+        )
         {
             return enumerable.ToDictionary(kvp => kvp.Key, kvp => kvp.Value);
         }
@@ -45,7 +47,9 @@ namespace QuantConnect.Util
         /// <typeparam name="V">The value type</typeparam>
         /// <param name="enumerable">The IEnumerable of KeyValuePair instances to convert to a dictionary</param>
         /// <returns>A read-only dictionary holding the same data as the enumerable</returns>
-        public static IReadOnlyDictionary<K, V> ToReadOnlyDictionary<K, V>(this IEnumerable<KeyValuePair<K, V>> enumerable)
+        public static IReadOnlyDictionary<K, V> ToReadOnlyDictionary<K, V>(
+            this IEnumerable<KeyValuePair<K, V>> enumerable
+        )
         {
             return new ReadOnlyDictionary<K, V>(enumerable.ToDictionary());
         }
@@ -58,7 +62,10 @@ namespace QuantConnect.Util
         /// <param name="enumerable">The items to be placed into the enumerable</param>
         /// <param name="selector">Selects items from the enumerable to be placed into the <see cref="HashSet{T}"/></param>
         /// <returns>A new <see cref="HashSet{T}"/> containing the items in the enumerable</returns>
-        public static HashSet<TResult> ToHashSet<T, TResult>(this IEnumerable<T> enumerable, Func<T, TResult> selector)
+        public static HashSet<TResult> ToHashSet<T, TResult>(
+            this IEnumerable<T> enumerable,
+            Func<T, TResult> selector
+        )
         {
             return new HashSet<TResult>(enumerable.Select(selector));
         }
@@ -71,7 +78,10 @@ namespace QuantConnect.Util
         /// <param name="enumerable">The items to be placed into the list</param>
         /// <param name="selector">Selects items from the enumerable to be placed into the <see cref="List{T}"/></param>
         /// <returns>A new <see cref="List{T}"/> containing the items in the enumerable</returns>
-        public static List<TResult> ToList<T, TResult>(this IEnumerable<T> enumerable, Func<T, TResult> selector)
+        public static List<TResult> ToList<T, TResult>(
+            this IEnumerable<T> enumerable,
+            Func<T, TResult> selector
+        )
         {
             return enumerable.Select(selector).ToList();
         }
@@ -84,7 +94,10 @@ namespace QuantConnect.Util
         /// <param name="enumerable">The items to be placed into the array</param>
         /// <param name="selector">Selects items from the enumerable to be placed into the array</param>
         /// <returns>A new array containing the items in the enumerable</returns>
-        public static TResult[] ToArray<T, TResult>(this IEnumerable<T> enumerable, Func<T, TResult> selector)
+        public static TResult[] ToArray<T, TResult>(
+            this IEnumerable<T> enumerable,
+            Func<T, TResult> selector
+        )
         {
             return enumerable.Select(selector).ToArray();
         }
@@ -97,7 +110,10 @@ namespace QuantConnect.Util
         /// <param name="enumerable">The items to be placed into the array</param>
         /// <param name="selector">Selects items from the enumerable to be placed into the array</param>
         /// <returns>A new array containing the items in the enumerable</returns>
-        public static ImmutableArray<TResult> ToImmutableArray<T, TResult>(this IEnumerable<T> enumerable, Func<T, TResult> selector)
+        public static ImmutableArray<TResult> ToImmutableArray<T, TResult>(
+            this IEnumerable<T> enumerable,
+            Func<T, TResult> selector
+        )
         {
             return enumerable.Select(selector).ToImmutableArray();
         }
@@ -122,7 +138,7 @@ namespace QuantConnect.Util
         public static T Median<T>(this IEnumerable<T> enumerable)
         {
             var collection = enumerable.ToList();
-            return collection.OrderBy(x => x).Skip(collection.Count/2).First();
+            return collection.OrderBy(x => x).Skip(collection.Count / 2).First();
         }
 
         /// <summary>
@@ -133,7 +149,10 @@ namespace QuantConnect.Util
         /// <param name="collection">The collection of items to search</param>
         /// <param name="selector">Function used to select a value from collection items</param>
         /// <returns>The median value, throws InvalidOperationException if no items are present</returns>
-        public static TProperty Median<T, TProperty>(this IEnumerable<T> collection, Func<T, TProperty> selector)
+        public static TProperty Median<T, TProperty>(
+            this IEnumerable<T> collection,
+            Func<T, TProperty> selector
+        )
         {
             return collection.Select(selector).Median();
         }
@@ -147,7 +166,11 @@ namespace QuantConnect.Util
         /// <param name="value">The value to search for.</param>
         /// <param name="comparer">The comparer that is used to compare the value with the list items.</param>
         /// <returns>The index of the item if found, otherwise the bitwise complement where the value should be per MSDN specs</returns>
-        public static int BinarySearch<TItem, TSearch>(this IList<TItem> list, TSearch value, Func<TSearch, TItem, int> comparer)
+        public static int BinarySearch<TItem, TSearch>(
+            this IList<TItem> list,
+            TSearch value,
+            Func<TSearch, TItem, int> comparer
+        )
         {
             if (list == null)
             {
@@ -202,7 +225,11 @@ namespace QuantConnect.Util
         /// <param name="value">The value to search for.</param>
         /// <param name="comparer">The comparer that is used to compare the value with the list items.</param>
         /// <returns>The index of the item if found, otherwise the bitwise complement where the value should be per MSDN specs</returns>
-        public static int BinarySearch<TItem>(this IList<TItem> list, TItem value, IComparer<TItem> comparer)
+        public static int BinarySearch<TItem>(
+            this IList<TItem> list,
+            TItem value,
+            IComparer<TItem> comparer
+        )
         {
             return list.BinarySearch(value, comparer.Compare);
         }
@@ -215,7 +242,8 @@ namespace QuantConnect.Util
         /// <returns>A new enumerable that can be enumerated multiple times without re-enumerating the source enumerable</returns>
         public static IEnumerable<T> Memoize<T>(this IEnumerable<T> enumerable)
         {
-            if (enumerable is MemoizingEnumerable<T>) return enumerable;
+            if (enumerable is MemoizingEnumerable<T>)
+                return enumerable;
             return new MemoizingEnumerable<T>(enumerable);
         }
 
@@ -229,7 +257,12 @@ namespace QuantConnect.Util
         /// <param name="incrementer">The incrementing function, with argument of the current item</param>
         /// <param name="includeEndPoint">True to emit the end point, false otherwise</param>
         /// <returns>An enumerable of the range of items between start and end</returns>
-        public static IEnumerable<T> Range<T>(T start, T end, Func<T, T> incrementer, bool includeEndPoint = false)
+        public static IEnumerable<T> Range<T>(
+            T start,
+            T end,
+            Func<T, T> incrementer,
+            bool includeEndPoint = false
+        )
             where T : IComparable
         {
             var current = start;
@@ -260,13 +293,16 @@ namespace QuantConnect.Util
         /// true if the next value belongs in the same group as the previous value, otherwise returns false</param>
         /// <returns>A new enumerable of the groups defined by grouper. These groups don't have a key
         /// and are only grouped by being emitted separately from this enumerable</returns>
-        public static IEnumerable<IEnumerable<T>> GroupAdjacentBy<T>(this IEnumerable<T> enumerable, Func<T, T, bool> grouper)
+        public static IEnumerable<IEnumerable<T>> GroupAdjacentBy<T>(
+            this IEnumerable<T> enumerable,
+            Func<T, T, bool> grouper
+        )
         {
             using (var e = enumerable.GetEnumerator())
             {
                 if (e.MoveNext())
                 {
-                    var list = new List<T> {e.Current};
+                    var list = new List<T> { e.Current };
                     var pred = e.Current;
                     while (e.MoveNext())
                     {
@@ -277,7 +313,7 @@ namespace QuantConnect.Util
                         else
                         {
                             yield return list;
-                            list = new List<T> {e.Current};
+                            list = new List<T> { e.Current };
                         }
                         pred = e.Current;
                     }
@@ -297,7 +333,7 @@ namespace QuantConnect.Util
         /// <returns>True if there are any differences between the two sets, false otherwise</returns>
         public static bool AreDifferent<T>(this ISet<T> left, ISet<T> right)
         {
-            if(ReferenceEquals(left, right))
+            if (ReferenceEquals(left, right))
             {
                 return false;
             }
@@ -330,7 +366,11 @@ namespace QuantConnect.Util
         /// <param name="key">Lookup key</param>
         /// <param name="defaultValue">Default value</param>
         /// <returns>Value associated with the specified key or  default value</returns>
-        public static V GetValueOrDefault<K, V>(this IDictionary<K, V> dictionary, K key, V defaultValue = default(V))
+        public static V GetValueOrDefault<K, V>(
+            this IDictionary<K, V> dictionary,
+            K key,
+            V defaultValue = default(V)
+        )
         {
             V obj;
             return dictionary.TryGetValue(key, out obj) ? obj : defaultValue;

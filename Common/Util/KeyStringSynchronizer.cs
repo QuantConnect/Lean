@@ -15,8 +15,8 @@
 */
 
 using System;
-using System.Threading;
 using System.Collections.Generic;
+using System.Threading;
 
 namespace QuantConnect.Util
 {
@@ -25,7 +25,7 @@ namespace QuantConnect.Util
     /// </summary>
     public class KeyStringSynchronizer
     {
-        private readonly Dictionary<string, string> _currentStrings = new ();
+        private readonly Dictionary<string, string> _currentStrings = new();
 
         /// <summary>
         /// Execute the given action synchronously with any other thread using the same key
@@ -46,10 +46,14 @@ namespace QuantConnect.Util
         public T Execute<T>(string key, Func<T> action)
         {
             T result = default;
-            ExecuteImplementation(key, singleExecution: false, () =>
-            {
-                result = action();
-            });
+            ExecuteImplementation(
+                key,
+                singleExecution: false,
+                () =>
+                {
+                    result = action();
+                }
+            );
             return result;
         }
 
@@ -63,7 +67,7 @@ namespace QuantConnect.Util
                     string existingKey;
                     lock (_currentStrings)
                     {
-                        if(!_currentStrings.TryGetValue(key, out existingKey))
+                        if (!_currentStrings.TryGetValue(key, out existingKey))
                         {
                             _currentStrings[key] = existingKey = key;
                         }

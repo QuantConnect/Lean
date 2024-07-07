@@ -13,12 +13,12 @@
  * limitations under the License.
 */
 
-using QuantConnect.Util;
-using QuantConnect.Packets;
 using QuantConnect.Commands;
-using QuantConnect.Interfaces;
 using QuantConnect.Data.UniverseSelection;
+using QuantConnect.Interfaces;
 using QuantConnect.Lean.Engine.DataFeeds.Transport;
+using QuantConnect.Packets;
+using QuantConnect.Util;
 
 namespace QuantConnect.Lean.Engine.Server
 {
@@ -52,7 +52,12 @@ namespace QuantConnect.Lean.Engine.Server
         /// <param name="algorithmHandlers">Exposes the lean algorithm handlers running lean</param>
         /// <param name="job">The job packet representing either a live or backtest Lean instance</param>
         /// <param name="algorithmManager">The Algorithm manager</param>
-        public virtual void Initialize(LeanEngineSystemHandlers systemHandlers, LeanEngineAlgorithmHandlers algorithmHandlers, AlgorithmNodePacket job, AlgorithmManager algorithmManager)
+        public virtual void Initialize(
+            LeanEngineSystemHandlers systemHandlers,
+            LeanEngineAlgorithmHandlers algorithmHandlers,
+            AlgorithmNodePacket job,
+            AlgorithmManager algorithmManager
+        )
         {
             AlgorithmHandlers = algorithmHandlers;
             SystemHandlers = systemHandlers;
@@ -75,7 +80,7 @@ namespace QuantConnect.Lean.Engine.Server
         /// </summary>
         public virtual void Update()
         {
-            if(_commandHandler != null)
+            if (_commandHandler != null)
             {
                 foreach (var commandResultPacket in _commandHandler.ProcessCommands())
                 {

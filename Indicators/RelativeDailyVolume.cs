@@ -1,11 +1,11 @@
 /*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
- * 
- * Licensed under the Apache License, Version 2.0 (the "License"); 
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -13,17 +13,17 @@
  * limitations under the License.
 */
 using System;
-using System.Linq;
 using System.Collections.Generic;
+using System.Linq;
 using QuantConnect.Data.Market;
 
 namespace QuantConnect.Indicators
 {
     /// <summary>
-    /// The Relative Daily Volume indicator is an indicator that compares current 
-    /// cumulative volume to the cumulative volume for a given 
+    /// The Relative Daily Volume indicator is an indicator that compares current
+    /// cumulative volume to the cumulative volume for a given
     /// time of day, measured as a ratio.
-    /// 
+    ///
     /// Current volume from open to current time of day / Average over the past x days from open to current time of day
     /// </summary>
     public class RelativeDailyVolume : TradeBarIndicator
@@ -44,9 +44,7 @@ namespace QuantConnect.Indicators
         /// </summary>
         /// <param name="period">The period over which to perform the computation</param>
         public RelativeDailyVolume(int period = 2)
-            : this($"RDV({period})", period)
-        {
-        }
+            : this($"RDV({period})", period) { }
 
         /// <summary>
         /// Creates a new RelativeDailyVolume indicator with the specified period

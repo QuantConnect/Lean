@@ -13,12 +13,12 @@
  * limitations under the License.
 */
 
-using QuantConnect.Interfaces;
-using QuantConnect.Logging;
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
+using QuantConnect.Interfaces;
+using QuantConnect.Logging;
 
 namespace QuantConnect.Data
 {
@@ -30,12 +30,13 @@ namespace QuantConnect.Data
         /// <summary>
         /// Counter
         /// </summary>
-        protected ConcurrentDictionary<Channel, int> SubscribersByChannel { get; init; } = new ConcurrentDictionary<Channel, int>();
+        protected ConcurrentDictionary<Channel, int> SubscribersByChannel { get; init; } =
+            new ConcurrentDictionary<Channel, int>();
 
         /// <summary>
         /// Increment number of subscribers for current <see cref="TickType"/>
         /// </summary>
-        /// <param name="dataConfig">defines the subscription configuration data.</param>        
+        /// <param name="dataConfig">defines the subscription configuration data.</param>
         public void Subscribe(SubscriptionDataConfig dataConfig)
         {
             try
@@ -63,7 +64,7 @@ namespace QuantConnect.Data
         /// <summary>
         /// Decrement number of subscribers for current <see cref="TickType"/>
         /// </summary>
-        /// <param name="dataConfig">defines the subscription configuration data.</param> 
+        /// <param name="dataConfig">defines the subscription configuration data.</param>
         public void Unsubscribe(SubscriptionDataConfig dataConfig)
         {
             try
@@ -97,9 +98,7 @@ namespace QuantConnect.Data
         /// <returns>list of <see cref="Symbol"/> currently subscribed</returns>
         public IEnumerable<Symbol> GetSubscribedSymbols()
         {
-            return SubscribersByChannel.Keys
-                .Select(c => c.Symbol)
-                .Distinct();
+            return SubscribersByChannel.Keys.Select(c => c.Symbol).Distinct();
         }
 
         /// <summary>
@@ -110,17 +109,13 @@ namespace QuantConnect.Data
         /// <returns>return true if there is one subscriber at least; otherwise false</returns>
         public bool IsSubscribed(Symbol symbol, TickType tickType)
         {
-            return SubscribersByChannel.ContainsKey(GetChannel(
-                symbol,
-                tickType));
+            return SubscribersByChannel.ContainsKey(GetChannel(symbol, tickType));
         }
 
         /// <summary>
         /// Performs application-defined tasks associated with freeing, releasing, or resetting unmanaged resources.
         /// </summary>
-        public virtual void Dispose()
-        {
-        }
+        public virtual void Dispose() { }
 
         /// <summary>
         /// Describes the way <see cref="IDataQueueHandler"/> implements subscription
@@ -145,13 +140,12 @@ namespace QuantConnect.Data
         /// <returns></returns>
         protected abstract string ChannelNameFromTickType(TickType tickType);
 
-        private Channel GetChannel(SubscriptionDataConfig dataConfig) => GetChannel(dataConfig.Symbol, dataConfig.TickType);
+        private Channel GetChannel(SubscriptionDataConfig dataConfig) =>
+            GetChannel(dataConfig.Symbol, dataConfig.TickType);
 
         private Channel GetChannel(Symbol symbol, TickType tickType)
         {
-            return new Channel(
-                ChannelNameFromTickType(tickType),
-                symbol);
+            return new Channel(ChannelNameFromTickType(tickType), symbol);
         }
     }
 }

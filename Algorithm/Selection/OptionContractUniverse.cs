@@ -14,10 +14,10 @@
 */
 
 using System;
-using System.Linq;
-using QuantConnect.Data;
 using System.Collections.Generic;
 using System.Collections.Specialized;
+using System.Linq;
+using QuantConnect.Data;
 using QuantConnect.Data.UniverseSelection;
 
 namespace QuantConnect.Algorithm.Selection
@@ -34,10 +34,17 @@ namespace QuantConnect.Algorithm.Selection
         /// </summary>
         /// <param name="configuration">The universe configuration to use</param>
         /// <param name="universeSettings">The universe settings to use</param>
-        public OptionContractUniverse(SubscriptionDataConfig configuration, UniverseSettings universeSettings)
-            : base(configuration, universeSettings, Time.EndOfTimeTimeSpan,
+        public OptionContractUniverse(
+            SubscriptionDataConfig configuration,
+            UniverseSettings universeSettings
+        )
+            : base(
+                configuration,
+                universeSettings,
+                Time.EndOfTimeTimeSpan,
                 // Argument isn't used since we override 'SelectSymbols'
-                Enumerable.Empty<Symbol>())
+                Enumerable.Empty<Symbol>()
+            )
         {
             _symbols = new HashSet<Symbol>();
         }
@@ -66,8 +73,13 @@ namespace QuantConnect.Algorithm.Selection
 
                 // the option has been removed! This can happen when the user manually removed the option contract we remove the underlying
                 // but only if there isn't any other option selected using the same underlying!
-                if (removedSymbol.SecurityType.IsOption()
-                    && !_symbols.Any(symbol => symbol.SecurityType.IsOption() && symbol.Underlying == removedSymbol.Underlying))
+                if (
+                    removedSymbol.SecurityType.IsOption()
+                    && !_symbols.Any(symbol =>
+                        symbol.SecurityType.IsOption()
+                        && symbol.Underlying == removedSymbol.Underlying
+                    )
+                )
                 {
                     Remove(removedSymbol.Underlying);
                 }
@@ -89,9 +101,17 @@ namespace QuantConnect.Algorithm.Selection
         /// <returns>A symbol for user defined universe of the specified security type and market</returns>
         public static Symbol CreateSymbol(string market, SecurityType securityType)
         {
-            var ticker = $"qc-universe-optioncontract-{securityType.SecurityTypeToLower()}-{market.ToLowerInvariant()}";
+            var ticker =
+                $"qc-universe-optioncontract-{securityType.SecurityTypeToLower()}-{market.ToLowerInvariant()}";
             var underlying = Symbol.Create(ticker, securityType, market);
-            var sid = SecurityIdentifier.GenerateOption(SecurityIdentifier.DefaultDate, underlying.ID, market, 0, 0, 0);
+            var sid = SecurityIdentifier.GenerateOption(
+                SecurityIdentifier.DefaultDate,
+                underlying.ID,
+                market,
+                0,
+                0,
+                0
+            );
 
             return new Symbol(sid, ticker);
         }

@@ -33,7 +33,6 @@ namespace QuantConnect.Securities
             _marginRequiredPerUnitInAccountCurrency = marginRequiredPerUnitInAccountCurrency;
         }
 
-
         /// <summary>
         /// Sets the leverage for the applicable securities, i.e, equities
         /// </summary>
@@ -54,7 +53,9 @@ namespace QuantConnect.Securities
         /// </summary>
         /// <param name="parameters">An object containing the security and quantity of shares</param>
         /// <returns>The initial margin required for the provided security and quantity</returns>
-        public override InitialMargin GetInitialMarginRequirement(InitialMarginParameters parameters)
+        public override InitialMargin GetInitialMarginRequirement(
+            InitialMarginParameters parameters
+        )
         {
             return parameters.Quantity * _marginRequiredPerUnitInAccountCurrency;
         }
@@ -64,7 +65,9 @@ namespace QuantConnect.Securities
         /// </summary>
         /// <param name="parameters">An object containing the security</param>
         /// <returns>The maintenance margin required for the provided holdings quantity/cost/value</returns>
-        public override MaintenanceMargin GetMaintenanceMargin(MaintenanceMarginParameters parameters)
+        public override MaintenanceMargin GetMaintenanceMargin(
+            MaintenanceMarginParameters parameters
+        )
         {
             return parameters.AbsoluteQuantity * _marginRequiredPerUnitInAccountCurrency;
         }

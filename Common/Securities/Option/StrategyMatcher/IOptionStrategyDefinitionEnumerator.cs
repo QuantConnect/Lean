@@ -26,6 +26,8 @@ namespace QuantConnect.Securities.Option.StrategyMatcher
         /// <summary>
         /// Enumerates the <paramref name="definitions"/> according to the implementation's own concept of favorability.
         /// </summary>
-        IEnumerable<OptionStrategyDefinition> Enumerate(IReadOnlyList<OptionStrategyDefinition> definitions);
+        IEnumerable<OptionStrategyDefinition> Enumerate(
+            IReadOnlyList<OptionStrategyDefinition> definitions
+        );
     }
 }

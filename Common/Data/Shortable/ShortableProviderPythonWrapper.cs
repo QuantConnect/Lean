@@ -14,26 +14,26 @@
  *
 */
 
+using System;
 using Python.Runtime;
 using QuantConnect.Interfaces;
 using QuantConnect.Python;
-using System;
 
 namespace QuantConnect.Data.Shortable
 {
     /// <summary>
     /// Python wrapper for custom shortable providers
     /// </summary>
-    public class ShortableProviderPythonWrapper : BasePythonWrapper<IShortableProvider>, IShortableProvider
+    public class ShortableProviderPythonWrapper
+        : BasePythonWrapper<IShortableProvider>,
+            IShortableProvider
     {
         /// <summary>
         /// Creates a new instance
         /// </summary>
         /// <param name="shortableProvider">The python custom shortable provider</param>
         public ShortableProviderPythonWrapper(PyObject shortableProvider)
-            : base(shortableProvider)
-        {
-        }
+            : base(shortableProvider) { }
 
         /// <summary>
         /// Gets the fee rate for the Symbol at the given date.

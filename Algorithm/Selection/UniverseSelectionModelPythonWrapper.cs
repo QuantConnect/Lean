@@ -13,10 +13,10 @@
  * limitations under the License.
 */
 
-using Python.Runtime;
-using QuantConnect.Data.UniverseSelection;
 using System;
 using System.Collections.Generic;
+using Python.Runtime;
+using QuantConnect.Data.UniverseSelection;
 using QuantConnect.Interfaces;
 using QuantConnect.Python;
 
@@ -52,13 +52,17 @@ namespace QuantConnect.Algorithm.Framework.Selection
             _model = new BasePythonWrapper<UniverseSelectionModel>(model, false);
             using (Py.GIL())
             {
-                _modelHasGetNextRefreshTime = _model.HasAttr(nameof(IUniverseSelectionModel.GetNextRefreshTimeUtc));
+                _modelHasGetNextRefreshTime = _model.HasAttr(
+                    nameof(IUniverseSelectionModel.GetNextRefreshTimeUtc)
+                );
 
                 foreach (var attributeName in new[] { "CreateUniverses" })
                 {
                     if (!_model.HasAttr(attributeName))
                     {
-                        throw new NotImplementedException($"UniverseSelectionModel.{attributeName} must be implemented. Please implement this missing method on {model.GetPythonType()}");
+                        throw new NotImplementedException(
+                            $"UniverseSelectionModel.{attributeName} must be implemented. Please implement this missing method on {model.GetPythonType()}"
+                        );
                     }
                 }
             }

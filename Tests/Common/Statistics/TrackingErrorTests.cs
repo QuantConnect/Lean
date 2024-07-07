@@ -13,13 +13,13 @@
  * limitations under the License.
 */
 using System;
-using System.Linq;
 using System.Collections.Generic;
+using System.Linq;
 using NUnit.Framework;
-using QuantConnect.Util;
-using QuantConnect.Data.Market;
 using QuantConnect.Algorithm;
+using QuantConnect.Data.Market;
 using QuantConnect.Lean.Engine.Setup;
+using QuantConnect.Util;
 
 namespace QuantConnect.Tests.Common.Statistics
 {
@@ -32,7 +32,7 @@ namespace QuantConnect.Tests.Common.Statistics
         private List<double> _aaplPerformance = new List<double>();
 
         /// <summary>
-        /// Instance of QC Algorithm. 
+        /// Instance of QC Algorithm.
         /// Use to get <see cref="Interfaces.IAlgorithmSettings.TradingDaysPerYear"/> for clear calculation in <seealso cref="QuantConnect.Statistics.Statistics.AnnualPerformance"/>
         /// </summary>
         private QCAlgorithm _algorithm;
@@ -44,8 +44,23 @@ namespace QuantConnect.Tests.Common.Statistics
             BaseSetupHandler.SetBrokerageTradingDayPerYear(_algorithm);
 
             var spy = Symbol.Create("SPY", SecurityType.Equity, Market.USA);
-            var spyPath = LeanData.GenerateZipFilePath(Globals.DataFolder, spy, new DateTime(2020, 3, 1), Resolution.Daily, TickType.Trade);
-            var spyConfig = new QuantConnect.Data.SubscriptionDataConfig(typeof(TradeBar), spy, Resolution.Daily, TimeZones.NewYork, TimeZones.NewYork, false, false, false);
+            var spyPath = LeanData.GenerateZipFilePath(
+                Globals.DataFolder,
+                spy,
+                new DateTime(2020, 3, 1),
+                Resolution.Daily,
+                TickType.Trade
+            );
+            var spyConfig = new QuantConnect.Data.SubscriptionDataConfig(
+                typeof(TradeBar),
+                spy,
+                Resolution.Daily,
+                TimeZones.NewYork,
+                TimeZones.NewYork,
+                false,
+                false,
+                false
+            );
             var endDate = new DateTime(2020, 3, 8);
 
             foreach (var line in QuantConnect.Compression.ReadLines(spyPath))
@@ -63,8 +78,23 @@ namespace QuantConnect.Tests.Common.Statistics
             }
 
             var aapl = Symbol.Create("AAPL", SecurityType.Equity, Market.USA);
-            var aaplPath = LeanData.GenerateZipFilePath(Globals.DataFolder, aapl, new DateTime(2020, 3, 1), Resolution.Daily, TickType.Trade);
-            var aaplConfig = new QuantConnect.Data.SubscriptionDataConfig(typeof(TradeBar), aapl, Resolution.Daily, TimeZones.NewYork, TimeZones.NewYork, false, false, false);
+            var aaplPath = LeanData.GenerateZipFilePath(
+                Globals.DataFolder,
+                aapl,
+                new DateTime(2020, 3, 1),
+                Resolution.Daily,
+                TickType.Trade
+            );
+            var aaplConfig = new QuantConnect.Data.SubscriptionDataConfig(
+                typeof(TradeBar),
+                aapl,
+                Resolution.Daily,
+                TimeZones.NewYork,
+                TimeZones.NewYork,
+                false,
+                false,
+                false
+            );
 
             foreach (var line in QuantConnect.Compression.ReadLines(aaplPath))
             {
@@ -93,7 +123,11 @@ namespace QuantConnect.Tests.Common.Statistics
         [Test]
         public void OneYearPerformance()
         {
-            var result = QuantConnect.Statistics.Statistics.TrackingError(_aaplPerformance.Take(252).ToList(), _spyPerformance.Take(252).ToList(), _algorithm.Settings.TradingDaysPerYear.Value);
+            var result = QuantConnect.Statistics.Statistics.TrackingError(
+                _aaplPerformance.Take(252).ToList(),
+                _spyPerformance.Take(252).ToList(),
+                _algorithm.Settings.TradingDaysPerYear.Value
+            );
 
             Assert.AreEqual(0.52780899407691173, result);
         }
@@ -102,7 +136,11 @@ namespace QuantConnect.Tests.Common.Statistics
         public void TotalPerformance()
         {
             // This might seem arbitrary, but there's 1 missing date vs. AAPL for SPY data, and it happens to be at line 5555 for date 2020-01-31
-            var result = QuantConnect.Statistics.Statistics.TrackingError(_aaplPerformance.Take(5555).ToList(), _spyPerformance.Take(5555).ToList(), _algorithm.Settings.TradingDaysPerYear.Value);
+            var result = QuantConnect.Statistics.Statistics.TrackingError(
+                _aaplPerformance.Take(5555).ToList(),
+                _spyPerformance.Take(5555).ToList(),
+                _algorithm.Settings.TradingDaysPerYear.Value
+            );
 
             Assert.AreEqual(0.43074391577621751d, result, 0.00001);
         }
@@ -115,7 +153,11 @@ namespace QuantConnect.Tests.Common.Statistics
             var benchmarkPerformance = Enumerable.Repeat(random.NextDouble(), 252).ToList();
             var algoPerformance = benchmarkPerformance.Select(element => element).ToList();
 
-            var result = QuantConnect.Statistics.Statistics.TrackingError(algoPerformance, benchmarkPerformance, _algorithm.Settings.TradingDaysPerYear.Value);
+            var result = QuantConnect.Statistics.Statistics.TrackingError(
+                algoPerformance,
+                benchmarkPerformance,
+                _algorithm.Settings.TradingDaysPerYear.Value
+            );
 
             Assert.AreEqual(0.0, result);
         }
@@ -135,7 +177,11 @@ namespace QuantConnect.Tests.Common.Statistics
                 algoPerformance.Add((baseReturn * 2) + 2);
             }
 
-            var result = QuantConnect.Statistics.Statistics.TrackingError(algoPerformance, benchmarkPerformance, _algorithm.Settings.TradingDaysPerYear.Value);
+            var result = QuantConnect.Statistics.Statistics.TrackingError(
+                algoPerformance,
+                benchmarkPerformance,
+                _algorithm.Settings.TradingDaysPerYear.Value
+            );
 
             Assert.AreEqual(0.0, result);
         }
@@ -146,7 +192,11 @@ namespace QuantConnect.Tests.Common.Statistics
             var benchmarkPerformance = Enumerable.Repeat(0.0, 252).ToList();
             var algoPerformance = Enumerable.Repeat(0.0, 252).ToList();
 
-            var result = QuantConnect.Statistics.Statistics.TrackingError(algoPerformance, benchmarkPerformance, _algorithm.Settings.TradingDaysPerYear.Value);
+            var result = QuantConnect.Statistics.Statistics.TrackingError(
+                algoPerformance,
+                benchmarkPerformance,
+                _algorithm.Settings.TradingDaysPerYear.Value
+            );
 
             Assert.AreEqual(0.0, result);
         }

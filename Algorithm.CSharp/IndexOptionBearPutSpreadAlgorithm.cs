@@ -1,4 +1,4 @@
-/* 
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -13,8 +13,8 @@
  * limitations under the License.
 */
 
-using System.Linq;
 using System.Collections.Generic;
+using System.Linq;
 using QuantConnect.Data;
 using QuantConnect.Orders;
 using QuantConnect.Securities.Option;
@@ -42,21 +42,31 @@ namespace QuantConnect.Algorithm.CSharp
         public override void OnData(Slice slice)
         {
             // Return if open position exists
-            if (_tickets.Any(x => Portfolio[x.Symbol].Invested)) return;
+            if (_tickets.Any(x => Portfolio[x.Symbol].Invested))
+                return;
 
             // Get the OptionChain
-            if (!slice.OptionChains.TryGetValue(_spxw, out var chain)) return;
+            if (!slice.OptionChains.TryGetValue(_spxw, out var chain))
+                return;
 
             // Get the nearest expiry date of the contracts
             var expiry = chain.Min(x => x.Expiry);
-            
+
             // Select the put Option contracts with the nearest expiry and sort by strike price
-            var puts = chain.Where(x => x.Expiry == expiry && x.Right == OptionRight.Put)
-                .OrderBy(x => x.Strike).ToArray();
-            if (puts.Length < 2) return;
+            var puts = chain
+                .Where(x => x.Expiry == expiry && x.Right == OptionRight.Put)
+                .OrderBy(x => x.Strike)
+                .ToArray();
+            if (puts.Length < 2)
+                return;
 
             // Buy the bear put spread
-            var optionStrategy = OptionStrategies.BearPutSpread(_spxw, puts[^1].Strike, puts[0].Strike, expiry);
+            var optionStrategy = OptionStrategies.BearPutSpread(
+                _spxw,
+                puts[^1].Strike,
+                puts[0].Strike,
+                expiry
+            );
             _tickets = Buy(optionStrategy, 1);
         }
     }

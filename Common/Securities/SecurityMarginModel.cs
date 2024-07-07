@@ -23,9 +23,7 @@ namespace QuantConnect.Securities
         /// <summary>
         /// Initializes a new instance of the <see cref="SecurityMarginModel"/> with no leverage (1x)
         /// </summary>
-        public SecurityMarginModel()
-        {
-        }
+        public SecurityMarginModel() { }
 
         /// <summary>
         /// Initializes a new instance of the <see cref="SecurityMarginModel"/>
@@ -40,10 +38,12 @@ namespace QuantConnect.Securities
             decimal initialMarginRequirement,
             decimal maintenanceMarginRequirement,
             decimal requiredFreeBuyingPowerPercent
-            )
-            : base(initialMarginRequirement, maintenanceMarginRequirement, requiredFreeBuyingPowerPercent)
-        {
-        }
+        )
+            : base(
+                initialMarginRequirement,
+                maintenanceMarginRequirement,
+                requiredFreeBuyingPowerPercent
+            ) { }
 
         /// <summary>
         /// Initializes a new instance of the <see cref="SecurityMarginModel"/>
@@ -52,8 +52,6 @@ namespace QuantConnect.Securities
         /// <param name="requiredFreeBuyingPowerPercent">The percentage used to determine the required
         /// unused buying power for the account.</param>
         public SecurityMarginModel(decimal leverage, decimal requiredFreeBuyingPowerPercent = 0)
-            : base(leverage, requiredFreeBuyingPowerPercent)
-        {
-        }
+            : base(leverage, requiredFreeBuyingPowerPercent) { }
     }
 }

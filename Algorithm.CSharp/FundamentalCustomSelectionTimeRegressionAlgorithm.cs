@@ -14,23 +14,29 @@
 */
 
 using System;
-using QuantConnect.Data;
-using QuantConnect.Interfaces;
 using System.Collections.Generic;
+using QuantConnect.Data;
 using QuantConnect.Data.Fundamental;
 using QuantConnect.Data.UniverseSelection;
+using QuantConnect.Interfaces;
 
 namespace QuantConnect.Algorithm.CSharp
 {
     /// <summary>
     /// Regression test algorithm for scheduled universe selection GH 3890
     /// </summary>
-    public class FundamentalCustomSelectionTimeRegressionAlgorithm : QCAlgorithm, IRegressionAlgorithmDefinition
+    public class FundamentalCustomSelectionTimeRegressionAlgorithm
+        : QCAlgorithm,
+            IRegressionAlgorithmDefinition
     {
         private int _specificDateSelection;
         private int _monthStartSelection;
         private int _monthEndSelection;
-        private readonly Symbol _symbol = QuantConnect.Symbol.Create("SPY", SecurityType.Equity, Market.USA);
+        private readonly Symbol _symbol = QuantConnect.Symbol.Create(
+            "SPY",
+            SecurityType.Equity,
+            Market.USA
+        );
 
         /// <summary>
         /// Initialise the data and resolution required, as well as the cash and start-end dates for your algorithm. All algorithms must initialized.
@@ -59,7 +65,9 @@ namespace QuantConnect.Algorithm.CSharp
             _specificDateSelection++;
             if (Time != new DateTime(2014, 05, 9))
             {
-                throw new RegressionTestException($"SelectionFunction_SpecificDate unexpected selection: {Time}");
+                throw new RegressionTestException(
+                    $"SelectionFunction_SpecificDate unexpected selection: {Time}"
+                );
             }
             return new[] { _symbol };
         }
@@ -70,11 +78,12 @@ namespace QuantConnect.Algorithm.CSharp
             {
                 if (Time != StartDate)
                 {
-                    throw new RegressionTestException($"Month Start unexpected initial selection: {Time}");
+                    throw new RegressionTestException(
+                        $"Month Start unexpected initial selection: {Time}"
+                    );
                 }
             }
-            else if (Time != new DateTime(2014, 4, 1)
-                && Time != new DateTime(2014, 5, 1))
+            else if (Time != new DateTime(2014, 4, 1) && Time != new DateTime(2014, 5, 1))
             {
                 throw new RegressionTestException($"Month Start unexpected selection: {Time}");
             }
@@ -87,11 +96,12 @@ namespace QuantConnect.Algorithm.CSharp
             {
                 if (Time != StartDate)
                 {
-                    throw new RegressionTestException($"Month End unexpected initial selection: {Time}");
+                    throw new RegressionTestException(
+                        $"Month End unexpected initial selection: {Time}"
+                    );
                 }
             }
-            else if (Time != new DateTime(2014, 3, 31)
-                && Time != new DateTime(2014, 4, 30))
+            else if (Time != new DateTime(2014, 3, 31) && Time != new DateTime(2014, 4, 30))
             {
                 throw new RegressionTestException($"Month End unexpected selection: {Time}");
             }
@@ -115,15 +125,21 @@ namespace QuantConnect.Algorithm.CSharp
         {
             if (_monthEndSelection != 3)
             {
-                throw new RegressionTestException($"Month End unexpected selection count: {_monthEndSelection}");
+                throw new RegressionTestException(
+                    $"Month End unexpected selection count: {_monthEndSelection}"
+                );
             }
             if (_monthStartSelection != 3)
             {
-                throw new RegressionTestException($"Month start unexpected selection count: {_monthStartSelection}");
+                throw new RegressionTestException(
+                    $"Month start unexpected selection count: {_monthStartSelection}"
+                );
             }
             if (_specificDateSelection != 1)
             {
-                throw new RegressionTestException($"Specific date unexpected selection count: {_specificDateSelection}");
+                throw new RegressionTestException(
+                    $"Specific date unexpected selection count: {_specificDateSelection}"
+                );
             }
         }
 
@@ -155,35 +171,36 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// This is used by the regression test system to indicate what the expected statistics are from running the algorithm
         /// </summary>
-        public Dictionary<string, string> ExpectedStatistics => new Dictionary<string, string>
-        {
-            {"Total Orders", "1"},
-            {"Average Win", "0%"},
-            {"Average Loss", "0%"},
-            {"Compounding Annual Return", "7.010%"},
-            {"Drawdown", "3.900%"},
-            {"Expectancy", "0"},
-            {"Start Equity", "100000"},
-            {"End Equity", "100857.57"},
-            {"Net Profit", "0.858%"},
-            {"Sharpe Ratio", "0.51"},
-            {"Sortino Ratio", "0.516"},
-            {"Probabilistic Sharpe Ratio", "43.033%"},
-            {"Loss Rate", "0%"},
-            {"Win Rate", "0%"},
-            {"Profit-Loss Ratio", "0"},
-            {"Alpha", "0"},
-            {"Beta", "1.003"},
-            {"Annual Standard Deviation", "0.097"},
-            {"Annual Variance", "0.009"},
-            {"Information Ratio", "0.645"},
-            {"Tracking Error", "0"},
-            {"Treynor Ratio", "0.049"},
-            {"Total Fees", "$3.08"},
-            {"Estimated Strategy Capacity", "$710000000.00"},
-            {"Lowest Capacity Asset", "SPY R735QTJ8XC9X"},
-            {"Portfolio Turnover", "2.18%"},
-            {"OrderListHash", "472e90ba189aaf55e0edab9087c3d8e7"}
-        };
+        public Dictionary<string, string> ExpectedStatistics =>
+            new Dictionary<string, string>
+            {
+                { "Total Orders", "1" },
+                { "Average Win", "0%" },
+                { "Average Loss", "0%" },
+                { "Compounding Annual Return", "7.010%" },
+                { "Drawdown", "3.900%" },
+                { "Expectancy", "0" },
+                { "Start Equity", "100000" },
+                { "End Equity", "100857.57" },
+                { "Net Profit", "0.858%" },
+                { "Sharpe Ratio", "0.51" },
+                { "Sortino Ratio", "0.516" },
+                { "Probabilistic Sharpe Ratio", "43.033%" },
+                { "Loss Rate", "0%" },
+                { "Win Rate", "0%" },
+                { "Profit-Loss Ratio", "0" },
+                { "Alpha", "0" },
+                { "Beta", "1.003" },
+                { "Annual Standard Deviation", "0.097" },
+                { "Annual Variance", "0.009" },
+                { "Information Ratio", "0.645" },
+                { "Tracking Error", "0" },
+                { "Treynor Ratio", "0.049" },
+                { "Total Fees", "$3.08" },
+                { "Estimated Strategy Capacity", "$710000000.00" },
+                { "Lowest Capacity Asset", "SPY R735QTJ8XC9X" },
+                { "Portfolio Turnover", "2.18%" },
+                { "OrderListHash", "472e90ba189aaf55e0edab9087c3d8e7" }
+            };
     }
 }

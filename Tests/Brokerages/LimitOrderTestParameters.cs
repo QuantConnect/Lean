@@ -25,7 +25,13 @@ namespace QuantConnect.Tests.Brokerages
         private readonly decimal _highLimit;
         private readonly decimal _lowLimit;
 
-        public LimitOrderTestParameters(Symbol symbol, decimal highLimit, decimal lowLimit, IOrderProperties properties = null, OrderSubmissionData orderSubmissionData = null)
+        public LimitOrderTestParameters(
+            Symbol symbol,
+            decimal highLimit,
+            decimal lowLimit,
+            IOrderProperties properties = null,
+            OrderSubmissionData orderSubmissionData = null
+        )
             : base(symbol, properties, orderSubmissionData)
         {
             _highLimit = highLimit;
@@ -34,7 +40,13 @@ namespace QuantConnect.Tests.Brokerages
 
         public override Order CreateShortOrder(decimal quantity)
         {
-            return new LimitOrder(Symbol, -Math.Abs(quantity), _highLimit, DateTime.Now, properties: Properties)
+            return new LimitOrder(
+                Symbol,
+                -Math.Abs(quantity),
+                _highLimit,
+                DateTime.Now,
+                properties: Properties
+            )
             {
                 OrderSubmissionData = OrderSubmissionData
             };
@@ -42,23 +54,38 @@ namespace QuantConnect.Tests.Brokerages
 
         public override Order CreateLongOrder(decimal quantity)
         {
-            return new LimitOrder(Symbol, Math.Abs(quantity), _lowLimit, DateTime.Now, properties: Properties)
+            return new LimitOrder(
+                Symbol,
+                Math.Abs(quantity),
+                _lowLimit,
+                DateTime.Now,
+                properties: Properties
+            )
             {
                 OrderSubmissionData = OrderSubmissionData
             };
         }
 
-        public override bool ModifyOrderToFill(IBrokerage brokerage, Order order, decimal lastMarketPrice)
+        public override bool ModifyOrderToFill(
+            IBrokerage brokerage,
+            Order order,
+            decimal lastMarketPrice
+        )
         {
             // limit orders will process even if they go beyond the market price
 
-            var symbolProperties = SPDB.GetSymbolProperties(order.Symbol.ID.Market, order.Symbol, order.SecurityType, order.PriceCurrency);
+            var symbolProperties = SPDB.GetSymbolProperties(
+                order.Symbol.ID.Market,
+                order.Symbol,
+                order.SecurityType,
+                order.PriceCurrency
+            );
             var roundOffPlaces = symbolProperties.MinimumPriceVariation.GetDecimalPlaces();
-            var limit = (LimitOrder) order;
+            var limit = (LimitOrder)order;
             if (order.Quantity > 0)
             {
                 // for limit buys we need to increase the limit price
-                limit.LimitPrice = Math.Round(lastMarketPrice *1.02m, roundOffPlaces);
+                limit.LimitPrice = Math.Round(lastMarketPrice * 1.02m, roundOffPlaces);
             }
             else
             {
@@ -77,10 +104,13 @@ namespace QuantConnect.Tests.Brokerages
     // to be used with brokerages which do not support UpdateOrder
     public class NonUpdateableLimitOrderTestParameters : LimitOrderTestParameters
     {
-        public NonUpdateableLimitOrderTestParameters(Symbol symbol, decimal highLimit, decimal lowLimit, IOrderProperties properties = null)
-            : base(symbol, highLimit, lowLimit, properties)
-        {
-        }
+        public NonUpdateableLimitOrderTestParameters(
+            Symbol symbol,
+            decimal highLimit,
+            decimal lowLimit,
+            IOrderProperties properties = null
+        )
+            : base(symbol, highLimit, lowLimit, properties) { }
 
         public override bool ModifyUntilFilled => false;
     }

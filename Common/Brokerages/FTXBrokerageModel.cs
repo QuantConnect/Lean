@@ -13,13 +13,13 @@
  * limitations under the License.
 */
 
+using System.Collections.Generic;
+using System.Linq;
 using QuantConnect.Benchmarks;
 using QuantConnect.Orders;
 using QuantConnect.Orders.Fees;
 using QuantConnect.Securities;
 using QuantConnect.Util;
-using System.Collections.Generic;
-using System.Linq;
 
 namespace QuantConnect.Brokerages
 {
@@ -46,15 +46,15 @@ namespace QuantConnect.Brokerages
         /// <summary>
         /// Gets a map of the default markets to be used for each security type
         /// </summary>
-        public override IReadOnlyDictionary<SecurityType, string> DefaultMarkets { get; } = GetDefaultMarkets(Market.FTX);
+        public override IReadOnlyDictionary<SecurityType, string> DefaultMarkets { get; } =
+            GetDefaultMarkets(Market.FTX);
 
         /// <summary>
         /// Creates an instance of <see cref="FTXBrokerageModel"/> class
         /// </summary>
         /// <param name="accountType">Cash or Margin</param>
-        public FTXBrokerageModel(AccountType accountType = AccountType.Margin) : base(accountType)
-        {
-        }
+        public FTXBrokerageModel(AccountType accountType = AccountType.Margin)
+            : base(accountType) { }
 
         /// <summary>
         /// Gets the brokerage's leverage for the specified security
@@ -76,8 +76,7 @@ namespace QuantConnect.Brokerages
         /// </summary>
         /// <param name="security">The security to get a fee model for</param>
         /// <returns>The new fee model for this brokerage</returns>
-        public override IFeeModel GetFeeModel(Security security)
-            => new FTXFeeModel();
+        public override IFeeModel GetFeeModel(Security security) => new FTXFeeModel();
 
         /// <summary>
         /// Get the benchmark for this model
@@ -101,7 +100,11 @@ namespace QuantConnect.Brokerages
         /// <param name="order">The order to be processed</param>
         /// <param name="message">If this function returns false, a brokerage message detailing why the order may not be submitted</param>
         /// <returns>True if the brokerage could process the order, false otherwise</returns>
-        public override bool CanSubmitOrder(Security security, Order order, out BrokerageMessageEvent message)
+        public override bool CanSubmitOrder(
+            Security security,
+            Order order,
+            out BrokerageMessageEvent message
+        )
         {
             if (!IsValidOrderSize(security, order.Quantity, out message))
             {
@@ -113,8 +116,15 @@ namespace QuantConnect.Brokerages
             // validate order type
             if (!_supportedOrderTypes.Contains(order.Type))
             {
-                message = new BrokerageMessageEvent(BrokerageMessageType.Warning, "NotSupported",
-                    Messages.DefaultBrokerageModel.UnsupportedOrderType(this, order, _supportedOrderTypes));
+                message = new BrokerageMessageEvent(
+                    BrokerageMessageType.Warning,
+                    "NotSupported",
+                    Messages.DefaultBrokerageModel.UnsupportedOrderType(
+                        this,
+                        order,
+                        _supportedOrderTypes
+                    )
+                );
 
                 return false;
             }
@@ -123,8 +133,11 @@ namespace QuantConnect.Brokerages
             {
                 if (!security.HasData)
                 {
-                    message = new BrokerageMessageEvent(BrokerageMessageType.Warning, "NotSupported",
-                        Messages.DefaultBrokerageModel.NoDataForSymbol);
+                    message = new BrokerageMessageEvent(
+                        BrokerageMessageType.Warning,
+                        "NotSupported",
+                        Messages.DefaultBrokerageModel.NoDataForSymbol
+                    );
 
                     return false;
                 }
@@ -140,16 +153,22 @@ namespace QuantConnect.Brokerages
                     case OrderDirection.Sell:
                         if (stopPrice > security.BidPrice)
                         {
-                            message = new BrokerageMessageEvent(BrokerageMessageType.Warning, "NotSupported",
-                                Messages.FTXBrokerageModel.TriggerPriceTooHigh);
+                            message = new BrokerageMessageEvent(
+                                BrokerageMessageType.Warning,
+                                "NotSupported",
+                                Messages.FTXBrokerageModel.TriggerPriceTooHigh
+                            );
                         }
                         break;
 
                     case OrderDirection.Buy:
                         if (stopPrice < security.AskPrice)
                         {
-                            message = new BrokerageMessageEvent(BrokerageMessageType.Warning, "NotSupported",
-                                Messages.FTXBrokerageModel.TriggerPriceTooLow);
+                            message = new BrokerageMessageEvent(
+                                BrokerageMessageType.Warning,
+                                "NotSupported",
+                                Messages.FTXBrokerageModel.TriggerPriceTooLow
+                            );
                         }
                         break;
                 }
@@ -162,8 +181,11 @@ namespace QuantConnect.Brokerages
 
             if (security.Type != SecurityType.Crypto)
             {
-                message = new BrokerageMessageEvent(BrokerageMessageType.Warning, "NotSupported",
-                    Messages.DefaultBrokerageModel.UnsupportedSecurityType(this, security));
+                message = new BrokerageMessageEvent(
+                    BrokerageMessageType.Warning,
+                    "NotSupported",
+                    Messages.DefaultBrokerageModel.UnsupportedSecurityType(this, security)
+                );
 
                 return false;
             }
@@ -180,9 +202,18 @@ namespace QuantConnect.Brokerages
         /// <param name="request">The requested update to be made to the order</param>
         /// <param name="message">If this function returns false, a brokerage message detailing why the order may not be updated</param>
         /// <returns>True if the brokerage would allow updating the order, false otherwise</returns>
-        public override bool CanUpdateOrder(Security security, Order order, UpdateOrderRequest request, out BrokerageMessageEvent message)
+        public override bool CanUpdateOrder(
+            Security security,
+            Order order,
+            UpdateOrderRequest request,
+            out BrokerageMessageEvent message
+        )
         {
-            message = new BrokerageMessageEvent(BrokerageMessageType.Warning, 0, Messages.DefaultBrokerageModel.OrderUpdateNotSupported);
+            message = new BrokerageMessageEvent(
+                BrokerageMessageType.Warning,
+                0,
+                Messages.DefaultBrokerageModel.OrderUpdateNotSupported
+            );
             return false;
         }
 

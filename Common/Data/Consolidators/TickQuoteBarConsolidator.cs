@@ -15,8 +15,8 @@
 */
 
 using System;
-using QuantConnect.Data.Market;
 using Python.Runtime;
+using QuantConnect.Data.Market;
 
 namespace QuantConnect.Data.Consolidators
 {
@@ -30,18 +30,14 @@ namespace QuantConnect.Data.Consolidators
         /// </summary>
         /// <param name="period">The minimum span of time before emitting a consolidated bar</param>
         public TickQuoteBarConsolidator(TimeSpan period)
-            : base(period)
-        {
-        }
+            : base(period) { }
 
         /// <summary>
         /// Initializes a new instance of the <see cref="TickQuoteBarConsolidator"/> class
         /// </summary>
         /// <param name="maxCount">The number of pieces to accept before emitting a consolidated bar</param>
         public TickQuoteBarConsolidator(int maxCount)
-            : base(maxCount)
-        {
-        }
+            : base(maxCount) { }
 
         /// <summary>
         /// Initializes a new instance of the <see cref="TickQuoteBarConsolidator"/> class
@@ -49,27 +45,21 @@ namespace QuantConnect.Data.Consolidators
         /// <param name="maxCount">The number of pieces to accept before emitting a consolidated bar</param>
         /// <param name="period">The minimum span of time before emitting a consolidated bar</param>
         public TickQuoteBarConsolidator(int maxCount, TimeSpan period)
-            : base(maxCount, period)
-        {
-        }
+            : base(maxCount, period) { }
 
         /// <summary>
         /// Initializes a new instance of the <see cref="TickQuoteBarConsolidator"/> class
         /// </summary>
         /// <param name="func">Func that defines the start time of a consolidated data</param>
         public TickQuoteBarConsolidator(Func<DateTime, CalendarInfo> func)
-            : base(func)
-        {
-        }
+            : base(func) { }
 
         /// <summary>
         /// Initializes a new instance of the <see cref="TickQuoteBarConsolidator"/> class
         /// </summary>
         /// <param name="pyfuncobj">Python function object that defines the start time of a consolidated data</param>
         public TickQuoteBarConsolidator(PyObject pyfuncobj)
-            : base(pyfuncobj)
-        {
-        }
+            : base(pyfuncobj) { }
 
         /// <summary>
         /// Determines whether or not the specified data should be processed
@@ -91,20 +81,43 @@ namespace QuantConnect.Data.Consolidators
         {
             if (workingBar == null)
             {
-                workingBar = new QuoteBar(GetRoundedBarTime(data), data.Symbol, null, decimal.Zero, null, decimal.Zero, Period);
+                workingBar = new QuoteBar(
+                    GetRoundedBarTime(data),
+                    data.Symbol,
+                    null,
+                    decimal.Zero,
+                    null,
+                    decimal.Zero,
+                    Period
+                );
 
                 // open ask and bid should match previous close ask and bid
                 if (Consolidated != null)
                 {
                     // note that we will only fill forward previous close ask and bid when a new data point comes in and we generate a new working bar which is not a fill forward bar
                     var previous = Consolidated as QuoteBar;
-                    workingBar.Update(decimal.Zero, previous.Bid?.Close ?? decimal.Zero, previous.Ask?.Close ?? decimal.Zero, decimal.Zero, previous.LastBidSize, previous.LastAskSize);
+                    workingBar.Update(
+                        decimal.Zero,
+                        previous.Bid?.Close ?? decimal.Zero,
+                        previous.Ask?.Close ?? decimal.Zero,
+                        decimal.Zero,
+                        previous.LastBidSize,
+                        previous.LastAskSize
+                    );
                 }
             }
 
             // update the bid and ask
-            workingBar.Update(decimal.Zero, data.BidPrice, data.AskPrice, decimal.Zero, data.BidSize, data.AskSize);
-            if (!Period.HasValue) workingBar.EndTime = GetRoundedBarTime(data.EndTime);
+            workingBar.Update(
+                decimal.Zero,
+                data.BidPrice,
+                data.AskPrice,
+                decimal.Zero,
+                data.BidSize,
+                data.AskSize
+            );
+            if (!Period.HasValue)
+                workingBar.EndTime = GetRoundedBarTime(data.EndTime);
         }
     }
 }

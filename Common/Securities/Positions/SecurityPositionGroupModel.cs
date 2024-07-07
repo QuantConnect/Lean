@@ -14,10 +14,10 @@
 */
 
 using System;
-using System.Linq;
-using QuantConnect.Orders;
 using System.Collections.Generic;
 using System.Collections.Specialized;
+using System.Linq;
+using QuantConnect.Orders;
 
 namespace QuantConnect.Securities.Positions
 {
@@ -29,7 +29,8 @@ namespace QuantConnect.Securities.Positions
         /// <summary>
         /// Gets an implementation of <see cref="SecurityPositionGroupModel"/> that will not group multiple securities
         /// </summary>
-        public static readonly SecurityPositionGroupModel Null = new NullSecurityPositionGroupModel();
+        public static readonly SecurityPositionGroupModel Null =
+            new NullSecurityPositionGroupModel();
 
         private bool _requiresGroupResolution;
 
@@ -40,8 +41,8 @@ namespace QuantConnect.Securities.Positions
         /// <summary>
         /// Get's the single security position group buying power model to use
         /// </summary>
-        protected virtual IPositionGroupBuyingPowerModel PositionGroupBuyingPowerModel { get; } = new SecurityPositionGroupBuyingPowerModel();
-
+        protected virtual IPositionGroupBuyingPowerModel PositionGroupBuyingPowerModel { get; } =
+            new SecurityPositionGroupBuyingPowerModel();
 
         /// <summary>
         /// Gets the set of currently resolved position groups
@@ -53,10 +54,7 @@ namespace QuantConnect.Securities.Positions
                 ResolvePositionGroups();
                 return _groups;
             }
-            private set
-            {
-                _groups = value;
-            }
+            private set { _groups = value; }
         }
 
         /// <summary>
@@ -132,7 +130,10 @@ namespace QuantConnect.Securities.Positions
         /// <returns>A new position group matching the provided order</returns>
         public bool TryCreatePositionGroup(List<Order> orders, out IPositionGroup group)
         {
-            var newPositions = orders.Select(order => order.CreatePositions(_securities)).SelectMany(x => x).ToList();
+            var newPositions = orders
+                .Select(order => order.CreatePositions(_securities))
+                .SelectMany(x => x)
+                .ToList();
 
             // We send new and current positions to try resolve any strategy being executed by multiple orders
             // else the PositionGroup we will get out here will just be the default in those cases
@@ -159,7 +160,9 @@ namespace QuantConnect.Securities.Positions
         /// </summary>
         /// <param name="positions">The positions to be changed</param>
         /// <returns>All position groups that need to be re-evaluated due to changes in the positions</returns>
-        public IEnumerable<IPositionGroup> GetImpactedGroups(IReadOnlyCollection<IPosition> positions)
+        public IEnumerable<IPositionGroup> GetImpactedGroups(
+            IReadOnlyCollection<IPosition> positions
+        )
         {
             return _resolver.GetImpactedGroups(Groups, positions);
         }
@@ -190,10 +193,16 @@ namespace QuantConnect.Securities.Positions
         /// <returns>The position group resolver instance</returns>
         protected virtual IPositionGroupResolver GetPositionGroupResolver()
         {
-            return new CompositePositionGroupResolver(new OptionStrategyPositionGroupResolver(_securities), new SecurityPositionGroupResolver(PositionGroupBuyingPowerModel));
+            return new CompositePositionGroupResolver(
+                new OptionStrategyPositionGroupResolver(_securities),
+                new SecurityPositionGroupResolver(PositionGroupBuyingPowerModel)
+            );
         }
 
-        private void HoldingsOnQuantityChanged(object sender, SecurityHoldingQuantityChangedEventArgs e)
+        private void HoldingsOnQuantityChanged(
+            object sender,
+            SecurityHoldingQuantityChangedEventArgs e
+        )
         {
             _requiresGroupResolution = true;
         }
@@ -208,7 +217,9 @@ namespace QuantConnect.Securities.Positions
                 _requiresGroupResolution = false;
                 // TODO : Replace w/ special IPosition impl to always equal security.Quantity and we'll
                 // use them explicitly for resolution collection so we don't do this each time
-                var investedPositions = _securities.Where(kvp => kvp.Value.Invested).Select(kvp => (IPosition)new Position(kvp.Value));
+                var investedPositions = _securities
+                    .Where(kvp => kvp.Value.Invested)
+                    .Select(kvp => (IPosition)new Position(kvp.Value));
                 var positionsCollection = new PositionCollection(investedPositions);
                 Groups = ResolvePositionGroups(positionsCollection);
             }

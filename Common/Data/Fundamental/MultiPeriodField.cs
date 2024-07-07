@@ -13,9 +13,9 @@
  * limitations under the License.
 */
 
+using System.Collections.Generic;
 using System.Linq;
 using Python.Runtime;
-using System.Collections.Generic;
 using QuantConnect.Data.UniverseSelection;
 
 namespace QuantConnect.Data.Fundamental
@@ -53,21 +53,23 @@ namespace QuantConnect.Data.Fundamental
         /// <summary>
         /// Returns the default value for the field
         /// </summary>
-        public virtual T Value => GetPeriodValues().Select(x => x.Value).DefaultIfEmpty(NoValue).FirstOrDefault();
+        public virtual T Value =>
+            GetPeriodValues().Select(x => x.Value).DefaultIfEmpty(NoValue).FirstOrDefault();
 
         /// <summary>
         /// Creates an empty instance
         /// </summary>
-        protected MultiPeriodField()
-        {
-        }
+        protected MultiPeriodField() { }
 
         /// <summary>
         /// Creates a new instance
         /// </summary>
         /// <param name="timeProvider"></param>
         /// <param name="securityIdentifier"></param>
-        protected MultiPeriodField(ITimeProvider timeProvider, SecurityIdentifier securityIdentifier)
+        protected MultiPeriodField(
+            ITimeProvider timeProvider,
+            SecurityIdentifier securityIdentifier
+        )
         {
             TimeProvider = timeProvider;
             SecurityIdentifier = securityIdentifier;
@@ -82,7 +84,8 @@ namespace QuantConnect.Data.Fundamental
         /// Returns true if the field contains a value for the requested period
         /// </summary>
         /// <returns>True if the field contains a value for the requested period</returns>
-        public virtual bool HasPeriodValue(string period) => !BaseFundamentalDataProvider.IsNone(typeof(T), GetPeriodValue(period));
+        public virtual bool HasPeriodValue(string period) =>
+            !BaseFundamentalDataProvider.IsNone(typeof(T), GetPeriodValue(period));
 
         /// <summary>
         /// Gets the value of the field for the requested period
@@ -171,18 +174,18 @@ namespace QuantConnect.Data.Fundamental
         /// <summary>
         /// Creates an empty instance
         /// </summary>
-        protected MultiPeriodField()
-        {
-        }
+        protected MultiPeriodField() { }
 
         /// <summary>
         /// Creates a new instance
         /// </summary>
         /// <param name="timeProvider"></param>
         /// <param name="securityIdentifier"></param>
-        protected MultiPeriodField(ITimeProvider timeProvider, SecurityIdentifier securityIdentifier) : base(timeProvider, securityIdentifier)
-        {
-        }
+        protected MultiPeriodField(
+            ITimeProvider timeProvider,
+            SecurityIdentifier securityIdentifier
+        )
+            : base(timeProvider, securityIdentifier) { }
 
         /// <summary>
         /// Returns the default value for the field
@@ -201,18 +204,18 @@ namespace QuantConnect.Data.Fundamental
         /// <summary>
         /// Creates an empty instance
         /// </summary>
-        protected MultiPeriodFieldLong()
-        {
-        }
+        protected MultiPeriodFieldLong() { }
 
         /// <summary>
         /// Creates a new instance
         /// </summary>
         /// <param name="timeProvider"></param>
         /// <param name="securityIdentifier"></param>
-        protected MultiPeriodFieldLong(ITimeProvider timeProvider, SecurityIdentifier securityIdentifier) : base(timeProvider, securityIdentifier)
-        {
-        }
+        protected MultiPeriodFieldLong(
+            ITimeProvider timeProvider,
+            SecurityIdentifier securityIdentifier
+        )
+            : base(timeProvider, securityIdentifier) { }
 
         /// <summary>
         /// Returns the default value for the field

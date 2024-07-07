@@ -22,7 +22,8 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
     /// </summary>
     public class CancelPendingOrders
     {
-        private readonly ConcurrentDictionary<int, CancelPendingOrder> _cancelPendingOrders = new ConcurrentDictionary<int, CancelPendingOrder>();
+        private readonly ConcurrentDictionary<int, CancelPendingOrder> _cancelPendingOrders =
+            new ConcurrentDictionary<int, CancelPendingOrder>();
 
         /// <summary>
         /// Amount of CancelPending Orders

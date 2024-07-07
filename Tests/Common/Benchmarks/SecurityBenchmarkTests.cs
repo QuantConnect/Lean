@@ -31,12 +31,16 @@ namespace QuantConnect.Tests.Common.Benchmarks
         {
             var security = new Security(
                 SecurityExchangeHours.AlwaysOpen(TimeZones.NewYork),
-                new SubscriptionDataConfig(typeof(TradeBar),
+                new SubscriptionDataConfig(
+                    typeof(TradeBar),
                     Symbols.SPY,
                     Resolution.Minute,
                     TimeZones.NewYork,
                     TimeZones.NewYork,
-                    true, true, false),
+                    true,
+                    true,
+                    false
+                ),
                 new Cash(Currencies.USD, 0, conversionRate),
                 SymbolProperties.GetDefault(Currencies.USD),
                 ErrorCurrencyConverter.Instance,

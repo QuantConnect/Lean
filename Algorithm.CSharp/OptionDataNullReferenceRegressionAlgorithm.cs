@@ -33,9 +33,11 @@ namespace QuantConnect.Algorithm.CSharp
 
             var option = AddOption("DUST");
 
-            option.SetFilter(u => u.IncludeWeeklys()
-                                   .Strikes(-1, +1)
-                                   .Expiration(TimeSpan.FromDays(25), TimeSpan.FromDays(100)));
+            option.SetFilter(u =>
+                u.IncludeWeeklys()
+                    .Strikes(-1, +1)
+                    .Expiration(TimeSpan.FromDays(25), TimeSpan.FromDays(100))
+            );
         }
     }
 }

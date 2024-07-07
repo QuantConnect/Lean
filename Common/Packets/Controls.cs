@@ -52,7 +52,7 @@ namespace QuantConnect.Packets
         /// <summary>
         /// CPU allocation for this algorithm
         /// </summary>
-        public decimal CpuAllocation {  get; set; }
+        public decimal CpuAllocation { get; set; }
 
         /// <summary>
         /// The user live log limit

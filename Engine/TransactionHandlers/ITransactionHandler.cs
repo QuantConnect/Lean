@@ -35,18 +35,12 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
         /// Boolean flag indicating the thread is busy.
         /// False indicates it is completely finished processing and ready to be terminated.
         /// </summary>
-        bool IsActive
-        {
-            get;
-        }
+        bool IsActive { get; }
 
         /// <summary>
         /// Gets the permanent storage for all orders
         /// </summary>
-        ConcurrentDictionary<int, Order> Orders
-        {
-            get;
-        }
+        ConcurrentDictionary<int, Order> Orders { get; }
 
         /// <summary>
         /// Gets all order events
@@ -56,10 +50,7 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
         /// <summary>
         /// Gets the permanent storage for all order tickets
         /// </summary>
-        ConcurrentDictionary<int, OrderTicket> OrderTickets
-        {
-            get;
-        }
+        ConcurrentDictionary<int, OrderTicket> OrderTickets { get; }
 
         /// <summary>
         /// Initializes the transaction handler for the specified algorithm using the specified brokerage implementation

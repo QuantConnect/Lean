@@ -15,7 +15,6 @@
 
 using System;
 using NUnit.Framework;
-
 using QuantConnect.Lean.Engine.Results;
 
 namespace QuantConnect.Tests.Engine.Results
@@ -51,18 +50,22 @@ namespace QuantConnect.Tests.Engine.Results
                 timeKeeper.SetUtcDateTime(start.Add((end - start) * i / steps));
                 progressMonitor.InvalidateProcessedDays();
 
-                var expectedProcessedDays = (int)(timeKeeper.UtcTime- start).TotalDays;
+                var expectedProcessedDays = (int)(timeKeeper.UtcTime - start).TotalDays;
                 Assert.AreEqual(expectedProcessedDays, progressMonitor.ProcessedDays);
-                Assert.AreEqual((decimal) expectedProcessedDays / progressMonitor.TotalDays, progressMonitor.Progress);
+                Assert.AreEqual(
+                    (decimal)expectedProcessedDays / progressMonitor.TotalDays,
+                    progressMonitor.Progress
+                );
             }
         }
 
-        private static TestCaseData[] TotalDaysCalculationTestCases => new TestCaseData[]
-        {
-            new(new DateTime(2020, 1, 2), new DateTime(2020, 1, 2)),
-            new(new DateTime(2020, 1, 2), new DateTime(2020, 1, 3)),
-            new(new DateTime(2020, 1, 2), new DateTime(2020, 2, 2)),
-            new(new DateTime(2020, 1, 2), new DateTime(2021, 1, 2))
-        };
+        private static TestCaseData[] TotalDaysCalculationTestCases =>
+            new TestCaseData[]
+            {
+                new(new DateTime(2020, 1, 2), new DateTime(2020, 1, 2)),
+                new(new DateTime(2020, 1, 2), new DateTime(2020, 1, 3)),
+                new(new DateTime(2020, 1, 2), new DateTime(2020, 2, 2)),
+                new(new DateTime(2020, 1, 2), new DateTime(2021, 1, 2))
+            };
     }
 }

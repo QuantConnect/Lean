@@ -14,25 +14,25 @@
  *
 */
 
-using Newtonsoft.Json;
 using System.Globalization;
+using Newtonsoft.Json;
 
 namespace QuantConnect.Tests.Optimizer
 {
     public class BacktestResult
     {
-        private static JsonSerializerSettings _jsonSettings = new JsonSerializerSettings { Culture = CultureInfo.InvariantCulture, NullValueHandling = NullValueHandling.Ignore};
+        private static JsonSerializerSettings _jsonSettings = new JsonSerializerSettings
+        {
+            Culture = CultureInfo.InvariantCulture,
+            NullValueHandling = NullValueHandling.Ignore
+        };
         public Statistics Statistics { get; set; }
 
         public static BacktestResult Create(decimal? profit = null, decimal? drawdown = null)
         {
             return new BacktestResult
             {
-                Statistics = new Statistics
-                {
-                    Profit = profit,
-                    Drawdown = drawdown
-                }
+                Statistics = new Statistics { Profit = profit, Drawdown = drawdown }
             };
         }
 

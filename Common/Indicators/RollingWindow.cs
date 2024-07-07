@@ -30,14 +30,21 @@ namespace QuantConnect.Indicators
     {
         // the backing list object used to hold the data
         private readonly List<T> _list;
+
         // read-write lock used for controlling access to the underlying list data structure
-        private readonly ReaderWriterLockSlim _listLock = new ReaderWriterLockSlim(LockRecursionPolicy.SupportsRecursion);
+        private readonly ReaderWriterLockSlim _listLock = new ReaderWriterLockSlim(
+            LockRecursionPolicy.SupportsRecursion
+        );
+
         // the most recently removed item from the window (fell off the back)
         private T _mostRecentlyRemoved;
+
         // the total number of samples taken by this indicator
         private int _samples;
+
         // used to locate the last item in the window as an indexer into the _list
         private int _tail;
+
         // the size or capacity of the window
         private int _size;
 
@@ -72,10 +79,7 @@ namespace QuantConnect.Indicators
                     _listLock.ExitReadLock();
                 }
             }
-            set
-            {
-                Resize(value);
-            }
+            set { Resize(value); }
         }
 
         /// <summary>
@@ -131,7 +135,9 @@ namespace QuantConnect.Indicators
 
                     if (_samples <= _size)
                     {
-                        throw new InvalidOperationException(Messages.RollingWindow.NoItemsRemovedYet);
+                        throw new InvalidOperationException(
+                            Messages.RollingWindow.NoItemsRemovedYet
+                        );
                     }
                     return _mostRecentlyRemoved;
                 }
@@ -139,7 +145,6 @@ namespace QuantConnect.Indicators
                 {
                     _listLock.ExitReadLock();
                 }
-
             }
         }
 
@@ -149,7 +154,7 @@ namespace QuantConnect.Indicators
         /// </summary>
         /// <param name="i">the index, i</param>
         /// <returns>the ith most recent entry</returns>
-        public T this [int i]
+        public T this[int i]
         {
             get
             {
@@ -159,7 +164,11 @@ namespace QuantConnect.Indicators
 
                     if (i < 0)
                     {
-                        throw new ArgumentOutOfRangeException(nameof(i), i, Messages.RollingWindow.IndexOutOfSizeRange);
+                        throw new ArgumentOutOfRangeException(
+                            nameof(i),
+                            i,
+                            Messages.RollingWindow.IndexOutOfSizeRange
+                        );
                     }
 
                     if (i > _list.Count - 1)
@@ -189,7 +198,11 @@ namespace QuantConnect.Indicators
 
                     if (i < 0)
                     {
-                        throw new ArgumentOutOfRangeException(nameof(i), i, Messages.RollingWindow.IndexOutOfSizeRange);
+                        throw new ArgumentOutOfRangeException(
+                            nameof(i),
+                            i,
+                            Messages.RollingWindow.IndexOutOfSizeRange
+                        );
                     }
 
                     if (i > _list.Count - 1)
@@ -261,7 +274,6 @@ namespace QuantConnect.Indicators
             {
                 _listLock.ExitReadLock();
             }
-
         }
 
         /// <summary>

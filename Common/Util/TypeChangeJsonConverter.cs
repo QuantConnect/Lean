@@ -29,7 +29,10 @@ namespace QuantConnect.Util
     public abstract class TypeChangeJsonConverter<T, TResult> : JsonConverter
     {
         // we use a json serializer which allows using non public default constructor
-        private readonly JsonSerializer _jsonSerializer = new JsonSerializer {ConstructorHandling = ConstructorHandling.AllowNonPublicDefaultConstructor};
+        private readonly JsonSerializer _jsonSerializer = new JsonSerializer
+        {
+            ConstructorHandling = ConstructorHandling.AllowNonPublicDefaultConstructor
+        };
 
         /// <summary>
         /// True will populate TResult object returned by <see cref="Convert(TResult)"/> with json properties
@@ -43,7 +46,12 @@ namespace QuantConnect.Util
         /// <returns>
         /// The object value.
         /// </returns>
-        public override object ReadJson(JsonReader reader, Type objectType, object existingValue, JsonSerializer serializer)
+        public override object ReadJson(
+            JsonReader reader,
+            Type objectType,
+            object existingValue,
+            JsonSerializer serializer
+        )
         {
             // Load token from stream
             var token = JToken.Load(reader);

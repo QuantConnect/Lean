@@ -32,7 +32,10 @@ namespace QuantConnect.Tests.Common.Util
             var instance2 = Composer.Instance.GetExportedValueByTypeName<IExport2>("Export7");
             Assert.AreEqual(typeof(Export7), instance2.GetType());
 
-            var instance3 = Composer.Instance.GetExportedValueByTypeName<IExport2>("Export8", forceTypeNameOnExisting: false);
+            var instance3 = Composer.Instance.GetExportedValueByTypeName<IExport2>(
+                "Export8",
+                forceTypeNameOnExisting: false
+            );
             Assert.AreNotEqual(typeof(Export8), instance3.GetType());
         }
 
@@ -41,10 +44,10 @@ namespace QuantConnect.Tests.Common.Util
         {
             var instances = Composer.Instance.GetExportedValues<IExport>().ToList();
             Assert.AreEqual(5, instances.Count);
-            Assert.AreEqual(1, instances.Count(x => x.GetType() == typeof (Export1)));
-            Assert.AreEqual(1, instances.Count(x => x.GetType() == typeof (Export2)));
-            Assert.AreEqual(1, instances.Count(x => x.GetType() == typeof (Export3)));
-            Assert.AreEqual(1, instances.Count(x => x.GetType() == typeof (Export4)));
+            Assert.AreEqual(1, instances.Count(x => x.GetType() == typeof(Export1)));
+            Assert.AreEqual(1, instances.Count(x => x.GetType() == typeof(Export2)));
+            Assert.AreEqual(1, instances.Count(x => x.GetType() == typeof(Export3)));
+            Assert.AreEqual(1, instances.Count(x => x.GetType() == typeof(Export4)));
             Assert.AreEqual(1, instances.Count(x => x.GetType() == typeof(Export5)));
         }
 
@@ -53,7 +56,7 @@ namespace QuantConnect.Tests.Common.Util
         {
             var instance = Composer.Instance.Single<IExport>(x => x.Id == 3);
             Assert.IsNotNull(instance);
-            Assert.IsInstanceOf(typeof (Export3), instance);
+            Assert.IsInstanceOf(typeof(Export3), instance);
         }
 
         [Test]
@@ -95,45 +98,77 @@ namespace QuantConnect.Tests.Common.Util
 
         class Export1 : IExport
         {
-            public int Id { get { return 1; } }
+            public int Id
+            {
+                get { return 1; }
+            }
         }
+
         class Export2 : IExport
         {
-            public int Id { get { return 2; } }
+            public int Id
+            {
+                get { return 2; }
+            }
         }
+
         class Export3 : IExport
         {
-            public int Id { get { return 3; } }
+            public int Id
+            {
+                get { return 3; }
+            }
         }
+
         class Export4 : IExport
         {
-            public int Id { get { return 4; } }
+            public int Id
+            {
+                get { return 4; }
+            }
         }
 
         class Export5 : IExport, IOneMoreExport
         {
-            public decimal Export { get { return 5; } }
+            public decimal Export
+            {
+                get { return 5; }
+            }
 
-            public int Id { get { return 5; } }
+            public int Id
+            {
+                get { return 5; }
+            }
         }
-
 
         [InheritedExport(typeof(IExport2))]
         interface IExport2
         {
             int Id { get; }
         }
+
         class Export6 : IExport2
         {
-            public int Id { get { return 6; } }
+            public int Id
+            {
+                get { return 6; }
+            }
         }
+
         class Export7 : IExport2
         {
-            public int Id { get { return 7; } }
+            public int Id
+            {
+                get { return 7; }
+            }
         }
+
         class Export8 : IExport2
         {
-            public int Id { get { return 8; } }
+            public int Id
+            {
+                get { return 8; }
+            }
         }
     }
 }

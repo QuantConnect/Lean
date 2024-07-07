@@ -92,7 +92,10 @@ namespace QuantConnect.Securities
         /// <param name="orderProvider">The order provider to search</param>
         /// <param name="brokerageId">The brokerage id to fetch</param>
         /// <returns>The first order matching the brokerage id, or null if no match is found</returns>
-        public static List<Order> GetOrdersByBrokerageId(this IOrderProvider orderProvider, long brokerageId)
+        public static List<Order> GetOrdersByBrokerageId(
+            this IOrderProvider orderProvider,
+            long brokerageId
+        )
         {
             return orderProvider.GetOrdersByBrokerageId(brokerageId.ToStringInvariant());
         }
@@ -103,7 +106,10 @@ namespace QuantConnect.Securities
         /// <param name="orderProvider">The order provider to search</param>
         /// <param name="brokerageId">The brokerage id to fetch</param>
         /// <returns>The first order matching the brokerage id, or null if no match is found</returns>
-        public static List<Order> GetOrdersByBrokerageId(this IOrderProvider orderProvider, int brokerageId)
+        public static List<Order> GetOrdersByBrokerageId(
+            this IOrderProvider orderProvider,
+            int brokerageId
+        )
         {
             return orderProvider.GetOrdersByBrokerageId(brokerageId.ToStringInvariant());
         }

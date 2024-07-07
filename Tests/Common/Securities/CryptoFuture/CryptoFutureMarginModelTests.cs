@@ -33,7 +33,10 @@ namespace QuantConnect.Tests.Common.Securities.CryptoFuture
             var algo = GetAlgorithm();
             var cryptoFuture = algo.AddCryptoFuture(ticker);
 
-            Assert.AreEqual(typeof(CryptoFutureMarginModel), cryptoFuture.BuyingPowerModel.GetType());
+            Assert.AreEqual(
+                typeof(CryptoFutureMarginModel),
+                cryptoFuture.BuyingPowerModel.GetType()
+            );
         }
 
         [TestCase("BTCUSD", 10)]
@@ -53,7 +56,10 @@ namespace QuantConnect.Tests.Common.Securities.CryptoFuture
             if (ticker == "BTCUSD")
             {
                 // ((quantity * contract mutiplier * price) / leverage) * conversion rate (BTC -> USD)
-                marginRequirement = ((parameters.Quantity * 100m * cryptoFuture.Price) / 25m ) *  1 / cryptoFuture.Price;
+                marginRequirement =
+                    ((parameters.Quantity * 100m * cryptoFuture.Price) / 25m)
+                    * 1
+                    / cryptoFuture.Price;
             }
             else
             {
@@ -83,7 +89,10 @@ namespace QuantConnect.Tests.Common.Securities.CryptoFuture
             if (ticker == "BTCUSD")
             {
                 // ((quantity * contract mutiplier * price) * MaintenanceMarginRate) * conversion rate (BTC -> USD)
-                marginRequirement = ((parameters.Quantity * 100m * cryptoFuture.Price) * 0.05m) * 1 / cryptoFuture.Price;
+                marginRequirement =
+                    ((parameters.Quantity * 100m * cryptoFuture.Price) * 0.05m)
+                    * 1
+                    / cryptoFuture.Price;
             }
             else
             {
@@ -93,7 +102,6 @@ namespace QuantConnect.Tests.Common.Securities.CryptoFuture
 
             Assert.AreEqual(Math.Abs(marginRequirement), result.Value);
         }
-
 
         private static QCAlgorithm GetAlgorithm()
         {
@@ -105,19 +113,21 @@ namespace QuantConnect.Tests.Common.Securities.CryptoFuture
 
         private static void SetPrice(Security security, decimal price)
         {
-            var cryptoFuture = (QuantConnect.Securities.CryptoFuture.CryptoFuture) security;
+            var cryptoFuture = (QuantConnect.Securities.CryptoFuture.CryptoFuture)security;
             cryptoFuture.BaseCurrency.ConversionRate = price;
             cryptoFuture.QuoteCurrency.ConversionRate = 1;
 
-            security.SetMarketPrice(new TradeBar
-            {
-                Time = new DateTime(2022, 12, 22),
-                Symbol = security.Symbol,
-                Open = price,
-                High = price,
-                Low = price,
-                Close = price
-            });
+            security.SetMarketPrice(
+                new TradeBar
+                {
+                    Time = new DateTime(2022, 12, 22),
+                    Symbol = security.Symbol,
+                    Open = price,
+                    High = price,
+                    Low = price,
+                    Close = price
+                }
+            );
         }
     }
 }

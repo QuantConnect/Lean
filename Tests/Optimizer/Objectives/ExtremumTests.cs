@@ -14,22 +14,22 @@
 */
 
 
-using NUnit.Framework;
-using QuantConnect.Optimizer.Objectives;
 using System;
 using Newtonsoft.Json;
+using NUnit.Framework;
+using QuantConnect.Optimizer.Objectives;
 
 namespace QuantConnect.Tests.Optimizer.Objectives
 {
     [TestFixture, Parallelizable(ParallelScope.All)]
     public class ExtremumTests
     {
-        private static TestCaseData[] Extremums => new TestCaseData[]
-        {
-            new TestCaseData(new Maximization()),
-            new TestCaseData(new Minimization())
-        };
-
+        private static TestCaseData[] Extremums =>
+            new TestCaseData[]
+            {
+                new TestCaseData(new Maximization()),
+                new TestCaseData(new Minimization())
+            };
 
         [TestCase("\"max\"")]
         [TestCase("\"min\"")]

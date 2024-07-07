@@ -15,10 +15,10 @@
 */
 
 using System;
-using System.Linq;
-using Python.Runtime;
-using Newtonsoft.Json;
 using System.Collections.Generic;
+using System.Linq;
+using Newtonsoft.Json;
+using Python.Runtime;
 using QuantConnect.Data.UniverseSelection;
 
 namespace QuantConnect.Data.Fundamental
@@ -37,36 +37,69 @@ namespace QuantConnect.Data.Fundamental
         /// Gets/sets the OneMonth period value for the field
         /// </summary>
         [JsonProperty("1M")]
-        public string OneMonth => FundamentalService.Get<string>(TimeProvider.GetUtcNow(), SecurityIdentifier, FundamentalProperty.EarningReports_AccessionNumber_OneMonth);
+        public string OneMonth =>
+            FundamentalService.Get<string>(
+                TimeProvider.GetUtcNow(),
+                SecurityIdentifier,
+                FundamentalProperty.EarningReports_AccessionNumber_OneMonth
+            );
 
         /// <summary>
         /// Gets/sets the TwoMonths period value for the field
         /// </summary>
         [JsonProperty("2M")]
-        public string TwoMonths => FundamentalService.Get<string>(TimeProvider.GetUtcNow(), SecurityIdentifier, FundamentalProperty.EarningReports_AccessionNumber_TwoMonths);
+        public string TwoMonths =>
+            FundamentalService.Get<string>(
+                TimeProvider.GetUtcNow(),
+                SecurityIdentifier,
+                FundamentalProperty.EarningReports_AccessionNumber_TwoMonths
+            );
 
         /// <summary>
         /// Gets/sets the ThreeMonths period value for the field
         /// </summary>
         [JsonProperty("3M")]
-        public string ThreeMonths => FundamentalService.Get<string>(TimeProvider.GetUtcNow(), SecurityIdentifier, FundamentalProperty.EarningReports_AccessionNumber_ThreeMonths);
+        public string ThreeMonths =>
+            FundamentalService.Get<string>(
+                TimeProvider.GetUtcNow(),
+                SecurityIdentifier,
+                FundamentalProperty.EarningReports_AccessionNumber_ThreeMonths
+            );
 
         /// <summary>
         /// Gets/sets the SixMonths period value for the field
         /// </summary>
         [JsonProperty("6M")]
-        public string SixMonths => FundamentalService.Get<string>(TimeProvider.GetUtcNow(), SecurityIdentifier, FundamentalProperty.EarningReports_AccessionNumber_SixMonths);
+        public string SixMonths =>
+            FundamentalService.Get<string>(
+                TimeProvider.GetUtcNow(),
+                SecurityIdentifier,
+                FundamentalProperty.EarningReports_AccessionNumber_SixMonths
+            );
 
         /// <summary>
         /// Gets/sets the NineMonths period value for the field
         /// </summary>
         [JsonProperty("9M")]
-        public string NineMonths => FundamentalService.Get<string>(TimeProvider.GetUtcNow(), SecurityIdentifier, FundamentalProperty.EarningReports_AccessionNumber_NineMonths);
+        public string NineMonths =>
+            FundamentalService.Get<string>(
+                TimeProvider.GetUtcNow(),
+                SecurityIdentifier,
+                FundamentalProperty.EarningReports_AccessionNumber_NineMonths
+            );
 
         /// <summary>
         /// Returns true if the field contains a value for the default period
         /// </summary>
-        public override bool HasValue => !BaseFundamentalDataProvider.IsNone(typeof(string), FundamentalService.Get<string>(TimeProvider.GetUtcNow(), SecurityIdentifier, FundamentalProperty.EarningReports_AccessionNumber_OneMonth));
+        public override bool HasValue =>
+            !BaseFundamentalDataProvider.IsNone(
+                typeof(string),
+                FundamentalService.Get<string>(
+                    TimeProvider.GetUtcNow(),
+                    SecurityIdentifier,
+                    FundamentalProperty.EarningReports_AccessionNumber_OneMonth
+                )
+            );
 
         /// <summary>
         /// Returns the default value for the field
@@ -75,7 +108,11 @@ namespace QuantConnect.Data.Fundamental
         {
             get
             {
-                var defaultValue = FundamentalService.Get<string>(TimeProvider.GetUtcNow(), SecurityIdentifier, FundamentalProperty.EarningReports_AccessionNumber_OneMonth);
+                var defaultValue = FundamentalService.Get<string>(
+                    TimeProvider.GetUtcNow(),
+                    SecurityIdentifier,
+                    FundamentalProperty.EarningReports_AccessionNumber_OneMonth
+                );
                 if (!BaseFundamentalDataProvider.IsNone(typeof(string), defaultValue))
                 {
                     return defaultValue;
@@ -91,7 +128,16 @@ namespace QuantConnect.Data.Fundamental
         public override IReadOnlyDictionary<string, string> GetPeriodValues()
         {
             var result = new Dictionary<string, string>();
-            foreach (var kvp in new[] { new Tuple<string, string>("1M", OneMonth), new Tuple<string, string>("2M", TwoMonths), new Tuple<string, string>("3M", ThreeMonths), new Tuple<string, string>("6M", SixMonths), new Tuple<string, string>("9M", NineMonths) })
+            foreach (
+                var kvp in new[]
+                {
+                    new Tuple<string, string>("1M", OneMonth),
+                    new Tuple<string, string>("2M", TwoMonths),
+                    new Tuple<string, string>("3M", ThreeMonths),
+                    new Tuple<string, string>("6M", SixMonths),
+                    new Tuple<string, string>("9M", NineMonths)
+                }
+            )
             {
                 if (!BaseFundamentalDataProvider.IsNone(typeof(string), kvp.Item2))
                 {
@@ -106,20 +152,27 @@ namespace QuantConnect.Data.Fundamental
         /// </summary>
         /// <param name="period">The requested period</param>
         /// <returns>The value for the period</returns>
-        public override string GetPeriodValue(string period) => FundamentalService.Get<string>(TimeProvider.GetUtcNow(), SecurityIdentifier, Enum.Parse<FundamentalProperty>($"EarningReports_AccessionNumber_{ConvertPeriod(period)}"));
+        public override string GetPeriodValue(string period) =>
+            FundamentalService.Get<string>(
+                TimeProvider.GetUtcNow(),
+                SecurityIdentifier,
+                Enum.Parse<FundamentalProperty>(
+                    $"EarningReports_AccessionNumber_{ConvertPeriod(period)}"
+                )
+            );
 
         /// <summary>
         /// Creates a new empty instance
         /// </summary>
-        public EarningReportsAccessionNumber()
-        {
-        }
+        public EarningReportsAccessionNumber() { }
 
         /// <summary>
         /// Creates a new instance for the given time and security
         /// </summary>
-        public EarningReportsAccessionNumber(ITimeProvider timeProvider, SecurityIdentifier securityIdentifier) : base(timeProvider, securityIdentifier)
-        {
-        }
+        public EarningReportsAccessionNumber(
+            ITimeProvider timeProvider,
+            SecurityIdentifier securityIdentifier
+        )
+            : base(timeProvider, securityIdentifier) { }
     }
 }

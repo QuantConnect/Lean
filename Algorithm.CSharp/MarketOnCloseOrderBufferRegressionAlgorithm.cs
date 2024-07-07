@@ -22,7 +22,9 @@ using QuantConnect.Orders;
 
 namespace QuantConnect.Algorithm.CSharp
 {
-    public class MarketOnCloseOrderBufferRegressionAlgorithm : QCAlgorithm, IRegressionAlgorithmDefinition
+    public class MarketOnCloseOrderBufferRegressionAlgorithm
+        : QCAlgorithm,
+            IRegressionAlgorithmDefinition
     {
         private OrderTicket _validOrderTicket;
         private OrderTicket _invalidOrderTicket;
@@ -36,10 +38,14 @@ namespace QuantConnect.Algorithm.CSharp
             var ticker = "SPY";
             AddEquity(ticker, Resolution.Minute);
 
-            Schedule.On(DateRules.Today, TimeRules.At(17,00), () =>
-            {
-                _validOrderTicketExtendedMarketHours = MarketOnCloseOrder("SPY", 2);
-            });
+            Schedule.On(
+                DateRules.Today,
+                TimeRules.At(17, 00),
+                () =>
+                {
+                    _validOrderTicketExtendedMarketHours = MarketOnCloseOrder("SPY", 2);
+                }
+            );
 
             // Modify our submission buffer time to 10 minutes
             Orders.MarketOnCloseOrder.SubmissionTimeBuffer = TimeSpan.FromMinutes(10);
@@ -66,7 +72,9 @@ namespace QuantConnect.Algorithm.CSharp
         public override void OnEndOfAlgorithm()
         {
             // Set it back to default for other regressions
-            Orders.MarketOnCloseOrder.SubmissionTimeBuffer = Orders.MarketOnCloseOrder.DefaultSubmissionTimeBuffer;
+            Orders.MarketOnCloseOrder.SubmissionTimeBuffer = Orders
+                .MarketOnCloseOrder
+                .DefaultSubmissionTimeBuffer;
 
             // Verify that our good order filled
             if (_validOrderTicket.Status != OrderStatus.Filled)
@@ -83,7 +91,9 @@ namespace QuantConnect.Algorithm.CSharp
             // Verify that our second good order filled
             if (_validOrderTicketExtendedMarketHours.Status != OrderStatus.Filled)
             {
-                throw new RegressionTestException("Valid order during extended market hours failed to fill");
+                throw new RegressionTestException(
+                    "Valid order during extended market hours failed to fill"
+                );
             }
         }
 
@@ -115,35 +125,36 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// This is used by the regression test system to indicate what the expected statistics are from running the algorithm
         /// </summary>
-        public Dictionary<string, string> ExpectedStatistics => new()
-        {
-            {"Total Orders", "2"},
-            {"Average Win", "0%"},
-            {"Average Loss", "0%"},
-            {"Compounding Annual Return", "0%"},
-            {"Drawdown", "0%"},
-            {"Expectancy", "0"},
-            {"Start Equity", "100000"},
-            {"End Equity", "99994.65"},
-            {"Net Profit", "0%"},
-            {"Sharpe Ratio", "0"},
-            {"Sortino Ratio", "0"},
-            {"Probabilistic Sharpe Ratio", "0%"},
-            {"Loss Rate", "0%"},
-            {"Win Rate", "0%"},
-            {"Profit-Loss Ratio", "0"},
-            {"Alpha", "0"},
-            {"Beta", "0"},
-            {"Annual Standard Deviation", "0"},
-            {"Annual Variance", "0"},
-            {"Information Ratio", "0"},
-            {"Tracking Error", "0"},
-            {"Treynor Ratio", "0"},
-            {"Total Fees", "$2.00"},
-            {"Estimated Strategy Capacity", "$18000000000.00"},
-            {"Lowest Capacity Asset", "SPY R735QTJ8XC9X"},
-            {"Portfolio Turnover", "0.29%"},
-            {"OrderListHash", "105d3eb1a9b673ce88238a93a63d6d08"}
-        };
+        public Dictionary<string, string> ExpectedStatistics =>
+            new()
+            {
+                { "Total Orders", "2" },
+                { "Average Win", "0%" },
+                { "Average Loss", "0%" },
+                { "Compounding Annual Return", "0%" },
+                { "Drawdown", "0%" },
+                { "Expectancy", "0" },
+                { "Start Equity", "100000" },
+                { "End Equity", "99994.65" },
+                { "Net Profit", "0%" },
+                { "Sharpe Ratio", "0" },
+                { "Sortino Ratio", "0" },
+                { "Probabilistic Sharpe Ratio", "0%" },
+                { "Loss Rate", "0%" },
+                { "Win Rate", "0%" },
+                { "Profit-Loss Ratio", "0" },
+                { "Alpha", "0" },
+                { "Beta", "0" },
+                { "Annual Standard Deviation", "0" },
+                { "Annual Variance", "0" },
+                { "Information Ratio", "0" },
+                { "Tracking Error", "0" },
+                { "Treynor Ratio", "0" },
+                { "Total Fees", "$2.00" },
+                { "Estimated Strategy Capacity", "$18000000000.00" },
+                { "Lowest Capacity Asset", "SPY R735QTJ8XC9X" },
+                { "Portfolio Turnover", "0.29%" },
+                { "OrderListHash", "105d3eb1a9b673ce88238a93a63d6d08" }
+            };
     }
 }

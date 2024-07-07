@@ -13,6 +13,8 @@
  * limitations under the License.
 */
 
+using System;
+using System.Collections.Generic;
 using QuantConnect.Algorithm.Framework.Alphas;
 using QuantConnect.Algorithm.Framework.Execution;
 using QuantConnect.Algorithm.Framework.Portfolio;
@@ -20,8 +22,6 @@ using QuantConnect.Algorithm.Framework.Risk;
 using QuantConnect.Algorithm.Framework.Selection;
 using QuantConnect.Data;
 using QuantConnect.Orders.Fees;
-using System;
-using System.Collections.Generic;
 
 namespace QuantConnect.Algorithm.CSharp.Alphas
 {
@@ -91,11 +91,13 @@ namespace QuantConnect.Algorithm.CSharp.Alphas
 
             public override IEnumerable<Insight> Update(QCAlgorithm algorithm, Slice data)
             {
-                return Insight.Group(new[]
-                {
-                    Insight.Price(_ultraLong, _period, InsightDirection.Down, _magnitude),
-                    Insight.Price(_ultraShort, _period, InsightDirection.Down, _magnitude)
-                });
+                return Insight.Group(
+                    new[]
+                    {
+                        Insight.Price(_ultraLong, _period, InsightDirection.Down, _magnitude),
+                        Insight.Price(_ultraShort, _period, InsightDirection.Down, _magnitude)
+                    }
+                );
             }
         }
     }

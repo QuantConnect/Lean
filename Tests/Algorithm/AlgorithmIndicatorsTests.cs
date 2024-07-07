@@ -41,14 +41,33 @@ namespace QuantConnect.Tests.Algorithm
         {
             _algorithm = new AlgorithmStub();
             var historyProvider = new SubscriptionDataReaderHistoryProvider();
-            historyProvider.Initialize(new HistoryProviderInitializeParameters(null, null,
-                TestGlobals.DataProvider, TestGlobals.DataCacheProvider, TestGlobals.MapFileProvider, TestGlobals.FactorFileProvider,
-                null, true, new DataPermissionManager(), _algorithm.ObjectStore, _algorithm.Settings));
+            historyProvider.Initialize(
+                new HistoryProviderInitializeParameters(
+                    null,
+                    null,
+                    TestGlobals.DataProvider,
+                    TestGlobals.DataCacheProvider,
+                    TestGlobals.MapFileProvider,
+                    TestGlobals.FactorFileProvider,
+                    null,
+                    true,
+                    new DataPermissionManager(),
+                    _algorithm.ObjectStore,
+                    _algorithm.Settings
+                )
+            );
             _algorithm.SetHistoryProvider(historyProvider);
 
             _algorithm.SetDateTime(new DateTime(2013, 10, 11, 15, 0, 0));
             _equity = _algorithm.AddEquity("SPY").Symbol;
-            _option = Symbol.CreateOption("SPY", Market.USA, OptionStyle.American, OptionRight.Call, 450m, new DateTime(2023, 9, 1));
+            _option = Symbol.CreateOption(
+                "SPY",
+                Market.USA,
+                OptionStyle.American,
+                OptionRight.Call,
+                450m,
+                new DateTime(2023, 9, 1)
+            );
             _algorithm.AddOptionContract(_option);
             _algorithm.Settings.AutomaticIndicatorWarmUp = true;
         }
@@ -62,7 +81,10 @@ namespace QuantConnect.Tests.Algorithm
             var indicator = _algorithm.ABANDS(Symbols.SPY, 20, selector: mockSelector.Object);
 
             Assert.IsTrue(indicator.IsReady);
-            mockSelector.Verify(_ => _(It.IsAny<IBaseData>()), Times.Exactly(indicator.WarmUpPeriod));
+            mockSelector.Verify(
+                _ => _(It.IsAny<IBaseData>()),
+                Times.Exactly(indicator.WarmUpPeriod)
+            );
         }
 
         [Test]
@@ -111,15 +133,31 @@ namespace QuantConnect.Tests.Algorithm
             {
                 if (testCase == "StartAndEndDate")
                 {
-                    indicatorValues = _algorithm.IndicatorHistory(indicator, _equity, new DateTime(2013, 10, 07), new DateTime(2013, 10, 11), Resolution.Minute);
+                    indicatorValues = _algorithm.IndicatorHistory(
+                        indicator,
+                        _equity,
+                        new DateTime(2013, 10, 07),
+                        new DateTime(2013, 10, 11),
+                        Resolution.Minute
+                    );
                 }
                 else if (testCase == "Span")
                 {
-                    indicatorValues = _algorithm.IndicatorHistory(indicator, _equity, TimeSpan.FromDays(5), Resolution.Minute);
+                    indicatorValues = _algorithm.IndicatorHistory(
+                        indicator,
+                        _equity,
+                        TimeSpan.FromDays(5),
+                        Resolution.Minute
+                    );
                 }
                 else
                 {
-                    indicatorValues = _algorithm.IndicatorHistory(indicator, _equity, (int)(4 * 60 * 6.5), Resolution.Minute);
+                    indicatorValues = _algorithm.IndicatorHistory(
+                        indicator,
+                        _equity,
+                        (int)(4 * 60 * 6.5),
+                        Resolution.Minute
+                    );
                 }
                 // BollingerBands, upper, lower, mid bands, std, band width, percentB, price
                 Assert.AreEqual(8, indicatorValues.First().GetStorageDictionary().Count);
@@ -131,17 +169,35 @@ namespace QuantConnect.Tests.Algorithm
                 {
                     if (testCase == "StartAndEndDate")
                     {
-                        indicatorValues = _algorithm.IndicatorHistory(indicator.ToPython(), _equity.ToPython(), new DateTime(2013, 10, 07), new DateTime(2013, 10, 11), Resolution.Minute);
+                        indicatorValues = _algorithm.IndicatorHistory(
+                            indicator.ToPython(),
+                            _equity.ToPython(),
+                            new DateTime(2013, 10, 07),
+                            new DateTime(2013, 10, 11),
+                            Resolution.Minute
+                        );
                     }
                     else if (testCase == "Span")
                     {
-                        indicatorValues = _algorithm.IndicatorHistory(indicator.ToPython(), _equity.ToPython(), TimeSpan.FromDays(5), Resolution.Minute);
+                        indicatorValues = _algorithm.IndicatorHistory(
+                            indicator.ToPython(),
+                            _equity.ToPython(),
+                            TimeSpan.FromDays(5),
+                            Resolution.Minute
+                        );
                     }
                     else
                     {
-                        indicatorValues = _algorithm.IndicatorHistory(indicator.ToPython(), _equity.ToPython(), (int)(4 * 60 * 6.5), Resolution.Minute);
+                        indicatorValues = _algorithm.IndicatorHistory(
+                            indicator.ToPython(),
+                            _equity.ToPython(),
+                            (int)(4 * 60 * 6.5),
+                            Resolution.Minute
+                        );
                     }
-                    dataCount = QuantBookIndicatorsTests.GetDataFrameLength(indicatorValues.DataFrame);
+                    dataCount = QuantBookIndicatorsTests.GetDataFrameLength(
+                        indicatorValues.DataFrame
+                    );
                 }
             }
 
@@ -176,15 +232,31 @@ namespace QuantConnect.Tests.Algorithm
             {
                 if (testCase == "StartAndEndDate")
                 {
-                    indicatorValues = _algorithm.IndicatorHistory(indicator, _equity, new DateTime(2013, 10, 07), new DateTime(2013, 10, 11), Resolution.Minute);
+                    indicatorValues = _algorithm.IndicatorHistory(
+                        indicator,
+                        _equity,
+                        new DateTime(2013, 10, 07),
+                        new DateTime(2013, 10, 11),
+                        Resolution.Minute
+                    );
                 }
                 else if (testCase == "Span")
                 {
-                    indicatorValues = _algorithm.IndicatorHistory(indicator, _equity, TimeSpan.FromDays(5), Resolution.Minute);
+                    indicatorValues = _algorithm.IndicatorHistory(
+                        indicator,
+                        _equity,
+                        TimeSpan.FromDays(5),
+                        Resolution.Minute
+                    );
                 }
                 else
                 {
-                    indicatorValues = _algorithm.IndicatorHistory(indicator, _equity, (int)(4 * 60 * 6.5), Resolution.Minute);
+                    indicatorValues = _algorithm.IndicatorHistory(
+                        indicator,
+                        _equity,
+                        (int)(4 * 60 * 6.5),
+                        Resolution.Minute
+                    );
                 }
                 // the TrueRange & the AVGTrueRange
                 Assert.AreEqual(2, indicatorValues.First().GetStorageDictionary().Count);
@@ -196,17 +268,35 @@ namespace QuantConnect.Tests.Algorithm
                 {
                     if (testCase == "StartAndEndDate")
                     {
-                        indicatorValues = _algorithm.IndicatorHistory(indicator.ToPython(), _equity.ToPython(), new DateTime(2013, 10, 07), new DateTime(2013, 10, 11), Resolution.Minute);
+                        indicatorValues = _algorithm.IndicatorHistory(
+                            indicator.ToPython(),
+                            _equity.ToPython(),
+                            new DateTime(2013, 10, 07),
+                            new DateTime(2013, 10, 11),
+                            Resolution.Minute
+                        );
                     }
                     else if (testCase == "Span")
                     {
-                        indicatorValues = _algorithm.IndicatorHistory(indicator.ToPython(), _equity.ToPython(), TimeSpan.FromDays(5), Resolution.Minute);
+                        indicatorValues = _algorithm.IndicatorHistory(
+                            indicator.ToPython(),
+                            _equity.ToPython(),
+                            TimeSpan.FromDays(5),
+                            Resolution.Minute
+                        );
                     }
                     else
                     {
-                        indicatorValues = _algorithm.IndicatorHistory(indicator.ToPython(), _equity.ToPython(), (int)(4 * 60 * 6.5), Resolution.Minute);
+                        indicatorValues = _algorithm.IndicatorHistory(
+                            indicator.ToPython(),
+                            _equity.ToPython(),
+                            (int)(4 * 60 * 6.5),
+                            Resolution.Minute
+                        );
                     }
-                    dataCount = QuantBookIndicatorsTests.GetDataFrameLength(indicatorValues.DataFrame);
+                    dataCount = QuantBookIndicatorsTests.GetDataFrameLength(
+                        indicatorValues.DataFrame
+                    );
                 }
             }
 
@@ -235,7 +325,11 @@ namespace QuantConnect.Tests.Algorithm
             IndicatorHistory indicatorValues;
             if (language == Language.CSharp)
             {
-                indicatorValues = _algorithm.IndicatorHistory(indicator, new[] { _equity, referenceSymbol }, TimeSpan.FromDays(5));
+                indicatorValues = _algorithm.IndicatorHistory(
+                    indicator,
+                    new[] { _equity, referenceSymbol },
+                    TimeSpan.FromDays(5)
+                );
                 Assert.AreEqual(1, indicatorValues.First().GetStorageDictionary().Count);
                 dataCount = indicatorValues.ToList().Count;
             }
@@ -243,8 +337,14 @@ namespace QuantConnect.Tests.Algorithm
             {
                 using (Py.GIL())
                 {
-                    indicatorValues = _algorithm.IndicatorHistory(indicator.ToPython(), (new[] { _equity, referenceSymbol }).ToPython(), TimeSpan.FromDays(5));
-                    dataCount = QuantBookIndicatorsTests.GetDataFrameLength(indicatorValues.DataFrame);
+                    indicatorValues = _algorithm.IndicatorHistory(
+                        indicator.ToPython(),
+                        (new[] { _equity, referenceSymbol }).ToPython(),
+                        TimeSpan.FromDays(5)
+                    );
+                    dataCount = QuantBookIndicatorsTests.GetDataFrameLength(
+                        indicatorValues.DataFrame
+                    );
                 }
             }
 
@@ -265,7 +365,12 @@ namespace QuantConnect.Tests.Algorithm
             var indicator = new Beta(_equity, referenceSymbol, 10);
             _algorithm.SetDateTime(new DateTime(2013, 10, 11));
 
-            var indicatorValues = _algorithm.IndicatorHistory(indicator, new[] { _equity, referenceSymbol }, TimeSpan.FromDays(50), Resolution.Daily);
+            var indicatorValues = _algorithm.IndicatorHistory(
+                indicator,
+                new[] { _equity, referenceSymbol },
+                TimeSpan.FromDays(50),
+                Resolution.Daily
+            );
             Assert.AreEqual(0.676480102032563m, indicatorValues.Last().Price);
             Assert.AreEqual(0.676480102032563m, indicatorValues.Last().Current.Value);
         }
@@ -278,7 +383,11 @@ namespace QuantConnect.Tests.Algorithm
             var indicator = new Beta(_equity, referenceSymbol, 10);
             _algorithm.SetDateTime(new DateTime(2013, 10, 11));
 
-            var history = _algorithm.History(new[] { _equity, referenceSymbol }, TimeSpan.FromDays(5), Resolution.Minute);
+            var history = _algorithm.History(
+                new[] { _equity, referenceSymbol },
+                TimeSpan.FromDays(5),
+                Resolution.Minute
+            );
             int dataCount;
             if (language == Language.CSharp)
             {
@@ -303,12 +412,27 @@ namespace QuantConnect.Tests.Algorithm
         {
             var time = new DateTime(2014, 06, 07);
 
-            var put = Symbols.CreateOptionSymbol("AAPL", OptionRight.Call, 250m, new DateTime(2016, 01, 15));
-            var call = Symbols.CreateOptionSymbol("AAPL", OptionRight.Put, 250m, new DateTime(2016, 01, 15));
+            var put = Symbols.CreateOptionSymbol(
+                "AAPL",
+                OptionRight.Call,
+                250m,
+                new DateTime(2016, 01, 15)
+            );
+            var call = Symbols.CreateOptionSymbol(
+                "AAPL",
+                OptionRight.Put,
+                250m,
+                new DateTime(2016, 01, 15)
+            );
             var indicator = new Delta(option: put, mirrorOption: call);
             _algorithm.SetDateTime(time);
 
-            var indicatorValues = _algorithm.IndicatorHistory(indicator, new[] { put, call, put.Underlying }, 60 * 10, resolution: Resolution.Minute);
+            var indicatorValues = _algorithm.IndicatorHistory(
+                indicator,
+                new[] { put, call, put.Underlying },
+                60 * 10,
+                resolution: Resolution.Minute
+            );
 
             Assert.IsTrue(indicator.IsReady);
             Assert.AreEqual(389, indicatorValues.Count);
@@ -324,7 +448,8 @@ namespace QuantConnect.Tests.Algorithm
                 PyModule module;
                 if (testCases == 1)
                 {
-                    module = PyModule.FromString("PythonCustomIndicator",
+                    module = PyModule.FromString(
+                        "PythonCustomIndicator",
                         @"
 from AlgorithmImports import *
 class GoodCustomIndicator(PythonIndicator):
@@ -332,11 +457,13 @@ class GoodCustomIndicator(PythonIndicator):
         self.Value = 0
     def Update(self, input):
         self.Value = input.Value
-        return True");
+        return True"
+                    );
                 }
                 else
                 {
-                    module = PyModule.FromString("PythonCustomIndicator",
+                    module = PyModule.FromString(
+                        "PythonCustomIndicator",
                         @"
 from AlgorithmImports import *
 class GoodCustomIndicator:
@@ -345,11 +472,17 @@ class GoodCustomIndicator:
         self.Value = 0
     def Update(self, input):
         self.Value = input.Value
-        return True");
+        return True"
+                    );
                 }
 
                 var goodIndicator = module.GetAttr("GoodCustomIndicator").Invoke();
-                var pandasFrame = _algorithm.IndicatorHistory(goodIndicator, _equity.ToPython(), TimeSpan.FromDays(5), Resolution.Minute);
+                var pandasFrame = _algorithm.IndicatorHistory(
+                    goodIndicator,
+                    _equity.ToPython(),
+                    TimeSpan.FromDays(5),
+                    Resolution.Minute
+                );
                 var dataCount = QuantBookIndicatorsTests.GetDataFrameLength(pandasFrame.DataFrame);
 
                 Assert.IsTrue((bool)((dynamic)goodIndicator).IsReady);

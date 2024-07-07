@@ -13,14 +13,14 @@
  * limitations under the License.
 */
 
+using System;
+using System.Collections.Generic;
+using System.Linq;
 using Python.Runtime;
 using QuantConnect.Data;
 using QuantConnect.Data.Market;
 using QuantConnect.Indicators;
 using QuantConnect.Util;
-using System;
-using System.Collections.Generic;
-using System.Linq;
 
 namespace QuantConnect.Python
 {
@@ -61,13 +61,22 @@ namespace QuantConnect.Python
             var sliceDataDict = new Dictionary<SecurityIdentifier, PandasData>();
 
             // if no data type is requested we check all
-            var requestedTick = dataType == null || dataType == typeof(Tick) || dataType == typeof(OpenInterest);
+            var requestedTick =
+                dataType == null || dataType == typeof(Tick) || dataType == typeof(OpenInterest);
             var requestedTradeBar = dataType == null || dataType == typeof(TradeBar);
             var requestedQuoteBar = dataType == null || dataType == typeof(QuoteBar);
 
             foreach (var slice in data)
             {
-                AddSliceDataTypeDataToDict(slice, requestedTick, requestedTradeBar, requestedQuoteBar, sliceDataDict, ref maxLevels, dataType);
+                AddSliceDataTypeDataToDict(
+                    slice,
+                    requestedTick,
+                    requestedTradeBar,
+                    requestedQuoteBar,
+                    sliceDataDict,
+                    ref maxLevels,
+                    dataType
+                );
             }
 
             using (Py.GIL())
@@ -76,7 +85,9 @@ namespace QuantConnect.Python
                 {
                     return _pandas.DataFrame();
                 }
-                using var dataFrames = sliceDataDict.Select(x => x.Value.ToPandasDataFrame(maxLevels)).ToPyListUnSafe();
+                using var dataFrames = sliceDataDict
+                    .Select(x => x.Value.ToPandasDataFrame(maxLevels))
+                    .ToPyListUnSafe();
                 using var sortDic = Py.kw("sort", true);
                 var result = _concat.Invoke(new[] { dataFrames }, sortDic);
 
@@ -125,7 +136,9 @@ namespace QuantConnect.Python
         /// </summary>
         /// <param name="data">Dictionary with a list of <see cref="IndicatorDataPoint"/></param>
         /// <returns><see cref="PyObject"/> containing a pandas.DataFrame</returns>
-        public PyObject GetIndicatorDataFrame(IEnumerable<KeyValuePair<string, List<IndicatorDataPoint>>> data)
+        public PyObject GetIndicatorDataFrame(
+            IEnumerable<KeyValuePair<string, List<IndicatorDataPoint>>> data
+        )
         {
             using (Py.GIL())
             {
@@ -164,7 +177,11 @@ namespace QuantConnect.Python
                     foreach (var kvp in pyDictData.Items())
                     {
                         currentKvp = kvp;
-                        AddSeriesToPyDict(kvp[0].As<string>(), kvp[1].As<List<IndicatorDataPoint>>(), seriesPyDict);
+                        AddSeriesToPyDict(
+                            kvp[0].As<string>(),
+                            kvp[1].As<List<IndicatorDataPoint>>(),
+                            seriesPyDict
+                        );
                     }
 
                     return MakeIndicatorDataFrame(seriesPyDict);
@@ -173,10 +190,18 @@ namespace QuantConnect.Python
                 {
                     if (currentKvp != null)
                     {
-                        inputTypeStr = $"{currentKvp[0].GetPythonType()}: {currentKvp[1].GetPythonType()}";
+                        inputTypeStr =
+                            $"{currentKvp[0].GetPythonType()}: {currentKvp[1].GetPythonType()}";
                     }
 
-                    throw new ArgumentException(Messages.PandasConverter.ConvertToDictionaryFailed(inputTypeStr, targetTypeStr, e.Message), e);
+                    throw new ArgumentException(
+                        Messages.PandasConverter.ConvertToDictionaryFailed(
+                            inputTypeStr,
+                            targetTypeStr,
+                            e.Message
+                        ),
+                        e
+                    );
                 }
             }
         }
@@ -207,7 +232,7 @@ namespace QuantConnect.Python
             foreach (var point in points)
             {
                 index.Add(point.EndTime);
-                values.Add((double) point.Value);
+                values.Add((double)point.Value);
             }
             pyDict.SetItem(key.ToLowerInvariant(), _pandas.Series(values, index));
         }
@@ -219,14 +244,25 @@ namespace QuantConnect.Python
         /// <returns><see cref="PyObject"/> containing a pandas.DataFrame</returns>
         private PyObject MakeIndicatorDataFrame(PyDict pyDict)
         {
-            return _pandas.DataFrame(pyDict, columns: pyDict.Keys().Select(x => x.As<string>().ToLowerInvariant()).OrderBy(x => x));
+            return _pandas.DataFrame(
+                pyDict,
+                columns: pyDict
+                    .Keys()
+                    .Select(x => x.As<string>().ToLowerInvariant())
+                    .OrderBy(x => x)
+            );
         }
 
         /// <summary>
         /// Gets the <see cref="PandasData"/> for the given symbol if it exists in the dictionary, otherwise it creates a new instance with the
         /// given base data and adds it to the dictionary
         /// </summary>
-        private PandasData GetPandasDataValue(IDictionary<SecurityIdentifier, PandasData> sliceDataDict, Symbol symbol, object data, ref int maxLevels)
+        private PandasData GetPandasDataValue(
+            IDictionary<SecurityIdentifier, PandasData> sliceDataDict,
+            Symbol symbol,
+            object data,
+            ref int maxLevels
+        )
         {
             PandasData value;
             if (!sliceDataDict.TryGetValue(symbol.ID, out value))
@@ -241,14 +277,27 @@ namespace QuantConnect.Python
         /// <summary>
         /// Adds each slice data corresponding to the requested data type to the pandas data dictionary
         /// </summary>
-        private void AddSliceDataTypeDataToDict(Slice slice, bool requestedTick, bool requestedTradeBar, bool requestedQuoteBar, IDictionary<SecurityIdentifier, PandasData> sliceDataDict, ref int maxLevels, Type dataType = null)
+        private void AddSliceDataTypeDataToDict(
+            Slice slice,
+            bool requestedTick,
+            bool requestedTradeBar,
+            bool requestedQuoteBar,
+            IDictionary<SecurityIdentifier, PandasData> sliceDataDict,
+            ref int maxLevels,
+            Type dataType = null
+        )
         {
             HashSet<SecurityIdentifier> _addedData = null;
 
             for (int i = 0; i < slice.AllData.Count; i++)
             {
                 var baseData = slice.AllData[i];
-                var value = GetPandasDataValue(sliceDataDict, baseData.Symbol, baseData, ref maxLevels);
+                var value = GetPandasDataValue(
+                    sliceDataDict,
+                    baseData.Symbol,
+                    baseData,
+                    ref maxLevels
+                );
 
                 if (value.IsCustomData)
                 {
@@ -257,9 +306,14 @@ namespace QuantConnect.Python
                 else
                 {
                     var tick = requestedTick ? baseData as Tick : null;
-                    if(tick == null)
+                    if (tick == null)
                     {
-                        if (!requestedTradeBar && !requestedQuoteBar && dataType != null && baseData.GetType().IsAssignableTo(dataType))
+                        if (
+                            !requestedTradeBar
+                            && !requestedQuoteBar
+                            && dataType != null
+                            && baseData.GetType().IsAssignableTo(dataType)
+                        )
                         {
                             // support for auxiliary data history requests
                             value.Add(baseData);

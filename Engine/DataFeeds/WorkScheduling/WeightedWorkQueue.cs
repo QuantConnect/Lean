@@ -15,10 +15,10 @@
 */
 
 using System;
-using System.Threading;
-using System.Collections.Generic;
 using System.Collections.Concurrent;
+using System.Collections.Generic;
 using System.Runtime.CompilerServices;
+using System.Threading;
 
 namespace QuantConnect.Lean.Engine.DataFeeds.WorkScheduling
 {
@@ -64,7 +64,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds.WorkScheduling
                     workItem = Get();
                     if (workItem == null)
                     {
-                        if(_singleCallWork != null)
+                        if (_singleCallWork != null)
                         {
                             try
                             {
@@ -80,7 +80,10 @@ namespace QuantConnect.Lean.Engine.DataFeeds.WorkScheduling
                         }
 
                         // no work to do, lets sleep and try again
-                        WaitHandle.WaitAny(waitHandles, Math.Min(1 + (waitedPreviousLoop * 10), 250));
+                        WaitHandle.WaitAny(
+                            waitHandles,
+                            Math.Min(1 + (waitedPreviousLoop * 10), 250)
+                        );
                         waitedPreviousLoop++;
                         continue;
                     }

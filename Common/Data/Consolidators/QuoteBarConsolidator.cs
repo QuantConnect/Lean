@@ -30,18 +30,14 @@ namespace QuantConnect.Data.Consolidators
         /// </summary>
         /// <param name="period">The minimum span of time before emitting a consolidated bar</param>
         public QuoteBarConsolidator(TimeSpan period)
-            : base(period)
-        {
-        }
+            : base(period) { }
 
         /// <summary>
         /// Initializes a new instance of the <see cref="QuoteBarConsolidator"/> class
         /// </summary>
         /// <param name="maxCount">The number of pieces to accept before emitting a consolidated bar</param>
         public QuoteBarConsolidator(int maxCount)
-            : base(maxCount)
-        {
-        }
+            : base(maxCount) { }
 
         /// <summary>
         /// Initializes a new instance of the <see cref="QuoteBarConsolidator"/> class
@@ -49,27 +45,21 @@ namespace QuantConnect.Data.Consolidators
         /// <param name="maxCount">The number of pieces to accept before emitting a consolidated bar</param>
         /// <param name="period">The minimum span of time before emitting a consolidated bar</param>
         public QuoteBarConsolidator(int maxCount, TimeSpan period)
-            : base(maxCount, period)
-        {
-        }
+            : base(maxCount, period) { }
 
         /// <summary>
         /// Creates a consolidator to produce a new 'QuoteBar' representing the last count pieces of data or the period, whichever comes first
         /// </summary>
         /// <param name="func">Func that defines the start time of a consolidated data</param>
         public QuoteBarConsolidator(Func<DateTime, CalendarInfo> func)
-            : base(func)
-        {
-        }
+            : base(func) { }
 
         /// <summary>
         /// Creates a consolidator to produce a new 'QuoteBar' representing the last count pieces of data or the period, whichever comes first
         /// </summary>
         /// <param name="pyfuncobj">Python function object that defines the start time of a consolidated data</param>
         public QuoteBarConsolidator(PyObject pyfuncobj)
-            : base(pyfuncobj)
-        {
-        }
+            : base(pyfuncobj) { }
 
         /// <summary>
         /// Aggregates the new 'data' into the 'workingBar'. The 'workingBar' will be
@@ -84,14 +74,29 @@ namespace QuantConnect.Data.Consolidators
 
             if (workingBar == null)
             {
-                workingBar = new QuoteBar(GetRoundedBarTime(data), data.Symbol, null, 0, null, 0, IsTimeBased && Period.HasValue ? Period : data.Period);
+                workingBar = new QuoteBar(
+                    GetRoundedBarTime(data),
+                    data.Symbol,
+                    null,
+                    0,
+                    null,
+                    0,
+                    IsTimeBased && Period.HasValue ? Period : data.Period
+                );
 
                 // open ask and bid should match previous close ask and bid
                 if (Consolidated != null)
                 {
                     // note that we will only fill forward previous close ask and bid when a new data point comes in and we generate a new working bar which is not a fill forward bar
                     var previous = Consolidated as QuoteBar;
-                    workingBar.Update(0, previous.Bid?.Close ?? 0, previous.Ask?.Close ?? 0, 0, previous.LastBidSize, previous.LastAskSize);
+                    workingBar.Update(
+                        0,
+                        previous.Bid?.Close ?? 0,
+                        previous.Ask?.Close ?? 0,
+                        0,
+                        previous.LastBidSize,
+                        previous.LastAskSize
+                    );
                 }
             }
             else if (!IsTimeBased)
@@ -112,8 +117,10 @@ namespace QuantConnect.Data.Consolidators
                 else
                 {
                     workingBar.Bid.Close = bid.Close;
-                    if (workingBar.Bid.High < bid.High) workingBar.Bid.High = bid.High;
-                    if (workingBar.Bid.Low > bid.Low) workingBar.Bid.Low = bid.Low;
+                    if (workingBar.Bid.High < bid.High)
+                        workingBar.Bid.High = bid.High;
+                    if (workingBar.Bid.Low > bid.Low)
+                        workingBar.Bid.Low = bid.Low;
                 }
             }
             if (ask != null)
@@ -126,8 +133,10 @@ namespace QuantConnect.Data.Consolidators
                 else
                 {
                     workingBar.Ask.Close = ask.Close;
-                    if (workingBar.Ask.High < ask.High) workingBar.Ask.High = ask.High;
-                    if (workingBar.Ask.Low > ask.Low) workingBar.Ask.Low = ask.Low;
+                    if (workingBar.Ask.High < ask.High)
+                        workingBar.Ask.High = ask.High;
+                    if (workingBar.Ask.Low > ask.Low)
+                        workingBar.Ask.Low = ask.Low;
                 }
             }
 

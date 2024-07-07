@@ -23,17 +23,20 @@ namespace QuantConnect.Tests.Indicators
     [TestFixture, Parallelizable(ParallelScope.Fixtures)]
     public class RhoTests : OptionBaseIndicatorTests<Rho>
     {
-        protected override IndicatorBase<IndicatorDataPoint> CreateIndicator()
-            => new Rho("testRhoIndicator", _symbol, 0.0403m, 0.0m);
+        protected override IndicatorBase<IndicatorDataPoint> CreateIndicator() =>
+            new Rho("testRhoIndicator", _symbol, 0.0403m, 0.0m);
 
-        protected override OptionIndicatorBase CreateIndicator(IRiskFreeInterestRateModel riskFreeRateModel)
-            => new Rho("testRhoIndicator", _symbol, riskFreeRateModel);
+        protected override OptionIndicatorBase CreateIndicator(
+            IRiskFreeInterestRateModel riskFreeRateModel
+        ) => new Rho("testRhoIndicator", _symbol, riskFreeRateModel);
 
-        protected override OptionIndicatorBase CreateIndicator(IRiskFreeInterestRateModel riskFreeRateModel, IDividendYieldModel dividendYieldModel)
-            => new Rho("testRhoIndicator", _symbol, riskFreeRateModel, dividendYieldModel);
+        protected override OptionIndicatorBase CreateIndicator(
+            IRiskFreeInterestRateModel riskFreeRateModel,
+            IDividendYieldModel dividendYieldModel
+        ) => new Rho("testRhoIndicator", _symbol, riskFreeRateModel, dividendYieldModel);
 
-        protected override OptionIndicatorBase CreateIndicator(QCAlgorithm algorithm)
-            => algorithm.R(_symbol);
+        protected override OptionIndicatorBase CreateIndicator(QCAlgorithm algorithm) =>
+            algorithm.R(_symbol);
 
         [SetUp]
         public void SetUp()
@@ -70,11 +73,34 @@ namespace QuantConnect.Tests.Indicators
         [TestCase(0.409, 470.0, OptionRight.Put, 180, -0.1230, OptionStyle.American)]
         [TestCase(2.642, 430.0, OptionRight.Call, 180, 0.5306, OptionStyle.American)]
         [TestCase(27.772, 430.0, OptionRight.Put, 180, -1.3180, OptionStyle.American)]
-        public void ComparesAgainstExternalData2(decimal price, decimal spotPrice, OptionRight right, int expiry, double refRho, OptionStyle style)
+        public void ComparesAgainstExternalData2(
+            decimal price,
+            decimal spotPrice,
+            OptionRight right,
+            int expiry,
+            double refRho,
+            OptionStyle style
+        )
         {
-            var symbol = Symbol.CreateOption("SPY", Market.USA, style, right, 450m, _reference.AddDays(expiry));
-            var model = style == OptionStyle.European ? OptionPricingModelType.BlackScholes : OptionPricingModelType.BinomialCoxRossRubinstein;
-            var indicator = new Rho(symbol, 0.053m, 0.0153m, optionModel: model, ivModel: OptionPricingModelType.BlackScholes);
+            var symbol = Symbol.CreateOption(
+                "SPY",
+                Market.USA,
+                style,
+                right,
+                450m,
+                _reference.AddDays(expiry)
+            );
+            var model =
+                style == OptionStyle.European
+                    ? OptionPricingModelType.BlackScholes
+                    : OptionPricingModelType.BinomialCoxRossRubinstein;
+            var indicator = new Rho(
+                symbol,
+                0.053m,
+                0.0153m,
+                optionModel: model,
+                ivModel: OptionPricingModelType.BlackScholes
+            );
 
             var optionDataPoint = new IndicatorDataPoint(symbol, _reference, price);
             var spotDataPoint = new IndicatorDataPoint(symbol.Underlying, _reference, spotPrice);

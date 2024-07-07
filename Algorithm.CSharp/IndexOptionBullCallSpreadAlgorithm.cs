@@ -1,4 +1,4 @@
-/* 
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -13,8 +13,8 @@
  * limitations under the License.
 */
 
-using System.Linq;
 using System.Collections.Generic;
+using System.Linq;
 using QuantConnect.Data;
 using QuantConnect.Orders;
 using QuantConnect.Securities.Option;
@@ -23,7 +23,8 @@ namespace QuantConnect.Algorithm.CSharp
 {
     public class IndexOptionBullCallSpreadAlgorithm : QCAlgorithm
     {
-        private Symbol _spxw, _spy;
+        private Symbol _spxw,
+            _spy;
         private IEnumerable<OrderTicket> _tickets = Enumerable.Empty<OrderTicket>();
 
         public override void Initialize()
@@ -46,23 +47,33 @@ namespace QuantConnect.Algorithm.CSharp
             {
                 MarketOrder(_spy, 100);
             }
-        
+
             // Return if hedge position presents
-            if (_tickets.Any(x => Portfolio[x.Symbol].Invested)) return;
+            if (_tickets.Any(x => Portfolio[x.Symbol].Invested))
+                return;
 
             // Get the OptionChain
-            if (!slice.OptionChains.TryGetValue(_spxw, out var chain)) return;
+            if (!slice.OptionChains.TryGetValue(_spxw, out var chain))
+                return;
 
             // Get the nearest expiry date of the contracts
             var expiry = chain.Min(x => x.Expiry);
-            
+
             // Select the call Option contracts with the nearest expiry and sort by strike price
-            var calls = chain.Where(x => x.Expiry == expiry && x.Right == OptionRight.Call)
-                            .OrderBy(x => x.Strike).ToArray();
-            if (calls.Length < 2) return;
+            var calls = chain
+                .Where(x => x.Expiry == expiry && x.Right == OptionRight.Call)
+                .OrderBy(x => x.Strike)
+                .ToArray();
+            if (calls.Length < 2)
+                return;
 
             // Buy the bull call spread
-            var bullCallSpread = OptionStrategies.BullCallSpread(_spxw, calls[0].Strike, calls[^1].Strike, expiry);
+            var bullCallSpread = OptionStrategies.BullCallSpread(
+                _spxw,
+                calls[0].Strike,
+                calls[^1].Strike,
+                expiry
+            );
             _tickets = Buy(bullCallSpread, 1);
         }
     }

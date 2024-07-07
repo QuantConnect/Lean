@@ -14,11 +14,11 @@
 */
 
 using System;
-using System.IO;
 using System.Globalization;
+using System.IO;
 using QuantConnect.Data;
-using QuantConnect.Util;
 using QuantConnect.Indicators;
+using QuantConnect.Util;
 
 namespace QuantConnect.Algorithm.CSharp
 {
@@ -105,13 +105,37 @@ namespace QuantConnect.Algorithm.CSharp
             get { return QuantConnect.Time.OneDay; }
         }
 
-        public override SubscriptionDataSource GetSource(SubscriptionDataConfig config, DateTime date, bool isLiveMode)
+        public override SubscriptionDataSource GetSource(
+            SubscriptionDataConfig config,
+            DateTime date,
+            bool isLiveMode
+        )
         {
-            var source = Path.Combine(Globals.DataFolder, "equity", "usa", config.Resolution.ToString().ToLower(), LeanData.GenerateZipFileName(config.Symbol, date, config.Resolution, config.TickType));
-            return new SubscriptionDataSource(source, SubscriptionTransportMedium.LocalFile, FileFormat.Csv);
+            var source = Path.Combine(
+                Globals.DataFolder,
+                "equity",
+                "usa",
+                config.Resolution.ToString().ToLower(),
+                LeanData.GenerateZipFileName(
+                    config.Symbol,
+                    date,
+                    config.Resolution,
+                    config.TickType
+                )
+            );
+            return new SubscriptionDataSource(
+                source,
+                SubscriptionTransportMedium.LocalFile,
+                FileFormat.Csv
+            );
         }
 
-        public override BaseData Reader(SubscriptionDataConfig config, string line, DateTime date, bool isLiveMode)
+        public override BaseData Reader(
+            SubscriptionDataConfig config,
+            string line,
+            DateTime date,
+            bool isLiveMode
+        )
         {
             var csv = line.ToCsv(6);
             var _scaleFactor = 1 / 10000m;
@@ -119,7 +143,11 @@ namespace QuantConnect.Algorithm.CSharp
             var custom = new CustomData
             {
                 Symbol = config.Symbol,
-                Time = DateTime.ParseExact(csv[0], DateFormat.TwelveCharacter, CultureInfo.InvariantCulture),
+                Time = DateTime.ParseExact(
+                    csv[0],
+                    DateFormat.TwelveCharacter,
+                    CultureInfo.InvariantCulture
+                ),
                 Open = csv[1].ToDecimal() * _scaleFactor,
                 High = csv[2].ToDecimal() * _scaleFactor,
                 Low = csv[3].ToDecimal() * _scaleFactor,

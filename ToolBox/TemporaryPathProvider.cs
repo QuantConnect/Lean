@@ -50,17 +50,20 @@ namespace QuantConnect.ToolBox
                 paths = TemporaryPaths.ToList(s => s);
                 TemporaryPaths.Clear();
             }
-            Parallel.ForEach(paths, path =>
-            {
-                try
+            Parallel.ForEach(
+                paths,
+                path =>
                 {
-                    Directory.Delete(path, recursive: true);
+                    try
+                    {
+                        Directory.Delete(path, recursive: true);
+                    }
+                    catch
+                    {
+                        // pass
+                    }
                 }
-                catch
-                {
-                    // pass
-                }
-            });
+            );
         }
     }
 }

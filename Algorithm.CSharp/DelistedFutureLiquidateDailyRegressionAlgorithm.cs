@@ -21,7 +21,8 @@ namespace QuantConnect.Algorithm.CSharp
     /// <summary>
     /// Regression algorithm which reproduces GH issue 4446, in the case of daily resolution.
     /// </summary>
-    public class DelistedFutureLiquidateDailyRegressionAlgorithm : DelistedFutureLiquidateRegressionAlgorithm
+    public class DelistedFutureLiquidateDailyRegressionAlgorithm
+        : DelistedFutureLiquidateRegressionAlgorithm
     {
         protected override Resolution Resolution => Resolution.Daily;
 
@@ -33,35 +34,36 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// This is used by the regression test system to indicate what the expected statistics are from running the algorithm
         /// </summary>
-        public override Dictionary<string, string> ExpectedStatistics => new Dictionary<string, string>
-        {
-            {"Total Orders", "2"},
-            {"Average Win", "7.78%"},
-            {"Average Loss", "0%"},
-            {"Compounding Annual Return", "38.033%"},
-            {"Drawdown", "0.200%"},
-            {"Expectancy", "0"},
-            {"Start Equity", "100000"},
-            {"End Equity", "107779.1"},
-            {"Net Profit", "7.779%"},
-            {"Sharpe Ratio", "3.107"},
-            {"Sortino Ratio", "0"},
-            {"Probabilistic Sharpe Ratio", "99.459%"},
-            {"Loss Rate", "0%"},
-            {"Win Rate", "100%"},
-            {"Profit-Loss Ratio", "0"},
-            {"Alpha", "0.143"},
-            {"Beta", "0.271"},
-            {"Annual Standard Deviation", "0.08"},
-            {"Annual Variance", "0.006"},
-            {"Information Ratio", "-1.446"},
-            {"Tracking Error", "0.098"},
-            {"Treynor Ratio", "0.918"},
-            {"Total Fees", "$2.15"},
-            {"Estimated Strategy Capacity", "$60000000000.00"},
-            {"Lowest Capacity Asset", "ES VMKLFZIH2MTD"},
-            {"Portfolio Turnover", "1.96%"},
-            {"OrderListHash", "7ba852ca7413743ca2be8310611f14d1"}
-        };
+        public override Dictionary<string, string> ExpectedStatistics =>
+            new Dictionary<string, string>
+            {
+                { "Total Orders", "2" },
+                { "Average Win", "7.78%" },
+                { "Average Loss", "0%" },
+                { "Compounding Annual Return", "38.033%" },
+                { "Drawdown", "0.200%" },
+                { "Expectancy", "0" },
+                { "Start Equity", "100000" },
+                { "End Equity", "107779.1" },
+                { "Net Profit", "7.779%" },
+                { "Sharpe Ratio", "3.107" },
+                { "Sortino Ratio", "0" },
+                { "Probabilistic Sharpe Ratio", "99.459%" },
+                { "Loss Rate", "0%" },
+                { "Win Rate", "100%" },
+                { "Profit-Loss Ratio", "0" },
+                { "Alpha", "0.143" },
+                { "Beta", "0.271" },
+                { "Annual Standard Deviation", "0.08" },
+                { "Annual Variance", "0.006" },
+                { "Information Ratio", "-1.446" },
+                { "Tracking Error", "0.098" },
+                { "Treynor Ratio", "0.918" },
+                { "Total Fees", "$2.15" },
+                { "Estimated Strategy Capacity", "$60000000000.00" },
+                { "Lowest Capacity Asset", "ES VMKLFZIH2MTD" },
+                { "Portfolio Turnover", "1.96%" },
+                { "OrderListHash", "7ba852ca7413743ca2be8310611f14d1" }
+            };
     }
 }

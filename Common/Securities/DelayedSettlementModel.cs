@@ -63,7 +63,9 @@ namespace QuantConnect.Securities
                 portfolio.UnsettledCashBook[currency].AddAmount(amount);
 
                 // find the correct settlement date (usually T+3 or T+1)
-                var settlementDate = applyFundsParameters.UtcTime.ConvertFromUtc(security.Exchange.TimeZone).Date;
+                var settlementDate = applyFundsParameters
+                    .UtcTime.ConvertFromUtc(security.Exchange.TimeZone)
+                    .Date;
                 for (var i = 0; i < _numberOfDays; i++)
                 {
                     settlementDate = settlementDate.AddDays(1);
@@ -74,11 +76,15 @@ namespace QuantConnect.Securities
                 }
 
                 // use correct settlement time
-                var settlementTimeUtc = settlementDate.Add(_timeOfDay).ConvertToUtc(security.Exchange.Hours.TimeZone);
+                var settlementTimeUtc = settlementDate
+                    .Add(_timeOfDay)
+                    .ConvertToUtc(security.Exchange.Hours.TimeZone);
 
                 lock (_unsettledCashAmounts)
                 {
-                    _unsettledCashAmounts.Enqueue(new UnsettledCashAmount(settlementTimeUtc, currency, amount));
+                    _unsettledCashAmounts.Enqueue(
+                        new UnsettledCashAmount(settlementTimeUtc, currency, amount)
+                    );
                 }
             }
             else
@@ -103,15 +109,19 @@ namespace QuantConnect.Securities
         {
             lock (_unsettledCashAmounts)
             {
-                while (_unsettledCashAmounts.TryPeek(out var item)
+                while (
+                    _unsettledCashAmounts.TryPeek(out var item)
                     // check if settlement time has passed
-                    && settlementParameters.UtcTime >= item.SettlementTimeUtc)
+                    && settlementParameters.UtcTime >= item.SettlementTimeUtc
+                )
                 {
                     // remove item from unsettled funds list
                     _unsettledCashAmounts.Dequeue();
 
                     // update unsettled cashbook
-                    settlementParameters.Portfolio.UnsettledCashBook[item.Currency].AddAmount(-item.Amount);
+                    settlementParameters
+                        .Portfolio.UnsettledCashBook[item.Currency]
+                        .AddAmount(-item.Amount);
 
                     // update settled cashbook
                     settlementParameters.Portfolio.CashBook[item.Currency].AddAmount(item.Amount);
@@ -133,9 +143,13 @@ namespace QuantConnect.Securities
                     return default;
                 }
 
-                return new CashAmount(_unsettledCashAmounts.Sum(x => _cashBook.ConvertToAccountCurrency(x.Amount, x.Currency)), accountCurrency);
+                return new CashAmount(
+                    _unsettledCashAmounts.Sum(x =>
+                        _cashBook.ConvertToAccountCurrency(x.Amount, x.Currency)
+                    ),
+                    accountCurrency
+                );
             }
-
         }
     }
 }

@@ -15,12 +15,12 @@
 */
 
 using System;
-using System.Collections.Generic;
-using QuantConnect.Data;
-using QuantConnect.Data.UniverseSelection;
 using System.Collections;
+using System.Collections.Generic;
 using System.Linq;
+using QuantConnect.Data;
 using QuantConnect.Data.Auxiliary;
+using QuantConnect.Data.UniverseSelection;
 using QuantConnect.Interfaces;
 using QuantConnect.Logging;
 
@@ -29,7 +29,8 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
     /// <summary>
     /// Enumerates live futures symbol universe data into <see cref="BaseDataCollection"/> instances
     /// </summary>
-    public class DataQueueFuturesChainUniverseDataCollectionEnumerator : IEnumerator<BaseDataCollection>
+    public class DataQueueFuturesChainUniverseDataCollectionEnumerator
+        : IEnumerator<BaseDataCollection>
     {
         private readonly SubscriptionRequest _subscriptionRequest;
         private readonly IDataQueueUniverseProvider _universeProvider;
@@ -47,7 +48,8 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
         public DataQueueFuturesChainUniverseDataCollectionEnumerator(
             SubscriptionRequest subscriptionRequest,
             IDataQueueUniverseProvider universeProvider,
-            ITimeProvider timeProvider)
+            ITimeProvider timeProvider
+        )
         {
             _subscriptionRequest = subscriptionRequest;
             _universeProvider = universeProvider;
@@ -69,9 +71,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
         /// <summary>
         /// Performs application-defined tasks associated with freeing, releasing, or resetting unmanaged resources.
         /// </summary>
-        public void Dispose()
-        {
-        }
+        public void Dispose() { }
 
         /// <summary>
         /// Advances the enumerator to the next element of the collection.
@@ -84,7 +84,11 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
             if (!_needNewCurrent)
             {
                 // refresh on date change (in exchange time zone)
-                _needNewCurrent = _timeProvider.GetUtcNow().ConvertFromUtc(_subscriptionRequest.Configuration.ExchangeTimeZone).Date != _lastEmitTime.Date;
+                _needNewCurrent =
+                    _timeProvider
+                        .GetUtcNow()
+                        .ConvertFromUtc(_subscriptionRequest.Configuration.ExchangeTimeZone)
+                        .Date != _lastEmitTime.Date;
             }
 
             if (_needNewCurrent)
@@ -95,13 +99,19 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
                     return true;
                 }
 
-                var localTime = _timeProvider.GetUtcNow()
+                var localTime = _timeProvider
+                    .GetUtcNow()
                     .ConvertFromUtc(_subscriptionRequest.Configuration.ExchangeTimeZone)
                     .RoundDown(_subscriptionRequest.Configuration.Increment);
 
                 // loading the list of futures contracts and converting them into zip entries
-                var symbols = _universeProvider.LookupSymbols(_subscriptionRequest.Security.Symbol, false);
-                var zipEntries = symbols.Select(x => new ZipEntryName { Time = localTime, Symbol = x } as BaseData).ToList();
+                var symbols = _universeProvider.LookupSymbols(
+                    _subscriptionRequest.Security.Symbol,
+                    false
+                );
+                var zipEntries = symbols
+                    .Select(x => new ZipEntryName { Time = localTime, Symbol = x } as BaseData)
+                    .ToList();
                 var current = new BaseDataCollection
                 {
                     Symbol = _subscriptionRequest.Security.Symbol,
@@ -112,7 +122,9 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
 
                 _lastEmitTime = localTime;
 
-                Log.Trace($"DataQueueFuturesChainUniverseDataCollectionEnumerator({current.Symbol}): Emitting data point: {current.EndTime}. Count: {current.Data.Count}");
+                Log.Trace(
+                    $"DataQueueFuturesChainUniverseDataCollectionEnumerator({current.Symbol}): Emitting data point: {current.EndTime}. Count: {current.Data.Count}"
+                );
 
                 Current = current;
                 _needNewCurrent = false;

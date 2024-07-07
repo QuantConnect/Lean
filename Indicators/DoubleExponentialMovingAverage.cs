@@ -23,7 +23,9 @@ namespace QuantConnect.Indicators
     /// The Generalized DEMA (GD) is calculated with the following formula:
     /// GD = (volumeFactor+1) * EMA(t,period) - volumeFactor * EMA2
     /// </summary>
-    public class DoubleExponentialMovingAverage : IndicatorBase<IndicatorDataPoint>, IIndicatorWarmUpPeriodProvider
+    public class DoubleExponentialMovingAverage
+        : IndicatorBase<IndicatorDataPoint>,
+            IIndicatorWarmUpPeriodProvider
     {
         private readonly int _period;
         private readonly decimal _volumeFactor;
@@ -32,7 +34,7 @@ namespace QuantConnect.Indicators
 
         /// <summary>
         /// Initializes a new instance of the <see cref="DoubleExponentialMovingAverage"/> class using the specified name and period.
-        /// </summary> 
+        /// </summary>
         /// <param name="name">The name of this indicator</param>
         /// <param name="period">The period of the DEMA</param>
         /// <param name="volumeFactor">The volume factor of the DEMA (value must be in the [0,1] range, set to 1 for standard DEMA)</param>
@@ -47,13 +49,11 @@ namespace QuantConnect.Indicators
 
         /// <summary>
         /// Initializes a new instance of the <see cref="DoubleExponentialMovingAverage"/> class using the specified period.
-        /// </summary> 
+        /// </summary>
         /// <param name="period">The period of the DEMA</param>
         /// <param name="volumeFactor">The volume factor of the DEMA (value must be in the [0,1] range, set to 1 for standard DEMA)</param>
         public DoubleExponentialMovingAverage(int period, decimal volumeFactor = 1m)
-            : this($"DEMA({period})", period, volumeFactor)
-        {
-        }
+            : this($"DEMA({period})", period, volumeFactor) { }
 
         /// <summary>
         /// Gets a flag indicating when this indicator is ready and fully initialized

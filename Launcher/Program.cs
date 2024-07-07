@@ -27,7 +27,8 @@ namespace QuantConnect.Lean.Launcher
 {
     public class Program
     {
-        private const string _collapseMessage = "Unhandled exception breaking past controls and causing collapse of algorithm node. This is likely a memory leak of an external dependency or the underlying OS terminating the LEAN engine.";
+        private const string _collapseMessage =
+            "Unhandled exception breaking past controls and causing collapse of algorithm node. This is likely a memory leak of an external dependency or the underlying OS terminating the LEAN engine.";
         private static LeanEngineSystemHandlers leanEngineSystemHandlers;
         private static LeanEngineAlgorithmHandlers leanEngineAlgorithmHandlers;
         private static AlgorithmNodePacket job;
@@ -54,7 +55,9 @@ namespace QuantConnect.Lean.Launcher
             // expect first argument to be config file name
             if (args.Length > 0)
             {
-                Config.MergeCommandLineArgumentsWithConfiguration(LeanArgumentParser.ParseArguments(args));
+                Config.MergeCommandLineArgumentsWithConfiguration(
+                    LeanArgumentParser.ParseArguments(args)
+                );
             }
 
             //Name thread for the profiler:
@@ -70,7 +73,8 @@ namespace QuantConnect.Lean.Launcher
 
             if (job == null)
             {
-                const string jobNullMessage = "Engine.Main(): Sorry we could not process this algorithm request.";
+                const string jobNullMessage =
+                    "Engine.Main(): Sorry we could not process this algorithm request.";
                 Log.Error(jobNullMessage);
                 throw new ArgumentException(jobNullMessage);
             }
@@ -82,12 +86,25 @@ namespace QuantConnect.Lean.Launcher
             // we also don't want to reprocess redelivered jobs
             if (job.Redelivered)
             {
-                Log.Error("Engine.Run(): Job Version: " + job.Version + "  Deployed Version: " + Globals.Version + " Redelivered: " + job.Redelivered);
+                Log.Error(
+                    "Engine.Run(): Job Version: "
+                        + job.Version
+                        + "  Deployed Version: "
+                        + Globals.Version
+                        + " Redelivered: "
+                        + job.Redelivered
+                );
                 //Tiny chance there was an uncontrolled collapse of a server, resulting in an old user task circulating.
                 //In this event kill the old algorithm and leave a message so the user can later review.
-                leanEngineSystemHandlers.Api.SetAlgorithmStatus(job.AlgorithmId, AlgorithmStatus.RuntimeError, _collapseMessage);
+                leanEngineSystemHandlers.Api.SetAlgorithmStatus(
+                    job.AlgorithmId,
+                    AlgorithmStatus.RuntimeError,
+                    _collapseMessage
+                );
                 leanEngineSystemHandlers.Notify.SetAuthentication(job);
-                leanEngineSystemHandlers.Notify.Send(new RuntimeErrorPacket(job.UserId, job.AlgorithmId, _collapseMessage));
+                leanEngineSystemHandlers.Notify.Send(
+                    new RuntimeErrorPacket(job.UserId, job.AlgorithmId, _collapseMessage)
+                );
                 leanEngineSystemHandlers.JobQueue.AcknowledgeJob(job);
                 Exit(1);
             }
@@ -100,11 +117,20 @@ namespace QuantConnect.Lean.Launcher
                 // Create the algorithm manager and start our engine
                 algorithmManager = new AlgorithmManager(Globals.LiveMode, job);
 
-                leanEngineSystemHandlers.LeanManager.Initialize(leanEngineSystemHandlers, leanEngineAlgorithmHandlers, job, algorithmManager);
+                leanEngineSystemHandlers.LeanManager.Initialize(
+                    leanEngineSystemHandlers,
+                    leanEngineAlgorithmHandlers,
+                    job,
+                    algorithmManager
+                );
 
                 OS.Initialize();
 
-                var engine = new Engine.Engine(leanEngineSystemHandlers, leanEngineAlgorithmHandlers, Globals.LiveMode);
+                var engine = new Engine.Engine(
+                    leanEngineSystemHandlers,
+                    leanEngineAlgorithmHandlers,
+                    Globals.LiveMode
+                );
                 engine.Run(job, algorithmManager, assemblyPath, WorkerThread.Instance);
             }
             finally
@@ -122,7 +148,9 @@ namespace QuantConnect.Lean.Launcher
 
             // Stop the algorithm
             algorithmManager.SetStatus(AlgorithmStatus.Stopped);
-            Log.Trace("Program.ExitKeyPress(): Lean instance has been cancelled, shutting down safely now");
+            Log.Trace(
+                "Program.ExitKeyPress(): Lean instance has been cancelled, shutting down safely now"
+            );
         }
 
         public static void Exit(int exitCode)

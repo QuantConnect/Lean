@@ -29,7 +29,8 @@ namespace QuantConnect.Algorithm.CSharp
     /// </summary>
     public class OptionExerciseRegressionAlgorithm : QCAlgorithm, IRegressionAlgorithmDefinition
     {
-        private Symbol _equity, _option;
+        private Symbol _equity,
+            _option;
         private Symbol _contractSymbol;
         private bool _purchasedUnderlying;
         private int quantity = 20;
@@ -44,16 +45,20 @@ namespace QuantConnect.Algorithm.CSharp
             var option = AddOption("AAPL", Resolution.Minute);
             _option = option.Symbol;
 
-            option.SetFilter(universe => from symbol in universe
-                                .WeeklysOnly()
-                                .Strikes(-5, +5)
-                                .Expiration(TimeSpan.Zero, TimeSpan.FromDays(29))
-                                         select symbol);
+            option.SetFilter(universe =>
+                from symbol in universe
+                    .WeeklysOnly()
+                    .Strikes(-5, +5)
+                    .Expiration(TimeSpan.Zero, TimeSpan.FromDays(29))
+                select symbol
+            );
         }
 
         public override void OnOrderEvent(OrderEvent orderEvent)
         {
-            Log($"Order Symbol: {orderEvent.Symbol}; Quantity: {orderEvent.Quantity}; Status: {orderEvent.Status}");
+            Log(
+                $"Order Symbol: {orderEvent.Symbol}; Quantity: {orderEvent.Quantity}; Status: {orderEvent.Status}"
+            );
 
             if (orderEvent.Symbol == _equity && orderEvent.Status == OrderStatus.Filled)
             {
@@ -75,7 +80,10 @@ namespace QuantConnect.Algorithm.CSharp
             }
 
             // Buy a contract and exercise it immediately
-            if (_purchasedUnderlying && slice.OptionChains.TryGetValue(_option, out OptionChain chain))
+            if (
+                _purchasedUnderlying
+                && slice.OptionChains.TryGetValue(_option, out OptionChain chain)
+            )
             {
                 var contract = chain
                     .Where(x => x.Right == OptionRight.Put)
@@ -96,7 +104,9 @@ namespace QuantConnect.Algorithm.CSharp
         {
             if (Portfolio[_equity].Quantity != 0)
             {
-                throw new RegressionTestException("Regression equity holdings should be zero after exercise.");
+                throw new RegressionTestException(
+                    "Regression equity holdings should be zero after exercise."
+                );
             }
         }
 
@@ -128,35 +138,36 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// This is used by the regression test system to indicate what the expected statistics are from running the algorithm
         /// </summary>
-        public Dictionary<string, string> ExpectedStatistics => new Dictionary<string, string>
-        {
-            {"Total Orders", "3"},
-            {"Average Win", "2.13%"},
-            {"Average Loss", "-2.21%"},
-            {"Compounding Annual Return", "-12.347%"},
-            {"Drawdown", "0.100%"},
-            {"Expectancy", "-0.019"},
-            {"Start Equity", "1000000"},
-            {"End Equity", "998677"},
-            {"Net Profit", "-0.132%"},
-            {"Sharpe Ratio", "0"},
-            {"Sortino Ratio", "0"},
-            {"Probabilistic Sharpe Ratio", "0%"},
-            {"Loss Rate", "50%"},
-            {"Win Rate", "50%"},
-            {"Profit-Loss Ratio", "0.96"},
-            {"Alpha", "0"},
-            {"Beta", "0"},
-            {"Annual Standard Deviation", "0"},
-            {"Annual Variance", "0"},
-            {"Information Ratio", "-9.486"},
-            {"Tracking Error", "0.008"},
-            {"Treynor Ratio", "0"},
-            {"Total Fees", "$23.00"},
-            {"Estimated Strategy Capacity", "$420000.00"},
-            {"Lowest Capacity Asset", "AAPL 2ZQA0P58YFYIU|AAPL R735QTJ8XC9X"},
-            {"Portfolio Turnover", "66.12%"},
-            {"OrderListHash", "e448ec4e631d4215a2cae661e3a219ed"}
-        };
+        public Dictionary<string, string> ExpectedStatistics =>
+            new Dictionary<string, string>
+            {
+                { "Total Orders", "3" },
+                { "Average Win", "2.13%" },
+                { "Average Loss", "-2.21%" },
+                { "Compounding Annual Return", "-12.347%" },
+                { "Drawdown", "0.100%" },
+                { "Expectancy", "-0.019" },
+                { "Start Equity", "1000000" },
+                { "End Equity", "998677" },
+                { "Net Profit", "-0.132%" },
+                { "Sharpe Ratio", "0" },
+                { "Sortino Ratio", "0" },
+                { "Probabilistic Sharpe Ratio", "0%" },
+                { "Loss Rate", "50%" },
+                { "Win Rate", "50%" },
+                { "Profit-Loss Ratio", "0.96" },
+                { "Alpha", "0" },
+                { "Beta", "0" },
+                { "Annual Standard Deviation", "0" },
+                { "Annual Variance", "0" },
+                { "Information Ratio", "-9.486" },
+                { "Tracking Error", "0.008" },
+                { "Treynor Ratio", "0" },
+                { "Total Fees", "$23.00" },
+                { "Estimated Strategy Capacity", "$420000.00" },
+                { "Lowest Capacity Asset", "AAPL 2ZQA0P58YFYIU|AAPL R735QTJ8XC9X" },
+                { "Portfolio Turnover", "66.12%" },
+                { "OrderListHash", "e448ec4e631d4215a2cae661e3a219ed" }
+            };
     }
 }

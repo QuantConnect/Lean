@@ -1,11 +1,11 @@
 /*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
- * 
- * Licensed under the Apache License, Version 2.0 (the "License"); 
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -33,14 +33,21 @@ namespace QuantConnect.Data.UniverseSelection
         /// <param name="currentTimeUtc">The current utc frontier time</param>
         /// <param name="maximumEndTimeUtc"></param>
         /// <returns>The subscription requests for the security to be given to the data feed</returns>
-        public delegate IEnumerable<SubscriptionRequest> GetSubscriptionRequestsDelegate(Security security, DateTime currentTimeUtc, DateTime maximumEndTimeUtc);
+        public delegate IEnumerable<SubscriptionRequest> GetSubscriptionRequestsDelegate(
+            Security security,
+            DateTime currentTimeUtc,
+            DateTime maximumEndTimeUtc
+        );
 
         /// <summary>
         /// Initializes a new instance of the <see cref="GetSubscriptionRequestsUniverseDecorator"/> class
         /// </summary>
         /// <param name="universe">The universe to be decorated</param>
         /// <param name="getRequests"></param>
-        public GetSubscriptionRequestsUniverseDecorator(Universe universe, GetSubscriptionRequestsDelegate getRequests)
+        public GetSubscriptionRequestsUniverseDecorator(
+            Universe universe,
+            GetSubscriptionRequestsDelegate getRequests
+        )
             : base(universe)
         {
             _getRequests = getRequests;
@@ -53,7 +60,11 @@ namespace QuantConnect.Data.UniverseSelection
         /// <param name="currentTimeUtc">The current time in utc. This is the frontier time of the algorithm</param>
         /// <param name="maximumEndTimeUtc">The max end time</param>
         /// <returns>All subscriptions required by this security</returns>
-        public override IEnumerable<SubscriptionRequest> GetSubscriptionRequests(Security security, DateTime currentTimeUtc, DateTime maximumEndTimeUtc)
+        public override IEnumerable<SubscriptionRequest> GetSubscriptionRequests(
+            Security security,
+            DateTime currentTimeUtc,
+            DateTime maximumEndTimeUtc
+        )
         {
             return _getRequests(security, currentTimeUtc, maximumEndTimeUtc);
         }

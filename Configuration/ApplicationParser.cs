@@ -21,8 +21,14 @@ namespace QuantConnect.Configuration
         /// <param name="options">The applications command line available options</param>
         /// <param name="noArgsShowHelp">To show help when no command line arguments were provided</param>
         /// <returns>The user provided options. Key is option name</returns>
-        public static Dictionary<string, object> Parse(string applicationName, string applicationDescription, string applicationHelpText,
-                                                       string[] args, List<CommandLineOption> options, bool noArgsShowHelp = false)
+        public static Dictionary<string, object> Parse(
+            string applicationName,
+            string applicationDescription,
+            string applicationHelpText,
+            string[] args,
+            List<CommandLineOption> options,
+            bool noArgsShowHelp = false
+        )
         {
             var application = new CommandLineApplication
             {
@@ -35,9 +41,11 @@ namespace QuantConnect.Configuration
 
             // This is a helper/shortcut method to display version info - it is creating a regular Option, with some defaults.
             // The default help text is "Show version Information"
-            application.VersionOption("-v|-V|--version",
+            application.VersionOption(
+                "-v|-V|--version",
                 () =>
-                    $"Version {Assembly.GetEntryAssembly().GetCustomAttribute<AssemblyInformationalVersionAttribute>()?.InformationalVersion}");
+                    $"Version {Assembly.GetEntryAssembly().GetCustomAttribute<AssemblyInformationalVersionAttribute>()?.InformationalVersion}"
+            );
 
             var optionsObject = new Dictionary<string, object>();
 
@@ -45,7 +53,9 @@ namespace QuantConnect.Configuration
 
             foreach (var option in options)
             {
-                listOfOptions.Add(application.Option($"--{option.Name}", option.Description, option.Type));
+                listOfOptions.Add(
+                    application.Option($"--{option.Name}", option.Description, option.Type)
+                );
             }
 
             application.OnExecute(() =>
@@ -106,7 +116,10 @@ namespace QuantConnect.Configuration
             Environment.Exit(exitCode);
         }
 
-        public static string GetParameterOrExit(IReadOnlyDictionary<string, object> optionsObject, string parameter)
+        public static string GetParameterOrExit(
+            IReadOnlyDictionary<string, object> optionsObject,
+            string parameter
+        )
         {
             if (!optionsObject.ContainsKey(parameter))
             {
@@ -115,12 +128,18 @@ namespace QuantConnect.Configuration
             return optionsObject[parameter].ToString();
         }
 
-        public static string GetParameterOrDefault(IReadOnlyDictionary<string, object> optionsObject, string parameter, string defaultValue)
+        public static string GetParameterOrDefault(
+            IReadOnlyDictionary<string, object> optionsObject,
+            string parameter,
+            string defaultValue
+        )
         {
             object value;
             if (!optionsObject.TryGetValue(parameter, out value))
             {
-                Console.WriteLine($"'{parameter}' was not specified. Using default value: '{defaultValue}'");
+                Console.WriteLine(
+                    $"'{parameter}' was not specified. Using default value: '{defaultValue}'"
+                );
                 return defaultValue;
             }
 

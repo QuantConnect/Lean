@@ -56,8 +56,13 @@ namespace QuantConnect.Securities
         /// <param name="minimumOrderMarginPortfolioPercentage">Configurable minimum order margin portfolio percentage to ignore orders with unrealistic small sizes</param>
         /// <param name="silenceNonErrorReasons">True will not return <see cref="GetMaximumOrderQuantityResult.Reason"/>
         /// set for non error situation, this is for performance</param>
-        public GetMaximumOrderQuantityForTargetBuyingPowerParameters(SecurityPortfolioManager portfolio, Security security,
-            decimal targetBuyingPower, decimal minimumOrderMarginPortfolioPercentage, bool silenceNonErrorReasons = false)
+        public GetMaximumOrderQuantityForTargetBuyingPowerParameters(
+            SecurityPortfolioManager portfolio,
+            Security security,
+            decimal targetBuyingPower,
+            decimal minimumOrderMarginPortfolioPercentage,
+            bool silenceNonErrorReasons = false
+        )
         {
             Portfolio = portfolio;
             Security = security;

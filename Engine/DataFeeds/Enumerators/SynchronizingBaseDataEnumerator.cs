@@ -14,10 +14,10 @@
  *
 */
 
-using QuantConnect.Data;
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using QuantConnect.Data;
 
 namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
 {
@@ -32,17 +32,14 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
         /// </summary>
         /// <param name="enumerators">The enumerators to be synchronized. NOTE: Assumes the same time zone for all data</param>
         public SynchronizingBaseDataEnumerator(params IEnumerator<BaseData>[] enumerators)
-            : this((IEnumerable<IEnumerator>)enumerators)
-        {
-        }
+            : this((IEnumerable<IEnumerator>)enumerators) { }
 
         /// <summary>
         /// Initializes a new instance of the <see cref="SynchronizingBaseDataEnumerator"/> class
         /// </summary>
         /// <param name="enumerators">The enumerators to be synchronized. NOTE: Assumes the same time zone for all data</param>
-        public SynchronizingBaseDataEnumerator(IEnumerable<IEnumerator> enumerators) : base((IEnumerable<IEnumerator<BaseData>>)enumerators)
-        {
-        }
+        public SynchronizingBaseDataEnumerator(IEnumerable<IEnumerator> enumerators)
+            : base((IEnumerable<IEnumerator<BaseData>>)enumerators) { }
 
         /// <summary>
         /// Gets the Timestamp for the data

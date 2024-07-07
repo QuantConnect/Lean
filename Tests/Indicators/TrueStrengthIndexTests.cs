@@ -41,7 +41,8 @@ namespace QuantConnect.Tests.Indicators
                 (ind, expected) =>
                 {
                     var tsi = (TrueStrengthIndex)ind;
-                    if (!tsi.Signal.IsReady) return;
+                    if (!tsi.Signal.IsReady)
+                        return;
                     Assert.AreEqual(expected, (double)tsi.Signal.Current.Value, delta: 1e-4);
                 }
             );

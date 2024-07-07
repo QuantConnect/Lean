@@ -46,7 +46,10 @@ namespace QuantConnect.Tests.Common
         [TestCase("ISE_GEMINI", "")]
         [TestCase("ISE_MERCURY", "")]
         [TestCase("OPRA", "")]
-        public void ExchangeCorrectlyReturnedAsSingleLetter(string exchange, string expectedExchangeCode)
+        public void ExchangeCorrectlyReturnedAsSingleLetter(
+            string exchange,
+            string expectedExchangeCode
+        )
         {
             var primaryExchange = exchange.GetPrimaryExchange();
             Assert.AreEqual(expectedExchangeCode, primaryExchange.Code);
@@ -56,19 +59,36 @@ namespace QuantConnect.Tests.Common
         [TestCase("ISE_GEMINI", "H", SecurityType.Option)]
         [TestCase("ISE_MERCURY", "J", SecurityType.Option)]
         [TestCase("OPRA", "O", SecurityType.Option)]
-        public void ExchangeCorrectlyReturnedAsSingleLetterSecurityType(string exchange, string expectedExchange, SecurityType securityType)
+        public void ExchangeCorrectlyReturnedAsSingleLetterSecurityType(
+            string exchange,
+            string expectedExchange,
+            SecurityType securityType
+        )
         {
-            Assert.AreEqual(expectedExchange, exchange.GetPrimaryExchangeCodeGetPrimaryExchange(securityType));
+            Assert.AreEqual(
+                expectedExchange,
+                exchange.GetPrimaryExchangeCodeGetPrimaryExchange(securityType)
+            );
         }
 
         [TestCaseSource(nameof(ExchangeCases))]
-        public void StringExchangeCorrectlyReturnedAsSingleLetter(Exchange expectedExchange, string exchange, string _, SecurityType securityType)
+        public void StringExchangeCorrectlyReturnedAsSingleLetter(
+            Exchange expectedExchange,
+            string exchange,
+            string _,
+            SecurityType securityType
+        )
         {
             Assert.AreEqual(expectedExchange, exchange.GetPrimaryExchange(securityType));
         }
 
         [TestCaseSource(nameof(ExchangeCases))]
-        public void ExchangeAsString(Exchange exchange, string _,  string expectedExchange, SecurityType __)
+        public void ExchangeAsString(
+            Exchange exchange,
+            string _,
+            string expectedExchange,
+            SecurityType __
+        )
         {
             Assert.AreEqual(expectedExchange, exchange.ToString());
         }
@@ -114,7 +134,6 @@ namespace QuantConnect.Tests.Common
                 new TestCaseData(true, null, null),
                 new TestCaseData(true, Exchange.NASDAQ, Exchange.NASDAQ),
                 new TestCaseData(true, Exchange.NYSE, Exchange.NYSE),
-
                 new TestCaseData(false, Exchange.UNKNOWN, Exchange.NYSE),
                 new TestCaseData(false, null, Exchange.NYSE),
                 new TestCaseData(false, Exchange.NSX, Exchange.NSE),
@@ -145,15 +164,12 @@ namespace QuantConnect.Tests.Common
                 new TestCaseData(Exchange.AMEX, "A", "AMEX", SecurityType.Equity),
                 new TestCaseData(Exchange.NSX, "C", "NSE", SecurityType.Equity),
                 new TestCaseData(Exchange.BSE, "BSE", "BSE", SecurityType.Equity),
-
                 new TestCaseData(Exchange.UNKNOWN, "O", "", SecurityType.Equity),
                 new TestCaseData(Exchange.UNKNOWN, "H", "", SecurityType.Equity),
                 new TestCaseData(Exchange.EDGA, "J", "EDGA", SecurityType.Equity),
-
                 new TestCaseData(Exchange.OPRA, "O", "OPRA", SecurityType.Option),
                 new TestCaseData(Exchange.ISE_GEMINI, "H", "ISE_GEMINI", SecurityType.Option),
                 new TestCaseData(Exchange.ISE_MERCURY, "J", "ISE_MERCURY", SecurityType.Option),
-
             };
         }
     }

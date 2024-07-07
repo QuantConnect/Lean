@@ -34,7 +34,9 @@ namespace QuantConnect.Util
         /// <returns>Hexadecimal number as a string. If .NET Color is null, returns default #000000</returns>
         protected override string Convert(Color value)
         {
-            return value.IsEmpty ? string.Empty : $"#{value.R.ToStringInvariant("X2")}{value.G.ToStringInvariant("X2")}{value.B.ToStringInvariant("X2")}";
+            return value.IsEmpty
+                ? string.Empty
+                : $"#{value.R.ToStringInvariant("X2")}{value.G.ToStringInvariant("X2")}{value.B.ToStringInvariant("X2")}";
         }
 
         /// <summary>
@@ -50,7 +52,8 @@ namespace QuantConnect.Util
             }
             if (value.Length != 7)
             {
-                var message = $"Unable to convert '{value}' to a Color. Requires string length of 7 including the leading hashtag.";
+                var message =
+                    $"Unable to convert '{value}' to a Color. Requires string length of 7 including the leading hashtag.";
                 throw new FormatException(message);
             }
 
@@ -69,7 +72,8 @@ namespace QuantConnect.Util
         {
             if (hexValue.Length != 2)
             {
-                var message = $"Unable to convert '{hexValue}' to an Integer. Requires string length of 2.";
+                var message =
+                    $"Unable to convert '{hexValue}' to an Integer. Requires string length of 2.";
                 throw new FormatException(message);
             }
 

@@ -13,9 +13,9 @@
  * limitations under the License.
 */
 
+using System.Collections.Generic;
 using System.Linq;
 using Newtonsoft.Json;
-using System.Collections.Generic;
 
 namespace QuantConnect
 {
@@ -27,246 +27,450 @@ namespace QuantConnect
         /// <summary>
         /// Unknown exchange value
         /// </summary>
-        public static Exchange UNKNOWN { get; } = new (string.Empty, string.Empty, "UNKNOWN", string.Empty);
+        public static Exchange UNKNOWN { get; } =
+            new(string.Empty, string.Empty, "UNKNOWN", string.Empty);
 
         /// <summary>
         /// The Members Exchange (MEMX) is an independently owned, technology-driven stock exchange
         /// </summary>
-        public static Exchange MEMX { get; }
-            = new("MEMX", "MM", "The Long-Term Stock Exchange", QuantConnect.Market.USA, SecurityType.Equity);
+        public static Exchange MEMX { get; } =
+            new(
+                "MEMX",
+                "MM",
+                "The Long-Term Stock Exchange",
+                QuantConnect.Market.USA,
+                SecurityType.Equity
+            );
 
         /// <summary>
         /// Long-Term Stock Exchange
         /// </summary>
-        public static Exchange LTSE { get; }
-            = new("LTSE", "L", "The Long-Term Stock Exchange", QuantConnect.Market.USA, SecurityType.Equity);
+        public static Exchange LTSE { get; } =
+            new(
+                "LTSE",
+                "L",
+                "The Long-Term Stock Exchange",
+                QuantConnect.Market.USA,
+                SecurityType.Equity
+            );
 
         /// <summary>
         /// National Association of Securities Dealers Automated Quotation.
         /// </summary>
-        public static Exchange NASDAQ { get; }
-            = new("NASDAQ", "Q", "National Association of Securities Dealers Automated Quotation", QuantConnect.Market.USA, SecurityType.Equity);
+        public static Exchange NASDAQ { get; } =
+            new(
+                "NASDAQ",
+                "Q",
+                "National Association of Securities Dealers Automated Quotation",
+                QuantConnect.Market.USA,
+                SecurityType.Equity
+            );
 
         /// <summary>
         /// Bats Global Markets, Better Alternative Trading System
         /// </summary>
-        public static Exchange BATS { get; }
-            = new("BATS", "Z", "Bats Global Markets, Better Alternative Trading System", QuantConnect.Market.USA, SecurityType.Equity);
+        public static Exchange BATS { get; } =
+            new(
+                "BATS",
+                "Z",
+                "Bats Global Markets, Better Alternative Trading System",
+                QuantConnect.Market.USA,
+                SecurityType.Equity
+            );
 
         /// <summary>
         /// New York Stock Archipelago Exchange
         /// </summary>
-        public static Exchange ARCA { get; }
-            = new("ARCA", "P", "New York Stock Archipelago Exchange", QuantConnect.Market.USA, SecurityType.Equity);
+        public static Exchange ARCA { get; } =
+            new(
+                "ARCA",
+                "P",
+                "New York Stock Archipelago Exchange",
+                QuantConnect.Market.USA,
+                SecurityType.Equity
+            );
 
         /// <summary>
         /// New York Stock Exchange
         /// </summary>
-        public static Exchange NYSE { get; }
-            = new("NYSE", "N", "New York Stock Exchange", QuantConnect.Market.USA, SecurityType.Equity);
+        public static Exchange NYSE { get; } =
+            new(
+                "NYSE",
+                "N",
+                "New York Stock Exchange",
+                QuantConnect.Market.USA,
+                SecurityType.Equity
+            );
 
         /// <summary>
         /// Smart Exchange
         /// </summary>
         /// <remarks>Brokerage will route to smart exchange</remarks>
-        public static Exchange SMART { get; }
-            = new("SMART", "SMART", "SMART Exchange", QuantConnect.Market.USA, SecurityType.Equity);
+        public static Exchange SMART { get; } =
+            new("SMART", "SMART", "SMART Exchange", QuantConnect.Market.USA, SecurityType.Equity);
 
         /// <summary>
         /// Over The Counter Exchange
         /// </summary>
-        public static Exchange OTCX { get; }
-            = new("OTCX", "OTCX", "Over the Counter Exchange", QuantConnect.Market.USA, SecurityType.Equity);
+        public static Exchange OTCX { get; } =
+            new(
+                "OTCX",
+                "OTCX",
+                "Over the Counter Exchange",
+                QuantConnect.Market.USA,
+                SecurityType.Equity
+            );
 
         /// <summary>
         /// The Investors Exchange
         /// </summary>
-        public static Exchange IEX { get; }
-            = new("IEX", "IEX", "Investors Exchange", QuantConnect.Market.USA, SecurityType.Equity);
+        public static Exchange IEX { get; } =
+            new("IEX", "IEX", "Investors Exchange", QuantConnect.Market.USA, SecurityType.Equity);
 
         /// <summary>
         /// National Stock Exchange
         /// </summary>
         /// <remarks>Is now known as the NYSE National</remarks>
-        public static Exchange NSX { get; }
-            = new("NSE", "C", "National Stock Exchange", QuantConnect.Market.USA, SecurityType.Equity);
+        public static Exchange NSX { get; } =
+            new(
+                "NSE",
+                "C",
+                "National Stock Exchange",
+                QuantConnect.Market.USA,
+                SecurityType.Equity
+            );
 
         /// <summary>
         /// The Financial Industry Regulatory Authority
         /// </summary>
-        public static Exchange FINRA { get; }
-            = new("FINRA", "D", "The Financial Industry Regulatory Authority", QuantConnect.Market.USA, SecurityType.Equity);
+        public static Exchange FINRA { get; } =
+            new(
+                "FINRA",
+                "D",
+                "The Financial Industry Regulatory Authority",
+                QuantConnect.Market.USA,
+                SecurityType.Equity
+            );
 
         /// <summary>
         /// Nasdaq International Securities Exchange
         /// </summary>
-        public static Exchange ISE { get; }
-            = new("ISE", "I", "Nasdaq International Securities Exchange", QuantConnect.Market.USA, SecurityType.Equity);
+        public static Exchange ISE { get; } =
+            new(
+                "ISE",
+                "I",
+                "Nasdaq International Securities Exchange",
+                QuantConnect.Market.USA,
+                SecurityType.Equity
+            );
 
         /// <summary>
         /// Chicago Stock Exchange
         /// </summary>
-        public static Exchange CSE { get; }
-            = new("CSE", "M", "Chicago Stock Exchange", QuantConnect.Market.USA, SecurityType.Equity);
+        public static Exchange CSE { get; } =
+            new("CSE", "M", "Chicago Stock Exchange", QuantConnect.Market.USA, SecurityType.Equity);
 
         /// <summary>
         /// The Chicago Board Options Exchange
         /// </summary>
-        public static Exchange CBOE { get; }
-            = new("CBOE", "W", "The Chicago Board Options Exchange", QuantConnect.Market.USA, SecurityType.Equity);
+        public static Exchange CBOE { get; } =
+            new(
+                "CBOE",
+                "W",
+                "The Chicago Board Options Exchange",
+                QuantConnect.Market.USA,
+                SecurityType.Equity
+            );
 
         /// <summary>
         /// The American Options Exchange
         /// </summary>
-        public static Exchange NASDAQ_BX { get; }
-            = new("NASDAQ_BX", "B", "National Association of Securities Dealers Automated Quotation BX", QuantConnect.Market.USA, SecurityType.Equity);
+        public static Exchange NASDAQ_BX { get; } =
+            new(
+                "NASDAQ_BX",
+                "B",
+                "National Association of Securities Dealers Automated Quotation BX",
+                QuantConnect.Market.USA,
+                SecurityType.Equity
+            );
 
         /// <summary>
         /// The Securities Industry Automation Corporation
         /// </summary>
-        public static Exchange SIAC { get; }
-            = new("SIAC", "SIAC", "The Securities Industry Automation Corporation", QuantConnect.Market.USA, SecurityType.Equity);
+        public static Exchange SIAC { get; } =
+            new(
+                "SIAC",
+                "SIAC",
+                "The Securities Industry Automation Corporation",
+                QuantConnect.Market.USA,
+                SecurityType.Equity
+            );
 
         /// <summary>
         /// CBOE EDGA U.S. equities Exchange
         /// </summary>
-        public static Exchange EDGA { get; }
-            = new("EDGA", "J", "CBOE EDGA U.S. equities Exchange", QuantConnect.Market.USA, SecurityType.Equity);
+        public static Exchange EDGA { get; } =
+            new(
+                "EDGA",
+                "J",
+                "CBOE EDGA U.S. equities Exchange",
+                QuantConnect.Market.USA,
+                SecurityType.Equity
+            );
 
         /// <summary>
         /// CBOE EDGX U.S. equities Exchange
         /// </summary>
-        public static Exchange EDGX { get; }
-            = new("EDGX", "K", "CBOE EDGX U.S. equities Exchange", QuantConnect.Market.USA, SecurityType.Equity);
+        public static Exchange EDGX { get; } =
+            new(
+                "EDGX",
+                "K",
+                "CBOE EDGX U.S. equities Exchange",
+                QuantConnect.Market.USA,
+                SecurityType.Equity
+            );
 
         /// <summary>
         /// National Association of Securities Dealers Automated Quotation PSX
         /// </summary>
-        public static Exchange NASDAQ_PSX { get; }
-            = new("NASDAQ_PSX", "X", "National Association of Securities Dealers Automated Quotation PSX", QuantConnect.Market.USA, SecurityType.Equity);
+        public static Exchange NASDAQ_PSX { get; } =
+            new(
+                "NASDAQ_PSX",
+                "X",
+                "National Association of Securities Dealers Automated Quotation PSX",
+                QuantConnect.Market.USA,
+                SecurityType.Equity
+            );
 
         /// <summary>
         /// National Association of Securities Dealers Automated Quotation PSX
         /// </summary>
-        public static Exchange BATS_Y { get; }
-            = new("BATS_Y", "Y", "Bats Global Markets, Better Alternative Trading System", QuantConnect.Market.USA, SecurityType.Equity);
+        public static Exchange BATS_Y { get; } =
+            new(
+                "BATS_Y",
+                "Y",
+                "Bats Global Markets, Better Alternative Trading System",
+                QuantConnect.Market.USA,
+                SecurityType.Equity
+            );
 
         /// <summary>
         /// The Boston Stock Exchange
         /// </summary>
         /// <remarks>Now NASDAQ OMX BX</remarks>
-        public static Exchange BOSTON { get; }
-            = new("BOSTON", "BB", "The Boston Stock Exchange", QuantConnect.Market.USA, SecurityType.Equity);
+        public static Exchange BOSTON { get; } =
+            new(
+                "BOSTON",
+                "BB",
+                "The Boston Stock Exchange",
+                QuantConnect.Market.USA,
+                SecurityType.Equity
+            );
 
         /// <summary>
         /// The American Stock Exchange
         /// </summary>
         /// <remarks>Now NYSE MKT</remarks>
-        public static Exchange AMEX { get; }
-            = new("AMEX", "A", "The American Stock Exchange", QuantConnect.Market.USA, SecurityType.Equity);
+        public static Exchange AMEX { get; } =
+            new(
+                "AMEX",
+                "A",
+                "The American Stock Exchange",
+                QuantConnect.Market.USA,
+                SecurityType.Equity
+            );
 
         /// <summary>
         /// Bombay Stock Exchange
         /// </summary>
-        public static Exchange BSE { get; }
-            = new("BSE", "BSE", "Bombay Stock Exchange", QuantConnect.Market.India, SecurityType.Equity);
+        public static Exchange BSE { get; } =
+            new(
+                "BSE",
+                "BSE",
+                "Bombay Stock Exchange",
+                QuantConnect.Market.India,
+                SecurityType.Equity
+            );
 
         /// <summary>
         /// National Stock Exchange of India
         /// </summary>
-        public static Exchange NSE { get; }
-            = new("NSE", "NSE", "National Stock Exchange of India", QuantConnect.Market.India, SecurityType.Equity);
+        public static Exchange NSE { get; } =
+            new(
+                "NSE",
+                "NSE",
+                "National Stock Exchange of India",
+                QuantConnect.Market.India,
+                SecurityType.Equity
+            );
 
         /// <summary>
         /// The American Options Exchange
         /// </summary>
         /// <remarks>Now NYSE Amex Options</remarks>
-        public static Exchange AMEX_Options { get; }
-            = new("AMEX", "A", "The American Options Exchange", QuantConnect.Market.USA, SecurityType.Option);
+        public static Exchange AMEX_Options { get; } =
+            new(
+                "AMEX",
+                "A",
+                "The American Options Exchange",
+                QuantConnect.Market.USA,
+                SecurityType.Option
+            );
 
         /// <summary>
         /// The Options Price Reporting Authority
         /// </summary>
-        public static Exchange OPRA { get; }
-            = new("OPRA", "O", "The Options Price Reporting Authority", QuantConnect.Market.USA, SecurityType.Option);
+        public static Exchange OPRA { get; } =
+            new(
+                "OPRA",
+                "O",
+                "The Options Price Reporting Authority",
+                QuantConnect.Market.USA,
+                SecurityType.Option
+            );
 
         /// <summary>
         /// CBOE Options Exchange
         /// </summary>
-        public static Exchange C2 { get; }
-            = new("C2", "W", "CBOE Options Exchange", QuantConnect.Market.USA, SecurityType.Option);
+        public static Exchange C2 { get; } =
+            new("C2", "W", "CBOE Options Exchange", QuantConnect.Market.USA, SecurityType.Option);
 
         /// <summary>
         /// Miami International Securities Options Exchange
         /// </summary>
-        public static Exchange MIAX { get; }
-            = new("MIAX", "M", "Miami International Securities Options Exchange", QuantConnect.Market.USA, SecurityType.Option);
+        public static Exchange MIAX { get; } =
+            new(
+                "MIAX",
+                "M",
+                "Miami International Securities Options Exchange",
+                QuantConnect.Market.USA,
+                SecurityType.Option
+            );
 
         /// <summary>
         /// MIAX Pearl Option and Equity exchange. Offers a Price-Time allocation and Maker-Taker fee structure
         /// </summary>
-        public static Exchange MIAX_PEARL { get; }
-            = new("MIAX_PEARL", "MP", "MIAX PEARL", QuantConnect.Market.USA, SecurityType.Option, SecurityType.Equity);
+        public static Exchange MIAX_PEARL { get; } =
+            new(
+                "MIAX_PEARL",
+                "MP",
+                "MIAX PEARL",
+                QuantConnect.Market.USA,
+                SecurityType.Option,
+                SecurityType.Equity
+            );
 
         /// <summary>
         /// Serves as a counterpart to MIAX Options and MIAX Pearl by providing Pro-Rata allocation like MIAX Options and a Maker-Taker fee structure like MIAX Pearl
         /// </summary>
-        public static Exchange MIAX_EMERALD { get; }
-            = new("MIAX_EMERALD", "ME", "MIAX EMERALD", QuantConnect.Market.USA, SecurityType.Option);
+        public static Exchange MIAX_EMERALD { get; } =
+            new("MIAX_EMERALD", "ME", "MIAX EMERALD", QuantConnect.Market.USA, SecurityType.Option);
 
         /// <summary>
         /// International Securities Options Exchange GEMINI
         /// </summary>
-        public static Exchange ISE_GEMINI { get; }
-            = new("ISE_GEMINI", "H", "International Securities Options Exchange GEMINI", QuantConnect.Market.USA, SecurityType.Option);
+        public static Exchange ISE_GEMINI { get; } =
+            new(
+                "ISE_GEMINI",
+                "H",
+                "International Securities Options Exchange GEMINI",
+                QuantConnect.Market.USA,
+                SecurityType.Option
+            );
 
         /// <summary>
         /// International Securities Options Exchange MERCURY
         /// </summary>
-        public static Exchange ISE_MERCURY { get; }
-            = new("ISE_MERCURY", "J", "International Securities Options Exchange MERCURY", QuantConnect.Market.USA, SecurityType.Option);
+        public static Exchange ISE_MERCURY { get; } =
+            new(
+                "ISE_MERCURY",
+                "J",
+                "International Securities Options Exchange MERCURY",
+                QuantConnect.Market.USA,
+                SecurityType.Option
+            );
 
         /// <summary>
         /// The Chicago Mercantile Exchange (CME), is an organized exchange for the trading of futures and options.
         /// </summary>
-        public static Exchange CME { get; }
-            = new("CME", "CME", "Futures and Options Chicago Mercantile Exchange", QuantConnect.Market.CME, SecurityType.Future, SecurityType.FutureOption);
+        public static Exchange CME { get; } =
+            new(
+                "CME",
+                "CME",
+                "Futures and Options Chicago Mercantile Exchange",
+                QuantConnect.Market.CME,
+                SecurityType.Future,
+                SecurityType.FutureOption
+            );
 
         /// <summary>
         /// The Chicago Board of Trade (CBOT) is a commodity exchange
         /// </summary>
-        public static Exchange CBOT { get; }
-            = new("CBOT", "CBOT", " Chicago Board of Trade Commodity Exchange", QuantConnect.Market.CBOT, SecurityType.Future, SecurityType.FutureOption);
+        public static Exchange CBOT { get; } =
+            new(
+                "CBOT",
+                "CBOT",
+                " Chicago Board of Trade Commodity Exchange",
+                QuantConnect.Market.CBOT,
+                SecurityType.Future,
+                SecurityType.FutureOption
+            );
 
         /// <summary>
         /// Cboe Futures Exchange
         /// </summary>
-        public static Exchange CFE { get; }
-            = new("CFE", "CFE", "CFE Futures Exchange", QuantConnect.Market.CFE, SecurityType.Future);
+        public static Exchange CFE { get; } =
+            new("CFE", "CFE", "CFE Futures Exchange", QuantConnect.Market.CFE, SecurityType.Future);
 
         /// <summary>
         /// COMEX Commodity Exchange
         /// </summary>
-        public static Exchange COMEX { get; }
-            = new("COMEX", "COMEX", "COMEX Futures Exchange", QuantConnect.Market.COMEX, SecurityType.Future);
+        public static Exchange COMEX { get; } =
+            new(
+                "COMEX",
+                "COMEX",
+                "COMEX Futures Exchange",
+                QuantConnect.Market.COMEX,
+                SecurityType.Future
+            );
 
         /// <summary>
         /// The Intercontinental Exchange
         /// </summary>
-        public static Exchange ICE { get; }
-            = new("ICE", "ICE", "The Intercontinental Exchange", QuantConnect.Market.ICE, SecurityType.Future);
+        public static Exchange ICE { get; } =
+            new(
+                "ICE",
+                "ICE",
+                "The Intercontinental Exchange",
+                QuantConnect.Market.ICE,
+                SecurityType.Future
+            );
 
         /// <summary>
         /// New York Mercantile Exchange
         /// </summary>
-        public static Exchange NYMEX { get; }
-            = new("NYMEX", "NYMEX", "New York Mercantile Exchange", QuantConnect.Market.NYMEX, SecurityType.Future, SecurityType.FutureOption);
+        public static Exchange NYMEX { get; } =
+            new(
+                "NYMEX",
+                "NYMEX",
+                "New York Mercantile Exchange",
+                QuantConnect.Market.NYMEX,
+                SecurityType.Future,
+                SecurityType.FutureOption
+            );
 
         /// <summary>
         /// London International Financial Futures and Options Exchange
         /// </summary>
-        public static Exchange NYSELIFFE { get; }
-            = new("NYSELIFFE", "NYSELIFFE", "London International Financial Futures and Options Exchange", QuantConnect.Market.NYSELIFFE, SecurityType.Future, SecurityType.FutureOption);
+        public static Exchange NYSELIFFE { get; } =
+            new(
+                "NYSELIFFE",
+                "NYSELIFFE",
+                "London International Financial Futures and Options Exchange",
+                QuantConnect.Market.NYSELIFFE,
+                SecurityType.Future,
+                SecurityType.FutureOption
+            );
 
         /// <summary>
         /// Exchange description
@@ -299,14 +503,18 @@ namespace QuantConnect
         /// Creates a new empty exchange instance
         /// </summary>
         /// <remarks>For json round trip serialization</remarks>
-        private Exchange()
-        {
-        }
+        private Exchange() { }
 
         /// <summary>
         /// Creates a new exchange instance
         /// </summary>
-        private Exchange(string name, string code, string description, string market, params SecurityType[] securityTypes)
+        private Exchange(
+            string name,
+            string code,
+            string description,
+            string market,
+            params SecurityType[] securityTypes
+        )
         {
             Name = name;
             Market = market;

@@ -15,14 +15,14 @@
 */
 
 using System;
+using System.Collections.Generic;
 using System.Linq;
-using QuantConnect.Util;
+using QuantConnect.Interfaces;
+using QuantConnect.Lean.Engine.Results;
 using QuantConnect.Logging;
 using QuantConnect.Packets;
 using QuantConnect.Scheduling;
-using QuantConnect.Interfaces;
-using System.Collections.Generic;
-using QuantConnect.Lean.Engine.Results;
+using QuantConnect.Util;
 
 namespace QuantConnect.Lean.Engine.RealTime
 {
@@ -43,7 +43,13 @@ namespace QuantConnect.Lean.Engine.RealTime
         /// <summary>
         /// Initializes the real time handler for the specified algorithm and job
         /// </summary>
-        public override void Setup(IAlgorithm algorithm, AlgorithmNodePacket job, IResultHandler resultHandler, IApi api, IIsolatorLimitResultProvider isolatorLimitProvider)
+        public override void Setup(
+            IAlgorithm algorithm,
+            AlgorithmNodePacket job,
+            IResultHandler resultHandler,
+            IApi api,
+            IIsolatorLimitResultProvider isolatorLimitProvider
+        )
         {
             // create events for algorithm's end of tradeable dates
             // set up the events for each security to fire every tradeable date before market close
@@ -110,7 +116,10 @@ namespace QuantConnect.Lean.Engine.RealTime
                 }
                 catch (Exception exception)
                 {
-                    Algorithm.SetRuntimeError(exception, $"Scheduled event: '{scheduledEvents[0].Name}' at {time}");
+                    Algorithm.SetRuntimeError(
+                        exception,
+                        $"Scheduled event: '{scheduledEvents[0].Name}' at {time}"
+                    );
                     break;
                 }
 
@@ -140,7 +149,10 @@ namespace QuantConnect.Lean.Engine.RealTime
                 }
                 catch (Exception exception)
                 {
-                    Algorithm.SetRuntimeError(exception, $"Scheduled event: '{scheduledEvent.Name}' at {nextEventUtcTime}");
+                    Algorithm.SetRuntimeError(
+                        exception,
+                        $"Scheduled event: '{scheduledEvent.Name}' at {nextEventUtcTime}"
+                    );
                     break;
                 }
 
@@ -159,7 +171,8 @@ namespace QuantConnect.Lean.Engine.RealTime
                     // then by unique id so that for scheduled events in the same time
                     // respect their creation order, so its deterministic
                     .ThenBy(x => x.Value)
-                    .Select(x => x.Key).ToList();
+                    .Select(x => x.Key)
+                    .ToList();
             }
 
             return _scheduledEventsSortedByTime;
@@ -174,15 +187,19 @@ namespace QuantConnect.Lean.Engine.RealTime
             var scheduledEvent = scheduledEvents[0];
             var nextEventUtcTime = scheduledEvent.NextEventUtcTime;
 
-            if (scheduledEvents.Count > 1
+            if (
+                scheduledEvents.Count > 1
                 // if our NextEventUtcTime is after the next event we sort our selves
-                && nextEventUtcTime > scheduledEvents[1].NextEventUtcTime)
+                && nextEventUtcTime > scheduledEvents[1].NextEventUtcTime
+            )
             {
                 // remove ourselves and re insert at the correct position, the rest of the items are sorted!
                 scheduledEvents.RemoveAt(0);
 
-                var position = scheduledEvents.BinarySearch(nextEventUtcTime,
-                    (time, orderEvent) => time.CompareTo(orderEvent.NextEventUtcTime));
+                var position = scheduledEvents.BinarySearch(
+                    nextEventUtcTime,
+                    (time, orderEvent) => time.CompareTo(orderEvent.NextEventUtcTime)
+                );
                 if (position >= 0)
                 {
                     // we have to insert after existing position to respect existing order, see ScheduledEventsOrderRegressionAlgorithm

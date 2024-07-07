@@ -15,16 +15,16 @@
 */
 
 using System;
-using QuantConnect.Util;
+using System.Collections.Generic;
+using QuantConnect.Algorithm;
+using QuantConnect.AlgorithmFactory;
+using QuantConnect.Brokerages.Backtesting;
+using QuantConnect.Configuration;
+using QuantConnect.Interfaces;
+using QuantConnect.Lean.Engine.DataFeeds;
 using QuantConnect.Logging;
 using QuantConnect.Packets;
-using QuantConnect.Algorithm;
-using QuantConnect.Interfaces;
-using QuantConnect.Configuration;
-using System.Collections.Generic;
-using QuantConnect.AlgorithmFactory;
-using QuantConnect.Lean.Engine.DataFeeds;
-using QuantConnect.Brokerages.Backtesting;
+using QuantConnect.Util;
 
 namespace QuantConnect.Lean.Engine.Setup
 {
@@ -84,23 +84,47 @@ namespace QuantConnect.Lean.Engine.Setup
         /// <param name="assemblyPath">The path to the assembly's location</param>
         /// <param name="algorithmNodePacket">Details of the task required</param>
         /// <returns>A new instance of IAlgorithm, or throws an exception if there was an error</returns>
-        public virtual IAlgorithm CreateAlgorithmInstance(AlgorithmNodePacket algorithmNodePacket, string assemblyPath)
+        public virtual IAlgorithm CreateAlgorithmInstance(
+            AlgorithmNodePacket algorithmNodePacket,
+            string assemblyPath
+        )
         {
             string error;
             IAlgorithm algorithm;
 
             var debugNode = algorithmNodePacket as BacktestNodePacket;
-            var debugging = debugNode != null && debugNode.Debugging || Config.GetBool("debugging", false);
+            var debugging =
+                debugNode != null && debugNode.Debugging || Config.GetBool("debugging", false);
 
-            if (debugging && !BaseSetupHandler.InitializeDebugging(algorithmNodePacket, WorkerThread))
+            if (
+                debugging
+                && !BaseSetupHandler.InitializeDebugging(algorithmNodePacket, WorkerThread)
+            )
             {
                 throw new AlgorithmSetupException("Failed to initialize debugging");
             }
 
             // Limit load times to 90 seconds and force the assembly to have exactly one derived type
-            var loader = new Loader(debugging, algorithmNodePacket.Language, BaseSetupHandler.AlgorithmCreationTimeout, names => names.SingleOrAlgorithmTypeName(Config.Get("algorithm-type-name", algorithmNodePacket.AlgorithmId)), WorkerThread);
-            var complete = loader.TryCreateAlgorithmInstanceWithIsolator(assemblyPath, algorithmNodePacket.RamAllocation, out algorithm, out error);
-            if (!complete) throw new AlgorithmSetupException($"During the algorithm initialization, the following exception has occurred: {error}");
+            var loader = new Loader(
+                debugging,
+                algorithmNodePacket.Language,
+                BaseSetupHandler.AlgorithmCreationTimeout,
+                names =>
+                    names.SingleOrAlgorithmTypeName(
+                        Config.Get("algorithm-type-name", algorithmNodePacket.AlgorithmId)
+                    ),
+                WorkerThread
+            );
+            var complete = loader.TryCreateAlgorithmInstanceWithIsolator(
+                assemblyPath,
+                algorithmNodePacket.RamAllocation,
+                out algorithm,
+                out error
+            );
+            if (!complete)
+                throw new AlgorithmSetupException(
+                    $"During the algorithm initialization, the following exception has occurred: {error}"
+                );
 
             return algorithm;
         }
@@ -112,7 +136,11 @@ namespace QuantConnect.Lean.Engine.Setup
         /// <param name="uninitializedAlgorithm">The algorithm instance before Initialize has been called</param>
         /// <param name="factory">The brokerage factory</param>
         /// <returns>The brokerage instance, or throws if error creating instance</returns>
-        public virtual IBrokerage CreateBrokerage(AlgorithmNodePacket algorithmNodePacket, IAlgorithm uninitializedAlgorithm, out IBrokerageFactory factory)
+        public virtual IBrokerage CreateBrokerage(
+            AlgorithmNodePacket algorithmNodePacket,
+            IAlgorithm uninitializedAlgorithm,
+            out IBrokerageFactory factory
+        )
         {
             factory = new BacktestingBrokerageFactory();
             return new BacktestingBrokerage(uninitializedAlgorithm);
@@ -129,11 +157,15 @@ namespace QuantConnect.Lean.Engine.Setup
             var job = parameters.AlgorithmNodePacket as BacktestNodePacket;
             if (job == null)
             {
-                throw new ArgumentException("Expected BacktestNodePacket but received " + parameters.AlgorithmNodePacket.GetType().Name);
+                throw new ArgumentException(
+                    "Expected BacktestNodePacket but received "
+                        + parameters.AlgorithmNodePacket.GetType().Name
+                );
             }
 
-            Log.Trace($"BacktestingSetupHandler.Setup(): Setting up job: UID: {job.UserId.ToStringInvariant()}, " +
-                $"PID: {job.ProjectId.ToStringInvariant()}, Version: {job.Version}, Source: {job.RequestSource}"
+            Log.Trace(
+                $"BacktestingSetupHandler.Setup(): Setting up job: UID: {job.UserId.ToStringInvariant()}, "
+                    + $"PID: {job.ProjectId.ToStringInvariant()}, Version: {job.Version}, Source: {job.RequestSource}"
             );
 
             if (algorithm == null)
@@ -153,74 +185,99 @@ namespace QuantConnect.Lean.Engine.Setup
 
             var controls = job.Controls;
             var isolator = new Isolator();
-            var initializeComplete = isolator.ExecuteWithTimeLimit(TimeSpan.FromMinutes(5), () =>
-            {
-                try
+            var initializeComplete = isolator.ExecuteWithTimeLimit(
+                TimeSpan.FromMinutes(5),
+                () =>
                 {
-                    parameters.ResultHandler.SendStatusUpdate(AlgorithmStatus.Initializing, "Initializing algorithm...");
-                    //Set our parameters
-                    algorithm.SetParameters(job.Parameters);
-                    algorithm.SetAvailableDataTypes(BaseSetupHandler.GetConfiguredDataFeeds());
-
-                    //Algorithm is backtesting, not live:
-                    algorithm.SetAlgorithmMode(job.AlgorithmMode);
-                    algorithm.SetDeploymentTarget(job.DeploymentTarget);
-
-                    //Set the source impl for the event scheduling
-                    algorithm.Schedule.SetEventSchedule(parameters.RealTimeHandler);
-
-                    // set the option chain provider
-                    algorithm.SetOptionChainProvider(new CachingOptionChainProvider(new BacktestingOptionChainProvider(parameters.DataCacheProvider, parameters.MapFileProvider)));
-
-                    // set the future chain provider
-                    algorithm.SetFutureChainProvider(new CachingFutureChainProvider(new BacktestingFutureChainProvider(parameters.DataCacheProvider)));
-
-                    // before we call initialize
-                    BaseSetupHandler.LoadBacktestJobAccountCurrency(algorithm, job);
-
-                    //Initialise the algorithm, get the required data:
-                    algorithm.Initialize();
-
-                    // set start and end date if present in the job
-                    if (job.PeriodStart.HasValue)
+                    try
                     {
-                        algorithm.SetStartDate(job.PeriodStart.Value);
-                    }
-                    if (job.PeriodFinish.HasValue)
-                    {
-                        algorithm.SetEndDate(job.PeriodFinish.Value);
-                    }
+                        parameters.ResultHandler.SendStatusUpdate(
+                            AlgorithmStatus.Initializing,
+                            "Initializing algorithm..."
+                        );
+                        //Set our parameters
+                        algorithm.SetParameters(job.Parameters);
+                        algorithm.SetAvailableDataTypes(BaseSetupHandler.GetConfiguredDataFeeds());
 
-                    if(job.OutOfSampleMaxEndDate.HasValue)
-                    {
-                        if(algorithm.EndDate > job.OutOfSampleMaxEndDate.Value)
+                        //Algorithm is backtesting, not live:
+                        algorithm.SetAlgorithmMode(job.AlgorithmMode);
+                        algorithm.SetDeploymentTarget(job.DeploymentTarget);
+
+                        //Set the source impl for the event scheduling
+                        algorithm.Schedule.SetEventSchedule(parameters.RealTimeHandler);
+
+                        // set the option chain provider
+                        algorithm.SetOptionChainProvider(
+                            new CachingOptionChainProvider(
+                                new BacktestingOptionChainProvider(
+                                    parameters.DataCacheProvider,
+                                    parameters.MapFileProvider
+                                )
+                            )
+                        );
+
+                        // set the future chain provider
+                        algorithm.SetFutureChainProvider(
+                            new CachingFutureChainProvider(
+                                new BacktestingFutureChainProvider(parameters.DataCacheProvider)
+                            )
+                        );
+
+                        // before we call initialize
+                        BaseSetupHandler.LoadBacktestJobAccountCurrency(algorithm, job);
+
+                        //Initialise the algorithm, get the required data:
+                        algorithm.Initialize();
+
+                        // set start and end date if present in the job
+                        if (job.PeriodStart.HasValue)
                         {
-                            Log.Trace($"BacktestingSetupHandler.Setup(): setting end date to {job.OutOfSampleMaxEndDate.Value:yyyyMMdd}");
-                            algorithm.SetEndDate(job.OutOfSampleMaxEndDate.Value);
+                            algorithm.SetStartDate(job.PeriodStart.Value);
+                        }
+                        if (job.PeriodFinish.HasValue)
+                        {
+                            algorithm.SetEndDate(job.PeriodFinish.Value);
+                        }
 
-                            if (algorithm.StartDate > algorithm.EndDate)
+                        if (job.OutOfSampleMaxEndDate.HasValue)
+                        {
+                            if (algorithm.EndDate > job.OutOfSampleMaxEndDate.Value)
                             {
-                                algorithm.SetStartDate(algorithm.EndDate);
+                                Log.Trace(
+                                    $"BacktestingSetupHandler.Setup(): setting end date to {job.OutOfSampleMaxEndDate.Value:yyyyMMdd}"
+                                );
+                                algorithm.SetEndDate(job.OutOfSampleMaxEndDate.Value);
+
+                                if (algorithm.StartDate > algorithm.EndDate)
+                                {
+                                    algorithm.SetStartDate(algorithm.EndDate);
+                                }
                             }
                         }
+
+                        // after we call initialize
+                        BaseSetupHandler.LoadBacktestJobCashAmount(algorithm, job);
+
+                        // after algorithm was initialized, should set trading days per year for our great portfolio statistics
+                        BaseSetupHandler.SetBrokerageTradingDayPerYear(algorithm);
+
+                        // finalize initialization
+                        algorithm.PostInitialize();
                     }
-
-                    // after we call initialize
-                    BaseSetupHandler.LoadBacktestJobCashAmount(algorithm, job);
-
-                    // after algorithm was initialized, should set trading days per year for our great portfolio statistics
-                    BaseSetupHandler.SetBrokerageTradingDayPerYear(algorithm);
-
-                    // finalize initialization
-                    algorithm.PostInitialize();
-                }
-                catch (Exception err)
-                {
-                    Errors.Add(new AlgorithmSetupException("During the algorithm initialization, the following exception has occurred: ", err));
-                }
-            }, controls.RamAllocation,
-                sleepIntervalMillis: 100,  // entire system is waiting on this, so be as fast as possible
-                workerThread: WorkerThread);
+                    catch (Exception err)
+                    {
+                        Errors.Add(
+                            new AlgorithmSetupException(
+                                "During the algorithm initialization, the following exception has occurred: ",
+                                err
+                            )
+                        );
+                    }
+                },
+                controls.RamAllocation,
+                sleepIntervalMillis: 100, // entire system is waiting on this, so be as fast as possible
+                workerThread: WorkerThread
+            );
 
             if (Errors.Count > 0)
             {
@@ -229,7 +286,8 @@ namespace QuantConnect.Lean.Engine.Setup
             }
 
             //Before continuing, detect if this is ready:
-            if (!initializeComplete) return false;
+            if (!initializeComplete)
+                return false;
 
             MaximumRuntime = TimeSpan.FromMinutes(job.Controls.MaximumRuntimeMinutes);
 
@@ -244,12 +302,21 @@ namespace QuantConnect.Lean.Engine.Setup
             StartingDate = algorithm.StartDate;
 
             //Put into log for debugging:
-            Log.Trace("SetUp Backtesting: User: " + job.UserId + " ProjectId: " + job.ProjectId + " AlgoId: " + job.AlgorithmId);
-            Log.Trace($"Dates: Start: {algorithm.StartDate.ToStringInvariant("d")} " +
-                      $"End: {algorithm.EndDate.ToStringInvariant("d")} " +
-                      $"Cash: {StartingPortfolioValue.ToStringInvariant("C")} " +
-                      $"MaximumRuntime: {MaximumRuntime} " +
-                      $"MaxOrders: {MaxOrders}");
+            Log.Trace(
+                "SetUp Backtesting: User: "
+                    + job.UserId
+                    + " ProjectId: "
+                    + job.ProjectId
+                    + " AlgoId: "
+                    + job.AlgorithmId
+            );
+            Log.Trace(
+                $"Dates: Start: {algorithm.StartDate.ToStringInvariant("d")} "
+                    + $"End: {algorithm.EndDate.ToStringInvariant("d")} "
+                    + $"Cash: {StartingPortfolioValue.ToStringInvariant("C")} "
+                    + $"MaximumRuntime: {MaximumRuntime} "
+                    + $"MaxOrders: {MaxOrders}"
+            );
 
             return initializeComplete;
         }
@@ -258,9 +325,6 @@ namespace QuantConnect.Lean.Engine.Setup
         /// Performs application-defined tasks associated with freeing, releasing, or resetting unmanaged resources.
         /// </summary>
         /// <filterpriority>2</filterpriority>
-        public void Dispose()
-        {
-        }
+        public void Dispose() { }
     } // End Result Handler Thread:
-
 } // End Namespace

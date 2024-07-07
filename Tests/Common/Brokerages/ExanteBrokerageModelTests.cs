@@ -17,8 +17,8 @@ using Moq;
 using NUnit.Framework;
 using QuantConnect.Brokerages;
 using QuantConnect.Orders;
-using QuantConnect.Tests.Brokerages;
 using QuantConnect.Securities;
+using QuantConnect.Tests.Brokerages;
 
 namespace QuantConnect.Tests.Common.Brokerages
 {
@@ -32,25 +32,27 @@ namespace QuantConnect.Tests.Common.Brokerages
         [SetUp]
         public void Init()
         {
-            _security = TestsHelpers.GetSecurity(symbol: _btcusd.Value, market: _btcusd.ID.Market,
-                quoteCurrency: "EUR");
+            _security = TestsHelpers.GetSecurity(
+                symbol: _btcusd.Value,
+                market: _btcusd.ID.Market,
+                quoteCurrency: "EUR"
+            );
         }
 
         [Test]
         public void CannotSubmitMarketOrder_IfPriceNotInitialized()
         {
-            var order = new Mock<MarketOrder>
-            {
-                Object =
-                {
-                    Quantity = 1
-                }
-            };
+            var order = new Mock<MarketOrder> { Object = { Quantity = 1 } };
 
-            var security =
-                TestsHelpers.GetSecurity(symbol: _btcusd.Value, market: _btcusd.ID.Market, quoteCurrency: "EUR");
+            var security = TestsHelpers.GetSecurity(
+                symbol: _btcusd.Value,
+                market: _btcusd.ID.Market,
+                quoteCurrency: "EUR"
+            );
 
-            Assert.False(_exanteBrokerageModel.CanSubmitOrder(security, order.Object, out var message));
+            Assert.False(
+                _exanteBrokerageModel.CanSubmitOrder(security, order.Object, out var message)
+            );
             Assert.NotNull(message);
         }
     }

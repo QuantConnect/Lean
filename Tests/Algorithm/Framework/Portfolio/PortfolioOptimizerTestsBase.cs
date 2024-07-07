@@ -13,11 +13,11 @@
  * limitations under the License.
 */
 
-using NUnit.Framework;
-using QuantConnect.Algorithm.Framework.Portfolio;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using NUnit.Framework;
+using QuantConnect.Algorithm.Framework.Portfolio;
 
 namespace QuantConnect.Tests.Algorithm.Framework.Portfolio;
 
@@ -40,7 +40,8 @@ public abstract class PortfolioOptimizerTestsBase
         var result = testOptimizer.Optimize(
             HistoricalReturns[testCaseNumber],
             ExpectedReturns[testCaseNumber],
-            Covariances[testCaseNumber]);
+            Covariances[testCaseNumber]
+        );
 
         Assert.AreEqual(ExpectedResults[testCaseNumber], result.Select(x => Math.Round(x, 6)));
     }
@@ -49,7 +50,10 @@ public abstract class PortfolioOptimizerTestsBase
     public virtual void EmptyPortfolioReturnsEmptyArrayOfDouble()
     {
         var testOptimizer = CreateOptimizer();
-        var historicalReturns = new double[,] { { } };
+        var historicalReturns = new double[,]
+        {
+            { }
+        };
         var expectedResult = Array.Empty<double>();
 
         var result = testOptimizer.Optimize(historicalReturns);

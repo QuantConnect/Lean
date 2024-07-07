@@ -20,8 +20,8 @@ using QuantConnect.Algorithm.Framework.Portfolio;
 using QuantConnect.Data.Consolidators;
 using QuantConnect.Data.UniverseSelection;
 using QuantConnect.Indicators;
-using QuantConnect.Securities;
 using QuantConnect.Orders;
+using QuantConnect.Securities;
 
 namespace QuantConnect.Algorithm.Framework.Execution
 {
@@ -54,7 +54,7 @@ namespace QuantConnect.Algorithm.Framework.Execution
             int period = 60,
             decimal deviations = 2m,
             Resolution resolution = Resolution.Minute
-            )
+        )
         {
             _period = period;
             _deviations = deviations;
@@ -94,7 +94,11 @@ namespace QuantConnect.Algorithm.Framework.Execution
                     if (data.STD.IsReady && PriceIsFavorable(data, unorderedQuantity))
                     {
                         // Adjust order size to respect the maximum total order value
-                        var orderSize = OrderSizing.GetOrderSizeForMaximumValue(data.Security, MaximumOrderValue, unorderedQuantity);
+                        var orderSize = OrderSizing.GetOrderSizeForMaximumValue(
+                            data.Security,
+                            MaximumOrderValue,
+                            unorderedQuantity
+                        );
 
                         if (orderSize != 0)
                         {
@@ -119,7 +123,12 @@ namespace QuantConnect.Algorithm.Framework.Execution
                 // initialize new securities
                 if (!_symbolData.ContainsKey(added.Symbol))
                 {
-                    _symbolData[added.Symbol] = new SymbolData(algorithm, added, _period, _resolution);
+                    _symbolData[added.Symbol] = new SymbolData(
+                        algorithm,
+                        added,
+                        _period,
+                        _resolution
+                    );
                 }
             }
 
@@ -132,7 +141,10 @@ namespace QuantConnect.Algorithm.Framework.Execution
                     if (IsSafeToRemove(algorithm, removed.Symbol))
                     {
                         _symbolData.Remove(removed.Symbol);
-                        algorithm.SubscriptionManager.RemoveConsolidator(removed.Symbol, data.Consolidator);
+                        algorithm.SubscriptionManager.RemoveConsolidator(
+                            removed.Symbol,
+                            data.Consolidator
+                        );
                     }
                 }
             }
@@ -173,7 +185,7 @@ namespace QuantConnect.Algorithm.Framework.Execution
             /// Standard Deviation
             /// </summary>
             public StandardDeviation STD { get; }
-            
+
             /// <summary>
             /// Simple Moving Average
             /// </summary>
@@ -191,16 +203,29 @@ namespace QuantConnect.Algorithm.Framework.Execution
             /// <param name="security">The security we are using</param>
             /// <param name="period">Period of the SMA and STD</param>
             /// <param name="resolution">Resolution for this symbol</param>
-            public SymbolData(QCAlgorithm algorithm, Security security, int period, Resolution resolution)
+            public SymbolData(
+                QCAlgorithm algorithm,
+                Security security,
+                int period,
+                Resolution resolution
+            )
             {
                 Security = security;
                 Consolidator = algorithm.ResolveConsolidator(security.Symbol, resolution);
 
-                var smaName = algorithm.CreateIndicatorName(security.Symbol, "SMA" + period, resolution);
+                var smaName = algorithm.CreateIndicatorName(
+                    security.Symbol,
+                    "SMA" + period,
+                    resolution
+                );
                 SMA = new SimpleMovingAverage(smaName, period);
                 algorithm.RegisterIndicator(security.Symbol, SMA, Consolidator);
 
-                var stdName = algorithm.CreateIndicatorName(security.Symbol, "STD" + period, resolution);
+                var stdName = algorithm.CreateIndicatorName(
+                    security.Symbol,
+                    "STD" + period,
+                    resolution
+                );
                 STD = new StandardDeviation(stdName, period);
                 algorithm.RegisterIndicator(security.Symbol, STD, Consolidator);
 

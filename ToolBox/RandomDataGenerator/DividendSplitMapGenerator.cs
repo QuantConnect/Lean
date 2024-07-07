@@ -16,8 +16,8 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using QuantConnect.Data.Market;
 using QuantConnect.Data.Auxiliary;
+using QuantConnect.Data.Market;
 
 namespace QuantConnect.ToolBox.RandomDataGenerator
 {
@@ -44,7 +44,8 @@ namespace QuantConnect.ToolBox.RandomDataGenerator
         /// <summary>
         /// Stores <see cref="CorporateFactorRow"/> instances
         /// </summary>
-        public List<CorporateFactorRow> DividendsSplits { get; set; } = new List<CorporateFactorRow>();
+        public List<CorporateFactorRow> DividendsSplits { get; set; } =
+            new List<CorporateFactorRow>();
 
         /// <summary>
         /// Current Symbol value. Can be renamed
@@ -65,7 +66,8 @@ namespace QuantConnect.ToolBox.RandomDataGenerator
             BaseSymbolGenerator symbolGenerator,
             Random random,
             DateTime delistDate,
-            bool willBeDelisted)
+            bool willBeDelisted
+        )
         {
             CurrentSymbol = symbol;
             _settings = settings;
@@ -89,7 +91,9 @@ namespace QuantConnect.ToolBox.RandomDataGenerator
             var hasRename = _randomValueGenerator.NextBool(_settings.HasRenamePercentage);
             var hasSplits = _randomValueGenerator.NextBool(_settings.HasSplitsPercentage);
             var hasDividends = _randomValueGenerator.NextBool(_settings.HasDividendsPercentage);
-            var dividendEveryQuarter = _randomValueGenerator.NextBool(_settings.DividendEveryQuarterPercentage);
+            var dividendEveryQuarter = _randomValueGenerator.NextBool(
+                _settings.DividendEveryQuarterPercentage
+            );
 
             var previousX = _random.NextDouble();
 
@@ -101,11 +105,18 @@ namespace QuantConnect.ToolBox.RandomDataGenerator
             // On the other hand, if the upper bound for the previousSplitFactor is 1, then the FinalSplitFactor will be, in the
             // worst of the cases as small as the minimum equity value we can obtain
 
-            var months = (int)Math.Round(_settings.End.Subtract(_settings.Start).Days / (365.25 / 12));
+            var months = (int)
+                Math.Round(_settings.End.Subtract(_settings.Start).Days / (365.25 / 12));
             months = months != 0 ? months : 1;
             var minPreviousSplitFactor = GetLowerBoundForPreviousSplitFactor(months);
             var maxPreviousSplitFactor = 1;
-            var previousSplitFactor = hasSplits ? GetNextPreviousSplitFactor(_random, minPreviousSplitFactor, maxPreviousSplitFactor) : 1;
+            var previousSplitFactor = hasSplits
+                ? GetNextPreviousSplitFactor(
+                    _random,
+                    minPreviousSplitFactor,
+                    maxPreviousSplitFactor
+                )
+                : 1;
             var previousPriceFactor = hasDividends ? (decimal)Math.Tanh(previousX) : 1;
 
             var splitDates = new List<DateTime>();
@@ -121,10 +132,14 @@ namespace QuantConnect.ToolBox.RandomDataGenerator
                     // On the first trading day write relevant starting data to factor and map files
                     if (firstTick)
                     {
-                        DividendsSplits.Add(new CorporateFactorRow(tick.Time,
-                            previousPriceFactor,
-                            previousSplitFactor,
-                            tick.Value));
+                        DividendsSplits.Add(
+                            new CorporateFactorRow(
+                                tick.Time,
+                                previousPriceFactor,
+                                previousSplitFactor,
+                                tick.Value
+                            )
+                        );
 
                         MapRows.Add(new MapFileRow(tick.Time, CurrentSymbol.Value));
                     }
@@ -139,11 +154,14 @@ namespace QuantConnect.ToolBox.RandomDataGenerator
                         {
                             if (tick.Time > splitDate)
                             {
-                                DividendsSplits.Add(new CorporateFactorRow(
-                                    splitDate,
-                                    previousPriceFactor,
-                                    previousSplitFactor,
-                                    tick.Value / FinalSplitFactor));
+                                DividendsSplits.Add(
+                                    new CorporateFactorRow(
+                                        splitDate,
+                                        previousPriceFactor,
+                                        previousSplitFactor,
+                                        tick.Value / FinalSplitFactor
+                                    )
+                                );
 
                                 FinalSplitFactor *= previousSplitFactor;
                                 deleteDates.Add(splitDate);
@@ -162,11 +180,14 @@ namespace QuantConnect.ToolBox.RandomDataGenerator
                         {
                             if (tick.Time > dividendDate)
                             {
-                                DividendsSplits.Add(new CorporateFactorRow(
-                                    dividendDate,
-                                    previousPriceFactor,
-                                    previousSplitFactor,
-                                    tick.Value / FinalSplitFactor));
+                                DividendsSplits.Add(
+                                    new CorporateFactorRow(
+                                        dividendDate,
+                                        previousPriceFactor,
+                                        previousSplitFactor,
+                                        tick.Value / FinalSplitFactor
+                                    )
+                                );
 
                                 deleteDates.Add(dividendDate);
                             }
@@ -189,35 +210,65 @@ namespace QuantConnect.ToolBox.RandomDataGenerator
                                     previousPriceFactor = (decimal)Math.Tanh(previousX);
                                 } while (previousPriceFactor >= 1.0m || previousPriceFactor <= 0m);
 
-                                dividendDates.Add(_randomValueGenerator.NextDate(tick.Time, tick.Time.AddMonths(1), (DayOfWeek)_random.Next(1, 5)));
+                                dividendDates.Add(
+                                    _randomValueGenerator.NextDate(
+                                        tick.Time,
+                                        tick.Time.AddMonths(1),
+                                        (DayOfWeek)_random.Next(1, 5)
+                                    )
+                                );
                             }
                         }
                         // Have a 5% chance of a split every month
-                        if (hasSplits && _randomValueGenerator.NextBool(_settings.MonthSplitPercentage))
+                        if (
+                            hasSplits
+                            && _randomValueGenerator.NextBool(_settings.MonthSplitPercentage)
+                        )
                         {
                             // Produce another split factor that is also bounded by the min and max split factors allowed
                             if (_randomValueGenerator.NextBool(5.0)) // Add the possibility of a reverse split
                             {
                                 // A reverse split is a split that is smaller than the current previousSplitFactor
                                 // Update previousSplitFactor with a smaller value that is still bounded below by minPreviousSplitFactor
-                                previousSplitFactor = GetNextPreviousSplitFactor(_random, minPreviousSplitFactor, previousSplitFactor);
+                                previousSplitFactor = GetNextPreviousSplitFactor(
+                                    _random,
+                                    minPreviousSplitFactor,
+                                    previousSplitFactor
+                                );
                             }
                             else
                             {
                                 // Update previousSplitFactor with a higher value that is still bounded by maxPreviousSplitFactor
                                 // Usually, the split factor tends to grow across the time span(See /Data/Equity/usa/factor_files/aapl for instance)
-                                previousSplitFactor = GetNextPreviousSplitFactor(_random, previousSplitFactor, maxPreviousSplitFactor);
+                                previousSplitFactor = GetNextPreviousSplitFactor(
+                                    _random,
+                                    previousSplitFactor,
+                                    maxPreviousSplitFactor
+                                );
                             }
 
-                            splitDates.Add(_randomValueGenerator.NextDate(tick.Time, tick.Time.AddMonths(1), (DayOfWeek)_random.Next(1, 5)));
+                            splitDates.Add(
+                                _randomValueGenerator.NextDate(
+                                    tick.Time,
+                                    tick.Time.AddMonths(1),
+                                    (DayOfWeek)_random.Next(1, 5)
+                                )
+                            );
                         }
                         // 10% chance of being renamed every month
                         if (hasRename && _randomValueGenerator.NextBool(10.0))
                         {
-                            var randomDate = _randomValueGenerator.NextDate(tick.Time, tick.Time.AddMonths(1), (DayOfWeek)_random.Next(1, 5));
+                            var randomDate = _randomValueGenerator.NextDate(
+                                tick.Time,
+                                tick.Time.AddMonths(1),
+                                (DayOfWeek)_random.Next(1, 5)
+                            );
                             MapRows.Add(new MapFileRow(randomDate, CurrentSymbol.Value));
 
-                            CurrentSymbol = _symbolGenerator.NextSymbol(_settings.SecurityType, _settings.Market);
+                            CurrentSymbol = _symbolGenerator.NextSymbol(
+                                _settings.SecurityType,
+                                _settings.Market
+                            );
                         }
 
                         previousMonth = tick.Time.Month;
@@ -257,7 +308,11 @@ namespace QuantConnect.ToolBox.RandomDataGenerator
         /// <param name="upperBound">Maximum allowed value to obtain</param>
         /// <returns>A new valid previousSplitFactor that is still bounded by the given upper and lower
         /// bounds</returns>
-        public static decimal GetNextPreviousSplitFactor(Random random, decimal lowerBound, decimal upperBound)
+        public static decimal GetNextPreviousSplitFactor(
+            Random random,
+            decimal lowerBound,
+            decimal upperBound
+        )
         {
             return ((decimal)random.NextDouble()) * (upperBound - lowerBound) + lowerBound;
         }

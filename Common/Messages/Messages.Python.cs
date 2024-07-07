@@ -13,10 +13,9 @@
  * limitations under the License.
 */
 
+using System.Collections.Generic;
 using System.IO;
 using System.Runtime.CompilerServices;
-using System.Collections.Generic;
-
 using Python.Runtime;
 
 namespace QuantConnect
@@ -43,7 +42,8 @@ namespace QuantConnect
         /// </summary>
         public static class MarginCallModelPythonWrapper
         {
-            public static string GetMarginCallOrdersMustReturnTuple = "Must return a tuple, where the first item is a list and the second a boolean";
+            public static string GetMarginCallOrdersMustReturnTuple =
+                "Must return a tuple, where the first item is a list and the second a boolean";
         }
 
         /// <summary>
@@ -54,7 +54,11 @@ namespace QuantConnect
             public static string PandasModuleNotImported = "pandas module was not imported.";
 
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            public static string ConvertToDictionaryFailed(string sourceType, string targetType, string reason)
+            public static string ConvertToDictionaryFailed(
+                string sourceType,
+                string targetType,
+                string reason
+            )
             {
                 return $"ConvertToDictionary cannot be used to convert a {sourceType} into {targetType}. Reason: {reason}";
             }
@@ -100,14 +104,20 @@ namespace QuantConnect
             }
 
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            public static string FailedToFindSystemPackagesConfiguration(string virtualEnvPath, FileInfo configFile)
+            public static string FailedToFindSystemPackagesConfiguration(
+                string virtualEnvPath,
+                FileInfo configFile
+            )
             {
                 return $@"virtual env '{virtualEnvPath}'. Failed to find system packages configuration. ConfigFile.Exits: {
                     configFile.Exists}. Will default to true.";
             }
 
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            public static string SystemPackagesConfigurationFound(string virtualEnvPath, bool includeSystemPackages)
+            public static string SystemPackagesConfigurationFound(
+                string virtualEnvPath,
+                bool includeSystemPackages
+            )
             {
                 return $"virtual env '{virtualEnvPath}'. Will use system packages: {includeSystemPackages}";
             }
@@ -124,10 +134,15 @@ namespace QuantConnect
         /// </summary>
         public static class PythonWrapper
         {
-            public static string ExpectedInterfaceTypeParameter = "expected an interface type parameter.";
+            public static string ExpectedInterfaceTypeParameter =
+                "expected an interface type parameter.";
 
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            public static string InterfaceNotFullyImplemented(string interfaceName, string pythonTypeName, IEnumerable<string> missingMembers)
+            public static string InterfaceNotFullyImplemented(
+                string interfaceName,
+                string pythonTypeName,
+                IEnumerable<string> missingMembers
+            )
             {
                 return $@"{interfaceName} must be fully implemented. Please implement these missing methods on {
                     pythonTypeName}: {string.Join(", ", missingMembers)}";

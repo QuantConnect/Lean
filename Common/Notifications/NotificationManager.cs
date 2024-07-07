@@ -59,9 +59,21 @@ namespace QuantConnect.Notifications
         /// <param name="data">Data attachment (optional)</param>
         /// <param name="address">Email address to send to</param>
         /// <param name="headers">Optional email headers to use</param>
-        public bool Email(string address, string subject, string message, string data, PyObject headers)
+        public bool Email(
+            string address,
+            string subject,
+            string message,
+            string data,
+            PyObject headers
+        )
         {
-            return Email(address, subject, message, data, headers.ConvertToDictionary<string, string>());
+            return Email(
+                address,
+                subject,
+                message,
+                data,
+                headers.ConvertToDictionary<string, string>()
+            );
         }
 
         /// <summary>
@@ -72,7 +84,13 @@ namespace QuantConnect.Notifications
         /// <param name="data">Data attachment (optional)</param>
         /// <param name="address">Email address to send to</param>
         /// <param name="headers">Optional email headers to use</param>
-        public bool Email(string address, string subject, string message, string data = "", Dictionary<string, string> headers = null)
+        public bool Email(
+            string address,
+            string subject,
+            string message,
+            string data = "",
+            Dictionary<string, string> headers = null
+        )
         {
             if (!Allow())
             {
@@ -121,7 +139,11 @@ namespace QuantConnect.Notifications
         /// <param name="address">Endpoint address</param>
         /// <param name="data">Data to send in body JSON encoded (optional)</param>
         /// <param name="headers">Optional headers to use</param>
-        public bool Web(string address, object data = null, Dictionary<string, string> headers = null)
+        public bool Web(
+            string address,
+            object data = null,
+            Dictionary<string, string> headers = null
+        )
         {
             if (!Allow())
             {
@@ -163,7 +185,14 @@ namespace QuantConnect.Notifications
         /// <param name="filePath">The path to file on the FTP server</param>
         /// <param name="fileContent">The contents of the file</param>
         /// <param name="port">The FTP server port. Defaults to 21</param>
-        public bool Ftp(string hostname, string username, string password, string filePath, byte[] fileContent, int? port = null)
+        public bool Ftp(
+            string hostname,
+            string username,
+            string password,
+            string filePath,
+            byte[] fileContent,
+            int? port = null
+        )
         {
             return Ftp(hostname, username, password, filePath, fileContent, secure: false, port);
         }
@@ -177,7 +206,14 @@ namespace QuantConnect.Notifications
         /// <param name="filePath">The path to file on the FTP server</param>
         /// <param name="fileContent">The string contents of the file</param>
         /// <param name="port">The FTP server port. Defaults to 21</param>
-        public bool Ftp(string hostname, string username, string password, string filePath, string fileContent, int? port = null)
+        public bool Ftp(
+            string hostname,
+            string username,
+            string password,
+            string filePath,
+            string fileContent,
+            int? port = null
+        )
         {
             return Ftp(hostname, username, password, filePath, fileContent, secure: false, port);
         }
@@ -191,7 +227,14 @@ namespace QuantConnect.Notifications
         /// <param name="filePath">The path to file on the FTP server</param>
         /// <param name="fileContent">The contents of the file</param>
         /// <param name="port">The FTP server port. Defaults to 21</param>
-        public bool Sftp(string hostname, string username, string password, string filePath, byte[] fileContent, int? port = null)
+        public bool Sftp(
+            string hostname,
+            string username,
+            string password,
+            string filePath,
+            byte[] fileContent,
+            int? port = null
+        )
         {
             return Ftp(hostname, username, password, filePath, fileContent, secure: true, port);
         }
@@ -205,7 +248,14 @@ namespace QuantConnect.Notifications
         /// <param name="filePath">The path to file on the FTP server</param>
         /// <param name="fileContent">The string contents of the file</param>
         /// <param name="port">The FTP server port. Defaults to 21</param>
-        public bool Sftp(string hostname, string username, string password, string filePath, string fileContent, int? port = null)
+        public bool Sftp(
+            string hostname,
+            string username,
+            string password,
+            string filePath,
+            string fileContent,
+            int? port = null
+        )
         {
             return Ftp(hostname, username, password, filePath, fileContent, secure: true, port);
         }
@@ -221,15 +271,30 @@ namespace QuantConnect.Notifications
         /// <param name="filePath">The path to file on the FTP server</param>
         /// <param name="fileContent">The contents of the file</param>
         /// <param name="port">The FTP server port. Defaults to 21</param>
-        public bool Sftp(string hostname, string username, string privateKey, string privateKeyPassphrase, string filePath, byte[] fileContent,
-            int? port = null)
+        public bool Sftp(
+            string hostname,
+            string username,
+            string privateKey,
+            string privateKeyPassphrase,
+            string filePath,
+            byte[] fileContent,
+            int? port = null
+        )
         {
             if (!Allow())
             {
                 return false;
             }
 
-            var ftp = new NotificationFtp(hostname, username, privateKey, privateKeyPassphrase, filePath, fileContent, port);
+            var ftp = new NotificationFtp(
+                hostname,
+                username,
+                privateKey,
+                privateKeyPassphrase,
+                filePath,
+                fileContent,
+                port
+            );
             Messages.Enqueue(ftp);
 
             return true;
@@ -246,41 +311,88 @@ namespace QuantConnect.Notifications
         /// <param name="filePath">The path to file on the FTP server</param>
         /// <param name="fileContent">The string contents of the file</param>
         /// <param name="port">The FTP server port. Defaults to 21</param>
-        public bool Sftp(string hostname, string username, string privateKey, string privateKeyPassphrase, string filePath, string fileContent,
-            int? port = null)
+        public bool Sftp(
+            string hostname,
+            string username,
+            string privateKey,
+            string privateKeyPassphrase,
+            string filePath,
+            string fileContent,
+            int? port = null
+        )
         {
             if (!Allow())
             {
                 return false;
             }
 
-            var ftp = new NotificationFtp(hostname, username, privateKey, privateKeyPassphrase, filePath, fileContent, port);
+            var ftp = new NotificationFtp(
+                hostname,
+                username,
+                privateKey,
+                privateKeyPassphrase,
+                filePath,
+                fileContent,
+                port
+            );
             Messages.Enqueue(ftp);
 
             return true;
         }
 
-        private bool Ftp(string hostname, string username, string password, string filePath, byte[] fileContent, bool secure = true, int? port = null)
+        private bool Ftp(
+            string hostname,
+            string username,
+            string password,
+            string filePath,
+            byte[] fileContent,
+            bool secure = true,
+            int? port = null
+        )
         {
             if (!Allow())
             {
                 return false;
             }
 
-            var ftp = new NotificationFtp(hostname, username, password, filePath, fileContent, secure: secure, port);
+            var ftp = new NotificationFtp(
+                hostname,
+                username,
+                password,
+                filePath,
+                fileContent,
+                secure: secure,
+                port
+            );
             Messages.Enqueue(ftp);
 
             return true;
         }
 
-        private bool Ftp(string hostname, string username, string password, string filePath, string fileContent, bool secure = true, int? port = null)
+        private bool Ftp(
+            string hostname,
+            string username,
+            string password,
+            string filePath,
+            string fileContent,
+            bool secure = true,
+            int? port = null
+        )
         {
             if (!Allow())
             {
                 return false;
             }
 
-            var ftp = new NotificationFtp(hostname, username, password, filePath, fileContent, secure: secure, port);
+            var ftp = new NotificationFtp(
+                hostname,
+                username,
+                password,
+                filePath,
+                fileContent,
+                secure: secure,
+                port
+            );
             Messages.Enqueue(ftp);
 
             return true;

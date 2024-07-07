@@ -36,17 +36,19 @@ namespace QuantConnect.Algorithm.CSharp
             // Set requested data resolution
             UniverseSettings.Resolution = Resolution.Minute;
 
-            SetStartDate(2013, 10, 07);  //Set Start Date
-            SetEndDate(2013, 10, 11);    //Set End Date
-            SetCash(100000);             //Set Strategy Cash
+            SetStartDate(2013, 10, 07); //Set Start Date
+            SetEndDate(2013, 10, 11); //Set End Date
+            SetCash(100000); //Set Strategy Cash
 
             SetUniverseSelection(new CustomFundamentalUniverseSelectionModel());
-            SetAlpha(new MacdAlphaModel(
-                fastPeriod: 10,
-                slowPeriod: 30,
-                signalPeriod: 12,
-                movingAverageType: MovingAverageType.Simple
-            ));
+            SetAlpha(
+                new MacdAlphaModel(
+                    fastPeriod: 10,
+                    slowPeriod: 30,
+                    signalPeriod: 12,
+                    movingAverageType: MovingAverageType.Simple
+                )
+            );
             SetPortfolioConstruction(new EqualWeightingPortfolioConstructionModel());
         }
 
@@ -65,9 +67,7 @@ namespace QuantConnect.Algorithm.CSharp
         public class CustomFundamentalUniverseSelectionModel : FundamentalUniverseSelectionModel
         {
             public CustomFundamentalUniverseSelectionModel()
-                : base(filterFineData: true)
-            {
-            }
+                : base(filterFineData: true) { }
 
             /// <summary>
             /// Defines the coarse fundamental selection function.
@@ -75,7 +75,10 @@ namespace QuantConnect.Algorithm.CSharp
             /// <param name="algorithm">The algorithm instance</param>
             /// <param name="coarse">The coarse fundamental data used to perform filtering</param>
             /// <returns>An enumerable of symbols passing the filter</returns>
-            public override IEnumerable<Symbol> SelectCoarse(QCAlgorithm algorithm, IEnumerable<CoarseFundamental> coarse)
+            public override IEnumerable<Symbol> SelectCoarse(
+                QCAlgorithm algorithm,
+                IEnumerable<CoarseFundamental> coarse
+            )
             {
                 return coarse
                     .OrderByDescending(c => c.DollarVolume)
@@ -89,10 +92,12 @@ namespace QuantConnect.Algorithm.CSharp
             /// <param name="algorithm">The algorithm instance</param>
             /// <param name="fine">The fine fundamental data used to perform filtering</param>
             /// <returns>An enumerable of symbols passing the filter</returns>
-            public override IEnumerable<Symbol> SelectFine(QCAlgorithm algorithm, IEnumerable<FineFundamental> fine)
+            public override IEnumerable<Symbol> SelectFine(
+                QCAlgorithm algorithm,
+                IEnumerable<FineFundamental> fine
+            )
             {
-                return fine
-                    .OrderByDescending(f => f.ValuationRatios.EarningYield)
+                return fine.OrderByDescending(f => f.ValuationRatios.EarningYield)
                     .Select(f => f.Symbol)
                     .Take(20);
             }

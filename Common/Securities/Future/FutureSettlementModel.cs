@@ -33,16 +33,23 @@ namespace QuantConnect.Securities.Future
         /// <param name="applyFundsParameters">The funds application parameters</param>
         public override void ApplyFunds(ApplyFundsSettlementModelParameters applyFundsParameters)
         {
-            if(_settledFutureQuantity != 0)
+            if (_settledFutureQuantity != 0)
             {
                 var fill = applyFundsParameters.Fill;
                 var security = applyFundsParameters.Security;
                 var futureHolding = (FutureHolding)security.Holdings;
 
-                var absoluteQuantityClosed = Math.Min(fill.AbsoluteFillQuantity, security.Holdings.AbsoluteQuantity);
+                var absoluteQuantityClosed = Math.Min(
+                    fill.AbsoluteFillQuantity,
+                    security.Holdings.AbsoluteQuantity
+                );
 
-                var absoluteQuantityClosedSettled = Math.Min(absoluteQuantityClosed, Math.Abs(_settledFutureQuantity));
-                var quantityClosedSettled = Math.Sign(-fill.FillQuantity) * absoluteQuantityClosedSettled;
+                var absoluteQuantityClosedSettled = Math.Min(
+                    absoluteQuantityClosed,
+                    Math.Abs(_settledFutureQuantity)
+                );
+                var quantityClosedSettled =
+                    Math.Sign(-fill.FillQuantity) * absoluteQuantityClosedSettled;
 
                 // reduce our settled future quantity proportionally too
                 var factor = quantityClosedSettled / _settledFutureQuantity;
@@ -52,7 +59,10 @@ namespace QuantConnect.Securities.Future
                 var removedSettledProfit = factor * futureHolding.SettledProfit;
                 futureHolding.SettledProfit -= removedSettledProfit;
 
-                applyFundsParameters.CashAmount = new CashAmount(applyFundsParameters.CashAmount.Amount - removedSettledProfit, applyFundsParameters.CashAmount.Currency);
+                applyFundsParameters.CashAmount = new CashAmount(
+                    applyFundsParameters.CashAmount.Amount - removedSettledProfit,
+                    applyFundsParameters.CashAmount.Currency
+                );
             }
 
             base.ApplyFunds(applyFundsParameters);
@@ -77,14 +87,22 @@ namespace QuantConnect.Securities.Future
                     _settledFutureQuantity = security.Holdings.Quantity;
 
                     // We settled the daily P&L, losers pay winners
-                    var dailyProfitLoss = futureHolding.TotalCloseProfit(includeFees: false, exitPrice: _settlementPrice) - futureHolding.SettledProfit;
+                    var dailyProfitLoss =
+                        futureHolding.TotalCloseProfit(
+                            includeFees: false,
+                            exitPrice: _settlementPrice
+                        ) - futureHolding.SettledProfit;
                     if (dailyProfitLoss != 0)
                     {
                         futureHolding.SettledProfit += dailyProfitLoss;
 
-                        settlementParameters.Portfolio.CashBook[security.QuoteCurrency.Symbol].AddAmount(dailyProfitLoss);
-                        Log.Trace($"FutureSettlementModel.Scan({security.Symbol}): {security.LocalTime} Daily P&L: {dailyProfitLoss} " +
-                            $"Quantity: {_settledFutureQuantity} Settlement: {_settlementPrice} UnrealizedProfit: {futureHolding.UnrealizedProfit}");
+                        settlementParameters
+                            .Portfolio.CashBook[security.QuoteCurrency.Symbol]
+                            .AddAmount(dailyProfitLoss);
+                        Log.Trace(
+                            $"FutureSettlementModel.Scan({security.Symbol}): {security.LocalTime} Daily P&L: {dailyProfitLoss} "
+                                + $"Quantity: {_settledFutureQuantity} Settlement: {_settlementPrice} UnrealizedProfit: {futureHolding.UnrealizedProfit}"
+                        );
                     }
                 }
                 _lastSettlementDate = security.LocalTime.Date;

@@ -13,13 +13,13 @@
  * limitations under the License.
 */
 
+using System;
+using System.Linq;
 using NUnit.Framework;
 using QuantConnect.Algorithm;
 using QuantConnect.Data.UniverseSelection;
 using QuantConnect.Lean.Engine.DataFeeds;
 using QuantConnect.Securities;
-using System;
-using System.Linq;
 
 namespace QuantConnect.Tests.Algorithm
 {
@@ -30,7 +30,9 @@ namespace QuantConnect.Tests.Algorithm
         [TestCase(DataNormalizationMode.Adjusted)]
         [TestCase(DataNormalizationMode.SplitAdjusted)]
         [TestCase(DataNormalizationMode.TotalReturn)]
-        public void CheckUniverseSelectionSecurityDataNormalizationMode(DataNormalizationMode dataNormalizationMode)
+        public void CheckUniverseSelectionSecurityDataNormalizationMode(
+            DataNormalizationMode dataNormalizationMode
+        )
         {
             var tuple = GetAlgorithmAndDataManager();
             var algorithm = tuple.Item1;
@@ -42,11 +44,15 @@ namespace QuantConnect.Tests.Algorithm
             // OnEndOfTimeStep will add all pending universe additions
             algorithm.OnEndOfTimeStep();
 
-            var changes = dataManager.UniverseSelection
-                .ApplyUniverseSelection(
-                    algorithm.UniverseManager.First().Value,
+            var changes = dataManager.UniverseSelection.ApplyUniverseSelection(
+                algorithm.UniverseManager.First().Value,
+                algorithm.UtcTime,
+                new BaseDataCollection(
                     algorithm.UtcTime,
-                    new BaseDataCollection(algorithm.UtcTime, null, Enumerable.Empty<CoarseFundamental>()));
+                    null,
+                    Enumerable.Empty<CoarseFundamental>()
+                )
+            );
 
             Assert.AreEqual(1, changes.AddedSecurities.Count());
 
@@ -72,11 +78,15 @@ namespace QuantConnect.Tests.Algorithm
             // OnEndOfTimeStep will add all pending universe additions
             algorithm.OnEndOfTimeStep();
 
-            var changes = dataManager.UniverseSelection
-                .ApplyUniverseSelection(
-                    algorithm.UniverseManager.First().Value,
+            var changes = dataManager.UniverseSelection.ApplyUniverseSelection(
+                algorithm.UniverseManager.First().Value,
+                algorithm.UtcTime,
+                new BaseDataCollection(
                     algorithm.UtcTime,
-                    new BaseDataCollection(algorithm.UtcTime, null, Enumerable.Empty<CoarseFundamental>()));
+                    null,
+                    Enumerable.Empty<CoarseFundamental>()
+                )
+            );
 
             Assert.AreEqual(1, changes.AddedSecurities.Count());
 
@@ -111,11 +121,15 @@ namespace QuantConnect.Tests.Algorithm
             // OnEndOfTimeStep will add all pending universe additions
             algorithm.OnEndOfTimeStep();
 
-            var changes = dataManager.UniverseSelection
-                .ApplyUniverseSelection(
-                    algorithm.UniverseManager.First().Value,
+            var changes = dataManager.UniverseSelection.ApplyUniverseSelection(
+                algorithm.UniverseManager.First().Value,
+                algorithm.UtcTime,
+                new BaseDataCollection(
                     algorithm.UtcTime,
-                    new BaseDataCollection(algorithm.UtcTime, null, Enumerable.Empty<CoarseFundamental>()));
+                    null,
+                    Enumerable.Empty<CoarseFundamental>()
+                )
+            );
 
             Assert.AreEqual(1, changes.AddedSecurities.Count());
 
@@ -144,15 +158,18 @@ namespace QuantConnect.Tests.Algorithm
                         symbolPropertiesDatabase,
                         algorithm,
                         RegisteredSecurityDataTypesProvider.Null,
-                        new SecurityCacheProvider(algorithm.Portfolio)),
+                        new SecurityCacheProvider(algorithm.Portfolio)
+                    ),
                     dataPermissionManager,
-                    TestGlobals.DataProvider),
+                    TestGlobals.DataProvider
+                ),
                 algorithm,
                 algorithm.TimeKeeper,
                 marketHoursDatabase,
                 false,
                 RegisteredSecurityDataTypesProvider.Null,
-                dataPermissionManager);
+                dataPermissionManager
+            );
 
             var securityService = new SecurityService(
                 algorithm.Portfolio.CashBook,
@@ -160,7 +177,8 @@ namespace QuantConnect.Tests.Algorithm
                 symbolPropertiesDatabase,
                 algorithm,
                 RegisteredSecurityDataTypesProvider.Null,
-                new SecurityCacheProvider(algorithm.Portfolio));
+                new SecurityCacheProvider(algorithm.Portfolio)
+            );
 
             algorithm.SubscriptionManager.SetDataManager(dataManager);
             algorithm.Securities.SetSecurityService(securityService);

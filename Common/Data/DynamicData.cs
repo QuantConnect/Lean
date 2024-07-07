@@ -29,10 +29,15 @@ namespace QuantConnect.Data
     /// <remarks>Intended for use with Quandl class.</remarks>
     public abstract class DynamicData : BaseData, IDynamicMetaObjectProvider
     {
-        private static readonly MethodInfo SetPropertyMethodInfo = typeof(DynamicData).GetMethod("SetProperty");
-        private static readonly MethodInfo GetPropertyMethodInfo = typeof(DynamicData).GetMethod("GetProperty");
+        private static readonly MethodInfo SetPropertyMethodInfo = typeof(DynamicData).GetMethod(
+            "SetProperty"
+        );
+        private static readonly MethodInfo GetPropertyMethodInfo = typeof(DynamicData).GetMethod(
+            "GetProperty"
+        );
 
-        private readonly IDictionary<string, object> _snakeNameStorage = new Dictionary<string, object>();
+        private readonly IDictionary<string, object> _snakeNameStorage =
+            new Dictionary<string, object>();
         private readonly IDictionary<string, object> _storage = new Dictionary<string, object>();
 
         /// <summary>
@@ -40,7 +45,12 @@ namespace QuantConnect.Data
         /// </summary>
         public DynamicMetaObject GetMetaObject(Expression parameter)
         {
-            return new GetSetPropertyDynamicMetaObject(parameter, this, SetPropertyMethodInfo, GetPropertyMethodInfo);
+            return new GetSetPropertyDynamicMetaObject(
+                parameter,
+                this,
+                SetPropertyMethodInfo,
+                GetPropertyMethodInfo
+            );
         }
 
         /// <summary>
@@ -92,7 +102,7 @@ namespace QuantConnect.Data
             {
                 if (value is string)
                 {
-                    Symbol = SymbolCache.GetSymbol((string) value);
+                    Symbol = SymbolCache.GetSymbol((string)value);
                 }
                 else
                 {
@@ -147,7 +157,10 @@ namespace QuantConnect.Data
             }
 
             object value;
-            if (!_storage.TryGetValue(name, out value) && !_snakeNameStorage.TryGetValue(name, out value))
+            if (
+                !_storage.TryGetValue(name, out value)
+                && !_snakeNameStorage.TryGetValue(name, out value)
+            )
             {
                 // let the user know the property name that we couldn't find
                 throw new KeyNotFoundException(

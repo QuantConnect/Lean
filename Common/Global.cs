@@ -14,11 +14,11 @@
 */
 
 using System;
-using Newtonsoft.Json;
-using QuantConnect.Securities;
-using Newtonsoft.Json.Converters;
-using System.Runtime.Serialization;
 using System.Runtime.CompilerServices;
+using System.Runtime.Serialization;
+using Newtonsoft.Json;
+using Newtonsoft.Json.Converters;
+using QuantConnect.Securities;
 
 namespace QuantConnect
 {
@@ -29,30 +29,43 @@ namespace QuantConnect
     {
         /// Year-Month-Date 6 Character Date Representation
         public const string SixCharacter = "yyMMdd";
+
         /// YYYY-MM-DD Eight Character Date Representation
         public const string EightCharacter = "yyyyMMdd";
+
         /// Daily and hourly time format
         public const string TwelveCharacter = "yyyyMMdd HH:mm";
+
         /// JSON Format Date Representation
         public static string JsonFormat { get; } = "yyyy-MM-ddTHH:mm:ss";
+
         /// MySQL Format Date Representation
         public const string DB = "yyyy-MM-dd HH:mm:ss";
+
         /// QuantConnect UX Date Representation
         public const string UI = "yyyy-MM-dd HH:mm:ss";
+
         /// en-US Short Date and Time Pattern
         public const string USShort = "M/d/yy h:mm tt";
+
         /// en-US Short Date Pattern
         public const string USShortDateOnly = "M/d/yy";
+
         /// en-US format
         public const string US = "M/d/yyyy h:mm:ss tt";
+
         /// en-US Date format
         public const string USDateOnly = "M/d/yyyy";
+
         /// Date format of QC forex data
         public const string Forex = "yyyyMMdd HH:mm:ss.ffff";
+
         /// Date format of FIX Protocol UTC Timestamp without milliseconds
         public const string FIX = "yyyyMMdd-HH:mm:ss";
+
         /// Date format of FIX Protocol UTC Timestamp with milliseconds
         public const string FIXWithMillisecond = "yyyyMMdd-HH:mm:ss.fff";
+
         /// YYYYMM Year and Month Character Date Representation (used for futures)
         public const string YearMonth = "yyyyMM";
     }
@@ -76,27 +89,45 @@ namespace QuantConnect
         public string CurrencySymbol { get; set; }
 
         /// Average Price of our Holding in the currency the symbol is traded in
-        [JsonProperty(PropertyName = "averagePrice", DefaultValueHandling = DefaultValueHandling.Ignore)]
+        [JsonProperty(
+            PropertyName = "averagePrice",
+            DefaultValueHandling = DefaultValueHandling.Ignore
+        )]
         public decimal AveragePrice { get; set; }
 
         /// Quantity of Symbol We Hold.
-        [JsonProperty(PropertyName = "quantity", DefaultValueHandling = DefaultValueHandling.Ignore)]
+        [JsonProperty(
+            PropertyName = "quantity",
+            DefaultValueHandling = DefaultValueHandling.Ignore
+        )]
         public decimal Quantity { get; set; }
 
         /// Current Market Price of the Asset in the currency the symbol is traded in
-        [JsonProperty(PropertyName = "marketPrice", DefaultValueHandling = DefaultValueHandling.Ignore)]
+        [JsonProperty(
+            PropertyName = "marketPrice",
+            DefaultValueHandling = DefaultValueHandling.Ignore
+        )]
         public decimal MarketPrice { get; set; }
 
         /// Current market conversion rate into the account currency
-        [JsonProperty(PropertyName = "conversionRate", DefaultValueHandling = DefaultValueHandling.Ignore)]
+        [JsonProperty(
+            PropertyName = "conversionRate",
+            DefaultValueHandling = DefaultValueHandling.Ignore
+        )]
         public decimal? ConversionRate { get; set; }
 
         /// Current market value of the holding
-        [JsonProperty(PropertyName = "marketValue", DefaultValueHandling = DefaultValueHandling.Ignore)]
+        [JsonProperty(
+            PropertyName = "marketValue",
+            DefaultValueHandling = DefaultValueHandling.Ignore
+        )]
         public decimal MarketValue { get; set; }
 
         /// Current unrealized P/L of the holding
-        [JsonProperty(PropertyName = "unrealizedPnl", DefaultValueHandling = DefaultValueHandling.Ignore)]
+        [JsonProperty(
+            PropertyName = "unrealizedPnl",
+            DefaultValueHandling = DefaultValueHandling.Ignore
+        )]
         public decimal UnrealizedPnL { get; set; }
 
         /// Current unrealized P/L % of the holding
@@ -337,16 +368,22 @@ namespace QuantConnect
     {
         /// Base market data type (0)
         Base,
+
         /// TradeBar market data type (OHLC summary bar) (1)
         TradeBar,
+
         /// Tick market data type (price-time pair) (2)
         Tick,
+
         /// Data associated with an instrument (3)
         Auxiliary,
+
         /// QuoteBar market data type (4) [Bid(OHLC), Ask(OHLC) and Mid(OHLC) summary bar]
         QuoteBar,
+
         /// Option chain data (5)
         OptionChain,
+
         /// Futures chain data (6)
         FuturesChain
     }
@@ -358,10 +395,13 @@ namespace QuantConnect
     {
         /// Backtesting Datafeed Endpoint (0)
         Backtesting,
+
         /// Loading files off the local system (1)
         FileSystem,
+
         /// Getting datafeed from a QC-Live-Cloud (2)
         LiveTrading,
+
         /// Database (3)
         Database
     }
@@ -385,9 +425,11 @@ namespace QuantConnect
     public enum TickType
     {
         /// Trade type tick object (0)
-        Trade ,
+        Trade,
+
         /// Quote type tick object (1)
         Quote,
+
         /// Open Interest type tick object (for options, futures) (2)
         OpenInterest
     }
@@ -432,12 +474,16 @@ namespace QuantConnect
     {
         /// Tick Resolution (0)
         Tick,
+
         /// Second Resolution (1)
         Second,
+
         /// Minute Resolution (2)
         Minute,
+
         /// Hour Resolution (3)
         Hour,
+
         /// Daily Resolution (4)
         Daily
     }
@@ -556,26 +602,37 @@ namespace QuantConnect
     {
         /// Error compiling algorithm at start (0)
         DeployError,
+
         /// Waiting for a server (1)
         InQueue,
+
         /// Running algorithm (2)
         Running,
+
         /// Stopped algorithm or exited with runtime errors (3)
         Stopped,
+
         /// Liquidated algorithm (4)
         Liquidated,
+
         /// Algorithm has been deleted (5)
         Deleted,
+
         /// Algorithm completed running (6)
         Completed,
+
         /// Runtime Error Stoped Algorithm (7)
         RuntimeError,
+
         /// Error in the algorithm id (not used) (8)
         Invalid,
+
         /// The algorithm is logging into the brokerage (9)
         LoggingIn,
+
         /// The algorithm is initializing (10)
         Initializing,
+
         /// History status update (11)
         History
     }
@@ -639,30 +696,43 @@ namespace QuantConnect
     {
         /// Period Short Codes - 10
         TenSeconds = 10,
+
         /// Period Short Codes - 30 Second
         ThirtySeconds = 30,
+
         /// Period Short Codes - 60 Second
         OneMinute = 60,
+
         /// Period Short Codes - 120 Second
         TwoMinutes = 120,
+
         /// Period Short Codes - 180 Second
         ThreeMinutes = 180,
+
         /// Period Short Codes - 300 Second
         FiveMinutes = 300,
+
         /// Period Short Codes - 600 Second
         TenMinutes = 600,
+
         /// Period Short Codes - 900 Second
         FifteenMinutes = 900,
+
         /// Period Short Codes - 1200 Second
         TwentyMinutes = 1200,
+
         /// Period Short Codes - 1800 Second
         ThirtyMinutes = 1800,
+
         /// Period Short Codes - 3600 Second
         OneHour = 3600,
+
         /// Period Short Codes - 7200 Second
         TwoHours = 7200,
+
         /// Period Short Codes - 14400 Second
         FourHours = 14400,
+
         /// Period Short Codes - 21600 Second
         SixHours = 21600
     }
@@ -676,33 +746,40 @@ namespace QuantConnect
         /// No modifications to the asset price at all. For Equities, dividends are paid in cash and splits are applied directly to your portfolio quantity. (0)
         /// </summary>
         Raw,
+
         /// <summary>
         /// Splits and dividends are backward-adjusted into the price of the asset. The price today is identical to the current market price. (1)
         /// </summary>
         Adjusted,
+
         /// <summary>
         /// Equity splits are applied to the price adjustment but dividends are paid in cash to your portfolio. This normalization mode allows you to manage dividend payments (e.g. reinvestment) while still giving a smooth time series of prices for indicators. (2)
         /// </summary>
         SplitAdjusted,
+
         /// <summary>
         /// Equity splits are applied to the price adjustment and the value of all future dividend payments is added to the initial asset price. (3)
         /// </summary>
         TotalReturn,
+
         /// <summary>
         /// Eliminates price jumps between two consecutive contracts, adding a factor based on the difference of their prices. The first contract has the true price. Factor 0. (4)
         /// </summary>
         /// <remarks>First contract is the true one, factor 0</remarks>
         ForwardPanamaCanal,
+
         /// <summary>
         /// Eliminates price jumps between two consecutive contracts, adding a factor based on the difference of their prices. The last contract has the true price. Factor 0. (5)
         /// </summary>
         /// <remarks>Last contract is the true one, factor 0</remarks>
         BackwardsPanamaCanal,
+
         /// <summary>
         /// Eliminates price jumps between two consecutive contracts, multiplying the prices by their ratio. The last contract has the true price. Factor 1. (6)
         /// </summary>
         /// <remarks>Last contract is the true one, factor 1</remarks>
         BackwardsRatio,
+
         /// <summary>
         /// Splits and dividends are adjusted into the prices in a given date. Only for history requests. (7)
         /// </summary>
@@ -718,6 +795,7 @@ namespace QuantConnect
         /// The contract maps on the previous day of expiration of the front month (0)
         /// </summary>
         LastTradingDay,
+
         /// <summary>
         /// The contract maps on the first date of the delivery month of the front month. If the contract expires prior to this date,
         /// then it rolls on the contract's last trading date instead (1)
@@ -725,10 +803,12 @@ namespace QuantConnect
         /// <remarks>For example, the Crude Oil WTI (CL) 'DEC 2021 CLZ1' contract expires on November, 19 2021, so the mapping date will be its expiration date.</remarks>
         /// <remarks>Another example is the Corn 'DEC 2021 ZCZ1' contract, which expires on December, 14 2021, so the mapping date will be December 1, 2021.</remarks>
         FirstDayMonth,
+
         /// <summary>
         /// The contract maps when the following back month contract has a higher open interest that the current front month (2)
         /// </summary>
         OpenInterest,
+
         /// <summary>
         /// The contract maps when any of the back month contracts of the next year have a higher volume that the current front month (3)
         /// </summary>
@@ -744,10 +824,12 @@ namespace QuantConnect
         /// A new <see cref="Cash.Symbol"/> was added (0)
         /// </summary>
         Added,
+
         /// <summary>
         /// One or more <see cref="Cash"/> instances were removed (1)
         /// </summary>
         Removed,
+
         /// <summary>
         /// An existing <see cref="Cash.Symbol"/> was updated (2)
         /// </summary>
@@ -763,9 +845,11 @@ namespace QuantConnect
         /// Gets the exchange as single character representation.
         /// </summary>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static string GetPrimaryExchangeCodeGetPrimaryExchange(this string exchange,
+        public static string GetPrimaryExchangeCodeGetPrimaryExchange(
+            this string exchange,
             SecurityType securityType = SecurityType.Equity,
-            string market = Market.USA)
+            string market = Market.USA
+        )
         {
             return exchange.GetPrimaryExchange(securityType, market).Code;
         }
@@ -775,9 +859,11 @@ namespace QuantConnect
         /// </summary>
         /// <remarks>Useful for performance</remarks>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static Exchange GetPrimaryExchange(this string exchange,
+        public static Exchange GetPrimaryExchange(
+            this string exchange,
             SecurityType securityType = SecurityType.Equity,
-            string market = Market.USA)
+            string market = Market.USA
+        )
         {
             var primaryExchange = Exchange.UNKNOWN;
             if (string.IsNullOrEmpty(exchange))
@@ -914,7 +1000,10 @@ namespace QuantConnect
                         return Exchange.UNKNOWN;
                 }
             }
-            else if (securityType == SecurityType.Future || securityType == SecurityType.FutureOption)
+            else if (
+                securityType == SecurityType.Future
+                || securityType == SecurityType.FutureOption
+            )
             {
                 switch (exchange.LazyToUpper())
                 {

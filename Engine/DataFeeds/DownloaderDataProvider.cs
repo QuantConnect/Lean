@@ -15,17 +15,17 @@
 */
 
 using System;
-using NodaTime;
+using System.Collections.Concurrent;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using QuantConnect.Util;
+using NodaTime;
+using QuantConnect.Configuration;
 using QuantConnect.Data;
+using QuantConnect.Interfaces;
 using QuantConnect.Logging;
 using QuantConnect.Securities;
-using QuantConnect.Interfaces;
-using System.Collections.Generic;
-using QuantConnect.Configuration;
-using System.Collections.Concurrent;
+using QuantConnect.Util;
 
 namespace QuantConnect.Lean.Engine.DataFeeds
 {
@@ -41,10 +41,14 @@ namespace QuantConnect.Lean.Engine.DataFeeds
 
         private bool _customDataDownloadError;
         private readonly ConcurrentDictionary<Symbol, Symbol> _marketHoursWarning = new();
-        private readonly MarketHoursDatabase _marketHoursDatabase = MarketHoursDatabase.FromDataFolder();
+        private readonly MarketHoursDatabase _marketHoursDatabase =
+            MarketHoursDatabase.FromDataFolder();
         private readonly IDataDownloader _dataDownloader;
-        private readonly IDataCacheProvider _dataCacheProvider = new DiskDataCacheProvider(DiskSynchronizer);
-        private readonly IMapFileProvider _mapFileProvider = Composer.Instance.GetPart<IMapFileProvider>();
+        private readonly IDataCacheProvider _dataCacheProvider = new DiskDataCacheProvider(
+            DiskSynchronizer
+        );
+        private readonly IMapFileProvider _mapFileProvider =
+            Composer.Instance.GetPart<IMapFileProvider>();
 
         /// <summary>
         /// Creates a new instance
@@ -54,11 +58,15 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             var dataDownloaderConfig = Config.Get("data-downloader");
             if (!string.IsNullOrEmpty(dataDownloaderConfig))
             {
-                _dataDownloader = Composer.Instance.GetExportedValueByTypeName<IDataDownloader>(dataDownloaderConfig);
+                _dataDownloader = Composer.Instance.GetExportedValueByTypeName<IDataDownloader>(
+                    dataDownloaderConfig
+                );
             }
             else
             {
-                throw new ArgumentException("DownloaderDataProvider(): requires 'data-downloader' to be set with a valid type name");
+                throw new ArgumentException(
+                    "DownloaderDataProvider(): requires 'data-downloader' to be set with a valid type name"
+                );
             }
         }
 
@@ -77,120 +85,166 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         /// <returns>A <see cref="Stream"/> of the data requested</returns>
         public override Stream Fetch(string key)
         {
-            return DownloadOnce(key, s =>
-            {
-                if (LeanData.TryParsePath(key, out var symbol, out var date, out var resolution, out var tickType, out var dataType))
+            return DownloadOnce(
+                key,
+                s =>
                 {
-                    if (symbol.SecurityType == SecurityType.Base)
+                    if (
+                        LeanData.TryParsePath(
+                            key,
+                            out var symbol,
+                            out var date,
+                            out var resolution,
+                            out var tickType,
+                            out var dataType
+                        )
+                    )
                     {
-                        if (!_customDataDownloadError)
+                        if (symbol.SecurityType == SecurityType.Base)
                         {
-                            _customDataDownloadError = true;
-                            // lean data writter doesn't support it
-                            Log.Trace($"DownloaderDataProvider.Get(): custom data is not supported, requested: {symbol}");
-                        }
-                        return;
-                    }
-
-                    MarketHoursDatabase.Entry entry;
-                    try
-                    {
-                        entry = _marketHoursDatabase.GetEntry(symbol.ID.Market, symbol, symbol.SecurityType);
-                    }
-                    catch
-                    {
-                        // this could happen for some sources using the data provider but with not market hours data base entry, like interest rates
-                        if (_marketHoursWarning.TryAdd(symbol, symbol))
-                        {
-                            // log once
-                            Log.Trace($"DownloaderDataProvider.Get(): failed to find market hours for {symbol}, skipping");
-                        }
-                        // this shouldn't happen for data we want can download
-                        return;
-                    }
-
-                    var dataTimeZone = entry.DataTimeZone;
-                    var exchangeTimeZone = entry.ExchangeHours.TimeZone;
-                    DateTime startTimeUtc;
-                    DateTime endTimeUtc;
-                    // we will download until yesterday so we are sure we don't get partial data
-                    var endTimeUtcLimit = DateTime.UtcNow.Date.AddDays(-1);
-                    if (resolution < Resolution.Hour)
-                    {
-                        // we can get the date from the path
-                        startTimeUtc = date.ConvertToUtc(dataTimeZone);
-                        // let's get the whole day
-                        endTimeUtc = date.AddDays(1).ConvertToUtc(dataTimeZone);
-                        if (endTimeUtc > endTimeUtcLimit)
-                        {
-                            // we are at the limit, avoid getting partial data
+                            if (!_customDataDownloadError)
+                            {
+                                _customDataDownloadError = true;
+                                // lean data writter doesn't support it
+                                Log.Trace(
+                                    $"DownloaderDataProvider.Get(): custom data is not supported, requested: {symbol}"
+                                );
+                            }
                             return;
                         }
-                    }
-                    else
-                    {
-                        // since hourly & daily are a single file we fetch the whole file
-                        endTimeUtc = endTimeUtcLimit;
+
+                        MarketHoursDatabase.Entry entry;
                         try
                         {
-                            // we don't really know when Futures, FutureOptions, Cryptos, etc, start date so let's give it a good guess
-                            if (symbol.SecurityType == SecurityType.Crypto)
-                            {
-                                // bitcoin start
-                                startTimeUtc = new DateTime(2009, 1, 1);
-                            }
-                            else if (symbol.SecurityType.IsOption() && symbol.SecurityType != SecurityType.FutureOption)
-                            {
-                                // For options, an hourly or daily file contains a year of data, so we need to get the year of the date
-                                startTimeUtc = new DateTime(date.Year, 1, 1);
-                                endTimeUtc = startTimeUtc.AddYears(1);
-                            }
-                            else
-                            {
-                                startTimeUtc = symbol.ID.Date;
-                            }
+                            entry = _marketHoursDatabase.GetEntry(
+                                symbol.ID.Market,
+                                symbol,
+                                symbol.SecurityType
+                            );
                         }
-                        catch (InvalidOperationException)
+                        catch
                         {
-                            startTimeUtc = Time.Start;
+                            // this could happen for some sources using the data provider but with not market hours data base entry, like interest rates
+                            if (_marketHoursWarning.TryAdd(symbol, symbol))
+                            {
+                                // log once
+                                Log.Trace(
+                                    $"DownloaderDataProvider.Get(): failed to find market hours for {symbol}, skipping"
+                                );
+                            }
+                            // this shouldn't happen for data we want can download
+                            return;
                         }
 
-                        if (startTimeUtc < Time.Start)
+                        var dataTimeZone = entry.DataTimeZone;
+                        var exchangeTimeZone = entry.ExchangeHours.TimeZone;
+                        DateTime startTimeUtc;
+                        DateTime endTimeUtc;
+                        // we will download until yesterday so we are sure we don't get partial data
+                        var endTimeUtcLimit = DateTime.UtcNow.Date.AddDays(-1);
+                        if (resolution < Resolution.Hour)
                         {
-                            startTimeUtc = Time.Start;
+                            // we can get the date from the path
+                            startTimeUtc = date.ConvertToUtc(dataTimeZone);
+                            // let's get the whole day
+                            endTimeUtc = date.AddDays(1).ConvertToUtc(dataTimeZone);
+                            if (endTimeUtc > endTimeUtcLimit)
+                            {
+                                // we are at the limit, avoid getting partial data
+                                return;
+                            }
                         }
-
-                        if (endTimeUtc > endTimeUtcLimit)
+                        else
                         {
+                            // since hourly & daily are a single file we fetch the whole file
                             endTimeUtc = endTimeUtcLimit;
-                        }
-                    }
-
-                    try
-                    {
-                        LeanDataWriter writer = null;
-                        var getParams = new DataDownloaderGetParameters(symbol, resolution, startTimeUtc, endTimeUtc, tickType);
-
-                        var downloaderDataParameters = getParams.GetDataDownloaderParameterForAllMappedSymbols(_mapFileProvider, exchangeTimeZone);
-
-                        var downloadedData = GetDownloadedData(downloaderDataParameters, symbol, exchangeTimeZone, dataTimeZone, dataType);
-
-                        foreach (var dataPerSymbol in downloadedData)
-                        {
-                            if (writer == null)
+                            try
                             {
-                                writer = new LeanDataWriter(resolution, symbol, Globals.DataFolder, tickType, mapSymbol: true, dataCacheProvider: _dataCacheProvider);
+                                // we don't really know when Futures, FutureOptions, Cryptos, etc, start date so let's give it a good guess
+                                if (symbol.SecurityType == SecurityType.Crypto)
+                                {
+                                    // bitcoin start
+                                    startTimeUtc = new DateTime(2009, 1, 1);
+                                }
+                                else if (
+                                    symbol.SecurityType.IsOption()
+                                    && symbol.SecurityType != SecurityType.FutureOption
+                                )
+                                {
+                                    // For options, an hourly or daily file contains a year of data, so we need to get the year of the date
+                                    startTimeUtc = new DateTime(date.Year, 1, 1);
+                                    endTimeUtc = startTimeUtc.AddYears(1);
+                                }
+                                else
+                                {
+                                    startTimeUtc = symbol.ID.Date;
+                                }
                             }
-                            // Save the data
-                            writer.Write(dataPerSymbol);
+                            catch (InvalidOperationException)
+                            {
+                                startTimeUtc = Time.Start;
+                            }
+
+                            if (startTimeUtc < Time.Start)
+                            {
+                                startTimeUtc = Time.Start;
+                            }
+
+                            if (endTimeUtc > endTimeUtcLimit)
+                            {
+                                endTimeUtc = endTimeUtcLimit;
+                            }
                         }
-                    }
-                    catch (Exception e)
-                    {
-                        Log.Error(e);
+
+                        try
+                        {
+                            LeanDataWriter writer = null;
+                            var getParams = new DataDownloaderGetParameters(
+                                symbol,
+                                resolution,
+                                startTimeUtc,
+                                endTimeUtc,
+                                tickType
+                            );
+
+                            var downloaderDataParameters =
+                                getParams.GetDataDownloaderParameterForAllMappedSymbols(
+                                    _mapFileProvider,
+                                    exchangeTimeZone
+                                );
+
+                            var downloadedData = GetDownloadedData(
+                                downloaderDataParameters,
+                                symbol,
+                                exchangeTimeZone,
+                                dataTimeZone,
+                                dataType
+                            );
+
+                            foreach (var dataPerSymbol in downloadedData)
+                            {
+                                if (writer == null)
+                                {
+                                    writer = new LeanDataWriter(
+                                        resolution,
+                                        symbol,
+                                        Globals.DataFolder,
+                                        tickType,
+                                        mapSymbol: true,
+                                        dataCacheProvider: _dataCacheProvider
+                                    );
+                                }
+                                // Save the data
+                                writer.Write(dataPerSymbol);
+                            }
+                        }
+                        catch (Exception e)
+                        {
+                            Log.Error(e);
+                        }
                     }
                 }
-            });
+            );
         }
 
         /// <summary>
@@ -208,11 +262,14 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             Symbol symbol,
             DateTimeZone exchangeTimeZone,
             DateTimeZone dataTimeZone,
-            Type dataType)
+            Type dataType
+        )
         {
             if (downloaderDataParameters.IsNullOrEmpty())
             {
-                throw new ArgumentException($"{nameof(DownloaderDataProvider)}.{nameof(GetDownloadedData)}: DataDownloaderGetParameters are empty or equal to null.");
+                throw new ArgumentException(
+                    $"{nameof(DownloaderDataProvider)}.{nameof(GetDownloadedData)}: DataDownloaderGetParameters are empty or equal to null."
+                );
             }
 
             foreach (var downloaderDataParameter in downloaderDataParameters)
@@ -232,7 +289,8 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                     exchangeTimeZone,
                     dataTimeZone,
                     downloaderDataParameter.StartUtc,
-                    downloaderDataParameter.EndUtc);
+                    downloaderDataParameter.EndUtc
+                );
 
                 foreach (var data in groupedData)
                 {
@@ -246,24 +304,31 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         /// </summary>
         protected override Stream GetStream(string key)
         {
-            if (LeanData.TryParsePath(key, out var symbol, out var date, out var resolution) && resolution > Resolution.Minute && symbol.RequiresMapping())
+            if (
+                LeanData.TryParsePath(key, out var symbol, out var date, out var resolution)
+                && resolution > Resolution.Minute
+                && symbol.RequiresMapping()
+            )
             {
                 // because the file could be updated even after it's created because of symbol mapping we can't stream from disk
-                return DiskSynchronizer.Execute(key, () =>
-                {
-                    var baseStream = base.Fetch(key);
-                    if (baseStream != null)
+                return DiskSynchronizer.Execute(
+                    key,
+                    () =>
                     {
-                        var result = new MemoryStream();
-                        baseStream.CopyTo(result);
-                        baseStream.Dispose();
-                        // move position back to the start
-                        result.Position = 0;
+                        var baseStream = base.Fetch(key);
+                        if (baseStream != null)
+                        {
+                            var result = new MemoryStream();
+                            baseStream.CopyTo(result);
+                            baseStream.Dispose();
+                            // move position back to the start
+                            result.Position = 0;
 
-                        return result;
+                            return result;
+                        }
+                        return null;
                     }
-                    return null;
-                });
+                );
             }
 
             return base.Fetch(key);
@@ -277,11 +342,15 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         protected override bool NeedToDownload(string filePath)
         {
             // Ignore null and invalid data requests
-            if (filePath == null
-                || filePath.Contains("fine", StringComparison.InvariantCultureIgnoreCase) && filePath.Contains("fundamental", StringComparison.InvariantCultureIgnoreCase)
+            if (
+                filePath == null
+                || filePath.Contains("fine", StringComparison.InvariantCultureIgnoreCase)
+                    && filePath.Contains("fundamental", StringComparison.InvariantCultureIgnoreCase)
                 || filePath.Contains("map_files", StringComparison.InvariantCultureIgnoreCase)
                 || filePath.Contains("factor_files", StringComparison.InvariantCultureIgnoreCase)
-                || filePath.Contains("margins", StringComparison.InvariantCultureIgnoreCase) && filePath.Contains("future", StringComparison.InvariantCultureIgnoreCase))
+                || filePath.Contains("margins", StringComparison.InvariantCultureIgnoreCase)
+                    && filePath.Contains("future", StringComparison.InvariantCultureIgnoreCase)
+            )
             {
                 return false;
             }
@@ -311,16 +380,24 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             DateTimeZone exchangeTimeZone,
             DateTimeZone dataTimeZone,
             DateTime downloaderStartTimeUtc,
-            DateTime downloaderEndTimeUtc)
+            DateTime downloaderEndTimeUtc
+        )
         {
-            var startDateTimeInExchangeTimeZone = downloaderStartTimeUtc.ConvertFromUtc(exchangeTimeZone);
-            var endDateTimeInExchangeTimeZone = downloaderEndTimeUtc.ConvertFromUtc(exchangeTimeZone);
+            var startDateTimeInExchangeTimeZone = downloaderStartTimeUtc.ConvertFromUtc(
+                exchangeTimeZone
+            );
+            var endDateTimeInExchangeTimeZone = downloaderEndTimeUtc.ConvertFromUtc(
+                exchangeTimeZone
+            );
 
             return downloadData
                 .Where(baseData =>
                 {
                     // Sometimes, external Downloader provider returns excess data
-                    if (baseData.Time < startDateTimeInExchangeTimeZone || baseData.Time > endDateTimeInExchangeTimeZone)
+                    if (
+                        baseData.Time < startDateTimeInExchangeTimeZone
+                        || baseData.Time > endDateTimeInExchangeTimeZone
+                    )
                     {
                         return false;
                     }
@@ -329,7 +406,10 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                     {
                         // we need to store the data in data time zone
                         baseData.Time = baseData.Time.ConvertTo(exchangeTimeZone, dataTimeZone);
-                        baseData.EndTime = baseData.EndTime.ConvertTo(exchangeTimeZone, dataTimeZone);
+                        baseData.EndTime = baseData.EndTime.ConvertTo(
+                            exchangeTimeZone,
+                            dataTimeZone
+                        );
                         return true;
                     }
                     return false;

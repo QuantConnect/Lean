@@ -13,8 +13,8 @@
  * limitations under the License.
 */
 
-using QuantConnect.Securities;
 using System;
+using QuantConnect.Securities;
 
 namespace QuantConnect.Orders.Fees
 {
@@ -93,13 +93,22 @@ namespace QuantConnect.Orders.Fees
             decimal securitiesTransactionTaxTotal = 0;
             if (isSell)
             {
-                securitiesTransactionTaxTotal = Math.Round(orderValue * SecuritiesTransactionTaxTotalMultiplier, 2);
+                securitiesTransactionTaxTotal = Math.Round(
+                    orderValue * SecuritiesTransactionTaxTotalMultiplier,
+                    2
+                );
             }
 
-            var exchangeTransactionCharge = Math.Round(turnover * ExchangeTransactionChargeMultiplier, 2);
+            var exchangeTransactionCharge = Math.Round(
+                turnover * ExchangeTransactionChargeMultiplier,
+                2
+            );
             var clearingCharge = 0;
 
-            var stateTax = Math.Round(StateTaxMultiplier * (brokerage + exchangeTransactionCharge), 2);
+            var stateTax = Math.Round(
+                StateTaxMultiplier * (brokerage + exchangeTransactionCharge),
+                2
+            );
 
             var sebiCharges = Math.Round((turnover * SebiChargesMultiplier), 2);
             decimal stampCharges = 0;
@@ -115,7 +124,16 @@ namespace QuantConnect.Orders.Fees
                 }
             }
 
-            var totalTax = Math.Round(brokerage + securitiesTransactionTaxTotal + exchangeTransactionCharge + stampCharges + clearingCharge + stateTax + sebiCharges, 2);
+            var totalTax = Math.Round(
+                brokerage
+                    + securitiesTransactionTaxTotal
+                    + exchangeTransactionCharge
+                    + stampCharges
+                    + clearingCharge
+                    + stateTax
+                    + sebiCharges,
+                2
+            );
 
             return totalTax;
         }

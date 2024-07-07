@@ -15,14 +15,14 @@
 */
 
 using System;
+using System.Collections.Concurrent;
+using System.Collections.Generic;
 using System.Linq;
 using QuantConnect.Data;
-using QuantConnect.Util;
-using QuantConnect.Interfaces;
-using System.Collections.Generic;
-using System.Collections.Concurrent;
-using QuantConnect.Lean.Engine.Results;
 using QuantConnect.Data.UniverseSelection;
+using QuantConnect.Interfaces;
+using QuantConnect.Lean.Engine.Results;
+using QuantConnect.Util;
 
 namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators.Factories
 {
@@ -30,7 +30,9 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators.Factories
     /// Provides an implementation of <see cref="ISubscriptionEnumeratorFactory"/> that used the <see cref="SubscriptionDataReader"/>
     /// </summary>
     /// <remarks>Only used on backtesting by the <see cref="FileSystemDataFeed"/></remarks>
-    public class SubscriptionDataReaderSubscriptionEnumeratorFactory : ISubscriptionEnumeratorFactory, IDisposable
+    public class SubscriptionDataReaderSubscriptionEnumeratorFactory
+        : ISubscriptionEnumeratorFactory,
+            IDisposable
     {
         private readonly IResultHandler _resultHandler;
         private readonly IFactorFileProvider _factorFileProvider;
@@ -52,13 +54,14 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators.Factories
         /// <param name="cacheProvider">Provider used to get data when it is not present on disk</param>
         /// <param name="algorithm">The algorithm instance to use</param>
         /// <param name="enablePriceScaling">Applies price factor</param>
-        public SubscriptionDataReaderSubscriptionEnumeratorFactory(IResultHandler resultHandler,
+        public SubscriptionDataReaderSubscriptionEnumeratorFactory(
+            IResultHandler resultHandler,
             IMapFileProvider mapFileProvider,
             IFactorFileProvider factorFileProvider,
             IDataCacheProvider cacheProvider,
             IAlgorithm algorithm,
             bool enablePriceScaling = true
-            )
+        )
         {
             _algorithm = algorithm;
             _resultHandler = resultHandler;
@@ -76,17 +79,25 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators.Factories
         /// <param name="request">The subscription request to be read</param>
         /// <param name="dataProvider">Provider used to get data when it is not present on disk</param>
         /// <returns>An enumerator reading the subscription request</returns>
-        public IEnumerator<BaseData> CreateEnumerator(SubscriptionRequest request, IDataProvider dataProvider)
+        public IEnumerator<BaseData> CreateEnumerator(
+            SubscriptionRequest request,
+            IDataProvider dataProvider
+        )
         {
-            var dataReader = new SubscriptionDataReader(request.Configuration,
+            var dataReader = new SubscriptionDataReader(
+                request.Configuration,
                 request,
                 _mapFileProvider,
                 _factorFileProvider,
                 _dataCacheProvider,
                 dataProvider,
-                _algorithm.ObjectStore);
+                _algorithm.ObjectStore
+            );
 
-            dataReader.InvalidConfigurationDetected += (sender, args) => { _resultHandler.ErrorMessage(args.Message); };
+            dataReader.InvalidConfigurationDetected += (sender, args) =>
+            {
+                _resultHandler.ErrorMessage(args.Message);
+            };
             dataReader.StartDateLimited += (sender, args) =>
             {
                 // Queue this warning into our dictionary to report on dispose
@@ -95,19 +106,35 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators.Factories
                     _startDateLimitedWarnings.TryAdd(args.Symbol, args.Message);
                 }
             };
-            dataReader.DownloadFailed += (sender, args) => { _resultHandler.ErrorMessage(args.Message, args.StackTrace); };
-            dataReader.ReaderErrorDetected += (sender, args) => { _resultHandler.RuntimeError(args.Message, args.StackTrace); };
+            dataReader.DownloadFailed += (sender, args) =>
+            {
+                _resultHandler.ErrorMessage(args.Message, args.StackTrace);
+            };
+            dataReader.ReaderErrorDetected += (sender, args) =>
+            {
+                _resultHandler.RuntimeError(args.Message, args.StackTrace);
+            };
             dataReader.NumericalPrecisionLimited += (sender, args) =>
             {
                 // Set a hard limit to keep this warning list from getting unnecessarily large
-                if (_numericalPrecisionLimitedWarnings.Count <= _numericalPrecisionLimitedWarningsMaxCount)
+                if (
+                    _numericalPrecisionLimitedWarnings.Count
+                    <= _numericalPrecisionLimitedWarningsMaxCount
+                )
                 {
                     _numericalPrecisionLimitedWarnings.TryAdd(args.Symbol, args.Message);
                 }
             };
 
             IEnumerator<BaseData> enumerator = dataReader;
-            if (LeanData.UseDailyStrictEndTimes(_algorithm.Settings, request, request.Configuration.Symbol, request.Configuration.Increment))
+            if (
+                LeanData.UseDailyStrictEndTimes(
+                    _algorithm.Settings,
+                    request,
+                    request.Configuration.Symbol,
+                    request.Configuration.Increment
+                )
+            )
             {
                 // before corporate events which might yield data and we synchronize both feeds
                 enumerator = new StrictDailyEndTimesEnumerator(enumerator, request.ExchangeHours);
@@ -121,7 +148,8 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators.Factories
                 _mapFileProvider,
                 request.StartTimeLocal,
                 request.EndTimeLocal,
-                _enablePriceScaling);
+                _enablePriceScaling
+            );
 
             return enumerator;
         }
@@ -135,11 +163,15 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators.Factories
             // Log our numerical precision limited warnings if any
             if (!_numericalPrecisionLimitedWarnings.IsNullOrEmpty())
             {
-                var message = "Due to numerical precision issues in the factor file, data for the following" +
-                    $" symbols was adjust to a later starting date: {string.Join(", ", _numericalPrecisionLimitedWarnings.Values.Take(_numericalPrecisionLimitedWarningsMaxCount))}";
+                var message =
+                    "Due to numerical precision issues in the factor file, data for the following"
+                    + $" symbols was adjust to a later starting date: {string.Join(", ", _numericalPrecisionLimitedWarnings.Values.Take(_numericalPrecisionLimitedWarningsMaxCount))}";
 
                 // If we reached our max warnings count suggest that more may have been left out
-                if (_numericalPrecisionLimitedWarnings.Count >= _numericalPrecisionLimitedWarningsMaxCount)
+                if (
+                    _numericalPrecisionLimitedWarnings.Count
+                    >= _numericalPrecisionLimitedWarningsMaxCount
+                )
                 {
                     message += "...";
                 }
@@ -150,8 +182,9 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators.Factories
             // Log our start date adjustments because of map files
             if (!_startDateLimitedWarnings.IsNullOrEmpty())
             {
-                var message = "The starting dates for the following symbols have been adjusted to match their" +
-                    $" map files first date: {string.Join(", ", _startDateLimitedWarnings.Values.Take(_startDateLimitedWarningsMaxCount))}";
+                var message =
+                    "The starting dates for the following symbols have been adjusted to match their"
+                    + $" map files first date: {string.Join(", ", _startDateLimitedWarnings.Values.Take(_startDateLimitedWarningsMaxCount))}";
 
                 // If we reached our max warnings count suggest that more may have been left out
                 if (_startDateLimitedWarnings.Count >= _startDateLimitedWarningsMaxCount)

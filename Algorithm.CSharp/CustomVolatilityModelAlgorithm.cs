@@ -31,11 +31,12 @@ namespace QuantConnect.Algorithm.CSharp
     public class CustomVolatilityModelAlgorithm : QCAlgorithm
     {
         private Security _equity;
+
         public override void Initialize()
         {
-            SetStartDate(2013, 10, 7);   //Set Start Date
-            SetEndDate(2015, 7, 15);     //Set End Date
-            SetCash(100000);           //Set Strategy Cash
+            SetStartDate(2013, 10, 7); //Set Start Date
+            SetEndDate(2015, 7, 15); //Set End Date
+            SetCash(100000); //Set Strategy Cash
 
             // Find more symbols here: http://quantconnect.com/data
             _equity = AddEquity("SPY", Resolution.Daily);
@@ -59,6 +60,7 @@ namespace QuantConnect.Algorithm.CSharp
 
         // Volatility is a mandatory field
         public decimal Volatility { get; set; } = 0m;
+
         public CustomVolatilityModel(int periods)
         {
             _window = new RollingWindow<decimal>(periods);
@@ -91,14 +93,19 @@ namespace QuantConnect.Algorithm.CSharp
             {
                 _needsUpdate = false;
                 var mean = _window.Average();
-                var std = Math.Sqrt((double)_window.Sum(x => (x - mean)*(x - mean)) / _window.Count());
+                var std = Math.Sqrt(
+                    (double)_window.Sum(x => (x - mean) * (x - mean)) / _window.Count()
+                );
                 Volatility = (std * Math.Sqrt(252d)).SafeDecimalCast();
             }
         }
 
         // Returns history requirements for the volatility model expressed in the form of history request
         // GetHistoryRequirements is a mandatory method
-        public IEnumerable<HistoryRequest> GetHistoryRequirements(Security security, DateTime utcTime)
+        public IEnumerable<HistoryRequest> GetHistoryRequirements(
+            Security security,
+            DateTime utcTime
+        )
         // For simplicity's sake, we will not set a history requirement
         {
             return Enumerable.Empty<HistoryRequest>();

@@ -45,10 +45,11 @@ namespace QuantConnect.Indicators
         /// </summary>
         /// <param name="period">The period used for up and down days</param>
         /// <param name="movingAverageType">The type of moving average to be used for computing the average gain/loss values</param>
-        public RelativeStrengthIndex(int period, MovingAverageType movingAverageType = MovingAverageType.Wilders)
-            : this($"RSI({period})", period, movingAverageType)
-        {
-        }
+        public RelativeStrengthIndex(
+            int period,
+            MovingAverageType movingAverageType = MovingAverageType.Wilders
+        )
+            : this($"RSI({period})", period, movingAverageType) { }
 
         /// <summary>
         /// Initializes a new instance of the RelativeStrengthIndex class with the specified name and period
@@ -56,7 +57,11 @@ namespace QuantConnect.Indicators
         /// <param name="name">The name of this indicator</param>
         /// <param name="period">The period used for up and down days</param>
         /// <param name="movingAverageType">The type of moving average to be used for computing the average gain/loss values</param>
-        public RelativeStrengthIndex(string name, int period, MovingAverageType movingAverageType = MovingAverageType.Wilders)
+        public RelativeStrengthIndex(
+            string name,
+            int period,
+            MovingAverageType movingAverageType = MovingAverageType.Wilders
+        )
             : base(name)
         {
             MovingAverageType = movingAverageType;

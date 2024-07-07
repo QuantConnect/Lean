@@ -44,7 +44,9 @@ namespace QuantConnect.Orders.Fees
         /// <returns>The cost of the order in quote currency</returns>
         public OrderFee GetOrderFee(OrderFeeParameters parameters)
         {
-            return new OrderFee(new CashAmount(_feesPerShare * parameters.Order.AbsoluteQuantity, Currencies.USD));
+            return new OrderFee(
+                new CashAmount(_feesPerShare * parameters.Order.AbsoluteQuantity, Currencies.USD)
+            );
         }
     }
 }

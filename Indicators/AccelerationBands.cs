@@ -52,8 +52,12 @@ namespace QuantConnect.Indicators
         /// <param name="period">The period of the three moving average (middle, upper and lower band).</param>
         /// <param name="width">A coefficient specifying the distance between the middle band and upper or lower bands.</param>
         /// <param name="movingAverageType">Type of the moving average.</param>
-        public AccelerationBands(string name, int period, decimal width,
-            MovingAverageType movingAverageType = MovingAverageType.Simple)
+        public AccelerationBands(
+            string name,
+            int period,
+            decimal width,
+            MovingAverageType movingAverageType = MovingAverageType.Simple
+        )
             : base(name)
         {
             WarmUpPeriod = period;
@@ -70,23 +74,20 @@ namespace QuantConnect.Indicators
         /// <param name="period">The period of the three moving average (middle, upper and lower band).</param>
         /// <param name="width">A coefficient specifying the distance between the middle band and upper or lower bands.</param>
         public AccelerationBands(int period, decimal width)
-            : this($"ABANDS({period},{width})", period, width)
-        {
-        }
+            : this($"ABANDS({period},{width})", period, width) { }
 
         /// <summary>
         /// Initializes a new instance of the <see cref="AccelerationBands" /> class.
         /// </summary>
         /// <param name="period">The period of the three moving average (middle, upper and lower band).</param>
         public AccelerationBands(int period)
-            : this(period, 4)
-        {
-        }
+            : this(period, 4) { }
 
         /// <summary>
         /// Gets a flag indicating when this indicator is ready and fully initialized
         /// </summary>
-        public override bool IsReady => MiddleBand.IsReady && LowerBand.IsReady && UpperBand.IsReady;
+        public override bool IsReady =>
+            MiddleBand.IsReady && LowerBand.IsReady && UpperBand.IsReady;
 
         /// <summary>
         /// Required period, in data points, for the indicator to be ready and fully initialized.
@@ -113,7 +114,8 @@ namespace QuantConnect.Indicators
         /// </returns>
         protected override decimal ComputeNextValue(IBaseDataBar input)
         {
-            var coefficient = _width * (input.High - input.Low).SafeDivision(input.High + input.Low);
+            var coefficient =
+                _width * (input.High - input.Low).SafeDivision(input.High + input.Low);
 
             LowerBand.Update(input.Time, input.Low * (1 - coefficient));
             UpperBand.Update(input.Time, input.High * (1 + coefficient));

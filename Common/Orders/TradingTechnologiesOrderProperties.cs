@@ -12,13 +12,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
 */
-    
+
 namespace QuantConnect.Orders
 {
     /// <summary>
     /// Trading Technologies order properties
     /// </summary>
-    public class TradingTechnologiesOrderProperties : FixOrderProperites
-    {
-    }
+    public class TradingTechnologiesOrderProperties : FixOrderProperites { }
 }

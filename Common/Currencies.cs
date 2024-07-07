@@ -15,8 +15,8 @@
 
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Globalization;
+using System.Linq;
 using System.Text.RegularExpressions;
 
 namespace QuantConnect
@@ -77,73 +77,75 @@ namespace QuantConnect
         /// <remarks>
         /// Now used by Forex and CFD, should probably be moved out into its own class
         /// </remarks>
-        public static readonly IReadOnlyDictionary<string, string> CurrencySymbols = new Dictionary<string, string>
+        public static readonly IReadOnlyDictionary<string, string> CurrencySymbols = new Dictionary<
+            string,
+            string
+        >
         {
-            {USD, "$"},
-            {GBP, "₤"},
-            {"JPY", "¥"},
-            {EUR, "€"},
-            {"NZD", "$"},
-            {"AUD", "$"},
-            {"CAD", "$"},
-            {CHF, "Fr"},
-            {HKD, "$"},
-            {"SGD", "$"},
-            {"XAG", "Ag"},
-            {"XAU", "Au"},
-            {CNH, "¥"},
-            {"CNY", "¥"},
-            {"CZK", "Kč"},
-            {"DKK", "kr"},
-            {"HUF", "Ft"},
-            {"INR", "₹"},
-            {"MXN", "$"},
-            {"NOK", "kr"},
-            {"PLN", "zł"},
-            {"SAR", "﷼"},
-            {"SEK", "kr"},
-            {"THB", "฿"},
-            {"TRY", "₺"},
-            {"TWD", "NT$"},
-            {"ZAR", "R"},
-            {"RUB", "₽"},
-            {"BRL", "R$"},
-            {"GNF", "Fr"},
-            {IDR, "Rp"},
-
-            {"BTC", "₿"},
-            {"BCH", "Ƀ"},
-            {"BSV", "Ɓ"},
-            {"LTC", "Ł"},
-            {"ETH", "Ξ"},
-            {"EOS", "ε"},
-            {"XRP", "✕"},
-            {"XLM", "*"},
-            {"ETC", "ξ"},
-            {"ZRX", "ZRX"},
-            {"USDT", "₮"},
-            {"ADA", "₳"},
-            {"SOL", "◎"},
-            {"DOT", "●"},
-            {"DOGE", "Ð"},
-            {"DAI", "◈"},
-            {"ALGO", "Ⱥ"},
-            {"ICP", "∞"},
-            {"XMR", "ɱ"},
-            {"XTZ", "ꜩ"},
-            {"IOTA", "ɨ"},
-            {"MIOTA", "ɨ"},
-            {"MKR", "Μ"},
-            {"ZEC", "ⓩ"},
-            {"DASH", "Đ"},
-            {"XNO", "Ӿ"},
-            {"REP", "Ɍ"},
-            {"STEEM", "ȿ"},
-            {"THETA", "ϑ"},
-            {"FIL", "⨎"},
-            {"BAT", "⟁"},
-            {"LSK", "Ⱡ"},
-            {"NAV", "Ꞥ"}
+            { USD, "$" },
+            { GBP, "₤" },
+            { "JPY", "¥" },
+            { EUR, "€" },
+            { "NZD", "$" },
+            { "AUD", "$" },
+            { "CAD", "$" },
+            { CHF, "Fr" },
+            { HKD, "$" },
+            { "SGD", "$" },
+            { "XAG", "Ag" },
+            { "XAU", "Au" },
+            { CNH, "¥" },
+            { "CNY", "¥" },
+            { "CZK", "Kč" },
+            { "DKK", "kr" },
+            { "HUF", "Ft" },
+            { "INR", "₹" },
+            { "MXN", "$" },
+            { "NOK", "kr" },
+            { "PLN", "zł" },
+            { "SAR", "﷼" },
+            { "SEK", "kr" },
+            { "THB", "฿" },
+            { "TRY", "₺" },
+            { "TWD", "NT$" },
+            { "ZAR", "R" },
+            { "RUB", "₽" },
+            { "BRL", "R$" },
+            { "GNF", "Fr" },
+            { IDR, "Rp" },
+            { "BTC", "₿" },
+            { "BCH", "Ƀ" },
+            { "BSV", "Ɓ" },
+            { "LTC", "Ł" },
+            { "ETH", "Ξ" },
+            { "EOS", "ε" },
+            { "XRP", "✕" },
+            { "XLM", "*" },
+            { "ETC", "ξ" },
+            { "ZRX", "ZRX" },
+            { "USDT", "₮" },
+            { "ADA", "₳" },
+            { "SOL", "◎" },
+            { "DOT", "●" },
+            { "DOGE", "Ð" },
+            { "DAI", "◈" },
+            { "ALGO", "Ⱥ" },
+            { "ICP", "∞" },
+            { "XMR", "ɱ" },
+            { "XTZ", "ꜩ" },
+            { "IOTA", "ɨ" },
+            { "MIOTA", "ɨ" },
+            { "MKR", "Μ" },
+            { "ZEC", "ⓩ" },
+            { "DASH", "Đ" },
+            { "XNO", "Ӿ" },
+            { "REP", "Ɍ" },
+            { "STEEM", "ȿ" },
+            { "THETA", "ϑ" },
+            { "FIL", "⨎" },
+            { "BAT", "⟁" },
+            { "LSK", "Ⱡ" },
+            { "NAV", "Ꞥ" }
         };
 
         /// <summary>
@@ -155,25 +157,26 @@ namespace QuantConnect
         /// <summary>
         /// Stable pairs in Coinbase. We defined them because they have different fees in Coinbase market
         /// </summary>
-        public static readonly HashSet<string> StablePairsCoinbase = new()
-        {
-            "DAIUSDC",
-            "DAIUSD",
-            "GYENUSD",
-            "PAXUSD",
-            "PAXUSDT",
-            "MUSDUSD",
-            "USDCEUR",
-            "USDCGBP",
-            "USDTEUR",
-            "USDTGBP",
-            "USDTUSD",
-            "USDTUSDC",
-            "USTEUR",
-            "USTUSD",
-            "USTUSDT",
-            "WBTCBTC"
-        };
+        public static readonly HashSet<string> StablePairsCoinbase =
+            new()
+            {
+                "DAIUSDC",
+                "DAIUSD",
+                "GYENUSD",
+                "PAXUSD",
+                "PAXUSDT",
+                "MUSDUSD",
+                "USDCEUR",
+                "USDCGBP",
+                "USDTEUR",
+                "USDTGBP",
+                "USDTUSD",
+                "USDTUSDC",
+                "USTEUR",
+                "USTUSD",
+                "USTUSDT",
+                "WBTCBTC"
+            };
 
         /// <summary>
         /// Define some StableCoins that don't have direct pairs for base currencies in our SPDB in Coinbase market
@@ -181,10 +184,8 @@ namespace QuantConnect
         ///
         /// We use this to allow setting cash amounts for these stablecoins without needing a conversion
         /// security.
-        private static readonly HashSet<string> _stableCoinsWithoutPairsCoinbase = new HashSet<string>
-        {
-            "USDCUSD"
-        };
+        private static readonly HashSet<string> _stableCoinsWithoutPairsCoinbase =
+            new HashSet<string> { "USDCUSD" };
 
         /// <summary>
         /// Define some StableCoins that don't have direct pairs for base currencies in our SPDB in Binance market
@@ -193,19 +194,20 @@ namespace QuantConnect
         /// We use this to allow setting cash amounts for these stablecoins without needing a conversion
         /// security.
         /// </summary>
-        private static readonly HashSet<string> _stableCoinsWithoutPairsBinance = new HashSet<string>
-        {
-            "USDCUSD",
-            "USDTUSD",
-            "USDPUSD",
-            "SUSDUSD",
-            "BUSDUSD",
-            "USTUSD",
-            "TUSDUSD",
-            "FDUSDUSD",
-            "DAIUSD",
-            "IDRTIDR"
-        };
+        private static readonly HashSet<string> _stableCoinsWithoutPairsBinance =
+            new HashSet<string>
+            {
+                "USDCUSD",
+                "USDTUSD",
+                "USDPUSD",
+                "SUSDUSD",
+                "BUSDUSD",
+                "USTUSD",
+                "TUSDUSD",
+                "FDUSDUSD",
+                "DAIUSD",
+                "IDRTIDR"
+            };
 
         /// <summary>
         /// Define some StableCoins that don't have direct pairs for base currencies in our SPDB in Bitfinex market
@@ -214,11 +216,8 @@ namespace QuantConnect
         /// We use this to allow setting cash amounts for these stablecoins without needing a conversion
         /// security.
         /// </summary>
-        private static readonly HashSet<string> _stableCoinsWithoutPairsBitfinex = new HashSet<string>
-        {
-            "EURSEUR",
-            "XCHFCHF"
-        };
+        private static readonly HashSet<string> _stableCoinsWithoutPairsBitfinex =
+            new HashSet<string> { "EURSEUR", "XCHFCHF" };
 
         /// <summary>
         /// Define some StableCoins that don't have direct pairs for base currencies in our SPDB in Binance market
@@ -242,12 +241,15 @@ namespace QuantConnect
         /// <summary>
         /// Dictionary to save StableCoins in different Markets
         /// </summary>
-        private static readonly Dictionary<string, HashSet<string>> _stableCoinsWithoutPairsMarkets = new Dictionary<string, HashSet<string>>
+        private static readonly Dictionary<
+            string,
+            HashSet<string>
+        > _stableCoinsWithoutPairsMarkets = new Dictionary<string, HashSet<string>>
         {
-            { Market.Binance , _stableCoinsWithoutPairsBinance},
-            { Market.Bitfinex , _stableCoinsWithoutPairsBitfinex},
-            { Market.Coinbase, _stableCoinsWithoutPairsCoinbase},
-            { Market.Bybit , _stableCoinsWithoutPairsBybit},
+            { Market.Binance, _stableCoinsWithoutPairsBinance },
+            { Market.Bitfinex, _stableCoinsWithoutPairsBitfinex },
+            { Market.Coinbase, _stableCoinsWithoutPairsCoinbase },
+            { Market.Bybit, _stableCoinsWithoutPairsBybit },
         };
 
         /// <summary>
@@ -258,7 +260,10 @@ namespace QuantConnect
         /// <returns>True if the given symbol is a StableCoin without pair in the given market</returns>
         public static bool IsStableCoinWithoutPair(string symbol, string market)
         {
-            if (_stableCoinsWithoutPairsMarkets.TryGetValue(market, out var stableCoins) && stableCoins.Contains(symbol))
+            if (
+                _stableCoinsWithoutPairsMarkets.TryGetValue(market, out var stableCoins)
+                && stableCoins.Contains(symbol)
+            )
             {
                 return true;
             }
@@ -277,7 +282,9 @@ namespace QuantConnect
                 return string.Empty;
             }
 
-            return CurrencySymbols.TryGetValue(currency, out var currencySymbol) ? currencySymbol : currency;
+            return CurrencySymbols.TryGetValue(currency, out var currencySymbol)
+                ? currencySymbol
+                : currency;
         }
 
         /// <summary>
@@ -308,7 +315,12 @@ namespace QuantConnect
         {
             // Strip out the currency (any character before the first number) ignoring blank spaces since they are not supposed to be in numbers with currency
             value = Regex.Replace(value, @"^[^\d\s-+]+", string.Empty);
-            return decimal.TryParse(value, NumberStyles.Any, CultureInfo.InvariantCulture, out parsedValue);
+            return decimal.TryParse(
+                value,
+                NumberStyles.Any,
+                CultureInfo.InvariantCulture,
+                out parsedValue
+            );
         }
     }
 }

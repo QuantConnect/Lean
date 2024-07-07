@@ -36,19 +36,18 @@ namespace QuantConnect.Tests.Python
             using (Py.GIL())
             {
                 //Filter function that returns a list of symbols
-                var module = PyModule.FromString(Guid.NewGuid().ToString(),
-                    "def filter(universe):\n" +
-                    "   universe = universe.WeeklysOnly().Expiration(0, 10)\n" +
-                    "   return [symbol for symbol in universe\n"+
-                    "           if symbol.ID.OptionRight != OptionRight.Put\n" +
-                    "           and universe.Underlying.Price - symbol.ID.StrikePrice < 10]\n"
+                var module = PyModule.FromString(
+                    Guid.NewGuid().ToString(),
+                    "def filter(universe):\n"
+                        + "   universe = universe.WeeklysOnly().Expiration(0, 10)\n"
+                        + "   return [symbol for symbol in universe\n"
+                        + "           if symbol.ID.OptionRight != OptionRight.Put\n"
+                        + "           and universe.Underlying.Price - symbol.ID.StrikePrice < 10]\n"
                 );
 
                 var filterFunction = module.GetAttr("filter");
                 Assert.DoesNotThrow(() => spyOption.SetFilter(filterFunction));
             }
-
-
         }
 
         [Test]
@@ -61,10 +60,11 @@ namespace QuantConnect.Tests.Python
             using (Py.GIL())
             {
                 //Filter function that returns a OptionFilterUniverse
-                var module = PyModule.FromString(Guid.NewGuid().ToString(),
-                    "def filter(universe):\n" +
-                    "   universe = universe.WeeklysOnly().Expiration(0, 5)\n" +
-                    "   return universe"
+                var module = PyModule.FromString(
+                    Guid.NewGuid().ToString(),
+                    "def filter(universe):\n"
+                        + "   universe = universe.WeeklysOnly().Expiration(0, 5)\n"
+                        + "   return universe"
                 );
 
                 var filterFunction = module.GetAttr("filter");
@@ -75,37 +75,42 @@ namespace QuantConnect.Tests.Python
         [Test]
         public void FilterReturnsUniverseRegression()
         {
-            var parameter = new RegressionTests.AlgorithmStatisticsTestParameters("FilterUniverseRegressionAlgorithm",
-                new Dictionary<string, string> {
-                    {PerformanceMetrics.TotalOrders, "2"},
-                    {"Average Win", "0%"},
-                    {"Average Loss", "-0.02%"},
-                    {"Compounding Annual Return", "-1.629%"},
-                    {"Drawdown", "0.000%"},
-                    {"Expectancy", "-1"},
-                    {"Net Profit", "-0.021%"},
-                    {"Sharpe Ratio", "0"},
-                    {"Probabilistic Sharpe Ratio", "0%"},
-                    {"Loss Rate", "100%"},
-                    {"Win Rate", "0%"},
-                    {"Profit-Loss Ratio", "0"},
-                    {"Alpha", "0"},
-                    {"Beta", "0"},
-                    {"Annual Standard Deviation", "0"},
-                    {"Annual Variance", "0"},
-                    {"Information Ratio", "0"},
-                    {"Tracking Error", "0"},
-                    {"Treynor Ratio", "0"},
-                    {"Total Fees", "$1.00"},
-                    {"OrderListHash", "133c6a56631cf3d8a089c3095a25ee81"}
-                    },
-                    Language.Python,
-                    AlgorithmStatus.Completed);
+            var parameter = new RegressionTests.AlgorithmStatisticsTestParameters(
+                "FilterUniverseRegressionAlgorithm",
+                new Dictionary<string, string>
+                {
+                    { PerformanceMetrics.TotalOrders, "2" },
+                    { "Average Win", "0%" },
+                    { "Average Loss", "-0.02%" },
+                    { "Compounding Annual Return", "-1.629%" },
+                    { "Drawdown", "0.000%" },
+                    { "Expectancy", "-1" },
+                    { "Net Profit", "-0.021%" },
+                    { "Sharpe Ratio", "0" },
+                    { "Probabilistic Sharpe Ratio", "0%" },
+                    { "Loss Rate", "100%" },
+                    { "Win Rate", "0%" },
+                    { "Profit-Loss Ratio", "0" },
+                    { "Alpha", "0" },
+                    { "Beta", "0" },
+                    { "Annual Standard Deviation", "0" },
+                    { "Annual Variance", "0" },
+                    { "Information Ratio", "0" },
+                    { "Tracking Error", "0" },
+                    { "Treynor Ratio", "0" },
+                    { "Total Fees", "$1.00" },
+                    { "OrderListHash", "133c6a56631cf3d8a089c3095a25ee81" }
+                },
+                Language.Python,
+                AlgorithmStatus.Completed
+            );
 
-            AlgorithmRunner.RunLocalBacktest(parameter.Algorithm,
+            AlgorithmRunner.RunLocalBacktest(
+                parameter.Algorithm,
                 parameter.Statistics,
                 parameter.Language,
-                parameter.ExpectedFinalStatus);
+                parameter.ExpectedFinalStatus
+            );
         }
     }
 }

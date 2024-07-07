@@ -57,7 +57,11 @@ namespace QuantConnect.Securities
         /// The percent margin buffer to use when checking whether the total margin used is
         /// above the total portfolio value to generate margin call orders
         /// </param>
-        public DefaultMarginCallModel(SecurityPortfolioManager portfolio, IOrderProperties defaultOrderProperties, decimal marginBuffer = 0.10m)
+        public DefaultMarginCallModel(
+            SecurityPortfolioManager portfolio,
+            IOrderProperties defaultOrderProperties,
+            decimal marginBuffer = 0.10m
+        )
         {
             Portfolio = portfolio;
             DefaultOrderProperties = defaultOrderProperties;
@@ -102,8 +106,17 @@ namespace QuantConnect.Securities
                     foreach (var positionGroup in Portfolio.Positions.Groups)
                     {
                         var positionMarginCallOrders = GenerateMarginCallOrders(
-                            new MarginCallOrdersParameters(positionGroup, totalPortfolioValue, totalMarginUsed)).ToList();
-                        if (positionMarginCallOrders.Count > 0 && positionMarginCallOrders.All(x => x.Quantity != 0))
+                                new MarginCallOrdersParameters(
+                                    positionGroup,
+                                    totalPortfolioValue,
+                                    totalMarginUsed
+                                )
+                            )
+                            .ToList();
+                        if (
+                            positionMarginCallOrders.Count > 0
+                            && positionMarginCallOrders.All(x => x.Quantity != 0)
+                        )
                         {
                             marginCallOrders.AddRange(positionMarginCallOrders);
                         }
@@ -122,10 +135,16 @@ namespace QuantConnect.Securities
         /// </summary>
         /// <param name="parameters">The set of parameters required to generate the margin call orders</param>
         /// <returns>An order object representing a liquidation order to be executed to bring the account within margin requirements</returns>
-        protected virtual IEnumerable<SubmitOrderRequest> GenerateMarginCallOrders(MarginCallOrdersParameters parameters)
+        protected virtual IEnumerable<SubmitOrderRequest> GenerateMarginCallOrders(
+            MarginCallOrdersParameters parameters
+        )
         {
             var positionGroup = parameters.PositionGroup;
-            if (positionGroup.Positions.Any(position => Portfolio.Securities[position.Symbol].QuoteCurrency.ConversionRate == 0))
+            if (
+                positionGroup.Positions.Any(position =>
+                    Portfolio.Securities[position.Symbol].QuoteCurrency.ConversionRate == 0
+                )
+            )
             {
                 // check for div 0 - there's no conv rate, so we can't place an order
                 return Enumerable.Empty<SubmitOrderRequest>();
@@ -134,19 +153,28 @@ namespace QuantConnect.Securities
             // compute the amount of quote currency we need to liquidate in order to get within margin requirements
             var deltaAccountCurrency = parameters.TotalUsedMargin - parameters.TotalPortfolioValue;
 
-            var currentlyUsedBuyingPower = positionGroup.BuyingPowerModel.GetReservedBuyingPowerForPositionGroup(Portfolio, positionGroup);
+            var currentlyUsedBuyingPower =
+                positionGroup.BuyingPowerModel.GetReservedBuyingPowerForPositionGroup(
+                    Portfolio,
+                    positionGroup
+                );
 
             // if currentlyUsedBuyingPower > deltaAccountCurrency, means we can keep using the diff in buying power
             var buyingPowerToKeep = Math.Max(0, currentlyUsedBuyingPower - deltaAccountCurrency);
 
             // we want a reduction so we send the inverse side of our position
-            var deltaBuyingPower = (currentlyUsedBuyingPower - buyingPowerToKeep) * -Math.Sign(positionGroup.Quantity);
+            var deltaBuyingPower =
+                (currentlyUsedBuyingPower - buyingPowerToKeep) * -Math.Sign(positionGroup.Quantity);
 
-            var result = positionGroup.BuyingPowerModel.GetMaximumLotsForDeltaBuyingPower(new GetMaximumLotsForDeltaBuyingPowerParameters(
-                Portfolio, positionGroup, deltaBuyingPower,
-                // margin is negative, we need to reduce positions, no minimum
-                minimumOrderMarginPortfolioPercentage: 0
-            ));
+            var result = positionGroup.BuyingPowerModel.GetMaximumLotsForDeltaBuyingPower(
+                new GetMaximumLotsForDeltaBuyingPowerParameters(
+                    Portfolio,
+                    positionGroup,
+                    deltaBuyingPower,
+                    // margin is negative, we need to reduce positions, no minimum
+                    minimumOrderMarginPortfolioPercentage: 0
+                )
+            );
 
             var absQuantity = Math.Abs(result.NumberOfLots);
             var orderType = positionGroup.Count > 1 ? OrderType.ComboMarket : OrderType.Market;
@@ -154,15 +182,19 @@ namespace QuantConnect.Securities
             GroupOrderManager groupOrderManager = null;
             if (orderType == OrderType.ComboMarket)
             {
-                groupOrderManager = new GroupOrderManager(Portfolio.Transactions.GetIncrementGroupOrderManagerId(), positionGroup.Count,
-                    absQuantity);
+                groupOrderManager = new GroupOrderManager(
+                    Portfolio.Transactions.GetIncrementGroupOrderManagerId(),
+                    positionGroup.Count,
+                    absQuantity
+                );
             }
 
             return positionGroup.Positions.Select(position =>
             {
                 var security = Portfolio.Securities[position.Symbol];
                 // Always reducing, so we take the absolute quantity times the opposite sign of the position
-                var legQuantity = absQuantity * position.UnitQuantity * -Math.Sign(position.Quantity);
+                var legQuantity =
+                    absQuantity * position.UnitQuantity * -Math.Sign(position.Quantity);
 
                 return new SubmitOrderRequest(
                     orderType,
@@ -174,7 +206,8 @@ namespace QuantConnect.Securities
                     security.LocalTime.ConvertToUtc(security.Exchange.TimeZone),
                     Messages.DefaultMarginCallModel.MarginCallOrderTag,
                     DefaultOrderProperties?.Clone(),
-                    groupOrderManager);
+                    groupOrderManager
+                );
             });
         }
 
@@ -184,7 +217,9 @@ namespace QuantConnect.Securities
         /// <param name="generatedMarginCallOrders">These are the margin call orders that were generated
         /// by individual security margin models.</param>
         /// <returns>The list of orders that were actually executed</returns>
-        public virtual List<OrderTicket> ExecuteMarginCall(IEnumerable<SubmitOrderRequest> generatedMarginCallOrders)
+        public virtual List<OrderTicket> ExecuteMarginCall(
+            IEnumerable<SubmitOrderRequest> generatedMarginCallOrders
+        )
         {
             // if our margin used is back under the portfolio value then we can stop liquidating
             if (Portfolio.MarginRemaining >= 0)
@@ -194,7 +229,10 @@ namespace QuantConnect.Securities
 
             // order by losers first
             var executedOrders = new List<OrderTicket>();
-            var ordersWithSecurities = generatedMarginCallOrders.ToDictionary(x => x, x => Portfolio[x.Symbol]);
+            var ordersWithSecurities = generatedMarginCallOrders.ToDictionary(
+                x => x,
+                x => Portfolio[x.Symbol]
+            );
             var groupManagerTemporalIds = -ordersWithSecurities.Count;
             var orderedByLosers = ordersWithSecurities
                 // group orders by their group manager id so they are executed together

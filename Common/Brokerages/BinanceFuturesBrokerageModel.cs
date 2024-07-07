@@ -29,11 +29,14 @@ namespace QuantConnect.Brokerages
         /// <summary>
         /// Creates a new instance
         /// </summary>
-        public BinanceFuturesBrokerageModel(AccountType accountType) : base(accountType)
+        public BinanceFuturesBrokerageModel(AccountType accountType)
+            : base(accountType)
         {
             if (accountType == AccountType.Cash)
             {
-                throw new InvalidOperationException($"{SecurityType.CryptoFuture} can only be traded using a {AccountType.Margin} account type");
+                throw new InvalidOperationException(
+                    $"{SecurityType.CryptoFuture} can only be traded using a {AccountType.Margin} account type"
+                );
             }
         }
 
@@ -66,7 +69,10 @@ namespace QuantConnect.Brokerages
         public override IMarginInterestRateModel GetMarginInterestRateModel(Security security)
         {
             // only applies for perpetual futures
-            if (security.Symbol.SecurityType == SecurityType.CryptoFuture && security.Symbol.ID.Date == SecurityIdentifier.DefaultDate)
+            if (
+                security.Symbol.SecurityType == SecurityType.CryptoFuture
+                && security.Symbol.ID.Date == SecurityIdentifier.DefaultDate
+            )
             {
                 return new BinanceFutureMarginInterestRateModel();
             }

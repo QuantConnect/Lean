@@ -13,12 +13,12 @@
  * limitations under the License.
 */
 
+using System;
+using System.Collections.Generic;
 using NUnit.Framework;
 using NUnit.Framework.Constraints;
 using Python.Runtime;
 using QuantConnect.Exceptions;
-using System;
-using System.Collections.Generic;
 
 namespace QuantConnect.Tests.Common.Exceptions
 {
@@ -82,12 +82,18 @@ namespace QuantConnect.Tests.Common.Exceptions
         [TestCase(typeof(InvalidOperationException), true)]
         [TestCase(typeof(PythonException), true)]
         [TestCase(typeof(ClrBubbledException), false)]
-        public void InterpretThrowsForNonClrBubbledExceptionTypes(Type exceptionType, bool expectThrow)
+        public void InterpretThrowsForNonClrBubbledExceptionTypes(
+            Type exceptionType,
+            bool expectThrow
+        )
         {
             var exception = CreateExceptionFromType(exceptionType);
             var interpreter = new ClrBubbledExceptionInterpreter();
             var constraint = expectThrow ? (IResolveConstraint)Throws.Exception : Throws.Nothing;
-            Assert.That(() => interpreter.Interpret(exception, NullExceptionInterpreter.Instance), constraint);
+            Assert.That(
+                () => interpreter.Interpret(exception, NullExceptionInterpreter.Instance),
+                constraint
+            );
         }
 
         [Test]
@@ -98,10 +104,27 @@ namespace QuantConnect.Tests.Common.Exceptions
             var interpreter = StackExceptionInterpreter.CreateFromAssemblies(new[] { assembly });
             exception = interpreter.Interpret(exception, NullExceptionInterpreter.Instance);
 
-            Assert.True(exception.Message.Contains("Value cannot be null. (Parameter 'key')", StringComparison.InvariantCulture));
-            Assert.True(exception.Message.Contains("at dotnet_error", StringComparison.InvariantCulture));
-            Assert.True(exception.Message.Contains("self.market_order(None", StringComparison.InvariantCulture));
-            Assert.True(exception.Message.Contains($"in {_pythonModuleName}.py: line ", StringComparison.InvariantCulture));
+            Assert.True(
+                exception.Message.Contains(
+                    "Value cannot be null. (Parameter 'key')",
+                    StringComparison.InvariantCulture
+                )
+            );
+            Assert.True(
+                exception.Message.Contains("at dotnet_error", StringComparison.InvariantCulture)
+            );
+            Assert.True(
+                exception.Message.Contains(
+                    "self.market_order(None",
+                    StringComparison.InvariantCulture
+                )
+            );
+            Assert.True(
+                exception.Message.Contains(
+                    $"in {_pythonModuleName}.py: line ",
+                    StringComparison.InvariantCulture
+                )
+            );
         }
 
         private Exception CreateExceptionFromType(Type type)
@@ -111,7 +134,9 @@ namespace QuantConnect.Tests.Common.Exceptions
                 return _dotnetException;
             }
 
-            return type == typeof(PythonException) ? _pythonException : (Exception)Activator.CreateInstance(type);
+            return type == typeof(PythonException)
+                ? _pythonException
+                : (Exception)Activator.CreateInstance(type);
         }
     }
 }

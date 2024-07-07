@@ -13,12 +13,12 @@
  * limitations under the License.
 */
 
-using System.Linq;
-using QuantConnect.Interfaces;
 using System.Collections.Generic;
+using System.Linq;
 using QuantConnect.Algorithm.Framework.Alphas;
 using QuantConnect.Algorithm.Framework.Execution;
 using QuantConnect.Algorithm.Framework.Portfolio;
+using QuantConnect.Interfaces;
 
 namespace QuantConnect.Algorithm.CSharp
 {
@@ -26,7 +26,8 @@ namespace QuantConnect.Algorithm.CSharp
     /// Regression algorithm that will test that <see cref="IAlgorithmSettings.MinimumOrderMarginPortfolioPercentage"/>
     /// is respected by the <see cref="ImmediateExecutionModel"/>
     /// </summary>
-    public class ImmediateExecutionModelMinimumOrderMarginRegressionAlgorithm : BasicTemplateFrameworkAlgorithm
+    public class ImmediateExecutionModelMinimumOrderMarginRegressionAlgorithm
+        : BasicTemplateFrameworkAlgorithm
     {
         public override void Initialize()
         {
@@ -44,17 +45,24 @@ namespace QuantConnect.Algorithm.CSharp
         private class CustomPortfolioConstructionModel : EqualWeightingPortfolioConstructionModel
         {
             private ITimeKeeper _timeKeeper;
+
             public CustomPortfolioConstructionModel(ITimeKeeper timeKeeper)
             {
                 _timeKeeper = timeKeeper;
             }
-            protected override Dictionary<Insight, double> DetermineTargetPercent(List<Insight> activeInsights)
+
+            protected override Dictionary<Insight, double> DetermineTargetPercent(
+                List<Insight> activeInsights
+            )
             {
                 var baseResult = base.DetermineTargetPercent(activeInsights);
 
                 // we generate some fake noise in the percentage allocation
                 var adjustPercentage = _timeKeeper.UtcTime.Minute % 2 == 0;
-                return baseResult.ToDictionary(pair => pair.Key, pair => adjustPercentage ? pair.Value - 0.001 : pair.Value);
+                return baseResult.ToDictionary(
+                    pair => pair.Key,
+                    pair => adjustPercentage ? pair.Value - 0.001 : pair.Value
+                );
             }
         }
     }

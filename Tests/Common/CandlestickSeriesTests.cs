@@ -26,7 +26,13 @@ namespace QuantConnect.Tests.Common
         [TestCase("IndexName", null)]
         public void Clone(string indexName, string toolTip)
         {
-            var series = new CandlestickSeries("A", 8, "TT") { ZIndex = 98, Index = 8, IndexName = indexName, Tooltip = toolTip };
+            var series = new CandlestickSeries("A", 8, "TT")
+            {
+                ZIndex = 98,
+                Index = 8,
+                IndexName = indexName,
+                Tooltip = toolTip
+            };
             var result = (CandlestickSeries)series.Clone();
 
             Assert.AreEqual(series.Name, result.Name);

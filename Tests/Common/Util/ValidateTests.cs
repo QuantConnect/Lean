@@ -32,7 +32,6 @@ namespace QuantConnect.Tests.Common.Util
         [TestCase("js#internal@proseware.com", true)]
         [TestCase("j.s@server1.proseware.com", true)]
         [TestCase(@"""j\""s\""""@proseware.com", true)]
-
         [TestCase("js*@proseware.com", false)]
         [TestCase("js@proseware..com", false)]
         [TestCase("j..s@proseware.com", false)]

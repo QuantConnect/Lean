@@ -29,14 +29,17 @@ namespace QuantConnect.Algorithm.CSharp
     /// This regression algorithm tests that we only receive the option chain for a single future contract
     /// in the option universe filter.
     /// </summary>
-    public class AddFutureOptionSingleOptionChainSelectedInUniverseFilterRegressionAlgorithm : QCAlgorithm, IRegressionAlgorithmDefinition
+    public class AddFutureOptionSingleOptionChainSelectedInUniverseFilterRegressionAlgorithm
+        : QCAlgorithm,
+            IRegressionAlgorithmDefinition
     {
         private bool _invested;
         private bool _onDataReached;
         private bool _optionFilterRan;
         private readonly HashSet<Symbol> _symbolsReceived = new HashSet<Symbol>();
         private readonly HashSet<Symbol> _expectedSymbolsReceived = new HashSet<Symbol>();
-        private readonly Dictionary<Symbol, List<QuoteBar>> _dataReceived = new Dictionary<Symbol, List<QuoteBar>>();
+        private readonly Dictionary<Symbol, List<QuoteBar>> _dataReceived =
+            new Dictionary<Symbol, List<QuoteBar>>();
 
         private Future _es;
 
@@ -46,33 +49,44 @@ namespace QuantConnect.Algorithm.CSharp
             SetEndDate(2020, 1, 8);
 
             _es = AddFuture(Futures.Indices.SP500EMini, Resolution.Minute, Market.CME);
-            _es.SetFilter((futureFilter) =>
-            {
-                return futureFilter.Expiration(0, 365).ExpirationCycle(new[] { 3, 6 });
-            });
-
-            AddFutureOption(_es.Symbol, optionContracts =>
-            {
-                _optionFilterRan = true;
-
-                var expiry = new HashSet<DateTime>(optionContracts.Select(x => x.Underlying.ID.Date)).SingleOrDefault();
-                // Cast to IEnumerable<Symbol> because OptionFilterContract overrides some LINQ operators like `Select` and `Where`
-                // and cause it to mutate the underlying Symbol collection when using those operators.
-                var symbol = new HashSet<Symbol>(((IEnumerable<Symbol>)optionContracts).Select(x => x.Underlying)).SingleOrDefault();
-
-                if (expiry == null || symbol == null)
+            _es.SetFilter(
+                (futureFilter) =>
                 {
-                    throw new InvalidOperationException("Expected a single Option contract in the chain, found 0 contracts");
+                    return futureFilter.Expiration(0, 365).ExpirationCycle(new[] { 3, 6 });
                 }
+            );
 
-                var enumerator = optionContracts.GetEnumerator();
-                while (enumerator.MoveNext())
+            AddFutureOption(
+                _es.Symbol,
+                optionContracts =>
                 {
-                    _expectedSymbolsReceived.Add(enumerator.Current);
-                }
+                    _optionFilterRan = true;
 
-                return optionContracts;
-            });
+                    var expiry = new HashSet<DateTime>(
+                        optionContracts.Select(x => x.Underlying.ID.Date)
+                    ).SingleOrDefault();
+                    // Cast to IEnumerable<Symbol> because OptionFilterContract overrides some LINQ operators like `Select` and `Where`
+                    // and cause it to mutate the underlying Symbol collection when using those operators.
+                    var symbol = new HashSet<Symbol>(
+                        ((IEnumerable<Symbol>)optionContracts).Select(x => x.Underlying)
+                    ).SingleOrDefault();
+
+                    if (expiry == null || symbol == null)
+                    {
+                        throw new InvalidOperationException(
+                            "Expected a single Option contract in the chain, found 0 contracts"
+                        );
+                    }
+
+                    var enumerator = optionContracts.GetEnumerator();
+                    while (enumerator.MoveNext())
+                    {
+                        _expectedSymbolsReceived.Add(enumerator.Current);
+                    }
+
+                    return optionContracts;
+                }
+            );
         }
 
         public override void OnData(Slice slice)
@@ -125,22 +139,29 @@ namespace QuantConnect.Algorithm.CSharp
                     if (!optionInvested && slice.ContainsKey(option))
                     {
                         var optionContract = Securities[option];
-                        var marginModel = optionContract.BuyingPowerModel as FuturesOptionsMarginModel;
-                        if (marginModel.InitialIntradayMarginRequirement == 0
+                        var marginModel =
+                            optionContract.BuyingPowerModel as FuturesOptionsMarginModel;
+                        if (
+                            marginModel.InitialIntradayMarginRequirement == 0
                             || marginModel.InitialOvernightMarginRequirement == 0
                             || marginModel.MaintenanceIntradayMarginRequirement == 0
-                            || marginModel.MaintenanceOvernightMarginRequirement == 0)
+                            || marginModel.MaintenanceOvernightMarginRequirement == 0
+                        )
                         {
                             throw new RegressionTestException("Unexpected margin requirements");
                         }
 
                         if (marginModel.GetInitialMarginRequirement(optionContract, 1) == 0)
                         {
-                            throw new RegressionTestException("Unexpected Initial Margin requirement");
+                            throw new RegressionTestException(
+                                "Unexpected Initial Margin requirement"
+                            );
                         }
                         if (marginModel.GetMaintenanceMargin(optionContract) != 0)
                         {
-                            throw new RegressionTestException("Unexpected Maintenance Margin requirement");
+                            throw new RegressionTestException(
+                                "Unexpected Maintenance Margin requirement"
+                            );
                         }
 
                         MarketOrder(option, 1);
@@ -149,7 +170,9 @@ namespace QuantConnect.Algorithm.CSharp
 
                         if (marginModel.GetMaintenanceMargin(optionContract) == 0)
                         {
-                            throw new RegressionTestException("Unexpected Maintenance Margin requirement");
+                            throw new RegressionTestException(
+                                "Unexpected Maintenance Margin requirement"
+                            );
                         }
                     }
                     if (!futureInvested && slice.ContainsKey(future))
@@ -174,7 +197,9 @@ namespace QuantConnect.Algorithm.CSharp
             }
             if (_symbolsReceived.Count != _expectedSymbolsReceived.Count)
             {
-                throw new AggregateException($"Expected {_expectedSymbolsReceived.Count} option contracts Symbols, found {_symbolsReceived.Count}");
+                throw new AggregateException(
+                    $"Expected {_expectedSymbolsReceived.Count} option contracts Symbols, found {_symbolsReceived.Count}"
+                );
             }
 
             var missingSymbols = new List<Symbol>();
@@ -188,21 +213,27 @@ namespace QuantConnect.Algorithm.CSharp
 
             if (missingSymbols.Count > 0)
             {
-                throw new RegressionTestException($"Symbols: \"{string.Join(", ", missingSymbols)}\" were not found in OnData");
+                throw new RegressionTestException(
+                    $"Symbols: \"{string.Join(", ", missingSymbols)}\" were not found in OnData"
+                );
             }
 
             foreach (var expectedSymbol in _expectedSymbolsReceived)
             {
                 var data = _dataReceived[expectedSymbol];
                 var nonDupeDataCount = data.Select(x =>
-                {
-                    x.EndTime = default(DateTime);
-                    return x;
-                }).Distinct().Count();
+                    {
+                        x.EndTime = default(DateTime);
+                        return x;
+                    })
+                    .Distinct()
+                    .Count();
 
                 if (nonDupeDataCount < 1000)
                 {
-                    throw new RegressionTestException($"Received too few data points. Expected >=1000, found {nonDupeDataCount} for {expectedSymbol}");
+                    throw new RegressionTestException(
+                        $"Received too few data points. Expected >=1000, found {nonDupeDataCount} for {expectedSymbol}"
+                    );
                 }
             }
         }
@@ -235,35 +266,36 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// This is used by the regression test system to indicate what the expected statistics are from running the algorithm
         /// </summary>
-        public Dictionary<string, string> ExpectedStatistics => new Dictionary<string, string>
-        {
-            {"Total Orders", "2"},
-            {"Average Win", "0%"},
-            {"Average Loss", "0%"},
-            {"Compounding Annual Return", "347.065%"},
-            {"Drawdown", "0.900%"},
-            {"Expectancy", "0"},
-            {"Start Equity", "100000"},
-            {"End Equity", "101950.53"},
-            {"Net Profit", "1.951%"},
-            {"Sharpe Ratio", "15.402"},
-            {"Sortino Ratio", "0"},
-            {"Probabilistic Sharpe Ratio", "95.977%"},
-            {"Loss Rate", "0%"},
-            {"Win Rate", "0%"},
-            {"Profit-Loss Ratio", "0"},
-            {"Alpha", "1.886"},
-            {"Beta", "1.066"},
-            {"Annual Standard Deviation", "0.155"},
-            {"Annual Variance", "0.024"},
-            {"Information Ratio", "13.528"},
-            {"Tracking Error", "0.142"},
-            {"Treynor Ratio", "2.237"},
-            {"Total Fees", "$3.57"},
-            {"Estimated Strategy Capacity", "$760000.00"},
-            {"Lowest Capacity Asset", "ES XCZJLDQX2SRO|ES XCZJLC9NOB29"},
-            {"Portfolio Turnover", "32.31%"},
-            {"OrderListHash", "7a04f66a30d793bf187c2695781ad3ee"}
-        };
+        public Dictionary<string, string> ExpectedStatistics =>
+            new Dictionary<string, string>
+            {
+                { "Total Orders", "2" },
+                { "Average Win", "0%" },
+                { "Average Loss", "0%" },
+                { "Compounding Annual Return", "347.065%" },
+                { "Drawdown", "0.900%" },
+                { "Expectancy", "0" },
+                { "Start Equity", "100000" },
+                { "End Equity", "101950.53" },
+                { "Net Profit", "1.951%" },
+                { "Sharpe Ratio", "15.402" },
+                { "Sortino Ratio", "0" },
+                { "Probabilistic Sharpe Ratio", "95.977%" },
+                { "Loss Rate", "0%" },
+                { "Win Rate", "0%" },
+                { "Profit-Loss Ratio", "0" },
+                { "Alpha", "1.886" },
+                { "Beta", "1.066" },
+                { "Annual Standard Deviation", "0.155" },
+                { "Annual Variance", "0.024" },
+                { "Information Ratio", "13.528" },
+                { "Tracking Error", "0.142" },
+                { "Treynor Ratio", "2.237" },
+                { "Total Fees", "$3.57" },
+                { "Estimated Strategy Capacity", "$760000.00" },
+                { "Lowest Capacity Asset", "ES XCZJLDQX2SRO|ES XCZJLC9NOB29" },
+                { "Portfolio Turnover", "32.31%" },
+                { "OrderListHash", "7a04f66a30d793bf187c2695781ad3ee" }
+            };
     }
 }

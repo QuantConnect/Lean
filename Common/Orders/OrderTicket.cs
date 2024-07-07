@@ -65,7 +65,8 @@ namespace QuantConnect.Orders
         {
             get
             {
-                if (_orderStatusOverride.HasValue) return _orderStatusOverride.Value;
+                if (_orderStatusOverride.HasValue)
+                    return _orderStatusOverride.Value;
                 return _order == null ? OrderStatus.New : _order.Status;
             }
         }
@@ -211,7 +212,10 @@ namespace QuantConnect.Orders
         /// </summary>
         /// <param name="transactionManager">The transaction manager used for submitting updates and cancels for this ticket</param>
         /// <param name="submitRequest">The order request that initiated this order ticket</param>
-        public OrderTicket(SecurityTransactionManager transactionManager, SubmitOrderRequest submitRequest)
+        public OrderTicket(
+            SecurityTransactionManager transactionManager,
+            SubmitOrderRequest submitRequest
+        )
         {
             _submitRequest = submitRequest;
             _orderId = submitRequest.OrderId;
@@ -251,51 +255,106 @@ namespace QuantConnect.Orders
                 case OrderField.LimitPrice:
                     if (_submitRequest.OrderType == OrderType.ComboLimit)
                     {
-                        fieldValue = AccessOrder<ComboLimitOrder, decimal>(this, field, o => o.GroupOrderManager.LimitPrice, r => r.LimitPrice);
+                        fieldValue = AccessOrder<ComboLimitOrder, decimal>(
+                            this,
+                            field,
+                            o => o.GroupOrderManager.LimitPrice,
+                            r => r.LimitPrice
+                        );
                     }
                     else if (_submitRequest.OrderType == OrderType.ComboLegLimit)
                     {
-                        fieldValue = AccessOrder<ComboLegLimitOrder, decimal>(this, field, o => o.LimitPrice, r => r.LimitPrice);
+                        fieldValue = AccessOrder<ComboLegLimitOrder, decimal>(
+                            this,
+                            field,
+                            o => o.LimitPrice,
+                            r => r.LimitPrice
+                        );
                     }
                     else if (_submitRequest.OrderType == OrderType.Limit)
                     {
-                        fieldValue = AccessOrder<LimitOrder, decimal>(this, field, o => o.LimitPrice, r => r.LimitPrice);
+                        fieldValue = AccessOrder<LimitOrder, decimal>(
+                            this,
+                            field,
+                            o => o.LimitPrice,
+                            r => r.LimitPrice
+                        );
                     }
                     else if (_submitRequest.OrderType == OrderType.StopLimit)
                     {
-                        fieldValue = AccessOrder<StopLimitOrder, decimal>(this, field, o => o.LimitPrice, r => r.LimitPrice);
+                        fieldValue = AccessOrder<StopLimitOrder, decimal>(
+                            this,
+                            field,
+                            o => o.LimitPrice,
+                            r => r.LimitPrice
+                        );
                     }
                     else if (_submitRequest.OrderType == OrderType.LimitIfTouched)
                     {
-                        fieldValue = AccessOrder<LimitIfTouchedOrder, decimal>(this, field, o => o.LimitPrice, r => r.LimitPrice);
+                        fieldValue = AccessOrder<LimitIfTouchedOrder, decimal>(
+                            this,
+                            field,
+                            o => o.LimitPrice,
+                            r => r.LimitPrice
+                        );
                     }
                     break;
 
                 case OrderField.StopPrice:
                     if (_submitRequest.OrderType == OrderType.StopLimit)
                     {
-                        fieldValue = AccessOrder<StopLimitOrder, decimal>(this, field, o => o.StopPrice, r => r.StopPrice);
+                        fieldValue = AccessOrder<StopLimitOrder, decimal>(
+                            this,
+                            field,
+                            o => o.StopPrice,
+                            r => r.StopPrice
+                        );
                     }
                     else if (_submitRequest.OrderType == OrderType.StopMarket)
                     {
-                        fieldValue = AccessOrder<StopMarketOrder, decimal>(this, field, o => o.StopPrice, r => r.StopPrice);
+                        fieldValue = AccessOrder<StopMarketOrder, decimal>(
+                            this,
+                            field,
+                            o => o.StopPrice,
+                            r => r.StopPrice
+                        );
                     }
                     else if (_submitRequest.OrderType == OrderType.TrailingStop)
                     {
-                        fieldValue = AccessOrder<TrailingStopOrder, decimal>(this, field, o => o.StopPrice, r => r.StopPrice);
+                        fieldValue = AccessOrder<TrailingStopOrder, decimal>(
+                            this,
+                            field,
+                            o => o.StopPrice,
+                            r => r.StopPrice
+                        );
                     }
                     break;
 
                 case OrderField.TriggerPrice:
-                    fieldValue = AccessOrder<LimitIfTouchedOrder, decimal>(this, field, o => o.TriggerPrice, r => r.TriggerPrice);
+                    fieldValue = AccessOrder<LimitIfTouchedOrder, decimal>(
+                        this,
+                        field,
+                        o => o.TriggerPrice,
+                        r => r.TriggerPrice
+                    );
                     break;
 
                 case OrderField.TrailingAmount:
-                    fieldValue = AccessOrder<TrailingStopOrder, decimal>(this, field, o => o.TrailingAmount, r => r.TrailingAmount);
+                    fieldValue = AccessOrder<TrailingStopOrder, decimal>(
+                        this,
+                        field,
+                        o => o.TrailingAmount,
+                        r => r.TrailingAmount
+                    );
                     break;
 
                 case OrderField.TrailingAsPercentage:
-                    fieldValue = AccessOrder<TrailingStopOrder, bool>(this, field, o => o.TrailingAsPercentage, r => r.TrailingAsPercentage);
+                    fieldValue = AccessOrder<TrailingStopOrder, bool>(
+                        this,
+                        field,
+                        o => o.TrailingAsPercentage,
+                        r => r.TrailingAsPercentage
+                    );
                     break;
 
                 default:
@@ -318,7 +377,9 @@ namespace QuantConnect.Orders
         /// <returns>The <see cref="OrderResponse"/> from updating the order</returns>
         public OrderResponse Update(UpdateOrderFields fields)
         {
-            var ticket = _transactionManager.UpdateOrder(new UpdateOrderRequest(_transactionManager.UtcTime, SubmitRequest.OrderId, fields));
+            var ticket = _transactionManager.UpdateOrder(
+                new UpdateOrderRequest(_transactionManager.UtcTime, SubmitRequest.OrderId, fields)
+            );
             return ticket.UpdateRequests.Last().Response;
         }
 
@@ -330,10 +391,7 @@ namespace QuantConnect.Orders
         /// <returns><see cref="OrderResponse"/> from updating the order</returns>
         public OrderResponse UpdateTag(string tag)
         {
-            var fields = new UpdateOrderFields()
-            {
-                Tag = tag
-            };
+            var fields = new UpdateOrderFields() { Tag = tag };
             return Update(fields);
         }
 
@@ -346,11 +404,7 @@ namespace QuantConnect.Orders
         /// <returns><see cref="OrderResponse"/> from updating the order</returns>
         public OrderResponse UpdateQuantity(decimal quantity, string tag = null)
         {
-            var fields = new UpdateOrderFields()
-            {
-                Quantity = quantity,
-                Tag = tag
-            };
+            var fields = new UpdateOrderFields() { Quantity = quantity, Tag = tag };
             return Update(fields);
         }
 
@@ -363,11 +417,7 @@ namespace QuantConnect.Orders
         /// <returns><see cref="OrderResponse"/> from updating the order</returns>
         public OrderResponse UpdateLimitPrice(decimal limitPrice, string tag = null)
         {
-            var fields = new UpdateOrderFields()
-            {
-                LimitPrice = limitPrice,
-                Tag = tag
-            };
+            var fields = new UpdateOrderFields() { LimitPrice = limitPrice, Tag = tag };
             return Update(fields);
         }
 
@@ -380,11 +430,7 @@ namespace QuantConnect.Orders
         /// <returns><see cref="OrderResponse"/> from updating the order</returns>
         public OrderResponse UpdateStopPrice(decimal stopPrice, string tag = null)
         {
-            var fields = new UpdateOrderFields()
-            {
-                StopPrice = stopPrice,
-                Tag = tag
-            };
+            var fields = new UpdateOrderFields() { StopPrice = stopPrice, Tag = tag };
             return Update(fields);
         }
 
@@ -397,11 +443,7 @@ namespace QuantConnect.Orders
         /// <returns><see cref="OrderResponse"/> from updating the order</returns>
         public OrderResponse UpdateTriggerPrice(decimal triggerPrice, string tag = null)
         {
-            var fields = new UpdateOrderFields()
-            {
-                TriggerPrice = triggerPrice,
-                Tag = tag
-            };
+            var fields = new UpdateOrderFields() { TriggerPrice = triggerPrice, Tag = tag };
             return Update(fields);
         }
 
@@ -414,11 +456,7 @@ namespace QuantConnect.Orders
         /// <returns><see cref="OrderResponse"/> from updating the order</returns>
         public OrderResponse UpdateStopTrailingAmount(decimal trailingAmount, string tag = null)
         {
-            var fields = new UpdateOrderFields()
-            {
-                TrailingAmount = trailingAmount,
-                Tag = tag
-            };
+            var fields = new UpdateOrderFields() { TrailingAmount = trailingAmount, Tag = tag };
             return Update(fields);
         }
 
@@ -434,8 +472,11 @@ namespace QuantConnect.Orders
                 // this could happen when trying to cancel an order which status is still new and hasn't even been submitted to the brokerage
                 if (_cancelRequest != null && _cancelRequest.Status != OrderRequestStatus.Error)
                 {
-                    return OrderResponse.Error(request, OrderResponseErrorCode.RequestCanceled,
-                        Messages.OrderTicket.CancelRequestAlreadySubmitted(this));
+                    return OrderResponse.Error(
+                        request,
+                        OrderResponseErrorCode.RequestCanceled,
+                        Messages.OrderTicket.CancelRequestAlreadySubmitted(this)
+                    );
                 }
             }
 
@@ -492,7 +533,8 @@ namespace QuantConnect.Orders
                         // keep running totals of quantity filled and the average fill price so we
                         // don't need to compute these on demand
                         _quantityFilled += orderEvent.FillQuantity;
-                        var quantityWeightedFillPrice = _orderEvents.Where(x => x.Status.IsFill())
+                        var quantityWeightedFillPrice = _orderEvents
+                            .Where(x => x.Status.IsFill())
                             .Aggregate(0m, (d, x) => d + x.AbsoluteFillQuantity * x.FillPrice);
                         _averageFillPrice = quantityWeightedFillPrice / Math.Abs(_quantityFilled);
 
@@ -587,9 +629,21 @@ namespace QuantConnect.Orders
         /// <summary>
         /// Creates a new <see cref="OrderTicket"/> that represents trying to cancel an order for which no ticket exists
         /// </summary>
-        public static OrderTicket InvalidCancelOrderId(SecurityTransactionManager transactionManager, CancelOrderRequest request)
+        public static OrderTicket InvalidCancelOrderId(
+            SecurityTransactionManager transactionManager,
+            CancelOrderRequest request
+        )
         {
-            var submit = new SubmitOrderRequest(OrderType.Market, SecurityType.Base, Symbol.Empty, 0, 0, 0, DateTime.MaxValue, request.Tag);
+            var submit = new SubmitOrderRequest(
+                OrderType.Market,
+                SecurityType.Base,
+                Symbol.Empty,
+                0,
+                0,
+                0,
+                DateTime.MaxValue,
+                request.Tag
+            );
             submit.SetResponse(OrderResponse.UnableToFindOrder(request));
             submit.SetOrderId(request.OrderId);
             var ticket = new OrderTicket(transactionManager, submit);
@@ -602,9 +656,21 @@ namespace QuantConnect.Orders
         /// <summary>
         /// Creates a new <see cref="OrderTicket"/> that represents trying to update an order for which no ticket exists
         /// </summary>
-        public static OrderTicket InvalidUpdateOrderId(SecurityTransactionManager transactionManager, UpdateOrderRequest request)
+        public static OrderTicket InvalidUpdateOrderId(
+            SecurityTransactionManager transactionManager,
+            UpdateOrderRequest request
+        )
         {
-            var submit = new SubmitOrderRequest(OrderType.Market, SecurityType.Base, Symbol.Empty, 0, 0, 0, DateTime.MaxValue, request.Tag);
+            var submit = new SubmitOrderRequest(
+                OrderType.Market,
+                SecurityType.Base,
+                Symbol.Empty,
+                0,
+                0,
+                0,
+                DateTime.MaxValue,
+                request.Tag
+            );
             submit.SetResponse(OrderResponse.UnableToFindOrder(request));
             submit.SetOrderId(request.OrderId);
             var ticket = new OrderTicket(transactionManager, submit);
@@ -617,10 +683,17 @@ namespace QuantConnect.Orders
         /// <summary>
         /// Creates a new <see cref="OrderTicket"/> that represents trying to submit a new order that had errors embodied in the <paramref name="response"/>
         /// </summary>
-        public static OrderTicket InvalidSubmitRequest(SecurityTransactionManager transactionManager, SubmitOrderRequest request, OrderResponse response)
+        public static OrderTicket InvalidSubmitRequest(
+            SecurityTransactionManager transactionManager,
+            SubmitOrderRequest request,
+            OrderResponse response
+        )
         {
             request.SetResponse(response);
-            return new OrderTicket(transactionManager, request) { _orderStatusOverride = OrderStatus.Invalid };
+            return new OrderTicket(transactionManager, request)
+            {
+                _orderStatusOverride = OrderStatus.Invalid
+            };
         }
 
         /// <summary>
@@ -637,12 +710,16 @@ namespace QuantConnect.Orders
 
         private int ResponseCount()
         {
-            var count = (_submitRequest.Response == OrderResponse.Unprocessed ? 0 : 1) +
-                        _updateRequests.Count(x => x.Response != OrderResponse.Unprocessed);
+            var count =
+                (_submitRequest.Response == OrderResponse.Unprocessed ? 0 : 1)
+                + _updateRequests.Count(x => x.Response != OrderResponse.Unprocessed);
 
             lock (_cancelRequestLock)
             {
-                count += _cancelRequest == null || _cancelRequest.Response == OrderResponse.Unprocessed ? 0 : 1;
+                count +=
+                    _cancelRequest == null || _cancelRequest.Response == OrderResponse.Unprocessed
+                        ? 0
+                        : 1;
             }
 
             return count;
@@ -670,12 +747,17 @@ namespace QuantConnect.Orders
             var response = ticket.GetMostRecentOrderResponse();
             if (response != null && response.IsError)
             {
-                return (int) response.ErrorCode;
+                return (int)response.ErrorCode;
             }
             return ticket.OrderId;
         }
 
-        private static P AccessOrder<T, P>(OrderTicket ticket, OrderField field, Func<T, P> orderSelector, Func<SubmitOrderRequest, P> requestSelector)
+        private static P AccessOrder<T, P>(
+            OrderTicket ticket,
+            OrderField field,
+            Func<T, P> orderSelector,
+            Func<SubmitOrderRequest, P> requestSelector
+        )
             where T : Order
         {
             var order = ticket._order;
@@ -688,7 +770,9 @@ namespace QuantConnect.Orders
             {
                 return orderSelector(typedOrder);
             }
-            throw new ArgumentException(Invariant($"Unable to access property {field} on order of type {order.Type}"));
+            throw new ArgumentException(
+                Invariant($"Unable to access property {field} on order of type {order.Type}")
+            );
         }
     }
 }

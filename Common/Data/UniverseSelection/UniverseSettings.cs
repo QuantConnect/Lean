@@ -14,8 +14,8 @@
 */
 
 using System;
-using QuantConnect.Scheduling;
 using System.Collections.Generic;
+using QuantConnect.Scheduling;
 
 namespace QuantConnect.Data.UniverseSelection
 {
@@ -57,7 +57,7 @@ namespace QuantConnect.Data.UniverseSelection
         /// <remarks>When selection takes place, the actual members time in the universe
         /// will be rounded based on this TimeSpan, so that relative small differences do not
         /// cause an unexpected behavior <see cref="Universe.CanRemoveMember"/></remarks>
-        public TimeSpan MinimumTimeInUniverse {  get; set; }
+        public TimeSpan MinimumTimeInUniverse { get; set; }
 
         /// <summary>
         /// Defines how universe data is normalized before being send into the algorithm
@@ -100,8 +100,18 @@ namespace QuantConnect.Data.UniverseSelection
         /// For example, 0 (default) will use the front month, 1 will use the back month contract</param>
         /// <param name="asynchronous">True if universe selection can run asynchronous</param>
         /// <param name="selectionDateRule">If provided, will be used to determine universe selection schedule</param>
-        public UniverseSettings(Resolution resolution, decimal leverage, bool fillForward, bool extendedMarketHours, TimeSpan minimumTimeInUniverse, DataNormalizationMode dataNormalizationMode = DataNormalizationMode.Adjusted,
-            DataMappingMode dataMappingMode = DataMappingMode.OpenInterest, int contractDepthOffset = 0, bool? asynchronous = null, IDateRule selectionDateRule = null)
+        public UniverseSettings(
+            Resolution resolution,
+            decimal leverage,
+            bool fillForward,
+            bool extendedMarketHours,
+            TimeSpan minimumTimeInUniverse,
+            DataNormalizationMode dataNormalizationMode = DataNormalizationMode.Adjusted,
+            DataMappingMode dataMappingMode = DataMappingMode.OpenInterest,
+            int contractDepthOffset = 0,
+            bool? asynchronous = null,
+            IDateRule selectionDateRule = null
+        )
         {
             Resolution = resolution;
             Leverage = leverage;

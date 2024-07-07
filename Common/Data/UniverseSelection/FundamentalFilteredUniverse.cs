@@ -14,8 +14,8 @@
 */
 
 using System;
-using Python.Runtime;
 using System.Collections.Generic;
+using Python.Runtime;
 using QuantConnect.Data.Fundamental;
 
 namespace QuantConnect.Data.UniverseSelection
@@ -35,11 +35,18 @@ namespace QuantConnect.Data.UniverseSelection
         /// </summary>
         /// <param name="universe">The universe to be filtered</param>
         /// <param name="fundamentalSelector">The fundamental selection function</param>
-        public FundamentalFilteredUniverse(Universe universe, Func<IEnumerable<Fundamental.Fundamental>, IEnumerable<Symbol>> fundamentalSelector)
+        public FundamentalFilteredUniverse(
+            Universe universe,
+            Func<IEnumerable<Fundamental.Fundamental>, IEnumerable<Symbol>> fundamentalSelector
+        )
             : base(universe, universe.SelectSymbols)
         {
-            FundamentalUniverse = Fundamental.FundamentalUniverse.USA(fundamentalSelector, universe.UniverseSettings);
-            FundamentalUniverse.SelectionChanged += (sender, args) => OnSelectionChanged(((SelectionEventArgs)args).CurrentSelection);
+            FundamentalUniverse = Fundamental.FundamentalUniverse.USA(
+                fundamentalSelector,
+                universe.UniverseSettings
+            );
+            FundamentalUniverse.SelectionChanged += (sender, args) =>
+                OnSelectionChanged(((SelectionEventArgs)args).CurrentSelection);
         }
 
         /// <summary>
@@ -50,9 +57,15 @@ namespace QuantConnect.Data.UniverseSelection
         public FundamentalFilteredUniverse(Universe universe, PyObject fundamentalSelector)
             : base(universe, universe.SelectSymbols)
         {
-            var func = fundamentalSelector.ConvertToDelegate<Func<IEnumerable<Fundamental.Fundamental>, object>>();
-            FundamentalUniverse = Fundamental.FundamentalUniverse.USA(func.ConvertToUniverseSelectionSymbolDelegate(), universe.UniverseSettings);
-            FundamentalUniverse.SelectionChanged += (sender, args) => OnSelectionChanged(((SelectionEventArgs)args).CurrentSelection);
+            var func = fundamentalSelector.ConvertToDelegate<
+                Func<IEnumerable<Fundamental.Fundamental>, object>
+            >();
+            FundamentalUniverse = Fundamental.FundamentalUniverse.USA(
+                func.ConvertToUniverseSelectionSymbolDelegate(),
+                universe.UniverseSettings
+            );
+            FundamentalUniverse.SelectionChanged += (sender, args) =>
+                OnSelectionChanged(((SelectionEventArgs)args).CurrentSelection);
         }
     }
 }

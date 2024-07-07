@@ -1,11 +1,11 @@
 /*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
- * 
- * Licensed under the Apache License, Version 2.0 (the "License"); 
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -36,7 +36,10 @@ namespace QuantConnect.ToolBox
         /// </summary>
         /// <param name="destination">The receiver of the consolidated data</param>
         /// <param name="createConsolidator">Function used to create consolidators</param>
-        public ConsolidatorDataProcessor(IDataProcessor destination, Func<IBaseData, IDataConsolidator> createConsolidator)
+        public ConsolidatorDataProcessor(
+            IDataProcessor destination,
+            Func<IBaseData, IDataConsolidator> createConsolidator
+        )
         {
             _destination = destination;
             _createConsolidator = createConsolidator;
@@ -86,7 +89,8 @@ namespace QuantConnect.ToolBox
             _destination.Process(args);
 
             // we've already checked this frontier time, so don't scan the consolidators
-            if (_frontier >= args.EndTime) return;
+            if (_frontier >= args.EndTime)
+                return;
             _frontier = args.EndTime;
 
             // check the other consolidators to see if they also need to emit

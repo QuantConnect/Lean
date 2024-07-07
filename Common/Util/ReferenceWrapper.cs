@@ -21,7 +21,7 @@ namespace QuantConnect.Util
     /// and reading from multiple threads. This is possible because assignments are atomic operations in C# for reference types (among others).
     /// </summary>
     /// <remarks>This is a simpler, performance oriented version of <see cref="Ref"/></remarks>
-    public class ReferenceWrapper<T> 
+    public class ReferenceWrapper<T>
         where T : struct
     {
         /// <summary>

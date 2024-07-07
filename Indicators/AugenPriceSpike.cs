@@ -1,11 +1,11 @@
 /*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
- * 
- * Licensed under the Apache License, Version 2.0 (the "License"); 
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -17,12 +17,12 @@ using System;
 namespace QuantConnect.Indicators
 {
     /// <summary>
-    /// The Augen Price Spike indicator is an indicator that measures price 
+    /// The Augen Price Spike indicator is an indicator that measures price
     /// changes in terms of standard deviations. In the book, The
     /// Volatility Edge in Options Trading, Jeff Augen describes a
     /// method for tracking absolute price changes in terms of recent
     /// volatility, using the standard deviation.
-    /// 
+    ///
     /// length = x
     /// closes = closeArray
     /// closes1 = closeArray shifted right by 1
@@ -32,10 +32,10 @@ namespace QuantConnect.Indicators
     /// m = SDev * closes1[-1]
     /// spike = (closes[-1]-closes1[-1])/m
     /// return spike
-    /// 
+    ///
     /// Augen Price Spike from TradingView
-    /// https://www.tradingview.com/script/fC7Pn2X2-Price-Spike-Jeff-Augen/  
-    /// 
+    /// https://www.tradingview.com/script/fC7Pn2X2-Price-Spike-Jeff-Augen/
+    ///
     /// </summary>
     public class AugenPriceSpike : Indicator, IIndicatorWarmUpPeriodProvider
     {
@@ -47,9 +47,8 @@ namespace QuantConnect.Indicators
         /// </summary>
         /// <param name="period">The period over which to perform to computation</param>
         public AugenPriceSpike(int period = 3)
-            : this($"APS({period})", period)
-        {
-        }
+            : this($"APS({period})", period) { }
+
         /// <summary>
         /// Creates a new AugenPriceSpike indicator with the specified period
         /// </summary>
@@ -60,11 +59,14 @@ namespace QuantConnect.Indicators
         {
             if (period < 3)
             {
-                throw new ArgumentException("AugenPriceSpike Indicator must have a period of at least 3", nameof(period));
+                throw new ArgumentException(
+                    "AugenPriceSpike Indicator must have a period of at least 3",
+                    nameof(period)
+                );
             }
             _standardDeviation = new StandardDeviation(period);
             _rollingData = new RollingWindow<decimal>(3);
-            WarmUpPeriod = period+2;
+            WarmUpPeriod = period + 2;
         }
 
         /// <summary>
@@ -85,7 +87,10 @@ namespace QuantConnect.Indicators
         protected override decimal ComputeNextValue(IndicatorDataPoint input)
         {
             _rollingData.Add(input.Value);
-            if (_rollingData.Count < 3) { return 0m; }
+            if (_rollingData.Count < 3)
+            {
+                return 0m;
+            }
 
             var previousPoint = _rollingData[1];
             var previousPoint2 = _rollingData[2];
@@ -98,11 +103,20 @@ namespace QuantConnect.Indicators
 
             _standardDeviation.Update(input.Time, (decimal)logPoint);
 
-            if (!_rollingData.IsReady) { return 0m; }
-            if (!_standardDeviation.IsReady) { return 0m; }
+            if (!_rollingData.IsReady)
+            {
+                return 0m;
+            }
+            if (!_standardDeviation.IsReady)
+            {
+                return 0m;
+            }
 
             var m = _standardDeviation.Current.Value * previousPoint;
-            if (m == 0) { return 0; }
+            if (m == 0)
+            {
+                return 0;
+            }
 
             var spikeValue = (input.Value - previousPoint) / m;
             return spikeValue;

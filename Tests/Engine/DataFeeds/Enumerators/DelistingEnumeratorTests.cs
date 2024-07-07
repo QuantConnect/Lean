@@ -34,33 +34,34 @@ namespace QuantConnect.Tests.Engine.DataFeeds.Enumerators
         {
             var symbol = Symbol.CreateFuture("ASD", Market.USA, new DateTime(2018, 01, 01));
 
-            _config = new SubscriptionDataConfig(typeof(TradeBar),
+            _config = new SubscriptionDataConfig(
+                typeof(TradeBar),
                 symbol,
                 Resolution.Daily,
                 TimeZones.NewYork,
                 TimeZones.NewYork,
                 true,
                 true,
-                false);
+                false
+            );
         }
 
         [Test]
         public void EmitsBothEventsIfDateIsPastDelisted()
         {
             var eventProvider = new DelistingEventProvider();
-            eventProvider.Initialize(_config,
-                null,
-                null,
-                DateTime.UtcNow);
+            eventProvider.Initialize(_config, null, null, DateTime.UtcNow);
 
-            var enumerator = eventProvider.GetEvents(
-                new NewTradableDateEventArgs(
-                    DateTime.UtcNow,
-                    new Tick(DateTime.UtcNow, _config.Symbol, 10, 5),
-                    _config.Symbol,
-                    null
+            var enumerator = eventProvider
+                .GetEvents(
+                    new NewTradableDateEventArgs(
+                        DateTime.UtcNow,
+                        new Tick(DateTime.UtcNow, _config.Symbol, 10, 5),
+                        _config.Symbol,
+                        null
+                    )
                 )
-            ).GetEnumerator();
+                .GetEnumerator();
 
             Assert.IsTrue(enumerator.MoveNext());
             Assert.IsNotNull(enumerator.Current as Delisting);
@@ -73,7 +74,10 @@ namespace QuantConnect.Tests.Engine.DataFeeds.Enumerators
             Assert.IsNotNull(enumerator.Current as Delisting);
             Assert.AreEqual(MarketDataType.Auxiliary, enumerator.Current.DataType);
             Assert.AreEqual(DelistingType.Delisted, (enumerator.Current as Delisting).Type);
-            Assert.AreEqual(_config.Symbol.ID.Date.AddDays(1), (enumerator.Current as Delisting).Time.Date);
+            Assert.AreEqual(
+                _config.Symbol.ID.Date.AddDays(1),
+                (enumerator.Current as Delisting).Time.Date
+            );
             Assert.AreEqual(7.5, (enumerator.Current as Delisting).Price);
 
             Assert.IsFalse(enumerator.MoveNext());
@@ -85,32 +89,33 @@ namespace QuantConnect.Tests.Engine.DataFeeds.Enumerators
         public void EmitsWarningAsOffDelistingDate()
         {
             var eventProvider = new DelistingEventProvider();
-            eventProvider.Initialize(_config,
-                null,
-                null,
-                DateTime.UtcNow);
+            eventProvider.Initialize(_config, null, null, DateTime.UtcNow);
 
             // should NOT emit
-            var enumerator = eventProvider.GetEvents(
-                new NewTradableDateEventArgs(
-                    _config.Symbol.ID.Date.Subtract(TimeSpan.FromMinutes(1)),
-                    new Tick(DateTime.UtcNow, _config.Symbol, 10, 5),
-                    _config.Symbol,
-                    null
+            var enumerator = eventProvider
+                .GetEvents(
+                    new NewTradableDateEventArgs(
+                        _config.Symbol.ID.Date.Subtract(TimeSpan.FromMinutes(1)),
+                        new Tick(DateTime.UtcNow, _config.Symbol, 10, 5),
+                        _config.Symbol,
+                        null
+                    )
                 )
-            ).GetEnumerator();
+                .GetEnumerator();
 
             Assert.IsFalse(enumerator.MoveNext());
 
             // should emit
-            enumerator = eventProvider.GetEvents(
-                new NewTradableDateEventArgs(
-                    _config.Symbol.ID.Date,
-                    new Tick(DateTime.UtcNow, _config.Symbol, 10, 5),
-                    _config.Symbol,
-                    null
+            enumerator = eventProvider
+                .GetEvents(
+                    new NewTradableDateEventArgs(
+                        _config.Symbol.ID.Date,
+                        new Tick(DateTime.UtcNow, _config.Symbol, 10, 5),
+                        _config.Symbol,
+                        null
+                    )
                 )
-            ).GetEnumerator();
+                .GetEnumerator();
 
             Assert.IsTrue(enumerator.MoveNext());
             Assert.IsNotNull(enumerator.Current as Delisting);
@@ -128,51 +133,57 @@ namespace QuantConnect.Tests.Engine.DataFeeds.Enumerators
         public void EmitsDelistedAfterDelistingDate()
         {
             var eventProvider = new DelistingEventProvider();
-            eventProvider.Initialize(_config,
-                null,
-                null,
-                DateTime.UtcNow);
+            eventProvider.Initialize(_config, null, null, DateTime.UtcNow);
 
             // should emit warning
-            var enumerator = eventProvider.GetEvents(
-                new NewTradableDateEventArgs(
-                    _config.Symbol.ID.Date,
-                    new Tick(DateTime.UtcNow, _config.Symbol, 10, 5),
-                    _config.Symbol,
-                    null
+            var enumerator = eventProvider
+                .GetEvents(
+                    new NewTradableDateEventArgs(
+                        _config.Symbol.ID.Date,
+                        new Tick(DateTime.UtcNow, _config.Symbol, 10, 5),
+                        _config.Symbol,
+                        null
+                    )
                 )
-            ).GetEnumerator();
+                .GetEnumerator();
 
             Assert.IsTrue(enumerator.MoveNext());
             Assert.IsNotNull(enumerator.Current as Delisting);
             Assert.AreEqual(DelistingType.Warning, (enumerator.Current as Delisting).Type);
 
             // should NOT emit if not AFTER delisting date
-            enumerator = eventProvider.GetEvents(
-                new NewTradableDateEventArgs(
-                    _config.Symbol.ID.Date,
-                    new Tick(DateTime.UtcNow, _config.Symbol, 10, 5),
-                    _config.Symbol,
-                    null
+            enumerator = eventProvider
+                .GetEvents(
+                    new NewTradableDateEventArgs(
+                        _config.Symbol.ID.Date,
+                        new Tick(DateTime.UtcNow, _config.Symbol, 10, 5),
+                        _config.Symbol,
+                        null
+                    )
                 )
-            ).GetEnumerator();
+                .GetEnumerator();
             Assert.IsFalse(enumerator.MoveNext());
 
             // should emit AFTER delisting date
-            enumerator = eventProvider.GetEvents(
-                new NewTradableDateEventArgs(
-                    _config.Symbol.ID.Date.AddMinutes(1),
-                    new Tick(DateTime.UtcNow, _config.Symbol, 10, 5),
-                    _config.Symbol,
-                    null
+            enumerator = eventProvider
+                .GetEvents(
+                    new NewTradableDateEventArgs(
+                        _config.Symbol.ID.Date.AddMinutes(1),
+                        new Tick(DateTime.UtcNow, _config.Symbol, 10, 5),
+                        _config.Symbol,
+                        null
+                    )
                 )
-            ).GetEnumerator();
+                .GetEnumerator();
 
             Assert.IsTrue(enumerator.MoveNext());
             Assert.IsNotNull(enumerator.Current as Delisting);
             Assert.AreEqual(MarketDataType.Auxiliary, enumerator.Current.DataType);
             Assert.AreEqual(DelistingType.Delisted, (enumerator.Current as Delisting).Type);
-            Assert.AreEqual(_config.Symbol.ID.Date.AddDays(1), (enumerator.Current as Delisting).Time.Date);
+            Assert.AreEqual(
+                _config.Symbol.ID.Date.AddDays(1),
+                (enumerator.Current as Delisting).Time.Date
+            );
             Assert.AreEqual(7.5, (enumerator.Current as Delisting).Price);
 
             Assert.IsFalse(enumerator.MoveNext());
@@ -186,32 +197,37 @@ namespace QuantConnect.Tests.Engine.DataFeeds.Enumerators
             // Unit test to simulate and reproduce #5545
 
             // Give us two tradable days before and after expiration
-            var tradableDays = new List<DateTime> { new DateTime(2021, 01, 01), new DateTime(2021, 01, 04) };
+            var tradableDays = new List<DateTime>
+            {
+                new DateTime(2021, 01, 01),
+                new DateTime(2021, 01, 04)
+            };
 
             // Set expiration as 1/2/21 a Saturday, not included in our tradble days
             var expiration = new DateTime(2021, 01, 02);
             var symbol = Symbol.CreateFuture("ASD", Market.USA, expiration);
-            var config = new SubscriptionDataConfig(typeof(TradeBar),
+            var config = new SubscriptionDataConfig(
+                typeof(TradeBar),
                 symbol,
                 Resolution.Daily,
                 TimeZones.NewYork,
                 TimeZones.NewYork,
                 true,
                 true,
-                false);
-            
-            var eventProvider = new DelistingEventProvider();
-            eventProvider.Initialize(config,
-                null,
-                null,
-                DateTime.UtcNow);
+                false
+            );
 
-            var tradableDateEvents = tradableDays.Select(day => new NewTradableDateEventArgs(
-                day,
-                new Tick(day, config.Symbol, 10, 5),
-                config.Symbol,
-                null
-            )).GetEnumerator();
+            var eventProvider = new DelistingEventProvider();
+            eventProvider.Initialize(config, null, null, DateTime.UtcNow);
+
+            var tradableDateEvents = tradableDays
+                .Select(day => new NewTradableDateEventArgs(
+                    day,
+                    new Tick(day, config.Symbol, 10, 5),
+                    config.Symbol,
+                    null
+                ))
+                .GetEnumerator();
 
             // Pass in the day before expiration should be nothing
             tradableDateEvents.MoveNext();
@@ -233,7 +249,10 @@ namespace QuantConnect.Tests.Engine.DataFeeds.Enumerators
             Assert.IsNotNull(enumerator.Current as Delisting);
             Assert.AreEqual(MarketDataType.Auxiliary, enumerator.Current.DataType);
             Assert.AreEqual(DelistingType.Delisted, (enumerator.Current as Delisting).Type);
-            Assert.AreEqual(config.Symbol.ID.Date.AddDays(1), (enumerator.Current as Delisting).Time.Date);
+            Assert.AreEqual(
+                config.Symbol.ID.Date.AddDays(1),
+                (enumerator.Current as Delisting).Time.Date
+            );
             Assert.AreEqual(7.5, (enumerator.Current as Delisting).Price);
 
             Assert.IsFalse(enumerator.MoveNext());

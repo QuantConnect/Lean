@@ -40,7 +40,12 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
         /// <param name="exchangeTimeZone">The time zone the raw data is time stamped in</param>
         /// <param name="tradeBarAggregator">The trade bar aggregator enumerator</param>
         /// <param name="auxDataEnumerators">The auxiliary data enumerators</param>
-        public LiveAuxiliaryDataSynchronizingEnumerator(ITimeProvider timeProvider, DateTimeZone exchangeTimeZone, IEnumerator<BaseData> tradeBarAggregator, List<IEnumerator<BaseData>> auxDataEnumerators)
+        public LiveAuxiliaryDataSynchronizingEnumerator(
+            ITimeProvider timeProvider,
+            DateTimeZone exchangeTimeZone,
+            IEnumerator<BaseData> tradeBarAggregator,
+            List<IEnumerator<BaseData>> auxDataEnumerators
+        )
         {
             _timeProvider = timeProvider;
             _exchangeTimeZone = exchangeTimeZone;
@@ -70,7 +75,8 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
                     _auxDataEnumerators[i].MoveNext();
                 }
             }
-            if (_tradeBarAggregator.Current == null) _tradeBarAggregator.MoveNext();
+            if (_tradeBarAggregator.Current == null)
+                _tradeBarAggregator.MoveNext();
 
             // check if any enumerator is ready to emit
             if (DataPointEmitted(frontierUtc))
@@ -135,7 +141,10 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
                     }
                     else
                     {
-                        auxDataEnumerator = auxDataEnumerator.Current.EndTime > currentEnum.Current.EndTime ? currentEnum : auxDataEnumerator;
+                        auxDataEnumerator =
+                            auxDataEnumerator.Current.EndTime > currentEnum.Current.EndTime
+                                ? currentEnum
+                                : auxDataEnumerator;
                     }
                 }
             }
@@ -143,8 +152,12 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
             // check if any enumerator is ready to emit
             if (auxDataEnumerator?.Current != null && _tradeBarAggregator.Current != null)
             {
-                var auxDataEndTime = auxDataEnumerator.Current.EndTime.ConvertToUtc(_exchangeTimeZone);
-                var tradeBarEndTime = _tradeBarAggregator.Current.EndTime.ConvertToUtc(_exchangeTimeZone);
+                var auxDataEndTime = auxDataEnumerator.Current.EndTime.ConvertToUtc(
+                    _exchangeTimeZone
+                );
+                var tradeBarEndTime = _tradeBarAggregator.Current.EndTime.ConvertToUtc(
+                    _exchangeTimeZone
+                );
                 if (auxDataEndTime < tradeBarEndTime)
                 {
                     if (auxDataEndTime <= frontierUtc)
@@ -166,7 +179,9 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
             }
             else if (auxDataEnumerator?.Current != null)
             {
-                var auxDataEndTime = auxDataEnumerator.Current.EndTime.ConvertToUtc(_exchangeTimeZone);
+                var auxDataEndTime = auxDataEnumerator.Current.EndTime.ConvertToUtc(
+                    _exchangeTimeZone
+                );
                 if (auxDataEndTime <= frontierUtc)
                 {
                     Current = auxDataEnumerator.Current;
@@ -176,7 +191,9 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
             }
             else if (_tradeBarAggregator.Current != null)
             {
-                var tradeBarEndTime = _tradeBarAggregator.Current.EndTime.ConvertToUtc(_exchangeTimeZone);
+                var tradeBarEndTime = _tradeBarAggregator.Current.EndTime.ConvertToUtc(
+                    _exchangeTimeZone
+                );
                 if (tradeBarEndTime <= frontierUtc)
                 {
                     Current = _tradeBarAggregator.Current;

@@ -41,7 +41,11 @@ namespace QuantConnect.Brokerages.CrossZero
         /// <param name="brokerageOrderId">The brokerage order ID.</param>
         /// <param name="isOrderPlacedSuccessfully">if set to <c>true</c> [is order placed successfully].</param>
         /// <param name="message">The message of the order. This parameter is optional and defaults to <c>null</c>.</param>
-        public CrossZeroOrderResponse(string brokerageOrderId, bool isOrderPlacedSuccessfully, string message = "")
+        public CrossZeroOrderResponse(
+            string brokerageOrderId,
+            bool isOrderPlacedSuccessfully,
+            string message = ""
+        )
         {
             Message = message;
             BrokerageOrderId = brokerageOrderId;

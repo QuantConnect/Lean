@@ -14,18 +14,20 @@
 */
 
 using System;
-using System.Linq;
-using QuantConnect.Interfaces;
 using System.Collections.Generic;
-using QuantConnect.Data.UniverseSelection;
+using System.Linq;
 using QuantConnect.Data;
+using QuantConnect.Data.UniverseSelection;
+using QuantConnect.Interfaces;
 
 namespace QuantConnect.Algorithm.CSharp
 {
     /// <summary>
     /// Assert that CoarseFundamentals universe selection happens right away after algorithm starts
     /// </summary>
-    public class CoarseFundamentalImmediateSelectionRegressionAlgorithm : QCAlgorithm, IRegressionAlgorithmDefinition
+    public class CoarseFundamentalImmediateSelectionRegressionAlgorithm
+        : QCAlgorithm,
+            IRegressionAlgorithmDefinition
     {
         private const int NumberOfSymbols = 3;
 
@@ -49,8 +51,10 @@ namespace QuantConnect.Algorithm.CSharp
             {
                 if (Time != StartDate)
                 {
-                    throw new RegressionTestException($"CoarseSelectionFunction called at unexpected time. " +
-                        $"Expected it to be called on {StartDate} but was called on {Time}");
+                    throw new RegressionTestException(
+                        $"CoarseSelectionFunction called at unexpected time. "
+                            + $"Expected it to be called on {StartDate} but was called on {Time}"
+                    );
                 }
             }
 
@@ -80,20 +84,26 @@ namespace QuantConnect.Algorithm.CSharp
 
                 if (Time != StartDate)
                 {
-                    throw new RegressionTestException($"OnSecuritiesChanged called at unexpected time. " +
-                        $"Expected it to be called on {StartDate} but was called on {Time}");
+                    throw new RegressionTestException(
+                        $"OnSecuritiesChanged called at unexpected time. "
+                            + $"Expected it to be called on {StartDate} but was called on {Time}"
+                    );
                 }
 
                 if (changes.AddedSecurities.Count != NumberOfSymbols)
                 {
-                    throw new RegressionTestException($"Unexpected number of added securities. " +
-                        $"Expected {NumberOfSymbols} but was {changes.AddedSecurities.Count}");
+                    throw new RegressionTestException(
+                        $"Unexpected number of added securities. "
+                            + $"Expected {NumberOfSymbols} but was {changes.AddedSecurities.Count}"
+                    );
                 }
 
                 if (changes.RemovedSecurities.Count != 0)
                 {
-                    throw new RegressionTestException($"Unexpected number of removed securities. " +
-                        $"Expected 0 but was {changes.RemovedSecurities.Count}");
+                    throw new RegressionTestException(
+                        $"Unexpected number of removed securities. "
+                            + $"Expected 0 but was {changes.RemovedSecurities.Count}"
+                    );
                 }
             }
         }
@@ -126,35 +136,36 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// This is used by the regression test system to indicate what the expected statistics are from running the algorithm
         /// </summary>
-        public Dictionary<string, string> ExpectedStatistics => new Dictionary<string, string>
-        {
-            {"Total Orders", "0"},
-            {"Average Win", "0%"},
-            {"Average Loss", "0%"},
-            {"Compounding Annual Return", "0%"},
-            {"Drawdown", "0%"},
-            {"Expectancy", "0"},
-            {"Start Equity", "100000"},
-            {"End Equity", "100000"},
-            {"Net Profit", "0%"},
-            {"Sharpe Ratio", "0"},
-            {"Sortino Ratio", "0"},
-            {"Probabilistic Sharpe Ratio", "0%"},
-            {"Loss Rate", "0%"},
-            {"Win Rate", "0%"},
-            {"Profit-Loss Ratio", "0"},
-            {"Alpha", "0"},
-            {"Beta", "0"},
-            {"Annual Standard Deviation", "0"},
-            {"Annual Variance", "0"},
-            {"Information Ratio", "3.134"},
-            {"Tracking Error", "0.097"},
-            {"Treynor Ratio", "0"},
-            {"Total Fees", "$0.00"},
-            {"Estimated Strategy Capacity", "$0"},
-            {"Lowest Capacity Asset", ""},
-            {"Portfolio Turnover", "0%"},
-            {"OrderListHash", "d41d8cd98f00b204e9800998ecf8427e"}
-        };
+        public Dictionary<string, string> ExpectedStatistics =>
+            new Dictionary<string, string>
+            {
+                { "Total Orders", "0" },
+                { "Average Win", "0%" },
+                { "Average Loss", "0%" },
+                { "Compounding Annual Return", "0%" },
+                { "Drawdown", "0%" },
+                { "Expectancy", "0" },
+                { "Start Equity", "100000" },
+                { "End Equity", "100000" },
+                { "Net Profit", "0%" },
+                { "Sharpe Ratio", "0" },
+                { "Sortino Ratio", "0" },
+                { "Probabilistic Sharpe Ratio", "0%" },
+                { "Loss Rate", "0%" },
+                { "Win Rate", "0%" },
+                { "Profit-Loss Ratio", "0" },
+                { "Alpha", "0" },
+                { "Beta", "0" },
+                { "Annual Standard Deviation", "0" },
+                { "Annual Variance", "0" },
+                { "Information Ratio", "3.134" },
+                { "Tracking Error", "0.097" },
+                { "Treynor Ratio", "0" },
+                { "Total Fees", "$0.00" },
+                { "Estimated Strategy Capacity", "$0" },
+                { "Lowest Capacity Asset", "" },
+                { "Portfolio Turnover", "0%" },
+                { "OrderListHash", "d41d8cd98f00b204e9800998ecf8427e" }
+            };
     }
 }

@@ -41,10 +41,17 @@ namespace QuantConnect.Tests.Common.Securities
             string file = Path.Combine("TestData", "SampleMarketHoursDatabase.json");
             var exchangeHours = GetMarketHoursDatabase(file);
 
-            var hours = exchangeHours.GetExchangeHours(Market.USA, Symbols.SPY, SecurityType.Equity);
+            var hours = exchangeHours.GetExchangeHours(
+                Market.USA,
+                Symbols.SPY,
+                SecurityType.Equity
+            );
             Assert.IsNotNull(hours);
 
-            Assert.AreEqual(hours, exchangeHours.GetExchangeHours(Market.USA, null, SecurityType.Equity));
+            Assert.AreEqual(
+                hours,
+                exchangeHours.GetExchangeHours(Market.USA, null, SecurityType.Equity)
+            );
         }
 
         [Test]
@@ -93,10 +100,22 @@ namespace QuantConnect.Tests.Common.Securities
                     Assert.IsTrue(marketHours.IsClosedAllDay);
                     continue;
                 }
-                Assert.AreEqual(new TimeSpan(4, 0, 0), marketHours.GetMarketOpen(TimeSpan.Zero, true));
-                Assert.AreEqual(new TimeSpan(9, 30, 0), marketHours.GetMarketOpen(TimeSpan.Zero, false));
-                Assert.AreEqual(new TimeSpan(16, 0, 0), marketHours.GetMarketClose(TimeSpan.Zero, false));
-                Assert.AreEqual(new TimeSpan(20, 0, 0), marketHours.GetMarketClose(TimeSpan.Zero, true));
+                Assert.AreEqual(
+                    new TimeSpan(4, 0, 0),
+                    marketHours.GetMarketOpen(TimeSpan.Zero, true)
+                );
+                Assert.AreEqual(
+                    new TimeSpan(9, 30, 0),
+                    marketHours.GetMarketOpen(TimeSpan.Zero, false)
+                );
+                Assert.AreEqual(
+                    new TimeSpan(16, 0, 0),
+                    marketHours.GetMarketClose(TimeSpan.Zero, false)
+                );
+                Assert.AreEqual(
+                    new TimeSpan(20, 0, 0),
+                    marketHours.GetMarketClose(TimeSpan.Zero, true)
+                );
             }
         }
 
@@ -129,10 +148,14 @@ namespace QuantConnect.Tests.Common.Securities
         [TestCase("CSC", Market.CME, true)]
         [TestCase("GNF", Market.CME, true)]
         [TestCase("GDK", Market.CME, true)]
-        public void CorrectlyReadsCMEGroupFutureHolidayGoodFridaySchedule(string futureTicker, string market, bool isHoliday)
+        public void CorrectlyReadsCMEGroupFutureHolidayGoodFridaySchedule(
+            string futureTicker,
+            string market,
+            bool isHoliday
+        )
         {
             var provider = MarketHoursDatabase.FromDataFolder();
-            var ticker= OptionSymbol.MapToUnderlying(futureTicker, SecurityType.Future);
+            var ticker = OptionSymbol.MapToUnderlying(futureTicker, SecurityType.Future);
             var future = Symbol.Create(ticker, SecurityType.Future, market);
 
             var futureEntry = provider.GetEntry(market, ticker, future.SecurityType);
@@ -155,7 +178,12 @@ namespace QuantConnect.Tests.Common.Securities
         [TestCase("DY", Market.CME, "4/7/2023", false)]
         [TestCase("GNF", Market.CME, "4/6/2023", true)]
         [TestCase("GDK", Market.CME, "4/6/2023", true)]
-        public void CorrectlyReadsCMEGroupFutureEarlyCloses(string futureTicker, string market, string date, bool isEarlyClose)
+        public void CorrectlyReadsCMEGroupFutureEarlyCloses(
+            string futureTicker,
+            string market,
+            string date,
+            bool isEarlyClose
+        )
         {
             var provider = MarketHoursDatabase.FromDataFolder();
             var ticker = OptionSymbol.MapToUnderlying(futureTicker, SecurityType.Future);
@@ -186,7 +214,11 @@ namespace QuantConnect.Tests.Common.Securities
         [TestCase("DY", Market.CME, false)]
         [TestCase("GNF", Market.CME, false)]
         [TestCase("GDK", Market.CME, false)]
-        public void CheckJustEarlyClosesOrJustHolidaysForCMEGroupFuturesOnGoodFriday(string futureTicker, string market, bool isEarlyClose)
+        public void CheckJustEarlyClosesOrJustHolidaysForCMEGroupFuturesOnGoodFriday(
+            string futureTicker,
+            string market,
+            bool isEarlyClose
+        )
         {
             var provider = MarketHoursDatabase.FromDataFolder();
             var ticker = OptionSymbol.MapToUnderlying(futureTicker, SecurityType.Future);
@@ -219,8 +251,18 @@ namespace QuantConnect.Tests.Common.Securities
             var earlyCloseHour = futureEntry.ExchangeHours.EarlyCloses[earlyCloseDate];
             var lateOpenHour = futureEntry.ExchangeHours.LateOpens[earlyCloseDate];
 
-            Assert.AreEqual(earlyCloseHour, futureEntry.ExchangeHours.GetMarketHours(earlyCloseDate).GetMarketClose(new TimeSpan(0, 0, 0), true));
-            Assert.AreEqual(lateOpenHour, futureEntry.ExchangeHours.GetMarketHours(earlyCloseDate).GetMarketOpen(earlyCloseHour, true));
+            Assert.AreEqual(
+                earlyCloseHour,
+                futureEntry
+                    .ExchangeHours.GetMarketHours(earlyCloseDate)
+                    .GetMarketClose(new TimeSpan(0, 0, 0), true)
+            );
+            Assert.AreEqual(
+                lateOpenHour,
+                futureEntry
+                    .ExchangeHours.GetMarketHours(earlyCloseDate)
+                    .GetMarketOpen(earlyCloseHour, true)
+            );
         }
 
         [Test]
@@ -243,17 +285,41 @@ namespace QuantConnect.Tests.Common.Securities
                 }
                 else if (day == DayOfWeek.Sunday)
                 {
-                    Assert.AreEqual(new TimeSpan(17, 0, 0), marketHours.GetMarketOpen(TimeSpan.Zero, true));
-                    Assert.AreEqual(new TimeSpan(17, 0, 0), marketHours.GetMarketOpen(TimeSpan.Zero, false));
-                    Assert.AreEqual(new TimeSpan(24, 0, 0), marketHours.GetMarketClose(TimeSpan.Zero, false));
-                    Assert.AreEqual(new TimeSpan(24, 0, 0), marketHours.GetMarketClose(TimeSpan.Zero, true));
+                    Assert.AreEqual(
+                        new TimeSpan(17, 0, 0),
+                        marketHours.GetMarketOpen(TimeSpan.Zero, true)
+                    );
+                    Assert.AreEqual(
+                        new TimeSpan(17, 0, 0),
+                        marketHours.GetMarketOpen(TimeSpan.Zero, false)
+                    );
+                    Assert.AreEqual(
+                        new TimeSpan(24, 0, 0),
+                        marketHours.GetMarketClose(TimeSpan.Zero, false)
+                    );
+                    Assert.AreEqual(
+                        new TimeSpan(24, 0, 0),
+                        marketHours.GetMarketClose(TimeSpan.Zero, true)
+                    );
                 }
                 else
                 {
-                    Assert.AreEqual(new TimeSpan(0, 0, 0), marketHours.GetMarketOpen(TimeSpan.Zero, true));
-                    Assert.AreEqual(new TimeSpan(0, 0, 0), marketHours.GetMarketOpen(TimeSpan.Zero, false));
-                    Assert.AreEqual(new TimeSpan(17, 0, 0), marketHours.GetMarketClose(TimeSpan.Zero, false));
-                    Assert.AreEqual(new TimeSpan(17, 0, 0), marketHours.GetMarketClose(TimeSpan.Zero, true));
+                    Assert.AreEqual(
+                        new TimeSpan(0, 0, 0),
+                        marketHours.GetMarketOpen(TimeSpan.Zero, true)
+                    );
+                    Assert.AreEqual(
+                        new TimeSpan(0, 0, 0),
+                        marketHours.GetMarketOpen(TimeSpan.Zero, false)
+                    );
+                    Assert.AreEqual(
+                        new TimeSpan(17, 0, 0),
+                        marketHours.GetMarketClose(TimeSpan.Zero, false)
+                    );
+                    Assert.AreEqual(
+                        new TimeSpan(17, 0, 0),
+                        marketHours.GetMarketClose(TimeSpan.Zero, true)
+                    );
                 }
             }
         }
@@ -264,7 +330,10 @@ namespace QuantConnect.Tests.Common.Securities
             string file = Path.Combine("TestData", "SampleMarketHoursDatabase.json");
             var marketHoursDatabase = GetMarketHoursDatabase(file);
 
-            Assert.AreEqual(TimeZones.NewYork, marketHoursDatabase.GetDataTimeZone(Market.USA, null, SecurityType.Equity));
+            Assert.AreEqual(
+                TimeZones.NewYork,
+                marketHoursDatabase.GetDataTimeZone(Market.USA, null, SecurityType.Equity)
+            );
         }
 
         [Test]
@@ -273,14 +342,16 @@ namespace QuantConnect.Tests.Common.Securities
             string file = Path.Combine("TestData", "SampleMarketHoursDatabase.json");
             var marketHoursDatabase = GetMarketHoursDatabase(file);
 
-            Assert.AreEqual(TimeZones.EasternStandard, marketHoursDatabase.GetDataTimeZone(Market.FXCM, null, SecurityType.Forex));
+            Assert.AreEqual(
+                TimeZones.EasternStandard,
+                marketHoursDatabase.GetDataTimeZone(Market.FXCM, null, SecurityType.Forex)
+            );
         }
 
         [TestCase("SPX", SecurityType.Index, Market.USA)]
         [TestCase("SPXW", SecurityType.Index, Market.USA)]
         [TestCase("AAPL", SecurityType.Equity, Market.USA)]
         [TestCase("SPY", SecurityType.Equity, Market.USA)]
-
         [TestCase("GC", SecurityType.Future, Market.COMEX)]
         [TestCase("SI", SecurityType.Future, Market.COMEX)]
         [TestCase("HG", SecurityType.Future, Market.COMEX)]
@@ -293,7 +364,11 @@ namespace QuantConnect.Tests.Common.Securities
         [TestCase("ZS", SecurityType.Future, Market.CBOT)]
         [TestCase("ZT", SecurityType.Future, Market.CBOT)]
         [TestCase("ZW", SecurityType.Future, Market.CBOT)]
-        public void MissingOptionsEntriesResolveToUnderlyingMarketHours(string optionTicker, SecurityType securityType, string market)
+        public void MissingOptionsEntriesResolveToUnderlyingMarketHours(
+            string optionTicker,
+            SecurityType securityType,
+            string market
+        )
         {
             var provider = MarketHoursDatabase.FromDataFolder();
             var underlyingTIcker = OptionSymbol.MapToUnderlying(optionTicker, securityType);
@@ -304,7 +379,8 @@ namespace QuantConnect.Tests.Common.Securities
                 default,
                 default,
                 default,
-                SecurityIdentifier.DefaultDate);
+                SecurityIdentifier.DefaultDate
+            );
 
             var underlyingEntry = provider.GetEntry(market, underlying, underlying.SecurityType);
             var optionEntry = provider.GetEntry(market, option, option.SecurityType);
@@ -315,9 +391,18 @@ namespace QuantConnect.Tests.Common.Securities
             }
             else
             {
-                Assert.AreEqual(underlyingEntry.ExchangeHours.Holidays, optionEntry.ExchangeHours.Holidays);
-                Assert.AreEqual(underlyingEntry.ExchangeHours.LateOpens, optionEntry.ExchangeHours.LateOpens);
-                Assert.AreEqual(underlyingEntry.ExchangeHours.EarlyCloses, optionEntry.ExchangeHours.EarlyCloses);
+                Assert.AreEqual(
+                    underlyingEntry.ExchangeHours.Holidays,
+                    optionEntry.ExchangeHours.Holidays
+                );
+                Assert.AreEqual(
+                    underlyingEntry.ExchangeHours.LateOpens,
+                    optionEntry.ExchangeHours.LateOpens
+                );
+                Assert.AreEqual(
+                    underlyingEntry.ExchangeHours.EarlyCloses,
+                    optionEntry.ExchangeHours.EarlyCloses
+                );
             }
         }
 
@@ -335,11 +420,19 @@ namespace QuantConnect.Tests.Common.Securities
                 default,
                 default,
                 default,
-                SecurityIdentifier.DefaultDate);
+                SecurityIdentifier.DefaultDate
+            );
 
-            var underlyingEntry = provider.GetEntry(Market.USA, underlying, underlying.SecurityType);
+            var underlyingEntry = provider.GetEntry(
+                Market.USA,
+                underlying,
+                underlying.SecurityType
+            );
             var optionEntry = provider.GetEntry(Market.USA, option, option.SecurityType);
-            Assert.AreEqual(underlyingEntry.ExchangeHours.EarlyCloses, optionEntry.ExchangeHours.EarlyCloses);
+            Assert.AreEqual(
+                underlyingEntry.ExchangeHours.EarlyCloses,
+                optionEntry.ExchangeHours.EarlyCloses
+            );
         }
 
         [TestCase("GC", Market.COMEX, "OG")]
@@ -354,7 +447,11 @@ namespace QuantConnect.Tests.Common.Securities
         [TestCase("ZS", Market.CBOT, "OZS")]
         [TestCase("ZT", Market.CBOT, "OZT")]
         [TestCase("ZW", Market.CBOT, "OZW")]
-        public void FuturesOptionsGetDatabaseSymbolKey(string ticker, string market, string expected)
+        public void FuturesOptionsGetDatabaseSymbolKey(
+            string ticker,
+            string market,
+            string expected
+        )
         {
             var future = Symbol.Create(ticker, SecurityType.Future, market);
             var option = Symbol.CreateOption(
@@ -363,7 +460,8 @@ namespace QuantConnect.Tests.Common.Securities
                 default(OptionStyle),
                 default(OptionRight),
                 default(decimal),
-                SecurityIdentifier.DefaultDate);
+                SecurityIdentifier.DefaultDate
+            );
 
             Assert.AreEqual(expected, MarketHoursDatabase.GetDatabaseSymbolKey(option));
         }
@@ -393,10 +491,14 @@ namespace QuantConnect.Tests.Common.Securities
             var entry = database.SetEntry(Market.USA, ticker, securityType, hours);
 
             MarketHoursDatabase.Entry returnedEntry;
-            Assert.IsTrue(database.TryGetEntry(Market.USA, ticker, securityType, out returnedEntry));
+            Assert.IsTrue(
+                database.TryGetEntry(Market.USA, ticker, securityType, out returnedEntry)
+            );
             Assert.AreEqual(returnedEntry, entry);
             Assert.DoesNotThrow(() => database.ReloadEntries());
-            Assert.IsTrue(database.TryGetEntry(Market.USA, ticker, securityType, out returnedEntry));
+            Assert.IsTrue(
+                database.TryGetEntry(Market.USA, ticker, securityType, out returnedEntry)
+            );
             Assert.AreEqual(returnedEntry, entry);
         }
 

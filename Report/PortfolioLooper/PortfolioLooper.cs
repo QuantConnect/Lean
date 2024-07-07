@@ -13,24 +13,24 @@
  * limitations under the License.
 */
 
+using System;
+using System.Collections.Generic;
+using System.Linq;
 using Deedle;
-using QuantConnect.Orders;
 using QuantConnect.Brokerages.Backtesting;
 using QuantConnect.Data;
 using QuantConnect.Data.Market;
 using QuantConnect.Interfaces;
 using QuantConnect.Lean.Engine.DataFeeds;
+using QuantConnect.Lean.Engine.HistoricalData;
 using QuantConnect.Lean.Engine.Results;
 using QuantConnect.Lean.Engine.Setup;
 using QuantConnect.Lean.Engine.TransactionHandlers;
 using QuantConnect.Logging;
+using QuantConnect.Orders;
 using QuantConnect.Packets;
 using QuantConnect.Securities;
 using QuantConnect.Util;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using QuantConnect.Lean.Engine.HistoricalData;
 
 namespace QuantConnect.Report
 {
@@ -66,18 +66,45 @@ namespace QuantConnect.Report
         /// <param name="orders">Order events</param>
         /// <param name="resolution">Optional parameter to override default resolution (Hourly)</param>
         /// <param name="algorithmConfiguration">Optional parameter to override default algorithm configuration</param>
-        private PortfolioLooper(double startingCash, List<Order> orders, Resolution resolution = _resolution,
-            AlgorithmConfiguration algorithmConfiguration = null)
+        private PortfolioLooper(
+            double startingCash,
+            List<Order> orders,
+            Resolution resolution = _resolution,
+            AlgorithmConfiguration algorithmConfiguration = null
+        )
         {
             // Initialize the providers that the HistoryProvider requires
-            var factorFileProvider = Composer.Instance.GetExportedValueByTypeName<IFactorFileProvider>("LocalDiskFactorFileProvider");
-            var mapFileProvider = Composer.Instance.GetExportedValueByTypeName<IMapFileProvider>("LocalDiskMapFileProvider");
+            var factorFileProvider =
+                Composer.Instance.GetExportedValueByTypeName<IFactorFileProvider>(
+                    "LocalDiskFactorFileProvider"
+                );
+            var mapFileProvider = Composer.Instance.GetExportedValueByTypeName<IMapFileProvider>(
+                "LocalDiskMapFileProvider"
+            );
             _cacheProvider = new ZipDataCacheProvider(new DefaultDataProvider(), false);
             var historyProvider = new SubscriptionDataReaderHistoryProvider();
 
-            Algorithm = new PortfolioLooperAlgorithm((decimal)startingCash, orders, algorithmConfiguration);
+            Algorithm = new PortfolioLooperAlgorithm(
+                (decimal)startingCash,
+                orders,
+                algorithmConfiguration
+            );
             var dataPermissionManager = new DataPermissionManager();
-            historyProvider.Initialize(new HistoryProviderInitializeParameters(null, null, null, _cacheProvider, mapFileProvider, factorFileProvider, (_) => { }, false, dataPermissionManager, Algorithm.ObjectStore, Algorithm.Settings));
+            historyProvider.Initialize(
+                new HistoryProviderInitializeParameters(
+                    null,
+                    null,
+                    null,
+                    _cacheProvider,
+                    mapFileProvider,
+                    factorFileProvider,
+                    (_) => { },
+                    false,
+                    dataPermissionManager,
+                    Algorithm.ObjectStore,
+                    Algorithm.Settings
+                )
+            );
             Algorithm.SetHistoryProvider(historyProvider);
 
             // Dummy LEAN datafeed classes and initializations that essentially do nothing
@@ -87,32 +114,39 @@ namespace QuantConnect.Report
             // Create MHDB and Symbol properties DB instances for the DataManager
             var marketHoursDatabase = MarketHoursDatabase.FromDataFolder();
             var symbolPropertiesDataBase = SymbolPropertiesDatabase.FromDataFolder();
-            _dataManager = new DataManager(feed,
+            _dataManager = new DataManager(
+                feed,
                 new UniverseSelection(
                     Algorithm,
-                    new SecurityService(Algorithm.Portfolio.CashBook,
+                    new SecurityService(
+                        Algorithm.Portfolio.CashBook,
                         marketHoursDatabase,
                         symbolPropertiesDataBase,
                         Algorithm,
                         RegisteredSecurityDataTypesProvider.Null,
                         new SecurityCacheProvider(Algorithm.Portfolio),
-                        algorithm: Algorithm),
+                        algorithm: Algorithm
+                    ),
                     dataPermissionManager,
-                    new DefaultDataProvider()),
+                    new DefaultDataProvider()
+                ),
                 Algorithm,
                 Algorithm.TimeKeeper,
                 marketHoursDatabase,
                 false,
                 RegisteredSecurityDataTypesProvider.Null,
-                dataPermissionManager);
+                dataPermissionManager
+            );
 
-            _securityService = new SecurityService(Algorithm.Portfolio.CashBook,
+            _securityService = new SecurityService(
+                Algorithm.Portfolio.CashBook,
                 marketHoursDatabase,
                 symbolPropertiesDataBase,
                 Algorithm,
                 RegisteredSecurityDataTypesProvider.Null,
                 new SecurityCacheProvider(Algorithm.Portfolio),
-                algorithm: Algorithm);
+                algorithm: Algorithm
+            );
 
             var transactions = new BacktestingTransactionHandler();
             _resultHandler = new BacktestingResultHandler();
@@ -130,19 +164,33 @@ namespace QuantConnect.Report
             Algorithm.FromOrders(orders);
 
             // More initialization, this time with Algorithm and other misc. classes
-            _resultHandler.Initialize(new (job, new Messaging.Messaging(), new Api.Api(), transactions, mapFileProvider));
+            _resultHandler.Initialize(
+                new(job, new Messaging.Messaging(), new Api.Api(), transactions, mapFileProvider)
+            );
             _resultHandler.SetAlgorithm(Algorithm, Algorithm.Portfolio.TotalPortfolioValue);
 
             Algorithm.Transactions.SetOrderProcessor(transactions);
 
             transactions.Initialize(Algorithm, new BacktestingBrokerage(Algorithm), _resultHandler);
-            feed.Initialize(Algorithm, job, _resultHandler, null, null, null, _dataManager, null, null);
+            feed.Initialize(
+                Algorithm,
+                job,
+                _resultHandler,
+                null,
+                null,
+                null,
+                _dataManager,
+                null,
+                null
+            );
 
             // Begin setting up the currency conversion feed if needed
             var coreSecurities = Algorithm.Securities.Values.ToList();
 
             BaseSetupHandler.SetupCurrencyConversions(Algorithm, _dataManager.UniverseSelection);
-            var conversionSecurities = Algorithm.Securities.Values.Where(s => !coreSecurities.Contains(s)).ToList();
+            var conversionSecurities = Algorithm
+                .Securities.Values.Where(s => !coreSecurities.Contains(s))
+                .ToList();
 
             // Skip the history request if we don't need to convert anything
             if (conversionSecurities.Any())
@@ -170,7 +218,11 @@ namespace QuantConnect.Report
         /// <param name="resolution">Resolution to retrieve data in</param>
         /// <returns>History of the given securities</returns>
         /// <remarks>Method is static because we want to use it from the constructor as well</remarks>
-        private static IEnumerable<Slice> GetHistory(IAlgorithm algorithm, List<Security> securities, Resolution resolution)
+        private static IEnumerable<Slice> GetHistory(
+            IAlgorithm algorithm,
+            List<Security> securities,
+            Resolution resolution
+        )
         {
             var historyRequests = new List<Data.HistoryRequest>();
             var historyRequestFactory = new HistoryRequestFactory(algorithm);
@@ -178,9 +230,11 @@ namespace QuantConnect.Report
             // Create the history requests
             foreach (var security in securities)
             {
-                var configs = algorithm.SubscriptionManager
-                    .SubscriptionDataConfigService
-                    .GetSubscriptionDataConfigs(security.Symbol, includeInternalConfigs: true);
+                var configs =
+                    algorithm.SubscriptionManager.SubscriptionDataConfigService.GetSubscriptionDataConfigs(
+                        security.Symbol,
+                        includeInternalConfigs: true
+                    );
 
                 // we need to order and select a specific configuration type
                 // so the conversion rate is deterministic
@@ -191,19 +245,24 @@ namespace QuantConnect.Report
                     1,
                     resolution,
                     security.Exchange.Hours,
-                    configToUse.DataTimeZone);
+                    configToUse.DataTimeZone
+                );
                 var endTime = algorithm.EndDate;
 
-                historyRequests.Add(historyRequestFactory.CreateHistoryRequest(
-                    configToUse,
-                    startTime,
-                    endTime,
-                    security.Exchange.Hours,
-                    resolution
-                ));
+                historyRequests.Add(
+                    historyRequestFactory.CreateHistoryRequest(
+                        configToUse,
+                        startTime,
+                        endTime,
+                        security.Exchange.Hours,
+                        resolution
+                    )
+                );
             }
 
-            return algorithm.HistoryProvider.GetHistory(historyRequests, algorithm.TimeZone).ToList();
+            return algorithm
+                .HistoryProvider.GetHistory(historyRequests, algorithm.TimeZone)
+                .ToList();
         }
 
         /// <summary>
@@ -214,7 +273,12 @@ namespace QuantConnect.Report
         /// <param name="end">End date of history request</param>
         /// <param name="resolution">Resolution of history request</param>
         /// <returns>Enumerable of slices</returns>
-        public static IEnumerable<Slice> GetHistory(List<Symbol> symbols, DateTime start, DateTime end, Resolution resolution)
+        public static IEnumerable<Slice> GetHistory(
+            List<Symbol> symbols,
+            DateTime start,
+            DateTime end,
+            Resolution resolution
+        )
         {
             // Handles the conversion of Symbol to Security for us.
             var looper = new PortfolioLooper(0, new List<Order>(), resolution);
@@ -225,7 +289,13 @@ namespace QuantConnect.Report
 
             foreach (var symbol in symbols)
             {
-                var configs = looper.Algorithm.SubscriptionManager.SubscriptionDataConfigService.Add(symbol, resolution, false, false);
+                var configs =
+                    looper.Algorithm.SubscriptionManager.SubscriptionDataConfigService.Add(
+                        symbol,
+                        resolution,
+                        false,
+                        false
+                    );
                 securities.Add(looper.Algorithm.Securities.CreateSecurity(symbol, configs));
             }
 
@@ -240,8 +310,12 @@ namespace QuantConnect.Report
         /// <param name="algorithmConfiguration">Optional parameter to override default algorithm configuration</param>
         /// <param name="liveSeries">Equity curve series originates from LiveResult</param>
         /// <returns>Enumerable of <see cref="PointInTimePortfolio"/></returns>
-        public static IEnumerable<PointInTimePortfolio> FromOrders(Series<DateTime, double> equityCurve, IEnumerable<Order> orders,
-            AlgorithmConfiguration algorithmConfiguration = null, bool liveSeries = false)
+        public static IEnumerable<PointInTimePortfolio> FromOrders(
+            Series<DateTime, double> equityCurve,
+            IEnumerable<Order> orders,
+            AlgorithmConfiguration algorithmConfiguration = null,
+            bool liveSeries = false
+        )
         {
             // Don't do anything if we have no orders or equity curve to process
             if (!orders.Any() || equityCurve.IsEmpty)
@@ -287,19 +361,30 @@ namespace QuantConnect.Report
                 var deployment = equityCurve.Where(kvp => kvp.Key <= startTime);
                 if (deployment.IsEmpty)
                 {
-                    Log.Trace($"PortfolioLooper.FromOrders(): Equity series is empty after filtering with upper bound: {startTime}");
+                    Log.Trace(
+                        $"PortfolioLooper.FromOrders(): Equity series is empty after filtering with upper bound: {startTime}"
+                    );
                     continue;
                 }
 
                 // Skip any deployments that haven't been ran long enough to be generated in live mode
-                if (liveSeries && deploymentOrders.First().Time.Date == deploymentOrders.Last().Time.Date)
+                if (
+                    liveSeries
+                    && deploymentOrders.First().Time.Date == deploymentOrders.Last().Time.Date
+                )
                 {
-                    Log.Trace("PortfolioLooper.FromOrders(): Filtering deployment because it has not been deployed for more than one day");
+                    Log.Trace(
+                        "PortfolioLooper.FromOrders(): Filtering deployment because it has not been deployed for more than one day"
+                    );
                     continue;
                 }
 
                 // For every deployment, we want to start fresh.
-                looper = new PortfolioLooper(deployment.LastValue(), deploymentOrders, algorithmConfiguration: algorithmConfiguration);
+                looper = new PortfolioLooper(
+                    deployment.LastValue(),
+                    deploymentOrders,
+                    algorithmConfiguration: algorithmConfiguration
+                );
 
                 foreach (var portfolio in looper.ProcessOrders(deploymentOrders))
                 {
@@ -331,14 +416,22 @@ namespace QuantConnect.Report
                 var orderSecurity = Algorithm.Securities[order.Symbol];
                 DateTime lastFillTime;
 
-                if ((order.Type == OrderType.MarketOnOpen || order.Type == OrderType.MarketOnClose) &&
-                    (order.Status == OrderStatus.Filled || order.Status == OrderStatus.PartiallyFilled) && order.LastFillTime == null)
+                if (
+                    (order.Type == OrderType.MarketOnOpen || order.Type == OrderType.MarketOnClose)
+                    && (
+                        order.Status == OrderStatus.Filled
+                        || order.Status == OrderStatus.PartiallyFilled
+                    )
+                    && order.LastFillTime == null
+                )
                 {
                     lastFillTime = order.Time;
                 }
                 else if (order.LastFillTime == null)
                 {
-                    Log.Trace($"Order with ID: {order.Id} has been skipped because of null LastFillTime");
+                    Log.Trace(
+                        $"Order with ID: {order.Id} has been skipped because of null LastFillTime"
+                    );
                     continue;
                 }
                 else
@@ -346,7 +439,14 @@ namespace QuantConnect.Report
                     lastFillTime = order.LastFillTime.Value;
                 }
 
-                var tick = new Tick { Quantity = order.Quantity, AskPrice = order.Price, BidPrice = order.Price, Value = order.Price, EndTime = lastFillTime };
+                var tick = new Tick
+                {
+                    Quantity = order.Quantity,
+                    AskPrice = order.Price,
+                    BidPrice = order.Price,
+                    Value = order.Price,
+                    EndTime = lastFillTime
+                };
                 var tradeBar = new TradeBar
                 {
                     Open = order.Price,
@@ -392,7 +492,11 @@ namespace QuantConnect.Report
 
                 // Update our cash holdings before we invalidate the portfolio value
                 // to calculate the proper cash value of other assets the algo owns
-                foreach (var cash in Algorithm.Portfolio.CashBook.Values.Where(x => x.CurrencyConversion != null))
+                foreach (
+                    var cash in Algorithm.Portfolio.CashBook.Values.Where(x =>
+                        x.CurrencyConversion != null
+                    )
+                )
                 {
                     cash.Update();
                 }
@@ -402,7 +506,11 @@ namespace QuantConnect.Report
                 // calculate on stale data.
                 Algorithm.Portfolio.InvalidateTotalPortfolioValue();
 
-                var orderEvent = new OrderEvent(order, order.Time, Orders.Fees.OrderFee.Zero) { FillPrice = order.Price, FillQuantity = order.Quantity };
+                var orderEvent = new OrderEvent(order, order.Time, Orders.Fees.OrderFee.Zero)
+                {
+                    FillPrice = order.Price,
+                    FillQuantity = order.Quantity
+                };
 
                 // Process the order
                 Algorithm.Portfolio.ProcessFills(new List<OrderEvent> { orderEvent });

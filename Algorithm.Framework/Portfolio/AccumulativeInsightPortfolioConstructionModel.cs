@@ -48,12 +48,12 @@ namespace QuantConnect.Algorithm.Framework.Portfolio
         /// <param name="percent">The percentage amount of the portfolio value to allocate
         /// to a single insight. The value of percent should be in the range [0,1].
         /// The default value is 0.03.</param>
-        public AccumulativeInsightPortfolioConstructionModel(IDateRule rebalancingDateRules,
+        public AccumulativeInsightPortfolioConstructionModel(
+            IDateRule rebalancingDateRules,
             PortfolioBias portfolioBias = PortfolioBias.LongShort,
-            double percent = 0.03)
-            : this(rebalancingDateRules.ToFunc(), portfolioBias, percent)
-        {
-        }
+            double percent = 0.03
+        )
+            : this(rebalancingDateRules.ToFunc(), portfolioBias, percent) { }
 
         /// <summary>
         /// Initialize a new instance of <see cref="AccumulativeInsightPortfolioConstructionModel"/>
@@ -65,9 +65,11 @@ namespace QuantConnect.Algorithm.Framework.Portfolio
         /// <param name="percent">The percentage amount of the portfolio value to allocate
         /// to a single insight. The value of percent should be in the range [0,1].
         /// The default value is 0.03.</param>
-        public AccumulativeInsightPortfolioConstructionModel(Func<DateTime, DateTime?> rebalancingFunc = null,
+        public AccumulativeInsightPortfolioConstructionModel(
+            Func<DateTime, DateTime?> rebalancingFunc = null,
             PortfolioBias portfolioBias = PortfolioBias.LongShort,
-            double percent = 0.03)
+            double percent = 0.03
+        )
             : base(rebalancingFunc)
         {
             _portfolioBias = portfolioBias;
@@ -83,14 +85,18 @@ namespace QuantConnect.Algorithm.Framework.Portfolio
         /// <param name="percent">The percentage amount of the portfolio value to allocate
         /// to a single insight. The value of percent should be in the range [0,1].
         /// The default value is 0.03.</param>
-        public AccumulativeInsightPortfolioConstructionModel(Func<DateTime, DateTime> rebalancingFunc,
+        public AccumulativeInsightPortfolioConstructionModel(
+            Func<DateTime, DateTime> rebalancingFunc,
             PortfolioBias portfolioBias = PortfolioBias.LongShort,
-            double percent = 0.03)
-            : this(rebalancingFunc != null ? (Func<DateTime, DateTime?>)(timeUtc => rebalancingFunc(timeUtc)) : null,
+            double percent = 0.03
+        )
+            : this(
+                rebalancingFunc != null
+                    ? (Func<DateTime, DateTime?>)(timeUtc => rebalancingFunc(timeUtc))
+                    : null,
                 portfolioBias,
-                percent)
-        {
-        }
+                percent
+            ) { }
 
         /// <summary>
         /// Initialize a new instance of <see cref="AccumulativeInsightPortfolioConstructionModel"/>
@@ -106,16 +112,16 @@ namespace QuantConnect.Algorithm.Framework.Portfolio
         /// <param name="percent">The percentage amount of the portfolio value to allocate
         /// to a single insight. The value of percent should be in the range [0,1].
         /// The default value is 0.03.</param>
-        public AccumulativeInsightPortfolioConstructionModel(PyObject rebalance,
+        public AccumulativeInsightPortfolioConstructionModel(
+            PyObject rebalance,
             PortfolioBias portfolioBias = PortfolioBias.LongShort,
-            double percent = 0.03)
-            : this((Func<DateTime, DateTime?>)null,
-                portfolioBias,
-                percent)
+            double percent = 0.03
+        )
+            : this((Func<DateTime, DateTime?>)null, portfolioBias, percent)
         {
             SetRebalancingFunc(rebalance);
         }
-        
+
         /// <summary>
         /// Initialize a new instance of <see cref="AccumulativeInsightPortfolioConstructionModel"/>
         /// </summary>
@@ -124,12 +130,12 @@ namespace QuantConnect.Algorithm.Framework.Portfolio
         /// <param name="percent">The percentage amount of the portfolio value to allocate
         /// to a single insight. The value of percent should be in the range [0,1].
         /// The default value is 0.03.</param>
-        public AccumulativeInsightPortfolioConstructionModel(TimeSpan timeSpan,
+        public AccumulativeInsightPortfolioConstructionModel(
+            TimeSpan timeSpan,
             PortfolioBias portfolioBias = PortfolioBias.LongShort,
-            double percent = 0.03)
-            : this(dt => dt.Add(timeSpan), portfolioBias, percent)
-        {
-        }
+            double percent = 0.03
+        )
+            : this(dt => dt.Add(timeSpan), portfolioBias, percent) { }
 
         /// <summary>
         /// Initialize a new instance of <see cref="AccumulativeInsightPortfolioConstructionModel"/>
@@ -139,12 +145,12 @@ namespace QuantConnect.Algorithm.Framework.Portfolio
         /// <param name="percent">The percentage amount of the portfolio value to allocate
         /// to a single insight. The value of percent should be in the range [0,1].
         /// The default value is 0.03.</param>
-        public AccumulativeInsightPortfolioConstructionModel(Resolution resolution,
+        public AccumulativeInsightPortfolioConstructionModel(
+            Resolution resolution,
             PortfolioBias portfolioBias = PortfolioBias.LongShort,
-            double percent = 0.03)
-            : this(resolution.ToTimeSpan(), portfolioBias, percent)
-        {
-        }
+            double percent = 0.03
+        )
+            : this(resolution.ToTimeSpan(), portfolioBias, percent) { }
 
         /// <summary>
         /// Gets the target insights to calculate a portfolio target percent for
@@ -152,7 +158,9 @@ namespace QuantConnect.Algorithm.Framework.Portfolio
         /// <returns>An enumerable of the target insights</returns>
         protected override List<Insight> GetTargetInsights()
         {
-            return Algorithm.Insights.GetActiveInsights(Algorithm.UtcTime).Where(ShouldCreateTargetForInsight)
+            return Algorithm
+                .Insights.GetActiveInsights(Algorithm.UtcTime)
+                .Where(ShouldCreateTargetForInsight)
                 .OrderBy(insight => insight.GeneratedTimeUtc)
                 .ToList();
         }
@@ -162,7 +170,9 @@ namespace QuantConnect.Algorithm.Framework.Portfolio
         /// </summary>
         /// <param name="activeInsights">The active insights to generate a target for</param>
         /// <returns>A target percent for each insight</returns>
-        protected override Dictionary<Insight, double> DetermineTargetPercent(List<Insight> activeInsights)
+        protected override Dictionary<Insight, double> DetermineTargetPercent(
+            List<Insight> activeInsights
+        )
         {
             var percentPerSymbol = new Dictionary<Symbol, double>();
 
@@ -189,8 +199,10 @@ namespace QuantConnect.Algorithm.Framework.Portfolio
                 targetPercent += _percent * (int)insight.Direction;
 
                 // adjust to respect portfolio bias
-                if (_portfolioBias != PortfolioBias.LongShort
-                    && Math.Sign(targetPercent) != (int)_portfolioBias)
+                if (
+                    _portfolioBias != PortfolioBias.LongShort
+                    && Math.Sign(targetPercent) != (int)_portfolioBias
+                )
                 {
                     targetPercent = 0;
                 }
@@ -198,7 +210,8 @@ namespace QuantConnect.Algorithm.Framework.Portfolio
                 percentPerSymbol[insight.Symbol] = targetPercent;
             }
 
-            return activeInsights.DistinctBy(insight => insight.Symbol)
+            return activeInsights
+                .DistinctBy(insight => insight.Symbol)
                 .ToDictionary(insight => insight, insight => percentPerSymbol[insight.Symbol]);
         }
     }

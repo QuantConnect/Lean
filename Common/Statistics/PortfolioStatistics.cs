@@ -211,7 +211,8 @@ namespace QuantConnect.Statistics
             IRiskFreeInterestRateModel riskFreeInterestRateModel,
             int tradingDaysPerYear,
             int? winCount = null,
-            int? lossCount = null)
+            int? lossCount = null
+        )
         {
             StartEquity = startingCapital;
             EndEquity = equity.LastOrDefault().Value;
@@ -221,10 +222,12 @@ namespace QuantConnect.Statistics
                 PortfolioTurnover = portfolioTurnover.Select(kvp => kvp.Value).Average();
             }
 
-            if (startingCapital == 0
+            if (
+                startingCapital == 0
                 // minimum amount of samples to calculate variance
                 || listBenchmark.Count < 2
-                || listPerformance.Count < 2)
+                || listPerformance.Count < 2
+            )
             {
                 return;
             }
@@ -265,8 +268,8 @@ namespace QuantConnect.Statistics
             }
 
             var totalTrades = totalWins + totalLosses;
-            WinRate = totalTrades == 0 ? 0 : (decimal) totalWins / totalTrades;
-            LossRate = totalTrades == 0 ? 0 : (decimal) totalLosses / totalTrades;
+            WinRate = totalTrades == 0 ? 0 : (decimal)totalWins / totalTrades;
+            LossRate = totalTrades == 0 ? 0 : (decimal)totalLosses / totalTrades;
             Expectancy = WinRate * ProfitLossRatio - LossRate;
 
             if (startingCapital != 0)
@@ -274,38 +277,83 @@ namespace QuantConnect.Statistics
                 TotalNetProfit = equity.Values.LastOrDefault() / startingCapital - 1;
             }
 
-            var fractionOfYears = (decimal) (equity.Keys.LastOrDefault() - equity.Keys.FirstOrDefault()).TotalDays / 365;
-            CompoundingAnnualReturn = Statistics.CompoundingAnnualPerformance(startingCapital, equity.Values.LastOrDefault(), fractionOfYears);
+            var fractionOfYears =
+                (decimal)(equity.Keys.LastOrDefault() - equity.Keys.FirstOrDefault()).TotalDays
+                / 365;
+            CompoundingAnnualReturn = Statistics.CompoundingAnnualPerformance(
+                startingCapital,
+                equity.Values.LastOrDefault(),
+                fractionOfYears
+            );
 
             Drawdown = DrawdownPercent(equity, 3);
 
-            AnnualVariance = Statistics.AnnualVariance(listPerformance, tradingDaysPerYear).SafeDecimalCast();
-            AnnualStandardDeviation = (decimal) Math.Sqrt((double) AnnualVariance);
+            AnnualVariance = Statistics
+                .AnnualVariance(listPerformance, tradingDaysPerYear)
+                .SafeDecimalCast();
+            AnnualStandardDeviation = (decimal)Math.Sqrt((double)AnnualVariance);
 
-            var benchmarkAnnualPerformance = GetAnnualPerformance(listBenchmark, tradingDaysPerYear);
+            var benchmarkAnnualPerformance = GetAnnualPerformance(
+                listBenchmark,
+                tradingDaysPerYear
+            );
             var annualPerformance = GetAnnualPerformance(listPerformance, tradingDaysPerYear);
 
-            var riskFreeRate = riskFreeInterestRateModel.GetAverageRiskFreeRate(equity.Select(x => x.Key));
-            SharpeRatio = AnnualStandardDeviation == 0 ? 0 : Statistics.SharpeRatio(annualPerformance, AnnualStandardDeviation, riskFreeRate);
+            var riskFreeRate = riskFreeInterestRateModel.GetAverageRiskFreeRate(
+                equity.Select(x => x.Key)
+            );
+            SharpeRatio =
+                AnnualStandardDeviation == 0
+                    ? 0
+                    : Statistics.SharpeRatio(
+                        annualPerformance,
+                        AnnualStandardDeviation,
+                        riskFreeRate
+                    );
 
-            var annualDownsideDeviation = Statistics.AnnualDownsideStandardDeviation(listPerformance, tradingDaysPerYear).SafeDecimalCast();
-            SortinoRatio = annualDownsideDeviation == 0 ? 0 : Statistics.SharpeRatio(annualPerformance, annualDownsideDeviation, riskFreeRate);
+            var annualDownsideDeviation = Statistics
+                .AnnualDownsideStandardDeviation(listPerformance, tradingDaysPerYear)
+                .SafeDecimalCast();
+            SortinoRatio =
+                annualDownsideDeviation == 0
+                    ? 0
+                    : Statistics.SharpeRatio(
+                        annualPerformance,
+                        annualDownsideDeviation,
+                        riskFreeRate
+                    );
 
             var benchmarkVariance = listBenchmark.Variance();
-            Beta = benchmarkVariance.IsNaNOrZero() ? 0 : (decimal) (listPerformance.Covariance(listBenchmark) / benchmarkVariance);
+            Beta = benchmarkVariance.IsNaNOrZero()
+                ? 0
+                : (decimal)(listPerformance.Covariance(listBenchmark) / benchmarkVariance);
 
-            Alpha = Beta == 0 ? 0 : annualPerformance - (riskFreeRate + Beta * (benchmarkAnnualPerformance - riskFreeRate));
+            Alpha =
+                Beta == 0
+                    ? 0
+                    : annualPerformance
+                        - (riskFreeRate + Beta * (benchmarkAnnualPerformance - riskFreeRate));
 
-            TrackingError = (decimal)Statistics.TrackingError(listPerformance, listBenchmark, (double)tradingDaysPerYear);
+            TrackingError = (decimal)
+                Statistics.TrackingError(
+                    listPerformance,
+                    listBenchmark,
+                    (double)tradingDaysPerYear
+                );
 
-            InformationRatio = TrackingError == 0 ? 0 : (annualPerformance - benchmarkAnnualPerformance) / TrackingError;
+            InformationRatio =
+                TrackingError == 0
+                    ? 0
+                    : (annualPerformance - benchmarkAnnualPerformance) / TrackingError;
 
             TreynorRatio = Beta == 0 ? 0 : (annualPerformance - riskFreeRate) / Beta;
 
             // deannualize a 1 sharpe ratio
             var benchmarkSharpeRatio = 1.0d / Math.Sqrt(tradingDaysPerYear);
-            ProbabilisticSharpeRatio = Statistics.ProbabilisticSharpeRatio(listPerformance, benchmarkSharpeRatio).SafeDecimalCast();
-            
+            ProbabilisticSharpeRatio = Statistics
+                .ProbabilisticSharpeRatio(listPerformance, benchmarkSharpeRatio)
+                .SafeDecimalCast();
+
             ValueAtRisk99 = GetValueAtRisk(listPerformance, tradingDaysPerYear, 0.99d);
             ValueAtRisk95 = GetValueAtRisk(listPerformance, tradingDaysPerYear, 0.95d);
         }
@@ -313,9 +361,7 @@ namespace QuantConnect.Statistics
         /// <summary>
         /// Initializes a new instance of the <see cref="PortfolioStatistics"/> class
         /// </summary>
-        public PortfolioStatistics()
-        {
-        }
+        public PortfolioStatistics() { }
 
         /// <summary>
         /// Drawdown maximum percentage.
@@ -323,17 +369,23 @@ namespace QuantConnect.Statistics
         /// <param name="equityOverTime">The list of daily equity values</param>
         /// <param name="rounding">The number of decimal places to round the result</param>
         /// <returns>The drawdown percentage</returns>
-        private static decimal DrawdownPercent(SortedDictionary<DateTime, decimal> equityOverTime, int rounding = 2)
+        private static decimal DrawdownPercent(
+            SortedDictionary<DateTime, decimal> equityOverTime,
+            int rounding = 2
+        )
         {
             var prices = equityOverTime.Values.ToList();
-            if (prices.Count == 0) return 0;
+            if (prices.Count == 0)
+                return 0;
 
             var drawdowns = new List<decimal>();
             var high = prices[0];
             foreach (var price in prices)
             {
-                if (price > high) high = price;
-                if (high > 0) drawdowns.Add(price / high - 1);
+                if (price > high)
+                    high = price;
+                if (high > 0)
+                    drawdowns.Add(price / high - 1);
             }
 
             return Math.Round(Math.Abs(drawdowns.Min()), rounding);
@@ -346,18 +398,23 @@ namespace QuantConnect.Statistics
         /// <param name="tradingDaysPerYear">Trading days per year for the assets in portfolio</param>
         /// <remarks>May be inaccurate for forex algorithms with more trading days in a year</remarks>
         /// <returns>Double annual performance percentage</returns>
-        private static decimal GetAnnualPerformance(List<double> performance, int tradingDaysPerYear)
+        private static decimal GetAnnualPerformance(
+            List<double> performance,
+            int tradingDaysPerYear
+        )
         {
             try
             {
-                return Statistics.AnnualPerformance(performance, tradingDaysPerYear).SafeDecimalCast();
+                return Statistics
+                    .AnnualPerformance(performance, tradingDaysPerYear)
+                    .SafeDecimalCast();
             }
             catch (ArgumentException ex)
             {
                 var partialSums = 0.0;
                 var points = 0;
                 double troublePoint = default;
-                foreach(var point in performance)
+                foreach (var point in performance)
                 {
                     points++;
                     partialSums += point;
@@ -368,8 +425,10 @@ namespace QuantConnect.Statistics
                     }
                 }
 
-                throw new ArgumentException($"PortfolioStatistics.GetAnnualPerformance(): An exception was thrown when trying to cast the annual performance value due to the following performance point: {troublePoint}. " +
-                    $"The exception thrown was the following: {ex.Message}.");
+                throw new ArgumentException(
+                    $"PortfolioStatistics.GetAnnualPerformance(): An exception was thrown when trying to cast the annual performance value due to the following performance point: {troublePoint}. "
+                        + $"The exception thrown was the following: {ex.Message}."
+                );
             }
         }
 
@@ -377,7 +436,8 @@ namespace QuantConnect.Statistics
             List<double> performance,
             int lookbackPeriodDays,
             double confidenceLevel,
-            int rounding = 3)
+            int rounding = 3
+        )
         {
             var periodPerformance = performance.TakeLast(lookbackPeriodDays);
             var mean = periodPerformance.Mean();

@@ -27,7 +27,7 @@ namespace QuantConnect.Data.Shortable
         /// <summary>
         /// The null shortable provider instance
         /// </summary>
-        public static NullShortableProvider Instance { get; } = new ();
+        public static NullShortableProvider Instance { get; } = new();
 
         /// <summary>
         /// Gets interest rate charged on borrowed shares for a given asset.
@@ -37,7 +37,7 @@ namespace QuantConnect.Data.Shortable
         /// <returns>zero indicating that it is does have borrowing costs</returns>
         public decimal FeeRate(Symbol symbol, DateTime localTime)
         {
-            return 0m;       
+            return 0m;
         }
 
         /// <summary>

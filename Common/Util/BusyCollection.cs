@@ -29,7 +29,9 @@ namespace QuantConnect.Util
     public class BusyCollection<T> : IBusyCollection<T>
     {
         private readonly ConcurrentQueue<T> _collection = new ConcurrentQueue<T>();
-        private readonly ManualResetEventSlim _processingCompletedEvent = new ManualResetEventSlim(true);
+        private readonly ManualResetEventSlim _processingCompletedEvent = new ManualResetEventSlim(
+            true
+        );
         private bool _completedAdding;
 
         /// <summary>
@@ -66,8 +68,10 @@ namespace QuantConnect.Util
         {
             if (_completedAdding)
             {
-                throw new InvalidOperationException("Collection has already been marked as not " +
-                    $"accepting more additions, see {nameof(CompleteAdding)}");
+                throw new InvalidOperationException(
+                    "Collection has already been marked as not "
+                        + $"accepting more additions, see {nameof(CompleteAdding)}"
+                );
             }
 
             // locking to avoid race condition with GetConsumingEnumerable()

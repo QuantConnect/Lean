@@ -15,18 +15,20 @@
 */
 
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using QuantConnect.Data;
-using QuantConnect.Interfaces;
-using System.Collections.Generic;
 using QuantConnect.Data.UniverseSelection;
+using QuantConnect.Interfaces;
 
 namespace QuantConnect.Algorithm.CSharp
 {
     /// <summary>
     /// Regression algorithm asserting warming up with a lower resolution for speed is respected using options
     /// </summary>
-    public class WarmupLowerResolutionOptionRegressionAlgorithm : QCAlgorithm, IRegressionAlgorithmDefinition
+    public class WarmupLowerResolutionOptionRegressionAlgorithm
+        : QCAlgorithm,
+            IRegressionAlgorithmDefinition
     {
         private List<DateTime> _optionWarmupTimes = new();
         private const string UnderlyingTicker = "AAPL";
@@ -57,7 +59,9 @@ namespace QuantConnect.Algorithm.CSharp
                     var dataSpan = data.EndTime - data.Time;
                     if (dataSpan != QuantConnect.Time.OneDay)
                     {
-                        throw new RegressionTestException($"Unexpected bar span! {data}: {dataSpan}");
+                        throw new RegressionTestException(
+                            $"Unexpected bar span! {data}: {dataSpan}"
+                        );
                     }
                 }
             }
@@ -105,12 +109,13 @@ namespace QuantConnect.Algorithm.CSharp
             {
                 if (_optionWarmupTimes[count] != start)
                 {
-                    throw new RegressionTestException($"Unexpected time {_optionWarmupTimes[count]} expected {start}");
+                    throw new RegressionTestException(
+                        $"Unexpected time {_optionWarmupTimes[count]} expected {start}"
+                    );
                 }
                 count++;
                 start = start.AddDays(1);
-            }
-            while (start < end);
+            } while (start < end);
         }
 
         /// <summary>
@@ -141,35 +146,36 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// This is used by the regression test system to indicate what the expected statistics are from running the algorithm
         /// </summary>
-        public Dictionary<string, string> ExpectedStatistics => new Dictionary<string, string>
-        {
-            {"Total Orders", "3"},
-            {"Average Win", "0%"},
-            {"Average Loss", "0%"},
-            {"Compounding Annual Return", "0%"},
-            {"Drawdown", "0%"},
-            {"Expectancy", "0"},
-            {"Start Equity", "100000"},
-            {"End Equity", "99908"},
-            {"Net Profit", "0%"},
-            {"Sharpe Ratio", "0"},
-            {"Sortino Ratio", "0"},
-            {"Probabilistic Sharpe Ratio", "0%"},
-            {"Loss Rate", "0%"},
-            {"Win Rate", "0%"},
-            {"Profit-Loss Ratio", "0"},
-            {"Alpha", "0"},
-            {"Beta", "0"},
-            {"Annual Standard Deviation", "0"},
-            {"Annual Variance", "0"},
-            {"Information Ratio", "0"},
-            {"Tracking Error", "0"},
-            {"Treynor Ratio", "0"},
-            {"Total Fees", "$2.00"},
-            {"Estimated Strategy Capacity", "$5000.00"},
-            {"Lowest Capacity Asset", "AAPL 2ZTXYMUME0LUU|AAPL R735QTJ8XC9X"},
-            {"Portfolio Turnover", "1.08%"},
-            {"OrderListHash", "1dfc2281fd254870f2e32528e7bb7842"}
-        };
+        public Dictionary<string, string> ExpectedStatistics =>
+            new Dictionary<string, string>
+            {
+                { "Total Orders", "3" },
+                { "Average Win", "0%" },
+                { "Average Loss", "0%" },
+                { "Compounding Annual Return", "0%" },
+                { "Drawdown", "0%" },
+                { "Expectancy", "0" },
+                { "Start Equity", "100000" },
+                { "End Equity", "99908" },
+                { "Net Profit", "0%" },
+                { "Sharpe Ratio", "0" },
+                { "Sortino Ratio", "0" },
+                { "Probabilistic Sharpe Ratio", "0%" },
+                { "Loss Rate", "0%" },
+                { "Win Rate", "0%" },
+                { "Profit-Loss Ratio", "0" },
+                { "Alpha", "0" },
+                { "Beta", "0" },
+                { "Annual Standard Deviation", "0" },
+                { "Annual Variance", "0" },
+                { "Information Ratio", "0" },
+                { "Tracking Error", "0" },
+                { "Treynor Ratio", "0" },
+                { "Total Fees", "$2.00" },
+                { "Estimated Strategy Capacity", "$5000.00" },
+                { "Lowest Capacity Asset", "AAPL 2ZTXYMUME0LUU|AAPL R735QTJ8XC9X" },
+                { "Portfolio Turnover", "1.08%" },
+                { "OrderListHash", "1dfc2281fd254870f2e32528e7bb7842" }
+            };
     }
 }

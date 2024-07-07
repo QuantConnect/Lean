@@ -13,16 +13,16 @@
  * limitations under the License.
 */
 
+using System;
+using System.Collections.Generic;
+using System.Linq;
 using QuantConnect.Algorithm.Framework.Alphas;
 using QuantConnect.Algorithm.Framework.Portfolio;
 using QuantConnect.Algorithm.Framework.Selection;
 using QuantConnect.Data.Fundamental;
 using QuantConnect.Data.UniverseSelection;
-using QuantConnect.Orders;
 using QuantConnect.Interfaces;
-using System;
-using System.Collections.Generic;
-using System.Linq;
+using QuantConnect.Orders;
 using QuantConnect.Securities;
 
 namespace QuantConnect.Algorithm.CSharp
@@ -44,11 +44,20 @@ namespace QuantConnect.Algorithm.CSharp
             SetEndDate(2014, 04, 06);
             SetCash(100000);
 
-            SetUniverseSelection(new FineFundamentalUniverseSelectionModel(SelectCoarse, SelectFine));
-            SetAlpha(new ConstantAlphaModel(InsightType.Price, InsightDirection.Up, QuantConnect.Time.OneDay));
+            SetUniverseSelection(
+                new FineFundamentalUniverseSelectionModel(SelectCoarse, SelectFine)
+            );
+            SetAlpha(
+                new ConstantAlphaModel(
+                    InsightType.Price,
+                    InsightDirection.Up,
+                    QuantConnect.Time.OneDay
+                )
+            );
             SetPortfolioConstruction(new SectorWeightingPortfolioConstructionModel());
 
-            Func<string, Symbol> toSymbol = t => QuantConnect.Symbol.Create(t, SecurityType.Equity, Market.USA);
+            Func<string, Symbol> toSymbol = t =>
+                QuantConnect.Symbol.Create(t, SecurityType.Equity, Market.USA);
             _targets.Add(toSymbol("AAPL"), .25m);
             _targets.Add(toSymbol("AIG"), .5m);
             _targets.Add(toSymbol("IBM"), .25m);
@@ -64,9 +73,12 @@ namespace QuantConnect.Algorithm.CSharp
                 var symbol = orderEvent.Symbol;
                 var security = Securities[symbol];
 
-                var absoluteBuyingPower = security.BuyingPowerModel
-                    .GetReservedBuyingPowerForPosition(new ReservedBuyingPowerForPositionParameters(security))
-                    .AbsoluteUsedBuyingPower   // See GH issue 4107
+                var absoluteBuyingPower =
+                    security
+                        .BuyingPowerModel.GetReservedBuyingPowerForPosition(
+                            new ReservedBuyingPowerForPositionParameters(security)
+                        )
+                        .AbsoluteUsedBuyingPower // See GH issue 4107
                     * security.BuyingPowerModel.GetLeverage(security);
 
                 var portfolioShare = absoluteBuyingPower / Portfolio.TotalPortfolioValue;
@@ -75,9 +87,14 @@ namespace QuantConnect.Algorithm.CSharp
 
                 // Checks whether the portfolio share of a given symbol matches its target
                 // Only considers the buy orders, because holding value is zero otherwise
-                if (Math.Abs(_targets[symbol] - portfolioShare) > 0.01m && orderEvent.Direction == OrderDirection.Buy)
+                if (
+                    Math.Abs(_targets[symbol] - portfolioShare) > 0.01m
+                    && orderEvent.Direction == OrderDirection.Buy
+                )
                 {
-                    throw new RegressionTestException($"Target for {symbol}: expected {_targets[symbol]}, actual: {portfolioShare}");
+                    throw new RegressionTestException(
+                        $"Target for {symbol}: expected {_targets[symbol]}, actual: {portfolioShare}"
+                    );
                 }
             }
         }
@@ -91,7 +108,8 @@ namespace QuantConnect.Algorithm.CSharp
                 : _targets.Keys.Skip(3);
         }
 
-        private IEnumerable<Symbol> SelectFine(IEnumerable<FineFundamental> fine) => fine.Select(f => f.Symbol);
+        private IEnumerable<Symbol> SelectFine(IEnumerable<FineFundamental> fine) =>
+            fine.Select(f => f.Symbol);
 
         /// <summary>
         /// This is used by the regression test system to indicate if the open source Lean repository has the required data to run this algorithm.
@@ -121,35 +139,36 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// This is used by the regression test system to indicate what the expected statistics are from running the algorithm
         /// </summary>
-        public Dictionary<string, string> ExpectedStatistics => new Dictionary<string, string>
-        {
-            {"Total Orders", "11"},
-            {"Average Win", "0.53%"},
-            {"Average Loss", "-0.14%"},
-            {"Compounding Annual Return", "-98.488%"},
-            {"Drawdown", "3.700%"},
-            {"Expectancy", "1.374"},
-            {"Start Equity", "100000"},
-            {"End Equity", "96613.29"},
-            {"Net Profit", "-3.387%"},
-            {"Sharpe Ratio", "-2.425"},
-            {"Sortino Ratio", "-2.425"},
-            {"Probabilistic Sharpe Ratio", "0%"},
-            {"Loss Rate", "50%"},
-            {"Win Rate", "50%"},
-            {"Profit-Loss Ratio", "3.75"},
-            {"Alpha", "1.887"},
-            {"Beta", "3.528"},
-            {"Annual Standard Deviation", "0.412"},
-            {"Annual Variance", "0.17"},
-            {"Information Ratio", "-0.613"},
-            {"Tracking Error", "0.295"},
-            {"Treynor Ratio", "-0.283"},
-            {"Total Fees", "$47.58"},
-            {"Estimated Strategy Capacity", "$44000000.00"},
-            {"Lowest Capacity Asset", "AIG R735QTJ8XC9X"},
-            {"Portfolio Turnover", "102.74%"},
-            {"OrderListHash", "fa900c290faf84a346d242c64cf01a69"}
-        };
+        public Dictionary<string, string> ExpectedStatistics =>
+            new Dictionary<string, string>
+            {
+                { "Total Orders", "11" },
+                { "Average Win", "0.53%" },
+                { "Average Loss", "-0.14%" },
+                { "Compounding Annual Return", "-98.488%" },
+                { "Drawdown", "3.700%" },
+                { "Expectancy", "1.374" },
+                { "Start Equity", "100000" },
+                { "End Equity", "96613.29" },
+                { "Net Profit", "-3.387%" },
+                { "Sharpe Ratio", "-2.425" },
+                { "Sortino Ratio", "-2.425" },
+                { "Probabilistic Sharpe Ratio", "0%" },
+                { "Loss Rate", "50%" },
+                { "Win Rate", "50%" },
+                { "Profit-Loss Ratio", "3.75" },
+                { "Alpha", "1.887" },
+                { "Beta", "3.528" },
+                { "Annual Standard Deviation", "0.412" },
+                { "Annual Variance", "0.17" },
+                { "Information Ratio", "-0.613" },
+                { "Tracking Error", "0.295" },
+                { "Treynor Ratio", "-0.283" },
+                { "Total Fees", "$47.58" },
+                { "Estimated Strategy Capacity", "$44000000.00" },
+                { "Lowest Capacity Asset", "AIG R735QTJ8XC9X" },
+                { "Portfolio Turnover", "102.74%" },
+                { "OrderListHash", "fa900c290faf84a346d242c64cf01a69" }
+            };
     }
 }

@@ -46,12 +46,12 @@ namespace QuantConnect.Tests.Brokerages.Paper
         {
             // init algorithm
             var algorithm = new AlgorithmStub(new MockDataFeed());
-            algorithm.AddSecurities(equities: new List<string> {"SPY"});
+            algorithm.AddSecurities(equities: new List<string> { "SPY" });
             algorithm.PostInitialize();
 
             // init holdings
             var SPY = algorithm.Securities[Symbols.SPY];
-            SPY.SetMarketPrice(new Tick {Value = 100m});
+            SPY.SetMarketPrice(new Tick { Value = 100m });
             SPY.Holdings.SetHoldings(100m, 1000);
 
             // resolve expected outcome
@@ -62,7 +62,9 @@ namespace QuantConnect.Tests.Brokerages.Paper
 
             // create slice w/ dividend
             var slice = new Slice(algorithm.Time, new List<BaseData>(), algorithm.Time);
-            slice.Dividends.Add(new Dividend(Symbols.SPY, algorithm.Time, distributionPerShare, 100m));
+            slice.Dividends.Add(
+                new Dividend(Symbols.SPY, algorithm.Time, distributionPerShare, 100m)
+            );
             algorithm.SetCurrentSlice(slice);
 
             // invoke brokerage
@@ -87,22 +89,32 @@ namespace QuantConnect.Tests.Brokerages.Paper
             var marketHoursDatabase = MarketHoursDatabase.FromDataFolder();
             var symbolPropertiesDataBase = SymbolPropertiesDatabase.FromDataFolder();
             var dataPermissionManager = new DataPermissionManager();
-            var dataManager = new DataManager(feed,
+            var dataManager = new DataManager(
+                feed,
                 new UniverseSelection(
                     algorithm,
-                    new SecurityService(algorithm.Portfolio.CashBook, marketHoursDatabase, symbolPropertiesDataBase, algorithm, RegisteredSecurityDataTypesProvider.Null, new SecurityCacheProvider(algorithm.Portfolio)),
+                    new SecurityService(
+                        algorithm.Portfolio.CashBook,
+                        marketHoursDatabase,
+                        symbolPropertiesDataBase,
+                        algorithm,
+                        RegisteredSecurityDataTypesProvider.Null,
+                        new SecurityCacheProvider(algorithm.Portfolio)
+                    ),
                     dataPermissionManager,
-                    TestGlobals.DataProvider),
+                    TestGlobals.DataProvider
+                ),
                 algorithm,
                 algorithm.TimeKeeper,
                 marketHoursDatabase,
                 true,
                 RegisteredSecurityDataTypesProvider.Null,
-                dataPermissionManager);
+                dataPermissionManager
+            );
             var synchronizer = new NullSynchronizer(algorithm, dividend);
 
             algorithm.SubscriptionManager.SetDataManager(dataManager);
-            algorithm.AddSecurities(equities: new List<string> {"SPY"});
+            algorithm.AddSecurities(equities: new List<string> { "SPY" });
             algorithm.Securities[Symbols.SPY].Holdings.SetHoldings(100m, 1);
             algorithm.PostInitialize();
 
@@ -123,7 +135,7 @@ namespace QuantConnect.Tests.Brokerages.Paper
             // initialize results and transactions
             using var eventMessagingHandler = new EventMessagingHandler();
             using var api = new Api.Api();
-            results.Initialize(new (job, eventMessagingHandler, api, transactions, null));
+            results.Initialize(new(job, eventMessagingHandler, api, transactions, null));
             results.SetAlgorithm(algorithm, algorithm.Portfolio.TotalPortfolioValue);
             transactions.Initialize(algorithm, brokerage, results);
 
@@ -131,7 +143,8 @@ namespace QuantConnect.Tests.Brokerages.Paper
             using var nullLeanManager = new AlgorithmManagerTests.NullLeanManager();
 
             // run algorithm manager
-            manager.Run(job,
+            manager.Run(
+                job,
                 algorithm,
                 synchronizer,
                 transactions,
@@ -165,11 +178,15 @@ namespace QuantConnect.Tests.Brokerages.Paper
 
             public IEnumerable<TimeSlice> StreamData(CancellationToken cancellationToken)
             {
-                var dataFeedPacket = new DataFeedPacket(_algorithm.Securities[_symbol],
+                var dataFeedPacket = new DataFeedPacket(
+                    _algorithm.Securities[_symbol],
                     _algorithm.SubscriptionManager.Subscriptions.First(s => s.Symbol == _symbol),
-                    new List<BaseData> { _dividend }, Ref.CreateReadOnly(() => false));
+                    new List<BaseData> { _dividend },
+                    Ref.CreateReadOnly(() => false)
+                );
 
-                yield return _timeSliceFactory.Create(DateTime.UtcNow,
+                yield return _timeSliceFactory.Create(
+                    DateTime.UtcNow,
                     new List<DataFeedPacket> { dataFeedPacket },
                     SecurityChanges.None,
                     new Dictionary<Universe, BaseDataCollection>()

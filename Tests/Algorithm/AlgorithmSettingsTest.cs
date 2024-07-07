@@ -14,13 +14,13 @@
 */
 using System;
 using NUnit.Framework;
-using QuantConnect.Util;
 using QuantConnect.Algorithm;
 using QuantConnect.Brokerages;
 using QuantConnect.Data.Market;
-using QuantConnect.Tests.Engine.DataFeeds;
-using QuantConnect.Tests.Common.Securities;
 using QuantConnect.Lean.Engine.Setup;
+using QuantConnect.Tests.Common.Securities;
+using QuantConnect.Tests.Engine.DataFeeds;
+using QuantConnect.Util;
 
 namespace QuantConnect.Tests.Algorithm
 {
@@ -51,7 +51,7 @@ namespace QuantConnect.Tests.Algorithm
             // It should NOT send a order to set us flat
             Assert.IsTrue(fakeOrderProcessor.ProcessedOrdersRequests.IsNullOrEmpty());
         }
-        
+
         [Test]
         public void SettingSetHoldingsBufferWorksCorrectly()
         {
@@ -104,7 +104,11 @@ namespace QuantConnect.Tests.Algorithm
         [TestCase(BrokerageName.Coinbase, 365, AccountType.Cash)]
         [TestCase(BrokerageName.BinanceUS, 365, AccountType.Cash)]
         [TestCase(BrokerageName.InteractiveBrokersBrokerage, 252)]
-        public void ReturnUniqueTradingDayPerYearDependOnBrokerageName(BrokerageName brokerageName, int expectedTradingDayPerYear, AccountType accountType = AccountType.Margin)
+        public void ReturnUniqueTradingDayPerYearDependOnBrokerageName(
+            BrokerageName brokerageName,
+            int expectedTradingDayPerYear,
+            AccountType accountType = AccountType.Margin
+        )
         {
             var algorithm = new QCAlgorithm();
             algorithm.SetBrokerageModel(brokerageName, accountType);
@@ -116,7 +120,11 @@ namespace QuantConnect.Tests.Algorithm
 
         [TestCase(BrokerageName.Bybit, 202, 365)]
         [TestCase(BrokerageName.InteractiveBrokersBrokerage, 404, 252)]
-        public void ReturnCustomTradingDayPerYearIndependentlyFromBrokerageName(BrokerageName brokerageName, int customTradingDayPerYear, int expectedDefaultTradingDayPerYearForBrokerage)
+        public void ReturnCustomTradingDayPerYearIndependentlyFromBrokerageName(
+            BrokerageName brokerageName,
+            int customTradingDayPerYear,
+            int expectedDefaultTradingDayPerYearForBrokerage
+        )
         {
             var algorithm = new QCAlgorithm();
             algorithm.SetBrokerageModel(brokerageName);
@@ -125,12 +133,18 @@ namespace QuantConnect.Tests.Algorithm
             // duplicate: make sure that custom value is assigned
             BaseSetupHandler.SetBrokerageTradingDayPerYear(algorithm);
 
-            Assert.AreNotEqual(expectedDefaultTradingDayPerYearForBrokerage, algorithm.Settings.TradingDaysPerYear);
+            Assert.AreNotEqual(
+                expectedDefaultTradingDayPerYearForBrokerage,
+                algorithm.Settings.TradingDaysPerYear
+            );
         }
 
         [TestCase(252, null)]
         [TestCase(404, 404)]
-        public void ReturnTradingDayPerYearWithoutSetBrokerage(int expectedTradingDayPerYear, int? customTradingDayPerYear = null)
+        public void ReturnTradingDayPerYearWithoutSetBrokerage(
+            int expectedTradingDayPerYear,
+            int? customTradingDayPerYear = null
+        )
         {
             var algorithm = new QCAlgorithm();
 
@@ -154,15 +168,17 @@ namespace QuantConnect.Tests.Algorithm
             algo.Transactions.SetOrderProcessor(fakeOrderProcessor);
             algo.Portfolio[symbol].SetHoldings(1, 10);
             var security = algo.Securities[symbol];
-            security.SetMarketPrice(new TradeBar
-            {
-                Time = DateTime.Now,
-                Symbol = security.Symbol,
-                Open = 20,
-                High = 20,
-                Low = 20,
-                Close = 20
-            });
+            security.SetMarketPrice(
+                new TradeBar
+                {
+                    Time = DateTime.Now,
+                    Symbol = security.Symbol,
+                    Open = 20,
+                    High = 20,
+                    Low = 20,
+                    Close = 20
+                }
+            );
 
             Assert.IsTrue(fakeOrderProcessor.ProcessedOrdersRequests.IsNullOrEmpty());
             return fakeOrderProcessor;

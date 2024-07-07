@@ -17,11 +17,10 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-
 using QuantConnect.Data;
-using QuantConnect.Util;
 using QuantConnect.Interfaces;
 using QuantConnect.Securities.Option;
+using QuantConnect.Util;
 
 namespace QuantConnect.Algorithm.CSharp
 {
@@ -32,7 +31,9 @@ namespace QuantConnect.Algorithm.CSharp
     ///     1. Short front month put
     ///     2. Roll out front month put to back month put using a calendar spread.
     /// </summary>
-    public class RollOutFrontMonthToBackMonthOptionUsingCalendarSpreadRegressionAlgorithm : QCAlgorithm, IRegressionAlgorithmDefinition
+    public class RollOutFrontMonthToBackMonthOptionUsingCalendarSpreadRegressionAlgorithm
+        : QCAlgorithm,
+            IRegressionAlgorithmDefinition
     {
         private Symbol _symbol;
         private Symbol _frontMonthPutSymbol;
@@ -65,7 +66,9 @@ namespace QuantConnect.Algorithm.CSharp
                 _atmStrike = chain.MinBy(x => Math.Abs(x.Strike - chain.Underlying.Price)).Strike;
             }
 
-            var puts = chain.Where(x => x.Strike == _atmStrike && x.Right == OptionRight.Put).ToList();
+            var puts = chain
+                .Where(x => x.Strike == _atmStrike && x.Right == OptionRight.Put)
+                .ToList();
 
             if (isFirstStep)
             {
@@ -85,15 +88,28 @@ namespace QuantConnect.Algorithm.CSharp
                 // which we want to roll out to the farther expiry
                 var frontMonthExpiry = puts[0].Expiry;
                 var backMonthExpiry = puts[puts.Count - 1].Expiry;
-                var optionStrategy = OptionStrategies.PutCalendarSpread(_symbol, _atmStrike, frontMonthExpiry, backMonthExpiry);
+                var optionStrategy = OptionStrategies.PutCalendarSpread(
+                    _symbol,
+                    _atmStrike,
+                    frontMonthExpiry,
+                    backMonthExpiry
+                );
                 var tickets = Sell(optionStrategy, 1);
 
-                if (!tickets.Any(ticket => ticket.Symbol == _frontMonthPutSymbol && ticket.Quantity == 1))
+                if (
+                    !tickets.Any(ticket =>
+                        ticket.Symbol == _frontMonthPutSymbol && ticket.Quantity == 1
+                    )
+                )
                 {
-                    throw new RegressionTestException($"Expected to find a ticket for {_frontMonthPutSymbol} with quantity {-Securities[_frontMonthPutSymbol].Holdings.Quantity}");
+                    throw new RegressionTestException(
+                        $"Expected to find a ticket for {_frontMonthPutSymbol} with quantity {-Securities[_frontMonthPutSymbol].Holdings.Quantity}"
+                    );
                 }
 
-                _backMonthPutSymbol = tickets.First(ticket => ticket.Symbol != _frontMonthPutSymbol).Symbol;
+                _backMonthPutSymbol = tickets
+                    .First(ticket => ticket.Symbol != _frontMonthPutSymbol)
+                    .Symbol;
                 _done = true;
             }
         }
@@ -102,25 +118,33 @@ namespace QuantConnect.Algorithm.CSharp
         {
             if (!_done)
             {
-                throw new RegressionTestException("Expected the algorithm to have bought and sold a Bull Call Spread and a Bear Put Spread.");
+                throw new RegressionTestException(
+                    "Expected the algorithm to have bought and sold a Bull Call Spread and a Bear Put Spread."
+                );
             }
 
             if (Portfolio.Positions.Groups.Count != 1)
             {
-                throw new RegressionTestException($"Expected 1 position group, found {Portfolio.Positions.Groups.Count}");
+                throw new RegressionTestException(
+                    $"Expected 1 position group, found {Portfolio.Positions.Groups.Count}"
+                );
             }
 
             var positions = Portfolio.Positions.Groups.Single().Positions.ToList();
             if (positions.Count != 1)
             {
-                throw new RegressionTestException($"Expected 1 position in the position group, found {positions.Count()}");
+                throw new RegressionTestException(
+                    $"Expected 1 position in the position group, found {positions.Count()}"
+                );
             }
 
             // The position should correspond to the far expiry contract
             var position = positions[0];
             if (position.Symbol != _backMonthPutSymbol)
             {
-                throw new RegressionTestException($"Expected final portfolio position to be {_backMonthPutSymbol}, found {position.Symbol}");
+                throw new RegressionTestException(
+                    $"Expected final portfolio position to be {_backMonthPutSymbol}, found {position.Symbol}"
+                );
             }
         }
 
@@ -152,35 +176,36 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// This is used by the regression test system to indicate what the expected statistics are from running the algorithm
         /// </summary>
-        public Dictionary<string, string> ExpectedStatistics => new Dictionary<string, string>
-        {
-            {"Total Orders", "3"},
-            {"Average Win", "0%"},
-            {"Average Loss", "0%"},
-            {"Compounding Annual Return", "0%"},
-            {"Drawdown", "0%"},
-            {"Expectancy", "0"},
-            {"Start Equity", "500000"},
-            {"End Equity", "499792"},
-            {"Net Profit", "0%"},
-            {"Sharpe Ratio", "0"},
-            {"Sortino Ratio", "0"},
-            {"Probabilistic Sharpe Ratio", "0%"},
-            {"Loss Rate", "0%"},
-            {"Win Rate", "0%"},
-            {"Profit-Loss Ratio", "0"},
-            {"Alpha", "0"},
-            {"Beta", "0"},
-            {"Annual Standard Deviation", "0"},
-            {"Annual Variance", "0"},
-            {"Information Ratio", "0"},
-            {"Tracking Error", "0"},
-            {"Treynor Ratio", "0"},
-            {"Total Fees", "$3.00"},
-            {"Estimated Strategy Capacity", "$190000.00"},
-            {"Lowest Capacity Asset", "GOOCV 306CZK4DP0LC6|GOOCV VP83T1ZUHROL"},
-            {"Portfolio Turnover", "1.19%"},
-            {"OrderListHash", "007124f0e2e4f0048f367782ef7fcd02"}
-        };
+        public Dictionary<string, string> ExpectedStatistics =>
+            new Dictionary<string, string>
+            {
+                { "Total Orders", "3" },
+                { "Average Win", "0%" },
+                { "Average Loss", "0%" },
+                { "Compounding Annual Return", "0%" },
+                { "Drawdown", "0%" },
+                { "Expectancy", "0" },
+                { "Start Equity", "500000" },
+                { "End Equity", "499792" },
+                { "Net Profit", "0%" },
+                { "Sharpe Ratio", "0" },
+                { "Sortino Ratio", "0" },
+                { "Probabilistic Sharpe Ratio", "0%" },
+                { "Loss Rate", "0%" },
+                { "Win Rate", "0%" },
+                { "Profit-Loss Ratio", "0" },
+                { "Alpha", "0" },
+                { "Beta", "0" },
+                { "Annual Standard Deviation", "0" },
+                { "Annual Variance", "0" },
+                { "Information Ratio", "0" },
+                { "Tracking Error", "0" },
+                { "Treynor Ratio", "0" },
+                { "Total Fees", "$3.00" },
+                { "Estimated Strategy Capacity", "$190000.00" },
+                { "Lowest Capacity Asset", "GOOCV 306CZK4DP0LC6|GOOCV VP83T1ZUHROL" },
+                { "Portfolio Turnover", "1.19%" },
+                { "OrderListHash", "007124f0e2e4f0048f367782ef7fcd02" }
+            };
     }
 }

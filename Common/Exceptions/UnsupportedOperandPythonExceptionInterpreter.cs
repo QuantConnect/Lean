@@ -36,8 +36,12 @@ namespace QuantConnect.Exceptions
         /// <returns>True if the exception can be interpreted, false otherwise</returns>
         public override bool CanInterpret(Exception exception)
         {
-            return base.CanInterpret(exception) &&
-                exception.Message.Contains(Messages.UnsupportedOperandPythonExceptionInterpreter.UnsupportedOperandTypeExpectedSubstring);
+            return base.CanInterpret(exception)
+                && exception.Message.Contains(
+                    Messages
+                        .UnsupportedOperandPythonExceptionInterpreter
+                        .UnsupportedOperandTypeExpectedSubstring
+                );
         }
 
         /// <summary>
@@ -46,12 +50,18 @@ namespace QuantConnect.Exceptions
         /// <param name="exception">The exception to be interpreted</param>
         /// <param name="innerInterpreter">An interpreter that should be applied to the inner exception.</param>
         /// <returns>The interpreted exception</returns>
-        public override Exception Interpret(Exception exception, IExceptionInterpreter innerInterpreter)
+        public override Exception Interpret(
+            Exception exception,
+            IExceptionInterpreter innerInterpreter
+        )
         {
             var pe = (PythonException)exception;
 
             var types = pe.Message.Split(':')[1].Trim();
-            var message = Messages.UnsupportedOperandPythonExceptionInterpreter.InvalidObjectTypesForOperation(types);
+            var message =
+                Messages.UnsupportedOperandPythonExceptionInterpreter.InvalidObjectTypesForOperation(
+                    types
+                );
             message += PythonUtil.PythonExceptionStackParser(pe.StackTrace);
 
             return new Exception(message, pe);

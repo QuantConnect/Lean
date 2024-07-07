@@ -23,16 +23,15 @@ namespace QuantConnect.Indicators
         /// </summary>
         /// <param name="name">The name of the indicator</param>
         public IntradayVwap(string name)
-            : base(name)
-        {
-        }
+            : base(name) { }
 
         /// <summary>
         /// Computes the new VWAP
         /// </summary>
         protected override IndicatorResult ValidateAndComputeNextValue(BaseData input)
         {
-            decimal volume, averagePrice;
+            decimal volume,
+                averagePrice;
             if (!TryGetVolumeAndAveragePrice(input, out volume, out averagePrice))
             {
                 return new IndicatorResult(0, IndicatorStatus.InvalidInput);
@@ -68,13 +67,19 @@ namespace QuantConnect.Indicators
         /// <returns>A new value for this indicator</returns>
         protected override decimal ComputeNextValue(BaseData input)
         {
-            throw new NotImplementedException($"{nameof(IntradayVwap)}.{nameof(ComputeNextValue)} should never be invoked.");
+            throw new NotImplementedException(
+                $"{nameof(IntradayVwap)}.{nameof(ComputeNextValue)} should never be invoked."
+            );
         }
 
         /// <summary>
         /// Determines the volume and price to be used for the current input in the VWAP computation
         /// </summary>
-        protected bool TryGetVolumeAndAveragePrice(BaseData input, out decimal volume, out decimal averagePrice)
+        protected bool TryGetVolumeAndAveragePrice(
+            BaseData input,
+            out decimal volume,
+            out decimal averagePrice
+        )
         {
             var tick = input as Tick;
 

@@ -14,8 +14,8 @@
 */
 
 using System;
-using QuantConnect.Data.Market;
 using Python.Runtime;
+using QuantConnect.Data.Market;
 
 namespace QuantConnect.Data.Consolidators
 {
@@ -39,18 +39,14 @@ namespace QuantConnect.Data.Consolidators
         /// </summary>
         /// <param name="period">The minimum span of time before emitting a consolidated bar</param>
         public BaseDataConsolidator(TimeSpan period)
-            : base(period)
-        {
-        }
+            : base(period) { }
 
         /// <summary>
         /// Creates a consolidator to produce a new 'TradeBar' representing the last count pieces of data
         /// </summary>
         /// <param name="maxCount">The number of pieces to accept before emitting a consolidated bar</param>
         public BaseDataConsolidator(int maxCount)
-            : base(maxCount)
-        {
-        }
+            : base(maxCount) { }
 
         /// <summary>
         /// Creates a consolidator to produce a new 'TradeBar' representing the last count pieces of data or the period, whichever comes first
@@ -58,28 +54,21 @@ namespace QuantConnect.Data.Consolidators
         /// <param name="maxCount">The number of pieces to accept before emitting a consolidated bar</param>
         /// <param name="period">The minimum span of time before emitting a consolidated bar</param>
         public BaseDataConsolidator(int maxCount, TimeSpan period)
-            : base(maxCount, period)
-        {
-        }
+            : base(maxCount, period) { }
 
         /// <summary>
         /// Initializes a new instance of the <see cref="BaseDataConsolidator"/> class
         /// </summary>
         /// <param name="func">Func that defines the start time of a consolidated data</param>
         public BaseDataConsolidator(Func<DateTime, CalendarInfo> func)
-            : base(func)
-        {
-        }
-
+            : base(func) { }
 
         /// <summary>
         /// Initializes a new instance of the <see cref="BaseDataConsolidator"/> class
         /// </summary>
         /// <param name="pyfuncobj">Func that defines the start time of a consolidated data</param>
         public BaseDataConsolidator(PyObject pyfuncobj)
-            : base(pyfuncobj)
-        {
-        }
+            : base(pyfuncobj) { }
 
         /// <summary>
         /// Aggregates the new 'data' into the 'workingBar'. The 'workingBar' will be
@@ -107,8 +96,10 @@ namespace QuantConnect.Data.Consolidators
             {
                 //Aggregate the working bar
                 workingBar.Close = data.Value;
-                if (data.Value < workingBar.Low) workingBar.Low = data.Value;
-                if (data.Value > workingBar.High) workingBar.High = data.Value;
+                if (data.Value < workingBar.Low)
+                    workingBar.Low = data.Value;
+                if (data.Value > workingBar.High)
+                    workingBar.High = data.Value;
             }
         }
     }

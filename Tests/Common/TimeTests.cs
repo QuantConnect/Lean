@@ -32,7 +32,11 @@ namespace QuantConnect.Tests.Common
         public void AuxiliaryDataDueTime(string utcNow, string expectedDueTime)
         {
             var result = Time.GetNextLiveAuxiliaryDataDueTime(Time.ParseDate(utcNow));
-            var expected  = TimeSpan.ParseExact(expectedDueTime, "hh\\:mm", CultureInfo.InvariantCulture);
+            var expected = TimeSpan.ParseExact(
+                expectedDueTime,
+                "hh\\:mm",
+                CultureInfo.InvariantCulture
+            );
 
             Assert.AreEqual(expected, result);
         }
@@ -54,8 +58,7 @@ namespace QuantConnect.Tests.Common
             var time = Time.UnixMillisecondTimeStampToDateTime(stamp);
             Assert.AreEqual(expected, time);
         }
-        
-        
+
         [Test]
         public void UnixTimeStampSecondsToDateTimeSubMillisecondPrecision()
         {
@@ -81,7 +84,14 @@ namespace QuantConnect.Tests.Common
             var end = new DateTime(2015, 09, 01, 12, 0, 1);
             var barSize = TimeSpan.FromMinutes(1);
             var hours = SecurityExchangeHours.AlwaysOpen(TimeZones.NewYork);
-            var start = Time.GetStartTimeForTradeBars(hours, end, barSize, 1, false, TimeZones.NewYork);
+            var start = Time.GetStartTimeForTradeBars(
+                hours,
+                end,
+                barSize,
+                1,
+                false,
+                TimeZones.NewYork
+            );
             // round down and back up a single bar
             Assert.AreEqual(end.RoundDown(barSize).Subtract(barSize), start);
         }
@@ -93,7 +103,14 @@ namespace QuantConnect.Tests.Common
             var end = new DateTime(2015, 09, 01, 12, 0, 0);
             var barSize = TimeSpan.FromHours(1);
             var hours = SecurityExchangeHoursTests.CreateUsEquitySecurityExchangeHours();
-            var start = Time.GetStartTimeForTradeBars(hours, end, barSize, 7, false, hours.TimeZone);
+            var start = Time.GetStartTimeForTradeBars(
+                hours,
+                end,
+                barSize,
+                7,
+                false,
+                hours.TimeZone
+            );
             // from noon, back up to 9am (3 hours) then skip night, so from 4pm, back up to noon, 4 more hours
             Assert.AreEqual(end.AddDays(-1), start);
         }
@@ -106,13 +123,24 @@ namespace QuantConnect.Tests.Common
             var expectedStart = new DateTime(2015, 08, 21);
             var barSize = TimeSpan.FromDays(1);
             var hours = SecurityExchangeHoursTests.CreateUsEquitySecurityExchangeHours();
-            var start = Time.GetStartTimeForTradeBars(hours, end, barSize, 7, false, hours.TimeZone);
+            var start = Time.GetStartTimeForTradeBars(
+                hours,
+                end,
+                barSize,
+                7,
+                false,
+                hours.TimeZone
+            );
             // from noon, back up to 9am (3 hours) then skip night, so from 4pm, back up to noon, 4 more hours
             Assert.AreEqual(expectedStart, start);
         }
 
         [Test, TestCaseSource(nameof(ForexHistoryDates))]
-        public void GetStartTimeForForexTradeBars(DateTime end, DateTime expectedStart, DateTimeZone dataTimeZone)
+        public void GetStartTimeForForexTradeBars(
+            DateTime end,
+            DateTime expectedStart,
+            DateTimeZone dataTimeZone
+        )
         {
             var barSize = TimeSpan.FromDays(1);
             var hours = SecurityExchangeHoursTests.CreateForexSecurityExchangeHours();
@@ -121,7 +149,11 @@ namespace QuantConnect.Tests.Common
         }
 
         [Test, TestCaseSource(nameof(EquityHistoryDates))]
-        public void GetStartTimeForEquityTradeBars(DateTime end, DateTime expectedStart, DateTimeZone dataTimeZone)
+        public void GetStartTimeForEquityTradeBars(
+            DateTime end,
+            DateTime expectedStart,
+            DateTimeZone dataTimeZone
+        )
         {
             var barSize = TimeSpan.FromMinutes(1);
             var hours = SecurityExchangeHoursTests.CreateUsEquitySecurityExchangeHours();
@@ -136,7 +168,13 @@ namespace QuantConnect.Tests.Common
             var end = new DateTime(2016, 02, 12);
             var entry = MarketHoursDatabase.FromDataFolder().ExchangeHoursListing.First().Value;
             var expected = Time.EachTradeableDay(entry.ExchangeHours, start, end);
-            var actual = Time.EachTradeableDayInTimeZone(entry.ExchangeHours, start, end, entry.ExchangeHours.TimeZone, true);
+            var actual = Time.EachTradeableDayInTimeZone(
+                entry.ExchangeHours,
+                start,
+                end,
+                entry.ExchangeHours.TimeZone,
+                true
+            );
             CollectionAssert.AreEqual(expected, actual);
         }
 
@@ -145,12 +183,20 @@ namespace QuantConnect.Tests.Common
         {
             var start = new DateTime(2016, 2, 11);
             var end = new DateTime(2016, 2, 12);
-            var equityExchange = SecurityExchangeHours.AlwaysOpen(DateTimeZone.ForOffset(Offset.FromHours(-5)));
+            var equityExchange = SecurityExchangeHours.AlwaysOpen(
+                DateTimeZone.ForOffset(Offset.FromHours(-5))
+            );
             var dataTimeZone = DateTimeZone.ForOffset(Offset.FromHours(7));
 
             // given this arrangement we should still start on the same date and end a day late
             var expected = new[] { start, end, end.AddDays(1) };
-            var actual = Time.EachTradeableDayInTimeZone(equityExchange, start, end, dataTimeZone, true);
+            var actual = Time.EachTradeableDayInTimeZone(
+                equityExchange,
+                start,
+                end,
+                dataTimeZone,
+                true
+            );
             CollectionAssert.AreEqual(expected, actual);
         }
 
@@ -159,7 +205,9 @@ namespace QuantConnect.Tests.Common
         {
             var start = new DateTime(2016, 2, 11);
             var end = new DateTime(2016, 2, 12);
-            var exchange = SecurityExchangeHours.AlwaysOpen(DateTimeZone.ForOffset(Offset.FromHours(5)));
+            var exchange = SecurityExchangeHours.AlwaysOpen(
+                DateTimeZone.ForOffset(Offset.FromHours(5))
+            );
             var dataTimeZone = DateTimeZone.ForOffset(Offset.FromHours(-7));
 
             // given this arrangement we should still start a day early but still end on the same date
@@ -173,7 +221,9 @@ namespace QuantConnect.Tests.Common
         {
             var start = new DateTime(2016, 2, 11);
             var end = new DateTime(2016, 2, 12);
-            var exchange = SecurityExchangeHours.AlwaysOpen(DateTimeZone.ForOffset(Offset.FromHours(12)));
+            var exchange = SecurityExchangeHours.AlwaysOpen(
+                DateTimeZone.ForOffset(Offset.FromHours(12))
+            );
             var dataTimeZone = DateTimeZone.ForOffset(Offset.FromHours(-13));
 
             // given this arrangement we should still start a day early but still end on the same date
@@ -195,12 +245,21 @@ namespace QuantConnect.Tests.Common
         [TestCase(2, 7, 3)]
         [TestCase(2, 4, 2)]
         [TestCase(6, 7, 1)]
-        public void GetNumberOfTradeBarsForIntervalUsingDailyStepSize(int startDay, int endDay, int expected)
+        public void GetNumberOfTradeBarsForIntervalUsingDailyStepSize(
+            int startDay,
+            int endDay,
+            int expected
+        )
         {
             var start = new DateTime(2018, 08, startDay);
             var end = new DateTime(2018, 08, endDay);
             var exchangeHours = CreateUsEquitySecurityExchangeHours();
-            var actual = Time.GetNumberOfTradeBarsInInterval(exchangeHours, start, end, Time.OneDay);
+            var actual = Time.GetNumberOfTradeBarsInInterval(
+                exchangeHours,
+                start,
+                end,
+                Time.OneDay
+            );
             Assert.AreEqual(expected, actual);
         }
 
@@ -208,40 +267,91 @@ namespace QuantConnect.Tests.Common
         [TestCase(2, 7, 21)]
         [TestCase(2, 4, 14)]
         [TestCase(6, 7, 07)]
-        public void GetNumberOfTradeBarsForIntervalUsingHourlyStepSize(int startDay, int endDay, int expected)
+        public void GetNumberOfTradeBarsForIntervalUsingHourlyStepSize(
+            int startDay,
+            int endDay,
+            int expected
+        )
         {
             var start = new DateTime(2018, 08, startDay);
             var end = new DateTime(2018, 08, endDay);
             var exchangeHours = CreateUsEquitySecurityExchangeHours();
-            var actual = Time.GetNumberOfTradeBarsInInterval(exchangeHours, start, end, Time.OneHour);
+            var actual = Time.GetNumberOfTradeBarsInInterval(
+                exchangeHours,
+                start,
+                end,
+                Time.OneHour
+            );
             Assert.AreEqual(expected, actual);
         }
-
 
         private static readonly TimeSpan USEquityPreOpen = new TimeSpan(4, 0, 0);
         private static readonly TimeSpan USEquityOpen = new TimeSpan(9, 30, 0);
         private static readonly TimeSpan USEquityClose = new TimeSpan(16, 0, 0);
         private static readonly TimeSpan USEquityPostClose = new TimeSpan(20, 0, 0);
+
         private static SecurityExchangeHours CreateUsEquitySecurityExchangeHours()
         {
             var sunday = LocalMarketHours.ClosedAllDay(DayOfWeek.Sunday);
-            var monday = new LocalMarketHours(DayOfWeek.Monday, USEquityPreOpen, USEquityOpen, USEquityClose, USEquityPostClose);
-            var tuesday = new LocalMarketHours(DayOfWeek.Tuesday, USEquityPreOpen, USEquityOpen, USEquityClose, USEquityPostClose);
-            var wednesday = new LocalMarketHours(DayOfWeek.Wednesday, USEquityPreOpen, USEquityOpen, USEquityClose, USEquityPostClose);
-            var thursday = new LocalMarketHours(DayOfWeek.Thursday, USEquityPreOpen, USEquityOpen, USEquityClose, USEquityPostClose);
-            var friday = new LocalMarketHours(DayOfWeek.Friday, USEquityPreOpen, USEquityOpen, USEquityClose, USEquityPostClose);
+            var monday = new LocalMarketHours(
+                DayOfWeek.Monday,
+                USEquityPreOpen,
+                USEquityOpen,
+                USEquityClose,
+                USEquityPostClose
+            );
+            var tuesday = new LocalMarketHours(
+                DayOfWeek.Tuesday,
+                USEquityPreOpen,
+                USEquityOpen,
+                USEquityClose,
+                USEquityPostClose
+            );
+            var wednesday = new LocalMarketHours(
+                DayOfWeek.Wednesday,
+                USEquityPreOpen,
+                USEquityOpen,
+                USEquityClose,
+                USEquityPostClose
+            );
+            var thursday = new LocalMarketHours(
+                DayOfWeek.Thursday,
+                USEquityPreOpen,
+                USEquityOpen,
+                USEquityClose,
+                USEquityPostClose
+            );
+            var friday = new LocalMarketHours(
+                DayOfWeek.Friday,
+                USEquityPreOpen,
+                USEquityOpen,
+                USEquityClose,
+                USEquityPostClose
+            );
             var saturday = LocalMarketHours.ClosedAllDay(DayOfWeek.Saturday);
 
             var earlyCloses = new Dictionary<DateTime, TimeSpan>();
             var lateOpens = new Dictionary<DateTime, TimeSpan>();
-            var holidays = MarketHoursDatabase.FromDataFolder()
-                        .GetEntry(Market.USA, (string)null, SecurityType.Equity)
-                        .ExchangeHours
-                        .Holidays;
-            return new SecurityExchangeHours(TimeZones.NewYork, holidays, new[]
-            {
-                sunday, monday, tuesday, wednesday, thursday, friday, saturday
-            }.ToDictionary(x => x.DayOfWeek), earlyCloses, lateOpens);
+            var holidays = MarketHoursDatabase
+                .FromDataFolder()
+                .GetEntry(Market.USA, (string)null, SecurityType.Equity)
+                .ExchangeHours.Holidays;
+            return new SecurityExchangeHours(
+                TimeZones.NewYork,
+                holidays,
+                new[]
+                {
+                    sunday,
+                    monday,
+                    tuesday,
+                    wednesday,
+                    thursday,
+                    friday,
+                    saturday
+                }.ToDictionary(x => x.DayOfWeek),
+                earlyCloses,
+                lateOpens
+            );
         }
 
         [Test]
@@ -263,60 +373,128 @@ namespace QuantConnect.Tests.Common
         [TestCase("1/20/2019 2:30:00 PM", 2019, 1, 20, 14, 30)]
         [TestCase("1/20/19 2:30 PM", 2019, 1, 20, 14, 30)]
         [TestCase("2019-01-20T02:30:00.000Z", 2019, 1, 20, 2, 30)]
-        public void ParseDateAndTime(string parseDate, int year, int month, int day, int hour, int minute)
+        public void ParseDateAndTime(
+            string parseDate,
+            int year,
+            int month,
+            int day,
+            int hour,
+            int minute
+        )
         {
-            Assert.AreEqual(new DateTime(year, month, day, hour, minute, 0), Time.ParseDate(parseDate));
+            Assert.AreEqual(
+                new DateTime(year, month, day, hour, minute, 0),
+                Time.ParseDate(parseDate)
+            );
         }
 
         [Test]
         [TestCase("19981231-23:59:59", 1998, 12, 31, 23, 59, 59)]
         [TestCase("19990101-00:00:00", 1999, 01, 01, 00, 00, 00)]
         [TestCase("20210121-21:32:18", 2021, 01, 21, 21, 32, 18)]
-        public void ParseFIXUtcTimestamp(string parseDate, int year, int month, int day, int hour, int minute, int second)
+        public void ParseFIXUtcTimestamp(
+            string parseDate,
+            int year,
+            int month,
+            int day,
+            int hour,
+            int minute,
+            int second
+        )
         {
             var expected = new DateTime(year, month, day, hour, minute, second);
-            Assert.AreEqual(
-                expected,
-                Parse.DateTimeExact(parseDate, DateFormat.FIX));
+            Assert.AreEqual(expected, Parse.DateTimeExact(parseDate, DateFormat.FIX));
 
-            Assert.AreEqual(
-                expected,
-                Time.ParseFIXUtcTimestamp(parseDate));
+            Assert.AreEqual(expected, Time.ParseFIXUtcTimestamp(parseDate));
         }
 
         [Test]
         [TestCase("19981231-23:59:59.000", 1998, 12, 31, 23, 59, 59, 0)]
         [TestCase("19990101-00:00:00.000", 1999, 01, 01, 00, 00, 00, 0)]
         [TestCase("20210121-21:32:18.610", 2021, 01, 21, 21, 32, 18, 610)]
-        public void ParseFIXUtcTimestampWithMillisecond(string parseDate, int year, int month, int day, int hour, int minute, int second, int millisecond)
+        public void ParseFIXUtcTimestampWithMillisecond(
+            string parseDate,
+            int year,
+            int month,
+            int day,
+            int hour,
+            int minute,
+            int second,
+            int millisecond
+        )
         {
             var expected = new DateTime(year, month, day, hour, minute, second, millisecond);
             Assert.AreEqual(
-                expected, 
-                Parse.DateTimeExact(parseDate, DateFormat.FIXWithMillisecond));
-
-            Assert.AreEqual(
                 expected,
-                Time.ParseFIXUtcTimestamp(parseDate));
+                Parse.DateTimeExact(parseDate, DateFormat.FIXWithMillisecond)
+            );
+
+            Assert.AreEqual(expected, Time.ParseFIXUtcTimestamp(parseDate));
         }
 
-        private static IEnumerable<TestCaseData> ForexHistoryDates => new List<TestCaseData>
-        {
-            new TestCaseData(new DateTime(2018, 04, 02, 1, 0, 0), new DateTime(2018, 04, 01, 01, 0, 0), DateTimeZone.ForOffset(Offset.FromHours(-5))),
-            new TestCaseData(new DateTime(2018, 04, 02, 0, 0, 0), new DateTime(2018, 03, 29, 01, 0, 0), DateTimeZone.ForOffset(Offset.FromHours(-5))),
-            new TestCaseData(new DateTime(2018, 04, 04, 0, 0, 0), new DateTime(2018, 04, 02, 01, 0, 0), DateTimeZone.ForOffset(Offset.FromHours(-5))),
-            new TestCaseData(new DateTime(2018, 04, 02, 1, 0, 0), new DateTime(2018, 03, 29, 15, 0, 0), DateTimeZone.ForOffset(Offset.FromHours(5))),
-            new TestCaseData(new DateTime(2018, 04, 02, 0, 0, 0), new DateTime(2018, 03, 29, 15, 0, 0), DateTimeZone.ForOffset(Offset.FromHours(5))),
-            new TestCaseData(new DateTime(2018, 04, 04, 0, 0, 0), new DateTime(2018, 04, 02, 15, 0, 0), DateTimeZone.ForOffset(Offset.FromHours(5))),
-            new TestCaseData(new DateTime(2018, 04, 02, 1, 0, 0), new DateTime(2018, 03, 31, 20, 0, 0), DateTimeZone.Utc),
-            new TestCaseData(new DateTime(2018, 04, 02, 0, 0, 0), new DateTime(2018, 03, 31, 20, 0, 0), DateTimeZone.Utc),
-            new TestCaseData(new DateTime(2018, 04, 04, 0, 0, 0), new DateTime(2018, 04, 02, 20, 0, 0), DateTimeZone.Utc)
-        };
+        private static IEnumerable<TestCaseData> ForexHistoryDates =>
+            new List<TestCaseData>
+            {
+                new TestCaseData(
+                    new DateTime(2018, 04, 02, 1, 0, 0),
+                    new DateTime(2018, 04, 01, 01, 0, 0),
+                    DateTimeZone.ForOffset(Offset.FromHours(-5))
+                ),
+                new TestCaseData(
+                    new DateTime(2018, 04, 02, 0, 0, 0),
+                    new DateTime(2018, 03, 29, 01, 0, 0),
+                    DateTimeZone.ForOffset(Offset.FromHours(-5))
+                ),
+                new TestCaseData(
+                    new DateTime(2018, 04, 04, 0, 0, 0),
+                    new DateTime(2018, 04, 02, 01, 0, 0),
+                    DateTimeZone.ForOffset(Offset.FromHours(-5))
+                ),
+                new TestCaseData(
+                    new DateTime(2018, 04, 02, 1, 0, 0),
+                    new DateTime(2018, 03, 29, 15, 0, 0),
+                    DateTimeZone.ForOffset(Offset.FromHours(5))
+                ),
+                new TestCaseData(
+                    new DateTime(2018, 04, 02, 0, 0, 0),
+                    new DateTime(2018, 03, 29, 15, 0, 0),
+                    DateTimeZone.ForOffset(Offset.FromHours(5))
+                ),
+                new TestCaseData(
+                    new DateTime(2018, 04, 04, 0, 0, 0),
+                    new DateTime(2018, 04, 02, 15, 0, 0),
+                    DateTimeZone.ForOffset(Offset.FromHours(5))
+                ),
+                new TestCaseData(
+                    new DateTime(2018, 04, 02, 1, 0, 0),
+                    new DateTime(2018, 03, 31, 20, 0, 0),
+                    DateTimeZone.Utc
+                ),
+                new TestCaseData(
+                    new DateTime(2018, 04, 02, 0, 0, 0),
+                    new DateTime(2018, 03, 31, 20, 0, 0),
+                    DateTimeZone.Utc
+                ),
+                new TestCaseData(
+                    new DateTime(2018, 04, 04, 0, 0, 0),
+                    new DateTime(2018, 04, 02, 20, 0, 0),
+                    DateTimeZone.Utc
+                )
+            };
 
-        private static IEnumerable<TestCaseData> EquityHistoryDates => new List<TestCaseData>
-        {
-            new TestCaseData(new DateTime(2013, 10, 08, 17, 0, 0), new DateTime(2013, 10, 08, 15, 50, 0), DateTimeZone.Utc),
-            new TestCaseData(new DateTime(2013, 10, 08, 13, 0, 0), new DateTime(2013, 10, 08, 12, 50, 0), DateTimeZone.Utc),
-        };
+        private static IEnumerable<TestCaseData> EquityHistoryDates =>
+            new List<TestCaseData>
+            {
+                new TestCaseData(
+                    new DateTime(2013, 10, 08, 17, 0, 0),
+                    new DateTime(2013, 10, 08, 15, 50, 0),
+                    DateTimeZone.Utc
+                ),
+                new TestCaseData(
+                    new DateTime(2013, 10, 08, 13, 0, 0),
+                    new DateTime(2013, 10, 08, 12, 50, 0),
+                    DateTimeZone.Utc
+                ),
+            };
     }
 }

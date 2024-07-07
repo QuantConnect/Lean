@@ -13,25 +13,32 @@
  * limitations under the License.
 */
 
+using System;
 using Moq;
 using NUnit.Framework;
 using QuantConnect.Brokerages;
 using QuantConnect.Data.Market;
 using QuantConnect.Orders;
-using QuantConnect.Tests.Brokerages;
-using System;
 using QuantConnect.Orders.Fees;
 using QuantConnect.Securities;
 using QuantConnect.Securities.CryptoFuture;
+using QuantConnect.Tests.Brokerages;
 
 namespace QuantConnect.Tests.Common.Brokerages
 {
-
     [TestFixture, Parallelizable(ParallelScope.All)]
     public class BybitBrokerageModelTests
     {
-        private static readonly Symbol BTCUSDT = Symbol.Create("BTCUSDT", SecurityType.Crypto, Market.Bybit);
-        private static readonly Symbol BTCUSDT_Future = Symbol.Create("BTCUSDT", SecurityType.CryptoFuture, Market.Bybit);
+        private static readonly Symbol BTCUSDT = Symbol.Create(
+            "BTCUSDT",
+            SecurityType.Crypto,
+            Market.Bybit
+        );
+        private static readonly Symbol BTCUSDT_Future = Symbol.Create(
+            "BTCUSDT",
+            SecurityType.CryptoFuture,
+            Market.Bybit
+        );
         private Security _crypto;
         private Security _cryptoFuture;
 
@@ -40,61 +47,86 @@ namespace QuantConnect.Tests.Common.Brokerages
         [SetUp]
         public void Init()
         {
-            _crypto = TestsHelpers.GetSecurity(symbol: BTCUSDT.Value,
+            _crypto = TestsHelpers.GetSecurity(
+                symbol: BTCUSDT.Value,
                 securityType: BTCUSDT.SecurityType,
                 market: BTCUSDT.ID.Market,
-                quoteCurrency: "USDT");
-            _cryptoFuture = TestsHelpers.GetSecurity(symbol: BTCUSDT_Future.Value,
+                quoteCurrency: "USDT"
+            );
+            _cryptoFuture = TestsHelpers.GetSecurity(
+                symbol: BTCUSDT_Future.Value,
                 securityType: BTCUSDT_Future.SecurityType,
                 market: BTCUSDT_Future.ID.Market,
-                quoteCurrency: "USDT");
+                quoteCurrency: "USDT"
+            );
         }
 
         [TestCase(0.01, true)]
         [TestCase(0.000001, false)]
-        public void CanSubmitMarketOrder_OrderSizeIsLargeEnough(decimal orderQuantity, bool isValidOrderQuantity)
+        public void CanSubmitMarketOrder_OrderSizeIsLargeEnough(
+            decimal orderQuantity,
+            bool isValidOrderQuantity
+        )
         {
             var order = new Mock<MarketOrder>();
             order.Setup(x => x.Quantity).Returns(orderQuantity);
 
-            _crypto.Cache.AddData(new Tick
-            {
-                AskPrice = 50001,
-                BidPrice = 49999,
-                Time = DateTime.UtcNow,
-                Symbol = BTCUSDT,
-                TickType = TickType.Quote,
-                AskSize = 1,
-                BidSize = 1
-            });
+            _crypto.Cache.AddData(
+                new Tick
+                {
+                    AskPrice = 50001,
+                    BidPrice = 49999,
+                    Time = DateTime.UtcNow,
+                    Symbol = BTCUSDT,
+                    TickType = TickType.Quote,
+                    AskSize = 1,
+                    BidSize = 1
+                }
+            );
 
-            Assert.AreEqual(isValidOrderQuantity, BybitBrokerageModel.CanSubmitOrder(_crypto, order.Object, out var message));
+            Assert.AreEqual(
+                isValidOrderQuantity,
+                BybitBrokerageModel.CanSubmitOrder(_crypto, order.Object, out var message)
+            );
             Assert.AreEqual(isValidOrderQuantity, message == null);
             if (!isValidOrderQuantity)
             {
-                Assert.AreEqual(Messages.DefaultBrokerageModel.InvalidOrderQuantity(_crypto, order.Object.Quantity), message.Message);
+                Assert.AreEqual(
+                    Messages.DefaultBrokerageModel.InvalidOrderQuantity(
+                        _crypto,
+                        order.Object.Quantity
+                    ),
+                    message.Message
+                );
             }
         }
 
         [TestCase(0.01, 4500, true)]
         [TestCase(0.000001, 4500, false)]
-        public void CanSubmitLimitOrder_OrderSizeIsLargeEnough(decimal orderQuantity, decimal limitPrice, bool isValidOrderQuantity)
+        public void CanSubmitLimitOrder_OrderSizeIsLargeEnough(
+            decimal orderQuantity,
+            decimal limitPrice,
+            bool isValidOrderQuantity
+        )
         {
-            var order = new Mock<LimitOrder>
-            {
-                Object =
-                {
-                    LimitPrice = limitPrice
-                }
-            };
+            var order = new Mock<LimitOrder> { Object = { LimitPrice = limitPrice } };
 
             order.Setup(x => x.Quantity).Returns(orderQuantity);
 
-            Assert.AreEqual(isValidOrderQuantity, BybitBrokerageModel.CanSubmitOrder(_crypto, order.Object, out var message));
+            Assert.AreEqual(
+                isValidOrderQuantity,
+                BybitBrokerageModel.CanSubmitOrder(_crypto, order.Object, out var message)
+            );
             Assert.AreEqual(isValidOrderQuantity, message == null);
             if (!isValidOrderQuantity)
             {
-                Assert.AreEqual(Messages.DefaultBrokerageModel.InvalidOrderQuantity(_crypto, order.Object.Quantity), message.Message);
+                Assert.AreEqual(
+                    Messages.DefaultBrokerageModel.InvalidOrderQuantity(
+                        _crypto,
+                        order.Object.Quantity
+                    ),
+                    message.Message
+                );
             }
         }
 
@@ -103,23 +135,33 @@ namespace QuantConnect.Tests.Common.Brokerages
         [TestCase(0.002, 5500, 4500, true)]
         [TestCase(0.003, 4500, 5500, true)]
         [TestCase(0.003, 5500, 4500, true)]
-        public void CanSubmitStopLimitOrder_OrderSizeIsLargeEnough(decimal orderQuantity, decimal stopPrice, decimal limitPrice, bool isValidOrderQuantity)
+        public void CanSubmitStopLimitOrder_OrderSizeIsLargeEnough(
+            decimal orderQuantity,
+            decimal stopPrice,
+            decimal limitPrice,
+            bool isValidOrderQuantity
+        )
         {
             var order = new Mock<StopLimitOrder>
             {
-                Object =
-                {
-                    StopPrice = stopPrice,
-                    LimitPrice = limitPrice
-                }
+                Object = { StopPrice = stopPrice, LimitPrice = limitPrice }
             };
             order.Setup(x => x.Quantity).Returns(orderQuantity);
 
-            Assert.AreEqual(isValidOrderQuantity, BybitBrokerageModel.CanSubmitOrder(_crypto, order.Object, out var message));
+            Assert.AreEqual(
+                isValidOrderQuantity,
+                BybitBrokerageModel.CanSubmitOrder(_crypto, order.Object, out var message)
+            );
             Assert.AreEqual(isValidOrderQuantity, message == null);
             if (!isValidOrderQuantity)
             {
-                Assert.AreEqual(Messages.DefaultBrokerageModel.InvalidOrderQuantity(_crypto, order.Object.Quantity), message.Message);
+                Assert.AreEqual(
+                    Messages.DefaultBrokerageModel.InvalidOrderQuantity(
+                        _crypto,
+                        order.Object.Quantity
+                    ),
+                    message.Message
+                );
             }
         }
 
@@ -129,37 +171,54 @@ namespace QuantConnect.Tests.Common.Brokerages
             var order = new Mock<MarketOrder>();
             order.Setup(x => x.Quantity).Returns(1m);
 
-            var security = TestsHelpers.GetSecurity(symbol: BTCUSDT.Value, market: BTCUSDT.ID.Market, quoteCurrency: "USDT");
+            var security = TestsHelpers.GetSecurity(
+                symbol: BTCUSDT.Value,
+                market: BTCUSDT.ID.Market,
+                quoteCurrency: "USDT"
+            );
 
-            Assert.AreEqual(true, BybitBrokerageModel.CanSubmitOrder(security, order.Object, out var message));
+            Assert.AreEqual(
+                true,
+                BybitBrokerageModel.CanSubmitOrder(security, order.Object, out var message)
+            );
             Assert.Null(message);
         }
 
-        [TestCase(0.002, 5500,  true)]
-        [TestCase(0.000001, 5500,  false)]
-
-        [TestCase(0.002, 4500,  true)]
-        [TestCase(0.002, 5500,  true)]
-        [TestCase(0.003, 4500,  true)]
-        [TestCase(0.003, 5500,  true)]
-        public void CanSubmitStopMarketOrder_OrderSizeIsLargeEnough(decimal orderQuantity, decimal stopPrice, bool isValidOrderQuantity)
+        [TestCase(0.002, 5500, true)]
+        [TestCase(0.000001, 5500, false)]
+        [TestCase(0.002, 4500, true)]
+        [TestCase(0.002, 5500, true)]
+        [TestCase(0.003, 4500, true)]
+        [TestCase(0.003, 5500, true)]
+        public void CanSubmitStopMarketOrder_OrderSizeIsLargeEnough(
+            decimal orderQuantity,
+            decimal stopPrice,
+            bool isValidOrderQuantity
+        )
         {
-            var order = new Mock<StopMarketOrder>
-            {
-                Object =
-                {
-                    StopPrice = stopPrice
-                }
-            };
+            var order = new Mock<StopMarketOrder> { Object = { StopPrice = stopPrice } };
             order.Setup(x => x.Quantity).Returns(orderQuantity);
 
-            var security = TestsHelpers.GetSecurity(symbol: BTCUSDT.Value, market: BTCUSDT.ID.Market, quoteCurrency: "USDT");
+            var security = TestsHelpers.GetSecurity(
+                symbol: BTCUSDT.Value,
+                market: BTCUSDT.ID.Market,
+                quoteCurrency: "USDT"
+            );
 
-            Assert.AreEqual(isValidOrderQuantity, BybitBrokerageModel.CanSubmitOrder(security, order.Object, out var message));
+            Assert.AreEqual(
+                isValidOrderQuantity,
+                BybitBrokerageModel.CanSubmitOrder(security, order.Object, out var message)
+            );
             Assert.AreEqual(isValidOrderQuantity, message == null);
             if (!isValidOrderQuantity)
             {
-                Assert.AreEqual(Messages.DefaultBrokerageModel.InvalidOrderQuantity(_crypto, order.Object.Quantity),message.Message);
+                Assert.AreEqual(
+                    Messages.DefaultBrokerageModel.InvalidOrderQuantity(
+                        _crypto,
+                        order.Object.Quantity
+                    ),
+                    message.Message
+                );
             }
         }
 
@@ -177,10 +236,17 @@ namespace QuantConnect.Tests.Common.Brokerages
         [TestCase(SecurityType.Crypto, AccountType.Margin, typeof(SecurityMarginModel))]
         [TestCase(SecurityType.CryptoFuture, AccountType.Cash, typeof(CryptoFutureMarginModel))]
         [TestCase(SecurityType.CryptoFuture, AccountType.Margin, typeof(CryptoFutureMarginModel))]
-        public void ReturnsCorrectBuyingPowerModel(SecurityType securityType, AccountType accountType, Type expectedMarginModelType)
+        public void ReturnsCorrectBuyingPowerModel(
+            SecurityType securityType,
+            AccountType accountType,
+            Type expectedMarginModelType
+        )
         {
             var security = securityType == SecurityType.Crypto ? _crypto : _cryptoFuture;
-            Assert.IsInstanceOf(expectedMarginModelType, new BybitBrokerageModel(accountType).GetBuyingPowerModel(security));
+            Assert.IsInstanceOf(
+                expectedMarginModelType,
+                new BybitBrokerageModel(accountType).GetBuyingPowerModel(security)
+            );
         }
 
         [TestCase(SecurityType.Crypto, typeof(BybitFeeModel))]
@@ -192,7 +258,13 @@ namespace QuantConnect.Tests.Common.Brokerages
             {
                 SecurityType.Crypto => _crypto,
                 SecurityType.CryptoFuture => _cryptoFuture,
-                _ => TestsHelpers.GetSecurity(symbol: "BTCUSDT", securityType: SecurityType.Base, market: Market.Bybit, quoteCurrency: "USDT")
+                _
+                    => TestsHelpers.GetSecurity(
+                        symbol: "BTCUSDT",
+                        securityType: SecurityType.Base,
+                        market: Market.Bybit,
+                        quoteCurrency: "USDT"
+                    )
             };
 
             Assert.IsInstanceOf(expectedFeeModelType, BybitBrokerageModel.GetFeeModel(security));
@@ -208,7 +280,10 @@ namespace QuantConnect.Tests.Common.Brokerages
 
         [TestCase(SecurityType.Crypto, false)]
         [TestCase(SecurityType.CryptoFuture, true)]
-        public void CannotUpdateOrder_IfSecurityIsNotCryptoFuture(SecurityType securityType, bool canUpdate)
+        public void CannotUpdateOrder_IfSecurityIsNotCryptoFuture(
+            SecurityType securityType,
+            bool canUpdate
+        )
         {
             var order = new Mock<MarketOrder>
             {
@@ -220,14 +295,29 @@ namespace QuantConnect.Tests.Common.Brokerages
                 }
             };
 
-            var updateRequest = new UpdateOrderRequest(DateTime.UtcNow, 1, new UpdateOrderFields { Quantity = 2 });
+            var updateRequest = new UpdateOrderRequest(
+                DateTime.UtcNow,
+                1,
+                new UpdateOrderFields { Quantity = 2 }
+            );
 
             var security = securityType == SecurityType.Crypto ? _crypto : _cryptoFuture;
-            Assert.AreEqual(canUpdate, BybitBrokerageModel.CanUpdateOrder(security, order.Object, updateRequest, out var message));
+            Assert.AreEqual(
+                canUpdate,
+                BybitBrokerageModel.CanUpdateOrder(
+                    security,
+                    order.Object,
+                    updateRequest,
+                    out var message
+                )
+            );
 
             if (!canUpdate)
             {
-                Assert.AreEqual(message.Message, Messages.DefaultBrokerageModel.OrderUpdateNotSupported);
+                Assert.AreEqual(
+                    message.Message,
+                    Messages.DefaultBrokerageModel.OrderUpdateNotSupported
+                );
             }
         }
 
@@ -245,47 +335,73 @@ namespace QuantConnect.Tests.Common.Brokerages
             var order = new LimitOrder(BTCUSDT, 1, 1000, DateTime.Now) { Status = status };
             var request = new UpdateOrderRequest(DateTime.UtcNow, 1, new UpdateOrderFields());
 
-            Assert.AreEqual(canUpdate, BybitBrokerageModel.CanUpdateOrder(_cryptoFuture, order, request, out var message));
+            Assert.AreEqual(
+                canUpdate,
+                BybitBrokerageModel.CanUpdateOrder(_cryptoFuture, order, request, out var message)
+            );
             if (!canUpdate)
             {
                 Assert.AreEqual("NotSupported", message.Code);
             }
-
         }
 
         [TestCase(0.1, true)]
         [TestCase(0.000001, false)]
-        public void CanUpdateOrder_OrderSizeIsLargeEnough(decimal newOrderQuantity, bool isLargeEnough)
+        public void CanUpdateOrder_OrderSizeIsLargeEnough(
+            decimal newOrderQuantity,
+            bool isLargeEnough
+        )
         {
             var order = new LimitOrder(BTCUSDT, 1, 1000, DateTime.Now) { Status = OrderStatus.New };
-            var request = new UpdateOrderRequest(DateTime.UtcNow, 1, new UpdateOrderFields { Quantity = newOrderQuantity });
+            var request = new UpdateOrderRequest(
+                DateTime.UtcNow,
+                1,
+                new UpdateOrderFields { Quantity = newOrderQuantity }
+            );
 
-            Assert.AreEqual(isLargeEnough, BybitBrokerageModel.CanUpdateOrder(_cryptoFuture, order, request, out var message));
+            Assert.AreEqual(
+                isLargeEnough,
+                BybitBrokerageModel.CanUpdateOrder(_cryptoFuture, order, request, out var message)
+            );
             if (!isLargeEnough)
             {
-                Assert.AreEqual(Messages.DefaultBrokerageModel.InvalidOrderQuantity(_cryptoFuture, request.Quantity.Value), message.Message);
+                Assert.AreEqual(
+                    Messages.DefaultBrokerageModel.InvalidOrderQuantity(
+                        _cryptoFuture,
+                        request.Quantity.Value
+                    ),
+                    message.Message
+                );
             }
-
         }
 
         [TestFixture]
         public class Margin
         {
-
-            private readonly Symbol _btcusdt = Symbol.Create("BTCUSDT", SecurityType.Crypto, Market.Bybit);
+            private readonly Symbol _btcusdt = Symbol.Create(
+                "BTCUSDT",
+                SecurityType.Crypto,
+                Market.Bybit
+            );
             private Security _security;
             private static BybitBrokerageModel BybitBrokerageModel => new(AccountType.Margin);
 
             [SetUp]
             public void Init()
             {
-                _security = TestsHelpers.GetSecurity(symbol: _btcusdt.Value, market: _btcusdt.ID.Market, quoteCurrency: "USDT");
+                _security = TestsHelpers.GetSecurity(
+                    symbol: _btcusdt.Value,
+                    market: _btcusdt.ID.Market,
+                    quoteCurrency: "USDT"
+                );
             }
 
             [Test]
             public void ReturnsSecurityMarginModel_ForMarginAccount()
             {
-                Assert.IsInstanceOf<SecurityMarginModel>(BybitBrokerageModel.GetBuyingPowerModel(_security));
+                Assert.IsInstanceOf<SecurityMarginModel>(
+                    BybitBrokerageModel.GetBuyingPowerModel(_security)
+                );
             }
 
             [Test]

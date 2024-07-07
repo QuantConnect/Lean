@@ -42,14 +42,23 @@ namespace QuantConnect
         /// <summary>
         /// Reads series from Json
         /// </summary>
-        public override object ReadJson(JsonReader reader, Type objectType, object existingValue, JsonSerializer serializer)
+        public override object ReadJson(
+            JsonReader reader,
+            Type objectType,
+            object existingValue,
+            JsonSerializer serializer
+        )
         {
             if (reader.TokenType == JsonToken.StartObject)
             {
                 var jObject = JObject.Load(reader);
                 var tooltip = jObject.TryGetPropertyValue<string>("tooltip");
 
-                return new ScatterChartPoint(jObject["x"].Value<long>(), jObject["y"].Value<decimal?>(), tooltip);
+                return new ScatterChartPoint(
+                    jObject["x"].Value<long>(),
+                    jObject["y"].Value<decimal?>(),
+                    tooltip
+                );
             }
 
             var jArray = JArray.Load(reader);

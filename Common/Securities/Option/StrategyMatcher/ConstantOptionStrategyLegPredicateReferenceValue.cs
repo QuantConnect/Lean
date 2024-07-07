@@ -21,7 +21,8 @@ namespace QuantConnect.Securities.Option.StrategyMatcher
     /// <summary>
     /// Provides an implementation of <see cref="IOptionStrategyLegPredicateReferenceValue"/> that represents a constant value.
     /// </summary>
-    public class ConstantOptionStrategyLegPredicateReferenceValue<T> : IOptionStrategyLegPredicateReferenceValue
+    public class ConstantOptionStrategyLegPredicateReferenceValue<T>
+        : IOptionStrategyLegPredicateReferenceValue
     {
         private readonly T _value;
 
@@ -35,7 +36,10 @@ namespace QuantConnect.Securities.Option.StrategyMatcher
         /// </summary>
         /// <param name="value">The constant reference value</param>
         /// <param name="target">The value target in relation to the <see cref="OptionPosition"/></param>
-        public ConstantOptionStrategyLegPredicateReferenceValue(T value, PredicateTargetValue target)
+        public ConstantOptionStrategyLegPredicateReferenceValue(
+            T value,
+            PredicateTargetValue target
+        )
         {
             _value = value;
             Target = target;
@@ -63,20 +67,31 @@ namespace QuantConnect.Securities.Option.StrategyMatcher
         {
             if (value is DateTime)
             {
-                return new ConstantOptionStrategyLegPredicateReferenceValue<DateTime>((DateTime) value, PredicateTargetValue.Expiration);
+                return new ConstantOptionStrategyLegPredicateReferenceValue<DateTime>(
+                    (DateTime)value,
+                    PredicateTargetValue.Expiration
+                );
             }
 
             if (value is decimal)
             {
-                return new ConstantOptionStrategyLegPredicateReferenceValue<decimal>((decimal) value, PredicateTargetValue.Strike);
+                return new ConstantOptionStrategyLegPredicateReferenceValue<decimal>(
+                    (decimal)value,
+                    PredicateTargetValue.Strike
+                );
             }
 
             if (value is OptionRight)
             {
-                return new ConstantOptionStrategyLegPredicateReferenceValue<OptionRight>((OptionRight) value, PredicateTargetValue.Right);
+                return new ConstantOptionStrategyLegPredicateReferenceValue<OptionRight>(
+                    (OptionRight)value,
+                    PredicateTargetValue.Right
+                );
             }
 
-            throw new NotSupportedException($"{value?.GetType().GetBetterTypeName()} is not supported.");
+            throw new NotSupportedException(
+                $"{value?.GetType().GetBetterTypeName()} is not supported."
+            );
         }
     }
 }

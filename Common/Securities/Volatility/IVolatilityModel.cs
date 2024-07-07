@@ -13,10 +13,10 @@
  * limitations under the License.
 */
 
-using QuantConnect.Data;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using QuantConnect.Data;
 using QuantConnect.Securities.Volatility;
 
 namespace QuantConnect.Securities
@@ -67,7 +67,13 @@ namespace QuantConnect.Securities
 
             public void Update(Security security, BaseData data) { }
 
-            public IEnumerable<HistoryRequest> GetHistoryRequirements(Security security, DateTime utcTime) { return Enumerable.Empty<HistoryRequest>(); }
+            public IEnumerable<HistoryRequest> GetHistoryRequirements(
+                Security security,
+                DateTime utcTime
+            )
+            {
+                return Enumerable.Empty<HistoryRequest>();
+            }
         }
     }
 }

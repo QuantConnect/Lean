@@ -56,12 +56,12 @@ namespace QuantConnect.Tests.Common.Data
             }
         }
 
-        [TestCase("19700306", 0.0225)]   // Date in before the first date in file
+        [TestCase("19700306", 0.0225)] // Date in before the first date in file
         [TestCase("20200306", 0.0175)]
         [TestCase("20200307", 0.0175)]
         [TestCase("20200308", 0.0175)]
         [TestCase("20200310", 0.0175)]
-        [TestCase("20501231", 0.055)]   // Date in far future
+        [TestCase("20501231", 0.055)] // Date in far future
         public void GetInterestRate(string dateString, decimal expected)
         {
             var provider = new InterestRateProvider();

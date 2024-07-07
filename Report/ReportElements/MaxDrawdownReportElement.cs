@@ -33,7 +33,12 @@ namespace QuantConnect.Report.ReportElements
         /// <param name="key">Location of injection</param>
         /// <param name="backtest">Backtest result object</param>
         /// <param name="live">Live result object</param>
-        public MaxDrawdownReportElement(string name, string key, BacktestResult backtest, LiveResult live)
+        public MaxDrawdownReportElement(
+            string name,
+            string key,
+            BacktestResult backtest,
+            LiveResult live
+        )
         {
             _live = live;
             _backtest = backtest;
@@ -53,9 +58,11 @@ namespace QuantConnect.Report.ReportElements
                 return backtestDrawdown?.ToString("P1") ?? "-";
             }
 
-            var equityCurve = new SortedDictionary<DateTime, decimal>(DrawdownCollection.NormalizeResults(_backtest, _live)
-                .Observations
-                .ToDictionary(kvp => kvp.Key, kvp => (decimal)kvp.Value));
+            var equityCurve = new SortedDictionary<DateTime, decimal>(
+                DrawdownCollection
+                    .NormalizeResults(_backtest, _live)
+                    .Observations.ToDictionary(kvp => kvp.Key, kvp => (decimal)kvp.Value)
+            );
 
             var maxDrawdown = Statistics.Statistics.DrawdownPercent(equityCurve);
             Result = maxDrawdown;

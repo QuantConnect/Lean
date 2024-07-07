@@ -236,9 +236,7 @@ namespace QuantConnect.Orders
         /// <summary>
         /// Order Event empty constructor required for json converter
         /// </summary>
-        public OrderEvent()
-        {
-        }
+        public OrderEvent() { }
 
         /// <summary>
         /// Order Event Constructor.
@@ -252,7 +250,8 @@ namespace QuantConnect.Orders
         /// <param name="fillQuantity">Fill quantity</param>
         /// <param name="orderFee">The order fee</param>
         /// <param name="message">Message from the exchange</param>
-        public OrderEvent(int orderId,
+        public OrderEvent(
+            int orderId,
             Symbol symbol,
             DateTime utcTime,
             OrderStatus status,
@@ -261,7 +260,7 @@ namespace QuantConnect.Orders
             decimal fillQuantity,
             OrderFee orderFee,
             string message = ""
-            )
+        )
         {
             OrderId = orderId;
             Symbol = symbol;
@@ -327,7 +326,7 @@ namespace QuantConnect.Orders
         /// <returns>The new clone object</returns>
         public OrderEvent Clone()
         {
-            return (OrderEvent) MemberwiseClone();
+            return (OrderEvent)MemberwiseClone();
         }
 
         /// <summary>
@@ -341,19 +340,28 @@ namespace QuantConnect.Orders
             var orderFee = OrderFee.Zero;
             if (serializedOrderEvent.OrderFeeAmount.HasValue)
             {
-                orderFee = new OrderFee(new CashAmount(serializedOrderEvent.OrderFeeAmount.Value,
-                    serializedOrderEvent.OrderFeeCurrency));
+                orderFee = new OrderFee(
+                    new CashAmount(
+                        serializedOrderEvent.OrderFeeAmount.Value,
+                        serializedOrderEvent.OrderFeeCurrency
+                    )
+                );
             }
 
-            var orderEvent = new OrderEvent(serializedOrderEvent.OrderId,
+            var orderEvent = new OrderEvent(
+                serializedOrderEvent.OrderId,
                 symbol,
-                DateTime.SpecifyKind(Time.UnixTimeStampToDateTime(serializedOrderEvent.Time), DateTimeKind.Utc),
+                DateTime.SpecifyKind(
+                    Time.UnixTimeStampToDateTime(serializedOrderEvent.Time),
+                    DateTimeKind.Utc
+                ),
                 serializedOrderEvent.Status,
                 serializedOrderEvent.Direction,
                 serializedOrderEvent.FillPrice,
                 serializedOrderEvent.FillQuantity,
                 orderFee,
-                serializedOrderEvent.Message)
+                serializedOrderEvent.Message
+            )
             {
                 IsAssignment = serializedOrderEvent.IsAssignment,
                 IsInTheMoney = serializedOrderEvent.IsInTheMoney,

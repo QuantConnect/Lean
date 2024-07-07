@@ -14,6 +14,7 @@
  *
 */
 
+using System;
 using NUnit.Framework;
 using Python.Runtime;
 using QuantConnect.Algorithm;
@@ -22,7 +23,6 @@ using QuantConnect.Python;
 using QuantConnect.Securities;
 using QuantConnect.Tests.Common.Securities;
 using QuantConnect.Tests.Engine.DataFeeds;
-using System;
 
 namespace QuantConnect.Tests.Python
 {
@@ -53,7 +53,9 @@ namespace QuantConnect.Tests.Python
             Assert.IsAssignableFrom<MarginCallModelPythonWrapper>(portfolio.MarginCallModel);
 
             bool issueMarginCallWarning;
-            var marginCallOrders = portfolio.MarginCallModel.GetMarginCallOrders(out issueMarginCallWarning);
+            var marginCallOrders = portfolio.MarginCallModel.GetMarginCallOrders(
+                out issueMarginCallWarning
+            );
 
             if (isChild)
             {
@@ -77,10 +79,15 @@ namespace QuantConnect.Tests.Python
             var code = CreateCustomMarginCallModelCode();
             code = code.Replace("GetMarginCall", "SetMarginCall");
             var pyObject = CreateCustomMarginCallModel(code, portfolio);
-            Assert.Throws<NotImplementedException>(() => portfolio.SetMarginCallModel(CreateCustomMarginCallModel(code, portfolio)));
+            Assert.Throws<NotImplementedException>(
+                () => portfolio.SetMarginCallModel(CreateCustomMarginCallModel(code, portfolio))
+            );
         }
 
-        private PyObject CreateCustomMarginCallModel(string code, SecurityPortfolioManager portfolio)
+        private PyObject CreateCustomMarginCallModel(
+            string code,
+            SecurityPortfolioManager portfolio
+        )
         {
             using (Py.GIL())
             {
@@ -90,7 +97,8 @@ namespace QuantConnect.Tests.Python
             }
         }
 
-        private string CreateCustomMarginCallModelCode() => @"
+        private string CreateCustomMarginCallModelCode() =>
+            @"
 import os, sys
 sys.path.append(os.getcwd())
 
@@ -119,7 +127,8 @@ class CustomMarginCallModel:
         
         return [order, order, order], issueMarginCallWarning";
 
-        private string CreateCustomMarginCallModelFromSecurityMarginModelCode() => @"
+        private string CreateCustomMarginCallModelFromSecurityMarginModelCode() =>
+            @"
 import os, sys
 sys.path.append(os.getcwd())
 

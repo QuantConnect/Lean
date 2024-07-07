@@ -53,7 +53,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         /// <returns>The current time in UTC</returns>
         public DateTime GetUtcNow()
         {
-            if(ReferenceEquals(_realTime, _warmupTimeProvider))
+            if (ReferenceEquals(_realTime, _warmupTimeProvider))
             {
                 // warmup ended
                 return _realTime.GetUtcNow();

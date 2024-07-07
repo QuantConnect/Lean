@@ -57,9 +57,11 @@ namespace QuantConnect.Algorithm.CSharp
 
             var ribbonCount = 8;
             var ribbonInterval = 15;
-            _ribbon = Enumerable.Range(0, ribbonCount).Select(x => SMA(_symbol, (x + 1)*ribbonInterval, Resolution.Daily)).ToArray();
+            _ribbon = Enumerable
+                .Range(0, ribbonCount)
+                .Select(x => SMA(_symbol, (x + 1) * ribbonInterval, Resolution.Daily))
+                .ToArray();
         }
-
 
         /// <summary>
         /// OnData event is the primary entry point for your algorithm. Each new data point will be pumped in here.
@@ -73,10 +75,12 @@ namespace QuantConnect.Algorithm.CSharp
             //  3. We can easily plot many indicators at the same time
 
             // wait for our slow ema to fully initialize
-            if (!_slow.IsReady) return;
+            if (!_slow.IsReady)
+                return;
 
             // only once per day
-            if (_previous.Date == Time.Date) return;
+            if (_previous.Date == Time.Date)
+                return;
 
             // define a small tolerance on our checks to avoid bouncing
             const decimal tolerance = 0.00015m;

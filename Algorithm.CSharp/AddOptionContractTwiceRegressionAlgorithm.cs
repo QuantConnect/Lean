@@ -14,17 +14,19 @@
 */
 
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using QuantConnect.Data;
 using QuantConnect.Interfaces;
-using System.Collections.Generic;
 
 namespace QuantConnect.Algorithm.CSharp
 {
     /// <summary>
     /// Regression algorithm reproducing GH issue #6073 where we remove and re add an option and expect it to work
     /// </summary>
-    public class AddOptionContractTwiceRegressionAlgorithm : QCAlgorithm, IRegressionAlgorithmDefinition
+    public class AddOptionContractTwiceRegressionAlgorithm
+        : QCAlgorithm,
+            IRegressionAlgorithmDefinition
     {
         private Symbol _contract;
         private bool _hasRemoved;
@@ -43,10 +45,13 @@ namespace QuantConnect.Algorithm.CSharp
 
             var aapl = QuantConnect.Symbol.Create("AAPL", SecurityType.Equity, Market.USA);
 
-            _contract = OptionChainProvider.GetOptionContractList(aapl, Time)
+            _contract = OptionChainProvider
+                .GetOptionContractList(aapl, Time)
                 .OrderBy(symbol => symbol.ID.Symbol)
-                .FirstOrDefault(optionContract => optionContract.ID.OptionRight == OptionRight.Call
-                    && optionContract.ID.OptionStyle == OptionStyle.American);
+                .FirstOrDefault(optionContract =>
+                    optionContract.ID.OptionRight == OptionRight.Call
+                    && optionContract.ID.OptionStyle == OptionStyle.American
+                );
             AddOptionContract(_contract);
         }
 
@@ -54,25 +59,37 @@ namespace QuantConnect.Algorithm.CSharp
         {
             if (_hasRemoved)
             {
-                if (!_reAdded && slice.ContainsKey(_contract) && slice.ContainsKey(_contract.Underlying))
+                if (
+                    !_reAdded
+                    && slice.ContainsKey(_contract)
+                    && slice.ContainsKey(_contract.Underlying)
+                )
                 {
-                    throw new RegressionTestException("Getting data for removed option and underlying!");
+                    throw new RegressionTestException(
+                        "Getting data for removed option and underlying!"
+                    );
                 }
 
                 if (!Portfolio.Invested && _reAdded)
                 {
                     var option = Securities[_contract];
                     var optionUnderlying = Securities[_contract.Underlying];
-                    if (option.IsTradable && optionUnderlying.IsTradable
-                        && slice.ContainsKey(_contract) && slice.ContainsKey(_contract.Underlying))
+                    if (
+                        option.IsTradable
+                        && optionUnderlying.IsTradable
+                        && slice.ContainsKey(_contract)
+                        && slice.ContainsKey(_contract.Underlying)
+                    )
                     {
                         Buy(_contract, 1);
                     }
                 }
 
-                if (!Securities[_contract].IsTradable
+                if (
+                    !Securities[_contract].IsTradable
                     && !Securities[_contract.Underlying].IsTradable
-                    && !_reAdded)
+                    && !_reAdded
+                )
                 {
                     // ha changed my mind!
                     AddOptionContract(_contract);
@@ -131,35 +148,36 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// This is used by the regression test system to indicate what the expected statistics are from running the algorithm
         /// </summary>
-        public Dictionary<string, string> ExpectedStatistics => new Dictionary<string, string>
-        {
-            {"Total Orders", "2"},
-            {"Average Win", "0%"},
-            {"Average Loss", "-0.05%"},
-            {"Compounding Annual Return", "-4.548%"},
-            {"Drawdown", "0.100%"},
-            {"Expectancy", "-1"},
-            {"Start Equity", "100000"},
-            {"End Equity", "99949"},
-            {"Net Profit", "-0.051%"},
-            {"Sharpe Ratio", "0"},
-            {"Sortino Ratio", "0"},
-            {"Probabilistic Sharpe Ratio", "0%"},
-            {"Loss Rate", "100%"},
-            {"Win Rate", "0%"},
-            {"Profit-Loss Ratio", "0"},
-            {"Alpha", "0"},
-            {"Beta", "0"},
-            {"Annual Standard Deviation", "0"},
-            {"Annual Variance", "0"},
-            {"Information Ratio", "-9.486"},
-            {"Tracking Error", "0.008"},
-            {"Treynor Ratio", "0"},
-            {"Total Fees", "$2.00"},
-            {"Estimated Strategy Capacity", "$30000.00"},
-            {"Lowest Capacity Asset", "AAPL VXBK4Q9ZIFD2|AAPL R735QTJ8XC9X"},
-            {"Portfolio Turnover", "0.07%"},
-            {"OrderListHash", "c763192f852f447453941500d362dbf1"}
-        };
+        public Dictionary<string, string> ExpectedStatistics =>
+            new Dictionary<string, string>
+            {
+                { "Total Orders", "2" },
+                { "Average Win", "0%" },
+                { "Average Loss", "-0.05%" },
+                { "Compounding Annual Return", "-4.548%" },
+                { "Drawdown", "0.100%" },
+                { "Expectancy", "-1" },
+                { "Start Equity", "100000" },
+                { "End Equity", "99949" },
+                { "Net Profit", "-0.051%" },
+                { "Sharpe Ratio", "0" },
+                { "Sortino Ratio", "0" },
+                { "Probabilistic Sharpe Ratio", "0%" },
+                { "Loss Rate", "100%" },
+                { "Win Rate", "0%" },
+                { "Profit-Loss Ratio", "0" },
+                { "Alpha", "0" },
+                { "Beta", "0" },
+                { "Annual Standard Deviation", "0" },
+                { "Annual Variance", "0" },
+                { "Information Ratio", "-9.486" },
+                { "Tracking Error", "0.008" },
+                { "Treynor Ratio", "0" },
+                { "Total Fees", "$2.00" },
+                { "Estimated Strategy Capacity", "$30000.00" },
+                { "Lowest Capacity Asset", "AAPL VXBK4Q9ZIFD2|AAPL R735QTJ8XC9X" },
+                { "Portfolio Turnover", "0.07%" },
+                { "OrderListHash", "c763192f852f447453941500d362dbf1" }
+            };
     }
 }

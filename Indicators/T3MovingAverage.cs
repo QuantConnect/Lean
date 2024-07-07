@@ -32,11 +32,11 @@ namespace QuantConnect.Indicators
 
         /// <summary>
         /// Initializes a new instance of the <see cref="T3MovingAverage"/> class using the specified name and period.
-        /// </summary> 
+        /// </summary>
         /// <param name="name">The name of this indicator</param>
         /// <param name="period">The period of the T3MovingAverage</param>
         /// <param name="volumeFactor">The volume factor of the T3MovingAverage (value must be in the [0,1] range, defaults to 0.7)</param>
-        public T3MovingAverage(string name, int period, decimal volumeFactor = 0.7m) 
+        public T3MovingAverage(string name, int period, decimal volumeFactor = 0.7m)
             : base(name)
         {
             _period = period;
@@ -47,13 +47,11 @@ namespace QuantConnect.Indicators
 
         /// <summary>
         /// Initializes a new instance of the <see cref="T3MovingAverage"/> class using the specified period.
-        /// </summary> 
+        /// </summary>
         /// <param name="period">The period of the T3MovingAverage</param>
         /// <param name="volumeFactor">The volume factor of the T3MovingAverage (value must be in the [0,1] range, defaults to 0.7)</param>
         public T3MovingAverage(int period, decimal volumeFactor = 0.7m)
-            : this($"T3({period},{volumeFactor})", period, volumeFactor)
-        {
-        }
+            : this($"T3({period},{volumeFactor})", period, volumeFactor) { }
 
         /// <summary>
         /// Gets a flag indicating when this indicator is ready and fully initialized

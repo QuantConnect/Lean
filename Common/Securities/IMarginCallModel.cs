@@ -38,7 +38,9 @@ namespace QuantConnect.Securities
         /// <param name="generatedMarginCallOrders">These are the margin call orders that were generated
         /// by individual security margin models.</param>
         /// <returns>The list of orders that were actually executed</returns>
-        List<OrderTicket> ExecuteMarginCall(IEnumerable<SubmitOrderRequest> generatedMarginCallOrders);
+        List<OrderTicket> ExecuteMarginCall(
+            IEnumerable<SubmitOrderRequest> generatedMarginCallOrders
+        );
     }
 
     /// <summary>
@@ -60,7 +62,9 @@ namespace QuantConnect.Securities
                 return new List<SubmitOrderRequest>();
             }
 
-            public List<OrderTicket> ExecuteMarginCall(IEnumerable<SubmitOrderRequest> generatedMarginCallOrders)
+            public List<OrderTicket> ExecuteMarginCall(
+                IEnumerable<SubmitOrderRequest> generatedMarginCallOrders
+            )
             {
                 return new List<OrderTicket>();
             }

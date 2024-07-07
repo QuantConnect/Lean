@@ -13,9 +13,9 @@
  * limitations under the License.
 */
 
-using QuantConnect.Data.Auxiliary;
 using System;
 using System.Linq;
+using QuantConnect.Data.Auxiliary;
 
 namespace QuantConnect.ToolBox.CoarseUniverseGenerator
 {
@@ -33,8 +33,13 @@ namespace QuantConnect.ToolBox.CoarseUniverseGenerator
         {
             MapFile = mapFile;
             SID = SecurityIdentifier.GenerateEquity(MapFile.FirstDate, MapFile.FirstTicker, market);
-            MapFileRows = MapFile.Select(mfr => new Tuple<DateTime, string>(mfr.Date, mfr.MappedSymbol)).ToArray();
-            Tickers = MapFile.Select(mfr => mfr.MappedSymbol.ToLowerInvariant()).Distinct().ToArray();
+            MapFileRows = MapFile
+                .Select(mfr => new Tuple<DateTime, string>(mfr.Date, mfr.MappedSymbol))
+                .ToArray();
+            Tickers = MapFile
+                .Select(mfr => mfr.MappedSymbol.ToLowerInvariant())
+                .Distinct()
+                .ToArray();
             LastTicker = MapFile.Last().MappedSymbol.ToLowerInvariant();
         }
 

@@ -43,9 +43,12 @@ namespace QuantConnect.Tests.Algorithm.Framework.Execution
             var actualOrdersSubmitted = new List<SubmitOrderRequest>();
 
             var orderProcessor = new Mock<IOrderProcessor>();
-            orderProcessor.Setup(m => m.Process(It.IsAny<SubmitOrderRequest>()))
+            orderProcessor
+                .Setup(m => m.Process(It.IsAny<SubmitOrderRequest>()))
                 .Returns((OrderTicket)null)
-                .Callback((OrderRequest request) => actualOrdersSubmitted.Add((SubmitOrderRequest)request));
+                .Callback(
+                    (OrderRequest request) => actualOrdersSubmitted.Add((SubmitOrderRequest)request)
+                );
 
             var algorithm = new AlgorithmStub();
             algorithm.Transactions.SetOrderProcessor(orderProcessor.Object);
@@ -53,7 +56,10 @@ namespace QuantConnect.Tests.Algorithm.Framework.Execution
             var model = GetExecutionModel(language);
             algorithm.SetExecution(model);
 
-            var changes = SecurityChangesTests.CreateNonInternal(Enumerable.Empty<Security>(), Enumerable.Empty<Security>());
+            var changes = SecurityChangesTests.CreateNonInternal(
+                Enumerable.Empty<Security>(),
+                Enumerable.Empty<Security>()
+            );
             model.OnSecuritiesChanged(algorithm, changes);
 
             model.Execute(algorithm, new IPortfolioTarget[0]);
@@ -70,28 +76,39 @@ namespace QuantConnect.Tests.Algorithm.Framework.Execution
             double[] historicalPrices,
             decimal openOrdersQuantity,
             int expectedOrdersSubmitted,
-            decimal expectedTotalQuantity)
+            decimal expectedTotalQuantity
+        )
         {
             var actualOrdersSubmitted = new List<SubmitOrderRequest>();
 
             var time = new DateTime(2018, 8, 2, 16, 0, 0);
             var historyProvider = new Mock<IHistoryProvider>();
-            historyProvider.Setup(m => m.GetHistory(It.IsAny<IEnumerable<HistoryRequest>>(), It.IsAny<DateTimeZone>()))
-                .Returns(historicalPrices.Select((x, i) =>
-                    new Slice(time.AddMinutes(i),
-                        new List<BaseData>
-                        {
-                            new TradeBar
-                            {
-                                Time = time.AddMinutes(i),
-                                Symbol = Symbols.AAPL,
-                                Open = Convert.ToDecimal(x),
-                                High = Convert.ToDecimal(x),
-                                Low = Convert.ToDecimal(x),
-                                Close = Convert.ToDecimal(x),
-                                Volume = 100m
-                            }
-                        }, time.AddMinutes(i))));
+            historyProvider
+                .Setup(m =>
+                    m.GetHistory(It.IsAny<IEnumerable<HistoryRequest>>(), It.IsAny<DateTimeZone>())
+                )
+                .Returns(
+                    historicalPrices.Select(
+                        (x, i) =>
+                            new Slice(
+                                time.AddMinutes(i),
+                                new List<BaseData>
+                                {
+                                    new TradeBar
+                                    {
+                                        Time = time.AddMinutes(i),
+                                        Symbol = Symbols.AAPL,
+                                        Open = Convert.ToDecimal(x),
+                                        High = Convert.ToDecimal(x),
+                                        Low = Convert.ToDecimal(x),
+                                        Close = Convert.ToDecimal(x),
+                                        Volume = 100m
+                                    }
+                                },
+                                time.AddMinutes(i)
+                            )
+                    )
+                );
 
             var algorithm = new AlgorithmStub();
             algorithm.SetHistoryProvider(historyProvider.Object);
@@ -102,24 +119,48 @@ namespace QuantConnect.Tests.Algorithm.Framework.Execution
 
             algorithm.SetFinishedWarmingUp();
 
-            var openOrderRequest = new SubmitOrderRequest(OrderType.Market, SecurityType.Equity, Symbols.AAPL, openOrdersQuantity, 0, 0, DateTime.MinValue, "");
+            var openOrderRequest = new SubmitOrderRequest(
+                OrderType.Market,
+                SecurityType.Equity,
+                Symbols.AAPL,
+                openOrdersQuantity,
+                0,
+                0,
+                DateTime.MinValue,
+                ""
+            );
             openOrderRequest.SetOrderId(1);
             var openOrderTicket = new OrderTicket(algorithm.Transactions, openOrderRequest);
 
             var orderProcessor = new Mock<IOrderProcessor>();
-            orderProcessor.Setup(m => m.Process(It.IsAny<SubmitOrderRequest>()))
-                .Returns((SubmitOrderRequest request) => new OrderTicket(algorithm.Transactions, request))
-                .Callback((OrderRequest request) => actualOrdersSubmitted.Add((SubmitOrderRequest)request));
-            orderProcessor.Setup(m => m.GetOpenOrders(It.IsAny<Func<Order, bool>>()))
-                .Returns(new List<Order> { new MarketOrder(Symbols.AAPL, openOrdersQuantity, DateTime.MinValue) });
-            orderProcessor.Setup(m => m.GetOpenOrderTickets(It.IsAny<Func<OrderTicket, bool>>()))
+            orderProcessor
+                .Setup(m => m.Process(It.IsAny<SubmitOrderRequest>()))
+                .Returns(
+                    (SubmitOrderRequest request) => new OrderTicket(algorithm.Transactions, request)
+                )
+                .Callback(
+                    (OrderRequest request) => actualOrdersSubmitted.Add((SubmitOrderRequest)request)
+                );
+            orderProcessor
+                .Setup(m => m.GetOpenOrders(It.IsAny<Func<Order, bool>>()))
+                .Returns(
+                    new List<Order>
+                    {
+                        new MarketOrder(Symbols.AAPL, openOrdersQuantity, DateTime.MinValue)
+                    }
+                );
+            orderProcessor
+                .Setup(m => m.GetOpenOrderTickets(It.IsAny<Func<OrderTicket, bool>>()))
                 .Returns(new List<OrderTicket> { openOrderTicket });
             algorithm.Transactions.SetOrderProcessor(orderProcessor.Object);
 
             var model = GetExecutionModel(language);
             algorithm.SetExecution(model);
 
-            var changes = SecurityChangesTests.CreateNonInternal(new[] { security }, Enumerable.Empty<Security>());
+            var changes = SecurityChangesTests.CreateNonInternal(
+                new[] { security },
+                Enumerable.Empty<Security>()
+            );
             model.OnSecuritiesChanged(algorithm, changes);
 
             var targets = new IPortfolioTarget[] { new PortfolioTarget(Symbols.AAPL, 10) };
@@ -148,29 +189,59 @@ namespace QuantConnect.Tests.Algorithm.Framework.Execution
 
             algorithm.SetFinishedWarmingUp();
 
-            var openOrderRequest = new SubmitOrderRequest(OrderType.Market, SecurityType.Equity, Symbols.AAPL, 100, 0, 0, DateTime.MinValue, "");
+            var openOrderRequest = new SubmitOrderRequest(
+                OrderType.Market,
+                SecurityType.Equity,
+                Symbols.AAPL,
+                100,
+                0,
+                0,
+                DateTime.MinValue,
+                ""
+            );
             openOrderRequest.SetOrderId(1);
 
             var order = Order.CreateOrder(openOrderRequest);
             var openOrderTicket = new OrderTicket(algorithm.Transactions, openOrderRequest);
             openOrderTicket.SetOrder(order);
 
-            openOrderTicket.AddOrderEvent(new OrderEvent(1, Symbols.AAPL, DateTime.MinValue, OrderStatus.PartiallyFilled, OrderDirection.Buy, 250, 70, OrderFee.Zero));
+            openOrderTicket.AddOrderEvent(
+                new OrderEvent(
+                    1,
+                    Symbols.AAPL,
+                    DateTime.MinValue,
+                    OrderStatus.PartiallyFilled,
+                    OrderDirection.Buy,
+                    250,
+                    70,
+                    OrderFee.Zero
+                )
+            );
 
             var orderProcessor = new Mock<IOrderProcessor>();
-            orderProcessor.Setup(m => m.Process(It.IsAny<SubmitOrderRequest>()))
-                .Returns((SubmitOrderRequest request) => new OrderTicket(algorithm.Transactions, request))
-                .Callback((OrderRequest request) => actualOrdersSubmitted.Add((SubmitOrderRequest)request));
-            orderProcessor.Setup(m => m.GetOpenOrders(It.IsAny<Func<Order, bool>>()))
+            orderProcessor
+                .Setup(m => m.Process(It.IsAny<SubmitOrderRequest>()))
+                .Returns(
+                    (SubmitOrderRequest request) => new OrderTicket(algorithm.Transactions, request)
+                )
+                .Callback(
+                    (OrderRequest request) => actualOrdersSubmitted.Add((SubmitOrderRequest)request)
+                );
+            orderProcessor
+                .Setup(m => m.GetOpenOrders(It.IsAny<Func<Order, bool>>()))
                 .Returns(new List<Order> { new MarketOrder(Symbols.AAPL, 100, DateTime.MinValue) });
-            orderProcessor.Setup(m => m.GetOpenOrderTickets(It.IsAny<Func<OrderTicket, bool>>()))
+            orderProcessor
+                .Setup(m => m.GetOpenOrderTickets(It.IsAny<Func<OrderTicket, bool>>()))
                 .Returns(new List<OrderTicket> { openOrderTicket });
             algorithm.Transactions.SetOrderProcessor(orderProcessor.Object);
 
             var model = GetExecutionModel(language);
             algorithm.SetExecution(model);
 
-            var changes = SecurityChangesTests.CreateNonInternal(Enumerable.Empty<Security>(), Enumerable.Empty<Security>());
+            var changes = SecurityChangesTests.CreateNonInternal(
+                Enumerable.Empty<Security>(),
+                Enumerable.Empty<Security>()
+            );
             model.OnSecuritiesChanged(algorithm, changes);
 
             var targets = new IPortfolioTarget[] { new PortfolioTarget(Symbols.AAPL, 80) };
@@ -200,19 +271,35 @@ namespace QuantConnect.Tests.Algorithm.Framework.Execution
             algorithm.SetFinishedWarmingUp();
 
             var orderProcessor = new Mock<IOrderProcessor>();
-            orderProcessor.Setup(m => m.Process(It.IsAny<SubmitOrderRequest>()))
-                .Returns((SubmitOrderRequest request) => new OrderTicket(algorithm.Transactions, request))
-                .Callback((OrderRequest request) => actualOrdersSubmitted.Add((SubmitOrderRequest)request));
+            orderProcessor
+                .Setup(m => m.Process(It.IsAny<SubmitOrderRequest>()))
+                .Returns(
+                    (SubmitOrderRequest request) => new OrderTicket(algorithm.Transactions, request)
+                )
+                .Callback(
+                    (OrderRequest request) => actualOrdersSubmitted.Add((SubmitOrderRequest)request)
+                );
             algorithm.Transactions.SetOrderProcessor(orderProcessor.Object);
 
             var model = GetExecutionModel(language);
             algorithm.SetExecution(model);
 
-            model.Execute(algorithm,
-                new IPortfolioTarget[] { new PortfolioTarget(Symbols.EURUSD, security.SymbolProperties.LotSize * 1.5m * side) });
+            model.Execute(
+                algorithm,
+                new IPortfolioTarget[]
+                {
+                    new PortfolioTarget(
+                        Symbols.EURUSD,
+                        security.SymbolProperties.LotSize * 1.5m * side
+                    )
+                }
+            );
 
             Assert.AreEqual(1, actualOrdersSubmitted.Count);
-            Assert.AreEqual(security.SymbolProperties.LotSize * side, actualOrdersSubmitted.Single().Quantity);
+            Assert.AreEqual(
+                security.SymbolProperties.LotSize * side,
+                actualOrdersSubmitted.Single().Quantity
+            );
         }
 
         private static IExecutionModel GetExecutionModel(Language language)

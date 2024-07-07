@@ -15,11 +15,11 @@
 */
 
 using System;
-using System.Linq;
-using System.Globalization;
-using QuantConnect.Securities;
-using QuantConnect.Data.Market;
 using System.Collections.Generic;
+using System.Globalization;
+using System.Linq;
+using QuantConnect.Data.Market;
+using QuantConnect.Securities;
 using static QuantConnect.StringExtensions;
 
 namespace QuantConnect.Data.Auxiliary
@@ -42,11 +42,7 @@ namespace QuantConnect.Data.Auxiliary
         /// </summary>
         public decimal PriceFactor
         {
-            get
-            {
-                return _priceFactor;
-
-            }
+            get { return _priceFactor; }
             set
             {
                 _priceFactor = value;
@@ -59,10 +55,7 @@ namespace QuantConnect.Data.Auxiliary
         /// </summary>
         public decimal SplitFactor
         {
-            get
-            {
-                return _splitFactor;
-            }
+            get { return _splitFactor; }
             set
             {
                 _splitFactor = value;
@@ -83,7 +76,12 @@ namespace QuantConnect.Data.Auxiliary
         /// <summary>
         /// Initializes a new instance of the <see cref="CorporateFactorRow"/> class
         /// </summary>
-        public CorporateFactorRow(DateTime date, decimal priceFactor, decimal splitFactor, decimal referencePrice = 0)
+        public CorporateFactorRow(
+            DateTime date,
+            decimal priceFactor,
+            decimal splitFactor,
+            decimal referencePrice = 0
+        )
         {
             Date = date;
             ReferencePrice = referencePrice;
@@ -97,7 +95,10 @@ namespace QuantConnect.Data.Auxiliary
         /// <param name="lines">The lines from the factor file to be parsed</param>
         /// <param name="factorFileMinimumDate">The minimum date from the factor file</param>
         /// <returns>An enumerable of factor file rows</returns>
-        public static List<CorporateFactorRow> Parse(IEnumerable<string> lines, out DateTime? factorFileMinimumDate)
+        public static List<CorporateFactorRow> Parse(
+            IEnumerable<string> lines,
+            out DateTime? factorFileMinimumDate
+        )
         {
             factorFileMinimumDate = null;
 
@@ -143,7 +144,9 @@ namespace QuantConnect.Data.Auxiliary
         {
             if (dividend.ReferencePrice == 0m)
             {
-                throw new ArgumentException("Unable to apply dividend with reference price of zero.");
+                throw new ArgumentException(
+                    "Unable to apply dividend with reference price of zero."
+                );
             }
 
             var previousTradingDay = exchangeHours.GetPreviousTradingDay(dividend.Time);
@@ -152,14 +155,19 @@ namespace QuantConnect.Data.Auxiliary
             // this is because the factors are defined working from current to past
             if (Date < previousTradingDay)
             {
-                throw new ArgumentException(Invariant(
-                    $"Factor file row date '{Date:yyy-MM-dd}' is before dividend previous trading date '{previousTradingDay.Date:yyyy-MM-dd}'."
-                ));
+                throw new ArgumentException(
+                    Invariant(
+                        $"Factor file row date '{Date:yyy-MM-dd}' is before dividend previous trading date '{previousTradingDay.Date:yyyy-MM-dd}'."
+                    )
+                );
             }
 
             // pfi - new price factor pf(i+1) - this price factor D - distribution C - previous close
             // pfi = pf(i+1) * (C-D)/C
-            var priceFactor = PriceFactor * (dividend.ReferencePrice - dividend.Distribution) / dividend.ReferencePrice;
+            var priceFactor =
+                PriceFactor
+                * (dividend.ReferencePrice - dividend.Distribution)
+                / dividend.ReferencePrice;
 
             return new CorporateFactorRow(
                 previousTradingDay,
@@ -181,7 +189,9 @@ namespace QuantConnect.Data.Auxiliary
         {
             if (split.Type == SplitType.Warning)
             {
-                throw new ArgumentException("Unable to apply split with type warning. Only actual splits may be applied");
+                throw new ArgumentException(
+                    "Unable to apply split with type warning. Only actual splits may be applied"
+                );
             }
 
             if (split.ReferencePrice == 0m)
@@ -195,9 +205,11 @@ namespace QuantConnect.Data.Auxiliary
             // this is because the factors are defined working from current to past
             if (Date < previousTradingDay)
             {
-                throw new ArgumentException(Invariant(
-                    $"Factor file row date '{Date:yyy-MM-dd}' is before split date '{split.Time.Date:yyyy-MM-dd}'."
-                ));
+                throw new ArgumentException(
+                    Invariant(
+                        $"Factor file row date '{Date:yyy-MM-dd}' is before split date '{split.Time.Date:yyyy-MM-dd}'."
+                    )
+                );
             }
 
             return new CorporateFactorRow(
@@ -217,13 +229,20 @@ namespace QuantConnect.Data.Auxiliary
         /// <param name="exchangeHours">Exchange hours used for resolving the previous trading day</param>
         /// <param name="decimalPlaces">The number of decimal places to round the dividend's distribution to, defaulting to 2</param>
         /// <returns>A new dividend instance</returns>
-        public Dividend GetDividend(CorporateFactorRow nextCorporateFactorRow, Symbol symbol, SecurityExchangeHours exchangeHours, int decimalPlaces=2)
+        public Dividend GetDividend(
+            CorporateFactorRow nextCorporateFactorRow,
+            Symbol symbol,
+            SecurityExchangeHours exchangeHours,
+            int decimalPlaces = 2
+        )
         {
             if (nextCorporateFactorRow.PriceFactor == 0m)
             {
-                throw new InvalidOperationException(Invariant(
-                    $"Unable to resolve dividend for '{symbol.ID}' at {Date:yyyy-MM-dd}. Price factor is zero."
-                ));
+                throw new InvalidOperationException(
+                    Invariant(
+                        $"Unable to resolve dividend for '{symbol.ID}' at {Date:yyyy-MM-dd}. Price factor is zero."
+                    )
+                );
             }
 
             // find previous trading day
@@ -246,13 +265,19 @@ namespace QuantConnect.Data.Auxiliary
         /// <param name="symbol">The symbol to use for the split</param>
         /// <param name="exchangeHours">Exchange hours used for resolving the previous trading day</param>
         /// <returns>A new split instance</returns>
-        public Split GetSplit(CorporateFactorRow nextCorporateFactorRow, Symbol symbol, SecurityExchangeHours exchangeHours)
+        public Split GetSplit(
+            CorporateFactorRow nextCorporateFactorRow,
+            Symbol symbol,
+            SecurityExchangeHours exchangeHours
+        )
         {
             if (nextCorporateFactorRow.SplitFactor == 0m)
             {
-                throw new InvalidOperationException(Invariant(
-                    $"Unable to resolve split for '{symbol.ID}' at {Date:yyyy-MM-dd}. Split factor is zero."
-                ));
+                throw new InvalidOperationException(
+                    Invariant(
+                        $"Unable to resolve split for '{symbol.ID}' at {Date:yyyy-MM-dd}. Split factor is zero."
+                    )
+                );
             }
 
             // find previous trading day
@@ -274,7 +299,11 @@ namespace QuantConnect.Data.Auxiliary
         {
             var csv = line.Split(',');
             return new CorporateFactorRow(
-                QuantConnect.Parse.DateTimeExact(csv[0], DateFormat.EightCharacter, DateTimeStyles.None),
+                QuantConnect.Parse.DateTimeExact(
+                    csv[0],
+                    DateFormat.EightCharacter,
+                    DateTimeStyles.None
+                ),
                 QuantConnect.Parse.Decimal(csv[1]),
                 QuantConnect.Parse.Decimal(csv[2]),
                 csv.Length > 3 ? QuantConnect.Parse.Decimal(csv[3]) : 0m
@@ -288,11 +317,11 @@ namespace QuantConnect.Data.Auxiliary
         public string GetFileFormat(string source = null)
         {
             source = source == null ? "" : $",{source}";
-            return $"{Date.ToStringInvariant(DateFormat.EightCharacter)}," +
-                   Invariant($"{Math.Round(PriceFactor, 7)},") +
-                   Invariant($"{Math.Round(SplitFactor, 8)},") +
-                   Invariant($"{Math.Round(ReferencePrice, 4).Normalize()}") +
-                   $"{source}";
+            return $"{Date.ToStringInvariant(DateFormat.EightCharacter)},"
+                + Invariant($"{Math.Round(PriceFactor, 7)},")
+                + Invariant($"{Math.Round(SplitFactor, 8)},")
+                + Invariant($"{Math.Round(ReferencePrice, 4).Normalize()}")
+                + $"{source}";
         }
 
         /// <summary>

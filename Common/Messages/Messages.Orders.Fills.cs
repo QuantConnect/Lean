@@ -17,12 +17,10 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.CompilerServices;
-
 using QuantConnect.Data.Market;
 using QuantConnect.Orders;
 using QuantConnect.Orders.Fills;
 using QuantConnect.Securities;
-
 using static QuantConnect.StringExtensions;
 
 namespace QuantConnect
@@ -40,13 +38,20 @@ namespace QuantConnect
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             public static string FilledAtStalePrice(Securities.Security security, Prices prices)
             {
-                return Invariant($"Warning: fill at stale price ({prices.EndTime.ToStringInvariant()} {security.Exchange.TimeZone})");
+                return Invariant(
+                    $"Warning: fill at stale price ({prices.EndTime.ToStringInvariant()} {security.Exchange.TimeZone})"
+                );
             }
 
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            public static string MarketNeverCloses(Securities.Security security, OrderType orderType)
+            public static string MarketNeverCloses(
+                Securities.Security security,
+                OrderType orderType
+            )
             {
-                return Invariant($"Market never closes for this symbol {security.Symbol}, can no submit a {nameof(orderType)} order.");
+                return Invariant(
+                    $"Market never closes for this symbol {security.Symbol}, can no submit a {nameof(orderType)} order."
+                );
             }
 
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -54,27 +59,39 @@ namespace QuantConnect
             {
                 return subscribedTypes == null
                     ? string.Empty
-                    : Invariant($" SubscribedTypes: [{string.Join(",", subscribedTypes.Select(type => type.Name))}]");
+                    : Invariant(
+                        $" SubscribedTypes: [{string.Join(",", subscribedTypes.Select(type => type.Name))}]"
+                    );
             }
 
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            public static string NoMarketDataToGetAskPriceForFilling(Securities.Security security, HashSet<Type> subscribedTypes = null)
+            public static string NoMarketDataToGetAskPriceForFilling(
+                Securities.Security security,
+                HashSet<Type> subscribedTypes = null
+            )
             {
-                return Invariant($"Cannot get ask price to perform fill for {security.Symbol} because no market data was found.") +
-                    SubscribedTypesToString(subscribedTypes);
+                return Invariant(
+                        $"Cannot get ask price to perform fill for {security.Symbol} because no market data was found."
+                    ) + SubscribedTypesToString(subscribedTypes);
             }
 
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            public static string NoMarketDataToGetBidPriceForFilling(Securities.Security security, HashSet<Type> subscribedTypes = null)
+            public static string NoMarketDataToGetBidPriceForFilling(
+                Securities.Security security,
+                HashSet<Type> subscribedTypes = null
+            )
             {
-                return Invariant($"Cannot get bid price to perform fill for {security.Symbol} because no market data was found.") +
-                    SubscribedTypesToString(subscribedTypes);
+                return Invariant(
+                        $"Cannot get bid price to perform fill for {security.Symbol} because no market data was found."
+                    ) + SubscribedTypesToString(subscribedTypes);
             }
 
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             public static string NoDataSubscriptionFoundForFilling(Securities.Security security)
             {
-                return Invariant($"Cannot perform fill for {security.Symbol} because no data subscription were found.");
+                return Invariant(
+                    $"Cannot perform fill for {security.Symbol} because no data subscription were found."
+                );
             }
         }
 
@@ -101,48 +118,80 @@ namespace QuantConnect
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             public static string FilledWithQuoteData(Securities.Security security)
             {
-                return Invariant($@"Warning: No trade information available at {security.LocalTime.ToStringInvariant()} {
-                    security.Exchange.TimeZone}, order filled using Quote data");
+                return Invariant(
+                    $@"Warning: No trade information available at {security.LocalTime.ToStringInvariant()} {
+                    security.Exchange.TimeZone}, order filled using Quote data"
+                );
             }
 
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            public static string FilledWithQuoteTickData(Securities.Security security, Tick quoteTick)
+            public static string FilledWithQuoteTickData(
+                Securities.Security security,
+                Tick quoteTick
+            )
             {
-                return Invariant($@"Warning: fill at stale price ({quoteTick.EndTime.ToStringInvariant()} {
-                    security.Exchange.TimeZone}), using Quote Tick data.");
+                return Invariant(
+                    $@"Warning: fill at stale price ({quoteTick.EndTime.ToStringInvariant()} {
+                    security.Exchange.TimeZone}), using Quote Tick data."
+                );
             }
 
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            public static string FilledWithTradeTickData(Securities.Security security, Tick tradeTick)
+            public static string FilledWithTradeTickData(
+                Securities.Security security,
+                Tick tradeTick
+            )
             {
-                return Invariant($@"Warning: No quote information available at {tradeTick.EndTime.ToStringInvariant()} {
-                    security.Exchange.TimeZone}, order filled using Trade Tick data");
+                return Invariant(
+                    $@"Warning: No quote information available at {tradeTick.EndTime.ToStringInvariant()} {
+                    security.Exchange.TimeZone}, order filled using Trade Tick data"
+                );
             }
 
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            public static string FilledWithQuoteBarData(Securities.Security security, QuoteBar quoteBar)
+            public static string FilledWithQuoteBarData(
+                Securities.Security security,
+                QuoteBar quoteBar
+            )
             {
-                return Invariant($@"Warning: fill at stale price ({quoteBar.EndTime.ToStringInvariant()} {
-                    security.Exchange.TimeZone}), using QuoteBar data.");
+                return Invariant(
+                    $@"Warning: fill at stale price ({quoteBar.EndTime.ToStringInvariant()} {
+                    security.Exchange.TimeZone}), using QuoteBar data."
+                );
             }
 
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            public static string FilledWithTradeBarData(Securities.Security security, TradeBar tradeBar)
+            public static string FilledWithTradeBarData(
+                Securities.Security security,
+                TradeBar tradeBar
+            )
             {
-                return Invariant($@"Warning: No quote information available at {tradeBar.EndTime.ToStringInvariant()} {
-                    security.Exchange.TimeZone}, order filled using TradeBar data");
+                return Invariant(
+                    $@"Warning: No quote information available at {tradeBar.EndTime.ToStringInvariant()} {
+                    security.Exchange.TimeZone}, order filled using TradeBar data"
+                );
             }
 
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            public static string FilledWithOpenDueToFavorableGap(Securities.Security security, TradeBar tradeBar)
+            public static string FilledWithOpenDueToFavorableGap(
+                Securities.Security security,
+                TradeBar tradeBar
+            )
             {
-                return Invariant($@"Due to a favorable gap at {tradeBar.EndTime.ToStringInvariant()} {security.Exchange.TimeZone}, order filled using the open price ({tradeBar.Open})");
+                return Invariant(
+                    $@"Due to a favorable gap at {tradeBar.EndTime.ToStringInvariant()} {security.Exchange.TimeZone}, order filled using the open price ({tradeBar.Open})"
+                );
             }
 
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            public static string FilledWithOpenDueToUnfavorableGap(Securities.Security security, TradeBar tradeBar)
+            public static string FilledWithOpenDueToUnfavorableGap(
+                Securities.Security security,
+                TradeBar tradeBar
+            )
             {
-                return Invariant($@"Due to an unfavorable gap at {tradeBar.EndTime.ToStringInvariant()} {security.Exchange.TimeZone}, order filled using the open price ({tradeBar.Open})");
+                return Invariant(
+                    $@"Due to an unfavorable gap at {tradeBar.EndTime.ToStringInvariant()} {security.Exchange.TimeZone}, order filled using the open price ({tradeBar.Open})"
+                );
             }
         }
     }

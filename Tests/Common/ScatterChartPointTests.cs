@@ -27,7 +27,12 @@ namespace QuantConnect.Tests.Common
         {
             var chart = new Chart(Symbols.SPY.Value);
             var series = new Series("SeriesName", SeriesType.Scatter);
-            var point = new ScatterChartPoint() { y = 99, Time = new DateTime(2024, 01, 01), Tooltip = "Filled @ 88 tooltip test" };
+            var point = new ScatterChartPoint()
+            {
+                y = 99,
+                Time = new DateTime(2024, 01, 01),
+                Tooltip = "Filled @ 88 tooltip test"
+            };
             series.AddPoint(point);
             chart.AddSeries(series);
 
@@ -49,7 +54,12 @@ namespace QuantConnect.Tests.Common
         [Test]
         public void Clone()
         {
-            var point = new ScatterChartPoint() { y = 99, Time = new DateTime(2024, 01, 01), Tooltip = "Filled @ 88 tooltip test" };
+            var point = new ScatterChartPoint()
+            {
+                y = 99,
+                Time = new DateTime(2024, 01, 01),
+                Tooltip = "Filled @ 88 tooltip test"
+            };
             var clone = (ScatterChartPoint)point.Clone();
 
             Assert.AreEqual(point.Time, clone.Time);

@@ -19,7 +19,7 @@ using QuantConnect.Data.Market;
 namespace QuantConnect.Indicators
 {
     /// <summary>
-    /// This indicator computes the Slow Stochastics %K and %D. The Fast Stochastics %K is is computed by 
+    /// This indicator computes the Slow Stochastics %K and %D. The Fast Stochastics %K is is computed by
     /// (Current Close Price - Lowest Price of given Period) / (Highest Price of given Period - Lowest Price of given Period)
     /// multiplied by 100. Once the Fast Stochastics %K is calculated the Slow Stochastic %K is calculated by the average/smoothed price of
     /// of the Fast %K with the given period. The Slow Stochastics %D is then derived from the Slow Stochastics %K with the given period.
@@ -61,13 +61,15 @@ namespace QuantConnect.Indicators
             _sumFastK = new Sum(name + "_SumFastK", kPeriod);
             _sumSlowK = new Sum(name + "_SumD", dPeriod);
 
-            FastStoch = new FunctionalIndicator<IBaseDataBar>(name + "_FastStoch",
+            FastStoch = new FunctionalIndicator<IBaseDataBar>(
+                name + "_FastStoch",
                 input => ComputeFastStoch(period, input),
                 fastStoch => _maximum.IsReady,
                 () => { }
-                );
+            );
 
-            StochK = new FunctionalIndicator<IBaseDataBar>(name + "_StochK",
+            StochK = new FunctionalIndicator<IBaseDataBar>(
+                name + "_StochK",
                 input => ComputeStochK(period, kPeriod, input),
                 stochK => _maximum.IsReady,
                 () => { }
@@ -90,9 +92,7 @@ namespace QuantConnect.Indicators
         /// <param name="kPeriod">The K period given to calculated the Slow %K</param>
         /// <param name="dPeriod">The D period given to calculated the Slow %D</param>
         public Stochastic(int period, int kPeriod, int dPeriod)
-            : this($"STO({period},{kPeriod},{dPeriod})", period, kPeriod, dPeriod)
-        {
-        }
+            : this($"STO({period},{kPeriod},{dPeriod})", period, kPeriod, dPeriod) { }
 
         /// <summary>
         /// Gets a flag indicating when this indicator is ready and fully initialized
@@ -128,7 +128,7 @@ namespace QuantConnect.Indicators
         private decimal ComputeFastStoch(int period, IBaseDataBar input)
         {
             var denominator = _maximum.Current.Value - _minimum.Current.Value;
-            
+
             // if there's no range, just return constant zero
             if (denominator == 0m)
             {
@@ -151,7 +151,10 @@ namespace QuantConnect.Indicators
         /// <returns>The Slow Stochastics %K value.</returns>
         private decimal ComputeStochK(int period, int constantK, IBaseData input)
         {
-            var stochK = _maximum.Samples >= (period + constantK - 1) ? _sumFastK.Current.Value / constantK : decimal.Zero;
+            var stochK =
+                _maximum.Samples >= (period + constantK - 1)
+                    ? _sumFastK.Current.Value / constantK
+                    : decimal.Zero;
             _sumSlowK.Update(input.Time, stochK);
             return stochK * 100;
         }
@@ -165,9 +168,13 @@ namespace QuantConnect.Indicators
         /// <returns>The Slow Stochastics %D value.</returns>
         private decimal ComputeStochD(int period, int constantK, int constantD)
         {
-            var stochD = _maximum.Samples >= (period + constantK + constantD - 2) ? _sumSlowK.Current.Value / constantD : decimal.Zero;
+            var stochD =
+                _maximum.Samples >= (period + constantK + constantD - 2)
+                    ? _sumSlowK.Current.Value / constantD
+                    : decimal.Zero;
             return stochD * 100;
         }
+
         /// <summary>
         /// Resets this indicator to its initial state
         /// </summary>

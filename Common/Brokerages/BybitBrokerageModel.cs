@@ -37,15 +37,15 @@ public class BybitBrokerageModel : DefaultBrokerageModel
     /// <summary>
     /// Gets a map of the default markets to be used for each security type
     /// </summary>
-    public override IReadOnlyDictionary<SecurityType, string> DefaultMarkets { get; } = GetDefaultMarkets(Market.Bybit);
+    public override IReadOnlyDictionary<SecurityType, string> DefaultMarkets { get; } =
+        GetDefaultMarkets(Market.Bybit);
 
     /// <summary>
     /// Initializes a new instance of the <see cref="BybitBrokerageModel"/> class
     /// </summary>
     /// <param name="accountType">The type of account to be modeled, defaults to <see cref="AccountType.Cash"/></param>
-    public BybitBrokerageModel(AccountType accountType = AccountType.Cash) : base(accountType)
-    {
-    }
+    public BybitBrokerageModel(AccountType accountType = AccountType.Cash)
+        : base(accountType) { }
 
     /// <summary>
     /// Bybit global leverage rule
@@ -54,7 +54,11 @@ public class BybitBrokerageModel : DefaultBrokerageModel
     /// <returns></returns>
     public override decimal GetLeverage(Security security)
     {
-        if (AccountType == AccountType.Cash || security.IsInternalFeed() || security.Type == SecurityType.Base)
+        if (
+            AccountType == AccountType.Cash
+            || security.IsInternalFeed()
+            || security.Type == SecurityType.Base
+        )
         {
             return 1m;
         }
@@ -74,7 +78,12 @@ public class BybitBrokerageModel : DefaultBrokerageModel
             SecurityType.Crypto => new BybitFeeModel(),
             SecurityType.CryptoFuture => new BybitFuturesFeeModel(),
             SecurityType.Base => base.GetFeeModel(security),
-            _ => throw new ArgumentOutOfRangeException(nameof(security), security, $"Not supported security type {security.Type}")
+            _
+                => throw new ArgumentOutOfRangeException(
+                    nameof(security),
+                    security,
+                    $"Not supported security type {security.Type}"
+                )
         };
     }
 
@@ -86,8 +95,10 @@ public class BybitBrokerageModel : DefaultBrokerageModel
     public override IMarginInterestRateModel GetMarginInterestRateModel(Security security)
     {
         // only applies for perpetual futures
-        if (security.Type == SecurityType.CryptoFuture &&
-            security.Symbol.ID.Date == SecurityIdentifier.DefaultDate)
+        if (
+            security.Type == SecurityType.CryptoFuture
+            && security.Symbol.ID.Date == SecurityIdentifier.DefaultDate
+        )
         {
             return new BybitFutureMarginInterestRateModel();
         }
@@ -116,28 +127,55 @@ public class BybitBrokerageModel : DefaultBrokerageModel
     /// <param name="request">The requested update to be made to the order</param>
     /// <param name="message">If this function returns false, a brokerage message detailing why the order may not be updated</param>
     /// <returns>True if the brokerage could update the order, false otherwise</returns>
-    public override bool CanUpdateOrder(Security security, Order order, UpdateOrderRequest request,
-        out BrokerageMessageEvent message)
+    public override bool CanUpdateOrder(
+        Security security,
+        Order order,
+        UpdateOrderRequest request,
+        out BrokerageMessageEvent message
+    )
     {
         //can only update linear, inverse, and options
         if (security.Type != SecurityType.CryptoFuture)
         {
-            message = new BrokerageMessageEvent(BrokerageMessageType.Warning, "NotSupported",
-                Messages.DefaultBrokerageModel.OrderUpdateNotSupported);
+            message = new BrokerageMessageEvent(
+                BrokerageMessageType.Warning,
+                "NotSupported",
+                Messages.DefaultBrokerageModel.OrderUpdateNotSupported
+            );
             return false;
         }
 
-        if (order.Status is not (OrderStatus.New or OrderStatus.PartiallyFilled or OrderStatus.Submitted or OrderStatus.UpdateSubmitted))
+        if (
+            order.Status
+            is not (
+                OrderStatus.New
+                or OrderStatus.PartiallyFilled
+                or OrderStatus.Submitted
+                or OrderStatus.UpdateSubmitted
+            )
+        )
         {
-            message = new BrokerageMessageEvent(BrokerageMessageType.Warning, "NotSupported",
-                $"Order with status {order.Status} can't be modified");
+            message = new BrokerageMessageEvent(
+                BrokerageMessageType.Warning,
+                "NotSupported",
+                $"Order with status {order.Status} can't be modified"
+            );
             return false;
         }
 
-        if (request.Quantity.HasValue && !IsOrderSizeLargeEnough(security, Math.Abs(request.Quantity.Value)))
+        if (
+            request.Quantity.HasValue
+            && !IsOrderSizeLargeEnough(security, Math.Abs(request.Quantity.Value))
+        )
         {
-            message = new BrokerageMessageEvent(BrokerageMessageType.Warning, "NotSupported",
-                Messages.DefaultBrokerageModel.InvalidOrderQuantity(security, request.Quantity.Value));
+            message = new BrokerageMessageEvent(
+                BrokerageMessageType.Warning,
+                "NotSupported",
+                Messages.DefaultBrokerageModel.InvalidOrderQuantity(
+                    security,
+                    request.Quantity.Value
+                )
+            );
             return false;
         }
 
@@ -156,12 +194,23 @@ public class BybitBrokerageModel : DefaultBrokerageModel
     /// <param name="order">The order to be processed</param>
     /// <param name="message">If this function returns false, a brokerage message detailing why the order may not be submitted</param>
     /// <returns>True if the brokerage could process the order, false otherwise</returns>
-    public override bool CanSubmitOrder(Security security, Order order, out BrokerageMessageEvent message)
+    public override bool CanSubmitOrder(
+        Security security,
+        Order order,
+        out BrokerageMessageEvent message
+    )
     {
-        if (security.Type != SecurityType.Crypto && security.Type != SecurityType.CryptoFuture && security.Type != SecurityType.Base)
+        if (
+            security.Type != SecurityType.Crypto
+            && security.Type != SecurityType.CryptoFuture
+            && security.Type != SecurityType.Base
+        )
         {
-            message = new BrokerageMessageEvent(BrokerageMessageType.Warning, "NotSupported",
-                Messages.DefaultBrokerageModel.UnsupportedSecurityType(this, security));
+            message = new BrokerageMessageEvent(
+                BrokerageMessageType.Warning,
+                "NotSupported",
+                Messages.DefaultBrokerageModel.UnsupportedSecurityType(this, security)
+            );
 
             return false;
         }
@@ -178,16 +227,31 @@ public class BybitBrokerageModel : DefaultBrokerageModel
                 quantityIsValid = IsOrderSizeLargeEnough(security, Math.Abs(order.Quantity));
                 break;
             default:
-                message = new BrokerageMessageEvent(BrokerageMessageType.Warning, "NotSupported",
-                    Messages.DefaultBrokerageModel.UnsupportedOrderType(this, order,
-                        new[] { OrderType.StopMarket, OrderType.StopLimit, OrderType.Market, OrderType.Limit }));
+                message = new BrokerageMessageEvent(
+                    BrokerageMessageType.Warning,
+                    "NotSupported",
+                    Messages.DefaultBrokerageModel.UnsupportedOrderType(
+                        this,
+                        order,
+                        new[]
+                        {
+                            OrderType.StopMarket,
+                            OrderType.StopLimit,
+                            OrderType.Market,
+                            OrderType.Limit
+                        }
+                    )
+                );
                 return false;
         }
 
         if (!quantityIsValid)
         {
-            message = new BrokerageMessageEvent(BrokerageMessageType.Warning, "NotSupported",
-                Messages.DefaultBrokerageModel.InvalidOrderQuantity(security, order.Quantity));
+            message = new BrokerageMessageEvent(
+                BrokerageMessageType.Warning,
+                "NotSupported",
+                Messages.DefaultBrokerageModel.InvalidOrderQuantity(security, order.Quantity)
+            );
 
             return false;
         }
@@ -203,8 +267,8 @@ public class BybitBrokerageModel : DefaultBrokerageModel
     /// <returns>True if the order size is large enough, false otherwise</returns>
     protected virtual bool IsOrderSizeLargeEnough(Security security, decimal orderQuantity)
     {
-        return !security.SymbolProperties.MinimumOrderSize.HasValue ||
-               orderQuantity > security.SymbolProperties.MinimumOrderSize;
+        return !security.SymbolProperties.MinimumOrderSize.HasValue
+            || orderQuantity > security.SymbolProperties.MinimumOrderSize;
     }
 
     private static IReadOnlyDictionary<SecurityType, string> GetDefaultMarkets(string marketName)

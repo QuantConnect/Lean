@@ -1,4 +1,4 @@
-/* 
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -13,8 +13,8 @@
  * limitations under the License.
 */
 
-using System.Linq;
 using System.Collections.Generic;
+using System.Linq;
 using QuantConnect.Data;
 using QuantConnect.Indicators;
 using QuantConnect.Orders;
@@ -43,22 +43,29 @@ namespace QuantConnect.Algorithm.CSharp
 
         public override void OnData(Slice slice)
         {
-            if (Portfolio.Invested) return;
+            if (Portfolio.Invested)
+                return;
 
             // Get the OptionChain
-            if (!slice.OptionChains.TryGetValue(_spxw, out var chain)) return;
+            if (!slice.OptionChains.TryGetValue(_spxw, out var chain))
+                return;
 
             // Get the closest expiry date
             var expiry = chain.Min(x => x.Expiry);
             var contracts = chain.Where(x => x.Expiry == expiry).ToList();
 
             // Separate the call and put contracts and sort by Strike to find OTM contracts
-            var calls = contracts.Where(x => x.Right == OptionRight.Call)
-                .OrderByDescending(x => x.Strike).ToArray();
-            var puts = contracts.Where(x => x.Right == OptionRight.Put)
-                .OrderBy(x => x.Strike).ToArray();
+            var calls = contracts
+                .Where(x => x.Right == OptionRight.Call)
+                .OrderByDescending(x => x.Strike)
+                .ToArray();
+            var puts = contracts
+                .Where(x => x.Right == OptionRight.Put)
+                .OrderBy(x => x.Strike)
+                .ToArray();
 
-            if (calls.Length < 3 || puts.Length < 3) return;
+            if (calls.Length < 3 || puts.Length < 3)
+                return;
 
             // Create combo order legs
             var price = _bb.Price.Current.Value;
@@ -67,7 +74,7 @@ namespace QuantConnect.Algorithm.CSharp
             {
                 quantity = -1;
             }
-            
+
             var legs = new List<Leg>
             {
                 Leg.Create(calls[0].Symbol, quantity),

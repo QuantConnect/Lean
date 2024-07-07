@@ -35,24 +35,21 @@ namespace QuantConnect.Algorithm.Framework.Selection
         /// <summary>
         /// Initializes a new instance of the SP500SectorsETFUniverse class
         /// </summary>
-        public SP500SectorsETFUniverse() :
-            base(
+        public SP500SectorsETFUniverse()
+            : base(
                 "qc-sp500-sectors-etf-basket",
                 new Dictionary<string, DateTime>()
                 {
-                    {"XLB", new DateTime(1998, 12, 22)},
-                    {"XLE", new DateTime(1998, 12, 22)},
-                    {"XLF", new DateTime(1998, 12, 22)},
-                    {"XLI", new DateTime(1998, 12, 22)},
-                    {"XLK", new DateTime(1998, 12, 22)},
-                    {"XLP", new DateTime(1998, 12, 22)},
-                    {"XLU", new DateTime(1998, 12, 22)},
-                    {"XLV", new DateTime(1998, 12, 22)},
-                    {"XLY", new DateTime(1998, 12, 22)}
+                    { "XLB", new DateTime(1998, 12, 22) },
+                    { "XLE", new DateTime(1998, 12, 22) },
+                    { "XLF", new DateTime(1998, 12, 22) },
+                    { "XLI", new DateTime(1998, 12, 22) },
+                    { "XLK", new DateTime(1998, 12, 22) },
+                    { "XLP", new DateTime(1998, 12, 22) },
+                    { "XLU", new DateTime(1998, 12, 22) },
+                    { "XLV", new DateTime(1998, 12, 22) },
+                    { "XLY", new DateTime(1998, 12, 22) }
                 }
-            )
-        {
-
-        }
+            ) { }
     }
 }

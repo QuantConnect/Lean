@@ -13,16 +13,16 @@
  * limitations under the License.
 */
 
-using Python.Runtime;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using NodaTime;
+using Python.Runtime;
 using QuantConnect.Data.Consolidators;
 using QuantConnect.Data.Market;
 using QuantConnect.Interfaces;
-using QuantConnect.Util;
 using QuantConnect.Python;
+using QuantConnect.Util;
 
 namespace QuantConnect.Data
 {
@@ -31,7 +31,10 @@ namespace QuantConnect.Data
     /// </summary>
     public class SubscriptionManager
     {
-        private readonly PriorityQueue<ConsolidatorWrapper, ConsolidatorScanPriority> _consolidatorsSortedByScanTime;
+        private readonly PriorityQueue<
+            ConsolidatorWrapper,
+            ConsolidatorScanPriority
+        > _consolidatorsSortedByScanTime;
         private readonly Dictionary<IDataConsolidator, ConsolidatorWrapper> _consolidators;
         private readonly ITimeKeeper _timeKeeper;
         private IAlgorithmSubscriptionManager _subscriptionManager;
@@ -45,12 +48,16 @@ namespace QuantConnect.Data
         ///     Returns an IEnumerable of Subscriptions
         /// </summary>
         /// <remarks>Will not return internal subscriptions</remarks>
-        public IEnumerable<SubscriptionDataConfig> Subscriptions => _subscriptionManager.SubscriptionManagerSubscriptions.Where(config => !config.IsInternalFeed);
+        public IEnumerable<SubscriptionDataConfig> Subscriptions =>
+            _subscriptionManager.SubscriptionManagerSubscriptions.Where(config =>
+                !config.IsInternalFeed
+            );
 
         /// <summary>
         ///     The different <see cref="TickType" /> each <see cref="SecurityType" /> supports
         /// </summary>
-        public Dictionary<SecurityType, List<TickType>> AvailableDataTypes => _subscriptionManager.AvailableDataTypes;
+        public Dictionary<SecurityType, List<TickType>> AvailableDataTypes =>
+            _subscriptionManager.AvailableDataTypes;
 
         /// <summary>
         ///     Get the count of assets:
@@ -91,7 +98,7 @@ namespace QuantConnect.Data
             bool isCustomData = false,
             bool fillForward = true,
             bool extendedMarketHours = false
-            )
+        )
         {
             //Set the type: market data only comes in two forms -- ticks(trade by trade) or tradebar(time summaries)
             var dataType = typeof(TradeBar);
@@ -100,9 +107,21 @@ namespace QuantConnect.Data
                 dataType = typeof(Tick);
             }
 
-            var tickType = LeanData.GetCommonTickTypeForCommonDataTypes(dataType, symbol.SecurityType);
-            return Add(dataType, tickType, symbol, resolution, timeZone, exchangeTimeZone, isCustomData, fillForward,
-                extendedMarketHours);
+            var tickType = LeanData.GetCommonTickTypeForCommonDataTypes(
+                dataType,
+                symbol.SecurityType
+            );
+            return Add(
+                dataType,
+                tickType,
+                symbol,
+                resolution,
+                timeZone,
+                exchangeTimeZone,
+                isCustomData,
+                fillForward,
+                extendedMarketHours
+            );
         }
 
         /// <summary>
@@ -145,12 +164,24 @@ namespace QuantConnect.Data
             bool isInternalFeed = false,
             bool isFilteredSubscription = true,
             DataNormalizationMode dataNormalizationMode = DataNormalizationMode.Adjusted
-            )
+        )
         {
-            return SubscriptionDataConfigService.Add(symbol, resolution, fillForward,
-                extendedMarketHours, isFilteredSubscription, isInternalFeed, isCustomData,
-                new List<Tuple<Type, TickType>> { new Tuple<Type, TickType>(dataType, tickType) },
-                dataNormalizationMode).First();
+            return SubscriptionDataConfigService
+                .Add(
+                    symbol,
+                    resolution,
+                    fillForward,
+                    extendedMarketHours,
+                    isFilteredSubscription,
+                    isInternalFeed,
+                    isCustomData,
+                    new List<Tuple<Type, TickType>>
+                    {
+                        new Tuple<Type, TickType>(dataType, tickType)
+                    },
+                    dataNormalizationMode
+                )
+                .First();
         }
 
         /// <summary>
@@ -159,7 +190,11 @@ namespace QuantConnect.Data
         /// <param name="symbol">Symbol of the asset to consolidate</param>
         /// <param name="consolidator">The consolidator</param>
         /// <param name="tickType">Desired tick type for the subscription</param>
-        public void AddConsolidator(Symbol symbol, IDataConsolidator consolidator, TickType? tickType = null)
+        public void AddConsolidator(
+            Symbol symbol,
+            IDataConsolidator consolidator,
+            TickType? tickType = null
+        )
         {
             // Find the right subscription and add the consolidator to it
             var subscriptions = Subscriptions.Where(x => x.Symbol == symbol).ToList();
@@ -167,8 +202,10 @@ namespace QuantConnect.Data
             if (subscriptions.Count == 0)
             {
                 // If we made it here it is because we never found the symbol in the subscription list
-                throw new ArgumentException("Please subscribe to this symbol before adding a consolidator for it. Symbol: " +
-                    symbol.Value);
+                throw new ArgumentException(
+                    "Please subscribe to this symbol before adding a consolidator for it. Symbol: "
+                        + symbol.Value
+                );
             }
 
             foreach (var subscription in subscriptions)
@@ -178,8 +215,12 @@ namespace QuantConnect.Data
                 {
                     subscription.Consolidators.Add(consolidator);
 
-                    var wrapper = _consolidators[consolidator] =
-                        new ConsolidatorWrapper(consolidator, subscription.Increment, _timeKeeper, _timeKeeper.GetLocalTimeKeeper(subscription.ExchangeTimeZone));
+                    var wrapper = _consolidators[consolidator] = new ConsolidatorWrapper(
+                        consolidator,
+                        subscription.Increment,
+                        _timeKeeper,
+                        _timeKeeper.GetLocalTimeKeeper(subscription.ExchangeTimeZone)
+                    );
 
                     _consolidatorsSortedByScanTime.Enqueue(wrapper, wrapper.Priority);
                     return;
@@ -189,12 +230,18 @@ namespace QuantConnect.Data
             string tickTypeException = null;
             if (tickType != null && !subscriptions.Where(x => x.TickType == tickType).Any())
             {
-                tickTypeException = $"No subscription with the requested Tick Type {tickType} was found. Available Tick Types: {string.Join(", ", subscriptions.Select(x => x.TickType))}";
+                tickTypeException =
+                    $"No subscription with the requested Tick Type {tickType} was found. Available Tick Types: {string.Join(", ", subscriptions.Select(x => x.TickType))}";
             }
 
-            throw new ArgumentException(tickTypeException ?? ("Type mismatch found between consolidator and symbol. " +
-                $"Symbol: {symbol.Value} does not support input type: {consolidator.InputType.Name}. " +
-                $"Supported types: {string.Join(",", subscriptions.Select(x => x.Type.Name))}."));
+            throw new ArgumentException(
+                tickTypeException
+                    ?? (
+                        "Type mismatch found between consolidator and symbol. "
+                        + $"Symbol: {symbol.Value} does not support input type: {consolidator.InputType.Name}. "
+                        + $"Supported types: {string.Join(",", subscriptions.Select(x => x.Type.Name))}."
+                    )
+            );
         }
 
         /// <summary>
@@ -260,7 +307,10 @@ namespace QuantConnect.Data
         /// <param name="algorithm">The algorithm instance</param>
         public void ScanPastConsolidators(DateTime newUtcTime, IAlgorithm algorithm)
         {
-            while (_consolidatorsSortedByScanTime.TryPeek(out _, out var priority) && priority.UtcScanTime < newUtcTime)
+            while (
+                _consolidatorsSortedByScanTime.TryPeek(out _, out var priority)
+                && priority.UtcScanTime < newUtcTime
+            )
             {
                 var consolidatorToScan = _consolidatorsSortedByScanTime.Dequeue();
                 if (consolidatorToScan.Disposed)
@@ -281,7 +331,10 @@ namespace QuantConnect.Data
                     consolidatorToScan.Scan();
                 }
 
-                _consolidatorsSortedByScanTime.Enqueue(consolidatorToScan, consolidatorToScan.Priority);
+                _consolidatorsSortedByScanTime.Enqueue(
+                    consolidatorToScan,
+                    consolidatorToScan.Priority
+                );
             }
         }
 
@@ -292,18 +345,54 @@ namespace QuantConnect.Data
         {
             return new Dictionary<SecurityType, List<TickType>>
             {
-                {SecurityType.Base, new List<TickType> {TickType.Trade}},
-                {SecurityType.Index, new List<TickType> {TickType.Trade}},
-                {SecurityType.Forex, new List<TickType> {TickType.Quote}},
-                {SecurityType.Equity, new List<TickType> {TickType.Trade, TickType.Quote}},
-                {SecurityType.Option, new List<TickType> {TickType.Quote, TickType.Trade, TickType.OpenInterest}},
-                {SecurityType.FutureOption, new List<TickType> {TickType.Quote, TickType.Trade, TickType.OpenInterest}},
-                {SecurityType.IndexOption, new List<TickType> {TickType.Quote, TickType.Trade, TickType.OpenInterest}},
-                {SecurityType.Cfd, new List<TickType> {TickType.Quote}},
-                {SecurityType.Future, new List<TickType> {TickType.Quote, TickType.Trade, TickType.OpenInterest}},
-                {SecurityType.Commodity, new List<TickType> {TickType.Trade}},
-                {SecurityType.Crypto, new List<TickType> {TickType.Trade, TickType.Quote}},
-                {SecurityType.CryptoFuture, new List<TickType> {TickType.Trade, TickType.Quote}}
+                {
+                    SecurityType.Base,
+                    new List<TickType> { TickType.Trade }
+                },
+                {
+                    SecurityType.Index,
+                    new List<TickType> { TickType.Trade }
+                },
+                {
+                    SecurityType.Forex,
+                    new List<TickType> { TickType.Quote }
+                },
+                {
+                    SecurityType.Equity,
+                    new List<TickType> { TickType.Trade, TickType.Quote }
+                },
+                {
+                    SecurityType.Option,
+                    new List<TickType> { TickType.Quote, TickType.Trade, TickType.OpenInterest }
+                },
+                {
+                    SecurityType.FutureOption,
+                    new List<TickType> { TickType.Quote, TickType.Trade, TickType.OpenInterest }
+                },
+                {
+                    SecurityType.IndexOption,
+                    new List<TickType> { TickType.Quote, TickType.Trade, TickType.OpenInterest }
+                },
+                {
+                    SecurityType.Cfd,
+                    new List<TickType> { TickType.Quote }
+                },
+                {
+                    SecurityType.Future,
+                    new List<TickType> { TickType.Quote, TickType.Trade, TickType.OpenInterest }
+                },
+                {
+                    SecurityType.Commodity,
+                    new List<TickType> { TickType.Trade }
+                },
+                {
+                    SecurityType.Crypto,
+                    new List<TickType> { TickType.Trade, TickType.Quote }
+                },
+                {
+                    SecurityType.CryptoFuture,
+                    new List<TickType> { TickType.Trade, TickType.Quote }
+                }
             };
         }
 
@@ -326,9 +415,13 @@ namespace QuantConnect.Data
             SecurityType symbolSecurityType,
             Resolution resolution,
             bool isCanonical
-            )
+        )
         {
-            return _subscriptionManager.LookupSubscriptionConfigDataTypes(symbolSecurityType, resolution, isCanonical);
+            return _subscriptionManager.LookupSubscriptionConfigDataTypes(
+                symbolSecurityType,
+                resolution,
+                isCanonical
+            );
         }
 
         /// <summary>
@@ -346,16 +439,23 @@ namespace QuantConnect.Data
         /// <param name="consolidator">The consolidator</param>
         /// <param name="desiredTickType">The desired tick type for the subscription. If not given is null.</param>
         /// <returns>true if the subscription is valid for the consolidator</returns>
-        public static bool IsSubscriptionValidForConsolidator(SubscriptionDataConfig subscription, IDataConsolidator consolidator, TickType? desiredTickType = null)
+        public static bool IsSubscriptionValidForConsolidator(
+            SubscriptionDataConfig subscription,
+            IDataConsolidator consolidator,
+            TickType? desiredTickType = null
+        )
         {
-            if (subscription.Type == typeof(Tick) &&
-                LeanData.IsCommonLeanDataType(consolidator.OutputType))
+            if (
+                subscription.Type == typeof(Tick)
+                && LeanData.IsCommonLeanDataType(consolidator.OutputType)
+            )
             {
                 if (desiredTickType == null)
                 {
                     var tickType = LeanData.GetCommonTickTypeForCommonDataTypes(
-                    consolidator.OutputType,
-                    subscription.Symbol.SecurityType);
+                        consolidator.OutputType,
+                        subscription.Symbol.SecurityType
+                    );
 
                     return subscription.TickType == tickType;
                 }
@@ -380,7 +480,11 @@ namespace QuantConnect.Data
             switch (data.Symbol.SecurityType)
             {
                 case SecurityType.Equity:
-                    if (data.DataType == MarketDataType.QuoteBar || data.DataType == MarketDataType.Tick && (data as Tick).TickType == TickType.Quote)
+                    if (
+                        data.DataType == MarketDataType.QuoteBar
+                        || data.DataType == MarketDataType.Tick
+                            && (data as Tick).TickType == TickType.Quote
+                    )
                     {
                         return false;
                     }

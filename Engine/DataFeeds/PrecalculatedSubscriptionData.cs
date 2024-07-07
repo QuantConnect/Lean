@@ -13,8 +13,8 @@
  * limitations under the License.
 */
 
-using QuantConnect.Data;
 using System;
+using QuantConnect.Data;
 
 namespace QuantConnect.Lean.Engine.DataFeeds
 {
@@ -44,9 +44,11 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                 }
                 else
                 {
-                    throw new ArgumentException($"DataNormalizationMode.{_config.DataNormalizationMode} was requested for " 
-                                                + $"symbol {_data.Symbol} but only {_mode} and Raw DataNormalizationMode are available. " 
-                                                + "Please configure the desired DataNormalizationMode initially when adding the Symbol");
+                    throw new ArgumentException(
+                        $"DataNormalizationMode.{_config.DataNormalizationMode} was requested for "
+                            + $"symbol {_data.Symbol} but only {_mode} and Raw DataNormalizationMode are available. "
+                            + "Please configure the desired DataNormalizationMode initially when adding the Symbol"
+                    );
                 }
             }
         }
@@ -59,7 +61,13 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         /// <param name="normalizedData">The normalized calculated based on raw data</param>
         /// <param name="normalizationMode">Specifies how data is normalized</param>
         /// <param name="emitTimeUtc">The emit time for the data</param>
-        public PrecalculatedSubscriptionData(SubscriptionDataConfig configuration, BaseData rawData, BaseData normalizedData, DataNormalizationMode normalizationMode, DateTime emitTimeUtc)
+        public PrecalculatedSubscriptionData(
+            SubscriptionDataConfig configuration,
+            BaseData rawData,
+            BaseData normalizedData,
+            DataNormalizationMode normalizationMode,
+            DateTime emitTimeUtc
+        )
             : base(rawData, emitTimeUtc)
         {
             _config = configuration;

@@ -15,14 +15,14 @@
 */
 
 using System;
-using System.Linq;
-using Python.Runtime;
 using System.Collections.Generic;
-using QuantConnect.Data.Fundamental;
-using System.Text.RegularExpressions;
-using QuantConnect.Data.UniverseSelection;
-using System.IO;
 using System.Globalization;
+using System.IO;
+using System.Linq;
+using System.Text.RegularExpressions;
+using Python.Runtime;
+using QuantConnect.Data.Fundamental;
+using QuantConnect.Data.UniverseSelection;
 
 namespace QuantConnect.Util
 {
@@ -32,8 +32,13 @@ namespace QuantConnect.Util
     public class PythonUtil
     {
         private static Regex LineRegex = new Regex("line (\\d+)", RegexOptions.Compiled);
-        private static Regex StackTraceFileLineRegex = new Regex("\"(.+)\", line (\\d+), in (.+)", RegexOptions.Compiled | RegexOptions.Singleline);
-        private static readonly Lazy<dynamic> lazyInspect = new Lazy<dynamic>(() => Py.Import("inspect"));
+        private static Regex StackTraceFileLineRegex = new Regex(
+            "\"(.+)\", line (\\d+), in (.+)",
+            RegexOptions.Compiled | RegexOptions.Singleline
+        );
+        private static readonly Lazy<dynamic> lazyInspect = new Lazy<dynamic>(
+            () => Py.Import("inspect")
+        );
 
         /// <summary>
         /// The python exception stack trace line shift to use
@@ -77,7 +82,8 @@ namespace QuantConnect.Util
                     return null;
                 }
                 dynamic method = GetModule().GetAttr("to_action2");
-                return method(pyObject, typeof(T1), typeof(T2)).AsManagedObject(typeof(Action<T1, T2>));
+                return method(pyObject, typeof(T1), typeof(T2))
+                    .AsManagedObject(typeof(Action<T1, T2>));
             }
         }
 
@@ -98,7 +104,8 @@ namespace QuantConnect.Util
                     return null;
                 }
                 dynamic method = GetModule().GetAttr("to_func1");
-                return method(pyObject, typeof(T1), typeof(T2)).AsManagedObject(typeof(Func<T1, T2>));
+                return method(pyObject, typeof(T1), typeof(T2))
+                    .AsManagedObject(typeof(Func<T1, T2>));
             }
         }
 
@@ -120,7 +127,8 @@ namespace QuantConnect.Util
                     return null;
                 }
                 dynamic method = GetModule().GetAttr("to_func2");
-                return method(pyObject, typeof(T1), typeof(T2), typeof(T3)).AsManagedObject(typeof(Func<T1, T2, T3>));
+                return method(pyObject, typeof(T1), typeof(T2), typeof(T3))
+                    .AsManagedObject(typeof(Func<T1, T2, T3>));
             }
         }
 
@@ -129,14 +137,19 @@ namespace QuantConnect.Util
         /// </summary>
         /// <param name="pyObject">The python method</param>
         /// <returns>A <see cref="Func{T, TResult}"/> (parameter is <see cref="IEnumerable{CoarseFundamental}"/>, return value is <see cref="IEnumerable{Symbol}"/>) that encapsulates the python method</returns>
-        public static Func<IEnumerable<CoarseFundamental>, IEnumerable<Symbol>> ToCoarseFundamentalSelector(PyObject pyObject)
+        public static Func<
+            IEnumerable<CoarseFundamental>,
+            IEnumerable<Symbol>
+        > ToCoarseFundamentalSelector(PyObject pyObject)
         {
             var selector = ToFunc<IEnumerable<CoarseFundamental>, Symbol[]>(pyObject);
             if (selector == null)
             {
                 using (Py.GIL())
                 {
-                    throw new ArgumentException($"{pyObject.Repr()} is not a valid coarse fundamental universe selector method.");
+                    throw new ArgumentException(
+                        $"{pyObject.Repr()} is not a valid coarse fundamental universe selector method."
+                    );
                 }
             }
             return selector;
@@ -147,14 +160,19 @@ namespace QuantConnect.Util
         /// </summary>
         /// <param name="pyObject">The python method</param>
         /// <returns>A <see cref="Func{T, TResult}"/> (parameter is <see cref="IEnumerable{FineFundamental}"/>, return value is <see cref="IEnumerable{Symbol}"/>) that encapsulates the python method</returns>
-        public static Func<IEnumerable<FineFundamental>, IEnumerable<Symbol>> ToFineFundamentalSelector(PyObject pyObject)
+        public static Func<
+            IEnumerable<FineFundamental>,
+            IEnumerable<Symbol>
+        > ToFineFundamentalSelector(PyObject pyObject)
         {
             var selector = ToFunc<IEnumerable<FineFundamental>, Symbol[]>(pyObject);
             if (selector == null)
             {
                 using (Py.GIL())
                 {
-                    throw new ArgumentException($"{pyObject.Repr()} is not a valid fine fundamental universe selector method.");
+                    throw new ArgumentException(
+                        $"{pyObject.Repr()} is not a valid fine fundamental universe selector method."
+                    );
                 }
             }
             return selector;
@@ -167,7 +185,8 @@ namespace QuantConnect.Util
         /// <returns>String with relevant part of the stacktrace</returns>
         public static string PythonExceptionParser(PythonException pythonException)
         {
-            return PythonExceptionMessageParser(pythonException.Message) + PythonExceptionStackParser(pythonException.StackTrace);
+            return PythonExceptionMessageParser(pythonException.Message)
+                + PythonExceptionStackParser(pythonException.StackTrace);
         }
 
         /// <summary>
@@ -183,12 +202,22 @@ namespace QuantConnect.Util
                 foreach (Match lineCapture in match.Captures)
                 {
                     var newLineNumber = int.Parse(lineCapture.Groups[1].Value) + ExceptionLineShift;
-                    message = Regex.Replace(message, lineCapture.ToString(), $"line {newLineNumber}");
+                    message = Regex.Replace(
+                        message,
+                        lineCapture.ToString(),
+                        $"line {newLineNumber}"
+                    );
                 }
             }
-            else if (message.Contains(" value cannot be converted to ", StringComparison.InvariantCulture))
+            else if (
+                message.Contains(
+                    " value cannot be converted to ",
+                    StringComparison.InvariantCulture
+                )
+            )
             {
-                message += ": This error is often encountered when assigning to a member defined in the base QCAlgorithm class. For example, self.universe conflicts with 'QCAlgorithm.Universe' but can be fixed by prefixing private variables with an underscore, self._universe.";
+                message +=
+                    ": This error is often encountered when assigning to a member defined in the base QCAlgorithm class. For example, self.universe conflicts with 'QCAlgorithm.Universe' but can be fixed by prefixing private variables with an underscore, self._universe.";
             }
 
             return message;
@@ -212,7 +241,8 @@ namespace QuantConnect.Util
             var neededStackTrace = endIndex > 0 ? value.Substring(0, endIndex) : value;
 
             // The stack trace is separated in blocks by file
-            var blocks = neededStackTrace.Split("  File ", StringSplitOptions.RemoveEmptyEntries)
+            var blocks = neededStackTrace
+                .Split("  File ", StringSplitOptions.RemoveEmptyEntries)
                 .Select(fileTrace =>
                 {
                     var trimedTrace = fileTrace.Trim();
@@ -230,14 +260,19 @@ namespace QuantConnect.Util
                     var capture = match.Captures[0] as Match;
 
                     var filePath = capture.Groups[1].Value;
-                    var lastFileSeparatorIndex = Math.Max(filePath.LastIndexOf('/'), filePath.LastIndexOf('\\'));
+                    var lastFileSeparatorIndex = Math.Max(
+                        filePath.LastIndexOf('/'),
+                        filePath.LastIndexOf('\\')
+                    );
                     if (lastFileSeparatorIndex < 0)
                     {
                         return string.Empty;
                     }
 
                     var fileName = filePath.Substring(lastFileSeparatorIndex + 1);
-                    var lineNumber = int.Parse(capture.Groups[2].Value, CultureInfo.InvariantCulture) + ExceptionLineShift;
+                    var lineNumber =
+                        int.Parse(capture.Groups[2].Value, CultureInfo.InvariantCulture)
+                        + ExceptionLineShift;
                     var locationAndInfo = capture.Groups[3].Value.Trim();
 
                     return $"  at {locationAndInfo}{Environment.NewLine} in {fileName}: line {lineNumber}";
@@ -293,18 +328,20 @@ namespace QuantConnect.Util
         /// <returns>PyObject with a python module</returns>
         private static PyObject GetModule()
         {
-            return PyModule.FromString("x",
-                "from clr import AddReference\n" +
-                "AddReference(\"System\")\n" +
-                "from System import Action, Func\n" +
-                "def to_action1(pyobject, t1):\n" +
-                "    return Action[t1](pyobject)\n" +
-                "def to_action2(pyobject, t1, t2):\n" +
-                "    return Action[t1, t2](pyobject)\n" +
-                "def to_func1(pyobject, t1, t2):\n" +
-                "    return Func[t1, t2](pyobject)\n" +
-                "def to_func2(pyobject, t1, t2, t3):\n" +
-                "    return Func[t1, t2, t3](pyobject)");
+            return PyModule.FromString(
+                "x",
+                "from clr import AddReference\n"
+                    + "AddReference(\"System\")\n"
+                    + "from System import Action, Func\n"
+                    + "def to_action1(pyobject, t1):\n"
+                    + "    return Action[t1](pyobject)\n"
+                    + "def to_action2(pyobject, t1, t2):\n"
+                    + "    return Action[t1, t2](pyobject)\n"
+                    + "def to_func1(pyobject, t1, t2):\n"
+                    + "    return Func[t1, t2](pyobject)\n"
+                    + "def to_func2(pyobject, t1, t2, t3):\n"
+                    + "    return Func[t1, t2, t3](pyobject)"
+            );
         }
 
         /// <summary>
@@ -330,14 +367,20 @@ namespace QuantConnect.Util
                         symbolsList = new List<Symbol>();
                         foreach (var stringSymbol in symbolsStringList)
                         {
-                            symbol = QuantConnect.Symbol.Create(stringSymbol, SecurityType.Equity, Market.USA);
+                            symbol = QuantConnect.Symbol.Create(
+                                stringSymbol,
+                                SecurityType.Equity,
+                                Market.USA
+                            );
                             symbolsList.Add(symbol);
                         }
                     }
                     //Try converting it to list of symbols, if it fails throw exception
                     else if (!input.TryConvert(out symbolsList))
                     {
-                        throw new ArgumentException($"Cannot convert list {input.Repr()} to symbols");
+                        throw new ArgumentException(
+                            $"Cannot convert list {input.Repr()} to symbols"
+                        );
                     }
                 }
                 else
@@ -346,7 +389,11 @@ namespace QuantConnect.Util
                     string symbolString;
                     if (PyString.IsStringType(input) && input.TryConvert(out symbolString))
                     {
-                        symbol = QuantConnect.Symbol.Create(symbolString, SecurityType.Equity, Market.USA);
+                        symbol = QuantConnect.Symbol.Create(
+                            symbolString,
+                            SecurityType.Equity,
+                            Market.USA
+                        );
                         symbolsList = new List<Symbol> { symbol };
                     }
                     else if (input.TryConvert(out symbol))
@@ -355,7 +402,9 @@ namespace QuantConnect.Util
                     }
                     else
                     {
-                        throw new ArgumentException($"Cannot convert object {input.Repr()} to symbol");
+                        throw new ArgumentException(
+                            $"Cannot convert object {input.Repr()} to symbol"
+                        );
                     }
                 }
             }

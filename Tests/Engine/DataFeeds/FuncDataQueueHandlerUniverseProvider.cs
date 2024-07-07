@@ -25,7 +25,9 @@ namespace QuantConnect.Tests.Engine.DataFeeds
     /// Provides an implementation of <see cref="IDataQueueHandler"/> and <see cref="IDataQueueUniverseProvider"/>
     /// that can be specified via functions
     /// </summary>
-    public class FuncDataQueueHandlerUniverseProvider : FuncDataQueueHandler, IDataQueueUniverseProvider
+    public class FuncDataQueueHandlerUniverseProvider
+        : FuncDataQueueHandler,
+            IDataQueueUniverseProvider
     {
         private readonly Func<Symbol, bool, string, IEnumerable<Symbol>> _lookupSymbolsFunction;
         private readonly Func<bool> _canPerformSelectionFunction;
@@ -41,7 +43,9 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             Func<FuncDataQueueHandler, IEnumerable<BaseData>> getNextTicksFunction,
             Func<Symbol, bool, string, IEnumerable<Symbol>> lookupSymbolsFunction,
             Func<bool> canPerformSelectionFunction,
-            ITimeProvider timeProvider, IAlgorithmSettings algorithmSettings)
+            ITimeProvider timeProvider,
+            IAlgorithmSettings algorithmSettings
+        )
             : base(getNextTicksFunction, timeProvider, algorithmSettings)
         {
             _lookupSymbolsFunction = lookupSymbolsFunction;
@@ -55,7 +59,11 @@ namespace QuantConnect.Tests.Engine.DataFeeds
         /// <param name="includeExpired">Include expired contracts</param>
         /// <param name="securityCurrency">Expected security currency(if any)</param>
         /// <returns></returns>
-        public IEnumerable<Symbol> LookupSymbols(Symbol symbol, bool includeExpired, string securityCurrency = null)
+        public IEnumerable<Symbol> LookupSymbols(
+            Symbol symbol,
+            bool includeExpired,
+            string securityCurrency = null
+        )
         {
             return _lookupSymbolsFunction(symbol, includeExpired, securityCurrency);
         }

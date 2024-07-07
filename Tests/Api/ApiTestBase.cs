@@ -13,14 +13,14 @@
  * limitations under the License.
 */
 
-using NUnit.Framework;
-using QuantConnect.Api;
-using QuantConnect.Configuration;
-using QuantConnect.Logging;
 using System;
 using System.Collections;
 using System.IO;
 using System.Threading;
+using NUnit.Framework;
+using QuantConnect.Api;
+using QuantConnect.Configuration;
+using QuantConnect.Logging;
 
 namespace QuantConnect.Tests.API
 {
@@ -68,8 +68,11 @@ namespace QuantConnect.Tests.API
         {
             // Create a new project and backtest that can be used for testing
             Log.Debug("ApiTestBase.Setup(): Creating test project and backtest");
-            var createProjectResult = ApiClient.CreateProject($"TestProject{DateTime.UtcNow.ToStringInvariant("yyyyMMddHHmmssfff")}",
-                Language.CSharp, TestOrganization);
+            var createProjectResult = ApiClient.CreateProject(
+                $"TestProject{DateTime.UtcNow.ToStringInvariant("yyyyMMddHHmmssfff")}",
+                Language.CSharp,
+                TestOrganization
+            );
             if (!createProjectResult.Success)
             {
                 Assert.Warn("Could not create test project, tests using it will fail.");
@@ -82,31 +85,43 @@ namespace QuantConnect.Tests.API
             var compile = ApiClient.CreateCompile(TestProject.ProjectId);
             if (!compile.Success)
             {
-                Assert.Warn("Could not create compile for the test project, tests using it will fail.");
+                Assert.Warn(
+                    "Could not create compile for the test project, tests using it will fail."
+                );
                 return;
             }
             Log.Debug("ApiTestBase.Setup(): Waiting for test compile to complete");
             compile = WaitForCompilerResponse(TestProject.ProjectId, compile.CompileId);
             if (!compile.Success)
             {
-                Assert.Warn("Could not create compile for the test project, tests using it will fail.");
+                Assert.Warn(
+                    "Could not create compile for the test project, tests using it will fail."
+                );
                 return;
             }
 
             // Create a backtest
             Log.Debug("ApiTestBase.Setup(): Creating test backtest");
             var backtestName = $"{DateTime.UtcNow.ToStringInvariant("u")} API Backtest";
-            var backtest = ApiClient.CreateBacktest(TestProject.ProjectId, compile.CompileId, backtestName);
+            var backtest = ApiClient.CreateBacktest(
+                TestProject.ProjectId,
+                compile.CompileId,
+                backtestName
+            );
             if (!backtest.Success)
             {
-                Assert.Warn("Could not create backtest for the test project, tests using it will fail.");
+                Assert.Warn(
+                    "Could not create backtest for the test project, tests using it will fail."
+                );
                 return;
             }
             Log.Debug("ApiTestBase.Setup(): Waiting for test backtest to complete");
             TestBacktest = WaitForBacktestCompletion(TestProject.ProjectId, backtest.BacktestId);
             if (!TestBacktest.Success)
             {
-                Assert.Warn("Could not create backtest for the test project, tests using it will fail.");
+                Assert.Warn(
+                    "Could not create backtest for the test project, tests using it will fail."
+                );
                 return;
             }
 
@@ -186,8 +201,13 @@ namespace QuantConnect.Tests.API
 
                 if (envKey.StartsWith("QC_", StringComparison.InvariantCulture))
                 {
-                    var key = envKey.Substring(3).Replace("_", "-", StringComparison.InvariantCulture).ToLowerInvariant();
-                    Log.Trace($"TestSetup(): Updating config setting '{key}' from environment var '{envKey}'");
+                    var key = envKey
+                        .Substring(3)
+                        .Replace("_", "-", StringComparison.InvariantCulture)
+                        .ToLowerInvariant();
+                    Log.Trace(
+                        $"TestSetup(): Updating config setting '{key}' from environment var '{envKey}'"
+                    );
                     Config.Set(key, value);
                 }
             }

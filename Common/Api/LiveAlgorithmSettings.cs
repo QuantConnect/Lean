@@ -54,7 +54,8 @@ namespace QuantConnect.Api
             string version = "-1",
             Dictionary<string, object> dataProviders = null,
             Dictionary<string, string> parameters = null,
-            Dictionary<string, List<string>> notification = null)
+            Dictionary<string, List<string>> notification = null
+        )
         {
             VersionId = version;
             ProjectId = projectId;
@@ -67,10 +68,12 @@ namespace QuantConnect.Api
                 { "id", "QuantConnectBrokerage" },
             };
 
-            DataProviders = dataProviders ?? new Dictionary<string, object>()
-            {
-                { "QuantConnectBrokerage", quantConnectDataProvider },
-            };
+            DataProviders =
+                dataProviders
+                ?? new Dictionary<string, object>()
+                {
+                    { "QuantConnectBrokerage", quantConnectDataProvider },
+                };
             Signature = CompileId.Split("-").LastOrDefault();
             Parameters = parameters ?? new Dictionary<string, string>();
             Notification = notification ?? new Dictionary<string, List<string>>();

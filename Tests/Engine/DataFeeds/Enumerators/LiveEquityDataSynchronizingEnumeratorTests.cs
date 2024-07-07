@@ -39,15 +39,34 @@ namespace QuantConnect.Tests.Engine.DataFeeds.Enumerators
             var end = start.AddSeconds(testTimeSeconds);
 
             var time = start;
-            var tickList1 = Enumerable.Range(0, 10).Select(x => new Tick { Time = time.AddSeconds(x * 1 + timeOffsetSeconds), Value = x }).ToList();
-            var tickList2 = Enumerable.Range(0, 5).Select(x => new Tick { Time = time.AddSeconds(x * 2 + timeOffsetSeconds), Value = x + 100 }).ToList();
+            var tickList1 = Enumerable
+                .Range(0, 10)
+                .Select(x => new Tick
+                {
+                    Time = time.AddSeconds(x * 1 + timeOffsetSeconds),
+                    Value = x
+                })
+                .ToList();
+            var tickList2 = Enumerable
+                .Range(0, 5)
+                .Select(x => new Tick
+                {
+                    Time = time.AddSeconds(x * 2 + timeOffsetSeconds),
+                    Value = x + 100
+                })
+                .ToList();
             var stream1 = tickList1.GetEnumerator();
             var stream2 = tickList2.GetEnumerator();
 
             var count1 = 0;
             var count2 = 0;
             var previous = DateTime.MinValue;
-            var synchronizer = new LiveAuxiliaryDataSynchronizingEnumerator(new RealTimeProvider(), DateTimeZone.Utc, stream1, new List<IEnumerator<BaseData>> { stream2 });
+            var synchronizer = new LiveAuxiliaryDataSynchronizingEnumerator(
+                new RealTimeProvider(),
+                DateTimeZone.Utc,
+                stream1,
+                new List<IEnumerator<BaseData>> { stream2 }
+            );
             while (synchronizer.MoveNext() && DateTime.UtcNow < end)
             {
                 if (synchronizer.Current != null)
@@ -66,7 +85,9 @@ namespace QuantConnect.Tests.Engine.DataFeeds.Enumerators
                     Assert.That(synchronizer.Current.EndTime, Is.GreaterThanOrEqualTo(previous));
                     previous = synchronizer.Current.EndTime;
 
-                    Log.Trace($"Data point emitted: {synchronizer.Current.EndTime:O} - {synchronizer.Current}");
+                    Log.Trace(
+                        $"Data point emitted: {synchronizer.Current.EndTime:O} - {synchronizer.Current}"
+                    );
                 }
             }
 

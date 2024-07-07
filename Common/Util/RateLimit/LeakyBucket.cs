@@ -42,7 +42,11 @@ namespace QuantConnect.Util.RateLimit
         public long AvailableTokens
         {
             // synchronized read w/ the modification of available tokens in TryConsume
-            get { lock (_sync) return _available; }
+            get
+            {
+                lock (_sync)
+                    return _available;
+            }
         }
 
         /// <summary>
@@ -55,11 +59,15 @@ namespace QuantConnect.Util.RateLimit
         /// <param name="refillAmount">The number of tokens to add to the bucket each <paramref name="refillInterval"/></param>
         /// <param name="refillInterval">The interval which after passing more tokens are added to the bucket</param>
         public LeakyBucket(long capacity, long refillAmount, TimeSpan refillInterval)
-            : this(capacity, ThreadSleepStrategy.Sleeping(1),
-                new FixedIntervalRefillStrategy(RealTimeProvider.Instance, refillAmount, refillInterval)
-            )
-        {
-        }
+            : this(
+                capacity,
+                ThreadSleepStrategy.Sleeping(1),
+                new FixedIntervalRefillStrategy(
+                    RealTimeProvider.Instance,
+                    refillAmount,
+                    refillInterval
+                )
+            ) { }
 
         /// <summary>
         /// Initializes a new instance of the <see cref="LeakyBucket"/> class
@@ -71,7 +79,12 @@ namespace QuantConnect.Util.RateLimit
         /// back to the bucket each time consumption is attempted</param>
         /// <param name="timeProvider">Defines the <see cref="ITimeProvider"/> used to enforce timeouts when
         /// invoking <see cref="Consume"/></param>
-        public LeakyBucket(long capacity, ISleepStrategy sleep, IRefillStrategy refill, ITimeProvider timeProvider = null)
+        public LeakyBucket(
+            long capacity,
+            ISleepStrategy sleep,
+            IRefillStrategy refill,
+            ITimeProvider timeProvider = null
+        )
         {
             _sleep = sleep;
             _refill = refill;
@@ -92,9 +105,10 @@ namespace QuantConnect.Util.RateLimit
         {
             if (timeout < Timeout.Infinite)
             {
-                throw new ArgumentOutOfRangeException(nameof(timeout),
-                    "Invalid timeout. Use -1 for no timeout, 0 for immediate timeout and a positive number " +
-                    "of milliseconds to indicate a timeout. All other values are out of range."
+                throw new ArgumentOutOfRangeException(
+                    nameof(timeout),
+                    "Invalid timeout. Use -1 for no timeout, 0 for immediate timeout and a positive number "
+                        + "of milliseconds to indicate a timeout. All other values are out of range."
                 );
             }
 
@@ -114,7 +128,9 @@ namespace QuantConnect.Util.RateLimit
                     var elapsedMilliseconds = (currentTime - startTime).TotalMilliseconds;
                     if (elapsedMilliseconds > timeout)
                     {
-                        throw new TimeoutException("The operation timed out while waiting for the rate limit to be lifted.");
+                        throw new TimeoutException(
+                            "The operation timed out while waiting for the rate limit to be lifted."
+                        );
                     }
                 }
 
@@ -131,14 +147,16 @@ namespace QuantConnect.Util.RateLimit
         {
             if (tokens <= 0)
             {
-                throw new ArgumentOutOfRangeException(nameof(tokens),
+                throw new ArgumentOutOfRangeException(
+                    nameof(tokens),
                     "Number of tokens to consume must be positive"
                 );
             }
 
             if (tokens > Capacity)
             {
-                throw new ArgumentOutOfRangeException(nameof(tokens),
+                throw new ArgumentOutOfRangeException(
+                    nameof(tokens),
                     "Number of tokens to consume must be less than or equal to the capacity"
                 );
             }
@@ -157,16 +175,19 @@ namespace QuantConnect.Util.RateLimit
                 if (tokens > _available)
                 {
                     // we don't have enough tokens yet
-                    Logging.Log.Trace($"LeakyBucket.TryConsume({tokens}): Failed to consumed tokens. Available: {_available}");
+                    Logging.Log.Trace(
+                        $"LeakyBucket.TryConsume({tokens}): Failed to consumed tokens. Available: {_available}"
+                    );
                     return false;
                 }
 
                 // subtract the number of tokens consumed
                 _available = _available - tokens;
-                Logging.Log.Trace($"LeakyBucket.TryConsume({tokens}): Successfully consumed tokens. Available: {_available}");
+                Logging.Log.Trace(
+                    $"LeakyBucket.TryConsume({tokens}): Successfully consumed tokens. Available: {_available}"
+                );
                 return true;
             }
         }
-
     }
 }

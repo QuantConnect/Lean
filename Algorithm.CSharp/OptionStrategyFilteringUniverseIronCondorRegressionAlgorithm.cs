@@ -26,7 +26,8 @@ namespace QuantConnect.Algorithm.CSharp
     /// <summary>
     /// Regression algorithm of filtering with Iron Condor option strategy and asserting it's being detected by Lean and works as expected
     /// </summary>
-    public class OptionStrategyFilteringUniverseIronCondorRegressionAlgorithm : OptionStrategyFilteringUniverseBaseAlgorithm
+    public class OptionStrategyFilteringUniverseIronCondorRegressionAlgorithm
+        : OptionStrategyFilteringUniverseBaseAlgorithm
     {
         public override void Initialize()
         {
@@ -41,7 +42,9 @@ namespace QuantConnect.Algorithm.CSharp
             var count = chain.Count();
             if (count != ExpectedCount)
             {
-                throw new RegressionTestException($"Number of contract returned does not match expectation, {count}, {ExpectedCount}");
+                throw new RegressionTestException(
+                    $"Number of contract returned does not match expectation, {count}, {ExpectedCount}"
+                );
             }
 
             var farCallStrike = 757.50m;
@@ -50,34 +53,33 @@ namespace QuantConnect.Algorithm.CSharp
             var farPutStrike = 737.50m;
             var expiry = new DateTime(2016, 1, 22);
 
-            var farCall = chain.SingleOrDefault(x => 
-                x.Right == OptionRight.Call &&
-                x.Strike == farCallStrike &&
-                x.Expiry == expiry
+            var farCall = chain.SingleOrDefault(x =>
+                x.Right == OptionRight.Call && x.Strike == farCallStrike && x.Expiry == expiry
             );
             var nearCall = chain.SingleOrDefault(x =>
-                x.Right == OptionRight.Call &&
-                x.Strike == nearCallStrike &&
-                x.Expiry == expiry
+                x.Right == OptionRight.Call && x.Strike == nearCallStrike && x.Expiry == expiry
             );
             var nearPut = chain.SingleOrDefault(x =>
-                x.Right == OptionRight.Put &&
-                x.Strike == nearPutStrike &&
-                x.Expiry == expiry
+                x.Right == OptionRight.Put && x.Strike == nearPutStrike && x.Expiry == expiry
             );
             var farPut = chain.SingleOrDefault(x =>
-                x.Right == OptionRight.Put &&
-                x.Strike == farPutStrike &&
-                x.Expiry == expiry
+                x.Right == OptionRight.Put && x.Strike == farPutStrike && x.Expiry == expiry
             );
             if (farCall == null || nearCall == null || nearPut == null || farPut == null)
             {
                 throw new RegressionTestException($"No contract returned match condition");
             }
 
-            var strategy = OptionStrategies.IronCondor(OptionSymbol, farPutStrike, nearPutStrike, nearCallStrike, farCallStrike, expiry);
+            var strategy = OptionStrategies.IronCondor(
+                OptionSymbol,
+                farPutStrike,
+                nearPutStrike,
+                nearCallStrike,
+                farCallStrike,
+                expiry
+            );
             Buy(strategy, 1);
-            
+
             /* we can obtain the same result from market orders
             MarketOrder(farCall.Symbol, +1);
             MarketOrder(nearCall.Symbol, -1);
@@ -101,35 +103,36 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// This is used by the regression test system to indicate what the expected statistics are from running the algorithm
         /// </summary>
-        public override Dictionary<string, string> ExpectedStatistics => new Dictionary<string, string>
-        {
-            {"Total Orders", "4"},
-            {"Average Win", "0%"},
-            {"Average Loss", "0%"},
-            {"Compounding Annual Return", "0%"},
-            {"Drawdown", "0%"},
-            {"Expectancy", "0"},
-            {"Start Equity", "200000"},
-            {"End Equity", "199661"},
-            {"Net Profit", "0%"},
-            {"Sharpe Ratio", "0"},
-            {"Sortino Ratio", "0"},
-            {"Probabilistic Sharpe Ratio", "0%"},
-            {"Loss Rate", "0%"},
-            {"Win Rate", "0%"},
-            {"Profit-Loss Ratio", "0"},
-            {"Alpha", "0"},
-            {"Beta", "0"},
-            {"Annual Standard Deviation", "0"},
-            {"Annual Variance", "0"},
-            {"Information Ratio", "0"},
-            {"Tracking Error", "0"},
-            {"Treynor Ratio", "0"},
-            {"Total Fees", "$4.00"},
-            {"Estimated Strategy Capacity", "$3400000.00"},
-            {"Lowest Capacity Asset", "GOOCV 306JVPPH5QXMU|GOOCV VP83T1ZUHROL"},
-            {"Portfolio Turnover", "2.76%"},
-            {"OrderListHash", "5162055c872b1954d3c51d05391defc3"}
-        };
+        public override Dictionary<string, string> ExpectedStatistics =>
+            new Dictionary<string, string>
+            {
+                { "Total Orders", "4" },
+                { "Average Win", "0%" },
+                { "Average Loss", "0%" },
+                { "Compounding Annual Return", "0%" },
+                { "Drawdown", "0%" },
+                { "Expectancy", "0" },
+                { "Start Equity", "200000" },
+                { "End Equity", "199661" },
+                { "Net Profit", "0%" },
+                { "Sharpe Ratio", "0" },
+                { "Sortino Ratio", "0" },
+                { "Probabilistic Sharpe Ratio", "0%" },
+                { "Loss Rate", "0%" },
+                { "Win Rate", "0%" },
+                { "Profit-Loss Ratio", "0" },
+                { "Alpha", "0" },
+                { "Beta", "0" },
+                { "Annual Standard Deviation", "0" },
+                { "Annual Variance", "0" },
+                { "Information Ratio", "0" },
+                { "Tracking Error", "0" },
+                { "Treynor Ratio", "0" },
+                { "Total Fees", "$4.00" },
+                { "Estimated Strategy Capacity", "$3400000.00" },
+                { "Lowest Capacity Asset", "GOOCV 306JVPPH5QXMU|GOOCV VP83T1ZUHROL" },
+                { "Portfolio Turnover", "2.76%" },
+                { "OrderListHash", "5162055c872b1954d3c51d05391defc3" }
+            };
     }
 }

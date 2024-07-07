@@ -18,7 +18,9 @@ namespace QuantConnect.Indicators
     /// <summary>
     /// Represents the traditional simple moving average indicator (SMA)
     /// </summary>
-    public class SimpleMovingAverage : WindowIndicator<IndicatorDataPoint>, IIndicatorWarmUpPeriodProvider
+    public class SimpleMovingAverage
+        : WindowIndicator<IndicatorDataPoint>,
+            IIndicatorWarmUpPeriodProvider
     {
         /// <summary>
         /// A rolling sum for computing the average for the given period
@@ -55,9 +57,7 @@ namespace QuantConnect.Indicators
         /// </summary>
         /// <param name="period">The period of the SMA</param>
         public SimpleMovingAverage(int period)
-            : this($"SMA({period})", period)
-        {
-        }
+            : this($"SMA({period})", period) { }
 
         /// <summary>
         /// Computes the next value for this indicator from the given state.
@@ -65,7 +65,10 @@ namespace QuantConnect.Indicators
         /// <param name="window">The window of data held in this indicator</param>
         /// <param name="input">The input value to this indicator on this time step</param>
         /// <returns>A new value for this indicator</returns>
-        protected override decimal ComputeNextValue(IReadOnlyWindow<IndicatorDataPoint> window, IndicatorDataPoint input)
+        protected override decimal ComputeNextValue(
+            IReadOnlyWindow<IndicatorDataPoint> window,
+            IndicatorDataPoint input
+        )
         {
             RollingSum.Update(input.Time, input.Value);
             return RollingSum.Current.Value / window.Count;

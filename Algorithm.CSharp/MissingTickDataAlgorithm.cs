@@ -33,7 +33,8 @@ namespace QuantConnect.Algorithm.CSharp
 
             var start = new DateTime(2013, 10, 07, 15, 0, 0);
 
-            var slices = History(new[] { spy }, start, start.AddSeconds(10), Resolution.Tick).ToList();
+            var slices = History(new[] { spy }, start, start.AddSeconds(10), Resolution.Tick)
+                .ToList();
             var tickCountInSliceHistoryCall = slices.Sum(x => x.Ticks[spy].Count);
 
             var ticks = History<Tick>(spy, start, start.AddSeconds(10), Resolution.Tick).ToList();
@@ -41,8 +42,10 @@ namespace QuantConnect.Algorithm.CSharp
 
             if (tickCountInSliceHistoryCall != tickCountInTickHistoryCall)
             {
-                throw new RegressionTestException($@"Tick count mismatch in Slice and Tick history calls: History() returned {
-                    tickCountInSliceHistoryCall} ticks, while History<Tick>() returned {tickCountInTickHistoryCall} ticks");
+                throw new RegressionTestException(
+                    $@"Tick count mismatch in Slice and Tick history calls: History() returned {
+                    tickCountInSliceHistoryCall} ticks, while History<Tick>() returned {tickCountInTickHistoryCall} ticks"
+                );
             }
 
             // Early quit, we already tested what we wanted
@@ -77,35 +80,36 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// This is used by the regression test system to indicate what the expected statistics are from running the algorithm
         /// </summary>
-        public Dictionary<string, string> ExpectedStatistics => new Dictionary<string, string>
-        {
-            {"Total Orders", "0"},
-            {"Average Win", "0%"},
-            {"Average Loss", "0%"},
-            {"Compounding Annual Return", "0%"},
-            {"Drawdown", "0%"},
-            {"Expectancy", "0"},
-            {"Start Equity", "100000"},
-            {"End Equity", "100000"},
-            {"Net Profit", "0%"},
-            {"Sharpe Ratio", "0"},
-            {"Sortino Ratio", "0"},
-            {"Probabilistic Sharpe Ratio", "0%"},
-            {"Loss Rate", "0%"},
-            {"Win Rate", "0%"},
-            {"Profit-Loss Ratio", "0"},
-            {"Alpha", "0"},
-            {"Beta", "0"},
-            {"Annual Standard Deviation", "0"},
-            {"Annual Variance", "0"},
-            {"Information Ratio", "0"},
-            {"Tracking Error", "0"},
-            {"Treynor Ratio", "0"},
-            {"Total Fees", "$0.00"},
-            {"Estimated Strategy Capacity", "$0"},
-            {"Lowest Capacity Asset", ""},
-            {"Portfolio Turnover", "0%"},
-            {"OrderListHash", "d41d8cd98f00b204e9800998ecf8427e"}
-        };
+        public Dictionary<string, string> ExpectedStatistics =>
+            new Dictionary<string, string>
+            {
+                { "Total Orders", "0" },
+                { "Average Win", "0%" },
+                { "Average Loss", "0%" },
+                { "Compounding Annual Return", "0%" },
+                { "Drawdown", "0%" },
+                { "Expectancy", "0" },
+                { "Start Equity", "100000" },
+                { "End Equity", "100000" },
+                { "Net Profit", "0%" },
+                { "Sharpe Ratio", "0" },
+                { "Sortino Ratio", "0" },
+                { "Probabilistic Sharpe Ratio", "0%" },
+                { "Loss Rate", "0%" },
+                { "Win Rate", "0%" },
+                { "Profit-Loss Ratio", "0" },
+                { "Alpha", "0" },
+                { "Beta", "0" },
+                { "Annual Standard Deviation", "0" },
+                { "Annual Variance", "0" },
+                { "Information Ratio", "0" },
+                { "Tracking Error", "0" },
+                { "Treynor Ratio", "0" },
+                { "Total Fees", "$0.00" },
+                { "Estimated Strategy Capacity", "$0" },
+                { "Lowest Capacity Asset", "" },
+                { "Portfolio Turnover", "0%" },
+                { "OrderListHash", "d41d8cd98f00b204e9800998ecf8427e" }
+            };
     }
 }

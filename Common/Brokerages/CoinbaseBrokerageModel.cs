@@ -14,12 +14,12 @@
 */
 
 using System;
-using System.Linq;
-using QuantConnect.Orders;
-using QuantConnect.Securities;
-using QuantConnect.Benchmarks;
-using QuantConnect.Orders.Fees;
 using System.Collections.Generic;
+using System.Linq;
+using QuantConnect.Benchmarks;
+using QuantConnect.Orders;
+using QuantConnect.Orders.Fees;
+using QuantConnect.Securities;
 using QuantConnect.Util;
 
 namespace QuantConnect.Brokerages
@@ -36,28 +36,36 @@ namespace QuantConnect.Brokerages
         /// market structure update was applied, affecting the handling of historical data or simulations
         /// involving stop market orders. Details: https://blog.coinbase.com/coinbase-pro-market-structure-update-fbd9d49f43d7
         /// </summary>
-        private readonly DateTime _stopMarketOrderSupportEndDate = new DateTime(2019, 3, 23, 1, 0, 0);
+        private readonly DateTime _stopMarketOrderSupportEndDate = new DateTime(
+            2019,
+            3,
+            23,
+            1,
+            0,
+            0
+        );
 
         /// <summary>
         /// Notifies users that order updates are not supported by the current brokerage model.
         /// </summary>
-        private readonly BrokerageMessageEvent _message = new(BrokerageMessageType.Warning, 0, Messages.DefaultBrokerageModel.OrderUpdateNotSupported);
+        private readonly BrokerageMessageEvent _message =
+            new(
+                BrokerageMessageType.Warning,
+                0,
+                Messages.DefaultBrokerageModel.OrderUpdateNotSupported
+            );
 
         /// <summary>
         /// Represents a set of order types supported by the current brokerage model.
         /// </summary>
-        private readonly HashSet<OrderType> _supportedOrderTypes = new()
-        {
-            OrderType.Limit,
-            OrderType.Market,
-            OrderType.StopLimit,
-            OrderType.StopMarket
-        };
+        private readonly HashSet<OrderType> _supportedOrderTypes =
+            new() { OrderType.Limit, OrderType.Market, OrderType.StopLimit, OrderType.StopMarket };
 
         /// <summary>
         /// Gets a map of the default markets to be used for each security type
         /// </summary>
-        public override IReadOnlyDictionary<SecurityType, string> DefaultMarkets => GetDefaultMarkets(Market.Coinbase);
+        public override IReadOnlyDictionary<SecurityType, string> DefaultMarkets =>
+            GetDefaultMarkets(Market.Coinbase);
 
         /// <summary>
         /// Initializes a new instance of the <see cref="CoinbaseBrokerageModel"/> class
@@ -68,7 +76,10 @@ namespace QuantConnect.Brokerages
         {
             if (accountType == AccountType.Margin)
             {
-                throw new ArgumentException(Messages.CoinbaseBrokerageModel.UnsupportedAccountType, nameof(accountType));
+                throw new ArgumentException(
+                    Messages.CoinbaseBrokerageModel.UnsupportedAccountType,
+                    nameof(accountType)
+                );
             }
         }
 
@@ -113,39 +124,73 @@ namespace QuantConnect.Brokerages
         /// <param name="message">If this function returns false, a brokerage message detailing why the order may not be updated</param>
         /// <returns><c>true</c> if the brokerage supports updating orders; otherwise, <c>false</c>.</returns>
         /// <remarks>Coinbase: Only limit order types, with time in force type of good-till-cancelled can be edited.</remarks>
-        public override bool CanUpdateOrder(Security security, Order order, UpdateOrderRequest request, out BrokerageMessageEvent message)
+        public override bool CanUpdateOrder(
+            Security security,
+            Order order,
+            UpdateOrderRequest request,
+            out BrokerageMessageEvent message
+        )
         {
             if (order == null || security == null || request == null)
             {
                 var parameter = order == null ? nameof(order) : nameof(security);
-                throw new ArgumentNullException(parameter, $"{parameter} parameter cannot be null. Please provide a valid {parameter} for submission.");
+                throw new ArgumentNullException(
+                    parameter,
+                    $"{parameter} parameter cannot be null. Please provide a valid {parameter} for submission."
+                );
             }
 
             if (order.Type != OrderType.Limit)
             {
-                message = new BrokerageMessageEvent(BrokerageMessageType.Warning, "NotSupported", 
-                    $"Order with type {order.Type} can't be modified, only LIMIT.");
+                message = new BrokerageMessageEvent(
+                    BrokerageMessageType.Warning,
+                    "NotSupported",
+                    $"Order with type {order.Type} can't be modified, only LIMIT."
+                );
                 return false;
             }
 
             if (order.TimeInForce != TimeInForce.GoodTilCanceled)
             {
-                message = new BrokerageMessageEvent(BrokerageMessageType.Warning, "NotSupported", 
-                    $"Order's parameter 'TimeInForce' is not instance of Good Til Cancelled class.");
+                message = new BrokerageMessageEvent(
+                    BrokerageMessageType.Warning,
+                    "NotSupported",
+                    $"Order's parameter 'TimeInForce' is not instance of Good Til Cancelled class."
+                );
                 return false;
             }
 
-            if (order.Status is not (OrderStatus.New or OrderStatus.PartiallyFilled or OrderStatus.Submitted or OrderStatus.UpdateSubmitted))
+            if (
+                order.Status
+                is not (
+                    OrderStatus.New
+                    or OrderStatus.PartiallyFilled
+                    or OrderStatus.Submitted
+                    or OrderStatus.UpdateSubmitted
+                )
+            )
             {
-                message = new BrokerageMessageEvent(BrokerageMessageType.Warning, "NotSupported",
-                    $"Order with status {order.Status} can't be modified");
+                message = new BrokerageMessageEvent(
+                    BrokerageMessageType.Warning,
+                    "NotSupported",
+                    $"Order with status {order.Status} can't be modified"
+                );
                 return false;
             }
 
-            if (request.Quantity.HasValue && !IsOrderSizeLargeEnough(security, Math.Abs(request.Quantity.Value)))
+            if (
+                request.Quantity.HasValue
+                && !IsOrderSizeLargeEnough(security, Math.Abs(request.Quantity.Value))
+            )
             {
-                message = new BrokerageMessageEvent(BrokerageMessageType.Warning, "NotSupported",
-                    Messages.DefaultBrokerageModel.InvalidOrderQuantity(security, request.Quantity.Value));
+                message = new BrokerageMessageEvent(
+                    BrokerageMessageType.Warning,
+                    "NotSupported",
+                    Messages.DefaultBrokerageModel.InvalidOrderQuantity(
+                        security,
+                        request.Quantity.Value
+                    )
+                );
                 return false;
             }
 
@@ -160,14 +205,21 @@ namespace QuantConnect.Brokerages
         /// <param name="order">The order to be processed</param>
         /// <param name="message">If this function returns false, a brokerage message detailing why the order may not be submitted</param>
         /// <returns>True if the brokerage could process the order, false otherwise</returns>
-        public override bool CanSubmitOrder(Security security, Order order, out BrokerageMessageEvent message)
+        public override bool CanSubmitOrder(
+            Security security,
+            Order order,
+            out BrokerageMessageEvent message
+        )
         {
-            if(order == null || security == null)
+            if (order == null || security == null)
             {
                 var parameter = order == null ? nameof(order) : nameof(security);
-                throw new ArgumentNullException(parameter, $"{parameter} parameter cannot be null. Please provide a valid {parameter} for submission.");
+                throw new ArgumentNullException(
+                    parameter,
+                    $"{parameter} parameter cannot be null. Please provide a valid {parameter} for submission."
+                );
             }
-            
+
             if (order.BrokerId != null && order.BrokerId.Any())
             {
                 message = _message;
@@ -181,30 +233,48 @@ namespace QuantConnect.Brokerages
 
             if (security.Type != SecurityType.Crypto)
             {
-                message = new BrokerageMessageEvent(BrokerageMessageType.Warning, "NotSupported", 
-                    Messages.DefaultBrokerageModel.UnsupportedSecurityType(this, security));
+                message = new BrokerageMessageEvent(
+                    BrokerageMessageType.Warning,
+                    "NotSupported",
+                    Messages.DefaultBrokerageModel.UnsupportedSecurityType(this, security)
+                );
                 return false;
             }
 
             if (!_supportedOrderTypes.Contains(order.Type))
             {
-                message = new BrokerageMessageEvent(BrokerageMessageType.Warning, "NotSupported",
-                    Messages.DefaultBrokerageModel.UnsupportedOrderType(this, order, _supportedOrderTypes));
+                message = new BrokerageMessageEvent(
+                    BrokerageMessageType.Warning,
+                    "NotSupported",
+                    Messages.DefaultBrokerageModel.UnsupportedOrderType(
+                        this,
+                        order,
+                        _supportedOrderTypes
+                    )
+                );
                 return false;
             }
-            
+
             if (order.Type == OrderType.StopMarket && order.Time >= _stopMarketOrderSupportEndDate)
             {
-                message = new BrokerageMessageEvent(BrokerageMessageType.Warning, "NotSupported",
-                    Messages.CoinbaseBrokerageModel.StopMarketOrdersNoLongerSupported(_stopMarketOrderSupportEndDate));
+                message = new BrokerageMessageEvent(
+                    BrokerageMessageType.Warning,
+                    "NotSupported",
+                    Messages.CoinbaseBrokerageModel.StopMarketOrdersNoLongerSupported(
+                        _stopMarketOrderSupportEndDate
+                    )
+                );
 
                 return false;
             }
 
             if (!IsOrderSizeLargeEnough(security, Math.Abs(order.Quantity)))
             {
-                message = new BrokerageMessageEvent(BrokerageMessageType.Warning, "NotSupported",
-                    Messages.DefaultBrokerageModel.InvalidOrderQuantity(security, order.Quantity));
+                message = new BrokerageMessageEvent(
+                    BrokerageMessageType.Warning,
+                    "NotSupported",
+                    Messages.DefaultBrokerageModel.InvalidOrderQuantity(security, order.Quantity)
+                );
                 return false;
             }
 
@@ -232,8 +302,8 @@ namespace QuantConnect.Brokerages
         protected virtual bool IsOrderSizeLargeEnough(Security security, decimal orderQuantity)
         {
 #pragma warning disable CA1062
-            return !security!.SymbolProperties.MinimumOrderSize.HasValue ||
-                   orderQuantity >= security.SymbolProperties.MinimumOrderSize;
+            return !security!.SymbolProperties.MinimumOrderSize.HasValue
+                || orderQuantity >= security.SymbolProperties.MinimumOrderSize;
 #pragma warning restore CA1062
         }
 
@@ -244,7 +314,9 @@ namespace QuantConnect.Brokerages
         /// <returns>
         /// A read-only dictionary where the keys are <see cref="SecurityType"/> and the values are market names.
         /// </returns>
-        protected static IReadOnlyDictionary<SecurityType, string> GetDefaultMarkets(string marketName)
+        protected static IReadOnlyDictionary<SecurityType, string> GetDefaultMarkets(
+            string marketName
+        )
         {
             var map = DefaultMarketMap.ToDictionary();
             map[SecurityType.Crypto] = marketName;

@@ -13,6 +13,9 @@
  * limitations under the License.
 */
 
+using System;
+using System.Collections.Generic;
+using System.Linq;
 using QuantConnect.Algorithm.Framework.Alphas;
 using QuantConnect.Algorithm.Framework.Execution;
 using QuantConnect.Algorithm.Framework.Portfolio;
@@ -20,9 +23,6 @@ using QuantConnect.Algorithm.Framework.Risk;
 using QuantConnect.Algorithm.Framework.Selection;
 using QuantConnect.Data;
 using QuantConnect.Interfaces;
-using System;
-using System.Collections.Generic;
-using System.Linq;
 
 namespace QuantConnect.Algorithm.CSharp.Alphas
 {
@@ -44,13 +44,94 @@ namespace QuantConnect.Algorithm.CSharp.Alphas
             SetEndDate(2018, 8, 1);
             SetCash(100000);
 
-            var underlying = new List<string> { "SPY", "QLD", "DIA", "IJR", "MDY", "IWM", "QQQ", "IYE", "EEM", "IYW", "EFA", "GAZB", "SLV", "IEF", "IYM", "IYF", "IYH", "IYR", "IYC", "IBB", "FEZ", "USO", "TLT" };
-            var ultraLong = new List<string> { "SSO", "UGL", "DDM", "SAA", "MZZ", "UWM", "QLD", "DIG", "EET", "ROM", "EFO", "BOIL", "AGQ", "UST", "UYM", "UYG", "RXL", "URE", "UCC", "BIB", "ULE", "UCO", "UBT" };
-            var ultraShort = new List<string> { "SDS", "GLL", "DXD", "SDD", "MVV", "TWM", "QID", "DUG", "EEV", "REW", "EFU", "KOLD", "ZSL", "PST", "SMN", "SKF", "RXD", "SRS", "SCC", "BIS", "EPV", "SCO", "TBT" };
+            var underlying = new List<string>
+            {
+                "SPY",
+                "QLD",
+                "DIA",
+                "IJR",
+                "MDY",
+                "IWM",
+                "QQQ",
+                "IYE",
+                "EEM",
+                "IYW",
+                "EFA",
+                "GAZB",
+                "SLV",
+                "IEF",
+                "IYM",
+                "IYF",
+                "IYH",
+                "IYR",
+                "IYC",
+                "IBB",
+                "FEZ",
+                "USO",
+                "TLT"
+            };
+            var ultraLong = new List<string>
+            {
+                "SSO",
+                "UGL",
+                "DDM",
+                "SAA",
+                "MZZ",
+                "UWM",
+                "QLD",
+                "DIG",
+                "EET",
+                "ROM",
+                "EFO",
+                "BOIL",
+                "AGQ",
+                "UST",
+                "UYM",
+                "UYG",
+                "RXL",
+                "URE",
+                "UCC",
+                "BIB",
+                "ULE",
+                "UCO",
+                "UBT"
+            };
+            var ultraShort = new List<string>
+            {
+                "SDS",
+                "GLL",
+                "DXD",
+                "SDD",
+                "MVV",
+                "TWM",
+                "QID",
+                "DUG",
+                "EEV",
+                "REW",
+                "EFU",
+                "KOLD",
+                "ZSL",
+                "PST",
+                "SMN",
+                "SKF",
+                "RXD",
+                "SRS",
+                "SCC",
+                "BIS",
+                "EPV",
+                "SCO",
+                "TBT"
+            };
 
             for (var i = 0; i < underlying.Count; i++)
             {
-                Groups.Add(new ETFGroup(AddEquity(underlying[i]).Symbol, AddEquity(ultraLong[i]).Symbol, AddEquity(ultraShort[i]).Symbol));
+                Groups.Add(
+                    new ETFGroup(
+                        AddEquity(underlying[i]).Symbol,
+                        AddEquity(ultraLong[i]).Symbol,
+                        AddEquity(ultraShort[i]).Symbol
+                    )
+                );
             }
 
             // Manually curated universe
@@ -100,28 +181,29 @@ namespace QuantConnect.Algorithm.CSharp.Alphas
         /// <summary>
         /// This is used by the regression test system to indicate what the expected statistics are from running the algorithm
         /// </summary>
-        public Dictionary<string, string> ExpectedStatistics => new Dictionary<string, string>
-        {
-            {"Total Orders", "2465"},
-            {"Average Win", "0.26%"},
-            {"Average Loss", "-0.24%"},
-            {"Compounding Annual Return", "7.848%"},
-            {"Drawdown", "17.500%"},
-            {"Expectancy", "0.035"},
-            {"Net Profit", "9.233%"},
-            {"Sharpe Ratio", "0.492"},
-            {"Loss Rate", "50%"},
-            {"Win Rate", "50%"},
-            {"Profit-Loss Ratio", "1.06"},
-            {"Alpha", "0.585"},
-            {"Beta", "-24.639"},
-            {"Annual Standard Deviation", "0.19"},
-            {"Annual Variance", "0.036"},
-            {"Information Ratio", "0.387"},
-            {"Tracking Error", "0.19"},
-            {"Treynor Ratio", "-0.004"},
-            {"Total Fees", "$9029.33"}
-        };
+        public Dictionary<string, string> ExpectedStatistics =>
+            new Dictionary<string, string>
+            {
+                { "Total Orders", "2465" },
+                { "Average Win", "0.26%" },
+                { "Average Loss", "-0.24%" },
+                { "Compounding Annual Return", "7.848%" },
+                { "Drawdown", "17.500%" },
+                { "Expectancy", "0.035" },
+                { "Net Profit", "9.233%" },
+                { "Sharpe Ratio", "0.492" },
+                { "Loss Rate", "50%" },
+                { "Win Rate", "50%" },
+                { "Profit-Loss Ratio", "1.06" },
+                { "Alpha", "0.585" },
+                { "Beta", "-24.639" },
+                { "Annual Standard Deviation", "0.19" },
+                { "Annual Variance", "0.036" },
+                { "Information Ratio", "0.387" },
+                { "Tracking Error", "0.19" },
+                { "Treynor Ratio", "-0.004" },
+                { "Total Fees", "$9029.33" }
+            };
     }
 
     /// <summary>
@@ -173,16 +255,28 @@ namespace QuantConnect.Algorithm.CSharp.Alphas
             {
                 foreach (var group in _etfGroups)
                 {
-                    if (group.YesterdayClose == 0) continue;
-                    var returns = (algorithm.Portfolio[group.Underlying].Price - group.YesterdayClose) / group.YesterdayClose;
+                    if (group.YesterdayClose == 0)
+                        continue;
+                    var returns =
+                        (algorithm.Portfolio[group.Underlying].Price - group.YesterdayClose)
+                        / group.YesterdayClose;
 
                     if (returns > 0.01m)
                     {
-                        insights.Add(Insight.Price(group.UltraLong, period, InsightDirection.Up, magnitude));
+                        insights.Add(
+                            Insight.Price(group.UltraLong, period, InsightDirection.Up, magnitude)
+                        );
                     }
                     else if (returns < -0.01m)
                     {
-                        insights.Add(Insight.Price(group.UltraShort, period, InsightDirection.Down, magnitude));
+                        insights.Add(
+                            Insight.Price(
+                                group.UltraShort,
+                                period,
+                                InsightDirection.Down,
+                                magnitude
+                            )
+                        );
                     }
                 }
             }

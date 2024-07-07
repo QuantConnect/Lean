@@ -28,9 +28,7 @@ namespace QuantConnect.Indicators
         /// </summary>
         /// <param name="period">The period over which to perform to computation</param>
         public MomentumPercent(int period)
-            : this($"MOMP({period})", period)
-        {
-        }
+            : this($"MOMP({period})", period) { }
 
         /// <summary>
         /// Creates a new MomentumPercent indicator with the specified period
@@ -38,8 +36,6 @@ namespace QuantConnect.Indicators
         /// <param name="name">The name of this indicator</param>
         /// <param name="period">The period over which to perform to computation</param>
         public MomentumPercent(string name, int period)
-            : base(name, period)
-        {
-        }
+            : base(name, period) { }
     }
 }

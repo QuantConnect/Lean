@@ -57,7 +57,9 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         {
             if (_timeProvider != null)
             {
-                throw new Exception("SubscriptionSynchronizer.SetTimeProvider(): can only be called once");
+                throw new Exception(
+                    "SubscriptionSynchronizer.SetTimeProvider(): can only be called once"
+                );
             }
             _timeProvider = timeProvider;
             _frontierTimeProvider = new ManualTimeProvider(_timeProvider.GetUtcNow());
@@ -71,7 +73,9 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         {
             if (_timeSliceFactory != null)
             {
-                throw new Exception("SubscriptionSynchronizer.SetTimeSliceFactory(): can only be called once");
+                throw new Exception(
+                    "SubscriptionSynchronizer.SetTimeSliceFactory(): can only be called once"
+                );
             }
             _timeSliceFactory = timeSliceFactory;
         }
@@ -82,8 +86,10 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         /// </summary>
         /// <param name="subscriptions">The subscriptions to sync</param>
         /// <param name="cancellationToken">The cancellation token to stop enumeration</param>
-        public IEnumerable<TimeSlice> Sync(IEnumerable<Subscription> subscriptions,
-            CancellationToken cancellationToken)
+        public IEnumerable<TimeSlice> Sync(
+            IEnumerable<Subscription> subscriptions,
+            CancellationToken cancellationToken
+        )
         {
             var delayedSubscriptionFinished = new Queue<Subscription>();
 
@@ -122,7 +128,10 @@ namespace QuantConnect.Lean.Engine.DataFeeds
 
                         DataFeedPacket packet = null;
 
-                        while (subscription.Current != null && subscription.Current.EmitTimeUtc <= frontierUtc)
+                        while (
+                            subscription.Current != null
+                            && subscription.Current.EmitTimeUtc <= frontierUtc
+                        )
                         {
                             if (packet == null)
                             {
@@ -142,15 +151,21 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                             // universes (e.g. for ETF constituent universes, since the ETF itself is used to create
                             // the universe Symbol (and set as its underlying), once the ETF is delisted, the
                             // universe should cease to exist, since there are no more constituents of that ETF).
-                            if (subscription.Current.Data.DataType == MarketDataType.Auxiliary && subscription.Current.Data is Delisting delisting)
+                            if (
+                                subscription.Current.Data.DataType == MarketDataType.Auxiliary
+                                && subscription.Current.Data is Delisting delisting
+                            )
                             {
-                                if(subscription.IsUniverseSelectionSubscription)
+                                if (subscription.IsUniverseSelectionSubscription)
                                 {
                                     subscription.Universes.Single().Dispose();
                                 }
-                                else if(delisting.Type == DelistingType.Delisted)
+                                else if (delisting.Type == DelistingType.Delisted)
                                 {
-                                    changes += _universeSelection.HandleDelisting(subscription.Current.Data, subscription.Configuration.IsInternalFeed);
+                                    changes += _universeSelection.HandleDelisting(
+                                        subscription.Current.Data,
+                                        subscription.Configuration.IsInternalFeed
+                                    );
                                 }
                             }
 
@@ -175,30 +190,46 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                                 // assume that if the first item is a base data collection then the enumerator handled the aggregation,
                                 // otherwise, load all the the data into a new collection instance
                                 var packetBaseDataCollection = packet.Data[0] as BaseDataCollection;
-                                var packetData = packetBaseDataCollection == null
-                                    ? packet.Data
-                                    : packetBaseDataCollection.Data;
+                                var packetData =
+                                    packetBaseDataCollection == null
+                                        ? packet.Data
+                                        : packetBaseDataCollection.Data;
 
                                 BaseDataCollection collection;
-                                if (universeData != null
-                                    && universeData.TryGetValue(subscription.Universes.Single(), out collection))
+                                if (
+                                    universeData != null
+                                    && universeData.TryGetValue(
+                                        subscription.Universes.Single(),
+                                        out collection
+                                    )
+                                )
                                 {
                                     collection.AddRange(packetData);
                                 }
                                 else
                                 {
-                                    collection = new BaseDataCollection(frontierUtc, frontierUtc, subscription.Configuration.Symbol, packetData, packetBaseDataCollection?.Underlying, packetBaseDataCollection?.FilteredContracts);
+                                    collection = new BaseDataCollection(
+                                        frontierUtc,
+                                        frontierUtc,
+                                        subscription.Configuration.Symbol,
+                                        packetData,
+                                        packetBaseDataCollection?.Underlying,
+                                        packetBaseDataCollection?.FilteredContracts
+                                    );
                                     if (universeData == null)
                                     {
-                                        universeData = new Dictionary<Universe, BaseDataCollection>();
+                                        universeData =
+                                            new Dictionary<Universe, BaseDataCollection>();
                                     }
                                     universeData[subscription.Universes.Single()] = collection;
                                 }
                             }
                         }
 
-                        if (subscription.IsUniverseSelectionSubscription
-                            && subscription.Universes.Single().DisposeRequested)
+                        if (
+                            subscription.IsUniverseSelectionSubscription
+                            && subscription.Universes.Single().DisposeRequested
+                        )
                         {
                             var universe = subscription.Universes.Single();
                             // check if a universe selection isn't already scheduled for this disposed universe
@@ -209,7 +240,10 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                                     universeData = new Dictionary<Universe, BaseDataCollection>();
                                 }
                                 // we force trigger one last universe selection for this disposed universe, so it deselects all subscriptions it added
-                                universeData[universe] = new BaseDataCollection(frontierUtc, subscription.Configuration.Symbol);
+                                universeData[universe] = new BaseDataCollection(
+                                    frontierUtc,
+                                    subscription.Configuration.Symbol
+                                );
                             }
 
                             // we need to do this after all usages of subscription.Universes
@@ -225,22 +259,36 @@ namespace QuantConnect.Lean.Engine.DataFeeds
 
                         // trigger the smalled resolution first, so that FF res get's set once from the start correctly
                         // while at it, let's make it determininstic and sort by universe sid later
-                        foreach (var kvp in universeData.OrderBy(x => x.Key.Configuration.Resolution).ThenBy(x => x.Key.Symbol.ID))
+                        foreach (
+                            var kvp in universeData
+                                .OrderBy(x => x.Key.Configuration.Resolution)
+                                .ThenBy(x => x.Key.Symbol.ID)
+                        )
                         {
                             var universe = kvp.Key;
                             var baseDataCollection = kvp.Value;
                             universeDataForTimeSliceCreate[universe] = baseDataCollection;
-                            newChanges += _universeSelection.ApplyUniverseSelection(universe, frontierUtc, baseDataCollection);
+                            newChanges += _universeSelection.ApplyUniverseSelection(
+                                universe,
+                                frontierUtc,
+                                baseDataCollection
+                            );
                         }
                         universeData.Clear();
                     }
 
                     changes += newChanges;
-                }
-                while (newChanges != SecurityChanges.None
-                    || _universeSelection.AddPendingInternalDataFeeds(frontierUtc));
+                } while (
+                    newChanges != SecurityChanges.None
+                    || _universeSelection.AddPendingInternalDataFeeds(frontierUtc)
+                );
 
-                var timeSlice = _timeSliceFactory.Create(frontierUtc, data, changes, universeDataForTimeSliceCreate);
+                var timeSlice = _timeSliceFactory.Create(
+                    frontierUtc,
+                    data,
+                    changes,
+                    universeDataForTimeSliceCreate
+                );
 
                 while (delayedSubscriptionFinished.Count > 0)
                 {

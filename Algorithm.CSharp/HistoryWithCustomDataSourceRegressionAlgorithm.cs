@@ -26,7 +26,9 @@ namespace QuantConnect.Algorithm.CSharp
     /// <summary>
     /// Regression test illustrating how history from custom data sources can be requested.
     /// </summary>
-    public class HistoryWithCustomDataSourceRegressionAlgorithm : QCAlgorithm, IRegressionAlgorithmDefinition
+    public class HistoryWithCustomDataSourceRegressionAlgorithm
+        : QCAlgorithm,
+            IRegressionAlgorithmDefinition
     {
         private Symbol _aapl;
         private Symbol _spy;
@@ -43,7 +45,8 @@ namespace QuantConnect.Algorithm.CSharp
         public override void OnEndOfAlgorithm()
         {
             // We remove the symbol from history data in order to compare values only
-            Func<CustomData, Object> getRawCustomData = data => new {
+            Func<CustomData, Object> getRawCustomData = data => new
+            {
                 Time = data.Time,
                 Value = data.Value,
                 Close = data.Close,
@@ -53,8 +56,12 @@ namespace QuantConnect.Algorithm.CSharp
                 Volume = data.Volume,
             };
 
-            var aaplHistory = History<CustomData>("AAPL", StartDate, EndDate, Resolution.Minute).Select(getRawCustomData).ToList();
-            var spyHistory = History<CustomData>("SPY", StartDate, EndDate, Resolution.Minute).Select(getRawCustomData).ToList();
+            var aaplHistory = History<CustomData>("AAPL", StartDate, EndDate, Resolution.Minute)
+                .Select(getRawCustomData)
+                .ToList();
+            var spyHistory = History<CustomData>("SPY", StartDate, EndDate, Resolution.Minute)
+                .Select(getRawCustomData)
+                .ToList();
 
             if (aaplHistory.Count == 0 || spyHistory.Count == 0)
             {
@@ -96,36 +103,37 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// This is used by the regression test system to indicate what the expected statistics are from running the algorithm
         /// </summary>
-        public Dictionary<string, string> ExpectedStatistics => new Dictionary<string, string>
-        {
-            {"Total Orders", "0"},
-            {"Average Win", "0%"},
-            {"Average Loss", "0%"},
-            {"Compounding Annual Return", "0%"},
-            {"Drawdown", "0%"},
-            {"Expectancy", "0"},
-            {"Start Equity", "100000"},
-            {"End Equity", "100000"},
-            {"Net Profit", "0%"},
-            {"Sharpe Ratio", "0"},
-            {"Sortino Ratio", "0"},
-            {"Probabilistic Sharpe Ratio", "0%"},
-            {"Loss Rate", "0%"},
-            {"Win Rate", "0%"},
-            {"Profit-Loss Ratio", "0"},
-            {"Alpha", "0"},
-            {"Beta", "0"},
-            {"Annual Standard Deviation", "0"},
-            {"Annual Variance", "0"},
-            {"Information Ratio", "0"},
-            {"Tracking Error", "0"},
-            {"Treynor Ratio", "0"},
-            {"Total Fees", "$0.00"},
-            {"Estimated Strategy Capacity", "$0"},
-            {"Lowest Capacity Asset", ""},
-            {"Portfolio Turnover", "0%"},
-            {"OrderListHash", "d41d8cd98f00b204e9800998ecf8427e"}
-        };
+        public Dictionary<string, string> ExpectedStatistics =>
+            new Dictionary<string, string>
+            {
+                { "Total Orders", "0" },
+                { "Average Win", "0%" },
+                { "Average Loss", "0%" },
+                { "Compounding Annual Return", "0%" },
+                { "Drawdown", "0%" },
+                { "Expectancy", "0" },
+                { "Start Equity", "100000" },
+                { "End Equity", "100000" },
+                { "Net Profit", "0%" },
+                { "Sharpe Ratio", "0" },
+                { "Sortino Ratio", "0" },
+                { "Probabilistic Sharpe Ratio", "0%" },
+                { "Loss Rate", "0%" },
+                { "Win Rate", "0%" },
+                { "Profit-Loss Ratio", "0" },
+                { "Alpha", "0" },
+                { "Beta", "0" },
+                { "Annual Standard Deviation", "0" },
+                { "Annual Variance", "0" },
+                { "Information Ratio", "0" },
+                { "Tracking Error", "0" },
+                { "Treynor Ratio", "0" },
+                { "Total Fees", "$0.00" },
+                { "Estimated Strategy Capacity", "$0" },
+                { "Lowest Capacity Asset", "" },
+                { "Portfolio Turnover", "0%" },
+                { "OrderListHash", "d41d8cd98f00b204e9800998ecf8427e" }
+            };
 
         /// <summary>
         /// Custom data source for the regression test algorithm, which returns AAPL equity data regardless of the symbol requested.
@@ -138,7 +146,11 @@ namespace QuantConnect.Algorithm.CSharp
             public decimal Close { get; set; }
             public decimal Volume { get; set; }
 
-            public override SubscriptionDataSource GetSource(SubscriptionDataConfig config, DateTime date, bool isLiveMode)
+            public override SubscriptionDataSource GetSource(
+                SubscriptionDataConfig config,
+                DateTime date,
+                bool isLiveMode
+            )
             {
                 return new TradeBar().GetSource(
                     new SubscriptionDataConfig(
@@ -146,16 +158,24 @@ namespace QuantConnect.Algorithm.CSharp
                         typeof(CustomData),
                         // Create a new symbol as equity so we find the existing data files
                         // Symbol.Create(config.MappedSymbol, SecurityType.Equity, config.Market)),
-                        Symbol.Create("AAPL", SecurityType.Equity, config.Market)),
+                        Symbol.Create("AAPL", SecurityType.Equity, config.Market)
+                    ),
                     date,
-                    isLiveMode);
+                    isLiveMode
+                );
             }
 
-            public override BaseData Reader(SubscriptionDataConfig config, string line, DateTime date, bool isLiveMode)
+            public override BaseData Reader(
+                SubscriptionDataConfig config,
+                string line,
+                DateTime date,
+                bool isLiveMode
+            )
             {
                 var tradeBar = TradeBar.ParseEquity(config, line, date);
 
-                return new CustomData {
+                return new CustomData
+                {
                     Symbol = config.Symbol,
                     Time = tradeBar.Time,
                     Value = tradeBar.Value,

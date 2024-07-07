@@ -38,9 +38,7 @@ namespace QuantConnect.Packets
         /// Initializes a new instance of the <see cref="HistoryPacket"/> class
         /// </summary>
         public HistoryPacket()
-            : base(PacketType.History)
-        {
-        }
+            : base(PacketType.History) { }
     }
 
     /// <summary>
@@ -142,9 +140,7 @@ namespace QuantConnect.Packets
         /// Default constructor for serializers
         /// </summary>
         public FileHistoryResult()
-            : base(HistoryResultType.File)
-        {
-        }
+            : base(HistoryResultType.File) { }
 
         /// <summary>
         /// Initializes a new instance of the <see cref="HistoryResult"/> class
@@ -168,9 +164,7 @@ namespace QuantConnect.Packets
         /// Initializes a new instance of <see cref="CompletedHistoryResult"/> class
         /// </summary>
         public CompletedHistoryResult()
-            : base(HistoryResultType.Completed)
-        {
-        }
+            : base(HistoryResultType.Completed) { }
     }
 
     /// <summary>
@@ -187,9 +181,7 @@ namespace QuantConnect.Packets
         /// Default constructor for serializers
         /// </summary>
         public ErrorHistoryResult()
-            : base(HistoryResultType.Error)
-        {
-        }
+            : base(HistoryResultType.Error) { }
 
         /// <summary>
         /// Initializes a new instance of the <see cref="ErrorHistoryResult"/> class
@@ -216,9 +208,7 @@ namespace QuantConnect.Packets
         /// Default constructor for serializers
         /// </summary>
         public StatusHistoryResult()
-            : base(HistoryResultType.Status)
-        {
-        }
+            : base(HistoryResultType.Status) { }
 
         /// <summary>
         /// Initializes a new instance of the <see cref="StatusHistoryResult"/> class

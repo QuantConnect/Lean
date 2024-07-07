@@ -13,8 +13,8 @@
  * limitations under the License.
 */
 
-using QuantConnect.Data;
 using System;
+using QuantConnect.Data;
 
 namespace QuantConnect.Algorithm.CSharp
 {
@@ -33,9 +33,9 @@ namespace QuantConnect.Algorithm.CSharp
         /// </summary>
         public override void Initialize()
         {
-            SetStartDate(2014, 5, 7);  //Set Start Date
-            SetEndDate(2014, 5, 15);    //Set End Date
-            SetCash(100000);             //Set Strategy Cash
+            SetStartDate(2014, 5, 7); //Set Start Date
+            SetEndDate(2014, 5, 15); //Set End Date
+            SetCash(100000); //Set Strategy Cash
             // Find more symbols here: http://quantconnect.com/data
             AddForex("EURUSD");
             AddForex("NZDUSD");

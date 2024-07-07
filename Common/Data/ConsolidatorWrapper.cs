@@ -15,8 +15,8 @@
 
 using System;
 using System.Threading;
-using QuantConnect.Interfaces;
 using QuantConnect.Data.Consolidators;
+using QuantConnect.Interfaces;
 
 namespace QuantConnect.Data
 {
@@ -48,12 +48,17 @@ namespace QuantConnect.Data
         /// <summary>
         /// Get enqueue time
         /// </summary>
-        public ConsolidatorScanPriority Priority => new (UtcScanTime, _id);
+        public ConsolidatorScanPriority Priority => new(UtcScanTime, _id);
 
         /// <summary>
         /// Creates a new instance
         /// </summary>
-        public ConsolidatorWrapper(IDataConsolidator consolidator, TimeSpan configIncrement, ITimeKeeper timeKeeper, LocalTimeKeeper localTimeKeeper)
+        public ConsolidatorWrapper(
+            IDataConsolidator consolidator,
+            TimeSpan configIncrement,
+            ITimeKeeper timeKeeper,
+            LocalTimeKeeper localTimeKeeper
+        )
         {
             _id = Interlocked.Increment(ref _counter);
 
@@ -115,7 +120,9 @@ namespace QuantConnect.Data
                         _barSpan = _minimumIncrement;
                     }
 
-                    UtcScanTime = consolidated.EndTime.ConvertToUtc(_localTimeKeeper.TimeZone) + _barSpan.Value;
+                    UtcScanTime =
+                        consolidated.EndTime.ConvertToUtc(_localTimeKeeper.TimeZone)
+                        + _barSpan.Value;
                 }
                 else if (_consolidator.WorkingData == null)
                 {
@@ -124,7 +131,9 @@ namespace QuantConnect.Data
                 }
                 else
                 {
-                    var pontetialEndTime = _consolidator.WorkingData.EndTime.ConvertToUtc(_localTimeKeeper.TimeZone);
+                    var pontetialEndTime = _consolidator.WorkingData.EndTime.ConvertToUtc(
+                        _localTimeKeeper.TimeZone
+                    );
                     if (pontetialEndTime > _timeKeeper.UtcTime)
                     {
                         UtcScanTime = pontetialEndTime;
@@ -158,7 +167,8 @@ namespace QuantConnect.Data
 
         public int CompareTo(object obj)
         {
-            if (obj == null) return 1;
+            if (obj == null)
+                return 1;
 
             var other = (ConsolidatorScanPriority)obj;
             var result = UtcScanTime.CompareTo(other.UtcScanTime);

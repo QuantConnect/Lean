@@ -85,7 +85,7 @@ namespace QuantConnect.Lean.Engine.Setup
         public BrokerageSetupHandler()
         {
             Errors = new List<Exception>();
-            MaximumRuntime = TimeSpan.FromDays(10*365);
+            MaximumRuntime = TimeSpan.FromDays(10 * 365);
             MaxOrders = int.MaxValue;
         }
 
@@ -95,15 +95,35 @@ namespace QuantConnect.Lean.Engine.Setup
         /// <param name="assemblyPath">The path to the assembly's location</param>
         /// <param name="algorithmNodePacket">Details of the task required</param>
         /// <returns>A new instance of IAlgorithm, or throws an exception if there was an error</returns>
-        public IAlgorithm CreateAlgorithmInstance(AlgorithmNodePacket algorithmNodePacket, string assemblyPath)
+        public IAlgorithm CreateAlgorithmInstance(
+            AlgorithmNodePacket algorithmNodePacket,
+            string assemblyPath
+        )
         {
             string error;
             IAlgorithm algorithm;
 
             // limit load times to 10 seconds and force the assembly to have exactly one derived type
-            var loader = new Loader(false, algorithmNodePacket.Language, BaseSetupHandler.AlgorithmCreationTimeout, names => names.SingleOrAlgorithmTypeName(Config.Get("algorithm-type-name", algorithmNodePacket.AlgorithmId)), WorkerThread);
-            var complete = loader.TryCreateAlgorithmInstanceWithIsolator(assemblyPath, algorithmNodePacket.RamAllocation, out algorithm, out error);
-            if (!complete) throw new AlgorithmSetupException($"During the algorithm initialization, the following exception has occurred: {error}");
+            var loader = new Loader(
+                false,
+                algorithmNodePacket.Language,
+                BaseSetupHandler.AlgorithmCreationTimeout,
+                names =>
+                    names.SingleOrAlgorithmTypeName(
+                        Config.Get("algorithm-type-name", algorithmNodePacket.AlgorithmId)
+                    ),
+                WorkerThread
+            );
+            var complete = loader.TryCreateAlgorithmInstanceWithIsolator(
+                assemblyPath,
+                algorithmNodePacket.RamAllocation,
+                out algorithm,
+                out error
+            );
+            if (!complete)
+                throw new AlgorithmSetupException(
+                    $"During the algorithm initialization, the following exception has occurred: {error}"
+                );
 
             return algorithm;
         }
@@ -115,18 +135,28 @@ namespace QuantConnect.Lean.Engine.Setup
         /// <param name="uninitializedAlgorithm">The algorithm instance before Initialize has been called</param>
         /// <param name="factory">The brokerage factory</param>
         /// <returns>The brokerage instance, or throws if error creating instance</returns>
-        public IBrokerage CreateBrokerage(AlgorithmNodePacket algorithmNodePacket, IAlgorithm uninitializedAlgorithm, out IBrokerageFactory factory)
+        public IBrokerage CreateBrokerage(
+            AlgorithmNodePacket algorithmNodePacket,
+            IAlgorithm uninitializedAlgorithm,
+            out IBrokerageFactory factory
+        )
         {
             var liveJob = algorithmNodePacket as LiveNodePacket;
             if (liveJob == null)
             {
-                throw new ArgumentException("BrokerageSetupHandler.CreateBrokerage requires a live node packet");
+                throw new ArgumentException(
+                    "BrokerageSetupHandler.CreateBrokerage requires a live node packet"
+                );
             }
 
-            Log.Trace($"BrokerageSetupHandler.CreateBrokerage(): creating brokerage '{liveJob.Brokerage}'");
+            Log.Trace(
+                $"BrokerageSetupHandler.CreateBrokerage(): creating brokerage '{liveJob.Brokerage}'"
+            );
 
             // find the correct brokerage factory based on the specified brokerage in the live job packet
-            _factory = Composer.Instance.Single<IBrokerageFactory>(brokerageFactory => brokerageFactory.BrokerageType.MatchesTypeName(liveJob.Brokerage));
+            _factory = Composer.Instance.Single<IBrokerageFactory>(brokerageFactory =>
+                brokerageFactory.BrokerageType.MatchesTypeName(liveJob.Brokerage)
+            );
             factory = _factory;
 
             PreloadDataQueueHandler(liveJob, uninitializedAlgorithm, factory);
@@ -163,7 +193,6 @@ namespace QuantConnect.Lean.Engine.Setup
                 return false;
             }
 
-
             // attach to the message event to relay brokerage specific initialization messages
             EventHandler<BrokerageMessageEvent> brokerageOnMessage = (sender, args) =>
             {
@@ -176,7 +205,10 @@ namespace QuantConnect.Lean.Engine.Setup
             try
             {
                 // let the world know what we're doing since logging in can take a minute
-                parameters.ResultHandler.SendStatusUpdate(AlgorithmStatus.LoggingIn, "Logging into brokerage...");
+                parameters.ResultHandler.SendStatusUpdate(
+                    AlgorithmStatus.LoggingIn,
+                    "Logging into brokerage..."
+                );
 
                 brokerage.Message += brokerageOnMessage;
 
@@ -190,8 +222,10 @@ namespace QuantConnect.Lean.Engine.Setup
                 {
                     Log.Error(err);
                     AddInitializationError(
-                        $"Error connecting to brokerage: {err.Message}. " +
-                        "This may be caused by incorrect login credentials or an unsupported account type.", err);
+                        $"Error connecting to brokerage: {err.Message}. "
+                            + "This may be caused by incorrect login credentials or an unsupported account type.",
+                        err
+                    );
                     return false;
                 }
 
@@ -202,8 +236,8 @@ namespace QuantConnect.Lean.Engine.Setup
                     return false;
                 }
 
-                var message = $"{brokerage.Name} account base currency: {brokerage.AccountBaseCurrency ?? algorithm.AccountCurrency}";
-
+                var message =
+                    $"{brokerage.Name} account base currency: {brokerage.AccountBaseCurrency ?? algorithm.AccountCurrency}";
 
                 var accountCurrency = brokerage.AccountBaseCurrency;
                 if (liveJob.BrokerageData.ContainsKey(MaxAllocationLimitConfig))
@@ -222,71 +256,91 @@ namespace QuantConnect.Lean.Engine.Setup
 
                 Log.Trace("BrokerageSetupHandler.Setup(): Initializing algorithm...");
 
-                parameters.ResultHandler.SendStatusUpdate(AlgorithmStatus.Initializing, "Initializing algorithm...");
+                parameters.ResultHandler.SendStatusUpdate(
+                    AlgorithmStatus.Initializing,
+                    "Initializing algorithm..."
+                );
 
                 //Execute the initialize code:
                 var controls = liveJob.Controls;
                 var isolator = new Isolator();
-                var initializeComplete = isolator.ExecuteWithTimeLimit(TimeSpan.FromSeconds(300), () =>
-                {
-                    try
+                var initializeComplete = isolator.ExecuteWithTimeLimit(
+                    TimeSpan.FromSeconds(300),
+                    () =>
                     {
-                        //Set the default brokerage model before initialize
-                        algorithm.SetBrokerageModel(_factory.GetBrokerageModel(algorithm.Transactions));
-
-                        //Margin calls are disabled by default in live mode
-                        algorithm.Portfolio.MarginCallModel = MarginCallModel.Null;
-
-                        //Set our parameters
-                        algorithm.SetParameters(liveJob.Parameters);
-                        algorithm.SetAvailableDataTypes(BaseSetupHandler.GetConfiguredDataFeeds());
-
-                        //Algorithm is live, not backtesting:
-                        algorithm.SetAlgorithmMode(liveJob.AlgorithmMode);
-                        algorithm.SetDeploymentTarget(liveJob.DeploymentTarget);
-
-                        //Initialize the algorithm's starting date
-                        algorithm.SetDateTime(DateTime.UtcNow);
-
-                        //Set the source impl for the event scheduling
-                        algorithm.Schedule.SetEventSchedule(parameters.RealTimeHandler);
-
-                        var optionChainProvider = Composer.Instance.GetPart<IOptionChainProvider>();
-                        if (optionChainProvider == null)
+                        try
                         {
-                            optionChainProvider = new CachingOptionChainProvider(new LiveOptionChainProvider(parameters.DataCacheProvider, parameters.MapFileProvider));
-                            Composer.Instance.AddPart(optionChainProvider);
-                        }
-                        // set the option chain provider
-                        algorithm.SetOptionChainProvider(optionChainProvider);
+                            //Set the default brokerage model before initialize
+                            algorithm.SetBrokerageModel(
+                                _factory.GetBrokerageModel(algorithm.Transactions)
+                            );
 
-                        var futureChainProvider = Composer.Instance.GetPart<IFutureChainProvider>();
-                        if (futureChainProvider == null)
-                        {
-                            futureChainProvider = new CachingFutureChainProvider(new LiveFutureChainProvider(parameters.DataCacheProvider));
-                            Composer.Instance.AddPart(futureChainProvider);
-                        }
-                        // set the future chain provider
-                        algorithm.SetFutureChainProvider(futureChainProvider);
+                            //Margin calls are disabled by default in live mode
+                            algorithm.Portfolio.MarginCallModel = MarginCallModel.Null;
 
-                        //Initialise the algorithm, get the required data:
-                        algorithm.Initialize();
+                            //Set our parameters
+                            algorithm.SetParameters(liveJob.Parameters);
+                            algorithm.SetAvailableDataTypes(
+                                BaseSetupHandler.GetConfiguredDataFeeds()
+                            );
 
-                        if (liveJob.Brokerage != "PaperBrokerage")
-                        {
-                            //Zero the CashBook - we'll populate directly from brokerage
-                            foreach (var kvp in algorithm.Portfolio.CashBook)
+                            //Algorithm is live, not backtesting:
+                            algorithm.SetAlgorithmMode(liveJob.AlgorithmMode);
+                            algorithm.SetDeploymentTarget(liveJob.DeploymentTarget);
+
+                            //Initialize the algorithm's starting date
+                            algorithm.SetDateTime(DateTime.UtcNow);
+
+                            //Set the source impl for the event scheduling
+                            algorithm.Schedule.SetEventSchedule(parameters.RealTimeHandler);
+
+                            var optionChainProvider =
+                                Composer.Instance.GetPart<IOptionChainProvider>();
+                            if (optionChainProvider == null)
                             {
-                                kvp.Value.SetAmount(0);
+                                optionChainProvider = new CachingOptionChainProvider(
+                                    new LiveOptionChainProvider(
+                                        parameters.DataCacheProvider,
+                                        parameters.MapFileProvider
+                                    )
+                                );
+                                Composer.Instance.AddPart(optionChainProvider);
+                            }
+                            // set the option chain provider
+                            algorithm.SetOptionChainProvider(optionChainProvider);
+
+                            var futureChainProvider =
+                                Composer.Instance.GetPart<IFutureChainProvider>();
+                            if (futureChainProvider == null)
+                            {
+                                futureChainProvider = new CachingFutureChainProvider(
+                                    new LiveFutureChainProvider(parameters.DataCacheProvider)
+                                );
+                                Composer.Instance.AddPart(futureChainProvider);
+                            }
+                            // set the future chain provider
+                            algorithm.SetFutureChainProvider(futureChainProvider);
+
+                            //Initialise the algorithm, get the required data:
+                            algorithm.Initialize();
+
+                            if (liveJob.Brokerage != "PaperBrokerage")
+                            {
+                                //Zero the CashBook - we'll populate directly from brokerage
+                                foreach (var kvp in algorithm.Portfolio.CashBook)
+                                {
+                                    kvp.Value.SetAmount(0);
+                                }
                             }
                         }
-                    }
-                    catch (Exception err)
-                    {
-                        AddInitializationError(err.ToString(), err);
-                    }
-                }, controls.RamAllocation,
-                    sleepIntervalMillis: 100); // entire system is waiting on this, so be as fast as possible
+                        catch (Exception err)
+                        {
+                            AddInitializationError(err.ToString(), err);
+                        }
+                    },
+                    controls.RamAllocation,
+                    sleepIntervalMillis: 100
+                ); // entire system is waiting on this, so be as fast as possible
 
                 if (Errors.Count != 0)
                 {
@@ -314,7 +368,7 @@ namespace QuantConnect.Lean.Engine.Setup
                 BaseSetupHandler.SetBrokerageTradingDayPerYear(algorithm);
 
                 var dataAggregator = Composer.Instance.GetPart<IDataAggregator>();
-                dataAggregator?.Initialize(new () { AlgorithmSettings = algorithm.Settings });
+                dataAggregator?.Initialize(new() { AlgorithmSettings = algorithm.Settings });
 
                 //Finalize Initialization
                 algorithm.PostInitialize();
@@ -323,18 +377,27 @@ namespace QuantConnect.Lean.Engine.Setup
 
                 if (algorithm.Portfolio.TotalPortfolioValue == 0)
                 {
-                    algorithm.Debug("Warning: No cash balances or holdings were found in the brokerage account.");
+                    algorithm.Debug(
+                        "Warning: No cash balances or holdings were found in the brokerage account."
+                    );
                 }
 
                 string maxCashLimitStr;
-                if (liveJob.BrokerageData.TryGetValue(MaxAllocationLimitConfig, out maxCashLimitStr))
+                if (
+                    liveJob.BrokerageData.TryGetValue(MaxAllocationLimitConfig, out maxCashLimitStr)
+                )
                 {
-                    var maxCashLimit = decimal.Parse(maxCashLimitStr, NumberStyles.Any, CultureInfo.InvariantCulture);
+                    var maxCashLimit = decimal.Parse(
+                        maxCashLimitStr,
+                        NumberStyles.Any,
+                        CultureInfo.InvariantCulture
+                    );
 
                     // If allocation exceeded by more than $10,000; block deployment
                     if (algorithm.Portfolio.TotalPortfolioValue > (maxCashLimit + 10000m))
                     {
-                        var exceptionMessage = $"TotalPortfolioValue '{algorithm.Portfolio.TotalPortfolioValue}' exceeds allocation limit '{maxCashLimit}'";
+                        var exceptionMessage =
+                            $"TotalPortfolioValue '{algorithm.Portfolio.TotalPortfolioValue}' exceeds allocation limit '{maxCashLimit}'";
                         algorithm.Debug(exceptionMessage);
                         throw new ArgumentException(exceptionMessage);
                     }
@@ -368,7 +431,9 @@ namespace QuantConnect.Lean.Engine.Setup
                 var cashBalance = brokerage.GetCashBalance();
                 foreach (var cash in cashBalance)
                 {
-                    Log.Trace($"BrokerageSetupHandler.Setup(): Setting {cash.Currency} cash to {cash.Amount}");
+                    Log.Trace(
+                        $"BrokerageSetupHandler.Setup(): Setting {cash.Currency} cash to {cash.Amount}"
+                    );
 
                     algorithm.Portfolio.SetCash(cash.Currency, cash.Amount, 0);
                 }
@@ -376,23 +441,38 @@ namespace QuantConnect.Lean.Engine.Setup
             catch (Exception err)
             {
                 Log.Error(err);
-                AddInitializationError("Error getting cash balance from brokerage: " + err.Message, err);
+                AddInitializationError(
+                    "Error getting cash balance from brokerage: " + err.Message,
+                    err
+                );
                 return false;
             }
             return true;
         }
 
-        protected bool LoadExistingHoldingsAndOrders(IBrokerage brokerage, IAlgorithm algorithm, SetupHandlerParameters parameters)
+        protected bool LoadExistingHoldingsAndOrders(
+            IBrokerage brokerage,
+            IAlgorithm algorithm,
+            SetupHandlerParameters parameters
+        )
         {
             Log.Trace("BrokerageSetupHandler.Setup(): Fetching open orders from brokerage...");
             try
             {
-                GetOpenOrders(algorithm, parameters.ResultHandler, parameters.TransactionHandler, brokerage);
+                GetOpenOrders(
+                    algorithm,
+                    parameters.ResultHandler,
+                    parameters.TransactionHandler,
+                    brokerage
+                );
             }
             catch (Exception err)
             {
                 Log.Error(err);
-                AddInitializationError("Error getting open orders from brokerage: " + err.Message, err);
+                AddInitializationError(
+                    "Error getting open orders from brokerage: " + err.Message,
+                    err
+                );
                 return false;
             }
 
@@ -411,7 +491,14 @@ namespace QuantConnect.Lean.Engine.Setup
 
                     // verify existing holding security type
                     Security security;
-                    if (!GetOrAddUnrequestedSecurity(algorithm, holding.Symbol, holding.Type, out security))
+                    if (
+                        !GetOrAddUnrequestedSecurity(
+                            algorithm,
+                            holding.Symbol,
+                            holding.Type,
+                            out security
+                        )
+                    )
                     {
                         continue;
                     }
@@ -428,36 +515,54 @@ namespace QuantConnect.Lean.Engine.Setup
 
                     if (holding.MarketPrice != 0)
                     {
-                        security.SetMarketPrice(new TradeBar
-                        {
-                            Time = exchangeTime,
-                            Open = holding.MarketPrice,
-                            High = holding.MarketPrice,
-                            Low = holding.MarketPrice,
-                            Close = holding.MarketPrice,
-                            Volume = 0,
-                            Symbol = holding.Symbol,
-                            DataType = MarketDataType.TradeBar
-                        });
+                        security.SetMarketPrice(
+                            new TradeBar
+                            {
+                                Time = exchangeTime,
+                                Open = holding.MarketPrice,
+                                High = holding.MarketPrice,
+                                Low = holding.MarketPrice,
+                                Close = holding.MarketPrice,
+                                Volume = 0,
+                                Symbol = holding.Symbol,
+                                DataType = MarketDataType.TradeBar
+                            }
+                        );
                     }
                 }
             }
             catch (Exception err)
             {
                 Log.Error(err);
-                AddInitializationError("Error getting account holdings from brokerage: " + err.Message, err);
+                AddInitializationError(
+                    "Error getting account holdings from brokerage: " + err.Message,
+                    err
+                );
                 return false;
             }
 
             return true;
         }
 
-        private bool GetOrAddUnrequestedSecurity(IAlgorithm algorithm, Symbol symbol, SecurityType securityType, out Security security)
+        private bool GetOrAddUnrequestedSecurity(
+            IAlgorithm algorithm,
+            Symbol symbol,
+            SecurityType securityType,
+            out Security security
+        )
         {
-            return algorithm.GetOrAddUnrequestedSecurity(symbol, out security,
-                onError: (supportedSecurityTypes) => AddInitializationError(
-                    "Found unsupported security type in existing brokerage holdings: " + securityType + ". " +
-                    "QuantConnect currently supports the following security types: " + string.Join(",", supportedSecurityTypes)));
+            return algorithm.GetOrAddUnrequestedSecurity(
+                symbol,
+                out security,
+                onError: (supportedSecurityTypes) =>
+                    AddInitializationError(
+                        "Found unsupported security type in existing brokerage holdings: "
+                            + securityType
+                            + ". "
+                            + "QuantConnect currently supports the following security types: "
+                            + string.Join(",", supportedSecurityTypes)
+                    )
+            );
         }
 
         /// <summary>
@@ -467,7 +572,12 @@ namespace QuantConnect.Lean.Engine.Setup
         /// <param name="resultHandler">The configured result handler</param>
         /// <param name="transactionHandler">The configurated transaction handler</param>
         /// <param name="brokerage">Brokerage output instance</param>
-        protected void GetOpenOrders(IAlgorithm algorithm, IResultHandler resultHandler, ITransactionHandler transactionHandler, IBrokerage brokerage)
+        protected void GetOpenOrders(
+            IAlgorithm algorithm,
+            IResultHandler resultHandler,
+            ITransactionHandler transactionHandler,
+            IBrokerage brokerage
+        )
         {
             // populate the algorithm with the account's outstanding orders
             var openOrders = brokerage.GetOpenOrders();
@@ -477,7 +587,14 @@ namespace QuantConnect.Lean.Engine.Setup
             {
                 // verify existing holding security type
                 Security security;
-                if (!GetOrAddUnrequestedSecurity(algorithm, order.Symbol, order.SecurityType, out security))
+                if (
+                    !GetOrAddUnrequestedSecurity(
+                        algorithm,
+                        order.Symbol,
+                        order.SecurityType,
+                        out security
+                    )
+                )
                 {
                     continue;
                 }
@@ -486,7 +603,9 @@ namespace QuantConnect.Lean.Engine.Setup
                 order.PriceCurrency = security?.SymbolProperties.QuoteCurrency;
 
                 Log.Trace($"BrokerageSetupHandler.Setup(): Has open order: {order}");
-                resultHandler.DebugMessage($"BrokerageSetupHandler.Setup(): Open order detected.  Creating order tickets for open order {order.Symbol.Value} with quantity {order.Quantity}. Beware that this order ticket may not accurately reflect the quantity of the order if the open order is partially filled.");
+                resultHandler.DebugMessage(
+                    $"BrokerageSetupHandler.Setup(): Open order detected.  Creating order tickets for open order {order.Symbol.Value} with quantity {order.Quantity}. Beware that this order ticket may not accurately reflect the quantity of the order if the open order is partially filled."
+                );
             }
         }
 
@@ -497,7 +616,13 @@ namespace QuantConnect.Lean.Engine.Setup
         /// <param name="inner">The inner exception being wrapped</param>
         private void AddInitializationError(string message, Exception inner = null)
         {
-            Errors.Add(new AlgorithmSetupException("During the algorithm initialization, the following exception has occurred: " + message, inner));
+            Errors.Add(
+                new AlgorithmSetupException(
+                    "During the algorithm initialization, the following exception has occurred: "
+                        + message,
+                    inner
+                )
+            );
         }
 
         /// <summary>
@@ -521,34 +646,46 @@ namespace QuantConnect.Lean.Engine.Setup
                 var dataQueueHandler = Composer.Instance.GetPart<IDataQueueHandler>();
                 if (dataQueueHandler != null)
                 {
-                    Log.Trace($"BrokerageSetupHandler.Setup(): Found data queue handler to dispose: {dataQueueHandler.GetType()}");
+                    Log.Trace(
+                        $"BrokerageSetupHandler.Setup(): Found data queue handler to dispose: {dataQueueHandler.GetType()}"
+                    );
                     dataQueueHandler.DisposeSafely();
                 }
                 else
                 {
-                    Log.Trace("BrokerageSetupHandler.Setup(): did not find any data queue handler to dispose");
+                    Log.Trace(
+                        "BrokerageSetupHandler.Setup(): did not find any data queue handler to dispose"
+                    );
                 }
             }
         }
 
-        private void PreloadDataQueueHandler(LiveNodePacket liveJob, IAlgorithm algorithm, IBrokerageFactory factory)
+        private void PreloadDataQueueHandler(
+            LiveNodePacket liveJob,
+            IAlgorithm algorithm,
+            IBrokerageFactory factory
+        )
         {
             // preload the data queue handler using custom BrokerageFactory attribute
-            var dataQueueHandlerType = Assembly.GetAssembly(typeof(Brokerage))
+            var dataQueueHandlerType = Assembly
+                .GetAssembly(typeof(Brokerage))
                 .GetTypes()
                 .FirstOrDefault(x =>
-                    x.FullName != null &&
-                    x.FullName.EndsWith(liveJob.DataQueueHandler) &&
-                    x.HasAttribute(typeof(BrokerageFactoryAttribute)));
+                    x.FullName != null
+                    && x.FullName.EndsWith(liveJob.DataQueueHandler)
+                    && x.HasAttribute(typeof(BrokerageFactoryAttribute))
+                );
 
             if (dataQueueHandlerType != null)
             {
-                var attribute = dataQueueHandlerType.GetCustomAttribute<BrokerageFactoryAttribute>();
+                var attribute =
+                    dataQueueHandlerType.GetCustomAttribute<BrokerageFactoryAttribute>();
 
                 // only load the data queue handler if the factory is different from our brokerage factory
                 if (attribute.Type != factory.GetType())
                 {
-                    var brokerageFactory = (BrokerageFactory)Activator.CreateInstance(attribute.Type);
+                    var brokerageFactory = (BrokerageFactory)
+                        Activator.CreateInstance(attribute.Type);
 
                     // copy the brokerage data (usually credentials)
                     foreach (var kvp in brokerageFactory.BrokerageData)
@@ -560,7 +697,10 @@ namespace QuantConnect.Lean.Engine.Setup
                     }
 
                     // create the data queue handler and add it to composer
-                    _dataQueueHandlerBrokerage = brokerageFactory.CreateBrokerage(liveJob, algorithm);
+                    _dataQueueHandlerBrokerage = brokerageFactory.CreateBrokerage(
+                        liveJob,
+                        algorithm
+                    );
 
                     // open connection for subscriptions
                     _dataQueueHandlerBrokerage.Connect();

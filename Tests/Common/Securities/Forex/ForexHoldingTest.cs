@@ -29,22 +29,37 @@ namespace QuantConnect.Tests.Common.Securities.Forex
         [TestCase("EURUSD", 1, 0.00001, 1000, 1.23456, 50, 10000)]
         [TestCase("USDJPY", 0.9, 0.001, 1000, 100.30, -40, 10000)]
         [TestCase("EURGBP", 1.1, 0.00001, 1000, 0.89012, 100, 10000)]
-        public void TotalProfitIsCorrectlyEstimated(string ticker, decimal conversionRate,
-                                                    decimal minimumPriceVariation,
-                                                    int lotSize, decimal entryPrice, decimal pips, int entryQuantity)
+        public void TotalProfitIsCorrectlyEstimated(
+            string ticker,
+            decimal conversionRate,
+            decimal minimumPriceVariation,
+            int lotSize,
+            decimal entryPrice,
+            decimal pips,
+            int entryQuantity
+        )
         {
             // Arrange
             var timeKeeper = new TimeKeeper(DateTime.Now, TimeZones.NewYork);
 
             var symbol = Symbol.Create(ticker, SecurityType.Forex, Market.FXCM);
             var pairQuoteCurrency = symbol.Value.Substring(startIndex: 3);
-            var quoteCash = new Cash(pairQuoteCurrency,
+            var quoteCash = new Cash(
+                pairQuoteCurrency,
                 amount: 100000,
-                conversionRate: conversionRate);
+                conversionRate: conversionRate
+            );
             var baseCash = new Cash(symbol.Value.Substring(0, 3), 0, 0);
-            var subscription = new SubscriptionDataConfig(typeof(QuoteBar), symbol, Resolution.Daily,
-                                                          TimeZones.NewYork, TimeZones.NewYork, fillForward: true,
-                                                          extendedHours: true, isInternalFeed: true);
+            var subscription = new SubscriptionDataConfig(
+                typeof(QuoteBar),
+                symbol,
+                Resolution.Daily,
+                TimeZones.NewYork,
+                TimeZones.NewYork,
+                fillForward: true,
+                extendedHours: true,
+                isInternalFeed: true
+            );
 
             var pair = new QuantConnect.Securities.Forex.Forex(
                 SecurityExchangeHours.AlwaysOpen(TimeZones.NewYork),
@@ -64,12 +79,17 @@ namespace QuantConnect.Tests.Common.Securities.Forex
             );
             pair.SetLocalTimeKeeper(timeKeeper.GetLocalTimeKeeper(TimeZones.NewYork));
             pair.SetFeeModel(new ConstantFeeModel(decimal.Zero));
-            var forexHolding = new ForexHolding(pair, new IdentityCurrencyConverter(Currencies.USD));
+            var forexHolding = new ForexHolding(
+                pair,
+                new IdentityCurrencyConverter(Currencies.USD)
+            );
             // Act
             forexHolding.SetHoldings(entryPrice, entryQuantity);
             var priceVariation = pips * 10 * minimumPriceVariation;
             forexHolding.UpdateMarketPrice(entryPrice + priceVariation);
-            pair.SetMarketPrice(new Tick(DateTime.Now, pair.Symbol, forexHolding.Price, forexHolding.Price));
+            pair.SetMarketPrice(
+                new Tick(DateTime.Now, pair.Symbol, forexHolding.Price, forexHolding.Price)
+            );
             var actualPips = forexHolding.TotalCloseProfitPips();
             // Assert
             Assert.AreEqual(pips, actualPips);

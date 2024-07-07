@@ -49,18 +49,12 @@ namespace QuantConnect.Scheduling
         /// <summary>
         /// Gets or sets whether this event is enabled
         /// </summary>
-        public bool Enabled
-        {
-            get; set;
-        }
+        public bool Enabled { get; set; }
 
         /// <summary>
         /// Gets or sets whether this event will log each time it fires
         /// </summary>
-        internal bool IsLoggingEnabled
-        {
-            get; set;
-        }
+        internal bool IsLoggingEnabled { get; set; }
 
         /// <summary>
         /// Gets the next time this scheduled event will fire in UTC
@@ -95,10 +89,12 @@ namespace QuantConnect.Scheduling
         /// <param name="name">An identifier for this event</param>
         /// <param name="eventUtcTime">The date time the event should fire</param>
         /// <param name="callback">Delegate to be called when the event time passes</param>
-        public ScheduledEvent(string name, DateTime eventUtcTime, Action<string, DateTime> callback = null)
-            : this(name, new[] { eventUtcTime }.AsEnumerable().GetEnumerator(), callback)
-        {
-        }
+        public ScheduledEvent(
+            string name,
+            DateTime eventUtcTime,
+            Action<string, DateTime> callback = null
+        )
+            : this(name, new[] { eventUtcTime }.AsEnumerable().GetEnumerator(), callback) { }
 
         /// <summary>
         /// Initializes a new instance of the <see cref="ScheduledEvent"/> class
@@ -106,10 +102,12 @@ namespace QuantConnect.Scheduling
         /// <param name="name">An identifier for this event</param>
         /// <param name="orderedEventUtcTimes">An enumerable that emits event times</param>
         /// <param name="callback">Delegate to be called each time an event passes</param>
-        public ScheduledEvent(string name, IEnumerable<DateTime> orderedEventUtcTimes, Action<string, DateTime> callback = null)
-            : this(name, orderedEventUtcTimes.GetEnumerator(), callback)
-        {
-        }
+        public ScheduledEvent(
+            string name,
+            IEnumerable<DateTime> orderedEventUtcTimes,
+            Action<string, DateTime> callback = null
+        )
+            : this(name, orderedEventUtcTimes.GetEnumerator(), callback) { }
 
         /// <summary>
         /// Initializes a new instance of the <see cref="ScheduledEvent"/> class
@@ -117,7 +115,11 @@ namespace QuantConnect.Scheduling
         /// <param name="name">An identifier for this event</param>
         /// <param name="orderedEventUtcTimes">An enumerator that emits event times</param>
         /// <param name="callback">Delegate to be called each time an event passes</param>
-        public ScheduledEvent(string name, IEnumerator<DateTime> orderedEventUtcTimes, Action<string, DateTime> callback = null)
+        public ScheduledEvent(
+            string name,
+            IEnumerator<DateTime> orderedEventUtcTimes,
+            Action<string, DateTime> callback = null
+        )
         {
             Name = name;
             Enabled = true;
@@ -125,7 +127,6 @@ namespace QuantConnect.Scheduling
             // we don't move next until we are requested, this allows the algorithm to support the warmup period correctly
             _needsMoveNext = true;
             _orderedEventUtcTimes = orderedEventUtcTimes;
-
         }
 
         /// <summary>Serves as the default hash function. </summary>
@@ -172,7 +173,9 @@ namespace QuantConnect.Scheduling
                     }
                     if (IsLoggingEnabled)
                     {
-                        Log.Trace($"ScheduledEvent.{Name}: Next event: {_orderedEventUtcTimes.Current.ToStringInvariant(DateFormat.UI)} UTC");
+                        Log.Trace(
+                            $"ScheduledEvent.{Name}: Next event: {_orderedEventUtcTimes.Current.ToStringInvariant(DateFormat.UI)} UTC"
+                        );
                     }
                 }
 
@@ -181,8 +184,9 @@ namespace QuantConnect.Scheduling
                 {
                     if (IsLoggingEnabled)
                     {
-                        Log.Trace($"ScheduledEvent.{Name}: Firing at {utcTime.ToStringInvariant(DateFormat.UI)} UTC " +
-                            $"Scheduled at {_orderedEventUtcTimes.Current.ToStringInvariant(DateFormat.UI)} UTC"
+                        Log.Trace(
+                            $"ScheduledEvent.{Name}: Firing at {utcTime.ToStringInvariant(DateFormat.UI)} UTC "
+                                + $"Scheduled at {_orderedEventUtcTimes.Current.ToStringInvariant(DateFormat.UI)} UTC"
                         );
                     }
                     // fire the event
@@ -214,18 +218,20 @@ namespace QuantConnect.Scheduling
                 {
                     if (IsLoggingEnabled)
                     {
-                        Log.Trace($"ScheduledEvent.{Name}: Skipped events before {utcTime.ToStringInvariant(DateFormat.UI)}. " +
-                            $"Next event: {_orderedEventUtcTimes.Current.ToStringInvariant(DateFormat.UI)}"
+                        Log.Trace(
+                            $"ScheduledEvent.{Name}: Skipped events before {utcTime.ToStringInvariant(DateFormat.UI)}. "
+                                + $"Next event: {_orderedEventUtcTimes.Current.ToStringInvariant(DateFormat.UI)}"
                         );
                     }
                     return;
                 }
-            }
-            while (_orderedEventUtcTimes.MoveNext());
+            } while (_orderedEventUtcTimes.MoveNext());
 
             if (IsLoggingEnabled)
             {
-                Log.Trace($"ScheduledEvent.{Name}: Exhausted event stream during skip until {utcTime.ToStringInvariant(DateFormat.UI)}");
+                Log.Trace(
+                    $"ScheduledEvent.{Name}: Exhausted event stream during skip until {utcTime.ToStringInvariant(DateFormat.UI)}"
+                );
             }
             _endOfScheduledEvents = true;
         }
@@ -254,7 +260,8 @@ namespace QuantConnect.Scheduling
         protected void OnEventFired(DateTime triggerTime)
         {
             // don't fire the event if we're turned off
-            if (!Enabled) return;
+            if (!Enabled)
+                return;
 
             _callback?.Invoke(Name, _orderedEventUtcTimes.Current);
             EventFired?.Invoke(Name, triggerTime);

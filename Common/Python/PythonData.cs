@@ -13,10 +13,10 @@
  * limitations under the License.
 */
 
-using Python.Runtime;
-using QuantConnect.Data;
 using System;
 using System.Collections.Generic;
+using Python.Runtime;
+using QuantConnect.Data;
 
 namespace QuantConnect.Python
 {
@@ -46,14 +46,11 @@ namespace QuantConnect.Python
         /// </remarks>
         public override DateTime EndTime
         {
-            get
-            {
-                return _endTime == default ? Time : _endTime;
-            }
+            get { return _endTime == default ? Time : _endTime; }
             set
             {
                 _endTime = value;
-                if(Time == default)
+                if (Time == default)
                 {
                     // if Time hasn't been set let's set it, like BaseData does. If the user overrides it that's okay
                     Time = value;
@@ -96,7 +93,11 @@ namespace QuantConnect.Python
         /// <param name="date">Date of the data file we're looking for</param>
         /// <param name="isLiveMode">true if we're in live mode, false for backtesting mode</param>
         /// <returns>STRING API Url.</returns>
-        public override SubscriptionDataSource GetSource(SubscriptionDataConfig config, DateTime date, bool isLiveMode)
+        public override SubscriptionDataSource GetSource(
+            SubscriptionDataConfig config,
+            DateTime date,
+            bool isLiveMode
+        )
         {
             using (Py.GIL())
             {
@@ -113,7 +114,12 @@ namespace QuantConnect.Python
         /// <param name="date">Date of the requested line</param>
         /// <param name="isLiveMode">true if we're in live mode, false for backtesting mode</param>
         /// <returns></returns>
-        public override BaseData Reader(SubscriptionDataConfig config, string line, DateTime date, bool isLiveMode)
+        public override BaseData Reader(
+            SubscriptionDataConfig config,
+            string line,
+            DateTime date,
+            bool isLiveMode
+        )
         {
             using (Py.GIL())
             {
@@ -200,15 +206,8 @@ namespace QuantConnect.Python
         /// <returns>Dynamic property of a given index</returns>
         public object this[string index]
         {
-            get
-            {
-                return GetProperty(index);
-            }
-
-            set
-            {
-                SetProperty(index, value is double ? value.ConvertInvariant<decimal>() : value);
-            }
+            get { return GetProperty(index); }
+            set { SetProperty(index, value is double ? value.ConvertInvariant<decimal>() : value); }
         }
 
         /// <summary>

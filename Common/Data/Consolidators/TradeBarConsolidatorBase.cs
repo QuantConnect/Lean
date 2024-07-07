@@ -15,8 +15,8 @@
 */
 
 using System;
-using QuantConnect.Data.Market;
 using Python.Runtime;
+using QuantConnect.Data.Market;
 
 namespace QuantConnect.Data.Consolidators
 {
@@ -34,18 +34,14 @@ namespace QuantConnect.Data.Consolidators
         /// </summary>
         /// <param name="period">The minimum span of time before emitting a consolidated bar</param>
         protected TradeBarConsolidatorBase(TimeSpan period)
-            : base(period)
-        {
-        }
+            : base(period) { }
 
         /// <summary>
         /// Creates a consolidator to produce a new 'TradeBar' representing the last count pieces of data
         /// </summary>
         /// <param name="maxCount">The number of pieces to accept before emiting a consolidated bar</param>
         protected TradeBarConsolidatorBase(int maxCount)
-            : base(maxCount)
-        {
-        }
+            : base(maxCount) { }
 
         /// <summary>
         /// Creates a consolidator to produce a new 'TradeBar' representing the last count pieces of data or the period, whichever comes first
@@ -53,31 +49,25 @@ namespace QuantConnect.Data.Consolidators
         /// <param name="maxCount">The number of pieces to accept before emiting a consolidated bar</param>
         /// <param name="period">The minimum span of time before emitting a consolidated bar</param>
         protected TradeBarConsolidatorBase(int maxCount, TimeSpan period)
-            : base(maxCount, period)
-        {
-        }
+            : base(maxCount, period) { }
 
         /// <summary>
         /// Creates a consolidator to produce a new 'TradeBar' representing the last count pieces of data or the period, whichever comes first
         /// </summary>
         /// <param name="func">Func that defines the start time of a consolidated data</param>
         protected TradeBarConsolidatorBase(Func<DateTime, CalendarInfo> func)
-            : base(func)
-        {
-        }
+            : base(func) { }
 
         /// <summary>
         /// Creates a consolidator to produce a new 'TradeBar' representing the last count pieces of data or the period, whichever comes first
         /// </summary>
         /// <param name="pyfuncobj">Python function object that defines the start time of a consolidated data</param>
         protected TradeBarConsolidatorBase(PyObject pyfuncobj)
-            : base(pyfuncobj)
-        {
-        }
+            : base(pyfuncobj) { }
 
         /// <summary>
         /// Gets a copy of the current 'workingBar'.
         /// </summary>
-        public TradeBar WorkingBar => (TradeBar) WorkingData;
+        public TradeBar WorkingBar => (TradeBar)WorkingData;
     }
 }

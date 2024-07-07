@@ -15,12 +15,12 @@
 */
 
 using System;
-using QuantConnect.Data;
-using QuantConnect.Util;
-using QuantConnect.Interfaces;
-using QuantConnect.Data.Market;
 using System.Collections.Generic;
+using QuantConnect.Data;
 using QuantConnect.Data.Auxiliary;
+using QuantConnect.Data.Market;
+using QuantConnect.Interfaces;
+using QuantConnect.Util;
 
 namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
 {
@@ -62,7 +62,8 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
             SubscriptionDataConfig config,
             IFactorFileProvider factorFileProvider,
             IMapFileProvider mapFileProvider,
-            DateTime startTime)
+            DateTime startTime
+        )
         {
             Config = config;
             _mapFileProvider = mapFileProvider;
@@ -90,7 +91,8 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
                         eventArgs.Symbol,
                         DelistingDate.Value.Date,
                         price,
-                        DelistingType.Warning);
+                        DelistingType.Warning
+                    );
                 }
                 if (!_delisted && eventArgs.Date > DelistingDate.Value)
                 {
@@ -101,7 +103,8 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
                         eventArgs.Symbol,
                         DelistingDate.Value.AddDays(1),
                         price,
-                        DelistingType.Delisted);
+                        DelistingType.Delisted
+                    );
                 }
             }
         }

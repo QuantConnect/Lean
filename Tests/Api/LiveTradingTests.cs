@@ -14,35 +14,41 @@
 */
 
 using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using NUnit.Framework;
-using QuantConnect.Api;
 using System.Threading;
-using QuantConnect.Orders;
+using NUnit.Framework;
+using Python.Runtime;
+using QuantConnect.Api;
 using QuantConnect.Brokerages;
 using QuantConnect.Configuration;
-using System.Collections.Generic;
-using Python.Runtime;
 using QuantConnect.Interfaces;
+using QuantConnect.Orders;
 
 namespace QuantConnect.Tests.API
 {
     /// <summary>
     /// API Live endpoint tests
     /// </summary>
-    [TestFixture, Explicit("Requires configured api access, a live node to run on, and brokerage configurations.")]
+    [
+        TestFixture,
+        Explicit(
+            "Requires configured api access, a live node to run on, and brokerage configurations."
+        )
+    ]
     public class LiveTradingTests : ApiTestBase
     {
         private const bool StopLiveAlgos = true;
-        private readonly Dictionary<string, object> _defaultSettings = new()
-        {
-            { "id", "QuantConnectBrokerage" },
-            { "environment", "paper" },
-            { "user", "" },
-            { "password", "" },
-            { "account", "" }
-        };
+        private readonly Dictionary<string, object> _defaultSettings =
+            new()
+            {
+                { "id", "QuantConnectBrokerage" },
+                { "environment", "paper" },
+                { "user", "" },
+                { "password", "" },
+                { "account", "" }
+            };
         private readonly ProjectFile _defaultFile = new ProjectFile
         {
             Name = "Main.cs",
@@ -62,22 +68,26 @@ namespace QuantConnect.Tests.API
             var ib_weekly_restart_utc_time = Config.Get("ib-weekly-restart-utc-time");
 
             // Create default algorithm settings
-            var settings = new Dictionary<string, object>() {
+            var settings = new Dictionary<string, object>()
+            {
                 { "id", "InteractiveBrokersBrokerage" },
                 { "ib-trading-mode", environment },
                 { "ib-user-name", user },
                 { "ib-password", password },
                 { "ib-account", account },
-                { "ib-weekly-restart-utc-time", ib_weekly_restart_utc_time},
+                { "ib-weekly-restart-utc-time", ib_weekly_restart_utc_time },
                 { "holdings", new List<Holding>() },
-                { "cash", new List<Dictionary<object, object>>()
+                {
+                    "cash",
+                    new List<Dictionary<object, object>>()
                     {
-                    {new Dictionary<object, object>
                         {
-                            { "currency" , "USD"},
-                            { "amount", 100000}
+                            new Dictionary<object, object>
+                            {
+                                { "currency", "USD" },
+                                { "amount", 100000 }
+                            }
                         }
-                    }
                     }
                 },
             };
@@ -131,14 +141,17 @@ namespace QuantConnect.Tests.API
                 { "binance-api-url", apiUrl },
                 { "binance-websocket-url", websocketUrl },
                 { "holdings", new List<Holding>() },
-                { "cash", new List<Dictionary<object, object>>()
+                {
+                    "cash",
+                    new List<Dictionary<object, object>>()
                     {
-                    {new Dictionary<object, object>
                         {
-                            { "currency" , "USD"},
-                            { "amount", 100000}
+                            new Dictionary<object, object>
+                            {
+                                { "currency", "USD" },
+                                { "amount", 100000 }
+                            }
                         }
-                    }
                     }
                 },
             };
@@ -167,14 +180,17 @@ namespace QuantConnect.Tests.API
                 { "binanceus-api-url", apiUrl },
                 { "binanceus-websocket-url", websocketUrl },
                 { "holdings", new List<Holding>() },
-                { "cash", new List<Dictionary<object, object>>()
+                {
+                    "cash",
+                    new List<Dictionary<object, object>>()
                     {
-                    {new Dictionary<object, object>
                         {
-                            { "currency" , "USD"},
-                            { "amount", 100000}
+                            new Dictionary<object, object>
+                            {
+                                { "currency", "USD" },
+                                { "amount", 100000 }
+                            }
                         }
-                    }
                     }
                 },
             };
@@ -203,14 +219,17 @@ namespace QuantConnect.Tests.API
                 { "binance-fapi-url", apiUrl },
                 { "binance-fwebsocket-url", websocketUrl },
                 { "holdings", new List<Holding>() },
-                { "cash", new List<Dictionary<object, object>>()
+                {
+                    "cash",
+                    new List<Dictionary<object, object>>()
                     {
-                    {new Dictionary<object, object>
                         {
-                            { "currency" , "USD"},
-                            { "amount", 100000}
+                            new Dictionary<object, object>
+                            {
+                                { "currency", "USD" },
+                                { "amount", 100000 }
+                            }
                         }
-                    }
                     }
                 },
             };
@@ -239,14 +258,17 @@ namespace QuantConnect.Tests.API
                 { "binance-dapi-url", apiUrl },
                 { "binance-dwebsocket-url", websocketUrl },
                 { "holdings", new List<Holding>() },
-                { "cash", new List<Dictionary<object, object>>()
+                {
+                    "cash",
+                    new List<Dictionary<object, object>>()
                     {
-                    {new Dictionary<object, object>
                         {
-                            { "currency" , "USD"},
-                            { "amount", 100000}
+                            new Dictionary<object, object>
+                            {
+                                { "currency", "USD" },
+                                { "amount", 100000 }
+                            }
                         }
-                    }
                     }
                 },
             };
@@ -270,7 +292,8 @@ namespace QuantConnect.Tests.API
             var account = Config.Get("fxcm-account-id");
 
             // Create default algorithm settings
-            var settings = new Dictionary<string, object>() {
+            var settings = new Dictionary<string, object>()
+            {
                 { "id", "FxcmBrokerage" },
                 { "environment", "paper" },
                 { "user", user },
@@ -333,21 +356,24 @@ namespace QuantConnect.Tests.API
                 { "tradier-access-token", accessToken },
                 { "tradier-environment", "paper" },
                 { "holdings", new List<Holding>() },
-                { "cash", new List<Dictionary<object, object>>()
+                {
+                    "cash",
+                    new List<Dictionary<object, object>>()
                     {
-                    {new Dictionary<object, object>
                         {
-                            { "currency" , "USD"},
-                            { "amount", 100000}
+                            new Dictionary<object, object>
+                            {
+                                { "currency", "USD" },
+                                { "amount", 100000 }
+                            }
                         }
-                    }
                     }
                 }
             };
 
             var dataProvider = new Dictionary<string, object>()
             {
-                { "TradierBrokerage",  tradierSettings}
+                { "TradierBrokerage", tradierSettings }
             };
 
             RunLiveAlgorithm(tradierSettings, _defaultFile, StopLiveAlgos, dataProvider);
@@ -369,14 +395,17 @@ namespace QuantConnect.Tests.API
                 { "bitfinex-api-secret", secretKey },
                 { "bitfinex-api-key", key },
                 { "holdings", new List<Holding>() },
-                { "cash", new List<Dictionary<object, object>>()
+                {
+                    "cash",
+                    new List<Dictionary<object, object>>()
                     {
-                    {new Dictionary<object, object>
                         {
-                            { "currency" , "USD"},
-                            { "amount", 100000}
+                            new Dictionary<object, object>
+                            {
+                                { "currency", "USD" },
+                                { "amount", 100000 }
+                            }
                         }
-                    }
                     }
                 },
             };
@@ -409,14 +438,17 @@ namespace QuantConnect.Tests.API
                 { "coinbase-rest-api", apiUrl },
                 { "coinbase-url", wsUrl },
                 { "holdings", new List<Holding>() },
-                { "cash", new List<Dictionary<object, object>>()
+                {
+                    "cash",
+                    new List<Dictionary<object, object>>()
                     {
-                    {new Dictionary<object, object>
                         {
-                            { "currency" , "USD"},
-                            { "amount", 100000}
+                            new Dictionary<object, object>
+                            {
+                                { "currency", "USD" },
+                                { "amount", 100000 }
+                            }
                         }
-                    }
                     }
                 }
             };
@@ -439,14 +471,17 @@ namespace QuantConnect.Tests.API
                 { "kraken-api-secret", Config.Get("kraken-api-secret") },
                 { "kraken-verification-tier", Config.Get("kraken-verification-tier") },
                 { "holdings", new List<Holding>() },
-                { "cash", new List<Dictionary<object, object>>()
+                {
+                    "cash",
+                    new List<Dictionary<object, object>>()
                     {
-                    {new Dictionary<object, object>
                         {
-                            { "currency" , "USD"},
-                            { "amount", 100000}
+                            new Dictionary<object, object>
+                            {
+                                { "currency", "USD" },
+                                { "amount", 100000 }
+                            }
                         }
-                    }
                     }
                 }
             };
@@ -472,14 +507,17 @@ namespace QuantConnect.Tests.API
                 { "bybit-use-testnet", "paper" },
                 { "bybit-vip-level", "VIP0" },
                 { "holdings", new List<Holding>() },
-                { "cash", new List<Dictionary<object, object>>()
+                {
+                    "cash",
+                    new List<Dictionary<object, object>>()
                     {
-                    {new Dictionary<object, object>
                         {
-                            { "currency" , "USD"},
-                            { "amount", 100000}
+                            new Dictionary<object, object>
+                            {
+                                { "currency", "USD" },
+                                { "amount", 100000 }
+                            }
                         }
-                    }
                     }
                 }
             };
@@ -560,7 +598,9 @@ namespace QuantConnect.Tests.API
                             { "acount", account }
                         };
 
-                        Assert.IsTrue(settings["id"] == BrokerageName.InteractiveBrokersBrokerage.ToString());
+                        Assert.IsTrue(
+                            settings["id"] == BrokerageName.InteractiveBrokersBrokerage.ToString()
+                        );
                         break;
                     case BrokerageName.OandaBrokerage:
                         accessToken = Config.Get("oanda-access-token");
@@ -619,7 +659,7 @@ namespace QuantConnect.Tests.API
 
                         settings = new Dictionary<string, string>()
                         {
-                            { "id",  "CoinbaseBrokerage"},
+                            { "id", "CoinbaseBrokerage" },
                             { "user", "" },
                             { "password", "" },
                             { "environment", "live" },
@@ -650,7 +690,9 @@ namespace QuantConnect.Tests.API
                         };
                         break;
                     default:
-                        throw new Exception($"Settings have not been implemented for this brokerage: {brokerageName}");
+                        throw new Exception(
+                            $"Settings have not been implemented for this brokerage: {brokerageName}"
+                        );
                 }
 
                 // Tests common to all brokerage configuration classes
@@ -701,14 +743,22 @@ namespace QuantConnect.Tests.API
 
             // Read the logs of the first live algorithm
             var firstLiveAlgo = liveAlgorithms.Algorithms[0];
-            var liveLogs = ApiClient.ReadLiveLogs(firstLiveAlgo.ProjectId, firstLiveAlgo.DeployId, 0, 20);
+            var liveLogs = ApiClient.ReadLiveLogs(
+                firstLiveAlgo.ProjectId,
+                firstLiveAlgo.DeployId,
+                0,
+                20
+            );
 
             Assert.IsTrue(liveLogs.Success);
             Assert.IsTrue(liveLogs.Logs.Any());
             Assert.IsTrue(liveLogs.Length >= 0);
             Assert.IsTrue(liveLogs.DeploymentOffset >= 0);
 
-            Assert.Throws<ArgumentException>(() => ApiClient.ReadLiveLogs(firstLiveAlgo.ProjectId, firstLiveAlgo.DeployId, 0, 251));
+            Assert.Throws<ArgumentException>(
+                () =>
+                    ApiClient.ReadLiveLogs(firstLiveAlgo.ProjectId, firstLiveAlgo.DeployId, 0, 251)
+            );
         }
 
         /// <summary>
@@ -720,14 +770,27 @@ namespace QuantConnect.Tests.API
         /// Otherwise, it will keep running</param>
         /// <param name="dataProviders">Dictionary with the data providers and their corresponding credentials</param>
         /// <returns>The id of the project created with the algorithm in</returns>
-        private int RunLiveAlgorithm(Dictionary<string, object> settings, ProjectFile file, bool stopLiveAlgos, Dictionary<string, object> dataProviders = null)
+        private int RunLiveAlgorithm(
+            Dictionary<string, object> settings,
+            ProjectFile file,
+            bool stopLiveAlgos,
+            Dictionary<string, object> dataProviders = null
+        )
         {
             // Create a new project
-            var project = ApiClient.CreateProject($"Test project - {DateTime.Now.ToStringInvariant()}", Language.CSharp, TestOrganization);
+            var project = ApiClient.CreateProject(
+                $"Test project - {DateTime.Now.ToStringInvariant()}",
+                Language.CSharp,
+                TestOrganization
+            );
             var projectId = project.Projects.First().ProjectId;
 
             // Update Project Files
-            var updateProjectFileContent = ApiClient.UpdateProjectFileContent(projectId, "Main.cs", file.Code);
+            var updateProjectFileContent = ApiClient.UpdateProjectFileContent(
+                projectId,
+                "Main.cs",
+                file.Code
+            );
             Assert.IsTrue(updateProjectFileContent.Success);
 
             // Create compile
@@ -746,7 +809,13 @@ namespace QuantConnect.Tests.API
             Assert.IsNotEmpty(freeNode, "No free Live Nodes found");
 
             // Create live default algorithm
-            var createLiveAlgorithm = ApiClient.CreateLiveAlgorithm(projectId, compile.CompileId, freeNode.FirstOrDefault().Id, settings, dataProviders: dataProviders);
+            var createLiveAlgorithm = ApiClient.CreateLiveAlgorithm(
+                projectId,
+                compile.CompileId,
+                freeNode.FirstOrDefault().Id,
+                settings,
+                dataProviders: dataProviders
+            );
             Assert.IsTrue(createLiveAlgorithm.Success);
 
             if (stopLiveAlgos)
@@ -808,11 +877,19 @@ namespace QuantConnect.Tests.API
                 Code = File.ReadAllText("../../../Algorithm.CSharp/BasicTemplateAlgorithm.cs")
             };
             // Create a new project
-            var project = ApiClient.CreateProject($"Test project - {DateTime.Now.ToStringInvariant()}", Language.CSharp, TestOrganization);
+            var project = ApiClient.CreateProject(
+                $"Test project - {DateTime.Now.ToStringInvariant()}",
+                Language.CSharp,
+                TestOrganization
+            );
             var projectId = project.Projects.First().ProjectId;
 
             // Update Project Files
-            var updateProjectFileContent = ApiClient.UpdateProjectFileContent(projectId, "Main.cs", file.Code);
+            var updateProjectFileContent = ApiClient.UpdateProjectFileContent(
+                projectId,
+                "Main.cs",
+                file.Code
+            );
             Assert.IsTrue(updateProjectFileContent.Success);
 
             // Create compile
@@ -832,8 +909,8 @@ namespace QuantConnect.Tests.API
 
             using (Py.GIL())
             {
-
-                dynamic pythonCall = PyModule.FromString("testModule",
+                dynamic pythonCall = PyModule.FromString(
+                    "testModule",
                     @"
 from AlgorithmImports import *
 
@@ -848,9 +925,15 @@ def CreateLiveAlgorithmFromPython(apiClient, projectId, compileId, nodeId):
     settings = {'id':'InteractiveBrokersBrokerage', 'environment': environment, 'ib-user-name': user, 'ib-password': password, 'ib-account': account, 'ib-weekly-restart-utc-time': ib_weekly_restart_utc_time, 'holdings':[], 'cash': [{'currency' : 'USD', 'amount' : 100000}]}
     dataProviders = {'QuantConnectBrokerage':{'id':'QuantConnectBrokerage'}}
     apiClient.CreateLiveAlgorithm(projectId, compileId, nodeId, settings, dataProviders = dataProviders)
-");
+"
+                );
                 var createLiveAlgorithmModule = pythonCall.GetAttr("CreateLiveAlgorithmFromPython");
-                var createLiveAlgorithm = createLiveAlgorithmModule(ApiClient, projectId, compile.CompileId, freeNode.FirstOrDefault().Id);
+                var createLiveAlgorithm = createLiveAlgorithmModule(
+                    ApiClient,
+                    projectId,
+                    compile.CompileId,
+                    freeNode.FirstOrDefault().Id
+                );
                 Assert.IsTrue(createLiveAlgorithm.Success);
 
                 // Liquidate live algorithm; will also stop algorithm
@@ -878,7 +961,8 @@ def CreateLiveAlgorithmFromPython(apiClient, projectId, compileId, nodeId):
             {
                 Thread.Sleep(1000);
                 compile = ApiClient.ReadCompile(projectId, compileId);
-                if (compile.State == CompileState.BuildSuccess) break;
+                if (compile.State == CompileState.BuildSuccess)
+                    break;
             }
             return compile;
         }

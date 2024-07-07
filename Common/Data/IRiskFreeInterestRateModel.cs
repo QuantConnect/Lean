@@ -43,7 +43,11 @@ namespace QuantConnect.Data
         /// <param name="model">The interest rate model</param>
         /// <param name="startDate">Start date to calculate the average</param>
         /// <param name="endDate">End date to calculate the average</param>
-        public static decimal GetRiskFreeRate(this IRiskFreeInterestRateModel model, DateTime startDate, DateTime endDate)
+        public static decimal GetRiskFreeRate(
+            this IRiskFreeInterestRateModel model,
+            DateTime startDate,
+            DateTime endDate
+        )
         {
             return model.GetAverageRiskFreeRate(Time.EachDay(startDate, endDate));
         }
@@ -55,7 +59,10 @@ namespace QuantConnect.Data
         /// <param name="dates">
         /// Collection of dates from which the interest rates will be computed and then the average of them
         /// </param>
-        public static decimal GetAverageRiskFreeRate(this IRiskFreeInterestRateModel model, IEnumerable<DateTime> dates)
+        public static decimal GetAverageRiskFreeRate(
+            this IRiskFreeInterestRateModel model,
+            IEnumerable<DateTime> dates
+        )
         {
             var interestRates = dates.Select(x => model.GetInterestRate(x)).DefaultIfEmpty(0);
             return interestRates.Average();

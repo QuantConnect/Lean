@@ -42,7 +42,12 @@ namespace QuantConnect.Algorithm.Framework.Selection
         /// <param name="timeRule">Time rule defines what times on each day selected by date rule the universe selection function will be invoked</param>
         /// <param name="selector">Selector function accepting the date time firing time and returning the universe selected symbols</param>
         /// <param name="settings">Universe settings for subscriptions added via this universe, null will default to algorithm's universe settings</param>
-        public ScheduledUniverseSelectionModel(IDateRule dateRule, ITimeRule timeRule, Func<DateTime, IEnumerable<Symbol>> selector, UniverseSettings settings = null)
+        public ScheduledUniverseSelectionModel(
+            IDateRule dateRule,
+            ITimeRule timeRule,
+            Func<DateTime, IEnumerable<Symbol>> selector,
+            UniverseSettings settings = null
+        )
         {
             _dateRule = dateRule;
             _timeRule = timeRule;
@@ -58,7 +63,13 @@ namespace QuantConnect.Algorithm.Framework.Selection
         /// <param name="timeRule">Time rule defines what times on each day selected by date rule the universe selection function will be invoked</param>
         /// <param name="selector">Selector function accepting the date time firing time and returning the universe selected symbols</param>
         /// <param name="settings">Universe settings for subscriptions added via this universe, null will default to algorithm's universe settings</param>
-        public ScheduledUniverseSelectionModel(DateTimeZone timeZone, IDateRule dateRule, ITimeRule timeRule, Func<DateTime, IEnumerable<Symbol>> selector, UniverseSettings settings = null)
+        public ScheduledUniverseSelectionModel(
+            DateTimeZone timeZone,
+            IDateRule dateRule,
+            ITimeRule timeRule,
+            Func<DateTime, IEnumerable<Symbol>> selector,
+            UniverseSettings settings = null
+        )
         {
             _timeZone = timeZone;
             _dateRule = dateRule;
@@ -74,10 +85,13 @@ namespace QuantConnect.Algorithm.Framework.Selection
         /// <param name="timeRule">Time rule defines what times on each day selected by date rule the universe selection function will be invoked</param>
         /// <param name="selector">Selector function accepting the date time firing time and returning the universe selected symbols</param>
         /// <param name="settings">Universe settings for subscriptions added via this universe, null will default to algorithm's universe settings</param>
-        public ScheduledUniverseSelectionModel(IDateRule dateRule, ITimeRule timeRule, PyObject selector, UniverseSettings settings = null)
-            : this(null, dateRule, timeRule, selector, settings)
-        {
-        }
+        public ScheduledUniverseSelectionModel(
+            IDateRule dateRule,
+            ITimeRule timeRule,
+            PyObject selector,
+            UniverseSettings settings = null
+        )
+            : this(null, dateRule, timeRule, selector, settings) { }
 
         /// <summary>
         /// Initializes a new instance of the <see cref="ScheduledUniverseSelectionModel"/> class
@@ -87,7 +101,13 @@ namespace QuantConnect.Algorithm.Framework.Selection
         /// <param name="timeRule">Time rule defines what times on each day selected by date rule the universe selection function will be invoked</param>
         /// <param name="selector">Selector function accepting the date time firing time and returning the universe selected symbols</param>
         /// <param name="settings">Universe settings for subscriptions added via this universe, null will default to algorithm's universe settings</param>
-        public ScheduledUniverseSelectionModel(DateTimeZone timeZone, IDateRule dateRule, ITimeRule timeRule, PyObject selector, UniverseSettings settings = null)
+        public ScheduledUniverseSelectionModel(
+            DateTimeZone timeZone,
+            IDateRule dateRule,
+            ITimeRule timeRule,
+            PyObject selector,
+            UniverseSettings settings = null
+        )
         {
             Func<DateTime, object> func;
             selector.TryConvertToDelegate(out func);

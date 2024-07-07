@@ -38,7 +38,6 @@ namespace QuantConnect
         public static bool TryParse(string input, out TimeSpan value)
         {
             return System.TimeSpan.TryParse(input, CultureInfo.InvariantCulture, out value);
-
         }
 
         /// <summary>
@@ -50,9 +49,20 @@ namespace QuantConnect
         /// <param name="timeSpanStyle"></param>
         /// <param name="value"></param>
         /// <returns></returns>
-        public static bool TryParseExact(string input, string format, TimeSpanStyles timeSpanStyle, out TimeSpan value)
+        public static bool TryParseExact(
+            string input,
+            string format,
+            TimeSpanStyles timeSpanStyle,
+            out TimeSpan value
+        )
         {
-            return System.TimeSpan.TryParseExact(input, format, CultureInfo.InvariantCulture, timeSpanStyle, out value);
+            return System.TimeSpan.TryParseExact(
+                input,
+                format,
+                CultureInfo.InvariantCulture,
+                timeSpanStyle,
+                out value
+            );
         }
 
         /// <summary>
@@ -77,18 +87,36 @@ namespace QuantConnect
         /// Parses the provided value as a <see cref="System.DateTime"/> using <see cref="System.DateTime.ParseExact(string,string,IFormatProvider)"/>
         /// with the specified <paramref name="format"/>, <paramref name="dateTimeStyles"/> and <see cref="CultureInfo.InvariantCulture"/>
         /// </summary>
-        public static DateTime DateTimeExact(string value, string format, DateTimeStyles dateTimeStyles)
+        public static DateTime DateTimeExact(
+            string value,
+            string format,
+            DateTimeStyles dateTimeStyles
+        )
         {
-            return System.DateTime.ParseExact(value, format, CultureInfo.InvariantCulture, dateTimeStyles);
+            return System.DateTime.ParseExact(
+                value,
+                format,
+                CultureInfo.InvariantCulture,
+                dateTimeStyles
+            );
         }
 
         /// <summary>
         /// Tries to parse the provided value with TryParse as a <see cref="System.DateTime"/> using the specified <paramref name="dateTimeStyle"/>
         /// and <see cref="CultureInfo.InvariantCulture"/>.
         /// </summary>
-        public static bool TryParse(string input, DateTimeStyles dateTimeStyle, out System.DateTime value)
+        public static bool TryParse(
+            string input,
+            DateTimeStyles dateTimeStyle,
+            out System.DateTime value
+        )
         {
-            return System.DateTime.TryParse(input, CultureInfo.InvariantCulture, dateTimeStyle, out value);
+            return System.DateTime.TryParse(
+                input,
+                CultureInfo.InvariantCulture,
+                dateTimeStyle,
+                out value
+            );
         }
 
         /// <summary>
@@ -96,9 +124,20 @@ namespace QuantConnect
         /// specified <paramref name="dateTimeStyle"/>, the format <paramref name="format"/>, and
         /// <see cref="CultureInfo.InvariantCulture"/>.
         /// </summary>
-        public static bool TryParseExact(string input, string format, DateTimeStyles dateTimeStyle, out System.DateTime value)
+        public static bool TryParseExact(
+            string input,
+            string format,
+            DateTimeStyles dateTimeStyle,
+            out System.DateTime value
+        )
         {
-            return System.DateTime.TryParseExact(input, format, CultureInfo.InvariantCulture, dateTimeStyle, out value);
+            return System.DateTime.TryParseExact(
+                input,
+                format,
+                CultureInfo.InvariantCulture,
+                dateTimeStyle,
+                out value
+            );
         }
 
         /// <summary>

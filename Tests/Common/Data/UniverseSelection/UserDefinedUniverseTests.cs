@@ -14,11 +14,11 @@
 */
 
 using System;
-using NUnit.Framework;
-using System.Threading;
-using QuantConnect.Data;
 using System.Collections.Generic;
+using System.Threading;
+using NUnit.Framework;
 using QuantConnect.Algorithm.CSharp;
+using QuantConnect.Data;
 using QuantConnect.Statistics;
 
 namespace QuantConnect.Tests.Common.Data.UniverseSelection
@@ -31,13 +31,19 @@ namespace QuantConnect.Tests.Common.Data.UniverseSelection
         {
             // allow the system to stabilize
             Thread.Sleep(1000);
-            var results = AlgorithmRunner.RunLocalBacktest(nameof(TestUserDefinedUniverseAlgorithm),
+            var results = AlgorithmRunner.RunLocalBacktest(
+                nameof(TestUserDefinedUniverseAlgorithm),
                 new Dictionary<string, string> { { PerformanceMetrics.TotalOrders, "1" } },
                 Language.CSharp,
                 AlgorithmStatus.Completed,
-                algorithmLocation: "QuantConnect.Tests.dll");
+                algorithmLocation: "QuantConnect.Tests.dll"
+            );
 
-            Assert.GreaterOrEqual(TestUserDefinedUniverseAlgorithm.AdditionCount, 50, $"We added {TestUserDefinedUniverseAlgorithm.AdditionCount} times");
+            Assert.GreaterOrEqual(
+                TestUserDefinedUniverseAlgorithm.AdditionCount,
+                50,
+                $"We added {TestUserDefinedUniverseAlgorithm.AdditionCount} times"
+            );
         }
     }
 
@@ -47,14 +53,19 @@ namespace QuantConnect.Tests.Common.Data.UniverseSelection
 
         private Thread _thread;
         private CancellationTokenSource _cancellationTokenSource = new();
-        private ManualResetEvent _threadStarted = new (false);
+        private ManualResetEvent _threadStarted = new(false);
+
         public override void Initialize()
         {
             SetStartDate(2013, 10, 07);
             SetEndDate(2013, 10, 11);
 
 #pragma warning disable CS0618
-            var spy = AddEquity("SPY", Resolution.Minute, dataNormalizationMode: DataNormalizationMode.Raw).Symbol;
+            var spy = AddEquity(
+                "SPY",
+                Resolution.Minute,
+                dataNormalizationMode: DataNormalizationMode.Raw
+            ).Symbol;
 
             _thread = new Thread(() =>
             {
@@ -64,9 +75,15 @@ namespace QuantConnect.Tests.Common.Data.UniverseSelection
                     while (!_cancellationTokenSource.IsCancellationRequested && AdditionCount < 250)
                     {
                         var currentCount = Interlocked.Increment(ref AdditionCount);
-                        var contract = QuantConnect.Symbol.CreateOption(spy, QuantConnect.Market.USA, OptionStyle.American, OptionRight.Call, currentCount, new DateTime(2022, 10, 10));
+                        var contract = QuantConnect.Symbol.CreateOption(
+                            spy,
+                            QuantConnect.Market.USA,
+                            OptionStyle.American,
+                            OptionRight.Call,
+                            currentCount,
+                            new DateTime(2022, 10, 10)
+                        );
                         AddOptionContract(contract);
-
 
                         if (currentCount % 2 == 0)
                         {
@@ -88,7 +105,10 @@ namespace QuantConnect.Tests.Common.Data.UniverseSelection
                     Error(ex);
                     SetStatus(AlgorithmStatus.RuntimeError);
                 }
-            }) { IsBackground = true };
+            })
+            {
+                IsBackground = true
+            };
         }
 
         public override void OnData(Slice data)
@@ -100,6 +120,7 @@ namespace QuantConnect.Tests.Common.Data.UniverseSelection
             }
             base.OnData(data);
         }
+
         public override void OnEndOfAlgorithm()
         {
             _thread.StopSafely(TimeSpan.FromSeconds(2), _cancellationTokenSource);

@@ -21,7 +21,9 @@ namespace QuantConnect.Indicators
     /// <summary>
     /// To provide a base class for option indicator
     /// </summary>
-    public abstract class OptionIndicatorBase : IndicatorBase<IndicatorDataPoint>, IIndicatorWarmUpPeriodProvider
+    public abstract class OptionIndicatorBase
+        : IndicatorBase<IndicatorDataPoint>,
+            IIndicatorWarmUpPeriodProvider
     {
         /// <summary>
         /// Option's symbol object
@@ -113,14 +115,23 @@ namespace QuantConnect.Indicators
         /// <param name="mirrorOption">The mirror option for parity calculation</param>
         /// <param name="period">The lookback period of volatility</param>
         /// <param name="optionModel">The option pricing model used to estimate the Greek/IV</param>
-        protected OptionIndicatorBase(string name, Symbol option, IRiskFreeInterestRateModel riskFreeRateModel, IDividendYieldModel dividendYieldModel, 
-            Symbol mirrorOption = null, OptionPricingModelType optionModel = OptionPricingModelType.BlackScholes, int period = 2)
+        protected OptionIndicatorBase(
+            string name,
+            Symbol option,
+            IRiskFreeInterestRateModel riskFreeRateModel,
+            IDividendYieldModel dividendYieldModel,
+            Symbol mirrorOption = null,
+            OptionPricingModelType optionModel = OptionPricingModelType.BlackScholes,
+            int period = 2
+        )
             : base(name)
         {
             var sid = option.ID;
             if (!sid.SecurityType.IsOption())
             {
-                throw new ArgumentException("OptionIndicatorBase only support SecurityType.Option.");
+                throw new ArgumentException(
+                    "OptionIndicatorBase only support SecurityType.Option."
+                );
             }
 
             _optionSymbol = option;

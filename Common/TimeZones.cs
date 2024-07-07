@@ -1,11 +1,11 @@
 /*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
- * 
- * Licensed under the Apache License, Version 2.0 (the "License"); 
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -30,7 +30,9 @@ namespace QuantConnect
         /// <summary>
         /// Gets the time zone for New York City, USA. This is a daylight savings time zone.
         /// </summary>
-        public static readonly DateTimeZone NewYork = DateTimeZoneProviders.Tzdb["America/New_York"];
+        public static readonly DateTimeZone NewYork = DateTimeZoneProviders.Tzdb[
+            "America/New_York"
+        ];
 
         /// <summary>
         /// Get the Eastern Standard Time (EST) WITHOUT daylight savings, this is a constant -5 hour offset
@@ -65,7 +67,9 @@ namespace QuantConnect
         /// <summary>
         /// Gets the time zone for Vancouver, Canada.
         /// </summary>
-        public static readonly DateTimeZone Vancouver = DateTimeZoneProviders.Tzdb["America/Vancouver"];
+        public static readonly DateTimeZone Vancouver = DateTimeZoneProviders.Tzdb[
+            "America/Vancouver"
+        ];
 
         /// <summary>
         /// Gets the time zone for Toronto, Canada. This is a daylight savings time zone.
@@ -80,7 +84,9 @@ namespace QuantConnect
         /// <summary>
         /// Gets the time zone for Los Angeles, USA. This is a daylight savings time zone.
         /// </summary>
-        public static readonly DateTimeZone LosAngeles = DateTimeZoneProviders.Tzdb["America/Los_Angeles"];
+        public static readonly DateTimeZone LosAngeles = DateTimeZoneProviders.Tzdb[
+            "America/Los_Angeles"
+        ];
 
         /// <summary>
         /// Gets the time zone for Phoenix, USA. This is a daylight savings time zone.
@@ -90,7 +96,9 @@ namespace QuantConnect
         /// <summary>
         /// Gets the time zone for Auckland, New Zealand. This is a daylight savings time zone.
         /// </summary>
-        public static readonly DateTimeZone Auckland = DateTimeZoneProviders.Tzdb["Pacific/Auckland"];
+        public static readonly DateTimeZone Auckland = DateTimeZoneProviders.Tzdb[
+            "Pacific/Auckland"
+        ];
 
         /// <summary>
         /// Gets the time zone for Moscow, Russia.
@@ -105,17 +113,23 @@ namespace QuantConnect
         /// <summary>
         /// Gets the time zone for Buenos Aires, Argentia.
         /// </summary>
-        public static readonly DateTimeZone BuenosAires = DateTimeZoneProviders.Tzdb["America/Argentina/Buenos_Aires"];
+        public static readonly DateTimeZone BuenosAires = DateTimeZoneProviders.Tzdb[
+            "America/Argentina/Buenos_Aires"
+        ];
 
         /// <summary>
         /// Gets the time zone for Brisbane, Australia.
         /// </summary>
-        public static readonly DateTimeZone Brisbane = DateTimeZoneProviders.Tzdb["Australia/Brisbane"];
+        public static readonly DateTimeZone Brisbane = DateTimeZoneProviders.Tzdb[
+            "Australia/Brisbane"
+        ];
 
         /// <summary>
         /// Gets the time zone for Sao Paulo, Brazil. This is a daylight savings time zone.
         /// </summary>
-        public static readonly DateTimeZone SaoPaulo = DateTimeZoneProviders.Tzdb["America/Sao_Paulo"];
+        public static readonly DateTimeZone SaoPaulo = DateTimeZoneProviders.Tzdb[
+            "America/Sao_Paulo"
+        ];
 
         /// <summary>
         /// Gets the time zone for Cairo, Egypt.
@@ -125,12 +139,16 @@ namespace QuantConnect
         /// <summary>
         /// Gets the time zone for Johannesburg, South Africa.
         /// </summary>
-        public static readonly DateTimeZone Johannesburg = DateTimeZoneProviders.Tzdb["Africa/Johannesburg"];
+        public static readonly DateTimeZone Johannesburg = DateTimeZoneProviders.Tzdb[
+            "Africa/Johannesburg"
+        ];
 
         /// <summary>
         /// Gets the time zone for Anchorage, USA. This is a daylight savings time zone.
         /// </summary>
-        public static readonly DateTimeZone Anchorage = DateTimeZoneProviders.Tzdb["America/Anchorage"];
+        public static readonly DateTimeZone Anchorage = DateTimeZoneProviders.Tzdb[
+            "America/Anchorage"
+        ];
 
         /// <summary>
         /// Gets the time zone for Denver, USA. This is a daylight savings time zone.
@@ -145,12 +163,16 @@ namespace QuantConnect
         /// <summary>
         /// Gets the time zone for Mexico City, Mexico. This is a daylight savings time zone.
         /// </summary>
-        public static readonly DateTimeZone MexicoCity = DateTimeZoneProviders.Tzdb["America/Mexico_City"];
+        public static readonly DateTimeZone MexicoCity = DateTimeZoneProviders.Tzdb[
+            "America/Mexico_City"
+        ];
 
         /// <summary>
         /// Gets the time zone for Jerusalem, Israel. This is a daylight savings time zone.
         /// </summary>
-        public static readonly DateTimeZone Jerusalem = DateTimeZoneProviders.Tzdb["Asia/Jerusalem"];
+        public static readonly DateTimeZone Jerusalem = DateTimeZoneProviders.Tzdb[
+            "Asia/Jerusalem"
+        ];
 
         /// <summary>
         /// Gets the time zone for Shanghai, China.
@@ -160,12 +182,16 @@ namespace QuantConnect
         /// <summary>
         /// Gets the time zone for Melbourne, Australia. This is a daylight savings time zone.
         /// </summary>
-        public static readonly DateTimeZone Melbourne = DateTimeZoneProviders.Tzdb["Australia/Melbourne"];
+        public static readonly DateTimeZone Melbourne = DateTimeZoneProviders.Tzdb[
+            "Australia/Melbourne"
+        ];
 
         /// <summary>
         /// Gets the time zone for Amsterdam, Netherlands. This is a daylight savings time zone.
         /// </summary>
-        public static readonly DateTimeZone Amsterdam = DateTimeZoneProviders.Tzdb["Europe/Amsterdam"];
+        public static readonly DateTimeZone Amsterdam = DateTimeZoneProviders.Tzdb[
+            "Europe/Amsterdam"
+        ];
 
         /// <summary>
         /// Gets the time zone for Athens, Greece. This is a daylight savings time zone.
@@ -180,7 +206,9 @@ namespace QuantConnect
         /// <summary>
         /// Gets the time zone for Bucharest, Romania. This is a daylight savings time zone.
         /// </summary>
-        public static readonly DateTimeZone Bucharest = DateTimeZoneProviders.Tzdb["Europe/Bucharest"];
+        public static readonly DateTimeZone Bucharest = DateTimeZoneProviders.Tzdb[
+            "Europe/Bucharest"
+        ];
 
         /// <summary>
         /// Gets the time zone for Dublin, Ireland. This is a daylight savings time zone.
@@ -190,12 +218,16 @@ namespace QuantConnect
         /// <summary>
         /// Gets the time zone for Helsinki, Finland. This is a daylight savings time zone.
         /// </summary>
-        public static readonly DateTimeZone Helsinki = DateTimeZoneProviders.Tzdb["Europe/Helsinki"];
+        public static readonly DateTimeZone Helsinki = DateTimeZoneProviders.Tzdb[
+            "Europe/Helsinki"
+        ];
 
         /// <summary>
         /// Gets the time zone for Istanbul, Turkey. This is a daylight savings time zone.
         /// </summary>
-        public static readonly DateTimeZone Istanbul = DateTimeZoneProviders.Tzdb["Europe/Istanbul"];
+        public static readonly DateTimeZone Istanbul = DateTimeZoneProviders.Tzdb[
+            "Europe/Istanbul"
+        ];
 
         /// <summary>
         /// Gets the time zone for Minsk, Belarus.
@@ -215,7 +247,9 @@ namespace QuantConnect
         /// <summary>
         /// Gets the time zone for Honolulu, USA. This is a daylight savings time zone.
         /// </summary>
-        public static readonly DateTimeZone Honolulu = DateTimeZoneProviders.Tzdb["Pacific/Honolulu"];
+        public static readonly DateTimeZone Honolulu = DateTimeZoneProviders.Tzdb[
+            "Pacific/Honolulu"
+        ];
 
         /// <summary>
         /// Gets the time zone for Kolkata, India.

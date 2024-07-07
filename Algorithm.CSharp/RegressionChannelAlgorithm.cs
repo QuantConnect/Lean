@@ -37,9 +37,9 @@ namespace QuantConnect.Algorithm.CSharp
         /// </summary>
         public override void Initialize()
         {
-            SetStartDate(2009, 1, 1);  //Set Start Date
-            SetEndDate(2015, 1, 1);    //Set End Date
-            SetCash(100000);           //Set Strategy Cash
+            SetStartDate(2009, 1, 1); //Set Start Date
+            SetEndDate(2015, 1, 1); //Set End Date
+            SetCash(100000); //Set Strategy Cash
             // Find more symbols here: http://quantconnect.com/data
             var equity = AddEquity(_spy, Resolution.Minute);
             _holdings = equity.Holdings;
@@ -60,7 +60,8 @@ namespace QuantConnect.Algorithm.CSharp
         /// <param name="data">Slice object keyed by symbol containing the stock data</param>
         public void OnData(TradeBars data)
         {
-            if (!_rc.IsReady || !data.ContainsKey(_spy)) return;
+            if (!_rc.IsReady || !data.ContainsKey(_spy))
+                return;
             var value = data[_spy].Value;
 
             if (_holdings.Quantity <= 0 && value < _rc.LowerChannel)

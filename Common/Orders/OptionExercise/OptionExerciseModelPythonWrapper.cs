@@ -14,26 +14,26 @@
  *
 */
 
+using System.Collections.Generic;
 using Python.Runtime;
 using QuantConnect.Python;
 using QuantConnect.Securities.Option;
-using System.Collections.Generic;
 
 namespace QuantConnect.Orders.OptionExercise
 {
     /// <summary>
     /// Python wrapper for custom option exercise models
     /// </summary>
-    public class OptionExerciseModelPythonWrapper: BasePythonWrapper<IOptionExerciseModel>, IOptionExerciseModel
+    public class OptionExerciseModelPythonWrapper
+        : BasePythonWrapper<IOptionExerciseModel>,
+            IOptionExerciseModel
     {
         /// <summary>
         /// Creates a new instance
         /// </summary>
         /// <param name="model">The python model to wrapp</param>
         public OptionExerciseModelPythonWrapper(PyObject model)
-            : base(model)
-        {
-        }
+            : base(model) { }
 
         /// <summary>
         /// Performs option exercise for the option security class.

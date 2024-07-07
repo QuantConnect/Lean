@@ -36,10 +36,13 @@ namespace QuantConnect.Data.UniverseSelection
         /// <param name="universeSettings">The universe settings to use</param>
         /// <param name="constituentsFilter">User-provided function to filter constituents universe with</param>
         public ConstituentsUniverse(
-            Symbol symbol, 
-            UniverseSettings universeSettings, 
-            Func<IEnumerable<T>, IEnumerable<Symbol>> constituentsFilter = null)
-            : this(new SubscriptionDataConfig(typeof(T),
+            Symbol symbol,
+            UniverseSettings universeSettings,
+            Func<IEnumerable<T>, IEnumerable<Symbol>> constituentsFilter = null
+        )
+            : this(
+                new SubscriptionDataConfig(
+                    typeof(T),
                     symbol,
                     Resolution.Daily,
                     TimeZones.NewYork,
@@ -47,11 +50,11 @@ namespace QuantConnect.Data.UniverseSelection
                     false,
                     false,
                     true,
-                    true),
+                    true
+                ),
                 universeSettings,
-                constituentsFilter)
-        {
-        }
+                constituentsFilter
+            ) { }
 
         /// <summary>
         /// Creates a new instance of the <see cref="ConstituentsUniverse"/>
@@ -62,10 +65,13 @@ namespace QuantConnect.Data.UniverseSelection
         public ConstituentsUniverse(
             Symbol symbol,
             UniverseSettings universeSettings,
-            PyObject constituentsFilter = null)
-            : this(symbol, universeSettings, constituentsFilter.ConvertPythonUniverseFilterFunction<T>())
-        {
-        }
+            PyObject constituentsFilter = null
+        )
+            : this(
+                symbol,
+                universeSettings,
+                constituentsFilter.ConvertPythonUniverseFilterFunction<T>()
+            ) { }
 
         /// <summary>
         /// Creates a new instance of the <see cref="ConstituentsUniverse"/>
@@ -74,28 +80,36 @@ namespace QuantConnect.Data.UniverseSelection
         /// <param name="universeSettings">The universe settings to use</param>
         /// <param name="constituentsFilter">User-provided function to filter constituents universe with</param>
         public ConstituentsUniverse(
-            SubscriptionDataConfig subscriptionDataConfig, 
+            SubscriptionDataConfig subscriptionDataConfig,
             UniverseSettings universeSettings,
-            Func<IEnumerable<T>, IEnumerable<Symbol>> constituentsFilter = null)
-            : base(subscriptionDataConfig,
+            Func<IEnumerable<T>, IEnumerable<Symbol>> constituentsFilter = null
+        )
+            : base(
+                subscriptionDataConfig,
                 universeSettings,
-                constituentsFilter ?? (constituents =>
-                {
-                    var symbols = constituents.Select(baseData => baseData.Symbol).ToList();
-                    // for performance, just compare to Symbol.None if we have 1 Symbol
-                    if (symbols.Count == 1 && symbols[0] == Symbol.None)
-                    {
-                        // no symbol selected
-                        return Enumerable.Empty<Symbol>();
-                    }
+                constituentsFilter
+                    ?? (
+                        constituents =>
+                        {
+                            var symbols = constituents.Select(baseData => baseData.Symbol).ToList();
+                            // for performance, just compare to Symbol.None if we have 1 Symbol
+                            if (symbols.Count == 1 && symbols[0] == Symbol.None)
+                            {
+                                // no symbol selected
+                                return Enumerable.Empty<Symbol>();
+                            }
 
-                    return symbols;
-                }))
+                            return symbols;
+                        }
+                    )
+            )
         {
             if (!subscriptionDataConfig.IsCustomData)
             {
-                throw new InvalidOperationException($"{typeof(T).Name} {nameof(SubscriptionDataConfig)}" +
-                    $" only supports custom data property set to 'true'");
+                throw new InvalidOperationException(
+                    $"{typeof(T).Name} {nameof(SubscriptionDataConfig)}"
+                        + $" only supports custom data property set to 'true'"
+                );
             }
         }
 
@@ -108,10 +122,13 @@ namespace QuantConnect.Data.UniverseSelection
         public ConstituentsUniverse(
             SubscriptionDataConfig subscriptionDataConfig,
             UniverseSettings universeSettings,
-            PyObject constituentsFilter = null)
-        : this(subscriptionDataConfig, universeSettings, constituentsFilter.ConvertPythonUniverseFilterFunction<T>())
-        {
-        }
+            PyObject constituentsFilter = null
+        )
+            : this(
+                subscriptionDataConfig,
+                universeSettings,
+                constituentsFilter.ConvertPythonUniverseFilterFunction<T>()
+            ) { }
     }
 
     /// <summary>
@@ -128,30 +145,36 @@ namespace QuantConnect.Data.UniverseSelection
         /// <param name="symbol">The universe symbol</param>
         /// <param name="universeSettings">The universe settings to use</param>
         /// <param name="filterFunc">The constituents filter function</param>
-        public ConstituentsUniverse(Symbol symbol, UniverseSettings universeSettings, Func<IEnumerable<ConstituentsUniverseData>, IEnumerable<Symbol>> filterFunc)
-            : base(symbol, universeSettings, filterFunc)
-        {
-        }
-        
+        public ConstituentsUniverse(
+            Symbol symbol,
+            UniverseSettings universeSettings,
+            Func<IEnumerable<ConstituentsUniverseData>, IEnumerable<Symbol>> filterFunc
+        )
+            : base(symbol, universeSettings, filterFunc) { }
+
         /// <summary>
         /// Creates a new instance of the <see cref="ConstituentsUniverse"/>
         /// </summary>
         /// <param name="symbol">The universe symbol</param>
         /// <param name="universeSettings">The universe settings to use</param>
         public ConstituentsUniverse(Symbol symbol, UniverseSettings universeSettings)
-            : base(symbol, universeSettings, (Func<IEnumerable<ConstituentsUniverseData>, IEnumerable<Symbol>>)null)
-        {
-        } 
-        
+            : base(
+                symbol,
+                universeSettings,
+                (Func<IEnumerable<ConstituentsUniverseData>, IEnumerable<Symbol>>)null
+            ) { }
+
         /// <summary>
         /// Creates a new instance of the <see cref="ConstituentsUniverse"/>
         /// </summary>
         /// <param name="symbol">The universe symbol</param>
         /// <param name="universeSettings">The universe settings to use</param>
         /// <param name="filterFunc">The constituents filter function</param>
-        public ConstituentsUniverse(Symbol symbol, UniverseSettings universeSettings, PyObject filterFunc)
-            : base(symbol, universeSettings, filterFunc)
-        {
-        }
+        public ConstituentsUniverse(
+            Symbol symbol,
+            UniverseSettings universeSettings,
+            PyObject filterFunc
+        )
+            : base(symbol, universeSettings, filterFunc) { }
     }
 }

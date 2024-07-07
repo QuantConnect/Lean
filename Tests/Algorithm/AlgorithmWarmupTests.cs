@@ -18,20 +18,20 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using NUnit.Framework;
+using Python.Runtime;
 using QuantConnect.Algorithm;
 using QuantConnect.Configuration;
 using QuantConnect.Data;
-using QuantConnect.Interfaces;
-using QuantConnect.Logging;
-using QuantConnect.Packets;
-using QuantConnect.Indicators;
-using QuantConnect.Tests.Engine.DataFeeds;
-using Python.Runtime;
 using QuantConnect.Data.UniverseSelection;
+using QuantConnect.Indicators;
+using QuantConnect.Interfaces;
 using QuantConnect.Lean.Engine.DataFeeds;
 using QuantConnect.Lean.Engine.HistoricalData;
-using QuantConnect.Util;
+using QuantConnect.Logging;
+using QuantConnect.Packets;
 using QuantConnect.Statistics;
+using QuantConnect.Tests.Engine.DataFeeds;
+using QuantConnect.Util;
 
 namespace QuantConnect.Tests.Algorithm
 {
@@ -79,23 +79,28 @@ namespace QuantConnect.Tests.Algorithm
                 _algorithm.EndDateToUse = new DateTime(2018, 04, 07);
             }
 
-            AlgorithmRunner.RunLocalBacktest(nameof(TestWarmupAlgorithm),
+            AlgorithmRunner.RunLocalBacktest(
+                nameof(TestWarmupAlgorithm),
                 new Dictionary<string, string> { { PerformanceMetrics.TotalOrders, "1" } },
                 Language.CSharp,
                 AlgorithmStatus.Completed,
-                setupHandler: "TestSetupHandler");
+                setupHandler: "TestSetupHandler"
+            );
 
             int estimateExpectedDataCount;
             switch (resolution)
             {
                 case Resolution.Tick:
-                    estimateExpectedDataCount = 2 * (securityType == SecurityType.Forex ? 19 : 4) * 60;
+                    estimateExpectedDataCount =
+                        2 * (securityType == SecurityType.Forex ? 19 : 4) * 60;
                     break;
                 case Resolution.Second:
-                    estimateExpectedDataCount = 2 * (securityType == SecurityType.Forex ? 19 : 6) * 60 * 60;
+                    estimateExpectedDataCount =
+                        2 * (securityType == SecurityType.Forex ? 19 : 6) * 60 * 60;
                     break;
                 case Resolution.Minute:
-                    estimateExpectedDataCount = 2 * (securityType == SecurityType.Forex ? 19 : 6) * 60;
+                    estimateExpectedDataCount =
+                        2 * (securityType == SecurityType.Forex ? 19 : 6) * 60;
                     break;
                 case Resolution.Hour:
                     estimateExpectedDataCount = 2 * (securityType == SecurityType.Forex ? 19 : 6);
@@ -109,7 +114,9 @@ namespace QuantConnect.Tests.Algorithm
                     throw new ArgumentOutOfRangeException(nameof(resolution), resolution, null);
             }
 
-            Log.Debug($"WarmUpDataCount: {_algorithm.WarmUpDataCount}. Resolution {resolution}. SecurityType {securityType}");
+            Log.Debug(
+                $"WarmUpDataCount: {_algorithm.WarmUpDataCount}. Resolution {resolution}. SecurityType {securityType}"
+            );
             Assert.GreaterOrEqual(_algorithm.WarmUpDataCount, estimateExpectedDataCount);
         }
 
@@ -145,7 +152,10 @@ namespace QuantConnect.Tests.Algorithm
             algo.PostInitialize();
 
             // +2 is due to the weekend
-            Assert.AreEqual(algo.StartDate - universe.Configuration.Resolution.ToTimeSpan() * (barCount + 2), algo.Time);
+            Assert.AreEqual(
+                algo.StartDate - universe.Configuration.Resolution.ToTimeSpan() * (barCount + 2),
+                algo.Time
+            );
         }
 
         [Test]
@@ -155,18 +165,21 @@ namespace QuantConnect.Tests.Algorithm
             {
                 HistoryProvider = new SubscriptionDataReaderHistoryProvider()
             };
-            algo.HistoryProvider.Initialize(new HistoryProviderInitializeParameters(
-                null,
-                null,
-                TestGlobals.DataProvider,
-                TestGlobals.DataCacheProvider,
-                TestGlobals.MapFileProvider,
-                TestGlobals.FactorFileProvider,
-                null,
-                false,
-                new DataPermissionManager(),
-                algo.ObjectStore,
-                algo.Settings));
+            algo.HistoryProvider.Initialize(
+                new HistoryProviderInitializeParameters(
+                    null,
+                    null,
+                    TestGlobals.DataProvider,
+                    TestGlobals.DataCacheProvider,
+                    TestGlobals.MapFileProvider,
+                    TestGlobals.FactorFileProvider,
+                    null,
+                    false,
+                    new DataPermissionManager(),
+                    algo.ObjectStore,
+                    algo.Settings
+                )
+            );
             algo.SetStartDate(2013, 10, 08);
             algo.AddEquity("SPY", Resolution.Minute);
 
@@ -180,11 +193,11 @@ namespace QuantConnect.Tests.Algorithm
                 var sma = indicatorDataPoint.ToPython();
                 var atr = indicatorTradeBar.ToPython();
                 var vwapi = indicatorDataBar.ToPython();
-                #pragma warning disable CS0618
+#pragma warning disable CS0618
                 Assert.DoesNotThrow(() => algo.WarmUpIndicator("SPY", sma, Resolution.Minute));
                 Assert.DoesNotThrow(() => algo.WarmUpIndicator("SPY", atr, Resolution.Minute));
                 Assert.DoesNotThrow(() => algo.WarmUpIndicator("SPY", vwapi, Resolution.Minute));
-                #pragma warning restore CS0618
+#pragma warning restore CS0618
                 var smaIsReady = ((dynamic)sma).IsReady;
                 var atrIsReady = ((dynamic)atr).IsReady;
                 var vwapiIsReady = ((dynamic)vwapi).IsReady;
@@ -321,8 +334,10 @@ namespace QuantConnect.Tests.Algorithm
         {
             using (Py.GIL())
             {
-                dynamic algo = PyModule.FromString("testModule",
-                    @"
+                dynamic algo = PyModule
+                    .FromString(
+                        "testModule",
+                        @"
 from AlgorithmImports import *
 from QuantConnect.Tests.Engine.DataFeeds import *
 
@@ -333,7 +348,10 @@ class TestAlgo(AlgorithmStub):
         self.set_start_date(2013, 10, 1)
         self.add_equity(""AAPL"")
         self.set_warm_up(60)
-").GetAttr("TestAlgo").Invoke();
+"
+                    )
+                    .GetAttr("TestAlgo")
+                    .Invoke();
 
                 algo.initialize();
                 algo.post_initialize();
@@ -349,8 +367,10 @@ class TestAlgo(AlgorithmStub):
         {
             using (Py.GIL())
             {
-                dynamic algo = PyModule.FromString("testModule",
-                    @"
+                dynamic algo = PyModule
+                    .FromString(
+                        "testModule",
+                        @"
 from AlgorithmImports import *
 from QuantConnect.Tests.Engine.DataFeeds import *
 
@@ -368,7 +388,10 @@ class TestAlgo(AlgorithmStub):
             self.settings.warm_up_resolution = Resolution.DAILY
         else:
             self.settings.warmup_resolution = Resolution.DAILY
-").GetAttr("TestAlgo").Invoke(passThrough.ToPython());
+"
+                    )
+                    .GetAttr("TestAlgo")
+                    .Invoke(passThrough.ToPython());
 
                 algo.initialize();
                 algo.post_initialize();
@@ -383,7 +406,10 @@ class TestAlgo(AlgorithmStub):
         {
             public static TestWarmupAlgorithm TestAlgorithm { get; set; }
 
-            public override IAlgorithm CreateAlgorithmInstance(AlgorithmNodePacket algorithmNodePacket, string assemblyPath)
+            public override IAlgorithm CreateAlgorithmInstance(
+                AlgorithmNodePacket algorithmNodePacket,
+                string assemblyPath
+            )
             {
                 Algorithm = TestAlgorithm;
                 return Algorithm;

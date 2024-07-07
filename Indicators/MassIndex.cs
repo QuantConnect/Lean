@@ -51,9 +51,7 @@ namespace QuantConnect.Indicators
         /// <param name="emaPeriod">The period used by both EMA.</param>
         /// <param name="sumPeriod">The sum period.</param>
         public MassIndex(int emaPeriod = 9, int sumPeriod = 25)
-            : this($"MASS({emaPeriod},{sumPeriod})", emaPeriod, sumPeriod)
-        {
-        }
+            : this($"MASS({emaPeriod},{sumPeriod})", emaPeriod, sumPeriod) { }
 
         /// <summary>
         /// Gets a flag indicating when this indicator is ready and fully initialized

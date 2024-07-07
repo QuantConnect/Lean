@@ -30,15 +30,23 @@ namespace QuantConnect.Report
         /// <param name="result">Result object to extract the chart points</param>
         /// <param name="seriesName">Series name from which the points will be extracted. By default is Equity series</param>
         /// <returns></returns>
-        public static SortedList<DateTime, double> EquityPoints(Result result, string seriesName = null)
+        public static SortedList<DateTime, double> EquityPoints(
+            Result result,
+            string seriesName = null
+        )
         {
             var points = new SortedList<DateTime, double>();
 
             seriesName ??= BaseResultsHandler.EquityKey;
-            if (result == null || result.Charts == null ||
-                !result.Charts.ContainsKey(BaseResultsHandler.StrategyEquityKey) ||
-                result.Charts[BaseResultsHandler.StrategyEquityKey].Series == null ||
-                !result.Charts[BaseResultsHandler.StrategyEquityKey].Series.ContainsKey(seriesName))
+            if (
+                result == null
+                || result.Charts == null
+                || !result.Charts.ContainsKey(BaseResultsHandler.StrategyEquityKey)
+                || result.Charts[BaseResultsHandler.StrategyEquityKey].Series == null
+                || !result
+                    .Charts[BaseResultsHandler.StrategyEquityKey]
+                    .Series.ContainsKey(seriesName)
+            )
             {
                 return points;
             }
@@ -73,10 +81,15 @@ namespace QuantConnect.Report
         {
             var points = new SortedList<DateTime, double>();
 
-            if (result == null || result.Charts == null ||
-                !result.Charts.ContainsKey(BaseResultsHandler.BenchmarkKey) ||
-                result.Charts[BaseResultsHandler.BenchmarkKey].Series == null ||
-                !result.Charts[BaseResultsHandler.BenchmarkKey].Series.ContainsKey(BaseResultsHandler.BenchmarkKey))
+            if (
+                result == null
+                || result.Charts == null
+                || !result.Charts.ContainsKey(BaseResultsHandler.BenchmarkKey)
+                || result.Charts[BaseResultsHandler.BenchmarkKey].Series == null
+                || !result
+                    .Charts[BaseResultsHandler.BenchmarkKey]
+                    .Series.ContainsKey(BaseResultsHandler.BenchmarkKey)
+            )
             {
                 return points;
             }
@@ -85,13 +98,22 @@ namespace QuantConnect.Report
             {
                 return new SortedList<DateTime, double>();
             }
-            if (!result.Charts[BaseResultsHandler.BenchmarkKey].Series.ContainsKey(BaseResultsHandler.BenchmarkKey))
+            if (
+                !result
+                    .Charts[BaseResultsHandler.BenchmarkKey]
+                    .Series.ContainsKey(BaseResultsHandler.BenchmarkKey)
+            )
             {
                 return new SortedList<DateTime, double>();
             }
 
             // Benchmark should be a Series, so we cast the points directly to ChartPoint
-            foreach (ChartPoint point in result.Charts[BaseResultsHandler.BenchmarkKey].Series[BaseResultsHandler.BenchmarkKey].Values)
+            foreach (
+                ChartPoint point in result
+                    .Charts[BaseResultsHandler.BenchmarkKey]
+                    .Series[BaseResultsHandler.BenchmarkKey]
+                    .Values
+            )
             {
                 points[Time.UnixTimeStampToDateTime(point.x)] = Convert.ToDouble(point.y);
             }

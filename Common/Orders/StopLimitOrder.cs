@@ -54,9 +54,7 @@ namespace QuantConnect.Orders
         /// <summary>
         /// Default constructor for JSON Deserialization:
         /// </summary>
-        public StopLimitOrder()
-        {
-        }
+        public StopLimitOrder() { }
 
         /// <summary>
         /// New Stop Market Order constructor -
@@ -68,7 +66,15 @@ namespace QuantConnect.Orders
         /// <param name="stopPrice">Price the order should be filled at if a limit order</param>
         /// <param name="tag">User defined data tag for this order</param>
         /// <param name="properties">The order properties for this order</param>
-        public StopLimitOrder(Symbol symbol, decimal quantity, decimal stopPrice, decimal limitPrice, DateTime time, string tag = "", IOrderProperties properties = null)
+        public StopLimitOrder(
+            Symbol symbol,
+            decimal quantity,
+            decimal stopPrice,
+            decimal limitPrice,
+            DateTime time,
+            string tag = "",
+            IOrderProperties properties = null
+        )
             : base(symbol, quantity, time, tag, properties)
         {
             StopPrice = stopPrice;
@@ -140,7 +146,12 @@ namespace QuantConnect.Orders
         /// <returns>A copy of this order</returns>
         public override Order Clone()
         {
-            var order = new StopLimitOrder { StopPrice = StopPrice, LimitPrice = LimitPrice, StopTriggered = StopTriggered };
+            var order = new StopLimitOrder
+            {
+                StopPrice = StopPrice,
+                LimitPrice = LimitPrice,
+                StopTriggered = StopTriggered
+            };
             CopyTo(order);
             return order;
         }

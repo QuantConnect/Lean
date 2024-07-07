@@ -22,8 +22,8 @@ using QuantConnect.Data.UniverseSelection;
 using QuantConnect.Interfaces;
 using QuantConnect.Logging;
 using QuantConnect.Orders;
-using QuantConnect.Orders.Fills;
 using QuantConnect.Orders.Fees;
+using QuantConnect.Orders.Fills;
 using QuantConnect.Securities;
 using QuantConnect.Securities.Option;
 using QuantConnect.Util;
@@ -56,9 +56,7 @@ namespace QuantConnect.Brokerages.Backtesting
         /// </summary>
         /// <param name="algorithm">The algorithm instance</param>
         public BacktestingBrokerage(IAlgorithm algorithm)
-            : this(algorithm, "Backtesting Brokerage")
-        {
-        }
+            : this(algorithm, "Backtesting Brokerage") { }
 
         /// <summary>
         /// Creates a new BacktestingBrokerage for the specified algorithm
@@ -96,9 +94,11 @@ namespace QuantConnect.Brokerages.Backtesting
         public override List<Holding> GetAccountHoldings()
         {
             // grab everything from the portfolio with a non-zero absolute quantity
-            return (from kvp in Algorithm.Portfolio.Securities.OrderBy(x => x.Value.Symbol)
-                    where kvp.Value.Holdings.AbsoluteQuantity > 0
-                    select new Holding(kvp.Value)).ToList();
+            return (
+                from kvp in Algorithm.Portfolio.Securities.OrderBy(x => x.Value.Symbol)
+                where kvp.Value.Holdings.AbsoluteQuantity > 0
+                select new Holding(kvp.Value)
+            ).ToList();
         }
 
         /// <summary>
@@ -107,7 +107,9 @@ namespace QuantConnect.Brokerages.Backtesting
         /// <returns>The current cash balance for each currency available for trading</returns>
         public override List<CashAmount> GetCashBalance()
         {
-            return Algorithm.Portfolio.CashBook.Select(x => new CashAmount(x.Value.Amount, x.Value.Symbol)).ToList();
+            return Algorithm
+                .Portfolio.CashBook.Select(x => new CashAmount(x.Value.Amount, x.Value.Symbol))
+                .ToList();
         }
 
         /// <summary>
@@ -119,7 +121,14 @@ namespace QuantConnect.Brokerages.Backtesting
         {
             if (Algorithm.LiveMode)
             {
-                Log.Trace("BacktestingBrokerage.PlaceOrder(): Type: " + order.Type + " Symbol: " + order.Symbol.Value + " Quantity: " + order.Quantity);
+                Log.Trace(
+                    "BacktestingBrokerage.PlaceOrder(): Type: "
+                        + order.Type
+                        + " Symbol: "
+                        + order.Symbol.Value
+                        + " Quantity: "
+                        + order.Quantity
+                );
             }
 
             if (order.Status == OrderStatus.New)
@@ -133,10 +142,10 @@ namespace QuantConnect.Brokerages.Backtesting
                 AddBrokerageOrderId(order);
 
                 // fire off the event that says this order has been submitted
-                var submitted = new OrderEvent(order,
-                        Algorithm.UtcTime,
-                        OrderFee.Zero)
-                { Status = OrderStatus.Submitted };
+                var submitted = new OrderEvent(order, Algorithm.UtcTime, OrderFee.Zero)
+                {
+                    Status = OrderStatus.Submitted
+                };
                 OnOrderEvent(submitted);
 
                 return true;
@@ -153,7 +162,14 @@ namespace QuantConnect.Brokerages.Backtesting
         {
             if (Algorithm.LiveMode)
             {
-                Log.Trace("BacktestingBrokerage.UpdateOrder(): Symbol: " + order.Symbol.Value + " Quantity: " + order.Quantity + " Status: " + order.Status);
+                Log.Trace(
+                    "BacktestingBrokerage.UpdateOrder(): Symbol: "
+                        + order.Symbol.Value
+                        + " Quantity: "
+                        + order.Quantity
+                        + " Status: "
+                        + order.Status
+                );
             }
 
             lock (_needsScanLock)
@@ -172,9 +188,7 @@ namespace QuantConnect.Brokerages.Backtesting
             AddBrokerageOrderId(order);
 
             // fire off the event that says this order has been updated
-            var updated = new OrderEvent(order,
-                    Algorithm.UtcTime,
-                    OrderFee.Zero)
+            var updated = new OrderEvent(order, Algorithm.UtcTime, OrderFee.Zero)
             {
                 Status = OrderStatus.UpdateSubmitted
             };
@@ -192,7 +206,12 @@ namespace QuantConnect.Brokerages.Backtesting
         {
             if (Algorithm.LiveMode)
             {
-                Log.Trace("BacktestingBrokerage.CancelOrder(): Symbol: " + order.Symbol.Value + " Quantity: " + order.Quantity);
+                Log.Trace(
+                    "BacktestingBrokerage.CancelOrder(): Symbol: "
+                        + order.Symbol.Value
+                        + " Quantity: "
+                        + order.Quantity
+                );
             }
 
             if (!order.TryGetGroupOrders(TryGetOrder, out var orders))
@@ -216,10 +235,10 @@ namespace QuantConnect.Brokerages.Backtesting
                 AddBrokerageOrderId(orderInGroup);
 
                 // fire off the event that says this order has been canceled
-                var canceled = new OrderEvent(orderInGroup,
-                        Algorithm.UtcTime,
-                        OrderFee.Zero)
-                { Status = OrderStatus.Canceled };
+                var canceled = new OrderEvent(orderInGroup, Algorithm.UtcTime, OrderFee.Zero)
+                {
+                    Status = OrderStatus.Canceled
+                };
                 OnOrderEvent(canceled);
             }
 
@@ -249,7 +268,9 @@ namespace QuantConnect.Brokerages.Backtesting
                     var order = kvp.Value;
                     if (order == null)
                     {
-                        Log.Error("BacktestingBrokerage.Scan(): Null pending order found: " + kvp.Key);
+                        Log.Error(
+                            "BacktestingBrokerage.Scan(): Null pending order found: " + kvp.Key
+                        );
                         _pending.TryRemove(kvp.Key, out order);
                         continue;
                     }
@@ -262,7 +283,12 @@ namespace QuantConnect.Brokerages.Backtesting
                     }
 
                     // all order fills are processed on the next bar (except for market orders)
-                    if (order.Time == Algorithm.UtcTime && order.Type != OrderType.Market && order.Type != OrderType.ComboMarket && order.Type != OrderType.OptionExercise)
+                    if (
+                        order.Time == Algorithm.UtcTime
+                        && order.Type != OrderType.Market
+                        && order.Type != OrderType.ComboMarket
+                        && order.Type != OrderType.OptionExercise
+                    )
                     {
                         stillNeedsScan = true;
                         continue;
@@ -275,9 +301,13 @@ namespace QuantConnect.Brokerages.Backtesting
                         continue;
                     }
 
-                    if(!orders.TryGetGroupOrdersSecurities(Algorithm.Portfolio, out var securities))
+                    if (
+                        !orders.TryGetGroupOrdersSecurities(Algorithm.Portfolio, out var securities)
+                    )
                     {
-                        Log.Error($"BacktestingBrokerage.Scan(): Unable to process orders: [{string.Join(",", orders.Select(o => o.Id))}] The security no longer exists. UtcTime: {Algorithm.UtcTime}");
+                        Log.Error(
+                            $"BacktestingBrokerage.Scan(): Unable to process orders: [{string.Join(",", orders.Select(o => o.Id))}] The security no longer exists. UtcTime: {Algorithm.UtcTime}"
+                        );
                         // invalidate the order in the algorithm before removing
                         RemoveOrders(orders, OrderStatus.Invalid);
                         continue;
@@ -292,7 +322,8 @@ namespace QuantConnect.Brokerages.Backtesting
                     HasSufficientBuyingPowerForOrderResult hasSufficientBuyingPowerResult;
                     try
                     {
-                        hasSufficientBuyingPowerResult = Algorithm.Portfolio.HasSufficientBuyingPowerForOrder(orders);
+                        hasSufficientBuyingPowerResult =
+                            Algorithm.Portfolio.HasSufficientBuyingPowerForOrder(orders);
                     }
                     catch (Exception err)
                     {
@@ -300,7 +331,9 @@ namespace QuantConnect.Brokerages.Backtesting
                         RemoveOrders(orders, OrderStatus.Invalid, err.Message);
 
                         Log.Error(err);
-                        Algorithm.Error($"Order Error: ids: [{string.Join(",", orders.Select(o => o.Id))}], Error executing margin models: {err.Message}");
+                        Algorithm.Error(
+                            $"Order Error: ids: [{string.Join(",", orders.Select(o => o.Id))}], Error executing margin models: {err.Message}"
+                        );
                         continue;
                     }
 
@@ -318,7 +351,12 @@ namespace QuantConnect.Brokerages.Backtesting
                             if (order.Type == OrderType.OptionExercise)
                             {
                                 var option = (Option)security;
-                                fills.AddRange(option.OptionExerciseModel.OptionExercise(option, order as OptionExerciseOrder));
+                                fills.AddRange(
+                                    option.OptionExerciseModel.OptionExercise(
+                                        option,
+                                        order as OptionExerciseOrder
+                                    )
+                                );
                             }
                             else
                             {
@@ -328,11 +366,14 @@ namespace QuantConnect.Brokerages.Backtesting
                                     Algorithm.SubscriptionManager.SubscriptionDataConfigService,
                                     Algorithm.Settings.StalePriceTimeSpan,
                                     securities,
-                                    OnOrderUpdated);
+                                    OnOrderUpdated
+                                );
 
                                 // check if the fill should be emitted
                                 var fill = model.Fill(context);
-                                if (fill.All(x => order.TimeInForce.IsFillValid(security, order, x)))
+                                if (
+                                    fill.All(x => order.TimeInForce.IsFillValid(security, order, x))
+                                )
                                 {
                                     fills.AddRange(fill);
                                 }
@@ -350,8 +391,12 @@ namespace QuantConnect.Brokerages.Backtesting
                                     {
                                         // It could be the case the order is a combo order, then it contains legs with different quantities and security types.
                                         // Therefore, we need to compute the fees based on the specific leg order and security
-                                        var legKVP = securities.Where(x => x.Key.Id == fill.OrderId).Single();
-                                        fill.OrderFee = legKVP.Value.FeeModel.GetOrderFee(new OrderFeeParameters(legKVP.Value, legKVP.Key));
+                                        var legKVP = securities
+                                            .Where(x => x.Key.Id == fill.OrderId)
+                                            .Single();
+                                        fill.OrderFee = legKVP.Value.FeeModel.GetOrderFee(
+                                            new OrderFeeParameters(legKVP.Value, legKVP.Key)
+                                        );
                                     }
                                 }
                             }
@@ -359,7 +404,9 @@ namespace QuantConnect.Brokerages.Backtesting
                         catch (Exception err)
                         {
                             Log.Error(err);
-                            Algorithm.Error($"Order Error: id: {order.Id}, Transaction model failed to fill for order type: {order.Type} with error: {err.Message}");
+                            Algorithm.Error(
+                                $"Order Error: id: {order.Id}, Transaction model failed to fill for order type: {order.Type} with error: {err.Message}"
+                            );
                         }
                     }
                     else if (order.Status == OrderStatus.CancelPending)
@@ -440,11 +487,23 @@ namespace QuantConnect.Brokerages.Backtesting
             switch (order.Type)
             {
                 case OrderType.TrailingStop:
-                    OnOrderUpdated(new OrderUpdateEvent { OrderId = order.Id, TrailingStopPrice = ((TrailingStopOrder)order).StopPrice });
+                    OnOrderUpdated(
+                        new OrderUpdateEvent
+                        {
+                            OrderId = order.Id,
+                            TrailingStopPrice = ((TrailingStopOrder)order).StopPrice
+                        }
+                    );
                     break;
 
                 case OrderType.StopLimit:
-                    OnOrderUpdated(new OrderUpdateEvent { OrderId = order.Id, StopTriggered = ((StopLimitOrder)order).StopTriggered });
+                    OnOrderUpdated(
+                        new OrderUpdateEvent
+                        {
+                            OrderId = order.Id,
+                            StopTriggered = ((StopLimitOrder)order).StopTriggered
+                        }
+                    );
                     break;
             }
         }
@@ -456,22 +515,33 @@ namespace QuantConnect.Brokerages.Backtesting
         {
             if (Algorithm.UtcTime >= _nextOptionAssignmentTime)
             {
-                _nextOptionAssignmentTime = Algorithm.UtcTime.RoundDown(Time.OneHour) + Time.OneHour;
+                _nextOptionAssignmentTime =
+                    Algorithm.UtcTime.RoundDown(Time.OneHour) + Time.OneHour;
 
-                foreach (var security in Algorithm.Securities.Values
-                    .Where(security => security.Symbol.SecurityType.IsOption() && security.Holdings.IsShort)
-                    .OrderBy(security => security.Symbol.ID.Symbol))
+                foreach (
+                    var security in Algorithm
+                        .Securities.Values.Where(security =>
+                            security.Symbol.SecurityType.IsOption() && security.Holdings.IsShort
+                        )
+                        .OrderBy(security => security.Symbol.ID.Symbol)
+                )
                 {
                     var option = (Option)security;
-                    var result = option.OptionAssignmentModel.GetAssignment(new OptionAssignmentParameters(option));
+                    var result = option.OptionAssignmentModel.GetAssignment(
+                        new OptionAssignmentParameters(option)
+                    );
                     if (result != null && result.Quantity != 0)
                     {
                         if (!_pendingOptionAssignments.Add(option.Symbol))
                         {
-                            throw new InvalidOperationException($"Duplicate option exercise order request for symbol {option.Symbol}. Please contact support");
+                            throw new InvalidOperationException(
+                                $"Duplicate option exercise order request for symbol {option.Symbol}. Please contact support"
+                            );
                         }
 
-                        OnOptionNotification(new OptionNotificationEventArgs(option.Symbol, 0, result.Tag));
+                        OnOptionNotification(
+                            new OptionNotificationEventArgs(option.Symbol, 0, result.Tag)
+                        );
                     }
                 }
             }
@@ -524,9 +594,13 @@ namespace QuantConnect.Brokerages.Backtesting
         {
             // Process our delistings, important to do options first because of possibility of having future options contracts
             // and underlying future delisting at the same time.
-            foreach (var delisting in delistings?.Values.OrderBy(x => !x.Symbol.SecurityType.IsOption()))
+            foreach (
+                var delisting in delistings?.Values.OrderBy(x => !x.Symbol.SecurityType.IsOption())
+            )
             {
-                Log.Trace($"BacktestingBrokerage.ProcessDelistings(): Delisting {delisting.Type}: {delisting.Symbol.Value}, UtcTime: {Algorithm.UtcTime}, DelistingTime: {delisting.Time}");
+                Log.Trace(
+                    $"BacktestingBrokerage.ProcessDelistings(): Delisting {delisting.Type}: {delisting.Symbol.Value}, UtcTime: {Algorithm.UtcTime}, DelistingTime: {delisting.Time}"
+                );
                 if (delisting.Type == DelistingType.Warning)
                 {
                     // We do nothing with warnings
@@ -583,14 +657,22 @@ namespace QuantConnect.Brokerages.Backtesting
             for (var i = 0; i < orders.Count; i++)
             {
                 var order = orders[i];
-                orderEvents.Add(new OrderEvent(order, Algorithm.UtcTime, OrderFee.Zero, message) { Status = orderStatus });
+                orderEvents.Add(
+                    new OrderEvent(order, Algorithm.UtcTime, OrderFee.Zero, message)
+                    {
+                        Status = orderStatus
+                    }
+                );
                 _pending.TryRemove(order.Id, out var _);
             }
 
             OnOrderEvents(orderEvents);
         }
 
-        private bool TryOrderPreChecks(Dictionary<Order, Security> ordersSecurities, out bool stillNeedsScan)
+        private bool TryOrderPreChecks(
+            Dictionary<Order, Security> ordersSecurities,
+            out bool stillNeedsScan
+        )
         {
             var result = true;
             stillNeedsScan = false;
@@ -622,7 +704,11 @@ namespace QuantConnect.Brokerages.Backtesting
                 if (order.TimeInForce.IsOrderExpired(security, order))
                 {
                     // We remove all orders in the combo
-                    RemoveOrders(ordersSecurities.Select(kvp => kvp.Key).ToList(), OrderStatus.Canceled, "The order has expired.");
+                    RemoveOrders(
+                        ordersSecurities.Select(kvp => kvp.Key).ToList(),
+                        OrderStatus.Canceled,
+                        "The order has expired."
+                    );
                     result = false;
                     break;
                 }

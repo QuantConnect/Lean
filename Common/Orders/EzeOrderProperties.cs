@@ -18,7 +18,7 @@ namespace QuantConnect.Orders
     /// <summary>
     /// Contains additional properties and settings for an order submitted to EZE brokerage
     /// </summary>
-    public class EzeOrderProperties: OrderProperties
+    public class EzeOrderProperties : OrderProperties
     {
         /// <summary>
         /// Route name as shown in Eze EMS.
@@ -26,7 +26,7 @@ namespace QuantConnect.Orders
         public string Route { get; set; }
 
         /// <summary>
-        /// Semi-colon separated values that represent either Trade or Neutral accounts the user has permission 
+        /// Semi-colon separated values that represent either Trade or Neutral accounts the user has permission
         /// e.g.,TAL;TEST;USER1;TRADE or TAL;TEST;USER2;NEUTRAL
         /// </summary>
         public string Account { get; set; }
@@ -43,7 +43,13 @@ namespace QuantConnect.Orders
         /// <param name="account">Trading account with specific permission</param>
         /// <param name="exchange">Exchange name</param>
         /// <param name="notes">Some notes about order</param>
-        public EzeOrderProperties(string route, string account, Exchange exchange, string notes = "") : base(exchange)
+        public EzeOrderProperties(
+            string route,
+            string account,
+            Exchange exchange,
+            string notes = ""
+        )
+            : base(exchange)
         {
             Route = route;
             Account = account;

@@ -58,8 +58,12 @@ namespace QuantConnect.Orders.Fees
         /// <param name="tUsdtFee">Taker fee value for USDT pair contracts</param>
         /// <param name="mBusdFee">Maker fee value for BUSD pair contracts</param>
         /// <param name="tBusdFee">Taker fee value for BUSD pair contracts</param>
-        public BinanceFuturesFeeModel(decimal mUsdtFee = MakerTier1USDTFee, decimal tUsdtFee = TakerTier1USDTFee,
-            decimal mBusdFee = MakerTier1BUSDFee, decimal tBusdFee = TakerTier1BUSDFee)
+        public BinanceFuturesFeeModel(
+            decimal mUsdtFee = MakerTier1USDTFee,
+            decimal tUsdtFee = TakerTier1USDTFee,
+            decimal mBusdFee = MakerTier1BUSDFee,
+            decimal tBusdFee = TakerTier1BUSDFee
+        )
             : base(-1, -1)
         {
             _makerUsdtFee = mUsdtFee;

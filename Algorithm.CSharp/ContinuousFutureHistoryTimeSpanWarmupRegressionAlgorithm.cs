@@ -20,7 +20,8 @@ namespace QuantConnect.Algorithm.CSharp
     /// <summary>
     /// Continuous Futures History Regression algorithm. Asserting and showcasing the behavior of adding a continuous future
     /// </summary>
-    public class ContinuousFutureHistoryTimeSpanWarmupRegressionAlgorithm : ContinuousFutureHistoryRegressionAlgorithm
+    public class ContinuousFutureHistoryTimeSpanWarmupRegressionAlgorithm
+        : ContinuousFutureHistoryRegressionAlgorithm
     {
         public override void Initialize()
         {

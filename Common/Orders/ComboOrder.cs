@@ -33,22 +33,15 @@ namespace QuantConnect.Orders
         /// </summary>
         public override decimal Quantity
         {
-            get
-            {
-                return _ratio.GetOrderLegGroupQuantity(GroupOrderManager).Normalize();
-            }
-            internal set
-            {
-                _ratio = value.GetOrderLegRatio(GroupOrderManager);
-            }
+            get { return _ratio.GetOrderLegGroupQuantity(GroupOrderManager).Normalize(); }
+            internal set { _ratio = value.GetOrderLegRatio(GroupOrderManager); }
         }
 
         /// <summary>
         /// Added a default constructor for JSON Deserialization:
         /// </summary>
-        public ComboOrder() : base()
-        {
-        }
+        public ComboOrder()
+            : base() { }
 
         /// <summary>
         /// New market order constructor
@@ -59,8 +52,14 @@ namespace QuantConnect.Orders
         /// <param name="groupOrderManager">Manager for the orders in the group</param>
         /// <param name="tag">User defined data tag for this order</param>
         /// <param name="properties">The order properties for this order</param>
-        public ComboOrder(Symbol symbol, decimal quantity, DateTime time, GroupOrderManager groupOrderManager, string tag = "",
-            IOrderProperties properties = null)
+        public ComboOrder(
+            Symbol symbol,
+            decimal quantity,
+            DateTime time,
+            GroupOrderManager groupOrderManager,
+            string tag = "",
+            IOrderProperties properties = null
+        )
             : base(symbol, 0m, time, tag, properties)
         {
             GroupOrderManager = groupOrderManager;

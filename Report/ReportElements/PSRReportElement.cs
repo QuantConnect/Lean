@@ -38,7 +38,13 @@ namespace QuantConnect.Report.ReportElements
         /// <param name="backtest">Backtest result object</param>
         /// <param name="live">Live result object</param>
         /// <param name="tradingDaysPerYear">The number of trading days per year to get better result of statistics</param>
-        public PSRReportElement(string name, string key, BacktestResult backtest, LiveResult live, int tradingDaysPerYear)
+        public PSRReportElement(
+            string name,
+            string key,
+            BacktestResult backtest,
+            LiveResult live,
+            int tradingDaysPerYear
+        )
         {
             _live = live;
             _backtest = backtest;
@@ -61,11 +67,12 @@ namespace QuantConnect.Report.ReportElements
                 {
                     return "-";
                 }
-                
+
                 return $"{psr:P0}";
             }
 
-            var equityCurvePerformance = DrawdownCollection.NormalizeResults(_backtest, _live)
+            var equityCurvePerformance = DrawdownCollection
+                .NormalizeResults(_backtest, _live)
                 .ResampleEquivalence(date => date.Date, s => s.LastValue())
                 .PercentChange();
 
@@ -77,14 +84,13 @@ namespace QuantConnect.Report.ReportElements
             var sixMonthsBefore = equityCurvePerformance.LastKey() - TimeSpan.FromDays(180);
 
             var benchmarkSharpeRatio = 1.0d / Math.Sqrt(_tradingDaysPerYear);
-            psr = Statistics.Statistics.ProbabilisticSharpeRatio(
-                equityCurvePerformance
-                    .Where(kvp => kvp.Key >= sixMonthsBefore)
-                    .Values
-                    .ToList(), 
-                benchmarkSharpeRatio)
+            psr = Statistics
+                .Statistics.ProbabilisticSharpeRatio(
+                    equityCurvePerformance.Where(kvp => kvp.Key >= sixMonthsBefore).Values.ToList(),
+                    benchmarkSharpeRatio
+                )
                 .SafeDecimalCast();
-            
+
             Result = psr;
             return $"{psr:P0}";
         }

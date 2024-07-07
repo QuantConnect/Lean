@@ -15,8 +15,8 @@
 */
 
 using System;
-using QuantConnect.Data;
 using System.Collections.Generic;
+using QuantConnect.Data;
 using QuantConnect.Indicators;
 using QuantConnect.Interfaces;
 
@@ -57,7 +57,8 @@ namespace QuantConnect.Algorithm.CSharp
                 OptionStyle.European,
                 OptionRight.Call,
                 3200m,
-                new DateTime(2021, 1, 15));
+                new DateTime(2021, 1, 15)
+            );
 
             AddIndexOptionContract(SpxOption, Resolution);
 
@@ -109,7 +110,8 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// This is used by the regression test system to indicate which languages this algorithm is written in.
         /// </summary>
-        public virtual List<Language> Languages { get; } = new() { Language.CSharp, Language.Python };
+        public virtual List<Language> Languages { get; } =
+            new() { Language.CSharp, Language.Python };
 
         /// <summary>
         /// Data Points count of all timeslices of algorithm
@@ -129,35 +131,36 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// This is used by the regression test system to indicate what the expected statistics are from running the algorithm
         /// </summary>
-        public virtual Dictionary<string, string> ExpectedStatistics => new Dictionary<string, string>
-        {
-            {"Total Orders", "3"},
-            {"Average Win", "7.08%"},
-            {"Average Loss", "0%"},
-            {"Compounding Annual Return", "603.355%"},
-            {"Drawdown", "3.400%"},
-            {"Expectancy", "0"},
-            {"Start Equity", "1000000"},
-            {"End Equity", "1064395"},
-            {"Net Profit", "6.440%"},
-            {"Sharpe Ratio", "-4.563"},
-            {"Sortino Ratio", "0"},
-            {"Probabilistic Sharpe Ratio", "0.781%"},
-            {"Loss Rate", "0%"},
-            {"Win Rate", "100%"},
-            {"Profit-Loss Ratio", "0"},
-            {"Alpha", "-0.169"},
-            {"Beta", "0.073"},
-            {"Annual Standard Deviation", "0.028"},
-            {"Annual Variance", "0.001"},
-            {"Information Ratio", "-6.684"},
-            {"Tracking Error", "0.099"},
-            {"Treynor Ratio", "-1.771"},
-            {"Total Fees", "$0.00"},
-            {"Estimated Strategy Capacity", "$3000.00"},
-            {"Lowest Capacity Asset", "SPX XL80P3GHDZXQ|SPX 31"},
-            {"Portfolio Turnover", "23.97%"},
-            {"OrderListHash", "51f1bc2ea080df79748dc66c2520b782"}
-        };
+        public virtual Dictionary<string, string> ExpectedStatistics =>
+            new Dictionary<string, string>
+            {
+                { "Total Orders", "3" },
+                { "Average Win", "7.08%" },
+                { "Average Loss", "0%" },
+                { "Compounding Annual Return", "603.355%" },
+                { "Drawdown", "3.400%" },
+                { "Expectancy", "0" },
+                { "Start Equity", "1000000" },
+                { "End Equity", "1064395" },
+                { "Net Profit", "6.440%" },
+                { "Sharpe Ratio", "-4.563" },
+                { "Sortino Ratio", "0" },
+                { "Probabilistic Sharpe Ratio", "0.781%" },
+                { "Loss Rate", "0%" },
+                { "Win Rate", "100%" },
+                { "Profit-Loss Ratio", "0" },
+                { "Alpha", "-0.169" },
+                { "Beta", "0.073" },
+                { "Annual Standard Deviation", "0.028" },
+                { "Annual Variance", "0.001" },
+                { "Information Ratio", "-6.684" },
+                { "Tracking Error", "0.099" },
+                { "Treynor Ratio", "-1.771" },
+                { "Total Fees", "$0.00" },
+                { "Estimated Strategy Capacity", "$3000.00" },
+                { "Lowest Capacity Asset", "SPX XL80P3GHDZXQ|SPX 31" },
+                { "Portfolio Turnover", "23.97%" },
+                { "OrderListHash", "51f1bc2ea080df79748dc66c2520b782" }
+            };
     }
 }

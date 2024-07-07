@@ -50,7 +50,10 @@ namespace QuantConnect.Lean.Engine.HistoricalData
         /// <summary>
         /// Enumerates the subscriptions into slices
         /// </summary>
-        protected IEnumerable<Slice> CreateSliceEnumerableFromSubscriptions(List<Subscription> subscriptions, DateTimeZone sliceTimeZone)
+        protected IEnumerable<Slice> CreateSliceEnumerableFromSubscriptions(
+            List<Subscription> subscriptions,
+            DateTimeZone sliceTimeZone
+        )
         {
             // required by TimeSlice.Create, but we don't need it's behavior
             var frontier = DateTime.MinValue;
@@ -61,7 +64,11 @@ namespace QuantConnect.Lean.Engine.HistoricalData
             {
                 var earlyBirdTicks = long.MaxValue;
                 var data = new List<DataFeedPacket>();
-                foreach (var subscription in subscriptions.Where(subscription => !subscription.EndOfStream))
+                foreach (
+                    var subscription in subscriptions.Where(subscription =>
+                        !subscription.EndOfStream
+                    )
+                )
                 {
                     if (subscription.Current == null && !subscription.MoveNext())
                     {
@@ -76,7 +83,10 @@ namespace QuantConnect.Lean.Engine.HistoricalData
                         if (packet == null)
                         {
                             // for performance, lets be selfish about creating a new instance
-                            packet = new DataFeedPacket(subscription.Security, subscription.Configuration);
+                            packet = new DataFeedPacket(
+                                subscription.Security,
+                                subscription.Configuration
+                            );
 
                             // only add if we have data
                             data.Add(packet);
@@ -93,18 +103,24 @@ namespace QuantConnect.Lean.Engine.HistoricalData
                     if (subscription.Current != null)
                     {
                         // take the earliest between the next piece of data or the next tz discontinuity
-                        earlyBirdTicks = Math.Min(earlyBirdTicks, subscription.Current.EmitTimeUtc.Ticks);
+                        earlyBirdTicks = Math.Min(
+                            earlyBirdTicks,
+                            subscription.Current.EmitTimeUtc.Ticks
+                        );
                     }
                 }
 
                 if (data.Count != 0)
                 {
                     // reuse the slice construction code from TimeSlice.Create
-                    yield return timeSliceFactory.Create(frontier, data, SecurityChanges.None, universeSelectionData).Slice;
+                    yield return timeSliceFactory
+                        .Create(frontier, data, SecurityChanges.None, universeSelectionData)
+                        .Slice;
                 }
 
                 // end of subscriptions, after we emit, else we might drop a data point
-                if (earlyBirdTicks == long.MaxValue) break;
+                if (earlyBirdTicks == long.MaxValue)
+                    break;
 
                 frontier = new DateTime(Math.Max(earlyBirdTicks, frontier.Ticks), DateTimeKind.Utc);
             }
@@ -119,7 +135,10 @@ namespace QuantConnect.Lean.Engine.HistoricalData
         /// <summary>
         /// Creates a subscription to process the history request
         /// </summary>
-        protected Subscription CreateSubscription(HistoryRequest request, IEnumerable<BaseData> history)
+        protected Subscription CreateSubscription(
+            HistoryRequest request,
+            IEnumerable<BaseData> history
+        )
         {
             var config = request.ToSubscriptionDataConfig();
             var security = new Security(
@@ -134,7 +153,12 @@ namespace QuantConnect.Lean.Engine.HistoricalData
 
             var reader = history.GetEnumerator();
 
-            var useDailyStrictEndTimes = LeanData.UseDailyStrictEndTimes(AlgorithmSettings, request, config.Symbol, config.Increment);
+            var useDailyStrictEndTimes = LeanData.UseDailyStrictEndTimes(
+                AlgorithmSettings,
+                request,
+                config.Symbol,
+                config.Increment
+            );
             if (useDailyStrictEndTimes)
             {
                 reader = new StrictDailyEndTimesEnumerator(reader, request.ExchangeHours);
@@ -153,13 +177,35 @@ namespace QuantConnect.Lean.Engine.HistoricalData
                     reader = new QuoteBarFillForwardEnumerator(reader);
                 }
 
-                var readOnlyRef = Ref.CreateReadOnly(() => request.FillForwardResolution.Value.ToTimeSpan());
-                reader = new FillForwardEnumerator(reader, security.Exchange, readOnlyRef, request.IncludeExtendedMarketHours, end, config.Increment, config.DataTimeZone, useDailyStrictEndTimes);
+                var readOnlyRef = Ref.CreateReadOnly(
+                    () => request.FillForwardResolution.Value.ToTimeSpan()
+                );
+                reader = new FillForwardEnumerator(
+                    reader,
+                    security.Exchange,
+                    readOnlyRef,
+                    request.IncludeExtendedMarketHours,
+                    end,
+                    config.Increment,
+                    config.DataTimeZone,
+                    useDailyStrictEndTimes
+                );
             }
 
-            var subscriptionRequest = new SubscriptionRequest(false, null, security, config, request.StartTimeUtc, request.EndTimeUtc);
+            var subscriptionRequest = new SubscriptionRequest(
+                false,
+                null,
+                security,
+                config,
+                request.StartTimeUtc,
+                request.EndTimeUtc
+            );
 
-            return SubscriptionUtils.Create(subscriptionRequest, reader, AlgorithmSettings.DailyPreciseEndTime);
+            return SubscriptionUtils.Create(
+                subscriptionRequest,
+                reader,
+                AlgorithmSettings.DailyPreciseEndTime
+            );
         }
     }
 }

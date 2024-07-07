@@ -49,7 +49,7 @@ namespace QuantConnect.Securities.Positions
             SecurityPortfolioManager portfolio,
             IPositionGroup positionGroup,
             List<Order> orders
-            )
+        )
         {
             Orders = orders;
             Portfolio = portfolio;
@@ -61,11 +61,15 @@ namespace QuantConnect.Securities.Positions
         /// </summary>
         public static implicit operator HasSufficientBuyingPowerForOrderParameters(
             HasSufficientPositionGroupBuyingPowerForOrderParameters parameters
-            )
+        )
         {
             var position = parameters.PositionGroup.Single();
             var security = parameters.Portfolio.Securities[position.Symbol];
-            return new HasSufficientBuyingPowerForOrderParameters(parameters.Portfolio, security, parameters.Orders.Single());
+            return new HasSufficientBuyingPowerForOrderParameters(
+                parameters.Portfolio,
+                security,
+                parameters.Orders.Single()
+            );
         }
 
         /// <summary>

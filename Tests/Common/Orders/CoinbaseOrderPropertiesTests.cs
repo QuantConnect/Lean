@@ -14,8 +14,8 @@
 */
 
 using NUnit.Framework;
-using QuantConnect.Orders;
 using QuantConnect.Interfaces;
+using QuantConnect.Orders;
 
 namespace QuantConnect.Tests.Common.Orders
 {

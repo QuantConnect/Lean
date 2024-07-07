@@ -29,7 +29,12 @@ namespace QuantConnect.Report.ReportElements
         /// <param name="key">Location of injection</param>
         /// <param name="backtest">Backtest result object</param>
         /// <param name="live">Live result object</param>
-        public InformationRatioReportElement(string name, string key, BacktestResult backtest, LiveResult live)
+        public InformationRatioReportElement(
+            string name,
+            string key,
+            BacktestResult backtest,
+            LiveResult live
+        )
         {
             _live = live;
             _backtest = backtest;
@@ -42,7 +47,10 @@ namespace QuantConnect.Report.ReportElements
         /// </summary>
         public override string Render()
         {
-            var informationRatio = _backtest?.TotalPerformance?.PortfolioStatistics?.InformationRatio;
+            var informationRatio = _backtest
+                ?.TotalPerformance
+                ?.PortfolioStatistics
+                ?.InformationRatio;
             Result = informationRatio;
             return informationRatio?.ToString("F1") ?? "-";
         }

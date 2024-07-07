@@ -47,7 +47,8 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         /// </summary>
         public override void Initialize(
             IAlgorithm algorithm,
-            IDataFeedSubscriptionManager dataFeedSubscriptionManager)
+            IDataFeedSubscriptionManager dataFeedSubscriptionManager
+        )
         {
             base.Initialize(algorithm, dataFeedSubscriptionManager);
 
@@ -70,7 +71,9 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                 subscription.NewDataAvailable -= OnSubscriptionNewDataAvailable;
             };
 
-            _realTimeScheduleEventService = new RealTimeScheduleEventService(new RealTimeProvider());
+            _realTimeScheduleEventService = new RealTimeScheduleEventService(
+                new RealTimeProvider()
+            );
             // this schedule event will be our time pulse
             _realTimeScheduleEventService.NewEvent += (sender, args) => _newLiveDataEmitted.Set();
         }
@@ -96,15 +99,20 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                 var now = DateTime.UtcNow;
                 if (!previousWasTimePulse)
                 {
-                    if (!_newLiveDataEmitted.IsSet
+                    if (
+                        !_newLiveDataEmitted.IsSet
                         // we warmup as fast as we can even if no new data point is available
-                        && !Algorithm.IsWarmingUp)
+                        && !Algorithm.IsWarmingUp
+                    )
                     {
                         // if we just crossed into the next second let's loop again, we will flush any consolidator bar
                         // else we will wait to be notified by the subscriptions or our scheduled event service every second
                         if (lastLoopStart.Second == now.Second)
                         {
-                            _realTimeScheduleEventService.ScheduleEvent(TimeSpan.FromMilliseconds(GetPulseDueTime(now)), now);
+                            _realTimeScheduleEventService.ScheduleEvent(
+                                TimeSpan.FromMilliseconds(GetPulseDueTime(now)),
+                                now
+                            );
                             _newLiveDataEmitted.Wait();
                         }
                     }
@@ -133,14 +141,17 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                 }
 
                 // check for cancellation
-                if (timeSlice == null || cancellationToken.IsCancellationRequested) break;
+                if (timeSlice == null || cancellationToken.IsCancellationRequested)
+                    break;
 
                 var frontierUtc = FrontierTimeProvider.GetUtcNow();
                 // emit on data or if we've elapsed a full second since last emit or there are security changes
-                if (timeSlice.SecurityChanges != SecurityChanges.None
+                if (
+                    timeSlice.SecurityChanges != SecurityChanges.None
                     || timeSlice.IsTimePulse
                     || timeSlice.Data.Count != 0
-                    || frontierUtc >= nextEmit)
+                    || frontierUtc >= nextEmit
+                )
                 {
                     previousWasTimePulse = timeSlice.IsTimePulse;
                     yield return timeSlice;
@@ -167,7 +178,8 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                         nextEmit,
                         new List<DataFeedPacket>(),
                         SecurityChanges.None,
-                        new Dictionary<Universe, BaseDataCollection>());
+                        new Dictionary<Universe, BaseDataCollection>()
+                    );
                     yield return timeSlice;
                 }
             }

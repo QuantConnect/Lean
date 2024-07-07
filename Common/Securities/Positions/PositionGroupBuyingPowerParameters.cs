@@ -47,7 +47,7 @@ namespace QuantConnect.Securities.Positions
             SecurityPortfolioManager portfolio,
             IPositionGroup positionGroup,
             OrderDirection direction
-            )
+        )
         {
             Portfolio = portfolio;
             Direction = direction;
@@ -59,9 +59,12 @@ namespace QuantConnect.Securities.Positions
         /// </summary>
         public static implicit operator ReservedBuyingPowerForPositionGroupParameters(
             PositionGroupBuyingPowerParameters parameters
-            )
+        )
         {
-            return new ReservedBuyingPowerForPositionGroupParameters(parameters.Portfolio, parameters.PositionGroup);
+            return new ReservedBuyingPowerForPositionGroupParameters(
+                parameters.Portfolio,
+                parameters.PositionGroup
+            );
         }
     }
 }

@@ -45,12 +45,16 @@ namespace QuantConnect.Tests.ToolBox.RandomDataGenerator
 
             _security = new Security(
                 SecurityExchangeHours.AlwaysOpen(TimeZones.NewYork),
-                new SubscriptionDataConfig(typeof(TradeBar),
+                new SubscriptionDataConfig(
+                    typeof(TradeBar),
                     _symbol,
                     Resolution.Minute,
                     TimeZones.NewYork,
                     TimeZones.NewYork,
-                    true, true, false),
+                    true,
+                    true,
+                    false
+                ),
                 new Cash(Currencies.USD, 0, 0),
                 SymbolProperties.GetDefault(Currencies.USD),
                 ErrorCurrencyConverter.Instance,
@@ -61,15 +65,11 @@ namespace QuantConnect.Tests.ToolBox.RandomDataGenerator
             _security.SetMarketPrice(new OpenInterest(start, _security.Symbol, 10000));
 
             _tickGenerator = new TickGenerator(
-                new RandomDataGeneratorSettings()
-                {
-                    Start = start,
-                    End = end
-                },
+                new RandomDataGeneratorSettings() { Start = start, End = end },
                 new TickType[3] { TickType.Trade, TickType.Quote, TickType.OpenInterest },
                 _security,
-                new RandomValueGenerator());
-
+                new RandomValueGenerator()
+            );
         }
 
         [Test]
@@ -169,7 +169,8 @@ namespace QuantConnect.Tests.ToolBox.RandomDataGenerator
                 increment = TimeSpan.FromMilliseconds(500);
             }
 
-            var marketHours = MarketHoursDatabase.FromDataFolder()
+            var marketHours = MarketHoursDatabase
+                .FromDataFolder()
                 .GetExchangeHours(_symbol.ID.Market, _symbol, _symbol.SecurityType);
             for (int i = 0; i < count; i++)
             {

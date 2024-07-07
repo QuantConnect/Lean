@@ -15,13 +15,13 @@
 */
 
 using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using Python.Runtime;
-using QuantConnect.Util;
-using QuantConnect.Logging;
-using System.Collections.Generic;
 using QuantConnect.Configuration;
+using QuantConnect.Logging;
+using QuantConnect.Util;
 
 namespace QuantConnect.Python
 {
@@ -119,13 +119,16 @@ namespace QuantConnect.Python
                     // Filter out any already paths that already exist on our current PythonPath
                     using var pythonCurrentPath = PythonEngine.Eval("sys.path", locals: locals);
                     var currentPath = pythonCurrentPath.As<List<string>>();
-                    _pendingPathAdditions = _pendingPathAdditions.Where(x => !currentPath.Contains(x.Replace('\\', '/'))).ToList();
+                    _pendingPathAdditions = _pendingPathAdditions
+                        .Where(x => !currentPath.Contains(x.Replace('\\', '/')))
+                        .ToList();
 
                     // Algorithm location most always be before any other path added through this method
                     var insertionIndex = 0;
                     if (!_algorithmLocation.IsNullOrEmpty())
                     {
-                        insertionIndex = currentPath.IndexOf(_algorithmLocation.Replace('\\', '/')) + 1;
+                        insertionIndex =
+                            currentPath.IndexOf(_algorithmLocation.Replace('\\', '/')) + 1;
 
                         if (insertionIndex == 0)
                         {
@@ -139,8 +142,13 @@ namespace QuantConnect.Python
                     // Insert any pending path additions
                     if (!_pendingPathAdditions.IsNullOrEmpty())
                     {
-                        var code = string.Join(";", _pendingPathAdditions
-                            .Select(s => $"sys.path.insert({insertionIndex}, '{s}')")).Replace('\\', '/');
+                        var code = string.Join(
+                                ";",
+                                _pendingPathAdditions.Select(s =>
+                                    $"sys.path.insert({insertionIndex}, '{s}')"
+                                )
+                            )
+                            .Replace('\\', '/');
                         PythonEngine.Exec(code, locals: locals);
 
                         _pendingPathAdditions.Clear();
@@ -165,8 +173,10 @@ namespace QuantConnect.Python
 
             if (!Directory.Exists(algorithmLocation))
             {
-                Log.Error($@"PythonInitializer.AddAlgorithmLocationPath(): {
-                    Messages.PythonInitializer.UnableToLocateAlgorithm(algorithmLocation)}");
+                Log.Error(
+                    $@"PythonInitializer.AddAlgorithmLocationPath(): {
+                    Messages.PythonInitializer.UnableToLocateAlgorithm(algorithmLocation)}"
+                );
                 return;
             }
 
@@ -196,10 +206,12 @@ namespace QuantConnect.Python
                 return false;
             }
 
-            if(!Directory.Exists(pathToVirtualEnv))
+            if (!Directory.Exists(pathToVirtualEnv))
             {
-                Log.Error($@"PythonIntializer.ActivatePythonVirtualEnvironment(): {
-                    Messages.PythonInitializer.VirutalEnvironmentNotFound(pathToVirtualEnv)}");
+                Log.Error(
+                    $@"PythonIntializer.ActivatePythonVirtualEnvironment(): {
+                    Messages.PythonInitializer.VirutalEnvironmentNotFound(pathToVirtualEnv)}"
+                );
                 return false;
             }
 
@@ -207,15 +219,27 @@ namespace QuantConnect.Python
 
             bool? includeSystemPackages = null;
             var configFile = new FileInfo(Path.Combine(PathToVirtualEnv, "pyvenv.cfg"));
-            if(configFile.Exists)
+            if (configFile.Exists)
             {
                 foreach (var line in File.ReadAllLines(configFile.FullName))
                 {
-                    if (line.Contains("include-system-site-packages", StringComparison.InvariantCultureIgnoreCase))
+                    if (
+                        line.Contains(
+                            "include-system-site-packages",
+                            StringComparison.InvariantCultureIgnoreCase
+                        )
+                    )
                     {
                         // format: include-system-site-packages = false (or true)
-                        var equalsIndex = line.IndexOf('=', StringComparison.InvariantCultureIgnoreCase);
-                        if(equalsIndex != -1 && line.Length > (equalsIndex + 1) && bool.TryParse(line.Substring(equalsIndex + 1).Trim(), out var result))
+                        var equalsIndex = line.IndexOf(
+                            '=',
+                            StringComparison.InvariantCultureIgnoreCase
+                        );
+                        if (
+                            equalsIndex != -1
+                            && line.Length > (equalsIndex + 1)
+                            && bool.TryParse(line.Substring(equalsIndex + 1).Trim(), out var result)
+                        )
                         {
                             includeSystemPackages = result;
                             break;
@@ -224,16 +248,20 @@ namespace QuantConnect.Python
                 }
             }
 
-            if(!includeSystemPackages.HasValue)
+            if (!includeSystemPackages.HasValue)
             {
                 includeSystemPackages = true;
-                Log.Error($@"PythonIntializer.ActivatePythonVirtualEnvironment(): {
-                    Messages.PythonInitializer.FailedToFindSystemPackagesConfiguration(pathToVirtualEnv, configFile)}");
+                Log.Error(
+                    $@"PythonIntializer.ActivatePythonVirtualEnvironment(): {
+                    Messages.PythonInitializer.FailedToFindSystemPackagesConfiguration(pathToVirtualEnv, configFile)}"
+                );
             }
             else
             {
-                Log.Trace($@"PythonIntializer.ActivatePythonVirtualEnvironment(): {
-                    Messages.PythonInitializer.SystemPackagesConfigurationFound(pathToVirtualEnv, includeSystemPackages.Value)}");
+                Log.Trace(
+                    $@"PythonIntializer.ActivatePythonVirtualEnvironment(): {
+                    Messages.PythonInitializer.SystemPackagesConfigurationFound(pathToVirtualEnv, includeSystemPackages.Value)}"
+                );
             }
 
             if (!includeSystemPackages.Value)
@@ -263,10 +291,17 @@ namespace QuantConnect.Python
                 if (!IncludeSystemPackages)
                 {
                     var currentPath = (List<string>)sys.path.As<List<string>>();
-                    var toRemove = new List<string>(currentPath.Where(s => s.Contains("site-packages", StringComparison.InvariantCultureIgnoreCase)));
+                    var toRemove = new List<string>(
+                        currentPath.Where(s =>
+                            s.Contains("site-packages", StringComparison.InvariantCultureIgnoreCase)
+                        )
+                    );
                     if (toRemove.Count > 0)
                     {
-                        var code = string.Join(";", toRemove.Select(s => $"sys.path.remove('{s}')"));
+                        var code = string.Join(
+                            ";",
+                            toRemove.Select(s => $"sys.path.remove('{s}')")
+                        );
                         PythonEngine.Exec(code, locals: locals);
                     }
                 }
@@ -284,8 +319,11 @@ namespace QuantConnect.Python
                 if (IncludeSystemPackages)
                 {
                     // let's make sure our site packages is at the start so that we support overriding system libraries with a version in the env
-                    PythonEngine.Exec(@$"if sys.path[-1].startswith('{PathToVirtualEnv}'):
-    sys.path.insert(0, sys.path.pop())", locals: locals);
+                    PythonEngine.Exec(
+                        @$"if sys.path[-1].startswith('{PathToVirtualEnv}'):
+    sys.path.insert(0, sys.path.pop())",
+                        locals: locals
+                    );
                 }
 
                 if (Log.DebuggingEnabled)
@@ -297,14 +335,16 @@ namespace QuantConnect.Python
                         path.Add((string)p);
                     }
 
-                    Log.Debug($"PythonIntializer.InitPythonVirtualEnvironment(): PYTHONHOME: {os.getenv("PYTHONHOME")}." +
-                        $" PYTHONPATH: {os.getenv("PYTHONPATH")}." +
-                        $" sys.executable: {sys.executable}." +
-                        $" sys.prefix: {sys.prefix}." +
-                        $" sys.base_prefix: {sys.base_prefix}." +
-                        $" sys.exec_prefix: {sys.exec_prefix}." +
-                        $" sys.base_exec_prefix: {sys.base_exec_prefix}." +
-                        $" sys.path: [{string.Join(",", path)}]");
+                    Log.Debug(
+                        $"PythonIntializer.InitPythonVirtualEnvironment(): PYTHONHOME: {os.getenv("PYTHONHOME")}."
+                            + $" PYTHONPATH: {os.getenv("PYTHONPATH")}."
+                            + $" sys.executable: {sys.executable}."
+                            + $" sys.prefix: {sys.prefix}."
+                            + $" sys.base_prefix: {sys.base_prefix}."
+                            + $" sys.exec_prefix: {sys.exec_prefix}."
+                            + $" sys.base_exec_prefix: {sys.base_exec_prefix}."
+                            + $" sys.path: [{string.Join(",", path)}]"
+                    );
                 }
             }
         }
@@ -315,17 +355,23 @@ namespace QuantConnect.Python
         private static void ConfigurePythonPaths()
         {
             var pythonAdditionalPaths = new List<string> { Environment.CurrentDirectory };
-            pythonAdditionalPaths.AddRange(Config.GetValue("python-additional-paths", Enumerable.Empty<string>()));
-            AddPythonPaths(pythonAdditionalPaths.Where(path =>
-            {
-                var pathExists = Directory.Exists(path);
-                if (!pathExists)
+            pythonAdditionalPaths.AddRange(
+                Config.GetValue("python-additional-paths", Enumerable.Empty<string>())
+            );
+            AddPythonPaths(
+                pythonAdditionalPaths.Where(path =>
                 {
-                    Log.Error($"PythonInitializer.ConfigurePythonPaths(): {Messages.PythonInitializer.PythonPathNotFound(path)}");
-                }
+                    var pathExists = Directory.Exists(path);
+                    if (!pathExists)
+                    {
+                        Log.Error(
+                            $"PythonInitializer.ConfigurePythonPaths(): {Messages.PythonInitializer.PythonPathNotFound(path)}"
+                        );
+                    }
 
-                return pathExists;
-            }));
+                    return pathExists;
+                })
+            );
         }
     }
 }

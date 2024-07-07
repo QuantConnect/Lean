@@ -21,7 +21,6 @@ using QuantConnect.Data.UniverseSelection;
 
 namespace QuantConnect.Algorithm.CSharp.Benchmarks
 {
-
     public class CoarseFineUniverseSelectionBenchmark : QCAlgorithm
     {
         private const int NumberOfSymbolsCoarse = 150;
@@ -72,7 +71,8 @@ namespace QuantConnect.Algorithm.CSharp.Benchmarks
         public void OnData(TradeBars data)
         {
             // if we have no changes, do nothing
-            if (_changes == SecurityChanges.None) return;
+            if (_changes == SecurityChanges.None)
+                return;
 
             // liquidate removed securities
             foreach (var security in _changes.RemovedSecurities)

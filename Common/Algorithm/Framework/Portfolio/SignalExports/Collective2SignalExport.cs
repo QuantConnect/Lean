@@ -13,15 +13,15 @@
  * limitations under the License.
 */
 
-using Newtonsoft.Json;
-using QuantConnect.Interfaces;
-using QuantConnect.Util;
 using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Net.Http;
 using System.Net.Http.Json;
 using System.Text;
+using Newtonsoft.Json;
+using QuantConnect.Interfaces;
+using QuantConnect.Util;
 
 namespace QuantConnect.Algorithm.Framework.Portfolio.SignalExports
 {
@@ -59,18 +59,23 @@ namespace QuantConnect.Algorithm.Framework.Portfolio.SignalExports
         /// <summary>
         /// Lazy initialization of ten seconds rate limiter
         /// </summary>
-        private static Lazy<RateGate> _tenSecondsRateLimiter = new Lazy<RateGate>(() => new RateGate(100, TimeSpan.FromMilliseconds(1000)));
+        private static Lazy<RateGate> _tenSecondsRateLimiter = new Lazy<RateGate>(
+            () => new RateGate(100, TimeSpan.FromMilliseconds(1000))
+        );
 
         /// <summary>
         /// Lazy initialization of one hour rate limiter
         /// </summary>
-        private static Lazy<RateGate> _hourlyRateLimiter = new Lazy<RateGate>(() => new RateGate(1000, TimeSpan.FromHours(1)));
+        private static Lazy<RateGate> _hourlyRateLimiter = new Lazy<RateGate>(
+            () => new RateGate(1000, TimeSpan.FromHours(1))
+        );
 
         /// <summary>
         /// Lazy initialization of one day rate limiter
         /// </summary>
-        private static Lazy<RateGate> _dailyRateLimiter = new Lazy<RateGate>(() => new RateGate(20000, TimeSpan.FromDays(1)));
-
+        private static Lazy<RateGate> _dailyRateLimiter = new Lazy<RateGate>(
+            () => new RateGate(20000, TimeSpan.FromDays(1))
+        );
 
         /// <summary>
         /// Collective2SignalExport constructor. It obtains the entry information for Collective2 API requests.
@@ -82,14 +87,16 @@ namespace QuantConnect.Algorithm.Framework.Portfolio.SignalExports
         {
             _apiKey = apiKey;
             _systemId = systemId;
-            _destination = new Uri("https://api4-general.collective2.com/Strategies/SetDesiredPositions");
+            _destination = new Uri(
+                "https://api4-general.collective2.com/Strategies/SetDesiredPositions"
+            );
         }
 
         /// <summary>
         /// Creates a JSON message with the desired positions using the expected
         /// Collective2 API format and then sends it
         /// </summary>
-        /// <param name="parameters">A list of holdings from the portfolio 
+        /// <param name="parameters">A list of holdings from the portfolio
         /// expected to be sent to Collective2 API and the algorithm being ran</param>
         /// <returns>True if the positions were sent correctly and Collective2 sent no errors, false otherwise</returns>
         public override bool Send(SignalExportTargetParameters parameters)
@@ -115,11 +122,14 @@ namespace QuantConnect.Algorithm.Framework.Portfolio.SignalExports
         /// <summary>
         /// Converts a list of targets to a list of Collective2 positions
         /// </summary>
-        /// <param name="parameters">A list of targets from the portfolio 
+        /// <param name="parameters">A list of targets from the portfolio
         /// expected to be sent to Collective2 API and the algorithm being ran</param>
         /// <param name="positions">A list of Collective2 positions</param>
         /// <returns>True if the given targets could be converted to a Collective2Position list, false otherwise</returns>
-        protected bool ConvertHoldingsToCollective2(SignalExportTargetParameters parameters, out List<Collective2Position> positions)
+        protected bool ConvertHoldingsToCollective2(
+            SignalExportTargetParameters parameters,
+            out List<Collective2Position> positions
+        )
         {
             _algorithm = parameters.Algorithm;
             var targets = parameters.Targets;
@@ -140,22 +150,21 @@ namespace QuantConnect.Algorithm.Framework.Portfolio.SignalExports
                 var symbol = _algorithm.Ticker(target.Symbol);
                 if (target.Symbol.SecurityType == SecurityType.Future)
                 {
-                    symbol = $"@{SymbolRepresentation.GenerateFutureTicker(target.Symbol.ID.Symbol, target.Symbol.ID.Date, doubleDigitsYear: false, includeExpirationDate: false)}";
+                    symbol =
+                        $"@{SymbolRepresentation.GenerateFutureTicker(target.Symbol.ID.Symbol, target.Symbol.ID.Date, doubleDigitsYear: false, includeExpirationDate: false)}";
                 }
                 else if (target.Symbol.SecurityType.IsOption())
                 {
                     symbol = SymbolRepresentation.GenerateOptionTicker(target.Symbol);
                 }
 
-                positions.Add(new Collective2Position
-                {
-                    C2Symbol = new C2Symbol
+                positions.Add(
+                    new Collective2Position
                     {
-                        FullSymbol = symbol,
-                        SymbolType = typeOfSymbol,
-                    },
-                    Quantity = ConvertPercentageToQuantity(_algorithm, target),
-                });
+                        C2Symbol = new C2Symbol { FullSymbol = symbol, SymbolType = typeOfSymbol, },
+                        Quantity = ConvertPercentageToQuantity(_algorithm, target),
+                    }
+                );
             }
 
             return true;
@@ -191,7 +200,9 @@ namespace QuantConnect.Algorithm.Framework.Portfolio.SignalExports
 
             if (typeOfSymbol == "NotImplemented")
             {
-                _algorithm.Error($"{targetSymbol.SecurityType} security type is not supported by Collective2.");
+                _algorithm.Error(
+                    $"{targetSymbol.SecurityType} security type is not supported by Collective2."
+                );
                 return false;
             }
 
@@ -209,7 +220,9 @@ namespace QuantConnect.Algorithm.Framework.Portfolio.SignalExports
             var numberShares = PortfolioTarget.Percent(algorithm, target.Symbol, target.Quantity);
             if (numberShares == null)
             {
-                throw new InvalidOperationException($"Collective2 failed to calculate target quantity for {target}");
+                throw new InvalidOperationException(
+                    $"Collective2 failed to calculate target quantity for {target}"
+                );
             }
 
             return (int)numberShares.Quantity;
@@ -222,11 +235,7 @@ namespace QuantConnect.Algorithm.Framework.Portfolio.SignalExports
         /// <returns>A JSON request string of the desired positions to be sent by a POST request to Collective2 API</returns>
         protected string CreateMessage(List<Collective2Position> positions)
         {
-            var payload = new
-            {
-                StrategyId = _systemId,
-                Positions = positions,
-            };
+            var payload = new { StrategyId = _systemId, Positions = positions, };
 
             var jsonMessage = JsonConvert.SerializeObject(payload);
             return jsonMessage;
@@ -246,24 +255,31 @@ namespace QuantConnect.Algorithm.Framework.Portfolio.SignalExports
             httpMessage.Headers.Add("X-AppId", "OPA1N90E71");
 
             //Add the Authorization header
-            HttpClient.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", _apiKey);
+            HttpClient.DefaultRequestHeaders.Authorization =
+                new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", _apiKey);
 
             //Send the message
-            using HttpResponseMessage response = HttpClient.PostAsync(_destination, httpMessage).Result;
+            using HttpResponseMessage response = HttpClient
+                .PostAsync(_destination, httpMessage)
+                .Result;
 
             //Parse it
             var responseObject = response.Content.ReadFromJsonAsync<C2Response>().Result;
 
             if (!response.IsSuccessStatusCode)
             {
-                _algorithm.Error($"Collective2 API returned the following errors: {string.Join(",", PrintErrors(responseObject.ResponseStatus.Errors))}");
+                _algorithm.Error(
+                    $"Collective2 API returned the following errors: {string.Join(",", PrintErrors(responseObject.ResponseStatus.Errors))}"
+                );
                 return false;
             }
             else if (responseObject.Results.Count > 0)
             {
-                _algorithm.Debug($"Collective2: NewSignals={string.Join(',', responseObject.Results[0].NewSignals)} | CanceledSignals={string.Join(',', responseObject.Results[0].CanceledSignals)}");
+                _algorithm.Debug(
+                    $"Collective2: NewSignals={string.Join(',', responseObject.Results[0].NewSignals)} | CanceledSignals={string.Join(',', responseObject.Results[0].CanceledSignals)}"
+                );
             }
-            
+
             return true;
         }
 
@@ -277,7 +293,10 @@ namespace QuantConnect.Algorithm.Framework.Portfolio.SignalExports
             StringBuilder sb = new StringBuilder();
             foreach (var error in errors)
             {
-                sb.AppendLine(CultureInfo.InvariantCulture, $"({error.ErrorCode}) {error.FieldName}: {error.Message}");
+                sb.AppendLine(
+                    CultureInfo.InvariantCulture,
+                    $"({error.ErrorCode}) {error.FieldName}: {error.Message}"
+                );
             }
 
             return sb.ToString();
@@ -291,7 +310,6 @@ namespace QuantConnect.Algorithm.Framework.Portfolio.SignalExports
             [JsonProperty(PropertyName = "Results")]
             public virtual List<DesiredPositionResponse> Results { get; set; }
 
-
             [JsonProperty(PropertyName = "ResponseStatus")]
             public ResponseStatus ResponseStatus { get; set; }
         }
@@ -304,7 +322,6 @@ namespace QuantConnect.Algorithm.Framework.Portfolio.SignalExports
             [JsonProperty(PropertyName = "NewSignals")]
             public List<long> NewSignals { get; set; } = new List<long>();
 
-
             [JsonProperty(PropertyName = "CanceledSignals")]
             public List<long> CanceledSignals { get; set; } = new List<long>();
         }
@@ -316,7 +333,7 @@ namespace QuantConnect.Algorithm.Framework.Portfolio.SignalExports
         {
             /* Example:
 
-                    "ResponseStatus": 
+                    "ResponseStatus":
                     {
                       "ErrorCode": ""401",
                       "Message": ""Unauthorized",
@@ -334,14 +351,11 @@ namespace QuantConnect.Algorithm.Framework.Portfolio.SignalExports
             [JsonProperty(PropertyName = "ErrorCode")]
             public string ErrorCode { get; set; }
 
-
             [JsonProperty(PropertyName = "Message")]
             public string Message { get; set; }
 
-
             [JsonProperty(PropertyName = "Errors")]
             public List<ResponseError> Errors { get; set; }
-
         }
 
         /// <summary>
@@ -352,10 +366,8 @@ namespace QuantConnect.Algorithm.Framework.Portfolio.SignalExports
             [JsonProperty(PropertyName = "ErrorCode")]
             public string ErrorCode { get; set; }
 
-
             [JsonProperty(PropertyName = "FieldName")]
             public string FieldName { get; set; }
-
 
             [JsonProperty(PropertyName = "Message")]
             public string Message { get; set; }
@@ -391,7 +403,6 @@ namespace QuantConnect.Algorithm.Framework.Portfolio.SignalExports
             /// </summary>
             [JsonProperty(PropertyName = "FullSymbol")]
             public string FullSymbol { get; set; }
-
 
             /// <summary>
             /// The type of instrument. e.g. 'stock', 'option', 'future', 'forex'

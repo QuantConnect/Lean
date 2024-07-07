@@ -47,6 +47,7 @@ namespace QuantConnect.Data
         // string -> data   for non-tick data
         // string -> list{data} for tick data
         private Lazy<DataDictionary<SymbolData>> _data;
+
         // UnlinkedData -> DataDictonary<UnlinkedData>
         private Dictionary<Type, object> _dataByType;
 
@@ -58,26 +59,17 @@ namespace QuantConnect.Data
         /// <summary>
         /// Gets the timestamp for this slice of data
         /// </summary>
-        public DateTime Time
-        {
-            get; private set;
-        }
+        public DateTime Time { get; private set; }
 
         /// <summary>
         /// Gets the timestamp for this slice of data in UTC
         /// </summary>
-        public DateTime UtcTime
-        {
-            get; private set;
-        }
+        public DateTime UtcTime { get; private set; }
 
         /// <summary>
         /// Gets whether or not this slice has data
         /// </summary>
-        public bool HasData
-        {
-            get; private set;
-        }
+        public bool HasData { get; private set; }
 
         /// <summary>
         /// Gets the <see cref="TradeBars"/> for this slice of data
@@ -197,7 +189,8 @@ namespace QuantConnect.Data
         /// <returns>
         /// An <see cref="T:System.Collections.Generic.ICollection`1"/> containing the values in the object that implements <see cref="T:System.Collections.Generic.IDictionary`2"/>.
         /// </returns>
-        protected override IEnumerable<dynamic> GetValues => GetKeyValuePairEnumerable().Select(data => (dynamic)data.Value);
+        protected override IEnumerable<dynamic> GetValues =>
+            GetKeyValuePairEnumerable().Select(data => (dynamic)data.Value);
 
         /// <summary>
         /// Gets a list of all the data in this slice
@@ -216,9 +209,7 @@ namespace QuantConnect.Data
         /// <param name="data">The raw data in this slice</param>
         /// <param name="utcTime">The timestamp for this slice of data in UTC</param>
         public Slice(DateTime time, IEnumerable<BaseData> data, DateTime utcTime)
-            : this(time, data.ToList(), utcTime: utcTime)
-        {
-        }
+            : this(time, data.ToList(), utcTime: utcTime) { }
 
         /// <summary>
         /// Initializes a new instance of the <see cref="Slice"/> class, lazily
@@ -229,7 +220,10 @@ namespace QuantConnect.Data
         /// <param name="data">The raw data in this slice</param>
         /// <param name="utcTime">The timestamp for this slice of data in UTC</param>
         public Slice(DateTime time, List<BaseData> data, DateTime utcTime)
-            : this(time, data, CreateCollection<TradeBars, TradeBar>(time, data),
+            : this(
+                time,
+                data,
+                CreateCollection<TradeBars, TradeBar>(time, data),
                 CreateCollection<QuoteBars, QuoteBar>(time, data),
                 CreateTicksCollection(time, data),
                 CreateCollection<OptionChains, OptionChain>(time, data),
@@ -238,10 +232,9 @@ namespace QuantConnect.Data
                 CreateCollection<Dividends, Dividend>(time, data),
                 CreateCollection<Delistings, Delisting>(time, data),
                 CreateCollection<SymbolChangedEvents, SymbolChangedEvent>(time, data),
-                CreateCollection<MarginInterestRates, MarginInterestRate> (time, data),
-                utcTime: utcTime)
-        {
-        }
+                CreateCollection<MarginInterestRates, MarginInterestRate>(time, data),
+                utcTime: utcTime
+            ) { }
 
         /// <summary>
         /// Initializes a new instance used by the <see cref="PythonSlice"/>
@@ -290,13 +283,30 @@ namespace QuantConnect.Data
         /// <param name="marginInterestRates">The margin interest rates for this slice</param>
         /// <param name="utcTime">The timestamp for this slice of data in UTC</param>
         /// <param name="hasData">true if this slice contains data</param>
-        public Slice(DateTime time, List<BaseData> data, TradeBars tradeBars, QuoteBars quoteBars, Ticks ticks, OptionChains optionChains, FuturesChains futuresChains, Splits splits, Dividends dividends, Delistings delistings, SymbolChangedEvents symbolChanges, MarginInterestRates marginInterestRates, DateTime utcTime, bool? hasData = null)
+        public Slice(
+            DateTime time,
+            List<BaseData> data,
+            TradeBars tradeBars,
+            QuoteBars quoteBars,
+            Ticks ticks,
+            OptionChains optionChains,
+            FuturesChains futuresChains,
+            Splits splits,
+            Dividends dividends,
+            Delistings delistings,
+            SymbolChangedEvents symbolChanges,
+            MarginInterestRates marginInterestRates,
+            DateTime utcTime,
+            bool? hasData = null
+        )
         {
             Time = time;
             UtcTime = utcTime;
             AllData = data;
             // market data
-            _data = new Lazy<DataDictionary<SymbolData>>(() => CreateDynamicDataDictionary(AllData));
+            _data = new Lazy<DataDictionary<SymbolData>>(
+                () => CreateDynamicDataDictionary(AllData)
+            );
 
             HasData = hasData ?? _data.Value.Count > 0;
 
@@ -331,7 +341,9 @@ namespace QuantConnect.Data
                 {
                     return value.GetData();
                 }
-                throw new KeyNotFoundException($"'{symbol}' wasn't found in the Slice object, likely because there was no-data at this moment in time and it wasn't possible to fillforward historical data. Please check the data exists before accessing it with data.ContainsKey(\"{symbol}\")");
+                throw new KeyNotFoundException(
+                    $"'{symbol}' wasn't found in the Slice object, likely because there was no-data at this moment in time and it wasn't possible to fillforward historical data. Please check the data exists before accessing it with data.ContainsKey(\"{symbol}\")"
+                );
             }
         }
 
@@ -394,12 +406,18 @@ namespace QuantConnect.Data
                         var symbol = data.Key;
                         // preserving existing behavior we will return the last data point, users expect a 'DataDictionary<Tick> : IDictionary<Symbol, Tick>'.
                         // openInterest is stored with the Ticks collection
-                        var lastDataPoint = data.Value.LastOrDefault(tick => requestedOpenInterest && tick.TickType == TickType.OpenInterest || !requestedOpenInterest && tick.TickType != TickType.OpenInterest);
+                        var lastDataPoint = data.Value.LastOrDefault(tick =>
+                            requestedOpenInterest && tick.TickType == TickType.OpenInterest
+                            || !requestedOpenInterest && tick.TickType != TickType.OpenInterest
+                        );
                         if (lastDataPoint == null)
                         {
                             continue;
                         }
-                        dataDictionaryCache.MethodInfo.Invoke(dictionary, new object[] { symbol, lastDataPoint });
+                        dataDictionaryCache.MethodInfo.Invoke(
+                            dictionary,
+                            new object[] { symbol, lastDataPoint }
+                        );
                     }
                 }
                 else if (type == typeof(TradeBar))
@@ -451,13 +469,23 @@ namespace QuantConnect.Data
                         // let's first check custom data, else double check the user isn't requesting auxiliary data we have
                         if (IsDataPointOfType(data.Custom, type, isPythonData))
                         {
-                            dataDictionaryCache.MethodInfo.Invoke(dictionary, new object[] { data.Symbol, data.Custom });
+                            dataDictionaryCache.MethodInfo.Invoke(
+                                dictionary,
+                                new object[] { data.Symbol, data.Custom }
+                            );
                         }
                         else
                         {
-                            foreach (var auxiliaryData in data.AuxilliaryData.Where(x => IsDataPointOfType(x, type, isPythonData)))
+                            foreach (
+                                var auxiliaryData in data.AuxilliaryData.Where(x =>
+                                    IsDataPointOfType(x, type, isPythonData)
+                                )
+                            )
                             {
-                                dataDictionaryCache.MethodInfo.Invoke(dictionary, new object[] { data.Symbol, auxiliaryData });
+                                dataDictionaryCache.MethodInfo.Invoke(
+                                    dictionary,
+                                    new object[] { data.Symbol, auxiliaryData }
+                                );
                             }
                         }
                     }
@@ -517,19 +545,30 @@ namespace QuantConnect.Data
         {
             if (UtcTime != inputSlice.UtcTime)
             {
-                throw new InvalidOperationException($"Slice with time {UtcTime} can't be merged with given slice with different {inputSlice.UtcTime}");
+                throw new InvalidOperationException(
+                    $"Slice with time {UtcTime} can't be merged with given slice with different {inputSlice.UtcTime}"
+                );
             }
 
             _bars = (TradeBars)UpdateCollection(_bars, inputSlice.Bars);
             _quoteBars = (QuoteBars)UpdateCollection(_quoteBars, inputSlice.QuoteBars);
             _ticks = (Ticks)UpdateCollection(_ticks, inputSlice.Ticks);
             _optionChains = (OptionChains)UpdateCollection(_optionChains, inputSlice.OptionChains);
-            _futuresChains = (FuturesChains)UpdateCollection(_futuresChains, inputSlice.FuturesChains);
+            _futuresChains = (FuturesChains)UpdateCollection(
+                _futuresChains,
+                inputSlice.FuturesChains
+            );
             _splits = (Splits)UpdateCollection(_splits, inputSlice.Splits);
             _dividends = (Dividends)UpdateCollection(_dividends, inputSlice.Dividends);
             _delistings = (Delistings)UpdateCollection(_delistings, inputSlice.Delistings);
-            _symbolChangedEvents = (SymbolChangedEvents)UpdateCollection(_symbolChangedEvents, inputSlice.SymbolChangedEvents);
-            _marginInterestRates = (MarginInterestRates)UpdateCollection(_marginInterestRates, inputSlice.MarginInterestRates);
+            _symbolChangedEvents = (SymbolChangedEvents)UpdateCollection(
+                _symbolChangedEvents,
+                inputSlice.SymbolChangedEvents
+            );
+            _marginInterestRates = (MarginInterestRates)UpdateCollection(
+                _marginInterestRates,
+                inputSlice.MarginInterestRates
+            );
 
             if (inputSlice.AllData.Count != 0)
             {
@@ -544,12 +583,17 @@ namespace QuantConnect.Data
                     // while creating _data
                     inputSlice.AllData.AddRange(AllData);
                     AllData = inputSlice.AllData;
-                    _data = new Lazy<DataDictionary<SymbolData>>(() => CreateDynamicDataDictionary(AllData));
+                    _data = new Lazy<DataDictionary<SymbolData>>(
+                        () => CreateDynamicDataDictionary(AllData)
+                    );
                 }
             }
         }
 
-        private static DataDictionary<T> UpdateCollection<T>(DataDictionary<T> baseCollection, DataDictionary<T> inputCollection)
+        private static DataDictionary<T> UpdateCollection<T>(
+            DataDictionary<T> baseCollection,
+            DataDictionary<T> inputCollection
+        )
         {
             if (baseCollection == null || baseCollection.Count == 0)
             {
@@ -571,7 +615,9 @@ namespace QuantConnect.Data
         /// <summary>
         /// Produces the dynamic data dictionary from the input data
         /// </summary>
-        private static DataDictionary<SymbolData> CreateDynamicDataDictionary(IEnumerable<BaseData> data)
+        private static DataDictionary<SymbolData> CreateDynamicDataDictionary(
+            IEnumerable<BaseData> data
+        )
         {
             var allData = new DataDictionary<SymbolData>();
             foreach (var datum in data)
@@ -727,7 +773,14 @@ namespace QuantConnect.Data
             return o.GetType() == type;
         }
 
-        private enum SubscriptionType { TradeBar, QuoteBar, Tick, Custom };
+        private enum SubscriptionType
+        {
+            TradeBar,
+            QuoteBar,
+            Tick,
+            Custom
+        };
+
         private class SymbolData
         {
             public SubscriptionType Type;
@@ -772,7 +825,8 @@ namespace QuantConnect.Data
         /// of the generic types instances and there add methods.</remarks>
         private class GenericDataDictionary
         {
-            private static readonly Dictionary<Type, GenericDataDictionary> _genericCache = new Dictionary<Type, GenericDataDictionary>();
+            private static readonly Dictionary<Type, GenericDataDictionary> _genericCache =
+                new Dictionary<Type, GenericDataDictionary>();
 
             /// <summary>
             /// The <see cref="DataDictionary{T}.Add(KeyValuePair{QuantConnect.Symbol,T})"/> method
@@ -809,7 +863,10 @@ namespace QuantConnect.Data
                     }
                     var generic = typeof(DataDictionary<>).MakeGenericType(dictionaryType);
                     var method = generic.GetMethod("Add", new[] { typeof(Symbol), dictionaryType });
-                    _genericCache[type] = dataDictionaryCache = new GenericDataDictionary(generic, method);
+                    _genericCache[type] = dataDictionaryCache = new GenericDataDictionary(
+                        generic,
+                        method
+                    );
                 }
 
                 return dataDictionaryCache;

@@ -15,8 +15,8 @@
 
 using System;
 using NUnit.Framework;
-using QuantConnect.Indicators;
 using QuantConnect.Data.Market;
+using QuantConnect.Indicators;
 
 namespace QuantConnect.Tests.Indicators
 {
@@ -36,7 +36,7 @@ namespace QuantConnect.Tests.Indicators
 
         protected override Action<IndicatorBase<IBaseDataBar>, double> Assertion =>
             (indicator, expected) =>
-                Assert.AreEqual(expected, (double) indicator.Current.Value, 0.006);
+                Assert.AreEqual(expected, (double)indicator.Current.Value, 0.006);
 
         [Test]
         public override void ResetsProperly()

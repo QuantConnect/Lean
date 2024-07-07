@@ -15,7 +15,6 @@
 
 using NodaTime;
 using NUnit.Framework;
-
 using QuantConnect.Algorithm;
 using QuantConnect.Data.Market;
 using QuantConnect.Securities;
@@ -46,15 +45,17 @@ namespace QuantConnect.Tests.Common.Securities
                 new SymbolProperties(string.Empty, Currencies.USD, 1, 0.01m, 0.01m, string.Empty),
                 new IdentityCurrencyConverter(Currencies.USD),
                 new RegisteredSecurityDataTypesProvider(),
-                new SecurityCache());
+                new SecurityCache()
+            );
             _security.SetMarketPrice(new Tick { Value = 200m });
 
             _algorithm.Securities.Add(_security);
-
         }
 
         [Test]
-        public void GetsTheCorrectMaximumNumberOfLotsForTargetBuyingPower([Values(0.2, 0.75, 1)] decimal targetBuyingPower)
+        public void GetsTheCorrectMaximumNumberOfLotsForTargetBuyingPower(
+            [Values(0.2, 0.75, 1)] decimal targetBuyingPower
+        )
         {
             var buyingPowerModel = new SecurityPositionGroupBuyingPowerModel();
             var positionGroup = new PositionGroup(
@@ -63,21 +64,41 @@ namespace QuantConnect.Tests.Common.Securities
                 new Position(_security.Symbol, -10, 1)
             );
 
-            var maxQuantityParameters = new GetMaximumOrderQuantityForTargetBuyingPowerParameters(_portfolio, _security, targetBuyingPower, 0);
-            var maxQuantityResult = _security.BuyingPowerModel.GetMaximumOrderQuantityForTargetBuyingPower(maxQuantityParameters);
+            var maxQuantityParameters = new GetMaximumOrderQuantityForTargetBuyingPowerParameters(
+                _portfolio,
+                _security,
+                targetBuyingPower,
+                0
+            );
+            var maxQuantityResult =
+                _security.BuyingPowerModel.GetMaximumOrderQuantityForTargetBuyingPower(
+                    maxQuantityParameters
+                );
 
             Assert.IsFalse(maxQuantityResult.IsError);
             Assert.AreNotEqual(maxQuantityResult.Quantity, 0);
 
-            var maxLotsParameters = new GetMaximumLotsForTargetBuyingPowerParameters(_portfolio, positionGroup, targetBuyingPower, 0);
-            var maxLotsResult = buyingPowerModel.GetMaximumLotsForTargetBuyingPower(maxLotsParameters);
+            var maxLotsParameters = new GetMaximumLotsForTargetBuyingPowerParameters(
+                _portfolio,
+                positionGroup,
+                targetBuyingPower,
+                0
+            );
+            var maxLotsResult = buyingPowerModel.GetMaximumLotsForTargetBuyingPower(
+                maxLotsParameters
+            );
 
             Assert.IsFalse(maxLotsResult.IsError);
-            Assert.AreEqual(maxQuantityResult.Quantity, maxLotsResult.NumberOfLots * _security.SymbolProperties.LotSize);
+            Assert.AreEqual(
+                maxQuantityResult.Quantity,
+                maxLotsResult.NumberOfLots * _security.SymbolProperties.LotSize
+            );
         }
 
         [Test]
-        public void GetsTheCorrectMaximumNumberOfLotsForDeltaBuyingPower([Values(0.2, 0.75, 1)] decimal targetBuyingPower)
+        public void GetsTheCorrectMaximumNumberOfLotsForDeltaBuyingPower(
+            [Values(0.2, 0.75, 1)] decimal targetBuyingPower
+        )
         {
             var buyingPowerModel = new SecurityPositionGroupBuyingPowerModel();
             var positionGroup = new PositionGroup(
@@ -88,21 +109,41 @@ namespace QuantConnect.Tests.Common.Securities
 
             var deltaBuyingPower = _portfolio.TotalPortfolioValue * targetBuyingPower;
 
-            var maxQuantityParameters = new GetMaximumOrderQuantityForDeltaBuyingPowerParameters(_portfolio, _security, deltaBuyingPower, 0);
-            var maxQuantityResult = _security.BuyingPowerModel.GetMaximumOrderQuantityForDeltaBuyingPower(maxQuantityParameters);
+            var maxQuantityParameters = new GetMaximumOrderQuantityForDeltaBuyingPowerParameters(
+                _portfolio,
+                _security,
+                deltaBuyingPower,
+                0
+            );
+            var maxQuantityResult =
+                _security.BuyingPowerModel.GetMaximumOrderQuantityForDeltaBuyingPower(
+                    maxQuantityParameters
+                );
 
             Assert.IsFalse(maxQuantityResult.IsError);
             Assert.AreNotEqual(maxQuantityResult.Quantity, 0);
 
-            var maxLotsarameters = new GetMaximumLotsForDeltaBuyingPowerParameters(_portfolio, positionGroup, deltaBuyingPower, 0);
-            var maxLotsForDeltaResult = buyingPowerModel.GetMaximumLotsForDeltaBuyingPower(maxLotsarameters);
+            var maxLotsarameters = new GetMaximumLotsForDeltaBuyingPowerParameters(
+                _portfolio,
+                positionGroup,
+                deltaBuyingPower,
+                0
+            );
+            var maxLotsForDeltaResult = buyingPowerModel.GetMaximumLotsForDeltaBuyingPower(
+                maxLotsarameters
+            );
 
             Assert.IsFalse(maxLotsForDeltaResult.IsError);
-            Assert.AreEqual(maxQuantityResult.Quantity, maxLotsForDeltaResult.NumberOfLots * _security.SymbolProperties.LotSize);
+            Assert.AreEqual(
+                maxQuantityResult.Quantity,
+                maxLotsForDeltaResult.NumberOfLots * _security.SymbolProperties.LotSize
+            );
         }
 
         [Test]
-        public void GetTheSameQuantityAndLotsForTargetAndDeltaBuyingPower([Values(0.2, 0.5, 0.75, 1)] decimal targetBuyingPower)
+        public void GetTheSameQuantityAndLotsForTargetAndDeltaBuyingPower(
+            [Values(0.2, 0.5, 0.75, 1)] decimal targetBuyingPower
+        )
         {
             var buyingPowerModel = new SecurityPositionGroupBuyingPowerModel();
             var positionGroup = new PositionGroup(
@@ -112,20 +153,52 @@ namespace QuantConnect.Tests.Common.Securities
             );
 
             // maximum quantity and lots for target buying power
-            var maxQuantityForTargetParameters = new GetMaximumOrderQuantityForTargetBuyingPowerParameters(_portfolio, _security, targetBuyingPower, 0);
-            var maxQuantityForTargetResult = _security.BuyingPowerModel.GetMaximumOrderQuantityForTargetBuyingPower(maxQuantityForTargetParameters);
+            var maxQuantityForTargetParameters =
+                new GetMaximumOrderQuantityForTargetBuyingPowerParameters(
+                    _portfolio,
+                    _security,
+                    targetBuyingPower,
+                    0
+                );
+            var maxQuantityForTargetResult =
+                _security.BuyingPowerModel.GetMaximumOrderQuantityForTargetBuyingPower(
+                    maxQuantityForTargetParameters
+                );
 
-            var maxLotsForTargetParameters = new GetMaximumLotsForTargetBuyingPowerParameters(_portfolio, positionGroup, targetBuyingPower, 0);
-            var maxLotsForTargetResult = buyingPowerModel.GetMaximumLotsForTargetBuyingPower(maxLotsForTargetParameters);
+            var maxLotsForTargetParameters = new GetMaximumLotsForTargetBuyingPowerParameters(
+                _portfolio,
+                positionGroup,
+                targetBuyingPower,
+                0
+            );
+            var maxLotsForTargetResult = buyingPowerModel.GetMaximumLotsForTargetBuyingPower(
+                maxLotsForTargetParameters
+            );
 
             // maximum quantity and lots for delta buying power
             var deltaBuyingPower = _portfolio.TotalPortfolioValue * targetBuyingPower;
 
-            var maxQuantityForDeltaParameters = new GetMaximumOrderQuantityForDeltaBuyingPowerParameters(_portfolio, _security, deltaBuyingPower, 0);
-            var maxQuantityForDeltaResult = _security.BuyingPowerModel.GetMaximumOrderQuantityForDeltaBuyingPower(maxQuantityForDeltaParameters);
+            var maxQuantityForDeltaParameters =
+                new GetMaximumOrderQuantityForDeltaBuyingPowerParameters(
+                    _portfolio,
+                    _security,
+                    deltaBuyingPower,
+                    0
+                );
+            var maxQuantityForDeltaResult =
+                _security.BuyingPowerModel.GetMaximumOrderQuantityForDeltaBuyingPower(
+                    maxQuantityForDeltaParameters
+                );
 
-            var maxLotsForDeltaParameters = new GetMaximumLotsForDeltaBuyingPowerParameters(_portfolio, positionGroup, deltaBuyingPower, 0);
-            var maxLotsForDeltaResult = buyingPowerModel.GetMaximumLotsForDeltaBuyingPower(maxLotsForDeltaParameters);
+            var maxLotsForDeltaParameters = new GetMaximumLotsForDeltaBuyingPowerParameters(
+                _portfolio,
+                positionGroup,
+                deltaBuyingPower,
+                0
+            );
+            var maxLotsForDeltaResult = buyingPowerModel.GetMaximumLotsForDeltaBuyingPower(
+                maxLotsForDeltaParameters
+            );
 
             // maximum quantity should be the same, since the expected delta buying power is the same as the target buying power used
             Assert.IsFalse(maxQuantityForTargetResult.IsError);
@@ -134,8 +207,14 @@ namespace QuantConnect.Tests.Common.Securities
             Assert.IsFalse(maxLotsForDeltaResult.IsError);
             Assert.AreNotEqual(maxQuantityForTargetResult.Quantity, 0);
             Assert.AreNotEqual(maxLotsForTargetResult.NumberOfLots, 0);
-            Assert.AreEqual(maxQuantityForTargetResult.Quantity, maxQuantityForDeltaResult.Quantity);
-            Assert.AreEqual(maxLotsForTargetResult.NumberOfLots, maxLotsForDeltaResult.NumberOfLots);
+            Assert.AreEqual(
+                maxQuantityForTargetResult.Quantity,
+                maxQuantityForDeltaResult.Quantity
+            );
+            Assert.AreEqual(
+                maxLotsForTargetResult.NumberOfLots,
+                maxLotsForDeltaResult.NumberOfLots
+            );
         }
     }
 }

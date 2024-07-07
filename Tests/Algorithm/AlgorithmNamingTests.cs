@@ -77,7 +77,9 @@ namespace QuantConnect.Tests.Algorithm
             TestSettingLongAlgorithmName(SetAlgorithmNameUsingSetMethod);
         }
 
-        private static void TestSettingAlgorithmNameAfterInitialization(Action<QCAlgorithm, string> setName)
+        private static void TestSettingAlgorithmNameAfterInitialization(
+            Action<QCAlgorithm, string> setName
+        )
         {
             var algorithm = new QCAlgorithm();
             algorithm.SetLocked();
@@ -100,7 +102,10 @@ namespace QuantConnect.Tests.Algorithm
 
         #region Tagging tests
 
-        private static void SetAlgorithmTagsUsingPropertySetter(QCAlgorithm algorithm, string[] tags)
+        private static void SetAlgorithmTagsUsingPropertySetter(
+            QCAlgorithm algorithm,
+            string[] tags
+        )
         {
             algorithm.Tags = tags?.ToHashSet();
         }
@@ -110,7 +115,11 @@ namespace QuantConnect.Tests.Algorithm
             algorithm.SetTags(tags?.ToHashSet());
         }
 
-        private static void TestAlgorithmTagsAreSet(Action<QCAlgorithm, string[]> setTags, QCAlgorithm algorithm, string[] tags)
+        private static void TestAlgorithmTagsAreSet(
+            Action<QCAlgorithm, string[]> setTags,
+            QCAlgorithm algorithm,
+            string[] tags
+        )
         {
             setTags(algorithm, tags);
             CollectionAssert.AreEquivalent(tags, algorithm.Tags);
@@ -202,14 +211,20 @@ namespace QuantConnect.Tests.Algorithm
             TestSettingTooManyAlgorithmTags(SetAlgorithmTagsUsingSetMethod);
         }
 
-        private static void TestSettingTagsAreTruncatedWhenTooLong(Action<QCAlgorithm, string[]> setTags)
+        private static void TestSettingTagsAreTruncatedWhenTooLong(
+            Action<QCAlgorithm, string[]> setTags
+        )
         {
             var algorithm = new QCAlgorithm();
-            var tags = Enumerable.Range(0, MaxTagsCount)
+            var tags = Enumerable
+                .Range(0, MaxTagsCount)
                 .Select(i => "tag" + string.Concat(Enumerable.Repeat(i, MaxNameAndTagsLength + 1)))
                 .ToArray();
             setTags(algorithm, tags);
-            CollectionAssert.AreEquivalent(tags.ToHashSet(t => t.Substring(0, MaxNameAndTagsLength)), algorithm.Tags);
+            CollectionAssert.AreEquivalent(
+                tags.ToHashSet(t => t.Substring(0, MaxNameAndTagsLength)),
+                algorithm.Tags
+            );
         }
 
         [Test]

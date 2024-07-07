@@ -14,18 +14,20 @@
  *
 */
 
-using System.Collections.Generic;
 using System;
+using System.Collections.Generic;
 using System.Linq;
-using QuantConnect.Interfaces;
 using QuantConnect.Data.UniverseSelection;
+using QuantConnect.Interfaces;
 
 namespace QuantConnect.Algorithm.CSharp
 {
     /// <summary>
     /// Regression algorithm asserting that universe selection is not dynamic by default, that is, selection happens only on market open by default.
     /// </summary>
-    public class NonDynamicOptionsFilterRegressionAlgorithm : QCAlgorithm, IRegressionAlgorithmDefinition
+    public class NonDynamicOptionsFilterRegressionAlgorithm
+        : QCAlgorithm,
+            IRegressionAlgorithmDefinition
     {
         private const string UnderlyingTicker = "AAPL";
 
@@ -57,14 +59,18 @@ namespace QuantConnect.Algorithm.CSharp
                 // This is the underlying security addition
                 if (changes.AddedSecurities.Count != 1 || changes.RemovedSecurities.Count != 0)
                 {
-                    throw new RegressionTestException("Unexpected security changes count: " +
-                        "on the first OnSecuritiesChanged callback, we expect only the underlying to be added.");
+                    throw new RegressionTestException(
+                        "Unexpected security changes count: "
+                            + "on the first OnSecuritiesChanged callback, we expect only the underlying to be added."
+                    );
                 }
 
                 if (changes.AddedSecurities[0].Symbol != _optionSymbol.Underlying)
                 {
-                    throw new RegressionTestException("Unexpected security added: " +
-                        "on the first OnSecuritiesChanged callback, we expect only the underlying to be added.");
+                    throw new RegressionTestException(
+                        "Unexpected security added: "
+                            + "on the first OnSecuritiesChanged callback, we expect only the underlying to be added."
+                    );
                 }
             }
             else if (_securitiesChangedCount < 4)
@@ -77,20 +83,31 @@ namespace QuantConnect.Algorithm.CSharp
                 var marketOpen = exchangeHours.GetNextMarketOpen(Time.Date, false);
                 if (Time.AddMinutes(-1) != marketOpen)
                 {
-                    throw new RegressionTestException($"Unexpected security changes time. Current time {Time}. Expected time: {marketOpen.AddMinutes(1)}");
+                    throw new RegressionTestException(
+                        $"Unexpected security changes time. Current time {Time}. Expected time: {marketOpen.AddMinutes(1)}"
+                    );
                 }
 
                 // Check the changes
                 if (changes.AddedSecurities.Count == 0)
                 {
-                    throw new RegressionTestException("Unexpected security changes count: " +
-                        "on second and third OnSecuritiesChanged callbacks we expect options to be added");
+                    throw new RegressionTestException(
+                        "Unexpected security changes count: "
+                            + "on second and third OnSecuritiesChanged callbacks we expect options to be added"
+                    );
                 }
 
-                if (changes.AddedSecurities.Any(security => !security.Symbol.HasCanonical() || security.Symbol.Canonical != _optionSymbol))
+                if (
+                    changes.AddedSecurities.Any(security =>
+                        !security.Symbol.HasCanonical()
+                        || security.Symbol.Canonical != _optionSymbol
+                    )
+                )
                 {
-                    throw new RegressionTestException("Unexpected security added: " +
-                        $"on second and third OnSecuritiesChanged callbacks we expect only {UnderlyingTicker} options to be added");
+                    throw new RegressionTestException(
+                        "Unexpected security added: "
+                            + $"on second and third OnSecuritiesChanged callbacks we expect only {UnderlyingTicker} options to be added"
+                    );
                 }
 
                 if (_securitiesChangedCount == 3)
@@ -98,8 +115,10 @@ namespace QuantConnect.Algorithm.CSharp
                     // The options added the previous day should be removed
                     if (changes.RemovedSecurities.Count != _previouslyAddedOptionsCount)
                     {
-                        throw new RegressionTestException("Unexpected security changes count: " +
-                            "on the third OnSecuritiesChanged callback we expect the previous day selection to be removed.");
+                        throw new RegressionTestException(
+                            "Unexpected security changes count: "
+                                + "on the third OnSecuritiesChanged callback we expect the previous day selection to be removed."
+                        );
                     }
                 }
 
@@ -107,7 +126,9 @@ namespace QuantConnect.Algorithm.CSharp
             }
             else
             {
-                throw new RegressionTestException($"Unexpected call to OnSecuritiesChanged: we expect only 3 OnSecuritiesChanged callbacks for this algorithm");
+                throw new RegressionTestException(
+                    $"Unexpected call to OnSecuritiesChanged: we expect only 3 OnSecuritiesChanged callbacks for this algorithm"
+                );
             }
         }
 
@@ -115,8 +136,10 @@ namespace QuantConnect.Algorithm.CSharp
         {
             if (_securitiesChangedCount != 3)
             {
-                throw new RegressionTestException($"Unexpected number of calls to OnSecuritiesChanged: {_securitiesChangedCount}. " +
-                    "We expect only 3 OnSecuritiesChanged callbacks for this algorithm");
+                throw new RegressionTestException(
+                    $"Unexpected number of calls to OnSecuritiesChanged: {_securitiesChangedCount}. "
+                        + "We expect only 3 OnSecuritiesChanged callbacks for this algorithm"
+                );
             }
         }
 
@@ -148,35 +171,36 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// This is used by the regression test system to indicate what the expected statistics are from running the algorithm
         /// </summary>
-        public Dictionary<string, string> ExpectedStatistics => new Dictionary<string, string>
-        {
-            {"Total Orders", "0"},
-            {"Average Win", "0%"},
-            {"Average Loss", "0%"},
-            {"Compounding Annual Return", "0%"},
-            {"Drawdown", "0%"},
-            {"Expectancy", "0"},
-            {"Start Equity", "100000"},
-            {"End Equity", "100000"},
-            {"Net Profit", "0%"},
-            {"Sharpe Ratio", "0"},
-            {"Sortino Ratio", "0"},
-            {"Probabilistic Sharpe Ratio", "0%"},
-            {"Loss Rate", "0%"},
-            {"Win Rate", "0%"},
-            {"Profit-Loss Ratio", "0"},
-            {"Alpha", "0"},
-            {"Beta", "0"},
-            {"Annual Standard Deviation", "0"},
-            {"Annual Variance", "0"},
-            {"Information Ratio", "-19.236"},
-            {"Tracking Error", "0.147"},
-            {"Treynor Ratio", "0"},
-            {"Total Fees", "$0.00"},
-            {"Estimated Strategy Capacity", "$0"},
-            {"Lowest Capacity Asset", ""},
-            {"Portfolio Turnover", "0%"},
-            {"OrderListHash", "d41d8cd98f00b204e9800998ecf8427e"}
-        };
+        public Dictionary<string, string> ExpectedStatistics =>
+            new Dictionary<string, string>
+            {
+                { "Total Orders", "0" },
+                { "Average Win", "0%" },
+                { "Average Loss", "0%" },
+                { "Compounding Annual Return", "0%" },
+                { "Drawdown", "0%" },
+                { "Expectancy", "0" },
+                { "Start Equity", "100000" },
+                { "End Equity", "100000" },
+                { "Net Profit", "0%" },
+                { "Sharpe Ratio", "0" },
+                { "Sortino Ratio", "0" },
+                { "Probabilistic Sharpe Ratio", "0%" },
+                { "Loss Rate", "0%" },
+                { "Win Rate", "0%" },
+                { "Profit-Loss Ratio", "0" },
+                { "Alpha", "0" },
+                { "Beta", "0" },
+                { "Annual Standard Deviation", "0" },
+                { "Annual Variance", "0" },
+                { "Information Ratio", "-19.236" },
+                { "Tracking Error", "0.147" },
+                { "Treynor Ratio", "0" },
+                { "Total Fees", "$0.00" },
+                { "Estimated Strategy Capacity", "$0" },
+                { "Lowest Capacity Asset", "" },
+                { "Portfolio Turnover", "0%" },
+                { "OrderListHash", "d41d8cd98f00b204e9800998ecf8427e" }
+            };
     }
 }

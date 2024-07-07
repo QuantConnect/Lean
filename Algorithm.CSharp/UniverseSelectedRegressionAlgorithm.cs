@@ -14,12 +14,12 @@
 */
 
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using QuantConnect.Data;
-using QuantConnect.Interfaces;
-using System.Collections.Generic;
 using QuantConnect.Data.Fundamental;
 using QuantConnect.Data.UniverseSelection;
+using QuantConnect.Interfaces;
 
 namespace QuantConnect.Algorithm.CSharp
 {
@@ -31,12 +31,15 @@ namespace QuantConnect.Algorithm.CSharp
         private int _selectionCount;
         private Universe _universe;
 
-        private readonly Queue<List<Symbol>> _expectedSymbols = new(new[]
-        {
-            new List<Symbol> { GetSymbol("SPY") },
-            new List<Symbol> { GetSymbol("AAPL"), GetSymbol("IWM") },
-            new List<Symbol> { GetSymbol("FB"), GetSymbol("AAPL"), GetSymbol("QQQ") },
-        });
+        private readonly Queue<List<Symbol>> _expectedSymbols =
+            new(
+                new[]
+                {
+                    new List<Symbol> { GetSymbol("SPY") },
+                    new List<Symbol> { GetSymbol("AAPL"), GetSymbol("IWM") },
+                    new List<Symbol> { GetSymbol("FB"), GetSymbol("AAPL"), GetSymbol("QQQ") },
+                }
+            );
 
         public override void Initialize()
         {
@@ -59,7 +62,11 @@ namespace QuantConnect.Algorithm.CSharp
 
         public override void OnData(Slice slice)
         {
-            if (_universe.Selected.Contains(QuantConnect.Symbol.Create("TSLA", SecurityType.Equity, Market.USA)))
+            if (
+                _universe.Selected.Contains(
+                    QuantConnect.Symbol.Create("TSLA", SecurityType.Equity, Market.USA)
+                )
+            )
             {
                 throw new RegressionTestException($"TSLA shouldn't of been selected");
             }
@@ -83,13 +90,19 @@ namespace QuantConnect.Algorithm.CSharp
             {
                 throw new RegressionTestException($"Unexpected selection count {_selectionCount}");
             }
-            if (_universe.Selected.Count != 3 || _universe.Selected.Count == _universe.Members.Count)
+            if (
+                _universe.Selected.Count != 3
+                || _universe.Selected.Count == _universe.Members.Count
+            )
             {
-                throw new RegressionTestException($"Unexpected universe selected count {_universe.Selected.Count}");
+                throw new RegressionTestException(
+                    $"Unexpected universe selected count {_universe.Selected.Count}"
+                );
             }
         }
 
-        private static Symbol GetSymbol(string ticker) => QuantConnect.Symbol.Create(ticker, SecurityType.Equity, Market.USA);
+        private static Symbol GetSymbol(string ticker) =>
+            QuantConnect.Symbol.Create(ticker, SecurityType.Equity, Market.USA);
 
         /// <summary>
         /// This is used by the regression test system to indicate if the open source Lean repository has the required data to run this algorithm.
@@ -119,35 +132,36 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// This is used by the regression test system to indicate what the expected statistics are from running the algorithm
         /// </summary>
-        public Dictionary<string, string> ExpectedStatistics => new Dictionary<string, string>
-        {
-            {"Total Orders", "4"},
-            {"Average Win", "0%"},
-            {"Average Loss", "0%"},
-            {"Compounding Annual Return", "-0.536%"},
-            {"Drawdown", "0.000%"},
-            {"Expectancy", "0"},
-            {"Start Equity", "100000"},
-            {"End Equity", "99995.58"},
-            {"Net Profit", "-0.004%"},
-            {"Sharpe Ratio", "-70.905"},
-            {"Sortino Ratio", "-70.905"},
-            {"Probabilistic Sharpe Ratio", "0%"},
-            {"Loss Rate", "0%"},
-            {"Win Rate", "0%"},
-            {"Profit-Loss Ratio", "0"},
-            {"Alpha", "-0.01"},
-            {"Beta", "0.003"},
-            {"Annual Standard Deviation", "0"},
-            {"Annual Variance", "0"},
-            {"Information Ratio", "12.072"},
-            {"Tracking Error", "0.057"},
-            {"Treynor Ratio", "-4.046"},
-            {"Total Fees", "$3.00"},
-            {"Estimated Strategy Capacity", "$680000000000.00"},
-            {"Lowest Capacity Asset", "AAPL R735QTJ8XC9X"},
-            {"Portfolio Turnover", "0.08%"},
-            {"OrderListHash", "d80bfd86cd975ae3d29e174ec39a6e8e"}
-        };
+        public Dictionary<string, string> ExpectedStatistics =>
+            new Dictionary<string, string>
+            {
+                { "Total Orders", "4" },
+                { "Average Win", "0%" },
+                { "Average Loss", "0%" },
+                { "Compounding Annual Return", "-0.536%" },
+                { "Drawdown", "0.000%" },
+                { "Expectancy", "0" },
+                { "Start Equity", "100000" },
+                { "End Equity", "99995.58" },
+                { "Net Profit", "-0.004%" },
+                { "Sharpe Ratio", "-70.905" },
+                { "Sortino Ratio", "-70.905" },
+                { "Probabilistic Sharpe Ratio", "0%" },
+                { "Loss Rate", "0%" },
+                { "Win Rate", "0%" },
+                { "Profit-Loss Ratio", "0" },
+                { "Alpha", "-0.01" },
+                { "Beta", "0.003" },
+                { "Annual Standard Deviation", "0" },
+                { "Annual Variance", "0" },
+                { "Information Ratio", "12.072" },
+                { "Tracking Error", "0.057" },
+                { "Treynor Ratio", "-4.046" },
+                { "Total Fees", "$3.00" },
+                { "Estimated Strategy Capacity", "$680000000000.00" },
+                { "Lowest Capacity Asset", "AAPL R735QTJ8XC9X" },
+                { "Portfolio Turnover", "0.08%" },
+                { "OrderListHash", "d80bfd86cd975ae3d29e174ec39a6e8e" }
+            };
     }
 }

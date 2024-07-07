@@ -14,13 +14,13 @@
 */
 
 using System;
-using System.Linq;
-using Python.Runtime;
-using NUnit.Framework;
-using QuantConnect.Research;
 using System.Collections.Generic;
+using System.Linq;
+using NUnit.Framework;
+using Python.Runtime;
 using QuantConnect.Data.Fundamental;
 using QuantConnect.Data.UniverseSelection;
+using QuantConnect.Research;
 
 namespace QuantConnect.Tests.Research
 {
@@ -45,25 +45,33 @@ namespace QuantConnect.Tests.Research
         {
             if (language == Language.CSharp)
             {
-                var universe = _qb.AddUniverse((IEnumerable<Fundamental> fundamentals) => fundamentals.Select(x => x.Symbol));
+                var universe = _qb.AddUniverse(
+                    (IEnumerable<Fundamental> fundamentals) => fundamentals.Select(x => x.Symbol)
+                );
                 var history = _qb.UniverseHistory(universe, _start, _end).ToList();
 
                 // we asked for 2 weeks, 5 work days for each week expected
                 Assert.AreEqual(10, history.Count);
                 Assert.IsTrue(history.All(x => x.Count() > 7000));
-                Assert.IsTrue(history.All(x => x.All(fundamental => fundamental.GetType() == typeof(Fundamental))));
+                Assert.IsTrue(
+                    history.All(x =>
+                        x.All(fundamental => fundamental.GetType() == typeof(Fundamental))
+                    )
+                );
             }
             else
             {
                 using (Py.GIL())
                 {
-                    var testModule = PyModule.FromString("testModule",
-                    @"
+                    var testModule = PyModule.FromString(
+                        "testModule",
+                        @"
 from AlgorithmImports import *
 
 def getUniverseHistory(qb, start, end):
     universe = qb.AddUniverse(lambda fundamentals: [ x.Symbol for x in fundamentals ])
-" + GetBaseImplementation(expectedCount: 7000, identation: "    "));
+" + GetBaseImplementation(expectedCount: 7000, identation: "    ")
+                    );
 
                     dynamic getUniverse = testModule.GetAttr("getUniverseHistory");
                     var pyHistory = getUniverse(_qb, _start, _end);
@@ -74,7 +82,8 @@ def getUniverseHistory(qb, start, end):
                     {
                         var index = pyHistory.index[i];
                         var type = typeof(List<Fundamental>);
-                        var fundamental = (List<Fundamental>)pyHistory.loc[index].AsManagedObject(type);
+                        var fundamental =
+                            (List<Fundamental>)pyHistory.loc[index].AsManagedObject(type);
 
                         Assert.GreaterOrEqual(fundamental.Count, 7000);
                     }
@@ -91,30 +100,38 @@ def getUniverseHistory(qb, start, end):
             var selectionState = false;
             if (language == Language.CSharp)
             {
-                var universe = _qb.AddUniverse((IEnumerable<Fundamental> fundamentals) =>
-                {
-                    if (!useUniverseUnchanged || !selectionState)
+                var universe = _qb.AddUniverse(
+                    (IEnumerable<Fundamental> fundamentals) =>
                     {
-                        selectionState = true;
-                        return new[] { Symbols.AAPL };
+                        if (!useUniverseUnchanged || !selectionState)
+                        {
+                            selectionState = true;
+                            return new[] { Symbols.AAPL };
+                        }
+                        // after the first call we will return 'unchanged' if 'useUniverseUnchanged' is true
+                        return Universe.Unchanged;
                     }
-                    // after the first call we will return 'unchanged' if 'useUniverseUnchanged' is true
-                    return Universe.Unchanged;
-                });
+                );
                 var history = _qb.UniverseHistory(universe, _start, _end).ToList();
 
                 // we asked for 2 weeks, 5 work days for each week expected
                 Assert.AreEqual(10, history.Count);
                 Assert.IsTrue(history.All(x => x.Count() == 1));
                 Assert.IsTrue(history.All(x => x.Single().Symbol == Symbols.AAPL));
-                Assert.IsTrue(history.All(x => x.All(fundamental => fundamental.GetType() == typeof(Fundamental))));
+                Assert.IsTrue(
+                    history.All(x =>
+                        x.All(fundamental => fundamental.GetType() == typeof(Fundamental))
+                    )
+                );
             }
             else
             {
                 using (Py.GIL())
                 {
-                    dynamic testModule = PyModule.FromString("testModule",
-                    @"
+                    dynamic testModule = PyModule
+                        .FromString(
+                            "testModule",
+                            @"
 from AlgorithmImports import *
 
 class Test():
@@ -130,7 +147,9 @@ class Test():
 
     def getUniverseHistory(self, qb, start, end):
         universe = qb.AddUniverse(self.selection)
-" + GetBaseImplementation(expectedCount: 1, identation: "        ")).GetAttr("Test");
+" + GetBaseImplementation(expectedCount: 1, identation: "        ")
+                        )
+                        .GetAttr("Test");
 
                     var instance = testModule(useUniverseUnchanged);
                     var pyHistory = instance.getUniverseHistory(_qb, _start, _end);
@@ -161,30 +180,42 @@ class Test():
             if (language == Language.CSharp)
             {
                 var spy = Symbol.Create("SPY", SecurityType.Equity, Market.USA);
-                var universe = _qb.Universe.ETF(spy, _qb.UniverseSettings, (IEnumerable<ETFConstituentUniverse> etfConstituents) =>
-                {
-                    if (!selectionState)
+                var universe = _qb.Universe.ETF(
+                    spy,
+                    _qb.UniverseSettings,
+                    (IEnumerable<ETFConstituentUniverse> etfConstituents) =>
                     {
-                        selectionState = true;
-                        return new[] { Symbols.AAPL };
+                        if (!selectionState)
+                        {
+                            selectionState = true;
+                            return new[] { Symbols.AAPL };
+                        }
+                        // after the first call we will return 'unchanged' if 'useUniverseUnchanged' is true
+                        return Universe.Unchanged;
                     }
-                    // after the first call we will return 'unchanged' if 'useUniverseUnchanged' is true
-                    return Universe.Unchanged;
-                });
+                );
                 var history = _qb.UniverseHistory(universe, _start, _end).ToList();
 
                 // we asked for 2 weeks, 5 work days for each week expected
                 Assert.AreEqual(41, history.Count);
                 Assert.IsTrue(history.All(x => x.Count() == 1));
                 Assert.IsTrue(history.All(x => x.Single().Symbol == Symbols.AAPL));
-                Assert.IsTrue(history.All(x => x.All(fundamental => fundamental.GetType() == typeof(ETFConstituentUniverse))));
+                Assert.IsTrue(
+                    history.All(x =>
+                        x.All(fundamental =>
+                            fundamental.GetType() == typeof(ETFConstituentUniverse)
+                        )
+                    )
+                );
             }
             else
             {
                 using (Py.GIL())
                 {
-                    dynamic testModule = PyModule.FromString("testModule",
-                    @"
+                    dynamic testModule = PyModule
+                        .FromString(
+                            "testModule",
+                            @"
 from AlgorithmImports import *
 
 class Test():
@@ -209,7 +240,9 @@ class Test():
             if dataPointCount < 1:
                 raise ValueError(f""Unexpected historical Fundamentals data count {dataPointCount}! Expected > expectedCount"")
         return universeDataPerTime
-").GetAttr("Test");
+"
+                        )
+                        .GetAttr("Test");
 
                     var instance = testModule();
                     var pyHistory = instance.getUniverseHistory(_qb, _start, _end);
@@ -241,19 +274,25 @@ class Test():
                 // we asked for 2 weeks, 5 work days for each week expected
                 Assert.AreEqual(10, history.Count);
                 Assert.IsTrue(history.All(x => x.Count() > 7000));
-                Assert.IsTrue(history.All(x => x.All(fundamental => fundamental.GetType() == typeof(Fundamental))));
+                Assert.IsTrue(
+                    history.All(x =>
+                        x.All(fundamental => fundamental.GetType() == typeof(Fundamental))
+                    )
+                );
             }
             else
             {
                 using (Py.GIL())
                 {
-                    var testModule = PyModule.FromString("testModule",
-                    @"
+                    var testModule = PyModule.FromString(
+                        "testModule",
+                        @"
 from AlgorithmImports import *
 
 def getUniverseHistory(qb, start, end):
     return qb.UniverseHistory(Fundamentals, start, end)
-                    ");
+                    "
+                    );
 
                     dynamic getUniverse = testModule.GetAttr("getUniverseHistory");
                     var pyHistory = getUniverse(_qb, _start, _end);
@@ -264,7 +303,8 @@ def getUniverseHistory(qb, start, end):
                     {
                         var index = pyHistory.index[i];
                         var type = typeof(List<Fundamental>);
-                        var fundamental = (List<Fundamental>)pyHistory.loc[index].AsManagedObject(type);
+                        var fundamental =
+                            (List<Fundamental>)pyHistory.loc[index].AsManagedObject(type);
 
                         Assert.GreaterOrEqual(fundamental.Count, 7000);
                     }
@@ -276,34 +316,48 @@ def getUniverseHistory(qb, start, end):
         [TestCase(Language.Python, false)]
         [TestCase(Language.CSharp, true)]
         [TestCase(Language.Python, true)]
-        public void UniverseSelection_BackwardsCompatibility(Language language, bool useUniverseUnchanged)
+        public void UniverseSelection_BackwardsCompatibility(
+            Language language,
+            bool useUniverseUnchanged
+        )
         {
             var selectionState = false;
             if (language == Language.CSharp)
             {
-                var history = _qb.UniverseHistory<Fundamentals, Fundamental>(_start, _end, (fundamental) =>
-                {
-                    if (!useUniverseUnchanged || !selectionState)
-                    {
-                        selectionState = true;
-                        return new[] { Symbols.AAPL };
-                    }
-                    // after the first call we will return 'unchanged' if 'useUniverseUnchanged' is true
-                    return Universe.Unchanged;
-                }).ToList();
+                var history = _qb.UniverseHistory<Fundamentals, Fundamental>(
+                        _start,
+                        _end,
+                        (fundamental) =>
+                        {
+                            if (!useUniverseUnchanged || !selectionState)
+                            {
+                                selectionState = true;
+                                return new[] { Symbols.AAPL };
+                            }
+                            // after the first call we will return 'unchanged' if 'useUniverseUnchanged' is true
+                            return Universe.Unchanged;
+                        }
+                    )
+                    .ToList();
 
                 // we asked for 2 weeks, 5 work days for each week expected
                 Assert.AreEqual(10, history.Count);
                 Assert.IsTrue(history.All(x => x.Count() == 1));
                 Assert.IsTrue(history.All(x => x.Single().Symbol == Symbols.AAPL));
-                Assert.IsTrue(history.All(x => x.All(fundamental => fundamental.GetType() == typeof(Fundamental))));
+                Assert.IsTrue(
+                    history.All(x =>
+                        x.All(fundamental => fundamental.GetType() == typeof(Fundamental))
+                    )
+                );
             }
             else
             {
                 using (Py.GIL())
                 {
-                    dynamic testModule = PyModule.FromString("testModule",
-                    @"
+                    dynamic testModule = PyModule
+                        .FromString(
+                            "testModule",
+                            @"
 from AlgorithmImports import *
 
 class Test():
@@ -319,7 +373,9 @@ class Test():
 
     def getUniverseHistory(self, qb, start, end):
         return qb.UniverseHistory(Fundamentals, start, end, self.selection)
-").GetAttr("Test");
+"
+                        )
+                        .GetAttr("Test");
 
                     var instance = testModule(useUniverseUnchanged);
                     var pyHistory = instance.getUniverseHistory(_qb, _start, _end);
@@ -353,8 +409,11 @@ class Test():
 {identation}    if dataPointCount < expectedCount:
 {identation}        raise ValueError(f""Unexpected historical Fundamentals data count {dataPointCount}! Expected > expectedCount"")
 {identation}return universeDataPerTime
-".Replace("expectedCount", expectedCount.ToStringInvariant(), StringComparison.InvariantCulture)
-.Replace("{identation}", identation, StringComparison.InvariantCulture);
+".Replace(
+                "expectedCount",
+                expectedCount.ToStringInvariant(),
+                StringComparison.InvariantCulture
+            ).Replace("{identation}", identation, StringComparison.InvariantCulture);
         }
     }
 }

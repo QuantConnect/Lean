@@ -27,12 +27,10 @@ namespace QuantConnect.Data.Market
         // storage for the data
         private readonly IDictionary<Symbol, T> _data = new Dictionary<Symbol, T>();
 
-       /// <summary>
-       /// Initializes a new instance of the <see cref="QuantConnect.Data.Market.DataDictionary{T}"/> class.
-       /// </summary>
-        public DataDictionary()
-        {
-        }
+        /// <summary>
+        /// Initializes a new instance of the <see cref="QuantConnect.Data.Market.DataDictionary{T}"/> class.
+        /// </summary>
+        public DataDictionary() { }
 
         /// <summary>
         /// Initializes a new instance of the <see cref="QuantConnect.Data.Market.DataDictionary{T}"/> class
@@ -75,6 +73,7 @@ namespace QuantConnect.Data.Market
         {
             return _data.GetEnumerator();
         }
+
         /// <summary>
         /// Returns an enumerator that iterates through a collection.
         /// </summary>
@@ -224,12 +223,11 @@ namespace QuantConnect.Data.Market
                 {
                     return data;
                 }
-                throw new KeyNotFoundException($"'{symbol}' wasn't found in the {GetType().GetBetterTypeName()} object, likely because there was no-data at this moment in time and it wasn't possible to fillforward historical data. Please check the data exists before accessing it with data.ContainsKey(\"{symbol}\")");
+                throw new KeyNotFoundException(
+                    $"'{symbol}' wasn't found in the {GetType().GetBetterTypeName()} object, likely because there was no-data at this moment in time and it wasn't possible to fillforward historical data. Please check the data exists before accessing it with data.ContainsKey(\"{symbol}\")"
+                );
             }
-            set
-            {
-                _data[symbol] = value;
-            }
+            set { _data[symbol] = value; }
         }
 
         /// <summary>

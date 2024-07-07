@@ -21,8 +21,8 @@ using QuantConnect.Data;
 using QuantConnect.Data.Consolidators;
 using QuantConnect.Data.UniverseSelection;
 using QuantConnect.Indicators;
-using QuantConnect.Securities;
 using QuantConnect.Orders;
+using QuantConnect.Securities;
 
 namespace QuantConnect.Algorithm.Framework.Execution
 {
@@ -31,8 +31,10 @@ namespace QuantConnect.Algorithm.Framework.Execution
     /// </summary>
     public class VolumeWeightedAveragePriceExecutionModel : ExecutionModel
     {
-        private readonly PortfolioTargetCollection _targetsCollection = new PortfolioTargetCollection();
-        private readonly Dictionary<Symbol, SymbolData> _symbolData = new Dictionary<Symbol, SymbolData>();
+        private readonly PortfolioTargetCollection _targetsCollection =
+            new PortfolioTargetCollection();
+        private readonly Dictionary<Symbol, SymbolData> _symbolData =
+            new Dictionary<Symbol, SymbolData>();
 
         /// <summary>
         /// Gets or sets the maximum order quantity as a percentage of the current bar's volume.
@@ -74,7 +76,10 @@ namespace QuantConnect.Algorithm.Framework.Execution
                     {
                         // adjust order size to respect maximum order size based on a percentage of current volume
                         var orderSize = OrderSizing.GetOrderSizeForPercentVolume(
-                            data.Security, MaximumOrderQuantityPercentVolume, unorderedQuantity);
+                            data.Security,
+                            MaximumOrderQuantityPercentVolume,
+                            unorderedQuantity
+                        );
 
                         if (orderSize != 0)
                         {
@@ -111,7 +116,10 @@ namespace QuantConnect.Algorithm.Framework.Execution
                     if (IsSafeToRemove(algorithm, removed.Symbol))
                     {
                         _symbolData.Remove(removed.Symbol);
-                        algorithm.SubscriptionManager.RemoveConsolidator(removed.Symbol, data.Consolidator);
+                        algorithm.SubscriptionManager.RemoveConsolidator(
+                            removed.Symbol,
+                            data.Consolidator
+                        );
                     }
                 }
             }
@@ -176,10 +184,19 @@ namespace QuantConnect.Algorithm.Framework.Execution
             {
                 Security = security;
                 Consolidator = algorithm.ResolveConsolidator(security.Symbol, security.Resolution);
-                var name = algorithm.CreateIndicatorName(security.Symbol, "VWAP", security.Resolution);
+                var name = algorithm.CreateIndicatorName(
+                    security.Symbol,
+                    "VWAP",
+                    security.Resolution
+                );
                 VWAP = new IntradayVwap(name);
 
-                algorithm.RegisterIndicator(security.Symbol, VWAP, Consolidator, bd => (BaseData) bd);
+                algorithm.RegisterIndicator(
+                    security.Symbol,
+                    VWAP,
+                    Consolidator,
+                    bd => (BaseData)bd
+                );
             }
         }
     }

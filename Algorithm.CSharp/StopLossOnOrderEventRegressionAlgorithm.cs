@@ -24,7 +24,9 @@ namespace QuantConnect.Algorithm.CSharp
     /// This regression test algorithm reproduces GH issue 3239, where the stopLoss order
     /// place on <see cref="OnOrderEvent"/> was not being filled.
     /// </summary>
-    public class StopLossOnOrderEventRegressionAlgorithm : QCAlgorithm, IRegressionAlgorithmDefinition
+    public class StopLossOnOrderEventRegressionAlgorithm
+        : QCAlgorithm,
+            IRegressionAlgorithmDefinition
     {
         private Symbol _spy;
         private bool _alreadyTraded;
@@ -45,7 +47,9 @@ namespace QuantConnect.Algorithm.CSharp
                 // Entry short $2 below
                 var stopPrice = orderEvent.FillPrice - 2;
                 var currencySymbol = Currencies.GetCurrencySymbol(order.PriceCurrency);
-                Debug($"Enter short at {orderEvent.FillPrice} set STOPLOSS at {currencySymbol}{stopPrice}");
+                Debug(
+                    $"Enter short at {orderEvent.FillPrice} set STOPLOSS at {currencySymbol}{stopPrice}"
+                );
                 StopMarketOrder(order.Symbol, -order.Quantity, stopPrice, "StopLoss");
             }
         }
@@ -88,35 +92,36 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// This is used by the regression test system to indicate what the expected statistics are from running the algorithm
         /// </summary>
-        public Dictionary<string, string> ExpectedStatistics => new Dictionary<string, string>
-        {
-            {"Total Orders", "2"},
-            {"Average Win", "0%"},
-            {"Average Loss", "0.00%"},
-            {"Compounding Annual Return", "-0.359%"},
-            {"Drawdown", "0.000%"},
-            {"Expectancy", "-1"},
-            {"Start Equity", "100000"},
-            {"End Equity", "99995.41"},
-            {"Net Profit", "-0.005%"},
-            {"Sharpe Ratio", "0"},
-            {"Sortino Ratio", "0"},
-            {"Probabilistic Sharpe Ratio", "0%"},
-            {"Loss Rate", "100%"},
-            {"Win Rate", "0%"},
-            {"Profit-Loss Ratio", "0"},
-            {"Alpha", "0"},
-            {"Beta", "0"},
-            {"Annual Standard Deviation", "0"},
-            {"Annual Variance", "0"},
-            {"Information Ratio", "-8.91"},
-            {"Tracking Error", "0.223"},
-            {"Treynor Ratio", "0"},
-            {"Total Fees", "$2.00"},
-            {"Estimated Strategy Capacity", "$18000000.00"},
-            {"Lowest Capacity Asset", "SPY R735QTJ8XC9X"},
-            {"Portfolio Turnover", "5.79%"},
-            {"OrderListHash", "4113054204a032b871734430f2fbdcb5"}
-        };
+        public Dictionary<string, string> ExpectedStatistics =>
+            new Dictionary<string, string>
+            {
+                { "Total Orders", "2" },
+                { "Average Win", "0%" },
+                { "Average Loss", "0.00%" },
+                { "Compounding Annual Return", "-0.359%" },
+                { "Drawdown", "0.000%" },
+                { "Expectancy", "-1" },
+                { "Start Equity", "100000" },
+                { "End Equity", "99995.41" },
+                { "Net Profit", "-0.005%" },
+                { "Sharpe Ratio", "0" },
+                { "Sortino Ratio", "0" },
+                { "Probabilistic Sharpe Ratio", "0%" },
+                { "Loss Rate", "100%" },
+                { "Win Rate", "0%" },
+                { "Profit-Loss Ratio", "0" },
+                { "Alpha", "0" },
+                { "Beta", "0" },
+                { "Annual Standard Deviation", "0" },
+                { "Annual Variance", "0" },
+                { "Information Ratio", "-8.91" },
+                { "Tracking Error", "0.223" },
+                { "Treynor Ratio", "0" },
+                { "Total Fees", "$2.00" },
+                { "Estimated Strategy Capacity", "$18000000.00" },
+                { "Lowest Capacity Asset", "SPY R735QTJ8XC9X" },
+                { "Portfolio Turnover", "5.79%" },
+                { "OrderListHash", "4113054204a032b871734430f2fbdcb5" }
+            };
     }
 }

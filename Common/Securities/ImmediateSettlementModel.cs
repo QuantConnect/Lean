@@ -36,9 +36,7 @@ namespace QuantConnect.Securities
         /// Scan for pending settlements
         /// </summary>
         /// <param name="settlementParameters">The settlement parameters</param>
-        public virtual void Scan(ScanSettlementModelParameters settlementParameters)
-        {
-        }
+        public virtual void Scan(ScanSettlementModelParameters settlementParameters) { }
 
         /// <summary>
         /// Gets the unsettled cash amount for the security

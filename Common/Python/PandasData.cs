@@ -13,11 +13,6 @@
  * limitations under the License.
 */
 
-using Python.Runtime;
-using QuantConnect.Data;
-using QuantConnect.Data.Fundamental;
-using QuantConnect.Data.Market;
-using QuantConnect.Util;
 using System;
 using System.Collections;
 using System.Collections.Concurrent;
@@ -25,6 +20,11 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
 using System.Reflection;
+using Python.Runtime;
+using QuantConnect.Data;
+using QuantConnect.Data.Fundamental;
+using QuantConnect.Data.Market;
+using QuantConnect.Util;
 
 namespace QuantConnect.Python
 {
@@ -70,13 +70,35 @@ namespace QuantConnect.Python
         private static PyList _level2Names;
         private static PyList _level3Names;
 
-        private readonly static HashSet<string> _baseDataProperties = typeof(BaseData).GetProperties().ToHashSet(x => x.Name.ToLowerInvariant());
-        private readonly static ConcurrentDictionary<Type, IEnumerable<MemberInfo>> _membersByType = new ();
-        private readonly static IReadOnlyList<string> _standardColumns = new string []
+        private static readonly HashSet<string> _baseDataProperties = typeof(BaseData)
+            .GetProperties()
+            .ToHashSet(x => x.Name.ToLowerInvariant());
+        private static readonly ConcurrentDictionary<Type, IEnumerable<MemberInfo>> _membersByType =
+            new();
+        private static readonly IReadOnlyList<string> _standardColumns = new string[]
         {
-                Open,    High,    Low,    Close, LastPrice,  Volume,
-            AskOpen, AskHigh, AskLow, AskClose,  AskPrice, AskSize, Quantity, Suspicious,
-            BidOpen, BidHigh, BidLow, BidClose,  BidPrice, BidSize, Exchange, OpenInterest
+            Open,
+            High,
+            Low,
+            Close,
+            LastPrice,
+            Volume,
+            AskOpen,
+            AskHigh,
+            AskLow,
+            AskClose,
+            AskPrice,
+            AskSize,
+            Quantity,
+            Suspicious,
+            BidOpen,
+            BidHigh,
+            BidLow,
+            BidClose,
+            BidPrice,
+            BidSize,
+            Exchange,
+            OpenInterest
         };
 
         private readonly Symbol _symbol;
@@ -115,7 +137,16 @@ namespace QuantConnect.Python
                     var time = new PyString("time");
                     var symbol = new PyString("symbol");
                     var expiry = new PyString("expiry");
-                    _defaultNames = new PyList(new PyObject[] { expiry, new PyString("strike"), new PyString("type"), symbol, time });
+                    _defaultNames = new PyList(
+                        new PyObject[]
+                        {
+                            expiry,
+                            new PyString("strike"),
+                            new PyString("type"),
+                            symbol,
+                            time
+                        }
+                    );
                     _level2Names = new PyList(new PyObject[] { symbol, time });
                     _level3Names = new PyList(new PyObject[] { expiry, symbol, time });
                 }
@@ -137,16 +168,20 @@ namespace QuantConnect.Python
             IsCustomData = type.Namespace != typeof(Bar).Namespace;
             _symbol = ((IBaseData)data).Symbol;
 
-            if (_symbol.SecurityType == SecurityType.Future) Levels = 3;
-            if (_symbol.SecurityType.IsOption()) Levels = 5;
+            if (_symbol.SecurityType == SecurityType.Future)
+                Levels = 3;
+            if (_symbol.SecurityType.IsOption())
+                Levels = 5;
 
             IEnumerable<string> columns = _standardColumns;
 
             if (IsCustomData || ((IBaseData)data).DataType == MarketDataType.Auxiliary)
             {
-                var keys = (data as DynamicData)?.GetStorageDictionary()
+                var keys = (data as DynamicData)
+                    ?.GetStorageDictionary()
                     // if this is a PythonData instance we add in '__typename' which we don't want into the data frame
-                    .Where(x => !x.Key.StartsWith("__", StringComparison.InvariantCulture)).ToHashSet(x => x.Key);
+                    .Where(x => !x.Key.StartsWith("__", StringComparison.InvariantCulture))
+                    .ToHashSet(x => x.Key);
 
                 // C# types that are not DynamicData type
                 if (keys == null)
@@ -157,12 +192,22 @@ namespace QuantConnect.Python
                     }
                     else
                     {
-                        var members = type.GetMembers().Where(x => x.MemberType == MemberTypes.Field || x.MemberType == MemberTypes.Property).ToList();
+                        var members = type.GetMembers()
+                            .Where(x =>
+                                x.MemberType == MemberTypes.Field
+                                || x.MemberType == MemberTypes.Property
+                            )
+                            .ToList();
 
-                        var duplicateKeys = members.GroupBy(x => x.Name.ToLowerInvariant()).Where(x => x.Count() > 1).Select(x => x.Key);
+                        var duplicateKeys = members
+                            .GroupBy(x => x.Name.ToLowerInvariant())
+                            .Where(x => x.Count() > 1)
+                            .Select(x => x.Key);
                         foreach (var duplicateKey in duplicateKeys)
                         {
-                            throw new ArgumentException($"PandasData.ctor(): {Messages.PandasData.DuplicateKey(duplicateKey, type.FullName)}");
+                            throw new ArgumentException(
+                                $"PandasData.ctor(): {Messages.PandasData.DuplicateKey(duplicateKey, type.FullName)}"
+                            );
                         }
 
                         // If the custom data derives from a Market Data (e.g. Tick, TradeBar, QuoteBar), exclude its keys
@@ -173,7 +218,9 @@ namespace QuantConnect.Python
                         keys.ExceptWith(GetPropertiesNames(typeof(Tick), type));
                         keys.Add("value");
 
-                        _members = members.Where(x => keys.Contains(x.Name.ToLowerInvariant())).ToList();
+                        _members = members
+                            .Where(x => keys.Contains(x.Name.ToLowerInvariant()))
+                            .ToList();
                         _membersByType.TryAdd(type, _members);
                     }
                 }
@@ -203,9 +250,16 @@ namespace QuantConnect.Python
                 if (propertyMember != null)
                 {
                     var propertyValue = propertyMember.GetValue(baseData);
-                    if (_isFundamentalType && propertyMember.PropertyType.IsAssignableTo(typeof(FundamentalTimeDependentProperty)))
+                    if (
+                        _isFundamentalType
+                        && propertyMember.PropertyType.IsAssignableTo(
+                            typeof(FundamentalTimeDependentProperty)
+                        )
+                    )
                     {
-                        propertyValue = ((FundamentalTimeDependentProperty)propertyValue).Clone(new FixedTimeProvider(endTime));
+                        propertyValue = ((FundamentalTimeDependentProperty)propertyValue).Clone(
+                            new FixedTimeProvider(endTime)
+                        );
                     }
                     AddToSeries(key, endTime, propertyValue);
                     continue;
@@ -223,12 +277,16 @@ namespace QuantConnect.Python
             var storage = (baseData as DynamicData)?.GetStorageDictionary();
             if (storage != null)
             {
-                var value = ((IBaseData) baseData).Value;
+                var value = ((IBaseData)baseData).Value;
                 AddToSeries("value", endTime, value);
 
-                foreach (var kvp in storage.Where(x => x.Key != "value"
-                    // if this is a PythonData instance we add in '__typename' which we don't want into the data frame
-                    && !x.Key.StartsWith("__", StringComparison.InvariantCulture)))
+                foreach (
+                    var kvp in storage.Where(x =>
+                        x.Key != "value"
+                        // if this is a PythonData instance we add in '__typename' which we don't want into the data frame
+                        && !x.Key.StartsWith("__", StringComparison.InvariantCulture)
+                    )
+                )
                 {
                     AddToSeries(kvp.Key, endTime, kvp.Value);
                 }
@@ -382,14 +440,20 @@ namespace QuantConnect.Python
             using var pyDict = new PyDict();
             foreach (var kvp in _series)
             {
-                if (kvp.Value.ShouldFilter) continue;
+                if (kvp.Value.ShouldFilter)
+                    continue;
 
                 if (!indexCache.TryGetValue(kvp.Value.Times, out var index))
                 {
-                    using var tuples = kvp.Value.Times.Select(time => CreateTupleIndex(time, list)).ToPyListUnSafe();
+                    using var tuples = kvp
+                        .Value.Times.Select(time => CreateTupleIndex(time, list))
+                        .ToPyListUnSafe();
                     using var namesDic = Py.kw("names", names);
 
-                    indexCache[kvp.Value.Times] = index = _multiIndexFactory.Invoke(new[] { tuples }, namesDic);
+                    indexCache[kvp.Value.Times] = index = _multiIndexFactory.Invoke(
+                        new[] { tuples },
+                        namesDic
+                    );
 
                     foreach (var pyObject in tuples)
                     {
@@ -466,7 +530,9 @@ namespace QuantConnect.Python
         {
             if (!_series.TryGetValue(key, out var value))
             {
-                throw new ArgumentException($"PandasData.GetSerie(): {Messages.PandasData.KeyNotFoundInSeries(key)}");
+                throw new ArgumentException(
+                    $"PandasData.GetSerie(): {Messages.PandasData.KeyNotFoundInSeries(key)}"
+                );
             }
             return value;
         }
@@ -544,7 +610,9 @@ namespace QuantConnect.Python
         private class FixedTimeProvider : ITimeProvider
         {
             private readonly DateTime _time;
+
             public DateTime GetUtcNow() => _time;
+
             public FixedTimeProvider(DateTime time)
             {
                 _time = time;

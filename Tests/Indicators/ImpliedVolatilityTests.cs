@@ -27,17 +27,26 @@ namespace QuantConnect.Tests.Indicators
     [TestFixture, Parallelizable(ParallelScope.Fixtures)]
     public class ImpliedVolatilityTests : OptionBaseIndicatorTests<ImpliedVolatility>
     {
-        protected override IndicatorBase<IndicatorDataPoint> CreateIndicator()
-           => new ImpliedVolatility("testImpliedVolatilityIndicator", _symbol, 0.053m, 0.0153m);
+        protected override IndicatorBase<IndicatorDataPoint> CreateIndicator() =>
+            new ImpliedVolatility("testImpliedVolatilityIndicator", _symbol, 0.053m, 0.0153m);
 
-        protected override OptionIndicatorBase CreateIndicator(IRiskFreeInterestRateModel riskFreeRateModel)
-            => new ImpliedVolatility("testImpliedVolatilityIndicator", _symbol, riskFreeRateModel);
+        protected override OptionIndicatorBase CreateIndicator(
+            IRiskFreeInterestRateModel riskFreeRateModel
+        ) => new ImpliedVolatility("testImpliedVolatilityIndicator", _symbol, riskFreeRateModel);
 
-        protected override OptionIndicatorBase CreateIndicator(IRiskFreeInterestRateModel riskFreeRateModel, IDividendYieldModel dividendYieldModel)
-            => new ImpliedVolatility("testImpliedVolatilityIndicator", _symbol, riskFreeRateModel, dividendYieldModel);
+        protected override OptionIndicatorBase CreateIndicator(
+            IRiskFreeInterestRateModel riskFreeRateModel,
+            IDividendYieldModel dividendYieldModel
+        ) =>
+            new ImpliedVolatility(
+                "testImpliedVolatilityIndicator",
+                _symbol,
+                riskFreeRateModel,
+                dividendYieldModel
+            );
 
-        protected override OptionIndicatorBase CreateIndicator(QCAlgorithm algorithm)
-            => algorithm.IV(_symbol);
+        protected override OptionIndicatorBase CreateIndicator(QCAlgorithm algorithm) =>
+            algorithm.IV(_symbol);
 
         [SetUp]
         public void SetUp()
@@ -50,8 +59,15 @@ namespace QuantConnect.Tests.Indicators
         [TestCase("american/third_party_1_greeks.csv", false, false, 0.08)]
         // Just placing the test and data here, we are unsure about the smoothing function and not going to reverse engineer
         [TestCase("american/third_party_2_greeks.csv", false, true, 10000)]
-        public void ComparesAgainstExternalData(string subPath, bool reset, bool singleContract, double errorRate, double errorMargin = 1e-4,
-            int callColumn = 7, int putColumn = 6)
+        public void ComparesAgainstExternalData(
+            string subPath,
+            bool reset,
+            bool singleContract,
+            double errorRate,
+            double errorMargin = 1e-4,
+            int callColumn = 7,
+            int putColumn = 6
+        )
         {
             var path = Path.Combine("TestData", "greeksindicator", subPath);
             // skip last entry since for deep ITM, IV will not affect much on price. Thus root finding will not be optimizing a non-convex function.
@@ -62,29 +78,76 @@ namespace QuantConnect.Tests.Indicators
                 var interestRate = Parse.Decimal(items[^2]);
                 var dividendYield = Parse.Decimal(items[^1]);
 
-                var model = ParseSymbols(items, path.Contains("american"), out var call, out var put);
+                var model = ParseSymbols(
+                    items,
+                    path.Contains("american"),
+                    out var call,
+                    out var put
+                );
 
                 ImpliedVolatility callIndicator;
                 ImpliedVolatility putIndicator;
                 if (singleContract)
                 {
-                    callIndicator = new ImpliedVolatility(call, interestRate, dividendYield, optionModel: model);
-                    putIndicator = new ImpliedVolatility(put, interestRate, dividendYield, optionModel: model);
+                    callIndicator = new ImpliedVolatility(
+                        call,
+                        interestRate,
+                        dividendYield,
+                        optionModel: model
+                    );
+                    putIndicator = new ImpliedVolatility(
+                        put,
+                        interestRate,
+                        dividendYield,
+                        optionModel: model
+                    );
                 }
                 else
                 {
-                    callIndicator = new ImpliedVolatility(call, interestRate, dividendYield, put, model);
-                    putIndicator = new ImpliedVolatility(put, interestRate, dividendYield, call, model);
+                    callIndicator = new ImpliedVolatility(
+                        call,
+                        interestRate,
+                        dividendYield,
+                        put,
+                        model
+                    );
+                    putIndicator = new ImpliedVolatility(
+                        put,
+                        interestRate,
+                        dividendYield,
+                        call,
+                        model
+                    );
                 }
 
-                RunTestIndicator(call, put, callIndicator, putIndicator, items, callColumn, putColumn, errorRate, errorMargin);
+                RunTestIndicator(
+                    call,
+                    put,
+                    callIndicator,
+                    putIndicator,
+                    items,
+                    callColumn,
+                    putColumn,
+                    errorRate,
+                    errorMargin
+                );
 
                 if (reset == true)
                 {
                     callIndicator.Reset();
                     putIndicator.Reset();
 
-                    RunTestIndicator(call, put, callIndicator, putIndicator, items, callColumn, putColumn, errorRate, errorMargin);
+                    RunTestIndicator(
+                        call,
+                        put,
+                        callIndicator,
+                        putIndicator,
+                        items,
+                        callColumn,
+                        putColumn,
+                        errorRate,
+                        errorMargin
+                    );
                 }
             }
         }
@@ -92,15 +155,46 @@ namespace QuantConnect.Tests.Indicators
         [TestCase(23.753, 27.651, 450.0, OptionRight.Call, 60, 0.309, 0.309)]
         [TestCase(33.928, 5.564, 470.0, OptionRight.Call, 60, 0.191, 0.279)]
         [TestCase(47.701, 10.213, 430.0, OptionRight.Put, 60, 0.247, 0.545)]
-        public void SetSmoothingFunction(decimal price, decimal mirrorPrice, decimal spotPrice, OptionRight right, int expiry, double refIV1, double refIV2)
+        public void SetSmoothingFunction(
+            decimal price,
+            decimal mirrorPrice,
+            decimal spotPrice,
+            OptionRight right,
+            int expiry,
+            double refIV1,
+            double refIV2
+        )
         {
-            var symbol = Symbol.CreateOption("SPY", Market.USA, OptionStyle.American, right, 450m, _reference.AddDays(expiry));
-            var mirrorSymbol = Symbol.CreateOption("SPY", Market.USA, OptionStyle.American, right == OptionRight.Call ? OptionRight.Put : OptionRight.Call,
-                450m, _reference.AddDays(expiry));
-            var indicator = new ImpliedVolatility(symbol, 0.0530m, 0.0153m, mirrorSymbol, OptionPricingModelType.BlackScholes);
+            var symbol = Symbol.CreateOption(
+                "SPY",
+                Market.USA,
+                OptionStyle.American,
+                right,
+                450m,
+                _reference.AddDays(expiry)
+            );
+            var mirrorSymbol = Symbol.CreateOption(
+                "SPY",
+                Market.USA,
+                OptionStyle.American,
+                right == OptionRight.Call ? OptionRight.Put : OptionRight.Call,
+                450m,
+                _reference.AddDays(expiry)
+            );
+            var indicator = new ImpliedVolatility(
+                symbol,
+                0.0530m,
+                0.0153m,
+                mirrorSymbol,
+                OptionPricingModelType.BlackScholes
+            );
 
             var optionDataPoint = new IndicatorDataPoint(symbol, _reference, price);
-            var mirrorOptionDataPoint = new IndicatorDataPoint(mirrorSymbol, _reference, mirrorPrice);
+            var mirrorOptionDataPoint = new IndicatorDataPoint(
+                mirrorSymbol,
+                _reference,
+                mirrorPrice
+            );
             var spotDataPoint = new IndicatorDataPoint(symbol.Underlying, _reference, spotPrice);
             indicator.Update(optionDataPoint);
             indicator.Update(mirrorOptionDataPoint);
@@ -111,8 +205,16 @@ namespace QuantConnect.Tests.Indicators
             indicator.SetSmoothingFunction((iv, mirrorIv) => iv);
 
             optionDataPoint = new IndicatorDataPoint(symbol, _reference.AddMilliseconds(1), price);
-            mirrorOptionDataPoint = new IndicatorDataPoint(mirrorSymbol, _reference.AddMilliseconds(1), mirrorPrice);
-            spotDataPoint = new IndicatorDataPoint(symbol.Underlying, _reference.AddMilliseconds(1), spotPrice);
+            mirrorOptionDataPoint = new IndicatorDataPoint(
+                mirrorSymbol,
+                _reference.AddMilliseconds(1),
+                mirrorPrice
+            );
+            spotDataPoint = new IndicatorDataPoint(
+                symbol.Underlying,
+                _reference.AddMilliseconds(1),
+                spotPrice
+            );
             indicator.Update(optionDataPoint);
             indicator.Update(mirrorOptionDataPoint);
             indicator.Update(spotDataPoint);
@@ -123,21 +225,55 @@ namespace QuantConnect.Tests.Indicators
         [TestCase(23.753, 27.651, 450.0, OptionRight.Call, 60, 0.309, 0.309)]
         [TestCase(33.928, 5.564, 470.0, OptionRight.Call, 60, 0.191, 0.279)]
         [TestCase(47.701, 10.213, 430.0, OptionRight.Put, 60, 0.247, 0.545)]
-        public void SetPythonSmoothingFunction(decimal price, decimal mirrorPrice, decimal spotPrice, OptionRight right, int expiry, double refIV1, double refIV2)
+        public void SetPythonSmoothingFunction(
+            decimal price,
+            decimal mirrorPrice,
+            decimal spotPrice,
+            OptionRight right,
+            int expiry,
+            double refIV1,
+            double refIV2
+        )
         {
             using var _ = Py.GIL();
-            var module = PyModule.FromString(Guid.NewGuid().ToString(), $@"
+            var module = PyModule.FromString(
+                Guid.NewGuid().ToString(),
+                $@"
 def TestSmoothingFunction(iv: float, mirror_iv: float) -> float:
-    return iv");
+    return iv"
+            );
             var pythonSmoothingFunction = module.GetAttr("TestSmoothingFunction");
 
-            var symbol = Symbol.CreateOption("SPY", Market.USA, OptionStyle.American, right, 450m, _reference.AddDays(expiry));
-            var mirrorSymbol = Symbol.CreateOption("SPY", Market.USA, OptionStyle.American, right == OptionRight.Call ? OptionRight.Put : OptionRight.Call,
-                450m, _reference.AddDays(expiry));
-            var indicator = new ImpliedVolatility(symbol, 0.0530m, 0.0153m, mirrorSymbol, OptionPricingModelType.BlackScholes);
+            var symbol = Symbol.CreateOption(
+                "SPY",
+                Market.USA,
+                OptionStyle.American,
+                right,
+                450m,
+                _reference.AddDays(expiry)
+            );
+            var mirrorSymbol = Symbol.CreateOption(
+                "SPY",
+                Market.USA,
+                OptionStyle.American,
+                right == OptionRight.Call ? OptionRight.Put : OptionRight.Call,
+                450m,
+                _reference.AddDays(expiry)
+            );
+            var indicator = new ImpliedVolatility(
+                symbol,
+                0.0530m,
+                0.0153m,
+                mirrorSymbol,
+                OptionPricingModelType.BlackScholes
+            );
 
             var optionDataPoint = new IndicatorDataPoint(symbol, _reference, price);
-            var mirrorOptionDataPoint = new IndicatorDataPoint(mirrorSymbol, _reference, mirrorPrice);
+            var mirrorOptionDataPoint = new IndicatorDataPoint(
+                mirrorSymbol,
+                _reference,
+                mirrorPrice
+            );
             var spotDataPoint = new IndicatorDataPoint(symbol.Underlying, _reference, spotPrice);
             indicator.Update(optionDataPoint);
             indicator.Update(mirrorOptionDataPoint);
@@ -148,8 +284,16 @@ def TestSmoothingFunction(iv: float, mirror_iv: float) -> float:
             indicator.SetSmoothingFunction(pythonSmoothingFunction);
 
             optionDataPoint = new IndicatorDataPoint(symbol, _reference.AddMilliseconds(1), price);
-            mirrorOptionDataPoint = new IndicatorDataPoint(mirrorSymbol, _reference.AddMilliseconds(1), mirrorPrice);
-            spotDataPoint = new IndicatorDataPoint(symbol.Underlying, _reference.AddMilliseconds(1), spotPrice);
+            mirrorOptionDataPoint = new IndicatorDataPoint(
+                mirrorSymbol,
+                _reference.AddMilliseconds(1),
+                mirrorPrice
+            );
+            spotDataPoint = new IndicatorDataPoint(
+                symbol.Underlying,
+                _reference.AddMilliseconds(1),
+                spotPrice
+            );
             indicator.Update(optionDataPoint);
             indicator.Update(mirrorOptionDataPoint);
             indicator.Update(spotDataPoint);
@@ -170,10 +314,28 @@ def TestSmoothingFunction(iv: float, mirror_iv: float) -> float:
         [TestCase(0.409, 470.0, OptionRight.Put, 180, 0.055)]
         [TestCase(2.642, 430.0, OptionRight.Call, 180, 0.057)]
         [TestCase(27.772, 430.0, OptionRight.Put, 180, 0.177)]
-        public void ComparesAgainstExternalData2(decimal price, decimal spotPrice, OptionRight right, int expiry, double refIV)
+        public void ComparesAgainstExternalData2(
+            decimal price,
+            decimal spotPrice,
+            OptionRight right,
+            int expiry,
+            double refIV
+        )
         {
-            var symbol = Symbol.CreateOption("SPY", Market.USA, OptionStyle.American, right, 450m, _reference.AddDays(expiry));
-            var indicator = new ImpliedVolatility(symbol, 0.0530m, 0.0153m, optionModel: OptionPricingModelType.BlackScholes);
+            var symbol = Symbol.CreateOption(
+                "SPY",
+                Market.USA,
+                OptionStyle.American,
+                right,
+                450m,
+                _reference.AddDays(expiry)
+            );
+            var indicator = new ImpliedVolatility(
+                symbol,
+                0.0530m,
+                0.0153m,
+                optionModel: OptionPricingModelType.BlackScholes
+            );
 
             var optionDataPoint = new IndicatorDataPoint(symbol, _reference, price);
             var spotDataPoint = new IndicatorDataPoint(symbol.Underlying, _reference, spotPrice);
@@ -187,7 +349,13 @@ def TestSmoothingFunction(iv: float, mirror_iv: float) -> float:
         public override void WarmsUpProperly()
         {
             var period = 5;
-            var indicator = new ImpliedVolatility("testImpliedVolatilityIndicator", _symbol, 0.053m, 0.0153m, period: period);
+            var indicator = new ImpliedVolatility(
+                "testImpliedVolatilityIndicator",
+                _symbol,
+                0.053m,
+                0.0153m,
+                period: period
+            );
             var warmUpPeriod = (indicator as IIndicatorWarmUpPeriodProvider)?.WarmUpPeriod;
 
             if (!warmUpPeriod.HasValue)

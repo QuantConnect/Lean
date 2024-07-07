@@ -186,11 +186,12 @@ namespace QuantConnect.Tests.Common.Data
             Assert.AreEqual(newTradeBar.Close, newTradeBar.Value);
             Assert.AreEqual(bar4.EndTime, newTradeBar.EndTime);
             Assert.AreEqual(TimeSpan.FromMinutes(4), newTradeBar.Period);
-            
-            Assert.AreEqual(bar1.Volume + bar2.Volume + bar3.Volume + bar4.Volume, newTradeBar.Volume);
 
+            Assert.AreEqual(
+                bar1.Volume + bar2.Volume + bar3.Volume + bar4.Volume,
+                newTradeBar.Volume
+            );
         }
-
 
         [Test]
         public void AggregatesPeriodInCountModeWithHourlyData()
@@ -280,7 +281,9 @@ namespace QuantConnect.Tests.Common.Data
             Assert.AreEqual(reference, consolidated.Time);
             consolidated = null;
 
-            consolidator.Update(new Tick { Time = reference.AddDays(2).AddHours(1).AddMinutes(1).AddSeconds(1) });
+            consolidator.Update(
+                new Tick { Time = reference.AddDays(2).AddHours(1).AddMinutes(1).AddSeconds(1) }
+            );
             Assert.IsNotNull(consolidated);
             Assert.AreEqual(TimeSpan.FromDays(1), consolidated.Period);
             Assert.AreEqual(reference.AddDays(1), consolidated.Time);
@@ -312,10 +315,11 @@ namespace QuantConnect.Tests.Common.Data
 
         private void OnFiveMinutes(object sender, TradeBar e)
         {
-            if (!indicator.IsReady) return;
+            if (!indicator.IsReady)
+                return;
 
             var previous = e.Value - e.Period.Minutes;
-            var actual = (e.Value +  previous) / indicator.Period;
+            var actual = (e.Value + previous) / indicator.Period;
             Assert.AreEqual(indicator, actual);
         }
 
@@ -324,7 +328,10 @@ namespace QuantConnect.Tests.Common.Data
         /// </summary>
         /// <param name="indicator">The indicator to receive data from the consolidator</param>
         /// <param name="consolidator">The consolidator to receive raw subscription data</param>
-        public void RegisterIndicator(IndicatorBase<IndicatorDataPoint> indicator, IDataConsolidator consolidator)
+        public void RegisterIndicator(
+            IndicatorBase<IndicatorDataPoint> indicator,
+            IDataConsolidator consolidator
+        )
         {
             consolidator.DataConsolidated += (sender, consolidated) =>
             {

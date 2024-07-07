@@ -25,12 +25,12 @@ namespace QuantConnect.Indicators
         private readonly ExponentialMovingAverage _smoothedRsi;
         private readonly ExponentialMovingAverage _doubleSmoothedRsi;
         private readonly SimpleMovingAverage _signalLine;
-        
+
         /// <summary>
         /// Gets a flag indicating when this indicator is ready and fully initialized
         /// </summary>
         public override bool IsReady => _signalLine.IsReady;
-        
+
         /// <summary>
         /// Required period, in data points, for the indicator to be ready and fully initialized.
         /// </summary>
@@ -44,13 +44,30 @@ namespace QuantConnect.Indicators
         /// <param name="smoothingRsiPeriod">The period for the smoothing RSI</param>
         /// <param name="doubleSmoothingRsiPeriod">The period for the double smoothing RSI</param>
         /// <param name="signalLinePeriod">The period for the signal line</param>
-        public DerivativeOscillator(string name, int rsiPeriod, int smoothingRsiPeriod, int doubleSmoothingRsiPeriod, int signalLinePeriod) : base(name)
+        public DerivativeOscillator(
+            string name,
+            int rsiPeriod,
+            int smoothingRsiPeriod,
+            int doubleSmoothingRsiPeriod,
+            int signalLinePeriod
+        )
+            : base(name)
         {
             _rsi = new RelativeStrengthIndex($"{name}_RSI", rsiPeriod);
-            _smoothedRsi = new ExponentialMovingAverage($"{name}_SmoothedRSI", smoothingRsiPeriod).Of(_rsi);
-            _doubleSmoothedRsi = new ExponentialMovingAverage($"{name}_DoubleSmoothedRSI", doubleSmoothingRsiPeriod).Of(_smoothedRsi);
-            _signalLine = new SimpleMovingAverage($"{name}_SignalLine", signalLinePeriod).Of(_doubleSmoothedRsi);
-            WarmUpPeriod = (rsiPeriod + smoothingRsiPeriod + doubleSmoothingRsiPeriod + signalLinePeriod - 3) + 1;
+            _smoothedRsi = new ExponentialMovingAverage(
+                $"{name}_SmoothedRSI",
+                smoothingRsiPeriod
+            ).Of(_rsi);
+            _doubleSmoothedRsi = new ExponentialMovingAverage(
+                $"{name}_DoubleSmoothedRSI",
+                doubleSmoothingRsiPeriod
+            ).Of(_smoothedRsi);
+            _signalLine = new SimpleMovingAverage($"{name}_SignalLine", signalLinePeriod).Of(
+                _doubleSmoothedRsi
+            );
+            WarmUpPeriod =
+                (rsiPeriod + smoothingRsiPeriod + doubleSmoothingRsiPeriod + signalLinePeriod - 3)
+                + 1;
         }
 
         /// <summary>
@@ -62,7 +79,7 @@ namespace QuantConnect.Indicators
         {
             // Chaining updates all of the other indicators
             _rsi.Update(input);
-            
+
             if (!IsReady)
             {
                 return 0;
@@ -70,7 +87,7 @@ namespace QuantConnect.Indicators
 
             return _doubleSmoothedRsi.Current.Value - _signalLine.Current.Value;
         }
-        
+
         /// <summary>
         /// Resets this indicator to its initial state
         /// </summary>

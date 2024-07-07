@@ -15,10 +15,10 @@
 */
 
 using System;
-using QuantConnect.Orders;
-using QuantConnect.Securities;
-using QuantConnect.Orders.Fees;
 using System.Collections.Generic;
+using QuantConnect.Orders;
+using QuantConnect.Orders.Fees;
+using QuantConnect.Securities;
 
 namespace QuantConnect.Brokerages
 {
@@ -30,34 +30,29 @@ namespace QuantConnect.Brokerages
         /// <summary>
         /// HashSet containing the security types supported by TradeStation.
         /// </summary>
-        private readonly HashSet<SecurityType> _supportSecurityTypes = new(
-            new[]
-            {
-                SecurityType.Equity,
-                SecurityType.Option,
-                SecurityType.Future
-            });
+        private readonly HashSet<SecurityType> _supportSecurityTypes =
+            new(new[] { SecurityType.Equity, SecurityType.Option, SecurityType.Future });
 
         /// <summary>
         /// HashSet containing the order types supported by TradeStation.
         /// </summary>
-        private readonly HashSet<OrderType> _supportOrderTypes = new(
-            new[]
-            {
-                OrderType.Market,
-                OrderType.Limit,
-                OrderType.StopMarket,
-                OrderType.StopLimit
-            });
+        private readonly HashSet<OrderType> _supportOrderTypes =
+            new(
+                new[]
+                {
+                    OrderType.Market,
+                    OrderType.Limit,
+                    OrderType.StopMarket,
+                    OrderType.StopLimit
+                }
+            );
 
         /// <summary>
         /// Constructor for TradeStation brokerage model
         /// </summary>
         /// <param name="accountType">Cash or Margin</param>
         public TradeStationBrokerageModel(AccountType accountType = AccountType.Margin)
-            : base(accountType)
-        {
-        }
+            : base(accountType) { }
 
         /// <summary>
         /// Provides TradeStation fee model
@@ -80,22 +75,36 @@ namespace QuantConnect.Brokerages
         /// <param name="order">The order to be processed</param>
         /// <param name="message">If this function returns false, a brokerage message detailing why the order may not be submitted</param>
         /// <returns>True if the brokerage could process the order, false otherwise</returns>
-        public override bool CanSubmitOrder(Security security, Order order, out BrokerageMessageEvent message)
+        public override bool CanSubmitOrder(
+            Security security,
+            Order order,
+            out BrokerageMessageEvent message
+        )
         {
             message = default;
 
             if (!_supportSecurityTypes.Contains(security.Type))
             {
-                message = new BrokerageMessageEvent(BrokerageMessageType.Warning, "NotSupported",
-                    Messages.DefaultBrokerageModel.UnsupportedSecurityType(this, security));
+                message = new BrokerageMessageEvent(
+                    BrokerageMessageType.Warning,
+                    "NotSupported",
+                    Messages.DefaultBrokerageModel.UnsupportedSecurityType(this, security)
+                );
 
                 return false;
             }
 
             if (!_supportOrderTypes.Contains(order.Type))
             {
-                message = new BrokerageMessageEvent(BrokerageMessageType.Warning, "NotSupported",
-                    Messages.DefaultBrokerageModel.UnsupportedOrderType(this, order, _supportOrderTypes));
+                message = new BrokerageMessageEvent(
+                    BrokerageMessageType.Warning,
+                    "NotSupported",
+                    Messages.DefaultBrokerageModel.UnsupportedOrderType(
+                        this,
+                        order,
+                        _supportOrderTypes
+                    )
+                );
 
                 return false;
             }
@@ -111,15 +120,26 @@ namespace QuantConnect.Brokerages
         /// <param name="request">Update request</param>
         /// <param name="message">Outgoing message</param>
         /// <returns>True if the brokerage would allow updating the order, false otherwise</returns>
-        public override bool CanUpdateOrder(Security security, Order order, UpdateOrderRequest request, out BrokerageMessageEvent message)
+        public override bool CanUpdateOrder(
+            Security security,
+            Order order,
+            UpdateOrderRequest request,
+            out BrokerageMessageEvent message
+        )
         {
             message = null;
 
-            if (BrokerageExtensions.OrderCrossesZero(security.Holdings.Quantity, order.Quantity) 
-                && request.Quantity != null && request.Quantity != order.Quantity)
+            if (
+                BrokerageExtensions.OrderCrossesZero(security.Holdings.Quantity, order.Quantity)
+                && request.Quantity != null
+                && request.Quantity != order.Quantity
+            )
             {
-                message = new BrokerageMessageEvent(BrokerageMessageType.Warning, "UpdateRejected",
-                    Messages.DefaultBrokerageModel.UnsupportedCrossZeroOrderUpdate(this));
+                message = new BrokerageMessageEvent(
+                    BrokerageMessageType.Warning,
+                    "UpdateRejected",
+                    Messages.DefaultBrokerageModel.UnsupportedCrossZeroOrderUpdate(this)
+                );
                 return false;
             }
 

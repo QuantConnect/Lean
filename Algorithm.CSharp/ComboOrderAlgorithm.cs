@@ -14,13 +14,12 @@
 */
 
 using System;
-using System.Linq;
 using System.Collections.Generic;
-
+using System.Linq;
 using QuantConnect.Data;
 using QuantConnect.Data.Market;
-using QuantConnect.Orders;
 using QuantConnect.Interfaces;
+using QuantConnect.Orders;
 
 namespace QuantConnect.Algorithm.CSharp
 {
@@ -42,10 +41,7 @@ namespace QuantConnect.Algorithm.CSharp
 
         protected virtual int ExpectedFillCount
         {
-            get
-            {
-                return OrderLegs.Count;
-            }
+            get { return OrderLegs.Count; }
         }
 
         public override void Initialize()
@@ -58,8 +54,7 @@ namespace QuantConnect.Algorithm.CSharp
             var option = AddOption(equity.Symbol, fillForward: true);
             _optionSymbol = option.Symbol;
 
-            option.SetFilter(u => u.Strikes(-2, +2)
-                  .Expiration(0, 180));
+            option.SetFilter(u => u.Strikes(-2, +2).Expiration(0, 180));
         }
 
         public override void OnData(Slice slice)
@@ -67,9 +62,13 @@ namespace QuantConnect.Algorithm.CSharp
             if (OrderLegs == null)
             {
                 OptionChain chain;
-                if (IsMarketOpen(_optionSymbol) && slice.OptionChains.TryGetValue(_optionSymbol, out chain))
+                if (
+                    IsMarketOpen(_optionSymbol)
+                    && slice.OptionChains.TryGetValue(_optionSymbol, out chain)
+                )
                 {
-                    var callContracts = chain.Where(contract => contract.Right == OptionRight.Call)
+                    var callContracts = chain
+                        .Where(contract => contract.Right == OptionRight.Call)
                         .GroupBy(x => x.Expiry)
                         .OrderBy(grouping => grouping.Key)
                         .First()
@@ -92,16 +91,18 @@ namespace QuantConnect.Algorithm.CSharp
                 }
             }
             // Let's test order updates
-            else if (Tickets.All(ticket => ticket.OrderType != OrderType.ComboMarket) && FillOrderEvents.Count == 0 && !_updated)
+            else if (
+                Tickets.All(ticket => ticket.OrderType != OrderType.ComboMarket)
+                && FillOrderEvents.Count == 0
+                && !_updated
+            )
             {
                 UpdateComboOrder(Tickets);
                 _updated = true;
             }
         }
 
-        protected virtual void UpdateComboOrder(List<OrderTicket> tickets)
-        {
-        }
+        protected virtual void UpdateComboOrder(List<OrderTicket> tickets) { }
 
         public override void OnOrderEvent(OrderEvent orderEvent)
         {
@@ -127,24 +128,38 @@ namespace QuantConnect.Algorithm.CSharp
 
             if (FillOrderEvents.Count != ExpectedFillCount)
             {
-                throw new RegressionTestException($"Expected {ExpectedFillCount} fill order events, found {FillOrderEvents.Count}");
+                throw new RegressionTestException(
+                    $"Expected {ExpectedFillCount} fill order events, found {FillOrderEvents.Count}"
+                );
             }
 
             var fillTimes = FillOrderEvents.Select(x => x.UtcTime).ToHashSet();
             if (fillTimes.Count != 1)
             {
-                throw new RegressionTestException($"Expected all fill order events to have the same time, found {string.Join(", ", fillTimes)}");
+                throw new RegressionTestException(
+                    $"Expected all fill order events to have the same time, found {string.Join(", ", fillTimes)}"
+                );
             }
 
-            if (FillOrderEvents.Zip(OrderLegs).Any(x => x.First.FillQuantity != x.Second.Quantity * ComboOrderQuantity))
+            if (
+                FillOrderEvents
+                    .Zip(OrderLegs)
+                    .Any(x => x.First.FillQuantity != x.Second.Quantity * ComboOrderQuantity)
+            )
             {
-                throw new RegressionTestException("Fill quantity does not match expected quantity for at least one order leg." +
-                    $"Expected: {string.Join(", ", OrderLegs.Select(x => x.Quantity * ComboOrderQuantity))}. " +
-                    $"Actual: {string.Join(", ", FillOrderEvents.Select(x => x.FillQuantity))}");
+                throw new RegressionTestException(
+                    "Fill quantity does not match expected quantity for at least one order leg."
+                        + $"Expected: {string.Join(", ", OrderLegs.Select(x => x.Quantity * ComboOrderQuantity))}. "
+                        + $"Actual: {string.Join(", ", FillOrderEvents.Select(x => x.FillQuantity))}"
+                );
             }
         }
 
-        protected abstract IEnumerable<OrderTicket> PlaceComboOrder(List<Leg> legs, int quantity, decimal? limitPrice = null);
+        protected abstract IEnumerable<OrderTicket> PlaceComboOrder(
+            List<Leg> legs,
+            int quantity,
+            decimal? limitPrice = null
+        );
 
         public abstract bool CanRunLocally { get; }
 

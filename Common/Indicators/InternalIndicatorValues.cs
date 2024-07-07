@@ -13,11 +13,11 @@
  * limitations under the License.
 */
 
+using System.Collections;
+using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using QuantConnect.Data;
-using System.Collections;
-using System.Collections.Generic;
 
 namespace QuantConnect.Indicators
 {
@@ -41,10 +41,7 @@ namespace QuantConnect.Indicators
         /// </summary>
         public IndicatorDataPoint this[string name]
         {
-            get
-            {
-                return GetProperty(name) as IndicatorDataPoint;
-            }
+            get { return GetProperty(name) as IndicatorDataPoint; }
         }
 
         /// <summary>
@@ -125,7 +122,10 @@ namespace QuantConnect.Indicators
         /// <summary>
         /// Creates a new instance
         /// </summary>
-        public static InternalIndicatorValues Create(IIndicator indicator, PropertyInfo propertyInfo)
+        public static InternalIndicatorValues Create(
+            IIndicator indicator,
+            PropertyInfo propertyInfo
+        )
         {
             return new IndicatorPropertyValues(indicator, propertyInfo);
         }
@@ -152,11 +152,14 @@ namespace QuantConnect.Indicators
         {
             private readonly PropertyInfo _currentInfo;
             private readonly PropertyInfo _propertyInfo;
-            public IndicatorPropertyValues(IIndicator indicator, PropertyInfo propertyInfo) : base(indicator, propertyInfo.Name)
+
+            public IndicatorPropertyValues(IIndicator indicator, PropertyInfo propertyInfo)
+                : base(indicator, propertyInfo.Name)
             {
                 _propertyInfo = propertyInfo;
                 _currentInfo = _propertyInfo.PropertyType.GetProperty("Current");
             }
+
             public override IndicatorDataPoint UpdateValue()
             {
                 var value = _propertyInfo.GetValue(Indicator);

@@ -18,7 +18,7 @@ using System.Linq;
 namespace QuantConnect.Indicators
 {
     /// <summary>
-    /// The Advance Decline Difference compute the difference between the number of stocks 
+    /// The Advance Decline Difference compute the difference between the number of stocks
     /// that closed higher and the number of stocks that closed lower than their previous day's closing prices.
     /// </summary>
     public class AdvanceDeclineDifference : AdvanceDeclineIndicator

@@ -48,22 +48,26 @@ namespace QuantConnect.Tests.Common.Orders.Fees
         {
             using (Py.GIL())
             {
-                var module = PyModule.FromString(Guid.NewGuid().ToString(),
-                    "from AlgorithmImports import *\n" +
-                    "class CustomFeeModel:\n" +
-                    "   def __init__(self):\n" +
-                    "       self.CalledGetOrderFee = False\n" +
-                    "   def GetOrderFee(self, security, order):\n" +
-                    "       self.CalledGetOrderFee = True\n" +
-                    "       return 15");
+                var module = PyModule.FromString(
+                    Guid.NewGuid().ToString(),
+                    "from AlgorithmImports import *\n"
+                        + "class CustomFeeModel:\n"
+                        + "   def __init__(self):\n"
+                        + "       self.CalledGetOrderFee = False\n"
+                        + "   def GetOrderFee(self, security, order):\n"
+                        + "       self.CalledGetOrderFee = True\n"
+                        + "       return 15"
+                );
 
                 var customFeeModel = module.GetAttr("CustomFeeModel").Invoke();
                 var wrapper = new FeeModelPythonWrapper(customFeeModel);
 
-                var result = wrapper.GetOrderFee(new OrderFeeParameters(
-                    _security,
-                    new MarketOrder(_security.Symbol, 1, orderDateTime)
-                ));
+                var result = wrapper.GetOrderFee(
+                    new OrderFeeParameters(
+                        _security,
+                        new MarketOrder(_security.Symbol, 1, orderDateTime)
+                    )
+                );
 
                 bool called;
                 customFeeModel.GetAttr("CalledGetOrderFee").TryConvert(out called);
@@ -79,22 +83,26 @@ namespace QuantConnect.Tests.Common.Orders.Fees
         {
             using (Py.GIL())
             {
-                var module = PyModule.FromString(Guid.NewGuid().ToString(),
-                    "from AlgorithmImports import *\n" +
-                    "class CustomFeeModel(FeeModel):\n" +
-                    "   def __init__(self):\n" +
-                    "       self.CalledGetOrderFee = False\n" +
-                    "   def GetOrderFee(self, parameters):\n" +
-                    "       self.CalledGetOrderFee = True\n" +
-                    "       return OrderFee(CashAmount(15, \"USD\"))");
+                var module = PyModule.FromString(
+                    Guid.NewGuid().ToString(),
+                    "from AlgorithmImports import *\n"
+                        + "class CustomFeeModel(FeeModel):\n"
+                        + "   def __init__(self):\n"
+                        + "       self.CalledGetOrderFee = False\n"
+                        + "   def GetOrderFee(self, parameters):\n"
+                        + "       self.CalledGetOrderFee = True\n"
+                        + "       return OrderFee(CashAmount(15, \"USD\"))"
+                );
 
                 var customFeeModel = module.GetAttr("CustomFeeModel").Invoke();
                 var wrapper = new FeeModelPythonWrapper(customFeeModel);
 
-                var result = wrapper.GetOrderFee(new OrderFeeParameters(
-                    _security,
-                    new MarketOrder(_security.Symbol, 1, orderDateTime)
-                ));
+                var result = wrapper.GetOrderFee(
+                    new OrderFeeParameters(
+                        _security,
+                        new MarketOrder(_security.Symbol, 1, orderDateTime)
+                    )
+                );
 
                 bool called;
                 customFeeModel.GetAttr("CalledGetOrderFee").TryConvert(out called);

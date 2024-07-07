@@ -13,11 +13,6 @@
  * limitations under the License.
 */
 
-using QuantConnect.Configuration;
-using QuantConnect.Data.Auxiliary;
-using QuantConnect.Data.Market;
-using QuantConnect.Interfaces;
-using QuantConnect.Util;
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
@@ -26,12 +21,17 @@ using System.IO;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using QuantConnect.Configuration;
+using QuantConnect.Data.Auxiliary;
+using QuantConnect.Data.Fundamental;
+using QuantConnect.Data.Market;
+using QuantConnect.Data.UniverseSelection;
+using QuantConnect.Interfaces;
 using QuantConnect.Lean.Engine.DataFeeds;
+using QuantConnect.Util;
+using static QuantConnect.Data.UniverseSelection.CoarseFundamentalDataProvider;
 using DateTime = System.DateTime;
 using Log = QuantConnect.Logging.Log;
-using QuantConnect.Data.UniverseSelection;
-using static QuantConnect.Data.UniverseSelection.CoarseFundamentalDataProvider;
-using QuantConnect.Data.Fundamental;
 
 namespace QuantConnect.ToolBox.CoarseUniverseGenerator
 {
@@ -43,7 +43,8 @@ namespace QuantConnect.ToolBox.CoarseUniverseGenerator
         /// <summary>
         /// Has fundamental data source
         /// </summary>
-        public const FundamentalProperty HasFundamentalSource = FundamentalProperty.CompanyReference_CompanyId;
+        public const FundamentalProperty HasFundamentalSource =
+            FundamentalProperty.CompanyReference_CompanyId;
 
         private static readonly object _lock = new object();
         private readonly DirectoryInfo _dailyDataFolder;
@@ -59,8 +60,23 @@ namespace QuantConnect.ToolBox.CoarseUniverseGenerator
         /// <returns></returns>
         public static bool CoarseUniverseGenerator()
         {
-            var dailyDataFolder = new DirectoryInfo(Path.Combine(Globals.DataFolder, SecurityType.Equity.SecurityTypeToLower(), Market.USA, Resolution.Daily.ResolutionToLower()));
-            var destinationFolder = new DirectoryInfo(Path.Combine(Globals.DataFolder, SecurityType.Equity.SecurityTypeToLower(), Market.USA, "fundamental", "coarse"));
+            var dailyDataFolder = new DirectoryInfo(
+                Path.Combine(
+                    Globals.DataFolder,
+                    SecurityType.Equity.SecurityTypeToLower(),
+                    Market.USA,
+                    Resolution.Daily.ResolutionToLower()
+                )
+            );
+            var destinationFolder = new DirectoryInfo(
+                Path.Combine(
+                    Globals.DataFolder,
+                    SecurityType.Equity.SecurityTypeToLower(),
+                    Market.USA,
+                    "fundamental",
+                    "coarse"
+                )
+            );
             var blackListedTickersFile = new FileInfo("blacklisted-tickers.txt");
             var reservedWordPrefix = Config.Get("reserved-words-prefix", "quantconnect-");
             var dataProvider = new DefaultDataProvider();
@@ -68,8 +84,20 @@ namespace QuantConnect.ToolBox.CoarseUniverseGenerator
             mapFileProvider.Initialize(dataProvider);
             var factorFileProvider = new LocalDiskFactorFileProvider();
             factorFileProvider.Initialize(mapFileProvider, dataProvider);
-            FundamentalService.Initialize(dataProvider, nameof(CoarseFundamentalDataProvider), false);
-            var generator = new CoarseUniverseGeneratorProgram(dailyDataFolder, destinationFolder, Market.USA, blackListedTickersFile, reservedWordPrefix, mapFileProvider, factorFileProvider);
+            FundamentalService.Initialize(
+                dataProvider,
+                nameof(CoarseFundamentalDataProvider),
+                false
+            );
+            var generator = new CoarseUniverseGeneratorProgram(
+                dailyDataFolder,
+                destinationFolder,
+                Market.USA,
+                blackListedTickersFile,
+                reservedWordPrefix,
+                mapFileProvider,
+                factorFileProvider
+            );
             return generator.Run(out _, out _);
         }
 
@@ -92,7 +120,8 @@ namespace QuantConnect.ToolBox.CoarseUniverseGenerator
             string reservedWordsPrefix,
             IMapFileProvider mapFileProvider,
             IFactorFileProvider factorFileProvider,
-            bool debugEnabled = false)
+            bool debugEnabled = false
+        )
         {
             _blackListedTickersFile = blackListedTickersFile;
             _market = market;
@@ -108,18 +137,25 @@ namespace QuantConnect.ToolBox.CoarseUniverseGenerator
         /// Runs this instance.
         /// </summary>
         /// <returns></returns>
-        public bool Run(out ConcurrentDictionary<SecurityIdentifier, List<CoarseFundamental>> coarsePerSecurity, out DateTime[] dates)
+        public bool Run(
+            out ConcurrentDictionary<SecurityIdentifier, List<CoarseFundamental>> coarsePerSecurity,
+            out DateTime[] dates
+        )
         {
             var startTime = DateTime.UtcNow;
             var success = true;
-            Log.Trace($"CoarseUniverseGeneratorProgram.ProcessDailyFolder(): Processing: {_dailyDataFolder.FullName}");
+            Log.Trace(
+                $"CoarseUniverseGeneratorProgram.ProcessDailyFolder(): Processing: {_dailyDataFolder.FullName}"
+            );
 
             var symbolsProcessed = 0;
             var filesRead = 0;
             var dailyFilesNotFound = 0;
             var coarseFilesGenerated = 0;
 
-            var mapFileResolver = _mapFileProvider.Get(new AuxiliaryDataKey(_market, SecurityType.Equity));
+            var mapFileResolver = _mapFileProvider.Get(
+                new AuxiliaryDataKey(_market, SecurityType.Equity)
+            );
 
             var result = coarsePerSecurity = new();
             dates = Array.Empty<DateTime>();
@@ -127,111 +163,169 @@ namespace QuantConnect.ToolBox.CoarseUniverseGenerator
             var blackListedTickers = new HashSet<string>();
             if (_blackListedTickersFile.Exists)
             {
-                blackListedTickers = File.ReadAllLines(_blackListedTickersFile.FullName).ToHashSet();
+                blackListedTickers = File.ReadAllLines(_blackListedTickersFile.FullName)
+                    .ToHashSet();
             }
 
             var securityIdentifierContexts = PopulateSidContex(mapFileResolver, blackListedTickers);
             var dailyPricesByTicker = new ConcurrentDictionary<string, List<TradeBar>>();
             var outputCoarseContent = new ConcurrentDictionary<DateTime, List<CoarseFundamental>>();
 
-            var parallelOptions = new ParallelOptions { MaxDegreeOfParallelism = Math.Max(1, Environment.ProcessorCount / 2) };
+            var parallelOptions = new ParallelOptions
+            {
+                MaxDegreeOfParallelism = Math.Max(1, Environment.ProcessorCount / 2)
+            };
             try
             {
-                Parallel.ForEach(securityIdentifierContexts, parallelOptions, sidContext =>
-                {
-                    var coarseForSecurity = new List<CoarseFundamental>();
-                    var symbol = new Symbol(sidContext.SID, sidContext.LastTicker);
-                    var symbolCount = Interlocked.Increment(ref symbolsProcessed);
-                    Log.Debug($"CoarseUniverseGeneratorProgram.Run(): Processing {symbol} with tickers: '{string.Join(",", sidContext.Tickers)}'");
-                    var factorFile = _factorFileProvider.Get(symbol);
-
-                    // Populate dailyPricesByTicker with all daily data by ticker for all tickers of this security.
-                    foreach (var ticker in sidContext.Tickers)
+                Parallel.ForEach(
+                    securityIdentifierContexts,
+                    parallelOptions,
+                    sidContext =>
                     {
-                        var pathFile = Path.Combine(_dailyDataFolder.FullName, $"{ticker}.zip");
-                        var dailyFile = new FileInfo(pathFile);
-                        if (!dailyFile.Exists)
-                        {
-                            Log.Debug($"CoarseUniverseGeneratorProgram.Run(): {dailyFile.FullName} not found, looking for daily data in data folder");
+                        var coarseForSecurity = new List<CoarseFundamental>();
+                        var symbol = new Symbol(sidContext.SID, sidContext.LastTicker);
+                        var symbolCount = Interlocked.Increment(ref symbolsProcessed);
+                        Log.Debug(
+                            $"CoarseUniverseGeneratorProgram.Run(): Processing {symbol} with tickers: '{string.Join(",", sidContext.Tickers)}'"
+                        );
+                        var factorFile = _factorFileProvider.Get(symbol);
 
-                            dailyFile = new FileInfo(Path.Combine(Globals.DataFolder, "equity", "usa", "daily", $"{ticker}.zip"));
+                        // Populate dailyPricesByTicker with all daily data by ticker for all tickers of this security.
+                        foreach (var ticker in sidContext.Tickers)
+                        {
+                            var pathFile = Path.Combine(_dailyDataFolder.FullName, $"{ticker}.zip");
+                            var dailyFile = new FileInfo(pathFile);
                             if (!dailyFile.Exists)
                             {
-                                Log.Error($"CoarseUniverseGeneratorProgram.Run(): {dailyFile} not found!");
-                                Interlocked.Increment(ref dailyFilesNotFound);
-                                continue;
+                                Log.Debug(
+                                    $"CoarseUniverseGeneratorProgram.Run(): {dailyFile.FullName} not found, looking for daily data in data folder"
+                                );
+
+                                dailyFile = new FileInfo(
+                                    Path.Combine(
+                                        Globals.DataFolder,
+                                        "equity",
+                                        "usa",
+                                        "daily",
+                                        $"{ticker}.zip"
+                                    )
+                                );
+                                if (!dailyFile.Exists)
+                                {
+                                    Log.Error(
+                                        $"CoarseUniverseGeneratorProgram.Run(): {dailyFile} not found!"
+                                    );
+                                    Interlocked.Increment(ref dailyFilesNotFound);
+                                    continue;
+                                }
+                            }
+
+                            if (!dailyPricesByTicker.ContainsKey(ticker))
+                            {
+                                dailyPricesByTicker.AddOrUpdate(ticker, ParseDailyFile(dailyFile));
+                                Interlocked.Increment(ref filesRead);
                             }
                         }
 
-                        if (!dailyPricesByTicker.ContainsKey(ticker))
+                        // Look for daily data for each ticker of the actual security
+                        for (
+                            int mapFileRowIndex = sidContext.MapFileRows.Length - 1;
+                            mapFileRowIndex >= 1;
+                            mapFileRowIndex--
+                        )
                         {
-                            dailyPricesByTicker.AddOrUpdate(ticker, ParseDailyFile(dailyFile));
-                            Interlocked.Increment(ref filesRead);
-                        }
-                    }
-
-                    // Look for daily data for each ticker of the actual security
-                    for (int mapFileRowIndex = sidContext.MapFileRows.Length - 1; mapFileRowIndex >= 1; mapFileRowIndex--)
-                    {
-                        var ticker = sidContext.MapFileRows[mapFileRowIndex].Item2.ToLowerInvariant();
-                        var endDate = sidContext.MapFileRows[mapFileRowIndex].Item1;
-                        var startDate = sidContext.MapFileRows[mapFileRowIndex - 1].Item1;
-                        List<TradeBar> tickerDailyData;
-                        if (!dailyPricesByTicker.TryGetValue(ticker, out tickerDailyData))
-                        {
-                            Log.Error($"CoarseUniverseGeneratorProgram.Run(): Daily data for ticker {ticker.ToUpperInvariant()} not found!");
-                            continue;
-                        }
-
-                        // Get daily data only for the time the ticker was
-                        foreach (var tradeBar in tickerDailyData.Where(tb => tb.Time >= startDate && tb.Time <= endDate))
-                        {
-                            var coarseFundamental = GenerateFactorFileRow(ticker, sidContext, factorFile as CorporateFactorProvider, tradeBar);
-                            coarseForSecurity.Add(coarseFundamental);
-
-                            outputCoarseContent.AddOrUpdate(tradeBar.Time,
-                                new List<CoarseFundamental> { coarseFundamental },
-                                (time, list) =>
+                            var ticker = sidContext
+                                .MapFileRows[mapFileRowIndex]
+                                .Item2.ToLowerInvariant();
+                            var endDate = sidContext.MapFileRows[mapFileRowIndex].Item1;
+                            var startDate = sidContext.MapFileRows[mapFileRowIndex - 1].Item1;
+                            List<TradeBar> tickerDailyData;
+                            if (!dailyPricesByTicker.TryGetValue(ticker, out tickerDailyData))
                             {
-                                lock (list)
-                                {
-                                    list.Add(coarseFundamental);
-                                    return list;
-                                }
-                            });
+                                Log.Error(
+                                    $"CoarseUniverseGeneratorProgram.Run(): Daily data for ticker {ticker.ToUpperInvariant()} not found!"
+                                );
+                                continue;
+                            }
+
+                            // Get daily data only for the time the ticker was
+                            foreach (
+                                var tradeBar in tickerDailyData.Where(tb =>
+                                    tb.Time >= startDate && tb.Time <= endDate
+                                )
+                            )
+                            {
+                                var coarseFundamental = GenerateFactorFileRow(
+                                    ticker,
+                                    sidContext,
+                                    factorFile as CorporateFactorProvider,
+                                    tradeBar
+                                );
+                                coarseForSecurity.Add(coarseFundamental);
+
+                                outputCoarseContent.AddOrUpdate(
+                                    tradeBar.Time,
+                                    new List<CoarseFundamental> { coarseFundamental },
+                                    (time, list) =>
+                                    {
+                                        lock (list)
+                                        {
+                                            list.Add(coarseFundamental);
+                                            return list;
+                                        }
+                                    }
+                                );
+                            }
+                        }
+
+                        if (coarseForSecurity.Count > 0)
+                        {
+                            result[sidContext.SID] = coarseForSecurity;
+                        }
+                        if (symbolCount % 1000 == 0)
+                        {
+                            var elapsed = DateTime.UtcNow - startTime;
+                            Log.Trace(
+                                $"CoarseUniverseGeneratorProgram.Run(): Processed {symbolCount} in {elapsed:g} at {symbolCount / elapsed.TotalMinutes:F2} symbols/minute "
+                            );
                         }
                     }
-
-                    if(coarseForSecurity.Count > 0)
-                    {
-                        result[sidContext.SID] = coarseForSecurity;
-                    }
-                    if (symbolCount % 1000 == 0)
-                    {
-                        var elapsed = DateTime.UtcNow - startTime;
-                        Log.Trace($"CoarseUniverseGeneratorProgram.Run(): Processed {symbolCount} in {elapsed:g} at {symbolCount / elapsed.TotalMinutes:F2} symbols/minute ");
-                    }
-                });
+                );
 
                 _destinationFolder.Create();
                 var startWriting = DateTime.UtcNow;
-                Parallel.ForEach(outputCoarseContent, coarseByDate =>
-                {
-                    var filename = $"{coarseByDate.Key.ToString(DateFormat.EightCharacter, CultureInfo.InvariantCulture)}.csv";
-                    var filePath = Path.Combine(_destinationFolder.FullName, filename);
-                    Log.Debug($"CoarseUniverseGeneratorProgram.Run(): Saving {filename} with {coarseByDate.Value.Count} entries.");
-                    File.WriteAllLines(filePath, coarseByDate.Value.Select(x => CoarseFundamental.ToRow(x)).OrderBy(cr => cr));
-                    var filesCount = Interlocked.Increment(ref coarseFilesGenerated);
-                    if (filesCount % 1000 == 0)
+                Parallel.ForEach(
+                    outputCoarseContent,
+                    coarseByDate =>
                     {
-                        var elapsed = DateTime.UtcNow - startWriting;
-                        Log.Trace($"CoarseUniverseGeneratorProgram.Run(): Processed {filesCount} in {elapsed:g} at {filesCount / elapsed.TotalSeconds:F2} files/second ");
+                        var filename =
+                            $"{coarseByDate.Key.ToString(DateFormat.EightCharacter, CultureInfo.InvariantCulture)}.csv";
+                        var filePath = Path.Combine(_destinationFolder.FullName, filename);
+                        Log.Debug(
+                            $"CoarseUniverseGeneratorProgram.Run(): Saving {filename} with {coarseByDate.Value.Count} entries."
+                        );
+                        File.WriteAllLines(
+                            filePath,
+                            coarseByDate
+                                .Value.Select(x => CoarseFundamental.ToRow(x))
+                                .OrderBy(cr => cr)
+                        );
+                        var filesCount = Interlocked.Increment(ref coarseFilesGenerated);
+                        if (filesCount % 1000 == 0)
+                        {
+                            var elapsed = DateTime.UtcNow - startWriting;
+                            Log.Trace(
+                                $"CoarseUniverseGeneratorProgram.Run(): Processed {filesCount} in {elapsed:g} at {filesCount / elapsed.TotalSeconds:F2} files/second "
+                            );
+                        }
                     }
-                });
+                );
 
                 dates = outputCoarseContent.Keys.OrderBy(x => x).ToArray();
-                Log.Trace($"\n\nTotal of {coarseFilesGenerated} coarse files generated in {DateTime.UtcNow - startTime:g}:\n" +
-                          $"\t => {filesRead} daily data files read.\n");
+                Log.Trace(
+                    $"\n\nTotal of {coarseFilesGenerated} coarse files generated in {DateTime.UtcNow - startTime:g}:\n"
+                        + $"\t => {filesRead} daily data files read.\n"
+                );
             }
             catch (Exception e)
             {
@@ -252,7 +346,12 @@ namespace QuantConnect.ToolBox.CoarseUniverseGenerator
         /// <param name="fineAvailableDates">The fine available dates.</param>
         /// <param name="fineFundamentalFolder">The fine fundamental folder.</param>
         /// <returns></returns>
-        private static CoarseFundamental GenerateFactorFileRow(string ticker, SecurityIdentifierContext sidContext, CorporateFactorProvider factorFile, TradeBar tradeBar)
+        private static CoarseFundamental GenerateFactorFileRow(
+            string ticker,
+            SecurityIdentifierContext sidContext,
+            CorporateFactorProvider factorFile,
+            TradeBar tradeBar
+        )
         {
             var date = tradeBar.Time;
             var factorFileRow = factorFile?.GetScalingFactors(date);
@@ -283,7 +382,9 @@ namespace QuantConnect.ToolBox.CoarseUniverseGenerator
         /// <returns>True if fundamental data is available</returns>
         private static bool CheckFundamentalData(DateTime date, SecurityIdentifier sid)
         {
-            return !string.IsNullOrEmpty(FundamentalService.Get<string>(date, sid, HasFundamentalSource));
+            return !string.IsNullOrEmpty(
+                FundamentalService.Get<string>(date, sid, HasFundamentalSource)
+            );
         }
 
         /// <summary>
@@ -323,9 +424,14 @@ namespace QuantConnect.ToolBox.CoarseUniverseGenerator
         /// <param name="mapFileResolver">The map file resolver.</param>
         /// <param name="exclusions">The exclusions.</param>
         /// <returns></returns>
-        private IEnumerable<SecurityIdentifierContext> PopulateSidContex(MapFileResolver mapFileResolver, HashSet<string> exclusions)
+        private IEnumerable<SecurityIdentifierContext> PopulateSidContex(
+            MapFileResolver mapFileResolver,
+            HashSet<string> exclusions
+        )
         {
-            Log.Trace("CoarseUniverseGeneratorProgram.PopulateSidContex(): Generating SID context from QuantQuote's map files.");
+            Log.Trace(
+                "CoarseUniverseGeneratorProgram.PopulateSidContex(): Generating SID context from QuantQuote's map files."
+            );
             foreach (var mapFile in mapFileResolver)
             {
                 if (exclusions.Contains(mapFile.Last().MappedSymbol))

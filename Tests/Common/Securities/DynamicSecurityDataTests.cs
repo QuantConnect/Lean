@@ -47,10 +47,13 @@ namespace QuantConnect.Tests.Common.Securities
         public void StoreData_UsesTypeName_AsKey()
         {
             var data = new DynamicSecurityData(_dataTypesProvider, _cache);
-            _cache.StoreData(new List<TradeBar>
-            {
-                new TradeBar(DateTime.UtcNow, Symbols.SPY, 10m, 20m, 5m, 15m, 10000)
-            }, typeof(TradeBar));
+            _cache.StoreData(
+                new List<TradeBar>
+                {
+                    new TradeBar(DateTime.UtcNow, Symbols.SPY, 10m, 20m, 5m, 15m, 10000)
+                },
+                typeof(TradeBar)
+            );
 
             Assert.IsTrue(data.HasProperty(typeof(TradeBar).Name));
 
@@ -63,11 +66,15 @@ namespace QuantConnect.Tests.Common.Securities
         public void Get_UsesTypeName_AsKey_And_ReturnsLastItem()
         {
             var data = new DynamicSecurityData(_dataTypesProvider, _cache);
-            _cache.StoreData(new List<TradeBar> {
-                new TradeBar(DateTime.UtcNow, Symbols.SPY, 10m, 20m, 5m, 1, 10000),
-                new TradeBar(DateTime.UtcNow, Symbols.SPY, 10m, 20m, 5m, 2, 10000),
-                new TradeBar(DateTime.UtcNow, Symbols.SPY, 10m, 20m, 5m, 3, 10000)
-            }, typeof(TradeBar));
+            _cache.StoreData(
+                new List<TradeBar>
+                {
+                    new TradeBar(DateTime.UtcNow, Symbols.SPY, 10m, 20m, 5m, 1, 10000),
+                    new TradeBar(DateTime.UtcNow, Symbols.SPY, 10m, 20m, 5m, 2, 10000),
+                    new TradeBar(DateTime.UtcNow, Symbols.SPY, 10m, 20m, 5m, 3, 10000)
+                },
+                typeof(TradeBar)
+            );
 
             var item = data.Get<TradeBar>();
             Assert.AreEqual(3, item.Close);
@@ -77,11 +84,15 @@ namespace QuantConnect.Tests.Common.Securities
         public void GetAll_UsesTypeName_AsKey()
         {
             var data = new DynamicSecurityData(_dataTypesProvider, _cache);
-            _cache.StoreData(new List<TradeBar> {
-                new TradeBar(DateTime.UtcNow, Symbols.SPY, 10m, 20m, 5m, 1, 10000),
-                new TradeBar(DateTime.UtcNow, Symbols.SPY, 10m, 20m, 5m, 2, 10000),
-                new TradeBar(DateTime.UtcNow, Symbols.SPY, 10m, 20m, 5m, 3, 10000)
-            }, typeof(TradeBar));
+            _cache.StoreData(
+                new List<TradeBar>
+                {
+                    new TradeBar(DateTime.UtcNow, Symbols.SPY, 10m, 20m, 5m, 1, 10000),
+                    new TradeBar(DateTime.UtcNow, Symbols.SPY, 10m, 20m, 5m, 2, 10000),
+                    new TradeBar(DateTime.UtcNow, Symbols.SPY, 10m, 20m, 5m, 3, 10000)
+                },
+                typeof(TradeBar)
+            );
 
             var arr = data.GetAll<TradeBar>();
             Assert.AreEqual(3, arr.Count);
@@ -92,11 +103,15 @@ namespace QuantConnect.Tests.Common.Securities
         public void AccessesDataDynamically()
         {
             var securityData = new DynamicSecurityData(_dataTypesProvider, _cache);
-            _cache.StoreData(new List<TradeBar> {
-                new TradeBar(DateTime.UtcNow, Symbols.SPY, 10m, 20m, 5m, 1, 10000),
-                new TradeBar(DateTime.UtcNow, Symbols.SPY, 10m, 20m, 5m, 2, 10000),
-                new TradeBar(DateTime.UtcNow, Symbols.SPY, 10m, 20m, 5m, 3, 10000)
-            }, typeof(TradeBar));
+            _cache.StoreData(
+                new List<TradeBar>
+                {
+                    new TradeBar(DateTime.UtcNow, Symbols.SPY, 10m, 20m, 5m, 1, 10000),
+                    new TradeBar(DateTime.UtcNow, Symbols.SPY, 10m, 20m, 5m, 2, 10000),
+                    new TradeBar(DateTime.UtcNow, Symbols.SPY, 10m, 20m, 5m, 3, 10000)
+                },
+                typeof(TradeBar)
+            );
 
             dynamic dynamicSecurityData = securityData;
             var tradeBars = dynamicSecurityData.TradeBar;
@@ -107,7 +122,8 @@ namespace QuantConnect.Tests.Common.Securities
         public void DataCanNotBeSetDynamically()
         {
             var securityData = new DynamicSecurityData(_dataTypesProvider, _cache);
-            var data = new List<TradeBar> {
+            var data = new List<TradeBar>
+            {
                 new TradeBar(DateTime.UtcNow, Symbols.SPY, 10m, 20m, 5m, 1, 10000)
             };
 
@@ -146,15 +162,20 @@ namespace QuantConnect.Tests.Common.Securities
         public void Py_StoreData_GetProperty()
         {
             var data = new DynamicSecurityData(_dataTypesProvider, _cache);
-            _cache.StoreData(new List<TradeBar>
-            {
-                new TradeBar(DateTime.UtcNow, Symbols.SPY, 10m, 20m, 5m, 1, 10000)
-            }, typeof(TradeBar));
+            _cache.StoreData(
+                new List<TradeBar>
+                {
+                    new TradeBar(DateTime.UtcNow, Symbols.SPY, 10m, 20m, 5m, 1, 10000)
+                },
+                typeof(TradeBar)
+            );
 
             using (Py.GIL())
             {
-                dynamic test = PyModule.FromString("testModule",
-                    @"
+                dynamic test = PyModule
+                    .FromString(
+                        "testModule",
+                        @"
 from AlgorithmImports import *
 
 def Test(dynamicData):
@@ -162,7 +183,9 @@ def Test(dynamicData):
     if len(data) != 1:
         raise Exception('Unexpected length')
     if data[0].Close != 1:
-        raise Exception('Unexpected value')").GetAttr("Test");
+        raise Exception('Unexpected value')"
+                    )
+                    .GetAttr("Test");
 
                 Assert.DoesNotThrow(() => test(data));
             }
@@ -172,21 +195,28 @@ def Test(dynamicData):
         public void Py_StoreData_HasProperty()
         {
             var data = new DynamicSecurityData(_dataTypesProvider, _cache);
-            _cache.StoreData(new List<TradeBar>
-            {
-                new TradeBar(DateTime.UtcNow, Symbols.SPY, 10m, 20m, 5m, 1, 10000)
-            }, typeof(TradeBar));
+            _cache.StoreData(
+                new List<TradeBar>
+                {
+                    new TradeBar(DateTime.UtcNow, Symbols.SPY, 10m, 20m, 5m, 1, 10000)
+                },
+                typeof(TradeBar)
+            );
 
             using (Py.GIL())
             {
-                dynamic test = PyModule.FromString("testModule",
-                    @"
+                dynamic test = PyModule
+                    .FromString(
+                        "testModule",
+                        @"
 from AlgorithmImports import *
 
 def Test(dynamicData):
     data = dynamicData.HasProperty(""TradeBar"")
     if not data:
-        raise Exception('Unexpected HasProperty result')").GetAttr("Test");
+        raise Exception('Unexpected HasProperty result')"
+                    )
+                    .GetAttr("Test");
 
                 Assert.DoesNotThrow(() => test(data));
             }
@@ -196,21 +226,28 @@ def Test(dynamicData):
         public void Py_StoreData_Get_UsesTypeName()
         {
             var data = new DynamicSecurityData(_dataTypesProvider, _cache);
-            _cache.StoreData(new List<TradeBar>
-            {
-                new TradeBar(DateTime.UtcNow, Symbols.SPY, 10m, 20m, 5m, 1, 10000)
-            }, typeof(TradeBar));
+            _cache.StoreData(
+                new List<TradeBar>
+                {
+                    new TradeBar(DateTime.UtcNow, Symbols.SPY, 10m, 20m, 5m, 1, 10000)
+                },
+                typeof(TradeBar)
+            );
 
             using (Py.GIL())
             {
-                dynamic test = PyModule.FromString("testModule",
-                    @"
+                dynamic test = PyModule
+                    .FromString(
+                        "testModule",
+                        @"
 from AlgorithmImports import *
 
 def Test(dynamicData):
     data = dynamicData.Get(TradeBar)
     if data.Close != 1:
-        raise Exception('Unexpected value')").GetAttr("Test");
+        raise Exception('Unexpected value')"
+                    )
+                    .GetAttr("Test");
 
                 Assert.DoesNotThrow(() => test(data));
             }
@@ -220,15 +257,20 @@ def Test(dynamicData):
         public void Py_StoreData_GetAll_UsesTypeName()
         {
             var data = new DynamicSecurityData(_dataTypesProvider, _cache);
-            _cache.StoreData(new List<TradeBar>
-            {
-                new TradeBar(DateTime.UtcNow, Symbols.SPY, 10m, 20m, 5m, 1, 10000)
-            }, typeof(TradeBar));
+            _cache.StoreData(
+                new List<TradeBar>
+                {
+                    new TradeBar(DateTime.UtcNow, Symbols.SPY, 10m, 20m, 5m, 1, 10000)
+                },
+                typeof(TradeBar)
+            );
 
             using (Py.GIL())
             {
-                dynamic test = PyModule.FromString("testModule",
-                    @"
+                dynamic test = PyModule
+                    .FromString(
+                        "testModule",
+                        @"
 from AlgorithmImports import *
 
 def Test(dynamicData):
@@ -236,7 +278,9 @@ def Test(dynamicData):
     if len(data) != 1:
         raise Exception('Unexpected length')
     if data[0].Close != 1:
-        raise Exception('Unexpected value')").GetAttr("Test");
+        raise Exception('Unexpected value')"
+                    )
+                    .GetAttr("Test");
 
                 Assert.DoesNotThrow(() => test(data));
             }
@@ -246,22 +290,29 @@ def Test(dynamicData):
         public void Py_Get_UsesTypeName_AsKey_And_ReturnsLastItem()
         {
             var data = new DynamicSecurityData(_dataTypesProvider, _cache);
-            _cache.StoreData(new List<TradeBar>
-            {
-                new TradeBar(DateTime.UtcNow, Symbols.SPY, 10m, 20m, 5m, 1, 10000),
-                new TradeBar(DateTime.UtcNow, Symbols.SPY, 10m, 20m, 5m, 3, 10000)
-            }, typeof(TradeBar));
+            _cache.StoreData(
+                new List<TradeBar>
+                {
+                    new TradeBar(DateTime.UtcNow, Symbols.SPY, 10m, 20m, 5m, 1, 10000),
+                    new TradeBar(DateTime.UtcNow, Symbols.SPY, 10m, 20m, 5m, 3, 10000)
+                },
+                typeof(TradeBar)
+            );
 
             using (Py.GIL())
             {
-                dynamic test = PyModule.FromString("testModule",
-                    @"
+                dynamic test = PyModule
+                    .FromString(
+                        "testModule",
+                        @"
 from AlgorithmImports import *
 
 def Test(dynamicData):
     data = dynamicData.Get(TradeBar)
     if data.Close != 3:
-        raise Exception('Unexpected value')").GetAttr("Test");
+        raise Exception('Unexpected value')"
+                    )
+                    .GetAttr("Test");
 
                 Assert.DoesNotThrow(() => test(data));
             }
@@ -279,14 +330,18 @@ def Test(dynamicData):
 
             using (Py.GIL())
             {
-                dynamic test = PyModule.FromString("testModule",
-                    @"
+                dynamic test = PyModule
+                    .FromString(
+                        "testModule",
+                        @"
 from AlgorithmImports import *
 
 def Test(dynamicData):
     data = dynamicData.GetAll(TradeBar)
     if data[0].Low != 5:
-        raise Exception('Unexpected value')").GetAttr("Test");
+        raise Exception('Unexpected value')"
+                    )
+                    .GetAttr("Test");
 
                 Assert.DoesNotThrow(() => test(securityData));
             }
@@ -304,14 +359,18 @@ def Test(dynamicData):
 
             using (Py.GIL())
             {
-                dynamic test = PyModule.FromString("testModule",
-                    @"
+                dynamic test = PyModule
+                    .FromString(
+                        "testModule",
+                        @"
 from AlgorithmImports import *
 
 def Test(dynamicData):
     data = dynamicData.Get(TradeBar)
     if data.Low != 5:
-        raise Exception('Unexpected value')").GetAttr("Test");
+        raise Exception('Unexpected value')"
+                    )
+                    .GetAttr("Test");
 
                 Assert.DoesNotThrow(() => test(securityData));
             }
@@ -329,14 +388,18 @@ def Test(dynamicData):
 
             using (Py.GIL())
             {
-                dynamic test = PyModule.FromString("testModule",
-                    @"
+                dynamic test = PyModule
+                    .FromString(
+                        "testModule",
+                        @"
 from AlgorithmImports import *
 
 def Test(dynamicData):
     data = dynamicData.Get(TradeBar)
     if data.Low != 5:
-        raise Exception('Unexpected value')").GetAttr("Test");
+        raise Exception('Unexpected value')"
+                    )
+                    .GetAttr("Test");
 
                 Assert.DoesNotThrow(() => test(securityData));
             }
@@ -350,15 +413,23 @@ def Test(dynamicData):
 
             using (Py.GIL())
             {
-                dynamic test = PyModule.FromString("testModule",
-                    @"
+                dynamic test = PyModule
+                    .FromString(
+                        "testModule",
+                        @"
 from AlgorithmImports import *
 
 def Test(dynamicData):
-    data = dynamicData.Get(TradeBar)").GetAttr("Test");
+    data = dynamicData.Get(TradeBar)"
+                    )
+                    .GetAttr("Test");
 
-                Assert.That(() => test(securityData),
-                    Throws.InstanceOf<ClrBubbledException>().With.InnerException.InstanceOf<KeyNotFoundException>());
+                Assert.That(
+                    () => test(securityData),
+                    Throws
+                        .InstanceOf<ClrBubbledException>()
+                        .With.InnerException.InstanceOf<KeyNotFoundException>()
+                );
             }
         }
 
@@ -371,8 +442,10 @@ def Test(dynamicData):
 
             using (Py.GIL())
             {
-                dynamic test = PyModule.FromString("testModule",
-                    @"
+                dynamic test = PyModule
+                    .FromString(
+                        "testModule",
+                        @"
 from AlgorithmImports import *
 
 def Test(dynamicData):
@@ -380,7 +453,9 @@ def Test(dynamicData):
     if data is None:
         raise Exception('Unexpected None value')
     if len(data) != 0:
-        raise Exception('Unexpected length')").GetAttr("Test");
+        raise Exception('Unexpected length')"
+                    )
+                    .GetAttr("Test");
 
                 Assert.DoesNotThrow(() => test(securityData));
             }

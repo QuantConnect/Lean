@@ -51,7 +51,10 @@ namespace QuantConnect.Tests.Engine.DataFeeds.Enumerators
             Assert.IsTrue(enumerator.MoveNext());
             Assert.IsNull(enumerator.Current);
 
-            var tick2 = new Tick(currentTime, Symbols.SPY, 199.56m, 199.21m, 200.02m) { Quantity = 5 };
+            var tick2 = new Tick(currentTime, Symbols.SPY, 199.56m, 199.21m, 200.02m)
+            {
+                Quantity = 5
+            };
             enumerator.Update(tick2);
             Assert.IsTrue(enumerator.MoveNext());
             Assert.AreEqual(tick2, enumerator.Current);
@@ -69,7 +72,10 @@ namespace QuantConnect.Tests.Engine.DataFeeds.Enumerators
                 identityDataConsolidator,
                 DateTimeZone.ForOffset(Offset.FromHours(-5)),
                 new ManualTimeProvider(currentTime),
-                (s, e) => { available = true; }
+                (s, e) =>
+                {
+                    available = true;
+                }
             );
 
             // returns true even if no data present until stop is called
@@ -187,7 +193,9 @@ namespace QuantConnect.Tests.Engine.DataFeeds.Enumerators
             var reference = new DateTime(2020, 2, 2, 1, 0, 0);
             var timeProvider = new ManualTimeProvider(reference);
             var dateTimeZone = DateTimeZone.ForOffset(Offset.FromHours(-5));
-            using var tickQuoteBarConsolidator = new TickQuoteBarConsolidator(TimeSpan.FromMinutes(1));
+            using var tickQuoteBarConsolidator = new TickQuoteBarConsolidator(
+                TimeSpan.FromMinutes(1)
+            );
             using var enumerator = new ScannableEnumerator<Data.BaseData>(
                 tickQuoteBarConsolidator,
                 dateTimeZone,
@@ -274,7 +282,9 @@ namespace QuantConnect.Tests.Engine.DataFeeds.Enumerators
             var reference = utc.ToOffset(offset.ToTimeSpan());
             var timeProvider = new ManualTimeProvider(reference.DateTime, timeZone);
 
-            using var tickQuoteBarConsolidator = new TickQuoteBarConsolidator(TimeSpan.FromMinutes(1));
+            using var tickQuoteBarConsolidator = new TickQuoteBarConsolidator(
+                TimeSpan.FromMinutes(1)
+            );
             using var enumerator = new ScannableEnumerator<Data.BaseData>(
                 tickQuoteBarConsolidator,
                 timeZone,

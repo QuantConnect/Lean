@@ -27,9 +27,7 @@ namespace QuantConnect.Orders
         /// <summary>
         /// Added a default constructor for JSON Deserialization:
         /// </summary>
-        public MarketOrder()
-        {
-        }
+        public MarketOrder() { }
 
         /// <summary>
         /// Market Order Type
@@ -48,7 +46,14 @@ namespace QuantConnect.Orders
         /// <param name="price">Price of the order</param>
         /// <param name="tag">User defined data tag for this order</param>
         /// <param name="properties">The order properties for this order</param>
-        public MarketOrder(Symbol symbol, decimal quantity, DateTime time, decimal price, string tag = "", IOrderProperties properties = null)
+        public MarketOrder(
+            Symbol symbol,
+            decimal quantity,
+            DateTime time,
+            decimal price,
+            string tag = "",
+            IOrderProperties properties = null
+        )
             : this(symbol, quantity, time, tag, properties)
         {
             Price = price;
@@ -62,10 +67,14 @@ namespace QuantConnect.Orders
         /// <param name="time">Time the order was placed</param>
         /// <param name="tag">User defined data tag for this order</param>
         /// <param name="properties">The order properties for this order</param>
-        public MarketOrder(Symbol symbol, decimal quantity, DateTime time, string tag = "", IOrderProperties properties = null)
-            : base(symbol, quantity, time, tag, properties)
-        {
-        }
+        public MarketOrder(
+            Symbol symbol,
+            decimal quantity,
+            DateTime time,
+            string tag = "",
+            IOrderProperties properties = null
+        )
+            : base(symbol, quantity, time, tag, properties) { }
 
         /// <summary>
         /// Gets the order value in units of the security's quote currency
@@ -73,7 +82,7 @@ namespace QuantConnect.Orders
         /// <param name="security">The security matching this order's symbol</param>
         protected override decimal GetValueImpl(Security security)
         {
-            return Quantity*security.Price;
+            return Quantity * security.Price;
         }
 
         /// <summary>

@@ -47,7 +47,7 @@ namespace QuantConnect.Securities.Positions
             SecurityPortfolioManager portfolio,
             IPositionGroup positionGroup,
             Order order
-            )
+        )
         {
             Portfolio = portfolio;
             PositionGroup = positionGroup;

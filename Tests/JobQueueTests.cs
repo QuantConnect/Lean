@@ -13,10 +13,10 @@
  * limitations under the License.
 */
 
+using System;
 using NUnit.Framework;
 using QuantConnect.Configuration;
 using QuantConnect.Queues;
-using System;
 
 namespace QuantConnect.Tests
 {
@@ -26,11 +26,31 @@ namespace QuantConnect.Tests
         [TestCase("QuantConnect.Algorithm.CSharp.dll", "CSharp", Language.CSharp, true)]
         [TestCase("QuantConnect.Algorithm.CSharp.dll", "", Language.CSharp, true)]
         [TestCase("QUANTCONNECT.ALGORITHM.CSHARP.DLL", "", Language.CSharp, true)]
-        [TestCase("../../../Algorithm.Python/BasicTemplateFrameworkAlgorithm.py", "Python", Language.Python, true)]
-        [TestCase("../../../Algorithm.Python/BasicTemplateFrameworkAlgorithm.py", "", Language.Python, true)]
-        [TestCase("../../../ALGORITHM.PYTHON/BASICTEMPLATEFRAMEWORKALGORITHM.PY", "", Language.Python, true)]
+        [TestCase(
+            "../../../Algorithm.Python/BasicTemplateFrameworkAlgorithm.py",
+            "Python",
+            Language.Python,
+            true
+        )]
+        [TestCase(
+            "../../../Algorithm.Python/BasicTemplateFrameworkAlgorithm.py",
+            "",
+            Language.Python,
+            true
+        )]
+        [TestCase(
+            "../../../ALGORITHM.PYTHON/BASICTEMPLATEFRAMEWORKALGORITHM.PY",
+            "",
+            Language.Python,
+            true
+        )]
         [TestCase("../../../test.jar", "", Language.Java, false)]
-        public void JobQueueSetsAlgorithmLanguageCorrectly(string algorithmLocation, string algorithmLanguage, Language expectedLangauge, bool isValidExtension)
+        public void JobQueueSetsAlgorithmLanguageCorrectly(
+            string algorithmLocation,
+            string algorithmLanguage,
+            Language expectedLangauge,
+            bool isValidExtension
+        )
         {
             Config.Set("algorithm-location", algorithmLocation);
             Config.Set("algorithm-language", algorithmLanguage);
@@ -49,6 +69,9 @@ namespace QuantConnect.Tests
 
     public class JobQueueTestClass : JobQueue
     {
-        public Language GetLanguage() { return Language; }
+        public Language GetLanguage()
+        {
+            return Language;
+        }
     }
 }

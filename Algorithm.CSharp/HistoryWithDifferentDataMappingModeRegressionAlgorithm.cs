@@ -14,8 +14,8 @@
 */
 
 using System;
-using System.Linq;
 using System.Collections.Generic;
+using System.Linq;
 using QuantConnect.Interfaces;
 using QuantConnect.Securities;
 
@@ -24,7 +24,9 @@ namespace QuantConnect.Algorithm.CSharp
     /// <summary>
     /// Regression algorithm illustrating how to request history data for different data mapping modes.
     /// </summary>
-    public class HistoryWithDifferentDataMappingModeRegressionAlgorithm : QCAlgorithm, IRegressionAlgorithmDefinition
+    public class HistoryWithDifferentDataMappingModeRegressionAlgorithm
+        : QCAlgorithm,
+            IRegressionAlgorithmDefinition
     {
         private Symbol _continuousContractSymbol;
 
@@ -32,16 +34,30 @@ namespace QuantConnect.Algorithm.CSharp
         {
             SetStartDate(2013, 10, 6);
             SetEndDate(2014, 1, 1);
-            _continuousContractSymbol = AddFuture(Futures.Indices.SP500EMini, Resolution.Daily).Symbol;
+            _continuousContractSymbol = AddFuture(
+                Futures.Indices.SP500EMini,
+                Resolution.Daily
+            ).Symbol;
         }
 
         public override void OnEndOfAlgorithm()
         {
-            var dataMappingModes = ((DataMappingMode[])Enum.GetValues(typeof(DataMappingMode))).ToList();
-            var historyResults = dataMappingModes.Select(dataMappingMode =>
-            {
-                return History(new [] { _continuousContractSymbol }, StartDate, EndDate, Resolution.Daily, dataMappingMode: dataMappingMode).ToList();
-            }).ToList();
+            var dataMappingModes = (
+                (DataMappingMode[])Enum.GetValues(typeof(DataMappingMode))
+            ).ToList();
+            var historyResults = dataMappingModes
+                .Select(dataMappingMode =>
+                {
+                    return History(
+                            new[] { _continuousContractSymbol },
+                            StartDate,
+                            EndDate,
+                            Resolution.Daily,
+                            dataMappingMode: dataMappingMode
+                        )
+                        .ToList();
+                })
+                .ToList();
 
             if (historyResults.Any(x => x.Count != historyResults[0].Count))
             {
@@ -68,22 +84,30 @@ namespace QuantConnect.Algorithm.CSharp
 
                 if (mappingsCount == 0)
                 {
-                    throw new RegressionTestException($"History results for {dataMappingModes[i]} data mapping mode did not contain any mappings");
+                    throw new RegressionTestException(
+                        $"History results for {dataMappingModes[i]} data mapping mode did not contain any mappings"
+                    );
                 }
             }
 
             if (mappingDates.Count < dataMappingModes.Count)
             {
-                throw new RegressionTestException($"History results should have had different mapping dates for each data mapping mode");
+                throw new RegressionTestException(
+                    $"History results should have had different mapping dates for each data mapping mode"
+                );
             }
 
             // Check that close prices at each time are different for different data mapping modes
             for (int j = 0; j < historyResults[0].Count; j++)
             {
-                var closePrices = historyResults.Select(hr => hr[j].Bars.First().Value.Close).ToHashSet();
+                var closePrices = historyResults
+                    .Select(hr => hr[j].Bars.First().Value.Close)
+                    .ToHashSet();
                 if (closePrices.Count != dataMappingModes.Count)
                 {
-                    throw new RegressionTestException($"History results close prices should have been different for each data mapping mode at each time");
+                    throw new RegressionTestException(
+                        $"History results close prices should have been different for each data mapping mode at each time"
+                    );
                 }
             }
         }
@@ -116,35 +140,36 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// This is used by the regression test system to indicate what the expected statistics are from running the algorithm
         /// </summary>
-        public Dictionary<string, string> ExpectedStatistics => new Dictionary<string, string>
-        {
-            {"Total Orders", "0"},
-            {"Average Win", "0%"},
-            {"Average Loss", "0%"},
-            {"Compounding Annual Return", "0%"},
-            {"Drawdown", "0%"},
-            {"Expectancy", "0"},
-            {"Start Equity", "100000"},
-            {"End Equity", "100000"},
-            {"Net Profit", "0%"},
-            {"Sharpe Ratio", "0"},
-            {"Sortino Ratio", "0"},
-            {"Probabilistic Sharpe Ratio", "0%"},
-            {"Loss Rate", "0%"},
-            {"Win Rate", "0%"},
-            {"Profit-Loss Ratio", "0"},
-            {"Alpha", "0"},
-            {"Beta", "0"},
-            {"Annual Standard Deviation", "0"},
-            {"Annual Variance", "0"},
-            {"Information Ratio", "-3.681"},
-            {"Tracking Error", "0.086"},
-            {"Treynor Ratio", "0"},
-            {"Total Fees", "$0.00"},
-            {"Estimated Strategy Capacity", "$0"},
-            {"Lowest Capacity Asset", ""},
-            {"Portfolio Turnover", "0%"},
-            {"OrderListHash", "d41d8cd98f00b204e9800998ecf8427e"}
-        };
+        public Dictionary<string, string> ExpectedStatistics =>
+            new Dictionary<string, string>
+            {
+                { "Total Orders", "0" },
+                { "Average Win", "0%" },
+                { "Average Loss", "0%" },
+                { "Compounding Annual Return", "0%" },
+                { "Drawdown", "0%" },
+                { "Expectancy", "0" },
+                { "Start Equity", "100000" },
+                { "End Equity", "100000" },
+                { "Net Profit", "0%" },
+                { "Sharpe Ratio", "0" },
+                { "Sortino Ratio", "0" },
+                { "Probabilistic Sharpe Ratio", "0%" },
+                { "Loss Rate", "0%" },
+                { "Win Rate", "0%" },
+                { "Profit-Loss Ratio", "0" },
+                { "Alpha", "0" },
+                { "Beta", "0" },
+                { "Annual Standard Deviation", "0" },
+                { "Annual Variance", "0" },
+                { "Information Ratio", "-3.681" },
+                { "Tracking Error", "0.086" },
+                { "Treynor Ratio", "0" },
+                { "Total Fees", "$0.00" },
+                { "Estimated Strategy Capacity", "$0" },
+                { "Lowest Capacity Asset", "" },
+                { "Portfolio Turnover", "0%" },
+                { "OrderListHash", "d41d8cd98f00b204e9800998ecf8427e" }
+            };
     }
 }

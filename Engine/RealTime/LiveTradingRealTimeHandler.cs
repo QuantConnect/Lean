@@ -17,14 +17,14 @@
 using System;
 using System.Linq;
 using System.Threading;
-using QuantConnect.Util;
+using QuantConnect.Configuration;
+using QuantConnect.Interfaces;
+using QuantConnect.Lean.Engine.Results;
 using QuantConnect.Logging;
 using QuantConnect.Packets;
-using QuantConnect.Interfaces;
 using QuantConnect.Scheduling;
 using QuantConnect.Securities;
-using QuantConnect.Configuration;
-using QuantConnect.Lean.Engine.Results;
+using QuantConnect.Util;
 
 namespace QuantConnect.Lean.Engine.RealTime
 {
@@ -35,17 +35,21 @@ namespace QuantConnect.Lean.Engine.RealTime
     {
         private Thread _realTimeThread;
         private CancellationTokenSource _cancellationTokenSource = new();
-        private readonly bool _forceExchangeAlwaysOpen = Config.GetBool("force-exchange-always-open");
+        private readonly bool _forceExchangeAlwaysOpen = Config.GetBool(
+            "force-exchange-always-open"
+        );
 
         /// <summary>
         /// Gets the current market hours database instance
         /// </summary>
-        protected MarketHoursDatabase MarketHoursDatabase { get; set; } = MarketHoursDatabase.FromDataFolder();
+        protected MarketHoursDatabase MarketHoursDatabase { get; set; } =
+            MarketHoursDatabase.FromDataFolder();
 
         /// <summary>
         /// Gets the current symbol properties database instance
         /// </summary>
-        protected SymbolPropertiesDatabase SymbolPropertiesDatabase { get; set; } = SymbolPropertiesDatabase.FromDataFolder();
+        protected SymbolPropertiesDatabase SymbolPropertiesDatabase { get; set; } =
+            SymbolPropertiesDatabase.FromDataFolder();
 
         /// <summary>
         /// Gets the time provider
@@ -63,7 +67,13 @@ namespace QuantConnect.Lean.Engine.RealTime
         /// <summary>
         /// Initializes the real time handler for the specified algorithm and job
         /// </summary>
-        public override void Setup(IAlgorithm algorithm, AlgorithmNodePacket job, IResultHandler resultHandler, IApi api, IIsolatorLimitResultProvider isolatorLimitProvider)
+        public override void Setup(
+            IAlgorithm algorithm,
+            AlgorithmNodePacket job,
+            IResultHandler resultHandler,
+            IApi api,
+            IIsolatorLimitResultProvider isolatorLimitProvider
+        )
         {
             base.Setup(algorithm, job, resultHandler, api, isolatorLimitProvider);
 
@@ -75,13 +85,24 @@ namespace QuantConnect.Lean.Engine.RealTime
             RefreshSymbolProperties();
 
             // set up an scheduled event to refresh market hours and symbol properties every certain period of time
-            var times = Time.DateTimeRange(utcNow.Date, Time.EndOfTime, Algorithm.Settings.DatabasesRefreshPeriod).Where(date => date > utcNow);
+            var times = Time.DateTimeRange(
+                    utcNow.Date,
+                    Time.EndOfTime,
+                    Algorithm.Settings.DatabasesRefreshPeriod
+                )
+                .Where(date => date > utcNow);
 
-            Add(new ScheduledEvent("RefreshMarketHoursAndSymbolProperties", times, (name, triggerTime) =>
-            {
-                RefreshMarketHours(triggerTime.ConvertFromUtc(Algorithm.TimeZone).Date);
-                RefreshSymbolProperties();
-            }));
+            Add(
+                new ScheduledEvent(
+                    "RefreshMarketHoursAndSymbolProperties",
+                    times,
+                    (name, triggerTime) =>
+                    {
+                        RefreshMarketHours(triggerTime.ConvertFromUtc(Algorithm.TimeZone).Date);
+                        RefreshSymbolProperties();
+                    }
+                )
+            );
         }
 
         /// <summary>
@@ -120,13 +141,19 @@ namespace QuantConnect.Lean.Engine.RealTime
                     }
                     catch (Exception exception)
                     {
-                        Algorithm.SetRuntimeError(exception, $"Scheduled event: '{scheduledEvent.Name}' at {time}");
+                        Algorithm.SetRuntimeError(
+                            exception,
+                            $"Scheduled event: '{scheduledEvent.Name}' at {time}"
+                        );
                     }
                 }
             }
 
             IsActive = false;
-            Log.Trace("LiveTradingRealTimeHandler.Run(): Exiting thread... Exit triggered: " + _cancellationTokenSource.IsCancellationRequested);
+            Log.Trace(
+                "LiveTradingRealTimeHandler.Run(): Exiting thread... Exit triggered: "
+                    + _cancellationTokenSource.IsCancellationRequested
+            );
         }
 
         /// <summary>
@@ -145,7 +172,9 @@ namespace QuantConnect.Lean.Engine.RealTime
                 UpdateMarketHours(security);
 
                 var localMarketHours = security.Exchange.Hours.GetMarketHours(date);
-                Log.Trace($"LiveTradingRealTimeHandler.RefreshMarketHoursToday({security.Type}): Market hours set: Symbol: {security.Symbol} {localMarketHours} ({security.Exchange.Hours.TimeZone})");
+                Log.Trace(
+                    $"LiveTradingRealTimeHandler.RefreshMarketHoursToday({security.Type}): Market hours set: Symbol: {security.Symbol} {localMarketHours} ({security.Exchange.Hours.TimeZone})"
+                );
             }
         }
 
@@ -166,8 +195,10 @@ namespace QuantConnect.Lean.Engine.RealTime
                 var security = kvp.Value;
                 UpdateSymbolProperties(security);
 
-                Log.Trace($"LiveTradingRealTimeHandler.RefreshSymbolPropertiesToday(): Symbol properties set: " +
-                    $"Symbol: {security.Symbol} {security.SymbolProperties}");
+                Log.Trace(
+                    $"LiveTradingRealTimeHandler.RefreshSymbolPropertiesToday(): Symbol properties set: "
+                        + $"Symbol: {security.Symbol} {security.SymbolProperties}"
+                );
             }
         }
 
@@ -225,7 +256,11 @@ namespace QuantConnect.Lean.Engine.RealTime
         {
             var hours = _forceExchangeAlwaysOpen
                 ? SecurityExchangeHours.AlwaysOpen(security.Exchange.TimeZone)
-                : MarketHoursDatabase.GetExchangeHours(security.Symbol.ID.Market, security.Symbol, security.Symbol.ID.SecurityType);
+                : MarketHoursDatabase.GetExchangeHours(
+                    security.Symbol.ID.Market,
+                    security.Symbol,
+                    security.Symbol.ID.SecurityType
+                );
 
             // Use Update method to avoid replacing the reference
             security.Exchange.Hours.Update(hours);
@@ -240,8 +275,12 @@ namespace QuantConnect.Lean.Engine.RealTime
         /// </remarks>
         protected virtual void UpdateSymbolProperties(Security security)
         {
-            var symbolProperties = SymbolPropertiesDatabase.GetSymbolProperties(security.Symbol.ID.Market, security.Symbol,
-                security.Symbol.ID.SecurityType, security.QuoteCurrency.Symbol);
+            var symbolProperties = SymbolPropertiesDatabase.GetSymbolProperties(
+                security.Symbol.ID.Market,
+                security.Symbol,
+                security.Symbol.ID.SecurityType,
+                security.QuoteCurrency.Symbol
+            );
             security.UpdateSymbolProperties(symbolProperties);
         }
 

@@ -13,10 +13,10 @@
  * limitations under the License.
 */
 
-using Deedle;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using Deedle;
 
 namespace QuantConnect.Report
 {
@@ -53,7 +53,9 @@ namespace QuantConnect.Report
         /// </summary>
         /// <param name="input">Input series</param>
         /// <returns>Cumulative product</returns>
-        public static Series<DateTime, double> CumulativeProduct(this Series<DateTime, double> input)
+        public static Series<DateTime, double> CumulativeProduct(
+            this Series<DateTime, double> input
+        )
         {
             if (input.IsEmpty)
             {
@@ -122,16 +124,18 @@ namespace QuantConnect.Report
         /// </summary>
         /// <param name="input">Equity curve series</param>
         /// <returns>Cumulative returns over time</returns>
-        public static Series<DateTime, double> CumulativeReturns(this Series<DateTime, double> input)
+        public static Series<DateTime, double> CumulativeReturns(
+            this Series<DateTime, double> input
+        )
         {
             if (input.IsEmpty)
             {
                 return input;
             }
 
-            return (input.PercentChange()
-                .Where(kvp => !double.IsInfinity(kvp.Value)) + 1)
-                .CumulativeProduct() - 1;
+            return (
+                    input.PercentChange().Where(kvp => !double.IsInfinity(kvp.Value)) + 1
+                ).CumulativeProduct() - 1;
         }
 
         /// <summary>
@@ -159,7 +163,9 @@ namespace QuantConnect.Report
         /// <param name="frame">Data Frame</param>
         /// <returns>new Frame with sparse columns dropped</returns>
         /// <remarks>Equivalent to `df.dropna(axis=1, how='all')`</remarks>
-        public static Frame<TRowKey, TColumnKey> DropSparseColumnsAll<TRowKey, TColumnKey>(this Frame<TRowKey, TColumnKey> frame)
+        public static Frame<TRowKey, TColumnKey> DropSparseColumnsAll<TRowKey, TColumnKey>(
+            this Frame<TRowKey, TColumnKey> frame
+        )
         {
             var newFrame = frame.Clone();
 
@@ -182,7 +188,9 @@ namespace QuantConnect.Report
         /// <param name="frame">Data Frame</param>
         /// <returns>new Frame with sparse rows dropped</returns>
         /// <remarks>Equivalent to `df.dropna(how='all')`</remarks>
-        public static Frame<TRowKey, TColumnKey> DropSparseRowsAll<TRowKey, TColumnKey>(this Frame<TRowKey, TColumnKey> frame)
+        public static Frame<TRowKey, TColumnKey> DropSparseRowsAll<TRowKey, TColumnKey>(
+            this Frame<TRowKey, TColumnKey> frame
+        )
         {
             if (frame.ColumnKeys.Count() == 0)
             {

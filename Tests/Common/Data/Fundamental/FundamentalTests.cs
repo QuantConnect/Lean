@@ -27,13 +27,20 @@ namespace QuantConnect.Tests.Common.Data.Fundamental
         [SetUp]
         public void Setup()
         {
-            FundamentalService.Initialize(TestGlobals.DataProvider, new TestFundamentalDataProvider(), false);
+            FundamentalService.Initialize(
+                TestGlobals.DataProvider,
+                new TestFundamentalDataProvider(),
+                false
+            );
         }
 
         [Test]
         public void ComputesMarketCapCorrectly()
         {
-            var fine = new QuantConnect.Data.Fundamental.Fundamental(new DateTime(2014, 04, 01), Symbols.AAPL);
+            var fine = new QuantConnect.Data.Fundamental.Fundamental(
+                new DateTime(2014, 04, 01),
+                Symbols.AAPL
+            );
 
             Assert.AreEqual(541.74m, fine.Price);
             Assert.AreEqual(469400291359, fine.MarketCap);

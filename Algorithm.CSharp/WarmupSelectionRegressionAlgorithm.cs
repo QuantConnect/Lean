@@ -14,12 +14,12 @@
 */
 
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using QuantConnect.Data;
-using QuantConnect.Orders;
-using QuantConnect.Interfaces;
-using System.Collections.Generic;
 using QuantConnect.Data.UniverseSelection;
+using QuantConnect.Interfaces;
+using QuantConnect.Orders;
 
 namespace QuantConnect.Algorithm.CSharp
 {
@@ -29,22 +29,22 @@ namespace QuantConnect.Algorithm.CSharp
     public class WarmupSelectionRegressionAlgorithm : QCAlgorithm, IRegressionAlgorithmDefinition
     {
         private const int NumberOfSymbols = 3;
-        private Queue<DateTime> _selection = new Queue<DateTime>(new[]
-        {
-            new DateTime(2014, 03, 24),
-
-            new DateTime(2014, 03, 25),
-            new DateTime(2014, 03, 26),
-            new DateTime(2014, 03, 27),
-            new DateTime(2014, 03, 28),
-            new DateTime(2014, 03, 29),
-
-            new DateTime(2014, 04, 01),
-            new DateTime(2014, 04, 02),
-            new DateTime(2014, 04, 03),
-            new DateTime(2014, 04, 04),
-            new DateTime(2014, 04, 05),
-        });
+        private Queue<DateTime> _selection = new Queue<DateTime>(
+            new[]
+            {
+                new DateTime(2014, 03, 24),
+                new DateTime(2014, 03, 25),
+                new DateTime(2014, 03, 26),
+                new DateTime(2014, 03, 27),
+                new DateTime(2014, 03, 28),
+                new DateTime(2014, 03, 29),
+                new DateTime(2014, 04, 01),
+                new DateTime(2014, 04, 02),
+                new DateTime(2014, 04, 03),
+                new DateTime(2014, 04, 04),
+                new DateTime(2014, 04, 05),
+            }
+        );
 
         // initialize our changes to nothing
         private SecurityChanges _changes = SecurityChanges.None;
@@ -67,7 +67,9 @@ namespace QuantConnect.Algorithm.CSharp
             var expected = _selection.Dequeue();
             if (expected != Time && !LiveMode)
             {
-                throw new RegressionTestException($"Unexpected selection time: {Time}. Expected {expected}");
+                throw new RegressionTestException(
+                    $"Unexpected selection time: {Time}. Expected {expected}"
+                );
             }
 
             // sort descending by daily dollar volume
@@ -86,7 +88,9 @@ namespace QuantConnect.Algorithm.CSharp
         /// <param name="slice">Slice object keyed by symbol containing the stock data</param>
         public override void OnData(Slice slice)
         {
-            Debug($"OnData({UtcTime:o}): {IsWarmingUp}. {string.Join(", ", slice.Values.OrderBy(x => x.Symbol))}");
+            Debug(
+                $"OnData({UtcTime:o}): {IsWarmingUp}. {string.Join(", ", slice.Values.OrderBy(x => x.Symbol))}"
+            );
 
             // if we have no changes, do nothing
             if (_changes == SecurityChanges.None || IsWarmingUp)
@@ -152,35 +156,36 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// This is used by the regression test system to indicate what the expected statistics are from running the algorithm
         /// </summary>
-        public virtual Dictionary<string, string> ExpectedStatistics => new Dictionary<string, string>
-        {
-            {"Total Orders", "8"},
-            {"Average Win", "1.51%"},
-            {"Average Loss", "-0.26%"},
-            {"Compounding Annual Return", "15.928%"},
-            {"Drawdown", "0.700%"},
-            {"Expectancy", "1.231"},
-            {"Start Equity", "100000"},
-            {"End Equity", "100527.79"},
-            {"Net Profit", "0.528%"},
-            {"Sharpe Ratio", "3.097"},
-            {"Sortino Ratio", "5.756"},
-            {"Probabilistic Sharpe Ratio", "67.783%"},
-            {"Loss Rate", "67%"},
-            {"Win Rate", "33%"},
-            {"Profit-Loss Ratio", "5.69"},
-            {"Alpha", "0.248"},
-            {"Beta", "0.31"},
-            {"Annual Standard Deviation", "0.073"},
-            {"Annual Variance", "0.005"},
-            {"Information Ratio", "3.163"},
-            {"Tracking Error", "0.094"},
-            {"Treynor Ratio", "0.726"},
-            {"Total Fees", "$47.52"},
-            {"Estimated Strategy Capacity", "$150000000.00"},
-            {"Lowest Capacity Asset", "AAPL R735QTJ8XC9X"},
-            {"Portfolio Turnover", "20.51%"},
-            {"OrderListHash", "94f1e5a2d60302408778ffcb20dee690"}
-        };
+        public virtual Dictionary<string, string> ExpectedStatistics =>
+            new Dictionary<string, string>
+            {
+                { "Total Orders", "8" },
+                { "Average Win", "1.51%" },
+                { "Average Loss", "-0.26%" },
+                { "Compounding Annual Return", "15.928%" },
+                { "Drawdown", "0.700%" },
+                { "Expectancy", "1.231" },
+                { "Start Equity", "100000" },
+                { "End Equity", "100527.79" },
+                { "Net Profit", "0.528%" },
+                { "Sharpe Ratio", "3.097" },
+                { "Sortino Ratio", "5.756" },
+                { "Probabilistic Sharpe Ratio", "67.783%" },
+                { "Loss Rate", "67%" },
+                { "Win Rate", "33%" },
+                { "Profit-Loss Ratio", "5.69" },
+                { "Alpha", "0.248" },
+                { "Beta", "0.31" },
+                { "Annual Standard Deviation", "0.073" },
+                { "Annual Variance", "0.005" },
+                { "Information Ratio", "3.163" },
+                { "Tracking Error", "0.094" },
+                { "Treynor Ratio", "0.726" },
+                { "Total Fees", "$47.52" },
+                { "Estimated Strategy Capacity", "$150000000.00" },
+                { "Lowest Capacity Asset", "AAPL R735QTJ8XC9X" },
+                { "Portfolio Turnover", "20.51%" },
+                { "OrderListHash", "94f1e5a2d60302408778ffcb20dee690" }
+            };
     }
 }

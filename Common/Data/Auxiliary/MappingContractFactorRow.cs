@@ -15,9 +15,9 @@
 */
 
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using Newtonsoft.Json;
-using System.Collections.Generic;
 
 namespace QuantConnect.Data.Auxiliary
 {
@@ -35,19 +35,19 @@ namespace QuantConnect.Data.Auxiliary
         /// Backwards ratio price scaling factors for the front month [index 0] and it's 'i' back months [index 0 + i]
         /// <see cref="DataNormalizationMode.BackwardsRatio"/>
         /// </summary>
-        public IReadOnlyList<decimal> BackwardsRatioScale { get; set;  } = new List<decimal>();
+        public IReadOnlyList<decimal> BackwardsRatioScale { get; set; } = new List<decimal>();
 
         /// <summary>
         /// Backwards Panama Canal price scaling factors for the front month [index 0] and it's 'i' back months [index 0 + i]
         /// <see cref="DataNormalizationMode.BackwardsPanamaCanal"/>
         /// </summary>
-        public IReadOnlyList<decimal> BackwardsPanamaCanalScale { get; set;  } = new List<decimal>();
+        public IReadOnlyList<decimal> BackwardsPanamaCanalScale { get; set; } = new List<decimal>();
 
         /// <summary>
         /// Forward Panama Canal price scaling factors for the front month [index 0] and it's 'i' back months [index 0 + i]
         /// <see cref="DataNormalizationMode.ForwardPanamaCanal"/>
         /// </summary>
-        public IReadOnlyList<decimal> ForwardPanamaCanalScale { get; set;  } = new List<decimal>();
+        public IReadOnlyList<decimal> ForwardPanamaCanalScale { get; set; } = new List<decimal>();
 
         /// <summary>
         /// Allows the consumer to specify a desired mapping mode
@@ -57,9 +57,7 @@ namespace QuantConnect.Data.Auxiliary
         /// <summary>
         /// Empty constructor for json converter
         /// </summary>
-        public MappingContractFactorRow()
-        {
-        }
+        public MappingContractFactorRow() { }
 
         /// <summary>
         /// Writes factor file row into it's file format
@@ -76,7 +74,10 @@ namespace QuantConnect.Data.Auxiliary
         /// <param name="lines">The lines from the factor file to be parsed</param>
         /// <param name="factorFileMinimumDate">The minimum date from the factor file</param>
         /// <returns>An enumerable of factor file rows</returns>
-        public static List<MappingContractFactorRow> Parse(IEnumerable<string> lines, out DateTime? factorFileMinimumDate)
+        public static List<MappingContractFactorRow> Parse(
+            IEnumerable<string> lines,
+            out DateTime? factorFileMinimumDate
+        )
         {
             factorFileMinimumDate = null;
 
@@ -86,7 +87,10 @@ namespace QuantConnect.Data.Auxiliary
             foreach (var line in lines)
             {
                 var row = JsonConvert.DeserializeObject<MappingContractFactorRow>(line);
-                if(!row.DataMappingMode.HasValue || Enum.IsDefined(typeof(DataMappingMode), row.DataMappingMode.Value))
+                if (
+                    !row.DataMappingMode.HasValue
+                    || Enum.IsDefined(typeof(DataMappingMode), row.DataMappingMode.Value)
+                )
                 {
                     rows.Add(row);
                 }

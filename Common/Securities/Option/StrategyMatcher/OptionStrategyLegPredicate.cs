@@ -32,7 +32,9 @@ namespace QuantConnect.Securities.Option.StrategyMatcher
         private readonly BinaryComparison _comparison;
         private readonly IOptionStrategyLegPredicateReferenceValue _reference;
         private readonly Func<IReadOnlyList<OptionPosition>, OptionPosition, bool> _predicate;
-        private readonly Expression<Func<IReadOnlyList<OptionPosition>, OptionPosition, bool>> _expression;
+        private readonly Expression<
+            Func<IReadOnlyList<OptionPosition>, OptionPosition, bool>
+        > _expression;
 
         /// <summary>
         /// Determines whether or not this predicate is able to utilize <see cref="OptionPositionCollection"/> indexes.
@@ -52,7 +54,7 @@ namespace QuantConnect.Securities.Option.StrategyMatcher
             IOptionStrategyLegPredicateReferenceValue reference,
             Func<IReadOnlyList<OptionPosition>, OptionPosition, bool> predicate,
             Expression<Func<IReadOnlyList<OptionPosition>, OptionPosition, bool>> expression
-            )
+        )
         {
             _reference = reference;
             _predicate = predicate;
@@ -83,7 +85,11 @@ namespace QuantConnect.Securities.Option.StrategyMatcher
         /// <summary>
         /// Filters the specified <paramref name="positions"/> by applying this predicate based on the referenced legs.
         /// </summary>
-        public OptionPositionCollection Filter(IReadOnlyList<OptionPosition> legs, OptionPositionCollection positions, bool includeUnderlying)
+        public OptionPositionCollection Filter(
+            IReadOnlyList<OptionPosition> legs,
+            OptionPositionCollection positions,
+            bool includeUnderlying
+        )
         {
             if (!IsIndexed)
             {
@@ -97,9 +103,16 @@ namespace QuantConnect.Securities.Option.StrategyMatcher
             var referenceValue = _reference.Resolve(legs);
             switch (_reference.Target)
             {
-                case PredicateTargetValue.Right:        return positions.Slice((OptionRight) referenceValue, includeUnderlying);
-                case PredicateTargetValue.Strike:       return positions.Slice(_comparison, (decimal) referenceValue, includeUnderlying);
-                case PredicateTargetValue.Expiration:   return positions.Slice(_comparison, (DateTime) referenceValue, includeUnderlying);
+                case PredicateTargetValue.Right:
+                    return positions.Slice((OptionRight)referenceValue, includeUnderlying);
+                case PredicateTargetValue.Strike:
+                    return positions.Slice(_comparison, (decimal)referenceValue, includeUnderlying);
+                case PredicateTargetValue.Expiration:
+                    return positions.Slice(
+                        _comparison,
+                        (DateTime)referenceValue,
+                        includeUnderlying
+                    );
                 default:
                     throw new ArgumentOutOfRangeException();
             }
@@ -118,7 +131,7 @@ namespace QuantConnect.Securities.Option.StrategyMatcher
         /// </summary>
         public static OptionStrategyLegPredicate Create(
             Expression<Func<IReadOnlyList<OptionPosition>, OptionPosition, bool>> expression
-            )
+        )
         {
             // expr must NOT include compound comparisons
             // expr is a lambda of one of the following forms:
@@ -138,13 +151,25 @@ namespace QuantConnect.Securities.Option.StrategyMatcher
             {
                 var legsParameter = expression.Parameters[0];
                 var positionParameter = expression.Parameters[1];
-                var binary = expression.OfType<BinaryExpression>().Single(e => e.NodeType.IsBinaryComparison());
+                var binary = expression
+                    .OfType<BinaryExpression>()
+                    .Single(e => e.NodeType.IsBinaryComparison());
                 var comparison = BinaryComparison.FromExpressionType(binary.NodeType);
-                var leftReference = CreateReferenceValue(legsParameter, positionParameter, binary.Left);
-                var rightReference = CreateReferenceValue(legsParameter, positionParameter, binary.Right);
+                var leftReference = CreateReferenceValue(
+                    legsParameter,
+                    positionParameter,
+                    binary.Left
+                );
+                var rightReference = CreateReferenceValue(
+                    legsParameter,
+                    positionParameter,
+                    binary.Right
+                );
                 if (leftReference != null && rightReference != null)
                 {
-                    throw new ArgumentException($"The provided expression is not of the required form: {expression}");
+                    throw new ArgumentException(
+                        $"The provided expression is not of the required form: {expression}"
+                    );
                 }
 
                 // we want the left side to be null, indicating position.{target}
@@ -156,7 +181,12 @@ namespace QuantConnect.Securities.Option.StrategyMatcher
                     comparison = comparison.FlipOperands();
                 }
 
-                return new OptionStrategyLegPredicate(comparison, reference, expression.Compile(), expression);
+                return new OptionStrategyLegPredicate(
+                    comparison,
+                    reference,
+                    expression.Compile(),
+                    expression
+                );
             }
             catch
             {
@@ -174,20 +204,23 @@ namespace QuantConnect.Securities.Option.StrategyMatcher
             Expression legsParameter,
             Expression positionParameter,
             Expression expression
-            )
+        )
         {
             // if we're referencing the position parameter then this isn't a reference value
             // this 'value' is the positions being matched in OptionPositionCollection
             // verify the legs parameter doesn't appear in here either
             var expressions = expression.AsEnumerable().ToList();
             var containsLegParameter = expressions.Any(e => ReferenceEquals(e, legsParameter));
-            var containsPositionParameter = expressions.Any(e => ReferenceEquals(e, positionParameter));
+            var containsPositionParameter = expressions.Any(e =>
+                ReferenceEquals(e, positionParameter)
+            );
             if (containsPositionParameter)
             {
                 if (containsLegParameter)
                 {
-                    throw new NotSupportedException("Expressions containing references to both parameters " +
-                        "(legs and positions) on the same side of an equality operator are not supported."
+                    throw new NotSupportedException(
+                        "Expressions containing references to both parameters "
+                            + "(legs and positions) on the same side of an equality operator are not supported."
                     );
                 }
 
@@ -202,7 +235,9 @@ namespace QuantConnect.Securities.Option.StrategyMatcher
                 var value = Expression.Lambda(expression).Compile().DynamicInvoke();
                 if (value == null)
                 {
-                    throw new ArgumentNullException($"Failed to evaluate expression literal: {expressions}");
+                    throw new ArgumentNullException(
+                        $"Failed to evaluate expression literal: {expressions}"
+                    );
                 }
 
                 return ConstantOptionStrategyLegReferenceValue.Create(value);
@@ -212,7 +247,8 @@ namespace QuantConnect.Securities.Option.StrategyMatcher
             var methodCall = expressions.Single<MethodCallExpression>();
             Debug.Assert(methodCall.Method.Name == "get_Item");
             // compile and dynamically invoke the argument to get_Item(x) {legs[x]}
-            var arrayIndex = (int) Expression.Lambda(methodCall.Arguments[0]).Compile().DynamicInvoke();
+            var arrayIndex = (int)
+                Expression.Lambda(methodCall.Arguments[0]).Compile().DynamicInvoke();
 
             // and then a member expression denoting the property (target)
             var member = expressions.Single<MemberExpression>().Member;
@@ -225,9 +261,12 @@ namespace QuantConnect.Securities.Option.StrategyMatcher
         {
             switch (memberName)
             {
-                case nameof(OptionPosition.Right):      return PredicateTargetValue.Right;
-                case nameof(OptionPosition.Strike):     return PredicateTargetValue.Strike;
-                case nameof(OptionPosition.Expiration): return PredicateTargetValue.Expiration;
+                case nameof(OptionPosition.Right):
+                    return PredicateTargetValue.Right;
+                case nameof(OptionPosition.Strike):
+                    return PredicateTargetValue.Strike;
+                case nameof(OptionPosition.Expiration):
+                    return PredicateTargetValue.Expiration;
                 default:
                     throw new NotImplementedException(
                         $"Failed to resolve member name '{memberName}' to {nameof(PredicateTargetValue)}"

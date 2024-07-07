@@ -15,8 +15,8 @@
 
 using System;
 using NUnit.Framework;
-using QuantConnect.Securities;
 using QuantConnect.Data.Market;
+using QuantConnect.Securities;
 using QuantConnect.Tests.Engine.DataFeeds;
 
 namespace QuantConnect.Tests.Common
@@ -48,7 +48,9 @@ namespace QuantConnect.Tests.Common
             {
                 security = algo.AddFuture("CL");
             }
-            security.SetMarketPrice(new Tick(new DateTime(2022, 01, 04), security.Symbol, 10.0001m, 10.0001m));
+            security.SetMarketPrice(
+                new Tick(new DateTime(2022, 01, 04), security.Symbol, 10.0001m, 10.0001m)
+            );
             security.Holdings.SetHoldings(10.0000000000m, 10);
 
             var holding = new Holding(security);
@@ -60,7 +62,7 @@ namespace QuantConnect.Tests.Common
                 Assert.AreEqual(10.00m, holding.MarketPrice);
                 Assert.AreEqual(10.00m, holding.AveragePrice);
             }
-            else if(securityType == SecurityType.Forex || securityType == SecurityType.Crypto)
+            else if (securityType == SecurityType.Forex || securityType == SecurityType.Crypto)
             {
                 Assert.AreEqual(10.0001m, holding.MarketPrice);
                 Assert.AreEqual(10.0000m, holding.AveragePrice);

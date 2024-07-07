@@ -7,7 +7,6 @@
     {
         public TooManyFailedAttemptsException(string method, int attempts)
             : base($"Failed to generate a valid value for '{method}' after {attempts} attempts.")
-        {
-        }
+        { }
     }
 }

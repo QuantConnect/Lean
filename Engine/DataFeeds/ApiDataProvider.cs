@@ -15,15 +15,15 @@
 */
 
 using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Threading;
 using QuantConnect.Api;
-using QuantConnect.Util;
-using QuantConnect.Logging;
-using QuantConnect.Interfaces;
-using System.Collections.Generic;
 using QuantConnect.Configuration;
+using QuantConnect.Interfaces;
+using QuantConnect.Logging;
+using QuantConnect.Util;
 
 namespace QuantConnect.Lean.Engine.DataFeeds
 {
@@ -47,7 +47,13 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         /// </summary>
         public ApiDataProvider()
         {
-            _unsupportedSecurityType = new HashSet<SecurityType> { SecurityType.Future, SecurityType.FutureOption, SecurityType.Index, SecurityType.IndexOption };
+            _unsupportedSecurityType = new HashSet<SecurityType>
+            {
+                SecurityType.Future,
+                SecurityType.FutureOption,
+                SecurityType.Index,
+                SecurityType.IndexOption
+            };
 
             _api = Composer.Instance.GetPart<IApi>();
 
@@ -56,14 +62,20 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             {
                 var account = _api.ReadAccount();
                 Globals.OrganizationID = account?.OrganizationId;
-                Log.Trace($"ApiDataProvider(): Will use organization Id '{Globals.OrganizationID}'.");
+                Log.Trace(
+                    $"ApiDataProvider(): Will use organization Id '{Globals.OrganizationID}'."
+                );
             }
 
             // Read in data prices and organization details
             _dataPrices = _api.ReadDataPrices(Globals.OrganizationID);
             var organization = _api.ReadOrganization(Globals.OrganizationID);
 
-            foreach (var productItem in organization.Products.Where(x => x.Type == ProductType.Data).SelectMany(product => product.Items))
+            foreach (
+                var productItem in organization
+                    .Products.Where(x => x.Type == ProductType.Data)
+                    .SelectMany(product => product.Items)
+            )
             {
                 if (productItem.Id == 37)
                 {
@@ -86,21 +98,25 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             if (organization.DataAgreement.Signed)
             {
                 //Log Agreement Highlights
-                Log.Trace("ApiDataProvider(): Data Terms of Use has been signed. \r\n" +
-                    $" Find full agreement at: {_dataPrices.AgreementUrl} \r\n" +
-                    "==========================================================================\r\n" +
-                    $"CLI API Access Agreement: On {organization.DataAgreement.SignedTime:d} You Agreed:\r\n" +
-                    " - Display or distribution of data obtained through CLI API Access is not permitted.  \r\n" +
-                    " - Data and Third Party Data obtained via CLI API Access can only be used for individual or internal employee's use.\r\n" +
-                    " - Data is provided in LEAN format can not be manipulated for transmission or use in other applications. \r\n" +
-                    " - QuantConnect is not liable for the quality of data received and is not responsible for trading losses. \r\n" +
-                    "==========================================================================");
+                Log.Trace(
+                    "ApiDataProvider(): Data Terms of Use has been signed. \r\n"
+                        + $" Find full agreement at: {_dataPrices.AgreementUrl} \r\n"
+                        + "==========================================================================\r\n"
+                        + $"CLI API Access Agreement: On {organization.DataAgreement.SignedTime:d} You Agreed:\r\n"
+                        + " - Display or distribution of data obtained through CLI API Access is not permitted.  \r\n"
+                        + " - Data and Third Party Data obtained via CLI API Access can only be used for individual or internal employee's use.\r\n"
+                        + " - Data is provided in LEAN format can not be manipulated for transmission or use in other applications. \r\n"
+                        + " - QuantConnect is not liable for the quality of data received and is not responsible for trading losses. \r\n"
+                        + "=========================================================================="
+                );
                 Thread.Sleep(TimeSpan.FromSeconds(3));
             }
             else
             {
                 // Log URL to go accept terms
-                throw new InvalidOperationException($"ApiDataProvider(): Must agree to terms at {_dataPrices.AgreementUrl}, before using the ApiDataProvider");
+                throw new InvalidOperationException(
+                    $"ApiDataProvider(): Must agree to terms at {_dataPrices.AgreementUrl}, before using the ApiDataProvider"
+                );
             }
 
             // Verify we have the balance to maintain our purchase limit, if not adjust it to meet our balance
@@ -109,8 +125,10 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             {
                 if (_purchaseLimit != decimal.MaxValue)
                 {
-                    Log.Error("ApiDataProvider(): Purchase limit is greater than balance." +
-                        $" Setting purchase limit to balance : {balance}");
+                    Log.Error(
+                        "ApiDataProvider(): Purchase limit is greater than balance."
+                            + $" Setting purchase limit to balance : {balance}"
+                    );
                 }
                 _purchaseLimit = balance;
             }
@@ -124,29 +142,36 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         /// <returns>A <see cref="Stream"/> of the data requested</returns>
         public override Stream Fetch(string key)
         {
-            return DownloadOnce(key, s =>
-            {
-                // Verify we have enough credit to handle this
-                var pricePath = Api.Api.FormatPathForDataRequest(key);
-                var price = _dataPrices.GetPrice(pricePath);
-
-                // No price found
-                if (price == -1)
+            return DownloadOnce(
+                key,
+                s =>
                 {
-                    throw new ArgumentException($"ApiDataProvider.Fetch(): No price found for {pricePath}");
-                }
+                    // Verify we have enough credit to handle this
+                    var pricePath = Api.Api.FormatPathForDataRequest(key);
+                    var price = _dataPrices.GetPrice(pricePath);
 
-                if (_purchaseLimit < price)
-                {
-                    throw new ArgumentException($"ApiDataProvider.Fetch(): Cost {price} for {pricePath} data exceeds remaining purchase limit: {_purchaseLimit}");
-                }
+                    // No price found
+                    if (price == -1)
+                    {
+                        throw new ArgumentException(
+                            $"ApiDataProvider.Fetch(): No price found for {pricePath}"
+                        );
+                    }
 
-                if (DownloadData(key))
-                {
-                    // Update our purchase limit.
-                    _purchaseLimit -= price;
+                    if (_purchaseLimit < price)
+                    {
+                        throw new ArgumentException(
+                            $"ApiDataProvider.Fetch(): Cost {price} for {pricePath} data exceeds remaining purchase limit: {_purchaseLimit}"
+                        );
+                    }
+
+                    if (DownloadData(key))
+                    {
+                        // Update our purchase limit.
+                        _purchaseLimit -= price;
+                    }
                 }
-            });
+            );
         }
 
         /// <summary>
@@ -163,7 +188,13 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             }
 
             // Some security types can't be downloaded, lets attempt to extract that information
-            if (LeanData.TryParseSecurityType(filePath, out SecurityType securityType, out var market) && _unsupportedSecurityType.Contains(securityType))
+            if (
+                LeanData.TryParseSecurityType(
+                    filePath,
+                    out SecurityType securityType,
+                    out var market
+                ) && _unsupportedSecurityType.Contains(securityType)
+            )
             {
                 // we do support future auxiliary data (map and factor files)
                 if (securityType != SecurityType.Future || !IsAuxiliaryData(filePath))
@@ -172,13 +203,19 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                     {
                         // let's log this once. Will still use any existing data on disk
                         _invalidSecurityTypeLog = true;
-                        Log.Error($"ApiDataProvider(): does not support security types: {string.Join(", ", _unsupportedSecurityType)}");
+                        Log.Error(
+                            $"ApiDataProvider(): does not support security types: {string.Join(", ", _unsupportedSecurityType)}"
+                        );
                     }
                     return false;
                 }
             }
 
-            if (securityType == SecurityType.Equity && filePath.Contains("fine", StringComparison.InvariantCultureIgnoreCase) && filePath.Contains("fundamental", StringComparison.InvariantCultureIgnoreCase))
+            if (
+                securityType == SecurityType.Equity
+                && filePath.Contains("fine", StringComparison.InvariantCultureIgnoreCase)
+                && filePath.Contains("fundamental", StringComparison.InvariantCultureIgnoreCase)
+            )
             {
                 // Ignore fine fundamental data requests
                 return false;
@@ -194,25 +231,45 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                 {
                     if (!_subscribedToFutureMapAndFactorFiles)
                     {
-                        throw new ArgumentException("ApiDataProvider(): Must be subscribed to map and factor files to use the ApiDataProvider " +
-                            "to download Future auxiliary data from QuantConnect. " +
-                            "Please visit https://www.quantconnect.com/datasets/quantconnect-us-futures-security-master for details.");
+                        throw new ArgumentException(
+                            "ApiDataProvider(): Must be subscribed to map and factor files to use the ApiDataProvider "
+                                + "to download Future auxiliary data from QuantConnect. "
+                                + "Please visit https://www.quantconnect.com/datasets/quantconnect-us-futures-security-master for details."
+                        );
                     }
                 }
                 // Final check; If we want to download and the request requires equity data we need to be sure they are subscribed to map and factor files
-                else if (!_subscribedToUsaEquityMapAndFactorFiles && market.Equals(Market.USA, StringComparison.InvariantCultureIgnoreCase)
-                         && (securityType == SecurityType.Equity || securityType == SecurityType.Option || IsAuxiliaryData(filePath)))
+                else if (
+                    !_subscribedToUsaEquityMapAndFactorFiles
+                    && market.Equals(Market.USA, StringComparison.InvariantCultureIgnoreCase)
+                    && (
+                        securityType == SecurityType.Equity
+                        || securityType == SecurityType.Option
+                        || IsAuxiliaryData(filePath)
+                    )
+                )
                 {
-                    throw new ArgumentException("ApiDataProvider(): Must be subscribed to map and factor files to use the ApiDataProvider " +
-                        "to download Equity data from QuantConnect. " +
-                        "Please visit https://www.quantconnect.com/datasets/quantconnect-security-master for details.");
+                    throw new ArgumentException(
+                        "ApiDataProvider(): Must be subscribed to map and factor files to use the ApiDataProvider "
+                            + "to download Equity data from QuantConnect. "
+                            + "Please visit https://www.quantconnect.com/datasets/quantconnect-security-master for details."
+                    );
                 }
-                else if (!_subscribedToIndiaEquityMapAndFactorFiles && market.Equals(Market.India, StringComparison.InvariantCultureIgnoreCase)
-                         && (securityType == SecurityType.Equity || securityType == SecurityType.Option || IsAuxiliaryData(filePath)))
+                else if (
+                    !_subscribedToIndiaEquityMapAndFactorFiles
+                    && market.Equals(Market.India, StringComparison.InvariantCultureIgnoreCase)
+                    && (
+                        securityType == SecurityType.Equity
+                        || securityType == SecurityType.Option
+                        || IsAuxiliaryData(filePath)
+                    )
+                )
                 {
-                    throw new ArgumentException("ApiDataProvider(): Must be subscribed to map and factor files to use the ApiDataProvider " +
-                        "to download India data from QuantConnect. " +
-                        "Please visit https://www.quantconnect.com/datasets/truedata-india-equity-security-master for details.");
+                    throw new ArgumentException(
+                        "ApiDataProvider(): Must be subscribed to map and factor files to use the ApiDataProvider "
+                            + "to download India data from QuantConnect. "
+                            + "Please visit https://www.quantconnect.com/datasets/truedata-india-equity-security-master for details."
+                    );
                 }
             }
 
@@ -228,7 +285,9 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         {
             if (Log.DebuggingEnabled)
             {
-                Log.Debug($"ApiDataProvider.Fetch(): Attempting to get data from QuantConnect.com's data library for {filePath}.");
+                Log.Debug(
+                    $"ApiDataProvider.Fetch(): Attempting to get data from QuantConnect.com's data library for {filePath}."
+                );
             }
 
             if (_api.DownloadData(filePath, Globals.OrganizationID))

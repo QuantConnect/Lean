@@ -23,7 +23,7 @@ namespace QuantConnect.Exceptions
     /// </summary>
     public class SystemExceptionInterpreter : IExceptionInterpreter
     {
-        private static Regex FileAndLineRegex = new ("(\\w+.cs:line \\d+)", RegexOptions.Compiled);
+        private static Regex FileAndLineRegex = new("(\\w+.cs:line \\d+)", RegexOptions.Compiled);
 
         /// <summary>
         /// Determines the order that an instance of this class should be called
@@ -43,7 +43,10 @@ namespace QuantConnect.Exceptions
         /// <param name="exception">The exception to be interpreted</param>
         /// <param name="innerInterpreter">An interpreter that should be applied to the inner exception.</param>
         /// <returns>The interpreted exception</returns>
-        public virtual Exception Interpret(Exception exception, IExceptionInterpreter innerInterpreter)
+        public virtual Exception Interpret(
+            Exception exception,
+            IExceptionInterpreter innerInterpreter
+        )
         {
             var sanitized = new SanitizedException(exception.Message, exception.StackTrace);
 
@@ -67,7 +70,7 @@ namespace QuantConnect.Exceptions
                 {
                     foreach (Match lineCapture in match.Captures)
                     {
-                        fileAndLine = $" in {lineCapture.Groups[1].Value}" ;
+                        fileAndLine = $" in {lineCapture.Groups[1].Value}";
                         return true;
                     }
                 }

@@ -1,11 +1,11 @@
 /*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
- * 
- * Licensed under the Apache License, Version 2.0 (the "License"); 
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -30,6 +30,7 @@ namespace QuantConnect.Indicators
         private readonly int _surroundingBarsCountForLowPoint;
         private readonly RollingWindow<IBaseDataBar> _windowHighs;
         private readonly RollingWindow<IBaseDataBar> _windowLows;
+
         // Stores information of that last N pivot points
         private readonly RollingWindow<PivotPoint> _windowPivotPoints;
 
@@ -54,8 +55,12 @@ namespace QuantConnect.Indicators
         /// <param name="surroundingBarsCount">The length parameter here defines the number of surrounding bars that we compare against the current bar high and lows for the max/min </param>
         /// <param name="lastStoredValues">The number of last stored indicator values</param>
         public PivotPointsHighLow(int surroundingBarsCount, int lastStoredValues = 100)
-            : this($"PivotPointsHighLow({surroundingBarsCount})", surroundingBarsCount, surroundingBarsCount, lastStoredValues)
-        { }
+            : this(
+                $"PivotPointsHighLow({surroundingBarsCount})",
+                surroundingBarsCount,
+                surroundingBarsCount,
+                lastStoredValues
+            ) { }
 
         /// <summary>
         /// Creates a new instance of <see cref="PivotPointsHighLow"/> indicator
@@ -63,10 +68,17 @@ namespace QuantConnect.Indicators
         /// <param name="surroundingBarsCountForHighPoint">The number of surrounding bars whose high values should be less than the current bar's for the bar high to be marked as high pivot point</param>
         /// <param name="surroundingBarsCountForLowPoint">The number of surrounding bars whose low values should be more than the current bar's for the bar low to be marked as low pivot point</param>
         /// <param name="lastStoredValues">The number of last stored indicator values</param>
-        public PivotPointsHighLow(int surroundingBarsCountForHighPoint, int surroundingBarsCountForLowPoint, int lastStoredValues = 100)
-            : this($"PivotPointsHighLow({surroundingBarsCountForHighPoint},{surroundingBarsCountForLowPoint})", surroundingBarsCountForHighPoint, surroundingBarsCountForLowPoint, lastStoredValues)
-        { }
-
+        public PivotPointsHighLow(
+            int surroundingBarsCountForHighPoint,
+            int surroundingBarsCountForLowPoint,
+            int lastStoredValues = 100
+        )
+            : this(
+                $"PivotPointsHighLow({surroundingBarsCountForHighPoint},{surroundingBarsCountForLowPoint})",
+                surroundingBarsCountForHighPoint,
+                surroundingBarsCountForLowPoint,
+                lastStoredValues
+            ) { }
 
         /// <summary>
         /// Creates a new instance of <see cref="PivotPointsHighLow"/> indicator
@@ -75,12 +87,19 @@ namespace QuantConnect.Indicators
         /// <param name="surroundingBarsCountForHighPoint">The number of surrounding bars whose high values should be less than the current bar's for the bar high to be marked as high pivot point</param>
         /// <param name="surroundingBarsCountForLowPoint">The number of surrounding bars whose low values should be more than the current bar's for the bar low to be marked as low pivot point</param>
         /// <param name="lastStoredValues">The number of last stored indicator values</param>
-        public PivotPointsHighLow(string name, int surroundingBarsCountForHighPoint, int surroundingBarsCountForLowPoint, int lastStoredValues = 100)
+        public PivotPointsHighLow(
+            string name,
+            int surroundingBarsCountForHighPoint,
+            int surroundingBarsCountForLowPoint,
+            int lastStoredValues = 100
+        )
             : base(name)
         {
             _surroundingBarsCountForHighPoint = surroundingBarsCountForHighPoint;
             _surroundingBarsCountForLowPoint = surroundingBarsCountForLowPoint;
-            _windowHighs = new RollingWindow<IBaseDataBar>(2 * surroundingBarsCountForHighPoint + 1);
+            _windowHighs = new RollingWindow<IBaseDataBar>(
+                2 * surroundingBarsCountForHighPoint + 1
+            );
             _windowLows = new RollingWindow<IBaseDataBar>(2 * _surroundingBarsCountForLowPoint + 1);
             _windowPivotPoints = new RollingWindow<PivotPoint>(lastStoredValues);
             WarmUpPeriod = Math.Max(_windowHighs.Size, _windowLows.Size);
@@ -96,7 +115,8 @@ namespace QuantConnect.Indicators
             _windowHighs.Add(input);
             _windowLows.Add(input);
 
-            PivotPoint highPoint = null, lowPoint = null;
+            PivotPoint highPoint = null,
+                lowPoint = null;
 
             if (_windowHighs.IsReady)
             {
@@ -120,7 +140,10 @@ namespace QuantConnect.Indicators
         /// <param name="windowLows">rolling window that tracks the lows</param>
         /// <param name="midPointIndexOrSurroundingBarsCount">The midpoint index or surrounding bars count for lows</param>
         /// <returns>pivot point if found else null</returns>
-        protected virtual PivotPoint FindNextLowPivotPoint(RollingWindow<IBaseDataBar> windowLows, int midPointIndexOrSurroundingBarsCount)
+        protected virtual PivotPoint FindNextLowPivotPoint(
+            RollingWindow<IBaseDataBar> windowLows,
+            int midPointIndexOrSurroundingBarsCount
+        )
         {
             var isLow = true;
             var middlePoint = windowLows[midPointIndexOrSurroundingBarsCount];
@@ -149,7 +172,10 @@ namespace QuantConnect.Indicators
         /// <param name="windowHighs">rolling window that tracks the highs</param>
         /// <param name="midPointIndexOrSurroundingBarsCount">The midpoint index or surrounding bars count for highs</param>
         /// <returns>pivot point if found else null</returns>
-        protected virtual PivotPoint FindNextHighPivotPoint(RollingWindow<IBaseDataBar> windowHighs, int midPointIndexOrSurroundingBarsCount)
+        protected virtual PivotPoint FindNextHighPivotPoint(
+            RollingWindow<IBaseDataBar> windowHighs,
+            int midPointIndexOrSurroundingBarsCount
+        )
         {
             var isHigh = true;
             var middlePoint = windowHighs[midPointIndexOrSurroundingBarsCount];

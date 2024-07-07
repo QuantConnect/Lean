@@ -25,7 +25,9 @@ namespace QuantConnect.Algorithm.CSharp
     /// <summary>
     /// This regression algorithm tests the performance related GH issue 3772
     /// </summary>
-    public class CustomDataIconicTypesDefaultResolutionRegressionAlgorithm : QCAlgorithm, IRegressionAlgorithmDefinition
+    public class CustomDataIconicTypesDefaultResolutionRegressionAlgorithm
+        : QCAlgorithm,
+            IRegressionAlgorithmDefinition
     {
         public override void Initialize()
         {
@@ -44,17 +46,23 @@ namespace QuantConnect.Algorithm.CSharp
             {
                 var custom = AddData(type, spy);
 
-                if (SubscriptionManager.SubscriptionDataConfigService
-                    .GetSubscriptionDataConfigs(custom.Symbol)
-                    .Any(config => config.Resolution != Resolution.Daily))
+                if (
+                    SubscriptionManager
+                        .SubscriptionDataConfigService.GetSubscriptionDataConfigs(custom.Symbol)
+                        .Any(config => config.Resolution != Resolution.Daily)
+                )
                 {
-                    throw new RegressionTestException("Was expecting resolution to be set to Daily");
+                    throw new RegressionTestException(
+                        "Was expecting resolution to be set to Daily"
+                    );
                 }
 
                 try
                 {
                     AddData(type, spy, Resolution.Tick);
-                    throw new RegressionTestException("Was expecting an ArgumentException to be thrown");
+                    throw new RegressionTestException(
+                        "Was expecting an ArgumentException to be thrown"
+                    );
                 }
                 catch (ArgumentException)
                 {
@@ -63,15 +71,21 @@ namespace QuantConnect.Algorithm.CSharp
             }
 
             var security = AddData<HourlyDefaultResolutionUnlinkedData>(spy);
-            if (SubscriptionManager.SubscriptionDataConfigService.GetSubscriptionDataConfigs(security.Symbol)
-                .Any(config => config.Resolution != Resolution.Hour))
+            if (
+                SubscriptionManager
+                    .SubscriptionDataConfigService.GetSubscriptionDataConfigs(security.Symbol)
+                    .Any(config => config.Resolution != Resolution.Hour)
+            )
             {
                 throw new RegressionTestException("Was expecting resolution to be set to Hour");
             }
 
             var option = AddOption("AAPL");
-            if (SubscriptionManager.SubscriptionDataConfigService.GetSubscriptionDataConfigs(option.Symbol)
-                .Any(config => config.Resolution != Resolution.Minute))
+            if (
+                SubscriptionManager
+                    .SubscriptionDataConfigService.GetSubscriptionDataConfigs(option.Symbol)
+                    .Any(config => config.Resolution != Resolution.Minute)
+            )
             {
                 throw new RegressionTestException("Was expecting resolution to be set to Minute");
             }
@@ -129,35 +143,36 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// This is used by the regression test system to indicate what the expected statistics are from running the algorithm
         /// </summary>
-        public Dictionary<string, string> ExpectedStatistics => new Dictionary<string, string>
-        {
-            {"Total Orders", "0"},
-            {"Average Win", "0%"},
-            {"Average Loss", "0%"},
-            {"Compounding Annual Return", "0%"},
-            {"Drawdown", "0%"},
-            {"Expectancy", "0"},
-            {"Start Equity", "100000"},
-            {"End Equity", "100000"},
-            {"Net Profit", "0%"},
-            {"Sharpe Ratio", "0"},
-            {"Sortino Ratio", "0"},
-            {"Probabilistic Sharpe Ratio", "0%"},
-            {"Loss Rate", "0%"},
-            {"Win Rate", "0%"},
-            {"Profit-Loss Ratio", "0"},
-            {"Alpha", "0"},
-            {"Beta", "0"},
-            {"Annual Standard Deviation", "0"},
-            {"Annual Variance", "0"},
-            {"Information Ratio", "0"},
-            {"Tracking Error", "0"},
-            {"Treynor Ratio", "0"},
-            {"Total Fees", "$0.00"},
-            {"Estimated Strategy Capacity", "$0"},
-            {"Lowest Capacity Asset", ""},
-            {"Portfolio Turnover", "0%"},
-            {"OrderListHash", "d41d8cd98f00b204e9800998ecf8427e"}
-        };
+        public Dictionary<string, string> ExpectedStatistics =>
+            new Dictionary<string, string>
+            {
+                { "Total Orders", "0" },
+                { "Average Win", "0%" },
+                { "Average Loss", "0%" },
+                { "Compounding Annual Return", "0%" },
+                { "Drawdown", "0%" },
+                { "Expectancy", "0" },
+                { "Start Equity", "100000" },
+                { "End Equity", "100000" },
+                { "Net Profit", "0%" },
+                { "Sharpe Ratio", "0" },
+                { "Sortino Ratio", "0" },
+                { "Probabilistic Sharpe Ratio", "0%" },
+                { "Loss Rate", "0%" },
+                { "Win Rate", "0%" },
+                { "Profit-Loss Ratio", "0" },
+                { "Alpha", "0" },
+                { "Beta", "0" },
+                { "Annual Standard Deviation", "0" },
+                { "Annual Variance", "0" },
+                { "Information Ratio", "0" },
+                { "Tracking Error", "0" },
+                { "Treynor Ratio", "0" },
+                { "Total Fees", "$0.00" },
+                { "Estimated Strategy Capacity", "$0" },
+                { "Lowest Capacity Asset", "" },
+                { "Portfolio Turnover", "0%" },
+                { "OrderListHash", "d41d8cd98f00b204e9800998ecf8427e" }
+            };
     }
 }

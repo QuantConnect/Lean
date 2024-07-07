@@ -46,15 +46,17 @@ namespace QuantConnect.Algorithm.CSharp
 
         private const SecurityType SecType = SecurityType.Equity;
 
-        private readonly CircularQueue<OrderType> _orderTypesQueue = new CircularQueue<OrderType>(new []
-        {
-            OrderType.MarketOnOpen,
-            OrderType.MarketOnClose,
-            OrderType.StopLimit,
-            OrderType.StopMarket,
-            OrderType.Limit,
-            OrderType.Market
-        });
+        private readonly CircularQueue<OrderType> _orderTypesQueue = new CircularQueue<OrderType>(
+            new[]
+            {
+                OrderType.MarketOnOpen,
+                OrderType.MarketOnClose,
+                OrderType.StopLimit,
+                OrderType.StopMarket,
+                OrderType.Limit,
+                OrderType.Market
+            }
+        );
 
         private readonly List<OrderTicket> _tickets = new List<OrderTicket>();
 
@@ -65,9 +67,9 @@ namespace QuantConnect.Algorithm.CSharp
         /// </summary>
         public override void Initialize()
         {
-            SetStartDate(2013, 10, 07);  //Set Start Date
-            SetEndDate(2013, 10, 07);    //Set End Date
-            SetCash(100000);             //Set Strategy Cash
+            SetStartDate(2013, 10, 07); //Set Start Date
+            SetEndDate(2013, 10, 07); //Set End Date
+            SetCash(100000); //Set Strategy Cash
             // Find more symbols here: http://quantconnect.com/data
             AddSecurity(SecType, _symbol, Resolution.Second);
             _security = Securities[_symbol];
@@ -102,13 +104,28 @@ namespace QuantConnect.Algorithm.CSharp
                 var orderType = _orderTypesQueue.Dequeue();
                 Log("ORDER TYPE:: " + orderType);
                 var isLong = _quantity > 0;
-                var stopPrice = isLong ? (1 + StopPercentage) * _security.High : (1 - StopPercentage) * _security.Low;
-                var limitPrice = isLong ? (1 - LimitPercentage) * stopPrice : (1 + LimitPercentage) * stopPrice;
+                var stopPrice = isLong
+                    ? (1 + StopPercentage) * _security.High
+                    : (1 - StopPercentage) * _security.Low;
+                var limitPrice = isLong
+                    ? (1 - LimitPercentage) * stopPrice
+                    : (1 + LimitPercentage) * stopPrice;
                 if (orderType == OrderType.Limit)
                 {
-                    limitPrice = !isLong ? (1 + LimitPercentage) * _security.High : (1 - LimitPercentage) * _security.Low;
+                    limitPrice = !isLong
+                        ? (1 + LimitPercentage) * _security.High
+                        : (1 - LimitPercentage) * _security.Low;
                 }
-                var request = new SubmitOrderRequest(orderType, SecType, Securities[_symbol].Symbol, _quantity, stopPrice, limitPrice, Time, orderType.ToString());
+                var request = new SubmitOrderRequest(
+                    orderType,
+                    SecType,
+                    Securities[_symbol].Symbol,
+                    _quantity,
+                    stopPrice,
+                    limitPrice,
+                    Time,
+                    orderType.ToString()
+                );
                 var ticket = Transactions.AddOrder(request);
                 _tickets.Add(ticket);
                 if ((decimal)Random.NextDouble() < ImmediateCancelPercentage)
@@ -125,11 +142,13 @@ namespace QuantConnect.Algorithm.CSharp
                     if (ticket.UpdateRequests.Count == 0 && ticket.Status.IsOpen())
                     {
                         Log(ticket.ToString());
-                        ticket.Update(new UpdateOrderFields
-                        {
-                            Quantity = ticket.Quantity + Math.Sign(_quantity) * DeltaQuantity,
-                            Tag = "Change quantity: " + Time
-                        });
+                        ticket.Update(
+                            new UpdateOrderFields
+                            {
+                                Quantity = ticket.Quantity + Math.Sign(_quantity) * DeltaQuantity,
+                                Tag = "Change quantity: " + Time
+                            }
+                        );
                         Log("UPDATE1:: " + ticket.UpdateRequests.Last());
                     }
                 }
@@ -138,12 +157,18 @@ namespace QuantConnect.Algorithm.CSharp
                     if (ticket.UpdateRequests.Count == 1 && ticket.Status.IsOpen())
                     {
                         Log(ticket.ToString());
-                        ticket.Update(new UpdateOrderFields
-                        {
-                            LimitPrice = _security.Price * (1 - Math.Sign(ticket.Quantity) * LimitPercentageDelta),
-                            StopPrice = _security.Price * (1 + Math.Sign(ticket.Quantity) * StopPercentageDelta),
-                            Tag = "Change prices: " + Time
-                        });
+                        ticket.Update(
+                            new UpdateOrderFields
+                            {
+                                LimitPrice =
+                                    _security.Price
+                                    * (1 - Math.Sign(ticket.Quantity) * LimitPercentageDelta),
+                                StopPrice =
+                                    _security.Price
+                                    * (1 + Math.Sign(ticket.Quantity) * StopPercentageDelta),
+                                Tag = "Change prices: " + Time
+                            }
+                        );
                         Log("UPDATE2:: " + ticket.UpdateRequests.Last());
                     }
                 }
@@ -169,7 +194,12 @@ namespace QuantConnect.Algorithm.CSharp
 
             if (orderEvent.Status == OrderStatus.Filled)
             {
-                Log("FILLED:: " + Transactions.GetOrderById(orderEvent.OrderId) + " FILL PRICE:: " + orderEvent.FillPrice.SmartRounding());
+                Log(
+                    "FILLED:: "
+                        + Transactions.GetOrderById(orderEvent.OrderId)
+                        + " FILL PRICE:: "
+                        + orderEvent.FillPrice.SmartRounding()
+                );
             }
             else
             {

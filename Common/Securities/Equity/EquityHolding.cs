@@ -27,8 +27,6 @@ namespace QuantConnect.Securities.Equity
         /// <param name="security">The security being held</param>
         /// <param name="currencyConverter">A currency converter instance</param>
         public EquityHolding(Security security, ICurrencyConverter currencyConverter)
-            : base(security, currencyConverter)
-        {
-        }
+            : base(security, currencyConverter) { }
     }
 }

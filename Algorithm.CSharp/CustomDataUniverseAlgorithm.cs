@@ -48,19 +48,21 @@ namespace QuantConnect.Algorithm.CSharp
             SetBenchmark("SPY");
 
             // add a custom universe data source (defaults to usa-equity)
-            AddUniverse<NyseTopGainers>("universe-nyse-top-gainers", Resolution.Daily, data =>
-            {
-                // define our selection criteria
-                return from NyseTopGainers d in data
-                       // pick top 2 gainers to bet against
-                       where d.TopGainersRank <= 2
-                       select d.Symbol;
-            });
+            AddUniverse<NyseTopGainers>(
+                "universe-nyse-top-gainers",
+                Resolution.Daily,
+                data =>
+                {
+                    // define our selection criteria
+                    return from NyseTopGainers d in data
+                        // pick top 2 gainers to bet against
+                        where d.TopGainersRank <= 2
+                        select d.Symbol;
+                }
+            );
         }
 
-        public override void OnData(Slice slice)
-        {
-        }
+        public override void OnData(Slice slice) { }
 
         public override void OnSecuritiesChanged(SecurityChanges changes)
         {
@@ -106,19 +108,35 @@ namespace QuantConnect.Algorithm.CSharp
 
             private int _count;
             private DateTime _lastDate;
-            public override SubscriptionDataSource GetSource(SubscriptionDataConfig config, DateTime date, bool isLiveMode)
+
+            public override SubscriptionDataSource GetSource(
+                SubscriptionDataConfig config,
+                DateTime date,
+                bool isLiveMode
+            )
             {
                 if (isLiveMode)
                 {
                     // this is actually an html file, we'll handle the parsing accordingly
-                    return new SubscriptionDataSource(@"http://www.wsj.com/mdc/public/page/2_3021-gainnyse-gainer.html", SubscriptionTransportMedium.RemoteFile);
+                    return new SubscriptionDataSource(
+                        @"http://www.wsj.com/mdc/public/page/2_3021-gainnyse-gainer.html",
+                        SubscriptionTransportMedium.RemoteFile
+                    );
                 }
 
                 // this has data from 2009.01.01 to 2015.10.19 for top 10 nyse gainers
-                return new SubscriptionDataSource(@"https://www.dropbox.com/s/vrn3p38qberw3df/nyse-gainers.csv?dl=1", SubscriptionTransportMedium.RemoteFile);
+                return new SubscriptionDataSource(
+                    @"https://www.dropbox.com/s/vrn3p38qberw3df/nyse-gainers.csv?dl=1",
+                    SubscriptionTransportMedium.RemoteFile
+                );
             }
 
-            public override BaseData Reader(SubscriptionDataConfig config, string line, DateTime date, bool isLiveMode)
+            public override BaseData Reader(
+                SubscriptionDataConfig config,
+                string line,
+                DateTime date,
+                bool isLiveMode
+            )
             {
                 if (!isLiveMode)
                 {
@@ -154,7 +172,10 @@ namespace QuantConnect.Algorithm.CSharp
                     return null;
                 }
 
-                var symbolString = line.Substring(lastOpenParen + 1, lastCloseParen - lastOpenParen - 1);
+                var symbolString = line.Substring(
+                    lastOpenParen + 1,
+                    lastCloseParen - lastOpenParen - 1
+                );
                 return new NyseTopGainers
                 {
                     Symbol = Symbol.Create(symbolString, SecurityType.Equity, Market.USA),

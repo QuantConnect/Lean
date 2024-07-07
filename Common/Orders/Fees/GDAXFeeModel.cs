@@ -21,6 +21,5 @@ namespace QuantConnect.Orders.Fees
     /// Provides an implementation of <see cref="FeeModel"/> that models GDAX order fees
     /// </summary>
     [Obsolete("GDAXFeeModel is deprecated. Use CoinbaseFeeModel instead.")]
-    public class GDAXFeeModel : CoinbaseFeeModel
-    { }
+    public class GDAXFeeModel : CoinbaseFeeModel { }
 }

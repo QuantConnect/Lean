@@ -56,7 +56,11 @@ namespace QuantConnect.Tests.Common.Scheduling
         {
             var count = 0;
             var time = new DateTime(2015, 08, 11, 10, 30, 0);
-            using var sevent = new ScheduledEvent("test", new[] { time.AddSeconds(-2), time.AddSeconds(-1), time}, (n, t) => count++);
+            using var sevent = new ScheduledEvent(
+                "test",
+                new[] { time.AddSeconds(-2), time.AddSeconds(-1), time },
+                (n, t) => count++
+            );
             sevent.Scan(time);
             Assert.AreEqual(3, count);
         }
@@ -66,7 +70,11 @@ namespace QuantConnect.Tests.Common.Scheduling
         {
             var count = 0;
             var time = new DateTime(2015, 08, 11, 10, 30, 0);
-            using var sevent = new ScheduledEvent("test", new[] { time.AddSeconds(-2), time.AddSeconds(-1), time }, (n, t) => count++);
+            using var sevent = new ScheduledEvent(
+                "test",
+                new[] { time.AddSeconds(-2), time.AddSeconds(-1), time },
+                (n, t) => count++
+            );
             // skips all preceding events, not including the specified time
             sevent.SkipEventsUntil(time);
             Assert.AreEqual(time, sevent.NextEventUtcTime);
@@ -78,7 +86,7 @@ namespace QuantConnect.Tests.Common.Scheduling
         {
             var count = 0;
             var time = new DateTime(2015, 08, 11, 10, 30, 0);
-            var eventTimes = new[] {time, time.AddSeconds(1)};
+            var eventTimes = new[] { time, time.AddSeconds(1) };
             using var sevent = new ScheduledEvent("test", eventTimes, (n, t) => count++);
             // skips all preceding events, not including the specified time
             sevent.SkipEventsUntil(time);
@@ -90,11 +98,17 @@ namespace QuantConnect.Tests.Common.Scheduling
         public void FiresEventWhenTimeEquals()
         {
             var triggered = false;
-            using var se = new ScheduledEvent("test", new DateTime(2015, 08, 07), (name, triggerTime) =>
+            using var se = new ScheduledEvent(
+                "test",
+                new DateTime(2015, 08, 07),
+                (name, triggerTime) =>
+                {
+                    triggered = true;
+                }
+            )
             {
-                triggered = true;
-            })
-            { IsLoggingEnabled = true };
+                IsLoggingEnabled = true
+            };
 
             se.Scan(new DateTime(2015, 08, 06));
             Assert.IsFalse(triggered);
@@ -107,11 +121,17 @@ namespace QuantConnect.Tests.Common.Scheduling
         public void FiresEventWhenTimePasses()
         {
             var triggered = false;
-            using var se = new ScheduledEvent("test", new DateTime(2015, 08, 07), (name, triggerTime) =>
+            using var se = new ScheduledEvent(
+                "test",
+                new DateTime(2015, 08, 07),
+                (name, triggerTime) =>
+                {
+                    triggered = true;
+                }
+            )
             {
-                triggered = true;
-            })
-            { IsLoggingEnabled = true };
+                IsLoggingEnabled = true
+            };
 
             se.Scan(new DateTime(2015, 08, 06));
             Assert.IsFalse(triggered);
@@ -126,10 +146,14 @@ namespace QuantConnect.Tests.Common.Scheduling
             var first = new DateTime(2015, 08, 07);
             var second = new DateTime(2015, 08, 08);
             var dates = new[] { first, second }.ToHashSet();
-            using var se = new ScheduledEvent("test", dates.ToList(), (name, triggerTime) =>
-            {
-                dates.Remove(triggerTime);
-            });
+            using var se = new ScheduledEvent(
+                "test",
+                dates.ToList(),
+                (name, triggerTime) =>
+                {
+                    dates.Remove(triggerTime);
+                }
+            );
 
             se.Scan(first);
             Assert.IsFalse(dates.Contains(first));
@@ -143,10 +167,14 @@ namespace QuantConnect.Tests.Common.Scheduling
         {
             var triggered = false;
             var first = new DateTime(2015, 08, 07);
-            using var se = new ScheduledEvent("test", first, (name, triggerTime) =>
-            {
-                triggered = true;
-            });
+            using var se = new ScheduledEvent(
+                "test",
+                first,
+                (name, triggerTime) =>
+                {
+                    triggered = true;
+                }
+            );
 
             se.Scan(first);
             Assert.IsTrue(triggered);

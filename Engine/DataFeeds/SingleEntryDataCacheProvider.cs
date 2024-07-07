@@ -15,13 +15,13 @@
 */
 
 using System;
-using System.IO;
-using Ionic.Zip;
-using System.Linq;
-using QuantConnect.Util;
-using QuantConnect.Logging;
-using QuantConnect.Interfaces;
 using System.Collections.Generic;
+using System.IO;
+using System.Linq;
+using Ionic.Zip;
+using QuantConnect.Interfaces;
+using QuantConnect.Logging;
+using QuantConnect.Util;
 
 namespace QuantConnect.Lean.Engine.DataFeeds
 {
@@ -73,7 +73,12 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                 }
                 catch (ZipException exception)
                 {
-                    Log.Error("SingleEntryDataCacheProvider.Fetch(): Corrupt file: " + key + " Error: " + exception);
+                    Log.Error(
+                        "SingleEntryDataCacheProvider.Fetch(): Corrupt file: "
+                            + key
+                            + " Error: "
+                            + exception
+                    );
                     stream.DisposeSafely();
                     return null;
                 }

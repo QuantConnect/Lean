@@ -28,14 +28,16 @@ namespace QuantConnect.Tests.Report
         [Test]
         public void MaxDrawdown()
         {
-            var series = new Deedle.Series<DateTime, double>(new []
-            {
-                new KeyValuePair<DateTime, double>(new DateTime(2020, 1, 1), 100000),
-                new KeyValuePair<DateTime, double>(new DateTime(2020, 1, 2), 90000),
-                new KeyValuePair<DateTime, double>(new DateTime(2020, 1, 3), 100000),
-                new KeyValuePair<DateTime, double>(new DateTime(2020, 1, 4), 100000),
-                new KeyValuePair<DateTime, double>(new DateTime(2020, 1, 5), 80000)
-            });
+            var series = new Deedle.Series<DateTime, double>(
+                new[]
+                {
+                    new KeyValuePair<DateTime, double>(new DateTime(2020, 1, 1), 100000),
+                    new KeyValuePair<DateTime, double>(new DateTime(2020, 1, 2), 90000),
+                    new KeyValuePair<DateTime, double>(new DateTime(2020, 1, 3), 100000),
+                    new KeyValuePair<DateTime, double>(new DateTime(2020, 1, 4), 100000),
+                    new KeyValuePair<DateTime, double>(new DateTime(2020, 1, 5), 80000)
+                }
+            );
 
             var collection = DrawdownCollection.GetDrawdownPeriods(series, 1).ToList();
 
@@ -58,7 +60,10 @@ namespace QuantConnect.Tests.Report
 
             var backtest = new BacktestResult
             {
-                Charts = new Dictionary<string, Chart> {[strategyEquityChart.Name] = strategyEquityChart}
+                Charts = new Dictionary<string, Chart>
+                {
+                    [strategyEquityChart.Name] = strategyEquityChart
+                }
             };
 
             var normalizedResults = DrawdownCollection.NormalizeResults(backtest, null);

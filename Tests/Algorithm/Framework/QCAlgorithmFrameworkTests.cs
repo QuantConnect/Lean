@@ -43,7 +43,9 @@ namespace QuantConnect.Tests.Algorithm.Framework
                 eventFired = true;
                 var insights = data.Insights;
                 Assert.AreEqual(1, insights.Length);
-                Assert.IsTrue(insights.All(insight => insight.GeneratedTimeUtc != default(DateTime)));
+                Assert.IsTrue(
+                    insights.All(insight => insight.GeneratedTimeUtc != default(DateTime))
+                );
                 Assert.IsTrue(insights.All(insight => insight.CloseTimeUtc != default(DateTime)));
             };
             var security = algo.AddEquity("SPY");
@@ -63,12 +65,22 @@ namespace QuantConnect.Tests.Algorithm.Framework
             };
             security.SetMarketPrice(tick);
 
-            algo.OnFrameworkData(new Slice(new DateTime(2000, 01, 01), algo.Securities.Select(s => tick), new DateTime(2000, 01, 01)));
+            algo.OnFrameworkData(
+                new Slice(
+                    new DateTime(2000, 01, 01),
+                    algo.Securities.Select(s => tick),
+                    new DateTime(2000, 01, 01)
+                )
+            );
 
             Assert.IsTrue(eventFired);
             Assert.AreEqual(1, construction.Insights.Count);
-            Assert.IsTrue(construction.Insights.All(insight => insight.GeneratedTimeUtc != default(DateTime)));
-            Assert.IsTrue(construction.Insights.All(insight => insight.CloseTimeUtc != default(DateTime)));
+            Assert.IsTrue(
+                construction.Insights.All(insight => insight.GeneratedTimeUtc != default(DateTime))
+            );
+            Assert.IsTrue(
+                construction.Insights.All(insight => insight.CloseTimeUtc != default(DateTime))
+            );
         }
 
         [TestCase(true, 0)]
@@ -103,10 +115,18 @@ namespace QuantConnect.Tests.Algorithm.Framework
             security.IsDelisted = isDelisted;
 
             // Trigger Alpha to emit insight
-            algorithm.OnFrameworkData(new Slice(new DateTime(2000, 01, 01), new List<BaseData>() { tick }, new DateTime(2000, 01, 01)));
+            algorithm.OnFrameworkData(
+                new Slice(
+                    new DateTime(2000, 01, 01),
+                    new List<BaseData>() { tick },
+                    new DateTime(2000, 01, 01)
+                )
+            );
 
             // Manually emit insight
-            algorithm.EmitInsights(Insight.Price(Symbols.SPY, TimeSpan.FromDays(1), InsightDirection.Up, .5, .75));
+            algorithm.EmitInsights(
+                Insight.Price(Symbols.SPY, TimeSpan.FromDays(1), InsightDirection.Up, .5, .75)
+            );
 
             // Should be zero because security is delisted
             Assert.AreEqual(expectedCount, actualInsights.Count);
@@ -116,17 +136,29 @@ namespace QuantConnect.Tests.Algorithm.Framework
         {
             public override IEnumerable<Insight> Update(QCAlgorithm algorithm, Slice data)
             {
-                yield return Insight.Price(Symbols.SPY, TimeSpan.FromDays(1), InsightDirection.Up, .5, .75);
+                yield return Insight.Price(
+                    Symbols.SPY,
+                    TimeSpan.FromDays(1),
+                    InsightDirection.Up,
+                    .5,
+                    .75
+                );
             }
         }
 
         class FakePortfolioConstruction : PortfolioConstructionModel
         {
             public IReadOnlyCollection<Insight> Insights { get; private set; }
-            public override IEnumerable<IPortfolioTarget> CreateTargets(QCAlgorithm algorithm, Insight[] insights)
+
+            public override IEnumerable<IPortfolioTarget> CreateTargets(
+                QCAlgorithm algorithm,
+                Insight[] insights
+            )
             {
                 Insights = insights;
-                return insights.Select(insight => PortfolioTarget.Percent(algorithm, insight.Symbol, 0.01m));
+                return insights.Select(insight =>
+                    PortfolioTarget.Percent(algorithm, insight.Symbol, 0.01m)
+                );
             }
         }
     }

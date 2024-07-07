@@ -13,12 +13,12 @@
  * limitations under the License.
 */
 
+using System;
+using System.Collections.Generic;
 using Python.Runtime;
 using QuantConnect.Algorithm.Framework.Alphas;
 using QuantConnect.Data.UniverseSelection;
 using QuantConnect.Python;
-using System;
-using System.Collections.Generic;
 
 namespace QuantConnect.Algorithm.Framework.Portfolio
 {
@@ -35,14 +35,8 @@ namespace QuantConnect.Algorithm.Framework.Portfolio
         /// </summary>
         public override bool RebalanceOnSecurityChanges
         {
-            get
-            {
-                return _model.GetProperty<bool>(nameof(RebalanceOnSecurityChanges));
-            }
-            set
-            {
-                _model.SetProperty(nameof(RebalanceOnSecurityChanges), value);
-            }
+            get { return _model.GetProperty<bool>(nameof(RebalanceOnSecurityChanges)); }
+            set { _model.SetProperty(nameof(RebalanceOnSecurityChanges), value); }
         }
 
         /// <summary>
@@ -50,14 +44,8 @@ namespace QuantConnect.Algorithm.Framework.Portfolio
         /// </summary>
         public override bool RebalanceOnInsightChanges
         {
-            get
-            {
-                return _model.GetProperty<bool>(nameof(RebalanceOnInsightChanges));
-            }
-            set
-            {
-                _model.SetProperty(nameof(RebalanceOnInsightChanges), value);
-            }
+            get { return _model.GetProperty<bool>(nameof(RebalanceOnInsightChanges)); }
+            set { _model.SetProperty(nameof(RebalanceOnInsightChanges), value); }
         }
 
         /// <summary>
@@ -73,13 +61,16 @@ namespace QuantConnect.Algorithm.Framework.Portfolio
                 {
                     if (!_model.HasAttr(attributeName))
                     {
-                        throw new NotImplementedException($"IPortfolioConstructionModel.{attributeName} must be implemented. Please implement this missing method on {model.GetPythonType()}");
+                        throw new NotImplementedException(
+                            $"IPortfolioConstructionModel.{attributeName} must be implemented. Please implement this missing method on {model.GetPythonType()}"
+                        );
                     }
                 }
 
                 _model.InvokeMethod(nameof(SetPythonWrapper), this).Dispose();
 
-                _implementsDetermineTargetPercent = model.GetPythonMethod("DetermineTargetPercent") != null;
+                _implementsDetermineTargetPercent =
+                    model.GetPythonMethod("DetermineTargetPercent") != null;
             }
         }
 
@@ -89,9 +80,16 @@ namespace QuantConnect.Algorithm.Framework.Portfolio
         /// <param name="algorithm">The algorithm instance</param>
         /// <param name="insights">The insights to create portfolio targets from</param>
         /// <returns>An enumerable of portfolio targets to be sent to the execution model</returns>
-        public override IEnumerable<IPortfolioTarget> CreateTargets(QCAlgorithm algorithm, Insight[] insights)
+        public override IEnumerable<IPortfolioTarget> CreateTargets(
+            QCAlgorithm algorithm,
+            Insight[] insights
+        )
         {
-            return _model.InvokeMethod<IEnumerable<IPortfolioTarget>>(nameof(CreateTargets), algorithm, insights);
+            return _model.InvokeMethod<IEnumerable<IPortfolioTarget>>(
+                nameof(CreateTargets),
+                algorithm,
+                insights
+            );
         }
 
         /// <summary>
@@ -142,18 +140,24 @@ namespace QuantConnect.Algorithm.Framework.Portfolio
         /// </summary>
         /// <param name="activeInsights">The active insights to generate a target for</param>
         /// <returns>A target percent for each insight</returns>
-        protected override Dictionary<Insight, double> DetermineTargetPercent(List<Insight> activeInsights)
+        protected override Dictionary<Insight, double> DetermineTargetPercent(
+            List<Insight> activeInsights
+        )
         {
             using (Py.GIL())
             {
                 if (!_implementsDetermineTargetPercent)
                 {
                     // the implementation is in C#
-                    return _model.InvokeMethod<Dictionary<Insight, double>>(nameof(DetermineTargetPercent), activeInsights);
+                    return _model.InvokeMethod<Dictionary<Insight, double>>(
+                        nameof(DetermineTargetPercent),
+                        activeInsights
+                    );
                 }
 
                 Dictionary<Insight, double> dic;
-                var result = _model.InvokeMethod(nameof(DetermineTargetPercent), activeInsights) as dynamic;
+                var result =
+                    _model.InvokeMethod(nameof(DetermineTargetPercent), activeInsights) as dynamic;
                 if ((result as PyObject).TryConvert(out dic))
                 {
                     // this is required if the python implementation is actually returning a C# dic, not common,

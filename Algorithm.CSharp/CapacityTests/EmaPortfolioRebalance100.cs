@@ -35,7 +35,8 @@ namespace QuantConnect.Algorithm.CSharp
             SetWarmup(1000);
             SetCash(100000);
 
-            _data = new List<SymbolData> {
+            _data = new List<SymbolData>
+            {
                 new SymbolData(this, AddEquity("AADR", Resolution.Minute).Symbol),
                 new SymbolData(this, AddEquity("AAMC", Resolution.Minute).Symbol),
                 new SymbolData(this, AddEquity("AAU", Resolution.Minute).Symbol),
@@ -163,7 +164,8 @@ namespace QuantConnect.Algorithm.CSharp
             public ExponentialMovingAverage Slow { get; set; }
             public bool IsCrossed => Fast > Slow;
 
-            public SymbolData(QCAlgorithm algorithm, Symbol symbol) {
+            public SymbolData(QCAlgorithm algorithm, Symbol symbol)
+            {
                 Symbol = symbol;
                 Fast = algorithm.EMA(symbol, 20);
                 Slow = algorithm.EMA(symbol, 300);
@@ -198,49 +200,50 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// This is used by the regression test system to indicate what the expected statistics are from running the algorithm
         /// </summary>
-        public Dictionary<string, string> ExpectedStatistics => new Dictionary<string, string>
-        {
-            {"Total Orders", "1015"},
-            {"Average Win", "0.01%"},
-            {"Average Loss", "0.00%"},
-            {"Compounding Annual Return", "-12.674%"},
-            {"Drawdown", "1.400%"},
-            {"Expectancy", "-0.761"},
-            {"Net Profit", "-1.328%"},
-            {"Sharpe Ratio", "-12.258"},
-            {"Probabilistic Sharpe Ratio", "0.000%"},
-            {"Loss Rate", "95%"},
-            {"Win Rate", "5%"},
-            {"Profit-Loss Ratio", "3.67"},
-            {"Alpha", "-0.142"},
-            {"Beta", "0.038"},
-            {"Annual Standard Deviation", "0.01"},
-            {"Annual Variance", "0"},
-            {"Information Ratio", "-4.389"},
-            {"Tracking Error", "0.123"},
-            {"Treynor Ratio", "-3.359"},
-            {"Total Fees", "$1125.52"},
-            {"Estimated Strategy Capacity", "$300.00"},
-            {"Fitness Score", "0.007"},
-            {"Kelly Criterion Estimate", "0"},
-            {"Kelly Criterion Probability Value", "0"},
-            {"Sortino Ratio", "-14.315"},
-            {"Return Over Maximum Drawdown", "-9.589"},
-            {"Portfolio Turnover", "0.406"},
-            {"Total Insights Generated", "0"},
-            {"Total Insights Closed", "0"},
-            {"Total Insights Analysis Completed", "0"},
-            {"Long Insight Count", "0"},
-            {"Short Insight Count", "0"},
-            {"Long/Short Ratio", "100%"},
-            {"Estimated Monthly Alpha Value", "$0"},
-            {"Total Accumulated Estimated Alpha Value", "$0"},
-            {"Mean Population Estimated Insight Value", "$0"},
-            {"Mean Population Direction", "0%"},
-            {"Mean Population Magnitude", "0%"},
-            {"Rolling Averaged Population Direction", "0%"},
-            {"Rolling Averaged Population Magnitude", "0%"},
-            {"OrderListHash", "4c165e8d648d54a85bb7b564050a6f85"}
-        };
+        public Dictionary<string, string> ExpectedStatistics =>
+            new Dictionary<string, string>
+            {
+                { "Total Orders", "1015" },
+                { "Average Win", "0.01%" },
+                { "Average Loss", "0.00%" },
+                { "Compounding Annual Return", "-12.674%" },
+                { "Drawdown", "1.400%" },
+                { "Expectancy", "-0.761" },
+                { "Net Profit", "-1.328%" },
+                { "Sharpe Ratio", "-12.258" },
+                { "Probabilistic Sharpe Ratio", "0.000%" },
+                { "Loss Rate", "95%" },
+                { "Win Rate", "5%" },
+                { "Profit-Loss Ratio", "3.67" },
+                { "Alpha", "-0.142" },
+                { "Beta", "0.038" },
+                { "Annual Standard Deviation", "0.01" },
+                { "Annual Variance", "0" },
+                { "Information Ratio", "-4.389" },
+                { "Tracking Error", "0.123" },
+                { "Treynor Ratio", "-3.359" },
+                { "Total Fees", "$1125.52" },
+                { "Estimated Strategy Capacity", "$300.00" },
+                { "Fitness Score", "0.007" },
+                { "Kelly Criterion Estimate", "0" },
+                { "Kelly Criterion Probability Value", "0" },
+                { "Sortino Ratio", "-14.315" },
+                { "Return Over Maximum Drawdown", "-9.589" },
+                { "Portfolio Turnover", "0.406" },
+                { "Total Insights Generated", "0" },
+                { "Total Insights Closed", "0" },
+                { "Total Insights Analysis Completed", "0" },
+                { "Long Insight Count", "0" },
+                { "Short Insight Count", "0" },
+                { "Long/Short Ratio", "100%" },
+                { "Estimated Monthly Alpha Value", "$0" },
+                { "Total Accumulated Estimated Alpha Value", "$0" },
+                { "Mean Population Estimated Insight Value", "$0" },
+                { "Mean Population Direction", "0%" },
+                { "Mean Population Magnitude", "0%" },
+                { "Rolling Averaged Population Direction", "0%" },
+                { "Rolling Averaged Population Magnitude", "0%" },
+                { "OrderListHash", "4c165e8d648d54a85bb7b564050a6f85" }
+            };
     }
 }

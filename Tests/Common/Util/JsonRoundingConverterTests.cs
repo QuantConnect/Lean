@@ -13,9 +13,9 @@
  * limitations under the License.
 */
 
-using QuantConnect.Statistics;
 using Newtonsoft.Json;
 using NUnit.Framework;
+using QuantConnect.Statistics;
 
 namespace QuantConnect.Tests.Common.Util
 {
@@ -33,13 +33,21 @@ namespace QuantConnect.Tests.Common.Util
             };
 
             var serializedValue = JsonConvert.SerializeObject(portfolioStatistics);
-            var deserializedValue = JsonConvert.DeserializeObject<PortfolioStatistics>(serializedValue);
+            var deserializedValue = JsonConvert.DeserializeObject<PortfolioStatistics>(
+                serializedValue
+            );
 
             Assert.AreEqual(portfolioStatistics.AverageWinRate, deserializedValue.AverageWinRate);
             Assert.AreEqual(portfolioStatistics.AverageLossRate, deserializedValue.AverageLossRate);
-            Assert.AreEqual(portfolioStatistics.CompoundingAnnualReturn, deserializedValue.CompoundingAnnualReturn);
+            Assert.AreEqual(
+                portfolioStatistics.CompoundingAnnualReturn,
+                deserializedValue.CompoundingAnnualReturn
+            );
 
-            Assert.AreEqual(portfolioStatistics.AnnualStandardDeviation, deserializedValue.AnnualStandardDeviation);
+            Assert.AreEqual(
+                portfolioStatistics.AnnualStandardDeviation,
+                deserializedValue.AnnualStandardDeviation
+            );
             Assert.AreEqual(portfolioStatistics.Expectancy, deserializedValue.Expectancy);
         }
     }

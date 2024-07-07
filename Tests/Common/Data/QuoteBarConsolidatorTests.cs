@@ -1,11 +1,11 @@
 /*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
- * 
- * Licensed under the Apache License, Version 2.0 (the "License"); 
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -15,8 +15,8 @@
 
 using System;
 using NUnit.Framework;
-using QuantConnect.Data.Market;
 using QuantConnect.Data.Consolidators;
+using QuantConnect.Data.Market;
 
 namespace QuantConnect.Tests.Common.Data
 {
@@ -321,10 +321,8 @@ namespace QuantConnect.Tests.Common.Data
             };
             creator.Update(bar3);
 
-
             Assert.IsNotNull(quoteBar);
 
-            
             Assert.AreEqual(bar1.Symbol, quoteBar.Symbol);
             Assert.AreEqual(bar1.Time, quoteBar.Time);
             Assert.AreEqual(bar2.EndTime, quoteBar.EndTime);
@@ -344,7 +342,6 @@ namespace QuantConnect.Tests.Common.Data
             Assert.AreEqual(bar1.LastAskSize, quoteBar.LastAskSize);
 
             Assert.AreEqual(1, quoteBar.Value);
-                        
         }
 
         [Test]
@@ -381,8 +378,12 @@ namespace QuantConnect.Tests.Common.Data
 
             consolidator.Update(bar1);
 
-            Exception ex = Assert.Throws<InvalidOperationException>(() => consolidator.Update(bar2));
-            Assert.IsTrue(ex.Message.Contains("is not the same", StringComparison.InvariantCultureIgnoreCase));
+            Exception ex = Assert.Throws<InvalidOperationException>(
+                () => consolidator.Update(bar2)
+            );
+            Assert.IsTrue(
+                ex.Message.Contains("is not the same", StringComparison.InvariantCultureIgnoreCase)
+            );
         }
 
         [Test]

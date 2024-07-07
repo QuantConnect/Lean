@@ -36,27 +36,28 @@ namespace QuantConnect.Algorithm.CSharp
         /// This is the period of bars we'll be creating
         /// </summary>
         private readonly TimeSpan _barPeriod = TimeSpan.FromMinutes(10);
+
         /// <summary>
         /// This is the period of our sma indicators
         /// </summary>
         private readonly int _simpleMovingAveragePeriod = 10;
+
         /// <summary>
         /// This is the number of consolidated bars we'll hold in symbol data for reference
         /// </summary>
         private readonly int _rollingWindowSize = 10;
+
         /// <summary>
         /// Holds all of our data keyed by each symbol
         /// </summary>
-        private readonly Dictionary<string, SymbolData> _data = new Dictionary<string, SymbolData>();
+        private readonly Dictionary<string, SymbolData> _data =
+            new Dictionary<string, SymbolData>();
+
         /// <summary>
         /// Contains all of our equity symbols
         /// </summary>
-        private IReadOnlyList<string> _equitySymbols = new List<string>
-        {
-            "AAPL",
-            "SPY",
-            "IBM"
-        };
+        private IReadOnlyList<string> _equitySymbols = new List<string> { "AAPL", "SPY", "IBM" };
+
         /// <summary>
         /// Contains all of our forex symbols
         /// </summary>
@@ -105,12 +106,20 @@ namespace QuantConnect.Algorithm.CSharp
                 var symbolData = kvp.Value;
 
                 // define a consolidator to consolidate data for this symbol on the requested period
-                var consolidator = symbolData.Symbol.SecurityType == SecurityType.Equity
-                    ? (IDataConsolidator)new TradeBarConsolidator(_barPeriod)
-                    : (IDataConsolidator)new QuoteBarConsolidator(_barPeriod);
+                var consolidator =
+                    symbolData.Symbol.SecurityType == SecurityType.Equity
+                        ? (IDataConsolidator)new TradeBarConsolidator(_barPeriod)
+                        : (IDataConsolidator)new QuoteBarConsolidator(_barPeriod);
 
                 // define our indicator
-                symbolData.SMA = new SimpleMovingAverage(CreateIndicatorName(symbolData.Symbol, "SMA" + _simpleMovingAveragePeriod, Resolution.Minute), _simpleMovingAveragePeriod);
+                symbolData.SMA = new SimpleMovingAverage(
+                    CreateIndicatorName(
+                        symbolData.Symbol,
+                        "SMA" + _simpleMovingAveragePeriod,
+                        Resolution.Minute
+                    ),
+                    _simpleMovingAveragePeriod
+                );
                 // wire up our consolidator to update the indicator
                 consolidator.DataConsolidated += (sender, baseData) =>
                 {
@@ -157,7 +166,7 @@ namespace QuantConnect.Algorithm.CSharp
             foreach (var kvp in _data.OrderBy(x => x.Value.Symbol))
             {
                 // we have too many symbols to plot them all, so plot ever other
-                if (kvp.Value.IsReady && ++i%2 == 0)
+                if (kvp.Value.IsReady && ++i % 2 == 0)
                 {
                     Plot(kvp.Value.Symbol.ToString(), kvp.Value.SMA);
                 }
@@ -173,6 +182,7 @@ namespace QuantConnect.Algorithm.CSharp
             /// This symbol the other data in this class is associated with
             /// </summary>
             public Symbol Symbol { get; init; }
+
             /// <summary>
             /// A rolling window of data, data needs to be pumped into Bars by using Bars.Update( tradeBar ) and
             /// can be accessed like:
@@ -180,10 +190,12 @@ namespace QuantConnect.Algorithm.CSharp
             ///  mySymbolData.Bars[5] - the sixth most recent piece of data (zero based indexing)
             /// </summary>
             public RollingWindow<IBaseDataBar> Bars { get; init; }
+
             /// <summary>
             /// The period used when populating the Bars rolling window.
             /// </summary>
             public TimeSpan BarPeriod { get; init; }
+
             /// <summary>
             /// The simple moving average indicator for our symbol
             /// </summary>

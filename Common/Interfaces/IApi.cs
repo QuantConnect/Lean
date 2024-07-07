@@ -77,7 +77,11 @@ namespace QuantConnect.Interfaces
         /// <param name="fileName">The name of the file that should be updated</param>
         /// <param name="newFileContents">The new contents of the file</param>
         /// <returns><see cref="RestResponse"/> indicating success</returns>
-        RestResponse UpdateProjectFileContent(int projectId, string fileName, string newFileContents);
+        RestResponse UpdateProjectFileContent(
+            int projectId,
+            string fileName,
+            string newFileContents
+        );
 
         /// <summary>
         /// Read a file in a project
@@ -172,7 +176,12 @@ namespace QuantConnect.Interfaces
         /// <param name="name">New backtest name to set</param>
         /// <param name="note">Note attached to the backtest</param>
         /// <returns>Rest response on success</returns>
-        RestResponse UpdateBacktest(int projectId, string backtestId, string name = "", string note = "");
+        RestResponse UpdateBacktest(
+            int projectId,
+            string backtestId,
+            string name = "",
+            string note = ""
+        );
 
         /// <summary>
         /// Delete a backtest from the specified project and backtestId.
@@ -199,7 +208,12 @@ namespace QuantConnect.Interfaces
         /// <param name="end">Last index of the insights to be fetched. Note that end - start must be less than 100</param>
         /// <returns><see cref="InsightResponse"/></returns>
         /// <exception cref="ArgumentException"></exception>
-        public InsightResponse ReadBacktestInsights(int projectId, string backtestId, int start = 0, int end = 0);
+        public InsightResponse ReadBacktestInsights(
+            int projectId,
+            string backtestId,
+            int start = 0,
+            int end = 0
+        );
 
         /// <summary>
         /// Estimate optimization with the specified parameters via QuantConnect.com API
@@ -223,7 +237,8 @@ namespace QuantConnect.Interfaces
             string strategy,
             string compileId,
             HashSet<OptimizationParameter> parameters,
-            IReadOnlyList<Constraint> constraints);
+            IReadOnlyList<Constraint> constraints
+        );
 
         /// <summary>
         /// Create an optimization with the specified parameters via QuantConnect.com API
@@ -253,7 +268,8 @@ namespace QuantConnect.Interfaces
             IReadOnlyList<Constraint> constraints,
             decimal estimatedCost,
             string nodeType,
-            int parallelNodes);
+            int parallelNodes
+        );
 
         /// <summary>
         /// List all the optimizations for a project
@@ -310,7 +326,13 @@ namespace QuantConnect.Interfaces
         /// <param name="end">The Utc end seconds timestamp of the request</param>
         /// <param name="count">The number of data points to request</param>
         /// <returns></returns>
-        public ReadChartResponse ReadLiveChart(int projectId, string name, int start, int end, uint count);
+        public ReadChartResponse ReadLiveChart(
+            int projectId,
+            string name,
+            int start,
+            int end,
+            uint count
+        );
 
         /// <summary>
         /// Read out the portfolio state of a live algorithm
@@ -365,7 +387,14 @@ namespace QuantConnect.Interfaces
         /// <param name="count">The number of data points to request</param>
         /// <param name="backtestId">Associated Backtest ID for this chart request</param>
         /// <returns></returns>
-        public ReadChartResponse ReadBacktestChart(int projectId, string name, int start, int end, uint count, string backtestId);
+        public ReadChartResponse ReadBacktestChart(
+            int projectId,
+            string name,
+            int start,
+            int end,
+            uint count,
+            string backtestId
+        );
 
         /// <summary>
         /// Method to download and save the data purchased through QuantConnect
@@ -397,7 +426,14 @@ namespace QuantConnect.Interfaces
         /// <param name="versionId">The version identifier</param>
         /// <param name="dataProviders">Dictionary with data providers and their corresponding credentials</param>
         /// <returns>Information regarding the new algorithm <see cref="CreateLiveAlgorithmResponse"/></returns>
-        CreateLiveAlgorithmResponse CreateLiveAlgorithm(int projectId, string compileId, string nodeId, Dictionary<string, object> brokerageSettings, string versionId = "-1", Dictionary<string, object> dataProviders = null);
+        CreateLiveAlgorithmResponse CreateLiveAlgorithm(
+            int projectId,
+            string compileId,
+            string nodeId,
+            Dictionary<string, object> brokerageSettings,
+            string versionId = "-1",
+            Dictionary<string, object> dataProviders = null
+        );
 
         /// <summary>
         /// Get a list of live running algorithms for a logged in user.
@@ -406,7 +442,11 @@ namespace QuantConnect.Interfaces
         /// <param name="startTime">Earliest launched time of the algorithms returned by the Api</param>
         /// <param name="endTime">Latest launched time of the algorithms returned by the Api</param>
         /// <returns>List of live algorithm instances</returns>
-        LiveList ListLiveAlgorithms(AlgorithmStatus? status = null, DateTime? startTime = null, DateTime? endTime = null);
+        LiveList ListLiveAlgorithms(
+            AlgorithmStatus? status = null,
+            DateTime? startTime = null,
+            DateTime? endTime = null
+        );
 
         /// <summary>
         /// Read out a live algorithm in the project id specified.
@@ -466,7 +506,18 @@ namespace QuantConnect.Interfaces
         /// <param name="volume">Volume traded</param>
         /// <param name="trades">Total trades since inception</param>
         /// <param name="sharpe">Sharpe ratio since inception</param>
-        void SendStatistics(string algorithmId, decimal unrealized, decimal fees, decimal netProfit, decimal holdings, decimal equity, decimal netReturn, decimal volume, int trades, double sharpe);
+        void SendStatistics(
+            string algorithmId,
+            decimal unrealized,
+            decimal fees,
+            decimal netProfit,
+            decimal holdings,
+            decimal equity,
+            decimal netReturn,
+            decimal volume,
+            int trades,
+            double sharpe
+        );
 
         /// <summary>
         /// Send an email to the user associated with the specified algorithm id
@@ -484,7 +535,12 @@ namespace QuantConnect.Interfaces
         /// <param name="userName">Username for basic authentication</param>
         /// <param name="password">Password for basic authentication</param>
         /// <returns></returns>
-        string Download(string address, IEnumerable<KeyValuePair<string, string>> headers, string userName, string password);
+        string Download(
+            string address,
+            IEnumerable<KeyValuePair<string, string>> headers,
+            string userName,
+            string password
+        );
 
         /// <summary>
         /// Local implementation for downloading data to algorithms
@@ -494,7 +550,12 @@ namespace QuantConnect.Interfaces
         /// <param name="userName">Username for basic authentication</param>
         /// <param name="password">Password for basic authentication</param>
         /// <returns></returns>
-        byte[] DownloadBytes(string address, IEnumerable<KeyValuePair<string, string>> headers, string userName, string password);
+        byte[] DownloadBytes(
+            string address,
+            IEnumerable<KeyValuePair<string, string>> headers,
+            string userName,
+            string password
+        );
 
         /// <summary>
         /// Download the object store associated with the given organization ID and key
@@ -503,7 +564,11 @@ namespace QuantConnect.Interfaces
         /// <param name="keys">Keys for the Object Store files</param>
         /// <param name="destinationFolder">Folder in which the object will be stored</param>
         /// <returns>True if the object was retrieved correctly, false otherwise</returns>
-        public bool GetObjectStore(string organizationId, List<string> keys, string destinationFolder = null);
+        public bool GetObjectStore(
+            string organizationId,
+            List<string> keys,
+            string destinationFolder = null
+        );
 
         /// <summary>
         /// Get Object Store properties given the organization ID and the Object Store key
@@ -512,7 +577,10 @@ namespace QuantConnect.Interfaces
         /// <param name="key">Key for the Object Store file</param>
         /// <returns><see cref="PropertiesObjectStoreResponse"/></returns>
         /// <remarks>It does not work when the object store is a directory</remarks>
-        public PropertiesObjectStoreResponse GetObjectStoreProperties(string organizationId, string key);
+        public PropertiesObjectStoreResponse GetObjectStoreProperties(
+            string organizationId,
+            string key
+        );
 
         /// <summary>
         /// Upload files to the Object Store

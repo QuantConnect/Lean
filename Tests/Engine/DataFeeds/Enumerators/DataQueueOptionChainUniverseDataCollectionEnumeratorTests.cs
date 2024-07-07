@@ -15,18 +15,18 @@
 */
 
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using NUnit.Framework;
 using QuantConnect.Data;
-using QuantConnect.Interfaces;
-using QuantConnect.Securities;
-using QuantConnect.Data.Market;
-using System.Collections.Generic;
 using QuantConnect.Data.Auxiliary;
-using QuantConnect.Securities.Option;
-using QuantConnect.Lean.Engine.DataFeeds;
+using QuantConnect.Data.Market;
 using QuantConnect.Data.UniverseSelection;
+using QuantConnect.Interfaces;
+using QuantConnect.Lean.Engine.DataFeeds;
 using QuantConnect.Lean.Engine.DataFeeds.Enumerators;
+using QuantConnect.Securities;
+using QuantConnect.Securities.Option;
 
 namespace QuantConnect.Tests.Engine.DataFeeds.Enumerators
 {
@@ -48,7 +48,12 @@ namespace QuantConnect.Tests.Engine.DataFeeds.Enumerators
             var canonicalSymbol = Symbols.SPY_Option_Chain;
             var request = GetRequest(canonicalSymbol, startTime, resolution);
             using var underlying = new EnqueueableEnumerator<BaseData>();
-            using var enumerator = new DataQueueOptionChainUniverseDataCollectionEnumerator(request, underlying, symbolUniverse, timeProvider);
+            using var enumerator = new DataQueueOptionChainUniverseDataCollectionEnumerator(
+                request,
+                underlying,
+                symbolUniverse,
+                timeProvider
+            );
 
             Assert.IsTrue(enumerator.MoveNext());
             Assert.IsNull(enumerator.Current);
@@ -61,13 +66,16 @@ namespace QuantConnect.Tests.Engine.DataFeeds.Enumerators
         [TestCase(Resolution.Minute, "20181017 05:00", 5)]
         [TestCase(Resolution.Hour, "20181017 05:00", 5)]
         [TestCase(Resolution.Daily, "20181017 05:00", 5)]
-
         [TestCase(Resolution.Tick, "20181017 10:00", 10)]
         [TestCase(Resolution.Second, "20181017 10:00", 10)]
         [TestCase(Resolution.Minute, "20181017 10:00", 10)]
         [TestCase(Resolution.Hour, "20181017 10:00", 10)]
         [TestCase(Resolution.Daily, "20181017 10:00", 10)]
-        public void RefreshesUniverseChainOnDateChange(Resolution resolution, string dateTime, int expectedStartHour)
+        public void RefreshesUniverseChainOnDateChange(
+            Resolution resolution,
+            string dateTime,
+            int expectedStartHour
+        )
         {
             var startTime = Time.ParseDate(dateTime);
             Assert.AreEqual(expectedStartHour, startTime.Hour);
@@ -79,9 +87,21 @@ namespace QuantConnect.Tests.Engine.DataFeeds.Enumerators
             var request = GetRequest(canonicalSymbol, startTime, resolution);
             var underlyingSymbol = (request.Security as Option).Underlying.Symbol;
             using var underlying = new EnqueueableEnumerator<BaseData>();
-            using var enumerator = new DataQueueOptionChainUniverseDataCollectionEnumerator(request, underlying, symbolUniverse, timeProvider);
+            using var enumerator = new DataQueueOptionChainUniverseDataCollectionEnumerator(
+                request,
+                underlying,
+                symbolUniverse,
+                timeProvider
+            );
 
-            underlying.Enqueue(new Tick(timeProvider.GetUtcNow().ConvertFromUtc(request.Security.Exchange.TimeZone), underlyingSymbol, 9, 10));
+            underlying.Enqueue(
+                new Tick(
+                    timeProvider.GetUtcNow().ConvertFromUtc(request.Security.Exchange.TimeZone),
+                    underlyingSymbol,
+                    9,
+                    10
+                )
+            );
             Assert.IsTrue(enumerator.MoveNext());
             Assert.IsNotNull(enumerator.Current);
             Assert.AreEqual(1, symbolUniverse.TotalLookupCalls);
@@ -91,7 +111,14 @@ namespace QuantConnect.Tests.Engine.DataFeeds.Enumerators
             Assert.IsFalse(enumerator.Current.IsFillForward);
 
             timeProvider.Advance(Time.OneSecond);
-            underlying.Enqueue(new Tick(timeProvider.GetUtcNow().ConvertFromUtc(request.Security.Exchange.TimeZone), underlyingSymbol, 9, 10));
+            underlying.Enqueue(
+                new Tick(
+                    timeProvider.GetUtcNow().ConvertFromUtc(request.Security.Exchange.TimeZone),
+                    underlyingSymbol,
+                    9,
+                    10
+                )
+            );
 
             Assert.IsTrue(enumerator.MoveNext());
             Assert.IsNotNull(enumerator.Current);
@@ -103,7 +130,14 @@ namespace QuantConnect.Tests.Engine.DataFeeds.Enumerators
             data = enumerator.Current;
 
             timeProvider.Advance(Time.OneMinute);
-            underlying.Enqueue(new Tick(timeProvider.GetUtcNow().ConvertFromUtc(request.Security.Exchange.TimeZone), underlyingSymbol, 9, 10));
+            underlying.Enqueue(
+                new Tick(
+                    timeProvider.GetUtcNow().ConvertFromUtc(request.Security.Exchange.TimeZone),
+                    underlyingSymbol,
+                    9,
+                    10
+                )
+            );
 
             Assert.IsTrue(enumerator.MoveNext());
             Assert.IsNotNull(enumerator.Current);
@@ -115,7 +149,14 @@ namespace QuantConnect.Tests.Engine.DataFeeds.Enumerators
             data = enumerator.Current;
 
             timeProvider.Advance(Time.OneDay);
-            underlying.Enqueue(new Tick(timeProvider.GetUtcNow().ConvertFromUtc(request.Security.Exchange.TimeZone), underlyingSymbol, 9, 10));
+            underlying.Enqueue(
+                new Tick(
+                    timeProvider.GetUtcNow().ConvertFromUtc(request.Security.Exchange.TimeZone),
+                    underlyingSymbol,
+                    9,
+                    10
+                )
+            );
 
             Assert.IsTrue(enumerator.MoveNext());
             Assert.IsNotNull(enumerator.Current);
@@ -130,7 +171,14 @@ namespace QuantConnect.Tests.Engine.DataFeeds.Enumerators
             Assert.AreEqual(1, data.Data.Count);
 
             timeProvider.Advance(Time.OneMinute);
-            underlying.Enqueue(new Tick(timeProvider.GetUtcNow().ConvertFromUtc(request.Security.Exchange.TimeZone), underlyingSymbol, 9, 10));
+            underlying.Enqueue(
+                new Tick(
+                    timeProvider.GetUtcNow().ConvertFromUtc(request.Security.Exchange.TimeZone),
+                    underlyingSymbol,
+                    9,
+                    10
+                )
+            );
 
             Assert.IsTrue(enumerator.MoveNext());
             Assert.AreEqual(2, symbolUniverse.TotalLookupCalls);
@@ -143,9 +191,15 @@ namespace QuantConnect.Tests.Engine.DataFeeds.Enumerators
             request.Universe.Dispose();
         }
 
-        private static SubscriptionRequest GetRequest(Symbol canonicalSymbol, DateTime startTime, Resolution resolution)
+        private static SubscriptionRequest GetRequest(
+            Symbol canonicalSymbol,
+            DateTime startTime,
+            Resolution resolution
+        )
         {
-            var entry = MarketHoursDatabase.FromDataFolder().GetEntry(canonicalSymbol.ID.Market, canonicalSymbol, canonicalSymbol.SecurityType);
+            var entry = MarketHoursDatabase
+                .FromDataFolder()
+                .GetEntry(canonicalSymbol.ID.Market, canonicalSymbol, canonicalSymbol.SecurityType);
             var config = new SubscriptionDataConfig(
                 typeof(ZipEntryName),
                 canonicalSymbol,
@@ -170,7 +224,14 @@ namespace QuantConnect.Tests.Engine.DataFeeds.Enumerators
 # pragma warning disable CA2000
             var universe = new OptionChainUniverse(option, universeSettings);
 #pragma warning restore CA2000
-            return new SubscriptionRequest(true, universe, option, config, startTime, Time.EndOfTime);
+            return new SubscriptionRequest(
+                true,
+                universe,
+                option,
+                config,
+                startTime,
+                Time.EndOfTime
+            );
         }
 
         private class TestDataQueueUniverseProvider : IDataQueueUniverseProvider
@@ -186,7 +247,11 @@ namespace QuantConnect.Tests.Engine.DataFeeds.Enumerators
                 _timeProvider = timeProvider;
             }
 
-            public IEnumerable<Symbol> LookupSymbols(Symbol symbol, bool includeExpired, string securityCurrency = null)
+            public IEnumerable<Symbol> LookupSymbols(
+                Symbol symbol,
+                bool includeExpired,
+                string securityCurrency = null
+            )
             {
                 TotalLookupCalls++;
                 return _timeProvider.GetUtcNow().Date.Day >= 18 ? _symbolList2 : _symbolList1;

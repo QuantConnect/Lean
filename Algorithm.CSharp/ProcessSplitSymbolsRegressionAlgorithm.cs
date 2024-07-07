@@ -25,7 +25,9 @@ namespace QuantConnect.Algorithm.CSharp
     /// This test algorithm reproduces GH issue 2848 where an exception is thrown
     /// in the AlgorithmManager.ProcessSplitSymbols when removing the equity having a split
     /// </summary>
-    public class ProcessSplitSymbolsRegressionAlgorithm : QCAlgorithm, IRegressionAlgorithmDefinition
+    public class ProcessSplitSymbolsRegressionAlgorithm
+        : QCAlgorithm,
+            IRegressionAlgorithmDefinition
     {
         private Security _aapl;
         private Security _goog;
@@ -35,9 +37,9 @@ namespace QuantConnect.Algorithm.CSharp
         /// </summary>
         public override void Initialize()
         {
-            SetStartDate(2014, 06, 05);  //Set Start Date
-            SetEndDate(2014, 06, 09);    //Set End Date
-            SetCash(100000);             //Set Strategy Cash
+            SetStartDate(2014, 06, 05); //Set Start Date
+            SetEndDate(2014, 06, 09); //Set End Date
+            SetCash(100000); //Set Strategy Cash
 
             _aapl = AddEquity("AAPL", Resolution.Daily);
             _goog = AddEquity("GOOG", Resolution.Daily);
@@ -88,35 +90,36 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// This is used by the regression test system to indicate what the expected statistics are from running the algorithm
         /// </summary>
-        public Dictionary<string, string> ExpectedStatistics => new Dictionary<string, string>
-        {
-            {"Total Orders", "1"},
-            {"Average Win", "0%"},
-            {"Average Loss", "0%"},
-            {"Compounding Annual Return", "808.402%"},
-            {"Drawdown", "0%"},
-            {"Expectancy", "0"},
-            {"Start Equity", "100000"},
-            {"End Equity", "103068.77"},
-            {"Net Profit", "3.069%"},
-            {"Sharpe Ratio", "19.483"},
-            {"Sortino Ratio", "0"},
-            {"Probabilistic Sharpe Ratio", "100.000%"},
-            {"Loss Rate", "0%"},
-            {"Win Rate", "0%"},
-            {"Profit-Loss Ratio", "0"},
-            {"Alpha", "1.289"},
-            {"Beta", "0.537"},
-            {"Annual Standard Deviation", "0.078"},
-            {"Annual Variance", "0.006"},
-            {"Information Ratio", "14.15"},
-            {"Tracking Error", "0.077"},
-            {"Treynor Ratio", "2.823"},
-            {"Total Fees", "$1.00"},
-            {"Estimated Strategy Capacity", "$37000000.00"},
-            {"Lowest Capacity Asset", "GOOCV VP83T1ZUHROL"},
-            {"Portfolio Turnover", "19.60%"},
-            {"OrderListHash", "6f3468b3a384444ee29d33ff85456660"}
-        };
+        public Dictionary<string, string> ExpectedStatistics =>
+            new Dictionary<string, string>
+            {
+                { "Total Orders", "1" },
+                { "Average Win", "0%" },
+                { "Average Loss", "0%" },
+                { "Compounding Annual Return", "808.402%" },
+                { "Drawdown", "0%" },
+                { "Expectancy", "0" },
+                { "Start Equity", "100000" },
+                { "End Equity", "103068.77" },
+                { "Net Profit", "3.069%" },
+                { "Sharpe Ratio", "19.483" },
+                { "Sortino Ratio", "0" },
+                { "Probabilistic Sharpe Ratio", "100.000%" },
+                { "Loss Rate", "0%" },
+                { "Win Rate", "0%" },
+                { "Profit-Loss Ratio", "0" },
+                { "Alpha", "1.289" },
+                { "Beta", "0.537" },
+                { "Annual Standard Deviation", "0.078" },
+                { "Annual Variance", "0.006" },
+                { "Information Ratio", "14.15" },
+                { "Tracking Error", "0.077" },
+                { "Treynor Ratio", "2.823" },
+                { "Total Fees", "$1.00" },
+                { "Estimated Strategy Capacity", "$37000000.00" },
+                { "Lowest Capacity Asset", "GOOCV VP83T1ZUHROL" },
+                { "Portfolio Turnover", "19.60%" },
+                { "OrderListHash", "6f3468b3a384444ee29d33ff85456660" }
+            };
     }
 }

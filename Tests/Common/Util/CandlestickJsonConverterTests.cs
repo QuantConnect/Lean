@@ -29,7 +29,8 @@ namespace QuantConnect.Tests.Common.Util
             var candlestick = new Candlestick(dateTime, 100, 110, 80, 90);
 
             var serializedCandlestick = JsonConvert.SerializeObject(candlestick);
-            var result = (Candlestick)JsonConvert.DeserializeObject(serializedCandlestick, typeof(Candlestick));
+            var result = (Candlestick)
+                JsonConvert.DeserializeObject(serializedCandlestick, typeof(Candlestick));
 
             Assert.AreEqual(candlestick.Time, result.Time);
             Assert.AreEqual(candlestick.Open, result.Open);
@@ -45,7 +46,8 @@ namespace QuantConnect.Tests.Common.Util
             var chartPoint = new ChartPoint(dateTime, 100);
 
             var serializedChartPoint = JsonConvert.SerializeObject(chartPoint);
-            var result = (Candlestick)JsonConvert.DeserializeObject(serializedChartPoint, typeof(Candlestick));
+            var result = (Candlestick)
+                JsonConvert.DeserializeObject(serializedChartPoint, typeof(Candlestick));
 
             Assert.AreEqual(chartPoint.Time, result.Time);
             Assert.AreEqual(chartPoint.y, result.Open);

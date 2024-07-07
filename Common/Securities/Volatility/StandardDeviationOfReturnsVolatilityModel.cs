@@ -15,9 +15,7 @@
 
 using System;
 using System.Collections.Generic;
-
 using MathNet.Numerics.Statistics;
-
 using QuantConnect.Data;
 using QuantConnect.Indicators;
 using QuantConnect.Securities.Volatility;
@@ -87,11 +85,14 @@ namespace QuantConnect.Securities
             int periods,
             Resolution? resolution = null,
             TimeSpan? updateFrequency = null
-            )
+        )
         {
             if (periods < 2)
             {
-                throw new ArgumentOutOfRangeException(nameof(periods), "'periods' must be greater than or equal to 2.");
+                throw new ArgumentOutOfRangeException(
+                    nameof(periods),
+                    "'periods' must be greater than or equal to 2."
+                );
             }
 
             _window = new RollingWindow<double>(periods);
@@ -119,9 +120,8 @@ namespace QuantConnect.Securities
         public StandardDeviationOfReturnsVolatilityModel(
             Resolution resolution,
             TimeSpan? updateFrequency = null
-            ) : this(PeriodsInResolution(resolution), resolution, updateFrequency)
-        {
-        }
+        )
+            : this(PeriodsInResolution(resolution), resolution, updateFrequency) { }
 
         /// <summary>
         /// Updates this model using the new price information in
@@ -154,16 +154,15 @@ namespace QuantConnect.Securities
         /// <param name="security">The security of the request</param>
         /// <param name="utcTime">The date of the request</param>
         /// <returns>History request object list, or empty if no requirements</returns>
-        public override IEnumerable<HistoryRequest> GetHistoryRequirements(Security security, DateTime utcTime)
+        public override IEnumerable<HistoryRequest> GetHistoryRequirements(
+            Security security,
+            DateTime utcTime
+        )
         {
             // Let's reset the model since it will get warmed up again using these history requirements
             Reset();
 
-            return GetHistoryRequirements(
-                security,
-                utcTime,
-                _resolution,
-                _window.Size + 1);
+            return GetHistoryRequirements(security, utcTime, _resolution, _window.Size + 1);
         }
 
         /// <summary>

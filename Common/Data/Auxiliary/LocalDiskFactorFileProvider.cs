@@ -14,10 +14,10 @@
  *
 */
 
-using System.IO;
-using QuantConnect.Util;
-using QuantConnect.Interfaces;
 using System.Collections.Concurrent;
+using System.IO;
+using QuantConnect.Interfaces;
+using QuantConnect.Util;
 
 namespace QuantConnect.Data.Auxiliary
 {
@@ -85,10 +85,16 @@ namespace QuantConnect.Data.Auxiliary
         /// </summary>
         private IFactorProvider GetFactorFile(Symbol symbol, string permtick)
         {
-            var basePath = Globals.GetDataFolderPath(FactorFileZipHelper.GetRelativeFactorFilePath(symbol.ID.Market, symbol.SecurityType));
+            var basePath = Globals.GetDataFolderPath(
+                FactorFileZipHelper.GetRelativeFactorFilePath(symbol.ID.Market, symbol.SecurityType)
+            );
             var path = Path.Combine(basePath, permtick.ToLowerInvariant() + ".csv");
 
-            var factorFile = PriceScalingExtensions.SafeRead(permtick, _dataProvider.ReadLines(path), symbol.SecurityType);
+            var factorFile = PriceScalingExtensions.SafeRead(
+                permtick,
+                _dataProvider.ReadLines(path),
+                symbol.SecurityType
+            );
             _cache.AddOrUpdate(symbol, factorFile, (s, c) => factorFile);
             return factorFile;
         }

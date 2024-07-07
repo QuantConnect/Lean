@@ -15,7 +15,6 @@
 
 using System;
 using System.Runtime.CompilerServices;
-
 using static QuantConnect.StringExtensions;
 
 namespace QuantConnect

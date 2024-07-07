@@ -75,15 +75,18 @@ namespace QuantConnect.Data
 
             Initialize();
 
-            if (e.Path.Contains("map_files", StringComparison.OrdinalIgnoreCase) ||
-                e.Path.Contains("factor_files", StringComparison.OrdinalIgnoreCase))
+            if (
+                e.Path.Contains("map_files", StringComparison.OrdinalIgnoreCase)
+                || e.Path.Contains("factor_files", StringComparison.OrdinalIgnoreCase)
+            )
             {
                 return;
             }
 
             var path = StripDataFolder(e.Path);
-            var isUniverseData = path.Contains("coarse", StringComparison.OrdinalIgnoreCase) ||
-                path.Contains("universe", StringComparison.OrdinalIgnoreCase);
+            var isUniverseData =
+                path.Contains("coarse", StringComparison.OrdinalIgnoreCase)
+                || path.Contains("universe", StringComparison.OrdinalIgnoreCase);
 
             if (e.Succeded)
             {
@@ -105,7 +108,9 @@ namespace QuantConnect.Data
 
                 if (Logging.Log.DebuggingEnabled)
                 {
-                    Logging.Log.Debug($"DataMonitor.OnNewDataRequest(): Data from {path} could not be fetched");
+                    Logging.Log.Debug(
+                        $"DataMonitor.OnNewDataRequest(): Data from {path} could not be fetched"
+                    );
                 }
             }
         }
@@ -121,7 +126,10 @@ namespace QuantConnect.Data
             }
             _exited = true;
 
-            _requestRateCalculationThread.StopSafely(TimeSpan.FromSeconds(5), _cancellationTokenSource);
+            _requestRateCalculationThread.StopSafely(
+                TimeSpan.FromSeconds(5),
+                _cancellationTokenSource
+            );
             _succeededDataRequestsWriter?.Close();
             _failedDataRequestsWriter?.Close();
 
@@ -175,28 +183,34 @@ namespace QuantConnect.Data
                         ComputeFileRequestFrequency();
                     }
                 })
-                { IsBackground = true };
+                {
+                    IsBackground = true
+                };
                 _requestRateCalculationThread.Start();
             }
         }
 
         private DataMonitorReport GenerateReport()
         {
-            var report = new DataMonitorReport(_succeededDataRequestsCount,
+            var report = new DataMonitorReport(
+                _succeededDataRequestsCount,
                 _failedDataRequestsCount,
                 _succeededUniverseDataRequestsCount,
                 _failedUniverseDataRequestsCount,
-                _requestRates);
+                _requestRates
+            );
 
-            Logging.Log.Trace($"DataMonitor.GenerateReport():{Environment.NewLine}" +
-                $"DATA USAGE:: Total data requests {report.TotalRequestsCount}{Environment.NewLine}" +
-                $"DATA USAGE:: Succeeded data requests {report.SucceededDataRequestsCount}{Environment.NewLine}" +
-                $"DATA USAGE:: Failed data requests {report.FailedDataRequestsCount}{Environment.NewLine}" +
-                $"DATA USAGE:: Failed data requests percentage {report.FailedDataRequestsPercentage}%{Environment.NewLine}" +
-                $"DATA USAGE:: Total universe data requests {report.TotalUniverseDataRequestsCount}{Environment.NewLine}" +
-                $"DATA USAGE:: Succeeded universe data requests {report.SucceededUniverseDataRequestsCount}{Environment.NewLine}" +
-                $"DATA USAGE:: Failed universe data requests {report.FailedUniverseDataRequestsCount}{Environment.NewLine}" +
-                $"DATA USAGE:: Failed universe data requests percentage {report.FailedUniverseDataRequestsPercentage}%");
+            Logging.Log.Trace(
+                $"DataMonitor.GenerateReport():{Environment.NewLine}"
+                    + $"DATA USAGE:: Total data requests {report.TotalRequestsCount}{Environment.NewLine}"
+                    + $"DATA USAGE:: Succeeded data requests {report.SucceededDataRequestsCount}{Environment.NewLine}"
+                    + $"DATA USAGE:: Failed data requests {report.FailedDataRequestsCount}{Environment.NewLine}"
+                    + $"DATA USAGE:: Failed data requests percentage {report.FailedDataRequestsPercentage}%{Environment.NewLine}"
+                    + $"DATA USAGE:: Total universe data requests {report.TotalUniverseDataRequestsCount}{Environment.NewLine}"
+                    + $"DATA USAGE:: Succeeded universe data requests {report.SucceededUniverseDataRequestsCount}{Environment.NewLine}"
+                    + $"DATA USAGE:: Failed universe data requests {report.FailedUniverseDataRequestsCount}{Environment.NewLine}"
+                    + $"DATA USAGE:: Failed universe data requests percentage {report.FailedUniverseDataRequestsPercentage}%"
+            );
 
             return report;
         }
@@ -244,7 +258,10 @@ namespace QuantConnect.Data
             var baseFilename = Path.GetFileNameWithoutExtension(filename);
             var timestamp = DateTime.UtcNow.ToStringInvariant("yyyyMMddHHmmssfff");
             var extension = Path.GetExtension(filename);
-            return Path.Combine(_resultsDestinationFolder, $"{baseFilename}-{timestamp}{extension}");
+            return Path.Combine(
+                _resultsDestinationFolder,
+                $"{baseFilename}-{timestamp}{extension}"
+            );
         }
 
         private static TextWriter OpenStream(string filename)
@@ -261,7 +278,9 @@ namespace QuantConnect.Data
             }
             catch (IOException exception)
             {
-                Logging.Log.Error($"DataMonitor.OnNewDataRequest(): Failed to write to file {filename}: {exception.Message}");
+                Logging.Log.Error(
+                    $"DataMonitor.OnNewDataRequest(): Failed to write to file {filename}: {exception.Message}"
+                );
             }
         }
     }

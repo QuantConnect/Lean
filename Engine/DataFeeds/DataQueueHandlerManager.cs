@@ -14,16 +14,16 @@
 */
 
 using System;
-using System.Linq;
-using QuantConnect.Util;
-using QuantConnect.Data;
-using QuantConnect.Packets;
-using QuantConnect.Logging;
-using QuantConnect.Interfaces;
-using QuantConnect.Securities;
-using QuantConnect.Data.Market;
 using System.Collections.Generic;
+using System.Linq;
+using QuantConnect.Data;
+using QuantConnect.Data.Market;
+using QuantConnect.Interfaces;
 using QuantConnect.Lean.Engine.DataFeeds.Enumerators;
+using QuantConnect.Logging;
+using QuantConnect.Packets;
+using QuantConnect.Securities;
+using QuantConnect.Util;
 
 namespace QuantConnect.Lean.Engine.DataFeeds
 {
@@ -34,7 +34,10 @@ namespace QuantConnect.Lean.Engine.DataFeeds
     {
         private ITimeProvider _frontierTimeProvider;
         private readonly IAlgorithmSettings _algorithmSettings;
-        private readonly Dictionary<SubscriptionDataConfig, Queue<IDataQueueHandler>> _dataConfigAndDataHandler = new();
+        private readonly Dictionary<
+            SubscriptionDataConfig,
+            Queue<IDataQueueHandler>
+        > _dataConfigAndDataHandler = new();
 
         /// <summary>
         /// Creates a new instance
@@ -66,29 +69,45 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         /// <param name="dataConfig">defines the parameters to subscribe to a data feed</param>
         /// <param name="newDataAvailableHandler">handler to be fired on new data available</param>
         /// <returns>The new enumerator for this subscription request</returns>
-        public IEnumerator<BaseData> Subscribe(SubscriptionDataConfig dataConfig, EventHandler newDataAvailableHandler)
+        public IEnumerator<BaseData> Subscribe(
+            SubscriptionDataConfig dataConfig,
+            EventHandler newDataAvailableHandler
+        )
         {
             Exception failureException = null;
             foreach (var dataHandler in DataHandlers)
             {
                 // Emit ticks & custom data as soon as we get them, they don't need any kind of batching behavior applied to them
                 // only use the frontier time provider if we need to
-                var immediateEmission = dataConfig.Resolution == Resolution.Tick || dataConfig.IsCustomData || _frontierTimeProvider == null;
+                var immediateEmission =
+                    dataConfig.Resolution == Resolution.Tick
+                    || dataConfig.IsCustomData
+                    || _frontierTimeProvider == null;
                 var exchangeTimeZone = dataConfig.ExchangeTimeZone;
 
                 IEnumerator<BaseData> enumerator;
                 try
                 {
-                    enumerator = dataHandler.Subscribe(dataConfig, immediateEmission ? newDataAvailableHandler
-                        : (sender, eventArgs) => {
-                            // let's only wake up the main thread if the data point is allowed to be emitted, else we could fill forward previous bar and not let this one through
-                            var dataAvailable = eventArgs as NewDataAvailableEventArgs;
-                            if (dataAvailable == null || dataAvailable.DataPoint == null
-                                || dataAvailable.DataPoint.EndTime.ConvertToUtc(exchangeTimeZone) <= _frontierTimeProvider.GetUtcNow())
+                    enumerator = dataHandler.Subscribe(
+                        dataConfig,
+                        immediateEmission
+                            ? newDataAvailableHandler
+                            : (sender, eventArgs) =>
                             {
-                                newDataAvailableHandler?.Invoke(sender, eventArgs);
+                                // let's only wake up the main thread if the data point is allowed to be emitted, else we could fill forward previous bar and not let this one through
+                                var dataAvailable = eventArgs as NewDataAvailableEventArgs;
+                                if (
+                                    dataAvailable == null
+                                    || dataAvailable.DataPoint == null
+                                    || dataAvailable.DataPoint.EndTime.ConvertToUtc(
+                                        exchangeTimeZone
+                                    ) <= _frontierTimeProvider.GetUtcNow()
+                                )
+                                {
+                                    newDataAvailableHandler?.Invoke(sender, eventArgs);
+                                }
                             }
-                        });
+                    );
                 }
                 catch (Exception exception)
                 {
@@ -100,11 +119,17 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                 // Check if the enumerator is not empty
                 if (enumerator != null)
                 {
-                    if (!_dataConfigAndDataHandler.TryGetValue(dataConfig, out var dataQueueHandlers))
+                    if (
+                        !_dataConfigAndDataHandler.TryGetValue(
+                            dataConfig,
+                            out var dataQueueHandlers
+                        )
+                    )
                     {
                         // we can get the same subscription request multiple times, the aggregator manager handles updating each enumerator
                         // but we need to keep track so we can call unsubscribe later to the target data queue handler
-                        _dataConfigAndDataHandler[dataConfig] = dataQueueHandlers = new Queue<IDataQueueHandler>();
+                        _dataConfigAndDataHandler[dataConfig] = dataQueueHandlers =
+                            new Queue<IDataQueueHandler>();
                     }
                     dataQueueHandlers.Enqueue(dataHandler);
 
@@ -113,15 +138,34 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                         return enumerator;
                     }
 
-                    var exchangeHours = MarketHoursDatabase.FromDataFolder().GetExchangeHours(dataConfig.Symbol.ID.Market, dataConfig.Symbol, dataConfig.Symbol.SecurityType);
-                    if (LeanData.UseStrictEndTime(_algorithmSettings.DailyPreciseEndTime, dataConfig.Symbol, dataConfig.Increment, exchangeHours))
+                    var exchangeHours = MarketHoursDatabase
+                        .FromDataFolder()
+                        .GetExchangeHours(
+                            dataConfig.Symbol.ID.Market,
+                            dataConfig.Symbol,
+                            dataConfig.Symbol.SecurityType
+                        );
+                    if (
+                        LeanData.UseStrictEndTime(
+                            _algorithmSettings.DailyPreciseEndTime,
+                            dataConfig.Symbol,
+                            dataConfig.Increment,
+                            exchangeHours
+                        )
+                    )
                     {
                         // before the first frontier enumerator we adjust the endtimes if required
                         enumerator = new StrictDailyEndTimesEnumerator(enumerator, exchangeHours);
                     }
 
-                    return new FrontierAwareEnumerator(enumerator, _frontierTimeProvider,
-                        new TimeZoneOffsetProvider(exchangeTimeZone, _frontierTimeProvider.GetUtcNow(), Time.EndOfTime)
+                    return new FrontierAwareEnumerator(
+                        enumerator,
+                        _frontierTimeProvider,
+                        new TimeZoneOffsetProvider(
+                            exchangeTimeZone,
+                            _frontierTimeProvider.GetUtcNow(),
+                            Time.EndOfTime
+                        )
                     );
                 }
             }
@@ -133,9 +177,14 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             }
 
             // filter out warning for expected cases to reduce noise
-            if (!dataConfig.Symbol.Value.Contains("-UNIVERSE-", StringComparison.InvariantCultureIgnoreCase)
+            if (
+                !dataConfig.Symbol.Value.Contains(
+                    "-UNIVERSE-",
+                    StringComparison.InvariantCultureIgnoreCase
+                )
                 && dataConfig.Type != typeof(Delisting)
-                && !dataConfig.Symbol.IsCanonical())
+                && !dataConfig.Symbol.IsCanonical()
+            )
             {
                 UnsupportedConfiguration?.Invoke(this, dataConfig);
             }
@@ -171,7 +220,9 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             Log.Trace($"CompositeDataQueueHandler.SetJob(): will use {dataHandlersConfig}");
             foreach (var dataHandlerName in dataHandlersConfig.DeserializeList())
             {
-                var dataHandler = Composer.Instance.GetExportedValueByTypeName<IDataQueueHandler>(dataHandlerName);
+                var dataHandler = Composer.Instance.GetExportedValueByTypeName<IDataQueueHandler>(
+                    dataHandlerName
+                );
                 dataHandler.SetJob(job);
                 DataHandlers.Add(dataHandler);
             }
@@ -203,11 +254,17 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         /// <param name="includeExpired">Include expired contracts</param>
         /// <param name="securityCurrency">Expected security currency(if any)</param>
         /// <returns>Enumerable of Symbols, that are associated with the provided Symbol</returns>
-        public IEnumerable<Symbol> LookupSymbols(Symbol symbol, bool includeExpired, string securityCurrency = null)
+        public IEnumerable<Symbol> LookupSymbols(
+            Symbol symbol,
+            bool includeExpired,
+            string securityCurrency = null
+        )
         {
             foreach (var dataHandler in GetUniverseProviders())
             {
-                var result = dataHandler.LookupSymbols(symbol, includeExpired, securityCurrency).ToList();
+                var result = dataHandler
+                    .LookupSymbols(symbol, includeExpired, securityCurrency)
+                    .ToList();
                 if (result.Any())
                 {
                     return result;
@@ -236,7 +293,9 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             var timeProviders = DataHandlers.OfType<ITimeProvider>().ToList();
             if (timeProviders.Any())
             {
-                Log.Trace($"DataQueueHandlerManager.InitializeFrontierTimeProvider(): will use the following IDQH frontier time providers: [{string.Join(",", timeProviders.Select(x => x.GetType()))}]");
+                Log.Trace(
+                    $"DataQueueHandlerManager.InitializeFrontierTimeProvider(): will use the following IDQH frontier time providers: [{string.Join(",", timeProviders.Select(x => x.GetType()))}]"
+                );
                 return new CompositeTimeProvider(timeProviders);
             }
             return null;
@@ -253,7 +312,9 @@ namespace QuantConnect.Lean.Engine.DataFeeds
 
             if (!yielded)
             {
-                throw new NotSupportedException("The DataQueueHandler does not support Options and Futures.");
+                throw new NotSupportedException(
+                    "The DataQueueHandler does not support Options and Futures."
+                );
             }
         }
     }

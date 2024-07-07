@@ -14,7 +14,6 @@
 */
 
 using System.Collections.Generic;
-
 using QuantConnect.Interfaces;
 using QuantConnect.Orders;
 using QuantConnect.Securities;
@@ -23,12 +22,15 @@ namespace QuantConnect.Tests.Common.Securities
 {
     internal class TestDefaultMarginCallModel : DefaultMarginCallModel
     {
-        public TestDefaultMarginCallModel(SecurityPortfolioManager portfolio, IOrderProperties defaultOrderProperties)
-            : base(portfolio, defaultOrderProperties)
-        {
-        }
+        public TestDefaultMarginCallModel(
+            SecurityPortfolioManager portfolio,
+            IOrderProperties defaultOrderProperties
+        )
+            : base(portfolio, defaultOrderProperties) { }
 
-        public new IEnumerable<SubmitOrderRequest> GenerateMarginCallOrders(MarginCallOrdersParameters parameters)
+        public new IEnumerable<SubmitOrderRequest> GenerateMarginCallOrders(
+            MarginCallOrdersParameters parameters
+        )
         {
             return base.GenerateMarginCallOrders(parameters);
         }

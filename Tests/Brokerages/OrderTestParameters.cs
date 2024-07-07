@@ -31,7 +31,11 @@ namespace QuantConnect.Tests.Brokerages
         public OrderSubmissionData OrderSubmissionData { get; internal set; }
         public SymbolPropertiesDatabase SPDB { get; internal set; }
 
-        protected OrderTestParameters(Symbol symbol, IOrderProperties properties = null, OrderSubmissionData orderSubmissionData = null)
+        protected OrderTestParameters(
+            Symbol symbol,
+            IOrderProperties properties = null,
+            OrderSubmissionData orderSubmissionData = null
+        )
         {
             Symbol = symbol;
             SecurityType = symbol.ID.SecurityType;
@@ -47,9 +51,15 @@ namespace QuantConnect.Tests.Brokerages
                 OrderSubmissionData = OrderSubmissionData
             };
         }
+
         public MarketOrder CreateShortMarketOrder(decimal quantity)
         {
-            return new MarketOrder(Symbol, -Math.Abs(quantity), DateTime.Now, properties: Properties)
+            return new MarketOrder(
+                Symbol,
+                -Math.Abs(quantity),
+                DateTime.Now,
+                properties: Properties
+            )
             {
                 OrderSubmissionData = OrderSubmissionData
             };
@@ -59,19 +69,27 @@ namespace QuantConnect.Tests.Brokerages
         /// Creates a sell order of this type
         /// </summary>
         public abstract Order CreateShortOrder(decimal quantity);
+
         /// <summary>
         /// Creates a long order of this type
         /// </summary>
         public abstract Order CreateLongOrder(decimal quantity);
+
         /// <summary>
         /// Modifies the order so it is more likely to fill
         /// </summary>
-        public abstract bool ModifyOrderToFill(IBrokerage brokerage, Order order, decimal lastMarketPrice);
+        public abstract bool ModifyOrderToFill(
+            IBrokerage brokerage,
+            Order order,
+            decimal lastMarketPrice
+        );
+
         /// <summary>
         /// The status to expect when submitting this order, typically just Submitted,
         /// unless market order, then Filled
         /// </summary>
         public abstract OrderStatus ExpectedStatus { get; }
+
         /// <summary>
         /// The status to expect when cancelling this order
         /// </summary>

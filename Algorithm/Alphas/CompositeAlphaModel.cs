@@ -38,7 +38,9 @@ namespace QuantConnect.Algorithm.Framework.Alphas
         {
             if (alphaModels.IsNullOrEmpty())
             {
-                throw new ArgumentException("Must specify at least 1 alpha model for the CompositeAlphaModel");
+                throw new ArgumentException(
+                    "Must specify at least 1 alpha model for the CompositeAlphaModel"
+                );
             }
 
             _alphaModels.AddRange(alphaModels);
@@ -52,7 +54,9 @@ namespace QuantConnect.Algorithm.Framework.Alphas
         {
             if (alphaModels.IsNullOrEmpty())
             {
-                throw new ArgumentException("Must specify at least 1 alpha model for the CompositeAlphaModel");
+                throw new ArgumentException(
+                    "Must specify at least 1 alpha model for the CompositeAlphaModel"
+                );
             }
 
             foreach (var pyAlphaModel in alphaModels)
@@ -66,10 +70,7 @@ namespace QuantConnect.Algorithm.Framework.Alphas
         /// </summary>
         /// <param name="alphaModel">The individual alpha model defining this composite model</param>
         public CompositeAlphaModel(PyObject alphaModel)
-            : this(new[] { alphaModel} )
-        {
-
-        }
+            : this(new[] { alphaModel }) { }
 
         /// <summary>
         /// Updates this alpha model with the latest data from the algorithm.

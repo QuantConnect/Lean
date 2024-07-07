@@ -27,7 +27,9 @@ namespace QuantConnect.Securities.Positions
         /// </summary>
         /// <param name="parameters">An object containing the security</param>
         /// <returns>The maintenance margin required for the </returns>
-        public override MaintenanceMargin GetMaintenanceMargin(PositionGroupMaintenanceMarginParameters parameters)
+        public override MaintenanceMargin GetMaintenanceMargin(
+            PositionGroupMaintenanceMarginParameters parameters
+        )
         {
             // SecurityPositionGroupBuyingPowerModel models buying power the same as non-grouped, so we can simply sum up
             // the reserved buying power via the security's model. We should really only ever get a single position here,
@@ -37,7 +39,10 @@ namespace QuantConnect.Securities.Positions
             {
                 var security = parameters.Portfolio.Securities[position.Symbol];
                 var result = security.BuyingPowerModel.GetMaintenanceMargin(
-                    MaintenanceMarginParameters.ForQuantityAtCurrentPrice(security, position.Quantity)
+                    MaintenanceMarginParameters.ForQuantityAtCurrentPrice(
+                        security,
+                        position.Quantity
+                    )
                 );
 
                 buyingPower += result;
@@ -50,14 +55,17 @@ namespace QuantConnect.Securities.Positions
         /// The margin that must be held in order to increase the position by the provided quantity
         /// </summary>
         /// <param name="parameters">An object containing the security and quantity</param>
-        public override InitialMargin GetInitialMarginRequirement(PositionGroupInitialMarginParameters parameters)
+        public override InitialMargin GetInitialMarginRequirement(
+            PositionGroupInitialMarginParameters parameters
+        )
         {
             var initialMarginRequirement = 0m;
             foreach (var position in parameters.PositionGroup)
             {
                 var security = parameters.Portfolio.Securities[position.Symbol];
                 initialMarginRequirement += security.BuyingPowerModel.GetInitialMarginRequirement(
-                    security, position.Quantity
+                    security,
+                    position.Quantity
                 );
             }
 
@@ -71,16 +79,21 @@ namespace QuantConnect.Securities.Positions
         /// <returns>The total margin in terms of the currency quoted in the order</returns>
         public override InitialMargin GetInitialMarginRequiredForOrder(
             PositionGroupInitialMarginForOrderParameters parameters
-            )
+        )
         {
             var initialMarginRequirement = 0m;
             foreach (var position in parameters.PositionGroup)
             {
                 // TODO : Support combo order by pull symbol-specific order
                 var security = parameters.Portfolio.Securities[position.Symbol];
-                initialMarginRequirement += security.BuyingPowerModel.GetInitialMarginRequiredForOrder(
-                    new InitialMarginRequiredForOrderParameters(parameters.Portfolio.CashBook, security, parameters.Order)
-                );
+                initialMarginRequirement +=
+                    security.BuyingPowerModel.GetInitialMarginRequiredForOrder(
+                        new InitialMarginRequiredForOrderParameters(
+                            parameters.Portfolio.CashBook,
+                            security,
+                            parameters.Order
+                        )
+                    );
             }
 
             return initialMarginRequirement;
@@ -95,7 +108,7 @@ namespace QuantConnect.Securities.Positions
         /// <returns>Returns the maximum allowed market order quantity and if zero, also the reason</returns>
         public override GetMaximumLotsResult GetMaximumLotsForTargetBuyingPower(
             GetMaximumLotsForTargetBuyingPowerParameters parameters
-            )
+        )
         {
             if (parameters.PositionGroup.Count != 1)
             {
@@ -107,7 +120,10 @@ namespace QuantConnect.Securities.Positions
             var position = parameters.PositionGroup.Single();
             var security = parameters.Portfolio.Securities[position.Symbol];
             var result = security.BuyingPowerModel.GetMaximumOrderQuantityForTargetBuyingPower(
-                parameters.Portfolio, security, parameters.TargetBuyingPower, parameters.MinimumOrderMarginPortfolioPercentage
+                parameters.Portfolio,
+                security,
+                parameters.TargetBuyingPower,
+                parameters.MinimumOrderMarginPortfolioPercentage
             );
 
             var quantity = result.Quantity / security.SymbolProperties.LotSize;
@@ -123,7 +139,7 @@ namespace QuantConnect.Securities.Positions
         /// <remarks>Used by the margin call model to reduce the position by a delta percent.</remarks>
         public override GetMaximumLotsResult GetMaximumLotsForDeltaBuyingPower(
             GetMaximumLotsForDeltaBuyingPowerParameters parameters
-            )
+        )
         {
             if (parameters.PositionGroup.Count != 1)
             {
@@ -136,7 +152,10 @@ namespace QuantConnect.Securities.Positions
             var security = parameters.Portfolio.Securities[position.Symbol];
             var result = security.BuyingPowerModel.GetMaximumOrderQuantityForDeltaBuyingPower(
                 new GetMaximumOrderQuantityForDeltaBuyingPowerParameters(
-                    parameters.Portfolio, security, parameters.DeltaBuyingPower, parameters.MinimumOrderMarginPortfolioPercentage
+                    parameters.Portfolio,
+                    security,
+                    parameters.DeltaBuyingPower,
+                    parameters.MinimumOrderMarginPortfolioPercentage
                 )
             );
 
@@ -151,7 +170,7 @@ namespace QuantConnect.Securities.Positions
         /// <returns>Returns buying power information for an order against a position group</returns>
         public override HasSufficientBuyingPowerForOrderResult HasSufficientBuyingPowerForOrder(
             HasSufficientPositionGroupBuyingPowerForOrderParameters parameters
-            )
+        )
         {
             if (parameters.PositionGroup.Count != 1)
             {
@@ -163,7 +182,9 @@ namespace QuantConnect.Securities.Positions
             var position = parameters.PositionGroup.Single();
             var security = parameters.Portfolio.Securities[position.Symbol];
             return security.BuyingPowerModel.HasSufficientBuyingPowerForOrder(
-                parameters.Portfolio, security, parameters.Orders.Single()
+                parameters.Portfolio,
+                security,
+                parameters.Orders.Single()
             );
         }
 
@@ -173,7 +194,7 @@ namespace QuantConnect.Securities.Positions
         protected override HasSufficientBuyingPowerForOrderResult PassesPositionGroupSpecificBuyingPowerForOrderChecks(
             HasSufficientPositionGroupBuyingPowerForOrderParameters parameters,
             decimal availableBuyingPower
-            )
+        )
         {
             // only check initial margin requirements when the algorithm is only using default position groups
             if (!parameters.Portfolio.Positions.IsOnlyDefaultGroups)
@@ -184,7 +205,9 @@ namespace QuantConnect.Securities.Positions
             var symbol = parameters.PositionGroup.Single().Symbol;
             var security = parameters.Portfolio.Securities[symbol];
             return security.BuyingPowerModel.HasSufficientBuyingPowerForOrder(
-                parameters.Portfolio, security, parameters.Orders.Single()
+                parameters.Portfolio,
+                security,
+                parameters.Orders.Single()
             );
         }
     }

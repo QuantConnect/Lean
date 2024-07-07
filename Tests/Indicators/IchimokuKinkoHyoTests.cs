@@ -13,10 +13,10 @@
  * limitations under the License.
 */
 
+using System;
 using NUnit.Framework;
 using QuantConnect.Data.Market;
 using QuantConnect.Indicators;
-using System;
 
 namespace QuantConnect.Tests.Indicators
 {
@@ -36,7 +36,11 @@ namespace QuantConnect.Tests.Indicators
 
         protected override Action<IndicatorBase<IBaseDataBar>, double> Assertion =>
             (indicator, expected) =>
-                Assert.AreEqual(expected, (double) ((IchimokuKinkoHyo) indicator).Tenkan.Current.Value, 1e-3);
+                Assert.AreEqual(
+                    expected,
+                    (double)((IchimokuKinkoHyo)indicator).Tenkan.Current.Value,
+                    1e-3
+                );
 
         [Test]
         public void ComparesWithExternalDataTenkanMaximum()
@@ -45,8 +49,12 @@ namespace QuantConnect.Tests.Indicators
                 CreateIndicator(),
                 TestFileName,
                 "TenkanMaximum",
-                (ind, expected) => Assert.AreEqual(expected, (double)((IchimokuKinkoHyo)ind).TenkanMaximum.Current.Value)
-                );
+                (ind, expected) =>
+                    Assert.AreEqual(
+                        expected,
+                        (double)((IchimokuKinkoHyo)ind).TenkanMaximum.Current.Value
+                    )
+            );
         }
 
         [Test]
@@ -56,8 +64,12 @@ namespace QuantConnect.Tests.Indicators
                 CreateIndicator(),
                 TestFileName,
                 "TenkanMinimum",
-                (ind, expected) => Assert.AreEqual(expected, (double)((IchimokuKinkoHyo)ind).TenkanMinimum.Current.Value)
-                );
+                (ind, expected) =>
+                    Assert.AreEqual(
+                        expected,
+                        (double)((IchimokuKinkoHyo)ind).TenkanMinimum.Current.Value
+                    )
+            );
         }
 
         [Test]
@@ -67,9 +79,14 @@ namespace QuantConnect.Tests.Indicators
                 CreateIndicator(),
                 TestFileName,
                 "KijunMaximum",
-                (ind, expected) => Assert.AreEqual(expected, (double)((IchimokuKinkoHyo)ind).KijunMaximum.Current.Value)
-                );
+                (ind, expected) =>
+                    Assert.AreEqual(
+                        expected,
+                        (double)((IchimokuKinkoHyo)ind).KijunMaximum.Current.Value
+                    )
+            );
         }
+
         [Test]
         public void ComparesWithExternalDataKijunMinimum()
         {
@@ -77,9 +94,14 @@ namespace QuantConnect.Tests.Indicators
                 CreateIndicator(),
                 TestFileName,
                 "KijunMinimum",
-                (ind, expected) => Assert.AreEqual(expected, (double)((IchimokuKinkoHyo)ind).KijunMinimum.Current.Value)
-                );
+                (ind, expected) =>
+                    Assert.AreEqual(
+                        expected,
+                        (double)((IchimokuKinkoHyo)ind).KijunMinimum.Current.Value
+                    )
+            );
         }
+
         [Test]
         public void ComparesWithExternalDataKijun()
         {
@@ -87,9 +109,11 @@ namespace QuantConnect.Tests.Indicators
                 CreateIndicator(),
                 TestFileName,
                 "Kijun",
-                (ind, expected) => Assert.AreEqual(expected, (double)((IchimokuKinkoHyo)ind).Kijun.Current.Value)
-                );
+                (ind, expected) =>
+                    Assert.AreEqual(expected, (double)((IchimokuKinkoHyo)ind).Kijun.Current.Value)
+            );
         }
+
         [Test]
         public void ComparesWithExternalDataDelayedTenkanSenkouA()
         {
@@ -97,10 +121,13 @@ namespace QuantConnect.Tests.Indicators
                 CreateIndicator(),
                 TestFileName,
                 "DelayedTenkanSenkouA",
-                (ind, expected) => Assert.AreEqual(expected, (double)((IchimokuKinkoHyo)ind).DelayedTenkanSenkouA.Current.Value)
-                );
+                (ind, expected) =>
+                    Assert.AreEqual(
+                        expected,
+                        (double)((IchimokuKinkoHyo)ind).DelayedTenkanSenkouA.Current.Value
+                    )
+            );
         }
-
 
         [Test]
         public void ComparesWithExternalDataDelayedKijunSenkouA()
@@ -109,8 +136,12 @@ namespace QuantConnect.Tests.Indicators
                 CreateIndicator(),
                 TestFileName,
                 "DelayedKijunSenkouA",
-                (ind, expected) => Assert.AreEqual(expected, (double)((IchimokuKinkoHyo)ind).DelayedKijunSenkouA.Current.Value)
-                );
+                (ind, expected) =>
+                    Assert.AreEqual(
+                        expected,
+                        (double)((IchimokuKinkoHyo)ind).DelayedKijunSenkouA.Current.Value
+                    )
+            );
         }
 
         [Test]
@@ -120,9 +151,11 @@ namespace QuantConnect.Tests.Indicators
                 CreateIndicator(),
                 TestFileName,
                 "Senkou A",
-                (ind, expected) => Assert.AreEqual(expected, (double)((IchimokuKinkoHyo)ind).SenkouA.Current.Value)
-                );
+                (ind, expected) =>
+                    Assert.AreEqual(expected, (double)((IchimokuKinkoHyo)ind).SenkouA.Current.Value)
+            );
         }
+
         [Test]
         public void ComparesWithExternalDataSenkouBMaximum()
         {
@@ -130,8 +163,12 @@ namespace QuantConnect.Tests.Indicators
                 CreateIndicator(),
                 TestFileName,
                 "SenkouBMaximum",
-                (ind, expected) => Assert.AreEqual(expected, (double)((IchimokuKinkoHyo)ind).SenkouBMaximum.Current.Value)
-                );
+                (ind, expected) =>
+                    Assert.AreEqual(
+                        expected,
+                        (double)((IchimokuKinkoHyo)ind).SenkouBMaximum.Current.Value
+                    )
+            );
         }
 
         [Test]
@@ -141,8 +178,12 @@ namespace QuantConnect.Tests.Indicators
                 CreateIndicator(),
                 TestFileName,
                 "SenkouBMinimum",
-                (ind, expected) => Assert.AreEqual(expected, (double)((IchimokuKinkoHyo)ind).SenkouBMinimum.Current.Value)
-                );
+                (ind, expected) =>
+                    Assert.AreEqual(
+                        expected,
+                        (double)((IchimokuKinkoHyo)ind).SenkouBMinimum.Current.Value
+                    )
+            );
         }
 
         [Test]
@@ -152,8 +193,12 @@ namespace QuantConnect.Tests.Indicators
                 CreateIndicator(),
                 TestFileName,
                 "DelayedMaximumSenkouB",
-                (ind, expected) => Assert.AreEqual(expected, (double)((IchimokuKinkoHyo)ind).DelayedMaximumSenkouB.Current.Value)
-                );
+                (ind, expected) =>
+                    Assert.AreEqual(
+                        expected,
+                        (double)((IchimokuKinkoHyo)ind).DelayedMaximumSenkouB.Current.Value
+                    )
+            );
         }
 
         [Test]
@@ -163,8 +208,12 @@ namespace QuantConnect.Tests.Indicators
                 CreateIndicator(),
                 TestFileName,
                 "DelayedMinimumSenkouB",
-                (ind, expected) => Assert.AreEqual(expected, (double)((IchimokuKinkoHyo)ind).DelayedMinimumSenkouB.Current.Value)
-                );
+                (ind, expected) =>
+                    Assert.AreEqual(
+                        expected,
+                        (double)((IchimokuKinkoHyo)ind).DelayedMinimumSenkouB.Current.Value
+                    )
+            );
         }
     }
 }

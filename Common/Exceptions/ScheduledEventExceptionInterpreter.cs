@@ -33,7 +33,8 @@ namespace QuantConnect.Exceptions
         /// </summary>
         /// <param name="exception">The exception to check</param>
         /// <returns>True if the exception can be interpreted, false otherwise</returns>
-        public bool CanInterpret(Exception exception) => exception?.GetType() == typeof(ScheduledEventException);
+        public bool CanInterpret(Exception exception) =>
+            exception?.GetType() == typeof(ScheduledEventException);
 
         /// <summary>
         /// Interprets the specified exception into a new exception
@@ -46,7 +47,7 @@ namespace QuantConnect.Exceptions
         /// <returns>The interpreted exception</returns>
         public Exception Interpret(Exception exception, IExceptionInterpreter innerInterpreter)
         {
-            var see = (ScheduledEventException) exception;
+            var see = (ScheduledEventException)exception;
 
             var inner = innerInterpreter.Interpret(see.InnerException, innerInterpreter);
 
@@ -54,7 +55,9 @@ namespace QuantConnect.Exceptions
             var message = exception.Message;
             if (!message.Contains(see.ScheduledEventName))
             {
-                message = Messages.ScheduledEventExceptionInterpreter.ScheduledEventName(see.ScheduledEventName);
+                message = Messages.ScheduledEventExceptionInterpreter.ScheduledEventName(
+                    see.ScheduledEventName
+                );
             }
 
             return new ScheduledEventException(see.ScheduledEventName, message, inner);

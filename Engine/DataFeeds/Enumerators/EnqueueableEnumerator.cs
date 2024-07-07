@@ -15,9 +15,9 @@
 */
 
 using System;
-using System.Threading;
 using System.Collections;
 using System.Collections.Generic;
+using System.Threading;
 
 namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
 {
@@ -48,7 +48,8 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
             {
                 lock (_lock)
                 {
-                    if (_end) return 0;
+                    if (_end)
+                        return 0;
                     return _producer.Count + (int)Interlocked.Read(ref _consumerCount);
                 }
             }
@@ -81,7 +82,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
             {
                 _producer.Enqueue(data);
                 // most of the time this will be set
-                if(!_resetEvent.IsSet)
+                if (!_resetEvent.IsSet)
                 {
                     _resetEvent.Set();
                 }
@@ -96,7 +97,8 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
         {
             lock (_lock)
             {
-                if (_end) return;
+                if (_end)
+                    return;
                 _end = true;
 
                 // no more items can be added, so no need to wait anymore
@@ -132,7 +134,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
                     _producer = _consumer;
                 }
                 _consumer = producer;
-                if(_consumer.Count > 0)
+                if (_consumer.Count > 0)
                 {
                     _current = _consumer.Dequeue();
                     Interlocked.Exchange(ref _consumerCount, _consumer.Count);
@@ -161,8 +163,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
                 {
                     break;
                 }
-            }
-            while (!ended);
+            } while (!ended);
 
             // even if we don't have data to return, we haven't technically
             // passed the end of the collection, so always return true until
@@ -176,7 +177,9 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
         /// <exception cref="T:System.InvalidOperationException">The collection was modified after the enumerator was created. </exception><filterpriority>2</filterpriority>
         public void Reset()
         {
-            throw new NotImplementedException("EnqueableEnumerator.Reset() has not been implemented yet.");
+            throw new NotImplementedException(
+                "EnqueableEnumerator.Reset() has not been implemented yet."
+            );
         }
 
         /// <summary>

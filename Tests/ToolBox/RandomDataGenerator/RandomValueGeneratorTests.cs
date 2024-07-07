@@ -13,9 +13,9 @@
  * limitations under the License.
 */
 
+using System;
 using NUnit.Framework;
 using QuantConnect.ToolBox.RandomDataGenerator;
-using System;
 
 namespace QuantConnect.Tests.ToolBox.RandomDataGenerator
 {
@@ -65,8 +65,8 @@ namespace QuantConnect.Tests.ToolBox.RandomDataGenerator
         {
             var min = new DateTime(2000, 01, 01);
             var max = min.AddDays(-1);
-            Assert.Throws<ArgumentException>(() =>
-                randomValueGenerator.NextDate(min, max, dayOfWeek: null)
+            Assert.Throws<ArgumentException>(
+                () => randomValueGenerator.NextDate(min, max, dayOfWeek: null)
             );
         }
 
@@ -75,9 +75,10 @@ namespace QuantConnect.Tests.ToolBox.RandomDataGenerator
         {
             var min = new DateTime(2019, 01, 15);
             var max = new DateTime(2019, 01, 20);
-            Assert.Throws<ArgumentException>(() =>
-                // no monday between these dates, so impossible to fulfill request
-                randomValueGenerator.NextDate(min, max, DayOfWeek.Monday)
+            Assert.Throws<ArgumentException>(
+                () =>
+                    // no monday between these dates, so impossible to fulfill request
+                    randomValueGenerator.NextDate(min, max, DayOfWeek.Monday)
             );
         }
 
@@ -92,25 +93,33 @@ namespace QuantConnect.Tests.ToolBox.RandomDataGenerator
         public void NextPrice_ThrowsIfReferencePriceIsInvalid([Values] SecurityType securityType)
         {
             // Negative reference price
-            Assert.Throws<ArgumentException>(() =>
-                randomValueGenerator.NextPrice(securityType, null, -1m, 1m)
+            Assert.Throws<ArgumentException>(
+                () => randomValueGenerator.NextPrice(securityType, null, -1m, 1m)
             );
 
             // Zero reference price
             if (securityType != SecurityType.Option)
             {
-                Assert.Throws<ArgumentException>(() =>
-                    randomValueGenerator.NextPrice(securityType, null, 0m, 1m)
+                Assert.Throws<ArgumentException>(
+                    () => randomValueGenerator.NextPrice(securityType, null, 0m, 1m)
                 );
             }
         }
 
         [TestCase(0)]
         [TestCase(-1)]
-        public void NextPrice_ThrowsIfMaximumPercentDeviationIsInvalid(decimal maximumPercentDeviation)
+        public void NextPrice_ThrowsIfMaximumPercentDeviationIsInvalid(
+            decimal maximumPercentDeviation
+        )
         {
-            Assert.Throws<ArgumentException>(() =>
-                randomValueGenerator.NextPrice(SecurityType.Equity, null, 100m, maximumPercentDeviation)
+            Assert.Throws<ArgumentException>(
+                () =>
+                    randomValueGenerator.NextPrice(
+                        SecurityType.Equity,
+                        null,
+                        100m,
+                        maximumPercentDeviation
+                    )
             );
         }
 
@@ -121,7 +130,12 @@ namespace QuantConnect.Tests.ToolBox.RandomDataGenerator
             var maximumPercentDeviation = 0.45m;
             var referencePrice = 0.1m; // too close to the minimum price variation
 
-            var price = randomValueGenerator.NextPrice(SecurityType.Crypto, Market.GDAX, referencePrice, maximumPercentDeviation);
+            var price = randomValueGenerator.NextPrice(
+                SecurityType.Crypto,
+                Market.GDAX,
+                referencePrice,
+                maximumPercentDeviation
+            );
 
             Assert.AreEqual(referencePrice, price);
         }
@@ -136,7 +150,12 @@ namespace QuantConnect.Tests.ToolBox.RandomDataGenerator
             // The maximum price variation is 0.45% of 2, which is 0.009, less than the minimum price variation of 0.01.
             // The generated price will be rounded back to 2m, but this should be properly handled.
 
-            var price = randomValueGenerator.NextPrice(SecurityType.Crypto, Market.GDAX, referencePrice, maximumPercentDeviation);
+            var price = randomValueGenerator.NextPrice(
+                SecurityType.Crypto,
+                Market.GDAX,
+                referencePrice,
+                maximumPercentDeviation
+            );
 
             Assert.AreNotEqual(referencePrice, price);
         }

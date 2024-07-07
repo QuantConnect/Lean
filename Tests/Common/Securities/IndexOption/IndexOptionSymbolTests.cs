@@ -24,17 +24,26 @@ namespace QuantConnect.Tests.Common.Securities.IndexOption
     {
         [TestCase(1, false, "SPXW")]
         [TestCase(20, true, "SPXW")]
-
         [TestCase(1, false, "NQX")]
         [TestCase(20, true, "NQX")]
-
         [TestCase(1, true, "VIX")]
         [TestCase(20, true, "VIX")]
         public void IsStandard(int expirationDate, bool isStandard, string optionTicker)
         {
-            var symbol = Symbol.Create(IndexOptionSymbol.MapToUnderlying(optionTicker), SecurityType.Index, Market.USA);
-            var option = Symbol.CreateOption(symbol, optionTicker, Market.USA, OptionStyle.European,
-                OptionRight.Call, 3700, new DateTime(2023, 1, expirationDate));
+            var symbol = Symbol.Create(
+                IndexOptionSymbol.MapToUnderlying(optionTicker),
+                SecurityType.Index,
+                Market.USA
+            );
+            var option = Symbol.CreateOption(
+                symbol,
+                optionTicker,
+                Market.USA,
+                OptionStyle.European,
+                OptionRight.Call,
+                3700,
+                new DateTime(2023, 1, expirationDate)
+            );
 
             Assert.AreEqual(isStandard, IndexOptionSymbol.IsStandard(option));
         }

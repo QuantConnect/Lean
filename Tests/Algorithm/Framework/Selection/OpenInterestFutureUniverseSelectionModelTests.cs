@@ -30,20 +30,55 @@ namespace QuantConnect.Tests.Algorithm.Framework.Selection
     [TestFixture]
     public class OpenInterestFutureUniverseSelectionModelTests
     {
-        private static readonly Symbol Jan = Symbol.CreateFuture(Futures.Metals.Gold, Market.COMEX, new DateTime(2020, 01, 01));
-        private static readonly Symbol Feb = Symbol.CreateFuture(Futures.Metals.Gold, Market.COMEX, new DateTime(2020, 02, 01));
-        private static readonly Symbol March = Symbol.CreateFuture(Futures.Metals.Gold, Market.COMEX, new DateTime(2020, 03, 01));
-        private static readonly Symbol April = Symbol.CreateFuture(Futures.Metals.Gold, Market.COMEX, new DateTime(2020, 04, 01));
-        private static readonly DateTime TestDate = new DateTime(2020, 05, 11, 0, 0, 0, DateTimeKind.Utc);
-        private static readonly DateTime ExpectedPreviousDate = new DateTime(2020, 05, 09, 20, 0, 0, DateTimeKind.Utc);
-        private static readonly IReadOnlyDictionary<Symbol, decimal> OpenInterestData = new Dictionary<Symbol, decimal>
-        {
-            [Jan] = 3,
-            [Feb] = 6,
-            [March] = 3, // Same as Jan.
-            [April] = 1
-        };
-        private static readonly MarketHoursDatabase.Entry MarketHours = MarketHoursDatabase.FromDataFolder().GetEntry(Jan.ID.Market, Jan, Jan.SecurityType);
+        private static readonly Symbol Jan = Symbol.CreateFuture(
+            Futures.Metals.Gold,
+            Market.COMEX,
+            new DateTime(2020, 01, 01)
+        );
+        private static readonly Symbol Feb = Symbol.CreateFuture(
+            Futures.Metals.Gold,
+            Market.COMEX,
+            new DateTime(2020, 02, 01)
+        );
+        private static readonly Symbol March = Symbol.CreateFuture(
+            Futures.Metals.Gold,
+            Market.COMEX,
+            new DateTime(2020, 03, 01)
+        );
+        private static readonly Symbol April = Symbol.CreateFuture(
+            Futures.Metals.Gold,
+            Market.COMEX,
+            new DateTime(2020, 04, 01)
+        );
+        private static readonly DateTime TestDate = new DateTime(
+            2020,
+            05,
+            11,
+            0,
+            0,
+            0,
+            DateTimeKind.Utc
+        );
+        private static readonly DateTime ExpectedPreviousDate = new DateTime(
+            2020,
+            05,
+            09,
+            20,
+            0,
+            0,
+            DateTimeKind.Utc
+        );
+        private static readonly IReadOnlyDictionary<Symbol, decimal> OpenInterestData =
+            new Dictionary<Symbol, decimal>
+            {
+                [Jan] = 3,
+                [Feb] = 6,
+                [March] = 3, // Same as Jan.
+                [April] = 1
+            };
+        private static readonly MarketHoursDatabase.Entry MarketHours = MarketHoursDatabase
+            .FromDataFolder()
+            .GetEntry(Jan.ID.Market, Jan, Jan.SecurityType);
         private Mock<IHistoryProvider> _mockHistoryProvider;
         private OpenInterestFutureUniverseSelectionModel _underTest;
 
@@ -51,7 +86,10 @@ namespace QuantConnect.Tests.Algorithm.Framework.Selection
         public void No_Open_Interest_Returns_Empty()
         {
             SetupSubject(OpenInterestData.Count, OpenInterestData.Count);
-            _mockHistoryProvider.Setup(x => x.GetHistory(It.IsAny<IEnumerable<HistoryRequest>>(), It.IsAny<DateTimeZone>()))
+            _mockHistoryProvider
+                .Setup(x =>
+                    x.GetHistory(It.IsAny<IEnumerable<HistoryRequest>>(), It.IsAny<DateTimeZone>())
+                )
                 .Returns<IEnumerable<HistoryRequest>, DateTimeZone>((r, tz) => new Slice[0])
                 .Verifiable();
 
@@ -65,7 +103,10 @@ namespace QuantConnect.Tests.Algorithm.Framework.Selection
         public void Can_Sort_By_Open_Interest()
         {
             SetupSubject(OpenInterestData.Count, OpenInterestData.Count);
-            _mockHistoryProvider.Setup(x => x.GetHistory(It.IsAny<IEnumerable<HistoryRequest>>(), It.IsAny<DateTimeZone>()))
+            _mockHistoryProvider
+                .Setup(x =>
+                    x.GetHistory(It.IsAny<IEnumerable<HistoryRequest>>(), It.IsAny<DateTimeZone>())
+                )
                 .Returns<IEnumerable<HistoryRequest>, DateTimeZone>(
                     (r, tz) =>
                     {
@@ -76,13 +117,18 @@ namespace QuantConnect.Tests.Algorithm.Framework.Selection
                         {
                             Assert.NotNull(request.Symbol);
                             Assert.AreEqual(typeof(Tick), request.DataType);
-                            Assert.AreEqual(DataNormalizationMode.Raw, request.DataNormalizationMode);
+                            Assert.AreEqual(
+                                DataNormalizationMode.Raw,
+                                request.DataNormalizationMode
+                            );
                             Assert.AreEqual(ExpectedPreviousDate, request.StartTimeUtc);
                             Assert.AreEqual(TestDate, request.EndTimeUtc);
                             Assert.AreEqual(Resolution.Tick, request.Resolution);
                             Assert.AreEqual(TickType.OpenInterest, request.TickType);
                             Assert.AreEqual(tz, MarketHours.ExchangeHours.TimeZone);
-                            slices.Add(CreateReplySlice(request.Symbol, OpenInterestData[request.Symbol]));
+                            slices.Add(
+                                CreateReplySlice(request.Symbol, OpenInterestData[request.Symbol])
+                            );
                         }
 
                         return slices;
@@ -106,22 +152,54 @@ namespace QuantConnect.Tests.Algorithm.Framework.Selection
         public void Can_Limit_Number_Of_Contracts()
         {
             SetupSubject(6, 4);
-            var expected = Enumerable.Range(1, 4).Select(d => Symbol.CreateFuture(Futures.Metals.Gold, Market.COMEX, new DateTime(2020, 01, d))).ToList();
+            var expected = Enumerable
+                .Range(1, 4)
+                .Select(d =>
+                    Symbol.CreateFuture(
+                        Futures.Metals.Gold,
+                        Market.COMEX,
+                        new DateTime(2020, 01, d)
+                    )
+                )
+                .ToList();
 
             // Create 7 requests.  Reverse the list so the order isn't correct, but remains consistent for tests.
-            var data = expected.Concat(Enumerable.Range(5, 3).Select(d => Symbol.CreateFuture(Futures.Metals.Gold, Market.COMEX, new DateTime(2020, 01, d))))
+            var data = expected
+                .Concat(
+                    Enumerable
+                        .Range(5, 3)
+                        .Select(d =>
+                            Symbol.CreateFuture(
+                                Futures.Metals.Gold,
+                                Market.COMEX,
+                                new DateTime(2020, 01, d)
+                            )
+                        )
+                )
                 .Reverse()
                 .ToDictionary(x => x, _ => MarketHours);
 
             // 7 input requests, but the look-up should be limited to only 6.
-            _mockHistoryProvider.Setup(x => x.GetHistory(It.IsAny<IEnumerable<HistoryRequest>>(), It.IsAny<DateTimeZone>()))
-                .Returns<IEnumerable<HistoryRequest>, DateTimeZone>((rq, tz) => rq.Select(r => CreateReplySlice(r.Symbol, 1)).ToArray());
+            _mockHistoryProvider
+                .Setup(x =>
+                    x.GetHistory(It.IsAny<IEnumerable<HistoryRequest>>(), It.IsAny<DateTimeZone>())
+                )
+                .Returns<IEnumerable<HistoryRequest>, DateTimeZone>(
+                    (rq, tz) => rq.Select(r => CreateReplySlice(r.Symbol, 1)).ToArray()
+                );
 
             // Run the test.
             var results = _underTest.FilterByOpenInterest(data).ToList();
 
             // Verify the chain limit was applied.
-            _mockHistoryProvider.Verify(x => x.GetHistory(It.Is<IEnumerable<HistoryRequest>>(r => r.Count() == 6), MarketHours.ExchangeHours.TimeZone), Times.Once);
+            _mockHistoryProvider.Verify(
+                x =>
+                    x.GetHistory(
+                        It.Is<IEnumerable<HistoryRequest>>(r => r.Count() == 6),
+                        MarketHours.ExchangeHours.TimeZone
+                    ),
+                Times.Once
+            );
 
             // Verify the results.
             CollectionAssert.AreEqual(expected, results);
@@ -132,18 +210,61 @@ namespace QuantConnect.Tests.Algorithm.Framework.Selection
         {
             SetupSubject(null, null);
             var startDate = new DateTime(2020, 01, 01);
-            var items = Enumerable.Range(0, 100).ToDictionary(d => Symbol.CreateFuture(Futures.Metals.Gold, Market.COMEX, startDate.AddDays(d)), _ => MarketHours);
-            _mockHistoryProvider.Setup(x => x.GetHistory(It.IsAny<IEnumerable<HistoryRequest>>(), It.IsAny<DateTimeZone>()))
-                .Returns<IEnumerable<HistoryRequest>, DateTimeZone>((rq, tz) => rq.Select(r => CreateReplySlice(r.Symbol, 1)).ToArray());
+            var items = Enumerable
+                .Range(0, 100)
+                .ToDictionary(
+                    d =>
+                        Symbol.CreateFuture(
+                            Futures.Metals.Gold,
+                            Market.COMEX,
+                            startDate.AddDays(d)
+                        ),
+                    _ => MarketHours
+                );
+            _mockHistoryProvider
+                .Setup(x =>
+                    x.GetHistory(It.IsAny<IEnumerable<HistoryRequest>>(), It.IsAny<DateTimeZone>())
+                )
+                .Returns<IEnumerable<HistoryRequest>, DateTimeZone>(
+                    (rq, tz) => rq.Select(r => CreateReplySlice(r.Symbol, 1)).ToArray()
+                );
             var results = _underTest.FilterByOpenInterest(items).ToList();
-            _mockHistoryProvider.Verify(x => x.GetHistory(It.Is<IEnumerable<HistoryRequest>>(r => r.Count() == 100), MarketHours.ExchangeHours.TimeZone), Times.Once);
+            _mockHistoryProvider.Verify(
+                x =>
+                    x.GetHistory(
+                        It.Is<IEnumerable<HistoryRequest>>(r => r.Count() == 100),
+                        MarketHours.ExchangeHours.TimeZone
+                    ),
+                Times.Once
+            );
             Assert.AreEqual(items.Keys, results);
         }
 
         private static Slice CreateReplySlice(Symbol symbol, decimal openInterest)
         {
-            var ticks = new Ticks {{symbol, new List<Tick> {new OpenInterest(TestDate, symbol, openInterest)}}};
-            return new Slice(TestDate, null, null, null, ticks, null, null, null, null, null, null, null, TestDate, true);
+            var ticks = new Ticks
+            {
+                {
+                    symbol,
+                    new List<Tick> { new OpenInterest(TestDate, symbol, openInterest) }
+                }
+            };
+            return new Slice(
+                TestDate,
+                null,
+                null,
+                null,
+                ticks,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                TestDate,
+                true
+            );
         }
 
         private void SetupSubject(int? testChainContractLookupLimit, int? testResultsLimit)
@@ -153,7 +274,12 @@ namespace QuantConnect.Tests.Algorithm.Framework.Selection
             var mockAlgorithm = new Mock<IAlgorithm>();
             mockAlgorithm.SetupGet(x => x.HistoryProvider).Returns(_mockHistoryProvider.Object);
             mockAlgorithm.SetupGet(x => x.UtcTime).Returns(TestDate);
-            _underTest = new OpenInterestFutureUniverseSelectionModel(mockAlgorithm.Object, _ => OpenInterestData.Keys, testChainContractLookupLimit, testResultsLimit);
+            _underTest = new OpenInterestFutureUniverseSelectionModel(
+                mockAlgorithm.Object,
+                _ => OpenInterestData.Keys,
+                testChainContractLookupLimit,
+                testResultsLimit
+            );
         }
     }
 }

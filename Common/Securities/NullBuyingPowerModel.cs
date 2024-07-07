@@ -25,7 +25,9 @@ namespace QuantConnect.Securities
         /// </summary>
         /// <param name="parameters">An object containing the security</param>
         /// <returns>The maintenance margin required for the provided holdings quantity/cost/value</returns>
-        public override MaintenanceMargin GetMaintenanceMargin(MaintenanceMarginParameters parameters)
+        public override MaintenanceMargin GetMaintenanceMargin(
+            MaintenanceMarginParameters parameters
+        )
         {
             return new MaintenanceMargin(decimal.Zero);
         }
@@ -35,7 +37,9 @@ namespace QuantConnect.Securities
         /// </summary>
         /// <param name="parameters">An object containing the portfolio, the security and the order</param>
         /// <returns>Returns buying power information for an order</returns>
-        public override HasSufficientBuyingPowerForOrderResult HasSufficientBuyingPowerForOrder(HasSufficientBuyingPowerForOrderParameters parameters)
+        public override HasSufficientBuyingPowerForOrderResult HasSufficientBuyingPowerForOrder(
+            HasSufficientBuyingPowerForOrderParameters parameters
+        )
         {
             return parameters.Sufficient();
         }

@@ -34,7 +34,16 @@ namespace QuantConnect.Tests.Common.Securities
             var reference = new DateTime(2016, 04, 06, 12, 0, 0);
             var referenceUtc = reference.ConvertToUtc(TimeZones.NewYork);
             var timeKeeper = new TimeKeeper(referenceUtc);
-            var config = new SubscriptionDataConfig(typeof(TradeBar), Symbols.SPY, Resolution.Minute, TimeZones.NewYork, TimeZones.NewYork, true, false, false);
+            var config = new SubscriptionDataConfig(
+                typeof(TradeBar),
+                Symbols.SPY,
+                Resolution.Minute,
+                TimeZones.NewYork,
+                TimeZones.NewYork,
+                true,
+                false,
+                false
+            );
             var security = new Security(
                 SecurityExchangeHours.AlwaysOpen(TimeZones.NewYork),
                 config,
@@ -75,7 +84,16 @@ namespace QuantConnect.Tests.Common.Securities
             var reference = new DateTime(2016, 04, 06, 12, 0, 0);
             var referenceUtc = reference.ConvertToUtc(TimeZones.NewYork);
             var timeKeeper = new TimeKeeper(referenceUtc);
-            var config = new SubscriptionDataConfig(typeof(TradeBar), Symbols.SPY, Resolution.Minute, TimeZones.NewYork, TimeZones.NewYork, true, false, false);
+            var config = new SubscriptionDataConfig(
+                typeof(TradeBar),
+                Symbols.SPY,
+                Resolution.Minute,
+                TimeZones.NewYork,
+                TimeZones.NewYork,
+                true,
+                false,
+                false
+            );
             var security = new Security(
                 SecurityExchangeHours.AlwaysOpen(TimeZones.NewYork),
                 config,
@@ -121,7 +139,16 @@ namespace QuantConnect.Tests.Common.Securities
             var reference = new DateTime(2016, 04, 06, 12, 0, 0);
             var referenceUtc = reference.ConvertToUtc(TimeZones.NewYork);
             var timeKeeper = new TimeKeeper(referenceUtc);
-            var config = new SubscriptionDataConfig(typeof(TradeBar), Symbols.SPY, Resolution.Minute, TimeZones.NewYork, TimeZones.NewYork, true, false, false);
+            var config = new SubscriptionDataConfig(
+                typeof(TradeBar),
+                Symbols.SPY,
+                Resolution.Minute,
+                TimeZones.NewYork,
+                TimeZones.NewYork,
+                true,
+                false,
+                false
+            );
             var security = new Security(
                 SecurityExchangeHours.AlwaysOpen(TimeZones.NewYork),
                 config,
@@ -154,7 +181,16 @@ namespace QuantConnect.Tests.Common.Securities
             var reference = new DateTime(2016, 04, 06, 12, 0, 0);
             var referenceUtc = reference.ConvertToUtc(TimeZones.NewYork);
             var timeKeeper = new TimeKeeper(referenceUtc);
-            var config = new SubscriptionDataConfig(typeof(TradeBar), Symbols.SPY, Resolution.Minute, TimeZones.NewYork, TimeZones.NewYork, true, false, false);
+            var config = new SubscriptionDataConfig(
+                typeof(TradeBar),
+                Symbols.SPY,
+                Resolution.Minute,
+                TimeZones.NewYork,
+                TimeZones.NewYork,
+                true,
+                false,
+                false
+            );
             var security = new Security(
                 SecurityExchangeHours.AlwaysOpen(TimeZones.NewYork),
                 config,
@@ -178,7 +214,9 @@ namespace QuantConnect.Tests.Common.Securities
                     true,
                     true,
                     false,
-                    true));
+                    true
+                )
+            );
             model.SetSubscriptionDataConfigProvider(mock);
             var result = model.GetHistoryRequirements(security, DateTime.UtcNow).First();
 
@@ -199,7 +237,16 @@ namespace QuantConnect.Tests.Common.Securities
             var reference = new DateTime(2016, 04, 06, 12, 0, 0);
             var referenceUtc = reference.ConvertToUtc(TimeZones.NewYork);
             var timeKeeper = new TimeKeeper(referenceUtc);
-            var config = new SubscriptionDataConfig(typeof(TradeBar), Symbols.SPY, Resolution.Minute, TimeZones.NewYork, TimeZones.NewYork, true, false, false);
+            var config = new SubscriptionDataConfig(
+                typeof(TradeBar),
+                Symbols.SPY,
+                Resolution.Minute,
+                TimeZones.NewYork,
+                TimeZones.NewYork,
+                true,
+                false,
+                false
+            );
             var security = new Security(
                 SecurityExchangeHours.AlwaysOpen(TimeZones.NewYork),
                 config,
@@ -211,7 +258,11 @@ namespace QuantConnect.Tests.Common.Securities
             );
             security.SetLocalTimeKeeper(timeKeeper.GetLocalTimeKeeper(TimeZones.NewYork));
 
-            var model = new StandardDeviationOfReturnsVolatilityModel(periods, Resolution.Minute, TimeSpan.FromMinutes(1));
+            var model = new StandardDeviationOfReturnsVolatilityModel(
+                periods,
+                Resolution.Minute,
+                TimeSpan.FromMinutes(1)
+            );
 
             for (var i = 0; i < 5; i++)
             {
@@ -224,15 +275,18 @@ namespace QuantConnect.Tests.Common.Securities
                     Assert.AreNotEqual(0, model.Volatility);
                 }
 
-                model.Update(security, new TradeBar
-                {
-                    Open = 11 + (i - 1),
-                    High = 11 + i,
-                    Low = 9 - i,
-                    Close = 11 + i,
-                    Symbol = security.Symbol,
-                    Time = reference.AddMinutes(i)
-                });
+                model.Update(
+                    security,
+                    new TradeBar
+                    {
+                        Open = 11 + (i - 1),
+                        High = 11 + i,
+                        Low = 9 - i,
+                        Close = 11 + i,
+                        Symbol = security.Symbol,
+                        Time = reference.AddMinutes(i)
+                    }
+                );
             }
 
             Assert.AreNotEqual(0, model.Volatility);
@@ -252,10 +306,29 @@ namespace QuantConnect.Tests.Common.Securities
                 OptionStyle.American,
                 OptionRight.Call,
                 0,
-                SecurityIdentifier.DefaultDate);
+                SecurityIdentifier.DefaultDate
+            );
 
-            var underlyingConfig = new SubscriptionDataConfig(typeof(TradeBar), underlyingSymbol, Resolution.Minute, TimeZones.Chicago, TimeZones.Chicago, true, false, false);
-            var futureOptionConfig = new SubscriptionDataConfig(typeof(TradeBar), futureOption, Resolution.Minute, TimeZones.Chicago, TimeZones.Chicago, true, false, false);
+            var underlyingConfig = new SubscriptionDataConfig(
+                typeof(TradeBar),
+                underlyingSymbol,
+                Resolution.Minute,
+                TimeZones.Chicago,
+                TimeZones.Chicago,
+                true,
+                false,
+                false
+            );
+            var futureOptionConfig = new SubscriptionDataConfig(
+                typeof(TradeBar),
+                futureOption,
+                Resolution.Minute,
+                TimeZones.Chicago,
+                TimeZones.Chicago,
+                true,
+                false,
+                false
+            );
 
             var underlyingSecurity = new Security(
                 SecurityExchangeHours.AlwaysOpen(TimeZones.Chicago),
@@ -277,16 +350,28 @@ namespace QuantConnect.Tests.Common.Securities
             );
 
             underlyingSecurity.SetLocalTimeKeeper(timeKeeper.GetLocalTimeKeeper(TimeZones.Chicago));
-            futureOptionSecurity.SetLocalTimeKeeper(timeKeeper.GetLocalTimeKeeper(TimeZones.Chicago));
+            futureOptionSecurity.SetLocalTimeKeeper(
+                timeKeeper.GetLocalTimeKeeper(TimeZones.Chicago)
+            );
 
             var mock = new MockSubscriptionDataConfigProvider();
             mock.SubscriptionDataConfigs.Add(underlyingConfig);
             mock.SubscriptionDataConfigs.Add(futureOptionConfig);
-            var model = new StandardDeviationOfReturnsVolatilityModel(periods, Resolution.Minute, TimeSpan.FromMinutes(1));
+            var model = new StandardDeviationOfReturnsVolatilityModel(
+                periods,
+                Resolution.Minute,
+                TimeSpan.FromMinutes(1)
+            );
             model.SetSubscriptionDataConfigProvider(mock);
 
-            var futureHistoryRequirements = model.GetHistoryRequirements(underlyingSecurity, referenceUtc);
-            var optionHistoryRequirements = model.GetHistoryRequirements(futureOptionSecurity, referenceUtc);
+            var futureHistoryRequirements = model.GetHistoryRequirements(
+                underlyingSecurity,
+                referenceUtc
+            );
+            var optionHistoryRequirements = model.GetHistoryRequirements(
+                futureOptionSecurity,
+                referenceUtc
+            );
 
             Assert.IsTrue(futureHistoryRequirements.All(x => x.Resolution == Resolution.Minute));
             Assert.IsTrue(optionHistoryRequirements.All(x => x.Resolution == Resolution.Minute));

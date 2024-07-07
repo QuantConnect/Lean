@@ -20,7 +20,7 @@ namespace QuantConnect.Orders.Fees
     /// <summary>
     /// Provides an implementation of <see cref="FeeModel"/> that models Axos order fees
     /// </summary>
-    public class AxosFeeModel: IFeeModel
+    public class AxosFeeModel : IFeeModel
     {
         private readonly decimal _feesPerShare;
 
@@ -42,7 +42,9 @@ namespace QuantConnect.Orders.Fees
         /// <returns>The cost of the order in quote currency</returns>
         public OrderFee GetOrderFee(OrderFeeParameters parameters)
         {
-            return new OrderFee(new CashAmount(_feesPerShare * parameters.Order.AbsoluteQuantity, Currencies.USD));
+            return new OrderFee(
+                new CashAmount(_feesPerShare * parameters.Order.AbsoluteQuantity, Currencies.USD)
+            );
         }
     }
 }

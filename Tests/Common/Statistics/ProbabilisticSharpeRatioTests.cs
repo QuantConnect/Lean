@@ -27,10 +27,14 @@ namespace QuantConnect.Tests.Common.Statistics
             var performance = new List<double> { 0.01, 0.02, 0.01, 0, 0, 3 };
             var benchmark = new List<double> { 0.01, 0.02, 0.01, 0, 0, 3 };
 
-            var benchmarkSharpeRatio = QuantConnect.Statistics.Statistics.ObservedSharpeRatio(benchmark);
+            var benchmarkSharpeRatio = QuantConnect.Statistics.Statistics.ObservedSharpeRatio(
+                benchmark
+            );
 
-            var result = QuantConnect.Statistics.Statistics.ProbabilisticSharpeRatio(performance,
-                benchmarkSharpeRatio);
+            var result = QuantConnect.Statistics.Statistics.ProbabilisticSharpeRatio(
+                performance,
+                benchmarkSharpeRatio
+            );
 
             // they zero each other out
             Assert.AreEqual(0.5d, result, 0.001);
@@ -39,13 +43,17 @@ namespace QuantConnect.Tests.Common.Statistics
         [Test]
         public void BeatBenchmark()
         {
-            var performance = new List<double> { 0.01, 0.02, 0.01, 0, 0,3 };
+            var performance = new List<double> { 0.01, 0.02, 0.01, 0, 0, 3 };
             var benchmark = new List<double> { 0, 0, 0, -0.1, 0, 0.01, 0 };
 
-            var benchmarkSharpeRatio = QuantConnect.Statistics.Statistics.ObservedSharpeRatio(benchmark);
+            var benchmarkSharpeRatio = QuantConnect.Statistics.Statistics.ObservedSharpeRatio(
+                benchmark
+            );
 
-            var result = QuantConnect.Statistics.Statistics.ProbabilisticSharpeRatio(performance,
-                benchmarkSharpeRatio);
+            var result = QuantConnect.Statistics.Statistics.ProbabilisticSharpeRatio(
+                performance,
+                benchmarkSharpeRatio
+            );
 
             Assert.AreEqual(1d, result, 0.001);
         }
@@ -56,10 +64,14 @@ namespace QuantConnect.Tests.Common.Statistics
             var benchmark = new List<double> { 0.01, 0.02, 0.01, 0, 0, 3 };
             var performance = new List<double> { 0, 0, 0, -0.1, 0, 0.01, 0 };
 
-            var benchmarkSharpeRatio = QuantConnect.Statistics.Statistics.ObservedSharpeRatio(benchmark);
+            var benchmarkSharpeRatio = QuantConnect.Statistics.Statistics.ObservedSharpeRatio(
+                benchmark
+            );
 
-            var result = QuantConnect.Statistics.Statistics.ProbabilisticSharpeRatio(performance,
-                benchmarkSharpeRatio);
+            var result = QuantConnect.Statistics.Statistics.ProbabilisticSharpeRatio(
+                performance,
+                benchmarkSharpeRatio
+            );
 
             Assert.AreEqual(0d, result, 0.001);
         }
@@ -70,10 +82,14 @@ namespace QuantConnect.Tests.Common.Statistics
             var benchmark = new List<double> { 0, 0, 0 };
             var performance = new List<double> { 0, 0, 0 };
 
-            var benchmarkSharpeRatio = QuantConnect.Statistics.Statistics.ObservedSharpeRatio(benchmark);
+            var benchmarkSharpeRatio = QuantConnect.Statistics.Statistics.ObservedSharpeRatio(
+                benchmark
+            );
 
-            var result = QuantConnect.Statistics.Statistics.ProbabilisticSharpeRatio(performance,
-                benchmarkSharpeRatio);
+            var result = QuantConnect.Statistics.Statistics.ProbabilisticSharpeRatio(
+                performance,
+                benchmarkSharpeRatio
+            );
 
             Assert.AreEqual(0d, result, 0.001);
         }

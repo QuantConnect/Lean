@@ -21,16 +21,16 @@ namespace QuantConnect.Python
     /// <summary>
     /// Provides a wrapper for <see cref="IBrokerageMessageHandler"/> implementations written in python
     /// </summary>
-    public class BrokerageMessageHandlerPythonWrapper : BasePythonWrapper<IBrokerageMessageHandler>, IBrokerageMessageHandler
+    public class BrokerageMessageHandlerPythonWrapper
+        : BasePythonWrapper<IBrokerageMessageHandler>,
+            IBrokerageMessageHandler
     {
         /// <summary>
         /// Initializes a new instance of the <see cref="BrokerageMessageHandlerPythonWrapper"/> class
         /// </summary>
         /// <param name="model">The python implementation of <see cref="IBrokerageMessageHandler"/></param>
         public BrokerageMessageHandlerPythonWrapper(PyObject model)
-            : base(model)
-        {
-        }
+            : base(model) { }
 
         /// <summary>
         /// Handles the message

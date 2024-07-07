@@ -57,19 +57,22 @@ namespace QuantConnect.Algorithm.CSharp
             // define our sma as the base of the ribbon
             var sma = new SimpleMovingAverage(period);
 
-            _ribbon = Enumerable.Range(0, count).Select(x =>
-            {
-                // define our offset to the zero sma, these various offsets will create our 'displaced' ribbon
-                var delay = new Delay(offset*(x+1));
+            _ribbon = Enumerable
+                .Range(0, count)
+                .Select(x =>
+                {
+                    // define our offset to the zero sma, these various offsets will create our 'displaced' ribbon
+                    var delay = new Delay(offset * (x + 1));
 
-                // define an indicator that takes the output of the sma and pipes it into our delay indicator
-                var delayedSma = delay.Of(sma);
+                    // define an indicator that takes the output of the sma and pipes it into our delay indicator
+                    var delayedSma = delay.Of(sma);
 
-                // register our new 'delayedSma' for automatic updates on a daily resolution
-                RegisterIndicator(_spy, delayedSma, Resolution.Daily, data => data.Value);
+                    // register our new 'delayedSma' for automatic updates on a daily resolution
+                    RegisterIndicator(_spy, delayedSma, Resolution.Daily, data => data.Value);
 
-                return delayedSma;
-            }).ToArray();
+                    return delayedSma;
+                })
+                .ToArray();
         }
 
         private DateTime _previous;
@@ -81,14 +84,15 @@ namespace QuantConnect.Algorithm.CSharp
         public override void OnData(Slice slice)
         {
             // wait for our entire ribbon to be ready
-            if (!_ribbon.All(x => x.IsReady)) return;
+            if (!_ribbon.All(x => x.IsReady))
+                return;
 
             // only once per day
-            if (_previous.Date == Time.Date) return;
+            if (_previous.Date == Time.Date)
+                return;
 
             Plot("Ribbon", "Price", slice[_spy].Price);
             Plot("Ribbon", _ribbon);
-
 
             // check for a buy signal
             var values = _ribbon.Select(x => x.Current.Value).ToArray();
@@ -180,35 +184,36 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// This is used by the regression test system to indicate what the expected statistics are from running the algorithm
         /// </summary>
-        public Dictionary<string, string> ExpectedStatistics => new Dictionary<string, string>
-        {
-            {"Total Orders", "7"},
-            {"Average Win", "19.17%"},
-            {"Average Loss", "0%"},
-            {"Compounding Annual Return", "16.729%"},
-            {"Drawdown", "12.400%"},
-            {"Expectancy", "0"},
-            {"Start Equity", "100000"},
-            {"End Equity", "253075.04"},
-            {"Net Profit", "153.075%"},
-            {"Sharpe Ratio", "1.05"},
-            {"Sortino Ratio", "1.078"},
-            {"Probabilistic Sharpe Ratio", "56.405%"},
-            {"Loss Rate", "0%"},
-            {"Win Rate", "100%"},
-            {"Profit-Loss Ratio", "0"},
-            {"Alpha", "0.051"},
-            {"Beta", "0.507"},
-            {"Annual Standard Deviation", "0.107"},
-            {"Annual Variance", "0.011"},
-            {"Information Ratio", "-0.083"},
-            {"Tracking Error", "0.105"},
-            {"Treynor Ratio", "0.221"},
-            {"Total Fees", "$49.40"},
-            {"Estimated Strategy Capacity", "$740000000.00"},
-            {"Lowest Capacity Asset", "SPY R735QTJ8XC9X"},
-            {"Portfolio Turnover", "0.32%"},
-            {"OrderListHash", "62d1401e91275f777d0865a13906e7c8"}
-        };
+        public Dictionary<string, string> ExpectedStatistics =>
+            new Dictionary<string, string>
+            {
+                { "Total Orders", "7" },
+                { "Average Win", "19.17%" },
+                { "Average Loss", "0%" },
+                { "Compounding Annual Return", "16.729%" },
+                { "Drawdown", "12.400%" },
+                { "Expectancy", "0" },
+                { "Start Equity", "100000" },
+                { "End Equity", "253075.04" },
+                { "Net Profit", "153.075%" },
+                { "Sharpe Ratio", "1.05" },
+                { "Sortino Ratio", "1.078" },
+                { "Probabilistic Sharpe Ratio", "56.405%" },
+                { "Loss Rate", "0%" },
+                { "Win Rate", "100%" },
+                { "Profit-Loss Ratio", "0" },
+                { "Alpha", "0.051" },
+                { "Beta", "0.507" },
+                { "Annual Standard Deviation", "0.107" },
+                { "Annual Variance", "0.011" },
+                { "Information Ratio", "-0.083" },
+                { "Tracking Error", "0.105" },
+                { "Treynor Ratio", "0.221" },
+                { "Total Fees", "$49.40" },
+                { "Estimated Strategy Capacity", "$740000000.00" },
+                { "Lowest Capacity Asset", "SPY R735QTJ8XC9X" },
+                { "Portfolio Turnover", "0.32%" },
+                { "OrderListHash", "62d1401e91275f777d0865a13906e7c8" }
+            };
     }
 }

@@ -22,7 +22,7 @@ using QuantConnect.Indicators;
 namespace QuantConnect.Algorithm.CSharp.Benchmarks
 {
     /// <summary>
-    /// Constructs a displaced moving average ribbon 
+    /// Constructs a displaced moving average ribbon
     /// </summary>
     public class IndicatorRibbonBenchmark : QCAlgorithm
     {
@@ -43,25 +43,29 @@ namespace QuantConnect.Algorithm.CSharp.Benchmarks
             // define our sma as the base of the ribbon
             var sma = new SimpleMovingAverage(period);
 
-            _ribbon = Enumerable.Range(0, count).Select(x =>
-            {
-                // define our offset to the zero sma, these various offsets will create our 'displaced' ribbon
-                var delay = new Delay(offset * (x + 1));
+            _ribbon = Enumerable
+                .Range(0, count)
+                .Select(x =>
+                {
+                    // define our offset to the zero sma, these various offsets will create our 'displaced' ribbon
+                    var delay = new Delay(offset * (x + 1));
 
-                // define an indicator that takes the output of the sma and pipes it into our delay indicator
-                var delayedSma = delay.Of(sma);
+                    // define an indicator that takes the output of the sma and pipes it into our delay indicator
+                    var delayedSma = delay.Of(sma);
 
-                // register our new 'delayedSma' for automatic updates on a daily resolution
-                RegisterIndicator(_spy, delayedSma, Resolution.Daily, data => data.Value);
+                    // register our new 'delayedSma' for automatic updates on a daily resolution
+                    RegisterIndicator(_spy, delayedSma, Resolution.Daily, data => data.Value);
 
-                return delayedSma;
-            }).ToArray();
+                    return delayedSma;
+                })
+                .ToArray();
         }
 
         public void OnData(TradeBars data)
         {
             // wait for our entire ribbon to be ready
-            if (!_ribbon.All(x => x.IsReady)) return;
+            if (!_ribbon.All(x => x.IsReady))
+                return;
             foreach (var indicator in _ribbon)
             {
                 var value = indicator.Current.Value;

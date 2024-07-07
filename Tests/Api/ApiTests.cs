@@ -85,22 +85,39 @@ namespace QuantConnect.Tests.API
         [TestCase("C:/Data/", "forex\\oanda\\daily\\eurusd.zip")]
         [TestCase("C:\\Data\\", "forex\\oanda\\daily\\eurusd.zip")]
         [TestCase("C:\\Data", "forex\\oanda\\daily\\eurusd.zip")]
-        public void FormattingPathForDataRequestsAreCorrect(string dataFolder, string dataToDownload)
+        public void FormattingPathForDataRequestsAreCorrect(
+            string dataFolder,
+            string dataToDownload
+        )
         {
             var path = Path.Combine(dataFolder, dataToDownload);
 
             var result = Api.Api.FormatPathForDataRequest(path, dataFolder);
-            Assert.AreEqual(dataToDownload.Replace("\\", "/", StringComparison.InvariantCulture), result);
+            Assert.AreEqual(
+                dataToDownload.Replace("\\", "/", StringComparison.InvariantCulture),
+                result
+            );
         }
 
-        [TestCase("Authorization", "AWS4-HMAC-SHA256 Credential=AKIAIOSFODNN7EXAMPLE/20130524/us-east-1/s3/aws4_request, SignedHeaders=host;range;x-amz-date,Signature=EXAMPLE_SIGNATURE")]
+        [TestCase(
+            "Authorization",
+            "AWS4-HMAC-SHA256 Credential=AKIAIOSFODNN7EXAMPLE/20130524/us-east-1/s3/aws4_request, SignedHeaders=host;range;x-amz-date,Signature=EXAMPLE_SIGNATURE"
+        )]
         [TestCase("Custom-Header", "Custom header value")]
         public void DownloadBytesAllowsUserDefinedHeaders(string headerKey, string headerValue)
         {
             using var api = new Api.Api();
 
             var headers = new List<KeyValuePair<string, string>>() { new(headerKey, headerValue) };
-            Assert.DoesNotThrow(() => api.Download("https://www.dropbox.com/s/ggt6blmib54q36e/CAPE.csv?dl=1", headers, "", ""));
+            Assert.DoesNotThrow(
+                () =>
+                    api.Download(
+                        "https://www.dropbox.com/s/ggt6blmib54q36e/CAPE.csv?dl=1",
+                        headers,
+                        "",
+                        ""
+                    )
+            );
         }
     }
 }

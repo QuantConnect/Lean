@@ -36,9 +36,10 @@ namespace QuantConnect.Tests.Algorithm.Framework.Portfolio
 
             using (Py.GIL())
             {
-                dynamic model = PyModule.FromString(
-                    "TestPCM",
-                    @"
+                dynamic model = PyModule
+                    .FromString(
+                        "TestPCM",
+                        @"
 from AlgorithmImports import *
 
 class PyPCM(EqualWeightingPortfolioConstructionModel):
@@ -75,17 +76,30 @@ class PyPCM(EqualWeightingPortfolioConstructionModel):
         self.DetermineTargetPercent_WasCalled = True
         return super().DetermineTargetPercent(activeInsights)
 "
-                ).GetAttr("PyPCM").Invoke();
+                    )
+                    .GetAttr("PyPCM")
+                    .Invoke();
                 var now = new DateTime(2020, 1, 10);
                 var wrappedModel = new PortfolioConstructionModelPythonWrapper(model);
                 var aapl = algorithm.AddEquity("AAPL");
                 aapl.SetMarketPrice(new Tick(now, aapl.Symbol, 10, 10));
                 algorithm.SetDateTime(now);
 
-                wrappedModel.OnSecuritiesChanged(algorithm, new SecurityChanges(SecurityChangesTests.AddedNonInternal(aapl)));
+                wrappedModel.OnSecuritiesChanged(
+                    algorithm,
+                    new SecurityChanges(SecurityChangesTests.AddedNonInternal(aapl))
+                );
                 Assert.IsTrue((bool)model.OnSecuritiesChanged_WasCalled);
 
-                var insight = new Insight(now, aapl.Symbol, TimeSpan.FromDays(1), InsightType.Price, InsightDirection.Down, null, null);
+                var insight = new Insight(
+                    now,
+                    aapl.Symbol,
+                    TimeSpan.FromDays(1),
+                    InsightType.Price,
+                    InsightDirection.Down,
+                    null,
+                    null
+                );
                 algorithm.Insights.Add(insight);
                 var result = wrappedModel.CreateTargets(algorithm, new[] { insight }).ToList();
                 Assert.AreEqual(1, result.Count);
@@ -104,9 +118,10 @@ class PyPCM(EqualWeightingPortfolioConstructionModel):
 
             using (Py.GIL())
             {
-                dynamic model = PyModule.FromString(
-                    "TestPCM",
-                    @"
+                dynamic model = PyModule
+                    .FromString(
+                        "TestPCM",
+                        @"
 
 from clr import AddReference
 AddReference(""QuantConnect.Algorithm.Framework"")
@@ -142,7 +157,9 @@ class PyPCM(EqualWeightingPortfolioConstructionModel):
         self.GetTargetInsights_WasCalled = True
         return super().GetTargetInsights()
 "
-                ).GetAttr("PyPCM").Invoke();
+                    )
+                    .GetAttr("PyPCM")
+                    .Invoke();
 
                 var now = new DateTime(2020, 1, 10);
                 var wrappedModel = new PortfolioConstructionModelPythonWrapper(model);
@@ -150,10 +167,21 @@ class PyPCM(EqualWeightingPortfolioConstructionModel):
                 aapl.SetMarketPrice(new Tick(now, aapl.Symbol, 10, 10));
                 algorithm.SetDateTime(now);
 
-                wrappedModel.OnSecuritiesChanged(algorithm, new SecurityChanges(SecurityChangesTests.AddedNonInternal(aapl)));
+                wrappedModel.OnSecuritiesChanged(
+                    algorithm,
+                    new SecurityChanges(SecurityChangesTests.AddedNonInternal(aapl))
+                );
                 Assert.IsTrue((bool)model.OnSecuritiesChanged_WasCalled);
 
-                var insight = new Insight(now, aapl.Symbol, TimeSpan.FromDays(1), InsightType.Price, InsightDirection.Down, null, null);
+                var insight = new Insight(
+                    now,
+                    aapl.Symbol,
+                    TimeSpan.FromDays(1),
+                    InsightType.Price,
+                    InsightDirection.Down,
+                    null,
+                    null
+                );
                 algorithm.Insights.Add(insight);
                 var result = wrappedModel.CreateTargets(algorithm, new[] { insight }).ToList();
                 Assert.AreEqual(1, result.Count);

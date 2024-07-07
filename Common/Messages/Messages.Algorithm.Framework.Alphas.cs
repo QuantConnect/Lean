@@ -15,7 +15,6 @@
 
 using System;
 using System.Runtime.CompilerServices;
-
 using static QuantConnect.StringExtensions;
 
 namespace QuantConnect
@@ -32,29 +31,40 @@ namespace QuantConnect
         {
             public static string InvalidBarCount = "Insight barCount must be greater than zero.";
 
-            public static string InvalidPeriod = "Insight period must be greater than or equal to 1 second.";
+            public static string InvalidPeriod =
+                "Insight period must be greater than or equal to 1 second.";
 
-            public static string InvalidCloseTimeUtc = "Insight closeTimeUtc must be greater than generatedTimeUtc.";
+            public static string InvalidCloseTimeUtc =
+                "Insight closeTimeUtc must be greater than generatedTimeUtc.";
 
-            public static string InvalidCloseTimeLocal = "Insight closeTimeLocal must not be in the past.";
+            public static string InvalidCloseTimeLocal =
+                "Insight closeTimeLocal must not be in the past.";
 
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             public static string GeneratedTimeUtcNotSet(Algorithm.Framework.Alphas.Insight insight)
             {
-                return Invariant($@"The insight's '{nameof(insight.GeneratedTimeUtc)}' property must be set before calling {
-                    nameof(insight.SetPeriodAndCloseTime)}.");
+                return Invariant(
+                    $@"The insight's '{nameof(insight.GeneratedTimeUtc)}' property must be set before calling {
+                    nameof(insight.SetPeriodAndCloseTime)}."
+                );
             }
 
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            public static string InsightAlreadyAssignedToAGroup(Algorithm.Framework.Alphas.Insight insight)
+            public static string InsightAlreadyAssignedToAGroup(
+                Algorithm.Framework.Alphas.Insight insight
+            )
             {
-                return Invariant($"Unable to set group id on insight {insight} because it has already been assigned to a group.");
+                return Invariant(
+                    $"Unable to set group id on insight {insight} because it has already been assigned to a group."
+                );
             }
 
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             public static string ToString(Algorithm.Framework.Alphas.Insight insight)
             {
-                var str = Invariant($"{insight.Id:N}: {insight.Symbol} {insight.Type} {insight.Direction} within {insight.Period}");
+                var str = Invariant(
+                    $"{insight.Id:N}: {insight.Symbol} {insight.Type} {insight.Direction} within {insight.Period}"
+                );
 
                 if (insight.Magnitude.HasValue)
                 {
@@ -62,7 +72,9 @@ namespace QuantConnect
                 }
                 if (insight.Confidence.HasValue)
                 {
-                    str += Invariant($" with {Math.Round(100 * insight.Confidence.Value, 1)}% confidence");
+                    str += Invariant(
+                        $" with {Math.Round(100 * insight.Confidence.Value, 1)}% confidence"
+                    );
                 }
                 if (insight.Weight.HasValue)
                 {
@@ -80,7 +92,9 @@ namespace QuantConnect
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             public static string ShortToString(Algorithm.Framework.Alphas.Insight insight)
             {
-                var str = Invariant($"{insight.Symbol.Value} {insight.Type} {insight.Direction} {insight.Period}");
+                var str = Invariant(
+                    $"{insight.Symbol.Value} {insight.Type} {insight.Direction} {insight.Period}"
+                );
 
                 if (insight.Magnitude.HasValue)
                 {
@@ -111,8 +125,10 @@ namespace QuantConnect
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             public static string ToString(Algorithm.Framework.Alphas.InsightScore insightScore)
             {
-                return Invariant($@"Direction: {Math.Round(100 * insightScore.Direction, 2)} Magnitude: {
-                    Math.Round(100 * insightScore.Magnitude, 2)}");
+                return Invariant(
+                    $@"Direction: {Math.Round(100 * insightScore.Direction, 2)} Magnitude: {
+                    Math.Round(100 * insightScore.Magnitude, 2)}"
+                );
             }
         }
     }

@@ -13,9 +13,9 @@
  * limitations under the License.
 */
 
-using QuantConnect.Data;
 using System;
 using System.Collections.Generic;
+using QuantConnect.Data;
 
 namespace QuantConnect.Tests.Common.Data
 {
@@ -32,6 +32,7 @@ namespace QuantConnect.Tests.Common.Data
 
         protected override bool Unsubscribe(IEnumerable<Symbol> symbols, TickType tickType) => true;
 
-        protected override string ChannelNameFromTickType(TickType tickType) => _getChannelName(tickType);
+        protected override string ChannelNameFromTickType(TickType tickType) =>
+            _getChannelName(tickType);
     }
 }

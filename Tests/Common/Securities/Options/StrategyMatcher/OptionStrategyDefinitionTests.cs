@@ -55,22 +55,34 @@ namespace QuantConnect.Tests.Common.Securities.Options.StrategyMatcher
             // (9U, -9C130)
             // (20U, -20C140)
             // OptionStrategyDefinition.Match produces ALL possible matches
-            var positions = Empty.AddRange(Position(Underlying, +20),
-                Position(Call[100], -4), Position(Put[105], -4),
-                Position(Call[105], +4), Position(Put[110], +4),
-                Position(Call[110], -3), Position(Put[115], -3),
-                Position(Call[115], +3), Position(Put[120], +3),
-                Position(Call[120], -5), Position(Put[125], -5),
-                Position(Call[125], +5), Position(Put[130], +5),
-                Position(Call[130], -9), Position(Put[135], -9),
-                Position(Call[140], -21), Position(Put[145], -21)
+            var positions = Empty.AddRange(
+                Position(Underlying, +20),
+                Position(Call[100], -4),
+                Position(Put[105], -4),
+                Position(Call[105], +4),
+                Position(Put[110], +4),
+                Position(Call[110], -3),
+                Position(Put[115], -3),
+                Position(Call[115], +3),
+                Position(Put[120], +3),
+                Position(Call[120], -5),
+                Position(Put[125], -5),
+                Position(Call[125], +5),
+                Position(Put[130], +5),
+                Position(Call[130], -9),
+                Position(Put[135], -9),
+                Position(Call[140], -21),
+                Position(Put[145], -21)
             );
 
             // force lower strikes to be evaluated first to provide determinism for this test
-            var options = OptionStrategyMatcherOptions.ForDefinitions(CoveredCall)
-                .WithPositionEnumerator(new FunctionalOptionPositionCollectionEnumerator(
-                    pos => pos.OrderBy(p => p.IsUnderlying ? 0 : p.Strike)
-                ));
+            var options = OptionStrategyMatcherOptions
+                .ForDefinitions(CoveredCall)
+                .WithPositionEnumerator(
+                    new FunctionalOptionPositionCollectionEnumerator(pos =>
+                        pos.OrderBy(p => p.IsUnderlying ? 0 : p.Strike)
+                    )
+                );
 
             var matches = CoveredCall.Match(options, positions).ToList();
             Assert.AreEqual(5, matches.Count);
@@ -98,10 +110,30 @@ namespace QuantConnect.Tests.Common.Securities.Options.StrategyMatcher
 
             var matches = BearCallSpread.Match(positions).ToList();
             Assert.AreEqual(4, matches.Count);
-            Assert.AreEqual(1, matches.Count(m => m.Legs[1].Position.Strike == 110 && m.Legs[0].Position.Strike == 105));
-            Assert.AreEqual(1, matches.Count(m => m.Legs[1].Position.Strike == 110 && m.Legs[0].Position.Strike == 100));
-            Assert.AreEqual(1, matches.Count(m => m.Legs[1].Position.Strike == 115 && m.Legs[0].Position.Strike == 105));
-            Assert.AreEqual(1, matches.Count(m => m.Legs[1].Position.Strike == 115 && m.Legs[0].Position.Strike == 100));
+            Assert.AreEqual(
+                1,
+                matches.Count(m =>
+                    m.Legs[1].Position.Strike == 110 && m.Legs[0].Position.Strike == 105
+                )
+            );
+            Assert.AreEqual(
+                1,
+                matches.Count(m =>
+                    m.Legs[1].Position.Strike == 110 && m.Legs[0].Position.Strike == 100
+                )
+            );
+            Assert.AreEqual(
+                1,
+                matches.Count(m =>
+                    m.Legs[1].Position.Strike == 115 && m.Legs[0].Position.Strike == 105
+                )
+            );
+            Assert.AreEqual(
+                1,
+                matches.Count(m =>
+                    m.Legs[1].Position.Strike == 115 && m.Legs[0].Position.Strike == 100
+                )
+            );
         }
 
         [Test]
@@ -116,9 +148,18 @@ namespace QuantConnect.Tests.Common.Securities.Options.StrategyMatcher
             var matches = ButterflyCall.Match(positions).ToList();
             Assert.AreEqual(1, matches.Count);
             Assert.AreEqual(3, matches[0].Legs.Count);
-            Assert.AreEqual(1, matches[0].Legs.Count(m => m.Position.Strike == 100 && m.Position.Quantity == 10));
-            Assert.AreEqual(1, matches[0].Legs.Count(m => m.Position.Strike == 110 && m.Position.Quantity == -20));
-            Assert.AreEqual(1, matches[0].Legs.Count(m => m.Position.Strike == 120 && m.Position.Quantity == 10));
+            Assert.AreEqual(
+                1,
+                matches[0].Legs.Count(m => m.Position.Strike == 100 && m.Position.Quantity == 10)
+            );
+            Assert.AreEqual(
+                1,
+                matches[0].Legs.Count(m => m.Position.Strike == 110 && m.Position.Quantity == -20)
+            );
+            Assert.AreEqual(
+                1,
+                matches[0].Legs.Count(m => m.Position.Strike == 120 && m.Position.Quantity == 10)
+            );
 
             // Now let add some extra option contracts which shouldn't match since they aren't enough
             positions = positions.Add(Position(Call[100], 5));
@@ -132,7 +173,10 @@ namespace QuantConnect.Tests.Common.Securities.Options.StrategyMatcher
             // assert the strategy size respects the matching multiplier
             var strategy = matches[0].CreateStrategy();
             Assert.AreEqual(1, strategy.OptionLegs.Count(m => m.Strike == 100 && m.Quantity == 10));
-            Assert.AreEqual(1, strategy.OptionLegs.Count(m => m.Strike == 110 && m.Quantity == -20));
+            Assert.AreEqual(
+                1,
+                strategy.OptionLegs.Count(m => m.Strike == 110 && m.Quantity == -20)
+            );
             Assert.AreEqual(1, strategy.OptionLegs.Count(m => m.Strike == 120 && m.Quantity == 10));
 
             // assert the remaining positions are the expected ones
@@ -155,7 +199,10 @@ namespace QuantConnect.Tests.Common.Securities.Options.StrategyMatcher
             Assert.AreEqual(1, matches.Count);
             // underlying isn't included yet
             Assert.AreEqual(1, matches[0].Legs.Count);
-            Assert.AreEqual(1, matches[0].Legs.Count(m => m.Position.Strike == 100 && m.Position.Quantity == -5));
+            Assert.AreEqual(
+                1,
+                matches[0].Legs.Count(m => m.Position.Strike == 100 && m.Position.Quantity == -5)
+            );
 
             var strategy = matches[0].CreateStrategy();
             Assert.AreEqual(1, strategy.OptionLegs.Count);
@@ -166,7 +213,10 @@ namespace QuantConnect.Tests.Common.Securities.Options.StrategyMatcher
             // assert the remaining positions are the expected ones
             positions = matches[0].RemoveFrom(positions);
             Assert.AreEqual(1, positions.Count);
-            Assert.AreEqual(1, positions.Count(m => !m.IsUnderlying && m.Strike == 100 && m.Quantity == -1));
+            Assert.AreEqual(
+                1,
+                positions.Count(m => !m.IsUnderlying && m.Strike == 100 && m.Quantity == -1)
+            );
         }
 
         private static string String(OptionPosition position)
@@ -187,44 +237,152 @@ namespace QuantConnect.Tests.Common.Securities.Options.StrategyMatcher
             {
                 return new[]
                 {
-                    TestCase.ExactPosition(CoveredCall, Position(Call[100], -1), new OptionPosition(Underlying, +100) ),
-                    TestCase.ExactPosition(CoveredPut, Position(Put[100], -1), new OptionPosition(Underlying, -100) ),
-
-                    TestCase.ExactPosition(BearCallSpread, Position(Call[110], +1), Position(Call[100], -1)),
-                    TestCase.ExactPosition(BearCallSpread, Position(Call[100], -1), Position(Call[110], +1)),
-                    TestCase.ExactPosition(BearPutSpread,  Position( Put[110], +1), Position( Put[100], -1)),
-                    TestCase.ExactPosition(BearPutSpread,  Position( Put[100], -1), Position( Put[110], +1)),
-                    TestCase.ExactPosition(BullCallSpread, Position(Call[110], -1), Position(Call[100], +1)),
-                    TestCase.ExactPosition(BullCallSpread, Position(Call[100], +1), Position(Call[110], -1)),
-                    TestCase.ExactPosition(BullPutSpread,  Position( Put[110], -1), Position( Put[100], +1)),
-                    TestCase.ExactPosition(BullPutSpread,  Position( Put[100], +1), Position( Put[110], -1)),
-                    TestCase.ExactPosition(Straddle,       Position(Call[100], +1), Position( Put[100], +1)),
-                    TestCase.ExactPosition(Straddle,       Position( Put[100], +1), Position(Call[100], +1)),
-                    TestCase.ExactPosition(ButterflyCall,  Position(Call[100], +1), Position(Call[105], -2), Position(Call[110], +1)),
-                    TestCase.ExactPosition(ButterflyCall,  Position(Call[105], -2), Position(Call[100], +1), Position(Call[110], +1)),
-                    TestCase.ExactPosition(ButterflyCall,  Position(Call[110], +1), Position(Call[105], -2), Position(Call[100], +1)),
-                    TestCase.ExactPosition(ShortButterflyCall,  Position(Call[110], -1), Position(Call[105], +2), Position(Call[100], -1)),
-                    TestCase.ExactPosition(ButterflyPut,   Position( Put[100], +1), Position( Put[105], -2), Position( Put[110], +1)),
-                    TestCase.ExactPosition(ButterflyPut,   Position( Put[105], -2), Position( Put[100], +1), Position( Put[110], +1)),
-                    TestCase.ExactPosition(ButterflyPut,   Position( Put[110], +1), Position( Put[105], -2), Position( Put[100], +1)),
-                    TestCase.ExactPosition(ShortButterflyPut,   Position( Put[110], -1), Position( Put[105], +2), Position( Put[100], -1)),
-
-                    TestCase.ExactPosition(CallCalendarSpread, Position(Call[100, 1], +1), Position(Call[100, 0], -1)),
-                    TestCase.ExactPosition(CallCalendarSpread, Position(Call[100, 0], -1), Position(Call[100, 1], +1)),
-                    TestCase.ExactPosition(PutCalendarSpread,  Position( Put[100, 1], +1), Position( Put[100, 0], -1)),
-                    TestCase.ExactPosition(PutCalendarSpread,  Position( Put[100, 0], -1), Position( Put[100, 1], +1)),
-
-                    TestCase.ExactPosition(IronCondor,  Position( Put[100, 0], +1), Position(Put[105, 0], -1), Position(Call[110, 0], -1), Position(Call[120, 0], +1))
-
-                }.Select(x => new TestCaseData(x).SetName(x.Name)).ToArray();
+                    TestCase.ExactPosition(
+                        CoveredCall,
+                        Position(Call[100], -1),
+                        new OptionPosition(Underlying, +100)
+                    ),
+                    TestCase.ExactPosition(
+                        CoveredPut,
+                        Position(Put[100], -1),
+                        new OptionPosition(Underlying, -100)
+                    ),
+                    TestCase.ExactPosition(
+                        BearCallSpread,
+                        Position(Call[110], +1),
+                        Position(Call[100], -1)
+                    ),
+                    TestCase.ExactPosition(
+                        BearCallSpread,
+                        Position(Call[100], -1),
+                        Position(Call[110], +1)
+                    ),
+                    TestCase.ExactPosition(
+                        BearPutSpread,
+                        Position(Put[110], +1),
+                        Position(Put[100], -1)
+                    ),
+                    TestCase.ExactPosition(
+                        BearPutSpread,
+                        Position(Put[100], -1),
+                        Position(Put[110], +1)
+                    ),
+                    TestCase.ExactPosition(
+                        BullCallSpread,
+                        Position(Call[110], -1),
+                        Position(Call[100], +1)
+                    ),
+                    TestCase.ExactPosition(
+                        BullCallSpread,
+                        Position(Call[100], +1),
+                        Position(Call[110], -1)
+                    ),
+                    TestCase.ExactPosition(
+                        BullPutSpread,
+                        Position(Put[110], -1),
+                        Position(Put[100], +1)
+                    ),
+                    TestCase.ExactPosition(
+                        BullPutSpread,
+                        Position(Put[100], +1),
+                        Position(Put[110], -1)
+                    ),
+                    TestCase.ExactPosition(
+                        Straddle,
+                        Position(Call[100], +1),
+                        Position(Put[100], +1)
+                    ),
+                    TestCase.ExactPosition(
+                        Straddle,
+                        Position(Put[100], +1),
+                        Position(Call[100], +1)
+                    ),
+                    TestCase.ExactPosition(
+                        ButterflyCall,
+                        Position(Call[100], +1),
+                        Position(Call[105], -2),
+                        Position(Call[110], +1)
+                    ),
+                    TestCase.ExactPosition(
+                        ButterflyCall,
+                        Position(Call[105], -2),
+                        Position(Call[100], +1),
+                        Position(Call[110], +1)
+                    ),
+                    TestCase.ExactPosition(
+                        ButterflyCall,
+                        Position(Call[110], +1),
+                        Position(Call[105], -2),
+                        Position(Call[100], +1)
+                    ),
+                    TestCase.ExactPosition(
+                        ShortButterflyCall,
+                        Position(Call[110], -1),
+                        Position(Call[105], +2),
+                        Position(Call[100], -1)
+                    ),
+                    TestCase.ExactPosition(
+                        ButterflyPut,
+                        Position(Put[100], +1),
+                        Position(Put[105], -2),
+                        Position(Put[110], +1)
+                    ),
+                    TestCase.ExactPosition(
+                        ButterflyPut,
+                        Position(Put[105], -2),
+                        Position(Put[100], +1),
+                        Position(Put[110], +1)
+                    ),
+                    TestCase.ExactPosition(
+                        ButterflyPut,
+                        Position(Put[110], +1),
+                        Position(Put[105], -2),
+                        Position(Put[100], +1)
+                    ),
+                    TestCase.ExactPosition(
+                        ShortButterflyPut,
+                        Position(Put[110], -1),
+                        Position(Put[105], +2),
+                        Position(Put[100], -1)
+                    ),
+                    TestCase.ExactPosition(
+                        CallCalendarSpread,
+                        Position(Call[100, 1], +1),
+                        Position(Call[100, 0], -1)
+                    ),
+                    TestCase.ExactPosition(
+                        CallCalendarSpread,
+                        Position(Call[100, 0], -1),
+                        Position(Call[100, 1], +1)
+                    ),
+                    TestCase.ExactPosition(
+                        PutCalendarSpread,
+                        Position(Put[100, 1], +1),
+                        Position(Put[100, 0], -1)
+                    ),
+                    TestCase.ExactPosition(
+                        PutCalendarSpread,
+                        Position(Put[100, 0], -1),
+                        Position(Put[100, 1], +1)
+                    ),
+                    TestCase.ExactPosition(
+                        IronCondor,
+                        Position(Put[100, 0], +1),
+                        Position(Put[105, 0], -1),
+                        Position(Call[110, 0], -1),
+                        Position(Call[120, 0], +1)
+                    )
+                }
+                    .Select(x => new TestCaseData(x).SetName(x.Name))
+                    .ToArray();
             }
         }
 
         // aim for perfect match, extra quantity in position, extra symbol position, no match/missing leg
         public class TestCase
         {
-            private static readonly Dictionary<string, int> NameCounts
-                = new Dictionary<string, int>();
+            private static readonly Dictionary<string, int> NameCounts =
+                new Dictionary<string, int>();
 
             public string Name { get; }
             public OptionStrategyDefinition Definition { get; }
@@ -232,10 +390,14 @@ namespace QuantConnect.Tests.Common.Securities.Options.StrategyMatcher
             public IReadOnlyList<OptionPosition> Extra { get; }
             public IReadOnlyList<OptionPosition> Missing { get; }
             public IReadOnlyDictionary<string, int> ExpectedMatches { get; }
-            public OptionStrategyMatcher CreateMatcher()
-                => new OptionStrategyMatcher(new OptionStrategyMatcherOptions(
-                    new[] {Definition}, new List<int> {100, 100, 100, 100}
-                ));
+
+            public OptionStrategyMatcher CreateMatcher() =>
+                new OptionStrategyMatcher(
+                    new OptionStrategyMatcherOptions(
+                        new[] { Definition },
+                        new List<int> { 100, 100, 100, 100 }
+                    )
+                );
 
             private readonly string _methodName;
 
@@ -245,7 +407,7 @@ namespace QuantConnect.Tests.Common.Securities.Options.StrategyMatcher
                 IReadOnlyList<OptionPosition> positions,
                 IReadOnlyList<OptionPosition> extra,
                 IReadOnlyList<OptionPosition> missing
-                )
+            )
             {
                 _methodName = methodName;
 
@@ -281,10 +443,10 @@ namespace QuantConnect.Tests.Common.Securities.Options.StrategyMatcher
                 //Name = $"{Name} ({count})";
                 ExpectedMatches = new Dictionary<string, int>
                 {
-                    {nameof(ExactPosition),   1},
-                    {nameof(ExtraQuantity),   1},
-                    {nameof(ExtraPosition),   1},
-                    {nameof(MissingPosition), 0}
+                    { nameof(ExactPosition), 1 },
+                    { nameof(ExtraQuantity), 1 },
+                    { nameof(ExtraPosition), 1 },
+                    { nameof(MissingPosition), 0 }
                 };
             }
 
@@ -322,31 +484,68 @@ namespace QuantConnect.Tests.Common.Securities.Options.StrategyMatcher
                 return Name;
             }
 
-            public static TestCase ExactPosition(OptionStrategyDefinition definition, params OptionPosition[] positions)
+            public static TestCase ExactPosition(
+                OptionStrategyDefinition definition,
+                params OptionPosition[] positions
+            )
             {
-                return new TestCase(nameof(ExactPosition), definition, positions, Array.Empty<OptionPosition>(), Array.Empty<OptionPosition>());
+                return new TestCase(
+                    nameof(ExactPosition),
+                    definition,
+                    positions,
+                    Array.Empty<OptionPosition>(),
+                    Array.Empty<OptionPosition>()
+                );
             }
 
-            public static TestCase ExtraQuantity(OptionStrategyDefinition definition, params OptionPosition[] positions)
+            public static TestCase ExtraQuantity(
+                OptionStrategyDefinition definition,
+                params OptionPosition[] positions
+            )
             {
                 // add 1 to the first position
                 var extra = positions[0].WithQuantity(1);
                 var pos = positions.Select((p, i) => i == 0 ? p + extra : p).ToList();
-                return new TestCase(nameof(ExtraQuantity), definition, pos, new[] {extra}, Array.Empty<OptionPosition>());
+                return new TestCase(
+                    nameof(ExtraQuantity),
+                    definition,
+                    pos,
+                    new[] { extra },
+                    Array.Empty<OptionPosition>()
+                );
             }
 
-            public static TestCase ExtraPosition(OptionStrategyDefinition definition, params OptionPosition[] positions)
+            public static TestCase ExtraPosition(
+                OptionStrategyDefinition definition,
+                params OptionPosition[] positions
+            )
             {
                 // add a random position w/ the same underlying
                 var maxStrike = positions.Where(p => p.Symbol.HasUnderlying).Max(p => p.Strike);
                 var extra = new OptionPosition(positions[0].Symbol.WithStrike(maxStrike + 5m), 1);
-                var pos = positions.Concat(new[] {extra}).ToList();
-                return new TestCase(nameof(ExtraPosition), definition, pos, new[] {extra}, Array.Empty<OptionPosition>());
+                var pos = positions.Concat(new[] { extra }).ToList();
+                return new TestCase(
+                    nameof(ExtraPosition),
+                    definition,
+                    pos,
+                    new[] { extra },
+                    Array.Empty<OptionPosition>()
+                );
             }
 
-            public static TestCase MissingPosition(OptionStrategyDefinition definition, OptionPosition missing, params OptionPosition[] positions)
+            public static TestCase MissingPosition(
+                OptionStrategyDefinition definition,
+                OptionPosition missing,
+                params OptionPosition[] positions
+            )
             {
-                return new TestCase(nameof(MissingPosition), definition, positions, Array.Empty<OptionPosition>(), new []{missing});
+                return new TestCase(
+                    nameof(MissingPosition),
+                    definition,
+                    positions,
+                    Array.Empty<OptionPosition>(),
+                    new[] { missing }
+                );
             }
         }
     }

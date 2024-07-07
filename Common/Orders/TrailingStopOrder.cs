@@ -47,9 +47,7 @@ namespace QuantConnect.Orders
         /// <summary>
         /// Default constructor for JSON Deserialization:
         /// </summary>
-        public TrailingStopOrder()
-        {
-        }
+        public TrailingStopOrder() { }
 
         /// <summary>
         /// New Trailing Stop Market Order constructor
@@ -62,8 +60,16 @@ namespace QuantConnect.Orders
         /// <param name="time">Time the order was placed</param>
         /// <param name="tag">User defined data tag for this order</param>
         /// <param name="properties">The properties for this order</param>
-        public TrailingStopOrder(Symbol symbol, decimal quantity, decimal stopPrice, decimal trailingAmount, bool trailingAsPercentage,
-            DateTime time, string tag = "", IOrderProperties properties = null)
+        public TrailingStopOrder(
+            Symbol symbol,
+            decimal quantity,
+            decimal stopPrice,
+            decimal trailingAmount,
+            bool trailingAsPercentage,
+            DateTime time,
+            string tag = "",
+            IOrderProperties properties = null
+        )
             : base(symbol, quantity, stopPrice, time, tag, properties)
         {
             TrailingAmount = trailingAmount;
@@ -82,11 +88,17 @@ namespace QuantConnect.Orders
         /// <param name="time">Time the order was placed</param>
         /// <param name="tag">User defined data tag for this order</param>
         /// <param name="properties">The properties for this order</param>
-        public TrailingStopOrder(Symbol symbol, decimal quantity, decimal trailingAmount, bool trailingAsPercentage,
-            DateTime time, string tag = "", IOrderProperties properties = null)
+        public TrailingStopOrder(
+            Symbol symbol,
+            decimal quantity,
+            decimal trailingAmount,
+            bool trailingAsPercentage,
+            DateTime time,
+            string tag = "",
+            IOrderProperties properties = null
+        )
             : this(symbol, quantity, 0, trailingAmount, trailingAsPercentage, time, tag, properties)
-        {
-        }
+        { }
 
         /// <summary>
         /// Gets the default tag for this order
@@ -152,21 +164,35 @@ namespace QuantConnect.Orders
         /// This only happens when the distance between the current stop price and the current market price is greater than the trailing amount,
         /// which will happen when the market price raises/falls for sell/buy orders respectively.
         /// </returns>
-        public static bool TryUpdateStopPrice(decimal currentMarketPrice, decimal currentStopPrice, decimal trailingAmount,
-            bool trailingAsPercentage, OrderDirection direction, out decimal updatedStopPrice)
+        public static bool TryUpdateStopPrice(
+            decimal currentMarketPrice,
+            decimal currentStopPrice,
+            decimal trailingAmount,
+            bool trailingAsPercentage,
+            OrderDirection direction,
+            out decimal updatedStopPrice
+        )
         {
             updatedStopPrice = 0m;
-            var distanceToMarketPrice = direction == OrderDirection.Sell
-                ? currentMarketPrice - currentStopPrice
-                : currentStopPrice - currentMarketPrice;
-            var stopReference = trailingAsPercentage ? currentMarketPrice * trailingAmount : trailingAmount;
+            var distanceToMarketPrice =
+                direction == OrderDirection.Sell
+                    ? currentMarketPrice - currentStopPrice
+                    : currentStopPrice - currentMarketPrice;
+            var stopReference = trailingAsPercentage
+                ? currentMarketPrice * trailingAmount
+                : trailingAmount;
 
             if (distanceToMarketPrice <= stopReference)
             {
                 return false;
             }
 
-            updatedStopPrice = CalculateStopPrice(currentMarketPrice, trailingAmount, trailingAsPercentage, direction);
+            updatedStopPrice = CalculateStopPrice(
+                currentMarketPrice,
+                trailingAmount,
+                trailingAsPercentage,
+                direction
+            );
             return true;
         }
 
@@ -178,8 +204,12 @@ namespace QuantConnect.Orders
         /// <param name="trailingAsPercentage">Whether the <paramref name="trailingAmount"/> is a percentage or an absolute currency value</param>
         /// <param name="direction">The order direction</param>
         /// <returns>The stop price for the order given the current market price</returns>
-        public static decimal CalculateStopPrice(decimal currentMarketPrice, decimal trailingAmount, bool trailingAsPercentage,
-            OrderDirection direction)
+        public static decimal CalculateStopPrice(
+            decimal currentMarketPrice,
+            decimal trailingAmount,
+            bool trailingAsPercentage,
+            OrderDirection direction
+        )
         {
             if (trailingAsPercentage)
             {

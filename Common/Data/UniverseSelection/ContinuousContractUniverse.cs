@@ -14,12 +14,12 @@
 */
 
 using System;
+using System.Collections.Generic;
 using System.Linq;
-using QuantConnect.Util;
+using QuantConnect.Data.Auxiliary;
 using QuantConnect.Interfaces;
 using QuantConnect.Securities;
-using System.Collections.Generic;
-using QuantConnect.Data.Auxiliary;
+using QuantConnect.Util;
 
 namespace QuantConnect.Data.UniverseSelection
 {
@@ -28,7 +28,7 @@ namespace QuantConnect.Data.UniverseSelection
     /// </summary>
     public class ContinuousContractUniverse : Universe, ITimeTriggeredUniverse
     {
-        private readonly  IMapFileProvider _mapFileProvider;
+        private readonly IMapFileProvider _mapFileProvider;
         private readonly SubscriptionDataConfig _config;
         private readonly Security _security;
         private readonly bool _liveMode;
@@ -44,7 +44,12 @@ namespace QuantConnect.Data.UniverseSelection
         /// <summary>
         /// Creates a new instance
         /// </summary>
-        public ContinuousContractUniverse(Security security, UniverseSettings universeSettings, bool liveMode, SubscriptionDataConfig universeConfig)
+        public ContinuousContractUniverse(
+            Security security,
+            UniverseSettings universeSettings,
+            bool liveMode,
+            SubscriptionDataConfig universeConfig
+        )
             : base(universeConfig)
         {
             _security = security;
@@ -52,7 +57,11 @@ namespace QuantConnect.Data.UniverseSelection
             UniverseSettings = universeSettings;
             _mapFileProvider = Composer.Instance.GetPart<IMapFileProvider>();
 
-            _config = new SubscriptionDataConfig(Configuration, dataMappingMode: UniverseSettings.DataMappingMode, symbol: _security.Symbol.Canonical);
+            _config = new SubscriptionDataConfig(
+                Configuration,
+                dataMappingMode: UniverseSettings.DataMappingMode,
+                symbol: _security.Symbol.Canonical
+            );
         }
 
         /// <summary>
@@ -66,7 +75,10 @@ namespace QuantConnect.Data.UniverseSelection
             yield return _security.Symbol.Canonical;
 
             var mapFile = _mapFileProvider.ResolveMapFile(_config);
-            var mappedSymbol = mapFile.GetMappedSymbol(utcTime.ConvertFromUtc(_security.Exchange.TimeZone), dataMappingMode: _config.DataMappingMode);
+            var mappedSymbol = mapFile.GetMappedSymbol(
+                utcTime.ConvertFromUtc(_security.Exchange.TimeZone),
+                dataMappingMode: _config.DataMappingMode
+            );
             if (!string.IsNullOrEmpty(mappedSymbol) && mappedSymbol != _mappedSymbol)
             {
                 if (_currentSymbol != null)
@@ -76,8 +88,11 @@ namespace QuantConnect.Data.UniverseSelection
                 }
                 _mappedSymbol = mappedSymbol;
 
-                _currentSymbol = _security.Symbol.Canonical
-                    .UpdateMappedSymbol(mappedSymbol, Configuration.ContractDepthOffset)
+                _currentSymbol = _security
+                    .Symbol.Canonical.UpdateMappedSymbol(
+                        mappedSymbol,
+                        Configuration.ContractDepthOffset
+                    )
                     .Underlying;
             }
 
@@ -97,25 +112,37 @@ namespace QuantConnect.Data.UniverseSelection
         /// <param name="maximumEndTimeUtc">The max end time</param>
         /// <param name="subscriptionService">Instance which implements <see cref="ISubscriptionDataConfigService"/> interface</param>
         /// <returns>All subscriptions required by this security</returns>
-        public override IEnumerable<SubscriptionRequest> GetSubscriptionRequests(Security security,
+        public override IEnumerable<SubscriptionRequest> GetSubscriptionRequests(
+            Security security,
             DateTime currentTimeUtc,
             DateTime maximumEndTimeUtc,
-            ISubscriptionDataConfigService subscriptionService)
+            ISubscriptionDataConfigService subscriptionService
+        )
         {
             var configs = AddConfigurations(subscriptionService, UniverseSettings, security.Symbol);
-            return configs.Select(config => new SubscriptionRequest(isUniverseSubscription: false,
+            return configs.Select(config => new SubscriptionRequest(
+                isUniverseSubscription: false,
                 universe: this,
                 security: security,
-                configuration: new SubscriptionDataConfig(config, isInternalFeed: config.IsInternalFeed || config.TickType == TickType.OpenInterest),
+                configuration: new SubscriptionDataConfig(
+                    config,
+                    isInternalFeed: config.IsInternalFeed
+                        || config.TickType == TickType.OpenInterest
+                ),
                 startTimeUtc: currentTimeUtc,
-                endTimeUtc: maximumEndTimeUtc));
+                endTimeUtc: maximumEndTimeUtc
+            ));
         }
 
         /// <summary>
         /// Each tradeable day of the future we trigger a new selection.
         /// Allows use to select the current contract
         /// </summary>
-        public IEnumerable<DateTime> GetTriggerTimes(DateTime startTimeUtc, DateTime endTimeUtc, MarketHoursDatabase marketHoursDatabase)
+        public IEnumerable<DateTime> GetTriggerTimes(
+            DateTime startTimeUtc,
+            DateTime endTimeUtc,
+            MarketHoursDatabase marketHoursDatabase
+        )
         {
             var startTimeLocal = startTimeUtc.ConvertFromUtc(_security.Exchange.TimeZone);
             var endTimeLocal = endTimeUtc.ConvertFromUtc(_security.Exchange.TimeZone);
@@ -130,22 +157,31 @@ namespace QuantConnect.Data.UniverseSelection
         /// <summary>
         /// Helper method to add and get the required configurations associated with a continuous universe
         /// </summary>
-        public static List<SubscriptionDataConfig> AddConfigurations(ISubscriptionDataConfigService subscriptionService, UniverseSettings universeSettings, Symbol symbol)
+        public static List<SubscriptionDataConfig> AddConfigurations(
+            ISubscriptionDataConfigService subscriptionService,
+            UniverseSettings universeSettings,
+            Symbol symbol
+        )
         {
-            List<SubscriptionDataConfig> configs = new(universeSettings.SubscriptionDataTypes.Count);
+            List<SubscriptionDataConfig> configs =
+                new(universeSettings.SubscriptionDataTypes.Count);
             foreach (var pair in universeSettings.SubscriptionDataTypes)
             {
-                configs.AddRange(subscriptionService.Add(symbol,
-                    universeSettings.Resolution,
-                    universeSettings.FillForward,
-                    universeSettings.ExtendedMarketHours,
-                    dataNormalizationMode: universeSettings.DataNormalizationMode,
-                    // we need to provider the data types we want, else since it's canonical it would assume the default ZipEntry type used in universe chain
-                    subscriptionDataTypes: new List<Tuple<Type, TickType>> { pair },
-                    dataMappingMode: universeSettings.DataMappingMode,
-                    contractDepthOffset: (uint)Math.Abs(universeSettings.ContractDepthOffset),
-                    // open interest is internal and the underlying mapped contracts of the continuous canonical
-                    isInternalFeed: !symbol.IsCanonical() || pair.Item2 == TickType.OpenInterest));
+                configs.AddRange(
+                    subscriptionService.Add(
+                        symbol,
+                        universeSettings.Resolution,
+                        universeSettings.FillForward,
+                        universeSettings.ExtendedMarketHours,
+                        dataNormalizationMode: universeSettings.DataNormalizationMode,
+                        // we need to provider the data types we want, else since it's canonical it would assume the default ZipEntry type used in universe chain
+                        subscriptionDataTypes: new List<Tuple<Type, TickType>> { pair },
+                        dataMappingMode: universeSettings.DataMappingMode,
+                        contractDepthOffset: (uint)Math.Abs(universeSettings.ContractDepthOffset),
+                        // open interest is internal and the underlying mapped contracts of the continuous canonical
+                        isInternalFeed: !symbol.IsCanonical() || pair.Item2 == TickType.OpenInterest
+                    )
+                );
             }
             return configs;
         }
@@ -157,7 +193,8 @@ namespace QuantConnect.Data.UniverseSelection
         /// <returns>A symbol for a continuous universe of the specified symbol</returns>
         public static Symbol CreateSymbol(Symbol symbol)
         {
-            var ticker = $"qc-universe-continuous-{symbol.ID.Market.ToLowerInvariant()}-{symbol.SecurityType}-{symbol.ID.Symbol}";
+            var ticker =
+                $"qc-universe-continuous-{symbol.ID.Market.ToLowerInvariant()}-{symbol.SecurityType}-{symbol.ID.Symbol}";
             return UniverseExtensions.CreateSymbol(symbol.SecurityType, symbol.ID.Market, ticker);
         }
     }

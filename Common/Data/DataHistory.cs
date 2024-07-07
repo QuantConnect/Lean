@@ -14,12 +14,12 @@
 */
 
 using System;
-using System.Text;
-using System.Linq;
-using Python.Runtime;
-using QuantConnect.Util;
 using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using Python.Runtime;
+using QuantConnect.Util;
 
 namespace QuantConnect.Data
 {

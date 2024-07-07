@@ -13,8 +13,8 @@
  * limitations under the License.
 */
 
-using QuantConnect.Orders;
 using QuantConnect.Interfaces;
+using QuantConnect.Orders;
 
 namespace QuantConnect.Brokerages
 {

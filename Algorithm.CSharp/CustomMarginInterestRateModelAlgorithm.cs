@@ -13,12 +13,12 @@
  * limitations under the License.
 */
 
-using QuantConnect.Interfaces;
-using QuantConnect.Securities;
+using System;
 using System.Collections.Generic;
 using QuantConnect.Data;
+using QuantConnect.Interfaces;
 using QuantConnect.Orders;
-using System;
+using QuantConnect.Securities;
 
 namespace QuantConnect.Algorithm.CSharp
 {
@@ -26,7 +26,9 @@ namespace QuantConnect.Algorithm.CSharp
     /// Demonstration of using custom margin interest rate model in backtesting.
     /// </summary>
     /// <meta name="tag" content="custom margin interest rate models" />
-    public class CustomMarginInterestRateModelAlgorithm : QCAlgorithm, IRegressionAlgorithmDefinition
+    public class CustomMarginInterestRateModelAlgorithm
+        : QCAlgorithm,
+            IRegressionAlgorithmDefinition
     {
         private Symbol _spy;
 
@@ -63,7 +65,8 @@ namespace QuantConnect.Algorithm.CSharp
         public override void OnEndOfAlgorithm()
         {
             var security = Securities[_spy];
-            var marginInterestRateModel = security.MarginInterestRateModel as CustomMarginInterestRateModel;
+            var marginInterestRateModel =
+                security.MarginInterestRateModel as CustomMarginInterestRateModel;
 
             if (marginInterestRateModel == null)
             {
@@ -75,12 +78,20 @@ namespace QuantConnect.Algorithm.CSharp
                 throw new RegressionTestException("CustomMarginInterestRateModel was not called");
             }
 
-            var expectedCash = _cashAfterOrder * (decimal)Math.Pow(1 + (double)marginInterestRateModel.InterestRate, marginInterestRateModel.CallCount);
+            var expectedCash =
+                _cashAfterOrder
+                * (decimal)
+                    Math.Pow(
+                        1 + (double)marginInterestRateModel.InterestRate,
+                        marginInterestRateModel.CallCount
+                    );
 
             // add a tolerance since using Math.Pow(double, double) given the lack of a decimal overload
             if (Math.Abs(Portfolio.Cash - expectedCash) > 1e-10m)
             {
-                throw new RegressionTestException($"Expected cash {expectedCash} but got {Portfolio.Cash}");
+                throw new RegressionTestException(
+                    $"Expected cash {expectedCash} but got {Portfolio.Cash}"
+                );
             }
         }
 
@@ -90,7 +101,9 @@ namespace QuantConnect.Algorithm.CSharp
 
             public int CallCount { get; private set; }
 
-            public void ApplyMarginInterestRate(MarginInterestRateParameters marginInterestRateParameters)
+            public void ApplyMarginInterestRate(
+                MarginInterestRateParameters marginInterestRateParameters
+            )
             {
                 var security = marginInterestRateParameters.Security;
                 var positionValue = security.Holdings.GetQuantityValue(security.Holdings.Quantity);
@@ -131,35 +144,36 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// This is used by the regression test system to indicate what the expected statistics are from running the algorithm
         /// </summary>
-        public Dictionary<string, string> ExpectedStatistics => new Dictionary<string, string>
-        {
-            {"Total Orders", "1"},
-            {"Average Win", "0%"},
-            {"Average Loss", "0%"},
-            {"Compounding Annual Return", "93.409%"},
-            {"Drawdown", "2.400%"},
-            {"Expectancy", "0"},
-            {"Start Equity", "100000"},
-            {"End Equity", "105698.63"},
-            {"Net Profit", "5.699%"},
-            {"Sharpe Ratio", "4.701"},
-            {"Sortino Ratio", "9.153"},
-            {"Probabilistic Sharpe Ratio", "85.653%"},
-            {"Loss Rate", "0%"},
-            {"Win Rate", "0%"},
-            {"Profit-Loss Ratio", "0"},
-            {"Alpha", "0.145"},
-            {"Beta", "0.998"},
-            {"Annual Standard Deviation", "0.108"},
-            {"Annual Variance", "0.012"},
-            {"Information Ratio", "28.436"},
-            {"Tracking Error", "0.005"},
-            {"Treynor Ratio", "0.506"},
-            {"Total Fees", "$3.43"},
-            {"Estimated Strategy Capacity", "$150000000.00"},
-            {"Lowest Capacity Asset", "SPY R735QTJ8XC9X"},
-            {"Portfolio Turnover", "3.19%"},
-            {"OrderListHash", "91660550269bce594c61fbf9159807d2"}
-        };
+        public Dictionary<string, string> ExpectedStatistics =>
+            new Dictionary<string, string>
+            {
+                { "Total Orders", "1" },
+                { "Average Win", "0%" },
+                { "Average Loss", "0%" },
+                { "Compounding Annual Return", "93.409%" },
+                { "Drawdown", "2.400%" },
+                { "Expectancy", "0" },
+                { "Start Equity", "100000" },
+                { "End Equity", "105698.63" },
+                { "Net Profit", "5.699%" },
+                { "Sharpe Ratio", "4.701" },
+                { "Sortino Ratio", "9.153" },
+                { "Probabilistic Sharpe Ratio", "85.653%" },
+                { "Loss Rate", "0%" },
+                { "Win Rate", "0%" },
+                { "Profit-Loss Ratio", "0" },
+                { "Alpha", "0.145" },
+                { "Beta", "0.998" },
+                { "Annual Standard Deviation", "0.108" },
+                { "Annual Variance", "0.012" },
+                { "Information Ratio", "28.436" },
+                { "Tracking Error", "0.005" },
+                { "Treynor Ratio", "0.506" },
+                { "Total Fees", "$3.43" },
+                { "Estimated Strategy Capacity", "$150000000.00" },
+                { "Lowest Capacity Asset", "SPY R735QTJ8XC9X" },
+                { "Portfolio Turnover", "3.19%" },
+                { "OrderListHash", "91660550269bce594c61fbf9159807d2" }
+            };
     }
 }

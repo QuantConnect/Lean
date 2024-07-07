@@ -15,12 +15,12 @@
 */
 
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using QuantConnect.Data;
-using QuantConnect.Orders;
 using QuantConnect.Interfaces;
+using QuantConnect.Orders;
 using QuantConnect.Securities;
-using System.Collections.Generic;
 using QuantConnect.Securities.Future;
 
 namespace QuantConnect.Algorithm.CSharp
@@ -28,7 +28,9 @@ namespace QuantConnect.Algorithm.CSharp
     /// <summary>
     /// Regression algorithm asserting the futures daily cash settlement behavior taking long positions
     /// </summary>
-    public class FuturesDailySettlementLongRegressionAlgorithm : QCAlgorithm, IRegressionAlgorithmDefinition
+    public class FuturesDailySettlementLongRegressionAlgorithm
+        : QCAlgorithm,
+            IRegressionAlgorithmDefinition
     {
         private decimal _initialPortfolioValue;
         private int _lastTradedDay;
@@ -38,14 +40,15 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// Expected cash balance for each day
         /// </summary>
-        protected virtual Dictionary<DateTime, decimal> ExpectedCash { get; } = new()
-        {
-            { new DateTime(2013, 10, 07), 100000 },
-            { new DateTime(2013, 10, 08), 103264.45m },
-            { new DateTime(2013, 10, 09), 101231.05m },
-            { new DateTime(2013, 10, 10), 101962.10m },
-            { new DateTime(2013, 10, 10, 17, 0, 0), 100905.65m }
-        };
+        protected virtual Dictionary<DateTime, decimal> ExpectedCash { get; } =
+            new()
+            {
+                { new DateTime(2013, 10, 07), 100000 },
+                { new DateTime(2013, 10, 08), 103264.45m },
+                { new DateTime(2013, 10, 09), 101231.05m },
+                { new DateTime(2013, 10, 10), 101962.10m },
+                { new DateTime(2013, 10, 10, 17, 0, 0), 100905.65m }
+            };
 
         /// <summary>
         /// Order side factor
@@ -60,9 +63,16 @@ namespace QuantConnect.Algorithm.CSharp
             SetStartDate(2013, 10, 07);
             SetEndDate(2013, 10, 10);
 
-            var future = QuantConnect.Symbol.Create(Futures.Indices.SP500EMini, SecurityType.Future, Market.CME);
+            var future = QuantConnect.Symbol.Create(
+                Futures.Indices.SP500EMini,
+                SecurityType.Future,
+                Market.CME
+            );
 
-            _contractSymbol = FutureChainProvider.GetFutureContractList(future, Time).OrderBy(x => x.ID.Date).FirstOrDefault();
+            _contractSymbol = FutureChainProvider
+                .GetFutureContractList(future, Time)
+                .OrderBy(x => x.ID.Date)
+                .FirstOrDefault();
             _future = AddFutureContract(_contractSymbol);
 
             _future.Holdings.SetHoldings(1600, 1 * OrderSide);
@@ -79,10 +89,11 @@ namespace QuantConnect.Algorithm.CSharp
             if (Transactions.OrdersCount == 0)
             {
                 // initial trade
-                _initialPortfolioValue = Portfolio.TotalPortfolioValue - _future.Holdings.UnrealizedProfit;
+                _initialPortfolioValue =
+                    Portfolio.TotalPortfolioValue - _future.Holdings.UnrealizedProfit;
                 MarketOrder(_contractSymbol, 1 * OrderSide);
             }
-            else if(Time.Day == 7 && _lastTradedDay != Time.Day)
+            else if (Time.Day == 7 && _lastTradedDay != Time.Day)
             {
                 _lastTradedDay = Time.Day;
                 // increase position
@@ -102,7 +113,7 @@ namespace QuantConnect.Algorithm.CSharp
             }
             else if (Time.Day == 10)
             {
-                if(_lastTradedDay != Time.Day)
+                if (_lastTradedDay != Time.Day)
                 {
                     _lastTradedDay = Time.Day;
                     // increase position
@@ -123,7 +134,9 @@ namespace QuantConnect.Algorithm.CSharp
                 var value = Portfolio.CashBook.TotalValueInAccountCurrency;
                 if (expected != Math.Round(value, 5))
                 {
-                    throw new RegressionTestException($"Unexpected cash balance {value} expected {expected}");
+                    throw new RegressionTestException(
+                        $"Unexpected cash balance {value} expected {expected}"
+                    );
                 }
             }
         }
@@ -139,24 +152,33 @@ namespace QuantConnect.Algorithm.CSharp
         public override void OnEndOfAlgorithm()
         {
             var holdings = (FutureHolding)_future.Holdings;
-            Debug($"{Environment.NewLine}InitialPortfolioValue: {_initialPortfolioValue}. CurrentPortfolioValue: {Portfolio.TotalPortfolioValue}" +
-                $"{Environment.NewLine}Profit: {holdings.Profit}" +
-                $"{Environment.NewLine}Fees: {holdings.TotalFees}" +
-                $"{Environment.NewLine}CashBook:{Environment.NewLine}{Portfolio.CashBook}" +
-                $"{Environment.NewLine}UnsettledCashBook:{Environment.NewLine}{Portfolio.UnsettledCashBook}");
+            Debug(
+                $"{Environment.NewLine}InitialPortfolioValue: {_initialPortfolioValue}. CurrentPortfolioValue: {Portfolio.TotalPortfolioValue}"
+                    + $"{Environment.NewLine}Profit: {holdings.Profit}"
+                    + $"{Environment.NewLine}Fees: {holdings.TotalFees}"
+                    + $"{Environment.NewLine}CashBook:{Environment.NewLine}{Portfolio.CashBook}"
+                    + $"{Environment.NewLine}UnsettledCashBook:{Environment.NewLine}{Portfolio.UnsettledCashBook}"
+            );
 
             var expected = _initialPortfolioValue + holdings.NetProfit;
-            if (expected != Portfolio.TotalPortfolioValue || expected != Portfolio.CashBook[Currencies.USD].Amount)
+            if (
+                expected != Portfolio.TotalPortfolioValue
+                || expected != Portfolio.CashBook[Currencies.USD].Amount
+            )
             {
                 throw new RegressionTestException($"Unexpected future profit {holdings.NetProfit}");
             }
-            if(holdings.SettledProfit != 0)
+            if (holdings.SettledProfit != 0)
             {
-                throw new RegressionTestException($"Unexpected SettledProfit value {holdings.SettledProfit}");
+                throw new RegressionTestException(
+                    $"Unexpected SettledProfit value {holdings.SettledProfit}"
+                );
             }
             if (holdings.UnrealizedProfit != 0)
             {
-                throw new RegressionTestException($"Unexpected UnrealizedProfit value {holdings.UnrealizedProfit}");
+                throw new RegressionTestException(
+                    $"Unexpected UnrealizedProfit value {holdings.UnrealizedProfit}"
+                );
             }
 
             AssertCash(Time);
@@ -190,35 +212,36 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// This is used by the regression test system to indicate what the expected statistics are from running the algorithm
         /// </summary>
-        public virtual Dictionary<string, string> ExpectedStatistics => new Dictionary<string, string>
-        {
-            {"Total Orders", "6"},
-            {"Average Win", "0.89%"},
-            {"Average Loss", "-0.87%"},
-            {"Compounding Annual Return", "142.879%"},
-            {"Drawdown", "3.800%"},
-            {"Expectancy", "0.349"},
-            {"Start Equity", "100000"},
-            {"End Equity", "100905.65"},
-            {"Net Profit", "0.906%"},
-            {"Sharpe Ratio", "-3.968"},
-            {"Sortino Ratio", "-8.141"},
-            {"Probabilistic Sharpe Ratio", "0%"},
-            {"Loss Rate", "33%"},
-            {"Win Rate", "67%"},
-            {"Profit-Loss Ratio", "1.02"},
-            {"Alpha", "-1.091"},
-            {"Beta", "0.151"},
-            {"Annual Standard Deviation", "0.216"},
-            {"Annual Variance", "0.047"},
-            {"Information Ratio", "-7.634"},
-            {"Tracking Error", "0.313"},
-            {"Treynor Ratio", "-5.675"},
-            {"Total Fees", "$19.35"},
-            {"Estimated Strategy Capacity", "$100000000.00"},
-            {"Lowest Capacity Asset", "ES VMKLFZIH2MTD"},
-            {"Portfolio Turnover", "183.82%"},
-            {"OrderListHash", "0a1d9c87a1aced914c355e762c255a31"}
-        };
+        public virtual Dictionary<string, string> ExpectedStatistics =>
+            new Dictionary<string, string>
+            {
+                { "Total Orders", "6" },
+                { "Average Win", "0.89%" },
+                { "Average Loss", "-0.87%" },
+                { "Compounding Annual Return", "142.879%" },
+                { "Drawdown", "3.800%" },
+                { "Expectancy", "0.349" },
+                { "Start Equity", "100000" },
+                { "End Equity", "100905.65" },
+                { "Net Profit", "0.906%" },
+                { "Sharpe Ratio", "-3.968" },
+                { "Sortino Ratio", "-8.141" },
+                { "Probabilistic Sharpe Ratio", "0%" },
+                { "Loss Rate", "33%" },
+                { "Win Rate", "67%" },
+                { "Profit-Loss Ratio", "1.02" },
+                { "Alpha", "-1.091" },
+                { "Beta", "0.151" },
+                { "Annual Standard Deviation", "0.216" },
+                { "Annual Variance", "0.047" },
+                { "Information Ratio", "-7.634" },
+                { "Tracking Error", "0.313" },
+                { "Treynor Ratio", "-5.675" },
+                { "Total Fees", "$19.35" },
+                { "Estimated Strategy Capacity", "$100000000.00" },
+                { "Lowest Capacity Asset", "ES VMKLFZIH2MTD" },
+                { "Portfolio Turnover", "183.82%" },
+                { "OrderListHash", "0a1d9c87a1aced914c355e762c255a31" }
+            };
     }
 }

@@ -17,9 +17,9 @@
 using System;
 using System.Linq;
 using QuantConnect.Data;
+using QuantConnect.Indicators;
 using QuantConnect.Orders;
 using QuantConnect.Securities;
-using QuantConnect.Indicators;
 
 namespace QuantConnect.Algorithm.CSharp
 {
@@ -43,9 +43,18 @@ namespace QuantConnect.Algorithm.CSharp
         private ExponentialMovingAverage _fast;
         private ExponentialMovingAverage _slow;
 
-        public bool IsReady { get { return _fast.IsReady && _slow.IsReady; } }
-        public bool IsUpTrend { get { return IsReady && _fast > _slow * (1 + _tolerance); } }
-        public bool IsDownTrend { get { return IsReady && _fast < _slow * (1 + _tolerance); } }
+        public bool IsReady
+        {
+            get { return _fast.IsReady && _slow.IsReady; }
+        }
+        public bool IsUpTrend
+        {
+            get { return IsReady && _fast > _slow * (1 + _tolerance); }
+        }
+        public bool IsDownTrend
+        {
+            get { return IsReady && _fast < _slow * (1 + _tolerance); }
+        }
 
         public override void Initialize()
         {
@@ -76,7 +85,7 @@ namespace QuantConnect.Algorithm.CSharp
                         from futuresContract in chain.Value.OrderBy(x => x.Expiry)
                         where futuresContract.Expiry > Time.Date.AddDays(90)
                         select futuresContract
-                        ).FirstOrDefault();
+                    ).FirstOrDefault();
 
                     // if found, trade it
                     if (contract != null)
@@ -94,7 +103,15 @@ namespace QuantConnect.Algorithm.CSharp
 
         public override void OnEndOfDay(Symbol symbol)
         {
-            Plot("Indicator Signal", "EOD", IsDownTrend ? -1 : IsUpTrend ? 1 : 0);
+            Plot(
+                "Indicator Signal",
+                "EOD",
+                IsDownTrend
+                    ? -1
+                    : IsUpTrend
+                        ? 1
+                        : 0
+            );
         }
 
         public override void OnOrderEvent(OrderEvent orderEvent)

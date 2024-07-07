@@ -1,11 +1,11 @@
 ﻿/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
- * 
- * Licensed under the Apache License, Version 2.0 (the "License"); 
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -26,7 +26,7 @@ namespace QuantConnect.Data.Consolidators
     public class IdentityDataConsolidator<T> : DataConsolidator<T>
         where T : IBaseData
     {
-        private static readonly bool IsTick = typeof (T) == typeof (Tick);
+        private static readonly bool IsTick = typeof(T) == typeof(Tick);
 
         private T _last;
 
@@ -43,7 +43,7 @@ namespace QuantConnect.Data.Consolidators
         /// </summary>
         public override Type OutputType
         {
-            get { return typeof (T); }
+            get { return typeof(T); }
         }
 
         /// <summary>
@@ -63,8 +63,6 @@ namespace QuantConnect.Data.Consolidators
         /// Scans this consolidator to see if it should emit a bar due to time passing
         /// </summary>
         /// <param name="currentLocalTime">The current time in the local time zone (same as <see cref="BaseData.Time"/>)</param>
-        public override void Scan(DateTime currentLocalTime)
-        {
-        }
+        public override void Scan(DateTime currentLocalTime) { }
     }
 }

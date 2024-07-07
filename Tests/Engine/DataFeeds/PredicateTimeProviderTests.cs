@@ -28,9 +28,11 @@ namespace QuantConnect.Tests.Engine.DataFeeds
         {
             var startTime = new DateTime(2018, 1, 1);
             var manualTimeProvider = new ManualTimeProvider(startTime);
-            var stepTimeProvider = new PredicateTimeProvider(manualTimeProvider,
+            var stepTimeProvider = new PredicateTimeProvider(
+                manualTimeProvider,
                 // only step when minute is a pair number
-                time => time.Minute % 2 == 0);
+                time => time.Minute % 2 == 0
+            );
 
             Assert.AreEqual(manualTimeProvider.GetUtcNow(), stepTimeProvider.GetUtcNow());
 

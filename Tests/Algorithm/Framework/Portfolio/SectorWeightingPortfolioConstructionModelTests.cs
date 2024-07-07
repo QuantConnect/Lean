@@ -13,6 +13,9 @@
  * limitations under the License.
 */
 
+using System;
+using System.Collections.Generic;
+using System.Linq;
 using NodaTime;
 using NUnit.Framework;
 using Python.Runtime;
@@ -21,22 +24,21 @@ using QuantConnect.Algorithm.Framework.Portfolio;
 using QuantConnect.Data.Fundamental;
 using QuantConnect.Data.Market;
 using QuantConnect.Data.UniverseSelection;
+using QuantConnect.Interfaces;
 using QuantConnect.Securities;
 using QuantConnect.Securities.Equity;
-using System;
-using System.Collections.Generic;
-using System.Linq;
 using QuantConnect.Tests.Common.Data.UniverseSelection;
-using QuantConnect.Interfaces;
 
 namespace QuantConnect.Tests.Algorithm.Framework.Portfolio
 {
     [TestFixture]
-    public class SectorWeightingPortfolioConstructionModelTests : BaseWeightingPortfolioConstructionModelTests
+    public class SectorWeightingPortfolioConstructionModelTests
+        : BaseWeightingPortfolioConstructionModelTests
     {
         private const double _weight = 0.01;
 
-        public override double? Weight => Algorithm.Securities.Count == 0 ? default(double) : 1d / Algorithm.Securities.Count;
+        public override double? Weight =>
+            Algorithm.Securities.Count == 0 ? default(double) : 1d / Algorithm.Securities.Count;
 
         [OneTimeSetUp]
         public override void SetUp()
@@ -46,24 +48,41 @@ namespace QuantConnect.Tests.Algorithm.Framework.Portfolio
             var prices = new Dictionary<Symbol, Tuple<decimal, string>>
             {
                 { Symbol.Create("XXX", SecurityType.Equity, Market.USA), Tuple.Create(55.22m, "") },
-                { Symbol.Create("B01", SecurityType.Equity, Market.USA), Tuple.Create(55.22m, "B") },
-                { Symbol.Create("B02", SecurityType.Equity, Market.USA), Tuple.Create(55.22m, "B") },
-                { Symbol.Create("B03", SecurityType.Equity, Market.USA), Tuple.Create(55.22m, "B") },
-                { Symbol.Create("T01", SecurityType.Equity, Market.USA), Tuple.Create(145.17m, "T") },
-                { Symbol.Create("T02", SecurityType.Equity, Market.USA), Tuple.Create(145.17m, "T") },
-                { Symbol.Create("SPY", SecurityType.Equity, Market.USA), Tuple.Create(281.79m, "X") },
+                {
+                    Symbol.Create("B01", SecurityType.Equity, Market.USA),
+                    Tuple.Create(55.22m, "B")
+                },
+                {
+                    Symbol.Create("B02", SecurityType.Equity, Market.USA),
+                    Tuple.Create(55.22m, "B")
+                },
+                {
+                    Symbol.Create("B03", SecurityType.Equity, Market.USA),
+                    Tuple.Create(55.22m, "B")
+                },
+                {
+                    Symbol.Create("T01", SecurityType.Equity, Market.USA),
+                    Tuple.Create(145.17m, "T")
+                },
+                {
+                    Symbol.Create("T02", SecurityType.Equity, Market.USA),
+                    Tuple.Create(145.17m, "T")
+                },
+                {
+                    Symbol.Create("SPY", SecurityType.Equity, Market.USA),
+                    Tuple.Create(281.79m, "X")
+                },
             };
 
-            Func<Symbol, Security> GetSecurity = symbol =>
-                new Equity(
-                    symbol,
-                    SecurityExchangeHours.AlwaysOpen(DateTimeZone.Utc),
-                    new Cash(Currencies.USD, 0, 1),
-                    SymbolProperties.GetDefault(Currencies.USD),
-                    ErrorCurrencyConverter.Instance,
-                    RegisteredSecurityDataTypesProvider.Null,
-                    new SecurityCache()
-                    );
+            Func<Symbol, Security> GetSecurity = symbol => new Equity(
+                symbol,
+                SecurityExchangeHours.AlwaysOpen(DateTimeZone.Utc),
+                new Cash(Currencies.USD, 0, 1),
+                SymbolProperties.GetDefault(Currencies.USD),
+                ErrorCurrencyConverter.Instance,
+                RegisteredSecurityDataTypesProvider.Null,
+                new SecurityCache()
+            );
 
             var industryTemplateCodeDict = new Dictionary<SecurityIdentifier, string>();
             foreach (var kvp in prices)
@@ -76,17 +95,20 @@ namespace QuantConnect.Tests.Algorithm.Framework.Portfolio
                 // This procedure shows that the model ignores the securities without it
                 if (!string.IsNullOrEmpty(sectorCode))
                 {
-                    security.SetMarketPrice(new Fundamental(Algorithm.Time, symbol)
-                    {
-                        Value = price
-                    });
+                    security.SetMarketPrice(
+                        new Fundamental(Algorithm.Time, symbol) { Value = price }
+                    );
                     industryTemplateCodeDict[symbol.ID] = kvp.Value.Item2;
                 }
                 security.SetMarketPrice(new Tick(Algorithm.Time, symbol, price, price));
                 Algorithm.Securities.Add(symbol, security);
             }
 
-            FundamentalService.Initialize(TestGlobals.DataProvider, new TestFundamentalDataProvider(industryTemplateCodeDict), false);
+            FundamentalService.Initialize(
+                TestGlobals.DataProvider,
+                new TestFundamentalDataProvider(industryTemplateCodeDict),
+                false
+            );
         }
 
         [Test]
@@ -96,14 +118,19 @@ namespace QuantConnect.Tests.Algorithm.Framework.Portfolio
         [TestCase(Language.Python, InsightDirection.Up)]
         [TestCase(Language.Python, InsightDirection.Down)]
         [TestCase(Language.Python, InsightDirection.Flat)]
-        public override void AutomaticallyRemoveInvestedWithNewInsights(Language language, InsightDirection direction)
+        public override void AutomaticallyRemoveInvestedWithNewInsights(
+            Language language,
+            InsightDirection direction
+        )
         {
             SetPortfolioConstruction(language);
 
             // Let's create a position for SPY
             var insights = new[] { GetInsight(Symbols.SPY, direction, Algorithm.UtcTime) };
 
-            foreach (var target in Algorithm.PortfolioConstruction.CreateTargets(Algorithm, insights))
+            foreach (
+                var target in Algorithm.PortfolioConstruction.CreateTargets(Algorithm, insights)
+            )
             {
                 var holding = Algorithm.Portfolio[target.Symbol];
                 holding.SetHoldings(holding.Price, target.Quantity);
@@ -112,11 +139,13 @@ namespace QuantConnect.Tests.Algorithm.Framework.Portfolio
 
             SetUtcTime(Algorithm.UtcTime.AddDays(2));
 
-            // Since we have 3 B, 2 T and 1 X, each security in each sector will get 
+            // Since we have 3 B, 2 T and 1 X, each security in each sector will get
             // B => .166%, T => .25, X => 0% (removed)
             var sectorCount = 2;
-            var groupedBySector = Algorithm.Securities
-                .Where(pair => pair.Value.Fundamentals?.CompanyReference.IndustryTemplateCode != null)
+            var groupedBySector = Algorithm
+                .Securities.Where(pair =>
+                    pair.Value.Fundamentals?.CompanyReference.IndustryTemplateCode != null
+                )
                 .GroupBy(pair => pair.Value.Fundamentals.CompanyReference.IndustryTemplateCode);
 
             var expectedTargets = new List<PortfolioTarget>();
@@ -124,17 +153,27 @@ namespace QuantConnect.Tests.Algorithm.Framework.Portfolio
             foreach (var securities in groupedBySector)
             {
                 var list = securities.ToList();
-                var amount = Algorithm.Portfolio.TotalPortfolioValue / list.Count / sectorCount *
-                    (1 - Algorithm.Settings.FreePortfolioValuePercentage);
+                var amount =
+                    Algorithm.Portfolio.TotalPortfolioValue
+                    / list.Count
+                    / sectorCount
+                    * (1 - Algorithm.Settings.FreePortfolioValuePercentage);
 
-                expectedTargets.AddRange(list
-                    .Select(x => new PortfolioTarget(x.Key, x.Key.Value == "SPY" ? 0
-                        : (int)direction * Math.Floor(amount / x.Value.Price))));
+                expectedTargets.AddRange(
+                    list.Select(x => new PortfolioTarget(
+                        x.Key,
+                        x.Key.Value == "SPY"
+                            ? 0
+                            : (int)direction * Math.Floor(amount / x.Value.Price)
+                    ))
+                );
             }
 
             // Do no include SPY in the insights
-            insights = Algorithm.Securities.Keys.Where(x => x.Value != "SPY")
-                .Select(x => GetInsight(x, direction, Algorithm.UtcTime)).ToArray();
+            insights = Algorithm
+                .Securities.Keys.Where(x => x.Value != "SPY")
+                .Select(x => GetInsight(x, direction, Algorithm.UtcTime))
+                .ToArray();
 
             var actualTargets = Algorithm.PortfolioConstruction.CreateTargets(Algorithm, insights);
 
@@ -149,23 +188,35 @@ namespace QuantConnect.Tests.Algorithm.Framework.Portfolio
         [TestCase(Language.Python, InsightDirection.Up)]
         [TestCase(Language.Python, InsightDirection.Down)]
         [TestCase(Language.Python, InsightDirection.Flat)]
-        public override void DelistedSecurityEmitsFlatTargetWithNewInsights(Language language, InsightDirection direction)
+        public override void DelistedSecurityEmitsFlatTargetWithNewInsights(
+            Language language,
+            InsightDirection direction
+        )
         {
             SetPortfolioConstruction(language);
 
-            var insights = new[] { GetInsight(Symbols.SPY, InsightDirection.Down, Algorithm.UtcTime) };
-            var targets = Algorithm.PortfolioConstruction.CreateTargets(Algorithm, insights).ToList();
+            var insights = new[]
+            {
+                GetInsight(Symbols.SPY, InsightDirection.Down, Algorithm.UtcTime)
+            };
+            var targets = Algorithm
+                .PortfolioConstruction.CreateTargets(Algorithm, insights)
+                .ToList();
             Assert.AreEqual(1, targets.Count);
 
             // Removing SPY should clear the key in the insight collection
-            var changes = SecurityChangesTests.RemovedNonInternal(Algorithm.Securities[Symbols.SPY]);
+            var changes = SecurityChangesTests.RemovedNonInternal(
+                Algorithm.Securities[Symbols.SPY]
+            );
             Algorithm.PortfolioConstruction.OnSecuritiesChanged(Algorithm, changes);
 
-            // Since we have 3 B, 2 T and 1 X, each security in each sector will get 
+            // Since we have 3 B, 2 T and 1 X, each security in each sector will get
             // B => .166%, T => .25, X => 0% (removed)
             var sectorCount = 2;
-            var groupedBySector = Algorithm.Securities
-                .Where(pair => pair.Value.Fundamentals?.CompanyReference.IndustryTemplateCode != null)
+            var groupedBySector = Algorithm
+                .Securities.Where(pair =>
+                    pair.Value.Fundamentals?.CompanyReference.IndustryTemplateCode != null
+                )
                 .GroupBy(pair => pair.Value.Fundamentals.CompanyReference.IndustryTemplateCode);
 
             var expectedTargets = new List<PortfolioTarget>();
@@ -173,17 +224,27 @@ namespace QuantConnect.Tests.Algorithm.Framework.Portfolio
             foreach (var securities in groupedBySector)
             {
                 var list = securities.ToList();
-                var amount = Algorithm.Portfolio.TotalPortfolioValue / list.Count / sectorCount *
-                    (1 - Algorithm.Settings.FreePortfolioValuePercentage);
+                var amount =
+                    Algorithm.Portfolio.TotalPortfolioValue
+                    / list.Count
+                    / sectorCount
+                    * (1 - Algorithm.Settings.FreePortfolioValuePercentage);
 
-                expectedTargets.AddRange(list
-                    .Select(x => new PortfolioTarget(x.Key, x.Key.Value == "SPY" ? 0
-                        : (int)direction * Math.Floor(amount / x.Value.Price))));
+                expectedTargets.AddRange(
+                    list.Select(x => new PortfolioTarget(
+                        x.Key,
+                        x.Key.Value == "SPY"
+                            ? 0
+                            : (int)direction * Math.Floor(amount / x.Value.Price)
+                    ))
+                );
             }
 
             // Do no include SPY in the insights
-            insights = Algorithm.Securities.Keys.Where(x => x.Value != "SPY")
-                .Select(x => GetInsight(x, direction, Algorithm.UtcTime)).ToArray();
+            insights = Algorithm
+                .Securities.Keys.Where(x => x.Value != "SPY")
+                .Select(x => GetInsight(x, direction, Algorithm.UtcTime))
+                .ToArray();
 
             // Create target from an empty insights array
             var actualTargets = Algorithm.PortfolioConstruction.CreateTargets(Algorithm, insights);
@@ -198,15 +259,20 @@ namespace QuantConnect.Tests.Algorithm.Framework.Portfolio
         [TestCase(Language.Python, InsightDirection.Up)]
         [TestCase(Language.Python, InsightDirection.Down)]
         [TestCase(Language.Python, InsightDirection.Flat)]
-        public override void FlatDirectionNotAccountedToAllocation(Language language, InsightDirection direction)
+        public override void FlatDirectionNotAccountedToAllocation(
+            Language language,
+            InsightDirection direction
+        )
         {
             SetPortfolioConstruction(language);
 
-            // Since we have 3 B, 2 T and 1 X, each security in each sector will get 
+            // Since we have 3 B, 2 T and 1 X, each security in each sector will get
             // B => .166%, T => .25, X => 0% (removed)
             var sectorCount = 2;
-            var groupedBySector = Algorithm.Securities
-                .Where(pair => pair.Value.Fundamentals?.CompanyReference.IndustryTemplateCode != null)
+            var groupedBySector = Algorithm
+                .Securities.Where(pair =>
+                    pair.Value.Fundamentals?.CompanyReference.IndustryTemplateCode != null
+                )
                 .GroupBy(pair => pair.Value.Fundamentals.CompanyReference.IndustryTemplateCode);
 
             var expectedTargets = new List<PortfolioTarget>();
@@ -214,12 +280,20 @@ namespace QuantConnect.Tests.Algorithm.Framework.Portfolio
             foreach (var securities in groupedBySector)
             {
                 var list = securities.ToList();
-                var amount = Algorithm.Portfolio.TotalPortfolioValue / list.Count / sectorCount *
-                    (1 - Algorithm.Settings.FreePortfolioValuePercentage);
+                var amount =
+                    Algorithm.Portfolio.TotalPortfolioValue
+                    / list.Count
+                    / sectorCount
+                    * (1 - Algorithm.Settings.FreePortfolioValuePercentage);
 
-                expectedTargets.AddRange(list
-                    .Select(x => new PortfolioTarget(x.Key, x.Key.Value == "SPY" ? 0
-                        : (int)direction * Math.Floor(amount / x.Value.Price))));
+                expectedTargets.AddRange(
+                    list.Select(x => new PortfolioTarget(
+                        x.Key,
+                        x.Key.Value == "SPY"
+                            ? 0
+                            : (int)direction * Math.Floor(amount / x.Value.Price)
+                    ))
+                );
             }
 
             var insights = Algorithm.Securities.Keys.Select(x =>
@@ -228,7 +302,10 @@ namespace QuantConnect.Tests.Algorithm.Framework.Portfolio
                 var actualDirection = x.Value == "SPY" ? InsightDirection.Flat : direction;
                 return GetInsight(x, actualDirection, Algorithm.UtcTime);
             });
-            var actualTargets = Algorithm.PortfolioConstruction.CreateTargets(Algorithm, insights.ToArray());
+            var actualTargets = Algorithm.PortfolioConstruction.CreateTargets(
+                Algorithm,
+                insights.ToArray()
+            );
 
             Assert.Greater(Algorithm.Securities.Count, expectedTargets.Count);
             AssertTargets(expectedTargets, actualTargets);
@@ -242,14 +319,16 @@ namespace QuantConnect.Tests.Algorithm.Framework.Portfolio
             SetPortfolioConstruction(language);
 
             // create two insights whose weights sums up to 2
-            var insights = Algorithm.Securities
-                .Select(x => GetInsight(x.Key, InsightDirection.Up, Algorithm.UtcTime))
+            var insights = Algorithm
+                .Securities.Select(x => GetInsight(x.Key, InsightDirection.Up, Algorithm.UtcTime))
                 .ToArray();
 
             // Since we have 3 B, 2 T and 1 X, each security in each secotr will get B => .11%, T => .165, X => .33%
             var sectorCount = 3;
-            var groupedBySector = Algorithm.Securities
-                .Where(pair => pair.Value.Fundamentals?.CompanyReference.IndustryTemplateCode != null)
+            var groupedBySector = Algorithm
+                .Securities.Where(pair =>
+                    pair.Value.Fundamentals?.CompanyReference.IndustryTemplateCode != null
+                )
                 .Where(pair => insights.Any(insight => pair.Key == insight.Symbol))
                 .GroupBy(pair => pair.Value.Fundamentals.CompanyReference.IndustryTemplateCode);
 
@@ -258,20 +337,35 @@ namespace QuantConnect.Tests.Algorithm.Framework.Portfolio
             foreach (var securities in groupedBySector)
             {
                 var list = securities.ToList();
-                var amount = Algorithm.Portfolio.TotalPortfolioValue / list.Count / sectorCount *
-                    (1 - Algorithm.Settings.FreePortfolioValuePercentage);
+                var amount =
+                    Algorithm.Portfolio.TotalPortfolioValue
+                    / list.Count
+                    / sectorCount
+                    * (1 - Algorithm.Settings.FreePortfolioValuePercentage);
 
-                expectedTargets.AddRange(list
-                    .Select(x => new PortfolioTarget(x.Key, (int)InsightDirection.Up * Math.Floor(amount / x.Value.Price))));
+                expectedTargets.AddRange(
+                    list.Select(x => new PortfolioTarget(
+                        x.Key,
+                        (int)InsightDirection.Up * Math.Floor(amount / x.Value.Price)
+                    ))
+                );
             }
 
-            var actualTargets = Algorithm.PortfolioConstruction.CreateTargets(Algorithm, insights).ToList();
+            var actualTargets = Algorithm
+                .PortfolioConstruction.CreateTargets(Algorithm, insights)
+                .ToList();
             Assert.AreEqual(6, actualTargets.Count);
             Assert.Greater(Algorithm.Securities.Count, expectedTargets.Count);
             AssertTargets(expectedTargets, actualTargets);
         }
 
-        public override Insight GetInsight(Symbol symbol, InsightDirection direction, DateTime generatedTimeUtc, TimeSpan? period = null, double? weight = _weight)
+        public override Insight GetInsight(
+            Symbol symbol,
+            InsightDirection direction,
+            DateTime generatedTimeUtc,
+            TimeSpan? period = null,
+            double? weight = _weight
+        )
         {
             period ??= TimeSpan.FromDays(1);
             var insight = Insight.Price(symbol, period.Value, direction, weight: weight);
@@ -281,7 +375,10 @@ namespace QuantConnect.Tests.Algorithm.Framework.Portfolio
             return insight;
         }
 
-        public override IPortfolioConstructionModel GetPortfolioConstructionModel(Language language, dynamic paramenter = null)
+        public override IPortfolioConstructionModel GetPortfolioConstructionModel(
+            Language language,
+            dynamic paramenter = null
+        )
         {
             if (language == Language.CSharp)
             {
@@ -291,7 +388,9 @@ namespace QuantConnect.Tests.Algorithm.Framework.Portfolio
             using (Py.GIL())
             {
                 const string name = nameof(SectorWeightingPortfolioConstructionModel);
-                var instance = Py.Import(name).GetAttr(name).Invoke(((object)paramenter).ToPython());
+                var instance = Py.Import(name)
+                    .GetAttr(name)
+                    .Invoke(((object)paramenter).ToPython());
                 return new PortfolioConstructionModelPythonWrapper(instance);
             }
         }
@@ -300,11 +399,18 @@ namespace QuantConnect.Tests.Algorithm.Framework.Portfolio
         {
             private readonly Dictionary<SecurityIdentifier, string> _industryTemplateCodeDict;
 
-            public TestFundamentalDataProvider(Dictionary<SecurityIdentifier, string> industryTemplateCodeDict)
+            public TestFundamentalDataProvider(
+                Dictionary<SecurityIdentifier, string> industryTemplateCodeDict
+            )
             {
                 _industryTemplateCodeDict = industryTemplateCodeDict;
             }
-            public T Get<T>(DateTime time, SecurityIdentifier securityIdentifier, FundamentalProperty name)
+
+            public T Get<T>(
+                DateTime time,
+                SecurityIdentifier securityIdentifier,
+                FundamentalProperty name
+            )
             {
                 if (securityIdentifier == SecurityIdentifier.Empty)
                 {
@@ -312,13 +418,23 @@ namespace QuantConnect.Tests.Algorithm.Framework.Portfolio
                 }
                 return Get(time, securityIdentifier, name);
             }
-            private dynamic Get(DateTime time, SecurityIdentifier securityIdentifier, FundamentalProperty enumName)
+
+            private dynamic Get(
+                DateTime time,
+                SecurityIdentifier securityIdentifier,
+                FundamentalProperty enumName
+            )
             {
                 var name = Enum.GetName(enumName);
                 switch (name)
                 {
                     case "CompanyReference_IndustryTemplateCode":
-                        if(_industryTemplateCodeDict.TryGetValue(securityIdentifier, out var result))
+                        if (
+                            _industryTemplateCodeDict.TryGetValue(
+                                securityIdentifier,
+                                out var result
+                            )
+                        )
                         {
                             return result;
                         }
@@ -326,9 +442,8 @@ namespace QuantConnect.Tests.Algorithm.Framework.Portfolio
                 }
                 return null;
             }
-            public void Initialize(IDataProvider dataProvider, bool liveMode)
-            {
-            }
+
+            public void Initialize(IDataProvider dataProvider, bool liveMode) { }
         }
     }
 }

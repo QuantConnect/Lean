@@ -13,12 +13,12 @@
  * limitations under the License.
 */
 
-using System.Linq;
-using QuantConnect.Data;
 using System.Collections.Generic;
+using System.Linq;
+using QuantConnect.Algorithm.Framework.Selection;
+using QuantConnect.Data;
 using QuantConnect.Data.Fundamental;
 using QuantConnect.Data.UniverseSelection;
-using QuantConnect.Algorithm.Framework.Selection;
 
 namespace QuantConnect.Algorithm.CSharp
 {
@@ -46,7 +46,10 @@ namespace QuantConnect.Algorithm.CSharp
 
         private class FundamentalUniverseSelectionModelTest : FundamentalUniverseSelectionModel
         {
-            public override IEnumerable<Symbol> Select(QCAlgorithm algorithm, IEnumerable<Fundamental> fundamental)
+            public override IEnumerable<Symbol> Select(
+                QCAlgorithm algorithm,
+                IEnumerable<Fundamental> fundamental
+            )
             {
                 // select only symbols with fundamental data and sort descending by daily dollar volume
                 var sortedByDollarVolume = fundamental
@@ -54,7 +57,9 @@ namespace QuantConnect.Algorithm.CSharp
                     .OrderByDescending(x => x.DollarVolume);
 
                 // sort descending by P/E ratio
-                var sortedByPeRatio = sortedByDollarVolume.OrderByDescending(x => x.ValuationRatios.PERatio);
+                var sortedByPeRatio = sortedByDollarVolume.OrderByDescending(x =>
+                    x.ValuationRatios.PERatio
+                );
 
                 // take the top entries from our sorted collection
                 var topFine = sortedByPeRatio.Take(NumberOfSymbolsFundamental);
@@ -67,7 +72,8 @@ namespace QuantConnect.Algorithm.CSharp
         public override void OnData(Slice slice)
         {
             // if we have no changes, do nothing
-            if (_changes == SecurityChanges.None) return;
+            if (_changes == SecurityChanges.None)
+                return;
 
             // liquidate removed securities
             foreach (var security in _changes.RemovedSecurities)

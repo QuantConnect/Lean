@@ -27,7 +27,9 @@ namespace QuantConnect.Algorithm.CSharp
     /// Coarse universe selection should start from the algorithm start date.
     /// Data returned by history requests performed from the selection method should be up to date.
     /// </summary>
-    public class CoarseSelectionTimeRegressionAlgorithm : QCAlgorithm, IRegressionAlgorithmDefinition
+    public class CoarseSelectionTimeRegressionAlgorithm
+        : QCAlgorithm,
+            IRegressionAlgorithmDefinition
     {
         private Symbol _spy;
         private decimal _historyCoarseSpyPrice;
@@ -70,12 +72,16 @@ namespace QuantConnect.Algorithm.CSharp
             }
             if (ActiveSecurities.Count != 2)
             {
-                throw new RegressionTestException($"Unexpected ActiveSecurities count: {ActiveSecurities.Count}");
+                throw new RegressionTestException(
+                    $"Unexpected ActiveSecurities count: {ActiveSecurities.Count}"
+                );
             }
             // the price obtained by the previous coarse selection should be the same as the current price
             if (_historyCoarseSpyPrice != 0 && _historyCoarseSpyPrice != Securities[_spy].Price)
             {
-                throw new RegressionTestException($"Unexpected SPY price: {_historyCoarseSpyPrice}");
+                throw new RegressionTestException(
+                    $"Unexpected SPY price: {_historyCoarseSpyPrice}"
+                );
             }
             _historyCoarseSpyPrice = 0;
             if (!Portfolio.Invested)
@@ -113,35 +119,36 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// This is used by the regression test system to indicate what the expected statistics are from running the algorithm
         /// </summary>
-        public Dictionary<string, string> ExpectedStatistics => new Dictionary<string, string>
-        {
-            {"Total Orders", "1"},
-            {"Average Win", "0%"},
-            {"Average Loss", "0%"},
-            {"Compounding Annual Return", "57.657%"},
-            {"Drawdown", "1.000%"},
-            {"Expectancy", "0"},
-            {"Start Equity", "100000"},
-            {"End Equity", "101002.81"},
-            {"Net Profit", "1.003%"},
-            {"Sharpe Ratio", "5.273"},
-            {"Sortino Ratio", "7.973"},
-            {"Probabilistic Sharpe Ratio", "69.521%"},
-            {"Loss Rate", "0%"},
-            {"Win Rate", "0%"},
-            {"Profit-Loss Ratio", "0"},
-            {"Alpha", "0"},
-            {"Beta", "1.003"},
-            {"Annual Standard Deviation", "0.087"},
-            {"Annual Variance", "0.007"},
-            {"Information Ratio", "6.477"},
-            {"Tracking Error", "0"},
-            {"Treynor Ratio", "0.455"},
-            {"Total Fees", "$3.08"},
-            {"Estimated Strategy Capacity", "$720000000.00"},
-            {"Lowest Capacity Asset", "SPY R735QTJ8XC9X"},
-            {"Portfolio Turnover", "12.54%"},
-            {"OrderListHash", "472e90ba189aaf55e0edab9087c3d8e7"}
-        };
+        public Dictionary<string, string> ExpectedStatistics =>
+            new Dictionary<string, string>
+            {
+                { "Total Orders", "1" },
+                { "Average Win", "0%" },
+                { "Average Loss", "0%" },
+                { "Compounding Annual Return", "57.657%" },
+                { "Drawdown", "1.000%" },
+                { "Expectancy", "0" },
+                { "Start Equity", "100000" },
+                { "End Equity", "101002.81" },
+                { "Net Profit", "1.003%" },
+                { "Sharpe Ratio", "5.273" },
+                { "Sortino Ratio", "7.973" },
+                { "Probabilistic Sharpe Ratio", "69.521%" },
+                { "Loss Rate", "0%" },
+                { "Win Rate", "0%" },
+                { "Profit-Loss Ratio", "0" },
+                { "Alpha", "0" },
+                { "Beta", "1.003" },
+                { "Annual Standard Deviation", "0.087" },
+                { "Annual Variance", "0.007" },
+                { "Information Ratio", "6.477" },
+                { "Tracking Error", "0" },
+                { "Treynor Ratio", "0.455" },
+                { "Total Fees", "$3.08" },
+                { "Estimated Strategy Capacity", "$720000000.00" },
+                { "Lowest Capacity Asset", "SPY R735QTJ8XC9X" },
+                { "Portfolio Turnover", "12.54%" },
+                { "OrderListHash", "472e90ba189aaf55e0edab9087c3d8e7" }
+            };
     }
 }

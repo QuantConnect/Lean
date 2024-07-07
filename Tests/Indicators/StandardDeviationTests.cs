@@ -70,6 +70,6 @@ namespace QuantConnect.Tests.Indicators
 
         protected override Action<IndicatorBase<IndicatorDataPoint>, double> Assertion =>
             (indicator, expected) =>
-                Assert.AreEqual(Math.Sqrt(expected), (double) indicator.Current.Value, 1e-6);
+                Assert.AreEqual(Math.Sqrt(expected), (double)indicator.Current.Value, 1e-6);
     }
 }

@@ -13,14 +13,14 @@
  * limitations under the License.
 */
 
+using System;
+using System.Collections.Generic;
+using System.Linq;
 using QuantConnect.Data;
+using QuantConnect.Data.UniverseSelection;
 using QuantConnect.Interfaces;
 using QuantConnect.Securities;
-using System.Collections.Generic;
 using QuantConnect.Securities.Future;
-using System;
-using QuantConnect.Data.UniverseSelection;
-using System.Linq;
 
 namespace QuantConnect.Algorithm.CSharp
 {
@@ -29,7 +29,9 @@ namespace QuantConnect.Algorithm.CSharp
     /// An example case is ES and Milk futures, which have different time zones. ES is in New York and Milk is in Chicago.
     /// ES selection would happen first just because of this, but all futures should have a mapped contract right away.
     /// </summary>
-    public class ContinuousFutureImmediateUniverseSelectionRegressionAlgorithm : QCAlgorithm, IRegressionAlgorithmDefinition
+    public class ContinuousFutureImmediateUniverseSelectionRegressionAlgorithm
+        : QCAlgorithm,
+            IRegressionAlgorithmDefinition
     {
         private Future _es;
         private Future _milk;
@@ -51,18 +53,22 @@ namespace QuantConnect.Algorithm.CSharp
             _startDateUtc = StartDate.ConvertToUtc(TimeZone);
 
             // ES time zone is New York
-            _es = AddFuture(Futures.Indices.SP500EMini,
+            _es = AddFuture(
+                Futures.Indices.SP500EMini,
                 dataNormalizationMode: DataNormalizationMode.BackwardsRatio,
                 dataMappingMode: DataMappingMode.OpenInterestAnnual,
                 contractDepthOffset: 0,
-                extendedMarketHours: true);
+                extendedMarketHours: true
+            );
 
             // Milk time zone is Chicago, so market open will be after ES
-            _milk = AddFuture(Futures.Dairy.ClassIIIMilk,
+            _milk = AddFuture(
+                Futures.Dairy.ClassIIIMilk,
                 dataNormalizationMode: DataNormalizationMode.BackwardsRatio,
                 dataMappingMode: DataMappingMode.OpenInterestAnnual,
                 contractDepthOffset: 0,
-                extendedMarketHours: true);
+                extendedMarketHours: true
+            );
 
             _es.SetFilter(universe =>
             {
@@ -72,10 +78,11 @@ namespace QuantConnect.Algorithm.CSharp
 
                     if (_esSelectionTimeUtc != _startDateUtc)
                     {
-                        throw new RegressionTestException($"Expected ES universe selection to happen on algorithm start ({_startDateUtc}), " +
-                            $"but happened on {_esSelectionTimeUtc}");
+                        throw new RegressionTestException(
+                            $"Expected ES universe selection to happen on algorithm start ({_startDateUtc}), "
+                                + $"but happened on {_esSelectionTimeUtc}"
+                        );
                     }
-
                 }
 
                 return universe.Select(x => x);
@@ -85,12 +92,16 @@ namespace QuantConnect.Algorithm.CSharp
             {
                 if (_milkSelectionTimeUtc == DateTime.MinValue)
                 {
-                    _milkSelectionTimeUtc = universe.LocalTime.ConvertToUtc(_milk.Exchange.TimeZone);
+                    _milkSelectionTimeUtc = universe.LocalTime.ConvertToUtc(
+                        _milk.Exchange.TimeZone
+                    );
 
                     if (_milkSelectionTimeUtc != _startDateUtc)
                     {
-                        throw new RegressionTestException($"Expected DC universe selection to happen on algorithm start ({_startDateUtc}), " +
-                            $"but happened on {_milkSelectionTimeUtc}");
+                        throw new RegressionTestException(
+                            $"Expected DC universe selection to happen on algorithm start ({_startDateUtc}), "
+                                + $"but happened on {_milkSelectionTimeUtc}"
+                        );
                     }
                 }
 
@@ -114,7 +125,9 @@ namespace QuantConnect.Algorithm.CSharp
                 throw new RegressionTestException("DC mapped contract is null");
             }
 
-            Log($"{slice.Time} :: ES Mapped Contract: {_es.Mapped}. DC Mapped Contract: {_milk.Mapped}");
+            Log(
+                $"{slice.Time} :: ES Mapped Contract: {_es.Mapped}. DC Mapped Contract: {_milk.Mapped}"
+            );
         }
 
         public override void OnSecuritiesChanged(SecurityChanges changes)
@@ -125,8 +138,10 @@ namespace QuantConnect.Algorithm.CSharp
 
                 if (Time != StartDate)
                 {
-                    throw new RegressionTestException($"Expected OnSecuritiesChanged to be called on algorithm start ({StartDate}), " +
-                        $"but happened on {Time}");
+                    throw new RegressionTestException(
+                        $"Expected OnSecuritiesChanged to be called on algorithm start ({StartDate}), "
+                            + $"but happened on {Time}"
+                    );
                 }
 
                 if (_esSelectionTimeUtc == DateTime.MinValue)
@@ -141,18 +156,32 @@ namespace QuantConnect.Algorithm.CSharp
 
                 if (changes.AddedSecurities.Count == 0 || changes.RemovedSecurities.Count != 0)
                 {
-                    throw new RegressionTestException($"Unexpected securities changes. Expected multiple securities added and none removed " +
-                        $"but got {changes.AddedSecurities.Count} securities added and {changes.RemovedSecurities.Count} removed.");
+                    throw new RegressionTestException(
+                        $"Unexpected securities changes. Expected multiple securities added and none removed "
+                            + $"but got {changes.AddedSecurities.Count} securities added and {changes.RemovedSecurities.Count} removed."
+                    );
                 }
 
-                if (!changes.AddedSecurities.Any(x => !x.Symbol.IsCanonical() && x.Symbol.Canonical == _es.Symbol))
+                if (
+                    !changes.AddedSecurities.Any(x =>
+                        !x.Symbol.IsCanonical() && x.Symbol.Canonical == _es.Symbol
+                    )
+                )
                 {
-                    throw new RegressionTestException($"Expected to find a multiple futures for ES");
+                    throw new RegressionTestException(
+                        $"Expected to find a multiple futures for ES"
+                    );
                 }
 
-                if (!changes.AddedSecurities.Any(x => !x.Symbol.IsCanonical() && x.Symbol.Canonical == _milk.Symbol))
+                if (
+                    !changes.AddedSecurities.Any(x =>
+                        !x.Symbol.IsCanonical() && x.Symbol.Canonical == _milk.Symbol
+                    )
+                )
                 {
-                    throw new RegressionTestException($"Expected to find a multiple futures for DC");
+                    throw new RegressionTestException(
+                        $"Expected to find a multiple futures for DC"
+                    );
                 }
             }
         }
@@ -199,35 +228,36 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// This is used by the regression test system to indicate what the expected statistics are from running the algorithm
         /// </summary>
-        public Dictionary<string, string> ExpectedStatistics => new Dictionary<string, string>
-        {
-            {"Total Orders", "0"},
-            {"Average Win", "0%"},
-            {"Average Loss", "0%"},
-            {"Compounding Annual Return", "0%"},
-            {"Drawdown", "0%"},
-            {"Expectancy", "0"},
-            {"Start Equity", "100000"},
-            {"End Equity", "100000"},
-            {"Net Profit", "0%"},
-            {"Sharpe Ratio", "0"},
-            {"Sortino Ratio", "0"},
-            {"Probabilistic Sharpe Ratio", "0%"},
-            {"Loss Rate", "0%"},
-            {"Win Rate", "0%"},
-            {"Profit-Loss Ratio", "0"},
-            {"Alpha", "0"},
-            {"Beta", "0"},
-            {"Annual Standard Deviation", "0"},
-            {"Annual Variance", "0"},
-            {"Information Ratio", "-8.91"},
-            {"Tracking Error", "0.223"},
-            {"Treynor Ratio", "0"},
-            {"Total Fees", "$0.00"},
-            {"Estimated Strategy Capacity", "$0"},
-            {"Lowest Capacity Asset", ""},
-            {"Portfolio Turnover", "0%"},
-            {"OrderListHash", "d41d8cd98f00b204e9800998ecf8427e"}
-        };
+        public Dictionary<string, string> ExpectedStatistics =>
+            new Dictionary<string, string>
+            {
+                { "Total Orders", "0" },
+                { "Average Win", "0%" },
+                { "Average Loss", "0%" },
+                { "Compounding Annual Return", "0%" },
+                { "Drawdown", "0%" },
+                { "Expectancy", "0" },
+                { "Start Equity", "100000" },
+                { "End Equity", "100000" },
+                { "Net Profit", "0%" },
+                { "Sharpe Ratio", "0" },
+                { "Sortino Ratio", "0" },
+                { "Probabilistic Sharpe Ratio", "0%" },
+                { "Loss Rate", "0%" },
+                { "Win Rate", "0%" },
+                { "Profit-Loss Ratio", "0" },
+                { "Alpha", "0" },
+                { "Beta", "0" },
+                { "Annual Standard Deviation", "0" },
+                { "Annual Variance", "0" },
+                { "Information Ratio", "-8.91" },
+                { "Tracking Error", "0.223" },
+                { "Treynor Ratio", "0" },
+                { "Total Fees", "$0.00" },
+                { "Estimated Strategy Capacity", "$0" },
+                { "Lowest Capacity Asset", "" },
+                { "Portfolio Turnover", "0%" },
+                { "OrderListHash", "d41d8cd98f00b204e9800998ecf8427e" }
+            };
     }
 }

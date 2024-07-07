@@ -13,11 +13,11 @@
  * limitations under the License.
 */
 
+using System;
+using System.Collections.Generic;
 using NUnit.Framework;
 using NUnit.Framework.Constraints;
 using QuantConnect.Exceptions;
-using System;
-using System.Collections.Generic;
 
 namespace QuantConnect.Tests.Common.Exceptions
 {
@@ -42,12 +42,18 @@ namespace QuantConnect.Tests.Common.Exceptions
         [TestCase(typeof(DivideByZeroException), true)]
         [TestCase(typeof(InvalidOperationException), true)]
         [TestCase(typeof(DllNotFoundException), false)]
-        public void InterpretThrowsForNonDllNotFoundExceptionTypes(Type exceptionType, bool expectThrow)
+        public void InterpretThrowsForNonDllNotFoundExceptionTypes(
+            Type exceptionType,
+            bool expectThrow
+        )
         {
             var exception = CreateExceptionFromType(exceptionType);
             var interpreter = new DllNotFoundPythonExceptionInterpreter();
             var constraint = expectThrow ? (IResolveConstraint)Throws.Exception : Throws.Nothing;
-            Assert.That(() => interpreter.Interpret(exception, NullExceptionInterpreter.Instance), constraint);
+            Assert.That(
+                () => interpreter.Interpret(exception, NullExceptionInterpreter.Instance),
+                constraint
+            );
         }
 
         private Exception CreateExceptionFromType(Type type)

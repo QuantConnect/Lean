@@ -14,9 +14,9 @@
  *
 */
 
-using Python.Runtime;
-using NUnit.Framework;
 using System.Collections.Generic;
+using NUnit.Framework;
+using Python.Runtime;
 
 namespace QuantConnect.Tests.Python
 {
@@ -25,7 +25,8 @@ namespace QuantConnect.Tests.Python
     {
         private static dynamic containsKeyTest;
         private static dynamic containsTest;
-        private static string testModule = @"
+        private static string testModule =
+            @"
 def ContainsTest(key, collection):
     if key in collection.Keys:
         return True
@@ -34,7 +35,6 @@ def ContainsTest(key, collection):
 def ContainsKeyTest(key, collection):
     return collection.ContainsKey(key)
 ";
-
 
         [OneTimeSetUp]
         public void Setup()

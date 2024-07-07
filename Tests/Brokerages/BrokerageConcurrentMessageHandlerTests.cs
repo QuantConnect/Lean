@@ -14,11 +14,11 @@
 */
 
 using System;
-using NUnit.Framework;
+using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
+using NUnit.Framework;
 using QuantConnect.Brokerages;
-using System.Collections.Generic;
 
 namespace QuantConnect.Tests.Brokerages
 {
@@ -47,7 +47,7 @@ namespace QuantConnect.Tests.Brokerages
                 }
             });
 
-            for (var i = 0; i < expectedCount;)
+            for (var i = 0; i < expectedCount; )
             {
                 handler.WithLockedStream(() =>
                 {
@@ -61,9 +61,11 @@ namespace QuantConnect.Tests.Brokerages
                 }
             }
 
-            if(!task.Wait(TimeSpan.FromSeconds(5)))
+            if (!task.Wait(TimeSpan.FromSeconds(5)))
             {
-                Assert.Fail("BrokerageConcurrentMessageHandlerTests.MessagesHandledCorrectly(): timeout waiting for task to finish");
+                Assert.Fail(
+                    "BrokerageConcurrentMessageHandlerTests.MessagesHandledCorrectly(): timeout waiting for task to finish"
+                );
             }
 
             // all processed

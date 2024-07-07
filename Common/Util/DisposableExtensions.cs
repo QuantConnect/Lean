@@ -43,7 +43,10 @@ namespace QuantConnect.Util
         /// while calling <see cref="IDisposable.Dispose"/></param> on <paramref name="disposable"/>
         /// <returns>True if the object was successfully disposed, false if an error was thrown or
         /// the specified disposable was null</returns>
-        public static bool DisposeSafely(this IDisposable disposable, Action<Exception> errorHandler)
+        public static bool DisposeSafely(
+            this IDisposable disposable,
+            Action<Exception> errorHandler
+        )
         {
             if (disposable == null)
             {

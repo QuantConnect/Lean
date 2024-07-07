@@ -41,8 +41,11 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators.Factories
         /// <param name="enumeratorConfigurator">Function used to configure the sub-enumerators before sync (fill-forward/filter/ect...)</param>
         /// <param name="symbolUniverse">Symbol universe provider of the data queue</param>
         /// <param name="timeProvider">The time provider instance used to determine when bars are completed and can be emitted</param>
-        public OptionChainUniverseSubscriptionEnumeratorFactory(Func<SubscriptionRequest, IEnumerator<BaseData>> enumeratorConfigurator,
-                                                                IDataQueueUniverseProvider symbolUniverse, ITimeProvider timeProvider)
+        public OptionChainUniverseSubscriptionEnumeratorFactory(
+            Func<SubscriptionRequest, IEnumerator<BaseData>> enumeratorConfigurator,
+            IDataQueueUniverseProvider symbolUniverse,
+            ITimeProvider timeProvider
+        )
         {
             _isLiveMode = true;
             _symbolUniverse = symbolUniverse;
@@ -56,42 +59,67 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators.Factories
         /// <param name="request">The subscription request to be read</param>
         /// <param name="dataProvider">Provider used to get data when it is not present on disk</param>
         /// <returns>An enumerator reading the subscription request</returns>
-        public IEnumerator<BaseData> CreateEnumerator(SubscriptionRequest request, IDataProvider dataProvider)
+        public IEnumerator<BaseData> CreateEnumerator(
+            SubscriptionRequest request,
+            IDataProvider dataProvider
+        )
         {
             if (_isLiveMode)
             {
                 // configuring the enumerator
                 var subscriptionConfiguration = GetSubscriptionConfigurations(request).First();
-                var subscriptionRequest = new SubscriptionRequest(request, configuration: subscriptionConfiguration);
+                var subscriptionRequest = new SubscriptionRequest(
+                    request,
+                    configuration: subscriptionConfiguration
+                );
                 var configuredEnumerator = _enumeratorConfigurator(subscriptionRequest);
 
-                return new DataQueueOptionChainUniverseDataCollectionEnumerator(subscriptionRequest, configuredEnumerator, _symbolUniverse, _timeProvider);
+                return new DataQueueOptionChainUniverseDataCollectionEnumerator(
+                    subscriptionRequest,
+                    configuredEnumerator,
+                    _symbolUniverse,
+                    _timeProvider
+                );
             }
             else
             {
-                throw new InvalidOperationException($"Backtesting is expected to be using {nameof(BaseDataSubscriptionEnumeratorFactory)}");
+                throw new InvalidOperationException(
+                    $"Backtesting is expected to be using {nameof(BaseDataSubscriptionEnumeratorFactory)}"
+                );
             }
         }
 
-        private IEnumerable<SubscriptionDataConfig> GetSubscriptionConfigurations(SubscriptionRequest request)
+        private IEnumerable<SubscriptionDataConfig> GetSubscriptionConfigurations(
+            SubscriptionRequest request
+        )
         {
             // canonical also needs underlying price data
             var config = request.Configuration;
             var underlying = config.Symbol.Underlying;
 
             // Making sure data is non-tick
-            var resolution = config.Resolution == Resolution.Tick ? Resolution.Second : config.Resolution;
+            var resolution =
+                config.Resolution == Resolution.Tick ? Resolution.Second : config.Resolution;
 
             var configurations = new List<SubscriptionDataConfig>
             {
                 // add underlying trade data
-                new SubscriptionDataConfig(config, resolution: resolution, fillForward: true, symbol: underlying, objectType: typeof (TradeBar), tickType: TickType.Trade),
+                new SubscriptionDataConfig(
+                    config,
+                    resolution: resolution,
+                    fillForward: true,
+                    symbol: underlying,
+                    objectType: typeof(TradeBar),
+                    tickType: TickType.Trade
+                ),
             };
 
             if (!_isLiveMode)
             {
                 // rewrite the primary to be fill forward
-                configurations.Add(new SubscriptionDataConfig(config, resolution: resolution, fillForward: true));
+                configurations.Add(
+                    new SubscriptionDataConfig(config, resolution: resolution, fillForward: true)
+                );
             }
 
             return configurations;

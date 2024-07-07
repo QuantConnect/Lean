@@ -37,8 +37,9 @@ public class BybitFuturesFeeModel : BybitFeeModel
     /// </summary>
     /// <param name="makerFee">The accounts maker fee</param>
     /// <param name="takerFee">The accounts taker fee</param>
-    public BybitFuturesFeeModel(decimal makerFee = MakerNonVIPFee, decimal takerFee = TakerNonVIPFee)
-        : base(makerFee, takerFee)
-    {
-    }
+    public BybitFuturesFeeModel(
+        decimal makerFee = MakerNonVIPFee,
+        decimal takerFee = TakerNonVIPFee
+    )
+        : base(makerFee, takerFee) { }
 }

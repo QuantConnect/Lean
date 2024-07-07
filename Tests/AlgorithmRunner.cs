@@ -54,7 +54,8 @@ namespace QuantConnect.Tests
             string setupHandler = "RegressionSetupHandlerWrapper",
             decimal? initialCash = null,
             string algorithmLocation = null,
-            bool returnLogs = false)
+            bool returnLogs = false
+        )
         {
             AlgorithmManager algorithmManager = null;
             var statistics = new Dictionary<string, string>();
@@ -63,7 +64,8 @@ namespace QuantConnect.Tests
             Composer.Instance.Reset();
             SymbolCache.Clear();
             TextSubscriptionDataSourceReader.ClearCache();
-            MarketOnCloseOrder.SubmissionTimeBuffer = MarketOnCloseOrder.DefaultSubmissionTimeBuffer;
+            MarketOnCloseOrder.SubmissionTimeBuffer =
+                MarketOnCloseOrder.DefaultSubmissionTimeBuffer;
 
             // clean up object storage
             var objectStorePath = LocalObjectStore.DefaultObjectStore;
@@ -78,8 +80,9 @@ namespace QuantConnect.Tests
             File.Delete(logFile);
             var logs = new List<string>();
 
-            var reducedDiskSize = TestContext.Parameters.Exists("reduced-disk-size") &&
-                bool.Parse(TestContext.Parameters["reduced-disk-size"]);
+            var reducedDiskSize =
+                TestContext.Parameters.Exists("reduced-disk-size")
+                && bool.Parse(TestContext.Parameters["reduced-disk-size"]);
 
             try
             {
@@ -92,15 +95,23 @@ namespace QuantConnect.Tests
                 Config.Set("setup-handler", setupHandler);
                 Config.Set("history-provider", "RegressionHistoryProviderWrapper");
                 Config.Set("api-handler", "QuantConnect.Api.Api");
-                Config.Set("result-handler", "QuantConnect.Lean.Engine.Results.RegressionResultHandler");
-                Config.Set("fundamental-data-provider", "QuantConnect.Tests.Common.Data.Fundamental.TestFundamentalDataProvider");
+                Config.Set(
+                    "result-handler",
+                    "QuantConnect.Lean.Engine.Results.RegressionResultHandler"
+                );
+                Config.Set(
+                    "fundamental-data-provider",
+                    "QuantConnect.Tests.Common.Data.Fundamental.TestFundamentalDataProvider"
+                );
                 Config.Set("algorithm-language", language.ToString());
                 if (string.IsNullOrEmpty(algorithmLocation))
                 {
-                    Config.Set("algorithm-location",
+                    Config.Set(
+                        "algorithm-location",
                         language == Language.Python
                             ? "../../../Algorithm.Python/" + algorithm + ".py"
-                            : "QuantConnect.Algorithm." + language + ".dll");
+                            : "QuantConnect.Algorithm." + language + ".dll"
+                    );
                 }
                 else
                 {
@@ -111,7 +122,10 @@ namespace QuantConnect.Tests
                 var initialLogHandler = Log.LogHandler;
                 var initialDebugEnabled = Log.DebuggingEnabled;
 
-                var newLogHandlers = new List<ILogHandler>() { MaintainLogHandlerAttribute.LogHandler };
+                var newLogHandlers = new List<ILogHandler>()
+                {
+                    MaintainLogHandlerAttribute.LogHandler
+                };
                 // Use our current test LogHandler and a FileLogHandler
                 if (!reducedDiskSize)
                 {
@@ -126,7 +140,7 @@ namespace QuantConnect.Tests
                 using (Log.LogHandler = new CompositeLogHandler(newLogHandlers.ToArray()))
                 using (var algorithmHandlers = Initializer.GetAlgorithmHandlers())
                 using (var systemHandlers = Initializer.GetSystemHandlers())
-                using (var workerThread  = new TestWorkerThread())
+                using (var workerThread = new TestWorkerThread())
                 {
                     Log.DebuggingEnabled = !reducedDiskSize;
 
@@ -137,42 +151,61 @@ namespace QuantConnect.Tests
                     // run the algorithm in its own thread
                     var engine = new Lean.Engine.Engine(systemHandlers, algorithmHandlers, false);
                     Task.Factory.StartNew(() =>
-                    {
-                        try
                         {
-                            string algorithmPath;
-                            var job = (BacktestNodePacket)systemHandlers.JobQueue.NextJob(out algorithmPath);
-                            job.BacktestId = algorithm;
-                            job.PeriodStart = startDate;
-                            job.PeriodFinish = endDate;
-                            if (initialCash.HasValue)
+                            try
                             {
-                                job.CashAmount = new CashAmount(initialCash.Value, Currencies.USD);
-                            }
-                            algorithmManager = new AlgorithmManager(false, job);
+                                string algorithmPath;
+                                var job = (BacktestNodePacket)
+                                    systemHandlers.JobQueue.NextJob(out algorithmPath);
+                                job.BacktestId = algorithm;
+                                job.PeriodStart = startDate;
+                                job.PeriodFinish = endDate;
+                                if (initialCash.HasValue)
+                                {
+                                    job.CashAmount = new CashAmount(
+                                        initialCash.Value,
+                                        Currencies.USD
+                                    );
+                                }
+                                algorithmManager = new AlgorithmManager(false, job);
 
-                            var regressionTestMessageHandler = systemHandlers.Notify as RegressionTestMessageHandler;
-                            if (regressionTestMessageHandler != null)
+                                var regressionTestMessageHandler =
+                                    systemHandlers.Notify as RegressionTestMessageHandler;
+                                if (regressionTestMessageHandler != null)
+                                {
+                                    regressionTestMessageHandler.SetAlgorithmManager(
+                                        algorithmManager
+                                    );
+                                }
+
+                                systemHandlers.LeanManager.Initialize(
+                                    systemHandlers,
+                                    algorithmHandlers,
+                                    job,
+                                    algorithmManager
+                                );
+
+                                engine.Run(job, algorithmManager, algorithmPath, workerThread);
+                                ordersLogFile = (
+                                    (RegressionResultHandler)algorithmHandlers.Results
+                                ).LogFilePath;
+                            }
+                            catch (Exception e)
                             {
-                                regressionTestMessageHandler.SetAlgorithmManager(algorithmManager);
+                                Log.Trace($"Error in AlgorithmRunner task: {e}");
                             }
+                        })
+                        .Wait();
 
-                            systemHandlers.LeanManager.Initialize(systemHandlers, algorithmHandlers, job, algorithmManager);
-
-                            engine.Run(job, algorithmManager, algorithmPath, workerThread);
-                            ordersLogFile = ((RegressionResultHandler)algorithmHandlers.Results).LogFilePath;
-                        }
-                        catch (Exception e)
-                        {
-                            Log.Trace($"Error in AlgorithmRunner task: {e}");
-                        }
-                    }).Wait();
-
-                    var regressionResultHandler = (RegressionResultHandler)algorithmHandlers.Results;
+                    var regressionResultHandler = (RegressionResultHandler)
+                        algorithmHandlers.Results;
                     results = regressionResultHandler;
                     statistics = regressionResultHandler.FinalStatistics;
 
-                    if (expectedFinalStatus == AlgorithmStatus.Completed && regressionResultHandler.HasRuntimeError)
+                    if (
+                        expectedFinalStatus == AlgorithmStatus.Completed
+                        && regressionResultHandler.HasRuntimeError
+                    )
                     {
                         Assert.Fail($"There was a runtime error running the algorithm");
                     }
@@ -192,13 +225,18 @@ namespace QuantConnect.Tests
 
             if (algorithmManager?.State != expectedFinalStatus)
             {
-                Assert.Fail($"Algorithm state should be {expectedFinalStatus} and is: {algorithmManager?.State}");
+                Assert.Fail(
+                    $"Algorithm state should be {expectedFinalStatus} and is: {algorithmManager?.State}"
+                );
             }
 
             foreach (var expectedStat in expectedStatistics)
             {
                 string result;
-                Assert.IsTrue(statistics.TryGetValue(expectedStat.Key, out result), "Missing key: " + expectedStat.Key);
+                Assert.IsTrue(
+                    statistics.TryGetValue(expectedStat.Key, out result),
+                    "Missing key: " + expectedStat.Key
+                );
 
                 // normalize -0 & 0, they are the same thing
                 var expected = expectedStat.Value;
@@ -227,8 +265,8 @@ namespace QuantConnect.Tests
                 var passedOrderLogFile = ordersLogFile.Replace("./regression/", "./passed/");
                 Directory.CreateDirectory(Path.GetDirectoryName(passedFile));
                 File.Delete(passedOrderLogFile);
-                if (File.Exists(ordersLogFile)) File.Copy(ordersLogFile, passedOrderLogFile);
-
+                if (File.Exists(ordersLogFile))
+                    File.Copy(ordersLogFile, passedOrderLogFile);
             }
             return new AlgorithmRunnerResults(algorithm, language, algorithmManager, results, logs);
         }
@@ -239,7 +277,11 @@ namespace QuantConnect.Tests
         public class RegressionSetupHandlerWrapper : BacktestingSetupHandler
         {
             public static IAlgorithm Algorithm { get; protected set; }
-            public override IAlgorithm CreateAlgorithmInstance(AlgorithmNodePacket algorithmNodePacket, string assemblyPath)
+
+            public override IAlgorithm CreateAlgorithmInstance(
+                AlgorithmNodePacket algorithmNodePacket,
+                string assemblyPath
+            )
             {
                 Algorithm = base.CreateAlgorithmInstance(algorithmNodePacket, assemblyPath);
                 var framework = Algorithm as QCAlgorithm;
@@ -256,19 +298,26 @@ namespace QuantConnect.Tests
         /// </summary>
         public class RegressionHistoryProviderWrapper : SubscriptionDataReaderHistoryProvider
         {
-            public override IEnumerable<Slice> GetHistory(IEnumerable<HistoryRequest> requests, DateTimeZone sliceTimeZone)
+            public override IEnumerable<Slice> GetHistory(
+                IEnumerable<HistoryRequest> requests,
+                DateTimeZone sliceTimeZone
+            )
             {
                 requests = requests.ToList();
-                if (requests.Any(r => r.Symbol.SecurityType != SecurityType.Future && r.Symbol.IsCanonical()))
+                if (
+                    requests.Any(r =>
+                        r.Symbol.SecurityType != SecurityType.Future && r.Symbol.IsCanonical()
+                    )
+                )
                 {
-                    throw new Exception($"Invalid history reuqest symbols: {string.Join(",", requests.Select(x => x.Symbol))}");
+                    throw new Exception(
+                        $"Invalid history reuqest symbols: {string.Join(",", requests.Select(x => x.Symbol))}"
+                    );
                 }
                 return base.GetHistory(requests, sliceTimeZone);
             }
         }
 
-        public class TestWorkerThread : WorkerThread
-        {
-        }
+        public class TestWorkerThread : WorkerThread { }
     }
 }

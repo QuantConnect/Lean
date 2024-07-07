@@ -26,7 +26,9 @@ namespace QuantConnect.Algorithm.CSharp
     /// Demonstration of how to chain a coarse and fine universe selection with an option chain universe selection model
     /// that will add and remove an <see cref="OptionChainUniverse"/> for each symbol selected on fine
     /// </summary>
-    public class CoarseFineOptionUniverseChainRegressionAlgorithm : QCAlgorithm, IRegressionAlgorithmDefinition
+    public class CoarseFineOptionUniverseChainRegressionAlgorithm
+        : QCAlgorithm,
+            IRegressionAlgorithmDefinition
     {
         // initialize our changes to nothing
         private SecurityChanges _changes = SecurityChanges.None;
@@ -35,11 +37,7 @@ namespace QuantConnect.Algorithm.CSharp
         private Symbol _aapl;
         private Symbol _twx;
 
-        private Dictionary<string, decimal> _rawPrices = new()
-        {
-            { "AOL", 70  },
-            { "AAPL", 650 }
-        };
+        private Dictionary<string, decimal> _rawPrices = new() { { "AOL", 70 }, { "AAPL", 650 } };
 
         public override void Initialize()
         {
@@ -50,26 +48,33 @@ namespace QuantConnect.Algorithm.CSharp
             SetStartDate(2014, 06, 04);
             SetEndDate(2014, 06, 06);
 
-            var selectionUniverse = AddUniverse(enumerable => new[] { Time.Date <= new DateTime(2014, 6, 5) ? _twx : _aapl },
-                enumerable => new[] { Time.Date <= new DateTime(2014, 6, 5) ? _twx : _aapl });
+            var selectionUniverse = AddUniverse(
+                enumerable => new[] { Time.Date <= new DateTime(2014, 6, 5) ? _twx : _aapl },
+                enumerable => new[] { Time.Date <= new DateTime(2014, 6, 5) ? _twx : _aapl }
+            );
 
-            AddUniverseOptions(selectionUniverse, universe =>
-            {
-                if (universe.Underlying == null)
+            AddUniverseOptions(
+                selectionUniverse,
+                universe =>
                 {
-                    throw new RegressionTestException("Underlying data point is null! This shouldn't happen, each OptionChainUniverse handles and should provide this");
+                    if (universe.Underlying == null)
+                    {
+                        throw new RegressionTestException(
+                            "Underlying data point is null! This shouldn't happen, each OptionChainUniverse handles and should provide this"
+                        );
+                    }
+                    return universe.IncludeWeeklys().FrontMonth().Contracts(universe.Take(5));
                 }
-                return universe.IncludeWeeklys()
-                    .FrontMonth()
-                    .Contracts(universe.Take(5));
-            });
+            );
         }
 
         public override void OnData(Slice slice)
         {
             // if we have no changes, do nothing
-            if (_changes == SecurityChanges.None ||
-                _changes.AddedSecurities.Any(security => security.Price == 0))
+            if (
+                _changes == SecurityChanges.None
+                || _changes.AddedSecurities.Any(security => security.Price == 0)
+            )
             {
                 return;
             }
@@ -94,7 +99,9 @@ namespace QuantConnect.Algorithm.CSharp
                     // options added should all match prev added security
                     if (security.Symbol.Underlying != _lastEquityAdded)
                     {
-                        throw new RegressionTestException($"Unexpected symbol added {security.Symbol}");
+                        throw new RegressionTestException(
+                            $"Unexpected symbol added {security.Symbol}"
+                        );
                     }
 
                     _optionCount++;
@@ -102,15 +109,25 @@ namespace QuantConnect.Algorithm.CSharp
 
                 SetHoldings(security.Symbol, 0.05m);
 
-                var config = SubscriptionManager.SubscriptionDataConfigService.GetSubscriptionDataConfigs(security.Symbol).ToList();
+                var config = SubscriptionManager
+                    .SubscriptionDataConfigService.GetSubscriptionDataConfigs(security.Symbol)
+                    .ToList();
 
                 if (!config.Any())
                 {
-                    throw new RegressionTestException($"Was expecting configurations for {security.Symbol}");
+                    throw new RegressionTestException(
+                        $"Was expecting configurations for {security.Symbol}"
+                    );
                 }
-                if (config.Any(dataConfig => dataConfig.DataNormalizationMode != DataNormalizationMode.Raw))
+                if (
+                    config.Any(dataConfig =>
+                        dataConfig.DataNormalizationMode != DataNormalizationMode.Raw
+                    )
+                )
                 {
-                    throw new RegressionTestException($"Was expecting DataNormalizationMode.Raw configurations for {security.Symbol}");
+                    throw new RegressionTestException(
+                        $"Was expecting DataNormalizationMode.Raw configurations for {security.Symbol}"
+                    );
                 }
 
                 if (security.Symbol.SecurityType == SecurityType.Equity)
@@ -118,7 +135,9 @@ namespace QuantConnect.Algorithm.CSharp
                     var expectedPrice = _rawPrices[security.Symbol.ID.Symbol];
                     if (Math.Abs(security.Price - expectedPrice) > expectedPrice * 0.1m)
                     {
-                        throw new RegressionTestException($"Unexpected raw prices for symbol {security.Symbol}");
+                        throw new RegressionTestException(
+                            $"Unexpected raw prices for symbol {security.Symbol}"
+                        );
                     }
                 }
             }
@@ -133,9 +152,15 @@ namespace QuantConnect.Algorithm.CSharp
         public override void OnEndOfAlgorithm()
         {
             var config = SubscriptionManager.Subscriptions.ToList();
-            if (config.Any(dataConfig => dataConfig.Symbol == _twx || dataConfig.Symbol.Underlying == _twx))
+            if (
+                config.Any(dataConfig =>
+                    dataConfig.Symbol == _twx || dataConfig.Symbol.Underlying == _twx
+                )
+            )
             {
-                throw new RegressionTestException($"Was NOT expecting any configurations for {_twx} or it's options, since coarse/fine should have deselected it");
+                throw new RegressionTestException(
+                    $"Was NOT expecting any configurations for {_twx} or it's options, since coarse/fine should have deselected it"
+                );
             }
 
             if (_optionCount == 0)
@@ -172,35 +197,36 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// This is used by the regression test system to indicate what the expected statistics are from running the algorithm
         /// </summary>
-        public Dictionary<string, string> ExpectedStatistics => new Dictionary<string, string>
-        {
-            {"Total Orders", "13"},
-            {"Average Win", "0.04%"},
-            {"Average Loss", "-0.05%"},
-            {"Compounding Annual Return", "-24.719%"},
-            {"Drawdown", "0.500%"},
-            {"Expectancy", "-0.685"},
-            {"Start Equity", "100000"},
-            {"End Equity", "99766.89"},
-            {"Net Profit", "-0.233%"},
-            {"Sharpe Ratio", "-9.078"},
-            {"Sortino Ratio", "0"},
-            {"Probabilistic Sharpe Ratio", "0%"},
-            {"Loss Rate", "83%"},
-            {"Win Rate", "17%"},
-            {"Profit-Loss Ratio", "0.89"},
-            {"Alpha", "4.632"},
-            {"Beta", "-1.524"},
-            {"Annual Standard Deviation", "0.029"},
-            {"Annual Variance", "0.001"},
-            {"Information Ratio", "-72.647"},
-            {"Tracking Error", "0.048"},
-            {"Treynor Ratio", "0.172"},
-            {"Total Fees", "$16.10"},
-            {"Estimated Strategy Capacity", "$3100000.00"},
-            {"Lowest Capacity Asset", "AOL VRKS95ENLBYE|AOL R735QTJ8XC9X"},
-            {"Portfolio Turnover", "17.64%"},
-            {"OrderListHash", "a8605c1f5a9c67f60f1ddc963ec45542"}
-        };
+        public Dictionary<string, string> ExpectedStatistics =>
+            new Dictionary<string, string>
+            {
+                { "Total Orders", "13" },
+                { "Average Win", "0.04%" },
+                { "Average Loss", "-0.05%" },
+                { "Compounding Annual Return", "-24.719%" },
+                { "Drawdown", "0.500%" },
+                { "Expectancy", "-0.685" },
+                { "Start Equity", "100000" },
+                { "End Equity", "99766.89" },
+                { "Net Profit", "-0.233%" },
+                { "Sharpe Ratio", "-9.078" },
+                { "Sortino Ratio", "0" },
+                { "Probabilistic Sharpe Ratio", "0%" },
+                { "Loss Rate", "83%" },
+                { "Win Rate", "17%" },
+                { "Profit-Loss Ratio", "0.89" },
+                { "Alpha", "4.632" },
+                { "Beta", "-1.524" },
+                { "Annual Standard Deviation", "0.029" },
+                { "Annual Variance", "0.001" },
+                { "Information Ratio", "-72.647" },
+                { "Tracking Error", "0.048" },
+                { "Treynor Ratio", "0.172" },
+                { "Total Fees", "$16.10" },
+                { "Estimated Strategy Capacity", "$3100000.00" },
+                { "Lowest Capacity Asset", "AOL VRKS95ENLBYE|AOL R735QTJ8XC9X" },
+                { "Portfolio Turnover", "17.64%" },
+                { "OrderListHash", "a8605c1f5a9c67f60f1ddc963ec45542" }
+            };
     }
 }

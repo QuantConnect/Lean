@@ -38,20 +38,13 @@ namespace QuantConnect.Lean.Engine.Results
         /// <summary>
         /// Put messages to process into the queue so they are processed by this thread.
         /// </summary>
-        ConcurrentQueue<Packet> Messages
-        {
-            get;
-            set;
-        }
+        ConcurrentQueue<Packet> Messages { get; set; }
 
         /// <summary>
         /// Boolean flag indicating the result hander thread is busy.
         /// False means it has completely finished and ready to dispose.
         /// </summary>
-        bool IsActive
-        {
-            get;
-        }
+        bool IsActive { get; }
 
         /// <summary>
         /// Event fired each time that we add/remove securities from the data feed

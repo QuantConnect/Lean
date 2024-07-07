@@ -22,7 +22,7 @@ namespace QuantConnect.Indicators
 {
     /// <summary>
     /// Represents an Indicator of the Market Profile and its attributes
-    /// 
+    ///
     /// The concept of Market Profile stems from the idea that
     /// markets have a form of organization determined by time,
     /// price, and volume.Each day, the market will develop a range
@@ -31,9 +31,9 @@ namespace QuantConnect.Indicators
     /// In this area, prices never stay stagnant. They are constantly
     /// diverging, and Market Profile records this activity for traders
     /// to interpret.
-    /// 
+    ///
     /// It can be computed in two modes: TPO (Time Price Opportunity) or VOL (Volume Profile)
-    /// A discussion on the difference between TPO (Time Price Opportunity) 
+    /// A discussion on the difference between TPO (Time Price Opportunity)
     /// and VOL (Volume Profile) chart types: https://jimdaltontrading.com/tpo-vs-volume-profile
     /// </summary>
     public abstract class MarketProfile : TradeBarIndicator, IIndicatorWarmUpPeriodProvider
@@ -51,7 +51,7 @@ namespace QuantConnect.Indicators
         /// <summary>
         /// Rolling Window to erase old VolumePerPrice values out of the given period
         /// First item is going to contain Data Point's close value
-        /// 
+        ///
         /// Second item is going to contain the Volume, which can be 1 or
         /// the Data Point's volume value
         /// </summary>
@@ -77,7 +77,8 @@ namespace QuantConnect.Indicators
         /// <summary>
         /// Get a copy of the _volumePerPrice field
         /// </summary>
-        public SortedList<decimal, decimal> VolumePerPrice => new SortedList<decimal, decimal>(_volumePerPrice);
+        public SortedList<decimal, decimal> VolumePerPrice =>
+            new SortedList<decimal, decimal>(_volumePerPrice);
 
         /// <summary>
         /// The highest reached close price level during the period.
@@ -103,8 +104,8 @@ namespace QuantConnect.Indicators
         public decimal POCVolume { get; private set; }
 
         /// <summary>
-        /// The range of price levels in which a specified percentage of all volume 
-        /// was traded during the time period. Typically, this percentage is set 
+        /// The range of price levels in which a specified percentage of all volume
+        /// was traded during the time period. Typically, this percentage is set
         /// to 70% however it is up to the trader’s discretion.
         /// </summary>
         public decimal ValueAreaVolume { get; private set; }
@@ -137,13 +138,21 @@ namespace QuantConnect.Indicators
         /// <param name="valueAreaVolumePercentage">The percentage of volume contained in the value area</param>
         /// <param name="priceRangeRoundOff">How many digits you want to round and the precision.
         /// i.e 0.01 round to two digits exactly. 0.05 by default.</param>
-        protected MarketProfile(string name, int period, decimal valueAreaVolumePercentage = 0.70m, decimal priceRangeRoundOff = 0.05m)
+        protected MarketProfile(
+            string name,
+            int period,
+            decimal valueAreaVolumePercentage = 0.70m,
+            decimal priceRangeRoundOff = 0.05m
+        )
             : base(name)
         {
             // Check roundoff is positive
             if (priceRangeRoundOff <= 0)
             {
-                throw new ArgumentException("Must be strictly bigger than zero.", nameof(priceRangeRoundOff));
+                throw new ArgumentException(
+                    "Must be strictly bigger than zero.",
+                    nameof(priceRangeRoundOff)
+                );
             }
 
             WarmUpPeriod = period;
@@ -196,7 +205,7 @@ namespace QuantConnect.Indicators
         /// </summary>
         /// <param name="input">The input value to this indicator on this time step</param>
         /// <param name="VolumeQuantity">Volume quantity of the data point, it dependes of DefineVolume method.</param>
-        private void Add(TradeBar input, decimal VolumeQuantity) 
+        private void Add(TradeBar input, decimal VolumeQuantity)
         {
             // Check if the RollingWindow _oldDataPoints has been filled to its capacity
             var isFilled = _oldDataPoints.IsReady;
@@ -206,7 +215,7 @@ namespace QuantConnect.Indicators
             var ClosePrice = Round(input.Close);
             if (!_volumePerPrice.Keys.Contains(ClosePrice))
             {
-                _volumePerPrice.Add(ClosePrice,VolumeQuantity);
+                _volumePerPrice.Add(ClosePrice, VolumeQuantity);
             }
             else
             {
@@ -249,11 +258,11 @@ namespace QuantConnect.Indicators
                 {
                     maxIdx = index;
                 }
-                else if(VolumePerPrice.Values[index] == VolumePerPrice.Values[maxIdx])
+                else if (VolumePerPrice.Values[index] == VolumePerPrice.Values[maxIdx])
                 {
                     // Find the maximum with minimum distance to the center
                     var mid = VolumePerPrice.Count - 1;
-                    if(Math.Abs(mid/2 - index)<Math.Abs(mid/2 - maxIdx))
+                    if (Math.Abs(mid / 2 - index) < Math.Abs(mid / 2 - maxIdx))
                     {
                         maxIdx = index;
                     }
@@ -275,11 +284,14 @@ namespace QuantConnect.Indicators
             var minIndex = _pointOfControl;
             var maxIndex = _pointOfControl;
 
-            int lastMin, lastMax;
-            int nextMinIndex, nextMaxIndex;
+            int lastMin,
+                lastMax;
+            int nextMinIndex,
+                nextMaxIndex;
 
-            decimal lowVolume, highVolume;
-            
+            decimal lowVolume,
+                highVolume;
+
             // When this loop ends we will have a more accurate value of ValueAreaVolume
             // but mainly the prices that delimite this area, ValueAreaLow and ValueAreaHigh
             // so ValueArea, can also be seen as the range between ValueAreaLow and ValueAreaHigh

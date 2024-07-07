@@ -14,9 +14,9 @@
 */
 
 using System;
+using System.Collections.Generic;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
-using System.Collections.Generic;
 using QuantConnect.Orders.Serialization;
 
 namespace QuantConnect.Orders
@@ -49,7 +49,12 @@ namespace QuantConnect.Orders
         /// <summary>
         /// Deserialize the given api order response
         /// </summary>
-        public override object ReadJson(JsonReader reader, Type objectType, object existingValue, JsonSerializer serializer)
+        public override object ReadJson(
+            JsonReader reader,
+            Type objectType,
+            object existingValue,
+            JsonSerializer serializer
+        )
         {
             var jObject = JObject.Load(reader);
 

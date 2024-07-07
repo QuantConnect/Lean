@@ -17,9 +17,9 @@ using QuantConnect.Data.Market;
 
 namespace QuantConnect.Indicators
 {
-    /// <summary> 
+    /// <summary>
     /// This indicator creates a moving average (middle band) with an upper band and lower band
-    /// fixed at k average true range multiples away from the middle band.  
+    /// fixed at k average true range multiples away from the middle band.
     /// </summary>
     public class KeltnerChannels : BarIndicator, IIndicatorWarmUpPeriodProvider
     {
@@ -43,17 +43,18 @@ namespace QuantConnect.Indicators
         /// </summary>
         public IndicatorBase<IBaseDataBar> AverageTrueRange { get; }
 
-
         /// <summary>
         /// Initializes a new instance of the KeltnerChannels class
         /// </summary>
         /// <param name="period">The period of the average true range and moving average (middle band)</param>
         /// <param name="k">The number of multiplies specifying the distance between the middle band and upper or lower bands</param>
         /// <param name="movingAverageType">The type of moving average to be used</param>
-        public KeltnerChannels(int period, decimal k, MovingAverageType movingAverageType = MovingAverageType.Simple)
-            : this($"KC({period},{k})", period, k, movingAverageType)
-        {
-        }
+        public KeltnerChannels(
+            int period,
+            decimal k,
+            MovingAverageType movingAverageType = MovingAverageType.Simple
+        )
+            : this($"KC({period},{k})", period, k, movingAverageType) { }
 
         /// <summary>
         /// Initializes a new instance of the KeltnerChannels class
@@ -62,34 +63,55 @@ namespace QuantConnect.Indicators
         /// <param name="period">The period of the average true range and moving average (middle band)</param>
         /// <param name="k">The number of multiples specifying the distance between the middle band and upper or lower bands</param>
         /// <param name="movingAverageType">The type of moving average to be used</param>
-        public KeltnerChannels(string name, int period, decimal k, MovingAverageType movingAverageType = MovingAverageType.Simple)
+        public KeltnerChannels(
+            string name,
+            int period,
+            decimal k,
+            MovingAverageType movingAverageType = MovingAverageType.Simple
+        )
             : base(name)
         {
             WarmUpPeriod = period;
 
             //Initialise ATR and SMA
-            AverageTrueRange = new AverageTrueRange(name + "_AverageTrueRange", period, movingAverageType);
+            AverageTrueRange = new AverageTrueRange(
+                name + "_AverageTrueRange",
+                period,
+                movingAverageType
+            );
             MiddleBand = movingAverageType.AsIndicator(name + "_MiddleBand", period);
 
             //Compute Lower Band
-            LowerBand = new FunctionalIndicator<IBaseDataBar>(name + "_LowerBand",
-                input => MiddleBand.IsReady ? MiddleBand.Current.Value - AverageTrueRange.Current.Value * k : decimal.Zero,
+            LowerBand = new FunctionalIndicator<IBaseDataBar>(
+                name + "_LowerBand",
+                input =>
+                    MiddleBand.IsReady
+                        ? MiddleBand.Current.Value - AverageTrueRange.Current.Value * k
+                        : decimal.Zero,
                 lowerBand => MiddleBand.IsReady,
                 () => MiddleBand.Reset()
-                );
+            );
 
             //Compute Upper Band
-            UpperBand = new FunctionalIndicator<IBaseDataBar>(name + "_UpperBand",
-                input => MiddleBand.IsReady ? MiddleBand.Current.Value + AverageTrueRange.Current.Value * k : decimal.Zero,
+            UpperBand = new FunctionalIndicator<IBaseDataBar>(
+                name + "_UpperBand",
+                input =>
+                    MiddleBand.IsReady
+                        ? MiddleBand.Current.Value + AverageTrueRange.Current.Value * k
+                        : decimal.Zero,
                 upperBand => MiddleBand.IsReady,
                 () => MiddleBand.Reset()
-                );
+            );
         }
 
         /// <summary>
         /// Gets a flag indicating when this indicator is ready and fully initialized
         /// </summary>
-        public override bool IsReady => MiddleBand.IsReady && UpperBand.IsReady && LowerBand.IsReady && AverageTrueRange.IsReady;
+        public override bool IsReady =>
+            MiddleBand.IsReady
+            && UpperBand.IsReady
+            && LowerBand.IsReady
+            && AverageTrueRange.IsReady;
 
         /// <summary>
         /// Required period, in data points, for the indicator to be ready and fully initialized.
@@ -117,7 +139,7 @@ namespace QuantConnect.Indicators
         {
             AverageTrueRange.Update(input);
 
-            var typicalPrice = (input.High + input.Low + input.Close)/3m;
+            var typicalPrice = (input.High + input.Low + input.Close) / 3m;
             MiddleBand.Update(input.EndTime, typicalPrice);
 
             // poke the upper/lower bands, they actually don't use the input, they compute

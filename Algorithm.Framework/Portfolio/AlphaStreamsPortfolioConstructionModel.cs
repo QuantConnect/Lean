@@ -14,8 +14,8 @@
 */
 
 using System.Collections.Generic;
-using QuantConnect.Data.UniverseSelection;
 using QuantConnect.Algorithm.Framework.Alphas;
+using QuantConnect.Data.UniverseSelection;
 
 namespace QuantConnect.Algorithm.Framework.Portfolio
 {
@@ -50,7 +50,10 @@ namespace QuantConnect.Algorithm.Framework.Portfolio
         /// <param name="algorithm">The algorithm instance</param>
         /// <param name="insights">The insights to create portfolio targets from</param>
         /// <returns>An enumerable of portfolio targets to be sent to the execution model</returns>
-        public virtual IEnumerable<IPortfolioTarget> CreateTargets(QCAlgorithm algorithm, Insight[] insights)
+        public virtual IEnumerable<IPortfolioTarget> CreateTargets(
+            QCAlgorithm algorithm,
+            Insight[] insights
+        )
         {
             throw new System.NotImplementedException();
         }

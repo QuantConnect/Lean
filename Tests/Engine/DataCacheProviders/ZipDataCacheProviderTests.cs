@@ -16,18 +16,20 @@
 
 using System;
 using System.IO;
-using NUnit.Framework;
-using Path = System.IO.Path;
 using System.Threading.Tasks;
+using NUnit.Framework;
 using QuantConnect.Interfaces;
 using QuantConnect.Lean.Engine.DataFeeds;
+using Path = System.IO.Path;
 
 namespace QuantConnect.Tests.Engine.DataCacheProviders
 {
     [TestFixture]
     public class ZipDataCacheProviderTests : DataCacheProviderTests
     {
-        private readonly string _tempZipFileEntry = Path.GetTempFileName().Replace(".tmp", ".zip", StringComparison.InvariantCulture) + "#testEntry.csv";
+        private readonly string _tempZipFileEntry =
+            Path.GetTempFileName().Replace(".tmp", ".zip", StringComparison.InvariantCulture)
+            + "#testEntry.csv";
         private readonly Random _random = new Random();
 
         public override IDataCacheProvider CreateDataCacheProvider()
@@ -38,15 +40,22 @@ namespace QuantConnect.Tests.Engine.DataCacheProviders
         [Test]
         public void MultiThreadReadWriteTest()
         {
-            var dataCacheProvider = new ZipDataCacheProvider(TestGlobals.DataProvider, cacheTimer: 0.1);
+            var dataCacheProvider = new ZipDataCacheProvider(
+                TestGlobals.DataProvider,
+                cacheTimer: 0.1
+            );
 
-            Parallel.For(0, 100, (i) =>
-            {
-                var data = new byte[300];
-                _random.NextBytes(data);
+            Parallel.For(
+                0,
+                100,
+                (i) =>
+                {
+                    var data = new byte[300];
+                    _random.NextBytes(data);
 
-                ReadAndWrite(dataCacheProvider, data);
-            });
+                    ReadAndWrite(dataCacheProvider, data);
+                }
+            );
 
             dataCacheProvider.Dispose();
         }
@@ -54,16 +63,22 @@ namespace QuantConnect.Tests.Engine.DataCacheProviders
         [Test]
         public void StoreFailsCorruptedFile()
         {
-            var dataCacheProvider = new ZipDataCacheProvider(TestGlobals.DataProvider, cacheTimer: 0.1);
+            var dataCacheProvider = new ZipDataCacheProvider(
+                TestGlobals.DataProvider,
+                cacheTimer: 0.1
+            );
 
-            var tempZipFileEntry = Path.GetTempFileName().Replace(".tmp", ".zip", StringComparison.InvariantCulture);
+            var tempZipFileEntry = Path.GetTempFileName()
+                .Replace(".tmp", ".zip", StringComparison.InvariantCulture);
 
             var data = new byte[300];
             _random.NextBytes(data);
 
             File.WriteAllText(tempZipFileEntry, "corrupted zip");
 
-            Assert.Throws<InvalidOperationException>(() => dataCacheProvider.Store(tempZipFileEntry + "#testEntry.csv", data));
+            Assert.Throws<InvalidOperationException>(
+                () => dataCacheProvider.Store(tempZipFileEntry + "#testEntry.csv", data)
+            );
             dataCacheProvider.Dispose();
         }
 

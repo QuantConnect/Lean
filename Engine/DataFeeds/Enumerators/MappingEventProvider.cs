@@ -15,11 +15,11 @@
 */
 
 using System;
-using QuantConnect.Data;
-using QuantConnect.Interfaces;
-using QuantConnect.Data.Market;
 using System.Collections.Generic;
+using QuantConnect.Data;
 using QuantConnect.Data.Auxiliary;
+using QuantConnect.Data.Market;
+using QuantConnect.Interfaces;
 
 namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
 {
@@ -51,7 +51,8 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
             SubscriptionDataConfig config,
             IFactorFileProvider factorFileProvider,
             IMapFileProvider mapFileProvider,
-            DateTime startTime)
+            DateTime startTime
+        )
         {
             _mapFileProvider = mapFileProvider;
             Config = config;
@@ -60,7 +61,11 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
             if (MapFile.HasData(startTime.Date))
             {
                 // initialize mapped symbol using request start date
-                Config.MappedSymbol = MapFile.GetMappedSymbol(startTime.Date, Config.MappedSymbol, Config.DataMappingMode);
+                Config.MappedSymbol = MapFile.GetMappedSymbol(
+                    startTime.Date,
+                    Config.MappedSymbol,
+                    Config.DataMappingMode
+                );
             }
         }
 
@@ -71,11 +76,14 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
         /// <returns>New mapping event if any</returns>
         public virtual IEnumerable<BaseData> GetEvents(NewTradableDateEventArgs eventArgs)
         {
-            if (Config.Symbol == eventArgs.Symbol
-                && MapFile.HasData(eventArgs.Date))
+            if (Config.Symbol == eventArgs.Symbol && MapFile.HasData(eventArgs.Date))
             {
                 var old = Config.MappedSymbol;
-                var newSymbol = MapFile.GetMappedSymbol(eventArgs.Date, Config.MappedSymbol, Config.DataMappingMode);
+                var newSymbol = MapFile.GetMappedSymbol(
+                    eventArgs.Date,
+                    Config.MappedSymbol,
+                    Config.DataMappingMode
+                );
                 Config.MappedSymbol = newSymbol;
 
                 // check to see if the symbol was remapped
@@ -85,7 +93,8 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
                         Config.Symbol,
                         eventArgs.Date,
                         old,
-                        Config.MappedSymbol);
+                        Config.MappedSymbol
+                    );
                     yield return changed;
                 }
             }

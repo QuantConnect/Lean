@@ -56,10 +56,11 @@ namespace QuantConnect.Indicators
         /// </summary>
         /// <param name="period">The period of the standard deviation and moving average (middle band)</param>
         /// <param name="movingAverageType">The type of moving average to be used</param>
-        public CommodityChannelIndex(int period, MovingAverageType movingAverageType = MovingAverageType.Simple)
-            : this($"CCI({period})", period, movingAverageType)
-        {
-        }
+        public CommodityChannelIndex(
+            int period,
+            MovingAverageType movingAverageType = MovingAverageType.Simple
+        )
+            : this($"CCI({period})", period, movingAverageType) { }
 
         /// <summary>
         /// Initializes a new instance of the CommodityChannelIndex class
@@ -67,19 +68,27 @@ namespace QuantConnect.Indicators
         /// <param name="name">The name of this indicator</param>
         /// <param name="period">The period of the standard deviation and moving average (middle band)</param>
         /// <param name="movingAverageType">The type of moving average to be used</param>
-        public CommodityChannelIndex(string name, int period, MovingAverageType movingAverageType = MovingAverageType.Simple)
+        public CommodityChannelIndex(
+            string name,
+            int period,
+            MovingAverageType movingAverageType = MovingAverageType.Simple
+        )
             : base(name)
         {
             WarmUpPeriod = period;
             MovingAverageType = movingAverageType;
             TypicalPriceAverage = movingAverageType.AsIndicator(name + "_TypicalPriceAvg", period);
-            TypicalPriceMeanDeviation = new MeanAbsoluteDeviation(name + "_TypicalPriceMAD", period);
+            TypicalPriceMeanDeviation = new MeanAbsoluteDeviation(
+                name + "_TypicalPriceMAD",
+                period
+            );
         }
 
         /// <summary>
         /// Gets a flag indicating when this indicator is ready and fully initialized
         /// </summary>
-        public override bool IsReady => TypicalPriceAverage.IsReady && TypicalPriceMeanDeviation.IsReady;
+        public override bool IsReady =>
+            TypicalPriceAverage.IsReady && TypicalPriceMeanDeviation.IsReady;
 
         /// <summary>
         /// Required period, in data points, for the indicator to be ready and fully initialized.

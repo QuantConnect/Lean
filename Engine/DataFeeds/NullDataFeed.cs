@@ -41,7 +41,9 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                 {
                     return true;
                 }
-                throw new NotImplementedException("Unexpected usage of null data feed implementation.");
+                throw new NotImplementedException(
+                    "Unexpected usage of null data feed implementation."
+                );
             }
         }
 
@@ -56,7 +58,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             IDataFeedSubscriptionManager subscriptionManager,
             IDataFeedTimeProvider dataFeedTimeProvider,
             IDataChannelProvider dataChannelProvider
-            )
+        )
         {
             if (!ShouldThrow)
             {

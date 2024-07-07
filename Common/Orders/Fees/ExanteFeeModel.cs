@@ -83,7 +83,9 @@ namespace QuantConnect.Orders.Fees
                     break;
 
                 default:
-                    throw new ArgumentException(Messages.FeeModel.UnsupportedSecurityType(security));
+                    throw new ArgumentException(
+                        Messages.FeeModel.UnsupportedSecurityType(security)
+                    );
             }
 
             return new OrderFee(new CashAmount(feeResult, feeCurrency));
@@ -101,7 +103,10 @@ namespace QuantConnect.Orders.Fees
                     return new CashAmount(order.AbsoluteQuantity * MarketUsaRate, Currencies.USD);
 
                 default:
-                    return new CashAmount(order.AbsoluteQuantity * order.Price * DefaultRate, Currencies.USD);
+                    return new CashAmount(
+                        order.AbsoluteQuantity * order.Price * DefaultRate,
+                        Currencies.USD
+                    );
             }
         }
 
@@ -114,7 +119,8 @@ namespace QuantConnect.Orders.Fees
             return order.Symbol.ID.Market switch
             {
                 Market.USA => new CashAmount(order.AbsoluteQuantity * 1.5m, Currencies.USD),
-                _ =>
+                _
+                    =>
                     // ToDo: clarify the value for different exchanges
                     throw new ArgumentException(Messages.ExanteFeeModel.UnsupportedExchange(order))
             };

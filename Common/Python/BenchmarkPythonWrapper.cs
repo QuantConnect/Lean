@@ -13,9 +13,9 @@
  * limitations under the License.
 */
 
+using System;
 using Python.Runtime;
 using QuantConnect.Benchmarks;
-using System;
 
 namespace QuantConnect.Python
 {
@@ -29,9 +29,7 @@ namespace QuantConnect.Python
         /// </summary>
         /// <param name="model">Python benchmark model</param>
         public BenchmarkPythonWrapper(PyObject model)
-            : base(model)
-        {
-        }
+            : base(model) { }
 
         /// <summary>
         /// Evaluates this benchmark at the specified time using the method defined in the Python class

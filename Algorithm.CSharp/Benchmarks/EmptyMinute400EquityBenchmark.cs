@@ -38,9 +38,7 @@ namespace QuantConnect.Algorithm.CSharp.Benchmarks
             }
         }
 
-        public override void OnData(Slice slice)
-        {
-        }
+        public override void OnData(Slice slice) { }
     }
 
     public static class Symbols

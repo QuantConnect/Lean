@@ -37,14 +37,24 @@ namespace QuantConnect.Algorithm.CSharp
 
             UniverseSettings.Resolution = Resolution.Daily;
             var symbol = QuantConnect.Symbol.Create("SPY", SecurityType.Equity, Market.USA);
-            AddUniverseSelection(new ETFConstituentsUniverseSelectionModel(symbol, UniverseSettings, ETFConstituentsFilter));
+            AddUniverseSelection(
+                new ETFConstituentsUniverseSelectionModel(
+                    symbol,
+                    UniverseSettings,
+                    ETFConstituentsFilter
+                )
+            );
 
-            AddAlpha(new ConstantAlphaModel(InsightType.Price, InsightDirection.Up, TimeSpan.FromDays(1)));
+            AddAlpha(
+                new ConstantAlphaModel(InsightType.Price, InsightDirection.Up, TimeSpan.FromDays(1))
+            );
 
             SetPortfolioConstruction(new EqualWeightingPortfolioConstructionModel());
         }
 
-        private protected IEnumerable<Symbol> ETFConstituentsFilter(IEnumerable<ETFConstituentUniverse> constituents)
+        private protected IEnumerable<Symbol> ETFConstituentsFilter(
+            IEnumerable<ETFConstituentUniverse> constituents
+        )
         {
             // Get the 10 securities with the largest weight in the index
             return constituents.OrderByDescending(c => c.Weight).Take(8).Select(c => c.Symbol);
@@ -78,35 +88,36 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// This is used by the regression test system to indicate what the expected statistics are from running the algorithm
         /// </summary>
-        public Dictionary<string, string> ExpectedStatistics => new Dictionary<string, string>
-        {
-            {"Total Orders", "9"},
-            {"Average Win", "0.01%"},
-            {"Average Loss", "0%"},
-            {"Compounding Annual Return", "250.805%"},
-            {"Drawdown", "0.900%"},
-            {"Expectancy", "0"},
-            {"Start Equity", "100000"},
-            {"End Equity", "102436.17"},
-            {"Net Profit", "2.436%"},
-            {"Sharpe Ratio", "3.837"},
-            {"Sortino Ratio", "10.614"},
-            {"Probabilistic Sharpe Ratio", "63.620%"},
-            {"Loss Rate", "0%"},
-            {"Win Rate", "100%"},
-            {"Profit-Loss Ratio", "0"},
-            {"Alpha", "0.5"},
-            {"Beta", "-0.357"},
-            {"Annual Standard Deviation", "0.091"},
-            {"Annual Variance", "0.008"},
-            {"Information Ratio", "-0.581"},
-            {"Tracking Error", "0.12"},
-            {"Treynor Ratio", "-0.981"},
-            {"Total Fees", "$9.05"},
-            {"Estimated Strategy Capacity", "$400000000.00"},
-            {"Lowest Capacity Asset", "GOOCV VP83T1ZUHROL"},
-            {"Portfolio Turnover", "14.29%"},
-            {"OrderListHash", "a11cb12dabe993c7989036e299f3f028"}
-        };
+        public Dictionary<string, string> ExpectedStatistics =>
+            new Dictionary<string, string>
+            {
+                { "Total Orders", "9" },
+                { "Average Win", "0.01%" },
+                { "Average Loss", "0%" },
+                { "Compounding Annual Return", "250.805%" },
+                { "Drawdown", "0.900%" },
+                { "Expectancy", "0" },
+                { "Start Equity", "100000" },
+                { "End Equity", "102436.17" },
+                { "Net Profit", "2.436%" },
+                { "Sharpe Ratio", "3.837" },
+                { "Sortino Ratio", "10.614" },
+                { "Probabilistic Sharpe Ratio", "63.620%" },
+                { "Loss Rate", "0%" },
+                { "Win Rate", "100%" },
+                { "Profit-Loss Ratio", "0" },
+                { "Alpha", "0.5" },
+                { "Beta", "-0.357" },
+                { "Annual Standard Deviation", "0.091" },
+                { "Annual Variance", "0.008" },
+                { "Information Ratio", "-0.581" },
+                { "Tracking Error", "0.12" },
+                { "Treynor Ratio", "-0.981" },
+                { "Total Fees", "$9.05" },
+                { "Estimated Strategy Capacity", "$400000000.00" },
+                { "Lowest Capacity Asset", "GOOCV VP83T1ZUHROL" },
+                { "Portfolio Turnover", "14.29%" },
+                { "OrderListHash", "a11cb12dabe993c7989036e299f3f028" }
+            };
     }
 }

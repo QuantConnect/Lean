@@ -15,10 +15,10 @@
 */
 
 using System;
-using System.Linq;
-using Python.Runtime;
-using Newtonsoft.Json;
 using System.Collections.Generic;
+using System.Linq;
+using Newtonsoft.Json;
+using Python.Runtime;
 using QuantConnect.Data.UniverseSelection;
 
 namespace QuantConnect.Data.Fundamental
@@ -35,7 +35,8 @@ namespace QuantConnect.Data.Fundamental
         /// Morningstar DataId: 13015
         /// </remarks>
         [JsonProperty("13015")]
-        public DilutedEPSGrowth DilutedEPSGrowth => _dilutedEPSGrowth ??= new(_timeProvider, _securityIdentifier);
+        public DilutedEPSGrowth DilutedEPSGrowth =>
+            _dilutedEPSGrowth ??= new(_timeProvider, _securityIdentifier);
         private DilutedEPSGrowth _dilutedEPSGrowth;
 
         /// <summary>
@@ -45,7 +46,8 @@ namespace QuantConnect.Data.Fundamental
         /// Morningstar DataId: 13016
         /// </remarks>
         [JsonProperty("13016")]
-        public DilutedContEPSGrowth DilutedContEPSGrowth => _dilutedContEPSGrowth ??= new(_timeProvider, _securityIdentifier);
+        public DilutedContEPSGrowth DilutedContEPSGrowth =>
+            _dilutedContEPSGrowth ??= new(_timeProvider, _securityIdentifier);
         private DilutedContEPSGrowth _dilutedContEPSGrowth;
 
         /// <summary>
@@ -65,7 +67,8 @@ namespace QuantConnect.Data.Fundamental
         /// Morningstar DataId: 13018
         /// </remarks>
         [JsonProperty("13018")]
-        public EquityPerShareGrowth EquityPerShareGrowth => _equityPerShareGrowth ??= new(_timeProvider, _securityIdentifier);
+        public EquityPerShareGrowth EquityPerShareGrowth =>
+            _equityPerShareGrowth ??= new(_timeProvider, _securityIdentifier);
         private EquityPerShareGrowth _equityPerShareGrowth;
 
         /// <summary>
@@ -75,7 +78,8 @@ namespace QuantConnect.Data.Fundamental
         /// Morningstar DataId: 13019
         /// </remarks>
         [JsonProperty("13019")]
-        public RegressionGrowthofDividends5Years RegressionGrowthofDividends5Years => _regressionGrowthofDividends5Years ??= new(_timeProvider, _securityIdentifier);
+        public RegressionGrowthofDividends5Years RegressionGrowthofDividends5Years =>
+            _regressionGrowthofDividends5Years ??= new(_timeProvider, _securityIdentifier);
         private RegressionGrowthofDividends5Years _regressionGrowthofDividends5Years;
 
         /// <summary>
@@ -85,7 +89,8 @@ namespace QuantConnect.Data.Fundamental
         /// Morningstar DataId: 13020
         /// </remarks>
         [JsonProperty("13020")]
-        public FCFPerShareGrowth FCFPerShareGrowth => _fCFPerShareGrowth ??= new(_timeProvider, _securityIdentifier);
+        public FCFPerShareGrowth FCFPerShareGrowth =>
+            _fCFPerShareGrowth ??= new(_timeProvider, _securityIdentifier);
         private FCFPerShareGrowth _fCFPerShareGrowth;
 
         /// <summary>
@@ -95,7 +100,8 @@ namespace QuantConnect.Data.Fundamental
         /// Morningstar DataId: 13021
         /// </remarks>
         [JsonProperty("13021")]
-        public BookValuePerShareGrowth BookValuePerShareGrowth => _bookValuePerShareGrowth ??= new(_timeProvider, _securityIdentifier);
+        public BookValuePerShareGrowth BookValuePerShareGrowth =>
+            _bookValuePerShareGrowth ??= new(_timeProvider, _securityIdentifier);
         private BookValuePerShareGrowth _bookValuePerShareGrowth;
 
         /// <summary>
@@ -105,7 +111,8 @@ namespace QuantConnect.Data.Fundamental
         /// Morningstar DataId: 13022
         /// </remarks>
         [JsonProperty("13022")]
-        public NormalizedDilutedEPSGrowth NormalizedDilutedEPSGrowth => _normalizedDilutedEPSGrowth ??= new(_timeProvider, _securityIdentifier);
+        public NormalizedDilutedEPSGrowth NormalizedDilutedEPSGrowth =>
+            _normalizedDilutedEPSGrowth ??= new(_timeProvider, _securityIdentifier);
         private NormalizedDilutedEPSGrowth _normalizedDilutedEPSGrowth;
 
         /// <summary>
@@ -115,16 +122,15 @@ namespace QuantConnect.Data.Fundamental
         /// Morningstar DataId: 13023
         /// </remarks>
         [JsonProperty("13023")]
-        public NormalizedBasicEPSGrowth NormalizedBasicEPSGrowth => _normalizedBasicEPSGrowth ??= new(_timeProvider, _securityIdentifier);
+        public NormalizedBasicEPSGrowth NormalizedBasicEPSGrowth =>
+            _normalizedBasicEPSGrowth ??= new(_timeProvider, _securityIdentifier);
         private NormalizedBasicEPSGrowth _normalizedBasicEPSGrowth;
 
         /// <summary>
         /// Creates a new instance for the given time and security
         /// </summary>
         public EarningRatios(ITimeProvider timeProvider, SecurityIdentifier securityIdentifier)
-            : base(timeProvider, securityIdentifier)
-        {
-        }
+            : base(timeProvider, securityIdentifier) { }
 
         /// <summary>
         /// Clones this instance

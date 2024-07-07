@@ -42,9 +42,12 @@ namespace QuantConnect.Tests.Algorithm.Framework.Execution
             var actualOrdersSubmitted = new List<SubmitOrderRequest>();
 
             var orderProcessor = new Mock<IOrderProcessor>();
-            orderProcessor.Setup(m => m.Process(It.IsAny<SubmitOrderRequest>()))
+            orderProcessor
+                .Setup(m => m.Process(It.IsAny<SubmitOrderRequest>()))
                 .Returns((OrderTicket)null)
-                .Callback((OrderRequest request) => actualOrdersSubmitted.Add((SubmitOrderRequest)request));
+                .Callback(
+                    (OrderRequest request) => actualOrdersSubmitted.Add((SubmitOrderRequest)request)
+                );
 
             var algorithm = new QCAlgorithm();
             algorithm.SetPandasConverter();
@@ -54,7 +57,10 @@ namespace QuantConnect.Tests.Algorithm.Framework.Execution
             var model = GetExecutionModel(language);
             algorithm.SetExecution(model);
 
-            var changes = SecurityChangesTests.CreateNonInternal(Enumerable.Empty<Security>(), Enumerable.Empty<Security>());
+            var changes = SecurityChangesTests.CreateNonInternal(
+                Enumerable.Empty<Security>(),
+                Enumerable.Empty<Security>()
+            );
             model.OnSecuritiesChanged(algorithm, changes);
 
             model.Execute(algorithm, new IPortfolioTarget[0]);
@@ -70,7 +76,8 @@ namespace QuantConnect.Tests.Algorithm.Framework.Execution
             Language language,
             decimal currentPrice,
             int expectedOrdersSubmitted,
-            decimal expectedTotalQuantity)
+            decimal expectedTotalQuantity
+        )
         {
             var actualOrdersSubmitted = new List<SubmitOrderRequest>();
 
@@ -85,28 +92,39 @@ namespace QuantConnect.Tests.Algorithm.Framework.Execution
             security.SetMarketPrice(new TradeBar { Value = 250 });
             // pushing the ask higher will cause the spread the widen and no trade to happen
             var ask = expectedOrdersSubmitted == 0 ? currentPrice * 1.1m : currentPrice;
-            security.SetMarketPrice(new QuoteBar
-            {
-                Time = time,
-                Symbol = Symbols.AAPL,
-                Ask = new Bar(ask, ask, ask, ask),
-                Bid = new Bar(currentPrice, currentPrice, currentPrice, currentPrice)
-            });
+            security.SetMarketPrice(
+                new QuoteBar
+                {
+                    Time = time,
+                    Symbol = Symbols.AAPL,
+                    Ask = new Bar(ask, ask, ask, ask),
+                    Bid = new Bar(currentPrice, currentPrice, currentPrice, currentPrice)
+                }
+            );
 
             algorithm.SetFinishedWarmingUp();
 
             var orderProcessor = new Mock<IOrderProcessor>();
-            orderProcessor.Setup(m => m.Process(It.IsAny<SubmitOrderRequest>()))
-                .Returns((SubmitOrderRequest request) => new OrderTicket(algorithm.Transactions, request))
-                .Callback((OrderRequest request) => actualOrdersSubmitted.Add((SubmitOrderRequest)request));
-            orderProcessor.Setup(m => m.GetOpenOrders(It.IsAny<Func<Order, bool>>()))
+            orderProcessor
+                .Setup(m => m.Process(It.IsAny<SubmitOrderRequest>()))
+                .Returns(
+                    (SubmitOrderRequest request) => new OrderTicket(algorithm.Transactions, request)
+                )
+                .Callback(
+                    (OrderRequest request) => actualOrdersSubmitted.Add((SubmitOrderRequest)request)
+                );
+            orderProcessor
+                .Setup(m => m.GetOpenOrders(It.IsAny<Func<Order, bool>>()))
                 .Returns(new List<Order>());
             algorithm.Transactions.SetOrderProcessor(orderProcessor.Object);
 
             var model = GetExecutionModel(language);
             algorithm.SetExecution(model);
 
-            var changes = SecurityChangesTests.CreateNonInternal(new[] { security }, Enumerable.Empty<Security>());
+            var changes = SecurityChangesTests.CreateNonInternal(
+                new[] { security },
+                Enumerable.Empty<Security>()
+            );
             model.OnSecuritiesChanged(algorithm, changes);
 
             var targets = new IPortfolioTarget[] { new PortfolioTarget(Symbols.AAPL, 10) };
@@ -127,7 +145,12 @@ namespace QuantConnect.Tests.Algorithm.Framework.Execution
         [TestCase(Language.Python, 1, 10, true)]
         [TestCase(Language.CSharp, 0, 0, false)]
         [TestCase(Language.Python, 0, 0, false)]
-        public void FillsOnTradesOnlyRespectingExchangeOpen(Language language, int expectedOrdersSubmitted, decimal expectedTotalQuantity, bool exchangeOpen)
+        public void FillsOnTradesOnlyRespectingExchangeOpen(
+            Language language,
+            int expectedOrdersSubmitted,
+            decimal expectedTotalQuantity,
+            bool exchangeOpen
+        )
         {
             var actualOrdersSubmitted = new List<SubmitOrderRequest>();
 
@@ -148,17 +171,26 @@ namespace QuantConnect.Tests.Algorithm.Framework.Execution
             algorithm.SetFinishedWarmingUp();
 
             var orderProcessor = new Mock<IOrderProcessor>();
-            orderProcessor.Setup(m => m.Process(It.IsAny<SubmitOrderRequest>()))
-                .Returns((SubmitOrderRequest request) => new OrderTicket(algorithm.Transactions, request))
-                .Callback((OrderRequest request) => actualOrdersSubmitted.Add((SubmitOrderRequest)request));
-            orderProcessor.Setup(m => m.GetOpenOrders(It.IsAny<Func<Order, bool>>()))
+            orderProcessor
+                .Setup(m => m.Process(It.IsAny<SubmitOrderRequest>()))
+                .Returns(
+                    (SubmitOrderRequest request) => new OrderTicket(algorithm.Transactions, request)
+                )
+                .Callback(
+                    (OrderRequest request) => actualOrdersSubmitted.Add((SubmitOrderRequest)request)
+                );
+            orderProcessor
+                .Setup(m => m.GetOpenOrders(It.IsAny<Func<Order, bool>>()))
                 .Returns(new List<Order>());
             algorithm.Transactions.SetOrderProcessor(orderProcessor.Object);
 
             var model = GetExecutionModel(language);
             algorithm.SetExecution(model);
 
-            var changes = SecurityChangesTests.CreateNonInternal(new[] { security }, Enumerable.Empty<Security>());
+            var changes = SecurityChangesTests.CreateNonInternal(
+                new[] { security },
+                Enumerable.Empty<Security>()
+            );
             model.OnSecuritiesChanged(algorithm, changes);
 
             var targets = new IPortfolioTarget[] { new PortfolioTarget(Symbols.AAPL, 10) };
@@ -179,9 +211,7 @@ namespace QuantConnect.Tests.Algorithm.Framework.Execution
         [TestCase(Language.Python, MarketDataType.TradeBar)]
         [TestCase(Language.CSharp, MarketDataType.QuoteBar)]
         [TestCase(Language.Python, MarketDataType.QuoteBar)]
-        public void OnSecuritiesChangeDoesNotThrow(
-            Language language,
-            MarketDataType marketDataType)
+        public void OnSecuritiesChangeDoesNotThrow(Language language, MarketDataType marketDataType)
         {
             var time = new DateTime(2018, 8, 2, 16, 0, 0);
 
@@ -191,7 +221,15 @@ namespace QuantConnect.Tests.Algorithm.Framework.Execution
                 switch (marketDataType)
                 {
                     case MarketDataType.TradeBar:
-                        return new TradeBar(time.AddMinutes(i), Symbols.AAPL, price, price, price, price, 100m);
+                        return new TradeBar(
+                            time.AddMinutes(i),
+                            Symbols.AAPL,
+                            price,
+                            price,
+                            price,
+                            price,
+                            100m
+                        );
                     case MarketDataType.QuoteBar:
                         var bar = new Bar(price, price, price, price);
                         return new QuoteBar(time.AddMinutes(i), Symbols.AAPL, bar, 10m, bar, 10m);
@@ -212,7 +250,10 @@ namespace QuantConnect.Tests.Algorithm.Framework.Execution
             var model = GetExecutionModel(language);
             algorithm.SetExecution(model);
 
-            var changes = SecurityChangesTests.CreateNonInternal(new[] { security }, Enumerable.Empty<Security>());
+            var changes = SecurityChangesTests.CreateNonInternal(
+                new[] { security },
+                Enumerable.Empty<Security>()
+            );
             Assert.DoesNotThrow(() => model.OnSecuritiesChanged(algorithm, changes));
         }
 
@@ -225,7 +266,9 @@ namespace QuantConnect.Tests.Algorithm.Framework.Execution
                 using (Py.GIL())
                 {
                     const string name = nameof(SpreadExecutionModel);
-                    var instance = Py.Import(name).GetAttr(name).Invoke(acceptingSpreadPercent.ToPython());
+                    var instance = Py.Import(name)
+                        .GetAttr(name)
+                        .Invoke(acceptingSpreadPercent.ToPython());
                     return new ExecutionModelPythonWrapper(instance);
                 }
             }

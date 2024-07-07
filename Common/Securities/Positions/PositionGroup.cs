@@ -13,10 +13,10 @@
  * limitations under the License.
 */
 
-using System.Linq;
+using System;
 using System.Collections;
 using System.Collections.Generic;
-using System;
+using System.Linq;
 using QuantConnect.Securities.Option;
 
 namespace QuantConnect.Securities.Positions
@@ -60,10 +60,16 @@ namespace QuantConnect.Securities.Positions
         /// <param name="quantity">The group quantity, which must be the ratio of quantity to unit quantity of each position</param>
         /// <param name="positions">The positions comprising this group</param>
         /// <exception cref="ArgumentException">Thrown when the quantity is not the ratio of quantity to unit quantity of each position</exception>
-        public PositionGroup(IPositionGroupBuyingPowerModel buyingPowerModel, decimal quantity, params IPosition[] positions)
-            : this(new PositionGroupKey(buyingPowerModel, positions), quantity, positions.ToDictionary(p => p.Symbol))
-        {
-        }
+        public PositionGroup(
+            IPositionGroupBuyingPowerModel buyingPowerModel,
+            decimal quantity,
+            params IPosition[] positions
+        )
+            : this(
+                new PositionGroupKey(buyingPowerModel, positions),
+                quantity,
+                positions.ToDictionary(p => p.Symbol)
+            ) { }
 
         /// <summary>
         /// Initializes a new instance of the <see cref="PositionGroup"/> class
@@ -73,9 +79,7 @@ namespace QuantConnect.Securities.Positions
         /// <param name="positions">The positions comprising this group</param>
         /// <exception cref="ArgumentException">Thrown when the quantity is not the ratio of quantity to unit quantity of each position</exception>
         public PositionGroup(PositionGroupKey key, decimal quantity, params IPosition[] positions)
-            : this(key, quantity, positions.ToDictionary(p => p.Symbol))
-        {
-        }
+            : this(key, quantity, positions.ToDictionary(p => p.Symbol)) { }
 
         /// <summary>
         /// Initializes a new instance of the <see cref="PositionGroup"/> class
@@ -84,16 +88,26 @@ namespace QuantConnect.Securities.Positions
         /// <param name="quantity">The group quantity, which must be the ratio of quantity to unit quantity of each position</param>
         /// <param name="positions">The positions comprising this group</param>
         /// <exception cref="ArgumentException">Thrown when the quantity is not the ratio of quantity to unit quantity of each position</exception>
-        public PositionGroup(PositionGroupKey key, decimal quantity, Dictionary<Symbol, IPosition> positions)
+        public PositionGroup(
+            PositionGroupKey key,
+            decimal quantity,
+            Dictionary<Symbol, IPosition> positions
+        )
         {
             Key = key;
             Quantity = quantity;
             _positions = positions;
 
 #if DEBUG
-            if (positions.Any(kvp => Math.Abs(kvp.Value.Quantity / kvp.Value.UnitQuantity) != Math.Abs(Quantity)))
+            if (
+                positions.Any(kvp =>
+                    Math.Abs(kvp.Value.Quantity / kvp.Value.UnitQuantity) != Math.Abs(Quantity)
+                )
+            )
             {
-                throw new ArgumentException(Messages.PositionGroup.InvalidQuantity(Quantity, positions.Values));
+                throw new ArgumentException(
+                    Messages.PositionGroup.InvalidQuantity(Quantity, positions.Values)
+                );
             }
 #endif
         }
@@ -136,7 +150,10 @@ namespace QuantConnect.Securities.Positions
         /// <param name="buyingPowerModel">The buying power model to use for this group</param>
         public static PositionGroup Empty(IPositionGroupBuyingPowerModel buyingPowerModel)
         {
-            return new PositionGroup(new PositionGroupKey(buyingPowerModel, new List<IPosition>()), 0m);
+            return new PositionGroup(
+                new PositionGroupKey(buyingPowerModel, new List<IPosition>()),
+                0m
+            );
         }
     }
 }

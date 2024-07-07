@@ -14,12 +14,12 @@
  *
 */
 
-using QuantConnect.Python;
-using QuantConnect.Algorithm;
-using QuantConnect.Securities;
 using System.Collections.Generic;
-using QuantConnect.Lean.Engine.DataFeeds;
+using QuantConnect.Algorithm;
 using QuantConnect.Data.UniverseSelection;
+using QuantConnect.Lean.Engine.DataFeeds;
+using QuantConnect.Python;
+using QuantConnect.Securities;
 using QuantConnect.Tests.Common.Securities;
 
 namespace QuantConnect.Tests.Engine.DataFeeds
@@ -29,7 +29,8 @@ namespace QuantConnect.Tests.Engine.DataFeeds
     /// </summary>
     public class AlgorithmStub : QCAlgorithm
     {
-        public List<SecurityChanges> SecurityChangesRecord { get; set; } = new List<SecurityChanges>();
+        public List<SecurityChanges> SecurityChangesRecord { get; set; } =
+            new List<SecurityChanges>();
         public DataManager DataManager { get; set; }
         public IDataFeed DataFeed { get; set; }
 
@@ -40,7 +41,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
         {
             get
             {
-                if(base.PandasConverter == null)
+                if (base.PandasConverter == null)
                 {
                     SetPandasConverter();
                 }
@@ -70,13 +71,20 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             Transactions.SetOrderProcessor(new FakeOrderProcessor());
         }
 
-        public void AddSecurities(Resolution resolution = Resolution.Second, List<string> equities = null, List<string> forex = null, List<string> crypto = null)
+        public void AddSecurities(
+            Resolution resolution = Resolution.Second,
+            List<string> equities = null,
+            List<string> forex = null,
+            List<string> crypto = null
+        )
         {
             foreach (var ticker in equities ?? new List<string>())
             {
                 AddSecurity(SecurityType.Equity, ticker, resolution);
                 var symbol = SymbolCache.GetSymbol(ticker);
-                Securities[symbol].Exchange = new SecurityExchange(SecurityExchangeHours.AlwaysOpen(TimeZones.NewYork));
+                Securities[symbol].Exchange = new SecurityExchange(
+                    SecurityExchangeHours.AlwaysOpen(TimeZones.NewYork)
+                );
             }
             foreach (var ticker in forex ?? new List<string>())
             {
@@ -86,7 +94,9 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             {
                 AddSecurity(SecurityType.Crypto, ticker, resolution);
                 var symbol = SymbolCache.GetSymbol(ticker);
-                Securities[symbol].Exchange = new SecurityExchange(SecurityExchangeHours.AlwaysOpen(TimeZones.Utc));
+                Securities[symbol].Exchange = new SecurityExchange(
+                    SecurityExchangeHours.AlwaysOpen(TimeZones.Utc)
+                );
             }
         }
 

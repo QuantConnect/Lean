@@ -1,11 +1,11 @@
 /*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
- * 
- * Licensed under the Apache License, Version 2.0 (the "License"); 
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -13,8 +13,8 @@
  * limitations under the License.
 */
 using System;
-using Newtonsoft.Json;
 using System.Collections.Generic;
+using Newtonsoft.Json;
 
 namespace QuantConnect.Api
 {
@@ -46,7 +46,7 @@ namespace QuantConnect.Api
         /// The user public ID
         /// </summary>
         [JsonProperty(PropertyName = "publicId")]
-        public string PublicId {  get; set; }
+        public string PublicId { get; set; }
 
         /// <summary>
         /// The url of the user profile image
@@ -84,7 +84,6 @@ namespace QuantConnect.Api
     /// </summary>
     public class Library
     {
-
         /// <summary>
         /// Project Id of the library project
         /// </summary>
@@ -119,7 +118,7 @@ namespace QuantConnect.Api
         /// The chart name
         /// </summary>
         [JsonProperty(PropertyName = "chartName")]
-        public string ChartName { get; set;}
+        public string ChartName { get; set; }
 
         /// <summary>
         /// Width of the chart
@@ -322,7 +321,7 @@ namespace QuantConnect.Api
         /// <summary>
         /// Configuration of the backtest view grid
         /// </summary>
-        [JsonProperty(PropertyName = "grid" )]
+        [JsonProperty(PropertyName = "grid")]
         public Grid Grid { get; set; }
 
         /// <summary>
@@ -359,7 +358,7 @@ namespace QuantConnect.Api
         /// Indicates if the project is running or not
         /// </summary>
         [JsonProperty(PropertyName = "codeRunning")]
-        public bool CodeRunning {  get; set; }
+        public bool CodeRunning { get; set; }
 
         /// <summary>
         /// LEAN environment of the project running on

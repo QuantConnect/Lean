@@ -31,7 +31,10 @@ namespace QuantConnect.Util
         /// <param name="type">The type of the parameter in the expression</param>
         /// <param name="propertyOrField">The name of the property or field to bind to</param>
         /// <returns>A new lambda expression that represents accessing the property or field on 'type'</returns>
-        public static LambdaExpression MakePropertyOrFieldSelector(Type type, string propertyOrField)
+        public static LambdaExpression MakePropertyOrFieldSelector(
+            Type type,
+            string propertyOrField
+        )
         {
             var parameter = Expression.Parameter(type);
             var property = Expression.PropertyOrField(parameter, propertyOrField);
@@ -46,20 +49,27 @@ namespace QuantConnect.Util
         /// <typeparam name="TProperty">The type of the property or field being accessed in the expression</typeparam>
         /// <param name="propertyOrField">The name of the property or field to bind to</param>
         /// <returns>A new lambda expression that represents accessing the property or field on 'type'</returns>
-        public static Expression<Func<T, TProperty>> MakePropertyOrFieldSelector<T, TProperty>(string propertyOrField)
+        public static Expression<Func<T, TProperty>> MakePropertyOrFieldSelector<T, TProperty>(
+            string propertyOrField
+        )
         {
-            return (Expression<Func<T, TProperty>>) MakePropertyOrFieldSelector(typeof (T), propertyOrField);
+            return (Expression<Func<T, TProperty>>)
+                MakePropertyOrFieldSelector(typeof(T), propertyOrField);
         }
 
         /// <summary>
         /// Constructs a lambda expression that accepts two parameters of type <typeparamref name="T"/> and applies
         /// the specified binary comparison and returns the boolean result.
         /// </summary>
-        public static Expression<Func<T, T, bool>> MakeBinaryComparisonLambda<T>(ExpressionType type)
+        public static Expression<Func<T, T, bool>> MakeBinaryComparisonLambda<T>(
+            ExpressionType type
+        )
         {
             if (!type.IsBinaryComparison())
             {
-                throw new ArgumentException($"Provided ExpressionType '{type}' is not a binary comparison.");
+                throw new ArgumentException(
+                    $"Provided ExpressionType '{type}' is not a binary comparison."
+                );
             }
 
             var left = Expression.Parameter(typeof(T), "left");
@@ -142,6 +152,7 @@ namespace QuantConnect.Util
         private class ExpressionWalker : ExpressionVisitor
         {
             public readonly HashSet<Expression> Expressions = new HashSet<Expression>();
+
             public override Expression Visit(Expression node)
             {
                 Expressions.Add(node);

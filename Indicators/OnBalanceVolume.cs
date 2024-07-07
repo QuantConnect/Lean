@@ -18,7 +18,7 @@ using QuantConnect.Data.Market;
 namespace QuantConnect.Indicators
 {
     /// <summary>
-    /// This indicator computes the On Balance Volume (OBV). 
+    /// This indicator computes the On Balance Volume (OBV).
     /// The On Balance Volume is calculated by determining the price of the current close price and previous close price.
     /// If the current close price is equivalent to the previous price the OBV remains the same,
     /// If the current close price is higher the volume of that day is added to the OBV, while a lower close price will
@@ -30,20 +30,16 @@ namespace QuantConnect.Indicators
 
         /// <summary>
         /// Initializes a new instance of the Indicator class using the specified name.
-        /// </summary> 
+        /// </summary>
         public OnBalanceVolume()
-            : base("OBV")
-        {
-        }
+            : base("OBV") { }
 
         /// <summary>
         /// Initializes a new instance of the Indicator class using the specified name.
-        /// </summary> 
+        /// </summary>
         /// <param name="name">The name of this indicator</param>
         public OnBalanceVolume(string name)
-            : base(name)
-        {
-        }
+            : base(name) { }
 
         /// <summary>
         /// Gets a flag indicating when this indicator is ready and fully initialized

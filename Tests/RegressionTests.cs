@@ -13,14 +13,14 @@
  * limitations under the License.
 */
 
+using System;
+using System.Collections.Generic;
+using System.Linq;
 using Newtonsoft.Json.Linq;
 using NUnit.Framework;
 using QuantConnect.Algorithm.CSharp;
 using QuantConnect.Configuration;
 using QuantConnect.Interfaces;
-using System;
-using System.Collections.Generic;
-using System.Linq;
 
 namespace QuantConnect.Tests
 {
@@ -44,8 +44,10 @@ namespace QuantConnect.Tests
                 Config.Set("symbol-tick-limit", "100");
             }
 
-            if (parameters.Algorithm == "TrainingInitializeRegressionAlgorithm" ||
-                parameters.Algorithm == "TrainingOnDataRegressionAlgorithm")
+            if (
+                parameters.Algorithm == "TrainingInitializeRegressionAlgorithm"
+                || parameters.Algorithm == "TrainingOnDataRegressionAlgorithm"
+            )
             {
                 // limit time loop to 90 seconds and set leaky bucket capacity to one minute w/ zero refill
                 Config.Set("algorithm-manager-time-loop-maximum", "1.5");
@@ -53,12 +55,14 @@ namespace QuantConnect.Tests
                 Config.Set("scheduled-event-leaky-bucket-refill-amount", "0");
             }
 
-            var algorithmManager = AlgorithmRunner.RunLocalBacktest(
-                parameters.Algorithm,
-                parameters.Statistics,
-                parameters.Language,
-                parameters.ExpectedFinalStatus
-            ).AlgorithmManager;
+            var algorithmManager = AlgorithmRunner
+                .RunLocalBacktest(
+                    parameters.Algorithm,
+                    parameters.Statistics,
+                    parameters.Language,
+                    parameters.ExpectedFinalStatus
+                )
+                .AlgorithmManager;
 
             if (parameters.Algorithm == "TrainingOnDataRegressionAlgorithm")
             {
@@ -69,12 +73,20 @@ namespace QuantConnect.Tests
             // Skip non-deterministic data points regression algorithms
             if (parameters.DataPoints != -1)
             {
-                Assert.AreEqual(parameters.DataPoints, algorithmManager.DataPoints, "Failed on DataPoints");
+                Assert.AreEqual(
+                    parameters.DataPoints,
+                    algorithmManager.DataPoints,
+                    "Failed on DataPoints"
+                );
             }
             // Skip non-deterministic history data points regression algorithms
             if (parameters.AlgorithmHistoryDataPoints != -1)
             {
-                Assert.AreEqual(parameters.AlgorithmHistoryDataPoints, algorithmManager.AlgorithmHistoryDataPoints, "Failed on AlgorithmHistoryDataPoints");
+                Assert.AreEqual(
+                    parameters.AlgorithmHistoryDataPoints,
+                    algorithmManager.AlgorithmHistoryDataPoints,
+                    "Failed on AlgorithmHistoryDataPoints"
+                );
             }
         }
 
@@ -85,7 +97,11 @@ namespace QuantConnect.Tests
             // since these are static test cases, they are executed before test setup
             AssemblyInitialize.AdjustCurrentDirectory();
 
-            var languages = Config.GetValue("regression-test-languages", JArray.FromObject(new[] { "CSharp", "Python" }))
+            var languages = Config
+                .GetValue(
+                    "regression-test-languages",
+                    JArray.FromObject(new[] { "CSharp", "Python" })
+                )
                 .Select(str => Parse.Enum<Language>(str.Value<string>()))
                 .ToHashSet();
 
@@ -93,17 +109,25 @@ namespace QuantConnect.Tests
             return (
                 from type in typeof(BasicTemplateAlgorithm).Assembly.GetTypes()
                 where typeof(IRegressionAlgorithmDefinition).IsAssignableFrom(type)
-                where !type.IsAbstract                          // non-abstract
-                where type.GetConstructor(Array.Empty<Type>()) != null  // has default ctor
+                where !type.IsAbstract // non-abstract
+                where type.GetConstructor(Array.Empty<Type>()) != null // has default ctor
                 let instance = (IRegressionAlgorithmDefinition)Activator.CreateInstance(type)
-                where instance.CanRunLocally                   // open source has data to run this algorithm
+                where instance.CanRunLocally // open source has data to run this algorithm
                 from language in instance.Languages.Where(languages.Contains)
-                select new AlgorithmStatisticsTestParameters(type.Name, instance.ExpectedStatistics, language, instance.AlgorithmStatus, instance.DataPoints, instance.AlgorithmHistoryDataPoints)
+                select new AlgorithmStatisticsTestParameters(
+                    type.Name,
+                    instance.ExpectedStatistics,
+                    language,
+                    instance.AlgorithmStatus,
+                    instance.DataPoints,
+                    instance.AlgorithmHistoryDataPoints
+                )
             )
-            .OrderBy(x => x.Language).ThenBy(x => x.Algorithm)
-            // generate test cases from test parameters
-            .Select(x => new TestCaseData(x).SetName(x.Language + "/" + x.Algorithm))
-            .ToArray();
+                .OrderBy(x => x.Language)
+                .ThenBy(x => x.Algorithm)
+                // generate test cases from test parameters
+                .Select(x => new TestCaseData(x).SetName(x.Language + "/" + x.Algorithm))
+                .ToArray();
         }
 
         public class AlgorithmStatisticsTestParameters
@@ -122,7 +146,7 @@ namespace QuantConnect.Tests
                 AlgorithmStatus expectedFinalStatus,
                 long dataPoints = 0,
                 int algorithmHistoryDataPoints = 0
-                )
+            )
             {
                 Algorithm = algorithm;
                 Statistics = statistics;

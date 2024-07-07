@@ -21,9 +21,18 @@ namespace QuantConnect.Util
     /// <summary>
     /// Defines a <see cref="JsonConverter"/> that serializes <see cref="DateTime"/> use the number of whole and fractional seconds since unix epoch
     /// </summary>
-    public class DoubleUnixSecondsDateTimeJsonConverter : TypeChangeJsonConverter<DateTime?, double?>
+    public class DoubleUnixSecondsDateTimeJsonConverter
+        : TypeChangeJsonConverter<DateTime?, double?>
     {
-        private static readonly DateTime UnixEpoch = new DateTime(1970, 1, 1, 0, 0, 0, DateTimeKind.Utc);
+        private static readonly DateTime UnixEpoch = new DateTime(
+            1970,
+            1,
+            1,
+            0,
+            0,
+            0,
+            DateTimeKind.Utc
+        );
 
         /// <summary>
         /// Determines whether this instance can convert the specified object type.
@@ -34,8 +43,7 @@ namespace QuantConnect.Util
         /// </returns>
         public override bool CanConvert(Type objectType)
         {
-            return objectType == typeof(DateTime)
-                || objectType == typeof(DateTime?);
+            return objectType == typeof(DateTime) || objectType == typeof(DateTime?);
         }
 
         /// <summary>

@@ -13,17 +13,17 @@
  * limitations under the License.
 */
 
+using System;
+using System.Collections.Generic;
 using Accord.Math;
 using NUnit.Framework;
 using QuantConnect.Indicators;
-using System;
-using System.Collections.Generic;
 
-namespace QuantConnect.Tests.Indicators 
+namespace QuantConnect.Tests.Indicators
 {
     [TestFixture]
     public class SortinoRatioTests : CommonIndicatorTests<IndicatorDataPoint>
-    {   
+    {
         protected override IndicatorBase<IndicatorDataPoint> CreateIndicator()
         {
             return new SortinoRatio("SORTINO", 15);
@@ -34,34 +34,39 @@ namespace QuantConnect.Tests.Indicators
         protected override string TestColumnName => "sortino_rf_0_period_15";
 
         [Test]
-        public void TestConstantValues() 
+        public void TestConstantValues()
         {
             // With the value not changing, the indicator should return default value 0m.
             var sortino = new SortinoRatio("SORTINO", 15);
 
             // push the value 100000 into the indicator 20 times
             var time = DateTime.MinValue;
-            for(int i = 0; i < 20; i++) {
+            for (int i = 0; i < 20; i++)
+            {
                 IndicatorDataPoint point = new IndicatorDataPoint(time.AddDays(i), 100000m);
                 sortino.Update(point);
             }
-            
+
             Assert.AreEqual(sortino.Current.Value, 0m);
         }
-        
+
         [Test]
-        public void TestOnlyIncreasingValues() 
+        public void TestOnlyIncreasingValues()
         {
             // With the value increasing each step, the indicator should return 0m.
             var sr = new SortinoRatio("SORTINO", 15);
 
             // push only increasing values into the indicator
             var time = DateTime.MinValue;
-            for (int i = 20; i > 0; i--) {
-                IndicatorDataPoint point = new IndicatorDataPoint(time.AddDays(20-i), 100000m + i);
+            for (int i = 20; i > 0; i--)
+            {
+                IndicatorDataPoint point = new IndicatorDataPoint(
+                    time.AddDays(20 - i),
+                    100000m + i
+                );
                 sr.Update(point);
             }
-            
+
             Assert.AreNotEqual(sr.Current.Value, 0m);
         }
 
@@ -94,8 +99,12 @@ namespace QuantConnect.Tests.Indicators
         [Test]
         public void RunTestIndicatorWithNonZeroRiskFreeRate()
         {
-            TestHelper.TestIndicator(new SortinoRatio("SORTINO", 15, 0.01), TestFileName, "sortino_rf_0.01_period_15", Assertion);
+            TestHelper.TestIndicator(
+                new SortinoRatio("SORTINO", 15, 0.01),
+                TestFileName,
+                "sortino_rf_0.01_period_15",
+                Assertion
+            );
         }
-
     }
 }

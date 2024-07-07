@@ -33,9 +33,8 @@ namespace QuantConnect.Orders
         /// <summary>
         /// Added a default constructor for JSON Deserialization:
         /// </summary>
-        public ComboLimitOrder() : base()
-        {
-        }
+        public ComboLimitOrder()
+            : base() { }
 
         /// <summary>
         /// New limit order constructor
@@ -47,8 +46,15 @@ namespace QuantConnect.Orders
         /// <param name="limitPrice">Price the order should be filled at if a limit order</param>
         /// <param name="tag">User defined data tag for this order</param>
         /// <param name="properties">The order properties for this order</param>
-        public ComboLimitOrder(Symbol symbol, decimal quantity, decimal limitPrice, DateTime time, GroupOrderManager groupOrderManager,
-            string tag = "", IOrderProperties properties = null)
+        public ComboLimitOrder(
+            Symbol symbol,
+            decimal quantity,
+            decimal limitPrice,
+            DateTime time,
+            GroupOrderManager groupOrderManager,
+            string tag = "",
+            IOrderProperties properties = null
+        )
             : base(symbol, quantity, time, groupOrderManager, tag, properties)
         {
             GroupOrderManager.LimitPrice = limitPrice;
@@ -60,7 +66,11 @@ namespace QuantConnect.Orders
         /// <param name="security">The security matching this order's symbol</param>
         protected override decimal GetValueImpl(Security security)
         {
-            return LimitOrder.CalculateOrderValue(Quantity, GroupOrderManager.LimitPrice, security.Price);
+            return LimitOrder.CalculateOrderValue(
+                Quantity,
+                GroupOrderManager.LimitPrice,
+                security.Price
+            );
         }
 
         /// <summary>

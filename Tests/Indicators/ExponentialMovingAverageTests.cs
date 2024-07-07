@@ -25,7 +25,7 @@ namespace QuantConnect.Tests.Indicators
     {
         protected override IndicatorBase<IndicatorDataPoint> CreateIndicator()
         {
-             return new ExponentialMovingAverage(14);
+            return new ExponentialMovingAverage(14);
         }
 
         protected override string TestFileName => "spy_ema.csv";
@@ -36,8 +36,23 @@ namespace QuantConnect.Tests.Indicators
         public void EmaComputesCorrectly()
         {
             const int period = 4;
-            decimal[] values = { 1m, 10m, 100m, 1000m, 2000m, 3000m, 4000m, 5000m, 6000m, 7000m, 8000m, 9000m, 10000m };
-            const decimal expFactor = 2m/(1m + period);
+            decimal[] values =
+            {
+                1m,
+                10m,
+                100m,
+                1000m,
+                2000m,
+                3000m,
+                4000m,
+                5000m,
+                6000m,
+                7000m,
+                8000m,
+                9000m,
+                10000m
+            };
+            const decimal expFactor = 2m / (1m + period);
 
             var ema4 = new ExponentialMovingAverage(period);
 

@@ -14,12 +14,12 @@
 */
 
 using System;
+using System.Collections.Generic;
 using System.IO;
 using Newtonsoft.Json;
-using QuantConnect.Util;
-using QuantConnect.Interfaces;
 using QuantConnect.Configuration;
-using System.Collections.Generic;
+using QuantConnect.Interfaces;
+using QuantConnect.Util;
 
 namespace QuantConnect.Lean.Engine.DataFeeds
 {
@@ -45,20 +45,28 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             var dataProvidersConfig = Config.Get("composite-data-providers");
             if (!string.IsNullOrEmpty(dataProvidersConfig))
             {
-                var dataProviders = JsonConvert.DeserializeObject<List<string>>(dataProvidersConfig);
+                var dataProviders = JsonConvert.DeserializeObject<List<string>>(
+                    dataProvidersConfig
+                );
                 foreach (var dataProvider in dataProviders)
                 {
-                    _dataProviders.Add(Composer.Instance.GetExportedValueByTypeName<IDataProvider>(dataProvider));
+                    _dataProviders.Add(
+                        Composer.Instance.GetExportedValueByTypeName<IDataProvider>(dataProvider)
+                    );
                 }
 
                 if (_dataProviders.Count == 0)
                 {
-                    throw new ArgumentException("CompositeDataProvider(): requires at least 1 valid data provider in 'composite-data-providers'");
+                    throw new ArgumentException(
+                        "CompositeDataProvider(): requires at least 1 valid data provider in 'composite-data-providers'"
+                    );
                 }
             }
             else
             {
-                throw new ArgumentException("CompositeDataProvider(): requires 'composite-data-providers' to be set with a valid type name");
+                throw new ArgumentException(
+                    "CompositeDataProvider(): requires 'composite-data-providers' to be set with a valid type name"
+                );
             }
 
             _dataProviders.ForEach(x => x.NewDataRequest += OnNewDataRequest);

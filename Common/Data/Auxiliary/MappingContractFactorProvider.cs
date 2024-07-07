@@ -15,8 +15,8 @@
 */
 
 using System;
-using System.Linq;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace QuantConnect.Data.Auxiliary
 {
@@ -28,15 +28,22 @@ namespace QuantConnect.Data.Auxiliary
         /// <summary>
         ///Creates a new instance
         /// </summary>
-        public MappingContractFactorProvider(string permtick, IEnumerable<MappingContractFactorRow> data, DateTime? factorFileMinimumDate = null)
-            : base(permtick, data, factorFileMinimumDate)
-        {
-        }
+        public MappingContractFactorProvider(
+            string permtick,
+            IEnumerable<MappingContractFactorRow> data,
+            DateTime? factorFileMinimumDate = null
+        )
+            : base(permtick, data, factorFileMinimumDate) { }
 
         /// <summary>
         /// Gets the price scale factor for the specified search date
         /// </summary>
-        public override decimal GetPriceFactor(DateTime searchDate, DataNormalizationMode dataNormalizationMode, DataMappingMode? dataMappingMode = null, uint contractOffset = 0)
+        public override decimal GetPriceFactor(
+            DateTime searchDate,
+            DataNormalizationMode dataNormalizationMode,
+            DataMappingMode? dataMappingMode = null,
+            uint contractOffset = 0
+        )
         {
             if (dataNormalizationMode == DataNormalizationMode.Raw)
             {
@@ -44,7 +51,11 @@ namespace QuantConnect.Data.Auxiliary
             }
 
             var factor = 1m;
-            if (dataNormalizationMode is DataNormalizationMode.BackwardsPanamaCanal or DataNormalizationMode.ForwardPanamaCanal)
+            if (
+                dataNormalizationMode
+                is DataNormalizationMode.BackwardsPanamaCanal
+                    or DataNormalizationMode.ForwardPanamaCanal
+            )
             {
                 // default value depends on the data mode
                 factor = 0;
@@ -63,7 +74,9 @@ namespace QuantConnect.Data.Auxiliary
                 {
                     case DataNormalizationMode.BackwardsRatio:
                     {
-                        var row = factorFileRow.FirstOrDefault(row => row.DataMappingMode == dataMappingMode);
+                        var row = factorFileRow.FirstOrDefault(row =>
+                            row.DataMappingMode == dataMappingMode
+                        );
                         if (row != null && row.BackwardsRatioScale.Count > contractOffset)
                         {
                             factor = row.BackwardsRatioScale[(int)contractOffset];
@@ -72,7 +85,9 @@ namespace QuantConnect.Data.Auxiliary
                     }
                     case DataNormalizationMode.BackwardsPanamaCanal:
                     {
-                        var row = factorFileRow.FirstOrDefault(row => row.DataMappingMode == dataMappingMode);
+                        var row = factorFileRow.FirstOrDefault(row =>
+                            row.DataMappingMode == dataMappingMode
+                        );
                         if (row != null && row.BackwardsPanamaCanalScale.Count > contractOffset)
                         {
                             factor = row.BackwardsPanamaCanalScale[(int)contractOffset];
@@ -81,7 +96,9 @@ namespace QuantConnect.Data.Auxiliary
                     }
                     case DataNormalizationMode.ForwardPanamaCanal:
                     {
-                        var row = factorFileRow.FirstOrDefault(row => row.DataMappingMode == dataMappingMode);
+                        var row = factorFileRow.FirstOrDefault(row =>
+                            row.DataMappingMode == dataMappingMode
+                        );
                         if (row != null && row.ForwardPanamaCanalScale.Count > contractOffset)
                         {
                             factor = row.ForwardPanamaCanalScale[(int)contractOffset];

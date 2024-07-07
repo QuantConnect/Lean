@@ -16,8 +16,8 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using QuantConnect.Securities;
 using QLNet;
+using QuantConnect.Securities;
 
 namespace QuantConnect
 {
@@ -34,11 +34,15 @@ namespace QuantConnect
         /// </summary>
         /// <param name="securityManager">SecurityManager for this calendar</param>
         /// <param name="marketHoursDatabase">MarketHoursDatabase for this calendar</param>
-        public TradingCalendar(SecurityManager securityManager, MarketHoursDatabase marketHoursDatabase)
+        public TradingCalendar(
+            SecurityManager securityManager,
+            MarketHoursDatabase marketHoursDatabase
+        )
         {
             _securityManager = securityManager;
             _marketHoursDatabase = marketHoursDatabase;
         }
+
         /// <summary>
         /// Method returns <see cref="TradingDay"/> that contains trading events associated with today's date
         /// </summary>
@@ -77,34 +81,38 @@ namespace QuantConnect
         /// <param name="start">Start date of the range (inclusive)</param>
         /// <param name="end">End date of the range (inclusive)</param>
         /// <returns>>Populated list of <see cref="TradingDay"/></returns>
-        public IEnumerable<TradingDay> GetDaysByType(TradingDayType type, DateTime start, DateTime end)
+        public IEnumerable<TradingDay> GetDaysByType(
+            TradingDayType type,
+            DateTime start,
+            DateTime end
+        )
         {
             Func<TradingDay, bool> typeFilter = day =>
+            {
+                switch (type)
                 {
-                    switch (type)
-                    {
-                        case TradingDayType.BusinessDay:
-                            return day.BusinessDay;
-                        case TradingDayType.PublicHoliday:
-                            return day.PublicHoliday;
-                        case TradingDayType.Weekend:
-                            return day.Weekend;
-                        case TradingDayType.OptionExpiration:
-                            return day.OptionExpirations.Any();
-                        case TradingDayType.FutureExpiration:
-                            return day.FutureExpirations.Any();
-                        case TradingDayType.FutureRoll:
-                            return day.FutureRolls.Any();
-                        case TradingDayType.SymbolDelisting:
-                            return day.SymbolDelistings.Any();
-                        case TradingDayType.EquityDividends:
-                            return day.EquityDividends.Any();
-                    };
-                    return false;
-                };
+                    case TradingDayType.BusinessDay:
+                        return day.BusinessDay;
+                    case TradingDayType.PublicHoliday:
+                        return day.PublicHoliday;
+                    case TradingDayType.Weekend:
+                        return day.Weekend;
+                    case TradingDayType.OptionExpiration:
+                        return day.OptionExpirations.Any();
+                    case TradingDayType.FutureExpiration:
+                        return day.FutureExpirations.Any();
+                    case TradingDayType.FutureRoll:
+                        return day.FutureRolls.Any();
+                    case TradingDayType.SymbolDelisting:
+                        return day.SymbolDelistings.Any();
+                    case TradingDayType.EquityDividends:
+                        return day.EquityDividends.Any();
+                }
+                ;
+                return false;
+            };
             return GetTradingDays(start, end).Where(typeFilter);
         }
-
 
         private IEnumerable<TradingDay> PopulateTradingDays(DateTime start, DateTime end)
         {
@@ -113,7 +121,11 @@ namespace QuantConnect
             var holidays = new HashSet<DateTime>();
             foreach (var symbol in symbols)
             {
-                var entry = _marketHoursDatabase.GetEntry(symbol.ID.Market, symbol, symbol.ID.SecurityType);
+                var entry = _marketHoursDatabase.GetEntry(
+                    symbol.ID.Market,
+                    symbol,
+                    symbol.ID.SecurityType
+                );
 
                 foreach (var holiday in entry.ExchangeHours.Holidays)
                 {
@@ -128,28 +140,31 @@ namespace QuantConnect
             var totalDays = (int)(end.Date.AddDays(1.0) - start.Date).TotalDays;
             if (totalDays < 0)
             {
-                throw new ArgumentException($"TradingCalendar.PopulateTradingDays(): {Messages.TradingCalendar.InvalidTotalDays(totalDays)}");
+                throw new ArgumentException(
+                    $"TradingCalendar.PopulateTradingDays(): {Messages.TradingCalendar.InvalidTotalDays(totalDays)}"
+                );
             }
 
             foreach (var dayIdx in Enumerable.Range(0, totalDays))
             {
                 var currentDate = start.Date.AddDays(dayIdx);
 
-                var publicHoliday = holidays.Contains(currentDate) || !qlCalendar.isBusinessDay(currentDate);
-                var weekend = currentDate.DayOfWeek == DayOfWeek.Sunday ||
-                                currentDate.DayOfWeek == DayOfWeek.Saturday;
+                var publicHoliday =
+                    holidays.Contains(currentDate) || !qlCalendar.isBusinessDay(currentDate);
+                var weekend =
+                    currentDate.DayOfWeek == DayOfWeek.Sunday
+                    || currentDate.DayOfWeek == DayOfWeek.Saturday;
                 var businessDay = !publicHoliday && !weekend;
 
-                yield return
-                    new TradingDay
-                    {
-                        Date = currentDate,
-                        PublicHoliday = publicHoliday,
-                        Weekend = weekend,
-                        BusinessDay = businessDay,
-                        OptionExpirations = options.Where(x => x.ID.Date.Date == currentDate),
-                        FutureExpirations = futures.Where(x => x.ID.Date.Date == currentDate)
-                    };
+                yield return new TradingDay
+                {
+                    Date = currentDate,
+                    PublicHoliday = publicHoliday,
+                    Weekend = weekend,
+                    BusinessDay = businessDay,
+                    OptionExpirations = options.Where(x => x.ID.Date.Date == currentDate),
+                    FutureExpirations = futures.Where(x => x.ID.Date.Date == currentDate)
+                };
             }
         }
     }

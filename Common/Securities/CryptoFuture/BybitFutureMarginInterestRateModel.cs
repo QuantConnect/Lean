@@ -19,7 +19,5 @@ namespace QuantConnect.Securities.CryptoFuture
     /// <summary>
     /// The responsibility of this model is to apply future funding rate cash flows to the portfolio based on open positions
     /// </summary>
-    public class BybitFutureMarginInterestRateModel : BinanceFutureMarginInterestRateModel
-    {
-    }
+    public class BybitFutureMarginInterestRateModel : BinanceFutureMarginInterestRateModel { }
 }

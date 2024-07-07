@@ -37,9 +37,12 @@ namespace QuantConnect.Tests.Algorithm.Framework.Alphas
 
         protected override void InitializeAlgorithm(QCAlgorithm algorithm)
         {
-            algorithm.SetUniverseSelection(new ManualUniverseSelectionModel(
-                Symbol.Create("AIG", SecurityType.Equity, Market.USA),
-                Symbol.Create("BAC", SecurityType.Equity, Market.USA)));
+            algorithm.SetUniverseSelection(
+                new ManualUniverseSelectionModel(
+                    Symbol.Create("AIG", SecurityType.Equity, Market.USA),
+                    Symbol.Create("BAC", SecurityType.Equity, Market.USA)
+                )
+            );
         }
 
         protected override string GetExpectedModelName(IAlphaModel model)
@@ -51,7 +54,8 @@ namespace QuantConnect.Tests.Algorithm.Framework.Alphas
         {
             using (Py.GIL())
             {
-                dynamic model = Py.Import("BasePairsTradingAlphaModel").GetAttr("BasePairsTradingAlphaModel");
+                dynamic model = Py.Import("BasePairsTradingAlphaModel")
+                    .GetAttr("BasePairsTradingAlphaModel");
                 var instance = model(_lookback, _resolution);
                 return new AlphaModelPythonWrapper(instance);
             }
@@ -59,7 +63,9 @@ namespace QuantConnect.Tests.Algorithm.Framework.Alphas
 
         protected override IEnumerable<Insight> ExpectedInsights()
         {
-            Assert.Ignore("The CommonAlphaModelTests need to be refactored to support multiple securities with different prices for each security");
+            Assert.Ignore(
+                "The CommonAlphaModelTests need to be refactored to support multiple securities with different prices for each security"
+            );
             return null;
         }
     }

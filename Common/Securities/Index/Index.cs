@@ -36,13 +36,16 @@ namespace QuantConnect.Securities.Index
         /// <param name="currencyConverter">Currency converter used to convert <see cref="CashAmount"/>
         /// instances into units of the account currency</param>
         /// <param name="registeredTypes">Provides all data types registered in the algorithm</param>
-        public Index(SecurityExchangeHours exchangeHours,
+        public Index(
+            SecurityExchangeHours exchangeHours,
             Cash quoteCurrency,
             SubscriptionDataConfig config,
             SymbolProperties symbolProperties,
             ICurrencyConverter currencyConverter,
-            IRegisteredSecurityDataTypesProvider registeredTypes)
-            : base(config,
+            IRegisteredSecurityDataTypesProvider registeredTypes
+        )
+            : base(
+                config,
                 quoteCurrency,
                 symbolProperties,
                 new IndexExchange(exchangeHours),
@@ -59,9 +62,9 @@ namespace QuantConnect.Securities.Index
                 currencyConverter,
                 registeredTypes,
                 Securities.MarginInterestRateModel.Null
-                )
+            )
         {
-            IsTradable = false;   //Index are non tradable by default
+            IsTradable = false; //Index are non tradable by default
             Holdings = new IndexHolding(this, currencyConverter);
         }
 
@@ -76,14 +79,17 @@ namespace QuantConnect.Securities.Index
         /// instances into units of the account currency</param>
         /// <param name="registeredTypes">Provides all data types registered in the algorithm</param>
         /// <param name="securityCache">Cache to store security information</param>
-        public Index(Symbol symbol,
+        public Index(
+            Symbol symbol,
             SecurityExchangeHours exchangeHours,
             Cash quoteCurrency,
             SymbolProperties symbolProperties,
             ICurrencyConverter currencyConverter,
             IRegisteredSecurityDataTypesProvider registeredTypes,
-            SecurityCache securityCache)
-            : base(symbol,
+            SecurityCache securityCache
+        )
+            : base(
+                symbol,
                 quoteCurrency,
                 symbolProperties,
                 new IndexExchange(exchangeHours),
@@ -100,9 +106,9 @@ namespace QuantConnect.Securities.Index
                 currencyConverter,
                 registeredTypes,
                 Securities.MarginInterestRateModel.Null
-                )
+            )
         {
-            IsTradable = false;   //Index are non tradable by default
+            IsTradable = false; //Index are non tradable by default
             Holdings = new IndexHolding(this, currencyConverter);
         }
     }

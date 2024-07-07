@@ -15,12 +15,11 @@
 */
 
 using System;
-using System.Linq;
 using System.Collections.Generic;
+using System.Linq;
 using NUnit.Framework;
-
-using QuantConnect.Securities.Positions;
 using QuantConnect.Securities.Option;
+using QuantConnect.Securities.Positions;
 
 namespace QuantConnect.Tests.Common.Securities.Positions
 {
@@ -33,30 +32,54 @@ namespace QuantConnect.Tests.Common.Securities.Positions
 #if !DEBUG
         [Ignore("Not on debug mode")]
 #endif
-        public void PositionGroupCreationThrowsOnInvalidRatio(int[] positionsQuantities, int[] positionsUnitQuantities)
+        public void PositionGroupCreationThrowsOnInvalidRatio(
+            int[] positionsQuantities,
+            int[] positionsUnitQuantities
+        )
         {
             var symbols = GetSymbols(positionsQuantities.Length);
 
             Assert.Throws<ArgumentException>(
-                () => new PositionGroup(
-                    new OptionStrategyPositionGroupBuyingPowerModel(null),
-                    positionsQuantities.GreatestCommonDivisor(),
-                    positionsUnitQuantities
-                        .Select((positionUnitQuantity, i) => new Position(symbols[i], positionsQuantities[i], positionUnitQuantity))
-                        .ToArray()));
+                () =>
+                    new PositionGroup(
+                        new OptionStrategyPositionGroupBuyingPowerModel(null),
+                        positionsQuantities.GreatestCommonDivisor(),
+                        positionsUnitQuantities
+                            .Select(
+                                (positionUnitQuantity, i) =>
+                                    new Position(
+                                        symbols[i],
+                                        positionsQuantities[i],
+                                        positionUnitQuantity
+                                    )
+                            )
+                            .ToArray()
+                    )
+            );
         }
 
         [TestCase(10, new[] { 1, 5 }, new[] { 10 * 1, 10 * 5 }, new[] { 1, 5 })]
         [TestCase(-10, new[] { 1, 5 }, new[] { -10 * 1, -10 * 5 }, new[] { 1, 5 })]
         [TestCase(10, new[] { -1, 5 }, new[] { 10 * -1, 10 * 5 }, new[] { 1, 5 })]
         [TestCase(-10, new[] { -1, 5 }, new[] { -10 * -1, -10 * 5 }, new[] { 1, 5 })]
-        public void PositionGroupCreation(int groupQuantity, int[] positionsUnitQuantities, int[] expectedPositionsQuantities,
-            int[] expectedPositionsUnitQuantities)
+        public void PositionGroupCreation(
+            int groupQuantity,
+            int[] positionsUnitQuantities,
+            int[] expectedPositionsQuantities,
+            int[] expectedPositionsUnitQuantities
+        )
         {
             var symbols = GetSymbols(positionsUnitQuantities.Length);
             var group = CreatePositionGroup(groupQuantity, symbols, positionsUnitQuantities);
             var expectedPositions = symbols
-                .Select((symbol, i) => new Position(symbol, expectedPositionsQuantities[i], expectedPositionsUnitQuantities[i]))
+                .Select(
+                    (symbol, i) =>
+                        new Position(
+                            symbol,
+                            expectedPositionsQuantities[i],
+                            expectedPositionsUnitQuantities[i]
+                        )
+                )
                 .Cast<IPosition>()
                 .ToList();
 
@@ -101,14 +124,30 @@ namespace QuantConnect.Tests.Common.Securities.Positions
         [TestCase(-10, new[] { -1, 5 }, 0, new[] { 1, -5 }, true)]
         [TestCase(-10, new[] { -1, 5 }, -5, new[] { 1, -5 }, true)]
         [TestCase(-10, new[] { -1, 5 }, 15, new[] { 1, -5 }, false)]
-        public void PositionGroupClosesAnother(int initialGroupQuantity, int[] initialGroupPositionsUnitQuantities,
-            int finalGroupQuantity, int[] finalGroupPositionsUnitQuantities, bool expectedResult)
+        public void PositionGroupClosesAnother(
+            int initialGroupQuantity,
+            int[] initialGroupPositionsUnitQuantities,
+            int finalGroupQuantity,
+            int[] finalGroupPositionsUnitQuantities,
+            bool expectedResult
+        )
         {
-            Assert.AreEqual(initialGroupPositionsUnitQuantities.Length, finalGroupPositionsUnitQuantities.Length);
+            Assert.AreEqual(
+                initialGroupPositionsUnitQuantities.Length,
+                finalGroupPositionsUnitQuantities.Length
+            );
 
             var symbols = GetSymbols(initialGroupPositionsUnitQuantities.Length);
-            var initialGroup = CreatePositionGroup(initialGroupQuantity, symbols, initialGroupPositionsUnitQuantities);
-            var finalGroup = CreatePositionGroup(finalGroupQuantity, symbols, finalGroupPositionsUnitQuantities);
+            var initialGroup = CreatePositionGroup(
+                initialGroupQuantity,
+                symbols,
+                initialGroupPositionsUnitQuantities
+            );
+            var finalGroup = CreatePositionGroup(
+                finalGroupQuantity,
+                symbols,
+                finalGroupPositionsUnitQuantities
+            );
 
             Assert.AreEqual(expectedResult, finalGroup.Closes(initialGroup));
         }
@@ -116,10 +155,24 @@ namespace QuantConnect.Tests.Common.Securities.Positions
         private static List<Symbol> GetSymbols(int count)
         {
             var baseExpiry = new DateTime(2023, 05, 19);
-            return Enumerable.Range(0, count).Select(i => Symbols.CreateOptionSymbol("SPY", OptionRight.Call, 300, baseExpiry.AddMonths(i))).ToList();
+            return Enumerable
+                .Range(0, count)
+                .Select(i =>
+                    Symbols.CreateOptionSymbol(
+                        "SPY",
+                        OptionRight.Call,
+                        300,
+                        baseExpiry.AddMonths(i)
+                    )
+                )
+                .ToList();
         }
 
-        private static IPositionGroup CreatePositionGroup(int quantity, List<Symbol> symbols, int[] positionsUnitQuantities)
+        private static IPositionGroup CreatePositionGroup(
+            int quantity,
+            List<Symbol> symbols,
+            int[] positionsUnitQuantities
+        )
         {
             Assert.IsNotEmpty(positionsUnitQuantities);
             Assert.AreEqual(positionsUnitQuantities.Length, symbols.Count);
@@ -128,14 +181,26 @@ namespace QuantConnect.Tests.Common.Securities.Positions
                 new OptionStrategyPositionGroupBuyingPowerModel(null),
                 quantity,
                 positionsUnitQuantities
-                    .Select((positionUnitQuantity, i) => new Position(symbols[i], quantity * positionUnitQuantity, Math.Abs(positionUnitQuantity)))
-                    .ToArray());
+                    .Select(
+                        (positionUnitQuantity, i) =>
+                            new Position(
+                                symbols[i],
+                                quantity * positionUnitQuantity,
+                                Math.Abs(positionUnitQuantity)
+                            )
+                    )
+                    .ToArray()
+            );
         }
 
         /// <summary>
         /// Asserts that the specified group has the expected quantity and positions
         /// </summary>
-        private static void AssertPositionGroup(IPositionGroup group, int expectedQuantity, List<IPosition> expectedPositions)
+        private static void AssertPositionGroup(
+            IPositionGroup group,
+            int expectedQuantity,
+            List<IPosition> expectedPositions
+        )
         {
             var expectedAbsQuantity = Math.Abs(expectedQuantity);
             Assert.AreEqual(expectedAbsQuantity, Math.Abs(group.Quantity));
@@ -148,7 +213,10 @@ namespace QuantConnect.Tests.Common.Securities.Positions
                 Assert.AreEqual(expectedPosition.UnitQuantity, position.UnitQuantity);
 
                 // The position group quantity should be a ratio shared by all positions
-                Assert.AreEqual(expectedAbsQuantity, Math.Abs(position.Quantity) / position.UnitQuantity);
+                Assert.AreEqual(
+                    expectedAbsQuantity,
+                    Math.Abs(position.Quantity) / position.UnitQuantity
+                );
             }
         }
     }

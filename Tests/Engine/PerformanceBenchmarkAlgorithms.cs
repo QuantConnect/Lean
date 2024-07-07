@@ -24,8 +24,10 @@ namespace QuantConnect.Tests.Engine
 {
     public static class PerformanceBenchmarkAlgorithms
     {
-        public static QCAlgorithm SingleSecurity_Second => new SingleSecurity_Second_BenchmarkTest();
-        public static QCAlgorithm FiveHundredSecurity_Second => new FiveHundredSecurity_Second_BenchmarkTest();
+        public static QCAlgorithm SingleSecurity_Second =>
+            new SingleSecurity_Second_BenchmarkTest();
+        public static QCAlgorithm FiveHundredSecurity_Second =>
+            new FiveHundredSecurity_Second_BenchmarkTest();
 
         public static QCAlgorithm CreateBenchmarkAlgorithm(int securityCount, Resolution resolution)
         {
@@ -40,7 +42,9 @@ namespace QuantConnect.Tests.Engine
 
             if (days < 0)
             {
-                throw new Exception($"Unable to create {securityCount} subscriptions at {resolution} resolution. Consider using a larger resolution.");
+                throw new Exception(
+                    $"Unable to create {securityCount} subscriptions at {resolution} resolution. Consider using a larger resolution."
+                );
             }
 
             var parameters = new Parameters(securityCount, resolution, start, start.AddDays(days));
@@ -72,7 +76,11 @@ namespace QuantConnect.Tests.Engine
                 SetEndDate(2018, 02, 01);
                 SetCash(100000);
                 SetBenchmark(time => 0m);
-                foreach (var symbol in QuantConnect.Algorithm.CSharp.Benchmarks.Symbols.Equity.All.Take(500))
+                foreach (
+                    var symbol in QuantConnect.Algorithm.CSharp.Benchmarks.Symbols.Equity.All.Take(
+                        500
+                    )
+                )
                 {
                     AddEquity(symbol, Resolution.Second);
                 }
@@ -94,7 +102,11 @@ namespace QuantConnect.Tests.Engine
                 SetEndDate(_parameters.EndDate);
                 SetBenchmark(time => 0m);
 
-                foreach (var symbol in QuantConnect.Algorithm.CSharp.Benchmarks.Symbols.Equity.All.Take(_parameters.SecurityCount))
+                foreach (
+                    var symbol in QuantConnect.Algorithm.CSharp.Benchmarks.Symbols.Equity.All.Take(
+                        _parameters.SecurityCount
+                    )
+                )
                 {
                     AddEquity(symbol, _parameters.Resolution);
                 }
@@ -108,7 +120,12 @@ namespace QuantConnect.Tests.Engine
             public DateTime StartDate { get; set; }
             public DateTime EndDate { get; set; }
 
-            public Parameters(int securityCount, Resolution resolution, DateTime startDate, DateTime endDate)
+            public Parameters(
+                int securityCount,
+                Resolution resolution,
+                DateTime startDate,
+                DateTime endDate
+            )
             {
                 SecurityCount = securityCount;
                 Resolution = resolution;

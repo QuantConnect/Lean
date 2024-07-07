@@ -66,22 +66,48 @@ namespace QuantConnect.DownloaderDataProvider.Launcher
         /// <param name="parameters">Dictionary containing the parameters for data download.</param>
         public DataDownloadConfig()
         {
-            TickType = ParseEnum<TickType>(Config.Get(DownloaderCommandArguments.CommandDataType).ToString());
-            SecurityType = ParseEnum<SecurityType>(Config.Get(DownloaderCommandArguments.CommandSecurityType).ToString());
-            Resolution = ParseEnum<Resolution>(Config.Get(DownloaderCommandArguments.CommandResolution).ToString());
+            TickType = ParseEnum<TickType>(
+                Config.Get(DownloaderCommandArguments.CommandDataType).ToString()
+            );
+            SecurityType = ParseEnum<SecurityType>(
+                Config.Get(DownloaderCommandArguments.CommandSecurityType).ToString()
+            );
+            Resolution = ParseEnum<Resolution>(
+                Config.Get(DownloaderCommandArguments.CommandResolution).ToString()
+            );
 
-            StartDate = DateTime.ParseExact(Config.Get(DownloaderCommandArguments.CommandStartDate).ToString(), DateFormat.EightCharacter, CultureInfo.InvariantCulture);
-            EndDate = DateTime.ParseExact(Config.Get(DownloaderCommandArguments.CommandEndDate).ToString(), DateFormat.EightCharacter, CultureInfo.InvariantCulture);
+            StartDate = DateTime.ParseExact(
+                Config.Get(DownloaderCommandArguments.CommandStartDate).ToString(),
+                DateFormat.EightCharacter,
+                CultureInfo.InvariantCulture
+            );
+            EndDate = DateTime.ParseExact(
+                Config.Get(DownloaderCommandArguments.CommandEndDate).ToString(),
+                DateFormat.EightCharacter,
+                CultureInfo.InvariantCulture
+            );
 
 #pragma warning disable CA1308 // class Market keeps all name in lowercase
-            MarketName = Config.Get(DownloaderCommandArguments.CommandMarketName).ToString()?.ToLower(CultureInfo.InvariantCulture) ?? Market.USA;
+            MarketName =
+                Config
+                    .Get(DownloaderCommandArguments.CommandMarketName)
+                    .ToString()
+                    ?.ToLower(CultureInfo.InvariantCulture) ?? Market.USA;
 #pragma warning restore CA1308
             if (!Market.SupportedMarkets().Contains(MarketName))
             {
-                throw new ArgumentException($"The specified market '{MarketName}' is not supported. Supported markets are: {string.Join(", ", Market.SupportedMarkets())}.");
+                throw new ArgumentException(
+                    $"The specified market '{MarketName}' is not supported. Supported markets are: {string.Join(", ", Market.SupportedMarkets())}."
+                );
             }
 
-            foreach (var ticker in (Config.GetValue<Dictionary<string, string>>(DownloaderCommandArguments.CommandTickers))!.Keys)
+            foreach (
+                var ticker in (
+                    Config.GetValue<Dictionary<string, string>>(
+                        DownloaderCommandArguments.CommandTickers
+                    )
+                )!.Keys
+            )
             {
                 Symbols.Add(Symbol.Create(ticker, SecurityType, MarketName));
             }
@@ -97,7 +123,15 @@ namespace QuantConnect.DownloaderDataProvider.Launcher
         /// <param name="endDate">The end date for the data download range.</param>
         /// <param name="market">The name of the market from which the data is being downloaded.</param>
         /// <param name="symbols">A list of symbols for which data is being downloaded.</param>
-        public DataDownloadConfig(TickType tickType, SecurityType securityType, Resolution resolution, DateTime startDate, DateTime endDate, string market, List<Symbol> symbols)
+        public DataDownloadConfig(
+            TickType tickType,
+            SecurityType securityType,
+            Resolution resolution,
+            DateTime startDate,
+            DateTime endDate,
+            string market,
+            List<Symbol> symbols
+        )
         {
             TickType = tickType;
             SecurityType = securityType;
@@ -114,13 +148,13 @@ namespace QuantConnect.DownloaderDataProvider.Launcher
         /// <returns>A string representation of the <see cref="DataDownloadConfig"/> struct.</returns>
         public override string ToString()
         {
-            return $"TickType: {TickType}, " +
-                   $"SecurityType: {SecurityType}, " +
-                   $"Resolution: {Resolution}, " +
-                   $"StartDate: {StartDate:yyyyMMdd}, " +
-                   $"EndDate: {EndDate:yyyyMMdd}, " +
-                   $"MarketName: {MarketName}, " +
-                   $"Symbols: {string.Join(", ", Symbols.Select(s => s.ToString()))}";
+            return $"TickType: {TickType}, "
+                + $"SecurityType: {SecurityType}, "
+                + $"Resolution: {Resolution}, "
+                + $"StartDate: {StartDate:yyyyMMdd}, "
+                + $"EndDate: {EndDate:yyyyMMdd}, "
+                + $"MarketName: {MarketName}, "
+                + $"Symbols: {string.Join(", ", Symbols.Select(s => s.ToString()))}";
         }
 
         /// <summary>
@@ -129,11 +163,17 @@ namespace QuantConnect.DownloaderDataProvider.Launcher
         /// <typeparam name="TEnum">The enum type to parse to.</typeparam>
         /// <param name="value">The string value to parse.</param>
         /// <returns>The parsed enum value.</returns>
-        private static TEnum ParseEnum<TEnum>(string value) where TEnum : struct, Enum
+        private static TEnum ParseEnum<TEnum>(string value)
+            where TEnum : struct, Enum
         {
-            if (!Enum.TryParse(value, true, out TEnum result) || !Enum.IsDefined(typeof(TEnum), result))
+            if (
+                !Enum.TryParse(value, true, out TEnum result)
+                || !Enum.IsDefined(typeof(TEnum), result)
+            )
             {
-                throw new ArgumentException($"Invalid {typeof(TEnum).Name} specified. Please provide a valid {typeof(TEnum).Name}.");
+                throw new ArgumentException(
+                    $"Invalid {typeof(TEnum).Name} specified. Please provide a valid {typeof(TEnum).Name}."
+                );
             }
 
             return result;

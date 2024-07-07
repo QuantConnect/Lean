@@ -25,11 +25,8 @@ namespace QuantConnect.Securities.FutureOption
         /// <summary>
         /// CME's option chain quotes strike price scaling factor
         /// </summary>
-        private static readonly IReadOnlyDictionary<string, decimal> _scalingFactors = new Dictionary<string, decimal>
-        {
-            { "SI", 0.1m },
-            { "NG", 5m }
-        };
+        private static readonly IReadOnlyDictionary<string, decimal> _scalingFactors =
+            new Dictionary<string, decimal> { { "SI", 0.1m }, { "NG", 5m } };
 
         /// <summary>
         /// Gets the option chain strike price scaling factor for the quote response from CME

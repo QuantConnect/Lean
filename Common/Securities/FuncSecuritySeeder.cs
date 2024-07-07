@@ -15,10 +15,10 @@
 */
 
 using System;
+using System.Collections.Generic;
 using Python.Runtime;
 using QuantConnect.Data;
 using QuantConnect.Logging;
-using System.Collections.Generic;
 
 namespace QuantConnect.Securities
 {
@@ -28,7 +28,6 @@ namespace QuantConnect.Securities
     public class FuncSecuritySeeder : ISecuritySeeder
     {
         private readonly Func<Security, IEnumerable<BaseData>> _seedFunction;
-
 
         /// <summary>
         /// Constructor that takes as a parameter the security used to seed the price
@@ -55,9 +54,10 @@ namespace QuantConnect.Securities
         /// </summary>
         /// <param name="seedFunction">The seed function to use</param>
         public FuncSecuritySeeder(Func<Security, BaseData> seedFunction)
-         : this(security => { return new []{ seedFunction(security) }; })
-        {
-        }
+            : this(security =>
+            {
+                return new[] { seedFunction(security) };
+            }) { }
 
         /// <summary>
         /// Constructor that takes as a parameter the security used to seed the price
@@ -85,19 +85,29 @@ namespace QuantConnect.Securities
                     {
                         gotData = true;
                         security.SetMarketPrice(seedData);
-                        Log.Debug("FuncSecuritySeeder.SeedSecurity(): " + Messages.FuncSecuritySeeder.SeededSecurityInfo(seedData));
+                        Log.Debug(
+                            "FuncSecuritySeeder.SeedSecurity(): "
+                                + Messages.FuncSecuritySeeder.SeededSecurityInfo(seedData)
+                        );
                     }
 
                     if (!gotData)
                     {
-                        Log.Trace("FuncSecuritySeeder.SeedSecurity(): " + Messages.FuncSecuritySeeder.UnableToSeedSecurity(security));
+                        Log.Trace(
+                            "FuncSecuritySeeder.SeedSecurity(): "
+                                + Messages.FuncSecuritySeeder.UnableToSeedSecurity(security)
+                        );
                         return false;
                     }
                 }
             }
             catch (Exception exception)
             {
-                Log.Trace("FuncSecuritySeeder.SeedSecurity(): " + Messages.FuncSecuritySeeder.UnableToSecurityPrice(security) + $": {exception}");
+                Log.Trace(
+                    "FuncSecuritySeeder.SeedSecurity(): "
+                        + Messages.FuncSecuritySeeder.UnableToSecurityPrice(security)
+                        + $": {exception}"
+                );
                 return false;
             }
 

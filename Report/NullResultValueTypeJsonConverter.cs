@@ -57,7 +57,12 @@ namespace QuantConnect.Report
         /// Read Json for conversion
         /// </summary>
         /// <returns>Resulting object</returns>
-        public override object ReadJson(JsonReader reader, Type objectType, object existingValue, JsonSerializer serializer)
+        public override object ReadJson(
+            JsonReader reader,
+            Type objectType,
+            object existingValue,
+            JsonSerializer serializer
+        )
         {
             var token = JToken.ReadFrom(reader);
             if (token.Type == JTokenType.Null)
@@ -72,15 +77,24 @@ namespace QuantConnect.Report
                     var newValues = new List<JToken>();
                     foreach (var entry in GetProperty(seriesProperty.Value, "Values"))
                     {
-                        if (entry is JObject jobj &&
-                            (jobj["x"] == null || jobj["x"].Value<long?>() == null ||
-                             jobj["y"] == null || jobj["y"].Value<decimal?>() == null))
+                        if (
+                            entry is JObject jobj
+                            && (
+                                jobj["x"] == null
+                                || jobj["x"].Value<long?>() == null
+                                || jobj["y"] == null
+                                || jobj["y"].Value<decimal?>() == null
+                            )
+                        )
                         {
                             // null chart point
                             continue;
                         }
 
-                        if (entry is JArray jArray && jArray.Any(jToken => jToken.Type == JTokenType.Null))
+                        if (
+                            entry is JArray jArray
+                            && jArray.Any(jToken => jToken.Type == JTokenType.Null)
+                        )
                         {
                             // null candlestick
                             continue;

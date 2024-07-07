@@ -31,18 +31,60 @@ namespace QuantConnect.Tests.Engine.DataFeeds
         {
             var time = new DateTime(2016, 03, 03, 12, 48, 15);
             var source = Path.Combine("TestData", "20151224_quote_american.zip");
-            var config = new SubscriptionDataConfig(typeof (ZipEntryName), Symbol.Create("XLRE", SecurityType.Option, Market.USA), Resolution.Tick,
-                TimeZones.NewYork, TimeZones.NewYork, false, false, false);
+            var config = new SubscriptionDataConfig(
+                typeof(ZipEntryName),
+                Symbol.Create("XLRE", SecurityType.Option, Market.USA),
+                Resolution.Tick,
+                TimeZones.NewYork,
+                TimeZones.NewYork,
+                false,
+                false,
+                false
+            );
             using var cacheProvider = new ZipDataCacheProvider(TestGlobals.DataProvider);
-            var factory = new ZipEntryNameSubscriptionDataSourceReader(cacheProvider, config, time, false);
+            var factory = new ZipEntryNameSubscriptionDataSourceReader(
+                cacheProvider,
+                config,
+                time,
+                false
+            );
             var expected = new[]
             {
-                Symbol.CreateOption("XLRE", Market.USA, OptionStyle.American, OptionRight.Call, 21m, new DateTime(2016, 08, 19)),
-                Symbol.CreateOption("XLRE", Market.USA, OptionStyle.American, OptionRight.Call, 22m, new DateTime(2016, 08, 19)),
-                Symbol.CreateOption("XLRE", Market.USA, OptionStyle.American, OptionRight.Put, 37m, new DateTime(2016, 08, 19)),
+                Symbol.CreateOption(
+                    "XLRE",
+                    Market.USA,
+                    OptionStyle.American,
+                    OptionRight.Call,
+                    21m,
+                    new DateTime(2016, 08, 19)
+                ),
+                Symbol.CreateOption(
+                    "XLRE",
+                    Market.USA,
+                    OptionStyle.American,
+                    OptionRight.Call,
+                    22m,
+                    new DateTime(2016, 08, 19)
+                ),
+                Symbol.CreateOption(
+                    "XLRE",
+                    Market.USA,
+                    OptionStyle.American,
+                    OptionRight.Put,
+                    37m,
+                    new DateTime(2016, 08, 19)
+                ),
             };
 
-            var actual = factory.Read(new SubscriptionDataSource(source, SubscriptionTransportMedium.LocalFile, FileFormat.ZipEntryName)).ToList();
+            var actual = factory
+                .Read(
+                    new SubscriptionDataSource(
+                        source,
+                        SubscriptionTransportMedium.LocalFile,
+                        FileFormat.ZipEntryName
+                    )
+                )
+                .ToList();
 
             // we only really care about the symbols
             CollectionAssert.AreEqual(expected, actual.Select(x => x.Symbol));

@@ -21,7 +21,7 @@ namespace QuantConnect.Indicators
     /// This indicator creates the Schaff Trend Cycle
     /// </summary>
     public class SchaffTrendCycle : Indicator, IIndicatorWarmUpPeriodProvider
-    {   
+    {
         // MACD Variables
         private readonly MovingAverageConvergenceDivergence _MACD;
         private readonly IndicatorBase<IndicatorDataPoint> _maximum;
@@ -48,17 +48,26 @@ namespace QuantConnect.Indicators
         public int WarmUpPeriod { get; }
 
         /// <summary>
-        /// Creates the name string and calls on the indicator constructor with given parameters 
+        /// Creates the name string and calls on the indicator constructor with given parameters
         /// https://www.tradingpedia.com/forex-trading-indicators/schaff-trend-cycle
         /// </summary>
         /// <param name="fastPeriod">The fast moving average period</param>
         /// <param name="slowPeriod">The slow moving average period</param>
         /// <param name="cyclePeriod">The signal period</param>
         /// <param name="type">The type of moving averages to use</param>
-        public SchaffTrendCycle(int cyclePeriod = 10, int fastPeriod = 23, int slowPeriod = 50, MovingAverageType type = MovingAverageType.Exponential)
-            : this($"SchaffTrendCycle({cyclePeriod},{fastPeriod},{slowPeriod})", cyclePeriod, fastPeriod, slowPeriod, type)
-        {
-        }
+        public SchaffTrendCycle(
+            int cyclePeriod = 10,
+            int fastPeriod = 23,
+            int slowPeriod = 50,
+            MovingAverageType type = MovingAverageType.Exponential
+        )
+            : this(
+                $"SchaffTrendCycle({cyclePeriod},{fastPeriod},{slowPeriod})",
+                cyclePeriod,
+                fastPeriod,
+                slowPeriod,
+                type
+            ) { }
 
         /// <summary>
         /// Creates a new schaff trend cycle with the specified parameters
@@ -68,11 +77,22 @@ namespace QuantConnect.Indicators
         /// <param name="slowPeriod">The slow moving average period</param>
         /// <param name="cyclePeriod">The signal period</param>
         /// <param name="type">The type of moving averages to use</param>
-        public SchaffTrendCycle(string name, int cyclePeriod, int fastPeriod, int slowPeriod, MovingAverageType type)
+        public SchaffTrendCycle(
+            string name,
+            int cyclePeriod,
+            int fastPeriod,
+            int slowPeriod,
+            MovingAverageType type
+        )
             : base(name)
         {
             //Create MACD indicator and track max and min.
-            _MACD = new MovingAverageConvergenceDivergence(fastPeriod, slowPeriod, cyclePeriod, type);
+            _MACD = new MovingAverageConvergenceDivergence(
+                fastPeriod,
+                slowPeriod,
+                cyclePeriod,
+                type
+            );
             _maximum = _MACD.MAX(cyclePeriod, false);
             _minimum = _MACD.MIN(cyclePeriod, false);
 
@@ -100,11 +120,17 @@ namespace QuantConnect.Indicators
             _MACD.Update(input);
 
             // Update our Stochastics K, automatically updates our Stochastics D variable which is a smoothed version of K
-            var MACD_K = new IndicatorDataPoint(input.Time, ComputeStoch(_MACD.Current.Value, _maximum.Current.Value, _minimum.Current.Value));
+            var MACD_K = new IndicatorDataPoint(
+                input.Time,
+                ComputeStoch(_MACD.Current.Value, _maximum.Current.Value, _minimum.Current.Value)
+            );
             _K.Update(MACD_K);
 
-            // With our Stochastic D values calculate PF 
-            var PF = new IndicatorDataPoint(input.Time, ComputeStoch(_D.Current.Value, _maximumD.Current.Value, _minimumD.Current.Value));
+            // With our Stochastic D values calculate PF
+            var PF = new IndicatorDataPoint(
+                input.Time,
+                ComputeStoch(_D.Current.Value, _maximumD.Current.Value, _minimumD.Current.Value)
+            );
             _PF.Update(PF);
 
             return _PFF.Current.Value;

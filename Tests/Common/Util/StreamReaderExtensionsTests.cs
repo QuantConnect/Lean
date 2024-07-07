@@ -102,7 +102,6 @@ namespace QuantConnect.Tests.Common.Util
             Assert.IsFalse(pastLineEnd);
             Assert.AreEqual(12.2111111111, smartStream.GetDecimal(out pastLineEnd));
             Assert.IsFalse(pastLineEnd);
-
         }
 
         [Test]
@@ -173,8 +172,10 @@ namespace QuantConnect.Tests.Common.Util
             var stream = "20190102 02:13".ToStream();
             using var smartStream = new StreamReader(stream);
 
-            Assert.AreEqual(new DateTime(2019, 1, 2, 2, 13, 0),
-                smartStream.GetDateTime(DateFormat.TwelveCharacter));
+            Assert.AreEqual(
+                new DateTime(2019, 1, 2, 2, 13, 0),
+                smartStream.GetDateTime(DateFormat.TwelveCharacter)
+            );
         }
 
         [Test]
@@ -183,10 +184,14 @@ namespace QuantConnect.Tests.Common.Util
             var stream = "20190102 02:13,20190203 05:13".ToStream();
             using var smartStream = new StreamReader(stream);
 
-            Assert.AreEqual(new DateTime(2019, 1, 2, 2, 13, 0),
-                smartStream.GetDateTime(DateFormat.TwelveCharacter));
-            Assert.AreEqual(new DateTime(2019, 2, 3, 5, 13, 0),
-                smartStream.GetDateTime(DateFormat.TwelveCharacter));
+            Assert.AreEqual(
+                new DateTime(2019, 1, 2, 2, 13, 0),
+                smartStream.GetDateTime(DateFormat.TwelveCharacter)
+            );
+            Assert.AreEqual(
+                new DateTime(2019, 2, 3, 5, 13, 0),
+                smartStream.GetDateTime(DateFormat.TwelveCharacter)
+            );
         }
 
         [Test]
@@ -195,10 +200,14 @@ namespace QuantConnect.Tests.Common.Util
             var stream = "20190102 02:13\r20190203 05:13".ToStream();
             using var smartStream = new StreamReader(stream);
 
-            Assert.AreEqual(new DateTime(2019, 1, 2, 2, 13, 0),
-                smartStream.GetDateTime(DateFormat.TwelveCharacter));
-            Assert.AreEqual(new DateTime(2019, 2, 3, 5, 13, 0),
-                smartStream.GetDateTime(DateFormat.TwelveCharacter));
+            Assert.AreEqual(
+                new DateTime(2019, 1, 2, 2, 13, 0),
+                smartStream.GetDateTime(DateFormat.TwelveCharacter)
+            );
+            Assert.AreEqual(
+                new DateTime(2019, 2, 3, 5, 13, 0),
+                smartStream.GetDateTime(DateFormat.TwelveCharacter)
+            );
         }
 
         [Test]
@@ -207,10 +216,14 @@ namespace QuantConnect.Tests.Common.Util
             var stream = "20190102 02:13\n20190203 05:13".ToStream();
             using var smartStream = new StreamReader(stream);
 
-            Assert.AreEqual(new DateTime(2019, 1, 2, 2, 13, 0),
-                smartStream.GetDateTime(DateFormat.TwelveCharacter));
-            Assert.AreEqual(new DateTime(2019, 2, 3, 5, 13, 0),
-                smartStream.GetDateTime(DateFormat.TwelveCharacter));
+            Assert.AreEqual(
+                new DateTime(2019, 1, 2, 2, 13, 0),
+                smartStream.GetDateTime(DateFormat.TwelveCharacter)
+            );
+            Assert.AreEqual(
+                new DateTime(2019, 2, 3, 5, 13, 0),
+                smartStream.GetDateTime(DateFormat.TwelveCharacter)
+            );
         }
 
         [Test]
@@ -219,25 +232,34 @@ namespace QuantConnect.Tests.Common.Util
             var stream = "20190102 02:13\r\n20190203 05:13".ToStream();
             using var smartStream = new StreamReader(stream);
 
-            Assert.AreEqual(new DateTime(2019, 1, 2, 2, 13, 0),
-                smartStream.GetDateTime(DateFormat.TwelveCharacter));
-            Assert.AreEqual(new DateTime(2019, 2, 3, 5, 13, 0),
-                smartStream.GetDateTime(DateFormat.TwelveCharacter));
+            Assert.AreEqual(
+                new DateTime(2019, 1, 2, 2, 13, 0),
+                smartStream.GetDateTime(DateFormat.TwelveCharacter)
+            );
+            Assert.AreEqual(
+                new DateTime(2019, 2, 3, 5, 13, 0),
+                smartStream.GetDateTime(DateFormat.TwelveCharacter)
+            );
         }
 
         [Test]
         public void GetDecimalsAndDateTimes()
         {
-            var stream = $"20190102 02:13,0,19{Environment.NewLine}20190203 05:13,15,1000{Environment.NewLine}".ToStream();
+            var stream =
+                $"20190102 02:13,0,19{Environment.NewLine}20190203 05:13,15,1000{Environment.NewLine}".ToStream();
             using var smartStream = new StreamReader(stream);
 
-            Assert.AreEqual(new DateTime(2019, 1, 2, 2, 13, 0),
-                smartStream.GetDateTime(DateFormat.TwelveCharacter));
+            Assert.AreEqual(
+                new DateTime(2019, 1, 2, 2, 13, 0),
+                smartStream.GetDateTime(DateFormat.TwelveCharacter)
+            );
             Assert.AreEqual(0, smartStream.GetDecimal());
             Assert.AreEqual(19, smartStream.GetDecimal());
 
-            Assert.AreEqual(new DateTime(2019, 2, 3, 5, 13, 0),
-                smartStream.GetDateTime(DateFormat.TwelveCharacter));
+            Assert.AreEqual(
+                new DateTime(2019, 2, 3, 5, 13, 0),
+                smartStream.GetDateTime(DateFormat.TwelveCharacter)
+            );
             Assert.AreEqual(15, smartStream.GetDecimal());
             Assert.AreEqual(1000, smartStream.GetDecimal());
         }
@@ -257,7 +279,8 @@ namespace QuantConnect.Tests.Common.Util
         [Test]
         public void GetNegativeInt()
         {
-            var stream = $"-20190,0,-19{Environment.NewLine}-201900{Environment.NewLine}".ToStream();
+            var stream =
+                $"-20190,0,-19{Environment.NewLine}-201900{Environment.NewLine}".ToStream();
             using var smartStream = new StreamReader(stream);
 
             Assert.AreEqual(-20190, smartStream.GetInt32());
@@ -331,7 +354,8 @@ namespace QuantConnect.Tests.Common.Util
                     config,
                     date,
                     false,
-                    null);
+                    null
+                );
                 var source = streamReaderType.GetBaseDataInstance().GetSource(config, date, false);
                 // warmup
                 streamReaderCount = reader.Read(source).Count();
@@ -367,8 +391,11 @@ namespace QuantConnect.Tests.Common.Util
                     config,
                     date,
                     false,
-                    null);
-                var source = readLineReaderType.GetBaseDataInstance().GetSource(config, date, false);
+                    null
+                );
+                var source = readLineReaderType
+                    .GetBaseDataInstance()
+                    .GetSource(config, date, false);
                 // warmup
                 getLineReaderCount = reader.Read(source).Count();
                 getLineReaderCount = 0;
@@ -394,16 +421,12 @@ namespace QuantConnect.Tests.Common.Util
         /// Since this class does not implement <see cref="BaseData.Reader(SubscriptionDataConfig,StreamReader,DateTime,bool)"/>
         /// directly it will fallback to get line reader
         /// </summary>
-        private class TradeBarTest : TradeBar
-        {
-        }
+        private class TradeBarTest : TradeBar { }
 
         /// <summary>
         /// Since this class does not implement <see cref="BaseData.Reader(SubscriptionDataConfig,StreamReader,DateTime,bool)"/>
         /// directly it will fallback to get line reader
         /// </summary>
-        private class QuoteBarTest : QuoteBar
-        {
-        }
+        private class QuoteBarTest : QuoteBar { }
     }
 }

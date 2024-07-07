@@ -15,11 +15,11 @@
 */
 
 using System;
-using Newtonsoft.Json;
-using QuantConnect.Orders;
-using QuantConnect.Logging;
-using QuantConnect.Statistics;
 using System.Collections.Generic;
+using Newtonsoft.Json;
+using QuantConnect.Logging;
+using QuantConnect.Orders;
+using QuantConnect.Statistics;
 
 namespace QuantConnect.Packets
 {
@@ -91,7 +91,7 @@ namespace QuantConnect.Packets
         /// <summary>
         /// Result data object for this backtest
         /// </summary>
-        public BacktestResult Results { get; set; } = new ();
+        public BacktestResult Results { get; set; } = new();
 
         /// <summary>
         /// Processing time of the algorithm (from moment the algorithm arrived on the algorithm node)
@@ -116,38 +116,37 @@ namespace QuantConnect.Packets
         /// Compose the packet from a JSON string:
         /// </summary>
         public BacktestResultPacket(string json)
-            : base (PacketType.BacktestResult)
+            : base(PacketType.BacktestResult)
         {
             try
             {
-                var packet = JsonConvert.DeserializeObject<BacktestResultPacket>(json, new JsonSerializerSettings
-                {
-                    TypeNameHandling = TypeNameHandling.Auto
-                });
-                CompileId           = packet.CompileId;
-                Channel             = packet.Channel;
-                PeriodFinish        = packet.PeriodFinish;
-                PeriodStart         = packet.PeriodStart;
-                Progress            = packet.Progress;
-                SessionId           = packet.SessionId;
-                BacktestId          = packet.BacktestId;
-                Type                = packet.Type;
-                UserId              = packet.UserId;
-                DateFinished        = packet.DateFinished;
-                DateRequested       = packet.DateRequested;
-                Name                = packet.Name;
-                ProjectId           = packet.ProjectId;
-                Results             = packet.Results;
-                ProcessingTime      = packet.ProcessingTime;
-                TradeableDates      = packet.TradeableDates;
-                OptimizationId      = packet.OptimizationId;
+                var packet = JsonConvert.DeserializeObject<BacktestResultPacket>(
+                    json,
+                    new JsonSerializerSettings { TypeNameHandling = TypeNameHandling.Auto }
+                );
+                CompileId = packet.CompileId;
+                Channel = packet.Channel;
+                PeriodFinish = packet.PeriodFinish;
+                PeriodStart = packet.PeriodStart;
+                Progress = packet.Progress;
+                SessionId = packet.SessionId;
+                BacktestId = packet.BacktestId;
+                Type = packet.Type;
+                UserId = packet.UserId;
+                DateFinished = packet.DateFinished;
+                DateRequested = packet.DateRequested;
+                Name = packet.Name;
+                ProjectId = packet.ProjectId;
+                Results = packet.Results;
+                ProcessingTime = packet.ProcessingTime;
+                TradeableDates = packet.TradeableDates;
+                OptimizationId = packet.OptimizationId;
             }
             catch (Exception err)
             {
                 Log.Trace($"BacktestResultPacket(): Error converting json: {err}");
             }
         }
-
 
         /// <summary>
         /// Compose result data packet - with tradable dates from the backtest job task and the partial result packet.
@@ -157,7 +156,13 @@ namespace QuantConnect.Packets
         /// <param name="endDate">The algorithms backtest end date</param>
         /// <param name="startDate">The algorithms backtest start date</param>
         /// <param name="progress">Progress of the packet. For the packet we assume progess of 100%.</param>
-        public BacktestResultPacket(BacktestNodePacket job, BacktestResult results, DateTime endDate, DateTime startDate, decimal progress = 1m)
+        public BacktestResultPacket(
+            BacktestNodePacket job,
+            BacktestResult results,
+            DateTime endDate,
+            DateTime startDate,
+            decimal progress = 1m
+        )
             : this()
         {
             try
@@ -177,7 +182,8 @@ namespace QuantConnect.Packets
                 SessionId = job.SessionId;
                 TradeableDates = job.TradeableDates;
             }
-            catch (Exception err) {
+            catch (Exception err)
+            {
                 Log.Error(err);
             }
         }
@@ -189,14 +195,27 @@ namespace QuantConnect.Packets
         /// <returns>An empty result packet</returns>
         public static BacktestResultPacket CreateEmpty(BacktestNodePacket job)
         {
-            return new BacktestResultPacket(job, new BacktestResult(new BacktestResultParameters(
-                new Dictionary<string, Chart>(), new Dictionary<int, Order>(), new Dictionary<DateTime, decimal>(),
-                new Dictionary<string, string>(), new SortedDictionary<string, string>(), new Dictionary<string, AlgorithmPerformance>(),
-                new List<OrderEvent>(), new AlgorithmPerformance(), new AlgorithmConfiguration(), new Dictionary<string, string>()
-            )), DateTime.UtcNow, DateTime.UtcNow);
+            return new BacktestResultPacket(
+                job,
+                new BacktestResult(
+                    new BacktestResultParameters(
+                        new Dictionary<string, Chart>(),
+                        new Dictionary<int, Order>(),
+                        new Dictionary<DateTime, decimal>(),
+                        new Dictionary<string, string>(),
+                        new SortedDictionary<string, string>(),
+                        new Dictionary<string, AlgorithmPerformance>(),
+                        new List<OrderEvent>(),
+                        new AlgorithmPerformance(),
+                        new AlgorithmConfiguration(),
+                        new Dictionary<string, string>()
+                    )
+                ),
+                DateTime.UtcNow,
+                DateTime.UtcNow
+            );
         }
     } // End Queue Packet:
-
 
     /// <summary>
     /// Backtest results object class - result specific items from the packet.
@@ -206,7 +225,8 @@ namespace QuantConnect.Packets
         /// <summary>
         /// Rolling window detailed statistics.
         /// </summary>
-        public Dictionary<string, AlgorithmPerformance> RollingWindow { get; set; } = new Dictionary<string, AlgorithmPerformance>();
+        public Dictionary<string, AlgorithmPerformance> RollingWindow { get; set; } =
+            new Dictionary<string, AlgorithmPerformance>();
 
         /// <summary>
         /// Rolling window detailed statistics.
@@ -216,14 +236,13 @@ namespace QuantConnect.Packets
         /// <summary>
         /// Default Constructor
         /// </summary>
-        public BacktestResult()
-        {
-        }
+        public BacktestResult() { }
 
         /// <summary>
         /// Constructor for the result class using dictionary objects.
         /// </summary>
-        public BacktestResult(BacktestResultParameters parameters) : base(parameters)
+        public BacktestResult(BacktestResultParameters parameters)
+            : base(parameters)
         {
             RollingWindow = parameters.RollingWindow;
             TotalPerformance = parameters.TotalPerformance;

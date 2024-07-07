@@ -53,9 +53,7 @@ namespace QuantConnect.Data.Market
         /// <summary>
         /// Default initializer to setup an empty bar.
         /// </summary>
-        public Bar()
-        {
-        }
+        public Bar() { }
 
         /// <summary>
         /// Initializer to setup a bar with a given information.
@@ -91,15 +89,18 @@ namespace QuantConnect.Data.Market
         public void Update(ref decimal value)
         {
             // Do not accept zero as a new value
-            if (value == 0) return;
+            if (value == 0)
+                return;
 
             if (!_openSet)
             {
                 Open = High = Low = Close = value;
                 _openSet = true;
             }
-            else if (value > High) High = value;
-            else if (value < Low) Low = value;
+            else if (value > High)
+                High = value;
+            else if (value < Low)
+                Low = value;
             Close = value;
         }
 
@@ -116,10 +117,10 @@ namespace QuantConnect.Data.Market
         /// <filterpriority>2</filterpriority>
         public override string ToString()
         {
-            return $"O: {Open.SmartRounding()} " +
-                   $"H: {High.SmartRounding()} " +
-                   $"L: {Low.SmartRounding()} " +
-                   $"C: {Close.SmartRounding()}";
+            return $"O: {Open.SmartRounding()} "
+                + $"H: {High.SmartRounding()} "
+                + $"L: {Low.SmartRounding()} "
+                + $"C: {Close.SmartRounding()}";
         }
     }
 }

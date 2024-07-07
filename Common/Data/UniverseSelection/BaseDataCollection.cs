@@ -15,9 +15,9 @@
 */
 
 using System;
-using System.Linq;
 using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace QuantConnect.Data.UniverseSelection
 {
@@ -57,19 +57,14 @@ namespace QuantConnect.Data.UniverseSelection
                 }
                 return _endTime;
             }
-            set
-            {
-                _endTime = value;
-            }
+            set { _endTime = value; }
         }
 
         /// <summary>
         /// Initializes a new default instance of the <see cref="BaseDataCollection"/> c;ass
         /// </summary>
         public BaseDataCollection()
-            : this(DateTime.MinValue, Symbol.Empty)
-        {
-        }
+            : this(DateTime.MinValue, Symbol.Empty) { }
 
         /// <summary>
         /// Initializes a new instance of the <see cref="BaseDataCollection"/> class
@@ -78,9 +73,7 @@ namespace QuantConnect.Data.UniverseSelection
         /// <param name="symbol">A common identifier for all data in this packet</param>
         /// <param name="data">The data to add to this collection</param>
         public BaseDataCollection(DateTime time, Symbol symbol, IEnumerable<BaseData> data = null)
-            : this(time, time, symbol, data)
-        {
-        }
+            : this(time, time, symbol, data) { }
 
         /// <summary>
         /// Initializes a new instance of the <see cref="BaseDataCollection"/> class
@@ -91,10 +84,22 @@ namespace QuantConnect.Data.UniverseSelection
         /// <param name="data">The data to add to this collection</param>
         /// <param name="underlying">The associated underlying price data if any</param>
         /// <param name="filteredContracts">The contracts selected by the universe</param>
-        public BaseDataCollection(DateTime time, DateTime endTime, Symbol symbol, IEnumerable<BaseData> data = null, BaseData underlying = null, HashSet<Symbol> filteredContracts = null)
-            : this(time, endTime, symbol, data != null ? data.ToList() : new List<BaseData>(), underlying, filteredContracts)
-        {
-        }
+        public BaseDataCollection(
+            DateTime time,
+            DateTime endTime,
+            Symbol symbol,
+            IEnumerable<BaseData> data = null,
+            BaseData underlying = null,
+            HashSet<Symbol> filteredContracts = null
+        )
+            : this(
+                time,
+                endTime,
+                symbol,
+                data != null ? data.ToList() : new List<BaseData>(),
+                underlying,
+                filteredContracts
+            ) { }
 
         /// <summary>
         /// Initializes a new instance of the <see cref="BaseDataCollection"/> class
@@ -105,14 +110,26 @@ namespace QuantConnect.Data.UniverseSelection
         /// <param name="data">The data to add to this collection</param>
         /// <param name="underlying">The associated underlying price data if any</param>
         /// <param name="filteredContracts">The contracts selected by the universe</param>
-        public BaseDataCollection(DateTime time, DateTime endTime, Symbol symbol, List<BaseData> data, BaseData underlying, HashSet<Symbol> filteredContracts)
+        public BaseDataCollection(
+            DateTime time,
+            DateTime endTime,
+            Symbol symbol,
+            List<BaseData> data,
+            BaseData underlying,
+            HashSet<Symbol> filteredContracts
+        )
         {
             Symbol = symbol;
             Time = time;
             _endTime = endTime;
             Underlying = underlying;
             FilteredContracts = filteredContracts;
-            if (data != null && data.Count == 1 && data[0] is BaseDataCollection collection && collection.Data.Count > 0)
+            if (
+                data != null
+                && data.Count == 1
+                && data[0] is BaseDataCollection collection
+                && collection.Data.Count > 0
+            )
             {
                 // we were given a base data collection, let's be nice and fetch it's data if it has any
                 Data = collection.Data;
@@ -175,7 +192,14 @@ namespace QuantConnect.Data.UniverseSelection
         /// <returns>A clone of the current object</returns>
         public override BaseData Clone()
         {
-            return new BaseDataCollection(Time, EndTime, Symbol, Data, Underlying, FilteredContracts);
+            return new BaseDataCollection(
+                Time,
+                EndTime,
+                Symbol,
+                Data,
+                Underlying,
+                FilteredContracts
+            );
         }
 
         /// <summary>

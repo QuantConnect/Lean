@@ -34,7 +34,8 @@ namespace QuantConnect.Data.Consolidators
         {
             if (!(data is TInput))
             {
-                throw new ArgumentNullException(nameof(data),
+                throw new ArgumentNullException(
+                    nameof(data),
                     $"Received type of {data.GetType().Name} but expected {typeof(TInput).Name}"
                 );
             }
@@ -56,34 +57,25 @@ namespace QuantConnect.Data.Consolidators
         /// Gets the most recently consolidated piece of data. This will be null if this consolidator
         /// has not produced any data yet.
         /// </summary>
-        public IBaseData Consolidated
-        {
-            get; private set;
-        }
+        public IBaseData Consolidated { get; private set; }
 
         /// <summary>
         /// Gets a clone of the data being currently consolidated
         /// </summary>
-        public abstract IBaseData WorkingData
-        {
-            get;
-        }
+        public abstract IBaseData WorkingData { get; }
 
         /// <summary>
         /// Gets the type consumed by this consolidator
         /// </summary>
         public Type InputType
         {
-            get { return typeof (TInput); }
+            get { return typeof(TInput); }
         }
 
         /// <summary>
         /// Gets the type produced by this consolidator
         /// </summary>
-        public abstract Type OutputType
-        {
-            get;
-        }
+        public abstract Type OutputType { get; }
 
         /// <summary>
         /// Updates this consolidator with the specified data. This method is
@@ -100,7 +92,8 @@ namespace QuantConnect.Data.Consolidators
         protected virtual void OnDataConsolidated(IBaseData consolidated)
         {
             var handler = DataConsolidated;
-            if (handler != null) handler(this, consolidated);
+            if (handler != null)
+                handler(this, consolidated);
 
             // assign the Consolidated property after the event handlers are fired,
             // this allows the event handlers to look at the new consolidated data

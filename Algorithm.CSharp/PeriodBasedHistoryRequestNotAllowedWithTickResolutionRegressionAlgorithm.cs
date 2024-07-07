@@ -16,15 +16,17 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using QuantConnect.Interfaces;
 using QuantConnect.Data.Market;
+using QuantConnect.Interfaces;
 
 namespace QuantConnect.Algorithm.CSharp
 {
     /// <summary>
     /// Regression algorithm for testing that period-based history requests are not allowed with tick resolution
     /// </summary>
-    public class PeriodBasedHistoryRequestNotAllowedWithTickResolutionRegressionAlgorithm : QCAlgorithm, IRegressionAlgorithmDefinition
+    public class PeriodBasedHistoryRequestNotAllowedWithTickResolutionRegressionAlgorithm
+        : QCAlgorithm,
+            IRegressionAlgorithmDefinition
     {
         public override void Initialize()
         {
@@ -34,34 +36,51 @@ namespace QuantConnect.Algorithm.CSharp
             var spy = AddEquity("SPY", Resolution.Tick).Symbol;
 
             // Tick resolution is not allowed for period-based history requests
-            AssertThatHistoryThrowsForTickResolution(() => History<Tick>(spy, 1),
-                "Tick history call with implicit tick resolution");
-            AssertThatHistoryThrowsForTickResolution(() => History<Tick>(spy, 1, Resolution.Tick),
-                "Tick history call with explicit tick resolution");
-            AssertThatHistoryThrowsForTickResolution(() => History<Tick>(new [] { spy }, 1),
-                "Tick history call with symbol array with implicit tick resolution");
-            AssertThatHistoryThrowsForTickResolution(() => History<Tick>(new [] { spy }, 1, Resolution.Tick),
-                "Tick history call with symbol array with explicit tick resolution");
+            AssertThatHistoryThrowsForTickResolution(
+                () => History<Tick>(spy, 1),
+                "Tick history call with implicit tick resolution"
+            );
+            AssertThatHistoryThrowsForTickResolution(
+                () => History<Tick>(spy, 1, Resolution.Tick),
+                "Tick history call with explicit tick resolution"
+            );
+            AssertThatHistoryThrowsForTickResolution(
+                () => History<Tick>(new[] { spy }, 1),
+                "Tick history call with symbol array with implicit tick resolution"
+            );
+            AssertThatHistoryThrowsForTickResolution(
+                () => History<Tick>(new[] { spy }, 1, Resolution.Tick),
+                "Tick history call with symbol array with explicit tick resolution"
+            );
 
             var history = History<Tick>(spy, TimeSpan.FromHours(12));
             if (history.Count() == 0)
             {
-                throw new RegressionTestException("On history call with implicit tick resolution: history returned no results");
+                throw new RegressionTestException(
+                    "On history call with implicit tick resolution: history returned no results"
+                );
             }
 
             history = History<Tick>(spy, TimeSpan.FromHours(12), Resolution.Tick);
             if (history.Count() == 0)
             {
-                throw new RegressionTestException("On history call with explicit tick resolution: history returned no results");
+                throw new RegressionTestException(
+                    "On history call with explicit tick resolution: history returned no results"
+                );
             }
         }
 
-        private void AssertThatHistoryThrowsForTickResolution(Action historyCall, string historyCallDescription)
+        private void AssertThatHistoryThrowsForTickResolution(
+            Action historyCall,
+            string historyCallDescription
+        )
         {
             try
             {
                 historyCall();
-                throw new RegressionTestException($"{historyCallDescription}: expected an exception to be thrown");
+                throw new RegressionTestException(
+                    $"{historyCallDescription}: expected an exception to be thrown"
+                );
             }
             catch (InvalidOperationException)
             {
@@ -97,35 +116,36 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// This is used by the regression test system to indicate what the expected statistics are from running the algorithm
         /// </summary>
-        public Dictionary<string, string> ExpectedStatistics => new Dictionary<string, string>
-        {
-            {"Total Orders", "0"},
-            {"Average Win", "0%"},
-            {"Average Loss", "0%"},
-            {"Compounding Annual Return", "0%"},
-            {"Drawdown", "0%"},
-            {"Expectancy", "0"},
-            {"Start Equity", "100000"},
-            {"End Equity", "100000"},
-            {"Net Profit", "0%"},
-            {"Sharpe Ratio", "0"},
-            {"Sortino Ratio", "0"},
-            {"Probabilistic Sharpe Ratio", "0%"},
-            {"Loss Rate", "0%"},
-            {"Win Rate", "0%"},
-            {"Profit-Loss Ratio", "0"},
-            {"Alpha", "0"},
-            {"Beta", "0"},
-            {"Annual Standard Deviation", "0"},
-            {"Annual Variance", "0"},
-            {"Information Ratio", "0"},
-            {"Tracking Error", "0"},
-            {"Treynor Ratio", "0"},
-            {"Total Fees", "$0.00"},
-            {"Estimated Strategy Capacity", "$0"},
-            {"Lowest Capacity Asset", ""},
-            {"Portfolio Turnover", "0%"},
-            {"OrderListHash", "d41d8cd98f00b204e9800998ecf8427e"}
-        };
+        public Dictionary<string, string> ExpectedStatistics =>
+            new Dictionary<string, string>
+            {
+                { "Total Orders", "0" },
+                { "Average Win", "0%" },
+                { "Average Loss", "0%" },
+                { "Compounding Annual Return", "0%" },
+                { "Drawdown", "0%" },
+                { "Expectancy", "0" },
+                { "Start Equity", "100000" },
+                { "End Equity", "100000" },
+                { "Net Profit", "0%" },
+                { "Sharpe Ratio", "0" },
+                { "Sortino Ratio", "0" },
+                { "Probabilistic Sharpe Ratio", "0%" },
+                { "Loss Rate", "0%" },
+                { "Win Rate", "0%" },
+                { "Profit-Loss Ratio", "0" },
+                { "Alpha", "0" },
+                { "Beta", "0" },
+                { "Annual Standard Deviation", "0" },
+                { "Annual Variance", "0" },
+                { "Information Ratio", "0" },
+                { "Tracking Error", "0" },
+                { "Treynor Ratio", "0" },
+                { "Total Fees", "$0.00" },
+                { "Estimated Strategy Capacity", "$0" },
+                { "Lowest Capacity Asset", "" },
+                { "Portfolio Turnover", "0%" },
+                { "OrderListHash", "d41d8cd98f00b204e9800998ecf8427e" }
+            };
     }
 }

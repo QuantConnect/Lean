@@ -16,7 +16,6 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-
 using QuantConnect.Interfaces;
 using QuantConnect.Orders;
 using QuantConnect.Securities;
@@ -26,7 +25,9 @@ namespace QuantConnect.Algorithm.CSharp
     /// <summary>
     /// Base algorithm to assert that the margin call events are fired when trading options
     /// </summary>
-    public abstract class OptionsMarginCallEventsAlgorithmBase : QCAlgorithm, IRegressionAlgorithmDefinition
+    public abstract class OptionsMarginCallEventsAlgorithmBase
+        : QCAlgorithm,
+            IRegressionAlgorithmDefinition
     {
         private int _onMarginCallWarningCount;
         private int _onMarginCallCount;
@@ -57,7 +58,9 @@ namespace QuantConnect.Algorithm.CSharp
                 // the check in the OnEndOfAlgorithm method to be accurate.
                 if (orderEvent.Quantity != OriginalQuantity)
                 {
-                    throw new RegressionTestException($"Expected order quantity to be {OriginalQuantity} but was {orderEvent.Quantity}");
+                    throw new RegressionTestException(
+                        $"Expected order quantity to be {OriginalQuantity} but was {orderEvent.Quantity}"
+                    );
                 }
             }
         }
@@ -71,7 +74,9 @@ namespace QuantConnect.Algorithm.CSharp
 
             if (_onMarginCallCount != 1)
             {
-                throw new RegressionTestException($"OnMarginCall was called {_onMarginCallCount} times, expected 1");
+                throw new RegressionTestException(
+                    $"OnMarginCall was called {_onMarginCallCount} times, expected 1"
+                );
             }
 
             if (_onMarginCallWarningCount == 0)
@@ -82,7 +87,9 @@ namespace QuantConnect.Algorithm.CSharp
             var orders = Transactions.GetOrders().ToList();
             if (orders.Count != ExpectedOrdersCount)
             {
-                throw new RegressionTestException($"Expected {ExpectedOrdersCount} orders, found {orders.Count}");
+                throw new RegressionTestException(
+                    $"Expected {ExpectedOrdersCount} orders, found {orders.Count}"
+                );
             }
 
             if (orders.Any(order => !order.Status.IsFill()))
@@ -93,8 +100,10 @@ namespace QuantConnect.Algorithm.CSharp
             var finalStrategyQuantity = Portfolio.Positions.Groups.First().Quantity;
             if (Math.Abs(OriginalQuantity) <= Math.Abs(finalStrategyQuantity))
             {
-                throw new RegressionTestException($@"Strategy position group quantity should have been decreased from the original quantity {OriginalQuantity
-                    }, but was {finalStrategyQuantity}");
+                throw new RegressionTestException(
+                    $@"Strategy position group quantity should have been decreased from the original quantity {OriginalQuantity
+                    }, but was {finalStrategyQuantity}"
+                );
             }
         }
 
@@ -102,10 +111,11 @@ namespace QuantConnect.Algorithm.CSharp
         {
             // Setting margin buffer to 0 so we make sure the margin call orders are generated. Otherwise, they will only
             // be generated if the used margin is > 110%TVP, which is unlikely for this case
-            public CustomMarginCallModel(SecurityPortfolioManager portfolio, IOrderProperties defaultOrderProperties)
-                : base(portfolio, defaultOrderProperties, 0m)
-            {
-            }
+            public CustomMarginCallModel(
+                SecurityPortfolioManager portfolio,
+                IOrderProperties defaultOrderProperties
+            )
+                : base(portfolio, defaultOrderProperties, 0m) { }
         }
 
         public abstract bool CanRunLocally { get; }

@@ -74,7 +74,9 @@ namespace QuantConnect.Orders
         /// <returns>True if the order is a stop order, false otherwise</returns>
         public static bool IsStopOrder(this OrderType orderType)
         {
-            return orderType == OrderType.StopMarket || orderType == OrderType.StopLimit || orderType == OrderType.TrailingStop;
+            return orderType == OrderType.StopMarket
+                || orderType == OrderType.StopLimit
+                || orderType == OrderType.TrailingStop;
         }
     }
 }

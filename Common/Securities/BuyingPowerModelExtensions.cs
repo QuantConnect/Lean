@@ -29,7 +29,10 @@ namespace QuantConnect.Securities
         /// <param name="model">The <see cref="IBuyingPowerModel"/></param>
         /// <param name="security">The security</param>
         /// <returns>The reserved buying power in account currency</returns>
-        public static decimal GetReservedBuyingPowerForPosition(this IBuyingPowerModel model, Security security)
+        public static decimal GetReservedBuyingPowerForPosition(
+            this IBuyingPowerModel model,
+            Security security
+        )
         {
             var context = new ReservedBuyingPowerForPositionParameters(security);
             var reservedBuyingPower = model.GetReservedBuyingPowerForPosition(context);
@@ -49,9 +52,13 @@ namespace QuantConnect.Securities
             SecurityPortfolioManager portfolio,
             Security security,
             Order order
-            )
+        )
         {
-            var parameters = new HasSufficientBuyingPowerForOrderParameters(portfolio, security, order);
+            var parameters = new HasSufficientBuyingPowerForOrderParameters(
+                portfolio,
+                security,
+                order
+            );
 
             return model.HasSufficientBuyingPowerForOrder(parameters);
         }
@@ -71,9 +78,14 @@ namespace QuantConnect.Securities
             Security security,
             decimal target,
             decimal minimumOrderMarginPortfolioPercentage
-            )
+        )
         {
-            var parameters = new GetMaximumOrderQuantityForTargetBuyingPowerParameters(portfolio, security, target, minimumOrderMarginPortfolioPercentage);
+            var parameters = new GetMaximumOrderQuantityForTargetBuyingPowerParameters(
+                portfolio,
+                security,
+                target,
+                minimumOrderMarginPortfolioPercentage
+            );
 
             return model.GetMaximumOrderQuantityForTargetBuyingPower(parameters);
         }
@@ -108,7 +120,9 @@ namespace QuantConnect.Securities
         /// <returns>The maintenance margin required for the provided holdings quantity/cost/value</returns>
         public static decimal GetMaintenanceMargin(this IBuyingPowerModel model, Security security)
         {
-            return model.GetMaintenanceMargin(MaintenanceMarginParameters.ForCurrentHoldings(security));
+            return model.GetMaintenanceMargin(
+                MaintenanceMarginParameters.ForCurrentHoldings(security)
+            );
         }
 
         /// <summary>
@@ -118,9 +132,15 @@ namespace QuantConnect.Securities
         /// <param name="security">The security</param>
         /// <param name="quantity">The quantity of shares</param>
         /// <returns>The initial margin required for the provided security and quantity</returns>
-        public static decimal GetInitialMarginRequirement(this IBuyingPowerModel model, Security security, decimal quantity)
+        public static decimal GetInitialMarginRequirement(
+            this IBuyingPowerModel model,
+            Security security,
+            decimal quantity
+        )
         {
-            return model.GetInitialMarginRequirement(new InitialMarginParameters(security, quantity));
+            return model.GetInitialMarginRequirement(
+                new InitialMarginParameters(security, quantity)
+            );
         }
 
         /// <summary>
@@ -133,17 +153,29 @@ namespace QuantConnect.Securities
         /// <param name="minimumOrderMarginPortfolioPercentage">Minimum order margin portfolio percentage to ignore bad orders, orders with unrealistic small sizes</param>
         /// <remarks>If we are trading with negative margin remaining this method will return true always</remarks>
         /// <returns>True if this order quantity is above the minimum requested</returns>
-        public static bool AboveMinimumOrderMarginPortfolioPercentage(this IBuyingPowerModel model, Security security,
-            decimal quantity, SecurityPortfolioManager portfolioManager, decimal minimumOrderMarginPortfolioPercentage)
+        public static bool AboveMinimumOrderMarginPortfolioPercentage(
+            this IBuyingPowerModel model,
+            Security security,
+            decimal quantity,
+            SecurityPortfolioManager portfolioManager,
+            decimal minimumOrderMarginPortfolioPercentage
+        )
         {
             if (minimumOrderMarginPortfolioPercentage == 0)
             {
                 return true;
             }
-            var absFinalOrderMargin = Math.Abs(model.GetInitialMarginRequirement(new InitialMarginParameters(
-                security, quantity)).Value);
+            var absFinalOrderMargin = Math.Abs(
+                model
+                    .GetInitialMarginRequirement(new InitialMarginParameters(security, quantity))
+                    .Value
+            );
 
-            return AboveMinimumOrderMarginPortfolioPercentage(portfolioManager, minimumOrderMarginPortfolioPercentage, absFinalOrderMargin);
+            return AboveMinimumOrderMarginPortfolioPercentage(
+                portfolioManager,
+                minimumOrderMarginPortfolioPercentage,
+                absFinalOrderMargin
+            );
         }
 
         /// <summary>
@@ -154,15 +186,20 @@ namespace QuantConnect.Securities
         /// <param name="absFinalOrderMargin">The calculated order margin value</param>
         /// <remarks>If we are trading with negative margin remaining this method will return true always</remarks>
         /// <returns>True if this order quantity is above the minimum requested</returns>
-        public static bool AboveMinimumOrderMarginPortfolioPercentage(SecurityPortfolioManager portfolioManager,
+        public static bool AboveMinimumOrderMarginPortfolioPercentage(
+            SecurityPortfolioManager portfolioManager,
             decimal minimumOrderMarginPortfolioPercentage,
-            decimal absFinalOrderMargin)
+            decimal absFinalOrderMargin
+        )
         {
-            var minimumValue = portfolioManager.TotalPortfolioValue * minimumOrderMarginPortfolioPercentage;
+            var minimumValue =
+                portfolioManager.TotalPortfolioValue * minimumOrderMarginPortfolioPercentage;
 
-            if (minimumValue > absFinalOrderMargin
+            if (
+                minimumValue > absFinalOrderMargin
                 // if margin remaining is negative allow the order to pass so we can reduce the position
-                && portfolioManager.GetMarginRemaining(portfolioManager.TotalPortfolioValue) > 0)
+                && portfolioManager.GetMarginRemaining(portfolioManager.TotalPortfolioValue) > 0
+            )
             {
                 return false;
             }

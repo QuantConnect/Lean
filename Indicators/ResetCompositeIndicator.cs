@@ -35,10 +35,19 @@ namespace QuantConnect.Indicators
         /// <param name="right">The right indicator for the 'composer'</param>
         /// <param name="composer">Function used to compose the left and right indicators</param>
         /// <param name="extraResetAction">Action to execute once the composite indicator is reset</param>
-        public ResetCompositeIndicator(IndicatorBase left, IndicatorBase right, IndicatorComposer composer, Action extraResetAction)
-            : this($"RESET_COMPOSE({left.Name},{right.Name})", left, right, composer, extraResetAction)
-        {
-        }
+        public ResetCompositeIndicator(
+            IndicatorBase left,
+            IndicatorBase right,
+            IndicatorComposer composer,
+            Action extraResetAction
+        )
+            : this(
+                $"RESET_COMPOSE({left.Name},{right.Name})",
+                left,
+                right,
+                composer,
+                extraResetAction
+            ) { }
 
         /// <summary>
         /// Creates a new CompositeIndicator capable of taking the output from the left and right indicators
@@ -49,7 +58,13 @@ namespace QuantConnect.Indicators
         /// <param name="right">The right indicator for the 'composer'</param>
         /// <param name="composer">Function used to compose the left and right indicators</param>
         /// <param name="extraResetAction">Action to execute once the indicator is reset</param>
-        public ResetCompositeIndicator(string name, IndicatorBase left, IndicatorBase right, IndicatorComposer composer, Action extraResetAction)
+        public ResetCompositeIndicator(
+            string name,
+            IndicatorBase left,
+            IndicatorBase right,
+            IndicatorComposer composer,
+            Action extraResetAction
+        )
             : base(name, left, right, composer)
         {
             _extraResetAction = extraResetAction;

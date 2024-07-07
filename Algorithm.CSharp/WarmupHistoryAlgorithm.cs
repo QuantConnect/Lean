@@ -29,16 +29,17 @@ namespace QuantConnect.Algorithm.CSharp
     /// <meta name="tag" content="using data" />
     public class WarmupHistoryAlgorithm : QCAlgorithm
     {
-        private ExponentialMovingAverage fast, slow;
+        private ExponentialMovingAverage fast,
+            slow;
 
         /// <summary>
         /// Initialise the data and resolution required, as well as the cash and start-end dates for your algorithm. All algorithms must initialized.
         /// </summary>
         public override void Initialize()
         {
-            SetStartDate(2013, 10, 07);  //Set Start Date
-            SetEndDate(2013, 10, 11);    //Set End Date
-            SetCash(100000);             //Set Strategy Cash
+            SetStartDate(2013, 10, 07); //Set Start Date
+            SetEndDate(2013, 10, 11); //Set End Date
+            SetCash(100000); //Set Strategy Cash
             // Find more symbols here: http://quantconnect.com/data
             AddSecurity(SecurityType.Forex, "EURUSD", Resolution.Second);
 
@@ -53,8 +54,12 @@ namespace QuantConnect.Algorithm.CSharp
                 slow.Update(bar.EndTime, bar.Close);
             }
 
-            Log($"FAST IS {(fast.IsReady ? "" : "NOT")} READY. Samples: {fast.Samples.ToStringInvariant()}");
-            Log($"SLOW IS {(slow.IsReady ? "" : "NOT")} READY. Samples: {slow.Samples.ToStringInvariant()}");
+            Log(
+                $"FAST IS {(fast.IsReady ? "" : "NOT")} READY. Samples: {fast.Samples.ToStringInvariant()}"
+            );
+            Log(
+                $"SLOW IS {(slow.IsReady ? "" : "NOT")} READY. Samples: {slow.Samples.ToStringInvariant()}"
+            );
         }
 
         /// <summary>

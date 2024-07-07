@@ -16,7 +16,6 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-
 using QuantConnect.Data;
 using QuantConnect.Data.Market;
 using QuantConnect.Interfaces;
@@ -48,9 +47,9 @@ namespace QuantConnect.Algorithm.CSharp
 
             var equitySymbol = AddEquity("GOOG", leverage: 4, fillForward: true).Symbol;
             _option = AddOption(equitySymbol, fillForward: true);
-            _option.SetFilter(optionFilterUniverse => optionFilterUniverse
-                .Strikes(-2, 2)
-                .Expiration(0, 180));
+            _option.SetFilter(optionFilterUniverse =>
+                optionFilterUniverse.Strikes(-2, 2).Expiration(0, 180)
+            );
         }
 
         public override void OnData(Slice slice)
@@ -58,9 +57,13 @@ namespace QuantConnect.Algorithm.CSharp
             if (_orderLegs == null)
             {
                 OptionChain chain;
-                if (IsMarketOpen(_option.Symbol) && slice.OptionChains.TryGetValue(_option.Symbol, out chain))
+                if (
+                    IsMarketOpen(_option.Symbol)
+                    && slice.OptionChains.TryGetValue(_option.Symbol, out chain)
+                )
                 {
-                    var callContracts = chain.Where(contract => contract.Right == OptionRight.Call)
+                    var callContracts = chain
+                        .Where(contract => contract.Right == OptionRight.Call)
                         .GroupBy(x => x.Expiry)
                         .OrderBy(grouping => grouping.Key)
                         .First()
@@ -87,7 +90,11 @@ namespace QuantConnect.Algorithm.CSharp
             {
                 Debug("Placing exit combo limit order");
                 var entryOrderFillPrice = GetComboOrderFillPrice(_entryOrderTickets);
-                _exitOrderTickets = ComboLimitOrder(_orderLegs, -_comboQuantity, -entryOrderFillPrice * 1.05m);
+                _exitOrderTickets = ComboLimitOrder(
+                    _orderLegs,
+                    -_comboQuantity,
+                    -entryOrderFillPrice * 1.05m
+                );
             }
         }
 
@@ -97,15 +104,21 @@ namespace QuantConnect.Algorithm.CSharp
             {
                 // The multiplier depends on whether this order belongs either to the entry or exit combo order
                 var multiplier = _exitOrderTickets.Count > 0 ? -1 : 1;
-                var expectedQuantity = multiplier * _comboQuantity * _orderLegs.Where(leg => leg.Symbol == orderEvent.Symbol).Single().Quantity;
+                var expectedQuantity =
+                    multiplier
+                    * _comboQuantity
+                    * _orderLegs.Where(leg => leg.Symbol == orderEvent.Symbol).Single().Quantity;
                 if (orderEvent.Quantity != expectedQuantity)
                 {
-                    throw new RegressionTestException($"Order event quantity {orderEvent.Quantity} does not match expected quantity {expectedQuantity}");
+                    throw new RegressionTestException(
+                        $"Order event quantity {orderEvent.Quantity} does not match expected quantity {expectedQuantity}"
+                    );
                 }
                 if (orderEvent.FillQuantity != expectedQuantity)
                 {
                     throw new RegressionTestException(
-                        $"Order event fill quantity {orderEvent.FillQuantity} does not match expected fill quantity {expectedQuantity}");
+                        $"Order event fill quantity {orderEvent.FillQuantity} does not match expected fill quantity {expectedQuantity}"
+                    );
                 }
             }
         }
@@ -114,15 +127,23 @@ namespace QuantConnect.Algorithm.CSharp
         {
             if (Portfolio.Invested)
             {
-                throw new RegressionTestException("Portfolio should not be invested at the end of the algorithm.");
+                throw new RegressionTestException(
+                    "Portfolio should not be invested at the end of the algorithm."
+                );
             }
 
-            if (_entryOrderTickets.Count == 0 || _entryOrderTickets.Any(ticket => ticket.Status != OrderStatus.Filled))
+            if (
+                _entryOrderTickets.Count == 0
+                || _entryOrderTickets.Any(ticket => ticket.Status != OrderStatus.Filled)
+            )
             {
                 throw new RegressionTestException("Entry order was not filled");
             }
 
-            if (_exitOrderTickets.Count == 0 || _exitOrderTickets.Any(ticket => ticket.Status != OrderStatus.Filled))
+            if (
+                _exitOrderTickets.Count == 0
+                || _exitOrderTickets.Any(ticket => ticket.Status != OrderStatus.Filled)
+            )
             {
                 throw new RegressionTestException("Exit order was not filled");
             }
@@ -134,30 +155,46 @@ namespace QuantConnect.Algorithm.CSharp
                 var exitOrderTicket = _exitOrderTickets[i];
 
                 var expectedEntryQuantity = leg.Quantity * _comboQuantity;
-                if (entryOrderTicket.Quantity != expectedEntryQuantity || entryOrderTicket.QuantityFilled != expectedEntryQuantity)
+                if (
+                    entryOrderTicket.Quantity != expectedEntryQuantity
+                    || entryOrderTicket.QuantityFilled != expectedEntryQuantity
+                )
                 {
-                    throw new RegressionTestException($@"Entry order ticket quantity and filled quantity do not match expected quantity for leg {i
+                    throw new RegressionTestException(
+                        $@"Entry order ticket quantity and filled quantity do not match expected quantity for leg {i
                         }. Expected: {expectedEntryQuantity}. Actual quantity: {entryOrderTicket.Quantity}. Actual filled quantity: {
-                        entryOrderTicket.QuantityFilled}");
+                        entryOrderTicket.QuantityFilled}"
+                    );
                 }
 
                 var expectedExitQuantity = -expectedEntryQuantity;
-                if (exitOrderTicket.Quantity != expectedExitQuantity || exitOrderTicket.QuantityFilled != expectedExitQuantity)
+                if (
+                    exitOrderTicket.Quantity != expectedExitQuantity
+                    || exitOrderTicket.QuantityFilled != expectedExitQuantity
+                )
                 {
-                    throw new RegressionTestException($@"Exit order ticket quantity and filled quantity do not match expected quantity for leg {i
+                    throw new RegressionTestException(
+                        $@"Exit order ticket quantity and filled quantity do not match expected quantity for leg {i
                         }. Expected: {expectedExitQuantity}. Actual quantity: {exitOrderTicket.Quantity}. Actual filled quantity: {
-                        exitOrderTicket.QuantityFilled}");
+                        exitOrderTicket.QuantityFilled}"
+                    );
                 }
             }
         }
 
         private decimal GetComboOrderFillPrice(List<OrderTicket> orderTickets)
         {
-            return orderTickets.Aggregate(0m, (accumulatedPrice, ticket) =>
-            {
-                var legQuantity = _orderLegs.Where(leg => leg.Symbol == ticket.Symbol).Single().Quantity;
-                return accumulatedPrice + ticket.AverageFillPrice * legQuantity;
-            });
+            return orderTickets.Aggregate(
+                0m,
+                (accumulatedPrice, ticket) =>
+                {
+                    var legQuantity = _orderLegs
+                        .Where(leg => leg.Symbol == ticket.Symbol)
+                        .Single()
+                        .Quantity;
+                    return accumulatedPrice + ticket.AverageFillPrice * legQuantity;
+                }
+            );
         }
 
         /// <summary>
@@ -188,35 +225,36 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// This is used by the regression test system to indicate what the expected statistics are from running the algorithm
         /// </summary>
-        public Dictionary<string, string> ExpectedStatistics => new Dictionary<string, string>
-        {
-            {"Total Orders", "6"},
-            {"Average Win", "0%"},
-            {"Average Loss", "0%"},
-            {"Compounding Annual Return", "0%"},
-            {"Drawdown", "0%"},
-            {"Expectancy", "0"},
-            {"Start Equity", "10000"},
-            {"End Equity", "5764"},
-            {"Net Profit", "0%"},
-            {"Sharpe Ratio", "0"},
-            {"Sortino Ratio", "0"},
-            {"Probabilistic Sharpe Ratio", "0%"},
-            {"Loss Rate", "0%"},
-            {"Win Rate", "0%"},
-            {"Profit-Loss Ratio", "0"},
-            {"Alpha", "0"},
-            {"Beta", "0"},
-            {"Annual Standard Deviation", "0"},
-            {"Annual Variance", "0"},
-            {"Information Ratio", "0"},
-            {"Tracking Error", "0"},
-            {"Treynor Ratio", "0"},
-            {"Total Fees", "$36.00"},
-            {"Estimated Strategy Capacity", "$16000.00"},
-            {"Lowest Capacity Asset", "GOOCV W78ZERHAOVVQ|GOOCV VP83T1ZUHROL"},
-            {"Portfolio Turnover", "2088.83%"},
-            {"OrderListHash", "52947bba687287a189cee038daec6918"}
-        };
+        public Dictionary<string, string> ExpectedStatistics =>
+            new Dictionary<string, string>
+            {
+                { "Total Orders", "6" },
+                { "Average Win", "0%" },
+                { "Average Loss", "0%" },
+                { "Compounding Annual Return", "0%" },
+                { "Drawdown", "0%" },
+                { "Expectancy", "0" },
+                { "Start Equity", "10000" },
+                { "End Equity", "5764" },
+                { "Net Profit", "0%" },
+                { "Sharpe Ratio", "0" },
+                { "Sortino Ratio", "0" },
+                { "Probabilistic Sharpe Ratio", "0%" },
+                { "Loss Rate", "0%" },
+                { "Win Rate", "0%" },
+                { "Profit-Loss Ratio", "0" },
+                { "Alpha", "0" },
+                { "Beta", "0" },
+                { "Annual Standard Deviation", "0" },
+                { "Annual Variance", "0" },
+                { "Information Ratio", "0" },
+                { "Tracking Error", "0" },
+                { "Treynor Ratio", "0" },
+                { "Total Fees", "$36.00" },
+                { "Estimated Strategy Capacity", "$16000.00" },
+                { "Lowest Capacity Asset", "GOOCV W78ZERHAOVVQ|GOOCV VP83T1ZUHROL" },
+                { "Portfolio Turnover", "2088.83%" },
+                { "OrderListHash", "52947bba687287a189cee038daec6918" }
+            };
     }
 }

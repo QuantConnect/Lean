@@ -13,14 +13,14 @@
  * limitations under the License.
 */
 
-using Moq;
-using NUnit.Framework;
-using QuantConnect.Securities;
-using QuantConnect.ToolBox.RandomDataGenerator;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
+using Moq;
+using NUnit.Framework;
+using QuantConnect.Securities;
+using QuantConnect.ToolBox.RandomDataGenerator;
 
 namespace QuantConnect.Tests.ToolBox.RandomDataGenerator
 {
@@ -28,7 +28,8 @@ namespace QuantConnect.Tests.ToolBox.RandomDataGenerator
     public class DefaultSymbolGeneratorTests
     {
         private const int Seed = 123456789;
-        private static readonly IRandomValueGenerator _randomValueGenerator = new RandomValueGenerator(Seed);
+        private static readonly IRandomValueGenerator _randomValueGenerator =
+            new RandomValueGenerator(Seed);
 
         private BaseSymbolGenerator _symbolGenerator;
         private DateTime _minExpiry = new(2000, 01, 01);
@@ -45,7 +46,8 @@ namespace QuantConnect.Tests.ToolBox.RandomDataGenerator
                     Start = _minExpiry,
                     End = _maxExpiry
                 },
-                _randomValueGenerator);
+                _randomValueGenerator
+            );
         }
 
         [Test]
@@ -53,10 +55,12 @@ namespace QuantConnect.Tests.ToolBox.RandomDataGenerator
         [TestCase(SecurityType.Index)]
         public void ReturnsDefaultSymbolGeneratorInstance(SecurityType securityType)
         {
-            Assert.IsInstanceOf<DefaultSymbolGenerator>(BaseSymbolGenerator.Create(
+            Assert.IsInstanceOf<DefaultSymbolGenerator>(
+                BaseSymbolGenerator.Create(
                     new RandomDataGeneratorSettings() { SecurityType = securityType },
                     Mock.Of<IRandomValueGenerator>()
-                ));
+                )
+            );
         }
 
         [Test]
@@ -67,17 +71,23 @@ namespace QuantConnect.Tests.ToolBox.RandomDataGenerator
         [TestCase(SecurityType.Forex, Market.Oanda, false)]
         [TestCase(SecurityType.Crypto, Market.GDAX, false)]
         [TestCase(SecurityType.Crypto, Market.Bitfinex, false)]
-        public void GetAvailableSymbolCount(SecurityType securityType, string market, bool expectInfinity)
+        public void GetAvailableSymbolCount(
+            SecurityType securityType,
+            string market,
+            bool expectInfinity
+        )
         {
             var expected = expectInfinity
                 ? int.MaxValue
-                : SymbolPropertiesDatabase.FromDataFolder().GetSymbolPropertiesList(market, securityType).Count();
+                : SymbolPropertiesDatabase
+                    .FromDataFolder()
+                    .GetSymbolPropertiesList(market, securityType)
+                    .Count();
 
-            var symbolGenerator = new DefaultSymbolGenerator(new RandomDataGeneratorSettings
-            {
-                SecurityType = securityType,
-                Market = market
-            }, Mock.Of<RandomValueGenerator>());
+            var symbolGenerator = new DefaultSymbolGenerator(
+                new RandomDataGeneratorSettings { SecurityType = securityType, Market = market },
+                Mock.Of<RandomValueGenerator>()
+            );
 
             Assert.AreEqual(expected, symbolGenerator.GetAvailableSymbolCount());
         }
@@ -90,13 +100,15 @@ namespace QuantConnect.Tests.ToolBox.RandomDataGenerator
         [TestCase(SecurityType.Forex, Market.Oanda)]
         [TestCase(SecurityType.Crypto, Market.GDAX)]
         [TestCase(SecurityType.Crypto, Market.Bitfinex)]
-        public void NextSymbol_CreatesSymbol_WithRequestedSecurityTypeAndMarket(SecurityType securityType, string market)
+        public void NextSymbol_CreatesSymbol_WithRequestedSecurityTypeAndMarket(
+            SecurityType securityType,
+            string market
+        )
         {
-            var symbolGenerator = new DefaultSymbolGenerator(new RandomDataGeneratorSettings
-            {
-                SecurityType = securityType,
-                Market = market
-            }, _randomValueGenerator);
+            var symbolGenerator = new DefaultSymbolGenerator(
+                new RandomDataGeneratorSettings { SecurityType = securityType, Market = market },
+                _randomValueGenerator
+            );
 
             var symbols = BaseSymbolGeneratorTests.GenerateAsset(symbolGenerator).ToList().ToList();
             Assert.AreEqual(1, symbols.Count);
@@ -114,13 +126,15 @@ namespace QuantConnect.Tests.ToolBox.RandomDataGenerator
         [TestCase(SecurityType.Forex, Market.Oanda)]
         [TestCase(SecurityType.Crypto, Market.GDAX)]
         [TestCase(SecurityType.Crypto, Market.Bitfinex)]
-        public void NextSymbol_CreatesSymbol_WithEntryInSymbolPropertiesDatabase(SecurityType securityType, string market)
+        public void NextSymbol_CreatesSymbol_WithEntryInSymbolPropertiesDatabase(
+            SecurityType securityType,
+            string market
+        )
         {
-            var symbolGenerator = new DefaultSymbolGenerator(new RandomDataGeneratorSettings
-            {
-                SecurityType = securityType,
-                Market = market
-            }, _randomValueGenerator);
+            var symbolGenerator = new DefaultSymbolGenerator(
+                new RandomDataGeneratorSettings { SecurityType = securityType, Market = market },
+                _randomValueGenerator
+            );
 
             var symbols = BaseSymbolGeneratorTests.GenerateAsset(symbolGenerator).ToList().ToList();
             Assert.AreEqual(1, symbols.Count);
@@ -147,16 +161,18 @@ namespace QuantConnect.Tests.ToolBox.RandomDataGenerator
         [TestCase(SecurityType.Forex, Market.Oanda)]
         [TestCase(SecurityType.Crypto, Market.GDAX)]
         [TestCase(SecurityType.Crypto, Market.Bitfinex)]
-        public void NextSymbol_ThrowsNoTickersAvailableException_WhenAllSymbolsGenerated(SecurityType securityType, string market)
+        public void NextSymbol_ThrowsNoTickersAvailableException_WhenAllSymbolsGenerated(
+            SecurityType securityType,
+            string market
+        )
         {
             var db = SymbolPropertiesDatabase.FromDataFolder();
             var symbolCount = db.GetSymbolPropertiesList(market, securityType).Count();
 
-            var symbolGenerator = new DefaultSymbolGenerator(new RandomDataGeneratorSettings
-            {
-                SecurityType = securityType,
-                Market = market
-            }, _randomValueGenerator);
+            var symbolGenerator = new DefaultSymbolGenerator(
+                new RandomDataGeneratorSettings { SecurityType = securityType, Market = market },
+                _randomValueGenerator
+            );
 
             for (var i = 0; i < symbolCount; i++)
             {
@@ -164,8 +180,8 @@ namespace QuantConnect.Tests.ToolBox.RandomDataGenerator
                 Assert.AreEqual(1, symbols.Count);
             }
 
-            Assert.Throws<NoTickersAvailableException>(() =>
-                BaseSymbolGeneratorTests.GenerateAsset(symbolGenerator).ToList()
+            Assert.Throws<NoTickersAvailableException>(
+                () => BaseSymbolGeneratorTests.GenerateAsset(symbolGenerator).ToList()
             );
         }
     }

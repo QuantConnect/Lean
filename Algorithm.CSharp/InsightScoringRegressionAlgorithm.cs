@@ -14,16 +14,16 @@
 */
 
 using System;
-using System.Linq;
-using QuantConnect.Interfaces;
-using QuantConnect.Securities;
 using System.Collections.Generic;
-using QuantConnect.Algorithm.Framework.Risk;
+using System.Linq;
 using QuantConnect.Algorithm.Framework.Alphas;
+using QuantConnect.Algorithm.Framework.Alphas.Analysis;
 using QuantConnect.Algorithm.Framework.Execution;
 using QuantConnect.Algorithm.Framework.Portfolio;
+using QuantConnect.Algorithm.Framework.Risk;
 using QuantConnect.Algorithm.Framework.Selection;
-using QuantConnect.Algorithm.Framework.Alphas.Analysis;
+using QuantConnect.Interfaces;
+using QuantConnect.Securities;
 
 namespace QuantConnect.Algorithm.CSharp
 {
@@ -40,9 +40,23 @@ namespace QuantConnect.Algorithm.CSharp
             SetStartDate(2013, 10, 07);
             SetEndDate(2013, 10, 11);
 
-            SetUniverseSelection(new ManualUniverseSelectionModel(QuantConnect.Symbol.Create("SPY", SecurityType.Equity, Market.USA)));
-            SetAlpha(new ConstantAlphaModel(InsightType.Price, InsightDirection.Up, TimeSpan.FromMinutes(20), 0.025, null));
-            SetPortfolioConstruction(new EqualWeightingPortfolioConstructionModel(Resolution.Daily));
+            SetUniverseSelection(
+                new ManualUniverseSelectionModel(
+                    QuantConnect.Symbol.Create("SPY", SecurityType.Equity, Market.USA)
+                )
+            );
+            SetAlpha(
+                new ConstantAlphaModel(
+                    InsightType.Price,
+                    InsightDirection.Up,
+                    TimeSpan.FromMinutes(20),
+                    0.025,
+                    null
+                )
+            );
+            SetPortfolioConstruction(
+                new EqualWeightingPortfolioConstructionModel(Resolution.Daily)
+            );
             SetExecution(new ImmediateExecutionModel());
             SetRiskManagement(new MaximumDrawdownPercentPerSecurity(0.01m));
 
@@ -54,12 +68,18 @@ namespace QuantConnect.Algorithm.CSharp
         {
             var allInsights = Insights.GetInsights(insight => true);
 
-            if(allInsights.Count != 100 || Insights.GetInsights().Count != 100)
+            if (allInsights.Count != 100 || Insights.GetInsights().Count != 100)
             {
-                throw new RegressionTestException($"Unexpected insight count found {allInsights.Count}");
+                throw new RegressionTestException(
+                    $"Unexpected insight count found {allInsights.Count}"
+                );
             }
 
-            if(allInsights.Count(insight => insight.Score.Magnitude == 0 || insight.Score.Direction == 0) < 5)
+            if (
+                allInsights.Count(insight =>
+                    insight.Score.Magnitude == 0 || insight.Score.Direction == 0
+                ) < 5
+            )
             {
                 throw new RegressionTestException($"Insights not scored!");
             }
@@ -99,7 +119,11 @@ namespace QuantConnect.Algorithm.CSharp
 
                     var score = openInsight.ReferenceValueFinal - openInsight.ReferenceValue;
                     openInsight.Score.SetScore(InsightScoreType.Direction, (double)score, utcTime);
-                    openInsight.Score.SetScore(InsightScoreType.Magnitude, (double)score * 2, utcTime);
+                    openInsight.Score.SetScore(
+                        InsightScoreType.Magnitude,
+                        (double)score * 2,
+                        utcTime
+                    );
                     openInsight.EstimatedValue = score * 100;
 
                     if (openInsight.IsExpired(utcTime))
@@ -125,7 +149,8 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// This is used by the regression test system to indicate which languages this algorithm is written in.
         /// </summary>
-        public virtual List<Language> Languages { get; } = new() { Language.CSharp, Language.Python };
+        public virtual List<Language> Languages { get; } =
+            new() { Language.CSharp, Language.Python };
 
         /// <summary>
         /// Data Points count of all timeslices of algorithm
@@ -145,35 +170,36 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// This is used by the regression test system to indicate what the expected statistics are from running the algorithm
         /// </summary>
-        public Dictionary<string, string> ExpectedStatistics => new Dictionary<string, string>
-        {
-            {"Total Orders", "3"},
-            {"Average Win", "0%"},
-            {"Average Loss", "-1.01%"},
-            {"Compounding Annual Return", "261.134%"},
-            {"Drawdown", "2.200%"},
-            {"Expectancy", "-1"},
-            {"Start Equity", "100000"},
-            {"End Equity", "101655.30"},
-            {"Net Profit", "1.655%"},
-            {"Sharpe Ratio", "8.472"},
-            {"Sortino Ratio", "0"},
-            {"Probabilistic Sharpe Ratio", "66.840%"},
-            {"Loss Rate", "100%"},
-            {"Win Rate", "0%"},
-            {"Profit-Loss Ratio", "0"},
-            {"Alpha", "-0.091"},
-            {"Beta", "1.006"},
-            {"Annual Standard Deviation", "0.224"},
-            {"Annual Variance", "0.05"},
-            {"Information Ratio", "-33.445"},
-            {"Tracking Error", "0.002"},
-            {"Treynor Ratio", "1.885"},
-            {"Total Fees", "$10.32"},
-            {"Estimated Strategy Capacity", "$27000000.00"},
-            {"Lowest Capacity Asset", "SPY R735QTJ8XC9X"},
-            {"Portfolio Turnover", "59.86%"},
-            {"OrderListHash", "f209ed42701b0419858e0100595b40c0"}
-        };
+        public Dictionary<string, string> ExpectedStatistics =>
+            new Dictionary<string, string>
+            {
+                { "Total Orders", "3" },
+                { "Average Win", "0%" },
+                { "Average Loss", "-1.01%" },
+                { "Compounding Annual Return", "261.134%" },
+                { "Drawdown", "2.200%" },
+                { "Expectancy", "-1" },
+                { "Start Equity", "100000" },
+                { "End Equity", "101655.30" },
+                { "Net Profit", "1.655%" },
+                { "Sharpe Ratio", "8.472" },
+                { "Sortino Ratio", "0" },
+                { "Probabilistic Sharpe Ratio", "66.840%" },
+                { "Loss Rate", "100%" },
+                { "Win Rate", "0%" },
+                { "Profit-Loss Ratio", "0" },
+                { "Alpha", "-0.091" },
+                { "Beta", "1.006" },
+                { "Annual Standard Deviation", "0.224" },
+                { "Annual Variance", "0.05" },
+                { "Information Ratio", "-33.445" },
+                { "Tracking Error", "0.002" },
+                { "Treynor Ratio", "1.885" },
+                { "Total Fees", "$10.32" },
+                { "Estimated Strategy Capacity", "$27000000.00" },
+                { "Lowest Capacity Asset", "SPY R735QTJ8XC9X" },
+                { "Portfolio Turnover", "59.86%" },
+                { "OrderListHash", "f209ed42701b0419858e0100595b40c0" }
+            };
     }
 }

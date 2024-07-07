@@ -15,12 +15,12 @@
 */
 
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using QuantConnect.Data;
+using QuantConnect.Data.Market;
 using QuantConnect.Interfaces;
 using QuantConnect.Securities;
-using QuantConnect.Data.Market;
-using System.Collections.Generic;
 using QuantConnect.Securities.Option;
 
 namespace QuantConnect.Algorithm.CSharp
@@ -28,7 +28,9 @@ namespace QuantConnect.Algorithm.CSharp
     /// <summary>
     /// Base class for equity option strategy filter universe regression algorithms which holds some basic shared setup logic
     /// </summary>
-    public abstract class OptionStrategyFilteringUniverseBaseAlgorithm : QCAlgorithm, IRegressionAlgorithmDefinition
+    public abstract class OptionStrategyFilteringUniverseBaseAlgorithm
+        : QCAlgorithm,
+            IRegressionAlgorithmDefinition
     {
         /// <summary>
         /// The filter function
@@ -61,9 +63,18 @@ namespace QuantConnect.Algorithm.CSharp
 
         protected void AssertOptionStrategyIsPresent(string name, int? quantity = null)
         {
-            if (Portfolio.Positions.Groups.Where(group => group.BuyingPowerModel is OptionStrategyPositionGroupBuyingPowerModel)
-                .Count(group => ((OptionStrategyPositionGroupBuyingPowerModel)@group.BuyingPowerModel).ToString() == name
-                    && (!quantity.HasValue || Math.Abs(group.Quantity) == quantity)) != 1)
+            if (
+                Portfolio
+                    .Positions.Groups.Where(group =>
+                        group.BuyingPowerModel is OptionStrategyPositionGroupBuyingPowerModel
+                    )
+                    .Count(group =>
+                        (
+                            (OptionStrategyPositionGroupBuyingPowerModel)@group.BuyingPowerModel
+                        ).ToString() == name
+                        && (!quantity.HasValue || Math.Abs(group.Quantity) == quantity)
+                    ) != 1
+            )
             {
                 throw new RegressionTestException($"Option strategy: '{name}' was not found!");
             }

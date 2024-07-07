@@ -28,7 +28,12 @@ namespace QuantConnect.Tests.Common
         [TestCase(typeof(string), "123", typeof(decimal), 123)]
         [TestCase(typeof(long), "123", typeof(decimal), 123)]
         [TestCase(typeof(string), null, typeof(decimal), 0)]
-        public void ConvertInvariant(Type sourceType, string sourceString, Type conversionType, object expected)
+        public void ConvertInvariant(
+            Type sourceType,
+            string sourceString,
+            Type conversionType,
+            object expected
+        )
         {
             // we can't put a decimal in the attribute, so this ensure the runtime types are correct
             expected = Convert.ChangeType(expected, conversionType, CultureInfo.InvariantCulture);
@@ -53,9 +58,7 @@ namespace QuantConnect.Tests.Common
         public void ConvertInvariant_ThrowsFormatException_WhenConvertingEmptyString()
         {
             const string input = "";
-            Assert.Throws<FormatException>(
-                () => input.ConvertInvariant<decimal>()
-            );
+            Assert.Throws<FormatException>(() => input.ConvertInvariant<decimal>());
         }
 
         [Test]
@@ -78,7 +81,7 @@ namespace QuantConnect.Tests.Common
         [Test]
         public void Formattable_ToStringInvariant_DoesNotRequire_FormatParameter()
         {
-            var format = (string) null;
+            var format = (string)null;
             IFormattable formattable = 1;
             var formatted = formattable.ToStringInvariant(format);
             Assert.AreEqual(formattable.ToString(format, CultureInfo.InvariantCulture), formatted);
@@ -90,9 +93,10 @@ namespace QuantConnect.Tests.Common
             TypeCode typeCode,
             string value,
             string format
-            )
+        )
         {
-            var formattable = (IFormattable) Convert.ChangeType(value, typeCode, CultureInfo.InvariantCulture);
+            var formattable = (IFormattable)
+                Convert.ChangeType(value, typeCode, CultureInfo.InvariantCulture);
             var formatted = formattable.ToStringInvariant(format);
             var expected = formattable.ToString(format, CultureInfo.InvariantCulture);
             Assert.AreEqual(expected, formatted, $"Failed on type code: {typeCode}");
@@ -104,7 +108,7 @@ namespace QuantConnect.Tests.Common
             // BEHAVIOR CHANGE --
             var value = 5.678m;
             var format = "-20:P2";
-            var sameBehavior = $"{value,-20:P2}";
+            var sameBehavior = $"{value, -20:P2}";
             var expected = string.Format(CultureInfo.InvariantCulture, "{0,-20:P2}", value);
 
             // the usage of the InvariantCulture add a space between the number of the percent sign
@@ -151,9 +155,13 @@ namespace QuantConnect.Tests.Common
         [Test]
         [TestCase(true)]
         [TestCase(false)]
-        public void IndexOfInvariant_IsTheSameAs_IndexOf_WithStringComparisonInvariantCulture(bool ignoreCase)
+        public void IndexOfInvariant_IsTheSameAs_IndexOf_WithStringComparisonInvariantCulture(
+            bool ignoreCase
+        )
         {
-            var comparison = ignoreCase ? StringComparison.InvariantCultureIgnoreCase : StringComparison.InvariantCulture;
+            var comparison = ignoreCase
+                ? StringComparison.InvariantCultureIgnoreCase
+                : StringComparison.InvariantCulture;
             var str = "abcdefg";
             var substring1 = "de";
             var expected1 = str.IndexOf(substring1, comparison);
@@ -206,9 +214,16 @@ namespace QuantConnect.Tests.Common
         [TestCase("Test Data", 0, 5)]
         [TestCase("Test Data", 5, 4)]
         [TestCase("Test Data", 8, 0)]
-        public void SafeSubstring_ReturnsProperSubstring(string sourceString, int startIndex,  int length)
+        public void SafeSubstring_ReturnsProperSubstring(
+            string sourceString,
+            int startIndex,
+            int length
+        )
         {
-            Assert.AreEqual(sourceString?.Substring(startIndex, length), sourceString.SafeSubstring(startIndex, length));
+            Assert.AreEqual(
+                sourceString?.Substring(startIndex, length),
+                sourceString.SafeSubstring(startIndex, length)
+            );
         }
 
         [Test]
@@ -216,7 +231,12 @@ namespace QuantConnect.Tests.Common
         [TestCase("Test Data", 0, 15, "Test Data")]
         [TestCase("Test Data", 5, 15, "Data")]
         [TestCase("Test Data", 9, 15, "")]
-        public void SafeSubstring_ReturnsSubstring_WhenSubstringThrowException(string sourceString, int startIndex, int length, string expected)
+        public void SafeSubstring_ReturnsSubstring_WhenSubstringThrowException(
+            string sourceString,
+            int startIndex,
+            int length,
+            string expected
+        )
         {
             if (sourceString != null)
             {

@@ -14,21 +14,23 @@
  */
 
 using System;
-using System.Linq;
-using System.Threading;
-using QuantConnect.Data;
-using QuantConnect.Util;
-using QuantConnect.Logging;
-using System.Threading.Tasks;
 using System.Collections.Generic;
+using System.Linq;
 using System.Runtime.CompilerServices;
+using System.Threading;
+using System.Threading.Tasks;
+using QuantConnect.Data;
+using QuantConnect.Logging;
+using QuantConnect.Util;
 
 namespace QuantConnect.Brokerages
 {
     /// <summary>
     /// Handles brokerage data subscriptions with multiple websocket connections, with optional symbol weighting
     /// </summary>
-    public class BrokerageMultiWebSocketSubscriptionManager : EventBasedDataQueueHandlerSubscriptionManager, IDisposable
+    public class BrokerageMultiWebSocketSubscriptionManager
+        : EventBasedDataQueueHandlerSubscriptionManager,
+            IDisposable
     {
         private readonly string _webSocketUrl;
         private readonly int _maximumSymbolsPerWebSocket;
@@ -68,7 +70,8 @@ namespace QuantConnect.Brokerages
             Func<IWebSocket, Symbol, bool> unsubscribeFunc,
             Action<WebSocketMessage> messageHandler,
             TimeSpan webSocketConnectionDuration,
-            RateGate connectionRateLimiter = null)
+            RateGate connectionRateLimiter = null
+        )
         {
             _webSocketUrl = webSocketUrl;
             _maximumSymbolsPerWebSocket = maximumSymbolsPerWebSocket;
@@ -86,7 +89,9 @@ namespace QuantConnect.Brokerages
                 {
                     var webSocket = CreateWebSocket();
 
-                    _webSocketEntries.Add(new BrokerageMultiWebSocketEntry(symbolWeights, webSocket));
+                    _webSocketEntries.Add(
+                        new BrokerageMultiWebSocketEntry(symbolWeights, webSocket)
+                    );
                 }
             }
 
@@ -99,7 +104,9 @@ namespace QuantConnect.Brokerages
                 };
                 _reconnectTimer.Elapsed += (_, _) =>
                 {
-                    Log.Trace("BrokerageMultiWebSocketSubscriptionManager(): Restarting websocket connections");
+                    Log.Trace(
+                        "BrokerageMultiWebSocketSubscriptionManager(): Restarting websocket connections"
+                    );
 
                     lock (_locker)
                     {
@@ -109,10 +116,14 @@ namespace QuantConnect.Brokerages
                             {
                                 Task.Factory.StartNew(() =>
                                 {
-                                    Log.Trace($"BrokerageMultiWebSocketSubscriptionManager(): Websocket restart - disconnect: ({entry.WebSocket.GetHashCode()})");
+                                    Log.Trace(
+                                        $"BrokerageMultiWebSocketSubscriptionManager(): Websocket restart - disconnect: ({entry.WebSocket.GetHashCode()})"
+                                    );
                                     Disconnect(entry.WebSocket);
 
-                                    Log.Trace($"BrokerageMultiWebSocketSubscriptionManager(): Websocket restart - connect: ({entry.WebSocket.GetHashCode()})");
+                                    Log.Trace(
+                                        $"BrokerageMultiWebSocketSubscriptionManager(): Websocket restart - connect: ({entry.WebSocket.GetHashCode()})"
+                                    );
                                     Connect(entry.WebSocket);
                                 });
                             }
@@ -121,7 +132,9 @@ namespace QuantConnect.Brokerages
                 };
                 _reconnectTimer.Start();
 
-                Log.Trace($"BrokerageMultiWebSocketSubscriptionManager(): WebSocket connections will be restarted every: {webSocketConnectionDuration}");
+                Log.Trace(
+                    $"BrokerageMultiWebSocketSubscriptionManager(): WebSocket connections will be restarted every: {webSocketConnectionDuration}"
+                );
             }
         }
 
@@ -132,7 +145,9 @@ namespace QuantConnect.Brokerages
         /// <param name="tickType">Type of tick data</param>
         protected override bool Subscribe(IEnumerable<Symbol> symbols, TickType tickType)
         {
-            Log.Trace($"BrokerageMultiWebSocketSubscriptionManager.Subscribe(): {string.Join(",", symbols.Select(x => x.Value))}");
+            Log.Trace(
+                $"BrokerageMultiWebSocketSubscriptionManager.Subscribe(): {string.Join(",", symbols.Select(x => x.Value))}"
+            );
 
             var success = true;
 
@@ -153,7 +168,9 @@ namespace QuantConnect.Brokerages
         /// <param name="tickType">Type of tick data</param>
         protected override bool Unsubscribe(IEnumerable<Symbol> symbols, TickType tickType)
         {
-            Log.Trace($"BrokerageMultiWebSocketSubscriptionManager.Unsubscribe(): {string.Join(",", symbols.Select(x => x.Value))}");
+            Log.Trace(
+                $"BrokerageMultiWebSocketSubscriptionManager.Unsubscribe(): {string.Join(",", symbols.Select(x => x.Value))}"
+            );
 
             var success = true;
 
@@ -223,7 +240,9 @@ namespace QuantConnect.Brokerages
                 {
                     if (_maximumWebSocketConnections > 0)
                     {
-                        throw new NotSupportedException($"Maximum symbol count reached for the current configuration [MaxSymbolsPerWebSocket={_maximumSymbolsPerWebSocket}, MaxWebSocketConnections:{_maximumWebSocketConnections}]");
+                        throw new NotSupportedException(
+                            $"Maximum symbol count reached for the current configuration [MaxSymbolsPerWebSocket={_maximumSymbolsPerWebSocket}, MaxWebSocketConnections:{_maximumWebSocketConnections}]"
+                        );
                     }
 
                     // symbol limit reached on all, create new websocket instance
@@ -233,12 +252,14 @@ namespace QuantConnect.Brokerages
                 }
 
                 // sort by weight ascending, taking into account the symbol limit per websocket
-                _webSocketEntries.Sort((x, y) =>
-                    x.SymbolCount >= _maximumSymbolsPerWebSocket
-                    ? 1
-                    : y.SymbolCount >= _maximumSymbolsPerWebSocket
-                        ? -1
-                        : Math.Sign(x.TotalWeight - y.TotalWeight));
+                _webSocketEntries.Sort(
+                    (x, y) =>
+                        x.SymbolCount >= _maximumSymbolsPerWebSocket
+                            ? 1
+                            : y.SymbolCount >= _maximumSymbolsPerWebSocket
+                                ? -1
+                                : Math.Sign(x.TotalWeight - y.TotalWeight)
+                );
 
                 entry = _webSocketEntries.First();
             }
@@ -250,7 +271,9 @@ namespace QuantConnect.Brokerages
 
             entry.AddSymbol(symbol);
 
-            Log.Trace($"BrokerageMultiWebSocketSubscriptionManager.GetWebSocketForSymbol(): added symbol: {symbol} to websocket: {entry.WebSocket.GetHashCode()} - Count: {entry.SymbolCount}");
+            Log.Trace(
+                $"BrokerageMultiWebSocketSubscriptionManager.GetWebSocketForSymbol(): added symbol: {symbol} to websocket: {entry.WebSocket.GetHashCode()} - Count: {entry.SymbolCount}"
+            );
 
             return entry.WebSocket;
         }
@@ -296,7 +319,9 @@ namespace QuantConnect.Brokerages
 
                 if (!connectedEvent.WaitOne(ConnectionTimeout))
                 {
-                    throw new TimeoutException($"BrokerageMultiWebSocketSubscriptionManager.Connect(): WebSocket connection timeout: {webSocket.GetHashCode()}");
+                    throw new TimeoutException(
+                        $"BrokerageMultiWebSocketSubscriptionManager.Connect(): WebSocket connection timeout: {webSocket.GetHashCode()}"
+                    );
                 }
             }
             finally
@@ -322,7 +347,9 @@ namespace QuantConnect.Brokerages
                 {
                     if (entry.WebSocket == webSocket && entry.Symbols.Count > 0)
                     {
-                        Log.Trace($"BrokerageMultiWebSocketSubscriptionManager.Connect(): WebSocket opened: {webSocket.GetHashCode()} - Resubscribing existing symbols: {entry.Symbols.Count}");
+                        Log.Trace(
+                            $"BrokerageMultiWebSocketSubscriptionManager.Connect(): WebSocket opened: {webSocket.GetHashCode()} - Resubscribing existing symbols: {entry.Symbols.Count}"
+                        );
 
                         Task.Factory.StartNew(() =>
                         {

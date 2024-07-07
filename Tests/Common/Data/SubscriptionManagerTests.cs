@@ -43,7 +43,12 @@ namespace QuantConnect.Tests.Common.Data
         [TestCase(SecurityType.Crypto, Resolution.Hour, 2, TickType.Trade, TickType.Quote)]
         [TestCase(SecurityType.Equity, Resolution.Daily, 1, TickType.Trade)]
         [TestCase(SecurityType.Equity, Resolution.Hour, 1, TickType.Trade)]
-        public void GetsSubscriptionDataTypesLowResolution(SecurityType securityType, Resolution resolution, int count, params TickType [] expectedTickTypes)
+        public void GetsSubscriptionDataTypesLowResolution(
+            SecurityType securityType,
+            Resolution resolution,
+            int count,
+            params TickType[] expectedTickTypes
+        )
         {
             var types = GetSubscriptionDataTypes(securityType, resolution);
 
@@ -61,7 +66,12 @@ namespace QuantConnect.Tests.Common.Data
         [TestCase(SecurityType.Forex, Resolution.Tick, typeof(Tick), TickType.Quote)]
         [TestCase(SecurityType.Cfd, Resolution.Minute, typeof(QuoteBar), TickType.Quote)]
         [TestCase(SecurityType.Cfd, Resolution.Tick, typeof(Tick), TickType.Quote)]
-        public void GetsSubscriptionDataTypesSingle(SecurityType securityType, Resolution resolution, Type expectedDataType, TickType expectedTickType)
+        public void GetsSubscriptionDataTypesSingle(
+            SecurityType securityType,
+            Resolution resolution,
+            Type expectedDataType,
+            TickType expectedTickType
+        )
         {
             var types = GetSubscriptionDataTypes(securityType, resolution);
 
@@ -75,7 +85,12 @@ namespace QuantConnect.Tests.Common.Data
         [TestCase(SecurityType.Future, Resolution.Tick, typeof(ZipEntryName), TickType.Quote)]
         [TestCase(SecurityType.Option, Resolution.Minute, typeof(ZipEntryName), TickType.Quote)]
         [TestCase(SecurityType.Option, Resolution.Tick, typeof(ZipEntryName), TickType.Quote)]
-        public void GetsSubscriptionDataTypesCanonical(SecurityType securityType, Resolution resolution, Type expectedDataType, TickType expectedTickType)
+        public void GetsSubscriptionDataTypesCanonical(
+            SecurityType securityType,
+            Resolution resolution,
+            Type expectedDataType,
+            TickType expectedTickType
+        )
         {
             var types = GetSubscriptionDataTypes(securityType, resolution, true);
 
@@ -87,7 +102,10 @@ namespace QuantConnect.Tests.Common.Data
         [Test]
         [TestCase(SecurityType.Future, Resolution.Minute)]
         [TestCase(SecurityType.Option, Resolution.Minute)]
-        public void GetsSubscriptionDataTypesFuturesOptionsMinute(SecurityType securityType, Resolution resolution)
+        public void GetsSubscriptionDataTypesFuturesOptionsMinute(
+            SecurityType securityType,
+            Resolution resolution
+        )
         {
             var types = GetSubscriptionDataTypes(securityType, resolution);
 
@@ -103,7 +121,10 @@ namespace QuantConnect.Tests.Common.Data
         [Test]
         [TestCase(SecurityType.Future, Resolution.Tick)]
         [TestCase(SecurityType.Option, Resolution.Tick)]
-        public void GetsSubscriptionDataTypesFuturesOptionsTick(SecurityType securityType, Resolution resolution)
+        public void GetsSubscriptionDataTypesFuturesOptionsTick(
+            SecurityType securityType,
+            Resolution resolution
+        )
         {
             var types = GetSubscriptionDataTypes(securityType, resolution);
 
@@ -152,27 +173,42 @@ namespace QuantConnect.Tests.Common.Data
             var start = DateTime.UtcNow;
             var end = start.AddSeconds(5);
             var tickers = QuantConnect.Algorithm.CSharp.StressSymbols.StockSymbols.ToList();
-            var symbols = tickers.Select(ticker => Symbol.Create(ticker, SecurityType.Equity, QuantConnect.Market.USA)).ToList();
+            var symbols = tickers
+                .Select(ticker =>
+                    Symbol.Create(ticker, SecurityType.Equity, QuantConnect.Market.USA)
+                )
+                .ToList();
 
             var readTask = new TaskFactory().StartNew(() =>
             {
                 Log.Trace("Read task started");
                 while (DateTime.UtcNow < end)
                 {
-                    subscriptionManager.Subscriptions.Select(x => x.Resolution).DefaultIfEmpty(Resolution.Minute).Min();
+                    subscriptionManager
+                        .Subscriptions.Select(x => x.Resolution)
+                        .DefaultIfEmpty(Resolution.Minute)
+                        .Min();
                     Thread.Sleep(1);
                 }
                 Log.Trace("Read task ended");
             });
 
-            while (readTask.Status != TaskStatus.Running) Thread.Sleep(1);
+            while (readTask.Status != TaskStatus.Running)
+                Thread.Sleep(1);
 
             var addTask = new TaskFactory().StartNew(() =>
             {
                 Log.Trace("Add task started");
                 foreach (var symbol in symbols)
                 {
-                    subscriptionManager.Add(symbol, Resolution.Minute, DateTimeZone.Utc, DateTimeZone.Utc, true, false);
+                    subscriptionManager.Add(
+                        symbol,
+                        Resolution.Minute,
+                        DateTimeZone.Utc,
+                        DateTimeZone.Utc,
+                        true,
+                        false
+                    );
                 }
                 Log.Trace("Add task ended");
             });
@@ -185,8 +221,17 @@ namespace QuantConnect.Tests.Common.Data
         {
             var subscriptionManager = new SubscriptionManager(NullTimeKeeper.Instance);
             subscriptionManager.SetDataManager(new DataManagerStub());
-            subscriptionManager.AvailableDataTypes[SecurityType.Commodity] = new List<TickType> { TickType.OpenInterest, TickType.Quote, TickType.Trade };
-            var types = subscriptionManager.LookupSubscriptionConfigDataTypes(SecurityType.Commodity, Resolution.Daily, false);
+            subscriptionManager.AvailableDataTypes[SecurityType.Commodity] = new List<TickType>
+            {
+                TickType.OpenInterest,
+                TickType.Quote,
+                TickType.Trade
+            };
+            var types = subscriptionManager.LookupSubscriptionConfigDataTypes(
+                SecurityType.Commodity,
+                Resolution.Daily,
+                false
+            );
 
             Assert.AreEqual(3, types.Count);
 
@@ -200,56 +245,318 @@ namespace QuantConnect.Tests.Common.Data
         }
 
         [Test]
-        [TestCase(SecurityType.Future, Resolution.Tick, typeof(Tick), TickType.Trade, typeof(TradeBar), true)]
-        [TestCase(SecurityType.Future, Resolution.Tick, typeof(Tick), TickType.Trade, typeof(QuoteBar), false)]
-        [TestCase(SecurityType.Future, Resolution.Tick, typeof(Tick), TickType.Trade, typeof(OpenInterest), false)]
-        [TestCase(SecurityType.Future, Resolution.Tick, typeof(Tick), TickType.Quote, typeof(TradeBar), false)]
-        [TestCase(SecurityType.Future, Resolution.Tick, typeof(Tick), TickType.Quote, typeof(QuoteBar), true)]
-        [TestCase(SecurityType.Future, Resolution.Tick, typeof(Tick), TickType.Quote, typeof(OpenInterest), false)]
-        [TestCase(SecurityType.Future, Resolution.Tick, typeof(Tick), TickType.OpenInterest, typeof(TradeBar), false)]
-        [TestCase(SecurityType.Future, Resolution.Tick, typeof(Tick), TickType.OpenInterest, typeof(QuoteBar), false)]
-        [TestCase(SecurityType.Future, Resolution.Tick, typeof(Tick), TickType.OpenInterest, typeof(OpenInterest), true)]
-
-        [TestCase(SecurityType.Option, Resolution.Tick, typeof(Tick), TickType.Trade, typeof(TradeBar), true)]
-        [TestCase(SecurityType.Option, Resolution.Tick, typeof(Tick), TickType.Trade, typeof(QuoteBar), false)]
-        [TestCase(SecurityType.Option, Resolution.Tick, typeof(Tick), TickType.Trade, typeof(OpenInterest), false)]
-        [TestCase(SecurityType.Option, Resolution.Tick, typeof(Tick), TickType.Quote, typeof(TradeBar), false)]
-        [TestCase(SecurityType.Option, Resolution.Tick, typeof(Tick), TickType.Quote, typeof(QuoteBar), true)]
-        [TestCase(SecurityType.Option, Resolution.Tick, typeof(Tick), TickType.Quote, typeof(OpenInterest), false)]
-        [TestCase(SecurityType.Option, Resolution.Tick, typeof(Tick), TickType.OpenInterest, typeof(TradeBar), false)]
-        [TestCase(SecurityType.Option, Resolution.Tick, typeof(Tick), TickType.OpenInterest, typeof(QuoteBar), false)]
-        [TestCase(SecurityType.Option, Resolution.Tick, typeof(Tick), TickType.OpenInterest, typeof(OpenInterest), true)]
-
-        [TestCase(SecurityType.Equity, Resolution.Tick, typeof(Tick), TickType.Trade, typeof(TradeBar), true)]
-        [TestCase(SecurityType.Equity, Resolution.Tick, typeof(Tick), TickType.Trade, typeof(QuoteBar), false)]
-        [TestCase(SecurityType.Equity, Resolution.Tick, typeof(Tick), TickType.Trade, typeof(OpenInterest), false)]
-        [TestCase(SecurityType.Equity, Resolution.Tick, typeof(Tick), TickType.Quote, typeof(RenkoBar), true)]
-
-        [TestCase(SecurityType.Forex, Resolution.Tick, typeof(Tick), TickType.Quote, typeof(TradeBar), false)]
-        [TestCase(SecurityType.Forex, Resolution.Tick, typeof(Tick), TickType.Quote, typeof(QuoteBar), true)]
-        [TestCase(SecurityType.Forex, Resolution.Tick, typeof(Tick), TickType.Quote, typeof(OpenInterest), false)]
-        [TestCase(SecurityType.Forex, Resolution.Tick, typeof(Tick), TickType.Quote, typeof(RenkoBar), true)]
-
-        [TestCase(SecurityType.Cfd, Resolution.Tick, typeof(Tick), TickType.Quote, typeof(TradeBar), false)]
-        [TestCase(SecurityType.Cfd, Resolution.Tick, typeof(Tick), TickType.Quote, typeof(QuoteBar), true)]
-        [TestCase(SecurityType.Cfd, Resolution.Tick, typeof(Tick), TickType.Quote, typeof(OpenInterest), false)]
-        [TestCase(SecurityType.Cfd, Resolution.Tick, typeof(Tick), TickType.Quote, typeof(RenkoBar), true)]
-
-        [TestCase(SecurityType.Crypto, Resolution.Tick, typeof(Tick), TickType.Trade, typeof(TradeBar), true)]
-        [TestCase(SecurityType.Crypto, Resolution.Tick, typeof(Tick), TickType.Trade, typeof(QuoteBar), false)]
-        [TestCase(SecurityType.Crypto, Resolution.Tick, typeof(Tick), TickType.Trade, typeof(OpenInterest), false)]
-        [TestCase(SecurityType.Crypto, Resolution.Tick, typeof(Tick), TickType.Trade, typeof(RenkoBar), true)]
-        [TestCase(SecurityType.Crypto, Resolution.Tick, typeof(Tick), TickType.Quote, typeof(TradeBar), false)]
-        [TestCase(SecurityType.Crypto, Resolution.Tick, typeof(Tick), TickType.Quote, typeof(QuoteBar), true)]
-        [TestCase(SecurityType.Crypto, Resolution.Tick, typeof(Tick), TickType.Quote, typeof(OpenInterest), false)]
-        [TestCase(SecurityType.Crypto, Resolution.Tick, typeof(Tick), TickType.Quote, typeof(RenkoBar), true)]
+        [TestCase(
+            SecurityType.Future,
+            Resolution.Tick,
+            typeof(Tick),
+            TickType.Trade,
+            typeof(TradeBar),
+            true
+        )]
+        [TestCase(
+            SecurityType.Future,
+            Resolution.Tick,
+            typeof(Tick),
+            TickType.Trade,
+            typeof(QuoteBar),
+            false
+        )]
+        [TestCase(
+            SecurityType.Future,
+            Resolution.Tick,
+            typeof(Tick),
+            TickType.Trade,
+            typeof(OpenInterest),
+            false
+        )]
+        [TestCase(
+            SecurityType.Future,
+            Resolution.Tick,
+            typeof(Tick),
+            TickType.Quote,
+            typeof(TradeBar),
+            false
+        )]
+        [TestCase(
+            SecurityType.Future,
+            Resolution.Tick,
+            typeof(Tick),
+            TickType.Quote,
+            typeof(QuoteBar),
+            true
+        )]
+        [TestCase(
+            SecurityType.Future,
+            Resolution.Tick,
+            typeof(Tick),
+            TickType.Quote,
+            typeof(OpenInterest),
+            false
+        )]
+        [TestCase(
+            SecurityType.Future,
+            Resolution.Tick,
+            typeof(Tick),
+            TickType.OpenInterest,
+            typeof(TradeBar),
+            false
+        )]
+        [TestCase(
+            SecurityType.Future,
+            Resolution.Tick,
+            typeof(Tick),
+            TickType.OpenInterest,
+            typeof(QuoteBar),
+            false
+        )]
+        [TestCase(
+            SecurityType.Future,
+            Resolution.Tick,
+            typeof(Tick),
+            TickType.OpenInterest,
+            typeof(OpenInterest),
+            true
+        )]
+        [TestCase(
+            SecurityType.Option,
+            Resolution.Tick,
+            typeof(Tick),
+            TickType.Trade,
+            typeof(TradeBar),
+            true
+        )]
+        [TestCase(
+            SecurityType.Option,
+            Resolution.Tick,
+            typeof(Tick),
+            TickType.Trade,
+            typeof(QuoteBar),
+            false
+        )]
+        [TestCase(
+            SecurityType.Option,
+            Resolution.Tick,
+            typeof(Tick),
+            TickType.Trade,
+            typeof(OpenInterest),
+            false
+        )]
+        [TestCase(
+            SecurityType.Option,
+            Resolution.Tick,
+            typeof(Tick),
+            TickType.Quote,
+            typeof(TradeBar),
+            false
+        )]
+        [TestCase(
+            SecurityType.Option,
+            Resolution.Tick,
+            typeof(Tick),
+            TickType.Quote,
+            typeof(QuoteBar),
+            true
+        )]
+        [TestCase(
+            SecurityType.Option,
+            Resolution.Tick,
+            typeof(Tick),
+            TickType.Quote,
+            typeof(OpenInterest),
+            false
+        )]
+        [TestCase(
+            SecurityType.Option,
+            Resolution.Tick,
+            typeof(Tick),
+            TickType.OpenInterest,
+            typeof(TradeBar),
+            false
+        )]
+        [TestCase(
+            SecurityType.Option,
+            Resolution.Tick,
+            typeof(Tick),
+            TickType.OpenInterest,
+            typeof(QuoteBar),
+            false
+        )]
+        [TestCase(
+            SecurityType.Option,
+            Resolution.Tick,
+            typeof(Tick),
+            TickType.OpenInterest,
+            typeof(OpenInterest),
+            true
+        )]
+        [TestCase(
+            SecurityType.Equity,
+            Resolution.Tick,
+            typeof(Tick),
+            TickType.Trade,
+            typeof(TradeBar),
+            true
+        )]
+        [TestCase(
+            SecurityType.Equity,
+            Resolution.Tick,
+            typeof(Tick),
+            TickType.Trade,
+            typeof(QuoteBar),
+            false
+        )]
+        [TestCase(
+            SecurityType.Equity,
+            Resolution.Tick,
+            typeof(Tick),
+            TickType.Trade,
+            typeof(OpenInterest),
+            false
+        )]
+        [TestCase(
+            SecurityType.Equity,
+            Resolution.Tick,
+            typeof(Tick),
+            TickType.Quote,
+            typeof(RenkoBar),
+            true
+        )]
+        [TestCase(
+            SecurityType.Forex,
+            Resolution.Tick,
+            typeof(Tick),
+            TickType.Quote,
+            typeof(TradeBar),
+            false
+        )]
+        [TestCase(
+            SecurityType.Forex,
+            Resolution.Tick,
+            typeof(Tick),
+            TickType.Quote,
+            typeof(QuoteBar),
+            true
+        )]
+        [TestCase(
+            SecurityType.Forex,
+            Resolution.Tick,
+            typeof(Tick),
+            TickType.Quote,
+            typeof(OpenInterest),
+            false
+        )]
+        [TestCase(
+            SecurityType.Forex,
+            Resolution.Tick,
+            typeof(Tick),
+            TickType.Quote,
+            typeof(RenkoBar),
+            true
+        )]
+        [TestCase(
+            SecurityType.Cfd,
+            Resolution.Tick,
+            typeof(Tick),
+            TickType.Quote,
+            typeof(TradeBar),
+            false
+        )]
+        [TestCase(
+            SecurityType.Cfd,
+            Resolution.Tick,
+            typeof(Tick),
+            TickType.Quote,
+            typeof(QuoteBar),
+            true
+        )]
+        [TestCase(
+            SecurityType.Cfd,
+            Resolution.Tick,
+            typeof(Tick),
+            TickType.Quote,
+            typeof(OpenInterest),
+            false
+        )]
+        [TestCase(
+            SecurityType.Cfd,
+            Resolution.Tick,
+            typeof(Tick),
+            TickType.Quote,
+            typeof(RenkoBar),
+            true
+        )]
+        [TestCase(
+            SecurityType.Crypto,
+            Resolution.Tick,
+            typeof(Tick),
+            TickType.Trade,
+            typeof(TradeBar),
+            true
+        )]
+        [TestCase(
+            SecurityType.Crypto,
+            Resolution.Tick,
+            typeof(Tick),
+            TickType.Trade,
+            typeof(QuoteBar),
+            false
+        )]
+        [TestCase(
+            SecurityType.Crypto,
+            Resolution.Tick,
+            typeof(Tick),
+            TickType.Trade,
+            typeof(OpenInterest),
+            false
+        )]
+        [TestCase(
+            SecurityType.Crypto,
+            Resolution.Tick,
+            typeof(Tick),
+            TickType.Trade,
+            typeof(RenkoBar),
+            true
+        )]
+        [TestCase(
+            SecurityType.Crypto,
+            Resolution.Tick,
+            typeof(Tick),
+            TickType.Quote,
+            typeof(TradeBar),
+            false
+        )]
+        [TestCase(
+            SecurityType.Crypto,
+            Resolution.Tick,
+            typeof(Tick),
+            TickType.Quote,
+            typeof(QuoteBar),
+            true
+        )]
+        [TestCase(
+            SecurityType.Crypto,
+            Resolution.Tick,
+            typeof(Tick),
+            TickType.Quote,
+            typeof(OpenInterest),
+            false
+        )]
+        [TestCase(
+            SecurityType.Crypto,
+            Resolution.Tick,
+            typeof(Tick),
+            TickType.Quote,
+            typeof(RenkoBar),
+            true
+        )]
         public void ValidatesSubscriptionTickTypesForConsolidators(
             SecurityType securityType,
             Resolution subscriptionResolution,
             Type subscriptionDataType,
             TickType? subscriptionTickType,
             Type consolidatorOutputType,
-            bool expected)
+            bool expected
+        )
         {
             var subscription = new SubscriptionDataConfig(
                 subscriptionDataType,
@@ -261,137 +568,1037 @@ namespace QuantConnect.Tests.Common.Data
                 false,
                 false,
                 false,
-                subscriptionTickType);
+                subscriptionTickType
+            );
 
-            using var consolidator = new TestConsolidator(subscriptionDataType, consolidatorOutputType);
+            using var consolidator = new TestConsolidator(
+                subscriptionDataType,
+                consolidatorOutputType
+            );
 
-            Assert.AreEqual(expected, SubscriptionManager.IsSubscriptionValidForConsolidator(subscription, consolidator));
+            Assert.AreEqual(
+                expected,
+                SubscriptionManager.IsSubscriptionValidForConsolidator(subscription, consolidator)
+            );
         }
 
-        [TestCase(SecurityType.Future, Resolution.Tick, typeof(Tick), TickType.Trade, null, typeof(TradeBar), true)]
-        [TestCase(SecurityType.Future, Resolution.Tick, typeof(Tick), TickType.Trade, null, typeof(QuoteBar), false)]
-        [TestCase(SecurityType.Future, Resolution.Tick, typeof(Tick), TickType.Trade, null, typeof(OpenInterest), false)]
-        [TestCase(SecurityType.Future, Resolution.Tick, typeof(Tick), TickType.Quote, null, typeof(TradeBar), false)]
-        [TestCase(SecurityType.Future, Resolution.Tick, typeof(Tick), TickType.Quote, null, typeof(QuoteBar), true)]
-        [TestCase(SecurityType.Future, Resolution.Tick, typeof(Tick), TickType.Quote, null, typeof(OpenInterest), false)]
-        [TestCase(SecurityType.Future, Resolution.Tick, typeof(Tick), TickType.OpenInterest, null, typeof(TradeBar), false)]
-        [TestCase(SecurityType.Future, Resolution.Tick, typeof(Tick), TickType.OpenInterest, null, typeof(QuoteBar), false)]
-        [TestCase(SecurityType.Future, Resolution.Tick, typeof(Tick), TickType.OpenInterest, null, typeof(OpenInterest), true)]
-        [TestCase(SecurityType.Future, Resolution.Tick, typeof(Tick), TickType.Trade, TickType.Trade, typeof(TradeBar), true)]
-        [TestCase(SecurityType.Future, Resolution.Tick, typeof(Tick), TickType.Trade, TickType.Quote, typeof(TradeBar), false)]
-        [TestCase(SecurityType.Future, Resolution.Tick, typeof(Tick), TickType.Trade, TickType.OpenInterest, typeof(TradeBar), false)]
-        [TestCase(SecurityType.Future, Resolution.Tick, typeof(Tick), TickType.Quote, TickType.Trade, typeof(QuoteBar), false)]
-        [TestCase(SecurityType.Future, Resolution.Tick, typeof(Tick), TickType.Quote, TickType.Quote, typeof(QuoteBar), true)]
-        [TestCase(SecurityType.Future, Resolution.Tick, typeof(Tick), TickType.Quote, TickType.OpenInterest, typeof(QuoteBar), false)]
-        [TestCase(SecurityType.Future, Resolution.Tick, typeof(Tick), TickType.OpenInterest, TickType.Trade, typeof(OpenInterest), false)]
-        [TestCase(SecurityType.Future, Resolution.Tick, typeof(Tick), TickType.OpenInterest, TickType.Quote, typeof(OpenInterest), false)]
-        [TestCase(SecurityType.Future, Resolution.Tick, typeof(Tick), TickType.OpenInterest, TickType.OpenInterest, typeof(OpenInterest), true)]
-
-        [TestCase(SecurityType.Option, Resolution.Tick, typeof(Tick), TickType.Trade, null, typeof(TradeBar), true)]
-        [TestCase(SecurityType.Option, Resolution.Tick, typeof(Tick), TickType.Trade, null, typeof(QuoteBar), false)]
-        [TestCase(SecurityType.Option, Resolution.Tick, typeof(Tick), TickType.Trade, null, typeof(OpenInterest), false)]
-        [TestCase(SecurityType.Option, Resolution.Tick, typeof(Tick), TickType.Quote, null, typeof(TradeBar), false)]
-        [TestCase(SecurityType.Option, Resolution.Tick, typeof(Tick), TickType.Quote, null, typeof(QuoteBar), true)]
-        [TestCase(SecurityType.Option, Resolution.Tick, typeof(Tick), TickType.Quote, null, typeof(OpenInterest), false)]
-        [TestCase(SecurityType.Option, Resolution.Tick, typeof(Tick), TickType.OpenInterest, null, typeof(TradeBar), false)]
-        [TestCase(SecurityType.Option, Resolution.Tick, typeof(Tick), TickType.OpenInterest, null, typeof(QuoteBar), false)]
-        [TestCase(SecurityType.Option, Resolution.Tick, typeof(Tick), TickType.OpenInterest, null, typeof(OpenInterest), true)]
-        [TestCase(SecurityType.Option, Resolution.Tick, typeof(Tick), TickType.Trade, TickType.Trade, typeof(TradeBar), true)]
-        [TestCase(SecurityType.Option, Resolution.Tick, typeof(Tick), TickType.Trade, TickType.Quote, typeof(TradeBar), false)]
-        [TestCase(SecurityType.Option, Resolution.Tick, typeof(Tick), TickType.Trade, TickType.OpenInterest, typeof(TradeBar), false)]
-        [TestCase(SecurityType.Option, Resolution.Tick, typeof(Tick), TickType.Quote, TickType.Trade, typeof(QuoteBar), false)]
-        [TestCase(SecurityType.Option, Resolution.Tick, typeof(Tick), TickType.Quote, TickType.Quote, typeof(QuoteBar), true)]
-        [TestCase(SecurityType.Option, Resolution.Tick, typeof(Tick), TickType.Quote, TickType.OpenInterest, typeof(QuoteBar), false)]
-        [TestCase(SecurityType.Option, Resolution.Tick, typeof(Tick), TickType.OpenInterest, TickType.Trade, typeof(OpenInterest), false)]
-        [TestCase(SecurityType.Option, Resolution.Tick, typeof(Tick), TickType.OpenInterest, TickType.Quote, typeof(OpenInterest), false)]
-        [TestCase(SecurityType.Option, Resolution.Tick, typeof(Tick), TickType.OpenInterest, TickType.OpenInterest, typeof(OpenInterest), true)]
-
-        [TestCase(SecurityType.Equity, Resolution.Tick, typeof(Tick), TickType.Trade, null, typeof(TradeBar), true)]
-        [TestCase(SecurityType.Equity, Resolution.Tick, typeof(Tick), TickType.Trade, null, typeof(QuoteBar), false)]
-        [TestCase(SecurityType.Equity, Resolution.Tick, typeof(Tick), TickType.Trade, null, typeof(OpenInterest), false)]
-        [TestCase(SecurityType.Equity, Resolution.Tick, typeof(Tick), TickType.Quote, null, typeof(TradeBar), false)]
-        [TestCase(SecurityType.Equity, Resolution.Tick, typeof(Tick), TickType.Quote, null, typeof(QuoteBar), true)]
-        [TestCase(SecurityType.Equity, Resolution.Tick, typeof(Tick), TickType.Quote, null, typeof(OpenInterest), false)]
-        [TestCase(SecurityType.Equity, Resolution.Tick, typeof(Tick), TickType.OpenInterest, null, typeof(TradeBar), false)]
-        [TestCase(SecurityType.Equity, Resolution.Tick, typeof(Tick), TickType.OpenInterest, null, typeof(QuoteBar), false)]
-        [TestCase(SecurityType.Equity, Resolution.Tick, typeof(Tick), TickType.OpenInterest, null, typeof(OpenInterest), true)]
-        [TestCase(SecurityType.Equity, Resolution.Tick, typeof(Tick), TickType.Quote, null, typeof(RenkoBar), true)]
-        [TestCase(SecurityType.Equity, Resolution.Tick, typeof(Tick), TickType.Trade, TickType.Trade, typeof(TradeBar), true)]
-        [TestCase(SecurityType.Equity, Resolution.Tick, typeof(Tick), TickType.Trade, TickType.Quote, typeof(TradeBar), false)]
-        [TestCase(SecurityType.Equity, Resolution.Tick, typeof(Tick), TickType.Trade, TickType.OpenInterest, typeof(TradeBar), false)]
-        [TestCase(SecurityType.Equity, Resolution.Tick, typeof(Tick), TickType.Quote, TickType.Trade, typeof(QuoteBar), false)]
-        [TestCase(SecurityType.Equity, Resolution.Tick, typeof(Tick), TickType.Quote, TickType.Quote, typeof(QuoteBar), true)]
-        [TestCase(SecurityType.Equity, Resolution.Tick, typeof(Tick), TickType.Quote, TickType.OpenInterest, typeof(QuoteBar), false)]
-        [TestCase(SecurityType.Equity, Resolution.Tick, typeof(Tick), TickType.OpenInterest, TickType.Trade, typeof(OpenInterest), false)]
-        [TestCase(SecurityType.Equity, Resolution.Tick, typeof(Tick), TickType.OpenInterest, TickType.Quote, typeof(OpenInterest), false)]
-        [TestCase(SecurityType.Equity, Resolution.Tick, typeof(Tick), TickType.OpenInterest, TickType.OpenInterest, typeof(OpenInterest), true)]
-
-        [TestCase(SecurityType.Forex, Resolution.Tick, typeof(Tick), TickType.Trade, null, typeof(TradeBar), true)]
-        [TestCase(SecurityType.Forex, Resolution.Tick, typeof(Tick), TickType.Trade, null, typeof(QuoteBar), false)]
-        [TestCase(SecurityType.Forex, Resolution.Tick, typeof(Tick), TickType.Trade, null, typeof(OpenInterest), false)]
-        [TestCase(SecurityType.Forex, Resolution.Tick, typeof(Tick), TickType.Quote, null, typeof(TradeBar), false)]
-        [TestCase(SecurityType.Forex, Resolution.Tick, typeof(Tick), TickType.Quote, null, typeof(QuoteBar), true)]
-        [TestCase(SecurityType.Forex, Resolution.Tick, typeof(Tick), TickType.Quote, null, typeof(OpenInterest), false)]
-        [TestCase(SecurityType.Forex, Resolution.Tick, typeof(Tick), TickType.OpenInterest, null, typeof(TradeBar), false)]
-        [TestCase(SecurityType.Forex, Resolution.Tick, typeof(Tick), TickType.OpenInterest, null, typeof(QuoteBar), false)]
-        [TestCase(SecurityType.Forex, Resolution.Tick, typeof(Tick), TickType.OpenInterest, null, typeof(OpenInterest), true)]
-        [TestCase(SecurityType.Forex, Resolution.Tick, typeof(Tick), TickType.Quote, null, typeof(RenkoBar), true)]
-        [TestCase(SecurityType.Forex, Resolution.Tick, typeof(Tick), TickType.Trade, TickType.Trade, typeof(TradeBar), true)]
-        [TestCase(SecurityType.Forex, Resolution.Tick, typeof(Tick), TickType.Trade, TickType.Quote, typeof(TradeBar), false)]
-        [TestCase(SecurityType.Forex, Resolution.Tick, typeof(Tick), TickType.Trade, TickType.OpenInterest, typeof(TradeBar), false)]
-        [TestCase(SecurityType.Forex, Resolution.Tick, typeof(Tick), TickType.Quote, TickType.Trade, typeof(QuoteBar), false)]
-        [TestCase(SecurityType.Forex, Resolution.Tick, typeof(Tick), TickType.Quote, TickType.Quote, typeof(QuoteBar), true)]
-        [TestCase(SecurityType.Forex, Resolution.Tick, typeof(Tick), TickType.Quote, TickType.OpenInterest, typeof(QuoteBar), false)]
-        [TestCase(SecurityType.Forex, Resolution.Tick, typeof(Tick), TickType.OpenInterest, TickType.Trade, typeof(OpenInterest), false)]
-        [TestCase(SecurityType.Forex, Resolution.Tick, typeof(Tick), TickType.OpenInterest, TickType.Quote, typeof(OpenInterest), false)]
-        [TestCase(SecurityType.Forex, Resolution.Tick, typeof(Tick), TickType.OpenInterest, TickType.OpenInterest, typeof(OpenInterest), true)]
-
-        [TestCase(SecurityType.Cfd, Resolution.Tick, typeof(Tick), TickType.Trade, null, typeof(TradeBar), true)]
-        [TestCase(SecurityType.Cfd, Resolution.Tick, typeof(Tick), TickType.Trade, null, typeof(QuoteBar), false)]
-        [TestCase(SecurityType.Cfd, Resolution.Tick, typeof(Tick), TickType.Trade, null, typeof(OpenInterest), false)]
-        [TestCase(SecurityType.Cfd, Resolution.Tick, typeof(Tick), TickType.Quote, null, typeof(TradeBar), false)]
-        [TestCase(SecurityType.Cfd, Resolution.Tick, typeof(Tick), TickType.Quote, null, typeof(QuoteBar), true)]
-        [TestCase(SecurityType.Cfd, Resolution.Tick, typeof(Tick), TickType.Quote, null, typeof(OpenInterest), false)]
-        [TestCase(SecurityType.Cfd, Resolution.Tick, typeof(Tick), TickType.OpenInterest, null, typeof(TradeBar), false)]
-        [TestCase(SecurityType.Cfd, Resolution.Tick, typeof(Tick), TickType.OpenInterest, null, typeof(QuoteBar), false)]
-        [TestCase(SecurityType.Cfd, Resolution.Tick, typeof(Tick), TickType.OpenInterest, null, typeof(OpenInterest), true)]
-        [TestCase(SecurityType.Cfd, Resolution.Tick, typeof(Tick), TickType.Quote, null, typeof(RenkoBar), true)]
-        [TestCase(SecurityType.Cfd, Resolution.Tick, typeof(Tick), TickType.Trade, TickType.Trade, typeof(TradeBar), true)]
-        [TestCase(SecurityType.Cfd, Resolution.Tick, typeof(Tick), TickType.Trade, TickType.Quote, typeof(TradeBar), false)]
-        [TestCase(SecurityType.Cfd, Resolution.Tick, typeof(Tick), TickType.Trade, TickType.OpenInterest, typeof(TradeBar), false)]
-        [TestCase(SecurityType.Cfd, Resolution.Tick, typeof(Tick), TickType.Quote, TickType.Trade, typeof(QuoteBar), false)]
-        [TestCase(SecurityType.Cfd, Resolution.Tick, typeof(Tick), TickType.Quote, TickType.Quote, typeof(QuoteBar), true)]
-        [TestCase(SecurityType.Cfd, Resolution.Tick, typeof(Tick), TickType.Quote, TickType.OpenInterest, typeof(QuoteBar), false)]
-        [TestCase(SecurityType.Cfd, Resolution.Tick, typeof(Tick), TickType.OpenInterest, TickType.Trade, typeof(OpenInterest), false)]
-        [TestCase(SecurityType.Cfd, Resolution.Tick, typeof(Tick), TickType.OpenInterest, TickType.Quote, typeof(OpenInterest), false)]
-        [TestCase(SecurityType.Cfd, Resolution.Tick, typeof(Tick), TickType.OpenInterest, TickType.OpenInterest, typeof(OpenInterest), true)]
-
-        [TestCase(SecurityType.Crypto, Resolution.Tick, typeof(Tick), TickType.Trade, null, typeof(TradeBar), true)]
-        [TestCase(SecurityType.Crypto, Resolution.Tick, typeof(Tick), TickType.Trade, null, typeof(QuoteBar), false)]
-        [TestCase(SecurityType.Crypto, Resolution.Tick, typeof(Tick), TickType.Trade, null, typeof(OpenInterest), false)]
-        [TestCase(SecurityType.Crypto, Resolution.Tick, typeof(Tick), TickType.Quote, null, typeof(TradeBar), false)]
-        [TestCase(SecurityType.Crypto, Resolution.Tick, typeof(Tick), TickType.Quote, null, typeof(QuoteBar), true)]
-        [TestCase(SecurityType.Crypto, Resolution.Tick, typeof(Tick), TickType.Quote, null, typeof(OpenInterest), false)]
-        [TestCase(SecurityType.Crypto, Resolution.Tick, typeof(Tick), TickType.OpenInterest, null, typeof(TradeBar), false)]
-        [TestCase(SecurityType.Crypto, Resolution.Tick, typeof(Tick), TickType.OpenInterest, null, typeof(QuoteBar), false)]
-        [TestCase(SecurityType.Crypto, Resolution.Tick, typeof(Tick), TickType.OpenInterest, null, typeof(OpenInterest), true)]
-        [TestCase(SecurityType.Crypto, Resolution.Tick, typeof(Tick), TickType.Quote, null, typeof(RenkoBar), true)]
-        [TestCase(SecurityType.Crypto, Resolution.Tick, typeof(Tick), TickType.Trade, TickType.Trade, typeof(TradeBar), true)]
-        [TestCase(SecurityType.Crypto, Resolution.Tick, typeof(Tick), TickType.Trade, TickType.Quote, typeof(TradeBar), false)]
-        [TestCase(SecurityType.Crypto, Resolution.Tick, typeof(Tick), TickType.Trade, TickType.OpenInterest, typeof(TradeBar), false)]
-        [TestCase(SecurityType.Crypto, Resolution.Tick, typeof(Tick), TickType.Quote, TickType.Trade, typeof(QuoteBar), false)]
-        [TestCase(SecurityType.Crypto, Resolution.Tick, typeof(Tick), TickType.Quote, TickType.Quote, typeof(QuoteBar), true)]
-        [TestCase(SecurityType.Crypto, Resolution.Tick, typeof(Tick), TickType.Quote, TickType.OpenInterest, typeof(QuoteBar), false)]
-        [TestCase(SecurityType.Crypto, Resolution.Tick, typeof(Tick), TickType.OpenInterest, TickType.Trade, typeof(OpenInterest), false)]
-        [TestCase(SecurityType.Crypto, Resolution.Tick, typeof(Tick), TickType.OpenInterest, TickType.Quote, typeof(OpenInterest), false)]
-        [TestCase(SecurityType.Crypto, Resolution.Tick, typeof(Tick), TickType.OpenInterest, TickType.OpenInterest, typeof(OpenInterest), true)]
-        public void GetsExpectedSubscriptionsGivenATickType(SecurityType securityType,
+        [TestCase(
+            SecurityType.Future,
+            Resolution.Tick,
+            typeof(Tick),
+            TickType.Trade,
+            null,
+            typeof(TradeBar),
+            true
+        )]
+        [TestCase(
+            SecurityType.Future,
+            Resolution.Tick,
+            typeof(Tick),
+            TickType.Trade,
+            null,
+            typeof(QuoteBar),
+            false
+        )]
+        [TestCase(
+            SecurityType.Future,
+            Resolution.Tick,
+            typeof(Tick),
+            TickType.Trade,
+            null,
+            typeof(OpenInterest),
+            false
+        )]
+        [TestCase(
+            SecurityType.Future,
+            Resolution.Tick,
+            typeof(Tick),
+            TickType.Quote,
+            null,
+            typeof(TradeBar),
+            false
+        )]
+        [TestCase(
+            SecurityType.Future,
+            Resolution.Tick,
+            typeof(Tick),
+            TickType.Quote,
+            null,
+            typeof(QuoteBar),
+            true
+        )]
+        [TestCase(
+            SecurityType.Future,
+            Resolution.Tick,
+            typeof(Tick),
+            TickType.Quote,
+            null,
+            typeof(OpenInterest),
+            false
+        )]
+        [TestCase(
+            SecurityType.Future,
+            Resolution.Tick,
+            typeof(Tick),
+            TickType.OpenInterest,
+            null,
+            typeof(TradeBar),
+            false
+        )]
+        [TestCase(
+            SecurityType.Future,
+            Resolution.Tick,
+            typeof(Tick),
+            TickType.OpenInterest,
+            null,
+            typeof(QuoteBar),
+            false
+        )]
+        [TestCase(
+            SecurityType.Future,
+            Resolution.Tick,
+            typeof(Tick),
+            TickType.OpenInterest,
+            null,
+            typeof(OpenInterest),
+            true
+        )]
+        [TestCase(
+            SecurityType.Future,
+            Resolution.Tick,
+            typeof(Tick),
+            TickType.Trade,
+            TickType.Trade,
+            typeof(TradeBar),
+            true
+        )]
+        [TestCase(
+            SecurityType.Future,
+            Resolution.Tick,
+            typeof(Tick),
+            TickType.Trade,
+            TickType.Quote,
+            typeof(TradeBar),
+            false
+        )]
+        [TestCase(
+            SecurityType.Future,
+            Resolution.Tick,
+            typeof(Tick),
+            TickType.Trade,
+            TickType.OpenInterest,
+            typeof(TradeBar),
+            false
+        )]
+        [TestCase(
+            SecurityType.Future,
+            Resolution.Tick,
+            typeof(Tick),
+            TickType.Quote,
+            TickType.Trade,
+            typeof(QuoteBar),
+            false
+        )]
+        [TestCase(
+            SecurityType.Future,
+            Resolution.Tick,
+            typeof(Tick),
+            TickType.Quote,
+            TickType.Quote,
+            typeof(QuoteBar),
+            true
+        )]
+        [TestCase(
+            SecurityType.Future,
+            Resolution.Tick,
+            typeof(Tick),
+            TickType.Quote,
+            TickType.OpenInterest,
+            typeof(QuoteBar),
+            false
+        )]
+        [TestCase(
+            SecurityType.Future,
+            Resolution.Tick,
+            typeof(Tick),
+            TickType.OpenInterest,
+            TickType.Trade,
+            typeof(OpenInterest),
+            false
+        )]
+        [TestCase(
+            SecurityType.Future,
+            Resolution.Tick,
+            typeof(Tick),
+            TickType.OpenInterest,
+            TickType.Quote,
+            typeof(OpenInterest),
+            false
+        )]
+        [TestCase(
+            SecurityType.Future,
+            Resolution.Tick,
+            typeof(Tick),
+            TickType.OpenInterest,
+            TickType.OpenInterest,
+            typeof(OpenInterest),
+            true
+        )]
+        [TestCase(
+            SecurityType.Option,
+            Resolution.Tick,
+            typeof(Tick),
+            TickType.Trade,
+            null,
+            typeof(TradeBar),
+            true
+        )]
+        [TestCase(
+            SecurityType.Option,
+            Resolution.Tick,
+            typeof(Tick),
+            TickType.Trade,
+            null,
+            typeof(QuoteBar),
+            false
+        )]
+        [TestCase(
+            SecurityType.Option,
+            Resolution.Tick,
+            typeof(Tick),
+            TickType.Trade,
+            null,
+            typeof(OpenInterest),
+            false
+        )]
+        [TestCase(
+            SecurityType.Option,
+            Resolution.Tick,
+            typeof(Tick),
+            TickType.Quote,
+            null,
+            typeof(TradeBar),
+            false
+        )]
+        [TestCase(
+            SecurityType.Option,
+            Resolution.Tick,
+            typeof(Tick),
+            TickType.Quote,
+            null,
+            typeof(QuoteBar),
+            true
+        )]
+        [TestCase(
+            SecurityType.Option,
+            Resolution.Tick,
+            typeof(Tick),
+            TickType.Quote,
+            null,
+            typeof(OpenInterest),
+            false
+        )]
+        [TestCase(
+            SecurityType.Option,
+            Resolution.Tick,
+            typeof(Tick),
+            TickType.OpenInterest,
+            null,
+            typeof(TradeBar),
+            false
+        )]
+        [TestCase(
+            SecurityType.Option,
+            Resolution.Tick,
+            typeof(Tick),
+            TickType.OpenInterest,
+            null,
+            typeof(QuoteBar),
+            false
+        )]
+        [TestCase(
+            SecurityType.Option,
+            Resolution.Tick,
+            typeof(Tick),
+            TickType.OpenInterest,
+            null,
+            typeof(OpenInterest),
+            true
+        )]
+        [TestCase(
+            SecurityType.Option,
+            Resolution.Tick,
+            typeof(Tick),
+            TickType.Trade,
+            TickType.Trade,
+            typeof(TradeBar),
+            true
+        )]
+        [TestCase(
+            SecurityType.Option,
+            Resolution.Tick,
+            typeof(Tick),
+            TickType.Trade,
+            TickType.Quote,
+            typeof(TradeBar),
+            false
+        )]
+        [TestCase(
+            SecurityType.Option,
+            Resolution.Tick,
+            typeof(Tick),
+            TickType.Trade,
+            TickType.OpenInterest,
+            typeof(TradeBar),
+            false
+        )]
+        [TestCase(
+            SecurityType.Option,
+            Resolution.Tick,
+            typeof(Tick),
+            TickType.Quote,
+            TickType.Trade,
+            typeof(QuoteBar),
+            false
+        )]
+        [TestCase(
+            SecurityType.Option,
+            Resolution.Tick,
+            typeof(Tick),
+            TickType.Quote,
+            TickType.Quote,
+            typeof(QuoteBar),
+            true
+        )]
+        [TestCase(
+            SecurityType.Option,
+            Resolution.Tick,
+            typeof(Tick),
+            TickType.Quote,
+            TickType.OpenInterest,
+            typeof(QuoteBar),
+            false
+        )]
+        [TestCase(
+            SecurityType.Option,
+            Resolution.Tick,
+            typeof(Tick),
+            TickType.OpenInterest,
+            TickType.Trade,
+            typeof(OpenInterest),
+            false
+        )]
+        [TestCase(
+            SecurityType.Option,
+            Resolution.Tick,
+            typeof(Tick),
+            TickType.OpenInterest,
+            TickType.Quote,
+            typeof(OpenInterest),
+            false
+        )]
+        [TestCase(
+            SecurityType.Option,
+            Resolution.Tick,
+            typeof(Tick),
+            TickType.OpenInterest,
+            TickType.OpenInterest,
+            typeof(OpenInterest),
+            true
+        )]
+        [TestCase(
+            SecurityType.Equity,
+            Resolution.Tick,
+            typeof(Tick),
+            TickType.Trade,
+            null,
+            typeof(TradeBar),
+            true
+        )]
+        [TestCase(
+            SecurityType.Equity,
+            Resolution.Tick,
+            typeof(Tick),
+            TickType.Trade,
+            null,
+            typeof(QuoteBar),
+            false
+        )]
+        [TestCase(
+            SecurityType.Equity,
+            Resolution.Tick,
+            typeof(Tick),
+            TickType.Trade,
+            null,
+            typeof(OpenInterest),
+            false
+        )]
+        [TestCase(
+            SecurityType.Equity,
+            Resolution.Tick,
+            typeof(Tick),
+            TickType.Quote,
+            null,
+            typeof(TradeBar),
+            false
+        )]
+        [TestCase(
+            SecurityType.Equity,
+            Resolution.Tick,
+            typeof(Tick),
+            TickType.Quote,
+            null,
+            typeof(QuoteBar),
+            true
+        )]
+        [TestCase(
+            SecurityType.Equity,
+            Resolution.Tick,
+            typeof(Tick),
+            TickType.Quote,
+            null,
+            typeof(OpenInterest),
+            false
+        )]
+        [TestCase(
+            SecurityType.Equity,
+            Resolution.Tick,
+            typeof(Tick),
+            TickType.OpenInterest,
+            null,
+            typeof(TradeBar),
+            false
+        )]
+        [TestCase(
+            SecurityType.Equity,
+            Resolution.Tick,
+            typeof(Tick),
+            TickType.OpenInterest,
+            null,
+            typeof(QuoteBar),
+            false
+        )]
+        [TestCase(
+            SecurityType.Equity,
+            Resolution.Tick,
+            typeof(Tick),
+            TickType.OpenInterest,
+            null,
+            typeof(OpenInterest),
+            true
+        )]
+        [TestCase(
+            SecurityType.Equity,
+            Resolution.Tick,
+            typeof(Tick),
+            TickType.Quote,
+            null,
+            typeof(RenkoBar),
+            true
+        )]
+        [TestCase(
+            SecurityType.Equity,
+            Resolution.Tick,
+            typeof(Tick),
+            TickType.Trade,
+            TickType.Trade,
+            typeof(TradeBar),
+            true
+        )]
+        [TestCase(
+            SecurityType.Equity,
+            Resolution.Tick,
+            typeof(Tick),
+            TickType.Trade,
+            TickType.Quote,
+            typeof(TradeBar),
+            false
+        )]
+        [TestCase(
+            SecurityType.Equity,
+            Resolution.Tick,
+            typeof(Tick),
+            TickType.Trade,
+            TickType.OpenInterest,
+            typeof(TradeBar),
+            false
+        )]
+        [TestCase(
+            SecurityType.Equity,
+            Resolution.Tick,
+            typeof(Tick),
+            TickType.Quote,
+            TickType.Trade,
+            typeof(QuoteBar),
+            false
+        )]
+        [TestCase(
+            SecurityType.Equity,
+            Resolution.Tick,
+            typeof(Tick),
+            TickType.Quote,
+            TickType.Quote,
+            typeof(QuoteBar),
+            true
+        )]
+        [TestCase(
+            SecurityType.Equity,
+            Resolution.Tick,
+            typeof(Tick),
+            TickType.Quote,
+            TickType.OpenInterest,
+            typeof(QuoteBar),
+            false
+        )]
+        [TestCase(
+            SecurityType.Equity,
+            Resolution.Tick,
+            typeof(Tick),
+            TickType.OpenInterest,
+            TickType.Trade,
+            typeof(OpenInterest),
+            false
+        )]
+        [TestCase(
+            SecurityType.Equity,
+            Resolution.Tick,
+            typeof(Tick),
+            TickType.OpenInterest,
+            TickType.Quote,
+            typeof(OpenInterest),
+            false
+        )]
+        [TestCase(
+            SecurityType.Equity,
+            Resolution.Tick,
+            typeof(Tick),
+            TickType.OpenInterest,
+            TickType.OpenInterest,
+            typeof(OpenInterest),
+            true
+        )]
+        [TestCase(
+            SecurityType.Forex,
+            Resolution.Tick,
+            typeof(Tick),
+            TickType.Trade,
+            null,
+            typeof(TradeBar),
+            true
+        )]
+        [TestCase(
+            SecurityType.Forex,
+            Resolution.Tick,
+            typeof(Tick),
+            TickType.Trade,
+            null,
+            typeof(QuoteBar),
+            false
+        )]
+        [TestCase(
+            SecurityType.Forex,
+            Resolution.Tick,
+            typeof(Tick),
+            TickType.Trade,
+            null,
+            typeof(OpenInterest),
+            false
+        )]
+        [TestCase(
+            SecurityType.Forex,
+            Resolution.Tick,
+            typeof(Tick),
+            TickType.Quote,
+            null,
+            typeof(TradeBar),
+            false
+        )]
+        [TestCase(
+            SecurityType.Forex,
+            Resolution.Tick,
+            typeof(Tick),
+            TickType.Quote,
+            null,
+            typeof(QuoteBar),
+            true
+        )]
+        [TestCase(
+            SecurityType.Forex,
+            Resolution.Tick,
+            typeof(Tick),
+            TickType.Quote,
+            null,
+            typeof(OpenInterest),
+            false
+        )]
+        [TestCase(
+            SecurityType.Forex,
+            Resolution.Tick,
+            typeof(Tick),
+            TickType.OpenInterest,
+            null,
+            typeof(TradeBar),
+            false
+        )]
+        [TestCase(
+            SecurityType.Forex,
+            Resolution.Tick,
+            typeof(Tick),
+            TickType.OpenInterest,
+            null,
+            typeof(QuoteBar),
+            false
+        )]
+        [TestCase(
+            SecurityType.Forex,
+            Resolution.Tick,
+            typeof(Tick),
+            TickType.OpenInterest,
+            null,
+            typeof(OpenInterest),
+            true
+        )]
+        [TestCase(
+            SecurityType.Forex,
+            Resolution.Tick,
+            typeof(Tick),
+            TickType.Quote,
+            null,
+            typeof(RenkoBar),
+            true
+        )]
+        [TestCase(
+            SecurityType.Forex,
+            Resolution.Tick,
+            typeof(Tick),
+            TickType.Trade,
+            TickType.Trade,
+            typeof(TradeBar),
+            true
+        )]
+        [TestCase(
+            SecurityType.Forex,
+            Resolution.Tick,
+            typeof(Tick),
+            TickType.Trade,
+            TickType.Quote,
+            typeof(TradeBar),
+            false
+        )]
+        [TestCase(
+            SecurityType.Forex,
+            Resolution.Tick,
+            typeof(Tick),
+            TickType.Trade,
+            TickType.OpenInterest,
+            typeof(TradeBar),
+            false
+        )]
+        [TestCase(
+            SecurityType.Forex,
+            Resolution.Tick,
+            typeof(Tick),
+            TickType.Quote,
+            TickType.Trade,
+            typeof(QuoteBar),
+            false
+        )]
+        [TestCase(
+            SecurityType.Forex,
+            Resolution.Tick,
+            typeof(Tick),
+            TickType.Quote,
+            TickType.Quote,
+            typeof(QuoteBar),
+            true
+        )]
+        [TestCase(
+            SecurityType.Forex,
+            Resolution.Tick,
+            typeof(Tick),
+            TickType.Quote,
+            TickType.OpenInterest,
+            typeof(QuoteBar),
+            false
+        )]
+        [TestCase(
+            SecurityType.Forex,
+            Resolution.Tick,
+            typeof(Tick),
+            TickType.OpenInterest,
+            TickType.Trade,
+            typeof(OpenInterest),
+            false
+        )]
+        [TestCase(
+            SecurityType.Forex,
+            Resolution.Tick,
+            typeof(Tick),
+            TickType.OpenInterest,
+            TickType.Quote,
+            typeof(OpenInterest),
+            false
+        )]
+        [TestCase(
+            SecurityType.Forex,
+            Resolution.Tick,
+            typeof(Tick),
+            TickType.OpenInterest,
+            TickType.OpenInterest,
+            typeof(OpenInterest),
+            true
+        )]
+        [TestCase(
+            SecurityType.Cfd,
+            Resolution.Tick,
+            typeof(Tick),
+            TickType.Trade,
+            null,
+            typeof(TradeBar),
+            true
+        )]
+        [TestCase(
+            SecurityType.Cfd,
+            Resolution.Tick,
+            typeof(Tick),
+            TickType.Trade,
+            null,
+            typeof(QuoteBar),
+            false
+        )]
+        [TestCase(
+            SecurityType.Cfd,
+            Resolution.Tick,
+            typeof(Tick),
+            TickType.Trade,
+            null,
+            typeof(OpenInterest),
+            false
+        )]
+        [TestCase(
+            SecurityType.Cfd,
+            Resolution.Tick,
+            typeof(Tick),
+            TickType.Quote,
+            null,
+            typeof(TradeBar),
+            false
+        )]
+        [TestCase(
+            SecurityType.Cfd,
+            Resolution.Tick,
+            typeof(Tick),
+            TickType.Quote,
+            null,
+            typeof(QuoteBar),
+            true
+        )]
+        [TestCase(
+            SecurityType.Cfd,
+            Resolution.Tick,
+            typeof(Tick),
+            TickType.Quote,
+            null,
+            typeof(OpenInterest),
+            false
+        )]
+        [TestCase(
+            SecurityType.Cfd,
+            Resolution.Tick,
+            typeof(Tick),
+            TickType.OpenInterest,
+            null,
+            typeof(TradeBar),
+            false
+        )]
+        [TestCase(
+            SecurityType.Cfd,
+            Resolution.Tick,
+            typeof(Tick),
+            TickType.OpenInterest,
+            null,
+            typeof(QuoteBar),
+            false
+        )]
+        [TestCase(
+            SecurityType.Cfd,
+            Resolution.Tick,
+            typeof(Tick),
+            TickType.OpenInterest,
+            null,
+            typeof(OpenInterest),
+            true
+        )]
+        [TestCase(
+            SecurityType.Cfd,
+            Resolution.Tick,
+            typeof(Tick),
+            TickType.Quote,
+            null,
+            typeof(RenkoBar),
+            true
+        )]
+        [TestCase(
+            SecurityType.Cfd,
+            Resolution.Tick,
+            typeof(Tick),
+            TickType.Trade,
+            TickType.Trade,
+            typeof(TradeBar),
+            true
+        )]
+        [TestCase(
+            SecurityType.Cfd,
+            Resolution.Tick,
+            typeof(Tick),
+            TickType.Trade,
+            TickType.Quote,
+            typeof(TradeBar),
+            false
+        )]
+        [TestCase(
+            SecurityType.Cfd,
+            Resolution.Tick,
+            typeof(Tick),
+            TickType.Trade,
+            TickType.OpenInterest,
+            typeof(TradeBar),
+            false
+        )]
+        [TestCase(
+            SecurityType.Cfd,
+            Resolution.Tick,
+            typeof(Tick),
+            TickType.Quote,
+            TickType.Trade,
+            typeof(QuoteBar),
+            false
+        )]
+        [TestCase(
+            SecurityType.Cfd,
+            Resolution.Tick,
+            typeof(Tick),
+            TickType.Quote,
+            TickType.Quote,
+            typeof(QuoteBar),
+            true
+        )]
+        [TestCase(
+            SecurityType.Cfd,
+            Resolution.Tick,
+            typeof(Tick),
+            TickType.Quote,
+            TickType.OpenInterest,
+            typeof(QuoteBar),
+            false
+        )]
+        [TestCase(
+            SecurityType.Cfd,
+            Resolution.Tick,
+            typeof(Tick),
+            TickType.OpenInterest,
+            TickType.Trade,
+            typeof(OpenInterest),
+            false
+        )]
+        [TestCase(
+            SecurityType.Cfd,
+            Resolution.Tick,
+            typeof(Tick),
+            TickType.OpenInterest,
+            TickType.Quote,
+            typeof(OpenInterest),
+            false
+        )]
+        [TestCase(
+            SecurityType.Cfd,
+            Resolution.Tick,
+            typeof(Tick),
+            TickType.OpenInterest,
+            TickType.OpenInterest,
+            typeof(OpenInterest),
+            true
+        )]
+        [TestCase(
+            SecurityType.Crypto,
+            Resolution.Tick,
+            typeof(Tick),
+            TickType.Trade,
+            null,
+            typeof(TradeBar),
+            true
+        )]
+        [TestCase(
+            SecurityType.Crypto,
+            Resolution.Tick,
+            typeof(Tick),
+            TickType.Trade,
+            null,
+            typeof(QuoteBar),
+            false
+        )]
+        [TestCase(
+            SecurityType.Crypto,
+            Resolution.Tick,
+            typeof(Tick),
+            TickType.Trade,
+            null,
+            typeof(OpenInterest),
+            false
+        )]
+        [TestCase(
+            SecurityType.Crypto,
+            Resolution.Tick,
+            typeof(Tick),
+            TickType.Quote,
+            null,
+            typeof(TradeBar),
+            false
+        )]
+        [TestCase(
+            SecurityType.Crypto,
+            Resolution.Tick,
+            typeof(Tick),
+            TickType.Quote,
+            null,
+            typeof(QuoteBar),
+            true
+        )]
+        [TestCase(
+            SecurityType.Crypto,
+            Resolution.Tick,
+            typeof(Tick),
+            TickType.Quote,
+            null,
+            typeof(OpenInterest),
+            false
+        )]
+        [TestCase(
+            SecurityType.Crypto,
+            Resolution.Tick,
+            typeof(Tick),
+            TickType.OpenInterest,
+            null,
+            typeof(TradeBar),
+            false
+        )]
+        [TestCase(
+            SecurityType.Crypto,
+            Resolution.Tick,
+            typeof(Tick),
+            TickType.OpenInterest,
+            null,
+            typeof(QuoteBar),
+            false
+        )]
+        [TestCase(
+            SecurityType.Crypto,
+            Resolution.Tick,
+            typeof(Tick),
+            TickType.OpenInterest,
+            null,
+            typeof(OpenInterest),
+            true
+        )]
+        [TestCase(
+            SecurityType.Crypto,
+            Resolution.Tick,
+            typeof(Tick),
+            TickType.Quote,
+            null,
+            typeof(RenkoBar),
+            true
+        )]
+        [TestCase(
+            SecurityType.Crypto,
+            Resolution.Tick,
+            typeof(Tick),
+            TickType.Trade,
+            TickType.Trade,
+            typeof(TradeBar),
+            true
+        )]
+        [TestCase(
+            SecurityType.Crypto,
+            Resolution.Tick,
+            typeof(Tick),
+            TickType.Trade,
+            TickType.Quote,
+            typeof(TradeBar),
+            false
+        )]
+        [TestCase(
+            SecurityType.Crypto,
+            Resolution.Tick,
+            typeof(Tick),
+            TickType.Trade,
+            TickType.OpenInterest,
+            typeof(TradeBar),
+            false
+        )]
+        [TestCase(
+            SecurityType.Crypto,
+            Resolution.Tick,
+            typeof(Tick),
+            TickType.Quote,
+            TickType.Trade,
+            typeof(QuoteBar),
+            false
+        )]
+        [TestCase(
+            SecurityType.Crypto,
+            Resolution.Tick,
+            typeof(Tick),
+            TickType.Quote,
+            TickType.Quote,
+            typeof(QuoteBar),
+            true
+        )]
+        [TestCase(
+            SecurityType.Crypto,
+            Resolution.Tick,
+            typeof(Tick),
+            TickType.Quote,
+            TickType.OpenInterest,
+            typeof(QuoteBar),
+            false
+        )]
+        [TestCase(
+            SecurityType.Crypto,
+            Resolution.Tick,
+            typeof(Tick),
+            TickType.OpenInterest,
+            TickType.Trade,
+            typeof(OpenInterest),
+            false
+        )]
+        [TestCase(
+            SecurityType.Crypto,
+            Resolution.Tick,
+            typeof(Tick),
+            TickType.OpenInterest,
+            TickType.Quote,
+            typeof(OpenInterest),
+            false
+        )]
+        [TestCase(
+            SecurityType.Crypto,
+            Resolution.Tick,
+            typeof(Tick),
+            TickType.OpenInterest,
+            TickType.OpenInterest,
+            typeof(OpenInterest),
+            true
+        )]
+        public void GetsExpectedSubscriptionsGivenATickType(
+            SecurityType securityType,
             Resolution subscriptionResolution,
             Type subscriptionDataType,
             TickType? subscriptionTickType,
             TickType? desiredTickType,
             Type consolidatorOutputType,
-            bool expected)
+            bool expected
+        )
         {
             var subscription = new SubscriptionDataConfig(
                 subscriptionDataType,
@@ -403,10 +1610,21 @@ namespace QuantConnect.Tests.Common.Data
                 false,
                 false,
                 false,
-                subscriptionTickType);
+                subscriptionTickType
+            );
 
-            using var consolidator = new TestConsolidator(subscriptionDataType, consolidatorOutputType);
-            Assert.AreEqual(expected, SubscriptionManager.IsSubscriptionValidForConsolidator(subscription, consolidator, desiredTickType));
+            using var consolidator = new TestConsolidator(
+                subscriptionDataType,
+                consolidatorOutputType
+            );
+            Assert.AreEqual(
+                expected,
+                SubscriptionManager.IsSubscriptionValidForConsolidator(
+                    subscription,
+                    consolidator,
+                    desiredTickType
+                )
+            );
         }
 
         [Test]
@@ -417,13 +1635,15 @@ namespace QuantConnect.Tests.Common.Data
             // and the C# type name don't match for generic types (e.g. IdentityDataConsolidator[TradeBar] != IdentityDataConsolidator`1)
 
             using var _ = Py.GIL();
-            var module = PyModule.FromString("testModule",
-                    @"
+            var module = PyModule.FromString(
+                "testModule",
+                @"
 from AlgorithmImports import *
 
 def get_consolidator():
     return IdentityDataConsolidator[TradeBar]()
-");
+"
+            );
 
             var algorithm = new AlgorithmStub();
             var symbol = algorithm.AddEquity("SPY").Symbol;
@@ -431,23 +1651,31 @@ def get_consolidator():
             var consolidator = module.GetAttr("get_consolidator").Invoke();
 
             algorithm.SubscriptionManager.AddConsolidator(symbol, consolidator);
-            Assert.AreEqual(1, algorithm.SubscriptionManager.Subscriptions.Sum(x => x.Consolidators.Count));
+            Assert.AreEqual(
+                1,
+                algorithm.SubscriptionManager.Subscriptions.Sum(x => x.Consolidators.Count)
+            );
 
             algorithm.SubscriptionManager.RemoveConsolidator(symbol, consolidator);
-            Assert.AreEqual(0, algorithm.SubscriptionManager.Subscriptions.Sum(x => x.Consolidators.Count));
+            Assert.AreEqual(
+                0,
+                algorithm.SubscriptionManager.Subscriptions.Sum(x => x.Consolidators.Count)
+            );
         }
 
         [Test]
         public void CanAddAndRemoveCSharpConsolidatorFromPythonWithWrapper()
         {
             using var _ = Py.GIL();
-            var module = PyModule.FromString("testModule",
-                    @"
+            var module = PyModule.FromString(
+                "testModule",
+                @"
 from AlgorithmImports import *
 
 def get_consolidator():
     return IdentityDataConsolidator[TradeBar]()
-");
+"
+            );
 
             var algorithm = new AlgorithmStub();
             var symbol = algorithm.AddEquity("SPY").Symbol;
@@ -455,18 +1683,25 @@ def get_consolidator():
             var pyConsolidator = module.GetAttr("get_consolidator").Invoke();
 
             algorithm.SubscriptionManager.AddConsolidator(Symbols.SPY, pyConsolidator);
-            Assert.AreEqual(1, algorithm.SubscriptionManager.Subscriptions.Sum(x => x.Consolidators.Count));
+            Assert.AreEqual(
+                1,
+                algorithm.SubscriptionManager.Subscriptions.Sum(x => x.Consolidators.Count)
+            );
 
             algorithm.SubscriptionManager.RemoveConsolidator(Symbols.SPY, pyConsolidator);
-            Assert.AreEqual(0, algorithm.SubscriptionManager.Subscriptions.Sum(x => x.Consolidators.Count));
+            Assert.AreEqual(
+                0,
+                algorithm.SubscriptionManager.Subscriptions.Sum(x => x.Consolidators.Count)
+            );
         }
 
         [Test]
         public void CanAddAndRemovePythonConsolidator()
         {
             using var _ = Py.GIL();
-            var module = PyModule.FromString("testModule",
-                    @"
+            var module = PyModule.FromString(
+                "testModule",
+                @"
 from AlgorithmImports import *
 
 class CustomQuoteBarConsolidator(PythonConsolidator):
@@ -487,7 +1722,8 @@ class CustomQuoteBarConsolidator(PythonConsolidator):
 
 def get_consolidator():
     return CustomQuoteBarConsolidator()
-");
+"
+            );
 
             var algorithm = new AlgorithmStub();
             var symbol = algorithm.AddEquity("SPY").Symbol;
@@ -495,45 +1731,56 @@ def get_consolidator():
             var pyConsolidator = module.GetAttr("get_consolidator").Invoke();
 
             algorithm.SubscriptionManager.AddConsolidator(Symbols.SPY, pyConsolidator);
-            Assert.AreEqual(1, algorithm.SubscriptionManager.Subscriptions.Sum(x => x.Consolidators.Count));
+            Assert.AreEqual(
+                1,
+                algorithm.SubscriptionManager.Subscriptions.Sum(x => x.Consolidators.Count)
+            );
 
             algorithm.SubscriptionManager.RemoveConsolidator(Symbols.SPY, pyConsolidator);
-            Assert.AreEqual(0, algorithm.SubscriptionManager.Subscriptions.Sum(x => x.Consolidators.Count));
+            Assert.AreEqual(
+                0,
+                algorithm.SubscriptionManager.Subscriptions.Sum(x => x.Consolidators.Count)
+            );
         }
 
         [Test]
         public void RunRemoveConsolidatorsRegressionAlgorithm()
         {
-            var parameter = new RegressionTests.AlgorithmStatisticsTestParameters("ManuallyRemovedConsolidatorsAlgorithm",
-                new Dictionary<string, string> {
-                    {PerformanceMetrics.TotalOrders, "0"},
-                    {"Average Win", "0%"},
-                    {"Average Loss", "0%"},
-                    {"Compounding Annual Return", "0%"},
-                    {"Drawdown", "0%"},
-                    {"Expectancy", "0"},
-                    {"Net Profit", "0%"},
-                    {"Sharpe Ratio", "0"},
-                    {"Probabilistic Sharpe Ratio", "0%"},
-                    {"Loss Rate", "0%"},
-                    {"Win Rate", "0%"},
-                    {"Profit-Loss Ratio", "0"},
-                    {"Alpha", "0"},
-                    {"Beta", "0"},
-                    {"Annual Standard Deviation", "0"},
-                    {"Annual Variance", "0"},
-                    {"Information Ratio", "-8.91"},
-                    {"Tracking Error", "0.223"},
-                    {"Treynor Ratio", "0"},
-                    {"Total Fees", "$0.00"}
+            var parameter = new RegressionTests.AlgorithmStatisticsTestParameters(
+                "ManuallyRemovedConsolidatorsAlgorithm",
+                new Dictionary<string, string>
+                {
+                    { PerformanceMetrics.TotalOrders, "0" },
+                    { "Average Win", "0%" },
+                    { "Average Loss", "0%" },
+                    { "Compounding Annual Return", "0%" },
+                    { "Drawdown", "0%" },
+                    { "Expectancy", "0" },
+                    { "Net Profit", "0%" },
+                    { "Sharpe Ratio", "0" },
+                    { "Probabilistic Sharpe Ratio", "0%" },
+                    { "Loss Rate", "0%" },
+                    { "Win Rate", "0%" },
+                    { "Profit-Loss Ratio", "0" },
+                    { "Alpha", "0" },
+                    { "Beta", "0" },
+                    { "Annual Standard Deviation", "0" },
+                    { "Annual Variance", "0" },
+                    { "Information Ratio", "-8.91" },
+                    { "Tracking Error", "0.223" },
+                    { "Treynor Ratio", "0" },
+                    { "Total Fees", "$0.00" }
                 },
                 Language.Python,
-                AlgorithmStatus.Completed);
+                AlgorithmStatus.Completed
+            );
 
-            AlgorithmRunner.RunLocalBacktest(parameter.Algorithm,
+            AlgorithmRunner.RunLocalBacktest(
+                parameter.Algorithm,
                 parameter.Statistics,
                 parameter.Language,
-                parameter.ExpectedFinalStatus);
+                parameter.ExpectedFinalStatus
+            );
         }
 
         private class TestConsolidator : IDataConsolidator
@@ -546,8 +1793,11 @@ def get_consolidator():
             public IBaseData WorkingData { get; }
             public Type InputType { get; }
             public Type OutputType { get; }
+
             public void Update(IBaseData data) { }
+
             public void Scan(DateTime currentLocalTime) { }
+
             public void Dispose() { }
 
             public TestConsolidator(Type inputType, Type outputType)
@@ -557,11 +1807,19 @@ def get_consolidator():
             }
         }
 
-        private static List<Tuple<Type, TickType>> GetSubscriptionDataTypes(SecurityType securityType, Resolution resolution, bool isCanonical = false)
+        private static List<Tuple<Type, TickType>> GetSubscriptionDataTypes(
+            SecurityType securityType,
+            Resolution resolution,
+            bool isCanonical = false
+        )
         {
             var subscriptionManager = new SubscriptionManager(NullTimeKeeper.Instance);
             subscriptionManager.SetDataManager(new DataManagerStub());
-            return subscriptionManager.LookupSubscriptionConfigDataTypes(securityType, resolution, isCanonical);
+            return subscriptionManager.LookupSubscriptionConfigDataTypes(
+                securityType,
+                resolution,
+                isCanonical
+            );
         }
     }
 }

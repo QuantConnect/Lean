@@ -16,8 +16,8 @@
 
 using System;
 using NUnit.Framework;
-using QuantConnect.Orders;
 using QuantConnect.Brokerages;
+using QuantConnect.Orders;
 using QuantConnect.Securities;
 using QuantConnect.Tests.Engine.DataFeeds;
 
@@ -26,7 +26,8 @@ namespace QuantConnect.Tests.Brokerages.TradeStation
     [TestFixture]
     public class TradeStationBrokerageModelTests
     {
-        private readonly TradeStationBrokerageModel _brokerageModel = new TradeStationBrokerageModel();
+        private readonly TradeStationBrokerageModel _brokerageModel =
+            new TradeStationBrokerageModel();
 
         [TestCase("AAPL", 10, -15, -16, false)]
         [TestCase("AAPL", 10, -15, -15, true)]
@@ -35,19 +36,36 @@ namespace QuantConnect.Tests.Brokerages.TradeStation
         [TestCase("AAPL", 1, -1, -1, true)]
         [TestCase("AAPL", 1, -2, -2, true)]
         [TestCase("AAPL", 1, -2, -3, false)]
-        public void CanUpdateCrossZeroOrder(string ticker, decimal holdingQuantity, decimal orderQuantity, decimal newOrderQuantity, bool isShouldUpdate)
+        public void CanUpdateCrossZeroOrder(
+            string ticker,
+            decimal holdingQuantity,
+            decimal orderQuantity,
+            decimal newOrderQuantity,
+            bool isShouldUpdate
+        )
         {
             var AAPL = Symbol.Create(ticker, SecurityType.Equity, Market.USA);
             var marketOrder = new MarketOrder(AAPL, orderQuantity, new DateTime(default));
             var security = InitializeSecurity((AAPL.Value, 209m, holdingQuantity))[AAPL];
-            var updateRequest = new UpdateOrderRequest(new DateTime(default), 1, new UpdateOrderFields() { Quantity = newOrderQuantity });
+            var updateRequest = new UpdateOrderRequest(
+                new DateTime(default),
+                1,
+                new UpdateOrderFields() { Quantity = newOrderQuantity }
+            );
 
-            var isPossibleUpdate = _brokerageModel.CanUpdateOrder(security, marketOrder, updateRequest, out var message);
+            var isPossibleUpdate = _brokerageModel.CanUpdateOrder(
+                security,
+                marketOrder,
+                updateRequest,
+                out var message
+            );
 
             Assert.That(isPossibleUpdate, Is.EqualTo(isShouldUpdate));
         }
 
-        private static SecurityManager InitializeSecurity(params (string ticker, decimal averagePrice, decimal quantity)[] equityQuantity)
+        private static SecurityManager InitializeSecurity(
+            params (string ticker, decimal averagePrice, decimal quantity)[] equityQuantity
+        )
         {
             var algorithm = new AlgorithmStub();
             foreach (var (symbol, averagePrice, quantity) in equityQuantity)

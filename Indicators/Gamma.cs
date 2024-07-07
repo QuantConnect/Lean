@@ -36,11 +36,24 @@ namespace QuantConnect.Indicators
         /// <param name="mirrorOption">The mirror option for parity calculation</param>
         /// <param name="optionModel">The option pricing model used to estimate Gamma</param>
         /// <param name="ivModel">The option pricing model used to estimate IV</param>
-        public Gamma(string name, Symbol option, IRiskFreeInterestRateModel riskFreeRateModel, IDividendYieldModel dividendYieldModel, Symbol mirrorOption = null,
-                OptionPricingModelType optionModel = OptionPricingModelType.BlackScholes, OptionPricingModelType? ivModel = null)
-            : base(name, option, riskFreeRateModel, dividendYieldModel, mirrorOption, optionModel, ivModel)
-        {
-        }
+        public Gamma(
+            string name,
+            Symbol option,
+            IRiskFreeInterestRateModel riskFreeRateModel,
+            IDividendYieldModel dividendYieldModel,
+            Symbol mirrorOption = null,
+            OptionPricingModelType optionModel = OptionPricingModelType.BlackScholes,
+            OptionPricingModelType? ivModel = null
+        )
+            : base(
+                name,
+                option,
+                riskFreeRateModel,
+                dividendYieldModel,
+                mirrorOption,
+                optionModel,
+                ivModel
+            ) { }
 
         /// <summary>
         /// Initializes a new instance of the Gamma class
@@ -51,11 +64,23 @@ namespace QuantConnect.Indicators
         /// <param name="mirrorOption">The mirror option for parity calculation</param>
         /// <param name="optionModel">The option pricing model used to estimate Gamma</param>
         /// <param name="ivModel">The option pricing model used to estimate IV</param>
-        public Gamma(Symbol option, IRiskFreeInterestRateModel riskFreeRateModel, IDividendYieldModel dividendYieldModel, Symbol mirrorOption = null,
-            OptionPricingModelType optionModel = OptionPricingModelType.BlackScholes, OptionPricingModelType? ivModel = null)
-            : this($"Gamma({option},{mirrorOption},{optionModel})", option, riskFreeRateModel, dividendYieldModel, mirrorOption, optionModel, ivModel)
-        {
-        }
+        public Gamma(
+            Symbol option,
+            IRiskFreeInterestRateModel riskFreeRateModel,
+            IDividendYieldModel dividendYieldModel,
+            Symbol mirrorOption = null,
+            OptionPricingModelType optionModel = OptionPricingModelType.BlackScholes,
+            OptionPricingModelType? ivModel = null
+        )
+            : this(
+                $"Gamma({option},{mirrorOption},{optionModel})",
+                option,
+                riskFreeRateModel,
+                dividendYieldModel,
+                mirrorOption,
+                optionModel,
+                ivModel
+            ) { }
 
         /// <summary>
         /// Initializes a new instance of the Gamma class
@@ -67,11 +92,24 @@ namespace QuantConnect.Indicators
         /// <param name="mirrorOption">The mirror option for parity calculation</param>
         /// <param name="optionModel">The option pricing model used to estimate Gamma</param>
         /// <param name="ivModel">The option pricing model used to estimate IV</param>
-        public Gamma(string name, Symbol option, PyObject riskFreeRateModel, PyObject dividendYieldModel, Symbol mirrorOption = null,
-            OptionPricingModelType optionModel = OptionPricingModelType.BlackScholes, OptionPricingModelType? ivModel = null)
-            : base(name, option, riskFreeRateModel, dividendYieldModel, mirrorOption, optionModel, ivModel)
-        {
-        }
+        public Gamma(
+            string name,
+            Symbol option,
+            PyObject riskFreeRateModel,
+            PyObject dividendYieldModel,
+            Symbol mirrorOption = null,
+            OptionPricingModelType optionModel = OptionPricingModelType.BlackScholes,
+            OptionPricingModelType? ivModel = null
+        )
+            : base(
+                name,
+                option,
+                riskFreeRateModel,
+                dividendYieldModel,
+                mirrorOption,
+                optionModel,
+                ivModel
+            ) { }
 
         /// <summary>
         /// Initializes a new instance of the Gamma class
@@ -82,11 +120,23 @@ namespace QuantConnect.Indicators
         /// <param name="mirrorOption">The mirror option for parity calculation</param>
         /// <param name="optionModel">The option pricing model used to estimate Gamma</param>
         /// <param name="ivModel">The option pricing model used to estimate IV</param>
-        public Gamma(Symbol option, PyObject riskFreeRateModel, PyObject dividendYieldModel, Symbol mirrorOption = null,
-            OptionPricingModelType optionModel = OptionPricingModelType.BlackScholes, OptionPricingModelType? ivModel = null)
-            : this($"Gamma({option},{mirrorOption},{optionModel})", option, riskFreeRateModel, dividendYieldModel, mirrorOption, optionModel, ivModel)
-        {
-        }
+        public Gamma(
+            Symbol option,
+            PyObject riskFreeRateModel,
+            PyObject dividendYieldModel,
+            Symbol mirrorOption = null,
+            OptionPricingModelType optionModel = OptionPricingModelType.BlackScholes,
+            OptionPricingModelType? ivModel = null
+        )
+            : this(
+                $"Gamma({option},{mirrorOption},{optionModel})",
+                option,
+                riskFreeRateModel,
+                dividendYieldModel,
+                mirrorOption,
+                optionModel,
+                ivModel
+            ) { }
 
         /// <summary>
         /// Initializes a new instance of the Gamma class
@@ -98,11 +148,24 @@ namespace QuantConnect.Indicators
         /// <param name="mirrorOption">The mirror option for parity calculation</param>
         /// <param name="optionModel">The option pricing model used to estimate Gamma</param>
         /// <param name="ivModel">The option pricing model used to estimate IV</param>
-        public Gamma(string name, Symbol option, IRiskFreeInterestRateModel riskFreeRateModel, decimal dividendYield = 0.0m, Symbol mirrorOption = null,
-                OptionPricingModelType optionModel = OptionPricingModelType.BlackScholes, OptionPricingModelType? ivModel = null)
-            : base(name, option, riskFreeRateModel, dividendYield, mirrorOption, optionModel, ivModel)
-        {
-        }
+        public Gamma(
+            string name,
+            Symbol option,
+            IRiskFreeInterestRateModel riskFreeRateModel,
+            decimal dividendYield = 0.0m,
+            Symbol mirrorOption = null,
+            OptionPricingModelType optionModel = OptionPricingModelType.BlackScholes,
+            OptionPricingModelType? ivModel = null
+        )
+            : base(
+                name,
+                option,
+                riskFreeRateModel,
+                dividendYield,
+                mirrorOption,
+                optionModel,
+                ivModel
+            ) { }
 
         /// <summary>
         /// Initializes a new instance of the Gamma class
@@ -113,11 +176,23 @@ namespace QuantConnect.Indicators
         /// <param name="mirrorOption">The mirror option for parity calculation</param>
         /// <param name="optionModel">The option pricing model used to estimate Gamma</param>
         /// <param name="ivModel">The option pricing model used to estimate IV</param>
-        public Gamma(Symbol option, IRiskFreeInterestRateModel riskFreeRateModel, decimal dividendYield = 0.0m, Symbol mirrorOption = null,
-            OptionPricingModelType optionModel = OptionPricingModelType.BlackScholes, OptionPricingModelType? ivModel = null)
-            : this($"Gamma({option},{mirrorOption},{optionModel})", option, riskFreeRateModel, dividendYield, mirrorOption, optionModel, ivModel)
-        {
-        }
+        public Gamma(
+            Symbol option,
+            IRiskFreeInterestRateModel riskFreeRateModel,
+            decimal dividendYield = 0.0m,
+            Symbol mirrorOption = null,
+            OptionPricingModelType optionModel = OptionPricingModelType.BlackScholes,
+            OptionPricingModelType? ivModel = null
+        )
+            : this(
+                $"Gamma({option},{mirrorOption},{optionModel})",
+                option,
+                riskFreeRateModel,
+                dividendYield,
+                mirrorOption,
+                optionModel,
+                ivModel
+            ) { }
 
         /// <summary>
         /// Initializes a new instance of the Gamma class
@@ -129,11 +204,24 @@ namespace QuantConnect.Indicators
         /// <param name="mirrorOption">The mirror option for parity calculation</param>
         /// <param name="optionModel">The option pricing model used to estimate Gamma</param>
         /// <param name="ivModel">The option pricing model used to estimate IV</param>
-        public Gamma(string name, Symbol option, PyObject riskFreeRateModel, decimal dividendYield = 0.0m, Symbol mirrorOption = null,
-            OptionPricingModelType optionModel = OptionPricingModelType.BlackScholes, OptionPricingModelType? ivModel = null)
-            : base(name, option, riskFreeRateModel, dividendYield, mirrorOption, optionModel, ivModel)
-        {
-        }
+        public Gamma(
+            string name,
+            Symbol option,
+            PyObject riskFreeRateModel,
+            decimal dividendYield = 0.0m,
+            Symbol mirrorOption = null,
+            OptionPricingModelType optionModel = OptionPricingModelType.BlackScholes,
+            OptionPricingModelType? ivModel = null
+        )
+            : base(
+                name,
+                option,
+                riskFreeRateModel,
+                dividendYield,
+                mirrorOption,
+                optionModel,
+                ivModel
+            ) { }
 
         /// <summary>
         /// Initializes a new instance of the Gamma class
@@ -144,11 +232,23 @@ namespace QuantConnect.Indicators
         /// <param name="mirrorOption">The mirror option for parity calculation</param>
         /// <param name="optionModel">The option pricing model used to estimate Gamma</param>
         /// <param name="ivModel">The option pricing model used to estimate IV</param>
-        public Gamma(Symbol option, PyObject riskFreeRateModel, decimal dividendYield = 0.0m, Symbol mirrorOption = null,
-            OptionPricingModelType optionModel = OptionPricingModelType.BlackScholes, OptionPricingModelType? ivModel = null)
-            : this($"Gamma({option},{mirrorOption},{optionModel})", option, riskFreeRateModel, dividendYield, mirrorOption, optionModel, ivModel)
-        {
-        }
+        public Gamma(
+            Symbol option,
+            PyObject riskFreeRateModel,
+            decimal dividendYield = 0.0m,
+            Symbol mirrorOption = null,
+            OptionPricingModelType optionModel = OptionPricingModelType.BlackScholes,
+            OptionPricingModelType? ivModel = null
+        )
+            : this(
+                $"Gamma({option},{mirrorOption},{optionModel})",
+                option,
+                riskFreeRateModel,
+                dividendYield,
+                mirrorOption,
+                optionModel,
+                ivModel
+            ) { }
 
         /// <summary>
         /// Initializes a new instance of the Gamma class
@@ -160,11 +260,17 @@ namespace QuantConnect.Indicators
         /// <param name="mirrorOption">The mirror option for parity calculation</param>
         /// <param name="optionModel">The option pricing model used to estimate Gamma</param>
         /// <param name="ivModel">The option pricing model used to estimate IV</param>
-        public Gamma(string name, Symbol option, decimal riskFreeRate = 0.05m, decimal dividendYield = 0.0m, Symbol mirrorOption = null,
-            OptionPricingModelType optionModel = OptionPricingModelType.BlackScholes, OptionPricingModelType? ivModel = null)
+        public Gamma(
+            string name,
+            Symbol option,
+            decimal riskFreeRate = 0.05m,
+            decimal dividendYield = 0.0m,
+            Symbol mirrorOption = null,
+            OptionPricingModelType optionModel = OptionPricingModelType.BlackScholes,
+            OptionPricingModelType? ivModel = null
+        )
             : base(name, option, riskFreeRate, dividendYield, mirrorOption, optionModel, ivModel)
-        {
-        }
+        { }
 
         /// <summary>
         /// Initializes a new instance of the Gamma class
@@ -175,11 +281,23 @@ namespace QuantConnect.Indicators
         /// <param name="mirrorOption">The mirror option for parity calculation</param>
         /// <param name="optionModel">The option pricing model used to estimate Gamma</param>
         /// <param name="ivModel">The option pricing model used to estimate IV</param>
-        public Gamma(Symbol option, decimal riskFreeRate = 0.05m, decimal dividendYield = 0.0m, Symbol mirrorOption = null,
-            OptionPricingModelType optionModel = OptionPricingModelType.BlackScholes, OptionPricingModelType? ivModel = null)
-            : this($"Gamma({option},{mirrorOption},{optionModel})", option, riskFreeRate, dividendYield, mirrorOption, optionModel, ivModel)
-        {
-        }
+        public Gamma(
+            Symbol option,
+            decimal riskFreeRate = 0.05m,
+            decimal dividendYield = 0.0m,
+            Symbol mirrorOption = null,
+            OptionPricingModelType optionModel = OptionPricingModelType.BlackScholes,
+            OptionPricingModelType? ivModel = null
+        )
+            : this(
+                $"Gamma({option},{mirrorOption},{optionModel})",
+                option,
+                riskFreeRate,
+                dividendYield,
+                mirrorOption,
+                optionModel,
+                ivModel
+            ) { }
 
         // Calculate the Gamma of the option
         protected override decimal CalculateGreek(decimal timeTillExpiry)
@@ -190,14 +308,28 @@ namespace QuantConnect.Indicators
             {
                 case OptionPricingModelType.BlackScholes:
                     var norm = new Normal();
-                    var d1 = OptionGreekIndicatorsHelper.CalculateD1(UnderlyingPrice, Strike, timeTillExpiry, RiskFreeRate, DividendYield, ImpliedVolatility);
+                    var d1 = OptionGreekIndicatorsHelper.CalculateD1(
+                        UnderlyingPrice,
+                        Strike,
+                        timeTillExpiry,
+                        RiskFreeRate,
+                        DividendYield,
+                        ImpliedVolatility
+                    );
 
                     // allow at least 1% IV
-                    return math(norm.Density, -d1) / UnderlyingPrice / Math.Max(ImpliedVolatility, 0.01m) / math(Math.Sqrt, timeTillExpiry);
+                    return math(norm.Density, -d1)
+                        / UnderlyingPrice
+                        / Math.Max(ImpliedVolatility, 0.01m)
+                        / math(Math.Sqrt, timeTillExpiry);
 
                 case OptionPricingModelType.BinomialCoxRossRubinstein:
                 case OptionPricingModelType.ForwardTree:
-                    var upFactor = math(Math.Exp, ImpliedVolatility * math(Math.Sqrt, timeTillExpiry / OptionGreekIndicatorsHelper.Steps));
+                    var upFactor = math(
+                        Math.Exp,
+                        ImpliedVolatility
+                            * math(Math.Sqrt, timeTillExpiry / OptionGreekIndicatorsHelper.Steps)
+                    );
                     if (upFactor == 1)
                     {
                         // provide a small step to estimate gamma
@@ -213,15 +345,63 @@ namespace QuantConnect.Indicators
                     var fD = 0m;
                     if (_optionModel == OptionPricingModelType.BinomialCoxRossRubinstein)
                     {
-                        fU = OptionGreekIndicatorsHelper.CRRTheoreticalPrice(ImpliedVolatility, sU, Strike, timeTillExpiry, RiskFreeRate, DividendYield, Right);
-                        fM = OptionGreekIndicatorsHelper.CRRTheoreticalPrice(ImpliedVolatility, UnderlyingPrice, Strike, timeTillExpiry, RiskFreeRate, DividendYield, Right);
-                        fD = OptionGreekIndicatorsHelper.CRRTheoreticalPrice(ImpliedVolatility, sD, Strike, timeTillExpiry, RiskFreeRate, DividendYield, Right);
+                        fU = OptionGreekIndicatorsHelper.CRRTheoreticalPrice(
+                            ImpliedVolatility,
+                            sU,
+                            Strike,
+                            timeTillExpiry,
+                            RiskFreeRate,
+                            DividendYield,
+                            Right
+                        );
+                        fM = OptionGreekIndicatorsHelper.CRRTheoreticalPrice(
+                            ImpliedVolatility,
+                            UnderlyingPrice,
+                            Strike,
+                            timeTillExpiry,
+                            RiskFreeRate,
+                            DividendYield,
+                            Right
+                        );
+                        fD = OptionGreekIndicatorsHelper.CRRTheoreticalPrice(
+                            ImpliedVolatility,
+                            sD,
+                            Strike,
+                            timeTillExpiry,
+                            RiskFreeRate,
+                            DividendYield,
+                            Right
+                        );
                     }
                     else if (_optionModel == OptionPricingModelType.ForwardTree)
                     {
-                        fU = OptionGreekIndicatorsHelper.ForwardTreeTheoreticalPrice(ImpliedVolatility, sU, Strike, timeTillExpiry, RiskFreeRate, DividendYield, Right);
-                        fM = OptionGreekIndicatorsHelper.ForwardTreeTheoreticalPrice(ImpliedVolatility, UnderlyingPrice, Strike, timeTillExpiry, RiskFreeRate, DividendYield, Right);
-                        fD = OptionGreekIndicatorsHelper.ForwardTreeTheoreticalPrice(ImpliedVolatility, sD, Strike, timeTillExpiry, RiskFreeRate, DividendYield, Right);
+                        fU = OptionGreekIndicatorsHelper.ForwardTreeTheoreticalPrice(
+                            ImpliedVolatility,
+                            sU,
+                            Strike,
+                            timeTillExpiry,
+                            RiskFreeRate,
+                            DividendYield,
+                            Right
+                        );
+                        fM = OptionGreekIndicatorsHelper.ForwardTreeTheoreticalPrice(
+                            ImpliedVolatility,
+                            UnderlyingPrice,
+                            Strike,
+                            timeTillExpiry,
+                            RiskFreeRate,
+                            DividendYield,
+                            Right
+                        );
+                        fD = OptionGreekIndicatorsHelper.ForwardTreeTheoreticalPrice(
+                            ImpliedVolatility,
+                            sD,
+                            Strike,
+                            timeTillExpiry,
+                            RiskFreeRate,
+                            DividendYield,
+                            Right
+                        );
                     }
 
                     var gammaU = (fU - fM) / (sU - UnderlyingPrice);

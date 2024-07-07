@@ -63,7 +63,7 @@ namespace QuantConnect.Securities.Positions
             decimal targetBuyingPower,
             decimal minimumOrderMarginPortfolioPercentage,
             bool silenceNonErrorReasons = false
-            )
+        )
         {
             Portfolio = portfolio;
             PositionGroup = positionGroup;

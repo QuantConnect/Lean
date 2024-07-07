@@ -37,7 +37,9 @@ namespace QuantConnect.Securities.Positions
         /// <summary>
         /// Implicit operator to <see cref="decimal"/> to remove noise
         /// </summary>
-        public static implicit operator decimal(ReservedBuyingPowerForPositionGroup reservedBuyingPower)
+        public static implicit operator decimal(
+            ReservedBuyingPowerForPositionGroup reservedBuyingPower
+        )
         {
             return reservedBuyingPower.AbsoluteUsedBuyingPower;
         }
@@ -45,7 +47,9 @@ namespace QuantConnect.Securities.Positions
         /// <summary>
         /// Implicit operator to <see cref="decimal"/> to remove noise
         /// </summary>
-        public static implicit operator ReservedBuyingPowerForPositionGroup(decimal reservedBuyingPower)
+        public static implicit operator ReservedBuyingPowerForPositionGroup(
+            decimal reservedBuyingPower
+        )
         {
             return new ReservedBuyingPowerForPositionGroup(reservedBuyingPower);
         }

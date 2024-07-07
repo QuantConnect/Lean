@@ -27,64 +27,51 @@ namespace QuantConnect.Util
         /// <summary>
         /// Gets the date component from the file name
         /// </summary>
-        public DateTime Date
-        {
-            get; private set;
-        }
+        public DateTime Date { get; private set; }
 
         /// <summary>
         /// Gets the security type from the path
         /// </summary>
-        public SecurityType SecurityType
-        {
-            get; private set;
-        }
+        public SecurityType SecurityType { get; private set; }
 
         /// <summary>
         /// Gets the market from the path
         /// </summary>
-        public string Market
-        {
-            get; private set;
-        }
+        public string Market { get; private set; }
 
         /// <summary>
         /// Gets the resolution from the path
         /// </summary>
-        public Resolution Resolution
-        {
-            get; private set;
-        }
+        public Resolution Resolution { get; private set; }
 
         /// <summary>
         /// Gets the file name, not inluding directory information
         /// </summary>
-        public string Filename
-        {
-            get; private set;
-        }
+        public string Filename { get; private set; }
 
         /// <summary>
         /// Gets the symbol object implied by the path. For options, or any
         /// multi-entry zip file, this should be the canonical symbol
         /// </summary>
-        public Symbol Symbol
-        {
-            get; private set;
-        }
+        public Symbol Symbol { get; private set; }
 
         /// <summary>
         /// Gets the tick type from the file name
         /// </summary>
-        public TickType TickType
-        {
-            get; private set;
-        }
+        public TickType TickType { get; private set; }
 
         /// <summary>
         /// Initializes a new instance of the <see cref="LeanDataPathComponents"/> class
         /// </summary>
-        public LeanDataPathComponents(SecurityType securityType, string market, Resolution resolution, Symbol symbol, string filename, DateTime date, TickType tickType)
+        public LeanDataPathComponents(
+            SecurityType securityType,
+            string market,
+            Resolution resolution,
+            Symbol symbol,
+            string filename,
+            DateTime date,
+            TickType tickType
+        )
         {
             Date = date;
             SecurityType = securityType;
@@ -117,7 +104,6 @@ namespace QuantConnect.Util
             const int ResolutionOffset = 2;
             const int TickerOffset = 3;
 
-
             if (parts.Length < LowResSecurityTypeOffset)
             {
                 throw new FormatException($"Unexpected path format: {path}");
@@ -137,7 +123,12 @@ namespace QuantConnect.Util
             }
 
             var market = parts[parts.Length - securityTypeOffset + MarketOffset];
-            var resolution = (Resolution) Enum.Parse(typeof (Resolution), parts[parts.Length - securityTypeOffset + ResolutionOffset], true);
+            var resolution = (Resolution)
+                Enum.Parse(
+                    typeof(Resolution),
+                    parts[parts.Length - securityTypeOffset + ResolutionOffset],
+                    true
+                );
             string ticker;
             if (securityTypeOffset == LowResSecurityTypeOffset)
             {
@@ -145,15 +136,23 @@ namespace QuantConnect.Util
                 if (securityType.IsOption())
                 {
                     // ticker_year_trade_american
-                    ticker = ticker.Substring(0, ticker.IndexOf("_", StringComparison.InvariantCulture));
+                    ticker = ticker.Substring(
+                        0,
+                        ticker.IndexOf("_", StringComparison.InvariantCulture)
+                    );
                 }
-                if (securityType == SecurityType.Future || securityType == SecurityType.CryptoFuture)
+                if (
+                    securityType == SecurityType.Future
+                    || securityType == SecurityType.CryptoFuture
+                )
                 {
                     // ticker_trade
                     ticker = ticker.Substring(0, ticker.LastIndexOfInvariant("_"));
                 }
-                if (securityType == SecurityType.Crypto &&
-                    (resolution == Resolution.Daily || resolution == Resolution.Hour))
+                if (
+                    securityType == SecurityType.Crypto
+                    && (resolution == Resolution.Daily || resolution == Resolution.Hour)
+                )
                 {
                     // ticker_trade or ticker_quote
                     ticker = ticker.Substring(0, ticker.LastIndexOfInvariant("_"));
@@ -164,24 +163,57 @@ namespace QuantConnect.Util
                 ticker = parts[parts.Length - securityTypeOffset + TickerOffset];
             }
 
-            var date = securityTypeOffset == LowResSecurityTypeOffset ? DateTime.MinValue : DateTime.ParseExact(filename.Substring(0, filename.IndexOf("_", StringComparison.Ordinal)), DateFormat.EightCharacter, null);
+            var date =
+                securityTypeOffset == LowResSecurityTypeOffset
+                    ? DateTime.MinValue
+                    : DateTime.ParseExact(
+                        filename.Substring(0, filename.IndexOf("_", StringComparison.Ordinal)),
+                        DateFormat.EightCharacter,
+                        null
+                    );
 
             Symbol symbol;
             if (securityType == SecurityType.Option)
             {
                 var withoutExtension = Path.GetFileNameWithoutExtension(filename);
-                rawValue = withoutExtension.Substring(withoutExtension.LastIndexOf("_", StringComparison.Ordinal) + 1);
-                var style = (OptionStyle) Enum.Parse(typeof (OptionStyle), rawValue, true);
-                symbol = Symbol.CreateOption(ticker, market, style, default, 0, SecurityIdentifier.DefaultDate);
+                rawValue = withoutExtension.Substring(
+                    withoutExtension.LastIndexOf("_", StringComparison.Ordinal) + 1
+                );
+                var style = (OptionStyle)Enum.Parse(typeof(OptionStyle), rawValue, true);
+                symbol = Symbol.CreateOption(
+                    ticker,
+                    market,
+                    style,
+                    default,
+                    0,
+                    SecurityIdentifier.DefaultDate
+                );
             }
-            else if (securityType == SecurityType.FutureOption || securityType == SecurityType.IndexOption)
+            else if (
+                securityType == SecurityType.FutureOption
+                || securityType == SecurityType.IndexOption
+            )
             {
                 var withoutExtension = Path.GetFileNameWithoutExtension(filename);
-                rawValue = withoutExtension.Substring(withoutExtension.LastIndexOf("_", StringComparison.Ordinal) + 1);
-                var style = (OptionStyle) Enum.Parse(typeof (OptionStyle), rawValue, true);
+                rawValue = withoutExtension.Substring(
+                    withoutExtension.LastIndexOf("_", StringComparison.Ordinal) + 1
+                );
+                var style = (OptionStyle)Enum.Parse(typeof(OptionStyle), rawValue, true);
                 var underlyingSecurityType = Symbol.GetUnderlyingFromOptionType(securityType);
-                var underlyingSymbol = Symbol.Create(OptionSymbol.MapToUnderlying(ticker, securityType), underlyingSecurityType, market);
-                symbol = Symbol.CreateOption(underlyingSymbol, ticker, market, style, default, 0, SecurityIdentifier.DefaultDate);
+                var underlyingSymbol = Symbol.Create(
+                    OptionSymbol.MapToUnderlying(ticker, securityType),
+                    underlyingSecurityType,
+                    market
+                );
+                symbol = Symbol.CreateOption(
+                    underlyingSymbol,
+                    ticker,
+                    market,
+                    style,
+                    default,
+                    0,
+                    SecurityIdentifier.DefaultDate
+                );
             }
             else if (securityType == SecurityType.Future)
             {
@@ -192,9 +224,19 @@ namespace QuantConnect.Util
                 symbol = Symbol.Create(ticker, securityType, market);
             }
 
-            var tickType = filename.Contains("_quote") ? TickType.Quote : (filename.Contains("_openinterest") ? TickType.OpenInterest : TickType.Trade);
+            var tickType = filename.Contains("_quote")
+                ? TickType.Quote
+                : (filename.Contains("_openinterest") ? TickType.OpenInterest : TickType.Trade);
 
-            return new LeanDataPathComponents(securityType, market, resolution, symbol, filename, date, tickType);
+            return new LeanDataPathComponents(
+                securityType,
+                market,
+                resolution,
+                symbol,
+                filename,
+                date,
+                tickType
+            );
         }
     }
 }

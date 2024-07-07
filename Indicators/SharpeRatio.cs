@@ -54,7 +54,7 @@ namespace QuantConnect.Indicators
         /// <summary>
         /// Indicator to store the calculation of the sharpe ratio
         /// </summary>
-        protected IndicatorBase Ratio { get; set;  }
+        protected IndicatorBase Ratio { get; set; }
 
         /// <summary>
         /// Indicator to store the numerator of the Sharpe ratio calculation
@@ -101,9 +101,7 @@ namespace QuantConnect.Indicators
         /// <param name="period">Period of historical observation for sharpe ratio calculation</param>
         /// <param name="riskFreeRateModel">Risk-free rate model</param>
         public SharpeRatio(int period, IRiskFreeInterestRateModel riskFreeRateModel)
-            : this($"SR({period})", period, riskFreeRateModel)
-        {
-        }
+            : this($"SR({period})", period, riskFreeRateModel) { }
 
         /// <summary>
         /// Creates a new Sharpe Ratio indicator using the specified period using a Python risk free rate model
@@ -111,9 +109,11 @@ namespace QuantConnect.Indicators
         /// <param name="period">Period of historical observation for sharpe ratio calculation</param>
         /// <param name="riskFreeRateModel">Risk-free rate model</param>
         public SharpeRatio(string name, int period, PyObject riskFreeRateModel)
-            : this(name, period, RiskFreeInterestRateModelPythonWrapper.FromPyObject(riskFreeRateModel))
-        {
-        }
+            : this(
+                name,
+                period,
+                RiskFreeInterestRateModelPythonWrapper.FromPyObject(riskFreeRateModel)
+            ) { }
 
         /// <summary>
         /// Creates a new Sharpe Ratio indicator using the specified period using a Python risk free rate model
@@ -122,8 +122,7 @@ namespace QuantConnect.Indicators
         /// <param name="riskFreeRateModel">Risk-free rate model</param>
         public SharpeRatio(int period, PyObject riskFreeRateModel)
             : this(period, RiskFreeInterestRateModelPythonWrapper.FromPyObject(riskFreeRateModel))
-        {
-        }
+        { }
 
         /// <summary>
         /// Creates a new Sharpe Ratio indicator using the specified periods
@@ -132,9 +131,7 @@ namespace QuantConnect.Indicators
         /// <param name="period">Period of historical observation for sharpe ratio calculation</param>
         /// <param name="riskFreeRate">Risk-free rate for sharpe ratio calculation</param>
         public SharpeRatio(string name, int period, decimal riskFreeRate = 0.0m)
-            : this(name, period, new ConstantRiskFreeRateInterestRateModel(riskFreeRate))
-        {
-        }
+            : this(name, period, new ConstantRiskFreeRateInterestRateModel(riskFreeRate)) { }
 
         /// <summary>
         /// Creates a new SharpeRatio indicator using the specified periods
@@ -142,9 +139,7 @@ namespace QuantConnect.Indicators
         /// <param name="period">Period of historical observation for sharpe ratio calculation</param>
         /// <param name="riskFreeRate">Risk-free rate for sharpe ratio calculation</param>
         public SharpeRatio(int period, decimal riskFreeRate = 0.0m)
-            : this($"SR({period},{riskFreeRate})", period, riskFreeRate)
-        {
-        }
+            : this($"SR({period},{riskFreeRate})", period, riskFreeRate) { }
 
         /// <summary>
         /// Computes the next value for this indicator from the given state.

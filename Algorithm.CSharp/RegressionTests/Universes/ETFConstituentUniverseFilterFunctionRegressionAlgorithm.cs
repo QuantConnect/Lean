@@ -25,10 +25,13 @@ namespace QuantConnect.Algorithm.CSharp
     /// <summary>
     /// Tests a custom filter function when creating an ETF constituents universe for SPY
     /// </summary>
-    public class ETFConstituentUniverseFilterFunctionRegressionAlgorithm : QCAlgorithm, IRegressionAlgorithmDefinition
+    public class ETFConstituentUniverseFilterFunctionRegressionAlgorithm
+        : QCAlgorithm,
+            IRegressionAlgorithmDefinition
     {
-        private Dictionary<Symbol, ETFConstituentUniverse> _etfConstituentData = new Dictionary<Symbol, ETFConstituentUniverse>();
-        
+        private Dictionary<Symbol, ETFConstituentUniverse> _etfConstituentData =
+            new Dictionary<Symbol, ETFConstituentUniverse>();
+
         private Symbol _aapl;
         private Symbol _spy;
         private bool _filtered;
@@ -37,7 +40,7 @@ namespace QuantConnect.Algorithm.CSharp
         private bool _etfRebalanced;
         private int _rebalanceCount;
         private int _rebalanceAssetCount;
-        
+
         /// <summary>
         /// Initialise the data and resolution required, as well as the cash and start-end dates for your algorithm. All algorithms must initialized.
         /// </summary>
@@ -48,10 +51,10 @@ namespace QuantConnect.Algorithm.CSharp
             SetCash(100000);
 
             UniverseSettings.Resolution = Resolution.Hour;
-            
+
             _spy = AddEquity("SPY", Resolution.Hour).Symbol;
             _aapl = QuantConnect.Symbol.Create("AAPL", SecurityType.Equity, Market.USA);
-            
+
             AddUniverse(Universe.ETF(_spy, universeFilterFunc: FilterETFs));
         }
 
@@ -65,15 +68,19 @@ namespace QuantConnect.Algorithm.CSharp
         {
             var constituentsData = constituents.ToList();
             _etfConstituentData = constituentsData.ToDictionary(x => x.Symbol, x => x);
-            
+
             var constituentsSymbols = constituentsData.Select(x => x.Symbol).ToList();
             if (constituentsData.Count == 0)
             {
-                throw new ArgumentException($"Constituents collection is empty on {UtcTime:yyyy-MM-dd HH:mm:ss.fff}");
+                throw new ArgumentException(
+                    $"Constituents collection is empty on {UtcTime:yyyy-MM-dd HH:mm:ss.fff}"
+                );
             }
             if (!constituentsSymbols.Contains(_aapl))
             {
-                throw new ArgumentException("AAPL is not in the constituents data provided to the algorithm");
+                throw new ArgumentException(
+                    "AAPL is not in the constituents data provided to the algorithm"
+                );
             }
 
             var aaplData = constituentsData.Single(x => x.Symbol == _aapl);
@@ -84,7 +91,7 @@ namespace QuantConnect.Algorithm.CSharp
 
             _filtered = true;
             _etfRebalanced = true;
-            
+
             return constituentsSymbols;
         }
 
@@ -96,17 +103,21 @@ namespace QuantConnect.Algorithm.CSharp
         {
             if (!_filtered && slice.Bars.Count != 0 && slice.Bars.ContainsKey(_aapl))
             {
-                throw new RegressionTestException("AAPL TradeBar data added to algorithm before constituent universe selection took place");
+                throw new RegressionTestException(
+                    "AAPL TradeBar data added to algorithm before constituent universe selection took place"
+                );
             }
 
             if (slice.Bars.Count == 1 && slice.Bars.ContainsKey(_spy))
             {
                 return;
             }
-            
+
             if (slice.Bars.Count != 0 && !slice.Bars.ContainsKey(_aapl))
             {
-                throw new RegressionTestException($"Expected AAPL TradeBar data in OnData on {UtcTime:yyyy-MM-dd HH:mm:ss}");
+                throw new RegressionTestException(
+                    $"Expected AAPL TradeBar data in OnData on {UtcTime:yyyy-MM-dd HH:mm:ss}"
+                );
             }
 
             _receivedData = true;
@@ -118,16 +129,21 @@ namespace QuantConnect.Algorithm.CSharp
 
             foreach (var bar in slice.Bars.Values)
             {
-                if (_etfConstituentData.TryGetValue(bar.Symbol, out var constituentData) && 
-                    constituentData.Weight != null && 
-                    constituentData.Weight >= 0.0001m)
+                if (
+                    _etfConstituentData.TryGetValue(bar.Symbol, out var constituentData)
+                    && constituentData.Weight != null
+                    && constituentData.Weight >= 0.0001m
+                )
                 {
                     // If the weight of the constituent is less than 1%, then it will be set to 1%
                     // If the weight of the constituent exceeds more than 5%, then it will be capped to 5%
                     // Otherwise, if the weight falls in between, then we use that value.
-                    var boundedWeight = Math.Max(0.01m, Math.Min(constituentData.Weight.Value, 0.05m));
+                    var boundedWeight = Math.Max(
+                        0.01m,
+                        Math.Min(constituentData.Weight.Value, 0.05m)
+                    );
                     SetHoldings(bar.Symbol, boundedWeight);
-                    
+
                     if (_etfRebalanced)
                     {
                         _rebalanceCount++;
@@ -147,7 +163,9 @@ namespace QuantConnect.Algorithm.CSharp
         {
             if (_filtered && !_securitiesChanged && changes.AddedSecurities.Count < 500)
             {
-                throw new ArgumentException($"Added SPY S&P 500 ETF to algorithm, but less than 500 equities were loaded (added {changes.AddedSecurities.Count} securities)");
+                throw new ArgumentException(
+                    $"Added SPY S&P 500 ETF to algorithm, but less than 500 equities were loaded (added {changes.AddedSecurities.Count} securities)"
+                );
             }
 
             _securitiesChanged = true;
@@ -161,11 +179,15 @@ namespace QuantConnect.Algorithm.CSharp
         {
             if (_rebalanceCount != 2)
             {
-                throw new RegressionTestException($"Expected 2 rebalances, instead rebalanced: {_rebalanceCount}");
+                throw new RegressionTestException(
+                    $"Expected 2 rebalances, instead rebalanced: {_rebalanceCount}"
+                );
             }
             if (_rebalanceAssetCount != 8)
             {
-                throw new RegressionTestException($"Invested in {_rebalanceAssetCount} assets (expected 8)");
+                throw new RegressionTestException(
+                    $"Invested in {_rebalanceAssetCount} assets (expected 8)"
+                );
             }
             if (!_filtered)
             {
@@ -173,11 +195,15 @@ namespace QuantConnect.Algorithm.CSharp
             }
             if (!_securitiesChanged)
             {
-                throw new RegressionTestException("Security changes never propagated to the algorithm");
+                throw new RegressionTestException(
+                    "Security changes never propagated to the algorithm"
+                );
             }
             if (!_receivedData)
             {
-                throw new RegressionTestException("Data was never loaded for the S&P 500 constituent AAPL");
+                throw new RegressionTestException(
+                    "Data was never loaded for the S&P 500 constituent AAPL"
+                );
             }
         }
 
@@ -209,35 +235,36 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// This is used by the regression test system to indicate what the expected statistics are from running the algorithm
         /// </summary>
-        public Dictionary<string, string> ExpectedStatistics => new Dictionary<string, string>
-        {
-            {"Total Orders", "4"},
-            {"Average Win", "0%"},
-            {"Average Loss", "0%"},
-            {"Compounding Annual Return", "1.989%"},
-            {"Drawdown", "0.600%"},
-            {"Expectancy", "0"},
-            {"Start Equity", "100000"},
-            {"End Equity", "100322.52"},
-            {"Net Profit", "0.323%"},
-            {"Sharpe Ratio", "0.838"},
-            {"Sortino Ratio", "1.122"},
-            {"Probabilistic Sharpe Ratio", "50.081%"},
-            {"Loss Rate", "0%"},
-            {"Win Rate", "0%"},
-            {"Profit-Loss Ratio", "0"},
-            {"Alpha", "0.005"},
-            {"Beta", "0.098"},
-            {"Annual Standard Deviation", "0.014"},
-            {"Annual Variance", "0"},
-            {"Information Ratio", "-0.614"},
-            {"Tracking Error", "0.096"},
-            {"Treynor Ratio", "0.123"},
-            {"Total Fees", "$4.00"},
-            {"Estimated Strategy Capacity", "$130000000.00"},
-            {"Lowest Capacity Asset", "AIG R735QTJ8XC9X"},
-            {"Portfolio Turnover", "0.13%"},
-            {"OrderListHash", "0c0cb7214d49cee63fc08115f62fe357"}
-        };
+        public Dictionary<string, string> ExpectedStatistics =>
+            new Dictionary<string, string>
+            {
+                { "Total Orders", "4" },
+                { "Average Win", "0%" },
+                { "Average Loss", "0%" },
+                { "Compounding Annual Return", "1.989%" },
+                { "Drawdown", "0.600%" },
+                { "Expectancy", "0" },
+                { "Start Equity", "100000" },
+                { "End Equity", "100322.52" },
+                { "Net Profit", "0.323%" },
+                { "Sharpe Ratio", "0.838" },
+                { "Sortino Ratio", "1.122" },
+                { "Probabilistic Sharpe Ratio", "50.081%" },
+                { "Loss Rate", "0%" },
+                { "Win Rate", "0%" },
+                { "Profit-Loss Ratio", "0" },
+                { "Alpha", "0.005" },
+                { "Beta", "0.098" },
+                { "Annual Standard Deviation", "0.014" },
+                { "Annual Variance", "0" },
+                { "Information Ratio", "-0.614" },
+                { "Tracking Error", "0.096" },
+                { "Treynor Ratio", "0.123" },
+                { "Total Fees", "$4.00" },
+                { "Estimated Strategy Capacity", "$130000000.00" },
+                { "Lowest Capacity Asset", "AIG R735QTJ8XC9X" },
+                { "Portfolio Turnover", "0.13%" },
+                { "OrderListHash", "0c0cb7214d49cee63fc08115f62fe357" }
+            };
     }
 }

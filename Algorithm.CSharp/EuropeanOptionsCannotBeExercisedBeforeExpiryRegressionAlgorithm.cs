@@ -16,7 +16,6 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-
 using QuantConnect.Data;
 using QuantConnect.Data.Market;
 using QuantConnect.Interfaces;
@@ -28,7 +27,9 @@ namespace QuantConnect.Algorithm.CSharp
     /// <summary>
     /// Regression algorithm asserting that European options cannot be exercised before expiry
     /// </summary>
-    public class EuropeanOptionsCannotBeExercisedBeforeExpiryRegressionAlgorithm : QCAlgorithm, IRegressionAlgorithmDefinition
+    public class EuropeanOptionsCannotBeExercisedBeforeExpiryRegressionAlgorithm
+        : QCAlgorithm,
+            IRegressionAlgorithmDefinition
     {
         private Option _option;
 
@@ -55,7 +56,10 @@ namespace QuantConnect.Algorithm.CSharp
 
         public override void OnData(Slice slice)
         {
-            if ((_exerciseBeforeExpiryDone && _exerciseOnExpiryDone) || !_option.Exchange.ExchangeOpen)
+            if (
+                (_exerciseBeforeExpiryDone && _exerciseOnExpiryDone)
+                || !_option.Exchange.ExchangeOpen
+            )
             {
                 return;
             }
@@ -63,7 +67,10 @@ namespace QuantConnect.Algorithm.CSharp
             if (_contract == null)
             {
                 OptionChain contracts;
-                if (!slice.OptionChains.TryGetValue(_option.Symbol, out contracts) || !contracts.Any())
+                if (
+                    !slice.OptionChains.TryGetValue(_option.Symbol, out contracts)
+                    || !contracts.Any()
+                )
                 {
                     return;
                 }
@@ -79,7 +86,9 @@ namespace QuantConnect.Algorithm.CSharp
                 {
                     if (MarketOrder(_contract.Symbol, 1).Status != OrderStatus.Filled)
                     {
-                        throw new RegressionTestException("Expected market order to fill immediately");
+                        throw new RegressionTestException(
+                            "Expected market order to fill immediately"
+                        );
                     }
 
                     _marketOrderDone = true;
@@ -87,8 +96,10 @@ namespace QuantConnect.Algorithm.CSharp
 
                 if (ExerciseOption(_contract.Symbol, 1).Status == OrderStatus.Filled)
                 {
-                    throw new RegressionTestException($"Expected European option to not be exercisable before its expiration date. " +
-                                        $"Time: {UtcTime}. Expiry: {_contract.Expiry.ConvertToUtc(_option.Exchange.TimeZone)}");
+                    throw new RegressionTestException(
+                        $"Expected European option to not be exercisable before its expiration date. "
+                            + $"Time: {UtcTime}. Expiry: {_contract.Expiry.ConvertToUtc(_option.Exchange.TimeZone)}"
+                    );
                 }
 
                 _exerciseBeforeExpiryDone = true;
@@ -100,8 +111,10 @@ namespace QuantConnect.Algorithm.CSharp
             {
                 if (ExerciseOption(_contract.Symbol, 1).Status != OrderStatus.Filled)
                 {
-                    throw new RegressionTestException($"Expected European option to be exercisable on its expiration date. " +
-                                        $"Time: {UtcTime}. Expiry: {_contract.Expiry.ConvertToUtc(_option.Exchange.TimeZone)}");
+                    throw new RegressionTestException(
+                        $"Expected European option to be exercisable on its expiration date. "
+                            + $"Time: {UtcTime}. Expiry: {_contract.Expiry.ConvertToUtc(_option.Exchange.TimeZone)}"
+                    );
                 }
 
                 _exerciseOnExpiryDone = true;
@@ -115,7 +128,9 @@ namespace QuantConnect.Algorithm.CSharp
         {
             if (!_exerciseBeforeExpiryDone || !_exerciseOnExpiryDone)
             {
-                throw new RegressionTestException("Expected to try to exercise option before and on expiry");
+                throw new RegressionTestException(
+                    "Expected to try to exercise option before and on expiry"
+                );
             }
         }
 
@@ -147,35 +162,36 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// This is used by the regression test system to indicate what the expected statistics are from running the algorithm
         /// </summary>
-        public Dictionary<string, string> ExpectedStatistics => new Dictionary<string, string>
-        {
-            {"Total Orders", "2"},
-            {"Average Win", "0%"},
-            {"Average Loss", "-4.10%"},
-            {"Compounding Annual Return", "24.075%"},
-            {"Drawdown", "1.900%"},
-            {"Expectancy", "0"},
-            {"Start Equity", "200000"},
-            {"End Equity", "201354"},
-            {"Net Profit", "0.677%"},
-            {"Sharpe Ratio", "5.76"},
-            {"Sortino Ratio", "0"},
-            {"Probabilistic Sharpe Ratio", "89.644%"},
-            {"Loss Rate", "0%"},
-            {"Win Rate", "100%"},
-            {"Profit-Loss Ratio", "0"},
-            {"Alpha", "0.946"},
-            {"Beta", "-0.354"},
-            {"Annual Standard Deviation", "0.123"},
-            {"Annual Variance", "0.015"},
-            {"Information Ratio", "0.211"},
-            {"Tracking Error", "0.176"},
-            {"Treynor Ratio", "-2.004"},
-            {"Total Fees", "$0.00"},
-            {"Estimated Strategy Capacity", "$1700000.00"},
-            {"Lowest Capacity Asset", "SPX XL80P3HB5O6M|SPX 31"},
-            {"Portfolio Turnover", "0.35%"},
-            {"OrderListHash", "2917a6c396e5ea4f4eea1220ad422d54"}
-        };
+        public Dictionary<string, string> ExpectedStatistics =>
+            new Dictionary<string, string>
+            {
+                { "Total Orders", "2" },
+                { "Average Win", "0%" },
+                { "Average Loss", "-4.10%" },
+                { "Compounding Annual Return", "24.075%" },
+                { "Drawdown", "1.900%" },
+                { "Expectancy", "0" },
+                { "Start Equity", "200000" },
+                { "End Equity", "201354" },
+                { "Net Profit", "0.677%" },
+                { "Sharpe Ratio", "5.76" },
+                { "Sortino Ratio", "0" },
+                { "Probabilistic Sharpe Ratio", "89.644%" },
+                { "Loss Rate", "0%" },
+                { "Win Rate", "100%" },
+                { "Profit-Loss Ratio", "0" },
+                { "Alpha", "0.946" },
+                { "Beta", "-0.354" },
+                { "Annual Standard Deviation", "0.123" },
+                { "Annual Variance", "0.015" },
+                { "Information Ratio", "0.211" },
+                { "Tracking Error", "0.176" },
+                { "Treynor Ratio", "-2.004" },
+                { "Total Fees", "$0.00" },
+                { "Estimated Strategy Capacity", "$1700000.00" },
+                { "Lowest Capacity Asset", "SPX XL80P3HB5O6M|SPX 31" },
+                { "Portfolio Turnover", "0.35%" },
+                { "OrderListHash", "2917a6c396e5ea4f4eea1220ad422d54" }
+            };
     }
 }

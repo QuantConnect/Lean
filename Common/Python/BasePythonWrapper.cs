@@ -13,9 +13,9 @@
  * limitations under the License.
 */
 
-using Python.Runtime;
 using System;
 using System.Collections.Generic;
+using Python.Runtime;
 
 namespace QuantConnect.Python
 {
@@ -70,7 +70,9 @@ namespace QuantConnect.Python
                 _pythonPropertyNames.Clear();
             }
 
-            _instance = _validateInterface ? instance.ValidateImplementationOf<TInterface>() : instance;
+            _instance = _validateInterface
+                ? instance.ValidateImplementationOf<TInterface>()
+                : instance;
             _instance.TryConvert(out _underlyingClrObject);
         }
 
@@ -182,10 +184,17 @@ namespace QuantConnect.Python
                     if (property != null)
                     {
                         var clrPropertyValue = property.GetValue(_underlyingClrObject);
-                        var pyObjectSnakeCasePropertyValue = _instance.GetAttr(snakeCasedPropertyName);
+                        var pyObjectSnakeCasePropertyValue = _instance.GetAttr(
+                            snakeCasedPropertyName
+                        );
 
-                        if (!pyObjectSnakeCasePropertyValue.TryConvert(out object pyObjectSnakeCasePropertyClrValue, true) ||
-                            !ReferenceEquals(clrPropertyValue, pyObjectSnakeCasePropertyClrValue))
+                        if (
+                            !pyObjectSnakeCasePropertyValue.TryConvert(
+                                out object pyObjectSnakeCasePropertyClrValue,
+                                true
+                            )
+                            || !ReferenceEquals(clrPropertyValue, pyObjectSnakeCasePropertyClrValue)
+                        )
                         {
                             pythonPropertyName = snakeCasedPropertyName;
                         }
@@ -205,7 +214,11 @@ namespace QuantConnect.Python
                     }
                 }
 
-                _pythonPropertyNames = AddToDictionary(_pythonPropertyNames, propertyName, pythonPropertyName);
+                _pythonPropertyNames = AddToDictionary(
+                    _pythonPropertyNames,
+                    propertyName,
+                    pythonPropertyName
+                );
             }
 
             return pythonPropertyName;
@@ -216,12 +229,13 @@ namespace QuantConnect.Python
         /// containing the new key-value pair along with the original ones.
         /// We do this in order to avoid the overhead of using locks or concurrent dictionaries and still be thread-safe.
         /// </summary>
-        private static Dictionary<string, T> AddToDictionary<T>(Dictionary<string, T> dictionary, string key, T value)
+        private static Dictionary<string, T> AddToDictionary<T>(
+            Dictionary<string, T> dictionary,
+            string key,
+            T value
+        )
         {
-            return new Dictionary<string, T>(dictionary)
-            {
-                [key] = value
-            };
+            return new Dictionary<string, T>(dictionary) { [key] = value };
         }
 
         /// <summary>
@@ -261,8 +275,10 @@ namespace QuantConnect.Python
         /// </summary>
         private bool Equals(PyObject other)
         {
-            if (other is null) return false;
-            if (ReferenceEquals(_instance, other)) return true;
+            if (other is null)
+                return false;
+            if (ReferenceEquals(_instance, other))
+                return true;
 
             using var _ = Py.GIL();
             // We only care about the Python object reference, not the underlying C# object reference for comparison

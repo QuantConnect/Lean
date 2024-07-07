@@ -26,7 +26,9 @@ namespace QuantConnect.Algorithm.CSharp
     /// In particular, an ARIMA(1,1,1) and ARIMA(1,1,0) are instantiated while orders are placed if their difference
     /// is sufficiently large (which would be due to the inclusion of the MA(1) term).
     /// </summary>
-    public class AutoRegressiveIntegratedMovingAverageRegressionAlgorithm : QCAlgorithm, IRegressionAlgorithmDefinition
+    public class AutoRegressiveIntegratedMovingAverageRegressionAlgorithm
+        : QCAlgorithm,
+            IRegressionAlgorithmDefinition
     {
         private AutoRegressiveIntegratedMovingAverage _arima;
         private AutoRegressiveIntegratedMovingAverage _ar;
@@ -91,35 +93,36 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// This is used by the regression test system to indicate what the expected statistics are from running the algorithm
         /// </summary>
-        public Dictionary<string, string> ExpectedStatistics => new Dictionary<string, string>
-        {
-            {"Total Orders", "52"},
-            {"Average Win", "0.00%"},
-            {"Average Loss", "0.00%"},
-            {"Compounding Annual Return", "0.096%"},
-            {"Drawdown", "0.100%"},
-            {"Expectancy", "3.321"},
-            {"Start Equity", "100000"},
-            {"End Equity", "100089.09"},
-            {"Net Profit", "0.089%"},
-            {"Sharpe Ratio", "-8.214"},
-            {"Sortino Ratio", "-9.025"},
-            {"Probabilistic Sharpe Ratio", "40.893%"},
-            {"Loss Rate", "24%"},
-            {"Win Rate", "76%"},
-            {"Profit-Loss Ratio", "4.67"},
-            {"Alpha", "-0.008"},
-            {"Beta", "0.008"},
-            {"Annual Standard Deviation", "0.001"},
-            {"Annual Variance", "0"},
-            {"Information Ratio", "-1.961"},
-            {"Tracking Error", "0.092"},
-            {"Treynor Ratio", "-0.826"},
-            {"Total Fees", "$52.00"},
-            {"Estimated Strategy Capacity", "$32000000000.00"},
-            {"Lowest Capacity Asset", "SPY R735QTJ8XC9X"},
-            {"Portfolio Turnover", "0.02%"},
-            {"OrderListHash", "fab920b5fc92a6e14d8128564249fbfa"}
-        };
+        public Dictionary<string, string> ExpectedStatistics =>
+            new Dictionary<string, string>
+            {
+                { "Total Orders", "52" },
+                { "Average Win", "0.00%" },
+                { "Average Loss", "0.00%" },
+                { "Compounding Annual Return", "0.096%" },
+                { "Drawdown", "0.100%" },
+                { "Expectancy", "3.321" },
+                { "Start Equity", "100000" },
+                { "End Equity", "100089.09" },
+                { "Net Profit", "0.089%" },
+                { "Sharpe Ratio", "-8.214" },
+                { "Sortino Ratio", "-9.025" },
+                { "Probabilistic Sharpe Ratio", "40.893%" },
+                { "Loss Rate", "24%" },
+                { "Win Rate", "76%" },
+                { "Profit-Loss Ratio", "4.67" },
+                { "Alpha", "-0.008" },
+                { "Beta", "0.008" },
+                { "Annual Standard Deviation", "0.001" },
+                { "Annual Variance", "0" },
+                { "Information Ratio", "-1.961" },
+                { "Tracking Error", "0.092" },
+                { "Treynor Ratio", "-0.826" },
+                { "Total Fees", "$52.00" },
+                { "Estimated Strategy Capacity", "$32000000000.00" },
+                { "Lowest Capacity Asset", "SPY R735QTJ8XC9X" },
+                { "Portfolio Turnover", "0.02%" },
+                { "OrderListHash", "fab920b5fc92a6e14d8128564249fbfa" }
+            };
     }
 }

@@ -16,7 +16,6 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-
 using QuantConnect.Util;
 
 namespace QuantConnect.Securities.Positions
@@ -34,7 +33,9 @@ namespace QuantConnect.Securities.Positions
             IPosition position;
             if (!group.TryGetPosition(symbol, out position))
             {
-                throw new KeyNotFoundException($"No position with symbol '{symbol}' exists in the group: {group}");
+                throw new KeyNotFoundException(
+                    $"No position with symbol '{symbol}' exists in the group: {group}"
+                );
             }
 
             return position;
@@ -48,14 +49,20 @@ namespace QuantConnect.Securities.Positions
         /// <param name="groupQuantity">The quantity of the new group</param>
         /// <param name="positionMananger">The position manager to use to resolve positions</param>
         /// <returns>A position group with the same position ratios as the template but with the specified group quantity</returns>
-        public static IPositionGroup WithQuantity(this IPositionGroup template, decimal groupQuantity, SecurityPositionGroupModel positionMananger)
+        public static IPositionGroup WithQuantity(
+            this IPositionGroup template,
+            decimal groupQuantity,
+            SecurityPositionGroupModel positionMananger
+        )
         {
             var positions = template.ToArray(p => p.WithLots(groupQuantity));
 
             // Could result in an inverse strategy that would not get resolved by using the same key
             if (groupQuantity < 0)
             {
-                return positionMananger.ResolvePositionGroups(new PositionCollection(positions)).Single();
+                return positionMananger
+                    .ResolvePositionGroups(new PositionCollection(positions))
+                    .Single();
             }
 
             return new PositionGroup(template.Key, groupQuantity, positions);
@@ -66,7 +73,10 @@ namespace QuantConnect.Securities.Positions
         /// </summary>
         /// <param name="template">The group template</param>
         /// <returns>A position group with the same position ratios as the template but with the specified group quantity</returns>
-        public static IPositionGroup CreateUnitGroup(this IPositionGroup template, SecurityPositionGroupModel positionMananger)
+        public static IPositionGroup CreateUnitGroup(
+            this IPositionGroup template,
+            SecurityPositionGroupModel positionMananger
+        )
         {
             return template.WithQuantity(1, positionMananger);
         }
@@ -92,7 +102,10 @@ namespace QuantConnect.Securities.Positions
         public static bool IsInvertedOf(this IPositionGroup group, IPositionGroup other)
         {
             return group.Count == other.Count
-                && group.All(position => Math.Sign(position.Quantity) == -Math.Sign(other.GetPosition(position.Symbol).Quantity));
+                && group.All(position =>
+                    Math.Sign(position.Quantity)
+                    == -Math.Sign(other.GetPosition(position.Symbol).Quantity)
+                );
         }
 
         /// <summary>
@@ -115,9 +128,12 @@ namespace QuantConnect.Securities.Positions
             }
 
             // Liquidating
-            if (finalGroup.Quantity == 0 &&
+            if (
+                finalGroup.Quantity == 0
+                &&
                 // The initial group includes all positions being liquidated
-                finalGroup.All(position => initialGroup.TryGetPosition(position.Symbol, out _)))
+                finalGroup.All(position => initialGroup.TryGetPosition(position.Symbol, out _))
+            )
             {
                 return true;
             }
@@ -129,8 +145,11 @@ namespace QuantConnect.Securities.Positions
             }
 
             // The final group has a smaller quantity than the initial group
-            return Math.Abs(finalGroup.Quantity) < Math.Abs(initialGroup.Quantity) &&
-                finalGroup.All(position => Math.Sign(position.Quantity) == Math.Sign(initialGroup.GetPosition(position.Symbol).Quantity));
+            return Math.Abs(finalGroup.Quantity) < Math.Abs(initialGroup.Quantity)
+                && finalGroup.All(position =>
+                    Math.Sign(position.Quantity)
+                    == Math.Sign(initialGroup.GetPosition(position.Symbol).Quantity)
+                );
         }
 
         /// <summary>

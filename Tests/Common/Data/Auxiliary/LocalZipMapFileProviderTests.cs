@@ -36,7 +36,10 @@ namespace QuantConnect.Tests.Common.Data.Auxiliary
             var path = Path.Combine(Globals.DataFolder, $"equity/usa/map_files/");
             var tmp = "./tmp.zip";
 
-            _zipFilePath = Path.Combine(Globals.DataFolder, $"equity/usa/map_files/map_files_{date:yyyyMMdd}.zip");
+            _zipFilePath = Path.Combine(
+                Globals.DataFolder,
+                $"equity/usa/map_files/map_files_{date:yyyyMMdd}.zip"
+            );
 
             // Have to compress to tmp file or else it doesn't finish reading all the files in dir
             QuantConnect.Compression.ZipDirectory(path, tmp);

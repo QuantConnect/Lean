@@ -13,9 +13,9 @@
  * limitations under the License.
 */
 
+using System;
 using Accord.MachineLearning.VectorMachines.Learning;
 using QuantConnect.Indicators;
-using System;
 
 namespace QuantConnect.Algorithm.CSharp
 {
@@ -30,7 +30,9 @@ namespace QuantConnect.Algorithm.CSharp
         // Those members are rate of return
         private const int _lookback = 30;
         private const int _inputSize = 5;
-        private RollingWindow<double> _window = new RollingWindow<double>(_inputSize * _lookback + 2);
+        private RollingWindow<double> _window = new RollingWindow<double>(
+            _inputSize * _lookback + 2
+        );
 
         public override void Initialize()
         {
@@ -42,16 +44,19 @@ namespace QuantConnect.Algorithm.CSharp
 
             ROC(symbol, 1, Resolution.Daily).Updated += (s, e) => _window.Add((double)e.Value);
 
-            Schedule.On(DateRules.Every(DayOfWeek.Monday),
+            Schedule.On(
+                DateRules.Every(DayOfWeek.Monday),
                 TimeRules.AfterMarketOpen(symbol, 10),
-                TrainAndTrade);
+                TrainAndTrade
+            );
 
             SetWarmUp(_window.Size, Resolution.Daily);
         }
 
         private void TrainAndTrade()
         {
-            if (!_window.IsReady) return;
+            if (!_window.IsReady)
+                return;
 
             // Convert the rolling window of rate of change into the Learn method
             var returns = new double[_inputSize];
@@ -77,9 +82,10 @@ namespace QuantConnect.Algorithm.CSharp
             var svm = teacher.Model;
 
             // Compute the value for the last rate of change
-            var last = (double) Math.Sign(_window[0]);
-            var value = svm.Compute(new[] {last});
-            if (value.IsNaNOrZero()) return;
+            var last = (double)Math.Sign(_window[0]);
+            var value = svm.Compute(new[] { last });
+            if (value.IsNaNOrZero())
+                return;
 
             SetHoldings("SPY", Math.Sign(value));
         }

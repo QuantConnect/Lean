@@ -23,7 +23,9 @@ namespace QuantConnect.Algorithm.CSharp
     /// <summary>
     /// Checks that the Tick BidPrice and AskPrices are adjusted like Value.
     /// </summary>
-    public class EquityTickQuoteAdjustedModeRegressionAlgorithm : QCAlgorithm, IRegressionAlgorithmDefinition
+    public class EquityTickQuoteAdjustedModeRegressionAlgorithm
+        : QCAlgorithm,
+            IRegressionAlgorithmDefinition
     {
         private Symbol _ibm;
         private bool _bought;
@@ -59,7 +61,12 @@ namespace QuantConnect.Algorithm.CSharp
                     _bought = true;
                     return;
                 }
-                if (tick.AskPrice != 0 && _bought && !_sold && Math.Abs((double)tick.Value - (double)tick.AskPrice) <= 0.05)
+                if (
+                    tick.AskPrice != 0
+                    && _bought
+                    && !_sold
+                    && Math.Abs((double)tick.Value - (double)tick.AskPrice) <= 0.05
+                )
                 {
                     Liquidate(_ibm);
                     _sold = true;
@@ -96,35 +103,36 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// This is used by the regression test system to indicate what the expected statistics are from running the algorithm
         /// </summary>
-        public Dictionary<string, string> ExpectedStatistics => new Dictionary<string, string>
-        {
-            {"Total Orders", "2"},
-            {"Average Win", "0%"},
-            {"Average Loss", "-0.12%"},
-            {"Compounding Annual Return", "-9.135%"},
-            {"Drawdown", "0.100%"},
-            {"Expectancy", "-1"},
-            {"Start Equity", "100000"},
-            {"End Equity", "99877.60"},
-            {"Net Profit", "-0.122%"},
-            {"Sharpe Ratio", "0"},
-            {"Sortino Ratio", "0"},
-            {"Probabilistic Sharpe Ratio", "0%"},
-            {"Loss Rate", "100%"},
-            {"Win Rate", "0%"},
-            {"Profit-Loss Ratio", "0"},
-            {"Alpha", "0"},
-            {"Beta", "0"},
-            {"Annual Standard Deviation", "0"},
-            {"Annual Variance", "0"},
-            {"Information Ratio", "-8.91"},
-            {"Tracking Error", "0.223"},
-            {"Treynor Ratio", "0"},
-            {"Total Fees", "$7.34"},
-            {"Estimated Strategy Capacity", "$0"},
-            {"Lowest Capacity Asset", "IBM R735QTJ8XC9X"},
-            {"Portfolio Turnover", "39.89%"},
-            {"OrderListHash", "32f56b0f4e9300ef1a34464e8083c7e7"}
-        };
+        public Dictionary<string, string> ExpectedStatistics =>
+            new Dictionary<string, string>
+            {
+                { "Total Orders", "2" },
+                { "Average Win", "0%" },
+                { "Average Loss", "-0.12%" },
+                { "Compounding Annual Return", "-9.135%" },
+                { "Drawdown", "0.100%" },
+                { "Expectancy", "-1" },
+                { "Start Equity", "100000" },
+                { "End Equity", "99877.60" },
+                { "Net Profit", "-0.122%" },
+                { "Sharpe Ratio", "0" },
+                { "Sortino Ratio", "0" },
+                { "Probabilistic Sharpe Ratio", "0%" },
+                { "Loss Rate", "100%" },
+                { "Win Rate", "0%" },
+                { "Profit-Loss Ratio", "0" },
+                { "Alpha", "0" },
+                { "Beta", "0" },
+                { "Annual Standard Deviation", "0" },
+                { "Annual Variance", "0" },
+                { "Information Ratio", "-8.91" },
+                { "Tracking Error", "0.223" },
+                { "Treynor Ratio", "0" },
+                { "Total Fees", "$7.34" },
+                { "Estimated Strategy Capacity", "$0" },
+                { "Lowest Capacity Asset", "IBM R735QTJ8XC9X" },
+                { "Portfolio Turnover", "39.89%" },
+                { "OrderListHash", "32f56b0f4e9300ef1a34464e8083c7e7" }
+            };
     }
 }

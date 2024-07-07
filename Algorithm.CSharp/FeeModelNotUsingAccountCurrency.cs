@@ -15,11 +15,11 @@
 
 using System;
 using System.Collections.Generic;
-using QuantConnect.Data;
 using QuantConnect.Brokerages;
-using QuantConnect.Orders.Fees;
-using QuantConnect.Orders;
+using QuantConnect.Data;
 using QuantConnect.Interfaces;
+using QuantConnect.Orders;
+using QuantConnect.Orders.Fees;
 using QuantConnect.Securities;
 
 namespace QuantConnect.Algorithm.CSharp
@@ -30,6 +30,7 @@ namespace QuantConnect.Algorithm.CSharp
     public class FeeModelNotUsingAccountCurrency : QCAlgorithm, IRegressionAlgorithmDefinition
     {
         private Security _security;
+
         // Adding this so we only trade once, so math is easier and clear
         private bool _alreadyTraded;
         private int _initialEurCash = 10000;
@@ -83,8 +84,9 @@ namespace QuantConnect.Algorithm.CSharp
         public override void OnOrderEvent(OrderEvent orderEvent)
         {
             Debug(Time + " " + orderEvent);
-            _orderFeesInAccountCurrency +=
-                Portfolio.CashBook.ConvertToAccountCurrency(orderEvent.OrderFee.Value).Amount;
+            _orderFeesInAccountCurrency += Portfolio
+                .CashBook.ConvertToAccountCurrency(orderEvent.OrderFee.Value)
+                .Amount;
         }
 
         public override void OnEndOfAlgorithm()
@@ -95,18 +97,21 @@ namespace QuantConnect.Algorithm.CSharp
             // Fees will be applied to the corresponding Cash currency. 1 ETH * 2 trades
             if (Portfolio.CashBook["ETH"].Amount != -2)
             {
-                throw new RegressionTestException("Unexpected ETH cash amount: " +
-                    $"{Portfolio.CashBook["ETH"].Amount}");
+                throw new RegressionTestException(
+                    "Unexpected ETH cash amount: " + $"{Portfolio.CashBook["ETH"].Amount}"
+                );
             }
             if (Portfolio.CashBook["USD"].Amount != 0)
             {
-                throw new RegressionTestException("Unexpected USD cash amount: " +
-                    $"{Portfolio.CashBook["USD"].Amount}");
+                throw new RegressionTestException(
+                    "Unexpected USD cash amount: " + $"{Portfolio.CashBook["USD"].Amount}"
+                );
             }
             if (Portfolio.CashBook["BTC"].Amount != 0)
             {
-                throw new RegressionTestException("Unexpected BTC cash amount: " +
-                    $"{Portfolio.CashBook["BTC"].Amount}");
+                throw new RegressionTestException(
+                    "Unexpected BTC cash amount: " + $"{Portfolio.CashBook["BTC"].Amount}"
+                );
             }
             if (Portfolio.CashBook.ContainsKey(Currencies.NullCurrency))
             {
@@ -114,20 +119,25 @@ namespace QuantConnect.Algorithm.CSharp
             }
 
             var closedTrade = TradeBuilder.ClosedTrades[0];
-            var profitInQuoteCurrency = (closedTrade.ExitPrice - closedTrade.EntryPrice)
-                * closedTrade.Quantity;
+            var profitInQuoteCurrency =
+                (closedTrade.ExitPrice - closedTrade.EntryPrice) * closedTrade.Quantity;
             if (Portfolio.CashBook["EUR"].Amount != _initialEurCash + profitInQuoteCurrency)
             {
-                throw new RegressionTestException("Unexpected EUR cash amount: " +
-                    $"{Portfolio.CashBook["EUR"].Amount}");
+                throw new RegressionTestException(
+                    "Unexpected EUR cash amount: " + $"{Portfolio.CashBook["EUR"].Amount}"
+                );
             }
             if (closedTrade.TotalFees != _orderFeesInAccountCurrency)
             {
-                throw new RegressionTestException($"Unexpected closed trades total fees {closedTrade.TotalFees}");
+                throw new RegressionTestException(
+                    $"Unexpected closed trades total fees {closedTrade.TotalFees}"
+                );
             }
             if (_security.Holdings.TotalFees != _orderFeesInAccountCurrency)
             {
-                throw new RegressionTestException($"Unexpected closed trades total fees {closedTrade.TotalFees}");
+                throw new RegressionTestException(
+                    $"Unexpected closed trades total fees {closedTrade.TotalFees}"
+                );
             }
         }
 
@@ -167,35 +177,36 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// This is used by the regression test system to indicate what the expected statistics are from running the algorithm
         /// </summary>
-        public Dictionary<string, string> ExpectedStatistics => new Dictionary<string, string>
-        {
-            {"Total Orders", "2"},
-            {"Average Win", "0%"},
-            {"Average Loss", "0%"},
-            {"Compounding Annual Return", "0%"},
-            {"Drawdown", "0%"},
-            {"Expectancy", "0"},
-            {"Start Equity", "12300.00"},
-            {"End Equity", "11511.60"},
-            {"Net Profit", "0%"},
-            {"Sharpe Ratio", "0"},
-            {"Sortino Ratio", "0"},
-            {"Probabilistic Sharpe Ratio", "0%"},
-            {"Loss Rate", "0%"},
-            {"Win Rate", "0%"},
-            {"Profit-Loss Ratio", "0"},
-            {"Alpha", "0"},
-            {"Beta", "0"},
-            {"Annual Standard Deviation", "0"},
-            {"Annual Variance", "0"},
-            {"Information Ratio", "0"},
-            {"Tracking Error", "0"},
-            {"Treynor Ratio", "0"},
-            {"Total Fees", "$804.33"},
-            {"Estimated Strategy Capacity", "$11000.00"},
-            {"Lowest Capacity Asset", "BTCEUR 2XR"},
-            {"Portfolio Turnover", "205.71%"},
-            {"OrderListHash", "ebb9bbcf4364d5dd5765f878525462d2"}
-        };
+        public Dictionary<string, string> ExpectedStatistics =>
+            new Dictionary<string, string>
+            {
+                { "Total Orders", "2" },
+                { "Average Win", "0%" },
+                { "Average Loss", "0%" },
+                { "Compounding Annual Return", "0%" },
+                { "Drawdown", "0%" },
+                { "Expectancy", "0" },
+                { "Start Equity", "12300.00" },
+                { "End Equity", "11511.60" },
+                { "Net Profit", "0%" },
+                { "Sharpe Ratio", "0" },
+                { "Sortino Ratio", "0" },
+                { "Probabilistic Sharpe Ratio", "0%" },
+                { "Loss Rate", "0%" },
+                { "Win Rate", "0%" },
+                { "Profit-Loss Ratio", "0" },
+                { "Alpha", "0" },
+                { "Beta", "0" },
+                { "Annual Standard Deviation", "0" },
+                { "Annual Variance", "0" },
+                { "Information Ratio", "0" },
+                { "Tracking Error", "0" },
+                { "Treynor Ratio", "0" },
+                { "Total Fees", "$804.33" },
+                { "Estimated Strategy Capacity", "$11000.00" },
+                { "Lowest Capacity Asset", "BTCEUR 2XR" },
+                { "Portfolio Turnover", "205.71%" },
+                { "OrderListHash", "ebb9bbcf4364d5dd5765f878525462d2" }
+            };
     }
 }

@@ -14,11 +14,11 @@
 */
 
 using System;
-using QuantConnect.Orders;
-using QuantConnect.Interfaces;
-using QuantConnect.Data.Market;
-using QuantConnect.Orders.Fills;
 using System.Collections.Generic;
+using QuantConnect.Data.Market;
+using QuantConnect.Interfaces;
+using QuantConnect.Orders;
+using QuantConnect.Orders.Fills;
 
 namespace QuantConnect.Algorithm.CSharp
 {
@@ -43,13 +43,13 @@ namespace QuantConnect.Algorithm.CSharp
         {
             if (!Portfolio.Invested)
             {
-                if(Time.TimeOfDay != new TimeSpan(9, 30, 0))
+                if (Time.TimeOfDay != new TimeSpan(9, 30, 0))
                 {
                     throw new RegressionTestException($"Unexpected event time {Time}");
                 }
 
                 var ticket = Buy("SPY", 1);
-                if(ticket.Status != OrderStatus.Submitted)
+                if (ticket.Status != OrderStatus.Submitted)
                 {
                     throw new RegressionTestException($"Unexpected order status {ticket.Status}");
                 }
@@ -69,10 +69,16 @@ namespace QuantConnect.Algorithm.CSharp
         {
             public override Fill Fill(FillModelParameters parameters)
             {
-                var orderLocalTime = parameters.Order.Time.ConvertFromUtc(parameters.Security.Exchange.TimeZone);
-                foreach (var dataType in new[] { typeof(QuoteBar), typeof(TradeBar), typeof(Tick)})
+                var orderLocalTime = parameters.Order.Time.ConvertFromUtc(
+                    parameters.Security.Exchange.TimeZone
+                );
+                foreach (var dataType in new[] { typeof(QuoteBar), typeof(TradeBar), typeof(Tick) })
                 {
-                    if(parameters.Security.Cache.TryGetValue(dataType, out var data) && data.Count > 0 && orderLocalTime <= data[data.Count - 1].EndTime)
+                    if (
+                        parameters.Security.Cache.TryGetValue(dataType, out var data)
+                        && data.Count > 0
+                        && orderLocalTime <= data[data.Count - 1].EndTime
+                    )
                     {
                         return base.Fill(parameters);
                     }
@@ -109,35 +115,36 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// This is used by the regression test system to indicate what the expected statistics are from running the algorithm
         /// </summary>
-        public Dictionary<string, string> ExpectedStatistics => new Dictionary<string, string>
-        {
-            {"Total Orders", "1"},
-            {"Average Win", "0%"},
-            {"Average Loss", "0%"},
-            {"Compounding Annual Return", "0.071%"},
-            {"Drawdown", "0.000%"},
-            {"Expectancy", "0"},
-            {"Start Equity", "100000"},
-            {"End Equity", "100005.93"},
-            {"Net Profit", "0.006%"},
-            {"Sharpe Ratio", "-47.299"},
-            {"Sortino Ratio", "-100.304"},
-            {"Probabilistic Sharpe Ratio", "81.116%"},
-            {"Loss Rate", "0%"},
-            {"Win Rate", "0%"},
-            {"Profit-Loss Ratio", "0"},
-            {"Alpha", "-0.007"},
-            {"Beta", "0.001"},
-            {"Annual Standard Deviation", "0"},
-            {"Annual Variance", "0"},
-            {"Information Ratio", "-3.425"},
-            {"Tracking Error", "0.107"},
-            {"Treynor Ratio", "-5.375"},
-            {"Total Fees", "$1.00"},
-            {"Estimated Strategy Capacity", "$62000000000.00"},
-            {"Lowest Capacity Asset", "SPY R735QTJ8XC9X"},
-            {"Portfolio Turnover", "0.00%"},
-            {"OrderListHash", "3bdd97240dba0b3795cfabe08b872c0e"}
-        };
+        public Dictionary<string, string> ExpectedStatistics =>
+            new Dictionary<string, string>
+            {
+                { "Total Orders", "1" },
+                { "Average Win", "0%" },
+                { "Average Loss", "0%" },
+                { "Compounding Annual Return", "0.071%" },
+                { "Drawdown", "0.000%" },
+                { "Expectancy", "0" },
+                { "Start Equity", "100000" },
+                { "End Equity", "100005.93" },
+                { "Net Profit", "0.006%" },
+                { "Sharpe Ratio", "-47.299" },
+                { "Sortino Ratio", "-100.304" },
+                { "Probabilistic Sharpe Ratio", "81.116%" },
+                { "Loss Rate", "0%" },
+                { "Win Rate", "0%" },
+                { "Profit-Loss Ratio", "0" },
+                { "Alpha", "-0.007" },
+                { "Beta", "0.001" },
+                { "Annual Standard Deviation", "0" },
+                { "Annual Variance", "0" },
+                { "Information Ratio", "-3.425" },
+                { "Tracking Error", "0.107" },
+                { "Treynor Ratio", "-5.375" },
+                { "Total Fees", "$1.00" },
+                { "Estimated Strategy Capacity", "$62000000000.00" },
+                { "Lowest Capacity Asset", "SPY R735QTJ8XC9X" },
+                { "Portfolio Turnover", "0.00%" },
+                { "OrderListHash", "3bdd97240dba0b3795cfabe08b872c0e" }
+            };
     }
 }

@@ -14,8 +14,8 @@
 */
 
 using System;
-using System.Threading;
 using System.Collections.Generic;
+using System.Threading;
 
 namespace QuantConnect.Util
 {
@@ -55,18 +55,12 @@ namespace QuantConnect.Util
         /// <summary>
         /// Number of occurrences allowed per unit of time.
         /// </summary>
-        public int Occurrences
-        {
-            get; private set;
-        }
+        public int Occurrences { get; private set; }
 
         /// <summary>
         /// The length of the time unit, in milliseconds.
         /// </summary>
-        public int TimeUnitMilliseconds
-        {
-            get; private set;
-        }
+        public int TimeUnitMilliseconds { get; private set; }
 
         /// <summary>
         /// Flag indicating we are currently being rate limited
@@ -89,11 +83,20 @@ namespace QuantConnect.Util
         {
             // Check the arguments.
             if (occurrences <= 0)
-                throw new ArgumentOutOfRangeException(nameof(occurrences), "Number of occurrences must be a positive integer");
+                throw new ArgumentOutOfRangeException(
+                    nameof(occurrences),
+                    "Number of occurrences must be a positive integer"
+                );
             if (timeUnit != timeUnit.Duration())
-                throw new ArgumentOutOfRangeException(nameof(timeUnit), "Time unit must be a positive span of time");
+                throw new ArgumentOutOfRangeException(
+                    nameof(timeUnit),
+                    "Time unit must be a positive span of time"
+                );
             if (timeUnit >= TimeSpan.FromMilliseconds(UInt32.MaxValue))
-                throw new ArgumentOutOfRangeException(nameof(timeUnit), "Time unit must be less than 2^32 milliseconds");
+                throw new ArgumentOutOfRangeException(
+                    nameof(timeUnit),
+                    "Time unit must be less than 2^32 milliseconds"
+                );
 
             Occurrences = occurrences;
             TimeUnitMilliseconds = (int)timeUnit.TotalMilliseconds;
@@ -102,7 +105,7 @@ namespace QuantConnect.Util
             _semaphore = new SemaphoreSlim(Occurrences, Occurrences);
 
             // Create a queue to hold the semaphore exit times.
-            _exitTimes = new ();
+            _exitTimes = new();
 
             // Create a timer to exit the semaphore. Use the time unit as the original
             // interval length because that's the earliest we will need to exit the semaphore.
@@ -172,7 +175,7 @@ namespace QuantConnect.Util
             if (entered)
             {
                 var timeToExit = unchecked(Environment.TickCount + TimeUnitMilliseconds);
-                lock(_exitTimes)
+                lock (_exitTimes)
                 {
                     _exitTimes.Enqueue(timeToExit);
                 }

@@ -56,9 +56,11 @@ namespace QuantConnect.Securities.Positions
         /// <param name="security">The security</param>
         /// <param name="quantity">The quantity, if null, the security's holdings quantity is used</param>
         public Position(Security security, decimal? quantity = null)
-            : this(security.Symbol, quantity ?? security.Holdings.Quantity, security.SymbolProperties.LotSize)
-        {
-        }
+            : this(
+                security.Symbol,
+                quantity ?? security.Holdings.Quantity,
+                security.SymbolProperties.LotSize
+            ) { }
 
         /// <summary>Returns a string that represents the current object.</summary>
         /// <returns>A string that represents the current object.</returns>

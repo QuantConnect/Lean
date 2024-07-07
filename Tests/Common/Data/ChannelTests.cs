@@ -23,12 +23,17 @@ namespace QuantConnect.Tests.Common.Data
     [TestFixture]
     public class ChannelTests
     {
-        private static TestCaseData[] Equality => new[]
-        {
-            new TestCaseData(new Channel("trade", Symbols.SPY), Symbols.SPY, "trade"),
-            new TestCaseData(new Channel("quote", Symbols.AAPL), Symbols.AAPL, "quote"),
-            new TestCaseData(new Channel("quote-trade", Symbols.IBM), Symbols.IBM, "quote-trade")
-        };
+        private static TestCaseData[] Equality =>
+            new[]
+            {
+                new TestCaseData(new Channel("trade", Symbols.SPY), Symbols.SPY, "trade"),
+                new TestCaseData(new Channel("quote", Symbols.AAPL), Symbols.AAPL, "quote"),
+                new TestCaseData(
+                    new Channel("quote-trade", Symbols.IBM),
+                    Symbols.IBM,
+                    "quote-trade"
+                )
+            };
 
         [TestCaseSource(nameof(Equality))]
         public void Equal(Channel expected, Symbol symbol, string channelName)
@@ -39,13 +44,14 @@ namespace QuantConnect.Tests.Common.Data
             Assert.AreEqual(expected.GetHashCode(), actual.GetHashCode());
         }
 
-        private static TestCaseData[] Inequality => new[]
-        {
-            new TestCaseData(new Channel("trade", Symbols.SPY), Symbols.SPY, "quote"),
-            new TestCaseData(new Channel("trade", Symbols.AAPL), Symbols.SPY, "trade"),
-            new TestCaseData(new Channel("quote-trade", Symbols.IBM), Symbols.IBM, "quote"),
-            new TestCaseData(new Channel("quote-trade", Symbols.MSFT), Symbols.MSFT, "trade")
-        };
+        private static TestCaseData[] Inequality =>
+            new[]
+            {
+                new TestCaseData(new Channel("trade", Symbols.SPY), Symbols.SPY, "quote"),
+                new TestCaseData(new Channel("trade", Symbols.AAPL), Symbols.SPY, "trade"),
+                new TestCaseData(new Channel("quote-trade", Symbols.IBM), Symbols.IBM, "quote"),
+                new TestCaseData(new Channel("quote-trade", Symbols.MSFT), Symbols.MSFT, "trade")
+            };
 
         [TestCaseSource(nameof(Inequality))]
         public void NotEqual(Channel expected, Symbol symbol, string channelName)

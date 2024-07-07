@@ -13,15 +13,15 @@
  * limitations under the License.
 */
 
-using QuantConnect.Data.Market;
 using System;
+using QuantConnect.Data.Market;
 
 namespace QuantConnect.Indicators
 {
     /// <summary>
     /// The Awesome Oscillator Indicator tracks the price midpoint-movement of a security. Specifically,
     /// <para>
-    /// AO = MAfast[(H+L)/2] - MAslow[(H+L)/2] 
+    /// AO = MAfast[(H+L)/2] - MAslow[(H+L)/2]
     /// </para>
     /// where MAfast and MAslow denote simple moving averages wherein fast has a shorter period.
     /// https://www.barchart.com/education/technical-indicators/awesome_oscillator
@@ -54,10 +54,12 @@ namespace QuantConnect.Indicators
         /// <param name="fastPeriod">The period of the fast moving average associated with the AO</param>
         /// <param name="slowPeriod">The period of the slow moving average associated with the AO</param>
         /// <param name="type">The type of moving average used when computing the fast and slow term. Defaults to simple moving average.</param>
-        public AwesomeOscillator(int fastPeriod, int slowPeriod, MovingAverageType type=MovingAverageType.Simple)
-            : this($"AO({fastPeriod},{slowPeriod},{type})", fastPeriod, slowPeriod, type)
-        {
-        }
+        public AwesomeOscillator(
+            int fastPeriod,
+            int slowPeriod,
+            MovingAverageType type = MovingAverageType.Simple
+        )
+            : this($"AO({fastPeriod},{slowPeriod},{type})", fastPeriod, slowPeriod, type) { }
 
         /// <summary>
         /// Creates a new Awesome Oscillator from the specified periods.
@@ -66,7 +68,12 @@ namespace QuantConnect.Indicators
         /// <param name="fastPeriod">The period of the fast moving average associated with the AO</param>
         /// <param name="slowPeriod">The period of the slow moving average associated with the AO</param>
         /// <param name="type">The type of moving average used when computing the fast and slow term. Defaults to simple moving average.</param>
-        public AwesomeOscillator(string name, int fastPeriod, int slowPeriod,  MovingAverageType type=MovingAverageType.Simple)
+        public AwesomeOscillator(
+            string name,
+            int fastPeriod,
+            int slowPeriod,
+            MovingAverageType type = MovingAverageType.Simple
+        )
             : base(name)
         {
             SlowAo = type.AsIndicator(slowPeriod);
@@ -89,7 +96,7 @@ namespace QuantConnect.Indicators
         }
 
         /// <summary>
-        /// Resets this indicator 
+        /// Resets this indicator
         /// </summary>
         public override void Reset()
         {

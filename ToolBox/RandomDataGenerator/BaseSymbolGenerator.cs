@@ -13,11 +13,11 @@
  * limitations under the License.
 */
 
-using QuantConnect.Securities;
-using QuantConnect.Util;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using QuantConnect.Securities;
+using QuantConnect.Util;
 
 namespace QuantConnect.ToolBox.RandomDataGenerator
 {
@@ -26,7 +26,6 @@ namespace QuantConnect.ToolBox.RandomDataGenerator
     /// </summary>
     public abstract class BaseSymbolGenerator
     {
-
         /// <summary>
         /// <see cref="IRandomValueGenerator"/> instance producing random values for use in random data generation
         /// </summary>
@@ -56,7 +55,10 @@ namespace QuantConnect.ToolBox.RandomDataGenerator
         /// </summary>
         /// <param name="settings">random data generation run settings</param>
         /// <param name="random">produces random values for use in random data generation</param>
-        protected BaseSymbolGenerator(RandomDataGeneratorSettings settings, IRandomValueGenerator random)
+        protected BaseSymbolGenerator(
+            RandomDataGeneratorSettings settings,
+            IRandomValueGenerator random
+        )
         {
             Settings = settings;
             Random = random;
@@ -71,11 +73,17 @@ namespace QuantConnect.ToolBox.RandomDataGenerator
         /// <param name="settings">random data generator settings</param>
         /// <param name="random">produces random values for use in random data generation</param>
         /// <returns>New symbol generator</returns>
-        public static BaseSymbolGenerator Create(RandomDataGeneratorSettings settings, IRandomValueGenerator random)
+        public static BaseSymbolGenerator Create(
+            RandomDataGeneratorSettings settings,
+            IRandomValueGenerator random
+        )
         {
             if (settings is null)
             {
-                throw new ArgumentNullException(nameof(settings), "Settings cannot be null or empty");
+                throw new ArgumentNullException(
+                    nameof(settings),
+                    "Settings cannot be null or empty"
+                );
             }
 
             if (random is null)
@@ -139,7 +147,9 @@ namespace QuantConnect.ToolBox.RandomDataGenerator
         {
             if (securityType == SecurityType.Option || securityType == SecurityType.Future)
             {
-                throw new ArgumentException("Please use OptionSymbolGenerator or FutureSymbolGenerator for SecurityType.Option and SecurityType.Future respectively.");
+                throw new ArgumentException(
+                    "Please use OptionSymbolGenerator or FutureSymbolGenerator for SecurityType.Option and SecurityType.Future respectively."
+                );
             }
 
             if (ticker == null)
@@ -147,7 +157,13 @@ namespace QuantConnect.ToolBox.RandomDataGenerator
                 // we must return a Symbol matching an entry in the Symbol properties database
                 // if there is a wildcard entry, we can generate a truly random Symbol
                 // if there is no wildcard entry, the symbols we can generate are limited by the entries in the database
-                if (SymbolPropertiesDatabase.ContainsKey(market, SecurityDatabaseKey.Wildcard, securityType))
+                if (
+                    SymbolPropertiesDatabase.ContainsKey(
+                        market,
+                        SecurityDatabaseKey.Wildcard,
+                        securityType
+                    )
+                )
                 {
                     // let's make symbols all have 3 chars as it's acceptable for all security types with wildcard entries
                     ticker = NextUpperCaseString(3, 3);
@@ -179,7 +195,10 @@ namespace QuantConnect.ToolBox.RandomDataGenerator
         /// <param name="securityType">security type</param>
         /// <param name="market"></param>
         /// <returns>Random Ticker matching an entry in the Symbol properties database</returns>
-        protected string NextTickerFromSymbolPropertiesDatabase(SecurityType securityType, string market)
+        protected string NextTickerFromSymbolPropertiesDatabase(
+            SecurityType securityType,
+            string market
+        )
         {
             // prevent returning a ticker matching any previously generated Symbol
             var existingTickers = _symbols
@@ -187,8 +206,13 @@ namespace QuantConnect.ToolBox.RandomDataGenerator
                 .Select(sym => sym.Value);
 
             // get the available tickers from the Symbol properties database and remove previously generated tickers
-            var availableTickers = Enumerable.Except(SymbolPropertiesDatabase.GetSymbolPropertiesList(market, securityType)
-                    .Select(kvp => kvp.Key.Symbol), existingTickers)
+            var availableTickers = Enumerable
+                .Except(
+                    SymbolPropertiesDatabase
+                        .GetSymbolPropertiesList(market, securityType)
+                        .Select(kvp => kvp.Key.Symbol),
+                    existingTickers
+                )
                 .ToList();
 
             // there is a limited number of entries in the Symbol properties database so we may run out of tickers
@@ -207,7 +231,11 @@ namespace QuantConnect.ToolBox.RandomDataGenerator
         /// <param name="minExpiry">minimum expiration date</param>
         /// <param name="maxExpiry">maximum expiration date</param>
         /// <returns>Random date on a friday within specified time range</returns>
-        protected DateTime GetRandomExpiration(SecurityExchangeHours marketHours, DateTime minExpiry, DateTime maxExpiry)
+        protected DateTime GetRandomExpiration(
+            SecurityExchangeHours marketHours,
+            DateTime minExpiry,
+            DateTime maxExpiry
+        )
         {
             // generate a random expiration date on a friday
             var expiry = Random.NextDate(minExpiry, maxExpiry, DayOfWeek.Friday);

@@ -1,11 +1,11 @@
 ﻿/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
- * 
- * Licensed under the Apache License, Version 2.0 (the "License"); 
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -24,12 +24,12 @@ namespace QuantConnect.Indicators.CandlestickPatterns
     /// <remarks>
     /// Must have:
     /// - first candle: long white candle
-    /// - second candle: black candle that opens above previous day high and closes within previous day real body; 
+    /// - second candle: black candle that opens above previous day high and closes within previous day real body;
     /// Greg Morris wants the close to be below the midpoint of the previous real body
     /// The meaning of "long" is specified with SetCandleSettings, the penetration of the first real body is specified
     /// with optInPenetration
     /// The returned value is negative(-1): dark cloud cover is always bearish
-    /// The user should consider that a dark cloud cover is significant when it appears in an uptrend, while 
+    /// The user should consider that a dark cloud cover is significant when it appears in an uptrend, while
     /// this function does not consider it
     /// </remarks>
     public class DarkCloudCover : CandlestickPattern
@@ -45,7 +45,7 @@ namespace QuantConnect.Indicators.CandlestickPatterns
         /// </summary>
         /// <param name="name">The name of this indicator</param>
         /// <param name="penetration">Percentage of penetration of a candle within another candle</param>
-        public DarkCloudCover(string name, decimal penetration = 0.5m) 
+        public DarkCloudCover(string name, decimal penetration = 0.5m)
             : base(name, CandleSettings.Get(CandleSettingType.BodyLong).AveragePeriod + 1 + 1)
         {
             _penetration = penetration;
@@ -58,17 +58,13 @@ namespace QuantConnect.Indicators.CandlestickPatterns
         /// </summary>
         /// <param name="penetration">Percentage of penetration of a candle within another candle</param>
         public DarkCloudCover(decimal penetration)
-            : this("DARKCLOUDCOVER", penetration)
-        {
-        }
+            : this("DARKCLOUDCOVER", penetration) { }
 
         /// <summary>
         /// Initializes a new instance of the <see cref="DarkCloudCover"/> class.
         /// </summary>
         public DarkCloudCover()
-            : this("DARKCLOUDCOVER")
-        {
-        }
+            : this("DARKCLOUDCOVER") { }
 
         /// <summary>
         /// Gets a flag indicating when this indicator is ready and fully initialized
@@ -84,7 +80,10 @@ namespace QuantConnect.Indicators.CandlestickPatterns
         /// <param name="window">The window of data held in this indicator</param>
         /// <param name="input">The input given to the indicator</param>
         /// <returns>A new value for this indicator</returns>
-        protected override decimal ComputeNextValue(IReadOnlyWindow<IBaseDataBar> window, IBaseDataBar input)
+        protected override decimal ComputeNextValue(
+            IReadOnlyWindow<IBaseDataBar> window,
+            IBaseDataBar input
+        )
         {
             if (!IsReady)
             {
@@ -99,26 +98,32 @@ namespace QuantConnect.Indicators.CandlestickPatterns
             decimal value;
             if (
                 // 1st: white
-                GetCandleColor(window[1]) == CandleColor.White &&
+                GetCandleColor(window[1]) == CandleColor.White
+                &&
                 //      long
-                GetRealBody(window[1]) > GetCandleAverage(CandleSettingType.BodyLong, _bodyLongPeriodTotal, window[1]) &&
+                GetRealBody(window[1])
+                    > GetCandleAverage(CandleSettingType.BodyLong, _bodyLongPeriodTotal, window[1])
+                &&
                 // 2nd: black
-                GetCandleColor(input) == CandleColor.Black &&
+                GetCandleColor(input) == CandleColor.Black
+                &&
                 //      open above prior high
-                input.Open > window[1].High &&
+                input.Open > window[1].High
+                &&
                 //      close within prior body
-                input.Close > window[1].Open &&
-                input.Close < window[1].Close - GetRealBody(window[1]) * _penetration
-              )
+                input.Close > window[1].Open
+                && input.Close < window[1].Close - GetRealBody(window[1]) * _penetration
+            )
                 value = -1m;
             else
                 value = 0m;
 
-            // add the current range and subtract the first range: this is done after the pattern recognition 
+            // add the current range and subtract the first range: this is done after the pattern recognition
             // when avgPeriod is not 0, that means "compare with the previous candles" (it excludes the current candle)
 
-            _bodyLongPeriodTotal += GetCandleRange(CandleSettingType.BodyLong, window[1]) -
-                                    GetCandleRange(CandleSettingType.BodyLong, window[_bodyLongAveragePeriod + 1]);
+            _bodyLongPeriodTotal +=
+                GetCandleRange(CandleSettingType.BodyLong, window[1])
+                - GetCandleRange(CandleSettingType.BodyLong, window[_bodyLongAveragePeriod + 1]);
 
             return value;
         }

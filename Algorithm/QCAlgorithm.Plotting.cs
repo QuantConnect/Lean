@@ -26,26 +26,44 @@ namespace QuantConnect.Algorithm
     public partial class QCAlgorithm
     {
         private bool _isEmitWarmupPlotWarningSet;
-        private readonly ConcurrentDictionary<string, Chart> _charts = new ConcurrentDictionary<string, Chart>();
+        private readonly ConcurrentDictionary<string, Chart> _charts =
+            new ConcurrentDictionary<string, Chart>();
 
-        private static readonly Dictionary<string, List<string>> ReservedChartSeriesNames = new Dictionary<string, List<string>>
-        {
-            { "Strategy Equity", new List<string> { "Equity", "Return" } },
-            { "Capacity", new List<string> { "Strategy Capacity" } },
-            { "Drawdown", new List<string> { "Equity Drawdown" } },
-            { "Benchmark", new List<string>() { "Benchmark" } },
-            { "Assets Sales Volume", new List<string>() },
-            { "Exposure", new List<string>() },
-            { "Portfolio Margin", new List<string>() },
-            { "Portfolio Turnover", new List<string> { "Portfolio Turnover" } }
-        };
+        private static readonly Dictionary<string, List<string>> ReservedChartSeriesNames =
+            new Dictionary<string, List<string>>
+            {
+                {
+                    "Strategy Equity",
+                    new List<string> { "Equity", "Return" }
+                },
+                {
+                    "Capacity",
+                    new List<string> { "Strategy Capacity" }
+                },
+                {
+                    "Drawdown",
+                    new List<string> { "Equity Drawdown" }
+                },
+                {
+                    "Benchmark",
+                    new List<string>() { "Benchmark" }
+                },
+                { "Assets Sales Volume", new List<string>() },
+                { "Exposure", new List<string>() },
+                { "Portfolio Margin", new List<string>() },
+                {
+                    "Portfolio Turnover",
+                    new List<string> { "Portfolio Turnover" }
+                }
+            };
 
         /// <summary>
         /// Access to the runtime statistics property. User provided statistics.
         /// </summary>
         /// <remarks> RuntimeStatistics are displayed in the head banner in live trading</remarks>
         [DocumentationAttribute(Charting)]
-        public ConcurrentDictionary<string, string> RuntimeStatistics { get; } = new ConcurrentDictionary<string, string>();
+        public ConcurrentDictionary<string, string> RuntimeStatistics { get; } =
+            new ConcurrentDictionary<string, string>();
 
         /// <summary>
         /// Add a Chart object to algorithm collection
@@ -110,7 +128,8 @@ namespace QuantConnect.Algorithm
         /// </summary>
         /// <seealso cref="Plot(string,string,decimal)"/>
         [DocumentationAttribute(Charting)]
-        public void Plot(string series, double value) {
+        public void Plot(string series, double value)
+        {
             Plot(series, value.SafeDecimalCast());
         }
 
@@ -191,7 +210,13 @@ namespace QuantConnect.Algorithm
         [DocumentationAttribute(Charting)]
         public void Plot(string series, double open, double high, double low, double close)
         {
-            Plot(series, open.SafeDecimalCast(), high.SafeDecimalCast(), low.SafeDecimalCast(), close.SafeDecimalCast());
+            Plot(
+                series,
+                open.SafeDecimalCast(),
+                high.SafeDecimalCast(),
+                low.SafeDecimalCast(),
+                close.SafeDecimalCast()
+            );
         }
 
         /// <summary>
@@ -251,9 +276,23 @@ namespace QuantConnect.Algorithm
         /// <param name="close">The candlestick close value</param>
         /// <seealso cref="Plot(string,string,decimal,decimal,decimal,decimal)"/>
         [DocumentationAttribute(Charting)]
-        public void Plot(string chart, string series, double open, double high, double low, double close)
+        public void Plot(
+            string chart,
+            string series,
+            double open,
+            double high,
+            double low,
+            double close
+        )
         {
-            Plot(chart, series, open.SafeDecimalCast(), high.SafeDecimalCast(), low.SafeDecimalCast(), close.SafeDecimalCast());
+            Plot(
+                chart,
+                series,
+                open.SafeDecimalCast(),
+                high.SafeDecimalCast(),
+                low.SafeDecimalCast(),
+                close.SafeDecimalCast()
+            );
         }
 
         /// <summary>
@@ -267,7 +306,14 @@ namespace QuantConnect.Algorithm
         /// <param name="close">The candlestick close value</param>
         /// <seealso cref="Plot(string,string,decimal,decimal,decimal,decimal)"/>
         [DocumentationAttribute(Charting)]
-        public void Plot(string chart, string series, float open, float high, float low, float close)
+        public void Plot(
+            string chart,
+            string series,
+            float open,
+            float high,
+            float low,
+            float close
+        )
         {
             Plot(chart, series, (double)open, (double)high, (double)low, (double)close);
         }
@@ -298,7 +344,14 @@ namespace QuantConnect.Algorithm
         /// <param name="low">The candlestick low value</param>
         /// <param name="close">The candlestick close value</param>
         [DocumentationAttribute(Charting)]
-        public void Plot(string chart, string series, decimal open, decimal high, decimal low, decimal close)
+        public void Plot(
+            string chart,
+            string series,
+            decimal open,
+            decimal high,
+            decimal low,
+            decimal close
+        )
         {
             if (TryGetChartSeries(chart, series, out CandlestickSeries candlestickSeries))
             {
@@ -345,11 +398,13 @@ namespace QuantConnect.Algorithm
                 }
                 if (reservedSeriesNames.Contains(seriesName))
                 {
-                    throw new ArgumentException($"'{seriesName}' is a reserved series name for chart '{chartName}'.");
+                    throw new ArgumentException(
+                        $"'{seriesName}' is a reserved series name for chart '{chartName}'."
+                    );
                 }
             }
 
-            if(!_charts.TryGetValue(chartName, out var chart))
+            if (!_charts.TryGetValue(chartName, out var chart))
             {
                 // If we don't have the chart, create it
                 _charts[chartName] = chart = new Chart(chartName);
@@ -426,11 +481,16 @@ namespace QuantConnect.Algorithm
         /// </summary>
         [DocumentationAttribute(Charting)]
         [DocumentationAttribute(Indicators)]
-        public void PlotIndicator(string chart, bool waitForReady, params IndicatorBase[] indicators)
+        public void PlotIndicator(
+            string chart,
+            bool waitForReady,
+            params IndicatorBase[] indicators
+        )
         {
             foreach (var i in indicators)
             {
-                if (i == null) continue;
+                if (i == null)
+                    continue;
 
                 // copy loop variable for usage in closure
                 var ilocal = i;

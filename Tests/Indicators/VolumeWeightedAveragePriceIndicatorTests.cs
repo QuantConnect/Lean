@@ -5,7 +5,7 @@
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -17,8 +17,8 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using NUnit.Framework;
-using QuantConnect.Indicators;
 using QuantConnect.Data.Market;
+using QuantConnect.Indicators;
 
 namespace QuantConnect.Tests.Indicators
 {
@@ -41,14 +41,24 @@ namespace QuantConnect.Tests.Indicators
             const int period = 4;
             const int volume = 100;
             var ind = new VolumeWeightedAveragePriceIndicator(period);
-            var data = new[] {1m, 10m, 100m, 1000m, 10000m, 1234m, 56789m};
+            var data = new[] { 1m, 10m, 100m, 1000m, 10000m, 1234m, 56789m };
 
             var seen = new List<decimal>();
             for (var i = 0; i < data.Length; i++)
             {
                 var datum = data[i];
                 seen.Add(datum);
-                ind.Update(new TradeBar(DateTime.Now.AddSeconds(i), Symbols.SPY, datum, datum, datum, datum, volume));
+                ind.Update(
+                    new TradeBar(
+                        DateTime.Now.AddSeconds(i),
+                        Symbols.SPY,
+                        datum,
+                        datum,
+                        datum,
+                        datum,
+                        volume
+                    )
+                );
                 // When volume is constant, VWAP is a simple moving average
                 Assert.AreEqual(Enumerable.Reverse(seen).Take(period).Average(), ind.Current.Value);
             }
@@ -83,7 +93,7 @@ namespace QuantConnect.Tests.Indicators
             ind.Update(new TradeBar(DateTime.UtcNow, Symbols.SPY, 2m, 2m, 2m, 2m, 1));
             Assert.AreEqual(ind.Current.Value, 2m);
         }
-        
+
         [Test]
         public void ResetsInnerVolumeWeightedAveragePriceIndicatorProperly()
         {
@@ -162,23 +172,22 @@ namespace QuantConnect.Tests.Indicators
             Assert.AreEqual(0, newVolumeIndicator.Samples);
             Assert.IsFalse(newVolumeIndicator.IsReady);
         }
-        
+
         /// <summary>
         /// The final value of this indicator is zero because it uses the Volume of the bars it receives.
         /// Since RenkoBar's don't always have Volume, the final current value is zero. Therefore we
         /// skip this test
         /// </summary>
         /// <param name="indicator"></param>
-        protected override void IndicatorValueIsNotZeroAfterReceiveRenkoBars(IndicatorBase indicator)
-        {
-        }
+        protected override void IndicatorValueIsNotZeroAfterReceiveRenkoBars(
+            IndicatorBase indicator
+        ) { }
     }
 
     public class TestVolumeWeightedAveragePriceIndicator : VolumeWeightedAveragePriceIndicator
     {
-        public TestVolumeWeightedAveragePriceIndicator(int period) : base(period)
-        {
-        }
+        public TestVolumeWeightedAveragePriceIndicator(int period)
+            : base(period) { }
 
         public CompositeIndicator GetInnerVolumeWeightedAveragePriceIndicator()
         {

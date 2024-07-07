@@ -13,17 +13,19 @@
  * limitations under the License.
 */
 
-using QuantConnect.Data;
-using QuantConnect.Interfaces;
 using System;
 using System.Collections.Generic;
+using QuantConnect.Data;
+using QuantConnect.Interfaces;
 
 namespace QuantConnect.Algorithm.CSharp
 {
     /// <summary>
     /// Asserts we can use a C# function as a FuncRiskFreeRateInterestRateModel
     /// </summary>
-    public class FuncRiskFreeRateInterestRateModelWithPythonLambda: QCAlgorithm, IRegressionAlgorithmDefinition
+    public class FuncRiskFreeRateInterestRateModelWithPythonLambda
+        : QCAlgorithm,
+            IRegressionAlgorithmDefinition
     {
         FuncRiskFreeRateInterestRateModel _model;
 
@@ -33,18 +35,24 @@ namespace QuantConnect.Algorithm.CSharp
             SetEndDate(2020, 6, 28);
 
             AddEquity("SPY", Resolution.Daily);
-            _model = new FuncRiskFreeRateInterestRateModel(dt => dt.Date == new DateTime(2020, 5, 28) ? 0 : 1);
+            _model = new FuncRiskFreeRateInterestRateModel(dt =>
+                dt.Date == new DateTime(2020, 5, 28) ? 0 : 1
+            );
         }
 
         public override void OnData(Slice slice)
         {
             if (Time.Date == (new DateTime(2020, 5, 28)) && _model.GetInterestRate(Time) != 0)
             {
-                throw new RegressionTestException($"Risk Free interest rate should be 0, but was {_model.GetInterestRate(Time)}");
+                throw new RegressionTestException(
+                    $"Risk Free interest rate should be 0, but was {_model.GetInterestRate(Time)}"
+                );
             }
             else if (Time.Date != (new DateTime(2020, 5, 28)) && _model.GetInterestRate(Time) != 1)
             {
-                throw new RegressionTestException($"Risk Free interest rate should be 1, but was {_model.GetInterestRate(Time)}");
+                throw new RegressionTestException(
+                    $"Risk Free interest rate should be 1, but was {_model.GetInterestRate(Time)}"
+                );
             }
         }
 
@@ -76,35 +84,36 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// This is used by the regression test system to indicate what the expected statistics are from running the algorithm
         /// </summary>
-        public Dictionary<string, string> ExpectedStatistics => new Dictionary<string, string>
-        {
-            {"Total Orders", "0"},
-            {"Average Win", "0%"},
-            {"Average Loss", "0%"},
-            {"Compounding Annual Return", "0%"},
-            {"Drawdown", "0%"},
-            {"Expectancy", "0"},
-            {"Start Equity", "100000"},
-            {"End Equity", "100000"},
-            {"Net Profit", "0%"},
-            {"Sharpe Ratio", "0"},
-            {"Sortino Ratio", "0"},
-            {"Probabilistic Sharpe Ratio", "0%"},
-            {"Loss Rate", "0%"},
-            {"Win Rate", "0%"},
-            {"Profit-Loss Ratio", "0"},
-            {"Alpha", "0"},
-            {"Beta", "0"},
-            {"Annual Standard Deviation", "0"},
-            {"Annual Variance", "0"},
-            {"Information Ratio", "0.069"},
-            {"Tracking Error", "0.243"},
-            {"Treynor Ratio", "0"},
-            {"Total Fees", "$0.00"},
-            {"Estimated Strategy Capacity", "$0"},
-            {"Lowest Capacity Asset", ""},
-            {"Portfolio Turnover", "0%"},
-            {"OrderListHash", "d41d8cd98f00b204e9800998ecf8427e"}
-        };
+        public Dictionary<string, string> ExpectedStatistics =>
+            new Dictionary<string, string>
+            {
+                { "Total Orders", "0" },
+                { "Average Win", "0%" },
+                { "Average Loss", "0%" },
+                { "Compounding Annual Return", "0%" },
+                { "Drawdown", "0%" },
+                { "Expectancy", "0" },
+                { "Start Equity", "100000" },
+                { "End Equity", "100000" },
+                { "Net Profit", "0%" },
+                { "Sharpe Ratio", "0" },
+                { "Sortino Ratio", "0" },
+                { "Probabilistic Sharpe Ratio", "0%" },
+                { "Loss Rate", "0%" },
+                { "Win Rate", "0%" },
+                { "Profit-Loss Ratio", "0" },
+                { "Alpha", "0" },
+                { "Beta", "0" },
+                { "Annual Standard Deviation", "0" },
+                { "Annual Variance", "0" },
+                { "Information Ratio", "0.069" },
+                { "Tracking Error", "0.243" },
+                { "Treynor Ratio", "0" },
+                { "Total Fees", "$0.00" },
+                { "Estimated Strategy Capacity", "$0" },
+                { "Lowest Capacity Asset", "" },
+                { "Portfolio Turnover", "0%" },
+                { "OrderListHash", "d41d8cd98f00b204e9800998ecf8427e" }
+            };
     }
 }

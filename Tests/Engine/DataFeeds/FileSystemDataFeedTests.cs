@@ -45,27 +45,49 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             var marketHoursDatabase = MarketHoursDatabase.FromDataFolder();
             var symbolPropertiesDataBase = SymbolPropertiesDatabase.FromDataFolder();
             var dataPermissionManager = new DataPermissionManager();
-            var dataManager = new DataManager(feed,
+            var dataManager = new DataManager(
+                feed,
                 new UniverseSelection(
                     algorithm,
-                    new SecurityService(algorithm.Portfolio.CashBook, marketHoursDatabase, symbolPropertiesDataBase, algorithm, RegisteredSecurityDataTypesProvider.Null, new SecurityCacheProvider(algorithm.Portfolio)),
+                    new SecurityService(
+                        algorithm.Portfolio.CashBook,
+                        marketHoursDatabase,
+                        symbolPropertiesDataBase,
+                        algorithm,
+                        RegisteredSecurityDataTypesProvider.Null,
+                        new SecurityCacheProvider(algorithm.Portfolio)
+                    ),
                     dataPermissionManager,
-                    TestGlobals.DataProvider),
+                    TestGlobals.DataProvider
+                ),
                 algorithm,
                 algorithm.TimeKeeper,
                 marketHoursDatabase,
                 false,
                 RegisteredSecurityDataTypesProvider.Null,
-                dataPermissionManager);
+                dataPermissionManager
+            );
             algorithm.SubscriptionManager.SetDataManager(dataManager);
             using var synchronizer = new Synchronizer();
             synchronizer.Initialize(algorithm, dataManager);
 
-            feed.Initialize(algorithm, job, resultHandler, TestGlobals.MapFileProvider, TestGlobals.FactorFileProvider, TestGlobals.DataProvider, dataManager, synchronizer, dataPermissionManager.DataChannelProvider);
+            feed.Initialize(
+                algorithm,
+                job,
+                resultHandler,
+                TestGlobals.MapFileProvider,
+                TestGlobals.FactorFileProvider,
+                TestGlobals.DataProvider,
+                dataManager,
+                synchronizer,
+                dataPermissionManager.DataChannelProvider
+            );
             algorithm.Initialize();
             algorithm.PostInitialize();
 
-            using var cancellationTokenSource = new CancellationTokenSource(TimeSpan.FromSeconds(30));
+            using var cancellationTokenSource = new CancellationTokenSource(
+                TimeSpan.FromSeconds(30)
+            );
             var count = 0;
             var stopwatch = Stopwatch.StartNew();
             var lastMonth = algorithm.StartDate.Month;
@@ -75,7 +97,9 @@ namespace QuantConnect.Tests.Engine.DataFeeds
                 {
                     var elapsed = stopwatch.Elapsed.TotalSeconds;
                     var thousands = count / 1000d;
-                    Log.Trace($"{DateTime.Now} - Time: {timeSlice.Time}: KPS: {thousands / elapsed}");
+                    Log.Trace(
+                        $"{DateTime.Now} - Time: {timeSlice.Time}: KPS: {thousands / elapsed}"
+                    );
                     lastMonth = timeSlice.Time.Month;
                 }
                 count++;
@@ -84,7 +108,9 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             stopwatch.Stop();
             feed.Exit();
             dataManager.RemoveAllSubscriptions();
-            Log.Trace($"Elapsed time: {stopwatch.Elapsed}   KPS: {count / 1000d / stopwatch.Elapsed.TotalSeconds}");
+            Log.Trace(
+                $"Elapsed time: {stopwatch.Elapsed}   KPS: {count / 1000d / stopwatch.Elapsed.TotalSeconds}"
+            );
         }
 
         [Test]
@@ -95,14 +121,30 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             algorithm.PostInitialize();
 
             var resultHandler = new BacktestingResultHandler();
-            using var factory = new SubscriptionDataReaderSubscriptionEnumeratorFactory(resultHandler, TestGlobals.MapFileProvider,
-                TestGlobals.FactorFileProvider, TestGlobals.DataCacheProvider, algorithm, enablePriceScaling: false);
+            using var factory = new SubscriptionDataReaderSubscriptionEnumeratorFactory(
+                resultHandler,
+                TestGlobals.MapFileProvider,
+                TestGlobals.FactorFileProvider,
+                TestGlobals.DataCacheProvider,
+                algorithm,
+                enablePriceScaling: false
+            );
 
             var universe = algorithm.UniverseManager.Single().Value;
             var security = algorithm.Securities.Single().Value;
             var securityConfig = security.Subscriptions.First();
-            var subscriptionRequest = new SubscriptionRequest(false, universe, security, securityConfig, algorithm.StartDate, algorithm.EndDate);
-            var enumerator = factory.CreateEnumerator(subscriptionRequest, TestGlobals.DataProvider);
+            var subscriptionRequest = new SubscriptionRequest(
+                false,
+                universe,
+                security,
+                securityConfig,
+                algorithm.StartDate,
+                algorithm.EndDate
+            );
+            var enumerator = factory.CreateEnumerator(
+                subscriptionRequest,
+                TestGlobals.DataProvider
+            );
 
             var count = 0;
             var stopwatch = Stopwatch.StartNew();
@@ -130,7 +172,9 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             stopwatch.Stop();
             enumerator.Dispose();
             factory.DisposeSafely();
-            Log.Trace($"Elapsed time: {stopwatch.Elapsed}   KPS: {count / 1000d / stopwatch.Elapsed.TotalSeconds}");
+            Log.Trace(
+                $"Elapsed time: {stopwatch.Elapsed}   KPS: {count / 1000d / stopwatch.Elapsed.TotalSeconds}"
+            );
         }
 
         [Test]
@@ -141,16 +185,31 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             algorithm.PostInitialize();
 
             var resultHandler = new TestResultHandler();
-            using var factory = new SubscriptionDataReaderSubscriptionEnumeratorFactory(resultHandler, TestGlobals.MapFileProvider,
-                TestGlobals.FactorFileProvider, TestGlobals.DataCacheProvider, algorithm, enablePriceScaling: false);
+            using var factory = new SubscriptionDataReaderSubscriptionEnumeratorFactory(
+                resultHandler,
+                TestGlobals.MapFileProvider,
+                TestGlobals.FactorFileProvider,
+                TestGlobals.DataCacheProvider,
+                algorithm,
+                enablePriceScaling: false
+            );
 
             var universe = algorithm.UniverseManager.Single().Value;
             var security = algorithm.AddEquity("AAA", Resolution.Daily);
             var securityConfig = security.Subscriptions.First();
             // start date is before the first date in the map file
-            var subscriptionRequest = new SubscriptionRequest(false, universe, security, securityConfig, new DateTime(2001, 12, 1),
-                new DateTime(2016, 11, 1));
-            var enumerator = factory.CreateEnumerator(subscriptionRequest, TestGlobals.DataProvider);
+            var subscriptionRequest = new SubscriptionRequest(
+                false,
+                universe,
+                security,
+                securityConfig,
+                new DateTime(2001, 12, 1),
+                new DateTime(2016, 11, 1)
+            );
+            var enumerator = factory.CreateEnumerator(
+                subscriptionRequest,
+                TestGlobals.DataProvider
+            );
             // should initialize the data source reader
             enumerator.MoveNext();
 
@@ -159,8 +218,11 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             resultHandler.Exit();
 
             var message = ((DebugPacket)resultHandler.Messages.Single()).Message;
-            Assert.IsTrue(message.Equals(
-                "The starting dates for the following symbols have been adjusted to match their map files first date: [AAA, 2020-09-09]"));
+            Assert.IsTrue(
+                message.Equals(
+                    "The starting dates for the following symbols have been adjusted to match their map files first date: [AAA, 2020-09-09]"
+                )
+            );
         }
 
         [TestCase(true)]
@@ -174,18 +236,35 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             algorithm.Transactions.SetOrderProcessor(new FakeOrderProcessor());
             algorithm.SetStartDate(new DateTime(2014, 06, 06));
             algorithm.SetEndDate(new DateTime(2014, 06, 09));
-            algorithm.SetOptionChainProvider(new BacktestingOptionChainProvider(TestGlobals.DataCacheProvider, TestGlobals.MapFileProvider));
+            algorithm.SetOptionChainProvider(
+                new BacktestingOptionChainProvider(
+                    TestGlobals.DataCacheProvider,
+                    TestGlobals.MapFileProvider
+                )
+            );
 
             var dataPermissionManager = new DataPermissionManager();
             using var synchronizer = new Synchronizer();
             synchronizer.Initialize(algorithm, algorithm.DataManager);
 
-            feed.Initialize(algorithm, job, resultHandler, TestGlobals.MapFileProvider, TestGlobals.FactorFileProvider, TestGlobals.DataProvider, algorithm.DataManager, synchronizer, dataPermissionManager.DataChannelProvider);
+            feed.Initialize(
+                algorithm,
+                job,
+                resultHandler,
+                TestGlobals.MapFileProvider,
+                TestGlobals.FactorFileProvider,
+                TestGlobals.DataProvider,
+                algorithm.DataManager,
+                synchronizer,
+                dataPermissionManager.DataChannelProvider
+            );
             var option = algorithm.AddOption("AAPL", fillForward: fillForward);
             option.SetFilter(filter => filter.FrontMonth());
             algorithm.PostInitialize();
 
-            using var cancellationTokenSource = new CancellationTokenSource(TimeSpan.FromSeconds(30));
+            using var cancellationTokenSource = new CancellationTokenSource(
+                TimeSpan.FromSeconds(30)
+            );
             var count = 0;
             var lastMonth = algorithm.StartDate.Month;
             foreach (var timeSlice in synchronizer.StreamData(cancellationTokenSource.Token))
@@ -196,11 +275,21 @@ namespace QuantConnect.Tests.Engine.DataFeeds
                     if (baseDataCollection.Symbol.SecurityType == SecurityType.Option)
                     {
                         var nyTime = timeSlice.Time.ConvertFromUtc(algorithm.TimeZone);
-                        Assert.AreEqual(new TimeSpan(9, 30, 0).Add(TimeSpan.FromMinutes((count % 390) + 1)), nyTime.TimeOfDay, $"Failed on: {nyTime}");
+                        Assert.AreEqual(
+                            new TimeSpan(9, 30, 0).Add(TimeSpan.FromMinutes((count % 390) + 1)),
+                            nyTime.TimeOfDay,
+                            $"Failed on: {nyTime}"
+                        );
                         Assert.IsNotNull(baseDataCollection.Underlying);
                         // make sure the underlying time stamp is getting updated
-                        Assert.AreEqual(nyTime.TimeOfDay, baseDataCollection.Underlying.EndTime.TimeOfDay);
-                        Assert.AreEqual(nyTime.TimeOfDay, baseDataCollection.EndTime.ConvertFromUtc(algorithm.TimeZone).TimeOfDay);
+                        Assert.AreEqual(
+                            nyTime.TimeOfDay,
+                            baseDataCollection.Underlying.EndTime.TimeOfDay
+                        );
+                        Assert.AreEqual(
+                            nyTime.TimeOfDay,
+                            baseDataCollection.EndTime.ConvertFromUtc(algorithm.TimeZone).TimeOfDay
+                        );
                         Assert.IsTrue(!baseDataCollection.FilteredContracts.IsNullOrEmpty());
                         count++;
                     }
@@ -224,19 +313,36 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             algorithm.Transactions.SetOrderProcessor(new FakeOrderProcessor());
             algorithm.SetStartDate(new DateTime(2013, 10, 07));
             algorithm.SetEndDate(new DateTime(2013, 10, 08));
-            algorithm.SetFutureChainProvider(new BacktestingFutureChainProvider(TestGlobals.DataCacheProvider));
+            algorithm.SetFutureChainProvider(
+                new BacktestingFutureChainProvider(TestGlobals.DataCacheProvider)
+            );
 
             var dataPermissionManager = new DataPermissionManager();
             using var synchronizer = new Synchronizer();
             synchronizer.Initialize(algorithm, algorithm.DataManager);
 
-            feed.Initialize(algorithm, job, resultHandler, TestGlobals.MapFileProvider, TestGlobals.FactorFileProvider, TestGlobals.DataProvider,
-                algorithm.DataManager, synchronizer, dataPermissionManager.DataChannelProvider);
-            var future = algorithm.AddFuture("ES", fillForward: fillForward, extendedMarketHours: true);
+            feed.Initialize(
+                algorithm,
+                job,
+                resultHandler,
+                TestGlobals.MapFileProvider,
+                TestGlobals.FactorFileProvider,
+                TestGlobals.DataProvider,
+                algorithm.DataManager,
+                synchronizer,
+                dataPermissionManager.DataChannelProvider
+            );
+            var future = algorithm.AddFuture(
+                "ES",
+                fillForward: fillForward,
+                extendedMarketHours: true
+            );
             future.SetFilter(0, 300);
             algorithm.PostInitialize();
 
-            using var cancellationTokenSource = new CancellationTokenSource(TimeSpan.FromSeconds(30));
+            using var cancellationTokenSource = new CancellationTokenSource(
+                TimeSpan.FromSeconds(30)
+            );
             var count = 0L;
             var lastMonth = algorithm.StartDate.Month;
             foreach (var timeSlice in synchronizer.StreamData(cancellationTokenSource.Token))
@@ -245,39 +351,84 @@ namespace QuantConnect.Tests.Engine.DataFeeds
                 {
                     var nyTime = timeSlice.Time.ConvertFromUtc(algorithm.TimeZone);
 
-                    var currentExpectedTime = new TimeSpan(0, 0, 0).Add(TimeSpan.FromMinutes(count % (24 * 60)));
-                    while (!future.Exchange.Hours.IsOpen(nyTime.Date.Add(currentExpectedTime).AddMinutes(-1), true))
+                    var currentExpectedTime = new TimeSpan(0, 0, 0).Add(
+                        TimeSpan.FromMinutes(count % (24 * 60))
+                    );
+                    while (
+                        !future.Exchange.Hours.IsOpen(
+                            nyTime.Date.Add(currentExpectedTime).AddMinutes(-1),
+                            true
+                        )
+                    )
                     {
                         // skip closed market times
-                        currentExpectedTime = new TimeSpan(0, 0, 0).Add(TimeSpan.FromMinutes(++count % (24 * 60)));
+                        currentExpectedTime = new TimeSpan(0, 0, 0).Add(
+                            TimeSpan.FromMinutes(++count % (24 * 60))
+                        );
                     }
-                    var universeData = timeSlice.UniverseData.OrderBy(kvp => kvp.Key.Configuration.Symbol).ToList();
+                    var universeData = timeSlice
+                        .UniverseData.OrderBy(kvp => kvp.Key.Configuration.Symbol)
+                        .ToList();
 
                     var chainData = universeData[0].Value;
 
-                    Log.Trace($"{nyTime}. Count: {count}. Universe Data Count {universeData.Count}");
-                    Assert.AreEqual(currentExpectedTime, nyTime.TimeOfDay, $"Failed on: {nyTime}. Count: {count}");
-                    Assert.IsTrue(timeSlice.UniverseData.All(kvp => kvp.Value.EndTime.ConvertFromUtc(algorithm.TimeZone).TimeOfDay == nyTime.TimeOfDay));
+                    Log.Trace(
+                        $"{nyTime}. Count: {count}. Universe Data Count {universeData.Count}"
+                    );
+                    Assert.AreEqual(
+                        currentExpectedTime,
+                        nyTime.TimeOfDay,
+                        $"Failed on: {nyTime}. Count: {count}"
+                    );
+                    Assert.IsTrue(
+                        timeSlice.UniverseData.All(kvp =>
+                            kvp.Value.EndTime.ConvertFromUtc(algorithm.TimeZone).TimeOfDay
+                            == nyTime.TimeOfDay
+                        )
+                    );
                     if (chainData.FilteredContracts.IsNullOrEmpty())
                     {
-                        Assert.AreEqual(new DateTime(2013, 10, 09), nyTime, $"Unexpected chain FilteredContracts was empty on {nyTime}");
+                        Assert.AreEqual(
+                            new DateTime(2013, 10, 09),
+                            nyTime,
+                            $"Unexpected chain FilteredContracts was empty on {nyTime}"
+                        );
                     }
 
                     if (universeData.Count == 1)
                     {
                         // the chain
-                        Assert.IsTrue(universeData.Any(kvp => kvp.Key.Configuration.Symbol == future.Symbol));
+                        Assert.IsTrue(
+                            universeData.Any(kvp => kvp.Key.Configuration.Symbol == future.Symbol)
+                        );
                     }
                     else
                     {
                         // we have 2 universe data, the chain and the continuous future
                         Assert.AreEqual(2, universeData.Count);
-                        Assert.IsTrue(universeData.All(kvp => kvp.Key.Configuration.Symbol.SecurityType == SecurityType.Future));
-                        Assert.IsTrue(universeData.Any(kvp => kvp.Key.Configuration.Symbol == future.Symbol));
-                        Assert.IsTrue(universeData.Any(kvp => kvp.Key.Configuration.Symbol.ID.Symbol.Contains("CONTINUOUS", StringComparison.InvariantCultureIgnoreCase)));
+                        Assert.IsTrue(
+                            universeData.All(kvp =>
+                                kvp.Key.Configuration.Symbol.SecurityType == SecurityType.Future
+                            )
+                        );
+                        Assert.IsTrue(
+                            universeData.Any(kvp => kvp.Key.Configuration.Symbol == future.Symbol)
+                        );
+                        Assert.IsTrue(
+                            universeData.Any(kvp =>
+                                kvp.Key.Configuration.Symbol.ID.Symbol.Contains(
+                                    "CONTINUOUS",
+                                    StringComparison.InvariantCultureIgnoreCase
+                                )
+                            )
+                        );
 
                         var continuousData = universeData[1].Value;
-                        Assert.AreEqual(currentExpectedTime, nyTime.TimeOfDay, $"Failed on: {nyTime}");
+                        Assert.AreEqual(
+                            currentExpectedTime,
+                            nyTime.TimeOfDay,
+                            $"Failed on: {nyTime}"
+                        );
                         Assert.IsTrue(!chainData.FilteredContracts.IsNullOrEmpty());
                     }
 

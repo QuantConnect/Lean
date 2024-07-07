@@ -1,11 +1,11 @@
 /*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
- * 
- * Licensed under the Apache License, Version 2.0 (the "License"); 
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -32,9 +32,14 @@ namespace QuantConnect.Tests.Indicators
             RenkoBarSize = 1m;
             return new TimeProfile(3);
         }
+
         protected override Action<IndicatorBase<TradeBar>, double> Assertion
         {
-            get { return (indicator, expected) => Assert.AreEqual(expected, (double)indicator.Current.Value, 0.01); }
+            get
+            {
+                return (indicator, expected) =>
+                    Assert.AreEqual(expected, (double)indicator.Current.Value, 0.01);
+            }
         }
 
         [Test]
@@ -45,7 +50,7 @@ namespace QuantConnect.Tests.Indicators
                 TestFileName,
                 "POCVolume",
                 (ind, expected) => Assert.AreEqual(expected, (double)((TimeProfile)ind).POCVolume)
-                );
+            );
         }
 
         [Test]
@@ -56,7 +61,7 @@ namespace QuantConnect.Tests.Indicators
                 TestFileName,
                 "PH",
                 (ind, expected) => Assert.AreEqual(expected, (double)((TimeProfile)ind).ProfileHigh)
-                );
+            );
         }
 
         [Test]
@@ -67,7 +72,7 @@ namespace QuantConnect.Tests.Indicators
                 TestFileName,
                 "PL",
                 (ind, expected) => Assert.AreEqual(expected, (double)((TimeProfile)ind).ProfileLow)
-                );
+            );
         }
 
         [Test]
@@ -77,8 +82,9 @@ namespace QuantConnect.Tests.Indicators
                 CreateIndicator(),
                 TestFileName,
                 "VA",
-                (ind, expected) => Assert.AreEqual(expected, (double)((TimeProfile)ind).ValueAreaVolume,0.01)
-                );
+                (ind, expected) =>
+                    Assert.AreEqual(expected, (double)((TimeProfile)ind).ValueAreaVolume, 0.01)
+            );
         }
 
         [Test]
@@ -88,8 +94,9 @@ namespace QuantConnect.Tests.Indicators
                 CreateIndicator(),
                 TestFileName,
                 "VAH",
-                (ind, expected) => Assert.AreEqual(expected, (double)((TimeProfile)ind).ValueAreaHigh)
-                );
+                (ind, expected) =>
+                    Assert.AreEqual(expected, (double)((TimeProfile)ind).ValueAreaHigh)
+            );
         }
 
         [Test]
@@ -99,8 +106,9 @@ namespace QuantConnect.Tests.Indicators
                 CreateIndicator(),
                 TestFileName,
                 "VAL",
-                (ind, expected) => Assert.AreEqual(expected, (double)((TimeProfile)ind).ValueAreaLow)
-                );
+                (ind, expected) =>
+                    Assert.AreEqual(expected, (double)((TimeProfile)ind).ValueAreaLow)
+            );
         }
 
         [Test]
@@ -111,13 +119,29 @@ namespace QuantConnect.Tests.Indicators
             Assert.IsFalse(tp.IsReady);
             for (int i = 0; i < 3; i++)
             {
-                tp.Update(new TradeBar() { Symbol = Symbols.IBM, Close = 1, Volume = 1, Time = reference.AddDays(1 + i) });
+                tp.Update(
+                    new TradeBar()
+                    {
+                        Symbol = Symbols.IBM,
+                        Close = 1,
+                        Volume = 1,
+                        Time = reference.AddDays(1 + i)
+                    }
+                );
             }
             Assert.IsTrue(tp.IsReady);
             tp.Reset();
 
             TestHelper.AssertIndicatorIsInDefaultState(tp);
-            tp.Update(new TradeBar() { Symbol = Symbols.IBM, Close = 1, Volume = 1, Time = reference.AddDays(1) });
+            tp.Update(
+                new TradeBar()
+                {
+                    Symbol = Symbols.IBM,
+                    Close = 1,
+                    Volume = 1,
+                    Time = reference.AddDays(1)
+                }
+            );
             Assert.AreEqual(tp.Current.Value, 1m);
         }
 
@@ -132,11 +156,18 @@ namespace QuantConnect.Tests.Indicators
             Assert.AreEqual(20, period);
             for (var i = 0; i < period; i++)
             {
-                tp.Update(new TradeBar() { Symbol = Symbols.AAPL, Low = 1, High = 2, Volume = 100, Time = reference.AddDays(1 + i) });
+                tp.Update(
+                    new TradeBar()
+                    {
+                        Symbol = Symbols.AAPL,
+                        Low = 1,
+                        High = 2,
+                        Volume = 100,
+                        Time = reference.AddDays(1 + i)
+                    }
+                );
                 Assert.AreEqual(i == period - 1, tp.IsReady);
             }
         }
     }
 }
-
-

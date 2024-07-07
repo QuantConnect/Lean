@@ -33,15 +33,16 @@ namespace QuantConnect.Logging
         /// <summary>
         /// Default constructor to handle MEF.
         /// </summary>
-        public FunctionalLogHandler()
-        {
-
-        }
+        public FunctionalLogHandler() { }
 
         /// <summary>
         /// Initializes a new instance of the <see cref="QuantConnect.Logging.FunctionalLogHandler"/> class.
         /// </summary>
-        public FunctionalLogHandler(Action<string> debug, Action<string> trace, Action<string> error)
+        public FunctionalLogHandler(
+            Action<string> debug,
+            Action<string> trace,
+            Action<string> error
+        )
         {
             // saves references to the real console text writer since in a deployed state we may overwrite this in order
             // to redirect messages from algorithm to result handler
@@ -58,7 +59,11 @@ namespace QuantConnect.Logging
         {
             if (_error != null)
             {
-                _error(DateTime.Now.ToString(DateFormat, CultureInfo.InvariantCulture) + " ERROR " + text);
+                _error(
+                    DateTime.Now.ToString(DateFormat, CultureInfo.InvariantCulture)
+                        + " ERROR "
+                        + text
+                );
             }
         }
 
@@ -70,7 +75,11 @@ namespace QuantConnect.Logging
         {
             if (_debug != null)
             {
-                _debug(DateTime.Now.ToString(DateFormat, CultureInfo.InvariantCulture) + " DEBUG " + text);
+                _debug(
+                    DateTime.Now.ToString(DateFormat, CultureInfo.InvariantCulture)
+                        + " DEBUG "
+                        + text
+                );
             }
         }
 
@@ -82,7 +91,11 @@ namespace QuantConnect.Logging
         {
             if (_trace != null)
             {
-                _trace(DateTime.Now.ToString(DateFormat, CultureInfo.InvariantCulture) + " TRACE " + text);
+                _trace(
+                    DateTime.Now.ToString(DateFormat, CultureInfo.InvariantCulture)
+                        + " TRACE "
+                        + text
+                );
             }
         }
 
@@ -90,8 +103,6 @@ namespace QuantConnect.Logging
         /// Performs application-defined tasks associated with freeing, releasing, or resetting unmanaged resources.
         /// </summary>
         /// <filterpriority>2</filterpriority>
-        public void Dispose()
-        {
-        }
+        public void Dispose() { }
     }
 }

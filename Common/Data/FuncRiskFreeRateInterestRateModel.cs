@@ -13,8 +13,8 @@
  * limitations under the License.
 */
 
-using Python.Runtime;
 using System;
+using Python.Runtime;
 
 namespace QuantConnect.Data
 {
@@ -40,7 +40,9 @@ namespace QuantConnect.Data
         {
             using (Py.GIL())
             {
-                _getInterestRateFunc = getInterestRateFunc.ConvertToDelegate<Func<DateTime, decimal>>();
+                _getInterestRateFunc = getInterestRateFunc.ConvertToDelegate<
+                    Func<DateTime, decimal>
+                >();
             }
         }
 

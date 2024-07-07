@@ -14,11 +14,11 @@
 */
 
 using System;
+using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using Newtonsoft.Json;
 using QuantConnect.Logging;
-using System.Collections.Generic;
-using System.Linq;
 
 namespace QuantConnect.Commands
 {
@@ -35,9 +35,7 @@ namespace QuantConnect.Commands
         /// Initializes a new instance of the <see cref="FileCommandHandler"/> class
         /// using the 'command-json-file' configuration value for the command json file
         /// </summary>
-        public FileCommandHandler()
-        {
-        }
+        public FileCommandHandler() { }
 
         /// <summary>
         /// Gets all the available command files
@@ -56,7 +54,7 @@ namespace QuantConnect.Commands
         /// <returns>The next command in the queue, if present, null if no commands present</returns>
         protected override IEnumerable<ICommand> GetCommands()
         {
-            foreach(var file in GetCommandFiles())
+            foreach (var file in GetCommandFiles())
             {
                 // update the queue by reading the command file
                 ReadCommandFile(file.FullName);
@@ -73,11 +71,16 @@ namespace QuantConnect.Commands
         /// </summary>
         /// <param name="command">The command that was executed</param>
         /// <param name="commandResultPacket">The result</param>
-        protected override void Acknowledge(ICommand command, CommandResultPacket commandResultPacket)
+        protected override void Acknowledge(
+            ICommand command,
+            CommandResultPacket commandResultPacket
+        )
         {
             if (string.IsNullOrEmpty(command.Id))
             {
-                Log.Error($"FileCommandHandler.Acknowledge(): {Messages.FileCommandHandler.NullOrEmptyCommandId}");
+                Log.Error(
+                    $"FileCommandHandler.Acknowledge(): {Messages.FileCommandHandler.NullOrEmptyCommandId}"
+                );
                 return;
             }
             var resultFilePath = $"{_resultFileBaseName}-{command.Id}.json";
@@ -89,17 +92,24 @@ namespace QuantConnect.Commands
         /// </summary>
         private void ReadCommandFile(string commandFilePath)
         {
-            Log.Trace($"FileCommandHandler.ReadCommandFile(): {Messages.FileCommandHandler.ReadingCommandFile(commandFilePath)}");
+            Log.Trace(
+                $"FileCommandHandler.ReadCommandFile(): {Messages.FileCommandHandler.ReadingCommandFile(commandFilePath)}"
+            );
             object deserialized;
             try
             {
                 if (!File.Exists(commandFilePath))
                 {
-                    Log.Error($"FileCommandHandler.ReadCommandFile(): {Messages.FileCommandHandler.CommandFileDoesNotExist(commandFilePath)}");
+                    Log.Error(
+                        $"FileCommandHandler.ReadCommandFile(): {Messages.FileCommandHandler.CommandFileDoesNotExist(commandFilePath)}"
+                    );
                     return;
                 }
                 var contents = File.ReadAllText(commandFilePath);
-                deserialized = JsonConvert.DeserializeObject(contents, new JsonSerializerSettings { TypeNameHandling = TypeNameHandling.All });
+                deserialized = JsonConvert.DeserializeObject(
+                    contents,
+                    new JsonSerializerSettings { TypeNameHandling = TypeNameHandling.All }
+                );
             }
             catch (Exception err)
             {

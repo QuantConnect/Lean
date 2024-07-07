@@ -14,13 +14,13 @@
 */
 
 using System;
+using System.Collections.Generic;
 using System.Drawing;
 using System.Linq;
 using Newtonsoft.Json;
+using Newtonsoft.Json.Serialization;
 using NUnit.Framework;
 using QuantConnect.Util;
-using System.Collections.Generic;
-using Newtonsoft.Json.Serialization;
 
 namespace QuantConnect.Tests.Common.Util
 {
@@ -31,19 +31,35 @@ namespace QuantConnect.Tests.Common.Util
         [TestCase(87, null, "Tooltip template")]
         [TestCase(null, "Index Name", "Tooltip template")]
         [TestCase(87, "Index Name", "Tooltip template")]
-        [TestCase(null,null, null)]
+        [TestCase(null, null, null)]
         [TestCase(87, null, null)]
         [TestCase(null, "Index Name", null)]
         [TestCase(87, "Index Name", null)]
-        public void SerializeDeserializeReturnsSameSeriesValue(int? zIndex, string indexName, string toolTip)
+        public void SerializeDeserializeReturnsSameSeriesValue(
+            int? zIndex,
+            string indexName,
+            string toolTip
+        )
         {
             var date = new DateTime(2050, 1, 1, 1, 1, 1);
-            var series = new Series("Pepito Grillo", SeriesType.Bar, "%", Color.Blue, ScatterMarkerSymbol.Diamond) { ZIndex = zIndex, Index = 6, IndexName = indexName, Tooltip = toolTip };
+            var series = new Series(
+                "Pepito Grillo",
+                SeriesType.Bar,
+                "%",
+                Color.Blue,
+                ScatterMarkerSymbol.Diamond
+            )
+            {
+                ZIndex = zIndex,
+                Index = 6,
+                IndexName = indexName,
+                Tooltip = toolTip
+            };
             series.AddPoint(date, 1);
             series.AddPoint(date.AddSeconds(1), 2);
 
             var serializedSeries = JsonConvert.SerializeObject(series);
-            var result = (Series) JsonConvert.DeserializeObject(serializedSeries, typeof(Series));
+            var result = (Series)JsonConvert.DeserializeObject(serializedSeries, typeof(Series));
 
             Assert.AreEqual(series.Values.Count, result.Values.Count);
             var values = series.GetValues<ChartPoint>().ToList();
@@ -69,7 +85,13 @@ namespace QuantConnect.Tests.Common.Util
         {
             var date = new DateTime(2050, 1, 1, 1, 1, 1);
             var date2 = date.AddSeconds(1);
-            var series = new Series("Pepito Grillo", SeriesType.Pie, "$", Color.Empty, ScatterMarkerSymbol.Diamond);
+            var series = new Series(
+                "Pepito Grillo",
+                SeriesType.Pie,
+                "$",
+                Color.Empty,
+                ScatterMarkerSymbol.Diamond
+            );
             series.AddPoint(date, 1);
             series.AddPoint(date2, 2);
 
@@ -95,15 +117,26 @@ namespace QuantConnect.Tests.Common.Util
         [TestCase(87, null, null)]
         [TestCase(null, "Index Name", null)]
         [TestCase(87, "Index Name", null)]
-        public void SerializeDeserializeReturnsSameCandlestickSeriesValue(int? zIndex, string indexName, string toolTip)
+        public void SerializeDeserializeReturnsSameCandlestickSeriesValue(
+            int? zIndex,
+            string indexName,
+            string toolTip
+        )
         {
             var date = new DateTime(2050, 1, 1, 1, 1, 1);
-            var series = new CandlestickSeries("Pepito Grillo") { ZIndex = zIndex, IndexName = indexName, Index = 7, Tooltip = toolTip };
+            var series = new CandlestickSeries("Pepito Grillo")
+            {
+                ZIndex = zIndex,
+                IndexName = indexName,
+                Index = 7,
+                Tooltip = toolTip
+            };
             series.AddPoint(date, 100, 110, 80, 90);
             series.AddPoint(date.AddSeconds(1), 105, 115, 85, 95);
 
             var serializedSeries = JsonConvert.SerializeObject(series);
-            var result = (CandlestickSeries)JsonConvert.DeserializeObject(serializedSeries, typeof(CandlestickSeries));
+            var result = (CandlestickSeries)
+                JsonConvert.DeserializeObject(serializedSeries, typeof(CandlestickSeries));
 
             Assert.AreEqual(series.Values.Count, result.Values.Count);
             var values = series.GetValues<Candlestick>().ToList();
@@ -130,12 +163,22 @@ namespace QuantConnect.Tests.Common.Util
         {
             var date = new DateTime(2050, 1, 1, 1, 1, 1);
             var date2 = date.AddSeconds(1);
-            var series = new Series("Pepito Grillo", SeriesType.Bar, "$", Color.Empty, ScatterMarkerSymbol.Diamond);
+            var series = new Series(
+                "Pepito Grillo",
+                SeriesType.Bar,
+                "$",
+                Color.Empty,
+                ScatterMarkerSymbol.Diamond
+            );
             series.AddPoint(date, 1);
             series.AddPoint(new ChartPoint(date2, null));
 
-            var result = (Series)JsonConvert.DeserializeObject("{\"Name\":\"Pepito Grillo\",\"Unit\":\"$\",\"Index\":0,\"SeriesType\":3," +
-                "\"Values\":[ {\"x\":2524611661,\"y\":1.0},{\"x\":2524611662,\"y\":null}],\"Color\":\"\",\"ScatterMarkerSymbol\":\"diamond\"}", typeof(Series));
+            var result = (Series)
+                JsonConvert.DeserializeObject(
+                    "{\"Name\":\"Pepito Grillo\",\"Unit\":\"$\",\"Index\":0,\"SeriesType\":3,"
+                        + "\"Values\":[ {\"x\":2524611661,\"y\":1.0},{\"x\":2524611662,\"y\":null}],\"Color\":\"\",\"ScatterMarkerSymbol\":\"diamond\"}",
+                    typeof(Series)
+                );
 
             Assert.AreEqual(2, result.Values.Count);
             Assert.AreEqual(date, ((ChartPoint)result.Values[0]).Time);
@@ -154,12 +197,22 @@ namespace QuantConnect.Tests.Common.Util
         {
             var date = new DateTime(2050, 1, 1, 1, 1, 1);
             var date2 = date.AddSeconds(1);
-            var series = new Series("Pepito Grillo", SeriesType.Bar, "$", Color.Empty, ScatterMarkerSymbol.Diamond);
+            var series = new Series(
+                "Pepito Grillo",
+                SeriesType.Bar,
+                "$",
+                Color.Empty,
+                ScatterMarkerSymbol.Diamond
+            );
             series.AddPoint(date, 1);
             series.AddPoint(new ChartPoint(date2, null));
 
-            var result = (Series)JsonConvert.DeserializeObject("{\"Name\":\"Pepito Grillo\",\"Unit\":\"$\",\"Index\":0,\"SeriesType\":3," +
-                "\"Values\":[[2524611661,1.0],[2524611662,null]],\"Color\":\"\",\"ScatterMarkerSymbol\":\"diamond\"}", typeof(Series));
+            var result = (Series)
+                JsonConvert.DeserializeObject(
+                    "{\"Name\":\"Pepito Grillo\",\"Unit\":\"$\",\"Index\":0,\"SeriesType\":3,"
+                        + "\"Values\":[[2524611661,1.0],[2524611662,null]],\"Color\":\"\",\"ScatterMarkerSymbol\":\"diamond\"}",
+                    typeof(Series)
+                );
 
             Assert.AreEqual(2, result.Values.Count);
             Assert.AreEqual(date, ((ChartPoint)result.Values[0]).Time);
@@ -178,15 +231,24 @@ namespace QuantConnect.Tests.Common.Util
         {
             var date = new DateTime(2050, 1, 1, 1, 1, 1);
             var date2 = date.AddSeconds(1);
-            var series = new Series("Pepito Grillo", SeriesType.Bar, "$", Color.Empty, ScatterMarkerSymbol.Diamond);
+            var series = new Series(
+                "Pepito Grillo",
+                SeriesType.Bar,
+                "$",
+                Color.Empty,
+                ScatterMarkerSymbol.Diamond
+            );
             series.AddPoint(date, 1);
             series.AddPoint(new ChartPoint(date2, null));
 
             var serializedSeries = JsonConvert.SerializeObject(series);
             var result = (Series)JsonConvert.DeserializeObject(serializedSeries, typeof(Series));
 
-            Assert.AreEqual("{\"name\":\"Pepito Grillo\",\"unit\":\"$\",\"index\":0,\"seriesType\":3," +
-                "\"values\":[[2524611661,1.0],[2524611662,null]],\"color\":\"\",\"scatterMarkerSymbol\":\"diamond\"}", serializedSeries);
+            Assert.AreEqual(
+                "{\"name\":\"Pepito Grillo\",\"unit\":\"$\",\"index\":0,\"seriesType\":3,"
+                    + "\"values\":[[2524611661,1.0],[2524611662,null]],\"color\":\"\",\"scatterMarkerSymbol\":\"diamond\"}",
+                serializedSeries
+            );
             Assert.AreEqual(2, result.Values.Count);
             Assert.AreEqual(date, ((ChartPoint)result.Values[0]).Time);
             Assert.AreEqual(1, ((ChartPoint)result.Values[0]).y);
@@ -207,8 +269,12 @@ namespace QuantConnect.Tests.Common.Util
             series.AddPoint(date, 100, 110, 80, 90);
             series.AddPoint(new Candlestick(date.AddSeconds(1), null, null, null, null));
 
-            var result = (CandlestickSeries)JsonConvert.DeserializeObject("{\"Name\":\"Pepito Grillo\",\"Unit\":\"$\",\"Index\":0,\"SeriesType\":2," +
-                "\"Values\":[[2524611661,100.0,110.0,80.0,90.0],[2524611662,null,null,null,null]]}", typeof(CandlestickSeries));
+            var result = (CandlestickSeries)
+                JsonConvert.DeserializeObject(
+                    "{\"Name\":\"Pepito Grillo\",\"Unit\":\"$\",\"Index\":0,\"SeriesType\":2,"
+                        + "\"Values\":[[2524611661,100.0,110.0,80.0,90.0],[2524611662,null,null,null,null]]}",
+                    typeof(CandlestickSeries)
+                );
 
             Assert.AreEqual(series.Values.Count, result.Values.Count);
             var values = series.GetValues<Candlestick>().ToList();
@@ -235,9 +301,13 @@ namespace QuantConnect.Tests.Common.Util
             series.AddPoint(new Candlestick(date.AddSeconds(1), null, null, null, null));
 
             var serializedSeries = JsonConvert.SerializeObject(series);
-            var result = (CandlestickSeries)JsonConvert.DeserializeObject(serializedSeries, typeof(CandlestickSeries));
+            var result = (CandlestickSeries)
+                JsonConvert.DeserializeObject(serializedSeries, typeof(CandlestickSeries));
 
-            Assert.AreEqual("{\"name\":\"Pepito Grillo\",\"unit\":\"$\",\"index\":0,\"seriesType\":2,\"values\":[[2524611661,100.0,110.0,80.0,90.0],[2524611662,null,null,null,null]]}", serializedSeries);
+            Assert.AreEqual(
+                "{\"name\":\"Pepito Grillo\",\"unit\":\"$\",\"index\":0,\"seriesType\":2,\"values\":[[2524611661,100.0,110.0,80.0,90.0],[2524611662,null,null,null,null]]}",
+                serializedSeries
+            );
             Assert.AreEqual(series.Values.Count, result.Values.Count);
             var values = series.GetValues<Candlestick>().ToList();
             var resultValues = result.GetValues<Candlestick>().ToList();
@@ -263,7 +333,10 @@ namespace QuantConnect.Tests.Common.Util
 
             var serializedSeries = JsonConvert.SerializeObject(testSeries);
 
-            Assert.AreEqual("{\"name\":null,\"unit\":\"$\",\"index\":0,\"seriesType\":0,\"values\":[{\"time\":\"2050-01-01T01:01:01\",\"property\":\"Pepe\"}]}", serializedSeries);
+            Assert.AreEqual(
+                "{\"name\":null,\"unit\":\"$\",\"index\":0,\"seriesType\":0,\"values\":[{\"time\":\"2050-01-01T01:01:01\",\"property\":\"Pepe\"}]}",
+                serializedSeries
+            );
         }
 
         private class TestSeries : BaseSeries
@@ -282,6 +355,7 @@ namespace QuantConnect.Tests.Common.Util
             {
                 throw new NotImplementedException();
             }
+
             public override void AddPoint(DateTime time, List<decimal> values)
             {
                 throw new NotImplementedException();
@@ -292,8 +366,9 @@ namespace QuantConnect.Tests.Common.Util
         {
             [JsonProperty("time")]
             public DateTime Time { get; set; }
+
             [JsonProperty("property")]
-            public string Property { get; set;}
+            public string Property { get; set; }
 
             public ISeriesPoint Clone()
             {

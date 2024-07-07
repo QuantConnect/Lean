@@ -26,7 +26,9 @@ namespace QuantConnect.Algorithm.CSharp
     /// Regression algorithm asserting that a short option position is auto exercised even when there is insufficient margin,
     /// but triggering a margin call for the underlying stock to cover the assignment.
     /// </summary>
-    public class InsufficientBuyingPowerForAutomaticExerciseRegressionAlgorithm : QCAlgorithm, IRegressionAlgorithmDefinition
+    public class InsufficientBuyingPowerForAutomaticExerciseRegressionAlgorithm
+        : QCAlgorithm,
+            IRegressionAlgorithmDefinition
     {
         private Symbol _stock;
         private Symbol _option;
@@ -78,19 +80,25 @@ namespace QuantConnect.Algorithm.CSharp
         {
             if (!_optionAssigned)
             {
-                throw new RegressionTestException("Expected option to have been assigned before the margin call " +
-                    "(which should have been triggered by the auto-exercise of the option with inssuficient margin).");
+                throw new RegressionTestException(
+                    "Expected option to have been assigned before the margin call "
+                        + "(which should have been triggered by the auto-exercise of the option with inssuficient margin)."
+                );
             }
 
             if (_marginCallReceived)
             {
-                throw new RegressionTestException("Received multiple margin calls. Expected just one.");
+                throw new RegressionTestException(
+                    "Received multiple margin calls. Expected just one."
+                );
             }
 
             var request = requests.Single();
             if (request.Symbol != _stock)
             {
-                throw new RegressionTestException("Expected margin call for the stock, but got margin call for: " + request.Symbol);
+                throw new RegressionTestException(
+                    "Expected margin call for the stock, but got margin call for: " + request.Symbol
+                );
             }
 
             _marginCallReceived = true;
@@ -99,7 +107,9 @@ namespace QuantConnect.Algorithm.CSharp
         public override void OnOrderEvent(OrderEvent orderEvent)
         {
             var order = Transactions.GetOrderById(orderEvent.OrderId);
-            Debug($"{Time} :: {order.Id} - {order.Type} - {orderEvent.Symbol}: {orderEvent.Status} - {orderEvent.Quantity} shares at {orderEvent.FillPrice}");
+            Debug(
+                $"{Time} :: {order.Id} - {order.Type} - {orderEvent.Symbol}: {orderEvent.Status} - {orderEvent.Quantity} shares at {orderEvent.FillPrice}"
+            );
 
             if (orderEvent.Status == OrderStatus.Filled)
             {
@@ -113,7 +123,9 @@ namespace QuantConnect.Algorithm.CSharp
                     {
                         if (!_stockBought)
                         {
-                            throw new RegressionTestException("Stock should have been bought first");
+                            throw new RegressionTestException(
+                                "Stock should have been bought first"
+                            );
                         }
 
                         _optionSold = true;
@@ -186,36 +198,36 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// This is used by the regression test system to indicate what the expected statistics are from running the algorithm
         /// </summary>
-        public Dictionary<string, string> ExpectedStatistics => new Dictionary<string, string>
-        {
-            {"Total Orders", "4"},
-            {"Average Win", "8.96%"},
-            {"Average Loss", "-1.95%"},
-            {"Compounding Annual Return", "-67.963%"},
-            {"Drawdown", "2.900%"},
-            {"Expectancy", "-1"},
-            {"Start Equity", "100000"},
-            {"End Equity", "98248.35"},
-            {"Net Profit", "-1.752%"},
-            {"Sharpe Ratio", "-6.542"},
-            {"Sortino Ratio", "0"},
-            {"Probabilistic Sharpe Ratio", "1.125%"},
-            {"Loss Rate", "100%"},
-            {"Win Rate", "0%"},
-            {"Profit-Loss Ratio", "4.60"},
-            {"Alpha", "-0.007"},
-            {"Beta", "1.181"},
-            {"Annual Standard Deviation", "0.036"},
-            {"Annual Variance", "0.001"},
-            {"Information Ratio", "-1.422"},
-            {"Tracking Error", "0.03"},
-            {"Treynor Ratio", "-0.2"},
-            {"Total Fees", "$3.30"},
-            {"Estimated Strategy Capacity", "$2400000.00"},
-            {"Lowest Capacity Asset", "GOOCV 305RBQ20WHPNQ|GOOCV VP83T1ZUHROL"},
-            {"Portfolio Turnover", "54.01%"},
-            {"OrderListHash", "0d84251bbf98ebbe616d35acdd959c85"}
-        };
+        public Dictionary<string, string> ExpectedStatistics =>
+            new Dictionary<string, string>
+            {
+                { "Total Orders", "4" },
+                { "Average Win", "8.96%" },
+                { "Average Loss", "-1.95%" },
+                { "Compounding Annual Return", "-67.963%" },
+                { "Drawdown", "2.900%" },
+                { "Expectancy", "-1" },
+                { "Start Equity", "100000" },
+                { "End Equity", "98248.35" },
+                { "Net Profit", "-1.752%" },
+                { "Sharpe Ratio", "-6.542" },
+                { "Sortino Ratio", "0" },
+                { "Probabilistic Sharpe Ratio", "1.125%" },
+                { "Loss Rate", "100%" },
+                { "Win Rate", "0%" },
+                { "Profit-Loss Ratio", "4.60" },
+                { "Alpha", "-0.007" },
+                { "Beta", "1.181" },
+                { "Annual Standard Deviation", "0.036" },
+                { "Annual Variance", "0.001" },
+                { "Information Ratio", "-1.422" },
+                { "Tracking Error", "0.03" },
+                { "Treynor Ratio", "-0.2" },
+                { "Total Fees", "$3.30" },
+                { "Estimated Strategy Capacity", "$2400000.00" },
+                { "Lowest Capacity Asset", "GOOCV 305RBQ20WHPNQ|GOOCV VP83T1ZUHROL" },
+                { "Portfolio Turnover", "54.01%" },
+                { "OrderListHash", "0d84251bbf98ebbe616d35acdd959c85" }
+            };
     }
 }
-

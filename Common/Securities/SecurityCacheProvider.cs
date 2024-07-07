@@ -16,11 +16,11 @@
 
 using System.Collections.Generic;
 using QuantConnect.Securities.Cfd;
+using QuantConnect.Securities.Equity;
 using QuantConnect.Securities.Forex;
+using QuantConnect.Securities.Future;
 using QuantConnect.Securities.Index;
 using QuantConnect.Securities.Option;
-using QuantConnect.Securities.Future;
-using QuantConnect.Securities.Equity;
 
 namespace QuantConnect.Securities
 {
@@ -43,7 +43,7 @@ namespace QuantConnect.Securities
         public SecurityCacheProvider(ISecurityProvider securityProvider)
         {
             _securityProvider = securityProvider;
-            _relatedSymbols = new ();
+            _relatedSymbols = new();
         }
 
         /// <summary>
@@ -90,7 +90,10 @@ namespace QuantConnect.Securities
                     if (underlyingSecurity != null)
                     {
                         // we found the underlying, lets use its data type cache
-                        SecurityCache.ShareTypeCacheInstance(underlyingSecurity.Cache, securityCache);
+                        SecurityCache.ShareTypeCacheInstance(
+                            underlyingSecurity.Cache,
+                            securityCache
+                        );
                     }
                     else
                     {
@@ -98,7 +101,8 @@ namespace QuantConnect.Securities
                         // else when it is added, we would have to go through existing Securities and find any which use it as underlying
                         if (!_relatedSymbols.TryGetValue(symbol.Underlying, out var relatedSymbols))
                         {
-                            _relatedSymbols[symbol.Underlying] = relatedSymbols = new List<Symbol>();
+                            _relatedSymbols[symbol.Underlying] = relatedSymbols =
+                                new List<Symbol>();
                         }
                         relatedSymbols.Add(symbol);
                     }
@@ -115,7 +119,10 @@ namespace QuantConnect.Securities
                             {
                                 // we make each existing custom security cache, use the new instance data type cache
                                 // note that if any data already existed in the custom cache it will be passed
-                                SecurityCache.ShareTypeCacheInstance(securityCache, customSecurity.Cache);
+                                SecurityCache.ShareTypeCacheInstance(
+                                    securityCache,
+                                    customSecurity.Cache
+                                );
                             }
                         }
                     }

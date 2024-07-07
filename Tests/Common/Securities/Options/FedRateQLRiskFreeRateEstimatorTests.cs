@@ -13,28 +13,34 @@
  * limitations under the License.
 */
 
+using System;
+using System.Collections.Generic;
 using NUnit.Framework;
 using QuantConnect.Data;
 using QuantConnect.Data.Market;
 using QuantConnect.Securities.Option;
-using System;
-using System.Collections.Generic;
 
 namespace QuantConnect.Tests.Common.Data
 {
     [TestFixture]
     public class FedRateQLRiskFreeRateEstimatorTests
     {
-        [TestCase("20200306", 0.0175)]      // Friday
-        [TestCase("20200307", 0.0175)]      // Saturday, use Friday's value
-        [TestCase("20200308", 0.0175)]      // Sunday, use Friday's value
-        [TestCase("20200310", 0.0175)]      // Tuesday
+        [TestCase("20200306", 0.0175)] // Friday
+        [TestCase("20200307", 0.0175)] // Saturday, use Friday's value
+        [TestCase("20200308", 0.0175)] // Sunday, use Friday's value
+        [TestCase("20200310", 0.0175)] // Tuesday
         public void Estimate(string dateString, decimal rate)
         {
             var spx = Symbols.SPX;
             var tz = TimeZones.NewYork;
-            var optionSymbol = Symbol.CreateOption(spx.Value, spx.ID.Market, OptionStyle.European, OptionRight.Put, 4200,
-                new DateTime(2021, 1, 15));
+            var optionSymbol = Symbol.CreateOption(
+                spx.Value,
+                spx.ID.Market,
+                OptionStyle.European,
+                OptionRight.Put,
+                4200,
+                new DateTime(2021, 1, 15)
+            );
             var evaluationDate = Parse.DateTimeExact(dateString, "yyyyMMdd");
 
             // setting up
@@ -44,9 +50,11 @@ namespace QuantConnect.Tests.Common.Data
 
             // get the risk free rate
             var estimator = new FedRateQLRiskFreeRateEstimator();
-            var result = estimator.Estimate(option, 
-                new Slice(evaluationDate, new List<BaseData> { tick }, evaluationDate), 
-                new OptionContract(option, spx));
+            var result = estimator.Estimate(
+                option,
+                new Slice(evaluationDate, new List<BaseData> { tick }, evaluationDate),
+                new OptionContract(option, spx)
+            );
 
             Assert.AreEqual(rate, result);
         }

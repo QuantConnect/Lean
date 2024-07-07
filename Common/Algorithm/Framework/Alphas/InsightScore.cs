@@ -51,9 +51,7 @@ namespace QuantConnect.Algorithm.Framework.Alphas
         /// <summary>
         /// Initializes a new, default instance of the <see cref="InsightScore"/> class
         /// </summary>
-        public InsightScore()
-        {
-        }
+        public InsightScore() { }
 
         /// <summary>
         /// Initializes a new instance of the <see cref="InsightScore"/> class
@@ -76,7 +74,8 @@ namespace QuantConnect.Algorithm.Framework.Alphas
         /// <param name="algorithmUtcTime">The algorithm's utc time at which time the new score was computed</param>
         public void SetScore(InsightScoreType type, double value, DateTime algorithmUtcTime)
         {
-            if (IsFinalScore) return;
+            if (IsFinalScore)
+                return;
 
             UpdatedTimeUtc = algorithmUtcTime;
 

@@ -21,16 +21,16 @@ namespace QuantConnect.Python
     /// <summary>
     /// Wraps a <see cref="PyObject"/> object that represents a security's model of buying power
     /// </summary>
-    public class BuyingPowerModelPythonWrapper : BasePythonWrapper<IBuyingPowerModel>, IBuyingPowerModel
+    public class BuyingPowerModelPythonWrapper
+        : BasePythonWrapper<IBuyingPowerModel>,
+            IBuyingPowerModel
     {
         /// <summary>
         /// Constructor for initializing the <see cref="BuyingPowerModelPythonWrapper"/> class with wrapped <see cref="PyObject"/> object
         /// </summary>
         /// <param name="model">Represents a security's model of buying power</param>
         public BuyingPowerModelPythonWrapper(PyObject model)
-            : base(model)
-        {
-        }
+            : base(model) { }
 
         /// <summary>
         /// Gets the buying power available for a trade
@@ -58,9 +58,14 @@ namespace QuantConnect.Python
         /// </summary>
         /// <param name="parameters">An object containing the portfolio, the security and the target signed buying power percentage</param>
         /// <returns>Returns the maximum allowed market order quantity and if zero, also the reason</returns>
-        public GetMaximumOrderQuantityResult GetMaximumOrderQuantityForTargetBuyingPower(GetMaximumOrderQuantityForTargetBuyingPowerParameters parameters)
+        public GetMaximumOrderQuantityResult GetMaximumOrderQuantityForTargetBuyingPower(
+            GetMaximumOrderQuantityForTargetBuyingPowerParameters parameters
+        )
         {
-            return InvokeMethod<GetMaximumOrderQuantityResult>(nameof(GetMaximumOrderQuantityForTargetBuyingPower), parameters);
+            return InvokeMethod<GetMaximumOrderQuantityResult>(
+                nameof(GetMaximumOrderQuantityForTargetBuyingPower),
+                parameters
+            );
         }
 
         /// <summary>
@@ -70,9 +75,13 @@ namespace QuantConnect.Python
         /// <param name="parameters">An object containing the portfolio, the security and the delta buying power</param>
         /// <returns>Returns the maximum allowed market order quantity and if zero, also the reason</returns>
         public GetMaximumOrderQuantityResult GetMaximumOrderQuantityForDeltaBuyingPower(
-            GetMaximumOrderQuantityForDeltaBuyingPowerParameters parameters)
+            GetMaximumOrderQuantityForDeltaBuyingPowerParameters parameters
+        )
         {
-            return InvokeMethod<GetMaximumOrderQuantityResult>(nameof(GetMaximumOrderQuantityForDeltaBuyingPower), parameters);
+            return InvokeMethod<GetMaximumOrderQuantityResult>(
+                nameof(GetMaximumOrderQuantityForDeltaBuyingPower),
+                parameters
+            );
         }
 
         /// <summary>
@@ -80,9 +89,14 @@ namespace QuantConnect.Python
         /// </summary>
         /// <param name="parameters">A parameters object containing the security</param>
         /// <returns>The reserved buying power in account currency</returns>
-        public ReservedBuyingPowerForPosition GetReservedBuyingPowerForPosition(ReservedBuyingPowerForPositionParameters parameters)
+        public ReservedBuyingPowerForPosition GetReservedBuyingPowerForPosition(
+            ReservedBuyingPowerForPositionParameters parameters
+        )
         {
-            return InvokeMethod<ReservedBuyingPowerForPosition>(nameof(GetReservedBuyingPowerForPosition), parameters);
+            return InvokeMethod<ReservedBuyingPowerForPosition>(
+                nameof(GetReservedBuyingPowerForPosition),
+                parameters
+            );
         }
 
         /// <summary>
@@ -90,9 +104,14 @@ namespace QuantConnect.Python
         /// </summary>
         /// <param name="parameters">An object containing the portfolio, the security and the order</param>
         /// <returns>Returns buying power information for an order</returns>
-        public HasSufficientBuyingPowerForOrderResult HasSufficientBuyingPowerForOrder(HasSufficientBuyingPowerForOrderParameters parameters)
+        public HasSufficientBuyingPowerForOrderResult HasSufficientBuyingPowerForOrder(
+            HasSufficientBuyingPowerForOrderParameters parameters
+        )
         {
-            return InvokeMethod<HasSufficientBuyingPowerForOrderResult>(nameof(HasSufficientBuyingPowerForOrder), parameters);
+            return InvokeMethod<HasSufficientBuyingPowerForOrderResult>(
+                nameof(HasSufficientBuyingPowerForOrder),
+                parameters
+            );
         }
 
         /// <summary>
@@ -133,9 +152,14 @@ namespace QuantConnect.Python
         /// </summary>
         /// <param name="parameters">An object containing the portfolio, the security and the order</param>
         /// <returns>The total margin in terms of the currency quoted in the order</returns>
-        public InitialMargin GetInitialMarginRequiredForOrder(InitialMarginRequiredForOrderParameters parameters)
+        public InitialMargin GetInitialMarginRequiredForOrder(
+            InitialMarginRequiredForOrderParameters parameters
+        )
         {
-            return InvokeMethod<InitialMargin>(nameof(GetInitialMarginRequiredForOrder), parameters);
+            return InvokeMethod<InitialMargin>(
+                nameof(GetInitialMarginRequiredForOrder),
+                parameters
+            );
         }
     }
 }

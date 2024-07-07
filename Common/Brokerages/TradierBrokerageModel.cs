@@ -43,9 +43,7 @@ namespace QuantConnect.Brokerages
         /// <param name="accountType">The type of account to be modeled, defaults to
         /// <see cref="QuantConnect.AccountType.Margin"/></param>
         public TradierBrokerageModel(AccountType accountType = AccountType.Margin)
-            : base(accountType)
-        {
-        }
+            : base(accountType) { }
 
         /// <summary>
         /// Returns true if the brokerage could accept this order. This takes into account
@@ -58,14 +56,25 @@ namespace QuantConnect.Brokerages
         /// <param name="order">The order to be processed</param>
         /// <param name="message">If this function returns false, a brokerage message detailing why the order may not be submitted</param>
         /// <returns>True if the brokerage could process the order, false otherwise</returns>
-        public override bool CanSubmitOrder(Security security, Order order, out BrokerageMessageEvent message)
+        public override bool CanSubmitOrder(
+            Security security,
+            Order order,
+            out BrokerageMessageEvent message
+        )
         {
             message = null;
 
             if (!_supportedOrderTypes.Contains(order.Type))
             {
-                message = new BrokerageMessageEvent(BrokerageMessageType.Warning, "NotSupported",
-                    Messages.DefaultBrokerageModel.UnsupportedOrderType(this, order, _supportedOrderTypes));
+                message = new BrokerageMessageEvent(
+                    BrokerageMessageType.Warning,
+                    "NotSupported",
+                    Messages.DefaultBrokerageModel.UnsupportedOrderType(
+                        this,
+                        order,
+                        _supportedOrderTypes
+                    )
+                );
 
                 return false;
             }
@@ -73,16 +82,25 @@ namespace QuantConnect.Brokerages
             var securityType = order.SecurityType;
             if (securityType != SecurityType.Equity && securityType != SecurityType.Option)
             {
-                message = new BrokerageMessageEvent(BrokerageMessageType.Warning, "NotSupported",
-                    Messages.TradierBrokerageModel.UnsupportedSecurityType);
+                message = new BrokerageMessageEvent(
+                    BrokerageMessageType.Warning,
+                    "NotSupported",
+                    Messages.TradierBrokerageModel.UnsupportedSecurityType
+                );
 
                 return false;
             }
 
-            if (order.TimeInForce is not GoodTilCanceledTimeInForce && order.TimeInForce is not DayTimeInForce)
+            if (
+                order.TimeInForce is not GoodTilCanceledTimeInForce
+                && order.TimeInForce is not DayTimeInForce
+            )
             {
-                message = new BrokerageMessageEvent(BrokerageMessageType.Warning, "NotSupported",
-                    Messages.TradierBrokerageModel.UnsupportedTimeInForceType);
+                message = new BrokerageMessageEvent(
+                    BrokerageMessageType.Warning,
+                    "NotSupported",
+                    Messages.TradierBrokerageModel.UnsupportedTimeInForceType
+                );
 
                 return false;
             }
@@ -91,13 +109,21 @@ namespace QuantConnect.Brokerages
             {
                 if (order.TimeInForce is GoodTilCanceledTimeInForce)
                 {
-                    message = new BrokerageMessageEvent(BrokerageMessageType.Warning, "ShortOrderIsGtc", Messages.TradierBrokerageModel.ShortOrderIsGtc);
+                    message = new BrokerageMessageEvent(
+                        BrokerageMessageType.Warning,
+                        "ShortOrderIsGtc",
+                        Messages.TradierBrokerageModel.ShortOrderIsGtc
+                    );
 
                     return false;
                 }
                 else if (security.Price < 5)
                 {
-                    message = new BrokerageMessageEvent(BrokerageMessageType.Warning, "SellShortOrderLastPriceBelow5", Messages.TradierBrokerageModel.SellShortOrderLastPriceBelow5);
+                    message = new BrokerageMessageEvent(
+                        BrokerageMessageType.Warning,
+                        "SellShortOrderLastPriceBelow5",
+                        Messages.TradierBrokerageModel.SellShortOrderLastPriceBelow5
+                    );
 
                     return false;
                 }
@@ -105,15 +131,22 @@ namespace QuantConnect.Brokerages
 
             if (order.AbsoluteQuantity < 1 || order.AbsoluteQuantity > 10000000)
             {
-                message = new BrokerageMessageEvent(BrokerageMessageType.Warning, "IncorrectOrderQuantity", Messages.TradierBrokerageModel.IncorrectOrderQuantity);
+                message = new BrokerageMessageEvent(
+                    BrokerageMessageType.Warning,
+                    "IncorrectOrderQuantity",
+                    Messages.TradierBrokerageModel.IncorrectOrderQuantity
+                );
 
                 return false;
             }
 
             if (!CanExecuteOrder(security, order))
             {
-                message = new BrokerageMessageEvent(BrokerageMessageType.Warning, "ExtendedMarket",
-                    Messages.TradierBrokerageModel.ExtendedMarketHoursTradingNotSupported);
+                message = new BrokerageMessageEvent(
+                    BrokerageMessageType.Warning,
+                    "ExtendedMarket",
+                    Messages.TradierBrokerageModel.ExtendedMarketHoursTradingNotSupported
+                );
             }
 
             // tradier order limits
@@ -128,15 +161,23 @@ namespace QuantConnect.Brokerages
         /// <param name="request">The requested update to be made to the order</param>
         /// <param name="message">If this function returns false, a brokerage message detailing why the order may not be updated</param>
         /// <returns>True if the brokerage would allow updating the order, false otherwise</returns>
-        public override bool CanUpdateOrder(Security security, Order order, UpdateOrderRequest request, out BrokerageMessageEvent message)
+        public override bool CanUpdateOrder(
+            Security security,
+            Order order,
+            UpdateOrderRequest request,
+            out BrokerageMessageEvent message
+        )
         {
             message = null;
 
             // Tradier doesn't allow updating order quantities
             if (request.Quantity != null && request.Quantity != order.Quantity)
             {
-                message = new BrokerageMessageEvent(BrokerageMessageType.Warning, "UpdateRejected",
-                    Messages.TradierBrokerageModel.OrderQuantityUpdateNotSupported);
+                message = new BrokerageMessageEvent(
+                    BrokerageMessageType.Warning,
+                    "UpdateRejected",
+                    Messages.TradierBrokerageModel.OrderQuantityUpdateNotSupported
+                );
 
                 return false;
             }
@@ -181,7 +222,11 @@ namespace QuantConnect.Brokerages
             var splitFactor = split.SplitFactor;
             if (splitFactor > 1.0m)
             {
-                tickets.ForEach(ticket => ticket.Cancel(Messages.TradierBrokerageModel.OpenOrdersCancelOnReverseSplitSymbols));
+                tickets.ForEach(ticket =>
+                    ticket.Cancel(
+                        Messages.TradierBrokerageModel.OpenOrdersCancelOnReverseSplitSymbols
+                    )
+                );
             }
             else
             {

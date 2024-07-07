@@ -31,7 +31,11 @@ namespace QuantConnect.Tests.Common.Util.RateLimit
 
             const int refillAmount = 1;
             var refillInterval = TimeSpan.FromMinutes(1);
-            var strategy = new FixedIntervalRefillStrategy(timeProvider, refillAmount, refillInterval);
+            var strategy = new FixedIntervalRefillStrategy(
+                timeProvider,
+                refillAmount,
+                refillInterval
+            );
 
             var refill = strategy.Refill();
             Assert.AreEqual(0, refill);
@@ -53,19 +57,23 @@ namespace QuantConnect.Tests.Common.Util.RateLimit
 
             const int refillAmount = 1;
             var refillInterval = TimeSpan.FromMinutes(1);
-            var strategy = new FixedIntervalRefillStrategy(timeProvider, refillAmount, refillInterval);
+            var strategy = new FixedIntervalRefillStrategy(
+                timeProvider,
+                refillAmount,
+                refillInterval
+            );
 
             var intervals = 3.5;
-            var advance = TimeSpan.FromTicks((long) (refillInterval.Ticks * intervals));
+            var advance = TimeSpan.FromTicks((long)(refillInterval.Ticks * intervals));
             timeProvider.Advance(advance);
 
             var refill = strategy.Refill();
-            var expected = (int) intervals * refillAmount;
+            var expected = (int)intervals * refillAmount;
             Assert.AreEqual(expected, refill);
 
             timeProvider.Advance(advance);
             refill = strategy.Refill();
-            expected = (int) (intervals * 2) * refillAmount - expected;
+            expected = (int)(intervals * 2) * refillAmount - expected;
             Assert.AreEqual(expected, refill);
         }
     }

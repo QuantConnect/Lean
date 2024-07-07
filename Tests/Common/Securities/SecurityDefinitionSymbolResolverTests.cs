@@ -27,31 +27,44 @@ namespace QuantConnect.Tests.Common.Securities
     {
         private DirectoryInfo _testingDataDirectory;
         private SecurityDefinitionSymbolResolver _instance;
-        private static readonly Dictionary<string, string> _tickerToSecurityIdentifier = new Dictionary<string, string>
-        {
-            {"AAPL", "AAPL R735QTJ8XC9X"},
-            {"GOOG", "GOOCV VP83T1ZUHROL"},
-            {"GOOCV", "GOOCV VP83T1ZUHROL"},
-            {"QQQ", "QQQ RIWIV7K5Z9LX"},
-            {"QQQQ", "QQQ RIWIV7K5Z9LX"}
-        };
+        private static readonly Dictionary<string, string> _tickerToSecurityIdentifier =
+            new Dictionary<string, string>
+            {
+                { "AAPL", "AAPL R735QTJ8XC9X" },
+                { "GOOG", "GOOCV VP83T1ZUHROL" },
+                { "GOOCV", "GOOCV VP83T1ZUHROL" },
+                { "QQQ", "QQQ RIWIV7K5Z9LX" },
+                { "QQQQ", "QQQ RIWIV7K5Z9LX" }
+            };
 
         [OneTimeSetUp]
         public void SetUp()
         {
-            _testingDataDirectory = Directory.CreateDirectory(Path.Combine(Directory.GetCurrentDirectory(), "testing_data"));
-            var symbolPropertiesDirectory = Directory.CreateDirectory(Path.Combine(_testingDataDirectory.FullName, "symbol-properties"));
-            var securityDatabaseFilePath = Path.Combine(symbolPropertiesDirectory.FullName, "security-database.csv");
+            _testingDataDirectory = Directory.CreateDirectory(
+                Path.Combine(Directory.GetCurrentDirectory(), "testing_data")
+            );
+            var symbolPropertiesDirectory = Directory.CreateDirectory(
+                Path.Combine(_testingDataDirectory.FullName, "symbol-properties")
+            );
+            var securityDatabaseFilePath = Path.Combine(
+                symbolPropertiesDirectory.FullName,
+                "security-database.csv"
+            );
 
             SecurityDefinitionSymbolResolver.Reset();
-            _instance = SecurityDefinitionSymbolResolver.GetInstance(TestGlobals.DataProvider, securityDatabaseFilePath);
+            _instance = SecurityDefinitionSymbolResolver.GetInstance(
+                TestGlobals.DataProvider,
+                securityDatabaseFilePath
+            );
 
-            var securityDatabaseLines = string.Join("\n",
+            var securityDatabaseLines = string.Join(
+                "\n",
                 "AAPL R735QTJ8XC9X,03783310,BBG000B9XRY4,2046251,US0378331005,320193",
                 "GOOG T1AZ164W5VTX,38259P50,BBG000BHSKN9,B020QX2,US38259P5089,",
                 "GOOCV VP83T1ZUHROL,38259P70,BBG002W96FT9,BKM4JZ7,US38259P7069,",
-                "QQQ RIWIV7K5Z9LX,73935A10,BBG000BSWKH7,BDQYP67,US46090E1038,");
-            File.WriteAllText(securityDatabaseFilePath,securityDatabaseLines);
+                "QQQ RIWIV7K5Z9LX,73935A10,BBG000BSWKH7,BDQYP67,US46090E1038,"
+            );
+            File.WriteAllText(securityDatabaseFilePath, securityDatabaseLines);
         }
 
         [OneTimeTearDown]
@@ -113,12 +126,18 @@ namespace QuantConnect.Tests.Common.Securities
         [TestCase("ABCDEF99", 2021, 9, 9, null, Market.USA)]
         [TestCase(null, 2021, 9, 9, null, Market.USA)]
         [TestCase("1", 2021, 9, 9, null, Market.USA)]
-        public void ResolvesCUSIP(string cusip, int year, int month, int day, string expectedTicker, string expectedMarket)
+        public void ResolvesCUSIP(
+            string cusip,
+            int year,
+            int month,
+            int day,
+            string expectedTicker,
+            string expectedMarket
+        )
         {
             var tradingDate = new DateTime(year, month, day);
-            var expectedSid = expectedTicker == null
-                ? null
-                : _tickerToSecurityIdentifier[expectedTicker];
+            var expectedSid =
+                expectedTicker == null ? null : _tickerToSecurityIdentifier[expectedTicker];
 
             var symbol = _instance.CUSIP(cusip, tradingDate);
 
@@ -162,12 +181,18 @@ namespace QuantConnect.Tests.Common.Securities
         [TestCase("1", 2021, 9, 9, null, Market.USA)]
         [TestCase("bbg000BSWKH7", 1998, 5, 21, "QQQ", Market.USA)]
         [TestCase("BBG000BSwKH7", 1998, 5, 21, "QQQ", Market.USA)]
-        public void ResolvesCompositeFIGI(string compositeFigi, int year, int month, int day, string expectedTicker, string expectedMarket)
+        public void ResolvesCompositeFIGI(
+            string compositeFigi,
+            int year,
+            int month,
+            int day,
+            string expectedTicker,
+            string expectedMarket
+        )
         {
             var tradingDate = new DateTime(year, month, day);
-            var expectedSid = expectedTicker == null
-                ? null
-                : _tickerToSecurityIdentifier[expectedTicker];
+            var expectedSid =
+                expectedTicker == null ? null : _tickerToSecurityIdentifier[expectedTicker];
 
             var symbol = _instance.CompositeFIGI(compositeFigi, tradingDate);
 
@@ -209,12 +234,18 @@ namespace QuantConnect.Tests.Common.Securities
         [TestCase("ABCDEF99", 2021, 9, 9, null, Market.USA)]
         [TestCase(null, 2021, 9, 9, null, Market.USA)]
         [TestCase("1", 2021, 9, 9, null, Market.USA)]
-        public void ResolvesSEDOL(string sedol, int year, int month, int day, string expectedTicker, string expectedMarket)
+        public void ResolvesSEDOL(
+            string sedol,
+            int year,
+            int month,
+            int day,
+            string expectedTicker,
+            string expectedMarket
+        )
         {
             var tradingDate = new DateTime(year, month, day);
-            var expectedSid = expectedTicker == null
-                ? null
-                : _tickerToSecurityIdentifier[expectedTicker];
+            var expectedSid =
+                expectedTicker == null ? null : _tickerToSecurityIdentifier[expectedTicker];
 
             var symbol = _instance.SEDOL(sedol, tradingDate);
 
@@ -256,12 +287,18 @@ namespace QuantConnect.Tests.Common.Securities
         [TestCase("ABCDEF99", 2021, 9, 9, null, Market.USA)]
         [TestCase(null, 2021, 9, 9, null, Market.USA)]
         [TestCase("1", 2021, 9, 9, null, Market.USA)]
-        public void ResolvesISIN(string isin, int year, int month, int day, string expectedTicker, string expectedMarket)
+        public void ResolvesISIN(
+            string isin,
+            int year,
+            int month,
+            int day,
+            string expectedTicker,
+            string expectedMarket
+        )
         {
             var tradingDate = new DateTime(year, month, day);
-            var expectedSid = expectedTicker == null
-                ? null
-                : _tickerToSecurityIdentifier[expectedTicker];
+            var expectedSid =
+                expectedTicker == null ? null : _tickerToSecurityIdentifier[expectedTicker];
 
             var symbol = _instance.ISIN(isin, tradingDate);
 
@@ -277,61 +314,119 @@ namespace QuantConnect.Tests.Common.Securities
             Assert.AreEqual(expectedIsin, isin);
         }
 
-        private static void AssertSymbol(Symbol actual, string expectedTicker, string expectedSid, string expectedMarket)
+        private static void AssertSymbol(
+            Symbol actual,
+            string expectedTicker,
+            string expectedSid,
+            string expectedMarket
+        )
         {
             Assert.AreEqual(expectedTicker, actual?.Value);
             Assert.AreEqual(expectedSid, actual?.ID.ToString());
             Assert.AreEqual(expectedMarket, actual?.ID.Market ?? expectedMarket);
         }
 
-        private static void AssertSymbolIdentifier(Symbol symbol, string reconvertedIdentifier, string expectedIdentifier)
+        private static void AssertSymbolIdentifier(
+            Symbol symbol,
+            string reconvertedIdentifier,
+            string expectedIdentifier
+        )
         {
             var expected = symbol != null ? expectedIdentifier.ToUpperInvariant() : null;
             Assert.AreEqual(expected, reconvertedIdentifier);
         }
 
-        private static TestCaseData[] SymbolToCUSIPTestCases => new[]
-        {
-            new TestCaseData(Symbol.Create("AAPL", SecurityType.Equity, Market.USA), "03783310"),
-            new TestCaseData(Symbol.Create("GOOG", SecurityType.Equity, Market.USA), "38259P70"),
-            new TestCaseData(Symbol.Create("GOOCV", SecurityType.Equity, Market.USA), "38259P70"),
-            new TestCaseData(Symbol.Create("QQQ", SecurityType.Equity, Market.USA), "73935A10"),
-            new TestCaseData(Symbol.Create("QQQQ", SecurityType.Equity, Market.USA), "73935A10"),
-            new TestCaseData(Symbol.Create("ABCD", SecurityType.Equity, Market.USA), null),
-            new TestCaseData(null, null)
-        };
+        private static TestCaseData[] SymbolToCUSIPTestCases =>
+            new[]
+            {
+                new TestCaseData(
+                    Symbol.Create("AAPL", SecurityType.Equity, Market.USA),
+                    "03783310"
+                ),
+                new TestCaseData(
+                    Symbol.Create("GOOG", SecurityType.Equity, Market.USA),
+                    "38259P70"
+                ),
+                new TestCaseData(
+                    Symbol.Create("GOOCV", SecurityType.Equity, Market.USA),
+                    "38259P70"
+                ),
+                new TestCaseData(Symbol.Create("QQQ", SecurityType.Equity, Market.USA), "73935A10"),
+                new TestCaseData(
+                    Symbol.Create("QQQQ", SecurityType.Equity, Market.USA),
+                    "73935A10"
+                ),
+                new TestCaseData(Symbol.Create("ABCD", SecurityType.Equity, Market.USA), null),
+                new TestCaseData(null, null)
+            };
 
-        private static TestCaseData[] SymbolToCompositeFIGITestCases => new[]
-        {
-            new TestCaseData(Symbol.Create("AAPL", SecurityType.Equity, Market.USA), "BBG000B9XRY4"),
-            new TestCaseData(Symbol.Create("GOOG", SecurityType.Equity, Market.USA), "BBG002W96FT9"),
-            new TestCaseData(Symbol.Create("GOOCV", SecurityType.Equity, Market.USA), "BBG002W96FT9"),
-            new TestCaseData(Symbol.Create("QQQ", SecurityType.Equity, Market.USA), "BBG000BSWKH7"),
-            new TestCaseData(Symbol.Create("QQQQ", SecurityType.Equity, Market.USA), "BBG000BSWKH7"),
-            new TestCaseData(Symbol.Create("ABCD", SecurityType.Equity, Market.USA), null),
-            new TestCaseData(null, null)
-        };
+        private static TestCaseData[] SymbolToCompositeFIGITestCases =>
+            new[]
+            {
+                new TestCaseData(
+                    Symbol.Create("AAPL", SecurityType.Equity, Market.USA),
+                    "BBG000B9XRY4"
+                ),
+                new TestCaseData(
+                    Symbol.Create("GOOG", SecurityType.Equity, Market.USA),
+                    "BBG002W96FT9"
+                ),
+                new TestCaseData(
+                    Symbol.Create("GOOCV", SecurityType.Equity, Market.USA),
+                    "BBG002W96FT9"
+                ),
+                new TestCaseData(
+                    Symbol.Create("QQQ", SecurityType.Equity, Market.USA),
+                    "BBG000BSWKH7"
+                ),
+                new TestCaseData(
+                    Symbol.Create("QQQQ", SecurityType.Equity, Market.USA),
+                    "BBG000BSWKH7"
+                ),
+                new TestCaseData(Symbol.Create("ABCD", SecurityType.Equity, Market.USA), null),
+                new TestCaseData(null, null)
+            };
 
-        private static TestCaseData[] SymbolToSEDOLTestCases => new[]
-        {
-            new TestCaseData(Symbol.Create("AAPL", SecurityType.Equity, Market.USA), "2046251"),
-            new TestCaseData(Symbol.Create("GOOG", SecurityType.Equity, Market.USA), "BKM4JZ7"),
-            new TestCaseData(Symbol.Create("GOOCV", SecurityType.Equity, Market.USA), "BKM4JZ7"),
-            new TestCaseData(Symbol.Create("QQQ", SecurityType.Equity, Market.USA), "BDQYP67"),
-            new TestCaseData(Symbol.Create("QQQQ", SecurityType.Equity, Market.USA), "BDQYP67"),
-            new TestCaseData(Symbol.Create("ABCD", SecurityType.Equity, Market.USA), null),
-            new TestCaseData(null, null)
-        };
+        private static TestCaseData[] SymbolToSEDOLTestCases =>
+            new[]
+            {
+                new TestCaseData(Symbol.Create("AAPL", SecurityType.Equity, Market.USA), "2046251"),
+                new TestCaseData(Symbol.Create("GOOG", SecurityType.Equity, Market.USA), "BKM4JZ7"),
+                new TestCaseData(
+                    Symbol.Create("GOOCV", SecurityType.Equity, Market.USA),
+                    "BKM4JZ7"
+                ),
+                new TestCaseData(Symbol.Create("QQQ", SecurityType.Equity, Market.USA), "BDQYP67"),
+                new TestCaseData(Symbol.Create("QQQQ", SecurityType.Equity, Market.USA), "BDQYP67"),
+                new TestCaseData(Symbol.Create("ABCD", SecurityType.Equity, Market.USA), null),
+                new TestCaseData(null, null)
+            };
 
-        private static TestCaseData[] SymbolToISINTestCases => new[]
-        {
-            new TestCaseData(Symbol.Create("AAPL", SecurityType.Equity, Market.USA), "US0378331005"),
-            new TestCaseData(Symbol.Create("GOOG", SecurityType.Equity, Market.USA), "US38259P7069"),
-            new TestCaseData(Symbol.Create("GOOCV", SecurityType.Equity, Market.USA), "US38259P7069"),
-            new TestCaseData(Symbol.Create("QQQ", SecurityType.Equity, Market.USA), "US46090E1038"),
-            new TestCaseData(Symbol.Create("QQQQ", SecurityType.Equity, Market.USA), "US46090E1038"),
-            new TestCaseData(Symbol.Create("ABCD", SecurityType.Equity, Market.USA), null),
-            new TestCaseData(null, null)
-        };
+        private static TestCaseData[] SymbolToISINTestCases =>
+            new[]
+            {
+                new TestCaseData(
+                    Symbol.Create("AAPL", SecurityType.Equity, Market.USA),
+                    "US0378331005"
+                ),
+                new TestCaseData(
+                    Symbol.Create("GOOG", SecurityType.Equity, Market.USA),
+                    "US38259P7069"
+                ),
+                new TestCaseData(
+                    Symbol.Create("GOOCV", SecurityType.Equity, Market.USA),
+                    "US38259P7069"
+                ),
+                new TestCaseData(
+                    Symbol.Create("QQQ", SecurityType.Equity, Market.USA),
+                    "US46090E1038"
+                ),
+                new TestCaseData(
+                    Symbol.Create("QQQQ", SecurityType.Equity, Market.USA),
+                    "US46090E1038"
+                ),
+                new TestCaseData(Symbol.Create("ABCD", SecurityType.Equity, Market.USA), null),
+                new TestCaseData(null, null)
+            };
     }
 }

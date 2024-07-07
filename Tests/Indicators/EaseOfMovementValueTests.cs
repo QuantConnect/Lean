@@ -1,11 +1,11 @@
 ﻿/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
- * 
- * Licensed under the Apache License, Version 2.0 (the "License"); 
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -53,7 +53,11 @@ namespace QuantConnect.Tests.Indicators
 
         protected override Action<IndicatorBase<TradeBar>, double> Assertion
         {
-            get { return (indicator, expected) => Assert.AreEqual(expected, (double)indicator.Current.Value, 1); }
+            get
+            {
+                return (indicator, expected) =>
+                    Assert.AreEqual(expected, (double)indicator.Current.Value, 1);
+            }
         }
 
         [Test]
@@ -62,19 +66,55 @@ namespace QuantConnect.Tests.Indicators
             var emv = new EaseOfMovementValue(period: 3, scale: 1);
             var reference = System.DateTime.Today;
 
-            emv.Update(new TradeBar() { Symbol = Symbols.AAPL, Low = 1, High = 2, Volume = 100, Time = reference.AddMinutes(1) });
+            emv.Update(
+                new TradeBar()
+                {
+                    Symbol = Symbols.AAPL,
+                    Low = 1,
+                    High = 2,
+                    Volume = 100,
+                    Time = reference.AddMinutes(1)
+                }
+            );
             Assert.AreEqual(0, emv.Current.Value);
             Assert.IsFalse(emv.IsReady);
 
-            emv.Update(new TradeBar() { Symbol = Symbols.AAPL, Low = 3, High = 4, Volume = 200, Time = reference.AddMinutes(2) });
+            emv.Update(
+                new TradeBar()
+                {
+                    Symbol = Symbols.AAPL,
+                    Low = 3,
+                    High = 4,
+                    Volume = 200,
+                    Time = reference.AddMinutes(2)
+                }
+            );
             Assert.AreEqual(0.005, (double)emv.Current.Value, 0.00001);
             Assert.IsFalse(emv.IsReady);
 
-            emv.Update(new TradeBar() { Symbol = Symbols.AAPL, Low = 5, High = 6, Volume = 300, Time = reference.AddMinutes(3) });
+            emv.Update(
+                new TradeBar()
+                {
+                    Symbol = Symbols.AAPL,
+                    Low = 5,
+                    High = 6,
+                    Volume = 300,
+                    Time = reference.AddMinutes(3)
+                }
+            );
             Assert.AreEqual(0.00556, (double)emv.Current.Value, 0.00001);
             Assert.IsTrue(emv.IsReady);
 
-            emv.Update(new TradeBar() { Symbol = Symbols.AAPL, Low = 6, High = 7, Volume = 400, Time = reference.AddMinutes(4) });
+            emv.Update(
+                new TradeBar()
+                {
+                    Symbol = Symbols.AAPL,
+                    Low = 6,
+                    High = 7,
+                    Volume = 400,
+                    Time = reference.AddMinutes(4)
+                }
+            );
             Assert.AreEqual(0.00639, (double)emv.Current.Value, 0.00001);
             Assert.IsTrue(emv.IsReady);
         }
@@ -85,17 +125,17 @@ namespace QuantConnect.Tests.Indicators
         /// skip this test
         /// </summary>
         /// <param name="indicator"></param>
-        protected override void IndicatorValueIsNotZeroAfterReceiveRenkoBars(IndicatorBase indicator)
-        {
-        }
+        protected override void IndicatorValueIsNotZeroAfterReceiveRenkoBars(
+            IndicatorBase indicator
+        ) { }
 
         /// <summary>
         /// The final value of this indicator is zero because the bars it's receiving are the same.
         /// Therefore we skip this test
         /// </summary>
         /// <param name="indicator"></param>
-        protected override void IndicatorValueIsNotZeroAfterReceiveVolumeRenkoBars(IndicatorBase indicator)
-        {
-        }
+        protected override void IndicatorValueIsNotZeroAfterReceiveVolumeRenkoBars(
+            IndicatorBase indicator
+        ) { }
     }
 }

@@ -14,9 +14,9 @@
 */
 
 using NUnit.Framework;
-using QuantConnect.Orders;
 using QuantConnect.Commands;
 using QuantConnect.Data.Market;
+using QuantConnect.Orders;
 using QuantConnect.Tests.Engine.DataFeeds;
 
 namespace QuantConnect.Tests.Common.Commands

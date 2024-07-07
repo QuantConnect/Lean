@@ -35,8 +35,10 @@ namespace QuantConnect.Algorithm.CSharp
     {
         // the changes from the previous universe selection
         private SecurityChanges _changes = SecurityChanges.None;
+
         // only used in backtest for caching the file results
-        private readonly Dictionary<DateTime, List<string>> _backtestSymbolsPerDay = new Dictionary<DateTime, List<string>>();
+        private readonly Dictionary<DateTime, List<string>> _backtestSymbolsPerDay =
+            new Dictionary<DateTime, List<string>>();
 
         /// <summary>
         /// Initialise the data and resolution required, as well as the cash and start-end dates for your algorithm. All algorithms must initialized.
@@ -58,50 +60,68 @@ namespace QuantConnect.Algorithm.CSharp
             SetEndDate(2018, 07, 04);
 
             // define a new custom universe that will trigger each day at midnight
-            AddUniverse("my-dropbox-universe", Resolution.Daily, dateTime =>
-            {
-                // handle live mode file format
-                if (LiveMode)
+            AddUniverse(
+                "my-dropbox-universe",
+                Resolution.Daily,
+                dateTime =>
                 {
-                    // fetch the file from dropbox
-                    var file = Download(@"https://www.dropbox.com/s/2l73mu97gcehmh7/daily-stock-picker-live.csv?dl=1");
-                    // if we have a file for today, break apart by commas and return symbols
-                    if (file.Length > 0) return file.ToCsv();
-                    // no symbol today, leave universe unchanged
+                    // handle live mode file format
+                    if (LiveMode)
+                    {
+                        // fetch the file from dropbox
+                        var file = Download(
+                            @"https://www.dropbox.com/s/2l73mu97gcehmh7/daily-stock-picker-live.csv?dl=1"
+                        );
+                        // if we have a file for today, break apart by commas and return symbols
+                        if (file.Length > 0)
+                            return file.ToCsv();
+                        // no symbol today, leave universe unchanged
+                        return Universe.Unchanged;
+                    }
+
+                    // backtest - first cache the entire file
+                    if (_backtestSymbolsPerDay.Count == 0)
+                    {
+                        // No need for headers for authorization with dropbox, these two lines are for example purposes
+                        var byteKey = Encoding.ASCII.GetBytes($"UserName:Password");
+                        // The headers must be passed to the Download method as list of key/value pair.
+                        var headers = new List<KeyValuePair<string, string>>
+                        {
+                            new KeyValuePair<string, string>(
+                                "Authorization",
+                                $"Basic ({Convert.ToBase64String(byteKey)})"
+                            )
+                        };
+
+                        var file = Download(
+                            @"https://www.dropbox.com/s/ae1couew5ir3z9y/daily-stock-picker-backtest.csv?dl=1",
+                            headers
+                        );
+
+                        // split the file into lines and add to our cache
+                        foreach (
+                            var line in file.Split(
+                                new[] { '\n', '\r' },
+                                StringSplitOptions.RemoveEmptyEntries
+                            )
+                        )
+                        {
+                            var csv = line.ToCsv();
+                            var date = DateTime.ParseExact(csv[0], "yyyyMMdd", null);
+                            var symbols = csv.Skip(1).ToList();
+                            _backtestSymbolsPerDay[date] = symbols;
+                        }
+                    }
+
+                    // if we have symbols for this date return them, else specify Universe.Unchanged
+                    List<string> result;
+                    if (_backtestSymbolsPerDay.TryGetValue(dateTime.Date, out result))
+                    {
+                        return result;
+                    }
                     return Universe.Unchanged;
                 }
-
-                // backtest - first cache the entire file
-                if (_backtestSymbolsPerDay.Count == 0)
-                {
-                    // No need for headers for authorization with dropbox, these two lines are for example purposes
-                    var byteKey = Encoding.ASCII.GetBytes($"UserName:Password");
-                    // The headers must be passed to the Download method as list of key/value pair.
-                    var headers = new List<KeyValuePair<string, string>>
-                    {
-                        new KeyValuePair<string, string>("Authorization", $"Basic ({Convert.ToBase64String(byteKey)})")
-                    };
-
-                    var file = Download(@"https://www.dropbox.com/s/ae1couew5ir3z9y/daily-stock-picker-backtest.csv?dl=1", headers);
-
-                    // split the file into lines and add to our cache
-                    foreach (var line in file.Split(new[] { '\n', '\r' }, StringSplitOptions.RemoveEmptyEntries))
-                    {
-                        var csv = line.ToCsv();
-                        var date = DateTime.ParseExact(csv[0], "yyyyMMdd", null);
-                        var symbols = csv.Skip(1).ToList();
-                        _backtestSymbolsPerDay[date] = symbols;
-                    }
-                }
-
-                // if we have symbols for this date return them, else specify Universe.Unchanged
-                List<string> result;
-                if (_backtestSymbolsPerDay.TryGetValue(dateTime.Date, out result))
-                {
-                    return result;
-                }
-                return Universe.Unchanged;
-            });
+            );
         }
 
         /// <summary>
@@ -120,13 +140,15 @@ namespace QuantConnect.Algorithm.CSharp
         /// <param name="slice">The current slice of data keyed by symbol string</param>
         public override void OnData(Slice slice)
         {
-            if (slice.Bars.Count == 0) return;
-            if (_changes == SecurityChanges.None) return;
+            if (slice.Bars.Count == 0)
+                return;
+            if (_changes == SecurityChanges.None)
+                return;
 
             // start fresh
             Liquidate();
 
-            var percentage = 1m/slice.Bars.Count;
+            var percentage = 1m / slice.Bars.Count;
             foreach (var tradeBar in slice.Bars.Values)
             {
                 SetHoldings(tradeBar.Symbol, percentage);
@@ -174,35 +196,36 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// This is used by the regression test system to indicate what the expected statistics are from running the algorithm
         /// </summary>
-        public Dictionary<string, string> ExpectedStatistics => new Dictionary<string, string>
-        {
-            {"Total Orders", "5059"},
-            {"Average Win", "0.08%"},
-            {"Average Loss", "-0.08%"},
-            {"Compounding Annual Return", "15.960%"},
-            {"Drawdown", "10.400%"},
-            {"Expectancy", "0.079"},
-            {"Start Equity", "100000"},
-            {"End Equity", "115960.04"},
-            {"Net Profit", "15.960%"},
-            {"Sharpe Ratio", "0.865"},
-            {"Sortino Ratio", "0.809"},
-            {"Probabilistic Sharpe Ratio", "49.486%"},
-            {"Loss Rate", "45%"},
-            {"Win Rate", "55%"},
-            {"Profit-Loss Ratio", "0.96"},
-            {"Alpha", "0.015"},
-            {"Beta", "0.985"},
-            {"Annual Standard Deviation", "0.11"},
-            {"Annual Variance", "0.012"},
-            {"Information Ratio", "0.348"},
-            {"Tracking Error", "0.041"},
-            {"Treynor Ratio", "0.096"},
-            {"Total Fees", "$5870.38"},
-            {"Estimated Strategy Capacity", "$320000.00"},
-            {"Lowest Capacity Asset", "BNO UN3IMQ2JU1YD"},
-            {"Portfolio Turnover", "107.21%"},
-            {"OrderListHash", "a7da6309cc1fb69e6f197ec9eb152a67"}
-        };
+        public Dictionary<string, string> ExpectedStatistics =>
+            new Dictionary<string, string>
+            {
+                { "Total Orders", "5059" },
+                { "Average Win", "0.08%" },
+                { "Average Loss", "-0.08%" },
+                { "Compounding Annual Return", "15.960%" },
+                { "Drawdown", "10.400%" },
+                { "Expectancy", "0.079" },
+                { "Start Equity", "100000" },
+                { "End Equity", "115960.04" },
+                { "Net Profit", "15.960%" },
+                { "Sharpe Ratio", "0.865" },
+                { "Sortino Ratio", "0.809" },
+                { "Probabilistic Sharpe Ratio", "49.486%" },
+                { "Loss Rate", "45%" },
+                { "Win Rate", "55%" },
+                { "Profit-Loss Ratio", "0.96" },
+                { "Alpha", "0.015" },
+                { "Beta", "0.985" },
+                { "Annual Standard Deviation", "0.11" },
+                { "Annual Variance", "0.012" },
+                { "Information Ratio", "0.348" },
+                { "Tracking Error", "0.041" },
+                { "Treynor Ratio", "0.096" },
+                { "Total Fees", "$5870.38" },
+                { "Estimated Strategy Capacity", "$320000.00" },
+                { "Lowest Capacity Asset", "BNO UN3IMQ2JU1YD" },
+                { "Portfolio Turnover", "107.21%" },
+                { "OrderListHash", "a7da6309cc1fb69e6f197ec9eb152a67" }
+            };
     }
 }

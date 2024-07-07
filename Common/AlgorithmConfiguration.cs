@@ -14,12 +14,12 @@
 */
 
 using System;
-using Newtonsoft.Json;
-using QuantConnect.Util;
-using QuantConnect.Packets;
-using QuantConnect.Interfaces;
-using QuantConnect.Brokerages;
 using System.Collections.Generic;
+using Newtonsoft.Json;
+using QuantConnect.Brokerages;
+using QuantConnect.Interfaces;
+using QuantConnect.Packets;
+using QuantConnect.Util;
 
 namespace QuantConnect
 {
@@ -92,9 +92,19 @@ namespace QuantConnect
         /// <summary>
         /// Initializes a new instance of the <see cref="AlgorithmConfiguration"/> class
         /// </summary>
-        public AlgorithmConfiguration(string name, ISet<string> tags, string accountCurrency, BrokerageName brokerageName,
-            AccountType accountType, IReadOnlyDictionary<string, string> parameters, DateTime startDate, DateTime endDate,
-            DateTime? outOfSampleMaxEndDate, int outOfSampleDays = 0, int tradingDaysPerYear = 0)
+        public AlgorithmConfiguration(
+            string name,
+            ISet<string> tags,
+            string accountCurrency,
+            BrokerageName brokerageName,
+            AccountType accountType,
+            IReadOnlyDictionary<string, string> parameters,
+            DateTime startDate,
+            DateTime endDate,
+            DateTime? outOfSampleMaxEndDate,
+            int outOfSampleDays = 0,
+            int tradingDaysPerYear = 0
+        )
         {
             Name = name;
             Tags = tags;
@@ -124,7 +134,10 @@ namespace QuantConnect
         /// <param name="algorithm">Algorithm for which the configuration object is being created</param>
         /// <param name="backtestNodePacket">The associated backtest node packet if any</param>
         /// <returns>A new AlgorithmConfiguration object for the specified algorithm</returns>
-        public static AlgorithmConfiguration Create(IAlgorithm algorithm, BacktestNodePacket backtestNodePacket)
+        public static AlgorithmConfiguration Create(
+            IAlgorithm algorithm,
+            BacktestNodePacket backtestNodePacket
+        )
         {
             return new AlgorithmConfiguration(
                 algorithm.Name,
@@ -138,7 +151,8 @@ namespace QuantConnect
                 backtestNodePacket?.OutOfSampleMaxEndDate,
                 backtestNodePacket?.OutOfSampleDays ?? 0,
                 // use value = 252 like default for backwards compatibility
-                algorithm?.Settings?.TradingDaysPerYear ?? 252);
+                algorithm?.Settings?.TradingDaysPerYear ?? 252
+            );
         }
     }
 }

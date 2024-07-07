@@ -107,7 +107,8 @@ namespace QuantConnect
         public static bool TryRemove(Symbol symbol)
         {
             string ticker;
-            return _cache.Tickers.TryRemove(symbol, out ticker) && _cache.Symbols.TryRemove(ticker, out symbol);
+            return _cache.Tickers.TryRemove(symbol, out ticker)
+                && _cache.Symbols.TryRemove(ticker, out symbol);
         }
 
         /// <summary>
@@ -118,7 +119,8 @@ namespace QuantConnect
         public static bool TryRemove(string ticker)
         {
             Symbol symbol;
-            return _cache.Symbols.TryRemove(ticker, out symbol) && _cache.Tickers.TryRemove(symbol, out ticker);
+            return _cache.Symbols.TryRemove(ticker, out symbol)
+                && _cache.Tickers.TryRemove(symbol, out ticker);
         }
 
         /// <summary>
@@ -143,7 +145,9 @@ namespace QuantConnect
                 if (match.Count == 0)
                 {
                     // no matches
-                    error = new InvalidOperationException(Messages.SymbolCache.UnableToLocateTicker(ticker));
+                    error = new InvalidOperationException(
+                        Messages.SymbolCache.UnableToLocateTicker(ticker)
+                    );
                 }
                 else if (match.Count == 1)
                 {
@@ -154,7 +158,10 @@ namespace QuantConnect
                 {
                     // too many matches
                     error = new InvalidOperationException(
-                        Messages.SymbolCache.MultipleMatchingTickersLocated(match.Select(kvp => kvp.Key)));
+                        Messages.SymbolCache.MultipleMatchingTickersLocated(
+                            match.Select(kvp => kvp.Key)
+                        )
+                    );
                 }
             }
 
@@ -163,8 +170,12 @@ namespace QuantConnect
 
         class Cache
         {
-            public readonly ConcurrentDictionary<string, Symbol> Symbols = new ConcurrentDictionary<string, Symbol>(StringComparer.OrdinalIgnoreCase);
-            public readonly ConcurrentDictionary<Symbol, string> Tickers = new ConcurrentDictionary<Symbol, string>();
+            public readonly ConcurrentDictionary<string, Symbol> Symbols = new ConcurrentDictionary<
+                string,
+                Symbol
+            >(StringComparer.OrdinalIgnoreCase);
+            public readonly ConcurrentDictionary<Symbol, string> Tickers =
+                new ConcurrentDictionary<Symbol, string>();
 
             /// <summary>
             /// Attempts to resolve the ticker to a Symbol via the cache. If not found in the

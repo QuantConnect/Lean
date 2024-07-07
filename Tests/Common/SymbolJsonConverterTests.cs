@@ -15,12 +15,12 @@
 */
 
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using Newtonsoft.Json;
 using NUnit.Framework;
 using QuantConnect.Data;
 using QuantConnect.Data.Market;
-using System.Collections.Generic;
 
 namespace QuantConnect.Tests.Common
 {
@@ -45,7 +45,14 @@ namespace QuantConnect.Tests.Common
         [Test]
         public void SurvivesRoundtripSerializationOption()
         {
-            var expected = Symbol.CreateOption("XLRE", Market.USA, OptionStyle.American, OptionRight.Call, 21m, new DateTime(2016, 08, 19));
+            var expected = Symbol.CreateOption(
+                "XLRE",
+                Market.USA,
+                OptionStyle.American,
+                OptionRight.Call,
+                21m,
+                new DateTime(2016, 08, 19)
+            );
 
             var json = JsonConvert.SerializeObject(expected, Settings);
             var actual = JsonConvert.DeserializeObject<Symbol>(json, Settings);
@@ -91,7 +98,8 @@ namespace QuantConnect.Tests.Common
         [Test]
         public void HandlesListTicks()
         {
-            const string json = @"{'$type':'System.Collections.Generic.List`1[[QuantConnect.Data.BaseData, QuantConnect.Common]], mscorlib',
+            const string json =
+                @"{'$type':'System.Collections.Generic.List`1[[QuantConnect.Data.BaseData, QuantConnect.Common]], mscorlib',
 '$values':[{'$type':'QuantConnect.Data.Market.Tick, QuantConnect.Common',
 'TickType':0,'Quantity':1,'Exchange':'',
 'SaleCondition':'',
@@ -101,7 +109,10 @@ namespace QuantConnect.Tests.Common
 'Value':'EURGBP',
 'ID':'EURGBP 5O'},'Value':0.72722,'Price':0.72722}]}";
 
-            var expected = new Symbol(SecurityIdentifier.GenerateForex("EURGBP", Market.FXCM), "EURGBP");
+            var expected = new Symbol(
+                SecurityIdentifier.GenerateForex("EURGBP", Market.FXCM),
+                "EURGBP"
+            );
             var settings = Settings;
             var actual = JsonConvert.DeserializeObject<List<BaseData>>(json, settings);
             Assert.AreEqual(expected, actual[0].Symbol);
@@ -112,30 +123,38 @@ namespace QuantConnect.Tests.Common
         {
             // the first serialized Tick object has a Symbol of EURGBP and the second has EURUSD, but the output
             const string json =
-                "{'$type':'System.Collections.Generic.List`1[[QuantConnect.Data.BaseData, QuantConnect.Common]], mscorlib','$values':[" +
-
-                    "{'$type':'QuantConnect.Data.Market.Tick, QuantConnect.Common'," +
-                    "'TickType':0,'Quantity':1,'Exchange':'','SaleCondition':'','Suspicious':false," +
-                    "'BidPrice':1.11895,'AskPrice':1.11898,'LastPrice':1.11895,'DataType':2,'IsFillForward':false," +
-                    "'Time':'2015-09-22T01:26:44.676','EndTime':'2015-09-22T01:26:44.676'," +
-                    "'Symbol':{'$type':'QuantConnect.Symbol, QuantConnect.Common','Value':'EURUSD', 'ID': 'EURUSD 5O'}," +
-                    "'Value':1.11895,'Price':1.11895}," +
-
-                    "{'$type':'QuantConnect.Data.Market.Tick, QuantConnect.Common'," +
-                    "'TickType':0,'Quantity':1,'Exchange':'','SaleCondition':'','Suspicious':false," +
-                    "'BidPrice':0.72157,'AskPrice':0.72162,'LastPrice':0.72157,'DataType':2,'IsFillForward':false," +
-                    "'Time':'2015-09-22T01:26:44.675','EndTime':'2015-09-22T01:26:44.675'," +
-                    "'Symbol':{'$type':'QuantConnect.Symbol, QuantConnect.Common','Value':'EURGBP', 'ID': 'EURGBP 5O'}," +
-                    "'Value':0.72157,'Price':0.72157}," +
-
-                    "]}";
+                "{'$type':'System.Collections.Generic.List`1[[QuantConnect.Data.BaseData, QuantConnect.Common]], mscorlib','$values':["
+                + "{'$type':'QuantConnect.Data.Market.Tick, QuantConnect.Common',"
+                + "'TickType':0,'Quantity':1,'Exchange':'','SaleCondition':'','Suspicious':false,"
+                + "'BidPrice':1.11895,'AskPrice':1.11898,'LastPrice':1.11895,'DataType':2,'IsFillForward':false,"
+                + "'Time':'2015-09-22T01:26:44.676','EndTime':'2015-09-22T01:26:44.676',"
+                + "'Symbol':{'$type':'QuantConnect.Symbol, QuantConnect.Common','Value':'EURUSD', 'ID': 'EURUSD 5O'},"
+                + "'Value':1.11895,'Price':1.11895},"
+                + "{'$type':'QuantConnect.Data.Market.Tick, QuantConnect.Common',"
+                + "'TickType':0,'Quantity':1,'Exchange':'','SaleCondition':'','Suspicious':false,"
+                + "'BidPrice':0.72157,'AskPrice':0.72162,'LastPrice':0.72157,'DataType':2,'IsFillForward':false,"
+                + "'Time':'2015-09-22T01:26:44.675','EndTime':'2015-09-22T01:26:44.675',"
+                + "'Symbol':{'$type':'QuantConnect.Symbol, QuantConnect.Common','Value':'EURGBP', 'ID': 'EURGBP 5O'},"
+                + "'Value':0.72157,'Price':0.72157},"
+                + "]}";
 
             var actual = JsonConvert.DeserializeObject<List<BaseData>>(json, Settings);
-            Assert.IsFalse(actual.All(x => x.Symbol == new Symbol(SecurityIdentifier.GenerateForex("EURUSD", Market.FXCM), "EURUSD")));
+            Assert.IsFalse(
+                actual.All(x =>
+                    x.Symbol
+                    == new Symbol(SecurityIdentifier.GenerateForex("EURUSD", Market.FXCM), "EURUSD")
+                )
+            );
         }
 
         [TestCaseSource(nameof(TestSymbols))]
-        public void CamelCaseSymbolIsDeserializedCorrectly(string json, string value, string id, SecurityType securityType, Symbol underlying)
+        public void CamelCaseSymbolIsDeserializedCorrectly(
+            string json,
+            string value,
+            string id,
+            SecurityType securityType,
+            Symbol underlying
+        )
         {
             var deserializedSymbol = JsonConvert.DeserializeObject<Symbol>(json, Settings);
             Assert.AreEqual(value, deserializedSymbol.Value);
@@ -172,19 +191,73 @@ namespace QuantConnect.Tests.Common
         public void BackwardsCompatibleJson()
         {
             var symbol = new Symbol(SecurityIdentifier.GenerateForex("a", Market.FXCM), "a");
-            var json = JsonConvert.SerializeObject(symbol, new JsonSerializerSettings { Formatting = Formatting.Indented, TypeNameHandling = TypeNameHandling.All });
+            var json = JsonConvert.SerializeObject(
+                symbol,
+                new JsonSerializerSettings
+                {
+                    Formatting = Formatting.Indented,
+                    TypeNameHandling = TypeNameHandling.All
+                }
+            );
             var oldSymbol = JsonConvert.DeserializeObject<OldSymbol>(json);
             Assert.AreEqual("A", oldSymbol.Value);
             Assert.AreEqual("A", oldSymbol.Permtick);
         }
 
-        [TestCase("{\"value\":\"Fb    210618c00322500\",\"type\":\"2\"}", SecurityType.Option, "FB", "FB", OptionRight.Call, OptionStyle.American, 2021)]
-        [TestCase("{\"value\":\"aapl  210618C00129000\",\"type\":\"2\"}", SecurityType.Option, "AAPL", "AAPL", OptionRight.Call, OptionStyle.American, 2021)]
-
-        [TestCase("{\"value\":\"OGV1 C2040\",\"type\":\"8\"}", SecurityType.FutureOption, "GC", "OG", OptionRight.Call, OptionStyle.American, 2021)]
-        [TestCase("{\"value\":\"ESZ30 C3505\",\"type\":\"8\"}", SecurityType.FutureOption, "ES", "ES", OptionRight.Call, OptionStyle.American, 2030)]
-        [TestCase("{\"value\":\"SPXW  210618C04165000\",\"type\":\"10\"}", SecurityType.IndexOption, "SPX", "SPXW", OptionRight.Call, OptionStyle.American, 2021)]
-        public void OptionUserFriendlyDeserialization(string jsonValue, SecurityType type, string underlying, string option, OptionRight optionRight, OptionStyle optionStyle, int expirationYear)
+        [TestCase(
+            "{\"value\":\"Fb    210618c00322500\",\"type\":\"2\"}",
+            SecurityType.Option,
+            "FB",
+            "FB",
+            OptionRight.Call,
+            OptionStyle.American,
+            2021
+        )]
+        [TestCase(
+            "{\"value\":\"aapl  210618C00129000\",\"type\":\"2\"}",
+            SecurityType.Option,
+            "AAPL",
+            "AAPL",
+            OptionRight.Call,
+            OptionStyle.American,
+            2021
+        )]
+        [TestCase(
+            "{\"value\":\"OGV1 C2040\",\"type\":\"8\"}",
+            SecurityType.FutureOption,
+            "GC",
+            "OG",
+            OptionRight.Call,
+            OptionStyle.American,
+            2021
+        )]
+        [TestCase(
+            "{\"value\":\"ESZ30 C3505\",\"type\":\"8\"}",
+            SecurityType.FutureOption,
+            "ES",
+            "ES",
+            OptionRight.Call,
+            OptionStyle.American,
+            2030
+        )]
+        [TestCase(
+            "{\"value\":\"SPXW  210618C04165000\",\"type\":\"10\"}",
+            SecurityType.IndexOption,
+            "SPX",
+            "SPXW",
+            OptionRight.Call,
+            OptionStyle.American,
+            2021
+        )]
+        public void OptionUserFriendlyDeserialization(
+            string jsonValue,
+            SecurityType type,
+            string underlying,
+            string option,
+            OptionRight optionRight,
+            OptionStyle optionStyle,
+            int expirationYear
+        )
         {
             var symbol = JsonConvert.DeserializeObject<Symbol>(jsonValue);
 
@@ -197,9 +270,21 @@ namespace QuantConnect.Tests.Common
             Assert.AreEqual(expirationYear, symbol.ID.Date.Year);
         }
 
-        [TestCase("{\"value\":\"GCV1\",\"type\":\"5\"}", SecurityType.Future, "GC", 10, Market.COMEX)]
+        [TestCase(
+            "{\"value\":\"GCV1\",\"type\":\"5\"}",
+            SecurityType.Future,
+            "GC",
+            10,
+            Market.COMEX
+        )]
         [TestCase("{\"value\":\"ESZ1\",\"type\":\"5\"}", SecurityType.Future, "ES", 12, Market.CME)]
-        public void FutureUserFriendlyDeserialization(string jsonValue, SecurityType type, string symbolId, int month, string market)
+        public void FutureUserFriendlyDeserialization(
+            string jsonValue,
+            SecurityType type,
+            string symbolId,
+            int month,
+            string market
+        )
         {
             var symbol = JsonConvert.DeserializeObject<Symbol>(jsonValue);
 
@@ -212,14 +297,36 @@ namespace QuantConnect.Tests.Common
 
         [TestCase("{\"value\":\"fb\",\"type\":\"1\"}", SecurityType.Equity, "FB", Market.USA)]
         [TestCase("{\"value\":\"AAPL\",\"type\":\"1\"}", SecurityType.Equity, "AAPL", Market.USA)]
-
-        [TestCase("{\"value\":\"BTCUSD\",\"type\":\"7\",\"market\":\"coinbase\"}", SecurityType.Crypto, "BTCUSD", Market.Coinbase)]
-        [TestCase("{\"value\":\"BTCUSD\",\"type\":\"7\",\"market\":\"binance\"}", SecurityType.Crypto, "BTCUSD", Market.Binance)]
-
-        [TestCase("{\"value\":\"xauusd\",\"type\":\"6\",\"market\":\"oanda\"}", SecurityType.Cfd, "XAUUSD", Market.Oanda)]
-
-        [TestCase("{\"value\":\"eurusd\",\"type\":\"4\",\"market\":\"oanda\"}", SecurityType.Forex, "EURUSD", Market.Oanda)]
-        public void UserFriendlyDeserialization(string jsonValue, SecurityType type, string symbolTicker, string market)
+        [TestCase(
+            "{\"value\":\"BTCUSD\",\"type\":\"7\",\"market\":\"coinbase\"}",
+            SecurityType.Crypto,
+            "BTCUSD",
+            Market.Coinbase
+        )]
+        [TestCase(
+            "{\"value\":\"BTCUSD\",\"type\":\"7\",\"market\":\"binance\"}",
+            SecurityType.Crypto,
+            "BTCUSD",
+            Market.Binance
+        )]
+        [TestCase(
+            "{\"value\":\"xauusd\",\"type\":\"6\",\"market\":\"oanda\"}",
+            SecurityType.Cfd,
+            "XAUUSD",
+            Market.Oanda
+        )]
+        [TestCase(
+            "{\"value\":\"eurusd\",\"type\":\"4\",\"market\":\"oanda\"}",
+            SecurityType.Forex,
+            "EURUSD",
+            Market.Oanda
+        )]
+        public void UserFriendlyDeserialization(
+            string jsonValue,
+            SecurityType type,
+            string symbolTicker,
+            string market
+        )
         {
             var symbol = JsonConvert.DeserializeObject<Symbol>(jsonValue);
 
@@ -231,7 +338,9 @@ namespace QuantConnect.Tests.Common
 
         public static object[] TestSymbols =
         {
-            new object[] { @"{
+            new object[]
+            {
+                @"{
 				""value"": ""AAPL  140613P00660000"",
 				""id"": ""AAPL 2ZQGWTST4Z8NA|AAPL R735QTJ8XC9X"",
 				""permtick"": ""AAPL  140613P00660000"",
@@ -240,8 +349,15 @@ namespace QuantConnect.Tests.Common
 					""id"": ""AAPL R735QTJ8XC9X"",
 					""permtick"": ""AAPL""
 				}
-			}", "AAPL  140613P00660000", "AAPL 2ZQGWTST4Z8NA|AAPL R735QTJ8XC9X", SecurityType.Option, Symbols.AAPL },
-            new object[] { @"{
+			}",
+                "AAPL  140613P00660000",
+                "AAPL 2ZQGWTST4Z8NA|AAPL R735QTJ8XC9X",
+                SecurityType.Option,
+                Symbols.AAPL
+            },
+            new object[]
+            {
+                @"{
                 ""value"": ""GOOG  160115C00750000"",
                 ""id"": ""GOOCV W78ZEOEHQRYE|GOOCV VP83T1ZUHROL"",
                 ""permtick"": ""GOOG  160115C00750000"",
@@ -250,13 +366,27 @@ namespace QuantConnect.Tests.Common
                     ""id"": ""GOOCV VP83T1ZUHROL"",
                     ""permtick"": ""GOOG""
                 }
-            }", "GOOG  160115C00750000", "GOOCV W78ZEOEHQRYE|GOOCV VP83T1ZUHROL", SecurityType.Option, Symbols.GOOG },
-            new object[] { @"{
+            }",
+                "GOOG  160115C00750000",
+                "GOOCV W78ZEOEHQRYE|GOOCV VP83T1ZUHROL",
+                SecurityType.Option,
+                Symbols.GOOG
+            },
+            new object[]
+            {
+                @"{
                 ""value"": ""SPY"",
                 ""id"": ""SPY R735QTJ8XC9X"",
                 ""permtick"": ""SPY""
-            }", "SPY", "SPY R735QTJ8XC9X", SecurityType.Equity, null },
-            new object[] { @"{
+            }",
+                "SPY",
+                "SPY R735QTJ8XC9X",
+                SecurityType.Equity,
+                null
+            },
+            new object[]
+            {
+                @"{
 				""Value"": ""AAPL  140613P00660000"",
 				""ID"": ""AAPL 2ZQGWTST4Z8NA|AAPL R735QTJ8XC9X"",
 				""Permtick"": ""AAPL  140613P00660000"",
@@ -265,8 +395,15 @@ namespace QuantConnect.Tests.Common
 					""id"": ""AAPL R735QTJ8XC9X"",
 					""permtick"": ""AAPL""
 				}
-			}", "AAPL  140613P00660000", "AAPL 2ZQGWTST4Z8NA|AAPL R735QTJ8XC9X", SecurityType.Option, Symbols.AAPL },
-            new object[] { @"{
+			}",
+                "AAPL  140613P00660000",
+                "AAPL 2ZQGWTST4Z8NA|AAPL R735QTJ8XC9X",
+                SecurityType.Option,
+                Symbols.AAPL
+            },
+            new object[]
+            {
+                @"{
                 ""Value"": ""GOOG  160115C00750000"",
                 ""ID"": ""GOOCV W78ZEOEHQRYE|GOOCV VP83T1ZUHROL"",
                 ""Permtick"": ""GOOG  160115C00750000"",
@@ -275,12 +412,24 @@ namespace QuantConnect.Tests.Common
                     ""id"": ""GOOCV VP83T1ZUHROL"",
                     ""permtick"": ""GOOG""
                 }
-            }", "GOOG  160115C00750000", "GOOCV W78ZEOEHQRYE|GOOCV VP83T1ZUHROL", SecurityType.Option, Symbols.GOOG },
-            new object[] { @"{
+            }",
+                "GOOG  160115C00750000",
+                "GOOCV W78ZEOEHQRYE|GOOCV VP83T1ZUHROL",
+                SecurityType.Option,
+                Symbols.GOOG
+            },
+            new object[]
+            {
+                @"{
                 ""Value"": ""SPY"",
                 ""ID"": ""SPY R735QTJ8XC9X"",
                 ""Permtick"": ""SPY""
-            }", "SPY", "SPY R735QTJ8XC9X", SecurityType.Equity, null }
+            }",
+                "SPY",
+                "SPY R735QTJ8XC9X",
+                SecurityType.Equity,
+                null
+            }
         };
 
         class OldSymbol

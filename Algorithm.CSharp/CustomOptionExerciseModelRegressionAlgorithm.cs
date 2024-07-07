@@ -15,10 +15,10 @@
 */
 
 using System.Collections.Generic;
-using QuantConnect.Securities.Option;
-using QuantConnect.Orders.OptionExercise;
 using QuantConnect.Orders;
 using QuantConnect.Orders.Fees;
+using QuantConnect.Orders.OptionExercise;
+using QuantConnect.Securities.Option;
 
 namespace QuantConnect.Algorithm.CSharp
 {
@@ -29,20 +29,26 @@ namespace QuantConnect.Algorithm.CSharp
     {
         public override void Initialize()
         {
-            SetSecurityInitializer((security) =>
-            {
-                var option = security as Option;
-                option?.SetOptionExerciseModel(new CustomOptionExerciseModel());
-            });
+            SetSecurityInitializer(
+                (security) =>
+                {
+                    var option = security as Option;
+                    option?.SetOptionExerciseModel(new CustomOptionExerciseModel());
+                }
+            );
 
             base.Initialize();
         }
 
         private class CustomOptionExerciseModel : DefaultExerciseModel
         {
-            public override IEnumerable<OrderEvent> OptionExercise(Option option, OptionExerciseOrder order)
+            public override IEnumerable<OrderEvent> OptionExercise(
+                Option option,
+                OptionExerciseOrder order
+            )
             {
-                yield return new OrderEvent(order.Id,
+                yield return new OrderEvent(
+                    order.Id,
                     option.Symbol,
                     option.LocalTime.ConvertToUtc(option.Exchange.TimeZone),
                     OrderStatus.Filled,
@@ -50,7 +56,8 @@ namespace QuantConnect.Algorithm.CSharp
                     0.0m,
                     order.Quantity,
                     OrderFee.Zero,
-                    "Tag")
+                    "Tag"
+                )
                 {
                     IsAssignment = false
                 };
@@ -60,41 +67,42 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// This is used by the regression test system to indicate which languages this algorithm is written in.
         /// </summary>
-        public override List<Language> Languages { get; } = new() { Language.CSharp, Language.Python };
+        public override List<Language> Languages { get; } =
+            new() { Language.CSharp, Language.Python };
 
         /// <summary>
         /// This is used by the regression test system to indicate what the expected statistics are from running the algorithm
         /// </summary>
-        public override Dictionary<string, string> ExpectedStatistics => new Dictionary<string, string>
-        {
-            {"Total Orders", "32"},
-            {"Average Win", "6.14%"},
-            {"Average Loss", "0%"},
-            {"Compounding Annual Return", "26116903817855100000000000000%"},
-            {"Drawdown", "0.500%"},
-            {"Expectancy", "0"},
-            {"Start Equity", "100000"},
-            {"End Equity", "257114"},
-            {"Net Profit", "157.114%"},
-            {"Sharpe Ratio", "107.743"},
-            {"Sortino Ratio", "0"},
-            {"Probabilistic Sharpe Ratio", "95.713%"},
-            {"Loss Rate", "0%"},
-            {"Win Rate", "100%"},
-            {"Profit-Loss Ratio", "0"},
-            {"Alpha", "60.088"},
-            {"Beta", "-19.374"},
-            {"Annual Standard Deviation", "0.593"},
-            {"Annual Variance", "0.351"},
-            {"Information Ratio", "106.234"},
-            {"Tracking Error", "0.603"},
-            {"Treynor Ratio", "-3.295"},
-            {"Total Fees", "$16.00"},
-            {"Estimated Strategy Capacity", "$87000.00"},
-            {"Lowest Capacity Asset", "GOOCV 305RBQ20WHPNQ|GOOCV VP83T1ZUHROL"},
-            {"Portfolio Turnover", "10.93%"},
-            {"OrderListHash", "3c5f9544f697725475491434f18803e6"}
-        };
+        public override Dictionary<string, string> ExpectedStatistics =>
+            new Dictionary<string, string>
+            {
+                { "Total Orders", "32" },
+                { "Average Win", "6.14%" },
+                { "Average Loss", "0%" },
+                { "Compounding Annual Return", "26116903817855100000000000000%" },
+                { "Drawdown", "0.500%" },
+                { "Expectancy", "0" },
+                { "Start Equity", "100000" },
+                { "End Equity", "257114" },
+                { "Net Profit", "157.114%" },
+                { "Sharpe Ratio", "107.743" },
+                { "Sortino Ratio", "0" },
+                { "Probabilistic Sharpe Ratio", "95.713%" },
+                { "Loss Rate", "0%" },
+                { "Win Rate", "100%" },
+                { "Profit-Loss Ratio", "0" },
+                { "Alpha", "60.088" },
+                { "Beta", "-19.374" },
+                { "Annual Standard Deviation", "0.593" },
+                { "Annual Variance", "0.351" },
+                { "Information Ratio", "106.234" },
+                { "Tracking Error", "0.603" },
+                { "Treynor Ratio", "-3.295" },
+                { "Total Fees", "$16.00" },
+                { "Estimated Strategy Capacity", "$87000.00" },
+                { "Lowest Capacity Asset", "GOOCV 305RBQ20WHPNQ|GOOCV VP83T1ZUHROL" },
+                { "Portfolio Turnover", "10.93%" },
+                { "OrderListHash", "3c5f9544f697725475491434f18803e6" }
+            };
     }
 }
-

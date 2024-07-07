@@ -21,7 +21,5 @@ namespace QuantConnect
     /// Custom attribute used for marking classes, methods, properties, etc. that should be ignored by the stubs generator
     /// </summary>
     [AttributeUsage(AttributeTargets.All)]
-    public sealed class StubsIgnoreAttribute : Attribute
-    {
-    }
+    public sealed class StubsIgnoreAttribute : Attribute { }
 }

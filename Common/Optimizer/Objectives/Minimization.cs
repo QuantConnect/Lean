@@ -23,8 +23,7 @@ namespace QuantConnect.Optimizer.Objectives
         /// <summary>
         /// Creates an instance of <see cref="Minimization"/>
         /// </summary>
-        public Minimization() : base((v1, v2) => v1 > v2)
-        {
-        }
+        public Minimization()
+            : base((v1, v2) => v1 > v2) { }
     }
 }

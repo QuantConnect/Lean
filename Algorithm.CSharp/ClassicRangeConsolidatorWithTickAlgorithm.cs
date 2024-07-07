@@ -13,9 +13,9 @@
  * limitations under the License.
 */
 
+using System;
 using QuantConnect.Data.Consolidators;
 using QuantConnect.Data.Market;
-using System;
 
 namespace QuantConnect.Algorithm.CSharp
 {
@@ -35,7 +35,9 @@ namespace QuantConnect.Algorithm.CSharp
 
             if (rangeBar.Volume == 0)
             {
-                throw new RegressionTestException($"All RangeBar's should have non-zero volume, but this doesn't");
+                throw new RegressionTestException(
+                    $"All RangeBar's should have non-zero volume, but this doesn't"
+                );
             }
         }
     }

@@ -13,10 +13,10 @@
  * limitations under the License.
 */
 
+using System;
 using NUnit.Framework;
 using QuantConnect.Data.Market;
 using QuantConnect.Indicators;
-using System;
 
 namespace QuantConnect.Tests.Indicators
 {
@@ -36,34 +36,130 @@ namespace QuantConnect.Tests.Indicators
         [Test]
         public override void ShouldIgnoreRemovedStocks()
         {
-            var trin = (ArmsIndex) CreateIndicator();
+            var trin = (ArmsIndex)CreateIndicator();
             var reference = System.DateTime.Today;
 
-            trin.Update(new TradeBar() { Symbol = Symbols.AAPL, Close = 1, Volume = 100, Time = reference.AddMinutes(1) });
-            trin.Update(new TradeBar() { Symbol = Symbols.IBM, Close = 1, Volume = 100, Time = reference.AddMinutes(1) });
-            trin.Update(new TradeBar() { Symbol = Symbols.GOOG, Close = 1, Volume = 100, Time = reference.AddMinutes(1) });
-            
+            trin.Update(
+                new TradeBar()
+                {
+                    Symbol = Symbols.AAPL,
+                    Close = 1,
+                    Volume = 100,
+                    Time = reference.AddMinutes(1)
+                }
+            );
+            trin.Update(
+                new TradeBar()
+                {
+                    Symbol = Symbols.IBM,
+                    Close = 1,
+                    Volume = 100,
+                    Time = reference.AddMinutes(1)
+                }
+            );
+            trin.Update(
+                new TradeBar()
+                {
+                    Symbol = Symbols.GOOG,
+                    Close = 1,
+                    Volume = 100,
+                    Time = reference.AddMinutes(1)
+                }
+            );
+
             // value is not ready yet
             Assert.AreEqual(0m, trin.Current.Value);
-            
-            trin.Update(new TradeBar() { Symbol = Symbols.AAPL, Close = 2, Volume = 100, Time = reference.AddMinutes(2) });
-            trin.Update(new TradeBar() { Symbol = Symbols.IBM, Close = 0.5m, Volume = 100, Time = reference.AddMinutes(2) });
-            trin.Update(new TradeBar() { Symbol = Symbols.GOOG, Close = 3, Volume = 100, Time = reference.AddMinutes(2) });
+
+            trin.Update(
+                new TradeBar()
+                {
+                    Symbol = Symbols.AAPL,
+                    Close = 2,
+                    Volume = 100,
+                    Time = reference.AddMinutes(2)
+                }
+            );
+            trin.Update(
+                new TradeBar()
+                {
+                    Symbol = Symbols.IBM,
+                    Close = 0.5m,
+                    Volume = 100,
+                    Time = reference.AddMinutes(2)
+                }
+            );
+            trin.Update(
+                new TradeBar()
+                {
+                    Symbol = Symbols.GOOG,
+                    Close = 3,
+                    Volume = 100,
+                    Time = reference.AddMinutes(2)
+                }
+            );
 
             Assert.AreEqual(1m, trin.Current.Value);
             trin.Reset();
             trin.Remove(Symbols.IBM);
 
-            trin.Update(new TradeBar() { Symbol = Symbols.AAPL, Close = 1, Volume = 100, Time = reference.AddMinutes(1) });
-            trin.Update(new TradeBar() { Symbol = Symbols.IBM, Close = 1, Volume = 100, Time = reference.AddMinutes(1) });
-            trin.Update(new TradeBar() { Symbol = Symbols.GOOG, Close = 1, Volume = 100, Time = reference.AddMinutes(1) });
+            trin.Update(
+                new TradeBar()
+                {
+                    Symbol = Symbols.AAPL,
+                    Close = 1,
+                    Volume = 100,
+                    Time = reference.AddMinutes(1)
+                }
+            );
+            trin.Update(
+                new TradeBar()
+                {
+                    Symbol = Symbols.IBM,
+                    Close = 1,
+                    Volume = 100,
+                    Time = reference.AddMinutes(1)
+                }
+            );
+            trin.Update(
+                new TradeBar()
+                {
+                    Symbol = Symbols.GOOG,
+                    Close = 1,
+                    Volume = 100,
+                    Time = reference.AddMinutes(1)
+                }
+            );
 
             // value is not ready yet
             Assert.AreEqual(0m, trin.Current.Value);
 
-            trin.Update(new TradeBar() { Symbol = Symbols.AAPL, Close = 2, Volume = 100, Time = reference.AddMinutes(2) });
-            trin.Update(new TradeBar() { Symbol = Symbols.IBM, Close = 0.5m, Volume = 100, Time = reference.AddMinutes(2) });
-            trin.Update(new TradeBar() { Symbol = Symbols.GOOG, Close = 3, Volume = 100, Time = reference.AddMinutes(2) });
+            trin.Update(
+                new TradeBar()
+                {
+                    Symbol = Symbols.AAPL,
+                    Close = 2,
+                    Volume = 100,
+                    Time = reference.AddMinutes(2)
+                }
+            );
+            trin.Update(
+                new TradeBar()
+                {
+                    Symbol = Symbols.IBM,
+                    Close = 0.5m,
+                    Volume = 100,
+                    Time = reference.AddMinutes(2)
+                }
+            );
+            trin.Update(
+                new TradeBar()
+                {
+                    Symbol = Symbols.GOOG,
+                    Close = 3,
+                    Volume = 100,
+                    Time = reference.AddMinutes(2)
+                }
+            );
 
             Assert.AreNotEqual(1m, trin.Current.Value);
         }
@@ -75,43 +171,211 @@ namespace QuantConnect.Tests.Indicators
             adr.Add(Symbols.MSFT);
             var reference = System.DateTime.Today;
 
-            adr.Update(new TradeBar() { Symbol = Symbols.AAPL, Close = 1, Volume = 100, Time = reference.AddMinutes(1) });
-            adr.Update(new TradeBar() { Symbol = Symbols.IBM, Close = 1, Volume = 100, Time = reference.AddMinutes(1) });
-            adr.Update(new TradeBar() { Symbol = Symbols.GOOG, Close = 1, Volume = 100, Time = reference.AddMinutes(1) });
-            adr.Update(new TradeBar() { Symbol = Symbols.MSFT, Close = 1, Volume = 100, Time = reference.AddMinutes(1) });
+            adr.Update(
+                new TradeBar()
+                {
+                    Symbol = Symbols.AAPL,
+                    Close = 1,
+                    Volume = 100,
+                    Time = reference.AddMinutes(1)
+                }
+            );
+            adr.Update(
+                new TradeBar()
+                {
+                    Symbol = Symbols.IBM,
+                    Close = 1,
+                    Volume = 100,
+                    Time = reference.AddMinutes(1)
+                }
+            );
+            adr.Update(
+                new TradeBar()
+                {
+                    Symbol = Symbols.GOOG,
+                    Close = 1,
+                    Volume = 100,
+                    Time = reference.AddMinutes(1)
+                }
+            );
+            adr.Update(
+                new TradeBar()
+                {
+                    Symbol = Symbols.MSFT,
+                    Close = 1,
+                    Volume = 100,
+                    Time = reference.AddMinutes(1)
+                }
+            );
 
             // value is not ready yet
             Assert.AreEqual(0m, adr.Current.Value);
 
-            adr.Update(new TradeBar() { Symbol = Symbols.AAPL, Close = 2, Volume = 100, Time = reference.AddMinutes(2) });
-            adr.Update(new TradeBar() { Symbol = Symbols.IBM, Close = 0.5m, Volume = 100, Time = reference.AddMinutes(2) });
-            adr.Update(new TradeBar() { Symbol = Symbols.GOOG, Close = 3, Volume = 100, Time = reference.AddMinutes(2) });
+            adr.Update(
+                new TradeBar()
+                {
+                    Symbol = Symbols.AAPL,
+                    Close = 2,
+                    Volume = 100,
+                    Time = reference.AddMinutes(2)
+                }
+            );
+            adr.Update(
+                new TradeBar()
+                {
+                    Symbol = Symbols.IBM,
+                    Close = 0.5m,
+                    Volume = 100,
+                    Time = reference.AddMinutes(2)
+                }
+            );
+            adr.Update(
+                new TradeBar()
+                {
+                    Symbol = Symbols.GOOG,
+                    Close = 3,
+                    Volume = 100,
+                    Time = reference.AddMinutes(2)
+                }
+            );
 
             Assert.AreEqual(0m, adr.Current.Value);
 
-            adr.Update(new TradeBar() { Symbol = Symbols.AAPL, Close = 3, Volume = 100, Time = reference.AddMinutes(3) });
-            adr.Update(new TradeBar() { Symbol = Symbols.IBM, Close = 1, Volume = 100, Time = reference.AddMinutes(3) });
-            adr.Update(new TradeBar() { Symbol = Symbols.GOOG, Close = 1, Volume = 200, Time = reference.AddMinutes(3) });
-            adr.Update(new TradeBar() { Symbol = Symbols.MSFT, Close = 1, Volume = 100, Time = reference.AddMinutes(3) });
+            adr.Update(
+                new TradeBar()
+                {
+                    Symbol = Symbols.AAPL,
+                    Close = 3,
+                    Volume = 100,
+                    Time = reference.AddMinutes(3)
+                }
+            );
+            adr.Update(
+                new TradeBar()
+                {
+                    Symbol = Symbols.IBM,
+                    Close = 1,
+                    Volume = 100,
+                    Time = reference.AddMinutes(3)
+                }
+            );
+            adr.Update(
+                new TradeBar()
+                {
+                    Symbol = Symbols.GOOG,
+                    Close = 1,
+                    Volume = 200,
+                    Time = reference.AddMinutes(3)
+                }
+            );
+            adr.Update(
+                new TradeBar()
+                {
+                    Symbol = Symbols.MSFT,
+                    Close = 1,
+                    Volume = 100,
+                    Time = reference.AddMinutes(3)
+                }
+            );
 
             Assert.AreEqual(2m, adr.Current.Value);
 
-            adr.Update(new TradeBar() { Symbol = Symbols.AAPL, Close = 1, Volume = 100, Time = reference.AddMinutes(4) });
-            adr.Update(new TradeBar() { Symbol = Symbols.IBM, Close = 2, Volume = 250, Time = reference.AddMinutes(4) });
-            adr.Update(new TradeBar() { Symbol = Symbols.GOOG, Close = 2, Volume = 100, Time = reference.AddMinutes(4) });
-            adr.Update(new TradeBar() { Symbol = Symbols.MSFT, Close = 2, Volume = 150, Time = reference.AddMinutes(4) });
-
-            Assert.AreEqual(3m/5m, adr.Current.Value);
-
-            adr.Update(new TradeBar() { Symbol = Symbols.AAPL, Close = 2, Volume = 140, Time = reference.AddMinutes(5) });
-            adr.Update(new TradeBar() { Symbol = Symbols.GOOG, Close = 5, Volume = 110, Time = reference.AddMinutes(5) });
-            adr.Update(new TradeBar() { Symbol = Symbols.MSFT, Close = 1, Volume = 150, Time = reference.AddMinutes(5) });
+            adr.Update(
+                new TradeBar()
+                {
+                    Symbol = Symbols.AAPL,
+                    Close = 1,
+                    Volume = 100,
+                    Time = reference.AddMinutes(4)
+                }
+            );
+            adr.Update(
+                new TradeBar()
+                {
+                    Symbol = Symbols.IBM,
+                    Close = 2,
+                    Volume = 250,
+                    Time = reference.AddMinutes(4)
+                }
+            );
+            adr.Update(
+                new TradeBar()
+                {
+                    Symbol = Symbols.GOOG,
+                    Close = 2,
+                    Volume = 100,
+                    Time = reference.AddMinutes(4)
+                }
+            );
+            adr.Update(
+                new TradeBar()
+                {
+                    Symbol = Symbols.MSFT,
+                    Close = 2,
+                    Volume = 150,
+                    Time = reference.AddMinutes(4)
+                }
+            );
 
             Assert.AreEqual(3m / 5m, adr.Current.Value);
 
-            adr.Update(new TradeBar() { Symbol = Symbols.AAPL, Close = 2, Volume = 120, Time = reference.AddMinutes(6) });
-            adr.Update(new TradeBar() { Symbol = Symbols.IBM, Close = 3, Volume = 350, Time = reference.AddMinutes(6) });
-            adr.Update(new TradeBar() { Symbol = Symbols.GOOG, Close = 4, Volume = 200, Time = reference.AddMinutes(6) });
+            adr.Update(
+                new TradeBar()
+                {
+                    Symbol = Symbols.AAPL,
+                    Close = 2,
+                    Volume = 140,
+                    Time = reference.AddMinutes(5)
+                }
+            );
+            adr.Update(
+                new TradeBar()
+                {
+                    Symbol = Symbols.GOOG,
+                    Close = 5,
+                    Volume = 110,
+                    Time = reference.AddMinutes(5)
+                }
+            );
+            adr.Update(
+                new TradeBar()
+                {
+                    Symbol = Symbols.MSFT,
+                    Close = 1,
+                    Volume = 150,
+                    Time = reference.AddMinutes(5)
+                }
+            );
+
+            Assert.AreEqual(3m / 5m, adr.Current.Value);
+
+            adr.Update(
+                new TradeBar()
+                {
+                    Symbol = Symbols.AAPL,
+                    Close = 2,
+                    Volume = 120,
+                    Time = reference.AddMinutes(6)
+                }
+            );
+            adr.Update(
+                new TradeBar()
+                {
+                    Symbol = Symbols.IBM,
+                    Close = 3,
+                    Volume = 350,
+                    Time = reference.AddMinutes(6)
+                }
+            );
+            adr.Update(
+                new TradeBar()
+                {
+                    Symbol = Symbols.GOOG,
+                    Close = 4,
+                    Volume = 200,
+                    Time = reference.AddMinutes(6)
+                }
+            );
 
             Assert.AreEqual(3m / 5m, adr.Current.Value);
         }
@@ -122,14 +386,62 @@ namespace QuantConnect.Tests.Indicators
             var indicator = CreateIndicator();
             var reference = System.DateTime.Today;
 
-            indicator.Update(new TradeBar() { Symbol = Symbols.AAPL, Close = 1, Volume = 1, Time = reference.AddMinutes(1) });
-            indicator.Update(new TradeBar() { Symbol = Symbols.AAPL, Close = 2, Volume = 60, Time = reference.AddMinutes(2) });
+            indicator.Update(
+                new TradeBar()
+                {
+                    Symbol = Symbols.AAPL,
+                    Close = 1,
+                    Volume = 1,
+                    Time = reference.AddMinutes(1)
+                }
+            );
+            indicator.Update(
+                new TradeBar()
+                {
+                    Symbol = Symbols.AAPL,
+                    Close = 2,
+                    Volume = 60,
+                    Time = reference.AddMinutes(2)
+                }
+            );
 
-            indicator.Update(new TradeBar() { Symbol = Symbols.IBM, Close = 1, Volume = 1, Time = reference.AddMinutes(1) });
-            indicator.Update(new TradeBar() { Symbol = Symbols.IBM, Close = 0.5m, Volume = 10, Time = reference.AddMinutes(2) });
+            indicator.Update(
+                new TradeBar()
+                {
+                    Symbol = Symbols.IBM,
+                    Close = 1,
+                    Volume = 1,
+                    Time = reference.AddMinutes(1)
+                }
+            );
+            indicator.Update(
+                new TradeBar()
+                {
+                    Symbol = Symbols.IBM,
+                    Close = 0.5m,
+                    Volume = 10,
+                    Time = reference.AddMinutes(2)
+                }
+            );
 
-            indicator.Update(new TradeBar() { Symbol = Symbols.GOOG, Close = 1, Volume = 1, Time = reference.AddMinutes(1) });
-            indicator.Update(new TradeBar() { Symbol = Symbols.GOOG, Close = 3, Volume = 40, Time = reference.AddMinutes(2) });
+            indicator.Update(
+                new TradeBar()
+                {
+                    Symbol = Symbols.GOOG,
+                    Close = 1,
+                    Volume = 1,
+                    Time = reference.AddMinutes(1)
+                }
+            );
+            indicator.Update(
+                new TradeBar()
+                {
+                    Symbol = Symbols.GOOG,
+                    Close = 3,
+                    Volume = 40,
+                    Time = reference.AddMinutes(2)
+                }
+            );
 
             Assert.IsTrue(indicator.IsReady);
             Assert.AreEqual(0.2m, indicator.Current.Value);
@@ -142,16 +454,64 @@ namespace QuantConnect.Tests.Indicators
             var indicator = CreateIndicator();
             var reference = System.DateTime.Today;
 
-            indicator.Update(new TradeBar() { Symbol = Symbols.AAPL, Close = 1, Volume = 1, Time = reference.AddMinutes(1) });
-            indicator.Update(new TradeBar() { Symbol = Symbols.IBM, Close = 1, Volume = 1, Time = reference.AddMinutes(1) });
-            indicator.Update(new TradeBar() { Symbol = Symbols.GOOG, Close = 1, Volume = 1, Time = reference.AddMinutes(1) });
+            indicator.Update(
+                new TradeBar()
+                {
+                    Symbol = Symbols.AAPL,
+                    Close = 1,
+                    Volume = 1,
+                    Time = reference.AddMinutes(1)
+                }
+            );
+            indicator.Update(
+                new TradeBar()
+                {
+                    Symbol = Symbols.IBM,
+                    Close = 1,
+                    Volume = 1,
+                    Time = reference.AddMinutes(1)
+                }
+            );
+            indicator.Update(
+                new TradeBar()
+                {
+                    Symbol = Symbols.GOOG,
+                    Close = 1,
+                    Volume = 1,
+                    Time = reference.AddMinutes(1)
+                }
+            );
 
             // indicator is not ready yet
             Assert.IsFalse(indicator.IsReady);
 
-            indicator.Update(new TradeBar() { Symbol = Symbols.AAPL, Close = 2, Volume = 60, Time = reference.AddMinutes(2) });
-            indicator.Update(new TradeBar() { Symbol = Symbols.IBM, Close = 0.5m, Volume = 10, Time = reference.AddMinutes(2) });
-            indicator.Update(new TradeBar() { Symbol = Symbols.GOOG, Close = 3, Volume = 40, Time = reference.AddMinutes(2) });
+            indicator.Update(
+                new TradeBar()
+                {
+                    Symbol = Symbols.AAPL,
+                    Close = 2,
+                    Volume = 60,
+                    Time = reference.AddMinutes(2)
+                }
+            );
+            indicator.Update(
+                new TradeBar()
+                {
+                    Symbol = Symbols.IBM,
+                    Close = 0.5m,
+                    Volume = 10,
+                    Time = reference.AddMinutes(2)
+                }
+            );
+            indicator.Update(
+                new TradeBar()
+                {
+                    Symbol = Symbols.GOOG,
+                    Close = 3,
+                    Volume = 40,
+                    Time = reference.AddMinutes(2)
+                }
+            );
 
             Assert.IsTrue(indicator.IsReady);
             Assert.AreEqual(0.2m, indicator.Current.Value);
@@ -224,8 +584,8 @@ namespace QuantConnect.Tests.Indicators
         /// skip this test
         /// </summary>
         /// <param name="indicator"></param>
-        protected override void IndicatorValueIsNotZeroAfterReceiveRenkoBars(IndicatorBase indicator)
-        {
-        }
+        protected override void IndicatorValueIsNotZeroAfterReceiveRenkoBars(
+            IndicatorBase indicator
+        ) { }
     }
 }

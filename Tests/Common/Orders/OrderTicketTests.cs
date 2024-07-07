@@ -28,7 +28,13 @@ namespace QuantConnect.Tests.Common.Orders
         [Test]
         public void TestInvalidUpdateOrderId()
         {
-            var updateFields = new UpdateOrderFields { Quantity = 99, Tag = "Pepe", StopPrice = 77 , LimitPrice = 55 };
+            var updateFields = new UpdateOrderFields
+            {
+                Quantity = 99,
+                Tag = "Pepe",
+                StopPrice = 77,
+                LimitPrice = 55
+            };
             var updateRequest = new UpdateOrderRequest(_requestTime, 11, updateFields);
             var ticket = OrderTicket.InvalidUpdateOrderId(null, updateRequest);
             Assert.AreEqual(11, ticket.OrderId);
@@ -37,13 +43,17 @@ namespace QuantConnect.Tests.Common.Orders
             Assert.AreEqual(OrderStatus.Invalid, ticket.Status);
             Assert.AreEqual(1, ticket.UpdateRequests.Count);
             Assert.AreEqual(OrderRequestStatus.Error, ticket.UpdateRequests[0].Status);
-            Assert.AreEqual(OrderResponseErrorCode.UnableToFindOrder, ticket.UpdateRequests[0].Response.ErrorCode);
+            Assert.AreEqual(
+                OrderResponseErrorCode.UnableToFindOrder,
+                ticket.UpdateRequests[0].Response.ErrorCode
+            );
             Assert.AreEqual(11, ticket.UpdateRequests[0].OrderId);
             Assert.AreEqual(99, ticket.UpdateRequests[0].Quantity);
             Assert.AreEqual("Pepe", ticket.UpdateRequests[0].Tag);
             Assert.AreEqual(77, ticket.UpdateRequests[0].StopPrice);
             Assert.AreEqual(55, ticket.UpdateRequests[0].LimitPrice);
         }
+
         [Test]
         public void TestInvalidCancelOrderId()
         {
@@ -55,14 +65,27 @@ namespace QuantConnect.Tests.Common.Orders
             Assert.AreEqual(OrderStatus.Invalid, ticket.Status);
             Assert.AreEqual(cancelRequest, ticket.CancelRequest);
             Assert.AreEqual(OrderRequestStatus.Error, ticket.CancelRequest.Status);
-            Assert.AreEqual(OrderResponseErrorCode.UnableToFindOrder, ticket.CancelRequest.Response.ErrorCode);
+            Assert.AreEqual(
+                OrderResponseErrorCode.UnableToFindOrder,
+                ticket.CancelRequest.Response.ErrorCode
+            );
             Assert.AreEqual(11, ticket.CancelRequest.OrderId);
             Assert.AreEqual("Pepe", ticket.CancelRequest.Tag);
         }
+
         [Test]
         public void TestInvalidSubmitRequest()
         {
-            var orderRequest = new SubmitOrderRequest(OrderType.Limit, SecurityType.Equity, Symbols.AAPL, 1000, 0, 1.11m, _requestTime, "Pepe");
+            var orderRequest = new SubmitOrderRequest(
+                OrderType.Limit,
+                SecurityType.Equity,
+                Symbols.AAPL,
+                1000,
+                0,
+                1.11m,
+                _requestTime,
+                "Pepe"
+            );
             var order = Order.CreateOrder(orderRequest);
             orderRequest.SetOrderId(orderRequest.OrderId);
             var orderResponse = OrderResponse.InvalidStatus(orderRequest, order);
@@ -80,10 +103,20 @@ namespace QuantConnect.Tests.Common.Orders
             Assert.AreEqual(1000, ticket.SubmitRequest.Quantity);
             Assert.AreEqual("Pepe", ticket.SubmitRequest.Tag);
         }
+
         [Test]
         public void TestInvalidWarmingUp()
         {
-            var orderRequest = new SubmitOrderRequest(OrderType.Limit, SecurityType.Equity, Symbols.AAPL, 1000, 0, 1.11m, _requestTime, "Pepe");
+            var orderRequest = new SubmitOrderRequest(
+                OrderType.Limit,
+                SecurityType.Equity,
+                Symbols.AAPL,
+                1000,
+                0,
+                1.11m,
+                _requestTime,
+                "Pepe"
+            );
             orderRequest.SetOrderId(orderRequest.OrderId);
             var algorithmSub = new AlgorithmStub();
             var ticket = algorithmSub.SubmitOrderRequest(orderRequest);
@@ -99,7 +132,10 @@ namespace QuantConnect.Tests.Common.Orders
             Assert.AreEqual(orderRequest.OrderId, ticket.SubmitRequest.OrderId);
             Assert.AreEqual(1000, ticket.SubmitRequest.Quantity);
             Assert.AreEqual("Pepe", ticket.SubmitRequest.Tag);
-            Assert.AreEqual("This operation is not allowed in Initialize or during warm up: OrderRequest.Submit. Please move this code to the OnWarmupFinished() method.", ticket.SubmitRequest.Response.ErrorMessage);
+            Assert.AreEqual(
+                "This operation is not allowed in Initialize or during warm up: OrderRequest.Submit. Please move this code to the OnWarmupFinished() method.",
+                ticket.SubmitRequest.Response.ErrorMessage
+            );
         }
     }
 }

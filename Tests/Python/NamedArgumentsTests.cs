@@ -34,15 +34,16 @@ namespace QuantConnect.Tests.Python
             using (Py.GIL())
             {
                 // Test function that will used named args in Python -> C#
-                var module = PyModule.FromString(Guid.NewGuid().ToString(),
-                    "def test(algorithm):\n" +
-                    "   aapl = algorithm.AddEquity(ticker='AAPL')\n" +
-                    "   return aapl\n"
+                var module = PyModule.FromString(
+                    Guid.NewGuid().ToString(),
+                    "def test(algorithm):\n"
+                        + "   aapl = algorithm.AddEquity(ticker='AAPL')\n"
+                        + "   return aapl\n"
                 );
 
                 var testFunction = module.GetAttr("test");
                 var equity = testFunction.Invoke(algorithm.ToPython()).As<Equity>();
-                
+
                 Assert.AreEqual("AAPL", equity.Symbol.Value);
             }
         }

@@ -13,19 +13,18 @@
  * limitations under the License.
 */
 
-using Newtonsoft.Json;
-using QuantConnect.Data;
-using QuantConnect.Logging;
-using RestSharp;
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
+using Newtonsoft.Json;
+using QuantConnect.Data;
+using QuantConnect.Logging;
+using RestSharp;
 
 namespace QuantConnect.Brokerages
 {
-
     /// <summary>
     /// Provides shared brokerage websockets implementation
     /// </summary>
@@ -81,14 +80,23 @@ namespace QuantConnect.Brokerages
         /// <param name="restClient">instance of rest client</param>
         /// <param name="apiKey">api key</param>
         /// <param name="apiSecret">api secret</param>
-        protected void Initialize(string wssUrl, IWebSocket websocket, IRestClient restClient, string apiKey, string apiSecret)
+        protected void Initialize(
+            string wssUrl,
+            IWebSocket websocket,
+            IRestClient restClient,
+            string apiKey,
+            string apiSecret
+        )
         {
             if (IsInitialized)
             {
                 return;
             }
             IsInitialized = true;
-            JsonSettings = new JsonSerializerSettings { FloatParseHandling = FloatParseHandling.Decimal };
+            JsonSettings = new JsonSerializerSettings
+            {
+                FloatParseHandling = FloatParseHandling.Decimal
+            };
             CachedOrderIDs = new ConcurrentDictionary<int, Orders.Order>();
 
             WebSocket = websocket;
@@ -110,9 +118,8 @@ namespace QuantConnect.Brokerages
         /// Creates an instance of a websockets brokerage
         /// </summary>
         /// <param name="name">Name of brokerage</param>
-        protected BaseWebsocketsBrokerage(string name) : base(name)
-        {
-        }
+        protected BaseWebsocketsBrokerage(string name)
+            : base(name) { }
 
         /// <summary>
         /// Handles websocket received messages

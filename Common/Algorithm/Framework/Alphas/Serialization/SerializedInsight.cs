@@ -13,9 +13,9 @@
  * limitations under the License.
 */
 
+using System;
 using Newtonsoft.Json;
 using QuantConnect.Util;
-using System;
 
 namespace QuantConnect.Algorithm.Framework.Alphas.Serialization
 {
@@ -153,9 +153,7 @@ namespace QuantConnect.Algorithm.Framework.Alphas.Serialization
         /// <summary>
         /// Initializes a new default instance of the <see cref="SerializedInsight"/> class
         /// </summary>
-        public SerializedInsight()
-        {
-        }
+        public SerializedInsight() { }
 
         /// <summary>
         /// Initializes a new instance of the <see cref="SerializedInsight "/> class by copying the specified insight
@@ -189,19 +187,13 @@ namespace QuantConnect.Algorithm.Framework.Alphas.Serialization
         [JsonProperty("group-id")]
         string OldGroupId
         {
-            set
-            {
-                GroupId = value;
-            }
+            set { GroupId = value; }
         }
 
         [JsonProperty("source-model")]
         string OldSourceModel
         {
-            set
-            {
-                SourceModel = value;
-            }
+            set { SourceModel = value; }
         }
 
         /// <summary>
@@ -210,10 +202,7 @@ namespace QuantConnect.Algorithm.Framework.Alphas.Serialization
         [JsonProperty("generated-time")]
         double OldGeneratedTime
         {
-            set
-            {
-                GeneratedTime = value;
-            }
+            set { GeneratedTime = value; }
         }
 
         /// <summary>
@@ -222,10 +211,7 @@ namespace QuantConnect.Algorithm.Framework.Alphas.Serialization
         [JsonProperty("created-time")]
         public double OldCreatedTime
         {
-            set
-            {
-                CreatedTime = value;
-            }
+            set { CreatedTime = value; }
         }
 
         /// <summary>
@@ -234,58 +220,40 @@ namespace QuantConnect.Algorithm.Framework.Alphas.Serialization
         [JsonProperty("close-time")]
         public double OldCloseTime
         {
-            set
-            {
-                CloseTime = value;
-            }
+            set { CloseTime = value; }
         }
 
         [JsonProperty("reference-final")]
         decimal OldReferenceValueFinal
         {
-            set
-            {
-                ReferenceValueFinal = value;
-            }
+            set { ReferenceValueFinal = value; }
         }
 
         [JsonProperty("score-final")]
         bool OldScoreIsFinal
         {
-            set
-            {
-                ScoreIsFinal = value;
-            }
+            set { ScoreIsFinal = value; }
         }
 
         [JsonProperty("score-magnitude")]
         [JsonConverter(typeof(JsonRoundingConverter))]
         double OldScoreMagnitude
         {
-            set
-            {
-                ScoreMagnitude = value;
-            }
+            set { ScoreMagnitude = value; }
         }
 
         [JsonProperty("score-direction")]
         [JsonConverter(typeof(JsonRoundingConverter))]
         double OldScoreDirection
         {
-            set
-            {
-                ScoreDirection = value;
-            }
+            set { ScoreDirection = value; }
         }
 
         [JsonProperty("estimated-value")]
         [JsonConverter(typeof(JsonRoundingConverter))]
         decimal OldEstimatedValue
         {
-            set
-            {
-                EstimatedValue = value;
-            }
+            set { EstimatedValue = value; }
         }
         #endregion
     }

@@ -22,7 +22,7 @@ namespace QuantConnect.Tests.Common.Util
     [TestFixture]
     public class DisposableExtensionsTests
     {
-        #pragma warning disable CA2000
+#pragma warning disable CA2000
         [Test]
         public void ReturnsFalseForNullDisposable()
         {

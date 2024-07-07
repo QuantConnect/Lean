@@ -15,18 +15,20 @@
 */
 
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using QuantConnect.Data;
-using QuantConnect.Interfaces;
-using System.Collections.Generic;
 using QuantConnect.Data.UniverseSelection;
+using QuantConnect.Interfaces;
 
 namespace QuantConnect.Algorithm.CSharp
 {
     /// <summary>
     /// Regression algorithm asserting the behavior of a zero time in universe setting. Related to GH issue #6653
     /// </summary>
-    public class OptionNoTimeInUniverseRegressionAlgorithm : QCAlgorithm, IRegressionAlgorithmDefinition
+    public class OptionNoTimeInUniverseRegressionAlgorithm
+        : QCAlgorithm,
+            IRegressionAlgorithmDefinition
     {
         private const string UnderlyingTicker = "GOOG";
         private Symbol _optionSymbol;
@@ -42,10 +44,12 @@ namespace QuantConnect.Algorithm.CSharp
             _optionSymbol = option.Symbol;
 
             // set our strike/expiry filter for this option chain
-            option.SetFilter(u => u.Strikes(-1, +1)
-                                   // Expiration method accepts TimeSpan objects or integer for days.
-                                   // The following statements yield the same filtering criteria
-                                   .Expiration(0, 60));
+            option.SetFilter(u =>
+                u.Strikes(-1, +1)
+                    // Expiration method accepts TimeSpan objects or integer for days.
+                    // The following statements yield the same filtering criteria
+                    .Expiration(0, 60)
+            );
         }
 
         /// <summary>
@@ -56,14 +60,17 @@ namespace QuantConnect.Algorithm.CSharp
         {
             var optionContracts = slice.OptionChains.GetValue(_optionSymbol);
             var underlyingPrice = Securities[_optionSymbol.Underlying].Price;
-            var strikes = optionContracts.Select(o => o.Strike)
+            var strikes = optionContracts
+                .Select(o => o.Strike)
                 // when the strike matches the underlying price it's not taken into account in the +1 -1 range
                 .Where(strike => strike != underlyingPrice)
                 .ToHashSet();
 
             if (strikes.Count > 2)
             {
-                throw new RegressionTestException($"At {Time} found {strikes.Count}. Underlying: {underlyingPrice}. Strikes: [{string.Join(",", strikes)}]");
+                throw new RegressionTestException(
+                    $"At {Time} found {strikes.Count}. Underlying: {underlyingPrice}. Strikes: [{string.Join(",", strikes)}]"
+                );
             }
         }
 
@@ -95,35 +102,36 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// This is used by the regression test system to indicate what the expected statistics are from running the algorithm
         /// </summary>
-        public Dictionary<string, string> ExpectedStatistics => new Dictionary<string, string>
-        {
-            {"Total Orders", "0"},
-            {"Average Win", "0%"},
-            {"Average Loss", "0%"},
-            {"Compounding Annual Return", "0%"},
-            {"Drawdown", "0%"},
-            {"Expectancy", "0"},
-            {"Start Equity", "100000"},
-            {"End Equity", "100000"},
-            {"Net Profit", "0%"},
-            {"Sharpe Ratio", "0"},
-            {"Sortino Ratio", "0"},
-            {"Probabilistic Sharpe Ratio", "0%"},
-            {"Loss Rate", "0%"},
-            {"Win Rate", "0%"},
-            {"Profit-Loss Ratio", "0"},
-            {"Alpha", "0"},
-            {"Beta", "0"},
-            {"Annual Standard Deviation", "0"},
-            {"Annual Variance", "0"},
-            {"Information Ratio", "0"},
-            {"Tracking Error", "0"},
-            {"Treynor Ratio", "0"},
-            {"Total Fees", "$0.00"},
-            {"Estimated Strategy Capacity", "$0"},
-            {"Lowest Capacity Asset", ""},
-            {"Portfolio Turnover", "0%"},
-            {"OrderListHash", "d41d8cd98f00b204e9800998ecf8427e"}
-        };
+        public Dictionary<string, string> ExpectedStatistics =>
+            new Dictionary<string, string>
+            {
+                { "Total Orders", "0" },
+                { "Average Win", "0%" },
+                { "Average Loss", "0%" },
+                { "Compounding Annual Return", "0%" },
+                { "Drawdown", "0%" },
+                { "Expectancy", "0" },
+                { "Start Equity", "100000" },
+                { "End Equity", "100000" },
+                { "Net Profit", "0%" },
+                { "Sharpe Ratio", "0" },
+                { "Sortino Ratio", "0" },
+                { "Probabilistic Sharpe Ratio", "0%" },
+                { "Loss Rate", "0%" },
+                { "Win Rate", "0%" },
+                { "Profit-Loss Ratio", "0" },
+                { "Alpha", "0" },
+                { "Beta", "0" },
+                { "Annual Standard Deviation", "0" },
+                { "Annual Variance", "0" },
+                { "Information Ratio", "0" },
+                { "Tracking Error", "0" },
+                { "Treynor Ratio", "0" },
+                { "Total Fees", "$0.00" },
+                { "Estimated Strategy Capacity", "$0" },
+                { "Lowest Capacity Asset", "" },
+                { "Portfolio Turnover", "0%" },
+                { "OrderListHash", "d41d8cd98f00b204e9800998ecf8427e" }
+            };
     }
 }

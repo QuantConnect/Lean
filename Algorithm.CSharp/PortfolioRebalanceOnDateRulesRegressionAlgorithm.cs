@@ -19,8 +19,8 @@ using QuantConnect.Algorithm.Framework.Alphas;
 using QuantConnect.Algorithm.Framework.Execution;
 using QuantConnect.Algorithm.Framework.Portfolio;
 using QuantConnect.Algorithm.Framework.Selection;
-using QuantConnect.Orders;
 using QuantConnect.Interfaces;
+using QuantConnect.Orders;
 
 namespace QuantConnect.Algorithm.CSharp
 {
@@ -28,7 +28,9 @@ namespace QuantConnect.Algorithm.CSharp
     /// Regression algorithm testing portfolio construction model control over rebalancing,
     /// specifying a date rules, see GH 4075.
     /// </summary>
-    public class PortfolioRebalanceOnDateRulesRegressionAlgorithm : QCAlgorithm, IRegressionAlgorithmDefinition
+    public class PortfolioRebalanceOnDateRulesRegressionAlgorithm
+        : QCAlgorithm,
+            IRegressionAlgorithmDefinition
     {
         /// <summary>
         /// Initialise the data and resolution required, as well as the cash and start-end dates for your algorithm. All algorithms must initialized.
@@ -51,12 +53,24 @@ namespace QuantConnect.Algorithm.CSharp
             Settings.RebalancePortfolioOnInsightChanges = false;
             Settings.RebalancePortfolioOnSecurityChanges = false;
 
-            SetUniverseSelection(new CustomUniverseSelectionModel(
-                "CustomUniverseSelectionModel",
-                time => new List<string> { "AAPL", "IBM", "FB", "SPY" }
-            ));
-            SetAlpha(new ConstantAlphaModel(InsightType.Price, InsightDirection.Up, TimeSpan.FromMinutes(20), 0.025, null));
-            SetPortfolioConstruction(new EqualWeightingPortfolioConstructionModel(DateRules.Every(DayOfWeek.Wednesday)));
+            SetUniverseSelection(
+                new CustomUniverseSelectionModel(
+                    "CustomUniverseSelectionModel",
+                    time => new List<string> { "AAPL", "IBM", "FB", "SPY" }
+                )
+            );
+            SetAlpha(
+                new ConstantAlphaModel(
+                    InsightType.Price,
+                    InsightDirection.Up,
+                    TimeSpan.FromMinutes(20),
+                    0.025,
+                    null
+                )
+            );
+            SetPortfolioConstruction(
+                new EqualWeightingPortfolioConstructionModel(DateRules.Every(DayOfWeek.Wednesday))
+            );
             SetExecution(new ImmediateExecutionModel());
         }
 
@@ -67,7 +81,9 @@ namespace QuantConnect.Algorithm.CSharp
                 Debug($"{orderEvent}");
                 if (UtcTime.DayOfWeek != DayOfWeek.Wednesday)
                 {
-                    throw new RegressionTestException($"{UtcTime} {orderEvent.Symbol} {UtcTime.DayOfWeek}");
+                    throw new RegressionTestException(
+                        $"{UtcTime} {orderEvent.Symbol} {UtcTime.DayOfWeek}"
+                    );
                 }
             }
         }
@@ -100,35 +116,36 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// This is used by the regression test system to indicate what the expected statistics are from running the algorithm
         /// </summary>
-        public Dictionary<string, string> ExpectedStatistics => new Dictionary<string, string>
-        {
-            {"Total Orders", "359"},
-            {"Average Win", "0.06%"},
-            {"Average Loss", "-0.03%"},
-            {"Compounding Annual Return", "11.414%"},
-            {"Drawdown", "18.200%"},
-            {"Expectancy", "1.289"},
-            {"Start Equity", "100000"},
-            {"End Equity", "124130.05"},
-            {"Net Profit", "24.130%"},
-            {"Sharpe Ratio", "0.563"},
-            {"Sortino Ratio", "0.662"},
-            {"Probabilistic Sharpe Ratio", "24.886%"},
-            {"Loss Rate", "23%"},
-            {"Win Rate", "77%"},
-            {"Profit-Loss Ratio", "1.98"},
-            {"Alpha", "0.036"},
-            {"Beta", "1.019"},
-            {"Annual Standard Deviation", "0.141"},
-            {"Annual Variance", "0.02"},
-            {"Information Ratio", "0.505"},
-            {"Tracking Error", "0.072"},
-            {"Treynor Ratio", "0.078"},
-            {"Total Fees", "$363.83"},
-            {"Estimated Strategy Capacity", "$71000000.00"},
-            {"Lowest Capacity Asset", "IBM R735QTJ8XC9X"},
-            {"Portfolio Turnover", "0.33%"},
-            {"OrderListHash", "fbc4fc832ebbd969bd449d38886575c0"}
-        };
+        public Dictionary<string, string> ExpectedStatistics =>
+            new Dictionary<string, string>
+            {
+                { "Total Orders", "359" },
+                { "Average Win", "0.06%" },
+                { "Average Loss", "-0.03%" },
+                { "Compounding Annual Return", "11.414%" },
+                { "Drawdown", "18.200%" },
+                { "Expectancy", "1.289" },
+                { "Start Equity", "100000" },
+                { "End Equity", "124130.05" },
+                { "Net Profit", "24.130%" },
+                { "Sharpe Ratio", "0.563" },
+                { "Sortino Ratio", "0.662" },
+                { "Probabilistic Sharpe Ratio", "24.886%" },
+                { "Loss Rate", "23%" },
+                { "Win Rate", "77%" },
+                { "Profit-Loss Ratio", "1.98" },
+                { "Alpha", "0.036" },
+                { "Beta", "1.019" },
+                { "Annual Standard Deviation", "0.141" },
+                { "Annual Variance", "0.02" },
+                { "Information Ratio", "0.505" },
+                { "Tracking Error", "0.072" },
+                { "Treynor Ratio", "0.078" },
+                { "Total Fees", "$363.83" },
+                { "Estimated Strategy Capacity", "$71000000.00" },
+                { "Lowest Capacity Asset", "IBM R735QTJ8XC9X" },
+                { "Portfolio Turnover", "0.33%" },
+                { "OrderListHash", "fbc4fc832ebbd969bd449d38886575c0" }
+            };
     }
 }

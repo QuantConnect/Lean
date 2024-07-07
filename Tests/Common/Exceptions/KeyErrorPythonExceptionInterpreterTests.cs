@@ -13,12 +13,12 @@
  * limitations under the License.
 */
 
+using System;
+using System.Collections.Generic;
 using NUnit.Framework;
 using NUnit.Framework.Constraints;
 using Python.Runtime;
 using QuantConnect.Exceptions;
-using System;
-using System.Collections.Generic;
 
 namespace QuantConnect.Tests.Common.Exceptions
 {
@@ -65,12 +65,18 @@ namespace QuantConnect.Tests.Common.Exceptions
         [TestCase(typeof(DivideByZeroException), true)]
         [TestCase(typeof(InvalidOperationException), true)]
         [TestCase(typeof(PythonException), false)]
-        public void InterpretThrowsForNonKeyErrorPythonExceptionTypes(Type exceptionType, bool expectThrow)
+        public void InterpretThrowsForNonKeyErrorPythonExceptionTypes(
+            Type exceptionType,
+            bool expectThrow
+        )
         {
             var exception = CreateExceptionFromType(exceptionType);
             var interpreter = new KeyErrorPythonExceptionInterpreter();
             var constraint = expectThrow ? (IResolveConstraint)Throws.Exception : Throws.Nothing;
-            Assert.That(() => interpreter.Interpret(exception, NullExceptionInterpreter.Instance), constraint);
+            Assert.That(
+                () => interpreter.Interpret(exception, NullExceptionInterpreter.Instance),
+                constraint
+            );
         }
 
         [Test]
@@ -83,6 +89,9 @@ namespace QuantConnect.Tests.Common.Exceptions
             Assert.True(exception.Message.Contains("dict()['SPY']"));
         }
 
-        private Exception CreateExceptionFromType(Type type) => type == typeof(PythonException) ? _pythonException : (Exception)Activator.CreateInstance(type);
+        private Exception CreateExceptionFromType(Type type) =>
+            type == typeof(PythonException)
+                ? _pythonException
+                : (Exception)Activator.CreateInstance(type);
     }
 }

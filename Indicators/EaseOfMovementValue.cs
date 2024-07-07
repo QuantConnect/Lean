@@ -1,11 +1,11 @@
 ﻿/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
- * 
- * Licensed under the Apache License, Version 2.0 (the "License"); 
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -18,7 +18,7 @@ namespace QuantConnect.Indicators
 {
     /// <summary>
     /// This indicator computes the n-period Ease of Movement Value using the following:
-    /// MID = (high_1 + low_1)/2 - (high_0 + low_0)/2 
+    /// MID = (high_1 + low_1)/2 - (high_0 + low_0)/2
     /// RATIO = (currentVolume/10000) / (high_1 - low_1)
     /// EMV = MID/RATIO
     /// _SMA = n-period of EMV
@@ -48,9 +48,8 @@ namespace QuantConnect.Indicators
         /// <param name="period">The period over which to perform to computation</param>
         /// <param name="scale">The size of the number outputed by EMV</param>
         public EaseOfMovementValue(int period = 1, int scale = 10000)
-            : this($"EMV({period}, {scale})", period, scale)
-        {
-        }
+            : this($"EMV({period}, {scale})", period, scale) { }
+
         /// <summary>
         /// Creates a new EaseOfMovement indicator with the specified period
         /// </summary>
@@ -71,11 +70,11 @@ namespace QuantConnect.Indicators
         /// <returns>A a value for this indicator</returns>
         protected override decimal ComputeNextValue(TradeBar input)
         {
-            if (_previousHighMaximum == 0 && _previousLowMinimum == 0) 
+            if (_previousHighMaximum == 0 && _previousLowMinimum == 0)
             {
                 _previousHighMaximum = input.High;
                 _previousLowMinimum = input.Low;
-            } 
+            }
 
             if (input.Volume == 0 || input.High == input.Low)
             {
@@ -83,7 +82,8 @@ namespace QuantConnect.Indicators
                 return _sma.Current.Value;
             }
 
-            var midValue = ((input.High + input.Low) / 2) - ((_previousHighMaximum + _previousLowMinimum) / 2);
+            var midValue =
+                ((input.High + input.Low) / 2) - ((_previousHighMaximum + _previousLowMinimum) / 2);
             var midRatio = ((input.Volume / _scale) / (input.High - input.Low));
 
             _previousHighMaximum = input.High;

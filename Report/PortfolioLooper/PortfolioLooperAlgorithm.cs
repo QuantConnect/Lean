@@ -13,12 +13,12 @@
  * limitations under the License.
 */
 
-using QuantConnect.Algorithm;
-using QuantConnect.Orders;
-using QuantConnect.Securities;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
+using QuantConnect.Algorithm;
+using QuantConnect.Orders;
+using QuantConnect.Securities;
 
 namespace QuantConnect.Report
 {
@@ -37,7 +37,12 @@ namespace QuantConnect.Report
         /// <param name="startingCash">Starting algorithm cash</param>
         /// <param name="orders">Orders to use</param>
         /// <param name="algorithmConfiguration">Optional parameter to override default algorithm configuration</param>
-        public PortfolioLooperAlgorithm(decimal startingCash, IEnumerable<Order> orders, AlgorithmConfiguration algorithmConfiguration = null) : base()
+        public PortfolioLooperAlgorithm(
+            decimal startingCash,
+            IEnumerable<Order> orders,
+            AlgorithmConfiguration algorithmConfiguration = null
+        )
+            : base()
         {
             _startingCash = startingCash;
             _orders = orders.ToList();
@@ -64,7 +69,12 @@ namespace QuantConnect.Report
                         break;
                 }
 
-                var configs = SubscriptionManager.SubscriptionDataConfigService.Add(symbol, resolution, false, false);
+                var configs = SubscriptionManager.SubscriptionDataConfigService.Add(
+                    symbol,
+                    resolution,
+                    false,
+                    false
+                );
                 var security = Securities.CreateSecurity(symbol, configs, 0m);
                 if (symbol.SecurityType == SecurityType.Crypto)
                 {
@@ -74,7 +84,10 @@ namespace QuantConnect.Report
                 // Set leverage to 10000 to account for unknown leverage values in user algorithms
                 security.SetLeverage(10000m);
 
-                var method = typeof(QCAlgorithm).GetMethod("AddToUserDefinedUniverse", BindingFlags.NonPublic | BindingFlags.Instance);
+                var method = typeof(QCAlgorithm).GetMethod(
+                    "AddToUserDefinedUniverse",
+                    BindingFlags.NonPublic | BindingFlags.Instance
+                );
                 method.Invoke(this, new object[] { security, configs });
             }
         }
@@ -87,7 +100,10 @@ namespace QuantConnect.Report
             if (_algorithmConfiguration != null)
             {
                 SetAccountCurrency(_algorithmConfiguration.AccountCurrency);
-                SetBrokerageModel(_algorithmConfiguration.Brokerage, _algorithmConfiguration.AccountType);
+                SetBrokerageModel(
+                    _algorithmConfiguration.Brokerage,
+                    _algorithmConfiguration.AccountType
+                );
             }
 
             SetCash(_startingCash);

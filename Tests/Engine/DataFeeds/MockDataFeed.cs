@@ -37,24 +37,20 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             IDataFeedSubscriptionManager subscriptionManager,
             IDataFeedTimeProvider dataFeedTimeProvider,
             IDataChannelProvider dataChannelProvider
-            )
-        {
-        }
+        ) { }
 
         public Subscription CreateSubscription(SubscriptionRequest request)
         {
-            var offsetProvider = new TimeZoneOffsetProvider(request.Configuration.ExchangeTimeZone,
+            var offsetProvider = new TimeZoneOffsetProvider(
+                request.Configuration.ExchangeTimeZone,
                 request.StartTimeUtc,
-                request.EndTimeUtc);
+                request.EndTimeUtc
+            );
             return new Subscription(request, _dummyData.GetEnumerator(), offsetProvider);
         }
 
-        public void RemoveSubscription(Subscription subscription)
-        {
-        }
+        public void RemoveSubscription(Subscription subscription) { }
 
-        public void Exit()
-        {
-        }
+        public void Exit() { }
     }
 }

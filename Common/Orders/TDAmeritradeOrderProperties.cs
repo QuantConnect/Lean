@@ -19,7 +19,5 @@ namespace QuantConnect.Orders
     /// <summary>
     /// TDAmeritrade order properties
     /// </summary>
-    public class TDAmeritradeOrderProperties : OrderProperties
-    {
-    }
+    public class TDAmeritradeOrderProperties : OrderProperties { }
 }

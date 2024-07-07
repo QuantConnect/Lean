@@ -16,7 +16,6 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-
 using QuantConnect.Data;
 using QuantConnect.Interfaces;
 using QuantConnect.Util;
@@ -60,18 +59,34 @@ namespace QuantConnect.Algorithm.CSharp
         {
             if (_lastSplitOrDividendDate == DateTime.MinValue)
             {
-                throw new RegressionTestException("No split or dividend was found in the algorithm.");
+                throw new RegressionTestException(
+                    "No split or dividend was found in the algorithm."
+                );
             }
 
             var start = Time.AddMonths(-18);
             var end = Time;
-            var rawHistory = History(new[] { _aapl }, start, end, dataNormalizationMode: DataNormalizationMode.Raw).ToList();
-            var scaledRawHistory = History(new[] { _aapl }, start, end, dataNormalizationMode: DataNormalizationMode.ScaledRaw).ToList();
+            var rawHistory = History(
+                    new[] { _aapl },
+                    start,
+                    end,
+                    dataNormalizationMode: DataNormalizationMode.Raw
+                )
+                .ToList();
+            var scaledRawHistory = History(
+                    new[] { _aapl },
+                    start,
+                    end,
+                    dataNormalizationMode: DataNormalizationMode.ScaledRaw
+                )
+                .ToList();
 
             if (rawHistory.Count == 0 || scaledRawHistory.Count != rawHistory.Count)
             {
-                throw new RegressionTestException($@"Expected history results to not be empty and have the same count. Raw: {rawHistory.Count
-                    }, ScaledRaw: {scaledRawHistory.Count}");
+                throw new RegressionTestException(
+                    $@"Expected history results to not be empty and have the same count. Raw: {rawHistory.Count
+                    }, ScaledRaw: {scaledRawHistory.Count}"
+                );
             }
 
             for (var i = 0; i < rawHistory.Count; i++)
@@ -81,15 +96,29 @@ namespace QuantConnect.Algorithm.CSharp
 
                 if (rawBar.Time < _lastSplitOrDividendDate)
                 {
-                    if (rawBar.Open == scaledRawBar.Open || rawBar.High == scaledRawBar.High || rawBar.Low == scaledRawBar.Low || rawBar.Close == scaledRawBar.Close)
+                    if (
+                        rawBar.Open == scaledRawBar.Open
+                        || rawBar.High == scaledRawBar.High
+                        || rawBar.Low == scaledRawBar.Low
+                        || rawBar.Close == scaledRawBar.Close
+                    )
                     {
-                        throw new RegressionTestException($@"Expected history results to be different at {rawBar.Time
-                            } before the last split or dividend date {_lastSplitOrDividendDate}");
+                        throw new RegressionTestException(
+                            $@"Expected history results to be different at {rawBar.Time
+                            } before the last split or dividend date {_lastSplitOrDividendDate}"
+                        );
                     }
                 }
-                else if (rawBar.Open != scaledRawBar.Open || rawBar.High != scaledRawBar.High || rawBar.Low != scaledRawBar.Low || rawBar.Close != scaledRawBar.Close)
+                else if (
+                    rawBar.Open != scaledRawBar.Open
+                    || rawBar.High != scaledRawBar.High
+                    || rawBar.Low != scaledRawBar.Low
+                    || rawBar.Close != scaledRawBar.Close
+                )
                 {
-                    throw new RegressionTestException($@"Expected history results to be the same at {rawBar.Time} after the last split or dividend date {_lastSplitOrDividendDate}");
+                    throw new RegressionTestException(
+                        $@"Expected history results to be the same at {rawBar.Time} after the last split or dividend date {_lastSplitOrDividendDate}"
+                    );
                 }
             }
         }
@@ -122,35 +151,36 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// This is used by the regression test system to indicate what the expected statistics are from running the algorithm
         /// </summary>
-        public Dictionary<string, string> ExpectedStatistics => new Dictionary<string, string>
-        {
-            {"Total Orders", "0"},
-            {"Average Win", "0%"},
-            {"Average Loss", "0%"},
-            {"Compounding Annual Return", "0%"},
-            {"Drawdown", "0%"},
-            {"Expectancy", "0"},
-            {"Start Equity", "100000"},
-            {"End Equity", "100000"},
-            {"Net Profit", "0%"},
-            {"Sharpe Ratio", "0"},
-            {"Sortino Ratio", "0"},
-            {"Probabilistic Sharpe Ratio", "0%"},
-            {"Loss Rate", "0%"},
-            {"Win Rate", "0%"},
-            {"Profit-Loss Ratio", "0"},
-            {"Alpha", "0"},
-            {"Beta", "0"},
-            {"Annual Standard Deviation", "0"},
-            {"Annual Variance", "0"},
-            {"Information Ratio", "0"},
-            {"Tracking Error", "0"},
-            {"Treynor Ratio", "0"},
-            {"Total Fees", "$0.00"},
-            {"Estimated Strategy Capacity", "$0"},
-            {"Lowest Capacity Asset", ""},
-            {"Portfolio Turnover", "0%"},
-            {"OrderListHash", "d41d8cd98f00b204e9800998ecf8427e"}
-        };
+        public Dictionary<string, string> ExpectedStatistics =>
+            new Dictionary<string, string>
+            {
+                { "Total Orders", "0" },
+                { "Average Win", "0%" },
+                { "Average Loss", "0%" },
+                { "Compounding Annual Return", "0%" },
+                { "Drawdown", "0%" },
+                { "Expectancy", "0" },
+                { "Start Equity", "100000" },
+                { "End Equity", "100000" },
+                { "Net Profit", "0%" },
+                { "Sharpe Ratio", "0" },
+                { "Sortino Ratio", "0" },
+                { "Probabilistic Sharpe Ratio", "0%" },
+                { "Loss Rate", "0%" },
+                { "Win Rate", "0%" },
+                { "Profit-Loss Ratio", "0" },
+                { "Alpha", "0" },
+                { "Beta", "0" },
+                { "Annual Standard Deviation", "0" },
+                { "Annual Variance", "0" },
+                { "Information Ratio", "0" },
+                { "Tracking Error", "0" },
+                { "Treynor Ratio", "0" },
+                { "Total Fees", "$0.00" },
+                { "Estimated Strategy Capacity", "$0" },
+                { "Lowest Capacity Asset", "" },
+                { "Portfolio Turnover", "0%" },
+                { "OrderListHash", "d41d8cd98f00b204e9800998ecf8427e" }
+            };
     }
 }

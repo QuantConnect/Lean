@@ -34,9 +34,9 @@ namespace QuantConnect.Algorithm.CSharp
         /// </summary>
         public override void Initialize()
         {
-            SetStartDate(2013, 10, 07);  //Set Start Date
-            SetEndDate(2013, 10, 11);    //Set End Date
-            SetCash(100000);             //Set Strategy Cash
+            SetStartDate(2013, 10, 07); //Set Start Date
+            SetEndDate(2013, 10, 11); //Set End Date
+            SetCash(100000); //Set Strategy Cash
             // Find more symbols here: http://quantconnect.com/data
             AddSecurity(SecurityType.Equity, "SPY", Resolution.Second);
 
@@ -86,7 +86,10 @@ namespace QuantConnect.Algorithm.CSharp
             private readonly QCAlgorithm _algorithm;
             private readonly decimal _minimumAccountBalance;
 
-            public MinimumAccountBalanceBrokerageModel(QCAlgorithm algorithm, decimal minimumAccountBalance)
+            public MinimumAccountBalanceBrokerageModel(
+                QCAlgorithm algorithm,
+                decimal minimumAccountBalance
+            )
             {
                 _algorithm = algorithm;
                 _minimumAccountBalance = minimumAccountBalance;
@@ -95,7 +98,11 @@ namespace QuantConnect.Algorithm.CSharp
             /// <summary>
             /// Prevent orders which would bring the account below a minimum cash balance
             /// </summary>
-            public override bool CanSubmitOrder(Security security, Order order, out BrokerageMessageEvent message)
+            public override bool CanSubmitOrder(
+                Security security,
+                Order order,
+                out BrokerageMessageEvent message
+            )
             {
                 message = null;
 
@@ -107,9 +114,11 @@ namespace QuantConnect.Algorithm.CSharp
                 if (cashAfterOrder < _minimumAccountBalance)
                 {
                     // return a message describing why we're not allowing this order
-                    message = new BrokerageMessageEvent(BrokerageMessageType.Warning, "InsufficientRemainingCapital",
-                        $"Account must maintain a minimum of ${_minimumAccountBalance.ToStringInvariant()} USD at all times. " +
-                        $"Order ID: {order.Id.ToStringInvariant()}"
+                    message = new BrokerageMessageEvent(
+                        BrokerageMessageType.Warning,
+                        "InsufficientRemainingCapital",
+                        $"Account must maintain a minimum of ${_minimumAccountBalance.ToStringInvariant()} USD at all times. "
+                            + $"Order ID: {order.Id.ToStringInvariant()}"
                     );
                     return false;
                 }

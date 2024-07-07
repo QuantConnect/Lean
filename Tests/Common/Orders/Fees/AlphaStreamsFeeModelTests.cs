@@ -21,10 +21,10 @@ using QuantConnect.Orders;
 using QuantConnect.Orders.Fees;
 using QuantConnect.Securities;
 using QuantConnect.Securities.Cfd;
+using QuantConnect.Securities.Crypto;
 using QuantConnect.Securities.Forex;
 using QuantConnect.Securities.Future;
 using QuantConnect.Securities.Option;
-using QuantConnect.Securities.Crypto;
 using QuantConnect.Tests.Common.Securities;
 
 namespace QuantConnect.Tests.Common.Orders.Fees
@@ -73,7 +73,8 @@ namespace QuantConnect.Tests.Common.Orders.Fees
         public void CalculateOrderFeeForLongOrShortFutures(int quantity)
         {
             var tz = TimeZones.NewYork;
-            var security = new Future(Symbols.Fut_SPY_Feb19_2016,
+            var security = new Future(
+                Symbols.Fut_SPY_Feb19_2016,
                 SecurityExchangeHours.AlwaysOpen(tz),
                 new Cash("USD", 0, 0),
                 SymbolProperties.GetDefault("USD"),
@@ -101,7 +102,8 @@ namespace QuantConnect.Tests.Common.Orders.Fees
         public void CalculateOrderFeeForLongOrShortOptions(int quantity)
         {
             var tz = TimeZones.NewYork;
-            var security = new Option(Symbols.SPY_C_192_Feb19_2016,
+            var security = new Option(
+                Symbols.SPY_C_192_Feb19_2016,
                 SecurityExchangeHours.AlwaysOpen(tz),
                 new Cash("USD", 0, 0),
                 new OptionSymbolProperties(SymbolProperties.GetDefault("USD")),
@@ -130,7 +132,8 @@ namespace QuantConnect.Tests.Common.Orders.Fees
         public void GetMinimumOrderFeeForLongOrShortOptions(int quantity)
         {
             var tz = TimeZones.NewYork;
-            var security = new Option(Symbols.SPY_C_192_Feb19_2016,
+            var security = new Option(
+                Symbols.SPY_C_192_Feb19_2016,
                 SecurityExchangeHours.AlwaysOpen(tz),
                 new Cash("USD", 0, 0),
                 new OptionSymbolProperties(SymbolProperties.GetDefault("USD")),
@@ -163,7 +166,16 @@ namespace QuantConnect.Tests.Common.Orders.Fees
                 SecurityExchangeHours.AlwaysOpen(tz),
                 new Cash("USD", 0, 1),
                 new Cash("EUR", 0, 0),
-                new SubscriptionDataConfig(typeof(TradeBar), Symbols.EURUSD, Resolution.Minute, tz, tz, true, false, false),
+                new SubscriptionDataConfig(
+                    typeof(TradeBar),
+                    Symbols.EURUSD,
+                    Resolution.Minute,
+                    tz,
+                    tz,
+                    true,
+                    false,
+                    false
+                ),
                 new SymbolProperties("EURUSD", "USD", 1, 0.01m, 0.00000001m, string.Empty),
                 ErrorCurrencyConverter.Instance,
                 RegisteredSecurityDataTypesProvider.Null
@@ -193,7 +205,16 @@ namespace QuantConnect.Tests.Common.Orders.Fees
                 SecurityExchangeHours.AlwaysOpen(tz),
                 new Cash("GBP", 0, conversionRate),
                 new Cash("EUR", 0, 0),
-                new SubscriptionDataConfig(typeof(TradeBar), Symbols.EURGBP, Resolution.Minute, tz, tz, true, false, false),
+                new SubscriptionDataConfig(
+                    typeof(TradeBar),
+                    Symbols.EURGBP,
+                    Resolution.Minute,
+                    tz,
+                    tz,
+                    true,
+                    false,
+                    false
+                ),
                 new SymbolProperties("EURGBP", "GBP", 1, 0.01m, 0.00000001m, string.Empty),
                 ErrorCurrencyConverter.Instance,
                 RegisteredSecurityDataTypesProvider.Null
@@ -210,7 +231,10 @@ namespace QuantConnect.Tests.Common.Orders.Fees
             );
 
             Assert.AreEqual(Currencies.USD, fee.Value.Currency);
-            Assert.AreEqual(0.000002m * security.Price * Math.Abs(quantity) * conversionRate, fee.Value.Amount);
+            Assert.AreEqual(
+                0.000002m * security.Price * Math.Abs(quantity) * conversionRate,
+                fee.Value.Amount
+            );
         }
 
         [Test]
@@ -218,22 +242,28 @@ namespace QuantConnect.Tests.Common.Orders.Fees
         {
             Crypto btcusd = new Crypto(
                 SecurityExchangeHours.AlwaysOpen(TimeZones.NewYork),
-                    new Cash(Currencies.USD, 0, 1),
-                    new Cash("BTC", 0, 0),
-                    new SubscriptionDataConfig(typeof(TradeBar), Symbols.BTCUSD, Resolution.Minute, TimeZones.NewYork, TimeZones.NewYork, true, false, false),
-                    new SymbolProperties("BTCUSD", Currencies.USD, 1, 0.01m, 0.00000001m, string.Empty),
-                    ErrorCurrencyConverter.Instance,
-                    RegisteredSecurityDataTypesProvider.Null
-                );
+                new Cash(Currencies.USD, 0, 1),
+                new Cash("BTC", 0, 0),
+                new SubscriptionDataConfig(
+                    typeof(TradeBar),
+                    Symbols.BTCUSD,
+                    Resolution.Minute,
+                    TimeZones.NewYork,
+                    TimeZones.NewYork,
+                    true,
+                    false,
+                    false
+                ),
+                new SymbolProperties("BTCUSD", Currencies.USD, 1, 0.01m, 0.00000001m, string.Empty),
+                ErrorCurrencyConverter.Instance,
+                RegisteredSecurityDataTypesProvider.Null
+            );
             btcusd.SetMarketPrice(new Tick(DateTime.UtcNow, btcusd.Symbol, 100, 100));
 
             var feeModel = new AlphaStreamsFeeModel();
 
             var fee = feeModel.GetOrderFee(
-                new OrderFeeParameters(
-                    btcusd,
-                    new MarketOrder(btcusd.Symbol, 1, DateTime.UtcNow)
-                )
+                new OrderFeeParameters(btcusd, new MarketOrder(btcusd.Symbol, 1, DateTime.UtcNow))
             );
 
             Assert.AreEqual(Currencies.USD, fee.Value.Currency);
@@ -247,7 +277,16 @@ namespace QuantConnect.Tests.Common.Orders.Fees
                 SecurityExchangeHours.AlwaysOpen(TimeZones.NewYork),
                 new Cash("EUR", 0, 10),
                 new Cash("BTC", 0, 0),
-                new SubscriptionDataConfig(typeof(TradeBar), Symbols.BTCEUR, Resolution.Minute, TimeZones.NewYork, TimeZones.NewYork, true, false, false),
+                new SubscriptionDataConfig(
+                    typeof(TradeBar),
+                    Symbols.BTCEUR,
+                    Resolution.Minute,
+                    TimeZones.NewYork,
+                    TimeZones.NewYork,
+                    true,
+                    false,
+                    false
+                ),
                 new SymbolProperties("BTCEUR", "EUR", 1, 0.01m, 0.00000001m, string.Empty),
                 ErrorCurrencyConverter.Instance,
                 RegisteredSecurityDataTypesProvider.Null
@@ -257,10 +296,7 @@ namespace QuantConnect.Tests.Common.Orders.Fees
             var feeModel = new AlphaStreamsFeeModel();
 
             var fee = feeModel.GetOrderFee(
-                new OrderFeeParameters(
-                    btceur,
-                    new MarketOrder(btceur.Symbol, 1, DateTime.UtcNow)
-                )
+                new OrderFeeParameters(btceur, new MarketOrder(btceur.Symbol, 1, DateTime.UtcNow))
             );
 
             Assert.AreEqual("EUR", fee.Value.Currency);
@@ -274,7 +310,16 @@ namespace QuantConnect.Tests.Common.Orders.Fees
             var security = new Cfd(
                 SecurityExchangeHours.AlwaysOpen(tz),
                 new Cash("EUR", 0, 0),
-                new SubscriptionDataConfig(typeof(QuoteBar), Symbols.DE30EUR, Resolution.Minute, tz, tz, true, false, false),
+                new SubscriptionDataConfig(
+                    typeof(QuoteBar),
+                    Symbols.DE30EUR,
+                    Resolution.Minute,
+                    tz,
+                    tz,
+                    true,
+                    false,
+                    false
+                ),
                 new SymbolProperties("DE30EUR", "EUR", 1, 0.01m, 1m, string.Empty),
                 ErrorCurrencyConverter.Instance,
                 RegisteredSecurityDataTypesProvider.Null

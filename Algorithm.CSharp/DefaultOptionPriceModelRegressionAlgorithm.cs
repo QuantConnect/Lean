@@ -14,11 +14,11 @@
  *
 */
 
-using QuantConnect.Data;
-using QuantConnect.Interfaces;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using QuantConnect.Data;
+using QuantConnect.Interfaces;
 
 namespace QuantConnect.Algorithm.CSharp
 {
@@ -26,7 +26,9 @@ namespace QuantConnect.Algorithm.CSharp
     /// Regression algorithm which tests the default option price model
     /// </summary>
     /// <meta name="tag" content="options" />
-    public class DefaultOptionPriceModelRegressionAlgorithm : QCAlgorithm, IRegressionAlgorithmDefinition
+    public class DefaultOptionPriceModelRegressionAlgorithm
+        : QCAlgorithm,
+            IRegressionAlgorithmDefinition
     {
         public override void Initialize()
         {
@@ -40,14 +42,21 @@ namespace QuantConnect.Algorithm.CSharp
 
         public override void OnData(Slice slice)
         {
-            if (slice.OptionChains.Any(kvp => kvp.Value.Any(
-                    contract => contract.Greeks.Delta == 0 &&
-                        contract.Greeks.Gamma == 0 && 
-                        contract.Greeks.Theta == 0 && 
-                        contract.Greeks.Vega == 0 && 
-                        contract.Greeks.Rho == 0)))
+            if (
+                slice.OptionChains.Any(kvp =>
+                    kvp.Value.Any(contract =>
+                        contract.Greeks.Delta == 0
+                        && contract.Greeks.Gamma == 0
+                        && contract.Greeks.Theta == 0
+                        && contract.Greeks.Vega == 0
+                        && contract.Greeks.Rho == 0
+                    )
+                )
+            )
             {
-                throw new RegressionTestException("All Greeks are zero - Pricing Model is not ready!");
+                throw new RegressionTestException(
+                    "All Greeks are zero - Pricing Model is not ready!"
+                );
             }
         }
 
@@ -79,35 +88,36 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// This is used by the regression test system to indicate what the expected statistics are from running the algorithm
         /// </summary>
-        public Dictionary<string, string> ExpectedStatistics => new Dictionary<string, string>
-        {
-            {"Total Orders", "0"},
-            {"Average Win", "0%"},
-            {"Average Loss", "0%"},
-            {"Compounding Annual Return", "0%"},
-            {"Drawdown", "0%"},
-            {"Expectancy", "0"},
-            {"Start Equity", "100000"},
-            {"End Equity", "100000"},
-            {"Net Profit", "0%"},
-            {"Sharpe Ratio", "0"},
-            {"Sortino Ratio", "0"},
-            {"Probabilistic Sharpe Ratio", "0%"},
-            {"Loss Rate", "0%"},
-            {"Win Rate", "0%"},
-            {"Profit-Loss Ratio", "0"},
-            {"Alpha", "0"},
-            {"Beta", "0"},
-            {"Annual Standard Deviation", "0"},
-            {"Annual Variance", "0"},
-            {"Information Ratio", "0"},
-            {"Tracking Error", "0"},
-            {"Treynor Ratio", "0"},
-            {"Total Fees", "$0.00"},
-            {"Estimated Strategy Capacity", "$0"},
-            {"Lowest Capacity Asset", ""},
-            {"Portfolio Turnover", "0%"},
-            {"OrderListHash", "d41d8cd98f00b204e9800998ecf8427e"}
-        };
+        public Dictionary<string, string> ExpectedStatistics =>
+            new Dictionary<string, string>
+            {
+                { "Total Orders", "0" },
+                { "Average Win", "0%" },
+                { "Average Loss", "0%" },
+                { "Compounding Annual Return", "0%" },
+                { "Drawdown", "0%" },
+                { "Expectancy", "0" },
+                { "Start Equity", "100000" },
+                { "End Equity", "100000" },
+                { "Net Profit", "0%" },
+                { "Sharpe Ratio", "0" },
+                { "Sortino Ratio", "0" },
+                { "Probabilistic Sharpe Ratio", "0%" },
+                { "Loss Rate", "0%" },
+                { "Win Rate", "0%" },
+                { "Profit-Loss Ratio", "0" },
+                { "Alpha", "0" },
+                { "Beta", "0" },
+                { "Annual Standard Deviation", "0" },
+                { "Annual Variance", "0" },
+                { "Information Ratio", "0" },
+                { "Tracking Error", "0" },
+                { "Treynor Ratio", "0" },
+                { "Total Fees", "$0.00" },
+                { "Estimated Strategy Capacity", "$0" },
+                { "Lowest Capacity Asset", "" },
+                { "Portfolio Turnover", "0%" },
+                { "OrderListHash", "d41d8cd98f00b204e9800998ecf8427e" }
+            };
     }
 }

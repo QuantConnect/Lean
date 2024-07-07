@@ -13,6 +13,9 @@
  * limitations under the License.
 */
 
+using System;
+using System.Collections.Generic;
+using System.Linq;
 using QuantConnect.Algorithm.Framework.Alphas;
 using QuantConnect.Algorithm.Framework.Execution;
 using QuantConnect.Algorithm.Framework.Portfolio;
@@ -21,9 +24,6 @@ using QuantConnect.Brokerages;
 using QuantConnect.Data;
 using QuantConnect.Interfaces;
 using QuantConnect.Orders;
-using System;
-using System.Collections.Generic;
-using System.Linq;
 
 namespace QuantConnect.Algorithm.CSharp
 {
@@ -38,7 +38,7 @@ namespace QuantConnect.Algorithm.CSharp
     {
         public override void Initialize()
         {
-            // 1. Required: 
+            // 1. Required:
             SetStartDate(2013, 10, 07);
             SetEndDate(2013, 10, 11);
 
@@ -49,7 +49,9 @@ namespace QuantConnect.Algorithm.CSharp
             SetCash(1000000);
 
             // Only SPY will be traded
-            SetPortfolioConstruction(new EqualWeightingPortfolioConstructionModel(Resolution.Daily, PortfolioBias.Long));
+            SetPortfolioConstruction(
+                new EqualWeightingPortfolioConstructionModel(Resolution.Daily, PortfolioBias.Long)
+            );
             SetExecution(new ImmediateExecutionModel());
 
             // Order margin value has to have a minimum of 0.5% of Portfolio value, allows filtering out small trades and reduce fees.
@@ -59,15 +61,17 @@ namespace QuantConnect.Algorithm.CSharp
             // set algorithm framework models
             SetUniverseSelection(
                 new ManualUniverseSelectionModel(
-                    new[] {"SPY", "IBM"}
-                        .Select(x => QuantConnect.Symbol.Create(x, SecurityType.Equity, Market.USA))
+                    new[] { "SPY", "IBM" }.Select(x =>
+                        QuantConnect.Symbol.Create(x, SecurityType.Equity, Market.USA)
+                    )
                 )
             );
         }
 
         public override void OnData(Slice slice)
         {
-            if (Portfolio.Invested) return;
+            if (Portfolio.Invested)
+                return;
 
             EmitInsights(
                 Insight.Price("SPY", TimeSpan.FromDays(1), InsightDirection.Up),
@@ -115,35 +119,36 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// This is used by the regression test system to indicate what the expected statistics are from running the algorithm
         /// </summary>
-        public Dictionary<string, string> ExpectedStatistics => new Dictionary<string, string>
-        {
-            {"Total Orders", "9"},
-            {"Average Win", "0.99%"},
-            {"Average Loss", "-0.60%"},
-            {"Compounding Annual Return", "216.678%"},
-            {"Drawdown", "2.300%"},
-            {"Expectancy", "0.318"},
-            {"Start Equity", "1000000"},
-            {"End Equity", "1014847.05"},
-            {"Net Profit", "1.485%"},
-            {"Sharpe Ratio", "7.265"},
-            {"Sortino Ratio", "0"},
-            {"Probabilistic Sharpe Ratio", "64.957%"},
-            {"Loss Rate", "50%"},
-            {"Win Rate", "50%"},
-            {"Profit-Loss Ratio", "1.64"},
-            {"Alpha", "-0.36"},
-            {"Beta", "1.003"},
-            {"Annual Standard Deviation", "0.223"},
-            {"Annual Variance", "0.05"},
-            {"Information Ratio", "-100.088"},
-            {"Tracking Error", "0.004"},
-            {"Treynor Ratio", "1.617"},
-            {"Total Fees", "$309.75"},
-            {"Estimated Strategy Capacity", "$15000000.00"},
-            {"Lowest Capacity Asset", "SPY R735QTJ8XC9X"},
-            {"Portfolio Turnover", "179.37%"},
-            {"OrderListHash", "15b25d354d282abb9adfcc80bd4d67bc"}
-        };
+        public Dictionary<string, string> ExpectedStatistics =>
+            new Dictionary<string, string>
+            {
+                { "Total Orders", "9" },
+                { "Average Win", "0.99%" },
+                { "Average Loss", "-0.60%" },
+                { "Compounding Annual Return", "216.678%" },
+                { "Drawdown", "2.300%" },
+                { "Expectancy", "0.318" },
+                { "Start Equity", "1000000" },
+                { "End Equity", "1014847.05" },
+                { "Net Profit", "1.485%" },
+                { "Sharpe Ratio", "7.265" },
+                { "Sortino Ratio", "0" },
+                { "Probabilistic Sharpe Ratio", "64.957%" },
+                { "Loss Rate", "50%" },
+                { "Win Rate", "50%" },
+                { "Profit-Loss Ratio", "1.64" },
+                { "Alpha", "-0.36" },
+                { "Beta", "1.003" },
+                { "Annual Standard Deviation", "0.223" },
+                { "Annual Variance", "0.05" },
+                { "Information Ratio", "-100.088" },
+                { "Tracking Error", "0.004" },
+                { "Treynor Ratio", "1.617" },
+                { "Total Fees", "$309.75" },
+                { "Estimated Strategy Capacity", "$15000000.00" },
+                { "Lowest Capacity Asset", "SPY R735QTJ8XC9X" },
+                { "Portfolio Turnover", "179.37%" },
+                { "OrderListHash", "15b25d354d282abb9adfcc80bd4d67bc" }
+            };
     }
 }

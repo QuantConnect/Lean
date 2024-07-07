@@ -89,12 +89,24 @@ namespace QuantConnect.Data.Consolidators
             }
             else
             {
-                throw new ArgumentException("VolumeRenkoConsolidator() must be used with TradeBar or Tick data.");
+                throw new ArgumentException(
+                    "VolumeRenkoConsolidator() must be used with TradeBar or Tick data."
+                );
             }
 
             if (_currentBar == null)
             {
-                _currentBar = new VolumeRenkoBar(data.Symbol, data.Time, data.EndTime, _barSize, open, high, low, close, 0);
+                _currentBar = new VolumeRenkoBar(
+                    data.Symbol,
+                    data.Time,
+                    data.EndTime,
+                    _barSize,
+                    open,
+                    high,
+                    low,
+                    close,
+                    0
+                );
             }
             var volumeLeftOver = _currentBar.Update(data.EndTime, high, low, close, volume);
             while (volumeLeftOver >= 0)
@@ -109,9 +121,7 @@ namespace QuantConnect.Data.Consolidators
         /// Scans this consolidator to see if it should emit a bar due to time passing
         /// </summary>
         /// <param name="currentLocalTime">The current time in the local time zone (same as <see cref="BaseData.Time"/>)</param>
-        public override void Scan(DateTime currentLocalTime)
-        {
-        }
+        public override void Scan(DateTime currentLocalTime) { }
 
         /// <summary>
         /// Event invocator for the DataConsolidated event. This should be invoked

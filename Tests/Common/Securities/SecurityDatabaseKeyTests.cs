@@ -111,20 +111,26 @@ namespace QuantConnect.Tests.Common.Securities
         public void ThrowsOnWildcardSecurityType()
         {
             const string input = "[*]-usa-SPY";
-            Assert.Throws<FormatException>(() =>
-            {
-                SecurityDatabaseKey.Parse(input);
-            }, "as a SecurityType");
+            Assert.Throws<FormatException>(
+                () =>
+                {
+                    SecurityDatabaseKey.Parse(input);
+                },
+                "as a SecurityType"
+            );
         }
 
         [Test]
         public void ThrowsOnInvalidFormat()
         {
             const string input = "Equity-[*]";
-            Assert.Throws<FormatException>(() =>
-            {
-                SecurityDatabaseKey.Parse(input);
-            }, "expected format");
+            Assert.Throws<FormatException>(
+                () =>
+                {
+                    SecurityDatabaseKey.Parse(input);
+                },
+                "expected format"
+            );
         }
 
         [TestCase("Index-usa-SPX")]

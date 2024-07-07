@@ -16,8 +16,8 @@
 
 using System;
 using System.Runtime.CompilerServices;
-using QuantConnect.Data.Market;
 using Python.Runtime;
+using QuantConnect.Data.Market;
 
 namespace QuantConnect.Data.Consolidators
 {
@@ -34,16 +34,22 @@ namespace QuantConnect.Data.Consolidators
         // The SecurityIdentifier that we are consolidating for.
         private SecurityIdentifier _securityIdentifier;
         private bool _securityIdentifierIsSet;
+
         //The number of data updates between creating new bars.
         private int? _maxCount;
+
         //
         private IPeriodSpecification _periodSpecification;
+
         //The minimum timespan between creating new bars.
         private TimeSpan? _period;
+
         //The number of pieces of data we've accumulated since our last emit
         private int _currentCount;
+
         //The working bar used for aggregating the data
         private TConsolidated _workingBar;
+
         //The last time we emitted a consolidated bar
         private DateTime? _lastEmit;
         private bool _validateTimeSpan;
@@ -101,9 +107,7 @@ namespace QuantConnect.Data.Consolidators
         /// </summary>
         /// <param name="pyObject">Python object that defines either a function object that defines the start time of a consolidated data or a timespan</param>
         protected PeriodCountConsolidatorBase(PyObject pyObject)
-            : this(GetPeriodSpecificationFromPyObject(pyObject))
-        {
-        }
+            : this(GetPeriodSpecificationFromPyObject(pyObject)) { }
 
         /// <summary>
         /// Gets the type produced by this consolidator
@@ -125,7 +129,7 @@ namespace QuantConnect.Data.Consolidators
         /// Updates this consolidator with the specified data. This method is
         /// responsible for raising the DataConsolidated event
         /// In time span mode, the bar range is closed on the left and open on the right: [T, T+TimeSpan).
-        /// For example, if time span is 1 minute, we have [10:00, 10:01): so data at 10:01 is not 
+        /// For example, if time span is 1 minute, we have [10:00, 10:01): so data at 10:01 is not
         /// included in the bar starting at 10:00.
         /// </summary>
         /// <exception cref="InvalidOperationException">Thrown when multiple symbols are being consolidated.</exception>
@@ -139,7 +143,9 @@ namespace QuantConnect.Data.Consolidators
             }
             else if (!data.Symbol.ID.Equals(_securityIdentifier))
             {
-                throw new InvalidOperationException($"Consolidators can only be used with a single symbol. The previous consolidated SecurityIdentifier ({_securityIdentifier}) is not the same as in the current data ({data.Symbol.ID}).");
+                throw new InvalidOperationException(
+                    $"Consolidators can only be used with a single symbol. The previous consolidated SecurityIdentifier ({_securityIdentifier}) is not the same as in the current data ({data.Symbol.ID})."
+                );
             }
 
             if (!ShouldProcess(data))
@@ -149,14 +155,20 @@ namespace QuantConnect.Data.Consolidators
                 return;
             }
 
-            if (!_validateTimeSpan && _period.HasValue && _periodSpecification is TimeSpanPeriodSpecification)
+            if (
+                !_validateTimeSpan
+                && _period.HasValue
+                && _periodSpecification is TimeSpanPeriodSpecification
+            )
             {
                 // only do this check once
                 _validateTimeSpan = true;
                 var dataLength = data.EndTime - data.Time;
                 if (dataLength > _period)
                 {
-                    throw new ArgumentException($"For Symbol {data.Symbol} can not consolidate bars of period: {_period}, using data of the same or higher period: {data.EndTime - data.Time}");
+                    throw new ArgumentException(
+                        $"For Symbol {data.Symbol} can not consolidate bars of period: {_period}, using data of the same or higher period: {data.EndTime - data.Time}"
+                    );
                 }
             }
 
@@ -187,7 +199,11 @@ namespace QuantConnect.Data.Consolidators
             if (_period.HasValue)
             {
                 // we're in time span mode and initialized
-                if (_workingBar != null && data.Time - _workingBar.Time >= _period.Value && GetRoundedBarTime(data) > _lastEmit)
+                if (
+                    _workingBar != null
+                    && data.Time - _workingBar.Time >= _period.Value
+                    && GetRoundedBarTime(data) > _lastEmit
+                )
                 {
                     fireDataConsolidated = true;
                 }
@@ -246,8 +262,13 @@ namespace QuantConnect.Data.Consolidators
         /// <param name="currentLocalTime">The current time in the local time zone (same as <see cref="BaseData.Time"/>)</param>
         public override void Scan(DateTime currentLocalTime)
         {
-            if (_workingBar != null && _period.HasValue && _period.Value != TimeSpan.Zero
-                && currentLocalTime - _workingBar.Time >= _period.Value && GetRoundedBarTime(currentLocalTime) > _lastEmit)
+            if (
+                _workingBar != null
+                && _period.HasValue
+                && _period.Value != TimeSpan.Zero
+                && currentLocalTime - _workingBar.Time >= _period.Value
+                && GetRoundedBarTime(currentLocalTime) > _lastEmit
+            )
             {
                 _lastEmit = _workingBar.EndTime;
                 OnDataConsolidated(_workingBar);
@@ -307,7 +328,7 @@ namespace QuantConnect.Data.Consolidators
         protected DateTime GetRoundedBarTime(IBaseData inputData)
         {
             var potentialStartTime = GetRoundedBarTime(inputData.Time);
-            if(_period.HasValue && potentialStartTime + _period < inputData.EndTime)
+            if (_period.HasValue && potentialStartTime + _period < inputData.EndTime)
             {
                 // whops! the end time we were giving is beyond our potential end time, so let's use the giving bars star time instead
                 potentialStartTime = inputData.Time;
@@ -405,7 +426,14 @@ namespace QuantConnect.Data.Consolidators
         /// </summary>
         private class FuncPeriodSpecification : IPeriodSpecification
         {
-            private static readonly DateTime _verificationDate = new DateTime(2022, 01, 03, 10, 10, 10);
+            private static readonly DateTime _verificationDate = new DateTime(
+                2022,
+                01,
+                03,
+                10,
+                10,
+                10
+            );
             public TimeSpan? Period { get; private set; }
 
             public readonly Func<DateTime, CalendarInfo> _calendarInfoFunc;
@@ -414,7 +442,9 @@ namespace QuantConnect.Data.Consolidators
             {
                 if (expiryFunc(_verificationDate).Start > _verificationDate)
                 {
-                    throw new ArgumentException($"{nameof(FuncPeriodSpecification)}: Please use a function that computes the start of the bar associated with the given date time. Should never return a time later than the one passed in.");
+                    throw new ArgumentException(
+                        $"{nameof(FuncPeriodSpecification)}: Please use a function that computes the start of the bar associated with the given date time. Should never return a time later than the one passed in."
+                    );
                 }
                 _calendarInfoFunc = expiryFunc;
             }

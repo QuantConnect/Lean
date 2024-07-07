@@ -38,7 +38,7 @@ namespace QuantConnect.Securities.Positions
         public ReservedBuyingPowerForPositionGroupParameters(
             SecurityPortfolioManager portfolio,
             IPositionGroup positionGroup
-            )
+        )
         {
             Portfolio = portfolio;
             PositionGroup = positionGroup;

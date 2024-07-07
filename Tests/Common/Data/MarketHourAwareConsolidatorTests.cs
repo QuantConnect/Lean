@@ -16,8 +16,8 @@
 
 using System;
 using NUnit.Framework;
-using QuantConnect.Data.Market;
 using QuantConnect.Data.Common;
+using QuantConnect.Data.Market;
 
 namespace QuantConnect.Tests.Common.Data
 {
@@ -28,7 +28,13 @@ namespace QuantConnect.Tests.Common.Data
         public void MarketAlwaysOpen()
         {
             var symbol = Symbols.BTCUSD;
-            using var consolidator = new MarketHourAwareConsolidator(true, Resolution.Daily, typeof(TradeBar), TickType.Trade, false);
+            using var consolidator = new MarketHourAwareConsolidator(
+                true,
+                Resolution.Daily,
+                typeof(TradeBar),
+                TickType.Trade,
+                false
+            );
             var consolidatedBarsCount = 0;
             TradeBar latestBar = null;
 
@@ -39,20 +45,52 @@ namespace QuantConnect.Tests.Common.Data
             };
 
             var time = new DateTime(2015, 04, 13, 5, 0, 0);
-            consolidator.Update(new TradeBar() { Time = time.Subtract(Time.OneMinute), Period = Time.OneMinute, Symbol = symbol, High = 100 });
+            consolidator.Update(
+                new TradeBar()
+                {
+                    Time = time.Subtract(Time.OneMinute),
+                    Period = Time.OneMinute,
+                    Symbol = symbol,
+                    High = 100
+                }
+            );
 
             time = new DateTime(2015, 04, 13, 10, 0, 0);
-            consolidator.Update(new TradeBar() { Time = time.Subtract(Time.OneMinute), Period = Time.OneMinute, Symbol = symbol, High = 1 });
+            consolidator.Update(
+                new TradeBar()
+                {
+                    Time = time.Subtract(Time.OneMinute),
+                    Period = Time.OneMinute,
+                    Symbol = symbol,
+                    High = 1
+                }
+            );
 
             Assert.IsNull(latestBar);
 
             time = time.AddHours(2);
-            consolidator.Update(new TradeBar() { Time = time.Subtract(Time.OneMinute), Period = Time.OneMinute, Symbol = symbol, High = 2 });
+            consolidator.Update(
+                new TradeBar()
+                {
+                    Time = time.Subtract(Time.OneMinute),
+                    Period = Time.OneMinute,
+                    Symbol = symbol,
+                    High = 2
+                }
+            );
 
             Assert.IsNull(latestBar);
 
             time = new DateTime(2015, 04, 13, 15, 15, 0);
-            consolidator.Update(new TradeBar() { Time = time.Subtract(Time.OneMinute), Period = Time.OneMinute, Symbol = symbol, High = 3 });
+            consolidator.Update(
+                new TradeBar()
+                {
+                    Time = time.Subtract(Time.OneMinute),
+                    Period = Time.OneMinute,
+                    Symbol = symbol,
+                    High = 3
+                }
+            );
 
             Assert.IsNull(latestBar);
 
@@ -73,7 +111,13 @@ namespace QuantConnect.Tests.Common.Data
         public void Daily(bool strictEndTime)
         {
             var symbol = strictEndTime ? Symbols.SPX : Symbols.SPY;
-            using var consolidator = new MarketHourAwareConsolidator(strictEndTime, Resolution.Daily, typeof(TradeBar), TickType.Trade, false);
+            using var consolidator = new MarketHourAwareConsolidator(
+                strictEndTime,
+                Resolution.Daily,
+                typeof(TradeBar),
+                TickType.Trade,
+                false
+            );
             var consolidatedBarsCount = 0;
             TradeBar latestBar = null;
 
@@ -85,20 +129,52 @@ namespace QuantConnect.Tests.Common.Data
 
             var time = new DateTime(2015, 04, 13, 5, 0, 0);
             // this bar will be ignored because it's during market closed hours
-            consolidator.Update(new TradeBar() { Time = time.Subtract(Time.OneMinute), Period = Time.OneMinute, Symbol = symbol, High = 100 });
+            consolidator.Update(
+                new TradeBar()
+                {
+                    Time = time.Subtract(Time.OneMinute),
+                    Period = Time.OneMinute,
+                    Symbol = symbol,
+                    High = 100
+                }
+            );
 
             time = new DateTime(2015, 04, 13, 10, 0, 0);
-            consolidator.Update(new TradeBar() { Time = time.Subtract(Time.OneMinute), Period = Time.OneMinute, Symbol = symbol, High = 1 });
+            consolidator.Update(
+                new TradeBar()
+                {
+                    Time = time.Subtract(Time.OneMinute),
+                    Period = Time.OneMinute,
+                    Symbol = symbol,
+                    High = 1
+                }
+            );
 
             Assert.IsNull(latestBar);
 
             time = time.AddHours(2);
-            consolidator.Update(new TradeBar() { Time = time.Subtract(Time.OneMinute), Period = Time.OneMinute, Symbol = symbol, High = 2 });
+            consolidator.Update(
+                new TradeBar()
+                {
+                    Time = time.Subtract(Time.OneMinute),
+                    Period = Time.OneMinute,
+                    Symbol = symbol,
+                    High = 2
+                }
+            );
 
             Assert.IsNull(latestBar);
 
             time = new DateTime(2015, 04, 13, 15, 15, 0);
-            consolidator.Update(new TradeBar() { Time = time.Subtract(Time.OneMinute), Period = Time.OneMinute, Symbol = symbol, High = 3 });
+            consolidator.Update(
+                new TradeBar()
+                {
+                    Time = time.Subtract(Time.OneMinute),
+                    Period = Time.OneMinute,
+                    Symbol = symbol,
+                    High = 3
+                }
+            );
 
             Assert.IsNull(latestBar);
 
@@ -107,8 +183,14 @@ namespace QuantConnect.Tests.Common.Data
 
             // Assert that the bar emitted
             Assert.IsNotNull(latestBar);
-            Assert.AreEqual(strictEndTime ? new DateTime(2015, 04, 13, 15, 15, 0) : time, latestBar.EndTime);
-            Assert.AreEqual(strictEndTime ? new DateTime(2015, 04, 13, 8, 30, 0) : time.AddDays(-1), latestBar.Time);
+            Assert.AreEqual(
+                strictEndTime ? new DateTime(2015, 04, 13, 15, 15, 0) : time,
+                latestBar.EndTime
+            );
+            Assert.AreEqual(
+                strictEndTime ? new DateTime(2015, 04, 13, 8, 30, 0) : time.AddDays(-1),
+                latestBar.Time
+            );
             Assert.AreEqual(1, consolidatedBarsCount);
             Assert.AreEqual(3, latestBar.High);
             Assert.AreEqual(1, latestBar.Low);
@@ -119,7 +201,12 @@ namespace QuantConnect.Tests.Common.Data
         public void DailyExtendedMarketHours(bool strictEndTime)
         {
             var symbol = strictEndTime ? Symbols.SPX : Symbols.SPY;
-            using var consolidator = new MarketHourAwareConsolidatorTest(Resolution.Daily, typeof(TradeBar), TickType.Trade, true);
+            using var consolidator = new MarketHourAwareConsolidatorTest(
+                Resolution.Daily,
+                typeof(TradeBar),
+                TickType.Trade,
+                true
+            );
             var consolidatedBarsCount = 0;
             TradeBar latestBar = null;
 
@@ -130,17 +217,41 @@ namespace QuantConnect.Tests.Common.Data
             };
 
             var time = new DateTime(2015, 04, 13, 8, 31, 0);
-            consolidator.Update(new TradeBar() { Time = time.Subtract(Time.OneMinute), Period = Time.OneMinute, Symbol = symbol, High = 10 });
+            consolidator.Update(
+                new TradeBar()
+                {
+                    Time = time.Subtract(Time.OneMinute),
+                    Period = Time.OneMinute,
+                    Symbol = symbol,
+                    High = 10
+                }
+            );
 
             time = new DateTime(2015, 04, 13, 10, 0, 0);
-            consolidator.Update(new TradeBar() { Time = time.Subtract(Time.OneMinute), Period = Time.OneMinute, Symbol = symbol, High = 15 });
+            consolidator.Update(
+                new TradeBar()
+                {
+                    Time = time.Subtract(Time.OneMinute),
+                    Period = Time.OneMinute,
+                    Symbol = symbol,
+                    High = 15
+                }
+            );
 
             Assert.IsNull(latestBar);
 
             if (!strictEndTime)
             {
                 time = new DateTime(2015, 04, 13, 18, 15, 0);
-                consolidator.Update(new TradeBar() { Time = time.Subtract(Time.OneMinute), Period = Time.OneMinute, Symbol = symbol, High = 20 });
+                consolidator.Update(
+                    new TradeBar()
+                    {
+                        Time = time.Subtract(Time.OneMinute),
+                        Period = Time.OneMinute,
+                        Symbol = symbol,
+                        High = 20
+                    }
+                );
 
                 Assert.IsNull(latestBar);
             }
@@ -150,8 +261,16 @@ namespace QuantConnect.Tests.Common.Data
 
             // Assert that the bar emitted
             Assert.IsNotNull(latestBar);
-            Assert.AreEqual(strictEndTime ? new DateTime(2015, 04, 13, 15, 15, 0) : time, latestBar.EndTime);
-            Assert.AreEqual(strictEndTime ? new DateTime(2015, 04, 13, 8, 30, 0) : new DateTime(2015, 04, 13, 4, 0, 0), latestBar.Time);
+            Assert.AreEqual(
+                strictEndTime ? new DateTime(2015, 04, 13, 15, 15, 0) : time,
+                latestBar.EndTime
+            );
+            Assert.AreEqual(
+                strictEndTime
+                    ? new DateTime(2015, 04, 13, 8, 30, 0)
+                    : new DateTime(2015, 04, 13, 4, 0, 0),
+                latestBar.Time
+            );
             Assert.AreEqual(1, consolidatedBarsCount);
             Assert.AreEqual(strictEndTime ? 15 : 20, latestBar.High);
             Assert.AreEqual(10, latestBar.Low);
@@ -160,7 +279,13 @@ namespace QuantConnect.Tests.Common.Data
         [Test]
         public void MarketHoursRespected()
         {
-            using var consolidator = new MarketHourAwareConsolidator(true, Resolution.Hour, typeof(TradeBar), TickType.Trade, false);
+            using var consolidator = new MarketHourAwareConsolidator(
+                true,
+                Resolution.Hour,
+                typeof(TradeBar),
+                TickType.Trade,
+                false
+            );
             var consolidatedBarsCount = 0;
             TradeBar latestBar = null;
 
@@ -172,20 +297,52 @@ namespace QuantConnect.Tests.Common.Data
 
             var time = new DateTime(2015, 04, 13, 9, 0, 0);
             // this bar will be ignored because it's during market closed hours
-            consolidator.Update(new TradeBar() { Time = time.Subtract(Time.OneMinute), Period = Time.OneMinute, Symbol = Symbols.SPY, High = 100 });
+            consolidator.Update(
+                new TradeBar()
+                {
+                    Time = time.Subtract(Time.OneMinute),
+                    Period = Time.OneMinute,
+                    Symbol = Symbols.SPY,
+                    High = 100
+                }
+            );
 
             time = new DateTime(2015, 04, 13, 9, 31, 0);
-            consolidator.Update(new TradeBar() { Time = time.Subtract(Time.OneMinute), Period = Time.OneMinute, Symbol = Symbols.SPY, High = 1 });
+            consolidator.Update(
+                new TradeBar()
+                {
+                    Time = time.Subtract(Time.OneMinute),
+                    Period = Time.OneMinute,
+                    Symbol = Symbols.SPY,
+                    High = 1
+                }
+            );
 
             Assert.IsNull(latestBar);
 
             time = time.AddMinutes(2);
-            consolidator.Update(new TradeBar() { Time = time.Subtract(Time.OneMinute), Period = Time.OneMinute, Symbol = Symbols.SPY, High = 2 });
+            consolidator.Update(
+                new TradeBar()
+                {
+                    Time = time.Subtract(Time.OneMinute),
+                    Period = Time.OneMinute,
+                    Symbol = Symbols.SPY,
+                    High = 2
+                }
+            );
 
             Assert.IsNull(latestBar);
 
             time = time.AddMinutes(2);
-            consolidator.Update(new TradeBar() { Time = time.Subtract(Time.OneMinute), Period = Time.OneMinute, Symbol = Symbols.SPY, High = 3 });
+            consolidator.Update(
+                new TradeBar()
+                {
+                    Time = time.Subtract(Time.OneMinute),
+                    Period = Time.OneMinute,
+                    Symbol = Symbols.SPY,
+                    High = 3
+                }
+            );
 
             Assert.IsNull(latestBar);
 
@@ -203,10 +360,13 @@ namespace QuantConnect.Tests.Common.Data
 
         private class MarketHourAwareConsolidatorTest : MarketHourAwareConsolidator
         {
-            public MarketHourAwareConsolidatorTest(Resolution resolution, Type dataType, TickType tickType, bool extendedMarketHours)
-                : base(true, resolution, dataType, tickType, extendedMarketHours)
-            {
-            }
+            public MarketHourAwareConsolidatorTest(
+                Resolution resolution,
+                Type dataType,
+                TickType tickType,
+                bool extendedMarketHours
+            )
+                : base(true, resolution, dataType, tickType, extendedMarketHours) { }
 
             protected override bool UseStrictEndTime(Symbol symbol)
             {

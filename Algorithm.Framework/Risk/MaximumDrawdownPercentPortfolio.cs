@@ -38,7 +38,10 @@ namespace QuantConnect.Algorithm.Framework.Risk
         /// compared with starting value, defaults to 5% drawdown</param>
         /// <param name="isTrailing">If "false", the drawdown will be relative to the starting value of the portfolio.
         /// If "true", the drawdown will be relative the last maximum portfolio value</param>
-        public MaximumDrawdownPercentPortfolio(decimal maximumDrawdownPercent = 0.05m, bool isTrailing = false)
+        public MaximumDrawdownPercentPortfolio(
+            decimal maximumDrawdownPercent = 0.05m,
+            bool isTrailing = false
+        )
         {
             _maximumDrawdownPercent = -Math.Abs(maximumDrawdownPercent);
             _isTrailing = isTrailing;
@@ -49,7 +52,10 @@ namespace QuantConnect.Algorithm.Framework.Risk
         /// </summary>
         /// <param name="algorithm">The algorithm instance</param>
         /// <param name="targets">The current portfolio targets to be assessed for risk</param>
-        public override IEnumerable<IPortfolioTarget> ManageRisk(QCAlgorithm algorithm, IPortfolioTarget[] targets)
+        public override IEnumerable<IPortfolioTarget> ManageRisk(
+            QCAlgorithm algorithm,
+            IPortfolioTarget[] targets
+        )
         {
             var currentValue = algorithm.Portfolio.TotalPortfolioValue;
 
@@ -74,7 +80,7 @@ namespace QuantConnect.Algorithm.Framework.Risk
                 foreach (var target in targets)
                 {
                     var symbol = target.Symbol;
-                    
+
                     // Cancel insights
                     algorithm.Insights.Cancel(new[] { symbol });
 

@@ -46,10 +46,7 @@ namespace QuantConnect.Tests.Messaging
         {
             using (var pullSocket = new PullSocket(">tcp://localhost:" + _port))
             {
-                var logPacket = new LogPacket
-                {
-                    Message = "1"
-                };
+                var logPacket = new LogPacket { Message = "1" };
 
                 var tx = JsonConvert.SerializeObject(logPacket);
 
@@ -66,10 +63,8 @@ namespace QuantConnect.Tests.Messaging
         public void MessageHandler_SendsCorrectPackets_ToCorrectRoutes()
         {
             //Allow proper decoding of orders.
-            JsonConvert.DefaultSettings = () => new JsonSerializerSettings
-            {
-                Converters = { new OrderJsonConverter() }
-            };
+            JsonConvert.DefaultSettings = () =>
+                new JsonSerializerSettings { Converters = { new OrderJsonConverter() } };
 
             // Create list of packets to test
             var debug = new DebugPacket();
@@ -77,14 +72,7 @@ namespace QuantConnect.Tests.Messaging
             var backtest = new BacktestResultPacket();
             var handled = new HandledErrorPacket();
             var error = new RuntimeErrorPacket();
-            var packetList = new List<Packet>
-                {
-                    log,
-                    debug,
-                    backtest,
-                    handled,
-                    error
-                };
+            var packetList = new List<Packet> { log, debug, backtest, handled, error };
 
             using (var pullSocket = new PullSocket(">tcp://localhost:" + _port))
             {

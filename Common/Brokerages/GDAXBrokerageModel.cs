@@ -29,7 +29,6 @@ namespace QuantConnect.Brokerages
         /// <param name="accountType">The type of account to be modelled, defaults to
         /// <see cref="AccountType.Cash"/></param>
         public GDAXBrokerageModel(AccountType accountType = AccountType.Cash)
-            : base(accountType)
-        { }
+            : base(accountType) { }
     }
 }

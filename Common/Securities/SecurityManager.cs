@@ -14,12 +14,12 @@
 */
 
 using System;
-using System.Linq;
-using QuantConnect.Data;
 using System.Collections;
-using QuantConnect.Interfaces;
 using System.Collections.Generic;
 using System.Collections.Specialized;
+using System.Linq;
+using QuantConnect.Data;
+using QuantConnect.Interfaces;
 
 namespace QuantConnect.Securities
 {
@@ -27,7 +27,10 @@ namespace QuantConnect.Securities
     /// Enumerable security management class for grouping security objects into an array and providing any common properties.
     /// </summary>
     /// <remarks>Implements IDictionary for the index searching of securities by symbol</remarks>
-    public class SecurityManager : ExtendedDictionary<Security>, IDictionary<Symbol, Security>, INotifyCollectionChanged
+    public class SecurityManager
+        : ExtendedDictionary<Security>,
+            IDictionary<Symbol, Security>,
+            INotifyCollectionChanged
     {
         /// <summary>
         /// Event fired when a security is added or removed from this collection
@@ -39,6 +42,7 @@ namespace QuantConnect.Securities
         //Internal dictionary implementation:
         private readonly Dictionary<Symbol, Security> _securityManager;
         private readonly Dictionary<Symbol, Security> _completeSecuritiesCollection;
+
         // let's keep ah thread safe enumerator created which we reset and recreate if required
         private List<Symbol> _enumeratorKeys;
         private List<Security> _enumeratorValues;
@@ -85,8 +89,15 @@ namespace QuantConnect.Securities
 
             if (changed)
             {
-                security.SetLocalTimeKeeper(_timeKeeper.GetLocalTimeKeeper(security.Exchange.TimeZone));
-                OnCollectionChanged(new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Add, security));
+                security.SetLocalTimeKeeper(
+                    _timeKeeper.GetLocalTimeKeeper(security.Exchange.TimeZone)
+                );
+                OnCollectionChanged(
+                    new NotifyCollectionChangedEventArgs(
+                        NotifyCollectionChangedAction.Add,
+                        security
+                    )
+                );
             }
         }
 
@@ -217,7 +228,12 @@ namespace QuantConnect.Securities
 
             if (security != null)
             {
-                OnCollectionChanged(new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Remove, security));
+                OnCollectionChanged(
+                    new NotifyCollectionChangedEventArgs(
+                        NotifyCollectionChangedAction.Remove,
+                        security
+                    )
+                );
                 return true;
             }
             return false;
@@ -317,7 +333,9 @@ namespace QuantConnect.Securities
         /// </summary>
         /// <remarks>IDictionary implementation</remarks>
         /// <returns>Enumerable key value pair</returns>
-        IEnumerator<KeyValuePair<Symbol, Security>> IEnumerable<KeyValuePair<Symbol, Security>>.GetEnumerator()
+        IEnumerator<KeyValuePair<Symbol, Security>> IEnumerable<
+            KeyValuePair<Symbol, Security>
+        >.GetEnumerator()
         {
             return GetEnumeratorImplementation();
         }
@@ -360,7 +378,9 @@ namespace QuantConnect.Securities
                 {
                     if (!_completeSecuritiesCollection.TryGetValue(symbol, out security))
                     {
-                        throw new KeyNotFoundException(Messages.SecurityManager.SymbolNotFoundInSecurities(symbol));
+                        throw new KeyNotFoundException(
+                            Messages.SecurityManager.SymbolNotFoundInSecurities(symbol)
+                        );
                     }
                 }
                 return security;
@@ -372,7 +392,9 @@ namespace QuantConnect.Securities
                 {
                     if (_securityManager.TryGetValue(symbol, out existing) && existing != value)
                     {
-                        throw new ArgumentException(Messages.SecurityManager.UnableToOverwriteSecurity(symbol));
+                        throw new ArgumentException(
+                            Messages.SecurityManager.UnableToOverwriteSecurity(symbol)
+                        );
                     }
                 }
 
@@ -388,7 +410,9 @@ namespace QuantConnect.Securities
         /// Event invocator for the <see cref="CollectionChanged"/> event
         /// </summary>
         /// <param name="changedEventArgs">Event arguments for the <see cref="CollectionChanged"/> event</param>
-        protected virtual void OnCollectionChanged(NotifyCollectionChangedEventArgs changedEventArgs)
+        protected virtual void OnCollectionChanged(
+            NotifyCollectionChangedEventArgs changedEventArgs
+        )
         {
             _enumerator = null;
             _enumeratorKeys = null;
@@ -414,11 +438,17 @@ namespace QuantConnect.Securities
             List<SubscriptionDataConfig> subscriptionDataConfigList,
             decimal leverage = 0,
             bool addToSymbolCache = true,
-            Security underlying = null)
+            Security underlying = null
+        )
         {
-            return _securityService.CreateSecurity(symbol, subscriptionDataConfigList, leverage, addToSymbolCache, underlying);
+            return _securityService.CreateSecurity(
+                symbol,
+                subscriptionDataConfigList,
+                leverage,
+                addToSymbolCache,
+                underlying
+            );
         }
-
 
         /// <summary>
         /// Creates a new security
@@ -431,9 +461,15 @@ namespace QuantConnect.Securities
             decimal leverage = 0,
             bool addToSymbolCache = true,
             Security underlying = null
-            )
+        )
         {
-            return _securityService.CreateSecurity(symbol, subscriptionDataConfig, leverage, addToSymbolCache, underlying);
+            return _securityService.CreateSecurity(
+                symbol,
+                subscriptionDataConfig,
+                leverage,
+                addToSymbolCache,
+                underlying
+            );
         }
 
         /// <summary>

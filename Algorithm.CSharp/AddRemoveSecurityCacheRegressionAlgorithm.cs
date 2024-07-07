@@ -14,9 +14,9 @@
 */
 
 using System;
+using System.Collections.Generic;
 using QuantConnect.Data;
 using QuantConnect.Interfaces;
-using System.Collections.Generic;
 using QuantConnect.Orders;
 
 namespace QuantConnect.Algorithm.CSharp
@@ -24,16 +24,18 @@ namespace QuantConnect.Algorithm.CSharp
     /// <summary>
     /// Regression algorithm making sure the securities cache is reset correctly once it's removed from the algorithm
     /// </summary>
-    public class AddRemoveSecurityCacheRegressionAlgorithm : QCAlgorithm, IRegressionAlgorithmDefinition
+    public class AddRemoveSecurityCacheRegressionAlgorithm
+        : QCAlgorithm,
+            IRegressionAlgorithmDefinition
     {
         /// <summary>
         /// Initialise the data and resolution required, as well as the cash and start-end dates for your algorithm. All algorithms must initialized.
         /// </summary>
         public override void Initialize()
         {
-            SetStartDate(2013, 10, 07);  //Set Start Date
-            SetEndDate(2013, 10, 11);    //Set End Date
-            SetCash(100000);             //Set Strategy Cash
+            SetStartDate(2013, 10, 07); //Set Start Date
+            SetEndDate(2013, 10, 11); //Set End Date
+            SetCash(100000); //Set Strategy Cash
 
             AddEquity("SPY", Resolution.Minute, extendedMarketHours: true);
         }
@@ -61,7 +63,9 @@ namespace QuantConnect.Algorithm.CSharp
 
                 if (ticket.Status != OrderStatus.Invalid)
                 {
-                    throw new RegressionTestException("Expected order to always be invalid because there is no data yet!");
+                    throw new RegressionTestException(
+                        "Expected order to always be invalid because there is no data yet!"
+                    );
                 }
             }
             else
@@ -98,35 +102,36 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// This is used by the regression test system to indicate what the expected statistics are from running the algorithm
         /// </summary>
-        public Dictionary<string, string> ExpectedStatistics => new Dictionary<string, string>
-        {
-            {"Total Orders", "19"},
-            {"Average Win", "0%"},
-            {"Average Loss", "0.00%"},
-            {"Compounding Annual Return", "271.720%"},
-            {"Drawdown", "2.500%"},
-            {"Expectancy", "-1"},
-            {"Start Equity", "100000"},
-            {"End Equity", "101753.84"},
-            {"Net Profit", "1.754%"},
-            {"Sharpe Ratio", "11.954"},
-            {"Sortino Ratio", "29.606"},
-            {"Probabilistic Sharpe Ratio", "74.160%"},
-            {"Loss Rate", "100%"},
-            {"Win Rate", "0%"},
-            {"Profit-Loss Ratio", "0"},
-            {"Alpha", "0.616"},
-            {"Beta", "0.81"},
-            {"Annual Standard Deviation", "0.185"},
-            {"Annual Variance", "0.034"},
-            {"Information Ratio", "3.961"},
-            {"Tracking Error", "0.061"},
-            {"Treynor Ratio", "2.737"},
-            {"Total Fees", "$21.45"},
-            {"Estimated Strategy Capacity", "$830000.00"},
-            {"Lowest Capacity Asset", "SPY R735QTJ8XC9X"},
-            {"Portfolio Turnover", "20.49%"},
-            {"OrderListHash", "6ebe462373e2ecc22de8eb2fe114d704"}
-        };
+        public Dictionary<string, string> ExpectedStatistics =>
+            new Dictionary<string, string>
+            {
+                { "Total Orders", "19" },
+                { "Average Win", "0%" },
+                { "Average Loss", "0.00%" },
+                { "Compounding Annual Return", "271.720%" },
+                { "Drawdown", "2.500%" },
+                { "Expectancy", "-1" },
+                { "Start Equity", "100000" },
+                { "End Equity", "101753.84" },
+                { "Net Profit", "1.754%" },
+                { "Sharpe Ratio", "11.954" },
+                { "Sortino Ratio", "29.606" },
+                { "Probabilistic Sharpe Ratio", "74.160%" },
+                { "Loss Rate", "100%" },
+                { "Win Rate", "0%" },
+                { "Profit-Loss Ratio", "0" },
+                { "Alpha", "0.616" },
+                { "Beta", "0.81" },
+                { "Annual Standard Deviation", "0.185" },
+                { "Annual Variance", "0.034" },
+                { "Information Ratio", "3.961" },
+                { "Tracking Error", "0.061" },
+                { "Treynor Ratio", "2.737" },
+                { "Total Fees", "$21.45" },
+                { "Estimated Strategy Capacity", "$830000.00" },
+                { "Lowest Capacity Asset", "SPY R735QTJ8XC9X" },
+                { "Portfolio Turnover", "20.49%" },
+                { "OrderListHash", "6ebe462373e2ecc22de8eb2fe114d704" }
+            };
     }
 }

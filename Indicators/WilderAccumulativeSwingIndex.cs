@@ -54,9 +54,7 @@ namespace QuantConnect.Indicators
         /// </summary>
         /// <param name="limitMove">A decimal representing the limit move value for the period.</param>
         public WilderAccumulativeSwingIndex(decimal limitMove)
-            : this ("ASI", limitMove)
-        {
-        }
+            : this("ASI", limitMove) { }
 
         /// <summary>
         /// Initializes a new instance of the <see cref="WilderAccumulativeSwingIndex"/> class using the specified name.
@@ -64,9 +62,9 @@ namespace QuantConnect.Indicators
         /// <param name="name">The name of this indicator</param>
         /// <param name="limitMove">A decimal representing the limit move value for the period.</param>
         public WilderAccumulativeSwingIndex(string name, decimal limitMove)
-            : base (name)
+            : base(name)
         {
-            _si = new WilderSwingIndex(limitMove); 
+            _si = new WilderSwingIndex(limitMove);
         }
 
         /// <summary>
@@ -90,9 +88,7 @@ namespace QuantConnect.Indicators
 
             if (isReady)
             {
-                return IsReady
-                    ? Current.Value + _si.Current.Value
-                    : _si.Current.Value;
+                return IsReady ? Current.Value + _si.Current.Value : _si.Current.Value;
             }
             else
             {

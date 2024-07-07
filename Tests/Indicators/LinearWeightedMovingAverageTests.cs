@@ -41,7 +41,7 @@ namespace QuantConnect.Tests.Indicators
         // for the formula and the numbers in this test.
         public void ComputesCorrectly(int period)
         {
-            var values = new[] {77m, 79m, 79m, 81m, 83m};
+            var values = new[] { 77m, 79m, 79m, 81m, 83m };
             var weights = Enumerable.Range(1, period).ToArray();
             var current = weights.Sum(i => i * values[i - 1]) / weights.Sum();
 

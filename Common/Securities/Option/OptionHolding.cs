@@ -29,8 +29,6 @@ namespace QuantConnect.Securities.Option
         /// <param name="security">The option security being held</param>
         /// <param name="currencyConverter">A currency converter instance</param>
         public OptionHolding(Option security, ICurrencyConverter currencyConverter)
-            : base(security, currencyConverter)
-        {
-        }
+            : base(security, currencyConverter) { }
     }
 }

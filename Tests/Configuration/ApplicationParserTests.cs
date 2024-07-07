@@ -13,14 +13,14 @@
  * limitations under the License.
 */
 
-using McMaster.Extensions.CommandLineUtils;
-using NUnit.Framework;
-using QuantConnect.Configuration;
 using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Text.RegularExpressions;
+using McMaster.Extensions.CommandLineUtils;
 using Newtonsoft.Json;
+using NUnit.Framework;
+using QuantConnect.Configuration;
 
 namespace QuantConnect.Tests.Configuration
 {
@@ -28,36 +28,34 @@ namespace QuantConnect.Tests.Configuration
     public class ApplicationParserTests
     {
         private static readonly List<CommandLineOption> Options = new List<CommandLineOption>
-            {
-                new CommandLineOption("config", CommandOptionType.SingleValue),
-                new CommandLineOption("algorithm-id", CommandOptionType.SingleValue),
-
-                // limits on number of symbols to allow
-                new CommandLineOption("symbol-minute-limit", CommandOptionType.SingleValue),
-                new CommandLineOption("symbol-second-limit", CommandOptionType.SingleValue),
-                new CommandLineOption("symbol-tick-limit", CommandOptionType.SingleValue),
-
-                new CommandLineOption("debugging", CommandOptionType.SingleValue),
-
-                // if one uses true in following token, market hours will remain open all hours and all days.
-                // if one uses false will make lean operate only during regular market hours.
-                new CommandLineOption("force-exchange-always-open", CommandOptionType.NoValue),
-
-                // parameters to set in the algorithm (the below are just samples)
-                new CommandLineOption("parameters", CommandOptionType.MultipleValue)
-            };
+        {
+            new CommandLineOption("config", CommandOptionType.SingleValue),
+            new CommandLineOption("algorithm-id", CommandOptionType.SingleValue),
+            // limits on number of symbols to allow
+            new CommandLineOption("symbol-minute-limit", CommandOptionType.SingleValue),
+            new CommandLineOption("symbol-second-limit", CommandOptionType.SingleValue),
+            new CommandLineOption("symbol-tick-limit", CommandOptionType.SingleValue),
+            new CommandLineOption("debugging", CommandOptionType.SingleValue),
+            // if one uses true in following token, market hours will remain open all hours and all days.
+            // if one uses false will make lean operate only during regular market hours.
+            new CommandLineOption("force-exchange-always-open", CommandOptionType.NoValue),
+            // parameters to set in the algorithm (the below are just samples)
+            new CommandLineOption("parameters", CommandOptionType.MultipleValue)
+        };
 
         [Test]
         public void ReturnProperNumberOfArgs()
         {
-            var args = $"--algorithm-id value --debugging true --symbol-tick-limit 100 --parameters \"ema-slow\":1,\"ema-fast\":\"10\"";
+            var args =
+                $"--algorithm-id value --debugging true --symbol-tick-limit 100 --parameters \"ema-slow\":1,\"ema-fast\":\"10\"";
 
             var options = ApplicationParser.Parse(
                 "Test AppName",
                 "Test Description",
                 "Test Help Text",
                 args.Split(new[] { " " }, StringSplitOptions.None),
-                Options);
+                Options
+            );
 
             Assert.AreEqual(Regex.Matches(args, "--").Count, options.Count);
         }
@@ -67,17 +65,16 @@ namespace QuantConnect.Tests.Configuration
         {
             var args = $"--force-exchange-always-open false";
 
-            Assert.Throws<UnrecognizedCommandParsingException>(
-                () =>
-                {
-                    var options = ApplicationParser.Parse(
-                        "Test AppName",
-                        "Test Description",
-                        "Test Help Text",
-                        args.Split(new[] { " " }, StringSplitOptions.None),
-                        Options);
-                }
-            );
+            Assert.Throws<UnrecognizedCommandParsingException>(() =>
+            {
+                var options = ApplicationParser.Parse(
+                    "Test AppName",
+                    "Test Description",
+                    "Test Help Text",
+                    args.Split(new[] { " " }, StringSplitOptions.None),
+                    Options
+                );
+            });
         }
 
         [Test]
@@ -90,13 +87,14 @@ namespace QuantConnect.Tests.Configuration
                 "Test Description",
                 "Test Help Text",
                 args,
-                Options);
+                Options
+            );
 
             Assert.AreEqual(1, options.Count);
             foreach (var option in options)
             {
                 Assert.IsInstanceOf<bool>(option.Value);
-                Assert.IsTrue((bool) option.Value);
+                Assert.IsTrue((bool)option.Value);
             }
         }
 
@@ -116,7 +114,8 @@ namespace QuantConnect.Tests.Configuration
                 "Test Description",
                 "Test Help Text",
                 args.Split(new[] { " " }, StringSplitOptions.None),
-                Options);
+                Options
+            );
 
             Assert.AreEqual(1, options.Count);
             foreach (var option in options)
@@ -129,14 +128,16 @@ namespace QuantConnect.Tests.Configuration
         [Test]
         public void ParseMultiValueArgs()
         {
-            var args = $"--parameters \"ema-slow\":1,\"ema-fast\":\"10\",\"line-slow\":20.0,\"line-fast\":\"100.0\"";
+            var args =
+                $"--parameters \"ema-slow\":1,\"ema-fast\":\"10\",\"line-slow\":20.0,\"line-fast\":\"100.0\"";
 
             var options = ApplicationParser.Parse(
                 "Test AppName",
                 "Test Description",
                 "Test Help Text",
                 args.Split(new[] { " " }, StringSplitOptions.None),
-                Options);
+                Options
+            );
 
             Assert.AreEqual(1, options.Count);
             Assert.IsTrue(options.ContainsKey("parameters"));
@@ -152,16 +153,25 @@ namespace QuantConnect.Tests.Configuration
 
         [TestCase("algorithmId", true, 100, 100.5, 1, 100.5)]
         [TestCase("algorithmId", "true", "100", "100.5", "1", "100.5")]
-        public void MergeWithArguments(string str, object bValue, object iValue, object dValue, object iParamValue, object dParamValue)
+        public void MergeWithArguments(
+            string str,
+            object bValue,
+            object iValue,
+            object dValue,
+            object iParamValue,
+            object dParamValue
+        )
         {
-            var args = $"--algorithm-id {str} --debugging {bValue} --symbol-tick-limit {iValue} --symbol-second-limit {Convert.ToString(dValue, CultureInfo.InvariantCulture)} --parameters ema-slow:{iParamValue},ema-fast:{Convert.ToString(dParamValue, CultureInfo.InvariantCulture)}";
+            var args =
+                $"--algorithm-id {str} --debugging {bValue} --symbol-tick-limit {iValue} --symbol-second-limit {Convert.ToString(dValue, CultureInfo.InvariantCulture)} --parameters ema-slow:{iParamValue},ema-fast:{Convert.ToString(dParamValue, CultureInfo.InvariantCulture)}";
 
             var options = ApplicationParser.Parse(
                 "Test AppName",
                 "Test Description",
                 "Test Help Text",
                 args.Split(new[] { " " }, StringSplitOptions.None),
-                Options);
+                Options
+            );
 
             Config.MergeCommandLineArgumentsWithConfiguration(options);
 
@@ -175,7 +185,9 @@ namespace QuantConnect.Tests.Configuration
             var parametersConfigString = Config.Get("parameters");
             if (parametersConfigString != string.Empty)
             {
-                parameters = JsonConvert.DeserializeObject<Dictionary<string, string>>(parametersConfigString);
+                parameters = JsonConvert.DeserializeObject<Dictionary<string, string>>(
+                    parametersConfigString
+                );
             }
 
             Assert.Contains("ema-slow", parameters.Keys);

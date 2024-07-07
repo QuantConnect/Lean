@@ -13,23 +13,24 @@
  * limitations under the License.
 */
 
-using Moq;
 using System;
+using Moq;
 using NUnit.Framework;
 using QuantConnect.Brokerages;
 using QuantConnect.Data;
 using QuantConnect.Data.Market;
+using QuantConnect.Orders;
 using QuantConnect.Securities;
 using QuantConnect.Securities.Crypto;
 using QuantConnect.Tests.Brokerages;
-using QuantConnect.Orders;
 
 namespace QuantConnect.Tests.Common.Brokerages
 {
     [TestFixture, Parallelizable(ParallelScope.All)]
     public class BitfinexBrokerageModelTests
     {
-        private readonly BitfinexBrokerageModel _bitfinexBrokerageModel = new BitfinexBrokerageModel();
+        private readonly BitfinexBrokerageModel _bitfinexBrokerageModel =
+            new BitfinexBrokerageModel();
 
         protected Symbol Symbol => Symbol.Create("ETHUSD", SecurityType.Crypto, Market.Bitfinex);
         protected Crypto Security
@@ -138,7 +139,8 @@ namespace QuantConnect.Tests.Common.Brokerages
 
             var brokerageInitializer = new BrokerageModelSecurityInitializer(
                 new BitfinexBrokerageModel(AccountType.Cash),
-                SecuritySeeder.Null);
+                SecuritySeeder.Null
+            );
 
             brokerageInitializer.Initialize(crypto);
             Assert.Throws<InvalidOperationException>(() => crypto.SetLeverage(2));
@@ -151,7 +153,8 @@ namespace QuantConnect.Tests.Common.Brokerages
 
             var brokerageInitializer = new BrokerageModelSecurityInitializer(
                 new BitfinexBrokerageModel(AccountType.Margin),
-                SecuritySeeder.Null);
+                SecuritySeeder.Null
+            );
 
             brokerageInitializer.Initialize(crypto);
             Assert.DoesNotThrow(() => crypto.SetLeverage(2));
@@ -181,13 +184,23 @@ namespace QuantConnect.Tests.Common.Brokerages
 
         [TestCase(0.01, true)]
         [TestCase(0.00005, false)]
-        public void CanSubmitOrder_WhenQuantityIsLargeEnough(decimal orderQuantity, bool isValidOrderQuantity)
+        public void CanSubmitOrder_WhenQuantityIsLargeEnough(
+            decimal orderQuantity,
+            bool isValidOrderQuantity
+        )
         {
             BrokerageMessageEvent message;
             var order = new Mock<Order>();
             order.Setup(x => x.Quantity).Returns(orderQuantity);
 
-            Assert.AreEqual(isValidOrderQuantity, _bitfinexBrokerageModel.CanSubmitOrder(TestsHelpers.GetSecurity(market: Market.Bitfinex), order.Object, out message));
+            Assert.AreEqual(
+                isValidOrderQuantity,
+                _bitfinexBrokerageModel.CanSubmitOrder(
+                    TestsHelpers.GetSecurity(market: Market.Bitfinex),
+                    order.Object,
+                    out message
+                )
+            );
         }
     }
 }

@@ -13,18 +13,18 @@
  * limitations under the License.
 */
 
+using System;
+using System.Collections.Generic;
 using QuantConnect.Configuration;
+using QuantConnect.Data;
 using QuantConnect.Data.Auxiliary;
 using QuantConnect.Data.Market;
 using QuantConnect.Interfaces;
+using QuantConnect.Logging;
 using QuantConnect.Securities;
 using QuantConnect.Securities.Option;
 using QuantConnect.ToolBox.CoarseUniverseGenerator;
 using QuantConnect.Util;
-using System;
-using System.Collections.Generic;
-using QuantConnect.Logging;
-using QuantConnect.Data;
 
 namespace QuantConnect.ToolBox.RandomDataGenerator
 {
@@ -33,7 +33,8 @@ namespace QuantConnect.ToolBox.RandomDataGenerator
     /// </summary>
     public static class RandomDataGeneratorProgram
     {
-        private static readonly IRiskFreeInterestRateModel _interestRateProvider = new InterestRateProvider();
+        private static readonly IRiskFreeInterestRateModel _interestRateProvider =
+            new InterestRateProvider();
 
         public static void RandomDataGenerator(
             string startDateString,
@@ -55,7 +56,7 @@ namespace QuantConnect.ToolBox.RandomDataGenerator
             string volatilityModelResolutionString,
             string chainSymbolCountString,
             List<string> tickers
-            )
+        )
         {
             var settings = RandomDataGeneratorSettings.FromCommandLineArguments(
                 startDateString,
@@ -81,35 +82,58 @@ namespace QuantConnect.ToolBox.RandomDataGenerator
 
             if (settings.Start.Year < 1998)
             {
-                Log.Error($"RandomDataGeneratorProgram(): Required parameter --start must be at least 19980101");
+                Log.Error(
+                    $"RandomDataGeneratorProgram(): Required parameter --start must be at least 19980101"
+                );
                 Environment.Exit(1);
             }
 
-            var securityManager = new SecurityManager(new TimeKeeper(settings.Start, new[] { TimeZones.Utc }));
+            var securityManager = new SecurityManager(
+                new TimeKeeper(settings.Start, new[] { TimeZones.Utc })
+            );
             var securityService = new SecurityService(
                 new CashBook(),
                 MarketHoursDatabase.FromDataFolder(),
                 SymbolPropertiesDatabase.FromDataFolder(),
-                new SecurityInitializerProvider(new FuncSecurityInitializer(security =>
-                {
-                    // init price
-                    security.SetMarketPrice(new Tick(settings.Start, security.Symbol, 100, 100));
-                    security.SetMarketPrice(new OpenInterest(settings.Start, security.Symbol, 10000));
-
-                    // from settings
-                    security.VolatilityModel = new StandardDeviationOfReturnsVolatilityModel(settings.VolatilityModelResolution);
-
-                    // from settings
-                    if (security is Option option)
+                new SecurityInitializerProvider(
+                    new FuncSecurityInitializer(security =>
                     {
-                        option.PriceModel = OptionPriceModels.Create(settings.OptionPriceEngineName,
-                            _interestRateProvider.GetRiskFreeRate(settings.Start, settings.End));
-                    }
-                })),
+                        // init price
+                        security.SetMarketPrice(
+                            new Tick(settings.Start, security.Symbol, 100, 100)
+                        );
+                        security.SetMarketPrice(
+                            new OpenInterest(settings.Start, security.Symbol, 10000)
+                        );
+
+                        // from settings
+                        security.VolatilityModel = new StandardDeviationOfReturnsVolatilityModel(
+                            settings.VolatilityModelResolution
+                        );
+
+                        // from settings
+                        if (security is Option option)
+                        {
+                            option.PriceModel = OptionPriceModels.Create(
+                                settings.OptionPriceEngineName,
+                                _interestRateProvider.GetRiskFreeRate(settings.Start, settings.End)
+                            );
+                        }
+                    })
+                ),
                 RegisteredSecurityDataTypesProvider.Null,
                 new SecurityCacheProvider(
-                    new SecurityPortfolioManager(securityManager, new SecurityTransactionManager(null, securityManager), new AlgorithmSettings())),
-                new MapFilePrimaryExchangeProvider(Composer.Instance.GetExportedValueByTypeName<IMapFileProvider>(Config.Get("map-file-provider", "LocalDiskMapFileProvider")))
+                    new SecurityPortfolioManager(
+                        securityManager,
+                        new SecurityTransactionManager(null, securityManager),
+                        new AlgorithmSettings()
+                    )
+                ),
+                new MapFilePrimaryExchangeProvider(
+                    Composer.Instance.GetExportedValueByTypeName<IMapFileProvider>(
+                        Config.Get("map-file-provider", "LocalDiskMapFileProvider")
+                    )
+                )
             );
             securityManager.SetSecurityService(securityService);
 

@@ -45,14 +45,20 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
         /// <param name="algorithm">The algorithm instance</param>
         /// <param name="brokerage">The BacktestingBrokerage</param>
         /// <param name="resultHandler"></param>
-        public override void Initialize(IAlgorithm algorithm, IBrokerage brokerage, IResultHandler resultHandler)
+        public override void Initialize(
+            IAlgorithm algorithm,
+            IBrokerage brokerage,
+            IResultHandler resultHandler
+        )
         {
             if (!(brokerage is BacktestingBrokerage))
             {
-                throw new ArgumentException("Brokerage must be of type BacktestingBrokerage for use wth the BacktestingTransactionHandler");
+                throw new ArgumentException(
+                    "Brokerage must be of type BacktestingBrokerage for use wth the BacktestingTransactionHandler"
+                );
             }
 
-            _brokerage = (BacktestingBrokerage) brokerage;
+            _brokerage = (BacktestingBrokerage)brokerage;
             _algorithm = algorithm;
 
             base.Initialize(algorithm, brokerage, resultHandler);
@@ -74,7 +80,10 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
             _brokerage.Scan();
 
             // Run our delistings processing, only do this once a slice
-            if (_algorithm.CurrentSlice != null && _algorithm.CurrentSlice.Delistings != _lastestDelistings)
+            if (
+                _algorithm.CurrentSlice != null
+                && _algorithm.CurrentSlice.Delistings != _lastestDelistings
+            )
             {
                 _lastestDelistings = _algorithm.CurrentSlice.Delistings;
                 _brokerage.ProcessDelistings(_algorithm.CurrentSlice.Delistings);
@@ -104,9 +113,11 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
             {
                 // this could happen if there was some error handling the order
                 // and it was not set
-                Log.Error("BacktestingTransactionHandler.WaitForOrderSubmission(): " +
-                    $"The order request (Id={ticket.OrderId}) was not submitted. " +
-                    "See the OrderRequest.Response for more information");
+                Log.Error(
+                    "BacktestingTransactionHandler.WaitForOrderSubmission(): "
+                        + $"The order request (Id={ticket.OrderId}) was not submitted. "
+                        + "See the OrderRequest.Response for more information"
+                );
             }
         }
 

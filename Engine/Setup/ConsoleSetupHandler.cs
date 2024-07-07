@@ -22,7 +22,5 @@ namespace QuantConnect.Lean.Engine.Setup
     /// Kept for backwards compatibility-
     /// </summary>
     [Obsolete("Should use BacktestingSetupHandler instead")]
-    public class ConsoleSetupHandler : BacktestingSetupHandler
-    {
-    }
+    public class ConsoleSetupHandler : BacktestingSetupHandler { }
 }

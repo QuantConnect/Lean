@@ -36,7 +36,11 @@ namespace QuantConnect.Orders.Fees
         /// <param name="orderFee">The order fee</param>
         /// <param name="quoteCurrency">The associated security quote currency</param>
         /// <param name="contractMultiplier">The associated security contract multiplier</param>
-        public ModifiedFillQuantityOrderFee(CashAmount orderFee, string quoteCurrency, decimal contractMultiplier)
+        public ModifiedFillQuantityOrderFee(
+            CashAmount orderFee,
+            string quoteCurrency,
+            decimal contractMultiplier
+        )
             : base(orderFee)
         {
             _quoteCurrency = quoteCurrency;
@@ -50,7 +54,9 @@ namespace QuantConnect.Orders.Fees
         /// <param name="fill">The order fill event</param>
         public override void ApplyToPortfolio(SecurityPortfolioManager portfolio, OrderEvent fill)
         {
-            portfolio.CashBook[_quoteCurrency].AddAmount(-Value.Amount * fill.FillPrice * _contractMultiplier);
+            portfolio
+                .CashBook[_quoteCurrency]
+                .AddAmount(-Value.Amount * fill.FillPrice * _contractMultiplier);
         }
     }
 }

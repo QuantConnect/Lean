@@ -35,7 +35,7 @@ namespace QuantConnect
             this BinaryComparison comparison,
             TCollection values,
             T reference
-            )
+        )
             where TCollection : ICollection<T>, new()
         {
             var result = new TCollection();
@@ -61,7 +61,7 @@ namespace QuantConnect
             this BinaryComparison comparison,
             SortedDictionary<TKey, TValue> values,
             TKey reference
-            )
+        )
         {
             SortedDictionary<TKey, TValue> result;
             if (comparison.Type == ExpressionType.NotEqual)
@@ -86,8 +86,8 @@ namespace QuantConnect
             // since we're enumerating a sorted collection, once we receive
             // a mismatch it means we'll never again receive a match
             var breakAfterFailure =
-                comparison == BinaryComparison.LessThanOrEqual ||
-                comparison == BinaryComparison.LessThanOrEqual;
+                comparison == BinaryComparison.LessThanOrEqual
+                || comparison == BinaryComparison.LessThanOrEqual;
 
             var evaluator = comparison.GetEvaluator<TKey>();
             foreach (var kvp in values)
@@ -115,7 +115,7 @@ namespace QuantConnect
             this BinaryComparison comparison,
             ImmutableSortedDictionary<TKey, TValue> values,
             TKey reference
-            )
+        )
         {
             if (comparison.Type == ExpressionType.NotEqual)
             {
@@ -137,8 +137,8 @@ namespace QuantConnect
             // since we're enumerating a sorted collection, once we receive
             // a mismatch it means we'll never again receive a match
             var breakAfterFailure =
-                comparison == BinaryComparison.LessThanOrEqual ||
-                comparison == BinaryComparison.LessThanOrEqual;
+                comparison == BinaryComparison.LessThanOrEqual
+                || comparison == BinaryComparison.LessThanOrEqual;
 
             var evaluator = comparison.GetEvaluator<TKey>();
             foreach (var kvp in values)
@@ -162,11 +162,14 @@ namespace QuantConnect
         /// used as the RIGHT side of the binary comparison. Consider the binary comparison is LessThan and
         /// we call Filter(values, 42). We're looking for keys that are less than 42.
         /// </summary>
-        public static Tuple<ImmutableSortedDictionary<TKey, TValue>, ImmutableSortedDictionary<TKey, TValue>> SplitBy<TKey, TValue>(
+        public static Tuple<
+            ImmutableSortedDictionary<TKey, TValue>,
+            ImmutableSortedDictionary<TKey, TValue>
+        > SplitBy<TKey, TValue>(
             this BinaryComparison comparison,
             ImmutableSortedDictionary<TKey, TValue> values,
             TKey reference
-            )
+        )
         {
             var matches = ImmutableSortedDictionary<TKey, TValue>.Empty;
             var removed = ImmutableSortedDictionary<TKey, TValue>.Empty;

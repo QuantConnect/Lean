@@ -23,8 +23,8 @@ using QuantConnect.Orders;
 using QuantConnect.Orders.Fees;
 using QuantConnect.Orders.Fills;
 using QuantConnect.Orders.Slippage;
-using QuantConnect.Securities;
 using QuantConnect.Python;
+using QuantConnect.Securities;
 
 namespace QuantConnect.Brokerages
 {
@@ -36,19 +36,13 @@ namespace QuantConnect.Brokerages
         /// <summary>
         /// Gets the account type used by this model
         /// </summary>
-        AccountType AccountType
-        {
-            get;
-        }
+        AccountType AccountType { get; }
 
         /// <summary>
         /// Gets the brokerages model percentage factor used to determine the required unused buying power for the account.
         /// From 1 to 0. Example: 0 means no unused buying power is required. 0.5 means 50% of the buying power should be left unused.
         /// </summary>
-        decimal RequiredFreeBuyingPowerPercent
-        {
-            get;
-        }
+        decimal RequiredFreeBuyingPowerPercent { get; }
 
         /// <summary>
         /// Gets a map of the default markets to be used for each security type
@@ -76,7 +70,12 @@ namespace QuantConnect.Brokerages
         /// <param name="request">The requested updated to be made to the order</param>
         /// <param name="message">If this function returns false, a brokerage message detailing why the order may not be updated</param>
         /// <returns>True if the brokerage would allow updating the order, false otherwise</returns>
-        bool CanUpdateOrder(Security security, Order order, UpdateOrderRequest request, out BrokerageMessageEvent message);
+        bool CanUpdateOrder(
+            Security security,
+            Order order,
+            UpdateOrderRequest request,
+            out BrokerageMessageEvent message
+        );
 
         /// <summary>
         /// Returns true if the brokerage would be able to execute this order at this time assuming
@@ -190,7 +189,11 @@ namespace QuantConnect.Brokerages
         /// <param name="brokerage">The name of the brokerage</param>
         /// <param name="accountType">The account type</param>
         /// <returns>The model for the specified brokerage</returns>
-        public static IBrokerageModel Create(IOrderProvider orderProvider, BrokerageName brokerage, AccountType accountType)
+        public static IBrokerageModel Create(
+            IOrderProvider orderProvider,
+            BrokerageName brokerage,
+            AccountType accountType
+        )
         {
             switch (brokerage)
             {
@@ -280,7 +283,6 @@ namespace QuantConnect.Brokerages
                     throw new ArgumentOutOfRangeException(nameof(brokerage), brokerage, null);
             }
         }
-
 
         /// <summary>
         /// Gets the corresponding <see cref="BrokerageName"/> for the specified <see cref="IBrokerageModel"/>
@@ -374,7 +376,11 @@ namespace QuantConnect.Brokerages
                     return BrokerageName.Default;
 
                 default:
-                    throw new ArgumentOutOfRangeException(nameof(brokerageModel), brokerageModel, null);
+                    throw new ArgumentOutOfRangeException(
+                        nameof(brokerageModel),
+                        brokerageModel,
+                        null
+                    );
             }
         }
     }

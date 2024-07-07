@@ -25,8 +25,8 @@ namespace QuantConnect.Securities.Future
     /// </summary>
     public static class FuturesExpiryUtilityFunctions
     {
-        private static readonly Dictionary<DateTime, DateTime> _reverseDairyReportDates = FuturesExpiryFunctions.DairyReportDates
-            .ToDictionary(kvp => kvp.Value, kvp => kvp.Key);
+        private static readonly Dictionary<DateTime, DateTime> _reverseDairyReportDates =
+            FuturesExpiryFunctions.DairyReportDates.ToDictionary(kvp => kvp.Value, kvp => kvp.Key);
 
         private static readonly HashSet<string> _dairyUnderlying = new HashSet<string>
         {
@@ -45,10 +45,10 @@ namespace QuantConnect.Securities.Future
         /// <param name="symbol">The particular symbol being traded</param>s
         public static HashSet<DateTime> GetHolidays(string market, string symbol)
         {
-            return MarketHoursDatabase.FromDataFolder()
-                        .GetEntry(market, symbol, SecurityType.Future)
-                        .ExchangeHours
-                        .Holidays;
+            return MarketHoursDatabase
+                .FromDataFolder()
+                .GetEntry(market, symbol, SecurityType.Future)
+                .ExchangeHours.Holidays;
         }
 
         /// <summary>
@@ -72,7 +72,8 @@ namespace QuantConnect.Securities.Future
                         businessDays--;
                     }
 
-                    if (businessDays > 0) totalDays++;
+                    if (businessDays > 0)
+                        totalDays++;
                 } while (businessDays > 0);
 
                 return time.AddDays(-totalDays);
@@ -89,7 +90,8 @@ namespace QuantConnect.Securities.Future
                         businessDays--;
                     }
 
-                    if (businessDays > 0) totalDays++;
+                    if (businessDays > 0)
+                        totalDays++;
                 } while (businessDays > 0);
 
                 return time.AddDays(totalDays);
@@ -103,7 +105,11 @@ namespace QuantConnect.Securities.Future
         /// <param name="n">Number of business days succeeding current time. Use negative value for preceding business days</param>
         /// <param name="holidayList">Enumerable of holidays to exclude. These should be sourced from the <see cref="MarketHoursDatabase"/></param>
         /// <returns>The date-time after adding n business days</returns>
-        public static DateTime AddBusinessDaysIfHoliday(DateTime time, int n, HashSet<DateTime> holidayList)
+        public static DateTime AddBusinessDaysIfHoliday(
+            DateTime time,
+            int n,
+            HashSet<DateTime> holidayList
+        )
         {
             if (holidayList.Contains(time))
             {
@@ -122,17 +128,24 @@ namespace QuantConnect.Securities.Future
         /// <param name="n">Number of days</param>
         /// <param name="holidayList">Holidays to use while calculating n^th business day. Useful for MHDB entries</param>
         /// <returns>Nth Last Business day of the month</returns>
-        public static DateTime NthLastBusinessDay(DateTime time, int n, IEnumerable<DateTime> holidayList)
+        public static DateTime NthLastBusinessDay(
+            DateTime time,
+            int n,
+            IEnumerable<DateTime> holidayList
+        )
         {
             var daysInMonth = DateTime.DaysInMonth(time.Year, time.Month);
             var lastDayOfMonth = new DateTime(time.Year, time.Month, daysInMonth);
             var holidays = holidayList.Select(x => x.Date);
 
-            if(n > daysInMonth)
+            if (n > daysInMonth)
             {
-                throw new ArgumentOutOfRangeException(nameof(n), Invariant(
-                    $"Number of days ({n}) is larger than the size of month({daysInMonth})"
-                ));
+                throw new ArgumentOutOfRangeException(
+                    nameof(n),
+                    Invariant(
+                        $"Number of days ({n}) is larger than the size of month({daysInMonth})"
+                    )
+                );
             }
             // Count the number of days in the month after the third to last business day
             var businessDays = n;
@@ -144,7 +157,8 @@ namespace QuantConnect.Securities.Future
                 {
                     businessDays--;
                 }
-                if (businessDays > 0) totalDays++;
+                if (businessDays > 0)
+                    totalDays++;
             } while (businessDays > 0);
 
             return lastDayOfMonth.AddDays(-totalDays);
@@ -157,21 +171,29 @@ namespace QuantConnect.Securities.Future
         /// <param name="nthBusinessDay">n^th business day to get</param>
         /// <param name="holidayList"> Holidays to not count as business days</param>
         /// <returns>Nth business day of the month</returns>
-        public static DateTime NthBusinessDay(DateTime time, int nthBusinessDay, IEnumerable<DateTime> holidayList)
+        public static DateTime NthBusinessDay(
+            DateTime time,
+            int nthBusinessDay,
+            IEnumerable<DateTime> holidayList
+        )
         {
             var daysInMonth = DateTime.DaysInMonth(time.Year, time.Month);
             var holidays = holidayList.Select(x => x.Date);
             if (nthBusinessDay > daysInMonth)
             {
-                throw new ArgumentOutOfRangeException(Invariant(
-                    $"Argument nthBusinessDay (${nthBusinessDay}) is larger than the amount of days in the current month (${daysInMonth})"
-                ));
+                throw new ArgumentOutOfRangeException(
+                    Invariant(
+                        $"Argument nthBusinessDay (${nthBusinessDay}) is larger than the amount of days in the current month (${daysInMonth})"
+                    )
+                );
             }
             if (nthBusinessDay < 1)
             {
-                throw new ArgumentOutOfRangeException(Invariant(
-                    $"Argument nthBusinessDay (${nthBusinessDay}) is less than one. Provide a number greater than one and less than the days in month"
-                ));
+                throw new ArgumentOutOfRangeException(
+                    Invariant(
+                        $"Argument nthBusinessDay (${nthBusinessDay}) is less than one. Provide a number greater than one and less than the days in month"
+                    )
+                );
             }
 
             var calculatedTime = new DateTime(time.Year, time.Month, 1);
@@ -181,7 +203,11 @@ namespace QuantConnect.Securities.Future
 
             // Check for holiday up here in case we want the first business day and it is a holiday so that we don't skip over it.
             // We also want to make sure that we don't stop on a weekend.
-            while (daysCounted < nthBusinessDay || holidays.Contains(calculatedTime) || !calculatedTime.IsCommonBusinessDay())
+            while (
+                daysCounted < nthBusinessDay
+                || holidays.Contains(calculatedTime)
+                || !calculatedTime.IsCommonBusinessDay()
+            )
             {
                 // The asset continues trading on days contained within `USHoliday.Dates`, but
                 // the last trade date is affected by those holidays. We check for
@@ -236,14 +262,16 @@ namespace QuantConnect.Securities.Future
         /// <param name="time">Date from the given month</param>
         /// <param name="n">The order of the Friday in the period</param>
         /// <returns>Nth Friday of given month</returns>
-        public static DateTime NthFriday(DateTime time, int n) => NthWeekday(time, n, DayOfWeek.Friday);
+        public static DateTime NthFriday(DateTime time, int n) =>
+            NthWeekday(time, n, DayOfWeek.Friday);
 
         /// <summary>
         /// Method to retrieve third Wednesday of the given month (usually Monday).
         /// </summary>
         /// <param name="time">Date from the given month</param>
         /// <returns>Third Wednesday of the given month</returns>
-        public static DateTime ThirdWednesday(DateTime time) => NthWeekday(time, 3, DayOfWeek.Wednesday);
+        public static DateTime ThirdWednesday(DateTime time) =>
+            NthWeekday(time, 3, DayOfWeek.Wednesday);
 
         /// <summary>
         /// Method to retrieve the Nth Weekday of the given month
@@ -256,15 +284,19 @@ namespace QuantConnect.Securities.Future
         {
             if (n < 1 || n > 5)
             {
-                throw new ArgumentOutOfRangeException(nameof(n), "'n' lower than 1 or greater than 5");
+                throw new ArgumentOutOfRangeException(
+                    nameof(n),
+                    "'n' lower than 1 or greater than 5"
+                );
             }
 
             var daysInMonth = DateTime.DaysInMonth(time.Year, time.Month);
-            return (from day in Enumerable.Range(1, daysInMonth)
-                    where new DateTime(time.Year, time.Month, day).DayOfWeek == dayOfWeek
-                    select new DateTime(time.Year, time.Month, day)).ElementAt(n - 1);
+            return (
+                from day in Enumerable.Range(1, daysInMonth)
+                where new DateTime(time.Year, time.Month, day).DayOfWeek == dayOfWeek
+                select new DateTime(time.Year, time.Month, day)
+            ).ElementAt(n - 1);
         }
-
 
         /// <summary>
         /// Method to retrieve the last weekday of any month
@@ -274,11 +306,12 @@ namespace QuantConnect.Securities.Future
         /// <returns>Last day of the we</returns>
         public static DateTime LastWeekday(DateTime time, DayOfWeek dayOfWeek)
         {
-
             var daysInMonth = DateTime.DaysInMonth(time.Year, time.Month);
-            return (from day in Enumerable.Range(1, daysInMonth).Reverse()
-                    where new DateTime(time.Year, time.Month, day).DayOfWeek == dayOfWeek
-                    select new DateTime(time.Year, time.Month, day)).First();
+            return (
+                from day in Enumerable.Range(1, daysInMonth).Reverse()
+                where new DateTime(time.Year, time.Month, day).DayOfWeek == dayOfWeek
+                select new DateTime(time.Year, time.Month, day)
+            ).First();
         }
 
         /// <summary>
@@ -312,7 +345,10 @@ namespace QuantConnect.Securities.Future
         /// <param name="thursday">DateTime of a given Thursday</param>
         /// <param name="holidayList">Enumerable of holidays to exclude. These should be sourced from the <see cref="MarketHoursDatabase"/></param>
         /// <returns>False if DayOfWeek is not Thursday or is not preceded by four weekdays,Otherwise returns True</returns>
-        public static bool NotPrecededByHoliday(DateTime thursday, IEnumerable<DateTime> holidayList)
+        public static bool NotPrecededByHoliday(
+            DateTime thursday,
+            IEnumerable<DateTime> holidayList
+        )
         {
             if (thursday.DayOfWeek != DayOfWeek.Thursday)
             {
@@ -342,19 +378,30 @@ namespace QuantConnect.Securities.Future
         /// <param name="holidayList">Enumerable of holidays to exclude. These should be sourced from the <see cref="MarketHoursDatabase"/></param>
         /// <param name="lastTradeTime">Time at which the dairy future contract stops trading (usually should be on 17:10:00 UTC)</param>
         /// <returns></returns>
-        public static DateTime DairyLastTradeDate(DateTime time, IEnumerable<DateTime> holidayList, TimeSpan? lastTradeTime = null)
+        public static DateTime DairyLastTradeDate(
+            DateTime time,
+            IEnumerable<DateTime> holidayList,
+            TimeSpan? lastTradeTime = null
+        )
         {
             // Trading shall terminate on the business day immediately preceding the day on which the USDA announces the <DAIRY_PRODUCT> price for that contract month. (LTD 12:10 p.m.)
             var contractMonth = new DateTime(time.Year, time.Month, 1);
             var lastTradeTs = lastTradeTime ?? new TimeSpan(17, 10, 0);
 
-            if (FuturesExpiryFunctions.DairyReportDates.TryGetValue(contractMonth, out DateTime publicationDate))
+            if (
+                FuturesExpiryFunctions.DairyReportDates.TryGetValue(
+                    contractMonth,
+                    out DateTime publicationDate
+                )
+            )
             {
                 do
                 {
                     publicationDate = publicationDate.AddDays(-1);
-                }
-                while (holidayList.Contains(publicationDate) || publicationDate.DayOfWeek == DayOfWeek.Saturday);
+                } while (
+                    holidayList.Contains(publicationDate)
+                    || publicationDate.DayOfWeek == DayOfWeek.Saturday
+                );
             }
             else
             {
@@ -374,7 +421,10 @@ namespace QuantConnect.Securities.Future
         /// <param name="underlying">The future symbol ticker</param>
         /// <param name="futureExpiryDate">Expiry date to use to look up contract month delta. Only used for dairy, since we need to lookup its contract month in a pre-defined table.</param>
         /// <returns>The number of months between the contract month and the contract expiry</returns>
-        public static int GetDeltaBetweenContractMonthAndContractExpiry(string underlying, DateTime? futureExpiryDate = null)
+        public static int GetDeltaBetweenContractMonthAndContractExpiry(
+            string underlying,
+            DateTime? futureExpiryDate = null
+        )
         {
             if (futureExpiryDate != null && _dairyUnderlying.Contains(underlying))
             {
@@ -384,7 +434,9 @@ namespace QuantConnect.Securities.Future
                 {
                     var contractMonth = _reverseDairyReportDates[dairyReportDate];
                     // Gets the distance between two months in months
-                    return ((contractMonth.Year - dairyReportDate.Year) * 12) + contractMonth.Month - dairyReportDate.Month;
+                    return ((contractMonth.Year - dairyReportDate.Year) * 12)
+                        + contractMonth.Month
+                        - dairyReportDate.Month;
                 }
 
                 return 0;
@@ -421,7 +473,10 @@ namespace QuantConnect.Securities.Future
             return new DateTime(year, month, day).AddDays(-2);
         }
 
-        private static readonly Dictionary<string, int> ExpiriesPriorMonth = new Dictionary<string, int>
+        private static readonly Dictionary<string, int> ExpiriesPriorMonth = new Dictionary<
+            string,
+            int
+        >
         {
             { Futures.Energy.ArgusLLSvsWTIArgusTradeMonth, 1 },
             { Futures.Energy.ArgusPropaneSaudiAramco, 1 },

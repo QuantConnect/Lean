@@ -34,7 +34,7 @@ namespace QuantConnect.Tests.Common
         [OneTimeSetUp]
         public void Setup()
         {
-            _timeMonitor = new TimeMonitorTest(monitorIntervalMs:3);
+            _timeMonitor = new TimeMonitorTest(monitorIntervalMs: 3);
             _timeMonitorEvent = new AutoResetEvent(false);
             _timeMonitor.TimeMonitorEvent = _timeMonitorEvent;
         }
@@ -181,11 +181,12 @@ namespace QuantConnect.Tests.Common
             }
         }
 
-        private class TimeMonitorTest: TimeMonitor
+        private class TimeMonitorTest : TimeMonitor
         {
             public AutoResetEvent TimeMonitorEvent;
 
-            public TimeMonitorTest(int monitorIntervalMs = 100) : base(monitorIntervalMs) { }
+            public TimeMonitorTest(int monitorIntervalMs = 100)
+                : base(monitorIntervalMs) { }
 
             protected override void ProcessConsumer(TimeConsumer consumer)
             {
@@ -193,6 +194,7 @@ namespace QuantConnect.Tests.Common
 
                 TimeMonitorEvent.Set();
             }
+
             protected override void RemoveAll()
             {
                 // Store the TimeConsumer objects to remove

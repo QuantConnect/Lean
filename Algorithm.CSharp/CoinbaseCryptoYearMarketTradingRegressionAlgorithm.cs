@@ -14,15 +14,17 @@
 */
 
 using System;
-using QuantConnect.Data;
-using QuantConnect.Brokerages;
-using QuantConnect.Interfaces;
 using System.Collections.Generic;
+using QuantConnect.Brokerages;
+using QuantConnect.Data;
+using QuantConnect.Interfaces;
 using QuantConnect.Securities.Crypto;
 
 namespace QuantConnect.Algorithm.CSharp
 {
-    public class CoinbaseCryptoYearMarketTradingRegressionAlgorithm : QCAlgorithm, IRegressionAlgorithmDefinition
+    public class CoinbaseCryptoYearMarketTradingRegressionAlgorithm
+        : QCAlgorithm,
+            IRegressionAlgorithmDefinition
     {
         /// <summary>
         /// The Average amount of day in year
@@ -82,7 +84,9 @@ namespace QuantConnect.Algorithm.CSharp
         {
             if (Settings.TradingDaysPerYear != _daysInYear)
             {
-                throw new RegressionTestException("The Algorithm was using invalid `TradingDaysPerYear` for this brokerage. The ExpectedStatistics is wrong.");
+                throw new RegressionTestException(
+                    "The Algorithm was using invalid `TradingDaysPerYear` for this brokerage. The ExpectedStatistics is wrong."
+                );
             }
         }
 
@@ -114,35 +118,36 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// This is used by the regression test system to indicate what the expected statistics are from running the algorithm
         /// </summary>
-        public Dictionary<string, string> ExpectedStatistics => new Dictionary<string, string>
-        {
-            {"Total Orders", "388"},
-            {"Average Win", "0.01%"},
-            {"Average Loss", "-0.01%"},
-            {"Compounding Annual Return", "-0.597%"},
-            {"Drawdown", "0.700%"},
-            {"Expectancy", "-0.400"},
-            {"Start Equity", "100000.00"},
-            {"End Equity", "99365.56"},
-            {"Net Profit", "-0.634%"},
-            {"Sharpe Ratio", "-7.126"},
-            {"Sortino Ratio", "-7.337"},
-            {"Probabilistic Sharpe Ratio", "0.000%"},
-            {"Loss Rate", "66%"},
-            {"Win Rate", "34%"},
-            {"Profit-Loss Ratio", "0.79"},
-            {"Alpha", "0"},
-            {"Beta", "0"},
-            {"Annual Standard Deviation", "0.002"},
-            {"Annual Variance", "0"},
-            {"Information Ratio", "-3.086"},
-            {"Tracking Error", "0.002"},
-            {"Treynor Ratio", "0"},
-            {"Total Fees", "$331.31"},
-            {"Estimated Strategy Capacity", "$71000.00"},
-            {"Lowest Capacity Asset", "BTCUSD 2XR"},
-            {"Portfolio Turnover", "0.29%"},
-            {"OrderListHash", "179b672b3c1024bbe49dd3b4974232f1"}
-        };
+        public Dictionary<string, string> ExpectedStatistics =>
+            new Dictionary<string, string>
+            {
+                { "Total Orders", "388" },
+                { "Average Win", "0.01%" },
+                { "Average Loss", "-0.01%" },
+                { "Compounding Annual Return", "-0.597%" },
+                { "Drawdown", "0.700%" },
+                { "Expectancy", "-0.400" },
+                { "Start Equity", "100000.00" },
+                { "End Equity", "99365.56" },
+                { "Net Profit", "-0.634%" },
+                { "Sharpe Ratio", "-7.126" },
+                { "Sortino Ratio", "-7.337" },
+                { "Probabilistic Sharpe Ratio", "0.000%" },
+                { "Loss Rate", "66%" },
+                { "Win Rate", "34%" },
+                { "Profit-Loss Ratio", "0.79" },
+                { "Alpha", "0" },
+                { "Beta", "0" },
+                { "Annual Standard Deviation", "0.002" },
+                { "Annual Variance", "0" },
+                { "Information Ratio", "-3.086" },
+                { "Tracking Error", "0.002" },
+                { "Treynor Ratio", "0" },
+                { "Total Fees", "$331.31" },
+                { "Estimated Strategy Capacity", "$71000.00" },
+                { "Lowest Capacity Asset", "BTCUSD 2XR" },
+                { "Portfolio Turnover", "0.29%" },
+                { "OrderListHash", "179b672b3c1024bbe49dd3b4974232f1" }
+            };
     }
 }

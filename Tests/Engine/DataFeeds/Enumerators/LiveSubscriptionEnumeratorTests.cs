@@ -14,16 +14,16 @@
 */
 
 using System;
-using NodaTime;
+using System.Collections.Generic;
 using System.Linq;
+using NodaTime;
 using NUnit.Framework;
 using QuantConnect.Data;
-using QuantConnect.Packets;
-using QuantConnect.Interfaces;
 using QuantConnect.Data.Market;
-using System.Collections.Generic;
+using QuantConnect.Interfaces;
 using QuantConnect.Lean.Engine.DataFeeds;
 using QuantConnect.Lean.Engine.DataFeeds.Enumerators;
+using QuantConnect.Packets;
 
 namespace QuantConnect.Tests.Engine.DataFeeds.Enumerators
 {
@@ -38,21 +38,46 @@ namespace QuantConnect.Tests.Engine.DataFeeds.Enumerators
             {
                 DataPerSymbol = new Dictionary<Symbol, List<BaseData>>
                 {
-                    { Symbols.Fut_SPY_Feb19_2016,
-                        new List<BaseData>{ new Tick(Time.BeginningOfTime, Symbols.Fut_SPY_Feb19_2016, 1, 1)} },
-                    { Symbols.Fut_SPY_Mar19_2016,
-                        new List<BaseData>{ new Tick(Time.BeginningOfTime, Symbols.Fut_SPY_Mar19_2016, 2, 2)} },
+                    {
+                        Symbols.Fut_SPY_Feb19_2016,
+                        new List<BaseData>
+                        {
+                            new Tick(Time.BeginningOfTime, Symbols.Fut_SPY_Feb19_2016, 1, 1)
+                        }
+                    },
+                    {
+                        Symbols.Fut_SPY_Mar19_2016,
+                        new List<BaseData>
+                        {
+                            new Tick(Time.BeginningOfTime, Symbols.Fut_SPY_Mar19_2016, 2, 2)
+                        }
+                    },
                 }
             };
-            var config = new SubscriptionDataConfig(typeof(Tick), canonical, Resolution.Tick,
-                DateTimeZone.Utc, DateTimeZone.Utc, false, false, false)
+            var config = new SubscriptionDataConfig(
+                typeof(Tick),
+                canonical,
+                Resolution.Tick,
+                DateTimeZone.Utc,
+                DateTimeZone.Utc,
+                false,
+                false,
+                false
+            )
             {
                 MappedSymbol = Symbols.Fut_SPY_Feb19_2016.ID.ToString()
             };
 
-            var compositeDataQueueHandler = new TestDataQueueHandlerManager(new AlgorithmSettings());
+            var compositeDataQueueHandler = new TestDataQueueHandlerManager(
+                new AlgorithmSettings()
+            );
             compositeDataQueueHandler.ExposedDataHandlers.Add(dataQueue);
-            var data = new LiveSubscriptionEnumerator(config, compositeDataQueueHandler, (_, _) => {}, (_) => false);
+            var data = new LiveSubscriptionEnumerator(
+                config,
+                compositeDataQueueHandler,
+                (_, _) => { },
+                (_) => false
+            );
 
             Assert.IsTrue(data.MoveNext());
             Assert.AreEqual(1, (data.Current as Tick).AskPrice);
@@ -68,7 +93,10 @@ namespace QuantConnect.Tests.Engine.DataFeeds.Enumerators
             Assert.IsTrue(data.MoveNext());
             Assert.AreEqual(2, (data.Current as Tick).AskPrice);
             Assert.AreEqual(canonical, (data.Current as Tick).Symbol);
-            Assert.AreNotEqual(canonical, dataQueue.DataPerSymbol[Symbols.Fut_SPY_Mar19_2016].Single().Symbol);
+            Assert.AreNotEqual(
+                canonical,
+                dataQueue.DataPerSymbol[Symbols.Fut_SPY_Mar19_2016].Single().Symbol
+            );
 
             Assert.IsFalse(data.MoveNext());
             Assert.IsNull(data.Current);
@@ -85,32 +113,36 @@ namespace QuantConnect.Tests.Engine.DataFeeds.Enumerators
 
             public Dictionary<Symbol, List<BaseData>> DataPerSymbol;
 
-            public IEnumerator<BaseData> Subscribe(SubscriptionDataConfig dataConfig, EventHandler newDataAvailableHandler)
+            public IEnumerator<BaseData> Subscribe(
+                SubscriptionDataConfig dataConfig,
+                EventHandler newDataAvailableHandler
+            )
             {
                 if (DataPerSymbol.TryGetValue(dataConfig.Symbol, out var baseDatas))
                 {
                     return baseDatas.GetEnumerator();
                 }
-                throw new Exception($"Failed to find a data enumerator for symbol {dataConfig.Symbol}!");
+                throw new Exception(
+                    $"Failed to find a data enumerator for symbol {dataConfig.Symbol}!"
+                );
             }
+
             public void Unsubscribe(SubscriptionDataConfig dataConfig)
             {
                 DataPerSymbol.Remove(dataConfig.Symbol);
             }
-            public void SetJob(LiveNodePacket job)
-            {
-            }
-            public void Dispose()
-            {
-            }
+
+            public void SetJob(LiveNodePacket job) { }
+
+            public void Dispose() { }
         }
 
         private class TestDataQueueHandlerManager : DataQueueHandlerManager
         {
             public List<IDataQueueHandler> ExposedDataHandlers => DataHandlers;
-            public TestDataQueueHandlerManager(IAlgorithmSettings settings) : base(settings)
-            {
-            }
+
+            public TestDataQueueHandlerManager(IAlgorithmSettings settings)
+                : base(settings) { }
         }
     }
 }

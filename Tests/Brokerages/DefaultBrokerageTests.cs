@@ -14,11 +14,11 @@
 */
 
 using System;
+using System.Collections.Generic;
 using NUnit.Framework;
+using QuantConnect.Brokerages;
 using QuantConnect.Orders;
 using QuantConnect.Securities;
-using QuantConnect.Brokerages;
-using System.Collections.Generic;
 
 namespace QuantConnect.Tests.Brokerages
 {
@@ -40,9 +40,8 @@ namespace QuantConnect.Tests.Brokerages
 
         private class TestableBrokerage : Brokerage
         {
-            public TestableBrokerage(string name) : base(name)
-            {
-            }
+            public TestableBrokerage(string name)
+                : base(name) { }
 
             public override bool IsConnected => throw new NotImplementedException();
 
@@ -86,11 +85,13 @@ namespace QuantConnect.Tests.Brokerages
                 throw new NotImplementedException();
             }
 
-            public static OrderPosition GetOrderPositionPublic(OrderDirection direction, decimal holdingsQuantity)
+            public static OrderPosition GetOrderPositionPublic(
+                OrderDirection direction,
+                decimal holdingsQuantity
+            )
             {
                 return GetOrderPosition(direction, holdingsQuantity);
             }
         }
-
     }
 }

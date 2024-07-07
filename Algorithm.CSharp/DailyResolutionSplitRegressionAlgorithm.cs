@@ -25,15 +25,17 @@ namespace QuantConnect.Algorithm.CSharp
     /// This regression test algorithm reproduces issue reported in GB issue https://github.com/QuantConnect/Lean/issues/2655
     /// fixed in PR https://github.com/QuantConnect/Lean/pull/2659
     /// </summary>
-    public class DailyResolutionSplitRegressionAlgorithm : QCAlgorithm, IRegressionAlgorithmDefinition
+    public class DailyResolutionSplitRegressionAlgorithm
+        : QCAlgorithm,
+            IRegressionAlgorithmDefinition
     {
         private Symbol _symbol;
 
         public override void Initialize()
         {
-            SetStartDate(2018, 2, 13);  //Set Start Date
-            SetEndDate(2018, 06, 01);    //Set End Date
-            SetCash(100000);             //Set Strategy Cash
+            SetStartDate(2018, 2, 13); //Set Start Date
+            SetEndDate(2018, 06, 01); //Set End Date
+            SetCash(100000); //Set Strategy Cash
             _symbol = AddEquity("UPRO", Resolution.Daily).Symbol;
         }
 
@@ -98,27 +100,28 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// This is used by the regression test system to indicate what the expected statistics are from running the algorithm
         /// </summary>
-        public Dictionary<string, string> ExpectedStatistics => new Dictionary<string, string>
-        {
-            {"Total Orders", "4"},
-            {"Average Win", "0%"},
-            {"Average Loss", "0%"},
-            {"Compounding Annual Return", "0.520%"},
-            {"Drawdown", "0.800%"},
-            {"Expectancy", "0"},
-            {"Net Profit", "0.155%"},
-            {"Sharpe Ratio", "0.242"},
-            {"Loss Rate", "0%"},
-            {"Win Rate", "0%"},
-            {"Profit-Loss Ratio", "0"},
-            {"Alpha", "0.118"},
-            {"Beta", "-5.794"},
-            {"Annual Standard Deviation", "0.022"},
-            {"Annual Variance", "0"},
-            {"Information Ratio", "-0.644"},
-            {"Tracking Error", "0.022"},
-            {"Treynor Ratio", "-0.001"},
-            {"Total Fees", "$4.00"}
-        };
+        public Dictionary<string, string> ExpectedStatistics =>
+            new Dictionary<string, string>
+            {
+                { "Total Orders", "4" },
+                { "Average Win", "0%" },
+                { "Average Loss", "0%" },
+                { "Compounding Annual Return", "0.520%" },
+                { "Drawdown", "0.800%" },
+                { "Expectancy", "0" },
+                { "Net Profit", "0.155%" },
+                { "Sharpe Ratio", "0.242" },
+                { "Loss Rate", "0%" },
+                { "Win Rate", "0%" },
+                { "Profit-Loss Ratio", "0" },
+                { "Alpha", "0.118" },
+                { "Beta", "-5.794" },
+                { "Annual Standard Deviation", "0.022" },
+                { "Annual Variance", "0" },
+                { "Information Ratio", "-0.644" },
+                { "Tracking Error", "0.022" },
+                { "Treynor Ratio", "-0.001" },
+                { "Total Fees", "$4.00" }
+            };
     }
 }

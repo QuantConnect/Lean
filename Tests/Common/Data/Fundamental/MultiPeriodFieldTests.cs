@@ -14,9 +14,9 @@
 */
 
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using NUnit.Framework;
-using System.Collections.Generic;
 using QuantConnect.Data.Fundamental;
 using QuantConnect.Data.UniverseSelection;
 
@@ -95,8 +95,14 @@ namespace QuantConnect.Tests.Common.Data.Fundamental
             Assert.AreEqual(MultiPeriodField.NoValue, field.FiveYears);
             Assert.AreEqual(MultiPeriodField.NoValue, field.OneYear);
             Assert.AreEqual(Enumerable.Empty<string>(), field.GetPeriodNames());
-            Assert.AreEqual(MultiPeriodField.NoValue, field.GetPeriodValue(QuantConnect.Data.Fundamental.Period.OneYear));
-            Assert.AreEqual(MultiPeriodField.NoValue, field.GetPeriodValue(QuantConnect.Data.Fundamental.Period.TenYears));
+            Assert.AreEqual(
+                MultiPeriodField.NoValue,
+                field.GetPeriodValue(QuantConnect.Data.Fundamental.Period.OneYear)
+            );
+            Assert.AreEqual(
+                MultiPeriodField.NoValue,
+                field.GetPeriodValue(QuantConnect.Data.Fundamental.Period.TenYears)
+            );
             Assert.AreEqual(0, field.GetPeriodValues().Count);
             Assert.IsFalse(field.HasPeriodValue(QuantConnect.Data.Fundamental.Period.OneYear));
             Assert.IsFalse(field.HasPeriodValue(QuantConnect.Data.Fundamental.Period.TenYears));
@@ -117,7 +123,8 @@ namespace QuantConnect.Tests.Common.Data.Fundamental
             public double OneYear { get; set; } = NoValue;
             public double ThreeYears { get; set; } = NoValue;
             public double FiveYears { get; set; } = NoValue;
-            public override bool HasValue => !BaseFundamentalDataProvider.IsNone(typeof(double), OneYear);
+            public override bool HasValue =>
+                !BaseFundamentalDataProvider.IsNone(typeof(double), OneYear);
             public override double Value
             {
                 get
@@ -133,7 +140,7 @@ namespace QuantConnect.Tests.Common.Data.Fundamental
 
             public override double GetPeriodValue(string period)
             {
-                switch(period)
+                switch (period)
                 {
                     case QuantConnect.Data.Fundamental.Period.ThreeMonths:
                         return ThreeMonths;
@@ -151,7 +158,15 @@ namespace QuantConnect.Tests.Common.Data.Fundamental
             public override IReadOnlyDictionary<string, double> GetPeriodValues()
             {
                 var result = new Dictionary<string, double>();
-                foreach (var kvp in new[] { new Tuple<string, double>("1Y", OneYear), new Tuple<string, double>("3M", ThreeMonths), new Tuple<string, double>("3Y", ThreeYears), new Tuple<string, double>("5Y", FiveYears) })
+                foreach (
+                    var kvp in new[]
+                    {
+                        new Tuple<string, double>("1Y", OneYear),
+                        new Tuple<string, double>("3M", ThreeMonths),
+                        new Tuple<string, double>("3Y", ThreeYears),
+                        new Tuple<string, double>("5Y", FiveYears)
+                    }
+                )
                 {
                     if (!BaseFundamentalDataProvider.IsNone(typeof(double), kvp.Item2))
                     {

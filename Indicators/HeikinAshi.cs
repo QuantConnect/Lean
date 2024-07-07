@@ -55,7 +55,7 @@ namespace QuantConnect.Indicators
 
         /// <summary>
         /// Initializes a new instance of the <see cref="HeikinAshi"/> class using the specified name.
-        /// </summary> 
+        /// </summary>
         /// <param name="name">The name of this indicator</param>
         public HeikinAshi(string name)
             : base(name)
@@ -69,11 +69,9 @@ namespace QuantConnect.Indicators
 
         /// <summary>
         /// Initializes a new instance of the <see cref="HeikinAshi"/> class.
-        /// </summary> 
+        /// </summary>
         public HeikinAshi()
-            : this("HA")
-        {
-        }
+            : this("HA") { }
 
         /// <summary>
         /// Gets a flag indicating when this indicator is ready and fully initialized
@@ -103,18 +101,24 @@ namespace QuantConnect.Indicators
             {
                 Open.Update(input.Time, (Open.Current.Value + Close.Current.Value) / 2);
                 Close.Update(input.Time, (input.Open + input.High + input.Low + input.Close) / 4);
-                High.Update(input.Time, Math.Max(input.High, Math.Max(Open.Current.Value, Close.Current.Value)));
-                Low.Update(input.Time, Math.Min(input.Low, Math.Min(Open.Current.Value, Close.Current.Value)));
+                High.Update(
+                    input.Time,
+                    Math.Max(input.High, Math.Max(Open.Current.Value, Close.Current.Value))
+                );
+                Low.Update(
+                    input.Time,
+                    Math.Min(input.Low, Math.Min(Open.Current.Value, Close.Current.Value))
+                );
             }
 
             var volume = 0.0m;
             if (input is TradeBar)
             {
-                volume = ((TradeBar) input).Volume;
+                volume = ((TradeBar)input).Volume;
             }
             else if (input is RenkoBar)
             {
-                volume = ((RenkoBar) input).Volume;
+                volume = ((RenkoBar)input).Volume;
             }
             Volume.Update(input.Time, volume);
 

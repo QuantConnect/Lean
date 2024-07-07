@@ -32,11 +32,14 @@ namespace QuantConnect.Securities
     /// </summary>
     public class DynamicSecurityData : IDynamicMetaObjectProvider
     {
-        private static readonly MethodInfo SetPropertyMethodInfo = typeof(DynamicSecurityData).GetMethod("SetProperty");
-        private static readonly MethodInfo GetPropertyMethodInfo = typeof(DynamicSecurityData).GetMethod("GetProperty");
+        private static readonly MethodInfo SetPropertyMethodInfo =
+            typeof(DynamicSecurityData).GetMethod("SetProperty");
+        private static readonly MethodInfo GetPropertyMethodInfo =
+            typeof(DynamicSecurityData).GetMethod("GetProperty");
 
         private readonly IRegisteredSecurityDataTypesProvider _registeredTypes;
-        private readonly ConcurrentDictionary<Type, Type> _genericTypes = new ConcurrentDictionary<Type, Type>();
+        private readonly ConcurrentDictionary<Type, Type> _genericTypes =
+            new ConcurrentDictionary<Type, Type>();
         private readonly SecurityCache _cache;
 
         /// <summary>
@@ -44,7 +47,10 @@ namespace QuantConnect.Securities
         /// </summary>
         /// <param name="registeredTypes">Provides all the registered data types for the algorithm</param>
         /// <param name="cache">The security cache</param>
-        public DynamicSecurityData(IRegisteredSecurityDataTypesProvider registeredTypes, SecurityCache cache)
+        public DynamicSecurityData(
+            IRegisteredSecurityDataTypesProvider registeredTypes,
+            SecurityCache cache
+        )
         {
             _registeredTypes = registeredTypes;
             _cache = cache;
@@ -55,7 +61,12 @@ namespace QuantConnect.Securities
         /// <param name="parameter">The expression tree representation of the runtime value.</param>
         public DynamicMetaObject GetMetaObject(Expression parameter)
         {
-            return new GetSetPropertyDynamicMetaObject(parameter, this, SetPropertyMethodInfo, GetPropertyMethodInfo);
+            return new GetSetPropertyDynamicMetaObject(
+                parameter,
+                this,
+                SetPropertyMethodInfo,
+                GetPropertyMethodInfo
+            );
         }
 
         /// <summary>
@@ -135,7 +146,9 @@ namespace QuantConnect.Securities
         /// <param name="name">The property name to set</param>
         /// <param name="value">The new property value</param>
         /// <returns>Returns the input value back to the caller</returns>
-        [Obsolete("DynamicSecurityData is a view of the SecurityCache. It is readonly, properties can not be set")]
+        [Obsolete(
+            "DynamicSecurityData is a view of the SecurityCache. It is readonly, properties can not be set"
+        )]
         public object SetProperty(string name, object value)
         {
             throw new InvalidOperationException(Messages.DynamicSecurityData.PropertiesCannotBeSet);
@@ -174,10 +187,12 @@ namespace QuantConnect.Securities
             var data = GetProperty(type.Name);
 
             var dataType = data.GetType();
-            if (dataType.GetElementType() == type // covers arrays
+            if (
+                dataType.GetElementType() == type // covers arrays
                 // covers lists
                 || dataType.GenericTypeArguments.Length == 1
-                && dataType.GenericTypeArguments[0] == type)
+                    && dataType.GenericTypeArguments[0] == type
+            )
             {
                 return data;
             }
@@ -194,7 +209,9 @@ namespace QuantConnect.Securities
                 return list;
             }
 
-            throw new InvalidOperationException(Messages.DynamicSecurityData.UnexpectedTypesForGetAll(type, data));
+            throw new InvalidOperationException(
+                Messages.DynamicSecurityData.UnexpectedTypesForGetAll(type, data)
+            );
         }
 
         private Type GetGenericListType(Type type)

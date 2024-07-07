@@ -22,7 +22,9 @@ namespace QuantConnect.Algorithm.CSharp
     /// <summary>
     /// Algorithm asserting the correct values for the deployment target and algorithm mode.
     /// </summary>
-    public class AlgorithmModeAndDeploymentTargetAlgorithm : QCAlgorithm, IRegressionAlgorithmDefinition
+    public class AlgorithmModeAndDeploymentTargetAlgorithm
+        : QCAlgorithm,
+            IRegressionAlgorithmDefinition
     {
         public override void Initialize()
         {
@@ -30,11 +32,15 @@ namespace QuantConnect.Algorithm.CSharp
             SetEndDate(2013, 10, 07);
             SetCash(100000);
 
-            Debug($"Algorithm Mode: {AlgorithmMode}. Is Live Mode: {LiveMode}. Deployment Target: {DeploymentTarget}.");
+            Debug(
+                $"Algorithm Mode: {AlgorithmMode}. Is Live Mode: {LiveMode}. Deployment Target: {DeploymentTarget}."
+            );
 
             if (AlgorithmMode != AlgorithmMode.Backtesting)
             {
-                throw new RegressionTestException($"Algorithm mode is not backtesting. Actual: {AlgorithmMode}");
+                throw new RegressionTestException(
+                    $"Algorithm mode is not backtesting. Actual: {AlgorithmMode}"
+                );
             }
 
             if (LiveMode)
@@ -44,7 +50,9 @@ namespace QuantConnect.Algorithm.CSharp
 
             if (DeploymentTarget != DeploymentTarget.LocalPlatform)
             {
-                throw new RegressionTestException($"Algorithm deployment target is not local. Actual{DeploymentTarget}");
+                throw new RegressionTestException(
+                    $"Algorithm deployment target is not local. Actual{DeploymentTarget}"
+                );
             }
 
             // For a live deployment these checks should pass:
@@ -85,35 +93,36 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// This is used by the regression test system to indicate what the expected statistics are from running the algorithm
         /// </summary>
-        public Dictionary<string, string> ExpectedStatistics => new Dictionary<string, string>
-        {
-            {"Total Orders", "0"},
-            {"Average Win", "0%"},
-            {"Average Loss", "0%"},
-            {"Compounding Annual Return", "0%"},
-            {"Drawdown", "0%"},
-            {"Expectancy", "0"},
-            {"Start Equity", "100000"},
-            {"End Equity", "100000"},
-            {"Net Profit", "0%"},
-            {"Sharpe Ratio", "0"},
-            {"Sortino Ratio", "0"},
-            {"Probabilistic Sharpe Ratio", "0%"},
-            {"Loss Rate", "0%"},
-            {"Win Rate", "0%"},
-            {"Profit-Loss Ratio", "0"},
-            {"Alpha", "0"},
-            {"Beta", "0"},
-            {"Annual Standard Deviation", "0"},
-            {"Annual Variance", "0"},
-            {"Information Ratio", "0"},
-            {"Tracking Error", "0"},
-            {"Treynor Ratio", "0"},
-            {"Total Fees", "$0.00"},
-            {"Estimated Strategy Capacity", "$0"},
-            {"Lowest Capacity Asset", ""},
-            {"Portfolio Turnover", "0%"},
-            {"OrderListHash", "d41d8cd98f00b204e9800998ecf8427e"}
-        };
+        public Dictionary<string, string> ExpectedStatistics =>
+            new Dictionary<string, string>
+            {
+                { "Total Orders", "0" },
+                { "Average Win", "0%" },
+                { "Average Loss", "0%" },
+                { "Compounding Annual Return", "0%" },
+                { "Drawdown", "0%" },
+                { "Expectancy", "0" },
+                { "Start Equity", "100000" },
+                { "End Equity", "100000" },
+                { "Net Profit", "0%" },
+                { "Sharpe Ratio", "0" },
+                { "Sortino Ratio", "0" },
+                { "Probabilistic Sharpe Ratio", "0%" },
+                { "Loss Rate", "0%" },
+                { "Win Rate", "0%" },
+                { "Profit-Loss Ratio", "0" },
+                { "Alpha", "0" },
+                { "Beta", "0" },
+                { "Annual Standard Deviation", "0" },
+                { "Annual Variance", "0" },
+                { "Information Ratio", "0" },
+                { "Tracking Error", "0" },
+                { "Treynor Ratio", "0" },
+                { "Total Fees", "$0.00" },
+                { "Estimated Strategy Capacity", "$0" },
+                { "Lowest Capacity Asset", "" },
+                { "Portfolio Turnover", "0%" },
+                { "OrderListHash", "d41d8cd98f00b204e9800998ecf8427e" }
+            };
     }
 }

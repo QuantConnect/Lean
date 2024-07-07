@@ -21,7 +21,7 @@ namespace QuantConnect.Indicators
     /// <summary>
     /// In the DeMarker strategy, for some period of size N, set:
     /// <para>
-    /// DeMax = High - Previous High, and 
+    /// DeMax = High - Previous High, and
     /// DeMin = Previous Low - Low
     /// </para>
     /// where, in the prior, if either term is less than zero (DeMax or DeMin), set it to zero.
@@ -30,7 +30,7 @@ namespace QuantConnect.Indicators
     /// DEM = MA(DeMax)/(MA(DeMax)+MA(DeMin))
     ///</para>
     /// where MA denotes a Moving Average of period N.
-    /// 
+    ///
     /// https://www.investopedia.com/terms/d/demarkerindicator.asp
     /// </summary>
     public class DeMarkerIndicator : BarIndicator, IIndicatorWarmUpPeriodProvider
@@ -46,9 +46,7 @@ namespace QuantConnect.Indicators
         /// <param name="period">The period of the  DeMarker Indicator</param>
         /// <param name="type">The type of moving average to use in calculations</param>
         public DeMarkerIndicator(int period, MovingAverageType type = MovingAverageType.Simple)
-            : this($"DEM({period},{type})", period, type)
-        {
-        }
+            : this($"DEM({period},{type})", period, type) { }
 
         /// <summary>
         /// Initializes a new instance of the DeMarkerIndicator class with the specified name and period
@@ -56,7 +54,11 @@ namespace QuantConnect.Indicators
         /// <param name="name">The name of this indicator</param>
         /// <param name="period">The period of the  DeMarker Indicator</param>
         /// <param name="type">The type of moving average to use in calculations</param>
-        public DeMarkerIndicator(string name, int period, MovingAverageType type = MovingAverageType.Simple)
+        public DeMarkerIndicator(
+            string name,
+            int period,
+            MovingAverageType type = MovingAverageType.Simple
+        )
             : base(name)
         {
             _lastHigh = 0m;
@@ -87,7 +89,6 @@ namespace QuantConnect.Indicators
             _minMA.Reset();
             base.Reset();
         }
-
 
         /// <summary>
         /// Computes the next value of this indicator from the given state

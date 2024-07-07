@@ -15,8 +15,8 @@
 */
 
 using System;
-using System.Linq;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace QuantConnect.Data.Auxiliary
 {
@@ -49,11 +49,15 @@ namespace QuantConnect.Data.Auxiliary
             uint contractOffset = 0,
             DataMappingMode? dataMappingMode = null,
             DateTime? endDateTime = null
-            )
+        )
         {
             if (factorFile == null)
             {
-                if (normalizationMode is DataNormalizationMode.BackwardsPanamaCanal or DataNormalizationMode.ForwardPanamaCanal)
+                if (
+                    normalizationMode
+                    is DataNormalizationMode.BackwardsPanamaCanal
+                        or DataNormalizationMode.ForwardPanamaCanal
+                )
                 {
                     return 0;
                 }
@@ -66,14 +70,25 @@ namespace QuantConnect.Data.Auxiliary
                 if (endDateTime == null)
                 {
                     throw new ArgumentException(
-                        $"{nameof(DataNormalizationMode.ScaledRaw)} normalization mode requires an end date for price scaling.");
+                        $"{nameof(DataNormalizationMode.ScaledRaw)} normalization mode requires an end date for price scaling."
+                    );
                 }
 
                 // For ScaledRaw, we need to get the price scale at the end date to adjust prices to that date instead of "today"
-                endDateTimeFactor = factorFile.GetPriceFactor(endDateTime.Value, normalizationMode, dataMappingMode, contractOffset);
+                endDateTimeFactor = factorFile.GetPriceFactor(
+                    endDateTime.Value,
+                    normalizationMode,
+                    dataMappingMode,
+                    contractOffset
+                );
             }
 
-            return factorFile.GetPriceFactor(dateTime, normalizationMode, dataMappingMode, contractOffset) / endDateTimeFactor;
+            return factorFile.GetPriceFactor(
+                    dateTime,
+                    normalizationMode,
+                    dataMappingMode,
+                    contractOffset
+                ) / endDateTimeFactor;
         }
 
         /// <summary>
@@ -92,15 +107,25 @@ namespace QuantConnect.Data.Auxiliary
         {
             if (symbol.SecurityType == SecurityType.Future)
             {
-                return new MappingContractFactorProvider(symbol.ID.Symbol, Enumerable.Empty<MappingContractFactorRow>());
+                return new MappingContractFactorProvider(
+                    symbol.ID.Symbol,
+                    Enumerable.Empty<MappingContractFactorRow>()
+                );
             }
-            return new CorporateFactorProvider(symbol.ID.Symbol, Enumerable.Empty<CorporateFactorRow>());
+            return new CorporateFactorProvider(
+                symbol.ID.Symbol,
+                Enumerable.Empty<CorporateFactorRow>()
+            );
         }
 
         /// <summary>
         /// Parses the contents as a FactorFile, if error returns a new empty factor file
         /// </summary>
-        public static IFactorProvider SafeRead(string permtick, IEnumerable<string> contents, SecurityType securityType)
+        public static IFactorProvider SafeRead(
+            string permtick,
+            IEnumerable<string> contents,
+            SecurityType securityType
+        )
         {
             try
             {
@@ -110,19 +135,33 @@ namespace QuantConnect.Data.Auxiliary
 
                 if (securityType == SecurityType.Future)
                 {
-                    return new MappingContractFactorProvider(permtick, MappingContractFactorRow.Parse(contents, out minimumDate), minimumDate);
+                    return new MappingContractFactorProvider(
+                        permtick,
+                        MappingContractFactorRow.Parse(contents, out minimumDate),
+                        minimumDate
+                    );
                 }
                 // FactorFileRow.Parse handles entries with 'inf' and exponential notation and provides the associated minimum tradeable date for these cases
                 // previously these cases were not handled causing an exception and returning an empty factor file
-                return new CorporateFactorProvider(permtick, CorporateFactorRow.Parse(contents, out minimumDate), minimumDate);
+                return new CorporateFactorProvider(
+                    permtick,
+                    CorporateFactorRow.Parse(contents, out minimumDate),
+                    minimumDate
+                );
             }
             catch (Exception e)
             {
                 if (securityType == SecurityType.Future)
                 {
-                    return new MappingContractFactorProvider(permtick, Enumerable.Empty<MappingContractFactorRow>());
+                    return new MappingContractFactorProvider(
+                        permtick,
+                        Enumerable.Empty<MappingContractFactorRow>()
+                    );
                 }
-                return new CorporateFactorProvider(permtick, Enumerable.Empty<CorporateFactorRow>());
+                return new CorporateFactorProvider(
+                    permtick,
+                    Enumerable.Empty<CorporateFactorRow>()
+                );
             }
         }
     }

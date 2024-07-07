@@ -44,12 +44,18 @@ namespace QuantConnect.Tests.Common.Exceptions
         [TestCase(typeof(DivideByZeroException), true)]
         [TestCase(typeof(InvalidOperationException), true)]
         [TestCase(typeof(ScheduledEventException), false)]
-        public void ProjectThrowsForNonScheduledEventExceptionTypes(Type exceptionType, bool expectThrow)
+        public void ProjectThrowsForNonScheduledEventExceptionTypes(
+            Type exceptionType,
+            bool expectThrow
+        )
         {
             var exception = CreateExceptionFromType(exceptionType);
             var interpreter = new ScheduledEventExceptionInterpreter();
             var constraint = expectThrow ? (IResolveConstraint)Throws.Exception : Throws.Nothing;
-            Assert.That(() => interpreter.Interpret(exception, NullExceptionInterpreter.Instance), constraint);
+            Assert.That(
+                () => interpreter.Interpret(exception, NullExceptionInterpreter.Instance),
+                constraint
+            );
         }
 
         [Test]
@@ -59,7 +65,10 @@ namespace QuantConnect.Tests.Common.Exceptions
             var name = id.ToStringInvariant("D");
             var message = id.ToStringInvariant("N");
             var exception = new ScheduledEventException(name, message, null);
-            var interpreted = new ScheduledEventExceptionInterpreter().Interpret(exception, NullExceptionInterpreter.Instance);
+            var interpreted = new ScheduledEventExceptionInterpreter().Interpret(
+                exception,
+                NullExceptionInterpreter.Instance
+            );
 
             var expectedInterpretedMessage = $"In Scheduled Event '{name}',";
             Assert.AreEqual(expectedInterpretedMessage, interpreted.Message);
@@ -70,7 +79,10 @@ namespace QuantConnect.Tests.Common.Exceptions
         {
             var inner = new Exception();
             var exception = new ScheduledEventException("name", "message", inner);
-            var interpreted = new ScheduledEventExceptionInterpreter().Interpret(exception, NullExceptionInterpreter.Instance);
+            var interpreted = new ScheduledEventExceptionInterpreter().Interpret(
+                exception,
+                NullExceptionInterpreter.Instance
+            );
             Assert.AreEqual(inner, interpreted.InnerException);
         }
 
@@ -80,7 +92,8 @@ namespace QuantConnect.Tests.Common.Exceptions
             var inner = new Exception("inner");
             var exception = new ScheduledEventException("name", "message", inner);
             var mockInnerInterpreter = new Mock<IExceptionInterpreter>();
-            mockInnerInterpreter.Setup(iep => iep.Interpret(inner, mockInnerInterpreter.Object))
+            mockInnerInterpreter
+                .Setup(iep => iep.Interpret(inner, mockInnerInterpreter.Object))
                 .Returns(new Exception("Projected " + inner.Message))
                 .Verifiable();
 
@@ -88,7 +101,10 @@ namespace QuantConnect.Tests.Common.Exceptions
 
             interpreter.Interpret(exception, mockInnerInterpreter.Object);
 
-            mockInnerInterpreter.Verify(iep => iep.Interpret(inner, mockInnerInterpreter.Object), Times.Exactly(1));
+            mockInnerInterpreter.Verify(
+                iep => iep.Interpret(inner, mockInnerInterpreter.Object),
+                Times.Exactly(1)
+            );
         }
 
         private Exception CreateExceptionFromType(Type type)
@@ -96,7 +112,11 @@ namespace QuantConnect.Tests.Common.Exceptions
             if (type == typeof(ScheduledEventException))
             {
                 var inner = new Exception("Sample inner message");
-                return new ScheduledEventException(Guid.NewGuid().ToStringInvariant(null), "Sample error message", inner);
+                return new ScheduledEventException(
+                    Guid.NewGuid().ToStringInvariant(null),
+                    "Sample error message",
+                    inner
+                );
             }
 
             return (Exception)Activator.CreateInstance(type);

@@ -25,10 +25,17 @@ namespace QuantConnect.Tests.Common.Securities.Futures
     public class FuturesListingsTests
     {
         [TestCaseSource(nameof(ListedContractsCME_2021_01_11))]
-        public void ListedContractsMatchesCME(string ticker, string market, DateTime[] expectedListedExpiries)
+        public void ListedContractsMatchesCME(
+            string ticker,
+            string market,
+            DateTime[] expectedListedExpiries
+        )
         {
             // Test was created on 2021-01-11, we're using CME's data here to validate the test, hence the fixed date.
-            var contractsListed = FuturesListings.ListedContracts(ticker, new DateTime(2021, 1, 11));
+            var contractsListed = FuturesListings.ListedContracts(
+                ticker,
+                new DateTime(2021, 1, 11)
+            );
             var contractsMissing = new HashSet<Symbol>();
 
             foreach (var expectedExpiry in expectedListedExpiries)
@@ -40,10 +47,15 @@ namespace QuantConnect.Tests.Common.Securities.Futures
                 }
             }
 
-            var missingContractsMessage = $"The following contracts are missing from the listed contracts: {string.Join("\n", contractsMissing.Select(s => "  " + s.Value + " " + s.ID.Date.ToStringInvariant("yyyy-MM-dd")))}";
+            var missingContractsMessage =
+                $"The following contracts are missing from the listed contracts: {string.Join("\n", contractsMissing.Select(s => "  " + s.Value + " " + s.ID.Date.ToStringInvariant("yyyy-MM-dd")))}";
 
             Assert.AreEqual(0, contractsMissing.Count, missingContractsMessage);
-            Assert.AreEqual(expectedListedExpiries.Length, contractsListed.Count, $"The length of expected listed contracts does not match the returned contract count.");
+            Assert.AreEqual(
+                expectedListedExpiries.Length,
+                contractsListed.Count,
+                $"The length of expected listed contracts does not match the returned contract count."
+            );
         }
 
         public static TestCaseData[] ListedContractsCME_2021_01_11()

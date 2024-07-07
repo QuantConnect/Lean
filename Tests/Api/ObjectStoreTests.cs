@@ -13,17 +13,17 @@
  * limitations under the License.
 */
 
-using NUnit.Framework;
-using QuantConnect.Configuration;
-using System.Collections.Generic;
 using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using NUnit.Framework;
+using QuantConnect.Configuration;
 
 namespace QuantConnect.Tests.API
 {
     [TestFixture, Explicit("Requires configured api access and available backtest node to run on")]
-    public class ObjectStoreTests: ApiTestBase
+    public class ObjectStoreTests : ApiTestBase
     {
         private const string _key = "/Ricardo";
         private readonly byte[] _data = new byte[3] { 1, 2, 3 };
@@ -37,7 +37,9 @@ namespace QuantConnect.Tests.API
             {
                 Assert.IsTrue(result);
                 DirectoryAssert.Exists(path);
-                Assert.IsTrue(keys.Where(x => File.Exists(path + x) || Directory.Exists(path + x)).Any()); // For some test cases, just one of the keys is present in the Object Store.
+                Assert.IsTrue(
+                    keys.Where(x => File.Exists(path + x) || Directory.Exists(path + x)).Any()
+                ); // For some test cases, just one of the keys is present in the Object Store.
             }
             else
             {
@@ -108,20 +110,57 @@ namespace QuantConnect.Tests.API
 
         private static object[] GetObjectStoreWorksAsExpectedTestCases =
         {
-            new object[] { new List<string> { "/orats_2024-02-17.json", "/orats_2024-02-29.json" }, true}, // Two keys present
-            new object[] { new List<string> {}, false}, // No key is given
-            new object[] { new List<string> { "/orats_2024-02-17.json", "/orats_2024-02-32.json" }, true}, // One key is present and the other one not
-            new object[] { new List<string> { "/orats_2024-02-32.json" }, false}, // The key is not present
-            new object[] { new List<string> { "/mrm8488" }, true}, // The type of the object store file is directory
-            new object[] { new List<string> { "/ETF_constrain_Alex.csv" }, true}, // The type of the object store file is text/plain
-            new object[] { new List<string> { "/model" }, true}, // The type of the object store file is application/octet-stream
-            new object[] { new List<string> { "/dividend_20240312.json" }, true}, // The type of the object store file is application/x-empty
-            new object[] { new List<string> {
-                "/cli-projects.zip",
-                "/500MB_big_file.txt",
-                "/orats_2024-01-31.json",
-                "/orats_2024-03-06.json"
-            }, true} // Heavy object store files
+            new object[]
+            {
+                new List<string> { "/orats_2024-02-17.json", "/orats_2024-02-29.json" },
+                true
+            }, // Two keys present
+            new object[]
+            {
+                new List<string> { },
+                false
+            }, // No key is given
+            new object[]
+            {
+                new List<string> { "/orats_2024-02-17.json", "/orats_2024-02-32.json" },
+                true
+            }, // One key is present and the other one not
+            new object[]
+            {
+                new List<string> { "/orats_2024-02-32.json" },
+                false
+            }, // The key is not present
+            new object[]
+            {
+                new List<string> { "/mrm8488" },
+                true
+            }, // The type of the object store file is directory
+            new object[]
+            {
+                new List<string> { "/ETF_constrain_Alex.csv" },
+                true
+            }, // The type of the object store file is text/plain
+            new object[]
+            {
+                new List<string> { "/model" },
+                true
+            }, // The type of the object store file is application/octet-stream
+            new object[]
+            {
+                new List<string> { "/dividend_20240312.json" },
+                true
+            }, // The type of the object store file is application/x-empty
+            new object[]
+            {
+                new List<string>
+                {
+                    "/cli-projects.zip",
+                    "/500MB_big_file.txt",
+                    "/orats_2024-01-31.json",
+                    "/orats_2024-03-06.json"
+                },
+                true
+            } // Heavy object store files
         };
     }
 }

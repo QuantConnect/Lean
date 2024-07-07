@@ -13,18 +13,18 @@
  * limitations under the License.
 */
 
-using System.Threading;
+using System;
 using System.Collections.Generic;
+using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 using NUnit.Framework;
-using QuantConnect.Algorithm;
 using Python.Runtime;
+using QuantConnect.Algorithm;
 using QuantConnect.Data.Market;
 using QuantConnect.Indicators;
-using QuantConnect.Tests.Indicators;
-using System;
-using System.Linq;
 using QuantConnect.Tests.Engine.DataFeeds;
+using QuantConnect.Tests.Indicators;
 using QuantConnect.Util;
 
 namespace QuantConnect.Tests.Algorithm
@@ -46,9 +46,9 @@ namespace QuantConnect.Tests.Algorithm
                 from type in GetType().Assembly.GetTypes()
                 where type.IsPublic && !type.IsAbstract
                 where
-                   typeof(CommonIndicatorTests<TradeBar>).IsAssignableFrom(type) ||
-                   typeof(CommonIndicatorTests<IBaseDataBar>).IsAssignableFrom(type) ||
-                   typeof(CommonIndicatorTests<IndicatorDataPoint>).IsAssignableFrom(type)
+                    typeof(CommonIndicatorTests<TradeBar>).IsAssignableFrom(type)
+                    || typeof(CommonIndicatorTests<IBaseDataBar>).IsAssignableFrom(type)
+                    || typeof(CommonIndicatorTests<IndicatorDataPoint>).IsAssignableFrom(type)
                 select type;
         }
 
@@ -123,22 +123,32 @@ namespace QuantConnect.Tests.Algorithm
                 var indicatorTest = Activator.CreateInstance(type);
                 if (indicatorTest is CommonIndicatorTests<IndicatorDataPoint>)
                 {
-                    indicator = (indicatorTest as CommonIndicatorTests<IndicatorDataPoint>).GetIndicatorAsPyObject();
+                    indicator = (
+                        indicatorTest as CommonIndicatorTests<IndicatorDataPoint>
+                    ).GetIndicatorAsPyObject();
                 }
                 else if (indicatorTest is CommonIndicatorTests<IBaseDataBar>)
                 {
-                    indicator = (indicatorTest as CommonIndicatorTests<IBaseDataBar>).GetIndicatorAsPyObject();
+                    indicator = (
+                        indicatorTest as CommonIndicatorTests<IBaseDataBar>
+                    ).GetIndicatorAsPyObject();
                 }
                 else if (indicatorTest is CommonIndicatorTests<TradeBar>)
                 {
-                    indicator = (indicatorTest as CommonIndicatorTests<TradeBar>).GetIndicatorAsPyObject();
+                    indicator = (
+                        indicatorTest as CommonIndicatorTests<TradeBar>
+                    ).GetIndicatorAsPyObject();
                 }
                 else
                 {
-                    throw new NotSupportedException($"RegistersIndicatorProperlyPython(): Unsupported indicator data type: {indicatorTest.GetType()}");
+                    throw new NotSupportedException(
+                        $"RegistersIndicatorProperlyPython(): Unsupported indicator data type: {indicatorTest.GetType()}"
+                    );
                 }
 
-                Assert.DoesNotThrow(() => _algorithm.Plot($"TestIndicatorPlot-{type.Name}", indicator));
+                Assert.DoesNotThrow(
+                    () => _algorithm.Plot($"TestIndicatorPlot-{type.Name}", indicator)
+                );
                 var charts = _algorithm.GetChartUpdates();
                 Assert.IsTrue(charts.Select(x => x.Name == $"TestIndicatorPlot-{type.Name}").Any());
             }
@@ -170,7 +180,10 @@ class PythonCustomIndicator(PythonIndicator):
                 Assert.DoesNotThrow(() => _algorithm.Plot("PlotTest", customIndicator));
                 var charts = _algorithm.GetChartUpdates().ToList();
                 Assert.IsTrue(charts.Where(x => x.Name == "PlotTest").Any());
-                Assert.AreEqual(10, charts.First().Series["custom"].GetValues<ChartPoint>().First().y);
+                Assert.AreEqual(
+                    10,
+                    charts.First().Series["custom"].GetValues<ChartPoint>().First().y
+                );
             }
         }
 
@@ -197,7 +210,10 @@ class CustomIndicator:
                 var charts = _algorithm.GetChartUpdates().ToList();
                 Assert.IsFalse(charts.Where(x => x.Name == "PlotTest").Any());
                 Assert.IsTrue(charts.Where(x => x.Name == "Strategy Equity").Any());
-                Assert.AreEqual(10, charts.First().Series["PlotTest"].GetValues<ChartPoint>().First().y);
+                Assert.AreEqual(
+                    10,
+                    charts.First().Series["PlotTest"].GetValues<ChartPoint>().First().y
+                );
             }
         }
 
@@ -218,7 +234,10 @@ class CustomIndicator:
 
             var chart = charts.First();
             Assert.AreEqual("PlotTest", chart.Name);
-            Assert.AreEqual(sma1.Current.Value / sma2.Current.Value, chart.Series[ratio.Name].GetValues<ChartPoint>().First().y);
+            Assert.AreEqual(
+                sma1.Current.Value / sma2.Current.Value,
+                chart.Series[ratio.Name].GetValues<ChartPoint>().First().y
+            );
         }
     }
 }

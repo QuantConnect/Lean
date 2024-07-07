@@ -14,14 +14,14 @@
  *
 */
 
+using System;
+using System.Collections.Generic;
+using System.Linq;
 using NUnit.Framework;
 using Python.Runtime;
 using QuantConnect.Python;
 using QuantConnect.Securities;
 using QuantConnect.Util;
-using System;
-using System.Collections.Generic;
-using System.Linq;
 
 namespace QuantConnect.Tests.Python
 {
@@ -29,9 +29,13 @@ namespace QuantConnect.Tests.Python
     public partial class PandasConverterTests
     {
         [Test, TestCaseSource(nameof(TestDataFrameNonExceptionFunctions))]
-        public void BackwardsCompatibilityDataFrameDataFrameNonExceptionFunctions(string method, string index, bool cache)
+        public void BackwardsCompatibilityDataFrameDataFrameNonExceptionFunctions(
+            string method,
+            string index,
+            bool cache
+        )
         {
-            if(method == ".to_orc()")
+            if (method == ".to_orc()")
             {
                 if (OS.IsWindows)
                 {
@@ -41,55 +45,76 @@ namespace QuantConnect.Tests.Python
                 // orc does not support serializing a non-default index for the index; you can .reset_index() to make the index into column(s)
                 method = $".reset_index(){method}";
             }
-            if (cache) SymbolCache.Set("SPY", Symbols.SPY);
+            if (cache)
+                SymbolCache.Set("SPY", Symbols.SPY);
 
             using (Py.GIL())
             {
-                dynamic test = PyModule.FromString("testModule",
-                    $@"
+                dynamic test = PyModule
+                    .FromString(
+                        "testModule",
+                        $@"
 def Test(df, symbol):
-    df = df.lastprice.unstack(level=0){method}").GetAttr("Test");
+    df = df.lastprice.unstack(level=0){method}"
+                    )
+                    .GetAttr("Test");
 
                 Assert.DoesNotThrow(() => test(GetTestDataFrame(Symbols.SPY), Symbols.SPY));
             }
         }
 
         [Test, TestCaseSource(nameof(TestDataFrameParameterlessFunctions))]
-        public void BackwardsCompatibilityDataFrameParameterlessFunctions(string method, string index, bool cache)
+        public void BackwardsCompatibilityDataFrameParameterlessFunctions(
+            string method,
+            string index,
+            bool cache
+        )
         {
-            if (cache) SymbolCache.Set("SPY", Symbols.SPY);
+            if (cache)
+                SymbolCache.Set("SPY", Symbols.SPY);
 
             using (Py.GIL())
             {
-                dynamic test = PyModule.FromString("testModule",
-                    $@"
+                dynamic test = PyModule
+                    .FromString(
+                        "testModule",
+                        $@"
 def Test(df, symbol):
     df = df.lastprice.unstack(level=0){method}
     # If not DataFrame, return
     if not hasattr(df, 'columns'):
         return
     if df.iloc[-1][{index}] is 0:
-        raise Exception('Data is zero')").GetAttr("Test");
+        raise Exception('Data is zero')"
+                    )
+                    .GetAttr("Test");
 
                 Assert.DoesNotThrow(() => test(GetTestDataFrame(Symbols.SPY), Symbols.SPY));
             }
         }
 
         [Test, TestCaseSource(nameof(TestDataFrameOtherParameterFunctions))]
-        public void BackwardsCompatibilityDataFrameOtherParameterFunctions(string method, string index, bool cache)
-        {   
+        public void BackwardsCompatibilityDataFrameOtherParameterFunctions(
+            string method,
+            string index,
+            bool cache
+        )
+        {
             // Cannot compare non identically indexed dataframes
             if (method == ".compare(other)" && _newerPandas)
             {
                 return;
             }
 
-            if (cache) SymbolCache.Set("SPY", Symbols.SPY);
+            if (cache)
+                SymbolCache.Set("SPY", Symbols.SPY);
 
             using (Py.GIL())
             {
-                dynamic test = PyModule.FromString("testModule",
-                    $@"
+                dynamic test = PyModule
+                    .FromString(
+                        "testModule",
+                        $@"
 def Test(df, other, symbol):
     df = df{method}
     df = df.lastprice.unstack(level=0)
@@ -97,38 +122,63 @@ def Test(df, other, symbol):
     if not hasattr(df, 'columns'):
         return
     if df.iloc[-1][{index}] is 0:
-        raise Exception('Data is zero')").GetAttr("Test");
+        raise Exception('Data is zero')"
+                    )
+                    .GetAttr("Test");
 
-                Assert.DoesNotThrow(() => test(GetTestDataFrame(Symbols.SPY), GetTestDataFrame(Symbols.AAPL), Symbols.SPY));
+                Assert.DoesNotThrow(
+                    () =>
+                        test(
+                            GetTestDataFrame(Symbols.SPY),
+                            GetTestDataFrame(Symbols.AAPL),
+                            Symbols.SPY
+                        )
+                );
             }
         }
 
         [Test, TestCaseSource(nameof(TestSeriesNonExceptionFunctions))]
-        public void BackwardsCompatibilitySeriesNonExceptionFunctions(string method, string index, bool cache)
+        public void BackwardsCompatibilitySeriesNonExceptionFunctions(
+            string method,
+            string index,
+            bool cache
+        )
         {
-            if (cache) SymbolCache.Set("SPY", Symbols.SPY);
+            if (cache)
+                SymbolCache.Set("SPY", Symbols.SPY);
 
             using (Py.GIL())
             {
-                dynamic test = PyModule.FromString("testModule",
-                    $@"
+                dynamic test = PyModule
+                    .FromString(
+                        "testModule",
+                        $@"
 def Test(df, symbol):
     series = df.lastprice
-    series = series{method}").GetAttr("Test");
+    series = series{method}"
+                    )
+                    .GetAttr("Test");
 
                 Assert.DoesNotThrow(() => test(GetTestDataFrame(Symbols.SPY), Symbols.SPY));
             }
         }
 
         [Test, TestCaseSource(nameof(TestSeriesParameterlessFunctions))]
-        public void BackwardsCompatibilitySeriesParameterlessFunctions(string method, string index, bool cache)
+        public void BackwardsCompatibilitySeriesParameterlessFunctions(
+            string method,
+            string index,
+            bool cache
+        )
         {
-            if (cache) SymbolCache.Set("SPY", Symbols.SPY);
+            if (cache)
+                SymbolCache.Set("SPY", Symbols.SPY);
 
             using (Py.GIL())
             {
-                dynamic test = PyModule.FromString("testModule",
-                    $@"
+                dynamic test = PyModule
+                    .FromString(
+                        "testModule",
+                        $@"
 def Test(df, symbol):
     series = df.lastprice
     series = series{method}
@@ -136,14 +186,20 @@ def Test(df, symbol):
     if not hasattr(series, 'index') or type(series) is tuple:
         return
     if series.loc[{index}].iloc[-1] is 0:
-        raise Exception('Data is zero')").GetAttr("Test");
+        raise Exception('Data is zero')"
+                    )
+                    .GetAttr("Test");
 
                 Assert.DoesNotThrow(() => test(GetTestDataFrame(Symbols.SPY), Symbols.SPY));
             }
         }
 
         [Test, TestCaseSource(nameof(TestSeriesOtherParameterFunctions))]
-        public void BackwardsCompatibilitySeriesOtherParameterFunctions(string method, string index, bool cache)
+        public void BackwardsCompatibilitySeriesOtherParameterFunctions(
+            string method,
+            string index,
+            bool cache
+        )
         {
             // Cannot compare non identically indexed dataframes
             if (method == ".compare(other)" && _newerPandas)
@@ -151,12 +207,15 @@ def Test(df, symbol):
                 return;
             }
 
-            if (cache) SymbolCache.Set("SPY", Symbols.SPY);
+            if (cache)
+                SymbolCache.Set("SPY", Symbols.SPY);
 
             using (Py.GIL())
             {
-                dynamic test = PyModule.FromString("testModule",
-                    $@"
+                dynamic test = PyModule
+                    .FromString(
+                        "testModule",
+                        $@"
 def Test(df, other, symbol):
     series, other = other.lastprice, df.lastprice
     series = series{method}
@@ -164,9 +223,18 @@ def Test(df, other, symbol):
     if not hasattr(series, 'index') or type(series) is tuple:
         return
     if series.loc[{index}].iloc[-1] is 0:
-        raise Exception('Data is zero')").GetAttr("Test");
+        raise Exception('Data is zero')"
+                    )
+                    .GetAttr("Test");
 
-                Assert.DoesNotThrow(() => test(GetTestDataFrame(Symbols.SPY), GetTestDataFrame(Symbols.AAPL), Symbols.SPY));
+                Assert.DoesNotThrow(
+                    () =>
+                        test(
+                            GetTestDataFrame(Symbols.SPY),
+                            GetTestDataFrame(Symbols.AAPL),
+                            Symbols.SPY
+                        )
+                );
             }
         }
 
@@ -185,22 +253,23 @@ def Test(df, other, symbol):
                     ".last('2S')",
                     ".melt()"
                 };
-                
-                if (!IsNewerPandas()){
-                    var additionalFunctions = new[]
-                    {
-                    ".clip_lower(100)",
-                    ".clip_upper(200)",
-                    };
+
+                if (!IsNewerPandas())
+                {
+                    var additionalFunctions = new[] { ".clip_lower(100)", ".clip_upper(200)", };
                     functions.Concat(additionalFunctions);
                 }
 
-                var testCases = functions.SelectMany(x => new[]
-                {
-                    new TestCaseData(x, "'SPY'", true),
-                    new TestCaseData(x, "symbol", false),
-                    new TestCaseData(x, "str(symbol.ID)", false)
-                }).ToList();
+                var testCases = functions
+                    .SelectMany(x =>
+                        new[]
+                        {
+                            new TestCaseData(x, "'SPY'", true),
+                            new TestCaseData(x, "symbol", false),
+                            new TestCaseData(x, "str(symbol.ID)", false)
+                        }
+                    )
+                    .ToList();
 
                 testCases.AddRange(_parameterlessFunctions["DataFrame"]);
                 return testCases.ToArray();
@@ -224,53 +293,48 @@ def Test(df, other, symbol):
                     ".value_counts()"
                 };
 
-                if (!IsNewerPandas()){
-                    var additionalFunctions = new[]
-                    {
-                    ".clip_lower(100)",
-                    ".clip_upper(200)",
-                    };
+                if (!IsNewerPandas())
+                {
+                    var additionalFunctions = new[] { ".clip_lower(100)", ".clip_upper(200)", };
                     functions.Concat(additionalFunctions);
                 }
 
-
-                var testCases = functions.SelectMany(x => new[]
-                {
-                    new TestCaseData(x, "'SPY'", true),
-                    new TestCaseData(x, "symbol", false),
-                    new TestCaseData(x, "str(symbol.ID)", false)
-                })
-                .ToList();
+                var testCases = functions
+                    .SelectMany(x =>
+                        new[]
+                        {
+                            new TestCaseData(x, "'SPY'", true),
+                            new TestCaseData(x, "symbol", false),
+                            new TestCaseData(x, "str(symbol.ID)", false)
+                        }
+                    )
+                    .ToList();
 
                 testCases.AddRange(_parameterlessFunctions["Series"]);
                 return testCases.ToArray();
             }
         }
 
-        private static TestCaseData[] TestDataFrameParameterlessFunctions => _parameterlessFunctions["DataFrameParameterless"];
+        private static TestCaseData[] TestDataFrameParameterlessFunctions =>
+            _parameterlessFunctions["DataFrameParameterless"];
 
-        private static TestCaseData[] TestSeriesParameterlessFunctions => _parameterlessFunctions["SeriesParameterless"];
+        private static TestCaseData[] TestSeriesParameterlessFunctions =>
+            _parameterlessFunctions["SeriesParameterless"];
 
         private static TestCaseData[] TestDataFrameOtherParameterFunctions
         {
             get
             {
-                var functions = new[]
-                {
-                    "+",
-                    "-",
-                    "/",
-                    "*",
-                    "%",
-                    "**",
-                    "//"
-                }
-                .SelectMany(x => new[]
-                {
-                    new TestCaseData($" {x} other", "'SPY'", true),
-                    new TestCaseData($" {x} other", "symbol", false),
-                    new TestCaseData($" {x} other", "str(symbol.ID)", false)
-                }).ToList();
+                var functions = new[] { "+", "-", "/", "*", "%", "**", "//" }
+                    .SelectMany(x =>
+                        new[]
+                        {
+                            new TestCaseData($" {x} other", "'SPY'", true),
+                            new TestCaseData($" {x} other", "symbol", false),
+                            new TestCaseData($" {x} other", "str(symbol.ID)", false)
+                        }
+                    )
+                    .ToList();
 
                 functions.AddRange(_parameterlessFunctions["DataFrameOtherParameter"]);
                 return functions.ToArray();
@@ -281,29 +345,24 @@ def Test(df, other, symbol):
         {
             get
             {
-                var functions = new[]
-                {
-                    "+",
-                    "-",
-                    "/",
-                    "*",
-                    "%",
-                    "**",
-                    "//"
-                }
-                .SelectMany(x => new[]
-                {
-                    new TestCaseData($" {x} other", "'SPY'", true),
-                    new TestCaseData($" {x} other", "symbol", false),
-                    new TestCaseData($" {x} other", "str(symbol.ID)", false)
-                }).ToList();
+                var functions = new[] { "+", "-", "/", "*", "%", "**", "//" }
+                    .SelectMany(x =>
+                        new[]
+                        {
+                            new TestCaseData($" {x} other", "'SPY'", true),
+                            new TestCaseData($" {x} other", "symbol", false),
+                            new TestCaseData($" {x} other", "str(symbol.ID)", false)
+                        }
+                    )
+                    .ToList();
 
                 functions.AddRange(_parameterlessFunctions["SeriesOtherParameter"]);
                 return functions.ToArray();
             }
         }
 
-        private static Dictionary<string, TestCaseData[]> _parameterlessFunctions = GetParameterlessFunctions();
+        private static Dictionary<string, TestCaseData[]> _parameterlessFunctions =
+            GetParameterlessFunctions();
 
         private static Dictionary<string, TestCaseData[]> GetParameterlessFunctions()
         {
@@ -314,7 +373,8 @@ def Test(df, other, symbol):
 
             using (Py.GIL())
             {
-                var module = PyModule.FromString("Test",
+                var module = PyModule.FromString(
+                    "Test",
                     @"import pandas
 from inspect import getmembers, isfunction, signature
 
@@ -372,25 +432,38 @@ DataFrameParameterless = getParameterlessFunctions(pandas.DataFrame)
 SeriesParameterless = getParameterlessFunctions(pandas.Series)
 DataFrameOtherParameter = getOtherParameterFunctions(pandas.DataFrame)
 SeriesOtherParameter = getOtherParameterFunctions(pandas.Series)
-");
+"
+                );
                 Func<string, string, TestCaseData[]> converter = (s, p) =>
                 {
-                    var list = (List<string>)module.GetAttr(s).AsManagedObject(typeof(List<string>));
-                    return list.SelectMany(x => new[]
-                    {
-                        new TestCaseData($".{x}{p}", "'SPY'", true),
-                        new TestCaseData($".{x}{p}", "symbol", false),
-                        new TestCaseData($".{x}{p}", "str(symbol.ID)", false)
-                    }
-                    ).ToArray();
+                    var list =
+                        (List<string>)module.GetAttr(s).AsManagedObject(typeof(List<string>));
+                    return list.SelectMany(x =>
+                            new[]
+                            {
+                                new TestCaseData($".{x}{p}", "'SPY'", true),
+                                new TestCaseData($".{x}{p}", "symbol", false),
+                                new TestCaseData($".{x}{p}", "str(symbol.ID)", false)
+                            }
+                        )
+                        .ToArray();
                 };
 
                 functionsByType.Add("DataFrame", converter("DataFrame", "()"));
                 functionsByType.Add("Series", converter("Series", "()"));
-                functionsByType.Add("DataFrameParameterless", converter("DataFrameParameterless", "()"));
+                functionsByType.Add(
+                    "DataFrameParameterless",
+                    converter("DataFrameParameterless", "()")
+                );
                 functionsByType.Add("SeriesParameterless", converter("SeriesParameterless", "()"));
-                functionsByType.Add("DataFrameOtherParameter", converter("DataFrameOtherParameter", "(other)"));
-                functionsByType.Add("SeriesOtherParameter", converter("SeriesOtherParameter", "(other)"));
+                functionsByType.Add(
+                    "DataFrameOtherParameter",
+                    converter("DataFrameOtherParameter", "(other)")
+                );
+                functionsByType.Add(
+                    "SeriesOtherParameter",
+                    converter("SeriesOtherParameter", "(other)")
+                );
             }
 
             return functionsByType;

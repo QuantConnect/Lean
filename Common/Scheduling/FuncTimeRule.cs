@@ -1,11 +1,11 @@
 /*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
- * 
- * Licensed under the Apache License, Version 2.0 (the "License"); 
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -14,9 +14,9 @@
  *
 */
 
-using Python.Runtime;
 using System;
 using System.Collections.Generic;
+using Python.Runtime;
 
 namespace QuantConnect.Scheduling
 {
@@ -25,14 +25,20 @@ namespace QuantConnect.Scheduling
     /// </summary>
     public class FuncTimeRule : ITimeRule
     {
-        private readonly Func<IEnumerable<DateTime>, IEnumerable<DateTime>> _createUtcEventTimesFunction;
+        private readonly Func<
+            IEnumerable<DateTime>,
+            IEnumerable<DateTime>
+        > _createUtcEventTimesFunction;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="FuncTimeRule"/> class
         /// </summary>
         /// <param name="name">The name of the time rule</param>
         /// <param name="createUtcEventTimesFunction">Function used to transform dates into event date times</param>
-        public FuncTimeRule(string name, Func<IEnumerable<DateTime>, IEnumerable<DateTime>> createUtcEventTimesFunction)
+        public FuncTimeRule(
+            string name,
+            Func<IEnumerable<DateTime>, IEnumerable<DateTime>> createUtcEventTimesFunction
+        )
         {
             Name = name;
             _createUtcEventTimesFunction = createUtcEventTimesFunction;
@@ -55,10 +61,7 @@ namespace QuantConnect.Scheduling
         /// <summary>
         /// Gets a name for this rule
         /// </summary>
-        public string Name
-        {
-            get; private set;
-        }
+        public string Name { get; private set; }
 
         /// <summary>
         /// Creates the event times for the specified dates in UTC

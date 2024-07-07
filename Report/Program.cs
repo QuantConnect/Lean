@@ -14,15 +14,15 @@
 */
 
 using System;
+using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using Newtonsoft.Json;
-using QuantConnect.Util;
-using System.Diagnostics;
+using QuantConnect.Configuration;
+using QuantConnect.Lean.Engine;
 using QuantConnect.Logging;
 using QuantConnect.Packets;
-using QuantConnect.Lean.Engine;
-using System.Collections.Generic;
-using QuantConnect.Configuration;
+using QuantConnect.Util;
 
 namespace QuantConnect.Report
 {
@@ -36,7 +36,9 @@ namespace QuantConnect.Report
             // Parse report arguments and merge with config to use in report creator:
             if (args.Length > 0)
             {
-                Config.MergeCommandLineArgumentsWithConfiguration(ReportArgumentParser.ParseArguments(args));
+                Config.MergeCommandLineArgumentsWithConfiguration(
+                    ReportArgumentParser.ParseArguments(args)
+                );
             }
 
             // initialize required lean handlers
@@ -52,14 +54,22 @@ namespace QuantConnect.Report
             var htmlCustomFile = Config.Get("report-html-custom-file", "template.html");
 
             // Parse content from source files into result objects
-            Log.Trace($"QuantConnect.Report.Main(): Parsing source files...{backtestDataFile}, {liveDataFile}");
+            Log.Trace(
+                $"QuantConnect.Report.Main(): Parsing source files...{backtestDataFile}, {liveDataFile}"
+            );
             var backtestSettings = new JsonSerializerSettings
             {
-                Converters = new List<JsonConverter> { new NullResultValueTypeJsonConverter<BacktestResult>() },
+                Converters = new List<JsonConverter>
+                {
+                    new NullResultValueTypeJsonConverter<BacktestResult>()
+                },
                 FloatParseHandling = FloatParseHandling.Decimal
             };
 
-            var backtest = JsonConvert.DeserializeObject<BacktestResult>(File.ReadAllText(backtestDataFile), backtestSettings);
+            var backtest = JsonConvert.DeserializeObject<BacktestResult>(
+                File.ReadAllText(backtestDataFile),
+                backtestSettings
+            );
             LiveResult live = null;
 
             if (liveDataFile != string.Empty)
@@ -67,10 +77,16 @@ namespace QuantConnect.Report
                 var settings = new JsonSerializerSettings
                 {
                     NullValueHandling = NullValueHandling.Ignore,
-                    Converters = new List<JsonConverter> { new NullResultValueTypeJsonConverter<LiveResult>() }
+                    Converters = new List<JsonConverter>
+                    {
+                        new NullResultValueTypeJsonConverter<LiveResult>()
+                    }
                 };
 
-                live = JsonConvert.DeserializeObject<LiveResult>(File.ReadAllText(liveDataFile), settings);
+                live = JsonConvert.DeserializeObject<LiveResult>(
+                    File.ReadAllText(liveDataFile),
+                    settings
+                );
             }
 
             string cssOverrideContent = null;
@@ -82,7 +98,9 @@ namespace QuantConnect.Report
                 }
                 else
                 {
-                    Log.Trace($"QuantConnect.Report.Main(): CSS override file {cssOverrideFile} was not found");
+                    Log.Trace(
+                        $"QuantConnect.Report.Main(): CSS override file {cssOverrideFile} was not found"
+                    );
                 }
             }
 
@@ -95,13 +113,23 @@ namespace QuantConnect.Report
                 }
                 else
                 {
-                    Log.Trace($"QuantConnect.Report.Main(): HTML custom file {htmlCustomFile} was not found");
+                    Log.Trace(
+                        $"QuantConnect.Report.Main(): HTML custom file {htmlCustomFile} was not found"
+                    );
                 }
             }
 
             //Create a new report
             Log.Trace("QuantConnect.Report.Main(): Instantiating report...");
-            var report = new Report(name, description, version, backtest, live, cssOverride: cssOverrideContent, htmlCustom: htmlCustomContent);
+            var report = new Report(
+                name,
+                description,
+                version,
+                backtest,
+                live,
+                cssOverride: cssOverrideContent,
+                htmlCustom: htmlCustomContent
+            );
 
             // Generate the html content
             Log.Trace("QuantConnect.Report.Main(): Starting content compile...");
@@ -125,29 +153,37 @@ namespace QuantConnect.Report
                         var pdfDestination = destination.Replace(".html", ".pdf");
                         Process process = new();
                         process.StartInfo.FileName = "xvfb-run";
-                        process.StartInfo.Arguments = $"--server-args=\"-screen 0, 1600x1200x24+32\" wkhtmltopdf {destination} {pdfDestination}";
+                        process.StartInfo.Arguments =
+                            $"--server-args=\"-screen 0, 1600x1200x24+32\" wkhtmltopdf {destination} {pdfDestination}";
                         process.StartInfo.UseShellExecute = false;
                         process.StartInfo.RedirectStandardOutput = true;
                         process.StartInfo.RedirectStandardError = true;
                         process.StartInfo.WindowStyle = ProcessWindowStyle.Hidden;
 
-                        process.OutputDataReceived += (sender, e) => Log.Trace($"QuantConnect.Report.Main(): {e.Data}");
-                        process.ErrorDataReceived += (sender, e) => Log.Error($"QuantConnect.Report.Main(): {e.Data}");
+                        process.OutputDataReceived += (sender, e) =>
+                            Log.Trace($"QuantConnect.Report.Main(): {e.Data}");
+                        process.ErrorDataReceived += (sender, e) =>
+                            Log.Error($"QuantConnect.Report.Main(): {e.Data}");
 
                         process.Start();
 
                         process.BeginOutputReadLine();
                         process.BeginErrorReadLine();
 
-                        var processExited = process.WaitForExit(1*60*1000); // wait for up to 1 minutes
+                        var processExited = process.WaitForExit(1 * 60 * 1000); // wait for up to 1 minutes
 
                         if (processExited)
                         {
-                            Log.Trace("QuantConnect.Report.Main(): Convert to PDF process exited with code " + process.ExitCode);
+                            Log.Trace(
+                                "QuantConnect.Report.Main(): Convert to PDF process exited with code "
+                                    + process.ExitCode
+                            );
                         }
                         else
                         {
-                            Log.Error("QuantConnect.Report.Main(): Process did not exit within the timeout period.");
+                            Log.Error(
+                                "QuantConnect.Report.Main(): Process did not exit within the timeout period."
+                            );
                             process.Kill(); // kill the process if it's still running
                         }
                     }

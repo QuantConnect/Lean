@@ -13,11 +13,11 @@
  * limitations under the License.
 */
 
+using System;
 using Python.Runtime;
 using QuantConnect.Algorithm.Framework.Portfolio;
 using QuantConnect.Data.UniverseSelection;
 using QuantConnect.Python;
-using System;
 
 namespace QuantConnect.Algorithm.Framework.Execution
 {
@@ -39,7 +39,9 @@ namespace QuantConnect.Algorithm.Framework.Execution
             {
                 if (!_model.HasAttr(attributeName))
                 {
-                    throw new NotImplementedException($"IExecutionModel.{attributeName} must be implemented. Please implement this missing method on {model.GetPythonType()}");
+                    throw new NotImplementedException(
+                        $"IExecutionModel.{attributeName} must be implemented. Please implement this missing method on {model.GetPythonType()}"
+                    );
                 }
             }
         }

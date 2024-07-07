@@ -30,7 +30,7 @@ namespace QuantConnect.Tests.Indicators
         protected override string TestFileName => "spy_cmf.txt";
 
         protected override string TestColumnName => "CMF_20";
-        
+
         [Test]
         public void TestTradeBarsWithNoVolume()
         {
@@ -46,10 +46,11 @@ namespace QuantConnect.Tests.Indicators
                     Low = data.Value,
                     Volume = 0
                 };
-                cmf.Update(tradeBar); 
+                cmf.Update(tradeBar);
             }
             Assert.AreEqual(cmf.Current.Value, 0m);
         }
+
         [Test]
         public void TestDivByZero()
         {
@@ -65,7 +66,7 @@ namespace QuantConnect.Tests.Indicators
                     Low = 1,
                     Volume = 1
                 };
-                cmf.Update(tradeBar); 
+                cmf.Update(tradeBar);
             }
             Assert.AreEqual(cmf.Current.Value, 0m);
         }
@@ -76,9 +77,8 @@ namespace QuantConnect.Tests.Indicators
         /// skip this test
         /// </summary>
         /// <param name="indicator"></param>
-        protected override void IndicatorValueIsNotZeroAfterReceiveRenkoBars(IndicatorBase indicator)
-        {
-        }
+        protected override void IndicatorValueIsNotZeroAfterReceiveRenkoBars(
+            IndicatorBase indicator
+        ) { }
     }
 }
-      

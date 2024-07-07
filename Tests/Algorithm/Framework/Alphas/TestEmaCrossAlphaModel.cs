@@ -13,8 +13,8 @@
  * limitations under the License.
 */
 
-using QuantConnect.Algorithm.Framework.Alphas;
 using System.Collections.Generic;
+using QuantConnect.Algorithm.Framework.Alphas;
 
 namespace QuantConnect.Tests.Algorithm.Framework.Alphas
 {

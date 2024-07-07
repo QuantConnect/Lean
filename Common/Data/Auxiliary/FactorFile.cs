@@ -15,11 +15,11 @@
 */
 
 using System;
+using System.Collections;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using QuantConnect.Util;
-using System.Collections;
-using System.Collections.Generic;
 
 namespace QuantConnect.Data.Auxiliary
 {
@@ -54,8 +54,8 @@ namespace QuantConnect.Data.Auxiliary
         /// <summary>
         /// Gets the most recent factor change in the factor file
         /// </summary>
-        public DateTime MostRecentFactorChange => ReversedFactorFileDates
-            .FirstOrDefault(time => time != Time.EndOfTime);
+        public DateTime MostRecentFactorChange =>
+            ReversedFactorFileDates.FirstOrDefault(time => time != Time.EndOfTime);
 
         /// <summary>
         /// Gets the symbol this factor file represents
@@ -65,7 +65,11 @@ namespace QuantConnect.Data.Auxiliary
         /// <summary>
         /// Initializes a new instance of the <see cref="FactorFile"/> class.
         /// </summary>
-        protected FactorFile(string permtick, IEnumerable<T> data, DateTime? factorFileMinimumDate = null)
+        protected FactorFile(
+            string permtick,
+            IEnumerable<T> data,
+            DateTime? factorFileMinimumDate = null
+        )
         {
             Permtick = permtick.LazyToUpper();
 
@@ -97,7 +101,7 @@ namespace QuantConnect.Data.Auxiliary
             DataNormalizationMode dataNormalizationMode,
             DataMappingMode? dataMappingMode = null,
             uint contractOffset = 0
-            );
+        );
 
         /// <summary>
         /// Writes this factor file data to an enumerable of csv lines
@@ -105,7 +109,9 @@ namespace QuantConnect.Data.Auxiliary
         /// <returns>An enumerable of lines representing this factor file</returns>
         public IEnumerable<string> GetFileFormat()
         {
-            return SortedFactorFileData.SelectMany(kvp => kvp.Value.Select(row => row.GetFileFormat()));
+            return SortedFactorFileData.SelectMany(kvp =>
+                kvp.Value.Select(row => row.GetFileFormat())
+            );
         }
 
         /// <summary>

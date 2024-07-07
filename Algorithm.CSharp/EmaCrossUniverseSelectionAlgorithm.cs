@@ -35,12 +35,14 @@ namespace QuantConnect.Algorithm.CSharp
         // tolerance to prevent bouncing
         const decimal Tolerance = 0.01m;
         private const int Count = 10;
+
         // use Buffer+Count to leave a little in cash
         private const decimal TargetPercent = 0.1m;
         private SecurityChanges _changes = SecurityChanges.None;
-        // holds our coarse fundamental indicators by symbol
-        private readonly ConcurrentDictionary<Symbol, SelectionData> _averages = new ConcurrentDictionary<Symbol, SelectionData>();
 
+        // holds our coarse fundamental indicators by symbol
+        private readonly ConcurrentDictionary<Symbol, SelectionData> _averages =
+            new ConcurrentDictionary<Symbol, SelectionData>();
 
         // class used to improve readability of the coarse selection function
         private class SelectionData
@@ -57,7 +59,7 @@ namespace QuantConnect.Algorithm.CSharp
             // computes an object score of how much large the fast is than the slow
             public decimal ScaledDelta
             {
-                get { return (Fast - Slow)/((Fast + Slow)/2m); }
+                get { return (Fast - Slow) / ((Fast + Slow) / 2m); }
             }
 
             // updates the EMA50 and EMA100 indicators, returning true when they're both ready
@@ -77,21 +79,23 @@ namespace QuantConnect.Algorithm.CSharp
 
             SetStartDate(2010, 01, 01);
             SetEndDate(2015, 01, 01);
-            SetCash(100*1000);
+            SetCash(100 * 1000);
 
             AddUniverse(coarse =>
             {
-                return (from cf in coarse
-                        // grab th SelectionData instance for this symbol
-                        let avg = _averages.GetOrAdd(cf.Symbol, sym => new SelectionData())
-                        // Update returns true when the indicators are ready, so don't accept until they are
-                        where avg.Update(cf.EndTime, cf.AdjustedPrice)
-                        // only pick symbols who have their 50 day ema over their 100 day ema
-                        where avg.Fast > avg.Slow*(1 + Tolerance)
-                        // prefer symbols with a larger delta by percentage between the two averages
-                        orderby avg.ScaledDelta descending
-                        // we only need to return the symbol and return 'Count' symbols
-                        select cf.Symbol).Take(Count);
+                return (
+                    from cf in coarse
+                    // grab th SelectionData instance for this symbol
+                    let avg = _averages.GetOrAdd(cf.Symbol, sym => new SelectionData())
+                    // Update returns true when the indicators are ready, so don't accept until they are
+                    where avg.Update(cf.EndTime, cf.AdjustedPrice)
+                    // only pick symbols who have their 50 day ema over their 100 day ema
+                    where avg.Fast > avg.Slow * (1 + Tolerance)
+                    // prefer symbols with a larger delta by percentage between the two averages
+                    orderby avg.ScaledDelta descending
+                    // we only need to return the symbol and return 'Count' symbols
+                    select cf.Symbol
+                ).Take(Count);
             });
         }
 
@@ -101,7 +105,8 @@ namespace QuantConnect.Algorithm.CSharp
         /// <param name="data">TradeBars dictionary object keyed by symbol containing the stock data</param>
         public void OnData(TradeBars data)
         {
-            if (_changes == SecurityChanges.None) return;
+            if (_changes == SecurityChanges.None)
+                return;
 
             // liquidate securities removed from our universe
             foreach (var security in _changes.RemovedSecurities)

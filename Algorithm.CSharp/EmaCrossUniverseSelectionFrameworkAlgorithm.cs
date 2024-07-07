@@ -39,7 +39,13 @@ namespace QuantConnect.Algorithm.CSharp
             UniverseSettings.Resolution = Resolution.Daily;
 
             SetUniverseSelection(new EmaCrossUniverseSelectionModel(fastPeriod, slowPeriod, count));
-            SetAlpha(new ConstantAlphaModel(InsightType.Price, InsightDirection.Up, Resolution.Daily.ToTimeSpan()));
+            SetAlpha(
+                new ConstantAlphaModel(
+                    InsightType.Price,
+                    InsightDirection.Up,
+                    Resolution.Daily.ToTimeSpan()
+                )
+            );
             SetPortfolioConstruction(new EqualWeightingPortfolioConstructionModel());
         }
     }

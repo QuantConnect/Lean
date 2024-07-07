@@ -23,19 +23,21 @@ namespace QuantConnect.Tests.Common.Util
     [TestFixture]
     public class ComparisonOperatorTests
     {
-        private static TestCaseData[] Equal => new[]
-        {
-            new TestCaseData(1, 1),
-            new TestCaseData(1.0, 1.0),
-            new TestCaseData(1.0m, 1.0m)
-        };
+        private static TestCaseData[] Equal =>
+            new[]
+            {
+                new TestCaseData(1, 1),
+                new TestCaseData(1.0, 1.0),
+                new TestCaseData(1.0m, 1.0m)
+            };
 
-        private static TestCaseData[] Greater => new[]
-        {
-            new TestCaseData(2, 1),
-            new TestCaseData(2.0, 1.5),
-            new TestCaseData(2.0m, 1.1m)
-        };
+        private static TestCaseData[] Greater =>
+            new[]
+            {
+                new TestCaseData(2, 1),
+                new TestCaseData(2.0, 1.5),
+                new TestCaseData(2.0m, 1.1m)
+            };
 
         [Test, TestCaseSource(nameof(Equal))]
         public void ShouldBeEqual(IComparable arg1, IComparable arg2)
@@ -63,7 +65,9 @@ namespace QuantConnect.Tests.Common.Util
         [TestCaseSource(nameof(Equal))]
         public void ShouldBeGreaterOrEqual(IComparable arg1, IComparable arg2)
         {
-            Assert.IsTrue(ComparisonOperator.Compare(ComparisonOperatorTypes.GreaterOrEqual, arg1, arg2));
+            Assert.IsTrue(
+                ComparisonOperator.Compare(ComparisonOperatorTypes.GreaterOrEqual, arg1, arg2)
+            );
             Assert.IsTrue(ComparisonOperatorTypes.GreaterOrEqual.Compare(arg1, arg2));
         }
 
@@ -79,7 +83,9 @@ namespace QuantConnect.Tests.Common.Util
         [TestCaseSource(nameof(Equal))]
         public void ShouldBeLessOrEqual(IComparable arg1, IComparable arg2)
         {
-            Assert.IsTrue(ComparisonOperator.Compare(ComparisonOperatorTypes.LessOrEqual, arg2, arg1));
+            Assert.IsTrue(
+                ComparisonOperator.Compare(ComparisonOperatorTypes.LessOrEqual, arg2, arg1)
+            );
             Assert.IsTrue(ComparisonOperatorTypes.LessOrEqual.Compare(arg2, arg1));
         }
     }

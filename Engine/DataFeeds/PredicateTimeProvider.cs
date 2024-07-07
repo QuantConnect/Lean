@@ -36,8 +36,10 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         /// <param name="customStepEvaluator">Function to evaluate whether or not
         /// to advance time. Should return true if provided <see cref="DateTime"/> is a
         /// valid new next time. False will avoid time advancing</param>
-        public PredicateTimeProvider(ITimeProvider underlyingTimeProvider,
-            Func<DateTime, bool> customStepEvaluator)
+        public PredicateTimeProvider(
+            ITimeProvider underlyingTimeProvider,
+            Func<DateTime, bool> customStepEvaluator
+        )
         {
             _underlyingTimeProvider = underlyingTimeProvider;
             _customStepEvaluator = customStepEvaluator;

@@ -34,7 +34,8 @@ namespace QuantConnect.Exceptions
         /// </summary>
         /// <param name="exception">The exception to check</param>
         /// <returns>True if the exception can be interpreted, false otherwise</returns>
-        public virtual bool CanInterpret(Exception exception) => exception?.GetType() == typeof(PythonException);
+        public virtual bool CanInterpret(Exception exception) =>
+            exception?.GetType() == typeof(PythonException);
 
         /// <summary>
         /// Interprets the specified exception into a new exception
@@ -42,7 +43,10 @@ namespace QuantConnect.Exceptions
         /// <param name="exception">The exception to be interpreted</param>
         /// <param name="innerInterpreter">An interpreter that should be applied to the inner exception.</param>
         /// <returns>The interpreted exception</returns>
-        public virtual Exception Interpret(Exception exception, IExceptionInterpreter innerInterpreter)
+        public virtual Exception Interpret(
+            Exception exception,
+            IExceptionInterpreter innerInterpreter
+        )
         {
             var pe = (PythonException)exception;
 

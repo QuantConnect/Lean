@@ -14,8 +14,8 @@
 */
 
 using System;
-using System.Linq;
 using System.Collections.Generic;
+using System.Linq;
 using QuantConnect.Data;
 using QuantConnect.Interfaces;
 using QuantConnect.Securities;
@@ -25,7 +25,9 @@ namespace QuantConnect.Algorithm.CSharp
     /// <summary>
     /// Regression algorithm illustrating how to request history data for different data normalization modes.
     /// </summary>
-    public class HistoryWithDifferentDataNormalizationModeRegressionAlgorithm : QCAlgorithm, IRegressionAlgorithmDefinition
+    public class HistoryWithDifferentDataNormalizationModeRegressionAlgorithm
+        : QCAlgorithm,
+            IRegressionAlgorithmDefinition
     {
         private Symbol _aaplEquitySymbol;
         private Symbol _esFutureSymbol;
@@ -41,41 +43,69 @@ namespace QuantConnect.Algorithm.CSharp
 
         public override void OnEndOfAlgorithm()
         {
-            var equityDataNormalizationModes = new DataNormalizationMode[]{
+            var equityDataNormalizationModes = new DataNormalizationMode[]
+            {
                 DataNormalizationMode.Raw,
                 DataNormalizationMode.Adjusted,
                 DataNormalizationMode.SplitAdjusted
             };
-            CheckHistoryResultsForDataNormalizationModes(_aaplEquitySymbol, StartDate, EndDate, Resolution.Daily, equityDataNormalizationModes);
+            CheckHistoryResultsForDataNormalizationModes(
+                _aaplEquitySymbol,
+                StartDate,
+                EndDate,
+                Resolution.Daily,
+                equityDataNormalizationModes
+            );
 
-            var futureDataNormalizationModes = new DataNormalizationMode[]{
+            var futureDataNormalizationModes = new DataNormalizationMode[]
+            {
                 DataNormalizationMode.Raw,
                 DataNormalizationMode.BackwardsRatio,
                 DataNormalizationMode.BackwardsPanamaCanal,
                 DataNormalizationMode.ForwardPanamaCanal
             };
-            CheckHistoryResultsForDataNormalizationModes(_esFutureSymbol, StartDate, EndDate, Resolution.Daily, futureDataNormalizationModes);
+            CheckHistoryResultsForDataNormalizationModes(
+                _esFutureSymbol,
+                StartDate,
+                EndDate,
+                Resolution.Daily,
+                futureDataNormalizationModes
+            );
         }
 
-        private void CheckHistoryResultsForDataNormalizationModes(Symbol symbol, DateTime start, DateTime end, Resolution resolution,
-            DataNormalizationMode[] dataNormalizationModes)
+        private void CheckHistoryResultsForDataNormalizationModes(
+            Symbol symbol,
+            DateTime start,
+            DateTime end,
+            Resolution resolution,
+            DataNormalizationMode[] dataNormalizationModes
+        )
         {
             var historyResults = dataNormalizationModes
-                .Select(x => History(new [] { symbol }, start, end, resolution, dataNormalizationMode: x).ToList())
+                .Select(x =>
+                    History(new[] { symbol }, start, end, resolution, dataNormalizationMode: x)
+                        .ToList()
+                )
                 .ToList();
 
             if (historyResults.Any(x => x.Count == 0 || x.Count != historyResults.First().Count))
             {
-                throw new RegressionTestException($"History results for {symbol} have different number of bars");
+                throw new RegressionTestException(
+                    $"History results for {symbol} have different number of bars"
+                );
             }
 
             // Check that, for each history result, close prices at each time are different for these securities (AAPL and ES)
             for (int j = 0; j < historyResults[0].Count; j++)
             {
-                var closePrices = historyResults.Select(hr => hr[j].Bars.First().Value.Close).ToHashSet();
+                var closePrices = historyResults
+                    .Select(hr => hr[j].Bars.First().Value.Close)
+                    .ToHashSet();
                 if (closePrices.Count != dataNormalizationModes.Length)
                 {
-                    throw new RegressionTestException($"History results for {symbol} have different close prices at the same time");
+                    throw new RegressionTestException(
+                        $"History results for {symbol} have different close prices at the same time"
+                    );
                 }
             }
         }
@@ -108,35 +138,36 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// This is used by the regression test system to indicate what the expected statistics are from running the algorithm
         /// </summary>
-        public Dictionary<string, string> ExpectedStatistics => new Dictionary<string, string>
-        {
-            {"Total Orders", "0"},
-            {"Average Win", "0%"},
-            {"Average Loss", "0%"},
-            {"Compounding Annual Return", "0%"},
-            {"Drawdown", "0%"},
-            {"Expectancy", "0"},
-            {"Start Equity", "100000"},
-            {"End Equity", "100000"},
-            {"Net Profit", "0%"},
-            {"Sharpe Ratio", "0"},
-            {"Sortino Ratio", "0"},
-            {"Probabilistic Sharpe Ratio", "0%"},
-            {"Loss Rate", "0%"},
-            {"Win Rate", "0%"},
-            {"Profit-Loss Ratio", "0"},
-            {"Alpha", "0"},
-            {"Beta", "0"},
-            {"Annual Standard Deviation", "0"},
-            {"Annual Variance", "0"},
-            {"Information Ratio", "-4.178"},
-            {"Tracking Error", "0.085"},
-            {"Treynor Ratio", "0"},
-            {"Total Fees", "$0.00"},
-            {"Estimated Strategy Capacity", "$0"},
-            {"Lowest Capacity Asset", ""},
-            {"Portfolio Turnover", "0%"},
-            {"OrderListHash", "d41d8cd98f00b204e9800998ecf8427e"}
-        };
+        public Dictionary<string, string> ExpectedStatistics =>
+            new Dictionary<string, string>
+            {
+                { "Total Orders", "0" },
+                { "Average Win", "0%" },
+                { "Average Loss", "0%" },
+                { "Compounding Annual Return", "0%" },
+                { "Drawdown", "0%" },
+                { "Expectancy", "0" },
+                { "Start Equity", "100000" },
+                { "End Equity", "100000" },
+                { "Net Profit", "0%" },
+                { "Sharpe Ratio", "0" },
+                { "Sortino Ratio", "0" },
+                { "Probabilistic Sharpe Ratio", "0%" },
+                { "Loss Rate", "0%" },
+                { "Win Rate", "0%" },
+                { "Profit-Loss Ratio", "0" },
+                { "Alpha", "0" },
+                { "Beta", "0" },
+                { "Annual Standard Deviation", "0" },
+                { "Annual Variance", "0" },
+                { "Information Ratio", "-4.178" },
+                { "Tracking Error", "0.085" },
+                { "Treynor Ratio", "0" },
+                { "Total Fees", "$0.00" },
+                { "Estimated Strategy Capacity", "$0" },
+                { "Lowest Capacity Asset", "" },
+                { "Portfolio Turnover", "0%" },
+                { "OrderListHash", "d41d8cd98f00b204e9800998ecf8427e" }
+            };
     }
 }

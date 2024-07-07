@@ -15,11 +15,11 @@
 */
 
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using Newtonsoft.Json;
 using QuantConnect.Logging;
 using QuantConnect.Securities;
-using System.Collections.Generic;
 
 namespace QuantConnect.Securities.Positions
 {
@@ -64,15 +64,25 @@ namespace QuantConnect.Securities.Positions
         /// <summary>
         /// Helper method to create the portfolio state snapshot
         /// </summary>
-        public static PortfolioState Create(SecurityPortfolioManager portfolioManager, DateTime utcNow, decimal currentPortfolioValue)
+        public static PortfolioState Create(
+            SecurityPortfolioManager portfolioManager,
+            DateTime utcNow,
+            decimal currentPortfolioValue
+        )
         {
             try
             {
                 var totalMarginUsed = 0m;
-                var positionGroups = new List<PositionGroupState>(portfolioManager.Positions.Groups.Count);
+                var positionGroups = new List<PositionGroupState>(
+                    portfolioManager.Positions.Groups.Count
+                );
                 foreach (var group in portfolioManager.Positions.Groups)
                 {
-                    var buyingPowerForPositionGroup = group.BuyingPowerModel.GetReservedBuyingPowerForPositionGroup(portfolioManager, group);
+                    var buyingPowerForPositionGroup =
+                        group.BuyingPowerModel.GetReservedBuyingPowerForPositionGroup(
+                            portfolioManager,
+                            group
+                        );
 
                     var positionGroupState = new PositionGroupState
                     {
@@ -81,7 +91,9 @@ namespace QuantConnect.Securities.Positions
                     };
                     if (currentPortfolioValue != 0)
                     {
-                        positionGroupState.PortfolioValuePercentage = (buyingPowerForPositionGroup / currentPortfolioValue).RoundToSignificantDigits(4);
+                        positionGroupState.PortfolioValuePercentage = (
+                            buyingPowerForPositionGroup / currentPortfolioValue
+                        ).RoundToSignificantDigits(4);
                     }
 
                     positionGroups.Add(positionGroupState);
@@ -93,11 +105,13 @@ namespace QuantConnect.Securities.Positions
                     Time = utcNow,
                     TotalPortfolioValue = currentPortfolioValue,
                     TotalMarginUsed = totalMarginUsed,
-                    CashBook = portfolioManager.CashBook.Where(pair => pair.Value.Amount != 0).ToDictionary(pair => pair.Key, pair => pair.Value)
+                    CashBook = portfolioManager
+                        .CashBook.Where(pair => pair.Value.Amount != 0)
+                        .ToDictionary(pair => pair.Key, pair => pair.Value)
                 };
 
-                var unsettledCashBook = portfolioManager.UnsettledCashBook
-                    .Where(pair => pair.Value.Amount != 0)
+                var unsettledCashBook = portfolioManager
+                    .UnsettledCashBook.Where(pair => pair.Value.Amount != 0)
                     .ToDictionary(pair => pair.Key, pair => pair.Value);
                 if (positionGroups.Count > 0)
                 {

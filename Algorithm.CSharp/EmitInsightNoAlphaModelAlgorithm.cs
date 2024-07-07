@@ -34,7 +34,11 @@ namespace QuantConnect.Algorithm.CSharp
     /// </summary>
     public class EmitInsightNoAlphaModelAlgorithm : QCAlgorithm, IRegressionAlgorithmDefinition
     {
-        private readonly Symbol _symbol = QuantConnect.Symbol.Create("SPY", SecurityType.Equity, Market.USA);
+        private readonly Symbol _symbol = QuantConnect.Symbol.Create(
+            "SPY",
+            SecurityType.Equity,
+            Market.USA
+        );
 
         /// <summary>
         /// Initialise the data and resolution required, as well as the cash and start-end dates for your algorithm. All algorithms must initialized.
@@ -44,9 +48,9 @@ namespace QuantConnect.Algorithm.CSharp
             // Set requested data resolution
             UniverseSettings.Resolution = Resolution.Daily;
 
-            SetStartDate(2013, 10, 07);  //Set Start Date
-            SetEndDate(2013, 10, 11);    //Set End Date
-            SetCash(100000);             //Set Strategy Cash
+            SetStartDate(2013, 10, 07); //Set Start Date
+            SetEndDate(2013, 10, 11); //Set End Date
+            SetCash(100000); //Set Strategy Cash
 
             // set algorithm framework models except ALPHA
             SetUniverseSelection(new ManualUniverseSelectionModel(_symbol));
@@ -81,10 +85,11 @@ namespace QuantConnect.Algorithm.CSharp
                 {
                     throw new RegressionTestException("Expected open order for emitted insight");
                 }
-                if (order.Direction != OrderDirection.Sell
-                    || order.Symbol != _symbol)
+                if (order.Direction != OrderDirection.Sell || order.Symbol != _symbol)
                 {
-                    throw new RegressionTestException($"Unexpected open order for emitted insight: {order}");
+                    throw new RegressionTestException(
+                        $"Unexpected open order for emitted insight: {order}"
+                    );
                 }
 
                 SetHoldings(_symbol, 1);
@@ -128,35 +133,36 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// This is used by the regression test system to indicate what the expected statistics are from running the algorithm
         /// </summary>
-        public Dictionary<string, string> ExpectedStatistics => new Dictionary<string, string>
-        {
-            {"Total Orders", "6"},
-            {"Average Win", "0%"},
-            {"Average Loss", "-0.02%"},
-            {"Compounding Annual Return", "-72.241%"},
-            {"Drawdown", "2.900%"},
-            {"Expectancy", "-1"},
-            {"Start Equity", "100000"},
-            {"End Equity", "98259.71"},
-            {"Net Profit", "-1.740%"},
-            {"Sharpe Ratio", "-3.018"},
-            {"Sortino Ratio", "-3.766"},
-            {"Probabilistic Sharpe Ratio", "24.616%"},
-            {"Loss Rate", "100%"},
-            {"Win Rate", "0%"},
-            {"Profit-Loss Ratio", "0"},
-            {"Alpha", "1.301"},
-            {"Beta", "-0.998"},
-            {"Annual Standard Deviation", "0.222"},
-            {"Annual Variance", "0.049"},
-            {"Information Ratio", "-5.95"},
-            {"Tracking Error", "0.445"},
-            {"Treynor Ratio", "0.672"},
-            {"Total Fees", "$19.23"},
-            {"Estimated Strategy Capacity", "$540000000.00"},
-            {"Lowest Capacity Asset", "SPY R735QTJ8XC9X"},
-            {"Portfolio Turnover", "100.02%"},
-            {"OrderListHash", "2f1cb4d9ca245eeab8ff432e85b4f221"}
-        };
+        public Dictionary<string, string> ExpectedStatistics =>
+            new Dictionary<string, string>
+            {
+                { "Total Orders", "6" },
+                { "Average Win", "0%" },
+                { "Average Loss", "-0.02%" },
+                { "Compounding Annual Return", "-72.241%" },
+                { "Drawdown", "2.900%" },
+                { "Expectancy", "-1" },
+                { "Start Equity", "100000" },
+                { "End Equity", "98259.71" },
+                { "Net Profit", "-1.740%" },
+                { "Sharpe Ratio", "-3.018" },
+                { "Sortino Ratio", "-3.766" },
+                { "Probabilistic Sharpe Ratio", "24.616%" },
+                { "Loss Rate", "100%" },
+                { "Win Rate", "0%" },
+                { "Profit-Loss Ratio", "0" },
+                { "Alpha", "1.301" },
+                { "Beta", "-0.998" },
+                { "Annual Standard Deviation", "0.222" },
+                { "Annual Variance", "0.049" },
+                { "Information Ratio", "-5.95" },
+                { "Tracking Error", "0.445" },
+                { "Treynor Ratio", "0.672" },
+                { "Total Fees", "$19.23" },
+                { "Estimated Strategy Capacity", "$540000000.00" },
+                { "Lowest Capacity Asset", "SPY R735QTJ8XC9X" },
+                { "Portfolio Turnover", "100.02%" },
+                { "OrderListHash", "2f1cb4d9ca245eeab8ff432e85b4f221" }
+            };
     }
 }

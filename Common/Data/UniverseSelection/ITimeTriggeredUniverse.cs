@@ -30,6 +30,10 @@ namespace QuantConnect.Data.UniverseSelection
         /// Returns an enumerator that defines when this user defined universe will be invoked
         /// </summary>
         /// <returns>An enumerator of DateTime that defines when this universe will be invoked</returns>
-        IEnumerable<DateTime> GetTriggerTimes(DateTime startTimeUtc, DateTime endTimeUtc, MarketHoursDatabase marketHoursDatabase);
+        IEnumerable<DateTime> GetTriggerTimes(
+            DateTime startTimeUtc,
+            DateTime endTimeUtc,
+            MarketHoursDatabase marketHoursDatabase
+        );
     }
 }

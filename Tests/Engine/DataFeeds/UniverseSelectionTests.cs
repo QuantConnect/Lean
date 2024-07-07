@@ -52,16 +52,8 @@ namespace QuantConnect.Tests.Engine.DataFeeds
                     Symbols.AAPL,
                     new[]
                     {
-                        new CoarseFundamental
-                        {
-                            Symbol = Symbols.AAPL,
-                            Time = DateTime.UtcNow
-                        },
-                        new CoarseFundamental
-                        {
-                            Symbol = Symbols.SPY,
-                            Time = DateTime.UtcNow
-                        }
+                        new CoarseFundamental { Symbol = Symbols.AAPL, Time = DateTime.UtcNow },
+                        new CoarseFundamental { Symbol = Symbols.SPY, Time = DateTime.UtcNow }
                     }
                 )
             );
@@ -78,12 +70,17 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             SymbolCache.Clear();
             var algorithm = new AlgorithmStub(new MockDataFeedWithSubscription());
             var orderProcessorMock = new Mock<IOrderProcessor>();
-            orderProcessorMock.Setup(m => m.GetOpenOrders(It.IsAny<Func<Order, bool>>())).Returns(new List<Order>());
+            orderProcessorMock
+                .Setup(m => m.GetOpenOrders(It.IsAny<Func<Order, bool>>()))
+                .Returns(new List<Order>());
             algorithm.Transactions.SetOrderProcessor(orderProcessorMock.Object);
 
             algorithm.SetStartDate(2012, 3, 27);
             algorithm.SetEndDate(2012, 3, 30);
-            algorithm.AddUniverse("my-custom-universe", dt => dt.Day < 30 ? new List<string> { "CPRT" } : Enumerable.Empty<string>());
+            algorithm.AddUniverse(
+                "my-custom-universe",
+                dt => dt.Day < 30 ? new List<string> { "CPRT" } : Enumerable.Empty<string>()
+            );
             // OnEndOfTimeStep will add all pending universe additions
             algorithm.OnEndOfTimeStep();
             var universe = algorithm.UniverseManager.Values.First();
@@ -144,16 +141,8 @@ namespace QuantConnect.Tests.Engine.DataFeeds
                     Symbols.AAPL,
                     new[]
                     {
-                        new CoarseFundamental
-                        {
-                            Symbol = Symbols.AAPL,
-                            Time = DateTime.UtcNow
-                        },
-                        new CoarseFundamental
-                        {
-                            Symbol = Symbols.SPY,
-                            Time = DateTime.UtcNow
-                        }
+                        new CoarseFundamental { Symbol = Symbols.AAPL, Time = DateTime.UtcNow },
+                        new CoarseFundamental { Symbol = Symbols.SPY, Time = DateTime.UtcNow }
                     }
                 )
             );
@@ -164,7 +153,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
 
         private IEnumerable<Symbol> CoarseSelectionFunction(IEnumerable<CoarseFundamental> coarse)
         {
-            return new List<Symbol> {Symbols.AAPL, Symbols.SPY};
+            return new List<Symbol> { Symbols.AAPL, Symbols.SPY };
         }
 
         private IEnumerable<Symbol> FineSelectionFunction(IEnumerable<FineFundamental> fine)
@@ -186,22 +175,20 @@ namespace QuantConnect.Tests.Engine.DataFeeds
                 IDataFeedSubscriptionManager subscriptionManager,
                 IDataFeedTimeProvider dataFeedTimeProvider,
                 IDataChannelProvider dataChannelProvider
-            )
-            {
-            }
+            ) { }
 
             public Subscription CreateSubscription(SubscriptionRequest request)
             {
-                return new Subscription(request, Enumerable.Empty<SubscriptionData>().GetEnumerator(), null);
+                return new Subscription(
+                    request,
+                    Enumerable.Empty<SubscriptionData>().GetEnumerator(),
+                    null
+                );
             }
 
-            public void RemoveSubscription(Subscription subscription)
-            {
-            }
+            public void RemoveSubscription(Subscription subscription) { }
 
-            public void Exit()
-            {
-            }
+            public void Exit() { }
         }
     }
 }

@@ -13,10 +13,10 @@
  * limitations under the License.
 */
 
+using System;
 using NUnit.Framework;
 using QuantConnect.Commands;
 using QuantConnect.Interfaces;
-using System;
 
 namespace QuantConnect.Tests.Common.Commands
 {
@@ -27,22 +27,31 @@ namespace QuantConnect.Tests.Common.Commands
         public void GetsSymbolWhenSymbolIsPresent()
         {
             var command = new TestBaseCommand();
-            Assert.DoesNotThrow(() => command.PublicGetSymbol(null, SecurityType.Base, null, Symbols.AAPL));
+            Assert.DoesNotThrow(
+                () => command.PublicGetSymbol(null, SecurityType.Base, null, Symbols.AAPL)
+            );
         }
-
 
         [Test]
         public void GetsSymbolWhenTickerSecurityMarketIsPresent()
         {
             var command = new TestBaseCommand();
-            Assert.DoesNotThrow(() => command.PublicGetSymbol(Symbols.AAPL.ID.Symbol, SecurityType.Equity, Market.USA));
+            Assert.DoesNotThrow(
+                () =>
+                    command.PublicGetSymbol(Symbols.AAPL.ID.Symbol, SecurityType.Equity, Market.USA)
+            );
         }
 
         [Test]
         public void ReturnSymbolWhenOtherValuesArePresentToo()
         {
             var command = new TestBaseCommand();
-            var symbol = command.PublicGetSymbol(Symbols.GOOG.ID.Symbol, SecurityType.Equity, Market.USA, Symbols.AAPL);
+            var symbol = command.PublicGetSymbol(
+                Symbols.GOOG.ID.Symbol,
+                SecurityType.Equity,
+                Market.USA,
+                Symbols.AAPL
+            );
             Assert.AreEqual(Symbols.AAPL, symbol);
         }
 
@@ -50,31 +59,37 @@ namespace QuantConnect.Tests.Common.Commands
         public void GetsSymbolThrowsWhenTickerMissing()
         {
             var command = new TestBaseCommand();
-            Assert.Throws<ArgumentException>(() => 
-                                    command.PublicGetSymbol(null, SecurityType.Equity, Market.USA));
+            Assert.Throws<ArgumentException>(
+                () => command.PublicGetSymbol(null, SecurityType.Equity, Market.USA)
+            );
         }
 
         [Test]
         public void GetsSymbolThrowsWhenSecurityTypeMissing()
         {
             var command = new TestBaseCommand();
-            Assert.Throws<ArgumentException>(() => 
-                                    command.PublicGetSymbol(Symbols.AAPL.ID.Symbol, SecurityType.Base, Market.USA));
+            Assert.Throws<ArgumentException>(
+                () => command.PublicGetSymbol(Symbols.AAPL.ID.Symbol, SecurityType.Base, Market.USA)
+            );
         }
-
 
         [Test]
         public void GetsSymbolThrowsWhenMarketMissing()
         {
             var command = new TestBaseCommand();
-            Assert.Throws<ArgumentException>(() => 
-                                    command.PublicGetSymbol(Symbols.AAPL.ID.Symbol, SecurityType.Equity, null));
+            Assert.Throws<ArgumentException>(
+                () => command.PublicGetSymbol(Symbols.AAPL.ID.Symbol, SecurityType.Equity, null)
+            );
         }
-
 
         private class TestBaseCommand : BaseCommand
         {
-            public Symbol PublicGetSymbol(string ticker, SecurityType securityType, string market, Symbol symbol = null)
+            public Symbol PublicGetSymbol(
+                string ticker,
+                SecurityType securityType,
+                string market,
+                Symbol symbol = null
+            )
             {
                 return GetSymbol(ticker, securityType, market, symbol);
             }

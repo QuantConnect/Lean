@@ -36,7 +36,8 @@ namespace QuantConnect.Tests.Engine.DataCacheProviders
         public void WriteTest()
         {
             var entryName = "testEntry.csv";
-            var filePath = Path.GetTempFileName().Replace(".tmp", ".zip", StringComparison.InvariantCulture);
+            var filePath = Path.GetTempFileName()
+                .Replace(".tmp", ".zip", StringComparison.InvariantCulture);
             var key = filePath + "#" + entryName;
 
             var random = new Random();
@@ -59,7 +60,8 @@ namespace QuantConnect.Tests.Engine.DataCacheProviders
         public void OverrideEntry()
         {
             var entryName = "testEntry.csv";
-            var filePath = Path.GetTempFileName().Replace(".tmp", ".zip", StringComparison.InvariantCulture);
+            var filePath = Path.GetTempFileName()
+                .Replace(".tmp", ".zip", StringComparison.InvariantCulture);
             var key = filePath + "#" + entryName;
 
             var random = new Random();

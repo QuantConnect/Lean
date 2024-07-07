@@ -32,7 +32,14 @@ namespace QuantConnect.Tests.Common.Util
             var set = new ConcurrentSet<int> { 1, 2, 3, 4 };
             var other = new HashSet<int> { 4, 5, 6 };
 
-            CompareWithHashSet(set, s => { s.UnionWith(other); return s; });
+            CompareWithHashSet(
+                set,
+                s =>
+                {
+                    s.UnionWith(other);
+                    return s;
+                }
+            );
         }
 
         [Test]
@@ -41,7 +48,14 @@ namespace QuantConnect.Tests.Common.Util
             var set = new ConcurrentSet<int> { 1, 2, 3, 4 };
             var other = new HashSet<int> { 4, 5, 6 };
 
-            CompareWithHashSet(set, s => { s.IntersectWith(other); return s; });
+            CompareWithHashSet(
+                set,
+                s =>
+                {
+                    s.IntersectWith(other);
+                    return s;
+                }
+            );
         }
 
         [Test]
@@ -50,7 +64,14 @@ namespace QuantConnect.Tests.Common.Util
             var set = new ConcurrentSet<int> { 1, 2, 3, 4 };
             var other = new HashSet<int> { 4, 5, 6 };
 
-            CompareWithHashSet(set, s => { s.ExceptWith(other); return s; });
+            CompareWithHashSet(
+                set,
+                s =>
+                {
+                    s.ExceptWith(other);
+                    return s;
+                }
+            );
         }
 
         [Test]
@@ -59,7 +80,14 @@ namespace QuantConnect.Tests.Common.Util
             var set = new ConcurrentSet<int> { 1, 2, 3, 4 };
             var other = new HashSet<int> { 4, 5, 6 };
 
-            CompareWithHashSet(set, s => { s.SymmetricExceptWith(other); return s; });
+            CompareWithHashSet(
+                set,
+                s =>
+                {
+                    s.SymmetricExceptWith(other);
+                    return s;
+                }
+            );
         }
 
         [Test]
@@ -68,7 +96,14 @@ namespace QuantConnect.Tests.Common.Util
             var set = new ConcurrentSet<int> { 4, 5, 6 };
             var other = new HashSet<int> { 4, 5, 6 };
 
-            CompareWithHashSet(set, s => { s.IsSubsetOf(other); return s; });
+            CompareWithHashSet(
+                set,
+                s =>
+                {
+                    s.IsSubsetOf(other);
+                    return s;
+                }
+            );
         }
 
         [Test]
@@ -77,7 +112,14 @@ namespace QuantConnect.Tests.Common.Util
             var set = new ConcurrentSet<int> { 4, 5 };
             var other = new HashSet<int> { 4, 5, 6 };
 
-            CompareWithHashSet(set, s => { s.IsSubsetOf(other); return s; });
+            CompareWithHashSet(
+                set,
+                s =>
+                {
+                    s.IsSubsetOf(other);
+                    return s;
+                }
+            );
         }
 
         [Test]
@@ -86,7 +128,14 @@ namespace QuantConnect.Tests.Common.Util
             var set = new ConcurrentSet<int> { 4, 5, 6, 7 };
             var other = new HashSet<int> { 4, 5, 6 };
 
-            CompareWithHashSet(set, s => { s.IsSubsetOf(other); return s; });
+            CompareWithHashSet(
+                set,
+                s =>
+                {
+                    s.IsSubsetOf(other);
+                    return s;
+                }
+            );
         }
 
         [Test]
@@ -95,7 +144,14 @@ namespace QuantConnect.Tests.Common.Util
             var set = new ConcurrentSet<int> { 4, 5, 6 };
             var other = new HashSet<int> { 4, 5, 6 };
 
-            CompareWithHashSet(set, s => { s.IsSubsetOf(other); return s; });
+            CompareWithHashSet(
+                set,
+                s =>
+                {
+                    s.IsSubsetOf(other);
+                    return s;
+                }
+            );
         }
 
         [Test]
@@ -104,7 +160,14 @@ namespace QuantConnect.Tests.Common.Util
             var set = new ConcurrentSet<int> { 4, 5, 6, 7 };
             var other = new HashSet<int> { 4, 5, 6 };
 
-            CompareWithHashSet(set, s => { s.IsSubsetOf(other); return s; });
+            CompareWithHashSet(
+                set,
+                s =>
+                {
+                    s.IsSubsetOf(other);
+                    return s;
+                }
+            );
         }
 
         [Test]
@@ -113,7 +176,14 @@ namespace QuantConnect.Tests.Common.Util
             var set = new ConcurrentSet<int> { 4, 5 };
             var other = new HashSet<int> { 4, 5, 6 };
 
-            CompareWithHashSet(set, s => { s.IsSubsetOf(other); return s; });
+            CompareWithHashSet(
+                set,
+                s =>
+                {
+                    s.IsSubsetOf(other);
+                    return s;
+                }
+            );
         }
 
         [Test]
@@ -122,7 +192,14 @@ namespace QuantConnect.Tests.Common.Util
             var set = new ConcurrentSet<int> { 4, 5, 6, 7 };
             var other = new HashSet<int> { 4, 5, 6 };
 
-            CompareWithHashSet(set, s => { s.IsSubsetOf(other); return s; });
+            CompareWithHashSet(
+                set,
+                s =>
+                {
+                    s.IsSubsetOf(other);
+                    return s;
+                }
+            );
         }
 
         [Test]
@@ -131,7 +208,14 @@ namespace QuantConnect.Tests.Common.Util
             var set = new ConcurrentSet<int> { 4, 5, 6 };
             var other = new HashSet<int> { 4, 5, 6 };
 
-            CompareWithHashSet(set, s => { s.IsSubsetOf(other); return s; });
+            CompareWithHashSet(
+                set,
+                s =>
+                {
+                    s.IsSubsetOf(other);
+                    return s;
+                }
+            );
         }
 
         [Test]
@@ -140,7 +224,14 @@ namespace QuantConnect.Tests.Common.Util
             var set = new ConcurrentSet<int> { 4, 5 };
             var other = new HashSet<int> { 4, 5, 6 };
 
-            CompareWithHashSet(set, s => { s.IsSubsetOf(other); return s; });
+            CompareWithHashSet(
+                set,
+                s =>
+                {
+                    s.IsSubsetOf(other);
+                    return s;
+                }
+            );
         }
 
         [Test]
@@ -149,7 +240,14 @@ namespace QuantConnect.Tests.Common.Util
             var set = new ConcurrentSet<int> { 4, 5, 6 };
             var other = new HashSet<int> { 4, 5, 6 };
 
-            CompareWithHashSet(set, s => { s.IsSubsetOf(other); return s; });
+            CompareWithHashSet(
+                set,
+                s =>
+                {
+                    s.IsSubsetOf(other);
+                    return s;
+                }
+            );
         }
 
         [Test]
@@ -158,7 +256,14 @@ namespace QuantConnect.Tests.Common.Util
             var set = new ConcurrentSet<int> { 4, 5 };
             var other = new HashSet<int> { 4, 5, 6 };
 
-            CompareWithHashSet(set, s => { s.IsSubsetOf(other); return s; });
+            CompareWithHashSet(
+                set,
+                s =>
+                {
+                    s.IsSubsetOf(other);
+                    return s;
+                }
+            );
         }
 
         [Test]
@@ -167,7 +272,14 @@ namespace QuantConnect.Tests.Common.Util
             var set = new ConcurrentSet<int> { 4, 5 };
             var other = new HashSet<int> { 6, 7 };
 
-            CompareWithHashSet(set, s => { s.IsSubsetOf(other); return s; });
+            CompareWithHashSet(
+                set,
+                s =>
+                {
+                    s.IsSubsetOf(other);
+                    return s;
+                }
+            );
         }
 
         [Test]
@@ -277,7 +389,8 @@ namespace QuantConnect.Tests.Common.Util
         {
             public int Id { get; }
 
-            public TestConsolidator(int maxCount) : base(maxCount)
+            public TestConsolidator(int maxCount)
+                : base(maxCount)
             {
                 Id = maxCount;
             }

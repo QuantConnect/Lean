@@ -30,10 +30,10 @@ namespace QuantConnect.Indicators
 
         /// <summary>
         /// Initializes a new instance of the <see cref="MidPrice"/> class using the specified name and period.
-        /// </summary> 
+        /// </summary>
         /// <param name="name">The name of this indicator</param>
         /// <param name="period">The period of the MIDPRICE</param>
-        public MidPrice(string name, int period) 
+        public MidPrice(string name, int period)
             : base(name)
         {
             _period = period;
@@ -43,12 +43,10 @@ namespace QuantConnect.Indicators
 
         /// <summary>
         /// Initializes a new instance of the <see cref="MidPrice"/> class using the specified period.
-        /// </summary> 
+        /// </summary>
         /// <param name="period">The period of the MIDPRICE</param>
         public MidPrice(int period)
-            : this($"MIDPRICE({period})", period)
-        {
-        }
+            : this($"MIDPRICE({period})", period) { }
 
         /// <summary>
         /// Gets a flag indicating when this indicator is ready and fully initialized

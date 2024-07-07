@@ -34,7 +34,12 @@ namespace QuantConnect.Report.ReportElements
         /// <param name="key">Location of injection</param>
         /// <param name="backtest">Backtest result object</param>
         /// <param name="live">Live result object</param>
-        public ReturnsPerTradeReportElement(string name, string key, BacktestResult backtest, LiveResult live)
+        public ReturnsPerTradeReportElement(
+            string name,
+            string key,
+            BacktestResult backtest,
+            LiveResult live
+        )
         {
             _live = live;
             _backtest = backtest;
@@ -54,12 +59,21 @@ namespace QuantConnect.Report.ReportElements
                 {
                     if (trade.EntryPrice == 0m)
                     {
-                        Log.Error($"ReturnsPerTradeReportElement.Render(): Encountered entry price of 0 in trade with entry time: {trade.EntryTime:yyyy-MM-dd HH:mm:ss} - Exit time: {trade.ExitTime:yyyy-MM-dd HH::mm:ss}");
+                        Log.Error(
+                            $"ReturnsPerTradeReportElement.Render(): Encountered entry price of 0 in trade with entry time: {trade.EntryTime:yyyy-MM-dd HH:mm:ss} - Exit time: {trade.ExitTime:yyyy-MM-dd HH::mm:ss}"
+                        );
                         continue;
                     }
 
                     var sideMultiplier = trade.Direction == TradeDirection.Long ? 1 : -1;
-                    backtestPercentagePerTrade.Add(sideMultiplier * (Convert.ToDouble(trade.ExitPrice) - Convert.ToDouble(trade.EntryPrice)) / Convert.ToDouble(trade.EntryPrice));
+                    backtestPercentagePerTrade.Add(
+                        sideMultiplier
+                            * (
+                                Convert.ToDouble(trade.ExitPrice)
+                                - Convert.ToDouble(trade.EntryPrice)
+                            )
+                            / Convert.ToDouble(trade.EntryPrice)
+                    );
                 }
             }
 

@@ -29,10 +29,19 @@ namespace QuantConnect.Algorithm.CSharp
     /// </summary>
     /// <meta name="tag" content="regression test" />
     public class UniverseSharingSecurityDifferentSubscriptionRequestRegressionAlgorithm
-        : QCAlgorithm, IRegressionAlgorithmDefinition
+        : QCAlgorithm,
+            IRegressionAlgorithmDefinition
     {
-        private readonly Symbol _spy = QuantConnect.Symbol.Create("SPY", SecurityType.Equity, Market.USA);
-        private readonly Symbol _aig = QuantConnect.Symbol.Create("AIG", SecurityType.Equity, Market.USA);
+        private readonly Symbol _spy = QuantConnect.Symbol.Create(
+            "SPY",
+            SecurityType.Equity,
+            Market.USA
+        );
+        private readonly Symbol _aig = QuantConnect.Symbol.Create(
+            "AIG",
+            SecurityType.Equity,
+            Market.USA
+        );
         private int _onDataCalls;
         private bool _alreadyRemoved;
 
@@ -41,8 +50,8 @@ namespace QuantConnect.Algorithm.CSharp
         /// </summary>
         public override void Initialize()
         {
-            SetStartDate(2013, 10, 08);  //Set Start Date
-            SetEndDate(2013, 10, 11);    //Set End Date
+            SetStartDate(2013, 10, 08); //Set Start Date
+            SetEndDate(2013, 10, 11); //Set End Date
             SetCash(100000); //Set Strategy Cash
 
             AddEquity("SPY");
@@ -50,7 +59,8 @@ namespace QuantConnect.Algorithm.CSharp
 
             UniverseSettings.Resolution = Resolution.Minute;
             UniverseSettings.ExtendedMarketHours = true;
-            AddUniverse(SecurityType.Equity,
+            AddUniverse(
+                SecurityType.Equity,
                 "SecondUniverse",
                 Resolution.Daily,
                 Market.USA,
@@ -69,47 +79,55 @@ namespace QuantConnect.Algorithm.CSharp
 
             if (_alreadyRemoved)
             {
-                var config = SubscriptionManager
-                    .SubscriptionDataConfigService
-                    .GetSubscriptionDataConfigs(_aig);
+                var config =
+                    SubscriptionManager.SubscriptionDataConfigService.GetSubscriptionDataConfigs(
+                        _aig
+                    );
                 if (config.Any())
                 {
-                    throw new RegressionTestException($"Unexpected SubscriptionDataConfig: {config}");
+                    throw new RegressionTestException(
+                        $"Unexpected SubscriptionDataConfig: {config}"
+                    );
                 }
             }
 
             if (!_alreadyRemoved)
             {
                 _alreadyRemoved = true;
-                var config = SubscriptionManager
-                    .SubscriptionDataConfigService
-                    .GetSubscriptionDataConfigs(_aig);
+                var config =
+                    SubscriptionManager.SubscriptionDataConfigService.GetSubscriptionDataConfigs(
+                        _aig
+                    );
                 if (!config.Any())
                 {
-                    throw new RegressionTestException("Expecting to find a SubscriptionDataConfig for AIG");
+                    throw new RegressionTestException(
+                        "Expecting to find a SubscriptionDataConfig for AIG"
+                    );
                 }
                 RemoveSecurity(_aig);
             }
 
             var isExtendedMarketHours = SubscriptionManager
-                .SubscriptionDataConfigService
-                .GetSubscriptionDataConfigs(_spy)
+                .SubscriptionDataConfigService.GetSubscriptionDataConfigs(_spy)
                 .IsExtendedMarketHours();
 
             if (Time.Day % 2 == 0)
             {
                 if (!isExtendedMarketHours)
                 {
-                    throw new RegressionTestException($"Unexpected isExtendedMarketHours value: {false}");
+                    throw new RegressionTestException(
+                        $"Unexpected isExtendedMarketHours value: {false}"
+                    );
                 }
             }
             else
             {
                 if (isExtendedMarketHours)
                 {
-                    throw new RegressionTestException($"Unexpected isExtendedMarketHours value: {true}");
+                    throw new RegressionTestException(
+                        $"Unexpected isExtendedMarketHours value: {true}"
+                    );
                 }
-
             }
         }
 
@@ -117,7 +135,9 @@ namespace QuantConnect.Algorithm.CSharp
         {
             if (_onDataCalls == 0)
             {
-                throw new RegressionTestException($"Unexpected OnData() calls count {_onDataCalls}");
+                throw new RegressionTestException(
+                    $"Unexpected OnData() calls count {_onDataCalls}"
+                );
             }
         }
 
@@ -149,35 +169,36 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// This is used by the regression test system to indicate what the expected statistics are from running the algorithm
         /// </summary>
-        public Dictionary<string, string> ExpectedStatistics => new Dictionary<string, string>
-        {
-            {"Total Orders", "0"},
-            {"Average Win", "0%"},
-            {"Average Loss", "0%"},
-            {"Compounding Annual Return", "0%"},
-            {"Drawdown", "0%"},
-            {"Expectancy", "0"},
-            {"Start Equity", "100000"},
-            {"End Equity", "100000"},
-            {"Net Profit", "0%"},
-            {"Sharpe Ratio", "0"},
-            {"Sortino Ratio", "0"},
-            {"Probabilistic Sharpe Ratio", "0%"},
-            {"Loss Rate", "0%"},
-            {"Win Rate", "0%"},
-            {"Profit-Loss Ratio", "0"},
-            {"Alpha", "0"},
-            {"Beta", "0"},
-            {"Annual Standard Deviation", "0"},
-            {"Annual Variance", "0"},
-            {"Information Ratio", "-57.739"},
-            {"Tracking Error", "0.178"},
-            {"Treynor Ratio", "0"},
-            {"Total Fees", "$0.00"},
-            {"Estimated Strategy Capacity", "$0"},
-            {"Lowest Capacity Asset", ""},
-            {"Portfolio Turnover", "0%"},
-            {"OrderListHash", "d41d8cd98f00b204e9800998ecf8427e"}
-        };
+        public Dictionary<string, string> ExpectedStatistics =>
+            new Dictionary<string, string>
+            {
+                { "Total Orders", "0" },
+                { "Average Win", "0%" },
+                { "Average Loss", "0%" },
+                { "Compounding Annual Return", "0%" },
+                { "Drawdown", "0%" },
+                { "Expectancy", "0" },
+                { "Start Equity", "100000" },
+                { "End Equity", "100000" },
+                { "Net Profit", "0%" },
+                { "Sharpe Ratio", "0" },
+                { "Sortino Ratio", "0" },
+                { "Probabilistic Sharpe Ratio", "0%" },
+                { "Loss Rate", "0%" },
+                { "Win Rate", "0%" },
+                { "Profit-Loss Ratio", "0" },
+                { "Alpha", "0" },
+                { "Beta", "0" },
+                { "Annual Standard Deviation", "0" },
+                { "Annual Variance", "0" },
+                { "Information Ratio", "-57.739" },
+                { "Tracking Error", "0.178" },
+                { "Treynor Ratio", "0" },
+                { "Total Fees", "$0.00" },
+                { "Estimated Strategy Capacity", "$0" },
+                { "Lowest Capacity Asset", "" },
+                { "Portfolio Turnover", "0%" },
+                { "OrderListHash", "d41d8cd98f00b204e9800998ecf8427e" }
+            };
     }
 }

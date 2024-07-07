@@ -14,8 +14,8 @@
 */
 
 using System;
-using System.Linq;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace QuantConnect
 {
@@ -29,7 +29,9 @@ namespace QuantConnect
 
         private static Dictionary<string, int> Markets = new Dictionary<string, int>();
         private static Dictionary<int, string> ReverseMarkets = new Dictionary<int, string>();
-        private static readonly IEnumerable<Tuple<string, int>> HardcodedMarkets = new List<Tuple<string, int>>
+        private static readonly IEnumerable<Tuple<string, int>> HardcodedMarkets = new List<
+            Tuple<string, int>
+        >
         {
             Tuple.Create("empty", 0),
             Tuple.Create(USA, 1),
@@ -37,14 +39,12 @@ namespace QuantConnect
             Tuple.Create(Oanda, 3),
             Tuple.Create(Dukascopy, 4),
             Tuple.Create(Bitfinex, 5),
-
             Tuple.Create(Globex, 6),
             Tuple.Create(NYMEX, 7),
             Tuple.Create(CBOT, 8),
             Tuple.Create(ICE, 9),
             Tuple.Create(CBOE, 10),
             Tuple.Create(India, 11),
-
             Tuple.Create(GDAX, 12),
             Tuple.Create(Kraken, 13),
             Tuple.Create(Bittrex, 14),
@@ -55,13 +55,11 @@ namespace QuantConnect
             Tuple.Create(HitBTC, 19),
             Tuple.Create(OkCoin, 20),
             Tuple.Create(Bitstamp, 21),
-
             Tuple.Create(COMEX, 22),
             Tuple.Create(CME, 23),
             Tuple.Create(SGX, 24),
             Tuple.Create(HKFE, 25),
             Tuple.Create(NYSELIFFE, 26),
-
             Tuple.Create(CFE, 33),
             Tuple.Create(FTX, 34),
             Tuple.Create(FTXUS, 35),
@@ -258,7 +256,10 @@ namespace QuantConnect
         {
             if (identifier >= MaxMarketIdentifier)
             {
-                throw new ArgumentOutOfRangeException(nameof(identifier), Messages.Market.InvalidMarketIdentifier(MaxMarketIdentifier));
+                throw new ArgumentOutOfRangeException(
+                    nameof(identifier),
+                    Messages.Market.InvalidMarketIdentifier(MaxMarketIdentifier)
+                );
             }
 
             market = market.ToLowerInvariant();
@@ -266,23 +267,31 @@ namespace QuantConnect
             int marketIdentifier;
             if (Markets.TryGetValue(market, out marketIdentifier) && identifier != marketIdentifier)
             {
-                throw new ArgumentException(Messages.Market.TriedToAddExistingMarketWithDifferentIdentifier(market));
+                throw new ArgumentException(
+                    Messages.Market.TriedToAddExistingMarketWithDifferentIdentifier(market)
+                );
             }
 
             string existingMarket;
             if (ReverseMarkets.TryGetValue(identifier, out existingMarket))
             {
-                throw new ArgumentException(Messages.Market.TriedToAddExistingMarketIdentifier(market, existingMarket));
+                throw new ArgumentException(
+                    Messages.Market.TriedToAddExistingMarketIdentifier(market, existingMarket)
+                );
             }
 
             // update our maps.
             // We make a copy and update the copy, later swap the references so it's thread safe with no lock
-            var newMarketDictionary = Markets.ToDictionary(entry => entry.Key,
-                entry => entry.Value);
+            var newMarketDictionary = Markets.ToDictionary(
+                entry => entry.Key,
+                entry => entry.Value
+            );
             newMarketDictionary[market] = identifier;
 
-            var newReverseMarketDictionary = ReverseMarkets.ToDictionary(entry => entry.Key,
-                entry => entry.Value);
+            var newReverseMarketDictionary = ReverseMarkets.ToDictionary(
+                entry => entry.Key,
+                entry => entry.Value
+            );
             newReverseMarketDictionary[identifier] = market;
 
             Markets = newMarketDictionary;

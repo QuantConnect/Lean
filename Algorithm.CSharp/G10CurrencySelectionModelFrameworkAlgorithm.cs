@@ -13,6 +13,8 @@
  * limitations under the License.
 */
 
+using System;
+using System.Linq;
 using QuantConnect.Algorithm.Framework;
 using QuantConnect.Algorithm.Framework.Alphas;
 using QuantConnect.Algorithm.Framework.Execution;
@@ -20,8 +22,6 @@ using QuantConnect.Algorithm.Framework.Portfolio;
 using QuantConnect.Algorithm.Framework.Risk;
 using QuantConnect.Algorithm.Framework.Selection;
 using QuantConnect.Orders;
-using System;
-using System.Linq;
 
 namespace QuantConnect.Algorithm.CSharp
 {
@@ -39,13 +39,21 @@ namespace QuantConnect.Algorithm.CSharp
             // Set requested data resolution
             UniverseSettings.Resolution = Resolution.Minute;
 
-            SetStartDate(2013, 10, 07);  //Set Start Date
-            SetEndDate(2013, 10, 11);    //Set End Date
-            SetCash(100000);             //Set Strategy Cash
+            SetStartDate(2013, 10, 07); //Set Start Date
+            SetEndDate(2013, 10, 11); //Set End Date
+            SetCash(100000); //Set Strategy Cash
 
             // set algorithm framework models
             SetUniverseSelection(new G10CurrencySelectionModel());
-            SetAlpha(new ConstantAlphaModel(InsightType.Price, InsightDirection.Up, TimeSpan.FromMinutes(20), 0.025, null));
+            SetAlpha(
+                new ConstantAlphaModel(
+                    InsightType.Price,
+                    InsightDirection.Up,
+                    TimeSpan.FromMinutes(20),
+                    0.025,
+                    null
+                )
+            );
             SetPortfolioConstruction(new EqualWeightingPortfolioConstructionModel());
             SetExecution(new ImmediateExecutionModel());
             SetRiskManagement(new MaximumDrawdownPercentPerSecurity(0.01m));
@@ -66,20 +74,20 @@ namespace QuantConnect.Algorithm.CSharp
             /// using the algorithm's security initializer and universe settings
             /// </summary>
             public G10CurrencySelectionModel()
-                : base(new[]
-                {
-                "EURUSD",
-                "GBPUSD",
-                "USDJPY",
-                "AUDUSD",
-                "NZDUSD",
-                "USDCAD",
-                "USDCHF",
-                "USDNOK",
-                "USDSEK"
-                }.Select(x => QuantConnect.Symbol.Create(x, SecurityType.Forex, Market.Oanda)))
-            {
-            }
+                : base(
+                    new[]
+                    {
+                        "EURUSD",
+                        "GBPUSD",
+                        "USDJPY",
+                        "AUDUSD",
+                        "NZDUSD",
+                        "USDCAD",
+                        "USDCHF",
+                        "USDNOK",
+                        "USDSEK"
+                    }.Select(x => QuantConnect.Symbol.Create(x, SecurityType.Forex, Market.Oanda))
+                ) { }
         }
     }
 }

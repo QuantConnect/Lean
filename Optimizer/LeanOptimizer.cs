@@ -14,16 +14,16 @@
 */
 
 using System;
-using System.Threading;
-using QuantConnect.Util;
-using QuantConnect.Logging;
-using QuantConnect.Configuration;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Globalization;
+using System.Threading;
+using QuantConnect.Configuration;
+using QuantConnect.Logging;
 using QuantConnect.Optimizer.Objectives;
 using QuantConnect.Optimizer.Parameters;
 using QuantConnect.Optimizer.Strategies;
+using QuantConnect.Util;
 
 namespace QuantConnect.Optimizer
 {
@@ -32,7 +32,10 @@ namespace QuantConnect.Optimizer
     /// </summary>
     public abstract class LeanOptimizer : IDisposable
     {
-        private readonly int _optimizationUpdateInterval = Config.GetInt("optimization-update-interval", 10);
+        private readonly int _optimizationUpdateInterval = Config.GetInt(
+            "optimization-update-interval",
+            10
+        );
 
         private DateTime _startedAt = DateTime.UtcNow;
 
@@ -64,7 +67,10 @@ namespace QuantConnect.Optimizer
         /// <summary>
         /// Collection holding <see cref="ParameterSet"/> for each backtest id we are waiting to finish
         /// </summary>
-        protected ConcurrentDictionary<string, ParameterSet> RunningParameterSetForBacktest { get; init; }
+        protected ConcurrentDictionary<
+            string,
+            ParameterSet
+        > RunningParameterSetForBacktest { get; init; }
 
         /// <summary>
         /// Collection holding <see cref="ParameterSet"/> for each backtest id we are waiting to launch
@@ -100,12 +106,16 @@ namespace QuantConnect.Optimizer
         {
             if (nodePacket.OptimizationParameters.IsNullOrEmpty())
             {
-                throw new ArgumentException("Cannot start an optimization job with no parameter to optimize");
+                throw new ArgumentException(
+                    "Cannot start an optimization job with no parameter to optimize"
+                );
             }
 
             if (string.IsNullOrEmpty(nodePacket.Criterion?.Target))
             {
-                throw new ArgumentException("Cannot start an optimization job with no target to optimize");
+                throw new ArgumentException(
+                    "Cannot start an optimization job with no target to optimize"
+                );
             }
 
             NodePacket = nodePacket;
@@ -116,19 +126,27 @@ namespace QuantConnect.Optimizer
                 TriggerOnEndEvent();
             };
 
-            Strategy = (IOptimizationStrategy)Activator.CreateInstance(Type.GetType(NodePacket.OptimizationStrategy));
+            Strategy = (IOptimizationStrategy)
+                Activator.CreateInstance(Type.GetType(NodePacket.OptimizationStrategy));
 
             RunningParameterSetForBacktest = new ConcurrentDictionary<string, ParameterSet>();
             PendingParameterSet = new ConcurrentQueue<ParameterSet>();
 
-            Strategy.Initialize(OptimizationTarget, nodePacket.Constraints, NodePacket.OptimizationParameters, NodePacket.OptimizationStrategySettings);
+            Strategy.Initialize(
+                OptimizationTarget,
+                nodePacket.Constraints,
+                NodePacket.OptimizationParameters,
+                NodePacket.OptimizationStrategySettings
+            );
 
             Strategy.NewParameterSet += (s, parameterSet) =>
             {
                 if (parameterSet == null)
                 {
                     // shouldn't happen
-                    Log.Error($"Strategy.NewParameterSet({GetLogDetails()}): generated a null {nameof(ParameterSet)} instance");
+                    Log.Error(
+                        $"Strategy.NewParameterSet({GetLogDetails()}): generated a null {nameof(ParameterSet)} instance"
+                    );
                     return;
                 }
                 LaunchLeanForParameterSet(parameterSet);
@@ -148,9 +166,13 @@ namespace QuantConnect.Optimizer
                 if (RunningParameterSetForBacktest.Count == 0)
                 {
                     SetOptimizationStatus(OptimizationStatus.Aborted);
-                    throw new InvalidOperationException($"LeanOptimizer.Start({GetLogDetails()}): failed to start");
+                    throw new InvalidOperationException(
+                        $"LeanOptimizer.Start({GetLogDetails()}): failed to start"
+                    );
                 }
-                Log.Trace($"LeanOptimizer.Start({GetLogDetails()}): start ended. Waiting on {RunningParameterSetForBacktest.Count + PendingParameterSet.Count} backtests");
+                Log.Trace(
+                    $"LeanOptimizer.Start({GetLogDetails()}): start ended. Waiting on {RunningParameterSetForBacktest.Count + PendingParameterSet.Count} backtests"
+                );
             }
 
             SetOptimizationStatus(OptimizationStatus.Running);
@@ -171,14 +193,21 @@ namespace QuantConnect.Optimizer
             var result = Strategy.Solution;
             if (result != null)
             {
-                var constraint = NodePacket.Constraints != null ? $"Constraints: ({string.Join(",", NodePacket.Constraints)})" : string.Empty;
-                Log.Trace($"LeanOptimizer.TriggerOnEndEvent({GetLogDetails()}): Optimization has ended. " +
-                    $"Result for {OptimizationTarget}: was reached using ParameterSet: ({result.ParameterSet}) backtestId '{result.BacktestId}'. " +
-                    $"{constraint}");
+                var constraint =
+                    NodePacket.Constraints != null
+                        ? $"Constraints: ({string.Join(",", NodePacket.Constraints)})"
+                        : string.Empty;
+                Log.Trace(
+                    $"LeanOptimizer.TriggerOnEndEvent({GetLogDetails()}): Optimization has ended. "
+                        + $"Result for {OptimizationTarget}: was reached using ParameterSet: ({result.ParameterSet}) backtestId '{result.BacktestId}'. "
+                        + $"{constraint}"
+                );
             }
             else
             {
-                Log.Trace($"LeanOptimizer.TriggerOnEndEvent({GetLogDetails()}): Optimization has ended. Result was not reached");
+                Log.Trace(
+                    $"LeanOptimizer.TriggerOnEndEvent({GetLogDetails()}): Optimization has ended. Result was not reached"
+                );
             }
 
             // we clean up before we send an update so that the runtime stats are updated
@@ -222,7 +251,8 @@ namespace QuantConnect.Optimizer
                 {
                     Interlocked.Increment(ref _failedBacktest);
                     Log.Error(
-                        $"LeanOptimizer.NewResult({GetLogDetails()}): Optimization compute job with id '{backtestId}' was not found");
+                        $"LeanOptimizer.NewResult({GetLogDetails()}): Optimization compute job with id '{backtestId}' was not found"
+                    );
                     return;
                 }
 
@@ -238,7 +268,8 @@ namespace QuantConnect.Optimizer
                 {
                     Interlocked.Increment(ref _failedBacktest);
                     Log.Error(
-                        $"LeanOptimizer.NewResult({GetLogDetails()}): Got null/empty backtest result for backtest id '{backtestId}'");
+                        $"LeanOptimizer.NewResult({GetLogDetails()}): Got null/empty backtest result for backtest id '{backtestId}'"
+                    );
                 }
                 else
                 {
@@ -292,12 +323,18 @@ namespace QuantConnect.Optimizer
             var runtime = DateTime.UtcNow - _startedAt;
             var result = new Dictionary<string, string>
             {
-                { "Completed", $"{completedCount}"},
-                { "Failed", $"{_failedBacktest}"},
-                { "Running", $"{RunningParameterSetForBacktest.Count}"},
-                { "In Queue", $"{PendingParameterSet.Count}"},
-                { "Average Length", $"{(totalEndedCount > 0 ? new TimeSpan(runtime.Ticks / totalEndedCount) : TimeSpan.Zero).ToString(@"hh\:mm\:ss", CultureInfo.InvariantCulture)}"},
-                { "Total Runtime", $"{runtime.ToString(@"hh\:mm\:ss", CultureInfo.InvariantCulture)}" }
+                { "Completed", $"{completedCount}" },
+                { "Failed", $"{_failedBacktest}" },
+                { "Running", $"{RunningParameterSetForBacktest.Count}" },
+                { "In Queue", $"{PendingParameterSet.Count}" },
+                {
+                    "Average Length",
+                    $"{(totalEndedCount > 0 ? new TimeSpan(runtime.Ticks / totalEndedCount) : TimeSpan.Zero).ToString(@"hh\:mm\:ss", CultureInfo.InvariantCulture)}"
+                },
+                {
+                    "Total Runtime",
+                    $"{runtime.ToString(@"hh\:mm\:ss", CultureInfo.InvariantCulture)}"
+                }
             };
 
             return result;
@@ -385,14 +422,21 @@ namespace QuantConnect.Optimizer
             try
             {
                 var now = DateTime.UtcNow;
-                if (forceSend || (now - _lastUpdate > TimeSpan.FromSeconds(_optimizationUpdateInterval)))
+                if (
+                    forceSend
+                    || (now - _lastUpdate > TimeSpan.FromSeconds(_optimizationUpdateInterval))
+                )
                 {
                     _lastUpdate = now;
-                    Log.Debug($"LeanOptimizer.ProcessUpdate({GetLogDetails()}): start sending update...");
+                    Log.Debug(
+                        $"LeanOptimizer.ProcessUpdate({GetLogDetails()}): start sending update..."
+                    );
 
                     SendUpdate();
 
-                    Log.Debug($"LeanOptimizer.ProcessUpdate({GetLogDetails()}): finished sending update successfully.");
+                    Log.Debug(
+                        $"LeanOptimizer.ProcessUpdate({GetLogDetails()}): finished sending update successfully."
+                    );
                 }
             }
             catch (Exception e)
@@ -403,14 +447,21 @@ namespace QuantConnect.Optimizer
 
         private void LaunchLeanForParameterSet(ParameterSet parameterSet)
         {
-            if (_disposed || Status == OptimizationStatus.Completed || Status == OptimizationStatus.Aborted)
+            if (
+                _disposed
+                || Status == OptimizationStatus.Completed
+                || Status == OptimizationStatus.Aborted
+            )
             {
                 return;
             }
 
             lock (RunningParameterSetForBacktest)
             {
-                if (NodePacket.MaximumConcurrentBacktests != 0 && RunningParameterSetForBacktest.Count >= NodePacket.MaximumConcurrentBacktests)
+                if (
+                    NodePacket.MaximumConcurrentBacktests != 0
+                    && RunningParameterSetForBacktest.Count >= NodePacket.MaximumConcurrentBacktests
+                )
                 {
                     // we hit the limit on the concurrent backtests
                     PendingParameterSet.Enqueue(parameterSet);
@@ -424,22 +475,30 @@ namespace QuantConnect.Optimizer
 
                     if (!string.IsNullOrEmpty(backtestId))
                     {
-                        Log.Trace($"LeanOptimizer.LaunchLeanForParameterSet({GetLogDetails()}): launched backtest '{backtestId}' with parameters '{parameterSet}'");
+                        Log.Trace(
+                            $"LeanOptimizer.LaunchLeanForParameterSet({GetLogDetails()}): launched backtest '{backtestId}' with parameters '{parameterSet}'"
+                        );
                         RunningParameterSetForBacktest.TryAdd(backtestId, parameterSet);
                     }
                     else
                     {
                         Interlocked.Increment(ref _failedBacktest);
                         // always notify the strategy
-                        Strategy.PushNewResults(new OptimizationResult(null, parameterSet, backtestId));
-                        Log.Error($"LeanOptimizer.LaunchLeanForParameterSet({GetLogDetails()}): Initial/null optimization compute job could not be placed into the queue");
+                        Strategy.PushNewResults(
+                            new OptimizationResult(null, parameterSet, backtestId)
+                        );
+                        Log.Error(
+                            $"LeanOptimizer.LaunchLeanForParameterSet({GetLogDetails()}): Initial/null optimization compute job could not be placed into the queue"
+                        );
                     }
 
                     ProcessUpdate();
                 }
                 catch (Exception ex)
                 {
-                    Log.Error($"LeanOptimizer.LaunchLeanForParameterSet({GetLogDetails()}): Error encountered while placing optimization message into the queue: {ex.Message}");
+                    Log.Error(
+                        $"LeanOptimizer.LaunchLeanForParameterSet({GetLogDetails()}): Error encountered while placing optimization message into the queue: {ex.Message}"
+                    );
                 }
             }
         }

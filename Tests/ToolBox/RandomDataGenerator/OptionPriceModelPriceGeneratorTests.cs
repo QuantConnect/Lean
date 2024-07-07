@@ -13,15 +13,15 @@
  * limitations under the License.
 */
 
+using System;
 using Moq;
 using NUnit.Framework;
-using QuantConnect.ToolBox.RandomDataGenerator;
-using System;
 using QLNet;
 using QuantConnect.Data;
 using QuantConnect.Data.Market;
 using QuantConnect.Securities;
 using QuantConnect.Securities.Option;
+using QuantConnect.ToolBox.RandomDataGenerator;
 using Cash = QuantConnect.Securities.Cash;
 using Option = QuantConnect.Securities.Option.Option;
 
@@ -60,7 +60,8 @@ namespace QuantConnect.Tests.ToolBox.RandomDataGenerator
                 _underlying.Symbol.SecurityType.DefaultOptionStyle(),
                 OptionRight.Call,
                 20,
-                new DateTime(2022, 1, 1));
+                new DateTime(2022, 1, 1)
+            );
 
             _option = new Option(
                 optionSymbol,
@@ -70,7 +71,8 @@ namespace QuantConnect.Tests.ToolBox.RandomDataGenerator
                 new CashBook(),
                 new RegisteredSecurityDataTypesProvider(),
                 new OptionCache(),
-                _underlying);
+                _underlying
+            );
         }
 
         [Test]
@@ -96,7 +98,9 @@ namespace QuantConnect.Tests.ToolBox.RandomDataGenerator
         {
             var priceModelMock = new Mock<IOptionPriceModel>();
             priceModelMock
-                .Setup(s => s.Evaluate(It.IsAny<Security>(), It.IsAny<Slice>(), It.IsAny<OptionContract>()))
+                .Setup(s =>
+                    s.Evaluate(It.IsAny<Security>(), It.IsAny<Slice>(), It.IsAny<OptionContract>())
+                )
                 .Returns(new OptionPriceModelResult(1000, new Greeks()));
             _option.PriceModel = priceModelMock.Object;
             var randomPriceGenerator = new OptionPriceModelPriceGenerator(_option);
@@ -120,10 +124,12 @@ namespace QuantConnect.Tests.ToolBox.RandomDataGenerator
         {
             var volatilityModel = new Mock<IQLUnderlyingVolatilityEstimator>();
             volatilityModel.SetupGet(s => s.IsReady).Returns(warmUp);
-            _option.PriceModel = new QLOptionPriceModel(process => new AnalyticEuropeanEngine(process),
+            _option.PriceModel = new QLOptionPriceModel(
+                process => new AnalyticEuropeanEngine(process),
                 volatilityModel.Object,
                 null,
-                null);
+                null
+            );
 
             var blackScholesModel = new OptionPriceModelPriceGenerator(_option);
 

@@ -14,20 +14,22 @@
 */
 
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using QuantConnect.Data;
+using QuantConnect.Data.UniverseSelection;
 using QuantConnect.Interfaces;
 using QuantConnect.Securities;
-using System.Collections.Generic;
 using QuantConnect.Securities.Future;
-using QuantConnect.Data.UniverseSelection;
 
 namespace QuantConnect.Algorithm.CSharp
 {
     /// <summary>
     /// Continuous Futures History Regression algorithm. Asserting and showcasing the behavior of adding a continuous future
     /// </summary>
-    public class ContinuousFutureHistoryRegressionAlgorithm : QCAlgorithm, IRegressionAlgorithmDefinition
+    public class ContinuousFutureHistoryRegressionAlgorithm
+        : QCAlgorithm,
+            IRegressionAlgorithmDefinition
     {
         private Future _continuousContract;
         private bool _warmedUp;
@@ -40,7 +42,8 @@ namespace QuantConnect.Algorithm.CSharp
             SetStartDate(2013, 10, 10);
             SetEndDate(2013, 10, 11);
 
-            _continuousContract = AddFuture(Futures.Indices.SP500EMini,
+            _continuousContract = AddFuture(
+                Futures.Indices.SP500EMini,
                 dataNormalizationMode: DataNormalizationMode.BackwardsRatio,
                 dataMappingMode: DataMappingMode.OpenInterest,
                 contractDepthOffset: 1
@@ -57,7 +60,9 @@ namespace QuantConnect.Algorithm.CSharp
             // ES has an expiration on december but because we are using 'contractDepthOffset: 1' we expect to use the next contract
             if (_continuousContract.Mapped.ID.Date.Month != 3)
             {
-                throw new RegressionTestException($"Unexpected mapped continuous contract future {_continuousContract.Mapped}");
+                throw new RegressionTestException(
+                    $"Unexpected mapped continuous contract future {_continuousContract.Mapped}"
+                );
             }
 
             if (IsWarmingUp)
@@ -67,20 +72,28 @@ namespace QuantConnect.Algorithm.CSharp
 
                 if (!_continuousContract.HasData)
                 {
-                    throw new RegressionTestException($"ContinuousContract did not get any data during warmup!");
+                    throw new RegressionTestException(
+                        $"ContinuousContract did not get any data during warmup!"
+                    );
                 }
 
-                var backMonthExpiration =   slice.Keys.Single().Underlying.ID.Date;
-                var frontMonthExpiration = FuturesExpiryFunctions.FuturesExpiryFunction(_continuousContract.Symbol)(Time.AddMonths(1));
+                var backMonthExpiration = slice.Keys.Single().Underlying.ID.Date;
+                var frontMonthExpiration = FuturesExpiryFunctions.FuturesExpiryFunction(
+                    _continuousContract.Symbol
+                )(Time.AddMonths(1));
                 if (backMonthExpiration <= frontMonthExpiration.Date)
                 {
-                    throw new RegressionTestException($"Unexpected current mapped contract expiration {backMonthExpiration}" +
-                        $" @ {Time} it should be AFTER front month expiration {frontMonthExpiration}");
+                    throw new RegressionTestException(
+                        $"Unexpected current mapped contract expiration {backMonthExpiration}"
+                            + $" @ {Time} it should be AFTER front month expiration {frontMonthExpiration}"
+                    );
                 }
             }
             if (slice.Keys.Count != 1)
             {
-                throw new RegressionTestException($"We are getting data for more than one symbols! {string.Join(",", slice.Keys.Select(symbol => symbol))}");
+                throw new RegressionTestException(
+                    $"We are getting data for more than one symbols! {string.Join(",", slice.Keys.Select(symbol => symbol))}"
+                );
             }
 
             if (!Portfolio.Invested && !IsWarmingUp)
@@ -100,10 +113,18 @@ namespace QuantConnect.Algorithm.CSharp
         public override void OnSecuritiesChanged(SecurityChanges changes)
         {
             Debug($"{Time}-{changes}");
-            if (changes.AddedSecurities.Any(security => security.Symbol != _continuousContract.Symbol)
-                || changes.RemovedSecurities.Any(security => security.Symbol != _continuousContract.Symbol))
+            if (
+                changes.AddedSecurities.Any(security =>
+                    security.Symbol != _continuousContract.Symbol
+                )
+                || changes.RemovedSecurities.Any(security =>
+                    security.Symbol != _continuousContract.Symbol
+                )
+            )
             {
-                throw new RegressionTestException($"We got an unexpected security changes {changes}");
+                throw new RegressionTestException(
+                    $"We got an unexpected security changes {changes}"
+                );
             }
         }
 
@@ -135,35 +156,36 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// This is used by the regression test system to indicate what the expected statistics are from running the algorithm
         /// </summary>
-        public virtual Dictionary<string, string> ExpectedStatistics => new Dictionary<string, string>
-        {
-            {"Total Orders", "1"},
-            {"Average Win", "0%"},
-            {"Average Loss", "0%"},
-            {"Compounding Annual Return", "0%"},
-            {"Drawdown", "0%"},
-            {"Expectancy", "0"},
-            {"Start Equity", "100000"},
-            {"End Equity", "101558.2"},
-            {"Net Profit", "0%"},
-            {"Sharpe Ratio", "0"},
-            {"Sortino Ratio", "0"},
-            {"Probabilistic Sharpe Ratio", "0%"},
-            {"Loss Rate", "0%"},
-            {"Win Rate", "0%"},
-            {"Profit-Loss Ratio", "0"},
-            {"Alpha", "0"},
-            {"Beta", "0"},
-            {"Annual Standard Deviation", "0"},
-            {"Annual Variance", "0"},
-            {"Information Ratio", "0"},
-            {"Tracking Error", "0"},
-            {"Treynor Ratio", "0"},
-            {"Total Fees", "$2.15"},
-            {"Estimated Strategy Capacity", "$100000000.00"},
-            {"Lowest Capacity Asset", "ES VP274HSU1AF5"},
-            {"Portfolio Turnover", "41.23%"},
-            {"OrderListHash", "b9f8e1a0704c086944e5df07e0ab04d6"}
-        };
+        public virtual Dictionary<string, string> ExpectedStatistics =>
+            new Dictionary<string, string>
+            {
+                { "Total Orders", "1" },
+                { "Average Win", "0%" },
+                { "Average Loss", "0%" },
+                { "Compounding Annual Return", "0%" },
+                { "Drawdown", "0%" },
+                { "Expectancy", "0" },
+                { "Start Equity", "100000" },
+                { "End Equity", "101558.2" },
+                { "Net Profit", "0%" },
+                { "Sharpe Ratio", "0" },
+                { "Sortino Ratio", "0" },
+                { "Probabilistic Sharpe Ratio", "0%" },
+                { "Loss Rate", "0%" },
+                { "Win Rate", "0%" },
+                { "Profit-Loss Ratio", "0" },
+                { "Alpha", "0" },
+                { "Beta", "0" },
+                { "Annual Standard Deviation", "0" },
+                { "Annual Variance", "0" },
+                { "Information Ratio", "0" },
+                { "Tracking Error", "0" },
+                { "Treynor Ratio", "0" },
+                { "Total Fees", "$2.15" },
+                { "Estimated Strategy Capacity", "$100000000.00" },
+                { "Lowest Capacity Asset", "ES VP274HSU1AF5" },
+                { "Portfolio Turnover", "41.23%" },
+                { "OrderListHash", "b9f8e1a0704c086944e5df07e0ab04d6" }
+            };
     }
 }

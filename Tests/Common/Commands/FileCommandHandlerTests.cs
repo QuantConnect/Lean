@@ -13,14 +13,14 @@
  * limitations under the License.
 */
 
+using System.Collections.Generic;
+using System.Globalization;
 using System.IO;
 using System.Linq;
 using Newtonsoft.Json;
 using NUnit.Framework;
 using QuantConnect.Commands;
 using QuantConnect.Interfaces;
-using System.Collections.Generic;
-using System.Globalization;
 
 namespace QuantConnect.Tests.Common.Commands
 {
@@ -34,32 +34,43 @@ namespace QuantConnect.Tests.Common.Commands
         [Test]
         public void ReadsSingleCommandFromFile()
         {
-            if (File.Exists(SingleCommandFilePath)) File.Delete(SingleCommandFilePath);
+            if (File.Exists(SingleCommandFilePath))
+                File.Delete(SingleCommandFilePath);
             using var queue = new TestFileCommandHandler();
             Assert.IsEmpty(queue.GetCommandsPublic());
-            File.WriteAllText(SingleCommandFilePath, JsonConvert.SerializeObject(new LiquidateCommand
-            {
-                Ticker = "aapl",
-                SecurityType = SecurityType.Equity,
-                Market = Market.USA
-            }, new JsonSerializerSettings { TypeNameHandling = TypeNameHandling.All }));
+            File.WriteAllText(
+                SingleCommandFilePath,
+                JsonConvert.SerializeObject(
+                    new LiquidateCommand
+                    {
+                        Ticker = "aapl",
+                        SecurityType = SecurityType.Equity,
+                        Market = Market.USA
+                    },
+                    new JsonSerializerSettings { TypeNameHandling = TypeNameHandling.All }
+                )
+            );
             Assert.IsInstanceOf(typeof(LiquidateCommand), queue.GetCommandsPublic().Single());
         }
 
         [Test]
         public void ReadsMultipleCommandsFromFile()
         {
-            if (File.Exists(MultiCommandFilePath)) File.Delete(MultiCommandFilePath);
+            if (File.Exists(MultiCommandFilePath))
+                File.Delete(MultiCommandFilePath);
             using var queue = new TestFileCommandHandler();
             Assert.IsEmpty(queue.GetCommandsPublic());
-            File.WriteAllText(MultiCommandFilePath, JsonConvert.SerializeObject(new List<ICommand>
-            {
-                new CancelOrderCommand
-                {
-                    OrderId = 2342
-                },
-                new SpecialCommand()
-            }, new JsonSerializerSettings { TypeNameHandling = TypeNameHandling.All }));
+            File.WriteAllText(
+                MultiCommandFilePath,
+                JsonConvert.SerializeObject(
+                    new List<ICommand>
+                    {
+                        new CancelOrderCommand { OrderId = 2342 },
+                        new SpecialCommand()
+                    },
+                    new JsonSerializerSettings { TypeNameHandling = TypeNameHandling.All }
+                )
+            );
             var list = queue.GetCommandsPublic().ToList();
             Assert.IsInstanceOf(typeof(CancelOrderCommand), list[0]);
             Assert.IsInstanceOf(typeof(SpecialCommand), list[1]);
@@ -78,13 +89,21 @@ namespace QuantConnect.Tests.Common.Commands
             var baseName = SingleCommandFilePath.Split(".")[0];
             var commands = new List<BaseCommand>()
             {
-                new LiquidateCommand(), new SpecialCommand(), new AlgorithmStatusCommand()
+                new LiquidateCommand(),
+                new SpecialCommand(),
+                new AlgorithmStatusCommand()
             };
             var fileSerialNumber = 0;
             foreach (var command in commands)
             {
                 var fileName = $"{baseName}-{++fileSerialNumber}.json";
-                File.WriteAllText(fileName, JsonConvert.SerializeObject(command, new JsonSerializerSettings { TypeNameHandling = TypeNameHandling.All }));
+                File.WriteAllText(
+                    fileName,
+                    JsonConvert.SerializeObject(
+                        command,
+                        new JsonSerializerSettings { TypeNameHandling = TypeNameHandling.All }
+                    )
+                );
             }
             var list = queue.GetCommandsPublic().ToList();
             Assert.AreEqual(commands.Count, list.Count);

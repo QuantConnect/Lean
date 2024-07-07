@@ -30,14 +30,16 @@ namespace QuantConnect.Util
     {
         private static readonly object _lock = new object();
         private static readonly object[] _emptyObjectArray = new object[0];
-        private static readonly Dictionary<Type, MethodInvoker> _cloneMethodsByType = new Dictionary<Type, MethodInvoker>();
-        private static readonly Dictionary<Type, Func<object[], object>> _activatorsByType = new Dictionary<Type, Func<object[], object>>();
+        private static readonly Dictionary<Type, MethodInvoker> _cloneMethodsByType =
+            new Dictionary<Type, MethodInvoker>();
+        private static readonly Dictionary<Type, Func<object[], object>> _activatorsByType =
+            new Dictionary<Type, Func<object[], object>>();
 
         static ObjectActivator()
         {
             // we can reuse the symbol instance in the clone since it's immutable
-            ((HashSet<Type>) CloneFactory.KnownImmutableTypes).Add(typeof (Symbol));
-            ((HashSet<Type>) CloneFactory.KnownImmutableTypes).Add(typeof (SecurityIdentifier));
+            ((HashSet<Type>)CloneFactory.KnownImmutableTypes).Add(typeof(Symbol));
+            ((HashSet<Type>)CloneFactory.KnownImmutableTypes).Add(typeof(SecurityIdentifier));
         }
 
         /// <summary>
@@ -58,15 +60,16 @@ namespace QuantConnect.Util
                     return factory;
                 }
 
-                var ctor = dataType.GetConstructor(new Type[] {});
+                var ctor = dataType.GetConstructor(new Type[] { });
 
                 //User has forgotten to include a parameterless constructor:
-                if (ctor == null) return null;
+                if (ctor == null)
+                    return null;
 
                 var paramsInfo = ctor.GetParameters();
 
                 //create a single param of type object[]
-                var param = Expression.Parameter(typeof (object[]), "args");
+                var param = Expression.Parameter(typeof(object[]), "args");
                 var argsExp = new Expression[paramsInfo.Length];
 
                 for (var i = 0; i < paramsInfo.Length; i++)
@@ -79,8 +82,8 @@ namespace QuantConnect.Util
                 }
 
                 var newExp = Expression.New(ctor, argsExp);
-                var lambda = Expression.Lambda(typeof (Func<object[], object>), newExp, param);
-                factory = (Func<object[], object>) lambda.Compile();
+                var lambda = Expression.Lambda(typeof(Func<object[], object>), newExp, param);
+                factory = (Func<object[], object>)lambda.Compile();
 
                 // save it for later
                 _activatorsByType.Add(dataType, factory);
@@ -104,7 +107,9 @@ namespace QuantConnect.Util
             }
 
             // public static T GetClone<T>(this T source, CloningFlags flags)
-            var method = typeof (CloneFactory).GetMethods().FirstOrDefault(x => x.Name == "GetClone" && x.GetParameters().Length == 1);
+            var method = typeof(CloneFactory)
+                .GetMethods()
+                .FirstOrDefault(x => x.Name == "GetClone" && x.GetParameters().Length == 1);
             method = method.MakeGenericMethod(type);
             func = method.DelegateForCallMethod();
             _cloneMethodsByType[type] = func;
@@ -114,12 +119,15 @@ namespace QuantConnect.Util
         /// <summary>
         /// Clones the specified instance and then casts it to T before returning
         /// </summary>
-        public static T Clone<T>(T instanceToClone) where T : class
+        public static T Clone<T>(T instanceToClone)
+            where T : class
         {
             var clone = Clone((object)instanceToClone) as T;
             if (clone == null)
             {
-                throw new ArgumentException($"Unable to clone instance of type {instanceToClone.GetType().Name} to {typeof(T).Name}");
+                throw new ArgumentException(
+                    $"Unable to clone instance of type {instanceToClone.GetType().Name} to {typeof(T).Name}"
+                );
             }
             return clone;
         }
@@ -137,7 +145,9 @@ namespace QuantConnect.Util
             }
             else
             {
-                throw new ArgumentException($"ObjectActivator.AddActivator(): a method to return an instance of {key.Name} has already been added");
+                throw new ArgumentException(
+                    $"ObjectActivator.AddActivator(): a method to return an instance of {key.Name} has already been added"
+                );
             }
         }
 

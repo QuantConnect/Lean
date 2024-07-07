@@ -13,15 +13,15 @@
  * limitations under the License.
 */
 
-using QuantConnect.Algorithm.Framework.Portfolio.SignalExports;
 using System;
+using QuantConnect.Algorithm.Framework.Portfolio.SignalExports;
 
 namespace QuantConnect.Interfaces
 {
     /// <summary>
     /// Interface to send positions holdings to different 3rd party API's
     /// </summary>
-    public interface ISignalExportTarget: IDisposable
+    public interface ISignalExportTarget : IDisposable
     {
         /// <summary>
         /// Sends user's positions to certain 3rd party API

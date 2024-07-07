@@ -43,7 +43,11 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Transport
         {
             get
             {
-                if (_streamReader == null && !string.IsNullOrEmpty(_key) && _objectStore.ContainsKey(_key))
+                if (
+                    _streamReader == null
+                    && !string.IsNullOrEmpty(_key)
+                    && _objectStore.ContainsKey(_key)
+                )
                 {
                     var data = _objectStore.ReadBytes(_key);
                     var stream = new MemoryStream(data);

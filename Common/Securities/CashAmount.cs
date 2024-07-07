@@ -76,9 +76,8 @@ namespace QuantConnect.Securities
         {
             if (obj is CashAmount)
             {
-                var cashAmountObj = (CashAmount) obj;
-                return Amount == cashAmountObj.Amount
-                    && Currency == cashAmountObj.Currency;
+                var cashAmountObj = (CashAmount)obj;
+                return Amount == cashAmountObj.Amount && Currency == cashAmountObj.Currency;
             }
             return false;
         }

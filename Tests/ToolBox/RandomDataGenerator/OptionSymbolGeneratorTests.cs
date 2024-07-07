@@ -13,11 +13,11 @@
  * limitations under the License.
 */
 
+using System;
+using System.Linq;
 using Moq;
 using NUnit.Framework;
 using QuantConnect.ToolBox.RandomDataGenerator;
-using System;
-using System.Linq;
 
 namespace QuantConnect.Tests.ToolBox.RandomDataGenerator
 {
@@ -25,7 +25,8 @@ namespace QuantConnect.Tests.ToolBox.RandomDataGenerator
     public class OptionSymbolGeneratorTests
     {
         private const int Seed = 123456789;
-        private static readonly IRandomValueGenerator _randomValueGenerator = new RandomValueGenerator(Seed);
+        private static readonly IRandomValueGenerator _randomValueGenerator =
+            new RandomValueGenerator(Seed);
 
         private BaseSymbolGenerator _symbolGenerator;
         private DateTime _minExpiry = new(2000, 01, 01);
@@ -46,25 +47,34 @@ namespace QuantConnect.Tests.ToolBox.RandomDataGenerator
                 },
                 _randomValueGenerator,
                 _underlyingPrice,
-                _maximumStrikePriceDeviation);
+                _maximumStrikePriceDeviation
+            );
         }
 
         [Test]
         [TestCase(SecurityType.Option)]
         public void ReturnsFutureSymbolGeneratorInstance(SecurityType securityType)
         {
-            Assert.IsInstanceOf<OptionSymbolGenerator>(BaseSymbolGenerator.Create(
-                new RandomDataGeneratorSettings { SecurityType = securityType },
-                Mock.Of<IRandomValueGenerator>()
-            ));
+            Assert.IsInstanceOf<OptionSymbolGenerator>(
+                BaseSymbolGenerator.Create(
+                    new RandomDataGeneratorSettings { SecurityType = securityType },
+                    Mock.Of<IRandomValueGenerator>()
+                )
+            );
         }
 
         [Test]
         public void GetAvailableSymbolCount()
         {
-            Assert.AreEqual(int.MaxValue,
-                new OptionSymbolGenerator(Mock.Of<RandomDataGeneratorSettings>(), Mock.Of<RandomValueGenerator>(), 100m,
-                    75m).GetAvailableSymbolCount());
+            Assert.AreEqual(
+                int.MaxValue,
+                new OptionSymbolGenerator(
+                    Mock.Of<RandomDataGeneratorSettings>(),
+                    Mock.Of<RandomValueGenerator>(),
+                    100m,
+                    75m
+                ).GetAvailableSymbolCount()
+            );
         }
 
         [Test]
@@ -106,7 +116,12 @@ namespace QuantConnect.Tests.ToolBox.RandomDataGenerator
         {
             for (int i = 0; i < 50; i++)
             {
-                var price = _randomValueGenerator.NextPrice(SecurityType.Equity, Market.USA, 100m, 100m);
+                var price = _randomValueGenerator.NextPrice(
+                    SecurityType.Equity,
+                    Market.USA,
+                    100m,
+                    100m
+                );
                 var symbolGenerator = new OptionSymbolGenerator(
                     new RandomDataGeneratorSettings()
                     {
@@ -116,7 +131,8 @@ namespace QuantConnect.Tests.ToolBox.RandomDataGenerator
                     },
                     _randomValueGenerator,
                     price,
-                    50m);
+                    50m
+                );
                 var symbols = BaseSymbolGeneratorTests.GenerateAsset(_symbolGenerator).ToList();
                 Assert.AreEqual(3, symbols.Count);
 
@@ -132,7 +148,7 @@ namespace QuantConnect.Tests.ToolBox.RandomDataGenerator
             var symbols = BaseSymbolGeneratorTests.GenerateAsset(_symbolGenerator).ToList();
             Assert.AreEqual(3, symbols.Count);
 
-            foreach (var option in new []{ symbols[1], symbols[2] })
+            foreach (var option in new[] { symbols[1], symbols[2] })
             {
                 var strikePrice = option.ID.StrikePrice;
                 var maximumDeviation = _underlyingPrice * (_maximumStrikePriceDeviation / 100m);
@@ -149,7 +165,10 @@ namespace QuantConnect.Tests.ToolBox.RandomDataGenerator
         [TestCase("2021, 6, 2 00:00:00", "2021, 6, 11 00:00:00")]
         [TestCase("2021, 6, 2 00:00:00", "2021, 8, 2 00:00:00")]
         [TestCase("2021, 6, 2 00:00:00", "2021, 6, 15 00:00:00")]
-        public void OptionSymbolGeneratorCreatesOptionSymbol_WithExpirationDateAtLeastThreeDaysAfterMinExpiryDate(DateTime minExpiry, DateTime maxExpiry)
+        public void OptionSymbolGeneratorCreatesOptionSymbol_WithExpirationDateAtLeastThreeDaysAfterMinExpiryDate(
+            DateTime minExpiry,
+            DateTime maxExpiry
+        )
         {
             var symbolGenerator = new OptionSymbolGenerator(
                 new RandomDataGeneratorSettings()
@@ -160,7 +179,8 @@ namespace QuantConnect.Tests.ToolBox.RandomDataGenerator
                 },
                 new RandomValueGenerator(),
                 _underlyingPrice,
-                _maximumStrikePriceDeviation);
+                _maximumStrikePriceDeviation
+            );
             var symbols = BaseSymbolGeneratorTests.GenerateAsset(symbolGenerator).ToList();
             Assert.AreEqual(3, symbols.Count);
 

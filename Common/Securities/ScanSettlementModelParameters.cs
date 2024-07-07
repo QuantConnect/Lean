@@ -43,7 +43,11 @@ namespace QuantConnect.Securities
         /// <param name="portfolio">The algorithm portfolio</param>
         /// <param name="security">The associated security type</param>
         /// <param name="timeUtc">The current utc time</param>
-        public ScanSettlementModelParameters(SecurityPortfolioManager portfolio, Security security, DateTime timeUtc)
+        public ScanSettlementModelParameters(
+            SecurityPortfolioManager portfolio,
+            Security security,
+            DateTime timeUtc
+        )
         {
             Portfolio = portfolio;
             Security = security;

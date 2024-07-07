@@ -28,80 +28,114 @@ namespace QuantConnect.Tests.Engine.DataFeeds
         public IDataFeed DataFeed { get; }
 
         public DataManagerStub()
-            : this(new QCAlgorithm())
-        {
-
-        }
+            : this(new QCAlgorithm()) { }
 
         public DataManagerStub(ITimeKeeper timeKeeper)
-            : this(new QCAlgorithm(), timeKeeper)
-        {
-
-        }
+            : this(new QCAlgorithm(), timeKeeper) { }
 
         public DataManagerStub(IAlgorithm algorithm, IDataFeed dataFeed, bool liveMode = false)
-            : this(dataFeed, algorithm, new TimeKeeper(DateTime.UtcNow, TimeZones.NewYork), liveMode)
-        {
-
-        }
+            : this(
+                dataFeed,
+                algorithm,
+                new TimeKeeper(DateTime.UtcNow, TimeZones.NewYork),
+                liveMode
+            ) { }
 
         public DataManagerStub(IAlgorithm algorithm)
-            : this(new NullDataFeed(), algorithm, new TimeKeeper(DateTime.UtcNow, TimeZones.NewYork))
-        {
-
-        }
+            : this(
+                new NullDataFeed(),
+                algorithm,
+                new TimeKeeper(DateTime.UtcNow, TimeZones.NewYork)
+            ) { }
 
         public DataManagerStub(IDataFeed dataFeed, IAlgorithm algorithm)
-            : this(dataFeed, algorithm, new TimeKeeper(DateTime.UtcNow, TimeZones.NewYork))
-        {
-
-        }
+            : this(dataFeed, algorithm, new TimeKeeper(DateTime.UtcNow, TimeZones.NewYork)) { }
 
         public DataManagerStub(IAlgorithm algorithm, ITimeKeeper timeKeeper)
-            : this(new NullDataFeed(), algorithm, timeKeeper)
-        {
+            : this(new NullDataFeed(), algorithm, timeKeeper) { }
 
-        }
+        public DataManagerStub(
+            IDataFeed dataFeed,
+            IAlgorithm algorithm,
+            ITimeKeeper timeKeeper,
+            bool liveMode = false
+        )
+            : this(
+                dataFeed,
+                algorithm,
+                timeKeeper,
+                MarketHoursDatabase.FromDataFolder(),
+                SymbolPropertiesDatabase.FromDataFolder(),
+                liveMode
+            ) { }
 
-        public DataManagerStub(IDataFeed dataFeed, IAlgorithm algorithm, ITimeKeeper timeKeeper, bool liveMode = false)
-            : this(dataFeed, algorithm, timeKeeper, MarketHoursDatabase.FromDataFolder(), SymbolPropertiesDatabase.FromDataFolder(), liveMode)
-        {
-
-        }
-
-        public DataManagerStub(IDataFeed dataFeed, IAlgorithm algorithm, ITimeKeeper timeKeeper, MarketHoursDatabase marketHoursDatabase, SymbolPropertiesDatabase symbolPropertiesDatabase, bool liveMode = false)
-            : this(dataFeed, algorithm, timeKeeper, marketHoursDatabase,
-                new SecurityService(algorithm.Portfolio.CashBook,
+        public DataManagerStub(
+            IDataFeed dataFeed,
+            IAlgorithm algorithm,
+            ITimeKeeper timeKeeper,
+            MarketHoursDatabase marketHoursDatabase,
+            SymbolPropertiesDatabase symbolPropertiesDatabase,
+            bool liveMode = false
+        )
+            : this(
+                dataFeed,
+                algorithm,
+                timeKeeper,
+                marketHoursDatabase,
+                new SecurityService(
+                    algorithm.Portfolio.CashBook,
                     marketHoursDatabase,
                     symbolPropertiesDatabase,
                     algorithm,
                     RegisteredSecurityDataTypesProvider.Null,
                     new SecurityCacheProvider(algorithm.Portfolio),
-                    algorithm: algorithm),
-                liveMode)
-        {
-        }
+                    algorithm: algorithm
+                ),
+                liveMode
+            ) { }
 
-        public DataManagerStub(IDataFeed dataFeed, IAlgorithm algorithm, ITimeKeeper timeKeeper, MarketHoursDatabase marketHoursDatabase, SecurityService securityService, bool liveMode = false)
-            : this(dataFeed,
+        public DataManagerStub(
+            IDataFeed dataFeed,
+            IAlgorithm algorithm,
+            ITimeKeeper timeKeeper,
+            MarketHoursDatabase marketHoursDatabase,
+            SecurityService securityService,
+            bool liveMode = false
+        )
+            : this(
+                dataFeed,
                 algorithm,
                 timeKeeper,
                 marketHoursDatabase,
                 securityService,
                 new DataPermissionManager(),
-                liveMode)
-        {
-        }
+                liveMode
+            ) { }
 
-        public DataManagerStub(IDataFeed dataFeed, IAlgorithm algorithm, ITimeKeeper timeKeeper, MarketHoursDatabase marketHoursDatabase, SecurityService securityService, DataPermissionManager dataPermissionManager, bool liveMode = false)
-            : base(dataFeed,
-                new UniverseSelection(algorithm, securityService, dataPermissionManager, TestGlobals.DataProvider),
+        public DataManagerStub(
+            IDataFeed dataFeed,
+            IAlgorithm algorithm,
+            ITimeKeeper timeKeeper,
+            MarketHoursDatabase marketHoursDatabase,
+            SecurityService securityService,
+            DataPermissionManager dataPermissionManager,
+            bool liveMode = false
+        )
+            : base(
+                dataFeed,
+                new UniverseSelection(
+                    algorithm,
+                    securityService,
+                    dataPermissionManager,
+                    TestGlobals.DataProvider
+                ),
                 algorithm,
                 timeKeeper,
                 marketHoursDatabase,
                 liveMode,
                 RegisteredSecurityDataTypesProvider.Null,
-                dataPermissionManager)
+                dataPermissionManager
+            )
         {
             SecurityService = securityService;
             algorithm.Securities.SetSecurityService(securityService);

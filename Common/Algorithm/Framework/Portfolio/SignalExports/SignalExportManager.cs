@@ -13,9 +13,9 @@
  * limitations under the License.
 */
 
+using System.Collections.Generic;
 using QuantConnect.Interfaces;
 using QuantConnect.Securities;
-using System.Collections.Generic;
 
 namespace QuantConnect.Algorithm.Framework.Portfolio.SignalExports
 {
@@ -101,15 +101,23 @@ namespace QuantConnect.Algorithm.Framework.Portfolio.SignalExports
             foreach (var holding in portfolio.Values)
             {
                 var security = _algorithm.Securities[holding.Symbol];
-                var marginParameters = MaintenanceMarginParameters.ForQuantityAtCurrentPrice(security, holding.Quantity);
-                var adjustedPercent = security.BuyingPowerModel.GetMaintenanceMargin(marginParameters) / totalPortfolioValue;
+                var marginParameters = MaintenanceMarginParameters.ForQuantityAtCurrentPrice(
+                    security,
+                    holding.Quantity
+                );
+                var adjustedPercent =
+                    security.BuyingPowerModel.GetMaintenanceMargin(marginParameters)
+                    / totalPortfolioValue;
                 // See PortfolioTarget.Percent:
                 // we normalize the target buying power by the leverage so we work in the land of margin
-                var holdingPercent = adjustedPercent * security.BuyingPowerModel.GetLeverage(security);
+                var holdingPercent =
+                    adjustedPercent * security.BuyingPowerModel.GetLeverage(security);
 
                 // FreePortfolioValue is used for orders not to be rejected due to volatility when using SetHoldings and CalculateOrderQuantity
                 // Then, we need to substract its value from the TotalPortfolioValue and obtain again the holding percentage for our holding
-                var adjustedHoldingPercent = (holdingPercent * totalPortfolioValue) / _algorithm.Portfolio.TotalPortfolioValueLessFreeBuffer;
+                var adjustedHoldingPercent =
+                    (holdingPercent * totalPortfolioValue)
+                    / _algorithm.Portfolio.TotalPortfolioValueLessFreeBuffer;
                 if (holding.Quantity < 0)
                 {
                     adjustedHoldingPercent *= -1;

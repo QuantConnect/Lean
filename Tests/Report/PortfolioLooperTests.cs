@@ -13,14 +13,14 @@
  * limitations under the License.
 */
 
-using Deedle;
-using NUnit.Framework;
-using QuantConnect.Orders;
-using QuantConnect.Report;
-using QuantConnect.Brokerages;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using Deedle;
+using NUnit.Framework;
+using QuantConnect.Brokerages;
+using QuantConnect.Orders;
+using QuantConnect.Report;
 
 namespace QuantConnect.Tests.Report
 {
@@ -41,10 +41,7 @@ namespace QuantConnect.Tests.Report
             // because the order will be filtered out.
             order.GetType().GetProperty("Id").SetValue(order, 1);
 
-            var orders = new List<Order>
-            {
-                order
-            };
+            var orders = new List<Order> { order };
 
             Assert.DoesNotThrow(() => PortfolioLooper.FromOrders(series, orders).ToList());
         }
@@ -55,7 +52,12 @@ namespace QuantConnect.Tests.Report
         [TestCase(OrderType.StopMarket, 80000, 0)]
         [TestCase(OrderType.MarketOnOpen, 0, 0, true)]
         [TestCase(OrderType.MarketOnClose, 0, 0, true)]
-        public void OrderProcessedInLooper(OrderType orderType, double stopPrice, double limitPrice, bool hasNullLastFillTime = false)
+        public void OrderProcessedInLooper(
+            OrderType orderType,
+            double stopPrice,
+            double limitPrice,
+            bool hasNullLastFillTime = false
+        )
         {
             var equityPoints = new SortedList<DateTime, double>
             {
@@ -64,26 +66,30 @@ namespace QuantConnect.Tests.Report
             };
 
             var series = new Series<DateTime, double>(equityPoints);
-            var entryOrder = Order.CreateOrder(new SubmitOrderRequest(
-                orderType,
-                SecurityType.Equity,
-                Symbols.SPY,
-                1,
-                (decimal)stopPrice,
-                (decimal)limitPrice,
-                new DateTime(2019, 1, 3, 5, 0, 5),
-                string.Empty
-            ));
-            var exitOrder = Order.CreateOrder(new SubmitOrderRequest(
-                orderType,
-                SecurityType.Equity,
-                Symbols.SPY,
-                -1,
-                (decimal)stopPrice,
-                (decimal)limitPrice,
-                new DateTime(2019, 1, 4, 5, 0, 5),
-                string.Empty
-            ));
+            var entryOrder = Order.CreateOrder(
+                new SubmitOrderRequest(
+                    orderType,
+                    SecurityType.Equity,
+                    Symbols.SPY,
+                    1,
+                    (decimal)stopPrice,
+                    (decimal)limitPrice,
+                    new DateTime(2019, 1, 3, 5, 0, 5),
+                    string.Empty
+                )
+            );
+            var exitOrder = Order.CreateOrder(
+                new SubmitOrderRequest(
+                    orderType,
+                    SecurityType.Equity,
+                    Symbols.SPY,
+                    -1,
+                    (decimal)stopPrice,
+                    (decimal)limitPrice,
+                    new DateTime(2019, 1, 4, 5, 0, 5),
+                    string.Empty
+                )
+            );
 
             if (!hasNullLastFillTime)
             {
@@ -97,8 +103,14 @@ namespace QuantConnect.Tests.Report
             if (hasNullLastFillTime)
             {
                 marketOnFillOrder = entryOrder.Clone();
-                marketOnFillOrder.GetType().GetProperty("Status").SetValue(marketOnFillOrder, OrderStatus.Filled);
-                marketOnFillOrder.GetType().GetProperty("Time").SetValue(marketOnFillOrder, new DateTime(2019, 1, 3, 6, 0 ,5));
+                marketOnFillOrder
+                    .GetType()
+                    .GetProperty("Status")
+                    .SetValue(marketOnFillOrder, OrderStatus.Filled);
+                marketOnFillOrder
+                    .GetType()
+                    .GetProperty("Time")
+                    .SetValue(marketOnFillOrder, new DateTime(2019, 1, 3, 6, 0, 5));
             }
             exitOrder.GetType().GetProperty("Id").SetValue(exitOrder, 2);
             exitOrder.GetType().GetProperty("Price").SetValue(exitOrder, 80000m);
@@ -132,29 +144,34 @@ namespace QuantConnect.Tests.Report
                 equity.ID.Market,
                 200m,
                 OptionRight.Call,
-                OptionStyle.American);
+                OptionStyle.American
+            );
             var option = new Symbol(optionSid, optionSid.Symbol);
 
-            var entryOrder = Order.CreateOrder(new SubmitOrderRequest(
-                OrderType.Market,
-                SecurityType.Option,
-                option,
-                1,
-                0m,
-                0m,
-                new DateTime(2019, 1, 3, 5, 0, 5),
-                string.Empty
-            ));
-            var exitOrder = Order.CreateOrder(new SubmitOrderRequest(
-                OrderType.Market,
-                SecurityType.Option,
-                option,
-                -1,
-                0m,
-                0m,
-                new DateTime(2019, 1, 4, 5, 0, 5),
-                string.Empty
-            ));
+            var entryOrder = Order.CreateOrder(
+                new SubmitOrderRequest(
+                    OrderType.Market,
+                    SecurityType.Option,
+                    option,
+                    1,
+                    0m,
+                    0m,
+                    new DateTime(2019, 1, 3, 5, 0, 5),
+                    string.Empty
+                )
+            );
+            var exitOrder = Order.CreateOrder(
+                new SubmitOrderRequest(
+                    OrderType.Market,
+                    SecurityType.Option,
+                    option,
+                    -1,
+                    0m,
+                    0m,
+                    new DateTime(2019, 1, 4, 5, 0, 5),
+                    string.Empty
+                )
+            );
 
             entryOrder.LastFillTime = new DateTime(2019, 1, 3, 5, 0, 5);
             exitOrder.LastFillTime = new DateTime(2019, 1, 4, 5, 0, 5);
@@ -175,14 +192,20 @@ namespace QuantConnect.Tests.Report
                 foreach (var pointInTimePortfolio in looper)
                 {
                     Assert.AreEqual(option, pointInTimePortfolio.Order.Symbol);
-                    Assert.AreEqual(option.Underlying, pointInTimePortfolio.Order.Symbol.Underlying);
+                    Assert.AreEqual(
+                        option.Underlying,
+                        pointInTimePortfolio.Order.Symbol.Underlying
+                    );
                 }
             });
         }
 
         [TestCase("BNTUSDT", "USDT")]
         [TestCase("AUDBUSD", "BUSD")]
-        public void OrderProcessedInLooper_WithNonDefaultAlgorithmSettings(string symbol, string currency)
+        public void OrderProcessedInLooper_WithNonDefaultAlgorithmSettings(
+            string symbol,
+            string currency
+        )
         {
             var equityPoints = new SortedList<DateTime, double>
             {
@@ -192,25 +215,40 @@ namespace QuantConnect.Tests.Report
             var series = new Series<DateTime, double>(equityPoints);
             var orderPrice = 0.35m;
             var orderQuantity = 30000m;
-            var order = Order.CreateOrder(new SubmitOrderRequest(
-                OrderType.Market,
-                SecurityType.Crypto,
-                Symbol.Create(symbol, SecurityType.Crypto, Market.Binance),
-                orderQuantity,
-                0m,
-                0m,
-                new DateTime(2020, 2, 12, 20, 0, 0),
-                string.Empty
-            ));
+            var order = Order.CreateOrder(
+                new SubmitOrderRequest(
+                    OrderType.Market,
+                    SecurityType.Crypto,
+                    Symbol.Create(symbol, SecurityType.Crypto, Market.Binance),
+                    orderQuantity,
+                    0m,
+                    0m,
+                    new DateTime(2020, 2, 12, 20, 0, 0),
+                    string.Empty
+                )
+            );
             order.LastFillTime = new DateTime(2020, 2, 12, 20, 0, 0);
             order.GetType().GetProperty("Id").SetValue(order, 1);
             order.GetType().GetProperty("Status").SetValue(order, OrderStatus.Filled);
             order.GetType().GetProperty("Price").SetValue(order, orderPrice);
             var orders = new[] { order };
 
-            var looper = PortfolioLooper.FromOrders(series, orders,
-                new AlgorithmConfiguration("AlgorightmName", new HashSet<string>(), currency, BrokerageName.Binance, AccountType.Cash,
-                    new Dictionary<string, string>(), DateTime.MinValue, DateTime.MinValue, null, 0));
+            var looper = PortfolioLooper.FromOrders(
+                series,
+                orders,
+                new AlgorithmConfiguration(
+                    "AlgorightmName",
+                    new HashSet<string>(),
+                    currency,
+                    BrokerageName.Binance,
+                    AccountType.Cash,
+                    new Dictionary<string, string>(),
+                    DateTime.MinValue,
+                    DateTime.MinValue,
+                    null,
+                    0
+                )
+            );
             var pointInTimePortfolio = looper.ToList();
 
             Assert.AreEqual(2, pointInTimePortfolio.Count);

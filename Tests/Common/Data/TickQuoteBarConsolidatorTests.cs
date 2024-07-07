@@ -1,11 +1,11 @@
 /*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
- * 
- * Licensed under the Apache License, Version 2.0 (the "License"); 
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -67,7 +67,7 @@ namespace QuantConnect.Tests.Common.Data
             };
             creator.Update(badTick);
             Assert.IsNull(quoteBar);
-            
+
             creator.Update(tick2);
             Assert.IsNull(quoteBar);
             var tick3 = new Tick
@@ -135,7 +135,9 @@ namespace QuantConnect.Tests.Common.Data
 
             consolidator.Update(tick1);
 
-            Exception ex = Assert.Throws<InvalidOperationException>(() => consolidator.Update(tick2));
+            Exception ex = Assert.Throws<InvalidOperationException>(
+                () => consolidator.Update(tick2)
+            );
             Assert.IsTrue(ex.Message.Contains("is not the same"));
         }
 
@@ -157,7 +159,6 @@ namespace QuantConnect.Tests.Common.Data
                 TickType = TickType.Quote,
                 AskPrice = 0,
                 BidPrice = 24,
-
             };
             creator.Update(tick1);
 
@@ -168,7 +169,6 @@ namespace QuantConnect.Tests.Common.Data
                 TickType = TickType.Quote,
                 AskPrice = 25,
                 BidPrice = 0,
-
             };
             creator.Update(tick2);
 
@@ -191,9 +191,17 @@ namespace QuantConnect.Tests.Common.Data
 
             // bar 2 emitted
             // ask is from tick 2
-            Assert.AreEqual(tick2.AskPrice, quoteBar.Ask.Open, "Ask Open not equal to Previous Close");
+            Assert.AreEqual(
+                tick2.AskPrice,
+                quoteBar.Ask.Open,
+                "Ask Open not equal to Previous Close"
+            );
             // bid is from tick 1
-            Assert.AreEqual(tick1.BidPrice, quoteBar.Bid.Open, "Bid Open not equal to Previous Close");
+            Assert.AreEqual(
+                tick1.BidPrice,
+                quoteBar.Bid.Open,
+                "Bid Open not equal to Previous Close"
+            );
             Assert.AreEqual(tick3.AskPrice, quoteBar.Ask.Close, "Ask Close incorrect");
             Assert.AreEqual(tick3.BidPrice, quoteBar.Bid.Close, "Bid Close incorrect");
         }
@@ -210,7 +218,7 @@ namespace QuantConnect.Tests.Common.Data
 
             var reference = DateTime.Today;
 
-            // timeframe 1 
+            // timeframe 1
             var tick1 = new Tick
             {
                 Symbol = Symbols.SPY,
@@ -239,7 +247,7 @@ namespace QuantConnect.Tests.Common.Data
             };
             creator.Update(tick3);
 
-            // timeframe 2 
+            // timeframe 2
             var tick4 = new Tick
             {
                 Symbol = Symbols.SPY,
@@ -250,14 +258,21 @@ namespace QuantConnect.Tests.Common.Data
             };
             creator.Update(tick4);
 
-            
             //force the consolidator to emit DataConsolidated
             creator.Scan(reference.AddMinutes(2));
 
             // bid is from tick 2
-            Assert.AreEqual(tick2.AskPrice, quoteBar.Ask.Open, "Ask Open not equal to Previous Close");
+            Assert.AreEqual(
+                tick2.AskPrice,
+                quoteBar.Ask.Open,
+                "Ask Open not equal to Previous Close"
+            );
             // bid is from tick 3
-            Assert.AreEqual(tick3.BidPrice, quoteBar.Bid.Open, "Bid Open not equal to Previous Close");
+            Assert.AreEqual(
+                tick3.BidPrice,
+                quoteBar.Bid.Open,
+                "Bid Open not equal to Previous Close"
+            );
             Assert.AreEqual(tick4.AskPrice, quoteBar.Ask.Close, "Ask Close incorrect");
             Assert.AreEqual(tick4.BidPrice, quoteBar.Bid.Close, "Bid Close incorrect");
         }

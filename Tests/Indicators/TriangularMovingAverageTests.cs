@@ -33,7 +33,7 @@ namespace QuantConnect.Tests.Indicators
         [Test]
         public override void ComparesAgainstExternalData()
         {
-            foreach (var period in new[] {5, 6})
+            foreach (var period in new[] { 5, 6 })
             {
                 RunTestIndicator(new TriangularMovingAverage(period), period);
             }

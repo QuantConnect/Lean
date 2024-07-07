@@ -30,6 +30,7 @@ namespace QuantConnect.Util
     {
         private readonly IEnumerator<T> _emptyEnumerator = Enumerable.Empty<T>().GetEnumerator();
         private readonly OrderedDictionary _set = new OrderedDictionary();
+
         // for performance we will keep a enumerator list which we will refresh only if required
         private readonly List<T> _enumerator = new List<T>();
         private bool _refreshEnumerator;
@@ -279,7 +280,7 @@ namespace QuantConnect.Util
             {
                 foreach (DictionaryEntry item in _set)
                 {
-                    if (!otherSet.Remove((T) item.Key))
+                    if (!otherSet.Remove((T)item.Key))
                     {
                         return false;
                     }
@@ -336,7 +337,7 @@ namespace QuantConnect.Util
             {
                 foreach (DictionaryEntry item in _set)
                 {
-                    array[arrayIndex++] = (T) item.Key;
+                    array[arrayIndex++] = (T)item.Key;
                 }
             }
         }

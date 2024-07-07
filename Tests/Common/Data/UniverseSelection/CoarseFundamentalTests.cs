@@ -23,7 +23,14 @@ namespace QuantConnect.Tests.Common.Data.UniverseSelection
     public class CoarseFundamentalTests
     {
         [Test, TestCaseSource(nameof(TestParameters))]
-        public void ParsesCoarseCsvLine(string line, bool hasFundamentalData, decimal price, decimal priceFactor, decimal splitFactor, decimal adjustedPrice)
+        public void ParsesCoarseCsvLine(
+            string line,
+            bool hasFundamentalData,
+            decimal price,
+            decimal priceFactor,
+            decimal splitFactor,
+            decimal adjustedPrice
+        )
         {
             var cf = (CoarseFundamental)CoarseFundamentalDataProvider.Read(line, DateTime.MinValue);
 
@@ -36,10 +43,33 @@ namespace QuantConnect.Tests.Common.Data.UniverseSelection
 
         public static object[] TestParameters =
         {
-            new object[] { "AAPL R735QTJ8XC9X,AAPL,537.46,5483955,3490219402,True", true, 537.46m, 1m, 1m, 537.46m },
-            new object[] { "AAPL R735QTJ8XC9X,AAPL,645.57,7831583,5055835037,True,0.9304792,0.142857", true, 645.57m, 0.9304792m, 0.142857m, 85.812693779220408m },
-            new object[] { "AAPL R735QTJ8XC9X,AAPL,93.7,37807206,3542535202,True,0.9304792,1", true, 93.7m, 0.9304792m, 1m, 87.18590104m },
+            new object[]
+            {
+                "AAPL R735QTJ8XC9X,AAPL,537.46,5483955,3490219402,True",
+                true,
+                537.46m,
+                1m,
+                1m,
+                537.46m
+            },
+            new object[]
+            {
+                "AAPL R735QTJ8XC9X,AAPL,645.57,7831583,5055835037,True,0.9304792,0.142857",
+                true,
+                645.57m,
+                0.9304792m,
+                0.142857m,
+                85.812693779220408m
+            },
+            new object[]
+            {
+                "AAPL R735QTJ8XC9X,AAPL,93.7,37807206,3542535202,True,0.9304792,1",
+                true,
+                93.7m,
+                0.9304792m,
+                1m,
+                87.18590104m
+            },
         };
-
     }
 }

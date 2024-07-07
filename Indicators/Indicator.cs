@@ -31,8 +31,6 @@ namespace QuantConnect.Indicators
         /// </summary>
         /// <param name="name">The name of this indicator</param>
         protected Indicator(string name)
-            : base(name)
-        {
-        }
+            : base(name) { }
     }
 }

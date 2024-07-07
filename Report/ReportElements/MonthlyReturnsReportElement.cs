@@ -34,7 +34,12 @@ namespace QuantConnect.Report.ReportElements
         /// <param name="key">Location of injection</param>
         /// <param name="backtest">Backtest result object</param>
         /// <param name="live">Live result object</param>
-        public MonthlyReturnsReportElement(string name, string key, BacktestResult backtest, LiveResult live)
+        public MonthlyReturnsReportElement(
+            string name,
+            string key,
+            BacktestResult backtest,
+            LiveResult live
+        )
         {
             _live = live;
             _backtest = backtest;
@@ -50,21 +55,32 @@ namespace QuantConnect.Report.ReportElements
             var backtestPoints = ResultsUtil.EquityPoints(_backtest);
             var livePoints = ResultsUtil.EquityPoints(_live);
 
-            var backtestSeries = new Series<DateTime, double>(backtestPoints.Keys, backtestPoints.Values);
+            var backtestSeries = new Series<DateTime, double>(
+                backtestPoints.Keys,
+                backtestPoints.Values
+            );
             var liveSeries = new Series<DateTime, double>(livePoints.Keys, livePoints.Values);
 
             // Equivalent to python pandas line: `backtestSeries.resample('M').apply(lambda x: x.pct_change().sum())`
-            var backtestMonthlyReturns = backtestSeries.ResampleEquivalence(date => new DateTime(date.Year, date.Month, 1).AddMonths(1).AddDays(-1))
+            var backtestMonthlyReturns = backtestSeries
+                .ResampleEquivalence(date =>
+                    new DateTime(date.Year, date.Month, 1).AddMonths(1).AddDays(-1)
+                )
                 .Select(kvp => kvp.Value.TotalReturns());
 
-            var liveMonthlyReturns = liveSeries.ResampleEquivalence(date => new DateTime(date.Year, date.Month, 1).AddMonths(1).AddDays(-1))
+            var liveMonthlyReturns = liveSeries
+                .ResampleEquivalence(date =>
+                    new DateTime(date.Year, date.Month, 1).AddMonths(1).AddDays(-1)
+                )
                 .Select(kvp => kvp.Value.TotalReturns());
 
             var base64 = "";
             using (Py.GIL())
             {
                 var backtestResults = new PyDict();
-                foreach (var kvp in backtestMonthlyReturns.GroupBy(kvp => kvp.Key.Year).GetObservations())
+                foreach (
+                    var kvp in backtestMonthlyReturns.GroupBy(kvp => kvp.Key.Year).GetObservations()
+                )
                 {
                     var key = kvp.Key.ToStringInvariant();
                     var monthlyReturns = kvp.Value * 100;
@@ -86,7 +102,9 @@ namespace QuantConnect.Report.ReportElements
                 }
 
                 var liveResults = new PyDict();
-                foreach (var kvp in liveMonthlyReturns.GroupBy(kvp => kvp.Key.Year).GetObservations())
+                foreach (
+                    var kvp in liveMonthlyReturns.GroupBy(kvp => kvp.Key.Year).GetObservations()
+                )
                 {
                     var key = kvp.Key.ToStringInvariant();
                     var monthlyReturns = kvp.Value * 100;

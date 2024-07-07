@@ -31,10 +31,7 @@ namespace QuantConnect
         /// <summary>
         /// Algo cancellation controls - cancel source.
         /// </summary>
-        public CancellationTokenSource CancellationTokenSource
-        {
-            get; private set;
-        }
+        public CancellationTokenSource CancellationTokenSource { get; private set; }
 
         /// <summary>
         /// Algo cancellation controls - cancellation token for algorithm thread.
@@ -72,18 +69,35 @@ namespace QuantConnect
         /// <param name="workerThread">The worker thread instance that will execute the provided action, if null
         /// will use a <see cref="Task"/></param>
         /// <returns>True if algorithm exited successfully, false if cancelled because it exceeded limits.</returns>
-        public bool ExecuteWithTimeLimit(TimeSpan timeSpan, Func<IsolatorLimitResult> withinCustomLimits, Action codeBlock, long memoryCap = 1024, int sleepIntervalMillis = 1000, WorkerThread workerThread = null)
+        public bool ExecuteWithTimeLimit(
+            TimeSpan timeSpan,
+            Func<IsolatorLimitResult> withinCustomLimits,
+            Action codeBlock,
+            long memoryCap = 1024,
+            int sleepIntervalMillis = 1000,
+            WorkerThread workerThread = null
+        )
         {
             workerThread?.Add(codeBlock);
 
-            var task = workerThread == null
-                //Launch task
-                ? Task.Factory.StartNew(codeBlock, CancellationTokenSource.Token)
-                // wrapper task so we can reuse MonitorTask
-                : Task.Factory.StartNew(() => workerThread.FinishedWorkItem.WaitOne(), CancellationTokenSource.Token);
+            var task =
+                workerThread == null
+                    //Launch task
+                    ? Task.Factory.StartNew(codeBlock, CancellationTokenSource.Token)
+                    // wrapper task so we can reuse MonitorTask
+                    : Task.Factory.StartNew(
+                        () => workerThread.FinishedWorkItem.WaitOne(),
+                        CancellationTokenSource.Token
+                    );
             try
             {
-                return MonitorTask(task, timeSpan, withinCustomLimits, memoryCap, sleepIntervalMillis);
+                return MonitorTask(
+                    task,
+                    timeSpan,
+                    withinCustomLimits,
+                    memoryCap,
+                    sleepIntervalMillis
+                );
             }
             catch (Exception)
             {
@@ -96,14 +110,17 @@ namespace QuantConnect
             }
         }
 
-        private bool MonitorTask(Task task,
+        private bool MonitorTask(
+            Task task,
             TimeSpan timeSpan,
             Func<IsolatorLimitResult> withinCustomLimits,
             long memoryCap = 1024,
-            int sleepIntervalMillis = 1000)
+            int sleepIntervalMillis = 1000
+        )
         {
             // default to always within custom limits
-            withinCustomLimits = withinCustomLimits ?? (() => new IsolatorLimitResult(TimeSpan.Zero, string.Empty));
+            withinCustomLimits =
+                withinCustomLimits ?? (() => new IsolatorLimitResult(TimeSpan.Zero, string.Empty));
 
             var message = string.Empty;
             var emaPeriod = 60d;
@@ -115,7 +132,7 @@ namespace QuantConnect
 
             //Convert to bytes
             memoryCap *= 1024 * 1024;
-            var spikeLimit = memoryCap*2;
+            var spikeLimit = memoryCap * 2;
 
             while (!task.IsCompleted && utcNow < end)
             {
@@ -123,12 +140,17 @@ namespace QuantConnect
                 var sample = Convert.ToDouble(GC.GetTotalMemory(memoryUsed > memoryCap * 0.8));
 
                 // find the EMA of the memory used to prevent spikes killing stategy
-                memoryUsed = Convert.ToInt64((emaPeriod-1)/emaPeriod * memoryUsed + (1/emaPeriod)*sample);
+                memoryUsed = Convert.ToInt64(
+                    (emaPeriod - 1) / emaPeriod * memoryUsed + (1 / emaPeriod) * sample
+                );
 
                 // if the rolling EMA > cap; or the spike is more than 2x the allocation.
                 if (memoryUsed > memoryCap || sample > spikeLimit)
                 {
-                    message = Messages.Isolator.MemoryUsageMaxedOut(PrettyFormatRam(memoryCap), PrettyFormatRam((long)sample));
+                    message = Messages.Isolator.MemoryUsageMaxedOut(
+                        PrettyFormatRam(memoryCap),
+                        PrettyFormatRam((long)sample)
+                    );
                     break;
                 }
 
@@ -139,13 +161,16 @@ namespace QuantConnect
                         Log.Error(Messages.Isolator.MemoryUsageOver80Percent(sample));
                     }
 
-                    Log.Trace("Isolator.ExecuteWithTimeLimit(): " +
-                        Messages.Isolator.MemoryUsageInfo(
-                            PrettyFormatRam(memoryUsed),
-                            PrettyFormatRam((long)sample),
-                            PrettyFormatRam(OS.ApplicationMemoryUsed * 1024 * 1024),
-                            isolatorLimitResult.CurrentTimeStepElapsed,
-                            (int)Math.Ceiling(OS.CpuUsage)));
+                    Log.Trace(
+                        "Isolator.ExecuteWithTimeLimit(): "
+                            + Messages.Isolator.MemoryUsageInfo(
+                                PrettyFormatRam(memoryUsed),
+                                PrettyFormatRam((long)sample),
+                                PrettyFormatRam(OS.ApplicationMemoryUsed * 1024 * 1024),
+                                isolatorLimitResult.CurrentTimeStepElapsed,
+                                (int)Math.Ceiling(OS.CpuUsage)
+                            )
+                    );
 
                     memoryLogger = utcNow.AddMinutes(1);
                 }
@@ -191,9 +216,22 @@ namespace QuantConnect
         /// <param name="workerThread">The worker thread instance that will execute the provided action, if null
         /// will use a <see cref="Task"/></param>
         /// <returns>True if algorithm exited successfully, false if cancelled because it exceeded limits.</returns>
-        public bool ExecuteWithTimeLimit(TimeSpan timeSpan, Action codeBlock, long memoryCap, int sleepIntervalMillis = 1000, WorkerThread workerThread = null)
+        public bool ExecuteWithTimeLimit(
+            TimeSpan timeSpan,
+            Action codeBlock,
+            long memoryCap,
+            int sleepIntervalMillis = 1000,
+            WorkerThread workerThread = null
+        )
         {
-            return ExecuteWithTimeLimit(timeSpan, null, codeBlock, memoryCap, sleepIntervalMillis, workerThread);
+            return ExecuteWithTimeLimit(
+                timeSpan,
+                null,
+                codeBlock,
+                memoryCap,
+                sleepIntervalMillis,
+                workerThread
+            );
         }
 
         /// <summary>
@@ -203,7 +241,7 @@ namespace QuantConnect
         /// <returns></returns>
         private static string PrettyFormatRam(long ramInBytes)
         {
-            return Math.Round(Convert.ToDouble(ramInBytes/(1024*1024))).ToStringInvariant();
+            return Math.Round(Convert.ToDouble(ramInBytes / (1024 * 1024))).ToStringInvariant();
         }
     }
 }

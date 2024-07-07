@@ -15,10 +15,10 @@
 
 using System;
 using System.Collections.Generic;
-using QuantConnect.Data.Market;
-using QuantConnect.Orders;
-using QuantConnect.Interfaces;
 using QuantConnect.Data;
+using QuantConnect.Data.Market;
+using QuantConnect.Interfaces;
+using QuantConnect.Orders;
 
 namespace QuantConnect.Algorithm.CSharp
 {
@@ -42,9 +42,9 @@ namespace QuantConnect.Algorithm.CSharp
         /// </summary>
         public override void Initialize()
         {
-            SetStartDate(2013, 10, 07);  //Set Start Date
-            SetEndDate(2013, 10, 11);    //Set End Date
-            SetCash(100000);             //Set Strategy Cash
+            SetStartDate(2013, 10, 07); //Set Start Date
+            SetEndDate(2013, 10, 11); //Set End Date
+            SetCash(100000); //Set Strategy Cash
             AddSecurity(SecurityType.Equity, "SPY");
         }
 
@@ -54,7 +54,8 @@ namespace QuantConnect.Algorithm.CSharp
         /// <param name="data">Slice object keyed by symbol containing the stock data</param>
         public override void OnData(Slice slice)
         {
-            if (lastAction.Date == Time.Date) return;
+            if (lastAction.Date == Time.Date)
+                return;
 
             if (!Portfolio.Invested)
             {
@@ -125,35 +126,36 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// This is used by the regression test system to indicate what the expected statistics are from running the algorithm
         /// </summary>
-        public Dictionary<string, string> ExpectedStatistics => new Dictionary<string, string>
-        {
-            {"Total Orders", "5"},
-            {"Average Win", "0.46%"},
-            {"Average Loss", "0%"},
-            {"Compounding Annual Return", "296.356%"},
-            {"Drawdown", "1.400%"},
-            {"Expectancy", "0"},
-            {"Start Equity", "100000"},
-            {"End Equity", "101776.32"},
-            {"Net Profit", "1.776%"},
-            {"Sharpe Ratio", "12.966"},
-            {"Sortino Ratio", "0"},
-            {"Probabilistic Sharpe Ratio", "80.409%"},
-            {"Loss Rate", "0%"},
-            {"Win Rate", "100%"},
-            {"Profit-Loss Ratio", "0"},
-            {"Alpha", "0.678"},
-            {"Beta", "0.707"},
-            {"Annual Standard Deviation", "0.16"},
-            {"Annual Variance", "0.026"},
-            {"Information Ratio", "1.378"},
-            {"Tracking Error", "0.072"},
-            {"Treynor Ratio", "2.935"},
-            {"Total Fees", "$28.30"},
-            {"Estimated Strategy Capacity", "$4700000.00"},
-            {"Lowest Capacity Asset", "AIG R735QTJ8XC9X"},
-            {"Portfolio Turnover", "29.88%"},
-            {"OrderListHash", "6061ecfbb89eb365dff913410d279b7c"}
-        };
+        public Dictionary<string, string> ExpectedStatistics =>
+            new Dictionary<string, string>
+            {
+                { "Total Orders", "5" },
+                { "Average Win", "0.46%" },
+                { "Average Loss", "0%" },
+                { "Compounding Annual Return", "296.356%" },
+                { "Drawdown", "1.400%" },
+                { "Expectancy", "0" },
+                { "Start Equity", "100000" },
+                { "End Equity", "101776.32" },
+                { "Net Profit", "1.776%" },
+                { "Sharpe Ratio", "12.966" },
+                { "Sortino Ratio", "0" },
+                { "Probabilistic Sharpe Ratio", "80.409%" },
+                { "Loss Rate", "0%" },
+                { "Win Rate", "100%" },
+                { "Profit-Loss Ratio", "0" },
+                { "Alpha", "0.678" },
+                { "Beta", "0.707" },
+                { "Annual Standard Deviation", "0.16" },
+                { "Annual Variance", "0.026" },
+                { "Information Ratio", "1.378" },
+                { "Tracking Error", "0.072" },
+                { "Treynor Ratio", "2.935" },
+                { "Total Fees", "$28.30" },
+                { "Estimated Strategy Capacity", "$4700000.00" },
+                { "Lowest Capacity Asset", "AIG R735QTJ8XC9X" },
+                { "Portfolio Turnover", "29.88%" },
+                { "OrderListHash", "6061ecfbb89eb365dff913410d279b7c" }
+            };
     }
 }

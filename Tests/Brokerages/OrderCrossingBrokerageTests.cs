@@ -14,20 +14,20 @@
 */
 
 using System;
-using System.Linq;
-using NUnit.Framework;
-using System.Threading;
-using QuantConnect.Util;
-using QuantConnect.Orders;
-using QuantConnect.Logging;
-using System.Threading.Tasks;
-using QuantConnect.Interfaces;
-using QuantConnect.Securities;
-using QuantConnect.Brokerages;
-using QuantConnect.Orders.Fees;
 using System.Collections.Generic;
+using System.Linq;
+using System.Threading;
+using System.Threading.Tasks;
+using NUnit.Framework;
+using QuantConnect.Brokerages;
 using QuantConnect.Brokerages.CrossZero;
+using QuantConnect.Interfaces;
+using QuantConnect.Logging;
+using QuantConnect.Orders;
+using QuantConnect.Orders.Fees;
+using QuantConnect.Securities;
 using QuantConnect.Tests.Engine.DataFeeds;
+using QuantConnect.Util;
 
 namespace QuantConnect.Tests.Brokerages
 {
@@ -38,7 +38,7 @@ namespace QuantConnect.Tests.Brokerages
         /// Provides a collection of test case data for order scenarios.
         /// </summary>
         /// <remarks>
-        /// This property generates test case data for various order statuses, specifically 
+        /// This property generates test case data for various order statuses, specifically
         /// for a Stop Market Order on the AAPL symbol.
         /// </remarks>
         /// <returns>
@@ -48,11 +48,28 @@ namespace QuantConnect.Tests.Brokerages
         {
             get
             {
-                var expectedOrderStatusChangedOrdering = new[] { OrderStatus.Submitted, OrderStatus.PartiallyFilled, OrderStatus.Filled };
-                yield return new TestCaseData(new MarketOrder(Symbols.AAPL, -15, new DateTime(2024, 6, 10)), expectedOrderStatusChangedOrdering);
-                yield return new TestCaseData(new LimitOrder(Symbols.AAPL, -15, 180m, new DateTime(2024, 6, 10)), expectedOrderStatusChangedOrdering);
-                yield return new TestCaseData(new StopMarketOrder(Symbols.AAPL, -20, 180m, new DateTime(2024, 6, 10)), expectedOrderStatusChangedOrdering);
-                yield return new TestCaseData(new StopLimitOrder(Symbols.AAPL, -15, 180m, 180m, new DateTime(2024, 6, 10)), expectedOrderStatusChangedOrdering);
+                var expectedOrderStatusChangedOrdering = new[]
+                {
+                    OrderStatus.Submitted,
+                    OrderStatus.PartiallyFilled,
+                    OrderStatus.Filled
+                };
+                yield return new TestCaseData(
+                    new MarketOrder(Symbols.AAPL, -15, new DateTime(2024, 6, 10)),
+                    expectedOrderStatusChangedOrdering
+                );
+                yield return new TestCaseData(
+                    new LimitOrder(Symbols.AAPL, -15, 180m, new DateTime(2024, 6, 10)),
+                    expectedOrderStatusChangedOrdering
+                );
+                yield return new TestCaseData(
+                    new StopMarketOrder(Symbols.AAPL, -20, 180m, new DateTime(2024, 6, 10)),
+                    expectedOrderStatusChangedOrdering
+                );
+                yield return new TestCaseData(
+                    new StopLimitOrder(Symbols.AAPL, -15, 180m, 180m, new DateTime(2024, 6, 10)),
+                    expectedOrderStatusChangedOrdering
+                );
             }
         }
 
@@ -62,7 +79,10 @@ namespace QuantConnect.Tests.Brokerages
         /// <param name="leanOrder">The order to be placed and updated.</param>
         /// <param name="expectedOrderStatusChangedOrdering">The expected sequence of order status changes.</param>
         [Test, TestCaseSource(nameof(OrderParameters))]
-        public void PlaceCrossOrder(Order leanOrder, OrderStatus[] expectedOrderStatusChangedOrdering)
+        public void PlaceCrossOrder(
+            Order leanOrder,
+            OrderStatus[] expectedOrderStatusChangedOrdering
+        )
         {
             var actualCrossZeroOrderStatusOrdering = new Queue<OrderStatus>();
             using var autoResetEventPartialFilledStatus = new AutoResetEvent(false);
@@ -76,7 +96,9 @@ namespace QuantConnect.Tests.Brokerages
 
                 actualCrossZeroOrderStatusOrdering.Enqueue(orderEventStatus);
 
-                Log.Trace($"{nameof(PlaceCrossOrder)}.OrdersStatusChangedEvent.Status: {orderEventStatus}");
+                Log.Trace(
+                    $"{nameof(PlaceCrossOrder)}.OrdersStatusChangedEvent.Status: {orderEventStatus}"
+                );
 
                 if (orderEventStatus == OrderStatus.PartiallyFilled)
                 {
@@ -93,11 +115,22 @@ namespace QuantConnect.Tests.Brokerages
 
             Assert.IsTrue(response);
 
-            AssertComingOrderStatusByEvent(autoResetEventPartialFilledStatus, brokerage, OrderStatus.PartiallyFilled);
+            AssertComingOrderStatusByEvent(
+                autoResetEventPartialFilledStatus,
+                brokerage,
+                OrderStatus.PartiallyFilled
+            );
 
-            AssertComingOrderStatusByEvent(autoResetEventFilledStatus, brokerage, OrderStatus.Filled);
+            AssertComingOrderStatusByEvent(
+                autoResetEventFilledStatus,
+                brokerage,
+                OrderStatus.Filled
+            );
 
-            CollectionAssert.AreEquivalent(expectedOrderStatusChangedOrdering, actualCrossZeroOrderStatusOrdering);
+            CollectionAssert.AreEquivalent(
+                expectedOrderStatusChangedOrdering,
+                actualCrossZeroOrderStatusOrdering
+            );
             Assert.AreEqual(0, brokerage.GetLeanOrderByZeroCrossBrokerageOrderIdCount());
         }
 
@@ -105,7 +138,7 @@ namespace QuantConnect.Tests.Brokerages
         /// Provides a collection of test case data for order update scenarios.
         /// </summary>
         /// <remarks>
-        /// This property generates test case data for various order statuses, specifically 
+        /// This property generates test case data for various order statuses, specifically
         /// for a Stop Market Order on the AAPL symbol.
         /// </remarks>
         /// <returns>
@@ -115,11 +148,29 @@ namespace QuantConnect.Tests.Brokerages
         {
             get
             {
-                var expectedOrderStatusChangedOrdering = new[] { OrderStatus.Submitted, OrderStatus.PartiallyFilled, OrderStatus.UpdateSubmitted, OrderStatus.Filled };
-                yield return new TestCaseData(new MarketOrder(Symbols.AAPL, -15, new DateTime(2024, 6, 10)), expectedOrderStatusChangedOrdering);
-                yield return new TestCaseData(new LimitOrder(Symbols.AAPL, -15, 180m, new DateTime(2024, 6, 10)), expectedOrderStatusChangedOrdering);
-                yield return new TestCaseData(new StopMarketOrder(Symbols.AAPL, -20, 180m, new DateTime(2024, 6, 10)), expectedOrderStatusChangedOrdering);
-                yield return new TestCaseData(new StopLimitOrder(Symbols.AAPL, -15, 180m, 180m, new DateTime(2024, 6, 10)), expectedOrderStatusChangedOrdering);
+                var expectedOrderStatusChangedOrdering = new[]
+                {
+                    OrderStatus.Submitted,
+                    OrderStatus.PartiallyFilled,
+                    OrderStatus.UpdateSubmitted,
+                    OrderStatus.Filled
+                };
+                yield return new TestCaseData(
+                    new MarketOrder(Symbols.AAPL, -15, new DateTime(2024, 6, 10)),
+                    expectedOrderStatusChangedOrdering
+                );
+                yield return new TestCaseData(
+                    new LimitOrder(Symbols.AAPL, -15, 180m, new DateTime(2024, 6, 10)),
+                    expectedOrderStatusChangedOrdering
+                );
+                yield return new TestCaseData(
+                    new StopMarketOrder(Symbols.AAPL, -20, 180m, new DateTime(2024, 6, 10)),
+                    expectedOrderStatusChangedOrdering
+                );
+                yield return new TestCaseData(
+                    new StopLimitOrder(Symbols.AAPL, -15, 180m, 180m, new DateTime(2024, 6, 10)),
+                    expectedOrderStatusChangedOrdering
+                );
             }
         }
 
@@ -129,7 +180,10 @@ namespace QuantConnect.Tests.Brokerages
         /// <param name="leanOrder">The order to be placed and updated.</param>
         /// <param name="expectedOrderStatusChangedOrdering">The expected sequence of order status changes.</param>
         [Test, TestCaseSource(nameof(OrderUpdateParameters))]
-        public void PlaceCrossOrderAndUpdate(Order leanOrder, OrderStatus[] expectedOrderStatusChangedOrdering)
+        public void PlaceCrossOrderAndUpdate(
+            Order leanOrder,
+            OrderStatus[] expectedOrderStatusChangedOrdering
+        )
         {
             var actualCrossZeroOrderStatusOrdering = new Queue<OrderStatus>();
             using var autoResetEventPartialFilledStatus = new AutoResetEvent(false);
@@ -144,7 +198,9 @@ namespace QuantConnect.Tests.Brokerages
 
                 actualCrossZeroOrderStatusOrdering.Enqueue(orderEventStatus);
 
-                Log.Trace($"{nameof(PlaceCrossOrder)}.OrdersStatusChangedEvent.Status: {orderEventStatus}");
+                Log.Trace(
+                    $"{nameof(PlaceCrossOrder)}.OrdersStatusChangedEvent.Status: {orderEventStatus}"
+                );
 
                 if (orderEventStatus == OrderStatus.PartiallyFilled)
                 {
@@ -165,16 +221,31 @@ namespace QuantConnect.Tests.Brokerages
             var response = brokerage.PlaceOrder(leanOrder);
             Assert.IsTrue(response);
 
-            AssertComingOrderStatusByEvent(autoResetEventPartialFilledStatus, brokerage, OrderStatus.PartiallyFilled);
+            AssertComingOrderStatusByEvent(
+                autoResetEventPartialFilledStatus,
+                brokerage,
+                OrderStatus.PartiallyFilled
+            );
 
             var updateResponse = brokerage.UpdateOrder(leanOrder);
             Assert.IsTrue(updateResponse);
 
-            AssertComingOrderStatusByEvent(autoResetEventUpdateSubmittedStatus, brokerage, OrderStatus.UpdateSubmitted);
+            AssertComingOrderStatusByEvent(
+                autoResetEventUpdateSubmittedStatus,
+                brokerage,
+                OrderStatus.UpdateSubmitted
+            );
 
-            AssertComingOrderStatusByEvent(autoResetEventFilledStatus, brokerage, OrderStatus.Filled);
+            AssertComingOrderStatusByEvent(
+                autoResetEventFilledStatus,
+                brokerage,
+                OrderStatus.Filled
+            );
 
-            CollectionAssert.AreEquivalent(expectedOrderStatusChangedOrdering, actualCrossZeroOrderStatusOrdering);
+            CollectionAssert.AreEquivalent(
+                expectedOrderStatusChangedOrdering,
+                actualCrossZeroOrderStatusOrdering
+            );
             Assert.AreEqual(0, brokerage.GetLeanOrderByZeroCrossBrokerageOrderIdCount());
         }
 
@@ -182,16 +253,35 @@ namespace QuantConnect.Tests.Brokerages
         {
             get
             {
-                var expectedOrderStatusChangedOrdering = new[] { OrderStatus.Submitted, OrderStatus.Invalid };
-                yield return new TestCaseData(new MarketOrder(Symbols.AAPL, -15, new DateTime(2024, 6, 10)), expectedOrderStatusChangedOrdering);
-                yield return new TestCaseData(new LimitOrder(Symbols.AAPL, -15, 180m, new DateTime(2024, 6, 10)), expectedOrderStatusChangedOrdering);
-                yield return new TestCaseData(new StopMarketOrder(Symbols.AAPL, -20, 180m, new DateTime(2024, 6, 10)), expectedOrderStatusChangedOrdering);
-                yield return new TestCaseData(new StopLimitOrder(Symbols.AAPL, -15, 180m, 180m, new DateTime(2024, 6, 10)), expectedOrderStatusChangedOrdering);
+                var expectedOrderStatusChangedOrdering = new[]
+                {
+                    OrderStatus.Submitted,
+                    OrderStatus.Invalid
+                };
+                yield return new TestCaseData(
+                    new MarketOrder(Symbols.AAPL, -15, new DateTime(2024, 6, 10)),
+                    expectedOrderStatusChangedOrdering
+                );
+                yield return new TestCaseData(
+                    new LimitOrder(Symbols.AAPL, -15, 180m, new DateTime(2024, 6, 10)),
+                    expectedOrderStatusChangedOrdering
+                );
+                yield return new TestCaseData(
+                    new StopMarketOrder(Symbols.AAPL, -20, 180m, new DateTime(2024, 6, 10)),
+                    expectedOrderStatusChangedOrdering
+                );
+                yield return new TestCaseData(
+                    new StopLimitOrder(Symbols.AAPL, -15, 180m, 180m, new DateTime(2024, 6, 10)),
+                    expectedOrderStatusChangedOrdering
+                );
             }
         }
 
         [Test, TestCaseSource(nameof(CrossZeroInvalidFirstPartParameters))]
-        public void PlaceCrossOrderInvalid(Order leanOrder, OrderStatus[] expectedOrderStatusChangedOrdering)
+        public void PlaceCrossOrderInvalid(
+            Order leanOrder,
+            OrderStatus[] expectedOrderStatusChangedOrdering
+        )
         {
             var actualCrossZeroOrderStatusOrdering = new Queue<OrderStatus>();
             using var autoResetEventInvalidStatus = new AutoResetEvent(false);
@@ -204,7 +294,9 @@ namespace QuantConnect.Tests.Brokerages
 
                 actualCrossZeroOrderStatusOrdering.Enqueue(orderEventStatus);
 
-                Log.Trace($"{nameof(PlaceCrossOrder)}.OrdersStatusChangedEvent.Status: {orderEventStatus}");
+                Log.Trace(
+                    $"{nameof(PlaceCrossOrder)}.OrdersStatusChangedEvent.Status: {orderEventStatus}"
+                );
 
                 if (orderEventStatus == OrderStatus.Invalid)
                 {
@@ -218,9 +310,16 @@ namespace QuantConnect.Tests.Brokerages
             var response = brokerage.PlaceOrder(leanOrder);
             Assert.IsFalse(response);
 
-            AssertComingOrderStatusByEvent(autoResetEventInvalidStatus, brokerage, OrderStatus.Invalid);
+            AssertComingOrderStatusByEvent(
+                autoResetEventInvalidStatus,
+                brokerage,
+                OrderStatus.Invalid
+            );
 
-            CollectionAssert.AreEquivalent(expectedOrderStatusChangedOrdering, actualCrossZeroOrderStatusOrdering);
+            CollectionAssert.AreEquivalent(
+                expectedOrderStatusChangedOrdering,
+                actualCrossZeroOrderStatusOrdering
+            );
             Assert.AreEqual(0, brokerage.GetLeanOrderByZeroCrossBrokerageOrderIdCount());
         }
 
@@ -228,16 +327,36 @@ namespace QuantConnect.Tests.Brokerages
         {
             get
             {
-                var expectedOrderStatusChangedOrdering = new[] { OrderStatus.Submitted, OrderStatus.PartiallyFilled, OrderStatus.Canceled };
-                yield return new TestCaseData(new MarketOrder(Symbols.AAPL, -15, new DateTime(2024, 6, 10)), expectedOrderStatusChangedOrdering);
-                yield return new TestCaseData(new LimitOrder(Symbols.AAPL, -15, 180m, new DateTime(2024, 6, 10)), expectedOrderStatusChangedOrdering);
-                yield return new TestCaseData(new StopMarketOrder(Symbols.AAPL, -20, 180m, new DateTime(2024, 6, 10)), expectedOrderStatusChangedOrdering);
-                yield return new TestCaseData(new StopLimitOrder(Symbols.AAPL, -15, 180m, 180m, new DateTime(2024, 6, 10)), expectedOrderStatusChangedOrdering);
+                var expectedOrderStatusChangedOrdering = new[]
+                {
+                    OrderStatus.Submitted,
+                    OrderStatus.PartiallyFilled,
+                    OrderStatus.Canceled
+                };
+                yield return new TestCaseData(
+                    new MarketOrder(Symbols.AAPL, -15, new DateTime(2024, 6, 10)),
+                    expectedOrderStatusChangedOrdering
+                );
+                yield return new TestCaseData(
+                    new LimitOrder(Symbols.AAPL, -15, 180m, new DateTime(2024, 6, 10)),
+                    expectedOrderStatusChangedOrdering
+                );
+                yield return new TestCaseData(
+                    new StopMarketOrder(Symbols.AAPL, -20, 180m, new DateTime(2024, 6, 10)),
+                    expectedOrderStatusChangedOrdering
+                );
+                yield return new TestCaseData(
+                    new StopLimitOrder(Symbols.AAPL, -15, 180m, 180m, new DateTime(2024, 6, 10)),
+                    expectedOrderStatusChangedOrdering
+                );
             }
         }
 
         [Test, TestCaseSource(nameof(OrderCrossZeroSecondPartParameters))]
-        public void PlaceCrossZeroSecondPartInvalid(Order leanOrder, OrderStatus[] expectedOrderStatusChangedOrdering)
+        public void PlaceCrossZeroSecondPartInvalid(
+            Order leanOrder,
+            OrderStatus[] expectedOrderStatusChangedOrdering
+        )
         {
             var actualCrossZeroOrderStatusOrdering = new Queue<OrderStatus>();
             using var autoResetEventInvalidStatus = new AutoResetEvent(false);
@@ -258,7 +377,9 @@ namespace QuantConnect.Tests.Brokerages
 
                 actualCrossZeroOrderStatusOrdering.Enqueue(orderEventStatus);
 
-                Log.Trace($"{nameof(PlaceCrossOrder)}.OrdersStatusChangedEvent.Status: {orderEventStatus}");
+                Log.Trace(
+                    $"{nameof(PlaceCrossOrder)}.OrdersStatusChangedEvent.Status: {orderEventStatus}"
+                );
 
                 if (orderEventStatus == OrderStatus.Canceled)
                 {
@@ -272,9 +393,16 @@ namespace QuantConnect.Tests.Brokerages
             var response = brokerage.PlaceOrder(leanOrder);
             Assert.IsTrue(response);
 
-            AssertComingOrderStatusByEvent(autoResetEventInvalidStatus, brokerage, OrderStatus.Canceled);
+            AssertComingOrderStatusByEvent(
+                autoResetEventInvalidStatus,
+                brokerage,
+                OrderStatus.Canceled
+            );
 
-            CollectionAssert.AreEquivalent(expectedOrderStatusChangedOrdering, actualCrossZeroOrderStatusOrdering);
+            CollectionAssert.AreEquivalent(
+                expectedOrderStatusChangedOrdering,
+                actualCrossZeroOrderStatusOrdering
+            );
             Assert.AreEqual(0, brokerage.GetLeanOrderByZeroCrossBrokerageOrderIdCount());
         }
 
@@ -283,7 +411,9 @@ namespace QuantConnect.Tests.Brokerages
         /// </summary>
         /// <param name="equityQuantity">("AAPL", 190m, 10)</param>
         /// <returns>The instance of Phony Brokerage</returns>
-        private static PhonyBrokerage InitializeBrokerage(params (string ticker, decimal averagePrice, decimal quantity)[] equityQuantity)
+        private static PhonyBrokerage InitializeBrokerage(
+            params (string ticker, decimal averagePrice, decimal quantity)[] equityQuantity
+        )
         {
             var algorithm = new AlgorithmStub();
             foreach (var (symbol, averagePrice, quantity) in equityQuantity)
@@ -321,10 +451,16 @@ namespace QuantConnect.Tests.Brokerages
         /// <exception cref="InvalidOperationException">
         /// Thrown if there is not exactly one order with the specified status.
         /// </exception>
-        private static void AssertComingOrderStatusByEvent(AutoResetEvent resetEvent, PhonyBrokerage brokerage, OrderStatus comingOrderStatus)
+        private static void AssertComingOrderStatusByEvent(
+            AutoResetEvent resetEvent,
+            PhonyBrokerage brokerage,
+            OrderStatus comingOrderStatus
+        )
         {
             Assert.True(resetEvent.WaitOne(TimeSpan.FromSeconds(5)));
-            var partialFilledOrder = brokerage.GetAllOrders(o => o.Status == comingOrderStatus).Single();
+            var partialFilledOrder = brokerage
+                .GetAllOrders(o => o.Status == comingOrderStatus)
+                .Single();
             Assert.IsNotNull(partialFilledOrder);
         }
 
@@ -365,7 +501,8 @@ namespace QuantConnect.Tests.Brokerages
 
             public override bool IsConnected => true;
 
-            public PhonyBrokerage(string name, IAlgorithm algorithm) : base(name)
+            public PhonyBrokerage(string name, IAlgorithm algorithm)
+                : base(name)
             {
                 _algorithm = algorithm;
                 _orderProvider = new CustomOrderProvider();
@@ -381,7 +518,13 @@ namespace QuantConnect.Tests.Brokerages
 
                 var brokerageOrderId = _tempBrokerageOrderIds.Last();
 
-                if (!TryGetOrRemoveCrossZeroOrder(brokerageOrderId, orderEvent.Status, out var leanOrder))
+                if (
+                    !TryGetOrRemoveCrossZeroOrder(
+                        brokerageOrderId,
+                        orderEvent.Status,
+                        out var leanOrder
+                    )
+                )
                 {
                     leanOrder = _orderProvider.GetOrderById(orderEvent.OrderId);
                 }
@@ -397,10 +540,14 @@ namespace QuantConnect.Tests.Brokerages
                 return _orderProvider.GetOrders(filter);
             }
 
-
             public override bool CancelOrder(Order order)
             {
-                OnOrderEvent(new OrderEvent(order, new DateTime(2024, 6, 10), OrderFee.Zero, "CancelOrder") { Status = OrderStatus.Canceled });
+                OnOrderEvent(
+                    new OrderEvent(order, new DateTime(2024, 6, 10), OrderFee.Zero, "CancelOrder")
+                    {
+                        Status = OrderStatus.Canceled
+                    }
+                );
                 return true;
             }
 
@@ -454,7 +601,9 @@ namespace QuantConnect.Tests.Brokerages
                 // Please ensure your account has sufficient securities and try again.
                 if (isPlaceCrossOrder == null)
                 {
-                    Assert.Fail("Unable to place a cross order. Please ensure your account holds the necessary securities and try again.");
+                    Assert.Fail(
+                        "Unable to place a cross order. Please ensure your account holds the necessary securities and try again."
+                    );
                 }
 
                 return isPlaceCrossOrder.Value;
@@ -468,19 +617,35 @@ namespace QuantConnect.Tests.Brokerages
             /// <returns>
             /// A <see cref="CrossZeroOrderResponse"/> containing the result of placing the order.
             /// </returns>
-            protected override CrossZeroOrderResponse PlaceCrossZeroOrder(CrossZeroFirstOrderRequest crossZeroOrderRequest, bool isPlaceOrderWithoutLeanEvent)
+            protected override CrossZeroOrderResponse PlaceCrossZeroOrder(
+                CrossZeroFirstOrderRequest crossZeroOrderRequest,
+                bool isPlaceOrderWithoutLeanEvent
+            )
             {
                 Log.Trace($"{nameof(PhonyBrokerage)}.{nameof(PlaceCrossZeroOrder)}");
 
                 // Step 1: Create order request under the hood of any brokerage
-                var brokeragePhonyParameterRequest = new PhonyPlaceOrderRequest(crossZeroOrderRequest.LeanOrder.Symbol.Value, crossZeroOrderRequest.OrderQuantity,
-                    crossZeroOrderRequest.LeanOrder.Direction, 0m, crossZeroOrderRequest.OrderType);
+                var brokeragePhonyParameterRequest = new PhonyPlaceOrderRequest(
+                    crossZeroOrderRequest.LeanOrder.Symbol.Value,
+                    crossZeroOrderRequest.OrderQuantity,
+                    crossZeroOrderRequest.LeanOrder.Direction,
+                    0m,
+                    crossZeroOrderRequest.OrderType
+                );
 
                 // Step 2: Place the order request, paying attention to the flag 'isPlaceOrderWithoutLeanEvent'
-                var response = PlaceOrderPhonyBrokerage(crossZeroOrderRequest.LeanOrder, isPlaceOrderWithoutLeanEvent, brokeragePhonyParameterRequest);
+                var response = PlaceOrderPhonyBrokerage(
+                    crossZeroOrderRequest.LeanOrder,
+                    isPlaceOrderWithoutLeanEvent,
+                    brokeragePhonyParameterRequest
+                );
 
                 // Step 3: Return the result of placing the order
-                return new CrossZeroOrderResponse(response.OrderId, response.IsOrderPlacedSuccessfully, response.Message);
+                return new CrossZeroOrderResponse(
+                    response.OrderId,
+                    response.IsOrderPlacedSuccessfully,
+                    response.Message
+                );
             }
 
             /// <summary>
@@ -492,14 +657,23 @@ namespace QuantConnect.Tests.Brokerages
             /// <returns>
             /// A <see cref="PhonyPlaceOrderResponse"/> containing the result of placing the order.
             /// </returns>
-            private PhonyPlaceOrderResponse PlaceOrderPhonyBrokerage(Order originalLeanOrder, bool isSubmittedEvent = true, PhonyPlaceOrderRequest orderRequest = default)
+            private PhonyPlaceOrderResponse PlaceOrderPhonyBrokerage(
+                Order originalLeanOrder,
+                bool isSubmittedEvent = true,
+                PhonyPlaceOrderRequest orderRequest = default
+            )
             {
                 var newOrderId = Guid.NewGuid().ToString();
                 _tempBrokerageOrderIds.Add(newOrderId);
 
                 if (isSubmittedEvent)
                 {
-                    OnOrderEvent(new OrderEvent(originalLeanOrder, new DateTime(2024, 6, 10), OrderFee.Zero) { Status = OrderStatus.Submitted });
+                    OnOrderEvent(
+                        new OrderEvent(originalLeanOrder, new DateTime(2024, 6, 10), OrderFee.Zero)
+                        {
+                            Status = OrderStatus.Submitted
+                        }
+                    );
                 }
 
                 if (IsPlaceOrderPhonyBrokerageFirstPartSuccessfully)
@@ -525,10 +699,17 @@ namespace QuantConnect.Tests.Brokerages
 
             public override bool UpdateOrder(Order order)
             {
-                OnOrderEvent(new OrderEvent(order, new DateTime(2024, 6, 10), OrderFee.Zero, $"{nameof(PhonyBrokerage)} Order Event")
-                {
-                    Status = OrderStatus.UpdateSubmitted
-                });
+                OnOrderEvent(
+                    new OrderEvent(
+                        order,
+                        new DateTime(2024, 6, 10),
+                        OrderFee.Zero,
+                        $"{nameof(PhonyBrokerage)} Order Event"
+                    )
+                    {
+                        Status = OrderStatus.UpdateSubmitted
+                    }
+                );
                 return true;
             }
 
@@ -537,8 +718,8 @@ namespace QuantConnect.Tests.Brokerages
             /// </summary>
             /// <remarks>
             /// This method starts a new long-running task that periodically checks for open orders
-            /// and updates their status. Specifically, it transitions orders with statuses 
-            /// <see cref="OrderStatus.Submitted"/> or <see cref="OrderStatus.PartiallyFilled"/> 
+            /// and updates their status. Specifically, it transitions orders with statuses
+            /// <see cref="OrderStatus.Submitted"/> or <see cref="OrderStatus.PartiallyFilled"/>
             /// to <see cref="OrderStatus.Filled"/> after a fixed delay.
             /// </remarks>
             /// <example>
@@ -553,25 +734,43 @@ namespace QuantConnect.Tests.Brokerages
             /// </exception>
             private void ImitationBrokerageOrderUpdates()
             {
-                Task.Factory.StartNew(() =>
-                {
-                    while (!_cancellationTokenSource.IsCancellationRequested)
+                Task.Factory.StartNew(
+                    () =>
                     {
-                        _cancellationTokenSource.Token.WaitHandle.WaitOne(TimeSpan.FromSeconds(3));
-                        var orders = _orderProvider.GetOpenOrders();
-                        foreach (var order in orders)
+                        while (!_cancellationTokenSource.IsCancellationRequested)
                         {
-                            if (order.Status == OrderStatus.Submitted || order.Status == OrderStatus.PartiallyFilled || order.Status == OrderStatus.UpdateSubmitted)
+                            _cancellationTokenSource.Token.WaitHandle.WaitOne(
+                                TimeSpan.FromSeconds(3)
+                            );
+                            var orders = _orderProvider.GetOpenOrders();
+                            foreach (var order in orders)
                             {
-                                var orderEvent = new OrderEvent(order, new DateTime(2024, 6, 10), OrderFee.Zero) { Status = OrderStatus.Filled };
-                                if (!TryHandleRemainingCrossZeroOrder(order, orderEvent))
+                                if (
+                                    order.Status == OrderStatus.Submitted
+                                    || order.Status == OrderStatus.PartiallyFilled
+                                    || order.Status == OrderStatus.UpdateSubmitted
+                                )
                                 {
-                                    OnOrderEvent(orderEvent);
+                                    var orderEvent = new OrderEvent(
+                                        order,
+                                        new DateTime(2024, 6, 10),
+                                        OrderFee.Zero
+                                    )
+                                    {
+                                        Status = OrderStatus.Filled
+                                    };
+                                    if (!TryHandleRemainingCrossZeroOrder(order, orderEvent))
+                                    {
+                                        OnOrderEvent(orderEvent);
+                                    }
                                 }
                             }
                         }
-                    }
-                }, _cancellationTokenSource.Token, TaskCreationOptions.LongRunning, TaskScheduler.Default);
+                    },
+                    _cancellationTokenSource.Token,
+                    TaskCreationOptions.LongRunning,
+                    TaskScheduler.Default
+                );
             }
 
             /// <summary>
@@ -607,7 +806,13 @@ namespace QuantConnect.Tests.Brokerages
                 /// <param name="orderDirection">The direction of the order.</param>
                 /// <param name="holdingQuantity">The quantity currently held.</param>
                 /// <param name="leanOrderType">The type of the order.</param>
-                public PhonyPlaceOrderRequest(string symbol, decimal quantity, OrderDirection orderDirection, decimal holdingQuantity, OrderType leanOrderType)
+                public PhonyPlaceOrderRequest(
+                    string symbol,
+                    decimal quantity,
+                    OrderDirection orderDirection,
+                    decimal holdingQuantity,
+                    OrderType leanOrderType
+                )
                 {
                     Symbol = symbol;
                     Quantity = quantity;
@@ -642,7 +847,11 @@ namespace QuantConnect.Tests.Brokerages
                 /// <param name="orderId">The unique identifier for the placed order.</param>
                 /// <param name="isOrderPlacedSuccessfully">A value indicating whether the order was placed successfully.</param>
                 /// <param name="message">The message associated with the order response. This parameter is optional and defaults to <c>null</c>.</param>
-                public PhonyPlaceOrderResponse(string orderId, bool isOrderPlacedSuccessfully, string message = null)
+                public PhonyPlaceOrderResponse(
+                    string orderId,
+                    bool isOrderPlacedSuccessfully,
+                    string message = null
+                )
                 {
                     OrderId = orderId;
                     IsOrderPlacedSuccessfully = isOrderPlacedSuccessfully;

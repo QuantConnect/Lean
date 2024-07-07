@@ -21,6 +21,5 @@ namespace QuantConnect.Orders
     /// Contains additional properties and settings for an order submitted to GDAX brokerage
     /// </summary>
     [Obsolete("GDAXOrderProperties is deprecated. Use CoinbaseOrderProperties instead.")]
-    public class GDAXOrderProperties : CoinbaseOrderProperties
-    { }
+    public class GDAXOrderProperties : CoinbaseOrderProperties { }
 }

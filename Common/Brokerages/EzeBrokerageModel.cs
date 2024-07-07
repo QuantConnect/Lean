@@ -13,11 +13,11 @@
 * limitations under the License.
 */
 
+using System;
+using System.Collections.Generic;
 using QuantConnect.Orders;
 using QuantConnect.Orders.Fees;
 using QuantConnect.Securities;
-using System;
-using System.Collections.Generic;
 
 namespace QuantConnect.Brokerages
 {
@@ -29,40 +29,47 @@ namespace QuantConnect.Brokerages
         /// <summary>
         /// Array's Eze supports security types
         /// </summary>
-        private readonly HashSet<SecurityType> _supportSecurityTypes = new(
-            new[]
-            {
-                SecurityType.Equity,
-                SecurityType.Option,
-                SecurityType.Future,
-                SecurityType.FutureOption,
-                SecurityType.Index,
-                SecurityType.IndexOption
-            });
+        private readonly HashSet<SecurityType> _supportSecurityTypes =
+            new(
+                new[]
+                {
+                    SecurityType.Equity,
+                    SecurityType.Option,
+                    SecurityType.Future,
+                    SecurityType.FutureOption,
+                    SecurityType.Index,
+                    SecurityType.IndexOption
+                }
+            );
 
         /// <summary>
         /// Array's Eze supports order types
         /// </summary>
-        private readonly HashSet<OrderType> _supportOrderTypes = new(
-            new[]
-            {
-                OrderType.Market,
-                OrderType.Limit,
-                OrderType.StopMarket,
-                OrderType.StopLimit,
-                OrderType.MarketOnOpen,
-                OrderType.MarketOnClose,
-            });
+        private readonly HashSet<OrderType> _supportOrderTypes =
+            new(
+                new[]
+                {
+                    OrderType.Market,
+                    OrderType.Limit,
+                    OrderType.StopMarket,
+                    OrderType.StopLimit,
+                    OrderType.MarketOnOpen,
+                    OrderType.MarketOnClose,
+                }
+            );
 
         /// <summary>
         /// Constructor for Eze brokerage model
         /// </summary>
         /// <param name="accountType">Cash or Margin</param>
-        public EzeBrokerageModel(AccountType accountType = AccountType.Margin) : base(accountType)
+        public EzeBrokerageModel(AccountType accountType = AccountType.Margin)
+            : base(accountType)
         {
             if (accountType == AccountType.Cash)
             {
-                throw new NotSupportedException($"Eze brokerage can only be used with a {AccountType.Margin} account type");
+                throw new NotSupportedException(
+                    $"Eze brokerage can only be used with a {AccountType.Margin} account type"
+                );
             }
         }
 
@@ -87,49 +94,75 @@ namespace QuantConnect.Brokerages
         /// <param name="order">The order to be processed</param>
         /// <param name="message">>If this function returns false, a brokerage message detailing why the order may not be submitted</param>
         /// <returns>True if the brokerage could process the order, false otherwise</returns>
-        public override bool CanSubmitOrder(Security security, Order order, out BrokerageMessageEvent message)
+        public override bool CanSubmitOrder(
+            Security security,
+            Order order,
+            out BrokerageMessageEvent message
+        )
         {
             var ezeOrderProperties = order.Properties as EzeOrderProperties;
-            if(ezeOrderProperties == null)
+            if (ezeOrderProperties == null)
             {
-                message = new BrokerageMessageEvent(BrokerageMessageType.Warning, "InvalidOrderParam",
-                    $"Order properties should be of type '{nameof(EzeOrderProperties)}'");
+                message = new BrokerageMessageEvent(
+                    BrokerageMessageType.Warning,
+                    "InvalidOrderParam",
+                    $"Order properties should be of type '{nameof(EzeOrderProperties)}'"
+                );
             }
 
             if (string.IsNullOrEmpty(ezeOrderProperties.Account))
             {
-                message = new BrokerageMessageEvent(BrokerageMessageType.Warning, "InvalidOrderParam",
-                    "Required order properties Account not set properly.");
+                message = new BrokerageMessageEvent(
+                    BrokerageMessageType.Warning,
+                    "InvalidOrderParam",
+                    "Required order properties Account not set properly."
+                );
                 return false;
             }
 
             if (string.IsNullOrEmpty(ezeOrderProperties.Route))
             {
-                message = new BrokerageMessageEvent(BrokerageMessageType.Warning, "InvalidOrderParam",
-                    "Required order properties Route not set properly.");
+                message = new BrokerageMessageEvent(
+                    BrokerageMessageType.Warning,
+                    "InvalidOrderParam",
+                    "Required order properties Route not set properly."
+                );
                 return false;
             }
 
             if (!_supportSecurityTypes.Contains(security.Type))
             {
-                message = new BrokerageMessageEvent(BrokerageMessageType.Warning, "NotSupported",
-                    Messages.DefaultBrokerageModel.UnsupportedSecurityType(this, security));
+                message = new BrokerageMessageEvent(
+                    BrokerageMessageType.Warning,
+                    "NotSupported",
+                    Messages.DefaultBrokerageModel.UnsupportedSecurityType(this, security)
+                );
 
                 return false;
             }
 
             if (!_supportOrderTypes.Contains(order.Type))
             {
-                message = new BrokerageMessageEvent(BrokerageMessageType.Warning, "NotSupported",
-                    Messages.DefaultBrokerageModel.UnsupportedOrderType(this, order, _supportOrderTypes));
+                message = new BrokerageMessageEvent(
+                    BrokerageMessageType.Warning,
+                    "NotSupported",
+                    Messages.DefaultBrokerageModel.UnsupportedOrderType(
+                        this,
+                        order,
+                        _supportOrderTypes
+                    )
+                );
 
                 return false;
             }
 
             if (order.AbsoluteQuantity % 1 != 0)
             {
-                message = new BrokerageMessageEvent(BrokerageMessageType.Warning, "NotSupported",
-                    $"Order Quantity must be Integer, but provided {order.AbsoluteQuantity}.");
+                message = new BrokerageMessageEvent(
+                    BrokerageMessageType.Warning,
+                    "NotSupported",
+                    $"Order Quantity must be Integer, but provided {order.AbsoluteQuantity}."
+                );
 
                 return false;
             }
@@ -154,7 +187,12 @@ namespace QuantConnect.Brokerages
         /// - OrderType <seealso cref="OrderType"/>
         /// - Time In Force <see cref="Order.TimeInForce"/>
         /// </remarks>
-        public override bool CanUpdateOrder(Security security, Order order, UpdateOrderRequest request, out BrokerageMessageEvent message)
+        public override bool CanUpdateOrder(
+            Security security,
+            Order order,
+            UpdateOrderRequest request,
+            out BrokerageMessageEvent message
+        )
         {
             message = null;
             return true;

@@ -13,11 +13,11 @@
  * limitations under the License.
 */
 
-using QuantConnect.Data.UniverseSelection;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using Python.Runtime;
+using QuantConnect.Data.UniverseSelection;
 
 namespace QuantConnect.Algorithm.Framework.Selection
 {
@@ -35,8 +35,11 @@ namespace QuantConnect.Algorithm.Framework.Selection
         /// </summary>
         /// <param name="name">A unique name for this universe</param>
         /// <param name="tickersByDate">Dictionary of DateTime keyed by String that represent the Inception date for each ticker</param>
-        public InceptionDateUniverseSelectionModel(string name, Dictionary<string, DateTime> tickersByDate) :
-            base(name, (Func<DateTime, IEnumerable<string>>) null)
+        public InceptionDateUniverseSelectionModel(
+            string name,
+            Dictionary<string, DateTime> tickersByDate
+        )
+            : base(name, (Func<DateTime, IEnumerable<string>>)null)
         {
             _queue = new Queue<KeyValuePair<string, DateTime>>(tickersByDate);
             _symbols = new List<string>();
@@ -47,17 +50,15 @@ namespace QuantConnect.Algorithm.Framework.Selection
         /// </summary>
         /// <param name="name">A unique name for this universe</param>
         /// <param name="tickersByDate">Dictionary of DateTime keyed by String that represent the Inception date for each ticker</param>
-        public InceptionDateUniverseSelectionModel(string name, PyObject tickersByDate) :
-            this(name, tickersByDate.ConvertToDictionary<string, DateTime>())
-        {
-        }
+        public InceptionDateUniverseSelectionModel(string name, PyObject tickersByDate)
+            : this(name, tickersByDate.ConvertToDictionary<string, DateTime>()) { }
 
         /// <summary>
         /// Returns all tickers that are trading at current algorithm Time
         /// </summary>
         public override IEnumerable<string> Select(QCAlgorithm algorithm, DateTime date)
         {
-            // Move Symbols that are trading from the queue to a list 
+            // Move Symbols that are trading from the queue to a list
             var added = new List<string>();
             while (_queue.TryPeek(out var keyValuePair) && keyValuePair.Value <= date)
             {

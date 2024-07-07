@@ -74,7 +74,8 @@ namespace QuantConnect.Logging
         {
             try
             {
-                if (error == _lastErrorText && !overrideMessageFloodProtection) return;
+                if (error == _lastErrorText && !overrideMessageFloodProtection)
+                    return;
                 _logHandler.Error(error);
                 _lastErrorText = error; //Stop message flooding filling diskspace.
             }
@@ -91,7 +92,12 @@ namespace QuantConnect.Logging
         /// <param name="exception">The exception to be logged</param>
         /// <param name="message">An optional message to be logged, if null/whitespace the messge text will be extracted</param>
         /// <param name="overrideMessageFloodProtection">Force sending a message, overriding the "do not flood" directive</param>
-        private static void Error(string method, Exception exception, string message = null, bool overrideMessageFloodProtection = false)
+        private static void Error(
+            string method,
+            Exception exception,
+            string message = null,
+            bool overrideMessageFloodProtection = false
+        )
         {
             message = method + "(): " + (message ?? string.Empty) + " " + exception;
             Error(message, overrideMessageFloodProtection);
@@ -104,7 +110,11 @@ namespace QuantConnect.Logging
         /// <param name="message">An optional message to be logged, if null/whitespace the messge text will be extracted</param>
         /// <param name="overrideMessageFloodProtection">Force sending a message, overriding the "do not flood" directive</param>
         [MethodImpl(MethodImplOptions.NoInlining)]
-        public static void Error(Exception exception, string message = null, bool overrideMessageFloodProtection = false)
+        public static void Error(
+            Exception exception,
+            string message = null,
+            bool overrideMessageFloodProtection = false
+        )
         {
             Error(WhoCalledMe.GetMethodName(1), exception, message, overrideMessageFloodProtection);
         }
@@ -116,13 +126,14 @@ namespace QuantConnect.Logging
         {
             try
             {
-                if (traceText == _lastTraceText && !overrideMessageFloodProtection) return;
+                if (traceText == _lastTraceText && !overrideMessageFloodProtection)
+                    return;
                 _logHandler.Trace(traceText);
                 _lastTraceText = traceText;
             }
             catch (Exception err)
             {
-                Console.WriteLine("Log.Trace(): Error writing trace: "  +err.Message);
+                Console.WriteLine("Log.Trace(): Error writing trace: " + err.Message);
             }
         }
 
@@ -151,7 +162,8 @@ namespace QuantConnect.Logging
         {
             try
             {
-                if (!_debuggingEnabled || level < _level) return;
+                if (!_debuggingEnabled || level < _level)
+                    return;
                 _logHandler.Debug(text);
             }
             catch (Exception err)
@@ -194,17 +206,26 @@ namespace QuantConnect.Logging
 
                         if (recursion > 0)
                         {
-                            indent = new StringBuilder(trail).Insert(0, spaces, recursion - 1).ToString();
+                            indent = new StringBuilder(trail)
+                                .Insert(0, spaces, recursion - 1)
+                                .ToString();
                         }
 
                         if (value != null)
                         {
                             // If the value is a string, add quotation marks
                             var displayValue = value.ToString();
-                            if (value is string) displayValue = String.Concat('"', displayValue, '"');
+                            if (value is string)
+                                displayValue = String.Concat('"', displayValue, '"');
 
                             // Add property name and value to return string
-                            result.AppendFormat(CultureInfo.InvariantCulture, "{0}{1} = {2}\n", indent, property.Name, displayValue);
+                            result.AppendFormat(
+                                CultureInfo.InvariantCulture,
+                                "{0}{1} = {2}\n",
+                                indent,
+                                property.Name,
+                                displayValue
+                            );
 
                             try
                             {
@@ -224,10 +245,18 @@ namespace QuantConnect.Logging
                                     foreach (var element in ((ICollection)value))
                                     {
                                         var elementName = $"{property.Name}[{elementCount}]";
-                                        indent = new StringBuilder(trail).Insert(0, spaces, recursion).ToString();
+                                        indent = new StringBuilder(trail)
+                                            .Insert(0, spaces, recursion)
+                                            .ToString();
 
                                         // Display the collection element name and type
-                                        result.AppendFormat(CultureInfo.InvariantCulture, "{0}{1} = {2}\n", indent, elementName, element.ToString());
+                                        result.AppendFormat(
+                                            CultureInfo.InvariantCulture,
+                                            "{0}{1} = {2}\n",
+                                            indent,
+                                            elementName,
+                                            element.ToString()
+                                        );
 
                                         // Display the child properties
                                         result.Append(VarDump(element, recursion + 2));
@@ -236,12 +265,19 @@ namespace QuantConnect.Logging
 
                                     result.Append(VarDump(value, recursion + 1));
                                 }
-                            } catch { }
+                            }
+                            catch { }
                         }
                         else
                         {
                             // Add empty (null) property to return string
-                            result.AppendFormat(CultureInfo.InvariantCulture, "{0}{1} = {2}\n", indent, property.Name, "null");
+                            result.AppendFormat(
+                                CultureInfo.InvariantCulture,
+                                "{0}{1} = {2}\n",
+                                indent,
+                                property.Name,
+                                "null"
+                            );
                         }
                     }
                     catch

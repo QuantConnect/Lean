@@ -1,11 +1,11 @@
 /*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
- * 
- * Licensed under the Apache License, Version 2.0 (the "License"); 
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -17,11 +17,11 @@
 
 using System;
 using System.IO;
-using NUnit.Framework;
 using System.Threading;
-using QuantConnect.Util;
+using NUnit.Framework;
 using QuantConnect.Data.Auxiliary;
 using QuantConnect.Lean.Engine.DataFeeds;
+using QuantConnect.Util;
 
 namespace QuantConnect.Tests.Common.Data.Auxiliary
 {
@@ -38,7 +38,10 @@ namespace QuantConnect.Tests.Common.Data.Auxiliary
             var path = Path.Combine(Globals.DataFolder, $"equity/usa/factor_files/");
             var tmp = "./tmp.zip";
 
-            _zipFilePath = Path.Combine(Globals.DataFolder, $"equity/usa/factor_files/factor_files_{date:yyyyMMdd}.zip");
+            _zipFilePath = Path.Combine(
+                Globals.DataFolder,
+                $"equity/usa/factor_files/factor_files_{date:yyyyMMdd}.zip"
+            );
 
             // Have to compress to tmp file or else it doesn't finish reading all the files in dir
             QuantConnect.Compression.ZipDirectory(path, tmp);
@@ -84,7 +87,7 @@ namespace QuantConnect.Tests.Common.Data.Auxiliary
         private class LocalZipFactorFileProviderTest : LocalZipFactorFileProvider
         {
             public bool Enabled = true;
-            public readonly ManualResetEvent CacheCleared = new (false);
+            public readonly ManualResetEvent CacheCleared = new(false);
             protected override TimeSpan CacheRefreshPeriod => TimeSpan.FromMilliseconds(300);
 
             protected override void StartExpirationTask()

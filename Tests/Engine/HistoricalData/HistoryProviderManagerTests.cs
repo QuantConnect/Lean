@@ -17,14 +17,14 @@
 using System;
 using System.Linq;
 using NUnit.Framework;
-using QuantConnect.Data;
-using QuantConnect.Packets;
-using QuantConnect.Util;
-using QuantConnect.Interfaces;
-using QuantConnect.Tests.Brokerages;
 using QuantConnect.Brokerages.Paper;
+using QuantConnect.Data;
+using QuantConnect.Interfaces;
 using QuantConnect.Lean.Engine.DataFeeds;
 using QuantConnect.Lean.Engine.HistoricalData;
+using QuantConnect.Packets;
+using QuantConnect.Tests.Brokerages;
+using QuantConnect.Util;
 
 namespace QuantConnect.Tests.Engine.HistoricalData
 {
@@ -38,25 +38,30 @@ namespace QuantConnect.Tests.Engine.HistoricalData
         public void Setup()
         {
             _historyProviderWrapper = new();
-            var historyProviders = Newtonsoft.Json.JsonConvert.SerializeObject(new[] { nameof(SubscriptionDataReaderHistoryProvider), nameof(TestHistoryProvider) });
+            var historyProviders = Newtonsoft.Json.JsonConvert.SerializeObject(
+                new[] { nameof(SubscriptionDataReaderHistoryProvider), nameof(TestHistoryProvider) }
+            );
             var jobWithArrayHistoryProviders = new LiveNodePacket
             {
                 HistoryProvider = historyProviders
             };
             _paperBrokerage = new PaperBrokerage(null, null);
             _historyProviderWrapper.SetBrokerage(_paperBrokerage);
-            _historyProviderWrapper.Initialize(new HistoryProviderInitializeParameters(
-                jobWithArrayHistoryProviders,
-                null,
-                TestGlobals.DataProvider,
-                TestGlobals.DataCacheProvider,
-                TestGlobals.MapFileProvider,
-                TestGlobals.FactorFileProvider,
-                null,
-                false,
-                new DataPermissionManager(),
-                null,
-                new AlgorithmSettings()));
+            _historyProviderWrapper.Initialize(
+                new HistoryProviderInitializeParameters(
+                    jobWithArrayHistoryProviders,
+                    null,
+                    TestGlobals.DataProvider,
+                    TestGlobals.DataCacheProvider,
+                    TestGlobals.MapFileProvider,
+                    TestGlobals.FactorFileProvider,
+                    null,
+                    false,
+                    new DataPermissionManager(),
+                    null,
+                    new AlgorithmSettings()
+                )
+            );
         }
 
         [TearDown]
@@ -71,9 +76,17 @@ namespace QuantConnect.Tests.Engine.HistoricalData
         {
             var symbol = Symbol.Create("WM", SecurityType.Equity, Market.USA);
 
-            var request = TestsHelpers.GetHistoryRequest(symbol, new DateTime(2008, 01, 01), new DateTime(2008, 01, 05), Resolution.Daily, TickType.Trade);
+            var request = TestsHelpers.GetHistoryRequest(
+                symbol,
+                new DateTime(2008, 01, 01),
+                new DateTime(2008, 01, 05),
+                Resolution.Daily,
+                TickType.Trade
+            );
 
-            var result = _historyProviderWrapper.GetHistory(new[] { request }, TimeZones.NewYork).ToList();
+            var result = _historyProviderWrapper
+                .GetHistory(new[] { request }, TimeZones.NewYork)
+                .ToList();
 
             Assert.IsNotNull(result);
             Assert.IsNotEmpty(result);
@@ -88,13 +101,30 @@ namespace QuantConnect.Tests.Engine.HistoricalData
             bool startDateLimited = new();
             bool downloadFailed = new();
             bool readerErrorDetected = new();
-            _historyProviderWrapper.InvalidConfigurationDetected += (sender, args) => { invalidConfigurationDetected = true; };
-            _historyProviderWrapper.NumericalPrecisionLimited += (sender, args) => { numericalPrecisionLimited = true; };
-            _historyProviderWrapper.StartDateLimited += (sender, args) => { startDateLimited = true; };
-            _historyProviderWrapper.DownloadFailed += (sender, args) => { downloadFailed = true; };
-            _historyProviderWrapper.ReaderErrorDetected += (sender, args) => { readerErrorDetected = true; };
+            _historyProviderWrapper.InvalidConfigurationDetected += (sender, args) =>
+            {
+                invalidConfigurationDetected = true;
+            };
+            _historyProviderWrapper.NumericalPrecisionLimited += (sender, args) =>
+            {
+                numericalPrecisionLimited = true;
+            };
+            _historyProviderWrapper.StartDateLimited += (sender, args) =>
+            {
+                startDateLimited = true;
+            };
+            _historyProviderWrapper.DownloadFailed += (sender, args) =>
+            {
+                downloadFailed = true;
+            };
+            _historyProviderWrapper.ReaderErrorDetected += (sender, args) =>
+            {
+                readerErrorDetected = true;
+            };
 
-            var historyProvider = Composer.Instance.GetExportedValueByTypeName<IHistoryProvider>(nameof(TestHistoryProvider));
+            var historyProvider = Composer.Instance.GetExportedValueByTypeName<IHistoryProvider>(
+                nameof(TestHistoryProvider)
+            );
             (historyProvider as TestHistoryProvider).TriggerEvents();
             Assert.IsTrue(invalidConfigurationDetected);
             Assert.IsTrue(numericalPrecisionLimited);
@@ -112,11 +142,20 @@ namespace QuantConnect.Tests.Engine.HistoricalData
                 OptionStyle.American,
                 OptionRight.Call,
                 32,
-                new DateTime(2013, 07, 20));
+                new DateTime(2013, 07, 20)
+            );
 
-            var request = TestsHelpers.GetHistoryRequest(symbol, new DateTime(2013, 06, 28), new DateTime(2013, 07, 03), Resolution.Minute, TickType.Quote);
+            var request = TestsHelpers.GetHistoryRequest(
+                symbol,
+                new DateTime(2013, 06, 28),
+                new DateTime(2013, 07, 03),
+                Resolution.Minute,
+                TickType.Quote
+            );
 
-            var result = _historyProviderWrapper.GetHistory(new[] { request }, TimeZones.NewYork).ToList();
+            var result = _historyProviderWrapper
+                .GetHistory(new[] { request }, TimeZones.NewYork)
+                .ToList();
 
             Assert.IsNotEmpty(result);
 
@@ -137,9 +176,17 @@ namespace QuantConnect.Tests.Engine.HistoricalData
         {
             var symbol = Symbol.Create("WM", SecurityType.Equity, Market.USA);
 
-            var request = TestsHelpers.GetHistoryRequest(symbol, new DateTime(2008, 01, 01), new DateTime(2008, 01, 05), Resolution.Daily, TickType.Trade);
+            var request = TestsHelpers.GetHistoryRequest(
+                symbol,
+                new DateTime(2008, 01, 01),
+                new DateTime(2008, 01, 05),
+                Resolution.Daily,
+                TickType.Trade
+            );
 
-            var result = _historyProviderWrapper.GetHistory(new[] { request }, TimeZones.NewYork).ToList();
+            var result = _historyProviderWrapper
+                .GetHistory(new[] { request }, TimeZones.NewYork)
+                .ToList();
 
             Assert.IsNotEmpty(result);
             var firstBar = result.First().Values.Single();
@@ -153,9 +200,17 @@ namespace QuantConnect.Tests.Engine.HistoricalData
         {
             var symbol = Symbol.Create("WM", SecurityType.Equity, Market.USA);
 
-            var request = TestsHelpers.GetHistoryRequest(symbol, new DateTime(2008, 01, 01), new DateTime(2008, 01, 05), Resolution.Daily, TickType.Trade);
+            var request = TestsHelpers.GetHistoryRequest(
+                symbol,
+                new DateTime(2008, 01, 01),
+                new DateTime(2008, 01, 05),
+                Resolution.Daily,
+                TickType.Trade
+            );
 
-            var result = _historyProviderWrapper.GetHistory(new[] { request }, TimeZones.NewYork).ToList();
+            var result = _historyProviderWrapper
+                .GetHistory(new[] { request }, TimeZones.NewYork)
+                .ToList();
 
             var initialTime = DateTime.MinValue;
             foreach (var slice in result)

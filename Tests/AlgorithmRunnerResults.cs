@@ -13,9 +13,9 @@
  * limitations under the License.
 */
 
+using System.Collections.Generic;
 using QuantConnect.Lean.Engine;
 using QuantConnect.Lean.Engine.Results;
-using System.Collections.Generic;
 
 namespace QuantConnect.Tests
 {
@@ -54,7 +54,8 @@ namespace QuantConnect.Tests
             Language language,
             AlgorithmManager manager,
             BacktestingResultHandler results,
-            List<string> logs)
+            List<string> logs
+        )
         {
             Algorithm = algorithm;
             Language = language;

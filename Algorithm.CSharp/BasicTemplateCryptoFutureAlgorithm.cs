@@ -14,14 +14,14 @@
 */
 
 using System;
-using QuantConnect.Data;
-using QuantConnect.Orders;
+using System.Collections.Generic;
 using QuantConnect.Brokerages;
+using QuantConnect.Data;
+using QuantConnect.Data.Market;
 using QuantConnect.Indicators;
 using QuantConnect.Interfaces;
+using QuantConnect.Orders;
 using QuantConnect.Securities;
-using QuantConnect.Data.Market;
-using System.Collections.Generic;
 using QuantConnect.Securities.CryptoFuture;
 
 namespace QuantConnect.Algorithm.CSharp
@@ -86,10 +86,13 @@ namespace QuantConnect.Algorithm.CSharp
             {
                 _interestPerSymbol[interestRate.Key]++;
 
-                var cachedInterestRate = Securities[interestRate.Key].Cache.GetData<MarginInterestRate>();
+                var cachedInterestRate = Securities[interestRate.Key]
+                    .Cache.GetData<MarginInterestRate>();
                 if (cachedInterestRate != interestRate.Value)
                 {
-                    throw new RegressionTestException($"Unexpected cached margin interest rate for {interestRate.Key}!");
+                    throw new RegressionTestException(
+                        $"Unexpected cached margin interest rate for {interestRate.Key}!"
+                    );
                 }
             }
 
@@ -100,7 +103,9 @@ namespace QuantConnect.Algorithm.CSharp
                     var ticket = Buy(_btcUsd.Symbol, 50);
                     if (ticket.Status != OrderStatus.Invalid)
                     {
-                        throw new RegressionTestException($"Unexpected valid order {ticket}, should fail due to margin not sufficient");
+                        throw new RegressionTestException(
+                            $"Unexpected valid order {ticket}, should fail due to margin not sufficient"
+                        );
                     }
 
                     Buy(_btcUsd.Symbol, 1);
@@ -113,15 +118,21 @@ namespace QuantConnect.Algorithm.CSharp
 
                     if (Math.Abs(btcUsdHoldings.TotalSaleVolume - holdingsValueBtcUsd) > 1)
                     {
-                        throw new RegressionTestException($"Unexpected TotalSaleVolume {btcUsdHoldings.TotalSaleVolume}");
+                        throw new RegressionTestException(
+                            $"Unexpected TotalSaleVolume {btcUsdHoldings.TotalSaleVolume}"
+                        );
                     }
                     if (Math.Abs(btcUsdHoldings.AbsoluteHoldingsCost - holdingsValueBtcUsd) > 1)
                     {
-                        throw new RegressionTestException($"Unexpected holdings cost {btcUsdHoldings.HoldingsCost}");
+                        throw new RegressionTestException(
+                            $"Unexpected holdings cost {btcUsdHoldings.HoldingsCost}"
+                        );
                     }
                     // margin used is based on the maintenance rate
-                    if (Math.Abs(btcUsdHoldings.AbsoluteHoldingsCost * 0.05m - marginUsed) > 1
-                        || _btcUsd.BuyingPowerModel.GetMaintenanceMargin(_btcUsd) != marginUsed)
+                    if (
+                        Math.Abs(btcUsdHoldings.AbsoluteHoldingsCost * 0.05m - marginUsed) > 1
+                        || _btcUsd.BuyingPowerModel.GetMaintenanceMargin(_btcUsd) != marginUsed
+                    )
                     {
                         throw new RegressionTestException($"Unexpected margin used {marginUsed}");
                     }
@@ -132,18 +143,25 @@ namespace QuantConnect.Algorithm.CSharp
                     var adaUsdtHoldings = _adaUsdt.Holdings;
 
                     // USDT/BUSD futures value is based on it's price
-                    var holdingsValueUsdt = _adaUsdt.Price * _adaUsdt.SymbolProperties.ContractMultiplier * 1000;
+                    var holdingsValueUsdt =
+                        _adaUsdt.Price * _adaUsdt.SymbolProperties.ContractMultiplier * 1000;
 
                     if (Math.Abs(adaUsdtHoldings.TotalSaleVolume - holdingsValueUsdt) > 1)
                     {
-                        throw new RegressionTestException($"Unexpected TotalSaleVolume {adaUsdtHoldings.TotalSaleVolume}");
+                        throw new RegressionTestException(
+                            $"Unexpected TotalSaleVolume {adaUsdtHoldings.TotalSaleVolume}"
+                        );
                     }
                     if (Math.Abs(adaUsdtHoldings.AbsoluteHoldingsCost - holdingsValueUsdt) > 1)
                     {
-                        throw new RegressionTestException($"Unexpected holdings cost {adaUsdtHoldings.HoldingsCost}");
+                        throw new RegressionTestException(
+                            $"Unexpected holdings cost {adaUsdtHoldings.HoldingsCost}"
+                        );
                     }
-                    if (Math.Abs(adaUsdtHoldings.AbsoluteHoldingsCost * 0.05m - marginUsed) > 1
-                        || _adaUsdt.BuyingPowerModel.GetMaintenanceMargin(_adaUsdt) != marginUsed)
+                    if (
+                        Math.Abs(adaUsdtHoldings.AbsoluteHoldingsCost * 0.05m - marginUsed) > 1
+                        || _adaUsdt.BuyingPowerModel.GetMaintenanceMargin(_adaUsdt) != marginUsed
+                    )
                     {
                         throw new RegressionTestException($"Unexpected margin used {marginUsed}");
                     }
@@ -152,12 +170,16 @@ namespace QuantConnect.Algorithm.CSharp
                     var profit = Portfolio.TotalUnrealizedProfit;
                     if ((5 - Math.Abs(profit)) < 0)
                     {
-                        throw new RegressionTestException($"Unexpected TotalUnrealizedProfit {Portfolio.TotalUnrealizedProfit}");
+                        throw new RegressionTestException(
+                            $"Unexpected TotalUnrealizedProfit {Portfolio.TotalUnrealizedProfit}"
+                        );
                     }
 
                     if (Portfolio.TotalProfit != 0)
                     {
-                        throw new RegressionTestException($"Unexpected TotalProfit {Portfolio.TotalProfit}");
+                        throw new RegressionTestException(
+                            $"Unexpected TotalProfit {Portfolio.TotalProfit}"
+                        );
                     }
                 }
             }
@@ -172,7 +194,9 @@ namespace QuantConnect.Algorithm.CSharp
 
                     if (Math.Abs(btcUsdHoldings.AbsoluteHoldingsCost - 100 * 2) > 1)
                     {
-                        throw new RegressionTestException($"Unexpected holdings cost {btcUsdHoldings.HoldingsCost}");
+                        throw new RegressionTestException(
+                            $"Unexpected holdings cost {btcUsdHoldings.HoldingsCost}"
+                        );
                     }
 
                     Sell(_adaUsdt.Symbol, 3000);
@@ -180,23 +204,30 @@ namespace QuantConnect.Algorithm.CSharp
                     var adaUsdtHoldings = _adaUsdt.Holdings;
 
                     // USDT/BUSD futures value is based on it's price
-                    var holdingsValueUsdt = _adaUsdt.Price * _adaUsdt.SymbolProperties.ContractMultiplier * 2000;
+                    var holdingsValueUsdt =
+                        _adaUsdt.Price * _adaUsdt.SymbolProperties.ContractMultiplier * 2000;
 
                     if (Math.Abs(adaUsdtHoldings.AbsoluteHoldingsCost - holdingsValueUsdt) > 1)
                     {
-                        throw new RegressionTestException($"Unexpected holdings cost {adaUsdtHoldings.HoldingsCost}");
+                        throw new RegressionTestException(
+                            $"Unexpected holdings cost {adaUsdtHoldings.HoldingsCost}"
+                        );
                     }
 
                     // position just opened should be just spread here
                     var profit = Portfolio.TotalUnrealizedProfit;
                     if ((5 - Math.Abs(profit)) < 0)
                     {
-                        throw new RegressionTestException($"Unexpected TotalUnrealizedProfit {Portfolio.TotalUnrealizedProfit}");
+                        throw new RegressionTestException(
+                            $"Unexpected TotalUnrealizedProfit {Portfolio.TotalUnrealizedProfit}"
+                        );
                     }
                     // we barely did any difference on the previous trade
                     if ((5 - Math.Abs(Portfolio.TotalProfit)) < 0)
                     {
-                        throw new RegressionTestException($"Unexpected TotalProfit {Portfolio.TotalProfit}");
+                        throw new RegressionTestException(
+                            $"Unexpected TotalProfit {Portfolio.TotalProfit}"
+                        );
                     }
                 }
             }
@@ -206,12 +237,16 @@ namespace QuantConnect.Algorithm.CSharp
         {
             if (_interestPerSymbol[_adaUsdt.Symbol] != 1)
             {
-                throw new RegressionTestException($"Unexpected interest rate count {_interestPerSymbol[_adaUsdt.Symbol]}");
+                throw new RegressionTestException(
+                    $"Unexpected interest rate count {_interestPerSymbol[_adaUsdt.Symbol]}"
+                );
             }
 
             if (_interestPerSymbol[_btcUsd.Symbol] != 3)
             {
-                throw new RegressionTestException($"Unexpected interest rate count {_interestPerSymbol[_btcUsd.Symbol]}");
+                throw new RegressionTestException(
+                    $"Unexpected interest rate count {_interestPerSymbol[_btcUsd.Symbol]}"
+                );
             }
         }
 
@@ -248,35 +283,36 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// This is used by the regression test system to indicate what the expected statistics are from running the algorithm
         /// </summary>
-        public Dictionary<string, string> ExpectedStatistics => new Dictionary<string, string>
-        {
-            {"Total Orders", "5"},
-            {"Average Win", "0%"},
-            {"Average Loss", "0%"},
-            {"Compounding Annual Return", "0%"},
-            {"Drawdown", "0%"},
-            {"Expectancy", "0"},
-            {"Start Equity", "1000200.00"},
-            {"End Equity", "1000278.02"},
-            {"Net Profit", "0%"},
-            {"Sharpe Ratio", "0"},
-            {"Sortino Ratio", "0"},
-            {"Probabilistic Sharpe Ratio", "0%"},
-            {"Loss Rate", "0%"},
-            {"Win Rate", "0%"},
-            {"Profit-Loss Ratio", "0"},
-            {"Alpha", "0"},
-            {"Beta", "0"},
-            {"Annual Standard Deviation", "0"},
-            {"Annual Variance", "0"},
-            {"Information Ratio", "0"},
-            {"Tracking Error", "0"},
-            {"Treynor Ratio", "0"},
-            {"Total Fees", "$0.65"},
-            {"Estimated Strategy Capacity", "$500000000.00"},
-            {"Lowest Capacity Asset", "ADAUSDT 18R"},
-            {"Portfolio Turnover", "0.16%"},
-            {"OrderListHash", "dcc4f964b5549c753123848c32eaee41"}
-        };
+        public Dictionary<string, string> ExpectedStatistics =>
+            new Dictionary<string, string>
+            {
+                { "Total Orders", "5" },
+                { "Average Win", "0%" },
+                { "Average Loss", "0%" },
+                { "Compounding Annual Return", "0%" },
+                { "Drawdown", "0%" },
+                { "Expectancy", "0" },
+                { "Start Equity", "1000200.00" },
+                { "End Equity", "1000278.02" },
+                { "Net Profit", "0%" },
+                { "Sharpe Ratio", "0" },
+                { "Sortino Ratio", "0" },
+                { "Probabilistic Sharpe Ratio", "0%" },
+                { "Loss Rate", "0%" },
+                { "Win Rate", "0%" },
+                { "Profit-Loss Ratio", "0" },
+                { "Alpha", "0" },
+                { "Beta", "0" },
+                { "Annual Standard Deviation", "0" },
+                { "Annual Variance", "0" },
+                { "Information Ratio", "0" },
+                { "Tracking Error", "0" },
+                { "Treynor Ratio", "0" },
+                { "Total Fees", "$0.65" },
+                { "Estimated Strategy Capacity", "$500000000.00" },
+                { "Lowest Capacity Asset", "ADAUSDT 18R" },
+                { "Portfolio Turnover", "0.16%" },
+                { "OrderListHash", "dcc4f964b5549c753123848c32eaee41" }
+            };
     }
 }

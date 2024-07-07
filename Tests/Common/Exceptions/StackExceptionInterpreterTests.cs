@@ -28,8 +28,13 @@ namespace QuantConnect.Tests.Common.Exceptions
         public void CreatesFromAssemblies()
         {
             var assembly = typeof(ClrBubbledExceptionInterpreter).Assembly;
-            var interpreter = StackExceptionInterpreter.CreateFromAssemblies(new[] {assembly});
-            Assert.AreEqual(1, interpreter.Interpreters.Count(p => p.GetType() == typeof(ClrBubbledExceptionInterpreter)));
+            var interpreter = StackExceptionInterpreter.CreateFromAssemblies(new[] { assembly });
+            Assert.AreEqual(
+                1,
+                interpreter.Interpreters.Count(p =>
+                    p.GetType() == typeof(ClrBubbledExceptionInterpreter)
+                )
+            );
         }
 
         [Test]
@@ -39,36 +44,45 @@ namespace QuantConnect.Tests.Common.Exceptions
             var interpretCalled = new List<int>();
             var interpreters = new[]
             {
-                new FakeExceptionInterpreter(e =>
-                {
-                    canInterpretCalled.Add(0);
-                    return false;
-                }, e =>
-                {
-                    interpretCalled.Add(0);
-                    return e;
-                },
-                order : 2),
-                new FakeExceptionInterpreter(e =>
-                {
-                    canInterpretCalled.Add(1);
-                    return true;
-                }, e =>
-                {
-                    interpretCalled.Add(1);
-                    return e;
-                },
-                order : 1),
-                new FakeExceptionInterpreter(e =>
-                {
-                    canInterpretCalled.Add(2);
-                    return false;
-                }, e =>
-                {
-                    interpretCalled.Add(2);
-                    return e;
-                },
-                order : 0)
+                new FakeExceptionInterpreter(
+                    e =>
+                    {
+                        canInterpretCalled.Add(0);
+                        return false;
+                    },
+                    e =>
+                    {
+                        interpretCalled.Add(0);
+                        return e;
+                    },
+                    order: 2
+                ),
+                new FakeExceptionInterpreter(
+                    e =>
+                    {
+                        canInterpretCalled.Add(1);
+                        return true;
+                    },
+                    e =>
+                    {
+                        interpretCalled.Add(1);
+                        return e;
+                    },
+                    order: 1
+                ),
+                new FakeExceptionInterpreter(
+                    e =>
+                    {
+                        canInterpretCalled.Add(2);
+                        return false;
+                    },
+                    e =>
+                    {
+                        interpretCalled.Add(2);
+                        return e;
+                    },
+                    order: 0
+                )
             };
 
             var interpreter = new StackExceptionInterpreter(interpreters);
@@ -94,15 +108,17 @@ namespace QuantConnect.Tests.Common.Exceptions
             var inner = new Exception("inner");
             var middle = new Exception("middle", inner);
             var outter = new Exception("outter", middle);
-            var interpreter = new StackExceptionInterpreter(new[]
-            {
-                new FakeExceptionInterpreter()
-            });
+            var interpreter = new StackExceptionInterpreter(
+                new[] { new FakeExceptionInterpreter() }
+            );
 
             var interpreted = interpreter.Interpret(outter, null);
             Assert.AreEqual("Projected 1: outter", interpreted.Message);
             Assert.AreEqual("Projected 2: middle", interpreted.InnerException.Message);
-            Assert.AreEqual("Projected 3: inner", interpreted.InnerException.InnerException.Message);
+            Assert.AreEqual(
+                "Projected 3: inner",
+                interpreted.InnerException.InnerException.Message
+            );
         }
 
         [Test]
@@ -111,7 +127,9 @@ namespace QuantConnect.Tests.Common.Exceptions
             var inner = new Exception("inner");
             var middle = new Exception("middle", inner);
             var outter = new Exception("outter", middle);
-            var message = new StackExceptionInterpreter(Enumerable.Empty<IExceptionInterpreter>()).GetExceptionMessageHeader(outter);
+            var message = new StackExceptionInterpreter(
+                Enumerable.Empty<IExceptionInterpreter>()
+            ).GetExceptionMessageHeader(outter);
 
             // header line w/ exception message and then the full detail on a new line
             var expectedMessage = "outter middle inner";

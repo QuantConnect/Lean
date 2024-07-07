@@ -29,9 +29,14 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Queues
         /// <summary>
         /// Desktop/Local doesn't support live data from this handler
         /// </summary>
-        public IEnumerator<BaseData> Subscribe(SubscriptionDataConfig dataConfig, EventHandler newDataAvailableHandler)
+        public IEnumerator<BaseData> Subscribe(
+            SubscriptionDataConfig dataConfig,
+            EventHandler newDataAvailableHandler
+        )
         {
-            throw new NotImplementedException("QuantConnect.Queues.LiveDataQueue has not implemented live data.");
+            throw new NotImplementedException(
+                "QuantConnect.Queues.LiveDataQueue has not implemented live data."
+            );
         }
 
         /// <summary>
@@ -39,16 +44,16 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Queues
         /// </summary>
         public virtual void Unsubscribe(SubscriptionDataConfig dataConfig)
         {
-            throw new NotImplementedException("QuantConnect.Queues.LiveDataQueue has not implemented live data.");
+            throw new NotImplementedException(
+                "QuantConnect.Queues.LiveDataQueue has not implemented live data."
+            );
         }
 
         /// <summary>
         /// Sets the job we're subscribing for
         /// </summary>
         /// <param name="job">Job we're subscribing for</param>
-        public void SetJob(LiveNodePacket job)
-        {
-        }
+        public void SetJob(LiveNodePacket job) { }
 
         /// <summary>
         /// Returns whether the data provider is connected
@@ -59,8 +64,6 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Queues
         /// <summary>
         /// Performs application-defined tasks associated with freeing, releasing, or resetting unmanaged resources.
         /// </summary>
-        public void Dispose()
-        {
-        }
+        public void Dispose() { }
     }
 }

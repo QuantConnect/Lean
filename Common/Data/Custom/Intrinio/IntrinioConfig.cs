@@ -25,13 +25,13 @@ namespace QuantConnect.Data.Custom.Intrinio
     {
         /// <summary>
         /// </summary>
-        public static RateGate RateGate =
-            new RateGate(1, TimeSpan.FromMilliseconds(5000));
+        public static RateGate RateGate = new RateGate(1, TimeSpan.FromMilliseconds(5000));
 
         /// <summary>
         ///     Check if Intrinio API user and password are not empty or null.
         /// </summary>
-        public static bool IsInitialized => !string.IsNullOrWhiteSpace(User) && !string.IsNullOrWhiteSpace(Password);
+        public static bool IsInitialized =>
+            !string.IsNullOrWhiteSpace(User) && !string.IsNullOrWhiteSpace(Password);
 
         /// <summary>
         ///     Intrinio API password
@@ -67,7 +67,9 @@ namespace QuantConnect.Data.Custom.Intrinio
 
             if (!IsInitialized)
             {
-                throw new InvalidOperationException("Please set a valid Intrinio user and password.");
+                throw new InvalidOperationException(
+                    "Please set a valid Intrinio user and password."
+                );
             }
         }
     }

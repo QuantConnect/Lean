@@ -13,13 +13,13 @@
  * limitations under the License.
 */
 
-using QuantConnect.Orders;
-using QuantConnect.Securities;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Serialization;
+using QuantConnect.Orders;
+using QuantConnect.Securities;
 
 namespace QuantConnect.Report
 {
@@ -70,7 +70,13 @@ namespace QuantConnect.Report
             Order = order;
             TotalPortfolioValue = portfolio.TotalPortfolioValue;
             Cash = portfolio.Cash;
-            Holdings = portfolio.Securities.Values.Select(x => new PointInTimeHolding(x.Symbol, x.Holdings.HoldingsValue, x.Holdings.Quantity)).ToList();
+            Holdings = portfolio
+                .Securities.Values.Select(x => new PointInTimeHolding(
+                    x.Symbol,
+                    x.Holdings.HoldingsValue,
+                    x.Holdings.Quantity
+                ))
+                .ToList();
             Leverage = Holdings.Sum(x => x.AbsoluteHoldingsValue) / TotalPortfolioValue;
         }
 
@@ -85,7 +91,9 @@ namespace QuantConnect.Report
             Order = portfolio.Order;
             TotalPortfolioValue = portfolio.TotalPortfolioValue;
             Cash = portfolio.Cash;
-            Holdings = portfolio.Holdings.Select(x => new PointInTimeHolding(x.Symbol, x.HoldingsValue, x.Quantity)).ToList();
+            Holdings = portfolio
+                .Holdings.Select(x => new PointInTimeHolding(x.Symbol, x.HoldingsValue, x.Quantity))
+                .ToList();
             Leverage = portfolio.Leverage;
         }
 
@@ -137,7 +145,11 @@ namespace QuantConnect.Report
             /// <param name="symbol">Symbol of the holding</param>
             /// <param name="holdingsValue">Value of the holding</param>
             /// <param name="holdingsQuantity">Quantity of the holding</param>
-            public PointInTimeHolding(Symbol symbol, decimal holdingsValue, decimal holdingsQuantity)
+            public PointInTimeHolding(
+                Symbol symbol,
+                decimal holdingsValue,
+                decimal holdingsQuantity
+            )
             {
                 Symbol = symbol;
                 HoldingsValue = holdingsValue;

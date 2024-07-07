@@ -15,13 +15,13 @@
 */
 
 using System;
-using NUnit.Framework;
-using System.Threading;
-using QuantConnect.Data;
-using QuantConnect.Logging;
 using System.Collections.Generic;
+using System.Threading;
+using NUnit.Framework;
+using QuantConnect.Data;
 using QuantConnect.Lean.Engine.DataFeeds;
 using QuantConnect.Lean.Engine.DataFeeds.Queues;
+using QuantConnect.Logging;
 
 namespace QuantConnect.Tests.Engine.DataFeeds
 {
@@ -39,15 +39,19 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             foreach (var config in algorithm.SubscriptionManager.Subscriptions)
             {
                 using var newDataEvent = new ManualResetEvent(false);
-                enumerators.Add(dataQueue.Subscribe(config, (_, _) => {
-                    try
-                    {
-                        newDataEvent.Set();
-                    }
-                    catch (ObjectDisposedException)
-                    {
-                    }
-                }));
+                enumerators.Add(
+                    dataQueue.Subscribe(
+                        config,
+                        (_, _) =>
+                        {
+                            try
+                            {
+                                newDataEvent.Set();
+                            }
+                            catch (ObjectDisposedException) { }
+                        }
+                    )
+                );
 
                 Assert.IsTrue(newDataEvent.WaitOne(15000));
 

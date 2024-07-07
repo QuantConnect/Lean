@@ -27,9 +27,16 @@ namespace QuantConnect.Tests.Engine.DataFeeds
         private int _incrementsToAdd;
         public static DateTime StartDate;
 
-        public override BaseData Reader(SubscriptionDataConfig config, string line, DateTime date, bool isLiveMode)
+        public override BaseData Reader(
+            SubscriptionDataConfig config,
+            string line,
+            DateTime date,
+            bool isLiveMode
+        )
         {
-            var start = StartDate.AddTicks(config.Increment.Ticks * _incrementsToAdd++).ConvertFromUtc(config.DataTimeZone);
+            var start = StartDate
+                .AddTicks(config.Increment.Ticks * _incrementsToAdd++)
+                .ConvertFromUtc(config.DataTimeZone);
             return new CustomMockedFileBaseData
             {
                 Symbol = config.Symbol,
@@ -39,10 +46,18 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             };
         }
 
-        public override SubscriptionDataSource GetSource(SubscriptionDataConfig config, DateTime date, bool isLiveMode)
+        public override SubscriptionDataSource GetSource(
+            SubscriptionDataConfig config,
+            DateTime date,
+            bool isLiveMode
+        )
         {
             // using an already existing file, the file it self and its contents don't really matter. The reader will mock the values
-            return new SubscriptionDataSource("./TestData/spy_with_ichimoku.csv", SubscriptionTransportMedium.LocalFile, FileFormat.Csv);
+            return new SubscriptionDataSource(
+                "./TestData/spy_with_ichimoku.csv",
+                SubscriptionTransportMedium.LocalFile,
+                FileFormat.Csv
+            );
         }
     }
 }

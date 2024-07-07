@@ -8,7 +8,9 @@ var parentDirectory = Directory.GetParent(currentDirectory).FullName;
 
 // If our parent directory contains QC Dlls use it, otherwise default to current working directory
 // In cloud and CLI research cases we expect the parent directory to contain the Dlls; but locally it may be cwd
-var directoryToLoad = Directory.GetFiles(parentDirectory, "QuantConnect.*.dll").Any() ? parentDirectory : currentDirectory;
+var directoryToLoad = Directory.GetFiles(parentDirectory, "QuantConnect.*.dll").Any()
+    ? parentDirectory
+    : currentDirectory;
 
 // Load in all QC dll's from this directory
 Console.WriteLine($"Initialize.csx: Loading assemblies from {directoryToLoad}");

@@ -13,8 +13,8 @@
  * limitations under the License.
 */
 
-using QuantConnect.Orders;
 using System.Collections.Generic;
+using QuantConnect.Orders;
 
 namespace QuantConnect.Securities.Positions
 {
@@ -48,7 +48,7 @@ namespace QuantConnect.Securities.Positions
             SecurityPortfolioManager portfolio,
             IPositionGroup contemplatedChanges,
             List<Order> orders
-            )
+        )
         {
             Orders = orders;
             Portfolio = portfolio;

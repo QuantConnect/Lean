@@ -26,17 +26,18 @@ namespace QuantConnect.Tests.Algorithm.Framework.Alphas.Serialization
     [TestFixture, Parallelizable(ParallelScope.All)]
     public class InsightJsonConverterTests
     {
-        private JsonSerializerSettings _serializerSettings = new()
-        {
-            ContractResolver = new DefaultContractResolver
+        private JsonSerializerSettings _serializerSettings =
+            new()
             {
-                NamingStrategy = new CamelCaseNamingStrategy
+                ContractResolver = new DefaultContractResolver
                 {
-                    ProcessDictionaryKeys = false,
-                    OverrideSpecifiedNames = true
+                    NamingStrategy = new CamelCaseNamingStrategy
+                    {
+                        ProcessDictionaryKeys = false,
+                        OverrideSpecifiedNames = true
+                    }
                 }
-            }
-        };
+            };
 
         [Test]
         public void DeserializesInsightWithoutScore()
@@ -45,9 +46,20 @@ namespace QuantConnect.Tests.Algorithm.Framework.Alphas.Serialization
             var result = JsonConvert.DeserializeObject<Insight>(jsonNoScoreBackwardsCompatible);
             Assert.AreEqual(jObject["id"].Value<string>(), result.Id.ToStringInvariant("N"));
             Assert.AreEqual(jObject["source-model"].Value<string>(), result.SourceModel);
-            Assert.AreEqual(jObject["group-id"]?.Value<string>(), result.GroupId?.ToStringInvariant("N"));
-            Assert.AreEqual(jObject["created-time"].Value<double>(), Time.DateTimeToUnixTimeStamp(result.GeneratedTimeUtc), 5e-4);
-            Assert.AreEqual(jObject["close-time"].Value<double>(), Time.DateTimeToUnixTimeStamp(result.CloseTimeUtc), 5e-4);
+            Assert.AreEqual(
+                jObject["group-id"]?.Value<string>(),
+                result.GroupId?.ToStringInvariant("N")
+            );
+            Assert.AreEqual(
+                jObject["created-time"].Value<double>(),
+                Time.DateTimeToUnixTimeStamp(result.GeneratedTimeUtc),
+                5e-4
+            );
+            Assert.AreEqual(
+                jObject["close-time"].Value<double>(),
+                Time.DateTimeToUnixTimeStamp(result.CloseTimeUtc),
+                5e-4
+            );
             Assert.AreEqual(jObject["symbol"].Value<string>(), result.Symbol.ID.ToString());
             Assert.AreEqual(jObject["ticker"].Value<string>(), result.Symbol.Value);
             Assert.AreEqual(jObject["type"].Value<string>(), result.Type.ToLower());
@@ -71,9 +83,20 @@ namespace QuantConnect.Tests.Algorithm.Framework.Alphas.Serialization
             var result = JsonConvert.DeserializeObject<Insight>(jsonWithScoreBackwardsCompatible);
             Assert.AreEqual(jObject["id"].Value<string>(), result.Id.ToStringInvariant("N"));
             Assert.AreEqual(jObject["source-model"].Value<string>(), result.SourceModel);
-            Assert.AreEqual(jObject["group-id"]?.Value<string>(), result.GroupId?.ToStringInvariant("N"));
-            Assert.AreEqual(jObject["created-time"].Value<double>(), Time.DateTimeToUnixTimeStamp(result.GeneratedTimeUtc), 5e-4);
-            Assert.AreEqual(jObject["close-time"].Value<double>(), Time.DateTimeToUnixTimeStamp(result.CloseTimeUtc), 5e-4);
+            Assert.AreEqual(
+                jObject["group-id"]?.Value<string>(),
+                result.GroupId?.ToStringInvariant("N")
+            );
+            Assert.AreEqual(
+                jObject["created-time"].Value<double>(),
+                Time.DateTimeToUnixTimeStamp(result.GeneratedTimeUtc),
+                5e-4
+            );
+            Assert.AreEqual(
+                jObject["close-time"].Value<double>(),
+                Time.DateTimeToUnixTimeStamp(result.CloseTimeUtc),
+                5e-4
+            );
             Assert.AreEqual(jObject["symbol"].Value<string>(), result.Symbol.ID.ToString());
             Assert.AreEqual(jObject["ticker"].Value<string>(), result.Symbol.Value);
             Assert.AreEqual(jObject["type"].Value<string>(), result.Type.ToLower());
@@ -85,14 +108,19 @@ namespace QuantConnect.Tests.Algorithm.Framework.Alphas.Serialization
             Assert.AreEqual(true, result.Score.IsFinalScore);
             Assert.AreEqual(jObject["score-magnitude"].Value<double>(), result.Score.Magnitude);
             Assert.AreEqual(jObject["score-direction"].Value<double>(), result.Score.Direction);
-            Assert.AreEqual(jObject["reference-final"].Value<decimal>(), result.ReferenceValueFinal);
+            Assert.AreEqual(
+                jObject["reference-final"].Value<decimal>(),
+                result.ReferenceValueFinal
+            );
         }
 
         [TestCase(true)]
         [TestCase(false)]
         public void SerializesInsightWithoutScore(bool backwardsCompatible)
         {
-            var serializedInsight = JsonConvert.DeserializeObject<SerializedInsight>(backwardsCompatible ? jsonNoScoreBackwardsCompatible : jsonNoScore2);
+            var serializedInsight = JsonConvert.DeserializeObject<SerializedInsight>(
+                backwardsCompatible ? jsonNoScoreBackwardsCompatible : jsonNoScore2
+            );
             var insight = Insight.FromSerializedInsight(serializedInsight);
             var result = JsonConvert.SerializeObject(insight, Formatting.None, _serializerSettings);
             Assert.AreEqual(jsonNoScore2, result);
@@ -102,7 +130,9 @@ namespace QuantConnect.Tests.Algorithm.Framework.Alphas.Serialization
         [TestCase(false)]
         public void SerializesInsightWithScore(bool backwardsCompatible)
         {
-            var serializedInsight = JsonConvert.DeserializeObject<SerializedInsight>(backwardsCompatible ? jsonWithScoreBackwardsCompatible : jsonWithScore);
+            var serializedInsight = JsonConvert.DeserializeObject<SerializedInsight>(
+                backwardsCompatible ? jsonWithScoreBackwardsCompatible : jsonWithScore
+            );
             var insight = Insight.FromSerializedInsight(serializedInsight);
             var result = JsonConvert.SerializeObject(insight, Formatting.None, _serializerSettings);
             Assert.AreEqual(jsonWithScore, result);
@@ -111,7 +141,9 @@ namespace QuantConnect.Tests.Algorithm.Framework.Alphas.Serialization
         [Test]
         public void SerializesOldInsightWithMissingCreatedTime()
         {
-            var serializedInsight = JsonConvert.DeserializeObject<SerializedInsight>(jsonWithMissingCreatedTimeBackwardsCompatible);
+            var serializedInsight = JsonConvert.DeserializeObject<SerializedInsight>(
+                jsonWithMissingCreatedTimeBackwardsCompatible
+            );
             var insight = Insight.FromSerializedInsight(serializedInsight);
             var result = JsonConvert.SerializeObject(insight, Formatting.None, _serializerSettings);
 
@@ -119,12 +151,13 @@ namespace QuantConnect.Tests.Algorithm.Framework.Alphas.Serialization
             Assert.AreEqual(jsonWithExpectedOutputFromMissingCreatedTimeValue, result);
         }
 
-
         [TestCase(true)]
         [TestCase(false)]
         public void SerializesInsightWithTag(bool backwardsCompatible)
         {
-            var serializedInsight = JsonConvert.DeserializeObject<SerializedInsight>(backwardsCompatible ? jsonWithTagBackwardsCompatible : jsonWithTag);
+            var serializedInsight = JsonConvert.DeserializeObject<SerializedInsight>(
+                backwardsCompatible ? jsonWithTagBackwardsCompatible : jsonWithTag
+            );
             var insight = Insight.FromSerializedInsight(serializedInsight);
             var result = JsonConvert.SerializeObject(insight, Formatting.None, _serializerSettings);
             Assert.AreEqual(jsonWithTag, result);
@@ -134,7 +167,9 @@ namespace QuantConnect.Tests.Algorithm.Framework.Alphas.Serialization
         [TestCase(false)]
         public void SerializesInsightWithoutTag(bool backwardsCompatible)
         {
-            var serializedInsight = JsonConvert.DeserializeObject<SerializedInsight>(backwardsCompatible ? jsonWithoutTagBackwardsCompatible : jsonWithoutTag);
+            var serializedInsight = JsonConvert.DeserializeObject<SerializedInsight>(
+                backwardsCompatible ? jsonWithoutTagBackwardsCompatible : jsonWithoutTag
+            );
             var insight = Insight.FromSerializedInsight(serializedInsight);
             var result = JsonConvert.SerializeObject(insight, Formatting.None, _serializerSettings);
             Assert.AreEqual(jsonWithoutTag, result);
@@ -155,147 +190,159 @@ namespace QuantConnect.Tests.Algorithm.Framework.Alphas.Serialization
             Assert.IsNull(result.Tag);
         }
 
-        private string jsonNoScore2 = @"{""id"":""e02be50f56a8496b9ba995d19a904ada"",""groupId"":null,""sourceModel"":""mySourceModel-1"",""generatedTime"":1520711961.00055,
+        private string jsonNoScore2 =
+            @"{""id"":""e02be50f56a8496b9ba995d19a904ada"",""groupId"":null,""sourceModel"":""mySourceModel-1"",""generatedTime"":1520711961.00055,
 ""createdTime"":1520711961.00055,""closeTime"":1520711961.00055,""symbol"":""BTCUSD XJ"",""ticker"":""BTCUSD"",""type"":""price"",""reference"":9143.53,""referenceValueFinal"":0.0,
 ""direction"":""up"",""period"":5.0,""magnitude"":""0.025"",""confidence"":null,""weight"":null,""scoreIsFinal"":false,""scoreMagnitude"":""0"",""scoreDirection"":""0"",
 ""estimatedValue"":""0"",""tag"":null}".ReplaceLineEndings(string.Empty);
 
         private const string jsonNoScoreBackwardsCompatible =
-            "{" +
-            "\"id\":\"e02be50f56a8496b9ba995d19a904ada\"," +
-            "\"group-id\":null," +
-            "\"source-model\":\"mySourceModel-1\"," +
-            "\"generated-time\":1520711961.00055," +
-            "\"created-time\":1520711961.00055," +
-            "\"close-time\":1520711961.00055," +
-            "\"symbol\":\"BTCUSD XJ\"," +
-            "\"ticker\":\"BTCUSD\"," +
-            "\"type\":\"price\"," +
-            "\"reference\":9143.53," +
-            "\"reference-final\":0.0," +
-            "\"direction\":\"up\"," +
-            "\"period\":5.0," +
-            "\"magnitude\":\"0.025\"," +
-            "\"confidence\":null," +
-            "\"weight\":null," +
-            "\"score-final\":false," +
-            "\"score-magnitude\":\"0\"," +
-            "\"score-direction\":\"0\"," +
-            "\"estimated-value\":\"0\"," +
-            "\"tag\":null}";
+            "{"
+            + "\"id\":\"e02be50f56a8496b9ba995d19a904ada\","
+            + "\"group-id\":null,"
+            + "\"source-model\":\"mySourceModel-1\","
+            + "\"generated-time\":1520711961.00055,"
+            + "\"created-time\":1520711961.00055,"
+            + "\"close-time\":1520711961.00055,"
+            + "\"symbol\":\"BTCUSD XJ\","
+            + "\"ticker\":\"BTCUSD\","
+            + "\"type\":\"price\","
+            + "\"reference\":9143.53,"
+            + "\"reference-final\":0.0,"
+            + "\"direction\":\"up\","
+            + "\"period\":5.0,"
+            + "\"magnitude\":\"0.025\","
+            + "\"confidence\":null,"
+            + "\"weight\":null,"
+            + "\"score-final\":false,"
+            + "\"score-magnitude\":\"0\","
+            + "\"score-direction\":\"0\","
+            + "\"estimated-value\":\"0\","
+            + "\"tag\":null}";
 
-        private string jsonWithScore = @"{""id"":""e02be50f56a8496b9ba995d19a904ada"",""groupId"":""a02be50f56a8496b9ba995d19a904ada"",""sourceModel"":""mySourceModel-1"",
+        private string jsonWithScore =
+            @"{""id"":""e02be50f56a8496b9ba995d19a904ada"",""groupId"":""a02be50f56a8496b9ba995d19a904ada"",""sourceModel"":""mySourceModel-1"",
 ""generatedTime"":1520711961.00055,""createdTime"":1520711961.00055,""closeTime"":1520711961.00055,""symbol"":""BTCUSD XJ"",""ticker"":""BTCUSD"",""type"":""price"",
 ""reference"":9143.53,""referenceValueFinal"":9243.53,""direction"":""up"",""period"":5.0,""magnitude"":""0.025"",""confidence"":null,""weight"":null,
-""scoreIsFinal"":true,""scoreMagnitude"":""1"",""scoreDirection"":""1"",""estimatedValue"":""1113.2484"",""tag"":null}".ReplaceLineEndings(string.Empty);
+""scoreIsFinal"":true,""scoreMagnitude"":""1"",""scoreDirection"":""1"",""estimatedValue"":""1113.2484"",""tag"":null}".ReplaceLineEndings(
+                string.Empty
+            );
         private const string jsonWithScoreBackwardsCompatible =
-            "{" +
-            "\"id\":\"e02be50f56a8496b9ba995d19a904ada\"," +
-            "\"group-id\":\"a02be50f56a8496b9ba995d19a904ada\"," +
-            "\"source-model\":\"mySourceModel-1\"," +
-            "\"generated-time\":1520711961.00055," +
-            "\"created-time\":1520711961.00055," +
-            "\"close-time\":1520711961.00055," +
-            "\"symbol\":\"BTCUSD XJ\"," +
-            "\"ticker\":\"BTCUSD\"," +
-            "\"type\":\"price\"," +
-            "\"reference\":9143.53," +
-            "\"reference-final\":9243.53," +
-            "\"direction\":\"up\"," +
-            "\"period\":5.0," +
-            "\"magnitude\":\"0.025\"," +
-            "\"confidence\":null," +
-            "\"weight\":null," +
-            "\"score-final\":true," +
-            "\"score-magnitude\":\"1\"," +
-            "\"score-direction\":\"1\"," +
-            "\"estimated-value\":\"1113.2484\"," +
-            "\"tag\":null}";
+            "{"
+            + "\"id\":\"e02be50f56a8496b9ba995d19a904ada\","
+            + "\"group-id\":\"a02be50f56a8496b9ba995d19a904ada\","
+            + "\"source-model\":\"mySourceModel-1\","
+            + "\"generated-time\":1520711961.00055,"
+            + "\"created-time\":1520711961.00055,"
+            + "\"close-time\":1520711961.00055,"
+            + "\"symbol\":\"BTCUSD XJ\","
+            + "\"ticker\":\"BTCUSD\","
+            + "\"type\":\"price\","
+            + "\"reference\":9143.53,"
+            + "\"reference-final\":9243.53,"
+            + "\"direction\":\"up\","
+            + "\"period\":5.0,"
+            + "\"magnitude\":\"0.025\","
+            + "\"confidence\":null,"
+            + "\"weight\":null,"
+            + "\"score-final\":true,"
+            + "\"score-magnitude\":\"1\","
+            + "\"score-direction\":\"1\","
+            + "\"estimated-value\":\"1113.2484\","
+            + "\"tag\":null}";
 
         private const string jsonWithMissingCreatedTimeBackwardsCompatible =
-            "{" +
-            "\"id\":\"e02be50f56a8496b9ba995d19a904ada\"," +
-            "\"group-id\":\"a02be50f56a8496b9ba995d19a904ada\"," +
-            "\"source-model\":\"mySourceModel-1\"," +
-            "\"generated-time\":1520711961.00055," +
-            "\"close-time\":1520711961.00055," +
-            "\"symbol\":\"BTCUSD XJ\"," +
-            "\"ticker\":\"BTCUSD\"," +
-            "\"type\":\"price\"," +
-            "\"reference\":9143.53," +
-            "\"reference-final\":9243.53," +
-            "\"direction\":\"up\"," +
-            "\"period\":5.0," +
-            "\"magnitude\":0.025," +
-            "\"confidence\":null," +
-            "\"weight\":null," +
-            "\"score-final\":true," +
-            "\"score-magnitude\":\"1\"," +
-            "\"score-direction\":\"1\"," +
-            "\"estimated-value\":\"1113.2484\"," +
-            "\"tag\":null}";
+            "{"
+            + "\"id\":\"e02be50f56a8496b9ba995d19a904ada\","
+            + "\"group-id\":\"a02be50f56a8496b9ba995d19a904ada\","
+            + "\"source-model\":\"mySourceModel-1\","
+            + "\"generated-time\":1520711961.00055,"
+            + "\"close-time\":1520711961.00055,"
+            + "\"symbol\":\"BTCUSD XJ\","
+            + "\"ticker\":\"BTCUSD\","
+            + "\"type\":\"price\","
+            + "\"reference\":9143.53,"
+            + "\"reference-final\":9243.53,"
+            + "\"direction\":\"up\","
+            + "\"period\":5.0,"
+            + "\"magnitude\":0.025,"
+            + "\"confidence\":null,"
+            + "\"weight\":null,"
+            + "\"score-final\":true,"
+            + "\"score-magnitude\":\"1\","
+            + "\"score-direction\":\"1\","
+            + "\"estimated-value\":\"1113.2484\","
+            + "\"tag\":null}";
 
-        private string jsonWithExpectedOutputFromMissingCreatedTimeValue = @"{""id"":""e02be50f56a8496b9ba995d19a904ada"",""groupId"":""a02be50f56a8496b9ba995d19a904ada"",
+        private string jsonWithExpectedOutputFromMissingCreatedTimeValue =
+            @"{""id"":""e02be50f56a8496b9ba995d19a904ada"",""groupId"":""a02be50f56a8496b9ba995d19a904ada"",
 ""sourceModel"":""mySourceModel-1"",""generatedTime"":1520711961.00055,""createdTime"":1520711961.00055,""closeTime"":1520711961.00055,""symbol"":""BTCUSD XJ"",""ticker"":
 ""BTCUSD"",""type"":""price"",""reference"":9143.53,""referenceValueFinal"":9243.53,""direction"":""up"",""period"":5.0,""magnitude"":""0.025"",""confidence"":null,
-""weight"":null,""scoreIsFinal"":true,""scoreMagnitude"":""1"",""scoreDirection"":""1"",""estimatedValue"":""1113.2484"",""tag"":null}".ReplaceLineEndings(string.Empty);
+""weight"":null,""scoreIsFinal"":true,""scoreMagnitude"":""1"",""scoreDirection"":""1"",""estimatedValue"":""1113.2484"",""tag"":null}".ReplaceLineEndings(
+                string.Empty
+            );
 
-        private string jsonWithTag = @"{""id"":""e02be50f56a8496b9ba995d19a904ada"",""groupId"":""a02be50f56a8496b9ba995d19a904ada"",""sourceModel"":""mySourceModel-1"",
+        private string jsonWithTag =
+            @"{""id"":""e02be50f56a8496b9ba995d19a904ada"",""groupId"":""a02be50f56a8496b9ba995d19a904ada"",""sourceModel"":""mySourceModel-1"",
 ""generatedTime"":1520711961.00055,""createdTime"":1520711961.00055,""closeTime"":1520711961.00055,""symbol"":""BTCUSD XJ"",""ticker"":""BTCUSD"",""type"":
 ""price"",""reference"":9143.53,""referenceValueFinal"":9243.53,""direction"":""up"",""period"":5.0,""magnitude"":null,""confidence"":null,""weight"":null,
-""scoreIsFinal"":true,""scoreMagnitude"":""1"",""scoreDirection"":""1"",""estimatedValue"":""1113.2484"",""tag"":""additional information""}".ReplaceLineEndings(string.Empty);
+""scoreIsFinal"":true,""scoreMagnitude"":""1"",""scoreDirection"":""1"",""estimatedValue"":""1113.2484"",""tag"":""additional information""}".ReplaceLineEndings(
+                string.Empty
+            );
         private const string jsonWithTagBackwardsCompatible =
-            "{" +
-            "\"id\":\"e02be50f56a8496b9ba995d19a904ada\"," +
-            "\"group-id\":\"a02be50f56a8496b9ba995d19a904ada\"," +
-            "\"source-model\":\"mySourceModel-1\"," +
-            "\"generated-time\":1520711961.00055," +
-            "\"created-time\":1520711961.00055," +
-            "\"close-time\":1520711961.00055," +
-            "\"symbol\":\"BTCUSD XJ\"," +
-            "\"ticker\":\"BTCUSD\"," +
-            "\"type\":\"price\"," +
-            "\"reference\":9143.53," +
-            "\"reference-final\":9243.53," +
-            "\"direction\":\"up\"," +
-            "\"period\":5.0," +
-            "\"magnitude\":null," +
-            "\"confidence\":null," +
-            "\"weight\":null," +
-            "\"score-final\":true," +
-            "\"score-magnitude\":\"1\"," +
-            "\"score-direction\":\"1\"," +
-            "\"estimated-value\":\"1113.2484\"," +
-            "\"tag\":\"additional information\"}";
+            "{"
+            + "\"id\":\"e02be50f56a8496b9ba995d19a904ada\","
+            + "\"group-id\":\"a02be50f56a8496b9ba995d19a904ada\","
+            + "\"source-model\":\"mySourceModel-1\","
+            + "\"generated-time\":1520711961.00055,"
+            + "\"created-time\":1520711961.00055,"
+            + "\"close-time\":1520711961.00055,"
+            + "\"symbol\":\"BTCUSD XJ\","
+            + "\"ticker\":\"BTCUSD\","
+            + "\"type\":\"price\","
+            + "\"reference\":9143.53,"
+            + "\"reference-final\":9243.53,"
+            + "\"direction\":\"up\","
+            + "\"period\":5.0,"
+            + "\"magnitude\":null,"
+            + "\"confidence\":null,"
+            + "\"weight\":null,"
+            + "\"score-final\":true,"
+            + "\"score-magnitude\":\"1\","
+            + "\"score-direction\":\"1\","
+            + "\"estimated-value\":\"1113.2484\","
+            + "\"tag\":\"additional information\"}";
 
-        private string jsonWithoutTag = @"{""id"":""e02be50f56a8496b9ba995d19a904ada"",""groupId"":""a02be50f56a8496b9ba995d19a904ada"",
+        private string jsonWithoutTag =
+            @"{""id"":""e02be50f56a8496b9ba995d19a904ada"",""groupId"":""a02be50f56a8496b9ba995d19a904ada"",
 ""sourceModel"":""mySourceModel-1"",""generatedTime"":1520711961.00055,""createdTime"":1520711961.00055,""closeTime"":1520711961.00055,""symbol"":""BTCUSD XJ"",
 ""ticker"":""BTCUSD"",""type"":""price"",""reference"":9143.53,""referenceValueFinal"":9243.53,""direction"":""up"",""period"":5.0,""magnitude"":null,
-""confidence"":null,""weight"":null,""scoreIsFinal"":true,""scoreMagnitude"":""1"",""scoreDirection"":""1"",""estimatedValue"":""1113.2484"",""tag"":null}".ReplaceLineEndings(string.Empty);
+""confidence"":null,""weight"":null,""scoreIsFinal"":true,""scoreMagnitude"":""1"",""scoreDirection"":""1"",""estimatedValue"":""1113.2484"",""tag"":null}".ReplaceLineEndings(
+                string.Empty
+            );
 
         private const string jsonWithoutTagBackwardsCompatible =
-            "{" +
-            "\"id\":\"e02be50f56a8496b9ba995d19a904ada\"," +
-            "\"group-id\":\"a02be50f56a8496b9ba995d19a904ada\"," +
-            "\"source-model\":\"mySourceModel-1\"," +
-            "\"generated-time\":1520711961.00055," +
-            "\"created-time\":1520711961.00055," +
-            "\"close-time\":1520711961.00055," +
-            "\"symbol\":\"BTCUSD XJ\"," +
-            "\"ticker\":\"BTCUSD\"," +
-            "\"type\":\"price\"," +
-            "\"reference\":9143.53," +
-            "\"reference-final\":9243.53," +
-            "\"direction\":\"up\"," +
-            "\"period\":5.0," +
-            "\"magnitude\":null," +
-            "\"confidence\":null," +
-            "\"weight\":null," +
-            "\"score-final\":true," +
-            "\"score-magnitude\":\"1\"," +
-            "\"score-direction\":\"1\"," +
-            "\"estimated-value\":\"1113.2484\"," +
-            "\"tag\":null}";
+            "{"
+            + "\"id\":\"e02be50f56a8496b9ba995d19a904ada\","
+            + "\"group-id\":\"a02be50f56a8496b9ba995d19a904ada\","
+            + "\"source-model\":\"mySourceModel-1\","
+            + "\"generated-time\":1520711961.00055,"
+            + "\"created-time\":1520711961.00055,"
+            + "\"close-time\":1520711961.00055,"
+            + "\"symbol\":\"BTCUSD XJ\","
+            + "\"ticker\":\"BTCUSD\","
+            + "\"type\":\"price\","
+            + "\"reference\":9143.53,"
+            + "\"reference-final\":9243.53,"
+            + "\"direction\":\"up\","
+            + "\"period\":5.0,"
+            + "\"magnitude\":null,"
+            + "\"confidence\":null,"
+            + "\"weight\":null,"
+            + "\"score-final\":true,"
+            + "\"score-magnitude\":\"1\","
+            + "\"score-direction\":\"1\","
+            + "\"estimated-value\":\"1113.2484\","
+            + "\"tag\":null}";
     }
-
 }

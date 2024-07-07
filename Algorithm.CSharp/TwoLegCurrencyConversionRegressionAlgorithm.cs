@@ -25,7 +25,9 @@ namespace QuantConnect.Algorithm.CSharp
     /// <summary>
     /// Regression algorithm which tests that a two leg currency conversion happens correctly
     /// </summary>
-    public class TwoLegCurrencyConversionRegressionAlgorithm : QCAlgorithm, IRegressionAlgorithmDefinition
+    public class TwoLegCurrencyConversionRegressionAlgorithm
+        : QCAlgorithm,
+            IRegressionAlgorithmDefinition
     {
         private Symbol _ethUsdSymbol;
         private Symbol _ltcUsdSymbol;
@@ -58,26 +60,29 @@ namespace QuantConnect.Algorithm.CSharp
         {
             var ltcCash = Portfolio.CashBook["LTC"];
 
-            var conversionSymbols = ltcCash.CurrencyConversion.ConversionRateSecurities
-                .Select(x => x.Symbol)
+            var conversionSymbols = ltcCash
+                .CurrencyConversion.ConversionRateSecurities.Select(x => x.Symbol)
                 .ToList();
 
             if (conversionSymbols.Count != 2)
             {
                 throw new RegressionTestException(
-                    $"Expected two conversion rate securities for LTC to ETH, is {conversionSymbols.Count}");
+                    $"Expected two conversion rate securities for LTC to ETH, is {conversionSymbols.Count}"
+                );
             }
 
             if (conversionSymbols[0] != _ltcUsdSymbol)
             {
                 throw new RegressionTestException(
-                    $"Expected first conversion rate security from LTC to ETH to be {_ltcUsdSymbol}, is {conversionSymbols[0]}");
+                    $"Expected first conversion rate security from LTC to ETH to be {_ltcUsdSymbol}, is {conversionSymbols[0]}"
+                );
             }
 
             if (conversionSymbols[1] != _ethUsdSymbol)
             {
                 throw new RegressionTestException(
-                    $"Expected second conversion rate security from LTC to ETH to be {_ethUsdSymbol}, is {conversionSymbols[1]}");
+                    $"Expected second conversion rate security from LTC to ETH to be {_ethUsdSymbol}, is {conversionSymbols[1]}"
+                );
             }
 
             var ltcUsdValue = Securities[_ltcUsdSymbol].GetLastData().Value;
@@ -89,7 +94,8 @@ namespace QuantConnect.Algorithm.CSharp
             if (actualConversionRate != expectedConversionRate)
             {
                 throw new RegressionTestException(
-                    $"Expected conversion rate from LTC to ETH to be {expectedConversionRate}, is {actualConversionRate}");
+                    $"Expected conversion rate from LTC to ETH to be {expectedConversionRate}, is {actualConversionRate}"
+                );
             }
         }
 
@@ -121,35 +127,36 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// This is used by the regression test system to indicate what the expected statistics are from running the algorithm
         /// </summary>
-        public Dictionary<string, string> ExpectedStatistics => new Dictionary<string, string>
-        {
-            {"Total Orders", "1"},
-            {"Average Win", "0%"},
-            {"Average Loss", "0%"},
-            {"Compounding Annual Return", "0%"},
-            {"Drawdown", "0%"},
-            {"Expectancy", "0"},
-            {"Start Equity", "132348.63"},
-            {"End Equity", "131620.05"},
-            {"Net Profit", "0%"},
-            {"Sharpe Ratio", "0"},
-            {"Sortino Ratio", "0"},
-            {"Probabilistic Sharpe Ratio", "0%"},
-            {"Loss Rate", "0%"},
-            {"Win Rate", "0%"},
-            {"Profit-Loss Ratio", "0"},
-            {"Alpha", "0"},
-            {"Beta", "0"},
-            {"Annual Standard Deviation", "0"},
-            {"Annual Variance", "0"},
-            {"Information Ratio", "0"},
-            {"Tracking Error", "0"},
-            {"Treynor Ratio", "0"},
-            {"Total Fees", "Ξ0.00"},
-            {"Estimated Strategy Capacity", "Ξ2000.00"},
-            {"Lowest Capacity Asset", "LTCUSD 2XR"},
-            {"Portfolio Turnover", "0.00%"},
-            {"OrderListHash", "c5d6001a28b12bd2d6c714a9aaa3aa07"}
-        };
+        public Dictionary<string, string> ExpectedStatistics =>
+            new Dictionary<string, string>
+            {
+                { "Total Orders", "1" },
+                { "Average Win", "0%" },
+                { "Average Loss", "0%" },
+                { "Compounding Annual Return", "0%" },
+                { "Drawdown", "0%" },
+                { "Expectancy", "0" },
+                { "Start Equity", "132348.63" },
+                { "End Equity", "131620.05" },
+                { "Net Profit", "0%" },
+                { "Sharpe Ratio", "0" },
+                { "Sortino Ratio", "0" },
+                { "Probabilistic Sharpe Ratio", "0%" },
+                { "Loss Rate", "0%" },
+                { "Win Rate", "0%" },
+                { "Profit-Loss Ratio", "0" },
+                { "Alpha", "0" },
+                { "Beta", "0" },
+                { "Annual Standard Deviation", "0" },
+                { "Annual Variance", "0" },
+                { "Information Ratio", "0" },
+                { "Tracking Error", "0" },
+                { "Treynor Ratio", "0" },
+                { "Total Fees", "Ξ0.00" },
+                { "Estimated Strategy Capacity", "Ξ2000.00" },
+                { "Lowest Capacity Asset", "LTCUSD 2XR" },
+                { "Portfolio Turnover", "0.00%" },
+                { "OrderListHash", "c5d6001a28b12bd2d6c714a9aaa3aa07" }
+            };
     }
 }

@@ -36,11 +36,24 @@ namespace QuantConnect.Indicators
         /// <param name="mirrorOption">The mirror option for parity calculation</param>
         /// <param name="optionModel">The option pricing model used to estimate Theta</param>
         /// <param name="ivModel">The option pricing model used to estimate IV</param>
-        public Theta(string name, Symbol option, IRiskFreeInterestRateModel riskFreeRateModel, IDividendYieldModel dividendYieldModel, Symbol mirrorOption = null,
-                OptionPricingModelType optionModel = OptionPricingModelType.BlackScholes, OptionPricingModelType? ivModel = null)
-            : base(name, option, riskFreeRateModel, dividendYieldModel, mirrorOption, optionModel, ivModel)
-        {
-        }
+        public Theta(
+            string name,
+            Symbol option,
+            IRiskFreeInterestRateModel riskFreeRateModel,
+            IDividendYieldModel dividendYieldModel,
+            Symbol mirrorOption = null,
+            OptionPricingModelType optionModel = OptionPricingModelType.BlackScholes,
+            OptionPricingModelType? ivModel = null
+        )
+            : base(
+                name,
+                option,
+                riskFreeRateModel,
+                dividendYieldModel,
+                mirrorOption,
+                optionModel,
+                ivModel
+            ) { }
 
         /// <summary>
         /// Initializes a new instance of the Theta class
@@ -51,11 +64,23 @@ namespace QuantConnect.Indicators
         /// <param name="mirrorOption">The mirror option for parity calculation</param>
         /// <param name="optionModel">The option pricing model used to estimate Theta</param>
         /// <param name="ivModel">The option pricing model used to estimate IV</param>
-        public Theta(Symbol option, IRiskFreeInterestRateModel riskFreeRateModel, IDividendYieldModel dividendYieldModel, Symbol mirrorOption = null,
-            OptionPricingModelType optionModel = OptionPricingModelType.BlackScholes, OptionPricingModelType? ivModel = null)
-            : this($"Theta({option},{mirrorOption},{optionModel})", option, riskFreeRateModel, dividendYieldModel, mirrorOption, optionModel, ivModel)
-        {
-        }
+        public Theta(
+            Symbol option,
+            IRiskFreeInterestRateModel riskFreeRateModel,
+            IDividendYieldModel dividendYieldModel,
+            Symbol mirrorOption = null,
+            OptionPricingModelType optionModel = OptionPricingModelType.BlackScholes,
+            OptionPricingModelType? ivModel = null
+        )
+            : this(
+                $"Theta({option},{mirrorOption},{optionModel})",
+                option,
+                riskFreeRateModel,
+                dividendYieldModel,
+                mirrorOption,
+                optionModel,
+                ivModel
+            ) { }
 
         /// <summary>
         /// Initializes a new instance of the Theta class
@@ -67,11 +92,24 @@ namespace QuantConnect.Indicators
         /// <param name="mirrorOption">The mirror option for parity calculation</param>
         /// <param name="optionModel">The option pricing model used to estimate Theta</param>
         /// <param name="ivModel">The option pricing model used to estimate IV</param>
-        public Theta(string name, Symbol option, PyObject riskFreeRateModel, PyObject dividendYieldModel, Symbol mirrorOption = null,
-            OptionPricingModelType optionModel = OptionPricingModelType.BlackScholes, OptionPricingModelType? ivModel = null)
-            : base(name, option, riskFreeRateModel, dividendYieldModel, mirrorOption, optionModel, ivModel)
-        {
-        }
+        public Theta(
+            string name,
+            Symbol option,
+            PyObject riskFreeRateModel,
+            PyObject dividendYieldModel,
+            Symbol mirrorOption = null,
+            OptionPricingModelType optionModel = OptionPricingModelType.BlackScholes,
+            OptionPricingModelType? ivModel = null
+        )
+            : base(
+                name,
+                option,
+                riskFreeRateModel,
+                dividendYieldModel,
+                mirrorOption,
+                optionModel,
+                ivModel
+            ) { }
 
         /// <summary>
         /// Initializes a new instance of the Theta class
@@ -82,11 +120,23 @@ namespace QuantConnect.Indicators
         /// <param name="mirrorOption">The mirror option for parity calculation</param>
         /// <param name="optionModel">The option pricing model used to estimate Theta</param>
         /// <param name="ivModel">The option pricing model used to estimate IV</param>
-        public Theta(Symbol option, PyObject riskFreeRateModel, PyObject dividendYieldModel, Symbol mirrorOption = null,
-            OptionPricingModelType optionModel = OptionPricingModelType.BlackScholes, OptionPricingModelType? ivModel = null)
-            : this($"Theta({option},{mirrorOption},{optionModel})", option, riskFreeRateModel, dividendYieldModel, mirrorOption, optionModel, ivModel)
-        {
-        }
+        public Theta(
+            Symbol option,
+            PyObject riskFreeRateModel,
+            PyObject dividendYieldModel,
+            Symbol mirrorOption = null,
+            OptionPricingModelType optionModel = OptionPricingModelType.BlackScholes,
+            OptionPricingModelType? ivModel = null
+        )
+            : this(
+                $"Theta({option},{mirrorOption},{optionModel})",
+                option,
+                riskFreeRateModel,
+                dividendYieldModel,
+                mirrorOption,
+                optionModel,
+                ivModel
+            ) { }
 
         /// <summary>
         /// Initializes a new instance of the Theta class
@@ -98,11 +148,24 @@ namespace QuantConnect.Indicators
         /// <param name="mirrorOption">The mirror option for parity calculation</param>
         /// <param name="optionModel">The option pricing model used to estimate Theta</param>
         /// <param name="ivModel">The option pricing model used to estimate IV</param>
-        public Theta(string name, Symbol option, IRiskFreeInterestRateModel riskFreeRateModel, decimal dividendYield = 0.0m, Symbol mirrorOption = null,
-                OptionPricingModelType optionModel = OptionPricingModelType.BlackScholes, OptionPricingModelType? ivModel = null)
-            : base(name, option, riskFreeRateModel, dividendYield, mirrorOption, optionModel, ivModel)
-        {
-        }
+        public Theta(
+            string name,
+            Symbol option,
+            IRiskFreeInterestRateModel riskFreeRateModel,
+            decimal dividendYield = 0.0m,
+            Symbol mirrorOption = null,
+            OptionPricingModelType optionModel = OptionPricingModelType.BlackScholes,
+            OptionPricingModelType? ivModel = null
+        )
+            : base(
+                name,
+                option,
+                riskFreeRateModel,
+                dividendYield,
+                mirrorOption,
+                optionModel,
+                ivModel
+            ) { }
 
         /// <summary>
         /// Initializes a new instance of the Theta class
@@ -113,11 +176,23 @@ namespace QuantConnect.Indicators
         /// <param name="mirrorOption">The mirror option for parity calculation</param>
         /// <param name="optionModel">The option pricing model used to estimate Theta</param>
         /// <param name="ivModel">The option pricing model used to estimate IV</param>
-        public Theta(Symbol option, IRiskFreeInterestRateModel riskFreeRateModel, decimal dividendYield = 0.0m, Symbol mirrorOption = null,
-            OptionPricingModelType optionModel = OptionPricingModelType.BlackScholes, OptionPricingModelType? ivModel = null)
-            : this($"Theta({option},{mirrorOption},{optionModel})", option, riskFreeRateModel, dividendYield, mirrorOption, optionModel, ivModel)
-        {
-        }
+        public Theta(
+            Symbol option,
+            IRiskFreeInterestRateModel riskFreeRateModel,
+            decimal dividendYield = 0.0m,
+            Symbol mirrorOption = null,
+            OptionPricingModelType optionModel = OptionPricingModelType.BlackScholes,
+            OptionPricingModelType? ivModel = null
+        )
+            : this(
+                $"Theta({option},{mirrorOption},{optionModel})",
+                option,
+                riskFreeRateModel,
+                dividendYield,
+                mirrorOption,
+                optionModel,
+                ivModel
+            ) { }
 
         /// <summary>
         /// Initializes a new instance of the Theta class
@@ -129,11 +204,24 @@ namespace QuantConnect.Indicators
         /// <param name="mirrorOption">The mirror option for parity calculation</param>
         /// <param name="optionModel">The option pricing model used to estimate Theta</param>
         /// <param name="ivModel">The option pricing model used to estimate IV</param>
-        public Theta(string name, Symbol option, PyObject riskFreeRateModel, decimal dividendYield = 0.0m, Symbol mirrorOption = null,
-            OptionPricingModelType optionModel = OptionPricingModelType.BlackScholes, OptionPricingModelType? ivModel = null)
-            : base(name, option, riskFreeRateModel, dividendYield, mirrorOption, optionModel, ivModel)
-        {
-        }
+        public Theta(
+            string name,
+            Symbol option,
+            PyObject riskFreeRateModel,
+            decimal dividendYield = 0.0m,
+            Symbol mirrorOption = null,
+            OptionPricingModelType optionModel = OptionPricingModelType.BlackScholes,
+            OptionPricingModelType? ivModel = null
+        )
+            : base(
+                name,
+                option,
+                riskFreeRateModel,
+                dividendYield,
+                mirrorOption,
+                optionModel,
+                ivModel
+            ) { }
 
         /// <summary>
         /// Initializes a new instance of the Theta class
@@ -144,11 +232,23 @@ namespace QuantConnect.Indicators
         /// <param name="mirrorOption">The mirror option for parity calculation</param>
         /// <param name="optionModel">The option pricing model used to estimate Theta</param>
         /// <param name="ivModel">The option pricing model used to estimate IV</param>
-        public Theta(Symbol option, PyObject riskFreeRateModel, decimal dividendYield = 0.0m, Symbol mirrorOption = null,
-            OptionPricingModelType optionModel = OptionPricingModelType.BlackScholes, OptionPricingModelType? ivModel = null)
-            : this($"Theta({option},{mirrorOption},{optionModel})", option, riskFreeRateModel, dividendYield, mirrorOption, optionModel, ivModel)
-        {
-        }
+        public Theta(
+            Symbol option,
+            PyObject riskFreeRateModel,
+            decimal dividendYield = 0.0m,
+            Symbol mirrorOption = null,
+            OptionPricingModelType optionModel = OptionPricingModelType.BlackScholes,
+            OptionPricingModelType? ivModel = null
+        )
+            : this(
+                $"Theta({option},{mirrorOption},{optionModel})",
+                option,
+                riskFreeRateModel,
+                dividendYield,
+                mirrorOption,
+                optionModel,
+                ivModel
+            ) { }
 
         /// <summary>
         /// Initializes a new instance of the Theta class
@@ -160,11 +260,17 @@ namespace QuantConnect.Indicators
         /// <param name="mirrorOption">The mirror option for parity calculation</param>
         /// <param name="optionModel">The option pricing model used to estimate Theta</param>
         /// <param name="ivModel">The option pricing model used to estimate IV</param>
-        public Theta(string name, Symbol option, decimal riskFreeRate = 0.05m, decimal dividendYield = 0.0m, Symbol mirrorOption = null,
-            OptionPricingModelType optionModel = OptionPricingModelType.BlackScholes, OptionPricingModelType? ivModel = null)
+        public Theta(
+            string name,
+            Symbol option,
+            decimal riskFreeRate = 0.05m,
+            decimal dividendYield = 0.0m,
+            Symbol mirrorOption = null,
+            OptionPricingModelType optionModel = OptionPricingModelType.BlackScholes,
+            OptionPricingModelType? ivModel = null
+        )
             : base(name, option, riskFreeRate, dividendYield, mirrorOption, optionModel, ivModel)
-        {
-        }
+        { }
 
         /// <summary>
         /// Initializes a new instance of the Theta class
@@ -175,11 +281,23 @@ namespace QuantConnect.Indicators
         /// <param name="mirrorOption">The mirror option for parity calculation</param>
         /// <param name="optionModel">The option pricing model used to estimate Theta</param>
         /// <param name="ivModel">The option pricing model used to estimate IV</param>
-        public Theta(Symbol option, decimal riskFreeRate = 0.05m, decimal dividendYield = 0.0m, Symbol mirrorOption = null,
-            OptionPricingModelType optionModel = OptionPricingModelType.BlackScholes, OptionPricingModelType? ivModel = null)
-            : this($"Theta({option},{mirrorOption},{optionModel})", option, riskFreeRate, dividendYield, mirrorOption, optionModel, ivModel)
-        {
-        }
+        public Theta(
+            Symbol option,
+            decimal riskFreeRate = 0.05m,
+            decimal dividendYield = 0.0m,
+            Symbol mirrorOption = null,
+            OptionPricingModelType optionModel = OptionPricingModelType.BlackScholes,
+            OptionPricingModelType? ivModel = null
+        )
+            : this(
+                $"Theta({option},{mirrorOption},{optionModel})",
+                option,
+                riskFreeRate,
+                dividendYield,
+                mirrorOption,
+                optionModel,
+                ivModel
+            ) { }
 
         /// <summary>
         /// Calculate the Theta of the option
@@ -198,13 +316,54 @@ namespace QuantConnect.Indicators
                     var price = 0m;
                     if (_optionModel == OptionPricingModelType.BinomialCoxRossRubinstein)
                     {
-                        forwardPrice = OptionGreekIndicatorsHelper.CRRTheoreticalPrice(ImpliedVolatility, UnderlyingPrice, Strike, timeTillExpiry - 2 * deltaTime, RiskFreeRate, DividendYield, Right);
-                        price = OptionGreekIndicatorsHelper.CRRTheoreticalPrice(ImpliedVolatility, UnderlyingPrice, Strike, timeTillExpiry, RiskFreeRate, DividendYield, Right);
+                        forwardPrice = OptionGreekIndicatorsHelper.CRRTheoreticalPrice(
+                            ImpliedVolatility,
+                            UnderlyingPrice,
+                            Strike,
+                            timeTillExpiry - 2 * deltaTime,
+                            RiskFreeRate,
+                            DividendYield,
+                            Right
+                        );
+                        price = OptionGreekIndicatorsHelper.CRRTheoreticalPrice(
+                            ImpliedVolatility,
+                            UnderlyingPrice,
+                            Strike,
+                            timeTillExpiry,
+                            RiskFreeRate,
+                            DividendYield,
+                            Right
+                        );
                     }
                     else if (_optionModel == OptionPricingModelType.ForwardTree)
                     {
-                        forwardPrice = OptionGreekIndicatorsHelper.ForwardTreeTheoreticalPrice(ImpliedVolatility, UnderlyingPrice, Strike, timeTillExpiry - 2 * deltaTime, RiskFreeRate, DividendYield, Right); price = OptionGreekIndicatorsHelper.ForwardTreeTheoreticalPrice(ImpliedVolatility, UnderlyingPrice, Strike, timeTillExpiry, RiskFreeRate, DividendYield, Right);
-                        price = OptionGreekIndicatorsHelper.ForwardTreeTheoreticalPrice(ImpliedVolatility, UnderlyingPrice, Strike, timeTillExpiry, RiskFreeRate, DividendYield, Right);
+                        forwardPrice = OptionGreekIndicatorsHelper.ForwardTreeTheoreticalPrice(
+                            ImpliedVolatility,
+                            UnderlyingPrice,
+                            Strike,
+                            timeTillExpiry - 2 * deltaTime,
+                            RiskFreeRate,
+                            DividendYield,
+                            Right
+                        );
+                        price = OptionGreekIndicatorsHelper.ForwardTreeTheoreticalPrice(
+                            ImpliedVolatility,
+                            UnderlyingPrice,
+                            Strike,
+                            timeTillExpiry,
+                            RiskFreeRate,
+                            DividendYield,
+                            Right
+                        );
+                        price = OptionGreekIndicatorsHelper.ForwardTreeTheoreticalPrice(
+                            ImpliedVolatility,
+                            UnderlyingPrice,
+                            Strike,
+                            timeTillExpiry,
+                            RiskFreeRate,
+                            DividendYield,
+                            Right
+                        );
                     }
 
                     return (forwardPrice - price) * 0.5m / deltaTime / 365m;
@@ -212,13 +371,30 @@ namespace QuantConnect.Indicators
                 case OptionPricingModelType.BlackScholes:
                 default:
                     var norm = new Normal();
-                    var d1 = OptionGreekIndicatorsHelper.CalculateD1(UnderlyingPrice, Strike, timeTillExpiry, RiskFreeRate, DividendYield, ImpliedVolatility);
-                    var d2 = OptionGreekIndicatorsHelper.CalculateD2(d1, ImpliedVolatility, timeTillExpiry);
+                    var d1 = OptionGreekIndicatorsHelper.CalculateD1(
+                        UnderlyingPrice,
+                        Strike,
+                        timeTillExpiry,
+                        RiskFreeRate,
+                        DividendYield,
+                        ImpliedVolatility
+                    );
+                    var d2 = OptionGreekIndicatorsHelper.CalculateD2(
+                        d1,
+                        ImpliedVolatility,
+                        timeTillExpiry
+                    );
                     var discount = math(Math.Exp, -RiskFreeRate * timeTillExpiry);
                     var adjustment = math(Math.Exp, -DividendYield * timeTillExpiry);
 
                     // allow at least 1% IV
-                    var theta = -UnderlyingPrice * Math.Max(ImpliedVolatility, 0.01m) * math(norm.Density, d1) * adjustment * 0.5m / math(Math.Sqrt, timeTillExpiry);
+                    var theta =
+                        -UnderlyingPrice
+                        * Math.Max(ImpliedVolatility, 0.01m)
+                        * math(norm.Density, d1)
+                        * adjustment
+                        * 0.5m
+                        / math(Math.Sqrt, timeTillExpiry);
 
                     if (Right == OptionRight.Call)
                     {
@@ -231,7 +407,9 @@ namespace QuantConnect.Indicators
                         d2 = math(norm.CumulativeDistribution, -d2);
                     }
 
-                    theta += DividendYield * UnderlyingPrice * d1 * adjustment + RiskFreeRate * Strike * discount * d2;
+                    theta +=
+                        DividendYield * UnderlyingPrice * d1 * adjustment
+                        + RiskFreeRate * Strike * discount * d2;
                     return theta / 365m;
             }
         }

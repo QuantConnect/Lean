@@ -28,18 +28,14 @@ namespace QuantConnect.Indicators
         /// Initializes a new instance of the <see cref="AccumulationDistribution"/> class using the specified name.
         /// </summary>
         public AccumulationDistribution()
-            : this("AD")
-        {
-        }
+            : this("AD") { }
 
         /// <summary>
         /// Initializes a new instance of the <see cref="AccumulationDistribution"/> class using the specified name.
         /// </summary>
         /// <param name="name">The name of this indicator</param>
         public AccumulationDistribution(string name)
-            : base(name)
-        {
-        }
+            : base(name) { }
 
         /// <summary>
         /// Gets a flag indicating when this indicator is ready and fully initialized
@@ -59,7 +55,14 @@ namespace QuantConnect.Indicators
         protected override decimal ComputeNextValue(TradeBar input)
         {
             var range = input.High - input.Low;
-            return Current.Value + (range > 0 ? ((input.Close - input.Low) - (input.High - input.Close)) / range * input.Volume : 0m);
+            return Current.Value
+                + (
+                    range > 0
+                        ? ((input.Close - input.Low) - (input.High - input.Close))
+                            / range
+                            * input.Volume
+                        : 0m
+                );
         }
     }
 }

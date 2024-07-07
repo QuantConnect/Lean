@@ -39,18 +39,14 @@ namespace QuantConnect.Indicators
         /// <param name="name">The name of this indicator</param>
         /// <param name="period">The period of the Efficiency Ratio (ER)</param>
         public KaufmanEfficiencyRatio(string name, int period)
-            : base(name, period + 1)
-        {
-        }
+            : base(name, period + 1) { }
 
         /// <summary>
         /// Initializes a new instance of the <see cref="KaufmanEfficiencyRatio"/> class using the specified period.
         /// </summary>
         /// <param name="period">The period of the Efficiency Ratio (ER)</param>
         public KaufmanEfficiencyRatio(int period)
-            : this($"KER({period})", period)
-        {
-        }
+            : this($"KER({period})", period) { }
 
         /// <summary>
         /// Computes the next value of this indicator from the given state
@@ -58,7 +54,10 @@ namespace QuantConnect.Indicators
         /// <param name="input">The input given to the indicator</param>
         /// <param name="window">The window for the input history</param>
         /// <returns>A new value for this indicator</returns>
-        protected override decimal ComputeNextValue(IReadOnlyWindow<IndicatorDataPoint> window, IndicatorDataPoint input)
+        protected override decimal ComputeNextValue(
+            IReadOnlyWindow<IndicatorDataPoint> window,
+            IndicatorDataPoint input
+        )
         {
             if (Samples < Period)
             {
@@ -81,7 +80,7 @@ namespace QuantConnect.Indicators
             if (Samples > Period)
             {
                 // Adjust sumROC1:
-                // - Remove trailing ROC1 
+                // - Remove trailing ROC1
                 // - Add new ROC1
                 _sumRoc1 -= Math.Abs(_trailingValue - newTrailingValue.Value);
                 _sumRoc1 += Math.Abs(input.Value - window[1].Value);

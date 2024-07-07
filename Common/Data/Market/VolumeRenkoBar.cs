@@ -1,11 +1,11 @@
 /*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
- * 
- * Licensed under the Apache License, Version 2.0 (the "License"); 
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -30,9 +30,7 @@ namespace QuantConnect.Data.Market
         /// <summary>
         /// Initializes a new default instance of the <see cref="RenkoBar"/> class.
         /// </summary>
-        public VolumeRenkoBar()
-        {
-        }
+        public VolumeRenkoBar() { }
 
         /// <summary>
         /// Initializes a new instance of the <see cref="VolumeRenkoBar"/> class with the specified values
@@ -46,7 +44,17 @@ namespace QuantConnect.Data.Market
         /// <param name="low">The current data low value</param>
         /// <param name="close">The current data close value</param>
         /// <param name="volume">The current data volume</param>
-        public VolumeRenkoBar(Symbol symbol, DateTime start, DateTime endTime, decimal brickSize, decimal open, decimal high, decimal low, decimal close, decimal volume)
+        public VolumeRenkoBar(
+            Symbol symbol,
+            DateTime start,
+            DateTime endTime,
+            decimal brickSize,
+            decimal open,
+            decimal high,
+            decimal low,
+            decimal close,
+            decimal volume
+        )
         {
             Type = RenkoType.Classic;
             BrickSize = brickSize;
@@ -70,10 +78,17 @@ namespace QuantConnect.Data.Market
         /// <param name="close">The current data close value</param>
         /// <param name="volume">The current data volume</param>
         /// <returns>The excess volume that the current bar cannot absorb</returns>
-        public decimal Update(DateTime time, decimal high, decimal low, decimal close, decimal volume)
+        public decimal Update(
+            DateTime time,
+            decimal high,
+            decimal low,
+            decimal close,
+            decimal volume
+        )
         {
             // can't update a closed renko bar
-            if (IsClosed) return 0m;
+            if (IsClosed)
+                return 0m;
             EndTime = time;
 
             var excessVolume = Volume + volume - BrickSize;
@@ -87,8 +102,10 @@ namespace QuantConnect.Data.Market
             }
 
             Close = close;
-            if (high > High) High = high;
-            if (low < Low) Low = low;
+            if (high > High)
+                High = high;
+            if (low < Low)
+                Low = low;
 
             return excessVolume;
         }
@@ -103,11 +120,11 @@ namespace QuantConnect.Data.Market
                 Type = Type,
                 BrickSize = BrickSize,
                 Symbol = Symbol,
-                Open = Close,           // rollover open is the previous close
+                Open = Close, // rollover open is the previous close
                 High = Close,
                 Low = Close,
                 Close = Close,
-                Start = EndTime,        // rollover start time is the previous end time
+                Start = EndTime, // rollover start time is the previous end time
                 EndTime = EndTime,
                 Volume = 0m
             };

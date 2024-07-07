@@ -36,11 +36,24 @@ namespace QuantConnect.Indicators
         /// <param name="mirrorOption">The mirror option for parity calculation</param>
         /// <param name="optionModel">The option pricing model used to estimate Vega</param>
         /// <param name="ivModel">The option pricing model used to estimate IV</param>
-        public Vega(string name, Symbol option, IRiskFreeInterestRateModel riskFreeRateModel, IDividendYieldModel dividendYieldModel, Symbol mirrorOption = null,
-                OptionPricingModelType optionModel = OptionPricingModelType.BlackScholes, OptionPricingModelType? ivModel = null)
-            : base(name, option, riskFreeRateModel, dividendYieldModel, mirrorOption, optionModel, ivModel)
-        {
-        }
+        public Vega(
+            string name,
+            Symbol option,
+            IRiskFreeInterestRateModel riskFreeRateModel,
+            IDividendYieldModel dividendYieldModel,
+            Symbol mirrorOption = null,
+            OptionPricingModelType optionModel = OptionPricingModelType.BlackScholes,
+            OptionPricingModelType? ivModel = null
+        )
+            : base(
+                name,
+                option,
+                riskFreeRateModel,
+                dividendYieldModel,
+                mirrorOption,
+                optionModel,
+                ivModel
+            ) { }
 
         /// <summary>
         /// Initializes a new instance of the Vega class
@@ -51,11 +64,23 @@ namespace QuantConnect.Indicators
         /// <param name="mirrorOption">The mirror option for parity calculation</param>
         /// <param name="optionModel">The option pricing model used to estimate Vega</param>
         /// <param name="ivModel">The option pricing model used to estimate IV</param>
-        public Vega(Symbol option, IRiskFreeInterestRateModel riskFreeRateModel, IDividendYieldModel dividendYieldModel, Symbol mirrorOption = null,
-            OptionPricingModelType optionModel = OptionPricingModelType.BlackScholes, OptionPricingModelType? ivModel = null)
-            : this($"Vega({option},{mirrorOption},{optionModel})", option, riskFreeRateModel, dividendYieldModel, mirrorOption, optionModel, ivModel)
-        {
-        }
+        public Vega(
+            Symbol option,
+            IRiskFreeInterestRateModel riskFreeRateModel,
+            IDividendYieldModel dividendYieldModel,
+            Symbol mirrorOption = null,
+            OptionPricingModelType optionModel = OptionPricingModelType.BlackScholes,
+            OptionPricingModelType? ivModel = null
+        )
+            : this(
+                $"Vega({option},{mirrorOption},{optionModel})",
+                option,
+                riskFreeRateModel,
+                dividendYieldModel,
+                mirrorOption,
+                optionModel,
+                ivModel
+            ) { }
 
         /// <summary>
         /// Initializes a new instance of the Vega class
@@ -67,11 +92,24 @@ namespace QuantConnect.Indicators
         /// <param name="mirrorOption">The mirror option for parity calculation</param>
         /// <param name="optionModel">The option pricing model used to estimate Vega</param>
         /// <param name="ivModel">The option pricing model used to estimate IV</param>
-        public Vega(string name, Symbol option, PyObject riskFreeRateModel, PyObject dividendYieldModel, Symbol mirrorOption = null,
-            OptionPricingModelType optionModel = OptionPricingModelType.BlackScholes, OptionPricingModelType? ivModel = null)
-            : base(name, option, riskFreeRateModel, dividendYieldModel, mirrorOption, optionModel, ivModel)
-        {
-        }
+        public Vega(
+            string name,
+            Symbol option,
+            PyObject riskFreeRateModel,
+            PyObject dividendYieldModel,
+            Symbol mirrorOption = null,
+            OptionPricingModelType optionModel = OptionPricingModelType.BlackScholes,
+            OptionPricingModelType? ivModel = null
+        )
+            : base(
+                name,
+                option,
+                riskFreeRateModel,
+                dividendYieldModel,
+                mirrorOption,
+                optionModel,
+                ivModel
+            ) { }
 
         /// <summary>
         /// Initializes a new instance of the Vega class
@@ -82,11 +120,23 @@ namespace QuantConnect.Indicators
         /// <param name="mirrorOption">The mirror option for parity calculation</param>
         /// <param name="optionModel">The option pricing model used to estimate Vega</param>
         /// <param name="ivModel">The option pricing model used to estimate IV</param>
-        public Vega(Symbol option, PyObject riskFreeRateModel, PyObject dividendYieldModel, Symbol mirrorOption = null,
-            OptionPricingModelType optionModel = OptionPricingModelType.BlackScholes, OptionPricingModelType? ivModel = null)
-            : this($"Vega({option},{mirrorOption},{optionModel})", option, riskFreeRateModel, dividendYieldModel, mirrorOption, optionModel, ivModel)
-        {
-        }
+        public Vega(
+            Symbol option,
+            PyObject riskFreeRateModel,
+            PyObject dividendYieldModel,
+            Symbol mirrorOption = null,
+            OptionPricingModelType optionModel = OptionPricingModelType.BlackScholes,
+            OptionPricingModelType? ivModel = null
+        )
+            : this(
+                $"Vega({option},{mirrorOption},{optionModel})",
+                option,
+                riskFreeRateModel,
+                dividendYieldModel,
+                mirrorOption,
+                optionModel,
+                ivModel
+            ) { }
 
         /// <summary>
         /// Initializes a new instance of the Vega class
@@ -98,11 +148,24 @@ namespace QuantConnect.Indicators
         /// <param name="mirrorOption">The mirror option for parity calculation</param>
         /// <param name="optionModel">The option pricing model used to estimate Vega</param>
         /// <param name="ivModel">The option pricing model used to estimate IV</param>
-        public Vega(string name, Symbol option, IRiskFreeInterestRateModel riskFreeRateModel, decimal dividendYield = 0.0m, Symbol mirrorOption = null,
-                OptionPricingModelType optionModel = OptionPricingModelType.BlackScholes, OptionPricingModelType? ivModel = null)
-            : base(name, option, riskFreeRateModel, dividendYield, mirrorOption, optionModel, ivModel)
-        {
-        }
+        public Vega(
+            string name,
+            Symbol option,
+            IRiskFreeInterestRateModel riskFreeRateModel,
+            decimal dividendYield = 0.0m,
+            Symbol mirrorOption = null,
+            OptionPricingModelType optionModel = OptionPricingModelType.BlackScholes,
+            OptionPricingModelType? ivModel = null
+        )
+            : base(
+                name,
+                option,
+                riskFreeRateModel,
+                dividendYield,
+                mirrorOption,
+                optionModel,
+                ivModel
+            ) { }
 
         /// <summary>
         /// Initializes a new instance of the Vega class
@@ -113,11 +176,23 @@ namespace QuantConnect.Indicators
         /// <param name="mirrorOption">The mirror option for parity calculation</param>
         /// <param name="optionModel">The option pricing model used to estimate Vega</param>
         /// <param name="ivModel">The option pricing model used to estimate IV</param>
-        public Vega(Symbol option, IRiskFreeInterestRateModel riskFreeRateModel, decimal dividendYield = 0.0m, Symbol mirrorOption = null,
-            OptionPricingModelType optionModel = OptionPricingModelType.BlackScholes, OptionPricingModelType? ivModel = null)
-            : this($"Vega({option},{mirrorOption},{optionModel})", option, riskFreeRateModel, dividendYield, mirrorOption, optionModel, ivModel)
-        {
-        }
+        public Vega(
+            Symbol option,
+            IRiskFreeInterestRateModel riskFreeRateModel,
+            decimal dividendYield = 0.0m,
+            Symbol mirrorOption = null,
+            OptionPricingModelType optionModel = OptionPricingModelType.BlackScholes,
+            OptionPricingModelType? ivModel = null
+        )
+            : this(
+                $"Vega({option},{mirrorOption},{optionModel})",
+                option,
+                riskFreeRateModel,
+                dividendYield,
+                mirrorOption,
+                optionModel,
+                ivModel
+            ) { }
 
         /// <summary>
         /// Initializes a new instance of the Vega class
@@ -129,11 +204,24 @@ namespace QuantConnect.Indicators
         /// <param name="mirrorOption">The mirror option for parity calculation</param>
         /// <param name="optionModel">The option pricing model used to estimate Vega</param>
         /// <param name="ivModel">The option pricing model used to estimate IV</param>
-        public Vega(string name, Symbol option, PyObject riskFreeRateModel, decimal dividendYield = 0.0m, Symbol mirrorOption = null,
-            OptionPricingModelType optionModel = OptionPricingModelType.BlackScholes, OptionPricingModelType? ivModel = null)
-            : base(name, option, riskFreeRateModel, dividendYield, mirrorOption, optionModel, ivModel)
-        {
-        }
+        public Vega(
+            string name,
+            Symbol option,
+            PyObject riskFreeRateModel,
+            decimal dividendYield = 0.0m,
+            Symbol mirrorOption = null,
+            OptionPricingModelType optionModel = OptionPricingModelType.BlackScholes,
+            OptionPricingModelType? ivModel = null
+        )
+            : base(
+                name,
+                option,
+                riskFreeRateModel,
+                dividendYield,
+                mirrorOption,
+                optionModel,
+                ivModel
+            ) { }
 
         /// <summary>
         /// Initializes a new instance of the Vega class
@@ -144,11 +232,23 @@ namespace QuantConnect.Indicators
         /// <param name="mirrorOption">The mirror option for parity calculation</param>
         /// <param name="optionModel">The option pricing model used to estimate Vega</param>
         /// <param name="ivModel">The option pricing model used to estimate IV</param>
-        public Vega(Symbol option, PyObject riskFreeRateModel, decimal dividendYield = 0.0m, Symbol mirrorOption = null,
-            OptionPricingModelType optionModel = OptionPricingModelType.BlackScholes, OptionPricingModelType? ivModel = null)
-            : this($"Vega({option},{mirrorOption},{optionModel})", option, riskFreeRateModel, dividendYield, mirrorOption, optionModel, ivModel)
-        {
-        }
+        public Vega(
+            Symbol option,
+            PyObject riskFreeRateModel,
+            decimal dividendYield = 0.0m,
+            Symbol mirrorOption = null,
+            OptionPricingModelType optionModel = OptionPricingModelType.BlackScholes,
+            OptionPricingModelType? ivModel = null
+        )
+            : this(
+                $"Vega({option},{mirrorOption},{optionModel})",
+                option,
+                riskFreeRateModel,
+                dividendYield,
+                mirrorOption,
+                optionModel,
+                ivModel
+            ) { }
 
         /// <summary>
         /// Initializes a new instance of the Vega class
@@ -160,11 +260,17 @@ namespace QuantConnect.Indicators
         /// <param name="mirrorOption">The mirror option for parity calculation</param>
         /// <param name="optionModel">The option pricing model used to estimate Vega</param>
         /// <param name="ivModel">The option pricing model used to estimate IV</param>
-        public Vega(string name, Symbol option, decimal riskFreeRate = 0.05m, decimal dividendYield = 0.0m, Symbol mirrorOption = null, 
-            OptionPricingModelType optionModel = OptionPricingModelType.BlackScholes, OptionPricingModelType? ivModel = null)
+        public Vega(
+            string name,
+            Symbol option,
+            decimal riskFreeRate = 0.05m,
+            decimal dividendYield = 0.0m,
+            Symbol mirrorOption = null,
+            OptionPricingModelType optionModel = OptionPricingModelType.BlackScholes,
+            OptionPricingModelType? ivModel = null
+        )
             : base(name, option, riskFreeRate, dividendYield, mirrorOption, optionModel, ivModel)
-        {
-        }
+        { }
 
         /// <summary>
         /// Initializes a new instance of the Vega class
@@ -175,11 +281,23 @@ namespace QuantConnect.Indicators
         /// <param name="mirrorOption">The mirror option for parity calculation</param>
         /// <param name="optionModel">The option pricing model used to estimate Vega</param>
         /// <param name="ivModel">The option pricing model used to estimate IV</param>
-        public Vega(Symbol option, decimal riskFreeRate = 0.05m, decimal dividendYield = 0.0m, Symbol mirrorOption = null,
-            OptionPricingModelType optionModel = OptionPricingModelType.BlackScholes, OptionPricingModelType? ivModel = null)
-            : this($"Vega({option},{mirrorOption},{optionModel})", option, riskFreeRate, dividendYield, mirrorOption, optionModel, ivModel)
-        {
-        }
+        public Vega(
+            Symbol option,
+            decimal riskFreeRate = 0.05m,
+            decimal dividendYield = 0.0m,
+            Symbol mirrorOption = null,
+            OptionPricingModelType optionModel = OptionPricingModelType.BlackScholes,
+            OptionPricingModelType? ivModel = null
+        )
+            : this(
+                $"Vega({option},{mirrorOption},{optionModel})",
+                option,
+                riskFreeRate,
+                dividendYield,
+                mirrorOption,
+                optionModel,
+                ivModel
+            ) { }
 
         /// <summary>
         /// Calculate the Vega of the option
@@ -199,13 +317,45 @@ namespace QuantConnect.Indicators
                     var price = 0m;
                     if (_optionModel == OptionPricingModelType.BinomialCoxRossRubinstein)
                     {
-                        newPrice = OptionGreekIndicatorsHelper.CRRTheoreticalPrice(ImpliedVolatility + deltaSigma, UnderlyingPrice, Strike, timeTillExpiry, RiskFreeRate, DividendYield, Right);
-                        price = OptionGreekIndicatorsHelper.CRRTheoreticalPrice(ImpliedVolatility, UnderlyingPrice, Strike, timeTillExpiry, RiskFreeRate, DividendYield, Right);
+                        newPrice = OptionGreekIndicatorsHelper.CRRTheoreticalPrice(
+                            ImpliedVolatility + deltaSigma,
+                            UnderlyingPrice,
+                            Strike,
+                            timeTillExpiry,
+                            RiskFreeRate,
+                            DividendYield,
+                            Right
+                        );
+                        price = OptionGreekIndicatorsHelper.CRRTheoreticalPrice(
+                            ImpliedVolatility,
+                            UnderlyingPrice,
+                            Strike,
+                            timeTillExpiry,
+                            RiskFreeRate,
+                            DividendYield,
+                            Right
+                        );
                     }
                     else if (_optionModel == OptionPricingModelType.ForwardTree)
                     {
-                        newPrice = OptionGreekIndicatorsHelper.ForwardTreeTheoreticalPrice(ImpliedVolatility + deltaSigma, UnderlyingPrice, Strike, timeTillExpiry, RiskFreeRate, DividendYield, Right);
-                        price = OptionGreekIndicatorsHelper.ForwardTreeTheoreticalPrice(ImpliedVolatility, UnderlyingPrice, Strike, timeTillExpiry, RiskFreeRate, DividendYield, Right);
+                        newPrice = OptionGreekIndicatorsHelper.ForwardTreeTheoreticalPrice(
+                            ImpliedVolatility + deltaSigma,
+                            UnderlyingPrice,
+                            Strike,
+                            timeTillExpiry,
+                            RiskFreeRate,
+                            DividendYield,
+                            Right
+                        );
+                        price = OptionGreekIndicatorsHelper.ForwardTreeTheoreticalPrice(
+                            ImpliedVolatility,
+                            UnderlyingPrice,
+                            Strike,
+                            timeTillExpiry,
+                            RiskFreeRate,
+                            DividendYield,
+                            Right
+                        );
                     }
 
                     return (newPrice - price) / deltaSigma / 100;
@@ -213,9 +363,20 @@ namespace QuantConnect.Indicators
                 case OptionPricingModelType.BlackScholes:
                 default:
                     var norm = new Normal();
-                    var d1 = OptionGreekIndicatorsHelper.CalculateD1(UnderlyingPrice, Strike, timeTillExpiry, RiskFreeRate, DividendYield, ImpliedVolatility);
+                    var d1 = OptionGreekIndicatorsHelper.CalculateD1(
+                        UnderlyingPrice,
+                        Strike,
+                        timeTillExpiry,
+                        RiskFreeRate,
+                        DividendYield,
+                        ImpliedVolatility
+                    );
 
-                    return UnderlyingPrice * math(Math.Sqrt, timeTillExpiry) * math(norm.Density, d1) * math(Math.Exp, -DividendYield * timeTillExpiry) / 100;
+                    return UnderlyingPrice
+                        * math(Math.Sqrt, timeTillExpiry)
+                        * math(norm.Density, d1)
+                        * math(Math.Exp, -DividendYield * timeTillExpiry)
+                        / 100;
             }
         }
     }

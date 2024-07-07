@@ -15,10 +15,10 @@
 */
 
 using System;
-using System.Linq;
-using Python.Runtime;
-using Newtonsoft.Json;
 using System.Collections.Generic;
+using System.Linq;
+using Newtonsoft.Json;
+using Python.Runtime;
 using QuantConnect.Data.UniverseSelection;
 
 namespace QuantConnect.Data.Fundamental
@@ -26,7 +26,8 @@ namespace QuantConnect.Data.Fundamental
     /// <summary>
     /// The aggregate amount change of (1) the lending of excess federal funds to another commercial bank requiring such for its legal reserve requirements and (2) securities purchased under agreements to resell. This item is usually only available for bank industry.
     /// </summary>
-    public class ProceedsPaymentFederalFundsSoldAndSecuritiesPurchasedUnderAgreementToResellCashFlowStatement : MultiPeriodField
+    public class ProceedsPaymentFederalFundsSoldAndSecuritiesPurchasedUnderAgreementToResellCashFlowStatement
+        : MultiPeriodField
     {
         /// <summary>
         /// The default period
@@ -37,30 +38,58 @@ namespace QuantConnect.Data.Fundamental
         /// Gets/sets the ThreeMonths period value for the field
         /// </summary>
         [JsonProperty("3M")]
-        public double ThreeMonths => FundamentalService.Get<double>(TimeProvider.GetUtcNow(), SecurityIdentifier, FundamentalProperty.FinancialStatements_CashFlowStatement_ProceedsPaymentFederalFundsSoldAndSecuritiesPurchasedUnderAgreementToResell_ThreeMonths);
+        public double ThreeMonths =>
+            FundamentalService.Get<double>(
+                TimeProvider.GetUtcNow(),
+                SecurityIdentifier,
+                FundamentalProperty.FinancialStatements_CashFlowStatement_ProceedsPaymentFederalFundsSoldAndSecuritiesPurchasedUnderAgreementToResell_ThreeMonths
+            );
 
         /// <summary>
         /// Gets/sets the SixMonths period value for the field
         /// </summary>
         [JsonProperty("6M")]
-        public double SixMonths => FundamentalService.Get<double>(TimeProvider.GetUtcNow(), SecurityIdentifier, FundamentalProperty.FinancialStatements_CashFlowStatement_ProceedsPaymentFederalFundsSoldAndSecuritiesPurchasedUnderAgreementToResell_SixMonths);
+        public double SixMonths =>
+            FundamentalService.Get<double>(
+                TimeProvider.GetUtcNow(),
+                SecurityIdentifier,
+                FundamentalProperty.FinancialStatements_CashFlowStatement_ProceedsPaymentFederalFundsSoldAndSecuritiesPurchasedUnderAgreementToResell_SixMonths
+            );
 
         /// <summary>
         /// Gets/sets the NineMonths period value for the field
         /// </summary>
         [JsonProperty("9M")]
-        public double NineMonths => FundamentalService.Get<double>(TimeProvider.GetUtcNow(), SecurityIdentifier, FundamentalProperty.FinancialStatements_CashFlowStatement_ProceedsPaymentFederalFundsSoldAndSecuritiesPurchasedUnderAgreementToResell_NineMonths);
+        public double NineMonths =>
+            FundamentalService.Get<double>(
+                TimeProvider.GetUtcNow(),
+                SecurityIdentifier,
+                FundamentalProperty.FinancialStatements_CashFlowStatement_ProceedsPaymentFederalFundsSoldAndSecuritiesPurchasedUnderAgreementToResell_NineMonths
+            );
 
         /// <summary>
         /// Gets/sets the TwelveMonths period value for the field
         /// </summary>
         [JsonProperty("12M")]
-        public double TwelveMonths => FundamentalService.Get<double>(TimeProvider.GetUtcNow(), SecurityIdentifier, FundamentalProperty.FinancialStatements_CashFlowStatement_ProceedsPaymentFederalFundsSoldAndSecuritiesPurchasedUnderAgreementToResell_TwelveMonths);
+        public double TwelveMonths =>
+            FundamentalService.Get<double>(
+                TimeProvider.GetUtcNow(),
+                SecurityIdentifier,
+                FundamentalProperty.FinancialStatements_CashFlowStatement_ProceedsPaymentFederalFundsSoldAndSecuritiesPurchasedUnderAgreementToResell_TwelveMonths
+            );
 
         /// <summary>
         /// Returns true if the field contains a value for the default period
         /// </summary>
-        public override bool HasValue => !BaseFundamentalDataProvider.IsNone(typeof(double), FundamentalService.Get<double>(TimeProvider.GetUtcNow(), SecurityIdentifier, FundamentalProperty.FinancialStatements_CashFlowStatement_ProceedsPaymentFederalFundsSoldAndSecuritiesPurchasedUnderAgreementToResell_TwelveMonths));
+        public override bool HasValue =>
+            !BaseFundamentalDataProvider.IsNone(
+                typeof(double),
+                FundamentalService.Get<double>(
+                    TimeProvider.GetUtcNow(),
+                    SecurityIdentifier,
+                    FundamentalProperty.FinancialStatements_CashFlowStatement_ProceedsPaymentFederalFundsSoldAndSecuritiesPurchasedUnderAgreementToResell_TwelveMonths
+                )
+            );
 
         /// <summary>
         /// Returns the default value for the field
@@ -69,7 +98,11 @@ namespace QuantConnect.Data.Fundamental
         {
             get
             {
-                var defaultValue = FundamentalService.Get<double>(TimeProvider.GetUtcNow(), SecurityIdentifier, FundamentalProperty.FinancialStatements_CashFlowStatement_ProceedsPaymentFederalFundsSoldAndSecuritiesPurchasedUnderAgreementToResell_TwelveMonths);
+                var defaultValue = FundamentalService.Get<double>(
+                    TimeProvider.GetUtcNow(),
+                    SecurityIdentifier,
+                    FundamentalProperty.FinancialStatements_CashFlowStatement_ProceedsPaymentFederalFundsSoldAndSecuritiesPurchasedUnderAgreementToResell_TwelveMonths
+                );
                 if (!BaseFundamentalDataProvider.IsNone(typeof(double), defaultValue))
                 {
                     return defaultValue;
@@ -85,9 +118,17 @@ namespace QuantConnect.Data.Fundamental
         public override IReadOnlyDictionary<string, double> GetPeriodValues()
         {
             var result = new Dictionary<string, double>();
-            foreach (var kvp in new[] { new Tuple<string, double>("3M",ThreeMonths), new Tuple<string, double>("6M",SixMonths), new Tuple<string, double>("9M",NineMonths), new Tuple<string, double>("12M",TwelveMonths) })
+            foreach (
+                var kvp in new[]
+                {
+                    new Tuple<string, double>("3M", ThreeMonths),
+                    new Tuple<string, double>("6M", SixMonths),
+                    new Tuple<string, double>("9M", NineMonths),
+                    new Tuple<string, double>("12M", TwelveMonths)
+                }
+            )
             {
-                if(!BaseFundamentalDataProvider.IsNone(typeof(double), kvp.Item2))
+                if (!BaseFundamentalDataProvider.IsNone(typeof(double), kvp.Item2))
                 {
                     result[kvp.Item1] = kvp.Item2;
                 }
@@ -100,20 +141,28 @@ namespace QuantConnect.Data.Fundamental
         /// </summary>
         /// <param name="period">The requested period</param>
         /// <returns>The value for the period</returns>
-        public override double GetPeriodValue(string period) => FundamentalService.Get<double>(TimeProvider.GetUtcNow(), SecurityIdentifier, Enum.Parse<FundamentalProperty>($"FinancialStatements_CashFlowStatement_ProceedsPaymentFederalFundsSoldAndSecuritiesPurchasedUnderAgreementToResell_{ConvertPeriod(period)}"));
+        public override double GetPeriodValue(string period) =>
+            FundamentalService.Get<double>(
+                TimeProvider.GetUtcNow(),
+                SecurityIdentifier,
+                Enum.Parse<FundamentalProperty>(
+                    $"FinancialStatements_CashFlowStatement_ProceedsPaymentFederalFundsSoldAndSecuritiesPurchasedUnderAgreementToResell_{ConvertPeriod(period)}"
+                )
+            );
 
         /// <summary>
         /// Creates a new empty instance
         /// </summary>
         public ProceedsPaymentFederalFundsSoldAndSecuritiesPurchasedUnderAgreementToResellCashFlowStatement()
-        {
-        }
+        { }
 
         /// <summary>
         /// Creates a new instance for the given time and security
         /// </summary>
-        public ProceedsPaymentFederalFundsSoldAndSecuritiesPurchasedUnderAgreementToResellCashFlowStatement(ITimeProvider timeProvider, SecurityIdentifier securityIdentifier) : base(timeProvider, securityIdentifier)
-        {
-        }
+        public ProceedsPaymentFederalFundsSoldAndSecuritiesPurchasedUnderAgreementToResellCashFlowStatement(
+            ITimeProvider timeProvider,
+            SecurityIdentifier securityIdentifier
+        )
+            : base(timeProvider, securityIdentifier) { }
     }
 }

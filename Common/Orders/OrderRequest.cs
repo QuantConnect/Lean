@@ -25,51 +25,33 @@ namespace QuantConnect.Orders
         /// <summary>
         /// Gets the type of this order request
         /// </summary>
-        public abstract OrderRequestType OrderRequestType
-        {
-            get;
-        }
+        public abstract OrderRequestType OrderRequestType { get; }
 
         /// <summary>
         /// Gets the status of this request
         /// </summary>
-        public OrderRequestStatus Status
-        {
-            get; private set;
-        }
+        public OrderRequestStatus Status { get; private set; }
 
         /// <summary>
         /// Gets the UTC time the request was created
         /// </summary>
-        public DateTime Time
-        {
-            get; private set;
-        }
+        public DateTime Time { get; private set; }
 
         /// <summary>
         /// Gets the order id the request acts on
         /// </summary>
-        public int OrderId
-        {
-            get; protected set;
-        }
+        public int OrderId { get; protected set; }
 
         /// <summary>
         /// Gets a tag for this request
         /// </summary>
-        public string Tag
-        {
-            get; private set;
-        }
+        public string Tag { get; private set; }
 
         /// <summary>
         /// Gets the response for this request. If this request was never processed then this
         /// will equal <see cref="OrderResponse.Unprocessed"/>. This value is never equal to null.
         /// </summary>
-        public OrderResponse Response
-        {
-            get; private set;
-        }
+        public OrderResponse Response { get; private set; }
 
         /// <summary>
         /// Initializes a new instance of the <see cref="OrderRequest"/> class
@@ -91,7 +73,10 @@ namespace QuantConnect.Orders
         /// </summary>
         /// <param name="response">The response to this request</param>
         /// <param name="status">The current status of this request</param>
-        public void SetResponse(OrderResponse response, OrderRequestStatus status = OrderRequestStatus.Error)
+        public void SetResponse(
+            OrderResponse response,
+            OrderRequestStatus status = OrderRequestStatus.Error
+        )
         {
             if (response == null)
             {

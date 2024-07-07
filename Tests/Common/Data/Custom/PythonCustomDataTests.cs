@@ -28,15 +28,23 @@ namespace QuantConnect.Tests.Common.Data.Custom
             dynamic instance;
             using (Py.GIL())
             {
-                PyObject test = PyModule.FromString("testModule",
-                    @"
+                PyObject test = PyModule
+                    .FromString(
+                        "testModule",
+                        @"
 from AlgorithmImports import *
 
 class Test(PythonData):
     def Pepe(self):
-        return 1").GetAttr("Test");
+        return 1"
+                    )
+                    .GetAttr("Test");
                 instance = test.CreateType().GetBaseDataInstance();
-                instance.Symbol = Symbol.CreateBase(typeof(decimal), Symbols.SPY, QuantConnect.Market.USA);
+                instance.Symbol = Symbol.CreateBase(
+                    typeof(decimal),
+                    Symbols.SPY,
+                    QuantConnect.Market.USA
+                );
             }
 
             Assert.IsTrue(instance.IsSparseData());
@@ -49,13 +57,17 @@ class Test(PythonData):
             dynamic instance;
             using (Py.GIL())
             {
-                PyObject test = PyModule.FromString("testModule",
-                    @"
+                PyObject test = PyModule
+                    .FromString(
+                        "testModule",
+                        @"
 from AlgorithmImports import *
 
 class Test(PythonData):
     def IsSparseData(self):
-        return " + $"{value}").GetAttr("Test");
+        return " + $"{value}"
+                    )
+                    .GetAttr("Test");
                 instance = test.CreateType().GetBaseDataInstance();
             }
 
@@ -68,13 +80,17 @@ class Test(PythonData):
             dynamic instance;
             using (Py.GIL())
             {
-                PyObject test = PyModule.FromString("testModule",
-                    @"
+                PyObject test = PyModule
+                    .FromString(
+                        "testModule",
+                        @"
 from AlgorithmImports import *
 
 class Test(PythonData):
     def DefaultResolution(self):
-        return Resolution.Tick").GetAttr("Test");
+        return Resolution.Tick"
+                    )
+                    .GetAttr("Test");
                 instance = test.CreateType().GetBaseDataInstance();
             }
 
@@ -87,13 +103,17 @@ class Test(PythonData):
             dynamic instance;
             using (Py.GIL())
             {
-                PyObject test = PyModule.FromString("testModule",
-                    @"
+                PyObject test = PyModule
+                    .FromString(
+                        "testModule",
+                        @"
 from AlgorithmImports import *
 
 class Test(PythonData):
     def SupportedResolutions(self):
-        return [ Resolution.Tick, Resolution.Daily ]").GetAttr("Test");
+        return [ Resolution.Tick, Resolution.Daily ]"
+                    )
+                    .GetAttr("Test");
                 instance = test.CreateType().GetBaseDataInstance();
             }
 

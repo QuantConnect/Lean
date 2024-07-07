@@ -24,7 +24,7 @@ namespace QuantConnect.Tests.Compression
     [TestFixture]
     public class ZipStreamWriterTests
     {
-        #pragma warning disable CA2000
+#pragma warning disable CA2000
         [Test]
         public void Create()
         {

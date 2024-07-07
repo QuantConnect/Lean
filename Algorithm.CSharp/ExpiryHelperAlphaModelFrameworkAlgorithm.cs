@@ -13,14 +13,14 @@
  * limitations under the License.
 */
 
+using System;
+using System.Collections.Generic;
 using QuantConnect.Algorithm.Framework.Alphas;
 using QuantConnect.Algorithm.Framework.Execution;
 using QuantConnect.Algorithm.Framework.Portfolio;
 using QuantConnect.Algorithm.Framework.Risk;
 using QuantConnect.Algorithm.Framework.Selection;
 using QuantConnect.Data;
-using System;
-using System.Collections.Generic;
 
 namespace QuantConnect.Algorithm.CSharp
 {
@@ -37,12 +37,16 @@ namespace QuantConnect.Algorithm.CSharp
             // Set requested data resolution
             UniverseSettings.Resolution = Resolution.Hour;
 
-            SetStartDate(2013, 10, 07);  //Set Start Date
-            SetEndDate(2014, 1, 1);      //Set End Date
-            SetCash(100000);             //Set Strategy Cash
+            SetStartDate(2013, 10, 07); //Set Start Date
+            SetEndDate(2014, 1, 1); //Set End Date
+            SetCash(100000); //Set Strategy Cash
 
             // set algorithm framework models
-            SetUniverseSelection(new ManualUniverseSelectionModel(QuantConnect.Symbol.Create("SPY", SecurityType.Equity, Market.USA)));
+            SetUniverseSelection(
+                new ManualUniverseSelectionModel(
+                    QuantConnect.Symbol.Create("SPY", SecurityType.Equity, Market.USA)
+                )
+            );
             SetAlpha(new ExpiryHelperAlphaModel());
             SetPortfolioConstruction(new EqualWeightingPortfolioConstructionModel());
             SetExecution(new ImmediateExecutionModel());
@@ -52,7 +56,9 @@ namespace QuantConnect.Algorithm.CSharp
             {
                 foreach (var insight in e.Insights)
                 {
-                    Log($"{e.DateTimeUtc.DayOfWeek}: Close Time {insight.CloseTimeUtc} {insight.CloseTimeUtc.DayOfWeek}");
+                    Log(
+                        $"{e.DateTimeUtc.DayOfWeek}: Close Time {insight.CloseTimeUtc} {insight.CloseTimeUtc.DayOfWeek}"
+                    );
                 }
             };
         }

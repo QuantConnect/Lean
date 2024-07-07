@@ -15,9 +15,9 @@
 */
 
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using QuantConnect.Data;
-using System.Collections.Generic;
 using QuantConnect.Data.Market;
 
 namespace QuantConnect.Algorithm.CSharp
@@ -60,7 +60,9 @@ namespace QuantConnect.Algorithm.CSharp
         {
             if (BarCounter != ExpectedBarCount)
             {
-                throw new ArgumentException($"Bar Count {BarCounter} is not expected count of {ExpectedBarCount}");
+                throw new ArgumentException(
+                    $"Bar Count {BarCounter} is not expected count of {ExpectedBarCount}"
+                );
             }
 
             if (Resolution != Resolution.Daily)
@@ -71,7 +73,9 @@ namespace QuantConnect.Algorithm.CSharp
             var openInterest = Securities[SpxOption].Cache.GetAll<OpenInterest>();
             if (openInterest.Single().EndTime != new DateTime(2021, 1, 15, 23, 0, 0))
             {
-                throw new ArgumentException($"Unexpected open interest time: {openInterest.Single().EndTime}");
+                throw new ArgumentException(
+                    $"Unexpected open interest time: {openInterest.Single().EndTime}"
+                );
             }
 
             foreach (var symbol in new[] { SpxOption, Spx })
@@ -100,7 +104,8 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// This is used by the regression test system to indicate which languages this algorithm is written in.
         /// </summary>
-        public override List<Language> Languages { get; } = new() { Language.CSharp, Language.Python };
+        public override List<Language> Languages { get; } =
+            new() { Language.CSharp, Language.Python };
 
         /// <summary>
         /// Data Points count of all timeslices of algorithm
@@ -120,35 +125,36 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// This is used by the regression test system to indicate what the expected statistics are from running the algorithm
         /// </summary>
-        public override Dictionary<string, string> ExpectedStatistics => new Dictionary<string, string>
-        {
-            {"Total Orders", "11"},
-            {"Average Win", "0%"},
-            {"Average Loss", "0%"},
-            {"Compounding Annual Return", "621.484%"},
-            {"Drawdown", "0%"},
-            {"Expectancy", "0"},
-            {"Start Equity", "1000000"},
-            {"End Equity", "1084600"},
-            {"Net Profit", "8.460%"},
-            {"Sharpe Ratio", "9.923"},
-            {"Sortino Ratio", "0"},
-            {"Probabilistic Sharpe Ratio", "93.682%"},
-            {"Loss Rate", "0%"},
-            {"Win Rate", "0%"},
-            {"Profit-Loss Ratio", "0"},
-            {"Alpha", "3.61"},
-            {"Beta", "-0.513"},
-            {"Annual Standard Deviation", "0.359"},
-            {"Annual Variance", "0.129"},
-            {"Information Ratio", "8.836"},
-            {"Tracking Error", "0.392"},
-            {"Treynor Ratio", "-6.937"},
-            {"Total Fees", "$0.00"},
-            {"Estimated Strategy Capacity", "$0"},
-            {"Lowest Capacity Asset", "SPX XL80P3GHDZXQ|SPX 31"},
-            {"Portfolio Turnover", "2.42%"},
-            {"OrderListHash", "61e8517ac3da6bed414ef23d26736fef"}
-        };
+        public override Dictionary<string, string> ExpectedStatistics =>
+            new Dictionary<string, string>
+            {
+                { "Total Orders", "11" },
+                { "Average Win", "0%" },
+                { "Average Loss", "0%" },
+                { "Compounding Annual Return", "621.484%" },
+                { "Drawdown", "0%" },
+                { "Expectancy", "0" },
+                { "Start Equity", "1000000" },
+                { "End Equity", "1084600" },
+                { "Net Profit", "8.460%" },
+                { "Sharpe Ratio", "9.923" },
+                { "Sortino Ratio", "0" },
+                { "Probabilistic Sharpe Ratio", "93.682%" },
+                { "Loss Rate", "0%" },
+                { "Win Rate", "0%" },
+                { "Profit-Loss Ratio", "0" },
+                { "Alpha", "3.61" },
+                { "Beta", "-0.513" },
+                { "Annual Standard Deviation", "0.359" },
+                { "Annual Variance", "0.129" },
+                { "Information Ratio", "8.836" },
+                { "Tracking Error", "0.392" },
+                { "Treynor Ratio", "-6.937" },
+                { "Total Fees", "$0.00" },
+                { "Estimated Strategy Capacity", "$0" },
+                { "Lowest Capacity Asset", "SPX XL80P3GHDZXQ|SPX 31" },
+                { "Portfolio Turnover", "2.42%" },
+                { "OrderListHash", "61e8517ac3da6bed414ef23d26736fef" }
+            };
     }
 }

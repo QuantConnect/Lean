@@ -17,9 +17,9 @@
 using System;
 using System.Collections.Generic;
 using NodaTime;
-using QuantConnect.Securities;
-using QuantConnect.Logging;
 using Python.Runtime;
+using QuantConnect.Logging;
+using QuantConnect.Securities;
 
 namespace QuantConnect.Scheduling
 {
@@ -50,7 +50,11 @@ namespace QuantConnect.Scheduling
         /// <param name="securities">Securities manager containing the algorithm's securities</param>
         /// <param name="timeZone">The algorithm's time zone</param>
         /// <param name="marketHoursDatabase">The market hours database instance to use</param>
-        public ScheduleManager(SecurityManager securities, DateTimeZone timeZone, MarketHoursDatabase marketHoursDatabase)
+        public ScheduleManager(
+            SecurityManager securities,
+            DateTimeZone timeZone,
+            MarketHoursDatabase marketHoursDatabase
+        )
         {
             _securities = securities;
             DateRules = new DateRules(securities, timeZone, marketHoursDatabase);
@@ -140,7 +144,15 @@ namespace QuantConnect.Scheduling
         /// <param name="callback">The callback to be invoked</param>
         public ScheduledEvent On(IDateRule dateRule, ITimeRule timeRule, PyObject callback)
         {
-            return On(dateRule, timeRule, (name, time) => { using (Py.GIL()) callback.Invoke(); });
+            return On(
+                dateRule,
+                timeRule,
+                (name, time) =>
+                {
+                    using (Py.GIL())
+                        callback.Invoke();
+                }
+            );
         }
 
         /// <summary>
@@ -149,7 +161,11 @@ namespace QuantConnect.Scheduling
         /// <param name="dateRule">Specifies what dates the event should run</param>
         /// <param name="timeRule">Specifies the times on those dates the event should run</param>
         /// <param name="callback">The callback to be invoked</param>
-        public ScheduledEvent On(IDateRule dateRule, ITimeRule timeRule, Action<string, DateTime> callback)
+        public ScheduledEvent On(
+            IDateRule dateRule,
+            ITimeRule timeRule,
+            Action<string, DateTime> callback
+        )
         {
             var name = $"{dateRule.Name}: {timeRule.Name}";
             return On(name, dateRule, timeRule, callback);
@@ -162,7 +178,12 @@ namespace QuantConnect.Scheduling
         /// <param name="dateRule">Specifies what dates the event should run</param>
         /// <param name="timeRule">Specifies the times on those dates the event should run</param>
         /// <param name="callback">The callback to be invoked</param>
-        public ScheduledEvent On(string name, IDateRule dateRule, ITimeRule timeRule, Action callback)
+        public ScheduledEvent On(
+            string name,
+            IDateRule dateRule,
+            ITimeRule timeRule,
+            Action callback
+        )
         {
             return On(name, dateRule, timeRule, (n, d) => callback());
         }
@@ -174,9 +195,23 @@ namespace QuantConnect.Scheduling
         /// <param name="dateRule">Specifies what dates the event should run</param>
         /// <param name="timeRule">Specifies the times on those dates the event should run</param>
         /// <param name="callback">The callback to be invoked</param>
-        public ScheduledEvent On(string name, IDateRule dateRule, ITimeRule timeRule, PyObject callback)
+        public ScheduledEvent On(
+            string name,
+            IDateRule dateRule,
+            ITimeRule timeRule,
+            PyObject callback
+        )
         {
-            return On(name, dateRule, timeRule, (n, d) => { using (Py.GIL()) callback.Invoke(); });
+            return On(
+                name,
+                dateRule,
+                timeRule,
+                (n, d) =>
+                {
+                    using (Py.GIL())
+                        callback.Invoke();
+                }
+            );
         }
 
         /// <summary>
@@ -186,7 +221,12 @@ namespace QuantConnect.Scheduling
         /// <param name="dateRule">Specifies what dates the event should run</param>
         /// <param name="timeRule">Specifies the times on those dates the event should run</param>
         /// <param name="callback">The callback to be invoked</param>
-        public ScheduledEvent On(string name, IDateRule dateRule, ITimeRule timeRule, Action<string, DateTime> callback)
+        public ScheduledEvent On(
+            string name,
+            IDateRule dateRule,
+            ITimeRule timeRule,
+            Action<string, DateTime> callback
+        )
         {
             // back the date up to ensure we get all events, the event scheduler will skip past events that whose time has passed
             var dates = GetDatesDeferred(dateRule, _securities);
@@ -225,7 +265,12 @@ namespace QuantConnect.Scheduling
         /// </summary>
         public ScheduledEvent TrainingNow(Action trainingCode)
         {
-            return On($"Training: Now: {_securities.UtcTime:O}", DateRules.Today, TimeRules.Now, trainingCode);
+            return On(
+                $"Training: Now: {_securities.UtcTime:O}",
+                DateRules.Today,
+                TimeRules.Now,
+                trainingCode
+            );
         }
 
         /// <summary>
@@ -233,7 +278,12 @@ namespace QuantConnect.Scheduling
         /// </summary>
         public ScheduledEvent TrainingNow(PyObject trainingCode)
         {
-            return On($"Training: Now: {_securities.UtcTime:O}", DateRules.Today, TimeRules.Now, trainingCode);
+            return On(
+                $"Training: Now: {_securities.UtcTime:O}",
+                DateRules.Today,
+                TimeRules.Now,
+                trainingCode
+            );
         }
 
         /// <summary>
@@ -248,17 +298,29 @@ namespace QuantConnect.Scheduling
             return On(name, dateRule, timeRule, (n, time) => trainingCode());
         }
 
-
         /// <summary>
         /// Schedules the training code to run using the specified date and time rules
         /// </summary>
         /// <param name="dateRule">Specifies what dates the event should run</param>
         /// <param name="timeRule">Specifies the times on those dates the event should run</param>
         /// <param name="trainingCode">The training code to be invoked</param>
-        public ScheduledEvent Training(IDateRule dateRule, ITimeRule timeRule, PyObject trainingCode)
+        public ScheduledEvent Training(
+            IDateRule dateRule,
+            ITimeRule timeRule,
+            PyObject trainingCode
+        )
         {
             var name = $"{dateRule.Name}: {timeRule.Name}";
-            return On(name, dateRule, timeRule, (n, time) => { using (Py.GIL()) trainingCode.Invoke(); });
+            return On(
+                name,
+                dateRule,
+                timeRule,
+                (n, time) =>
+                {
+                    using (Py.GIL())
+                        trainingCode.Invoke();
+                }
+            );
         }
 
         /// <summary>
@@ -267,7 +329,11 @@ namespace QuantConnect.Scheduling
         /// <param name="dateRule">Specifies what dates the event should run</param>
         /// <param name="timeRule">Specifies the times on those dates the event should run</param>
         /// <param name="trainingCode">The training code to be invoked</param>
-        public ScheduledEvent Training(IDateRule dateRule, ITimeRule timeRule, Action<DateTime> trainingCode)
+        public ScheduledEvent Training(
+            IDateRule dateRule,
+            ITimeRule timeRule,
+            Action<DateTime> trainingCode
+        )
         {
             var name = $"{dateRule.Name}: {timeRule.Name}";
             return On(name, dateRule, timeRule, (n, time) => trainingCode(time));
@@ -279,9 +345,14 @@ namespace QuantConnect.Scheduling
         /// Helper methods to defer the evaluation of the current time until the dates are enumerated for the first time.
         /// This allows for correct support for warmup period
         /// </summary>
-        internal static IEnumerable<DateTime> GetDatesDeferred(IDateRule dateRule, SecurityManager securities)
+        internal static IEnumerable<DateTime> GetDatesDeferred(
+            IDateRule dateRule,
+            SecurityManager securities
+        )
         {
-            foreach (var item in dateRule.GetDates(securities.UtcTime.Date.AddDays(-1), Time.EndOfTime))
+            foreach (
+                var item in dateRule.GetDates(securities.UtcTime.Date.AddDays(-1), Time.EndOfTime)
+            )
             {
                 yield return item;
             }

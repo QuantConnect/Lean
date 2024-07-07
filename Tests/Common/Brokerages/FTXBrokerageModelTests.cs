@@ -13,6 +13,7 @@
  * limitations under the License.
 */
 
+using System;
 using Moq;
 using NUnit.Framework;
 using QuantConnect.Brokerages;
@@ -23,7 +24,6 @@ using QuantConnect.Orders.Fees;
 using QuantConnect.Securities;
 using QuantConnect.Securities.Crypto;
 using QuantConnect.Tests.Brokerages;
-using System;
 using Order = QuantConnect.Orders.Order;
 
 namespace QuantConnect.Tests.Common.Brokerages
@@ -93,12 +93,22 @@ namespace QuantConnect.Tests.Common.Brokerages
 
         [TestCase(0.01, true)]
         [TestCase(0.00005, false)]
-        public void CanSubmitOrder_WhenQuantityIsLargeEnough(decimal orderQuantity, bool isValidOrderQuantity)
+        public void CanSubmitOrder_WhenQuantityIsLargeEnough(
+            decimal orderQuantity,
+            bool isValidOrderQuantity
+        )
         {
             var order = new Mock<Order>();
             order.Setup(x => x.Quantity).Returns(orderQuantity);
 
-            Assert.AreEqual(isValidOrderQuantity, _brokerageModel.CanSubmitOrder(TestsHelpers.GetSecurity(market: Market), order.Object, out _));
+            Assert.AreEqual(
+                isValidOrderQuantity,
+                _brokerageModel.CanSubmitOrder(
+                    TestsHelpers.GetSecurity(market: Market),
+                    order.Object,
+                    out _
+                )
+            );
         }
 
         [Test]
@@ -108,13 +118,20 @@ namespace QuantConnect.Tests.Common.Brokerages
             var order = orderMock.Object;
             order.Quantity = 0.01m;
 
-            var updateRequestMock = new Mock<UpdateOrderRequest>(DateTime.UtcNow, 1, new UpdateOrderFields());
+            var updateRequestMock = new Mock<UpdateOrderRequest>(
+                DateTime.UtcNow,
+                1,
+                new UpdateOrderFields()
+            );
 
-            Assert.False(_brokerageModel.CanUpdateOrder(
-                TestsHelpers.GetSecurity(),
-                order,
-                updateRequestMock.Object,
-                out var message));
+            Assert.False(
+                _brokerageModel.CanUpdateOrder(
+                    TestsHelpers.GetSecurity(),
+                    order,
+                    updateRequestMock.Object,
+                    out var message
+                )
+            );
             Assert.NotNull(message);
         }
 
@@ -124,11 +141,7 @@ namespace QuantConnect.Tests.Common.Brokerages
         {
             var order = new Mock<StopMarketOrder>
             {
-                Object =
-                {
-                    Quantity = quantity,
-                    StopPrice =  stopPrice
-                }
+                Object = { Quantity = quantity, StopPrice = stopPrice }
             };
             order.SetupGet(s => s.Type).Returns(OrderType.StopMarket);
 
@@ -141,34 +154,38 @@ namespace QuantConnect.Tests.Common.Brokerages
         {
             var order = new Mock<StopLimitOrder>
             {
-                Object =
-                {
-                    Quantity = quantity,
-                    StopPrice =  stopPrice
-                }
+                Object = { Quantity = quantity, StopPrice = stopPrice }
             };
             order.SetupGet(s => s.Type).Returns(OrderType.StopLimit);
-
 
             CannotSubmitStopOrder_WhenPriceMissingMarketPrice(order.Object);
         }
 
         private void CannotSubmitStopOrder_WhenPriceMissingMarketPrice(Order order)
         {
-            var security = TestsHelpers.GetSecurity(symbol: _symbol.Value, market: _symbol.ID.Market, quoteCurrency: "USD");
+            var security = TestsHelpers.GetSecurity(
+                symbol: _symbol.Value,
+                market: _symbol.ID.Market,
+                quoteCurrency: "USD"
+            );
 
-            security.Cache.AddData(new Tick
-            {
-                AskPrice = 50001,
-                BidPrice = 49999,
-                Time = DateTime.UtcNow,
-                Symbol = _symbol,
-                TickType = TickType.Quote,
-                AskSize = 1,
-                BidSize = 1
-            });
+            security.Cache.AddData(
+                new Tick
+                {
+                    AskPrice = 50001,
+                    BidPrice = 49999,
+                    Time = DateTime.UtcNow,
+                    Symbol = _symbol,
+                    TickType = TickType.Quote,
+                    AskSize = 1,
+                    BidSize = 1
+                }
+            );
 
-            Assert.AreEqual(false, _brokerageModel.CanSubmitOrder(security, order, out var message));
+            Assert.AreEqual(
+                false,
+                _brokerageModel.CanSubmitOrder(security, order, out var message)
+            );
             Assert.NotNull(message);
         }
 
@@ -176,22 +193,24 @@ namespace QuantConnect.Tests.Common.Brokerages
         [TestCase(OrderType.StopLimit)]
         public void CannotSubmitMarketOrder_IfPriceNotInitialized(OrderType orderType)
         {
-            var order = new Mock<StopLimitOrder>
-            {
-                Object =
-                {
-                    Quantity = 1,
-                    StopPrice =  100
-                }
-            };
+            var order = new Mock<StopLimitOrder> { Object = { Quantity = 1, StopPrice = 100 } };
             order.SetupGet(s => s.Type).Returns(orderType);
 
-            var security = TestsHelpers.GetSecurity(symbol: _symbol.Value, market: _symbol.ID.Market, quoteCurrency: "USD");
+            var security = TestsHelpers.GetSecurity(
+                symbol: _symbol.Value,
+                market: _symbol.ID.Market,
+                quoteCurrency: "USD"
+            );
 
-            Assert.AreEqual(false, _brokerageModel.CanSubmitOrder(security, order.Object, out var message));
+            Assert.AreEqual(
+                false,
+                _brokerageModel.CanSubmitOrder(security, order.Object, out var message)
+            );
             Assert.NotNull(message);
         }
 
-        protected virtual FTXBrokerageModel GetBrokerageModel(AccountType accountType = AccountType.Margin) => new(accountType);
+        protected virtual FTXBrokerageModel GetBrokerageModel(
+            AccountType accountType = AccountType.Margin
+        ) => new(accountType);
     }
 }

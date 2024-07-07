@@ -19,8 +19,8 @@ using QuantConnect.Data.Market;
 namespace QuantConnect.Indicators
 {
     /// <summary>
-    /// The Arms Index, also called the Short-Term Trading Index (TRIN) 
-    /// is a technical analysis indicator that compares the number of advancing 
+    /// The Arms Index, also called the Short-Term Trading Index (TRIN)
+    /// is a technical analysis indicator that compares the number of advancing
     /// and declining stocks (AD Ratio) to advancing and declining volume (AD volume).
     /// </summary>
     public class ArmsIndex : TradeBarIndicator, IIndicatorWarmUpPeriodProvider
@@ -40,7 +40,8 @@ namespace QuantConnect.Indicators
         /// <summary>
         /// Initializes a new instance of the <see cref="ArmsIndex"/> class
         /// </summary>
-        public ArmsIndex(string name) : base(name)
+        public ArmsIndex(string name)
+            : base(name)
         {
             ADRatio = new AdvanceDeclineRatio(name + "_A/D Ratio");
             ADVRatio = new AdvanceDeclineVolumeRatio(name + "_A/D Volume Ratio");

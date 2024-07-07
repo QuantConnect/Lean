@@ -14,9 +14,9 @@
 */
 
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using Newtonsoft.Json;
-using System.Collections.Generic;
 
 namespace QuantConnect
 {
@@ -41,10 +41,13 @@ namespace QuantConnect
             }
 
             writer.WriteStartObject();
-            // we sort the series in ascending count so that they are chart nicely, has value for stacked area series so they're continuous 
-            foreach (var kvp in series.OrderBy(x => x.Value.Index)
-                .ThenBy(x => x.Value.Values.Count)
-                .ThenBy(x => x.Value.Values.Select(x => (x as ChartPoint)?.Y ?? 0).Sum()))
+            // we sort the series in ascending count so that they are chart nicely, has value for stacked area series so they're continuous
+            foreach (
+                var kvp in series
+                    .OrderBy(x => x.Value.Index)
+                    .ThenBy(x => x.Value.Values.Count)
+                    .ThenBy(x => x.Value.Values.Select(x => (x as ChartPoint)?.Y ?? 0).Sum())
+            )
             {
                 writer.WritePropertyName(kvp.Key);
                 writer.WriteRawValue(JsonConvert.SerializeObject(kvp.Value));
@@ -53,7 +56,12 @@ namespace QuantConnect
             writer.WriteEndObject();
         }
 
-        public override object ReadJson(JsonReader reader, Type objectType, object existingValue, JsonSerializer serializer)
+        public override object ReadJson(
+            JsonReader reader,
+            Type objectType,
+            object existingValue,
+            JsonSerializer serializer
+        )
         {
             throw new NotImplementedException();
         }

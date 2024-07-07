@@ -14,8 +14,8 @@
 */
 
 using QuantConnect.Data;
-using QuantConnect.Indicators;
 using QuantConnect.Data.Market;
+using QuantConnect.Indicators;
 
 namespace QuantConnect.Algorithm.CSharp
 {
@@ -35,9 +35,9 @@ namespace QuantConnect.Algorithm.CSharp
         /// </summary>
         public override void Initialize()
         {
-            SetStartDate(2014, 5, 2);  //Set Start Date
-            SetEndDate(StartDate);     //Set End Date
-            SetCash(100000);           //Set Strategy Cash
+            SetStartDate(2014, 5, 2); //Set Start Date
+            SetEndDate(StartDate); //Set End Date
+            SetCash(100000); //Set Strategy Cash
 
             // Find more symbols here: http://quantconnect.com/data
             var security = AddForex("EURUSD", Resolution.Tick);
@@ -70,7 +70,8 @@ namespace QuantConnect.Algorithm.CSharp
         {
             // Since we are only accepting TickType.Trade,
             // this indicator will never be ready
-            if (!_identity.IsReady) return;
+            if (!_identity.IsReady)
+                return;
 
             if (!Portfolio.Invested)
             {

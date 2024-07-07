@@ -29,7 +29,8 @@ namespace QuantConnect.Securities.IndexOption
         /// <summary>
         /// Minimum price variation, subject to variability due to contract price
         /// </summary>
-        public override decimal MinimumPriceVariation => MinimumPriceVariationForPrice(_lastData?.Symbol, _lastData?.Price);
+        public override decimal MinimumPriceVariation =>
+            MinimumPriceVariationForPrice(_lastData?.Symbol, _lastData?.Price);
 
         /// <summary>
         /// Creates an instance of index symbol properties
@@ -45,19 +46,15 @@ namespace QuantConnect.Securities.IndexOption
             decimal contractMultiplier,
             decimal pipSize,
             decimal lotSize
-            )
-            : base(description, quoteCurrency, contractMultiplier, pipSize, lotSize)
-        {
-        }
+        )
+            : base(description, quoteCurrency, contractMultiplier, pipSize, lotSize) { }
 
         /// <summary>
         /// Creates instance of index symbol properties
         /// </summary>
         /// <param name="properties"></param>
         public IndexOptionSymbolProperties(SymbolProperties properties)
-            : base(properties)
-        {
-        }
+            : base(properties) { }
 
         /// <summary>
         /// Updates the last data received, required for calculating some
@@ -77,14 +74,14 @@ namespace QuantConnect.Securities.IndexOption
         /// https://www.nasdaq.com/docs/2022/08/24/1926-Q22_NDX%20Fact%20Sheet_NAM_v3.pdf</remarks>
         public static decimal MinimumPriceVariationForPrice(Symbol symbol, decimal? referencePrice)
         {
-            if(symbol == null || !referencePrice.HasValue)
+            if (symbol == null || !referencePrice.HasValue)
             {
                 return 0.05m;
             }
 
             var aboveThree = 0.1m;
             var belowThree = 0.05m;
-            if(symbol.ID.Symbol == "VIXW")
+            if (symbol.ID.Symbol == "VIXW")
             {
                 aboveThree = belowThree = 0.01m;
             }

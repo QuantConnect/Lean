@@ -50,7 +50,7 @@ namespace QuantConnect.Optimizer.Strategies
         protected IEnumerable<Constraint> Constraints { get; set; }
 
         /// <summary>
-        /// Keep the best found solution - lean computed job result and corresponding  parameter set 
+        /// Keep the best found solution - lean computed job result and corresponding  parameter set
         /// </summary>
         public OptimizationResult Solution { get; protected set; }
 
@@ -71,11 +71,18 @@ namespace QuantConnect.Optimizer.Strategies
         /// <param name="constraints">The optimization constraints to apply on backtest results</param>
         /// <param name="parameters">Optimization parameters</param>
         /// <param name="settings">Optimization strategy settings</param>
-        public virtual void Initialize(Target target, IReadOnlyList<Constraint> constraints, HashSet<OptimizationParameter> parameters, OptimizationStrategySettings settings)
+        public virtual void Initialize(
+            Target target,
+            IReadOnlyList<Constraint> constraints,
+            HashSet<OptimizationParameter> parameters,
+            OptimizationStrategySettings settings
+        )
         {
             if (Initialized)
             {
-                throw new InvalidOperationException($"GridSearchOptimizationStrategy.Initialize: can not be re-initialized.");
+                throw new InvalidOperationException(
+                    $"GridSearchOptimizationStrategy.Initialize: can not be re-initialized."
+                );
             }
 
             Target = target;
@@ -83,7 +90,9 @@ namespace QuantConnect.Optimizer.Strategies
             OptimizationParameters = parameters;
             Settings = settings;
 
-            foreach (var optimizationParameter in OptimizationParameters.OfType<OptimizationStepParameter>())
+            foreach (
+                var optimizationParameter in OptimizationParameters.OfType<OptimizationStepParameter>()
+            )
             {
                 // if the Step optimization parameter does not provide a step to use, we calculate one based on settings
                 if (!optimizationParameter.Step.HasValue)
@@ -91,7 +100,10 @@ namespace QuantConnect.Optimizer.Strategies
                     var stepSettings = Settings as StepBaseOptimizationStrategySettings;
                     if (stepSettings == null)
                     {
-                        throw new ArgumentException($"OptimizationStrategySettings is not of {nameof(StepBaseOptimizationStrategySettings)} type", nameof(settings));
+                        throw new ArgumentException(
+                            $"OptimizationStrategySettings is not of {nameof(StepBaseOptimizationStrategySettings)} type",
+                            nameof(settings)
+                        );
                     }
                     CalculateStep(optimizationParameter, stepSettings.DefaultSegmentAmount);
                 }
@@ -134,15 +146,22 @@ namespace QuantConnect.Optimizer.Strategies
             var stepParameter = parameter as OptimizationStepParameter;
             if (stepParameter == null)
             {
-                throw new InvalidOperationException($"Cannot estimate parameter of type {parameter.GetType().FullName}");
+                throw new InvalidOperationException(
+                    $"Cannot estimate parameter of type {parameter.GetType().FullName}"
+                );
             }
 
             if (!stepParameter.Step.HasValue)
             {
-                throw new InvalidOperationException("Optimization parameter cannot be estimated due to step value is not initialized");
+                throw new InvalidOperationException(
+                    "Optimization parameter cannot be estimated due to step value is not initialized"
+                );
             }
 
-            return (int)Math.Floor((stepParameter.MaxValue - stepParameter.MinValue) / stepParameter.Step.Value) + 1;
+            return (int)
+                    Math.Floor(
+                        (stepParameter.MaxValue - stepParameter.MinValue) / stepParameter.Step.Value
+                    ) + 1;
         }
 
         /// <summary>
@@ -159,7 +178,10 @@ namespace QuantConnect.Optimizer.Strategies
             // check if the incoming result is not the initial seed
             if (result.Id > 0)
             {
-                if (Constraints?.All(constraint => constraint.IsMet(result.JsonBacktestResult)) != false)
+                if (
+                    Constraints?.All(constraint => constraint.IsMet(result.JsonBacktestResult))
+                    != false
+                )
                 {
                     if (Target.MoveAhead(result.JsonBacktestResult))
                     {
@@ -181,7 +203,8 @@ namespace QuantConnect.Optimizer.Strategies
             {
                 yield return new ParameterSet(
                     ++_i,
-                    step.ToDictionary(kvp => kvp.Key, kvp => kvp.Value));
+                    step.ToDictionary(kvp => kvp.Key, kvp => kvp.Value)
+                );
             }
         }
 
@@ -192,10 +215,14 @@ namespace QuantConnect.Optimizer.Strategies
         {
             if (defaultSegmentAmount < 1)
             {
-                throw new ArgumentException($"Number of segments should be positive number, but specified '{defaultSegmentAmount}'", nameof(defaultSegmentAmount));
+                throw new ArgumentException(
+                    $"Number of segments should be positive number, but specified '{defaultSegmentAmount}'",
+                    nameof(defaultSegmentAmount)
+                );
             }
 
-            parameter.Step = Math.Abs(parameter.MaxValue - parameter.MinValue) / defaultSegmentAmount;
+            parameter.Step =
+                Math.Abs(parameter.MaxValue - parameter.MinValue) / defaultSegmentAmount;
             parameter.MinStep = parameter.Step / 10;
         }
 
@@ -204,13 +231,20 @@ namespace QuantConnect.Optimizer.Strategies
             if (args.Count == 1)
             {
                 var optimizationParameterLast = args.Dequeue();
-                using (var optimizationParameterLastEnumerator = GetEnumerator(optimizationParameterLast))
+                using (
+                    var optimizationParameterLastEnumerator = GetEnumerator(
+                        optimizationParameterLast
+                    )
+                )
                 {
                     while (optimizationParameterLastEnumerator.MoveNext())
                     {
                         yield return new Dictionary<string, string>()
                         {
-                            {optimizationParameterLast.Name, optimizationParameterLastEnumerator.Current}
+                            {
+                                optimizationParameterLast.Name,
+                                optimizationParameterLastEnumerator.Current
+                            }
                         };
                     }
                 }
@@ -225,7 +259,10 @@ namespace QuantConnect.Optimizer.Strategies
                 {
                     foreach (var inner in Recursive(new Queue<OptimizationParameter>(args)))
                     {
-                        inner.Add(optimizationParameter.Name, optimizationParameterEnumerator.Current);
+                        inner.Add(
+                            optimizationParameter.Name,
+                            optimizationParameterEnumerator.Current
+                        );
 
                         yield return inner;
                     }

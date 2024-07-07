@@ -22,7 +22,9 @@ namespace QuantConnect.Tests.Common.Brokerages
     [TestFixture]
     public class FTXUSBrokerageModelTests : FTXBrokerageModelTests
     {
-        protected override FTXBrokerageModel GetBrokerageModel(AccountType accountType = AccountType.Margin) => new FTXUSBrokerageModel(accountType);
+        protected override FTXBrokerageModel GetBrokerageModel(
+            AccountType accountType = AccountType.Margin
+        ) => new FTXUSBrokerageModel(accountType);
 
         protected override string Market => QuantConnect.Market.FTXUS;
 

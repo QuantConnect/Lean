@@ -14,10 +14,10 @@
  *
 */
 
-using QuantConnect.Orders;
-using QuantConnect.Securities;
-using QuantConnect.Orders.Fees;
 using System.Collections.Generic;
+using QuantConnect.Orders;
+using QuantConnect.Orders.Fees;
+using QuantConnect.Securities;
 
 namespace QuantConnect.Brokerages
 {
@@ -29,21 +29,29 @@ namespace QuantConnect.Brokerages
         /// <summary>
         /// Array's TD Ameritrade supports security types
         /// </summary>
-        private readonly HashSet<SecurityType> _supportSecurityTypes = new (new [] { SecurityType.Equity });
+        private readonly HashSet<SecurityType> _supportSecurityTypes =
+            new(new[] { SecurityType.Equity });
 
         /// <summary>
         /// Array's TD Ameritrade supports order types
         /// </summary>
-        private readonly HashSet<OrderType> _supportOrderTypes = new(new [] { OrderType.Market, OrderType.Limit, OrderType.StopMarket, OrderType.StopLimit });
+        private readonly HashSet<OrderType> _supportOrderTypes =
+            new(
+                new[]
+                {
+                    OrderType.Market,
+                    OrderType.Limit,
+                    OrderType.StopMarket,
+                    OrderType.StopLimit
+                }
+            );
 
         /// <summary>
         /// Constructor for TDAmeritrade brokerage model
         /// </summary>
         /// <param name="accountType">Cash or Margin</param>
-        public TDAmeritradeBrokerageModel(AccountType accountType = AccountType.Margin) : base(accountType)
-        {
-
-        }
+        public TDAmeritradeBrokerageModel(AccountType accountType = AccountType.Margin)
+            : base(accountType) { }
 
         /// <summary>
         /// Returns true if the brokerage could accept this order. This takes into account
@@ -56,7 +64,11 @@ namespace QuantConnect.Brokerages
         /// <param name="order">The order to be processed</param>
         /// <param name="message">If this function returns false, a brokerage message detailing why the order may not be submitted</param>
         /// <returns>True if the brokerage could process the order, false otherwise</returns>
-        public override bool CanSubmitOrder(Security security, Order order, out BrokerageMessageEvent message)
+        public override bool CanSubmitOrder(
+            Security security,
+            Order order,
+            out BrokerageMessageEvent message
+        )
         {
             if (!IsValidOrderSize(security, order.Quantity, out message))
             {
@@ -67,16 +79,26 @@ namespace QuantConnect.Brokerages
 
             if (!_supportSecurityTypes.Contains(security.Type))
             {
-                message = new BrokerageMessageEvent(BrokerageMessageType.Warning, "NotSupported",
-                    Messages.DefaultBrokerageModel.UnsupportedSecurityType(this, security));
+                message = new BrokerageMessageEvent(
+                    BrokerageMessageType.Warning,
+                    "NotSupported",
+                    Messages.DefaultBrokerageModel.UnsupportedSecurityType(this, security)
+                );
 
                 return false;
             }
 
             if (!_supportOrderTypes.Contains(order.Type))
             {
-                message = new BrokerageMessageEvent(BrokerageMessageType.Warning, "NotSupported",
-                    Messages.DefaultBrokerageModel.UnsupportedOrderType(this, order, _supportOrderTypes));
+                message = new BrokerageMessageEvent(
+                    BrokerageMessageType.Warning,
+                    "NotSupported",
+                    Messages.DefaultBrokerageModel.UnsupportedOrderType(
+                        this,
+                        order,
+                        _supportOrderTypes
+                    )
+                );
 
                 return false;
             }
@@ -92,7 +114,12 @@ namespace QuantConnect.Brokerages
         /// <param name="request">Update request</param>
         /// <param name="message">Outgoing message</param>
         /// <returns>True if the brokerage would allow updating the order, false otherwise</returns>
-        public override bool CanUpdateOrder(Security security, Order order, UpdateOrderRequest request, out BrokerageMessageEvent message)
+        public override bool CanUpdateOrder(
+            Security security,
+            Order order,
+            UpdateOrderRequest request,
+            out BrokerageMessageEvent message
+        )
         {
             message = null;
             return true;

@@ -20,8 +20,8 @@ using QuantConnect.Algorithm.Framework.Execution;
 using QuantConnect.Algorithm.Framework.Portfolio;
 using QuantConnect.Algorithm.Framework.Risk;
 using QuantConnect.Algorithm.Framework.Selection;
-using QuantConnect.Orders;
 using QuantConnect.Interfaces;
+using QuantConnect.Orders;
 
 namespace QuantConnect.Algorithm.CSharp
 {
@@ -41,9 +41,9 @@ namespace QuantConnect.Algorithm.CSharp
             // Set requested data resolution
             UniverseSettings.Resolution = Resolution.Minute;
 
-            SetStartDate(2013, 10, 07);  //Set Start Date
-            SetEndDate(2013, 10, 11);    //Set End Date
-            SetCash(100000);             //Set Strategy Cash
+            SetStartDate(2013, 10, 07); //Set Start Date
+            SetEndDate(2013, 10, 11); //Set End Date
+            SetCash(100000); //Set Strategy Cash
 
             // Find more symbols here: http://quantconnect.com/data
             // Forex, CFD, Equities Resolutions: Tick, Second, Minute, Hour, Daily.
@@ -51,12 +51,26 @@ namespace QuantConnect.Algorithm.CSharp
             // Options Resolution: Minute Only.
 
             // set algorithm framework models
-            SetUniverseSelection(new ManualUniverseSelectionModel(QuantConnect.Symbol.Create("SPY", SecurityType.Equity, Market.USA)));
-            SetAlpha(new ConstantAlphaModel(InsightType.Price, InsightDirection.Up, TimeSpan.FromMinutes(20), 0.025, null));
+            SetUniverseSelection(
+                new ManualUniverseSelectionModel(
+                    QuantConnect.Symbol.Create("SPY", SecurityType.Equity, Market.USA)
+                )
+            );
+            SetAlpha(
+                new ConstantAlphaModel(
+                    InsightType.Price,
+                    InsightDirection.Up,
+                    TimeSpan.FromMinutes(20),
+                    0.025,
+                    null
+                )
+            );
 
             // We can define who often the EWPCM will rebalance if no new insight is submitted using:
             // Resolution Enum:
-            SetPortfolioConstruction(new EqualWeightingPortfolioConstructionModel(Resolution.Daily));
+            SetPortfolioConstruction(
+                new EqualWeightingPortfolioConstructionModel(Resolution.Daily)
+            );
             // TimeSpan
             // SetPortfolioConstruction(new EqualWeightingPortfolioConstructionModel(TimeSpan.FromDays(2)));
             // A Func<DateTime, DateTime>. In this case, we can use the pre-defined func at Expiry helper class
@@ -82,7 +96,8 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// This is used by the regression test system to indicate which languages this algorithm is written in.
         /// </summary>
-        public virtual List<Language> Languages { get; } = new() { Language.CSharp, Language.Python };
+        public virtual List<Language> Languages { get; } =
+            new() { Language.CSharp, Language.Python };
 
         /// <summary>
         /// Data Points count of all timeslices of algorithm
@@ -102,35 +117,36 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// This is used by the regression test system to indicate what the expected statistics are from running the algorithm
         /// </summary>
-        public Dictionary<string, string> ExpectedStatistics => new Dictionary<string, string>
-        {
-            {"Total Orders", "3"},
-            {"Average Win", "0%"},
-            {"Average Loss", "-1.01%"},
-            {"Compounding Annual Return", "261.134%"},
-            {"Drawdown", "2.200%"},
-            {"Expectancy", "-1"},
-            {"Start Equity", "100000"},
-            {"End Equity", "101655.30"},
-            {"Net Profit", "1.655%"},
-            {"Sharpe Ratio", "8.472"},
-            {"Sortino Ratio", "0"},
-            {"Probabilistic Sharpe Ratio", "66.840%"},
-            {"Loss Rate", "100%"},
-            {"Win Rate", "0%"},
-            {"Profit-Loss Ratio", "0"},
-            {"Alpha", "-0.091"},
-            {"Beta", "1.006"},
-            {"Annual Standard Deviation", "0.224"},
-            {"Annual Variance", "0.05"},
-            {"Information Ratio", "-33.445"},
-            {"Tracking Error", "0.002"},
-            {"Treynor Ratio", "1.885"},
-            {"Total Fees", "$10.32"},
-            {"Estimated Strategy Capacity", "$27000000.00"},
-            {"Lowest Capacity Asset", "SPY R735QTJ8XC9X"},
-            {"Portfolio Turnover", "59.86%"},
-            {"OrderListHash", "f209ed42701b0419858e0100595b40c0"}
-        };
+        public Dictionary<string, string> ExpectedStatistics =>
+            new Dictionary<string, string>
+            {
+                { "Total Orders", "3" },
+                { "Average Win", "0%" },
+                { "Average Loss", "-1.01%" },
+                { "Compounding Annual Return", "261.134%" },
+                { "Drawdown", "2.200%" },
+                { "Expectancy", "-1" },
+                { "Start Equity", "100000" },
+                { "End Equity", "101655.30" },
+                { "Net Profit", "1.655%" },
+                { "Sharpe Ratio", "8.472" },
+                { "Sortino Ratio", "0" },
+                { "Probabilistic Sharpe Ratio", "66.840%" },
+                { "Loss Rate", "100%" },
+                { "Win Rate", "0%" },
+                { "Profit-Loss Ratio", "0" },
+                { "Alpha", "-0.091" },
+                { "Beta", "1.006" },
+                { "Annual Standard Deviation", "0.224" },
+                { "Annual Variance", "0.05" },
+                { "Information Ratio", "-33.445" },
+                { "Tracking Error", "0.002" },
+                { "Treynor Ratio", "1.885" },
+                { "Total Fees", "$10.32" },
+                { "Estimated Strategy Capacity", "$27000000.00" },
+                { "Lowest Capacity Asset", "SPY R735QTJ8XC9X" },
+                { "Portfolio Turnover", "59.86%" },
+                { "OrderListHash", "f209ed42701b0419858e0100595b40c0" }
+            };
     }
 }

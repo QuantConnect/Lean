@@ -38,7 +38,8 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             using var subscription = new Subscription(
                 subscriptionRequest,
                 null,
-                new TimeZoneOffsetProvider(DateTimeZone.Utc, _start, _end));
+                new TimeZoneOffsetProvider(DateTimeZone.Utc, _start, _end)
+            );
 
             Assert.IsFalse(subscription.Universes.Any());
             Assert.IsFalse(subscription.EndOfStream);
@@ -55,7 +56,8 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             using var subscription = new Subscription(
                 subscriptionRequest,
                 null,
-                new TimeZoneOffsetProvider(DateTimeZone.Utc, _start, _end));
+                new TimeZoneOffsetProvider(DateTimeZone.Utc, _start, _end)
+            );
 
             Assert.AreEqual(1, subscription.Universes.Count());
             Assert.AreEqual(_start, subscription.UtcStartTime);
@@ -73,7 +75,8 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             using var subscription = new Subscription(
                 subscriptionRequest,
                 null,
-                new TimeZoneOffsetProvider(DateTimeZone.Utc, _start, _end));
+                new TimeZoneOffsetProvider(DateTimeZone.Utc, _start, _end)
+            );
 
             Assert.AreEqual(1, subscription.Universes.Count());
             Assert.AreEqual(subscriptionRequest.Universe, subscription.Universes.First());
@@ -92,13 +95,16 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             using var subscription = new Subscription(
                 subscriptionRequest,
                 null,
-                new TimeZoneOffsetProvider(DateTimeZone.Utc, _start, _end));
+                new TimeZoneOffsetProvider(DateTimeZone.Utc, _start, _end)
+            );
 
             try
             {
                 subscription.AddSubscriptionRequest(subscriptionRequest2);
-                Assert.Fail("Subscription should only accept one universe selection" +
-                    " subscription request.");
+                Assert.Fail(
+                    "Subscription should only accept one universe selection"
+                        + " subscription request."
+                );
             }
             catch (Exception)
             {
@@ -114,7 +120,8 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             using var subscription = new Subscription(
                 subscriptionRequest,
                 null,
-                new TimeZoneOffsetProvider(DateTimeZone.Utc, _start, _end));
+                new TimeZoneOffsetProvider(DateTimeZone.Utc, _start, _end)
+            );
 
             try
             {
@@ -134,9 +141,12 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             using var subscription = new Subscription(
                 subscriptionRequest,
                 null,
-                new TimeZoneOffsetProvider(DateTimeZone.Utc, _start, _end));
+                new TimeZoneOffsetProvider(DateTimeZone.Utc, _start, _end)
+            );
 
-            var emptySubscription = subscription.RemoveSubscriptionRequest(subscriptionRequest.Universe);
+            var emptySubscription = subscription.RemoveSubscriptionRequest(
+                subscriptionRequest.Universe
+            );
 
             Assert.IsTrue(emptySubscription);
             Assert.IsFalse(subscription.Universes.Any());
@@ -150,7 +160,8 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             using var subscription = new Subscription(
                 subscriptionRequest,
                 null,
-                new TimeZoneOffsetProvider(DateTimeZone.Utc, _start, _end));
+                new TimeZoneOffsetProvider(DateTimeZone.Utc, _start, _end)
+            );
 
             subscription.AddSubscriptionRequest(subscriptionRequest2);
             Assert.AreEqual(2, subscription.Universes.Count());
@@ -167,7 +178,8 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             using var subscription = new Subscription(
                 subscriptionRequest,
                 null,
-                new TimeZoneOffsetProvider(DateTimeZone.Utc, _start, _end));
+                new TimeZoneOffsetProvider(DateTimeZone.Utc, _start, _end)
+            );
 
             var emptySubscription = subscription.RemoveSubscriptionRequest();
 
@@ -178,18 +190,26 @@ namespace QuantConnect.Tests.Engine.DataFeeds
         private SubscriptionRequest GetSubscriptionRequest(
             bool useUniverse = true,
             bool isUniverseSelection = false,
-            Resolution resolution = Resolution.Minute)
+            Resolution resolution = Resolution.Minute
+        )
         {
             var security = SecurityTests.GetSecurity();
             var config = SecurityTests.CreateTradeBarConfig(resolution);
-            # pragma warning disable CA2000
+# pragma warning disable CA2000
             var universe = new ManualUniverse(
                 config,
                 new UniverseSettings(Resolution.Daily, 1, true, true, TimeSpan.FromDays(1)),
-                new[] {security.Symbol}
+                new[] { security.Symbol }
             );
-            #pragma warning restore CA2000
-            return new SubscriptionRequest(isUniverseSelection, useUniverse ? universe : null, security, config, _start, _end);
+#pragma warning restore CA2000
+            return new SubscriptionRequest(
+                isUniverseSelection,
+                useUniverse ? universe : null,
+                security,
+                config,
+                _start,
+                _end
+            );
         }
     }
 }

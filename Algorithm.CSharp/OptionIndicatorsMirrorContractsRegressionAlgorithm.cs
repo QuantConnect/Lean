@@ -27,7 +27,9 @@ namespace QuantConnect.Algorithm.CSharp
     /// <summary>
     /// Algorithm illustrating the usage of the <see cref="OptionIndicatorBase"/> indicators with mirror-paired contracts
     /// </summary>
-    public class OptionIndicatorsMirrorContractsRegressionAlgorithm : QCAlgorithm, IRegressionAlgorithmDefinition
+    public class OptionIndicatorsMirrorContractsRegressionAlgorithm
+        : QCAlgorithm,
+            IRegressionAlgorithmDefinition
     {
         private ImpliedVolatility _impliedVolatility;
         private Delta _delta;
@@ -43,28 +45,85 @@ namespace QuantConnect.Algorithm.CSharp
             SetCash(100000);
 
             var equity = AddEquity("AAPL", Resolution.Daily).Symbol;
-            var option = QuantConnect.Symbol.CreateOption("AAPL", Market.USA, OptionStyle.American, OptionRight.Put, 650m, new DateTime(2014, 6, 21));
+            var option = QuantConnect.Symbol.CreateOption(
+                "AAPL",
+                Market.USA,
+                OptionStyle.American,
+                OptionRight.Put,
+                650m,
+                new DateTime(2014, 6, 21)
+            );
             AddOptionContract(option, Resolution.Daily);
             // add the call counter side of the mirrored pair
-            var mirrorOption = QuantConnect.Symbol.CreateOption("AAPL", Market.USA, OptionStyle.American, OptionRight.Call, 650m, new DateTime(2014, 6, 21));
+            var mirrorOption = QuantConnect.Symbol.CreateOption(
+                "AAPL",
+                Market.USA,
+                OptionStyle.American,
+                OptionRight.Call,
+                650m,
+                new DateTime(2014, 6, 21)
+            );
             AddOptionContract(mirrorOption, Resolution.Daily);
 
-            _delta = D(option, mirrorOption, optionModel: OptionPricingModelType.BinomialCoxRossRubinstein, ivModel: OptionPricingModelType.BlackScholes);
-            _gamma = G(option, mirrorOption, optionModel: OptionPricingModelType.ForwardTree, ivModel: OptionPricingModelType.BlackScholes);
-            _vega = V(option, mirrorOption, optionModel: OptionPricingModelType.ForwardTree, ivModel: OptionPricingModelType.BlackScholes);
-            _theta = T(option, mirrorOption, optionModel: OptionPricingModelType.ForwardTree, ivModel: OptionPricingModelType.BlackScholes);
-            _rho = R(option, mirrorOption, optionModel: OptionPricingModelType.ForwardTree, ivModel: OptionPricingModelType.BlackScholes);
+            _delta = D(
+                option,
+                mirrorOption,
+                optionModel: OptionPricingModelType.BinomialCoxRossRubinstein,
+                ivModel: OptionPricingModelType.BlackScholes
+            );
+            _gamma = G(
+                option,
+                mirrorOption,
+                optionModel: OptionPricingModelType.ForwardTree,
+                ivModel: OptionPricingModelType.BlackScholes
+            );
+            _vega = V(
+                option,
+                mirrorOption,
+                optionModel: OptionPricingModelType.ForwardTree,
+                ivModel: OptionPricingModelType.BlackScholes
+            );
+            _theta = T(
+                option,
+                mirrorOption,
+                optionModel: OptionPricingModelType.ForwardTree,
+                ivModel: OptionPricingModelType.BlackScholes
+            );
+            _rho = R(
+                option,
+                mirrorOption,
+                optionModel: OptionPricingModelType.ForwardTree,
+                ivModel: OptionPricingModelType.BlackScholes
+            );
 
             // A custom IV indicator with custom calculation of IV
             var riskFreeRateModel = new InterestRateProvider();
             var dividendYieldModel = new DividendYieldProvider(equity);
-            _impliedVolatility = new CustomImpliedVolatility(option, mirrorOption, riskFreeRateModel, dividendYieldModel);
-            RegisterIndicator(option, _impliedVolatility, new QuoteBarConsolidator(TimeSpan.FromDays(1)));
-            RegisterIndicator(mirrorOption, _impliedVolatility, new QuoteBarConsolidator(TimeSpan.FromDays(1)));
-            RegisterIndicator(equity, _impliedVolatility, new TradeBarConsolidator(TimeSpan.FromDays(1)));
+            _impliedVolatility = new CustomImpliedVolatility(
+                option,
+                mirrorOption,
+                riskFreeRateModel,
+                dividendYieldModel
+            );
+            RegisterIndicator(
+                option,
+                _impliedVolatility,
+                new QuoteBarConsolidator(TimeSpan.FromDays(1))
+            );
+            RegisterIndicator(
+                mirrorOption,
+                _impliedVolatility,
+                new QuoteBarConsolidator(TimeSpan.FromDays(1))
+            );
+            RegisterIndicator(
+                equity,
+                _impliedVolatility,
+                new TradeBarConsolidator(TimeSpan.FromDays(1))
+            );
 
             // custom IV smoothing function: assume the lower IV is more "fair"
-            Func<decimal, decimal, decimal> smoothingFunc = (iv, mirrorIv) => Math.Min(iv, mirrorIv);
+            Func<decimal, decimal, decimal> smoothingFunc = (iv, mirrorIv) =>
+                Math.Min(iv, mirrorIv);
             // set the smoothing function
             _delta.ImpliedVolatility.SetSmoothingFunction(smoothingFunc);
             _gamma.ImpliedVolatility.SetSmoothingFunction(smoothingFunc);
@@ -75,16 +134,25 @@ namespace QuantConnect.Algorithm.CSharp
 
         public override void OnEndOfAlgorithm()
         {
-            if (_impliedVolatility == 0m || _delta == 0m || _gamma == 0m || _vega == 0m || _theta == 0m || _rho == 0m)
+            if (
+                _impliedVolatility == 0m
+                || _delta == 0m
+                || _gamma == 0m
+                || _vega == 0m
+                || _theta == 0m
+                || _rho == 0m
+            )
             {
                 throw new RegressionTestException("Expected IV/greeks calculated");
             }
-            Debug(@$"Implied Volatility: {_impliedVolatility},
+            Debug(
+                @$"Implied Volatility: {_impliedVolatility},
 Delta: {_delta},
 Gamma: {_gamma},
 Vega: {_vega},
 Theta: {_theta},
-Rho: {_rho}");
+Rho: {_rho}"
+            );
         }
 
         /// <summary>
@@ -115,41 +183,47 @@ Rho: {_rho}");
         /// <summary>
         /// This is used by the regression test system to indicate what the expected statistics are from running the algorithm
         /// </summary>
-        public Dictionary<string, string> ExpectedStatistics => new Dictionary<string, string>
-        {
-            {"Total Orders", "0"},
-            {"Average Win", "0%"},
-            {"Average Loss", "0%"},
-            {"Compounding Annual Return", "0%"},
-            {"Drawdown", "0%"},
-            {"Expectancy", "0"},
-            {"Start Equity", "100000"},
-            {"End Equity", "100000"},
-            {"Net Profit", "0%"},
-            {"Sharpe Ratio", "0"},
-            {"Sortino Ratio", "0"},
-            {"Probabilistic Sharpe Ratio", "0%"},
-            {"Loss Rate", "0%"},
-            {"Win Rate", "0%"},
-            {"Profit-Loss Ratio", "0"},
-            {"Alpha", "0"},
-            {"Beta", "0"},
-            {"Annual Standard Deviation", "0"},
-            {"Annual Variance", "0"},
-            {"Information Ratio", "0"},
-            {"Tracking Error", "0"},
-            {"Treynor Ratio", "0"},
-            {"Total Fees", "$0.00"},
-            {"Estimated Strategy Capacity", "$0"},
-            {"Lowest Capacity Asset", ""},
-            {"Portfolio Turnover", "0%"},
-            {"OrderListHash", "d41d8cd98f00b204e9800998ecf8427e"}
-        };
+        public Dictionary<string, string> ExpectedStatistics =>
+            new Dictionary<string, string>
+            {
+                { "Total Orders", "0" },
+                { "Average Win", "0%" },
+                { "Average Loss", "0%" },
+                { "Compounding Annual Return", "0%" },
+                { "Drawdown", "0%" },
+                { "Expectancy", "0" },
+                { "Start Equity", "100000" },
+                { "End Equity", "100000" },
+                { "Net Profit", "0%" },
+                { "Sharpe Ratio", "0" },
+                { "Sortino Ratio", "0" },
+                { "Probabilistic Sharpe Ratio", "0%" },
+                { "Loss Rate", "0%" },
+                { "Win Rate", "0%" },
+                { "Profit-Loss Ratio", "0" },
+                { "Alpha", "0" },
+                { "Beta", "0" },
+                { "Annual Standard Deviation", "0" },
+                { "Annual Variance", "0" },
+                { "Information Ratio", "0" },
+                { "Tracking Error", "0" },
+                { "Treynor Ratio", "0" },
+                { "Total Fees", "$0.00" },
+                { "Estimated Strategy Capacity", "$0" },
+                { "Lowest Capacity Asset", "" },
+                { "Portfolio Turnover", "0%" },
+                { "OrderListHash", "d41d8cd98f00b204e9800998ecf8427e" }
+            };
     }
 
     public class CustomImpliedVolatility : ImpliedVolatility
     {
-        public CustomImpliedVolatility(Symbol option, Symbol mirrorOption, IRiskFreeInterestRateModel riskFreeRateModel, IDividendYieldModel dividendYieldModel)
+        public CustomImpliedVolatility(
+            Symbol option,
+            Symbol mirrorOption,
+            IRiskFreeInterestRateModel riskFreeRateModel,
+            IDividendYieldModel dividendYieldModel
+        )
             : base(option, riskFreeRateModel, dividendYieldModel, mirrorOption, period: 2)
         {
             SetSmoothingFunction((iv, mirrorIV) => iv);
@@ -163,9 +237,23 @@ Rho: {_rho}");
                 Func<double, double> f = (vol) =>
                 {
                     var callBlackPrice = OptionGreekIndicatorsHelper.BlackTheoreticalPrice(
-                        Convert.ToDecimal(vol), UnderlyingPrice, Strike, timeTillExpiry, RiskFreeRate, DividendYield, OptionRight.Call);
+                        Convert.ToDecimal(vol),
+                        UnderlyingPrice,
+                        Strike,
+                        timeTillExpiry,
+                        RiskFreeRate,
+                        DividendYield,
+                        OptionRight.Call
+                    );
                     var putBlackPrice = OptionGreekIndicatorsHelper.BlackTheoreticalPrice(
-                        Convert.ToDecimal(vol), UnderlyingPrice, Strike, timeTillExpiry, RiskFreeRate, DividendYield, OptionRight.Put);
+                        Convert.ToDecimal(vol),
+                        UnderlyingPrice,
+                        Strike,
+                        timeTillExpiry,
+                        RiskFreeRate,
+                        DividendYield,
+                        OptionRight.Put
+                    );
                     return (double)(Price + OppositePrice - callBlackPrice - putBlackPrice);
                 };
                 return Convert.ToDecimal(Brent.FindRoot(f, 1e-7d, 2.0d, 1e-4d, 100));

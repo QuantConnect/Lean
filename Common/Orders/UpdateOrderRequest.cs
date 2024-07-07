@@ -90,7 +90,10 @@ namespace QuantConnect.Orders
         /// <returns>True if the update request is allowed for a closed order</returns>
         public bool IsAllowedForClosedOrder()
         {
-            return !Quantity.HasValue && !LimitPrice.HasValue && !StopPrice.HasValue && !TriggerPrice.HasValue & !TrailingAmount.HasValue;
+            return !Quantity.HasValue
+                && !LimitPrice.HasValue
+                && !StopPrice.HasValue
+                && !TriggerPrice.HasValue & !TrailingAmount.HasValue;
         }
     }
 }

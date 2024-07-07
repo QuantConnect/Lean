@@ -14,17 +14,17 @@
  *
 */
 
-using NUnit.Framework;
-using QuantConnect.Data;
-using QuantConnect.Data.Market;
-using QuantConnect.Lean.Engine.DataFeeds;
-using QuantConnect.Packets;
-using QuantConnect.Queues;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using NUnit.Framework;
+using QuantConnect.Data;
+using QuantConnect.Data.Market;
 using QuantConnect.Interfaces;
+using QuantConnect.Lean.Engine.DataFeeds;
 using QuantConnect.Lean.Engine.DataFeeds.Enumerators;
+using QuantConnect.Packets;
+using QuantConnect.Queues;
 
 namespace QuantConnect.Tests.Engine.DataFeeds
 {
@@ -42,11 +42,10 @@ namespace QuantConnect.Tests.Engine.DataFeeds
         public void SetJob()
         {
             //Array IDQH
-            var dataHandlers = Newtonsoft.Json.JsonConvert.SerializeObject(new[] { "FakeDataQueue" });
-            var jobWithArrayIDQH = new LiveNodePacket
-            {
-                DataQueueHandler = dataHandlers
-            };
+            var dataHandlers = Newtonsoft.Json.JsonConvert.SerializeObject(
+                new[] { "FakeDataQueue" }
+            );
+            var jobWithArrayIDQH = new LiveNodePacket { DataQueueHandler = dataHandlers };
             var compositeDataQueueHandler = new DataQueueHandlerManager(new AlgorithmSettings());
             compositeDataQueueHandler.SetJob(jobWithArrayIDQH);
             compositeDataQueueHandler.Dispose();
@@ -56,7 +55,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
         public void SubscribeReturnsNull()
         {
             var compositeDataQueueHandler = new DataQueueHandlerManager(new AlgorithmSettings());
-            var enumerator = compositeDataQueueHandler.Subscribe(GetConfig(), (_, _) => {});
+            var enumerator = compositeDataQueueHandler.Subscribe(GetConfig(), (_, _) => { });
             Assert.Null(enumerator);
             compositeDataQueueHandler.Dispose();
         }
@@ -64,14 +63,13 @@ namespace QuantConnect.Tests.Engine.DataFeeds
         [Test]
         public void SubscribeReturnsNotNull()
         {
-            var dataHandlers = Newtonsoft.Json.JsonConvert.SerializeObject(new[] { "FakeDataQueue" });
-            var job = new LiveNodePacket
-            {
-                DataQueueHandler = dataHandlers
-            };
+            var dataHandlers = Newtonsoft.Json.JsonConvert.SerializeObject(
+                new[] { "FakeDataQueue" }
+            );
+            var job = new LiveNodePacket { DataQueueHandler = dataHandlers };
             var compositeDataQueueHandler = new DataQueueHandlerManager(new AlgorithmSettings());
             compositeDataQueueHandler.SetJob(job);
-            var enumerator = compositeDataQueueHandler.Subscribe(GetConfig(), (_, _) => {});
+            var enumerator = compositeDataQueueHandler.Subscribe(GetConfig(), (_, _) => { });
             Assert.NotNull(enumerator);
             compositeDataQueueHandler.Dispose();
             enumerator.Dispose();
@@ -90,8 +88,12 @@ namespace QuantConnect.Tests.Engine.DataFeeds
         {
             var compositeDataQueueHandler = new DataQueueHandlerManager(new AlgorithmSettings());
             Assert.IsFalse(compositeDataQueueHandler.HasUniverseProvider);
-            Assert.Throws<NotSupportedException>(() => compositeDataQueueHandler.LookupSymbols(Symbols.ES_Future_Chain, false));
-            Assert.Throws<NotSupportedException>(() => compositeDataQueueHandler.CanPerformSelection());
+            Assert.Throws<NotSupportedException>(
+                () => compositeDataQueueHandler.LookupSymbols(Symbols.ES_Future_Chain, false)
+            );
+            Assert.Throws<NotSupportedException>(
+                () => compositeDataQueueHandler.CanPerformSelection()
+            );
             compositeDataQueueHandler.Dispose();
         }
 
@@ -99,12 +101,16 @@ namespace QuantConnect.Tests.Engine.DataFeeds
         public void DoubleSubscribe()
         {
             var compositeDataQueueHandler = new DataQueueHandlerManager(new AlgorithmSettings());
-            compositeDataQueueHandler.SetJob(new LiveNodePacket { DataQueueHandler = "[ \"TestDataHandler\" ]" });
+            compositeDataQueueHandler.SetJob(
+                new LiveNodePacket { DataQueueHandler = "[ \"TestDataHandler\" ]" }
+            );
 
             var dataConfig = GetConfig();
-            var enumerator = compositeDataQueueHandler.Subscribe(dataConfig, (_, _) => {});
+            var enumerator = compositeDataQueueHandler.Subscribe(dataConfig, (_, _) => { });
 
-            Assert.DoesNotThrow(() => compositeDataQueueHandler.Subscribe(dataConfig, (_, _) => { }));
+            Assert.DoesNotThrow(
+                () => compositeDataQueueHandler.Subscribe(dataConfig, (_, _) => { })
+            );
             compositeDataQueueHandler.Dispose();
         }
 
@@ -113,10 +119,12 @@ namespace QuantConnect.Tests.Engine.DataFeeds
         {
             TestDataHandler.UnsubscribeCounter = 0;
             var compositeDataQueueHandler = new DataQueueHandlerManager(new AlgorithmSettings());
-            compositeDataQueueHandler.SetJob(new LiveNodePacket { DataQueueHandler = "[ \"TestDataHandler\" ]" });
+            compositeDataQueueHandler.SetJob(
+                new LiveNodePacket { DataQueueHandler = "[ \"TestDataHandler\" ]" }
+            );
 
             var dataConfig = GetConfig();
-            var enumerator = compositeDataQueueHandler.Subscribe(dataConfig, (_, _) => {});
+            var enumerator = compositeDataQueueHandler.Subscribe(dataConfig, (_, _) => { });
 
             compositeDataQueueHandler.Unsubscribe(dataConfig);
             compositeDataQueueHandler.Unsubscribe(dataConfig);
@@ -134,14 +142,28 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             TestDataHandler.UnsubscribeCounter = 0;
             TestDataHandler.SubscribeCounter = 0;
             var compositeDataQueueHandler = new DataQueueHandlerManager(new AlgorithmSettings());
-            compositeDataQueueHandler.SetJob(new LiveNodePacket { DataQueueHandler = "[ \"TestDataHandler\" ]" });
+            compositeDataQueueHandler.SetJob(
+                new LiveNodePacket { DataQueueHandler = "[ \"TestDataHandler\" ]" }
+            );
 
-            var canonicalSymbol = Symbols.ES_Future_Chain.UpdateMappedSymbol(Symbols.Future_ESZ18_Dec2018.ID.ToString());
+            var canonicalSymbol = Symbols.ES_Future_Chain.UpdateMappedSymbol(
+                Symbols.Future_ESZ18_Dec2018.ID.ToString()
+            );
             var canonicalConfig = GetConfig(canonicalSymbol);
             var contractConfig = GetConfig(Symbols.Future_ESZ18_Dec2018);
 
-            var enumerator = new LiveSubscriptionEnumerator(canonicalConfig, compositeDataQueueHandler, (_, _) => {}, (_) => false);
-            var enumerator2 = new LiveSubscriptionEnumerator(contractConfig, compositeDataQueueHandler, (_, _) => {}, (_) => false);
+            var enumerator = new LiveSubscriptionEnumerator(
+                canonicalConfig,
+                compositeDataQueueHandler,
+                (_, _) => { },
+                (_) => false
+            );
+            var enumerator2 = new LiveSubscriptionEnumerator(
+                contractConfig,
+                compositeDataQueueHandler,
+                (_, _) => { },
+                (_) => false
+            );
 
             var firstUnsubscribe = canonicalUnsubscribeFirst ? canonicalConfig : contractConfig;
             var secondUnsubscribe = canonicalUnsubscribeFirst ? contractConfig : canonicalConfig;
@@ -162,9 +184,16 @@ namespace QuantConnect.Tests.Engine.DataFeeds
         [Test]
         public void HandleExplodingDataQueueHandler()
         {
-            using var compositeDataQueueHandler = new DataQueueHandlerManager(new AlgorithmSettings());
+            using var compositeDataQueueHandler = new DataQueueHandlerManager(
+                new AlgorithmSettings()
+            );
             // first exploding
-            compositeDataQueueHandler.SetJob(new LiveNodePacket { DataQueueHandler = "[ \"ExplodingDataHandler\", \"TestDataHandler\" ]" });
+            compositeDataQueueHandler.SetJob(
+                new LiveNodePacket
+                {
+                    DataQueueHandler = "[ \"ExplodingDataHandler\", \"TestDataHandler\" ]"
+                }
+            );
             IEnumerator<BaseData> enumerator = null;
             Assert.DoesNotThrow(() =>
             {
@@ -177,11 +206,18 @@ namespace QuantConnect.Tests.Engine.DataFeeds
         [Test]
         public void ExplodingDataQueueHandler()
         {
-            using var compositeDataQueueHandler = new DataQueueHandlerManager(new AlgorithmSettings());
-            compositeDataQueueHandler.SetJob(new LiveNodePacket { DataQueueHandler = "[ \"ExplodingDataHandler\" ]" });
+            using var compositeDataQueueHandler = new DataQueueHandlerManager(
+                new AlgorithmSettings()
+            );
+            compositeDataQueueHandler.SetJob(
+                new LiveNodePacket { DataQueueHandler = "[ \"ExplodingDataHandler\" ]" }
+            );
             Assert.Throws<Exception>(() =>
             {
-                using var enumerator = compositeDataQueueHandler.Subscribe(GetConfig(), (_, _) => { });
+                using var enumerator = compositeDataQueueHandler.Subscribe(
+                    GetConfig(),
+                    (_, _) => { }
+                );
             });
         }
 
@@ -189,13 +225,23 @@ namespace QuantConnect.Tests.Engine.DataFeeds
         public void HandlesCustomData()
         {
             var customSymbol = Symbol.CreateBase(typeof(AlgorithmSettings), Symbols.SPY);
-            var config = new SubscriptionDataConfig(typeof(TradeBar), customSymbol, Resolution.Minute, TimeZones.NewYork, TimeZones.NewYork,
-                false, false, false, false, TickType.Trade, false);
-            var dataHandlers = Newtonsoft.Json.JsonConvert.SerializeObject(new[] { "FakeDataQueue" });
-            var job = new LiveNodePacket
-            {
-                DataQueueHandler = dataHandlers
-            };
+            var config = new SubscriptionDataConfig(
+                typeof(TradeBar),
+                customSymbol,
+                Resolution.Minute,
+                TimeZones.NewYork,
+                TimeZones.NewYork,
+                false,
+                false,
+                false,
+                false,
+                TickType.Trade,
+                false
+            );
+            var dataHandlers = Newtonsoft.Json.JsonConvert.SerializeObject(
+                new[] { "FakeDataQueue" }
+            );
+            var job = new LiveNodePacket { DataQueueHandler = dataHandlers };
             var compositeDataQueueHandler = new DataQueueHandlerManager(new AlgorithmSettings());
             compositeDataQueueHandler.SetJob(job);
             var enumerator = compositeDataQueueHandler.Subscribe(config, (_, _) => { });
@@ -206,21 +252,33 @@ namespace QuantConnect.Tests.Engine.DataFeeds
 
         private static SubscriptionDataConfig GetConfig(Symbol symbol = null)
         {
-            return new SubscriptionDataConfig(typeof(TradeBar), symbol ?? Symbols.SPY, Resolution.Minute, TimeZones.NewYork, TimeZones.NewYork,
-                false, false, false, false, TickType.Trade, false);
+            return new SubscriptionDataConfig(
+                typeof(TradeBar),
+                symbol ?? Symbols.SPY,
+                Resolution.Minute,
+                TimeZones.NewYork,
+                TimeZones.NewYork,
+                false,
+                false,
+                false,
+                false,
+                TickType.Trade,
+                false
+            );
         }
-
 
         private class TestDataHandler : IDataQueueHandler
         {
             public static int SubscribeCounter { get; set; }
 
             public static int UnsubscribeCounter { get; set; }
-            public void Dispose()
-            {
-            }
 
-            public virtual IEnumerator<BaseData> Subscribe(SubscriptionDataConfig dataConfig, EventHandler newDataAvailableHandler)
+            public void Dispose() { }
+
+            public virtual IEnumerator<BaseData> Subscribe(
+                SubscriptionDataConfig dataConfig,
+                EventHandler newDataAvailableHandler
+            )
             {
                 SubscribeCounter++;
                 return Enumerable.Empty<BaseData>().GetEnumerator();
@@ -231,16 +289,17 @@ namespace QuantConnect.Tests.Engine.DataFeeds
                 UnsubscribeCounter++;
             }
 
-            public void SetJob(LiveNodePacket job)
-            {
-            }
+            public void SetJob(LiveNodePacket job) { }
 
             public bool IsConnected { get; }
         }
 
         private class ExplodingDataHandler : TestDataHandler
         {
-            public override IEnumerator<BaseData> Subscribe(SubscriptionDataConfig dataConfig, EventHandler newDataAvailableHandler)
+            public override IEnumerator<BaseData> Subscribe(
+                SubscriptionDataConfig dataConfig,
+                EventHandler newDataAvailableHandler
+            )
             {
                 throw new Exception("ExplodingDataHandler exception!");
             }

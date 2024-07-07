@@ -48,7 +48,8 @@ namespace QuantConnect.Algorithm.Framework.Selection
             int fastPeriod = 100,
             int slowPeriod = 300,
             int universeCount = 500,
-            UniverseSettings universeSettings = null)
+            UniverseSettings universeSettings = null
+        )
             : base(false, universeSettings)
         {
             _fastPeriod = fastPeriod;
@@ -63,19 +64,27 @@ namespace QuantConnect.Algorithm.Framework.Selection
         /// <param name="algorithm">The algorithm instance</param>
         /// <param name="coarse">The coarse fundamental data used to perform filtering</param>
         /// <returns>An enumerable of symbols passing the filter</returns>
-        public override IEnumerable<Symbol> SelectCoarse(QCAlgorithm algorithm, IEnumerable<CoarseFundamental> coarse)
+        public override IEnumerable<Symbol> SelectCoarse(
+            QCAlgorithm algorithm,
+            IEnumerable<CoarseFundamental> coarse
+        )
         {
-            return (from cf in coarse
-                        // grab th SelectionData instance for this symbol
-                        let avg = _averages.GetOrAdd(cf.Symbol, sym => new SelectionData(_fastPeriod, _slowPeriod))
-                        // Update returns true when the indicators are ready, so don't accept until they are
-                        where avg.Update(cf.EndTime, cf.AdjustedPrice)
-                        // only pick symbols who have their _fastPeriod-day ema over their _slowPeriod-day ema
-                        where avg.Fast > avg.Slow * (1 + _tolerance)
-                        // prefer symbols with a larger delta by percentage between the two averages
-                        orderby avg.ScaledDelta descending
-                        // we only need to return the symbol and return 'Count' symbols
-                        select cf.Symbol).Take(_universeCount);
+            return (
+                from cf in coarse
+                // grab th SelectionData instance for this symbol
+                let avg = _averages.GetOrAdd(
+                    cf.Symbol,
+                    sym => new SelectionData(_fastPeriod, _slowPeriod)
+                )
+                // Update returns true when the indicators are ready, so don't accept until they are
+                where avg.Update(cf.EndTime, cf.AdjustedPrice)
+                // only pick symbols who have their _fastPeriod-day ema over their _slowPeriod-day ema
+                where avg.Fast > avg.Slow * (1 + _tolerance)
+                // prefer symbols with a larger delta by percentage between the two averages
+                orderby avg.ScaledDelta descending
+                // we only need to return the symbol and return 'Count' symbols
+                select cf.Symbol
+            ).Take(_universeCount);
         }
 
         // class used to improve readability of the coarse selection function
@@ -94,7 +103,8 @@ namespace QuantConnect.Algorithm.Framework.Selection
             public decimal ScaledDelta => (Fast - Slow) / ((Fast + Slow) / 2m);
 
             // updates the EMAFast and EMASlow indicators, returning true when they're both ready
-            public bool Update(DateTime time, decimal value) => Fast.Update(time, value) & Slow.Update(time, value);
+            public bool Update(DateTime time, decimal value) =>
+                Fast.Update(time, value) & Slow.Update(time, value);
         }
     }
 }

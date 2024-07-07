@@ -14,11 +14,11 @@
  * limitations under the License.
 */
 
+using System;
+using System.Linq;
 using NUnit.Framework;
 using QuantConnect.Interfaces;
 using QuantConnect.Util;
-using System;
-using System.Linq;
 
 namespace QuantConnect.Tests.Brokerages
 {
@@ -30,7 +30,8 @@ namespace QuantConnect.Tests.Brokerages
         {
             var type = typeof(IBrokerageFactory);
 
-            var types = AppDomain.CurrentDomain.Load("QuantConnect.Brokerages")
+            var types = AppDomain
+                .CurrentDomain.Load("QuantConnect.Brokerages")
                 .GetTypes()
                 .Where(p => type.IsAssignableFrom(p) && p.IsClass && !p.IsAbstract)
                 .ToList();
@@ -40,8 +41,10 @@ namespace QuantConnect.Tests.Brokerages
             types.ForEach(t =>
             {
                 Assert.NotNull(t.GetConstructor(Type.EmptyTypes));
-                Assert.NotNull(Composer.Instance.GetExportedValueByTypeName<IBrokerageFactory>(t.FullName));
-            });            
+                Assert.NotNull(
+                    Composer.Instance.GetExportedValueByTypeName<IBrokerageFactory>(t.FullName)
+                );
+            });
         }
     }
 }

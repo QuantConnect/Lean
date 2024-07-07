@@ -31,15 +31,13 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         /// <summary>
         /// Public flag indicator that the thread is still busy.
         /// </summary>
-        bool IsActive
-        {
-            get;
-        }
+        bool IsActive { get; }
 
         /// <summary>
         /// Initializes the data feed for the specified job and algorithm
         /// </summary>
-        void Initialize(IAlgorithm algorithm,
+        void Initialize(
+            IAlgorithm algorithm,
             AlgorithmNodePacket job,
             IResultHandler resultHandler,
             IMapFileProvider mapFileProvider,
@@ -47,7 +45,8 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             IDataProvider dataProvider,
             IDataFeedSubscriptionManager subscriptionManager,
             IDataFeedTimeProvider dataFeedTimeProvider,
-            IDataChannelProvider dataChannelProvider);
+            IDataChannelProvider dataChannelProvider
+        );
 
         /// <summary>
         /// Creates a new subscription to provide data for the specified security.

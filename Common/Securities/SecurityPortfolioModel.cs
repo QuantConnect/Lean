@@ -14,8 +14,8 @@
 */
 
 using System;
-using QuantConnect.Orders;
 using QuantConnect.Logging;
+using QuantConnect.Orders;
 using QuantConnect.Orders.Fees;
 
 namespace QuantConnect.Securities
@@ -33,7 +33,11 @@ namespace QuantConnect.Securities
         /// <param name="portfolio">The algorithm's portfolio</param>
         /// <param name="security">The fill's security</param>
         /// <param name="fill">The order event fill object to be applied</param>
-        public virtual void ProcessFill(SecurityPortfolioManager portfolio, Security security, OrderEvent fill)
+        public virtual void ProcessFill(
+            SecurityPortfolioManager portfolio,
+            Security security,
+            OrderEvent fill
+        )
         {
             var quoteCash = security.QuoteCurrency;
 
@@ -49,18 +53,24 @@ namespace QuantConnect.Securities
             try
             {
                 // apply sales value to holdings in the account currency
-                var saleValue = security.Holdings.GetQuantityValue(fill.AbsoluteFillQuantity, fill.FillPrice).InAccountCurrency;
+                var saleValue = security
+                    .Holdings.GetQuantityValue(fill.AbsoluteFillQuantity, fill.FillPrice)
+                    .InAccountCurrency;
                 security.Holdings.AddNewSale(saleValue);
 
                 // subtract transaction fees from the portfolio
                 var feeInAccountCurrency = 0m;
-                if (fill.OrderFee != OrderFee.Zero
+                if (
+                    fill.OrderFee != OrderFee.Zero
                     // this is for user friendliness because some
                     // Security types default to use 0 USD ConstantFeeModel
-                    && fill.OrderFee.Value.Amount != 0)
+                    && fill.OrderFee.Value.Amount != 0
+                )
                 {
                     var feeThisOrder = fill.OrderFee.Value;
-                    feeInAccountCurrency = portfolio.CashBook.ConvertToAccountCurrency(feeThisOrder).Amount;
+                    feeInAccountCurrency = portfolio
+                        .CashBook.ConvertToAccountCurrency(feeThisOrder)
+                        .Amount;
                     security.Holdings.AddNewFee(feeInAccountCurrency);
 
                     fill.OrderFee.ApplyToPortfolio(portfolio, fill);
@@ -69,20 +79,46 @@ namespace QuantConnect.Securities
                 // apply the funds using the current settlement model
                 // we dont adjust funds for futures and CFDs: it is zero upfront payment derivative (margin applies though)
                 // We do however apply funds for futures options, pay/gained premium, since they affect our cash balance the moment they are purchased/sold.
-                if (security.Type != SecurityType.Future && security.Type != SecurityType.Cfd && security.Type != SecurityType.CryptoFuture)
+                if (
+                    security.Type != SecurityType.Future
+                    && security.Type != SecurityType.Cfd
+                    && security.Type != SecurityType.CryptoFuture
+                )
                 {
-                    security.SettlementModel.ApplyFunds(new ApplyFundsSettlementModelParameters(portfolio, security, fill.UtcTime, new CashAmount(-fill.FillQuantity * fill.FillPrice * security.SymbolProperties.ContractMultiplier, quoteCash.Symbol), fill));
+                    security.SettlementModel.ApplyFunds(
+                        new ApplyFundsSettlementModelParameters(
+                            portfolio,
+                            security,
+                            fill.UtcTime,
+                            new CashAmount(
+                                -fill.FillQuantity
+                                    * fill.FillPrice
+                                    * security.SymbolProperties.ContractMultiplier,
+                                quoteCash.Symbol
+                            ),
+                            fill
+                        )
+                    );
                 }
                 if (security.Type == SecurityType.Forex || security.Type == SecurityType.Crypto)
                 {
                     // model forex fills as currency swaps
-                    var forex = (IBaseCurrencySymbol) security;
-                    security.SettlementModel.ApplyFunds(new ApplyFundsSettlementModelParameters(portfolio, security, fill.UtcTime, new CashAmount(fill.FillQuantity, forex.BaseCurrency.Symbol), fill));
+                    var forex = (IBaseCurrencySymbol)security;
+                    security.SettlementModel.ApplyFunds(
+                        new ApplyFundsSettlementModelParameters(
+                            portfolio,
+                            security,
+                            fill.UtcTime,
+                            new CashAmount(fill.FillQuantity, forex.BaseCurrency.Symbol),
+                            fill
+                        )
+                    );
                 }
 
                 // did we close or open a position further?
-                closedPosition = isLong && fill.Direction == OrderDirection.Sell
-                             || isShort && fill.Direction == OrderDirection.Buy;
+                closedPosition =
+                    isLong && fill.Direction == OrderDirection.Sell
+                    || isShort && fill.Direction == OrderDirection.Buy;
 
                 // calculate the last trade profit
                 if (closedPosition)
@@ -90,28 +126,53 @@ namespace QuantConnect.Securities
                     // profit = (closed sale value - cost)*conversion to account currency
                     // closed sale value = quantity closed * fill price       BUYs are deemed negative cash flow
                     // cost = quantity closed * average holdings price        SELLS are deemed positive cash flow
-                    var absoluteQuantityClosed = Math.Min(fill.AbsoluteFillQuantity, absoluteHoldingsQuantity);
+                    var absoluteQuantityClosed = Math.Min(
+                        fill.AbsoluteFillQuantity,
+                        absoluteHoldingsQuantity
+                    );
                     var quantityClosed = Math.Sign(-fill.FillQuantity) * absoluteQuantityClosed;
-                    var closedCost = security.Holdings.GetQuantityValue(quantityClosed, averageHoldingsPrice);
-                    var closedSaleValueInQuoteCurrency = security.Holdings.GetQuantityValue(quantityClosed, fill.FillPrice);
+                    var closedCost = security.Holdings.GetQuantityValue(
+                        quantityClosed,
+                        averageHoldingsPrice
+                    );
+                    var closedSaleValueInQuoteCurrency = security.Holdings.GetQuantityValue(
+                        quantityClosed,
+                        fill.FillPrice
+                    );
 
                     var lastTradeProfit = closedSaleValueInQuoteCurrency.Amount - closedCost.Amount;
-                    var lastTradeProfitInAccountCurrency = closedSaleValueInQuoteCurrency.InAccountCurrency - closedCost.InAccountCurrency;
+                    var lastTradeProfitInAccountCurrency =
+                        closedSaleValueInQuoteCurrency.InAccountCurrency
+                        - closedCost.InAccountCurrency;
 
                     // Reflect account cash adjustment for futures/CFD position
-                    if (security.Type == SecurityType.Future || security.Type == SecurityType.Cfd || security.Type == SecurityType.CryptoFuture)
+                    if (
+                        security.Type == SecurityType.Future
+                        || security.Type == SecurityType.Cfd
+                        || security.Type == SecurityType.CryptoFuture
+                    )
                     {
-                        security.SettlementModel.ApplyFunds(new ApplyFundsSettlementModelParameters(portfolio, security, fill.UtcTime, new CashAmount(lastTradeProfit, closedCost.Cash.Symbol), fill));
+                        security.SettlementModel.ApplyFunds(
+                            new ApplyFundsSettlementModelParameters(
+                                portfolio,
+                                security,
+                                fill.UtcTime,
+                                new CashAmount(lastTradeProfit, closedCost.Cash.Symbol),
+                                fill
+                            )
+                        );
                     }
 
                     //Update Vehicle Profit Tracking:
                     security.Holdings.AddNewProfit(lastTradeProfitInAccountCurrency);
                     security.Holdings.SetLastTradeProfit(lastTradeProfitInAccountCurrency);
-                    var transactionProfitLoss = lastTradeProfitInAccountCurrency - 2 * feeInAccountCurrency;
+                    var transactionProfitLoss =
+                        lastTradeProfitInAccountCurrency - 2 * feeInAccountCurrency;
                     portfolio.AddTransactionRecord(
                         security.LocalTime.ConvertToUtc(security.Exchange.TimeZone),
                         transactionProfitLoss,
-                        fill.IsWin(security, transactionProfitLoss));
+                        fill.IsWin(security, transactionProfitLoss)
+                    );
                 }
 
                 //UPDATE HOLDINGS QUANTITY, AVG PRICE:
@@ -129,7 +190,11 @@ namespace QuantConnect.Securities
                     {
                         case OrderDirection.Buy:
                             //Update the Holding Average Price: Total Value / Total Quantity:
-                            averageHoldingsPrice = ((averageHoldingsPrice*quantityHoldings) + (fill.FillQuantity*fill.FillPrice))/(quantityHoldings + fill.FillQuantity);
+                            averageHoldingsPrice =
+                                (
+                                    (averageHoldingsPrice * quantityHoldings)
+                                    + (fill.FillQuantity * fill.FillPrice)
+                                ) / (quantityHoldings + fill.FillQuantity);
                             //Add the new quantity:
                             quantityHoldings += fill.FillQuantity;
                             break;
@@ -171,7 +236,11 @@ namespace QuantConnect.Securities
                             //We are increasing a Short position:
                             //E.g.  -100 @ $5, adding -100 @ $10: Avg: $7.5
                             //      dAvg = (-500 + -1000) / -200 = 7.5
-                            averageHoldingsPrice = ((averageHoldingsPrice*quantityHoldings) + (fill.FillQuantity*fill.FillPrice))/(quantityHoldings + fill.FillQuantity);
+                            averageHoldingsPrice =
+                                (
+                                    (averageHoldingsPrice * quantityHoldings)
+                                    + (fill.FillQuantity * fill.FillPrice)
+                                ) / (quantityHoldings + fill.FillQuantity);
                             quantityHoldings += fill.FillQuantity;
                             break;
                     }

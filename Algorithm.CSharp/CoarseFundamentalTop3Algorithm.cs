@@ -13,13 +13,13 @@
  * limitations under the License.
 */
 
-using QuantConnect.Interfaces;
 using System.Collections.Generic;
 using System.Linq;
+using QuantConnect.Data;
 using QuantConnect.Data.Market;
 using QuantConnect.Data.UniverseSelection;
+using QuantConnect.Interfaces;
 using QuantConnect.Orders;
-using QuantConnect.Data;
 
 namespace QuantConnect.Algorithm.CSharp
 {
@@ -52,7 +52,9 @@ namespace QuantConnect.Algorithm.CSharp
         }
 
         // sort the data by daily dollar volume and take the top 'NumberOfSymbols'
-        public static IEnumerable<Symbol> CoarseSelectionFunction(IEnumerable<CoarseFundamental> coarse)
+        public static IEnumerable<Symbol> CoarseSelectionFunction(
+            IEnumerable<CoarseFundamental> coarse
+        )
         {
             // sort descending by daily dollar volume
             var sortedByDollarVolume = coarse.OrderByDescending(x => x.DollarVolume);
@@ -73,7 +75,8 @@ namespace QuantConnect.Algorithm.CSharp
             Log($"OnData({UtcTime:o}): Keys: {string.Join(", ", slice.Keys.OrderBy(x => x))}");
 
             // if we have no changes, do nothing
-            if (_changes == SecurityChanges.None) return;
+            if (_changes == SecurityChanges.None)
+                return;
 
             // liquidate removed securities
             foreach (var security in _changes.RemovedSecurities)
@@ -133,35 +136,36 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// This is used by the regression test system to indicate what the expected statistics are from running the algorithm
         /// </summary>
-        public Dictionary<string, string> ExpectedStatistics => new Dictionary<string, string>
-        {
-            {"Total Orders", "12"},
-            {"Average Win", "0.55%"},
-            {"Average Loss", "-0.26%"},
-            {"Compounding Annual Return", "16.717%"},
-            {"Drawdown", "1.700%"},
-            {"Expectancy", "0.850"},
-            {"Start Equity", "50000"},
-            {"End Equity", "50318.65"},
-            {"Net Profit", "0.637%"},
-            {"Sharpe Ratio", "1.024"},
-            {"Sortino Ratio", "2.169"},
-            {"Probabilistic Sharpe Ratio", "50.223%"},
-            {"Loss Rate", "40%"},
-            {"Win Rate", "60%"},
-            {"Profit-Loss Ratio", "2.08"},
-            {"Alpha", "0.196"},
-            {"Beta", "0.741"},
-            {"Annual Standard Deviation", "0.118"},
-            {"Annual Variance", "0.014"},
-            {"Information Ratio", "2.294"},
-            {"Tracking Error", "0.097"},
-            {"Treynor Ratio", "0.163"},
-            {"Total Fees", "$27.94"},
-            {"Estimated Strategy Capacity", "$200000000.00"},
-            {"Lowest Capacity Asset", "AAPL R735QTJ8XC9X"},
-            {"Portfolio Turnover", "26.69%"},
-            {"OrderListHash", "82ca991c660ecefbcbdf0b4cc90ddd67"}
-        };
+        public Dictionary<string, string> ExpectedStatistics =>
+            new Dictionary<string, string>
+            {
+                { "Total Orders", "12" },
+                { "Average Win", "0.55%" },
+                { "Average Loss", "-0.26%" },
+                { "Compounding Annual Return", "16.717%" },
+                { "Drawdown", "1.700%" },
+                { "Expectancy", "0.850" },
+                { "Start Equity", "50000" },
+                { "End Equity", "50318.65" },
+                { "Net Profit", "0.637%" },
+                { "Sharpe Ratio", "1.024" },
+                { "Sortino Ratio", "2.169" },
+                { "Probabilistic Sharpe Ratio", "50.223%" },
+                { "Loss Rate", "40%" },
+                { "Win Rate", "60%" },
+                { "Profit-Loss Ratio", "2.08" },
+                { "Alpha", "0.196" },
+                { "Beta", "0.741" },
+                { "Annual Standard Deviation", "0.118" },
+                { "Annual Variance", "0.014" },
+                { "Information Ratio", "2.294" },
+                { "Tracking Error", "0.097" },
+                { "Treynor Ratio", "0.163" },
+                { "Total Fees", "$27.94" },
+                { "Estimated Strategy Capacity", "$200000000.00" },
+                { "Lowest Capacity Asset", "AAPL R735QTJ8XC9X" },
+                { "Portfolio Turnover", "26.69%" },
+                { "OrderListHash", "82ca991c660ecefbcbdf0b4cc90ddd67" }
+            };
     }
 }

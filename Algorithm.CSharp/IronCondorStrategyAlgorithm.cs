@@ -17,7 +17,6 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-
 using QuantConnect.Data.Market;
 using QuantConnect.Securities.Option;
 using QuantConnect.Securities.Positions;
@@ -40,19 +39,31 @@ namespace QuantConnect.Algorithm.CSharp
             {
                 var expiry = group.Key;
                 var contracts = group.OrderBy(x => x.Strike).ToList();
-                if (contracts.Count < 4) continue;
+                if (contracts.Count < 4)
+                    continue;
 
                 var putContracts = contracts.Where(x => x.Right == OptionRight.Put).ToList();
-                if (putContracts.Count < 2) continue;
+                if (putContracts.Count < 2)
+                    continue;
                 var longPutStrike = putContracts[0].Strike;
                 var shortPutStrike = putContracts[1].Strike;
 
-                var callContracts = contracts.Where(x => x.Right == OptionRight.Call && x.Strike > shortPutStrike).ToList();
-                if (callContracts.Count < 2) continue;
+                var callContracts = contracts
+                    .Where(x => x.Right == OptionRight.Call && x.Strike > shortPutStrike)
+                    .ToList();
+                if (callContracts.Count < 2)
+                    continue;
                 var shortCallStrike = callContracts[0].Strike;
                 var longCallStrike = callContracts[1].Strike;
 
-                _ironCondor = OptionStrategies.IronCondor(_optionSymbol, longPutStrike, shortPutStrike, shortCallStrike, longCallStrike, expiry);
+                _ironCondor = OptionStrategies.IronCondor(
+                    _optionSymbol,
+                    longPutStrike,
+                    shortPutStrike,
+                    shortCallStrike,
+                    longCallStrike,
+                    expiry
+                );
                 Buy(_ironCondor, 2);
                 break;
             }
@@ -62,41 +73,62 @@ namespace QuantConnect.Algorithm.CSharp
         {
             if (positionGroup.Positions.Count() != 4)
             {
-                throw new RegressionTestException($"Expected position group to have 4 positions. Actual: {positionGroup.Positions.Count()}");
+                throw new RegressionTestException(
+                    $"Expected position group to have 4 positions. Actual: {positionGroup.Positions.Count()}"
+                );
             }
 
-            var orderedStrikes = _ironCondor.OptionLegs.Select(leg => leg.Strike).OrderBy(x => x).ToArray();
+            var orderedStrikes = _ironCondor
+                .OptionLegs.Select(leg => leg.Strike)
+                .OrderBy(x => x)
+                .ToArray();
 
             var longPutStrike = orderedStrikes[0];
-            var longPutPosition = positionGroup.Positions
-                .Single(x => x.Symbol.ID.OptionRight == OptionRight.Put && x.Symbol.ID.StrikePrice == longPutStrike);
+            var longPutPosition = positionGroup.Positions.Single(x =>
+                x.Symbol.ID.OptionRight == OptionRight.Put
+                && x.Symbol.ID.StrikePrice == longPutStrike
+            );
             if (longPutPosition.Quantity != 2)
             {
-                throw new RegressionTestException($"Expected long put position quantity to be 2. Actual: {longPutPosition.Quantity}");
+                throw new RegressionTestException(
+                    $"Expected long put position quantity to be 2. Actual: {longPutPosition.Quantity}"
+                );
             }
 
             var shortPutStrike = orderedStrikes[1];
-            var shortPutPosition = positionGroup.Positions
-                .Single(x => x.Symbol.ID.OptionRight == OptionRight.Put && x.Symbol.ID.StrikePrice == shortPutStrike);
+            var shortPutPosition = positionGroup.Positions.Single(x =>
+                x.Symbol.ID.OptionRight == OptionRight.Put
+                && x.Symbol.ID.StrikePrice == shortPutStrike
+            );
             if (shortPutPosition.Quantity != -2)
             {
-                throw new RegressionTestException($"Expected short put position quantity to be -2. Actual: {shortPutPosition.Quantity}");
+                throw new RegressionTestException(
+                    $"Expected short put position quantity to be -2. Actual: {shortPutPosition.Quantity}"
+                );
             }
 
             var shortCallStrike = orderedStrikes[2];
-            var shortCallPosition = positionGroup.Positions
-                .Single(x => x.Symbol.ID.OptionRight == OptionRight.Call && x.Symbol.ID.StrikePrice == shortCallStrike);
+            var shortCallPosition = positionGroup.Positions.Single(x =>
+                x.Symbol.ID.OptionRight == OptionRight.Call
+                && x.Symbol.ID.StrikePrice == shortCallStrike
+            );
             if (shortCallPosition.Quantity != -2)
             {
-                throw new RegressionTestException($"Expected short call position quantity to be -2. Actual: {shortCallPosition.Quantity}");
+                throw new RegressionTestException(
+                    $"Expected short call position quantity to be -2. Actual: {shortCallPosition.Quantity}"
+                );
             }
 
             var longCallStrike = orderedStrikes[3];
-            var longCallPosition = positionGroup.Positions
-                .Single(x => x.Symbol.ID.OptionRight == OptionRight.Call && x.Symbol.ID.StrikePrice == longCallStrike);
+            var longCallPosition = positionGroup.Positions.Single(x =>
+                x.Symbol.ID.OptionRight == OptionRight.Call
+                && x.Symbol.ID.StrikePrice == longCallStrike
+            );
             if (longCallPosition.Quantity != 2)
             {
-                throw new RegressionTestException($"Expected long call position quantity to be 2. Actual: {longCallPosition.Quantity}");
+                throw new RegressionTestException(
+                    $"Expected long call position quantity to be 2. Actual: {longCallPosition.Quantity}"
+                );
             }
         }
 
@@ -114,7 +146,8 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// This is used by the regression test system to indicate which languages this algorithm is written in.
         /// </summary>
-        public override List<Language> Languages { get; } = new() { Language.CSharp, Language.Python };
+        public override List<Language> Languages { get; } =
+            new() { Language.CSharp, Language.Python };
 
         /// <summary>
         /// Data Points count of all timeslices of algorithm
@@ -134,35 +167,36 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// This is used by the regression test system to indicate what the expected statistics are from running the algorithm
         /// </summary>
-        public override Dictionary<string, string> ExpectedStatistics => new Dictionary<string, string>
-        {
-            {"Total Orders", "8"},
-            {"Average Win", "0%"},
-            {"Average Loss", "0%"},
-            {"Compounding Annual Return", "0%"},
-            {"Drawdown", "0%"},
-            {"Expectancy", "0"},
-            {"Start Equity", "1000000"},
-            {"End Equity", "999149.6"},
-            {"Net Profit", "0%"},
-            {"Sharpe Ratio", "0"},
-            {"Sortino Ratio", "0"},
-            {"Probabilistic Sharpe Ratio", "0%"},
-            {"Loss Rate", "0%"},
-            {"Win Rate", "0%"},
-            {"Profit-Loss Ratio", "0"},
-            {"Alpha", "0"},
-            {"Beta", "0"},
-            {"Annual Standard Deviation", "0"},
-            {"Annual Variance", "0"},
-            {"Information Ratio", "0"},
-            {"Tracking Error", "0"},
-            {"Treynor Ratio", "0"},
-            {"Total Fees", "$10.40"},
-            {"Estimated Strategy Capacity", "$4000.00"},
-            {"Lowest Capacity Asset", "GOOCV 306CZL2DIL4G6|GOOCV VP83T1ZUHROL"},
-            {"Portfolio Turnover", "2.00%"},
-            {"OrderListHash", "293b5b1c428514fc9d7bb069be75e5e9"}
-        };
+        public override Dictionary<string, string> ExpectedStatistics =>
+            new Dictionary<string, string>
+            {
+                { "Total Orders", "8" },
+                { "Average Win", "0%" },
+                { "Average Loss", "0%" },
+                { "Compounding Annual Return", "0%" },
+                { "Drawdown", "0%" },
+                { "Expectancy", "0" },
+                { "Start Equity", "1000000" },
+                { "End Equity", "999149.6" },
+                { "Net Profit", "0%" },
+                { "Sharpe Ratio", "0" },
+                { "Sortino Ratio", "0" },
+                { "Probabilistic Sharpe Ratio", "0%" },
+                { "Loss Rate", "0%" },
+                { "Win Rate", "0%" },
+                { "Profit-Loss Ratio", "0" },
+                { "Alpha", "0" },
+                { "Beta", "0" },
+                { "Annual Standard Deviation", "0" },
+                { "Annual Variance", "0" },
+                { "Information Ratio", "0" },
+                { "Tracking Error", "0" },
+                { "Treynor Ratio", "0" },
+                { "Total Fees", "$10.40" },
+                { "Estimated Strategy Capacity", "$4000.00" },
+                { "Lowest Capacity Asset", "GOOCV 306CZL2DIL4G6|GOOCV VP83T1ZUHROL" },
+                { "Portfolio Turnover", "2.00%" },
+                { "OrderListHash", "293b5b1c428514fc9d7bb069be75e5e9" }
+            };
     }
 }

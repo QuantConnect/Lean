@@ -61,7 +61,11 @@ namespace QuantConnect.Securities.Option.StrategyMatcher
         /// <param name="name">The definition's name</param>
         /// <param name="underlyingLots">The required number of underlying lots</param>
         /// <param name="legs">Definitions for each option leg</param>
-        public OptionStrategyDefinition(string name, int underlyingLots, IEnumerable<OptionStrategyLegDefinition> legs)
+        public OptionStrategyDefinition(
+            string name,
+            int underlyingLots,
+            IEnumerable<OptionStrategyLegDefinition> legs
+        )
         {
             Name = name;
             Legs = legs.ToList();
@@ -79,7 +83,7 @@ namespace QuantConnect.Securities.Option.StrategyMatcher
                 underlying = underlying.Underlying;
             }
 
-            var strategy = new OptionStrategy {Name = Name, Underlying = underlying};
+            var strategy = new OptionStrategy { Name = Name, Underlying = underlying };
             for (int i = 0; i < Math.Min(Legs.Count, legs.Count); i++)
             {
                 var leg = Legs[i].CreateLegData(legs[i]);
@@ -94,7 +98,11 @@ namespace QuantConnect.Securities.Option.StrategyMatcher
         /// taking the first entry matched. If not match is found, then false is returned and <paramref name="match"/>
         /// will be null.
         /// </summary>
-        public bool TryMatchOnce(OptionStrategyMatcherOptions options, OptionPositionCollection positions, out OptionStrategyDefinitionMatch match)
+        public bool TryMatchOnce(
+            OptionStrategyMatcherOptions options,
+            OptionPositionCollection positions,
+            out OptionStrategyDefinitionMatch match
+        )
         {
             match = Match(options, positions).FirstOrDefault();
             return match != null;
@@ -118,7 +126,7 @@ namespace QuantConnect.Securities.Option.StrategyMatcher
         public IEnumerable<OptionStrategyDefinitionMatch> Match(
             OptionStrategyMatcherOptions options,
             OptionPositionCollection positions
-            )
+        )
         {
             // TODO : Pass OptionStrategyMatcherOptions in and respect applicable options
             if (positions.Count < LegCount)
@@ -133,8 +141,10 @@ namespace QuantConnect.Securities.Option.StrategyMatcher
             if (underlyingLotsSign != 0)
             {
                 var underlyingPositionSign = Math.Sign(positions.UnderlyingQuantity);
-                if (underlyingLotsSign != underlyingPositionSign ||
-                    Math.Abs(positions.UnderlyingQuantity) < Math.Abs(UnderlyingLots))
+                if (
+                    underlyingLotsSign != underlyingPositionSign
+                    || Math.Abs(positions.UnderlyingQuantity) < Math.Abs(UnderlyingLots)
+                )
                 {
                     return Enumerable.Empty<OptionStrategyDefinitionMatch>();
                 }
@@ -145,12 +155,14 @@ namespace QuantConnect.Securities.Option.StrategyMatcher
 
             // TODO : Consider add OptionStrategyLegDefinition for underlying for consistency purposes.
             //        Might want to enforce that it's always the first leg definition as well for easier slicing.
-            return Match(options,
-                ImmutableList<OptionStrategyLegDefinitionMatch>.Empty,
-                ImmutableList<OptionPosition>.Empty,
-                positions,
-                multiplier
-            ).Distinct();
+            return Match(
+                    options,
+                    ImmutableList<OptionStrategyLegDefinitionMatch>.Empty,
+                    ImmutableList<OptionPosition>.Empty,
+                    positions,
+                    multiplier
+                )
+                .Distinct();
         }
 
         private IEnumerable<OptionStrategyDefinitionMatch> Match(
@@ -159,7 +171,7 @@ namespace QuantConnect.Securities.Option.StrategyMatcher
             ImmutableList<OptionPosition> legPositions,
             OptionPositionCollection positions,
             int multiplier
-            )
+        )
         {
             var nextLegIndex = legPositions.Count;
             if (nextLegIndex == Legs.Count)
@@ -174,17 +186,24 @@ namespace QuantConnect.Securities.Option.StrategyMatcher
                 // grab the next leg definition and perform the match, restricting total to configured maximum per leg
                 var nextLeg = Legs[nextLegIndex];
                 var maxLegMatch = options.GetMaximumLegMatches(nextLegIndex);
-                foreach (var legMatch in nextLeg.Match(options, legPositions, positions).Take(maxLegMatch))
+                foreach (
+                    var legMatch in nextLeg
+                        .Match(options, legPositions, positions)
+                        .Take(maxLegMatch)
+                )
                 {
                     // add match to the match we're constructing and deduct matched position from positions collection
                     // we track the min multiplier in line so when we're done, we have the total number of matches for
                     // the matched set of positions in this 'thread' (OptionStrategy.Quantity)
-                    foreach (var definitionMatch in Match(options,
-                        legMatches.Add(legMatch),
-                        legPositions.Add(legMatch.Position),
-                        positions - legMatch.Position,
-                        Math.Min(multiplier, legMatch.Multiplier)
-                    ))
+                    foreach (
+                        var definitionMatch in Match(
+                            options,
+                            legMatches.Add(legMatch),
+                            legPositions.Add(legMatch.Position),
+                            positions - legMatch.Position,
+                            Math.Min(multiplier, legMatch.Multiplier)
+                        )
+                    )
                     {
                         yield return definitionMatch;
                     }
@@ -209,7 +228,11 @@ namespace QuantConnect.Securities.Option.StrategyMatcher
         /// <summary>
         /// Factory function for creating definitions
         /// </summary>
-        public static OptionStrategyDefinition Create(string name, int underlyingLots, params OptionStrategyLegDefinition[] legs)
+        public static OptionStrategyDefinition Create(
+            string name,
+            int underlyingLots,
+            params OptionStrategyLegDefinition[] legs
+        )
         {
             return new OptionStrategyDefinition(name, underlyingLots, legs);
         }
@@ -217,7 +240,10 @@ namespace QuantConnect.Securities.Option.StrategyMatcher
         /// <summary>
         /// Factory function for creating definitions
         /// </summary>
-        public static OptionStrategyDefinition Create(string name, params OptionStrategyLegDefinition[] legs)
+        public static OptionStrategyDefinition Create(
+            string name,
+            params OptionStrategyLegDefinition[] legs
+        )
         {
             return new OptionStrategyDefinition(name, 0, legs);
         }
@@ -225,19 +251,25 @@ namespace QuantConnect.Securities.Option.StrategyMatcher
         /// <summary>
         /// Factory function for creating definitions
         /// </summary>
-        public static OptionStrategyDefinition Create(string name, params Func<Builder, Builder>[] predicates)
+        public static OptionStrategyDefinition Create(
+            string name,
+            params Func<Builder, Builder>[] predicates
+        )
         {
-            return predicates.Aggregate(new Builder(name),
-                (builder, predicate) => predicate(builder)
-            ).Build();
+            return predicates
+                .Aggregate(new Builder(name), (builder, predicate) => predicate(builder))
+                .Build();
         }
 
         /// <summary>
         /// Factory function for creating a call leg definition
         /// </summary>
-        public static OptionStrategyLegDefinition CallLeg(int quantity,
-            params Expression<Func<IReadOnlyList<OptionPosition>, OptionPosition, bool>>[] predicates
-            )
+        public static OptionStrategyLegDefinition CallLeg(
+            int quantity,
+            params Expression<
+                Func<IReadOnlyList<OptionPosition>, OptionPosition, bool>
+            >[] predicates
+        )
         {
             return OptionStrategyLegDefinition.Create(OptionRight.Call, quantity, predicates);
         }
@@ -245,9 +277,12 @@ namespace QuantConnect.Securities.Option.StrategyMatcher
         /// <summary>
         /// Factory function for creating a put leg definition
         /// </summary>
-        public static OptionStrategyLegDefinition PutLeg(int quantity,
-            params Expression<Func<IReadOnlyList<OptionPosition>, OptionPosition, bool>>[] predicates
-            )
+        public static OptionStrategyLegDefinition PutLeg(
+            int quantity,
+            params Expression<
+                Func<IReadOnlyList<OptionPosition>, OptionPosition, bool>
+            >[] predicates
+        )
         {
             return OptionStrategyLegDefinition.Create(OptionRight.Put, quantity, predicates);
         }
@@ -288,22 +323,32 @@ namespace QuantConnect.Securities.Option.StrategyMatcher
             /// <summary>
             /// Adds a call leg
             /// </summary>
-            public Builder WithCall(int quantity,
-                params Expression<Func<IReadOnlyList<OptionPosition>, OptionPosition, bool>>[] predicates
-                )
+            public Builder WithCall(
+                int quantity,
+                params Expression<
+                    Func<IReadOnlyList<OptionPosition>, OptionPosition, bool>
+                >[] predicates
+            )
             {
-                _legs.Add(OptionStrategyLegDefinition.Create(OptionRight.Call, quantity, predicates));
+                _legs.Add(
+                    OptionStrategyLegDefinition.Create(OptionRight.Call, quantity, predicates)
+                );
                 return this;
             }
 
             /// <summary>
             /// Adds a put leg
             /// </summary>
-            public Builder WithPut(int quantity,
-                params Expression<Func<IReadOnlyList<OptionPosition>, OptionPosition, bool>>[] predicates
-                )
+            public Builder WithPut(
+                int quantity,
+                params Expression<
+                    Func<IReadOnlyList<OptionPosition>, OptionPosition, bool>
+                >[] predicates
+            )
             {
-                _legs.Add(OptionStrategyLegDefinition.Create(OptionRight.Put, quantity, predicates));
+                _legs.Add(
+                    OptionStrategyLegDefinition.Create(OptionRight.Put, quantity, predicates)
+                );
                 return this;
             }
 

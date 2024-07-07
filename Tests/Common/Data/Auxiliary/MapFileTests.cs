@@ -38,28 +38,45 @@ namespace QuantConnect.Tests.Common.Data.Auxiliary
             };
             File.WriteAllLines(fileName, lines);
 
-            var result = MapFileRow.Read(fileName, QuantConnect.Market.NYMEX, SecurityType.Future, TestGlobals.DataProvider).ToList();
+            var result = MapFileRow
+                .Read(
+                    fileName,
+                    QuantConnect.Market.NYMEX,
+                    SecurityType.Future,
+                    TestGlobals.DataProvider
+                )
+                .ToList();
             File.Delete(fileName);
 
             Assert.AreEqual(1, result.Count);
-            Assert.AreEqual(new DateTime(2011,2,21), result[0].Date);
+            Assert.AreEqual(new DateTime(2011, 2, 21), result[0].Date);
         }
 
         [Test]
         public void RowThrowsForUnknownMappingMode()
         {
-            Assert.Throws<ArgumentException>(() => MapFileRow.Parse("20110418,cl uvvl4qhqe8xt,NYMEX,999", QuantConnect.Market.NYMEX, SecurityType.Future));
+            Assert.Throws<ArgumentException>(
+                () =>
+                    MapFileRow.Parse(
+                        "20110418,cl uvvl4qhqe8xt,NYMEX,999",
+                        QuantConnect.Market.NYMEX,
+                        SecurityType.Future
+                    )
+            );
         }
 
         [Test]
         public void ResolvesFirstTicker()
         {
-            var mapFile = new MapFile("goog", new List<MapFileRow>
-            {
-                new MapFileRow(new DateTime(2014, 03, 27), "goocv"),
-                new MapFileRow(new DateTime(2014, 04, 02), "goocv"),
-                new MapFileRow(new DateTime(2050, 12, 31), "goog")
-            });
+            var mapFile = new MapFile(
+                "goog",
+                new List<MapFileRow>
+                {
+                    new MapFileRow(new DateTime(2014, 03, 27), "goocv"),
+                    new MapFileRow(new DateTime(2014, 04, 02), "goocv"),
+                    new MapFileRow(new DateTime(2050, 12, 31), "goog")
+                }
+            );
 
             Assert.AreEqual("GOOCV", mapFile.FirstTicker);
         }
@@ -69,7 +86,10 @@ namespace QuantConnect.Tests.Common.Data.Auxiliary
         [TestCase("abc.1", "ABC")]
         [TestCase("brk.a", "BRK.A")]
         [TestCase("brk.a.1", "BRK.A")]
-        public void ResolvesFirstTickerFromPermtickIfEmptyMapFile(string permtick, string expectedFirstTicker)
+        public void ResolvesFirstTickerFromPermtickIfEmptyMapFile(
+            string permtick,
+            string expectedFirstTicker
+        )
         {
             var mapFile = new MapFile(permtick, new List<MapFileRow>());
             Assert.AreEqual(expectedFirstTicker, mapFile.FirstTicker);
@@ -78,12 +98,15 @@ namespace QuantConnect.Tests.Common.Data.Auxiliary
         [Test]
         public void ResolvesFirstDate()
         {
-            var mapFile = new MapFile("goog", new List<MapFileRow>
-            {
-                new MapFileRow(new DateTime(2014, 03, 27), "goocv"),
-                new MapFileRow(new DateTime(2014, 04, 02), "goocv"),
-                new MapFileRow(new DateTime(2050, 12, 31), "goog")
-            });
+            var mapFile = new MapFile(
+                "goog",
+                new List<MapFileRow>
+                {
+                    new MapFileRow(new DateTime(2014, 03, 27), "goocv"),
+                    new MapFileRow(new DateTime(2014, 04, 02), "goocv"),
+                    new MapFileRow(new DateTime(2050, 12, 31), "goog")
+                }
+            );
 
             Assert.AreEqual(new DateTime(2014, 03, 27), mapFile.FirstDate);
         }
@@ -91,17 +114,16 @@ namespace QuantConnect.Tests.Common.Data.Auxiliary
         [Test]
         public void GenerateMapFileCSV()
         {
-            var mapFile = new MapFile("enrn", new List<MapFileRow>()
-            {
-                new MapFileRow(new DateTime(2001, 1, 1), "enrn"),
-                new MapFileRow(new DateTime(2001, 12, 2), "enrnq")
-            });
+            var mapFile = new MapFile(
+                "enrn",
+                new List<MapFileRow>()
+                {
+                    new MapFileRow(new DateTime(2001, 1, 1), "enrn"),
+                    new MapFileRow(new DateTime(2001, 12, 2), "enrnq")
+                }
+            );
 
-            var csvData = new List<string>()
-            {
-                "20010101,enrn",
-                "20011202,enrnq"
-            };
+            var csvData = new List<string>() { "20010101,enrn", "20011202,enrnq" };
 
             Assert.True(mapFile.ToCsvLines().SequenceEqual(csvData));
         }
@@ -109,14 +131,17 @@ namespace QuantConnect.Tests.Common.Data.Auxiliary
         [Test]
         public void ParsesExchangeCorrectly()
         {
-            var mapFile = new MapFile("goog", new List<MapFileRow>
-            {
-                new MapFileRow(new DateTime(2014, 03, 27), "goocv", "Q"),
-                new MapFileRow(new DateTime(2014, 04, 02), "goocv", "Q"),
-                new MapFileRow(new DateTime(2050, 12, 31), "goog", "Q")
-            });
+            var mapFile = new MapFile(
+                "goog",
+                new List<MapFileRow>
+                {
+                    new MapFileRow(new DateTime(2014, 03, 27), "goocv", "Q"),
+                    new MapFileRow(new DateTime(2014, 04, 02), "goocv", "Q"),
+                    new MapFileRow(new DateTime(2050, 12, 31), "goog", "Q")
+                }
+            );
 
-            Assert.AreEqual(Exchange.NASDAQ, (Exchange) mapFile.Last().PrimaryExchange);
+            Assert.AreEqual(Exchange.NASDAQ, (Exchange)mapFile.Last().PrimaryExchange);
         }
 
         [TestCaseSource(nameof(ParsesRowWithExchangesCorrectlyCases))]
@@ -125,11 +150,20 @@ namespace QuantConnect.Tests.Common.Data.Auxiliary
             // Arrange
             var rowParts = mapFileRow.Split(',');
             var expectedMapFileRow = new MapFileRow(
-                DateTime.ParseExact(rowParts[0], DateFormat.EightCharacter, CultureInfo.InvariantCulture),
+                DateTime.ParseExact(
+                    rowParts[0],
+                    DateFormat.EightCharacter,
+                    CultureInfo.InvariantCulture
+                ),
                 rowParts[1],
-                rowParts[2]);
+                rowParts[2]
+            );
             // Act
-            var actualMapFileRow = MapFileRow.Parse(mapFileRow, QuantConnect.Market.USA, SecurityType.Equity);
+            var actualMapFileRow = MapFileRow.Parse(
+                mapFileRow,
+                QuantConnect.Market.USA,
+                SecurityType.Equity
+            );
             // Assert
             Assert.AreEqual(expectedExchange, actualMapFileRow.PrimaryExchange);
             Assert.AreEqual(expectedMapFileRow, actualMapFileRow);
@@ -142,10 +176,19 @@ namespace QuantConnect.Tests.Common.Data.Auxiliary
             var mapFileRow = "20010213,aapl";
             var rowParts = mapFileRow.Split(',');
             var expectedMapFileRow = new MapFileRow(
-                DateTime.ParseExact(rowParts[0], DateFormat.EightCharacter, CultureInfo.InvariantCulture),
-                rowParts[1]);
+                DateTime.ParseExact(
+                    rowParts[0],
+                    DateFormat.EightCharacter,
+                    CultureInfo.InvariantCulture
+                ),
+                rowParts[1]
+            );
             // Act
-            var actualMapFileRow = MapFileRow.Parse(mapFileRow, QuantConnect.Market.USA, SecurityType.Equity);
+            var actualMapFileRow = MapFileRow.Parse(
+                mapFileRow,
+                QuantConnect.Market.USA,
+                SecurityType.Equity
+            );
             // Assert
             Assert.AreEqual(Exchange.UNKNOWN, actualMapFileRow.PrimaryExchange);
             Assert.AreEqual(expectedMapFileRow, actualMapFileRow);

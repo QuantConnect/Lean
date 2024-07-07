@@ -14,12 +14,12 @@
 */
 
 using System;
-using QuantConnect.Logging;
 using System.Diagnostics;
 using System.Globalization;
-using QuantConnect.Configuration;
-using System.Linq;
 using System.IO;
+using System.Linq;
+using QuantConnect.Configuration;
+using QuantConnect.Logging;
 
 namespace QuantConnect.ToolBox.AlgoSeekFuturesConverter
 {
@@ -33,7 +33,9 @@ namespace QuantConnect.ToolBox.AlgoSeekFuturesConverter
             // There are practical file limits we need to override for this to work.
             // By default programs are only allowed 1024 files open; for futures parsing we need 100k
             Environment.SetEnvironmentVariable("MONO_MANAGED_WATCHER", "disabled");
-            Log.LogHandler = new CompositeLogHandler(new ILogHandler[] { new ConsoleLogHandler(), new FileLogHandler("log.txt") });
+            Log.LogHandler = new CompositeLogHandler(
+                new ILogHandler[] { new ConsoleLogHandler(), new FileLogHandler("log.txt") }
+            );
 
             // Directory for the data, output and processed cache:
             var remoteDirectory = Config.Get("futures-remote-directory").Replace("{0}", date);
@@ -49,12 +51,16 @@ namespace QuantConnect.ToolBox.AlgoSeekFuturesConverter
             Log.Trace("Destination Directory: " + dataDirectory);
 
             // Date for the option bz files.
-            var referenceDate = DateTime.ParseExact(date, DateFormat.EightCharacter, CultureInfo.InvariantCulture);
+            var referenceDate = DateTime.ParseExact(
+                date,
+                DateFormat.EightCharacter,
+                CultureInfo.InvariantCulture
+            );
 
             Log.Trace("DateTime: " + referenceDate.Date.ToStringInvariant());
 
             // checking if remote folder exists
-            if(!Directory.Exists(remoteDirectory))
+            if (!Directory.Exists(remoteDirectory))
             {
                 Log.Error("Remote Directory doesn't exist: " + remoteDirectory);
                 return;
@@ -66,36 +72,53 @@ namespace QuantConnect.ToolBox.AlgoSeekFuturesConverter
             if (!string.IsNullOrEmpty(resolutions))
             {
                 var names = resolutions.Split(new[] { ';' });
-                resolutionList =
-                    names
+                resolutionList = names
                     .Where(x => !string.IsNullOrEmpty(x))
-                    .Select(name => (Resolution)Enum.Parse(typeof(Resolution), name, true)).ToArray();
+                    .Select(name => (Resolution)Enum.Parse(typeof(Resolution), name, true))
+                    .ToArray();
             }
 
-            Log.Trace("Resolutions: " + string.Join(";", resolutionList.Select(x => x.ToString()).ToArray()));
+            Log.Trace(
+                "Resolutions: "
+                    + string.Join(";", resolutionList.Select(x => x.ToString()).ToArray())
+            );
 
             // Convert the date:
             var timer = Stopwatch.StartNew();
-            var converter = new AlgoSeekFuturesConverter(resolutionList.ToList() , referenceDate, remoteDirectory, sourceDirectory, dataDirectory);
+            var converter = new AlgoSeekFuturesConverter(
+                resolutionList.ToList(),
+                referenceDate,
+                remoteDirectory,
+                sourceDirectory,
+                dataDirectory
+            );
             converter.Convert();
-            Log.Trace($"AlgoSeekFuturesConverter.Main(): {referenceDate.ToStringInvariant()} Conversion finished in time: {timer.Elapsed.ToStringInvariant(null)}");
+            Log.Trace(
+                $"AlgoSeekFuturesConverter.Main(): {referenceDate.ToStringInvariant()} Conversion finished in time: {timer.Elapsed.ToStringInvariant(null)}"
+            );
 
             // Compress the memory cache to zips.
             timer.Restart();
             converter.Package(referenceDate);
-            Log.Trace($"AlgoSeekFuturesConverter.Main(): {referenceDate.ToStringInvariant()} Compression finished in time: {timer.Elapsed.ToStringInvariant(null)}");
+            Log.Trace(
+                $"AlgoSeekFuturesConverter.Main(): {referenceDate.ToStringInvariant()} Compression finished in time: {timer.Elapsed.ToStringInvariant(null)}"
+            );
 
             if (cleanSourceDirectory)
             {
-                Log.Trace($"AlgoSeekFuturesConverter.Main(): Cleaning source directory: {sourceDirectory}");
+                Log.Trace(
+                    $"AlgoSeekFuturesConverter.Main(): Cleaning source directory: {sourceDirectory}"
+                );
 
                 try
                 {
                     Directory.Delete(sourceDirectory, true);
                 }
-                catch(Exception err)
+                catch (Exception err)
                 {
-                    Log.Trace($"AlgoSeekFuturesConverter.Main(): Error while cleaning source directory {err.Message}");
+                    Log.Trace(
+                        $"AlgoSeekFuturesConverter.Main(): Error while cleaning source directory {err.Message}"
+                    );
                 }
             }
         }

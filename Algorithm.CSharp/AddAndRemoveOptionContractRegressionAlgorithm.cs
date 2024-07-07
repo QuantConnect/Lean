@@ -14,10 +14,10 @@
 */
 
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using QuantConnect.Data;
 using QuantConnect.Interfaces;
-using System.Collections.Generic;
 
 namespace QuantConnect.Algorithm.CSharp
 {
@@ -25,7 +25,9 @@ namespace QuantConnect.Algorithm.CSharp
     /// Regression algorithm reproducing GH issue #5748 where in some cases an option underlying symbol was not being
     /// removed from all universes it was hold
     /// </summary>
-    public class AddAndRemoveOptionContractRegressionAlgorithm : QCAlgorithm, IRegressionAlgorithmDefinition
+    public class AddAndRemoveOptionContractRegressionAlgorithm
+        : QCAlgorithm,
+            IRegressionAlgorithmDefinition
     {
         private Symbol _contract;
         private bool _hasRemoved;
@@ -40,10 +42,13 @@ namespace QuantConnect.Algorithm.CSharp
 
             var aapl = QuantConnect.Symbol.Create("AAPL", SecurityType.Equity, Market.USA);
 
-            _contract = OptionChainProvider.GetOptionContractList(aapl, Time)
+            _contract = OptionChainProvider
+                .GetOptionContractList(aapl, Time)
                 .OrderBy(symbol => symbol.ID.Symbol)
-                .FirstOrDefault(optionContract => optionContract.ID.OptionRight == OptionRight.Call
-                    && optionContract.ID.OptionStyle == OptionStyle.American);
+                .FirstOrDefault(optionContract =>
+                    optionContract.ID.OptionRight == OptionRight.Call
+                    && optionContract.ID.OptionStyle == OptionStyle.American
+                );
             AddOptionContract(_contract);
         }
 
@@ -59,7 +64,9 @@ namespace QuantConnect.Algorithm.CSharp
                 }
                 else
                 {
-                    throw new RegressionTestException("Expect a single call to OnData where we removed the option and underlying");
+                    throw new RegressionTestException(
+                        "Expect a single call to OnData where we removed the option and underlying"
+                    );
                 }
             }
         }
@@ -68,7 +75,9 @@ namespace QuantConnect.Algorithm.CSharp
         {
             if (!_hasRemoved)
             {
-                throw new RegressionTestException("Expect a single call to OnData where we removed the option and underlying");
+                throw new RegressionTestException(
+                    "Expect a single call to OnData where we removed the option and underlying"
+                );
             }
         }
 
@@ -100,35 +109,36 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// This is used by the regression test system to indicate what the expected statistics are from running the algorithm
         /// </summary>
-        public Dictionary<string, string> ExpectedStatistics => new Dictionary<string, string>
-        {
-            {"Total Orders", "0"},
-            {"Average Win", "0%"},
-            {"Average Loss", "0%"},
-            {"Compounding Annual Return", "0%"},
-            {"Drawdown", "0%"},
-            {"Expectancy", "0"},
-            {"Start Equity", "100000"},
-            {"End Equity", "100000"},
-            {"Net Profit", "0%"},
-            {"Sharpe Ratio", "0"},
-            {"Sortino Ratio", "0"},
-            {"Probabilistic Sharpe Ratio", "0%"},
-            {"Loss Rate", "0%"},
-            {"Win Rate", "0%"},
-            {"Profit-Loss Ratio", "0"},
-            {"Alpha", "0"},
-            {"Beta", "0"},
-            {"Annual Standard Deviation", "0"},
-            {"Annual Variance", "0"},
-            {"Information Ratio", "-9.486"},
-            {"Tracking Error", "0.008"},
-            {"Treynor Ratio", "0"},
-            {"Total Fees", "$0.00"},
-            {"Estimated Strategy Capacity", "$0"},
-            {"Lowest Capacity Asset", ""},
-            {"Portfolio Turnover", "0%"},
-            {"OrderListHash", "d41d8cd98f00b204e9800998ecf8427e"}
-        };
+        public Dictionary<string, string> ExpectedStatistics =>
+            new Dictionary<string, string>
+            {
+                { "Total Orders", "0" },
+                { "Average Win", "0%" },
+                { "Average Loss", "0%" },
+                { "Compounding Annual Return", "0%" },
+                { "Drawdown", "0%" },
+                { "Expectancy", "0" },
+                { "Start Equity", "100000" },
+                { "End Equity", "100000" },
+                { "Net Profit", "0%" },
+                { "Sharpe Ratio", "0" },
+                { "Sortino Ratio", "0" },
+                { "Probabilistic Sharpe Ratio", "0%" },
+                { "Loss Rate", "0%" },
+                { "Win Rate", "0%" },
+                { "Profit-Loss Ratio", "0" },
+                { "Alpha", "0" },
+                { "Beta", "0" },
+                { "Annual Standard Deviation", "0" },
+                { "Annual Variance", "0" },
+                { "Information Ratio", "-9.486" },
+                { "Tracking Error", "0.008" },
+                { "Treynor Ratio", "0" },
+                { "Total Fees", "$0.00" },
+                { "Estimated Strategy Capacity", "$0" },
+                { "Lowest Capacity Asset", "" },
+                { "Portfolio Turnover", "0%" },
+                { "OrderListHash", "d41d8cd98f00b204e9800998ecf8427e" }
+            };
     }
 }

@@ -15,13 +15,13 @@
 */
 
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using QuantConnect.Data;
+using QuantConnect.Data.Auxiliary;
 using QuantConnect.Data.UniverseSelection;
 using QuantConnect.Interfaces;
-using QuantConnect.Data.Auxiliary;
-using System.Collections;
 using QuantConnect.Logging;
 
 namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
@@ -29,7 +29,8 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
     /// <summary>
     /// Enumerates live options symbol universe data into <see cref="OptionChainUniverseDataCollection"/> instances
     /// </summary>
-    public class DataQueueOptionChainUniverseDataCollectionEnumerator : IEnumerator<BaseDataCollection>
+    public class DataQueueOptionChainUniverseDataCollectionEnumerator
+        : IEnumerator<BaseDataCollection>
     {
         private readonly SubscriptionRequest _subscriptionRequest;
         private readonly IDataQueueUniverseProvider _universeProvider;
@@ -54,7 +55,8 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
             SubscriptionRequest subscriptionRequest,
             IEnumerator<BaseData> underlying,
             IDataQueueUniverseProvider universeProvider,
-            ITimeProvider timeProvider)
+            ITimeProvider timeProvider
+        )
         {
             _subscriptionRequest = subscriptionRequest;
             Underlying = underlying;
@@ -101,7 +103,11 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
             if (!_needNewCurrent)
             {
                 // refresh on date change (in exchange time zone)
-                _needNewCurrent = _timeProvider.GetUtcNow().ConvertFromUtc(_subscriptionRequest.Configuration.ExchangeTimeZone).Date != _lastEmitTime.Date;
+                _needNewCurrent =
+                    _timeProvider
+                        .GetUtcNow()
+                        .ConvertFromUtc(_subscriptionRequest.Configuration.ExchangeTimeZone)
+                        .Date != _lastEmitTime.Date;
             }
 
             if (_needNewCurrent)
@@ -112,13 +118,19 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
                     return true;
                 }
 
-                var localTime = _timeProvider.GetUtcNow()
+                var localTime = _timeProvider
+                    .GetUtcNow()
                     .ConvertFromUtc(_subscriptionRequest.Configuration.ExchangeTimeZone)
                     .RoundDown(_subscriptionRequest.Configuration.Increment);
 
                 // loading the list of futures contracts and converting them into zip entries
-                var symbols = _universeProvider.LookupSymbols(_subscriptionRequest.Security.Symbol, false);
-                var zipEntries = symbols.Select(x => new ZipEntryName { Time = localTime, Symbol = x } as BaseData).ToList();
+                var symbols = _universeProvider.LookupSymbols(
+                    _subscriptionRequest.Security.Symbol,
+                    false
+                );
+                var zipEntries = symbols
+                    .Select(x => new ZipEntryName { Time = localTime, Symbol = x } as BaseData)
+                    .ToList();
                 _currentData = new BaseDataCollection
                 {
                     Symbol = _subscriptionRequest.Security.Symbol,
@@ -128,8 +140,10 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
                     EndTime = localTime
                 };
 
-                Log.Trace($"DataQueueOptionChainUniverseDataCollectionEnumerator({_currentData.Symbol}): Emitting data point: {_currentData.EndTime}. " +
-                    $"Count: {_currentData.Data.Count}. Underlying: {_currentData.Underlying} Underlying.EndTime: {_currentData.Underlying.EndTime}");
+                Log.Trace(
+                    $"DataQueueOptionChainUniverseDataCollectionEnumerator({_currentData.Symbol}): Emitting data point: {_currentData.EndTime}. "
+                        + $"Count: {_currentData.Data.Count}. Underlying: {_currentData.Underlying} Underlying.EndTime: {_currentData.Underlying.EndTime}"
+                );
 
                 _lastEmitTime = localTime;
 

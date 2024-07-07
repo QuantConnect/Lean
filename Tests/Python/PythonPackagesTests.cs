@@ -15,8 +15,8 @@
 */
 
 using System;
-using Python.Runtime;
 using NUnit.Framework;
+using Python.Runtime;
 
 namespace QuantConnect.Tests.Python
 {
@@ -26,7 +26,8 @@ namespace QuantConnect.Tests.Python
         [Test]
         public void Peft()
         {
-            AssertCode(@"
+            AssertCode(
+                @"
 def RunTest():
     from transformers import AutoModelForSeq2SeqLM
     from peft import get_peft_config, get_peft_model, LoraConfig, TaskType
@@ -35,13 +36,15 @@ def RunTest():
 
     peft_config = LoraConfig(
         task_type=TaskType.SEQ_2_SEQ_LM, inference_mode=False, r=8, lora_alpha=32, lora_dropout=0.1
-    )");
+    )"
+            );
         }
 
         [Test]
         public void Accelerator()
         {
-            AssertCode(@"
+            AssertCode(
+                @"
 def RunTest():
 	import torch
 	import torch.nn.functional as F
@@ -53,34 +56,40 @@ def RunTest():
 
 	model = torch.nn.Transformer().to(device)
 	optimizer = torch.optim.Adam(model.parameters())
-");
+"
+            );
         }
 
         [Test, Explicit("ASD")]
         public void alibi_detect()
         {
-            AssertCode(@"
+            AssertCode(
+                @"
 def RunTest():
 	from alibi_detect.datasets import fetch_cifar10c
 
 	corruption = ['gaussian_noise', 'motion_blur', 'brightness', 'pixelate']
-	X, y = fetch_cifar10c(corruption=corruption, severity=5, return_X_y=True)");
+	X, y = fetch_cifar10c(corruption=corruption, severity=5, return_X_y=True)"
+            );
         }
 
         [Test]
         public void PytorchTabnet()
         {
-            AssertCode(@"
+            AssertCode(
+                @"
 def RunTest():
     from pytorch_tabnet.tab_model import TabNetClassifier, TabNetRegressor
 
-    clf = TabNetClassifier()");
+    clf = TabNetClassifier()"
+            );
         }
 
         [Test]
         public void FeatureEngine()
         {
-            AssertCode(@"
+            AssertCode(
+                @"
 def RunTest():
 	import pandas as pd
 	from feature_engine.encoding import RareLabelEncoder
@@ -90,36 +99,42 @@ def RunTest():
 	data['var_A'].value_counts()
 	rare_encoder = RareLabelEncoder(tol=0.10, n_categories=3)
 	data_encoded = rare_encoder.fit_transform(data)
-	data_encoded['var_A'].value_counts()");
+	data_encoded['var_A'].value_counts()"
+            );
         }
 
         [Test]
         public void Nolds()
         {
-            AssertCode(@"
+            AssertCode(
+                @"
 def RunTest():
     import nolds
     import numpy as np
 
     rwalk = np.cumsum(np.random.random(1000))
-    h = nolds.dfa(rwalk)");
+    h = nolds.dfa(rwalk)"
+            );
         }
 
         [Test]
         public void Pgmpy()
         {
-            AssertCode(@"
+            AssertCode(
+                @"
 def RunTest():
     from pgmpy.base import DAG
     G = DAG()
     G.add_node(node='a')
-    G.add_nodes_from(nodes=['a', 'b'])");
+    G.add_nodes_from(nodes=['a', 'b'])"
+            );
         }
 
         [Test]
         public void Control()
         {
-            AssertCode(@"
+            AssertCode(
+                @"
 def RunTest():
     import numpy as np
     import control
@@ -131,25 +146,29 @@ def RunTest():
     H1 = control.tf(num1, den1)
     H2 = control.tf(num2, den2)
 
-    H = control.series(H1, H2)");
+    H = control.series(H1, H2)"
+            );
         }
 
         [Test]
         public void PyCaret()
         {
-            AssertCode(@"
+            AssertCode(
+                @"
 from pycaret.datasets import get_data
 from pycaret.classification import setup
 
 def RunTest():
     data = get_data('diabetes')
-    s = setup(data, target = 'Class variable', session_id = 123)");
+    s = setup(data, target = 'Class variable', session_id = 123)"
+            );
         }
 
         [Test]
         public void NGBoost()
         {
-            AssertCode(@"
+            AssertCode(
+                @"
 def RunTest():
 	from ngboost import NGBClassifier
 	from ngboost.distns import k_categorical, Bernoulli
@@ -161,13 +180,15 @@ def RunTest():
 	X_cls_train, X_cls_test, Y_cls_train, Y_cls_test = train_test_split(X, y, test_size=0.2)
 
 	ngb_cat = NGBClassifier(Dist=k_categorical(3), verbose=False) # tell ngboost that there are 3 possible outcomes
-	_ = ngb_cat.fit(X_cls_train, Y_cls_train) # Y should have only 3 values: {0,1,2}");
+	_ = ngb_cat.fit(X_cls_train, Y_cls_train) # Y should have only 3 values: {0,1,2}"
+            );
         }
 
         [Test]
         public void MLFlow()
         {
-            AssertCode(@"
+            AssertCode(
+                @"
 def RunTest():
     import mlflow
     from mlflow.models import infer_signature
@@ -203,13 +224,15 @@ def RunTest():
     y_pred = lr.predict(X_test)
 
     # Calculate metrics
-    accuracy = accuracy_score(y_test, y_pred)");
+    accuracy = accuracy_score(y_test, y_pred)"
+            );
         }
 
         [Test]
         public void TPOT()
         {
-            AssertCode(@"
+            AssertCode(
+                @"
 def RunTest():
     from tpot import TPOTClassifier
     from sklearn.datasets import load_digits
@@ -223,7 +246,8 @@ def RunTest():
                                         random_state=42, verbosity=2)
     pipeline_optimizer.fit(X_train, y_train)
     print(pipeline_optimizer.score(X_test, y_test))
-    pipeline_optimizer.export('tpot_exported_pipeline.py')");
+    pipeline_optimizer.export('tpot_exported_pipeline.py')"
+            );
         }
 
         [Test, Explicit("Needs to be run by itself to avoid hanging")]
@@ -253,7 +277,8 @@ def RunTest():
     tgt = torch.randint(0, 256, (1, 1024))
 
     loss = model(src, tgt, mask = src_mask) # (1, 1024, 512)
-    loss.backward()");
+    loss.backward()"
+            );
         }
 
         [Test]
@@ -305,7 +330,8 @@ def RunTest():
     X_train, X_future = y.pipe(train_test_split(test_size=3))
     forecaster = linear_model(freq=""1mo"", lags=24)
     forecaster.fit(y=y_train, X=X_train)
-    y_pred = forecaster.predict(fh=3, X=X_future)");
+    y_pred = forecaster.predict(fh=3, X=X_future)"
+            );
         }
 
         [Test]
@@ -327,7 +353,8 @@ def RunTest():
         freq = 'M'
     )
     mlf.fit(df)
-    mlf.predict(12)");
+    mlf.predict(12)"
+            );
         }
 
         [Test]
@@ -351,7 +378,8 @@ def RunTest():
     mapie_regressor = MapieRegressor(estimator=regressor, method='plus', cv=5)
 
     mapie_regressor = mapie_regressor.fit(X_train, y_train)
-    y_pred, y_pis = mapie_regressor.predict(X_test, alpha=[0.05, 0.32])");
+    y_pred, y_pis = mapie_regressor.predict(X_test, alpha=[0.05, 0.32])"
+            );
         }
 
         [Test]
@@ -362,7 +390,8 @@ def RunTest():
 import h2o
 
 def RunTest():
-    h2o.init(ip = ""localhost"", port = 54321)");
+    h2o.init(ip = ""localhost"", port = 54321)"
+            );
         }
 
         [Test]
@@ -374,7 +403,8 @@ from langchain.prompts import PromptTemplate
 
 def RunTest():
     prompt = PromptTemplate.from_template(""What is a good name for a company that makes {product}?"")
-    prompt.format(product=""colorful socks"")");
+    prompt.format(product=""colorful socks"")"
+            );
         }
 
         [Test]
@@ -387,7 +417,8 @@ import Rbeast as rb
 def RunTest():
     (Nile, Year) = rb.load_example('nile')
     o = rb.beast(Nile, season = 'none')
-    rb.plot(o)");
+    rb.plot(o)"
+            );
         }
 
         [Test, Explicit("Needs to be run by itself to avoid hanging")]
@@ -400,7 +431,8 @@ from transformers import pipeline
 def RunTest():
     classifier = pipeline('sentiment-analysis')
 
-    classifier('We are very happy to introduce pipeline to the transformers repository.')");
+    classifier('We are very happy to introduce pipeline to the transformers repository.')"
+            );
         }
 
         [Test]
@@ -424,7 +456,8 @@ def RunTest():
     formula = 'y ~ x_1|id+time|0|(x_2~x_3+x_4)'
     model_iv2sls = ivgmm(data_df = df, formula = formula)
     result = model_iv2sls.fit()
-    result");
+    result"
+            );
         }
 
         [Test]
@@ -439,7 +472,8 @@ def RunTest():
     path = np . random . uniform ( size =(20 ,3) )
     signature = iisignature . sig ( path ,4)
     s = iisignature . prepare (3 ,4)
-    logsignature = iisignature . logsig ( path , s )");
+    logsignature = iisignature . logsig ( path , s )"
+            );
         }
 
         [Test]
@@ -477,7 +511,8 @@ def RunTest():
     posterior = stan.build(schools_code, data=schools_data)
     fit = posterior.sample(num_chains=4, num_samples=1000)
     eta = fit[""eta""]  # array with shape (8, 4000)
-    df = fit.to_frame()  # pandas `DataFrame, requires pandas");
+    df = fit.to_frame()  # pandas `DataFrame, requires pandas"
+            );
         }
 
         [Test]
@@ -514,10 +549,16 @@ def RunTest():
 
     # Both the mean and covariance matrix look ok!
     [mean, np.mean(x_sim, 1)]
-    [cov, np.cov(x_sim)]");
+    [cov, np.cov(x_sim)]"
+            );
         }
 
-        [Test, Explicit("Needs to be run byitself to avoid exception on init: A colormap named \"cet_gray\" is already registered.")]
+        [
+            Test,
+            Explicit(
+                "Needs to be run byitself to avoid exception on init: A colormap named \"cet_gray\" is already registered."
+            )
+        ]
         public void HvplotTest()
         {
             AssertCode(
@@ -532,7 +573,8 @@ def RunTest():
 
     df.head()
     pd.options.plotting.backend = 'holoviews'
-    df.plot()");
+    df.plot()"
+            );
         }
 
         [Test]
@@ -547,7 +589,8 @@ def RunTest():
     your_time_series = np.random.rand(1000)
     window_size = 10  # Approximately, how many data points might be found in a pattern
 
-    stumpy.stump(your_time_series, m=window_size)");
+    stumpy.stump(your_time_series, m=window_size)"
+            );
         }
 
         [Test]
@@ -558,7 +601,8 @@ def RunTest():
 from river import datasets
 
 def RunTest():
-    datasets.Phishing()");
+    datasets.Phishing()"
+            );
         }
 
         [Test]
@@ -578,7 +622,8 @@ def RunTest():
     p.circle([1, 2, 3, 4, 5], [6, 7, 2, 4, 5], size=20, color=""navy"", alpha=0.5)
 
     # show the results
-    show(p)");
+    show(p)"
+            );
         }
 
         [Test]
@@ -599,7 +644,8 @@ def RunTest():
     lp = LineProfiler()
     lp_wrapper = lp(do_stuff)
     lp_wrapper(numbers)
-    lp.print_stats()");
+    lp.print_stats()"
+            );
         }
 
         [Test]
@@ -622,7 +668,8 @@ def RunTest():
     fcm.fit(X)
     # outputs
     fcm_centers = fcm.centers
-    fcm.predict(X)");
+    fcm.predict(X)"
+            );
         }
 
         [Test]
@@ -636,7 +683,8 @@ def RunTest():
     P, R = mdptoolbox.example.forest()
     vi = mdptoolbox.mdp.ValueIteration(P, R, 0.9)
     vi.run()
-    vi.policy");
+    vi.policy"
+            );
         }
 
         [Test]
@@ -648,7 +696,8 @@ import numerapi
 
 def RunTest():
     napi = numerapi.NumerAPI(verbosity=""warning"")
-    napi.get_leaderboard()");
+    napi.get_leaderboard()"
+            );
         }
 
         [Test]
@@ -662,7 +711,8 @@ import stockstats
 def RunTest():
     d = {'date': [ '20220901', '20220902' ], 'open': [ 1, 2 ], 'close': [ 1, 2 ],'high': [ 1, 2], 'low': [ 1, 2 ], 'volume': [ 1, 2 ] }
     df = pd.DataFrame(data=d)
-    stock = stockstats.wrap(df)");
+    stock = stockstats.wrap(df)"
+            );
         }
 
         [Test]
@@ -682,7 +732,8 @@ def RunTest():
     series = np.cumprod(random_changes)  # create a random walk from random changes
 
     # Evaluate Hurst equation
-    H, c, data = compute_Hc(series, kind='price', simplified=True)");
+    H, c, data = compute_Hc(series, kind='price', simplified=True)"
+            );
         }
 
         [Test]
@@ -694,7 +745,8 @@ import polars as pl
 
 def RunTest():
     df = pl.DataFrame({ ""A"": [1, 2, 3, 4, 5], ""fruits"": [""banana"", ""banana"", ""apple"", ""apple"", ""banana""], ""cars"": [""beetle"", ""audi"", ""beetle"", ""beetle"", ""beetle""], })
-    df.sort(""fruits"")");
+    df.sort(""fruits"")"
+            );
         }
 
         [Test, Explicit("Hangs if run along side the rest")]
@@ -717,7 +769,8 @@ def RunTest():
     coeffs, linear_response, is_converged, num_iter = tfp.glm.fit(
         model_matrix=features[:, tf.newaxis],
         response=tf.cast(labels, dtype=tf.float32),
-        model=model)");
+        model=model)"
+            );
         }
 
         [Test]
@@ -728,7 +781,8 @@ def RunTest():
 from mpmath import sin, cos
 
 def RunTest():
-    sin(1), cos(1)");
+    sin(1), cos(1)"
+            );
         }
 
         [Test]
@@ -758,7 +812,12 @@ def RunTest():
             );
         }
 
-        [Test, Explicit("Should be run by itself to avoid matplotlib defaulting to use non existing latex")]
+        [
+            Test,
+            Explicit(
+                "Should be run by itself to avoid matplotlib defaulting to use non existing latex"
+            )
+        ]
         public void ShapTest()
         {
             AssertCode(
@@ -1415,7 +1474,8 @@ def RunTest():
         if value == ""skip"":
             break
     for obj in ijson.items(parse_events, 'item'):
-        print(obj)");
+        print(obj)"
+            );
         }
 
         [Test]
@@ -1439,7 +1499,8 @@ def RunTest():
     automl = AutoML()
     automl.fit(X_train, y_train)
 
-    predictions = automl.predict(X_test)");
+    predictions = automl.predict(X_test)"
+            );
         }
 
         [Test]
@@ -1451,7 +1512,8 @@ import tree
 
 def RunTest():
     structure = [[1], [[[2, 3]]], [4]]
-    tree.flatten(structure)");
+    tree.flatten(structure)"
+            );
         }
 
         [Test]
@@ -1469,7 +1531,8 @@ def RunTest():
 	x = solver.NumVar(0, 1, 'x')
 	y = solver.NumVar(0, 2, 'y')
 
-	print('Number of variables =', solver.NumVariables())");
+	print('Number of variables =', solver.NumVariables())"
+            );
         }
 
         [Test, Explicit("Requires old version of TF, addons are winding down")]
@@ -1483,7 +1546,8 @@ import tensorflow_addons as tfa
 def RunTest():
     train,test = tf.keras.datasets.mnist.load_data()
     x_train, y_train = train
-    x_train = x_train[..., tf.newaxis] / 255.0");
+    x_train = x_train[..., tf.newaxis] / 255.0"
+            );
         }
 
         [Test]
@@ -1502,7 +1566,8 @@ def RunTest():
                                class_sep=0.8, random_state=0)
     visualizer = ParallelCoordinates()
     visualizer.fit_transform(X, y)
-    visualizer.show()");
+    visualizer.show()"
+            );
         }
 
         [Test]
@@ -1532,7 +1597,8 @@ def RunTest():
 	# plot them
 	cm_bright = ListedColormap(['#FF0000', '#0000FF'])
 	plt.scatter(X_train[:, 0], X_train[:, 1], c=y_train, cmap=cm_bright)
-	plt.scatter(X_test[:, 0], X_test[:, 1], c=y_test, cmap=cm_bright, alpha=0.3)");
+	plt.scatter(X_test[:, 0], X_test[:, 1], c=y_test, cmap=cm_bright, alpha=0.3)"
+            );
         }
 
         [Test]
@@ -1549,7 +1615,8 @@ def RunTest():
     action = env.action_space.sample()
     observation, reward, terminated, truncated, info = env.step(action)
 
-    env.close()");
+    env.close()"
+            );
         }
 
         [Test]
@@ -1629,7 +1696,8 @@ def RunTest():
     X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.20, random_state=seed)
 
     ebm = ExplainableBoostingClassifier(random_state=seed)
-    ebm.fit(X_train, y_train)");
+    ebm.fit(X_train, y_train)"
+            );
         }
 
         [Test]
@@ -1651,7 +1719,8 @@ def RunTest():
 
     for i_rep in range(n_rep):
         (x, y, d) = make_plr_CCDDHNR2018(alpha=alpha, n_obs=n_obs, dim_x=n_vars, return_type='array')
-        data.append((x, y, d))");
+        data.append((x, y, d))"
+            );
         }
 
         [Test]
@@ -1674,7 +1743,8 @@ def RunTest():
 
     X_resampled, y_resampled = ros.fit_resample(X, y)
 
-    print(sorted(Counter(y_resampled).items()))");
+    print(sorted(Counter(y_resampled).items()))"
+            );
         }
 
         [Test, Explicit("Requires keras < 3")]
@@ -1715,7 +1785,8 @@ def RunTest():
     )
 
     clf.fit(X, y)
-    y_proba = clf.predict_proba(X)");
+    y_proba = clf.predict_proba(X)"
+            );
         }
 
         [Test]
@@ -1735,7 +1806,8 @@ def RunTest():
     X_train, X_test, y_train, y_test = train_test_split(X, y,test_size=.5,random_state =123)
 
     clf = LazyClassifier(verbose=0,ignore_warnings=True, custom_metric=None)
-    models,predictions = clf.fit(X_train, X_test, y_train, y_test)");
+    models,predictions = clf.fit(X_train, X_test, y_train, y_test)"
+            );
         }
 
         [Test]
@@ -1751,7 +1823,8 @@ def RunTest():
     train, val = series.split_before(0.6)
     scorer = KMeansScorer(k=2, window=5)
     scorer.fit(train)
-    anom_score = scorer.score(val)");
+    anom_score = scorer.score(val)"
+            );
         }
 
         [Test]
@@ -1765,7 +1838,8 @@ import pandas as pd
 def RunTest():
     d = {'date': [ '20220901', '20220902' ], 'open': [ 1, 2 ], 'close': [ 1, 2 ],'high': [ 1, 2], 'low': [ 1, 2 ], 'volume': [ 1, 2 ] }
     df = pd.DataFrame(data=d)
-    write('outfile.parq', df)");
+    write('outfile.parq', df)"
+            );
         }
 
         [Test]
@@ -1779,7 +1853,8 @@ def RunTest():
     bqm = dimod.BinaryQuadraticModel({0: -1, 1: 1}, {(0, 1): 2}, 0.0, dimod.BINARY)
 
     sampleset = dimod.ExactSolver().sample(bqm)
-    return sampleset");
+    return sampleset"
+            );
         }
 
         [Test]
@@ -1790,7 +1865,8 @@ def RunTest():
 from dwave.samplers import PlanarGraphSolver
 
 def RunTest():
-    solver = PlanarGraphSolver()");
+    solver = PlanarGraphSolver()"
+            );
         }
 
         [Test]
@@ -1808,7 +1884,8 @@ def RunTest():
         transitionA = aState.to(bState)
         transitionB = bState.to(aState)
 
-    instance = StateObject()");
+    instance = StateObject()"
+            );
         }
 
         [Test]
@@ -1824,7 +1901,8 @@ def RunTest():
     data = np.random.rand(360,1)
 
     result = mk.original_test(data)
-    return result");
+    return result"
+            );
         }
 
         [Test]
@@ -1857,7 +1935,8 @@ def RunTest():
 	CBmax = model.objective()
 	print('\nFlowrate at maximum CB = ', qmax, 'liters per minute.')
 	print('\nMaximum CB =', CBmax, 'moles per liter.')
-	print('\nProductivity = ', qmax*CBmax, 'moles per minute.')");
+	print('\nProductivity = ', qmax*CBmax, 'moles per minute.')"
+            );
         }
 
         [Test]
@@ -1888,7 +1967,8 @@ def RunTest():
     opt.minimize(model.training_loss, model.trainable_variables)
 
     Xnew = np.array([[0.5]])
-    model.predict_f(Xnew)");
+    model.predict_f(Xnew)"
+            );
         }
 
         [Test, Explicit("Sometimes hangs when run along side the other tests")]
@@ -1903,7 +1983,8 @@ def RunTest():
     env = make_vec_env(""CartPole-v1"", n_envs=1)
 
     model = PPO(""MlpPolicy"", env, verbose=1)
-    model.learn(total_timesteps=500)");
+    model.learn(total_timesteps=500)"
+            );
         }
 
         [Test]
@@ -2077,7 +2158,10 @@ def RunTest():
             );
         }
 
-        [Test, Explicit("Has issues when run along side the other tests. random.PRNGKey call hangs")]
+        [
+            Test,
+            Explicit("Has issues when run along side the other tests. random.PRNGKey call hangs")
+        ]
         public void NeuralTangentsTest()
         {
             AssertCode(
@@ -2108,7 +2192,6 @@ def RunTest():
     predict_fn(x_test=x_test, get='nngp')"
             );
         }
-
 
         [Test]
         public void SmmTest()
@@ -2203,6 +2286,7 @@ def RunTest():
     return cop.summary()"
             );
         }
+
         [Test]
         public void SanityClrInstallation()
         {
@@ -2238,7 +2322,8 @@ def RunTest():
         [Test, Explicit("Sometimes hangs when run along side the other tests")]
         public void AxPlatformTest()
         {
-            AssertCode(@"
+            AssertCode(
+                @"
 from ax import optimize
 
 def RunTest():
@@ -2259,13 +2344,15 @@ def RunTest():
             evaluation_function=lambda p: (p[""x1""] + 2*p[""x2""] - 7)**2 + (2*p[""x1""] + p[""x2""] - 5)**2,
             minimize=True,
         )
-");
+"
+            );
         }
 
         [Test]
         public void RiskfolioLibTest()
         {
-            AssertCode(@"
+            AssertCode(
+                @"
 import riskfolio as rp
 import pandas as pd
 
@@ -2295,7 +2382,8 @@ def RunTest():
 
 	w = port.optimization(model=model, rm=rm, obj=obj, rf=rf, l=l, hist=hist)
 
-	w.T");
+	w.T"
+            );
         }
 
         /// <summary>
@@ -2355,7 +2443,7 @@ def RunTest():
                 Assert.DoesNotThrow(() =>
                 {
                     var response = module.RunTest();
-                    if(response != null)
+                    if (response != null)
                     {
                         response.Dispose();
                     }

@@ -20,15 +20,15 @@ namespace QuantConnect.Optimizer.Parameters
     /// <summary>
     /// Enumerates all possible values for specific optimization parameter
     /// </summary>
-    public class OptimizationStepParameterEnumerator : OptimizationParameterEnumerator<OptimizationStepParameter>
+    public class OptimizationStepParameterEnumerator
+        : OptimizationParameterEnumerator<OptimizationStepParameter>
     {
         /// <summary>
         /// Creates an instance of <see cref="OptimizationStepParameterEnumerator"/>
         /// </summary>
         /// <param name="optimizationParameter">Step-based optimization parameter</param>
-        public OptimizationStepParameterEnumerator(OptimizationStepParameter optimizationParameter) : base(optimizationParameter)
-        {
-        }
+        public OptimizationStepParameterEnumerator(OptimizationStepParameter optimizationParameter)
+            : base(optimizationParameter) { }
 
         /// <summary>
         /// Gets the element in the collection at the current position of the enumerator.

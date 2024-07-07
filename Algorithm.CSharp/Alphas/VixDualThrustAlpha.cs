@@ -54,17 +54,30 @@ namespace QuantConnect.Algorithm.CSharp.Alphas
             SetBrokerageModel(BrokerageName.InteractiveBrokersBrokerage, AccountType.Margin);
 
             // Universe Selection
-            UniverseSettings.Resolution = Resolution.Minute;   // it's minute by default, but lets leave this param here
-            var symbols = new[] { QuantConnect.Symbol.Create("UVXY", SecurityType.Equity, Market.USA) };
+            UniverseSettings.Resolution = Resolution.Minute; // it's minute by default, but lets leave this param here
+            var symbols = new[]
+            {
+                QuantConnect.Symbol.Create("UVXY", SecurityType.Equity, Market.USA)
+            };
             SetUniverseSelection(new ManualUniverseSelectionModel(symbols));
 
             // Warming up
             var resolutionInTimeSpan = UniverseSettings.Resolution.ToTimeSpan();
-            var warmUpTimeSpan = resolutionInTimeSpan.Multiply(_consolidatorBars).Multiply(_rangePeriod);
+            var warmUpTimeSpan = resolutionInTimeSpan
+                .Multiply(_consolidatorBars)
+                .Multiply(_rangePeriod);
             SetWarmUp(warmUpTimeSpan);
 
             // Alpha Model
-            SetAlpha(new DualThrustAlphaModel(_k1, _k2, _rangePeriod, UniverseSettings.Resolution, _consolidatorBars));
+            SetAlpha(
+                new DualThrustAlphaModel(
+                    _k1,
+                    _k2,
+                    _rangePeriod,
+                    UniverseSettings.Resolution,
+                    _consolidatorBars
+                )
+            );
 
             // Portfolio Construction
             SetPortfolioConstruction(new EqualWeightingPortfolioConstructionModel());
@@ -107,7 +120,7 @@ namespace QuantConnect.Algorithm.CSharp.Alphas
             int rangePeriod,
             Resolution resolution = Resolution.Daily,
             int barsToConsolidate = 1
-            )
+        )
         {
             // coefficient that used to determine upper and lower borders of a breakout channel
             _k1 = k1;
@@ -148,19 +161,41 @@ namespace QuantConnect.Algorithm.CSharp.Alphas
                     // buying condition
                     // - (1) price is above upper line
                     // - (2) and we are not long. this is a first time we crossed the line lately
-                    if (security.Price > symbolData.UpperLine && !algorithm.Portfolio[symbol].IsLong)
+                    if (
+                        security.Price > symbolData.UpperLine
+                        && !algorithm.Portfolio[symbol].IsLong
+                    )
                     {
-                        DateTime insightCloseTimeUtc = algorithm.UtcTime.AddDays(insightCloseAddDays);
-                        insights.Add(Insight.Price(symbolData.Symbol, insightCloseTimeUtc, InsightDirection.Up));
+                        DateTime insightCloseTimeUtc = algorithm.UtcTime.AddDays(
+                            insightCloseAddDays
+                        );
+                        insights.Add(
+                            Insight.Price(
+                                symbolData.Symbol,
+                                insightCloseTimeUtc,
+                                InsightDirection.Up
+                            )
+                        );
                     }
 
                     // selling condition
                     // - (1) price is lower that lower line
                     // - (2) and we are not short. this is a first time we crossed the line lately
-                    if (security.Price < symbolData.LowerLine && !algorithm.Portfolio[symbol].IsShort)
+                    if (
+                        security.Price < symbolData.LowerLine
+                        && !algorithm.Portfolio[symbol].IsShort
+                    )
                     {
-                        DateTime insightCloseTimeUtc = algorithm.UtcTime.AddDays(insightCloseAddDays);
-                        insights.Add(Insight.Price(symbolData.Symbol, insightCloseTimeUtc, InsightDirection.Down));
+                        DateTime insightCloseTimeUtc = algorithm.UtcTime.AddDays(
+                            insightCloseAddDays
+                        );
+                        insights.Add(
+                            Insight.Price(
+                                symbolData.Symbol,
+                                insightCloseTimeUtc,
+                                InsightDirection.Down
+                            )
+                        );
                     }
                 }
             }
@@ -192,7 +227,10 @@ namespace QuantConnect.Algorithm.CSharp.Alphas
                     _symbolDataBySymbol[added.Symbol] = symbolData;
 
                     //register consolidator
-                    algorithm.SubscriptionManager.AddConsolidator(added.Symbol, symbolData.GetConsolidator());
+                    algorithm.SubscriptionManager.AddConsolidator(
+                        added.Symbol,
+                        symbolData.GetConsolidator()
+                    );
                 }
             }
 
@@ -203,12 +241,17 @@ namespace QuantConnect.Algorithm.CSharp.Alphas
                 if (_symbolDataBySymbol.TryGetValue(removed.Symbol, out symbolData))
                 {
                     // unsubscribe consolidator from data updates
-                    algorithm.SubscriptionManager.RemoveConsolidator(removed.Symbol, symbolData.GetConsolidator());
+                    algorithm.SubscriptionManager.RemoveConsolidator(
+                        removed.Symbol,
+                        symbolData.GetConsolidator()
+                    );
 
                     // remove item from dictionary collection
                     if (!_symbolDataBySymbol.Remove(removed.Symbol))
                     {
-                        algorithm.Error("Unable to remove data from collection: DualThrustAlphaModel");
+                        algorithm.Error(
+                            "Unable to remove data from collection: DualThrustAlphaModel"
+                        );
                     }
                 }
             }

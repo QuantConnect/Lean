@@ -14,9 +14,9 @@
 */
 
 using System;
-using System.Linq;
 using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace QuantConnect.Securities.Positions
 {
@@ -46,9 +46,7 @@ namespace QuantConnect.Securities.Positions
         /// </summary>
         /// <param name="positions">The positions to include in this collection</param>
         public PositionCollection(IEnumerable<IPosition> positions)
-            : this(positions.ToDictionary(p => p.Symbol))
-        {
-        }
+            : this(positions.ToDictionary(p => p.Symbol)) { }
 
         /// <summary>
         /// Removes the quantities in the provided groups from this position collection.
@@ -67,12 +65,14 @@ namespace QuantConnect.Securities.Positions
                     IPosition existing;
                     if (!_positions.TryGetValue(position.Symbol, out existing))
                     {
-                        throw new InvalidOperationException($"Position with symbol {position.Symbol} not found.");
+                        throw new InvalidOperationException(
+                            $"Position with symbol {position.Symbol} not found."
+                        );
                     }
 
                     var resultingPosition = existing.Deduct(position.Quantity);
                     // directly remove positions hows quantity is 0
-                    if(resultingPosition.Quantity == 0)
+                    if (resultingPosition.Quantity == 0)
                     {
                         _positions.Remove(position.Symbol);
                     }

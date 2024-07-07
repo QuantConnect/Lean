@@ -36,12 +36,28 @@ namespace QuantConnect.Tests.Common.Brokerages
         }
 
         [TestCaseSource(nameof(GetOrderTestData))]
-        public void ValidatesOrders(OrderType orderType, Symbol symbol, decimal quantity, decimal stopPrice, decimal limitPrice, bool isValid)
+        public void ValidatesOrders(
+            OrderType orderType,
+            Symbol symbol,
+            decimal quantity,
+            decimal stopPrice,
+            decimal limitPrice,
+            bool isValid
+        )
         {
             var security = CreateSecurity(symbol);
             security.SetMarketPrice(new Tick { Value = symbol == _eurUsd ? 1m : 10000m });
 
-            var request = new SubmitOrderRequest(orderType, symbol.SecurityType, symbol, quantity, stopPrice, limitPrice, DateTime.UtcNow, "");
+            var request = new SubmitOrderRequest(
+                orderType,
+                symbol.SecurityType,
+                symbol,
+                quantity,
+                stopPrice,
+                limitPrice,
+                DateTime.UtcNow,
+                ""
+            );
             var order = Order.CreateOrder(request);
 
             var model = new FxcmBrokerageModel();
@@ -57,7 +73,8 @@ namespace QuantConnect.Tests.Common.Brokerages
                 symbol.ID.Market,
                 symbol,
                 symbol.SecurityType,
-                quoteCurrency);
+                quoteCurrency
+            );
 
             return new Security(
                 SecurityExchangeHours.AlwaysOpen(TimeZones.NewYork),
@@ -71,7 +88,13 @@ namespace QuantConnect.Tests.Common.Brokerages
                     false,
                     false
                 ),
-                new Cash(symbol.SecurityType == SecurityType.Equity ? properties.QuoteCurrency : quoteCurrency, 0, 1m),
+                new Cash(
+                    symbol.SecurityType == SecurityType.Equity
+                        ? properties.QuoteCurrency
+                        : quoteCurrency,
+                    0,
+                    1m
+                ),
                 properties,
                 ErrorCurrencyConverter.Instance,
                 RegisteredSecurityDataTypesProvider.Null,
@@ -81,68 +104,58 @@ namespace QuantConnect.Tests.Common.Brokerages
 
         private static TestCaseData[] GetOrderTestData()
         {
-            var de30EUR = Symbol.Create("DE30EUR", SecurityType.Cfd, Market.FXCM); ;
+            var de30EUR = Symbol.Create("DE30EUR", SecurityType.Cfd, Market.FXCM);
+            ;
             return new[]
             {
                 // invalid security type
                 new TestCaseData(OrderType.Market, Symbols.SPY, 1m, 0m, 0m, false),
                 new TestCaseData(OrderType.Market, Symbols.BTCUSD, 1m, 0m, 0m, false),
-
                 // invalid order type
                 new TestCaseData(OrderType.MarketOnOpen, _eurUsd, 1m, 0m, 0m, false),
                 new TestCaseData(OrderType.MarketOnClose, _eurUsd, 1m, 0m, 0m, false),
                 new TestCaseData(OrderType.StopLimit, _eurUsd, 1m, 0m, 0m, false),
-
                 // invalid lot size
                 new TestCaseData(OrderType.Market, _eurUsd, 1m, 0m, 0m, false),
                 new TestCaseData(OrderType.Market, de30EUR, 0.5m, 0m, 0m, false),
-
                 // valid lot size
                 new TestCaseData(OrderType.Market, _eurUsd, 1000m, 0m, 0m, true),
                 new TestCaseData(OrderType.Market, de30EUR, 1m, 0m, 0m, true),
-
                 // invalid limit buy price
                 new TestCaseData(OrderType.Limit, _eurUsd, 1000m, 0m, 1.0001m, false),
                 new TestCaseData(OrderType.Limit, _eurUsd, 1000m, 0m, 0.4999m, false),
                 new TestCaseData(OrderType.Limit, de30EUR, 1m, 0m, 10000.1m, false),
                 new TestCaseData(OrderType.Limit, de30EUR, 1m, 0m, 4999m, false),
-
                 // valid limit buy price
                 new TestCaseData(OrderType.Limit, _eurUsd, 1000m, 0m, 1m, true),
                 new TestCaseData(OrderType.Limit, _eurUsd, 1000m, 0m, 0.5m, true),
                 new TestCaseData(OrderType.Limit, de30EUR, 1m, 0m, 10000m, true),
                 new TestCaseData(OrderType.Limit, de30EUR, 1m, 0m, 5000m, true),
-
                 // invalid limit sell price
                 new TestCaseData(OrderType.Limit, _eurUsd, -1000m, 0m, 0.9999m, false),
                 new TestCaseData(OrderType.Limit, _eurUsd, -1000m, 0m, 1.5001m, false),
                 new TestCaseData(OrderType.Limit, de30EUR, -1m, 0m, 9999.9m, false),
                 new TestCaseData(OrderType.Limit, de30EUR, -1m, 0m, 15000.1m, false),
-
                 // valid limit sell price
                 new TestCaseData(OrderType.Limit, _eurUsd, -1000m, 0m, 1m, true),
                 new TestCaseData(OrderType.Limit, _eurUsd, -1000m, 0m, 1.5m, true),
                 new TestCaseData(OrderType.Limit, de30EUR, -1m, 0m, 10000m, true),
                 new TestCaseData(OrderType.Limit, de30EUR, -1m, 0m, 15000m, true),
-
                 // invalid stop buy price
                 new TestCaseData(OrderType.StopMarket, _eurUsd, 1000m, 0.9999m, 0m, false),
                 new TestCaseData(OrderType.StopMarket, _eurUsd, 1000m, 1.5001m, 0m, false),
                 new TestCaseData(OrderType.StopMarket, de30EUR, 1m, 9999.9m, 0m, false),
                 new TestCaseData(OrderType.StopMarket, de30EUR, 1m, 15000.1m, 0m, false),
-
                 // valid stop buy price
                 new TestCaseData(OrderType.StopMarket, _eurUsd, 1000m, 1m, 0m, true),
                 new TestCaseData(OrderType.StopMarket, _eurUsd, 1000m, 1.5m, 0m, true),
                 new TestCaseData(OrderType.StopMarket, de30EUR, 1m, 10000m, 0m, true),
                 new TestCaseData(OrderType.StopMarket, de30EUR, 1m, 15000m, 0m, true),
-
                 // invalid stop sell price
                 new TestCaseData(OrderType.StopMarket, _eurUsd, -1000m, 1.0001m, 0m, false),
                 new TestCaseData(OrderType.StopMarket, _eurUsd, -1000m, 0.4999m, 0m, false),
                 new TestCaseData(OrderType.StopMarket, de30EUR, -1m, 10000.1m, 0m, false),
                 new TestCaseData(OrderType.StopMarket, de30EUR, -1m, 4999m, 0m, false),
-
                 // valid stop sell price
                 new TestCaseData(OrderType.StopMarket, _eurUsd, -1000m, 1m, 0m, true),
                 new TestCaseData(OrderType.StopMarket, _eurUsd, -1000m, 0.5m, 0m, true),

@@ -36,7 +36,11 @@ namespace QuantConnect.Tests.Indicators
 
         protected override Action<IndicatorBase<IBaseDataBar>, double> Assertion =>
             (indicator, expected) =>
-                Assert.AreEqual(expected, (double)((Stochastic)indicator).StochD.Current.Value, 1e-3);
+                Assert.AreEqual(
+                    expected,
+                    (double)((Stochastic)indicator).StochD.Current.Value,
+                    1e-3
+                );
 
         [Test]
         public void ComparesAgainstExternalDataOnStochasticsK()
@@ -45,11 +49,8 @@ namespace QuantConnect.Tests.Indicators
                 CreateIndicator(),
                 TestFileName,
                 "Stochastics 12 %K 3",
-                (ind, expected) => Assert.AreEqual(
-                    expected,
-                    (double) ((Stochastic) ind).StochK.Current.Value,
-                    1e-3
-                )
+                (ind, expected) =>
+                    Assert.AreEqual(expected, (double)((Stochastic)ind).StochK.Current.Value, 1e-3)
             );
         }
 
@@ -60,10 +61,11 @@ namespace QuantConnect.Tests.Indicators
                 CreateIndicator(),
                 TestFileName,
                 "Stochastics 12 %K 3",
-                (ind, expected) => Assert.AreEqual(
-                    (double) ((Stochastic) ind).FastStoch.Current.Value,
-                    ind.Current.Value
-                )
+                (ind, expected) =>
+                    Assert.AreEqual(
+                        (double)((Stochastic)ind).FastStoch.Current.Value,
+                        ind.Current.Value
+                    )
             );
         }
 

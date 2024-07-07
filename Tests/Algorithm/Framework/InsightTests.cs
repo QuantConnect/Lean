@@ -40,7 +40,17 @@ namespace QuantConnect.Tests.Algorithm.Framework
         public void SurvivesRoundTripSerializationUsingJsonConvert()
         {
             var time = new DateTime(2000, 01, 02, 03, 04, 05, 06);
-            var insight = new Insight(time, Symbols.SPY, Time.OneMinute, InsightType.Volatility, InsightDirection.Up, 1, 2, "source-model", 1);
+            var insight = new Insight(
+                time,
+                Symbols.SPY,
+                Time.OneMinute,
+                InsightType.Volatility,
+                InsightDirection.Up,
+                1,
+                2,
+                "source-model",
+                1
+            );
             Insight.Group(insight);
             insight.ReferenceValueFinal = 10;
             var serialized = JsonConvert.SerializeObject(insight);
@@ -70,7 +80,16 @@ namespace QuantConnect.Tests.Algorithm.Framework
         public void CancelInsight()
         {
             var time = new DateTime(2000, 01, 02, 03, 04, 05, 06);
-            var insight = new Insight(time, Symbols.SPY, Time.OneMinute, InsightType.Volatility, InsightDirection.Up, 1, 2, "source-model");
+            var insight = new Insight(
+                time,
+                Symbols.SPY,
+                Time.OneMinute,
+                InsightType.Volatility,
+                InsightDirection.Up,
+                1,
+                2,
+                "source-model"
+            );
 
             insight.Cancel(time.AddMinutes(1));
 
@@ -85,7 +104,16 @@ namespace QuantConnect.Tests.Algorithm.Framework
         public void SerializationUsingJsonConvertTrimsEstimatedValue()
         {
             var time = new DateTime(2000, 01, 02, 03, 04, 05, 06);
-            var insight = new Insight(time, Symbols.SPY, Time.OneMinute, InsightType.Volatility, InsightDirection.Up, 1, 2, "source-model");
+            var insight = new Insight(
+                time,
+                Symbols.SPY,
+                Time.OneMinute,
+                InsightType.Volatility,
+                InsightDirection.Up,
+                1,
+                2,
+                "source-model"
+            );
             insight.EstimatedValue = 0.00001m;
             insight.Score.SetScore(InsightScoreType.Direction, 0.00001, DateTime.UtcNow);
             insight.Score.SetScore(InsightScoreType.Magnitude, 0.00001, DateTime.UtcNow);
@@ -101,7 +129,17 @@ namespace QuantConnect.Tests.Algorithm.Framework
         public void SurvivesRoundTripCopy()
         {
             var time = new DateTime(2000, 01, 02, 03, 04, 05, 06);
-            var original = new Insight(time, Symbols.SPY, Time.OneMinute, InsightType.Volatility, InsightDirection.Up, 1, 2, "source-model", 1);
+            var original = new Insight(
+                time,
+                Symbols.SPY,
+                Time.OneMinute,
+                InsightType.Volatility,
+                InsightDirection.Up,
+                1,
+                2,
+                "source-model",
+                1
+            );
             original.ReferenceValueFinal = 10;
             Insight.Group(original);
 
@@ -168,16 +206,28 @@ namespace QuantConnect.Tests.Algorithm.Framework
         [TestCase(Resolution.Daily, 1)]
         [TestCase(Resolution.Daily, 10)]
         [TestCase(Resolution.Daily, 100)]
-        public void SetPeriodAndCloseTimeUsingResolutionBarCount(Resolution resolution, int barCount)
+        public void SetPeriodAndCloseTimeUsingResolutionBarCount(
+            Resolution resolution,
+            int barCount
+        )
         {
-            var generatedTimeUtc = new DateTime(2018, 08, 06, 13, 31, 0).ConvertToUtc(TimeZones.NewYork);
+            var generatedTimeUtc = new DateTime(2018, 08, 06, 13, 31, 0).ConvertToUtc(
+                TimeZones.NewYork
+            );
 
             var symbol = Symbols.SPY;
             var insight = Insight.Price(symbol, resolution, barCount, InsightDirection.Up);
             insight.GeneratedTimeUtc = generatedTimeUtc;
-            var exchangeHours = MarketHoursDatabase.FromDataFolder().GetExchangeHours(symbol.ID.Market, symbol, symbol.SecurityType);
+            var exchangeHours = MarketHoursDatabase
+                .FromDataFolder()
+                .GetExchangeHours(symbol.ID.Market, symbol, symbol.SecurityType);
             insight.SetPeriodAndCloseTime(exchangeHours);
-            var expectedCloseTime = Insight.ComputeCloseTime(exchangeHours, insight.GeneratedTimeUtc, resolution, barCount);
+            var expectedCloseTime = Insight.ComputeCloseTime(
+                exchangeHours,
+                insight.GeneratedTimeUtc,
+                resolution,
+                barCount
+            );
             Assert.AreEqual(expectedCloseTime, insight.CloseTimeUtc);
             Assert.AreEqual(expectedCloseTime - generatedTimeUtc, insight.Period);
         }
@@ -198,16 +248,24 @@ namespace QuantConnect.Tests.Algorithm.Framework
         public void SetPeriodAndCloseTimeUsingPeriod(Resolution resolution, int barCount)
         {
             var period = resolution.ToTimeSpan().Multiply(barCount);
-            var generatedTimeUtc = new DateTime(2018, 08, 06, 13, 31, 0).ConvertToUtc(TimeZones.NewYork);
+            var generatedTimeUtc = new DateTime(2018, 08, 06, 13, 31, 0).ConvertToUtc(
+                TimeZones.NewYork
+            );
 
             var symbol = Symbols.SPY;
             var insight = Insight.Price(symbol, period, InsightDirection.Up);
             insight.GeneratedTimeUtc = generatedTimeUtc;
-            var exchangeHours = MarketHoursDatabase.FromDataFolder().GetExchangeHours(symbol.ID.Market, symbol, symbol.SecurityType);
+            var exchangeHours = MarketHoursDatabase
+                .FromDataFolder()
+                .GetExchangeHours(symbol.ID.Market, symbol, symbol.SecurityType);
             insight.SetPeriodAndCloseTime(exchangeHours);
             Assert.AreEqual(Time.Max(period, Time.OneSecond), insight.Period);
 
-            var expectedCloseTime = Insight.ComputeCloseTime(exchangeHours, insight.GeneratedTimeUtc, period);
+            var expectedCloseTime = Insight.ComputeCloseTime(
+                exchangeHours,
+                insight.GeneratedTimeUtc,
+                period
+            );
             Assert.AreEqual(expectedCloseTime, insight.CloseTimeUtc);
         }
 
@@ -231,8 +289,12 @@ namespace QuantConnect.Tests.Algorithm.Framework
         {
             // consistency test -- first compute expected close time and then back-compute period to verify
             var symbol = Symbols.SPY;
-            var generatedTimeUtc = new DateTime(2018, 08, 06, 13, 31, 0).ConvertToUtc(TimeZones.NewYork);
-            var exchangeHours = MarketHoursDatabase.FromDataFolder().GetExchangeHours(symbol.ID.Market, symbol, symbol.SecurityType);
+            var generatedTimeUtc = new DateTime(2018, 08, 06, 13, 31, 0).ConvertToUtc(
+                TimeZones.NewYork
+            );
+            var exchangeHours = MarketHoursDatabase
+                .FromDataFolder()
+                .GetExchangeHours(symbol.ID.Market, symbol, symbol.SecurityType);
 
             var baseline = Insight.Price(symbol, resolution, barCount, InsightDirection.Up);
             baseline.GeneratedTimeUtc = generatedTimeUtc;
@@ -250,21 +312,42 @@ namespace QuantConnect.Tests.Algorithm.Framework
         [Test]
         [TestCase("SPY", SecurityType.Equity, Market.USA, 2018, 12, 4, 9, 30)]
         [TestCase("EURUSD", SecurityType.Forex, Market.FXCM, 2018, 12, 4, 0, 0)]
-        public void SetPeriodAndCloseTimeUsingExpiryEndOfDay(string ticker, SecurityType securityType, string market, int year, int month, int day, int hour, int minute)
+        public void SetPeriodAndCloseTimeUsingExpiryEndOfDay(
+            string ticker,
+            SecurityType securityType,
+            string market,
+            int year,
+            int month,
+            int day,
+            int hour,
+            int minute
+        )
         {
             var symbol = Symbol.Create(ticker, securityType, market);
-            var generatedTimeUtc = new DateTime(2018, 12, 3, 9, 31, 0).ConvertToUtc(TimeZones.NewYork);
+            var generatedTimeUtc = new DateTime(2018, 12, 3, 9, 31, 0).ConvertToUtc(
+                TimeZones.NewYork
+            );
 
             SetPeriodAndCloseTimeUsingExpiryFuncOrDateTime(
                 Insight.Price(symbol, Expiry.EndOfDay, InsightDirection.Up),
                 generatedTimeUtc,
-                new DateTime(year, month, day, hour, minute, 0).ConvertToUtc(TimeZones.NewYork));
+                new DateTime(year, month, day, hour, minute, 0).ConvertToUtc(TimeZones.NewYork)
+            );
         }
 
         [Test]
         [TestCase("SPY", SecurityType.Equity, Market.USA, 2018, 12, 10, 9, 30)]
         [TestCase("EURUSD", SecurityType.Forex, Market.FXCM, 2018, 12, 10, 0, 0)]
-        public void SetPeriodAndCloseTimeUsingExpiryEndOfWeek(string ticker, SecurityType securityType, string market, int year, int month, int day, int hour, int minute)
+        public void SetPeriodAndCloseTimeUsingExpiryEndOfWeek(
+            string ticker,
+            SecurityType securityType,
+            string market,
+            int year,
+            int month,
+            int day,
+            int hour,
+            int minute
+        )
         {
             var symbol = Symbol.Create(ticker, securityType, market);
             var generatedTime = new DateTime(2018, 12, 3, 9, 31, 0);
@@ -274,19 +357,30 @@ namespace QuantConnect.Tests.Algorithm.Framework
             SetPeriodAndCloseTimeUsingExpiryFuncOrDateTime(
                 Insight.Price(symbol, Expiry.EndOfWeek, InsightDirection.Up),
                 generatedTimeUtc,
-                new DateTime(year, month, day, hour, minute, 0).ConvertToUtc(TimeZones.NewYork));
+                new DateTime(year, month, day, hour, minute, 0).ConvertToUtc(TimeZones.NewYork)
+            );
 
             // Using DateTime
             SetPeriodAndCloseTimeUsingExpiryFuncOrDateTime(
                 Insight.Price(symbol, Expiry.EndOfWeek(generatedTime), InsightDirection.Up),
                 generatedTimeUtc,
-                new DateTime(year, month, day, hour, minute, 0).ConvertToUtc(TimeZones.NewYork));
+                new DateTime(year, month, day, hour, minute, 0).ConvertToUtc(TimeZones.NewYork)
+            );
         }
 
         [Test]
         [TestCase("SPY", SecurityType.Equity, Market.USA, 2019, 1, 2, 9, 30)]
         [TestCase("EURUSD", SecurityType.Forex, Market.FXCM, 2019, 1, 2, 0, 0)]
-        public void SetPeriodAndCloseTimeUsingExpiryEndOfMonth(string ticker, SecurityType securityType, string market, int year, int month, int day, int hour, int minute)
+        public void SetPeriodAndCloseTimeUsingExpiryEndOfMonth(
+            string ticker,
+            SecurityType securityType,
+            string market,
+            int year,
+            int month,
+            int day,
+            int hour,
+            int minute
+        )
         {
             var symbol = Symbol.Create(ticker, securityType, market);
             var generatedTime = new DateTime(2018, 12, 3, 9, 31, 0);
@@ -296,19 +390,30 @@ namespace QuantConnect.Tests.Algorithm.Framework
             SetPeriodAndCloseTimeUsingExpiryFuncOrDateTime(
                 Insight.Price(symbol, Expiry.EndOfMonth, InsightDirection.Up),
                 generatedTimeUtc,
-                new DateTime(year, month, day, hour, minute, 0).ConvertToUtc(TimeZones.NewYork));
+                new DateTime(year, month, day, hour, minute, 0).ConvertToUtc(TimeZones.NewYork)
+            );
 
             // Using DateTime
             SetPeriodAndCloseTimeUsingExpiryFuncOrDateTime(
                 Insight.Price(symbol, Expiry.EndOfMonth(generatedTime), InsightDirection.Up),
                 generatedTimeUtc,
-                new DateTime(year, month, day, hour, minute, 0).ConvertToUtc(TimeZones.NewYork));
+                new DateTime(year, month, day, hour, minute, 0).ConvertToUtc(TimeZones.NewYork)
+            );
         }
 
         [Test]
         [TestCase("SPY", SecurityType.Equity, Market.USA, 2019, 1, 3, 9, 31)]
         [TestCase("EURUSD", SecurityType.Forex, Market.FXCM, 2019, 1, 3, 9, 31)]
-        public void SetPeriodAndCloseTimeUsingExpiryOneMonth(string ticker, SecurityType securityType, string market, int year, int month, int day, int hour, int minute)
+        public void SetPeriodAndCloseTimeUsingExpiryOneMonth(
+            string ticker,
+            SecurityType securityType,
+            string market,
+            int year,
+            int month,
+            int day,
+            int hour,
+            int minute
+        )
         {
             var symbol = Symbol.Create(ticker, securityType, market);
             var generatedTime = new DateTime(2018, 12, 3, 9, 31, 0);
@@ -318,36 +423,53 @@ namespace QuantConnect.Tests.Algorithm.Framework
             SetPeriodAndCloseTimeUsingExpiryFuncOrDateTime(
                 Insight.Price(symbol, Expiry.OneMonth, InsightDirection.Up),
                 generatedTimeUtc,
-                new DateTime(year, month, day, hour, minute, 0).ConvertToUtc(TimeZones.NewYork));
+                new DateTime(year, month, day, hour, minute, 0).ConvertToUtc(TimeZones.NewYork)
+            );
 
             // Using DateTime
             SetPeriodAndCloseTimeUsingExpiryFuncOrDateTime(
                 Insight.Price(symbol, Expiry.OneMonth(generatedTime), InsightDirection.Up),
                 generatedTimeUtc,
-                new DateTime(year, month, day, hour, minute, 0).ConvertToUtc(TimeZones.NewYork));
+                new DateTime(year, month, day, hour, minute, 0).ConvertToUtc(TimeZones.NewYork)
+            );
         }
 
-        private void SetPeriodAndCloseTimeUsingExpiryFuncOrDateTime(Insight insight, DateTime generatedTimeUtc, DateTime expected)
+        private void SetPeriodAndCloseTimeUsingExpiryFuncOrDateTime(
+            Insight insight,
+            DateTime generatedTimeUtc,
+            DateTime expected
+        )
         {
             var symbol = insight.Symbol;
             insight.GeneratedTimeUtc = generatedTimeUtc;
 
-            var exchangeHours = MarketHoursDatabase.FromDataFolder().GetExchangeHours(symbol.ID.Market, symbol, symbol.SecurityType);
+            var exchangeHours = MarketHoursDatabase
+                .FromDataFolder()
+                .GetExchangeHours(symbol.ID.Market, symbol, symbol.SecurityType);
             insight.SetPeriodAndCloseTime(exchangeHours);
 
             Assert.AreEqual(expected, insight.CloseTimeUtc);
         }
-
 
         [Test]
         public void ComputeCloseTimeHandlesFractionalDays()
         {
             var symbol = Symbols.SPY;
             // Friday @ 3PM + 2.5 days => Wednesday @ 12:45 by counting 2 dates (Mon, Tues@3PM) and then half a trading day (+3.25hrs) => Wed@11:45AM
-            var generatedTimeUtc = new DateTime(2018, 08, 03, 12+3, 0, 0).ConvertToUtc(TimeZones.NewYork);
-            var expectedClosedTimeUtc = new DateTime(2018, 08, 08, 11, 45, 0).ConvertToUtc(TimeZones.NewYork);
-            var exchangeHours = MarketHoursDatabase.FromDataFolder().GetExchangeHours(symbol.ID.Market, symbol, symbol.SecurityType);
-            var actualCloseTimeUtc = Insight.ComputeCloseTime(exchangeHours, generatedTimeUtc, TimeSpan.FromDays(2.5));
+            var generatedTimeUtc = new DateTime(2018, 08, 03, 12 + 3, 0, 0).ConvertToUtc(
+                TimeZones.NewYork
+            );
+            var expectedClosedTimeUtc = new DateTime(2018, 08, 08, 11, 45, 0).ConvertToUtc(
+                TimeZones.NewYork
+            );
+            var exchangeHours = MarketHoursDatabase
+                .FromDataFolder()
+                .GetExchangeHours(symbol.ID.Market, symbol, symbol.SecurityType);
+            var actualCloseTimeUtc = Insight.ComputeCloseTime(
+                exchangeHours,
+                generatedTimeUtc,
+                TimeSpan.FromDays(2.5)
+            );
             Assert.AreEqual(expectedClosedTimeUtc, actualCloseTimeUtc);
         }
 
@@ -356,10 +478,20 @@ namespace QuantConnect.Tests.Algorithm.Framework
         {
             var symbol = Symbols.SPY;
             // Friday @ 3PM + 2.5 hours => Monday @ 11:00 (1 hr on Friday, 1.5 hours on Monday)
-            var generatedTimeUtc = new DateTime(2018, 08, 03, 12 + 3, 0, 0).ConvertToUtc(TimeZones.NewYork);
-            var expectedClosedTimeUtc = new DateTime(2018, 08, 06, 11, 0, 0).ConvertToUtc(TimeZones.NewYork);
-            var exchangeHours = MarketHoursDatabase.FromDataFolder().GetExchangeHours(symbol.ID.Market, symbol, symbol.SecurityType);
-            var actualCloseTimeUtc = Insight.ComputeCloseTime(exchangeHours, generatedTimeUtc, TimeSpan.FromHours(2.5));
+            var generatedTimeUtc = new DateTime(2018, 08, 03, 12 + 3, 0, 0).ConvertToUtc(
+                TimeZones.NewYork
+            );
+            var expectedClosedTimeUtc = new DateTime(2018, 08, 06, 11, 0, 0).ConvertToUtc(
+                TimeZones.NewYork
+            );
+            var exchangeHours = MarketHoursDatabase
+                .FromDataFolder()
+                .GetExchangeHours(symbol.ID.Market, symbol, symbol.SecurityType);
+            var actualCloseTimeUtc = Insight.ComputeCloseTime(
+                exchangeHours,
+                generatedTimeUtc,
+                TimeSpan.FromHours(2.5)
+            );
             Assert.AreEqual(expectedClosedTimeUtc, actualCloseTimeUtc);
         }
 
@@ -368,10 +500,20 @@ namespace QuantConnect.Tests.Algorithm.Framework
         {
             var symbol = Symbols.SPY;
             // Friday @ 3:59PM + 1 hours => Monday @ 10:29 (1 min on Friday, 59 min on Monday)
-            var generatedTimeUtc = new DateTime(2018, 08, 03, 12 + 3, 59, 0).ConvertToUtc(TimeZones.NewYork);
-            var expectedClosedTimeUtc = new DateTime(2018, 08, 06, 10, 29, 0).ConvertToUtc(TimeZones.NewYork);
-            var exchangeHours = MarketHoursDatabase.FromDataFolder().GetExchangeHours(symbol.ID.Market, symbol, symbol.SecurityType);
-            var actualCloseTimeUtc = Insight.ComputeCloseTime(exchangeHours, generatedTimeUtc, TimeSpan.FromHours(1));
+            var generatedTimeUtc = new DateTime(2018, 08, 03, 12 + 3, 59, 0).ConvertToUtc(
+                TimeZones.NewYork
+            );
+            var expectedClosedTimeUtc = new DateTime(2018, 08, 06, 10, 29, 0).ConvertToUtc(
+                TimeZones.NewYork
+            );
+            var exchangeHours = MarketHoursDatabase
+                .FromDataFolder()
+                .GetExchangeHours(symbol.ID.Market, symbol, symbol.SecurityType);
+            var actualCloseTimeUtc = Insight.ComputeCloseTime(
+                exchangeHours,
+                generatedTimeUtc,
+                TimeSpan.FromHours(1)
+            );
             Assert.AreEqual(expectedClosedTimeUtc, actualCloseTimeUtc);
         }
 
@@ -380,10 +522,21 @@ namespace QuantConnect.Tests.Algorithm.Framework
         {
             var symbol = Symbols.SPY;
             // Friday @ 3:59PM + 1 hours => Monday @ 10:29 (1 min on Friday, 59 min on Monday)
-            var generatedTimeUtc = new DateTime(2018, 08, 03, 12 + 3, 59, 0).ConvertToUtc(TimeZones.NewYork);
-            var expectedClosedTimeUtc = new DateTime(2018, 08, 06, 10, 29, 0).ConvertToUtc(TimeZones.NewYork);
-            var exchangeHours = MarketHoursDatabase.FromDataFolder().GetExchangeHours(symbol.ID.Market, symbol, symbol.SecurityType);
-            var actualCloseTimeUtc = Insight.ComputeCloseTime(exchangeHours, generatedTimeUtc, Resolution.Hour, 1);
+            var generatedTimeUtc = new DateTime(2018, 08, 03, 12 + 3, 59, 0).ConvertToUtc(
+                TimeZones.NewYork
+            );
+            var expectedClosedTimeUtc = new DateTime(2018, 08, 06, 10, 29, 0).ConvertToUtc(
+                TimeZones.NewYork
+            );
+            var exchangeHours = MarketHoursDatabase
+                .FromDataFolder()
+                .GetExchangeHours(symbol.ID.Market, symbol, symbol.SecurityType);
+            var actualCloseTimeUtc = Insight.ComputeCloseTime(
+                exchangeHours,
+                generatedTimeUtc,
+                Resolution.Hour,
+                1
+            );
             Assert.AreEqual(expectedClosedTimeUtc, actualCloseTimeUtc);
         }
 
@@ -393,8 +546,10 @@ namespace QuantConnect.Tests.Algorithm.Framework
             var insight = Insight.Price(Symbols.SPY, Time.OneDay, InsightDirection.Up);
             var exchangeHours = SecurityExchangeHours.AlwaysOpen(TimeZones.NewYork);
 
-            Assert.That(() => insight.SetPeriodAndCloseTime(exchangeHours),
-                Throws.InvalidOperationException);
+            Assert.That(
+                () => insight.SetPeriodAndCloseTime(exchangeHours),
+                Throws.InvalidOperationException
+            );
         }
 
         [Test]
@@ -403,9 +558,10 @@ namespace QuantConnect.Tests.Algorithm.Framework
             var insight = Insight.Price(Symbols.SPY, Time.OneDay, InsightDirection.Up);
             var exchangeHours = SecurityExchangeHours.AlwaysOpen(TimeZones.NewYork);
 
-            insight.GeneratedTimeUtc = new DateTime(2018, 08, 07, 00, 33, 00).ConvertToUtc(TimeZones.NewYork);
-            Assert.That(() => insight.SetPeriodAndCloseTime(exchangeHours),
-                Throws.Nothing);
+            insight.GeneratedTimeUtc = new DateTime(2018, 08, 07, 00, 33, 00).ConvertToUtc(
+                TimeZones.NewYork
+            );
+            Assert.That(() => insight.SetPeriodAndCloseTime(exchangeHours), Throws.Nothing);
         }
 
         [Test]
@@ -439,32 +595,146 @@ namespace QuantConnect.Tests.Algorithm.Framework
 
             Assert.Multiple(() =>
             {
-                var insight1 = new Insight(Symbols.SPY, Time.OneDay, InsightType.Price, InsightDirection.Up, tag);
-                AssertInsigthValues(insight1, Symbols.SPY, Time.OneDay, InsightType.Price, InsightDirection.Up, null, null, null, null, tag,
-                    default(DateTime), default(DateTime));
+                var insight1 = new Insight(
+                    Symbols.SPY,
+                    Time.OneDay,
+                    InsightType.Price,
+                    InsightDirection.Up,
+                    tag
+                );
+                AssertInsigthValues(
+                    insight1,
+                    Symbols.SPY,
+                    Time.OneDay,
+                    InsightType.Price,
+                    InsightDirection.Up,
+                    null,
+                    null,
+                    null,
+                    null,
+                    tag,
+                    default(DateTime),
+                    default(DateTime)
+                );
 
-                var insight2 = new Insight(Symbols.SPY, Time.OneDay, InsightType.Price, InsightDirection.Up, 1.0, 0.5, "Model", 0.25, tag);
-                AssertInsigthValues(insight2, Symbols.SPY, Time.OneDay, InsightType.Price, InsightDirection.Up, 1.0, 0.5, "Model", 0.25, tag,
-                    default(DateTime), default(DateTime));
+                var insight2 = new Insight(
+                    Symbols.SPY,
+                    Time.OneDay,
+                    InsightType.Price,
+                    InsightDirection.Up,
+                    1.0,
+                    0.5,
+                    "Model",
+                    0.25,
+                    tag
+                );
+                AssertInsigthValues(
+                    insight2,
+                    Symbols.SPY,
+                    Time.OneDay,
+                    InsightType.Price,
+                    InsightDirection.Up,
+                    1.0,
+                    0.5,
+                    "Model",
+                    0.25,
+                    tag,
+                    default(DateTime),
+                    default(DateTime)
+                );
 
-                var insight3 = new Insight(Symbols.SPY, time => time.AddDays(1), InsightType.Price, InsightDirection.Up, tag);
-                AssertInsigthValues(insight3, Symbols.SPY, new TimeSpan(0), InsightType.Price, InsightDirection.Up, null, null, null, null, tag,
-                                   default(DateTime), default(DateTime));
+                var insight3 = new Insight(
+                    Symbols.SPY,
+                    time => time.AddDays(1),
+                    InsightType.Price,
+                    InsightDirection.Up,
+                    tag
+                );
+                AssertInsigthValues(
+                    insight3,
+                    Symbols.SPY,
+                    new TimeSpan(0),
+                    InsightType.Price,
+                    InsightDirection.Up,
+                    null,
+                    null,
+                    null,
+                    null,
+                    tag,
+                    default(DateTime),
+                    default(DateTime)
+                );
 
-                var insight4 = new Insight(Symbols.SPY, time => time.AddDays(1), InsightType.Price, InsightDirection.Up, 1.0, 0.5, "Model", 0.25, tag);
-                AssertInsigthValues(insight4, Symbols.SPY, new TimeSpan(0), InsightType.Price, InsightDirection.Up, 1.0, 0.5, "Model", 0.25, tag,
-                    default(DateTime), default(DateTime));
+                var insight4 = new Insight(
+                    Symbols.SPY,
+                    time => time.AddDays(1),
+                    InsightType.Price,
+                    InsightDirection.Up,
+                    1.0,
+                    0.5,
+                    "Model",
+                    0.25,
+                    tag
+                );
+                AssertInsigthValues(
+                    insight4,
+                    Symbols.SPY,
+                    new TimeSpan(0),
+                    InsightType.Price,
+                    InsightDirection.Up,
+                    1.0,
+                    0.5,
+                    "Model",
+                    0.25,
+                    tag,
+                    default(DateTime),
+                    default(DateTime)
+                );
 
                 var generatedTime = new DateTime(2024, 05, 23);
-                var insight5 = new Insight(generatedTime, Symbols.SPY, Time.OneDay, InsightType.Price, InsightDirection.Up, 1.0, 0.5, "Model", 0.25, tag);
-                AssertInsigthValues(insight5, Symbols.SPY, Time.OneDay, InsightType.Price, InsightDirection.Up, 1.0, 0.5, "Model", 0.25, tag,
-                    generatedTime, generatedTime + Time.OneDay);
-
+                var insight5 = new Insight(
+                    generatedTime,
+                    Symbols.SPY,
+                    Time.OneDay,
+                    InsightType.Price,
+                    InsightDirection.Up,
+                    1.0,
+                    0.5,
+                    "Model",
+                    0.25,
+                    tag
+                );
+                AssertInsigthValues(
+                    insight5,
+                    Symbols.SPY,
+                    Time.OneDay,
+                    InsightType.Price,
+                    InsightDirection.Up,
+                    1.0,
+                    0.5,
+                    "Model",
+                    0.25,
+                    tag,
+                    generatedTime,
+                    generatedTime + Time.OneDay
+                );
             });
         }
 
-        private static void AssertInsigthValues(Insight insight, Symbol symbol, TimeSpan period, InsightType type, InsightDirection direction,
-            double? magnitude, double? confidence, string sourceModel, double? weight, string tag, DateTime generatedTimeUtc, DateTime closeTimeUtc)
+        private static void AssertInsigthValues(
+            Insight insight,
+            Symbol symbol,
+            TimeSpan period,
+            InsightType type,
+            InsightDirection direction,
+            double? magnitude,
+            double? confidence,
+            string sourceModel,
+            double? weight,
+            string tag,
+            DateTime generatedTimeUtc,
+            DateTime closeTimeUtc
+        )
         {
             Assert.AreEqual(symbol, insight.Symbol);
             Assert.AreEqual(period, insight.Period);

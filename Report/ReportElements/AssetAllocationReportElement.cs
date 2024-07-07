@@ -45,7 +45,8 @@ namespace QuantConnect.Report.ReportElements
             BacktestResult backtest,
             LiveResult live,
             List<PointInTimePortfolio> backtestPortfolios,
-            List<PointInTimePortfolio> livePortfolios)
+            List<PointInTimePortfolio> livePortfolios
+        )
         {
             _backtest = backtest;
             _backtestPortfolios = backtestPortfolios;
@@ -70,11 +71,33 @@ namespace QuantConnect.Report.ReportElements
                 var data = new PyList();
                 var liveData = new PyList();
 
-                data.Append(backtestSeries.SortBy(x => -x).Where(x => x.Value != 0).Keys.Select(x => x.Value).ToList().ToPython());
-                data.Append(backtestSeries.SortBy(x => -x).Where(x => x.Value != 0).Values.ToList().ToPython());
+                data.Append(
+                    backtestSeries
+                        .SortBy(x => -x)
+                        .Where(x => x.Value != 0)
+                        .Keys.Select(x => x.Value)
+                        .ToList()
+                        .ToPython()
+                );
+                data.Append(
+                    backtestSeries
+                        .SortBy(x => -x)
+                        .Where(x => x.Value != 0)
+                        .Values.ToList()
+                        .ToPython()
+                );
 
-                liveData.Append(liveSeries.SortBy(x => -x).Where(x => x.Value != 0).Keys.Select(x => x.Value).ToList().ToPython());
-                liveData.Append(liveSeries.SortBy(x => -x).Where(x => x.Value != 0).Values.ToList().ToPython());
+                liveData.Append(
+                    liveSeries
+                        .SortBy(x => -x)
+                        .Where(x => x.Value != 0)
+                        .Keys.Select(x => x.Value)
+                        .ToList()
+                        .ToPython()
+                );
+                liveData.Append(
+                    liveSeries.SortBy(x => -x).Where(x => x.Value != 0).Values.ToList().ToPython()
+                );
 
                 result = Charting.GetAssetAllocation(data, liveData);
             }

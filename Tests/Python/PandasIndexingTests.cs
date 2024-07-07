@@ -45,7 +45,9 @@ namespace QuantConnect.Tests.Python
         {
             using (Py.GIL())
             {
-                Assert.DoesNotThrow((() => _pandasIndexingTests.test_indexing_dataframe_with_list()));
+                Assert.DoesNotThrow(
+                    (() => _pandasIndexingTests.test_indexing_dataframe_with_list())
+                );
             }
         }
 
@@ -53,7 +55,7 @@ namespace QuantConnect.Tests.Python
         public void ContainsUserMappedTickers()
         {
             using (Py.GIL())
-            { 
+            {
                 PyObject result = _pandasDataFrameTests.test_contains_user_mapped_ticker();
                 var test = result.As<bool>();
 
@@ -67,7 +69,10 @@ namespace QuantConnect.Tests.Python
         {
             using (Py.GIL())
             {
-                PyObject result = _pandasDataFrameTests.test_contains_user_defined_columns_with_spaces(columnName);
+                PyObject result =
+                    _pandasDataFrameTests.test_contains_user_defined_columns_with_spaces(
+                        columnName
+                    );
                 var test = result.As<bool>();
 
                 Assert.IsTrue(test);
@@ -82,7 +87,12 @@ namespace QuantConnect.Tests.Python
                 PyObject result = _pandasDataFrameTests.test_expected_exception();
                 var exception = result.As<string>();
 
-                Assert.IsTrue(exception.Contains("No key found for either mapped or original key. Mapped Key: ['AAPL R735QTJ8XC9X']; Original Key: ['aapl']", StringComparison.InvariantCulture));
+                Assert.IsTrue(
+                    exception.Contains(
+                        "No key found for either mapped or original key. Mapped Key: ['AAPL R735QTJ8XC9X']; Original Key: ['aapl']",
+                        StringComparison.InvariantCulture
+                    )
+                );
             }
         }
     }

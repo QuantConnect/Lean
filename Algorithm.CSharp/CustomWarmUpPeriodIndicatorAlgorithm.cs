@@ -15,10 +15,10 @@
 
 using System;
 using System.Collections.Generic;
-using QuantConnect.Data.Market;
-using QuantConnect.Interfaces;
-using QuantConnect.Indicators;
 using QuantConnect.Data;
+using QuantConnect.Data.Market;
+using QuantConnect.Indicators;
+using QuantConnect.Interfaces;
 
 namespace QuantConnect.Algorithm.CSharp
 {
@@ -59,11 +59,15 @@ namespace QuantConnect.Algorithm.CSharp
             // Check _customWarmUp indicator has already been warmed up with the requested data
             if (!_customWarmUp.IsReady)
             {
-                throw new RegressionTestException("_customWarmUp indicator was expected to be ready");
+                throw new RegressionTestException(
+                    "_customWarmUp indicator was expected to be ready"
+                );
             }
             if (_customWarmUp.Samples != 60)
             {
-                throw new RegressionTestException("_customWarmUp indicator was expected to have processed 60 datapoints already");
+                throw new RegressionTestException(
+                    "_customWarmUp indicator was expected to have processed 60 datapoints already"
+                );
             }
 
             // Try to warm up _customNotWarmUp indicator. It's expected from LEAN to skip the warm up process
@@ -73,29 +77,39 @@ namespace QuantConnect.Algorithm.CSharp
             // Check _customNotWarmUp indicator is not ready, because the warm up process was skipped
             if (_customNotWarmUp.IsReady)
             {
-                throw new RegressionTestException("_customNotWarmUp indicator wasn't expected to be warmed up");
+                throw new RegressionTestException(
+                    "_customNotWarmUp indicator wasn't expected to be warmed up"
+                );
             }
 
             WarmUpIndicator("SPY", _customNotInherit, Resolution.Minute);
             // Check _customWarmUp indicator has already been warmed up with the requested data
             if (!_customNotInherit.IsReady)
             {
-                throw new RegressionTestException("_customNotInherit indicator was expected to be ready");
+                throw new RegressionTestException(
+                    "_customNotInherit indicator was expected to be ready"
+                );
             }
             if (_customNotInherit.Samples != 60)
             {
-                throw new RegressionTestException("_customNotInherit indicator was expected to have processed 60 datapoints already");
+                throw new RegressionTestException(
+                    "_customNotInherit indicator was expected to have processed 60 datapoints already"
+                );
             }
 
             WarmUpIndicator("SPY", _duplicateSMA, Resolution.Minute);
             // Check _customWarmUp indicator has already been warmed up with the requested data
             if (!_duplicateSMA.IsReady)
             {
-                throw new RegressionTestException("_duplicateSMA indicator was expected to be ready");
+                throw new RegressionTestException(
+                    "_duplicateSMA indicator was expected to be ready"
+                );
             }
             if (_duplicateSMA.Samples != 60)
             {
-                throw new RegressionTestException("_duplicateSMA indicator was expected to have processed 60 datapoints already");
+                throw new RegressionTestException(
+                    "_duplicateSMA indicator was expected to have processed 60 datapoints already"
+                );
             }
         }
 
@@ -119,13 +133,17 @@ namespace QuantConnect.Algorithm.CSharp
                 // Check _customNotWarmUp indicator is ready when the number of samples is bigger than its period
                 if (_customNotWarmUp.IsReady != (_customNotWarmUp.Samples >= 60))
                 {
-                    throw new RegressionTestException("_customNotWarmUp indicator was expected to be ready when the number of samples were bigger that its WarmUpPeriod parameter");
+                    throw new RegressionTestException(
+                        "_customNotWarmUp indicator was expected to be ready when the number of samples were bigger that its WarmUpPeriod parameter"
+                    );
                 }
 
                 // Check their values are the same when both are ready
-                if (diff > 1e-10m && _customNotWarmUp.IsReady && _customWarmUp.IsReady) 
+                if (diff > 1e-10m && _customNotWarmUp.IsReady && _customWarmUp.IsReady)
                 {
-                    throw new RegressionTestException($"The values of the indicators are not the same. The difference is {diff}");
+                    throw new RegressionTestException(
+                        $"The values of the indicators are not the same. The difference is {diff}"
+                    );
                 }
             }
         }
@@ -138,6 +156,7 @@ namespace QuantConnect.Algorithm.CSharp
         {
             private Queue<IBaseData> _queue;
             private int _period;
+
             public CSMANotWarmUp(string name, int period)
                 : base(name)
             {
@@ -172,6 +191,7 @@ namespace QuantConnect.Algorithm.CSharp
             {
                 WarmUpPeriod = period;
             }
+
             public int WarmUpPeriod { get; private set; }
         }
 
@@ -203,35 +223,36 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// This is used by the regression test system to indicate what the expected statistics are from running the algorithm
         /// </summary>
-        public Dictionary<string, string> ExpectedStatistics => new Dictionary<string, string>
-        {
-            {"Total Orders", "1"},
-            {"Average Win", "0%"},
-            {"Average Loss", "0%"},
-            {"Compounding Annual Return", "272.157%"},
-            {"Drawdown", "2.200%"},
-            {"Expectancy", "0"},
-            {"Start Equity", "100000"},
-            {"End Equity", "101694.38"},
-            {"Net Profit", "1.694%"},
-            {"Sharpe Ratio", "8.863"},
-            {"Sortino Ratio", "0"},
-            {"Probabilistic Sharpe Ratio", "67.609%"},
-            {"Loss Rate", "0%"},
-            {"Win Rate", "0%"},
-            {"Profit-Loss Ratio", "0"},
-            {"Alpha", "-0.003"},
-            {"Beta", "0.998"},
-            {"Annual Standard Deviation", "0.222"},
-            {"Annual Variance", "0.049"},
-            {"Information Ratio", "-14.534"},
-            {"Tracking Error", "0.001"},
-            {"Treynor Ratio", "1.972"},
-            {"Total Fees", "$3.45"},
-            {"Estimated Strategy Capacity", "$310000000.00"},
-            {"Lowest Capacity Asset", "SPY R735QTJ8XC9X"},
-            {"Portfolio Turnover", "19.96%"},
-            {"OrderListHash", "8c925e7c6c10ff1da3a40669accba91a"}
-        };
+        public Dictionary<string, string> ExpectedStatistics =>
+            new Dictionary<string, string>
+            {
+                { "Total Orders", "1" },
+                { "Average Win", "0%" },
+                { "Average Loss", "0%" },
+                { "Compounding Annual Return", "272.157%" },
+                { "Drawdown", "2.200%" },
+                { "Expectancy", "0" },
+                { "Start Equity", "100000" },
+                { "End Equity", "101694.38" },
+                { "Net Profit", "1.694%" },
+                { "Sharpe Ratio", "8.863" },
+                { "Sortino Ratio", "0" },
+                { "Probabilistic Sharpe Ratio", "67.609%" },
+                { "Loss Rate", "0%" },
+                { "Win Rate", "0%" },
+                { "Profit-Loss Ratio", "0" },
+                { "Alpha", "-0.003" },
+                { "Beta", "0.998" },
+                { "Annual Standard Deviation", "0.222" },
+                { "Annual Variance", "0.049" },
+                { "Information Ratio", "-14.534" },
+                { "Tracking Error", "0.001" },
+                { "Treynor Ratio", "1.972" },
+                { "Total Fees", "$3.45" },
+                { "Estimated Strategy Capacity", "$310000000.00" },
+                { "Lowest Capacity Asset", "SPY R735QTJ8XC9X" },
+                { "Portfolio Turnover", "19.96%" },
+                { "OrderListHash", "8c925e7c6c10ff1da3a40669accba91a" }
+            };
     }
 }

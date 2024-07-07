@@ -53,7 +53,8 @@ namespace QuantConnect
                 return dt =>
                 {
                     var value = 8 - (int)dt.DayOfWeek;
-                    if (value == 8) value = 1;   // Sunday
+                    if (value == 8)
+                        value = 1; // Sunday
                     return dt.AddDays(value).Date;
                 };
             }

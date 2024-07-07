@@ -15,12 +15,12 @@
 */
 
 using System;
-using QuantConnect.Util;
-using QuantConnect.Data;
 using System.Collections;
-using QuantConnect.Interfaces;
 using System.Collections.Generic;
+using QuantConnect.Data;
 using QuantConnect.Data.Auxiliary;
+using QuantConnect.Interfaces;
+using QuantConnect.Util;
 
 namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
 {
@@ -56,9 +56,10 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
             SubscriptionDataConfig config,
             IFactorFileProvider factorFileProvider,
             IMapFileProvider mapFileProvider,
-            ITradableDateEventProvider []tradableDateEventProviders,
+            ITradableDateEventProvider[] tradableDateEventProviders,
             ITradableDatesNotifier tradableDayNotifier,
-            DateTime startTime)
+            DateTime startTime
+        )
         {
             Config = config;
             _startTime = startTime;
@@ -109,7 +110,8 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
                 // Late initialization so it is performed in the data feed stack
                 for (var i = 0; i < _tradableDateEventProviders.Length; i++)
                 {
-                    _tradableDateEventProviders[i].Initialize(Config, _factorFileProvider, _mapFileProvider, _startTime);
+                    _tradableDateEventProviders[i]
+                        .Initialize(Config, _factorFileProvider, _mapFileProvider, _startTime);
                 }
             }
         }
@@ -121,7 +123,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
         {
             for (var i = 0; i < _tradableDateEventProviders.Length; i++)
             {
-                var disposable =_tradableDateEventProviders[i] as IDisposable;
+                var disposable = _tradableDateEventProviders[i] as IDisposable;
                 disposable?.DisposeSafely();
             }
         }
@@ -132,7 +134,9 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
         /// <remarks>Not used</remarks>
         public void Reset()
         {
-            throw new NotImplementedException("Reset method not implemented. Assumes loop will only be used once.");
+            throw new NotImplementedException(
+                "Reset method not implemented. Assumes loop will only be used once."
+            );
         }
 
         object IEnumerator.Current => Current;
@@ -140,10 +144,6 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
         /// <summary>
         /// Last read BaseData object from this type and source
         /// </summary>
-        public BaseData Current
-        {
-            get;
-            private set;
-        }
+        public BaseData Current { get; private set; }
     }
 }

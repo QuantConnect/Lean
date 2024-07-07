@@ -33,7 +33,11 @@ namespace QuantConnect.Tests.Indicators
 
         protected override Action<IndicatorBase<IndicatorDataPoint>, double> Assertion =>
             (indicator, expected) =>
-                Assert.AreEqual(expected, (double) ((BollingerBands) indicator).LowerBand.Current.Value, 1e-3);
+                Assert.AreEqual(
+                    expected,
+                    (double)((BollingerBands)indicator).LowerBand.Current.Value,
+                    1e-3
+                );
 
         [Test]
         public void ComparesWithExternalDataMiddleBand()
@@ -42,7 +46,7 @@ namespace QuantConnect.Tests.Indicators
                 CreateIndicator() as BollingerBands,
                 TestFileName,
                 "Moving Average 20",
-                ind => (double) ind.MiddleBand.Current.Value
+                ind => (double)ind.MiddleBand.Current.Value
             );
         }
 
@@ -53,7 +57,7 @@ namespace QuantConnect.Tests.Indicators
                 CreateIndicator() as BollingerBands,
                 TestFileName,
                 "Bollinger Bands® 20 2 Top",
-                ind => (double) ind.UpperBand.Current.Value
+                ind => (double)ind.UpperBand.Current.Value
             );
         }
 
@@ -141,7 +145,9 @@ namespace QuantConnect.Tests.Indicators
             {
                 if (bb.IsReady && lastPercentB == bb.PercentB.Current)
                 {
-                    throw new ArgumentException("BollingerBand is stale and should not be updating");
+                    throw new ArgumentException(
+                        "BollingerBand is stale and should not be updating"
+                    );
                 }
 
                 lastUpdateTime = e.Time;

@@ -48,14 +48,17 @@ namespace QuantConnect.Securities.Forex
         /// <param name="currencyConverter">Currency converter used to convert <see cref="CashAmount"/>
         /// instances into units of the account currency</param>
         /// <param name="registeredTypes">Provides all data types registered in the algorithm</param>
-        public Forex(SecurityExchangeHours exchangeHours,
+        public Forex(
+            SecurityExchangeHours exchangeHours,
             Cash quoteCurrency,
             Cash baseCurrency,
             SubscriptionDataConfig config,
             SymbolProperties symbolProperties,
             ICurrencyConverter currencyConverter,
-            IRegisteredSecurityDataTypesProvider registeredTypes)
-            : base(config,
+            IRegisteredSecurityDataTypesProvider registeredTypes
+        )
+            : base(
+                config,
                 quoteCurrency,
                 symbolProperties,
                 new ForexExchange(exchangeHours),
@@ -72,7 +75,7 @@ namespace QuantConnect.Securities.Forex
                 currencyConverter,
                 registeredTypes,
                 Securities.MarginInterestRateModel.Null
-                )
+            )
         {
             BaseCurrency = baseCurrency;
             Holdings = new ForexHolding(this, currencyConverter);
@@ -90,15 +93,18 @@ namespace QuantConnect.Securities.Forex
         /// instances into units of the account currency</param>
         /// <param name="registeredTypes">Provides all data types registered in the algorithm</param>
         /// <param name="securityCache">Cache for storing Security data</param>
-        public Forex(Symbol symbol,
+        public Forex(
+            Symbol symbol,
             SecurityExchangeHours exchangeHours,
             Cash quoteCurrency,
             Cash baseCurrency,
             SymbolProperties symbolProperties,
             ICurrencyConverter currencyConverter,
             IRegisteredSecurityDataTypesProvider registeredTypes,
-            SecurityCache securityCache)
-            : base(symbol,
+            SecurityCache securityCache
+        )
+            : base(
+                symbol,
                 quoteCurrency,
                 symbolProperties,
                 new ForexExchange(exchangeHours),
@@ -115,7 +121,7 @@ namespace QuantConnect.Securities.Forex
                 currencyConverter,
                 registeredTypes,
                 Securities.MarginInterestRateModel.Null
-                )
+            )
         {
             BaseCurrency = baseCurrency;
             Holdings = new ForexHolding(this, currencyConverter);
@@ -127,11 +133,17 @@ namespace QuantConnect.Securities.Forex
         /// <param name="currencyPair">The input currency pair to be decomposed, for example, "EURUSD"</param>
         /// <param name="baseCurrency">The output base currency</param>
         /// <param name="quoteCurrency">The output quote currency</param>
-        public static void DecomposeCurrencyPair(string currencyPair, out string baseCurrency, out string quoteCurrency)
+        public static void DecomposeCurrencyPair(
+            string currencyPair,
+            out string baseCurrency,
+            out string quoteCurrency
+        )
         {
             if (!CurrencyPairUtil.IsForexDecomposable(currencyPair))
             {
-                throw new ArgumentException($"Currency pairs must be exactly 6 characters: {currencyPair}");
+                throw new ArgumentException(
+                    $"Currency pairs must be exactly 6 characters: {currencyPair}"
+                );
             }
 
             baseCurrency = currencyPair.Substring(0, 3);

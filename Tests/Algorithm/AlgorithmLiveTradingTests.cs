@@ -41,8 +41,12 @@ namespace QuantConnect.Tests.Algorithm
             algorithm.SubscriptionManager.SetDataManager(new DataManagerStub(algorithm));
             algorithm.SetLiveMode(false);
             var security = algorithm.AddEquity("SPY");
-            security.Exchange = new SecurityExchange(SecurityExchangeHours.AlwaysOpen(TimeZones.NewYork));
-            security.Exchange.SetLocalDateTimeFrontierProvider(algorithm.TimeKeeper.GetLocalTimeKeeper(TimeZones.NewYork));
+            security.Exchange = new SecurityExchange(
+                SecurityExchangeHours.AlwaysOpen(TimeZones.NewYork)
+            );
+            security.Exchange.SetLocalDateTimeFrontierProvider(
+                algorithm.TimeKeeper.GetLocalTimeKeeper(TimeZones.NewYork)
+            );
             security.SetMarketPrice(new Tick { Value = 270m });
             algorithm.SetFinishedWarmingUp();
 
@@ -75,7 +79,7 @@ namespace QuantConnect.Tests.Algorithm
 
     public class NullBrokerage : IBrokerage
     {
-        public virtual void Dispose() {}
+        public virtual void Dispose() { }
 #pragma warning disable 0067 // NullBrokerage doesn't use any of these so we will just ignore them
         public event EventHandler<List<OrderEvent>> OrdersStatusChanged;
         public event EventHandler<OrderEvent> OptionPositionAssigned;
@@ -90,19 +94,63 @@ namespace QuantConnect.Tests.Algorithm
 
         public string Name => "NullBrokerage";
         public bool IsConnected { get; } = true;
-        public List<Order> GetOpenOrders() { return new List<Order>(); }
-        public List<Holding> GetAccountHoldings() { return new List<Holding>(); }
-        public List<CashAmount> GetCashBalance() { return new List<CashAmount>(); }
-        public bool PlaceOrder(Order order) { return true; }
-        public bool UpdateOrder(Order order) { return true; }
-        public bool CancelOrder(Order order) { return true; }
-        public void Connect() {}
-        public void Disconnect() {}
+
+        public List<Order> GetOpenOrders()
+        {
+            return new List<Order>();
+        }
+
+        public List<Holding> GetAccountHoldings()
+        {
+            return new List<Holding>();
+        }
+
+        public List<CashAmount> GetCashBalance()
+        {
+            return new List<CashAmount>();
+        }
+
+        public bool PlaceOrder(Order order)
+        {
+            return true;
+        }
+
+        public bool UpdateOrder(Order order)
+        {
+            return true;
+        }
+
+        public bool CancelOrder(Order order)
+        {
+            return true;
+        }
+
+        public void Connect() { }
+
+        public void Disconnect() { }
+
         public bool AccountInstantlyUpdated { get; } = true;
         public string AccountBaseCurrency => Currencies.USD;
-        public virtual IEnumerable<BaseData> GetHistory(HistoryRequest request) { return Enumerable.Empty<BaseData>(); }
+
+        public virtual IEnumerable<BaseData> GetHistory(HistoryRequest request)
+        {
+            return Enumerable.Empty<BaseData>();
+        }
+
         public DateTime LastSyncDateTimeUtc { get; } = DateTime.UtcNow;
-        public bool ShouldPerformCashSync(DateTime currentTimeUtc) { return false; }
-        public bool PerformCashSync(IAlgorithm algorithm, DateTime currentTimeUtc, Func<TimeSpan> getTimeSinceLastFill) { return true; }
+
+        public bool ShouldPerformCashSync(DateTime currentTimeUtc)
+        {
+            return false;
+        }
+
+        public bool PerformCashSync(
+            IAlgorithm algorithm,
+            DateTime currentTimeUtc,
+            Func<TimeSpan> getTimeSinceLastFill
+        )
+        {
+            return true;
+        }
     }
 }

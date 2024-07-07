@@ -49,22 +49,27 @@ namespace QuantConnect.Tests.Engine.DataFeeds
         public void ThrowsIfDataIsNotIndexBased()
         {
             var config = new SubscriptionDataConfig(
-                    typeof(TradeBar),
-                    Symbols.SPY,
-                    Resolution.Daily,
-                    TimeZones.NewYork,
-                    TimeZones.NewYork,
-                    true,
-                    true,
-                    false);
+                typeof(TradeBar),
+                Symbols.SPY,
+                Resolution.Daily,
+                TimeZones.NewYork,
+                TimeZones.NewYork,
+                true,
+                true,
+                false
+            );
 
-            Assert.Throws<ArgumentException>(() => new IndexSubscriptionDataSourceReader(
-                _dataCacheProvider,
-                config,
-                _initialDate,
-                false,
-                TestGlobals.DataProvider,
-                null));
+            Assert.Throws<ArgumentException>(
+                () =>
+                    new IndexSubscriptionDataSourceReader(
+                        _dataCacheProvider,
+                        config,
+                        _initialDate,
+                        false,
+                        TestGlobals.DataProvider,
+                        null
+                    )
+            );
         }
 
         [Test]
@@ -78,7 +83,8 @@ namespace QuantConnect.Tests.Engine.DataFeeds
                 TimeZones.NewYork,
                 true,
                 true,
-                false);
+                false
+            );
 
             var reader = new IndexSubscriptionDataSourceReader(
                 _dataCacheProvider,
@@ -86,7 +92,8 @@ namespace QuantConnect.Tests.Engine.DataFeeds
                 _initialDate,
                 false,
                 TestGlobals.DataProvider,
-                null);
+                null
+            );
             var source = (new TradeBar()).GetSource(config, _initialDate, false);
             _dataCacheProvider.Data = "20000101 00:00,2,2,2,2,2";
             var dataBars = reader.Read(source).First();
@@ -102,25 +109,44 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             public static string ReaderLine { get; set; }
             public static string IndexLine { get; set; }
 
-            public override BaseData Reader(SubscriptionDataConfig config, string line, DateTime date, bool isLiveMode)
+            public override BaseData Reader(
+                SubscriptionDataConfig config,
+                string line,
+                DateTime date,
+                bool isLiveMode
+            )
             {
                 ReaderLine = line;
                 var bar = new TradeBar();
                 return bar.Reader(config, line, date, isLiveMode);
             }
-            public override SubscriptionDataSource GetSourceForAnIndex(SubscriptionDataConfig config, DateTime date, string index, bool isLiveMode)
+
+            public override SubscriptionDataSource GetSourceForAnIndex(
+                SubscriptionDataConfig config,
+                DateTime date,
+                string index,
+                bool isLiveMode
+            )
             {
                 IndexLine = index;
-                return new SubscriptionDataSource("",
+                return new SubscriptionDataSource(
+                    "",
                     SubscriptionTransportMedium.LocalFile,
-                    FileFormat.Csv);
+                    FileFormat.Csv
+                );
             }
 
-            public override SubscriptionDataSource GetSource(SubscriptionDataConfig config, DateTime date, bool isLiveMode)
+            public override SubscriptionDataSource GetSource(
+                SubscriptionDataConfig config,
+                DateTime date,
+                bool isLiveMode
+            )
             {
-                return new SubscriptionDataSource("",
+                return new SubscriptionDataSource(
+                    "",
                     SubscriptionTransportMedium.LocalFile,
-                    FileFormat.Csv);
+                    FileFormat.Csv
+                );
             }
         }
 
@@ -139,13 +165,14 @@ namespace QuantConnect.Tests.Engine.DataFeeds
                 stream.Position = 0;
                 return stream;
             }
-            public void Store(string key, byte[] data)
-            {
-            }
+
+            public void Store(string key, byte[] data) { }
+
             public List<string> GetZipEntries(string zipFile)
             {
                 throw new NotImplementedException();
             }
+
             public void Dispose()
             {
                 _writer.DisposeSafely();

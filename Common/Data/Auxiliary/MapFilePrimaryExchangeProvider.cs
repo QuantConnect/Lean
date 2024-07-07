@@ -21,7 +21,7 @@ using QuantConnect.Interfaces;
 namespace QuantConnect.Data.Auxiliary
 {
     /// <summary>
-    /// Implementation of IPrimaryExchangeProvider from map files. 
+    /// Implementation of IPrimaryExchangeProvider from map files.
     /// </summary>
     public class MapFilePrimaryExchangeProvider : IPrimaryExchangeProvider
     {
@@ -48,7 +48,8 @@ namespace QuantConnect.Data.Auxiliary
             Exchange primaryExchange;
             if (!_primaryExchangeBySid.TryGetValue(securityIdentifier, out primaryExchange))
             {
-                var mapFile = _mapFileProvider.Get(AuxiliaryDataKey.Create(securityIdentifier))
+                var mapFile = _mapFileProvider
+                    .Get(AuxiliaryDataKey.Create(securityIdentifier))
                     .ResolveMapFile(securityIdentifier.Symbol, securityIdentifier.Date);
                 if (mapFile != null && mapFile.Any())
                 {

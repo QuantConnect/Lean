@@ -26,7 +26,9 @@ namespace QuantConnect.Algorithm.CSharp
     /// margin calls NOT being triggered when the market is about to close, GH issue 4064.
     /// Brother too <see cref="MarginCallClosedMarketRegressionAlgorithm"/>
     /// </summary>
-    public class NoMarginCallExpectedRegressionAlgorithm : QCAlgorithm, IRegressionAlgorithmDefinition
+    public class NoMarginCallExpectedRegressionAlgorithm
+        : QCAlgorithm,
+            IRegressionAlgorithmDefinition
     {
         private int _marginCall;
         private Symbol _spy;
@@ -46,14 +48,18 @@ namespace QuantConnect.Algorithm.CSharp
 
             _closedMarketLeverage = 2;
             _openMarketLeverage = 5;
-            security.BuyingPowerModel = new PatternDayTradingMarginModel(_closedMarketLeverage, _openMarketLeverage);
+            security.BuyingPowerModel = new PatternDayTradingMarginModel(
+                _closedMarketLeverage,
+                _openMarketLeverage
+            );
 
             Schedule.On(
                 DateRules.EveryDay(_spy),
                 // 15 minutes before market close, because PatternDayTradingMarginModel starts using closed
                 // market leverage 10 minutes before market closes.
                 TimeRules.BeforeMarketClose(_spy, 15),
-                () => {
+                () =>
+                {
                     // before market close we reduce our position to closed market leverage
                     SetHoldings(_spy, _closedMarketLeverage);
                 }
@@ -62,7 +68,8 @@ namespace QuantConnect.Algorithm.CSharp
             Schedule.On(
                 DateRules.EveryDay(_spy),
                 TimeRules.AfterMarketOpen(_spy, 1), // 1 min so that price is set
-                () => {
+                () =>
+                {
                     // at market open we increase our position to open market leverage
                     SetHoldings(_spy, _openMarketLeverage);
                 }
@@ -82,7 +89,9 @@ namespace QuantConnect.Algorithm.CSharp
         {
             if (_marginCall != 0)
             {
-                throw new RegressionTestException($"We expected NO margin call to happen, {_marginCall} occurred");
+                throw new RegressionTestException(
+                    $"We expected NO margin call to happen, {_marginCall} occurred"
+                );
             }
         }
 
@@ -114,35 +123,36 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// This is used by the regression test system to indicate what the expected statistics are from running the algorithm
         /// </summary>
-        public Dictionary<string, string> ExpectedStatistics => new Dictionary<string, string>
-        {
-            {"Total Orders", "10"},
-            {"Average Win", "2.45%"},
-            {"Average Loss", "-1.97%"},
-            {"Compounding Annual Return", "9636.014%"},
-            {"Drawdown", "9.800%"},
-            {"Expectancy", "0.346"},
-            {"Start Equity", "100000"},
-            {"End Equity", "106028.40"},
-            {"Net Profit", "6.028%"},
-            {"Sharpe Ratio", "42.843"},
-            {"Sortino Ratio", "0"},
-            {"Probabilistic Sharpe Ratio", "63.954%"},
-            {"Loss Rate", "40%"},
-            {"Win Rate", "60%"},
-            {"Profit-Loss Ratio", "1.24"},
-            {"Alpha", "28.365"},
-            {"Beta", "3.698"},
-            {"Annual Standard Deviation", "0.833"},
-            {"Annual Variance", "0.693"},
-            {"Information Ratio", "54.921"},
-            {"Tracking Error", "0.614"},
-            {"Treynor Ratio", "9.645"},
-            {"Total Fees", "$109.26"},
-            {"Estimated Strategy Capacity", "$8400000.00"},
-            {"Lowest Capacity Asset", "SPY R735QTJ8XC9X"},
-            {"Portfolio Turnover", "633.17%"},
-            {"OrderListHash", "07c47cca3bc30019a6fd6420d3ce8ee5"}
-        };
+        public Dictionary<string, string> ExpectedStatistics =>
+            new Dictionary<string, string>
+            {
+                { "Total Orders", "10" },
+                { "Average Win", "2.45%" },
+                { "Average Loss", "-1.97%" },
+                { "Compounding Annual Return", "9636.014%" },
+                { "Drawdown", "9.800%" },
+                { "Expectancy", "0.346" },
+                { "Start Equity", "100000" },
+                { "End Equity", "106028.40" },
+                { "Net Profit", "6.028%" },
+                { "Sharpe Ratio", "42.843" },
+                { "Sortino Ratio", "0" },
+                { "Probabilistic Sharpe Ratio", "63.954%" },
+                { "Loss Rate", "40%" },
+                { "Win Rate", "60%" },
+                { "Profit-Loss Ratio", "1.24" },
+                { "Alpha", "28.365" },
+                { "Beta", "3.698" },
+                { "Annual Standard Deviation", "0.833" },
+                { "Annual Variance", "0.693" },
+                { "Information Ratio", "54.921" },
+                { "Tracking Error", "0.614" },
+                { "Treynor Ratio", "9.645" },
+                { "Total Fees", "$109.26" },
+                { "Estimated Strategy Capacity", "$8400000.00" },
+                { "Lowest Capacity Asset", "SPY R735QTJ8XC9X" },
+                { "Portfolio Turnover", "633.17%" },
+                { "OrderListHash", "07c47cca3bc30019a6fd6420d3ce8ee5" }
+            };
     }
 }

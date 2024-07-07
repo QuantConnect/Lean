@@ -56,9 +56,13 @@ namespace QuantConnect.Tests.Common.Securities.Options
             var securities = new SecurityManager(new TimeKeeper(DateTime.Now, TimeZones.NewYork));
             var transactions = new SecurityTransactionManager(null, securities);
             var transactionHandler = new BacktestingTransactionHandler();
-            var portfolio = new SecurityPortfolioManager(securities, transactions, new AlgorithmSettings());
+            var portfolio = new SecurityPortfolioManager(
+                securities,
+                transactions,
+                new AlgorithmSettings()
+            );
 
-            var EUR = new Cash("EUR", 100*192, 10);
+            var EUR = new Cash("EUR", 100 * 192, 10);
             portfolio.CashBook.Add("EUR", EUR);
             portfolio.SetCash("USD", 0, 1);
             algorithm.Securities = securities;
@@ -84,7 +88,9 @@ namespace QuantConnect.Tests.Common.Securities.Options
                     SecurityExchangeHours.AlwaysOpen(TimeZones.NewYork),
                     CreateTradeBarConfig(Symbols.SPY_C_192_Feb19_2016),
                     EUR,
-                    new OptionSymbolProperties(new SymbolProperties("EUR", "EUR", 100, 0.01m, 1, string.Empty)),
+                    new OptionSymbolProperties(
+                        new SymbolProperties("EUR", "EUR", 100, 0.01m, 1, string.Empty)
+                    ),
                     ErrorCurrencyConverter.Instance,
                     RegisteredSecurityDataTypesProvider.Null
                 )
@@ -92,7 +98,18 @@ namespace QuantConnect.Tests.Common.Securities.Options
             securities[Symbols.SPY_C_192_Feb19_2016].Holdings.SetHoldings(1, 1);
             securities[Symbols.SPY].SetMarketPrice(new Tick { Value = 200 });
 
-            transactions.AddOrder(new SubmitOrderRequest(OrderType.OptionExercise, SecurityType.Option, Symbols.SPY_C_192_Feb19_2016, -1, 0, 0, securities.UtcTime, ""));
+            transactions.AddOrder(
+                new SubmitOrderRequest(
+                    OrderType.OptionExercise,
+                    SecurityType.Option,
+                    Symbols.SPY_C_192_Feb19_2016,
+                    -1,
+                    0,
+                    0,
+                    securities.UtcTime,
+                    ""
+                )
+            );
             var option = (Option)securities[Symbols.SPY_C_192_Feb19_2016];
             var order = (OptionExerciseOrder)transactions.GetOrders(x => true).First();
             option.Underlying = securities[Symbols.SPY];
@@ -125,7 +142,16 @@ namespace QuantConnect.Tests.Common.Securities.Options
 
         private static SubscriptionDataConfig CreateTradeBarConfig(Symbol symbol)
         {
-            return new SubscriptionDataConfig(typeof(TradeBar), symbol, Resolution.Minute, TimeZones.NewYork, TimeZones.NewYork, true, true, false);
+            return new SubscriptionDataConfig(
+                typeof(TradeBar),
+                symbol,
+                Resolution.Minute,
+                TimeZones.NewYork,
+                TimeZones.NewYork,
+                true,
+                true,
+                false
+            );
         }
     }
 }

@@ -43,7 +43,8 @@ namespace QuantConnect.Tests.Algorithm.Framework.Risk
             bool invested,
             decimal unrealizedProfit,
             decimal absoluteHoldingsCost,
-            bool shouldLiquidate)
+            bool shouldLiquidate
+        )
         {
             var security = new Mock<Equity>(
                 Symbols.AAPL,
@@ -57,11 +58,15 @@ namespace QuantConnect.Tests.Algorithm.Framework.Risk
             );
             security.Setup(m => m.Invested).Returns(invested);
 
-            var holding = new Mock<EquityHolding>(security.Object,
-                new IdentityCurrencyConverter(Currencies.USD));
+            var holding = new Mock<EquityHolding>(
+                security.Object,
+                new IdentityCurrencyConverter(Currencies.USD)
+            );
             holding.Setup(m => m.UnrealizedProfit).Returns(unrealizedProfit);
             holding.Setup(m => m.AbsoluteHoldingsCost).Returns(absoluteHoldingsCost);
-            holding.Setup(m => m.UnrealizedProfitPercent).Returns(absoluteHoldingsCost == 0m? 0m : unrealizedProfit / absoluteHoldingsCost);
+            holding
+                .Setup(m => m.UnrealizedProfitPercent)
+                .Returns(absoluteHoldingsCost == 0m ? 0m : unrealizedProfit / absoluteHoldingsCost);
 
             security.Object.Holdings = holding.Object;
 
@@ -74,7 +79,9 @@ namespace QuantConnect.Tests.Algorithm.Framework.Risk
                 using (Py.GIL())
                 {
                     const string name = nameof(MaximumDrawdownPercentPerSecurity);
-                    var instance = Py.Import(name).GetAttr(name).Invoke(maxDrawdownPercent.ToPython());
+                    var instance = Py.Import(name)
+                        .GetAttr(name)
+                        .Invoke(maxDrawdownPercent.ToPython());
                     var model = new RiskManagementModelPythonWrapper(instance);
                     algorithm.SetRiskManagement(model);
                 }

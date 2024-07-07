@@ -41,7 +41,11 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
         /// <param name="enumerator">The underlying enumerator to make frontier aware</param>
         /// <param name="timeProvider">The time provider used for resolving the current frontier time</param>
         /// <param name="offsetProvider">An offset provider used for converting the frontier UTC time into the data's native time zone</param>
-        public FrontierAwareEnumerator(IEnumerator<BaseData> enumerator, ITimeProvider timeProvider, TimeZoneOffsetProvider offsetProvider)
+        public FrontierAwareEnumerator(
+            IEnumerator<BaseData> enumerator,
+            ITimeProvider timeProvider,
+            TimeZoneOffsetProvider offsetProvider
+        )
         {
             _enumerator = enumerator;
             _timeProvider = timeProvider;
@@ -59,7 +63,9 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
         {
             var underlyingCurrent = _enumerator.Current;
             var frontier = _timeProvider.GetUtcNow();
-            var localFrontier = new DateTime(frontier.Ticks + _offsetProvider.GetOffsetTicks(frontier));
+            var localFrontier = new DateTime(
+                frontier.Ticks + _offsetProvider.GetOffsetTicks(frontier)
+            );
 
             // if we moved next, but didn't emit, check to see if it's time to emit yet
             if (!_needsMoveNext && underlyingCurrent != null)

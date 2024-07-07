@@ -13,10 +13,10 @@
  * limitations under the License.
 */
 
-using QuantConnect.Data.UniverseSelection;
-using QuantConnect.Indicators;
 using System.Collections.Concurrent;
 using System.Linq;
+using QuantConnect.Data.UniverseSelection;
+using QuantConnect.Indicators;
 
 namespace QuantConnect.Algorithm.CSharp
 {
@@ -46,10 +46,12 @@ namespace QuantConnect.Algorithm.CSharp
             Log($"{ibmSma.Name}: {ibmSma.Current.Time} - {ibmSma}. IsReady? {ibmSma.IsReady}");
 
             var spy = AddEquity("SPY", Resolution.Hour).Symbol;
-            var spySma = SMA(spy, 10);     // Data point indicator
-            var spyAtr = ATR(spy, 10);     // Bar indicator
-            var spyVwap = VWAP(spy, 10);   // TradeBar indicator
-            Log($"SPY    - Is ready? SMA: {spySma.IsReady}, ATR: {spyAtr.IsReady}, VWAP: {spyVwap.IsReady}");
+            var spySma = SMA(spy, 10); // Data point indicator
+            var spyAtr = ATR(spy, 10); // Bar indicator
+            var spyVwap = VWAP(spy, 10); // TradeBar indicator
+            Log(
+                $"SPY    - Is ready? SMA: {spySma.IsReady}, ATR: {spyAtr.IsReady}, VWAP: {spyVwap.IsReady}"
+            );
 
             var eur = AddForex("EURUSD", Resolution.Hour).Symbol;
             var eurSma = SMA(eur, 20, Resolution.Daily);
@@ -58,25 +60,31 @@ namespace QuantConnect.Algorithm.CSharp
 
             AddUniverse(coarse =>
             {
-                var averages = new ConcurrentDictionary<Symbol, IndicatorBase<IndicatorDataPoint>>();
+                var averages =
+                    new ConcurrentDictionary<Symbol, IndicatorBase<IndicatorDataPoint>>();
 
-                return (from cf in coarse
-                        where cf.HasFundamentalData
-                        // grab the SMA instance for this symbol
-                        let avg = averages.GetOrAdd(cf.Symbol, sym =>
+                return (
+                    from cf in coarse
+                    where cf.HasFundamentalData
+                    // grab the SMA instance for this symbol
+                    let avg = averages.GetOrAdd(
+                        cf.Symbol,
+                        sym =>
                         {
                             var sma = new SimpleMovingAverage(100);
                             WarmUpIndicator(cf.Symbol, sma, Resolution.Daily);
                             return sma;
-                        })
-                        // Update returns true when the indicators are ready, so don't accept until they are
-                        where avg.Update(cf.EndTime, cf.AdjustedPrice)
-                        // only pick symbols who have their price over their 100 day sma
-                        where avg > cf.AdjustedPrice * _tolerance
-                        // prefer symbols with a larger delta by percentage between the two averages
-                        orderby (avg - cf.AdjustedPrice) / ((avg + cf.AdjustedPrice) / 2m) descending
-                        // we only need to return the symbol and return 'Count' symbols
-                        select cf.Symbol).Take(_count);
+                        }
+                    )
+                    // Update returns true when the indicators are ready, so don't accept until they are
+                    where avg.Update(cf.EndTime, cf.AdjustedPrice)
+                    // only pick symbols who have their price over their 100 day sma
+                    where avg > cf.AdjustedPrice * _tolerance
+                    // prefer symbols with a larger delta by percentage between the two averages
+                    orderby (avg - cf.AdjustedPrice) / ((avg + cf.AdjustedPrice) / 2m) descending
+                    // we only need to return the symbol and return 'Count' symbols
+                    select cf.Symbol
+                ).Take(_count);
             });
 
             // Since the indicators are ready, we will receive error messages

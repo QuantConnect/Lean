@@ -36,29 +36,45 @@ namespace QuantConnect.Tests.Common.Orders.Fills
         [SetUp]
         public void Setup()
         {
-            TimeKeeper = new TimeKeeper(Noon.ConvertToUtc(TimeZones.NewYork), new[] { TimeZones.NewYork });
+            TimeKeeper = new TimeKeeper(
+                Noon.ConvertToUtc(TimeZones.NewYork),
+                new[] { TimeZones.NewYork }
+            );
         }
 
         [Test]
-        public void PerformsMarketFill([Values] bool isInternal,
+        public void PerformsMarketFill(
+            [Values] bool isInternal,
             [Values] bool extendedMarketHours,
-            [Values(OrderDirection.Buy, OrderDirection.Sell)] OrderDirection orderDirection)
+            [Values(OrderDirection.Buy, OrderDirection.Sell)] OrderDirection orderDirection
+        )
         {
             var model = new FutureFillModel();
             var quantity = orderDirection == OrderDirection.Buy ? 100 : -100;
             var time = extendedMarketHours ? Noon.AddHours(-12) : Noon; // Midgnight (extended hours) or Noon (regular hours)
             var order = new MarketOrder(Symbols.ES_Future_Chain, quantity, time);
-            var config = CreateTradeBarConfig(Symbols.ES_Future_Chain, isInternal, extendedMarketHours);
+            var config = CreateTradeBarConfig(
+                Symbols.ES_Future_Chain,
+                isInternal,
+                extendedMarketHours
+            );
             var security = GetSecurity(config);
             security.SetLocalTimeKeeper(TimeKeeper.GetLocalTimeKeeper(TimeZones.NewYork));
-            security.SetMarketPrice(new IndicatorDataPoint(Symbols.ES_Future_Chain, time, 101.123m));
+            security.SetMarketPrice(
+                new IndicatorDataPoint(Symbols.ES_Future_Chain, time, 101.123m)
+            );
 
-            var fill = model.Fill(new FillModelParameters(
-                security,
-                order,
-                new MockSubscriptionDataConfigProvider(config),
-                Time.OneHour,
-                null)).Single();
+            var fill = model
+                .Fill(
+                    new FillModelParameters(
+                        security,
+                        order,
+                        new MockSubscriptionDataConfigProvider(config),
+                        Time.OneHour,
+                        null
+                    )
+                )
+                .Single();
             Assert.AreEqual(order.Quantity, fill.FillQuantity);
             Assert.AreEqual(security.Price, fill.FillPrice);
             Assert.AreEqual(OrderStatus.Filled, fill.Status);
@@ -67,7 +83,8 @@ namespace QuantConnect.Tests.Common.Orders.Fills
         [Test]
         public void PerformsStopMarketFill(
             [Values] bool extendedMarketHours,
-            [Values(OrderDirection.Buy, OrderDirection.Sell)] OrderDirection orderDirection)
+            [Values(OrderDirection.Buy, OrderDirection.Sell)] OrderDirection orderDirection
+        )
         {
             var symbol = Symbols.ES_Future_Chain;
             var model = new FutureFillModel();
@@ -79,16 +96,23 @@ namespace QuantConnect.Tests.Common.Orders.Fills
             var order = new StopMarketOrder(symbol, quantity, 101.124m, time);
             var config = CreateTradeBarConfig(symbol, extendedMarketHours: extendedMarketHours);
             var security = GetSecurity(config);
-            TimeKeeper.GetLocalTimeKeeper(TimeZones.NewYork).UpdateTime(time.ConvertToUtc(TimeZones.NewYork));
+            TimeKeeper
+                .GetLocalTimeKeeper(TimeZones.NewYork)
+                .UpdateTime(time.ConvertToUtc(TimeZones.NewYork));
             security.SetLocalTimeKeeper(TimeKeeper.GetLocalTimeKeeper(TimeZones.NewYork));
             security.SetMarketPrice(new IndicatorDataPoint(symbol, time, marketPrice));
 
-            var fill = model.Fill(new FillModelParameters(
-                security,
-                order,
-                new MockSubscriptionDataConfigProvider(config),
-                Time.OneHour,
-                null)).Single();
+            var fill = model
+                .Fill(
+                    new FillModelParameters(
+                        security,
+                        order,
+                        new MockSubscriptionDataConfigProvider(config),
+                        Time.OneHour,
+                        null
+                    )
+                )
+                .Single();
 
             var exchangeHours = MarketHoursDatabase.FromDataFolder().GetExchangeHours(config);
             if (extendedMarketHours)
@@ -106,17 +130,31 @@ namespace QuantConnect.Tests.Common.Orders.Fills
                 Assert.AreNotEqual(OrderStatus.PartiallyFilled, fill.Status);
                 Assert.IsFalse(exchangeHours.IsOpen(fill.UtcTime, extendedMarketHours));
             }
-
         }
 
-        private SubscriptionDataConfig CreateTradeBarConfig(Symbol symbol, bool isInternal = false, bool extendedMarketHours = true)
+        private SubscriptionDataConfig CreateTradeBarConfig(
+            Symbol symbol,
+            bool isInternal = false,
+            bool extendedMarketHours = true
+        )
         {
-            return new SubscriptionDataConfig(typeof(TradeBar), symbol, Resolution.Minute, TimeZones.NewYork, TimeZones.NewYork, true, extendedMarketHours, isInternal);
+            return new SubscriptionDataConfig(
+                typeof(TradeBar),
+                symbol,
+                Resolution.Minute,
+                TimeZones.NewYork,
+                TimeZones.NewYork,
+                true,
+                extendedMarketHours,
+                isInternal
+            );
         }
 
         private Security GetSecurity(SubscriptionDataConfig config)
         {
-            var entry = MarketHoursDatabase.FromDataFolder().GetEntry(config.Symbol.ID.Market, config.Symbol, config.SecurityType);
+            var entry = MarketHoursDatabase
+                .FromDataFolder()
+                .GetEntry(config.Symbol.ID.Market, config.Symbol, config.SecurityType);
             var security = new Security(
                 entry.ExchangeHours,
                 config,

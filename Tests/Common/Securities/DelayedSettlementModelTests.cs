@@ -25,14 +25,21 @@ namespace QuantConnect.Tests.Common.Securities
     public class DelayedSettlementModelTests
     {
         private static readonly DateTime Noon = new DateTime(2015, 11, 2, 12, 0, 0);
-        private static readonly TimeKeeper TimeKeeper = new TimeKeeper(Noon.ConvertToUtc(TimeZones.NewYork), new[] { TimeZones.NewYork });
+        private static readonly TimeKeeper TimeKeeper = new TimeKeeper(
+            Noon.ConvertToUtc(TimeZones.NewYork),
+            new[] { TimeZones.NewYork }
+        );
 
         [Test]
         public void SellOnMondaySettleOnThursday()
         {
             var securities = new SecurityManager(TimeKeeper);
             var transactions = new SecurityTransactionManager(null, securities);
-            var portfolio = new SecurityPortfolioManager(securities, transactions, new AlgorithmSettings());
+            var portfolio = new SecurityPortfolioManager(
+                securities,
+                transactions,
+                new AlgorithmSettings()
+            );
             // settlement at T+3, 8:00 AM
             var model = new DelayedSettlementModel(3, TimeSpan.FromHours(8));
             var config = CreateTradeBarConfig(Symbols.SPY);
@@ -52,7 +59,15 @@ namespace QuantConnect.Tests.Common.Securities
 
             // Sell on Monday
             var timeUtc = Noon.ConvertToUtc(TimeZones.NewYork);
-            model.ApplyFunds(new ApplyFundsSettlementModelParameters(portfolio, security, timeUtc, new CashAmount(1000, Currencies.USD), null));
+            model.ApplyFunds(
+                new ApplyFundsSettlementModelParameters(
+                    portfolio,
+                    security,
+                    timeUtc,
+                    new CashAmount(1000, Currencies.USD),
+                    null
+                )
+            );
             model.Scan(new ScanSettlementModelParameters(portfolio, security, timeUtc));
             Assert.AreEqual(3000, portfolio.Cash);
             Assert.AreEqual(1000, portfolio.UnsettledCash);
@@ -87,7 +102,11 @@ namespace QuantConnect.Tests.Common.Securities
         {
             var securities = new SecurityManager(TimeKeeper);
             var transactions = new SecurityTransactionManager(null, securities);
-            var portfolio = new SecurityPortfolioManager(securities, transactions, new AlgorithmSettings());
+            var portfolio = new SecurityPortfolioManager(
+                securities,
+                transactions,
+                new AlgorithmSettings()
+            );
             // settlement at T+3, 8:00 AM
             var model = new DelayedSettlementModel(3, TimeSpan.FromHours(8));
             var config = CreateTradeBarConfig(Symbols.SPY);
@@ -107,7 +126,15 @@ namespace QuantConnect.Tests.Common.Securities
 
             // Sell on Thursday
             var timeUtc = Noon.AddDays(3).ConvertToUtc(TimeZones.NewYork);
-            model.ApplyFunds(new ApplyFundsSettlementModelParameters(portfolio, security, timeUtc, new CashAmount(1000, Currencies.USD), null));
+            model.ApplyFunds(
+                new ApplyFundsSettlementModelParameters(
+                    portfolio,
+                    security,
+                    timeUtc,
+                    new CashAmount(1000, Currencies.USD),
+                    null
+                )
+            );
             model.Scan(new ScanSettlementModelParameters(portfolio, security, timeUtc));
             Assert.AreEqual(3000, portfolio.Cash);
             Assert.AreEqual(1000, portfolio.UnsettledCash);
@@ -151,8 +178,16 @@ namespace QuantConnect.Tests.Common.Securities
 
         private SubscriptionDataConfig CreateTradeBarConfig(Symbol symbol)
         {
-            return new SubscriptionDataConfig(typeof(TradeBar), symbol, Resolution.Minute, TimeZones.NewYork, TimeZones.NewYork, true, true, false);
+            return new SubscriptionDataConfig(
+                typeof(TradeBar),
+                symbol,
+                Resolution.Minute,
+                TimeZones.NewYork,
+                TimeZones.NewYork,
+                true,
+                true,
+                false
+            );
         }
-
     }
 }

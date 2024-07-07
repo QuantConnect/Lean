@@ -13,10 +13,10 @@
  * limitations under the License.
 */
 
+using System;
 using QuantConnect.Data.Market;
 using QuantConnect.Logging;
 using QuantConnect.Securities;
-using System;
 
 namespace QuantConnect.Orders.Slippage
 {
@@ -46,7 +46,8 @@ namespace QuantConnect.Orders.Slippage
         public decimal GetSlippageApproximation(Security asset, Order order)
         {
             var lastData = asset.GetLastData();
-            if (lastData == null) return 0;
+            if (lastData == null)
+                return 0;
 
             var barVolume = 0m;
             var slippagePercent = _volumeLimit * _volumeLimit * _priceImpact;
@@ -57,12 +58,15 @@ namespace QuantConnect.Orders.Slippage
                     barVolume = ((TradeBar)lastData).Volume;
                     break;
                 case MarketDataType.QuoteBar:
-                    barVolume = order.Direction == OrderDirection.Buy
-                        ? ((QuoteBar)lastData).LastBidSize
-                        : ((QuoteBar)lastData).LastAskSize;
+                    barVolume =
+                        order.Direction == OrderDirection.Buy
+                            ? ((QuoteBar)lastData).LastBidSize
+                            : ((QuoteBar)lastData).LastAskSize;
                     break;
                 default:
-                    throw new InvalidOperationException(Messages.VolumeShareSlippageModel.InvalidMarketDataType(lastData));
+                    throw new InvalidOperationException(
+                        Messages.VolumeShareSlippageModel.InvalidMarketDataType(lastData)
+                    );
             }
 
             // If volume is zero or negative, we use the maximum slippage percentage since the impact of any quantity is infinite
@@ -70,13 +74,26 @@ namespace QuantConnect.Orders.Slippage
             if (barVolume <= 0)
             {
                 var securityType = asset.Symbol.ID.SecurityType;
-                if (securityType == SecurityType.Cfd || securityType == SecurityType.Forex || securityType == SecurityType.Crypto)
+                if (
+                    securityType == SecurityType.Cfd
+                    || securityType == SecurityType.Forex
+                    || securityType == SecurityType.Crypto
+                )
                 {
-                    Log.Error(Messages.VolumeShareSlippageModel.VolumeNotReportedForMarketDataType(securityType));
+                    Log.Error(
+                        Messages.VolumeShareSlippageModel.VolumeNotReportedForMarketDataType(
+                            securityType
+                        )
+                    );
                     return 0;
                 }
 
-                Log.Error(Messages.VolumeShareSlippageModel.NegativeOrZeroBarVolume(barVolume, slippagePercent));
+                Log.Error(
+                    Messages.VolumeShareSlippageModel.NegativeOrZeroBarVolume(
+                        barVolume,
+                        slippagePercent
+                    )
+                );
             }
             else
             {

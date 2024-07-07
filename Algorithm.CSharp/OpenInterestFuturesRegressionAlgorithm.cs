@@ -30,7 +30,9 @@ namespace QuantConnect.Algorithm.CSharp
     /// <meta name="tag" content="futures" />
     /// <meta name="tag" content="using data" />
     /// <meta name="tag" content="filter selection" />
-    public class OpenInterestFuturesRegressionAlgorithm : QCAlgorithm, IRegressionAlgorithmDefinition
+    public class OpenInterestFuturesRegressionAlgorithm
+        : QCAlgorithm,
+            IRegressionAlgorithmDefinition
     {
         private static readonly HashSet<DateTime> ExpectedExpiryDates = new HashSet<DateTime>
         {
@@ -50,7 +52,15 @@ namespace QuantConnect.Algorithm.CSharp
             SetUniverseSelection(
                 new OpenInterestFutureUniverseSelectionModel(
                     this,
-                    t => new[] {QuantConnect.Symbol.Create(Futures.Metals.Gold, SecurityType.Future, Market.COMEX)},
+                    t =>
+                        new[]
+                        {
+                            QuantConnect.Symbol.Create(
+                                Futures.Metals.Gold,
+                                SecurityType.Future,
+                                Market.COMEX
+                            )
+                        },
                     null,
                     ExpectedExpiryDates.Count
                 )
@@ -61,10 +71,15 @@ namespace QuantConnect.Algorithm.CSharp
         {
             if (Transactions.OrdersCount == 0 && slice.HasData)
             {
-                var matched = slice.Keys.Where(s => !s.IsCanonical() && !ExpectedExpiryDates.Contains(s.ID.Date)).ToList();
+                var matched = slice
+                    .Keys.Where(s => !s.IsCanonical() && !ExpectedExpiryDates.Contains(s.ID.Date))
+                    .ToList();
                 if (matched.Count != 0)
                 {
-                    throw new RegressionTestException($"{matched.Count}/{slice.Keys.Count} were unexpected expiry date(s): " + string.Join(", ", matched.Select(x => x.ID.Date)));
+                    throw new RegressionTestException(
+                        $"{matched.Count}/{slice.Keys.Count} were unexpected expiry date(s): "
+                            + string.Join(", ", matched.Select(x => x.ID.Date))
+                    );
                 }
 
                 foreach (var symbol in slice.Keys)
@@ -107,35 +122,36 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// This is used by the regression test system to indicate what the expected statistics are from running the algorithm
         /// </summary>
-        public Dictionary<string, string> ExpectedStatistics => new Dictionary<string, string>
-        {
-            {"Total Orders", "4"},
-            {"Average Win", "0%"},
-            {"Average Loss", "0.00%"},
-            {"Compounding Annual Return", "-0.020%"},
-            {"Drawdown", "0.000%"},
-            {"Expectancy", "-1"},
-            {"Start Equity", "10000000"},
-            {"End Equity", "9999980.12"},
-            {"Net Profit", "0.000%"},
-            {"Sharpe Ratio", "0"},
-            {"Sortino Ratio", "0"},
-            {"Probabilistic Sharpe Ratio", "0%"},
-            {"Loss Rate", "100%"},
-            {"Win Rate", "0%"},
-            {"Profit-Loss Ratio", "0"},
-            {"Alpha", "0"},
-            {"Beta", "0"},
-            {"Annual Standard Deviation", "0"},
-            {"Annual Variance", "0"},
-            {"Information Ratio", "-57.739"},
-            {"Tracking Error", "0.178"},
-            {"Treynor Ratio", "0"},
-            {"Total Fees", "$9.88"},
-            {"Estimated Strategy Capacity", "$0"},
-            {"Lowest Capacity Asset", "GC VMRHKN2NLWV1"},
-            {"Portfolio Turnover", "1.32%"},
-            {"OrderListHash", "cc9ca77de1272050971b5438e757df61"}
-        };
+        public Dictionary<string, string> ExpectedStatistics =>
+            new Dictionary<string, string>
+            {
+                { "Total Orders", "4" },
+                { "Average Win", "0%" },
+                { "Average Loss", "0.00%" },
+                { "Compounding Annual Return", "-0.020%" },
+                { "Drawdown", "0.000%" },
+                { "Expectancy", "-1" },
+                { "Start Equity", "10000000" },
+                { "End Equity", "9999980.12" },
+                { "Net Profit", "0.000%" },
+                { "Sharpe Ratio", "0" },
+                { "Sortino Ratio", "0" },
+                { "Probabilistic Sharpe Ratio", "0%" },
+                { "Loss Rate", "100%" },
+                { "Win Rate", "0%" },
+                { "Profit-Loss Ratio", "0" },
+                { "Alpha", "0" },
+                { "Beta", "0" },
+                { "Annual Standard Deviation", "0" },
+                { "Annual Variance", "0" },
+                { "Information Ratio", "-57.739" },
+                { "Tracking Error", "0.178" },
+                { "Treynor Ratio", "0" },
+                { "Total Fees", "$9.88" },
+                { "Estimated Strategy Capacity", "$0" },
+                { "Lowest Capacity Asset", "GC VMRHKN2NLWV1" },
+                { "Portfolio Turnover", "1.32%" },
+                { "OrderListHash", "cc9ca77de1272050971b5438e757df61" }
+            };
     }
 }

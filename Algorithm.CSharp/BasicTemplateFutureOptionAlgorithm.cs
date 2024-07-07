@@ -43,14 +43,17 @@ namespace QuantConnect.Algorithm.CSharp
             var gold_futures = AddFuture(Futures.Metals.Gold, Resolution.Minute);
             gold_futures.SetFilter(0, 180);
             _symbol = gold_futures.Symbol;
-            AddFutureOption(_symbol, universe => universe.Strikes(-5, +5)
-                                                        .CallsOnly()
-                                                        .BackMonth()
-                                                        .OnlyApplyFilterAtMarketOpen());
+            AddFutureOption(
+                _symbol,
+                universe =>
+                    universe.Strikes(-5, +5).CallsOnly().BackMonth().OnlyApplyFilterAtMarketOpen()
+            );
 
             // Historical Data
             var history = History(_symbol, 60, Resolution.Daily);
-            Log($"Received {history.Count()} bars from {_symbol} FutureOption historical data call.");
+            Log(
+                $"Received {history.Count()} bars from {_symbol} FutureOption historical data call."
+            );
         }
 
         /// <summary>
@@ -60,28 +63,37 @@ namespace QuantConnect.Algorithm.CSharp
         public override void OnData(Slice slice)
         {
             // Access Data
-            foreach(var kvp in slice.OptionChains)
+            foreach (var kvp in slice.OptionChains)
             {
                 var underlyingFutureContract = kvp.Key.Underlying;
                 var chain = kvp.Value;
 
-                if (chain.Count() == 0) continue;
+                if (chain.Count() == 0)
+                    continue;
 
-                foreach(var contract in chain)
+                foreach (var contract in chain)
                 {
-                    Log($@"Canonical Symbol: {kvp.Key}; 
+                    Log(
+                        $@"Canonical Symbol: {kvp.Key}; 
                         Contract: {contract}; 
                         Right: {contract.Right}; 
                         Expiry: {contract.Expiry}; 
                         Bid price: {contract.BidPrice}; 
                         Ask price: {contract.AskPrice}; 
-                        Implied Volatility: {contract.ImpliedVolatility}");
+                        Implied Volatility: {contract.ImpliedVolatility}"
+                    );
                 }
 
                 if (!Portfolio.Invested)
                 {
-                    var atmStrike = chain.OrderBy(x => Math.Abs(chain.Underlying.Price - x.Strike)).First().Strike;
-                    var selectedContract = chain.Where(x => x.Strike == atmStrike).OrderByDescending(x => x.Expiry).First();
+                    var atmStrike = chain
+                        .OrderBy(x => Math.Abs(chain.Underlying.Price - x.Strike))
+                        .First()
+                        .Strike;
+                    var selectedContract = chain
+                        .Where(x => x.Strike == atmStrike)
+                        .OrderByDescending(x => x.Expiry)
+                        .First();
                     MarketOrder(selectedContract.Symbol, 1);
                 }
             }

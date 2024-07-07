@@ -55,7 +55,13 @@ namespace QuantConnect
         /// <param name="startUtc">Start time of the data in UTC</param>
         /// <param name="endUtc">End time of the data in UTC</param>
         /// <param name="tickType">[Optional] The type of tick to get. Defaults to <see cref="QuantConnect.TickType.Trade"/></param>
-        public DataDownloaderGetParameters(Symbol symbol, Resolution resolution, DateTime startUtc, DateTime endUtc, TickType? tickType = null)
+        public DataDownloaderGetParameters(
+            Symbol symbol,
+            Resolution resolution,
+            DateTime startUtc,
+            DateTime endUtc,
+            TickType? tickType = null
+        )
         {
             Symbol = symbol;
             Resolution = resolution;
@@ -68,6 +74,7 @@ namespace QuantConnect
         /// Returns a string representation of the <see cref="DataDownloaderGetParameters"/> object.
         /// </summary>
         /// <returns>A string representing the object's properties.</returns>
-        public override string ToString() => $"Symbol: {Symbol}, Resolution: {Resolution}, StartUtc: {StartUtc}, EndUtc: {EndUtc}, TickType: {TickType}";
+        public override string ToString() =>
+            $"Symbol: {Symbol}, Resolution: {Resolution}, StartUtc: {StartUtc}, EndUtc: {EndUtc}, TickType: {TickType}";
     }
 }

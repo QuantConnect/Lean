@@ -33,9 +33,7 @@ namespace QuantConnect.Algorithm.Framework.Risk
         /// </summary>
         /// <param name="maximumDrawdownPercent">The maximum percentage drawdown allowed for any single security holding,
         /// defaults to 5% drawdown per security</param>
-        public MaximumDrawdownPercentPerSecurity(
-            decimal maximumDrawdownPercent = 0.05m
-            )
+        public MaximumDrawdownPercentPerSecurity(decimal maximumDrawdownPercent = 0.05m)
         {
             _maximumDrawdownPercent = -Math.Abs(maximumDrawdownPercent);
         }
@@ -45,7 +43,10 @@ namespace QuantConnect.Algorithm.Framework.Risk
         /// </summary>
         /// <param name="algorithm">The algorithm instance</param>
         /// <param name="targets">The current portfolio targets to be assessed for risk</param>
-        public override IEnumerable<IPortfolioTarget> ManageRisk(QCAlgorithm algorithm, IPortfolioTarget[] targets)
+        public override IEnumerable<IPortfolioTarget> ManageRisk(
+            QCAlgorithm algorithm,
+            IPortfolioTarget[] targets
+        )
         {
             foreach (var kvp in algorithm.Securities)
             {
@@ -63,7 +64,7 @@ namespace QuantConnect.Algorithm.Framework.Risk
 
                     // Cancel insights
                     algorithm.Insights.Cancel(new[] { symbol });
-                    
+
                     // liquidate
                     yield return new PortfolioTarget(symbol, 0);
                 }

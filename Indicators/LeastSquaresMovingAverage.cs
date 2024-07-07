@@ -26,7 +26,9 @@ namespace QuantConnect.Indicators
     /// essence, it calculates what the value would be if the regression line continued.
     /// Source: https://rtmath.net/assets/docs/finanalysis/html/b3fab79c-f4b2-40fb-8709-fdba43cdb363.htm
     /// </summary>
-    public class LeastSquaresMovingAverage : WindowIndicator<IndicatorDataPoint>, IIndicatorWarmUpPeriodProvider
+    public class LeastSquaresMovingAverage
+        : WindowIndicator<IndicatorDataPoint>,
+            IIndicatorWarmUpPeriodProvider
     {
         /// <summary>
         /// Array representing the time.
@@ -37,7 +39,7 @@ namespace QuantConnect.Indicators
         /// The point where the regression line crosses the y-axis (price-axis)
         /// </summary>
         public IndicatorBase<IndicatorDataPoint> Intercept { get; }
-        
+
         /// <summary>
         /// The regression line slope
         /// </summary>
@@ -66,9 +68,7 @@ namespace QuantConnect.Indicators
         /// </summary>
         /// <param name="period">The number of data points to hold in the window.</param>
         public LeastSquaresMovingAverage(int period)
-            : this($"LSMA({period})", period)
-        {
-        }
+            : this($"LSMA({period})", period) { }
 
         /// <summary>
         /// Computes the next value of this indicator from the given state
@@ -78,10 +78,14 @@ namespace QuantConnect.Indicators
         /// <returns>
         /// A new value for this indicator
         /// </returns>
-        protected override decimal ComputeNextValue(IReadOnlyWindow<IndicatorDataPoint> window, IndicatorDataPoint input)
+        protected override decimal ComputeNextValue(
+            IReadOnlyWindow<IndicatorDataPoint> window,
+            IndicatorDataPoint input
+        )
         {
             // Until the window is ready, the indicator returns the input value.
-            if (!window.IsReady) return input.Value;
+            if (!window.IsReady)
+                return input.Value;
 
             // Sort the window by time, convert the observations to double and transform it to an array
             var series = window

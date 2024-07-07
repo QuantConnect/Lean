@@ -39,6 +39,13 @@ namespace QuantConnect.Brokerages
         /// <param name="strike">The strike of the security (if applicable)</param>
         /// <param name="optionRight">The option right of the security (if applicable)</param>
         /// <returns>A new Lean Symbol instance</returns>
-        Symbol GetLeanSymbol(string brokerageSymbol, SecurityType securityType, string market, DateTime expirationDate = default(DateTime), decimal strike = 0, OptionRight optionRight = 0);
+        Symbol GetLeanSymbol(
+            string brokerageSymbol,
+            SecurityType securityType,
+            string market,
+            DateTime expirationDate = default(DateTime),
+            decimal strike = 0,
+            OptionRight optionRight = 0
+        );
     }
 }

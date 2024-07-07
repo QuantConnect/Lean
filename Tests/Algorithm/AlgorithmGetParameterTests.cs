@@ -30,7 +30,12 @@ namespace QuantConnect.Tests.Algorithm
         [TestCase(Language.Python, "numeric_parameter", 2, false)]
         [TestCase(Language.Python, "not_a_parameter", 2, true)]
         [TestCase(Language.Python, "string_parameter", 2, true)]
-        public void GetParameterConvertsToNumericTypes(Language language, string parameterName, int defaultValue, bool shouldReturnDefaultValue)
+        public void GetParameterConvertsToNumericTypes(
+            Language language,
+            string parameterName,
+            int defaultValue,
+            bool shouldReturnDefaultValue
+        )
         {
             var parameters = new Dictionary<string, string>
             {
@@ -54,7 +59,10 @@ namespace QuantConnect.Tests.Algorithm
                 Assert.AreEqual(typeof(decimal), decimalValue.GetType());
 
                 // If the parameter is not found or is not numeric, the default value should be returned
-                if (!shouldReturnDefaultValue && parameters.TryGetValue(parameterName, out var parameterValue))
+                if (
+                    !shouldReturnDefaultValue
+                    && parameters.TryGetValue(parameterName, out var parameterValue)
+                )
                 {
                     Assert.AreEqual(int.Parse(parameterValue), intValue);
                     Assert.AreEqual(double.Parse(parameterValue), doubleValue);
@@ -71,7 +79,8 @@ namespace QuantConnect.Tests.Algorithm
             {
                 using (Py.GIL())
                 {
-                    var testModule = PyModule.FromString("testModule",
+                    var testModule = PyModule.FromString(
+                        "testModule",
                         @"
 from AlgorithmImports import *
 
@@ -83,25 +92,41 @@ def isInt(value):
 
 def isFloat(value):
     return isinstance(value, float)
-        ");
+        "
+                    );
 
                     var getAlgorithm = testModule.GetAttr("getAlgorithm");
                     var algorithm = getAlgorithm.Invoke();
                     algorithm.GetAttr("SetParameters").Invoke(PyDict.FromManagedObject(parameters));
 
-                    var intValue = algorithm.GetAttr("GetParameter").Invoke(parameterName.ToPython(), defaultValue.ToPython());
-                    var doubleValue = algorithm.GetAttr("GetParameter").Invoke(parameterName.ToPython(), doubleDefaultValue.ToPython());
-                    var decimalValue = algorithm.GetAttr("GetParameter").Invoke(parameterName.ToPython(), decimalDefaultValue.ToPython());
+                    var intValue = algorithm
+                        .GetAttr("GetParameter")
+                        .Invoke(parameterName.ToPython(), defaultValue.ToPython());
+                    var doubleValue = algorithm
+                        .GetAttr("GetParameter")
+                        .Invoke(parameterName.ToPython(), doubleDefaultValue.ToPython());
+                    var decimalValue = algorithm
+                        .GetAttr("GetParameter")
+                        .Invoke(parameterName.ToPython(), decimalDefaultValue.ToPython());
 
-                    Assert.IsTrue(testModule.GetAttr("isInt").Invoke(intValue).As<bool>(),
-                        $"Expected 'intValue' to be of type int but was {intValue.GetPythonType().ToString()} instead");
-                    Assert.IsTrue(testModule.GetAttr("isFloat").Invoke(doubleValue).As<bool>(),
-                        $"Expected 'doubleValue' to be of type float but was {doubleValue.GetPythonType().ToString()} instead");
-                    Assert.IsTrue(testModule.GetAttr("isFloat").Invoke(decimalValue).As<bool>(),
-                        $"Expected 'decimalValue' to be of type float but was {decimalValue.GetPythonType().ToString()} instead");
+                    Assert.IsTrue(
+                        testModule.GetAttr("isInt").Invoke(intValue).As<bool>(),
+                        $"Expected 'intValue' to be of type int but was {intValue.GetPythonType().ToString()} instead"
+                    );
+                    Assert.IsTrue(
+                        testModule.GetAttr("isFloat").Invoke(doubleValue).As<bool>(),
+                        $"Expected 'doubleValue' to be of type float but was {doubleValue.GetPythonType().ToString()} instead"
+                    );
+                    Assert.IsTrue(
+                        testModule.GetAttr("isFloat").Invoke(decimalValue).As<bool>(),
+                        $"Expected 'decimalValue' to be of type float but was {decimalValue.GetPythonType().ToString()} instead"
+                    );
 
                     // If the parameter is not found or is not numeric, the default value should be returned
-                    if (!shouldReturnDefaultValue && parameters.TryGetValue(parameterName, out var parameterValue))
+                    if (
+                        !shouldReturnDefaultValue
+                        && parameters.TryGetValue(parameterName, out var parameterValue)
+                    )
                     {
                         Assert.AreEqual(int.Parse(parameterValue), intValue.As<int>());
                         Assert.AreEqual(double.Parse(parameterValue), doubleValue.As<double>());
@@ -155,7 +180,8 @@ def isFloat(value):
             {
                 using (Py.GIL())
                 {
-                    var testModule = PyModule.FromString("testModule",
+                    var testModule = PyModule.FromString(
+                        "testModule",
                         @"
 from AlgorithmImports import *
 
@@ -164,21 +190,31 @@ def getAlgorithm():
 
 def isString(value):
     return isinstance(value, str)
-        ");
+        "
+                    );
 
                     dynamic getAlgorithm = testModule.GetAttr("getAlgorithm");
                     dynamic algorithm = getAlgorithm();
                     algorithm.SetParameters(PyDict.FromManagedObject(parameters));
-                    dynamic parameterWithoutDefault = algorithm.GetParameter(parameterName.ToPython());
-                    dynamic parameterWithNullDefault = algorithm.GetParameter(parameterName.ToPython(), null);
+                    dynamic parameterWithoutDefault = algorithm.GetParameter(
+                        parameterName.ToPython()
+                    );
+                    dynamic parameterWithNullDefault = algorithm.GetParameter(
+                        parameterName.ToPython(),
+                        null
+                    );
 
                     if (parameters.TryGetValue(parameterName, out var parameterValue))
                     {
                         dynamic isString = testModule.GetAttr("isString");
-                        Assert.IsTrue(isString(parameterWithoutDefault).As<bool>(),
-                            $"Expected 'parameterWithoutDefault' to be of type string but was {parameterWithoutDefault.GetPythonType().ToString()} instead");
-                        Assert.IsTrue(isString(parameterWithNullDefault).As<bool>(),
-                        $"Expected 'parameterWithNullDefault' to be of type string but was {parameterWithNullDefault.GetPythonType().ToString()} instead");
+                        Assert.IsTrue(
+                            isString(parameterWithoutDefault).As<bool>(),
+                            $"Expected 'parameterWithoutDefault' to be of type string but was {parameterWithoutDefault.GetPythonType().ToString()} instead"
+                        );
+                        Assert.IsTrue(
+                            isString(parameterWithNullDefault).As<bool>(),
+                            $"Expected 'parameterWithNullDefault' to be of type string but was {parameterWithNullDefault.GetPythonType().ToString()} instead"
+                        );
                         Assert.AreEqual(parameterValue, parameterWithoutDefault.As<string>());
                         Assert.AreEqual(parameterValue, parameterWithNullDefault.As<string>());
                     }
@@ -221,26 +257,48 @@ def isString(value):
                 {
                     using (Py.GIL())
                     {
-                        var testModule = PyModule.FromString("testModule",
+                        var testModule = PyModule.FromString(
+                            "testModule",
                             @"
 from AlgorithmImports import *
 
 def getAlgorithm():
     return QCAlgorithm()
-            ");
+            "
+                        );
 
                         var getAlgorithm = testModule.GetAttr("getAlgorithm");
                         dynamic algorithm = getAlgorithm.Invoke();
-                        algorithm.GetAttr("SetParameters").Invoke(PyDict.FromManagedObject(parameters));
-                        intValue = algorithm.GetParameter(parameterName.ToPython(), defaultInt.ToPython()).As<int>();
-                        doubleValue = algorithm.GetParameter(parameterName.ToPython(), defaultDouble.ToPython()).As<double>();
-                        decimalValue = algorithm.GetParameter(parameterName.ToPython(), defaultDecimal.ToPython()).As<decimal>();
+                        algorithm
+                            .GetAttr("SetParameters")
+                            .Invoke(PyDict.FromManagedObject(parameters));
+                        intValue = algorithm
+                            .GetParameter(parameterName.ToPython(), defaultInt.ToPython())
+                            .As<int>();
+                        doubleValue = algorithm
+                            .GetParameter(parameterName.ToPython(), defaultDouble.ToPython())
+                            .As<double>();
+                        decimalValue = algorithm
+                            .GetParameter(parameterName.ToPython(), defaultDecimal.ToPython())
+                            .As<decimal>();
                     }
                 }
 
-                Assert.AreEqual(defaultInt, intValue, $"Expected '{parameterName}' to be {defaultInt} but was {intValue} instead");
-                Assert.AreEqual(defaultDouble, doubleValue, $"Expected '{parameterName}' to be {defaultDouble} but was {doubleValue} instead");
-                Assert.AreEqual(defaultDecimal, decimalValue, $"Expected '{parameterName}' to be {defaultDecimal} but was {decimalValue} instead");
+                Assert.AreEqual(
+                    defaultInt,
+                    intValue,
+                    $"Expected '{parameterName}' to be {defaultInt} but was {intValue} instead"
+                );
+                Assert.AreEqual(
+                    defaultDouble,
+                    doubleValue,
+                    $"Expected '{parameterName}' to be {defaultDouble} but was {doubleValue} instead"
+                );
+                Assert.AreEqual(
+                    defaultDecimal,
+                    decimalValue,
+                    $"Expected '{parameterName}' to be {defaultDecimal} but was {decimalValue} instead"
+                );
             }
         }
 
@@ -287,26 +345,40 @@ def getAlgorithm():
                 {
                     using (Py.GIL())
                     {
-                        var testModule = PyModule.FromString("testModule",
+                        var testModule = PyModule.FromString(
+                            "testModule",
                             @"
 from AlgorithmImports import *
 
 def getAlgorithm():
     return QCAlgorithm()
-            ");
+            "
+                        );
 
                         var getAlgorithm = testModule.GetAttr("getAlgorithm");
                         dynamic algorithm = getAlgorithm.Invoke();
-                        algorithm.GetAttr("SetParameters").Invoke(PyDict.FromManagedObject(parameters));
-                        doubleValue = algorithm.GetParameter(parameterName.ToPython(), defaultDouble.ToPython()).As<double>();
-                        decimalValue = algorithm.GetParameter(parameterName.ToPython(), defaultDecimal.ToPython()).As<decimal>();
+                        algorithm
+                            .GetAttr("SetParameters")
+                            .Invoke(PyDict.FromManagedObject(parameters));
+                        doubleValue = algorithm
+                            .GetParameter(parameterName.ToPython(), defaultDouble.ToPython())
+                            .As<double>();
+                        decimalValue = algorithm
+                            .GetParameter(parameterName.ToPython(), defaultDecimal.ToPython())
+                            .As<decimal>();
                     }
                 }
 
-                Assert.AreEqual(expectedDoubles[parameterName], doubleValue,
-                    $"Expected '{parameterName}' to be {expectedDoubles[parameterName]} but was {doubleValue} instead");
-                Assert.AreEqual(expectedDecimals[parameterName], decimalValue,
-                    $"Expected '{parameterName}' to be {expectedDecimals[parameterName]} but was {decimalValue} instead");
+                Assert.AreEqual(
+                    expectedDoubles[parameterName],
+                    doubleValue,
+                    $"Expected '{parameterName}' to be {expectedDoubles[parameterName]} but was {doubleValue} instead"
+                );
+                Assert.AreEqual(
+                    expectedDecimals[parameterName],
+                    decimalValue,
+                    $"Expected '{parameterName}' to be {expectedDecimals[parameterName]} but was {decimalValue} instead"
+                );
             }
         }
     }

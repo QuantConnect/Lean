@@ -31,7 +31,11 @@ namespace QuantConnect.Tests.Indicators
         /// </summary>
         protected override Action<IndicatorBase<IndicatorDataPoint>, double> Assertion
         {
-            get { return (indicator, expected) => Assert.AreEqual(expected, (double)indicator.Current.Value, 1); }
+            get
+            {
+                return (indicator, expected) =>
+                    Assert.AreEqual(expected, (double)indicator.Current.Value, 1);
+            }
         }
     }
 }

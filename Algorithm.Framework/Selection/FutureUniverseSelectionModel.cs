@@ -14,10 +14,10 @@
 */
 
 using System;
-using QuantConnect.Interfaces;
-using QuantConnect.Securities;
 using System.Collections.Generic;
 using QuantConnect.Data.UniverseSelection;
+using QuantConnect.Interfaces;
+using QuantConnect.Securities;
 
 namespace QuantConnect.Algorithm.Framework.Selection
 {
@@ -42,10 +42,11 @@ namespace QuantConnect.Algorithm.Framework.Selection
         /// </summary>
         /// <param name="refreshInterval">Time interval between universe refreshes</param>
         /// <param name="futureChainSymbolSelector">Selects symbols from the provided future chain</param>
-        public FutureUniverseSelectionModel(TimeSpan refreshInterval, Func<DateTime, IEnumerable<Symbol>> futureChainSymbolSelector)
-            : this(refreshInterval, futureChainSymbolSelector, null)
-        {
-        }
+        public FutureUniverseSelectionModel(
+            TimeSpan refreshInterval,
+            Func<DateTime, IEnumerable<Symbol>> futureChainSymbolSelector
+        )
+            : this(refreshInterval, futureChainSymbolSelector, null) { }
 
         /// <summary>
         /// Creates a new instance of <see cref="FutureUniverseSelectionModel"/>
@@ -57,7 +58,7 @@ namespace QuantConnect.Algorithm.Framework.Selection
             TimeSpan refreshInterval,
             Func<DateTime, IEnumerable<Symbol>> futureChainSymbolSelector,
             UniverseSettings universeSettings
-            )
+        )
         {
             _nextRefreshTimeUtc = DateTime.MinValue;
 
@@ -80,13 +81,21 @@ namespace QuantConnect.Algorithm.Framework.Selection
             {
                 if (futureSymbol.SecurityType != SecurityType.Future)
                 {
-                    throw new ArgumentException("FutureChainSymbolSelector must return future symbols.");
+                    throw new ArgumentException(
+                        "FutureChainSymbolSelector must return future symbols."
+                    );
                 }
 
                 // prevent creating duplicate future chains -- one per symbol
                 if (uniqueSymbols.Add(futureSymbol))
                 {
-                    foreach (var universe in algorithm.CreateFutureChain(futureSymbol, Filter, _universeSettings))
+                    foreach (
+                        var universe in algorithm.CreateFutureChain(
+                            futureSymbol,
+                            Filter,
+                            _universeSettings
+                        )
+                    )
                     {
                         yield return universe;
                     }

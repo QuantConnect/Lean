@@ -31,8 +31,7 @@ namespace QuantConnect.Packets
         /// </summary>
         /// <param name="type"></param>
         public AlgorithmNodePacket(PacketType type)
-            : base(type)
-        { }
+            : base(type) { }
 
         /// <summary>
         /// The host name to use if any
@@ -119,7 +118,8 @@ namespace QuantConnect.Packets
         /// <summary>
         /// The maximum amount of RAM (in MB) this algorithm is allowed to utilize
         /// </summary>
-        public int RamAllocation {
+        public int RamAllocation
+        {
             get { return Controls.RamAllocation; }
         }
 
@@ -131,7 +131,8 @@ namespace QuantConnect.Packets
         /// <summary>
         /// The parameter values used to set algorithm parameters
         /// </summary>
-        public Dictionary<string, string> Parameters { get; set; } = new Dictionary<string, string>();
+        public Dictionary<string, string> Parameters { get; set; } =
+            new Dictionary<string, string>();
 
         /// <summary>
         /// String name of the HistoryProvider we're running with

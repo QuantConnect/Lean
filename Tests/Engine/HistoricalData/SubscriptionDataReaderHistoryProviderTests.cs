@@ -38,43 +38,52 @@ namespace QuantConnect.Tests.Engine.HistoricalData
         {
             var historyProvider = new SubscriptionDataReaderHistoryProvider();
 
-            historyProvider.Initialize(new HistoryProviderInitializeParameters(
-                null,
-                null,
-                TestGlobals.DataProvider,
-                TestGlobals.DataCacheProvider,
-                TestGlobals.MapFileProvider,
-                TestGlobals.FactorFileProvider,
-                null,
-                false,
-                new DataPermissionManager(),
-                null,
-                new AlgorithmSettings()));
+            historyProvider.Initialize(
+                new HistoryProviderInitializeParameters(
+                    null,
+                    null,
+                    TestGlobals.DataProvider,
+                    TestGlobals.DataCacheProvider,
+                    TestGlobals.MapFileProvider,
+                    TestGlobals.FactorFileProvider,
+                    null,
+                    false,
+                    new DataPermissionManager(),
+                    null,
+                    new AlgorithmSettings()
+                )
+            );
             var symbol = Symbol.CreateOption(
                 "FOXA",
                 Market.USA,
                 OptionStyle.American,
                 OptionRight.Call,
                 32,
-                new DateTime(2013, 07, 20));
+                new DateTime(2013, 07, 20)
+            );
 
-            var result = historyProvider.GetHistory(
-                new[]
-                {
-                    new HistoryRequest(new DateTime(2013, 06,28),
-                        new DateTime(2013, 07,03),
-                        typeof(QuoteBar),
-                        symbol,
-                        Resolution.Minute,
-                        SecurityExchangeHours.AlwaysOpen(TimeZones.NewYork),
-                        TimeZones.NewYork,
-                        null,
-                        false,
-                        false,
-                        DataNormalizationMode.Raw,
-                        TickType.Quote)
-                },
-                TimeZones.NewYork).ToList();
+            var result = historyProvider
+                .GetHistory(
+                    new[]
+                    {
+                        new HistoryRequest(
+                            new DateTime(2013, 06, 28),
+                            new DateTime(2013, 07, 03),
+                            typeof(QuoteBar),
+                            symbol,
+                            Resolution.Minute,
+                            SecurityExchangeHours.AlwaysOpen(TimeZones.NewYork),
+                            TimeZones.NewYork,
+                            null,
+                            false,
+                            false,
+                            DataNormalizationMode.Raw,
+                            TickType.Quote
+                        )
+                    },
+                    TimeZones.NewYork
+                )
+                .ToList();
 
             Assert.IsNotEmpty(result);
 
@@ -92,37 +101,45 @@ namespace QuantConnect.Tests.Engine.HistoricalData
         public void EquitiesAreMappedCorrectly()
         {
             var historyProvider = new SubscriptionDataReaderHistoryProvider();
-            historyProvider.Initialize(new HistoryProviderInitializeParameters(
-                null,
-                null,
-                TestGlobals.DataProvider,
-                TestGlobals.DataCacheProvider,
-                TestGlobals.MapFileProvider,
-                TestGlobals.FactorFileProvider,
-                null,
-                false,
-                new DataPermissionManager(),
-                null,
-                new AlgorithmSettings()));
-            var symbol = Symbol.Create("WM",SecurityType.Equity,Market.USA);
+            historyProvider.Initialize(
+                new HistoryProviderInitializeParameters(
+                    null,
+                    null,
+                    TestGlobals.DataProvider,
+                    TestGlobals.DataCacheProvider,
+                    TestGlobals.MapFileProvider,
+                    TestGlobals.FactorFileProvider,
+                    null,
+                    false,
+                    new DataPermissionManager(),
+                    null,
+                    new AlgorithmSettings()
+                )
+            );
+            var symbol = Symbol.Create("WM", SecurityType.Equity, Market.USA);
 
-            var result = historyProvider.GetHistory(
-                new[]
-                {
-                    new HistoryRequest(new DateTime(2008, 01,01),
-                        new DateTime(2008, 01,05),
-                        typeof(TradeBar),
-                        symbol,
-                        Resolution.Daily,
-                        SecurityExchangeHours.AlwaysOpen(TimeZones.NewYork),
-                        TimeZones.NewYork,
-                        null,
-                        false,
-                        false,
-                        DataNormalizationMode.Raw,
-                        TickType.Trade)
-                },
-                TimeZones.NewYork).ToList();
+            var result = historyProvider
+                .GetHistory(
+                    new[]
+                    {
+                        new HistoryRequest(
+                            new DateTime(2008, 01, 01),
+                            new DateTime(2008, 01, 05),
+                            typeof(TradeBar),
+                            symbol,
+                            Resolution.Daily,
+                            SecurityExchangeHours.AlwaysOpen(TimeZones.NewYork),
+                            TimeZones.NewYork,
+                            null,
+                            false,
+                            false,
+                            DataNormalizationMode.Raw,
+                            TickType.Trade
+                        )
+                    },
+                    TimeZones.NewYork
+                )
+                .ToList();
 
             var firstBar = result.First().Values.Single();
             Assert.AreEqual("WMI", firstBar.Symbol.Value);

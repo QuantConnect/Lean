@@ -25,6 +25,10 @@ namespace QuantConnect.Securities.Option.StrategyMatcher
         /// as the solution. NOTE: This part of the match has not been implemented as of 2020-11-06 as it's only evaluating the
         /// first solution match (MatchOnce).
         /// </summary>
-        decimal ComputeScore(OptionPositionCollection input, OptionStrategyMatch match, OptionPositionCollection unmatched);
+        decimal ComputeScore(
+            OptionPositionCollection input,
+            OptionStrategyMatch match,
+            OptionPositionCollection unmatched
+        );
     }
 }

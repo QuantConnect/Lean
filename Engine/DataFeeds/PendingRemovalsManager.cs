@@ -52,10 +52,18 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         {
             // but don't physically remove it from the algorithm if we hold stock or have open orders against it or an open target
             var openOrders = _orderProvider.GetOpenOrders(x => x.Symbol == member.Symbol);
-            if (!member.HoldStock && !openOrders.Any() && (member.Holdings.Target == null || member.Holdings.Target.Quantity == 0))
+            if (
+                !member.HoldStock
+                && !openOrders.Any()
+                && (member.Holdings.Target == null || member.Holdings.Target.Quantity == 0)
+            )
             {
-                if (universe.Securities.Any(pair =>
-                    pair.Key.Underlying == member.Symbol && !IsSafeToRemove(pair.Value.Security, universe)))
+                if (
+                    universe.Securities.Any(pair =>
+                        pair.Key.Underlying == member.Symbol
+                        && !IsSafeToRemove(pair.Value.Security, universe)
+                    )
+                )
                 {
                     // don't remove if any member in the universe which uses this 'member' as underlying can't be removed
                     // covers the options use case
@@ -86,7 +94,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         {
             if (IsSafeToRemove(member, universe))
             {
-                return new List<RemovedMember> {new RemovedMember(universe, member)};
+                return new List<RemovedMember> { new RemovedMember(universe, member) };
             }
 
             if (_pendingRemovals.ContainsKey(universe))
@@ -112,7 +120,8 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         /// <returns>The members to be removed</returns>
         public List<RemovedMember> CheckPendingRemovals(
             HashSet<Symbol> selectedSymbols,
-            Universe currentUniverse)
+            Universe currentUniverse
+        )
         {
             var result = new List<RemovedMember>();
             // remove previously deselected members which were kept in the universe because of holdings or open orders
@@ -122,12 +131,14 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                 foreach (var security in kvp.Value.ToList())
                 {
                     var isSafeToRemove = IsSafeToRemove(security, universeRemoving);
-                    if (isSafeToRemove
+                    if (
+                        isSafeToRemove
                         ||
                         // if we are re selecting it we remove it as a pending removal
                         // else we might remove it when we do not want to do so
                         universeRemoving == currentUniverse
-                        && selectedSymbols.Contains(security.Symbol))
+                            && selectedSymbols.Contains(security.Symbol)
+                    )
                     {
                         if (isSafeToRemove)
                         {

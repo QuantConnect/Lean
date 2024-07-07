@@ -15,8 +15,8 @@
 
 using System;
 using Newtonsoft.Json;
-using QuantConnect.Util;
 using QuantConnect.Data.Market;
+using QuantConnect.Util;
 
 namespace QuantConnect
 {
@@ -42,10 +42,7 @@ namespace QuantConnect
         /// </summary>
         public long LongTime
         {
-            get
-            {
-                return (long)QuantConnect.Time.DateTimeToUnixTimeStamp(Time);
-            }
+            get { return (long)QuantConnect.Time.DateTimeToUnixTimeStamp(Time); }
         }
 
         /// <summary>
@@ -98,9 +95,7 @@ namespace QuantConnect
         /// <param name="low">Candlestick low price</param>
         /// <param name="close">Candlestick close price</param>
         public Candlestick(long time, decimal? open, decimal? high, decimal? low, decimal? close)
-            : this(QuantConnect.Time.UnixTimeStampToDateTime(time), open, high, low, close)
-        {
-        }
+            : this(QuantConnect.Time.UnixTimeStampToDateTime(time), open, high, low, close) { }
 
         /// <summary>
         /// Constructor taking candlestick values and time in DateTime format
@@ -110,7 +105,13 @@ namespace QuantConnect
         /// <param name="high">Candlestick high price</param>
         /// <param name="low">Candlestick low price</param>
         /// <param name="close">Candlestick close price</param>
-        public Candlestick(DateTime time, decimal? open, decimal? high, decimal? low, decimal? close)
+        public Candlestick(
+            DateTime time,
+            decimal? open,
+            decimal? high,
+            decimal? low,
+            decimal? close
+        )
         {
             Time = time;
             Open = open;
@@ -124,9 +125,7 @@ namespace QuantConnect
         /// </summary>
         /// <param name="bar">Bar which data will be used to create the candlestick</param>
         public Candlestick(TradeBar bar)
-            : this(bar.EndTime, bar.Open, bar.High, bar.Low, bar.Close)
-        {
-        }
+            : this(bar.EndTime, bar.Open, bar.High, bar.Low, bar.Close) { }
 
         /// <summary>
         /// Constructor taking candlestick values and time in DateTime format
@@ -134,18 +133,20 @@ namespace QuantConnect
         /// <param name="time">Candlestick time in seconds</param>
         /// <param name="bar">Bar which data will be used to create the candlestick</param>
         public Candlestick(DateTime time, Bar bar)
-            : this(time, bar.Open, bar.High, bar.Low, bar.Close)
-        {
-        }
+            : this(time, bar.Open, bar.High, bar.Low, bar.Close) { }
 
         /// <summary>
         /// Copy constructor
         /// </summary>
         /// <param name="candlestick">Candlestick to copy from</param>
         public Candlestick(Candlestick candlestick)
-            : this(candlestick.Time, candlestick.Open, candlestick.High, candlestick.Low, candlestick.Close)
-        {
-        }
+            : this(
+                candlestick.Time,
+                candlestick.Open,
+                candlestick.High,
+                candlestick.Low,
+                candlestick.Close
+            ) { }
 
         /// <summary>
         /// Provides a readable string representation of this instance.
@@ -187,8 +188,10 @@ namespace QuantConnect
                 Open = High = Low = Close = value;
                 _openSet = true;
             }
-            else if (value > High) High = value;
-            else if (value < Low) Low = value;
+            else if (value > High)
+                High = value;
+            else if (value < Low)
+                Low = value;
             Close = value;
         }
     }

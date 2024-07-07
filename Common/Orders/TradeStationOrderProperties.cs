@@ -19,6 +19,5 @@ namespace QuantConnect.Orders
     /// <summary>
     /// Represents the properties of an order in TradeStation.
     /// </summary>
-    public class TradeStationOrderProperties : OrderProperties
-    { }
+    public class TradeStationOrderProperties : OrderProperties { }
 }

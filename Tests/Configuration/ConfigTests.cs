@@ -45,7 +45,6 @@ namespace QuantConnect.Tests.Configuration
             var env = Config.Get("environment");
             Config.Set(env + ".beta-mode", betaMode ? "false" : "true");
 
-
             bool betaMode2 = Config.GetBool("beta-mode");
             Assert.AreNotEqual(betaMode, betaMode2);
         }
@@ -75,7 +74,7 @@ namespace QuantConnect.Tests.Configuration
             const string overrideEnvironment = "live-paper.beta";
 
             var config = JObject.Parse(
-@"{
+                @"{
    'some-setting': 'false',                 
     environments: {
         'live-paper': {
@@ -87,7 +86,8 @@ namespace QuantConnect.Tests.Configuration
             }
         }
     }
-}");
+}"
+            );
 
             var configCopy = config.DeepClone();
 
@@ -116,10 +116,7 @@ namespace QuantConnect.Tests.Configuration
             GetValueHandles(new TimeSpan(1, 2, 3, 4, 5));
         }
 
-        private static readonly TestCaseData[] DecimalValue =
-        {
-            new TestCaseData(100m)
-        };
+        private static readonly TestCaseData[] DecimalValue = { new TestCaseData(100m) };
 
         private static readonly TestCaseData[] DecimalWithExpectedValue =
         {
@@ -136,7 +133,9 @@ namespace QuantConnect.Tests.Configuration
         [Test, TestCaseSource(nameof(DecimalValue))]
         public void GetString(object value)
         {
-            Config.MergeCommandLineArgumentsWithConfiguration(new Dictionary<string, object>() { { "temp-value", value } });
+            Config.MergeCommandLineArgumentsWithConfiguration(
+                new Dictionary<string, object>() { { "temp-value", value } }
+            );
 
             var actual = Config.Get("temp-value");
             Assert.AreEqual(typeof(string), actual.GetType());
@@ -148,7 +147,9 @@ namespace QuantConnect.Tests.Configuration
         [TestCase(false, false)]
         public void GetBool(object value, bool expected)
         {
-            Config.MergeCommandLineArgumentsWithConfiguration(new Dictionary<string, object>() { { "temp-value", value } });
+            Config.MergeCommandLineArgumentsWithConfiguration(
+                new Dictionary<string, object>() { { "temp-value", value } }
+            );
 
             Assert.AreEqual(expected, Config.GetBool("temp-value"));
         }
@@ -159,7 +160,9 @@ namespace QuantConnect.Tests.Configuration
         [Test, TestCaseSource(nameof(DecimalWithExpectedValue))]
         public void GetInt(object value, object expected)
         {
-            Config.MergeCommandLineArgumentsWithConfiguration(new Dictionary<string, object>() { { "temp-value", value } });
+            Config.MergeCommandLineArgumentsWithConfiguration(
+                new Dictionary<string, object>() { { "temp-value", value } }
+            );
 
             Assert.AreEqual(expected, Config.GetInt("temp-value"));
         }
@@ -169,7 +172,9 @@ namespace QuantConnect.Tests.Configuration
         [Test, TestCaseSource(nameof(DecimalWithExpectedValue))]
         public void GetDouble(object value, double expected)
         {
-            Config.MergeCommandLineArgumentsWithConfiguration(new Dictionary<string, object>() { { "temp-value", value } });
+            Config.MergeCommandLineArgumentsWithConfiguration(
+                new Dictionary<string, object>() { { "temp-value", value } }
+            );
 
             Assert.AreEqual(expected, Config.GetDouble("temp-value"));
         }

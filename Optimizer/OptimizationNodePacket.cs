@@ -64,7 +64,8 @@ namespace QuantConnect.Optimizer
         /// <summary>
         /// Optimization strategy name
         /// </summary>
-        public string OptimizationStrategy { get; set; } = "QuantConnect.Optimizer.Strategies.GridSearchOptimizationStrategy";
+        public string OptimizationStrategy { get; set; } =
+            "QuantConnect.Optimizer.Strategies.GridSearchOptimizationStrategy";
 
         /// <summary>
         /// Objective settings
@@ -100,16 +101,13 @@ namespace QuantConnect.Optimizer
         /// <summary>
         /// Creates a new instance
         /// </summary>
-        public OptimizationNodePacket() : this(PacketType.OptimizationNode)
-        {
-        }
+        public OptimizationNodePacket()
+            : this(PacketType.OptimizationNode) { }
 
         /// <summary>
         /// Creates a new instance
         /// </summary>
-        protected OptimizationNodePacket(PacketType packetType) : base(packetType)
-        {
-        }
+        protected OptimizationNodePacket(PacketType packetType)
+            : base(packetType) { }
     }
-
 }

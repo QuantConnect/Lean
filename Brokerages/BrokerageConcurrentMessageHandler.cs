@@ -14,16 +14,17 @@
 */
 
 using System;
+using System.Collections.Generic;
 using System.Threading;
 using QuantConnect.Logging;
-using System.Collections.Generic;
 
 namespace QuantConnect.Brokerages
 {
     /// <summary>
     /// Brokerage helper class to lock message stream while executing an action, for example placing an order
     /// </summary>
-    public class BrokerageConcurrentMessageHandler<T> where T : class
+    public class BrokerageConcurrentMessageHandler<T>
+        where T : class
     {
         private readonly Action<T> _processMessages;
         private readonly Queue<T> _messageBuffer;

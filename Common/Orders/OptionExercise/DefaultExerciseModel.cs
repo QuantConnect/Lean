@@ -31,7 +31,10 @@ namespace QuantConnect.Orders.OptionExercise
         /// </summary>
         /// <param name="option">Option we're trading this order</param>
         /// <param name="order">Order to update</param>
-        public virtual IEnumerable<OrderEvent> OptionExercise(Option option, OptionExerciseOrder order)
+        public virtual IEnumerable<OrderEvent> OptionExercise(
+            Option option,
+            OptionExerciseOrder order
+        )
         {
             var underlying = option.Underlying;
             var utcTime = option.LocalTime.ConvertToUtc(option.Exchange.TimeZone);
@@ -48,7 +51,11 @@ namespace QuantConnect.Orders.OptionExercise
                 0.0m,
                 order.Quantity,
                 OrderFee.Zero,
-                Messages.DefaultExerciseModel.ContractHoldingsAdjustmentFillTag(inTheMoney, isAssignment, option)
+                Messages.DefaultExerciseModel.ContractHoldingsAdjustmentFillTag(
+                    inTheMoney,
+                    isAssignment,
+                    option
+                )
             )
             {
                 IsAssignment = isAssignment,
@@ -69,8 +76,13 @@ namespace QuantConnect.Orders.OptionExercise
                     option.StrikePrice,
                     exerciseQuantity,
                     OrderFee.Zero,
-                    isAssignment ? Messages.DefaultExerciseModel.OptionAssignment : Messages.DefaultExerciseModel.OptionExercise
-                ) { IsInTheMoney = true };
+                    isAssignment
+                        ? Messages.DefaultExerciseModel.OptionAssignment
+                        : Messages.DefaultExerciseModel.OptionExercise
+                )
+                {
+                    IsInTheMoney = true
+                };
             }
         }
     }

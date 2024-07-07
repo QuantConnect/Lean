@@ -13,13 +13,13 @@
  * limitations under the License.
 */
 
+using System.Collections.Generic;
+using System.IO;
+using System.Linq;
 using QuantConnect.Configuration;
 using QuantConnect.Lean.Engine;
 using QuantConnect.Packets;
 using QuantConnect.Util;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
 
 namespace QuantConnect.Tests
 {
@@ -28,7 +28,10 @@ namespace QuantConnect.Tests
     /// </summary>
     public class RegressionTestMessageHandler : QuantConnect.Messaging.Messaging
     {
-        private static readonly bool _updateRegressionStatistics = Config.GetBool("regression-update-statistics", false);
+        private static readonly bool _updateRegressionStatistics = Config.GetBool(
+            "regression-update-statistics",
+            false
+        );
         private AlgorithmNodePacket _job;
         private AlgorithmManager _algorithmManager;
 
@@ -76,7 +79,13 @@ namespace QuantConnect.Tests
 
         private void UpdateRegressionStatisticsInSourceFile(BacktestResultPacket result)
         {
-            var algorithmSource = Directory.EnumerateFiles("../../../Algorithm.CSharp", $"{_job.AlgorithmId}.cs", SearchOption.AllDirectories).Single();
+            var algorithmSource = Directory
+                .EnumerateFiles(
+                    "../../../Algorithm.CSharp",
+                    $"{_job.AlgorithmId}.cs",
+                    SearchOption.AllDirectories
+                )
+                .Single();
             var file = File.ReadAllLines(algorithmSource).ToList().GetEnumerator();
             var lines = new List<string>();
             while (file.MoveNext())
@@ -87,8 +96,11 @@ namespace QuantConnect.Tests
                     continue;
                 }
 
-                if (line.Contains("Dictionary<string, string> ExpectedStatistics => new Dictionary<string, string>")
-                    || line.Contains("Dictionary<string, string> ExpectedStatistics => new()"))
+                if (
+                    line.Contains(
+                        "Dictionary<string, string> ExpectedStatistics => new Dictionary<string, string>"
+                    ) || line.Contains("Dictionary<string, string> ExpectedStatistics => new()")
+                )
                 {
                     if (!result.Results.Statistics.Any() || line.EndsWith("();"))
                     {
@@ -138,7 +150,12 @@ namespace QuantConnect.Tests
                     }
                     else
                     {
-                        lines.Add(GetDataPointLine(line, _algorithmManager?.AlgorithmHistoryDataPoints.ToString()));
+                        lines.Add(
+                            GetDataPointLine(
+                                line,
+                                _algorithmManager?.AlgorithmHistoryDataPoints.ToString()
+                            )
+                        );
                     }
                 }
                 else if (line.Contains($"AlgorithmStatus AlgorithmStatus =>"))

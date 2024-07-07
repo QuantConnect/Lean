@@ -49,7 +49,12 @@ namespace QuantConnect.ToolBox.RandomDataGenerator
         ///     so a value of 1m is equal to 1%.</param>
         /// <param name="referenceDate">date used in price calculation</param>
         /// <returns>Returns a new decimal as price</returns>
-        public decimal NextValue(decimal maximumPercentDeviation, DateTime referenceDate)
-            => _random.NextPrice(_security.Symbol.SecurityType, _security.Symbol.ID.Market, _security.Price, maximumPercentDeviation);
+        public decimal NextValue(decimal maximumPercentDeviation, DateTime referenceDate) =>
+            _random.NextPrice(
+                _security.Symbol.SecurityType,
+                _security.Symbol.ID.Market,
+                _security.Price,
+                maximumPercentDeviation
+            );
     }
 }

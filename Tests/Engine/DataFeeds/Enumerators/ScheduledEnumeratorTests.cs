@@ -39,22 +39,27 @@ namespace QuantConnect.Tests.Engine.DataFeeds.Enumerators
             using var underlyingEnumerator = new TestEnumerator
             {
                 MoveNextReturn = true,
-                MoveNextNewValues = new Queue<BaseData>(new List<BaseData>
-                {
-                    new Tick(scheduledDate.AddDays(-1), Symbols.SPY, 1, 1)
-                })
+                MoveNextNewValues = new Queue<BaseData>(
+                    new List<BaseData> { new Tick(scheduledDate.AddDays(-1), Symbols.SPY, 1, 1) }
+                )
             };
             var timeProvider = new ManualTimeProvider(_referenceTime);
 
             using var enumerator = new ScheduledEnumerator(
                 underlyingEnumerator,
                 new List<DateTime> { scheduledDate },
-                new PredicateTimeProvider(timeProvider, (currentDateTime) => {
-                    // will only let time advance after it's passed the 7/8 hour frontier
-                    return currentDateTime.TimeOfDay > TimeSpan.FromMinutes(7 * 60 + DateTime.UtcNow.Second);
-                }),
+                new PredicateTimeProvider(
+                    timeProvider,
+                    (currentDateTime) =>
+                    {
+                        // will only let time advance after it's passed the 7/8 hour frontier
+                        return currentDateTime.TimeOfDay
+                            > TimeSpan.FromMinutes(7 * 60 + DateTime.UtcNow.Second);
+                    }
+                ),
                 TimeZones.Utc,
-                DateTime.MinValue);
+                DateTime.MinValue
+            );
 
             // still null since frontier is still behind schedule
             Assert.IsTrue(enumerator.MoveNext());
@@ -71,7 +76,9 @@ namespace QuantConnect.Tests.Engine.DataFeeds.Enumerators
             if (newDataArrivedInTime)
             {
                 // New data comes in!
-                underlyingEnumerator.MoveNextNewValues.Enqueue(new Tick(scheduledDate, Symbols.SPY, 10, 10));
+                underlyingEnumerator.MoveNextNewValues.Enqueue(
+                    new Tick(scheduledDate, Symbols.SPY, 10, 10)
+                );
             }
 
             timeProvider.SetCurrentTimeUtc(scheduledDate.AddHours(8));
@@ -94,7 +101,8 @@ namespace QuantConnect.Tests.Engine.DataFeeds.Enumerators
                 new List<DateTime> { _referenceTime },
                 new ManualTimeProvider(_referenceTime),
                 TimeZones.Utc,
-                _referenceTime.AddDays(1));
+                _referenceTime.AddDays(1)
+            );
 
             Assert.IsFalse(enumerator.MoveNext());
             Assert.IsNull(enumerator.Current);
@@ -104,12 +112,16 @@ namespace QuantConnect.Tests.Engine.DataFeeds.Enumerators
         public void EmptyScheduleThrowsNoException()
         {
             ScheduledEnumerator enumerator = null;
-            Assert.DoesNotThrow(() => enumerator = new ScheduledEnumerator(
-                new TestEnumerator(),
-                new List<DateTime>(),
-                new ManualTimeProvider(_referenceTime),
-                TimeZones.Utc,
-                DateTime.MinValue));
+            Assert.DoesNotThrow(
+                () =>
+                    enumerator = new ScheduledEnumerator(
+                        new TestEnumerator(),
+                        new List<DateTime>(),
+                        new ManualTimeProvider(_referenceTime),
+                        TimeZones.Utc,
+                        DateTime.MinValue
+                    )
+            );
 
             Assert.IsFalse(enumerator.MoveNext());
             Assert.IsNull(enumerator.Current);
@@ -126,7 +138,8 @@ namespace QuantConnect.Tests.Engine.DataFeeds.Enumerators
                 new List<DateTime> { _referenceTime.AddDays(1) },
                 timeProvider,
                 TimeZones.Utc,
-                DateTime.MinValue);
+                DateTime.MinValue
+            );
 
             Assert.IsTrue(enumerator.MoveNext());
             Assert.IsNull(enumerator.Current);
@@ -147,7 +160,8 @@ namespace QuantConnect.Tests.Engine.DataFeeds.Enumerators
                 new List<DateTime> { _referenceTime.AddDays(1) },
                 timeProvider,
                 TimeZones.Utc,
-                DateTime.MinValue);
+                DateTime.MinValue
+            );
 
             Assert.IsFalse(enumerator.MoveNext());
             Assert.IsNull(enumerator.Current);
@@ -160,12 +174,14 @@ namespace QuantConnect.Tests.Engine.DataFeeds.Enumerators
             using var underlyingEnumerator = new TestEnumerator
             {
                 MoveNextReturn = true,
-                MoveNextNewValues = new Queue<BaseData>(new List<BaseData>
-                {
-                    new Tick(scheduledDate, Symbols.SPY, 1, 1),
-                    // way in the future compared with the schedule
-                    new Tick(scheduledDate.AddYears(1), Symbols.SPY, 10, 10)
-                })
+                MoveNextNewValues = new Queue<BaseData>(
+                    new List<BaseData>
+                    {
+                        new Tick(scheduledDate, Symbols.SPY, 1, 1),
+                        // way in the future compared with the schedule
+                        new Tick(scheduledDate.AddYears(1), Symbols.SPY, 10, 10)
+                    }
+                )
             };
             var timeProvider = new ManualTimeProvider(_referenceTime);
 
@@ -174,7 +190,8 @@ namespace QuantConnect.Tests.Engine.DataFeeds.Enumerators
                 new List<DateTime> { scheduledDate, scheduledDate.AddDays(1) },
                 timeProvider,
                 TimeZones.Utc,
-                DateTime.MinValue);
+                DateTime.MinValue
+            );
 
             Assert.IsTrue(enumerator.MoveNext());
             // still null since frontier is still behind schedule
@@ -203,10 +220,9 @@ namespace QuantConnect.Tests.Engine.DataFeeds.Enumerators
             using var underlyingEnumerator = new TestEnumerator
             {
                 MoveNextReturn = true,
-                MoveNextNewValues = new Queue<BaseData>(new List<BaseData>
-                {
-                    new Tick(scheduledDate, Symbols.SPY, 1, 1)
-                })
+                MoveNextNewValues = new Queue<BaseData>(
+                    new List<BaseData> { new Tick(scheduledDate, Symbols.SPY, 1, 1) }
+                )
             };
             var timeProvider = new ManualTimeProvider(_referenceTime);
 
@@ -215,7 +231,8 @@ namespace QuantConnect.Tests.Engine.DataFeeds.Enumerators
                 new List<DateTime> { scheduledDate },
                 timeProvider,
                 TimeZones.Utc,
-                DateTime.MinValue);
+                DateTime.MinValue
+            );
 
             Assert.IsTrue(enumerator.MoveNext());
             // still null since frontier is still behind schedule
@@ -237,12 +254,14 @@ namespace QuantConnect.Tests.Engine.DataFeeds.Enumerators
             using var underlyingEnumerator = new TestEnumerator
             {
                 MoveNextReturn = true,
-                MoveNextNewValues = new Queue<BaseData>(new List<BaseData>
-                {
-                    new Tick(new DateTime(2019, 1, 15), Symbols.SPY, 1, 1),
-                    new Tick(new DateTime(2019, 1, 20), Symbols.SPY, 2, 1),
-                    new Tick(new DateTime(2019, 1, 25), Symbols.SPY, 3, 1)
-                })
+                MoveNextNewValues = new Queue<BaseData>(
+                    new List<BaseData>
+                    {
+                        new Tick(new DateTime(2019, 1, 15), Symbols.SPY, 1, 1),
+                        new Tick(new DateTime(2019, 1, 20), Symbols.SPY, 2, 1),
+                        new Tick(new DateTime(2019, 1, 25), Symbols.SPY, 3, 1)
+                    }
+                )
             };
             var timeProvider = new ManualTimeProvider(_referenceTime);
 
@@ -251,7 +270,8 @@ namespace QuantConnect.Tests.Engine.DataFeeds.Enumerators
                 new List<DateTime> { new DateTime(2019, 2, 1) },
                 timeProvider,
                 TimeZones.Utc,
-                DateTime.MinValue);
+                DateTime.MinValue
+            );
 
             Assert.IsTrue(enumerator.MoveNext());
             // still null since frontier is still behind schedule
@@ -274,13 +294,15 @@ namespace QuantConnect.Tests.Engine.DataFeeds.Enumerators
             using var underlyingEnumerator = new TestEnumerator
             {
                 MoveNextReturn = true,
-                MoveNextNewValues = new Queue<BaseData>(new List<BaseData>
-                {
-                    new Tick(new DateTime(2019, 1, 20), Symbols.SPY, 2, 1),
-                    new Tick(new DateTime(2019, 1, 25), Symbols.SPY, 3, 1),
-                    // this guys is in 2020
-                    new Tick(new DateTime(2020, 1, 1), Symbols.SPY, 4, 1)
-                })
+                MoveNextNewValues = new Queue<BaseData>(
+                    new List<BaseData>
+                    {
+                        new Tick(new DateTime(2019, 1, 20), Symbols.SPY, 2, 1),
+                        new Tick(new DateTime(2019, 1, 25), Symbols.SPY, 3, 1),
+                        // this guys is in 2020
+                        new Tick(new DateTime(2020, 1, 1), Symbols.SPY, 4, 1)
+                    }
+                )
             };
             var timeProvider = new ManualTimeProvider(_referenceTime);
 
@@ -289,7 +311,8 @@ namespace QuantConnect.Tests.Engine.DataFeeds.Enumerators
                 new List<DateTime> { new DateTime(2019, 2, 1), new DateTime(2020, 2, 1) },
                 timeProvider,
                 TimeZones.Utc,
-                DateTime.MinValue);
+                DateTime.MinValue
+            );
 
             Assert.IsTrue(enumerator.MoveNext());
             // still null since frontier is still behind schedule
@@ -327,20 +350,22 @@ namespace QuantConnect.Tests.Engine.DataFeeds.Enumerators
             using var underlyingEnumerator = new TestEnumerator
             {
                 MoveNextReturn = true,
-                MoveNextNewValues = new Queue<BaseData>(new List<BaseData>
-                {
-                    new Tick(new DateTime(2019, 1, 20), Symbols.SPY, 2, 1),
-                    new Tick(new DateTime(2019, 1, 25), Symbols.SPY, 3, 1),
-
-                    new Tick(new DateTime(2020, 1, 1), Symbols.SPY, 4, 1)
-                })
+                MoveNextNewValues = new Queue<BaseData>(
+                    new List<BaseData>
+                    {
+                        new Tick(new DateTime(2019, 1, 20), Symbols.SPY, 2, 1),
+                        new Tick(new DateTime(2019, 1, 25), Symbols.SPY, 3, 1),
+                        new Tick(new DateTime(2020, 1, 1), Symbols.SPY, 4, 1)
+                    }
+                )
             };
             using var enumerator = new ScheduledEnumerator(
                 underlyingEnumerator,
                 new List<DateTime> { new DateTime(2019, 2, 1), new DateTime(2020, 2, 1) },
                 null,
                 TimeZones.Utc,
-                DateTime.MinValue);
+                DateTime.MinValue
+            );
 
             Assert.IsTrue(enumerator.MoveNext());
             // it uses the last available data point in the enumerator that is before the schedule
@@ -384,10 +409,9 @@ namespace QuantConnect.Tests.Engine.DataFeeds.Enumerators
                 return MoveNextReturn;
             }
 
-            public void Reset()
-            {}
-            public void Dispose()
-            {}
+            public void Reset() { }
+
+            public void Dispose() { }
         }
     }
 }

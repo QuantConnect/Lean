@@ -15,17 +15,17 @@
 
 using System;
 using System.Linq;
+using System.Threading;
 using NUnit.Framework;
+using Python.Runtime;
+using QuantConnect.Algorithm;
+using QuantConnect.Brokerages.Backtesting;
 using QuantConnect.Data.Market;
+using QuantConnect.Lean.Engine.Results;
+using QuantConnect.Lean.Engine.TransactionHandlers;
 using QuantConnect.Orders;
 using QuantConnect.Securities;
-using QuantConnect.Lean.Engine.TransactionHandlers;
-using QuantConnect.Brokerages.Backtesting;
 using QuantConnect.Tests.Engine;
-using QuantConnect.Algorithm;
-using QuantConnect.Lean.Engine.Results;
-using Python.Runtime;
-using System.Threading;
 using QuantConnect.Tests.Engine.DataFeeds;
 
 namespace QuantConnect.Tests.Common.Securities
@@ -64,17 +64,23 @@ namespace QuantConnect.Tests.Common.Securities
 
             // this order should timeout (no fills received within 5 seconds)
             algorithm.SetHoldings(spy, 0.5m);
-            algorithm.SetHoldings(ibm, 0.5m);     
+            algorithm.SetHoldings(ibm, 0.5m);
 
             Func<Order, bool> basicOrderFilter = x => true;
             Func<OrderTicket, bool> basicOrderTicketFilter = x => true;
             using (Py.GIL())
             {
                 var orders = algorithm.Transactions.GetOrders(basicOrderFilter.ToPython());
-                var orderTickets = algorithm.Transactions.GetOrderTickets(basicOrderTicketFilter.ToPython());
+                var orderTickets = algorithm.Transactions.GetOrderTickets(
+                    basicOrderTicketFilter.ToPython()
+                );
                 var openOrders = algorithm.Transactions.GetOpenOrders(basicOrderFilter.ToPython());
-                var openOrderTickets = algorithm.Transactions.GetOpenOrderTickets(basicOrderTicketFilter.ToPython());
-                var openOrdersRemaining = algorithm.Transactions.GetOpenOrdersRemainingQuantity(basicOrderTicketFilter.ToPython());
+                var openOrderTickets = algorithm.Transactions.GetOpenOrderTickets(
+                    basicOrderTicketFilter.ToPython()
+                );
+                var openOrdersRemaining = algorithm.Transactions.GetOpenOrdersRemainingQuantity(
+                    basicOrderTicketFilter.ToPython()
+                );
 
                 Assert.AreEqual(2, orders.Count());
                 Assert.AreEqual(2, orderTickets.Count());
@@ -83,11 +89,17 @@ namespace QuantConnect.Tests.Common.Securities
                 Assert.AreEqual(368, openOrdersRemaining);
 
                 var ibmOpenOrders = algorithm.Transactions.GetOpenOrders(ibm.ToPython()).Count;
-                var ibmOpenOrderTickets = algorithm.Transactions.GetOpenOrderTickets(ibm.ToPython()).Count();
-                var ibmOpenOrdersRemainingQuantity = algorithm.Transactions.GetOpenOrdersRemainingQuantity(ibm.ToPython());
+                var ibmOpenOrderTickets = algorithm
+                    .Transactions.GetOpenOrderTickets(ibm.ToPython())
+                    .Count();
+                var ibmOpenOrdersRemainingQuantity =
+                    algorithm.Transactions.GetOpenOrdersRemainingQuantity(ibm.ToPython());
                 var spyOpenOrders = algorithm.Transactions.GetOpenOrders(spy.ToPython()).Count;
-                var spyOpenOrderTickets = algorithm.Transactions.GetOpenOrderTickets(spy.ToPython()).Count();
-                var spyOpenOrdersRemainingQuantity = algorithm.Transactions.GetOpenOrdersRemainingQuantity(spy.ToPython());
+                var spyOpenOrderTickets = algorithm
+                    .Transactions.GetOpenOrderTickets(spy.ToPython())
+                    .Count();
+                var spyOpenOrdersRemainingQuantity =
+                    algorithm.Transactions.GetOpenOrdersRemainingQuantity(spy.ToPython());
 
                 Assert.AreEqual(1, ibmOpenOrders);
                 Assert.AreEqual(1, ibmOpenOrderTickets);
@@ -101,7 +113,8 @@ namespace QuantConnect.Tests.Common.Securities
                 var defaultOrderTickets = algorithm.Transactions.GetOrderTickets();
                 var defaultOpenOrders = algorithm.Transactions.GetOpenOrders();
                 var defaultOpenOrderTickets = algorithm.Transactions.GetOpenOrderTickets();
-                var defaultOpenOrdersRemaining = algorithm.Transactions.GetOpenOrdersRemainingQuantity();
+                var defaultOpenOrdersRemaining =
+                    algorithm.Transactions.GetOpenOrdersRemainingQuantity();
 
                 Assert.AreEqual(2, defaultOrders.Count());
                 Assert.AreEqual(2, defaultOrderTickets.Count());

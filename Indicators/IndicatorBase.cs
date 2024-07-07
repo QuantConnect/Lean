@@ -14,12 +14,12 @@
 */
 
 using System;
-using QuantConnect.Data;
-using System.Diagnostics;
-using QuantConnect.Logging;
-using System.Collections.Generic;
-using QuantConnect.Data.Consolidators;
 using System.Collections;
+using System.Collections.Generic;
+using System.Diagnostics;
+using QuantConnect.Data;
+using QuantConnect.Data.Consolidators;
+using QuantConnect.Logging;
 
 namespace QuantConnect.Indicators
 {
@@ -41,14 +41,8 @@ namespace QuantConnect.Indicators
         /// </summary>
         public IndicatorDataPoint Current
         {
-            get
-            {
-                return Window[0];
-            }
-            protected set
-            {
-                Window.Add(value);
-            }
+            get { return Window[0]; }
+            protected set { Window.Add(value); }
         }
 
         /// <summary>
@@ -138,10 +132,7 @@ namespace QuantConnect.Indicators
         /// <returns>the ith most recent indicator value</returns>
         public IndicatorDataPoint this[int i]
         {
-            get
-            {
-                return Window[i];
-            }
+            get { return Window[i]; }
         }
 
         /// <summary>
@@ -216,12 +207,13 @@ namespace QuantConnect.Indicators
             var other = obj as IndicatorBase;
             if (other == null)
             {
-                throw new ArgumentException("Object must be of type " + GetType().GetBetterTypeName());
+                throw new ArgumentException(
+                    "Object must be of type " + GetType().GetBetterTypeName()
+                );
             }
 
             return CompareTo(other);
         }
-
     }
 
     /// <summary>
@@ -235,15 +227,15 @@ namespace QuantConnect.Indicators
         private bool _loggedForwardOnlyIndicatorError;
 
         /// <summary>the most recent input that was given to this indicator</summary>
-        private Dictionary<SecurityIdentifier, T> _previousInput = new Dictionary<SecurityIdentifier, T>();
+        private Dictionary<SecurityIdentifier, T> _previousInput =
+            new Dictionary<SecurityIdentifier, T>();
 
         /// <summary>
         /// Initializes a new instance of the Indicator class using the specified name.
         /// </summary>
         /// <param name="name">The name of this indicator</param>
         protected IndicatorBase(string name)
-            : base(name)
-        {}
+            : base(name) { }
 
         /// <summary>
         /// Updates the state of this indicator with the given value and returns true
@@ -254,13 +246,18 @@ namespace QuantConnect.Indicators
         public override bool Update(IBaseData input)
         {
             T _previousSymbolInput = default(T);
-            if (_previousInput.TryGetValue(input.Symbol.ID, out _previousSymbolInput) && input.EndTime < _previousSymbolInput.EndTime)
+            if (
+                _previousInput.TryGetValue(input.Symbol.ID, out _previousSymbolInput)
+                && input.EndTime < _previousSymbolInput.EndTime
+            )
             {
                 if (!_loggedForwardOnlyIndicatorError)
                 {
                     _loggedForwardOnlyIndicatorError = true;
                     // if we receive a time in the past, log once and return
-                    Log.Error($"IndicatorBase.Update(): This is a forward only indicator: {Name} Input: {input.EndTime:u} Previous: {_previousSymbolInput.EndTime:u}. It will not be updated with this input.");
+                    Log.Error(
+                        $"IndicatorBase.Update(): This is a forward only indicator: {Name} Input: {input.EndTime:u} Previous: {_previousSymbolInput.EndTime:u}. It will not be updated with this input."
+                    );
                 }
                 return IsReady;
             }
@@ -271,7 +268,9 @@ namespace QuantConnect.Indicators
 
                 if (!(input is T))
                 {
-                    throw new ArgumentException($"IndicatorBase.Update() 'input' expected to be of type {typeof(T)} but is of type {input.GetType()}");
+                    throw new ArgumentException(
+                        $"IndicatorBase.Update() 'input' expected to be of type {typeof(T)} but is of type {input.GetType()}"
+                    );
                 }
                 _previousInput[input.Symbol.ID] = (T)input;
 
@@ -301,18 +300,16 @@ namespace QuantConnect.Indicators
                 return Update((T)(object)new IndicatorDataPoint(time, value));
             }
 
-            var suggestions = new List<string>
-            {
-                "Update(TradeBar)",
-                "Update(QuoteBar)"
-            };
+            var suggestions = new List<string> { "Update(TradeBar)", "Update(QuoteBar)" };
 
             if (typeof(T) == typeof(IBaseData))
             {
                 suggestions.Add("Update(Tick)");
             }
 
-            throw new NotSupportedException($"{GetType().Name} does not support the `Update(DateTime, decimal)` method. Use one of the following methods instead: {string.Join(", ", suggestions)}");
+            throw new NotSupportedException(
+                $"{GetType().Name} does not support the `Update(DateTime, decimal)` method. Use one of the following methods instead: {string.Join(", ", suggestions)}"
+            );
         }
 
         /// <summary>
@@ -361,7 +358,8 @@ namespace QuantConnect.Indicators
             // because of this, we shouldn't need to override GetHashCode as well since we're still
             // solely relying on reference semantics (think hashset/dictionary impls)
 
-            if (ReferenceEquals(obj, null)) return false;
+            if (ReferenceEquals(obj, null))
+                return false;
             var type = obj.GetType();
 
             while (type != null && type != typeof(object))

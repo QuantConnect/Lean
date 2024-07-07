@@ -19,11 +19,11 @@ using QuantConnect.Brokerages;
 
 namespace QuantConnect.Tests.Common.Brokerages
 {
-
     [TestFixture, Parallelizable(ParallelScope.All)]
     public class BinanceUSBrokerageModelTests : BinanceBrokerageModelTests
     {
-        protected override BinanceBrokerageModel BinanceBrokerageModel => new BinanceUSBrokerageModel();
+        protected override BinanceBrokerageModel BinanceBrokerageModel =>
+            new BinanceUSBrokerageModel();
 
         [Test]
         public void ThrowsError_IfMarginAccount()

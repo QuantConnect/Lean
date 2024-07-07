@@ -50,8 +50,7 @@ namespace QuantConnect.Data.UniverseSelection
         /// </summary>
         /// <param name="future">The canonical future chain security</param>
         /// <param name="universeSettings">The universe settings to be used for new subscriptions</param>
-        public FuturesChainUniverse(Future future,
-            UniverseSettings universeSettings)
+        public FuturesChainUniverse(Future future, UniverseSettings universeSettings)
             : base(future.SubscriptionDataConfig)
         {
             Future = future;
@@ -73,7 +72,10 @@ namespace QuantConnect.Data.UniverseSelection
                 if (value != null)
                 {
                     // make sure data mode is raw
-                    base.UniverseSettings = new UniverseSettings(value) { DataNormalizationMode = DataNormalizationMode.Raw };
+                    base.UniverseSettings = new UniverseSettings(value)
+                    {
+                        DataNormalizationMode = DataNormalizationMode.Raw
+                    };
                 }
             }
         }
@@ -95,7 +97,9 @@ namespace QuantConnect.Data.UniverseSelection
             }
 
             var availableContracts = data.Data.Select(x => x.Symbol);
-            var results = Future.ContractFilter.Filter(new FutureFilterUniverse(availableContracts, localEndTime));
+            var results = Future.ContractFilter.Filter(
+                new FutureFilterUniverse(availableContracts, localEndTime)
+            );
             _cacheDate = exchangeDate;
 
             return results;
@@ -109,15 +113,24 @@ namespace QuantConnect.Data.UniverseSelection
         /// <param name="maximumEndTimeUtc">The max end time</param>
         /// <param name="subscriptionService">Instance which implements <see cref="ISubscriptionDataConfigService"/> interface</param>
         /// <returns>All subscriptions required by this security</returns>
-        public override IEnumerable<SubscriptionRequest> GetSubscriptionRequests(Security security, DateTime currentTimeUtc, DateTime maximumEndTimeUtc,
-            ISubscriptionDataConfigService subscriptionService)
+        public override IEnumerable<SubscriptionRequest> GetSubscriptionRequests(
+            Security security,
+            DateTime currentTimeUtc,
+            DateTime maximumEndTimeUtc,
+            ISubscriptionDataConfigService subscriptionService
+        )
         {
             if (Future.Symbol.Underlying == security.Symbol)
             {
                 Future.Underlying = security;
             }
 
-            return base.GetSubscriptionRequests(security, currentTimeUtc, maximumEndTimeUtc, subscriptionService);
+            return base.GetSubscriptionRequests(
+                security,
+                currentTimeUtc,
+                maximumEndTimeUtc,
+                subscriptionService
+            );
         }
     }
 }

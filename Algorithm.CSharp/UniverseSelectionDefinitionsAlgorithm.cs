@@ -41,7 +41,7 @@ namespace QuantConnect.Algorithm.CSharp
 
             SetStartDate(2014, 03, 24);
             SetEndDate(2014, 03, 28);
-            SetCash(100*1000);
+            SetCash(100 * 1000);
 
             // add universe for the top 3 stocks by dollar volume
             AddUniverse(Universe.Top(3));
@@ -49,7 +49,8 @@ namespace QuantConnect.Algorithm.CSharp
 
         public override void OnData(Slice slice)
         {
-            if (_changes == SecurityChanges.None) return;
+            if (_changes == SecurityChanges.None)
+                return;
 
             // liquidate securities that fell out of our universe
             foreach (var security in _changes.RemovedSecurities)
@@ -76,7 +77,9 @@ namespace QuantConnect.Algorithm.CSharp
         {
             if (!_onSecuritiesChangedWasCalled)
             {
-                throw new RegressionTestException($"OnSecuritiesChanged() method was never called!");
+                throw new RegressionTestException(
+                    $"OnSecuritiesChanged() method was never called!"
+                );
             }
         }
 
@@ -114,35 +117,36 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// This is used by the regression test system to indicate what the expected statistics are from running the algorithm
         /// </summary>
-        public Dictionary<string, string> ExpectedStatistics => new Dictionary<string, string>
-        {
-            {"Total Orders", "7"},
-            {"Average Win", "0.00%"},
-            {"Average Loss", "0.00%"},
-            {"Compounding Annual Return", "-3.587%"},
-            {"Drawdown", "0.100%"},
-            {"Expectancy", "-0.439"},
-            {"Start Equity", "100000"},
-            {"End Equity", "99949.98"},
-            {"Net Profit", "-0.050%"},
-            {"Sharpe Ratio", "-17.344"},
-            {"Sortino Ratio", "-17.344"},
-            {"Probabilistic Sharpe Ratio", "0%"},
-            {"Loss Rate", "50%"},
-            {"Win Rate", "50%"},
-            {"Profit-Loss Ratio", "0.12"},
-            {"Alpha", "-0.039"},
-            {"Beta", "0.017"},
-            {"Annual Standard Deviation", "0.002"},
-            {"Annual Variance", "0"},
-            {"Information Ratio", "-0.747"},
-            {"Tracking Error", "0.092"},
-            {"Treynor Ratio", "-2.271"},
-            {"Total Fees", "$7.00"},
-            {"Estimated Strategy Capacity", "$1200000000.00"},
-            {"Lowest Capacity Asset", "QQQ RIWIV7K5Z9LX"},
-            {"Portfolio Turnover", "1.06%"},
-            {"OrderListHash", "b5cba1a9956c6c86d56aa603f71326a1"}
-        };
+        public Dictionary<string, string> ExpectedStatistics =>
+            new Dictionary<string, string>
+            {
+                { "Total Orders", "7" },
+                { "Average Win", "0.00%" },
+                { "Average Loss", "0.00%" },
+                { "Compounding Annual Return", "-3.587%" },
+                { "Drawdown", "0.100%" },
+                { "Expectancy", "-0.439" },
+                { "Start Equity", "100000" },
+                { "End Equity", "99949.98" },
+                { "Net Profit", "-0.050%" },
+                { "Sharpe Ratio", "-17.344" },
+                { "Sortino Ratio", "-17.344" },
+                { "Probabilistic Sharpe Ratio", "0%" },
+                { "Loss Rate", "50%" },
+                { "Win Rate", "50%" },
+                { "Profit-Loss Ratio", "0.12" },
+                { "Alpha", "-0.039" },
+                { "Beta", "0.017" },
+                { "Annual Standard Deviation", "0.002" },
+                { "Annual Variance", "0" },
+                { "Information Ratio", "-0.747" },
+                { "Tracking Error", "0.092" },
+                { "Treynor Ratio", "-2.271" },
+                { "Total Fees", "$7.00" },
+                { "Estimated Strategy Capacity", "$1200000000.00" },
+                { "Lowest Capacity Asset", "QQQ RIWIV7K5Z9LX" },
+                { "Portfolio Turnover", "1.06%" },
+                { "OrderListHash", "b5cba1a9956c6c86d56aa603f71326a1" }
+            };
     }
 }

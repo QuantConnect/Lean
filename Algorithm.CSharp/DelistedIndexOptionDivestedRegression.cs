@@ -33,8 +33,8 @@ namespace QuantConnect.Algorithm.CSharp
 
         public override void Initialize()
         {
-            SetStartDate(2021, 1, 3);  //Set Start Date
-            SetEndDate(2021, 1, 20);    //Set End Date
+            SetStartDate(2021, 1, 3); //Set Start Date
+            SetEndDate(2021, 1, 20); //Set End Date
 
             _ticker = "SPX";
             var spxSecurity = AddIndex(_ticker, Resolution.Minute);
@@ -53,13 +53,13 @@ namespace QuantConnect.Algorithm.CSharp
             {
                 var contracts = OptionChainProvider.GetOptionContractList(_spx, Time);
                 contracts = contracts.Where(x =>
-                    x.ID.OptionRight == OptionRight.Put &&
-                    x.ID.Date.Date == new DateTime(2021, 1, 15));
+                    x.ID.OptionRight == OptionRight.Put
+                    && x.ID.Date.Date == new DateTime(2021, 1, 15)
+                );
 
                 var option = AddIndexOptionContract(contracts.First(), Resolution.Minute);
                 _optionExpiry = option.Expiry;
                 _optionSymbol = option.Symbol;
-
 
                 _addOption = false;
             }
@@ -83,7 +83,9 @@ namespace QuantConnect.Algorithm.CSharp
                         case DelistingType.Delisted:
                             if (!_receivedWarning)
                             {
-                                throw new RegressionTestException("Did not receive warning before delisting");
+                                throw new RegressionTestException(
+                                    "Did not receive warning before delisting"
+                                );
                             }
                             break;
                     }
@@ -92,20 +94,26 @@ namespace QuantConnect.Algorithm.CSharp
                 // Verify we aren't receiving expired option data.
                 if (_optionExpiry < Time.Date)
                 {
-                    throw new RegressionTestException($"Received expired contract {_optionSymbol} expired: {_optionExpiry} current time: {Time}");
+                    throw new RegressionTestException(
+                        $"Received expired contract {_optionSymbol} expired: {_optionExpiry} current time: {Time}"
+                    );
                 }
             }
-
         }
+
         public override void OnEndOfAlgorithm()
         {
             foreach (var holding in Portfolio.Values)
             {
-                Log($"Holding {holding.Symbol.Value}; Invested: {holding.Invested}; Quantity: {holding.Quantity}");
+                Log(
+                    $"Holding {holding.Symbol.Value}; Invested: {holding.Invested}; Quantity: {holding.Quantity}"
+                );
 
                 if (holding.Symbol == _optionSymbol && holding.Invested)
                 {
-                    throw new RegressionTestException($"Index option {_optionSymbol.Value} is still invested after delisting");
+                    throw new RegressionTestException(
+                        $"Index option {_optionSymbol.Value} is still invested after delisting"
+                    );
                 }
             }
         }
@@ -138,35 +146,36 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// This is used by the regression test system to indicate what the expected statistics are from running the algorithm
         /// </summary>
-        public Dictionary<string, string> ExpectedStatistics => new Dictionary<string, string>
-        {
-            {"Total Orders", "2"},
-            {"Average Win", "0%"},
-            {"Average Loss", "-26.02%"},
-            {"Compounding Annual Return", "-99.801%"},
-            {"Drawdown", "46.200%"},
-            {"Expectancy", "-1"},
-            {"Start Equity", "100000"},
-            {"End Equity", "73985"},
-            {"Net Profit", "-26.015%"},
-            {"Sharpe Ratio", "-0.605"},
-            {"Sortino Ratio", "-0.24"},
-            {"Probabilistic Sharpe Ratio", "19.498%"},
-            {"Loss Rate", "100%"},
-            {"Win Rate", "0%"},
-            {"Profit-Loss Ratio", "0"},
-            {"Alpha", "-0.541"},
-            {"Beta", "-0.847"},
-            {"Annual Standard Deviation", "1.575"},
-            {"Annual Variance", "2.481"},
-            {"Information Ratio", "-0.907"},
-            {"Tracking Error", "1.587"},
-            {"Treynor Ratio", "1.124"},
-            {"Total Fees", "$0.00"},
-            {"Estimated Strategy Capacity", "$1000000.00"},
-            {"Lowest Capacity Asset", "SPX 31KC0UJFONTBI|SPX 31"},
-            {"Portfolio Turnover", "1.24%"},
-            {"OrderListHash", "d1d242c46f1715249551f5da81d467d4"}
-        };
+        public Dictionary<string, string> ExpectedStatistics =>
+            new Dictionary<string, string>
+            {
+                { "Total Orders", "2" },
+                { "Average Win", "0%" },
+                { "Average Loss", "-26.02%" },
+                { "Compounding Annual Return", "-99.801%" },
+                { "Drawdown", "46.200%" },
+                { "Expectancy", "-1" },
+                { "Start Equity", "100000" },
+                { "End Equity", "73985" },
+                { "Net Profit", "-26.015%" },
+                { "Sharpe Ratio", "-0.605" },
+                { "Sortino Ratio", "-0.24" },
+                { "Probabilistic Sharpe Ratio", "19.498%" },
+                { "Loss Rate", "100%" },
+                { "Win Rate", "0%" },
+                { "Profit-Loss Ratio", "0" },
+                { "Alpha", "-0.541" },
+                { "Beta", "-0.847" },
+                { "Annual Standard Deviation", "1.575" },
+                { "Annual Variance", "2.481" },
+                { "Information Ratio", "-0.907" },
+                { "Tracking Error", "1.587" },
+                { "Treynor Ratio", "1.124" },
+                { "Total Fees", "$0.00" },
+                { "Estimated Strategy Capacity", "$1000000.00" },
+                { "Lowest Capacity Asset", "SPX 31KC0UJFONTBI|SPX 31" },
+                { "Portfolio Turnover", "1.24%" },
+                { "OrderListHash", "d1d242c46f1715249551f5da81d467d4" }
+            };
     }
 }

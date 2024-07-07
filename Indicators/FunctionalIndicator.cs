@@ -1,11 +1,11 @@
 ﻿/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
- * 
- * Licensed under the Apache License, Version 2.0 (the "License"); 
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -28,8 +28,10 @@ namespace QuantConnect.Indicators
     {
         /// <summary>function implementation of the IndicatorBase.IsReady property</summary>
         private readonly Func<IndicatorBase<T>, bool> _isReady;
+
         /// <summary>Action used to reset this indicator completely along with any indicators this one is dependent on</summary>
         private readonly Action _reset;
+
         /// <summary>function implementation of the IndicatorBase.ComputeNextValue method</summary>
         private readonly Func<T, decimal> _computeNextValue;
 
@@ -39,7 +41,11 @@ namespace QuantConnect.Indicators
         /// <param name="name">The name of this indicator</param>
         /// <param name="computeNextValue">A function accepting the input value and returning this indicator's output value</param>
         /// <param name="isReady">A function accepting this indicator and returning true if the indicator is ready, false otherwise</param>
-        public FunctionalIndicator(string name, Func<T, decimal> computeNextValue, Func<IndicatorBase<T>, bool> isReady)
+        public FunctionalIndicator(
+            string name,
+            Func<T, decimal> computeNextValue,
+            Func<IndicatorBase<T>, bool> isReady
+        )
             : base(name)
         {
             _computeNextValue = computeNextValue;
@@ -53,7 +59,12 @@ namespace QuantConnect.Indicators
         /// <param name="computeNextValue">A function accepting the input value and returning this indicator's output value</param>
         /// <param name="isReady">A function accepting this indicator and returning true if the indicator is ready, false otherwise</param>
         /// <param name="reset">Function called to reset this indicator and any indicators this is dependent on</param>
-        public FunctionalIndicator(string name, Func<T, decimal> computeNextValue, Func<IndicatorBase<T>, bool> isReady, Action reset)
+        public FunctionalIndicator(
+            string name,
+            Func<T, decimal> computeNextValue,
+            Func<IndicatorBase<T>, bool> isReady,
+            Action reset
+        )
             : base(name)
         {
             _computeNextValue = computeNextValue;

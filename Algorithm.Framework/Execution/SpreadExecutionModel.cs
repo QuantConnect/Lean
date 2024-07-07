@@ -14,9 +14,9 @@
 */
 
 using System;
+using QuantConnect.Algorithm.Framework.Portfolio;
 using QuantConnect.Orders;
 using QuantConnect.Securities;
-using QuantConnect.Algorithm.Framework.Portfolio;
 
 namespace QuantConnect.Algorithm.Framework.Execution
 {
@@ -84,8 +84,11 @@ namespace QuantConnect.Algorithm.Framework.Execution
             // Has to be in opening hours of exchange to avoid extreme spread in OTC period
             // Price has to be larger than zero to avoid zero division error, or negative price causing the spread percentage lower than preset value by accident
             return security.Exchange.ExchangeOpen
-                && security.Price > 0 && security.AskPrice > 0 && security.BidPrice > 0
-                && (security.AskPrice - security.BidPrice) / security.Price <= _acceptingSpreadPercent;
+                && security.Price > 0
+                && security.AskPrice > 0
+                && security.BidPrice > 0
+                && (security.AskPrice - security.BidPrice) / security.Price
+                    <= _acceptingSpreadPercent;
         }
     }
 }

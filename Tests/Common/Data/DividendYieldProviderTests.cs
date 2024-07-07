@@ -13,25 +13,25 @@
  * limitations under the License.
 */
 
-using NUnit.Framework;
-using QuantConnect.Data;
 using System;
 using System.Collections.Generic;
 using System.Threading;
+using NUnit.Framework;
+using QuantConnect.Data;
 
 namespace QuantConnect.Tests.Common.Data
 {
     [TestFixture]
     public class DividendYieldProviderTests
     {
-        [TestCase("19700306", 0.0)]   // Date in before the first date in file
+        [TestCase("19700306", 0.0)] // Date in before the first date in file
         [TestCase("20200205", 0.04147)]
         [TestCase("20200206", 0.03355)]
         [TestCase("20200207", 0.03355)]
         [TestCase("20210203", 0.01676)]
         [TestCase("20210204", 0.01239)]
         [TestCase("20210205", 0.01239)]
-        [TestCase("20491231", 0.01239)]   // Date in far future, assuming same rate
+        [TestCase("20491231", 0.01239)] // Date in far future, assuming same rate
         public void GetDividendYieldRate(string dateString, double expected)
         {
             var symbol = Symbols.AAPL;
@@ -42,9 +42,9 @@ namespace QuantConnect.Tests.Common.Data
             Assert.AreEqual(expected, (double)result, 0.0001d);
         }
 
-        [TestCase("19700101", 0.0)]   // Date before Time.Start
+        [TestCase("19700101", 0.0)] // Date before Time.Start
         [TestCase("20200101", 0.0)]
-        [TestCase("20500101", 0.0)]   // Date in far future
+        [TestCase("20500101", 0.0)] // Date in far future
         public void GetDividendYieldWithoutFactorFile(string dateString, decimal expected)
         {
             var symbol = Symbols.EURUSD;
@@ -86,12 +86,16 @@ namespace QuantConnect.Tests.Common.Data
         [Test]
         public void AnotherSymbolCall()
         {
-            using var fileProviderTest = new DividendYieldProviderTest(Symbol.Create("TEST_A", SecurityType.Equity, QuantConnect.Market.USA));
+            using var fileProviderTest = new DividendYieldProviderTest(
+                Symbol.Create("TEST_A", SecurityType.Equity, QuantConnect.Market.USA)
+            );
 
             var applYield = fileProviderTest.GetDividendYield(new DateTime(2020, 1, 1));
             Assert.AreEqual(1, fileProviderTest.FetchCount);
 
-            using var fileProviderTest2 = new DividendYieldProviderTest(Symbol.Create("TEST_B", SecurityType.Equity, QuantConnect.Market.USA));
+            using var fileProviderTest2 = new DividendYieldProviderTest(
+                Symbol.Create("TEST_B", SecurityType.Equity, QuantConnect.Market.USA)
+            );
 
             var spyYield = fileProviderTest2.GetDividendYield(new DateTime(2020, 1, 1));
             Assert.AreEqual(1, fileProviderTest2.FetchCount);
@@ -104,11 +108,11 @@ namespace QuantConnect.Tests.Common.Data
             protected override TimeSpan CacheRefreshPeriod => TimeSpan.FromSeconds(1);
 
             public DividendYieldProviderTest(Symbol symbol)
-                : base(symbol) 
-            { 
-            }
+                : base(symbol) { }
 
-            protected override Dictionary<DateTime, decimal> LoadDividendYieldProvider(Symbol symbol)
+            protected override Dictionary<DateTime, decimal> LoadDividendYieldProvider(
+                Symbol symbol
+            )
             {
                 FetchCount++;
                 return base.LoadDividendYieldProvider(symbol);
@@ -123,9 +127,7 @@ namespace QuantConnect.Tests.Common.Data
                     DividendYieldProvider._cacheClearTask = null;
                     task.Dispose();
                 }
-                catch
-                {
-                }
+                catch { }
             }
 
             public void Dispose()

@@ -1,11 +1,11 @@
 ﻿/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
- * 
- * Licensed under the Apache License, Version 2.0 (the "License"); 
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -52,25 +52,42 @@ namespace QuantConnect.Indicators.CandlestickPatterns
         /// Initializes a new instance of the <see cref="AdvanceBlock"/> class using the specified name.
         /// </summary>
         /// <param name="name">The name of this indicator</param>
-        public AdvanceBlock(string name) 
-            : base(name, Math.Max(Math.Max(Math.Max(CandleSettings.Get(CandleSettingType.ShadowLong).AveragePeriod, CandleSettings.Get(CandleSettingType.ShadowShort).AveragePeriod),
-                  Math.Max(CandleSettings.Get(CandleSettingType.Far).AveragePeriod, CandleSettings.Get(CandleSettingType.Near).AveragePeriod)),
-                  CandleSettings.Get(CandleSettingType.BodyLong).AveragePeriod) + 2 + 1)
+        public AdvanceBlock(string name)
+            : base(
+                name,
+                Math.Max(
+                    Math.Max(
+                        Math.Max(
+                            CandleSettings.Get(CandleSettingType.ShadowLong).AveragePeriod,
+                            CandleSettings.Get(CandleSettingType.ShadowShort).AveragePeriod
+                        ),
+                        Math.Max(
+                            CandleSettings.Get(CandleSettingType.Far).AveragePeriod,
+                            CandleSettings.Get(CandleSettingType.Near).AveragePeriod
+                        )
+                    ),
+                    CandleSettings.Get(CandleSettingType.BodyLong).AveragePeriod
+                )
+                    + 2
+                    + 1
+            )
         {
-            _shadowShortAveragePeriod = CandleSettings.Get(CandleSettingType.ShadowShort).AveragePeriod;
-            _shadowLongAveragePeriod = CandleSettings.Get(CandleSettingType.ShadowLong).AveragePeriod;
+            _shadowShortAveragePeriod = CandleSettings
+                .Get(CandleSettingType.ShadowShort)
+                .AveragePeriod;
+            _shadowLongAveragePeriod = CandleSettings
+                .Get(CandleSettingType.ShadowLong)
+                .AveragePeriod;
             _nearAveragePeriod = CandleSettings.Get(CandleSettingType.Near).AveragePeriod;
             _farAveragePeriod = CandleSettings.Get(CandleSettingType.Far).AveragePeriod;
             _bodyLongAveragePeriod = CandleSettings.Get(CandleSettingType.BodyLong).AveragePeriod;
         }
 
-    /// <summary>
-    /// Initializes a new instance of the <see cref="AdvanceBlock"/> class.
-    /// </summary>
-    public AdvanceBlock()
-            : this("ADVANCEBLOCK")
-        {
-        }
+        /// <summary>
+        /// Initializes a new instance of the <see cref="AdvanceBlock"/> class.
+        /// </summary>
+        public AdvanceBlock()
+            : this("ADVANCEBLOCK") { }
 
         /// <summary>
         /// Gets a flag indicating when this indicator is ready and fully initialized
@@ -86,21 +103,39 @@ namespace QuantConnect.Indicators.CandlestickPatterns
         /// <param name="window">The window of data held in this indicator</param>
         /// <param name="input">The input given to the indicator</param>
         /// <returns>A new value for this indicator</returns>
-        protected override decimal ComputeNextValue(IReadOnlyWindow<IBaseDataBar> window, IBaseDataBar input)
+        protected override decimal ComputeNextValue(
+            IReadOnlyWindow<IBaseDataBar> window,
+            IBaseDataBar input
+        )
         {
             if (!IsReady)
             {
                 if (Samples >= Period - _shadowShortAveragePeriod)
                 {
-                    _shadowShortPeriodTotal[2] += GetCandleRange(CandleSettingType.ShadowShort, window[2]);
-                    _shadowShortPeriodTotal[1] += GetCandleRange(CandleSettingType.ShadowShort, window[1]);
-                    _shadowShortPeriodTotal[0] += GetCandleRange(CandleSettingType.ShadowShort, input);
+                    _shadowShortPeriodTotal[2] += GetCandleRange(
+                        CandleSettingType.ShadowShort,
+                        window[2]
+                    );
+                    _shadowShortPeriodTotal[1] += GetCandleRange(
+                        CandleSettingType.ShadowShort,
+                        window[1]
+                    );
+                    _shadowShortPeriodTotal[0] += GetCandleRange(
+                        CandleSettingType.ShadowShort,
+                        input
+                    );
                 }
 
                 if (Samples >= Period - _shadowLongAveragePeriod)
                 {
-                    _shadowLongPeriodTotal[1] += GetCandleRange(CandleSettingType.ShadowLong, window[1]);
-                    _shadowLongPeriodTotal[0] += GetCandleRange(CandleSettingType.ShadowLong, input);
+                    _shadowLongPeriodTotal[1] += GetCandleRange(
+                        CandleSettingType.ShadowLong,
+                        window[1]
+                    );
+                    _shadowLongPeriodTotal[0] += GetCandleRange(
+                        CandleSettingType.ShadowLong,
+                        input
+                    );
                 }
 
                 if (Samples >= Period - _bodyLongAveragePeriod)
@@ -126,82 +161,143 @@ namespace QuantConnect.Indicators.CandlestickPatterns
             decimal value;
             if (
                 // 1st white
-                GetCandleColor(window[2]) == CandleColor.White &&
+                GetCandleColor(window[2]) == CandleColor.White
+                &&
                 // 2nd white
-                GetCandleColor(window[1]) == CandleColor.White &&
+                GetCandleColor(window[1]) == CandleColor.White
+                &&
                 // 3rd white
-                GetCandleColor(input) == CandleColor.White &&
+                GetCandleColor(input) == CandleColor.White
+                &&
                 // consecutive higher closes
-                input.Close > window[1].Close && window[1].Close > window[2].Close &&
+                input.Close > window[1].Close
+                && window[1].Close > window[2].Close
+                &&
                 // 2nd opens within/near 1st real body
-                window[1].Open > window[2].Open &&
-                window[1].Open <= window[2].Close + GetCandleAverage(CandleSettingType.Near, _nearPeriodTotal[2], window[2]) &&
+                window[1].Open > window[2].Open
+                && window[1].Open
+                    <= window[2].Close
+                        + GetCandleAverage(CandleSettingType.Near, _nearPeriodTotal[2], window[2])
+                &&
                 // 3rd opens within/near 2nd real body
-                input.Open > window[1].Open &&
-                input.Open <= window[1].Close + GetCandleAverage(CandleSettingType.Near, _nearPeriodTotal[1], window[1]) &&
+                input.Open > window[1].Open
+                && input.Open
+                    <= window[1].Close
+                        + GetCandleAverage(CandleSettingType.Near, _nearPeriodTotal[1], window[1])
+                &&
                 // 1st: long real body
-                GetRealBody(window[2]) > GetCandleAverage(CandleSettingType.BodyLong, _bodyLongPeriodTotal, window[2]) &&
+                GetRealBody(window[2])
+                    > GetCandleAverage(CandleSettingType.BodyLong, _bodyLongPeriodTotal, window[2])
+                &&
                 // 1st: short upper shadow
-                GetUpperShadow(window[2]) < GetCandleAverage(CandleSettingType.ShadowShort, _shadowShortPeriodTotal[2], window[2]) &&
-                (
+                GetUpperShadow(window[2])
+                    < GetCandleAverage(
+                        CandleSettingType.ShadowShort,
+                        _shadowShortPeriodTotal[2],
+                        window[2]
+                    )
+                && (
                     // ( 2 far smaller than 1 && 3 not longer than 2 )
                     // advance blocked with the 2nd, 3rd must not carry on the advance
                     (
-                        GetRealBody(window[1]) < GetRealBody(window[2]) - GetCandleAverage(CandleSettingType.Far, _farPeriodTotal[2], window[2]) &&
-                        GetRealBody(input) < GetRealBody(window[1]) + GetCandleAverage(CandleSettingType.Near, _nearPeriodTotal[1], window[1])
-                    ) ||
+                        GetRealBody(window[1])
+                            < GetRealBody(window[2])
+                                - GetCandleAverage(
+                                    CandleSettingType.Far,
+                                    _farPeriodTotal[2],
+                                    window[2]
+                                )
+                        && GetRealBody(input)
+                            < GetRealBody(window[1])
+                                + GetCandleAverage(
+                                    CandleSettingType.Near,
+                                    _nearPeriodTotal[1],
+                                    window[1]
+                                )
+                    )
+                    ||
                     // 3 far smaller than 2
                     // advance blocked with the 3rd
                     (
-                        GetRealBody(input) < GetRealBody(window[1]) - GetCandleAverage(CandleSettingType.Far, _farPeriodTotal[1], window[1])
-                    ) ||
+                        GetRealBody(input)
+                        < GetRealBody(window[1])
+                            - GetCandleAverage(CandleSettingType.Far, _farPeriodTotal[1], window[1])
+                    )
+                    ||
                     // ( 3 smaller than 2 && 2 smaller than 1 && (3 or 2 not short upper shadow) )
                     // advance blocked with progressively smaller real bodies and some upper shadows
                     (
-                        GetRealBody(input) < GetRealBody(window[1]) &&
-                        GetRealBody(window[1]) < GetRealBody(window[2]) &&
-                        (
-                            GetUpperShadow(input) > GetCandleAverage(CandleSettingType.ShadowShort, _shadowShortPeriodTotal[0], input) ||
-                            GetUpperShadow(window[1]) > GetCandleAverage(CandleSettingType.ShadowShort, _shadowShortPeriodTotal[1], window[1])
+                        GetRealBody(input) < GetRealBody(window[1])
+                        && GetRealBody(window[1]) < GetRealBody(window[2])
+                        && (
+                            GetUpperShadow(input)
+                                > GetCandleAverage(
+                                    CandleSettingType.ShadowShort,
+                                    _shadowShortPeriodTotal[0],
+                                    input
+                                )
+                            || GetUpperShadow(window[1])
+                                > GetCandleAverage(
+                                    CandleSettingType.ShadowShort,
+                                    _shadowShortPeriodTotal[1],
+                                    window[1]
+                                )
                         )
-                    ) ||
+                    )
+                    ||
                     // ( 3 smaller than 2 && 3 long upper shadow )
                     // advance blocked with 3rd candle's long upper shadow and smaller body
                     (
-                        GetRealBody(input) < GetRealBody(window[1]) &&
-                        GetUpperShadow(input) > GetCandleAverage(CandleSettingType.ShadowLong, _shadowLongPeriodTotal[0], input)
+                        GetRealBody(input) < GetRealBody(window[1])
+                        && GetUpperShadow(input)
+                            > GetCandleAverage(
+                                CandleSettingType.ShadowLong,
+                                _shadowLongPeriodTotal[0],
+                                input
+                            )
                     )
                 )
-              )
+            )
                 value = -1m;
             else
                 value = 0m;
 
-            // add the current range and subtract the first range: this is done after the pattern recognition 
+            // add the current range and subtract the first range: this is done after the pattern recognition
             // when avgPeriod is not 0, that means "compare with the previous candles" (it excludes the current candle)
 
             for (var i = 2; i >= 0; i--)
             {
-                _shadowShortPeriodTotal[i] += GetCandleRange(CandleSettingType.ShadowShort, window[i]) -
-                                              GetCandleRange(CandleSettingType.ShadowShort, window[i + _shadowShortAveragePeriod]);
+                _shadowShortPeriodTotal[i] +=
+                    GetCandleRange(CandleSettingType.ShadowShort, window[i])
+                    - GetCandleRange(
+                        CandleSettingType.ShadowShort,
+                        window[i + _shadowShortAveragePeriod]
+                    );
             }
 
             for (var i = 1; i >= 0; i--)
             {
-                _shadowLongPeriodTotal[i] += GetCandleRange(CandleSettingType.ShadowLong, window[i]) -
-                                             GetCandleRange(CandleSettingType.ShadowLong, window[i + _shadowLongAveragePeriod]);
+                _shadowLongPeriodTotal[i] +=
+                    GetCandleRange(CandleSettingType.ShadowLong, window[i])
+                    - GetCandleRange(
+                        CandleSettingType.ShadowLong,
+                        window[i + _shadowLongAveragePeriod]
+                    );
             }
 
             for (var i = 2; i >= 1; i--)
             {
-                _farPeriodTotal[i] += GetCandleRange(CandleSettingType.Far, window[i]) -
-                                      GetCandleRange(CandleSettingType.Far, window[i + _farAveragePeriod]);
-                _nearPeriodTotal[i] += GetCandleRange(CandleSettingType.Near, window[i]) -
-                                       GetCandleRange(CandleSettingType.Near, window[i + _nearAveragePeriod]);
+                _farPeriodTotal[i] +=
+                    GetCandleRange(CandleSettingType.Far, window[i])
+                    - GetCandleRange(CandleSettingType.Far, window[i + _farAveragePeriod]);
+                _nearPeriodTotal[i] +=
+                    GetCandleRange(CandleSettingType.Near, window[i])
+                    - GetCandleRange(CandleSettingType.Near, window[i + _nearAveragePeriod]);
             }
 
-            _bodyLongPeriodTotal += GetCandleRange(CandleSettingType.BodyLong, window[2]) - 
-                                    GetCandleRange(CandleSettingType.BodyLong, window[2 + _bodyLongAveragePeriod]);
+            _bodyLongPeriodTotal +=
+                GetCandleRange(CandleSettingType.BodyLong, window[2])
+                - GetCandleRange(CandleSettingType.BodyLong, window[2 + _bodyLongAveragePeriod]);
 
             return value;
         }

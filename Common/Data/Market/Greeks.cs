@@ -42,14 +42,8 @@ namespace QuantConnect.Data.Market
         /// </summary>
         public decimal Delta
         {
-            get
-            {
-                return _delta != null ? _delta.Value : _deltaGamma.Value.Item1;
-            }
-            private set
-            {
-                _delta = new Lazy<decimal>(() => value);
-            }
+            get { return _delta != null ? _delta.Value : _deltaGamma.Value.Item1; }
+            private set { _delta = new Lazy<decimal>(() => value); }
         }
 
         /// <summary>
@@ -61,14 +55,8 @@ namespace QuantConnect.Data.Market
         /// </summary>
         public decimal Gamma
         {
-            get
-            {
-                return _gamma != null ? _gamma.Value : _deltaGamma.Value.Item2;
-            }
-            private set
-            {
-                _gamma = new Lazy<decimal>(() => value);
-            }
+            get { return _gamma != null ? _gamma.Value : _deltaGamma.Value.Item2; }
+            private set { _gamma = new Lazy<decimal>(() => value); }
         }
 
         /// <summary>
@@ -80,14 +68,8 @@ namespace QuantConnect.Data.Market
         /// </summary>
         public decimal Vega
         {
-            get
-            {
-                return _vega.Value;
-            }
-            private set
-            {
-                _vega = new Lazy<decimal>(() => value);
-            }
+            get { return _vega.Value; }
+            private set { _vega = new Lazy<decimal>(() => value); }
         }
 
         /// <summary>
@@ -99,14 +81,8 @@ namespace QuantConnect.Data.Market
         /// </summary>
         public decimal Theta
         {
-            get
-            {
-                return _theta.Value;
-            }
-            private set
-            {
-                _theta = new Lazy<decimal>(() => value);
-            }
+            get { return _theta.Value; }
+            private set { _theta = new Lazy<decimal>(() => value); }
         }
 
         /// <summary>
@@ -118,14 +94,8 @@ namespace QuantConnect.Data.Market
         /// </summary>
         public decimal Rho
         {
-            get
-            {
-                return _rho.Value;
-            }
-            private set
-            {
-                _rho = new Lazy<decimal>(() => value);
-            }
+            get { return _rho.Value; }
+            private set { _rho = new Lazy<decimal>(() => value); }
         }
 
         /// <summary>
@@ -138,14 +108,8 @@ namespace QuantConnect.Data.Market
         /// </summary>
         public decimal Lambda
         {
-            get
-            {
-                return _lambda.Value;
-            }
-            private set
-            {
-                _lambda = new Lazy<decimal>(() => value);
-            }
+            get { return _lambda.Value; }
+            private set { _lambda = new Lazy<decimal>(() => value); }
         }
 
         /// <summary>
@@ -157,7 +121,7 @@ namespace QuantConnect.Data.Market
         /// </para>
         /// </summary>
         /// <remarks>
-        /// Alias for <see cref="Lambda"/> required for compatibility with Python when 
+        /// Alias for <see cref="Lambda"/> required for compatibility with Python when
         /// PEP8 API is used (lambda is a reserved keyword in Python).
         /// </remarks>
         public decimal Lambda_ => Lambda;
@@ -175,14 +139,19 @@ namespace QuantConnect.Data.Market
         /// Initializes a new default instance of the <see cref="Greeks"/> class
         /// </summary>
         public Greeks()
-            : this(0m, 0m, 0m, 0m, 0m, 0m)
-        {
-        }
+            : this(0m, 0m, 0m, 0m, 0m, 0m) { }
 
         /// <summary>
         /// Initializes a new instance of the <see cref="Greeks"/> class
         /// </summary>
-        public Greeks(decimal delta, decimal gamma, decimal vega, decimal theta, decimal rho, decimal lambda)
+        public Greeks(
+            decimal delta,
+            decimal gamma,
+            decimal vega,
+            decimal theta,
+            decimal rho,
+            decimal lambda
+        )
         {
             Delta = delta;
             Gamma = gamma;
@@ -191,10 +160,18 @@ namespace QuantConnect.Data.Market
             Rho = rho;
             Lambda = lambda;
         }
+
         /// <summary>
         /// Initializes a new instance of the <see cref="Greeks"/> class
         /// </summary>
-        public Greeks(Func<decimal> delta, Func<decimal> gamma, Func<decimal> vega, Func<decimal> theta, Func<decimal> rho, Func<decimal> lambda)
+        public Greeks(
+            Func<decimal> delta,
+            Func<decimal> gamma,
+            Func<decimal> vega,
+            Func<decimal> theta,
+            Func<decimal> rho,
+            Func<decimal> lambda
+        )
         {
             _delta = new Lazy<decimal>(delta);
             _gamma = new Lazy<decimal>(gamma);
@@ -203,10 +180,17 @@ namespace QuantConnect.Data.Market
             _rho = new Lazy<decimal>(rho);
             _lambda = new Lazy<decimal>(lambda);
         }
+
         /// <summary>
         /// Initializes a new instance of the <see cref="Greeks"/> class
         /// </summary>
-        public Greeks(Func<Tuple<decimal, decimal>> deltaGamma, Func<decimal> vega, Func<decimal> theta, Func<decimal> rho, Func<decimal> lambda)
+        public Greeks(
+            Func<Tuple<decimal, decimal>> deltaGamma,
+            Func<decimal> vega,
+            Func<decimal> theta,
+            Func<decimal> rho,
+            Func<decimal> lambda
+        )
         {
             _deltaGamma = new Lazy<Tuple<decimal, decimal>>(deltaGamma);
             _vega = new Lazy<decimal>(vega);

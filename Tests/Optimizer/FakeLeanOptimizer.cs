@@ -29,34 +29,33 @@ namespace QuantConnect.Tests.Optimizer
         public event EventHandler Update;
 
         public FakeLeanOptimizer(OptimizationNodePacket nodePacket)
-            : base(nodePacket)
-        {
-        }
+            : base(nodePacket) { }
 
         protected override string RunLean(ParameterSet parameterSet, string backtestName)
         {
             var id = Guid.NewGuid().ToString();
             _backtests.Add(id);
 
-            Task.Delay(100).ContinueWith(task =>
-            {
-                try
+            Task.Delay(100)
+                .ContinueWith(task =>
                 {
-                    var sum = parameterSet.Value.Where(pair => pair.Key != "skipFromResultSum").Sum(s => s.Value.ToDecimal());
-                    if (sum != 29)
+                    try
                     {
-                        NewResult(BacktestResult.Create(sum, sum / 100).ToJson(), id);
+                        var sum = parameterSet
+                            .Value.Where(pair => pair.Key != "skipFromResultSum")
+                            .Sum(s => s.Value.ToDecimal());
+                        if (sum != 29)
+                        {
+                            NewResult(BacktestResult.Create(sum, sum / 100).ToJson(), id);
+                        }
+                        else
+                        {
+                            // fail some backtests by passing empty json
+                            NewResult(string.Empty, id);
+                        }
                     }
-                    else
-                    {
-                        // fail some backtests by passing empty json
-                        NewResult(string.Empty, id);
-                    }
-                }
-                catch
-                {
-                }
-            });
+                    catch { }
+                });
 
             return id;
         }

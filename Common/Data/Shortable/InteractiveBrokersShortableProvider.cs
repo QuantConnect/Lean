@@ -26,8 +26,6 @@ namespace QuantConnect.Data.Shortable
         /// <param name="securityType">SecurityType to read the short availability data</param>
         /// <param name="market">Market to read the short availability data</param>
         public InteractiveBrokersShortableProvider()
-            : base("interactivebrokers")
-        {
-        }
+            : base("interactivebrokers") { }
     }
 }

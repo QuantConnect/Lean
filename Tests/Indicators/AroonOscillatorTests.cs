@@ -38,47 +38,55 @@ namespace QuantConnect.Tests.Indicators
         public override void ResetsProperly()
         {
             var aroon = new AroonOscillator(3, 3);
-            aroon.Update(new TradeBar
-            {
-                Symbol = Symbols.SPY,
-                Time = DateTime.Today,
-                Open = 3m,
-                High = 7m,
-                Low = 2m,
-                Close = 5m,
-                Volume = 10
-            });
-            aroon.Update(new TradeBar
-            {
-                Symbol = Symbols.SPY,
-                Time = DateTime.Today.AddSeconds(1),
-                Open = 3m,
-                High = 7m,
-                Low = 2m,
-                Close = 5m,
-                Volume = 10
-            });
-            aroon.Update(new TradeBar
-            {
-                Symbol = Symbols.SPY,
-                Time = DateTime.Today.AddSeconds(2),
-                Open = 3m,
-                High = 7m,
-                Low = 2m,
-                Close = 5m,
-                Volume = 10
-            });
+            aroon.Update(
+                new TradeBar
+                {
+                    Symbol = Symbols.SPY,
+                    Time = DateTime.Today,
+                    Open = 3m,
+                    High = 7m,
+                    Low = 2m,
+                    Close = 5m,
+                    Volume = 10
+                }
+            );
+            aroon.Update(
+                new TradeBar
+                {
+                    Symbol = Symbols.SPY,
+                    Time = DateTime.Today.AddSeconds(1),
+                    Open = 3m,
+                    High = 7m,
+                    Low = 2m,
+                    Close = 5m,
+                    Volume = 10
+                }
+            );
+            aroon.Update(
+                new TradeBar
+                {
+                    Symbol = Symbols.SPY,
+                    Time = DateTime.Today.AddSeconds(2),
+                    Open = 3m,
+                    High = 7m,
+                    Low = 2m,
+                    Close = 5m,
+                    Volume = 10
+                }
+            );
             Assert.IsFalse(aroon.IsReady);
-            aroon.Update(new TradeBar
-            {
-                Symbol = Symbols.SPY,
-                Time = DateTime.Today.AddSeconds(3),
-                Open = 3m,
-                High = 7m,
-                Low = 2m,
-                Close = 5m,
-                Volume = 10
-            });
+            aroon.Update(
+                new TradeBar
+                {
+                    Symbol = Symbols.SPY,
+                    Time = DateTime.Today.AddSeconds(3),
+                    Open = 3m,
+                    High = 7m,
+                    Low = 2m,
+                    Close = 5m,
+                    Volume = 10
+                }
+            );
             Assert.IsTrue(aroon.IsReady);
 
             aroon.Reset();

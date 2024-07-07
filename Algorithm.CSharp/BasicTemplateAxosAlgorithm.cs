@@ -13,10 +13,10 @@
  * limitations under the License.
 */
 
+using System.Collections.Generic;
+using QuantConnect.Brokerages;
 using QuantConnect.Data;
 using QuantConnect.Interfaces;
-using QuantConnect.Brokerages;
-using System.Collections.Generic;
 
 namespace QuantConnect.Algorithm.CSharp
 {
@@ -84,35 +84,36 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// This is used by the regression test system to indicate what the expected statistics are from running the algorithm
         /// </summary>
-        public Dictionary<string, string> ExpectedStatistics => new Dictionary<string, string>
-        {
-            {"Total Orders", "1"},
-            {"Average Win", "0%"},
-            {"Average Loss", "0%"},
-            {"Compounding Annual Return", "39.143%"},
-            {"Drawdown", "0.500%"},
-            {"Expectancy", "0"},
-            {"Start Equity", "100000"},
-            {"End Equity", "100423.24"},
-            {"Net Profit", "0.423%"},
-            {"Sharpe Ratio", "5.498"},
-            {"Sortino Ratio", "0"},
-            {"Probabilistic Sharpe Ratio", "67.498%"},
-            {"Loss Rate", "0%"},
-            {"Win Rate", "0%"},
-            {"Profit-Loss Ratio", "0"},
-            {"Alpha", "0"},
-            {"Beta", "0"},
-            {"Annual Standard Deviation", "0.055"},
-            {"Annual Variance", "0.003"},
-            {"Information Ratio", "5.634"},
-            {"Tracking Error", "0.055"},
-            {"Treynor Ratio", "0"},
-            {"Total Fees", "$0.60"},
-            {"Estimated Strategy Capacity", "$150000000.00"},
-            {"Lowest Capacity Asset", "SPY R735QTJ8XC9X"},
-            {"Portfolio Turnover", "4.98%"},
-            {"OrderListHash", "8774049eb5141a2b6956d9432426f837"}
-        };
+        public Dictionary<string, string> ExpectedStatistics =>
+            new Dictionary<string, string>
+            {
+                { "Total Orders", "1" },
+                { "Average Win", "0%" },
+                { "Average Loss", "0%" },
+                { "Compounding Annual Return", "39.143%" },
+                { "Drawdown", "0.500%" },
+                { "Expectancy", "0" },
+                { "Start Equity", "100000" },
+                { "End Equity", "100423.24" },
+                { "Net Profit", "0.423%" },
+                { "Sharpe Ratio", "5.498" },
+                { "Sortino Ratio", "0" },
+                { "Probabilistic Sharpe Ratio", "67.498%" },
+                { "Loss Rate", "0%" },
+                { "Win Rate", "0%" },
+                { "Profit-Loss Ratio", "0" },
+                { "Alpha", "0" },
+                { "Beta", "0" },
+                { "Annual Standard Deviation", "0.055" },
+                { "Annual Variance", "0.003" },
+                { "Information Ratio", "5.634" },
+                { "Tracking Error", "0.055" },
+                { "Treynor Ratio", "0" },
+                { "Total Fees", "$0.60" },
+                { "Estimated Strategy Capacity", "$150000000.00" },
+                { "Lowest Capacity Asset", "SPY R735QTJ8XC9X" },
+                { "Portfolio Turnover", "4.98%" },
+                { "OrderListHash", "8774049eb5141a2b6956d9432426f837" }
+            };
     }
 }

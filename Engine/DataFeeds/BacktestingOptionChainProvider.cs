@@ -14,9 +14,9 @@
 */
 
 using System;
-using QuantConnect.Interfaces;
 using System.Collections.Generic;
 using QuantConnect.Data.Auxiliary;
+using QuantConnect.Interfaces;
 
 namespace QuantConnect.Lean.Engine.DataFeeds
 {
@@ -32,7 +32,10 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         /// </summary>
         /// <param name="dataCacheProvider">The data cache provider instance to use</param>
         /// <param name="mapFileProvider">The map file provider instance to use</param>
-        public BacktestingOptionChainProvider(IDataCacheProvider dataCacheProvider, IMapFileProvider mapFileProvider)
+        public BacktestingOptionChainProvider(
+            IDataCacheProvider dataCacheProvider,
+            IMapFileProvider mapFileProvider
+        )
             : base(dataCacheProvider)
         {
             _mapFileProvider = mapFileProvider;
@@ -57,8 +60,10 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                 }
                 else
                 {
-                    throw new NotSupportedException($"BacktestingOptionChainProvider.GetOptionContractList(): " +
-                        $"{nameof(SecurityType.Equity)}, {nameof(SecurityType.Future)}, or {nameof(SecurityType.Index)} is expected but was {symbol.SecurityType}");
+                    throw new NotSupportedException(
+                        $"BacktestingOptionChainProvider.GetOptionContractList(): "
+                            + $"{nameof(SecurityType.Equity)}, {nameof(SecurityType.Future)}, or {nameof(SecurityType.Index)} is expected but was {symbol.SecurityType}"
+                    );
                 }
             }
             else

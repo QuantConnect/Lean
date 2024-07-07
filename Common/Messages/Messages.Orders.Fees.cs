@@ -14,9 +14,7 @@
 */
 
 using System.Runtime.CompilerServices;
-
 using QuantConnect.Securities;
-
 using static QuantConnect.StringExtensions;
 
 namespace QuantConnect
@@ -70,31 +68,45 @@ namespace QuantConnect
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             public static string UnexpectedOptionMarket(string market)
             {
-                return Invariant($"InteractiveBrokersFeeModel(): unexpected option Market {market}");
+                return Invariant(
+                    $"InteractiveBrokersFeeModel(): unexpected option Market {market}"
+                );
             }
 
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             public static string UnexpectedFutureMarket(string market)
             {
-                return Invariant($"InteractiveBrokersFeeModel(): unexpected future Market {market}");
+                return Invariant(
+                    $"InteractiveBrokersFeeModel(): unexpected future Market {market}"
+                );
             }
 
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             public static string UnexpectedEquityMarket(string market)
             {
-                return Invariant($"InteractiveBrokersFeeModel(): unexpected equity Market {market}");
+                return Invariant(
+                    $"InteractiveBrokersFeeModel(): unexpected equity Market {market}"
+                );
             }
 
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            public static string UnitedStatesFutureFeesUnsupportedSecurityType(Securities.Security security)
+            public static string UnitedStatesFutureFeesUnsupportedSecurityType(
+                Securities.Security security
+            )
             {
-                return Invariant($"InteractiveBrokersFeeModel.UnitedStatesFutureFees(): Unsupported security type: {security.Type}");
+                return Invariant(
+                    $"InteractiveBrokersFeeModel.UnitedStatesFutureFees(): Unsupported security type: {security.Type}"
+                );
             }
 
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            public static string HongKongFutureFeesUnexpectedQuoteCurrency(Securities.Security security)
+            public static string HongKongFutureFeesUnexpectedQuoteCurrency(
+                Securities.Security security
+            )
             {
-                return Invariant($"Unexpected quote currency {security.QuoteCurrency.Symbol} for Hong Kong futures exchange");
+                return Invariant(
+                    $"Unexpected quote currency {security.QuoteCurrency.Symbol} for Hong Kong futures exchange"
+                );
             }
         }
 

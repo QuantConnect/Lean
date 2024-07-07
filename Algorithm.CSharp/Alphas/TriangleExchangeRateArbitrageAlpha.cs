@@ -13,6 +13,9 @@
  * limitations under the License.
 */
 
+using System;
+using System.Collections.Generic;
+using System.Linq;
 using QuantConnect.Algorithm.Framework.Alphas;
 using QuantConnect.Algorithm.Framework.Execution;
 using QuantConnect.Algorithm.Framework.Portfolio;
@@ -20,9 +23,6 @@ using QuantConnect.Algorithm.Framework.Risk;
 using QuantConnect.Algorithm.Framework.Selection;
 using QuantConnect.Data;
 using QuantConnect.Orders.Fees;
-using System;
-using System.Collections.Generic;
-using System.Linq;
 
 namespace QuantConnect.Algorithm.CSharp.Alphas
 {
@@ -52,8 +52,9 @@ namespace QuantConnect.Algorithm.CSharp.Alphas
             // Currency A = USD
             // Currency B = EUR
             // Currency C = GBP
-            var symbols = new[] { "EURUSD", "EURGBP", "GBPUSD" }
-                .Select(x => QuantConnect.Symbol.Create(x, SecurityType.Forex, Market.Oanda));
+            var symbols = new[] { "EURUSD", "EURGBP", "GBPUSD" }.Select(x =>
+                QuantConnect.Symbol.Create(x, SecurityType.Forex, Market.Oanda)
+            );
 
             // Set requested data resolution
             UniverseSettings.Resolution = Resolution.Minute;
@@ -79,7 +80,8 @@ namespace QuantConnect.Algorithm.CSharp.Alphas
 
             public ForexTriangleArbitrageAlphaModel(
                 IEnumerable<Symbol> symbols,
-                Resolution resolution = Resolution.Minute)
+                Resolution resolution = Resolution.Minute
+            )
             {
                 _symbols = symbols.ToArray();
                 _insightPeriod = resolution.ToTimeSpan().Multiply(5);
@@ -106,12 +108,19 @@ namespace QuantConnect.Algorithm.CSharp.Alphas
                 // If the triangle rate is significantly different than 1, then emit insights
                 if (triangleRate > 1.0005m)
                 {
-                    return Insight.Group(new[]
-                    {
-                        Insight.Price(_symbols[0], _insightPeriod, InsightDirection.Up, 0.0001),
-                        Insight.Price(_symbols[1], _insightPeriod, InsightDirection.Down, 0.0001),
-                        Insight.Price(_symbols[2], _insightPeriod, InsightDirection.Up, 0.0001)
-                    });
+                    return Insight.Group(
+                        new[]
+                        {
+                            Insight.Price(_symbols[0], _insightPeriod, InsightDirection.Up, 0.0001),
+                            Insight.Price(
+                                _symbols[1],
+                                _insightPeriod,
+                                InsightDirection.Down,
+                                0.0001
+                            ),
+                            Insight.Price(_symbols[2], _insightPeriod, InsightDirection.Up, 0.0001)
+                        }
+                    );
                 }
 
                 return Enumerable.Empty<Insight>();

@@ -17,14 +17,14 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Text.RegularExpressions;
 using Deedle;
 using Newtonsoft.Json;
 using QuantConnect.Configuration;
 using QuantConnect.Logging;
+using QuantConnect.Orders;
 using QuantConnect.Packets;
 using QuantConnect.Report.ReportElements;
-using QuantConnect.Orders;
-using System.Text.RegularExpressions;
 
 namespace QuantConnect.Report
 {
@@ -52,11 +52,26 @@ namespace QuantConnect.Report
         /// <param name="pointInTimePortfolioDestination">Point in time portfolio json output base filename</param>
         /// <param name="cssOverride">CSS file that overrides some of the default rules defined in report.css</param>
         /// <param name="htmlCustom">Custom HTML file to replace the default template</param>
-        public Report(string name, string description, string version, BacktestResult backtest, LiveResult live, string pointInTimePortfolioDestination = null, string cssOverride = null, string htmlCustom = null)
+        public Report(
+            string name,
+            string description,
+            string version,
+            BacktestResult backtest,
+            LiveResult live,
+            string pointInTimePortfolioDestination = null,
+            string cssOverride = null,
+            string htmlCustom = null
+        )
         {
             _template = htmlCustom ?? File.ReadAllText("template.html");
-            var crisisHtmlContent = GetRegexInInput(@"<!--crisis(\r|\n)*((\r|\n|.)*?)crisis-->", _template);
-            var parametersHtmlContent = GetRegexInInput(@"<!--parameters(\r|\n)*((\r|\n|.)*?)parameters-->", _template);
+            var crisisHtmlContent = GetRegexInInput(
+                @"<!--crisis(\r|\n)*((\r|\n|.)*?)crisis-->",
+                _template
+            );
+            var parametersHtmlContent = GetRegexInInput(
+                @"<!--parameters(\r|\n)*((\r|\n|.)*?)parameters-->",
+                _template
+            );
 
             var backtestCurve = new Series<DateTime, double>(ResultsUtil.EquityPoints(backtest));
             var liveCurve = new Series<DateTime, double>(ResultsUtil.EquityPoints(live));
@@ -72,9 +87,13 @@ namespace QuantConnect.Report
             var tradingDayPerYear = backtestConfiguration?.TradingDaysPerYear ?? 252;
 
             Log.Trace($"QuantConnect.Report.Report(): Processing backtesting orders");
-            var backtestPortfolioInTime = PortfolioLooper.FromOrders(backtestCurve, backtestOrders, backtestConfiguration).ToList();
+            var backtestPortfolioInTime = PortfolioLooper
+                .FromOrders(backtestCurve, backtestOrders, backtestConfiguration)
+                .ToList();
             Log.Trace($"QuantConnect.Report.Report(): Processing live orders");
-            var livePortfolioInTime = PortfolioLooper.FromOrders(liveCurve, liveOrders, liveConfiguration, liveSeries: true).ToList();
+            var livePortfolioInTime = PortfolioLooper
+                .FromOrders(liveCurve, liveOrders, liveConfiguration, liveSeries: true)
+                .ToList();
 
             var destination = pointInTimePortfolioDestination ?? Config.Get("report-destination");
             if (!string.IsNullOrWhiteSpace(destination))
@@ -88,9 +107,14 @@ namespace QuantConnect.Report
                         .OrderBy(x => x.Time)
                         .ToList();
 
-                    var outputFile = destination.Replace(".html", string.Empty) + "-backtesting-portfolio.json";
-                    Log.Trace($"Report.Report(): Writing backtest point-in-time portfolios to JSON file: {outputFile}");
-                    var backtestPortfolioOutput = JsonConvert.SerializeObject(dailyBacktestPortfolioInTime);
+                    var outputFile =
+                        destination.Replace(".html", string.Empty) + "-backtesting-portfolio.json";
+                    Log.Trace(
+                        $"Report.Report(): Writing backtest point-in-time portfolios to JSON file: {outputFile}"
+                    );
+                    var backtestPortfolioOutput = JsonConvert.SerializeObject(
+                        dailyBacktestPortfolioInTime
+                    );
                     File.WriteAllText(outputFile, backtestPortfolioOutput);
                 }
                 if (livePortfolioInTime.Count != 0)
@@ -102,8 +126,11 @@ namespace QuantConnect.Report
                         .OrderBy(x => x.Time)
                         .ToList();
 
-                    var outputFile = destination.Replace(".html", string.Empty) + "-live-portfolio.json";
-                    Log.Trace($"Report.Report(): Writing live point-in-time portfolios to JSON file: {outputFile}");
+                    var outputFile =
+                        destination.Replace(".html", string.Empty) + "-live-portfolio.json";
+                    Log.Trace(
+                        $"Report.Report(): Writing live point-in-time portfolios to JSON file: {outputFile}"
+                    );
                     var livePortfolioOutput = JsonConvert.SerializeObject(dailyLivePortfolioInTime);
                     File.WriteAllText(outputFile, livePortfolioOutput);
                 }
@@ -115,50 +142,182 @@ namespace QuantConnect.Report
                 new TextReportElement("strategy name", ReportKey.StrategyName, name),
                 new TextReportElement("description", ReportKey.StrategyDescription, description),
                 new TextReportElement("version", ReportKey.StrategyVersion, version),
-                new TextReportElement("stylesheet", ReportKey.Stylesheet, File.ReadAllText("css/report.css") + (cssOverride)),
-                new TextReportElement("live marker key", ReportKey.LiveMarker, live == null ? string.Empty : "Live "),
-
+                new TextReportElement(
+                    "stylesheet",
+                    ReportKey.Stylesheet,
+                    File.ReadAllText("css/report.css") + (cssOverride)
+                ),
+                new TextReportElement(
+                    "live marker key",
+                    ReportKey.LiveMarker,
+                    live == null ? string.Empty : "Live "
+                ),
                 //KPI's Backtest:
-                new RuntimeDaysReportElement("runtime days kpi", ReportKey.BacktestDays, backtest, live),
+                new RuntimeDaysReportElement(
+                    "runtime days kpi",
+                    ReportKey.BacktestDays,
+                    backtest,
+                    live
+                ),
                 new CAGRReportElement("cagr kpi", ReportKey.CAGR, backtest, live),
                 new TurnoverReportElement("turnover kpi", ReportKey.Turnover, backtest, live),
-                new MaxDrawdownReportElement("max drawdown kpi", ReportKey.MaxDrawdown, backtest, live),
-                new SharpeRatioReportElement("sharpe kpi", ReportKey.SharpeRatio, backtest, live, tradingDayPerYear),
-                new SortinoRatioReportElement("sortino kpi", ReportKey.SortinoRatio, backtest, live, tradingDayPerYear),
+                new MaxDrawdownReportElement(
+                    "max drawdown kpi",
+                    ReportKey.MaxDrawdown,
+                    backtest,
+                    live
+                ),
+                new SharpeRatioReportElement(
+                    "sharpe kpi",
+                    ReportKey.SharpeRatio,
+                    backtest,
+                    live,
+                    tradingDayPerYear
+                ),
+                new SortinoRatioReportElement(
+                    "sortino kpi",
+                    ReportKey.SortinoRatio,
+                    backtest,
+                    live,
+                    tradingDayPerYear
+                ),
                 new PSRReportElement("psr kpi", ReportKey.PSR, backtest, live, tradingDayPerYear),
-                new InformationRatioReportElement("ir kpi", ReportKey.InformationRatio, backtest, live),
+                new InformationRatioReportElement(
+                    "ir kpi",
+                    ReportKey.InformationRatio,
+                    backtest,
+                    live
+                ),
                 new MarketsReportElement("markets kpi", ReportKey.Markets, backtest, live),
-                new TradesPerDayReportElement("trades per day kpi", ReportKey.TradesPerDay, backtest, live),
-                new EstimatedCapacityReportElement("estimated algorithm capacity", ReportKey.StrategyCapacity, backtest, live),
-
+                new TradesPerDayReportElement(
+                    "trades per day kpi",
+                    ReportKey.TradesPerDay,
+                    backtest,
+                    live
+                ),
+                new EstimatedCapacityReportElement(
+                    "estimated algorithm capacity",
+                    ReportKey.StrategyCapacity,
+                    backtest,
+                    live
+                ),
                 // Generate and insert plots MonthlyReturnsReportElement
-                new MonthlyReturnsReportElement("monthly return plot", ReportKey.MonthlyReturns, backtest, live),
-                new CumulativeReturnsReportElement("cumulative returns", ReportKey.CumulativeReturns, backtest, live),
-                new AnnualReturnsReportElement("annual returns", ReportKey.AnnualReturns, backtest, live),
-                new ReturnsPerTradeReportElement("returns per trade", ReportKey.ReturnsPerTrade, backtest, live),
-                new AssetAllocationReportElement("asset allocation over time pie chart", ReportKey.AssetAllocation, backtest, live, backtestPortfolioInTime, livePortfolioInTime),
+                new MonthlyReturnsReportElement(
+                    "monthly return plot",
+                    ReportKey.MonthlyReturns,
+                    backtest,
+                    live
+                ),
+                new CumulativeReturnsReportElement(
+                    "cumulative returns",
+                    ReportKey.CumulativeReturns,
+                    backtest,
+                    live
+                ),
+                new AnnualReturnsReportElement(
+                    "annual returns",
+                    ReportKey.AnnualReturns,
+                    backtest,
+                    live
+                ),
+                new ReturnsPerTradeReportElement(
+                    "returns per trade",
+                    ReportKey.ReturnsPerTrade,
+                    backtest,
+                    live
+                ),
+                new AssetAllocationReportElement(
+                    "asset allocation over time pie chart",
+                    ReportKey.AssetAllocation,
+                    backtest,
+                    live,
+                    backtestPortfolioInTime,
+                    livePortfolioInTime
+                ),
                 new DrawdownReportElement("drawdown plot", ReportKey.Drawdown, backtest, live),
-                new DailyReturnsReportElement("daily returns plot", ReportKey.DailyReturns, backtest, live),
-                new RollingPortfolioBetaReportElement("rolling beta to equities plot", ReportKey.RollingBeta, backtest, live, tradingDayPerYear),
-                new RollingSharpeReportElement("rolling sharpe ratio plot", ReportKey.RollingSharpe, backtest, live, tradingDayPerYear),
-                new LeverageUtilizationReportElement("leverage plot", ReportKey.LeverageUtilization, backtest, live, backtestPortfolioInTime, livePortfolioInTime),
-                new ExposureReportElement("exposure plot", ReportKey.Exposure, backtest, live, backtestPortfolioInTime, livePortfolioInTime)
+                new DailyReturnsReportElement(
+                    "daily returns plot",
+                    ReportKey.DailyReturns,
+                    backtest,
+                    live
+                ),
+                new RollingPortfolioBetaReportElement(
+                    "rolling beta to equities plot",
+                    ReportKey.RollingBeta,
+                    backtest,
+                    live,
+                    tradingDayPerYear
+                ),
+                new RollingSharpeReportElement(
+                    "rolling sharpe ratio plot",
+                    ReportKey.RollingSharpe,
+                    backtest,
+                    live,
+                    tradingDayPerYear
+                ),
+                new LeverageUtilizationReportElement(
+                    "leverage plot",
+                    ReportKey.LeverageUtilization,
+                    backtest,
+                    live,
+                    backtestPortfolioInTime,
+                    livePortfolioInTime
+                ),
+                new ExposureReportElement(
+                    "exposure plot",
+                    ReportKey.Exposure,
+                    backtest,
+                    live,
+                    backtestPortfolioInTime,
+                    livePortfolioInTime
+                )
             };
 
             // Include Algorithm Parameters
             if (parametersHtmlContent != null)
             {
-                _elements.Add(new ParametersReportElement("parameters page", ReportKey.ParametersPageStyle, backtestConfiguration, liveConfiguration, parametersHtmlContent));
-                _elements.Add(new ParametersReportElement("parameters", ReportKey.Parameters, backtestConfiguration, liveConfiguration, parametersHtmlContent));
+                _elements.Add(
+                    new ParametersReportElement(
+                        "parameters page",
+                        ReportKey.ParametersPageStyle,
+                        backtestConfiguration,
+                        liveConfiguration,
+                        parametersHtmlContent
+                    )
+                );
+                _elements.Add(
+                    new ParametersReportElement(
+                        "parameters",
+                        ReportKey.Parameters,
+                        backtestConfiguration,
+                        liveConfiguration,
+                        parametersHtmlContent
+                    )
+                );
             }
 
             // Array of Crisis Plots:
             if (crisisHtmlContent != null)
             {
-                _elements.Add(new CrisisReportElement("crisis page", ReportKey.CrisisPageStyle, backtest, live, crisisHtmlContent));
-                _elements.Add(new CrisisReportElement("crisis plots", ReportKey.CrisisPlots, backtest, live, crisisHtmlContent));
+                _elements.Add(
+                    new CrisisReportElement(
+                        "crisis page",
+                        ReportKey.CrisisPageStyle,
+                        backtest,
+                        live,
+                        crisisHtmlContent
+                    )
+                );
+                _elements.Add(
+                    new CrisisReportElement(
+                        "crisis plots",
+                        ReportKey.CrisisPlots,
+                        backtest,
+                        live,
+                        crisisHtmlContent
+                    )
+                );
             }
-
         }
 
         /// <summary>
@@ -176,7 +335,12 @@ namespace QuantConnect.Report
                 Log.Trace($"QuantConnect.Report.Compile(): Rendering {element.Name}...");
                 html = html.Replace(element.Key, element.Render());
 
-                if (element is TextReportElement || element is CrisisReportElement || element is ParametersReportElement ||(element as ReportElement) == null)
+                if (
+                    element is TextReportElement
+                    || element is CrisisReportElement
+                    || element is ParametersReportElement
+                    || (element as ReportElement) == null
+                )
                 {
                     continue;
                 }

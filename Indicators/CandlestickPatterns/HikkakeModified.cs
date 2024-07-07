@@ -1,11 +1,11 @@
 ﻿/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
- * 
- * Licensed under the Apache License, Version 2.0 (the "License"); 
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -50,8 +50,11 @@ namespace QuantConnect.Indicators.CandlestickPatterns
         /// Initializes a new instance of the <see cref="HikkakeModified"/> class using the specified name.
         /// </summary>
         /// <param name="name">The name of this indicator</param>
-        public HikkakeModified(string name) 
-            : base(name, Math.Max(1, CandleSettings.Get(CandleSettingType.Near).AveragePeriod) + 5 + 1)
+        public HikkakeModified(string name)
+            : base(
+                name,
+                Math.Max(1, CandleSettings.Get(CandleSettingType.Near).AveragePeriod) + 5 + 1
+            )
         {
             _nearAveragePeriod = CandleSettings.Get(CandleSettingType.Near).AveragePeriod;
         }
@@ -60,9 +63,7 @@ namespace QuantConnect.Indicators.CandlestickPatterns
         /// Initializes a new instance of the <see cref="HikkakeModified"/> class.
         /// </summary>
         public HikkakeModified()
-            : this("HIKKAKEMODIFIED")
-        {
-        }
+            : this("HIKKAKEMODIFIED") { }
 
         /// <summary>
         /// Gets a flag indicating when this indicator is ready and fully initialized
@@ -78,7 +79,10 @@ namespace QuantConnect.Indicators.CandlestickPatterns
         /// <param name="window">The window of data held in this indicator</param>
         /// <param name="input">The input given to the indicator</param>
         /// <returns>A new value for this indicator</returns>
-        protected override decimal ComputeNextValue(IReadOnlyWindow<IBaseDataBar> window, IBaseDataBar input)
+        protected override decimal ComputeNextValue(
+            IReadOnlyWindow<IBaseDataBar> window,
+            IBaseDataBar input
+        )
         {
             if (!IsReady)
             {
@@ -86,49 +90,83 @@ namespace QuantConnect.Indicators.CandlestickPatterns
                 {
                     _nearPeriodTotal += GetCandleRange(CandleSettingType.Near, window[2]);
                 }
-
                 else if (Samples >= Period - 3)
                 {
-                        // copy here the pattern recognition code below
-                        // 2nd: lower high and higher low than 1st
-                        if (window[2].High < window[3].High && window[2].Low > window[3].Low &&
+                    // copy here the pattern recognition code below
+                    // 2nd: lower high and higher low than 1st
+                    if (
+                        window[2].High < window[3].High
+                        && window[2].Low > window[3].Low
+                        &&
                         // 3rd: lower high and higher low than 2nd
-                        window[1].High < window[2].High && window[1].Low > window[2].Low &&
+                        window[1].High < window[2].High
+                        && window[1].Low > window[2].Low
+                        &&
                         // (bull) 4th: lower high and lower low
-                        ((input.High < window[1].High && input.Low < window[1].Low &&
-                          // (bull) 2nd: close near the low
-                          window[2].Close <= window[2].Low + GetCandleAverage(CandleSettingType.Near, _nearPeriodTotal, window[2])
+                        (
+                            (
+                                input.High < window[1].High
+                                && input.Low < window[1].Low
+                                &&
+                                // (bull) 2nd: close near the low
+                                window[2].Close
+                                    <= window[2].Low
+                                        + GetCandleAverage(
+                                            CandleSettingType.Near,
+                                            _nearPeriodTotal,
+                                            window[2]
+                                        )
                             )
-                         ||
-                         // (bear) 4th: higher high and higher low
-                         (input.High > window[1].High && input.Low > window[1].Low &&
-                          // (bull) 2nd: close near the top
-                          window[2].Close >= window[2].High - GetCandleAverage(CandleSettingType.Near, _nearPeriodTotal, window[2])
-                             )
+                            ||
+                            // (bear) 4th: higher high and higher low
+                            (
+                                input.High > window[1].High
+                                && input.Low > window[1].Low
+                                &&
+                                // (bull) 2nd: close near the top
+                                window[2].Close
+                                    >= window[2].High
+                                        - GetCandleAverage(
+                                            CandleSettingType.Near,
+                                            _nearPeriodTotal,
+                                            window[2]
+                                        )
                             )
                         )
+                    )
                     {
                         _patternResult = (input.High < window[1].High ? 1 : -1);
-                        _patternIndex = (int) Samples - 1;
+                        _patternIndex = (int)Samples - 1;
                     }
                     else
                     {
                         // search for confirmation if modified hikkake was no more than 3 bars ago
-                        if (Samples <= _patternIndex + 4 &&
+                        if (
+                            Samples <= _patternIndex + 4
+                            &&
                             // close higher than the high of 3rd
-                            ((_patternResult > 0 && input.Close > window[(int) Samples - _patternIndex].High)
-                             ||
-                             // close lower than the low of 3rd
-                             (_patternResult < 0 && input.Close < window[(int) Samples - _patternIndex].Low))
+                            (
+                                (
+                                    _patternResult > 0
+                                    && input.Close > window[(int)Samples - _patternIndex].High
                                 )
+                                ||
+                                // close lower than the low of 3rd
+                                (
+                                    _patternResult < 0
+                                    && input.Close < window[(int)Samples - _patternIndex].Low
+                                )
+                            )
+                        )
                             _patternIndex = 0;
                     }
 
-                    // add the current range and subtract the first range: this is done after the pattern recognition 
+                    // add the current range and subtract the first range: this is done after the pattern recognition
                     // when avgPeriod is not 0, that means "compare with the previous candles" (it excludes the current candle)
 
-                    _nearPeriodTotal += GetCandleRange(CandleSettingType.Near, window[2]) -
-                                        GetCandleRange(CandleSettingType.Near, window[(int)Samples - 1]);
+                    _nearPeriodTotal +=
+                        GetCandleRange(CandleSettingType.Near, window[2])
+                        - GetCandleRange(CandleSettingType.Near, window[(int)Samples - 1]);
                 }
 
                 return 0m;
@@ -136,37 +174,71 @@ namespace QuantConnect.Indicators.CandlestickPatterns
 
             decimal value;
             // 2nd: lower high and higher low than 1st
-            if (window[2].High < window[3].High && window[2].Low > window[3].Low &&
+            if (
+                window[2].High < window[3].High
+                && window[2].Low > window[3].Low
+                &&
                 // 3rd: lower high and higher low than 2nd
-                window[1].High < window[2].High && window[1].Low > window[2].Low &&
+                window[1].High < window[2].High
+                && window[1].Low > window[2].Low
+                &&
                 // (bull) 4th: lower high and lower low
-                ((input.High < window[1].High && input.Low < window[1].Low &&
-                  // (bull) 2nd: close near the low
-                  window[2].Close <= window[2].Low + GetCandleAverage(CandleSettingType.Near, _nearPeriodTotal, window[2])
+                (
+                    (
+                        input.High < window[1].High
+                        && input.Low < window[1].Low
+                        &&
+                        // (bull) 2nd: close near the low
+                        window[2].Close
+                            <= window[2].Low
+                                + GetCandleAverage(
+                                    CandleSettingType.Near,
+                                    _nearPeriodTotal,
+                                    window[2]
+                                )
                     )
-                 ||
-                 // (bear) 4th: higher high and higher low
-                 (input.High > window[1].High && input.Low > window[1].Low &&
-                  // (bull) 2nd: close near the top
-                  window[2].Close >= window[2].High - GetCandleAverage(CandleSettingType.Near, _nearPeriodTotal, window[2])
-                     )
+                    ||
+                    // (bear) 4th: higher high and higher low
+                    (
+                        input.High > window[1].High
+                        && input.Low > window[1].Low
+                        &&
+                        // (bull) 2nd: close near the top
+                        window[2].Close
+                            >= window[2].High
+                                - GetCandleAverage(
+                                    CandleSettingType.Near,
+                                    _nearPeriodTotal,
+                                    window[2]
+                                )
                     )
                 )
+            )
             {
                 _patternResult = (input.High < window[1].High ? 1 : -1);
-                _patternIndex = (int) Samples - 1;
+                _patternIndex = (int)Samples - 1;
                 value = _patternResult;
             }
             else
             {
                 // search for confirmation if modified hikkake was no more than 3 bars ago
-                if (Samples <= _patternIndex + 4 &&
+                if (
+                    Samples <= _patternIndex + 4
+                    &&
                     // close higher than the high of 3rd
-                    ((_patternResult > 0 && input.Close > window[(int)Samples - _patternIndex].High)
-                     ||
-                     // close lower than the low of 3rd
-                     (_patternResult < 0 && input.Close < window[(int)Samples - _patternIndex].Low))
+                    (
+                        (
+                            _patternResult > 0
+                            && input.Close > window[(int)Samples - _patternIndex].High
                         )
+                        ||
+                        // close lower than the low of 3rd
+                        (
+                            _patternResult < 0
+                            && input.Close < window[(int)Samples - _patternIndex].Low
+                        )
+                    )
+                )
                 {
                     value = _patternResult + (_patternResult > 0 ? 1 : -1);
                     _patternIndex = 0;
@@ -175,11 +247,12 @@ namespace QuantConnect.Indicators.CandlestickPatterns
                     value = 0;
             }
 
-            // add the current range and subtract the first range: this is done after the pattern recognition 
+            // add the current range and subtract the first range: this is done after the pattern recognition
             // when avgPeriod is not 0, that means "compare with the previous candles" (it excludes the current candle)
 
-            _nearPeriodTotal += GetCandleRange(CandleSettingType.Near, window[2]) -
-                                GetCandleRange(CandleSettingType.Near, window[_nearAveragePeriod + 5]);
+            _nearPeriodTotal +=
+                GetCandleRange(CandleSettingType.Near, window[2])
+                - GetCandleRange(CandleSettingType.Near, window[_nearAveragePeriod + 5]);
 
             return value;
         }

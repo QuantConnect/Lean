@@ -44,6 +44,11 @@ namespace QuantConnect.Data.Auxiliary
         /// <summary>
         /// Gets the price factor for the specified search date
         /// </summary>
-        decimal GetPriceFactor(DateTime searchDate, DataNormalizationMode dataNormalizationMode, DataMappingMode? dataMappingMode = null, uint contractOffset = 0);
+        decimal GetPriceFactor(
+            DateTime searchDate,
+            DataNormalizationMode dataNormalizationMode,
+            DataMappingMode? dataMappingMode = null,
+            uint contractOffset = 0
+        );
     }
 }

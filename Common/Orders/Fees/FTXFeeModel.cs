@@ -27,7 +27,7 @@ namespace QuantConnect.Orders.Fees
         /// Tier 1 maker fees
         /// </summary>
         public virtual decimal MakerFee => 0.0002m;
-        
+
         /// <summary>
         /// Tier 1 taker fees
         /// </summary>
@@ -47,14 +47,15 @@ namespace QuantConnect.Orders.Fees
 
             //taker by default
             var fee = TakerFee;
-            var unitPrice = order.Direction == OrderDirection.Buy ? security.AskPrice : security.BidPrice;
+            var unitPrice =
+                order.Direction == OrderDirection.Buy ? security.AskPrice : security.BidPrice;
             unitPrice *= security.SymbolProperties.ContractMultiplier;
             var currency = security.QuoteCurrency.Symbol;
 
             //maker if limit
             if (order.Type == OrderType.Limit && (props?.PostOnly == true || !order.IsMarketable))
             {
-                fee =  MakerFee;
+                fee = MakerFee;
                 if (order.Direction == OrderDirection.Buy)
                 {
                     unitPrice = 1;
@@ -63,9 +64,7 @@ namespace QuantConnect.Orders.Fees
             }
 
             // apply fee factor, currently we do not model 30-day volume, so we use the first tier
-            return new OrderFee(new CashAmount(
-                unitPrice * order.AbsoluteQuantity * fee,
-                currency));
+            return new OrderFee(new CashAmount(unitPrice * order.AbsoluteQuantity * fee, currency));
         }
     }
 }

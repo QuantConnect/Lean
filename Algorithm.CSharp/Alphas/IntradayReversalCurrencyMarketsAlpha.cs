@@ -13,6 +13,9 @@
  * limitations under the License.
 */
 
+using System;
+using System.Collections.Generic;
+using System.Linq;
 using QuantConnect.Algorithm.Framework.Alphas;
 using QuantConnect.Algorithm.Framework.Execution;
 using QuantConnect.Algorithm.Framework.Portfolio;
@@ -22,9 +25,6 @@ using QuantConnect.Data;
 using QuantConnect.Data.UniverseSelection;
 using QuantConnect.Indicators;
 using QuantConnect.Orders.Fees;
-using System;
-using System.Collections.Generic;
-using System.Linq;
 
 namespace QuantConnect.Algorithm.CSharp.Alphas
 {
@@ -52,7 +52,10 @@ namespace QuantConnect.Algorithm.CSharp.Alphas
             var resolution = Resolution.Hour;
 
             // Reversion on the USD.
-            var symbols = new[] { QuantConnect.Symbol.Create("EURUSD", SecurityType.Forex, Market.Oanda) };
+            var symbols = new[]
+            {
+                QuantConnect.Symbol.Create("EURUSD", SecurityType.Forex, Market.Oanda)
+            };
 
             // Set requested data resolution
             UniverseSettings.Resolution = resolution;
@@ -86,7 +89,8 @@ namespace QuantConnect.Algorithm.CSharp.Alphas
 
             public IntradayReversalAlphaModel(
                 int periodSma = 5,
-                Resolution resolution = Resolution.Hour)
+                Resolution resolution = Resolution.Hour
+            )
             {
                 _periodSma = periodSma;
                 _resolution = resolution;
@@ -107,8 +111,10 @@ namespace QuantConnect.Algorithm.CSharp.Alphas
 
                     SymbolData symbolData;
 
-                    if (ShouldEmitInsight(algorithm, symbol) &&
-                        _cache.TryGetValue(symbol, out symbolData))
+                    if (
+                        ShouldEmitInsight(algorithm, symbol)
+                        && _cache.TryGetValue(symbol, out symbolData)
+                    )
                     {
                         var price = kvp.Value.Price;
 
@@ -137,16 +143,17 @@ namespace QuantConnect.Algorithm.CSharp.Alphas
             {
                 var timeOfDay = algorithm.Time.TimeOfDay;
 
-                return algorithm.Securities[symbol].HasData &&
-                    timeOfDay >= TimeSpan.FromHours(10) &&
-                    timeOfDay <= TimeSpan.FromHours(15);
+                return algorithm.Securities[symbol].HasData
+                    && timeOfDay >= TimeSpan.FromHours(10)
+                    && timeOfDay <= TimeSpan.FromHours(15);
             }
 
             public override void OnSecuritiesChanged(QCAlgorithm algorithm, SecurityChanges changes)
             {
                 foreach (var symbol in changes.AddedSecurities.Select(x => x.Symbol))
                 {
-                    if (_cache.ContainsKey(symbol)) continue;
+                    if (_cache.ContainsKey(symbol))
+                        continue;
                     _cache.Add(symbol, new SymbolData(algorithm, symbol, _periodSma, _resolution));
                 }
             }
@@ -160,7 +167,12 @@ namespace QuantConnect.Algorithm.CSharp.Alphas
 
                 public InsightDirection PreviousDirection { get; set; }
 
-                public SymbolData(QCAlgorithm algorithm, Symbol symbol, int periodSma, Resolution resolution)
+                public SymbolData(
+                    QCAlgorithm algorithm,
+                    Symbol symbol,
+                    int periodSma,
+                    Resolution resolution
+                )
                 {
                     PreviousDirection = InsightDirection.Flat;
                     _priceSMA = algorithm.SMA(symbol, periodSma, resolution);

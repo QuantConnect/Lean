@@ -26,7 +26,9 @@ namespace QuantConnect.Tests.ToolBox.RandomDataGenerator
         [Test]
         public void NotNull()
         {
-            var securityInitializerProvider = new SecurityInitializerProvider(Mock.Of<ISecurityInitializer>());
+            var securityInitializerProvider = new SecurityInitializerProvider(
+                Mock.Of<ISecurityInitializer>()
+            );
             Assert.NotNull(securityInitializerProvider.SecurityInitializer);
         }
     }

@@ -13,10 +13,10 @@
  * limitations under the License.
 */
 
-using QuantConnect.Orders;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using QuantConnect.Orders;
 
 namespace QuantConnect.Algorithm.CSharp
 {
@@ -27,7 +27,11 @@ namespace QuantConnect.Algorithm.CSharp
     {
         private List<decimal> _originalLimitPrices = new();
 
-        protected override IEnumerable<OrderTicket> PlaceComboOrder(List<Leg> legs, int quantity, decimal? limitPrice = null)
+        protected override IEnumerable<OrderTicket> PlaceComboOrder(
+            List<Leg> legs,
+            int quantity,
+            decimal? limitPrice = null
+        )
         {
             foreach (var leg in legs)
             {
@@ -53,7 +57,9 @@ namespace QuantConnect.Algorithm.CSharp
 
             if (FillOrderEvents.Zip(OrderLegs).Any(x => x.Second.OrderPrice < x.First.FillPrice))
             {
-                throw new RegressionTestException($"Limit price expected to be greater that the fill price for each order. Limit prices: {string.Join(",", OrderLegs.Select(x => x.OrderPrice))} Fill prices: {string.Join(",", FillOrderEvents.Select(x => x.FillPrice))}");
+                throw new RegressionTestException(
+                    $"Limit price expected to be greater that the fill price for each order. Limit prices: {string.Join(",", OrderLegs.Select(x => x.OrderPrice))} Fill prices: {string.Join(",", FillOrderEvents.Select(x => x.FillPrice))}"
+                );
             }
         }
 
@@ -85,35 +91,36 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// This is used by the regression test system to indicate what the expected statistics are from running the algorithm
         /// </summary>
-        public override Dictionary<string, string> ExpectedStatistics => new Dictionary<string, string>
-        {
-            {"Total Orders", "3"},
-            {"Average Win", "0%"},
-            {"Average Loss", "0%"},
-            {"Compounding Annual Return", "0%"},
-            {"Drawdown", "0%"},
-            {"Expectancy", "0"},
-            {"Start Equity", "200000"},
-            {"End Equity", "198524"},
-            {"Net Profit", "0%"},
-            {"Sharpe Ratio", "0"},
-            {"Sortino Ratio", "0"},
-            {"Probabilistic Sharpe Ratio", "0%"},
-            {"Loss Rate", "0%"},
-            {"Win Rate", "0%"},
-            {"Profit-Loss Ratio", "0"},
-            {"Alpha", "0"},
-            {"Beta", "0"},
-            {"Annual Standard Deviation", "0"},
-            {"Annual Variance", "0"},
-            {"Information Ratio", "0"},
-            {"Tracking Error", "0"},
-            {"Treynor Ratio", "0"},
-            {"Total Fees", "$26.00"},
-            {"Estimated Strategy Capacity", "$58000.00"},
-            {"Lowest Capacity Asset", "GOOCV W78ZERHAOVVQ|GOOCV VP83T1ZUHROL"},
-            {"Portfolio Turnover", "30.22%"},
-            {"OrderListHash", "ab6171073cd96df46fd9d7bce62f5594"}
-        };
+        public override Dictionary<string, string> ExpectedStatistics =>
+            new Dictionary<string, string>
+            {
+                { "Total Orders", "3" },
+                { "Average Win", "0%" },
+                { "Average Loss", "0%" },
+                { "Compounding Annual Return", "0%" },
+                { "Drawdown", "0%" },
+                { "Expectancy", "0" },
+                { "Start Equity", "200000" },
+                { "End Equity", "198524" },
+                { "Net Profit", "0%" },
+                { "Sharpe Ratio", "0" },
+                { "Sortino Ratio", "0" },
+                { "Probabilistic Sharpe Ratio", "0%" },
+                { "Loss Rate", "0%" },
+                { "Win Rate", "0%" },
+                { "Profit-Loss Ratio", "0" },
+                { "Alpha", "0" },
+                { "Beta", "0" },
+                { "Annual Standard Deviation", "0" },
+                { "Annual Variance", "0" },
+                { "Information Ratio", "0" },
+                { "Tracking Error", "0" },
+                { "Treynor Ratio", "0" },
+                { "Total Fees", "$26.00" },
+                { "Estimated Strategy Capacity", "$58000.00" },
+                { "Lowest Capacity Asset", "GOOCV W78ZERHAOVVQ|GOOCV VP83T1ZUHROL" },
+                { "Portfolio Turnover", "30.22%" },
+                { "OrderListHash", "ab6171073cd96df46fd9d7bce62f5594" }
+            };
     }
 }

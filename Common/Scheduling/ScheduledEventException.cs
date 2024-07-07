@@ -34,7 +34,8 @@ namespace QuantConnect.Scheduling
         /// <param name="name">The name of the scheduled event</param>
         /// <param name="message">The exception as a string</param>
         /// <param name="innerException">The exception that is the cause of the current exception</param>
-        public ScheduledEventException(string name, string message, Exception innerException) : base(message, innerException)
+        public ScheduledEventException(string name, string message, Exception innerException)
+            : base(message, innerException)
         {
             ScheduledEventName = name;
         }

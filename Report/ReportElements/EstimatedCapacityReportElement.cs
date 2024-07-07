@@ -34,7 +34,12 @@ namespace QuantConnect.Report.ReportElements
         /// <param name="key">Location of injection</param>
         /// <param name="backtest">Backtest result object</param>
         /// <param name="live">Live result object</param>
-        public EstimatedCapacityReportElement(string name, string key, BacktestResult backtest, LiveResult live)
+        public EstimatedCapacityReportElement(
+            string name,
+            string key,
+            BacktestResult backtest,
+            LiveResult live
+        )
         {
             _live = live;
             _backtest = backtest;
@@ -49,7 +54,10 @@ namespace QuantConnect.Report.ReportElements
         {
             var statistics = _backtest?.Statistics;
             string capacityWithCurrency;
-            if (statistics == null || !statistics.TryGetValue("Estimated Strategy Capacity", out capacityWithCurrency))
+            if (
+                statistics == null
+                || !statistics.TryGetValue("Estimated Strategy Capacity", out capacityWithCurrency)
+            )
             {
                 return "-";
             }

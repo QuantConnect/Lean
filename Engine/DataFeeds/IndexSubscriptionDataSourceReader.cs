@@ -15,10 +15,10 @@
 */
 
 using System;
-using QuantConnect.Data;
-using QuantConnect.Util;
-using QuantConnect.Interfaces;
 using System.Collections.Generic;
+using QuantConnect.Data;
+using QuantConnect.Interfaces;
+using QuantConnect.Util;
 
 namespace QuantConnect.Lean.Engine.DataFeeds
 {
@@ -38,13 +38,15 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         /// <summary>
         /// Creates a new instance of this <see cref="ISubscriptionDataSourceReader"/>
         /// </summary>
-        public IndexSubscriptionDataSourceReader(IDataCacheProvider dataCacheProvider,
+        public IndexSubscriptionDataSourceReader(
+            IDataCacheProvider dataCacheProvider,
             SubscriptionDataConfig config,
             DateTime date,
             bool isLiveMode,
             IDataProvider dataProvider,
-            IObjectStore objectStore)
-        : base(dataCacheProvider, isLiveMode, objectStore)
+            IObjectStore objectStore
+        )
+            : base(dataCacheProvider, isLiveMode, objectStore)
         {
             _config = config;
             _date = date;
@@ -52,8 +54,10 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             _factory = config.Type.GetBaseDataInstance() as IndexedBaseData;
             if (_factory == null)
             {
-                throw new ArgumentException($"{nameof(IndexSubscriptionDataSourceReader)} should be used" +
-                                            $"with a data type which implements {nameof(IndexedBaseData)}");
+                throw new ArgumentException(
+                    $"{nameof(IndexSubscriptionDataSourceReader)} should be used"
+                        + $"with a data type which implements {nameof(IndexedBaseData)}"
+                );
             }
         }
 
@@ -70,7 +74,10 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                 // if the reader doesn't have data then we're done with this subscription
                 if (reader == null || reader.EndOfStream)
                 {
-                    OnInvalidSource(source, new Exception($"The reader was empty for source: ${source.Source}"));
+                    OnInvalidSource(
+                        source,
+                        new Exception($"The reader was empty for source: ${source.Source}")
+                    );
                     yield break;
                 }
 
@@ -91,7 +98,12 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                     }
                     catch
                     {
-                        OnInvalidSource(source, new Exception("Factory.GetSourceForAnIndex() failed to return a valid source"));
+                        OnInvalidSource(
+                            source,
+                            new Exception(
+                                "Factory.GetSourceForAnIndex() failed to return a valid source"
+                            )
+                        );
                         yield break;
                     }
 
@@ -105,7 +117,8 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                             IsLiveMode,
                             _factory,
                             _dataProvider,
-                            ObjectStore);
+                            ObjectStore
+                        );
 
                         var enumerator = dataReader.Read(dataSource).GetEnumerator();
                         while (enumerator.MoveNext())

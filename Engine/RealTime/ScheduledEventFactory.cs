@@ -42,7 +42,13 @@ namespace QuantConnect.Lean.Engine.RealTime
         /// <param name="callback">The delegate to call when an event fires</param>
         /// <param name="currentUtcTime">Specfies the current time in UTC, before which, no events will be scheduled. Specify null to skip this filter.</param>
         /// <returns>A new <see cref="ScheduledEvent"/> instance that fires events each tradeable day from the start to the finish at the specified time</returns>
-        public static ScheduledEvent EveryDayAt(string name, IEnumerable<DateTime> dates, TimeSpan timeOfDay, Action<string, DateTime> callback, DateTime? currentUtcTime = null)
+        public static ScheduledEvent EveryDayAt(
+            string name,
+            IEnumerable<DateTime> dates,
+            TimeSpan timeOfDay,
+            Action<string, DateTime> callback,
+            DateTime? currentUtcTime = null
+        )
         {
             var eventTimes = dates.Select(x => x.Date + timeOfDay);
             if (currentUtcTime.HasValue)
@@ -62,8 +68,17 @@ namespace QuantConnect.Lean.Engine.RealTime
         /// <param name="endOfDayDelta">The time difference between the market close and the event, positive time will fire before market close</param>
         /// <param name="currentUtcTime">Specfies the current time in UTC, before which, no events will be scheduled. Specify null to skip this filter.</param>
         /// <returns>The new <see cref="ScheduledEvent"/> that will fire near market close each tradeable dat</returns>
-        [Obsolete("This method is deprecated. It will generate ScheduledEvents for the deprecated IAlgorithm.OnEndOfDay()")]
-        public static ScheduledEvent EveryAlgorithmEndOfDay(IAlgorithm algorithm, IResultHandler resultHandler, DateTime start, DateTime end, TimeSpan endOfDayDelta, DateTime? currentUtcTime = null)
+        [Obsolete(
+            "This method is deprecated. It will generate ScheduledEvents for the deprecated IAlgorithm.OnEndOfDay()"
+        )]
+        public static ScheduledEvent EveryAlgorithmEndOfDay(
+            IAlgorithm algorithm,
+            IResultHandler resultHandler,
+            DateTime start,
+            DateTime end,
+            TimeSpan endOfDayDelta,
+            DateTime? currentUtcTime = null
+        )
         {
             if (endOfDayDelta >= Time.OneDay)
             {
@@ -86,20 +101,29 @@ namespace QuantConnect.Lean.Engine.RealTime
                 select eventUtcTime;
 
             // Log a message warning the user this EOD will be deprecated soon
-            algorithm.Debug("Usage of QCAlgorithm.OnEndOfDay() without a symbol will be deprecated August 2021. Always use a symbol when overriding this method: OnEndOfDay(symbol)");
+            algorithm.Debug(
+                "Usage of QCAlgorithm.OnEndOfDay() without a symbol will be deprecated August 2021. Always use a symbol when overriding this method: OnEndOfDay(symbol)"
+            );
 
-            return new ScheduledEvent(CreateEventName("Algorithm", "EndOfDay"), times, (name, triggerTime) =>
-            {
-                try
+            return new ScheduledEvent(
+                CreateEventName("Algorithm", "EndOfDay"),
+                times,
+                (name, triggerTime) =>
                 {
-                    algorithm.OnEndOfDay();
+                    try
+                    {
+                        algorithm.OnEndOfDay();
+                    }
+                    catch (Exception err)
+                    {
+                        resultHandler.RuntimeError(
+                            $"Runtime error in {name} event: {err.Message}",
+                            err.StackTrace
+                        );
+                        Log.Error(err, $"ScheduledEvent.{name}:");
+                    }
                 }
-                catch (Exception err)
-                {
-                    resultHandler.RuntimeError($"Runtime error in {name} event: {err.Message}", err.StackTrace);
-                    Log.Error(err, $"ScheduledEvent.{name}:");
-                }
-            });
+            );
         }
 
         /// <summary>
@@ -113,7 +137,15 @@ namespace QuantConnect.Lean.Engine.RealTime
         /// <param name="endOfDayDelta">The time difference between the market close and the event, positive time will fire before market close</param>
         /// <param name="currentUtcTime">Specfies the current time in UTC, before which, no events will be scheduled. Specify null to skip this filter.</param>
         /// <returns>The new <see cref="ScheduledEvent"/> that will fire near market close each tradeable dat</returns>
-        public static ScheduledEvent EverySecurityEndOfDay(IAlgorithm algorithm, IResultHandler resultHandler, Security security, DateTime start, DateTime end, TimeSpan endOfDayDelta, DateTime? currentUtcTime = null)
+        public static ScheduledEvent EverySecurityEndOfDay(
+            IAlgorithm algorithm,
+            IResultHandler resultHandler,
+            Security security,
+            DateTime start,
+            DateTime end,
+            TimeSpan endOfDayDelta,
+            DateTime? currentUtcTime = null
+        )
         {
             if (endOfDayDelta >= Time.OneDay)
             {
@@ -129,28 +161,41 @@ namespace QuantConnect.Lean.Engine.RealTime
                 from date in Time.EachTradeableDay(security, start, end)
                 // get the next market close for the specified date if the market closes at some point.
                 // Otherwise, use the given date at midnight
-                let marketClose = isMarketAlwaysOpen ?
-                    date.Date.AddDays(1) : security.Exchange.Hours.GetNextMarketClose(date, security.IsExtendedMarketHours)
+                let marketClose = isMarketAlwaysOpen
+                    ? date.Date.AddDays(1)
+                    : security.Exchange.Hours.GetNextMarketClose(
+                        date,
+                        security.IsExtendedMarketHours
+                    )
                 // define the time of day we want the event to fire before marketclose
-                let eventTime = isMarketAlwaysOpen ? marketClose : marketClose.Subtract(endOfDayDelta)
+                let eventTime = isMarketAlwaysOpen
+                    ? marketClose
+                    : marketClose.Subtract(endOfDayDelta)
                 // convert the event time into UTC
                 let eventUtcTime = eventTime.ConvertToUtc(security.Exchange.TimeZone)
                 // perform filter to verify it's not before the current time
                 where !currentUtcTime.HasValue || eventUtcTime > currentUtcTime
                 select eventUtcTime;
 
-            return new ScheduledEvent(CreateEventName(security.Symbol.ToString(), "EndOfDay"), times, (name, triggerTime) =>
-            {
-                try
+            return new ScheduledEvent(
+                CreateEventName(security.Symbol.ToString(), "EndOfDay"),
+                times,
+                (name, triggerTime) =>
                 {
-                    algorithm.OnEndOfDay(security.Symbol);
+                    try
+                    {
+                        algorithm.OnEndOfDay(security.Symbol);
+                    }
+                    catch (Exception err)
+                    {
+                        resultHandler.RuntimeError(
+                            $"Runtime error in {name} event: {err.Message}",
+                            err.StackTrace
+                        );
+                        Log.Error(err, $"ScheduledEvent.{name}:");
+                    }
                 }
-                catch (Exception err)
-                {
-                    resultHandler.RuntimeError($"Runtime error in {name} event: {err.Message}", err.StackTrace);
-                    Log.Error(err, $"ScheduledEvent.{name}:");
-                }
-            });
+            );
         }
 
         /// <summary>

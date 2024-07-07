@@ -19,16 +19,16 @@ using QuantConnect.Data.Market;
 namespace QuantConnect.Indicators
 {
     /// <summary>
-    /// The Correlation Indicator is a valuable tool in technical analysis, designed to quantify the degree of 
-    /// relationship between the price movements of a target security (e.g., a stock or ETF) and a reference 
-    /// market index. It measures how closely the target’s price changes are aligned with the fluctuations of 
-    /// the index over a specific period of time, providing insights into the target’s susceptibility to market 
+    /// The Correlation Indicator is a valuable tool in technical analysis, designed to quantify the degree of
+    /// relationship between the price movements of a target security (e.g., a stock or ETF) and a reference
+    /// market index. It measures how closely the target’s price changes are aligned with the fluctuations of
+    /// the index over a specific period of time, providing insights into the target’s susceptibility to market
     /// movements.
-    /// A positive correlation indicates that the target tends to move in the same direction as the market index, 
-    /// while a negative correlation suggests an inverse relationship. A correlation close to 0 implies a weak or 
+    /// A positive correlation indicates that the target tends to move in the same direction as the market index,
+    /// while a negative correlation suggests an inverse relationship. A correlation close to 0 implies a weak or
     /// no linear relationship.
-    /// Commonly, the SPX index is employed as the benchmark for the overall market when calculating correlation, 
-    /// ensuring a consistent and reliable reference point. This helps traders and investors make informed decisions 
+    /// Commonly, the SPX index is employed as the benchmark for the overall market when calculating correlation,
+    /// ensuring a consistent and reliable reference point. This helps traders and investors make informed decisions
     /// regarding the risk and behavior of the target security in relation to market trends.
     /// </summary>
     public class Correlation : BarIndicator, IIndicatorWarmUpPeriodProvider
@@ -52,7 +52,7 @@ namespace QuantConnect.Indicators
         /// Period required for calcualte correlation
         /// </summary>
         private readonly decimal _period;
- 
+
         /// <summary>
         /// Correlation type
         /// </summary>
@@ -76,10 +76,12 @@ namespace QuantConnect.Indicators
         /// <summary>
         /// Gets a flag indicating when the indicator is ready and fully initialized
         /// </summary>
-        public override bool IsReady => _targetDataPoints.Samples >= WarmUpPeriod && _referenceDataPoints.Samples >= WarmUpPeriod;
+        public override bool IsReady =>
+            _targetDataPoints.Samples >= WarmUpPeriod
+            && _referenceDataPoints.Samples >= WarmUpPeriod;
 
         /// <summary>
-        /// Creates a new Correlation indicator with the specified name, target, reference,  
+        /// Creates a new Correlation indicator with the specified name, target, reference,
         /// and period values
         /// </summary>
         /// <param name="name">The name of this indicator</param>
@@ -87,13 +89,21 @@ namespace QuantConnect.Indicators
         /// <param name="period">The period of this indicator</param>
         /// <param name="referenceSymbol">The reference symbol of this indicator</param>
         /// <param name="correlationType">Correlation type</param>
-        public Correlation(string name, Symbol targetSymbol, Symbol referenceSymbol, int period, CorrelationType correlationType = CorrelationType.Pearson)
+        public Correlation(
+            string name,
+            Symbol targetSymbol,
+            Symbol referenceSymbol,
+            int period,
+            CorrelationType correlationType = CorrelationType.Pearson
+        )
             : base(name)
         {
             // Assert the period is greater than two, otherwise the correlation can not be computed
             if (period < 2)
             {
-                throw new ArgumentException($"Period parameter for Correlation indicator must be greater than 2 but was {period}");
+                throw new ArgumentException(
+                    $"Period parameter for Correlation indicator must be greater than 2 but was {period}"
+                );
             }
 
             WarmUpPeriod = period + 1;
@@ -106,25 +116,28 @@ namespace QuantConnect.Indicators
 
             _targetDataPoints = new RollingWindow<double>(period);
             _referenceDataPoints = new RollingWindow<double>(period);
-
         }
 
         /// <summary>
-        /// Creates a new Correlation indicator with the specified target, reference,  
+        /// Creates a new Correlation indicator with the specified target, reference,
         /// and period values
         /// </summary>
         /// <param name="targetSymbol">The target symbol of this indicator</param>
         /// <param name="period">The period of this indicator</param>
         /// <param name="referenceSymbol">The reference symbol of this indicator</param>
         /// <param name="correlationType">Correlation type</param>
-        public Correlation(Symbol targetSymbol, Symbol referenceSymbol, int period, CorrelationType correlationType = CorrelationType.Pearson)
+        public Correlation(
+            Symbol targetSymbol,
+            Symbol referenceSymbol,
+            int period,
+            CorrelationType correlationType = CorrelationType.Pearson
+        )
             : this($"Correlation({period})", targetSymbol, referenceSymbol, period, correlationType)
-        {
-        }
+        { }
 
         /// <summary>
         /// Computes the next value for this indicator from the given state.
-        /// 
+        ///
         /// As this indicator is receiving data points from two different symbols,
         /// it's going to compute the next value when the amount of data points
         /// of each of them is the same. Otherwise, it will return the last correlation
@@ -146,7 +159,7 @@ namespace QuantConnect.Indicators
             }
             else
             {
-               throw new ArgumentException("The given symbol was not target or reference symbol");
+                throw new ArgumentException("The given symbol was not target or reference symbol");
             }
             ComputeCorrelation();
             return _correlation;
@@ -166,11 +179,17 @@ namespace QuantConnect.Indicators
             var newCorrelation = 0d;
             if (_correlationType == CorrelationType.Pearson)
             {
-                newCorrelation = MathNet.Numerics.Statistics.Correlation.Pearson(_targetDataPoints, _referenceDataPoints);
+                newCorrelation = MathNet.Numerics.Statistics.Correlation.Pearson(
+                    _targetDataPoints,
+                    _referenceDataPoints
+                );
             }
             if (_correlationType == CorrelationType.Spearman)
             {
-                newCorrelation = MathNet.Numerics.Statistics.Correlation.Spearman(_targetDataPoints, _referenceDataPoints);
+                newCorrelation = MathNet.Numerics.Statistics.Correlation.Spearman(
+                    _targetDataPoints,
+                    _referenceDataPoints
+                );
             }
             if (newCorrelation.IsNaNOrZero())
             {

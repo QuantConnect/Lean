@@ -53,7 +53,7 @@ namespace QuantConnect.Algorithm.Framework.Alphas
             int lookback = 1,
             Resolution resolution = Resolution.Daily,
             decimal threshold = 1m
-            )
+        )
         {
             _lookback = lookback;
             _resolution = resolution;
@@ -62,7 +62,9 @@ namespace QuantConnect.Algorithm.Framework.Alphas
             _pairs = new Dictionary<Tuple<Symbol, Symbol>, PairData>();
 
             Securities = new HashSet<Security>();
-            Name = Invariant($"{nameof(BasePairsTradingAlphaModel)}({_lookback},{_resolution},{_threshold.Normalize()})");
+            Name = Invariant(
+                $"{nameof(BasePairsTradingAlphaModel)}({_lookback},{_resolution},{_threshold.Normalize()})"
+            );
         }
 
         /// <summary>
@@ -117,7 +119,8 @@ namespace QuantConnect.Algorithm.Framework.Alphas
         /// <param name="asset1">The first asset's symbol in the pair</param>
         /// <param name="asset2">The second asset's symbol in the pair</param>
         /// <returns>True if the statistical test for the pair is successful</returns>
-        public virtual bool HasPassedTest(QCAlgorithm algorithm, Symbol asset1, Symbol asset2) => true;
+        public virtual bool HasPassedTest(QCAlgorithm algorithm, Symbol asset1, Symbol asset2) =>
+            true;
 
         private void UpdatePairs(QCAlgorithm algorithm)
         {
@@ -144,7 +147,13 @@ namespace QuantConnect.Algorithm.Framework.Alphas
                         continue;
                     }
 
-                    var pairData = new PairData(algorithm, assetI, assetJ, _predictionInterval, _threshold);
+                    var pairData = new PairData(
+                        algorithm,
+                        assetI,
+                        assetJ,
+                        _predictionInterval,
+                        _threshold
+                    );
                     _pairs.Add(pairSymbol, pairData);
                 }
             }
@@ -184,20 +193,27 @@ namespace QuantConnect.Algorithm.Framework.Alphas
             /// <param name="asset2">The second asset's symbol in the pair</param>
             /// <param name="period">Period over which this insight is expected to come to fruition</param>
             /// <param name="threshold">The percent [0, 100] deviation of the ratio from the mean before emitting an insight</param>
-            public PairData(QCAlgorithm algorithm, Symbol asset1, Symbol asset2, TimeSpan period, decimal threshold)
+            public PairData(
+                QCAlgorithm algorithm,
+                Symbol asset1,
+                Symbol asset2,
+                TimeSpan period,
+                decimal threshold
+            )
             {
                 _algorithm = algorithm;
                 _asset1 = asset1;
                 _asset2 = asset2;
 
                 // Created the Identity indicator for a given Symbol and
-                // the consolidator it is registered to. The consolidator reference 
+                // the consolidator it is registered to. The consolidator reference
                 // will be used to remove it from SubscriptionManager
                 (Identity, IDataConsolidator) CreateIdentityIndicator(Symbol symbol)
                 {
-                    var resolution = algorithm.SubscriptionManager
-                        .SubscriptionDataConfigService
-                        .GetSubscriptionDataConfigs(symbol)
+                    var resolution = algorithm
+                        .SubscriptionManager.SubscriptionDataConfigService.GetSubscriptionDataConfigs(
+                            symbol
+                        )
                         .Min(x => x.Resolution);
 
                     var name = algorithm.CreateIndicatorName(symbol, "close", resolution);
@@ -250,8 +266,16 @@ namespace QuantConnect.Algorithm.Framework.Alphas
                     _state = State.LongRatio;
 
                     // asset1/asset2 is more than 2 std away from mean, short asset1, long asset2
-                    var shortAsset1 = Insight.Price(_asset1, _predictionInterval, InsightDirection.Down);
-                    var longAsset2 = Insight.Price(_asset2, _predictionInterval, InsightDirection.Up);
+                    var shortAsset1 = Insight.Price(
+                        _asset1,
+                        _predictionInterval,
+                        InsightDirection.Down
+                    );
+                    var longAsset2 = Insight.Price(
+                        _asset2,
+                        _predictionInterval,
+                        InsightDirection.Up
+                    );
 
                     // creates a group id and set the GroupId property on each insight object
                     return Insight.Group(shortAsset1, longAsset2);
@@ -263,8 +287,16 @@ namespace QuantConnect.Algorithm.Framework.Alphas
                     _state = State.ShortRatio;
 
                     // asset1/asset2 is less than 2 std away from mean, long asset1, short asset2
-                    var longAsset1 = Insight.Price(_asset1, _predictionInterval, InsightDirection.Up);
-                    var shortAsset2 = Insight.Price(_asset2, _predictionInterval, InsightDirection.Down);
+                    var longAsset1 = Insight.Price(
+                        _asset1,
+                        _predictionInterval,
+                        InsightDirection.Up
+                    );
+                    var shortAsset2 = Insight.Price(
+                        _asset2,
+                        _predictionInterval,
+                        InsightDirection.Down
+                    );
 
                     // creates a group id and set the GroupId property on each insight object
                     return Insight.Group(longAsset1, shortAsset2);

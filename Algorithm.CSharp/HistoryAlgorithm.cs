@@ -14,14 +14,14 @@
 */
 
 using System;
-using QuantConnect.Util;
 using System.Collections.Generic;
 using System.Linq;
 using QuantConnect.Data;
 using QuantConnect.Data.Market;
 using QuantConnect.Indicators;
-using QuantConnect.Securities.Equity;
 using QuantConnect.Interfaces;
+using QuantConnect.Securities.Equity;
+using QuantConnect.Util;
 
 namespace QuantConnect.Algorithm.CSharp
 {
@@ -43,9 +43,9 @@ namespace QuantConnect.Algorithm.CSharp
         /// </summary>
         public override void Initialize()
         {
-            SetStartDate(2013, 10, 08);  //Set Start Date
-            SetEndDate(2013, 10, 11);    //Set End Date
-            SetCash(100000);             //Set Strategy Cash
+            SetStartDate(2013, 10, 08); //Set Start Date
+            SetEndDate(2013, 10, 11); //Set End Date
+            SetCash(100000); //Set Strategy Cash
 
             // Find more symbols here: http://quantconnect.com/data
             var SPY = AddSecurity(SecurityType.Equity, "SPY", Resolution.Daily).Symbol;
@@ -58,11 +58,21 @@ namespace QuantConnect.Algorithm.CSharp
 
             // get the last calendar year's worth of SPY data at the configured resolution (daily)
             var tradeBarHistory = History<TradeBar>("SPY", TimeSpan.FromDays(365));
-            AssertHistoryCount("History<TradeBar>(\"SPY\", TimeSpan.FromDays(365))", tradeBarHistory, 250, SPY);
+            AssertHistoryCount(
+                "History<TradeBar>(\"SPY\", TimeSpan.FromDays(365))",
+                tradeBarHistory,
+                250,
+                SPY
+            );
 
             // get the last calendar day's worth of SPY data at the specified resolution
             tradeBarHistory = History<TradeBar>("SPY", TimeSpan.FromDays(1), Resolution.Minute);
-            AssertHistoryCount("History<TradeBar>(\"SPY\", TimeSpan.FromDays(1), Resolution.Minute)", tradeBarHistory, 390, SPY);
+            AssertHistoryCount(
+                "History<TradeBar>(\"SPY\", TimeSpan.FromDays(1), Resolution.Minute)",
+                tradeBarHistory,
+                390,
+                SPY
+            );
 
             // get the last 14 bars of SPY at the configured resolution (daily)
             tradeBarHistory = History<TradeBar>("SPY", 14).ToList();
@@ -70,7 +80,12 @@ namespace QuantConnect.Algorithm.CSharp
 
             // get the last 14 minute bars of SPY
             tradeBarHistory = History<TradeBar>("SPY", 14, Resolution.Minute);
-            AssertHistoryCount("History<TradeBar>(\"SPY\", 14, Resolution.Minute)", tradeBarHistory, 14, SPY);
+            AssertHistoryCount(
+                "History<TradeBar>(\"SPY\", 14, Resolution.Minute)",
+                tradeBarHistory,
+                14,
+                SPY
+            );
 
             // we can loop over the return value from these functions and we get TradeBars
             // we can use these TradeBars to initialize indicators or perform other math
@@ -81,7 +96,12 @@ namespace QuantConnect.Algorithm.CSharp
 
             // get the last calendar year's worth of IBM data at the configured resolution (daily)
             var customDataHistory = History<CustomData>("IBM", TimeSpan.FromDays(365));
-            AssertHistoryCount("History<CustomData>(\"IBM\", TimeSpan.FromDays(365))", customDataHistory, 250, IBM);
+            AssertHistoryCount(
+                "History<CustomData>(\"IBM\", TimeSpan.FromDays(365))",
+                customDataHistory,
+                250,
+                IBM
+            );
 
             // get the last 14 bars of IBM at the configured resolution (daily)
             customDataHistory = History<CustomData>("IBM", 14);
@@ -97,11 +117,23 @@ namespace QuantConnect.Algorithm.CSharp
 
             // get the last year's worth of all configured custom data at the configured resolution (daily)
             var allCustomData = History<CustomData>(TimeSpan.FromDays(365));
-            AssertHistoryCount("History<CustomData>(TimeSpan.FromDays(365))", allCustomData, 250, IBM, SPY);
+            AssertHistoryCount(
+                "History<CustomData>(TimeSpan.FromDays(365))",
+                allCustomData,
+                250,
+                IBM,
+                SPY
+            );
 
             // get the last 14 bars worth of custom data for the specified symbols at the configured resolution (daily)
             allCustomData = History<CustomData>(Securities.Keys, 14);
-            AssertHistoryCount("History<CustomData>(Securities.Keys, 14)", allCustomData, 14, IBM, SPY);
+            AssertHistoryCount(
+                "History<CustomData>(Securities.Keys, 14)",
+                allCustomData,
+                14,
+                IBM,
+                SPY
+            );
 
             // NOTE: Using different resolutions require that they are properly implemented in your data type. If your
             // custom data source has different resolutions, it would need to be implemented in the GetSource and Reader
@@ -115,7 +147,13 @@ namespace QuantConnect.Algorithm.CSharp
 
             // get the last calendar year's worth of all custom data
             allCustomData = History<CustomData>(Securities.Keys, TimeSpan.FromDays(365));
-            AssertHistoryCount("History<CustomData>(Securities.Keys, TimeSpan.FromDays(365))", allCustomData, 250, IBM, SPY);
+            AssertHistoryCount(
+                "History<CustomData>(Securities.Keys, TimeSpan.FromDays(365))",
+                allCustomData,
+                250,
+                IBM,
+                SPY
+            );
 
             // the return is a series of dictionaries containing all custom data at each time
             // we can loop over it to get the individual dictionaries
@@ -151,7 +189,13 @@ namespace QuantConnect.Algorithm.CSharp
 
             // request the last days's worth of history at the minute resolution
             allHistory = History(TimeSpan.FromDays(1), Resolution.Minute);
-            AssertHistoryCount("History(TimeSpan.FromDays(1), Resolution.Minute)", allHistory, 390, SPY, IBM);
+            AssertHistoryCount(
+                "History(TimeSpan.FromDays(1), Resolution.Minute)",
+                allHistory,
+                390,
+                SPY,
+                IBM
+            );
 
             // request the last 100 bars for the specified securities at the configured resolution
             allHistory = History(Securities.Keys, 100);
@@ -159,14 +203,32 @@ namespace QuantConnect.Algorithm.CSharp
 
             // request the last 100 minute bars for the specified securities
             allHistory = History(Securities.Keys, 100, Resolution.Minute);
-            AssertHistoryCount("History(Securities.Keys, 100, Resolution.Minute)", allHistory, 100, SPY, IBM);
+            AssertHistoryCount(
+                "History(Securities.Keys, 100, Resolution.Minute)",
+                allHistory,
+                100,
+                SPY,
+                IBM
+            );
 
             // request the last calendar years worth of history for the specified securities
             allHistory = History(Securities.Keys, TimeSpan.FromDays(365));
-            AssertHistoryCount("History(Securities.Keys, TimeSpan.FromDays(365))", allHistory, 250, SPY, IBM);
+            AssertHistoryCount(
+                "History(Securities.Keys, TimeSpan.FromDays(365))",
+                allHistory,
+                250,
+                SPY,
+                IBM
+            );
             // we can also specify the resolution
             allHistory = History(Securities.Keys, TimeSpan.FromDays(1), Resolution.Minute);
-            AssertHistoryCount("History(Securities.Keys, TimeSpan.FromDays(1), Resolution.Minute)", allHistory, 390, SPY, IBM);
+            AssertHistoryCount(
+                "History(Securities.Keys, TimeSpan.FromDays(1), Resolution.Minute)",
+                allHistory,
+                390,
+                SPY,
+                IBM
+            );
 
             // if we loop over this allHistory, we get Slice objects
             foreach (Slice slice in allHistory)
@@ -195,11 +257,14 @@ namespace QuantConnect.Algorithm.CSharp
             // for the purposes of regression testing, we're explicitly requesting history
             // using the universe symbols. Requests for universe symbols are filtered out
             // and never sent to the history provider.
-            var universeSecurityHistory = History(UniverseManager.Keys, TimeSpan.FromDays(10)).ToList();
+            var universeSecurityHistory = History(UniverseManager.Keys, TimeSpan.FromDays(10))
+                .ToList();
             if (universeSecurityHistory.Count != 0)
             {
-                throw new RegressionTestException("History request for universe symbols incorrectly returned data. "
-                    + "These requests are intended to be filtered out and never sent to the history provider.");
+                throw new RegressionTestException(
+                    "History request for universe symbols incorrectly returned data. "
+                        + "These requests are intended to be filtered out and never sent to the history provider."
+                );
             }
         }
 
@@ -213,7 +278,9 @@ namespace QuantConnect.Algorithm.CSharp
 
             if (_count > 5)
             {
-                throw new RegressionTestException($"Invalid number of bars arrived. Expected exactly 5, but received {_count}");
+                throw new RegressionTestException(
+                    $"Invalid number of bars arrived. Expected exactly 5, but received {_count}"
+                );
             }
 
             if (!Portfolio.Invested)
@@ -223,30 +290,42 @@ namespace QuantConnect.Algorithm.CSharp
             }
         }
 
-        private void AssertHistoryCount<T>(string methodCall, IEnumerable<T> history, int expected, params Symbol[] expectedSymbols)
+        private void AssertHistoryCount<T>(
+            string methodCall,
+            IEnumerable<T> history,
+            int expected,
+            params Symbol[] expectedSymbols
+        )
         {
             history = history.ToList();
             var count = history.Count();
             if (count != expected)
             {
-                throw new RegressionTestException(methodCall + " expected " + expected + ", but received " + count);
+                throw new RegressionTestException(
+                    methodCall + " expected " + expected + ", but received " + count
+                );
             }
 
             IEnumerable<Symbol> unexpectedSymbols = null;
             if (typeof(T) == typeof(Slice))
             {
-                var slices = (IEnumerable<Slice>) history;
-                unexpectedSymbols = slices.SelectMany(slice => slice.Keys)
+                var slices = (IEnumerable<Slice>)history;
+                unexpectedSymbols = slices
+                    .SelectMany(slice => slice.Keys)
                     .Distinct()
                     .Where(sym => !expectedSymbols.Contains(sym))
                     .ToList();
             }
-            else if (typeof(T).IsGenericType && typeof(T).GetGenericTypeDefinition() == typeof(DataDictionary<>))
+            else if (
+                typeof(T).IsGenericType
+                && typeof(T).GetGenericTypeDefinition() == typeof(DataDictionary<>)
+            )
             {
                 if (typeof(T).GetGenericArguments()[0] == typeof(CustomData))
                 {
-                    var dictionaries = (IEnumerable<DataDictionary<CustomData>>) history;
-                    unexpectedSymbols = dictionaries.SelectMany(dd => dd.Keys)
+                    var dictionaries = (IEnumerable<DataDictionary<CustomData>>)history;
+                    unexpectedSymbols = dictionaries
+                        .SelectMany(dd => dd.Keys)
                         .Distinct()
                         .Where(sym => !expectedSymbols.Contains(sym))
                         .ToList();
@@ -255,7 +334,8 @@ namespace QuantConnect.Algorithm.CSharp
             else if (typeof(IBaseData).IsAssignableFrom(typeof(T)))
             {
                 var slices = (IEnumerable<IBaseData>)history;
-                unexpectedSymbols = slices.Select(data => data.Symbol)
+                unexpectedSymbols = slices
+                    .Select(data => data.Symbol)
                     .Distinct()
                     .Where(sym => !expectedSymbols.Contains(sym))
                     .ToList();
@@ -270,13 +350,17 @@ namespace QuantConnect.Algorithm.CSharp
 
             if (unexpectedSymbols == null)
             {
-                throw new RegressionTestException("Unhandled case: " + typeof(T).GetBetterTypeName());
+                throw new RegressionTestException(
+                    "Unhandled case: " + typeof(T).GetBetterTypeName()
+                );
             }
 
             var unexpectedSymbolsString = string.Join(" | ", unexpectedSymbols);
             if (!string.IsNullOrWhiteSpace(unexpectedSymbolsString))
             {
-                throw new RegressionTestException($"{methodCall} contains unexpected symbols: {unexpectedSymbolsString}");
+                throw new RegressionTestException(
+                    $"{methodCall} contains unexpected symbols: {unexpectedSymbolsString}"
+                );
             }
         }
 
@@ -308,35 +392,36 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// This is used by the regression test system to indicate what the expected statistics are from running the algorithm
         /// </summary>
-        public Dictionary<string, string> ExpectedStatistics => new Dictionary<string, string>
-        {
-            {"Total Orders", "1"},
-            {"Average Win", "0%"},
-            {"Average Loss", "0%"},
-            {"Compounding Annual Return", "363.283%"},
-            {"Drawdown", "1.200%"},
-            {"Expectancy", "0"},
-            {"Start Equity", "100000"},
-            {"End Equity", "101694.38"},
-            {"Net Profit", "1.694%"},
-            {"Sharpe Ratio", "57.467"},
-            {"Sortino Ratio", "0"},
-            {"Probabilistic Sharpe Ratio", "0%"},
-            {"Loss Rate", "0%"},
-            {"Win Rate", "0%"},
-            {"Profit-Loss Ratio", "0"},
-            {"Alpha", "-0.041"},
-            {"Beta", "0.998"},
-            {"Annual Standard Deviation", "0.177"},
-            {"Annual Variance", "0.031"},
-            {"Information Ratio", "-150.576"},
-            {"Tracking Error", "0"},
-            {"Treynor Ratio", "10.221"},
-            {"Total Fees", "$3.45"},
-            {"Estimated Strategy Capacity", "$970000000.00"},
-            {"Lowest Capacity Asset", "SPY R735QTJ8XC9X"},
-            {"Portfolio Turnover", "25.24%"},
-            {"OrderListHash", "39a84b9f15bb4e8ead0f0ecb59f28562"}
-        };
+        public Dictionary<string, string> ExpectedStatistics =>
+            new Dictionary<string, string>
+            {
+                { "Total Orders", "1" },
+                { "Average Win", "0%" },
+                { "Average Loss", "0%" },
+                { "Compounding Annual Return", "363.283%" },
+                { "Drawdown", "1.200%" },
+                { "Expectancy", "0" },
+                { "Start Equity", "100000" },
+                { "End Equity", "101694.38" },
+                { "Net Profit", "1.694%" },
+                { "Sharpe Ratio", "57.467" },
+                { "Sortino Ratio", "0" },
+                { "Probabilistic Sharpe Ratio", "0%" },
+                { "Loss Rate", "0%" },
+                { "Win Rate", "0%" },
+                { "Profit-Loss Ratio", "0" },
+                { "Alpha", "-0.041" },
+                { "Beta", "0.998" },
+                { "Annual Standard Deviation", "0.177" },
+                { "Annual Variance", "0.031" },
+                { "Information Ratio", "-150.576" },
+                { "Tracking Error", "0" },
+                { "Treynor Ratio", "10.221" },
+                { "Total Fees", "$3.45" },
+                { "Estimated Strategy Capacity", "$970000000.00" },
+                { "Lowest Capacity Asset", "SPY R735QTJ8XC9X" },
+                { "Portfolio Turnover", "25.24%" },
+                { "OrderListHash", "39a84b9f15bb4e8ead0f0ecb59f28562" }
+            };
     }
 }

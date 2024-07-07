@@ -27,8 +27,6 @@ namespace QuantConnect.Lean.Engine.Storage
         /// </summary>
         /// <param name="message">The associated message</param>
         public StorageLimitExceededException(string message)
-            : base(message)
-        {
-        }
+            : base(message) { }
     }
 }

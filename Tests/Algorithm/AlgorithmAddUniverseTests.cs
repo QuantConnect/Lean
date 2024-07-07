@@ -27,94 +27,145 @@ namespace QuantConnect.Tests.Algorithm
     public class AlgorithmAddUniverseTests
     {
         [TestCaseSource(nameof(ETFConstituentUniverseTestCases))]
-        public void AddUniverseWithETFConstituentUniverseDefinitionTicker(string ticker, string market)
+        public void AddUniverseWithETFConstituentUniverseDefinitionTicker(
+            string ticker,
+            string market
+        )
         {
             AssertConstituentUniverseDefinitionsSymbol(ticker, market, false, false, true);
         }
 
         [TestCaseSource(nameof(ETFConstituentUniverseTestCases))]
-        public void AddUniverseWithETFConstituentUniverseDefinitionTickerPython(string ticker, string market)
+        public void AddUniverseWithETFConstituentUniverseDefinitionTickerPython(
+            string ticker,
+            string market
+        )
         {
             AssertConstituentUniverseDefinitionsSymbol(ticker, market, false, true, true);
         }
-        
+
         [TestCaseSource(nameof(ETFConstituentUniverseTestCases))]
-        public void AddUniverseWithETFConstituentUniverseDefinitionSymbol(string ticker, string market)
+        public void AddUniverseWithETFConstituentUniverseDefinitionSymbol(
+            string ticker,
+            string market
+        )
         {
             AssertConstituentUniverseDefinitionsSymbol(ticker, market, true, false, true);
         }
 
         [TestCaseSource(nameof(ETFConstituentUniverseTestCases))]
-        public void AddUniverseWithETFConstituentUniverseDefinitionSymbolPython(string ticker, string market)
+        public void AddUniverseWithETFConstituentUniverseDefinitionSymbolPython(
+            string ticker,
+            string market
+        )
         {
             AssertConstituentUniverseDefinitionsSymbol(ticker, market, true, true, true);
         }
 
         [TestCaseSource(nameof(IndexConstituentUniverseTestCases))]
-        public void AddUniverseWithIndexConstituentUniverseDefinitionTicker(string ticker, string market)
+        public void AddUniverseWithIndexConstituentUniverseDefinitionTicker(
+            string ticker,
+            string market
+        )
         {
             AssertConstituentUniverseDefinitionsSymbol(ticker, market, false, false, false);
         }
 
         [TestCaseSource(nameof(IndexConstituentUniverseTestCases))]
-        public void AddUniverseWithIndexConstituentUniverseDefinitionSymbol(string ticker, string market)
+        public void AddUniverseWithIndexConstituentUniverseDefinitionSymbol(
+            string ticker,
+            string market
+        )
         {
             AssertConstituentUniverseDefinitionsSymbol(ticker, market, true, false, false);
         }
 
         [TestCaseSource(nameof(IndexConstituentUniverseTestCases))]
-        public void AddUniverseWithIndexConstituentUniverseDefinitionTickerPython(string ticker, string market)
+        public void AddUniverseWithIndexConstituentUniverseDefinitionTickerPython(
+            string ticker,
+            string market
+        )
         {
             AssertConstituentUniverseDefinitionsSymbol(ticker, market, false, true, false);
         }
 
         [TestCaseSource(nameof(IndexConstituentUniverseTestCases))]
-        public void AddUniverseWithIndexConstituentUniverseDefinitionSymbolPython(string ticker, string market)
+        public void AddUniverseWithIndexConstituentUniverseDefinitionSymbolPython(
+            string ticker,
+            string market
+        )
         {
             AssertConstituentUniverseDefinitionsSymbol(ticker, market, true, true, false);
         }
 
-        private void AssertConstituentUniverseDefinitionsSymbol(string ticker, string market, bool isSymbol, bool isPython, bool isEtf)
+        private void AssertConstituentUniverseDefinitionsSymbol(
+            string ticker,
+            string market,
+            bool isSymbol,
+            bool isPython,
+            bool isEtf
+        )
         {
             var algo = CreateAlgorithm();
             algo.SetStartDate(2021, 8, 23);
             algo.SetEndDate(2021, 8, 24);
 
             Universe constituentUniverse;
-            var symbol = Symbol.Create(ticker, isEtf ? SecurityType.Equity : SecurityType.Index, market ?? Market.USA);
+            var symbol = Symbol.Create(
+                ticker,
+                isEtf ? SecurityType.Equity : SecurityType.Index,
+                market ?? Market.USA
+            );
 
             if (isSymbol && isEtf)
             {
                 constituentUniverse = isPython
-                    ? algo.Universe.ETF(symbol, algo.UniverseSettings, (PyObject) null)
+                    ? algo.Universe.ETF(symbol, algo.UniverseSettings, (PyObject)null)
                     : algo.Universe.ETF(symbol, algo.UniverseSettings, CreateReturnAllFunc());
             }
             else if (isEtf)
             {
                 constituentUniverse = isPython
-                    ? algo.Universe.ETF(ticker, market, algo.UniverseSettings, (PyObject) null)
-                    : algo.Universe.ETF(ticker, market, algo.UniverseSettings, CreateReturnAllFunc());
+                    ? algo.Universe.ETF(ticker, market, algo.UniverseSettings, (PyObject)null)
+                    : algo.Universe.ETF(
+                        ticker,
+                        market,
+                        algo.UniverseSettings,
+                        CreateReturnAllFunc()
+                    );
             }
             else if (isSymbol)
             {
                 constituentUniverse = isPython
-                    ? algo.Universe.Index(symbol, algo.UniverseSettings, (PyObject) null)
+                    ? algo.Universe.Index(symbol, algo.UniverseSettings, (PyObject)null)
                     : algo.Universe.Index(symbol, algo.UniverseSettings, CreateReturnAllFunc());
             }
             else
             {
                 constituentUniverse = isPython
-                    ? algo.Universe.Index(ticker, market, algo.UniverseSettings, (PyObject) null)
-                    : algo.Universe.Index(ticker, market, algo.UniverseSettings, CreateReturnAllFunc());
+                    ? algo.Universe.Index(ticker, market, algo.UniverseSettings, (PyObject)null)
+                    : algo.Universe.Index(
+                        ticker,
+                        market,
+                        algo.UniverseSettings,
+                        CreateReturnAllFunc()
+                    );
             }
 
             Assert.IsTrue(constituentUniverse.Configuration.Symbol.HasUnderlying);
             Assert.AreEqual(symbol, constituentUniverse.Configuration.Symbol.Underlying);
-            
-            Assert.AreEqual(symbol.SecurityType, constituentUniverse.Configuration.Symbol.SecurityType);
-            Assert.IsTrue(constituentUniverse.Configuration.Symbol.ID.Symbol.StartsWithInvariant("qc-universe-"));
+
+            Assert.AreEqual(
+                symbol.SecurityType,
+                constituentUniverse.Configuration.Symbol.SecurityType
+            );
+            Assert.IsTrue(
+                constituentUniverse.Configuration.Symbol.ID.Symbol.StartsWithInvariant(
+                    "qc-universe-"
+                )
+            );
         }
-        
+
         private static TestCaseData[] ETFConstituentUniverseTestCases()
         {
             return new[]

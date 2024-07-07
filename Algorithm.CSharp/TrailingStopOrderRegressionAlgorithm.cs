@@ -15,7 +15,6 @@
 
 using System;
 using System.Collections.Generic;
-
 using QuantConnect.Data;
 using QuantConnect.Interfaces;
 using QuantConnect.Orders;
@@ -56,7 +55,12 @@ namespace QuantConnect.Algorithm.CSharp
 
             if (_buyOrderTicket == null)
             {
-                _buyOrderTicket = TrailingStopOrder(_symbol, 100, trailingAmount: BuyTrailingAmount, trailingAsPercentage: false);
+                _buyOrderTicket = TrailingStopOrder(
+                    _symbol,
+                    100,
+                    trailingAmount: BuyTrailingAmount,
+                    trailingAsPercentage: false
+                );
             }
             else if (_buyOrderTicket.Status != OrderStatus.Filled)
             {
@@ -71,7 +75,9 @@ namespace QuantConnect.Algorithm.CSharp
                 var stopPriceToMarketPriceDistance = stopPrice - low;
                 if (stopPriceToMarketPriceDistance > BuyTrailingAmount)
                 {
-                    throw new RegressionTestException($"StopPrice {stopPrice} should be within {BuyTrailingAmount} of the previous low price {low} at all times.");
+                    throw new RegressionTestException(
+                        $"StopPrice {stopPrice} should be within {BuyTrailingAmount} of the previous low price {low} at all times."
+                    );
                 }
             }
 
@@ -79,7 +85,12 @@ namespace QuantConnect.Algorithm.CSharp
             {
                 if (Portfolio.Invested)
                 {
-                    _sellOrderTicket = TrailingStopOrder(_symbol, -100, trailingAmount: SellTrailingAmount, trailingAsPercentage: false);
+                    _sellOrderTicket = TrailingStopOrder(
+                        _symbol,
+                        -100,
+                        trailingAmount: SellTrailingAmount,
+                        trailingAsPercentage: false
+                    );
                 }
             }
             else if (_sellOrderTicket.Status != OrderStatus.Filled)
@@ -95,7 +106,9 @@ namespace QuantConnect.Algorithm.CSharp
                 var stopPriceToMarketPriceDistance = high - stopPrice;
                 if (stopPriceToMarketPriceDistance > SellTrailingAmount)
                 {
-                    throw new RegressionTestException($"StopPrice {stopPrice} should be within {SellTrailingAmount} of the previous high price {high} at all times.");
+                    throw new RegressionTestException(
+                        $"StopPrice {stopPrice} should be within {SellTrailingAmount} of the previous high price {high} at all times."
+                    );
                 }
             }
 
@@ -111,8 +124,10 @@ namespace QuantConnect.Algorithm.CSharp
                     var stopPrice = _buyOrderTicket.Get(OrderField.StopPrice);
                     if (orderEvent.FillPrice < stopPrice)
                     {
-                        throw new RegressionTestException($@"Buy trailing stop order should have filled with price greater than or equal to the stop price {
-                            stopPrice}. Fill price: {orderEvent.FillPrice}");
+                        throw new RegressionTestException(
+                            $@"Buy trailing stop order should have filled with price greater than or equal to the stop price {
+                            stopPrice}. Fill price: {orderEvent.FillPrice}"
+                        );
                     }
                 }
                 else
@@ -120,8 +135,10 @@ namespace QuantConnect.Algorithm.CSharp
                     var stopPrice = _sellOrderTicket.Get(OrderField.StopPrice);
                     if (orderEvent.FillPrice > stopPrice)
                     {
-                        throw new RegressionTestException($@"Sell trailing stop order should have filled with price less than or equal to the stop price {
-                            stopPrice}. Fill price: {orderEvent.FillPrice}");
+                        throw new RegressionTestException(
+                            $@"Sell trailing stop order should have filled with price less than or equal to the stop price {
+                            stopPrice}. Fill price: {orderEvent.FillPrice}"
+                        );
                     }
                 }
             }
@@ -155,35 +172,36 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// This is used by the regression test system to indicate what the expected statistics are from running the algorithm
         /// </summary>
-        public Dictionary<string, string> ExpectedStatistics => new Dictionary<string, string>
-        {
-            {"Total Orders", "2"},
-            {"Average Win", "0.02%"},
-            {"Average Loss", "0%"},
-            {"Compounding Annual Return", "1.833%"},
-            {"Drawdown", "0.000%"},
-            {"Expectancy", "0"},
-            {"Start Equity", "100000"},
-            {"End Equity", "100023.22"},
-            {"Net Profit", "0.023%"},
-            {"Sharpe Ratio", "3.926"},
-            {"Sortino Ratio", "0"},
-            {"Probabilistic Sharpe Ratio", "95.977%"},
-            {"Loss Rate", "0%"},
-            {"Win Rate", "100%"},
-            {"Profit-Loss Ratio", "0"},
-            {"Alpha", "-0.007"},
-            {"Beta", "0.007"},
-            {"Annual Standard Deviation", "0.002"},
-            {"Annual Variance", "0"},
-            {"Information Ratio", "-8.907"},
-            {"Tracking Error", "0.221"},
-            {"Treynor Ratio", "1.031"},
-            {"Total Fees", "$2.00"},
-            {"Estimated Strategy Capacity", "$36000000.00"},
-            {"Lowest Capacity Asset", "SPY R735QTJ8XC9X"},
-            {"Portfolio Turnover", "5.79%"},
-            {"OrderListHash", "d56bac89a568c3a45cac595e69a35875"}
-        };
+        public Dictionary<string, string> ExpectedStatistics =>
+            new Dictionary<string, string>
+            {
+                { "Total Orders", "2" },
+                { "Average Win", "0.02%" },
+                { "Average Loss", "0%" },
+                { "Compounding Annual Return", "1.833%" },
+                { "Drawdown", "0.000%" },
+                { "Expectancy", "0" },
+                { "Start Equity", "100000" },
+                { "End Equity", "100023.22" },
+                { "Net Profit", "0.023%" },
+                { "Sharpe Ratio", "3.926" },
+                { "Sortino Ratio", "0" },
+                { "Probabilistic Sharpe Ratio", "95.977%" },
+                { "Loss Rate", "0%" },
+                { "Win Rate", "100%" },
+                { "Profit-Loss Ratio", "0" },
+                { "Alpha", "-0.007" },
+                { "Beta", "0.007" },
+                { "Annual Standard Deviation", "0.002" },
+                { "Annual Variance", "0" },
+                { "Information Ratio", "-8.907" },
+                { "Tracking Error", "0.221" },
+                { "Treynor Ratio", "1.031" },
+                { "Total Fees", "$2.00" },
+                { "Estimated Strategy Capacity", "$36000000.00" },
+                { "Lowest Capacity Asset", "SPY R735QTJ8XC9X" },
+                { "Portfolio Turnover", "5.79%" },
+                { "OrderListHash", "d56bac89a568c3a45cac595e69a35875" }
+            };
     }
 }

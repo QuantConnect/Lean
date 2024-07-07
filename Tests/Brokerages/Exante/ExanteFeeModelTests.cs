@@ -13,6 +13,7 @@
  * limitations under the License.
 */
 
+using System;
 using NUnit.Framework;
 using QuantConnect.Brokerages;
 using QuantConnect.Data;
@@ -20,7 +21,6 @@ using QuantConnect.Data.Market;
 using QuantConnect.Orders;
 using QuantConnect.Orders.Fees;
 using QuantConnect.Securities;
-using System;
 
 namespace QuantConnect.Tests.Brokerages.Exante
 {
@@ -70,25 +70,42 @@ namespace QuantConnect.Tests.Brokerages.Exante
             Assert.IsInstanceOf<ExanteFeeModel>(model.GetFeeModel(Security));
         }
 
-        private static TestCaseData[] MakerOrders => new[]
-        {
-            new TestCaseData(new LimitOrderTestParameters(Symbol, HighPrice, LowPrice)),
-            new TestCaseData(new LimitOrderTestParameters(Symbol, HighPrice, LowPrice)
-                { OrderSubmissionData = OrderSubmissionData }),
-            new TestCaseData(new LimitOrderTestParameters(Symbol, HighPrice, LowPrice, new OrderProperties())),
-            new TestCaseData(
-                new LimitOrderTestParameters(Symbol, LowPrice, HighPrice,
-                    new OrderProperties()) { OrderSubmissionData = OrderSubmissionData }),
-            new TestCaseData(new LimitOrderTestParameters(Symbol, HighPrice, LowPrice, new OrderProperties()))
-        };
+        private static TestCaseData[] MakerOrders =>
+            new[]
+            {
+                new TestCaseData(new LimitOrderTestParameters(Symbol, HighPrice, LowPrice)),
+                new TestCaseData(
+                    new LimitOrderTestParameters(Symbol, HighPrice, LowPrice)
+                    {
+                        OrderSubmissionData = OrderSubmissionData
+                    }
+                ),
+                new TestCaseData(
+                    new LimitOrderTestParameters(Symbol, HighPrice, LowPrice, new OrderProperties())
+                ),
+                new TestCaseData(
+                    new LimitOrderTestParameters(Symbol, LowPrice, HighPrice, new OrderProperties())
+                    {
+                        OrderSubmissionData = OrderSubmissionData
+                    }
+                ),
+                new TestCaseData(
+                    new LimitOrderTestParameters(Symbol, HighPrice, LowPrice, new OrderProperties())
+                )
+            };
 
-        private static TestCaseData[] TakerOrders => new[]
-        {
-            new TestCaseData(new MarketOrderTestParameters(Symbol)),
-            new TestCaseData(new MarketOrderTestParameters(Symbol, new OrderProperties())),
-            new TestCaseData(new LimitOrderTestParameters(Symbol, LowPrice, HighPrice)
-                { OrderSubmissionData = OrderSubmissionData })
-        };
+        private static TestCaseData[] TakerOrders =>
+            new[]
+            {
+                new TestCaseData(new MarketOrderTestParameters(Symbol)),
+                new TestCaseData(new MarketOrderTestParameters(Symbol, new OrderProperties())),
+                new TestCaseData(
+                    new LimitOrderTestParameters(Symbol, LowPrice, HighPrice)
+                    {
+                        OrderSubmissionData = OrderSubmissionData
+                    }
+                )
+            };
 
         [Test]
         [TestCaseSource(nameof(MakerOrders))]
@@ -99,10 +116,7 @@ namespace QuantConnect.Tests.Brokerages.Exante
             var order = parameters.CreateShortOrder(Quantity);
             var fee = feeModel.GetOrderFee(new OrderFeeParameters(Security, order));
 
-            Assert.AreEqual(
-                ExanteFeeModel.MarketUsaRate * Math.Abs(Quantity),
-                fee.Value.Amount
-            );
+            Assert.AreEqual(ExanteFeeModel.MarketUsaRate * Math.Abs(Quantity), fee.Value.Amount);
             Assert.AreEqual(Currencies.USD, fee.Value.Currency);
         }
 
@@ -115,10 +129,7 @@ namespace QuantConnect.Tests.Brokerages.Exante
             var order = parameters.CreateShortOrder(Quantity);
             var fee = feeModel.GetOrderFee(new OrderFeeParameters(Security, order));
 
-            Assert.AreEqual(
-                ExanteFeeModel.MarketUsaRate * Math.Abs(Quantity),
-                fee.Value.Amount
-            );
+            Assert.AreEqual(ExanteFeeModel.MarketUsaRate * Math.Abs(Quantity), fee.Value.Amount);
             Assert.AreEqual(Currencies.USD, fee.Value.Currency);
         }
 
@@ -131,10 +142,7 @@ namespace QuantConnect.Tests.Brokerages.Exante
             var order = parameters.CreateLongOrder(Quantity);
             var fee = feeModel.GetOrderFee(new OrderFeeParameters(Security, order));
 
-            Assert.AreEqual(
-                ExanteFeeModel.MarketUsaRate * Math.Abs(Quantity),
-                fee.Value.Amount
-            );
+            Assert.AreEqual(ExanteFeeModel.MarketUsaRate * Math.Abs(Quantity), fee.Value.Amount);
             Assert.AreEqual(Currencies.USD, fee.Value.Currency);
         }
 
@@ -147,10 +155,7 @@ namespace QuantConnect.Tests.Brokerages.Exante
             var order = parameters.CreateLongOrder(Quantity);
             var fee = feeModel.GetOrderFee(new OrderFeeParameters(Security, order));
 
-            Assert.AreEqual(
-                ExanteFeeModel.MarketUsaRate * Math.Abs(Quantity),
-                fee.Value.Amount
-            );
+            Assert.AreEqual(ExanteFeeModel.MarketUsaRate * Math.Abs(Quantity), fee.Value.Amount);
             Assert.AreEqual(Currencies.USD, fee.Value.Currency);
         }
     }

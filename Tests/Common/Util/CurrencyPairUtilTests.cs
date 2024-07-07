@@ -26,12 +26,17 @@ namespace QuantConnect.Tests.Common.Util
         public void DecomposeDecomposesAllCurrencyPairTypes(
             Symbol symbol,
             string expectedBaseCurrency,
-            string expectedQuoteCurrency)
+            string expectedQuoteCurrency
+        )
         {
             string actualBaseCurrency;
             string actualQuoteCurrency;
 
-            CurrencyPairUtil.DecomposeCurrencyPair(symbol, out actualBaseCurrency, out actualQuoteCurrency);
+            CurrencyPairUtil.DecomposeCurrencyPair(
+                symbol,
+                out actualBaseCurrency,
+                out actualQuoteCurrency
+            );
 
             Assert.AreEqual(expectedBaseCurrency, actualBaseCurrency);
             Assert.AreEqual(expectedQuoteCurrency, actualQuoteCurrency);
@@ -40,10 +45,17 @@ namespace QuantConnect.Tests.Common.Util
         [TestCaseSource(nameof(decomposeThrowCases))]
         public void DecomposeThrowsOnNonCurrencyPair(Symbol symbol)
         {
-            string baseCurrency, quoteCurrency;
+            string baseCurrency,
+                quoteCurrency;
 
             Assert.Throws<ArgumentException>(
-                () => CurrencyPairUtil.DecomposeCurrencyPair(symbol, out baseCurrency, out quoteCurrency));
+                () =>
+                    CurrencyPairUtil.DecomposeCurrencyPair(
+                        symbol,
+                        out baseCurrency,
+                        out quoteCurrency
+                    )
+            );
         }
 
         [TestCaseSource(nameof(isDecomposableCases))]
@@ -150,11 +162,31 @@ namespace QuantConnect.Tests.Common.Util
         private static object[][] decomposeSuccessCases =
         {
             new object[] { Symbol.Create("EURUSD", SecurityType.Forex, Market.FXCM), "EUR", "USD" },
-            new object[] { Symbol.Create("NZDSGD", SecurityType.Forex, Market.Oanda), "NZD", "SGD" },
+            new object[]
+            {
+                Symbol.Create("NZDSGD", SecurityType.Forex, Market.Oanda),
+                "NZD",
+                "SGD"
+            },
             new object[] { Symbol.Create("XAGUSD", SecurityType.Cfd, Market.FXCM), "XAG", "USD" },
-            new object[] { Symbol.Create("US30USD", SecurityType.Cfd, Market.Oanda), "US30", "USD" },
-            new object[] { Symbol.Create("BTCUSD", SecurityType.Crypto, Market.Bitfinex), "BTC", "USD" },
-            new object[] { Symbol.Create("BTCUSDT", SecurityType.Crypto, Market.Binance), "BTC", "USDT" }
+            new object[]
+            {
+                Symbol.Create("US30USD", SecurityType.Cfd, Market.Oanda),
+                "US30",
+                "USD"
+            },
+            new object[]
+            {
+                Symbol.Create("BTCUSD", SecurityType.Crypto, Market.Bitfinex),
+                "BTC",
+                "USD"
+            },
+            new object[]
+            {
+                Symbol.Create("BTCUSDT", SecurityType.Crypto, Market.Binance),
+                "BTC",
+                "USDT"
+            }
         };
 
         /// <summary>
@@ -180,14 +212,11 @@ namespace QuantConnect.Tests.Common.Util
             new object[] { Symbols.EURUSD, true },
             new object[] { Symbols.XAGUSD, true },
             new object[] { Symbols.BTCUSD, true },
-
             // CFD, but ticker doesn't end with quote currency, so no way to extract base currency
             new object[] { Symbol.Create("AU200AUD", SecurityType.Cfd, Market.FXCM), false },
-
             // Obviously not decomposable
             new object[] { null, false },
             new object[] { Symbol.Empty, false },
-
             // Other security types, also not decomposable
             new object[] { Symbols.SPY, false },
             new object[] { Symbols.SPY_C_192_Feb19_2016, false },

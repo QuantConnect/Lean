@@ -34,14 +34,8 @@ namespace QuantConnect.Data.UniverseSelection
         /// </summary>
         public override UniverseSettings UniverseSettings
         {
-            get
-            {
-                return _model.GetProperty<UniverseSettings>(nameof(UniverseSettings));
-            }
-            set
-            {
-                _model.SetProperty(nameof(UniverseSettings), value);
-            }
+            get { return _model.GetProperty<UniverseSettings>(nameof(UniverseSettings)); }
+            set { _model.SetProperty(nameof(UniverseSettings), value); }
         }
 
         /// <summary>
@@ -49,14 +43,8 @@ namespace QuantConnect.Data.UniverseSelection
         /// </summary>
         public override bool DisposeRequested
         {
-            get
-            {
-                return _model.GetProperty<bool>(nameof(DisposeRequested));
-            }
-            protected set
-            {
-                _model.SetProperty(nameof(DisposeRequested), value);
-            }
+            get { return _model.GetProperty<bool>(nameof(DisposeRequested)); }
+            protected set { _model.SetProperty(nameof(DisposeRequested), value); }
         }
 
         /// <summary>
@@ -64,10 +52,7 @@ namespace QuantConnect.Data.UniverseSelection
         /// </summary>
         public override SubscriptionDataConfig Configuration
         {
-            get
-            {
-                return _model.GetProperty<SubscriptionDataConfig>(nameof(Configuration));
-            }
+            get { return _model.GetProperty<SubscriptionDataConfig>(nameof(Configuration)); }
         }
 
         /// <summary>
@@ -84,7 +69,8 @@ namespace QuantConnect.Data.UniverseSelection
         /// <summary>
         /// Initializes a new instance of the <see cref="UniversePythonWrapper"/> class
         /// </summary>
-        public UniversePythonWrapper(PyObject universe) : base(null)
+        public UniversePythonWrapper(PyObject universe)
+            : base(null)
         {
             _model = new BasePythonWrapper<Universe>(universe, false);
         }
@@ -118,18 +104,27 @@ namespace QuantConnect.Data.UniverseSelection
         /// <param name="maximumEndTimeUtc">The max end time</param>
         /// <param name="subscriptionService">Instance which implements <see cref="ISubscriptionDataConfigService"/> interface</param>
         /// <returns>All subscriptions required by this security</returns>
-        public override IEnumerable<SubscriptionRequest> GetSubscriptionRequests(Security security, DateTime currentTimeUtc, DateTime maximumEndTimeUtc,
-            ISubscriptionDataConfigService subscriptionService)
+        public override IEnumerable<SubscriptionRequest> GetSubscriptionRequests(
+            Security security,
+            DateTime currentTimeUtc,
+            DateTime maximumEndTimeUtc,
+            ISubscriptionDataConfigService subscriptionService
+        )
         {
             using (Py.GIL())
             {
-                var subscriptionRequests = _model.InvokeMethod(nameof(GetSubscriptionRequests), security, currentTimeUtc,
-                    maximumEndTimeUtc, subscriptionService);
+                var subscriptionRequests = _model.InvokeMethod(
+                    nameof(GetSubscriptionRequests),
+                    security,
+                    currentTimeUtc,
+                    maximumEndTimeUtc,
+                    subscriptionService
+                );
                 var iterator = subscriptionRequests.GetIterator();
                 foreach (PyObject request in iterator)
                 {
                     var subscriptionRequest = request.GetAndDispose<SubscriptionRequest>();
-                    yield return new SubscriptionRequest(subscriptionRequest, universe:this);
+                    yield return new SubscriptionRequest(subscriptionRequest, universe: this);
                 }
                 iterator.Dispose();
                 subscriptionRequests.Dispose();

@@ -1,11 +1,11 @@
 /*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
- * 
- * Licensed under the Apache License, Version 2.0 (the "License"); 
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -38,9 +38,7 @@ namespace QuantConnect.Indicators
         /// </summary>
         /// <param name="period">The period over which to perform to computation</param>
         public RateOfChange(int period)
-            : base($"ROC({period})", period)
-        {
-        }
+            : base($"ROC({period})", period) { }
 
         /// <summary>
         /// Creates a new RateOfChange indicator with the specified period
@@ -48,9 +46,7 @@ namespace QuantConnect.Indicators
         /// <param name="name">The name of this indicator</param>
         /// <param name="period">The period over which to perform to computation</param>
         public RateOfChange(string name, int period)
-            : base(name, period)
-        {
-        }
+            : base(name, period) { }
 
         /// <summary>
         /// Computes the next value for this indicator from the given state.
@@ -58,10 +54,16 @@ namespace QuantConnect.Indicators
         /// <param name="window">The window of data held in this indicator</param>
         /// <param name="input">The input value to this indicator on this time step</param>
         /// <returns>A new value for this indicator</returns>
-        protected override decimal ComputeNextValue(IReadOnlyWindow<IndicatorDataPoint> window, IndicatorDataPoint input)
+        protected override decimal ComputeNextValue(
+            IReadOnlyWindow<IndicatorDataPoint> window,
+            IndicatorDataPoint input
+        )
         {
             // if we're not ready just grab the first input point in the window
-            var denominator = window.Samples <= window.Size ? window[window.Count - 1] : window.MostRecentlyRemoved;
+            var denominator =
+                window.Samples <= window.Size
+                    ? window[window.Count - 1]
+                    : window.MostRecentlyRemoved;
 
             if (denominator.Value == 0)
             {

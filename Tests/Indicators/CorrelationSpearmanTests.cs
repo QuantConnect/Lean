@@ -13,23 +13,22 @@
  * limitations under the License.
 */
 
+using System;
 using NUnit.Framework;
 using QuantConnect.Algorithm.CSharp;
 using QuantConnect.Data.Consolidators;
 using QuantConnect.Data.Market;
 using QuantConnect.Indicators;
-using System;
 using static QuantConnect.Tests.Indicators.TestHelper;
 
 namespace QuantConnect.Tests.Indicators
 {
     [TestFixture]
     public class CorrelationSpearmanTests : CorrelationPearsonTests
-    { 
+    {
         public CorrelationSpearmanTests()
         {
             _correlationType = CorrelationType.Spearman;
         }
-        
     }
 }

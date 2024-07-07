@@ -13,15 +13,15 @@
  * limitations under the License.
 */
 
-using QuantConnect.Data;
-using QuantConnect.Data.Auxiliary;
-using QuantConnect.Data.Market;
-using QuantConnect.Securities;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using QuantConnect.Data;
+using QuantConnect.Data.Auxiliary;
+using QuantConnect.Data.Market;
 using QuantConnect.Lean.Engine.DataFeeds.Enumerators;
 using QuantConnect.Logging;
+using QuantConnect.Securities;
 
 namespace QuantConnect.ToolBox.RandomDataGenerator
 {
@@ -58,28 +58,37 @@ namespace QuantConnect.ToolBox.RandomDataGenerator
                 random = new Random(_settings.RandomSeed);
                 randomValueGenerator = new RandomValueGenerator(_settings.RandomSeed);
             }
-            
+
             var symbolGenerator = BaseSymbolGenerator.Create(_settings, randomValueGenerator);
 
             var maxSymbolCount = symbolGenerator.GetAvailableSymbolCount();
             if (_settings.SymbolCount > maxSymbolCount)
             {
-                Log.Error($"RandomDataGenerator.Run(): Limiting Symbol count to {maxSymbolCount}, we don't have more {_settings.SecurityType} tickers for {_settings.Market}");
+                Log.Error(
+                    $"RandomDataGenerator.Run(): Limiting Symbol count to {maxSymbolCount}, we don't have more {_settings.SecurityType} tickers for {_settings.Market}"
+                );
                 _settings.SymbolCount = maxSymbolCount;
             }
 
-            Log.Trace($"RandomDataGenerator.Run(): Begin data generation of {_settings.SymbolCount} randomly generated {_settings.SecurityType} assets...");
+            Log.Trace(
+                $"RandomDataGenerator.Run(): Begin data generation of {_settings.SymbolCount} randomly generated {_settings.SecurityType} assets..."
+            );
 
             // iterate over our randomly generated symbols
             var count = 0;
             var progress = 0d;
             var previousMonth = -1;
 
-            foreach (var (symbolRef, currentSymbolGroup) in symbolGenerator.GenerateRandomSymbols()
-                .GroupBy(s => s.HasUnderlying ? s.Underlying : s)
-                .Select(g => (g.Key, g.OrderBy(s => s.HasUnderlying).ToList())))
+            foreach (
+                var (symbolRef, currentSymbolGroup) in symbolGenerator
+                    .GenerateRandomSymbols()
+                    .GroupBy(s => s.HasUnderlying ? s.Underlying : s)
+                    .Select(g => (g.Key, g.OrderBy(s => s.HasUnderlying).ToList()))
+            )
             {
-                Log.Trace($"RandomDataGenerator.Run(): Symbol[{++count}]: {symbolRef} Progress: {progress:0.0}% - Generating data...");
+                Log.Trace(
+                    $"RandomDataGenerator.Run(): Symbol[{++count}]: {symbolRef} Progress: {progress:0.0}% - Generating data..."
+                );
 
                 var tickGenerators = new List<IEnumerator<Tick>>();
                 var tickHistories = new Dictionary<Symbol, List<Tick>>();
@@ -91,20 +100,25 @@ namespace QuantConnect.ToolBox.RandomDataGenerator
                         security = _securityManager.CreateSecurity(
                             currentSymbol,
                             new List<SubscriptionDataConfig>(),
-                            underlying: underlyingSecurity);
+                            underlying: underlyingSecurity
+                        );
                         _securityManager.Add(security);
                     }
 
                     underlyingSecurity ??= security;
 
                     tickGenerators.Add(
-                        new TickGenerator(_settings, tickTypesPerSecurityType[currentSymbol.SecurityType].ToArray(), security, randomValueGenerator)
+                        new TickGenerator(
+                            _settings,
+                            tickTypesPerSecurityType[currentSymbol.SecurityType].ToArray(),
+                            security,
+                            randomValueGenerator
+                        )
                             .GenerateTicks()
-                            .GetEnumerator());
+                            .GetEnumerator()
+                    );
 
-                    tickHistories.Add(
-                        currentSymbol,
-                        new List<Tick>());
+                    tickHistories.Add(currentSymbol, new List<Tick>());
                 }
 
                 using var sync = new SynchronizingBaseDataEnumerator(tickGenerators);
@@ -113,7 +127,9 @@ namespace QuantConnect.ToolBox.RandomDataGenerator
                     var dataPoint = sync.Current;
                     if (!_securityManager.TryGetValue(dataPoint.Symbol, out var security))
                     {
-                        Log.Error($"RandomDataGenerator.Run(): Could not find security for symbol {sync.Current.Symbol}");
+                        Log.Error(
+                            $"RandomDataGenerator.Run(): Could not find security for symbol {sync.Current.Symbol}"
+                        );
                         continue;
                     }
 
@@ -126,11 +142,18 @@ namespace QuantConnect.ToolBox.RandomDataGenerator
                     var symbol = currentSymbol;
 
                     // This is done so that we can update the Symbol in the case of a rename event
-                    var delistDate = GetDelistingDate(_settings.Start, _settings.End, randomValueGenerator);
+                    var delistDate = GetDelistingDate(
+                        _settings.Start,
+                        _settings.End,
+                        randomValueGenerator
+                    );
                     var willBeDelisted = randomValueGenerator.NextBool(1.0);
 
                     // Companies rarely IPO then disappear within 6 months
-                    if (willBeDelisted && tickHistory.Select(tick => tick.Time.Month).Distinct().Count() <= 6)
+                    if (
+                        willBeDelisted
+                        && tickHistory.Select(tick => tick.Time.Month).Distinct().Count() <= 6
+                    )
                     {
                         willBeDelisted = false;
                     }
@@ -142,9 +165,10 @@ namespace QuantConnect.ToolBox.RandomDataGenerator
                         symbolGenerator,
                         random,
                         delistDate,
-                        willBeDelisted);
+                        willBeDelisted
+                    );
 
-                    // Keep track of renamed symbols and the time they were renamed. 
+                    // Keep track of renamed symbols and the time they were renamed.
                     var renamedSymbols = new Dictionary<Symbol, DateTime>();
 
                     if (_settings.SecurityType == SecurityType.Equity)
@@ -153,14 +177,23 @@ namespace QuantConnect.ToolBox.RandomDataGenerator
 
                         if (!willBeDelisted)
                         {
-                            dividendsSplitsMaps.DividendsSplits.Add(new CorporateFactorRow(new DateTime(2050, 12, 31), 1m, 1m));
+                            dividendsSplitsMaps.DividendsSplits.Add(
+                                new CorporateFactorRow(new DateTime(2050, 12, 31), 1m, 1m)
+                            );
 
                             if (dividendsSplitsMaps.MapRows.Count > 1)
                             {
                                 // Remove the last element if we're going to have a 20501231 entry
-                                dividendsSplitsMaps.MapRows.RemoveAt(dividendsSplitsMaps.MapRows.Count - 1);
+                                dividendsSplitsMaps.MapRows.RemoveAt(
+                                    dividendsSplitsMaps.MapRows.Count - 1
+                                );
                             }
-                            dividendsSplitsMaps.MapRows.Add(new MapFileRow(new DateTime(2050, 12, 31), dividendsSplitsMaps.CurrentSymbol.Value));
+                            dividendsSplitsMaps.MapRows.Add(
+                                new MapFileRow(
+                                    new DateTime(2050, 12, 31),
+                                    dividendsSplitsMaps.CurrentSymbol.Value
+                                )
+                            );
                         }
 
                         // If the Symbol value has changed, update the current Symbol
@@ -170,12 +203,18 @@ namespace QuantConnect.ToolBox.RandomDataGenerator
                             // We skip the first row as it contains the listing event instead of a rename event
                             foreach (var renameEvent in dividendsSplitsMaps.MapRows.Skip(1))
                             {
-                                // Symbol.UpdateMappedSymbol does not update the underlying security ID Symbol, which 
+                                // Symbol.UpdateMappedSymbol does not update the underlying security ID Symbol, which
                                 // is used to create the hash code. Create a new equity Symbol from scratch instead.
-                                symbol = Symbol.Create(renameEvent.MappedSymbol, SecurityType.Equity, _settings.Market);
+                                symbol = Symbol.Create(
+                                    renameEvent.MappedSymbol,
+                                    SecurityType.Equity,
+                                    _settings.Market
+                                );
                                 renamedSymbols.Add(symbol, renameEvent.Date);
 
-                                Log.Trace($"RandomDataGenerator.Run(): Symbol[{count}]: {symbol} will be renamed on {renameEvent.Date}");
+                                Log.Trace(
+                                    $"RandomDataGenerator.Run(): Symbol[{count}]: {symbol} will be renamed on {renameEvent.Date}"
+                                );
                             }
                         }
                         else
@@ -187,13 +226,19 @@ namespace QuantConnect.ToolBox.RandomDataGenerator
                         symbol = dividendsSplitsMaps.CurrentSymbol;
 
                         // Write Splits and Dividend events to directory factor_files
-                        var factorFile = new CorporateFactorProvider(symbol.Value, dividendsSplitsMaps.DividendsSplits, _settings.Start);
+                        var factorFile = new CorporateFactorProvider(
+                            symbol.Value,
+                            dividendsSplitsMaps.DividendsSplits,
+                            _settings.Start
+                        );
                         var mapFile = new MapFile(symbol.Value, dividendsSplitsMaps.MapRows);
 
                         factorFile.WriteToFile(symbol);
                         mapFile.WriteToCsv(_settings.Market, symbol.SecurityType);
 
-                        Log.Trace($"RandomDataGenerator.Run(): Symbol[{count}]: {symbol} Dividends, splits, and map files have been written to disk.");
+                        Log.Trace(
+                            $"RandomDataGenerator.Run(): Symbol[{count}]: {symbol} Dividends, splits, and map files have been written to disk."
+                        );
                     }
                     else
                     {
@@ -202,19 +247,39 @@ namespace QuantConnect.ToolBox.RandomDataGenerator
                     }
 
                     // define aggregators via settings
-                    var aggregators = CreateAggregators(_settings, tickTypesPerSecurityType[currentSymbol.SecurityType].ToArray()).ToList();
+                    var aggregators = CreateAggregators(
+                            _settings,
+                            tickTypesPerSecurityType[currentSymbol.SecurityType].ToArray()
+                        )
+                        .ToList();
                     Symbol previousSymbol = null;
                     var currentCount = 0;
                     var monthsTrading = 0;
 
                     foreach (var renamed in renamedSymbols)
                     {
-                        var previousRenameDate = previousSymbol == null ? new DateTime(1, 1, 1) : renamedSymbols[previousSymbol];
-                        var previousRenameDateDay = new DateTime(previousRenameDate.Year, previousRenameDate.Month, previousRenameDate.Day);
+                        var previousRenameDate =
+                            previousSymbol == null
+                                ? new DateTime(1, 1, 1)
+                                : renamedSymbols[previousSymbol];
+                        var previousRenameDateDay = new DateTime(
+                            previousRenameDate.Year,
+                            previousRenameDate.Month,
+                            previousRenameDate.Day
+                        );
                         var renameDate = renamed.Value;
-                        var renameDateDay = new DateTime(renameDate.Year, renameDate.Month, renameDate.Day);
+                        var renameDateDay = new DateTime(
+                            renameDate.Year,
+                            renameDate.Month,
+                            renameDate.Day
+                        );
 
-                        foreach (var tick in tickHistory.Where(tick => tick.Time >= previousRenameDate && previousRenameDateDay != TickDay(tick)))
+                        foreach (
+                            var tick in tickHistory.Where(tick =>
+                                tick.Time >= previousRenameDate
+                                && previousRenameDateDay != TickDay(tick)
+                            )
+                        )
                         {
                             // Prevents the aggregator from being updated with ticks after the rename event
                             if (TickDay(tick) > renameDateDay)
@@ -224,7 +289,9 @@ namespace QuantConnect.ToolBox.RandomDataGenerator
 
                             if (tick.Time.Month != previousMonth)
                             {
-                                Log.Trace($"RandomDataGenerator.Run(): Symbol[{count}]: Month: {tick.Time:MMMM}");
+                                Log.Trace(
+                                    $"RandomDataGenerator.Run(): Symbol[{count}]: Month: {tick.Time:MMMM}"
+                                );
                                 previousMonth = tick.Time.Month;
                                 monthsTrading++;
                             }
@@ -237,7 +304,9 @@ namespace QuantConnect.ToolBox.RandomDataGenerator
 
                             if (monthsTrading >= 6 && willBeDelisted && tick.Time > delistDate)
                             {
-                                Log.Trace($"RandomDataGenerator.Run(): Symbol[{count}]: {renamed.Key} delisted at {tick.Time:MMMM yyyy}");
+                                Log.Trace(
+                                    $"RandomDataGenerator.Run(): Symbol[{count}]: {renamed.Key} delisted at {tick.Time:MMMM yyyy}"
+                                );
                                 break;
                             }
                         }
@@ -246,23 +315,38 @@ namespace QuantConnect.ToolBox.RandomDataGenerator
                         // and the current progress is twice the current, but less one because we haven't finished writing data yet
                         progress = 100 * (2 * count - 1) / (2.0 * _settings.SymbolCount);
 
-                        Log.Trace($"RandomDataGenerator.Run(): Symbol[{count}]: {renamed.Key} Progress: {progress:0.0}% - Saving data in LEAN format");
+                        Log.Trace(
+                            $"RandomDataGenerator.Run(): Symbol[{count}]: {renamed.Key} Progress: {progress:0.0}% - Saving data in LEAN format"
+                        );
 
                         // persist consolidated data to disk
                         foreach (var item in aggregators)
                         {
-                            var writer = new LeanDataWriter(item.Resolution, renamed.Key, Globals.DataFolder, item.TickType);
+                            var writer = new LeanDataWriter(
+                                item.Resolution,
+                                renamed.Key,
+                                Globals.DataFolder,
+                                item.TickType
+                            );
 
                             // send the flushed data into the writer. pulling the flushed list is very important,
                             // lest we likely wouldn't get the last piece of data stuck in the consolidator
                             // Filter out the data we're going to write here because filtering them in the consolidator update phase
                             // makes it write all dates for some unknown reason
-                            writer.Write(item.Flush().Where(data => data.Time > previousRenameDate && previousRenameDateDay != DataDay(data)));
+                            writer.Write(
+                                item.Flush()
+                                    .Where(data =>
+                                        data.Time > previousRenameDate
+                                        && previousRenameDateDay != DataDay(data)
+                                    )
+                            );
                         }
 
                         // update progress
                         progress = 100 * (2 * count) / (2.0 * _settings.SymbolCount);
-                        Log.Trace($"RandomDataGenerator.Run(): Symbol[{count}]: {symbol} Progress: {progress:0.0}% - Symbol data generation and output completed");
+                        Log.Trace(
+                            $"RandomDataGenerator.Run(): Symbol[{count}]: {symbol} Progress: {progress:0.0}% - Symbol data generation and output completed"
+                        );
 
                         previousSymbol = renamed.Key;
                         currentCount++;
@@ -287,7 +371,11 @@ namespace QuantConnect.ToolBox.RandomDataGenerator
             return start_time;
         }
 
-        public static DateTime GetDelistingDate(DateTime start, DateTime end, RandomValueGenerator randomValueGenerator)
+        public static DateTime GetDelistingDate(
+            DateTime start,
+            DateTime end,
+            RandomValueGenerator randomValueGenerator
+        )
         {
             var mid_point = GetDateMidpoint(start, end);
             var delist_Date = randomValueGenerator.NextDate(mid_point, end, null);
@@ -296,14 +384,22 @@ namespace QuantConnect.ToolBox.RandomDataGenerator
             return delist_Date;
         }
 
-        public static IEnumerable<TickAggregator> CreateAggregators(RandomDataGeneratorSettings settings, TickType[] tickTypes)
+        public static IEnumerable<TickAggregator> CreateAggregators(
+            RandomDataGeneratorSettings settings,
+            TickType[] tickTypes
+        )
         {
             // create default aggregators for tick type/resolution
-            foreach (var tickAggregator in TickAggregator.ForTickTypes(settings.SecurityType, settings.Resolution, tickTypes))
+            foreach (
+                var tickAggregator in TickAggregator.ForTickTypes(
+                    settings.SecurityType,
+                    settings.Resolution,
+                    tickTypes
+                )
+            )
             {
                 yield return tickAggregator;
             }
-
 
             // ensure we have a daily consolidator when coarse is enabled
             if (settings.IncludeCoarse && settings.Resolution != Resolution.Daily)
@@ -311,11 +407,15 @@ namespace QuantConnect.ToolBox.RandomDataGenerator
                 // prefer trades for coarse - in practice equity only does trades, but leaving this as configurable
                 if (tickTypes.Contains(TickType.Trade))
                 {
-                    yield return TickAggregator.ForTickTypes(settings.SecurityType, Resolution.Daily, TickType.Trade).Single();
+                    yield return TickAggregator
+                        .ForTickTypes(settings.SecurityType, Resolution.Daily, TickType.Trade)
+                        .Single();
                 }
                 else
                 {
-                    yield return TickAggregator.ForTickTypes(settings.SecurityType, Resolution.Daily, TickType.Quote).Single();
+                    yield return TickAggregator
+                        .ForTickTypes(settings.SecurityType, Resolution.Daily, TickType.Quote)
+                        .Single();
                 }
             }
         }

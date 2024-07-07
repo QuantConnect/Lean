@@ -14,11 +14,11 @@
 */
 
 using System;
-using QuantConnect.Util;
-using QuantConnect.Logging;
+using System.Collections.Generic;
 using System.Threading.Tasks;
 using QuantConnect.Interfaces;
-using System.Collections.Generic;
+using QuantConnect.Logging;
+using QuantConnect.Util;
 
 namespace QuantConnect.Data.Auxiliary
 {
@@ -73,7 +73,7 @@ namespace QuantConnect.Data.Auxiliary
             {
                 return;
             }
-            
+
             _mapFileProvider = mapFileProvider;
             _dataProvider = dataProvider;
             StartExpirationTask();
@@ -132,7 +132,11 @@ namespace QuantConnect.Data.Auxiliary
 
             do
             {
-                var factorFilePath = FactorFileZipHelper.GetFactorFileZipFileName(market, date, key.SecurityType);
+                var factorFilePath = FactorFileZipHelper.GetFactorFileZipFileName(
+                    market,
+                    date,
+                    key.SecurityType
+                );
 
                 // Fetch a stream for our zip from our data provider
                 var stream = _dataProvider.Fetch(factorFilePath);
@@ -141,29 +145,41 @@ namespace QuantConnect.Data.Auxiliary
                 if (stream != null)
                 {
                     var mapFileResolver = _mapFileProvider.Get(key);
-                    foreach (var keyValuePair in FactorFileZipHelper.ReadFactorFileZip(stream, mapFileResolver, market, key.SecurityType))
+                    foreach (
+                        var keyValuePair in FactorFileZipHelper.ReadFactorFileZip(
+                            stream,
+                            mapFileResolver,
+                            market,
+                            key.SecurityType
+                        )
+                    )
                     {
                         // we merge with existing, this will allow to hold multiple markets
                         _factorFiles[keyValuePair.Key] = keyValuePair.Value;
                     }
                     stream.DisposeSafely();
-                    Log.Trace($"LocalZipFactorFileProvider.Get({market}): Fetched factor files for: {date.ToShortDateString()} NY");
+                    Log.Trace(
+                        $"LocalZipFactorFileProvider.Get({market}): Fetched factor files for: {date.ToShortDateString()} NY"
+                    );
 
                     return;
                 }
 
                 // Otherwise we will search back another day
-                Log.Debug($"LocalZipFactorFileProvider.Get({market}): No factor file found for date {date.ToShortDateString()}");
+                Log.Debug(
+                    $"LocalZipFactorFileProvider.Get({market}): No factor file found for date {date.ToShortDateString()}"
+                );
 
                 // prevent infinite recursion if something is wrong
                 if (count++ > 7)
                 {
-                    throw new InvalidOperationException($"LocalZipFactorFileProvider.Get(): Could not find any factor files going all the way back to {date} for {market}");
+                    throw new InvalidOperationException(
+                        $"LocalZipFactorFileProvider.Get(): Could not find any factor files going all the way back to {date} for {market}"
+                    );
                 }
 
                 date = date.AddDays(-1);
-            }
-            while (true);
+            } while (true);
         }
     }
 }

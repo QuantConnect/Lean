@@ -36,26 +36,31 @@ namespace QuantConnect.Data.Fundamental
         /// <summary>
         /// Creates a new instance
         /// </summary>
-        public FundamentalUniverse()
-        {
-        }
+        public FundamentalUniverse() { }
 
         /// <summary>
         /// Creates a new instance
         /// </summary>
         /// <param name="time">The current time</param>
         /// <param name="symbol">The associated symbol</param>
-        public FundamentalUniverse(DateTime time, Symbol symbol) : base(time, symbol)
-        {
-        }
+        public FundamentalUniverse(DateTime time, Symbol symbol)
+            : base(time, symbol) { }
 
         /// <summary>
         /// Return the URL string source of the file. This will be converted to a stream
         /// </summary>
-        public override SubscriptionDataSource GetSource(SubscriptionDataConfig config, DateTime date, bool isLiveMode)
+        public override SubscriptionDataSource GetSource(
+            SubscriptionDataConfig config,
+            DateTime date,
+            bool isLiveMode
+        )
         {
             var path = _factory.GetSource(config, date, isLiveMode).Source;
-            return new SubscriptionDataSource(path, SubscriptionTransportMedium.LocalFile, FileFormat.FoldingCollection);
+            return new SubscriptionDataSource(
+                path,
+                SubscriptionTransportMedium.LocalFile,
+                FileFormat.FoldingCollection
+            );
         }
 
         /// <summary>
@@ -66,7 +71,12 @@ namespace QuantConnect.Data.Fundamental
         /// <param name="date">The current time</param>
         /// <param name="isLiveMode">True if live mode</param>
         /// <returns>A new instance or null</returns>
-        public override BaseData Reader(SubscriptionDataConfig config, string line, DateTime date, bool isLiveMode)
+        public override BaseData Reader(
+            SubscriptionDataConfig config,
+            string line,
+            DateTime date,
+            bool isLiveMode
+        )
         {
             try
             {
@@ -116,9 +126,16 @@ namespace QuantConnect.Data.Fundamental
         /// <param name="selector">The selector function</param>
         /// <param name="universeSettings">The universe settings to use, will default to algorithms if not provided</param>
         /// <returns>A configured new universe instance</returns>
-        public static FundamentalUniverseFactory USA(Func<IEnumerable<Fundamental>, IEnumerable<Symbol>> selector, UniverseSettings universeSettings = null)
+        public static FundamentalUniverseFactory USA(
+            Func<IEnumerable<Fundamental>, IEnumerable<Symbol>> selector,
+            UniverseSettings universeSettings = null
+        )
         {
-            return new FundamentalUniverseFactory(QuantConnect.Market.USA, universeSettings, selector);
+            return new FundamentalUniverseFactory(
+                QuantConnect.Market.USA,
+                universeSettings,
+                selector
+            );
         }
 
         /// <summary>
@@ -127,9 +144,16 @@ namespace QuantConnect.Data.Fundamental
         /// <param name="selector">The selector function</param>
         /// <param name="universeSettings">The universe settings to use, will default to algorithms if not provided</param>
         /// <returns>A configured new universe instance</returns>
-        public static FundamentalUniverseFactory USA(PyObject selector, UniverseSettings universeSettings = null)
+        public static FundamentalUniverseFactory USA(
+            PyObject selector,
+            UniverseSettings universeSettings = null
+        )
         {
-            return new FundamentalUniverseFactory(QuantConnect.Market.USA, universeSettings, selector);
+            return new FundamentalUniverseFactory(
+                QuantConnect.Market.USA,
+                universeSettings,
+                selector
+            );
         }
 
         /// <summary>
@@ -138,9 +162,16 @@ namespace QuantConnect.Data.Fundamental
         /// <param name="selector">The selector function</param>
         /// <param name="universeSettings">The universe settings to use, will default to algorithms if not provided</param>
         /// <returns>A configured new universe instance</returns>
-        public static FundamentalUniverseFactory USA(Func<IEnumerable<Fundamental>, object> selector, UniverseSettings universeSettings = null)
+        public static FundamentalUniverseFactory USA(
+            Func<IEnumerable<Fundamental>, object> selector,
+            UniverseSettings universeSettings = null
+        )
         {
-            return new FundamentalUniverseFactory(QuantConnect.Market.USA, universeSettings, selector);
+            return new FundamentalUniverseFactory(
+                QuantConnect.Market.USA,
+                universeSettings,
+                selector
+            );
         }
     }
 }

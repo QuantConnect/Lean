@@ -1,11 +1,11 @@
 /*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
- * 
- * Licensed under the Apache License, Version 2.0 (the "License"); 
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -53,18 +53,13 @@ namespace QuantConnect.Data.Market
         /// </summary>
         public decimal Spread
         {
-            get
-            {
-                return Math.Abs(Close - Open);
-            }
+            get { return Math.Abs(Close - Open); }
         }
 
         /// <summary>
         /// Initializes a new default instance of the <see cref="RenkoBar"/> class.
         /// </summary>
-        public RenkoBar()
-        {
-        }
+        public RenkoBar() { }
 
         /// <summary>
         /// Initializes a new instance of the <see cref="RenkoBar"/> class with the specified values
@@ -74,8 +69,13 @@ namespace QuantConnect.Data.Market
         /// <param name="brickSize">The size of each renko brick</param>
         /// <param name="open">The opening price for the new bar</param>
         /// <param name="volume">Any initial volume associated with the data</param>
-        public RenkoBar(Symbol symbol, DateTime time, decimal brickSize, 
-            decimal open, decimal volume)
+        public RenkoBar(
+            Symbol symbol,
+            DateTime time,
+            decimal brickSize,
+            decimal open,
+            decimal volume
+        )
         {
             Type = RenkoType.Classic;
 
@@ -101,8 +101,16 @@ namespace QuantConnect.Data.Market
         /// <param name="high">The high price for the new bar</param>
         /// <param name="low">The low price for the new bar</param>
         /// <param name="close">The closing price for the new bar</param>
-        public RenkoBar(Symbol symbol, DateTime start, DateTime endTime,
-            decimal brickSize, decimal open, decimal high, decimal low, decimal close)
+        public RenkoBar(
+            Symbol symbol,
+            DateTime start,
+            DateTime endTime,
+            decimal brickSize,
+            decimal open,
+            decimal high,
+            decimal low,
+            decimal close
+        )
         {
             Type = RenkoType.Wicked;
 
@@ -130,8 +138,10 @@ namespace QuantConnect.Data.Market
                 throw new InvalidOperationException("A \"Wicked\" RenkoBar cannot be updated!");
 
             // can't update a closed renko bar
-            if (IsClosed) return true;
-            if (Start == DateTime.MinValue) Start = time;
+            if (IsClosed)
+                return true;
+            if (Start == DateTime.MinValue)
+                Start = time;
             EndTime = time;
 
             // compute the min/max closes this renko bar can have
@@ -142,13 +152,15 @@ namespace QuantConnect.Data.Market
             Volume += volumeSinceLastUpdate;
 
             // determine if this data caused the bar to close
-            if (currentValue <= lowClose  || currentValue >= highClose)
+            if (currentValue <= lowClose || currentValue >= highClose)
             {
                 IsClosed = true;
             }
 
-            if (Close > High) High = Close;
-            if (Close < Low) Low = Close;
+            if (Close > High)
+                High = Close;
+            if (Close < Low)
+                Low = Close;
 
             return IsClosed;
         }

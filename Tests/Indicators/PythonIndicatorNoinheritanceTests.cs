@@ -64,7 +64,8 @@ class CustomSimpleMovingAverage():
         return self.{(SnakeCase ? "is_ready" : "IsReady")}
 "
                 );
-                var indicator = module.GetAttr("CustomSimpleMovingAverage")
+                var indicator = module
+                    .GetAttr("CustomSimpleMovingAverage")
                     .Invoke("custom".ToPython(), 14.ToPython());
 
                 return new PythonIndicator(indicator);
@@ -96,7 +97,10 @@ class CustomSimpleMovingAverage():
                     }
                     if (closeIndex * targetIndex < 0)
                     {
-                        Assert.Fail($"Didn't find one of 'Close' or '{line}' in the header: ", TestColumnName);
+                        Assert.Fail(
+                            $"Didn't find one of 'Close' or '{line}' in the header: ",
+                            TestColumnName
+                        );
                     }
 
                     continue;

@@ -14,24 +14,24 @@
 */
 
 using System;
-using NodaTime;
-using QuantConnect.Data;
-using QuantConnect.Orders;
-using QuantConnect.Storage;
-using QuantConnect.Benchmarks;
-using QuantConnect.Brokerages;
-using QuantConnect.Scheduling;
-using QuantConnect.Securities;
-using QuantConnect.Statistics;
-using QuantConnect.Data.Market;
-using QuantConnect.Notifications;
-using System.Collections.Generic;
 using System.Collections.Concurrent;
-using QuantConnect.Securities.Future;
-using QuantConnect.Securities.Option;
-using QuantConnect.Data.UniverseSelection;
+using System.Collections.Generic;
+using NodaTime;
 using QuantConnect.Algorithm.Framework.Alphas;
 using QuantConnect.Algorithm.Framework.Alphas.Analysis;
+using QuantConnect.Benchmarks;
+using QuantConnect.Brokerages;
+using QuantConnect.Data;
+using QuantConnect.Data.Market;
+using QuantConnect.Data.UniverseSelection;
+using QuantConnect.Notifications;
+using QuantConnect.Orders;
+using QuantConnect.Scheduling;
+using QuantConnect.Securities;
+using QuantConnect.Securities.Future;
+using QuantConnect.Securities.Option;
+using QuantConnect.Statistics;
+using QuantConnect.Storage;
 
 namespace QuantConnect.Interfaces
 {
@@ -57,159 +57,99 @@ namespace QuantConnect.Interfaces
         /// <summary>
         /// Gets the time keeper instance
         /// </summary>
-        ITimeKeeper TimeKeeper
-        {
-            get;
-        }
+        ITimeKeeper TimeKeeper { get; }
 
         /// <summary>
         /// Data subscription manager controls the information and subscriptions the algorithms recieves.
         /// Subscription configurations can be added through the Subscription Manager.
         /// </summary>
-        SubscriptionManager SubscriptionManager
-        {
-            get;
-        }
+        SubscriptionManager SubscriptionManager { get; }
 
         /// <summary>
         /// The project id associated with this algorithm if any
         /// </summary>
-        int ProjectId
-        {
-            get;
-            set;
-        }
+        int ProjectId { get; set; }
 
         /// <summary>
         /// Security object collection class stores an array of objects representing representing each security/asset
         /// we have a subscription for.
         /// </summary>
         /// <remarks>It is an IDictionary implementation and can be indexed by symbol</remarks>
-        SecurityManager Securities
-        {
-            get;
-        }
+        SecurityManager Securities { get; }
 
         /// <summary>
         /// Gets the collection of universes for the algorithm
         /// </summary>
-        UniverseManager UniverseManager
-        {
-            get;
-        }
+        UniverseManager UniverseManager { get; }
 
         /// <summary>
         /// Security portfolio management class provides wrapper and helper methods for the Security.Holdings class such as
         /// IsLong, IsShort, TotalProfit
         /// </summary>
         /// <remarks>Portfolio is a wrapper and helper class encapsulating the Securities[].Holdings objects</remarks>
-        SecurityPortfolioManager Portfolio
-        {
-            get;
-        }
+        SecurityPortfolioManager Portfolio { get; }
 
         /// <summary>
         /// Security transaction manager class controls the store and processing of orders.
         /// </summary>
         /// <remarks>The orders and their associated events are accessible here. When a new OrderEvent is recieved the algorithm portfolio is updated.</remarks>
-        SecurityTransactionManager Transactions
-        {
-            get;
-        }
+        SecurityTransactionManager Transactions { get; }
 
         /// <summary>
         /// Gets the brokerage model used to emulate a real brokerage
         /// </summary>
-        IBrokerageModel BrokerageModel
-        {
-            get;
-        }
+        IBrokerageModel BrokerageModel { get; }
 
         /// <summary>
         /// Gets the brokerage name.
         /// </summary>
-        BrokerageName BrokerageName
-        {
-            get;
-        }
+        BrokerageName BrokerageName { get; }
 
         /// <summary>
         /// Gets the risk free interest rate model used to get the interest rates
         /// </summary>
-        IRiskFreeInterestRateModel RiskFreeInterestRateModel
-        {
-            get;
-        }
+        IRiskFreeInterestRateModel RiskFreeInterestRateModel { get; }
 
         /// <summary>
         /// Gets the brokerage message handler used to decide what to do
         /// with each message sent from the brokerage
         /// </summary>
-        IBrokerageMessageHandler BrokerageMessageHandler
-        {
-            get;
-            set;
-        }
+        IBrokerageMessageHandler BrokerageMessageHandler { get; set; }
 
         /// <summary>
         /// Notification manager for storing and processing live event messages
         /// </summary>
-        NotificationManager Notify
-        {
-            get;
-        }
+        NotificationManager Notify { get; }
 
         /// <summary>
         /// Gets schedule manager for adding/removing scheduled events
         /// </summary>
-        ScheduleManager Schedule
-        {
-            get;
-        }
+        ScheduleManager Schedule { get; }
 
         /// <summary>
         /// Gets or sets the history provider for the algorithm
         /// </summary>
-        IHistoryProvider HistoryProvider
-        {
-            get;
-            set;
-        }
+        IHistoryProvider HistoryProvider { get; set; }
 
         /// <summary>
         /// Gets or sets the current status of the algorithm
         /// </summary>
-        AlgorithmStatus Status
-        {
-            get;
-            set;
-        }
+        AlgorithmStatus Status { get; set; }
 
         /// <summary>
         /// Gets whether or not this algorithm is still warming up
         /// </summary>
-        bool IsWarmingUp
-        {
-            get;
-        }
+        bool IsWarmingUp { get; }
 
         /// <summary>
         /// Public name for the algorithm.
         /// </summary>
-        string Name
-        {
-            get;
-            set;
-        }
+        string Name { get; set; }
 
         /// <summary>
         /// A list of tags associated with the algorithm or the backtest, useful for categorization
         /// </summary>
-        HashSet<string> Tags
-        {
-            get;
-            set;
-        }
+        HashSet<string> Tags { get; set; }
 
         /// <summary>
         /// Event fired algorithm's name is changed
@@ -224,180 +164,113 @@ namespace QuantConnect.Interfaces
         /// <summary>
         /// Current date/time in the algorithm's local time zone
         /// </summary>
-        DateTime Time
-        {
-            get;
-        }
+        DateTime Time { get; }
 
         /// <summary>
         /// Gets the time zone of the algorithm
         /// </summary>
-        DateTimeZone TimeZone
-        {
-            get;
-        }
+        DateTimeZone TimeZone { get; }
 
         /// <summary>
         /// Current date/time in UTC.
         /// </summary>
-        DateTime UtcTime
-        {
-            get;
-        }
+        DateTime UtcTime { get; }
 
         /// <summary>
         /// Algorithm start date for backtesting, set by the SetStartDate methods.
         /// </summary>
-        DateTime StartDate
-        {
-            get;
-        }
+        DateTime StartDate { get; }
 
         /// <summary>
         /// Get Requested Backtest End Date
         /// </summary>
-        DateTime EndDate
-        {
-            get;
-        }
+        DateTime EndDate { get; }
 
         /// <summary>
         /// AlgorithmId for the backtest
         /// </summary>
-        string AlgorithmId
-        {
-            get;
-        }
+        string AlgorithmId { get; }
 
         /// <summary>
         /// Algorithm is running on a live server.
         /// </summary>
-        bool LiveMode
-        {
-            get;
-        }
+        bool LiveMode { get; }
 
         /// <summary>
         /// Algorithm running mode.
         /// </summary>
-        AlgorithmMode AlgorithmMode
-        {
-            get;
-        }
+        AlgorithmMode AlgorithmMode { get; }
 
         /// <summary>
         /// Deployment target, either local or cloud.
         /// </summary>
-        DeploymentTarget DeploymentTarget
-        {
-            get;
-        }
+        DeploymentTarget DeploymentTarget { get; }
 
         /// <summary>
         /// Gets the subscription settings to be used when adding securities via universe selection
         /// </summary>
-        UniverseSettings UniverseSettings
-        {
-            get;
-        }
+        UniverseSettings UniverseSettings { get; }
 
         /// <summary>
         /// Debug messages from the strategy:
         /// </summary>
-        ConcurrentQueue<string> DebugMessages
-        {
-            get;
-        }
+        ConcurrentQueue<string> DebugMessages { get; }
 
         /// <summary>
         /// Error messages from the strategy:
         /// </summary>
-        ConcurrentQueue<string> ErrorMessages
-        {
-            get;
-        }
+        ConcurrentQueue<string> ErrorMessages { get; }
 
         /// <summary>
         /// Log messages from the strategy:
         /// </summary>
-        ConcurrentQueue<string> LogMessages
-        {
-            get;
-        }
+        ConcurrentQueue<string> LogMessages { get; }
 
         /// <summary>
         /// Gets the run time error from the algorithm, or null if none was encountered.
         /// </summary>
-        Exception RunTimeError
-        {
-            get;
-            set;
-        }
+        Exception RunTimeError { get; set; }
 
         /// <summary>
         /// Customizable dynamic statistics displayed during live trading:
         /// </summary>
-        ConcurrentDictionary<string, string> RuntimeStatistics
-        {
-            get;
-        }
+        ConcurrentDictionary<string, string> RuntimeStatistics { get; }
 
         /// <summary>
         /// The current algorithm statistics for the running algorithm.
         /// </summary>
-        StatisticsResults Statistics
-        {
-            get;
-        }
+        StatisticsResults Statistics { get; }
 
         /// <summary>
         /// Gets the function used to define the benchmark. This function will return
         /// the value of the benchmark at a requested date/time
         /// </summary>
-        IBenchmark Benchmark
-        {
-            get;
-        }
+        IBenchmark Benchmark { get; }
 
         /// <summary>
         /// Gets the Trade Builder to generate trades from executions
         /// </summary>
-        ITradeBuilder TradeBuilder
-        {
-            get;
-        }
+        ITradeBuilder TradeBuilder { get; }
 
         /// <summary>
         /// Gets the user settings for the algorithm
         /// </summary>
-        IAlgorithmSettings Settings
-        {
-            get;
-        }
+        IAlgorithmSettings Settings { get; }
 
         /// <summary>
         /// Gets the option chain provider, used to get the list of option contracts for an underlying symbol
         /// </summary>
-        IOptionChainProvider OptionChainProvider
-        {
-            get;
-        }
+        IOptionChainProvider OptionChainProvider { get; }
 
         /// <summary>
         /// Gets the future chain provider, used to get the list of future contracts for an underlying symbol
         /// </summary>
-        IFutureChainProvider FutureChainProvider
-        {
-            get;
-        }
+        IFutureChainProvider FutureChainProvider { get; }
 
         /// <summary>
         /// Gets the insight manager
         /// </summary>
-        InsightManager Insights
-        {
-            get;
-        }
+        InsightManager Insights { get; }
 
         /// <summary>
         /// Gets the object store, used for persistence
@@ -699,8 +572,17 @@ namespace QuantConnect.Interfaces
         /// <param name="extendedMarketHours">ExtendedMarketHours send in data from 4am - 8pm, not used for FOREX</param>
         /// <param name="dataMappingMode">The contract mapping mode to use for the security</param>
         /// <param name="dataNormalizationMode">The price scaling mode to use for the security</param>
-        Security AddSecurity(SecurityType securityType, string symbol, Resolution? resolution, string market, bool fillForward, decimal leverage, bool extendedMarketHours,
-            DataMappingMode? dataMappingMode = null, DataNormalizationMode? dataNormalizationMode = null);
+        Security AddSecurity(
+            SecurityType securityType,
+            string symbol,
+            Resolution? resolution,
+            string market,
+            bool fillForward,
+            decimal leverage,
+            bool extendedMarketHours,
+            DataMappingMode? dataMappingMode = null,
+            DataNormalizationMode? dataNormalizationMode = null
+        );
 
         /// <summary>
         /// Set a required SecurityType-symbol and resolution for algorithm
@@ -715,8 +597,16 @@ namespace QuantConnect.Interfaces
         /// <param name="contractDepthOffset">The continuous contract desired offset from the current front month.
         /// For example, 0 (default) will use the front month, 1 will use the back month contract</param>
         /// <returns>The new Security that was added to the algorithm</returns>
-        Security AddSecurity(Symbol symbol, Resolution? resolution = null, bool fillForward = true, decimal leverage = Security.NullLeverage, bool extendedMarketHours = false,
-            DataMappingMode? dataMappingMode = null, DataNormalizationMode? dataNormalizationMode = null, int contractDepthOffset = 0);
+        Security AddSecurity(
+            Symbol symbol,
+            Resolution? resolution = null,
+            bool fillForward = true,
+            decimal leverage = Security.NullLeverage,
+            bool extendedMarketHours = false,
+            DataMappingMode? dataMappingMode = null,
+            DataNormalizationMode? dataNormalizationMode = null,
+            int contractDepthOffset = 0
+        );
 
         /// <summary>
         /// Creates and adds a new single <see cref="Future"/> contract to the algorithm
@@ -727,7 +617,13 @@ namespace QuantConnect.Interfaces
         /// <param name="leverage">The requested leverage for this equity. Default is set by <see cref="SecurityInitializer"/></param>
         /// <param name="extendedMarketHours">Show the after market data as well</param>
         /// <returns>The new <see cref="Future"/> security</returns>
-        Future AddFutureContract(Symbol symbol, Resolution? resolution = null, bool fillForward = true, decimal leverage = 0m, bool extendedMarketHours = false);
+        Future AddFutureContract(
+            Symbol symbol,
+            Resolution? resolution = null,
+            bool fillForward = true,
+            decimal leverage = 0m,
+            bool extendedMarketHours = false
+        );
 
         /// <summary>
         /// Creates and adds a new single <see cref="Option"/> contract to the algorithm
@@ -738,7 +634,13 @@ namespace QuantConnect.Interfaces
         /// <param name="leverage">The requested leverage for this equity. Default is set by <see cref="SecurityInitializer"/></param>
         /// <param name="extendedMarketHours">Show the after market data as well</param>
         /// <returns>The new <see cref="Option"/> security</returns>
-        Option AddOptionContract(Symbol symbol, Resolution? resolution = null, bool fillForward = true, decimal leverage = 0m, bool extendedMarketHours = false);
+        Option AddOptionContract(
+            Symbol symbol,
+            Resolution? resolution = null,
+            bool fillForward = true,
+            decimal leverage = 0m,
+            bool extendedMarketHours = false
+        );
 
         /// <summary>
         /// Removes the security with the specified symbol. This will cancel all

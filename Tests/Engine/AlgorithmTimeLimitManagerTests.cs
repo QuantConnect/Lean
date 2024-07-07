@@ -46,21 +46,28 @@ namespace QuantConnect.Tests.Engine
         public void StopsAlgorithm()
         {
             Config.Set("algorithm-manager-time-loop-maximum", "0.05");
-            var parameter = new RegressionTests.AlgorithmStatisticsTestParameters(nameof(TrainingInitializeRegressionAlgorithm),
+            var parameter = new RegressionTests.AlgorithmStatisticsTestParameters(
+                nameof(TrainingInitializeRegressionAlgorithm),
                 new Dictionary<string, string>(),
                 Language.CSharp,
-                AlgorithmStatus.RuntimeError);
+                AlgorithmStatus.RuntimeError
+            );
 
-            AlgorithmRunner.RunLocalBacktest(parameter.Algorithm,
+            AlgorithmRunner.RunLocalBacktest(
+                parameter.Algorithm,
                 parameter.Statistics,
                 parameter.Language,
-                parameter.ExpectedFinalStatus);
+                parameter.ExpectedFinalStatus
+            );
         }
 
         [Test]
         public void RaceCondition()
         {
-            var timeManager = new AlgorithmTimeLimitManager(TokenBucket.Null, TimeSpan.FromMinutes(1));
+            var timeManager = new AlgorithmTimeLimitManager(
+                TokenBucket.Null,
+                TimeSpan.FromMinutes(1)
+            );
 
             const int loops = 1000000;
             var task = Task.Factory.StartNew(() =>

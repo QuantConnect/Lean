@@ -13,9 +13,9 @@
  * limitations under the License.
 */
 
-using QuantConnect.Data;
 using System;
 using System.Collections.Generic;
+using QuantConnect.Data;
 
 namespace QuantConnect.Statistics
 {
@@ -64,12 +64,22 @@ namespace QuantConnect.Statistics
             int winningTransactions,
             int losingTransactions,
             IRiskFreeInterestRateModel riskFreeInterestRateModel,
-            int tradingDaysPerYear)
+            int tradingDaysPerYear
+        )
         {
-
             TradeStatistics = new TradeStatistics(trades);
-            PortfolioStatistics = new PortfolioStatistics(profitLoss, equity, portfolioTurnover, listPerformance, listBenchmark, startingCapital,
-                riskFreeInterestRateModel, tradingDaysPerYear, winningTransactions, losingTransactions);
+            PortfolioStatistics = new PortfolioStatistics(
+                profitLoss,
+                equity,
+                portfolioTurnover,
+                listPerformance,
+                listBenchmark,
+                startingCapital,
+                riskFreeInterestRateModel,
+                tradingDaysPerYear,
+                winningTransactions,
+                losingTransactions
+            );
             ClosedTrades = trades;
         }
 
@@ -82,6 +92,5 @@ namespace QuantConnect.Statistics
             PortfolioStatistics = new PortfolioStatistics();
             ClosedTrades = new List<Trade>();
         }
-
     }
 }

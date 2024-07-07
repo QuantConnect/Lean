@@ -1,4 +1,4 @@
-/* 
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -14,8 +14,8 @@
 */
 
 using System;
-using System.Linq;
 using System.Collections.Generic;
+using System.Linq;
 using QuantConnect.Data;
 using QuantConnect.Orders;
 
@@ -23,7 +23,9 @@ namespace QuantConnect.Algorithm.CSharp
 {
     public class IndexOptionCallCalendarSpreadAlgorithm : QCAlgorithm
     {
-        private Symbol _vixw, _vxz, _spy;
+        private Symbol _vixw,
+            _vxz,
+            _spy;
         private decimal _multiplier;
         private List<Leg> _legs = new();
         private DateTime _firstExpiry = DateTime.MaxValue;
@@ -59,15 +61,19 @@ namespace QuantConnect.Algorithm.CSharp
             }
 
             // Get the OptionChain
-            if (!slice.OptionChains.TryGetValue(_vixw, out var chain)) return;
+            if (!slice.OptionChains.TryGetValue(_vixw, out var chain))
+                return;
 
             // Get ATM strike price
             var strike = chain.MinBy(x => Math.Abs(x.Strike - chain.Underlying.Value)).Strike;
-            
+
             // Select the ATM call Option contracts and sort by expiration date
-            var calls = chain.Where(x => x.Strike == strike && x.Right == OptionRight.Call)
-                            .OrderBy(x => x.Expiry).ToArray();
-            if (calls.Length < 2) return;
+            var calls = chain
+                .Where(x => x.Strike == strike && x.Right == OptionRight.Call)
+                .OrderBy(x => x.Expiry)
+                .ToArray();
+            if (calls.Length < 2)
+                return;
             _firstExpiry = calls[0].Expiry;
 
             // Create combo order legs
@@ -78,13 +84,15 @@ namespace QuantConnect.Algorithm.CSharp
                 Leg.Create(_vxz, -100),
                 Leg.Create(_spy, -10)
             };
-            var quantity = Portfolio.TotalPortfolioValue / _legs.Sum(x =>
-            {
-                var value = Math.Abs(Securities[x.Symbol].Price * x.Quantity);
-                return x.Symbol.ID.SecurityType == SecurityType.IndexOption
-                    ? value * _multiplier
-                    : value;
-            });
+            var quantity =
+                Portfolio.TotalPortfolioValue
+                / _legs.Sum(x =>
+                {
+                    var value = Math.Abs(Securities[x.Symbol].Price * x.Quantity);
+                    return x.Symbol.ID.SecurityType == SecurityType.IndexOption
+                        ? value * _multiplier
+                        : value;
+                });
             ComboMarketOrder(_legs, -(int)Math.Floor(quantity), asynchronous: true);
         }
     }

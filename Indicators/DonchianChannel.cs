@@ -13,8 +13,8 @@
  * limitations under the License.
 */
 
-using QuantConnect.Data.Market;
 using System;
+using QuantConnect.Data.Market;
 
 namespace QuantConnect.Indicators
 {
@@ -22,7 +22,7 @@ namespace QuantConnect.Indicators
     /// This indicator computes the upper and lower band of the Donchian Channel.
     /// The upper band is computed by finding the highest high over the given period.
     /// The lower band is computed by finding the lowest low over the given period.
-    /// The primary output value of the indicator is the mean of the upper and lower band for 
+    /// The primary output value of the indicator is the mean of the upper and lower band for
     /// the given timeframe.
     /// </summary>
     public class DonchianChannel : BarIndicator, IIndicatorWarmUpPeriodProvider
@@ -44,9 +44,7 @@ namespace QuantConnect.Indicators
         /// </summary>
         /// <param name="period">The period for both the upper and lower channels.</param>
         public DonchianChannel(int period)
-            : this(period, period)
-        {
-        }
+            : this(period, period) { }
 
         /// <summary>
         /// Initializes a new instance of the <see cref="DonchianChannel"/> class.
@@ -54,9 +52,7 @@ namespace QuantConnect.Indicators
         /// <param name="upperPeriod">The period for the upper channel.</param>
         /// <param name="lowerPeriod">The period for the lower channel</param>
         public DonchianChannel(int upperPeriod, int lowerPeriod)
-            : this($"DCH({lowerPeriod},{lowerPeriod})", upperPeriod, lowerPeriod)
-        {
-        }
+            : this($"DCH({lowerPeriod},{lowerPeriod})", upperPeriod, lowerPeriod) { }
 
         /// <summary>
         /// Initializes a new instance of the <see cref="DonchianChannel"/> class.
@@ -64,9 +60,7 @@ namespace QuantConnect.Indicators
         /// <param name="name">The name.</param>
         /// <param name="period">The period for both the upper and lower channels.</param>
         public DonchianChannel(string name, int period)
-            : this(name, period, period)
-        {
-        }
+            : this(name, period, period) { }
 
         /// <summary>
         /// Initializes a new instance of the <see cref="DonchianChannel"/> class.

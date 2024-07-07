@@ -75,7 +75,9 @@ namespace QuantConnect.Tests.Algorithm.Framework.Portfolio
             collection.AddRange(targets);
 
             Assert.AreEqual(1, collection.Count);
-            collection.AddRange(new[] { new PortfolioTarget(Symbols.IBM, 1), new PortfolioTarget(Symbols.AAPL, 1) });
+            collection.AddRange(
+                new[] { new PortfolioTarget(Symbols.IBM, 1), new PortfolioTarget(Symbols.AAPL, 1) }
+            );
             Assert.AreEqual(3, collection.Count);
 
             collection.Clear();
@@ -98,7 +100,11 @@ namespace QuantConnect.Tests.Algorithm.Framework.Portfolio
         public void AddRange()
         {
             var collection = new PortfolioTargetCollection();
-            var targets = new[] { new PortfolioTarget(Symbols.SPY, 1), new PortfolioTarget(Symbols.AAPL, 1) };
+            var targets = new[]
+            {
+                new PortfolioTarget(Symbols.SPY, 1),
+                new PortfolioTarget(Symbols.AAPL, 1)
+            };
             collection.AddRange(targets);
             Assert.AreEqual(2, collection.Count);
             Assert.IsTrue(collection.ContainsKey(Symbols.SPY));
@@ -116,7 +122,10 @@ namespace QuantConnect.Tests.Algorithm.Framework.Portfolio
         [Test]
         public void RemoveTargetRespectsReference()
         {
-            var symbol = new Symbol(SecurityIdentifier.GenerateBase(null, _symbol, Market.USA), _symbol);
+            var symbol = new Symbol(
+                SecurityIdentifier.GenerateBase(null, _symbol, Market.USA),
+                _symbol
+            );
             var collection = new PortfolioTargetCollection();
             var target = new PortfolioTarget(symbol, 1);
             collection.Add(target);
@@ -130,7 +139,10 @@ namespace QuantConnect.Tests.Algorithm.Framework.Portfolio
         [Test]
         public void AddContainsAndRemoveWork()
         {
-            var symbol = new Symbol(SecurityIdentifier.GenerateBase(null, _symbol, Market.USA), _symbol);
+            var symbol = new Symbol(
+                SecurityIdentifier.GenerateBase(null, _symbol, Market.USA),
+                _symbol
+            );
             var collection = new PortfolioTargetCollection();
             var target = new PortfolioTarget(symbol, 1);
             collection.Add(target);
@@ -145,8 +157,11 @@ namespace QuantConnect.Tests.Algorithm.Framework.Portfolio
         {
             var algorithm = new FakeAlgorithm();
             algorithm.SetFinishedWarmingUp();
-            var symbol = new Symbol(SecurityIdentifier.GenerateEquity(_symbol, Market.USA), _symbol);
-            #pragma warning disable CS0618
+            var symbol = new Symbol(
+                SecurityIdentifier.GenerateEquity(_symbol, Market.USA),
+                _symbol
+            );
+#pragma warning disable CS0618
             var equity = algorithm.AddEquity(symbol);
             var dummySecurityHolding = new FakeSecurityHolding(equity);
             equity.Holdings = dummySecurityHolding;
@@ -163,7 +178,10 @@ namespace QuantConnect.Tests.Algorithm.Framework.Portfolio
         {
             var algorithm = new FakeAlgorithm();
             algorithm.SetFinishedWarmingUp();
-            var symbol = new Symbol(SecurityIdentifier.GenerateEquity(_symbol, Market.USA), _symbol);
+            var symbol = new Symbol(
+                SecurityIdentifier.GenerateEquity(_symbol, Market.USA),
+                _symbol
+            );
             var equity = algorithm.AddEquity(symbol);
             var dummySecurityHolding = new FakeSecurityHolding(equity);
             equity.Holdings = dummySecurityHolding;
@@ -180,7 +198,10 @@ namespace QuantConnect.Tests.Algorithm.Framework.Portfolio
         {
             var algorithm = new FakeAlgorithm();
             algorithm.SetFinishedWarmingUp();
-            var symbol = new Symbol(SecurityIdentifier.GenerateEquity(_symbol, Market.USA), _symbol);
+            var symbol = new Symbol(
+                SecurityIdentifier.GenerateEquity(_symbol, Market.USA),
+                _symbol
+            );
             var equity = algorithm.AddEquity(symbol);
             var dummySecurityHolding = new FakeSecurityHolding(equity);
             equity.Holdings = dummySecurityHolding;
@@ -198,7 +219,10 @@ namespace QuantConnect.Tests.Algorithm.Framework.Portfolio
         {
             var algorithm = new FakeAlgorithm();
             algorithm.SetFinishedWarmingUp();
-            var symbol = new Symbol(SecurityIdentifier.GenerateEquity(_symbol, Market.USA), _symbol);
+            var symbol = new Symbol(
+                SecurityIdentifier.GenerateEquity(_symbol, Market.USA),
+                _symbol
+            );
             var equity = algorithm.AddEquity(symbol);
             var dummySecurityHolding = new FakeSecurityHolding(equity);
             equity.Holdings = dummySecurityHolding;
@@ -217,7 +241,10 @@ namespace QuantConnect.Tests.Algorithm.Framework.Portfolio
             var algorithm = new FakeAlgorithm();
             algorithm.SetFinishedWarmingUp();
             algorithm.Transactions.SetOrderProcessor(new FakeOrderProcessor());
-            var symbol = new Symbol(SecurityIdentifier.GenerateEquity(_symbol, Market.USA), _symbol);
+            var symbol = new Symbol(
+                SecurityIdentifier.GenerateEquity(_symbol, Market.USA),
+                _symbol
+            );
             algorithm.AddEquity(symbol);
 
             var collection = new PortfolioTargetCollection();
@@ -235,7 +262,10 @@ namespace QuantConnect.Tests.Algorithm.Framework.Portfolio
             var algorithm = new FakeAlgorithm();
             algorithm.SetFinishedWarmingUp();
             algorithm.Transactions.SetOrderProcessor(new FakeOrderProcessor());
-            var symbol = new Symbol(SecurityIdentifier.GenerateEquity(_symbol, Market.USA), _symbol);
+            var symbol = new Symbol(
+                SecurityIdentifier.GenerateEquity(_symbol, Market.USA),
+                _symbol
+            );
             var equity = algorithm.AddEquity(symbol);
             equity.Cache.AddData(new TradeBar(DateTime.UtcNow, symbol, 1, 1, 1, 1, 1));
             var collection = new PortfolioTargetCollection();
@@ -255,7 +285,10 @@ namespace QuantConnect.Tests.Algorithm.Framework.Portfolio
             var algorithm = new FakeAlgorithm();
             algorithm.SetFinishedWarmingUp();
             algorithm.Transactions.SetOrderProcessor(new FakeOrderProcessor());
-            var symbol = new Symbol(SecurityIdentifier.GenerateEquity(_symbol, Market.USA), _symbol);
+            var symbol = new Symbol(
+                SecurityIdentifier.GenerateEquity(_symbol, Market.USA),
+                _symbol
+            );
             var equity = algorithm.AddEquity(symbol);
             equity.Cache.AddData(new TradeBar(DateTime.UtcNow, symbol, 1, 1, 1, 1, 1));
             var collection = new PortfolioTargetCollection();
@@ -274,7 +307,10 @@ namespace QuantConnect.Tests.Algorithm.Framework.Portfolio
             var algorithm = new FakeAlgorithm();
             algorithm.SetFinishedWarmingUp();
             algorithm.Transactions.SetOrderProcessor(new FakeOrderProcessor());
-            var symbol = new Symbol(SecurityIdentifier.GenerateEquity(_symbol, Market.USA), _symbol);
+            var symbol = new Symbol(
+                SecurityIdentifier.GenerateEquity(_symbol, Market.USA),
+                _symbol
+            );
             var equity = algorithm.AddEquity(symbol);
             var dummySecurityHolding = new FakeSecurityHolding(equity);
             equity.Holdings = dummySecurityHolding;
@@ -294,15 +330,27 @@ namespace QuantConnect.Tests.Algorithm.Framework.Portfolio
         {
             var orderProcessor = new FakeOrderProcessor();
             var algorithm = GetAlgorithm(orderProcessor);
-            var symbol = new Symbol(SecurityIdentifier.GenerateEquity(_symbol, Market.USA), _symbol);
+            var symbol = new Symbol(
+                SecurityIdentifier.GenerateEquity(_symbol, Market.USA),
+                _symbol
+            );
             var equity = algorithm.AddEquity(symbol);
-            #pragma warning restore CS0618
+#pragma warning restore CS0618
             equity.Cache.AddData(new TradeBar(DateTime.UtcNow, symbol, 1, 1, 1, 1, 1));
             var collection = new PortfolioTargetCollection();
             var target = new PortfolioTarget(symbol, 1);
             collection.Add(target);
 
-            var openOrderRequest = new SubmitOrderRequest(OrderType.Market, symbol.SecurityType, symbol, 1, 0, 0, DateTime.UtcNow, "");
+            var openOrderRequest = new SubmitOrderRequest(
+                OrderType.Market,
+                symbol.SecurityType,
+                symbol,
+                1,
+                0,
+                0,
+                DateTime.UtcNow,
+                ""
+            );
             openOrderRequest.SetOrderId(1);
             var openOrderTicket = new OrderTicket(algorithm.Transactions, openOrderRequest);
 
@@ -324,10 +372,9 @@ namespace QuantConnect.Tests.Algorithm.Framework.Portfolio
 
         private class FakeSecurityHolding : SecurityHolding
         {
-            public FakeSecurityHolding(Security security) :
-                base(security, new IdentityCurrencyConverter(security.QuoteCurrency.Symbol))
-            {
-            }
+            public FakeSecurityHolding(Security security)
+                : base(security, new IdentityCurrencyConverter(security.QuoteCurrency.Symbol)) { }
+
             public void SetQuantity(int quantity)
             {
                 Quantity = quantity;

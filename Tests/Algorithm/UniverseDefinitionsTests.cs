@@ -16,7 +16,6 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-
 using NUnit.Framework;
 using Python.Runtime;
 using QuantConnect.Algorithm;
@@ -34,7 +33,13 @@ namespace QuantConnect.Tests.Algorithm
         {
             var algorithm = new QCAlgorithm();
             var universeDefinitions = algorithm.Universe;
-            var universeSettings = new UniverseSettings(Resolution.Minute, Security.NullLeverage, true, false, TimeSpan.FromDays(1));
+            var universeSettings = new UniverseSettings(
+                Resolution.Minute,
+                Security.NullLeverage,
+                true,
+                false,
+                TimeSpan.FromDays(1)
+            );
 
             List<Universe> etfs = null;
 
@@ -49,7 +54,11 @@ namespace QuantConnect.Tests.Algorithm
                     universeDefinitions.ETF("SPY", Market.USA, universeFilterFunc: Filter),
                     universeDefinitions.ETF("SPY", universeSettings: universeSettings),
                     universeDefinitions.ETF("SPY", universeFilterFunc: Filter),
-                    universeDefinitions.ETF("SPY", universeSettings: universeSettings, universeFilterFunc: Filter),
+                    universeDefinitions.ETF(
+                        "SPY",
+                        universeSettings: universeSettings,
+                        universeFilterFunc: Filter
+                    ),
                     universeDefinitions.ETF(Symbols.SPY),
                     universeDefinitions.ETF(Symbols.SPY, universeSettings),
                     universeDefinitions.ETF(Symbols.SPY, universeFilterFunc: Filter),
@@ -60,7 +69,8 @@ namespace QuantConnect.Tests.Algorithm
             {
                 using (Py.GIL())
                 {
-                    var testModule = PyModule.FromString("testModule",
+                    var testModule = PyModule.FromString(
+                        "testModule",
                         @"
 from typing import List
 from AlgorithmImports import *
@@ -85,11 +95,18 @@ def getETFs(algorithm: QCAlgorithm, symbol: Symbol, universeSettings: UniverseSe
 
 def filterETFs(constituents: List[ETFConstituentData]) -> List[Symbol]:
     return [x.Symbol for x in constituents]
-        ");
+        "
+                    );
 
                     var getETFs = testModule.GetAttr("getETFs");
 
-                    etfs = getETFs.Invoke(algorithm.ToPython(), Symbols.SPY.ToPython(), universeSettings.ToPython()).As<List<Universe>>();
+                    etfs = getETFs
+                        .Invoke(
+                            algorithm.ToPython(),
+                            Symbols.SPY.ToPython(),
+                            universeSettings.ToPython()
+                        )
+                        .As<List<Universe>>();
                 }
             }
 
@@ -102,7 +119,13 @@ def filterETFs(constituents: List[ETFConstituentData]) -> List[Symbol]:
         {
             var algorithm = new QCAlgorithm();
             var universeDefinitions = algorithm.Universe;
-            var universeSettings = new UniverseSettings(Resolution.Minute, Security.NullLeverage, true, false, TimeSpan.FromDays(1));
+            var universeSettings = new UniverseSettings(
+                Resolution.Minute,
+                Security.NullLeverage,
+                true,
+                false,
+                TimeSpan.FromDays(1)
+            );
 
             List<Universe> indexes = null;
 
@@ -117,7 +140,11 @@ def filterETFs(constituents: List[ETFConstituentData]) -> List[Symbol]:
                     universeDefinitions.Index("SPY", Market.USA, universeFilterFunc: Filter),
                     universeDefinitions.Index("SPY", universeSettings: universeSettings),
                     universeDefinitions.Index("SPY", universeFilterFunc: Filter),
-                    universeDefinitions.Index("SPY", universeSettings: universeSettings, universeFilterFunc: Filter),
+                    universeDefinitions.Index(
+                        "SPY",
+                        universeSettings: universeSettings,
+                        universeFilterFunc: Filter
+                    ),
                     universeDefinitions.Index(Symbols.SPY),
                     universeDefinitions.Index(Symbols.SPY, universeSettings),
                     universeDefinitions.Index(Symbols.SPY, universeFilterFunc: Filter),
@@ -128,7 +155,8 @@ def filterETFs(constituents: List[ETFConstituentData]) -> List[Symbol]:
             {
                 using (Py.GIL())
                 {
-                    var testModule = PyModule.FromString("testModule",
+                    var testModule = PyModule.FromString(
+                        "testModule",
                         @"
 from typing import List
 from AlgorithmImports import *
@@ -153,11 +181,18 @@ def getIndexes(algorithm: QCAlgorithm, symbol: Symbol, universeSettings: Univers
 
 def filterIndexes(constituents: List[ETFConstituentData]) -> List[Symbol]:
     return [x.Symbol for x in constituents]
-        ");
+        "
+                    );
 
                     var getIndexes = testModule.GetAttr("getIndexes");
 
-                    indexes = getIndexes.Invoke(algorithm.ToPython(), Symbols.SPY.ToPython(), universeSettings.ToPython()).As<List<Universe>>();
+                    indexes = getIndexes
+                        .Invoke(
+                            algorithm.ToPython(),
+                            Symbols.SPY.ToPython(),
+                            universeSettings.ToPython()
+                        )
+                        .As<List<Universe>>();
                 }
             }
 
@@ -167,8 +202,11 @@ def filterIndexes(constituents: List[ETFConstituentData]) -> List[Symbol]:
         private static void AssertETFConstituentsUniverses(List<Universe> universes)
         {
             CollectionAssert.AllItemsAreNotNull(universes, "Universes should not be null");
-            CollectionAssert.AllItemsAreInstancesOfType(universes, typeof(ETFConstituentsUniverseFactory),
-                "Universes should be of type ETFConstituentsUniverse");
+            CollectionAssert.AllItemsAreInstancesOfType(
+                universes,
+                typeof(ETFConstituentsUniverseFactory),
+                "Universes should be of type ETFConstituentsUniverse"
+            );
         }
 
         private static IEnumerable<Symbol> Filter(IEnumerable<ETFConstituentUniverse> constituents)

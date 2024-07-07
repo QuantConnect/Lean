@@ -38,7 +38,10 @@ namespace QuantConnect.Securities.Option
         /// </summary>
         /// <param name="requiredInTheMoneyPercent">The percent in the money the option has to be to trigger the option assignment</param>
         /// <param name="priorExpiration">For <see cref="OptionStyle.American"/>, the time span prior to expiration were we will try to evaluate option assignment</param>
-        public DefaultOptionAssignmentModel(decimal requiredInTheMoneyPercent = 0.05m, TimeSpan? priorExpiration = null)
+        public DefaultOptionAssignmentModel(
+            decimal requiredInTheMoneyPercent = 0.05m,
+            TimeSpan? priorExpiration = null
+        )
         {
             _priorExpiration = priorExpiration ?? new TimeSpan(4, 0, 0, 0);
             _requiredInTheMoneyPercent = requiredInTheMoneyPercent;
@@ -55,16 +58,29 @@ namespace QuantConnect.Securities.Option
             var underlying = parameters.Option.Underlying;
 
             // we take only options that expire soon
-            if ((option.Symbol.ID.OptionStyle == OptionStyle.American && option.Symbol.ID.Date - option.LocalTime <= _priorExpiration ||
-                option.Symbol.ID.OptionStyle == OptionStyle.European && option.Symbol.ID.Date.Date == option.LocalTime.Date)
+            if (
+                (
+                    option.Symbol.ID.OptionStyle == OptionStyle.American
+                        && option.Symbol.ID.Date - option.LocalTime <= _priorExpiration
+                    || option.Symbol.ID.OptionStyle == OptionStyle.European
+                        && option.Symbol.ID.Date.Date == option.LocalTime.Date
+                )
                 // we take only deep ITM strikes
-                && IsDeepInTheMoney(option))
+                && IsDeepInTheMoney(option)
+            )
             {
                 // we estimate P/L
-                var potentialPnL = EstimateArbitragePnL(option, (OptionHolding)option.Holdings, underlying);
+                var potentialPnL = EstimateArbitragePnL(
+                    option,
+                    (OptionHolding)option.Holdings,
+                    underlying
+                );
                 if (potentialPnL > 0)
                 {
-                    return new OptionAssignmentResult(option.Holdings.AbsoluteQuantity, "Simulated option assignment before expiration");
+                    return new OptionAssignmentResult(
+                        option.Holdings.AbsoluteQuantity,
+                        "Simulated option assignment before expiration"
+                    );
                 }
             }
 
@@ -82,13 +98,19 @@ namespace QuantConnect.Securities.Option
             // option.StrikePrice
             var result =
                 symbol.ID.OptionRight == OptionRight.Call
-                    ? (underlyingPrice - option.ScaledStrikePrice) / underlyingPrice > _requiredInTheMoneyPercent
-                    : (option.ScaledStrikePrice - underlyingPrice) / underlyingPrice > _requiredInTheMoneyPercent;
+                    ? (underlyingPrice - option.ScaledStrikePrice) / underlyingPrice
+                        > _requiredInTheMoneyPercent
+                    : (option.ScaledStrikePrice - underlyingPrice) / underlyingPrice
+                        > _requiredInTheMoneyPercent;
 
             return result;
         }
 
-        private static decimal EstimateArbitragePnL(Option option, OptionHolding holding, Security underlying)
+        private static decimal EstimateArbitragePnL(
+            Option option,
+            OptionHolding holding,
+            Security underlying
+        )
         {
             // no-arb argument:
             // if our long deep ITM position has a large B/A spread and almost no time value, it may be interesting for us
@@ -100,28 +122,43 @@ namespace QuantConnect.Securities.Option
 
             // we are interested in underlying bid price if we exercise calls and want to sell the underlying immediately.
             // we are interested in underlying ask price if we exercise puts
-            var underlyingPrice = option.Symbol.ID.OptionRight == OptionRight.Call
-                ? underlying.BidPrice
-                : underlying.AskPrice;
+            var underlyingPrice =
+                option.Symbol.ID.OptionRight == OptionRight.Call
+                    ? underlying.BidPrice
+                    : underlying.AskPrice;
 
             // quantity is normally negative algo's holdings, but since we're modeling the contract holder (counter-party)
             // it's negative THEIR holdings. holding.Quantity is negative, so if counter-party exercises, they would reduce holdings
             var underlyingQuantity = option.GetExerciseQuantity(holding.Quantity);
 
             // Scenario 1 (base): we just close option position
-            var marketOrder1 = new MarketOrder(option.Symbol, -holding.Quantity, option.LocalTime.ConvertToUtc(option.Exchange.TimeZone));
-            var orderFee1 = option.FeeModel.GetOrderFee(
-                new OrderFeeParameters(option, marketOrder1)).Value.Amount * option.QuoteCurrency.ConversionRate;
+            var marketOrder1 = new MarketOrder(
+                option.Symbol,
+                -holding.Quantity,
+                option.LocalTime.ConvertToUtc(option.Exchange.TimeZone)
+            );
+            var orderFee1 =
+                option
+                    .FeeModel.GetOrderFee(new OrderFeeParameters(option, marketOrder1))
+                    .Value.Amount * option.QuoteCurrency.ConversionRate;
 
-            var basePnL = (optionPrice - holding.AveragePrice) * -holding.Quantity
-                * option.QuoteCurrency.ConversionRate
-                * option.SymbolProperties.ContractMultiplier
+            var basePnL =
+                (optionPrice - holding.AveragePrice)
+                    * -holding.Quantity
+                    * option.QuoteCurrency.ConversionRate
+                    * option.SymbolProperties.ContractMultiplier
                 - orderFee1;
 
             // Scenario 2 (alternative): we exercise option and then close underlying position
-            var optionExerciseOrder2 = new OptionExerciseOrder(option.Symbol, (int)holding.AbsoluteQuantity, option.LocalTime.ConvertToUtc(option.Exchange.TimeZone));
-            var optionOrderFee2 = option.FeeModel.GetOrderFee(
-                new OrderFeeParameters(option, optionExerciseOrder2)).Value.Amount * option.QuoteCurrency.ConversionRate;
+            var optionExerciseOrder2 = new OptionExerciseOrder(
+                option.Symbol,
+                (int)holding.AbsoluteQuantity,
+                option.LocalTime.ConvertToUtc(option.Exchange.TimeZone)
+            );
+            var optionOrderFee2 =
+                option
+                    .FeeModel.GetOrderFee(new OrderFeeParameters(option, optionExerciseOrder2))
+                    .Value.Amount * option.QuoteCurrency.ConversionRate;
 
             var underlyingOrderFee2Amount = 0m;
 
@@ -129,18 +166,32 @@ namespace QuantConnect.Securities.Option
             // For Physical Delivery, we calculate the order fee since we have to close the position
             if (option.ExerciseSettlement == SettlementType.PhysicalDelivery)
             {
-                var underlyingMarketOrder2 = new MarketOrder(underlying.Symbol, -underlyingQuantity,
-                    underlying.LocalTime.ConvertToUtc(underlying.Exchange.TimeZone));
-                var underlyingOrderFee2 = underlying.FeeModel.GetOrderFee(
-                    new OrderFeeParameters(underlying, underlyingMarketOrder2)).Value.Amount * underlying.QuoteCurrency.ConversionRate;
+                var underlyingMarketOrder2 = new MarketOrder(
+                    underlying.Symbol,
+                    -underlyingQuantity,
+                    underlying.LocalTime.ConvertToUtc(underlying.Exchange.TimeZone)
+                );
+                var underlyingOrderFee2 =
+                    underlying
+                        .FeeModel.GetOrderFee(
+                            new OrderFeeParameters(underlying, underlyingMarketOrder2)
+                        )
+                        .Value.Amount * underlying.QuoteCurrency.ConversionRate;
                 underlyingOrderFee2Amount = underlyingOrderFee2;
             }
 
             // calculating P/L of the two transactions (exercise option and then close underlying position)
-            var altPnL = (underlyingPrice - option.ScaledStrikePrice) * underlyingQuantity * underlying.QuoteCurrency.ConversionRate * option.ContractUnitOfTrade
-                        - underlyingOrderFee2Amount
-                        - holding.AveragePrice * holding.AbsoluteQuantity * option.SymbolProperties.ContractMultiplier * option.QuoteCurrency.ConversionRate
-                        - optionOrderFee2;
+            var altPnL =
+                (underlyingPrice - option.ScaledStrikePrice)
+                    * underlyingQuantity
+                    * underlying.QuoteCurrency.ConversionRate
+                    * option.ContractUnitOfTrade
+                - underlyingOrderFee2Amount
+                - holding.AveragePrice
+                    * holding.AbsoluteQuantity
+                    * option.SymbolProperties.ContractMultiplier
+                    * option.QuoteCurrency.ConversionRate
+                - optionOrderFee2;
 
             return altPnL - basePnL;
         }

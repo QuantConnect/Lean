@@ -37,9 +37,9 @@ namespace QuantConnect.Algorithm.CSharp
         /// </summary>
         public override void Initialize()
         {
-            SetStartDate(2014, 12, 01);  //Set Start Date
-            SetEndDate(2014, 12, 21);    //Set End Date
-            SetCash(100000);             //Set Strategy Cash
+            SetStartDate(2014, 12, 01); //Set Start Date
+            SetEndDate(2014, 12, 21); //Set End Date
+            SetCash(100000); //Set Strategy Cash
 
             AddEquity("SPY", Resolution.Daily);
         }
@@ -55,23 +55,30 @@ namespace QuantConnect.Algorithm.CSharp
                 _added = true;
                 // this should not be done by users but could be done by the BrokerageTransactionHandler
                 // Users: see and use SetCash()
-                Portfolio.CashBook.Add("EUR", 10,0);
+                Portfolio.CashBook.Add("EUR", 10, 0);
             }
             else
             {
                 var cash = Portfolio.CashBook["EUR"];
-                if (cash.CurrencyConversion.GetType() == typeof(ConstantCurrencyConversion) || cash.ConversionRate == 0)
+                if (
+                    cash.CurrencyConversion.GetType() == typeof(ConstantCurrencyConversion)
+                    || cash.ConversionRate == 0
+                )
                 {
                     throw new RegressionTestException("Expected 'EUR' Cash to be fully set");
                 }
 
-                var eurUsdSubscription = SubscriptionManager.SubscriptionDataConfigService
-                    .GetSubscriptionDataConfigs(QuantConnect.Symbol.Create("EURUSD", SecurityType.Forex, Market.Oanda),
-                        includeInternalConfigs: true)
+                var eurUsdSubscription = SubscriptionManager
+                    .SubscriptionDataConfigService.GetSubscriptionDataConfigs(
+                        QuantConnect.Symbol.Create("EURUSD", SecurityType.Forex, Market.Oanda),
+                        includeInternalConfigs: true
+                    )
                     .Single();
                 if (!eurUsdSubscription.IsInternalFeed)
                 {
-                    throw new RegressionTestException("Unexpected not internal 'EURUSD' Subscription");
+                    throw new RegressionTestException(
+                        "Unexpected not internal 'EURUSD' Subscription"
+                    );
                 }
             }
 
@@ -110,35 +117,36 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// This is used by the regression test system to indicate what the expected statistics are from running the algorithm
         /// </summary>
-        public Dictionary<string, string> ExpectedStatistics => new Dictionary<string, string>
-        {
-            {"Total Orders", "1"},
-            {"Average Win", "0%"},
-            {"Average Loss", "0%"},
-            {"Compounding Annual Return", "14.647%"},
-            {"Drawdown", "4.800%"},
-            {"Expectancy", "0"},
-            {"Start Equity", "100000"},
-            {"End Equity", "100819.38"},
-            {"Net Profit", "0.819%"},
-            {"Sharpe Ratio", "0.717"},
-            {"Sortino Ratio", "1.053"},
-            {"Probabilistic Sharpe Ratio", "46.877%"},
-            {"Loss Rate", "0%"},
-            {"Win Rate", "0%"},
-            {"Profit-Loss Ratio", "0"},
-            {"Alpha", "0.001"},
-            {"Beta", "0.996"},
-            {"Annual Standard Deviation", "0.149"},
-            {"Annual Variance", "0.022"},
-            {"Information Ratio", "1.091"},
-            {"Tracking Error", "0.001"},
-            {"Treynor Ratio", "0.108"},
-            {"Total Fees", "$2.75"},
-            {"Estimated Strategy Capacity", "$520000000.00"},
-            {"Lowest Capacity Asset", "SPY R735QTJ8XC9X"},
-            {"Portfolio Turnover", "4.50%"},
-            {"OrderListHash", "3813889e73d97a288cd4152db7ea5f60"}
-        };
+        public Dictionary<string, string> ExpectedStatistics =>
+            new Dictionary<string, string>
+            {
+                { "Total Orders", "1" },
+                { "Average Win", "0%" },
+                { "Average Loss", "0%" },
+                { "Compounding Annual Return", "14.647%" },
+                { "Drawdown", "4.800%" },
+                { "Expectancy", "0" },
+                { "Start Equity", "100000" },
+                { "End Equity", "100819.38" },
+                { "Net Profit", "0.819%" },
+                { "Sharpe Ratio", "0.717" },
+                { "Sortino Ratio", "1.053" },
+                { "Probabilistic Sharpe Ratio", "46.877%" },
+                { "Loss Rate", "0%" },
+                { "Win Rate", "0%" },
+                { "Profit-Loss Ratio", "0" },
+                { "Alpha", "0.001" },
+                { "Beta", "0.996" },
+                { "Annual Standard Deviation", "0.149" },
+                { "Annual Variance", "0.022" },
+                { "Information Ratio", "1.091" },
+                { "Tracking Error", "0.001" },
+                { "Treynor Ratio", "0.108" },
+                { "Total Fees", "$2.75" },
+                { "Estimated Strategy Capacity", "$520000000.00" },
+                { "Lowest Capacity Asset", "SPY R735QTJ8XC9X" },
+                { "Portfolio Turnover", "4.50%" },
+                { "OrderListHash", "3813889e73d97a288cd4152db7ea5f60" }
+            };
     }
 }

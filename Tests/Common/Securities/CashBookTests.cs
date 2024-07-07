@@ -40,10 +40,22 @@ namespace QuantConnect.Tests.Common.Securities
             Assert.AreEqual(expected.AccountCurrency, result.AccountCurrency);
             Assert.AreEqual(expected.AccountCurrencySymbol, result.AccountCurrencySymbol);
             Assert.AreEqual(expected.Cash.Count, result.Cash.Count);
-            Assert.AreEqual(expected.Cash[Currencies.USD].Amount, result.Cash[Currencies.USD].Amount);
-            Assert.AreEqual(expected.Cash[Currencies.USD].ConversionRate, result.Cash[Currencies.USD].ConversionRate);
-            Assert.AreEqual(expected.Cash[Currencies.EUR].Amount, result.Cash[Currencies.EUR].Amount);
-            Assert.AreEqual(expected.Cash[Currencies.EUR].ConversionRate, result.Cash[Currencies.EUR].ConversionRate);
+            Assert.AreEqual(
+                expected.Cash[Currencies.USD].Amount,
+                result.Cash[Currencies.USD].Amount
+            );
+            Assert.AreEqual(
+                expected.Cash[Currencies.USD].ConversionRate,
+                result.Cash[Currencies.USD].ConversionRate
+            );
+            Assert.AreEqual(
+                expected.Cash[Currencies.EUR].Amount,
+                result.Cash[Currencies.EUR].Amount
+            );
+            Assert.AreEqual(
+                expected.Cash[Currencies.EUR].ConversionRate,
+                result.Cash[Currencies.EUR].ConversionRate
+            );
         }
 
         [Test]
@@ -62,10 +74,13 @@ namespace QuantConnect.Tests.Common.Securities
         {
             var book = new CashBook();
             book[Currencies.USD].SetAmount(1000);
-            book.Add("JPY", 1000, 1/100m);
+            book.Add("JPY", 1000, 1 / 100m);
             book.Add("GBP", 1000, 2m);
 
-            decimal expected = book[Currencies.USD].ValueInAccountCurrency + book["JPY"].ValueInAccountCurrency + book["GBP"].ValueInAccountCurrency;
+            decimal expected =
+                book[Currencies.USD].ValueInAccountCurrency
+                + book["JPY"].ValueInAccountCurrency
+                + book["GBP"].ValueInAccountCurrency;
             Assert.AreEqual(expected, book.TotalValueInAccountCurrency);
         }
 
@@ -107,7 +122,7 @@ namespace QuantConnect.Tests.Common.Securities
         public void ConvertsToJpyFromAccountCurrencyProperly()
         {
             var book = new CashBook();
-            book.Add("JPY", 0, 1/100m);
+            book.Add("JPY", 0, 1 / 100m);
 
             var expected = 100000m;
             var actual = book.Convert(1000, book.AccountCurrency, "JPY");
@@ -117,7 +132,7 @@ namespace QuantConnect.Tests.Common.Securities
         [Test]
         public void WontAddNullCurrencyCash()
         {
-            var book = new CashBook {{Currencies.NullCurrency, 1, 1}};
+            var book = new CashBook { { Currencies.NullCurrency, 1, 1 } };
             Assert.AreEqual(1, book.Count);
             var cash = book.Single().Value;
             Assert.AreEqual(Currencies.USD, cash.Symbol);
@@ -127,14 +142,12 @@ namespace QuantConnect.Tests.Common.Securities
             cash = book.Single().Value;
             Assert.AreEqual(Currencies.USD, cash.Symbol);
 
-            book.Add(Currencies.NullCurrency,
-                new Cash(Currencies.NullCurrency, 1, 1));
+            book.Add(Currencies.NullCurrency, new Cash(Currencies.NullCurrency, 1, 1));
             Assert.AreEqual(1, book.Count);
             cash = book.Single().Value;
             Assert.AreEqual(Currencies.USD, cash.Symbol);
 
-            book[Currencies.NullCurrency] =
-                new Cash(Currencies.NullCurrency, 1, 1);
+            book[Currencies.NullCurrency] = new Cash(Currencies.NullCurrency, 1, 1);
             Assert.AreEqual(1, book.Count);
             cash = book.Single().Value;
             Assert.AreEqual(Currencies.USD, cash.Symbol);

@@ -14,9 +14,9 @@
 */
 
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using QuantConnect.Securities;
-using System.Collections.Generic;
 
 namespace QuantConnect.Brokerages
 {
@@ -41,25 +41,21 @@ namespace QuantConnect.Brokerages
         {
             _market = market;
 
-            var symbolPropertiesList =
-                SymbolPropertiesDatabase
-                    .FromDataFolder()
-                    .GetSymbolPropertiesList(_market)
-                    .Where(x => !string.IsNullOrWhiteSpace(x.Value.MarketTicker))
-                    .ToList();
+            var symbolPropertiesList = SymbolPropertiesDatabase
+                .FromDataFolder()
+                .GetSymbolPropertiesList(_market)
+                .Where(x => !string.IsNullOrWhiteSpace(x.Value.MarketTicker))
+                .ToList();
 
-            _symbolPropertiesMap =
-                symbolPropertiesList
-                    .ToDictionary(
-                        x => Symbol.Create(x.Key.Symbol, x.Key.SecurityType, x.Key.Market),
-                        x => x.Value);
+            _symbolPropertiesMap = symbolPropertiesList.ToDictionary(
+                x => Symbol.Create(x.Key.Symbol, x.Key.SecurityType, x.Key.Market),
+                x => x.Value
+            );
 
             _symbolMap = new();
             foreach (var group in _symbolPropertiesMap.GroupBy(x => x.Key.SecurityType))
             {
-                _symbolMap[group.Key] = group.ToDictionary(
-                            x => x.Value.MarketTicker,
-                            x => x.Key);
+                _symbolMap[group.Key] = group.ToDictionary(x => x.Value.MarketTicker, x => x.Key);
             }
         }
 
@@ -72,7 +68,9 @@ namespace QuantConnect.Brokerages
         {
             if (symbol == null || string.IsNullOrWhiteSpace(symbol.Value))
             {
-                throw new ArgumentException($"Invalid symbol: {(symbol == null ? "null" : symbol.Value)}");
+                throw new ArgumentException(
+                    $"Invalid symbol: {(symbol == null ? "null" : symbol.Value)}"
+                );
             }
 
             if (symbol.ID.Market != _market)
@@ -81,14 +79,18 @@ namespace QuantConnect.Brokerages
             }
 
             SymbolProperties symbolProperties;
-            if (!_symbolPropertiesMap.TryGetValue(symbol, out symbolProperties) )
+            if (!_symbolPropertiesMap.TryGetValue(symbol, out symbolProperties))
             {
-                throw new ArgumentException($"Unknown symbol: {symbol.Value}/{symbol.SecurityType}/{symbol.ID.Market}");
+                throw new ArgumentException(
+                    $"Unknown symbol: {symbol.Value}/{symbol.SecurityType}/{symbol.ID.Market}"
+                );
             }
 
             if (string.IsNullOrWhiteSpace(symbolProperties.MarketTicker))
             {
-                throw new ArgumentException($"MarketTicker not found in database for symbol: {symbol.Value}");
+                throw new ArgumentException(
+                    $"MarketTicker not found in database for symbol: {symbol.Value}"
+                );
             }
 
             return symbolProperties.MarketTicker;
@@ -104,7 +106,14 @@ namespace QuantConnect.Brokerages
         /// <param name="strike">The strike of the security (if applicable)</param>
         /// <param name="optionRight">The option right of the security (if applicable)</param>
         /// <returns>A new Lean Symbol instance</returns>
-        public Symbol GetLeanSymbol(string brokerageSymbol, SecurityType securityType, string market, DateTime expirationDate = default(DateTime), decimal strike = 0, OptionRight optionRight = OptionRight.Call)
+        public Symbol GetLeanSymbol(
+            string brokerageSymbol,
+            SecurityType securityType,
+            string market,
+            DateTime expirationDate = default(DateTime),
+            decimal strike = 0,
+            OptionRight optionRight = OptionRight.Call
+        )
         {
             if (string.IsNullOrWhiteSpace(brokerageSymbol))
             {
@@ -136,7 +145,8 @@ namespace QuantConnect.Brokerages
         /// <returns>True if the brokerage supports the symbol</returns>
         public bool IsKnownLeanSymbol(Symbol symbol)
         {
-            return !string.IsNullOrWhiteSpace(symbol?.Value) && _symbolPropertiesMap.ContainsKey(symbol);
+            return !string.IsNullOrWhiteSpace(symbol?.Value)
+                && _symbolPropertiesMap.ContainsKey(symbol);
         }
 
         /// <summary>
@@ -151,11 +161,14 @@ namespace QuantConnect.Brokerages
                 throw new ArgumentException($"Invalid brokerage symbol: {brokerageSymbol}");
             }
 
-            var result = _symbolMap.Select(kvp =>
-            {
-                kvp.Value.TryGetValue(brokerageSymbol, out var symbol);
-                return symbol;
-            }).Where(symbol => symbol != null).ToList();
+            var result = _symbolMap
+                .Select(kvp =>
+                {
+                    kvp.Value.TryGetValue(brokerageSymbol, out var symbol);
+                    return symbol;
+                })
+                .Where(symbol => symbol != null)
+                .ToList();
 
             if (result.Count == 0)
             {
@@ -163,7 +176,9 @@ namespace QuantConnect.Brokerages
             }
             if (result.Count > 1)
             {
-                throw new ArgumentException($"Found multiple brokerage symbols: {string.Join(",", result)}");
+                throw new ArgumentException(
+                    $"Found multiple brokerage symbols: {string.Join(",", result)}"
+                );
             }
 
             return result[0].SecurityType;

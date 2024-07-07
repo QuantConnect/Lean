@@ -62,10 +62,15 @@ public class BybitFeeModel : FeeModel
 
         var fee = GetFee(order);
 
-        if(security.Symbol.ID.SecurityType == SecurityType.CryptoFuture)
+        if (security.Symbol.ID.SecurityType == SecurityType.CryptoFuture)
         {
-            var positionValue = security.Holdings.GetQuantityValue(order.AbsoluteQuantity, security.Price);
-            return new OrderFee(new CashAmount(positionValue.Amount * fee, positionValue.Cash.Symbol));
+            var positionValue = security.Holdings.GetQuantityValue(
+                order.AbsoluteQuantity,
+                security.Price
+            );
+            return new OrderFee(
+                new CashAmount(positionValue.Amount * fee, positionValue.Cash.Symbol)
+            );
         }
 
         if (order.Direction == OrderDirection.Buy)
@@ -85,9 +90,9 @@ public class BybitFeeModel : FeeModel
 
         unitPrice *= security.SymbolProperties.ContractMultiplier;
 
-        return new OrderFee(new CashAmount(
-            unitPrice * order.AbsoluteQuantity * fee,
-            security.QuoteCurrency.Symbol));
+        return new OrderFee(
+            new CashAmount(unitPrice * order.AbsoluteQuantity * fee, security.QuoteCurrency.Symbol)
+        );
     }
 
     /// <summary>
@@ -106,7 +111,10 @@ public class BybitFeeModel : FeeModel
         var fee = takerFee;
         var props = order.Properties as BybitOrderProperties;
 
-        if (order.Type == OrderType.Limit && ((props != null && props.PostOnly) || !order.IsMarketable))
+        if (
+            order.Type == OrderType.Limit
+            && ((props != null && props.PostOnly) || !order.IsMarketable)
+        )
         {
             // limit order posted to the order book
             fee = makerFee;

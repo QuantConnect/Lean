@@ -76,7 +76,8 @@ namespace QuantConnect.Data.Consolidators
             decimal barSize,
             Func<IBaseData, decimal> selector,
             Func<IBaseData, decimal> volumeSelector = null,
-            bool evenBars = true)
+            bool evenBars = true
+        )
             : base(selector, volumeSelector)
         {
             EpsilonCheck(barSize);
@@ -91,11 +92,13 @@ namespace QuantConnect.Data.Consolidators
         /// <param name="type">The RenkoType of the bar</param>
         [Obsolete("Please use the new RenkoConsolidator if RenkoType is not Classic")]
         public ClassicRenkoConsolidator(decimal barSize, RenkoType type)
-        : this(barSize, true)
+            : this(barSize, true)
         {
             if (type != RenkoType.Classic)
             {
-                throw new ArgumentException("Please use the new RenkoConsolidator type if RenkoType is not Classic");
+                throw new ArgumentException(
+                    "Please use the new RenkoConsolidator type if RenkoType is not Classic"
+                );
             }
         }
 
@@ -108,10 +111,12 @@ namespace QuantConnect.Data.Consolidators
         /// <param name="volumeSelector">Extracts the volume from a data instance. The default value is null which does
         /// not aggregate volume per bar.</param>
         /// <param name="evenBars">When true bar open/close will be a multiple of the barSize</param>
-        public ClassicRenkoConsolidator(decimal barSize,
+        public ClassicRenkoConsolidator(
+            decimal barSize,
             PyObject selector,
             PyObject volumeSelector = null,
-            bool evenBars = true)
+            bool evenBars = true
+        )
             : base(selector, volumeSelector)
         {
             EpsilonCheck(barSize);
@@ -159,8 +164,10 @@ namespace QuantConnect.Data.Consolidators
         {
             if (barSize < Extensions.GetDecimalEpsilon())
             {
-                throw new ArgumentOutOfRangeException(nameof(barSize),
-                    "RenkoConsolidator bar size must be positve and greater than 1e-28");
+                throw new ArgumentOutOfRangeException(
+                    nameof(barSize),
+                    "RenkoConsolidator bar size must be positve and greater than 1e-28"
+                );
             }
         }
     }
@@ -186,11 +193,15 @@ namespace QuantConnect.Data.Consolidators
             Func<TInput, decimal> selector,
             Func<TInput, decimal> volumeSelector = null,
             bool evenBars = true
-            )
-            : base(barSize, x => selector((TInput) x),
-                volumeSelector == null ? (Func<IBaseData, decimal>) null : x => volumeSelector((TInput) x), evenBars)
-        {
-        }
+        )
+            : base(
+                barSize,
+                x => selector((TInput)x),
+                volumeSelector == null
+                    ? (Func<IBaseData, decimal>)null
+                    : x => volumeSelector((TInput)x),
+                evenBars
+            ) { }
 
         /// <summary>
         /// Initializes a new instance of the <see cref="ClassicRenkoConsolidator"/> class using the specified <paramref name="barSize"/>.
@@ -200,9 +211,7 @@ namespace QuantConnect.Data.Consolidators
         /// <param name="barSize">The constant value size of each bar</param>
         /// <param name="evenBars">When true bar open/close will be a multiple of the barSize</param>
         public ClassicRenkoConsolidator(decimal barSize, bool evenBars = true)
-            : this(barSize, x => x.Value, x => 0, evenBars)
-        {
-        }
+            : this(barSize, x => x.Value, x => 0, evenBars) { }
 
         /// <summary>
         /// Initializes a new instance of the <see cref="ClassicRenkoConsolidator"/> class using the specified <paramref name="barSize"/>.
@@ -213,9 +222,7 @@ namespace QuantConnect.Data.Consolidators
         /// <param name="type">The RenkoType of the bar</param>
         [Obsolete("Please use the WickedRenkoConsolidator if RenkoType is not Classic")]
         public ClassicRenkoConsolidator(decimal barSize, RenkoType type)
-            : base(barSize, type)
-        {
-        }
+            : base(barSize, type) { }
 
         /// <summary>
         /// Updates this consolidator with the specified data.

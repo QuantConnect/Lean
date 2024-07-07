@@ -27,7 +27,9 @@ namespace QuantConnect.Tests.Python
         {
             using var _ = Py.GIL();
 
-                var module = PyModule.FromString("EqualsReturnsTrueForWrapperAndUnderlyingModel", @"
+            var module = PyModule.FromString(
+                "EqualsReturnsTrueForWrapperAndUnderlyingModel",
+                @"
 from clr import AddReference
 AddReference('QuantConnect.Tests')
 
@@ -38,22 +40,19 @@ class PythonDerivedTestModel(BasePythonWrapperTests.TestModel):
 
 class PythonTestModel:
     pass
-");
-                var pyDerivedModel = module.GetAttr("PythonDerivedTestModel").Invoke();
-                var wrapper = new BasePythonWrapper<ITestModel>(pyDerivedModel);
-                var pyModel = module.GetAttr("PythonTestModel").Invoke();
+"
+            );
+            var pyDerivedModel = module.GetAttr("PythonDerivedTestModel").Invoke();
+            var wrapper = new BasePythonWrapper<ITestModel>(pyDerivedModel);
+            var pyModel = module.GetAttr("PythonTestModel").Invoke();
 
-                Assert.IsTrue(wrapper.Equals(pyDerivedModel));
-                Assert.IsTrue(wrapper.Equals(new BasePythonWrapper<ITestModel>(pyDerivedModel)));
-                Assert.IsFalse(wrapper.Equals(pyModel));
+            Assert.IsTrue(wrapper.Equals(pyDerivedModel));
+            Assert.IsTrue(wrapper.Equals(new BasePythonWrapper<ITestModel>(pyDerivedModel)));
+            Assert.IsFalse(wrapper.Equals(pyModel));
         }
 
-        public interface ITestModel
-        {
-        }
+        public interface ITestModel { }
 
-        public class TestModel : ITestModel
-        {
-        }
+        public class TestModel : ITestModel { }
     }
 }

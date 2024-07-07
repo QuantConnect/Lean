@@ -37,9 +37,7 @@ namespace QuantConnect.Orders
         /// <param name="orderId">The order id to be canceled</param>
         /// <param name="tag">A new tag for the order</param>
         public CancelOrderRequest(DateTime time, int orderId, string tag)
-            : base(time, orderId, tag)
-        {
-        }
+            : base(time, orderId, tag) { }
 
         /// <summary>
         /// Returns a string that represents the current object.

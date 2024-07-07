@@ -13,10 +13,10 @@
  * limitations under the License.
 */
 
+using System;
 using Python.Runtime;
 using QuantConnect.Data.Market;
 using QuantConnect.Securities;
-using System;
 
 namespace QuantConnect.Data.Consolidators
 {
@@ -31,7 +31,8 @@ namespace QuantConnect.Data.Consolidators
         /// <summary>
         /// Symbol properties database to use to get the minimum price variation of certain symbol
         /// </summary>
-        private static SymbolPropertiesDatabase _symbolPropertiesDatabase = SymbolPropertiesDatabase.FromDataFolder();
+        private static SymbolPropertiesDatabase _symbolPropertiesDatabase =
+            SymbolPropertiesDatabase.FromDataFolder();
 
         /// <summary>
         /// Bar being created
@@ -71,7 +72,8 @@ namespace QuantConnect.Data.Consolidators
         public RangeConsolidator(
             int range,
             Func<IBaseData, decimal> selector = null,
-            Func<IBaseData, decimal> volumeSelector = null)
+            Func<IBaseData, decimal> volumeSelector = null
+        )
             : base(selector, volumeSelector)
         {
             Range = range;
@@ -87,9 +89,7 @@ namespace QuantConnect.Data.Consolidators
         /// value is (x => x.Value) the <see cref="IBaseData.Value"/> property on <see cref="IBaseData"/></param>
         /// <param name="volumeSelector">Extracts the volume from a data instance. The default value is null which does
         /// not aggregate volume per bar.</param>
-        public RangeConsolidator(int range,
-            PyObject selector,
-            PyObject volumeSelector = null)
+        public RangeConsolidator(int range, PyObject selector, PyObject volumeSelector = null)
             : base(selector, volumeSelector)
         {
             Range = range;
@@ -119,8 +119,19 @@ namespace QuantConnect.Data.Consolidators
             while (CurrentBar.IsClosed)
             {
                 OnDataConsolidated(CurrentBar);
-                CurrentBar = new RangeBar(CurrentBar.Symbol, CurrentBar.EndTime, RangeSize, isRising ? CurrentBar.High + _minimumPriceVariation : CurrentBar.Low - _minimumPriceVariation);
-                CurrentBar.Update(time, currentValue, Math.Abs(CurrentBar.Low - currentValue) > RangeSize ? 0 : volume); // Intermediate/phantom RangeBar's have zero volume
+                CurrentBar = new RangeBar(
+                    CurrentBar.Symbol,
+                    CurrentBar.EndTime,
+                    RangeSize,
+                    isRising
+                        ? CurrentBar.High + _minimumPriceVariation
+                        : CurrentBar.Low - _minimumPriceVariation
+                );
+                CurrentBar.Update(
+                    time,
+                    currentValue,
+                    Math.Abs(CurrentBar.Low - currentValue) > RangeSize ? 0 : volume
+                ); // Intermediate/phantom RangeBar's have zero volume
             }
         }
 
@@ -136,7 +147,14 @@ namespace QuantConnect.Data.Consolidators
 
             if (_firstTick)
             {
-                _minimumPriceVariation = _symbolPropertiesDatabase.GetSymbolProperties(data.Symbol.ID.Market, data.Symbol, data.Symbol.ID.SecurityType, "USD").MinimumPriceVariation;
+                _minimumPriceVariation = _symbolPropertiesDatabase
+                    .GetSymbolProperties(
+                        data.Symbol.ID.Market,
+                        data.Symbol,
+                        data.Symbol.ID.SecurityType,
+                        "USD"
+                    )
+                    .MinimumPriceVariation;
                 RangeSize = _minimumPriceVariation * Range;
                 open = Math.Ceiling(open / RangeSize) * RangeSize;
                 _firstTick = false;

@@ -23,8 +23,5 @@ namespace QuantConnect.Data.Custom.Tiingo
     /// </summary>
     /// <remarks>Requires setting <see cref="Tiingo.AuthCode"/></remarks>
     [Obsolete("This is kept for backwards compatibility, please use TiingoPrice")]
-    public class TiingoDailyData : TiingoPrice
-    {
-
-    }
+    public class TiingoDailyData : TiingoPrice { }
 }

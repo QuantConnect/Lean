@@ -27,11 +27,12 @@ namespace QuantConnect.Algorithm.CSharp
         private readonly List<Symbol> _delisted = new List<Symbol>();
         private readonly List<Symbol> _toBeDelisted = new List<Symbol>();
         private bool _executed;
+
         public override void Initialize()
         {
-            SetStartDate(2016, 01, 15);  //Set Start Date
-            SetEndDate(2016, 01, 19);    //Set End Date
-            SetCash(100000);             //Set Strategy Cash
+            SetStartDate(2016, 01, 15); //Set Start Date
+            SetEndDate(2016, 01, 19); //Set End Date
+            SetCash(100000); //Set Strategy Cash
             AddOption(UnderlyingTicker);
         }
 
@@ -44,7 +45,9 @@ namespace QuantConnect.Algorithm.CSharp
                 {
                     if (_delisted.Contains(d.Key))
                     {
-                        throw new RegressionTestException("We shouldn't be recieving data from an already delisted symbol");
+                        throw new RegressionTestException(
+                            "We shouldn't be recieving data from an already delisted symbol"
+                        );
                     }
                 }
             }
@@ -61,7 +64,9 @@ namespace QuantConnect.Algorithm.CSharp
                 }
                 if (_toBeDelisted.Count != 20)
                 {
-                    throw new RegressionTestException("Expecting exactly 20 to be delisted warning events");
+                    throw new RegressionTestException(
+                        "Expecting exactly 20 to be delisted warning events"
+                    );
                 }
             }
             base.OnEndOfAlgorithm();
@@ -76,7 +81,9 @@ namespace QuantConnect.Algorithm.CSharp
                 if (delisting.Type == DelistingType.Warning)
                 {
                     _toBeDelisted.Add(symbol);
-                    Debug($"OnData(Delistings): {Time}: {symbol} will be delisted at end of day today.");
+                    Debug(
+                        $"OnData(Delistings): {Time}: {symbol} will be delisted at end of day today."
+                    );
                 }
                 if (delisting.Type == DelistingType.Delisted)
                 {
@@ -114,35 +121,36 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// This is used by the regression test system to indicate what the expected statistics are from running the algorithm
         /// </summary>
-        public Dictionary<string, string> ExpectedStatistics => new Dictionary<string, string>
-        {
-            {"Total Orders", "0"},
-            {"Average Win", "0%"},
-            {"Average Loss", "0%"},
-            {"Compounding Annual Return", "0%"},
-            {"Drawdown", "0%"},
-            {"Expectancy", "0"},
-            {"Start Equity", "100000"},
-            {"End Equity", "100000"},
-            {"Net Profit", "0%"},
-            {"Sharpe Ratio", "0"},
-            {"Sortino Ratio", "0"},
-            {"Probabilistic Sharpe Ratio", "0%"},
-            {"Loss Rate", "0%"},
-            {"Win Rate", "0%"},
-            {"Profit-Loss Ratio", "0"},
-            {"Alpha", "0"},
-            {"Beta", "0"},
-            {"Annual Standard Deviation", "0"},
-            {"Annual Variance", "0"},
-            {"Information Ratio", "-8.25"},
-            {"Tracking Error", "0.01"},
-            {"Treynor Ratio", "0"},
-            {"Total Fees", "$0.00"},
-            {"Estimated Strategy Capacity", "$0"},
-            {"Lowest Capacity Asset", ""},
-            {"Portfolio Turnover", "0%"},
-            {"OrderListHash", "d41d8cd98f00b204e9800998ecf8427e"}
-        };
+        public Dictionary<string, string> ExpectedStatistics =>
+            new Dictionary<string, string>
+            {
+                { "Total Orders", "0" },
+                { "Average Win", "0%" },
+                { "Average Loss", "0%" },
+                { "Compounding Annual Return", "0%" },
+                { "Drawdown", "0%" },
+                { "Expectancy", "0" },
+                { "Start Equity", "100000" },
+                { "End Equity", "100000" },
+                { "Net Profit", "0%" },
+                { "Sharpe Ratio", "0" },
+                { "Sortino Ratio", "0" },
+                { "Probabilistic Sharpe Ratio", "0%" },
+                { "Loss Rate", "0%" },
+                { "Win Rate", "0%" },
+                { "Profit-Loss Ratio", "0" },
+                { "Alpha", "0" },
+                { "Beta", "0" },
+                { "Annual Standard Deviation", "0" },
+                { "Annual Variance", "0" },
+                { "Information Ratio", "-8.25" },
+                { "Tracking Error", "0.01" },
+                { "Treynor Ratio", "0" },
+                { "Total Fees", "$0.00" },
+                { "Estimated Strategy Capacity", "$0" },
+                { "Lowest Capacity Asset", "" },
+                { "Portfolio Turnover", "0%" },
+                { "OrderListHash", "d41d8cd98f00b204e9800998ecf8427e" }
+            };
     }
 }

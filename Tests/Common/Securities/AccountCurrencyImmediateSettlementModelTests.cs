@@ -39,17 +39,41 @@ namespace QuantConnect.Tests.Common.Securities
             Assert.AreEqual(0, portfolio.UnsettledCash);
 
             var timeUtc = Noon.ConvertToUtc(TimeZones.NewYork);
-            model.ApplyFunds(new ApplyFundsSettlementModelParameters(portfolio, security, timeUtc, new CashAmount(1000, Currencies.USD), null));
+            model.ApplyFunds(
+                new ApplyFundsSettlementModelParameters(
+                    portfolio,
+                    security,
+                    timeUtc,
+                    new CashAmount(1000, Currencies.USD),
+                    null
+                )
+            );
 
             Assert.AreEqual(2000, portfolio.Cash);
             Assert.AreEqual(0, portfolio.UnsettledCash);
 
-            model.ApplyFunds(new ApplyFundsSettlementModelParameters(portfolio, security, timeUtc, new CashAmount(-500, Currencies.USD), null));
+            model.ApplyFunds(
+                new ApplyFundsSettlementModelParameters(
+                    portfolio,
+                    security,
+                    timeUtc,
+                    new CashAmount(-500, Currencies.USD),
+                    null
+                )
+            );
 
             Assert.AreEqual(1500, portfolio.Cash);
             Assert.AreEqual(0, portfolio.UnsettledCash);
 
-            model.ApplyFunds(new ApplyFundsSettlementModelParameters(portfolio, security, timeUtc, new CashAmount(1000, Currencies.USD), null));
+            model.ApplyFunds(
+                new ApplyFundsSettlementModelParameters(
+                    portfolio,
+                    security,
+                    timeUtc,
+                    new CashAmount(1000, Currencies.USD),
+                    null
+                )
+            );
 
             Assert.AreEqual(2500, portfolio.Cash);
             Assert.AreEqual(0, portfolio.UnsettledCash);
@@ -70,19 +94,43 @@ namespace QuantConnect.Tests.Common.Securities
             Assert.AreEqual(0, portfolio.UnsettledCash);
 
             var timeUtc = Noon.ConvertToUtc(TimeZones.NewYork);
-            model.ApplyFunds(new ApplyFundsSettlementModelParameters(portfolio, security, timeUtc, new CashAmount(1000, Currencies.EUR), null));
+            model.ApplyFunds(
+                new ApplyFundsSettlementModelParameters(
+                    portfolio,
+                    security,
+                    timeUtc,
+                    new CashAmount(1000, Currencies.EUR),
+                    null
+                )
+            );
 
             // 1000 + 1000 * 1.1 = 2100
             Assert.AreEqual(2100, portfolio.Cash);
             Assert.AreEqual(0, portfolio.UnsettledCash);
 
-            model.ApplyFunds(new ApplyFundsSettlementModelParameters(portfolio, security, timeUtc, new CashAmount(-500, Currencies.EUR), null));
+            model.ApplyFunds(
+                new ApplyFundsSettlementModelParameters(
+                    portfolio,
+                    security,
+                    timeUtc,
+                    new CashAmount(-500, Currencies.EUR),
+                    null
+                )
+            );
 
             // 2100 - 500 * 1.1 = 1550
             Assert.AreEqual(1550, portfolio.Cash);
             Assert.AreEqual(0, portfolio.UnsettledCash);
 
-            model.ApplyFunds(new ApplyFundsSettlementModelParameters(portfolio, security, timeUtc, new CashAmount(1000, Currencies.EUR), null));
+            model.ApplyFunds(
+                new ApplyFundsSettlementModelParameters(
+                    portfolio,
+                    security,
+                    timeUtc,
+                    new CashAmount(1000, Currencies.EUR),
+                    null
+                )
+            );
 
             // 1550 + 1000 * 1.1 = 2650
             Assert.AreEqual(2650, portfolio.Cash);

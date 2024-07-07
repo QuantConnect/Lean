@@ -20,7 +20,7 @@ using QuantConnect.Interfaces;
 namespace QuantConnect.Data.UniverseSelection
 {
     /// <summary>
-    /// 
+    ///
     /// </summary>
     public interface IFundamentalDataProvider
     {

@@ -32,8 +32,8 @@ namespace QuantConnect.Tests.Indicators
         protected override string TestColumnName => "Gauss";
 
         protected override Action<IndicatorBase<IndicatorDataPoint>, double> Assertion =>
-            (indicator, expected) => 
-                Assert.AreEqual(expected, (double) indicator.Current.Value, 0.01);
+            (indicator, expected) =>
+                Assert.AreEqual(expected, (double)indicator.Current.Value, 0.01);
 
         [Test]
         public override void ResetsProperly()
@@ -81,14 +81,28 @@ namespace QuantConnect.Tests.Indicators
             RunTestIndicator(indicator, "Butter", 0.01m);
         }
 
-        private void RunTestIndicator(IndicatorBase<IndicatorDataPoint> indicator, string field, decimal variance)
+        private void RunTestIndicator(
+            IndicatorBase<IndicatorDataPoint> indicator,
+            string field,
+            decimal variance
+        )
         {
-            TestHelper.TestIndicator(indicator, TestFileName, field, (actual, expected) => { AssertResult(expected, actual.Current.Value, variance); });
+            TestHelper.TestIndicator(
+                indicator,
+                TestFileName,
+                field,
+                (actual, expected) =>
+                {
+                    AssertResult(expected, actual.Current.Value, variance);
+                }
+            );
         }
 
         private static void AssertResult(double expected, decimal actual, decimal variance)
         {
-            System.Diagnostics.Debug.WriteLine(expected + "," + actual + "," + Math.Abs((decimal)expected - actual));
+            System.Diagnostics.Debug.WriteLine(
+                expected + "," + actual + "," + Math.Abs((decimal)expected - actual)
+            );
             Assert.IsTrue(Math.Abs((decimal)expected - actual) < variance);
         }
     }

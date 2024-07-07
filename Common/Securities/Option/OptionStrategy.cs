@@ -14,8 +14,8 @@
 */
 
 using System;
-using QuantConnect.Orders;
 using System.Collections.Generic;
+using QuantConnect.Orders;
 
 namespace QuantConnect.Securities.Option
 {
@@ -57,7 +57,10 @@ namespace QuantConnect.Securities.Option
             /// <summary>
             /// Invokes the correct handler based on the runtime type.
             /// </summary>
-            public abstract void Invoke(Action<UnderlyingLegData> underlyingHandler, Action<OptionLegData> optionHandler);
+            public abstract void Invoke(
+                Action<UnderlyingLegData> underlyingHandler,
+                Action<OptionLegData> optionHandler
+            );
         }
 
         /// <summary>
@@ -83,7 +86,11 @@ namespace QuantConnect.Securities.Option
             /// <summary>
             /// Creates a new instance of <see cref="OptionLegData"/> from the specified parameters
             /// </summary>
-            public static OptionLegData Create(int quantity, Symbol symbol, decimal? orderPrice = null)
+            public static OptionLegData Create(
+                int quantity,
+                Symbol symbol,
+                decimal? orderPrice = null
+            )
             {
                 return new OptionLegData
                 {
@@ -99,7 +106,10 @@ namespace QuantConnect.Securities.Option
             /// <summary>
             /// Invokes the <paramref name="optionHandler"/>
             /// </summary>
-            public override void Invoke(Action<UnderlyingLegData> underlyingHandler, Action<OptionLegData> optionHandler)
+            public override void Invoke(
+                Action<UnderlyingLegData> underlyingHandler,
+                Action<OptionLegData> optionHandler
+            )
             {
                 optionHandler(this);
             }
@@ -113,7 +123,11 @@ namespace QuantConnect.Securities.Option
             /// <summary>
             /// Creates a new instance of <see cref="UnderlyingLegData"/> for the specified <paramref name="quantity"/> of underlying shares.
             /// </summary>
-            public static UnderlyingLegData Create(int quantity, Symbol symbol, decimal? orderPrice = null)
+            public static UnderlyingLegData Create(
+                int quantity,
+                Symbol symbol,
+                decimal? orderPrice = null
+            )
             {
                 var data = Create(quantity, orderPrice);
                 data.Symbol = symbol;
@@ -125,17 +139,16 @@ namespace QuantConnect.Securities.Option
             /// </summary>
             public static UnderlyingLegData Create(int quantity, decimal? orderPrice = null)
             {
-                return new UnderlyingLegData
-                {
-                    Quantity = quantity,
-                    OrderPrice = orderPrice
-                };
+                return new UnderlyingLegData { Quantity = quantity, OrderPrice = orderPrice };
             }
 
             /// <summary>
             /// Invokes the <paramref name="underlyingHandler"/>
             /// </summary>
-            public override void Invoke(Action<UnderlyingLegData> underlyingHandler, Action<OptionLegData> optionHandler)
+            public override void Invoke(
+                Action<UnderlyingLegData> underlyingHandler,
+                Action<OptionLegData> optionHandler
+            )
             {
                 underlyingHandler(this);
             }

@@ -13,15 +13,15 @@
  * limitations under the License.
 */
 
-using NUnit.Framework;
-using QuantConnect.Orders.Fees;
-using QuantConnect.Orders;
-using QuantConnect.Securities;
 using System;
 using System.Collections.Generic;
+using NUnit.Framework;
+using QuantConnect.Brokerages;
 using QuantConnect.Data;
 using QuantConnect.Data.Market;
-using QuantConnect.Brokerages;
+using QuantConnect.Orders;
+using QuantConnect.Orders.Fees;
+using QuantConnect.Securities;
 using QuantConnect.Securities.Crypto;
 
 namespace QuantConnect.Tests.Brokerages.Kraken
@@ -30,7 +30,8 @@ namespace QuantConnect.Tests.Brokerages.Kraken
     public class KrakenFeeModelTests
     {
         private static Symbol Symbol => Symbol.Create("ETHUSD", SecurityType.Crypto, Market.Kraken);
-        private static Symbol FiatSymbol => Symbol.Create("EURUSD", SecurityType.Crypto, Market.Kraken);
+        private static Symbol FiatSymbol =>
+            Symbol.Create("EURUSD", SecurityType.Crypto, Market.Kraken);
         private static Security Security
         {
             get
@@ -58,7 +59,7 @@ namespace QuantConnect.Tests.Brokerages.Kraken
                 return security;
             }
         }
-        
+
         private static Security FiatSecurity
         {
             get
@@ -86,32 +87,84 @@ namespace QuantConnect.Tests.Brokerages.Kraken
                 return security;
             }
         }
-        
-        private static OrderSubmissionData OrderSubmissionData => new OrderSubmissionData(Security.BidPrice, Security.AskPrice, (Security.BidPrice + Security.AskPrice) / 2);
+
+        private static OrderSubmissionData OrderSubmissionData =>
+            new OrderSubmissionData(
+                Security.BidPrice,
+                Security.AskPrice,
+                (Security.BidPrice + Security.AskPrice) / 2
+            );
         private static decimal HighPrice = 1000m;
         private static decimal LowPrice = 100m;
         private static decimal Quantity = 1m;
 
-        private static TestCaseData[] MakerOrders => new[]
-        {
-            new TestCaseData(new LimitOrderTestParameters(Symbol, HighPrice, LowPrice)),
-            new TestCaseData(new LimitOrderTestParameters(Symbol, HighPrice, LowPrice, new KrakenOrderProperties())),
-            new TestCaseData(new LimitOrderTestParameters(Symbol, HighPrice, LowPrice, new KrakenOrderProperties() { PostOnly = true}))
-        };
+        private static TestCaseData[] MakerOrders =>
+            new[]
+            {
+                new TestCaseData(new LimitOrderTestParameters(Symbol, HighPrice, LowPrice)),
+                new TestCaseData(
+                    new LimitOrderTestParameters(
+                        Symbol,
+                        HighPrice,
+                        LowPrice,
+                        new KrakenOrderProperties()
+                    )
+                ),
+                new TestCaseData(
+                    new LimitOrderTestParameters(
+                        Symbol,
+                        HighPrice,
+                        LowPrice,
+                        new KrakenOrderProperties() { PostOnly = true }
+                    )
+                )
+            };
 
-        private static TestCaseData[] TakerOrders => new[]
-        {
-            new TestCaseData(new MarketOrderTestParameters(Symbol)),
-            new TestCaseData(new MarketOrderTestParameters(Symbol, new KrakenOrderProperties() { PostOnly = true })),
-            new TestCaseData(new LimitOrderTestParameters(Symbol, LowPrice, HighPrice, new KrakenOrderProperties()) { OrderSubmissionData = OrderSubmissionData}),
-        };
-        
-        private static TestCaseData[] FiatsOrders => new[]
-        {
-            new TestCaseData(new MarketOrderTestParameters(FiatSymbol)),
-            new TestCaseData(new MarketOrderTestParameters(FiatSymbol, new KrakenOrderProperties() { PostOnly = true })),
-            new TestCaseData(new LimitOrderTestParameters(FiatSymbol, LowPrice, HighPrice, new KrakenOrderProperties()) { OrderSubmissionData = OrderSubmissionData}),
-        };
+        private static TestCaseData[] TakerOrders =>
+            new[]
+            {
+                new TestCaseData(new MarketOrderTestParameters(Symbol)),
+                new TestCaseData(
+                    new MarketOrderTestParameters(
+                        Symbol,
+                        new KrakenOrderProperties() { PostOnly = true }
+                    )
+                ),
+                new TestCaseData(
+                    new LimitOrderTestParameters(
+                        Symbol,
+                        LowPrice,
+                        HighPrice,
+                        new KrakenOrderProperties()
+                    )
+                    {
+                        OrderSubmissionData = OrderSubmissionData
+                    }
+                ),
+            };
+
+        private static TestCaseData[] FiatsOrders =>
+            new[]
+            {
+                new TestCaseData(new MarketOrderTestParameters(FiatSymbol)),
+                new TestCaseData(
+                    new MarketOrderTestParameters(
+                        FiatSymbol,
+                        new KrakenOrderProperties() { PostOnly = true }
+                    )
+                ),
+                new TestCaseData(
+                    new LimitOrderTestParameters(
+                        FiatSymbol,
+                        LowPrice,
+                        HighPrice,
+                        new KrakenOrderProperties()
+                    )
+                    {
+                        OrderSubmissionData = OrderSubmissionData
+                    }
+                ),
+            };
 
         [Test]
         public void GetFeeModelTest()
@@ -131,7 +184,9 @@ namespace QuantConnect.Tests.Brokerages.Kraken
             var fee = feeModel.GetOrderFee(new OrderFeeParameters(Security, order));
 
             Assert.AreEqual(
-                KrakenFeeModel.MakerTier1CryptoFee * 1 * Math.Abs(Quantity), fee.Value.Amount);
+                KrakenFeeModel.MakerTier1CryptoFee * 1 * Math.Abs(Quantity),
+                fee.Value.Amount
+            );
             Assert.AreEqual("ETH", fee.Value.Currency);
         }
 
@@ -143,11 +198,12 @@ namespace QuantConnect.Tests.Brokerages.Kraken
 
             Order order = parameters.CreateShortOrder(Quantity);
             var price = order.Type == OrderType.Limit ? ((LimitOrder)order).LimitPrice : LowPrice;
-            var fee =
-                feeModel.GetOrderFee(new OrderFeeParameters(Security, order));
+            var fee = feeModel.GetOrderFee(new OrderFeeParameters(Security, order));
 
             Assert.AreEqual(
-                KrakenFeeModel.TakerTier1CryptoFee * 1 * Math.Abs(Quantity), fee.Value.Amount);
+                KrakenFeeModel.TakerTier1CryptoFee * 1 * Math.Abs(Quantity),
+                fee.Value.Amount
+            );
             Assert.AreEqual("ETH", fee.Value.Currency);
         }
 
@@ -159,11 +215,12 @@ namespace QuantConnect.Tests.Brokerages.Kraken
 
             Order order = parameters.CreateLongOrder(Quantity);
             var price = order.Type == OrderType.Limit ? ((LimitOrder)order).LimitPrice : HighPrice;
-            var fee =
-                feeModel.GetOrderFee(new OrderFeeParameters(Security, order));
+            var fee = feeModel.GetOrderFee(new OrderFeeParameters(Security, order));
 
             Assert.AreEqual(
-                KrakenFeeModel.MakerTier1CryptoFee * price * Math.Abs(Quantity), fee.Value.Amount);
+                KrakenFeeModel.MakerTier1CryptoFee * price * Math.Abs(Quantity),
+                fee.Value.Amount
+            );
             Assert.AreEqual(Currencies.USD, fee.Value.Currency);
         }
 
@@ -175,14 +232,15 @@ namespace QuantConnect.Tests.Brokerages.Kraken
 
             Order order = parameters.CreateLongOrder(Quantity);
             var price = order.Type == OrderType.Limit ? ((LimitOrder)order).LimitPrice : HighPrice;
-            var fee =
-                feeModel.GetOrderFee(new OrderFeeParameters(Security, order));
+            var fee = feeModel.GetOrderFee(new OrderFeeParameters(Security, order));
 
             Assert.AreEqual(
-                KrakenFeeModel.TakerTier1CryptoFee * price * Math.Abs(Quantity), fee.Value.Amount);
+                KrakenFeeModel.TakerTier1CryptoFee * price * Math.Abs(Quantity),
+                fee.Value.Amount
+            );
             Assert.AreEqual(Currencies.USD, fee.Value.Currency);
         }
-        
+
         [Test]
         [TestCaseSource(nameof(FiatsOrders))]
         public void ReturnLongFiatCoinFees(OrderTestParameters parameters)
@@ -191,14 +249,13 @@ namespace QuantConnect.Tests.Brokerages.Kraken
 
             Order order = parameters.CreateLongOrder(Quantity);
             var price = order.Type == OrderType.Limit ? ((LimitOrder)order).LimitPrice : HighPrice;
-            var fee =
-                feeModel.GetOrderFee(new OrderFeeParameters(FiatSecurity, order));
+            var fee = feeModel.GetOrderFee(new OrderFeeParameters(FiatSecurity, order));
 
             Assert.AreEqual(
-                KrakenFeeModel.Tier1FxFee * price * Math.Abs(Quantity), fee.Value.Amount);
+                KrakenFeeModel.Tier1FxFee * price * Math.Abs(Quantity),
+                fee.Value.Amount
+            );
             Assert.AreEqual(Currencies.USD, fee.Value.Currency);
         }
-        
     }
 }
-

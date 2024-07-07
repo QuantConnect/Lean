@@ -25,52 +25,32 @@ namespace QuantConnect.Securities
         /// <summary>
         /// The description of the security
         /// </summary>
-        public string Description
-        {
-            get;
-        }
+        public string Description { get; }
 
         /// <summary>
         /// The quote currency of the security
         /// </summary>
-        public string QuoteCurrency
-        {
-            get;
-        }
+        public string QuoteCurrency { get; }
 
         /// <summary>
         /// The contract multiplier for the security
         /// </summary>
-        public decimal ContractMultiplier
-        {
-            get;
-            protected set;
-        }
+        public decimal ContractMultiplier { get; protected set; }
 
         /// <summary>
         /// The minimum price variation (tick size) for the security
         /// </summary>
-        public virtual decimal MinimumPriceVariation
-        {
-            get;
-            protected set;
-        }
+        public virtual decimal MinimumPriceVariation { get; protected set; }
 
         /// <summary>
         /// The lot size (lot size of the order) for the security
         /// </summary>
-        public decimal LotSize
-        {
-            get;
-        }
+        public decimal LotSize { get; }
 
         /// <summary>
         /// The market ticker
         /// </summary>
-        public string MarketTicker
-        {
-            get;
-        }
+        public string MarketTicker { get; }
 
         /// <summary>
         /// The minimum order size allowed
@@ -78,20 +58,14 @@ namespace QuantConnect.Securities
         /// i.e For BTC/USD the minimum order size allowed with Coinbase is 0.0001 BTC
         /// while on Binance the minimum order size allowed is 10 USD
         /// </summary>
-        public decimal? MinimumOrderSize
-        {
-            get;
-        }
+        public decimal? MinimumOrderSize { get; }
 
         /// <summary>
         /// Allows normalizing live asset prices to US Dollars for Lean consumption. In some exchanges,
         /// for some securities, data is expressed in cents like for example for corn futures ('ZC').
         /// </summary>
         /// <remarks>Default value is 1 but for some futures in cents it's 100</remarks>
-        public decimal PriceMagnifier
-        {
-            get;
-        }
+        public decimal PriceMagnifier { get; }
 
         /// <summary>
         /// Scale factor for option's strike price. For some options, such as NQX, the strike price
@@ -99,15 +73,22 @@ namespace QuantConnect.Securities
         /// that it can be used in comparation with the underlying such as
         /// in <see cref="OptionFilterUniverse.Strikes(int, int)"/>
         /// </summary>
-        public decimal StrikeMultiplier
-        {
-            get;
-        }
+        public decimal StrikeMultiplier { get; }
 
         /// <summary>
         /// Creates an instance of the <see cref="SymbolProperties"/> class
         /// </summary>
-        public SymbolProperties(string description, string quoteCurrency, decimal contractMultiplier, decimal minimumPriceVariation, decimal lotSize, string marketTicker, decimal? minimumOrderSize = null, decimal priceMagnifier = 1, decimal strikeMultiplier = 1)
+        public SymbolProperties(
+            string description,
+            string quoteCurrency,
+            decimal contractMultiplier,
+            decimal minimumPriceVariation,
+            decimal lotSize,
+            string marketTicker,
+            decimal? minimumOrderSize = null,
+            decimal priceMagnifier = 1,
+            decimal strikeMultiplier = 1
+        )
         {
             Description = description;
             QuoteCurrency = quoteCurrency;
@@ -151,7 +132,14 @@ namespace QuantConnect.Securities
         /// <returns>A default instance of the<see cref="SymbolProperties"/> class</returns>
         public static SymbolProperties GetDefault(string quoteCurrency)
         {
-            return new SymbolProperties(string.Empty, quoteCurrency.LazyToUpper(), 1, 0.01m, 1, string.Empty);
+            return new SymbolProperties(
+                string.Empty,
+                quoteCurrency.LazyToUpper(),
+                1,
+                0.01m,
+                1,
+                string.Empty
+            );
         }
     }
 }

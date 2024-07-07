@@ -43,7 +43,7 @@ namespace QuantConnect.Tests.Common.Securities
             SecurityPortfolioManager portfolio = null,
             ITimeKeeper timeKeeper = null,
             IOrderProcessor orderProcessor = null
-            )
+        )
         {
             Portfolio = portfolio;
             SecurityModel = securityModel;
@@ -52,7 +52,11 @@ namespace QuantConnect.Tests.Common.Securities
             if (portfolio == null)
             {
                 var securities = new SecurityManager(timeKeeper ?? new TimeKeeper(DateTime.UtcNow));
-                Portfolio = new SecurityPortfolioManager(securities, new SecurityTransactionManager(null, securities), new AlgorithmSettings());
+                Portfolio = new SecurityPortfolioManager(
+                    securities,
+                    new SecurityTransactionManager(null, securities),
+                    new AlgorithmSettings()
+                );
             }
             if (orderProcessor != null)
             {
@@ -80,11 +84,20 @@ namespace QuantConnect.Tests.Common.Securities
             }
 
             reentry = true;
-            var actual = PositionGroupModel.GetMaintenanceMargin(new PositionGroupMaintenanceMarginParameters(
-                Portfolio, new PositionGroup(PositionGroupModel, parameters.Quantity, new Position(parameters.Security, parameters.Quantity))
-            ));
+            var actual = PositionGroupModel.GetMaintenanceMargin(
+                new PositionGroupMaintenanceMarginParameters(
+                    Portfolio,
+                    new PositionGroup(
+                        PositionGroupModel,
+                        parameters.Quantity,
+                        new Position(parameters.Security, parameters.Quantity)
+                    )
+                )
+            );
 
-            Assert.AreEqual(expected.Value, actual.Value,
+            Assert.AreEqual(
+                expected.Value,
+                actual.Value,
                 $"{PositionGroupModel.GetType().Name}:{nameof(GetMaintenanceMargin)}"
             );
 
@@ -102,11 +115,20 @@ namespace QuantConnect.Tests.Common.Securities
             }
 
             reentry = true;
-            var actual = PositionGroupModel.GetInitialMarginRequirement(new PositionGroupInitialMarginParameters(
-                Portfolio, new PositionGroup(PositionGroupModel, parameters.Quantity, new Position(parameters.Security, parameters.Quantity))
-            ));
+            var actual = PositionGroupModel.GetInitialMarginRequirement(
+                new PositionGroupInitialMarginParameters(
+                    Portfolio,
+                    new PositionGroup(
+                        PositionGroupModel,
+                        parameters.Quantity,
+                        new Position(parameters.Security, parameters.Quantity)
+                    )
+                )
+            );
 
-            Assert.AreEqual(expected.Value, actual.Value,
+            Assert.AreEqual(
+                expected.Value,
+                actual.Value,
                 $"{PositionGroupModel.GetType().Name}:{nameof(GetInitialMarginRequirement)}"
             );
 
@@ -114,7 +136,9 @@ namespace QuantConnect.Tests.Common.Securities
             return expected;
         }
 
-        public InitialMargin GetInitialMarginRequiredForOrder(InitialMarginRequiredForOrderParameters parameters)
+        public InitialMargin GetInitialMarginRequiredForOrder(
+            InitialMarginRequiredForOrderParameters parameters
+        )
         {
             reentry = true;
             EnsureSecurityExists(parameters.Security);
@@ -124,11 +148,21 @@ namespace QuantConnect.Tests.Common.Securities
                 return expected;
             }
 
-            var actual = PositionGroupModel.GetInitialMarginRequiredForOrder(new PositionGroupInitialMarginForOrderParameters(
-                Portfolio, new PositionGroup(PositionGroupModel, parameters.Order.Quantity, new Position(parameters.Security, parameters.Order.Quantity)), parameters.Order
-            ));
+            var actual = PositionGroupModel.GetInitialMarginRequiredForOrder(
+                new PositionGroupInitialMarginForOrderParameters(
+                    Portfolio,
+                    new PositionGroup(
+                        PositionGroupModel,
+                        parameters.Order.Quantity,
+                        new Position(parameters.Security, parameters.Order.Quantity)
+                    ),
+                    parameters.Order
+                )
+            );
 
-            Assert.AreEqual(expected.Value, actual.Value,
+            Assert.AreEqual(
+                expected.Value,
+                actual.Value,
                 $"{PositionGroupModel.GetType().Name}:{nameof(GetInitialMarginRequiredForOrder)}"
             );
 
@@ -138,7 +172,7 @@ namespace QuantConnect.Tests.Common.Securities
 
         public HasSufficientBuyingPowerForOrderResult HasSufficientBuyingPowerForOrder(
             HasSufficientBuyingPowerForOrderParameters parameters
-            )
+        )
         {
             EnsureSecurityExists(parameters.Security);
             var expected = SecurityModel.HasSufficientBuyingPowerForOrder(parameters);
@@ -157,13 +191,17 @@ namespace QuantConnect.Tests.Common.Securities
                 )
             );
 
-            Assert.AreEqual(expected.IsSufficient, actual.IsSufficient,
-                $"{PositionGroupModel.GetType().Name}:{nameof(HasSufficientBuyingPowerForOrder)}: " +
-                $"ExpectedReason: {expected.Reason}{Environment.NewLine}" +
-                $"ActualReason: {actual.Reason}"
+            Assert.AreEqual(
+                expected.IsSufficient,
+                actual.IsSufficient,
+                $"{PositionGroupModel.GetType().Name}:{nameof(HasSufficientBuyingPowerForOrder)}: "
+                    + $"ExpectedReason: {expected.Reason}{Environment.NewLine}"
+                    + $"ActualReason: {actual.Reason}"
             );
 
-            Assert.AreEqual(expected.Reason, actual.Reason,
+            Assert.AreEqual(
+                expected.Reason,
+                actual.Reason,
                 $"{PositionGroupModel.GetType().Name}:{nameof(HasSufficientBuyingPowerForOrder)}"
             );
 
@@ -173,7 +211,7 @@ namespace QuantConnect.Tests.Common.Securities
 
         public GetMaximumOrderQuantityResult GetMaximumOrderQuantityForTargetBuyingPower(
             GetMaximumOrderQuantityForTargetBuyingPowerParameters parameters
-            )
+        )
         {
             EnsureSecurityExists(parameters.Security);
             var expected = SecurityModel.GetMaximumOrderQuantityForTargetBuyingPower(parameters);
@@ -184,7 +222,9 @@ namespace QuantConnect.Tests.Common.Securities
 
             reentry = true;
             var security = parameters.Security;
-            var positionGroup = Portfolio.Positions[new PositionGroupKey(PositionGroupModel, security)];
+            var positionGroup = Portfolio.Positions[
+                new PositionGroupKey(PositionGroupModel, security)
+            ];
             var actual = PositionGroupModel.GetMaximumLotsForTargetBuyingPower(
                 new GetMaximumLotsForTargetBuyingPowerParameters(
                     parameters.Portfolio,
@@ -196,41 +236,63 @@ namespace QuantConnect.Tests.Common.Securities
             );
 
             var lotSize = security.SymbolProperties.LotSize;
-            Assert.AreEqual(expected.IsError, actual.IsError,
-                $"{PositionGroupModel.GetType().Name}:{nameof(GetMaximumOrderQuantityForTargetBuyingPower)}: " +
-                $"ExpectedQuantity: {expected.Quantity} ActualQuantity: {actual.NumberOfLots * lotSize} {Environment.NewLine}" +
-                $"ExpectedReason: {expected.Reason}{Environment.NewLine}" +
-                $"ActualReason: {actual.Reason}"
+            Assert.AreEqual(
+                expected.IsError,
+                actual.IsError,
+                $"{PositionGroupModel.GetType().Name}:{nameof(GetMaximumOrderQuantityForTargetBuyingPower)}: "
+                    + $"ExpectedQuantity: {expected.Quantity} ActualQuantity: {actual.NumberOfLots * lotSize} {Environment.NewLine}"
+                    + $"ExpectedReason: {expected.Reason}{Environment.NewLine}"
+                    + $"ActualReason: {actual.Reason}"
             );
 
             // we're not comparing group quantities, which is the number of position lots, but rather the implied
             // position quantities resulting from having that many lots.
             var resizedPositionGroup = positionGroup.WithQuantity(
-                Math.Sign(positionGroup.Quantity) == -1 ? -actual.NumberOfLots : actual.NumberOfLots, Portfolio.Positions);
+                Math.Sign(positionGroup.Quantity) == -1
+                    ? -actual.NumberOfLots
+                    : actual.NumberOfLots,
+                Portfolio.Positions
+            );
             var position = resizedPositionGroup.GetPosition(security.Symbol);
 
-            var bpmOrder = new MarketOrder(security.Symbol, expected.Quantity, parameters.Portfolio.Securities.UtcTime);
-            var pgbpmOrder = new MarketOrder(security.Symbol, position.Quantity, parameters.Portfolio.Securities.UtcTime);
+            var bpmOrder = new MarketOrder(
+                security.Symbol,
+                expected.Quantity,
+                parameters.Portfolio.Securities.UtcTime
+            );
+            var pgbpmOrder = new MarketOrder(
+                security.Symbol,
+                position.Quantity,
+                parameters.Portfolio.Securities.UtcTime
+            );
 
             var bpmOrderValue = bpmOrder.GetValue(security);
             var pgbpmOrderValue = pgbpmOrder.GetValue(security);
 
-            var bpmOrderFees = security.FeeModel.GetOrderFee(new OrderFeeParameters(security, bpmOrder)).Value.Amount;
-            var pgbpmOrderFees = security.FeeModel.GetOrderFee(new OrderFeeParameters(security, pgbpmOrder)).Value.Amount;
+            var bpmOrderFees = security
+                .FeeModel.GetOrderFee(new OrderFeeParameters(security, bpmOrder))
+                .Value.Amount;
+            var pgbpmOrderFees = security
+                .FeeModel.GetOrderFee(new OrderFeeParameters(security, pgbpmOrder))
+                .Value.Amount;
 
             var bpmMarginRequired = bpmOrderValue + bpmOrderFees;
             var pgbpmMarginRequired = pgbpmOrderValue + pgbpmOrderFees;
 
-            Assert.AreEqual(expected.Quantity, position.Quantity,
-                $"{PositionGroupModel.GetType().Name}:{nameof(GetMaximumOrderQuantityForTargetBuyingPower)}: " +
-                $"ExpectedReason: {expected.Reason}{Environment.NewLine}" +
-                $"ActualReason: {actual.Reason}"
+            Assert.AreEqual(
+                expected.Quantity,
+                position.Quantity,
+                $"{PositionGroupModel.GetType().Name}:{nameof(GetMaximumOrderQuantityForTargetBuyingPower)}: "
+                    + $"ExpectedReason: {expected.Reason}{Environment.NewLine}"
+                    + $"ActualReason: {actual.Reason}"
             );
 
-            Assert.AreEqual(expected.Reason, actual.Reason,
-                $"{PositionGroupModel.GetType().Name}:{nameof(GetMaximumOrderQuantityForTargetBuyingPower)}: " +
-                $"ExpectedReason: {expected.Reason}{Environment.NewLine}" +
-                $"ActualReason: {actual.Reason}"
+            Assert.AreEqual(
+                expected.Reason,
+                actual.Reason,
+                $"{PositionGroupModel.GetType().Name}:{nameof(GetMaximumOrderQuantityForTargetBuyingPower)}: "
+                    + $"ExpectedReason: {expected.Reason}{Environment.NewLine}"
+                    + $"ActualReason: {actual.Reason}"
             );
 
             reentry = false;
@@ -239,7 +301,7 @@ namespace QuantConnect.Tests.Common.Securities
 
         public GetMaximumOrderQuantityResult GetMaximumOrderQuantityForDeltaBuyingPower(
             GetMaximumOrderQuantityForDeltaBuyingPowerParameters parameters
-            )
+        )
         {
             EnsureSecurityExists(parameters.Security);
             var expected = SecurityModel.GetMaximumOrderQuantityForDeltaBuyingPower(parameters);
@@ -250,7 +312,9 @@ namespace QuantConnect.Tests.Common.Securities
 
             reentry = true;
             var security = parameters.Security;
-            var positionGroup = Portfolio.Positions[new PositionGroupKey(PositionGroupModel, security)];
+            var positionGroup = Portfolio.Positions[
+                new PositionGroupKey(PositionGroupModel, security)
+            ];
             var actual = PositionGroupModel.GetMaximumLotsForDeltaBuyingPower(
                 new GetMaximumLotsForDeltaBuyingPowerParameters(
                     parameters.Portfolio,
@@ -262,34 +326,63 @@ namespace QuantConnect.Tests.Common.Securities
             );
 
             var lotSize = security.SymbolProperties.LotSize;
-            Assert.AreEqual(expected.IsError, actual.IsError,
-                $"{PositionGroupModel.GetType().Name}:{nameof(GetMaximumOrderQuantityForDeltaBuyingPower)}: " +
-                $"ExpectedQuantity: {expected.Quantity} ActualQuantity: {actual.NumberOfLots * lotSize} {Environment.NewLine}" +
-                $"ExpectedReason: {expected.Reason}{Environment.NewLine}" +
-                $"ActualReason: {actual.Reason}"
+            Assert.AreEqual(
+                expected.IsError,
+                actual.IsError,
+                $"{PositionGroupModel.GetType().Name}:{nameof(GetMaximumOrderQuantityForDeltaBuyingPower)}: "
+                    + $"ExpectedQuantity: {expected.Quantity} ActualQuantity: {actual.NumberOfLots * lotSize} {Environment.NewLine}"
+                    + $"ExpectedReason: {expected.Reason}{Environment.NewLine}"
+                    + $"ActualReason: {actual.Reason}"
             );
 
             // we're not comparing group quantities, which is the number of position lots, but rather the implied
             // position quantities resulting from having that many lots.
             var resizedPositionGroup = positionGroup.WithQuantity(
-                Math.Sign(positionGroup.Quantity) == -1 ? -actual.NumberOfLots : actual.NumberOfLots, Portfolio.Positions);
+                Math.Sign(positionGroup.Quantity) == -1
+                    ? -actual.NumberOfLots
+                    : actual.NumberOfLots,
+                Portfolio.Positions
+            );
             var position = resizedPositionGroup.GetPosition(security.Symbol);
 
-            var bpmOrder = new MarketOrder(security.Symbol, expected.Quantity, parameters.Portfolio.Securities.UtcTime);
-            var pgbpmOrder = new MarketOrder(security.Symbol, position.Quantity, parameters.Portfolio.Securities.UtcTime);
-
-            var bpmMarginRequired = security.BuyingPowerModel.GetInitialMarginRequirement(security, bpmOrder.Quantity);
-            var pgbpmMarginRequired = PositionGroupModel.GetInitialMarginRequiredForOrder(Portfolio, resizedPositionGroup, pgbpmOrder);
-
-            var availableBuyingPower = security.BuyingPowerModel.GetBuyingPower(parameters.Portfolio, security, bpmOrder.Direction);
-
-            Assert.AreEqual(expected.Quantity, position.Quantity,
-                $"{PositionGroupModel.GetType().Name}:{nameof(GetMaximumOrderQuantityForDeltaBuyingPower)}: " +
-                $"ExpectedReason: {expected.Reason}{Environment.NewLine}" +
-                $"ActualReason: {actual.Reason}"
+            var bpmOrder = new MarketOrder(
+                security.Symbol,
+                expected.Quantity,
+                parameters.Portfolio.Securities.UtcTime
+            );
+            var pgbpmOrder = new MarketOrder(
+                security.Symbol,
+                position.Quantity,
+                parameters.Portfolio.Securities.UtcTime
             );
 
-            Assert.AreEqual(expected.Reason, actual.Reason,
+            var bpmMarginRequired = security.BuyingPowerModel.GetInitialMarginRequirement(
+                security,
+                bpmOrder.Quantity
+            );
+            var pgbpmMarginRequired = PositionGroupModel.GetInitialMarginRequiredForOrder(
+                Portfolio,
+                resizedPositionGroup,
+                pgbpmOrder
+            );
+
+            var availableBuyingPower = security.BuyingPowerModel.GetBuyingPower(
+                parameters.Portfolio,
+                security,
+                bpmOrder.Direction
+            );
+
+            Assert.AreEqual(
+                expected.Quantity,
+                position.Quantity,
+                $"{PositionGroupModel.GetType().Name}:{nameof(GetMaximumOrderQuantityForDeltaBuyingPower)}: "
+                    + $"ExpectedReason: {expected.Reason}{Environment.NewLine}"
+                    + $"ActualReason: {actual.Reason}"
+            );
+
+            Assert.AreEqual(
+                expected.Reason,
+                actual.Reason,
                 $"{PositionGroupModel.GetType().Name}:{nameof(GetMaximumOrderQuantityForDeltaBuyingPower)}"
             );
 
@@ -297,7 +390,9 @@ namespace QuantConnect.Tests.Common.Securities
             return expected;
         }
 
-        public ReservedBuyingPowerForPosition GetReservedBuyingPowerForPosition(ReservedBuyingPowerForPositionParameters parameters)
+        public ReservedBuyingPowerForPosition GetReservedBuyingPowerForPosition(
+            ReservedBuyingPowerForPositionParameters parameters
+        )
         {
             EnsureSecurityExists(parameters.Security);
             var expected = SecurityModel.GetReservedBuyingPowerForPosition(parameters);
@@ -329,7 +424,13 @@ namespace QuantConnect.Tests.Common.Securities
         {
             if (!Portfolio.Securities.ContainsKey(security.Symbol))
             {
-                var timeKeeper = (LocalTimeKeeper) typeof(Security).GetField("_localTimeKeeper", BindingFlags.NonPublic|BindingFlags.Instance).GetValue(security);
+                var timeKeeper = (LocalTimeKeeper)
+                    typeof(Security)
+                        .GetField(
+                            "_localTimeKeeper",
+                            BindingFlags.NonPublic | BindingFlags.Instance
+                        )
+                        .GetValue(security);
                 Portfolio.Securities[security.Symbol] = security;
                 security.SetLocalTimeKeeper(timeKeeper);
             }

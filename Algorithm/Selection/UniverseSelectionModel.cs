@@ -40,7 +40,9 @@ namespace QuantConnect.Algorithm.Framework.Selection
         /// <returns>The universes to be used by the algorithm</returns>
         public virtual IEnumerable<Universe> CreateUniverses(QCAlgorithm algorithm)
         {
-            throw new System.NotImplementedException("Types deriving from 'UniverseSelectionModel' must implement the 'IEnumerable<Universe> CreateUniverses(QCAlgorithm) method.");
+            throw new System.NotImplementedException(
+                "Types deriving from 'UniverseSelectionModel' must implement the 'IEnumerable<Universe> CreateUniverses(QCAlgorithm) method."
+            );
         }
     }
 }

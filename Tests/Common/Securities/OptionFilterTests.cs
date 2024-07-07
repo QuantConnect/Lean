@@ -26,24 +26,42 @@ namespace QuantConnect.Tests.Common.Securities
     [TestFixture]
     public class OptionFilterTests
     {
-
         [TestCaseSource(nameof(FiltersStrikeRangeTests))]
-        public void FiltersStrikeRange(decimal underlyingPrice, Symbol[] symbols, int filteredNumber)
+        public void FiltersStrikeRange(
+            decimal underlyingPrice,
+            Symbol[] symbols,
+            int filteredNumber
+        )
         {
             var expiry = new DateTime(2016, 03, 04);
-            var underlying = new Tick { Value = underlyingPrice, Time = new DateTime(2016, 02, 26) };
+            var underlying = new Tick
+            {
+                Value = underlyingPrice,
+                Time = new DateTime(2016, 02, 26)
+            };
 
-            Func<OptionFilterUniverse, OptionFilterUniverse> universeFunc = universe => universe
-                                .Strikes(-2, 3)
-                                .Expiration(TimeSpan.Zero, TimeSpan.MaxValue);
+            Func<OptionFilterUniverse, OptionFilterUniverse> universeFunc = universe =>
+                universe.Strikes(-2, 3).Expiration(TimeSpan.Zero, TimeSpan.MaxValue);
 
             Func<IDerivativeSecurityFilterUniverse, IDerivativeSecurityFilterUniverse> func =
                 universe => universeFunc(universe as OptionFilterUniverse);
 
             var filter = new FuncSecurityDerivativeFilter(func);
 
-            var underlyingScaleFactor = SymbolPropertiesDatabase.FromDataFolder().GetSymbolProperties(Market.USA, symbols.First(), symbols.First().SecurityType, "USD").StrikeMultiplier;
-            var filterUniverse = new OptionFilterUniverse(symbols, underlying, underlyingScaleFactor);
+            var underlyingScaleFactor = SymbolPropertiesDatabase
+                .FromDataFolder()
+                .GetSymbolProperties(
+                    Market.USA,
+                    symbols.First(),
+                    symbols.First().SecurityType,
+                    "USD"
+                )
+                .StrikeMultiplier;
+            var filterUniverse = new OptionFilterUniverse(
+                symbols,
+                underlying,
+                underlyingScaleFactor
+            );
             var filtered = filter.Filter(filterUniverse).ToList();
             Assert.AreEqual(filteredNumber, filtered.Count);
             Assert.AreEqual(symbols[3], filtered[0]);
@@ -63,11 +81,14 @@ namespace QuantConnect.Tests.Common.Securities
         public void FiltersStrikeRangeWithVaryingDistance(decimal underlyingPrice)
         {
             var expiry = new DateTime(2016, 03, 04);
-            var underlying = new Tick { Value = underlyingPrice, Time = new DateTime(2016, 02, 26) };
+            var underlying = new Tick
+            {
+                Value = underlyingPrice,
+                Time = new DateTime(2016, 02, 26)
+            };
 
-            Func<OptionFilterUniverse, OptionFilterUniverse> universeFunc = universe => universe
-                                .Strikes(-2, 2)
-                                .Expiration(TimeSpan.Zero, TimeSpan.MaxValue);
+            Func<OptionFilterUniverse, OptionFilterUniverse> universeFunc = universe =>
+                universe.Strikes(-2, 2).Expiration(TimeSpan.Zero, TimeSpan.MaxValue);
 
             Func<IDerivativeSecurityFilterUniverse, IDerivativeSecurityFilterUniverse> func =
                 universe => universeFunc(universe as OptionFilterUniverse);
@@ -75,16 +96,86 @@ namespace QuantConnect.Tests.Common.Securities
             var filter = new FuncSecurityDerivativeFilter(func);
             var symbols = new[]
             {
-                Symbol.CreateOption("SPY", Market.USA, OptionStyle.American, OptionRight.Put, 2, expiry),  // 0
-                Symbol.CreateOption("SPY", Market.USA, OptionStyle.American, OptionRight.Put, 5, expiry),  // 1
-                Symbol.CreateOption("SPY", Market.USA, OptionStyle.American, OptionRight.Put, 7, expiry),  // 2
-                Symbol.CreateOption("SPY", Market.USA, OptionStyle.American, OptionRight.Put, 8, expiry),  // 3
-                Symbol.CreateOption("SPY", Market.USA, OptionStyle.American, OptionRight.Put, 9, expiry),  // 4
-                Symbol.CreateOption("SPY", Market.USA, OptionStyle.American, OptionRight.Put, 10, expiry), // 5
-                Symbol.CreateOption("SPY", Market.USA, OptionStyle.American, OptionRight.Put, 11, expiry), // 6
-                Symbol.CreateOption("SPY", Market.USA, OptionStyle.American, OptionRight.Put, 12, expiry), // 7
-                Symbol.CreateOption("SPY", Market.USA, OptionStyle.American, OptionRight.Put, 15, expiry), // 8
-                Symbol.CreateOption("SPY", Market.USA, OptionStyle.American, OptionRight.Put, 20, expiry), // 9
+                Symbol.CreateOption(
+                    "SPY",
+                    Market.USA,
+                    OptionStyle.American,
+                    OptionRight.Put,
+                    2,
+                    expiry
+                ), // 0
+                Symbol.CreateOption(
+                    "SPY",
+                    Market.USA,
+                    OptionStyle.American,
+                    OptionRight.Put,
+                    5,
+                    expiry
+                ), // 1
+                Symbol.CreateOption(
+                    "SPY",
+                    Market.USA,
+                    OptionStyle.American,
+                    OptionRight.Put,
+                    7,
+                    expiry
+                ), // 2
+                Symbol.CreateOption(
+                    "SPY",
+                    Market.USA,
+                    OptionStyle.American,
+                    OptionRight.Put,
+                    8,
+                    expiry
+                ), // 3
+                Symbol.CreateOption(
+                    "SPY",
+                    Market.USA,
+                    OptionStyle.American,
+                    OptionRight.Put,
+                    9,
+                    expiry
+                ), // 4
+                Symbol.CreateOption(
+                    "SPY",
+                    Market.USA,
+                    OptionStyle.American,
+                    OptionRight.Put,
+                    10,
+                    expiry
+                ), // 5
+                Symbol.CreateOption(
+                    "SPY",
+                    Market.USA,
+                    OptionStyle.American,
+                    OptionRight.Put,
+                    11,
+                    expiry
+                ), // 6
+                Symbol.CreateOption(
+                    "SPY",
+                    Market.USA,
+                    OptionStyle.American,
+                    OptionRight.Put,
+                    12,
+                    expiry
+                ), // 7
+                Symbol.CreateOption(
+                    "SPY",
+                    Market.USA,
+                    OptionStyle.American,
+                    OptionRight.Put,
+                    15,
+                    expiry
+                ), // 8
+                Symbol.CreateOption(
+                    "SPY",
+                    Market.USA,
+                    OptionStyle.American,
+                    OptionRight.Put,
+                    20,
+                    expiry
+                ), // 9
             };
 
             var filterUniverse = new OptionFilterUniverse(symbols, underlying);
@@ -106,11 +197,14 @@ namespace QuantConnect.Tests.Common.Securities
         public void FiltersStrikeRangeWithNegativeMaxStrike(decimal underlyingPrice)
         {
             var expiry = new DateTime(2016, 03, 04);
-            var underlying = new Tick { Value = underlyingPrice, Time = new DateTime(2016, 02, 26) };
+            var underlying = new Tick
+            {
+                Value = underlyingPrice,
+                Time = new DateTime(2016, 02, 26)
+            };
 
-            Func<OptionFilterUniverse, OptionFilterUniverse> universeFunc = universe => universe
-                .Strikes(-3, -1)
-                .Expiration(TimeSpan.Zero, TimeSpan.MaxValue);
+            Func<OptionFilterUniverse, OptionFilterUniverse> universeFunc = universe =>
+                universe.Strikes(-3, -1).Expiration(TimeSpan.Zero, TimeSpan.MaxValue);
 
             Func<IDerivativeSecurityFilterUniverse, IDerivativeSecurityFilterUniverse> func =
                 universe => universeFunc(universe as OptionFilterUniverse);
@@ -118,16 +212,86 @@ namespace QuantConnect.Tests.Common.Securities
             var filter = new FuncSecurityDerivativeFilter(func);
             var symbols = new[]
             {
-                Symbol.CreateOption("SPY", Market.USA, OptionStyle.American, OptionRight.Put, 2, expiry),  // 0
-                Symbol.CreateOption("SPY", Market.USA, OptionStyle.American, OptionRight.Put, 5, expiry),  // 1
-                Symbol.CreateOption("SPY", Market.USA, OptionStyle.American, OptionRight.Put, 7, expiry),  // 2
-                Symbol.CreateOption("SPY", Market.USA, OptionStyle.American, OptionRight.Put, 8, expiry),  // 3
-                Symbol.CreateOption("SPY", Market.USA, OptionStyle.American, OptionRight.Put, 9, expiry),  // 4
-                Symbol.CreateOption("SPY", Market.USA, OptionStyle.American, OptionRight.Put, 10, expiry), // 5
-                Symbol.CreateOption("SPY", Market.USA, OptionStyle.American, OptionRight.Put, 11, expiry), // 6
-                Symbol.CreateOption("SPY", Market.USA, OptionStyle.American, OptionRight.Put, 12, expiry), // 7
-                Symbol.CreateOption("SPY", Market.USA, OptionStyle.American, OptionRight.Put, 15, expiry), // 8
-                Symbol.CreateOption("SPY", Market.USA, OptionStyle.American, OptionRight.Put, 20, expiry), // 9
+                Symbol.CreateOption(
+                    "SPY",
+                    Market.USA,
+                    OptionStyle.American,
+                    OptionRight.Put,
+                    2,
+                    expiry
+                ), // 0
+                Symbol.CreateOption(
+                    "SPY",
+                    Market.USA,
+                    OptionStyle.American,
+                    OptionRight.Put,
+                    5,
+                    expiry
+                ), // 1
+                Symbol.CreateOption(
+                    "SPY",
+                    Market.USA,
+                    OptionStyle.American,
+                    OptionRight.Put,
+                    7,
+                    expiry
+                ), // 2
+                Symbol.CreateOption(
+                    "SPY",
+                    Market.USA,
+                    OptionStyle.American,
+                    OptionRight.Put,
+                    8,
+                    expiry
+                ), // 3
+                Symbol.CreateOption(
+                    "SPY",
+                    Market.USA,
+                    OptionStyle.American,
+                    OptionRight.Put,
+                    9,
+                    expiry
+                ), // 4
+                Symbol.CreateOption(
+                    "SPY",
+                    Market.USA,
+                    OptionStyle.American,
+                    OptionRight.Put,
+                    10,
+                    expiry
+                ), // 5
+                Symbol.CreateOption(
+                    "SPY",
+                    Market.USA,
+                    OptionStyle.American,
+                    OptionRight.Put,
+                    11,
+                    expiry
+                ), // 6
+                Symbol.CreateOption(
+                    "SPY",
+                    Market.USA,
+                    OptionStyle.American,
+                    OptionRight.Put,
+                    12,
+                    expiry
+                ), // 7
+                Symbol.CreateOption(
+                    "SPY",
+                    Market.USA,
+                    OptionStyle.American,
+                    OptionRight.Put,
+                    15,
+                    expiry
+                ), // 8
+                Symbol.CreateOption(
+                    "SPY",
+                    Market.USA,
+                    OptionStyle.American,
+                    OptionRight.Put,
+                    20,
+                    expiry
+                ), // 9
             };
 
             var filterUniverse = new OptionFilterUniverse(symbols, underlying);
@@ -144,11 +308,14 @@ namespace QuantConnect.Tests.Common.Securities
         public void FiltersStrikeRangeWithNegativeMaxStrikeOutOfRange(decimal underlyingPrice)
         {
             var expiry = new DateTime(2016, 03, 04);
-            var underlying = new Tick { Value = underlyingPrice, Time = new DateTime(2016, 02, 26) };
+            var underlying = new Tick
+            {
+                Value = underlyingPrice,
+                Time = new DateTime(2016, 02, 26)
+            };
 
-            Func<OptionFilterUniverse, OptionFilterUniverse> universeFunc = universe => universe
-                .Strikes(-3, -1)
-                .Expiration(TimeSpan.Zero, TimeSpan.MaxValue);
+            Func<OptionFilterUniverse, OptionFilterUniverse> universeFunc = universe =>
+                universe.Strikes(-3, -1).Expiration(TimeSpan.Zero, TimeSpan.MaxValue);
 
             Func<IDerivativeSecurityFilterUniverse, IDerivativeSecurityFilterUniverse> func =
                 universe => universeFunc(universe as OptionFilterUniverse);
@@ -156,8 +323,22 @@ namespace QuantConnect.Tests.Common.Securities
             var filter = new FuncSecurityDerivativeFilter(func);
             var symbols = new[]
             {
-                Symbol.CreateOption("SPY", Market.USA, OptionStyle.American, OptionRight.Put, 15, expiry), // 0
-                Symbol.CreateOption("SPY", Market.USA, OptionStyle.American, OptionRight.Put, 20, expiry), // 1
+                Symbol.CreateOption(
+                    "SPY",
+                    Market.USA,
+                    OptionStyle.American,
+                    OptionRight.Put,
+                    15,
+                    expiry
+                ), // 0
+                Symbol.CreateOption(
+                    "SPY",
+                    Market.USA,
+                    OptionStyle.American,
+                    OptionRight.Put,
+                    20,
+                    expiry
+                ), // 1
             };
 
             var filterUniverse = new OptionFilterUniverse(symbols, underlying);
@@ -171,11 +352,14 @@ namespace QuantConnect.Tests.Common.Securities
         public void FiltersStrikeRangeWithPositiveMinStrike(decimal underlyingPrice)
         {
             var expiry = new DateTime(2016, 03, 04);
-            var underlying = new Tick { Value = underlyingPrice, Time = new DateTime(2016, 02, 26) };
+            var underlying = new Tick
+            {
+                Value = underlyingPrice,
+                Time = new DateTime(2016, 02, 26)
+            };
 
-            Func<OptionFilterUniverse, OptionFilterUniverse> universeFunc = universe => universe
-                .Strikes(1, 3)
-                .Expiration(TimeSpan.Zero, TimeSpan.MaxValue);
+            Func<OptionFilterUniverse, OptionFilterUniverse> universeFunc = universe =>
+                universe.Strikes(1, 3).Expiration(TimeSpan.Zero, TimeSpan.MaxValue);
 
             Func<IDerivativeSecurityFilterUniverse, IDerivativeSecurityFilterUniverse> func =
                 universe => universeFunc(universe as OptionFilterUniverse);
@@ -183,16 +367,86 @@ namespace QuantConnect.Tests.Common.Securities
             var filter = new FuncSecurityDerivativeFilter(func);
             var symbols = new[]
             {
-                Symbol.CreateOption("SPY", Market.USA, OptionStyle.American, OptionRight.Put, 2, expiry),  // 0
-                Symbol.CreateOption("SPY", Market.USA, OptionStyle.American, OptionRight.Put, 5, expiry),  // 1
-                Symbol.CreateOption("SPY", Market.USA, OptionStyle.American, OptionRight.Put, 7, expiry),  // 2
-                Symbol.CreateOption("SPY", Market.USA, OptionStyle.American, OptionRight.Put, 8, expiry),  // 3
-                Symbol.CreateOption("SPY", Market.USA, OptionStyle.American, OptionRight.Put, 9, expiry),  // 4
-                Symbol.CreateOption("SPY", Market.USA, OptionStyle.American, OptionRight.Put, 10, expiry), // 5
-                Symbol.CreateOption("SPY", Market.USA, OptionStyle.American, OptionRight.Put, 11, expiry), // 6
-                Symbol.CreateOption("SPY", Market.USA, OptionStyle.American, OptionRight.Put, 12, expiry), // 7
-                Symbol.CreateOption("SPY", Market.USA, OptionStyle.American, OptionRight.Put, 15, expiry), // 8
-                Symbol.CreateOption("SPY", Market.USA, OptionStyle.American, OptionRight.Put, 20, expiry), // 9
+                Symbol.CreateOption(
+                    "SPY",
+                    Market.USA,
+                    OptionStyle.American,
+                    OptionRight.Put,
+                    2,
+                    expiry
+                ), // 0
+                Symbol.CreateOption(
+                    "SPY",
+                    Market.USA,
+                    OptionStyle.American,
+                    OptionRight.Put,
+                    5,
+                    expiry
+                ), // 1
+                Symbol.CreateOption(
+                    "SPY",
+                    Market.USA,
+                    OptionStyle.American,
+                    OptionRight.Put,
+                    7,
+                    expiry
+                ), // 2
+                Symbol.CreateOption(
+                    "SPY",
+                    Market.USA,
+                    OptionStyle.American,
+                    OptionRight.Put,
+                    8,
+                    expiry
+                ), // 3
+                Symbol.CreateOption(
+                    "SPY",
+                    Market.USA,
+                    OptionStyle.American,
+                    OptionRight.Put,
+                    9,
+                    expiry
+                ), // 4
+                Symbol.CreateOption(
+                    "SPY",
+                    Market.USA,
+                    OptionStyle.American,
+                    OptionRight.Put,
+                    10,
+                    expiry
+                ), // 5
+                Symbol.CreateOption(
+                    "SPY",
+                    Market.USA,
+                    OptionStyle.American,
+                    OptionRight.Put,
+                    11,
+                    expiry
+                ), // 6
+                Symbol.CreateOption(
+                    "SPY",
+                    Market.USA,
+                    OptionStyle.American,
+                    OptionRight.Put,
+                    12,
+                    expiry
+                ), // 7
+                Symbol.CreateOption(
+                    "SPY",
+                    Market.USA,
+                    OptionStyle.American,
+                    OptionRight.Put,
+                    15,
+                    expiry
+                ), // 8
+                Symbol.CreateOption(
+                    "SPY",
+                    Market.USA,
+                    OptionStyle.American,
+                    OptionRight.Put,
+                    20,
+                    expiry
+                ), // 9
             };
 
             var filterUniverse = new OptionFilterUniverse(symbols, underlying);
@@ -209,11 +463,14 @@ namespace QuantConnect.Tests.Common.Securities
         public void FiltersStrikeRangeWithPositiveMinStrikeOutOfRange(decimal underlyingPrice)
         {
             var expiry = new DateTime(2016, 03, 04);
-            var underlying = new Tick { Value = underlyingPrice, Time = new DateTime(2016, 02, 26) };
+            var underlying = new Tick
+            {
+                Value = underlyingPrice,
+                Time = new DateTime(2016, 02, 26)
+            };
 
-            Func<OptionFilterUniverse, OptionFilterUniverse> universeFunc = universe => universe
-                .Strikes(1, 3)
-                .Expiration(TimeSpan.Zero, TimeSpan.MaxValue);
+            Func<OptionFilterUniverse, OptionFilterUniverse> universeFunc = universe =>
+                universe.Strikes(1, 3).Expiration(TimeSpan.Zero, TimeSpan.MaxValue);
 
             Func<IDerivativeSecurityFilterUniverse, IDerivativeSecurityFilterUniverse> func =
                 universe => universeFunc(universe as OptionFilterUniverse);
@@ -221,8 +478,22 @@ namespace QuantConnect.Tests.Common.Securities
             var filter = new FuncSecurityDerivativeFilter(func);
             var symbols = new[]
             {
-                Symbol.CreateOption("SPY", Market.USA, OptionStyle.American, OptionRight.Put, 15, expiry), // 0
-                Symbol.CreateOption("SPY", Market.USA, OptionStyle.American, OptionRight.Put, 20, expiry), // 1
+                Symbol.CreateOption(
+                    "SPY",
+                    Market.USA,
+                    OptionStyle.American,
+                    OptionRight.Put,
+                    15,
+                    expiry
+                ), // 0
+                Symbol.CreateOption(
+                    "SPY",
+                    Market.USA,
+                    OptionStyle.American,
+                    OptionRight.Put,
+                    20,
+                    expiry
+                ), // 1
             };
 
             var filterUniverse = new OptionFilterUniverse(symbols, underlying);
@@ -235,9 +506,8 @@ namespace QuantConnect.Tests.Common.Securities
         {
             var underlying = new Tick { Value = 7.5m, Time = new DateTime(2016, 02, 26) };
 
-            Func<OptionFilterUniverse, OptionFilterUniverse> universeFunc = universe => universe
-                .Strikes(-2, 2)
-                .Expiration(TimeSpan.Zero, TimeSpan.MaxValue);
+            Func<OptionFilterUniverse, OptionFilterUniverse> universeFunc = universe =>
+                universe.Strikes(-2, 2).Expiration(TimeSpan.Zero, TimeSpan.MaxValue);
 
             Func<IDerivativeSecurityFilterUniverse, IDerivativeSecurityFilterUniverse> func =
                 universe => universeFunc(universe as OptionFilterUniverse);
@@ -256,9 +526,8 @@ namespace QuantConnect.Tests.Common.Securities
             var time = new DateTime(2016, 02, 26);
             var underlying = new Tick { Value = 10m, Time = time };
 
-            Func<OptionFilterUniverse, OptionFilterUniverse> universeFunc = universe => universe
-                    .Strikes(-10, 10)
-                    .Expiration(TimeSpan.FromDays(3), TimeSpan.FromDays(7));
+            Func<OptionFilterUniverse, OptionFilterUniverse> universeFunc = universe =>
+                universe.Strikes(-10, 10).Expiration(TimeSpan.FromDays(3), TimeSpan.FromDays(7));
 
             Func<IDerivativeSecurityFilterUniverse, IDerivativeSecurityFilterUniverse> func =
                 universe => universeFunc(universe as OptionFilterUniverse);
@@ -266,16 +535,86 @@ namespace QuantConnect.Tests.Common.Securities
             var filter = new FuncSecurityDerivativeFilter(func);
             var symbols = new[]
             {
-                Symbol.CreateOption("SPY", Market.USA, OptionStyle.American, OptionRight.Put, 10, time.AddDays(0)), // 0
-                Symbol.CreateOption("SPY", Market.USA, OptionStyle.American, OptionRight.Put, 10, time.AddDays(1)), // 1
-                Symbol.CreateOption("SPY", Market.USA, OptionStyle.American, OptionRight.Put, 10, time.AddDays(2)), // 2
-                Symbol.CreateOption("SPY", Market.USA, OptionStyle.American, OptionRight.Put, 10, time.AddDays(3)), // 3
-                Symbol.CreateOption("SPY", Market.USA, OptionStyle.American, OptionRight.Put, 10, time.AddDays(4)), // 4
-                Symbol.CreateOption("SPY", Market.USA, OptionStyle.American, OptionRight.Put, 10, time.AddDays(5)), // 5
-                Symbol.CreateOption("SPY", Market.USA, OptionStyle.American, OptionRight.Put, 10, time.AddDays(6)), // 6
-                Symbol.CreateOption("SPY", Market.USA, OptionStyle.American, OptionRight.Put, 10, time.AddDays(7)), // 7
-                Symbol.CreateOption("SPY", Market.USA, OptionStyle.American, OptionRight.Put, 10, time.AddDays(8)), // 8
-                Symbol.CreateOption("SPY", Market.USA, OptionStyle.American, OptionRight.Put, 10, time.AddDays(9)), // 9
+                Symbol.CreateOption(
+                    "SPY",
+                    Market.USA,
+                    OptionStyle.American,
+                    OptionRight.Put,
+                    10,
+                    time.AddDays(0)
+                ), // 0
+                Symbol.CreateOption(
+                    "SPY",
+                    Market.USA,
+                    OptionStyle.American,
+                    OptionRight.Put,
+                    10,
+                    time.AddDays(1)
+                ), // 1
+                Symbol.CreateOption(
+                    "SPY",
+                    Market.USA,
+                    OptionStyle.American,
+                    OptionRight.Put,
+                    10,
+                    time.AddDays(2)
+                ), // 2
+                Symbol.CreateOption(
+                    "SPY",
+                    Market.USA,
+                    OptionStyle.American,
+                    OptionRight.Put,
+                    10,
+                    time.AddDays(3)
+                ), // 3
+                Symbol.CreateOption(
+                    "SPY",
+                    Market.USA,
+                    OptionStyle.American,
+                    OptionRight.Put,
+                    10,
+                    time.AddDays(4)
+                ), // 4
+                Symbol.CreateOption(
+                    "SPY",
+                    Market.USA,
+                    OptionStyle.American,
+                    OptionRight.Put,
+                    10,
+                    time.AddDays(5)
+                ), // 5
+                Symbol.CreateOption(
+                    "SPY",
+                    Market.USA,
+                    OptionStyle.American,
+                    OptionRight.Put,
+                    10,
+                    time.AddDays(6)
+                ), // 6
+                Symbol.CreateOption(
+                    "SPY",
+                    Market.USA,
+                    OptionStyle.American,
+                    OptionRight.Put,
+                    10,
+                    time.AddDays(7)
+                ), // 7
+                Symbol.CreateOption(
+                    "SPY",
+                    Market.USA,
+                    OptionStyle.American,
+                    OptionRight.Put,
+                    10,
+                    time.AddDays(8)
+                ), // 8
+                Symbol.CreateOption(
+                    "SPY",
+                    Market.USA,
+                    OptionStyle.American,
+                    OptionRight.Put,
+                    10,
+                    time.AddDays(9)
+                ), // 9
             };
             var filterUniverse = new OptionFilterUniverse(symbols, underlying);
             var filtered = filter.Filter(filterUniverse).ToList();
@@ -309,16 +648,86 @@ namespace QuantConnect.Tests.Common.Securities
             var filter = new FuncSecurityDerivativeFilter(func);
             var symbols = new[]
             {
-                Symbol.CreateOption("SPY", Market.USA, OptionStyle.American, OptionRight.Put, 2, expiry1),  // 0
-                Symbol.CreateOption("SPY", Market.USA, OptionStyle.American, OptionRight.Put, 5, expiry2),  // 1
-                Symbol.CreateOption("SPY", Market.USA, OptionStyle.American, OptionRight.Put, 7, expiry3),  // 2
-                Symbol.CreateOption("SPY", Market.USA, OptionStyle.American, OptionRight.Put, 8, expiry4),  // 3
-                Symbol.CreateOption("SPY", Market.USA, OptionStyle.American, OptionRight.Put, 9, expiry5),  // 4
-                Symbol.CreateOption("SPY", Market.USA, OptionStyle.American, OptionRight.Put, 10, expiry6), // 5
-                Symbol.CreateOption("SPY", Market.USA, OptionStyle.American, OptionRight.Put, 11, expiry6), // 6
-                Symbol.CreateOption("SPY", Market.USA, OptionStyle.American, OptionRight.Put, 12, expiry6), // 7
-                Symbol.CreateOption("SPY", Market.USA, OptionStyle.American, OptionRight.Put, 15, expiry7), // 8
-                Symbol.CreateOption("SPY", Market.USA, OptionStyle.American, OptionRight.Put, 20, expiry8), // 9
+                Symbol.CreateOption(
+                    "SPY",
+                    Market.USA,
+                    OptionStyle.American,
+                    OptionRight.Put,
+                    2,
+                    expiry1
+                ), // 0
+                Symbol.CreateOption(
+                    "SPY",
+                    Market.USA,
+                    OptionStyle.American,
+                    OptionRight.Put,
+                    5,
+                    expiry2
+                ), // 1
+                Symbol.CreateOption(
+                    "SPY",
+                    Market.USA,
+                    OptionStyle.American,
+                    OptionRight.Put,
+                    7,
+                    expiry3
+                ), // 2
+                Symbol.CreateOption(
+                    "SPY",
+                    Market.USA,
+                    OptionStyle.American,
+                    OptionRight.Put,
+                    8,
+                    expiry4
+                ), // 3
+                Symbol.CreateOption(
+                    "SPY",
+                    Market.USA,
+                    OptionStyle.American,
+                    OptionRight.Put,
+                    9,
+                    expiry5
+                ), // 4
+                Symbol.CreateOption(
+                    "SPY",
+                    Market.USA,
+                    OptionStyle.American,
+                    OptionRight.Put,
+                    10,
+                    expiry6
+                ), // 5
+                Symbol.CreateOption(
+                    "SPY",
+                    Market.USA,
+                    OptionStyle.American,
+                    OptionRight.Put,
+                    11,
+                    expiry6
+                ), // 6
+                Symbol.CreateOption(
+                    "SPY",
+                    Market.USA,
+                    OptionStyle.American,
+                    OptionRight.Put,
+                    12,
+                    expiry6
+                ), // 7
+                Symbol.CreateOption(
+                    "SPY",
+                    Market.USA,
+                    OptionStyle.American,
+                    OptionRight.Put,
+                    15,
+                    expiry7
+                ), // 8
+                Symbol.CreateOption(
+                    "SPY",
+                    Market.USA,
+                    OptionStyle.American,
+                    OptionRight.Put,
+                    20,
+                    expiry8
+                ), // 9
             };
 
             var filtered = filter.Filter(new OptionFilterUniverse(symbols, underlying)).ToList();
@@ -350,16 +759,86 @@ namespace QuantConnect.Tests.Common.Securities
             var filter = new FuncSecurityDerivativeFilter(func);
             var symbols = new[]
             {
-                Symbol.CreateOption("SPY", Market.USA, OptionStyle.American, OptionRight.Put, 2, expiry1),  // 0
-                Symbol.CreateOption("SPY", Market.USA, OptionStyle.American, OptionRight.Put, 5, expiry2),  // 1
-                Symbol.CreateOption("SPY", Market.USA, OptionStyle.American, OptionRight.Put, 7, expiry3),  // 2
-                Symbol.CreateOption("SPY", Market.USA, OptionStyle.American, OptionRight.Put, 8, expiry4),  // 3
-                Symbol.CreateOption("SPY", Market.USA, OptionStyle.American, OptionRight.Put, 9, expiry5),  // 4
-                Symbol.CreateOption("SPY", Market.USA, OptionStyle.American, OptionRight.Put, 10, expiry6), // 5
-                Symbol.CreateOption("SPY", Market.USA, OptionStyle.American, OptionRight.Put, 11, expiry6), // 6
-                Symbol.CreateOption("SPY", Market.USA, OptionStyle.American, OptionRight.Put, 12, expiry6), // 7
-                Symbol.CreateOption("SPY", Market.USA, OptionStyle.American, OptionRight.Put, 15, expiry7), // 8
-                Symbol.CreateOption("SPY", Market.USA, OptionStyle.American, OptionRight.Put, 20, expiry8), // 9
+                Symbol.CreateOption(
+                    "SPY",
+                    Market.USA,
+                    OptionStyle.American,
+                    OptionRight.Put,
+                    2,
+                    expiry1
+                ), // 0
+                Symbol.CreateOption(
+                    "SPY",
+                    Market.USA,
+                    OptionStyle.American,
+                    OptionRight.Put,
+                    5,
+                    expiry2
+                ), // 1
+                Symbol.CreateOption(
+                    "SPY",
+                    Market.USA,
+                    OptionStyle.American,
+                    OptionRight.Put,
+                    7,
+                    expiry3
+                ), // 2
+                Symbol.CreateOption(
+                    "SPY",
+                    Market.USA,
+                    OptionStyle.American,
+                    OptionRight.Put,
+                    8,
+                    expiry4
+                ), // 3
+                Symbol.CreateOption(
+                    "SPY",
+                    Market.USA,
+                    OptionStyle.American,
+                    OptionRight.Put,
+                    9,
+                    expiry5
+                ), // 4
+                Symbol.CreateOption(
+                    "SPY",
+                    Market.USA,
+                    OptionStyle.American,
+                    OptionRight.Put,
+                    10,
+                    expiry6
+                ), // 5
+                Symbol.CreateOption(
+                    "SPY",
+                    Market.USA,
+                    OptionStyle.American,
+                    OptionRight.Put,
+                    11,
+                    expiry6
+                ), // 6
+                Symbol.CreateOption(
+                    "SPY",
+                    Market.USA,
+                    OptionStyle.American,
+                    OptionRight.Put,
+                    12,
+                    expiry6
+                ), // 7
+                Symbol.CreateOption(
+                    "SPY",
+                    Market.USA,
+                    OptionStyle.American,
+                    OptionRight.Put,
+                    15,
+                    expiry7
+                ), // 8
+                Symbol.CreateOption(
+                    "SPY",
+                    Market.USA,
+                    OptionStyle.American,
+                    OptionRight.Put,
+                    20,
+                    expiry8
+                ), // 9
             };
 
             var filtered = filter.Filter(new OptionFilterUniverse(symbols, underlying)).ToList();
@@ -379,7 +858,8 @@ namespace QuantConnect.Tests.Common.Securities
 
             var underlying = new Tick { Value = 10m, Time = new DateTime(2016, 02, 26) };
 
-            Func<OptionFilterUniverse, OptionFilterUniverse> universeFunc = universe => universe.WeeklysOnly();
+            Func<OptionFilterUniverse, OptionFilterUniverse> universeFunc = universe =>
+                universe.WeeklysOnly();
 
             Func<IDerivativeSecurityFilterUniverse, IDerivativeSecurityFilterUniverse> func =
                 universe => universeFunc(universe as OptionFilterUniverse).ApplyTypesFilter();
@@ -387,16 +867,86 @@ namespace QuantConnect.Tests.Common.Securities
             var filter = new FuncSecurityDerivativeFilter(func);
             var symbols = new[]
             {
-                Symbol.CreateOption("SPY", Market.USA, OptionStyle.American, OptionRight.Put, 2, expiry1),  // 0
-                Symbol.CreateOption("SPY", Market.USA, OptionStyle.American, OptionRight.Put, 5, expiry1),  // 1
-                Symbol.CreateOption("SPY", Market.USA, OptionStyle.American, OptionRight.Put, 7, expiry1),  // 2
-                Symbol.CreateOption("SPY", Market.USA, OptionStyle.American, OptionRight.Put, 8, expiry1),  // 3
-                Symbol.CreateOption("SPY", Market.USA, OptionStyle.American, OptionRight.Put, 9, expiry2),  // 4
-                Symbol.CreateOption("SPY", Market.USA, OptionStyle.American, OptionRight.Put, 10, expiry2), // 5
-                Symbol.CreateOption("SPY", Market.USA, OptionStyle.American, OptionRight.Put, 11, expiry3), // 6
-                Symbol.CreateOption("SPY", Market.USA, OptionStyle.American, OptionRight.Put, 12, expiry3), // 7
-                Symbol.CreateOption("SPY", Market.USA, OptionStyle.American, OptionRight.Put, 15, expiry4), // 8
-                Symbol.CreateOption("SPY", Market.USA, OptionStyle.American, OptionRight.Put, 20, expiry4), // 9
+                Symbol.CreateOption(
+                    "SPY",
+                    Market.USA,
+                    OptionStyle.American,
+                    OptionRight.Put,
+                    2,
+                    expiry1
+                ), // 0
+                Symbol.CreateOption(
+                    "SPY",
+                    Market.USA,
+                    OptionStyle.American,
+                    OptionRight.Put,
+                    5,
+                    expiry1
+                ), // 1
+                Symbol.CreateOption(
+                    "SPY",
+                    Market.USA,
+                    OptionStyle.American,
+                    OptionRight.Put,
+                    7,
+                    expiry1
+                ), // 2
+                Symbol.CreateOption(
+                    "SPY",
+                    Market.USA,
+                    OptionStyle.American,
+                    OptionRight.Put,
+                    8,
+                    expiry1
+                ), // 3
+                Symbol.CreateOption(
+                    "SPY",
+                    Market.USA,
+                    OptionStyle.American,
+                    OptionRight.Put,
+                    9,
+                    expiry2
+                ), // 4
+                Symbol.CreateOption(
+                    "SPY",
+                    Market.USA,
+                    OptionStyle.American,
+                    OptionRight.Put,
+                    10,
+                    expiry2
+                ), // 5
+                Symbol.CreateOption(
+                    "SPY",
+                    Market.USA,
+                    OptionStyle.American,
+                    OptionRight.Put,
+                    11,
+                    expiry3
+                ), // 6
+                Symbol.CreateOption(
+                    "SPY",
+                    Market.USA,
+                    OptionStyle.American,
+                    OptionRight.Put,
+                    12,
+                    expiry3
+                ), // 7
+                Symbol.CreateOption(
+                    "SPY",
+                    Market.USA,
+                    OptionStyle.American,
+                    OptionRight.Put,
+                    15,
+                    expiry4
+                ), // 8
+                Symbol.CreateOption(
+                    "SPY",
+                    Market.USA,
+                    OptionStyle.American,
+                    OptionRight.Put,
+                    20,
+                    expiry4
+                ), // 9
             };
 
             var filtered = filter.Filter(new OptionFilterUniverse(symbols, underlying)).ToList();
@@ -413,7 +963,8 @@ namespace QuantConnect.Tests.Common.Securities
 
             var underlying = new Tick { Value = 10m, Time = new DateTime(2016, 02, 26) };
 
-            Func<OptionFilterUniverse, OptionFilterUniverse> universeFunc = universe => universe.IncludeWeeklys();
+            Func<OptionFilterUniverse, OptionFilterUniverse> universeFunc = universe =>
+                universe.IncludeWeeklys();
 
             Func<IDerivativeSecurityFilterUniverse, IDerivativeSecurityFilterUniverse> func =
                 universe => universeFunc(universe as OptionFilterUniverse).ApplyTypesFilter();
@@ -421,16 +972,86 @@ namespace QuantConnect.Tests.Common.Securities
             var filter = new FuncSecurityDerivativeFilter(func);
             var symbols = new[]
             {
-                Symbol.CreateOption("SPY", Market.USA, OptionStyle.American, OptionRight.Put, 2, expiry1),  // 0
-                Symbol.CreateOption("SPY", Market.USA, OptionStyle.American, OptionRight.Put, 5, expiry1),  // 1
-                Symbol.CreateOption("SPY", Market.USA, OptionStyle.American, OptionRight.Put, 7, expiry1),  // 2
-                Symbol.CreateOption("SPY", Market.USA, OptionStyle.American, OptionRight.Put, 8, expiry1),  // 3
-                Symbol.CreateOption("SPY", Market.USA, OptionStyle.American, OptionRight.Put, 9, expiry2),  // 4
-                Symbol.CreateOption("SPY", Market.USA, OptionStyle.American, OptionRight.Put, 10, expiry2), // 5
-                Symbol.CreateOption("SPY", Market.USA, OptionStyle.American, OptionRight.Put, 11, expiry3), // 6
-                Symbol.CreateOption("SPY", Market.USA, OptionStyle.American, OptionRight.Put, 12, expiry3), // 7
-                Symbol.CreateOption("SPY", Market.USA, OptionStyle.American, OptionRight.Put, 15, expiry4), // 8
-                Symbol.CreateOption("SPY", Market.USA, OptionStyle.American, OptionRight.Put, 20, expiry4), // 9
+                Symbol.CreateOption(
+                    "SPY",
+                    Market.USA,
+                    OptionStyle.American,
+                    OptionRight.Put,
+                    2,
+                    expiry1
+                ), // 0
+                Symbol.CreateOption(
+                    "SPY",
+                    Market.USA,
+                    OptionStyle.American,
+                    OptionRight.Put,
+                    5,
+                    expiry1
+                ), // 1
+                Symbol.CreateOption(
+                    "SPY",
+                    Market.USA,
+                    OptionStyle.American,
+                    OptionRight.Put,
+                    7,
+                    expiry1
+                ), // 2
+                Symbol.CreateOption(
+                    "SPY",
+                    Market.USA,
+                    OptionStyle.American,
+                    OptionRight.Put,
+                    8,
+                    expiry1
+                ), // 3
+                Symbol.CreateOption(
+                    "SPY",
+                    Market.USA,
+                    OptionStyle.American,
+                    OptionRight.Put,
+                    9,
+                    expiry2
+                ), // 4
+                Symbol.CreateOption(
+                    "SPY",
+                    Market.USA,
+                    OptionStyle.American,
+                    OptionRight.Put,
+                    10,
+                    expiry2
+                ), // 5
+                Symbol.CreateOption(
+                    "SPY",
+                    Market.USA,
+                    OptionStyle.American,
+                    OptionRight.Put,
+                    11,
+                    expiry3
+                ), // 6
+                Symbol.CreateOption(
+                    "SPY",
+                    Market.USA,
+                    OptionStyle.American,
+                    OptionRight.Put,
+                    12,
+                    expiry3
+                ), // 7
+                Symbol.CreateOption(
+                    "SPY",
+                    Market.USA,
+                    OptionStyle.American,
+                    OptionRight.Put,
+                    15,
+                    expiry4
+                ), // 8
+                Symbol.CreateOption(
+                    "SPY",
+                    Market.USA,
+                    OptionStyle.American,
+                    OptionRight.Put,
+                    20,
+                    expiry4
+                ), // 9
             };
             var filterUniverse = new OptionFilterUniverse(symbols, underlying);
             var filtered = filter.Filter(filterUniverse).ToList();
@@ -447,7 +1068,8 @@ namespace QuantConnect.Tests.Common.Securities
 
             var underlying = new Tick { Value = 10m, Time = new DateTime(2016, 02, 26) };
 
-            Func<OptionFilterUniverse, OptionFilterUniverse> universeFunc = universe => universe.IncludeWeeklys().FrontMonth();
+            Func<OptionFilterUniverse, OptionFilterUniverse> universeFunc = universe =>
+                universe.IncludeWeeklys().FrontMonth();
 
             Func<IDerivativeSecurityFilterUniverse, IDerivativeSecurityFilterUniverse> func =
                 universe => universeFunc(universe as OptionFilterUniverse);
@@ -455,16 +1077,86 @@ namespace QuantConnect.Tests.Common.Securities
             var filter = new FuncSecurityDerivativeFilter(func);
             var symbols = new[]
             {
-                Symbol.CreateOption("SPY", Market.USA, OptionStyle.American, OptionRight.Put, 2, expiry1),  // 0
-                Symbol.CreateOption("SPY", Market.USA, OptionStyle.American, OptionRight.Put, 5, expiry1),  // 1
-                Symbol.CreateOption("SPY", Market.USA, OptionStyle.American, OptionRight.Put, 7, expiry1),  // 2
-                Symbol.CreateOption("SPY", Market.USA, OptionStyle.American, OptionRight.Put, 8, expiry1),  // 3
-                Symbol.CreateOption("SPY", Market.USA, OptionStyle.American, OptionRight.Put, 9, expiry2),  // 4
-                Symbol.CreateOption("SPY", Market.USA, OptionStyle.American, OptionRight.Put, 10, expiry2), // 5
-                Symbol.CreateOption("SPY", Market.USA, OptionStyle.American, OptionRight.Put, 11, expiry3), // 6
-                Symbol.CreateOption("SPY", Market.USA, OptionStyle.American, OptionRight.Put, 12, expiry3), // 7
-                Symbol.CreateOption("SPY", Market.USA, OptionStyle.American, OptionRight.Put, 15, expiry4), // 8
-                Symbol.CreateOption("SPY", Market.USA, OptionStyle.American, OptionRight.Put, 20, expiry4), // 9
+                Symbol.CreateOption(
+                    "SPY",
+                    Market.USA,
+                    OptionStyle.American,
+                    OptionRight.Put,
+                    2,
+                    expiry1
+                ), // 0
+                Symbol.CreateOption(
+                    "SPY",
+                    Market.USA,
+                    OptionStyle.American,
+                    OptionRight.Put,
+                    5,
+                    expiry1
+                ), // 1
+                Symbol.CreateOption(
+                    "SPY",
+                    Market.USA,
+                    OptionStyle.American,
+                    OptionRight.Put,
+                    7,
+                    expiry1
+                ), // 2
+                Symbol.CreateOption(
+                    "SPY",
+                    Market.USA,
+                    OptionStyle.American,
+                    OptionRight.Put,
+                    8,
+                    expiry1
+                ), // 3
+                Symbol.CreateOption(
+                    "SPY",
+                    Market.USA,
+                    OptionStyle.American,
+                    OptionRight.Put,
+                    9,
+                    expiry2
+                ), // 4
+                Symbol.CreateOption(
+                    "SPY",
+                    Market.USA,
+                    OptionStyle.American,
+                    OptionRight.Put,
+                    10,
+                    expiry2
+                ), // 5
+                Symbol.CreateOption(
+                    "SPY",
+                    Market.USA,
+                    OptionStyle.American,
+                    OptionRight.Put,
+                    11,
+                    expiry3
+                ), // 6
+                Symbol.CreateOption(
+                    "SPY",
+                    Market.USA,
+                    OptionStyle.American,
+                    OptionRight.Put,
+                    12,
+                    expiry3
+                ), // 7
+                Symbol.CreateOption(
+                    "SPY",
+                    Market.USA,
+                    OptionStyle.American,
+                    OptionRight.Put,
+                    15,
+                    expiry4
+                ), // 8
+                Symbol.CreateOption(
+                    "SPY",
+                    Market.USA,
+                    OptionStyle.American,
+                    OptionRight.Put,
+                    20,
+                    expiry4
+                ), // 9
             };
 
             var filtered = filter.Filter(new OptionFilterUniverse(symbols, underlying)).ToList();
@@ -481,7 +1173,8 @@ namespace QuantConnect.Tests.Common.Securities
 
             var underlying = new Tick { Value = 10m, Time = new DateTime(2016, 02, 26) };
 
-            Func<OptionFilterUniverse, OptionFilterUniverse> universeFunc = universe => universe.IncludeWeeklys().BackMonth();
+            Func<OptionFilterUniverse, OptionFilterUniverse> universeFunc = universe =>
+                universe.IncludeWeeklys().BackMonth();
 
             Func<IDerivativeSecurityFilterUniverse, IDerivativeSecurityFilterUniverse> func =
                 universe => universeFunc(universe as OptionFilterUniverse);
@@ -489,16 +1182,86 @@ namespace QuantConnect.Tests.Common.Securities
             var filter = new FuncSecurityDerivativeFilter(func);
             var symbols = new[]
             {
-                Symbol.CreateOption("SPY", Market.USA, OptionStyle.American, OptionRight.Put, 2, expiry1),  // 0
-                Symbol.CreateOption("SPY", Market.USA, OptionStyle.American, OptionRight.Put, 5, expiry1),  // 1
-                Symbol.CreateOption("SPY", Market.USA, OptionStyle.American, OptionRight.Put, 7, expiry1),  // 2
-                Symbol.CreateOption("SPY", Market.USA, OptionStyle.American, OptionRight.Put, 8, expiry1),  // 3
-                Symbol.CreateOption("SPY", Market.USA, OptionStyle.American, OptionRight.Put, 9, expiry2),  // 4
-                Symbol.CreateOption("SPY", Market.USA, OptionStyle.American, OptionRight.Put, 10, expiry2), // 5
-                Symbol.CreateOption("SPY", Market.USA, OptionStyle.American, OptionRight.Put, 11, expiry2), // 6
-                Symbol.CreateOption("SPY", Market.USA, OptionStyle.American, OptionRight.Put, 12, expiry3), // 7
-                Symbol.CreateOption("SPY", Market.USA, OptionStyle.American, OptionRight.Put, 15, expiry4), // 8
-                Symbol.CreateOption("SPY", Market.USA, OptionStyle.American, OptionRight.Put, 20, expiry4), // 9
+                Symbol.CreateOption(
+                    "SPY",
+                    Market.USA,
+                    OptionStyle.American,
+                    OptionRight.Put,
+                    2,
+                    expiry1
+                ), // 0
+                Symbol.CreateOption(
+                    "SPY",
+                    Market.USA,
+                    OptionStyle.American,
+                    OptionRight.Put,
+                    5,
+                    expiry1
+                ), // 1
+                Symbol.CreateOption(
+                    "SPY",
+                    Market.USA,
+                    OptionStyle.American,
+                    OptionRight.Put,
+                    7,
+                    expiry1
+                ), // 2
+                Symbol.CreateOption(
+                    "SPY",
+                    Market.USA,
+                    OptionStyle.American,
+                    OptionRight.Put,
+                    8,
+                    expiry1
+                ), // 3
+                Symbol.CreateOption(
+                    "SPY",
+                    Market.USA,
+                    OptionStyle.American,
+                    OptionRight.Put,
+                    9,
+                    expiry2
+                ), // 4
+                Symbol.CreateOption(
+                    "SPY",
+                    Market.USA,
+                    OptionStyle.American,
+                    OptionRight.Put,
+                    10,
+                    expiry2
+                ), // 5
+                Symbol.CreateOption(
+                    "SPY",
+                    Market.USA,
+                    OptionStyle.American,
+                    OptionRight.Put,
+                    11,
+                    expiry2
+                ), // 6
+                Symbol.CreateOption(
+                    "SPY",
+                    Market.USA,
+                    OptionStyle.American,
+                    OptionRight.Put,
+                    12,
+                    expiry3
+                ), // 7
+                Symbol.CreateOption(
+                    "SPY",
+                    Market.USA,
+                    OptionStyle.American,
+                    OptionRight.Put,
+                    15,
+                    expiry4
+                ), // 8
+                Symbol.CreateOption(
+                    "SPY",
+                    Market.USA,
+                    OptionStyle.American,
+                    OptionRight.Put,
+                    20,
+                    expiry4
+                ), // 9
             };
 
             var filterUniverse = new OptionFilterUniverse(symbols, underlying);
@@ -511,43 +1274,195 @@ namespace QuantConnect.Tests.Common.Securities
             var expiry = new DateTime(2016, 03, 04);
             if (string.IsNullOrEmpty(targetOption))
             {
-                return new[] {
-                    Symbol.CreateOption(ticker, Market.USA, OptionStyle.American, OptionRight.Put, 2, expiry),  // 0
-                    Symbol.CreateOption(ticker, Market.USA, OptionStyle.American, OptionRight.Put, 5, expiry),  // 1
-                    Symbol.CreateOption(ticker, Market.USA, OptionStyle.American, OptionRight.Put, 7, expiry),  // 2
-                    Symbol.CreateOption(ticker, Market.USA, OptionStyle.American, OptionRight.Put, 8, expiry),  // 3
-                    Symbol.CreateOption(ticker, Market.USA, OptionStyle.American, OptionRight.Put, 9, expiry),  // 4
-                    Symbol.CreateOption(ticker, Market.USA, OptionStyle.American, OptionRight.Put, 10, expiry), // 5
-                    Symbol.CreateOption(ticker, Market.USA, OptionStyle.American, OptionRight.Put, 11, expiry), // 6
-                    Symbol.CreateOption(ticker, Market.USA, OptionStyle.American, OptionRight.Put, 12, expiry), // 7
-                    Symbol.CreateOption(ticker, Market.USA, OptionStyle.American, OptionRight.Put, 15, expiry), // 8
-                    Symbol.CreateOption(ticker, Market.USA, OptionStyle.American, OptionRight.Put, 20, expiry), // 9
+                return new[]
+                {
+                    Symbol.CreateOption(
+                        ticker,
+                        Market.USA,
+                        OptionStyle.American,
+                        OptionRight.Put,
+                        2,
+                        expiry
+                    ), // 0
+                    Symbol.CreateOption(
+                        ticker,
+                        Market.USA,
+                        OptionStyle.American,
+                        OptionRight.Put,
+                        5,
+                        expiry
+                    ), // 1
+                    Symbol.CreateOption(
+                        ticker,
+                        Market.USA,
+                        OptionStyle.American,
+                        OptionRight.Put,
+                        7,
+                        expiry
+                    ), // 2
+                    Symbol.CreateOption(
+                        ticker,
+                        Market.USA,
+                        OptionStyle.American,
+                        OptionRight.Put,
+                        8,
+                        expiry
+                    ), // 3
+                    Symbol.CreateOption(
+                        ticker,
+                        Market.USA,
+                        OptionStyle.American,
+                        OptionRight.Put,
+                        9,
+                        expiry
+                    ), // 4
+                    Symbol.CreateOption(
+                        ticker,
+                        Market.USA,
+                        OptionStyle.American,
+                        OptionRight.Put,
+                        10,
+                        expiry
+                    ), // 5
+                    Symbol.CreateOption(
+                        ticker,
+                        Market.USA,
+                        OptionStyle.American,
+                        OptionRight.Put,
+                        11,
+                        expiry
+                    ), // 6
+                    Symbol.CreateOption(
+                        ticker,
+                        Market.USA,
+                        OptionStyle.American,
+                        OptionRight.Put,
+                        12,
+                        expiry
+                    ), // 7
+                    Symbol.CreateOption(
+                        ticker,
+                        Market.USA,
+                        OptionStyle.American,
+                        OptionRight.Put,
+                        15,
+                        expiry
+                    ), // 8
+                    Symbol.CreateOption(
+                        ticker,
+                        Market.USA,
+                        OptionStyle.American,
+                        OptionRight.Put,
+                        20,
+                        expiry
+                    ), // 9
                 };
             }
             else
             {
                 var indexSymbol = Symbol.Create(ticker, SecurityType.Index, Market.USA);
-                return new[] {
-                    Symbol.CreateOption(indexSymbol, targetOption, Market.USA, OptionStyle.American, OptionRight.Put, 2, expiry),  // 0
-                    Symbol.CreateOption(indexSymbol, targetOption, Market.USA, OptionStyle.American, OptionRight.Put, 5, expiry),  // 1
-                    Symbol.CreateOption(indexSymbol, targetOption, Market.USA, OptionStyle.American, OptionRight.Put, 7, expiry),  // 2
-                    Symbol.CreateOption(indexSymbol, targetOption, Market.USA, OptionStyle.American, OptionRight.Put, 8, expiry),  // 3
-                    Symbol.CreateOption(indexSymbol, targetOption, Market.USA, OptionStyle.American, OptionRight.Put, 9, expiry),  // 4
-                    Symbol.CreateOption(indexSymbol, targetOption, Market.USA, OptionStyle.American, OptionRight.Put, 10, expiry), // 5
-                    Symbol.CreateOption(indexSymbol, targetOption, Market.USA, OptionStyle.American, OptionRight.Put, 11, expiry), // 6
-                    Symbol.CreateOption(indexSymbol, targetOption, Market.USA, OptionStyle.American, OptionRight.Put, 12, expiry), // 7
-                    Symbol.CreateOption(indexSymbol, targetOption, Market.USA, OptionStyle.American, OptionRight.Put, 15, expiry), // 8
-                    Symbol.CreateOption(indexSymbol, targetOption, Market.USA, OptionStyle.American, OptionRight.Put, 20, expiry), // 9
+                return new[]
+                {
+                    Symbol.CreateOption(
+                        indexSymbol,
+                        targetOption,
+                        Market.USA,
+                        OptionStyle.American,
+                        OptionRight.Put,
+                        2,
+                        expiry
+                    ), // 0
+                    Symbol.CreateOption(
+                        indexSymbol,
+                        targetOption,
+                        Market.USA,
+                        OptionStyle.American,
+                        OptionRight.Put,
+                        5,
+                        expiry
+                    ), // 1
+                    Symbol.CreateOption(
+                        indexSymbol,
+                        targetOption,
+                        Market.USA,
+                        OptionStyle.American,
+                        OptionRight.Put,
+                        7,
+                        expiry
+                    ), // 2
+                    Symbol.CreateOption(
+                        indexSymbol,
+                        targetOption,
+                        Market.USA,
+                        OptionStyle.American,
+                        OptionRight.Put,
+                        8,
+                        expiry
+                    ), // 3
+                    Symbol.CreateOption(
+                        indexSymbol,
+                        targetOption,
+                        Market.USA,
+                        OptionStyle.American,
+                        OptionRight.Put,
+                        9,
+                        expiry
+                    ), // 4
+                    Symbol.CreateOption(
+                        indexSymbol,
+                        targetOption,
+                        Market.USA,
+                        OptionStyle.American,
+                        OptionRight.Put,
+                        10,
+                        expiry
+                    ), // 5
+                    Symbol.CreateOption(
+                        indexSymbol,
+                        targetOption,
+                        Market.USA,
+                        OptionStyle.American,
+                        OptionRight.Put,
+                        11,
+                        expiry
+                    ), // 6
+                    Symbol.CreateOption(
+                        indexSymbol,
+                        targetOption,
+                        Market.USA,
+                        OptionStyle.American,
+                        OptionRight.Put,
+                        12,
+                        expiry
+                    ), // 7
+                    Symbol.CreateOption(
+                        indexSymbol,
+                        targetOption,
+                        Market.USA,
+                        OptionStyle.American,
+                        OptionRight.Put,
+                        15,
+                        expiry
+                    ), // 8
+                    Symbol.CreateOption(
+                        indexSymbol,
+                        targetOption,
+                        Market.USA,
+                        OptionStyle.American,
+                        OptionRight.Put,
+                        20,
+                        expiry
+                    ), // 9
                 };
             }
         }
 
         public static object[] FiltersStrikeRangeTests =
         {
-            new object[] {9.5m, CreateOptions("SPY", null), 5},
-            new object[] {10m, CreateOptions("SPY", null), 6},
-            new object[] {45.5m, CreateOptions("NDX", "NQX"), 5},
-            new object[] {50m, CreateOptions("NDX", "NQX"), 6}
+            new object[] { 9.5m, CreateOptions("SPY", null), 5 },
+            new object[] { 10m, CreateOptions("SPY", null), 6 },
+            new object[] { 45.5m, CreateOptions("NDX", "NQX"), 5 },
+            new object[] { 50m, CreateOptions("NDX", "NQX"), 6 }
         };
     }
 }

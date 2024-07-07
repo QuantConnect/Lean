@@ -35,9 +35,21 @@ namespace QuantConnect.Exceptions
         /// <returns>True if the exception can be interpreted, false otherwise</returns>
         public override bool CanInterpret(Exception exception)
         {
-            return base.CanInterpret(exception) &&
-                (exception.Message.Contains(Messages.InvalidTokenPythonExceptionInterpreter.InvalidTokenExpectedSubstring, StringComparison.InvariantCultureIgnoreCase)
-                || exception.Message.Contains(Messages.InvalidTokenPythonExceptionInterpreter.NotPermittedExpectedSubstring, StringComparison.InvariantCultureIgnoreCase));
+            return base.CanInterpret(exception)
+                && (
+                    exception.Message.Contains(
+                        Messages
+                            .InvalidTokenPythonExceptionInterpreter
+                            .InvalidTokenExpectedSubstring,
+                        StringComparison.InvariantCultureIgnoreCase
+                    )
+                    || exception.Message.Contains(
+                        Messages
+                            .InvalidTokenPythonExceptionInterpreter
+                            .NotPermittedExpectedSubstring,
+                        StringComparison.InvariantCultureIgnoreCase
+                    )
+                );
         }
 
         /// <summary>
@@ -46,10 +58,16 @@ namespace QuantConnect.Exceptions
         /// <param name="exception">The exception to be interpreted</param>
         /// <param name="innerInterpreter">An interpreter that should be applied to the inner exception.</param>
         /// <returns>The interpreted exception</returns>
-        public override Exception Interpret(Exception exception, IExceptionInterpreter innerInterpreter)
+        public override Exception Interpret(
+            Exception exception,
+            IExceptionInterpreter innerInterpreter
+        )
         {
             var pe = (PythonException)exception;
-            return new Exception(Messages.InvalidTokenPythonExceptionInterpreter.InterpretException(pe), pe);
+            return new Exception(
+                Messages.InvalidTokenPythonExceptionInterpreter.InterpretException(pe),
+                pe
+            );
         }
     }
 }

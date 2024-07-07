@@ -14,17 +14,17 @@
  *
 */
 
-using NUnit.Framework;
-using Python.Runtime;
-using QuantConnect.AlgorithmFactory.Python.Wrappers;
 using System;
 using System.Collections.Generic;
 using System.IO;
-using QuantConnect.Orders;
 using Moq;
-using static QuantConnect.Tests.Engine.PerformanceBenchmarkAlgorithms;
+using NUnit.Framework;
+using Python.Runtime;
+using QuantConnect.AlgorithmFactory.Python.Wrappers;
+using QuantConnect.Orders;
 using QuantConnect.Python;
 using QuantConnect.Securities;
+using static QuantConnect.Tests.Engine.PerformanceBenchmarkAlgorithms;
 
 namespace QuantConnect.Tests.Python
 {
@@ -36,7 +36,8 @@ namespace QuantConnect.Tests.Python
         {
             using (Py.GIL())
             {
-                var testModule = PyModule.FromString("testModule",
+                var testModule = PyModule.FromString(
+                    "testModule",
                     @"
 class CustomSettlementModel:
     def ApplyFunds(self, parameters):
@@ -47,12 +48,14 @@ class CustomSettlementModel:
 
     def GetUnsettledCash(self):
         return None
-        ");
+        "
+                );
 
-                var settlementModel = new SettlementModelPythonWrapper(testModule.GetAttr("CustomSettlementModel").Invoke());
+                var settlementModel = new SettlementModelPythonWrapper(
+                    testModule.GetAttr("CustomSettlementModel").Invoke()
+                );
                 var result = settlementModel.GetUnsettledCash();
                 Assert.AreEqual(default(CashAmount), result);
-
             }
         }
     }

@@ -19,8 +19,8 @@ using System.Collections.Generic;
 using System.Linq;
 using QuantConnect.Data;
 using QuantConnect.Data.Market;
-using QuantConnect.Orders;
 using QuantConnect.Interfaces;
+using QuantConnect.Orders;
 
 namespace QuantConnect.Algorithm.CSharp
 {
@@ -58,30 +58,50 @@ namespace QuantConnect.Algorithm.CSharp
                 {
                     foreach (var contract in chain.Value)
                     {
-                        if (contract.Symbol.ID.StrikePrice == 72.5m &&
-                            contract.Symbol.ID.OptionRight == OptionRight.Call &&
-                            contract.Symbol.ID.Date == new DateTime(2016, 01, 15))
+                        if (
+                            contract.Symbol.ID.StrikePrice == 72.5m
+                            && contract.Symbol.ID.OptionRight == OptionRight.Call
+                            && contract.Symbol.ID.Date == new DateTime(2016, 01, 15)
+                        )
                         {
-                            var history = History<OpenInterest>(contract.Symbol, TimeSpan.FromDays(1)).ToList();
+                            var history = History<OpenInterest>(
+                                    contract.Symbol,
+                                    TimeSpan.FromDays(1)
+                                )
+                                .ToList();
                             if (history.Count == 0)
                             {
-                                throw new RegressionTestException("Regression test failed: open interest history request is empty");
+                                throw new RegressionTestException(
+                                    "Regression test failed: open interest history request is empty"
+                                );
                             }
 
                             var security = Securities[contract.Symbol];
                             var openInterestCache = security.Cache.GetData<OpenInterest>();
                             if (openInterestCache == null)
                             {
-                                throw new RegressionTestException("Regression test failed: current open interest isn't in the security cache");
+                                throw new RegressionTestException(
+                                    "Regression test failed: current open interest isn't in the security cache"
+                                );
                             }
 
-                            if (slice.Time.Date == new DateTime(2014, 06, 05) && (contract.OpenInterest != 50 || security.OpenInterest != 50))
+                            if (
+                                slice.Time.Date == new DateTime(2014, 06, 05)
+                                && (contract.OpenInterest != 50 || security.OpenInterest != 50)
+                            )
                             {
-                                throw new RegressionTestException("Regression test failed: current open interest was not correctly loaded and is not equal to 50");
+                                throw new RegressionTestException(
+                                    "Regression test failed: current open interest was not correctly loaded and is not equal to 50"
+                                );
                             }
-                            if (slice.Time.Date == new DateTime(2014, 06, 06) && (contract.OpenInterest != 70 || security.OpenInterest != 70))
+                            if (
+                                slice.Time.Date == new DateTime(2014, 06, 06)
+                                && (contract.OpenInterest != 70 || security.OpenInterest != 70)
+                            )
                             {
-                                throw new RegressionTestException("Regression test failed: current open interest was not correctly loaded and is not equal to 70");
+                                throw new RegressionTestException(
+                                    "Regression test failed: current open interest was not correctly loaded and is not equal to 70"
+                                );
                             }
                             if (slice.Time.Date == new DateTime(2014, 06, 06))
                             {
@@ -132,35 +152,36 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// This is used by the regression test system to indicate what the expected statistics are from running the algorithm
         /// </summary>
-        public Dictionary<string, string> ExpectedStatistics => new Dictionary<string, string>
-        {
-            {"Total Orders", "4"},
-            {"Average Win", "0%"},
-            {"Average Loss", "0%"},
-            {"Compounding Annual Return", "0%"},
-            {"Drawdown", "0%"},
-            {"Expectancy", "0"},
-            {"Start Equity", "1000000"},
-            {"End Equity", "999898"},
-            {"Net Profit", "0%"},
-            {"Sharpe Ratio", "0"},
-            {"Sortino Ratio", "0"},
-            {"Probabilistic Sharpe Ratio", "0%"},
-            {"Loss Rate", "0%"},
-            {"Win Rate", "0%"},
-            {"Profit-Loss Ratio", "0"},
-            {"Alpha", "0"},
-            {"Beta", "0"},
-            {"Annual Standard Deviation", "0"},
-            {"Annual Variance", "0"},
-            {"Information Ratio", "0"},
-            {"Tracking Error", "0"},
-            {"Treynor Ratio", "0"},
-            {"Total Fees", "$2.00"},
-            {"Estimated Strategy Capacity", "$0"},
-            {"Lowest Capacity Asset", "AOL W78ZERDZK1QE|AOL R735QTJ8XC9X"},
-            {"Portfolio Turnover", "0.07%"},
-            {"OrderListHash", "58c3e82532109b692429e1eb062296b5"}
-        };
+        public Dictionary<string, string> ExpectedStatistics =>
+            new Dictionary<string, string>
+            {
+                { "Total Orders", "4" },
+                { "Average Win", "0%" },
+                { "Average Loss", "0%" },
+                { "Compounding Annual Return", "0%" },
+                { "Drawdown", "0%" },
+                { "Expectancy", "0" },
+                { "Start Equity", "1000000" },
+                { "End Equity", "999898" },
+                { "Net Profit", "0%" },
+                { "Sharpe Ratio", "0" },
+                { "Sortino Ratio", "0" },
+                { "Probabilistic Sharpe Ratio", "0%" },
+                { "Loss Rate", "0%" },
+                { "Win Rate", "0%" },
+                { "Profit-Loss Ratio", "0" },
+                { "Alpha", "0" },
+                { "Beta", "0" },
+                { "Annual Standard Deviation", "0" },
+                { "Annual Variance", "0" },
+                { "Information Ratio", "0" },
+                { "Tracking Error", "0" },
+                { "Treynor Ratio", "0" },
+                { "Total Fees", "$2.00" },
+                { "Estimated Strategy Capacity", "$0" },
+                { "Lowest Capacity Asset", "AOL W78ZERDZK1QE|AOL R735QTJ8XC9X" },
+                { "Portfolio Turnover", "0.07%" },
+                { "OrderListHash", "58c3e82532109b692429e1eb062296b5" }
+            };
     }
 }

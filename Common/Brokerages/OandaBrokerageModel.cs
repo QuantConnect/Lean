@@ -32,26 +32,24 @@ namespace QuantConnect.Brokerages
         /// <summary>
         /// The default markets for the fxcm brokerage
         /// </summary>
-        public new static readonly IReadOnlyDictionary<SecurityType, string> DefaultMarketMap = new Dictionary<SecurityType, string>
-        {
-            {SecurityType.Base, Market.USA},
-            {SecurityType.Equity, Market.USA},
-            {SecurityType.Option, Market.USA},
-            {SecurityType.Forex, Market.Oanda},
-            {SecurityType.Cfd, Market.Oanda}
-        }.ToReadOnlyDictionary();
+        public new static readonly IReadOnlyDictionary<SecurityType, string> DefaultMarketMap =
+            new Dictionary<SecurityType, string>
+            {
+                { SecurityType.Base, Market.USA },
+                { SecurityType.Equity, Market.USA },
+                { SecurityType.Option, Market.USA },
+                { SecurityType.Forex, Market.Oanda },
+                { SecurityType.Cfd, Market.Oanda }
+            }.ToReadOnlyDictionary();
 
-        private readonly HashSet<OrderType> _supportedOrderTypes = new()
-        {
-            OrderType.Limit,
-            OrderType.Market,
-            OrderType.StopMarket
-        };
+        private readonly HashSet<OrderType> _supportedOrderTypes =
+            new() { OrderType.Limit, OrderType.Market, OrderType.StopMarket };
 
         /// <summary>
         /// Gets a map of the default markets to be used for each security type
         /// </summary>
-        public override IReadOnlyDictionary<SecurityType, string> DefaultMarkets => DefaultMarketMap;
+        public override IReadOnlyDictionary<SecurityType, string> DefaultMarkets =>
+            DefaultMarketMap;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="DefaultBrokerageModel"/> class
@@ -63,7 +61,9 @@ namespace QuantConnect.Brokerages
         {
             if (accountType == AccountType.Cash)
             {
-                throw new InvalidOperationException($"Oanda brokerage can only be used with a {AccountType.Margin} account type");
+                throw new InvalidOperationException(
+                    $"Oanda brokerage can only be used with a {AccountType.Margin} account type"
+                );
             }
         }
 
@@ -78,15 +78,22 @@ namespace QuantConnect.Brokerages
         /// <param name="order">The order to be processed</param>
         /// <param name="message">If this function returns false, a brokerage message detailing why the order may not be submitted</param>
         /// <returns>True if the brokerage could process the order, false otherwise</returns>
-        public override bool CanSubmitOrder(Security security, Order order, out BrokerageMessageEvent message)
+        public override bool CanSubmitOrder(
+            Security security,
+            Order order,
+            out BrokerageMessageEvent message
+        )
         {
             message = null;
 
             // validate security type
             if (security.Type != SecurityType.Forex && security.Type != SecurityType.Cfd)
             {
-                message = new BrokerageMessageEvent(BrokerageMessageType.Warning, "NotSupported",
-                    Messages.DefaultBrokerageModel.UnsupportedSecurityType(this, security));
+                message = new BrokerageMessageEvent(
+                    BrokerageMessageType.Warning,
+                    "NotSupported",
+                    Messages.DefaultBrokerageModel.UnsupportedSecurityType(this, security)
+                );
 
                 return false;
             }
@@ -94,8 +101,15 @@ namespace QuantConnect.Brokerages
             // validate order type
             if (!_supportedOrderTypes.Contains(order.Type))
             {
-                message = new BrokerageMessageEvent(BrokerageMessageType.Warning, "NotSupported",
-                    Messages.DefaultBrokerageModel.UnsupportedOrderType(this, order, _supportedOrderTypes));
+                message = new BrokerageMessageEvent(
+                    BrokerageMessageType.Warning,
+                    "NotSupported",
+                    Messages.DefaultBrokerageModel.UnsupportedOrderType(
+                        this,
+                        order,
+                        _supportedOrderTypes
+                    )
+                );
 
                 return false;
             }
@@ -103,8 +117,11 @@ namespace QuantConnect.Brokerages
             // validate time in force
             if (order.TimeInForce != TimeInForce.GoodTilCanceled)
             {
-                message = new BrokerageMessageEvent(BrokerageMessageType.Warning, "NotSupported",
-                    Messages.DefaultBrokerageModel.UnsupportedTimeInForce(this, order));
+                message = new BrokerageMessageEvent(
+                    BrokerageMessageType.Warning,
+                    "NotSupported",
+                    Messages.DefaultBrokerageModel.UnsupportedTimeInForce(this, order)
+                );
 
                 return false;
             }
@@ -141,8 +158,8 @@ namespace QuantConnect.Brokerages
         public override ISettlementModel GetSettlementModel(Security security)
         {
             return security.Type == SecurityType.Cfd
-                ? new AccountCurrencyImmediateSettlementModel() :
-                (ISettlementModel)new ImmediateSettlementModel();
+                ? new AccountCurrencyImmediateSettlementModel()
+                : (ISettlementModel)new ImmediateSettlementModel();
         }
     }
 }

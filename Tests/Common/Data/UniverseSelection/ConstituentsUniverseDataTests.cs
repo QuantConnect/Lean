@@ -31,7 +31,8 @@ namespace QuantConnect.Tests.Common.Data.UniverseSelection
         [SetUp]
         public void SetUp()
         {
-            _config = new SubscriptionDataConfig(typeof(TradeBar),
+            _config = new SubscriptionDataConfig(
+                typeof(TradeBar),
                 Symbols.AAPL,
                 Resolution.Second,
                 TimeZones.NewYork,
@@ -41,9 +42,12 @@ namespace QuantConnect.Tests.Common.Data.UniverseSelection
                 false,
                 false,
                 TickType.Trade,
-                false);
-            _exchangeHours = MarketHoursDatabase.FromDataFolder()
-                 .GetEntry(Symbols.AAPL.ID.Market, Symbols.AAPL, Symbols.AAPL.ID.SecurityType).ExchangeHours;
+                false
+            );
+            _exchangeHours = MarketHoursDatabase
+                .FromDataFolder()
+                .GetEntry(Symbols.AAPL.ID.Market, Symbols.AAPL, Symbols.AAPL.ID.SecurityType)
+                .ExchangeHours;
         }
 
         [Test]
@@ -51,16 +55,20 @@ namespace QuantConnect.Tests.Common.Data.UniverseSelection
         {
             var reader = new ConstituentsUniverseData();
 
-            var tradableDays = Time.EachTradeableDayInTimeZone(_exchangeHours,
+            var tradableDays = Time.EachTradeableDayInTimeZone(
+                _exchangeHours,
                 new DateTime(2019, 06, 9), // sunday
                 new DateTime(2019, 06, 16),
                 _config.DataTimeZone,
-                _config.ExtendedMarketHours);
+                _config.ExtendedMarketHours
+            );
 
             foreach (var tradableDay in tradableDays)
             {
-                if (tradableDay.DayOfWeek == DayOfWeek.Saturday
-                    || tradableDay.DayOfWeek == DayOfWeek.Sunday)
+                if (
+                    tradableDay.DayOfWeek == DayOfWeek.Saturday
+                    || tradableDay.DayOfWeek == DayOfWeek.Sunday
+                )
                 {
                     Assert.Fail($"Unexpected tradable DayOfWeek {tradableDay.DayOfWeek}");
                 }
@@ -76,11 +84,13 @@ namespace QuantConnect.Tests.Common.Data.UniverseSelection
         {
             var reader = new ConstituentsUniverseData();
 
-            var tradableDays = Time.EachTradeableDayInTimeZone(_exchangeHours,
+            var tradableDays = Time.EachTradeableDayInTimeZone(
+                _exchangeHours,
                 new DateTime(2019, 06, 9), // sunday
                 new DateTime(2019, 06, 16),
                 _config.DataTimeZone,
-                _config.ExtendedMarketHours);
+                _config.ExtendedMarketHours
+            );
 
             foreach (var tradableDay in tradableDays)
             {

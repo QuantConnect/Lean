@@ -44,7 +44,16 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             var subscriptions = new SubscriptionCollection();
             var start = DateTime.UtcNow;
             var end = start.AddSeconds(10);
-            var config = new SubscriptionDataConfig(typeof(TradeBar), Symbols.SPY, Resolution.Minute, DateTimeZone.Utc, DateTimeZone.Utc, true, false, false);
+            var config = new SubscriptionDataConfig(
+                typeof(TradeBar),
+                Symbols.SPY,
+                Resolution.Minute,
+                DateTimeZone.Utc,
+                DateTimeZone.Utc,
+                true,
+                false,
+                false
+            );
             var security = new Equity(
                 Symbols.SPY,
                 SecurityExchangeHours.AlwaysOpen(DateTimeZone.Utc),
@@ -56,64 +65,93 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             );
             var timeZoneOffsetProvider = new TimeZoneOffsetProvider(DateTimeZone.Utc, start, end);
             using var enumerator = new EnqueueableEnumerator<BaseData>();
-            using var subscriptionDataEnumerator = new SubscriptionDataEnumerator(config, security.Exchange.Hours, timeZoneOffsetProvider, enumerator, false, false);
-            var subscriptionRequest = new SubscriptionRequest(false, null, security, config, start, end);
-            var subscription = new Subscription(subscriptionRequest, subscriptionDataEnumerator, timeZoneOffsetProvider);
+            using var subscriptionDataEnumerator = new SubscriptionDataEnumerator(
+                config,
+                security.Exchange.Hours,
+                timeZoneOffsetProvider,
+                enumerator,
+                false,
+                false
+            );
+            var subscriptionRequest = new SubscriptionRequest(
+                false,
+                null,
+                security,
+                config,
+                start,
+                end
+            );
+            var subscription = new Subscription(
+                subscriptionRequest,
+                subscriptionDataEnumerator,
+                timeZoneOffsetProvider
+            );
 
-            var addTask = Task.Factory.StartNew(() =>
-            {
-                Log.Trace("Add task started");
-
-                while (DateTime.UtcNow < end)
+            var addTask = Task.Factory.StartNew(
+                () =>
                 {
-                    if (!subscriptions.Contains(config))
+                    Log.Trace("Add task started");
+
+                    while (DateTime.UtcNow < end)
                     {
-                        subscriptions.TryAdd(subscription);
+                        if (!subscriptions.Contains(config))
+                        {
+                            subscriptions.TryAdd(subscription);
+                        }
+
+                        Thread.Sleep(1);
                     }
 
-                    Thread.Sleep(1);
-                }
+                    Log.Trace("Add task ended");
+                },
+                cts.Token
+            );
 
-                Log.Trace("Add task ended");
-            }, cts.Token);
-
-            var removeTask = Task.Factory.StartNew(() =>
-            {
-                Log.Trace("Remove task started");
-
-                while (DateTime.UtcNow < end)
+            var removeTask = Task.Factory.StartNew(
+                () =>
                 {
-                    Subscription removed;
-                    subscriptions.TryRemove(config, out removed);
+                    Log.Trace("Remove task started");
 
-                    Thread.Sleep(1);
-                }
+                    while (DateTime.UtcNow < end)
+                    {
+                        Subscription removed;
+                        subscriptions.TryRemove(config, out removed);
 
-                Log.Trace("Remove task ended");
-            }, cts.Token);
+                        Thread.Sleep(1);
+                    }
 
-            var readTask = Task.Factory.StartNew(() =>
-            {
-                Log.Trace("Read task started");
+                    Log.Trace("Remove task ended");
+                },
+                cts.Token
+            );
 
-                while (DateTime.UtcNow < end)
+            var readTask = Task.Factory.StartNew(
+                () =>
                 {
-                    foreach (var sub in subscriptions) { }
+                    Log.Trace("Read task started");
 
-                    Thread.Sleep(1);
-                }
+                    while (DateTime.UtcNow < end)
+                    {
+                        foreach (var sub in subscriptions) { }
 
-                Log.Trace("Read task ended");
-            }, cts.Token);
+                        Thread.Sleep(1);
+                    }
+
+                    Log.Trace("Read task ended");
+                },
+                cts.Token
+            );
 
             Task.WaitAll(addTask, removeTask, readTask);
             subscription.Dispose();
         }
+
         [Test]
         public void DefaultFillForwardResolution()
         {
             var subscriptionColletion = new SubscriptionCollection();
-            var defaultFillForwardResolutio = subscriptionColletion.UpdateAndGetFillForwardResolution();
+            var defaultFillForwardResolutio =
+                subscriptionColletion.UpdateAndGetFillForwardResolution();
             Assert.AreEqual(defaultFillForwardResolutio.Value, new TimeSpan(0, 1, 0));
         }
 
@@ -123,7 +161,9 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             var subscriptionColletion = new SubscriptionCollection();
             var subscription = CreateSubscription(Resolution.Daily);
 
-            var fillForwardResolutio = subscriptionColletion.UpdateAndGetFillForwardResolution(subscription.Configuration);
+            var fillForwardResolutio = subscriptionColletion.UpdateAndGetFillForwardResolution(
+                subscription.Configuration
+            );
             Assert.AreEqual(fillForwardResolutio.Value, new TimeSpan(1, 0, 0, 0));
             subscription.Dispose();
         }
@@ -134,7 +174,9 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             var subscriptionColletion = new SubscriptionCollection();
             var subscription = CreateSubscription(Resolution.Second);
 
-            var fillForwardResolutio = subscriptionColletion.UpdateAndGetFillForwardResolution(subscription.Configuration);
+            var fillForwardResolutio = subscriptionColletion.UpdateAndGetFillForwardResolution(
+                subscription.Configuration
+            );
             Assert.AreEqual(fillForwardResolutio.Value, new TimeSpan(0, 0, 1));
             subscription.Dispose();
         }
@@ -146,7 +188,10 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             using var subscription = CreateSubscription(Resolution.Second);
 
             subscriptionColletion.TryAdd(subscription);
-            Assert.AreEqual(subscriptionColletion.UpdateAndGetFillForwardResolution().Value, new TimeSpan(0, 0, 1));
+            Assert.AreEqual(
+                subscriptionColletion.UpdateAndGetFillForwardResolution().Value,
+                new TimeSpan(0, 0, 1)
+            );
         }
 
         [Test]
@@ -156,7 +201,10 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             var subscription = CreateSubscription(Resolution.Daily);
 
             subscriptionColletion.TryAdd(subscription);
-            Assert.AreEqual(subscriptionColletion.UpdateAndGetFillForwardResolution().Value, new TimeSpan(1, 0, 0, 0));
+            Assert.AreEqual(
+                subscriptionColletion.UpdateAndGetFillForwardResolution().Value,
+                new TimeSpan(1, 0, 0, 0)
+            );
             subscription.Dispose();
         }
 
@@ -168,9 +216,15 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             var subscription2 = CreateSubscription(Resolution.Minute);
 
             subscriptionColletion.TryAdd(subscription);
-            Assert.AreEqual(subscriptionColletion.UpdateAndGetFillForwardResolution().Value, new TimeSpan(0, 0, 1));
+            Assert.AreEqual(
+                subscriptionColletion.UpdateAndGetFillForwardResolution().Value,
+                new TimeSpan(0, 0, 1)
+            );
             subscriptionColletion.TryAdd(subscription2);
-            Assert.AreEqual(subscriptionColletion.UpdateAndGetFillForwardResolution().Value, new TimeSpan(0, 0, 1));
+            Assert.AreEqual(
+                subscriptionColletion.UpdateAndGetFillForwardResolution().Value,
+                new TimeSpan(0, 0, 1)
+            );
             subscription.Dispose();
             subscription2.Dispose();
         }
@@ -184,11 +238,20 @@ namespace QuantConnect.Tests.Engine.DataFeeds
 
             subscriptionColletion.TryAdd(subscription);
             subscriptionColletion.TryAdd(subscription2);
-            Assert.AreEqual(subscriptionColletion.UpdateAndGetFillForwardResolution().Value, new TimeSpan(0, 0, 1));
+            Assert.AreEqual(
+                subscriptionColletion.UpdateAndGetFillForwardResolution().Value,
+                new TimeSpan(0, 0, 1)
+            );
             subscriptionColletion.TryRemove(subscription.Configuration, out var outSubscription);
-            Assert.AreEqual(subscriptionColletion.UpdateAndGetFillForwardResolution().Value, new TimeSpan(1, 0, 0, 0));
+            Assert.AreEqual(
+                subscriptionColletion.UpdateAndGetFillForwardResolution().Value,
+                new TimeSpan(1, 0, 0, 0)
+            );
             subscriptionColletion.TryRemove(subscription2.Configuration, out var outSubscription2);
-            Assert.AreEqual(subscriptionColletion.UpdateAndGetFillForwardResolution().Value, new TimeSpan(0, 1, 0));
+            Assert.AreEqual(
+                subscriptionColletion.UpdateAndGetFillForwardResolution().Value,
+                new TimeSpan(0, 1, 0)
+            );
             outSubscription.Dispose();
             outSubscription2.Dispose();
         }
@@ -200,9 +263,15 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             using var subscription = CreateSubscription(Resolution.Tick);
 
             subscriptionColletion.TryAdd(subscription);
-            Assert.AreEqual(subscriptionColletion.UpdateAndGetFillForwardResolution().Value, new TimeSpan(0, 1, 0));
+            Assert.AreEqual(
+                subscriptionColletion.UpdateAndGetFillForwardResolution().Value,
+                new TimeSpan(0, 1, 0)
+            );
             subscriptionColletion.TryRemove(subscription.Configuration, out var outSubscription);
-            Assert.AreEqual(subscriptionColletion.UpdateAndGetFillForwardResolution().Value, new TimeSpan(0, 1, 0));
+            Assert.AreEqual(
+                subscriptionColletion.UpdateAndGetFillForwardResolution().Value,
+                new TimeSpan(0, 1, 0)
+            );
             outSubscription.Dispose();
         }
 
@@ -213,9 +282,15 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             using var subscription = CreateSubscription(Resolution.Second, "AAPL", true);
 
             subscriptionColletion.TryAdd(subscription);
-            Assert.AreEqual(subscriptionColletion.UpdateAndGetFillForwardResolution().Value, new TimeSpan(0, 1, 0));
+            Assert.AreEqual(
+                subscriptionColletion.UpdateAndGetFillForwardResolution().Value,
+                new TimeSpan(0, 1, 0)
+            );
             subscriptionColletion.TryRemove(subscription.Configuration, out var outSubscription);
-            Assert.AreEqual(subscriptionColletion.UpdateAndGetFillForwardResolution().Value, new TimeSpan(0, 1, 0));
+            Assert.AreEqual(
+                subscriptionColletion.UpdateAndGetFillForwardResolution().Value,
+                new TimeSpan(0, 1, 0)
+            );
             outSubscription.Dispose();
         }
 
@@ -227,13 +302,25 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             using var subscription2 = CreateSubscription(Resolution.Second, "SPY");
 
             subscriptionColletion.TryAdd(subscription);
-            Assert.AreEqual(subscriptionColletion.UpdateAndGetFillForwardResolution().Value, new TimeSpan(0, 0, 1));
+            Assert.AreEqual(
+                subscriptionColletion.UpdateAndGetFillForwardResolution().Value,
+                new TimeSpan(0, 0, 1)
+            );
             subscriptionColletion.TryAdd(subscription2);
-            Assert.AreEqual(subscriptionColletion.UpdateAndGetFillForwardResolution().Value, new TimeSpan(0, 0, 1));
+            Assert.AreEqual(
+                subscriptionColletion.UpdateAndGetFillForwardResolution().Value,
+                new TimeSpan(0, 0, 1)
+            );
             subscriptionColletion.TryRemove(subscription.Configuration, out var outSubscription);
-            Assert.AreEqual(subscriptionColletion.UpdateAndGetFillForwardResolution().Value, new TimeSpan(0, 0, 1));
+            Assert.AreEqual(
+                subscriptionColletion.UpdateAndGetFillForwardResolution().Value,
+                new TimeSpan(0, 0, 1)
+            );
             subscriptionColletion.TryRemove(subscription2.Configuration, out var outSubscription2);
-            Assert.AreEqual(subscriptionColletion.UpdateAndGetFillForwardResolution().Value, new TimeSpan(0, 1, 0));
+            Assert.AreEqual(
+                subscriptionColletion.UpdateAndGetFillForwardResolution().Value,
+                new TimeSpan(0, 1, 0)
+            );
             outSubscription.Dispose();
             outSubscription2.Dispose();
         }
@@ -242,29 +329,80 @@ namespace QuantConnect.Tests.Engine.DataFeeds
         public void SubscriptionsAreSortedWhenAdding()
         {
             var subscriptionColletion = new SubscriptionCollection();
-            var subscription = CreateSubscription(Resolution.Second, Futures.Metals.Gold, false, SecurityType.Future);
+            var subscription = CreateSubscription(
+                Resolution.Second,
+                Futures.Metals.Gold,
+                false,
+                SecurityType.Future
+            );
             var subscription2 = CreateSubscription(Resolution.Second, "SPY");
-            var subscription3 = CreateSubscription(Resolution.Second, "AAPL", false, SecurityType.Option);
+            var subscription3 = CreateSubscription(
+                Resolution.Second,
+                "AAPL",
+                false,
+                SecurityType.Option
+            );
             var subscription4 = CreateSubscription(Resolution.Second, "EURGBP");
-            var subscription5 = CreateSubscription(Resolution.Second, "AAPL", false, SecurityType.Option, TickType.OpenInterest);
-            var subscription6 = CreateSubscription(Resolution.Second, "AAPL", false, SecurityType.Option, TickType.Quote);
+            var subscription5 = CreateSubscription(
+                Resolution.Second,
+                "AAPL",
+                false,
+                SecurityType.Option,
+                TickType.OpenInterest
+            );
+            var subscription6 = CreateSubscription(
+                Resolution.Second,
+                "AAPL",
+                false,
+                SecurityType.Option,
+                TickType.Quote
+            );
 
             subscriptionColletion.TryAdd(subscription);
             Assert.AreEqual(subscriptionColletion.ToList(), new[] { subscription });
             subscriptionColletion.TryAdd(subscription2);
             Assert.AreEqual(subscriptionColletion.ToList(), new[] { subscription2, subscription });
             subscriptionColletion.TryAdd(subscription3);
-            Assert.AreEqual(subscriptionColletion.ToList(), new[] { subscription2, subscription3, subscription });
+            Assert.AreEqual(
+                subscriptionColletion.ToList(),
+                new[] { subscription2, subscription3, subscription }
+            );
             subscriptionColletion.TryAdd(subscription4);
-            Assert.AreEqual(subscriptionColletion.ToList(), new[] { subscription4, subscription2, subscription3, subscription });
+            Assert.AreEqual(
+                subscriptionColletion.ToList(),
+                new[] { subscription4, subscription2, subscription3, subscription }
+            );
             subscriptionColletion.TryAdd(subscription5);
-            Assert.AreEqual(subscriptionColletion.ToList(), new[] { subscription4, subscription2, subscription3, subscription5, subscription });
+            Assert.AreEqual(
+                subscriptionColletion.ToList(),
+                new[] { subscription4, subscription2, subscription3, subscription5, subscription }
+            );
             subscriptionColletion.TryAdd(subscription6);
-            Assert.AreEqual(subscriptionColletion.ToList(), new[] { subscription4, subscription2, subscription3, subscription6, subscription5, subscription });
+            Assert.AreEqual(
+                subscriptionColletion.ToList(),
+                new[]
+                {
+                    subscription4,
+                    subscription2,
+                    subscription3,
+                    subscription6,
+                    subscription5,
+                    subscription
+                }
+            );
 
-
-            Assert.AreEqual(subscriptionColletion.Select(x => x.Configuration.SecurityType).ToList(), new[] { SecurityType.Equity, SecurityType.Equity, SecurityType.Option,
-                SecurityType.Option, SecurityType.Option, SecurityType.Future });
+            Assert.AreEqual(
+                subscriptionColletion.Select(x => x.Configuration.SecurityType).ToList(),
+                new[]
+                {
+                    SecurityType.Equity,
+                    SecurityType.Equity,
+                    SecurityType.Option,
+                    SecurityType.Option,
+                    SecurityType.Option,
+                    SecurityType.Future
+                }
+            );
 
             subscription.Dispose();
             subscription2.Dispose();
@@ -278,9 +416,19 @@ namespace QuantConnect.Tests.Engine.DataFeeds
         public void SubscriptionsAreSortedWhenAdding2()
         {
             var subscriptionColletion = new SubscriptionCollection();
-            var subscription = CreateSubscription(Resolution.Second, Futures.Metals.Gold, false, SecurityType.Future);
+            var subscription = CreateSubscription(
+                Resolution.Second,
+                Futures.Metals.Gold,
+                false,
+                SecurityType.Future
+            );
             var subscription2 = CreateSubscription(Resolution.Second, "SPY");
-            var subscription3 = CreateSubscription(Resolution.Second, "AAPL", false, SecurityType.Option);
+            var subscription3 = CreateSubscription(
+                Resolution.Second,
+                "AAPL",
+                false,
+                SecurityType.Option
+            );
             var subscription4 = CreateSubscription(Resolution.Second, "EURGBP");
 
             subscriptionColletion.TryAdd(subscription);
@@ -288,11 +436,26 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             subscriptionColletion.TryAdd(subscription2);
             Assert.AreEqual(subscriptionColletion.ToList(), new[] { subscription2, subscription });
             subscriptionColletion.TryAdd(subscription3);
-            Assert.AreEqual(subscriptionColletion.ToList(), new[] { subscription2, subscription3, subscription });
+            Assert.AreEqual(
+                subscriptionColletion.ToList(),
+                new[] { subscription2, subscription3, subscription }
+            );
             subscriptionColletion.TryAdd(subscription4);
 
-            Assert.AreEqual(subscriptionColletion.ToList(), new[] { subscription4, subscription2, subscription3, subscription });
-            Assert.AreEqual(subscriptionColletion.Select(x => x.Configuration.SecurityType).ToList(), new[] { SecurityType.Equity, SecurityType.Equity, SecurityType.Option, SecurityType.Future });
+            Assert.AreEqual(
+                subscriptionColletion.ToList(),
+                new[] { subscription4, subscription2, subscription3, subscription }
+            );
+            Assert.AreEqual(
+                subscriptionColletion.Select(x => x.Configuration.SecurityType).ToList(),
+                new[]
+                {
+                    SecurityType.Equity,
+                    SecurityType.Equity,
+                    SecurityType.Option,
+                    SecurityType.Future
+                }
+            );
 
             subscription.Dispose();
             subscription2.Dispose();
@@ -304,12 +467,34 @@ namespace QuantConnect.Tests.Engine.DataFeeds
         public void SubscriptionsAreSortedWhenRemoving()
         {
             var subscriptionColletion = new SubscriptionCollection();
-            var subscription = CreateSubscription(Resolution.Second, Futures.Metals.Gold, false, SecurityType.Future);
+            var subscription = CreateSubscription(
+                Resolution.Second,
+                Futures.Metals.Gold,
+                false,
+                SecurityType.Future
+            );
             var subscription2 = CreateSubscription(Resolution.Second, "SPY");
-            var subscription3 = CreateSubscription(Resolution.Second, "AAPL", false, SecurityType.Option);
+            var subscription3 = CreateSubscription(
+                Resolution.Second,
+                "AAPL",
+                false,
+                SecurityType.Option
+            );
             var subscription4 = CreateSubscription(Resolution.Second, "EURGBP");
-            var subscription5 = CreateSubscription(Resolution.Second, "AAPL", false, SecurityType.Option, TickType.OpenInterest);
-            var subscription6 = CreateSubscription(Resolution.Second, "AAPL", false, SecurityType.Option, TickType.Quote);
+            var subscription5 = CreateSubscription(
+                Resolution.Second,
+                "AAPL",
+                false,
+                SecurityType.Option,
+                TickType.OpenInterest
+            );
+            var subscription6 = CreateSubscription(
+                Resolution.Second,
+                "AAPL",
+                false,
+                SecurityType.Option,
+                TickType.Quote
+            );
 
             subscriptionColletion.TryAdd(subscription);
             subscriptionColletion.TryAdd(subscription2);
@@ -317,28 +502,74 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             subscriptionColletion.TryAdd(subscription4);
             subscriptionColletion.TryAdd(subscription5);
             subscriptionColletion.TryAdd(subscription6);
-            Assert.AreEqual(subscriptionColletion.ToList(), new[] { subscription4, subscription2, subscription3, subscription6, subscription5, subscription });
+            Assert.AreEqual(
+                subscriptionColletion.ToList(),
+                new[]
+                {
+                    subscription4,
+                    subscription2,
+                    subscription3,
+                    subscription6,
+                    subscription5,
+                    subscription
+                }
+            );
 
             subscriptionColletion.TryRemove(subscription2.Configuration, out subscription2);
-            Assert.AreEqual(subscriptionColletion.Select(x => x.Configuration.SecurityType).ToList(), new[] { SecurityType.Equity, SecurityType.Option,
-                            SecurityType.Option, SecurityType.Option, SecurityType.Future });
+            Assert.AreEqual(
+                subscriptionColletion.Select(x => x.Configuration.SecurityType).ToList(),
+                new[]
+                {
+                    SecurityType.Equity,
+                    SecurityType.Option,
+                    SecurityType.Option,
+                    SecurityType.Option,
+                    SecurityType.Future
+                }
+            );
 
             subscriptionColletion.TryRemove(subscription3.Configuration, out subscription3);
-            Assert.AreEqual(subscriptionColletion.Select(x => x.Configuration.SecurityType).ToList(), new[] { SecurityType.Equity, SecurityType.Option, SecurityType.Option, SecurityType.Future });
+            Assert.AreEqual(
+                subscriptionColletion.Select(x => x.Configuration.SecurityType).ToList(),
+                new[]
+                {
+                    SecurityType.Equity,
+                    SecurityType.Option,
+                    SecurityType.Option,
+                    SecurityType.Future
+                }
+            );
 
             subscriptionColletion.TryRemove(subscription.Configuration, out subscription);
-            Assert.AreEqual(subscriptionColletion.Select(x => x.Configuration.SecurityType).ToList(), new[] { SecurityType.Equity, SecurityType.Option, SecurityType.Option });
-            Assert.AreEqual(subscriptionColletion.ToList(), new[] { subscription4, subscription6, subscription5 });
+            Assert.AreEqual(
+                subscriptionColletion.Select(x => x.Configuration.SecurityType).ToList(),
+                new[] { SecurityType.Equity, SecurityType.Option, SecurityType.Option }
+            );
+            Assert.AreEqual(
+                subscriptionColletion.ToList(),
+                new[] { subscription4, subscription6, subscription5 }
+            );
 
             subscriptionColletion.TryRemove(subscription6.Configuration, out subscription6);
-            Assert.AreEqual(subscriptionColletion.Select(x => x.Configuration.SecurityType).ToList(), new[] { SecurityType.Equity, SecurityType.Option });
+            Assert.AreEqual(
+                subscriptionColletion.Select(x => x.Configuration.SecurityType).ToList(),
+                new[] { SecurityType.Equity, SecurityType.Option }
+            );
             Assert.AreEqual(subscriptionColletion.ToList(), new[] { subscription4, subscription5 });
 
             subscriptionColletion.TryRemove(subscription5.Configuration, out subscription5);
-            Assert.AreEqual(subscriptionColletion.Select(x => x.Configuration.SecurityType).ToList(), new[] {SecurityType.Equity});
+            Assert.AreEqual(
+                subscriptionColletion.Select(x => x.Configuration.SecurityType).ToList(),
+                new[] { SecurityType.Equity }
+            );
 
             subscriptionColletion.TryRemove(subscription4.Configuration, out subscription4);
-            Assert.IsTrue(subscriptionColletion.Select(x => x.Configuration.SecurityType).ToList().IsNullOrEmpty());
+            Assert.IsTrue(
+                subscriptionColletion
+                    .Select(x => x.Configuration.SecurityType)
+                    .ToList()
+                    .IsNullOrEmpty()
+            );
 
             subscription.Dispose();
             subscription2.Dispose();
@@ -348,8 +579,13 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             subscription6.Dispose();
         }
 
-        private Subscription CreateSubscription(Resolution resolution, string symbol = "AAPL", bool isInternalFeed = false,
-                                                SecurityType type = SecurityType.Equity, TickType tickType = TickType.Trade)
+        private Subscription CreateSubscription(
+            Resolution resolution,
+            string symbol = "AAPL",
+            bool isInternalFeed = false,
+            SecurityType type = SecurityType.Equity,
+            TickType tickType = TickType.Trade
+        )
         {
             var start = DateTime.UtcNow;
             var end = start.AddSeconds(10);
@@ -357,7 +593,10 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             Symbol _symbol;
             if (type == SecurityType.Equity)
             {
-                _symbol = new Symbol(SecurityIdentifier.GenerateEquity(DateTime.Now, symbol, Market.USA), symbol);
+                _symbol = new Symbol(
+                    SecurityIdentifier.GenerateEquity(DateTime.Now, symbol, Market.USA),
+                    symbol
+                );
                 security = new Equity(
                     _symbol,
                     SecurityExchangeHours.AlwaysOpen(DateTimeZone.Utc),
@@ -371,7 +610,10 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             else if (type == SecurityType.Option)
             {
                 _symbol = Symbol.CreateOption(
-                    new Symbol(SecurityIdentifier.GenerateEquity(DateTime.Now, symbol, Market.USA), symbol),
+                    new Symbol(
+                        SecurityIdentifier.GenerateEquity(DateTime.Now, symbol, Market.USA),
+                        symbol
+                    ),
                     Market.USA,
                     OptionStyle.American,
                     OptionRight.Call,
@@ -391,7 +633,10 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             }
             else if (type == SecurityType.Future)
             {
-                _symbol = new Symbol(SecurityIdentifier.GenerateFuture(DateTime.Now, symbol, Market.COMEX), symbol);
+                _symbol = new Symbol(
+                    SecurityIdentifier.GenerateFuture(DateTime.Now, symbol, Market.COMEX),
+                    symbol
+                );
                 security = new Future(
                     _symbol,
                     SecurityExchangeHours.AlwaysOpen(DateTimeZone.Utc),
@@ -406,14 +651,43 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             {
                 throw new RegressionTestException("SecurityType not implemented");
             }
-            var config = new SubscriptionDataConfig(typeof(TradeBar), _symbol, resolution, DateTimeZone.Utc, DateTimeZone.Utc, true, false, isInternalFeed, false, tickType);
+            var config = new SubscriptionDataConfig(
+                typeof(TradeBar),
+                _symbol,
+                resolution,
+                DateTimeZone.Utc,
+                DateTimeZone.Utc,
+                true,
+                false,
+                isInternalFeed,
+                false,
+                tickType
+            );
             var timeZoneOffsetProvider = new TimeZoneOffsetProvider(DateTimeZone.Utc, start, end);
-            # pragma warning disable CA2000
+# pragma warning disable CA2000
             var enumerator = new EnqueueableEnumerator<BaseData>();
-            var subscriptionDataEnumerator = new SubscriptionDataEnumerator(config, security.Exchange.Hours, timeZoneOffsetProvider, enumerator, false, false);
-                # pragma warning restore CA2000
-            var subscriptionRequest = new SubscriptionRequest(false, null, security, config, start, end);
-            return new Subscription(subscriptionRequest, subscriptionDataEnumerator, timeZoneOffsetProvider);
+            var subscriptionDataEnumerator = new SubscriptionDataEnumerator(
+                config,
+                security.Exchange.Hours,
+                timeZoneOffsetProvider,
+                enumerator,
+                false,
+                false
+            );
+# pragma warning restore CA2000
+            var subscriptionRequest = new SubscriptionRequest(
+                false,
+                null,
+                security,
+                config,
+                start,
+                end
+            );
+            return new Subscription(
+                subscriptionRequest,
+                subscriptionDataEnumerator,
+                timeZoneOffsetProvider
+            );
         }
     }
 }

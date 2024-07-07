@@ -30,7 +30,9 @@ namespace QuantConnect.Algorithm.CSharp
     /// <meta name="tag" content="using data" />
     /// <meta name="tag" content="using quantconnect" />
     /// <meta name="tag" content="trading and orders" />
-    public class EquityTradeAndQuotesRegressionAlgorithm : QCAlgorithm, IRegressionAlgorithmDefinition
+    public class EquityTradeAndQuotesRegressionAlgorithm
+        : QCAlgorithm,
+            IRegressionAlgorithmDefinition
     {
         private Symbol _symbol;
         private bool _canTrade;
@@ -42,10 +44,9 @@ namespace QuantConnect.Algorithm.CSharp
         /// </summary>
         public override void Initialize()
         {
-            SetStartDate(2013, 10, 07);  //Set Start Date
-            SetEndDate(2013, 10, 11);    //Set End Date
-            SetCash(100000);             //Set Strategy Cash
-
+            SetStartDate(2013, 10, 07); //Set Start Date
+            SetEndDate(2013, 10, 11); //Set End Date
+            SetCash(100000); //Set Strategy Cash
 
             SetSecurityInitializer(x => x.SetDataNormalizationMode(DataNormalizationMode.Raw));
 
@@ -53,25 +54,42 @@ namespace QuantConnect.Algorithm.CSharp
             AddEquity("AAPL", Resolution.Daily);
 
             // 2013-10-07 was Monday, that's why we ask 3 days history to get  data from previous Friday.
-            var history = History(new[] { _symbol }, TimeSpan.FromDays(3), Resolution.Minute).ToList();
+            var history = History(new[] { _symbol }, TimeSpan.FromDays(3), Resolution.Minute)
+                .ToList();
             Log($"{Time} - history.Count: {history.Count}");
 
             const int expectedSliceCount = 390;
             if (history.Count != expectedSliceCount)
             {
-                throw new RegressionTestException($"History slices - expected: {expectedSliceCount}, actual: {history.Count}");
+                throw new RegressionTestException(
+                    $"History slices - expected: {expectedSliceCount}, actual: {history.Count}"
+                );
             }
-
 
             if (history.Any(s => s.Bars.Count != 1 && s.QuoteBars.Count != 1))
             {
-                throw new RegressionTestException($"History not all slices have trades and quotes.");
+                throw new RegressionTestException(
+                    $"History not all slices have trades and quotes."
+                );
             }
 
-            Schedule.On(DateRules.EveryDay(_symbol), TimeRules.AfterMarketOpen(_symbol, 0), () => { _canTrade = true; });
+            Schedule.On(
+                DateRules.EveryDay(_symbol),
+                TimeRules.AfterMarketOpen(_symbol, 0),
+                () =>
+                {
+                    _canTrade = true;
+                }
+            );
 
-            Schedule.On(DateRules.EveryDay(_symbol), TimeRules.BeforeMarketClose(_symbol, 16), () => { _canTrade = false; });
-
+            Schedule.On(
+                DateRules.EveryDay(_symbol),
+                TimeRules.BeforeMarketClose(_symbol, 16),
+                () =>
+                {
+                    _canTrade = false;
+                }
+            );
         }
 
         /// <summary>
@@ -99,21 +117,32 @@ namespace QuantConnect.Algorithm.CSharp
         {
             foreach (var addedSecurity in changes.AddedSecurities)
             {
-                var subscriptions = SubscriptionManager.SubscriptionDataConfigService.GetSubscriptionDataConfigs(addedSecurity.Symbol);
+                var subscriptions =
+                    SubscriptionManager.SubscriptionDataConfigService.GetSubscriptionDataConfigs(
+                        addedSecurity.Symbol
+                    );
                 if (addedSecurity.Symbol == _symbol)
                 {
-                    if (!(subscriptions.Count == 2 &&
-                          subscriptions.Any(s => s.TickType == TickType.Trade) &&
-                          subscriptions.Any(s => s.TickType == TickType.Quote)))
+                    if (
+                        !(
+                            subscriptions.Count == 2
+                            && subscriptions.Any(s => s.TickType == TickType.Trade)
+                            && subscriptions.Any(s => s.TickType == TickType.Quote)
+                        )
+                    )
                     {
-                        throw new RegressionTestException($"Subscriptions were not correctly added for high resolution.");
+                        throw new RegressionTestException(
+                            $"Subscriptions were not correctly added for high resolution."
+                        );
                     }
                 }
                 else
                 {
                     if (subscriptions.Single().TickType != TickType.Trade)
                     {
-                        throw new RegressionTestException($"Subscriptions were not correctly added for low resolution.");
+                        throw new RegressionTestException(
+                            $"Subscriptions were not correctly added for low resolution."
+                        );
                     }
                 }
             }
@@ -124,11 +153,16 @@ namespace QuantConnect.Algorithm.CSharp
             if (orderEvent.Status == OrderStatus.Filled)
             {
                 Log($"{Time:s} {orderEvent.Direction}");
-                var expectedFillPrice = orderEvent.Direction == OrderDirection.Buy ? Securities[_symbol].AskPrice : Securities[_symbol].BidPrice;
+                var expectedFillPrice =
+                    orderEvent.Direction == OrderDirection.Buy
+                        ? Securities[_symbol].AskPrice
+                        : Securities[_symbol].BidPrice;
                 if (orderEvent.FillPrice != expectedFillPrice)
                 {
-                    throw new RegressionTestException($"Fill price is not the expected for OrderId {orderEvent.OrderId} at Algorithm Time {Time:s}." +
-                                        $"\n\tExpected fill price: {expectedFillPrice}, Actual fill price: {orderEvent.FillPrice}");
+                    throw new RegressionTestException(
+                        $"Fill price is not the expected for OrderId {orderEvent.OrderId} at Algorithm Time {Time:s}."
+                            + $"\n\tExpected fill price: {expectedFillPrice}, Actual fill price: {orderEvent.FillPrice}"
+                    );
                 }
             }
         }
@@ -136,17 +170,20 @@ namespace QuantConnect.Algorithm.CSharp
         public override void OnEndOfAlgorithm()
         {
             // We expect at least 390 * 5 = 1950 minute bar
-            // + 5 daily bars, but those are pumped into OnData every minute 
+            // + 5 daily bars, but those are pumped into OnData every minute
             if (_tradeCounter <= 1955)
             {
-                throw new RegressionTestException($"Fail at trade bars count expected >= 1955, actual: {_tradeCounter}.");
+                throw new RegressionTestException(
+                    $"Fail at trade bars count expected >= 1955, actual: {_tradeCounter}."
+                );
             }
-            // We expect 390 * 5 = 1950 quote bars. 
+            // We expect 390 * 5 = 1950 quote bars.
             if (_quoteCounter != 1950)
             {
-                throw new RegressionTestException($"Fail at trade bars count expected: 1950, actual: {_quoteCounter}.");
+                throw new RegressionTestException(
+                    $"Fail at trade bars count expected: 1950, actual: {_quoteCounter}."
+                );
             }
-
         }
 
         /// <summary>
@@ -177,35 +214,36 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// This is used by the regression test system to indicate what the expected statistics are from running the algorithm
         /// </summary>
-        public Dictionary<string, string> ExpectedStatistics => new Dictionary<string, string>
-        {
-            {"Total Orders", "250"},
-            {"Average Win", "0.12%"},
-            {"Average Loss", "-0.10%"},
-            {"Compounding Annual Return", "-86.492%"},
-            {"Drawdown", "3.300%"},
-            {"Expectancy", "-0.225"},
-            {"Start Equity", "100000"},
-            {"End Equity", "97294.97"},
-            {"Net Profit", "-2.705%"},
-            {"Sharpe Ratio", "-5.072"},
-            {"Sortino Ratio", "-5.033"},
-            {"Probabilistic Sharpe Ratio", "1.585%"},
-            {"Loss Rate", "65%"},
-            {"Win Rate", "35%"},
-            {"Profit-Loss Ratio", "1.20"},
-            {"Alpha", "-1.882"},
-            {"Beta", "0.571"},
-            {"Annual Standard Deviation", "0.149"},
-            {"Annual Variance", "0.022"},
-            {"Information Ratio", "-22.183"},
-            {"Tracking Error", "0.123"},
-            {"Treynor Ratio", "-1.323"},
-            {"Total Fees", "$670.74"},
-            {"Estimated Strategy Capacity", "$190000.00"},
-            {"Lowest Capacity Asset", "IBM R735QTJ8XC9X"},
-            {"Portfolio Turnover", "4996.13%"},
-            {"OrderListHash", "c65a9aa12b55e53a49a29cd28a358fcd"}
-        };
+        public Dictionary<string, string> ExpectedStatistics =>
+            new Dictionary<string, string>
+            {
+                { "Total Orders", "250" },
+                { "Average Win", "0.12%" },
+                { "Average Loss", "-0.10%" },
+                { "Compounding Annual Return", "-86.492%" },
+                { "Drawdown", "3.300%" },
+                { "Expectancy", "-0.225" },
+                { "Start Equity", "100000" },
+                { "End Equity", "97294.97" },
+                { "Net Profit", "-2.705%" },
+                { "Sharpe Ratio", "-5.072" },
+                { "Sortino Ratio", "-5.033" },
+                { "Probabilistic Sharpe Ratio", "1.585%" },
+                { "Loss Rate", "65%" },
+                { "Win Rate", "35%" },
+                { "Profit-Loss Ratio", "1.20" },
+                { "Alpha", "-1.882" },
+                { "Beta", "0.571" },
+                { "Annual Standard Deviation", "0.149" },
+                { "Annual Variance", "0.022" },
+                { "Information Ratio", "-22.183" },
+                { "Tracking Error", "0.123" },
+                { "Treynor Ratio", "-1.323" },
+                { "Total Fees", "$670.74" },
+                { "Estimated Strategy Capacity", "$190000.00" },
+                { "Lowest Capacity Asset", "IBM R735QTJ8XC9X" },
+                { "Portfolio Turnover", "4996.13%" },
+                { "OrderListHash", "c65a9aa12b55e53a49a29cd28a358fcd" }
+            };
     }
 }

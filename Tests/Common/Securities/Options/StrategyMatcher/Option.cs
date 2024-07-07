@@ -37,17 +37,46 @@ namespace QuantConnect.Tests.Common.Securities.Options.StrategyMatcher
 
         public class Factory
         {
-            public Symbol this[Symbol underlying, OptionRight right, decimal strike, DateTime expiration]
-                => Symbol.CreateOption(underlying, underlying.ID.Market, OptionStyle.American, right, strike, expiration);
+            public Symbol this[Symbol underlying, OptionRight right, decimal strike, DateTime expiration] =>
+                Symbol.CreateOption(
+                    underlying,
+                    underlying.ID.Market,
+                    OptionStyle.American,
+                    right,
+                    strike,
+                    expiration
+                );
 
-            public Symbol this[OptionRight right, decimal strike, DateTime expiration]
-                => Symbol.CreateOption(Underlying, Market.USA, OptionStyle.American, right, strike, expiration);
+            public Symbol this[OptionRight right, decimal strike, DateTime expiration] =>
+                Symbol.CreateOption(
+                    Underlying,
+                    Market.USA,
+                    OptionStyle.American,
+                    right,
+                    strike,
+                    expiration
+                );
 
-            public Symbol this[Symbol underlying, OptionRight right, decimal strike, int weeks = 0]
-                => Symbol.CreateOption(underlying, underlying.ID.Market, OptionStyle.American, right, strike, ReferenceDate.AddDays(7 * weeks));
+            public Symbol this[Symbol underlying, OptionRight right, decimal strike, int weeks =
+                0] =>
+                Symbol.CreateOption(
+                    underlying,
+                    underlying.ID.Market,
+                    OptionStyle.American,
+                    right,
+                    strike,
+                    ReferenceDate.AddDays(7 * weeks)
+                );
 
-            public Symbol this[OptionRight right, decimal strike, int weeks = 0]
-                => Symbol.CreateOption(Underlying, Market.USA, OptionStyle.American, right, strike, ReferenceDate.AddDays(7 * weeks));
+            public Symbol this[OptionRight right, decimal strike, int weeks = 0] =>
+                Symbol.CreateOption(
+                    Underlying,
+                    Market.USA,
+                    OptionStyle.American,
+                    right,
+                    strike,
+                    ReferenceDate.AddDays(7 * weeks)
+                );
         }
 
         public class FactoryRight
@@ -59,37 +88,93 @@ namespace QuantConnect.Tests.Common.Securities.Options.StrategyMatcher
                 this.right = right;
             }
 
-            public Symbol this[Symbol underlying, decimal strike, DateTime expiration]
-                => Symbol.CreateOption(underlying, underlying.ID.Market, OptionStyle.American, right, strike, expiration);
+            public Symbol this[Symbol underlying, decimal strike, DateTime expiration] =>
+                Symbol.CreateOption(
+                    underlying,
+                    underlying.ID.Market,
+                    OptionStyle.American,
+                    right,
+                    strike,
+                    expiration
+                );
 
-            public Symbol this[decimal strike, DateTime expiration]
-                => Symbol.CreateOption(Symbols.SPY, Market.USA, OptionStyle.American, right, strike, expiration);
+            public Symbol this[decimal strike, DateTime expiration] =>
+                Symbol.CreateOption(
+                    Symbols.SPY,
+                    Market.USA,
+                    OptionStyle.American,
+                    right,
+                    strike,
+                    expiration
+                );
 
-            public Symbol this[Symbol underlying, decimal strike, int weeks = 0]
-                => Symbol.CreateOption(underlying, underlying.ID.Market, OptionStyle.American, right, strike, ReferenceDate.AddDays(7 * weeks));
+            public Symbol this[Symbol underlying, decimal strike, int weeks = 0] =>
+                Symbol.CreateOption(
+                    underlying,
+                    underlying.ID.Market,
+                    OptionStyle.American,
+                    right,
+                    strike,
+                    ReferenceDate.AddDays(7 * weeks)
+                );
 
-            public Symbol this[decimal strike, int weeks = 0]
-                => Symbol.CreateOption(Symbols.SPY, Market.USA, OptionStyle.American, right, strike, ReferenceDate.AddDays(7 * weeks));
+            public Symbol this[decimal strike, int weeks = 0] =>
+                Symbol.CreateOption(
+                    Symbols.SPY,
+                    Market.USA,
+                    OptionStyle.American,
+                    right,
+                    strike,
+                    ReferenceDate.AddDays(7 * weeks)
+                );
         }
 
         public static Symbol WithStrike(this Symbol symbol, decimal strike)
         {
-            return Symbol.CreateOption(symbol.Underlying, symbol.ID.Market, symbol.ID.OptionStyle, symbol.ID.OptionRight, strike, symbol.ID.Date);
+            return Symbol.CreateOption(
+                symbol.Underlying,
+                symbol.ID.Market,
+                symbol.ID.OptionStyle,
+                symbol.ID.OptionRight,
+                strike,
+                symbol.ID.Date
+            );
         }
 
         public static Symbol WithExpiration(this Symbol symbol, DateTime expiration)
         {
-            return Symbol.CreateOption(symbol.Underlying, symbol.ID.Market, symbol.ID.OptionStyle, symbol.ID.OptionRight, symbol.ID.StrikePrice, expiration);
+            return Symbol.CreateOption(
+                symbol.Underlying,
+                symbol.ID.Market,
+                symbol.ID.OptionStyle,
+                symbol.ID.OptionRight,
+                symbol.ID.StrikePrice,
+                expiration
+            );
         }
 
         public static Symbol WithRight(this Symbol symbol, OptionRight right)
         {
-            return Symbol.CreateOption(symbol.Underlying, symbol.ID.Market, symbol.ID.OptionStyle, right, symbol.ID.StrikePrice, symbol.ID.Date);
+            return Symbol.CreateOption(
+                symbol.Underlying,
+                symbol.ID.Market,
+                symbol.ID.OptionStyle,
+                right,
+                symbol.ID.StrikePrice,
+                symbol.ID.Date
+            );
         }
 
         public static Symbol WithUnderlying(this Symbol symbol, Symbol underlying)
         {
-            return Symbol.CreateOption(underlying, symbol.ID.Market, symbol.ID.OptionStyle, symbol.ID.OptionRight, symbol.ID.StrikePrice, symbol.ID.Date);
+            return Symbol.CreateOption(
+                underlying,
+                symbol.ID.Market,
+                symbol.ID.OptionStyle,
+                symbol.ID.OptionRight,
+                symbol.ID.StrikePrice,
+                symbol.ID.Date
+            );
         }
 
         public static OptionPosition Position(Symbol symbol, int quantity = +1)

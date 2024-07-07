@@ -30,7 +30,8 @@ namespace QuantConnect.Util
         /// <param name="arg1">The first value</param>
         /// <param name="arg2">The second value</param>
         /// <returns>Returns true if its left-hand operand meets the operator value to its right-hand operand, false otherwise</returns>
-        public static bool Compare<T>(ComparisonOperatorTypes op, T arg1, T arg2) where T : IComparable
+        public static bool Compare<T>(ComparisonOperatorTypes op, T arg1, T arg2)
+            where T : IComparable
         {
             switch (op)
             {
@@ -47,7 +48,10 @@ namespace QuantConnect.Util
                 case ComparisonOperatorTypes.LessOrEqual:
                     return arg1.CompareTo(arg2) <= 0;
                 default:
-                    throw new ArgumentOutOfRangeException(nameof(op), $"Operator '{op}' is not supported.");
+                    throw new ArgumentOutOfRangeException(
+                        nameof(op),
+                        $"Operator '{op}' is not supported."
+                    );
             }
         }
     }

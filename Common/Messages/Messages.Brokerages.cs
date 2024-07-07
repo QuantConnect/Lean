@@ -14,15 +14,13 @@
 */
 
 using System;
-using System.Runtime.CompilerServices;
-
-using QuantConnect.Brokerages;
-using QuantConnect.Securities;
-using QuantConnect.Orders;
-
-using static QuantConnect.StringExtensions;
 using System.Collections.Generic;
+using System.Runtime.CompilerServices;
+using QuantConnect.Brokerages;
+using QuantConnect.Orders;
 using QuantConnect.Orders.TimeInForces;
+using QuantConnect.Securities;
+using static QuantConnect.StringExtensions;
 
 namespace QuantConnect
 {
@@ -42,50 +40,85 @@ namespace QuantConnect
             public static string NoDataForSymbol =
                 "There is no data for this symbol yet, please check the security.HasData flag to ensure there is at least one data point.";
 
-            public static string OrderUpdateNotSupported = "Brokerage does not support update. You must cancel and re-create instead.";
+            public static string OrderUpdateNotSupported =
+                "Brokerage does not support update. You must cancel and re-create instead.";
 
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            public static string UnsupportedSecurityType(IBrokerageModel brokerageModel, Securities.Security security)
+            public static string UnsupportedSecurityType(
+                IBrokerageModel brokerageModel,
+                Securities.Security security
+            )
             {
-                return Invariant($"The {brokerageModel.GetType().Name} does not support {security.Type} security type.");
+                return Invariant(
+                    $"The {brokerageModel.GetType().Name} does not support {security.Type} security type."
+                );
             }
 
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             public static string UnsupportedCrossZeroOrderUpdate(IBrokerageModel brokerageModel)
             {
-                return Invariant($"Unfortunately, the {brokerageModel.GetType().Name} brokerage model does not support updating the quantity of Cross Zero Orders.");
+                return Invariant(
+                    $"Unfortunately, the {brokerageModel.GetType().Name} brokerage model does not support updating the quantity of Cross Zero Orders."
+                );
             }
 
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            public static string InvalidSecurityTypeToGetFillModel(IBrokerageModel brokerageModel, Securities.Security security)
+            public static string InvalidSecurityTypeToGetFillModel(
+                IBrokerageModel brokerageModel,
+                Securities.Security security
+            )
             {
-                return Invariant($"{brokerageModel.GetType().Name}.GetFillModel: Invalid security type {security.Type}");
+                return Invariant(
+                    $"{brokerageModel.GetType().Name}.GetFillModel: Invalid security type {security.Type}"
+                );
             }
 
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            public static string InvalidOrderQuantity(Securities.Security security, decimal quantity)
+            public static string InvalidOrderQuantity(
+                Securities.Security security,
+                decimal quantity
+            )
             {
-                return Invariant($@"The minimum order size (in quote currency) for {security.Symbol.Value} is {
-                    security.SymbolProperties.MinimumOrderSize}. Order quantity was {quantity}.");
+                return Invariant(
+                    $@"The minimum order size (in quote currency) for {security.Symbol.Value} is {
+                    security.SymbolProperties.MinimumOrderSize}. Order quantity was {quantity}."
+                );
             }
 
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            public static string InvalidOrderSize(Securities.Security security, decimal quantity, decimal price)
+            public static string InvalidOrderSize(
+                Securities.Security security,
+                decimal quantity,
+                decimal price
+            )
             {
-                return Invariant($@"The minimum order size (in quote currency) for {security.Symbol.Value} is {security.SymbolProperties.MinimumOrderSize}. Order size was {quantity * price}.");
+                return Invariant(
+                    $@"The minimum order size (in quote currency) for {security.Symbol.Value} is {security.SymbolProperties.MinimumOrderSize}. Order size was {quantity * price}."
+                );
             }
 
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            public static string UnsupportedOrderType(IBrokerageModel brokerageModel, Orders.Order order, IEnumerable<OrderType> supportedOrderTypes)
+            public static string UnsupportedOrderType(
+                IBrokerageModel brokerageModel,
+                Orders.Order order,
+                IEnumerable<OrderType> supportedOrderTypes
+            )
             {
-                return Invariant($"The {brokerageModel.GetType().Name} does not support {order.Type} order type. Only supports [{string.Join(',', supportedOrderTypes)}]");
+                return Invariant(
+                    $"The {brokerageModel.GetType().Name} does not support {order.Type} order type. Only supports [{string.Join(',', supportedOrderTypes)}]"
+                );
             }
 
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            public static string UnsupportedTimeInForce(IBrokerageModel brokerageModel, Orders.Order order)
+            public static string UnsupportedTimeInForce(
+                IBrokerageModel brokerageModel,
+                Orders.Order order
+            )
             {
-                return Invariant($@"The {brokerageModel.GetType().Name} does not support {
-                    order.TimeInForce.GetType().Name} time in force.");
+                return Invariant(
+                    $@"The {brokerageModel.GetType().Name} does not support {
+                    order.TimeInForce.GetType().Name} time in force."
+                );
             }
 
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -100,7 +133,8 @@ namespace QuantConnect
         /// </summary>
         public static class AlphaStreamsBrokerageModel
         {
-            public static string UnsupportedAccountType = "The Alpha Streams brokerage does not currently support Cash trading.";
+            public static string UnsupportedAccountType =
+                "The Alpha Streams brokerage does not currently support Cash trading.";
         }
 
         /// <summary>
@@ -121,16 +155,26 @@ namespace QuantConnect
         public static class BinanceBrokerageModel
         {
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            public static string UnsupportedOrderTypeForSecurityType(Orders.Order order, Securities.Security security)
+            public static string UnsupportedOrderTypeForSecurityType(
+                Orders.Order order,
+                Securities.Security security
+            )
             {
-                return Invariant($"{order.Type} orders are not supported for this symbol ${security.Symbol}");
+                return Invariant(
+                    $"{order.Type} orders are not supported for this symbol ${security.Symbol}"
+                );
             }
 
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            public static string UnsupportedOrderTypeWithLinkToSupportedTypes(Orders.Order order, Securities.Security security)
+            public static string UnsupportedOrderTypeWithLinkToSupportedTypes(
+                Orders.Order order,
+                Securities.Security security
+            )
             {
-                return Invariant($@"{order.Type} orders are not supported for this symbol. Please check 'https://api.binance.com/api/v3/exchangeInfo?symbol={
-                    security.SymbolProperties.MarketTicker}' to see supported order types.");
+                return Invariant(
+                    $@"{order.Type} orders are not supported for this symbol. Please check 'https://api.binance.com/api/v3/exchangeInfo?symbol={
+                    security.SymbolProperties.MarketTicker}' to see supported order types."
+                );
             }
         }
 
@@ -139,7 +183,8 @@ namespace QuantConnect
         /// </summary>
         public static class BinanceUSBrokerageModel
         {
-            public static string UnsupportedAccountType = "The Binance.US brokerage does not currently support Margin trading.";
+            public static string UnsupportedAccountType =
+                "The Binance.US brokerage does not currently support Margin trading.";
         }
 
         /// <summary>
@@ -154,7 +199,9 @@ namespace QuantConnect
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             public static string ToString(Brokerages.BrokerageMessageEvent messageEvent)
             {
-                return Invariant($"{messageEvent.Type} - Code: {messageEvent.Code} - {messageEvent.Message}");
+                return Invariant(
+                    $"{messageEvent.Type} - Code: {messageEvent.Code} - {messageEvent.Message}"
+                );
             }
         }
 
@@ -165,14 +212,17 @@ namespace QuantConnect
         {
             public static string BrokerageErrorContext = "Brokerage Error";
 
-            public static string Disconnected = "DefaultBrokerageMessageHandler.Handle(): Disconnected.";
+            public static string Disconnected =
+                "DefaultBrokerageMessageHandler.Handle(): Disconnected.";
 
-            public static string Reconnected = "DefaultBrokerageMessageHandler.Handle(): Reconnected.";
+            public static string Reconnected =
+                "DefaultBrokerageMessageHandler.Handle(): Reconnected.";
 
             public static string DisconnectedWhenExchangesAreClosed =
                 "DefaultBrokerageMessageHandler.Handle(): Disconnect when exchanges are closed, checking back before exchange open.";
 
-            public static string StillDisconnected = "DefaultBrokerageMessageHandler.Handle(): Still disconnected, goodbye.";
+            public static string StillDisconnected =
+                "DefaultBrokerageMessageHandler.Handle(): Still disconnected, goodbye.";
 
             public static string BrokerageDisconnectedShutDownContext = "Brokerage Disconnect";
 
@@ -191,14 +241,18 @@ namespace QuantConnect
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             public static string DisconnectedWhenExchangesAreOpen(TimeSpan reconnectionTimeout)
             {
-                return Invariant($@"DefaultBrokerageMessageHandler.Handle(): Disconnect when exchanges are open, trying to reconnect for {
-                    reconnectionTimeout.TotalMinutes} minutes.");
+                return Invariant(
+                    $@"DefaultBrokerageMessageHandler.Handle(): Disconnect when exchanges are open, trying to reconnect for {
+                    reconnectionTimeout.TotalMinutes} minutes."
+                );
             }
 
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             public static string TimeUntilNextMarketOpen(TimeSpan timeUntilNextMarketOpen)
             {
-                return Invariant($"DefaultBrokerageMessageHandler.Handle(): TimeUntilNextMarketOpen: {timeUntilNextMarketOpen}");
+                return Invariant(
+                    $"DefaultBrokerageMessageHandler.Handle(): TimeUntilNextMarketOpen: {timeUntilNextMarketOpen}"
+                );
             }
         }
 
@@ -217,9 +271,11 @@ namespace QuantConnect
         /// </summary>
         public static class FTXBrokerageModel
         {
-            public static string TriggerPriceTooHigh = "Trigger price too high: must be below current market price.";
+            public static string TriggerPriceTooHigh =
+                "Trigger price too high: must be below current market price.";
 
-            public static string TriggerPriceTooLow = "Trigger price too low: must be above current market price.";
+            public static string TriggerPriceTooLow =
+                "Trigger price too low: must be above current market price.";
         }
 
         /// <summary>
@@ -233,14 +289,23 @@ namespace QuantConnect
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             public static string InvalidOrderQuantityForLotSize(Securities.Security security)
             {
-                return Invariant($"The order quantity must be a multiple of LotSize: [{security.SymbolProperties.LotSize}].");
+                return Invariant(
+                    $"The order quantity must be a multiple of LotSize: [{security.SymbolProperties.LotSize}]."
+                );
             }
 
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            public static string PriceOutOfRange(OrderType orderType, OrderDirection orderDirection, decimal orderPrice, decimal currentPrice)
+            public static string PriceOutOfRange(
+                OrderType orderType,
+                OrderDirection orderDirection,
+                decimal orderPrice,
+                decimal currentPrice
+            )
             {
-                return Invariant($@"The {orderType} {orderDirection} order price ({
-                    orderPrice}) is too far from the current market price ({currentPrice}).");
+                return Invariant(
+                    $@"The {orderType} {orderDirection} order price ({
+                    orderPrice}) is too far from the current market price ({currentPrice})."
+                );
             }
         }
 
@@ -249,12 +314,17 @@ namespace QuantConnect
         /// </summary>
         public static class CoinbaseBrokerageModel
         {
-            public static string UnsupportedAccountType = "The Coinbase brokerage does not currently support Margin trading.";
-            
+            public static string UnsupportedAccountType =
+                "The Coinbase brokerage does not currently support Margin trading.";
+
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            public static string StopMarketOrdersNoLongerSupported(DateTime stopMarketOrderSupportEndDate)
+            public static string StopMarketOrdersNoLongerSupported(
+                DateTime stopMarketOrderSupportEndDate
+            )
             {
-                return Invariant($"Stop Market orders are no longer supported since {stopMarketOrderSupportEndDate}.");
+                return Invariant(
+                    $"Stop Market orders are no longer supported since {stopMarketOrderSupportEndDate}."
+                );
             }
         }
 
@@ -264,17 +334,23 @@ namespace QuantConnect
         public static class InteractiveBrokersBrokerageModel
         {
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            public static string UnsupportedExerciseForIndexAndCashSettledOptions(Brokerages.InteractiveBrokersBrokerageModel brokerageModel,
-                Orders.Order order)
+            public static string UnsupportedExerciseForIndexAndCashSettledOptions(
+                Brokerages.InteractiveBrokersBrokerageModel brokerageModel,
+                Orders.Order order
+            )
             {
-                return Invariant($@"The {brokerageModel.GetType().Name} does not support {
-                    order.Type} exercises for index and cash-settled options.");
+                return Invariant(
+                    $@"The {brokerageModel.GetType().Name} does not support {
+                    order.Type} exercises for index and cash-settled options."
+                );
             }
 
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             public static string InvalidForexOrderSize(decimal min, decimal max, string currency)
             {
-                return Invariant($"The minimum and maximum limits for the allowable order size are ({min}, {max}){currency}.");
+                return Invariant(
+                    $"The minimum and maximum limits for the allowable order size are ({min}, {max}){currency}."
+                );
             }
         }
 
@@ -286,12 +362,14 @@ namespace QuantConnect
             /// <summary>
             /// Unsupported Security Type string message
             /// </summary>
-            public static string UnsupportedSecurityType = "This model only supports equities and options.";
+            public static string UnsupportedSecurityType =
+                "This model only supports equities and options.";
 
             /// <summary>
             /// Unsupported Time In Force Type string message
             /// </summary>
-            public static string UnsupportedTimeInForceType = $"This model only supports orders with the following time in force types: {typeof(DayTimeInForce)} and {typeof(GoodTilCanceledTimeInForce)}";
+            public static string UnsupportedTimeInForceType =
+                $"This model only supports orders with the following time in force types: {typeof(DayTimeInForce)} and {typeof(GoodTilCanceledTimeInForce)}";
 
             /// <summary>
             /// Extended Market Hours Trading Not Supported string message
@@ -302,27 +380,32 @@ namespace QuantConnect
             /// <summary>
             /// Order Quantity Update Not Supported string message
             /// </summary>
-            public static string OrderQuantityUpdateNotSupported = "Tradier does not support updating order quantities.";
+            public static string OrderQuantityUpdateNotSupported =
+                "Tradier does not support updating order quantities.";
 
             /// <summary>
             /// Open Orders Cancel On Reverse Split Symbols string message
             /// </summary>
-            public static string OpenOrdersCancelOnReverseSplitSymbols = "Tradier Brokerage cancels open orders on reverse split symbols";
+            public static string OpenOrdersCancelOnReverseSplitSymbols =
+                "Tradier Brokerage cancels open orders on reverse split symbols";
 
             /// <summary>
             /// Short Order Is GTC string message
             /// </summary>
-            public static string ShortOrderIsGtc = "You cannot place short stock orders with GTC, only day orders are allowed";
+            public static string ShortOrderIsGtc =
+                "You cannot place short stock orders with GTC, only day orders are allowed";
 
             /// <summary>
             /// Sell Short Order Last Price Below 5 string message
             /// </summary>
-            public static string SellShortOrderLastPriceBelow5 = "Sell Short order cannot be placed for stock priced below $5";
+            public static string SellShortOrderLastPriceBelow5 =
+                "Sell Short order cannot be placed for stock priced below $5";
 
             /// <summary>
             /// Incorrect Order Quantity string message
             /// </summary>
-            public static string IncorrectOrderQuantity = "Quantity should be between 1 and 10,000,000";
+            public static string IncorrectOrderQuantity =
+                "Quantity should be between 1 and 10,000,000";
         }
 
         /// <summary>
@@ -360,7 +443,9 @@ namespace QuantConnect
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             public static string UnsupportedOrderType(Orders.Order order)
             {
-                return Invariant($"{order.Type} order is not supported by Wolverine. Currently, only Market Order is supported.");
+                return Invariant(
+                    $"{order.Type} order is not supported by Wolverine. Currently, only Market Order is supported."
+                );
             }
         }
 
@@ -377,7 +462,9 @@ namespace QuantConnect
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             public static string UnsupportedOrderType(Orders.Order order)
             {
-                return Invariant($"{order.Type} order is not supported by RBI. Currently, only Market Order, Limit Order, StopMarket Order and StopLimit Order are supported.");
+                return Invariant(
+                    $"{order.Type} order is not supported by RBI. Currently, only Market Order, Limit Order, StopMarket Order and StopLimit Order are supported."
+                );
             }
         }
     }

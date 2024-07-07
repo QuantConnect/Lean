@@ -23,7 +23,9 @@ namespace QuantConnect.Indicators
     /// The Accumulation/Distribution Oscillator is calculated using the following formula:
     /// ADOSC = EMA(fast,AD) - EMA(slow,AD)
     /// </summary>
-    public class AccumulationDistributionOscillator : TradeBarIndicator, IIndicatorWarmUpPeriodProvider
+    public class AccumulationDistributionOscillator
+        : TradeBarIndicator,
+            IIndicatorWarmUpPeriodProvider
     {
         private readonly int _period;
         private readonly AccumulationDistribution _ad;
@@ -32,17 +34,15 @@ namespace QuantConnect.Indicators
 
         /// <summary>
         /// Initializes a new instance of the <see cref="AccumulationDistributionOscillator"/> class using the specified parameters
-        /// </summary> 
+        /// </summary>
         /// <param name="fastPeriod">The fast moving average period</param>
         /// <param name="slowPeriod">The slow moving average period</param>
         public AccumulationDistributionOscillator(int fastPeriod, int slowPeriod)
-            : this($"ADOSC({fastPeriod},{slowPeriod})", fastPeriod, slowPeriod)
-        {
-        }
+            : this($"ADOSC({fastPeriod},{slowPeriod})", fastPeriod, slowPeriod) { }
 
         /// <summary>
         /// Initializes a new instance of the <see cref="AccumulationDistributionOscillator"/> class using the specified parameters
-        /// </summary> 
+        /// </summary>
         /// <param name="name">The name of this indicator</param>
         /// <param name="fastPeriod">The fast moving average period</param>
         /// <param name="slowPeriod">The slow moving average period</param>

@@ -53,7 +53,8 @@ namespace QuantConnect.Orders
         public override void WriteJson(JsonWriter writer, object value, JsonSerializer serializer)
         {
             var timeInForce = value as TimeInForce;
-            if (ReferenceEquals(timeInForce, null)) return;
+            if (ReferenceEquals(timeInForce, null))
+                return;
 
             var jo = new JObject();
 
@@ -86,7 +87,12 @@ namespace QuantConnect.Orders
         /// <returns>
         /// The object value.
         /// </returns>
-        public override object ReadJson(JsonReader reader, Type objectType, object existingValue, JsonSerializer serializer)
+        public override object ReadJson(
+            JsonReader reader,
+            Type objectType,
+            object existingValue,
+            JsonSerializer serializer
+        )
         {
             var jObject = JToken.Load(reader);
 
@@ -96,7 +102,9 @@ namespace QuantConnect.Orders
             {
                 if (array.Count != 0)
                 {
-                    throw new InvalidOperationException($"Unexpected time in force value: {jObject}");
+                    throw new InvalidOperationException(
+                        $"Unexpected time in force value: {jObject}"
+                    );
                 }
                 // default value if not present. for php [] & {} are the same representation of empty object
                 type = typeof(GoodTilCanceledTimeInForce);
@@ -117,15 +125,28 @@ namespace QuantConnect.Orders
                 type = typeof(GoodTilCanceledTimeInForce);
             }
 
-            var constructor = type.GetConstructor(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, new Type[0], null);
+            var constructor = type.GetConstructor(
+                BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic,
+                null,
+                new Type[0],
+                null
+            );
             if (constructor == null)
             {
-                throw new NotImplementedException($"Unable to find a constructor for type: {type.FullName}");
+                throw new NotImplementedException(
+                    $"Unable to find a constructor for type: {type.FullName}"
+                );
             }
 
             var timeInForce = constructor.Invoke(null);
 
-            foreach (var property in timeInForce.GetType().GetProperties(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic))
+            foreach (
+                var property in timeInForce
+                    .GetType()
+                    .GetProperties(
+                        BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic
+                    )
+            )
             {
                 var value = jObject[property.Name];
                 if (value != null)

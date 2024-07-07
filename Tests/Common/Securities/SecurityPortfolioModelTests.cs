@@ -42,8 +42,17 @@ namespace QuantConnect.Tests.Common.Securities
             var fillQuantity = 100;
             var orderFee = new OrderFee(new CashAmount(1m, Currencies.USD));
             var orderDirection = fillQuantity > 0 ? OrderDirection.Buy : OrderDirection.Sell;
-            var fill = new OrderEvent(1, security.Symbol, reference, OrderStatus.Filled, orderDirection, fillPrice, fillQuantity, orderFee);
-            portfolio.ProcessFills(new List<OrderEvent> {fill});
+            var fill = new OrderEvent(
+                1,
+                security.Symbol,
+                reference,
+                OrderStatus.Filled,
+                orderDirection,
+                fillPrice,
+                fillQuantity,
+                orderFee
+            );
+            portfolio.ProcessFills(new List<OrderEvent> { fill });
 
             // zero since we're from flat
             Assert.AreEqual(0, security.Holdings.LastTradeProfit);
@@ -60,8 +69,17 @@ namespace QuantConnect.Tests.Common.Securities
             var fillQuantity = -100;
             var orderFee = new OrderFee(new CashAmount(1m, Currencies.USD));
             var orderDirection = fillQuantity > 0 ? OrderDirection.Buy : OrderDirection.Sell;
-            var fill = new OrderEvent(1, security.Symbol, reference, OrderStatus.Filled, orderDirection, fillPrice, fillQuantity, orderFee);
-            portfolio.ProcessFills(new List<OrderEvent> {fill});
+            var fill = new OrderEvent(
+                1,
+                security.Symbol,
+                reference,
+                OrderStatus.Filled,
+                orderDirection,
+                fillPrice,
+                fillQuantity,
+                orderFee
+            );
+            portfolio.ProcessFills(new List<OrderEvent> { fill });
 
             // zero since we're from flat
             Assert.AreEqual(0, security.Holdings.LastTradeProfit);
@@ -80,8 +98,17 @@ namespace QuantConnect.Tests.Common.Securities
             var fillQuantity = 100;
             var orderFee = new OrderFee(new CashAmount(1m, Currencies.USD));
             var orderDirection = fillQuantity > 0 ? OrderDirection.Buy : OrderDirection.Sell;
-            var fill = new OrderEvent(1, security.Symbol, reference, OrderStatus.Filled, orderDirection, fillPrice, fillQuantity, orderFee);
-            portfolio.ProcessFills(new List<OrderEvent> {fill});
+            var fill = new OrderEvent(
+                1,
+                security.Symbol,
+                reference,
+                OrderStatus.Filled,
+                orderDirection,
+                fillPrice,
+                fillQuantity,
+                orderFee
+            );
+            portfolio.ProcessFills(new List<OrderEvent> { fill });
 
             // zero since we're from flat
             Assert.AreEqual(0, security.Holdings.LastTradeProfit);
@@ -100,8 +127,17 @@ namespace QuantConnect.Tests.Common.Securities
             var fillQuantity = -security.Holdings.Quantity;
             var orderFee = new OrderFee(new CashAmount(1m, Currencies.USD));
             var orderDirection = fillQuantity > 0 ? OrderDirection.Buy : OrderDirection.Sell;
-            var fill = new OrderEvent(1, security.Symbol, reference, OrderStatus.Filled, orderDirection, fillPrice, fillQuantity, orderFee);
-            portfolio.ProcessFills(new List<OrderEvent> {fill});
+            var fill = new OrderEvent(
+                1,
+                security.Symbol,
+                reference,
+                OrderStatus.Filled,
+                orderDirection,
+                fillPrice,
+                fillQuantity,
+                orderFee
+            );
+            portfolio.ProcessFills(new List<OrderEvent> { fill });
 
             // bought @50 and sold @100 = (-50*100)+(100*100 - 1) = 4999
             // current implementation doesn't back out fees.
@@ -118,11 +154,20 @@ namespace QuantConnect.Tests.Common.Securities
             security.Holdings.SetHoldings(50m, 100);
 
             var fillPrice = 100m;
-            var fillQuantity = -2*security.Holdings.Quantity;
+            var fillQuantity = -2 * security.Holdings.Quantity;
             var orderFee = new OrderFee(new CashAmount(1m, Currencies.USD));
             var orderDirection = fillQuantity > 0 ? OrderDirection.Buy : OrderDirection.Sell;
-            var fill = new OrderEvent(1, security.Symbol, reference, OrderStatus.Filled, orderDirection, fillPrice, fillQuantity, orderFee);
-            portfolio.ProcessFills(new List<OrderEvent> {fill});
+            var fill = new OrderEvent(
+                1,
+                security.Symbol,
+                reference,
+                OrderStatus.Filled,
+                orderDirection,
+                fillPrice,
+                fillQuantity,
+                orderFee
+            );
+            portfolio.ProcessFills(new List<OrderEvent> { fill });
 
             // we can only take 'profit' on the closing part of the position, so we closed 100
             // shares and opened a new for the second 100, so ony the frst 100 go into the calculation
@@ -144,8 +189,17 @@ namespace QuantConnect.Tests.Common.Securities
             var fillQuantity = -100;
             var orderFee = new OrderFee(new CashAmount(1m, Currencies.USD));
             var orderDirection = fillQuantity > 0 ? OrderDirection.Buy : OrderDirection.Sell;
-            var fill = new OrderEvent(1, security.Symbol, reference, OrderStatus.Filled, orderDirection, fillPrice, fillQuantity, orderFee);
-            portfolio.ProcessFills(new List<OrderEvent> {fill});
+            var fill = new OrderEvent(
+                1,
+                security.Symbol,
+                reference,
+                OrderStatus.Filled,
+                orderDirection,
+                fillPrice,
+                fillQuantity,
+                orderFee
+            );
+            portfolio.ProcessFills(new List<OrderEvent> { fill });
 
             Assert.AreEqual(0, security.Holdings.LastTradeProfit);
         }
@@ -164,8 +218,17 @@ namespace QuantConnect.Tests.Common.Securities
             var fillQuantity = -security.Holdings.Quantity;
             var orderFee = new OrderFee(new CashAmount(1m, Currencies.USD));
             var orderDirection = fillQuantity > 0 ? OrderDirection.Buy : OrderDirection.Sell;
-            var fill = new OrderEvent(1, security.Symbol, reference, OrderStatus.Filled, orderDirection, fillPrice, fillQuantity, orderFee);
-            portfolio.ProcessFills(new List<OrderEvent> {fill});
+            var fill = new OrderEvent(
+                1,
+                security.Symbol,
+                reference,
+                OrderStatus.Filled,
+                orderDirection,
+                fillPrice,
+                fillQuantity,
+                orderFee
+            );
+            portfolio.ProcessFills(new List<OrderEvent> { fill });
 
             // sold @50 and bought @100 = (50*100)+(-100*100 - 1) = -5001
             // current implementation doesn't back out fees.
@@ -181,11 +244,20 @@ namespace QuantConnect.Tests.Common.Securities
             security.Holdings.SetHoldings(50m, -100);
 
             var fillPrice = 100m;
-            var fillQuantity = -2*security.Holdings.Quantity; // flip from -100 to +100
+            var fillQuantity = -2 * security.Holdings.Quantity; // flip from -100 to +100
             var orderFee = new OrderFee(new CashAmount(1m, Currencies.USD));
             var orderDirection = fillQuantity > 0 ? OrderDirection.Buy : OrderDirection.Sell;
-            var fill = new OrderEvent(1, security.Symbol, reference, OrderStatus.Filled, orderDirection, fillPrice, fillQuantity, orderFee);
-            portfolio.ProcessFills(new List<OrderEvent> {fill});
+            var fill = new OrderEvent(
+                1,
+                security.Symbol,
+                reference,
+                OrderStatus.Filled,
+                orderDirection,
+                fillPrice,
+                fillQuantity,
+                orderFee
+            );
+            portfolio.ProcessFills(new List<OrderEvent> { fill });
 
             // we can only take 'profit' on the closing part of the position, so we closed 100
             // shares and opened a new for the second 100, so ony the frst 100 go into the calculation
@@ -220,8 +292,17 @@ namespace QuantConnect.Tests.Common.Securities
             var fillQuantity = -equity.Holdings.Quantity;
             var orderFee = new OrderFee(new CashAmount(1m, "EUR"));
             var orderDirection = fillQuantity > 0 ? OrderDirection.Buy : OrderDirection.Sell;
-            var fill = new OrderEvent(1, equity.Symbol, reference, OrderStatus.Filled, orderDirection, fillPrice, fillQuantity, orderFee);
-            portfolio.ProcessFills(new List<OrderEvent> {fill});
+            var fill = new OrderEvent(
+                1,
+                equity.Symbol,
+                reference,
+                OrderStatus.Filled,
+                orderDirection,
+                fillPrice,
+                fillQuantity,
+                orderFee
+            );
+            portfolio.ProcessFills(new List<OrderEvent> { fill });
 
             // current implementation doesn't back out fees.
             Assert.AreEqual(10, equity.Holdings.TotalFees); // 1 * 10 (conversion rate to account currency)
@@ -262,8 +343,17 @@ namespace QuantConnect.Tests.Common.Securities
             var fillQuantity = -equity.Holdings.Quantity;
             var orderFee = new OrderFee(new CashAmount(1m, "EUR"));
             var orderDirection = fillQuantity > 0 ? OrderDirection.Buy : OrderDirection.Sell;
-            var fill = new OrderEvent(1, equity.Symbol, reference, OrderStatus.Filled, orderDirection, fillPrice, fillQuantity, orderFee);
-            portfolio.ProcessFills(new List<OrderEvent> {fill});
+            var fill = new OrderEvent(
+                1,
+                equity.Symbol,
+                reference,
+                OrderStatus.Filled,
+                orderDirection,
+                fillPrice,
+                fillQuantity,
+                orderFee
+            );
+            portfolio.ProcessFills(new List<OrderEvent> { fill });
 
             // current implementation doesn't back out fees.
             Assert.AreEqual(10, equity.Holdings.TotalFees); // 1 * 10 (conversion rate to account currency)
@@ -303,8 +393,17 @@ namespace QuantConnect.Tests.Common.Securities
             var fillQuantity = -100;
             var orderFee = new OrderFee(new CashAmount(1m, "EUR"));
             var orderDirection = fillQuantity > 0 ? OrderDirection.Buy : OrderDirection.Sell;
-            var fill = new OrderEvent(1, equity.Symbol, reference, OrderStatus.Filled, orderDirection, fillPrice, fillQuantity, orderFee);
-            portfolio.ProcessFills(new List<OrderEvent> {fill});
+            var fill = new OrderEvent(
+                1,
+                equity.Symbol,
+                reference,
+                OrderStatus.Filled,
+                orderDirection,
+                fillPrice,
+                fillQuantity,
+                orderFee
+            );
+            portfolio.ProcessFills(new List<OrderEvent> { fill });
 
             // current implementation doesn't back out fees.
             Assert.AreEqual(10, equity.Holdings.TotalFees); // 1 * 10 (conversion rate to account currency)
@@ -350,8 +449,17 @@ namespace QuantConnect.Tests.Common.Securities
             var fillQuantity = 100;
             var orderFee = new OrderFee(new CashAmount(1m, "EUR"));
             var orderDirection = fillQuantity > 0 ? OrderDirection.Buy : OrderDirection.Sell;
-            var fill = new OrderEvent(1, equity.Symbol, reference, OrderStatus.Filled, orderDirection, fillPrice, fillQuantity, orderFee);
-            portfolio.ProcessFills(new List<OrderEvent> {fill});
+            var fill = new OrderEvent(
+                1,
+                equity.Symbol,
+                reference,
+                OrderStatus.Filled,
+                orderDirection,
+                fillPrice,
+                fillQuantity,
+                orderFee
+            );
+            portfolio.ProcessFills(new List<OrderEvent> { fill });
 
             // current implementation doesn't back out fees.
             Assert.AreEqual(10, equity.Holdings.TotalFees); // 1 * 10 (conversion rate to account currency)
@@ -398,8 +506,17 @@ namespace QuantConnect.Tests.Common.Securities
             var fillQuantity = -future.Holdings.Quantity;
             var orderFee = new OrderFee(new CashAmount(1m, "EUR"));
             var orderDirection = fillQuantity > 0 ? OrderDirection.Buy : OrderDirection.Sell;
-            var fill = new OrderEvent(1, future.Symbol, reference, OrderStatus.Filled, orderDirection, fillPrice, fillQuantity, orderFee);
-            portfolio.ProcessFills(new List<OrderEvent> {fill});
+            var fill = new OrderEvent(
+                1,
+                future.Symbol,
+                reference,
+                OrderStatus.Filled,
+                orderDirection,
+                fillPrice,
+                fillQuantity,
+                orderFee
+            );
+            portfolio.ProcessFills(new List<OrderEvent> { fill });
 
             // current implementation doesn't back out fees.
             Assert.AreEqual(10, future.Holdings.TotalFees); // 1 * 10 (conversion rate to account currency)
@@ -441,8 +558,17 @@ namespace QuantConnect.Tests.Common.Securities
             var fillQuantity = -future.Holdings.Quantity;
             var orderFee = new OrderFee(new CashAmount(1m, "EUR"));
             var orderDirection = fillQuantity > 0 ? OrderDirection.Buy : OrderDirection.Sell;
-            var fill = new OrderEvent(1, future.Symbol, reference, OrderStatus.Filled, orderDirection, fillPrice, fillQuantity, orderFee);
-            portfolio.ProcessFills(new List<OrderEvent> {fill});
+            var fill = new OrderEvent(
+                1,
+                future.Symbol,
+                reference,
+                OrderStatus.Filled,
+                orderDirection,
+                fillPrice,
+                fillQuantity,
+                orderFee
+            );
+            portfolio.ProcessFills(new List<OrderEvent> { fill });
 
             // current implementation doesn't back out fees.
             Assert.AreEqual(10, future.Holdings.TotalFees); // 1 * 10 (conversion rate to account currency)
@@ -483,7 +609,16 @@ namespace QuantConnect.Tests.Common.Securities
             var fillQuantity = 100;
             var orderFee = new OrderFee(new CashAmount(1m, "EUR"));
             var orderDirection = fillQuantity > 0 ? OrderDirection.Buy : OrderDirection.Sell;
-            var fill = new OrderEvent(1, future.Symbol, reference, OrderStatus.Filled, orderDirection, fillPrice, fillQuantity, orderFee);
+            var fill = new OrderEvent(
+                1,
+                future.Symbol,
+                reference,
+                OrderStatus.Filled,
+                orderDirection,
+                fillPrice,
+                fillQuantity,
+                orderFee
+            );
             portfolio.ProcessFills(new List<OrderEvent> { fill });
 
             // current implementation doesn't back out fees.
@@ -530,8 +665,17 @@ namespace QuantConnect.Tests.Common.Securities
             var fillQuantity = -100;
             var orderFee = new OrderFee(new CashAmount(1m, "EUR"));
             var orderDirection = fillQuantity > 0 ? OrderDirection.Buy : OrderDirection.Sell;
-            var fill = new OrderEvent(1, future.Symbol, reference, OrderStatus.Filled, orderDirection, fillPrice, fillQuantity, orderFee);
-            portfolio.ProcessFills(new List<OrderEvent> {fill});
+            var fill = new OrderEvent(
+                1,
+                future.Symbol,
+                reference,
+                OrderStatus.Filled,
+                orderDirection,
+                fillPrice,
+                fillQuantity,
+                orderFee
+            );
+            portfolio.ProcessFills(new List<OrderEvent> { fill });
 
             // current implementation doesn't back out fees.
             Assert.AreEqual(10, future.Holdings.TotalFees); // 1 * 10 (conversion rate to account currency)
@@ -579,8 +723,17 @@ namespace QuantConnect.Tests.Common.Securities
             var fillQuantity = -crypto.Holdings.Quantity;
             var orderFee = new OrderFee(new CashAmount(1m, "EUR"));
             var orderDirection = fillQuantity > 0 ? OrderDirection.Buy : OrderDirection.Sell;
-            var fill = new OrderEvent(1, crypto.Symbol, reference, OrderStatus.Filled, orderDirection, fillPrice, fillQuantity, orderFee);
-            portfolio.ProcessFills(new List<OrderEvent> {fill});
+            var fill = new OrderEvent(
+                1,
+                crypto.Symbol,
+                reference,
+                OrderStatus.Filled,
+                orderDirection,
+                fillPrice,
+                fillQuantity,
+                orderFee
+            );
+            portfolio.ProcessFills(new List<OrderEvent> { fill });
 
             // current implementation doesn't back out fees.
             Assert.AreEqual(10, crypto.Holdings.TotalFees); // 1 * 10 (conversion rate to account currency)
@@ -618,8 +771,17 @@ namespace QuantConnect.Tests.Common.Securities
             var fillQuantity = 100;
             var orderFee = new OrderFee(new CashAmount(1m, "EUR"));
             var orderDirection = fillQuantity > 0 ? OrderDirection.Buy : OrderDirection.Sell;
-            var fill = new OrderEvent(1, crypto.Symbol, reference, OrderStatus.Filled, orderDirection, fillPrice, fillQuantity, orderFee);
-            portfolio.ProcessFills(new List<OrderEvent> {fill});
+            var fill = new OrderEvent(
+                1,
+                crypto.Symbol,
+                reference,
+                OrderStatus.Filled,
+                orderDirection,
+                fillPrice,
+                fillQuantity,
+                orderFee
+            );
+            portfolio.ProcessFills(new List<OrderEvent> { fill });
 
             // current implementation doesn't back out fees.
             Assert.AreEqual(10, crypto.Holdings.TotalFees); // 1 * 10 (conversion rate to account currency)
@@ -634,7 +796,8 @@ namespace QuantConnect.Tests.Common.Securities
         [Test]
         public void ITMOptionExerciseWinLossCount(
             [Values(OrderDirection.Buy, OrderDirection.Sell)] OrderDirection orderDirection,
-            [Values] bool win)
+            [Values] bool win
+        )
         {
             var reference = new DateTime(2016, 02, 16, 11, 53, 30);
             var option = InitializeTestWithOption(reference, out var portfolio);
@@ -655,7 +818,18 @@ namespace QuantConnect.Tests.Common.Securities
 
             var orderProcessor = new FakeOrderProcessor();
             var quantity = orderDirection == OrderDirection.Buy ? 10 : -10;
-            var order = Order.CreateOrder(new SubmitOrderRequest(OrderType.Market, option.Type, option.Symbol, quantity, 0, 0, reference, ""));
+            var order = Order.CreateOrder(
+                new SubmitOrderRequest(
+                    OrderType.Market,
+                    option.Type,
+                    option.Symbol,
+                    quantity,
+                    0,
+                    0,
+                    reference,
+                    ""
+                )
+            );
             order.Id = 1;
             orderProcessor.AddOrder(order);
             portfolio.Transactions.SetOrderProcessor(orderProcessor);
@@ -663,7 +837,16 @@ namespace QuantConnect.Tests.Common.Securities
             var fillPrice = 100m;
             var fillQuantity = quantity;
             var orderFee = new OrderFee(new CashAmount(1m, Currencies.USD));
-            var fill = new OrderEvent(1, option.Symbol, reference, OrderStatus.Filled, orderDirection, fillPrice, fillQuantity, orderFee);
+            var fill = new OrderEvent(
+                1,
+                option.Symbol,
+                reference,
+                OrderStatus.Filled,
+                orderDirection,
+                fillPrice,
+                fillQuantity,
+                orderFee
+            );
             fill.IsInTheMoney = true;
             portfolio.ProcessFills(new List<OrderEvent> { fill });
 
@@ -673,10 +856,31 @@ namespace QuantConnect.Tests.Common.Securities
             // Now close the option position simulating an assignment on expiration
             fillPrice = 0;
             fillQuantity *= -1;
-            var closingOrderDirection = orderDirection == OrderDirection.Buy ? OrderDirection.Sell : OrderDirection.Buy;
-            var ticket = new OrderTicket(null, new SubmitOrderRequest(OrderType.OptionExercise, option.Type, option.Symbol, fillQuantity, 0, 0,
-                reference, ""));
-            fill = new OrderEvent(1, option.Symbol, reference, OrderStatus.Filled, closingOrderDirection, fillPrice, fillQuantity, orderFee)
+            var closingOrderDirection =
+                orderDirection == OrderDirection.Buy ? OrderDirection.Sell : OrderDirection.Buy;
+            var ticket = new OrderTicket(
+                null,
+                new SubmitOrderRequest(
+                    OrderType.OptionExercise,
+                    option.Type,
+                    option.Symbol,
+                    fillQuantity,
+                    0,
+                    0,
+                    reference,
+                    ""
+                )
+            );
+            fill = new OrderEvent(
+                1,
+                option.Symbol,
+                reference,
+                OrderStatus.Filled,
+                closingOrderDirection,
+                fillPrice,
+                fillQuantity,
+                orderFee
+            )
             {
                 IsInTheMoney = true,
                 Ticket = ticket,
@@ -700,7 +904,18 @@ namespace QuantConnect.Tests.Common.Securities
 
             var orderProcessor = new FakeOrderProcessor();
             var quantity = orderDirection == OrderDirection.Buy ? 10 : -10;
-            var order = Order.CreateOrder(new SubmitOrderRequest(OrderType.Market, option.Type, option.Symbol, quantity, 0, 0, reference, ""));
+            var order = Order.CreateOrder(
+                new SubmitOrderRequest(
+                    OrderType.Market,
+                    option.Type,
+                    option.Symbol,
+                    quantity,
+                    0,
+                    0,
+                    reference,
+                    ""
+                )
+            );
             order.Id = 1;
             orderProcessor.AddOrder(order);
             portfolio.Transactions.SetOrderProcessor(orderProcessor);
@@ -708,7 +923,16 @@ namespace QuantConnect.Tests.Common.Securities
             var fillPrice = 100m;
             var fillQuantity = quantity;
             var orderFee = new OrderFee(new CashAmount(1m, Currencies.USD));
-            var fill = new OrderEvent(1, option.Symbol, reference, OrderStatus.Filled, orderDirection, fillPrice, fillQuantity, orderFee);
+            var fill = new OrderEvent(
+                1,
+                option.Symbol,
+                reference,
+                OrderStatus.Filled,
+                orderDirection,
+                fillPrice,
+                fillQuantity,
+                orderFee
+            );
             fill.IsInTheMoney = true;
             portfolio.ProcessFills(new List<OrderEvent> { fill });
 
@@ -718,10 +942,31 @@ namespace QuantConnect.Tests.Common.Securities
             // Now close the option position simulating an assignment on expiration
             fillPrice = 0;
             fillQuantity *= -1;
-            var closingOrderDirection = orderDirection == OrderDirection.Buy ? OrderDirection.Sell : OrderDirection.Buy;
-            var ticket = new OrderTicket(null, new SubmitOrderRequest(OrderType.OptionExercise, option.Type, option.Symbol, fillQuantity, 0, 0,
-                reference, ""));
-            fill = new OrderEvent(1, option.Symbol, reference, OrderStatus.Filled, closingOrderDirection, fillPrice, fillQuantity, orderFee)
+            var closingOrderDirection =
+                orderDirection == OrderDirection.Buy ? OrderDirection.Sell : OrderDirection.Buy;
+            var ticket = new OrderTicket(
+                null,
+                new SubmitOrderRequest(
+                    OrderType.OptionExercise,
+                    option.Type,
+                    option.Symbol,
+                    fillQuantity,
+                    0,
+                    0,
+                    reference,
+                    ""
+                )
+            );
+            fill = new OrderEvent(
+                1,
+                option.Symbol,
+                reference,
+                OrderStatus.Filled,
+                closingOrderDirection,
+                fillPrice,
+                fillQuantity,
+                orderFee
+            )
             {
                 IsInTheMoney = true,
                 Ticket = ticket,
@@ -736,7 +981,8 @@ namespace QuantConnect.Tests.Common.Securities
         [Test]
         public void OptionPositionCloseWithoutExerciseWinLossCount(
             [Values(OrderDirection.Buy, OrderDirection.Sell)] OrderDirection orderDirection,
-            [Values] bool win)
+            [Values] bool win
+        )
         {
             var reference = new DateTime(2016, 02, 16, 11, 53, 30);
             var option = InitializeTestWithOption(reference, out var portfolio);
@@ -748,7 +994,18 @@ namespace QuantConnect.Tests.Common.Securities
 
             var orderProcessor = new FakeOrderProcessor();
             var quantity = orderDirection == OrderDirection.Buy ? 10 : -10;
-            var order = Order.CreateOrder(new SubmitOrderRequest(OrderType.Market, option.Type, option.Symbol, quantity, 0, 0, reference, ""));
+            var order = Order.CreateOrder(
+                new SubmitOrderRequest(
+                    OrderType.Market,
+                    option.Type,
+                    option.Symbol,
+                    quantity,
+                    0,
+                    0,
+                    reference,
+                    ""
+                )
+            );
             order.Id = 1;
             orderProcessor.AddOrder(order);
             portfolio.Transactions.SetOrderProcessor(orderProcessor);
@@ -756,7 +1013,16 @@ namespace QuantConnect.Tests.Common.Securities
             var fillPrice = 100m;
             var fillQuantity = quantity;
             var orderFee = new OrderFee(new CashAmount(1m, Currencies.USD));
-            var fill = new OrderEvent(1, option.Symbol, reference, OrderStatus.Filled, orderDirection, fillPrice, fillQuantity, orderFee);
+            var fill = new OrderEvent(
+                1,
+                option.Symbol,
+                reference,
+                OrderStatus.Filled,
+                orderDirection,
+                fillPrice,
+                fillQuantity,
+                orderFee
+            );
             fill.IsInTheMoney = true;
             portfolio.ProcessFills(new List<OrderEvent> { fill });
 
@@ -778,10 +1044,31 @@ namespace QuantConnect.Tests.Common.Securities
             // Now close the option position simulating an assignment on expiration
             fillPrice = finalOptionPrice;
             fillQuantity *= -1;
-            var closingOrderDirection = orderDirection == OrderDirection.Buy ? OrderDirection.Sell : OrderDirection.Buy;
-            var ticket = new OrderTicket(null, new SubmitOrderRequest(OrderType.Market, option.Type, option.Symbol, fillQuantity, 0, 0,
-                reference, ""));
-            fill = new OrderEvent(1, option.Symbol, reference, OrderStatus.Filled, closingOrderDirection, fillPrice, fillQuantity, orderFee)
+            var closingOrderDirection =
+                orderDirection == OrderDirection.Buy ? OrderDirection.Sell : OrderDirection.Buy;
+            var ticket = new OrderTicket(
+                null,
+                new SubmitOrderRequest(
+                    OrderType.Market,
+                    option.Type,
+                    option.Symbol,
+                    fillQuantity,
+                    0,
+                    0,
+                    reference,
+                    ""
+                )
+            );
+            fill = new OrderEvent(
+                1,
+                option.Symbol,
+                reference,
+                OrderStatus.Filled,
+                closingOrderDirection,
+                fillPrice,
+                fillQuantity,
+                orderFee
+            )
             {
                 IsInTheMoney = true,
                 Ticket = ticket,
@@ -792,9 +1079,11 @@ namespace QuantConnect.Tests.Common.Securities
             Assert.AreEqual(win ? 0 : 1, portfolio.Transactions.LossCount);
         }
 
-        private Security InitializeTest(DateTime reference,
+        private Security InitializeTest(
+            DateTime reference,
             out SecurityPortfolioManager portfolio,
-            string accountCurrency = "USD")
+            string accountCurrency = "USD"
+        )
         {
             var security = new Security(
                 SecurityExchangeHours.AlwaysOpen(TimeZones.NewYork),
@@ -810,18 +1099,24 @@ namespace QuantConnect.Tests.Common.Securities
             var securityManager = new SecurityManager(timeKeeper);
             securityManager.Add(security);
             var transactionManager = new SecurityTransactionManager(null, securityManager);
-            portfolio = new SecurityPortfolioManager(securityManager, transactionManager, new AlgorithmSettings());
+            portfolio = new SecurityPortfolioManager(
+                securityManager,
+                transactionManager,
+                new AlgorithmSettings()
+            );
             portfolio.SetCash(accountCurrency, 100 * 1000m, 1m);
             Assert.AreEqual(0, security.Holdings.Quantity);
-            Assert.AreEqual(100*1000m, portfolio.CashBook[accountCurrency].Amount);
+            Assert.AreEqual(100 * 1000m, portfolio.CashBook[accountCurrency].Amount);
 
             portfolio.SetCash(security.QuoteCurrency.Symbol, 0, 1m);
             return security;
         }
 
-        private Option InitializeTestWithOption(DateTime reference,
+        private Option InitializeTestWithOption(
+            DateTime reference,
             out SecurityPortfolioManager portfolio,
-            string accountCurrency = "USD")
+            string accountCurrency = "USD"
+        )
         {
             var underlying = InitializeTest(reference, out portfolio, accountCurrency);
             var option = new Option(
@@ -842,7 +1137,16 @@ namespace QuantConnect.Tests.Common.Securities
 
         private static SubscriptionDataConfig CreateTradeBarConfig()
         {
-            return new SubscriptionDataConfig(typeof(TradeBar), Symbols.SPY, Resolution.Minute, TimeZones.NewYork, TimeZones.NewYork, true, true, false);
+            return new SubscriptionDataConfig(
+                typeof(TradeBar),
+                Symbols.SPY,
+                Resolution.Minute,
+                TimeZones.NewYork,
+                TimeZones.NewYork,
+                true,
+                true,
+                false
+            );
         }
     }
 }

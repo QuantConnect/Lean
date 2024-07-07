@@ -27,9 +27,12 @@ namespace QuantConnect.Algorithm.CSharp
     /// <summary>
     /// Algorithm which tests indicator warm up using different data types, related to GH issue 4205
     /// </summary>
-    public class AutomaticIndicatorWarmupDataTypeRegressionAlgorithm : QCAlgorithm, IRegressionAlgorithmDefinition
+    public class AutomaticIndicatorWarmupDataTypeRegressionAlgorithm
+        : QCAlgorithm,
+            IRegressionAlgorithmDefinition
     {
         private Symbol _symbol;
+
         public override void Initialize()
         {
             UniverseSettings.DataNormalizationMode = DataNormalizationMode.Raw;
@@ -37,7 +40,11 @@ namespace QuantConnect.Algorithm.CSharp
             SetStartDate(2013, 10, 08);
             SetEndDate(2013, 10, 10);
 
-            var SP500 = QuantConnect.Symbol.Create(Futures.Indices.SP500EMini, SecurityType.Future, Market.CME);
+            var SP500 = QuantConnect.Symbol.Create(
+                Futures.Indices.SP500EMini,
+                SecurityType.Future,
+                Market.CME
+            );
             _symbol = FutureChainProvider.GetFutureContractList(SP500, StartDate).First();
 
             // Test case: custom IndicatorBase<QuoteBar> indicator using Future unsubscribed symbol
@@ -63,7 +70,9 @@ namespace QuantConnect.Algorithm.CSharp
             AddFutureContract(_symbol);
             AddEquity("SPY");
             // force spy for use Raw data mode so that it matches the used when unsubscribed which uses the universe settings
-            SubscriptionManager.SubscriptionDataConfigService.GetSubscriptionDataConfigs(spy).SetDataNormalizationMode(DataNormalizationMode.Raw);
+            SubscriptionManager
+                .SubscriptionDataConfigService.GetSubscriptionDataConfigs(spy)
+                .SetDataNormalizationMode(DataNormalizationMode.Raw);
 
             // Test case: custom IndicatorBase<QuoteBar> indicator using Future subscribed symbol
             var indicator = new CustomIndicator();
@@ -82,8 +91,10 @@ namespace QuantConnect.Algorithm.CSharp
 
             if (!sma11.Current.Equals(sma1.Current))
             {
-                throw new RegressionTestException("Expected SMAs warmed up before and after adding the Future to the algorithm to have the same current value. " +
-                                    "The result of 'WarmUpIndicator' shouldn't change if the symbol is or isn't subscribed");
+                throw new RegressionTestException(
+                    "Expected SMAs warmed up before and after adding the Future to the algorithm to have the same current value. "
+                        + "The result of 'WarmUpIndicator' shouldn't change if the symbol is or isn't subscribed"
+                );
             }
 
             // Test case: SimpleMovingAverage<IndicatorDataPoint> using Equity unsubscribed symbol
@@ -94,8 +105,10 @@ namespace QuantConnect.Algorithm.CSharp
 
             if (!smaSpy.Current.Equals(sma.Current))
             {
-                throw new RegressionTestException("Expected SMAs warmed up before and after adding the Equity to the algorithm to have the same current value. " +
-                                    "The result of 'WarmUpIndicator' shouldn't change if the symbol is or isn't subscribed");
+                throw new RegressionTestException(
+                    "Expected SMAs warmed up before and after adding the Equity to the algorithm to have the same current value. "
+                        + "The result of 'WarmUpIndicator' shouldn't change if the symbol is or isn't subscribed"
+                );
             }
         }
 
@@ -103,7 +116,9 @@ namespace QuantConnect.Algorithm.CSharp
         {
             if (indicator.IsReady != isReady)
             {
-                throw new RegressionTestException($"Expected indicator state, expected {isReady} but was {indicator.IsReady}");
+                throw new RegressionTestException(
+                    $"Expected indicator state, expected {isReady} but was {indicator.IsReady}"
+                );
             }
         }
 
@@ -124,8 +139,10 @@ namespace QuantConnect.Algorithm.CSharp
             private bool _isReady;
             public int WarmUpPeriod => 1;
             public override bool IsReady => _isReady;
-            public CustomIndicator() : base("Pepe")
-            { }
+
+            public CustomIndicator()
+                : base("Pepe") { }
+
             protected override decimal ComputeNextValue(QuoteBar input)
             {
                 _isReady = true;
@@ -161,35 +178,36 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// This is used by the regression test system to indicate what the expected statistics are from running the algorithm
         /// </summary>
-        public Dictionary<string, string> ExpectedStatistics => new Dictionary<string, string>
-        {
-            {"Total Orders", "1"},
-            {"Average Win", "0%"},
-            {"Average Loss", "0%"},
-            {"Compounding Annual Return", "733913.744%"},
-            {"Drawdown", "15.900%"},
-            {"Expectancy", "0"},
-            {"Start Equity", "100000"},
-            {"End Equity", "106827.7"},
-            {"Net Profit", "6.828%"},
-            {"Sharpe Ratio", "203744786353.299"},
-            {"Sortino Ratio", "0"},
-            {"Probabilistic Sharpe Ratio", "0%"},
-            {"Loss Rate", "0%"},
-            {"Win Rate", "0%"},
-            {"Profit-Loss Ratio", "0"},
-            {"Alpha", "456382350698.622"},
-            {"Beta", "9.229"},
-            {"Annual Standard Deviation", "2.24"},
-            {"Annual Variance", "5.017"},
-            {"Information Ratio", "228504036840.953"},
-            {"Tracking Error", "1.997"},
-            {"Treynor Ratio", "49450701625.717"},
-            {"Total Fees", "$23.65"},
-            {"Estimated Strategy Capacity", "$200000000.00"},
-            {"Lowest Capacity Asset", "ES VMKLFZIH2MTD"},
-            {"Portfolio Turnover", "351.80%"},
-            {"OrderListHash", "dfd9a280d3c6470b305c03e0b72c234e"}
-        };
+        public Dictionary<string, string> ExpectedStatistics =>
+            new Dictionary<string, string>
+            {
+                { "Total Orders", "1" },
+                { "Average Win", "0%" },
+                { "Average Loss", "0%" },
+                { "Compounding Annual Return", "733913.744%" },
+                { "Drawdown", "15.900%" },
+                { "Expectancy", "0" },
+                { "Start Equity", "100000" },
+                { "End Equity", "106827.7" },
+                { "Net Profit", "6.828%" },
+                { "Sharpe Ratio", "203744786353.299" },
+                { "Sortino Ratio", "0" },
+                { "Probabilistic Sharpe Ratio", "0%" },
+                { "Loss Rate", "0%" },
+                { "Win Rate", "0%" },
+                { "Profit-Loss Ratio", "0" },
+                { "Alpha", "456382350698.622" },
+                { "Beta", "9.229" },
+                { "Annual Standard Deviation", "2.24" },
+                { "Annual Variance", "5.017" },
+                { "Information Ratio", "228504036840.953" },
+                { "Tracking Error", "1.997" },
+                { "Treynor Ratio", "49450701625.717" },
+                { "Total Fees", "$23.65" },
+                { "Estimated Strategy Capacity", "$200000000.00" },
+                { "Lowest Capacity Asset", "ES VMKLFZIH2MTD" },
+                { "Portfolio Turnover", "351.80%" },
+                { "OrderListHash", "dfd9a280d3c6470b305c03e0b72c234e" }
+            };
     }
 }

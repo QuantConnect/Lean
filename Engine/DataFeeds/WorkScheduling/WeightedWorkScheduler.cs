@@ -32,7 +32,8 @@ namespace QuantConnect.Lean.Engine.DataFeeds.WorkScheduling
     /// depends on the thread id</remarks>
     public class WeightedWorkScheduler : WorkScheduler
     {
-        private static readonly Lazy<WeightedWorkScheduler> _instance = new Lazy<WeightedWorkScheduler>(() => new WeightedWorkScheduler());
+        private static readonly Lazy<WeightedWorkScheduler> _instance =
+            new Lazy<WeightedWorkScheduler>(() => new WeightedWorkScheduler());
 
         /// <summary>
         /// This is the size of each work sprint
@@ -65,7 +66,9 @@ namespace QuantConnect.Lean.Engine.DataFeeds.WorkScheduling
             _initializationTask = Task.Run(() =>
             {
                 MaxWorkWeight = Configuration.Config.GetInt("data-feed-max-work-weight", 400);
-                Logging.Log.Trace($"WeightedWorkScheduler(): will use {WorkersCount} workers and MaxWorkWeight is {MaxWorkWeight}");
+                Logging.Log.Trace(
+                    $"WeightedWorkScheduler(): will use {WorkersCount} workers and MaxWorkWeight is {MaxWorkWeight}"
+                );
 
                 for (var i = 0; i < WorkersCount; i++)
                 {
@@ -89,7 +92,11 @@ namespace QuantConnect.Lean.Engine.DataFeeds.WorkScheduling
         /// <param name="workFunc">The work function to run</param>
         /// <param name="weightFunc">The weight function.
         /// Work will be sorted in ascending order based on this weight</param>
-        public override void QueueWork(Symbol symbol, Func<int, bool> workFunc, Func<int> weightFunc)
+        public override void QueueWork(
+            Symbol symbol,
+            Func<int, bool> workFunc,
+            Func<int> weightFunc
+        )
         {
             _newWork.Enqueue(new WorkItem(workFunc, weightFunc));
             _newWorkEvent.Set();

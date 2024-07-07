@@ -14,13 +14,13 @@
 */
 
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using QuantConnect.Data;
-using QuantConnect.Orders;
-using QuantConnect.Interfaces;
-using QuantConnect.Securities;
 using QuantConnect.Data.Market;
-using System.Collections.Generic;
+using QuantConnect.Interfaces;
+using QuantConnect.Orders;
+using QuantConnect.Securities;
 using QuantConnect.Securities.Positions;
 
 namespace QuantConnect.Algorithm.CSharp
@@ -28,7 +28,9 @@ namespace QuantConnect.Algorithm.CSharp
     /// <summary>
     /// Regression algorithm asserting the behavior of specifying a null position group allowing us to fill orders which would be invalid if not
     /// </summary>
-    public class NullMarginMultipleOrdersRegressionAlgorithm : QCAlgorithm, IRegressionAlgorithmDefinition
+    public class NullMarginMultipleOrdersRegressionAlgorithm
+        : QCAlgorithm,
+            IRegressionAlgorithmDefinition
     {
         private bool _placedTrades;
         protected Symbol OptionSymbol { get; private set; }
@@ -66,7 +68,10 @@ namespace QuantConnect.Algorithm.CSharp
             if (!Portfolio.Invested)
             {
                 OptionChain chain;
-                if (IsMarketOpen(OptionSymbol) && slice.OptionChains.TryGetValue(OptionSymbol, out chain))
+                if (
+                    IsMarketOpen(OptionSymbol)
+                    && slice.OptionChains.TryGetValue(OptionSymbol, out chain)
+                )
                 {
                     // we find at the money (ATM) call contract with farthest expiration
                     var atmContracts = chain
@@ -75,7 +80,7 @@ namespace QuantConnect.Algorithm.CSharp
                         .ThenBy(x => x.Strike)
                         .First();
 
-                    if(!_placedTrades)
+                    if (!_placedTrades)
                     {
                         _placedTrades = true;
                         PlaceTrades(atmContracts);
@@ -90,17 +95,25 @@ namespace QuantConnect.Algorithm.CSharp
             AssertState(MarketOrder(optionContract.Symbol, -10), 2, 1010);
         }
 
-        protected virtual void AssertState(OrderTicket ticket, int expectedGroupCount, int expectedMarginUsed)
+        protected virtual void AssertState(
+            OrderTicket ticket,
+            int expectedGroupCount,
+            int expectedMarginUsed
+        )
         {
             if (ticket.Status != OrderStatus.Filled)
             {
-                throw new RegressionTestException($"Unexpected order status {ticket.Status} for symbol {ticket.Symbol} and quantity {ticket.Quantity}");
+                throw new RegressionTestException(
+                    $"Unexpected order status {ticket.Status} for symbol {ticket.Symbol} and quantity {ticket.Quantity}"
+                );
             }
             if (Portfolio.Positions.Groups.Count != expectedGroupCount)
             {
-                throw new RegressionTestException($"Unexpected position group count {Portfolio.Positions.Groups.Count} for symbol {ticket.Symbol} and quantity {ticket.Quantity}");
+                throw new RegressionTestException(
+                    $"Unexpected position group count {Portfolio.Positions.Groups.Count} for symbol {ticket.Symbol} and quantity {ticket.Quantity}"
+                );
             }
-            if(Portfolio.TotalMarginUsed != expectedMarginUsed)
+            if (Portfolio.TotalMarginUsed != expectedMarginUsed)
             {
                 throw new RegressionTestException($"Unexpected margin used {expectedMarginUsed}");
             }
@@ -114,7 +127,8 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// This is used by the regression test system to indicate which languages this algorithm is written in.
         /// </summary>
-        public virtual List<Language> Languages { get; } = new() { Language.CSharp, Language.Python };
+        public virtual List<Language> Languages { get; } =
+            new() { Language.CSharp, Language.Python };
 
         /// <summary>
         /// Data Points count of all timeslices of algorithm
@@ -134,35 +148,36 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// This is used by the regression test system to indicate what the expected statistics are from running the algorithm
         /// </summary>
-        public virtual Dictionary<string, string> ExpectedStatistics => new Dictionary<string, string>
-        {
-            {"Total Orders", "2"},
-            {"Average Win", "0%"},
-            {"Average Loss", "0%"},
-            {"Compounding Annual Return", "0%"},
-            {"Drawdown", "0%"},
-            {"Expectancy", "0"},
-            {"Start Equity", "10000"},
-            {"End Equity", "10658.5"},
-            {"Net Profit", "0%"},
-            {"Sharpe Ratio", "0"},
-            {"Sortino Ratio", "0"},
-            {"Probabilistic Sharpe Ratio", "0%"},
-            {"Loss Rate", "0%"},
-            {"Win Rate", "0%"},
-            {"Profit-Loss Ratio", "0"},
-            {"Alpha", "0"},
-            {"Beta", "0"},
-            {"Annual Standard Deviation", "0"},
-            {"Annual Variance", "0"},
-            {"Information Ratio", "0"},
-            {"Tracking Error", "0"},
-            {"Treynor Ratio", "0"},
-            {"Total Fees", "$11.50"},
-            {"Estimated Strategy Capacity", "$8800000.00"},
-            {"Lowest Capacity Asset", "GOOCV VP83T1ZUHROL"},
-            {"Portfolio Turnover", "7580.62%"},
-            {"OrderListHash", "ea13456d0c97785f9f2fc12842831990"}
-        };
+        public virtual Dictionary<string, string> ExpectedStatistics =>
+            new Dictionary<string, string>
+            {
+                { "Total Orders", "2" },
+                { "Average Win", "0%" },
+                { "Average Loss", "0%" },
+                { "Compounding Annual Return", "0%" },
+                { "Drawdown", "0%" },
+                { "Expectancy", "0" },
+                { "Start Equity", "10000" },
+                { "End Equity", "10658.5" },
+                { "Net Profit", "0%" },
+                { "Sharpe Ratio", "0" },
+                { "Sortino Ratio", "0" },
+                { "Probabilistic Sharpe Ratio", "0%" },
+                { "Loss Rate", "0%" },
+                { "Win Rate", "0%" },
+                { "Profit-Loss Ratio", "0" },
+                { "Alpha", "0" },
+                { "Beta", "0" },
+                { "Annual Standard Deviation", "0" },
+                { "Annual Variance", "0" },
+                { "Information Ratio", "0" },
+                { "Tracking Error", "0" },
+                { "Treynor Ratio", "0" },
+                { "Total Fees", "$11.50" },
+                { "Estimated Strategy Capacity", "$8800000.00" },
+                { "Lowest Capacity Asset", "GOOCV VP83T1ZUHROL" },
+                { "Portfolio Turnover", "7580.62%" },
+                { "OrderListHash", "ea13456d0c97785f9f2fc12842831990" }
+            };
     }
 }

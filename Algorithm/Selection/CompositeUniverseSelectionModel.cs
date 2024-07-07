@@ -28,18 +28,23 @@ namespace QuantConnect.Algorithm.Framework.Selection
     /// </summary>
     public class CompositeUniverseSelectionModel : UniverseSelectionModel
     {
-        private readonly List<IUniverseSelectionModel> _universeSelectionModels = new List<IUniverseSelectionModel>();
+        private readonly List<IUniverseSelectionModel> _universeSelectionModels =
+            new List<IUniverseSelectionModel>();
         private bool _alreadyCalledCreateUniverses;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="CompositeUniverseSelectionModel"/> class
         /// </summary>
         /// <param name="universeSelectionModels">The individual universe selection models defining this composite model</param>
-        public CompositeUniverseSelectionModel(params IUniverseSelectionModel[] universeSelectionModels)
+        public CompositeUniverseSelectionModel(
+            params IUniverseSelectionModel[] universeSelectionModels
+        )
         {
             if (universeSelectionModels.IsNullOrEmpty())
             {
-                throw new ArgumentException("Must specify at least 1 universe selection model for the CompositeUniverseSelectionModel");
+                throw new ArgumentException(
+                    "Must specify at least 1 universe selection model for the CompositeUniverseSelectionModel"
+                );
             }
 
             _universeSelectionModels.AddRange(universeSelectionModels);
@@ -53,7 +58,9 @@ namespace QuantConnect.Algorithm.Framework.Selection
         {
             if (universeSelectionModels.IsNullOrEmpty())
             {
-                throw new ArgumentException("Must specify at least 1 universe selection model for the CompositeUniverseSelectionModel");
+                throw new ArgumentException(
+                    "Must specify at least 1 universe selection model for the CompositeUniverseSelectionModel"
+                );
             }
 
             foreach (var pyUniverseSelectionModel in universeSelectionModels)
@@ -67,10 +74,7 @@ namespace QuantConnect.Algorithm.Framework.Selection
         /// </summary>
         /// <param name="universeSelectionModel">The individual universe selection model defining this composite model</param>
         public CompositeUniverseSelectionModel(PyObject universeSelectionModel)
-            : this(new[] { universeSelectionModel })
-        {
-
-        }
+            : this(new[] { universeSelectionModel }) { }
 
         /// <summary>
         /// Adds a new <see cref="IUniverseSelectionModel"/>
@@ -114,9 +118,11 @@ namespace QuantConnect.Algorithm.Framework.Selection
             {
                 var selectionRefreshTime = universeSelectionModel.GetNextRefreshTimeUtc();
                 var refreshTime = algorithm.UtcTime >= selectionRefreshTime;
-                if (!_alreadyCalledCreateUniverses // first initial call
+                if (
+                    !_alreadyCalledCreateUniverses // first initial call
                     || refreshTime
-                    || selectionRefreshTime == DateTime.MaxValue)
+                    || selectionRefreshTime == DateTime.MaxValue
+                )
                 {
                     foreach (var universe in universeSelectionModel.CreateUniverses(algorithm))
                     {

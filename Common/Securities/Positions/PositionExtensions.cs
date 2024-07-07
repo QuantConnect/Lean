@@ -45,10 +45,13 @@ namespace QuantConnect.Securities.Positions
         {
             if (!position.Symbol.Equals(other.Symbol))
             {
-                throw new ArgumentException($"Position symbols must match in order to combine quantities.");
+                throw new ArgumentException(
+                    $"Position symbols must match in order to combine quantities."
+                );
             }
 
-            return new Position(position.Symbol,
+            return new Position(
+                position.Symbol,
                 position.Quantity + other.Quantity,
                 Math.Min(position.UnitQuantity, other.UnitQuantity)
             );
@@ -59,7 +62,9 @@ namespace QuantConnect.Securities.Positions
         /// </summary>
         /// <param name="positions">The positions to be consolidated</param>
         /// <returns>A dictionary containing the consolidated positions</returns>
-        public static Dictionary<Symbol, IPosition> Consolidate(this IEnumerable<IPosition> positions)
+        public static Dictionary<Symbol, IPosition> Consolidate(
+            this IEnumerable<IPosition> positions
+        )
         {
             var consolidated = new Dictionary<Symbol, IPosition>();
             foreach (var position in positions)
@@ -88,7 +93,11 @@ namespace QuantConnect.Securities.Positions
         public static IPosition WithLots(this IPosition position, decimal numberOfLots)
         {
             var sign = position.Quantity < 0 ? -1 : +1;
-            return new Position(position.Symbol, numberOfLots * position.UnitQuantity * sign, position.UnitQuantity);
+            return new Position(
+                position.Symbol,
+                numberOfLots * position.UnitQuantity * sign,
+                position.UnitQuantity
+            );
         }
 
         /// <summary>

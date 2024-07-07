@@ -14,17 +14,19 @@
 */
 
 using System;
-using QuantConnect.Data;
-using QuantConnect.Interfaces;
-using QuantConnect.Data.Market;
 using System.Collections.Generic;
+using QuantConnect.Data;
+using QuantConnect.Data.Market;
+using QuantConnect.Interfaces;
 
 namespace QuantConnect.Algorithm.CSharp
 {
     /// <summary>
     /// Regression algorithm reproducing GH issue #5232, where we expect SPWR to be mapped to SPWRA
     /// </summary>
-    public class HourResolutionMappingEventRegressionAlgorithm : QCAlgorithm, IRegressionAlgorithmDefinition
+    public class HourResolutionMappingEventRegressionAlgorithm
+        : QCAlgorithm,
+            IRegressionAlgorithmDefinition
     {
         private DateTime _dateTime;
         private SymbolChangedEvent _changedEvent;
@@ -37,7 +39,7 @@ namespace QuantConnect.Algorithm.CSharp
             SetStartDate(2008, 08, 20);
             SetEndDate(2008, 10, 1);
 
-            AddEquity("SPWR", Resolution.Hour, fillForward:false);
+            AddEquity("SPWR", Resolution.Hour, fillForward: false);
         }
 
         /// <summary>
@@ -63,11 +65,15 @@ namespace QuantConnect.Algorithm.CSharp
         {
             if (_dateTime != EndDate.Date)
             {
-                throw new RegressionTestException($"Last day was {_dateTime}, should be algorithm end date: {EndDate.Date}");
+                throw new RegressionTestException(
+                    $"Last day was {_dateTime}, should be algorithm end date: {EndDate.Date}"
+                );
             }
             if (_changedEvent == null)
             {
-                throw new RegressionTestException("We got not symbol change event! 'SPWR' should of been mapped");
+                throw new RegressionTestException(
+                    "We got not symbol change event! 'SPWR' should of been mapped"
+                );
             }
         }
 
@@ -99,35 +105,36 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// This is used by the regression test system to indicate what the expected statistics are from running the algorithm
         /// </summary>
-        public Dictionary<string, string> ExpectedStatistics => new Dictionary<string, string>
-        {
-            {"Total Orders", "1"},
-            {"Average Win", "0%"},
-            {"Average Loss", "0%"},
-            {"Compounding Annual Return", "-78.316%"},
-            {"Drawdown", "31.700%"},
-            {"Expectancy", "0"},
-            {"Start Equity", "100000"},
-            {"End Equity", "83636.96"},
-            {"Net Profit", "-16.363%"},
-            {"Sharpe Ratio", "-0.498"},
-            {"Sortino Ratio", "-0.507"},
-            {"Probabilistic Sharpe Ratio", "25.138%"},
-            {"Loss Rate", "0%"},
-            {"Win Rate", "0%"},
-            {"Profit-Loss Ratio", "0"},
-            {"Alpha", "0.357"},
-            {"Beta", "2.004"},
-            {"Annual Standard Deviation", "0.924"},
-            {"Annual Variance", "0.854"},
-            {"Information Ratio", "-0.073"},
-            {"Tracking Error", "0.718"},
-            {"Treynor Ratio", "-0.23"},
-            {"Total Fees", "$5.40"},
-            {"Estimated Strategy Capacity", "$2400000.00"},
-            {"Lowest Capacity Asset", "SPWR TDQZFPKOZ5UT"},
-            {"Portfolio Turnover", "2.34%"},
-            {"OrderListHash", "22aace3d4bb618a825254b8bf14d6340"}
-        };
+        public Dictionary<string, string> ExpectedStatistics =>
+            new Dictionary<string, string>
+            {
+                { "Total Orders", "1" },
+                { "Average Win", "0%" },
+                { "Average Loss", "0%" },
+                { "Compounding Annual Return", "-78.316%" },
+                { "Drawdown", "31.700%" },
+                { "Expectancy", "0" },
+                { "Start Equity", "100000" },
+                { "End Equity", "83636.96" },
+                { "Net Profit", "-16.363%" },
+                { "Sharpe Ratio", "-0.498" },
+                { "Sortino Ratio", "-0.507" },
+                { "Probabilistic Sharpe Ratio", "25.138%" },
+                { "Loss Rate", "0%" },
+                { "Win Rate", "0%" },
+                { "Profit-Loss Ratio", "0" },
+                { "Alpha", "0.357" },
+                { "Beta", "2.004" },
+                { "Annual Standard Deviation", "0.924" },
+                { "Annual Variance", "0.854" },
+                { "Information Ratio", "-0.073" },
+                { "Tracking Error", "0.718" },
+                { "Treynor Ratio", "-0.23" },
+                { "Total Fees", "$5.40" },
+                { "Estimated Strategy Capacity", "$2400000.00" },
+                { "Lowest Capacity Asset", "SPWR TDQZFPKOZ5UT" },
+                { "Portfolio Turnover", "2.34%" },
+                { "OrderListHash", "22aace3d4bb618a825254b8bf14d6340" }
+            };
     }
 }

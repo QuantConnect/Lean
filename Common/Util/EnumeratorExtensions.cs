@@ -26,7 +26,10 @@ namespace QuantConnect.Util
         /// <summary>
         /// Filter the enumerator using the specified predicate
         /// </summary>
-        public static IEnumerator<T> Where<T>(this IEnumerator<T> enumerator, Func<T, bool> predicate)
+        public static IEnumerator<T> Where<T>(
+            this IEnumerator<T> enumerator,
+            Func<T, bool> predicate
+        )
         {
             using (enumerator)
             {
@@ -43,7 +46,10 @@ namespace QuantConnect.Util
         /// <summary>
         /// Project the enumerator using the specified selector
         /// </summary>
-        public static IEnumerator<TResult> Select<T, TResult>(this IEnumerator<T> enumerator, Func<T, TResult> selector)
+        public static IEnumerator<TResult> Select<T, TResult>(
+            this IEnumerator<T> enumerator,
+            Func<T, TResult> selector
+        )
         {
             using (enumerator)
             {
@@ -57,7 +63,10 @@ namespace QuantConnect.Util
         /// <summary>
         /// Project the enumerator using the specified selector
         /// </summary>
-        public static IEnumerator<TResult> SelectMany<T, TResult>(this IEnumerator<T> enumerator, Func<T, IEnumerator<TResult>> selector)
+        public static IEnumerator<TResult> SelectMany<T, TResult>(
+            this IEnumerator<T> enumerator,
+            Func<T, IEnumerator<TResult>> selector
+        )
         {
             using (enumerator)
             {

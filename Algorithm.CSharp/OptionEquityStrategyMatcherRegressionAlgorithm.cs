@@ -14,10 +14,10 @@
  *
 */
 
+using System.Collections.Generic;
 using System.Linq;
 using QuantConnect.Data;
 using QuantConnect.Data.Market;
-using System.Collections.Generic;
 using QuantConnect.Securities.Option.StrategyMatcher;
 
 namespace QuantConnect.Algorithm.CSharp
@@ -25,7 +25,8 @@ namespace QuantConnect.Algorithm.CSharp
     /// <summary>
     /// Regression algorithm to assert that the option strategy matcher works as expected
     /// </summary>
-    public class OptionEquityStrategyMatcherRegressionAlgorithm : OptionEquityBaseStrategyRegressionAlgorithm
+    public class OptionEquityStrategyMatcherRegressionAlgorithm
+        : OptionEquityBaseStrategyRegressionAlgorithm
     {
         public override void Initialize()
         {
@@ -42,7 +43,11 @@ namespace QuantConnect.Algorithm.CSharp
             if (!Portfolio.Invested)
             {
                 OptionChain chain;
-                if (IsMarketOpen(_optionSymbol) && slice.OptionChains.TryGetValue(_optionSymbol, out chain) && Securities["SPY"].HasData)
+                if (
+                    IsMarketOpen(_optionSymbol)
+                    && slice.OptionChains.TryGetValue(_optionSymbol, out chain)
+                    && Securities["SPY"].HasData
+                )
                 {
                     var contracts = chain
                         .Where(contract => contract.Right == OptionRight.Call)
@@ -54,8 +59,14 @@ namespace QuantConnect.Algorithm.CSharp
                     // let's setup and trade a butterfly call
                     var distanceBetweenStrikes = 2.5m;
                     var lowerCall = contracts.First();
-                    var middleCall = contracts.First(contract => contract.Expiry == lowerCall.Expiry && contract.Strike == lowerCall.Strike + distanceBetweenStrikes);
-                    var highestCall = contracts.First(contract => contract.Expiry == lowerCall.Expiry && contract.Strike == middleCall.Strike + distanceBetweenStrikes);
+                    var middleCall = contracts.First(contract =>
+                        contract.Expiry == lowerCall.Expiry
+                        && contract.Strike == lowerCall.Strike + distanceBetweenStrikes
+                    );
+                    var highestCall = contracts.First(contract =>
+                        contract.Expiry == lowerCall.Expiry
+                        && contract.Strike == middleCall.Strike + distanceBetweenStrikes
+                    );
 
                     var initialMargin = Portfolio.MarginRemaining;
                     MarketOrder(lowerCall.Symbol, 10);
@@ -72,7 +83,11 @@ namespace QuantConnect.Algorithm.CSharp
                     AssertOptionStrategyIsPresent(OptionStrategyDefinitions.ButterflyCall.Name, 10);
                     AssertDefaultGroup(_optionSymbol.Underlying, 490);
 
-                    LimitOrder(_optionSymbol.Underlying, 100, Securities[_optionSymbol.Underlying].AskPrice);
+                    LimitOrder(
+                        _optionSymbol.Underlying,
+                        100,
+                        Securities[_optionSymbol.Underlying].AskPrice
+                    );
 
                     AssertOptionStrategyIsPresent(OptionStrategyDefinitions.ButterflyCall.Name, 10);
                     AssertDefaultGroup(_optionSymbol.Underlying, 490);
@@ -127,35 +142,36 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// This is used by the regression test system to indicate what the expected statistics are from running the algorithm
         /// </summary>
-        public override Dictionary<string, string> ExpectedStatistics => new Dictionary<string, string>
-        {
-            {"Total Orders", "8"},
-            {"Average Win", "0%"},
-            {"Average Loss", "0%"},
-            {"Compounding Annual Return", "0%"},
-            {"Drawdown", "0%"},
-            {"Expectancy", "0"},
-            {"Start Equity", "200000"},
-            {"End Equity", "199576.82"},
-            {"Net Profit", "0%"},
-            {"Sharpe Ratio", "0"},
-            {"Sortino Ratio", "0"},
-            {"Probabilistic Sharpe Ratio", "0%"},
-            {"Loss Rate", "0%"},
-            {"Win Rate", "0%"},
-            {"Profit-Loss Ratio", "0"},
-            {"Alpha", "0"},
-            {"Beta", "0"},
-            {"Annual Standard Deviation", "0"},
-            {"Annual Variance", "0"},
-            {"Information Ratio", "0"},
-            {"Tracking Error", "0"},
-            {"Treynor Ratio", "0"},
-            {"Total Fees", "$36.95"},
-            {"Estimated Strategy Capacity", "$0"},
-            {"Lowest Capacity Asset", "GOOCV W78ZFMEBBB2E|GOOCV VP83T1ZUHROL"},
-            {"Portfolio Turnover", "274.86%"},
-            {"OrderListHash", "81a0b19f7e6148834e9a3902fa1d059d"}
-        };
+        public override Dictionary<string, string> ExpectedStatistics =>
+            new Dictionary<string, string>
+            {
+                { "Total Orders", "8" },
+                { "Average Win", "0%" },
+                { "Average Loss", "0%" },
+                { "Compounding Annual Return", "0%" },
+                { "Drawdown", "0%" },
+                { "Expectancy", "0" },
+                { "Start Equity", "200000" },
+                { "End Equity", "199576.82" },
+                { "Net Profit", "0%" },
+                { "Sharpe Ratio", "0" },
+                { "Sortino Ratio", "0" },
+                { "Probabilistic Sharpe Ratio", "0%" },
+                { "Loss Rate", "0%" },
+                { "Win Rate", "0%" },
+                { "Profit-Loss Ratio", "0" },
+                { "Alpha", "0" },
+                { "Beta", "0" },
+                { "Annual Standard Deviation", "0" },
+                { "Annual Variance", "0" },
+                { "Information Ratio", "0" },
+                { "Tracking Error", "0" },
+                { "Treynor Ratio", "0" },
+                { "Total Fees", "$36.95" },
+                { "Estimated Strategy Capacity", "$0" },
+                { "Lowest Capacity Asset", "GOOCV W78ZFMEBBB2E|GOOCV VP83T1ZUHROL" },
+                { "Portfolio Turnover", "274.86%" },
+                { "OrderListHash", "81a0b19f7e6148834e9a3902fa1d059d" }
+            };
     }
 }

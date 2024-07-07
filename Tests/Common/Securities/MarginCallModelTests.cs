@@ -32,15 +32,21 @@ namespace QuantConnect.Tests.Common.Securities
         // Test class to enable calling protected methods
         public class TestSecurityMarginModel : SecurityMarginModel
         {
-            public TestSecurityMarginModel(decimal leverage) : base(leverage) {}
+            public TestSecurityMarginModel(decimal leverage)
+                : base(leverage) { }
 
             public new decimal GetInitialMarginRequiredForOrder(
-                InitialMarginRequiredForOrderParameters parameters)
+                InitialMarginRequiredForOrderParameters parameters
+            )
             {
                 return base.GetInitialMarginRequiredForOrder(parameters).Value;
             }
 
-            public new decimal GetMarginRemaining(SecurityPortfolioManager portfolio, Security security, OrderDirection direction)
+            public new decimal GetMarginRemaining(
+                SecurityPortfolioManager portfolio,
+                Security security,
+                OrderDirection direction
+            )
             {
                 return base.GetMarginRemaining(portfolio, security, direction);
             }
@@ -82,7 +88,12 @@ namespace QuantConnect.Tests.Common.Securities
             security.BuyingPowerModel = buyingPowerModel;
             var order = new MarketOrder(security.Symbol, 100, DateTime.Now);
             var actual = buyingPowerModel.GetInitialMarginRequiredForOrder(
-                new InitialMarginRequiredForOrderParameters(new IdentityCurrencyConverter(Currencies.USD), security, order));
+                new InitialMarginRequiredForOrderParameters(
+                    new IdentityCurrencyConverter(Currencies.USD),
+                    security,
+                    order
+                )
+            );
 
             Assert.AreEqual(0, actual);
         }
@@ -98,15 +109,17 @@ namespace QuantConnect.Tests.Common.Securities
             security.BuyingPowerModel = new SecurityMarginModel(leverage);
             security.Holdings.SetHoldings(1m, quantity);
             // current value is used to determine reserved buying power
-            security.SetMarketPrice(new TradeBar
-            {
-                Time = DateTime.Now,
-                Symbol = security.Symbol,
-                Open = 1,
-                High = 1,
-                Low = 1,
-                Close = 1
-            });
+            security.SetMarketPrice(
+                new TradeBar
+                {
+                    Time = DateTime.Now,
+                    Symbol = security.Symbol,
+                    Open = 1,
+                    High = 1,
+                    Low = 1,
+                    Close = 1
+                }
+            );
             var actual = security.BuyingPowerModel.GetReservedBuyingPowerForPosition(security);
 
             Assert.AreEqual(expected, actual);
@@ -118,7 +131,7 @@ namespace QuantConnect.Tests.Common.Securities
             const int quantity = 1000;
             const decimal leverage = 2;
             var orderProcessor = new FakeOrderProcessor();
-            var portfolio = GetPortfolio(orderProcessor, cash:1000);
+            var portfolio = GetPortfolio(orderProcessor, cash: 1000);
 
             var security = GetSecurity(Symbols.AAPL);
             var buyingPowerModel = new TestSecurityMarginModel(leverage);
@@ -130,26 +143,44 @@ namespace QuantConnect.Tests.Common.Securities
             portfolio.SetCash(0);
 
             // current value is used to determine reserved buying power
-            security.SetMarketPrice(new TradeBar
-            {
-                Time = DateTime.Now,
-                Symbol = security.Symbol,
-                Open = 1,
-                High = 1,
-                Low = 1,
-                Close = 1
-            });
-            var actual1 = buyingPowerModel.GetMarginRemaining(portfolio, security, OrderDirection.Buy);
+            security.SetMarketPrice(
+                new TradeBar
+                {
+                    Time = DateTime.Now,
+                    Symbol = security.Symbol,
+                    Open = 1,
+                    High = 1,
+                    Low = 1,
+                    Close = 1
+                }
+            );
+            var actual1 = buyingPowerModel.GetMarginRemaining(
+                portfolio,
+                security,
+                OrderDirection.Buy
+            );
             Assert.AreEqual(quantity / leverage, actual1);
 
-            var actual2 = buyingPowerModel.GetMarginRemaining(portfolio, security, OrderDirection.Sell);
+            var actual2 = buyingPowerModel.GetMarginRemaining(
+                portfolio,
+                security,
+                OrderDirection.Sell
+            );
             Assert.AreEqual(quantity + quantity / leverage, actual2);
 
             security.Holdings.SetHoldings(1m, -quantity);
-            var actual3 = buyingPowerModel.GetMarginRemaining(portfolio, security, OrderDirection.Sell);
+            var actual3 = buyingPowerModel.GetMarginRemaining(
+                portfolio,
+                security,
+                OrderDirection.Sell
+            );
             Assert.AreEqual(quantity / leverage, actual3);
 
-            var actual4 = buyingPowerModel.GetMarginRemaining(portfolio, security, OrderDirection.Buy);
+            var actual4 = buyingPowerModel.GetMarginRemaining(
+                portfolio,
+                security,
+                OrderDirection.Buy
+            );
             Assert.AreEqual(quantity + quantity / leverage, actual4);
         }
 
@@ -173,14 +204,27 @@ namespace QuantConnect.Tests.Common.Securities
             const decimal buyPrice = 1m;
             security.SetMarketPrice(new Tick(time, Symbols.AAPL, buyPrice, buyPrice));
 
-            var order = new MarketOrder(Symbols.AAPL, quantity, time) {Price = buyPrice};
+            var order = new MarketOrder(Symbols.AAPL, quantity, time) { Price = buyPrice };
             var fill = new OrderEvent(order, DateTime.UtcNow, OrderFee.Zero)
-                { FillPrice = buyPrice, FillQuantity = quantity, Status = OrderStatus.Filled};
+            {
+                FillPrice = buyPrice,
+                FillQuantity = quantity,
+                Status = OrderStatus.Filled
+            };
             orderProcessor.AddOrder(order);
-            var request = new SubmitOrderRequest(OrderType.Market, security.Type, security.Symbol, order.Quantity, 0, 0, order.Time, null);
+            var request = new SubmitOrderRequest(
+                OrderType.Market,
+                security.Type,
+                security.Symbol,
+                order.Quantity,
+                0,
+                0,
+                order.Time,
+                null
+            );
             request.SetOrderId(0);
             orderProcessor.AddTicket(new OrderTicket(null, request));
-            Assert.AreEqual(portfolio.Cash, fill.FillPrice*fill.FillQuantity);
+            Assert.AreEqual(portfolio.Cash, fill.FillPrice * fill.FillQuantity);
 
             portfolio.ProcessFills(new List<OrderEvent> { fill });
 
@@ -189,8 +233,13 @@ namespace QuantConnect.Tests.Common.Securities
             Assert.AreEqual(quantity, portfolio.TotalPortfolioValue);
 
             // we shouldn't be able to place a trader
-            var newOrder = new MarketOrder(Symbols.AAPL, 1, time.AddSeconds(1)) {Price = buyPrice};
-            var hasSufficientBuyingPower = security.BuyingPowerModel.HasSufficientBuyingPowerForOrder(portfolio, security, newOrder).IsSufficient;
+            var newOrder = new MarketOrder(Symbols.AAPL, 1, time.AddSeconds(1))
+            {
+                Price = buyPrice
+            };
+            var hasSufficientBuyingPower = security
+                .BuyingPowerModel.HasSufficientBuyingPowerForOrder(portfolio, security, newOrder)
+                .IsSufficient;
             Assert.IsFalse(hasSufficientBuyingPower);
 
             // now the stock doubles, so we should have margin remaining
@@ -205,23 +254,34 @@ namespace QuantConnect.Tests.Common.Securities
             Assert.AreEqual(quantity * 2, portfolio.TotalPortfolioValue);
 
             // we shouldn't be able to place a trader
-            var anotherOrder = new MarketOrder(Symbols.AAPL, 1, time.AddSeconds(1)) { Price = highPrice };
-            hasSufficientBuyingPower = security.BuyingPowerModel.HasSufficientBuyingPowerForOrder(portfolio, security, anotherOrder).IsSufficient;
+            var anotherOrder = new MarketOrder(Symbols.AAPL, 1, time.AddSeconds(1))
+            {
+                Price = highPrice
+            };
+            hasSufficientBuyingPower = security
+                .BuyingPowerModel.HasSufficientBuyingPowerForOrder(
+                    portfolio,
+                    security,
+                    anotherOrder
+                )
+                .IsSufficient;
             Assert.IsFalse(hasSufficientBuyingPower);
 
             // now the stock plummets, leverage is 1 we shouldn't have more margin remaining
             time = time.AddDays(1);
-            const decimal lowPrice = buyPrice/2;
+            const decimal lowPrice = buyPrice / 2;
             security.SetMarketPrice(new Tick(time, Symbols.AAPL, lowPrice, lowPrice));
             portfolio.InvalidateTotalPortfolioValue();
 
             Assert.AreEqual(0, portfolio.MarginRemaining);
-            Assert.AreEqual(quantity/2m, portfolio.TotalMarginUsed);
-            Assert.AreEqual(quantity/2m, portfolio.TotalPortfolioValue);
+            Assert.AreEqual(quantity / 2m, portfolio.TotalMarginUsed);
+            Assert.AreEqual(quantity / 2m, portfolio.TotalPortfolioValue);
 
             // this would not cause a margin call due to leverage = 1
             bool issueMarginCallWarning;
-            var marginCallOrders = portfolio.MarginCallModel.GetMarginCallOrders(out issueMarginCallWarning);
+            var marginCallOrders = portfolio.MarginCallModel.GetMarginCallOrders(
+                out issueMarginCallWarning
+            );
             Assert.IsFalse(issueMarginCallWarning);
             Assert.AreEqual(0, marginCallOrders.Count);
 
@@ -236,7 +296,9 @@ namespace QuantConnect.Tests.Common.Securities
             portfolio.InvalidateTotalPortfolioValue();
 
             // this would not cause a margin call, only a margin call warning
-            marginCallOrders = portfolio.MarginCallModel.GetMarginCallOrders(out issueMarginCallWarning);
+            marginCallOrders = portfolio.MarginCallModel.GetMarginCallOrders(
+                out issueMarginCallWarning
+            );
             Assert.IsTrue(issueMarginCallWarning);
             Assert.AreEqual(0, marginCallOrders.Count);
 
@@ -246,12 +308,17 @@ namespace QuantConnect.Tests.Common.Securities
 
             order = new MarketOrder(Symbols.AAPL, quantity, time) { Price = buyPrice };
             fill = new OrderEvent(order, DateTime.UtcNow, OrderFee.Zero)
-                { FillPrice = buyPrice, FillQuantity = quantity };
+            {
+                FillPrice = buyPrice,
+                FillQuantity = quantity
+            };
             portfolio.ProcessFills(new List<OrderEvent> { fill });
 
             Assert.AreEqual(-250, portfolio.TotalPortfolioValue);
 
-            marginCallOrders = portfolio.MarginCallModel.GetMarginCallOrders(out issueMarginCallWarning);
+            marginCallOrders = portfolio.MarginCallModel.GetMarginCallOrders(
+                out issueMarginCallWarning
+            );
             Assert.IsTrue(issueMarginCallWarning);
             Assert.AreEqual(1, marginCallOrders.Count);
         }
@@ -278,15 +345,41 @@ namespace QuantConnect.Tests.Common.Securities
             const decimal underlyingPrice = 100m;
             const decimal callOptionPrice = 1m;
             const decimal putOptionPrice = 1m;
-            underlying.SetMarketPrice(new Tick(time, underlying.Symbol, underlyingPrice, underlyingPrice));
-            callOption.SetMarketPrice(new Tick(time, callOption.Symbol, callOptionPrice, callOptionPrice));
-            putOption.SetMarketPrice(new Tick(time, putOption.Symbol, putOptionPrice, putOptionPrice));
+            underlying.SetMarketPrice(
+                new Tick(time, underlying.Symbol, underlyingPrice, underlyingPrice)
+            );
+            callOption.SetMarketPrice(
+                new Tick(time, callOption.Symbol, callOptionPrice, callOptionPrice)
+            );
+            putOption.SetMarketPrice(
+                new Tick(time, putOption.Symbol, putOptionPrice, putOptionPrice)
+            );
 
             var groupOrderManager = new GroupOrderManager(1, 2, -10);
-            var callOptionOrder = new ComboMarketOrder(callOption.Symbol, -10, time, groupOrderManager) { Price = callOptionPrice };
-            var putOptionOrder = new ComboMarketOrder(putOption.Symbol, -10, time, groupOrderManager) { Price = putOptionPrice };
+            var callOptionOrder = new ComboMarketOrder(
+                callOption.Symbol,
+                -10,
+                time,
+                groupOrderManager
+            )
+            {
+                Price = callOptionPrice
+            };
+            var putOptionOrder = new ComboMarketOrder(
+                putOption.Symbol,
+                -10,
+                time,
+                groupOrderManager
+            )
+            {
+                Price = putOptionPrice
+            };
 
-            var callOptionOrderFill = new OrderEvent(callOptionOrder, DateTime.UtcNow, OrderFee.Zero)
+            var callOptionOrderFill = new OrderEvent(
+                callOptionOrder,
+                DateTime.UtcNow,
+                OrderFee.Zero
+            )
             {
                 FillPrice = callOptionOrder.Price,
                 FillQuantity = callOptionOrder.Quantity,
@@ -311,7 +404,8 @@ namespace QuantConnect.Tests.Common.Securities
                 0,
                 callOptionOrder.Time,
                 "",
-                groupOrderManager: groupOrderManager);
+                groupOrderManager: groupOrderManager
+            );
             var putOptionRequest = new SubmitOrderRequest(
                 OrderType.ComboMarket,
                 putOption.Type,
@@ -321,7 +415,8 @@ namespace QuantConnect.Tests.Common.Securities
                 0,
                 putOptionOrder.Time,
                 "",
-                groupOrderManager: groupOrderManager);
+                groupOrderManager: groupOrderManager
+            );
 
             callOptionRequest.SetOrderId(1);
             putOptionRequest.SetOrderId(2);
@@ -332,24 +427,48 @@ namespace QuantConnect.Tests.Common.Securities
             orderProcessor.AddTicket(new OrderTicket(null, callOptionRequest));
             orderProcessor.AddTicket(new OrderTicket(null, putOptionRequest));
 
-            portfolio.ProcessFills(new List<OrderEvent> { callOptionOrderFill, putOptionOrderFill });
+            portfolio.ProcessFills(
+                new List<OrderEvent> { callOptionOrderFill, putOptionOrderFill }
+            );
 
             // Simulate options price increase so the remaining margin goes below zero
-            callOption.SetMarketPrice(new Tick(time.AddMinutes(1), callOption.Symbol, callOptionPrice * 1.2m, callOptionPrice * 1.2m));
-            putOption.SetMarketPrice(new Tick(time.AddMinutes(1), putOption.Symbol, putOptionPrice * 1.2m, putOptionPrice * 1.2m));
+            callOption.SetMarketPrice(
+                new Tick(
+                    time.AddMinutes(1),
+                    callOption.Symbol,
+                    callOptionPrice * 1.2m,
+                    callOptionPrice * 1.2m
+                )
+            );
+            putOption.SetMarketPrice(
+                new Tick(
+                    time.AddMinutes(1),
+                    putOption.Symbol,
+                    putOptionPrice * 1.2m,
+                    putOptionPrice * 1.2m
+                )
+            );
 
-            var marginCallOrders = portfolio.MarginCallModel.GetMarginCallOrders(out var issueMarginCallWarning);
+            var marginCallOrders = portfolio.MarginCallModel.GetMarginCallOrders(
+                out var issueMarginCallWarning
+            );
             Assert.IsTrue(issueMarginCallWarning);
             Assert.AreEqual(2, marginCallOrders.Count);
         }
 
         private SecurityPortfolioManager GetPortfolio(IOrderProcessor orderProcessor, int cash)
         {
-            var securities = new SecurityManager(new TimeKeeper(DateTime.Now, new[] { TimeZones.NewYork }));
+            var securities = new SecurityManager(
+                new TimeKeeper(DateTime.Now, new[] { TimeZones.NewYork })
+            );
             var transactions = new SecurityTransactionManager(null, securities);
             transactions.SetOrderProcessor(orderProcessor);
 
-            var portfolio = new SecurityPortfolioManager(securities, transactions, new AlgorithmSettings());
+            var portfolio = new SecurityPortfolioManager(
+                securities,
+                transactions,
+                new AlgorithmSettings()
+            );
             portfolio.SetCash(cash);
 
             return portfolio;
@@ -394,7 +513,8 @@ namespace QuantConnect.Tests.Common.Securities
                 new Cash(Currencies.USD, 0, 1m),
                 new OptionSymbolProperties("", Currencies.USD, 100, 0.01m, 1),
                 ErrorCurrencyConverter.Instance,
-                RegisteredSecurityDataTypesProvider.Null);
+                RegisteredSecurityDataTypesProvider.Null
+            );
         }
     }
 }

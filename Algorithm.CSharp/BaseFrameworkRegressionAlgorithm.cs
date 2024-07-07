@@ -28,7 +28,9 @@ namespace QuantConnect.Algorithm.CSharp
     /// <summary>
     /// Abstract regression framework algorithm for multiple framework regression tests
     /// </summary>
-    public abstract class BaseFrameworkRegressionAlgorithm : QCAlgorithm, IRegressionAlgorithmDefinition
+    public abstract class BaseFrameworkRegressionAlgorithm
+        : QCAlgorithm,
+            IRegressionAlgorithmDefinition
     {
         public override void Initialize()
         {
@@ -39,7 +41,9 @@ namespace QuantConnect.Algorithm.CSharp
             UniverseSettings.DataNormalizationMode = DataNormalizationMode.Raw;
 
             var symbols = new[] { "AAPL", "AIG", "BAC", "SPY" }
-                .Select(ticker => QuantConnect.Symbol.Create(ticker, SecurityType.Equity, Market.USA))
+                .Select(ticker =>
+                    QuantConnect.Symbol.Create(ticker, SecurityType.Equity, Market.USA)
+                )
                 .ToList();
 
             // Manually add AAPL and AIG when the algorithm starts
@@ -47,11 +51,23 @@ namespace QuantConnect.Algorithm.CSharp
 
             // At midnight, add all securities every day except on the last data
             // With this procedure, the Alpha Model will experience multiple universe changes
-            AddUniverseSelection(new ScheduledUniverseSelectionModel(
-                DateRules.EveryDay(), TimeRules.Midnight,
-                dt => dt < EndDate.AddDays(-1) ? symbols : Enumerable.Empty<Symbol>()));
+            AddUniverseSelection(
+                new ScheduledUniverseSelectionModel(
+                    DateRules.EveryDay(),
+                    TimeRules.Midnight,
+                    dt => dt < EndDate.AddDays(-1) ? symbols : Enumerable.Empty<Symbol>()
+                )
+            );
 
-            SetAlpha(new ConstantAlphaModel(InsightType.Price, InsightDirection.Up, TimeSpan.FromDays(31), 0.025, null));
+            SetAlpha(
+                new ConstantAlphaModel(
+                    InsightType.Price,
+                    InsightDirection.Up,
+                    TimeSpan.FromDays(31),
+                    0.025,
+                    null
+                )
+            );
             SetPortfolioConstruction(new EqualWeightingPortfolioConstructionModel());
             SetExecution(new ImmediateExecutionModel());
             SetRiskManagement(new NullRiskManagementModel());
@@ -63,7 +79,9 @@ namespace QuantConnect.Algorithm.CSharp
             var insightsCount = Insights.GetInsights(insight => insight.IsActive(UtcTime)).Count;
             if (insightsCount != 0)
             {
-                throw new RegressionTestException($"The number of active insights should be 0. Actual: {insightsCount}");
+                throw new RegressionTestException(
+                    $"The number of active insights should be 0. Actual: {insightsCount}"
+                );
             }
         }
 
@@ -75,7 +93,8 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// This is used by the regression test system to indicate which languages this algorithm is written in.
         /// </summary>
-        public virtual List<Language> Languages { get; } = new() { Language.CSharp, Language.Python };
+        public virtual List<Language> Languages { get; } =
+            new() { Language.CSharp, Language.Python };
 
         /// <summary>
         /// Data Points count of all timeslices of algorithm

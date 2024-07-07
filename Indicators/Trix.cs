@@ -30,7 +30,7 @@ namespace QuantConnect.Indicators
 
         /// <summary>
         /// Initializes a new instance of the <see cref="Trix"/> class using the specified name and period.
-        /// </summary> 
+        /// </summary>
         /// <param name="name">The name of this indicator</param>
         /// <param name="period">The period of the indicator</param>
         public Trix(string name, int period)
@@ -45,12 +45,10 @@ namespace QuantConnect.Indicators
 
         /// <summary>
         /// Initializes a new instance of the <see cref="Trix"/> class using the specified period.
-        /// </summary> 
+        /// </summary>
         /// <param name="period">The period of the indicator</param>
         public Trix(int period)
-            : this($"TRIX({period})", period)
-        {
-        }
+            : this($"TRIX({period})", period) { }
 
         /// <summary>
         /// Gets a flag indicating when this indicator is ready and fully initialized

@@ -14,17 +14,17 @@
 */
 
 using System;
+using System.Collections.Concurrent;
+using System.Collections.Generic;
 using System.IO;
-using Ionic.Zip;
-using Ionic.Zlib;
 using System.Linq;
 using System.Threading;
-using QuantConnect.Util;
-using QuantConnect.Logging;
-using QuantConnect.Interfaces;
-using System.Collections.Generic;
-using System.Collections.Concurrent;
+using Ionic.Zip;
+using Ionic.Zlib;
 using QuantConnect.Configuration;
+using QuantConnect.Interfaces;
+using QuantConnect.Logging;
+using QuantConnect.Util;
 
 namespace QuantConnect.Lean.Engine.DataFeeds
 {
@@ -36,7 +36,8 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         private readonly double _cacheSeconds;
 
         // ZipArchive cache used by the class
-        private readonly ConcurrentDictionary<string, CachedZipFile> _zipFileCache = new ConcurrentDictionary<string, CachedZipFile>();
+        private readonly ConcurrentDictionary<string, CachedZipFile> _zipFileCache =
+            new ConcurrentDictionary<string, CachedZipFile>();
         private readonly IDataProvider _dataProvider;
         private readonly Timer _cacheCleaner;
 
@@ -48,12 +49,23 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         /// <summary>
         /// Constructor that sets the <see cref="IDataProvider"/> used to retrieve data
         /// </summary>
-        public ZipDataCacheProvider(IDataProvider dataProvider, bool isDataEphemeral = true, double cacheTimer = double.NaN)
+        public ZipDataCacheProvider(
+            IDataProvider dataProvider,
+            bool isDataEphemeral = true,
+            double cacheTimer = double.NaN
+        )
         {
             IsDataEphemeral = isDataEphemeral;
-            _cacheSeconds = double.IsNaN(cacheTimer) ? Config.GetDouble("zip-data-cache-provider", 10) : cacheTimer;
+            _cacheSeconds = double.IsNaN(cacheTimer)
+                ? Config.GetDouble("zip-data-cache-provider", 10)
+                : cacheTimer;
             _dataProvider = dataProvider;
-            _cacheCleaner = new Timer(state => CleanCache(), null, TimeSpan.FromSeconds(_cacheSeconds), Timeout.InfiniteTimeSpan);
+            _cacheCleaner = new Timer(
+                state => CleanCache(),
+                null,
+                TimeSpan.FromSeconds(_cacheSeconds),
+                Timeout.InfiniteTimeSpan
+            );
         }
 
         /// <summary>
@@ -99,9 +111,17 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                         {
                             if (exception is ZipException || exception is ZlibException)
                             {
-                                Log.Error("ZipDataCacheProvider.Fetch(): Corrupt zip file/entry: " + filename + "#" + entryName + " Error: " + exception);
+                                Log.Error(
+                                    "ZipDataCacheProvider.Fetch(): Corrupt zip file/entry: "
+                                        + filename
+                                        + "#"
+                                        + entryName
+                                        + " Error: "
+                                        + exception
+                                );
                             }
-                            else throw;
+                            else
+                                throw;
                         }
                     }
 
@@ -141,7 +161,10 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             lock (_zipFileCache)
             {
                 // If its not in the cache, and can not be cached we need to create it
-                if (!_zipFileCache.TryGetValue(fileName, out var cachedZip) && !Cache(fileName, out cachedZip))
+                if (
+                    !_zipFileCache.TryGetValue(fileName, out var cachedZip)
+                    && !Cache(fileName, out cachedZip)
+                )
                 {
                     // Create the zip, if successful, cache it for later use
                     if (Compression.ZipCreateAppendData(fileName, entryName, data))
@@ -150,7 +173,9 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                     }
                     else
                     {
-                        throw new InvalidOperationException($"Failed to store data {fileName}#{entryName}");
+                        throw new InvalidOperationException(
+                            $"Failed to store data {fileName}#{entryName}"
+                        );
                     }
 
                     return;
@@ -163,11 +188,17 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                         // if disposed and we have the lock means it's not in the dictionary anymore, let's assert it
                         // but there is a window for another thread to add a **new/different** instance which is okay
                         // we will pick it up on the store call bellow
-                        if (_zipFileCache.TryGetValue(fileName, out var existing) && ReferenceEquals(existing, cachedZip))
+                        if (
+                            _zipFileCache.TryGetValue(fileName, out var existing)
+                            && ReferenceEquals(existing, cachedZip)
+                        )
                         {
-                            Log.Error($"ZipDataCacheProvider.Store(): unexpected cache state for {fileName}");
+                            Log.Error(
+                                $"ZipDataCacheProvider.Store(): unexpected cache state for {fileName}"
+                            );
                             throw new InvalidOperationException(
-                                "LEAN entered an unexpected state. Please contact support@quantconnect.com so we may debug this further.");
+                                "LEAN entered an unexpected state. Please contact support@quantconnect.com so we may debug this further."
+                            );
                         }
                         Store(key, data);
                     }
@@ -255,7 +286,9 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             {
                 try
                 {
-                    var nextDueTime = Time.GetSecondUnevenWait((int)Math.Ceiling(_cacheSeconds * 1000));
+                    var nextDueTime = Time.GetSecondUnevenWait(
+                        (int)Math.Ceiling(_cacheSeconds * 1000)
+                    );
                     _cacheCleaner.Change(nextDueTime, Timeout.Infinite);
                 }
                 catch (ObjectDisposedException)
@@ -292,9 +325,17 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                     dataStream.DisposeSafely();
                     if (exception is ZipException || exception is ZlibException)
                     {
-                        Log.Error("ZipDataCacheProvider.Fetch(): Corrupt zip file/entry: " + filename + "#" + entryName + " Error: " + exception);
+                        Log.Error(
+                            "ZipDataCacheProvider.Fetch(): Corrupt zip file/entry: "
+                                + filename
+                                + "#"
+                                + entryName
+                                + " Error: "
+                                + exception
+                        );
                     }
-                    else throw;
+                    else
+                        throw;
                 }
             }
             return stream;
@@ -367,7 +408,13 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                     // Non-default entry name, return matching one if it exists, otherwise null.
                     while (zipEntry != null)
                     {
-                        if (string.Compare(zipEntry.FileName, entryName, StringComparison.OrdinalIgnoreCase) == 0)
+                        if (
+                            string.Compare(
+                                zipEntry.FileName,
+                                entryName,
+                                StringComparison.OrdinalIgnoreCase
+                            ) == 0
+                        )
                         {
                             return zipStream;
                         }
@@ -414,9 +461,15 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                 {
                     if (exception is ZipException || exception is ZlibException)
                     {
-                        Log.Error("ZipDataCacheProvider.Fetch(): Corrupt zip file/entry: " + filename + " Error: " + exception);
+                        Log.Error(
+                            "ZipDataCacheProvider.Fetch(): Corrupt zip file/entry: "
+                                + filename
+                                + " Error: "
+                                + exception
+                        );
                     }
-                    else throw;
+                    else
+                        throw;
                 }
 
                 dataStream.Dispose();
@@ -424,7 +477,6 @@ namespace QuantConnect.Lean.Engine.DataFeeds
 
             return false;
         }
-
 
         /// <summary>
         /// Type for storing zipfile in cache
@@ -445,7 +497,8 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             /// <summary>
             /// Contains all entries of the zip file by filename
             /// </summary>
-            public readonly Dictionary<string, ZipEntryCache> EntryCache = new (StringComparer.OrdinalIgnoreCase);
+            public readonly Dictionary<string, ZipEntryCache> EntryCache =
+                new(StringComparer.OrdinalIgnoreCase);
 
             /// <summary>
             /// Returns if this cached zip file is disposed
@@ -465,7 +518,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                 _zipFile.UseZip64WhenSaving = Zip64Option.Always;
                 foreach (var entry in _zipFile.Entries)
                 {
-                    EntryCache[entry.FileName] = new ZipEntryCache{ Entry = entry };
+                    EntryCache[entry.FileName] = new ZipEntryCache { Entry = entry };
                 }
                 _dateCached = new ReferenceWrapper<DateTime>(utcNow);
                 _filePath = filePath;
@@ -492,7 +545,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                 Interlocked.Increment(ref _modified);
                 Refresh();
 
-                // If the entry already exists remove it 
+                // If the entry already exists remove it
                 if (_zipFile.ContainsEntry(entryName))
                 {
                     _zipFile.RemoveEntry(entryName);
@@ -538,7 +591,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
 
                 //After disposal we will move it to the final location
                 if (modified && tempFileName != null)
-                { 
+                {
                     File.Move(tempFileName, _filePath, true);
                 }
             }

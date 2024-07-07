@@ -34,7 +34,10 @@ namespace QuantConnect.Brokerages
         {
             if (accountType == AccountType.Cash)
             {
-                throw new ArgumentException(Messages.AlphaStreamsBrokerageModel.UnsupportedAccountType, nameof(accountType));
+                throw new ArgumentException(
+                    Messages.AlphaStreamsBrokerageModel.UnsupportedAccountType,
+                    nameof(accountType)
+                );
             }
         }
 
@@ -50,7 +53,8 @@ namespace QuantConnect.Brokerages
         /// </summary>
         /// <param name="security">The security to get a slippage model for</param>
         /// <returns>The new slippage model for this brokerage</returns>
-        public override ISlippageModel GetSlippageModel(Security security) => new AlphaStreamsSlippageModel();
+        public override ISlippageModel GetSlippageModel(Security security) =>
+            new AlphaStreamsSlippageModel();
 
         /// <summary>
         /// Gets the brokerage's leverage for the specified security
@@ -75,6 +79,7 @@ namespace QuantConnect.Brokerages
         /// </summary>
         /// <param name="security">The security to get a settlement model for</param>
         /// <returns>The settlement model for this brokerage</returns>
-        public override ISettlementModel GetSettlementModel(Security security) => new ImmediateSettlementModel();
+        public override ISettlementModel GetSettlementModel(Security security) =>
+            new ImmediateSettlementModel();
     }
 }

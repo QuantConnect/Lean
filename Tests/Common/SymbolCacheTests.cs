@@ -66,7 +66,9 @@ namespace QuantConnect.Tests.Common
         [TestCase(SecurityType.Forex)]
         [TestCase(SecurityType.Future)]
         [TestCase(SecurityType.Option)]
-        public void GetSymbol_ReturnsSymbolMappedByTicker_WhenExactlyOneMatch(SecurityType securityType)
+        public void GetSymbol_ReturnsSymbolMappedByTicker_WhenExactlyOneMatch(
+            SecurityType securityType
+        )
         {
             var ticker = "ticker";
             var symbol = Symbol.Create(ticker, securityType, Market.USA);
@@ -89,15 +91,23 @@ namespace QuantConnect.Tests.Common
             // SID.GenerateBase uses <ticker>.<base-data-type-name> as the alias for custom data types
             var ticker = "ticker";
 
-            var symbol1 = Symbol.Create(ticker, SecurityType.Base, Market.USA, baseDataType: typeof(UnlinkedData));
+            var symbol1 = Symbol.Create(
+                ticker,
+                SecurityType.Base,
+                Market.USA,
+                baseDataType: typeof(UnlinkedData)
+            );
             SymbolCache.Set(symbol1.ID.Symbol, symbol1);
 
-            var symbol2 = Symbol.Create(ticker, SecurityType.Base, Market.USA, baseDataType: typeof(UnlinkedDataTradeBar));
+            var symbol2 = Symbol.Create(
+                ticker,
+                SecurityType.Base,
+                Market.USA,
+                baseDataType: typeof(UnlinkedDataTradeBar)
+            );
             SymbolCache.Set(symbol2.ID.Symbol, symbol2);
 
-            Assert.Throws<InvalidOperationException>(
-                () => SymbolCache.GetSymbol(ticker)
-            );
+            Assert.Throws<InvalidOperationException>(() => SymbolCache.GetSymbol(ticker));
         }
 
         [Test]
@@ -122,7 +132,10 @@ namespace QuantConnect.Tests.Common
             Assert.IsTrue(SymbolCache.TryGetTicker(Symbols.EURUSD, out ticker));
             Assert.AreEqual(Symbols.EURUSD.Value, ticker);
 
-            var symbol = new Symbol(SecurityIdentifier.GenerateForex("NOT-A-FOREX-PAIR", Market.FXCM), "EURGBP");
+            var symbol = new Symbol(
+                SecurityIdentifier.GenerateForex("NOT-A-FOREX-PAIR", Market.FXCM),
+                "EURGBP"
+            );
             Assert.IsFalse(SymbolCache.TryGetTicker(symbol, out ticker));
             Assert.AreEqual(default(string), ticker);
         }
@@ -151,7 +164,12 @@ namespace QuantConnect.Tests.Common
             SymbolCache.Set(ticker, symbol);
 
             var customTicker = $"{ticker}.CustomDataTypeName";
-            var customSymbol = Symbol.Create(customTicker, SecurityType.Base, Market.USA, baseDataType: typeof(Bitcoin));
+            var customSymbol = Symbol.Create(
+                customTicker,
+                SecurityType.Base,
+                Market.USA,
+                baseDataType: typeof(Bitcoin)
+            );
             SymbolCache.Set(customTicker, customSymbol);
 
             Symbol fetchedSymbol;
@@ -167,7 +185,12 @@ namespace QuantConnect.Tests.Common
         public void TryGetSymbol_FromTicker_WithoutCustomDataSuffix()
         {
             var ticker = "My-Ticker";
-            var symbol = Symbol.Create(ticker, SecurityType.Base, Market.USA, baseDataType: typeof(Bitcoin));
+            var symbol = Symbol.Create(
+                ticker,
+                SecurityType.Base,
+                Market.USA,
+                baseDataType: typeof(Bitcoin)
+            );
 
             // alias is the SID's symbol of the form: <symbol>.<type>
             var alias = symbol.ID.Symbol;

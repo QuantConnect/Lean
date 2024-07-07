@@ -39,7 +39,13 @@ namespace QuantConnect.Report.ReportElements
         /// <param name="backtest">Backtest result object</param>
         /// <param name="live">Live result object</param>
         /// <param name="tradingDaysPerYear">The number of trading days per year to get better result of statistics</param>
-        public RollingSharpeReportElement(string name, string key, BacktestResult backtest, LiveResult live, int tradingDaysPerYear)
+        public RollingSharpeReportElement(
+            string name,
+            string key,
+            BacktestResult backtest,
+            LiveResult live,
+            int tradingDaysPerYear
+        )
         {
             _live = live;
             _backtest = backtest;
@@ -59,10 +65,18 @@ namespace QuantConnect.Report.ReportElements
             var backtestSeries = new Series<DateTime, double>(backtestPoints);
             var liveSeries = new Series<DateTime, double>(livePoints);
 
-            var backtestRollingSharpeSixMonths = Rolling.Sharpe(backtestSeries, 6, _tradingDaysPerYear).DropMissing();
-            var backtestRollingSharpeTwelveMonths = Rolling.Sharpe(backtestSeries, 12, _tradingDaysPerYear).DropMissing();
-            var liveRollingSharpeSixMonths = Rolling.Sharpe(liveSeries, 6, _tradingDaysPerYear).DropMissing();
-            var liveRollingSharpeTwelveMonths = Rolling.Sharpe(liveSeries, 12, _tradingDaysPerYear).DropMissing();
+            var backtestRollingSharpeSixMonths = Rolling
+                .Sharpe(backtestSeries, 6, _tradingDaysPerYear)
+                .DropMissing();
+            var backtestRollingSharpeTwelveMonths = Rolling
+                .Sharpe(backtestSeries, 12, _tradingDaysPerYear)
+                .DropMissing();
+            var liveRollingSharpeSixMonths = Rolling
+                .Sharpe(liveSeries, 6, _tradingDaysPerYear)
+                .DropMissing();
+            var liveRollingSharpeTwelveMonths = Rolling
+                .Sharpe(liveSeries, 12, _tradingDaysPerYear)
+                .DropMissing();
 
             var base64 = "";
             using (Py.GIL())

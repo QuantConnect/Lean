@@ -18,8 +18,8 @@ using System.IO;
 using System.Text;
 using NUnit.Framework;
 using QuantConnect.Data;
-using QuantConnect.Securities;
 using QuantConnect.Data.Market;
+using QuantConnect.Securities;
 
 namespace QuantConnect.Tests.Common.Data.Market
 {
@@ -110,7 +110,8 @@ namespace QuantConnect.Tests.Common.Data.Market
                 OptionStyle.American,
                 OptionRight.Put,
                 4200m,
-                SecurityIdentifier.DefaultDate);
+                SecurityIdentifier.DefaultDate
+            );
 
             var config = new SubscriptionDataConfig(
                 typeof(TradeBar),
@@ -124,14 +125,17 @@ namespace QuantConnect.Tests.Common.Data.Market
                 false,
                 TickType.Trade,
                 true,
-                DataNormalizationMode.Raw);
+                DataNormalizationMode.Raw
+            );
 
             var tradeLine = "40560000,10000,15000,10000,15000,90";
             using var memoryStream = new MemoryStream(Encoding.UTF8.GetBytes(tradeLine));
             using var stream = new StreamReader(memoryStream);
 
-            var tradeBarFromLine = (TradeBar)factory.Reader(config, tradeLine, new DateTime(2020, 9, 22), false);
-            var tradeBarFromStream = (TradeBar)factory.Reader(config, stream, new DateTime(2020, 9, 22), false);
+            var tradeBarFromLine = (TradeBar)
+                factory.Reader(config, tradeLine, new DateTime(2020, 9, 22), false);
+            var tradeBarFromStream = (TradeBar)
+                factory.Reader(config, stream, new DateTime(2020, 9, 22), false);
 
             Assert.AreEqual(new DateTime(2020, 9, 22, 11, 17, 0), tradeBarFromLine.EndTime);
             Assert.AreEqual(optionSymbol, tradeBarFromLine.Symbol);
@@ -154,14 +158,19 @@ namespace QuantConnect.Tests.Common.Data.Market
         public void TradeBarParseDoesNotScaleOptionsWithNonEquityUnderlying()
         {
             var factory = new TradeBar();
-            var underlying = Symbol.CreateFuture("ES", QuantConnect.Market.CME, new DateTime(2021, 3, 19));
+            var underlying = Symbol.CreateFuture(
+                "ES",
+                QuantConnect.Market.CME,
+                new DateTime(2021, 3, 19)
+            );
             var optionSymbol = Symbol.CreateOption(
                 underlying,
                 QuantConnect.Market.CME,
                 OptionStyle.American,
                 OptionRight.Put,
                 4200m,
-                SecurityIdentifier.DefaultDate);
+                SecurityIdentifier.DefaultDate
+            );
 
             var config = new SubscriptionDataConfig(
                 typeof(TradeBar),
@@ -175,14 +184,17 @@ namespace QuantConnect.Tests.Common.Data.Market
                 false,
                 TickType.Trade,
                 true,
-                DataNormalizationMode.Raw);
+                DataNormalizationMode.Raw
+            );
 
             var tradeLine = "40560000,1.0,1.5,1.0,1.5,90.0";
             using var memoryStream = new MemoryStream(Encoding.UTF8.GetBytes(tradeLine));
             using var stream = new StreamReader(memoryStream);
 
-            var unscaledTradeBarFromLine = (TradeBar)factory.Reader(config, tradeLine, new DateTime(2020, 9, 22), false);
-            var unscaledTradeBarFromStream = (TradeBar)factory.Reader(config, stream, new DateTime(2020, 9, 22), false);
+            var unscaledTradeBarFromLine = (TradeBar)
+                factory.Reader(config, tradeLine, new DateTime(2020, 9, 22), false);
+            var unscaledTradeBarFromStream = (TradeBar)
+                factory.Reader(config, stream, new DateTime(2020, 9, 22), false);
 
             Assert.AreEqual(new DateTime(2020, 9, 22, 11, 17, 0), unscaledTradeBarFromLine.EndTime);
             Assert.AreEqual(optionSymbol, unscaledTradeBarFromLine.Symbol);
@@ -192,7 +204,10 @@ namespace QuantConnect.Tests.Common.Data.Market
             Assert.AreEqual(1.5m, unscaledTradeBarFromLine.Close);
             Assert.AreEqual(90m, unscaledTradeBarFromLine.Volume);
 
-            Assert.AreEqual(new DateTime(2020, 9, 22, 11, 17, 0), unscaledTradeBarFromStream.EndTime);
+            Assert.AreEqual(
+                new DateTime(2020, 9, 22, 11, 17, 0),
+                unscaledTradeBarFromStream.EndTime
+            );
             Assert.AreEqual(optionSymbol, unscaledTradeBarFromStream.Symbol);
             Assert.AreEqual(1m, unscaledTradeBarFromStream.Open);
             Assert.AreEqual(1.5m, unscaledTradeBarFromStream.High);
@@ -208,7 +223,8 @@ namespace QuantConnect.Tests.Common.Data.Market
         {
             var factory = new TradeBar();
             var symbol = Symbols.CreateIndexSymbol("VIX");
-            var entry = MarketHoursDatabase.FromDataFolder()
+            var entry = MarketHoursDatabase
+                .FromDataFolder()
                 .GetEntry(symbol.ID.Market, symbol, symbol.SecurityType);
             var config = new SubscriptionDataConfig(
                 typeof(TradeBar),
@@ -222,13 +238,16 @@ namespace QuantConnect.Tests.Common.Data.Market
                 false,
                 TickType.Trade,
                 true,
-                DataNormalizationMode.Raw);
+                DataNormalizationMode.Raw
+            );
 
             using var memoryStream = new MemoryStream(Encoding.UTF8.GetBytes(tradeLine));
             using var stream = new StreamReader(memoryStream);
 
-            var fromLine = (TradeBar)factory.Reader(config, tradeLine, new DateTime(2020, 9, 22), false);
-            var fromStream = (TradeBar)factory.Reader(config, stream, new DateTime(2020, 9, 22), false);
+            var fromLine = (TradeBar)
+                factory.Reader(config, tradeLine, new DateTime(2020, 9, 22), false);
+            var fromStream = (TradeBar)
+                factory.Reader(config, stream, new DateTime(2020, 9, 22), false);
 
             var expectedEndTime = new DateTime(2020, 9, 22, 12, 0, 0);
             if (resolution == Resolution.Daily)

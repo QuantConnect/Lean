@@ -15,15 +15,15 @@
 */
 
 using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using NUnit.Framework;
 using QuantConnect.Data;
-using QuantConnect.Util;
-using QuantConnect.Interfaces;
 using QuantConnect.Data.Market;
-using System.Collections.Generic;
 using QuantConnect.DownloaderDataProvider.Launcher;
+using QuantConnect.Interfaces;
+using QuantConnect.Util;
 
 namespace QuantConnect.Tests.DownloaderDataProvider
 {
@@ -50,7 +50,10 @@ namespace QuantConnect.Tests.DownloaderDataProvider
         /// <summary>
         /// Temporary data download directory
         /// </summary>
-        private readonly string _dataDirectory = Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString());
+        private readonly string _dataDirectory = Path.Combine(
+            Path.GetTempPath(),
+            Guid.NewGuid().ToString()
+        );
 
         [TestCase(TickType.Trade, Resolution.Daily)]
         public void RunDownload(TickType tickType, Resolution resolution)
@@ -59,10 +62,25 @@ namespace QuantConnect.Tests.DownloaderDataProvider
             var tradeDate = new DateTime(2024, 01, 10);
             var endDate = new DateTime(2024, 02, 02);
             var symbol = Symbol.CreateCanonicalOption(Symbols.AAPL);
-            var downloadDataConfig = new DataDownloadConfig(tickType, SecurityType.Option, resolution, startDate, endDate, Market.USA, new List<Symbol>() { symbol });
+            var downloadDataConfig = new DataDownloadConfig(
+                tickType,
+                SecurityType.Option,
+                resolution,
+                startDate,
+                endDate,
+                Market.USA,
+                new List<Symbol>() { symbol }
+            );
 
-            var optionContracts = GenerateOptionContracts(Symbols.AAPL, 100, new DateTime(2024, 03, 16), expiryAddDay: 30);
-            var generateOptionContactFileName = optionContracts.ToList(contract => LeanData.GenerateZipEntryName(contract, contract.ID.Date, resolution, tickType));
+            var optionContracts = GenerateOptionContracts(
+                Symbols.AAPL,
+                100,
+                new DateTime(2024, 03, 16),
+                expiryAddDay: 30
+            );
+            var generateOptionContactFileName = optionContracts.ToList(contract =>
+                LeanData.GenerateZipEntryName(contract, contract.ID.Date, resolution, tickType)
+            );
 
             Assert.That(optionContracts.Distinct().Count(), Is.EqualTo(optionContracts.Count));
 
@@ -72,9 +90,17 @@ namespace QuantConnect.Tests.DownloaderDataProvider
 
             Program.RunDownload(downloader, downloadDataConfig, _dataDirectory, _cacheProvider);
 
-            var filePath = LeanData.GenerateZipFilePath(_dataDirectory, symbol, startDate, resolution, tickType);
+            var filePath = LeanData.GenerateZipFilePath(
+                _dataDirectory,
+                symbol,
+                startDate,
+                resolution,
+                tickType
+            );
             var fileNames = _cacheProvider.GetZipEntries(filePath);
-            var unZipData = QuantConnect.Compression.Unzip(filePath).ToDictionary(x => x.Key, x => x.Value.ToList());
+            var unZipData = QuantConnect
+                .Compression.Unzip(filePath)
+                .ToDictionary(x => x.Key, x => x.Value.ToList());
 
             Assert.AreEqual(fileNames.Count, unZipData.Count);
             Assert.AreEqual(fileNames.Count, optionContracts.Count);
@@ -87,22 +113,49 @@ namespace QuantConnect.Tests.DownloaderDataProvider
             }
         }
 
-        private static IEnumerable<BaseData> GenerateTradeBarByEachSymbol(IEnumerable<Symbol> symbols, DateTime tradeDateTime)
+        private static IEnumerable<BaseData> GenerateTradeBarByEachSymbol(
+            IEnumerable<Symbol> symbols,
+            DateTime tradeDateTime
+        )
         {
             var multiplier = 100;
             foreach (var option in symbols)
             {
-                yield return new TradeBar(tradeDateTime, option, multiplier, multiplier, multiplier, multiplier, multiplier);
+                yield return new TradeBar(
+                    tradeDateTime,
+                    option,
+                    multiplier,
+                    multiplier,
+                    multiplier,
+                    multiplier,
+                    multiplier
+                );
                 multiplier *= 2;
             }
         }
 
-        private static List<Symbol> GenerateOptionContracts(Symbol underlying, decimal strikePrice, DateTime expiryDate, int strikeMultiplier = 2, int expiryAddDay = 1, int count = 2)
+        private static List<Symbol> GenerateOptionContracts(
+            Symbol underlying,
+            decimal strikePrice,
+            DateTime expiryDate,
+            int strikeMultiplier = 2,
+            int expiryAddDay = 1,
+            int count = 2
+        )
         {
             var contracts = new List<Symbol>();
             for (int i = 0; i < count; i++)
             {
-                contracts.Add(Symbol.CreateOption(underlying, underlying.ID.Market, OptionStyle.American, OptionRight.Put, strikePrice, expiryDate));
+                contracts.Add(
+                    Symbol.CreateOption(
+                        underlying,
+                        underlying.ID.Market,
+                        OptionStyle.American,
+                        OptionRight.Put,
+                        strikePrice,
+                        expiryDate
+                    )
+                );
                 expiryDate = expiryDate.AddDays(expiryAddDay);
                 strikePrice *= strikeMultiplier;
             }
@@ -118,7 +171,9 @@ namespace QuantConnect.Tests.DownloaderDataProvider
                 Data = data;
             }
 
-            public IEnumerable<BaseData> Get(DataDownloaderGetParameters dataDownloaderGetParameters)
+            public IEnumerable<BaseData> Get(
+                DataDownloaderGetParameters dataDownloaderGetParameters
+            )
             {
                 return Data.Select(x => x);
             }

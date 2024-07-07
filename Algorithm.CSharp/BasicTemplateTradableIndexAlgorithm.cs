@@ -15,10 +15,10 @@
 */
 
 using System;
-using QuantConnect.Data;
 using System.Collections.Generic;
-using QuantConnect.Orders;
 using System.Linq;
+using QuantConnect.Data;
+using QuantConnect.Orders;
 
 namespace QuantConnect.Algorithm.CSharp
 {
@@ -61,35 +61,36 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// This is used by the regression test system to indicate what the expected statistics are from running the algorithm
         /// </summary>
-        public override Dictionary<string, string> ExpectedStatistics => new()
-        {
-            {"Total Orders", "5"},
-            {"Average Win", "7.08%"},
-            {"Average Loss", "-0.01%"},
-            {"Compounding Annual Return", "602.278%"},
-            {"Drawdown", "3.400%"},
-            {"Expectancy", "677.669"},
-            {"Start Equity", "1000000"},
-            {"End Equity", "1064342.82"},
-            {"Net Profit", "6.434%"},
-            {"Sharpe Ratio", "-4.563"},
-            {"Sortino Ratio", "0"},
-            {"Probabilistic Sharpe Ratio", "0.781%"},
-            {"Loss Rate", "50%"},
-            {"Win Rate", "50%"},
-            {"Profit-Loss Ratio", "1356.34"},
-            {"Alpha", "-0.169"},
-            {"Beta", "0.073"},
-            {"Annual Standard Deviation", "0.028"},
-            {"Annual Variance", "0.001"},
-            {"Information Ratio", "-6.684"},
-            {"Tracking Error", "0.099"},
-            {"Treynor Ratio", "-1.771"},
-            {"Total Fees", "$0.00"},
-            {"Estimated Strategy Capacity", "$3000.00"},
-            {"Lowest Capacity Asset", "SPX XL80P3GHDZXQ|SPX 31"},
-            {"Portfolio Turnover", "24.03%"},
-            {"OrderListHash", "fcd6fddb0a315e21095c2b35eb633e2b"}
-        };
+        public override Dictionary<string, string> ExpectedStatistics =>
+            new()
+            {
+                { "Total Orders", "5" },
+                { "Average Win", "7.08%" },
+                { "Average Loss", "-0.01%" },
+                { "Compounding Annual Return", "602.278%" },
+                { "Drawdown", "3.400%" },
+                { "Expectancy", "677.669" },
+                { "Start Equity", "1000000" },
+                { "End Equity", "1064342.82" },
+                { "Net Profit", "6.434%" },
+                { "Sharpe Ratio", "-4.563" },
+                { "Sortino Ratio", "0" },
+                { "Probabilistic Sharpe Ratio", "0.781%" },
+                { "Loss Rate", "50%" },
+                { "Win Rate", "50%" },
+                { "Profit-Loss Ratio", "1356.34" },
+                { "Alpha", "-0.169" },
+                { "Beta", "0.073" },
+                { "Annual Standard Deviation", "0.028" },
+                { "Annual Variance", "0.001" },
+                { "Information Ratio", "-6.684" },
+                { "Tracking Error", "0.099" },
+                { "Treynor Ratio", "-1.771" },
+                { "Total Fees", "$0.00" },
+                { "Estimated Strategy Capacity", "$3000.00" },
+                { "Lowest Capacity Asset", "SPX XL80P3GHDZXQ|SPX 31" },
+                { "Portfolio Turnover", "24.03%" },
+                { "OrderListHash", "fcd6fddb0a315e21095c2b35eb633e2b" }
+            };
     }
 }

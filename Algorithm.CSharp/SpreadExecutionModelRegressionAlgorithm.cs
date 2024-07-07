@@ -13,25 +13,27 @@
  * limitations under the License.
 */
 
-using QuantConnect.Orders;
-using QuantConnect.Interfaces;
 using System.Collections.Generic;
 using QuantConnect.Algorithm.Framework.Alphas;
 using QuantConnect.Algorithm.Framework.Execution;
 using QuantConnect.Algorithm.Framework.Portfolio;
 using QuantConnect.Algorithm.Framework.Selection;
+using QuantConnect.Interfaces;
+using QuantConnect.Orders;
 
 namespace QuantConnect.Algorithm.CSharp
 {
     /// <summary>
     /// Regression algorithm for the SpreadExecutionModel.
-    /// This algorithm shows how the execution model works to 
+    /// This algorithm shows how the execution model works to
     /// submit orders only when the price is on desirably tight spread.
     /// </summary>
     /// <meta name="tag" content="using data" />
     /// <meta name="tag" content="using quantconnect" />
     /// <meta name="tag" content="trading and orders" />
-    public class SpreadExecutionModelRegressionAlgorithm : QCAlgorithm, IRegressionAlgorithmDefinition
+    public class SpreadExecutionModelRegressionAlgorithm
+        : QCAlgorithm,
+            IRegressionAlgorithmDefinition
     {
         /// <summary>
         /// Initialise the data and resolution required, as well as the cash and start-end dates for your algorithm. All algorithms must initialized.
@@ -41,11 +43,14 @@ namespace QuantConnect.Algorithm.CSharp
             SetStartDate(2013, 10, 7);
             SetEndDate(2013, 10, 11);
 
-            SetUniverseSelection(new ManualUniverseSelectionModel(
-                QuantConnect.Symbol.Create("AIG", SecurityType.Equity, Market.USA),
-                QuantConnect.Symbol.Create("BAC", SecurityType.Equity, Market.USA),
-                QuantConnect.Symbol.Create("IBM", SecurityType.Equity, Market.USA),
-                QuantConnect.Symbol.Create("SPY", SecurityType.Equity, Market.USA)));
+            SetUniverseSelection(
+                new ManualUniverseSelectionModel(
+                    QuantConnect.Symbol.Create("AIG", SecurityType.Equity, Market.USA),
+                    QuantConnect.Symbol.Create("BAC", SecurityType.Equity, Market.USA),
+                    QuantConnect.Symbol.Create("IBM", SecurityType.Equity, Market.USA),
+                    QuantConnect.Symbol.Create("SPY", SecurityType.Equity, Market.USA)
+                )
+            );
 
             // using hourly rsi to generate more insights
             SetAlpha(new RsiAlphaModel(14, Resolution.Hour));
@@ -55,7 +60,10 @@ namespace QuantConnect.Algorithm.CSharp
             InsightsGenerated += OnInsightsGenerated;
         }
 
-        private void OnInsightsGenerated(IAlgorithm algorithm, GeneratedInsightsCollection eventdata)
+        private void OnInsightsGenerated(
+            IAlgorithm algorithm,
+            GeneratedInsightsCollection eventdata
+        )
         {
             Log($"{Time}: {string.Join(", ", eventdata)}");
         }
@@ -98,35 +106,36 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// This is used by the regression test system to indicate what the expected statistics are from running the algorithm
         /// </summary>
-        public Dictionary<string, string> ExpectedStatistics => new Dictionary<string, string>
-        {
-            {"Total Orders", "19"},
-            {"Average Win", "0.62%"},
-            {"Average Loss", "-0.19%"},
-            {"Compounding Annual Return", "398.867%"},
-            {"Drawdown", "1.500%"},
-            {"Expectancy", "1.395"},
-            {"Start Equity", "100000"},
-            {"End Equity", "102076.08"},
-            {"Net Profit", "2.076%"},
-            {"Sharpe Ratio", "10.465"},
-            {"Sortino Ratio", "21.499"},
-            {"Probabilistic Sharpe Ratio", "70.084%"},
-            {"Loss Rate", "44%"},
-            {"Win Rate", "56%"},
-            {"Profit-Loss Ratio", "3.31"},
-            {"Alpha", "0.533"},
-            {"Beta", "1.115"},
-            {"Annual Standard Deviation", "0.261"},
-            {"Annual Variance", "0.068"},
-            {"Information Ratio", "8.837"},
-            {"Tracking Error", "0.086"},
-            {"Treynor Ratio", "2.453"},
-            {"Total Fees", "$40.66"},
-            {"Estimated Strategy Capacity", "$1900000.00"},
-            {"Lowest Capacity Asset", "IBM R735QTJ8XC9X"},
-            {"Portfolio Turnover", "146.73%"},
-            {"OrderListHash", "36ab6f7236250f7a064b77af9b4870c4"}
-        };
+        public Dictionary<string, string> ExpectedStatistics =>
+            new Dictionary<string, string>
+            {
+                { "Total Orders", "19" },
+                { "Average Win", "0.62%" },
+                { "Average Loss", "-0.19%" },
+                { "Compounding Annual Return", "398.867%" },
+                { "Drawdown", "1.500%" },
+                { "Expectancy", "1.395" },
+                { "Start Equity", "100000" },
+                { "End Equity", "102076.08" },
+                { "Net Profit", "2.076%" },
+                { "Sharpe Ratio", "10.465" },
+                { "Sortino Ratio", "21.499" },
+                { "Probabilistic Sharpe Ratio", "70.084%" },
+                { "Loss Rate", "44%" },
+                { "Win Rate", "56%" },
+                { "Profit-Loss Ratio", "3.31" },
+                { "Alpha", "0.533" },
+                { "Beta", "1.115" },
+                { "Annual Standard Deviation", "0.261" },
+                { "Annual Variance", "0.068" },
+                { "Information Ratio", "8.837" },
+                { "Tracking Error", "0.086" },
+                { "Treynor Ratio", "2.453" },
+                { "Total Fees", "$40.66" },
+                { "Estimated Strategy Capacity", "$1900000.00" },
+                { "Lowest Capacity Asset", "IBM R735QTJ8XC9X" },
+                { "Portfolio Turnover", "146.73%" },
+                { "OrderListHash", "36ab6f7236250f7a064b77af9b4870c4" }
+            };
     }
 }

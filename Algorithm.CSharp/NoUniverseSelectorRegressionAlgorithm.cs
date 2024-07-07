@@ -13,11 +13,11 @@
  * limitations under the License.
 */
 
+using System.Collections.Generic;
 using System.Linq;
 using QuantConnect.Data;
-using QuantConnect.Interfaces;
-using System.Collections.Generic;
 using QuantConnect.Data.UniverseSelection;
+using QuantConnect.Interfaces;
 
 namespace QuantConnect.Algorithm.CSharp
 {
@@ -43,7 +43,8 @@ namespace QuantConnect.Algorithm.CSharp
         public void OnData(Slice slice)
         {
             // if we have no changes, do nothing
-            if (_changes == SecurityChanges.None) return;
+            if (_changes == SecurityChanges.None)
+                return;
 
             // liquidate removed securities
             foreach (var security in _changes.RemovedSecurities)
@@ -100,35 +101,36 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// This is used by the regression test system to indicate what the expected statistics are from running the algorithm
         /// </summary>
-        public Dictionary<string, string> ExpectedStatistics => new Dictionary<string, string>
-        {
-            {"Total Orders", "15"},
-            {"Average Win", "0%"},
-            {"Average Loss", "0%"},
-            {"Compounding Annual Return", "-22.583%"},
-            {"Drawdown", "1.300%"},
-            {"Expectancy", "0"},
-            {"Start Equity", "100000"},
-            {"End Equity", "99440.55"},
-            {"Net Profit", "-0.559%"},
-            {"Sharpe Ratio", "-2.196"},
-            {"Sortino Ratio", "-1.813"},
-            {"Probabilistic Sharpe Ratio", "28.104%"},
-            {"Loss Rate", "0%"},
-            {"Win Rate", "0%"},
-            {"Profit-Loss Ratio", "0"},
-            {"Alpha", "-0.529"},
-            {"Beta", "0.923"},
-            {"Annual Standard Deviation", "0.086"},
-            {"Annual Variance", "0.007"},
-            {"Information Ratio", "-14.203"},
-            {"Tracking Error", "0.039"},
-            {"Treynor Ratio", "-0.204"},
-            {"Total Fees", "$17.95"},
-            {"Estimated Strategy Capacity", "$170000.00"},
-            {"Lowest Capacity Asset", "BNO UN3IMQ2JU1YD"},
-            {"Portfolio Turnover", "14.03%"},
-            {"OrderListHash", "7cda92bdfaa39f982ff7be895731061b"}
-        };
+        public Dictionary<string, string> ExpectedStatistics =>
+            new Dictionary<string, string>
+            {
+                { "Total Orders", "15" },
+                { "Average Win", "0%" },
+                { "Average Loss", "0%" },
+                { "Compounding Annual Return", "-22.583%" },
+                { "Drawdown", "1.300%" },
+                { "Expectancy", "0" },
+                { "Start Equity", "100000" },
+                { "End Equity", "99440.55" },
+                { "Net Profit", "-0.559%" },
+                { "Sharpe Ratio", "-2.196" },
+                { "Sortino Ratio", "-1.813" },
+                { "Probabilistic Sharpe Ratio", "28.104%" },
+                { "Loss Rate", "0%" },
+                { "Win Rate", "0%" },
+                { "Profit-Loss Ratio", "0" },
+                { "Alpha", "-0.529" },
+                { "Beta", "0.923" },
+                { "Annual Standard Deviation", "0.086" },
+                { "Annual Variance", "0.007" },
+                { "Information Ratio", "-14.203" },
+                { "Tracking Error", "0.039" },
+                { "Treynor Ratio", "-0.204" },
+                { "Total Fees", "$17.95" },
+                { "Estimated Strategy Capacity", "$170000.00" },
+                { "Lowest Capacity Asset", "BNO UN3IMQ2JU1YD" },
+                { "Portfolio Turnover", "14.03%" },
+                { "OrderListHash", "7cda92bdfaa39f982ff7be895731061b" }
+            };
     }
 }

@@ -14,13 +14,13 @@
 */
 
 using System;
-using Python.Runtime;
-using NUnit.Framework;
 using System.Threading;
-using QuantConnect.Orders;
+using NUnit.Framework;
+using Python.Runtime;
 using QuantConnect.Logging;
-using QuantConnect.Securities;
+using QuantConnect.Orders;
 using QuantConnect.Orders.Fees;
+using QuantConnect.Securities;
 using QuantConnect.Tests.Common.Securities;
 
 namespace QuantConnect.Tests.Python
@@ -47,7 +47,8 @@ namespace QuantConnect.Tests.Python
         {
             using (Py.GIL())
             {
-                var module = PyModule.FromString(Guid.NewGuid().ToString(),
+                var module = PyModule.FromString(
+                    Guid.NewGuid().ToString(),
                     @"
 from AlgorithmImports import *
 
@@ -72,11 +73,15 @@ class MakerTakerModel(FeeModel):
         else:
             fee_usd = self.maker * qty
 
-        return OrderFee(CashAmount(fee_usd, 'USD'))");
+        return OrderFee(CashAmount(fee_usd, 'USD'))"
+                );
 
                 module.GetAttr("jose").Invoke(_security.ToPython());
 
-                var parameters = new OrderFeeParameters(_security, new MarketOrder(_security.Symbol, 1, orderDateTime));
+                var parameters = new OrderFeeParameters(
+                    _security,
+                    new MarketOrder(_security.Symbol, 1, orderDateTime)
+                );
                 // warmup
                 var result = _security.FeeModel.GetOrderFee(parameters);
                 Assert.IsNotNull(result);
@@ -98,7 +103,8 @@ class MakerTakerModel(FeeModel):
                 Thread.Sleep(1000);
                 var end = GC.GetTotalMemory(true);
 
-                var message = $"Start: {start}. End {end}. Variation {((end - start) / (decimal)start * 100).RoundToSignificantDigits(2)}%";
+                var message =
+                    $"Start: {start}. End {end}. Variation {((end - start) / (decimal)start * 100).RoundToSignificantDigits(2)}%";
                 Log.Debug(message);
 
                 // 5% noise, leak was >10%

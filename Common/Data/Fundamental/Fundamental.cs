@@ -27,39 +27,43 @@ namespace QuantConnect.Data.Fundamental
         /// <summary>
         /// Gets the day's dollar volume for this symbol
         /// </summary>
-        public override double DollarVolume => FundamentalService.Get<double>(Time, Symbol.ID, FundamentalProperty.DollarVolume);
+        public override double DollarVolume =>
+            FundamentalService.Get<double>(Time, Symbol.ID, FundamentalProperty.DollarVolume);
 
         /// <summary>
         /// Gets the day's total volume
         /// </summary>
-        public override long Volume => FundamentalService.Get<long>(Time, Symbol.ID, FundamentalProperty.Volume);
+        public override long Volume =>
+            FundamentalService.Get<long>(Time, Symbol.ID, FundamentalProperty.Volume);
 
         /// <summary>
         /// Returns whether the symbol has fundamental data for the given date
         /// </summary>
-        public override bool HasFundamentalData => FundamentalService.Get<bool>(Time, Symbol.ID, FundamentalProperty.HasFundamentalData);
+        public override bool HasFundamentalData =>
+            FundamentalService.Get<bool>(Time, Symbol.ID, FundamentalProperty.HasFundamentalData);
 
         /// <summary>
         /// Gets the price factor for the given date
         /// </summary>
-        public override decimal PriceFactor => FundamentalService.Get<decimal>(Time, Symbol.ID, FundamentalProperty.PriceFactor);
+        public override decimal PriceFactor =>
+            FundamentalService.Get<decimal>(Time, Symbol.ID, FundamentalProperty.PriceFactor);
 
         /// <summary>
         /// Gets the split factor for the given date
         /// </summary>
-        public override decimal SplitFactor => FundamentalService.Get<decimal>(Time, Symbol.ID, FundamentalProperty.SplitFactor);
+        public override decimal SplitFactor =>
+            FundamentalService.Get<decimal>(Time, Symbol.ID, FundamentalProperty.SplitFactor);
 
         /// <summary>
         /// Gets the raw price
         /// </summary>
-        public override decimal Value => FundamentalService.Get<decimal>(Time, Symbol.ID, FundamentalProperty.Value);
+        public override decimal Value =>
+            FundamentalService.Get<decimal>(Time, Symbol.ID, FundamentalProperty.Value);
 
         /// <summary>
         /// Creates a new empty instance
         /// </summary>
-        public Fundamental()
-        {
-        }
+        public Fundamental() { }
 
         /// <summary>
         /// Creates a new instance
@@ -67,17 +71,30 @@ namespace QuantConnect.Data.Fundamental
         /// <param name="time">The current time</param>
         /// <param name="symbol">The associated symbol</param>
         public Fundamental(DateTime time, Symbol symbol)
-            : base(time, symbol)
-        {
-        }
+            : base(time, symbol) { }
 
         /// <summary>
         /// Return the URL string source of the file. This will be converted to a stream
         /// </summary>
-        public override SubscriptionDataSource GetSource(SubscriptionDataConfig config, DateTime date, bool isLiveMode)
+        public override SubscriptionDataSource GetSource(
+            SubscriptionDataConfig config,
+            DateTime date,
+            bool isLiveMode
+        )
         {
-            var path = Path.Combine(Globals.DataFolder, "equity", config.Market, "fundamental", "coarse", $"{date:yyyyMMdd}.csv");
-            return new SubscriptionDataSource(path, SubscriptionTransportMedium.LocalFile, FileFormat.Csv);
+            var path = Path.Combine(
+                Globals.DataFolder,
+                "equity",
+                config.Market,
+                "fundamental",
+                "coarse",
+                $"{date:yyyyMMdd}.csv"
+            );
+            return new SubscriptionDataSource(
+                path,
+                SubscriptionTransportMedium.LocalFile,
+                FileFormat.Csv
+            );
         }
 
         /// <summary>
@@ -88,7 +105,12 @@ namespace QuantConnect.Data.Fundamental
         /// <param name="date">The current time</param>
         /// <param name="isLiveMode">True if live mode</param>
         /// <returns>A new instance or null</returns>
-        public override BaseData Reader(SubscriptionDataConfig config, string line, DateTime date, bool isLiveMode)
+        public override BaseData Reader(
+            SubscriptionDataConfig config,
+            string line,
+            DateTime date,
+            bool isLiveMode
+        )
         {
             try
             {

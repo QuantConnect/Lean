@@ -18,9 +18,9 @@ using System;
 using System.Collections.Generic;
 using QuantConnect.Data;
 using QuantConnect.Data.Market;
-using QuantConnect.Orders;
-using QuantConnect.Interfaces;
 using QuantConnect.Data.UniverseSelection;
+using QuantConnect.Interfaces;
+using QuantConnect.Orders;
 
 namespace QuantConnect.Algorithm.CSharp
 {
@@ -43,9 +43,9 @@ namespace QuantConnect.Algorithm.CSharp
         /// </summary>
         public override void Initialize()
         {
-            SetStartDate(2007, 05, 16);  //Set Start Date
-            SetEndDate(2007, 05, 25);    //Set End Date
-            SetCash(100000);             //Set Strategy Cash
+            SetStartDate(2007, 05, 16); //Set Start Date
+            SetEndDate(2007, 05, 25); //Set End Date
+            SetCash(100000); //Set Strategy Cash
             // Find more symbols here: http://quantconnect.com/data
             AddSecurity(SecurityType.Equity, "AAA.1", Resolution.Daily);
             AddSecurity(SecurityType.Equity, "SPY", Resolution.Daily);
@@ -68,7 +68,9 @@ namespace QuantConnect.Algorithm.CSharp
             {
                 var symbol = kvp.Key;
                 var tradeBar = kvp.Value;
-                Debug($"OnData(Slice): {Time}: {symbol}: {tradeBar.Close.ToStringInvariant("0.00")}");
+                Debug(
+                    $"OnData(Slice): {Time}: {symbol}: {tradeBar.Close.ToStringInvariant("0.00")}"
+                );
             }
 
             // the slice can also contain delisting data: data.Delistings in a dictionary string->Delisting
@@ -80,7 +82,9 @@ namespace QuantConnect.Algorithm.CSharp
             }
             if (!aaa.IsDelisted && !aaa.IsTradable)
             {
-                throw new RegressionTestException("Securities must be marked as tradable until they're delisted or removed from the universe");
+                throw new RegressionTestException(
+                    "Securities must be marked as tradable until they're delisted or removed from the universe"
+                );
             }
 
             foreach (var kvp in slice.Delistings)
@@ -90,7 +94,9 @@ namespace QuantConnect.Algorithm.CSharp
                 if (delisting.Type == DelistingType.Warning)
                 {
                     _receivedDelistedWarningEvent = true;
-                    Debug($"OnData(Delistings): {Time}: {symbol} will be delisted at end of day today.");
+                    Debug(
+                        $"OnData(Delistings): {Time}: {symbol} will be delisted at end of day today."
+                    );
 
                     // liquidate on delisting warning
                     SetHoldings(symbol, 0);
@@ -130,15 +136,21 @@ namespace QuantConnect.Algorithm.CSharp
             }
             if (!_receivedDelistedWarningEvent)
             {
-                throw new RegressionTestException("Did not receive expected delisted warning event");
+                throw new RegressionTestException(
+                    "Did not receive expected delisted warning event"
+                );
             }
             if (_dataCount != 13)
             {
-                throw new RegressionTestException($"Unexpected data count {_dataCount}. Expected 13");
+                throw new RegressionTestException(
+                    $"Unexpected data count {_dataCount}. Expected 13"
+                );
             }
             if (_receivedSecurityChangesEvent != 1)
             {
-                throw new RegressionTestException($"Did not receive expected security changes removal! Got {_receivedSecurityChangesEvent}");
+                throw new RegressionTestException(
+                    $"Did not receive expected security changes removal! Got {_receivedSecurityChangesEvent}"
+                );
             }
         }
 
@@ -170,35 +182,36 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// This is used by the regression test system to indicate what the expected statistics are from running the algorithm
         /// </summary>
-        public Dictionary<string, string> ExpectedStatistics => new Dictionary<string, string>
-        {
-            {"Total Orders", "2"},
-            {"Average Win", "0%"},
-            {"Average Loss", "-5.58%"},
-            {"Compounding Annual Return", "-87.694%"},
-            {"Drawdown", "5.600%"},
-            {"Expectancy", "-1"},
-            {"Start Equity", "100000"},
-            {"End Equity", "94421.6"},
-            {"Net Profit", "-5.578%"},
-            {"Sharpe Ratio", "-5.122"},
-            {"Sortino Ratio", "-6.562"},
-            {"Probabilistic Sharpe Ratio", "0.008%"},
-            {"Loss Rate", "100%"},
-            {"Win Rate", "0%"},
-            {"Profit-Loss Ratio", "0"},
-            {"Alpha", "-0.739"},
-            {"Beta", "-0.877"},
-            {"Annual Standard Deviation", "0.142"},
-            {"Annual Variance", "0.02"},
-            {"Information Ratio", "-3.844"},
-            {"Tracking Error", "0.186"},
-            {"Treynor Ratio", "0.83"},
-            {"Total Fees", "$36.70"},
-            {"Estimated Strategy Capacity", "$65000.00"},
-            {"Lowest Capacity Asset", "AAA SEVKGI6HF885"},
-            {"Portfolio Turnover", "20.16%"},
-            {"OrderListHash", "e956792307b884e3c46e95b29c1563f6"}
-        };
+        public Dictionary<string, string> ExpectedStatistics =>
+            new Dictionary<string, string>
+            {
+                { "Total Orders", "2" },
+                { "Average Win", "0%" },
+                { "Average Loss", "-5.58%" },
+                { "Compounding Annual Return", "-87.694%" },
+                { "Drawdown", "5.600%" },
+                { "Expectancy", "-1" },
+                { "Start Equity", "100000" },
+                { "End Equity", "94421.6" },
+                { "Net Profit", "-5.578%" },
+                { "Sharpe Ratio", "-5.122" },
+                { "Sortino Ratio", "-6.562" },
+                { "Probabilistic Sharpe Ratio", "0.008%" },
+                { "Loss Rate", "100%" },
+                { "Win Rate", "0%" },
+                { "Profit-Loss Ratio", "0" },
+                { "Alpha", "-0.739" },
+                { "Beta", "-0.877" },
+                { "Annual Standard Deviation", "0.142" },
+                { "Annual Variance", "0.02" },
+                { "Information Ratio", "-3.844" },
+                { "Tracking Error", "0.186" },
+                { "Treynor Ratio", "0.83" },
+                { "Total Fees", "$36.70" },
+                { "Estimated Strategy Capacity", "$65000.00" },
+                { "Lowest Capacity Asset", "AAA SEVKGI6HF885" },
+                { "Portfolio Turnover", "20.16%" },
+                { "OrderListHash", "e956792307b884e3c46e95b29c1563f6" }
+            };
     }
 }

@@ -24,21 +24,30 @@ namespace QuantConnect.Orders.Fees
     /// </summary>
     public class AlphaStreamsFeeModel : FeeModel
     {
-        private readonly Dictionary<string, EquityFee> _equityFee =
-            new Dictionary<string, EquityFee> {
-                { Market.USA, new EquityFee("USD", feePerShare: 0.005m, minimumFee: 1, maximumFeeRate: 0.005m) }
-            };
+        private readonly Dictionary<string, EquityFee> _equityFee = new Dictionary<
+            string,
+            EquityFee
+        >
+        {
+            {
+                Market.USA,
+                new EquityFee("USD", feePerShare: 0.005m, minimumFee: 1, maximumFeeRate: 0.005m)
+            }
+        };
 
-        private readonly IDictionary<SecurityType, decimal> _feeRates = new Dictionary<SecurityType, decimal>
+        private readonly IDictionary<SecurityType, decimal> _feeRates = new Dictionary<
+            SecurityType,
+            decimal
+        >
         {
             // Commission
-            {SecurityType.Forex, 0.000002m},
+            { SecurityType.Forex, 0.000002m },
             // Commission plus clearing fee
-            {SecurityType.Future, 0.4m + 0.1m},
-            {SecurityType.FutureOption, 0.4m + 0.1m},
-            {SecurityType.Option, 0.4m + 0.1m},
-            {SecurityType.IndexOption, 0.4m + 0.1m},
-            {SecurityType.Cfd, 0m}
+            { SecurityType.Future, 0.4m + 0.1m },
+            { SecurityType.FutureOption, 0.4m + 0.1m },
+            { SecurityType.Option, 0.4m + 0.1m },
+            { SecurityType.IndexOption, 0.4m + 0.1m },
+            { SecurityType.Cfd, 0m }
         };
         private const decimal _makerFee = 0.001m;
         private const decimal _takerFee = 0.002m;
@@ -71,26 +80,35 @@ namespace QuantConnect.Orders.Fees
                 case SecurityType.FutureOption:
                 case SecurityType.Cfd:
                     _feeRates.TryGetValue(security.Type, out feeRate);
-                    return new OrderFee(new CashAmount(feeRate * order.AbsoluteQuantity, Currencies.USD));
+                    return new OrderFee(
+                        new CashAmount(feeRate * order.AbsoluteQuantity, Currencies.USD)
+                    );
 
                 case SecurityType.Forex:
                     _feeRates.TryGetValue(security.Type, out feeRate);
-                    return new OrderFee(new CashAmount(feeRate * Math.Abs(order.GetValue(security)), Currencies.USD));
+                    return new OrderFee(
+                        new CashAmount(feeRate * Math.Abs(order.GetValue(security)), Currencies.USD)
+                    );
 
                 case SecurityType.Crypto:
                     decimal fee = _takerFee;
                     var props = order.Properties as BitfinexOrderProperties;
 
-                    if (order.Type == OrderType.Limit &&
-                        props?.Hidden != true &&
-                        (props?.PostOnly == true || !order.IsMarketable))
+                    if (
+                        order.Type == OrderType.Limit
+                        && props?.Hidden != true
+                        && (props?.PostOnly == true || !order.IsMarketable)
+                    )
                     {
                         // limit order posted to the order book
                         fee = _makerFee;
                     }
 
                     // get order value in quote currency
-                    var unitPrice = order.Direction == OrderDirection.Buy ? security.AskPrice : security.BidPrice;
+                    var unitPrice =
+                        order.Direction == OrderDirection.Buy
+                            ? security.AskPrice
+                            : security.BidPrice;
                     if (order.Type == OrderType.Limit)
                     {
                         // limit order posted to the order book
@@ -100,16 +118,21 @@ namespace QuantConnect.Orders.Fees
                     unitPrice *= security.SymbolProperties.ContractMultiplier;
 
                     // apply fee factor, currently we do not model 30-day volume, so we use the first tier
-                    return new OrderFee(new CashAmount(
-                        unitPrice * order.AbsoluteQuantity * fee,
-                        security.QuoteCurrency.Symbol));
+                    return new OrderFee(
+                        new CashAmount(
+                            unitPrice * order.AbsoluteQuantity * fee,
+                            security.QuoteCurrency.Symbol
+                        )
+                    );
 
                 // Use the IB fee model
                 case SecurityType.Equity:
                     EquityFee equityFee;
                     if (!_equityFee.TryGetValue(market, out equityFee))
                     {
-                        throw new KeyNotFoundException(Messages.AlphaStreamsFeeModel.UnexpectedEquityMarket(market));
+                        throw new KeyNotFoundException(
+                            Messages.AlphaStreamsFeeModel.UnexpectedEquityMarket(market)
+                        );
                     }
                     var tradeValue = Math.Abs(order.GetValue(security));
 
@@ -132,7 +155,9 @@ namespace QuantConnect.Orders.Fees
 
                 default:
                     // unsupported security type
-                    throw new ArgumentException(Messages.FeeModel.UnsupportedSecurityType(security));
+                    throw new ArgumentException(
+                        Messages.FeeModel.UnsupportedSecurityType(security)
+                    );
             }
         }
 
@@ -146,10 +171,12 @@ namespace QuantConnect.Orders.Fees
             public decimal MinimumFee { get; }
             public decimal MaximumFeeRate { get; }
 
-            public EquityFee(string currency,
+            public EquityFee(
+                string currency,
                 decimal feePerShare,
                 decimal minimumFee,
-                decimal maximumFeeRate)
+                decimal maximumFeeRate
+            )
             {
                 Currency = currency;
                 FeePerShare = feePerShare;

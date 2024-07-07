@@ -36,9 +36,17 @@ namespace QuantConnect.Tests.Indicators
         public void ComparesWithExternalDataRviSignal()
         {
             var rvi = CreateIndicator();
-            TestHelper.TestIndicator(rvi, TestFileName, "RVI_S",
-                (ind, expected) => Assert.AreEqual(expected, 
-                    (double) ((RelativeVigorIndex) ind).Signal.Current.Value, 0.06));
+            TestHelper.TestIndicator(
+                rvi,
+                TestFileName,
+                "RVI_S",
+                (ind, expected) =>
+                    Assert.AreEqual(
+                        expected,
+                        (double)((RelativeVigorIndex)ind).Signal.Current.Value,
+                        0.06
+                    )
+            );
         }
 
         [Test]
@@ -48,17 +56,17 @@ namespace QuantConnect.Tests.Indicators
             for (int i = 0; i < 13; i++)
             {
                 var tradeBar = new TradeBar
-                    {
-                        Open = 0m,
-                        Close = 0m,
-                        High = 0m,
-                        Low = 0m,
-                        Volume = 1
-                    };
-                    rvi.Update(tradeBar);
+                {
+                    Open = 0m,
+                    Close = 0m,
+                    High = 0m,
+                    Low = 0m,
+                    Volume = 1
+                };
+                rvi.Update(tradeBar);
             }
             Assert.AreEqual(rvi.Current.Value, 0m);
-            Assert.AreEqual(((RelativeVigorIndex) rvi).Signal.Current.Value, 0m);
+            Assert.AreEqual(((RelativeVigorIndex)rvi).Signal.Current.Value, 0m);
         }
     }
 }

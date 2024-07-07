@@ -40,7 +40,10 @@ namespace QuantConnect.Tests.Indicators
 
             double[] heads;
             var differencer = TimeSeriesIndicator.DifferenceSeries(1, test, out heads);
-            Assert.AreEqual(test.Sum(), TimeSeriesIndicator.InverseDifferencedSeries(differencer, heads).Sum());
+            Assert.AreEqual(
+                test.Sum(),
+                TimeSeriesIndicator.InverseDifferencedSeries(differencer, heads).Sum()
+            );
         }
 
         [Test]
@@ -48,7 +51,7 @@ namespace QuantConnect.Tests.Indicators
         {
             var test = EvenOddSeries(0, 1);
             var lags = TimeSeriesIndicator.LaggedSeries(1, test);
-            
+
             Assert.AreEqual(50, test.Sum());
             Assert.AreEqual(49d, lags.Sum());
         }
@@ -58,7 +61,7 @@ namespace QuantConnect.Tests.Indicators
         {
             var test = EvenOddSeries(0, 1, 50);
             var sums = TimeSeriesIndicator.CumulativeSum(test.ToList());
-            
+
             Assert.AreEqual(25, test.Sum());
             Assert.AreEqual(625, sums.Sum()); // From excel
         }

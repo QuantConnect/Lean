@@ -30,9 +30,7 @@ namespace QuantConnect.Python
         /// </summary>
         /// <param name="model">Represents a model that simulates market order slippage</param>
         public SlippageModelPythonWrapper(PyObject model)
-            : base(model)
-        {
-        }
+            : base(model) { }
 
         /// <summary>
         /// Slippage Model. Return a decimal cash slippage approximation on the order.

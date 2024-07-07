@@ -30,7 +30,9 @@ namespace QuantConnect.Algorithm.CSharp
     /// <meta name="tag" content="custom data" />
     /// <meta name="tag" content="crypto" />
     /// <meta name="tag" content="regression test" />
-    public class CustomDataPropertiesRegressionAlgorithm : QCAlgorithm, IRegressionAlgorithmDefinition
+    public class CustomDataPropertiesRegressionAlgorithm
+        : QCAlgorithm,
+            IRegressionAlgorithmDefinition
     {
         private string _ticker = "BTC";
         private Security _bitcoin;
@@ -56,13 +58,17 @@ namespace QuantConnect.Algorithm.CSharp
             //Verify our symbol properties were changed and loaded into this security
             if (_bitcoin.SymbolProperties != properties)
             {
-                throw new RegressionTestException("Failed to set and retrieve custom SymbolProperties for BTC");
+                throw new RegressionTestException(
+                    "Failed to set and retrieve custom SymbolProperties for BTC"
+                );
             }
 
             //Verify our exchange hours were changed and loaded into this security
             if (_bitcoin.Exchange.Hours != exchangeHours)
             {
-                throw new RegressionTestException("Failed to set and retrieve custom ExchangeHours for BTC");
+                throw new RegressionTestException(
+                    "Failed to set and retrieve custom ExchangeHours for BTC"
+                );
             }
 
             // For regression purposes on AddData overloads, this call is simply to ensure Lean can accept this
@@ -92,8 +98,12 @@ namespace QuantConnect.Algorithm.CSharp
         public override void OnEndOfAlgorithm()
         {
             // Reset our Symbol property value, for testing purposes.
-            SymbolPropertiesDatabase.SetEntry(Market.USA, MarketHoursDatabase.GetDatabaseSymbolKey(_bitcoin.Symbol), SecurityType.Base,
-                SymbolProperties.GetDefault("USD"));
+            SymbolPropertiesDatabase.SetEntry(
+                Market.USA,
+                MarketHoursDatabase.GetDatabaseSymbolKey(_bitcoin.Symbol),
+                SecurityType.Base,
+                SymbolProperties.GetDefault("USD")
+            );
         }
 
         /// <summary>
@@ -124,36 +134,37 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// This is used by the regression test system to indicate what the expected statistics are from running the algorithm
         /// </summary>
-        public Dictionary<string, string> ExpectedStatistics => new Dictionary<string, string>
-        {
-            {"Total Orders", "1"},
-            {"Average Win", "0%"},
-            {"Average Loss", "0%"},
-            {"Compounding Annual Return", "155.211%"},
-            {"Drawdown", "84.800%"},
-            {"Expectancy", "0"},
-            {"Start Equity", "100000"},
-            {"End Equity", "5223241.65"},
-            {"Net Profit", "5123.242%"},
-            {"Sharpe Ratio", "2.058"},
-            {"Sortino Ratio", "2.492"},
-            {"Probabilistic Sharpe Ratio", "68.833%"},
-            {"Loss Rate", "0%"},
-            {"Win Rate", "0%"},
-            {"Profit-Loss Ratio", "0"},
-            {"Alpha", "1.724"},
-            {"Beta", "0.043"},
-            {"Annual Standard Deviation", "0.841"},
-            {"Annual Variance", "0.707"},
-            {"Information Ratio", "1.902"},
-            {"Tracking Error", "0.848"},
-            {"Treynor Ratio", "40.293"},
-            {"Total Fees", "$0.00"},
-            {"Estimated Strategy Capacity", "$0"},
-            {"Lowest Capacity Asset", "BTC.Bitcoin 2S"},
-            {"Portfolio Turnover", "0.06%"},
-            {"OrderListHash", "999305e00ec9861f5ff261794e81213d"}
-        };
+        public Dictionary<string, string> ExpectedStatistics =>
+            new Dictionary<string, string>
+            {
+                { "Total Orders", "1" },
+                { "Average Win", "0%" },
+                { "Average Loss", "0%" },
+                { "Compounding Annual Return", "155.211%" },
+                { "Drawdown", "84.800%" },
+                { "Expectancy", "0" },
+                { "Start Equity", "100000" },
+                { "End Equity", "5223241.65" },
+                { "Net Profit", "5123.242%" },
+                { "Sharpe Ratio", "2.058" },
+                { "Sortino Ratio", "2.492" },
+                { "Probabilistic Sharpe Ratio", "68.833%" },
+                { "Loss Rate", "0%" },
+                { "Win Rate", "0%" },
+                { "Profit-Loss Ratio", "0" },
+                { "Alpha", "1.724" },
+                { "Beta", "0.043" },
+                { "Annual Standard Deviation", "0.841" },
+                { "Annual Variance", "0.707" },
+                { "Information Ratio", "1.902" },
+                { "Tracking Error", "0.848" },
+                { "Treynor Ratio", "40.293" },
+                { "Total Fees", "$0.00" },
+                { "Estimated Strategy Capacity", "$0" },
+                { "Lowest Capacity Asset", "BTC.Bitcoin 2S" },
+                { "Portfolio Turnover", "0.06%" },
+                { "OrderListHash", "999305e00ec9861f5ff261794e81213d" }
+            };
 
         /// <summary>
         /// Custom Data Type: Bitcoin data from Quandl - http://www.quandl.com/help/api-for-bitcoin-data
@@ -162,20 +173,28 @@ namespace QuantConnect.Algorithm.CSharp
         {
             [JsonProperty("timestamp")]
             public int Timestamp { get; set; }
+
             [JsonProperty("open")]
             public decimal Open { get; set; }
+
             [JsonProperty("high")]
             public decimal High { get; set; }
+
             [JsonProperty("low")]
             public decimal Low { get; set; }
+
             [JsonProperty("last")]
             public decimal Close { get; set; }
+
             [JsonProperty("bid")]
             public decimal Bid { get; set; }
+
             [JsonProperty("ask")]
             public decimal Ask { get; set; }
+
             [JsonProperty("vwap")]
             public decimal WeightedPrice { get; set; }
+
             [JsonProperty("volume")]
             public decimal VolumeBTC { get; set; }
             public decimal VolumeUSD { get; set; }
@@ -208,16 +227,26 @@ namespace QuantConnect.Algorithm.CSharp
             /// <param name="date">Date of this source file</param>
             /// <param name="isLiveMode">true if we're in live mode, false for backtesting mode</param>
             /// <returns>String URL of source file.</returns>
-            public override SubscriptionDataSource GetSource(SubscriptionDataConfig config, DateTime date, bool isLiveMode)
+            public override SubscriptionDataSource GetSource(
+                SubscriptionDataConfig config,
+                DateTime date,
+                bool isLiveMode
+            )
             {
                 if (isLiveMode)
                 {
-                    return new SubscriptionDataSource("https://www.bitstamp.net/api/ticker/", SubscriptionTransportMedium.Rest);
+                    return new SubscriptionDataSource(
+                        "https://www.bitstamp.net/api/ticker/",
+                        SubscriptionTransportMedium.Rest
+                    );
                 }
 
                 //return "http://my-ftp-server.com/futures-data-" + date.ToString("Ymd") + ".zip";
                 // OR simply return a fixed small data file. Large files will slow down your backtest
-                return new SubscriptionDataSource("https://www.quantconnect.com/api/v2/proxy/quandl/api/v3/datasets/BCHARTS/BITSTAMPUSD.csv?order=asc&api_key=WyAazVXnq7ATy_fefTqm", SubscriptionTransportMedium.RemoteFile);
+                return new SubscriptionDataSource(
+                    "https://www.quantconnect.com/api/v2/proxy/quandl/api/v3/datasets/BCHARTS/BITSTAMPUSD.csv?order=asc&api_key=WyAazVXnq7ATy_fefTqm",
+                    SubscriptionTransportMedium.RemoteFile
+                );
             }
 
             /// <summary>
@@ -230,7 +259,12 @@ namespace QuantConnect.Algorithm.CSharp
             /// <param name="date">Current date we're requesting. This allows you to break up the data source into daily files.</param>
             /// <param name="isLiveMode">true if we're in live mode, false for backtesting mode</param>
             /// <returns>New Bitcoin Object which extends BaseData.</returns>
-            public override BaseData Reader(SubscriptionDataConfig config, string line, DateTime date, bool isLiveMode)
+            public override BaseData Reader(
+                SubscriptionDataConfig config,
+                string line,
+                DateTime date,
+                bool isLiveMode
+            )
             {
                 var coin = new Bitcoin();
                 if (isLiveMode)
@@ -243,7 +277,9 @@ namespace QuantConnect.Algorithm.CSharp
                         coin.EndTime = DateTime.UtcNow.ConvertFromUtc(config.ExchangeTimeZone);
                         coin.Value = coin.Close;
                     }
-                    catch { /* Do nothing, possible error in json decoding */ }
+                    catch
+                    { /* Do nothing, possible error in json decoding */
+                    }
                     return coin;
                 }
 
@@ -264,7 +300,9 @@ namespace QuantConnect.Algorithm.CSharp
                     coin.WeightedPrice = Convert.ToDecimal(data[7], CultureInfo.InvariantCulture);
                     coin.Value = coin.Close;
                 }
-                catch { /* Do nothing, skip first title row */ }
+                catch
+                { /* Do nothing, skip first title row */
+                }
 
                 return coin;
             }

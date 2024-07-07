@@ -56,7 +56,11 @@ namespace QuantConnect.Indicators
         /// <summary>
         /// Gets a flag indicating when this indicator is ready and fully initialized
         /// </summary>
-        public override bool IsReady => _standardDeviation.IsReady && LinearRegression.IsReady && UpperChannel.IsReady && LowerChannel.IsReady;
+        public override bool IsReady =>
+            _standardDeviation.IsReady
+            && LinearRegression.IsReady
+            && UpperChannel.IsReady
+            && LowerChannel.IsReady;
 
         /// <summary>
         /// Required period, in data points, for the indicator to be ready and fully initialized.
@@ -74,8 +78,14 @@ namespace QuantConnect.Indicators
         {
             _standardDeviation = new StandardDeviation(period);
             LinearRegression = new LeastSquaresMovingAverage(name + "_LinearRegression", period);
-            LowerChannel = LinearRegression.Minus(_standardDeviation.Times(k), name + "_LowerChannel");
-            UpperChannel = LinearRegression.Plus(_standardDeviation.Times(k), name + "_UpperChannel");
+            LowerChannel = LinearRegression.Minus(
+                _standardDeviation.Times(k),
+                name + "_LowerChannel"
+            );
+            UpperChannel = LinearRegression.Plus(
+                _standardDeviation.Times(k),
+                name + "_UpperChannel"
+            );
             WarmUpPeriod = period;
         }
 
@@ -85,9 +95,7 @@ namespace QuantConnect.Indicators
         /// <param name="period">The number of data points to hold in the window.</param>
         /// <param name="k">The number of standard deviations specifying the distance between the linear regression and upper or lower channel lines</param>
         public RegressionChannel(int period, decimal k)
-            : this($"RC({period},{k})", period, k)
-        {
-        }
+            : this($"RC({period},{k})", period, k) { }
 
         /// <summary>
         /// Computes the next value of this indicator from the given state

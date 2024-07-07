@@ -30,7 +30,9 @@ namespace QuantConnect.Securities.CryptoFuture
         /// Apply margin interest rates to the portfolio
         /// </summary>
         /// <param name="marginInterestRateParameters">The parameters to use</param>
-        public void ApplyMarginInterestRate(MarginInterestRateParameters marginInterestRateParameters)
+        public void ApplyMarginInterestRate(
+            MarginInterestRateParameters marginInterestRateParameters
+        )
         {
             var security = marginInterestRateParameters.Security;
             var time = marginInterestRateParameters.Time;
@@ -48,12 +50,12 @@ namespace QuantConnect.Securities.CryptoFuture
             }
 
             var marginInterest = cryptoFuture.Cache.GetData<MarginInterestRate>();
-            if(marginInterest == null)
+            if (marginInterest == null)
             {
                 return;
             }
 
-            while(time >= _nextFundingRateApplication)
+            while (time >= _nextFundingRateApplication)
             {
                 // When the funding rate is positive, the price of the perpetual contract is higher than the mark price,
                 // thus, traders who are long pay for short positions. Conversely, a negative funding rate indicates that perpetual
@@ -76,13 +78,15 @@ namespace QuantConnect.Securities.CryptoFuture
                 //      short position & positive rate
                 positionValue.Cash.AddAmount(funding);
 
-                _nextFundingRateApplication = GetNextFundingRateApplication(_nextFundingRateApplication);
+                _nextFundingRateApplication = GetNextFundingRateApplication(
+                    _nextFundingRateApplication
+                );
             }
         }
 
         private static DateTime GetNextFundingRateApplication(DateTime currentTime)
         {
-            if(currentTime.Hour >= 16)
+            if (currentTime.Hour >= 16)
             {
                 // tomorrow 00:00
                 return currentTime.Date.AddDays(1);

@@ -21,7 +21,9 @@ namespace QuantConnect.Indicators
     /// <summary>
     /// This indicator computes the n-period mean absolute deviation.
     /// </summary>
-    public class MeanAbsoluteDeviation : WindowIndicator<IndicatorDataPoint>, IIndicatorWarmUpPeriodProvider
+    public class MeanAbsoluteDeviation
+        : WindowIndicator<IndicatorDataPoint>,
+            IIndicatorWarmUpPeriodProvider
     {
         /// <summary>
         /// Gets the mean used to compute the deviation
@@ -35,9 +37,7 @@ namespace QuantConnect.Indicators
         /// </summary>
         /// <param name="period">The sample size of the standard deviation</param>
         public MeanAbsoluteDeviation(int period)
-            : this($"MAD({period})", period)
-        {
-        }
+            : this($"MAD({period})", period) { }
 
         /// <summary>
         /// Initializes a new instance of the MeanAbsoluteDeviation class with the specified period.
@@ -68,7 +68,10 @@ namespace QuantConnect.Indicators
         /// <param name="input">The input given to the indicator</param>
         /// <param name="window">The window for the input history</param>
         /// <returns>A new value for this indicator</returns>
-        protected override decimal ComputeNextValue(IReadOnlyWindow<IndicatorDataPoint> window, IndicatorDataPoint input)
+        protected override decimal ComputeNextValue(
+            IReadOnlyWindow<IndicatorDataPoint> window,
+            IndicatorDataPoint input
+        )
         {
             Mean.Update(input);
             return Samples < 2 ? 0m : window.Average(v => Math.Abs(v.Value - Mean.Current.Value));

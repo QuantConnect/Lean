@@ -15,10 +15,10 @@
 */
 
 using System;
-using System.Linq;
-using Python.Runtime;
-using Newtonsoft.Json;
 using System.Collections.Generic;
+using System.Linq;
+using Newtonsoft.Json;
+using Python.Runtime;
 using QuantConnect.Data.UniverseSelection;
 
 namespace QuantConnect.Data.Fundamental
@@ -26,7 +26,8 @@ namespace QuantConnect.Data.Fundamental
     /// <summary>
     /// Costs incurred in identifying areas that may warrant examination and in examining specific areas that are considered to have prospects of containing energy or metal reserves, including costs of drilling exploratory wells. Development expense is the capitalized costs incurred to obtain access to proved reserves and to provide facilities for extracting, treating, gathering and storing the energy and metal. Mineral property includes oil and gas wells, mines, and other natural deposits (including geothermal deposits). The payment for leasing those properties is called mineral property lease expense. Exploration expense is included in operation expenses for mining industry.
     /// </summary>
-    public class ExplorationDevelopmentAndMineralPropertyLeaseExpensesIncomeStatement : MultiPeriodField
+    public class ExplorationDevelopmentAndMineralPropertyLeaseExpensesIncomeStatement
+        : MultiPeriodField
     {
         /// <summary>
         /// The default period
@@ -37,30 +38,58 @@ namespace QuantConnect.Data.Fundamental
         /// Gets/sets the ThreeMonths period value for the field
         /// </summary>
         [JsonProperty("3M")]
-        public double ThreeMonths => FundamentalService.Get<double>(TimeProvider.GetUtcNow(), SecurityIdentifier, FundamentalProperty.FinancialStatements_IncomeStatement_ExplorationDevelopmentAndMineralPropertyLeaseExpenses_ThreeMonths);
+        public double ThreeMonths =>
+            FundamentalService.Get<double>(
+                TimeProvider.GetUtcNow(),
+                SecurityIdentifier,
+                FundamentalProperty.FinancialStatements_IncomeStatement_ExplorationDevelopmentAndMineralPropertyLeaseExpenses_ThreeMonths
+            );
 
         /// <summary>
         /// Gets/sets the SixMonths period value for the field
         /// </summary>
         [JsonProperty("6M")]
-        public double SixMonths => FundamentalService.Get<double>(TimeProvider.GetUtcNow(), SecurityIdentifier, FundamentalProperty.FinancialStatements_IncomeStatement_ExplorationDevelopmentAndMineralPropertyLeaseExpenses_SixMonths);
+        public double SixMonths =>
+            FundamentalService.Get<double>(
+                TimeProvider.GetUtcNow(),
+                SecurityIdentifier,
+                FundamentalProperty.FinancialStatements_IncomeStatement_ExplorationDevelopmentAndMineralPropertyLeaseExpenses_SixMonths
+            );
 
         /// <summary>
         /// Gets/sets the NineMonths period value for the field
         /// </summary>
         [JsonProperty("9M")]
-        public double NineMonths => FundamentalService.Get<double>(TimeProvider.GetUtcNow(), SecurityIdentifier, FundamentalProperty.FinancialStatements_IncomeStatement_ExplorationDevelopmentAndMineralPropertyLeaseExpenses_NineMonths);
+        public double NineMonths =>
+            FundamentalService.Get<double>(
+                TimeProvider.GetUtcNow(),
+                SecurityIdentifier,
+                FundamentalProperty.FinancialStatements_IncomeStatement_ExplorationDevelopmentAndMineralPropertyLeaseExpenses_NineMonths
+            );
 
         /// <summary>
         /// Gets/sets the TwelveMonths period value for the field
         /// </summary>
         [JsonProperty("12M")]
-        public double TwelveMonths => FundamentalService.Get<double>(TimeProvider.GetUtcNow(), SecurityIdentifier, FundamentalProperty.FinancialStatements_IncomeStatement_ExplorationDevelopmentAndMineralPropertyLeaseExpenses_TwelveMonths);
+        public double TwelveMonths =>
+            FundamentalService.Get<double>(
+                TimeProvider.GetUtcNow(),
+                SecurityIdentifier,
+                FundamentalProperty.FinancialStatements_IncomeStatement_ExplorationDevelopmentAndMineralPropertyLeaseExpenses_TwelveMonths
+            );
 
         /// <summary>
         /// Returns true if the field contains a value for the default period
         /// </summary>
-        public override bool HasValue => !BaseFundamentalDataProvider.IsNone(typeof(double), FundamentalService.Get<double>(TimeProvider.GetUtcNow(), SecurityIdentifier, FundamentalProperty.FinancialStatements_IncomeStatement_ExplorationDevelopmentAndMineralPropertyLeaseExpenses_TwelveMonths));
+        public override bool HasValue =>
+            !BaseFundamentalDataProvider.IsNone(
+                typeof(double),
+                FundamentalService.Get<double>(
+                    TimeProvider.GetUtcNow(),
+                    SecurityIdentifier,
+                    FundamentalProperty.FinancialStatements_IncomeStatement_ExplorationDevelopmentAndMineralPropertyLeaseExpenses_TwelveMonths
+                )
+            );
 
         /// <summary>
         /// Returns the default value for the field
@@ -69,7 +98,11 @@ namespace QuantConnect.Data.Fundamental
         {
             get
             {
-                var defaultValue = FundamentalService.Get<double>(TimeProvider.GetUtcNow(), SecurityIdentifier, FundamentalProperty.FinancialStatements_IncomeStatement_ExplorationDevelopmentAndMineralPropertyLeaseExpenses_TwelveMonths);
+                var defaultValue = FundamentalService.Get<double>(
+                    TimeProvider.GetUtcNow(),
+                    SecurityIdentifier,
+                    FundamentalProperty.FinancialStatements_IncomeStatement_ExplorationDevelopmentAndMineralPropertyLeaseExpenses_TwelveMonths
+                );
                 if (!BaseFundamentalDataProvider.IsNone(typeof(double), defaultValue))
                 {
                     return defaultValue;
@@ -85,9 +118,17 @@ namespace QuantConnect.Data.Fundamental
         public override IReadOnlyDictionary<string, double> GetPeriodValues()
         {
             var result = new Dictionary<string, double>();
-            foreach (var kvp in new[] { new Tuple<string, double>("3M",ThreeMonths), new Tuple<string, double>("6M",SixMonths), new Tuple<string, double>("9M",NineMonths), new Tuple<string, double>("12M",TwelveMonths) })
+            foreach (
+                var kvp in new[]
+                {
+                    new Tuple<string, double>("3M", ThreeMonths),
+                    new Tuple<string, double>("6M", SixMonths),
+                    new Tuple<string, double>("9M", NineMonths),
+                    new Tuple<string, double>("12M", TwelveMonths)
+                }
+            )
             {
-                if(!BaseFundamentalDataProvider.IsNone(typeof(double), kvp.Item2))
+                if (!BaseFundamentalDataProvider.IsNone(typeof(double), kvp.Item2))
                 {
                     result[kvp.Item1] = kvp.Item2;
                 }
@@ -100,20 +141,27 @@ namespace QuantConnect.Data.Fundamental
         /// </summary>
         /// <param name="period">The requested period</param>
         /// <returns>The value for the period</returns>
-        public override double GetPeriodValue(string period) => FundamentalService.Get<double>(TimeProvider.GetUtcNow(), SecurityIdentifier, Enum.Parse<FundamentalProperty>($"FinancialStatements_IncomeStatement_ExplorationDevelopmentAndMineralPropertyLeaseExpenses_{ConvertPeriod(period)}"));
+        public override double GetPeriodValue(string period) =>
+            FundamentalService.Get<double>(
+                TimeProvider.GetUtcNow(),
+                SecurityIdentifier,
+                Enum.Parse<FundamentalProperty>(
+                    $"FinancialStatements_IncomeStatement_ExplorationDevelopmentAndMineralPropertyLeaseExpenses_{ConvertPeriod(period)}"
+                )
+            );
 
         /// <summary>
         /// Creates a new empty instance
         /// </summary>
-        public ExplorationDevelopmentAndMineralPropertyLeaseExpensesIncomeStatement()
-        {
-        }
+        public ExplorationDevelopmentAndMineralPropertyLeaseExpensesIncomeStatement() { }
 
         /// <summary>
         /// Creates a new instance for the given time and security
         /// </summary>
-        public ExplorationDevelopmentAndMineralPropertyLeaseExpensesIncomeStatement(ITimeProvider timeProvider, SecurityIdentifier securityIdentifier) : base(timeProvider, securityIdentifier)
-        {
-        }
+        public ExplorationDevelopmentAndMineralPropertyLeaseExpensesIncomeStatement(
+            ITimeProvider timeProvider,
+            SecurityIdentifier securityIdentifier
+        )
+            : base(timeProvider, securityIdentifier) { }
     }
 }

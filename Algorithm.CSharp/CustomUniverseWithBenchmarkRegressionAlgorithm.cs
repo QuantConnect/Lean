@@ -24,7 +24,9 @@ namespace QuantConnect.Algorithm.CSharp
     /// <summary>
     /// Regression algorithm with a custom universe and benchmark, both using the same security.
     /// </summary>
-    public class CustomUniverseWithBenchmarkRegressionAlgorithm : QCAlgorithm, IRegressionAlgorithmDefinition
+    public class CustomUniverseWithBenchmarkRegressionAlgorithm
+        : QCAlgorithm,
+            IRegressionAlgorithmDefinition
     {
         private const int ExpectedLeverage = 2;
         private Symbol _spy;
@@ -47,12 +49,14 @@ namespace QuantConnect.Algorithm.CSharp
             _spy = AddEquity("SPY", Resolution.Hour).Symbol;
 
             // Minute resolution
-            AddUniverse("my-universe", x =>
+            AddUniverse(
+                "my-universe",
+                x =>
                 {
-                    if(x.Day % 2 == 0)
+                    if (x.Day % 2 == 0)
                     {
                         _universeSelected = true;
-                        return new List<string> {"SPY"};
+                        return new List<string> { "SPY" };
                     }
                     _universeSelected = false;
                     return Enumerable.Empty<string>();
@@ -63,11 +67,12 @@ namespace QuantConnect.Algorithm.CSharp
             SetBenchmark("SPY");
 
             Symbol symbol;
-            if (!SymbolCache.TryGetSymbol("SPY", out symbol)
-                || !ReferenceEquals(_spy, symbol))
+            if (!SymbolCache.TryGetSymbol("SPY", out symbol) || !ReferenceEquals(_spy, symbol))
             {
-                throw new RegressionTestException("We expected 'SPY' to be added to the Symbol cache," +
-                                    " since the algorithm is also using it");
+                throw new RegressionTestException(
+                    "We expected 'SPY' to be added to the Symbol cache,"
+                        + " since the algorithm is also using it"
+                );
             }
         }
 
@@ -83,30 +88,38 @@ namespace QuantConnect.Algorithm.CSharp
             var bar = slice.Bars.Values.Single();
             if (_universeSelected)
             {
-                if (bar.IsFillForward
-                    || bar.Period != TimeSpan.FromMinutes(1))
+                if (bar.IsFillForward || bar.Period != TimeSpan.FromMinutes(1))
                 {
                     // bar should always be the Minute resolution one here
                     throw new RegressionTestException("Unexpected Bar error");
                 }
-                if (_previousTime.Date == slice.Time.Date
-                    && (slice.Time - _previousTime) != TimeSpan.FromMinutes(1))
+                if (
+                    _previousTime.Date == slice.Time.Date
+                    && (slice.Time - _previousTime) != TimeSpan.FromMinutes(1)
+                )
                 {
-                    throw new RegressionTestException("For the same date expected data updates every 1 minute");
+                    throw new RegressionTestException(
+                        "For the same date expected data updates every 1 minute"
+                    );
                 }
             }
             else
             {
-                if (slice.Time.Minute == 0
-                    && _previousSecurityValue == security.Price)
+                if (slice.Time.Minute == 0 && _previousSecurityValue == security.Price)
                 {
-                    throw new RegressionTestException($"Security Price error. Price should change every new hour");
+                    throw new RegressionTestException(
+                        $"Security Price error. Price should change every new hour"
+                    );
                 }
-                if (slice.Time.Minute != 0
+                if (
+                    slice.Time.Minute != 0
                     && _previousSecurityValue != security.Price
-                    && security.IsTradable)
+                    && security.IsTradable
+                )
                 {
-                    throw new RegressionTestException($"Security Price error. Price should not change every minute");
+                    throw new RegressionTestException(
+                        $"Security Price error. Price should not change every minute"
+                    );
                 }
             }
             _previousSecurityValue = security.Price;
@@ -117,8 +130,10 @@ namespace QuantConnect.Algorithm.CSharp
             {
                 if (currentValue != _previousBenchmarkValue)
                 {
-                    throw new RegressionTestException($"Benchmark value error - expected: {_previousBenchmarkValue} {_previousTime}, actual: {currentValue} {slice.Time}. " +
-                                        "Benchmark value should only change when there is a change in hours");
+                    throw new RegressionTestException(
+                        $"Benchmark value error - expected: {_previousBenchmarkValue} {_previousTime}, actual: {currentValue} {slice.Time}. "
+                            + "Benchmark value should only change when there is a change in hours"
+                    );
                 }
             }
             else
@@ -131,8 +146,10 @@ namespace QuantConnect.Algorithm.CSharp
                         // there are two consecutive equal data points so we give it some room
                         if (_benchmarkPriceDidNotChange > 1)
                         {
-                            throw new RegressionTestException($"Benchmark value error - expected a new value, current {currentValue} {slice.Time}" +
-                                                "Benchmark value should change when there is a change in hours");
+                            throw new RegressionTestException(
+                                $"Benchmark value error - expected a new value, current {currentValue} {slice.Time}"
+                                    + "Benchmark value should change when there is a change in hours"
+                            );
                         }
                     }
                     else
@@ -147,7 +164,9 @@ namespace QuantConnect.Algorithm.CSharp
             // assert algorithm security is the correct one - not the internal one
             if (security.Leverage != ExpectedLeverage)
             {
-                throw new RegressionTestException($"Leverage error - expected: {ExpectedLeverage}, actual: {security.Leverage}");
+                throw new RegressionTestException(
+                    $"Leverage error - expected: {ExpectedLeverage}, actual: {security.Leverage}"
+                );
             }
         }
 
@@ -187,35 +206,36 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// This is used by the regression test system to indicate what the expected statistics are from running the algorithm
         /// </summary>
-        public Dictionary<string, string> ExpectedStatistics => new Dictionary<string, string>
-        {
-            {"Total Orders", "0"},
-            {"Average Win", "0%"},
-            {"Average Loss", "0%"},
-            {"Compounding Annual Return", "0%"},
-            {"Drawdown", "0%"},
-            {"Expectancy", "0"},
-            {"Start Equity", "100000"},
-            {"End Equity", "100000"},
-            {"Net Profit", "0%"},
-            {"Sharpe Ratio", "0"},
-            {"Sortino Ratio", "0"},
-            {"Probabilistic Sharpe Ratio", "0%"},
-            {"Loss Rate", "0%"},
-            {"Win Rate", "0%"},
-            {"Profit-Loss Ratio", "0"},
-            {"Alpha", "0"},
-            {"Beta", "0"},
-            {"Annual Standard Deviation", "0"},
-            {"Annual Variance", "0"},
-            {"Information Ratio", "-2.094"},
-            {"Tracking Error", "0.175"},
-            {"Treynor Ratio", "0"},
-            {"Total Fees", "$0.00"},
-            {"Estimated Strategy Capacity", "$0"},
-            {"Lowest Capacity Asset", ""},
-            {"Portfolio Turnover", "0%"},
-            {"OrderListHash", "d41d8cd98f00b204e9800998ecf8427e"}
-        };
+        public Dictionary<string, string> ExpectedStatistics =>
+            new Dictionary<string, string>
+            {
+                { "Total Orders", "0" },
+                { "Average Win", "0%" },
+                { "Average Loss", "0%" },
+                { "Compounding Annual Return", "0%" },
+                { "Drawdown", "0%" },
+                { "Expectancy", "0" },
+                { "Start Equity", "100000" },
+                { "End Equity", "100000" },
+                { "Net Profit", "0%" },
+                { "Sharpe Ratio", "0" },
+                { "Sortino Ratio", "0" },
+                { "Probabilistic Sharpe Ratio", "0%" },
+                { "Loss Rate", "0%" },
+                { "Win Rate", "0%" },
+                { "Profit-Loss Ratio", "0" },
+                { "Alpha", "0" },
+                { "Beta", "0" },
+                { "Annual Standard Deviation", "0" },
+                { "Annual Variance", "0" },
+                { "Information Ratio", "-2.094" },
+                { "Tracking Error", "0.175" },
+                { "Treynor Ratio", "0" },
+                { "Total Fees", "$0.00" },
+                { "Estimated Strategy Capacity", "$0" },
+                { "Lowest Capacity Asset", "" },
+                { "Portfolio Turnover", "0%" },
+                { "OrderListHash", "d41d8cd98f00b204e9800998ecf8427e" }
+            };
     }
 }

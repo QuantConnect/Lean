@@ -39,28 +39,25 @@ namespace QuantConnect.Algorithm.Framework.Selection
         /// <summary>
         /// Initializes a new instance of the MetalsETFUniverse class
         /// </summary>
-        public MetalsETFUniverse() :
-            base(
+        public MetalsETFUniverse()
+            : base(
                 "qc-metals-etf-basket",
                 new Dictionary<string, DateTime>()
                 {
-                    {"GLD", new DateTime(2004, 11, 18)},
-                    {"IAU", new DateTime(2005, 1, 28)},
-                    {"SLV", new DateTime(2006, 4, 28)},
-                    {"GDX", new DateTime(2006, 5, 22)},
-                    {"AGQ", new DateTime(2008, 12, 4)},
-                    {"GDXJ", new DateTime(2009, 11, 11)},
-                    {"PPLT", new DateTime(2010, 1, 8)},
-                    {"NUGT", new DateTime(2010, 12, 8)},
-                    {"DUST", new DateTime(2010, 12, 8)},
-                    {"USLV", new DateTime(2011, 10, 17)},
-                    {"UGLD", new DateTime(2011, 10, 17)},
-                    {"JNUG", new DateTime(2013, 10, 3)},
-                    {"JDST", new DateTime(2013, 10, 3)}
+                    { "GLD", new DateTime(2004, 11, 18) },
+                    { "IAU", new DateTime(2005, 1, 28) },
+                    { "SLV", new DateTime(2006, 4, 28) },
+                    { "GDX", new DateTime(2006, 5, 22) },
+                    { "AGQ", new DateTime(2008, 12, 4) },
+                    { "GDXJ", new DateTime(2009, 11, 11) },
+                    { "PPLT", new DateTime(2010, 1, 8) },
+                    { "NUGT", new DateTime(2010, 12, 8) },
+                    { "DUST", new DateTime(2010, 12, 8) },
+                    { "USLV", new DateTime(2011, 10, 17) },
+                    { "UGLD", new DateTime(2011, 10, 17) },
+                    { "JNUG", new DateTime(2013, 10, 3) },
+                    { "JDST", new DateTime(2013, 10, 3) }
                 }
-            )
-        {
-
-        }
+            ) { }
     }
 }

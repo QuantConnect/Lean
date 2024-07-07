@@ -65,7 +65,7 @@ namespace QuantConnect
         /// Provides a value large enough that we won't hit the limit, while small enough
         /// we can still do math against it without checking everywhere for <see cref="TimeSpan.MaxValue"/>
         /// </summary>
-        public static readonly TimeSpan MaxTimeSpan = TimeSpan.FromDays(1000*365);
+        public static readonly TimeSpan MaxTimeSpan = TimeSpan.FromDays(1000 * 365);
 
         /// <summary>
         /// One Year TimeSpan Period Constant
@@ -121,13 +121,19 @@ namespace QuantConnect
             /// Gets the universal time.
             /// </summary>
             /// <value>The universal time.</value>
-            public DateTime UniversalTime { get { return utcDateTime; } }
+            public DateTime UniversalTime
+            {
+                get { return utcDateTime; }
+            }
 
             /// <summary>
             /// Gets the time zone.
             /// </summary>
             /// <value>The time zone.</value>
-            public TimeZoneInfo TimeZone { get { return timeZone; } }
+            public TimeZoneInfo TimeZone
+            {
+                get { return timeZone; }
+            }
 
             /// <summary>
             /// Gets the local time.
@@ -135,10 +141,7 @@ namespace QuantConnect
             /// <value>The local time.</value>
             public DateTime LocalTime
             {
-                get
-                {
-                    return TimeZoneInfo.ConvertTime(utcDateTime, timeZone);
-                }
+                get { return TimeZoneInfo.ConvertTime(utcDateTime, timeZone); }
             }
         }
 
@@ -393,7 +396,7 @@ namespace QuantConnect
         /// <returns>The multiplied interval, such as 1s*5 = 5s</returns>
         public static TimeSpan Multiply(this TimeSpan interval, double multiplier)
         {
-            return TimeSpan.FromTicks((long) (interval.Ticks * multiplier));
+            return TimeSpan.FromTicks((long)(interval.Ticks * multiplier));
         }
 
         /// <summary>
@@ -407,35 +410,99 @@ namespace QuantConnect
             {
                 //First try the exact options:
                 DateTime date;
-                if (DateTime.TryParseExact(dateToParse, DateFormat.SixCharacter, CultureInfo.InvariantCulture, DateTimeStyles.None, out date))
+                if (
+                    DateTime.TryParseExact(
+                        dateToParse,
+                        DateFormat.SixCharacter,
+                        CultureInfo.InvariantCulture,
+                        DateTimeStyles.None,
+                        out date
+                    )
+                )
                 {
                     return date;
                 }
-                if (DateTime.TryParseExact(dateToParse, DateFormat.EightCharacter, CultureInfo.InvariantCulture, DateTimeStyles.None, out date))
+                if (
+                    DateTime.TryParseExact(
+                        dateToParse,
+                        DateFormat.EightCharacter,
+                        CultureInfo.InvariantCulture,
+                        DateTimeStyles.None,
+                        out date
+                    )
+                )
                 {
                     return date;
                 }
-                if (DateTime.TryParseExact(dateToParse, DateFormat.TwelveCharacter, CultureInfo.InvariantCulture, DateTimeStyles.None, out date))
+                if (
+                    DateTime.TryParseExact(
+                        dateToParse,
+                        DateFormat.TwelveCharacter,
+                        CultureInfo.InvariantCulture,
+                        DateTimeStyles.None,
+                        out date
+                    )
+                )
                 {
                     return date;
                 }
-                if (DateTime.TryParseExact(dateToParse.SafeSubstring(0, 19), DateFormat.JsonFormat, CultureInfo.InvariantCulture, DateTimeStyles.None, out date))
+                if (
+                    DateTime.TryParseExact(
+                        dateToParse.SafeSubstring(0, 19),
+                        DateFormat.JsonFormat,
+                        CultureInfo.InvariantCulture,
+                        DateTimeStyles.None,
+                        out date
+                    )
+                )
                 {
                     return date;
                 }
-                if (DateTime.TryParseExact(dateToParse, DateFormat.USShort, CultureInfo.InvariantCulture, DateTimeStyles.None, out date))
+                if (
+                    DateTime.TryParseExact(
+                        dateToParse,
+                        DateFormat.USShort,
+                        CultureInfo.InvariantCulture,
+                        DateTimeStyles.None,
+                        out date
+                    )
+                )
                 {
                     return date;
                 }
-                if (DateTime.TryParseExact(dateToParse, DateFormat.USShortDateOnly, CultureInfo.InvariantCulture, DateTimeStyles.None, out date))
+                if (
+                    DateTime.TryParseExact(
+                        dateToParse,
+                        DateFormat.USShortDateOnly,
+                        CultureInfo.InvariantCulture,
+                        DateTimeStyles.None,
+                        out date
+                    )
+                )
                 {
                     return date;
                 }
-                if (DateTime.TryParseExact(dateToParse, DateFormat.US, CultureInfo.InvariantCulture, DateTimeStyles.None, out date))
+                if (
+                    DateTime.TryParseExact(
+                        dateToParse,
+                        DateFormat.US,
+                        CultureInfo.InvariantCulture,
+                        DateTimeStyles.None,
+                        out date
+                    )
+                )
                 {
                     return date;
                 }
-                if (DateTime.TryParseExact(dateToParse, DateFormat.USDateOnly, CultureInfo.InvariantCulture, DateTimeStyles.None, out date))
+                if (
+                    DateTime.TryParseExact(
+                        dateToParse,
+                        DateFormat.USDateOnly,
+                        CultureInfo.InvariantCulture,
+                        DateTimeStyles.None,
+                        out date
+                    )
+                )
                 {
                     return date;
                 }
@@ -463,11 +530,27 @@ namespace QuantConnect
             {
                 //First try the exact options:
                 DateTime date;
-                if (DateTime.TryParseExact(dateToParse, DateFormat.FIX, CultureInfo.InvariantCulture, DateTimeStyles.None, out date))
+                if (
+                    DateTime.TryParseExact(
+                        dateToParse,
+                        DateFormat.FIX,
+                        CultureInfo.InvariantCulture,
+                        DateTimeStyles.None,
+                        out date
+                    )
+                )
                 {
                     return date;
                 }
-                if (DateTime.TryParseExact(dateToParse, DateFormat.FIXWithMillisecond, CultureInfo.InvariantCulture, DateTimeStyles.None, out date))
+                if (
+                    DateTime.TryParseExact(
+                        dateToParse,
+                        DateFormat.FIXWithMillisecond,
+                        CultureInfo.InvariantCulture,
+                        DateTimeStyles.None,
+                        out date
+                    )
+                )
                 {
                     return date;
                 }
@@ -486,7 +569,11 @@ namespace QuantConnect
         /// <param name="from">DateTime start date time</param>
         /// <param name="thru">DateTime end date time</param>
         /// <returns>Enumerable date time range</returns>
-        public static IEnumerable<DateTime> DateTimeRange(DateTime from, DateTime thru, TimeSpan step)
+        public static IEnumerable<DateTime> DateTimeRange(
+            DateTime from,
+            DateTime thru,
+            TimeSpan step
+        )
         {
             for (var dateTime = from; dateTime <= thru; dateTime = dateTime.Add(step))
                 yield return dateTime;
@@ -503,7 +590,6 @@ namespace QuantConnect
             return DateTimeRange(from.Date, thru.Date, TimeSpan.FromDays(1));
         }
 
-
         /// <summary>
         /// Define an enumerable date range of tradeable dates - skip the holidays and weekends when securities in this algorithm don't trade.
         /// </summary>
@@ -511,7 +597,11 @@ namespace QuantConnect
         /// <param name="from">Start date</param>
         /// <param name="thru">End date</param>
         /// <returns>Enumerable date range</returns>
-        public static IEnumerable<DateTime> EachTradeableDay(ICollection<Security> securities, DateTime from, DateTime thru)
+        public static IEnumerable<DateTime> EachTradeableDay(
+            ICollection<Security> securities,
+            DateTime from,
+            DateTime thru
+        )
         {
             for (var day = from.Date; day.Date <= thru.Date; day = day.AddDays(1))
             {
@@ -522,7 +612,6 @@ namespace QuantConnect
             }
         }
 
-
         /// <summary>
         /// Define an enumerable date range of tradeable dates - skip the holidays and weekends when securities in this algorithm don't trade.
         /// </summary>
@@ -530,11 +619,14 @@ namespace QuantConnect
         /// <param name="from">Start date</param>
         /// <param name="thru">End date</param>
         /// <returns>Enumerable date range</returns>
-        public static IEnumerable<DateTime> EachTradeableDay(Security security, DateTime from, DateTime thru)
+        public static IEnumerable<DateTime> EachTradeableDay(
+            Security security,
+            DateTime from,
+            DateTime thru
+        )
         {
             return EachTradeableDay(security.Exchange.Hours, from, thru);
         }
-
 
         /// <summary>
         /// Define an enumerable date range of tradeable dates - skip the holidays and weekends when securities in this algorithm don't trade.
@@ -543,7 +635,11 @@ namespace QuantConnect
         /// <param name="from">Start date</param>
         /// <param name="thru">End date</param>
         /// <returns>Enumerable date range</returns>
-        public static IEnumerable<DateTime> EachTradeableDay(SecurityExchangeHours exchange, DateTime from, DateTime thru)
+        public static IEnumerable<DateTime> EachTradeableDay(
+            SecurityExchangeHours exchange,
+            DateTime from,
+            DateTime thru
+        )
         {
             for (var day = from.Date; day.Date <= thru.Date; day = day.AddDays(1))
             {
@@ -567,7 +663,13 @@ namespace QuantConnect
         /// <param name="timeZone">The timezone to project the dates into (inclusive of the final day)</param>
         /// <param name="includeExtendedMarketHours">True to include extended market hours trading in the search, false otherwise</param>
         /// <returns></returns>
-        public static IEnumerable<DateTime> EachTradeableDayInTimeZone(SecurityExchangeHours exchange, DateTime from, DateTime thru, DateTimeZone timeZone, bool includeExtendedMarketHours = true)
+        public static IEnumerable<DateTime> EachTradeableDayInTimeZone(
+            SecurityExchangeHours exchange,
+            DateTime from,
+            DateTime thru,
+            DateTimeZone timeZone,
+            bool includeExtendedMarketHours = true
+        )
         {
             var currentExchangeTime = from;
             thru = thru.Date.AddDays(1); // we want to include the full thru date
@@ -577,7 +679,10 @@ namespace QuantConnect
                 var currentInTimeZone = currentExchangeTime.ConvertTo(exchange.TimeZone, timeZone);
                 var currentInTimeZoneEod = currentInTimeZone.Date.AddDays(1);
 
-                var currentExchangeTimeEod = currentInTimeZoneEod.ConvertTo(timeZone, exchange.TimeZone);
+                var currentExchangeTimeEod = currentInTimeZoneEod.ConvertTo(
+                    timeZone,
+                    exchange.TimeZone
+                );
 
                 // don't pass the end
                 if (currentExchangeTimeEod > thru)
@@ -586,7 +691,13 @@ namespace QuantConnect
                 }
 
                 // perform market open checks in the exchange time zone
-                if (exchange.IsOpen(currentExchangeTime, currentExchangeTimeEod, includeExtendedMarketHours))
+                if (
+                    exchange.IsOpen(
+                        currentExchangeTime,
+                        currentExchangeTimeEod,
+                        includeExtendedMarketHours
+                    )
+                )
                 {
                     yield return currentInTimeZone.Date;
                 }
@@ -607,7 +718,8 @@ namespace QuantConnect
             {
                 foreach (var security in securities)
                 {
-                    if (security.Exchange.DateIsOpen(day.Date)) return true;
+                    if (security.Exchange.DateIsOpen(day.Date))
+                        return true;
                 }
             }
             catch (Exception err)
@@ -617,7 +729,6 @@ namespace QuantConnect
             return false;
         }
 
-
         /// <summary>
         /// Could of the number of tradeable dates within this period.
         /// </summary>
@@ -625,10 +736,16 @@ namespace QuantConnect
         /// <param name="start">Start of Date Loop</param>
         /// <param name="finish">End of Date Loop</param>
         /// <returns>Number of dates</returns>
-        public static int TradeableDates(ICollection<Security> securities, DateTime start, DateTime finish)
+        public static int TradeableDates(
+            ICollection<Security> securities,
+            DateTime start,
+            DateTime finish
+        )
         {
             var count = 0;
-            Log.Trace(Invariant($"Time.TradeableDates(): {Messages.Time.SecurityCount(securities.Count)}"));
+            Log.Trace(
+                Invariant($"Time.TradeableDates(): {Messages.Time.SecurityCount(securities.Count)}")
+            );
             try
             {
                 foreach (var day in EachDay(start, finish))
@@ -656,7 +773,14 @@ namespace QuantConnect
         /// <param name="extendedMarketHours">True to allow extended market hours bars, otherwise false for only normal market hours</param>
         /// <param name="dataTimeZone">Timezone for this data</param>
         /// <returns>The start time that would provide the specified number of bars ending at the specified end time, rounded down by the requested bar size</returns>
-        public static DateTime GetStartTimeForTradeBars(SecurityExchangeHours exchangeHours, DateTime end, TimeSpan barSize, int barCount, bool extendedMarketHours, DateTimeZone dataTimeZone)
+        public static DateTime GetStartTimeForTradeBars(
+            SecurityExchangeHours exchangeHours,
+            DateTime end,
+            TimeSpan barSize,
+            int barCount,
+            bool extendedMarketHours,
+            DateTimeZone dataTimeZone
+        )
         {
             if (barSize <= TimeSpan.Zero)
             {
@@ -665,7 +789,7 @@ namespace QuantConnect
 
             // need to round down in data timezone because data is stored in this time zone
             var current = end.RoundDownInTimeZone(barSize, exchangeHours.TimeZone, dataTimeZone);
-            for (int i = 0; i < barCount;)
+            for (int i = 0; i < barCount; )
             {
                 var previous = current;
                 current = current - barSize;
@@ -687,7 +811,13 @@ namespace QuantConnect
         /// <param name="barCount">The number of bars requested</param>
         /// <param name="extendedMarketHours">True to allow extended market hours bars, otherwise false for only normal market hours</param>
         /// <returns>The start time that would provide the specified number of bars ending at the specified end time, rounded down by the requested bar size</returns>
-        public static DateTime GetEndTimeForTradeBars(SecurityExchangeHours exchangeHours, DateTime start, TimeSpan barSize, int barCount, bool extendedMarketHours)
+        public static DateTime GetEndTimeForTradeBars(
+            SecurityExchangeHours exchangeHours,
+            DateTime start,
+            TimeSpan barSize,
+            int barCount,
+            bool extendedMarketHours
+        )
         {
             if (barSize <= TimeSpan.Zero)
             {
@@ -697,7 +827,7 @@ namespace QuantConnect
             var current = start;
             if (barSize == OneDay)
             {
-                for (int i = 0; i < barCount;)
+                for (int i = 0; i < barCount; )
                 {
                     current = current + OneDay;
                     if (exchangeHours.IsDateOpen(current))
@@ -709,7 +839,7 @@ namespace QuantConnect
                 return current;
             }
 
-            for (int i = 0; i < barCount;)
+            for (int i = 0; i < barCount; )
             {
                 var previous = current;
                 current = current + barSize;
@@ -729,7 +859,12 @@ namespace QuantConnect
         /// <param name="end">The end time of the interval in the exchange time zone</param>
         /// <param name="barSize">The step size used to count number of bars between start and end</param>
         /// <returns>The number of bars of the specified size between start and end times</returns>
-        public static int GetNumberOfTradeBarsInInterval(SecurityExchangeHours exchangeHours, DateTime start, DateTime end, TimeSpan barSize)
+        public static int GetNumberOfTradeBarsInInterval(
+            SecurityExchangeHours exchangeHours,
+            DateTime start,
+            DateTime end,
+            TimeSpan barSize
+        )
         {
             if (barSize <= TimeSpan.Zero)
             {
@@ -775,7 +910,11 @@ namespace QuantConnect
         /// <param name="current">The current time we seek to normalize</param>
         /// <param name="period">The time span of the range</param>
         /// <returns>The normalized time</returns>
-        public static double NormalizeInstantWithinRange(DateTime start, DateTime current, TimeSpan period)
+        public static double NormalizeInstantWithinRange(
+            DateTime start,
+            DateTime current,
+            TimeSpan period
+        )
         {
             // normalization of a point time only has a value at that specific point
             if (period == TimeSpan.Zero)

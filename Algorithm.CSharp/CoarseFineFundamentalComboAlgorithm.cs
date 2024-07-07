@@ -84,7 +84,8 @@ namespace QuantConnect.Algorithm.CSharp
         public void OnData(TradeBars data)
         {
             // if we have no changes, do nothing
-            if (_changes == SecurityChanges.None) return;
+            if (_changes == SecurityChanges.None)
+                return;
 
             // liquidate removed securities
             foreach (var security in _changes.RemovedSecurities)
@@ -113,11 +114,17 @@ namespace QuantConnect.Algorithm.CSharp
 
             if (changes.AddedSecurities.Count > 0)
             {
-                Debug("Securities added: " + string.Join(",", changes.AddedSecurities.Select(x => x.Symbol.Value)));
+                Debug(
+                    "Securities added: "
+                        + string.Join(",", changes.AddedSecurities.Select(x => x.Symbol.Value))
+                );
             }
             if (changes.RemovedSecurities.Count > 0)
             {
-                Debug("Securities removed: " + string.Join(",", changes.RemovedSecurities.Select(x => x.Symbol.Value)));
+                Debug(
+                    "Securities removed: "
+                        + string.Join(",", changes.RemovedSecurities.Select(x => x.Symbol.Value))
+                );
             }
         }
     }

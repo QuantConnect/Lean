@@ -106,7 +106,8 @@ namespace QuantConnect.Data
             bool parallelHistoryRequestsEnabled,
             IDataPermissionManager dataPermissionManager,
             IObjectStore objectStore,
-            IAlgorithmSettings algorithmSettings)
+            IAlgorithmSettings algorithmSettings
+        )
         {
             Job = job;
             Api = api;

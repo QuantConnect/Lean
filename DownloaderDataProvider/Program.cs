@@ -14,18 +14,19 @@
  *
 */
 
-using NodaTime;
 using System.Timers;
-using QuantConnect.Util;
-using QuantConnect.Data;
-using QuantConnect.Logging;
-using QuantConnect.Interfaces;
-using QuantConnect.Securities;
+using NodaTime;
 using QuantConnect.Configuration;
-using DataFeeds = QuantConnect.Lean.Engine.DataFeeds;
+using QuantConnect.Data;
 using QuantConnect.DownloaderDataProvider.Launcher.Models.Constants;
+using QuantConnect.Interfaces;
+using QuantConnect.Logging;
+using QuantConnect.Securities;
+using QuantConnect.Util;
+using DataFeeds = QuantConnect.Lean.Engine.DataFeeds;
 
 namespace QuantConnect.DownloaderDataProvider.Launcher;
+
 public static class Program
 {
     /// <summary>
@@ -36,7 +37,9 @@ public static class Program
     /// <summary>
     /// The provider used to cache history data files
     /// </summary>
-    private static readonly IDataCacheProvider _dataCacheProvider = new DiskDataCacheProvider(DiskSynchronizer);
+    private static readonly IDataCacheProvider _dataCacheProvider = new DiskDataCacheProvider(
+        DiskSynchronizer
+    );
 
     /// <summary>
     /// Represents the time interval of 5 seconds.
@@ -46,7 +49,8 @@ public static class Program
     /// <summary>
     /// Provides access to exchange hours and raw data times zones in various markets
     /// </summary>
-    private static readonly MarketHoursDatabase _marketHoursDatabase = MarketHoursDatabase.FromDataFolder();
+    private static readonly MarketHoursDatabase _marketHoursDatabase =
+        MarketHoursDatabase.FromDataFolder();
 
     /// <summary>
     /// The main entry point for the application.
@@ -57,12 +61,16 @@ public static class Program
         // Parse report arguments and merge with config to use in the optimizer
         if (args.Length > 0)
         {
-            Config.MergeCommandLineArgumentsWithConfiguration(DownloaderDataProviderArgumentParser.ParseArguments(args));
+            Config.MergeCommandLineArgumentsWithConfiguration(
+                DownloaderDataProviderArgumentParser.ParseArguments(args)
+            );
         }
 
         InitializeConfigurations();
 
-        var dataDownloader = Composer.Instance.GetExportedValueByTypeName<IDataDownloader>(Config.Get(DownloaderCommandArguments.CommandDownloaderDataDownloader));
+        var dataDownloader = Composer.Instance.GetExportedValueByTypeName<IDataDownloader>(
+            Config.Get(DownloaderCommandArguments.CommandDownloaderDataDownloader)
+        );
 
         var dataDownloadConfig = new DataDownloadConfig();
 
@@ -78,11 +86,20 @@ public static class Program
     /// <param name="dataCacheProvider">The provider used to cache history data files</param>
     /// <param name="mapSymbol">True if the symbol should be mapped while writing the data</param>
     /// <exception cref="ArgumentNullException">Thrown when <paramref name="dataDownloader"/> is null.</exception>
-    public static void RunDownload(IDataDownloader dataDownloader, DataDownloadConfig dataDownloadConfig, string dataDirectory, IDataCacheProvider dataCacheProvider, bool mapSymbol = true)
+    public static void RunDownload(
+        IDataDownloader dataDownloader,
+        DataDownloadConfig dataDownloadConfig,
+        string dataDirectory,
+        IDataCacheProvider dataCacheProvider,
+        bool mapSymbol = true
+    )
     {
         if (dataDownloader == null)
         {
-            throw new ArgumentNullException(nameof(dataDownloader), "The data downloader instance cannot be null. Please ensure that a valid instance of data downloader is provided.");
+            throw new ArgumentNullException(
+                nameof(dataDownloader),
+                "The data downloader instance cannot be null. Please ensure that a valid instance of data downloader is provided."
+            );
         }
 
         var totalDownloadSymbols = dataDownloadConfig.Symbols.Count;
@@ -91,7 +108,13 @@ public static class Program
 
         foreach (var symbol in dataDownloadConfig.Symbols)
         {
-            var downloadParameters = new DataDownloaderGetParameters(symbol, dataDownloadConfig.Resolution, dataDownloadConfig.StartDate, dataDownloadConfig.EndDate, dataDownloadConfig.TickType);
+            var downloadParameters = new DataDownloaderGetParameters(
+                symbol,
+                dataDownloadConfig.Resolution,
+                dataDownloadConfig.StartDate,
+                dataDownloadConfig.EndDate,
+                dataDownloadConfig.TickType
+            );
 
             Log.Trace($"DownloaderDataProvider.Main(): Starting download {downloadParameters}");
             var downloadedData = dataDownloader.Get(downloadParameters);
@@ -99,13 +122,22 @@ public static class Program
             if (downloadedData == null)
             {
                 completeSymbolCount++;
-                Log.Trace($"DownloaderDataProvider.Main(): No data available for the following parameters: {downloadParameters}");
+                Log.Trace(
+                    $"DownloaderDataProvider.Main(): No data available for the following parameters: {downloadParameters}"
+                );
                 continue;
             }
 
             var (dataTimeZone, exchangeTimeZone) = GetDataAndExchangeTimeZoneBySymbol(symbol);
 
-            var writer = new LeanDataWriter(dataDownloadConfig.Resolution, symbol, dataDirectory, dataDownloadConfig.TickType, dataCacheProvider, mapSymbol: mapSymbol);
+            var writer = new LeanDataWriter(
+                dataDownloadConfig.Resolution,
+                symbol,
+                dataDirectory,
+                dataDownloadConfig.TickType,
+                dataCacheProvider,
+                mapSymbol: mapSymbol
+            );
 
             var groupedData = DataFeeds.DownloaderDataProvider.FilterAndGroupDownloadDataBySymbol(
                 downloadedData,
@@ -114,32 +146,43 @@ public static class Program
                 exchangeTimeZone,
                 dataTimeZone,
                 downloadParameters.StartUtc,
-                downloadParameters.EndUtc);
+                downloadParameters.EndUtc
+            );
 
             var lastLogStatusTime = DateTime.UtcNow;
 
             foreach (var data in groupedData)
             {
-                writer.Write(data.Select(data =>
-                {
-                    var utcNow = DateTime.UtcNow;
-                    if (utcNow - lastLogStatusTime >= _logDisplayInterval)
+                writer.Write(
+                    data.Select(data =>
                     {
-                        lastLogStatusTime = utcNow;
-                        Log.Trace($"Downloading data for {downloadParameters.Symbol}. Please hold on...");
-                    }
-                    return data;
-                }));
+                        var utcNow = DateTime.UtcNow;
+                        if (utcNow - lastLogStatusTime >= _logDisplayInterval)
+                        {
+                            lastLogStatusTime = utcNow;
+                            Log.Trace(
+                                $"Downloading data for {downloadParameters.Symbol}. Please hold on..."
+                            );
+                        }
+                        return data;
+                    })
+                );
             }
 
             completeSymbolCount++;
             var symbolPercentComplete = (double)completeSymbolCount / totalDownloadSymbols * 100;
-            Log.Trace($"DownloaderDataProvider.RunDownload(): {symbolPercentComplete:F2}% complete ({completeSymbolCount} out of {totalDownloadSymbols} symbols)");
+            Log.Trace(
+                $"DownloaderDataProvider.RunDownload(): {symbolPercentComplete:F2}% complete ({completeSymbolCount} out of {totalDownloadSymbols} symbols)"
+            );
 
-            Log.Trace($"DownloaderDataProvider.RunDownload(): Download completed for {downloadParameters.Symbol} at {downloadParameters.Resolution} resolution, " +
-                $"covering the period from {dataDownloadConfig.StartDate} to {dataDownloadConfig.EndDate}.");
+            Log.Trace(
+                $"DownloaderDataProvider.RunDownload(): Download completed for {downloadParameters.Symbol} at {downloadParameters.Resolution} resolution, "
+                    + $"covering the period from {dataDownloadConfig.StartDate} to {dataDownloadConfig.EndDate}."
+            );
         }
-        Log.Trace($"All downloads completed in {(DateTime.UtcNow - startDownloadUtcTime).TotalSeconds:F2} seconds.");
+        Log.Trace(
+            $"All downloads completed in {(DateTime.UtcNow - startDownloadUtcTime).TotalSeconds:F2} seconds."
+        );
     }
 
     /// <summary>
@@ -151,7 +194,10 @@ public static class Program
     /// The data time zone represents the time zone for data related to the symbol.
     /// The exchange time zone represents the time zone for trading activities related to the symbol.
     /// </returns>
-    private static (DateTimeZone dataTimeZone, DateTimeZone exchangeTimeZone) GetDataAndExchangeTimeZoneBySymbol(Symbol symbol)
+    private static (
+        DateTimeZone dataTimeZone,
+        DateTimeZone exchangeTimeZone
+    ) GetDataAndExchangeTimeZoneBySymbol(Symbol symbol)
     {
         var entry = _marketHoursDatabase.GetEntry(symbol.ID.Market, symbol, symbol.SecurityType);
         return (entry.DataTimeZone, entry.ExchangeHours.TimeZone);
@@ -162,7 +208,7 @@ public static class Program
     /// This method sets up logging, data providers, map file providers, and factor file providers.
     /// </summary>
     /// <remarks>
-    /// The method reads configuration values to determine whether debugging is enabled, 
+    /// The method reads configuration values to determine whether debugging is enabled,
     /// which log handler to use, and which data, map file, and factor file providers to initialize.
     /// </remarks>
     /// <seealso cref="Log"/>
@@ -175,11 +221,19 @@ public static class Program
     public static void InitializeConfigurations()
     {
         Log.DebuggingEnabled = Config.GetBool("debug-mode", false);
-        Log.LogHandler = Composer.Instance.GetExportedValueByTypeName<ILogHandler>(Config.Get("log-handler", "CompositeLogHandler"));
+        Log.LogHandler = Composer.Instance.GetExportedValueByTypeName<ILogHandler>(
+            Config.Get("log-handler", "CompositeLogHandler")
+        );
 
-        var dataProvider = Composer.Instance.GetExportedValueByTypeName<IDataProvider>("DefaultDataProvider");
-        var mapFileProvider = Composer.Instance.GetExportedValueByTypeName<IMapFileProvider>(Config.Get("map-file-provider", "LocalDiskMapFileProvider"));
-        var factorFileProvider = Composer.Instance.GetExportedValueByTypeName<IFactorFileProvider>(Config.Get("factor-file-provider", "LocalDiskFactorFileProvider"));
+        var dataProvider = Composer.Instance.GetExportedValueByTypeName<IDataProvider>(
+            "DefaultDataProvider"
+        );
+        var mapFileProvider = Composer.Instance.GetExportedValueByTypeName<IMapFileProvider>(
+            Config.Get("map-file-provider", "LocalDiskMapFileProvider")
+        );
+        var factorFileProvider = Composer.Instance.GetExportedValueByTypeName<IFactorFileProvider>(
+            Config.Get("factor-file-provider", "LocalDiskFactorFileProvider")
+        );
 
         mapFileProvider.Initialize(dataProvider);
         factorFileProvider.Initialize(mapFileProvider, dataProvider);

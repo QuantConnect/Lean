@@ -16,8 +16,8 @@
 
 using System;
 using System.IO;
-using Python.Runtime;
 using NUnit.Framework;
+using Python.Runtime;
 using QuantConnect.Python;
 
 namespace QuantConnect.Tests.Python
@@ -43,7 +43,9 @@ namespace QuantConnect.Tests.Python
 
             using (Py.GIL())
             {
-                PythonEngine.Exec("import venv;venv.create(\"testenv\", system_site_packages=True)");
+                PythonEngine.Exec(
+                    "import venv;venv.create(\"testenv\", system_site_packages=True)"
+                );
             }
 
             Assert.IsTrue(PythonInitializer.ActivatePythonVirtualEnvironment("testenv"));
@@ -56,7 +58,8 @@ namespace QuantConnect.Tests.Python
 
             using (Py.GIL())
             {
-                var code = @"import lean
+                var code =
+                    @"import lean
 
 def assertLeanVersion():
     return lean.__version__";

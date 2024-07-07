@@ -33,7 +33,8 @@ namespace QuantConnect.Optimizer.Parameters
         /// </summary>
         /// <param name="name">The name of the parameter</param>
         /// <param name="value">The fixed value of this parameter</param>
-        public StaticOptimizationParameter(string name, string value) : base(name)
+        public StaticOptimizationParameter(string name, string value)
+            : base(name)
         {
             Value = value;
         }

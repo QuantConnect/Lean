@@ -30,24 +30,32 @@ namespace QuantConnect.Algorithm.CSharp
         private DateTime _lastAction;
         private MovingAverageConvergenceDivergence _macd;
         private ExponentialMovingAverage _ema;
-        private readonly Symbol _ibm = QuantConnect.Symbol.Create("IBM", SecurityType.Equity, Market.USA);
-        private readonly Symbol _spy = QuantConnect.Symbol.Create("SPY", SecurityType.Equity, Market.USA);
+        private readonly Symbol _ibm = QuantConnect.Symbol.Create(
+            "IBM",
+            SecurityType.Equity,
+            Market.USA
+        );
+        private readonly Symbol _spy = QuantConnect.Symbol.Create(
+            "SPY",
+            SecurityType.Equity,
+            Market.USA
+        );
 
         /// <summary>
         /// Initialise the data and resolution required, as well as the cash and start-end dates for your algorithm. All algorithms must initialized.
         /// </summary>
         public override void Initialize()
         {
-            SetStartDate(2013, 01, 01);  //Set Start Date
-            SetEndDate(2014, 01, 01);    //Set End Date
-            SetCash(100000);             //Set Strategy Cash
+            SetStartDate(2013, 01, 01); //Set Start Date
+            SetEndDate(2014, 01, 01); //Set End Date
+            SetCash(100000); //Set Strategy Cash
 
             // Find more symbols here: http://quantconnect.com/data
             AddSecurity(SecurityType.Equity, "IBM", Resolution.Hour);
             AddSecurity(SecurityType.Equity, "SPY", Resolution.Daily);
 
             _macd = MACD(_spy, 12, 26, 9, MovingAverageType.Wilders, Resolution.Daily, Field.Close);
-            _ema = EMA(_ibm, 15*6, Resolution.Hour, Field.SevenBar);
+            _ema = EMA(_ibm, 15 * 6, Resolution.Hour, Field.SevenBar);
 
             Securities[_ibm].SetLeverage(1.0m);
         }
@@ -58,9 +66,12 @@ namespace QuantConnect.Algorithm.CSharp
         /// <param name="data">TradeBars IDictionary object with your stock data</param>
         public void OnData(TradeBars data)
         {
-            if (!_macd.IsReady) return;
-            if (!data.ContainsKey(_ibm)) return;
-            if (_lastAction.Date == Time.Date) return;
+            if (!_macd.IsReady)
+                return;
+            if (!data.ContainsKey(_ibm))
+                return;
+            if (_lastAction.Date == Time.Date)
+                return;
             _lastAction = Time;
 
             var holding = Portfolio[_spy];

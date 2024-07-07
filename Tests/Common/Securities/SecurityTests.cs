@@ -16,18 +16,18 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using Microsoft.CSharp.RuntimeBinder;
 using NodaTime;
 using NUnit.Framework;
+using Python.Runtime;
 using QuantConnect.Data;
 using QuantConnect.Data.Market;
-using QuantConnect.Securities;
-using QuantConnect.Orders.Fills;
-using QuantConnect.Orders.Fees;
-using QuantConnect.Orders.Slippage;
-using QuantConnect.Securities.Option;
 using QuantConnect.Indicators;
-using Microsoft.CSharp.RuntimeBinder;
-using Python.Runtime;
+using QuantConnect.Orders.Fees;
+using QuantConnect.Orders.Fills;
+using QuantConnect.Orders.Slippage;
+using QuantConnect.Securities;
+using QuantConnect.Securities.Option;
 using QuantConnect.Statistics;
 
 namespace QuantConnect.Tests.Common.Securities
@@ -117,7 +117,6 @@ namespace QuantConnect.Tests.Common.Securities
             Assert.IsFalse(security.Invested);
             Assert.IsFalse(security.Holdings.IsLong);
             Assert.IsFalse(security.Holdings.IsShort);
-
         }
 
         [Test]
@@ -126,7 +125,9 @@ namespace QuantConnect.Tests.Common.Securities
             var security = GetSecurity();
 
             // Update securuty price with a TradeBar
-            security.SetMarketPrice(new TradeBar(DateTime.Now, Symbols.SPY, 101m, 103m, 100m, 102m, 100000));
+            security.SetMarketPrice(
+                new TradeBar(DateTime.Now, Symbols.SPY, 101m, 103m, 100m, 102m, 100000)
+            );
 
             Assert.AreEqual(101m, security.Open);
             Assert.AreEqual(103m, security.High);
@@ -153,13 +154,17 @@ namespace QuantConnect.Tests.Common.Securities
             var security = GetSecurity();
 
             security.SetLeverage(4m);
-            Assert.AreEqual(4m,security.Leverage);
+            Assert.AreEqual(4m, security.Leverage);
 
             security.SetLeverage(5m);
             Assert.AreEqual(5m, security.Leverage);
 
-            Assert.That(() => security.SetLeverage(0.1m),
-                Throws.TypeOf<ArgumentException>().With.Message.EqualTo("Leverage must be greater than or equal to 1."));
+            Assert.That(
+                () => security.SetLeverage(0.1m),
+                Throws
+                    .TypeOf<ArgumentException>()
+                    .With.Message.EqualTo("Leverage must be greater than or equal to 1.")
+            );
         }
 
         [Test]
@@ -207,12 +212,39 @@ namespace QuantConnect.Tests.Common.Securities
                 RegisteredSecurityDataTypesProvider.Null
             );
 
-            Assert.DoesNotThrow(() => { option.SetDataNormalizationMode(DataNormalizationMode.Raw); });
+            Assert.DoesNotThrow(() =>
+            {
+                option.SetDataNormalizationMode(DataNormalizationMode.Raw);
+            });
 
-            Assert.Throws(typeof(ArgumentException), () => { option.SetDataNormalizationMode(DataNormalizationMode.Adjusted); });
-            Assert.Throws(typeof(ArgumentException), () => { option.SetDataNormalizationMode(DataNormalizationMode.SplitAdjusted); });
-            Assert.Throws(typeof(ArgumentException), () => { option.SetDataNormalizationMode(DataNormalizationMode.Adjusted); });
-            Assert.Throws(typeof(ArgumentException), () => { option.SetDataNormalizationMode(DataNormalizationMode.TotalReturn); });
+            Assert.Throws(
+                typeof(ArgumentException),
+                () =>
+                {
+                    option.SetDataNormalizationMode(DataNormalizationMode.Adjusted);
+                }
+            );
+            Assert.Throws(
+                typeof(ArgumentException),
+                () =>
+                {
+                    option.SetDataNormalizationMode(DataNormalizationMode.SplitAdjusted);
+                }
+            );
+            Assert.Throws(
+                typeof(ArgumentException),
+                () =>
+                {
+                    option.SetDataNormalizationMode(DataNormalizationMode.Adjusted);
+                }
+            );
+            Assert.Throws(
+                typeof(ArgumentException),
+                () =>
+                {
+                    option.SetDataNormalizationMode(DataNormalizationMode.TotalReturn);
+                }
+            );
         }
 
         [Test]
@@ -236,11 +268,26 @@ namespace QuantConnect.Tests.Common.Securities
                 RegisteredSecurityDataTypesProvider.Null
             );
 
-            Assert.DoesNotThrow(() => { equity.SetDataNormalizationMode(DataNormalizationMode.Raw); });
-            Assert.DoesNotThrow(() => { equity.SetDataNormalizationMode(DataNormalizationMode.Adjusted); });
-            Assert.DoesNotThrow(() => { equity.SetDataNormalizationMode(DataNormalizationMode.SplitAdjusted); });
-            Assert.DoesNotThrow(() => { equity.SetDataNormalizationMode(DataNormalizationMode.Adjusted); });
-            Assert.DoesNotThrow(() => { equity.SetDataNormalizationMode(DataNormalizationMode.TotalReturn); });
+            Assert.DoesNotThrow(() =>
+            {
+                equity.SetDataNormalizationMode(DataNormalizationMode.Raw);
+            });
+            Assert.DoesNotThrow(() =>
+            {
+                equity.SetDataNormalizationMode(DataNormalizationMode.Adjusted);
+            });
+            Assert.DoesNotThrow(() =>
+            {
+                equity.SetDataNormalizationMode(DataNormalizationMode.SplitAdjusted);
+            });
+            Assert.DoesNotThrow(() =>
+            {
+                equity.SetDataNormalizationMode(DataNormalizationMode.Adjusted);
+            });
+            Assert.DoesNotThrow(() =>
+            {
+                equity.SetDataNormalizationMode(DataNormalizationMode.TotalReturn);
+            });
         }
 
         [Test]
@@ -296,29 +343,30 @@ namespace QuantConnect.Tests.Common.Securities
             Assert.AreEqual(tradeBars[0].Volume, fromDynamicSecurityData.Volume);
         }
 
-        private static TestCaseData[] IsMarketOpenWithMarketDataTestCases => new[]
-        {
-            // Without extended market hours
-            new TestCaseData(new TimeSpan(3, 59, 59), false, false),
-            new TestCaseData(new TimeSpan(4, 0, 0), false, false),
-            new TestCaseData(new TimeSpan(9, 29, 59), false, false),
-            new TestCaseData(new TimeSpan(9, 30, 0), false, true),
-            new TestCaseData(new TimeSpan(15, 59, 59), false, true),
-            new TestCaseData(new TimeSpan(16, 0, 0), false, false),
-            new TestCaseData(new TimeSpan(19, 59, 59), false, false),
-            new TestCaseData(new TimeSpan(20, 0, 0), false, false),
-            new TestCaseData(new TimeSpan(21, 0, 0), false, false),
-            // With extended market hours
-            new TestCaseData(new TimeSpan(3, 59, 59), true, false),
-            new TestCaseData(new TimeSpan(4, 0, 0), true, true),
-            new TestCaseData(new TimeSpan(9, 29, 59), true, true),
-            new TestCaseData(new TimeSpan(9, 30, 0), true, true),
-            new TestCaseData(new TimeSpan(15, 59, 59), true, true),
-            new TestCaseData(new TimeSpan(16, 0, 0), true, true),
-            new TestCaseData(new TimeSpan(19, 59, 59), true, true),
-            new TestCaseData(new TimeSpan(20, 0, 0), true, false),
-            new TestCaseData(new TimeSpan(21, 0, 0), true, false),
-        };
+        private static TestCaseData[] IsMarketOpenWithMarketDataTestCases =>
+            new[]
+            {
+                // Without extended market hours
+                new TestCaseData(new TimeSpan(3, 59, 59), false, false),
+                new TestCaseData(new TimeSpan(4, 0, 0), false, false),
+                new TestCaseData(new TimeSpan(9, 29, 59), false, false),
+                new TestCaseData(new TimeSpan(9, 30, 0), false, true),
+                new TestCaseData(new TimeSpan(15, 59, 59), false, true),
+                new TestCaseData(new TimeSpan(16, 0, 0), false, false),
+                new TestCaseData(new TimeSpan(19, 59, 59), false, false),
+                new TestCaseData(new TimeSpan(20, 0, 0), false, false),
+                new TestCaseData(new TimeSpan(21, 0, 0), false, false),
+                // With extended market hours
+                new TestCaseData(new TimeSpan(3, 59, 59), true, false),
+                new TestCaseData(new TimeSpan(4, 0, 0), true, true),
+                new TestCaseData(new TimeSpan(9, 29, 59), true, true),
+                new TestCaseData(new TimeSpan(9, 30, 0), true, true),
+                new TestCaseData(new TimeSpan(15, 59, 59), true, true),
+                new TestCaseData(new TimeSpan(16, 0, 0), true, true),
+                new TestCaseData(new TimeSpan(19, 59, 59), true, true),
+                new TestCaseData(new TimeSpan(20, 0, 0), true, false),
+                new TestCaseData(new TimeSpan(21, 0, 0), true, false),
+            };
 
         [TestCaseSource(nameof(IsMarketOpenWithMarketDataTestCases))]
         public void IsMarketOpenIsAccurate(TimeSpan time, bool extendedMarketHours, bool expected)
@@ -326,7 +374,10 @@ namespace QuantConnect.Tests.Common.Securities
             var security = GetSecurity(isMarketAlwaysOpen: false);
 
             var dateTime = new DateTime(2023, 6, 26) + time;
-            var timeKeeper = new LocalTimeKeeper(dateTime.ConvertToUtc(security.Exchange.TimeZone), security.Exchange.TimeZone);
+            var timeKeeper = new LocalTimeKeeper(
+                dateTime.ConvertToUtc(security.Exchange.TimeZone),
+                security.Exchange.TimeZone
+            );
             security.SetLocalTimeKeeper(timeKeeper);
 
             Assert.AreEqual(expected, security.IsMarketOpen(extendedMarketHours));
@@ -379,7 +430,10 @@ namespace QuantConnect.Tests.Common.Securities
             Assert.AreEqual(new DateTime(2023, 06, 20), dynamicSecurity.DateTime);
             Assert.AreEqual(new ExponentialMovingAverage(10), dynamicSecurity.EMA);
 
-            Assert.Throws<RuntimeBinderException>(() => { var notAProperty = dynamicSecurity.NotAProperty; });
+            Assert.Throws<RuntimeBinderException>(() =>
+            {
+                var notAProperty = dynamicSecurity.NotAProperty;
+            });
         }
 
         [Test]
@@ -418,14 +472,22 @@ namespace QuantConnect.Tests.Common.Securities
             Assert.AreEqual(new DateTime(2023, 06, 20), dateTimeValue);
             Assert.AreEqual(new DateTime(2023, 06, 20), security.Get<DateTime>("DateTime"));
 
-            Assert.AreEqual(true, security.TryGet<ExponentialMovingAverage>("EMA", out var emaValue));
+            Assert.AreEqual(
+                true,
+                security.TryGet<ExponentialMovingAverage>("EMA", out var emaValue)
+            );
             Assert.AreEqual(new ExponentialMovingAverage(10), emaValue);
-            Assert.AreEqual(new ExponentialMovingAverage(10), security.Get<ExponentialMovingAverage>("EMA"));
+            Assert.AreEqual(
+                new ExponentialMovingAverage(10),
+                security.Get<ExponentialMovingAverage>("EMA")
+            );
 
             Assert.AreEqual(false, security.TryGet<bool>("NotAProperty", out _));
             Assert.Throws<KeyNotFoundException>(() => security.Get<bool>("NotAProperty"));
 
-            Assert.Throws<InvalidCastException>(() => security.TryGet<SimpleMovingAverage>("EMA", out _));
+            Assert.Throws<InvalidCastException>(
+                () => security.TryGet<SimpleMovingAverage>("EMA", out _)
+            );
             Assert.Throws<InvalidCastException>(() => security.Get<SimpleMovingAverage>("EMA"));
         }
 
@@ -449,7 +511,10 @@ namespace QuantConnect.Tests.Common.Securities
             Assert.AreEqual(new DateTime(2023, 06, 20), security["DateTime"]);
             Assert.AreEqual(new ExponentialMovingAverage(10), security["EMA"]);
 
-            Assert.Throws<KeyNotFoundException>(() => { var notAProperty = security["NotAProperty"]; });
+            Assert.Throws<KeyNotFoundException>(() =>
+            {
+                var notAProperty = security["NotAProperty"];
+            });
         }
 
         [Test]
@@ -482,7 +547,6 @@ namespace QuantConnect.Tests.Common.Securities
             Assert.AreEqual(0, security.Cache.Properties.Count);
             Assert.IsFalse(security.TryGet<decimal>("Decimal", out _));
             Assert.IsFalse(security.TryGet<DateTime>("DateTime", out _));
-
         }
 
         [Test]
@@ -505,9 +569,13 @@ namespace QuantConnect.Tests.Common.Securities
             dynamic dynamicSecurity = security;
 
             dynamicSecurity.MakeEma = new Func<int, decimal, ExponentialMovingAverage>(
-                (period, smoothingFactor) => new ExponentialMovingAverage(period, smoothingFactor));
+                (period, smoothingFactor) => new ExponentialMovingAverage(period, smoothingFactor)
+            );
 
-            Assert.AreEqual(new ExponentialMovingAverage(10, 0.5m), dynamicSecurity.MakeEma(10, 0.5m));
+            Assert.AreEqual(
+                new ExponentialMovingAverage(10, 0.5m),
+                dynamicSecurity.MakeEma(10, 0.5m)
+            );
         }
 
         [Test]
@@ -518,7 +586,8 @@ namespace QuantConnect.Tests.Common.Securities
 
             using (Py.GIL())
             {
-                var testModule = PyModule.FromString("testModule",
+                var testModule = PyModule.FromString(
+                    "testModule",
                     $@"
 from AlgorithmImports import *
 from QuantConnect.Tests.Common.Securities import SecurityTests
@@ -542,63 +611,85 @@ def AccessCSharpProperty(security: Security) -> str:
 
 def AccessPythonProperty(security: Security) -> str:
     return security.PythonClassObject.PythonProperty
-        ");
+        "
+                );
 
                 var security = GetSecurity();
                 dynamic dynamicSecurity = security;
 
-                dynamic SetSecurityDynamicProperty = testModule.GetAttr("SetSecurityDynamicProperty");
+                dynamic SetSecurityDynamicProperty = testModule.GetAttr(
+                    "SetSecurityDynamicProperty"
+                );
                 SetSecurityDynamicProperty(security);
 
-                dynamic AssertPythonClassObjectType = testModule.GetAttr("AssertPythonClassObjectType");
+                dynamic AssertPythonClassObjectType = testModule.GetAttr(
+                    "AssertPythonClassObjectType"
+                );
                 Assert.DoesNotThrow(() => AssertPythonClassObjectType(security));
 
                 // Access the C# class property
                 dynamic AccessCSharpProperty = testModule.GetAttr("AccessCSharpProperty");
-                Assert.AreEqual(expectedCSharpPropertyValue, AccessCSharpProperty(security).As<string>());
-                Assert.AreEqual(expectedCSharpPropertyValue, dynamicSecurity.PythonClassObject.CSharpProperty.As<string>());
+                Assert.AreEqual(
+                    expectedCSharpPropertyValue,
+                    AccessCSharpProperty(security).As<string>()
+                );
+                Assert.AreEqual(
+                    expectedCSharpPropertyValue,
+                    dynamicSecurity.PythonClassObject.CSharpProperty.As<string>()
+                );
 
                 // Access the Python class property
                 dynamic AccessPythonProperty = testModule.GetAttr("AccessPythonProperty");
-                Assert.AreEqual(expectedPythonPropertyValue, AccessPythonProperty(security).As<string>());
-                Assert.AreEqual(expectedPythonPropertyValue, dynamicSecurity.PythonClassObject.PythonProperty.As<string>());
+                Assert.AreEqual(
+                    expectedPythonPropertyValue,
+                    AccessPythonProperty(security).As<string>()
+                );
+                Assert.AreEqual(
+                    expectedPythonPropertyValue,
+                    dynamicSecurity.PythonClassObject.PythonProperty.As<string>()
+                );
             }
         }
 
         [Test]
         public void RunSecurityDynamicPropertyPythonObjectReferenceRegressionAlgorithm()
         {
-            var parameter = new RegressionTests.AlgorithmStatisticsTestParameters("SecurityDynamicPropertyPythonClassAlgorithm",
-                new Dictionary<string, string> {
-                    {PerformanceMetrics.TotalOrders, "0"},
-                    {"Average Win", "0%"},
-                    {"Average Loss", "0%"},
-                    {"Compounding Annual Return", "0%"},
-                    {"Drawdown", "0%"},
-                    {"Expectancy", "0"},
-                    {"Net Profit", "0%"},
-                    {"Sharpe Ratio", "0"},
-                    {"Probabilistic Sharpe Ratio", "0%"},
-                    {"Loss Rate", "0%"},
-                    {"Win Rate", "0%"},
-                    {"Profit-Loss Ratio", "0"},
-                    {"Alpha", "0"},
-                    {"Beta", "0"},
-                    {"Annual Standard Deviation", "0"},
-                    {"Annual Variance", "0"},
-                    {"Information Ratio", "0"},
-                    {"Tracking Error", "0"},
-                    {"Treynor Ratio", "0"},
-                    {"Total Fees", "$0.00"},
-                    {"OrderListHash", "d41d8cd98f00b204e9800998ecf8427e"}
+            var parameter = new RegressionTests.AlgorithmStatisticsTestParameters(
+                "SecurityDynamicPropertyPythonClassAlgorithm",
+                new Dictionary<string, string>
+                {
+                    { PerformanceMetrics.TotalOrders, "0" },
+                    { "Average Win", "0%" },
+                    { "Average Loss", "0%" },
+                    { "Compounding Annual Return", "0%" },
+                    { "Drawdown", "0%" },
+                    { "Expectancy", "0" },
+                    { "Net Profit", "0%" },
+                    { "Sharpe Ratio", "0" },
+                    { "Probabilistic Sharpe Ratio", "0%" },
+                    { "Loss Rate", "0%" },
+                    { "Win Rate", "0%" },
+                    { "Profit-Loss Ratio", "0" },
+                    { "Alpha", "0" },
+                    { "Beta", "0" },
+                    { "Annual Standard Deviation", "0" },
+                    { "Annual Variance", "0" },
+                    { "Information Ratio", "0" },
+                    { "Tracking Error", "0" },
+                    { "Treynor Ratio", "0" },
+                    { "Total Fees", "$0.00" },
+                    { "OrderListHash", "d41d8cd98f00b204e9800998ecf8427e" }
                 },
                 Language.Python,
-                AlgorithmStatus.Completed);
+                AlgorithmStatus.Completed
+            );
 
-            AlgorithmRunner.RunLocalBacktest(parameter.Algorithm,
+            AlgorithmRunner.RunLocalBacktest(
+                parameter.Algorithm,
                 parameter.Statistics,
                 parameter.Language,
-                parameter.ExpectedFinalStatus);
+                parameter.ExpectedFinalStatus
+            );
         }
 
         #endregion
@@ -612,7 +703,9 @@ def AccessPythonProperty(security: Security) -> str:
             }
             else
             {
-                var marketHourDbEntry = MarketHoursDatabase.FromDataFolder().GetEntry(Market.USA, "SPY", SecurityType.Equity);
+                var marketHourDbEntry = MarketHoursDatabase
+                    .FromDataFolder()
+                    .GetEntry(Market.USA, "SPY", SecurityType.Equity);
                 securityExchangeHours = marketHourDbEntry.ExchangeHours;
             }
 
@@ -627,9 +720,20 @@ def AccessPythonProperty(security: Security) -> str:
             );
         }
 
-        internal static SubscriptionDataConfig CreateTradeBarConfig(Resolution resolution = Resolution.Minute)
+        internal static SubscriptionDataConfig CreateTradeBarConfig(
+            Resolution resolution = Resolution.Minute
+        )
         {
-            return new SubscriptionDataConfig(typeof(TradeBar), Symbols.SPY, resolution, TimeZones.NewYork, TimeZones.NewYork, true, true, false);
+            return new SubscriptionDataConfig(
+                typeof(TradeBar),
+                Symbols.SPY,
+                resolution,
+                TimeZones.NewYork,
+                TimeZones.NewYork,
+                true,
+                true,
+                false
+            );
         }
 
         public class CSharpTestClass

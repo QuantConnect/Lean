@@ -13,14 +13,14 @@
  * limitations under the License.
 */
 
-using QuantConnect.Interfaces;
-using QuantConnect.Logging;
-using QuantConnect.Util;
 using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
 using System.Linq;
+using QuantConnect.Interfaces;
+using QuantConnect.Logging;
+using QuantConnect.Util;
 
 namespace QuantConnect.Data
 {
@@ -82,14 +82,23 @@ namespace QuantConnect.Data
         /// </summary>
         protected static Dictionary<DateTime, decimal> GetInterestRateProvider()
         {
-            var directory = Path.Combine(Globals.DataFolder, "alternative", "interest-rate", "usa",
-                "interest-rate.csv");
+            var directory = Path.Combine(
+                Globals.DataFolder,
+                "alternative",
+                "interest-rate",
+                "usa",
+                "interest-rate.csv"
+            );
             var riskFreeRateProvider = FromCsvFile(directory, out var previousInterestRate);
 
             _lastInterestRateDate = DateTime.UtcNow.Date;
 
             // Sparse the discrete data points into continuous credit rate data for every day
-            for (var date = _firstInterestRateDate; date <= _lastInterestRateDate; date = date.AddDays(1))
+            for (
+                var date = _firstInterestRateDate;
+                date <= _lastInterestRateDate;
+                date = date.AddDays(1)
+            )
             {
                 if (!riskFreeRateProvider.TryGetValue(date, out var currentRate))
                 {
@@ -109,7 +118,10 @@ namespace QuantConnect.Data
         /// <param name="file">The csv file to be read</param>
         /// <param name="firstInterestRate">The first interest rate on file</param>
         /// <returns>Dictionary of historical credit rate change events</returns>
-        public static Dictionary<DateTime, decimal> FromCsvFile(string file, out decimal firstInterestRate)
+        public static Dictionary<DateTime, decimal> FromCsvFile(
+            string file,
+            out decimal firstInterestRate
+        )
         {
             var dataProvider = Composer.Instance.GetPart<IDataProvider>();
 
@@ -118,8 +130,12 @@ namespace QuantConnect.Data
 
             // skip the first header line, also skip #'s as these are comment lines
             var interestRateProvider = new Dictionary<DateTime, decimal>();
-            foreach (var line in dataProvider.ReadLines(file).Skip(1)
-                         .Where(x => !string.IsNullOrWhiteSpace(x)))
+            foreach (
+                var line in dataProvider
+                    .ReadLines(file)
+                    .Skip(1)
+                    .Where(x => !string.IsNullOrWhiteSpace(x))
+            )
             {
                 if (TryParse(line, out var date, out var interestRate))
                 {
@@ -135,7 +151,9 @@ namespace QuantConnect.Data
 
             if (interestRateProvider.Count == 0)
             {
-                Log.Error($"InterestRateProvider.FromCsvFile(): no interest rates were loaded, please make sure the file is present '{file}'");
+                Log.Error(
+                    $"InterestRateProvider.FromCsvFile(): no interest rates were loaded, please make sure the file is present '{file}'"
+                );
             }
 
             return interestRateProvider;
@@ -151,16 +169,35 @@ namespace QuantConnect.Data
         {
             var line = csvLine.Split(',');
 
-            if (!DateTime.TryParseExact(line[0], "yyyy-MM-dd", CultureInfo.InvariantCulture, DateTimeStyles.None, out date))
+            if (
+                !DateTime.TryParseExact(
+                    line[0],
+                    "yyyy-MM-dd",
+                    CultureInfo.InvariantCulture,
+                    DateTimeStyles.None,
+                    out date
+                )
+            )
             {
-                Log.Error($"Couldn't parse date/time while reading FED primary credit rate file. Line: {csvLine}");
+                Log.Error(
+                    $"Couldn't parse date/time while reading FED primary credit rate file. Line: {csvLine}"
+                );
                 interestRate = DefaultRiskFreeRate;
                 return false;
             }
 
-            if (!decimal.TryParse(line[1], NumberStyles.Any, CultureInfo.InvariantCulture, out interestRate))
+            if (
+                !decimal.TryParse(
+                    line[1],
+                    NumberStyles.Any,
+                    CultureInfo.InvariantCulture,
+                    out interestRate
+                )
+            )
             {
-                Log.Error($"Couldn't parse primary credit rate while reading FED primary credit rate file. Line: {csvLine}");
+                Log.Error(
+                    $"Couldn't parse primary credit rate while reading FED primary credit rate file. Line: {csvLine}"
+                );
                 return false;
             }
 

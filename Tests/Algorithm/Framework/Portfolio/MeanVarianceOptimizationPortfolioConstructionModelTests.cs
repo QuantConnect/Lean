@@ -49,18 +49,21 @@ namespace QuantConnect.Tests.Algorithm.Framework.Portfolio
             var historyProvider = new SubscriptionDataReaderHistoryProvider();
             _algorithm.SetHistoryProvider(historyProvider);
 
-            historyProvider.Initialize(new HistoryProviderInitializeParameters(
-                null,
-                null,
-                TestGlobals.DataProvider,
-                TestGlobals.DataCacheProvider,
-                TestGlobals.MapFileProvider,
-                TestGlobals.FactorFileProvider,
-                i => { },
-                true,
-                new DataPermissionManager(),
-                _algorithm.ObjectStore,
-                _algorithm.Settings));
+            historyProvider.Initialize(
+                new HistoryProviderInitializeParameters(
+                    null,
+                    null,
+                    TestGlobals.DataProvider,
+                    TestGlobals.DataCacheProvider,
+                    TestGlobals.MapFileProvider,
+                    TestGlobals.FactorFileProvider,
+                    i => { },
+                    true,
+                    new DataPermissionManager(),
+                    _algorithm.ObjectStore,
+                    _algorithm.Settings
+                )
+            );
         }
 
         private void Clear() => _algorithm.Insights.Clear(_algorithm.Securities.Keys.ToArray());
@@ -73,9 +76,21 @@ namespace QuantConnect.Tests.Algorithm.Framework.Portfolio
         [TestCase(Language.Python, PortfolioBias.Long, -0.1, 0.1)]
         [TestCase(Language.CSharp, PortfolioBias.Short, 0.1, -0.1)]
         [TestCase(Language.Python, PortfolioBias.Short, 0.1, -0.1)]
-        public void PortfolioBiasIsRespected(Language language, PortfolioBias bias, double magnitude1, double magnitude2)
+        public void PortfolioBiasIsRespected(
+            Language language,
+            PortfolioBias bias,
+            double magnitude1,
+            double magnitude2
+        )
         {
-            var targets = GeneratePortfolioTargets(language, InsightDirection.Up, InsightDirection.Down, magnitude1, magnitude2, bias);
+            var targets = GeneratePortfolioTargets(
+                language,
+                InsightDirection.Up,
+                InsightDirection.Down,
+                magnitude1,
+                magnitude2,
+                bias
+            );
 
             foreach (var target in targets)
             {
@@ -90,27 +105,55 @@ namespace QuantConnect.Tests.Algorithm.Framework.Portfolio
 
         [TestCase(Language.CSharp, InsightDirection.Up, InsightDirection.Up, 0, 0, 4155, 2493)]
         [TestCase(Language.Python, InsightDirection.Up, InsightDirection.Up, 0, 0, 4155, 2493)]
-        [TestCase(Language.CSharp, InsightDirection.Up, InsightDirection.Down, 0.1, 0.05, 4155, 2493)]
-        [TestCase(Language.Python, InsightDirection.Up, InsightDirection.Down, 0.1, 0.05, 4155, 2493)]
+        [TestCase(
+            Language.CSharp,
+            InsightDirection.Up,
+            InsightDirection.Down,
+            0.1,
+            0.05,
+            4155,
+            2493
+        )]
+        [TestCase(
+            Language.Python,
+            InsightDirection.Up,
+            InsightDirection.Down,
+            0.1,
+            0.05,
+            4155,
+            2493
+        )]
         [TestCase(Language.CSharp, InsightDirection.Up, InsightDirection.Up, 0.1, 0, 4155, 2493)]
         [TestCase(Language.Python, InsightDirection.Up, InsightDirection.Up, 0.1, 0, 4155, 2493)]
         [TestCase(Language.CSharp, InsightDirection.Up, InsightDirection.Down, 0, 0.1, 4155, 2493)]
         [TestCase(Language.Python, InsightDirection.Up, InsightDirection.Down, 0, 0.1, 4155, 2493)]
-        public void CorrectWeightings(Language language,
-                                      InsightDirection direction1,
-                                      InsightDirection direction2,
-                                      double? magnitude1,
-                                      double? magnitude2,
-                                      decimal expectedQty1,
-                                      decimal expectedQty2)
+        public void CorrectWeightings(
+            Language language,
+            InsightDirection direction1,
+            InsightDirection direction2,
+            double? magnitude1,
+            double? magnitude2,
+            decimal expectedQty1,
+            decimal expectedQty2
+        )
         {
-            var targets = GeneratePortfolioTargets(language, direction1, direction2, magnitude1, magnitude2).ToList();
+            var targets = GeneratePortfolioTargets(
+                    language,
+                    direction1,
+                    direction2,
+                    magnitude1,
+                    magnitude2
+                )
+                .ToList();
             Clear();
-            var quantities = targets.ToDictionary(target => {
-                QuantConnect.Logging.Log.Trace($"{target.Symbol}: {target.Quantity}");
-                return target.Symbol.Value;
-            },
-            target => target.Quantity);
+            var quantities = targets.ToDictionary(
+                target =>
+                {
+                    QuantConnect.Logging.Log.Trace($"{target.Symbol}: {target.Quantity}");
+                    return target.Symbol.Value;
+                },
+                target => target.Quantity
+            );
 
             Assert.AreEqual(expectedQty1, quantities["AAPL"]);
             Assert.AreEqual(expectedQty2, quantities.ContainsKey("SPY") ? quantities["SPY"] : 0);
@@ -127,10 +170,20 @@ namespace QuantConnect.Tests.Algorithm.Framework.Portfolio
 
             var insights = new[]
             {
-                new Insight(_nowUtc, appl.Symbol, TimeSpan.FromDays(1), InsightType.Price, InsightDirection.Up, null, null)
+                new Insight(
+                    _nowUtc,
+                    appl.Symbol,
+                    TimeSpan.FromDays(1),
+                    InsightType.Price,
+                    InsightDirection.Up,
+                    null,
+                    null
+                )
             };
 
-            var actualTargets = _algorithm.PortfolioConstruction.CreateTargets(_algorithm, insights).ToList();
+            var actualTargets = _algorithm
+                .PortfolioConstruction.CreateTargets(_algorithm, insights)
+                .ToList();
             Assert.AreEqual(0, actualTargets.Count);
         }
 
@@ -142,14 +195,22 @@ namespace QuantConnect.Tests.Algorithm.Framework.Portfolio
         [TestCase(Language.Python, InsightDirection.Up, InsightDirection.Up, 0.1, 0)]
         [TestCase(Language.CSharp, InsightDirection.Up, InsightDirection.Down, 0.1, 0.1)]
         [TestCase(Language.Python, InsightDirection.Up, InsightDirection.Down, 0.1, 0.1)]
-        public void ObeyBudgetConstraint(Language language,
-                                         InsightDirection direction1,
-                                         InsightDirection direction2,
-                                         double? magnitude1,
-                                         double? magnitude2)
+        public void ObeyBudgetConstraint(
+            Language language,
+            InsightDirection direction1,
+            InsightDirection direction2,
+            double? magnitude1,
+            double? magnitude2
+        )
         {
-            var targets = GeneratePortfolioTargets(language, direction1, direction2, magnitude1, magnitude2);
-            var totalCost = targets.Sum(x => Math.Abs(x.Quantity) * 10);    // Set market price at $10 in the helper method
+            var targets = GeneratePortfolioTargets(
+                language,
+                direction1,
+                direction2,
+                magnitude1,
+                magnitude2
+            );
+            var totalCost = targets.Sum(x => Math.Abs(x.Quantity) * 10); // Set market price at $10 in the helper method
             Assert.LessOrEqual(totalCost, _algorithm.Portfolio.TotalPortfolioValue);
         }
 
@@ -164,14 +225,15 @@ namespace QuantConnect.Tests.Algorithm.Framework.Portfolio
         {
             using (Py.GIL())
             {
-                var module = PyModule.FromString(Guid.NewGuid().ToString(),
+                var module = PyModule.FromString(
+                    Guid.NewGuid().ToString(),
                     @"
 from AlgorithmImports import *
 timeDelta = timedelta(days=1)
 class CustomPortfolioOptimizer:
     def Optimize(self, historicalReturns, expectedReturns, covariance):
         return [0.5]*(np.array(historicalReturns)).shape[1]"
-                    );
+                );
                 var timeDelta = module.GetAttr("timeDelta");
                 var portfolioBias = PortfolioBias.LongShort;
                 var lookback = 1;
@@ -183,25 +245,78 @@ class CustomPortfolioOptimizer:
                 switch (arguments)
                 {
                     case 1:
-                        Assert.DoesNotThrow(() => new MeanVarianceOptimizationPortfolioConstructionModel(timeDelta));
+                        Assert.DoesNotThrow(
+                            () => new MeanVarianceOptimizationPortfolioConstructionModel(timeDelta)
+                        );
                         break;
                     case 2:
-                        Assert.DoesNotThrow(() => new MeanVarianceOptimizationPortfolioConstructionModel(timeDelta, portfolioBias));
+                        Assert.DoesNotThrow(
+                            () =>
+                                new MeanVarianceOptimizationPortfolioConstructionModel(
+                                    timeDelta,
+                                    portfolioBias
+                                )
+                        );
                         break;
                     case 3:
-                        Assert.DoesNotThrow(() => new MeanVarianceOptimizationPortfolioConstructionModel(timeDelta, portfolioBias, lookback));
+                        Assert.DoesNotThrow(
+                            () =>
+                                new MeanVarianceOptimizationPortfolioConstructionModel(
+                                    timeDelta,
+                                    portfolioBias,
+                                    lookback
+                                )
+                        );
                         break;
                     case 4:
-                        Assert.DoesNotThrow(() => new MeanVarianceOptimizationPortfolioConstructionModel(timeDelta, portfolioBias, lookback, period));
+                        Assert.DoesNotThrow(
+                            () =>
+                                new MeanVarianceOptimizationPortfolioConstructionModel(
+                                    timeDelta,
+                                    portfolioBias,
+                                    lookback,
+                                    period
+                                )
+                        );
                         break;
                     case 5:
-                        Assert.DoesNotThrow(() => new MeanVarianceOptimizationPortfolioConstructionModel(timeDelta, portfolioBias, lookback, period, resolution));
+                        Assert.DoesNotThrow(
+                            () =>
+                                new MeanVarianceOptimizationPortfolioConstructionModel(
+                                    timeDelta,
+                                    portfolioBias,
+                                    lookback,
+                                    period,
+                                    resolution
+                                )
+                        );
                         break;
                     case 6:
-                        Assert.DoesNotThrow(() => new MeanVarianceOptimizationPortfolioConstructionModel(timeDelta, portfolioBias, lookback, period, resolution, targetReturn));
+                        Assert.DoesNotThrow(
+                            () =>
+                                new MeanVarianceOptimizationPortfolioConstructionModel(
+                                    timeDelta,
+                                    portfolioBias,
+                                    lookback,
+                                    period,
+                                    resolution,
+                                    targetReturn
+                                )
+                        );
                         break;
                     case 7:
-                        Assert.DoesNotThrow(() => new MeanVarianceOptimizationPortfolioConstructionModel(timeDelta, portfolioBias, lookback, period, resolution, targetReturn, optimizer));
+                        Assert.DoesNotThrow(
+                            () =>
+                                new MeanVarianceOptimizationPortfolioConstructionModel(
+                                    timeDelta,
+                                    portfolioBias,
+                                    lookback,
+                                    period,
+                                    resolution,
+                                    targetReturn,
+                                    optimizer
+                                )
+                        );
                         break;
                 }
             }
@@ -213,10 +328,12 @@ class CustomPortfolioOptimizer:
         {
             using (Py.GIL())
             {
-                var module = PyModule.FromString(Guid.NewGuid().ToString(),
+                var module = PyModule.FromString(
+                    Guid.NewGuid().ToString(),
                     @"from AlgorithmImports import *
 timeDelta = timedelta(days=1)
-pyFunc = lambda x: x + timedelta(days=1)");
+pyFunc = lambda x: x + timedelta(days=1)"
+                );
                 var rebalance = module.GetAttr(rebalanceName);
                 Assert.DoesNotThrow(() => new MeanReversionPortfolioConstructionModel(rebalance));
             }
@@ -228,14 +345,16 @@ pyFunc = lambda x: x + timedelta(days=1)");
         {
             using (Py.GIL())
             {
-                var module = PyModule.FromString(Guid.NewGuid().ToString(),
+                var module = PyModule.FromString(
+                    Guid.NewGuid().ToString(),
                     @"from AlgorithmImports import *
 rebalance = timedelta(days=1)
 csharpOptimizer = MinimumVariancePortfolioOptimizer()
 
 class CustomPortfolioOptimizer:
     def Optimize(self, historicalReturns, expectedReturns, covariance):
-        pass");
+        pass"
+                );
 
                 var rebalance = module.GetAttr("rebalance");
                 var optimizer = module.GetAttr(optimizerName);
@@ -244,7 +363,13 @@ class CustomPortfolioOptimizer:
                     optimizer = optimizer.Invoke();
                 }
 
-                Assert.DoesNotThrow(() => new MeanVarianceOptimizationPortfolioConstructionModel(rebalance, optimizer: optimizer));
+                Assert.DoesNotThrow(
+                    () =>
+                        new MeanVarianceOptimizationPortfolioConstructionModel(
+                            rebalance,
+                            optimizer: optimizer
+                        )
+                );
             }
         }
 
@@ -253,15 +378,23 @@ class CustomPortfolioOptimizer:
         {
             using (Py.GIL())
             {
-                var module = PyModule.FromString(Guid.NewGuid().ToString(),
+                var module = PyModule.FromString(
+                    Guid.NewGuid().ToString(),
                     @"from AlgorithmImports import *
 rebalance = timedelta(days=1)
 class CustomPortfolioOptimizer:
-    pass");
+    pass"
+                );
                 var rebalance = module.GetAttr("rebalance");
                 var optimizer = module.GetAttr("CustomPortfolioOptimizer").Invoke();
 
-                var message = Assert.Throws<NotImplementedException>(() => new MeanVarianceOptimizationPortfolioConstructionModel(rebalance, optimizer: optimizer));
+                var message = Assert.Throws<NotImplementedException>(
+                    () =>
+                        new MeanVarianceOptimizationPortfolioConstructionModel(
+                            rebalance,
+                            optimizer: optimizer
+                        )
+                );
             }
         }
 
@@ -275,28 +408,55 @@ class CustomPortfolioOptimizer:
                 kvp.Value.SetHoldings(kvp.Value.Price, 0);
             }
 
-            var changes = SecurityChangesTests.AddedNonInternal(_algorithm.Securities.Values.ToArray());
+            var changes = SecurityChangesTests.AddedNonInternal(
+                _algorithm.Securities.Values.ToArray()
+            );
             _algorithm.PortfolioConstruction.OnSecuritiesChanged(_algorithm, changes);
         }
 
-        public IPortfolioConstructionModel GetPortfolioConstructionModel(Language language, Resolution resolution, PortfolioBias bias)
+        public IPortfolioConstructionModel GetPortfolioConstructionModel(
+            Language language,
+            Resolution resolution,
+            PortfolioBias bias
+        )
         {
             if (language == Language.CSharp)
             {
-                return new MeanVarianceOptimizationPortfolioConstructionModel(resolution, bias, 1, 63, Resolution.Daily, 0.0001);
+                return new MeanVarianceOptimizationPortfolioConstructionModel(
+                    resolution,
+                    bias,
+                    1,
+                    63,
+                    Resolution.Daily,
+                    0.0001
+                );
             }
 
             using (Py.GIL())
             {
                 const string name = nameof(MeanVarianceOptimizationPortfolioConstructionModel);
-                var instance = Py.Import(name).GetAttr(name)
-                    .Invoke(((int)resolution).ToPython(), ((int)bias).ToPython(), 1.ToPython(), 63.ToPython(), ((int)Resolution.Daily).ToPython(), 0.0001.ToPython());
+                var instance = Py.Import(name)
+                    .GetAttr(name)
+                    .Invoke(
+                        ((int)resolution).ToPython(),
+                        ((int)bias).ToPython(),
+                        1.ToPython(),
+                        63.ToPython(),
+                        ((int)Resolution.Daily).ToPython(),
+                        0.0001.ToPython()
+                    );
                 return new PortfolioConstructionModelPythonWrapper(instance);
             }
         }
 
-        private IEnumerable<IPortfolioTarget> GeneratePortfolioTargets(Language language, InsightDirection direction1, InsightDirection direction2,
-                                                                       double? magnitude1, double? magnitude2, PortfolioBias bias = PortfolioBias.LongShort)
+        private IEnumerable<IPortfolioTarget> GeneratePortfolioTargets(
+            Language language,
+            InsightDirection direction1,
+            InsightDirection direction2,
+            double? magnitude1,
+            double? magnitude2,
+            PortfolioBias bias = PortfolioBias.LongShort
+        )
         {
             SetPortfolioConstruction(language, bias);
 
@@ -312,11 +472,30 @@ class CustomPortfolioOptimizer:
 
             var insights = new[]
             {
-                new Insight(_nowUtc, aapl.Symbol, TimeSpan.FromDays(1), InsightType.Price, direction1, magnitude1, null),
-                new Insight(_nowUtc, spy.Symbol, TimeSpan.FromDays(1), InsightType.Price, direction2, magnitude2, null),
+                new Insight(
+                    _nowUtc,
+                    aapl.Symbol,
+                    TimeSpan.FromDays(1),
+                    InsightType.Price,
+                    direction1,
+                    magnitude1,
+                    null
+                ),
+                new Insight(
+                    _nowUtc,
+                    spy.Symbol,
+                    TimeSpan.FromDays(1),
+                    InsightType.Price,
+                    direction2,
+                    magnitude2,
+                    null
+                ),
             };
             _algorithm.Insights.AddRange(insights);
-            _algorithm.PortfolioConstruction.OnSecuritiesChanged(_algorithm, SecurityChangesTests.AddedNonInternal(aapl, spy));
+            _algorithm.PortfolioConstruction.OnSecuritiesChanged(
+                _algorithm,
+                SecurityChangesTests.AddedNonInternal(aapl, spy)
+            );
 
             return _algorithm.PortfolioConstruction.CreateTargets(_algorithm, insights);
         }

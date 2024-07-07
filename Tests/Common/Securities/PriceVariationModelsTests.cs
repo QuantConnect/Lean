@@ -30,43 +30,81 @@ namespace QuantConnect.Tests.Common.Securities.Equity
         [TestCase("EURUSD", SecurityType.Forex, Market.FXCM, DataNormalizationMode.Adjusted)]
         [TestCase("EURUSD", SecurityType.Forex, Market.FXCM, DataNormalizationMode.SplitAdjusted)]
         [TestCase("ZO", SecurityType.Future, Market.CBOT, DataNormalizationMode.Adjusted)]
-        public void CheckSecurityMinimumPriceVariation(string ticker, SecurityType securityType, string market, DataNormalizationMode mode)
+        public void CheckSecurityMinimumPriceVariation(
+            string ticker,
+            SecurityType securityType,
+            string market,
+            DataNormalizationMode mode
+        )
         {
             var symbol = Symbol.Create(ticker, securityType, market);
             var security = GetSecurity(symbol, mode);
             var expected = security.SymbolProperties.MinimumPriceVariation;
-            var adjutedEquity = mode == DataNormalizationMode.Adjusted && securityType == SecurityType.Equity;
+            var adjutedEquity =
+                mode == DataNormalizationMode.Adjusted && securityType == SecurityType.Equity;
 
             security.SetMarketPrice(new IndicatorDataPoint(symbol, DateTime.Now, 10m));
             var actual = security.PriceVariationModel.GetMinimumPriceVariation(
-                new GetMinimumPriceVariationParameters(security, security.Price));
+                new GetMinimumPriceVariationParameters(security, security.Price)
+            );
             Assert.AreEqual(adjutedEquity ? 0 : expected, actual);
 
             security.SetMarketPrice(new IndicatorDataPoint(symbol, DateTime.Now, 1m));
             actual = security.PriceVariationModel.GetMinimumPriceVariation(
-                new GetMinimumPriceVariationParameters(security, security.Price));
+                new GetMinimumPriceVariationParameters(security, security.Price)
+            );
             Assert.AreEqual(adjutedEquity ? 0 : expected, actual);
 
             // Special case, if stock price less than $1, minimum price variation is $0.0001
-            if (securityType == SecurityType.Equity) expected = 0.0001m;
+            if (securityType == SecurityType.Equity)
+                expected = 0.0001m;
 
             security.SetMarketPrice(new IndicatorDataPoint(symbol, DateTime.Now, .99m));
             actual = security.PriceVariationModel.GetMinimumPriceVariation(
-                new GetMinimumPriceVariationParameters(security, security.Price));
+                new GetMinimumPriceVariationParameters(security, security.Price)
+            );
             Assert.AreEqual(adjutedEquity ? 0 : expected, actual);
         }
 
-        [TestCase("ZO", SecurityType.Future, Market.CBOT, DataNormalizationMode.Adjusted, new float[] { 3.7025f, 3.72f, 3.6875f, 3.6425f, 3.5225f, 3.5125f, 3.47f, 3.46f, 3.445f, 3.4625f, 3.435f, 3.3575f })]
-        public void CheckMinimumPriceVariationWithData(string ticker, SecurityType securityType, string market, DataNormalizationMode mode, float[] data)
+        [TestCase(
+            "ZO",
+            SecurityType.Future,
+            Market.CBOT,
+            DataNormalizationMode.Adjusted,
+            new float[]
+            {
+                3.7025f,
+                3.72f,
+                3.6875f,
+                3.6425f,
+                3.5225f,
+                3.5125f,
+                3.47f,
+                3.46f,
+                3.445f,
+                3.4625f,
+                3.435f,
+                3.3575f
+            }
+        )]
+        public void CheckMinimumPriceVariationWithData(
+            string ticker,
+            SecurityType securityType,
+            string market,
+            DataNormalizationMode mode,
+            float[] data
+        )
         {
             var symbol = Symbol.Create(ticker, securityType, market);
             var security = GetSecurity(symbol, mode);
             var minimumPriceVariation = (float)security.SymbolProperties.MinimumPriceVariation;
 
             var lastPrice = data[0];
-            for(var index = 1; index< data.Length; index++)
+            for (var index = 1; index < data.Length; index++)
             {
-                Assert.IsTrue(Math.Round(Math.Abs(data[index] - lastPrice) % minimumPriceVariation) == 0);
+                Assert.IsTrue(
+                    Math.Round(Math.Abs(data[index] - lastPrice) % minimumPriceVariation) == 0
+                );
                 lastPrice = data[index];
             }
         }
@@ -81,7 +119,11 @@ namespace QuantConnect.Tests.Common.Securities.Equity
         [TestCase(1.1, 0.999999999, 0.0001)]
         [TestCase(1.1, 1, 0.01)]
         [TestCase(1.1, 1.000000001, 0.01)]
-        public void MinimumPriceVariationChangesWithOrderPrice(decimal securityPrice, decimal orderPrice, decimal expected)
+        public void MinimumPriceVariationChangesWithOrderPrice(
+            decimal securityPrice,
+            decimal orderPrice,
+            decimal expected
+        )
         {
             var symbol = Symbol.Create("YGTY", SecurityType.Equity, Market.USA);
             var security = GetSecurity(symbol, DataNormalizationMode.Raw);
@@ -89,14 +131,21 @@ namespace QuantConnect.Tests.Common.Securities.Equity
             security.SetMarketPrice(new Tick { Value = securityPrice });
 
             var actual = security.PriceVariationModel.GetMinimumPriceVariation(
-                new GetMinimumPriceVariationParameters(security, orderPrice));
+                new GetMinimumPriceVariationParameters(security, orderPrice)
+            );
             Assert.AreEqual(expected, actual);
         }
 
         private Security GetSecurity(Symbol symbol, DataNormalizationMode mode)
         {
-            var symbolProperties = SymbolPropertiesDatabase.FromDataFolder()
-                .GetSymbolProperties(symbol.ID.Market, symbol, symbol.ID.SecurityType, Currencies.USD);
+            var symbolProperties = SymbolPropertiesDatabase
+                .FromDataFolder()
+                .GetSymbolProperties(
+                    symbol.ID.Market,
+                    symbol,
+                    symbol.ID.SecurityType,
+                    Currencies.USD
+                );
 
             Security security;
             if (symbol.ID.SecurityType == SecurityType.Equity)
@@ -141,7 +190,10 @@ namespace QuantConnect.Tests.Common.Securities.Equity
                 );
             }
 
-            var TimeKeeper = new TimeKeeper(DateTime.Now.ConvertToUtc(TimeZones.NewYork), new[] { TimeZones.NewYork });
+            var TimeKeeper = new TimeKeeper(
+                DateTime.Now.ConvertToUtc(TimeZones.NewYork),
+                new[] { TimeZones.NewYork }
+            );
             security.SetLocalTimeKeeper(TimeKeeper.GetLocalTimeKeeper(TimeZones.NewYork));
             security.SetDataNormalizationMode(mode);
 

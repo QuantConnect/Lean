@@ -1,11 +1,11 @@
 /*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
- * 
- * Licensed under the Apache License, Version 2.0 (the "License"); 
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -14,12 +14,12 @@
 */
 
 using System;
+using System.Collections.Generic;
+using System.Linq;
 using NUnit.Framework;
 using QuantConnect.Data.Consolidators;
 using QuantConnect.Data.Market;
 using QuantConnect.Indicators;
-using System.Collections.Generic;
-using System.Linq;
 
 namespace QuantConnect.Tests.Common.Data
 {
@@ -30,8 +30,13 @@ namespace QuantConnect.Tests.Common.Data
         [TestCase(-1)]
         public void WickedRenkoConsolidatorFailsWhenBarSizeIsZero(double barSize)
         {
-            var message = Assert.Throws<ArgumentException>( () => new RenkoConsolidator((decimal)barSize));
-            Assert.AreEqual("Renko consolidator BarSize must be strictly greater than zero", message.Message);
+            var message = Assert.Throws<ArgumentException>(
+                () => new RenkoConsolidator((decimal)barSize)
+            );
+            Assert.AreEqual(
+                "Renko consolidator BarSize must be strictly greater than zero",
+                message.Message
+            );
         }
 
         [Test]
@@ -49,8 +54,7 @@ namespace QuantConnect.Tests.Common.Data
 
             var renkos = new List<RenkoBar>();
 
-            consolidator.DataConsolidated += (sender, renko) =>
-                renkos.Add(renko);
+            consolidator.DataConsolidated += (sender, renko) => renkos.Add(renko);
 
             var tickOn1 = new DateTime(2016, 1, 1, 17, 0, 0, 0);
             var tickOn2 = new DateTime(2016, 1, 1, 17, 0, 0, 1);
@@ -75,8 +79,7 @@ namespace QuantConnect.Tests.Common.Data
 
             var renkos = new List<RenkoBar>();
 
-            consolidator.DataConsolidated += (sender, renko) =>
-                renkos.Add(renko);
+            consolidator.DataConsolidated += (sender, renko) => renkos.Add(renko);
 
             var tickOn1 = new DateTime(2016, 1, 1, 17, 0, 0, 0);
             var tickOn2 = new DateTime(2016, 1, 1, 17, 0, 0, 1);
@@ -101,8 +104,7 @@ namespace QuantConnect.Tests.Common.Data
 
             var renkos = new List<RenkoBar>();
 
-            consolidator.DataConsolidated += (sender, renko) =>
-                renkos.Add(renko);
+            consolidator.DataConsolidated += (sender, renko) => renkos.Add(renko);
 
             var tickOn1 = new DateTime(2016, 1, 1, 17, 0, 0, 0);
             var tickOn2 = new DateTime(2016, 1, 1, 17, 0, 0, 1);
@@ -127,8 +129,7 @@ namespace QuantConnect.Tests.Common.Data
 
             var renkos = new List<RenkoBar>();
 
-            consolidator.DataConsolidated += (sender, renko) =>
-                renkos.Add(renko);
+            consolidator.DataConsolidated += (sender, renko) => renkos.Add(renko);
 
             var tickOn1 = new DateTime(2016, 1, 1, 17, 0, 0, 0);
             var tickOn2 = new DateTime(2016, 1, 1, 17, 0, 0, 1);
@@ -153,8 +154,7 @@ namespace QuantConnect.Tests.Common.Data
 
             var renkos = new List<RenkoBar>();
 
-            consolidator.DataConsolidated += (sender, renko) =>
-                renkos.Add(renko);
+            consolidator.DataConsolidated += (sender, renko) => renkos.Add(renko);
 
             var tickOn1 = new DateTime(2016, 1, 1, 17, 0, 0, 0);
             var tickOn2 = new DateTime(2016, 1, 1, 17, 0, 0, 1);
@@ -190,8 +190,7 @@ namespace QuantConnect.Tests.Common.Data
 
             var renkos = new List<RenkoBar>();
 
-            consolidator.DataConsolidated += (sender, renko) =>
-                renkos.Add(renko);
+            consolidator.DataConsolidated += (sender, renko) => renkos.Add(renko);
 
             var tickOn1 = new DateTime(2016, 1, 1, 17, 0, 0, 0);
             var tickOn2 = new DateTime(2016, 1, 1, 17, 0, 0, 1);
@@ -227,8 +226,7 @@ namespace QuantConnect.Tests.Common.Data
 
             var renkos = new List<RenkoBar>();
 
-            consolidator.DataConsolidated += (sender, renko) =>
-                renkos.Add(renko);
+            consolidator.DataConsolidated += (sender, renko) => renkos.Add(renko);
 
             var tickOn1 = new DateTime(2016, 1, 1, 17, 0, 0, 0);
             var tickOn2 = new DateTime(2016, 1, 1, 17, 0, 0, 1);
@@ -286,8 +284,7 @@ namespace QuantConnect.Tests.Common.Data
 
             var renkos = new List<RenkoBar>();
 
-            consolidator.DataConsolidated += (sender, renko) =>
-                renkos.Add(renko);
+            consolidator.DataConsolidated += (sender, renko) => renkos.Add(renko);
 
             var tickOn1 = new DateTime(2016, 1, 1, 17, 0, 0, 0);
             var tickOn2 = new DateTime(2016, 1, 1, 17, 0, 0, 1);
@@ -345,8 +342,7 @@ namespace QuantConnect.Tests.Common.Data
 
             var renkos = new List<RenkoBar>();
 
-            consolidator.DataConsolidated += (sender, renko) =>
-                renkos.Add(renko);
+            consolidator.DataConsolidated += (sender, renko) => renkos.Add(renko);
 
             var tickOn1 = new DateTime(2016, 1, 1, 17, 0, 0, 0);
             var tickOn2 = new DateTime(2016, 1, 1, 17, 0, 0, 1);
@@ -400,8 +396,7 @@ namespace QuantConnect.Tests.Common.Data
 
             var renkos = new List<RenkoBar>();
 
-            consolidator.DataConsolidated += (sender, renko) =>
-                renkos.Add(renko);
+            consolidator.DataConsolidated += (sender, renko) => renkos.Add(renko);
 
             var tickOn1 = new DateTime(2016, 1, 1, 17, 0, 0, 0);
             var tickOn2 = new DateTime(2016, 1, 1, 17, 0, 0, 1);
@@ -453,8 +448,7 @@ namespace QuantConnect.Tests.Common.Data
 
             var renkos = new List<RenkoBar>();
 
-            consolidator.DataConsolidated += (sender, renko) =>
-                renkos.Add(renko);
+            consolidator.DataConsolidated += (sender, renko) => renkos.Add(renko);
 
             var tickOn1 = new DateTime(2016, 1, 1, 17, 0, 0, 0);
             var tickOn2 = new DateTime(2016, 1, 1, 17, 0, 0, 1);
@@ -526,8 +520,7 @@ namespace QuantConnect.Tests.Common.Data
 
             var renkos = new List<RenkoBar>();
 
-            consolidator.DataConsolidated += (sender, renko) =>
-                renkos.Add(renko);
+            consolidator.DataConsolidated += (sender, renko) => renkos.Add(renko);
 
             var tickOn1 = new DateTime(2016, 1, 1, 17, 0, 0, 0);
             var tickOn2 = new DateTime(2016, 1, 1, 17, 0, 0, 1);
@@ -592,62 +585,303 @@ namespace QuantConnect.Tests.Common.Data
             Assert.AreEqual(openRenko.Close, 7.9);
         }
 
-        [TestCase(new double[] {1.38687, 1.38688, 1.38687, 1.38686, 1.38685, 1.38683,
-                1.38682, 1.38682, 1.38684, 1.38682, 1.38682, 1.38680,
-                1.38681, 1.38686, 1.38688, 1.38688, 1.38690, 1.38690,
-                1.38691, 1.38692, 1.38694, 1.38695, 1.38697, 1.38697,
-                1.38700, 1.38699, 1.38699, 1.38699, 1.38698, 1.38699,
-                1.38697, 1.38698, 1.38698, 1.38697, 1.38698, 1.38698,
-                1.38697, 1.38697, 1.38700, 1.38702, 1.38701, 1.38699,
-                1.38697, 1.38698, 1.38696, 1.38698, 1.38697, 1.38695,
-                1.38695, 1.38696, 1.38693, 1.38692, 1.38693, 1.38693,
-                1.38692, 1.38693, 1.38692, 1.38690, 1.38686, 1.38685,
-                1.38687, 1.38686, 1.38686, 1.38686, 1.38686, 1.38685,
-                1.38684, 1.38678, 1.38679, 1.38680, 1.38680, 1.38681,
-                1.38685, 1.38685, 1.38683, 1.38682, 1.38682, 1.38683,
-                1.38682, 1.38683, 1.38682, 1.38681, 1.38680, 1.38681,
-                1.38681, 1.38681, 1.38682, 1.38680, 1.38679, 1.38678,
-                1.38675, 1.38678, 1.38678, 1.38678, 1.38682, 1.38681,
-                1.38682, 1.38680, 1.38682, 1.38683, 1.38685, 1.38683,
-                1.38683, 1.38684, 1.38683, 1.38683, 1.38684, 1.38685,
-                1.38684, 1.38683, 1.38686, 1.38685, 1.38685, 1.38684,
-                1.38685, 1.38682, 1.38684, 1.38683, 1.38682, 1.38683,
-                1.38685, 1.38685, 1.38685, 1.38683, 1.38685, 1.38684,
-                1.38686, 1.38693, 1.38695, 1.38693, 1.38694, 1.38693,
-                1.38692, 1.38693, 1.38695, 1.38697, 1.38698, 1.38695,
-                1.38696}, 0.0001)]
-        [TestCase(new double[] {90.38687, 12.38688, 33.38687, 69.38686, 22.38685, 19.38683,
-                19.38682, 51.38682, 12.38684, 41.38682, 47.38682, 30.38680,
-                81.38681, 16.38686, 21.38688, 14.38688, 89.38690, 72.38690,
-                71.38691, 71.38692, 3.38694, 71.38695, 50.38697, 97.38697,
-                16.38700, 18.38699, 14.38699, 91.38699, 60.38698, 35.38699,
-                51.38697, 91.38698, 41.38698, 21.38697, 44.38698, 35.38698,
-                14.38697, 10.38697, 5.38700, 1.38702, 1.38701, 15.38699,
-                31.38697, 11.38698, 16.38696, 21.38698, 16.38697, 19.38695,
-                12.38695, 21.38696, 61.38693, 32.38692, 20.38693, 23.38693,
-                11.38692, 13.38693, 7.38692, 16.38690, 30.38686, 34.38685,
-                91.38687, 41.38686, 18.38686, 12.38686, 40.38686, 44.38685,
-                18.38684, 15.38678, 81.38679, 19.38680, 32.38680, 37.38681,
-                71.38685, 61.38685, 9.38683, 21.38682, 27.38682, 28.38683,
-                16.38682, 17.38683, 0.38682, 81.38681, 60.38680, 65.38681,
-                51.38681, 81.38681, 11.38682, 81.38680, 60.38679, 65.38678,
-                41.38675, 19.38678, 11.38678, 51.38678, 25.38682, 30.38681,
-                13.38682, 1.38680, 2.38682, 51.38683, 47.38685, 55.38683,
-                21.38683, 11.38684, 13.38683, 81.38683, 70.38684, 75.38685,
-                11.38684, 21.38683, 31.38686, 91.38685, 87.38685, 92.38684,
-                10.38685, 13.38682, 4.38684, 21.38683, 29.38682, 34.38683,
-                19.38685, 41.38685, 51.38685, 12.38683, 28.38685, 34.38684,
-                81.38686, 15.38693, 15.38695, 1.38693, 8.38694, 13.38693,
-                17.38692, 61.38693, 6.38695, 13.38697, 4.38698, 9.38695,
-                61.38696}, 5)]
+        [TestCase(
+            new double[]
+            {
+                1.38687,
+                1.38688,
+                1.38687,
+                1.38686,
+                1.38685,
+                1.38683,
+                1.38682,
+                1.38682,
+                1.38684,
+                1.38682,
+                1.38682,
+                1.38680,
+                1.38681,
+                1.38686,
+                1.38688,
+                1.38688,
+                1.38690,
+                1.38690,
+                1.38691,
+                1.38692,
+                1.38694,
+                1.38695,
+                1.38697,
+                1.38697,
+                1.38700,
+                1.38699,
+                1.38699,
+                1.38699,
+                1.38698,
+                1.38699,
+                1.38697,
+                1.38698,
+                1.38698,
+                1.38697,
+                1.38698,
+                1.38698,
+                1.38697,
+                1.38697,
+                1.38700,
+                1.38702,
+                1.38701,
+                1.38699,
+                1.38697,
+                1.38698,
+                1.38696,
+                1.38698,
+                1.38697,
+                1.38695,
+                1.38695,
+                1.38696,
+                1.38693,
+                1.38692,
+                1.38693,
+                1.38693,
+                1.38692,
+                1.38693,
+                1.38692,
+                1.38690,
+                1.38686,
+                1.38685,
+                1.38687,
+                1.38686,
+                1.38686,
+                1.38686,
+                1.38686,
+                1.38685,
+                1.38684,
+                1.38678,
+                1.38679,
+                1.38680,
+                1.38680,
+                1.38681,
+                1.38685,
+                1.38685,
+                1.38683,
+                1.38682,
+                1.38682,
+                1.38683,
+                1.38682,
+                1.38683,
+                1.38682,
+                1.38681,
+                1.38680,
+                1.38681,
+                1.38681,
+                1.38681,
+                1.38682,
+                1.38680,
+                1.38679,
+                1.38678,
+                1.38675,
+                1.38678,
+                1.38678,
+                1.38678,
+                1.38682,
+                1.38681,
+                1.38682,
+                1.38680,
+                1.38682,
+                1.38683,
+                1.38685,
+                1.38683,
+                1.38683,
+                1.38684,
+                1.38683,
+                1.38683,
+                1.38684,
+                1.38685,
+                1.38684,
+                1.38683,
+                1.38686,
+                1.38685,
+                1.38685,
+                1.38684,
+                1.38685,
+                1.38682,
+                1.38684,
+                1.38683,
+                1.38682,
+                1.38683,
+                1.38685,
+                1.38685,
+                1.38685,
+                1.38683,
+                1.38685,
+                1.38684,
+                1.38686,
+                1.38693,
+                1.38695,
+                1.38693,
+                1.38694,
+                1.38693,
+                1.38692,
+                1.38693,
+                1.38695,
+                1.38697,
+                1.38698,
+                1.38695,
+                1.38696
+            },
+            0.0001
+        )]
+        [TestCase(
+            new double[]
+            {
+                90.38687,
+                12.38688,
+                33.38687,
+                69.38686,
+                22.38685,
+                19.38683,
+                19.38682,
+                51.38682,
+                12.38684,
+                41.38682,
+                47.38682,
+                30.38680,
+                81.38681,
+                16.38686,
+                21.38688,
+                14.38688,
+                89.38690,
+                72.38690,
+                71.38691,
+                71.38692,
+                3.38694,
+                71.38695,
+                50.38697,
+                97.38697,
+                16.38700,
+                18.38699,
+                14.38699,
+                91.38699,
+                60.38698,
+                35.38699,
+                51.38697,
+                91.38698,
+                41.38698,
+                21.38697,
+                44.38698,
+                35.38698,
+                14.38697,
+                10.38697,
+                5.38700,
+                1.38702,
+                1.38701,
+                15.38699,
+                31.38697,
+                11.38698,
+                16.38696,
+                21.38698,
+                16.38697,
+                19.38695,
+                12.38695,
+                21.38696,
+                61.38693,
+                32.38692,
+                20.38693,
+                23.38693,
+                11.38692,
+                13.38693,
+                7.38692,
+                16.38690,
+                30.38686,
+                34.38685,
+                91.38687,
+                41.38686,
+                18.38686,
+                12.38686,
+                40.38686,
+                44.38685,
+                18.38684,
+                15.38678,
+                81.38679,
+                19.38680,
+                32.38680,
+                37.38681,
+                71.38685,
+                61.38685,
+                9.38683,
+                21.38682,
+                27.38682,
+                28.38683,
+                16.38682,
+                17.38683,
+                0.38682,
+                81.38681,
+                60.38680,
+                65.38681,
+                51.38681,
+                81.38681,
+                11.38682,
+                81.38680,
+                60.38679,
+                65.38678,
+                41.38675,
+                19.38678,
+                11.38678,
+                51.38678,
+                25.38682,
+                30.38681,
+                13.38682,
+                1.38680,
+                2.38682,
+                51.38683,
+                47.38685,
+                55.38683,
+                21.38683,
+                11.38684,
+                13.38683,
+                81.38683,
+                70.38684,
+                75.38685,
+                11.38684,
+                21.38683,
+                31.38686,
+                91.38685,
+                87.38685,
+                92.38684,
+                10.38685,
+                13.38682,
+                4.38684,
+                21.38683,
+                29.38682,
+                34.38683,
+                19.38685,
+                41.38685,
+                51.38685,
+                12.38683,
+                28.38685,
+                34.38684,
+                81.38686,
+                15.38693,
+                15.38695,
+                1.38693,
+                8.38694,
+                13.38693,
+                17.38692,
+                61.38693,
+                6.38695,
+                13.38697,
+                4.38698,
+                9.38695,
+                61.38696
+            },
+            5
+        )]
         public void ConsistentRenkos(double[] values, double barSize)
         {
             // Reproduce issue #5479
             // Test Renko bar consistency amongst three consolidators starting at different times
 
             var time = new DateTime(2016, 1, 1);
-            var testValues = new List<decimal> (values.Select(x => (decimal)x));
-
+            var testValues = new List<decimal>(values.Select(x => (decimal)x));
 
             var consolidator1 = new RenkoConsolidator((decimal)barSize);
             var consolidator2 = new RenkoConsolidator((decimal)barSize);
@@ -700,29 +934,45 @@ namespace QuantConnect.Tests.Common.Data
         [TestCase(1257.38682, 100, 1300)]
         [TestCase(44500.2349, 1000, 45000)]
         [TestCase(44300.2349, 1000, 44000)]
-        public void GetClosestMultipleWorksAsExpected(double price, double barSize, double expectedClosestMultiple)
+        public void GetClosestMultipleWorksAsExpected(
+            double price,
+            double barSize,
+            double expectedClosestMultiple
+        )
         {
-            Assert.AreEqual((decimal)expectedClosestMultiple, RenkoConsolidator.GetClosestMultiple((decimal)price, (decimal)barSize));
+            Assert.AreEqual(
+                (decimal)expectedClosestMultiple,
+                RenkoConsolidator.GetClosestMultiple((decimal)price, (decimal)barSize)
+            );
         }
 
         [TestCase(0)]
         [TestCase(-1)]
         public void GetClosestMultipleFailsWhenBarSizeIsLessThanZero(double barSize)
         {
-            var message = Assert.Throws<ArgumentException>(() => RenkoConsolidator.GetClosestMultiple((decimal)34.78989, (decimal)barSize));
+            var message = Assert.Throws<ArgumentException>(
+                () => RenkoConsolidator.GetClosestMultiple((decimal)34.78989, (decimal)barSize)
+            );
             Assert.AreEqual("BarSize must be strictly greater than zero", message.Message);
         }
 
         private class TestRenkoConsolidator : RenkoConsolidator
         {
             public TestRenkoConsolidator(decimal barSize)
-                : base(barSize)
-            {
-            }
+                : base(barSize) { }
 
             public RenkoBar OpenRenko()
             {
-                return new RenkoBar(null, OpenOn, CloseOn, BarSize, OpenRate, HighRate, LowRate, CloseRate);
+                return new RenkoBar(
+                    null,
+                    OpenOn,
+                    CloseOn,
+                    BarSize,
+                    OpenRate,
+                    HighRate,
+                    LowRate,
+                    CloseRate
+                );
             }
         }
     }

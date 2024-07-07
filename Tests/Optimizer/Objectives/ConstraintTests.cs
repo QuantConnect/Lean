@@ -14,11 +14,11 @@
  *
 */
 
+using System;
 using Newtonsoft.Json;
 using NUnit.Framework;
 using QuantConnect.Optimizer.Objectives;
 using QuantConnect.Util;
-using System;
 
 namespace QuantConnect.Tests.Optimizer.Objectives
 {
@@ -84,7 +84,8 @@ namespace QuantConnect.Tests.Optimizer.Objectives
         [Test]
         public void FromJson()
         {
-            var json = "{\"operator\": \"equals\",\"target\": \"pin ocho.Gepetto\",\"targetValue\": 11}";
+            var json =
+                "{\"operator\": \"equals\",\"target\": \"pin ocho.Gepetto\",\"targetValue\": 11}";
 
             var constraint = (Constraint)JsonConvert.DeserializeObject(json, typeof(Constraint));
 
@@ -96,11 +97,15 @@ namespace QuantConnect.Tests.Optimizer.Objectives
         [Test]
         public void RoundTrip()
         {
-            var origin =  new Constraint("['Statistics'].['Drawdown']", ComparisonOperatorTypes.Equals, 100);
-            
+            var origin = new Constraint(
+                "['Statistics'].['Drawdown']",
+                ComparisonOperatorTypes.Equals,
+                100
+            );
+
             var json = JsonConvert.SerializeObject(origin);
             var actual = JsonConvert.DeserializeObject<Constraint>(json);
-            
+
             Assert.NotNull(actual);
             Assert.AreEqual(origin.Target, actual.Target);
             Assert.AreEqual(origin.Operator, actual.Operator);

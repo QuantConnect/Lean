@@ -13,24 +13,33 @@
  * limitations under the License.
 */
 
-using Newtonsoft.Json;
-using NUnit.Framework;
-using QuantConnect.Orders;
 using System;
 using System.Collections.Generic;
 using System.Text.RegularExpressions;
+using Newtonsoft.Json;
+using NUnit.Framework;
+using QuantConnect.Orders;
 
 namespace QuantConnect.Tests.Common.Orders
 {
     [TestFixture]
     public class ReadOrdersResponseJsonConverterTests
     {
-        private JsonSerializerSettings _jsonSettings = new() { Converters = { new ReadOrdersResponseJsonConverter()} };
+        private JsonSerializerSettings _jsonSettings =
+            new() { Converters = { new ReadOrdersResponseJsonConverter() } };
 
         [TestCaseSource(nameof(DeserializeOrdersTests))]
-        public void DeserializesCamelAndCapitalCaseOrders(string json, OrderType expectedType, string id, SecurityType securityType)
+        public void DeserializesCamelAndCapitalCaseOrders(
+            string json,
+            OrderType expectedType,
+            string id,
+            SecurityType securityType
+        )
         {
-            var apiOrderResponse = JsonConvert.DeserializeObject<ApiOrderResponse>(json, _jsonSettings);
+            var apiOrderResponse = JsonConvert.DeserializeObject<ApiOrderResponse>(
+                json,
+                _jsonSettings
+            );
             var order = apiOrderResponse.Order;
             var actualType = order.Type;
             Assert.AreEqual(expectedType, actualType);
@@ -92,19 +101,49 @@ namespace QuantConnect.Tests.Common.Orders
             Assert.AreEqual(Market.USA, order.Symbol.ID.Market, "Failed in Order.Symbol.ID.Market");
             Assert.AreEqual(138.513986945m, order.Price, "Failed in Order.Price");
             Assert.AreEqual("USD", order.PriceCurrency, "Failed in Order.PriceCurrency");
-            Assert.AreEqual(new DateTime(2013, 10, 7, 13, 31, 00), order.Time.RoundDown(TimeSpan.FromSeconds(1)), "Failed in Order.Time");
-            Assert.AreEqual(new DateTime(2013, 10, 7, 13, 31, 00), order.CreatedTime.RoundDown(TimeSpan.FromSeconds(1)));
-            Assert.AreEqual(new DateTime(2013, 10, 7, 13, 31, 00), order.LastFillTime?.RoundDown(TimeSpan.FromSeconds(1)));
+            Assert.AreEqual(
+                new DateTime(2013, 10, 7, 13, 31, 00),
+                order.Time.RoundDown(TimeSpan.FromSeconds(1)),
+                "Failed in Order.Time"
+            );
+            Assert.AreEqual(
+                new DateTime(2013, 10, 7, 13, 31, 00),
+                order.CreatedTime.RoundDown(TimeSpan.FromSeconds(1))
+            );
+            Assert.AreEqual(
+                new DateTime(2013, 10, 7, 13, 31, 00),
+                order.LastFillTime?.RoundDown(TimeSpan.FromSeconds(1))
+            );
             Assert.AreEqual(10, order.Quantity, "Failed in Order.Quantity");
             Assert.AreEqual(OrderStatus.Submitted, order.Status, "Failed in Order.Status");
-            Assert.AreEqual(TimeInForce.GoodTilCanceled.ToString(), order.Properties.TimeInForce.ToString(), "Failed in Order.Properties.TimeInForce");
+            Assert.AreEqual(
+                TimeInForce.GoodTilCanceled.ToString(),
+                order.Properties.TimeInForce.ToString(),
+                "Failed in Order.Properties.TimeInForce"
+            );
             Assert.AreEqual(securityType, order.SecurityType, "Failed in Order.SecurityType");
             Assert.AreEqual(OrderDirection.Buy, order.Direction, "Failed in Order.Direction");
             Assert.AreEqual(1385.139869450m, order.Value, "Failed in Order.Value");
-            Assert.AreEqual(138.505714984m, order.OrderSubmissionData.BidPrice, "Failed in Order.OrderSubmissionData.BidPrice");
-            Assert.AreEqual(138.513986945m, order.OrderSubmissionData.AskPrice, "Failed in Order.OrderSubmissionData.AskPrice");
-            Assert.AreEqual(138.505714984m, order.OrderSubmissionData.LastPrice, "Failed in Order.OrderSubmissionData.LastPrice");
-            Assert.AreEqual(DataNormalizationMode.Adjusted, order.PriceAdjustmentMode, "Failed in Order.PriceAdjustmentMode");
+            Assert.AreEqual(
+                138.505714984m,
+                order.OrderSubmissionData.BidPrice,
+                "Failed in Order.OrderSubmissionData.BidPrice"
+            );
+            Assert.AreEqual(
+                138.513986945m,
+                order.OrderSubmissionData.AskPrice,
+                "Failed in Order.OrderSubmissionData.AskPrice"
+            );
+            Assert.AreEqual(
+                138.505714984m,
+                order.OrderSubmissionData.LastPrice,
+                "Failed in Order.OrderSubmissionData.LastPrice"
+            );
+            Assert.AreEqual(
+                DataNormalizationMode.Adjusted,
+                order.PriceAdjustmentMode,
+                "Failed in Order.PriceAdjustmentMode"
+            );
         }
 
         [TestCaseSource(nameof(SerializeOrdersTests))]
@@ -113,19 +152,33 @@ namespace QuantConnect.Tests.Common.Orders
             var order = JsonConvert.DeserializeObject<ApiOrderResponse>(json, _jsonSettings);
 
             var serializedOrder = JsonConvert.SerializeObject(order, _jsonSettings);
-            var jsonFormat = json.Replace("\r\n            ", "").Replace(": ", ":").Replace("    ", "").Replace("\r\n", "").Replace("\t", "").Replace("\n", "");
-            if (order.Order.Type == OrderType.ComboMarket || order.Order.Type == OrderType.ComboLimit || order.Order.Type == OrderType.ComboLegLimit)
+            var jsonFormat = json.Replace("\r\n            ", "")
+                .Replace(": ", ":")
+                .Replace("    ", "")
+                .Replace("\r\n", "")
+                .Replace("\t", "")
+                .Replace("\n", "");
+            if (
+                order.Order.Type == OrderType.ComboMarket
+                || order.Order.Type == OrderType.ComboLimit
+                || order.Order.Type == OrderType.ComboLegLimit
+            )
             {
                 jsonFormat = Regex.Replace(jsonFormat, @"\""value\"":\""(.*?)\"",", "");
                 jsonFormat = Regex.Replace(jsonFormat, @"\""permtick\"":\""(.*?)\"",", "");
                 serializedOrder = Regex.Replace(serializedOrder, @"\""value\"":\""(.*?)\"",", "");
-                serializedOrder = Regex.Replace(serializedOrder, @"\""permtick\"":\""(.*?)\"",", "");
+                serializedOrder = Regex.Replace(
+                    serializedOrder,
+                    @"\""permtick\"":\""(.*?)\"",",
+                    ""
+                );
             }
             Assert.AreEqual(jsonFormat, serializedOrder);
             Assert.AreEqual(jsonFormat.GetHashCode(), serializedOrder.GetHashCode());
         }
 
-        private const string _camelCaseMarketOrder = @"{
+        private const string _camelCaseMarketOrder =
+            @"{
             ""type"": 0,
             ""id"": 1,
             ""contingentId"": 0,
@@ -180,7 +233,8 @@ namespace QuantConnect.Tests.Common.Orders
             ]
         }";
 
-        private const string _camelCaseLimitOrder = @"{
+        private const string _camelCaseLimitOrder =
+            @"{
 			""limitPrice"": 139.240078869942,
 			""type"": 1,
 			""id"": 1,
@@ -237,7 +291,8 @@ namespace QuantConnect.Tests.Common.Orders
             ]
 		}";
 
-        private const string _camelCaseStopMarket = @"{
+        private const string _camelCaseStopMarket =
+            @"{
 			""stopPrice"": 138.232948134345,
 			""type"": 2,
 			""id"": 1,
@@ -294,7 +349,8 @@ namespace QuantConnect.Tests.Common.Orders
             ]
 		}";
 
-        private const string _camelCaseStopLimitOrder = @"{
+        private const string _camelCaseStopLimitOrder =
+            @"{
 			""stopPrice"": 138.232948134345,
 			""stopTriggered"": false,
 			""limitPrice"": 139.240078869942,
@@ -354,7 +410,8 @@ namespace QuantConnect.Tests.Common.Orders
             ]
 		}";
 
-        private const string _camelCaseMarketOnOpen = @"{
+        private const string _camelCaseMarketOnOpen =
+            @"{
 			""type"": 4,
 			""id"": 1,
 			""contingentId"": 0,
@@ -409,7 +466,8 @@ namespace QuantConnect.Tests.Common.Orders
             ]
 		}";
 
-        private const string _camelCaseMarketOnClose = @"{
+        private const string _camelCaseMarketOnClose =
+            @"{
 			""type"": 5,
 			""id"": 1,
 			""contingentId"": 0,
@@ -464,7 +522,8 @@ namespace QuantConnect.Tests.Common.Orders
             ]
 		}";
 
-        private const string _camelCaseOptionExercise = @"{
+        private const string _camelCaseOptionExercise =
+            @"{
             ""type"": 6,
             ""id"": 1,
             ""contingentId"": 0,
@@ -524,7 +583,8 @@ namespace QuantConnect.Tests.Common.Orders
             ]
         }";
 
-        private const string _camelCaseLimitIfTouched = @"{
+        private const string _camelCaseLimitIfTouched =
+            @"{
 			""type"": 7,
 			""triggerPrice"": 138.26,
 			""limitPrice"": 139.240078869942,
@@ -583,7 +643,8 @@ namespace QuantConnect.Tests.Common.Orders
             ]
 		}";
 
-        private const string _camelCaseComboMarket = @"{
+        private const string _camelCaseComboMarket =
+            @"{
             ""type"": 8,
             ""quantity"": 10.0,
             ""id"": 1,
@@ -655,7 +716,8 @@ namespace QuantConnect.Tests.Common.Orders
             ]
         }";
 
-        private const string _camelCaseComboLimit = @"{
+        private const string _camelCaseComboLimit =
+            @"{
             ""type"": 9,
             ""quantity"": 10.0,
             ""id"": 1,
@@ -727,7 +789,8 @@ namespace QuantConnect.Tests.Common.Orders
             ]
         }";
 
-        private const string _camelCaseComboLegLimit = @"{
+        private const string _camelCaseComboLegLimit =
+            @"{
             ""type"": 10,
             ""limitPrice"": 139.240078869942,
             ""quantity"": 10.0,
@@ -801,7 +864,8 @@ namespace QuantConnect.Tests.Common.Orders
             ]
         }";
 
-        private const string _camelCaseTrailingStop = @"{
+        private const string _camelCaseTrailingStop =
+            @"{
 			""trailingAmount"": 0.0019,
 			""trailingAsPercentage"": true,
 			""type"": 11,
@@ -860,7 +924,8 @@ namespace QuantConnect.Tests.Common.Orders
             ]
 		}";
 
-        private const string _capitalCaseMarketOrder = @"{
+        private const string _capitalCaseMarketOrder =
+            @"{
             ""Type"": 0,
             ""Id"": 1,
             ""ContingentId"": 0,
@@ -896,7 +961,8 @@ namespace QuantConnect.Tests.Common.Orders
             ""events"": []
         }";
 
-        private const string _capitalCaseLimitOrder = @"{
+        private const string _capitalCaseLimitOrder =
+            @"{
 	""LimitPrice"": 139.240078869942,
 	""Type"": 1,
 	""Id"": 1,
@@ -933,7 +999,8 @@ namespace QuantConnect.Tests.Common.Orders
     ""Events"": []
 }";
 
-        private const string _capitalCaseStopMarket = @"{
+        private const string _capitalCaseStopMarket =
+            @"{
 	""StopPrice"": 138.232948134345,
 	""Type"": 2,
 	""Id"": 1,
@@ -970,7 +1037,8 @@ namespace QuantConnect.Tests.Common.Orders
     ""Events"": []
 }";
 
-        private const string _capitalCaseStopLimitOrder = @"{
+        private const string _capitalCaseStopLimitOrder =
+            @"{
 	""StopPrice"": 138.232948134345,
 	""StopTriggered"": false,
 	""LimitPrice"": 139.240078869942,
@@ -1009,7 +1077,8 @@ namespace QuantConnect.Tests.Common.Orders
     ""Events"": []
 }";
 
-        private const string _capitalCaseMarketOnOpen = @"{
+        private const string _capitalCaseMarketOnOpen =
+            @"{
 	""Type"": 4,
 	""Id"": 1,
 	""ContingentId"": 0,
@@ -1045,7 +1114,8 @@ namespace QuantConnect.Tests.Common.Orders
     ""Events"": []
 }";
 
-        private const string _capitalCaseMarketOnClose = @"{
+        private const string _capitalCaseMarketOnClose =
+            @"{
 	""Type"": 5,
 	""Id"": 1,
 	""ContingentId"": 0,
@@ -1081,7 +1151,8 @@ namespace QuantConnect.Tests.Common.Orders
     ""Events"": []
 }";
 
-        private const string _capitalCaseOptionExercise = @"{
+        private const string _capitalCaseOptionExercise =
+            @"{
     ""Type"": 6,
     ""Id"": 1,
     ""ContingentId"": 0,
@@ -1122,7 +1193,8 @@ namespace QuantConnect.Tests.Common.Orders
     ""Events"": []
 }";
 
-        private const string _capitalCaseLimitIfTouched = @"{
+        private const string _capitalCaseLimitIfTouched =
+            @"{
 	""Type"": 7,
 	""triggerPrice"": 138.26,
 	""LimitPrice"": 139.240078869942,
@@ -1161,7 +1233,8 @@ namespace QuantConnect.Tests.Common.Orders
     ""Events"": []
 }";
 
-        private const string _capitalCaseComboMarket = @"{
+        private const string _capitalCaseComboMarket =
+            @"{
     ""Type"": 8,
     ""Quantity"": 10.0,
     ""Id"": 1,
@@ -1214,7 +1287,8 @@ namespace QuantConnect.Tests.Common.Orders
     ""Events"": []
 }";
 
-        private const string _capitalCaseComboLimit = @"{
+        private const string _capitalCaseComboLimit =
+            @"{
     ""Type"": 9,
     ""Quantity"": 10.0,
     ""Id"": 1,
@@ -1267,7 +1341,8 @@ namespace QuantConnect.Tests.Common.Orders
     ""Events"": []
 }";
 
-        private const string _capitalCaseComboLegLimit = @"{
+        private const string _capitalCaseComboLegLimit =
+            @"{
     ""Type"": 10,
     ""LimitPrice"": 139.240078869942,
     ""Quantity"": 10.0,
@@ -1321,7 +1396,8 @@ namespace QuantConnect.Tests.Common.Orders
     ""Events"": []
 }";
 
-        private const string _capitalCaseTrailingStop = @"{
+        private const string _capitalCaseTrailingStop =
+            @"{
 	""TrailingAmount"": 0.0019,
 	""TrailingAsPercentage"": true,
 	""Type"": 11,
@@ -1362,30 +1438,174 @@ namespace QuantConnect.Tests.Common.Orders
 
         public static object[] DeserializeOrdersTests =
         {
-            new object[] { _camelCaseMarketOrder, OrderType.Market, "SPY R735QTJ8XC9X", SecurityType.Equity },
-            new object[] { _camelCaseLimitOrder, OrderType.Limit, "SPY R735QTJ8XC9X", SecurityType.Equity },
-            new object[] { _camelCaseStopMarket, OrderType.StopMarket, "SPY R735QTJ8XC9X", SecurityType.Equity },
-            new object[] { _camelCaseStopLimitOrder, OrderType.StopLimit, "SPY R735QTJ8XC9X", SecurityType.Equity },
-            new object[] { _camelCaseMarketOnOpen, OrderType.MarketOnOpen, "SPY R735QTJ8XC9X", SecurityType.Equity },
-            new object[] { _camelCaseMarketOnClose, OrderType.MarketOnClose, "SPY R735QTJ8XC9X", SecurityType.Equity },
-            new object[] { _camelCaseOptionExercise, OrderType.OptionExercise, "AAPL 2ZQGWTST4Z8NA|AAPL R735QTJ8XC9X", SecurityType.Option },
-            new object[] { _camelCaseLimitIfTouched, OrderType.LimitIfTouched, "SPY R735QTJ8XC9X", SecurityType.Equity },
-            new object[] { _camelCaseComboMarket, OrderType.ComboMarket, "GOOCV W78ZERHAOVVQ|GOOCV VP83T1ZUHROL", SecurityType.Option },
-            new object[] { _camelCaseComboLimit, OrderType.ComboLimit, "GOOCV W78ZERHAOVVQ|GOOCV VP83T1ZUHROL", SecurityType.Option },
-            new object[] { _camelCaseComboLegLimit, OrderType.ComboLegLimit, "GOOCV W78ZEOEHQRYE|GOOCV VP83T1ZUHROL", SecurityType.Option },
-            new object[] { _camelCaseTrailingStop, OrderType.TrailingStop, "SPY R735QTJ8XC9X", SecurityType.Equity },
-            new object[] { _capitalCaseMarketOrder, OrderType.Market, "SPY R735QTJ8XC9X", SecurityType.Equity },
-            new object[] { _capitalCaseLimitOrder, OrderType.Limit, "SPY R735QTJ8XC9X", SecurityType.Equity },
-            new object[] { _capitalCaseStopMarket, OrderType.StopMarket, "SPY R735QTJ8XC9X", SecurityType.Equity },
-            new object[] { _capitalCaseStopLimitOrder, OrderType.StopLimit, "SPY R735QTJ8XC9X", SecurityType.Equity },
-            new object[] { _capitalCaseMarketOnOpen, OrderType.MarketOnOpen, "SPY R735QTJ8XC9X", SecurityType.Equity },
-            new object[] { _capitalCaseMarketOnClose, OrderType.MarketOnClose, "SPY R735QTJ8XC9X", SecurityType.Equity },
-            new object[] { _capitalCaseOptionExercise, OrderType.OptionExercise, "AAPL 2ZQGWTST4Z8NA|AAPL R735QTJ8XC9X", SecurityType.Option },
-            new object[] { _capitalCaseLimitIfTouched, OrderType.LimitIfTouched, "SPY R735QTJ8XC9X", SecurityType.Equity },
-            new object[] { _capitalCaseComboMarket, OrderType.ComboMarket, "GOOCV W78ZERHAOVVQ|GOOCV VP83T1ZUHROL", SecurityType.Option },
-            new object[] { _capitalCaseComboLimit, OrderType.ComboLimit, "GOOCV W78ZERHAOVVQ|GOOCV VP83T1ZUHROL", SecurityType.Option },
-            new object[] { _capitalCaseComboLegLimit, OrderType.ComboLegLimit, "GOOCV W78ZEOEHQRYE|GOOCV VP83T1ZUHROL", SecurityType.Option },
-            new object[] { _capitalCaseTrailingStop, OrderType.TrailingStop, "SPY R735QTJ8XC9X", SecurityType.Equity }
+            new object[]
+            {
+                _camelCaseMarketOrder,
+                OrderType.Market,
+                "SPY R735QTJ8XC9X",
+                SecurityType.Equity
+            },
+            new object[]
+            {
+                _camelCaseLimitOrder,
+                OrderType.Limit,
+                "SPY R735QTJ8XC9X",
+                SecurityType.Equity
+            },
+            new object[]
+            {
+                _camelCaseStopMarket,
+                OrderType.StopMarket,
+                "SPY R735QTJ8XC9X",
+                SecurityType.Equity
+            },
+            new object[]
+            {
+                _camelCaseStopLimitOrder,
+                OrderType.StopLimit,
+                "SPY R735QTJ8XC9X",
+                SecurityType.Equity
+            },
+            new object[]
+            {
+                _camelCaseMarketOnOpen,
+                OrderType.MarketOnOpen,
+                "SPY R735QTJ8XC9X",
+                SecurityType.Equity
+            },
+            new object[]
+            {
+                _camelCaseMarketOnClose,
+                OrderType.MarketOnClose,
+                "SPY R735QTJ8XC9X",
+                SecurityType.Equity
+            },
+            new object[]
+            {
+                _camelCaseOptionExercise,
+                OrderType.OptionExercise,
+                "AAPL 2ZQGWTST4Z8NA|AAPL R735QTJ8XC9X",
+                SecurityType.Option
+            },
+            new object[]
+            {
+                _camelCaseLimitIfTouched,
+                OrderType.LimitIfTouched,
+                "SPY R735QTJ8XC9X",
+                SecurityType.Equity
+            },
+            new object[]
+            {
+                _camelCaseComboMarket,
+                OrderType.ComboMarket,
+                "GOOCV W78ZERHAOVVQ|GOOCV VP83T1ZUHROL",
+                SecurityType.Option
+            },
+            new object[]
+            {
+                _camelCaseComboLimit,
+                OrderType.ComboLimit,
+                "GOOCV W78ZERHAOVVQ|GOOCV VP83T1ZUHROL",
+                SecurityType.Option
+            },
+            new object[]
+            {
+                _camelCaseComboLegLimit,
+                OrderType.ComboLegLimit,
+                "GOOCV W78ZEOEHQRYE|GOOCV VP83T1ZUHROL",
+                SecurityType.Option
+            },
+            new object[]
+            {
+                _camelCaseTrailingStop,
+                OrderType.TrailingStop,
+                "SPY R735QTJ8XC9X",
+                SecurityType.Equity
+            },
+            new object[]
+            {
+                _capitalCaseMarketOrder,
+                OrderType.Market,
+                "SPY R735QTJ8XC9X",
+                SecurityType.Equity
+            },
+            new object[]
+            {
+                _capitalCaseLimitOrder,
+                OrderType.Limit,
+                "SPY R735QTJ8XC9X",
+                SecurityType.Equity
+            },
+            new object[]
+            {
+                _capitalCaseStopMarket,
+                OrderType.StopMarket,
+                "SPY R735QTJ8XC9X",
+                SecurityType.Equity
+            },
+            new object[]
+            {
+                _capitalCaseStopLimitOrder,
+                OrderType.StopLimit,
+                "SPY R735QTJ8XC9X",
+                SecurityType.Equity
+            },
+            new object[]
+            {
+                _capitalCaseMarketOnOpen,
+                OrderType.MarketOnOpen,
+                "SPY R735QTJ8XC9X",
+                SecurityType.Equity
+            },
+            new object[]
+            {
+                _capitalCaseMarketOnClose,
+                OrderType.MarketOnClose,
+                "SPY R735QTJ8XC9X",
+                SecurityType.Equity
+            },
+            new object[]
+            {
+                _capitalCaseOptionExercise,
+                OrderType.OptionExercise,
+                "AAPL 2ZQGWTST4Z8NA|AAPL R735QTJ8XC9X",
+                SecurityType.Option
+            },
+            new object[]
+            {
+                _capitalCaseLimitIfTouched,
+                OrderType.LimitIfTouched,
+                "SPY R735QTJ8XC9X",
+                SecurityType.Equity
+            },
+            new object[]
+            {
+                _capitalCaseComboMarket,
+                OrderType.ComboMarket,
+                "GOOCV W78ZERHAOVVQ|GOOCV VP83T1ZUHROL",
+                SecurityType.Option
+            },
+            new object[]
+            {
+                _capitalCaseComboLimit,
+                OrderType.ComboLimit,
+                "GOOCV W78ZERHAOVVQ|GOOCV VP83T1ZUHROL",
+                SecurityType.Option
+            },
+            new object[]
+            {
+                _capitalCaseComboLegLimit,
+                OrderType.ComboLegLimit,
+                "GOOCV W78ZEOEHQRYE|GOOCV VP83T1ZUHROL",
+                SecurityType.Option
+            },
+            new object[]
+            {
+                _capitalCaseTrailingStop,
+                OrderType.TrailingStop,
+                "SPY R735QTJ8XC9X",
+                SecurityType.Equity
+            }
         };
 
         public static object[] SerializeOrdersTests =

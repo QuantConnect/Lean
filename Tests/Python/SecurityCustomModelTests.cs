@@ -14,6 +14,7 @@
  *
 */
 
+using System;
 using NUnit.Framework;
 using Python.Runtime;
 using QuantConnect.Algorithm;
@@ -23,7 +24,6 @@ using QuantConnect.Python;
 using QuantConnect.Securities;
 using QuantConnect.Securities.Equity;
 using QuantConnect.Tests.Common.Securities;
-using System;
 using QuantConnect.Tests.Engine.DataFeeds;
 
 namespace QuantConnect.Tests.Python
@@ -82,7 +82,8 @@ namespace QuantConnect.Tests.Python
             }
         }
 
-        private string CreateCustomBuyingPowerModelCode() => @"
+        private string CreateCustomBuyingPowerModelCode() =>
+            @"
 import os, sys
 sys.path.append(os.getcwd())
 
@@ -122,7 +123,8 @@ class CustomBuyingPowerModel:
     def SetLeverage(self, security, leverage):
         self.margin = 1.0 / float(leverage)";
 
-        private string CreateCustomBuyingPowerModelFromSecurityMarginModelCode() => @"
+        private string CreateCustomBuyingPowerModelFromSecurityMarginModelCode() =>
+            @"
 import os, sys
 sys.path.append(os.getcwd())
 
@@ -142,7 +144,8 @@ class CustomBuyingPowerModel(SecurityMarginModel):
                 TimeZones.Utc,
                 true,
                 true,
-                false);
+                false
+            );
 
             return new Security(
                 SecurityExchangeHours.AlwaysOpen(TimeZones.Utc),

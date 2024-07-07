@@ -25,7 +25,9 @@ namespace QuantConnect.Algorithm.CSharp
     /// Regression algorithm which reproduces GH issue 4131, we assert order events are executed in order
     /// event outside market ours
     /// </summary>
-    public class ScheduledEventsOrderRegressionAlgorithm : QCAlgorithm, IRegressionAlgorithmDefinition
+    public class ScheduledEventsOrderRegressionAlgorithm
+        : QCAlgorithm,
+            IRegressionAlgorithmDefinition
     {
         private int _scheduledEventCount;
         private int _afterMarketOpenEventCount;
@@ -50,51 +52,76 @@ namespace QuantConnect.Algorithm.CSharp
             var cEventCount = 0;
 
             var symbol = QuantConnect.Symbol.Create("AAPL", SecurityType.Equity, Market.USA);
-            Schedule.On(DateRules.WeekStart(symbol), TimeRules.AfterMarketOpen(symbol), AfterMarketOpen);
+            Schedule.On(
+                DateRules.WeekStart(symbol),
+                TimeRules.AfterMarketOpen(symbol),
+                AfterMarketOpen
+            );
 
             // we add each twice and assert the order in which they are added is also respected for events at the same time
             for (var i = 0; i < 2; i++)
             {
                 var id = i;
-                Schedule.On(dateRule, TimeRules.At(9, 25), (name, time) =>
-                {
-                    // for id 0 event count should always be 0, for id 1 should be 1
-                    if (aEventCount != id)
+                Schedule.On(
+                    dateRule,
+                    TimeRules.At(9, 25),
+                    (name, time) =>
                     {
-                        throw new RegressionTestException($"Scheduled event triggered out of order: {Time} expected id {id} but was {aEventCount}");
+                        // for id 0 event count should always be 0, for id 1 should be 1
+                        if (aEventCount != id)
+                        {
+                            throw new RegressionTestException(
+                                $"Scheduled event triggered out of order: {Time} expected id {id} but was {aEventCount}"
+                            );
+                        }
+                        aEventCount++;
+                        // goes from 0 to 1
+                        aEventCount %= 2;
+                        AssertScheduledEventTime();
+                        Debug($"{Time} :: Test: {test}");
+                        test++;
                     }
-                    aEventCount++;
-                    // goes from 0 to 1
-                    aEventCount %= 2;
-                    AssertScheduledEventTime();
-                    Debug($"{Time} :: Test: {test}"); test++;
-                });
-                Schedule.On(dateRule, TimeRules.BeforeMarketClose(_spy, 5), (name, time) =>
-                {
-                    // for id 0 event count should always be 0, for id 1 should be 1
-                    if (bEventCount != id)
+                );
+                Schedule.On(
+                    dateRule,
+                    TimeRules.BeforeMarketClose(_spy, 5),
+                    (name, time) =>
                     {
-                        throw new RegressionTestException($"Scheduled event triggered out of order: {Time} expected id {id} but was {bEventCount}");
+                        // for id 0 event count should always be 0, for id 1 should be 1
+                        if (bEventCount != id)
+                        {
+                            throw new RegressionTestException(
+                                $"Scheduled event triggered out of order: {Time} expected id {id} but was {bEventCount}"
+                            );
+                        }
+                        bEventCount++;
+                        // goes from 0 to 1
+                        bEventCount %= 2;
+                        AssertScheduledEventTime();
+                        Debug($"{Time} :: Test: {test}");
+                        test++;
                     }
-                    bEventCount++;
-                    // goes from 0 to 1
-                    bEventCount %= 2;
-                    AssertScheduledEventTime();
-                    Debug($"{Time} :: Test: {test}"); test++;
-                });
-                Schedule.On(dateRule, TimeRules.At(16, 5), (name, time) =>
-                {
-                    // for id 0 event count should always be 0, for id 1 should be 1
-                    if (cEventCount != id)
+                );
+                Schedule.On(
+                    dateRule,
+                    TimeRules.At(16, 5),
+                    (name, time) =>
                     {
-                        throw new RegressionTestException($"Scheduled event triggered out of order: {Time} expected id {id} but was {cEventCount}");
+                        // for id 0 event count should always be 0, for id 1 should be 1
+                        if (cEventCount != id)
+                        {
+                            throw new RegressionTestException(
+                                $"Scheduled event triggered out of order: {Time} expected id {id} but was {cEventCount}"
+                            );
+                        }
+                        cEventCount++;
+                        // goes from 0 to 1
+                        cEventCount %= 2;
+                        AssertScheduledEventTime();
+                        Debug($"{Time} :: Test: {test}");
+                        test = 0;
                     }
-                    cEventCount++;
-                    // goes from 0 to 1
-                    cEventCount %= 2;
-                    AssertScheduledEventTime();
-                    Debug($"{Time} :: Test: {test}"); test = 0;
-                });
+                );
             }
         }
 
@@ -102,7 +129,9 @@ namespace QuantConnect.Algorithm.CSharp
         {
             if (_lastTime > Time)
             {
-                throw new RegressionTestException($"Scheduled event time shouldn't go backwards, last time {_lastTime}, current {Time}");
+                throw new RegressionTestException(
+                    $"Scheduled event time shouldn't go backwards, last time {_lastTime}, current {Time}"
+                );
             }
             _lastTime = Time;
             _scheduledEventCount++;
@@ -121,11 +150,15 @@ namespace QuantConnect.Algorithm.CSharp
         {
             if (_scheduledEventCount != 28)
             {
-                throw new RegressionTestException($"OnEndOfAlgorithm expected scheduled events but was {_scheduledEventCount}");
+                throw new RegressionTestException(
+                    $"OnEndOfAlgorithm expected scheduled events but was {_scheduledEventCount}"
+                );
             }
             if (_afterMarketOpenEventCount != 1)
             {
-                throw new RegressionTestException($"OnEndOfAlgorithm expected after MarketOpenEvent count {_afterMarketOpenEventCount}");
+                throw new RegressionTestException(
+                    $"OnEndOfAlgorithm expected after MarketOpenEvent count {_afterMarketOpenEventCount}"
+                );
             }
         }
 
@@ -169,35 +202,36 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// This is used by the regression test system to indicate what the expected statistics are from running the algorithm
         /// </summary>
-        public Dictionary<string, string> ExpectedStatistics => new Dictionary<string, string>
-        {
-            {"Total Orders", "1"},
-            {"Average Win", "0%"},
-            {"Average Loss", "0%"},
-            {"Compounding Annual Return", "271.453%"},
-            {"Drawdown", "2.200%"},
-            {"Expectancy", "0"},
-            {"Start Equity", "100000"},
-            {"End Equity", "101691.92"},
-            {"Net Profit", "1.692%"},
-            {"Sharpe Ratio", "8.854"},
-            {"Sortino Ratio", "0"},
-            {"Probabilistic Sharpe Ratio", "67.609%"},
-            {"Loss Rate", "0%"},
-            {"Win Rate", "0%"},
-            {"Profit-Loss Ratio", "0"},
-            {"Alpha", "-0.005"},
-            {"Beta", "0.996"},
-            {"Annual Standard Deviation", "0.222"},
-            {"Annual Variance", "0.049"},
-            {"Information Ratio", "-14.565"},
-            {"Tracking Error", "0.001"},
-            {"Treynor Ratio", "1.97"},
-            {"Total Fees", "$3.44"},
-            {"Estimated Strategy Capacity", "$56000000.00"},
-            {"Lowest Capacity Asset", "SPY R735QTJ8XC9X"},
-            {"Portfolio Turnover", "19.93%"},
-            {"OrderListHash", "3da9fa60bf95b9ed148b95e02e0cfc9e"}
-        };
+        public Dictionary<string, string> ExpectedStatistics =>
+            new Dictionary<string, string>
+            {
+                { "Total Orders", "1" },
+                { "Average Win", "0%" },
+                { "Average Loss", "0%" },
+                { "Compounding Annual Return", "271.453%" },
+                { "Drawdown", "2.200%" },
+                { "Expectancy", "0" },
+                { "Start Equity", "100000" },
+                { "End Equity", "101691.92" },
+                { "Net Profit", "1.692%" },
+                { "Sharpe Ratio", "8.854" },
+                { "Sortino Ratio", "0" },
+                { "Probabilistic Sharpe Ratio", "67.609%" },
+                { "Loss Rate", "0%" },
+                { "Win Rate", "0%" },
+                { "Profit-Loss Ratio", "0" },
+                { "Alpha", "-0.005" },
+                { "Beta", "0.996" },
+                { "Annual Standard Deviation", "0.222" },
+                { "Annual Variance", "0.049" },
+                { "Information Ratio", "-14.565" },
+                { "Tracking Error", "0.001" },
+                { "Treynor Ratio", "1.97" },
+                { "Total Fees", "$3.44" },
+                { "Estimated Strategy Capacity", "$56000000.00" },
+                { "Lowest Capacity Asset", "SPY R735QTJ8XC9X" },
+                { "Portfolio Turnover", "19.93%" },
+                { "OrderListHash", "3da9fa60bf95b9ed148b95e02e0cfc9e" }
+            };
     }
 }

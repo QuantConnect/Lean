@@ -13,6 +13,9 @@
  * limitations under the License.
 */
 
+using System;
+using System.Collections.Generic;
+using System.Linq;
 using NodaTime;
 using NUnit.Framework;
 using QuantConnect.Algorithm;
@@ -20,11 +23,8 @@ using QuantConnect.Algorithm.Framework.Alphas;
 using QuantConnect.Algorithm.Framework.Portfolio;
 using QuantConnect.Securities;
 using QuantConnect.Securities.Equity;
-using QuantConnect.Tests.Engine.DataFeeds;
-using System;
-using System.Collections.Generic;
-using System.Linq;
 using QuantConnect.Tests.Common.Data.UniverseSelection;
+using QuantConnect.Tests.Engine.DataFeeds;
 
 namespace QuantConnect.Tests.Algorithm.Framework.Portfolio
 {
@@ -35,7 +35,8 @@ namespace QuantConnect.Tests.Algorithm.Framework.Portfolio
 
         protected QCAlgorithm Algorithm { get; set; }
 
-        public virtual double? Weight => Algorithm.Securities.Count == 0 ? default(double) : 1d / Algorithm.Securities.Count;
+        public virtual double? Weight =>
+            Algorithm.Securities.Count == 0 ? default(double) : 1d / Algorithm.Securities.Count;
 
         [OneTimeSetUp]
         public virtual void SetUp()
@@ -43,9 +44,9 @@ namespace QuantConnect.Tests.Algorithm.Framework.Portfolio
             Algorithm = new QCAlgorithm();
             Algorithm.SubscriptionManager.SetDataManager(new DataManagerStub(Algorithm));
         }
+
         [TearDown]
         public void TearDown() => Algorithm.Insights.Clear(Algorithm.Securities.Keys.ToArray());
-
 
         [Test]
         [TestCase(Language.CSharp)]
@@ -55,9 +56,14 @@ namespace QuantConnect.Tests.Algorithm.Framework.Portfolio
             SetPortfolioConstruction(language);
 
             // Let's create a position for SPY
-            var insights = new[] { GetInsight(Symbols.SPY, InsightDirection.Up, Algorithm.UtcTime) };
+            var insights = new[]
+            {
+                GetInsight(Symbols.SPY, InsightDirection.Up, Algorithm.UtcTime)
+            };
 
-            foreach (var target in Algorithm.PortfolioConstruction.CreateTargets(Algorithm, insights))
+            foreach (
+                var target in Algorithm.PortfolioConstruction.CreateTargets(Algorithm, insights)
+            )
             {
                 var holding = Algorithm.Portfolio[target.Symbol];
                 holding.SetHoldings(holding.Price, target.Quantity);
@@ -66,10 +72,16 @@ namespace QuantConnect.Tests.Algorithm.Framework.Portfolio
 
             SetUtcTime(Algorithm.UtcTime.AddDays(2));
 
-            var expectedTargets = new List<IPortfolioTarget> { new PortfolioTarget(Symbols.SPY, 0) };
+            var expectedTargets = new List<IPortfolioTarget>
+            {
+                new PortfolioTarget(Symbols.SPY, 0)
+            };
 
             // Create target from an empty insights array
-            var actualTargets = Algorithm.PortfolioConstruction.CreateTargets(Algorithm, new Insight[0]);
+            var actualTargets = Algorithm.PortfolioConstruction.CreateTargets(
+                Algorithm,
+                new Insight[0]
+            );
 
             AssertTargets(expectedTargets, actualTargets);
         }
@@ -81,17 +93,30 @@ namespace QuantConnect.Tests.Algorithm.Framework.Portfolio
         {
             SetPortfolioConstruction(language);
 
-            var insights = new[] { GetInsight(Symbols.SPY, InsightDirection.Down, Algorithm.UtcTime) };
-            var targets = Algorithm.PortfolioConstruction.CreateTargets(Algorithm, insights).ToList();
+            var insights = new[]
+            {
+                GetInsight(Symbols.SPY, InsightDirection.Down, Algorithm.UtcTime)
+            };
+            var targets = Algorithm
+                .PortfolioConstruction.CreateTargets(Algorithm, insights)
+                .ToList();
             Assert.AreEqual(1, targets.Count);
 
-            var changes = SecurityChangesTests.RemovedNonInternal(Algorithm.Securities[Symbols.SPY]);
+            var changes = SecurityChangesTests.RemovedNonInternal(
+                Algorithm.Securities[Symbols.SPY]
+            );
             Algorithm.PortfolioConstruction.OnSecuritiesChanged(Algorithm, changes);
 
-            var expectedTargets = new List<IPortfolioTarget> { new PortfolioTarget(Symbols.SPY, 0) };
+            var expectedTargets = new List<IPortfolioTarget>
+            {
+                new PortfolioTarget(Symbols.SPY, 0)
+            };
 
             // Create target from an empty insights array
-            var actualTargets = Algorithm.PortfolioConstruction.CreateTargets(Algorithm, new Insight[0]);
+            var actualTargets = Algorithm.PortfolioConstruction.CreateTargets(
+                Algorithm,
+                new Insight[0]
+            );
 
             AssertTargets(expectedTargets, actualTargets);
         }
@@ -108,7 +133,10 @@ namespace QuantConnect.Tests.Algorithm.Framework.Portfolio
 
             SetPortfolioConstruction(language);
 
-            var insights = new[] { GetInsight(Symbols.SPY, InsightDirection.Up, algorithm.UtcTime) };
+            var insights = new[]
+            {
+                GetInsight(Symbols.SPY, InsightDirection.Up, algorithm.UtcTime)
+            };
             var actualTargets = algorithm.PortfolioConstruction.CreateTargets(algorithm, insights);
 
             Assert.AreEqual(0, actualTargets.Count());
@@ -130,7 +158,10 @@ namespace QuantConnect.Tests.Algorithm.Framework.Portfolio
         public void EmptyInsightsReturnsEmptyTargets(Language language)
         {
             SetPortfolioConstruction(language);
-            var actualTargets = Algorithm.PortfolioConstruction.CreateTargets(Algorithm, new Insight[0]);
+            var actualTargets = Algorithm.PortfolioConstruction.CreateTargets(
+                Algorithm,
+                new Insight[0]
+            );
             Assert.AreEqual(0, actualTargets.Count());
         }
 
@@ -142,13 +173,21 @@ namespace QuantConnect.Tests.Algorithm.Framework.Portfolio
             SetPortfolioConstruction(language);
 
             // First emit long term insight
-            var insights = new[] { GetInsight(Symbols.SPY, InsightDirection.Down, Algorithm.UtcTime) };
-            var targets = Algorithm.PortfolioConstruction.CreateTargets(Algorithm, insights).ToList();
+            var insights = new[]
+            {
+                GetInsight(Symbols.SPY, InsightDirection.Down, Algorithm.UtcTime)
+            };
+            var targets = Algorithm
+                .PortfolioConstruction.CreateTargets(Algorithm, insights)
+                .ToList();
             Assert.AreEqual(1, targets.Count);
 
             // One minute later, emits short term insight
             SetUtcTime(Algorithm.UtcTime.AddMinutes(1));
-            insights = new[] { GetInsight(Symbols.SPY, InsightDirection.Up, Algorithm.UtcTime, Time.OneMinute) };
+            insights = new[]
+            {
+                GetInsight(Symbols.SPY, InsightDirection.Up, Algorithm.UtcTime, Time.OneMinute)
+            };
             targets = Algorithm.PortfolioConstruction.CreateTargets(Algorithm, insights).ToList();
             Assert.AreEqual(1, targets.Count);
 
@@ -158,7 +197,10 @@ namespace QuantConnect.Tests.Algorithm.Framework.Portfolio
             var expectedTargets = GetTargetsForSPY();
 
             // Create target from an empty insights array
-            var actualTargets = Algorithm.PortfolioConstruction.CreateTargets(Algorithm, new Insight[0]);
+            var actualTargets = Algorithm.PortfolioConstruction.CreateTargets(
+                Algorithm,
+                new Insight[0]
+            );
 
             AssertTargets(expectedTargets, actualTargets);
         }
@@ -170,7 +212,10 @@ namespace QuantConnect.Tests.Algorithm.Framework.Portfolio
         [TestCase(Language.Python, InsightDirection.Up)]
         [TestCase(Language.Python, InsightDirection.Down)]
         [TestCase(Language.Python, InsightDirection.Flat)]
-        public abstract void AutomaticallyRemoveInvestedWithNewInsights(Language language, InsightDirection direction);
+        public abstract void AutomaticallyRemoveInvestedWithNewInsights(
+            Language language,
+            InsightDirection direction
+        );
 
         [Test]
         [TestCase(Language.CSharp, InsightDirection.Up)]
@@ -179,7 +224,10 @@ namespace QuantConnect.Tests.Algorithm.Framework.Portfolio
         [TestCase(Language.Python, InsightDirection.Up)]
         [TestCase(Language.Python, InsightDirection.Down)]
         [TestCase(Language.Python, InsightDirection.Flat)]
-        public abstract void DelistedSecurityEmitsFlatTargetWithNewInsights(Language language, InsightDirection direction);
+        public abstract void DelistedSecurityEmitsFlatTargetWithNewInsights(
+            Language language,
+            InsightDirection direction
+        );
 
         [TestCase(Language.CSharp, InsightDirection.Up)]
         [TestCase(Language.CSharp, InsightDirection.Down)]
@@ -187,13 +235,28 @@ namespace QuantConnect.Tests.Algorithm.Framework.Portfolio
         [TestCase(Language.Python, InsightDirection.Up)]
         [TestCase(Language.Python, InsightDirection.Down)]
         [TestCase(Language.Python, InsightDirection.Flat)]
-        public abstract void FlatDirectionNotAccountedToAllocation(Language language, InsightDirection direction);
+        public abstract void FlatDirectionNotAccountedToAllocation(
+            Language language,
+            InsightDirection direction
+        );
 
-        public abstract IPortfolioConstructionModel GetPortfolioConstructionModel(Language language, dynamic paramenter = null);
+        public abstract IPortfolioConstructionModel GetPortfolioConstructionModel(
+            Language language,
+            dynamic paramenter = null
+        );
 
-        public abstract Insight GetInsight(Symbol symbol, InsightDirection direction, DateTime generatedTimeUtc, TimeSpan? period = null, double? weight = 0.01);
+        public abstract Insight GetInsight(
+            Symbol symbol,
+            InsightDirection direction,
+            DateTime generatedTimeUtc,
+            TimeSpan? period = null,
+            double? weight = 0.01
+        );
 
-        public void AssertTargets(IEnumerable<IPortfolioTarget> expectedTargets, IEnumerable<IPortfolioTarget> actualTargets)
+        public void AssertTargets(
+            IEnumerable<IPortfolioTarget> expectedTargets,
+            IEnumerable<IPortfolioTarget> actualTargets
+        )
         {
             var list = actualTargets.ToList();
             Assert.AreEqual(expectedTargets.Count(), list.Count);
@@ -215,11 +278,14 @@ namespace QuantConnect.Tests.Algorithm.Framework.Portfolio
                 ErrorCurrencyConverter.Instance,
                 RegisteredSecurityDataTypesProvider.Null,
                 new SecurityCache()
-                );
+            );
 
         public virtual List<IPortfolioTarget> GetTargetsForSPY()
         {
-            return new List<IPortfolioTarget> { PortfolioTarget.Percent(Algorithm, Symbols.SPY, -1m) };
+            return new List<IPortfolioTarget>
+            {
+                PortfolioTarget.Percent(Algorithm, Symbols.SPY, -1m)
+            };
         }
 
         protected void SetPortfolioConstruction(Language language, dynamic paramenter = null)
@@ -234,10 +300,13 @@ namespace QuantConnect.Tests.Algorithm.Framework.Portfolio
             Algorithm.Portfolio.SetCash(StartingCash);
             SetUtcTime(new DateTime(2018, 7, 31));
 
-            var changes = SecurityChangesTests.AddedNonInternal(Algorithm.Securities.Values.ToArray());
+            var changes = SecurityChangesTests.AddedNonInternal(
+                Algorithm.Securities.Values.ToArray()
+            );
             Algorithm.PortfolioConstruction.OnSecuritiesChanged(Algorithm, changes);
         }
 
-        protected void SetUtcTime(DateTime dateTime) => Algorithm.SetDateTime(dateTime.ConvertToUtc(Algorithm.TimeZone));
+        protected void SetUtcTime(DateTime dateTime) =>
+            Algorithm.SetDateTime(dateTime.ConvertToUtc(Algorithm.TimeZone));
     }
 }

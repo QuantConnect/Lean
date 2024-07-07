@@ -1,4 +1,4 @@
-/* 
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -14,8 +14,8 @@
 */
 
 using System;
-using System.Linq;
 using System.Collections.Generic;
+using System.Linq;
 using QuantConnect.Data;
 using QuantConnect.Orders;
 using QuantConnect.Securities.Option;
@@ -24,7 +24,8 @@ namespace QuantConnect.Algorithm.CSharp
 {
     public class IndexOptionPutCalendarSpreadAlgorithm : QCAlgorithm
     {
-        private Symbol _vixw, _vxz;
+        private Symbol _vixw,
+            _vxz;
         private IEnumerable<OrderTicket> _tickets = Enumerable.Empty<OrderTicket>();
         private DateTime _firstExpiry = DateTime.MaxValue;
 
@@ -48,7 +49,7 @@ namespace QuantConnect.Algorithm.CSharp
             {
                 MarketOrder(_vxz, 100);
             }
-            
+
             var indexOptionsInvested = _tickets.Where(x => Portfolio[x.Symbol].Invested).ToList();
             // Liquidate if the shorter term option is about to expire
             if (_firstExpiry < Time.AddDays(2) && _tickets.All(x => slice.ContainsKey(x.Symbol)))
@@ -65,19 +66,28 @@ namespace QuantConnect.Algorithm.CSharp
             }
 
             // Get the OptionChain
-            if (!slice.OptionChains.TryGetValue(_vixw, out var chain)) return;
+            if (!slice.OptionChains.TryGetValue(_vixw, out var chain))
+                return;
 
             // Get ATM strike price
             var strike = chain.MinBy(x => Math.Abs(x.Strike - chain.Underlying.Value)).Strike;
-            
+
             // Select the ATM put Option contracts and sort by expiration date
-            var puts = chain.Where(x => x.Strike == strike && x.Right == OptionRight.Put)
-                            .OrderBy(x => x.Expiry).ToArray();
-            if (puts.Length < 2) return;
+            var puts = chain
+                .Where(x => x.Strike == strike && x.Right == OptionRight.Put)
+                .OrderBy(x => x.Expiry)
+                .ToArray();
+            if (puts.Length < 2)
+                return;
             _firstExpiry = puts[0].Expiry;
 
             // Sell the put calendar spread
-            var putCalendarSpread = OptionStrategies.PutCalendarSpread(_vixw, strike, _firstExpiry, puts[^1].Expiry);
+            var putCalendarSpread = OptionStrategies.PutCalendarSpread(
+                _vixw,
+                strike,
+                _firstExpiry,
+                puts[^1].Expiry
+            );
             _tickets = Sell(putCalendarSpread, 1, asynchronous: true);
         }
     }

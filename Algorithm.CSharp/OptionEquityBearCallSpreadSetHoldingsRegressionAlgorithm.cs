@@ -15,10 +15,10 @@
 */
 
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using QuantConnect.Data;
 using QuantConnect.Data.Market;
-using System.Collections.Generic;
 using QuantConnect.Securities.Option.StrategyMatcher;
 
 namespace QuantConnect.Algorithm.CSharp
@@ -28,7 +28,8 @@ namespace QuantConnect.Algorithm.CSharp
     /// </summary>
     /// <remarks>SetHoldings percentage calculation is using the default position group so it fails to determine the correct value,
     /// either way Lean has to detect the option strategy been executed and margin used has to get reduced</remarks>
-    public class OptionEquityBearCallSpreadSetHoldingsRegressionAlgorithm : OptionEquityBaseStrategyRegressionAlgorithm
+    public class OptionEquityBearCallSpreadSetHoldingsRegressionAlgorithm
+        : OptionEquityBaseStrategyRegressionAlgorithm
     {
         public override void Initialize()
         {
@@ -45,7 +46,10 @@ namespace QuantConnect.Algorithm.CSharp
             if (!Portfolio.Invested)
             {
                 OptionChain chain;
-                if (IsMarketOpen(_optionSymbol) && slice.OptionChains.TryGetValue(_optionSymbol, out chain))
+                if (
+                    IsMarketOpen(_optionSymbol)
+                    && slice.OptionChains.TryGetValue(_optionSymbol, out chain)
+                )
                 {
                     var callContracts = chain
                         .Where(contract => contract.Right == OptionRight.Call)
@@ -54,13 +58,17 @@ namespace QuantConnect.Algorithm.CSharp
                         .ToList();
 
                     var shortCall = callContracts.First();
-                    var longCall = callContracts.First(contract => contract.Strike > shortCall.Strike && contract.Expiry == shortCall.Expiry);
+                    var longCall = callContracts.First(contract =>
+                        contract.Strike > shortCall.Strike && contract.Expiry == shortCall.Expiry
+                    );
 
                     SetHoldings(shortCall.Symbol, -0.05m);
                     var freeMargin = Portfolio.MarginRemaining;
 
-                    AssertOptionStrategyIsPresent(OptionStrategyDefinitions.NakedCall.Name,
-                        (int)Math.Abs(Securities[shortCall.Symbol].Holdings.Quantity));
+                    AssertOptionStrategyIsPresent(
+                        OptionStrategyDefinitions.NakedCall.Name,
+                        (int)Math.Abs(Securities[shortCall.Symbol].Holdings.Quantity)
+                    );
 
                     SetHoldings(longCall.Symbol, +0.05m);
                     var freeMarginPostTrade = Portfolio.MarginRemaining;
@@ -69,7 +77,9 @@ namespace QuantConnect.Algorithm.CSharp
 
                     if (freeMargin >= freeMarginPostTrade)
                     {
-                        throw new RegressionTestException("We expect the margin used to actually be lower once we perform the second trade");
+                        throw new RegressionTestException(
+                            "We expect the margin used to actually be lower once we perform the second trade"
+                        );
                     }
                 }
             }
@@ -93,35 +103,36 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// This is used by the regression test system to indicate what the expected statistics are from running the algorithm
         /// </summary>
-        public override Dictionary<string, string> ExpectedStatistics => new Dictionary<string, string>
-        {
-            {"Total Orders", "2"},
-            {"Average Win", "0%"},
-            {"Average Loss", "0%"},
-            {"Compounding Annual Return", "0%"},
-            {"Drawdown", "0%"},
-            {"Expectancy", "0"},
-            {"Start Equity", "1000000"},
-            {"End Equity", "998807.85"},
-            {"Net Profit", "0%"},
-            {"Sharpe Ratio", "0"},
-            {"Sortino Ratio", "0"},
-            {"Probabilistic Sharpe Ratio", "0%"},
-            {"Loss Rate", "0%"},
-            {"Win Rate", "0%"},
-            {"Profit-Loss Ratio", "0"},
-            {"Alpha", "0"},
-            {"Beta", "0"},
-            {"Annual Standard Deviation", "0"},
-            {"Annual Variance", "0"},
-            {"Information Ratio", "0"},
-            {"Tracking Error", "0"},
-            {"Treynor Ratio", "0"},
-            {"Total Fees", "$7.15"},
-            {"Estimated Strategy Capacity", "$33000000.00"},
-            {"Lowest Capacity Asset", "GOOCV WBGM95TAH2LI|GOOCV VP83T1ZUHROL"},
-            {"Portfolio Turnover", "6.17%"},
-            {"OrderListHash", "8f1288896dafb2856b6045f8930e86a6"}
-        };
+        public override Dictionary<string, string> ExpectedStatistics =>
+            new Dictionary<string, string>
+            {
+                { "Total Orders", "2" },
+                { "Average Win", "0%" },
+                { "Average Loss", "0%" },
+                { "Compounding Annual Return", "0%" },
+                { "Drawdown", "0%" },
+                { "Expectancy", "0" },
+                { "Start Equity", "1000000" },
+                { "End Equity", "998807.85" },
+                { "Net Profit", "0%" },
+                { "Sharpe Ratio", "0" },
+                { "Sortino Ratio", "0" },
+                { "Probabilistic Sharpe Ratio", "0%" },
+                { "Loss Rate", "0%" },
+                { "Win Rate", "0%" },
+                { "Profit-Loss Ratio", "0" },
+                { "Alpha", "0" },
+                { "Beta", "0" },
+                { "Annual Standard Deviation", "0" },
+                { "Annual Variance", "0" },
+                { "Information Ratio", "0" },
+                { "Tracking Error", "0" },
+                { "Treynor Ratio", "0" },
+                { "Total Fees", "$7.15" },
+                { "Estimated Strategy Capacity", "$33000000.00" },
+                { "Lowest Capacity Asset", "GOOCV WBGM95TAH2LI|GOOCV VP83T1ZUHROL" },
+                { "Portfolio Turnover", "6.17%" },
+                { "OrderListHash", "8f1288896dafb2856b6045f8930e86a6" }
+            };
     }
 }

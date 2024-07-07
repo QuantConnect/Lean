@@ -13,14 +13,14 @@
  * limitations under the License.
 */
 
-using Moq;
-using NUnit.Framework;
-using QuantConnect.Securities;
-using QuantConnect.ToolBox.RandomDataGenerator;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
+using Moq;
+using NUnit.Framework;
+using QuantConnect.Securities;
+using QuantConnect.ToolBox.RandomDataGenerator;
 
 namespace QuantConnect.Tests.ToolBox.RandomDataGenerator
 {
@@ -33,7 +33,10 @@ namespace QuantConnect.Tests.ToolBox.RandomDataGenerator
         [TestCase(1, 4)]
         public void NextUpperCaseString_CreatesString_WithinSpecifiedMinMaxLength(int min, int max)
         {
-            var symbolGenerator = new Mock<BaseSymbolGenerator>(Mock.Of<RandomDataGeneratorSettings>(), new RandomValueGenerator()).Object;
+            var symbolGenerator = new Mock<BaseSymbolGenerator>(
+                Mock.Of<RandomDataGeneratorSettings>(),
+                new RandomValueGenerator()
+            ).Object;
             var str = symbolGenerator.NextUpperCaseString(min, max);
             Assert.LessOrEqual(min, str.Length);
             Assert.GreaterOrEqual(max, str.Length);
@@ -42,7 +45,10 @@ namespace QuantConnect.Tests.ToolBox.RandomDataGenerator
         [Test]
         public void NextUpperCaseString_CreatesUpperCaseString()
         {
-            var symbolGenerator = new Mock<BaseSymbolGenerator>(Mock.Of<RandomDataGeneratorSettings>(), new RandomValueGenerator()).Object;
+            var symbolGenerator = new Mock<BaseSymbolGenerator>(
+                Mock.Of<RandomDataGeneratorSettings>(),
+                new RandomValueGenerator()
+            ).Object;
             var str = symbolGenerator.NextUpperCaseString(10, 10);
             Assert.IsTrue(str.All(char.IsUpper));
         }
@@ -52,9 +58,12 @@ namespace QuantConnect.Tests.ToolBox.RandomDataGenerator
         [TestCase(SecurityType.Future)]
         public void ThrowsArgumentException_ForDerivativeSymbols(SecurityType securityType)
         {
-            var symbolGenerator = new Mock<BaseSymbolGenerator>(Mock.Of<RandomDataGeneratorSettings>(), new RandomValueGenerator()).Object;
-            Assert.Throws<ArgumentException>(() =>
-                symbolGenerator.NextSymbol(securityType, Market.USA)
+            var symbolGenerator = new Mock<BaseSymbolGenerator>(
+                Mock.Of<RandomDataGeneratorSettings>(),
+                new RandomValueGenerator()
+            ).Object;
+            Assert.Throws<ArgumentException>(
+                () => symbolGenerator.NextSymbol(securityType, Market.USA)
             );
         }
 
@@ -78,8 +87,11 @@ namespace QuantConnect.Tests.ToolBox.RandomDataGenerator
 
         internal static IEnumerable<Symbol> GenerateAsset(BaseSymbolGenerator instance)
         {
-            var generateAsset = typeof(BaseSymbolGenerator).GetMethod("GenerateAsset", BindingFlags.NonPublic | BindingFlags.Instance);
-            return (IEnumerable<Symbol>)generateAsset.Invoke(instance, new [] { (object)null });
+            var generateAsset = typeof(BaseSymbolGenerator).GetMethod(
+                "GenerateAsset",
+                BindingFlags.NonPublic | BindingFlags.Instance
+            );
+            return (IEnumerable<Symbol>)generateAsset.Invoke(instance, new[] { (object)null });
         }
     }
 }

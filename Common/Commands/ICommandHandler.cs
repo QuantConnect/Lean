@@ -14,9 +14,9 @@
 */
 
 using System;
-using QuantConnect.Packets;
-using QuantConnect.Interfaces;
 using System.Collections.Generic;
+using QuantConnect.Interfaces;
+using QuantConnect.Packets;
 
 namespace QuantConnect.Commands
 {

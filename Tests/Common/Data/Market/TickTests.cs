@@ -14,14 +14,14 @@
 */
 
 using System;
+using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Text;
 using NUnit.Framework;
 using QuantConnect.Data;
-using System.Globalization;
-using QuantConnect.Securities;
 using QuantConnect.Data.Market;
+using QuantConnect.Securities;
 
 namespace QuantConnect.Tests.Common.Data.Market
 {
@@ -46,20 +46,49 @@ namespace QuantConnect.Tests.Common.Data.Market
             Assert.AreEqual(false, tick.Suspicious);
         }
 
-        [TestCase("18000677.3,3669.12,0.0040077,3669.13,3.40618718", "18000677.3", "3669.12", "0.0040077", "3669.13", "3.40618718")]
-        [TestCase("18000677.3111,3669.12,0.0040077,3669.13,3.40618718", "18000677.3111", "3669.12", "0.0040077", "3669.13", "3.40618718")]
-        public void ConstructsFromLineWithDecimalTimestamp(string line, string milliseconds, string bidPrice,
-            string bidSize, string askPrice, string askSize)
+        [TestCase(
+            "18000677.3,3669.12,0.0040077,3669.13,3.40618718",
+            "18000677.3",
+            "3669.12",
+            "0.0040077",
+            "3669.13",
+            "3.40618718"
+        )]
+        [TestCase(
+            "18000677.3111,3669.12,0.0040077,3669.13,3.40618718",
+            "18000677.3111",
+            "3669.12",
+            "0.0040077",
+            "3669.13",
+            "3.40618718"
+        )]
+        public void ConstructsFromLineWithDecimalTimestamp(
+            string line,
+            string milliseconds,
+            string bidPrice,
+            string bidSize,
+            string askPrice,
+            string askSize
+        )
         {
             var config = new SubscriptionDataConfig(
-                typeof(Tick), Symbols.BTCUSD, Resolution.Tick, TimeZones.Utc, TimeZones.Utc,
-                false, false, false, false, TickType.Quote);
+                typeof(Tick),
+                Symbols.BTCUSD,
+                Resolution.Tick,
+                TimeZones.Utc,
+                TimeZones.Utc,
+                false,
+                false,
+                false,
+                false,
+                TickType.Quote
+            );
             var baseDate = new DateTime(2019, 1, 15);
 
             var tick = new Tick(config, line, baseDate);
 
             var ms = (tick.Time - baseDate).TotalMilliseconds;
-            Assert.AreEqual( decimal.Parse(milliseconds, CultureInfo.InvariantCulture), ms);
+            Assert.AreEqual(decimal.Parse(milliseconds, CultureInfo.InvariantCulture), ms);
             Assert.AreEqual(decimal.Parse(bidPrice, CultureInfo.InvariantCulture), tick.BidPrice);
             Assert.AreEqual(decimal.Parse(bidSize, CultureInfo.InvariantCulture), tick.BidSize);
             Assert.AreEqual(decimal.Parse(askPrice, CultureInfo.InvariantCulture), tick.AskPrice);
@@ -72,8 +101,21 @@ namespace QuantConnect.Tests.Common.Data.Market
             const string line = "86399572,52.62,5,usa,,0,False";
 
             var baseDate = new DateTime(2013, 10, 08);
-            var symbol = Symbol.CreateFuture(Futures.Energy.CrudeOilWTI, QuantConnect.Market.NYMEX, new DateTime(2017, 2, 28));
-            var config = new SubscriptionDataConfig(typeof(Tick), symbol, Resolution.Tick, TimeZones.NewYork, TimeZones.NewYork, false, false, false);
+            var symbol = Symbol.CreateFuture(
+                Futures.Energy.CrudeOilWTI,
+                QuantConnect.Market.NYMEX,
+                new DateTime(2017, 2, 28)
+            );
+            var config = new SubscriptionDataConfig(
+                typeof(Tick),
+                symbol,
+                Resolution.Tick,
+                TimeZones.NewYork,
+                TimeZones.NewYork,
+                false,
+                false,
+                false
+            );
             var tick = new Tick(config, line, baseDate);
 
             var ms = (tick.Time - baseDate).TotalMilliseconds;
@@ -89,12 +131,25 @@ namespace QuantConnect.Tests.Common.Data.Market
         [TestCase(SecurityType.Crypto, TickType.Quote, "1234567,18000,10,18100,15,0")]
         [TestCase(SecurityType.CryptoFuture, TickType.Trade, "1234567,18000,0.0001,0")]
         [TestCase(SecurityType.CryptoFuture, TickType.Quote, "1234567,18000,10,18100,15,0")]
-        public void ReadsCryptoAndCryptoFuturesTickFromLine(SecurityType securityType, TickType tickType, string line)
+        public void ReadsCryptoAndCryptoFuturesTickFromLine(
+            SecurityType securityType,
+            TickType tickType,
+            string line
+        )
         {
             var baseDate = new DateTime(2013, 10, 08);
             var symbol = Symbol.Create("BTCUSDT", securityType, QuantConnect.Market.Binance);
-            var config = new SubscriptionDataConfig(typeof(Tick), symbol, Resolution.Tick, TimeZones.NewYork, TimeZones.NewYork, false, false, false,
-                tickType: tickType);
+            var config = new SubscriptionDataConfig(
+                typeof(Tick),
+                symbol,
+                Resolution.Tick,
+                TimeZones.NewYork,
+                TimeZones.NewYork,
+                false,
+                false,
+                false,
+                tickType: tickType
+            );
             var tick = new Tick(config, line, baseDate);
 
             var ms = (tick.Time - baseDate).TotalMilliseconds;
@@ -124,10 +179,17 @@ namespace QuantConnect.Tests.Common.Data.Market
         [TestCase("14400135,0,0,1680000,400,NASDAQ,00000001,0", 0, 0, 168, 400)]
         [TestCase("14400135,10000,10,0,0,NASDAQ,00000001,0", 1, 10, 0, 0)]
         [TestCase("14400135,10000,10,20000,20,NASDAQ,00000001,0", 1, 10, 2, 20)]
-        public void EquityQuoteTick(string line, decimal bidPrice, decimal bidSize, decimal askPrice, decimal askSize)
+        public void EquityQuoteTick(
+            string line,
+            decimal bidPrice,
+            decimal bidSize,
+            decimal askPrice,
+            decimal askSize
+        )
         {
             var baseDate = new DateTime(2013, 10, 08);
-            var config = new SubscriptionDataConfig(typeof(Tick),
+            var config = new SubscriptionDataConfig(
+                typeof(Tick),
                 Symbols.SPY,
                 Resolution.Tick,
                 TimeZones.NewYork,
@@ -136,7 +198,8 @@ namespace QuantConnect.Tests.Common.Data.Market
                 false,
                 false,
                 false,
-                TickType.Quote);
+                TickType.Quote
+            );
             var tick = new Tick(config, line, baseDate);
 
             var expectedValue = (askPrice + bidPrice) / 2;
@@ -171,7 +234,8 @@ namespace QuantConnect.Tests.Common.Data.Market
                 OptionStyle.American,
                 OptionRight.Put,
                 4200m,
-                SecurityIdentifier.DefaultDate);
+                SecurityIdentifier.DefaultDate
+            );
 
             var config = new SubscriptionDataConfig(
                 typeof(Tick),
@@ -185,12 +249,15 @@ namespace QuantConnect.Tests.Common.Data.Market
                 false,
                 TickType.Trade,
                 true,
-                DataNormalizationMode.Raw);
+                DataNormalizationMode.Raw
+            );
 
             using var stream = new StreamReader(new MemoryStream(Encoding.UTF8.GetBytes(tickLine)));
 
-            var tickFromLine = (Tick)factory.Reader(config, tickLine, new DateTime(2020, 9, 22), false);
-            var tickFromStream = (Tick)factory.Reader(config, stream, new DateTime(2020, 9, 22), false);
+            var tickFromLine = (Tick)
+                factory.Reader(config, tickLine, new DateTime(2020, 9, 22), false);
+            var tickFromStream = (Tick)
+                factory.Reader(config, stream, new DateTime(2020, 9, 22), false);
 
             Assert.AreEqual(new DateTime(2020, 9, 22, 11, 16, 0), tickFromLine.Time);
             Assert.AreEqual(1m, tickFromLine.Price);
@@ -206,14 +273,19 @@ namespace QuantConnect.Tests.Common.Data.Market
         {
             var factory = new Tick();
             var tickLine = "40560000,10000,10,CME,00000001,0";
-            var underlying = Symbol.CreateFuture("ES", QuantConnect.Market.CME, new DateTime(2021, 3, 19));
+            var underlying = Symbol.CreateFuture(
+                "ES",
+                QuantConnect.Market.CME,
+                new DateTime(2021, 3, 19)
+            );
             var optionSymbol = Symbol.CreateOption(
                 underlying,
                 QuantConnect.Market.CME,
                 OptionStyle.American,
                 OptionRight.Put,
                 4200m,
-                SecurityIdentifier.DefaultDate);
+                SecurityIdentifier.DefaultDate
+            );
 
             var config = new SubscriptionDataConfig(
                 typeof(Tick),
@@ -227,12 +299,15 @@ namespace QuantConnect.Tests.Common.Data.Market
                 false,
                 TickType.Trade,
                 true,
-                DataNormalizationMode.Raw);
+                DataNormalizationMode.Raw
+            );
 
             using var stream = new StreamReader(new MemoryStream(Encoding.UTF8.GetBytes(tickLine)));
 
-            var tickFromLine = (Tick)factory.Reader(config, tickLine, new DateTime(2020, 9, 22), false);
-            var tickFromStream = (Tick)factory.Reader(config, stream, new DateTime(2020, 9, 22), false);
+            var tickFromLine = (Tick)
+                factory.Reader(config, tickLine, new DateTime(2020, 9, 22), false);
+            var tickFromStream = (Tick)
+                factory.Reader(config, stream, new DateTime(2020, 9, 22), false);
 
             Assert.AreEqual(new DateTime(2020, 9, 22, 11, 16, 0), tickFromLine.Time);
             Assert.AreEqual(10000m, tickFromLine.Price);
@@ -250,9 +325,17 @@ namespace QuantConnect.Tests.Common.Data.Market
 
             var baseDate = new DateTime(2013, 10, 08);
             var tick = new Tick(Symbols.SPY, line, baseDate);
-            Assert.DoesNotThrow(()=> tick.ExchangeCode = "LL");
-            Assert.AreEqual(Exchange.UNKNOWN, tick.Exchange.GetPrimaryExchange(), "Failed at Exchange Property");
-            Assert.AreEqual((string)Exchange.UNKNOWN, tick.ExchangeCode, "Failed at ExchangeCode Property");
+            Assert.DoesNotThrow(() => tick.ExchangeCode = "LL");
+            Assert.AreEqual(
+                Exchange.UNKNOWN,
+                tick.Exchange.GetPrimaryExchange(),
+                "Failed at Exchange Property"
+            );
+            Assert.AreEqual(
+                (string)Exchange.UNKNOWN,
+                tick.ExchangeCode,
+                "Failed at ExchangeCode Property"
+            );
         }
 
         [Test]
@@ -262,11 +345,16 @@ namespace QuantConnect.Tests.Common.Data.Market
             const string line = "15093000,1456300,100,P,T,0";
 
             var exchanges = typeof(Exchange)
-                .GetProperties(System.Reflection.BindingFlags.Static | System.Reflection.BindingFlags.Public)
+                .GetProperties(
+                    System.Reflection.BindingFlags.Static | System.Reflection.BindingFlags.Public
+                )
                 .Where(p => p.PropertyType == typeof(Exchange))
                 .Select(propa => propa.GetValue(null))
                 .OfType<Exchange>()
-                .Where(exchange => exchange.Market == QuantConnect.Market.USA && exchange.SecurityTypes.Contains(SecurityType.Equity))
+                .Where(exchange =>
+                    exchange.Market == QuantConnect.Market.USA
+                    && exchange.SecurityTypes.Contains(SecurityType.Equity)
+                )
                 .ToList();
 
             Assert.GreaterOrEqual(exchanges.Count, 20);
@@ -277,15 +365,31 @@ namespace QuantConnect.Tests.Common.Data.Market
                     var tick = new Tick(Symbols.SPY, line, baseDate);
                     Assert.DoesNotThrow(() => tick.ExchangeCode = exchange.Code);
 
-                    Assert.AreEqual(exchange.Name, tick.Exchange, $"ExchangeCode: Failed at Exchange Property: {exchange}");
-                    Assert.AreEqual(exchange.Code, tick.ExchangeCode, $"ExchangeCode: Failed at ExchangeCode Property: {exchange}");
+                    Assert.AreEqual(
+                        exchange.Name,
+                        tick.Exchange,
+                        $"ExchangeCode: Failed at Exchange Property: {exchange}"
+                    );
+                    Assert.AreEqual(
+                        exchange.Code,
+                        tick.ExchangeCode,
+                        $"ExchangeCode: Failed at ExchangeCode Property: {exchange}"
+                    );
                 }
                 {
                     var tick = new Tick(Symbols.SPY, line, baseDate);
                     Assert.DoesNotThrow(() => tick.Exchange = exchange);
 
-                    Assert.AreEqual(exchange.Name, tick.Exchange, $"Exchange: Failed at Exchange Property: {exchange}");
-                    Assert.AreEqual(exchange.Code, tick.ExchangeCode, $"Exchange: Failed at ExchangeCode Property: {exchange}");
+                    Assert.AreEqual(
+                        exchange.Name,
+                        tick.Exchange,
+                        $"Exchange: Failed at Exchange Property: {exchange}"
+                    );
+                    Assert.AreEqual(
+                        exchange.Code,
+                        tick.ExchangeCode,
+                        $"Exchange: Failed at ExchangeCode Property: {exchange}"
+                    );
                 }
             }
         }

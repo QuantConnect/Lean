@@ -58,13 +58,19 @@ namespace QuantConnect.Algorithm.CSharp
                 //Weather used as a tradable asset, like stocks, futures etc.
                 if (data.Close != 0)
                 {
-                    // It's only OK to use SetHoldings with crypto when using custom data. When trading with built-in crypto data, 
-                    // use the cashbook. Reference https://github.com/QuantConnect/Lean/blob/master/Algorithm.Python/BasicTemplateCryptoAlgorithm.py 
+                    // It's only OK to use SetHoldings with crypto when using custom data. When trading with built-in crypto data,
+                    // use the cashbook. Reference https://github.com/QuantConnect/Lean/blob/master/Algorithm.Python/BasicTemplateCryptoAlgorithm.py
                     SetHoldings("BTC", 1);
                 }
                 Console.WriteLine("Buying BTC 'Shares': BTC: " + data.Close);
             }
-            Console.WriteLine("Time: " + Time.ToStringInvariant("T") + " " + Time.ToStringInvariant("T") + data.Close.ToStringInvariant());
+            Console.WriteLine(
+                "Time: "
+                    + Time.ToStringInvariant("T")
+                    + " "
+                    + Time.ToStringInvariant("T")
+                    + data.Close.ToStringInvariant()
+            );
         }
 
         /// <summary>
@@ -74,20 +80,28 @@ namespace QuantConnect.Algorithm.CSharp
         {
             [JsonProperty("timestamp")]
             public int Timestamp { get; set; }
+
             [JsonProperty("open")]
             public decimal Open { get; set; }
+
             [JsonProperty("high")]
             public decimal High { get; set; }
+
             [JsonProperty("low")]
             public decimal Low { get; set; }
+
             [JsonProperty("last")]
             public decimal Close { get; set; }
+
             [JsonProperty("bid")]
             public decimal Bid { get; set; }
+
             [JsonProperty("ask")]
             public decimal Ask { get; set; }
+
             [JsonProperty("vwap")]
             public decimal WeightedPrice { get; set; }
+
             [JsonProperty("volume")]
             public decimal VolumeBTC { get; set; }
             public decimal VolumeUSD { get; set; }
@@ -120,16 +134,26 @@ namespace QuantConnect.Algorithm.CSharp
             /// <param name="date">Date of this source file</param>
             /// <param name="isLiveMode">true if we're in live mode, false for backtesting mode</param>
             /// <returns>String URL of source file.</returns>
-            public override SubscriptionDataSource GetSource(SubscriptionDataConfig config, DateTime date, bool isLiveMode)
+            public override SubscriptionDataSource GetSource(
+                SubscriptionDataConfig config,
+                DateTime date,
+                bool isLiveMode
+            )
             {
                 if (isLiveMode)
                 {
-                    return new SubscriptionDataSource("https://www.bitstamp.net/api/ticker/", SubscriptionTransportMedium.Rest);
+                    return new SubscriptionDataSource(
+                        "https://www.bitstamp.net/api/ticker/",
+                        SubscriptionTransportMedium.Rest
+                    );
                 }
 
                 //return "http://my-ftp-server.com/futures-data-" + date.ToString("Ymd") + ".zip";
                 // OR simply return a fixed small data file. Large files will slow down your backtest
-                return new SubscriptionDataSource("https://www.quantconnect.com/api/v2/proxy/quandl/api/v3/datasets/BCHARTS/BITSTAMPUSD.csv?order=asc&api_key=WyAazVXnq7ATy_fefTqm", SubscriptionTransportMedium.RemoteFile);
+                return new SubscriptionDataSource(
+                    "https://www.quantconnect.com/api/v2/proxy/quandl/api/v3/datasets/BCHARTS/BITSTAMPUSD.csv?order=asc&api_key=WyAazVXnq7ATy_fefTqm",
+                    SubscriptionTransportMedium.RemoteFile
+                );
             }
 
             /// <summary>
@@ -142,7 +166,12 @@ namespace QuantConnect.Algorithm.CSharp
             /// <param name="date">Current date we're requesting. This allows you to break up the data source into daily files.</param>
             /// <param name="isLiveMode">true if we're in live mode, false for backtesting mode</param>
             /// <returns>New Bitcoin Object which extends BaseData.</returns>
-            public override BaseData Reader(SubscriptionDataConfig config, string line, DateTime date, bool isLiveMode)
+            public override BaseData Reader(
+                SubscriptionDataConfig config,
+                string line,
+                DateTime date,
+                bool isLiveMode
+            )
             {
                 var coin = new Bitcoin();
                 if (isLiveMode)
@@ -155,7 +184,9 @@ namespace QuantConnect.Algorithm.CSharp
                         coin.EndTime = DateTime.UtcNow.ConvertFromUtc(config.ExchangeTimeZone);
                         coin.Value = coin.Close;
                     }
-                    catch { /* Do nothing, possible error in json decoding */ }
+                    catch
+                    { /* Do nothing, possible error in json decoding */
+                    }
                     return coin;
                 }
 
@@ -176,7 +207,9 @@ namespace QuantConnect.Algorithm.CSharp
                     coin.WeightedPrice = Convert.ToDecimal(data[7], CultureInfo.InvariantCulture);
                     coin.Value = coin.Close;
                 }
-                catch { /* Do nothing, skip first title row */ }
+                catch
+                { /* Do nothing, skip first title row */
+                }
 
                 return coin;
             }

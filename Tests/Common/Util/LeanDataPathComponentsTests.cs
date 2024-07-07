@@ -32,14 +32,23 @@ namespace QuantConnect.Tests.Common.Util
             public TickType TickType { get; set; }
             public string Market { get; set; }
 
-            public Arguments(Symbol symbol, DateTime date, Resolution resolution, string market, TickType tickType)
+            public Arguments(
+                Symbol symbol,
+                DateTime date,
+                Resolution resolution,
+                string market,
+                TickType tickType
+            )
             {
                 Symbol = symbol;
                 Date = date;
                 Resolution = resolution;
                 TickType = tickType;
                 Market = market;
-                if (symbol.ID.SecurityType != SecurityType.Option && (resolution == Resolution.Hour || resolution == Resolution.Daily))
+                if (
+                    symbol.ID.SecurityType != SecurityType.Option
+                    && (resolution == Resolution.Hour || resolution == Resolution.Daily)
+                )
                 {
                     // for the time being this is true, eventually I'm sure we'd like to support hourly/daily quote data in other security types
                     TickType = TickType.Trade;
@@ -52,10 +61,12 @@ namespace QuantConnect.Tests.Common.Util
             var referenceDate = new DateTime(2016, 11, 1);
 
             var tickTypes = Enum.GetValues(typeof(TickType)).Cast<TickType>();
-            var resolutions = Enum.GetValues(typeof (Resolution)).Cast<Resolution>();
-            var securityTypes = Enum.GetValues(typeof (SecurityType)).Cast<SecurityType>();
-            var markets = typeof (Market).GetFields().Where(f => f.IsLiteral && !f.IsInitOnly)
-                .Select(f => (string) f.GetValue(null));
+            var resolutions = Enum.GetValues(typeof(Resolution)).Cast<Resolution>();
+            var securityTypes = Enum.GetValues(typeof(SecurityType)).Cast<SecurityType>();
+            var markets = typeof(Market)
+                .GetFields()
+                .Where(f => f.IsLiteral && !f.IsInitOnly)
+                .Select(f => (string)f.GetValue(null));
 
             var results = (
                 from securityType in securityTypes
@@ -63,15 +74,26 @@ namespace QuantConnect.Tests.Common.Util
                 from market in markets
                 from resolution in resolutions
                 from tickType in tickTypes
-                let date = resolution == Resolution.Hour || resolution == Resolution.Daily ? DateTime.MinValue : referenceDate
-                let name = Invariant($"{securityType}-{market}-{resolution}-{tickType}").ToLowerInvariant()
+                let date = resolution == Resolution.Hour || resolution == Resolution.Daily
+                    ? DateTime.MinValue
+                    : referenceDate
+                let name = Invariant($"{securityType}-{market}-{resolution}-{tickType}")
+                    .ToLowerInvariant()
                 where TryInvoke(() => Symbol.Create(name, securityType, market))
                 let symbol = securityType != SecurityType.Option
                     ? Symbol.Create(name, securityType, market)
-                    : Symbol.CreateOption(name, market, OptionStyle.American, default, 0, SecurityIdentifier.DefaultDate)
-                select new TestCaseData(new Arguments(symbol, date, resolution, market, tickType))
-                                .SetName(name)
-                ).ToArray();
+                    : Symbol.CreateOption(
+                        name,
+                        market,
+                        OptionStyle.American,
+                        default,
+                        0,
+                        SecurityIdentifier.DefaultDate
+                    )
+                select new TestCaseData(
+                    new Arguments(symbol, date, resolution, market, tickType)
+                ).SetName(name)
+            ).ToArray();
 
             return results;
         }
@@ -79,10 +101,20 @@ namespace QuantConnect.Tests.Common.Util
         [Test, TestCaseSource(nameof(GetTestCases))]
         public void DecomposesAccordingToLeanDataFileGeneration(Arguments args)
         {
-            var sourceString = LeanData.GenerateRelativeZipFilePath(args.Symbol, args.Date, args.Resolution, args.TickType);
+            var sourceString = LeanData.GenerateRelativeZipFilePath(
+                args.Symbol,
+                args.Date,
+                args.Resolution,
+                args.TickType
+            );
             var decomposed = LeanDataPathComponents.Parse(sourceString);
 
-            var expectedFileName = LeanData.GenerateZipFileName(args.Symbol, args.Date, args.Resolution, args.TickType);
+            var expectedFileName = LeanData.GenerateZipFileName(
+                args.Symbol,
+                args.Date,
+                args.Resolution,
+                args.TickType
+            );
 
             Assert.AreEqual(args.Symbol, decomposed.Symbol);
             Assert.AreEqual(args.Date, decomposed.Date);

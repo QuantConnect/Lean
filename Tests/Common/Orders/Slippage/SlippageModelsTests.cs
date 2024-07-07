@@ -13,6 +13,7 @@
  * limitations under the License.
 */
 
+using System;
 using NUnit.Framework;
 using QuantConnect.Data.Market;
 using QuantConnect.Orders;
@@ -20,7 +21,6 @@ using QuantConnect.Orders.Slippage;
 using QuantConnect.Securities;
 using QuantConnect.Securities.Equity;
 using QuantConnect.Securities.Forex;
-using System;
 
 namespace QuantConnect.Tests.Common.Orders.Slippage
 {
@@ -45,10 +45,11 @@ namespace QuantConnect.Tests.Common.Orders.Slippage
                 new SecurityCache()
             );
 
-            _equity.SetMarketPrice(new TradeBar(DateTime.Now, Symbols.SPY, 100m, 100m, 100m, 100m, 1));
+            _equity.SetMarketPrice(
+                new TradeBar(DateTime.Now, Symbols.SPY, 100m, 100m, 100m, 100m, 1)
+            );
 
             _equityBuyOrder = new MarketOrder(Symbols.SPY, 1, DateTime.Now);
-
 
             _forex = new Forex(
                 Symbols.EURUSD,
@@ -61,7 +62,9 @@ namespace QuantConnect.Tests.Common.Orders.Slippage
                 new SecurityCache()
             );
 
-            _forex.SetMarketPrice(new TradeBar(DateTime.Now, Symbols.EURUSD, 100m, 100m, 100m, 100m, 0));
+            _forex.SetMarketPrice(
+                new TradeBar(DateTime.Now, Symbols.EURUSD, 100m, 100m, 100m, 100m, 0)
+            );
 
             _forexBuyOrder = new MarketOrder(Symbols.EURUSD, 1000, DateTime.Now);
         }
@@ -122,7 +125,9 @@ namespace QuantConnect.Tests.Common.Orders.Slippage
             var volume = 100;
             var volumeShare = _equityBuyOrder.Quantity / (decimal)volume;
             Assert.Greater(volume, volumeLimit * _equityBuyOrder.Quantity);
-            _equity.SetMarketPrice(new TradeBar(DateTime.Now, Symbols.SPY, 100m, 100m, 100m, 100m, volume));
+            _equity.SetMarketPrice(
+                new TradeBar(DateTime.Now, Symbols.SPY, 100m, 100m, 100m, 100m, volume)
+            );
 
             var expected = _equity.Price * priceImpact * volumeShare * volumeShare;
             var actual = model.GetSlippageApproximation(_equity, _equityBuyOrder);

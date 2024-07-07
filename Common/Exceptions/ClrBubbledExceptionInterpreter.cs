@@ -34,7 +34,8 @@ namespace QuantConnect.Exceptions
         /// </summary>
         /// <param name="exception">The exception to check</param>
         /// <returns>True if the exception can be interpreted, false otherwise</returns>
-        public override bool CanInterpret(Exception exception) => exception?.GetType() == typeof(ClrBubbledException);
+        public override bool CanInterpret(Exception exception) =>
+            exception?.GetType() == typeof(ClrBubbledException);
 
         /// <summary>
         /// Interprets the specified exception into a new exception
@@ -42,13 +43,19 @@ namespace QuantConnect.Exceptions
         /// <param name="exception">The exception to be interpreted</param>
         /// <param name="innerInterpreter">An interpreter that should be applied to the inner exception.</param>
         /// <returns>The interpreted exception</returns>
-        public override Exception Interpret(Exception exception, IExceptionInterpreter innerInterpreter)
+        public override Exception Interpret(
+            Exception exception,
+            IExceptionInterpreter innerInterpreter
+        )
         {
             var pe = (ClrBubbledException)exception;
             var sanitized = base.Interpret(exception, innerInterpreter);
             var inner = sanitized.InnerException ?? sanitized;
 
-            return new Exception(pe.Message + PythonUtil.PythonExceptionStackParser(pe.PythonTraceback), inner);
+            return new Exception(
+                pe.Message + PythonUtil.PythonExceptionStackParser(pe.PythonTraceback),
+                inner
+            );
         }
     }
 }

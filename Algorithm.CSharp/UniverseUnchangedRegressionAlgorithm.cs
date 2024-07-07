@@ -43,7 +43,15 @@ namespace QuantConnect.Algorithm.CSharp
             SetStartDate(2014, 03, 25);
             SetEndDate(2014, 04, 07);
 
-            SetAlpha(new ConstantAlphaModel(InsightType.Price, InsightDirection.Up, TimeSpan.FromDays(1), 0.025, null));
+            SetAlpha(
+                new ConstantAlphaModel(
+                    InsightType.Price,
+                    InsightDirection.Up,
+                    TimeSpan.FromDays(1),
+                    0.025,
+                    null
+                )
+            );
             SetPortfolioConstruction(new EqualWeightingPortfolioConstructionModel());
             AddUniverse(CoarseSelectionFunction, FineSelectionFunction);
         }
@@ -80,10 +88,18 @@ namespace QuantConnect.Algorithm.CSharp
         // assert security changes, throw if called more than once
         public override void OnSecuritiesChanged(SecurityChanges changes)
         {
-            if (changes.AddedSecurities.Count != 2
+            if (
+                changes.AddedSecurities.Count != 2
                 || Time != new DateTime(2014, 3, 25)
-                || changes.AddedSecurities.All(security => security.Symbol != QuantConnect.Symbol.Create("IBM", SecurityType.Equity, Market.USA))
-                || changes.AddedSecurities.All(security => security.Symbol != QuantConnect.Symbol.Create("AAPL", SecurityType.Equity, Market.USA)))
+                || changes.AddedSecurities.All(security =>
+                    security.Symbol
+                    != QuantConnect.Symbol.Create("IBM", SecurityType.Equity, Market.USA)
+                )
+                || changes.AddedSecurities.All(security =>
+                    security.Symbol
+                    != QuantConnect.Symbol.Create("AAPL", SecurityType.Equity, Market.USA)
+                )
+            )
             {
                 throw new RegressionTestException("Unexpected security changes");
             }
@@ -118,35 +134,36 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// This is used by the regression test system to indicate what the expected statistics are from running the algorithm
         /// </summary>
-        public Dictionary<string, string> ExpectedStatistics => new Dictionary<string, string>
-        {
-            {"Total Orders", "10"},
-            {"Average Win", "0.01%"},
-            {"Average Loss", "0.00%"},
-            {"Compounding Annual Return", "-5.161%"},
-            {"Drawdown", "2.100%"},
-            {"Expectancy", "2.059"},
-            {"Start Equity", "100000"},
-            {"End Equity", "99796.97"},
-            {"Net Profit", "-0.203%"},
-            {"Sharpe Ratio", "-3.683"},
-            {"Sortino Ratio", "-5.057"},
-            {"Probabilistic Sharpe Ratio", "11.993%"},
-            {"Loss Rate", "33%"},
-            {"Win Rate", "67%"},
-            {"Profit-Loss Ratio", "3.59"},
-            {"Alpha", "-0.214"},
-            {"Beta", "0.678"},
-            {"Annual Standard Deviation", "0.093"},
-            {"Annual Variance", "0.009"},
-            {"Information Ratio", "-2.107"},
-            {"Tracking Error", "0.073"},
-            {"Treynor Ratio", "-0.506"},
-            {"Total Fees", "$22.21"},
-            {"Estimated Strategy Capacity", "$75000000.00"},
-            {"Lowest Capacity Asset", "IBM R735QTJ8XC9X"},
-            {"Portfolio Turnover", "7.20%"},
-            {"OrderListHash", "a8d1fef0be691bf1692e5691a98a5f37"}
-        };
+        public Dictionary<string, string> ExpectedStatistics =>
+            new Dictionary<string, string>
+            {
+                { "Total Orders", "10" },
+                { "Average Win", "0.01%" },
+                { "Average Loss", "0.00%" },
+                { "Compounding Annual Return", "-5.161%" },
+                { "Drawdown", "2.100%" },
+                { "Expectancy", "2.059" },
+                { "Start Equity", "100000" },
+                { "End Equity", "99796.97" },
+                { "Net Profit", "-0.203%" },
+                { "Sharpe Ratio", "-3.683" },
+                { "Sortino Ratio", "-5.057" },
+                { "Probabilistic Sharpe Ratio", "11.993%" },
+                { "Loss Rate", "33%" },
+                { "Win Rate", "67%" },
+                { "Profit-Loss Ratio", "3.59" },
+                { "Alpha", "-0.214" },
+                { "Beta", "0.678" },
+                { "Annual Standard Deviation", "0.093" },
+                { "Annual Variance", "0.009" },
+                { "Information Ratio", "-2.107" },
+                { "Tracking Error", "0.073" },
+                { "Treynor Ratio", "-0.506" },
+                { "Total Fees", "$22.21" },
+                { "Estimated Strategy Capacity", "$75000000.00" },
+                { "Lowest Capacity Asset", "IBM R735QTJ8XC9X" },
+                { "Portfolio Turnover", "7.20%" },
+                { "OrderListHash", "a8d1fef0be691bf1692e5691a98a5f37" }
+            };
     }
 }

@@ -13,10 +13,10 @@
  * limitations under the License.
 */
 
+using System;
 using NUnit.Framework;
 using Python.Runtime;
 using QuantConnect.Algorithm.Framework.Portfolio;
-using System;
 
 namespace QuantConnect.Tests.Algorithm.Framework.Portfolio;
 
@@ -28,8 +28,9 @@ public class PortfolioOptimizerPythonWrapperTests
     {
         using (Py.GIL())
         {
-            var module = PyModule.FromString(Guid.NewGuid().ToString(),
-                    @$"
+            var module = PyModule.FromString(
+                Guid.NewGuid().ToString(),
+                @$"
 from AlgorithmImports import *
 
 class CustomPortfolioOptimizer:
@@ -37,16 +38,20 @@ class CustomPortfolioOptimizer:
         self.OptimizeWasCalled = False
 
     def Optimize(self, historicalReturns, expectedReturns = None, covariance = None):
-        self.OptimizeWasCalled= True");
-                
+        self.OptimizeWasCalled= True"
+            );
+
             var pyCustomOptimizer = module.GetAttr("CustomPortfolioOptimizer").Invoke();
             var wrapper = new PortfolioOptimizerPythonWrapper(pyCustomOptimizer);
-            var historicalReturns = new double[,] { { -0.50, -0.13 }, { 0.81, 0.31 }, { -0.02, 0.01 } };
+            var historicalReturns = new double[,]
+            {
+                { -0.50, -0.13 },
+                { 0.81, 0.31 },
+                { -0.02, 0.01 }
+            };
 
             wrapper.Optimize(historicalReturns);
-            pyCustomOptimizer
-                .GetAttr("OptimizeWasCalled")
-                .TryConvert(out bool optimizerWasCalled);
+            pyCustomOptimizer.GetAttr("OptimizeWasCalled").TryConvert(out bool optimizerWasCalled);
 
             Assert.IsTrue(optimizerWasCalled);
         }
@@ -57,8 +62,9 @@ class CustomPortfolioOptimizer:
     {
         using (Py.GIL())
         {
-            var module = PyModule.FromString(Guid.NewGuid().ToString(),
-                    @$"
+            var module = PyModule.FromString(
+                Guid.NewGuid().ToString(),
+                @$"
 from AlgorithmImports import *
 
 class CustomPortfolioOptimizer:
@@ -66,11 +72,14 @@ class CustomPortfolioOptimizer:
         self.OptimizeWasCalled = False
 
     def Calculate(self, historicalReturns, expectedReturns = None, covariance = None):
-        pass");
+        pass"
+            );
 
             var pyCustomOptimizer = module.GetAttr("CustomPortfolioOptimizer").Invoke();
 
-            Assert.Throws<NotImplementedException>(() => new PortfolioOptimizerPythonWrapper(pyCustomOptimizer));
+            Assert.Throws<NotImplementedException>(
+                () => new PortfolioOptimizerPythonWrapper(pyCustomOptimizer)
+            );
         }
     }
 }

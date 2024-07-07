@@ -14,7 +14,6 @@
 */
 
 using System.Collections.Generic;
-
 using QuantConnect.Interfaces;
 
 namespace QuantConnect.Algorithm.CSharp
@@ -22,7 +21,9 @@ namespace QuantConnect.Algorithm.CSharp
     /// <summary>
     /// Algorithm asserting that the <see cref="DataNormalizationMode.ScaledRaw"/> data normalization mode is not allowed for adding subscriptions.
     /// </summary>
-    public class ScaledRawDataNormalizationModeNotAllowedSecuritiesAlgorithm : QCAlgorithm, IRegressionAlgorithmDefinition
+    public class ScaledRawDataNormalizationModeNotAllowedSecuritiesAlgorithm
+        : QCAlgorithm,
+            IRegressionAlgorithmDefinition
     {
         public override void Initialize()
         {
@@ -32,7 +33,11 @@ namespace QuantConnect.Algorithm.CSharp
 
             // Cannot add securities with DataNormalizationMode.ScaledRaw.
             // The DataManager should throw for this subscription
-            AddEquity("AAPL", Resolution.Daily, dataNormalizationMode: DataNormalizationMode.ScaledRaw);
+            AddEquity(
+                "AAPL",
+                Resolution.Daily,
+                dataNormalizationMode: DataNormalizationMode.ScaledRaw
+            );
         }
 
         /// <summary>
@@ -63,9 +68,10 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// This is used by the regression test system to indicate what the expected statistics are from running the algorithm
         /// </summary>
-        public Dictionary<string, string> ExpectedStatistics => new Dictionary<string, string>
-        {
-            {"OrderListHash", "d41d8cd98f00b204e9800998ecf8427e"}
-        };
+        public Dictionary<string, string> ExpectedStatistics =>
+            new Dictionary<string, string>
+            {
+                { "OrderListHash", "d41d8cd98f00b204e9800998ecf8427e" }
+            };
     }
 }

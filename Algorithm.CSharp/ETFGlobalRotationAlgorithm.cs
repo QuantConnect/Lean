@@ -41,14 +41,14 @@ namespace QuantConnect.Algorithm.CSharp
             "IEV", // iShares S&P europe 350
             "EEM", // iShared MSCI emerging markets
             "ILF", // iShares S&P latin america
-            "EPP"  // iShared MSCI Pacific ex-Japan
+            "EPP" // iShared MSCI Pacific ex-Japan
         };
 
         // these are the safety symbols we go to when things are looking bad for growth
         List<string> _safetySymbols = new List<string>
         {
             "EDV", // Vangaurd TSY 25yr+
-            "SHY"  // Barclays Low Duration TSY
+            "SHY" // Barclays Low Duration TSY
         };
 
         // we'll hold some computed data in these guys
@@ -69,15 +69,16 @@ namespace QuantConnect.Algorithm.CSharp
                 var oneMonthPerformance = MOM(symbol, 30, Resolution.Daily);
                 var threeMonthPerformance = MOM(symbol, 90, Resolution.Daily);
 
-                _symbolData.Add(new SymbolData
-                {
-                    Symbol = symbol,
-                    OneMonthPerformance = oneMonthPerformance,
-                    ThreeMonthPerformance = threeMonthPerformance
-                });
+                _symbolData.Add(
+                    new SymbolData
+                    {
+                        Symbol = symbol,
+                        OneMonthPerformance = oneMonthPerformance,
+                        ThreeMonthPerformance = threeMonthPerformance
+                    }
+                );
             }
         }
-
 
         /// <summary>
         /// OnData event is the primary entry point for your algorithm. Each new data point will be pumped in here.
@@ -102,10 +103,14 @@ namespace QuantConnect.Algorithm.CSharp
                     _lastRotationTime = Time;
 
                     // pick which one is best from growth and safety symbols
-                    var orderedObjScores = _symbolData.OrderByDescending(x => x.ObjectiveScore).ToList();
+                    var orderedObjScores = _symbolData
+                        .OrderByDescending(x => x.ObjectiveScore)
+                        .ToList();
                     foreach (var orderedObjScore in orderedObjScores)
                     {
-                        Log($">>SCORE>>{orderedObjScore.Symbol}>>{orderedObjScore.ObjectiveScore.ToStringInvariant()}");
+                        Log(
+                            $">>SCORE>>{orderedObjScore.Symbol}>>{orderedObjScore.ObjectiveScore.ToStringInvariant()}"
+                        );
                     }
                     var bestGrowth = orderedObjScores.First();
 
@@ -116,9 +121,11 @@ namespace QuantConnect.Algorithm.CSharp
                             Log("PREBUY>>LIQUIDATE>>");
                             Liquidate();
                         }
-                        Log($">>BUY>>{bestGrowth.Symbol}@{(100 * bestGrowth.OneMonthPerformance).ToStringInvariant("00.00")}");
+                        Log(
+                            $">>BUY>>{bestGrowth.Symbol}@{(100 * bestGrowth.OneMonthPerformance).ToStringInvariant("00.00")}"
+                        );
                         var qty = Portfolio.MarginRemaining / Securities[bestGrowth.Symbol].Close;
-                        MarketOrder(bestGrowth.Symbol, (int) qty);
+                        MarketOrder(bestGrowth.Symbol, (int)qty);
                     }
                     else
                     {
@@ -150,7 +157,8 @@ namespace QuantConnect.Algorithm.CSharp
                 decimal weight1 = 100;
                 decimal weight2 = 75;
 
-                return (weight1 * OneMonthPerformance + weight2 * ThreeMonthPerformance) / (weight1 + weight2);
+                return (weight1 * OneMonthPerformance + weight2 * ThreeMonthPerformance)
+                    / (weight1 + weight2);
             }
         }
     }

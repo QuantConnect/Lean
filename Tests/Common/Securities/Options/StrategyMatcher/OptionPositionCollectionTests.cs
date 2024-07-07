@@ -47,7 +47,11 @@ namespace QuantConnect.Tests.Common.Securities.Options.StrategyMatcher
                 CreateHolding(Symbols.SPY, ContractMultiplier * UnderlyingLots)
             };
 
-            _positions = OptionPositionCollection.Create(Symbols.SPY, ContractMultiplier, _holdings);
+            _positions = OptionPositionCollection.Create(
+                Symbols.SPY,
+                ContractMultiplier,
+                _holdings
+            );
         }
 
         [Test]
@@ -101,8 +105,8 @@ namespace QuantConnect.Tests.Common.Securities.Options.StrategyMatcher
             var positions = OptionPositionCollection.Empty.AddRange(
                 new OptionPosition(Call[100], +1),
                 new OptionPosition(Call[105], -1),
-                new OptionPosition( Put[110], +1),
-                new OptionPosition( Put[115], -1)
+                new OptionPosition(Put[110], +1),
+                new OptionPosition(Put[115], -1)
             );
             var shorts = positions.Slice(PositionSide.Short);
             var expected = positions.Where(p => p.Side == PositionSide.Short).ToHashSet();
@@ -141,9 +145,7 @@ namespace QuantConnect.Tests.Common.Securities.Options.StrategyMatcher
             Assert.AreEqual(expected.Count + 1, positions.Count);
             foreach (var strike in expected)
             {
-                Assert.IsTrue(positions.Any(
-                    p => p.Symbol.HasUnderlying && p.Strike == strike
-                ));
+                Assert.IsTrue(positions.Any(p => p.Symbol.HasUnderlying && p.Strike == strike));
             }
 
             actual = _positions.Slice(comparison, reference, false);
@@ -165,15 +167,18 @@ namespace QuantConnect.Tests.Common.Securities.Options.StrategyMatcher
             var actual = _positions.Slice(comparison, expiration);
             Assert.AreEqual(UnderlyingLots, actual.UnderlyingQuantity);
 
-            var expirations = _positions.Where(p => p.Symbol.HasUnderlying).ToList(p => p.Expiration);
+            var expirations = _positions
+                .Where(p => p.Symbol.HasUnderlying)
+                .ToList(p => p.Expiration);
             var expected = comparison.Filter(expirations, expiration);
 
             var positions = actual.ToList();
             Assert.AreEqual(expected.Count + 1, positions.Count);
             foreach (var exp in expected)
             {
-                Assert.AreEqual(expected.Count(e => e == exp), positions.Count(
-                    p => p.Symbol.HasUnderlying && p.Expiration == exp)
+                Assert.AreEqual(
+                    expected.Count(e => e == exp),
+                    positions.Count(p => p.Symbol.HasUnderlying && p.Expiration == exp)
                 );
             }
 
@@ -186,11 +191,23 @@ namespace QuantConnect.Tests.Common.Securities.Options.StrategyMatcher
         private OptionRight _previousRight;
 
         private static readonly CircularQueue<DateTime> Expirations = new CircularQueue<DateTime>(
-            Reference, Reference.AddDays(7), Reference.AddDays(14)
+            Reference,
+            Reference.AddDays(7),
+            Reference.AddDays(14)
         );
 
-        private SecurityHolding CreateHolding(int quantity)
-            => CreateHolding(Symbol.CreateOption(Symbols.SPY, Market.USA, OptionStyle.American, _previousRight.Invert(), _previousStrike + 1, Expirations.Dequeue()), quantity);
+        private SecurityHolding CreateHolding(int quantity) =>
+            CreateHolding(
+                Symbol.CreateOption(
+                    Symbols.SPY,
+                    Market.USA,
+                    OptionStyle.American,
+                    _previousRight.Invert(),
+                    _previousStrike + 1,
+                    Expirations.Dequeue()
+                ),
+                quantity
+            );
 
         private SecurityHolding CreateHolding(Symbol symbol, int quantity)
         {
@@ -202,7 +219,15 @@ namespace QuantConnect.Tests.Common.Securities.Options.StrategyMatcher
 
             var properties = SymbolProperties.GetDefault("USD");
             var cash = new Cash("USD", 0m, 1m);
-            var security = new Security(symbol, null, cash, properties, null, null, new SecurityCache());
+            var security = new Security(
+                symbol,
+                null,
+                cash,
+                properties,
+                null,
+                null,
+                new SecurityCache()
+            );
             var holding = new SecurityHolding(security, new IdentityCurrencyConverter("USD"));
             holding.SetHoldings(2, quantity);
             return holding;

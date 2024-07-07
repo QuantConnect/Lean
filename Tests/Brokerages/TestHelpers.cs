@@ -14,45 +14,68 @@
 */
 
 using System;
+using System.Collections.Generic;
 using NodaTime;
 using QuantConnect.Data;
-using QuantConnect.Util;
-using QuantConnect.Securities;
 using QuantConnect.Data.Market;
-using System.Collections.Generic;
+using QuantConnect.Securities;
+using QuantConnect.Util;
 
 namespace QuantConnect.Tests.Brokerages
 {
     public class TestsHelpers
     {
-        public static Security GetSecurity(decimal price = 1m, SecurityType securityType = SecurityType.Crypto, Resolution resolution = Resolution.Minute, string symbol = "BTCUSD", string market = Market.Coinbase, string quoteCurrency = "USD")
+        public static Security GetSecurity(
+            decimal price = 1m,
+            SecurityType securityType = SecurityType.Crypto,
+            Resolution resolution = Resolution.Minute,
+            string symbol = "BTCUSD",
+            string market = Market.Coinbase,
+            string quoteCurrency = "USD"
+        )
         {
             return new Security(
                 SecurityExchangeHours.AlwaysOpen(TimeZones.Utc),
                 CreateConfig(symbol, market, securityType, resolution),
                 new Cash(quoteCurrency, 1000, price),
-                #pragma warning disable CS0618
-                SymbolPropertiesDatabase.FromDataFolder().GetSymbolProperties(market, symbol, SecurityType.Crypto, quoteCurrency),
-                #pragma warning restore CS0618
+#pragma warning disable CS0618
+                SymbolPropertiesDatabase
+                    .FromDataFolder()
+                    .GetSymbolProperties(market, symbol, SecurityType.Crypto, quoteCurrency),
+#pragma warning restore CS0618
                 ErrorCurrencyConverter.Instance,
                 RegisteredSecurityDataTypesProvider.Null,
                 new SecurityCache()
             );
         }
 
-        private static SubscriptionDataConfig CreateConfig(string symbol, string market, SecurityType securityType = SecurityType.Crypto, Resolution resolution = Resolution.Minute)
+        private static SubscriptionDataConfig CreateConfig(
+            string symbol,
+            string market,
+            SecurityType securityType = SecurityType.Crypto,
+            Resolution resolution = Resolution.Minute
+        )
         {
             Symbol actualSymbol;
             switch (securityType)
             {
                 case SecurityType.FutureOption:
-                    actualSymbol = Symbols.CreateFutureOptionSymbol(Symbols.CreateFutureSymbol(symbol, new DateTime(2020, 4, 28)), OptionRight.Call,
-                        1000, new DateTime(2020, 3, 26));
+                    actualSymbol = Symbols.CreateFutureOptionSymbol(
+                        Symbols.CreateFutureSymbol(symbol, new DateTime(2020, 4, 28)),
+                        OptionRight.Call,
+                        1000,
+                        new DateTime(2020, 3, 26)
+                    );
                     break;
 
                 case SecurityType.Option:
                 case SecurityType.IndexOption:
-                    actualSymbol = Symbols.CreateOptionSymbol(symbol, OptionRight.Call, 1000, new DateTime(2020, 3, 26));
+                    actualSymbol = Symbols.CreateOptionSymbol(
+                        symbol,
+                        OptionRight.Call,
+                        1000,
+                        new DateTime(2020, 3, 26)
+                    );
                     break;
 
                 default:
@@ -60,10 +83,26 @@ namespace QuantConnect.Tests.Brokerages
                     break;
             }
 
-            return new SubscriptionDataConfig(typeof(TradeBar), actualSymbol, resolution, TimeZones.Utc, TimeZones.Utc, false, true, false);
+            return new SubscriptionDataConfig(
+                typeof(TradeBar),
+                actualSymbol,
+                resolution,
+                TimeZones.Utc,
+                TimeZones.Utc,
+                false,
+                true,
+                false
+            );
         }
 
-        public static HistoryRequest GetHistoryRequest(Symbol symbol, DateTime startDateTime, DateTime endDateTime, Resolution resolution, TickType tickType, DateTimeZone dateTimeZone = null)
+        public static HistoryRequest GetHistoryRequest(
+            Symbol symbol,
+            DateTime startDateTime,
+            DateTime endDateTime,
+            Resolution resolution,
+            TickType tickType,
+            DateTimeZone dateTimeZone = null
+        )
         {
             if (startDateTime > endDateTime)
             {
@@ -90,7 +129,7 @@ namespace QuantConnect.Tests.Brokerages
                 false,
                 DataNormalizationMode.Raw,
                 tickType
-                );
+            );
         }
 
         public static IEnumerable<DateTimeZone> GetTimeZones()

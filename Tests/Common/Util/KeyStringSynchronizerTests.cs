@@ -1,4 +1,3 @@
-
 /*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
@@ -16,10 +15,10 @@
 */
 
 using System;
-using NUnit.Framework;
 using System.Threading;
-using QuantConnect.Util;
 using System.Threading.Tasks;
+using NUnit.Framework;
+using QuantConnect.Util;
 
 namespace QuantConnect.Tests.Common.Util
 {
@@ -36,13 +35,21 @@ namespace QuantConnect.Tests.Common.Util
             var task = new Task(() =>
             {
                 var key = "someKey";
-                synchronizer.Execute(key, singleExecution: true, () =>
-                {
-                    synchronizer.Execute(key, singleExecution: true, () =>
+                synchronizer.Execute(
+                    key,
+                    singleExecution: true,
+                    () =>
                     {
-                        counter++;
-                    });
-                });
+                        synchronizer.Execute(
+                            key,
+                            singleExecution: true,
+                            () =>
+                            {
+                                counter++;
+                            }
+                        );
+                    }
+                );
                 cancellationToken.Cancel();
             });
             task.Start();
@@ -65,11 +72,15 @@ namespace QuantConnect.Tests.Common.Util
             {
                 var task = new Task(() =>
                 {
-                    synchronizer.Execute(new string("someKey"), singleExecution: true, () =>
-                    {
-                        Thread.Sleep(4000);
-                        counter++;
-                    });
+                    synchronizer.Execute(
+                        new string("someKey"),
+                        singleExecution: true,
+                        () =>
+                        {
+                            Thread.Sleep(4000);
+                            counter++;
+                        }
+                    );
 
                     if (Interlocked.Increment(ref endedCount) == taskCount)
                     {
@@ -104,14 +115,18 @@ namespace QuantConnect.Tests.Common.Util
                     {
                         try
                         {
-                            synchronizer.Execute("someKey", singleExecution: false, () =>
-                            {
-                                counter++;
-                                if (shouldThorw)
+                            synchronizer.Execute(
+                                "someKey",
+                                singleExecution: false,
+                                () =>
                                 {
-                                    throw new Exception("This shouldn't matter");
+                                    counter++;
+                                    if (shouldThorw)
+                                    {
+                                        throw new Exception("This shouldn't matter");
+                                    }
                                 }
-                            });
+                            );
                         }
                         catch (Exception)
                         {
@@ -151,10 +166,13 @@ namespace QuantConnect.Tests.Common.Util
                     var result = 0;
                     for (int i = 0; i < 5; i++)
                     {
-                        var newResult = synchronizer.Execute("someKey", () =>
-                        {
-                            return ++counter;
-                        });
+                        var newResult = synchronizer.Execute(
+                            "someKey",
+                            () =>
+                            {
+                                return ++counter;
+                            }
+                        );
 
                         Assert.Greater(newResult, result);
                         result = newResult;

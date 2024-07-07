@@ -31,10 +31,7 @@ namespace QuantConnect.Tests.Algorithm.Framework
         public void UpdateCallsDisposeOnDisposableInstances()
         {
             var disposable = new Disposable(Symbols.SPY);
-            var dictionary = new Dictionary<Symbol, Disposable>
-            {
-                [Symbols.SPY] = disposable
-            };
+            var dictionary = new Dictionary<Symbol, Disposable> { [Symbols.SPY] = disposable };
 
             var SPY = new Equity(
                 Symbols.SPY,
@@ -46,7 +43,9 @@ namespace QuantConnect.Tests.Algorithm.Framework
                 new SecurityCache()
             );
             var changes = SecurityChangesTests.RemovedNonInternal(SPY);
-            NotifiedSecurityChanges.UpdateDictionary(dictionary, changes,
+            NotifiedSecurityChanges.UpdateDictionary(
+                dictionary,
+                changes,
                 security => security.Symbol,
                 security => new Disposable(security.Symbol)
             );
@@ -63,6 +62,7 @@ namespace QuantConnect.Tests.Algorithm.Framework
             {
                 Symbol = symbol;
             }
+
             public void Dispose()
             {
                 Disposed = true;

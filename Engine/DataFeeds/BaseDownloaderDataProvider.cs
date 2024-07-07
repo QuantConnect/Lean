@@ -42,7 +42,11 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             if (NeedToDownload(key))
             {
                 // only the first thread will download the rest will wait for him to finish
-                _singleDownloadSynchronizer.Execute(key, singleExecution: true, () => download(key));
+                _singleDownloadSynchronizer.Execute(
+                    key,
+                    singleExecution: true,
+                    () => download(key)
+                );
                 // single download finished, let's get the stream!
                 return GetStream(key);
             }

@@ -29,7 +29,8 @@ namespace QuantConnect.Data
         /// <summary>
         /// Creates an instance of <see cref="EventBasedDataQueueHandlerSubscriptionManager"/> with a single channel name
         /// </summary>
-        public EventBasedDataQueueHandlerSubscriptionManager() : this(t => Channel.Single) {}
+        public EventBasedDataQueueHandlerSubscriptionManager()
+            : this(t => Channel.Single) { }
 
         /// <summary>
         /// Creates an instance of <see cref="EventBasedDataQueueHandlerSubscriptionManager"/>
@@ -44,7 +45,7 @@ namespace QuantConnect.Data
         /// Subscription method implementation
         /// </summary>
         public Func<IEnumerable<Symbol>, TickType, bool> SubscribeImpl { get; set; }
-        
+
         /// <summary>
         /// Unsubscription method implementation
         /// </summary>
@@ -63,7 +64,10 @@ namespace QuantConnect.Data
         /// <returns></returns>
         protected override bool Subscribe(IEnumerable<Symbol> symbols, TickType tickType)
         {
-            Log.Trace("EventBasedDataQueueHandlerSubscriptionManager.Subscribe(): {0}", string.Join(",", symbols.Select(x => x.Value)));
+            Log.Trace(
+                "EventBasedDataQueueHandlerSubscriptionManager.Subscribe(): {0}",
+                string.Join(",", symbols.Select(x => x.Value))
+            );
             return SubscribeImpl?.Invoke(symbols, tickType) == true;
         }
 
@@ -75,7 +79,10 @@ namespace QuantConnect.Data
         /// <returns></returns>
         protected override bool Unsubscribe(IEnumerable<Symbol> symbols, TickType tickType)
         {
-            Log.Trace("EventBasedDataQueueHandlerSubscriptionManager.Unsubscribe(): {0}", string.Join(",", symbols.Select(x => x.Value)));
+            Log.Trace(
+                "EventBasedDataQueueHandlerSubscriptionManager.Unsubscribe(): {0}",
+                string.Join(",", symbols.Select(x => x.Value))
+            );
             return UnsubscribeImpl?.Invoke(symbols, tickType) == true;
         }
 

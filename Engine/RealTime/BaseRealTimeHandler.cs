@@ -15,18 +15,18 @@
 */
 
 using System;
+using System.Collections.Concurrent;
+using System.Collections.Generic;
 using System.Threading;
-using QuantConnect.Util;
-using QuantConnect.Packets;
 using QuantConnect.Algorithm;
+using QuantConnect.AlgorithmFactory.Python.Wrappers;
+using QuantConnect.Data.UniverseSelection;
 using QuantConnect.Interfaces;
+using QuantConnect.Lean.Engine.Results;
+using QuantConnect.Packets;
 using QuantConnect.Scheduling;
 using QuantConnect.Securities;
-using System.Collections.Generic;
-using System.Collections.Concurrent;
-using QuantConnect.Lean.Engine.Results;
-using QuantConnect.Data.UniverseSelection;
-using QuantConnect.AlgorithmFactory.Python.Wrappers;
+using QuantConnect.Util;
 
 namespace QuantConnect.Lean.Engine.RealTime
 {
@@ -37,6 +37,7 @@ namespace QuantConnect.Lean.Engine.RealTime
     public abstract class BaseRealTimeHandler : IRealTimeHandler
     {
         private int _scheduledEventUniqueId;
+
         // For performance only add OnEndOfDay Symbol scheduled events if the method is implemented.
         // When there are many securities it adds a significant overhead
         private bool _implementsOnEndOfDaySymbol;
@@ -115,7 +116,13 @@ namespace QuantConnect.Lean.Engine.RealTime
         /// Initializes the real time handler for the specified algorithm and job.
         /// Adds EndOfDayEvents
         /// </summary>
-        public virtual void Setup(IAlgorithm algorithm, AlgorithmNodePacket job, IResultHandler resultHandler, IApi api, IIsolatorLimitResultProvider isolatorLimitProvider)
+        public virtual void Setup(
+            IAlgorithm algorithm,
+            AlgorithmNodePacket job,
+            IResultHandler resultHandler,
+            IApi api,
+            IIsolatorLimitResultProvider isolatorLimitProvider
+        )
         {
             Algorithm = algorithm;
             ResultHandler = resultHandler;
@@ -126,8 +133,10 @@ namespace QuantConnect.Lean.Engine.RealTime
             {
                 var method = Algorithm.GetType().GetMethod("OnEndOfDay", new[] { typeof(Symbol) });
                 var method2 = Algorithm.GetType().GetMethod("OnEndOfDay", new[] { typeof(string) });
-                if (method != null && method.DeclaringType != typeof(QCAlgorithm)
-                    || method2 != null && method2.DeclaringType != typeof(QCAlgorithm))
+                if (
+                    method != null && method.DeclaringType != typeof(QCAlgorithm)
+                    || method2 != null && method2.DeclaringType != typeof(QCAlgorithm)
+                )
                 {
                     _implementsOnEndOfDaySymbol = true;
                 }
@@ -155,7 +164,11 @@ namespace QuantConnect.Lean.Engine.RealTime
             }
 
             // Here to maintain functionality until deprecation in August 2021
-            AddAlgorithmEndOfDayEvent(start: algorithm.Time, end: algorithm.EndDate, currentUtcTime: algorithm.UtcTime);
+            AddAlgorithmEndOfDayEvent(
+                start: algorithm.Time,
+                end: algorithm.EndDate,
+                currentUtcTime: algorithm.UtcTime
+            );
         }
 
         /// <summary>
@@ -182,11 +195,20 @@ namespace QuantConnect.Lean.Engine.RealTime
         /// <param name="end">The date to end the events</param>
         /// <param name="currentUtcTime">Specifies the current time in UTC, before which,
         /// no events will be scheduled. Specify null to skip this filter.</param>
-        [Obsolete("This method is deprecated. It will add ScheduledEvents for the deprecated IAlgorithm.OnEndOfDay()")]
-        private void AddAlgorithmEndOfDayEvent(DateTime start, DateTime end, DateTime? currentUtcTime = null)
+        [Obsolete(
+            "This method is deprecated. It will add ScheduledEvents for the deprecated IAlgorithm.OnEndOfDay()"
+        )]
+        private void AddAlgorithmEndOfDayEvent(
+            DateTime start,
+            DateTime end,
+            DateTime? currentUtcTime = null
+        )
         {
             // If the algorithm didn't implement it no need to support it.
-            if (!_implementsOnEndOfDay) { return; }
+            if (!_implementsOnEndOfDay)
+            {
+                return;
+            }
 
             if (_algorithmOnEndOfDay != null)
             {
@@ -202,7 +224,8 @@ namespace QuantConnect.Lean.Engine.RealTime
                 start,
                 end,
                 ScheduledEvent.AlgorithmEndOfDayDelta,
-                currentUtcTime);
+                currentUtcTime
+            );
 
             Add(_algorithmOnEndOfDay);
         }
@@ -220,7 +243,8 @@ namespace QuantConnect.Lean.Engine.RealTime
             IEnumerable<Security> securities,
             DateTime start,
             DateTime end,
-            DateTime? currentUtcTime = null)
+            DateTime? currentUtcTime = null
+        )
         {
             if (_implementsOnEndOfDaySymbol)
             {
@@ -230,7 +254,14 @@ namespace QuantConnect.Lean.Engine.RealTime
                     if (!security.IsInternalFeed())
                     {
                         var scheduledEvent = ScheduledEventFactory.EverySecurityEndOfDay(
-                            Algorithm, ResultHandler, security, start, end, ScheduledEvent.SecurityEndOfDayDelta, currentUtcTime);
+                            Algorithm,
+                            ResultHandler,
+                            security,
+                            start,
+                            end,
+                            ScheduledEvent.SecurityEndOfDayDelta,
+                            currentUtcTime
+                        );
 
                         // we keep separate track so we can remove it later
                         _securityOnEndOfDay[security.Symbol] = scheduledEvent;
@@ -251,10 +282,12 @@ namespace QuantConnect.Lean.Engine.RealTime
             {
                 if (_implementsOnEndOfDaySymbol)
                 {
-                    AddSecurityDependentEndOfDayEvents(changes.AddedSecurities,
+                    AddSecurityDependentEndOfDayEvents(
+                        changes.AddedSecurities,
                         Algorithm.UtcTime,
                         Algorithm.EndDate,
-                        Algorithm.UtcTime);
+                        Algorithm.UtcTime
+                    );
 
                     foreach (var security in changes.RemovedSecurities)
                     {

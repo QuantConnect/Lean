@@ -15,10 +15,10 @@
 */
 
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using QuantConnect.Interfaces;
 using QuantConnect.Securities;
-using System.Collections.Generic;
 using QuantConnect.Securities.Option;
 
 namespace QuantConnect.Data.UniverseSelection
@@ -29,6 +29,7 @@ namespace QuantConnect.Data.UniverseSelection
     public class OptionChainUniverse : Universe
     {
         private readonly OptionFilterUniverse _optionFilterUniverse;
+
         // as an array to make it easy to prepend to selected symbols
         private readonly Symbol[] _underlyingSymbol;
         private DateTime _cacheDate;
@@ -53,8 +54,7 @@ namespace QuantConnect.Data.UniverseSelection
         /// </summary>
         /// <param name="option">The canonical option chain security</param>
         /// <param name="universeSettings">The universe settings to be used for new subscriptions</param>
-        public OptionChainUniverse(Option option,
-            UniverseSettings universeSettings)
+        public OptionChainUniverse(Option option, UniverseSettings universeSettings)
             : base(option.SubscriptionDataConfig)
         {
             Option = option;
@@ -78,7 +78,10 @@ namespace QuantConnect.Data.UniverseSelection
                 if (value != null)
                 {
                     // make sure data mode is raw
-                    base.UniverseSettings = new UniverseSettings(value) { DataNormalizationMode = DataNormalizationMode.Raw };
+                    base.UniverseSettings = new UniverseSettings(value)
+                    {
+                        DataNormalizationMode = DataNormalizationMode.Raw
+                    };
                 }
             }
         }
@@ -150,8 +153,12 @@ namespace QuantConnect.Data.UniverseSelection
         /// <param name="maximumEndTimeUtc">The max end time</param>
         /// <param name="subscriptionService">Instance which implements <see cref="ISubscriptionDataConfigService"/> interface</param>
         /// <returns>All subscriptions required by this security</returns>
-        public override IEnumerable<SubscriptionRequest> GetSubscriptionRequests(Security security, DateTime currentTimeUtc, DateTime maximumEndTimeUtc,
-                                                                                 ISubscriptionDataConfigService subscriptionService)
+        public override IEnumerable<SubscriptionRequest> GetSubscriptionRequests(
+            Security security,
+            DateTime currentTimeUtc,
+            DateTime maximumEndTimeUtc,
+            ISubscriptionDataConfigService subscriptionService
+        )
         {
             if (Option.Symbol.Underlying == security.Symbol)
             {
@@ -165,7 +172,12 @@ namespace QuantConnect.Data.UniverseSelection
                 option.PriceModel = Option.PriceModel;
             }
 
-            return base.GetSubscriptionRequests(security, currentTimeUtc, maximumEndTimeUtc, subscriptionService);
+            return base.GetSubscriptionRequests(
+                security,
+                currentTimeUtc,
+                maximumEndTimeUtc,
+                subscriptionService
+            );
         }
     }
 }

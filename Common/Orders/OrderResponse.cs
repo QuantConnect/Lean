@@ -24,27 +24,18 @@ namespace QuantConnect.Orders
         /// <summary>
         /// Gets the order id
         /// </summary>
-        public int OrderId
-        {
-            get; private set;
-        }
+        public int OrderId { get; private set; }
 
         /// <summary>
         /// Gets the error message if the <see cref="ErrorCode"/> does not equal <see cref="OrderResponseErrorCode.None"/>, otherwise
         /// gets <see cref="string.Empty"/>
         /// </summary>
-        public string ErrorMessage
-        {
-            get; private set;
-        }
+        public string ErrorMessage { get; private set; }
 
         /// <summary>
         /// Gets the error code for this response.
         /// </summary>
-        public OrderResponseErrorCode ErrorCode
-        {
-            get; private set;
-        }
+        public OrderResponseErrorCode ErrorCode { get; private set; }
 
         /// <summary>
         /// Gets true if this response represents a successful request, false otherwise
@@ -104,8 +95,11 @@ namespace QuantConnect.Orders
         /// <summary>
         /// Gets an <see cref="OrderResponse"/> for a request that has not yet been processed
         /// </summary>
-        public static readonly OrderResponse Unprocessed = new OrderResponse(int.MinValue, OrderResponseErrorCode.None,
-            Messages.OrderResponse.UnprocessedOrderResponseErrorMessage);
+        public static readonly OrderResponse Unprocessed = new OrderResponse(
+            int.MinValue,
+            OrderResponseErrorCode.None,
+            Messages.OrderResponse.UnprocessedOrderResponseErrorMessage
+        );
 
         /// <summary>
         /// Helper method to create a successful response from a request
@@ -118,7 +112,11 @@ namespace QuantConnect.Orders
         /// <summary>
         /// Helper method to create an error response from a request
         /// </summary>
-        public static OrderResponse Error(OrderRequest request, OrderResponseErrorCode errorCode, string errorMessage)
+        public static OrderResponse Error(
+            OrderRequest request,
+            OrderResponseErrorCode errorCode,
+            string errorMessage
+        )
         {
             return new OrderResponse(request.OrderId, errorCode, errorMessage);
         }
@@ -128,7 +126,11 @@ namespace QuantConnect.Orders
         /// </summary>
         public static OrderResponse InvalidStatus(OrderRequest request, Order order)
         {
-            return Error(request, OrderResponseErrorCode.InvalidOrderStatus, Messages.OrderResponse.InvalidStatus(request, order));
+            return Error(
+                request,
+                OrderResponseErrorCode.InvalidOrderStatus,
+                Messages.OrderResponse.InvalidStatus(request, order)
+            );
         }
 
         /// <summary>
@@ -136,7 +138,11 @@ namespace QuantConnect.Orders
         /// </summary>
         public static OrderResponse InvalidNewStatus(OrderRequest request, Order order)
         {
-            return Error(request, OrderResponseErrorCode.InvalidNewOrderStatus, Messages.OrderResponse.InvalidNewStatus(request, order));
+            return Error(
+                request,
+                OrderResponseErrorCode.InvalidNewOrderStatus,
+                Messages.OrderResponse.InvalidNewStatus(request, order)
+            );
         }
 
         /// <summary>
@@ -144,7 +150,11 @@ namespace QuantConnect.Orders
         /// </summary>
         public static OrderResponse UnableToFindOrder(OrderRequest request)
         {
-            return Error(request, OrderResponseErrorCode.UnableToFindOrder, Messages.OrderResponse.UnableToFindOrder(request));
+            return Error(
+                request,
+                OrderResponseErrorCode.UnableToFindOrder,
+                Messages.OrderResponse.UnableToFindOrder(request)
+            );
         }
 
         /// <summary>
@@ -152,7 +162,11 @@ namespace QuantConnect.Orders
         /// </summary>
         public static OrderResponse ZeroQuantity(OrderRequest request)
         {
-            return Error(request, OrderResponseErrorCode.OrderQuantityZero, Messages.OrderResponse.ZeroQuantity(request));
+            return Error(
+                request,
+                OrderResponseErrorCode.OrderQuantityZero,
+                Messages.OrderResponse.ZeroQuantity(request)
+            );
         }
 
         /// <summary>
@@ -160,7 +174,11 @@ namespace QuantConnect.Orders
         /// </summary>
         public static OrderResponse MissingSecurity(SubmitOrderRequest request)
         {
-            return Error(request, OrderResponseErrorCode.MissingSecurity, Messages.OrderResponse.MissingSecurity(request));
+            return Error(
+                request,
+                OrderResponseErrorCode.MissingSecurity,
+                Messages.OrderResponse.MissingSecurity(request)
+            );
         }
 
         /// <summary>
@@ -168,7 +186,11 @@ namespace QuantConnect.Orders
         /// </summary>
         public static OrderResponse WarmingUp(OrderRequest request)
         {
-            return Error(request, OrderResponseErrorCode.AlgorithmWarmingUp, Messages.OrderResponse.WarmingUp(request));
+            return Error(
+                request,
+                OrderResponseErrorCode.AlgorithmWarmingUp,
+                Messages.OrderResponse.WarmingUp(request)
+            );
         }
 
         #endregion

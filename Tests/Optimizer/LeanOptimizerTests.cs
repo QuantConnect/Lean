@@ -15,17 +15,17 @@
 */
 
 using System;
-using Newtonsoft.Json;
-using NUnit.Framework;
-using QuantConnect.Optimizer;
-using QuantConnect.Util;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Threading;
+using Newtonsoft.Json;
+using NUnit.Framework;
 using QuantConnect.Configuration;
+using QuantConnect.Optimizer;
 using QuantConnect.Optimizer.Objectives;
 using QuantConnect.Optimizer.Parameters;
 using QuantConnect.Optimizer.Strategies;
+using QuantConnect.Util;
 
 namespace QuantConnect.Tests.Optimizer
 {
@@ -40,16 +40,17 @@ namespace QuantConnect.Tests.Optimizer
             var packet = new OptimizationNodePacket
             {
                 OptimizationStrategy = strategyName,
-                Criterion = new Target("Profit",
-                    new Maximization(),
-                    null),
+                Criterion = new Target("Profit", new Maximization(), null),
                 OptimizationParameters = new HashSet<OptimizationParameter>
                 {
                     new OptimizationStepParameter("ema-slow", 1, 10, 1),
                     new OptimizationStepParameter("ema-fast", 10, 100, 3)
                 },
                 MaximumConcurrentBacktests = 20,
-                OptimizationStrategySettings = new StepBaseOptimizationStrategySettings { DefaultSegmentAmount = 10 }
+                OptimizationStrategySettings = new StepBaseOptimizationStrategySettings
+                {
+                    DefaultSegmentAmount = 10
+                }
             };
             using var optimizer = new FakeLeanOptimizer(packet);
 
@@ -67,7 +68,10 @@ namespace QuantConnect.Tests.Optimizer
             Assert.NotNull(result);
             Assert.AreEqual(
                 110,
-                JsonConvert.DeserializeObject<BacktestResult>(result.JsonBacktestResult).Statistics.Profit);
+                JsonConvert
+                    .DeserializeObject<BacktestResult>(result.JsonBacktestResult)
+                    .Statistics.Profit
+            );
 
             Assert.AreEqual(10, result.ParameterSet.Value["ema-slow"].ToDecimal());
             Assert.AreEqual(100, result.ParameterSet.Value["ema-fast"].ToDecimal());
@@ -88,7 +92,10 @@ namespace QuantConnect.Tests.Optimizer
                     new OptimizationStepParameter("ema-fast", 10, 100, 3)
                 },
                 MaximumConcurrentBacktests = 20,
-                OptimizationStrategySettings = new StepBaseOptimizationStrategySettings { DefaultSegmentAmount = 10 }
+                OptimizationStrategySettings = new StepBaseOptimizationStrategySettings
+                {
+                    DefaultSegmentAmount = 10
+                }
             };
             using var optimizer = new FakeLeanOptimizer(packet);
 
@@ -106,7 +113,10 @@ namespace QuantConnect.Tests.Optimizer
             Assert.NotNull(result);
             Assert.GreaterOrEqual(
                 20,
-                JsonConvert.DeserializeObject<BacktestResult>(result.JsonBacktestResult).Statistics.Profit);
+                JsonConvert
+                    .DeserializeObject<BacktestResult>(result.JsonBacktestResult)
+                    .Statistics.Profit
+            );
         }
 
         [Test]
@@ -143,11 +153,16 @@ namespace QuantConnect.Tests.Optimizer
             Assert.NotNull(result);
             Assert.AreEqual(
                 15,
-                JsonConvert.DeserializeObject<BacktestResult>(result.JsonBacktestResult).Statistics.Profit);
+                JsonConvert
+                    .DeserializeObject<BacktestResult>(result.JsonBacktestResult)
+                    .Statistics.Profit
+            );
             Assert.AreEqual(
                 0.15m,
-                JsonConvert.DeserializeObject<BacktestResult>(result.JsonBacktestResult).Statistics.Drawdown);
-
+                JsonConvert
+                    .DeserializeObject<BacktestResult>(result.JsonBacktestResult)
+                    .Statistics.Drawdown
+            );
         }
 
         [Test]
@@ -156,7 +171,8 @@ namespace QuantConnect.Tests.Optimizer
             using var resetEvent = new ManualResetEvent(false);
             var packet = new OptimizationNodePacket
             {
-                OptimizationStrategy = "QuantConnect.Optimizer.Strategies.EulerSearchOptimizationStrategy",
+                OptimizationStrategy =
+                    "QuantConnect.Optimizer.Strategies.EulerSearchOptimizationStrategy",
                 Criterion = new Target("Profit", new Maximization(), null),
                 OptimizationParameters = new HashSet<OptimizationParameter>
                 {
@@ -168,7 +184,10 @@ namespace QuantConnect.Tests.Optimizer
                     new Constraint("Drawdown", ComparisonOperatorTypes.LessOrEqual, 0.15m)
                 },
                 MaximumConcurrentBacktests = 20,
-                OptimizationStrategySettings = new StepBaseOptimizationStrategySettings { DefaultSegmentAmount = 10 }
+                OptimizationStrategySettings = new StepBaseOptimizationStrategySettings
+                {
+                    DefaultSegmentAmount = 10
+                }
             };
             using var optimizer = new FakeLeanOptimizer(packet);
 
@@ -186,11 +205,16 @@ namespace QuantConnect.Tests.Optimizer
             Assert.NotNull(result);
             Assert.AreEqual(
                 15,
-                JsonConvert.DeserializeObject<BacktestResult>(result.JsonBacktestResult).Statistics.Profit);
+                JsonConvert
+                    .DeserializeObject<BacktestResult>(result.JsonBacktestResult)
+                    .Statistics.Profit
+            );
             Assert.AreEqual(
                 0.15m,
-                JsonConvert.DeserializeObject<BacktestResult>(result.JsonBacktestResult).Statistics.Drawdown);
-
+                JsonConvert
+                    .DeserializeObject<BacktestResult>(result.JsonBacktestResult)
+                    .Statistics.Drawdown
+            );
         }
 
         [Test]
@@ -227,11 +251,16 @@ namespace QuantConnect.Tests.Optimizer
             Assert.NotNull(result);
             Assert.GreaterOrEqual(
                 20,
-                JsonConvert.DeserializeObject<BacktestResult>(result.JsonBacktestResult).Statistics.Profit);
+                JsonConvert
+                    .DeserializeObject<BacktestResult>(result.JsonBacktestResult)
+                    .Statistics.Profit
+            );
             Assert.GreaterOrEqual(
                 0.15m,
-                JsonConvert.DeserializeObject<BacktestResult>(result.JsonBacktestResult).Statistics.Drawdown);
-
+                JsonConvert
+                    .DeserializeObject<BacktestResult>(result.JsonBacktestResult)
+                    .Statistics.Drawdown
+            );
         }
 
         [Test]
@@ -263,9 +292,18 @@ namespace QuantConnect.Tests.Optimizer
             optimizer.Update += (s, e) =>
             {
                 var runtimeStats = optimizer.GetRuntimeStatistics();
-                Assert.LessOrEqual(int.Parse(runtimeStats["Running"], CultureInfo.InvariantCulture), packet.MaximumConcurrentBacktests);
-                Assert.LessOrEqual(completedTests, int.Parse(runtimeStats["Completed"], CultureInfo.InvariantCulture));
-                Assert.LessOrEqual(failed, int.Parse(runtimeStats["Failed"], CultureInfo.InvariantCulture));
+                Assert.LessOrEqual(
+                    int.Parse(runtimeStats["Running"], CultureInfo.InvariantCulture),
+                    packet.MaximumConcurrentBacktests
+                );
+                Assert.LessOrEqual(
+                    completedTests,
+                    int.Parse(runtimeStats["Completed"], CultureInfo.InvariantCulture)
+                );
+                Assert.LessOrEqual(
+                    failed,
+                    int.Parse(runtimeStats["Failed"], CultureInfo.InvariantCulture)
+                );
 
                 Assert.AreEqual(totalBacktest, optimizer.GetCurrentEstimate());
 
@@ -275,7 +313,13 @@ namespace QuantConnect.Tests.Optimizer
                 if (completedTests > 0)
                 {
                     // 'ms' aren't stored so might be 0
-                    Assert.GreaterOrEqual(TimeSpan.Parse(runtimeStats["Average Length"], CultureInfo.InvariantCulture), TimeSpan.Zero);
+                    Assert.GreaterOrEqual(
+                        TimeSpan.Parse(
+                            runtimeStats["Average Length"],
+                            CultureInfo.InvariantCulture
+                        ),
+                        TimeSpan.Zero
+                    );
                 }
 
                 totalUpdates++;
@@ -296,9 +340,12 @@ namespace QuantConnect.Tests.Optimizer
             Assert.NotZero(int.Parse(runtimeStatistics["Failed"], CultureInfo.InvariantCulture));
             // we have 2 force updates at least, expect a few more over it.
             Assert.Greater(totalUpdates, 2);
-            Assert.AreEqual(int.Parse(runtimeStatistics["Completed"], CultureInfo.InvariantCulture)
-                            + int.Parse(runtimeStatistics["Failed"], CultureInfo.InvariantCulture)
-                            + int.Parse(runtimeStatistics["Running"], CultureInfo.InvariantCulture), totalBacktest);
+            Assert.AreEqual(
+                int.Parse(runtimeStatistics["Completed"], CultureInfo.InvariantCulture)
+                    + int.Parse(runtimeStatistics["Failed"], CultureInfo.InvariantCulture)
+                    + int.Parse(runtimeStatistics["Running"], CultureInfo.InvariantCulture),
+                totalBacktest
+            );
         }
     }
 }

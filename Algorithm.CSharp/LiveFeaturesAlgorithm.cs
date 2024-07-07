@@ -76,15 +76,40 @@ namespace QuantConnect.Algorithm.CSharp
 
                 //Send a notification email/SMS/web request on events:
                 Notify.Email("myemail@gmail.com", "Test", "Test Body", "test attachment");
-                Notify.Sms("+11233456789", Time.ToStringInvariant("u") + ">> Test message from live BTC server.");
-                Notify.Web("http://api.quantconnect.com", Time.ToStringInvariant("u") + ">> Test data packet posted from live BTC server.");
-                Notify.Telegram("id", Time.ToStringInvariant("u") + ">> Test message from live BTC server.");
-                Notify.Ftp("ftp.quantconnect.com", "username", "password", "path/to/file.txt",
-                    Time.ToStringInvariant("u") + ">> Test file from live BTC server.");
-                Notify.Sftp("ftp.quantconnect.com", "username", "password", "path/to/file.txt",
-                    Time.ToStringInvariant("u") + ">> Test file from live BTC server.");
-                Notify.Sftp("ftp.quantconnect.com", "username", "privatekey", "optionalprivatekeypassphrase", "path/to/file.txt",
-                    Time.ToStringInvariant("u") + ">> Test file from live BTC server.");
+                Notify.Sms(
+                    "+11233456789",
+                    Time.ToStringInvariant("u") + ">> Test message from live BTC server."
+                );
+                Notify.Web(
+                    "http://api.quantconnect.com",
+                    Time.ToStringInvariant("u") + ">> Test data packet posted from live BTC server."
+                );
+                Notify.Telegram(
+                    "id",
+                    Time.ToStringInvariant("u") + ">> Test message from live BTC server."
+                );
+                Notify.Ftp(
+                    "ftp.quantconnect.com",
+                    "username",
+                    "password",
+                    "path/to/file.txt",
+                    Time.ToStringInvariant("u") + ">> Test file from live BTC server."
+                );
+                Notify.Sftp(
+                    "ftp.quantconnect.com",
+                    "username",
+                    "password",
+                    "path/to/file.txt",
+                    Time.ToStringInvariant("u") + ">> Test file from live BTC server."
+                );
+                Notify.Sftp(
+                    "ftp.quantconnect.com",
+                    "username",
+                    "privatekey",
+                    "optionalprivatekeypassphrase",
+                    "path/to/file.txt",
+                    Time.ToStringInvariant("u") + ">> Test file from live BTC server."
+                );
             }
         }
 
@@ -136,20 +161,28 @@ namespace QuantConnect.Algorithm.CSharp
         {
             [JsonProperty("timestamp")]
             public int Timestamp { get; set; }
+
             [JsonProperty("open")]
             public decimal Open { get; set; }
+
             [JsonProperty("high")]
             public decimal High { get; set; }
+
             [JsonProperty("low")]
             public decimal Low { get; set; }
+
             [JsonProperty("last")]
             public decimal Close { get; set; }
+
             [JsonProperty("bid")]
             public decimal Bid { get; set; }
+
             [JsonProperty("ask")]
             public decimal Ask { get; set; }
+
             [JsonProperty("vwap")]
             public decimal WeightedPrice { get; set; }
+
             [JsonProperty("volume")]
             public decimal VolumeBTC { get; set; }
             public decimal VolumeUSD { get; set; }
@@ -182,16 +215,26 @@ namespace QuantConnect.Algorithm.CSharp
             /// <param name="date">Date of this source file</param>
             /// <param name="isLiveMode">true if we're in live mode, false for backtesting mode</param>
             /// <returns>String URL of source file.</returns>
-            public override SubscriptionDataSource GetSource(SubscriptionDataConfig config, DateTime date, bool isLiveMode)
+            public override SubscriptionDataSource GetSource(
+                SubscriptionDataConfig config,
+                DateTime date,
+                bool isLiveMode
+            )
             {
                 if (isLiveMode)
                 {
-                    return new SubscriptionDataSource("https://www.bitstamp.net/api/ticker/", SubscriptionTransportMedium.Rest);
+                    return new SubscriptionDataSource(
+                        "https://www.bitstamp.net/api/ticker/",
+                        SubscriptionTransportMedium.Rest
+                    );
                 }
 
                 //return "http://my-ftp-server.com/futures-data-" + date.ToString("Ymd") + ".zip";
                 // OR simply return a fixed small data file. Large files will slow down your backtest
-                return new SubscriptionDataSource("https://www.quandl.com/api/v3/datasets/BCHARTS/BITSTAMPUSD.csv?order=asc", SubscriptionTransportMedium.RemoteFile);
+                return new SubscriptionDataSource(
+                    "https://www.quandl.com/api/v3/datasets/BCHARTS/BITSTAMPUSD.csv?order=asc",
+                    SubscriptionTransportMedium.RemoteFile
+                );
             }
 
             /// <summary>
@@ -204,7 +247,12 @@ namespace QuantConnect.Algorithm.CSharp
             /// <param name="date">Current date we're requesting. This allows you to break up the data source into daily files.</param>
             /// <param name="isLiveMode">true if we're in live mode, false for backtesting mode</param>
             /// <returns>New Bitcoin Object which extends BaseData.</returns>
-            public override BaseData Reader(SubscriptionDataConfig config, string line, DateTime date, bool isLiveMode)
+            public override BaseData Reader(
+                SubscriptionDataConfig config,
+                string line,
+                DateTime date,
+                bool isLiveMode
+            )
             {
                 var coin = new Bitcoin();
                 if (isLiveMode)
@@ -217,7 +265,9 @@ namespace QuantConnect.Algorithm.CSharp
                         coin.EndTime = DateTime.UtcNow.ConvertFromUtc(config.ExchangeTimeZone);
                         coin.Value = coin.Close;
                     }
-                    catch { /* Do nothing, possible error in json decoding */ }
+                    catch
+                    { /* Do nothing, possible error in json decoding */
+                    }
                     return coin;
                 }
 
@@ -237,7 +287,9 @@ namespace QuantConnect.Algorithm.CSharp
                     coin.WeightedPrice = Convert.ToDecimal(data[7], CultureInfo.InvariantCulture);
                     coin.Value = coin.Close;
                 }
-                catch { /* Do nothing, skip first title row */ }
+                catch
+                { /* Do nothing, skip first title row */
+                }
 
                 return coin;
             }

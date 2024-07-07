@@ -33,7 +33,8 @@ namespace QuantConnect
         public override void WriteJson(JsonWriter writer, object value, JsonSerializer serializer)
         {
             var symbol = value as Symbol;
-            if (ReferenceEquals(symbol, null)) return;
+            if (ReferenceEquals(symbol, null))
+                return;
 
             writer.WriteStartObject();
             writer.WritePropertyName("value");
@@ -57,11 +58,22 @@ namespace QuantConnect
         /// <returns>
         /// The object value.
         /// </returns>
-        public override object ReadJson(JsonReader reader, Type objectType, object existingValue, JsonSerializer serializer)
+        public override object ReadJson(
+            JsonReader reader,
+            Type objectType,
+            object existingValue,
+            JsonSerializer serializer
+        )
         {
             var jobject = JObject.Load(reader);
 
-            if (jobject.TryGetValue("type", StringComparison.InvariantCultureIgnoreCase, out var type))
+            if (
+                jobject.TryGetValue(
+                    "type",
+                    StringComparison.InvariantCultureIgnoreCase,
+                    out var type
+                )
+            )
             {
                 return BuildSymbolFromUserFriendlyValue(jobject);
             }
@@ -77,7 +89,7 @@ namespace QuantConnect
         /// </returns>
         public override bool CanConvert(Type objectType)
         {
-            return objectType == typeof (Symbol);
+            return objectType == typeof(Symbol);
         }
 
         private Symbol ReadSymbolFromJson(JObject jObject)
@@ -85,20 +97,56 @@ namespace QuantConnect
             JToken symbolId;
             JToken value;
 
-            if ((jObject.TryGetValue("ID", StringComparison.InvariantCultureIgnoreCase, out symbolId)
-                && jObject.TryGetValue("Value", StringComparison.InvariantCultureIgnoreCase, out value))
-                || (jObject.TryGetValue("id", StringComparison.InvariantCultureIgnoreCase, out symbolId)
-                && jObject.TryGetValue("value", StringComparison.InvariantCultureIgnoreCase, out value)))
+            if (
+                (
+                    jObject.TryGetValue(
+                        "ID",
+                        StringComparison.InvariantCultureIgnoreCase,
+                        out symbolId
+                    )
+                    && jObject.TryGetValue(
+                        "Value",
+                        StringComparison.InvariantCultureIgnoreCase,
+                        out value
+                    )
+                )
+                || (
+                    jObject.TryGetValue(
+                        "id",
+                        StringComparison.InvariantCultureIgnoreCase,
+                        out symbolId
+                    )
+                    && jObject.TryGetValue(
+                        "value",
+                        StringComparison.InvariantCultureIgnoreCase,
+                        out value
+                    )
+                )
+            )
             {
                 Symbol underlyingSymbol = null;
                 JToken underlying;
-                if (jObject.TryGetValue("Underlying", StringComparison.InvariantCultureIgnoreCase, out underlying)
-                    || jObject.TryGetValue("underlying", StringComparison.InvariantCultureIgnoreCase, out underlying))
+                if (
+                    jObject.TryGetValue(
+                        "Underlying",
+                        StringComparison.InvariantCultureIgnoreCase,
+                        out underlying
+                    )
+                    || jObject.TryGetValue(
+                        "underlying",
+                        StringComparison.InvariantCultureIgnoreCase,
+                        out underlying
+                    )
+                )
                 {
                     underlyingSymbol = ReadSymbolFromJson(underlying as JObject);
                 }
 
-                return new Symbol(SecurityIdentifier.Parse(symbolId.ToString()), value.ToString(), underlyingSymbol);
+                return new Symbol(
+                    SecurityIdentifier.Parse(symbolId.ToString()),
+                    value.ToString(),
+                    underlyingSymbol
+                );
             }
             return null;
         }
@@ -108,9 +156,19 @@ namespace QuantConnect
         /// </summary>
         private Symbol BuildSymbolFromUserFriendlyValue(JObject jObject)
         {
-            if (jObject.TryGetValue("value", StringComparison.InvariantCultureIgnoreCase, out var value)
-                && jObject.TryGetValue("type", StringComparison.InvariantCultureIgnoreCase, out var securityTypeToken)
-                && securityTypeToken.ToString().TryParseSecurityType(out var securityType))
+            if (
+                jObject.TryGetValue(
+                    "value",
+                    StringComparison.InvariantCultureIgnoreCase,
+                    out var value
+                )
+                && jObject.TryGetValue(
+                    "type",
+                    StringComparison.InvariantCultureIgnoreCase,
+                    out var securityTypeToken
+                )
+                && securityTypeToken.ToString().TryParseSecurityType(out var securityType)
+            )
             {
                 if (securityType == SecurityType.Option)
                 {
@@ -120,16 +178,25 @@ namespace QuantConnect
                 {
                     return SymbolRepresentation.ParseFutureSymbol(value.ToString());
                 }
-                else if(securityType == SecurityType.FutureOption)
+                else if (securityType == SecurityType.FutureOption)
                 {
                     return SymbolRepresentation.ParseFutureOptionSymbol(value.ToString());
                 }
                 else if (securityType == SecurityType.IndexOption)
                 {
-                    return SymbolRepresentation.ParseOptionTickerOSI(value.ToString(), securityType: securityType);
+                    return SymbolRepresentation.ParseOptionTickerOSI(
+                        value.ToString(),
+                        securityType: securityType
+                    );
                 }
 
-                if (!jObject.TryGetValue("market", StringComparison.InvariantCultureIgnoreCase, out var market))
+                if (
+                    !jObject.TryGetValue(
+                        "market",
+                        StringComparison.InvariantCultureIgnoreCase,
+                        out var market
+                    )
+                )
                 {
                     market = Market.USA;
                 }

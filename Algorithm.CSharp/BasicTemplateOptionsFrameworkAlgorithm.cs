@@ -29,7 +29,9 @@ namespace QuantConnect.Algorithm.CSharp
     /// Basic template options framework algorithm uses framework components to define an algorithm
     /// that trades options.
     /// </summary>
-    public class BasicTemplateOptionsFrameworkAlgorithm : QCAlgorithm, IRegressionAlgorithmDefinition
+    public class BasicTemplateOptionsFrameworkAlgorithm
+        : QCAlgorithm,
+            IRegressionAlgorithmDefinition
     {
         public override void Initialize()
         {
@@ -40,8 +42,18 @@ namespace QuantConnect.Algorithm.CSharp
             SetCash(100000);
 
             // set framework models
-            SetUniverseSelection(new EarliestExpiringWeeklyAtTheMoneyPutOptionUniverseSelectionModel(SelectOptionChainSymbols));
-            SetAlpha(new ConstantOptionContractAlphaModel(InsightType.Price, InsightDirection.Up, TimeSpan.FromHours(0.5)));
+            SetUniverseSelection(
+                new EarliestExpiringWeeklyAtTheMoneyPutOptionUniverseSelectionModel(
+                    SelectOptionChainSymbols
+                )
+            );
+            SetAlpha(
+                new ConstantOptionContractAlphaModel(
+                    InsightType.Price,
+                    InsightDirection.Up,
+                    TimeSpan.FromHours(0.5)
+                )
+            );
             SetPortfolioConstruction(new SingleSharePortfolioConstructionModel());
             SetExecution(new ImmediateExecutionModel());
             SetRiskManagement(new NullRiskManagementModel());
@@ -53,12 +65,22 @@ namespace QuantConnect.Algorithm.CSharp
             var newYorkTime = utcTime.ConvertFromUtc(TimeZones.NewYork);
             if (newYorkTime.Date < new DateTime(2014, 06, 06))
             {
-                yield return QuantConnect.Symbol.Create("TWX", SecurityType.Option, Market.USA, "?TWX");
+                yield return QuantConnect.Symbol.Create(
+                    "TWX",
+                    SecurityType.Option,
+                    Market.USA,
+                    "?TWX"
+                );
             }
 
             if (newYorkTime.Date >= new DateTime(2014, 06, 06))
             {
-                yield return QuantConnect.Symbol.Create("AAPL", SecurityType.Option, Market.USA, "?AAPL");
+                yield return QuantConnect.Symbol.Create(
+                    "AAPL",
+                    SecurityType.Option,
+                    Market.USA,
+                    "?AAPL"
+                );
             }
         }
 
@@ -66,12 +88,13 @@ namespace QuantConnect.Algorithm.CSharp
         /// Creates option chain universes that select only the earliest expiry ATM weekly put contract
         /// and runs a user defined optionChainSymbolSelector every day to enable choosing different option chains
         /// </summary>
-        class EarliestExpiringWeeklyAtTheMoneyPutOptionUniverseSelectionModel : OptionUniverseSelectionModel
+        class EarliestExpiringWeeklyAtTheMoneyPutOptionUniverseSelectionModel
+            : OptionUniverseSelectionModel
         {
-            public EarliestExpiringWeeklyAtTheMoneyPutOptionUniverseSelectionModel(Func<DateTime, IEnumerable<Symbol>> optionChainSymbolSelector)
-                : base(TimeSpan.FromDays(1), optionChainSymbolSelector)
-            {
-            }
+            public EarliestExpiringWeeklyAtTheMoneyPutOptionUniverseSelectionModel(
+                Func<DateTime, IEnumerable<Symbol>> optionChainSymbolSelector
+            )
+                : base(TimeSpan.FromDays(1), optionChainSymbolSelector) { }
 
             /// <summary>
             /// Defines the option chain universe filter
@@ -95,10 +118,12 @@ namespace QuantConnect.Algorithm.CSharp
         /// </summary>
         class ConstantOptionContractAlphaModel : ConstantAlphaModel
         {
-            public ConstantOptionContractAlphaModel(InsightType type, InsightDirection direction, TimeSpan period)
-                : base(type, direction, period)
-            {
-            }
+            public ConstantOptionContractAlphaModel(
+                InsightType type,
+                InsightDirection direction,
+                TimeSpan period
+            )
+                : base(type, direction, period) { }
 
             protected override bool ShouldEmitInsight(DateTime utcTime, Symbol symbol)
             {
@@ -117,11 +142,14 @@ namespace QuantConnect.Algorithm.CSharp
         /// </summary>
         class SingleSharePortfolioConstructionModel : PortfolioConstructionModel
         {
-            public override IEnumerable<IPortfolioTarget> CreateTargets(QCAlgorithm algorithm, Insight[] insights)
+            public override IEnumerable<IPortfolioTarget> CreateTargets(
+                QCAlgorithm algorithm,
+                Insight[] insights
+            )
             {
                 foreach (var insight in insights)
                 {
-                    yield return new PortfolioTarget(insight.Symbol, (int) insight.Direction);
+                    yield return new PortfolioTarget(insight.Symbol, (int)insight.Direction);
                 }
             }
         }
@@ -154,35 +182,36 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// This is used by the regression test system to indicate what the expected statistics are from running the algorithm
         /// </summary>
-        public Dictionary<string, string> ExpectedStatistics => new Dictionary<string, string>
-        {
-            {"Total Orders", "5"},
-            {"Average Win", "0.14%"},
-            {"Average Loss", "-0.28%"},
-            {"Compounding Annual Return", "-47.543%"},
-            {"Drawdown", "1.600%"},
-            {"Expectancy", "0.502"},
-            {"Start Equity", "100000"},
-            {"End Equity", "99178.50"},
-            {"Net Profit", "-0.821%"},
-            {"Sharpe Ratio", "-4.136"},
-            {"Sortino Ratio", "0"},
-            {"Probabilistic Sharpe Ratio", "17.155%"},
-            {"Loss Rate", "0%"},
-            {"Win Rate", "100%"},
-            {"Profit-Loss Ratio", "0.50"},
-            {"Alpha", "-0.855"},
-            {"Beta", "1.047"},
-            {"Annual Standard Deviation", "0.099"},
-            {"Annual Variance", "0.01"},
-            {"Information Ratio", "-9.141"},
-            {"Tracking Error", "0.091"},
-            {"Treynor Ratio", "-0.392"},
-            {"Total Fees", "$4.00"},
-            {"Estimated Strategy Capacity", "$0"},
-            {"Lowest Capacity Asset", "AAPL R735QTJ8XC9X"},
-            {"Portfolio Turnover", "13.49%"},
-            {"OrderListHash", "2722fee93126736e03d66d7ab880b537"}
-        };
+        public Dictionary<string, string> ExpectedStatistics =>
+            new Dictionary<string, string>
+            {
+                { "Total Orders", "5" },
+                { "Average Win", "0.14%" },
+                { "Average Loss", "-0.28%" },
+                { "Compounding Annual Return", "-47.543%" },
+                { "Drawdown", "1.600%" },
+                { "Expectancy", "0.502" },
+                { "Start Equity", "100000" },
+                { "End Equity", "99178.50" },
+                { "Net Profit", "-0.821%" },
+                { "Sharpe Ratio", "-4.136" },
+                { "Sortino Ratio", "0" },
+                { "Probabilistic Sharpe Ratio", "17.155%" },
+                { "Loss Rate", "0%" },
+                { "Win Rate", "100%" },
+                { "Profit-Loss Ratio", "0.50" },
+                { "Alpha", "-0.855" },
+                { "Beta", "1.047" },
+                { "Annual Standard Deviation", "0.099" },
+                { "Annual Variance", "0.01" },
+                { "Information Ratio", "-9.141" },
+                { "Tracking Error", "0.091" },
+                { "Treynor Ratio", "-0.392" },
+                { "Total Fees", "$4.00" },
+                { "Estimated Strategy Capacity", "$0" },
+                { "Lowest Capacity Asset", "AAPL R735QTJ8XC9X" },
+                { "Portfolio Turnover", "13.49%" },
+                { "OrderListHash", "2722fee93126736e03d66d7ab880b537" }
+            };
     }
 }

@@ -1,8 +1,8 @@
+using System;
 using NodaTime;
 using NUnit.Framework;
 using QuantConnect.Securities;
 using QuantConnect.Securities.Crypto;
-using System;
 
 namespace QuantConnect.Tests.Common.Securities.Cryptos
 {
@@ -23,7 +23,11 @@ namespace QuantConnect.Tests.Common.Securities.Cryptos
         {
             var securities = new SecurityManager(TimeKeeper);
             var transactions = new SecurityTransactionManager(null, securities);
-            var portfolio = new SecurityPortfolioManager(securities, transactions, new AlgorithmSettings());
+            var portfolio = new SecurityPortfolioManager(
+                securities,
+                transactions,
+                new AlgorithmSettings()
+            );
             if (portfolio.CashBook.ContainsKey(quote))
             {
                 portfolio.CashBook[quote].SetAmount(1000);
@@ -39,7 +43,13 @@ namespace QuantConnect.Tests.Common.Securities.Cryptos
                 symbol,
                 SecurityExchangeHours.AlwaysOpen(DateTimeZone.Utc),
                 cash,
-                new Cash(ticker.StartsWith("BTC", StringComparison.InvariantCultureIgnoreCase) ? "BTC" : "ETH", 0, 0),
+                new Cash(
+                    ticker.StartsWith("BTC", StringComparison.InvariantCultureIgnoreCase)
+                        ? "BTC"
+                        : "ETH",
+                    0,
+                    0
+                ),
                 SymbolProperties.GetDefault(quote),
                 portfolio.CashBook,
                 RegisteredSecurityDataTypesProvider.Null,

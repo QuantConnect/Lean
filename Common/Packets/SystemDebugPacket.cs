@@ -25,13 +25,18 @@ namespace QuantConnect.Packets
         /// Default constructor for JSON
         /// </summary>
         public SystemDebugPacket()
-            : base (PacketType.SystemDebug)
-        { }
+            : base(PacketType.SystemDebug) { }
 
         /// <summary>
         /// Create a new instance of the system debug packet
         /// </summary>
-        public SystemDebugPacket(int projectId, string algorithmId, string compileId, string message, bool toast = false)
+        public SystemDebugPacket(
+            int projectId,
+            string algorithmId,
+            string compileId,
+            string message,
+            bool toast = false
+        )
             : base(PacketType.SystemDebug)
         {
             ProjectId = projectId;

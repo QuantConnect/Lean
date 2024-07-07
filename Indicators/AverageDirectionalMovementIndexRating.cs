@@ -18,21 +18,23 @@ using QuantConnect.Data.Market;
 namespace QuantConnect.Indicators
 {
     /// <summary>
-    /// This indicator computes the Average Directional Movement Index Rating (ADXR). 
+    /// This indicator computes the Average Directional Movement Index Rating (ADXR).
     /// The Average Directional Movement Index Rating is calculated with the following formula:
     /// ADXR[i] = (ADX[i] + ADX[i - period + 1]) / 2
     /// </summary>
-    public class AverageDirectionalMovementIndexRating : BarIndicator, IIndicatorWarmUpPeriodProvider
+    public class AverageDirectionalMovementIndexRating
+        : BarIndicator,
+            IIndicatorWarmUpPeriodProvider
     {
         private readonly int _period;
         private readonly RollingWindow<decimal> _adxHistory;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="AverageDirectionalMovementIndexRating"/> class using the specified name and period.
-        /// </summary> 
+        /// </summary>
         /// <param name="name">The name of this indicator</param>
         /// <param name="period">The period of the ADXR</param>
-        public AverageDirectionalMovementIndexRating(string name, int period) 
+        public AverageDirectionalMovementIndexRating(string name, int period)
             : base(name)
         {
             _period = period;
@@ -42,12 +44,10 @@ namespace QuantConnect.Indicators
 
         /// <summary>
         /// Initializes a new instance of the <see cref="AverageDirectionalMovementIndexRating"/> class using the specified period.
-        /// </summary> 
+        /// </summary>
         /// <param name="period">The period of the ADXR</param>
         public AverageDirectionalMovementIndexRating(int period)
-            : this($"ADXR({period})", period)
-        {
-        }
+            : this($"ADXR({period})", period) { }
 
         /// <summary>
         /// The Average Directional Index indicator instance being used

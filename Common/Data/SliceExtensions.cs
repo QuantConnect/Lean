@@ -56,13 +56,20 @@ namespace QuantConnect.Data
         /// <param name="slices">The enumerable of slice</param>
         /// <param name="type">Data type of the data that will be fetched</param>
         /// <returns>An enumerable of data dictionary or data point of the requested type</returns>
-        public static IEnumerable<DataDictionary<BaseDataCollection>> GetUniverseData(this IEnumerable<Slice> slices)
+        public static IEnumerable<DataDictionary<BaseDataCollection>> GetUniverseData(
+            this IEnumerable<Slice> slices
+        )
         {
-            return slices.SelectMany(x => x.AllData).Select(x =>
-            {
-                // we wrap the universe data collection into a data dictionary so it fits the api pattern
-                return new DataDictionary<BaseDataCollection>(new[] { (BaseDataCollection)x }, (y) => y.Symbol);
-            });
+            return slices
+                .SelectMany(x => x.AllData)
+                .Select(x =>
+                {
+                    // we wrap the universe data collection into a data dictionary so it fits the api pattern
+                    return new DataDictionary<BaseDataCollection>(
+                        new[] { (BaseDataCollection)x },
+                        (y) => y.Symbol
+                    );
+                });
         }
 
         /// <summary>
@@ -72,7 +79,11 @@ namespace QuantConnect.Data
         /// <param name="type">Data type of the data that will be fetched</param>
         /// <param name="symbol">The symbol to retrieve</param>
         /// <returns>An enumerable of data dictionary or data point of the requested type</returns>
-        public static IEnumerable<dynamic> Get(this IEnumerable<Slice> slices, Type type, Symbol symbol = null)
+        public static IEnumerable<dynamic> Get(
+            this IEnumerable<Slice> slices,
+            Type type,
+            Symbol symbol = null
+        )
         {
             var result = slices.Select(x => x.Get(type));
 
@@ -104,7 +115,10 @@ namespace QuantConnect.Data
         /// <param name="dataDictionaries">The data dictionary enumerable to access</param>
         /// <param name="symbol">The symbol to retrieve</param>
         /// <returns>An enumerable of T for the matching symbol, if no T is found for symbol, empty enumerable is returned</returns>
-        public static IEnumerable<T> Get<T>(this IEnumerable<DataDictionary<T>> dataDictionaries, Symbol symbol)
+        public static IEnumerable<T> Get<T>(
+            this IEnumerable<DataDictionary<T>> dataDictionaries,
+            Symbol symbol
+        )
             where T : IBaseData
         {
             return dataDictionaries.Where(x => x.ContainsKey(symbol)).Select(x => x[symbol]);
@@ -118,27 +132,37 @@ namespace QuantConnect.Data
         /// <param name="symbol">The symbol to retrieve</param>
         /// <param name="field">The field to access</param>
         /// <returns>An enumerable of decimals</returns>
-        public static IEnumerable<decimal> Get<T>(this IEnumerable<DataDictionary<T>> dataDictionaries, Symbol symbol, string field)
+        public static IEnumerable<decimal> Get<T>(
+            this IEnumerable<DataDictionary<T>> dataDictionaries,
+            Symbol symbol,
+            string field
+        )
         {
             Func<T, decimal> selector;
-            if (typeof (DynamicData).IsAssignableFrom(typeof (T)))
+            if (typeof(DynamicData).IsAssignableFrom(typeof(T)))
             {
                 selector = data =>
                 {
-                    var dyn = (DynamicData) (object) data;
-                    return (decimal) dyn.GetProperty(field);
+                    var dyn = (DynamicData)(object)data;
+                    return (decimal)dyn.GetProperty(field);
                 };
             }
-            else if (typeof (T) == typeof (List<Tick>))
+            else if (typeof(T) == typeof(List<Tick>))
             {
                 // perform the selection on the last tick
                 // NOTE: This is a known bug, should be updated to perform the selection on each item in the list
-                var dataSelector = (Func<Tick, decimal>) ExpressionBuilder.MakePropertyOrFieldSelector(typeof (Tick), field).Compile();
-                selector = ticks => dataSelector(((List<Tick>) (object) ticks).Last());
+                var dataSelector =
+                    (Func<Tick, decimal>)
+                        ExpressionBuilder
+                            .MakePropertyOrFieldSelector(typeof(Tick), field)
+                            .Compile();
+                selector = ticks => dataSelector(((List<Tick>)(object)ticks).Last());
             }
             else
             {
-                selector = (Func<T, decimal>) ExpressionBuilder.MakePropertyOrFieldSelector(typeof (T), field).Compile();
+                selector =
+                    (Func<T, decimal>)
+                        ExpressionBuilder.MakePropertyOrFieldSelector(typeof(T), field).Compile();
             }
 
             foreach (var dataDictionary in dataDictionaries)
@@ -173,7 +197,10 @@ namespace QuantConnect.Data
         public static IEnumerable<T> Get<T>(this IEnumerable<Slice> slices, Symbol symbol)
             where T : IBaseData
         {
-            return slices.Select(x => x.Get<T>()).Where(x => x.ContainsKey(symbol)).Select(x => x[symbol]);
+            return slices
+                .Select(x => x.Get<T>())
+                .Where(x => x.ContainsKey(symbol))
+                .Select(x => x[symbol]);
         }
 
         /// <summary>
@@ -184,15 +211,21 @@ namespace QuantConnect.Data
         /// <param name="symbol">The symbol to retrieve</param>
         /// <param name="field">The field selector used to access the dats</param>
         /// <returns>An enumerable of decimal</returns>
-        public static IEnumerable<decimal> Get(this IEnumerable<Slice> slices, Symbol symbol, Func<BaseData, decimal> field)
+        public static IEnumerable<decimal> Get(
+            this IEnumerable<Slice> slices,
+            Symbol symbol,
+            Func<BaseData, decimal> field
+        )
         {
             foreach (var slice in slices)
             {
                 dynamic item;
                 if (slice.TryGetValue(symbol, out item))
                 {
-                    if (item is List<Tick>) yield return field(item.Last());
-                    else yield return field(item);
+                    if (item is List<Tick>)
+                        yield return field(item.Last());
+                    else
+                        yield return field(item);
                 }
             }
         }
@@ -247,7 +280,7 @@ namespace QuantConnect.Data
         /// <returns>Double array representing the enumerable of decimal</returns>
         public static double[] ToDoubleArray(this IEnumerable<decimal> decimals)
         {
-            return decimals.Select(x => (double) x).ToArray();
+            return decimals.Select(x => (double)x).ToArray();
         }
 
         /// <summary>
@@ -256,14 +289,20 @@ namespace QuantConnect.Data
         /// </summary>
         /// <param name="slices">The data to send into the consolidators, likely result of a history request</param>
         /// <param name="consolidatorsBySymbol">Dictionary of consolidators keyed by symbol</param>
-        public static void PushThroughConsolidators(this IEnumerable<Slice> slices, Dictionary<Symbol, IDataConsolidator> consolidatorsBySymbol)
+        public static void PushThroughConsolidators(
+            this IEnumerable<Slice> slices,
+            Dictionary<Symbol, IDataConsolidator> consolidatorsBySymbol
+        )
         {
-            PushThroughConsolidators(slices, symbol =>
-            {
-                IDataConsolidator consolidator;
-                consolidatorsBySymbol.TryGetValue(symbol, out consolidator);
-                return consolidator;
-            });
+            PushThroughConsolidators(
+                slices,
+                symbol =>
+                {
+                    IDataConsolidator consolidator;
+                    consolidatorsBySymbol.TryGetValue(symbol, out consolidator);
+                    return consolidator;
+                }
+            );
         }
 
         /// <summary>
@@ -272,7 +311,10 @@ namespace QuantConnect.Data
         /// </summary>
         /// <param name="slices">The data to send into the consolidators, likely result of a history request</param>
         /// <param name="consolidatorsProvider">Delegate that fetches the consolidators by a symbol</param>
-        public static void PushThroughConsolidators(this IEnumerable<Slice> slices, Func<Symbol, IDataConsolidator> consolidatorsProvider)
+        public static void PushThroughConsolidators(
+            this IEnumerable<Slice> slices,
+            Func<Symbol, IDataConsolidator> consolidatorsProvider
+        )
         {
             slices.PushThrough(data => consolidatorsProvider(data?.Symbol)?.Update(data));
         }

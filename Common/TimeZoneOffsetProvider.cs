@@ -52,32 +52,51 @@ namespace QuantConnect
         /// Careful here, it will determine the current discontinuity offset value. When requested to convert a date we only look forward for new discontinuities
         /// but we suppose the current offset is correct for the requested date if in the past.</param>
         /// <param name="utcEndTime">The end of the range of offsets</param>
-        public TimeZoneOffsetProvider(DateTimeZone timeZone, DateTime utcStartTime, DateTime utcEndTime)
+        public TimeZoneOffsetProvider(
+            DateTimeZone timeZone,
+            DateTime utcStartTime,
+            DateTime utcEndTime
+        )
         {
             _timeZone = timeZone;
 
             // pad the end so we get the correct zone interval
-            utcEndTime += TimeSpan.FromDays(2*365);
+            utcEndTime += TimeSpan.FromDays(2 * 365);
 
             var start = DateTimeZone.Utc.AtLeniently(LocalDateTime.FromDateTime(utcStartTime));
             var end = DateTimeZone.Utc.AtLeniently(LocalDateTime.FromDateTime(utcEndTime));
-            var zoneIntervals = _timeZone.GetZoneIntervals(start.ToInstant(), end.ToInstant()).ToList();
+            var zoneIntervals = _timeZone
+                .GetZoneIntervals(start.ToInstant(), end.ToInstant())
+                .ToList();
 
             // In NodaTime v3.0.5, ZoneInterval throws if `ZoneInterval.HasStart` is false and `ZoneInterval.Start` is called.
             // short circuit time zones with no discontinuities
-            if (zoneIntervals.Count == 1 && zoneIntervals[0].HasStart && zoneIntervals[0].Start == Instant.MinValue && zoneIntervals[0].End == Instant.MaxValue)
+            if (
+                zoneIntervals.Count == 1
+                && zoneIntervals[0].HasStart
+                && zoneIntervals[0].Start == Instant.MinValue
+                && zoneIntervals[0].End == Instant.MaxValue
+            )
             {
                 // end of discontinuities
                 _discontinuities = new Queue<long>();
                 _nextDiscontinuity = DateTime.MaxValue.Ticks;
-                _currentOffsetTicks = _timeZone.GetUtcOffset(Instant.FromDateTimeUtc(DateTime.UtcNow)).Ticks;
+                _currentOffsetTicks = _timeZone
+                    .GetUtcOffset(Instant.FromDateTimeUtc(DateTime.UtcNow))
+                    .Ticks;
             }
             else
             {
                 // get the offset just before the next discontinuity to initialize
                 _discontinuities = new Queue<long>(zoneIntervals.Select(GetDateTimeUtcTicks));
                 _nextDiscontinuity = _discontinuities.Dequeue();
-                _currentOffsetTicks = _timeZone.GetUtcOffset(Instant.FromDateTimeUtc(new DateTime(_nextDiscontinuity - 1, DateTimeKind.Utc))).Ticks;
+                _currentOffsetTicks = _timeZone
+                    .GetUtcOffset(
+                        Instant.FromDateTimeUtc(
+                            new DateTime(_nextDiscontinuity - 1, DateTimeKind.Utc)
+                        )
+                    )
+                    .Ticks;
             }
         }
 
@@ -90,15 +109,20 @@ namespace QuantConnect
         public long GetOffsetTicks(DateTime utcTime)
         {
             // keep advancing our discontinuity until the requested time, don't recompute if already at max value
-            while (utcTime.Ticks >= _nextDiscontinuity && _nextDiscontinuity != DateTimeMaxValueTicks)
+            while (
+                utcTime.Ticks >= _nextDiscontinuity && _nextDiscontinuity != DateTimeMaxValueTicks
+            )
             {
                 // grab the next discontinuity
-                _nextDiscontinuity = _discontinuities.Count == 0
-                    ? DateTime.MaxValue.Ticks
-                    : _discontinuities.Dequeue();
+                _nextDiscontinuity =
+                    _discontinuities.Count == 0
+                        ? DateTime.MaxValue.Ticks
+                        : _discontinuities.Dequeue();
 
                 // get the offset just before the next discontinuity
-                var offset = _timeZone.GetUtcOffset(Instant.FromDateTimeUtc(new DateTime(_nextDiscontinuity - 1, DateTimeKind.Utc)));
+                var offset = _timeZone.GetUtcOffset(
+                    Instant.FromDateTimeUtc(new DateTime(_nextDiscontinuity - 1, DateTimeKind.Utc))
+                );
                 _currentOffsetTicks = offset.Ticks;
             }
 
@@ -160,9 +184,12 @@ namespace QuantConnect
             // can't convert these values directly to date times, so just shortcut these here
             // we set the min value to one since the logic in the ctor will decrement this value to
             // determine the last instant BEFORE the discontinuity
-            if (!zoneInterval.HasStart || zoneInterval.Start == Instant.MinValue) return 1;
-            if (zoneInterval.HasStart && zoneInterval.Start == Instant.MaxValue) return DateTime.MaxValue.Ticks;
-            if (zoneInterval.HasStart) return zoneInterval.Start.ToDateTimeUtc().Ticks;
+            if (!zoneInterval.HasStart || zoneInterval.Start == Instant.MinValue)
+                return 1;
+            if (zoneInterval.HasStart && zoneInterval.Start == Instant.MaxValue)
+                return DateTime.MaxValue.Ticks;
+            if (zoneInterval.HasStart)
+                return zoneInterval.Start.ToDateTimeUtc().Ticks;
 
             return 1;
         }

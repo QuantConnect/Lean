@@ -26,7 +26,9 @@ namespace QuantConnect.Algorithm.CSharp
     /// <summary>
     /// Tests the consolidation of custom data with random data
     /// </summary>
-    public class CustomDataUnlinkedTradeBarIconicTypeConsolidationRegressionAlgorithm : QCAlgorithm, IRegressionAlgorithmDefinition
+    public class CustomDataUnlinkedTradeBarIconicTypeConsolidationRegressionAlgorithm
+        : QCAlgorithm,
+            IRegressionAlgorithmDefinition
     {
         private Symbol _vix;
         private BollingerBands _bb;
@@ -53,7 +55,9 @@ namespace QuantConnect.Algorithm.CSharp
         {
             if (_bb.Current.Value == 0)
             {
-                throw new RegressionTestException("Bollinger Band value is zero when we expect non-zero value.");
+                throw new RegressionTestException(
+                    "Bollinger Band value is zero when we expect non-zero value."
+                );
             }
 
             if (!_invested && _bb.Current.Value > 0.05m)
@@ -79,9 +83,24 @@ namespace QuantConnect.Algorithm.CSharp
             /// <param name="date">Date we're making this request</param>
             /// <param name="isLiveMode">Is live mode</param>
             /// <returns>Source of subscription</returns>
-            public override SubscriptionDataSource GetSource(SubscriptionDataConfig config, DateTime date, bool isLiveMode)
+            public override SubscriptionDataSource GetSource(
+                SubscriptionDataConfig config,
+                DateTime date,
+                bool isLiveMode
+            )
             {
-                return new SubscriptionDataSource(Path.Combine(Globals.DataFolder, "equity", "usa", "minute", "spy", $"{date:yyyyMMdd}_trade.zip#{date:yyyyMMdd}_spy_minute_trade.csv"), SubscriptionTransportMedium.LocalFile, FileFormat.Csv);
+                return new SubscriptionDataSource(
+                    Path.Combine(
+                        Globals.DataFolder,
+                        "equity",
+                        "usa",
+                        "minute",
+                        "spy",
+                        $"{date:yyyyMMdd}_trade.zip#{date:yyyyMMdd}_spy_minute_trade.csv"
+                    ),
+                    SubscriptionTransportMedium.LocalFile,
+                    FileFormat.Csv
+                );
             }
 
             /// <summary>
@@ -92,7 +111,12 @@ namespace QuantConnect.Algorithm.CSharp
             /// <param name="date">Date of the request</param>
             /// <param name="isLiveMode">Is live mode</param>
             /// <returns>Incremental BaseData instance</returns>
-            public override BaseData Reader(SubscriptionDataConfig config, string line, DateTime date, bool isLiveMode)
+            public override BaseData Reader(
+                SubscriptionDataConfig config,
+                string line,
+                DateTime date,
+                bool isLiveMode
+            )
             {
                 var unlinkedBar = new UnlinkedDataTradeBar();
                 _step += 0.10m;
@@ -109,8 +133,14 @@ namespace QuantConnect.Algorithm.CSharp
                     Close = close,
                     Time = date,
                     Symbol = new Symbol(
-                        SecurityIdentifier.GenerateBase(typeof(IncrementallyGeneratedCustomData), "VIX", Market.USA, false),
-                        "VIX"),
+                        SecurityIdentifier.GenerateBase(
+                            typeof(IncrementallyGeneratedCustomData),
+                            "VIX",
+                            Market.USA,
+                            false
+                        ),
+                        "VIX"
+                    ),
                     Period = unlinkedBar.Period,
                     DataType = unlinkedBar.DataType
                 };
@@ -148,35 +178,36 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// This is used by the regression test system to indicate what the expected statistics are from running the algorithm
         /// </summary>
-        public Dictionary<string, string> ExpectedStatistics => new Dictionary<string, string>
-        {
-            {"Total Orders", "1"},
-            {"Average Win", "0%"},
-            {"Average Loss", "0%"},
-            {"Compounding Annual Return", "28.248%"},
-            {"Drawdown", "0%"},
-            {"Expectancy", "0"},
-            {"Start Equity", "100000"},
-            {"End Equity", "100330"},
-            {"Net Profit", "0.330%"},
-            {"Sharpe Ratio", "315.406"},
-            {"Sortino Ratio", "0"},
-            {"Probabilistic Sharpe Ratio", "0%"},
-            {"Loss Rate", "0%"},
-            {"Win Rate", "0%"},
-            {"Profit-Loss Ratio", "0"},
-            {"Alpha", "0.22"},
-            {"Beta", "0.002"},
-            {"Annual Standard Deviation", "0.001"},
-            {"Annual Variance", "0"},
-            {"Information Ratio", "-7.886"},
-            {"Tracking Error", "0.222"},
-            {"Treynor Ratio", "144.512"},
-            {"Total Fees", "$0.00"},
-            {"Estimated Strategy Capacity", "$0"},
-            {"Lowest Capacity Asset", "VIX.IncrementallyGeneratedCustomData 2S"},
-            {"Portfolio Turnover", "0.02%"},
-            {"OrderListHash", "a3abee8c47244710f63c596af48a7951"}
-        };
+        public Dictionary<string, string> ExpectedStatistics =>
+            new Dictionary<string, string>
+            {
+                { "Total Orders", "1" },
+                { "Average Win", "0%" },
+                { "Average Loss", "0%" },
+                { "Compounding Annual Return", "28.248%" },
+                { "Drawdown", "0%" },
+                { "Expectancy", "0" },
+                { "Start Equity", "100000" },
+                { "End Equity", "100330" },
+                { "Net Profit", "0.330%" },
+                { "Sharpe Ratio", "315.406" },
+                { "Sortino Ratio", "0" },
+                { "Probabilistic Sharpe Ratio", "0%" },
+                { "Loss Rate", "0%" },
+                { "Win Rate", "0%" },
+                { "Profit-Loss Ratio", "0" },
+                { "Alpha", "0.22" },
+                { "Beta", "0.002" },
+                { "Annual Standard Deviation", "0.001" },
+                { "Annual Variance", "0" },
+                { "Information Ratio", "-7.886" },
+                { "Tracking Error", "0.222" },
+                { "Treynor Ratio", "144.512" },
+                { "Total Fees", "$0.00" },
+                { "Estimated Strategy Capacity", "$0" },
+                { "Lowest Capacity Asset", "VIX.IncrementallyGeneratedCustomData 2S" },
+                { "Portfolio Turnover", "0.02%" },
+                { "OrderListHash", "a3abee8c47244710f63c596af48a7951" }
+            };
     }
 }

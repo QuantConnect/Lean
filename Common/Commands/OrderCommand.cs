@@ -14,8 +14,8 @@
 */
 
 using System;
-using QuantConnect.Orders;
 using QuantConnect.Interfaces;
+using QuantConnect.Orders;
 
 namespace QuantConnect.Commands
 {
@@ -76,7 +76,16 @@ namespace QuantConnect.Commands
         public override CommandResultPacket Run(IAlgorithm algorithm)
         {
             Symbol = GetSymbol(Ticker, SecurityType, Market, Symbol);
-            var request = new SubmitOrderRequest(OrderType, Symbol.SecurityType, Symbol, Quantity, StopPrice, LimitPrice, DateTime.UtcNow, Tag);
+            var request = new SubmitOrderRequest(
+                OrderType,
+                Symbol.SecurityType,
+                Symbol,
+                Quantity,
+                StopPrice,
+                LimitPrice,
+                DateTime.UtcNow,
+                Tag
+            );
             var ticket = algorithm.SubmitOrderRequest(request);
             var response = ticket.GetMostRecentOrderResponse();
             var message = Messages.OrderCommand.CommandInfo(OrderType, Symbol, Quantity, response);
@@ -104,7 +113,16 @@ namespace QuantConnect.Commands
         {
             Symbol = GetSymbol(Ticker, SecurityType, Market, Symbol);
             // delegate to the order request
-            return new SubmitOrderRequest(OrderType, Symbol.SecurityType, Symbol, Quantity, StopPrice, LimitPrice, DateTime.UtcNow, Tag).ToString();
+            return new SubmitOrderRequest(
+                OrderType,
+                Symbol.SecurityType,
+                Symbol,
+                Quantity,
+                StopPrice,
+                LimitPrice,
+                DateTime.UtcNow,
+                Tag
+            ).ToString();
         }
     }
 }

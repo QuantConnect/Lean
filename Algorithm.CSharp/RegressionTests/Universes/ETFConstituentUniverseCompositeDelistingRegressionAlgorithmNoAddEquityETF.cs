@@ -19,7 +19,8 @@ namespace QuantConnect.Algorithm.CSharp
     /// Tests the delisting of the composite Symbol (ETF symbol) and the removal of
     /// the universe and the symbol from the algorithm, without adding a subscription via AddEquity
     /// </summary>
-    public class ETFConstituentUniverseCompositeDelistingRegressionAlgorithmNoAddEquityETF : ETFConstituentUniverseCompositeDelistingRegressionAlgorithm
+    public class ETFConstituentUniverseCompositeDelistingRegressionAlgorithmNoAddEquityETF
+        : ETFConstituentUniverseCompositeDelistingRegressionAlgorithm
     {
         protected override bool AddETFSubscription { get; set; } = false;
 

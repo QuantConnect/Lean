@@ -15,6 +15,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using Newtonsoft.Json;
 using NUnit.Framework;
@@ -24,7 +25,6 @@ using QuantConnect.Optimizer.Objectives;
 using QuantConnect.Optimizer.Parameters;
 using QuantConnect.Statistics;
 using QuantConnect.Util;
-using System.IO;
 
 namespace QuantConnect.Tests.API
 {
@@ -34,15 +34,17 @@ namespace QuantConnect.Tests.API
     [TestFixture, Explicit("Requires configured api access")]
     public class OptimizationTests : ApiTestBase
     {
-        private string _validSerialization = "{\"optimizationId\":\"myOptimizationId\",\"name\":\"myOptimizationName\",\"runtimeStatistics\":{\"Completed\":\"1\"},"+
-            "\"constraints\":[{\"target\":\"TotalPerformance.PortfolioStatistics.SharpeRatio\",\"operator\":\"GreaterOrEqual\",\"targetValue\":1}],"+
-            "\"parameters\":[{\"name\":\"myParamName\",\"min\":2,\"max\":4,\"step\":1}, {\"name\":\"myStaticParamName\",\"value\":4}],\"nodeType\":\"O2-8\",\"parallelNodes\":12,\"projectId\":1234567,\"status\":\"completed\"," +
-            "\"backtests\":{\"myBacktestKey\":{\"name\":\"myBacktestName\",\"id\":\"myBacktestId\",\"progress\":1,\"exitCode\":0,"+
-            "\"statistics\":[0.374,0.217,0.047,-4.51,2.86,-0.664,52.602,17.800,6300000.00,0.196,1.571,27.0,123.888,77.188,0.63,1.707,1390.49,180.0,0.233,-0.558,73.0]," +
-            "\"parameterSet\":{\"myParamName\":\"2\"},\"equity\":[]}},\"strategy\":\"QuantConnect.Optimizer.Strategies.GridSearchOptimizationStrategy\"," +
-            "\"requested\":\"2021-12-16 00:51:58\",\"criterion\":{\"extremum\":\"max\",\"target\":\"TotalPerformance.PortfolioStatistics.SharpeRatio\",\"targetValue\":null}}";
+        private string _validSerialization =
+            "{\"optimizationId\":\"myOptimizationId\",\"name\":\"myOptimizationName\",\"runtimeStatistics\":{\"Completed\":\"1\"},"
+            + "\"constraints\":[{\"target\":\"TotalPerformance.PortfolioStatistics.SharpeRatio\",\"operator\":\"GreaterOrEqual\",\"targetValue\":1}],"
+            + "\"parameters\":[{\"name\":\"myParamName\",\"min\":2,\"max\":4,\"step\":1}, {\"name\":\"myStaticParamName\",\"value\":4}],\"nodeType\":\"O2-8\",\"parallelNodes\":12,\"projectId\":1234567,\"status\":\"completed\","
+            + "\"backtests\":{\"myBacktestKey\":{\"name\":\"myBacktestName\",\"id\":\"myBacktestId\",\"progress\":1,\"exitCode\":0,"
+            + "\"statistics\":[0.374,0.217,0.047,-4.51,2.86,-0.664,52.602,17.800,6300000.00,0.196,1.571,27.0,123.888,77.188,0.63,1.707,1390.49,180.0,0.233,-0.558,73.0],"
+            + "\"parameterSet\":{\"myParamName\":\"2\"},\"equity\":[]}},\"strategy\":\"QuantConnect.Optimizer.Strategies.GridSearchOptimizationStrategy\","
+            + "\"requested\":\"2021-12-16 00:51:58\",\"criterion\":{\"extremum\":\"max\",\"target\":\"TotalPerformance.PortfolioStatistics.SharpeRatio\",\"targetValue\":null}}";
 
-        private string _validEstimateSerialization = "{\"estimateId\":\"myEstimateId\",\"time\":26,\"balance\":500}";
+        private string _validEstimateSerialization =
+            "{\"estimateId\":\"myEstimateId\",\"time\":26,\"balance\":500}";
 
         [Test]
         public void Deserialization()
@@ -54,16 +56,25 @@ namespace QuantConnect.Tests.API
             Assert.IsTrue(deserialized.RuntimeStatistics.Count == 1);
             Assert.IsTrue(deserialized.RuntimeStatistics["Completed"] == "1");
             Assert.IsTrue(deserialized.Constraints.Count == 1);
-            Assert.AreEqual("['TotalPerformance'].['PortfolioStatistics'].['SharpeRatio']", deserialized.Constraints[0].Target);
-            Assert.IsTrue(deserialized.Constraints[0].Operator == ComparisonOperatorTypes.GreaterOrEqual);
+            Assert.AreEqual(
+                "['TotalPerformance'].['PortfolioStatistics'].['SharpeRatio']",
+                deserialized.Constraints[0].Target
+            );
+            Assert.IsTrue(
+                deserialized.Constraints[0].Operator == ComparisonOperatorTypes.GreaterOrEqual
+            );
             Assert.IsTrue(deserialized.Constraints[0].TargetValue == 1);
             Assert.IsTrue(deserialized.Parameters.Count == 2);
-            var stepParam = deserialized.Parameters.First().ConvertInvariant<OptimizationStepParameter>();
+            var stepParam = deserialized
+                .Parameters.First()
+                .ConvertInvariant<OptimizationStepParameter>();
             Assert.IsTrue(stepParam.Name == "myParamName");
             Assert.IsTrue(stepParam.MinValue == 2);
             Assert.IsTrue(stepParam.MaxValue == 4);
             Assert.IsTrue(stepParam.Step == 1);
-            var staticParam = deserialized.Parameters.ElementAt(1).ConvertInvariant<StaticOptimizationParameter>();
+            var staticParam = deserialized
+                .Parameters.ElementAt(1)
+                .ConvertInvariant<StaticOptimizationParameter>();
             Assert.IsTrue(staticParam.Name == "myStaticParamName");
             Assert.IsTrue(staticParam.Value == "4");
             Assert.AreEqual(OptimizationNodes.O2_8, deserialized.NodeType);
@@ -73,11 +84,23 @@ namespace QuantConnect.Tests.API
             Assert.IsTrue(deserialized.Backtests.Count == 1);
             Assert.IsTrue(deserialized.Backtests["myBacktestKey"].BacktestId == "myBacktestId");
             Assert.IsTrue(deserialized.Backtests["myBacktestKey"].Name == "myBacktestName");
-            Assert.IsTrue(deserialized.Backtests["myBacktestKey"].ParameterSet.Value["myParamName"] == "2");
-            Assert.IsTrue(deserialized.Backtests["myBacktestKey"].Statistics[PerformanceMetrics.ProbabilisticSharpeRatio] == "77.188");
-            Assert.AreEqual("QuantConnect.Optimizer.Strategies.GridSearchOptimizationStrategy", deserialized.Strategy);
+            Assert.IsTrue(
+                deserialized.Backtests["myBacktestKey"].ParameterSet.Value["myParamName"] == "2"
+            );
+            Assert.IsTrue(
+                deserialized.Backtests["myBacktestKey"].Statistics[
+                    PerformanceMetrics.ProbabilisticSharpeRatio
+                ] == "77.188"
+            );
+            Assert.AreEqual(
+                "QuantConnect.Optimizer.Strategies.GridSearchOptimizationStrategy",
+                deserialized.Strategy
+            );
             Assert.AreEqual(new DateTime(2021, 12, 16, 00, 51, 58), deserialized.Requested);
-            Assert.AreEqual("['TotalPerformance'].['PortfolioStatistics'].['SharpeRatio']", deserialized.Criterion.Target);
+            Assert.AreEqual(
+                "['TotalPerformance'].['PortfolioStatistics'].['SharpeRatio']",
+                deserialized.Criterion.Target
+            );
             Assert.IsInstanceOf<Maximization>(deserialized.Criterion.Extremum);
             Assert.IsNull(deserialized.Criterion.TargetValue);
         }
@@ -110,7 +133,11 @@ namespace QuantConnect.Tests.API
                 },
                 constraints: new List<Constraint>
                 {
-                    new Constraint("TotalPerformance.PortfolioStatistics.SharpeRatio", ComparisonOperatorTypes.GreaterOrEqual, 1)
+                    new Constraint(
+                        "TotalPerformance.PortfolioStatistics.SharpeRatio",
+                        ComparisonOperatorTypes.GreaterOrEqual,
+                        1
+                    )
                 }
             );
 
@@ -179,7 +206,10 @@ namespace QuantConnect.Tests.API
         public void UpdateOptimization()
         {
             var optimization = GetOptimization(out var projectId);
-            var response = ApiClient.UpdateOptimization(optimization.OptimizationId, "Alert Yellow Submarine");
+            var response = ApiClient.UpdateOptimization(
+                optimization.OptimizationId,
+                "Alert Yellow Submarine"
+            );
             Assert.IsTrue(response.Success);
 
             // Delete the project
@@ -208,11 +238,19 @@ namespace QuantConnect.Tests.API
             };
 
             // Create a new project
-            var project = ApiClient.CreateProject($"Test project - {DateTime.Now.ToStringInvariant()}", Language.CSharp, TestOrganization);
+            var project = ApiClient.CreateProject(
+                $"Test project - {DateTime.Now.ToStringInvariant()}",
+                Language.CSharp,
+                TestOrganization
+            );
             var projectId = project.Projects.First().ProjectId;
 
             // Update Project Files
-            var updateProjectFileContent = ApiClient.UpdateProjectFileContent(projectId, "Main.cs", file.Code);
+            var updateProjectFileContent = ApiClient.UpdateProjectFileContent(
+                projectId,
+                "Main.cs",
+                file.Code
+            );
             Assert.IsTrue(updateProjectFileContent.Success);
 
             // Create compile
@@ -251,7 +289,11 @@ namespace QuantConnect.Tests.API
                 },
                 constraints: new List<Constraint>
                 {
-                    new Constraint("TotalPerformance.PortfolioStatistics.SharpeRatio", ComparisonOperatorTypes.GreaterOrEqual, 1)
+                    new Constraint(
+                        "TotalPerformance.PortfolioStatistics.SharpeRatio",
+                        ComparisonOperatorTypes.GreaterOrEqual,
+                        1
+                    )
                 },
                 estimatedCost: 0.06m,
                 nodeType: OptimizationNodes.O2_8,
@@ -279,7 +321,10 @@ namespace QuantConnect.Tests.API
 
             if (optimization is OptimizationSummary)
             {
-                Assert.AreNotEqual(default(DateTime), (optimization as OptimizationSummary).Created);
+                Assert.AreNotEqual(
+                    default(DateTime),
+                    (optimization as OptimizationSummary).Created
+                );
             }
             else if (optimization is Optimization)
             {

@@ -55,15 +55,15 @@ namespace QuantConnect.Algorithm.CSharp
             }
 
             var putContractsWithLatestExpiry = chain
-                    // puts only
-                    .Where(x => x.Right == OptionRight.Put)
-                    // contracts with latest expiry
-                    .GroupBy(x => x.Expiry)
-                    .OrderBy(x => x.Key)
-                    .Last()
-                    // ordered by strike
-                    .OrderBy(x => x.Strike)
-                    .ToList();
+                // puts only
+                .Where(x => x.Right == OptionRight.Put)
+                // contracts with latest expiry
+                .GroupBy(x => x.Expiry)
+                .OrderBy(x => x.Key)
+                .Last()
+                // ordered by strike
+                .OrderBy(x => x.Strike)
+                .ToList();
 
             if (putContractsWithLatestExpiry.Count < 2)
             {
@@ -73,14 +73,21 @@ namespace QuantConnect.Algorithm.CSharp
             var longContract = putContractsWithLatestExpiry[0];
             var shortContract = putContractsWithLatestExpiry[1];
 
-            var strategy = OptionStrategies.BearPutSpread(_optionSymbol, shortContract.Strike, longContract.Strike, shortContract.Expiry);
+            var strategy = OptionStrategies.BearPutSpread(
+                _optionSymbol,
+                shortContract.Strike,
+                longContract.Strike,
+                shortContract.Expiry
+            );
 
             // Before option strategies orders were place as combo orders, only a quantity up to 18 could be used in this case,
             // even though the remaining margin was enough to support a larger quantity. See GH issue #5693.
             // We want to assert that with combo orders, large quantities can be used on option strategies
             Order(strategy, 19);
 
-            Quit($"Margin used: {Portfolio.TotalMarginUsed}; Remaining: {Portfolio.MarginRemaining}");
+            Quit(
+                $"Margin used: {Portfolio.TotalMarginUsed}; Remaining: {Portfolio.MarginRemaining}"
+            );
         }
 
         public override void OnEndOfAlgorithm()
@@ -89,7 +96,9 @@ namespace QuantConnect.Algorithm.CSharp
 
             if (filledOrders.Count != 2)
             {
-                throw new RegressionTestException($"Expected 2 filled orders but found {filledOrders.Count}");
+                throw new RegressionTestException(
+                    $"Expected 2 filled orders but found {filledOrders.Count}"
+                );
             }
         }
 
@@ -121,35 +130,36 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// This is used by the regression test system to indicate what the expected statistics are from running the algorithm
         /// </summary>
-        public Dictionary<string, string> ExpectedStatistics => new Dictionary<string, string>
-        {
-            {"Total Orders", "2"},
-            {"Average Win", "0%"},
-            {"Average Loss", "0%"},
-            {"Compounding Annual Return", "0%"},
-            {"Drawdown", "0%"},
-            {"Expectancy", "0"},
-            {"Start Equity", "100000"},
-            {"End Equity", "95130.3"},
-            {"Net Profit", "0%"},
-            {"Sharpe Ratio", "0"},
-            {"Sortino Ratio", "0"},
-            {"Probabilistic Sharpe Ratio", "0%"},
-            {"Loss Rate", "0%"},
-            {"Win Rate", "0%"},
-            {"Profit-Loss Ratio", "0"},
-            {"Alpha", "0"},
-            {"Beta", "0"},
-            {"Annual Standard Deviation", "0"},
-            {"Annual Variance", "0"},
-            {"Information Ratio", "0"},
-            {"Tracking Error", "0"},
-            {"Treynor Ratio", "0"},
-            {"Total Fees", "$24.70"},
-            {"Estimated Strategy Capacity", "$6000.00"},
-            {"Lowest Capacity Asset", "GOOCV 30AKMELSHQVZA|GOOCV VP83T1ZUHROL"},
-            {"Portfolio Turnover", "208.51%"},
-            {"OrderListHash", "80f3cfbffc903339387a788a4d35dad1"}
-        };
+        public Dictionary<string, string> ExpectedStatistics =>
+            new Dictionary<string, string>
+            {
+                { "Total Orders", "2" },
+                { "Average Win", "0%" },
+                { "Average Loss", "0%" },
+                { "Compounding Annual Return", "0%" },
+                { "Drawdown", "0%" },
+                { "Expectancy", "0" },
+                { "Start Equity", "100000" },
+                { "End Equity", "95130.3" },
+                { "Net Profit", "0%" },
+                { "Sharpe Ratio", "0" },
+                { "Sortino Ratio", "0" },
+                { "Probabilistic Sharpe Ratio", "0%" },
+                { "Loss Rate", "0%" },
+                { "Win Rate", "0%" },
+                { "Profit-Loss Ratio", "0" },
+                { "Alpha", "0" },
+                { "Beta", "0" },
+                { "Annual Standard Deviation", "0" },
+                { "Annual Variance", "0" },
+                { "Information Ratio", "0" },
+                { "Tracking Error", "0" },
+                { "Treynor Ratio", "0" },
+                { "Total Fees", "$24.70" },
+                { "Estimated Strategy Capacity", "$6000.00" },
+                { "Lowest Capacity Asset", "GOOCV 30AKMELSHQVZA|GOOCV VP83T1ZUHROL" },
+                { "Portfolio Turnover", "208.51%" },
+                { "OrderListHash", "80f3cfbffc903339387a788a4d35dad1" }
+            };
     }
 }

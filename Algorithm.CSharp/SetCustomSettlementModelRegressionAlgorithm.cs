@@ -13,20 +13,23 @@
  * limitations under the License.
 */
 
-using QuantConnect.Data;
-using QuantConnect.Securities;
 using System;
-using QuantConnect.Interfaces;
 using System.Collections.Generic;
+using QuantConnect.Data;
+using QuantConnect.Interfaces;
+using QuantConnect.Securities;
 
 namespace QuantConnect.Algorithm.CSharp
 {
     /// <summary>
     /// Regression algorithm to test we can specify a custom settlement model using Security.SetSettlementModel() method
     /// </summary>
-    public class SetCustomSettlementModelRegressionAlgorithm: QCAlgorithm, IRegressionAlgorithmDefinition
+    public class SetCustomSettlementModelRegressionAlgorithm
+        : QCAlgorithm,
+            IRegressionAlgorithmDefinition
     {
         private Security _spy;
+
         public override void Initialize()
         {
             SetStartDate(2013, 10, 7);
@@ -40,7 +43,13 @@ namespace QuantConnect.Algorithm.CSharp
         {
             if (Portfolio.CashBook[Currencies.USD].Amount == 10000)
             {
-                var parameters = new ApplyFundsSettlementModelParameters(Portfolio, _spy, Time, new CashAmount(101, Currencies.USD), null);
+                var parameters = new ApplyFundsSettlementModelParameters(
+                    Portfolio,
+                    _spy,
+                    Time,
+                    new CashAmount(101, Currencies.USD),
+                    null
+                );
                 _spy.SettlementModel.ApplyFunds(parameters);
             }
         }
@@ -49,15 +58,23 @@ namespace QuantConnect.Algorithm.CSharp
         {
             if (Portfolio.CashBook[Currencies.USD].Amount != 10101)
             {
-                throw new RegressionTestException($"It was expected to have 10101 USD in Portfolio, but was {Portfolio.CashBook[Currencies.USD].Amount}");
+                throw new RegressionTestException(
+                    $"It was expected to have 10101 USD in Portfolio, but was {Portfolio.CashBook[Currencies.USD].Amount}"
+                );
             }
 
-            var parameters = new ScanSettlementModelParameters(Portfolio, _spy, new DateTime(2013, 10, 6));
+            var parameters = new ScanSettlementModelParameters(
+                Portfolio,
+                _spy,
+                new DateTime(2013, 10, 6)
+            );
             _spy.SettlementModel.Scan(parameters);
 
             if (Portfolio.CashBook[Currencies.USD].Amount != 10000)
             {
-                throw new RegressionTestException($"It was expected to have 10000 USD in Portfolio, but was {Portfolio.CashBook[Currencies.USD].Amount}");
+                throw new RegressionTestException(
+                    $"It was expected to have 10000 USD in Portfolio, but was {Portfolio.CashBook[Currencies.USD].Amount}"
+                );
             }
         }
 
@@ -89,42 +106,44 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// This is used by the regression test system to indicate what the expected statistics are from running the algorithm
         /// </summary>
-        public Dictionary<string, string> ExpectedStatistics => new Dictionary<string, string>
-        {
-            {"Total Orders", "0"},
-            {"Average Win", "0%"},
-            {"Average Loss", "0%"},
-            {"Compounding Annual Return", "108.257%"},
-            {"Drawdown", "0%"},
-            {"Expectancy", "0"},
-            {"Start Equity", "10000"},
-            {"End Equity", "10101"},
-            {"Net Profit", "1.010%"},
-            {"Sharpe Ratio", "10.983"},
-            {"Sortino Ratio", "0"},
-            {"Probabilistic Sharpe Ratio", "95.977%"},
-            {"Loss Rate", "0%"},
-            {"Win Rate", "0%"},
-            {"Profit-Loss Ratio", "0"},
-            {"Alpha", "1.42"},
-            {"Beta", "-0.273"},
-            {"Annual Standard Deviation", "0.08"},
-            {"Annual Variance", "0.006"},
-            {"Information Ratio", "-3.801"},
-            {"Tracking Error", "0.288"},
-            {"Treynor Ratio", "-3.226"},
-            {"Total Fees", "$0.00"},
-            {"Estimated Strategy Capacity", "$0"},
-            {"Lowest Capacity Asset", ""},
-            {"Portfolio Turnover", "0%"},
-            {"OrderListHash", "d41d8cd98f00b204e9800998ecf8427e"}
-        };
+        public Dictionary<string, string> ExpectedStatistics =>
+            new Dictionary<string, string>
+            {
+                { "Total Orders", "0" },
+                { "Average Win", "0%" },
+                { "Average Loss", "0%" },
+                { "Compounding Annual Return", "108.257%" },
+                { "Drawdown", "0%" },
+                { "Expectancy", "0" },
+                { "Start Equity", "10000" },
+                { "End Equity", "10101" },
+                { "Net Profit", "1.010%" },
+                { "Sharpe Ratio", "10.983" },
+                { "Sortino Ratio", "0" },
+                { "Probabilistic Sharpe Ratio", "95.977%" },
+                { "Loss Rate", "0%" },
+                { "Win Rate", "0%" },
+                { "Profit-Loss Ratio", "0" },
+                { "Alpha", "1.42" },
+                { "Beta", "-0.273" },
+                { "Annual Standard Deviation", "0.08" },
+                { "Annual Variance", "0.006" },
+                { "Information Ratio", "-3.801" },
+                { "Tracking Error", "0.288" },
+                { "Treynor Ratio", "-3.226" },
+                { "Total Fees", "$0.00" },
+                { "Estimated Strategy Capacity", "$0" },
+                { "Lowest Capacity Asset", "" },
+                { "Portfolio Turnover", "0%" },
+                { "OrderListHash", "d41d8cd98f00b204e9800998ecf8427e" }
+            };
     }
 
     public class CustomSettlementModel : ISettlementModel
     {
         private string _currency;
         private decimal _amount;
+
         public void ApplyFunds(ApplyFundsSettlementModelParameters applyFundsParameters)
         {
             _currency = applyFundsParameters.CashAmount.Currency;

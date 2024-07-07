@@ -13,9 +13,9 @@
  * limitations under the License.
 */
 
+using System.Collections.Generic;
 using NUnit.Framework;
 using QuantConnect.Statistics;
-using System.Collections.Generic;
 
 namespace QuantConnect.Tests.Common
 {
@@ -25,37 +25,42 @@ namespace QuantConnect.Tests.Common
         [Test]
         public void RunPythonSliceGetByTypeRegressionAlgorithm()
         {
-            var parameter = new RegressionTests.AlgorithmStatisticsTestParameters("SliceGetByTypeRegressionAlgorithm",
-                new Dictionary<string, string> {
-                    {PerformanceMetrics.TotalOrders, "1"},
-                    {"Average Win", "0%"},
-                    {"Average Loss", "0%"},
-                    {"Compounding Annual Return", "284.284%"},
-                    {"Drawdown", "2.200%"},
-                    {"Expectancy", "0"},
-                    {"Net Profit", "1.736%"},
-                    {"Sharpe Ratio", "8.86"},
-                    {"Probabilistic Sharpe Ratio", "67.609%"},
-                    {"Loss Rate", "0%"},
-                    {"Win Rate", "0%"},
-                    {"Profit-Loss Ratio", "0"},
-                    {"Alpha", "-0.004"},
-                    {"Beta", "0.997"},
-                    {"Annual Standard Deviation", "0.222"},
-                    {"Annual Variance", "0.049"},
-                    {"Information Ratio", "-14.547"},
-                    {"Tracking Error", "0.001"},
-                    {"Treynor Ratio", "1.972"},
-                    {"Total Fees", "$3.45"},
-                    {"OrderListHash", "275925e122dc6f40501d1e3f35339e26"}
+            var parameter = new RegressionTests.AlgorithmStatisticsTestParameters(
+                "SliceGetByTypeRegressionAlgorithm",
+                new Dictionary<string, string>
+                {
+                    { PerformanceMetrics.TotalOrders, "1" },
+                    { "Average Win", "0%" },
+                    { "Average Loss", "0%" },
+                    { "Compounding Annual Return", "284.284%" },
+                    { "Drawdown", "2.200%" },
+                    { "Expectancy", "0" },
+                    { "Net Profit", "1.736%" },
+                    { "Sharpe Ratio", "8.86" },
+                    { "Probabilistic Sharpe Ratio", "67.609%" },
+                    { "Loss Rate", "0%" },
+                    { "Win Rate", "0%" },
+                    { "Profit-Loss Ratio", "0" },
+                    { "Alpha", "-0.004" },
+                    { "Beta", "0.997" },
+                    { "Annual Standard Deviation", "0.222" },
+                    { "Annual Variance", "0.049" },
+                    { "Information Ratio", "-14.547" },
+                    { "Tracking Error", "0.001" },
+                    { "Treynor Ratio", "1.972" },
+                    { "Total Fees", "$3.45" },
+                    { "OrderListHash", "275925e122dc6f40501d1e3f35339e26" }
                 },
                 Language.Python,
-                AlgorithmStatus.Completed);
+                AlgorithmStatus.Completed
+            );
 
-            AlgorithmRunner.RunLocalBacktest(parameter.Algorithm,
+            AlgorithmRunner.RunLocalBacktest(
+                parameter.Algorithm,
                 parameter.Statistics,
                 parameter.Language,
-                parameter.ExpectedFinalStatus);
+                parameter.ExpectedFinalStatus
+            );
         }
     }
 }

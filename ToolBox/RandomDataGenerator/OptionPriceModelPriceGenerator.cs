@@ -13,9 +13,9 @@
  * limitations under the License.
 */
 
-using QuantConnect.Securities;
 using System;
 using QuantConnect.Data.Market;
+using QuantConnect.Securities;
 using QuantConnect.Securities.Option;
 
 namespace QuantConnect.ToolBox.RandomDataGenerator
@@ -31,7 +31,10 @@ namespace QuantConnect.ToolBox.RandomDataGenerator
         /// <summary>
         /// <see cref="RandomPriceGenerator"/> is always ready to generate new price values as it does not depend on volatility model
         /// </summary>
-        public bool WarmedUp => _option.PriceModel is QLOptionPriceModel optionPriceModel && optionPriceModel.VolatilityEstimatorWarmedUp || _option.PriceModel is not QLOptionPriceModel;
+        public bool WarmedUp =>
+            _option.PriceModel is QLOptionPriceModel optionPriceModel
+                && optionPriceModel.VolatilityEstimatorWarmedUp
+            || _option.PriceModel is not QLOptionPriceModel;
 
         /// <summary>
         /// Creates instance of <see cref="OptionPriceModelPriceGenerator"/>
@@ -46,7 +49,9 @@ namespace QuantConnect.ToolBox.RandomDataGenerator
 
             if (!security.Symbol.SecurityType.IsOption())
             {
-                throw new ArgumentException($"{nameof(OptionPriceModelPriceGenerator)} model cannot be applied to non-option security.");
+                throw new ArgumentException(
+                    $"{nameof(OptionPriceModelPriceGenerator)} model cannot be applied to non-option security."
+                );
             }
 
             _option = security as Option;
@@ -61,8 +66,8 @@ namespace QuantConnect.ToolBox.RandomDataGenerator
         /// <returns>A new decimal suitable for usage as new security price</returns>
         public decimal NextValue(decimal maximumPercentDeviation, DateTime referenceDate)
         {
-            return _option.PriceModel
-                .Evaluate(
+            return _option
+                .PriceModel.Evaluate(
                     _option,
                     null,
                     OptionContract.Create(
@@ -70,7 +75,8 @@ namespace QuantConnect.ToolBox.RandomDataGenerator
                         referenceDate,
                         _option,
                         _option.Underlying.Price
-                        ))
+                    )
+                )
                 .TheoreticalPrice;
         }
     }

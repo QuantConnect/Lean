@@ -14,8 +14,8 @@
 */
 
 using System;
-using System.Linq;
 using System.Collections.Generic;
+using System.Linq;
 using static QuantConnect.StringExtensions;
 
 namespace QuantConnect.Data
@@ -25,7 +25,8 @@ namespace QuantConnect.Data
     /// </summary>
     public class SubscriptionDataSource : IEquatable<SubscriptionDataSource>
     {
-        private readonly static IReadOnlyList<KeyValuePair<string, string>> _empty = new List<KeyValuePair<string, string>>();
+        private static readonly IReadOnlyList<KeyValuePair<string, string>> _empty =
+            new List<KeyValuePair<string, string>>();
 
         /// <summary>
         /// Identifies where to get the subscription's data from
@@ -52,9 +53,7 @@ namespace QuantConnect.Data
         /// </summary>
         /// <param name="source">The subscription's data source location</param>
         public SubscriptionDataSource(string source)
-            : this(source, GetDefaultSubscriptionTransportMedium(source), FileFormat.Csv)
-        {
-        }
+            : this(source, GetDefaultSubscriptionTransportMedium(source), FileFormat.Csv) { }
 
         /// <summary>
         /// Initializes a new instance of the <see cref="SubscriptionDataSource"/> class.
@@ -62,9 +61,7 @@ namespace QuantConnect.Data
         /// <param name="source">The subscription's data source location</param>
         /// <param name="transportMedium">The transport medium to be used to retrieve the subscription's data from the source</param>
         public SubscriptionDataSource(string source, SubscriptionTransportMedium transportMedium)
-            : this(source, transportMedium, FileFormat.Csv)
-        {
-        }
+            : this(source, transportMedium, FileFormat.Csv) { }
 
         /// <summary>
         /// Initializes a new instance of the <see cref="SubscriptionDataSource"/> class.
@@ -72,10 +69,12 @@ namespace QuantConnect.Data
         /// <param name="source">The subscription's data source location</param>
         /// <param name="transportMedium">The transport medium to be used to retrieve the subscription's data from the source</param>
         /// <param name="format">The format of the data within the source</param>
-        public SubscriptionDataSource(string source, SubscriptionTransportMedium transportMedium, FileFormat format)
-            : this(source, transportMedium, format, null)
-        {
-        }
+        public SubscriptionDataSource(
+            string source,
+            SubscriptionTransportMedium transportMedium,
+            FileFormat format
+        )
+            : this(source, transportMedium, format, null) { }
 
         /// <summary>
         /// Initializes a new instance of the <see cref="SubscriptionDataSource"/> class with <see cref="SubscriptionTransportMedium.Rest"/>
@@ -85,7 +84,12 @@ namespace QuantConnect.Data
         /// <param name="transportMedium">The transport medium to be used to retrieve the subscription's data from the source</param>
         /// <param name="format">The format of the data within the source</param>
         /// <param name="headers">The headers to be used for this source</param>
-        public SubscriptionDataSource(string source, SubscriptionTransportMedium transportMedium, FileFormat format, IEnumerable<KeyValuePair<string, string>> headers)
+        public SubscriptionDataSource(
+            string source,
+            SubscriptionTransportMedium transportMedium,
+            FileFormat format,
+            IEnumerable<KeyValuePair<string, string>> headers
+        )
         {
             Source = source;
             Format = format;
@@ -102,8 +106,10 @@ namespace QuantConnect.Data
         /// <param name="other">An object to compare with this object.</param>
         public bool Equals(SubscriptionDataSource other)
         {
-            if (ReferenceEquals(null, other)) return false;
-            if (ReferenceEquals(this, other)) return true;
+            if (ReferenceEquals(null, other))
+                return false;
+            if (ReferenceEquals(this, other))
+                return true;
             return string.Equals(Source, other.Source)
                 && TransportMedium == other.TransportMedium
                 && Headers.SequenceEqual(other.Headers);
@@ -118,10 +124,13 @@ namespace QuantConnect.Data
         /// <param name="obj">The object to compare with the current object. </param><filterpriority>2</filterpriority>
         public override bool Equals(object obj)
         {
-            if (ReferenceEquals(null, obj)) return false;
-            if (ReferenceEquals(this, obj)) return true;
-            if (obj.GetType() != GetType()) return false;
-            return Equals((SubscriptionDataSource) obj);
+            if (ReferenceEquals(null, obj))
+                return false;
+            if (ReferenceEquals(this, obj))
+                return true;
+            if (obj.GetType() != GetType())
+                return false;
+            return Equals((SubscriptionDataSource)obj);
         }
 
         /// <summary>
@@ -135,7 +144,7 @@ namespace QuantConnect.Data
         {
             unchecked
             {
-                return ((Source != null ? Source.GetHashCode() : 0)*397) ^ (int) TransportMedium;
+                return ((Source != null ? Source.GetHashCode() : 0) * 397) ^ (int)TransportMedium;
             }
         }
 
@@ -176,10 +185,14 @@ namespace QuantConnect.Data
         /// <summary>
         /// Gets the default transport medium for the specified source
         /// </summary>
-        private static SubscriptionTransportMedium GetDefaultSubscriptionTransportMedium(string source)
+        private static SubscriptionTransportMedium GetDefaultSubscriptionTransportMedium(
+            string source
+        )
         {
-            if (source.StartsWith("http://", StringComparison.OrdinalIgnoreCase) ||
-                source.StartsWith("https://", StringComparison.OrdinalIgnoreCase))
+            if (
+                source.StartsWith("http://", StringComparison.OrdinalIgnoreCase)
+                || source.StartsWith("https://", StringComparison.OrdinalIgnoreCase)
+            )
             {
                 return SubscriptionTransportMedium.RemoteFile;
             }

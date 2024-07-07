@@ -13,11 +13,11 @@
  * limitations under the License.
 */
 
+using System.Collections.Generic;
 using Python.Runtime;
 using QuantConnect.Orders;
 using QuantConnect.Orders.Fills;
 using QuantConnect.Securities;
-using System.Collections.Generic;
 
 namespace QuantConnect.Python
 {
@@ -146,9 +146,16 @@ namespace QuantConnect.Python
         /// <param name="order">Order to fill</param>
         /// <param name="parameters">Fill parameters for the order</param>
         /// <returns>Order fill information detailing the average price and quantity filled for each leg. If any of the fills fails, none of the orders will be filled and the returned list will be empty</returns>
-        public override List<OrderEvent> ComboMarketFill(Order order, FillModelParameters parameters)
+        public override List<OrderEvent> ComboMarketFill(
+            Order order,
+            FillModelParameters parameters
+        )
         {
-            return _model.InvokeMethod<List<OrderEvent>>(nameof(ComboMarketFill), order, parameters);
+            return _model.InvokeMethod<List<OrderEvent>>(
+                nameof(ComboMarketFill),
+                order,
+                parameters
+            );
         }
 
         /// <summary>
@@ -168,9 +175,16 @@ namespace QuantConnect.Python
         /// <param name="order">Order to fill</param>
         /// <param name="parameters">Fill parameters for the order</param>
         /// <returns>Order fill information detailing the average price and quantity filled for each leg. If any of the fills fails, none of the orders will be filled and the returned list will be empty</returns>
-        public override List<OrderEvent> ComboLegLimitFill(Order order, FillModelParameters parameters)
+        public override List<OrderEvent> ComboLegLimitFill(
+            Order order,
+            FillModelParameters parameters
+        )
         {
-            return _model.InvokeMethod<List<OrderEvent>>(nameof(ComboLegLimitFill), order, parameters);
+            return _model.InvokeMethod<List<OrderEvent>>(
+                nameof(ComboLegLimitFill),
+                order,
+                parameters
+            );
         }
 
         /// <summary>

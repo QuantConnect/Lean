@@ -15,9 +15,9 @@
 */
 
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using QuantConnect.Interfaces;
-using System.Collections.Generic;
 
 namespace QuantConnect.Data.Auxiliary
 {
@@ -49,15 +49,30 @@ namespace QuantConnect.Data.Auxiliary
         /// <summary>
         /// Initializes a new instance of the <see cref="MapFileRow"/> class.
         /// </summary>
-        public MapFileRow(DateTime date, string mappedSymbol, string primaryExchange,
-            string market = QuantConnect.Market.USA, SecurityType securityType = SecurityType.Equity, DataMappingMode? dataMappingMode = null)
-            : this(date, mappedSymbol, primaryExchange.GetPrimaryExchange(securityType, market), dataMappingMode)
-        { }
-        
+        public MapFileRow(
+            DateTime date,
+            string mappedSymbol,
+            string primaryExchange,
+            string market = QuantConnect.Market.USA,
+            SecurityType securityType = SecurityType.Equity,
+            DataMappingMode? dataMappingMode = null
+        )
+            : this(
+                date,
+                mappedSymbol,
+                primaryExchange.GetPrimaryExchange(securityType, market),
+                dataMappingMode
+            ) { }
+
         /// <summary>
         /// Initializes a new instance of the <see cref="MapFileRow"/> class.
         /// </summary>
-        public MapFileRow(DateTime date, string mappedSymbol, Exchange primaryExchange = null, DataMappingMode? dataMappingMode = null)
+        public MapFileRow(
+            DateTime date,
+            string mappedSymbol,
+            Exchange primaryExchange = null,
+            DataMappingMode? dataMappingMode = null
+        )
         {
             Date = date;
             MappedSymbol = mappedSymbol.LazyToUpper();
@@ -68,11 +83,18 @@ namespace QuantConnect.Data.Auxiliary
         /// <summary>
         /// Reads in the map_file for the specified equity symbol
         /// </summary>
-        public static IEnumerable<MapFileRow> Read(string file, string market, SecurityType securityType, IDataProvider dataProvider)
+        public static IEnumerable<MapFileRow> Read(
+            string file,
+            string market,
+            SecurityType securityType,
+            IDataProvider dataProvider
+        )
         {
-            return dataProvider.ReadLines(file)
+            return dataProvider
+                .ReadLines(file)
                 .Where(l => !string.IsNullOrWhiteSpace(l))
-                .Select(s => {
+                .Select(s =>
+                {
                     try
                     {
                         return Parse(s, market, securityType);
@@ -104,7 +126,12 @@ namespace QuantConnect.Data.Auxiliary
                 mappingMode = csv[3].ParseDataMappingMode();
             }
 
-            return new MapFileRow(DateTime.ParseExact(csv[0], DateFormat.EightCharacter, null), csv[1], primaryExchange, mappingMode);
+            return new MapFileRow(
+                DateTime.ParseExact(csv[0], DateFormat.EightCharacter, null),
+                csv[1],
+                primaryExchange,
+                mappingMode
+            );
         }
 
         #region Equality members
@@ -118,12 +145,14 @@ namespace QuantConnect.Data.Auxiliary
         /// <param name="other">An object to compare with this object.</param>
         public bool Equals(MapFileRow other)
         {
-            if (ReferenceEquals(null, other)) return false;
-            if (ReferenceEquals(this, other)) return true;
-            return Date.Equals(other.Date) &&
-                   string.Equals(MappedSymbol, other.MappedSymbol) &&
-                   string.Equals(PrimaryExchange, other.PrimaryExchange) &&
-                   DataMappingMode == other.DataMappingMode;
+            if (ReferenceEquals(null, other))
+                return false;
+            if (ReferenceEquals(this, other))
+                return true;
+            return Date.Equals(other.Date)
+                && string.Equals(MappedSymbol, other.MappedSymbol)
+                && string.Equals(PrimaryExchange, other.PrimaryExchange)
+                && DataMappingMode == other.DataMappingMode;
         }
 
         /// <summary>
@@ -135,9 +164,12 @@ namespace QuantConnect.Data.Auxiliary
         /// <param name="obj">The object to compare with the current object. </param><filterpriority>2</filterpriority>
         public override bool Equals(object obj)
         {
-            if (ReferenceEquals(null, obj)) return false;
-            if (ReferenceEquals(this, obj)) return true;
-            if (obj.GetType() != this.GetType()) return false;
+            if (ReferenceEquals(null, obj))
+                return false;
+            if (ReferenceEquals(this, obj))
+                return true;
+            if (obj.GetType() != this.GetType())
+                return false;
             return Equals((MapFileRow)obj);
         }
 
@@ -152,10 +184,10 @@ namespace QuantConnect.Data.Auxiliary
         {
             unchecked
             {
-                return (Date.GetHashCode() * 397) ^ 
-                       (MappedSymbol != null ? MappedSymbol.GetHashCode() : 0) ^
-                       (DataMappingMode != null ? DataMappingMode.GetHashCode() : 0) ^
-                       (PrimaryExchange.GetHashCode());
+                return (Date.GetHashCode() * 397)
+                    ^ (MappedSymbol != null ? MappedSymbol.GetHashCode() : 0)
+                    ^ (DataMappingMode != null ? DataMappingMode.GetHashCode() : 0)
+                    ^ (PrimaryExchange.GetHashCode());
             }
         }
 
@@ -205,7 +237,8 @@ namespace QuantConnect.Data.Auxiliary
         /// <returns>resulting string</returns>
         public override string ToString()
         {
-            var mainExchange = PrimaryExchange == Exchange.UNKNOWN ? string.Empty : $" - {PrimaryExchange}";
+            var mainExchange =
+                PrimaryExchange == Exchange.UNKNOWN ? string.Empty : $" - {PrimaryExchange}";
             var mappingMode = DataMappingMode != null ? $" - {DataMappingMode}" : string.Empty;
             return Date.ToShortDateString() + ": " + MappedSymbol + mainExchange + mappingMode;
         }

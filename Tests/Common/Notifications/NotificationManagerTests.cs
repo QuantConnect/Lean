@@ -43,7 +43,10 @@ namespace QuantConnect.Tests.Common.Notifications
         [Test]
         public void Email_AddsNotificationEmail_ToMessages_WhenLiveModeIsTrue()
         {
-            Assert.AreEqual(_liveMode, _notify.Email("address@domain.com", "subject", "message", "data"));
+            Assert.AreEqual(
+                _liveMode,
+                _notify.Email("address@domain.com", "subject", "message", "data")
+            );
             Assert.AreEqual(_liveMode ? 1 : 0, _notify.Messages.Count);
             if (_liveMode)
             {
@@ -87,7 +90,16 @@ namespace QuantConnect.Tests.Common.Notifications
         [Test]
         public void FtpAddsNotificationToMessagesWhenLiveModeIsTrue()
         {
-            Assert.AreEqual(_liveMode, _notify.Ftp("qc.com", "username", "password", "path/to/file.json", Encoding.ASCII.GetBytes("{}")));
+            Assert.AreEqual(
+                _liveMode,
+                _notify.Ftp(
+                    "qc.com",
+                    "username",
+                    "password",
+                    "path/to/file.json",
+                    Encoding.ASCII.GetBytes("{}")
+                )
+            );
             Assert.AreEqual(_liveMode ? 1 : 0, _notify.Messages.Count);
             if (_liveMode)
             {
@@ -98,7 +110,10 @@ namespace QuantConnect.Tests.Common.Notifications
         [Test]
         public void FtpAddsNotificationToMessagesWhenLiveModeIsTrueFromStringContents()
         {
-            Assert.AreEqual(_liveMode, _notify.Ftp("qc.com", "username", "password", "path/to/file.json", "{}"));
+            Assert.AreEqual(
+                _liveMode,
+                _notify.Ftp("qc.com", "username", "password", "path/to/file.json", "{}")
+            );
             Assert.AreEqual(_liveMode ? 1 : 0, _notify.Messages.Count);
             if (_liveMode)
             {
@@ -136,7 +151,13 @@ namespace QuantConnect.Tests.Common.Notifications
                         break;
 
                     case "ftp":
-                        result = _notify.Ftp("qc.com", "username", "password", "path/to/file.json", Encoding.ASCII.GetBytes("{}"));
+                        result = _notify.Ftp(
+                            "qc.com",
+                            "username",
+                            "password",
+                            "path/to/file.json",
+                            Encoding.ASCII.GetBytes("{}")
+                        );
                         break;
 
                     default:
@@ -167,7 +188,8 @@ namespace QuantConnect.Tests.Common.Notifications
             {
                 dynamic function;
                 bool result;
-                var test = PyModule.FromString("testModule",
+                var test = PyModule.FromString(
+                    "testModule",
                     @"
 from AlgorithmImports import *
 
@@ -178,8 +200,8 @@ def email(notifier):
 def web(notifier):
     headers = {'header-key': 'header-value'}
     data = {'objectA':'valueA', 'objectB':{'PropertyA':10, 'PropertyB':'stringB'}}
-    return notifier.Web('api.quantconnect.com', data, headers)");
-
+    return notifier.Web('api.quantconnect.com', data, headers)"
+                );
 
                 switch (notificationType)
                 {
@@ -206,7 +228,6 @@ def web(notifier):
                     Assert.IsFalse(result);
                 }
             }
-
         }
     }
 }

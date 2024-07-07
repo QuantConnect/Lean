@@ -14,10 +14,10 @@
 */
 
 using System;
+using System.Collections.Generic;
 using Newtonsoft.Json;
 using QuantConnect.Orders;
 using QuantConnect.Packets;
-using System.Collections.Generic;
 
 namespace QuantConnect
 {
@@ -86,9 +86,7 @@ namespace QuantConnect
         /// <summary>
         /// Creates new empty instance
         /// </summary>
-        public Result()
-        {
-        }
+        public Result() { }
 
         /// <summary>
         /// Creates a new result from the given parameters

@@ -19,13 +19,15 @@ using System.Linq;
 namespace QuantConnect.Indicators
 {
     /// <summary>
-    /// This indicator computes the n-period target downside deviation. The target downside deviation is defined as the 
-    /// root-mean-square, or RMS, of the deviations of the realized return’s underperformance from the target return 
+    /// This indicator computes the n-period target downside deviation. The target downside deviation is defined as the
+    /// root-mean-square, or RMS, of the deviations of the realized return’s underperformance from the target return
     /// where all returns above the target return are treated as underperformance of 0.
-    /// 
+    ///
     /// Reference: https://www.cmegroup.com/education/files/rr-sortino-a-sharper-ratio.pdf
     /// </summary>
-    public class TargetDownsideDeviation : WindowIndicator<IndicatorDataPoint>, IIndicatorWarmUpPeriodProvider
+    public class TargetDownsideDeviation
+        : WindowIndicator<IndicatorDataPoint>,
+            IIndicatorWarmUpPeriodProvider
     {
         /// <summary>
         /// Minimum acceptable return (MAR) for target downside deviation calculation
@@ -33,11 +35,11 @@ namespace QuantConnect.Indicators
         private readonly double _minimumAcceptableReturn;
 
         /// <summary>
-        /// Initializes a new instance of the TargetDownsideDeviation class with the specified period and 
+        /// Initializes a new instance of the TargetDownsideDeviation class with the specified period and
         /// minimum acceptable return.
         ///
-        /// The target downside deviation is defined as the root-mean-square, or RMS, of the deviations of 
-        /// the realized return’s underperformance from the target return where all returns above the target 
+        /// The target downside deviation is defined as the root-mean-square, or RMS, of the deviations of
+        /// the realized return’s underperformance from the target return where all returns above the target
         /// return are treated as underperformance of 0.
         /// </summary>
         /// <param name="period">The sample size of the target downside deviation</param>
@@ -49,20 +51,18 @@ namespace QuantConnect.Indicators
         }
 
         /// <summary>
-        /// Initializes a new instance of the TargetDownsideDeviation class with the specified period and 
+        /// Initializes a new instance of the TargetDownsideDeviation class with the specified period and
         /// minimum acceptable return.
-        /// 
-        /// The target downside deviation is defined as the root-mean-square, or RMS, of the deviations of 
-        /// the realized return’s underperformance from the target return where all returns above the target 
+        ///
+        /// The target downside deviation is defined as the root-mean-square, or RMS, of the deviations of
+        /// the realized return’s underperformance from the target return where all returns above the target
         /// return are treated as underperformance of 0.
         /// </summary>
         /// <param name="name">The name of this indicator</param>
         /// <param name="period">The sample size of the target downside deviation</param>
         /// <param name="minimumAcceptableReturn">Minimum acceptable return (MAR) for target downside deviation calculation</param>
         public TargetDownsideDeviation(string name, int period, double minimumAcceptableReturn = 0)
-            : base(name, period)
-        {
-        }
+            : base(name, period) { }
 
         /// <summary>
         /// Computes the next value of this indicator from the given state
@@ -70,9 +70,14 @@ namespace QuantConnect.Indicators
         /// <param name="window">The window for the input history</param>
         /// <param name="input">The input given to the indicator</param>
         /// <returns>A new value for this indicator</returns>
-        protected override decimal ComputeNextValue(IReadOnlyWindow<IndicatorDataPoint> window, IndicatorDataPoint input)
+        protected override decimal ComputeNextValue(
+            IReadOnlyWindow<IndicatorDataPoint> window,
+            IndicatorDataPoint input
+        )
         {
-            var avg = window.Select(x => Math.Pow(Math.Min(0, (double)x.Value - _minimumAcceptableReturn), 2)).Average();
+            var avg = window
+                .Select(x => Math.Pow(Math.Min(0, (double)x.Value - _minimumAcceptableReturn), 2))
+                .Average();
             return Math.Sqrt(avg).SafeDecimalCast();
         }
     }

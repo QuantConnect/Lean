@@ -35,14 +35,15 @@ namespace QuantConnect.Algorithm.CSharp
         public override void Initialize()
         {
             SetStartDate(2013, 11, 1);
-            SetEndDate(2013, 12, 10);    //Set End Date
+            SetEndDate(2013, 12, 10); //Set End Date
             SetWarmup(TimeSpan.FromDays(30));
 
             _spy = AddEquity("SPY", Resolution.Daily).Symbol;
             var renkoConsolidator = new ClassicRenkoConsolidator(2m);
             renkoConsolidator.DataConsolidated += (sender, consolidated) =>
             {
-                if (IsWarmingUp) return;
+                if (IsWarmingUp)
+                    return;
                 if (!Portfolio.Invested)
                 {
                     SetHoldings(_spy, 1.0);
@@ -57,9 +58,7 @@ namespace QuantConnect.Algorithm.CSharp
         /// OnData event is the primary entry point for your algorithm. Each new data point will be pumped in here.
         /// </summary>
         /// <param name="slice">Slice object keyed by symbol containing the stock data</param>
-        public override void OnData(Slice slice)
-        {
-        }
+        public override void OnData(Slice slice) { }
 
         /// <summary>
         /// This is used by the regression test system to indicate if the open source Lean repository has the required data to run this algorithm.
@@ -89,35 +88,36 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// This is used by the regression test system to indicate what the expected statistics are from running the algorithm
         /// </summary>
-        public Dictionary<string, string> ExpectedStatistics => new Dictionary<string, string>
-        {
-            {"Total Orders", "1"},
-            {"Average Win", "0%"},
-            {"Average Loss", "0%"},
-            {"Compounding Annual Return", "11.856%"},
-            {"Drawdown", "1.200%"},
-            {"Expectancy", "0"},
-            {"Start Equity", "100000"},
-            {"End Equity", "101236.75"},
-            {"Net Profit", "1.237%"},
-            {"Sharpe Ratio", "1.636"},
-            {"Sortino Ratio", "3.633"},
-            {"Probabilistic Sharpe Ratio", "62.183%"},
-            {"Loss Rate", "0%"},
-            {"Win Rate", "0%"},
-            {"Profit-Loss Ratio", "0"},
-            {"Alpha", "0.001"},
-            {"Beta", "0.425"},
-            {"Annual Standard Deviation", "0.047"},
-            {"Annual Variance", "0.002"},
-            {"Information Ratio", "-1.856"},
-            {"Tracking Error", "0.054"},
-            {"Treynor Ratio", "0.18"},
-            {"Total Fees", "$3.23"},
-            {"Estimated Strategy Capacity", "$600000000.00"},
-            {"Lowest Capacity Asset", "SPY R735QTJ8XC9X"},
-            {"Portfolio Turnover", "2.48%"},
-            {"OrderListHash", "3df6a825fac0960446ff74e1255e1682"}
-        };
+        public Dictionary<string, string> ExpectedStatistics =>
+            new Dictionary<string, string>
+            {
+                { "Total Orders", "1" },
+                { "Average Win", "0%" },
+                { "Average Loss", "0%" },
+                { "Compounding Annual Return", "11.856%" },
+                { "Drawdown", "1.200%" },
+                { "Expectancy", "0" },
+                { "Start Equity", "100000" },
+                { "End Equity", "101236.75" },
+                { "Net Profit", "1.237%" },
+                { "Sharpe Ratio", "1.636" },
+                { "Sortino Ratio", "3.633" },
+                { "Probabilistic Sharpe Ratio", "62.183%" },
+                { "Loss Rate", "0%" },
+                { "Win Rate", "0%" },
+                { "Profit-Loss Ratio", "0" },
+                { "Alpha", "0.001" },
+                { "Beta", "0.425" },
+                { "Annual Standard Deviation", "0.047" },
+                { "Annual Variance", "0.002" },
+                { "Information Ratio", "-1.856" },
+                { "Tracking Error", "0.054" },
+                { "Treynor Ratio", "0.18" },
+                { "Total Fees", "$3.23" },
+                { "Estimated Strategy Capacity", "$600000000.00" },
+                { "Lowest Capacity Asset", "SPY R735QTJ8XC9X" },
+                { "Portfolio Turnover", "2.48%" },
+                { "OrderListHash", "3df6a825fac0960446ff74e1255e1682" }
+            };
     }
 }

@@ -13,9 +13,9 @@
  * limitations under the License.
 */
 
-using QuantConnect.Securities;
 using System;
 using System.Collections.Generic;
+using QuantConnect.Securities;
 
 namespace QuantConnect.Brokerages
 {
@@ -32,17 +32,21 @@ namespace QuantConnect.Brokerages
         /// <summary>
         /// Gets a map of the default markets to be used for each security type
         /// </summary>
-        public override IReadOnlyDictionary<SecurityType, string> DefaultMarkets { get; } = GetDefaultMarkets(Market.BinanceUS);
+        public override IReadOnlyDictionary<SecurityType, string> DefaultMarkets { get; } =
+            GetDefaultMarkets(Market.BinanceUS);
 
         /// <summary>
         /// Initializes a new instance of the <see cref="BinanceBrokerageModel"/> class
         /// </summary>
         /// <param name="accountType">The type of account to be modeled, defaults to <see cref="AccountType.Cash"/></param>
-        public BinanceUSBrokerageModel(AccountType accountType = AccountType.Cash) : base(accountType)
+        public BinanceUSBrokerageModel(AccountType accountType = AccountType.Cash)
+            : base(accountType)
         {
             if (accountType == AccountType.Margin)
             {
-                throw new ArgumentException(Messages.BinanceUSBrokerageModel.UnsupportedAccountType);
+                throw new ArgumentException(
+                    Messages.BinanceUSBrokerageModel.UnsupportedAccountType
+                );
             }
         }
 

@@ -47,10 +47,7 @@ namespace QuantConnect.Securities.CurrencyConversion
         /// </summary>
         public decimal ConversionRate
         {
-            get
-            {
-                return _conversionRate;
-            }
+            get { return _conversionRate; }
             set
             {
                 if (_conversionRate != value)
@@ -73,7 +70,11 @@ namespace QuantConnect.Securities.CurrencyConversion
         /// <param name="sourceCurrency">The currency this conversion converts from</param>
         /// <param name="destinationCurrency">The currency this conversion converts to</param>
         /// <param name="conversionRate">The conversion rate between the currencies</param>
-        public ConstantCurrencyConversion(string sourceCurrency, string destinationCurrency, decimal conversionRate = 1m)
+        public ConstantCurrencyConversion(
+            string sourceCurrency,
+            string destinationCurrency,
+            decimal conversionRate = 1m
+        )
         {
             SourceCurrency = sourceCurrency;
             DestinationCurrency = destinationCurrency;
@@ -84,9 +85,7 @@ namespace QuantConnect.Securities.CurrencyConversion
         /// Marks the conversion rate as potentially outdated, needing an update based on the latest data
         /// </summary>
         /// <remarks>This conversion is not based on securities, so we don't really need an update</remarks>
-        public void Update()
-        {
-        }
+        public void Update() { }
 
         /// <summary>
         /// Creates a new identity conversion, where the conversion rate is set to 1 and the source and destination currencies might the same
@@ -94,15 +93,24 @@ namespace QuantConnect.Securities.CurrencyConversion
         /// <param name="sourceCurrency">The currency this conversion converts from</param>
         /// <param name="destinationCurrency">The currency this conversion converts to. If null, the destination and source currencies are the same</param>
         /// <returns>The identity currency conversion</returns>
-        public static ConstantCurrencyConversion Identity(string sourceCurrency, string destinationCurrency = null)
+        public static ConstantCurrencyConversion Identity(
+            string sourceCurrency,
+            string destinationCurrency = null
+        )
         {
-            return new ConstantCurrencyConversion(sourceCurrency, destinationCurrency ?? sourceCurrency);
+            return new ConstantCurrencyConversion(
+                sourceCurrency,
+                destinationCurrency ?? sourceCurrency
+            );
         }
 
         /// <summary>
         /// Returns an instance of <see cref="ConstantCurrencyConversion"/> that represents a null conversion
         /// </summary>
-        public static ConstantCurrencyConversion Null(string sourceCurrency, string destinationCurrency)
+        public static ConstantCurrencyConversion Null(
+            string sourceCurrency,
+            string destinationCurrency
+        )
         {
             return new ConstantCurrencyConversion(sourceCurrency, destinationCurrency, 0m);
         }

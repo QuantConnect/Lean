@@ -13,9 +13,9 @@
  * limitations under the License.
 */
 
-using System.Linq;
 using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace QuantConnect.Securities.Positions
 {
@@ -27,7 +27,11 @@ namespace QuantConnect.Securities.Positions
         /// <summary>
         /// Gets an empty instance of the <see cref="PositionGroupCollection"/> class
         /// </summary>
-        public static PositionGroupCollection Empty => new(new Dictionary<PositionGroupKey, IPositionGroup>(), new Dictionary<Symbol, HashSet<IPositionGroup>>());
+        public static PositionGroupCollection Empty =>
+            new(
+                new Dictionary<PositionGroupKey, IPositionGroup>(),
+                new Dictionary<Symbol, HashSet<IPositionGroup>>()
+            );
 
         /// <summary>
         /// Gets the number of positions in this group
@@ -43,7 +47,8 @@ namespace QuantConnect.Securities.Positions
             {
                 if (_hasNonDefaultGroups == null)
                 {
-                    _hasNonDefaultGroups = _groups.Count == 0 || _groups.All(grp => grp.Key.IsDefaultGroup);
+                    _hasNonDefaultGroups =
+                        _groups.Count == 0 || _groups.All(grp => grp.Key.IsDefaultGroup);
                 }
 
                 return _hasNonDefaultGroups.Value;
@@ -62,7 +67,7 @@ namespace QuantConnect.Securities.Positions
         public PositionGroupCollection(
             Dictionary<PositionGroupKey, IPositionGroup> groups,
             Dictionary<Symbol, HashSet<IPositionGroup>> groupsBySymbol
-            )
+        )
         {
             _groups = groups;
             _groupsBySymbol = groupsBySymbol;
@@ -167,7 +172,7 @@ namespace QuantConnect.Securities.Positions
         /// </summary>
         public PositionGroupCollection CombineWith(PositionGroupCollection other)
         {
-            if(other.Count == 0)
+            if (other.Count == 0)
             {
                 return this;
             }

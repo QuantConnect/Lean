@@ -20,6 +20,7 @@ namespace QuantConnect.Algorithm.CSharp.Benchmarks
     public class HistoryRequestBenchmark : QCAlgorithm
     {
         private Symbol _symbol;
+
         public override void Initialize()
         {
             SetStartDate(2010, 01, 01);
@@ -31,7 +32,10 @@ namespace QuantConnect.Algorithm.CSharp.Benchmarks
         public override void OnEndOfDay(Symbol symbol)
         {
             var minuteHistory = History(symbol, 60, Resolution.Minute);
-            var lastHourHigh = minuteHistory.Select(minuteBar => minuteBar.High).DefaultIfEmpty(0).Max();
+            var lastHourHigh = minuteHistory
+                .Select(minuteBar => minuteBar.High)
+                .DefaultIfEmpty(0)
+                .Max();
             var dailyHistory = History(symbol, 1, Resolution.Daily).First();
             var dailyHigh = dailyHistory.High;
             var dailyLow = dailyHistory.Low;

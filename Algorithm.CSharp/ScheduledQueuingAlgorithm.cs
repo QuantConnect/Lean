@@ -34,28 +34,36 @@ namespace QuantConnect.Algorithm.CSharp
         private int numberOfSymbolsFine;
         private Queue<Symbol> queue;
         private int dequeueSize;
-        
 
         public override void Initialize()
         {
             SetStartDate(2020, 9, 1);
             SetEndDate(2020, 9, 2);
             SetCash(100000);
-            
+
             numberOfSymbols = 2000;
             numberOfSymbolsFine = 1000;
-            SetUniverseSelection(new FineFundamentalUniverseSelectionModel(CoarseSelectionFunction, FineSelectionFunction));
-            
+            SetUniverseSelection(
+                new FineFundamentalUniverseSelectionModel(
+                    CoarseSelectionFunction,
+                    FineSelectionFunction
+                )
+            );
+
             SetPortfolioConstruction(new EqualWeightingPortfolioConstructionModel());
-            
+
             SetExecution(new ImmediateExecutionModel());
-            
+
             queue = new Queue<Symbol>();
             dequeueSize = 100;
-            
+
             AddEquity("SPY", Resolution.Minute);
             Schedule.On(DateRules.EveryDay("SPY"), TimeRules.At(0, 0), FillQueue);
-            Schedule.On(DateRules.EveryDay("SPY"), TimeRules.Every(TimeSpan.FromMinutes(60)), TakeFromQueue);
+            Schedule.On(
+                DateRules.EveryDay("SPY"),
+                TimeRules.Every(TimeSpan.FromMinutes(60)),
+                TakeFromQueue
+            );
         }
 
         public IEnumerable<Symbol> CoarseSelectionFunction(IEnumerable<CoarseFundamental> coarse)
@@ -65,31 +73,34 @@ namespace QuantConnect.Algorithm.CSharp
                 .OrderByDescending(x => x.DollarVolume);
             return sortedByDollarVolume.Take(numberOfSymbols).Select(x => x.Symbol);
         }
-        
+
         public IEnumerable<Symbol> FineSelectionFunction(IEnumerable<FineFundamental> fine)
         {
-            
             var sortedByPeRatio = fine.OrderByDescending(x => x.ValuationRatios.PERatio);
             var topFine = sortedByPeRatio.Take(numberOfSymbolsFine);
             return topFine.Select(x => x.Symbol);
         }
-        
-        private void FillQueue() {
+
+        private void FillQueue()
+        {
             var securities = ActiveSecurities.Values.Where(x => x.Fundamentals != null);
-            
+
             // Fill queue with symbols sorted by PE ratio (decreasing order)
             queue.Clear();
-            var sortedByPERatio = securities.OrderByDescending(x => x.Fundamentals.ValuationRatios.PERatio);
+            var sortedByPERatio = securities.OrderByDescending(x =>
+                x.Fundamentals.ValuationRatios.PERatio
+            );
             foreach (Security security in sortedByPERatio)
                 queue.Enqueue(security.Symbol);
         }
-        
-        private void TakeFromQueue() {
+
+        private void TakeFromQueue()
+        {
             List<Symbol> symbols = new List<Symbol>();
             for (int i = 0; i < Math.Min(dequeueSize, queue.Count); i++)
                 symbols.Add(queue.Dequeue());
             History(symbols, 10, Resolution.Daily);
-            
+
             Log("Symbols at " + Time + ": " + string.Join(", ", symbols.Select(x => x.ToString())));
         }
     }

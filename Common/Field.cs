@@ -1,11 +1,11 @@
 ﻿/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
- * 
- * Licensed under the Apache License, Version 2.0 (the "License"); 
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -61,7 +61,10 @@ namespace QuantConnect
         /// </summary>
         public static Func<IBaseData, decimal> Average
         {
-            get { return BaseDataBarPropertyOrValue(x => (x.Open + x.High + x.Low + x.Close) / 4m); }
+            get
+            {
+                return BaseDataBarPropertyOrValue(x => (x.Open + x.High + x.Low + x.Close) / 4m);
+            }
         }
 
         /// <summary>
@@ -93,7 +96,12 @@ namespace QuantConnect
         /// </summary>
         public static Func<IBaseData, decimal> SevenBar
         {
-            get { return BaseDataBarPropertyOrValue(x => (2*x.Open + x.High + x.Low + 3*x.Close)/7m); }
+            get
+            {
+                return BaseDataBarPropertyOrValue(x =>
+                    (2 * x.Open + x.High + x.Low + 3 * x.Close) / 7m
+                );
+            }
         }
 
         /// <summary>
@@ -101,10 +109,19 @@ namespace QuantConnect
         /// </summary>
         public static Func<IBaseData, decimal> Volume
         {
-            get { return BaseDataBarPropertyOrValue(x => x is TradeBar ? ((TradeBar)x).Volume : 0m, x => 0m); }
+            get
+            {
+                return BaseDataBarPropertyOrValue(
+                    x => x is TradeBar ? ((TradeBar)x).Volume : 0m,
+                    x => 0m
+                );
+            }
         }
 
-        private static Func<IBaseData, decimal> BaseDataBarPropertyOrValue(Func<IBaseDataBar, decimal> selector, Func<IBaseData, decimal> defaultSelector = null)
+        private static Func<IBaseData, decimal> BaseDataBarPropertyOrValue(
+            Func<IBaseDataBar, decimal> selector,
+            Func<IBaseData, decimal> defaultSelector = null
+        )
         {
             return x =>
             {

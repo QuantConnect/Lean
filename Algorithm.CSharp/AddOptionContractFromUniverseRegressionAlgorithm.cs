@@ -27,7 +27,9 @@ namespace QuantConnect.Algorithm.CSharp
     /// gets deselected from the universe selection but should still be present since we manually added the option contract.
     /// Later we call <see cref="QCAlgorithm.RemoveOptionContract"/> and expect both option and underlying to be removed.
     /// </summary>
-    public class AddOptionContractFromUniverseRegressionAlgorithm : QCAlgorithm, IRegressionAlgorithmDefinition
+    public class AddOptionContractFromUniverseRegressionAlgorithm
+        : QCAlgorithm,
+            IRegressionAlgorithmDefinition
     {
         private DateTime _expiration = new DateTime(2014, 06, 21);
         private SecurityChanges _securityChanges = SecurityChanges.None;
@@ -46,8 +48,10 @@ namespace QuantConnect.Algorithm.CSharp
             SetStartDate(2014, 06, 05);
             SetEndDate(2014, 06, 09);
 
-            AddUniverse(enumerable => new[] { Time.Date <= new DateTime(2014, 6, 5) ? _twx : _aapl },
-                enumerable => new[] { Time.Date <= new DateTime(2014, 6, 5) ? _twx : _aapl });
+            AddUniverse(
+                enumerable => new[] { Time.Date <= new DateTime(2014, 6, 5) ? _twx : _aapl },
+                enumerable => new[] { Time.Date <= new DateTime(2014, 6, 5) ? _twx : _aapl }
+            );
         }
 
         public override void OnData(Slice slice)
@@ -62,12 +66,17 @@ namespace QuantConnect.Algorithm.CSharp
             {
                 if (Time < new DateTime(2014, 6, 6, 14, 0, 0))
                 {
-                    var configs = SubscriptionManager.SubscriptionDataConfigService.GetSubscriptionDataConfigs(_twx);
+                    var configs =
+                        SubscriptionManager.SubscriptionDataConfigService.GetSubscriptionDataConfigs(
+                            _twx
+                        );
                     // assert underlying still there after the universe selection removed it, still used by the manually added option contract
                     if (!configs.Any())
                     {
-                        throw new RegressionTestException($"Was expecting configurations for {_twx}" +
-                                            $" even after it has been deselected from coarse universe because we still have the option contract.");
+                        throw new RegressionTestException(
+                            $"Was expecting configurations for {_twx}"
+                                + $" even after it has been deselected from coarse universe because we still have the option contract."
+                        );
                     }
                 }
                 else if (Time == new DateTime(2014, 6, 6, 14, 0, 0))
@@ -76,14 +85,19 @@ namespace QuantConnect.Algorithm.CSharp
                     RemoveOptionContract(_option);
                 }
                 // assert underlying was finally removed
-                else if(Time > new DateTime(2014, 6, 6, 14, 0, 0))
+                else if (Time > new DateTime(2014, 6, 6, 14, 0, 0))
                 {
                     foreach (var symbol in new[] { _option, _option.Underlying })
                     {
-                        var configs = SubscriptionManager.SubscriptionDataConfigService.GetSubscriptionDataConfigs(symbol);
+                        var configs =
+                            SubscriptionManager.SubscriptionDataConfigService.GetSubscriptionDataConfigs(
+                                symbol
+                            );
                         if (configs.Any())
                         {
-                            throw new RegressionTestException($"Unexpected configuration for {symbol} after it has been deselected from coarse universe and option contract is removed.");
+                            throw new RegressionTestException(
+                                $"Unexpected configuration for {symbol} after it has been deselected from coarse universe and option contract is removed."
+                            );
                         }
                     }
                 }
@@ -94,40 +108,61 @@ namespace QuantConnect.Algorithm.CSharp
         {
             if (_securityChanges.RemovedSecurities.Intersect(changes.RemovedSecurities).Any())
             {
-                throw new RegressionTestException($"SecurityChanges.RemovedSecurities intersect {changes.RemovedSecurities}. We expect no duplicate!");
+                throw new RegressionTestException(
+                    $"SecurityChanges.RemovedSecurities intersect {changes.RemovedSecurities}. We expect no duplicate!"
+                );
             }
             if (_securityChanges.AddedSecurities.Intersect(changes.AddedSecurities).Any())
             {
-                throw new RegressionTestException($"SecurityChanges.AddedSecurities intersect {changes.RemovedSecurities}. We expect no duplicate!");
+                throw new RegressionTestException(
+                    $"SecurityChanges.AddedSecurities intersect {changes.RemovedSecurities}. We expect no duplicate!"
+                );
             }
             // keep track of all removed and added securities
             _securityChanges += changes;
 
-            if (changes.AddedSecurities.Any(security => security.Symbol.SecurityType == SecurityType.Option))
+            if (
+                changes.AddedSecurities.Any(security =>
+                    security.Symbol.SecurityType == SecurityType.Option
+                )
+            )
             {
                 return;
             }
 
             foreach (var addedSecurity in changes.AddedSecurities)
             {
-                var option = OptionChainProvider.GetOptionContractList(addedSecurity.Symbol, Time)
+                var option = OptionChainProvider
+                    .GetOptionContractList(addedSecurity.Symbol, Time)
                     .OrderBy(symbol => symbol.ID.Symbol)
-                    .First(optionContract => optionContract.ID.Date == _expiration
-                                                      && optionContract.ID.OptionRight == OptionRight.Call
-                                                      && optionContract.ID.OptionStyle == OptionStyle.American);
+                    .First(optionContract =>
+                        optionContract.ID.Date == _expiration
+                        && optionContract.ID.OptionRight == OptionRight.Call
+                        && optionContract.ID.OptionStyle == OptionStyle.American
+                    );
                 AddOptionContract(option);
 
                 foreach (var symbol in new[] { option, option.Underlying })
                 {
-                    var config = SubscriptionManager.SubscriptionDataConfigService.GetSubscriptionDataConfigs(symbol).ToList();
+                    var config = SubscriptionManager
+                        .SubscriptionDataConfigService.GetSubscriptionDataConfigs(symbol)
+                        .ToList();
 
                     if (!config.Any())
                     {
-                        throw new RegressionTestException($"Was expecting configurations for {symbol}");
+                        throw new RegressionTestException(
+                            $"Was expecting configurations for {symbol}"
+                        );
                     }
-                    if (config.Any(dataConfig => dataConfig.DataNormalizationMode != DataNormalizationMode.Raw))
+                    if (
+                        config.Any(dataConfig =>
+                            dataConfig.DataNormalizationMode != DataNormalizationMode.Raw
+                        )
+                    )
                     {
-                        throw new RegressionTestException($"Was expecting DataNormalizationMode.Raw configurations for {symbol}");
+                        throw new RegressionTestException(
+                            $"Was expecting DataNormalizationMode.Raw configurations for {symbol}"
+                        );
                     }
                 }
 
@@ -141,18 +176,30 @@ namespace QuantConnect.Algorithm.CSharp
 
         public override void OnEndOfAlgorithm()
         {
-            if (SubscriptionManager.Subscriptions.Any(dataConfig => dataConfig.Symbol == _twx || dataConfig.Symbol.Underlying == _twx))
+            if (
+                SubscriptionManager.Subscriptions.Any(dataConfig =>
+                    dataConfig.Symbol == _twx || dataConfig.Symbol.Underlying == _twx
+                )
+            )
             {
-                throw new RegressionTestException($"Was NOT expecting any configurations for {_twx} or it's options, since we removed the contract");
+                throw new RegressionTestException(
+                    $"Was NOT expecting any configurations for {_twx} or it's options, since we removed the contract"
+                );
             }
 
             if (SubscriptionManager.Subscriptions.All(dataConfig => dataConfig.Symbol != _aapl))
             {
                 throw new RegressionTestException($"Was expecting configurations for {_aapl}");
             }
-            if (SubscriptionManager.Subscriptions.All(dataConfig => dataConfig.Symbol.Underlying != _aapl))
+            if (
+                SubscriptionManager.Subscriptions.All(dataConfig =>
+                    dataConfig.Symbol.Underlying != _aapl
+                )
+            )
             {
-                throw new RegressionTestException($"Was expecting options configurations for {_aapl}");
+                throw new RegressionTestException(
+                    $"Was expecting options configurations for {_aapl}"
+                );
             }
         }
 
@@ -184,35 +231,36 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// This is used by the regression test system to indicate what the expected statistics are from running the algorithm
         /// </summary>
-        public Dictionary<string, string> ExpectedStatistics => new Dictionary<string, string>
-        {
-            {"Total Orders", "2"},
-            {"Average Win", "0%"},
-            {"Average Loss", "-0.23%"},
-            {"Compounding Annual Return", "-15.596%"},
-            {"Drawdown", "0.200%"},
-            {"Expectancy", "-1"},
-            {"Start Equity", "100000"},
-            {"End Equity", "99768"},
-            {"Net Profit", "-0.232%"},
-            {"Sharpe Ratio", "-8.903"},
-            {"Sortino Ratio", "0"},
-            {"Probabilistic Sharpe Ratio", "1.216%"},
-            {"Loss Rate", "100%"},
-            {"Win Rate", "0%"},
-            {"Profit-Loss Ratio", "0"},
-            {"Alpha", "0.015"},
-            {"Beta", "-0.171"},
-            {"Annual Standard Deviation", "0.006"},
-            {"Annual Variance", "0"},
-            {"Information Ratio", "-11.082"},
-            {"Tracking Error", "0.043"},
-            {"Treynor Ratio", "0.335"},
-            {"Total Fees", "$2.00"},
-            {"Estimated Strategy Capacity", "$2800000.00"},
-            {"Lowest Capacity Asset", "AOL VRKS95ENLBYE|AOL R735QTJ8XC9X"},
-            {"Portfolio Turnover", "1.14%"},
-            {"OrderListHash", "cde7b518b7ad6d86cff6e5e092d9a413"}
-        };
+        public Dictionary<string, string> ExpectedStatistics =>
+            new Dictionary<string, string>
+            {
+                { "Total Orders", "2" },
+                { "Average Win", "0%" },
+                { "Average Loss", "-0.23%" },
+                { "Compounding Annual Return", "-15.596%" },
+                { "Drawdown", "0.200%" },
+                { "Expectancy", "-1" },
+                { "Start Equity", "100000" },
+                { "End Equity", "99768" },
+                { "Net Profit", "-0.232%" },
+                { "Sharpe Ratio", "-8.903" },
+                { "Sortino Ratio", "0" },
+                { "Probabilistic Sharpe Ratio", "1.216%" },
+                { "Loss Rate", "100%" },
+                { "Win Rate", "0%" },
+                { "Profit-Loss Ratio", "0" },
+                { "Alpha", "0.015" },
+                { "Beta", "-0.171" },
+                { "Annual Standard Deviation", "0.006" },
+                { "Annual Variance", "0" },
+                { "Information Ratio", "-11.082" },
+                { "Tracking Error", "0.043" },
+                { "Treynor Ratio", "0.335" },
+                { "Total Fees", "$2.00" },
+                { "Estimated Strategy Capacity", "$2800000.00" },
+                { "Lowest Capacity Asset", "AOL VRKS95ENLBYE|AOL R735QTJ8XC9X" },
+                { "Portfolio Turnover", "1.14%" },
+                { "OrderListHash", "cde7b518b7ad6d86cff6e5e092d9a413" }
+            };
     }
 }

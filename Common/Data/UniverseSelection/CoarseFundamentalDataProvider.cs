@@ -14,8 +14,8 @@
 */
 
 using System;
-using System.IO;
 using System.Collections.Generic;
+using System.IO;
 using QuantConnect.Data.Fundamental;
 
 namespace QuantConnect.Data.UniverseSelection
@@ -26,7 +26,8 @@ namespace QuantConnect.Data.UniverseSelection
     public class CoarseFundamentalDataProvider : BaseFundamentalDataProvider
     {
         private DateTime _date;
-        private readonly Dictionary<SecurityIdentifier, CoarseFundamental> _coarseFundamental = new();
+        private readonly Dictionary<SecurityIdentifier, CoarseFundamental> _coarseFundamental =
+            new();
 
         /// <summary>
         /// Will fetch the requested fundamental information for the requested time and symbol
@@ -36,7 +37,11 @@ namespace QuantConnect.Data.UniverseSelection
         /// <param name="securityIdentifier">The security identifier</param>
         /// <param name="name">The name of the fundamental property</param>
         /// <returns>The fundamental information</returns>
-        public override T Get<T>(DateTime time, SecurityIdentifier securityIdentifier, FundamentalProperty name)
+        public override T Get<T>(
+            DateTime time,
+            SecurityIdentifier securityIdentifier,
+            FundamentalProperty name
+        )
         {
             var enumName = Enum.GetName(name);
             lock (_coarseFundamental)
@@ -47,7 +52,14 @@ namespace QuantConnect.Data.UniverseSelection
                 }
                 _date = time;
 
-                var path = Path.Combine(Globals.DataFolder, "equity", "usa", "fundamental", "coarse", $"{time:yyyyMMdd}.csv");
+                var path = Path.Combine(
+                    Globals.DataFolder,
+                    "equity",
+                    "usa",
+                    "fundamental",
+                    "coarse",
+                    $"{time:yyyyMMdd}.csv"
+                );
                 var fileStream = DataProvider.Fetch(path);
                 if (fileStream == null)
                 {
@@ -103,7 +115,6 @@ namespace QuantConnect.Data.UniverseSelection
             {
                 return null;
             }
-
         }
 
         private dynamic GetProperty<T>(SecurityIdentifier securityIdentifier, string property)

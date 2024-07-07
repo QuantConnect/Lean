@@ -24,12 +24,21 @@ namespace QuantConnect.Tests.Common.Data.Auxiliary
     [TestFixture]
     public class AuxiliaryDataSerializationTests
     {
-        private readonly JsonSerializerSettings _settings = new JsonSerializerSettings { TypeNameHandling = TypeNameHandling.All };
+        private readonly JsonSerializerSettings _settings = new JsonSerializerSettings
+        {
+            TypeNameHandling = TypeNameHandling.All
+        };
 
         [Test]
         public void DeserializesSplitWarning()
         {
-            var splitWarning = new Split(Symbols.AAPL, new DateTime(2014, 6, 9), 645.57m, 0.142857m, SplitType.Warning);
+            var splitWarning = new Split(
+                Symbols.AAPL,
+                new DateTime(2014, 6, 9),
+                645.57m,
+                0.142857m,
+                SplitType.Warning
+            );
 
             var json = JsonConvert.SerializeObject(splitWarning, _settings);
             var deserialized = (Split)JsonConvert.DeserializeObject(json, _settings);
@@ -44,7 +53,13 @@ namespace QuantConnect.Tests.Common.Data.Auxiliary
         [Test]
         public void DeserializesSplit()
         {
-            var split = new Split(Symbols.AAPL, new DateTime(2014, 6, 9), 645.57m, 0.142857m, SplitType.SplitOccurred);
+            var split = new Split(
+                Symbols.AAPL,
+                new DateTime(2014, 6, 9),
+                645.57m,
+                0.142857m,
+                SplitType.SplitOccurred
+            );
 
             var json = JsonConvert.SerializeObject(split, _settings);
             var deserialized = (Split)JsonConvert.DeserializeObject(json, _settings);
@@ -72,7 +87,12 @@ namespace QuantConnect.Tests.Common.Data.Auxiliary
         [Test]
         public void DeserializesDelistingWarning()
         {
-            var delistingWarning = new Delisting(Symbols.AAPL, new DateTime(2999, 12, 31), 100m, DelistingType.Warning);
+            var delistingWarning = new Delisting(
+                Symbols.AAPL,
+                new DateTime(2999, 12, 31),
+                100m,
+                DelistingType.Warning
+            );
 
             var json = JsonConvert.SerializeObject(delistingWarning, _settings);
             var deserialized = (Delisting)JsonConvert.DeserializeObject(json, _settings);
@@ -85,7 +105,12 @@ namespace QuantConnect.Tests.Common.Data.Auxiliary
         [Test]
         public void DeserializesDelisting()
         {
-            var delisting = new Delisting(Symbols.AAPL, new DateTime(2999, 12, 31), 100m, DelistingType.Delisted);
+            var delisting = new Delisting(
+                Symbols.AAPL,
+                new DateTime(2999, 12, 31),
+                100m,
+                DelistingType.Delisted
+            );
 
             var json = JsonConvert.SerializeObject(delisting, _settings);
             var deserialized = (Delisting)JsonConvert.DeserializeObject(json, _settings);

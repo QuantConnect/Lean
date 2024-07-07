@@ -25,18 +25,12 @@ namespace QuantConnect.Data.Market
         /// <summary>
         /// Gets the futures contract's symbol
         /// </summary>
-        public Symbol Symbol
-        {
-            get; private set;
-        }
+        public Symbol Symbol { get; private set; }
 
         /// <summary>
         /// Gets the underlying security's symbol
         /// </summary>
-        public Symbol UnderlyingSymbol
-        {
-            get; private set;
-        }
+        public Symbol UnderlyingSymbol { get; private set; }
 
         /// <summary>
         /// Gets the expiration date
@@ -46,66 +40,42 @@ namespace QuantConnect.Data.Market
         /// <summary>
         /// Gets the local date time this contract's data was last updated
         /// </summary>
-        public DateTime Time
-        {
-            get; set;
-        }
+        public DateTime Time { get; set; }
 
         /// <summary>
         /// Gets the open interest
         /// </summary>
-        public decimal OpenInterest
-        {
-            get; set;
-        }
+        public decimal OpenInterest { get; set; }
 
         /// <summary>
         /// Gets the last price this contract traded at
         /// </summary>
-        public decimal LastPrice
-        {
-            get; set;
-        }
+        public decimal LastPrice { get; set; }
 
         /// <summary>
         /// Gets the last volume this contract traded at
         /// </summary>
-        public long Volume
-        {
-            get; set;
-        }
+        public long Volume { get; set; }
 
         /// <summary>
         /// Gets the current bid price
         /// </summary>
-        public decimal BidPrice
-        {
-            get; set;
-        }
+        public decimal BidPrice { get; set; }
 
         /// <summary>
         /// Get the current bid size
         /// </summary>
-        public long BidSize
-        {
-            get; set;
-        }
+        public long BidSize { get; set; }
 
         /// <summary>
         /// Gets the ask price
         /// </summary>
-        public decimal AskPrice
-        {
-            get; set;
-        }
+        public decimal AskPrice { get; set; }
 
         /// <summary>
         /// Gets the current ask size
         /// </summary>
-        public long AskSize
-        {
-            get; set;
-        }
+        public long AskSize { get; set; }
 
         /// <summary>
         /// Initializes a new instance of the <see cref="FuturesContract"/> class

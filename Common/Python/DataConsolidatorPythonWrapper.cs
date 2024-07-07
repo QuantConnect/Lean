@@ -23,7 +23,9 @@ namespace QuantConnect.Python
     /// <summary>
     /// Provides an Data Consolidator that wraps a <see cref="PyObject"/> object that represents a custom Python consolidator
     /// </summary>
-    public class DataConsolidatorPythonWrapper : BasePythonWrapper<IDataConsolidator>, IDataConsolidator
+    public class DataConsolidatorPythonWrapper
+        : BasePythonWrapper<IDataConsolidator>,
+            IDataConsolidator
     {
         internal PyObject Model => Instance;
 
@@ -82,9 +84,7 @@ namespace QuantConnect.Python
         /// </summary>
         /// <param name="consolidator">Represents a custom python consolidator</param>
         public DataConsolidatorPythonWrapper(PyObject consolidator)
-            : base(consolidator, true)
-        {
-        }
+            : base(consolidator, true) { }
 
         /// <summary>
         /// Scans this consolidator to see if it should emit a bar due to time passing
@@ -106,8 +106,6 @@ namespace QuantConnect.Python
 
         /// <summary>Performs application-defined tasks associated with freeing, releasing, or resetting unmanaged resources.</summary>
         /// <filterpriority>2</filterpriority>
-        public void Dispose()
-        {
-        }
+        public void Dispose() { }
     }
 }

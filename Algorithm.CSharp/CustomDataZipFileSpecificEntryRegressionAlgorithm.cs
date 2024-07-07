@@ -18,7 +18,8 @@ namespace QuantConnect.Algorithm.CSharp
     /// <summary>
     /// Regression algorithm asserting that custom data can be sourced from a remote CSV zipped file.
     /// </summary>
-    public class CustomDataZipFileSpecificEntryRegressionAlgorithm: CustomDataZipFileRegressionAlgorithm
+    public class CustomDataZipFileSpecificEntryRegressionAlgorithm
+        : CustomDataZipFileRegressionAlgorithm
     {
         protected override string GetCustomDataUrl()
         {

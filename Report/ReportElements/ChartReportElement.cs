@@ -16,7 +16,6 @@
 using Python.Runtime;
 using QuantConnect.Python;
 
-
 namespace QuantConnect.Report.ReportElements
 {
     internal abstract class ChartReportElement : ReportElement

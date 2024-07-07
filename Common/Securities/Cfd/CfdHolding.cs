@@ -27,8 +27,6 @@ namespace QuantConnect.Securities.Cfd
         /// <param name="security">The CFD security being held</param>
         /// <param name="currencyConverter">A currency converter instance</param>
         public CfdHolding(Cfd security, ICurrencyConverter currencyConverter)
-            : base(security, currencyConverter)
-        {
-        }
+            : base(security, currencyConverter) { }
     }
 }

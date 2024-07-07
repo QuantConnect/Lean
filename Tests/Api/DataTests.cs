@@ -25,14 +25,33 @@ namespace QuantConnect.Tests.API
     /// <summary>
     /// API Data endpoint tests
     /// </summary>
-    [TestFixture, Explicit("Requires configured api access, and also makes calls to data endpoints which are charging transactions")]
+    [
+        TestFixture,
+        Explicit(
+            "Requires configured api access, and also makes calls to data endpoints which are charging transactions"
+        )
+    ]
     public class DataTests : ApiTestBase
     {
         private DataPricesList _pricesCache;
         private static object[] validForexDataTestCases =
         {
-            new object[] { "EURUSD", Market.Oanda, new DateTime(2013,10,07), Resolution.Daily, TickType.Quote },
-            new object[] { "EURUSD", Market.Oanda, new DateTime(2013,10,07), Resolution.Minute, TickType.Quote }
+            new object[]
+            {
+                "EURUSD",
+                Market.Oanda,
+                new DateTime(2013, 10, 07),
+                Resolution.Daily,
+                TickType.Quote
+            },
+            new object[]
+            {
+                "EURUSD",
+                Market.Oanda,
+                new DateTime(2013, 10, 07),
+                Resolution.Minute,
+                TickType.Quote
+            }
         };
 
         /// <summary>
@@ -70,11 +89,20 @@ namespace QuantConnect.Tests.API
         /// Test getting links to forex data for Oanda
         /// </summary>
         [TestCaseSource(nameof(validForexDataTestCases))]
-        public void ValidForexDataLinks(string ticker, string market, DateTime date, Resolution resolution, TickType tickType)
+        public void ValidForexDataLinks(
+            string ticker,
+            string market,
+            DateTime date,
+            Resolution resolution,
+            TickType tickType
+        )
         {
             var path = LeanData.GenerateRelativeZipFilePath(
                 new Symbol(SecurityIdentifier.GenerateForex(ticker, market), ticker),
-                date, resolution, tickType);
+                date,
+                resolution,
+                tickType
+            );
             var dataLink = ApiClient.ReadDataLink(path, TestOrganization);
 
             Assert.IsTrue(dataLink.Success);
@@ -107,16 +135,31 @@ namespace QuantConnect.Tests.API
         /// </summary>
         /// <param name="dataFile"></param>
         /// <param name="matchingRegex"></param>
-        [TestCase("forex/oanda/daily/eurusd.zip", "/^(cfd|forex)\\/oanda\\/(daily|hour)\\/[^\\/]+.zip$/m")]
-        [TestCase("forex/oanda/daily/eurusd.zip", "/^(cfd|forex)\\/oanda\\/(daily|hour)\\/[^\\/]+.zip$")]
-        [TestCase("forex/oanda/daily/eurusd.zip", "^(cfd|forex)\\/oanda\\/(daily|hour)\\/[^\\/]+.zip$/")]
-        [TestCase("forex/oanda/daily/eurusd.zip", "^(cfd|forex)\\/oanda\\/(daily|hour)\\/[^\\/]+.zip$")]
+        [TestCase(
+            "forex/oanda/daily/eurusd.zip",
+            "/^(cfd|forex)\\/oanda\\/(daily|hour)\\/[^\\/]+.zip$/m"
+        )]
+        [TestCase(
+            "forex/oanda/daily/eurusd.zip",
+            "/^(cfd|forex)\\/oanda\\/(daily|hour)\\/[^\\/]+.zip$"
+        )]
+        [TestCase(
+            "forex/oanda/daily/eurusd.zip",
+            "^(cfd|forex)\\/oanda\\/(daily|hour)\\/[^\\/]+.zip$/"
+        )]
+        [TestCase(
+            "forex/oanda/daily/eurusd.zip",
+            "^(cfd|forex)\\/oanda\\/(daily|hour)\\/[^\\/]+.zip$"
+        )]
         public void DataPriceRegex(string dataFile, string matchingRegex)
         {
             var setPrice = 10;
             var dataList = new DataPricesList
             {
-                Prices = new List<PriceEntry>() { new PriceEntry() { Price = setPrice, RawRegEx = matchingRegex } }
+                Prices = new List<PriceEntry>()
+                {
+                    new PriceEntry() { Price = setPrice, RawRegEx = matchingRegex }
+                }
             };
 
             int price = dataList.GetPrice(dataFile);

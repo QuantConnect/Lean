@@ -1,11 +1,11 @@
 ﻿/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
- * 
- * Licensed under the Apache License, Version 2.0 (the "License"); 
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -35,14 +35,18 @@ namespace QuantConnect.Tests.Indicators
 
         protected override Action<IndicatorBase<IndicatorDataPoint>, double> Assertion
         {
-            get { return (indicator, expected) => Assert.AreEqual(expected, (double)indicator.Current.Value, 1e-2); }
+            get
+            {
+                return (indicator, expected) =>
+                    Assert.AreEqual(expected, (double)indicator.Current.Value, 1e-2);
+            }
         }
 
         [Test]
         public void SmaComputesCorrectly()
         {
             var sma = new SimpleMovingAverage(4);
-            var data = new[] {1m, 10m, 100m, 1000m, 10000m, 1234m, 56789m};
+            var data = new[] { 1m, 10m, 100m, 1000m, 10000m, 1234m, 56789m };
 
             var seen = new List<decimal>();
             for (int i = 0; i < data.Length; i++)
@@ -50,7 +54,10 @@ namespace QuantConnect.Tests.Indicators
                 var datum = data[i];
                 seen.Add(datum);
                 sma.Update(new IndicatorDataPoint(DateTime.Now.AddSeconds(i), datum));
-                Assert.AreEqual(Enumerable.Reverse(seen).Take(sma.Period).Average(), sma.Current.Value);
+                Assert.AreEqual(
+                    Enumerable.Reverse(seen).Take(sma.Period).Average(),
+                    sma.Current.Value
+                );
             }
         }
 
@@ -76,7 +83,7 @@ namespace QuantConnect.Tests.Indicators
                 sma.Update(data);
             }
             Assert.IsTrue(sma.IsReady);
-            
+
             sma.Reset();
 
             TestHelper.AssertIndicatorIsInDefaultState(sma);

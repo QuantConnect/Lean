@@ -13,11 +13,11 @@
  * limitations under the License.
 */
 
+using System.Collections.Generic;
 using Python.Runtime;
+using QuantConnect.Algorithm.Framework.Portfolio;
 using QuantConnect.Data.UniverseSelection;
 using QuantConnect.Python;
-using System.Collections.Generic;
-using QuantConnect.Algorithm.Framework.Portfolio;
 
 namespace QuantConnect.Algorithm.Framework.Risk
 {
@@ -42,7 +42,10 @@ namespace QuantConnect.Algorithm.Framework.Risk
         /// </summary>
         /// <param name="algorithm">The algorithm instance</param>
         /// <param name="targets">The current portfolio targets to be assessed for risk</param>
-        public override IEnumerable<IPortfolioTarget> ManageRisk(QCAlgorithm algorithm, IPortfolioTarget[] targets)
+        public override IEnumerable<IPortfolioTarget> ManageRisk(
+            QCAlgorithm algorithm,
+            IPortfolioTarget[] targets
+        )
         {
             using (Py.GIL())
             {

@@ -66,15 +66,29 @@ namespace QuantConnect.Orders.Fees
         {
             if (parameters == null)
             {
-                throw new ArgumentNullException(nameof(parameters), "Order fee parameters cannot be null.");
+                throw new ArgumentNullException(
+                    nameof(parameters),
+                    "Order fee parameters cannot be null."
+                );
             }
 
             switch (parameters.Security.Type)
             {
                 case SecurityType.Option:
-                    return new OrderFee(new CashAmount(CommissionPerTrade + parameters.Order.AbsoluteQuantity * _equityOptionFee, Currencies.USD));
+                    return new OrderFee(
+                        new CashAmount(
+                            CommissionPerTrade
+                                + parameters.Order.AbsoluteQuantity * _equityOptionFee,
+                            Currencies.USD
+                        )
+                    );
                 case SecurityType.Future:
-                    return new OrderFee(new CashAmount(parameters.Order.AbsoluteQuantity * _futuresFee, Currencies.USD));
+                    return new OrderFee(
+                        new CashAmount(
+                            parameters.Order.AbsoluteQuantity * _futuresFee,
+                            Currencies.USD
+                        )
+                    );
                 default:
                     return new OrderFee(new CashAmount(CommissionPerTrade, Currencies.USD));
             }

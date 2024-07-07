@@ -40,7 +40,11 @@ namespace QuantConnect.Tests.Indicators
                 CreateIndicator(),
                 TestFileName,
                 "Donchian Channels 50 Top",
-                (ind, expected) => Assert.AreEqual(expected, (double) ((DonchianChannel) ind).UpperBand.Current.Value)
+                (ind, expected) =>
+                    Assert.AreEqual(
+                        expected,
+                        (double)((DonchianChannel)ind).UpperBand.Current.Value
+                    )
             );
         }
 
@@ -51,7 +55,11 @@ namespace QuantConnect.Tests.Indicators
                 CreateIndicator(),
                 TestFileName,
                 "Donchian Channels 50 Bottom",
-                (ind, expected) => Assert.AreEqual(expected, (double) ((DonchianChannel) ind).LowerBand.Current.Value)
+                (ind, expected) =>
+                    Assert.AreEqual(
+                        expected,
+                        (double)((DonchianChannel)ind).LowerBand.Current.Value
+                    )
             );
         }
     }

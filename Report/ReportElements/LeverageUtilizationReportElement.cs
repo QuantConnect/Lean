@@ -45,7 +45,8 @@ namespace QuantConnect.Report.ReportElements
             BacktestResult backtest,
             LiveResult live,
             List<PointInTimePortfolio> backtestPortfolios,
-            List<PointInTimePortfolio> livePortfolios)
+            List<PointInTimePortfolio> livePortfolios
+        )
         {
             _backtest = backtest;
             _backtestPortfolios = backtestPortfolios;
@@ -60,8 +61,12 @@ namespace QuantConnect.Report.ReportElements
         /// </summary>
         public override string Render()
         {
-            var backtestSeries = Metrics.LeverageUtilization(_backtestPortfolios).FillMissing(Direction.Forward);
-            var liveSeries = Metrics.LeverageUtilization(_livePortfolios).FillMissing(Direction.Forward);
+            var backtestSeries = Metrics
+                .LeverageUtilization(_backtestPortfolios)
+                .FillMissing(Direction.Forward);
+            var liveSeries = Metrics
+                .LeverageUtilization(_livePortfolios)
+                .FillMissing(Direction.Forward);
 
             var base64 = "";
             using (Py.GIL())

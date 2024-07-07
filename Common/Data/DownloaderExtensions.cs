@@ -14,10 +14,10 @@
 */
 
 using System;
-using QuantConnect.Interfaces;
 using System.Collections.Generic;
-using QuantConnect.Data.Auxiliary;
 using NodaTime;
+using QuantConnect.Data.Auxiliary;
+using QuantConnect.Interfaces;
 
 namespace QuantConnect.Data
 {
@@ -41,27 +41,40 @@ namespace QuantConnect.Data
         public static IEnumerable<DataDownloaderGetParameters> GetDataDownloaderParameterForAllMappedSymbols(
             this DataDownloaderGetParameters dataDownloaderParameter,
             IMapFileProvider mapFileProvider,
-            DateTimeZone exchangeTimeZone)
+            DateTimeZone exchangeTimeZone
+        )
         {
             if (dataDownloaderParameter == null)
             {
                 throw new ArgumentNullException(nameof(dataDownloaderParameter));
             }
 
-            if (dataDownloaderParameter.Symbol.SecurityType != SecurityType.Future
+            if (
+                dataDownloaderParameter.Symbol.SecurityType != SecurityType.Future
                 && dataDownloaderParameter.Symbol.RequiresMapping()
-                && dataDownloaderParameter.Resolution >= Resolution.Hour)
+                && dataDownloaderParameter.Resolution >= Resolution.Hour
+            )
             {
                 var yieldMappedSymbol = default(bool);
-                foreach (var symbolDateRange in mapFileProvider.RetrieveAllMappedSymbolInDateRange(dataDownloaderParameter.Symbol))
+                foreach (
+                    var symbolDateRange in mapFileProvider.RetrieveAllMappedSymbolInDateRange(
+                        dataDownloaderParameter.Symbol
+                    )
+                )
                 {
-                    var startDateTimeUtc = symbolDateRange.StartDateTimeLocal.ConvertToUtc(exchangeTimeZone);
-                    var endDateTimeUtc = symbolDateRange.EndDateTimeLocal.ConvertToUtc(exchangeTimeZone);
+                    var startDateTimeUtc = symbolDateRange.StartDateTimeLocal.ConvertToUtc(
+                        exchangeTimeZone
+                    );
+                    var endDateTimeUtc = symbolDateRange.EndDateTimeLocal.ConvertToUtc(
+                        exchangeTimeZone
+                    );
 
                     // The first start date returns from mapFile like IPO (DateTime) and can not be greater then request StartTime
                     // The Downloader doesn't know start DateTime exactly, it always download all data, except for options and index options
-                    if (dataDownloaderParameter.Symbol.SecurityType == SecurityType.Option ||
-                        dataDownloaderParameter.Symbol.SecurityType == SecurityType.IndexOption)
+                    if (
+                        dataDownloaderParameter.Symbol.SecurityType == SecurityType.Option
+                        || dataDownloaderParameter.Symbol.SecurityType == SecurityType.IndexOption
+                    )
                     {
                         // The symbol was delisted before the request start time
                         if (endDateTimeUtc < dataDownloaderParameter.StartUtc)
@@ -81,7 +94,12 @@ namespace QuantConnect.Data
                     }
 
                     yield return new DataDownloaderGetParameters(
-                        symbolDateRange.Symbol, dataDownloaderParameter.Resolution, startDateTimeUtc, endDateTimeUtc, dataDownloaderParameter.TickType);
+                        symbolDateRange.Symbol,
+                        dataDownloaderParameter.Resolution,
+                        startDateTimeUtc,
+                        endDateTimeUtc,
+                        dataDownloaderParameter.TickType
+                    );
                     yieldMappedSymbol = true;
                 }
 

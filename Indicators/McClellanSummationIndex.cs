@@ -18,8 +18,8 @@ using QuantConnect.Data.Market;
 namespace QuantConnect.Indicators
 {
     /// <summary>
-    /// The McClellan Summation Index (MSI) is a market breadth indicator that is based on the rolling average of difference 
-    /// between the number of advancing and declining issues on a stock exchange. It is generally considered as is 
+    /// The McClellan Summation Index (MSI) is a market breadth indicator that is based on the rolling average of difference
+    /// between the number of advancing and declining issues on a stock exchange. It is generally considered as is
     /// a long-term version of the <see cref="McClellanOscillator"/>
     /// </summary>
     public class McClellanSummationIndex : TradeBarIndicator, IIndicatorWarmUpPeriodProvider
@@ -51,7 +51,8 @@ namespace QuantConnect.Indicators
         /// <param name="fastPeriod">The fast period of EMA of advance decline difference</param>
         /// <param name="slowPeriod">The slow period of EMA of advance decline difference</param>
         /// </summary>
-        public McClellanSummationIndex(string name, int fastPeriod = 19, int slowPeriod = 39) : base(name)
+        public McClellanSummationIndex(string name, int fastPeriod = 19, int slowPeriod = 39)
+            : base(name)
         {
             Summation = new();
             McClellanOscillator = new McClellanOscillator(fastPeriod, slowPeriod);
@@ -72,9 +73,7 @@ namespace QuantConnect.Indicators
         /// <param name="slowPeriod">The slow period of EMA of advance decline difference</param>
         /// </summary>
         public McClellanSummationIndex(int fastPeriod = 19, int slowPeriod = 39)
-            : this("McClellanSummationIndex", fastPeriod, slowPeriod)
-        {
-        }
+            : this("McClellanSummationIndex", fastPeriod, slowPeriod) { }
 
         /// <summary>
         /// Computes the next value of this indicator from the given state

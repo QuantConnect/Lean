@@ -1,11 +1,11 @@
 ﻿/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
- * 
- * Licensed under the Apache License, Version 2.0 (the "License"); 
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -74,10 +74,10 @@ namespace QuantConnect.Tests.Common.Util
             Assert.AreEqual(data.Symbol, bar.Symbol);
             Assert.AreEqual(data.Time, bar.Time);
             Assert.AreEqual(data.Value, bar.Value);
-            Assert.AreEqual(((TradeBar) data).Open, bar.Open);
-            Assert.AreEqual(((TradeBar) data).High, bar.High);
-            Assert.AreEqual(((TradeBar) data).Low, bar.Low);
-            Assert.AreEqual(((TradeBar) data).Close, bar.Close);
+            Assert.AreEqual(((TradeBar)data).Open, bar.Open);
+            Assert.AreEqual(((TradeBar)data).High, bar.High);
+            Assert.AreEqual(((TradeBar)data).Low, bar.Low);
+            Assert.AreEqual(((TradeBar)data).Close, bar.Close);
             Assert.AreEqual(data.Price, bar.Price);
         }
 
@@ -92,7 +92,10 @@ namespace QuantConnect.Tests.Common.Util
 
             var type = instanceToClone.GetType();
             var factory = ObjectActivator.GetActivator(type);
-            var fields = GetFieldInfosIncludingBaseClasses(type, BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
+            var fields = GetFieldInfosIncludingBaseClasses(
+                type,
+                BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic
+            );
 
             var instance = factory.Invoke(new object[0]);
             foreach (var field in fields)
@@ -106,12 +109,15 @@ namespace QuantConnect.Tests.Common.Util
         /// <summary>
         /// Private fields in base classes aren't found in normal reflection, so we need to recurse on base types
         /// </summary>
-        private static IEnumerable<FieldInfo> GetFieldInfosIncludingBaseClasses(Type type, BindingFlags bindingFlags)
+        private static IEnumerable<FieldInfo> GetFieldInfosIncludingBaseClasses(
+            Type type,
+            BindingFlags bindingFlags
+        )
         {
             FieldInfo[] fieldInfos = type.GetFields(bindingFlags);
 
             // If this class doesn't have a base, don't waste any time
-            if (type.BaseType == typeof (object))
+            if (type.BaseType == typeof(object))
             {
                 return fieldInfos;
             }
@@ -120,7 +126,7 @@ namespace QuantConnect.Tests.Common.Util
             var currentType = type;
             var fieldComparer = new FieldInfoComparer();
             var fieldInfoList = new HashSet<FieldInfo>(fieldInfos, fieldComparer);
-            while (currentType != typeof (object) && currentType != null)
+            while (currentType != typeof(object) && currentType != null)
             {
                 fieldInfos = currentType.GetFields(bindingFlags);
                 fieldInfoList.UnionWith(fieldInfos);
@@ -143,6 +149,5 @@ namespace QuantConnect.Tests.Common.Util
         }
 
         #endregion
-
     }
 }

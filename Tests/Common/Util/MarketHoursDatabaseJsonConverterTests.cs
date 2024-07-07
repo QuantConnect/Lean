@@ -42,13 +42,22 @@ namespace QuantConnect.Tests.Common.Util
             {
                 var original = originalListing[kvp.Key];
                 Assert.AreEqual(original.DataTimeZone, kvp.Value.DataTimeZone);
-                CollectionAssert.AreEqual(original.ExchangeHours.Holidays, kvp.Value.ExchangeHours.Holidays);
-                CollectionAssert.AreEqual(original.ExchangeHours.EarlyCloses, kvp.Value.ExchangeHours.EarlyCloses);
-                CollectionAssert.AreEqual(original.ExchangeHours.LateOpens, kvp.Value.ExchangeHours.LateOpens);
+                CollectionAssert.AreEqual(
+                    original.ExchangeHours.Holidays,
+                    kvp.Value.ExchangeHours.Holidays
+                );
+                CollectionAssert.AreEqual(
+                    original.ExchangeHours.EarlyCloses,
+                    kvp.Value.ExchangeHours.EarlyCloses
+                );
+                CollectionAssert.AreEqual(
+                    original.ExchangeHours.LateOpens,
+                    kvp.Value.ExchangeHours.LateOpens
+                );
 
                 foreach (var value in Enum.GetValues(typeof(DayOfWeek)))
                 {
-                    var day = (DayOfWeek) value;
+                    var day = (DayOfWeek)value;
                     var o = original.ExchangeHours.MarketHours[day];
                     var d = kvp.Value.ExchangeHours.MarketHours[day];
                     foreach (var pair in o.Segments.Zip(d.Segments, Tuple.Create))
@@ -61,11 +70,13 @@ namespace QuantConnect.Tests.Common.Util
             }
         }
 
-        public static void TestOverriddenEarlyClosesAndLateOpens(IReadOnlyDictionary<DateTime, TimeSpan> commonDateTimes,
+        public static void TestOverriddenEarlyClosesAndLateOpens(
+            IReadOnlyDictionary<DateTime, TimeSpan> commonDateTimes,
             IReadOnlyDictionary<DateTime, TimeSpan> specificDateTimes,
             JObject jsonDatabase,
             string testKey,
-            string specificEntryKey)
+            string specificEntryKey
+        )
         {
             var datesWereOverriden = false;
 
@@ -80,7 +91,9 @@ namespace QuantConnect.Tests.Common.Util
                 if (commonDateTimes[date] != specificDateTimes[date])
                 {
                     var dateStr = date.ToStringInvariant("MM/dd/yyyy");
-                    var timeStr = jsonDatabase["entries"][specificEntryKey][testKey][dateStr].Value<string>();
+                    var timeStr = jsonDatabase["entries"]
+                        [specificEntryKey][testKey][dateStr]
+                        .Value<string>();
                     var time = TimeSpan.Parse(timeStr, CultureInfo.InvariantCulture);
                     Assert.AreEqual(time, specificDateTimes[date]);
 
@@ -100,11 +113,13 @@ namespace QuantConnect.Tests.Common.Util
             var googEntry = database.GetEntry(Market.USA, "GOOG", SecurityType.Equity);
             var equityCommonEntry = database.GetEntry(Market.USA, "", SecurityType.Equity);
 
-            TestOverriddenEarlyClosesAndLateOpens(equityCommonEntry.ExchangeHours.LateOpens,
+            TestOverriddenEarlyClosesAndLateOpens(
+                equityCommonEntry.ExchangeHours.LateOpens,
                 googEntry.ExchangeHours.LateOpens,
                 jsonDatabase,
                 "lateOpens",
-                "Equity-usa-GOOG");
+                "Equity-usa-GOOG"
+            );
         }
 
         [Test]
@@ -116,18 +131,21 @@ namespace QuantConnect.Tests.Common.Util
             var googEntry = database.GetEntry(Market.USA, "GOOG", SecurityType.Equity);
             var equityCommonEntry = database.GetEntry(Market.USA, "", SecurityType.Equity);
 
-            TestOverriddenEarlyClosesAndLateOpens(equityCommonEntry.ExchangeHours.EarlyCloses,
+            TestOverriddenEarlyClosesAndLateOpens(
+                equityCommonEntry.ExchangeHours.EarlyCloses,
                 googEntry.ExchangeHours.EarlyCloses,
                 jsonDatabase,
                 "earlyCloses",
-                "Equity-usa-GOOG");
+                "Equity-usa-GOOG"
+            );
         }
 
         /// <summary>
         /// Equity-usa-GOOG is more specific than Equity-usa-[*].
         /// The early closes for GOOG should override the early closes for the common entry ([*]).
         /// </summary>
-        public static string SampleMHDBWithOverriddenEarlyOpens => @"
+        public static string SampleMHDBWithOverriddenEarlyOpens =>
+            @"
 {
   ""entries"": {
     ""Equity-usa-[*]"": {
@@ -220,27 +238,36 @@ namespace QuantConnect.Tests.Common.Util
 }
 ";
 
-        [Test, Ignore("This is provided to make it easier to convert your own market-hours-database.csv to the new format")]
+        [
+            Test,
+            Ignore(
+                "This is provided to make it easier to convert your own market-hours-database.csv to the new format"
+            )
+        ]
         public void ConvertMarketHoursDatabaseCsvToJson()
         {
             var directory = Path.Combine(Globals.DataFolder, "market-hours");
             var input = Path.Combine(directory, "market-hours-database.csv");
             var output = Path.Combine(directory, Path.GetFileNameWithoutExtension(input) + ".json");
-            var allHolidays = Directory.EnumerateFiles(Path.Combine(Globals.DataFolder, "market-hours"), "holidays-*.csv").Select(x =>
-            {
-                var dates = new HashSet<DateTime>();
-                var market = Path.GetFileNameWithoutExtension(x).Replace("holidays-", string.Empty);
-                foreach (var line in File.ReadAllLines(x).Skip(1).Where(l => !l.StartsWith("#")))
+            var allHolidays = Directory
+                .EnumerateFiles(Path.Combine(Globals.DataFolder, "market-hours"), "holidays-*.csv")
+                .Select(x =>
                 {
-                    var csv = line.ToCsv();
-                    dates.Add(new DateTime(
-                        Parse.Int(csv[0]),
-                        Parse.Int(csv[1]),
-                        Parse.Int(csv[2])
-                    ));
-                }
-                return new KeyValuePair<string, IEnumerable<DateTime>>(market, dates);
-            }).ToDictionary();
+                    var dates = new HashSet<DateTime>();
+                    var market = Path.GetFileNameWithoutExtension(x)
+                        .Replace("holidays-", string.Empty);
+                    foreach (
+                        var line in File.ReadAllLines(x).Skip(1).Where(l => !l.StartsWith("#"))
+                    )
+                    {
+                        var csv = line.ToCsv();
+                        dates.Add(
+                            new DateTime(Parse.Int(csv[0]), Parse.Int(csv[1]), Parse.Int(csv[2]))
+                        );
+                    }
+                    return new KeyValuePair<string, IEnumerable<DateTime>>(market, dates);
+                })
+                .ToDictionary();
             var database = FromCsvFile(input, allHolidays);
             File.WriteAllText(output, JsonConvert.SerializeObject(database, Formatting.Indented));
         }
@@ -253,7 +280,10 @@ namespace QuantConnect.Tests.Common.Util
         /// <param name="file">The csv file to be read</param>
         /// <param name="holidaysByMarket">The holidays for each market in the file, if no holiday is present then none is used</param>
         /// <returns>A new instance of the <see cref="MarketHoursDatabase"/> class representing the data in the specified file</returns>
-        public static MarketHoursDatabase FromCsvFile(string file, IReadOnlyDictionary<string, IEnumerable<DateTime>> holidaysByMarket)
+        public static MarketHoursDatabase FromCsvFile(
+            string file,
+            IReadOnlyDictionary<string, IEnumerable<DateTime>> holidaysByMarket
+        )
         {
             var exchangeHours = new Dictionary<SecurityDatabaseKey, MarketHoursDatabase.Entry>();
 
@@ -269,7 +299,9 @@ namespace QuantConnect.Tests.Common.Util
                 var hours = FromCsvLine(line, holidaysByMarket, out key);
                 if (exchangeHours.ContainsKey(key))
                 {
-                    throw new Exception($"Encountered duplicate key while processing file: {file}. Key: {key}");
+                    throw new Exception(
+                        $"Encountered duplicate key while processing file: {file}. Key: {key}"
+                    );
                 }
 
                 exchangeHours[key] = hours;
@@ -285,9 +317,11 @@ namespace QuantConnect.Tests.Common.Util
         /// <param name="holidaysByMarket">The holidays this exchange isn't open for trading by market</param>
         /// <param name="key">The key used to uniquely identify these market hours</param>
         /// <returns>A new <see cref="SecurityExchangeHours"/> for the specified csv line and holidays</returns>
-        private static MarketHoursDatabase.Entry FromCsvLine(string line,
+        private static MarketHoursDatabase.Entry FromCsvLine(
+            string line,
             IReadOnlyDictionary<string, IEnumerable<DateTime>> holidaysByMarket,
-            out SecurityDatabaseKey key)
+            out SecurityDatabaseKey key
+        )
         {
             var csv = line.Split(',');
             var marketHours = new List<LocalMarketHours>(7);
@@ -302,17 +336,21 @@ namespace QuantConnect.Tests.Common.Util
             //var symbol = csv[3];
             //var type = csv[4];
             var symbol = string.IsNullOrEmpty(csv[3]) ? null : csv[3];
-            key = new SecurityDatabaseKey(csv[2], symbol, (SecurityType)Enum.Parse(typeof(SecurityType), csv[4], true));
+            key = new SecurityDatabaseKey(
+                csv[2],
+                symbol,
+                (SecurityType)Enum.Parse(typeof(SecurityType), csv[4], true)
+            );
 
             int csvLength = csv.Length;
             for (int i = 1; i < 8; i++) // 7 days, so < 8
             {
                 // the 4 here is because 4 times per day, ex_open,open,close,ex_close
-                if (4*i + 4 > csvLength - 1)
+                if (4 * i + 4 > csvLength - 1)
                 {
                     break;
                 }
-                var hours = ReadCsvHours(csv, 4*i + 1, (DayOfWeek) (i - 1));
+                var hours = ReadCsvHours(csv, 4 * i + 1, (DayOfWeek)(i - 1));
                 marketHours.Add(hours);
             }
 
@@ -324,28 +362,39 @@ namespace QuantConnect.Tests.Common.Util
 
             var earlyCloses = new Dictionary<DateTime, TimeSpan>();
             var lateOpens = new Dictionary<DateTime, TimeSpan>();
-            var exchangeHours = new SecurityExchangeHours(exchangeTimeZone, holidays, marketHours.ToDictionary(x => x.DayOfWeek), earlyCloses, lateOpens);
+            var exchangeHours = new SecurityExchangeHours(
+                exchangeTimeZone,
+                holidays,
+                marketHours.ToDictionary(x => x.DayOfWeek),
+                earlyCloses,
+                lateOpens
+            );
             return new MarketHoursDatabase.Entry(dataTimeZone, exchangeHours);
         }
 
         private static DateTimeZone ParseTimeZone(string tz)
         {
             // handle UTC directly
-            if (tz == "UTC") return TimeZones.Utc;
+            if (tz == "UTC")
+                return TimeZones.Utc;
             // if it doesn't start with UTC then it's a name, like America/New_York
-            if (!tz.StartsWith("UTC")) return DateTimeZoneProviders.Tzdb[tz];
+            if (!tz.StartsWith("UTC"))
+                return DateTimeZoneProviders.Tzdb[tz];
 
             // it must be a UTC offset, parse the offset as hours
 
             // define the time zone as a constant offset time zone in the form: 'UTC-3.5' or 'UTC+10'
-            var millisecondsOffset = (int) TimeSpan.FromHours(
-                Parse.Double(tz.Replace("UTC", string.Empty))
-            ).TotalMilliseconds;
+            var millisecondsOffset = (int)
+                TimeSpan.FromHours(Parse.Double(tz.Replace("UTC", string.Empty))).TotalMilliseconds;
 
             return DateTimeZone.ForOffset(Offset.FromMilliseconds(millisecondsOffset));
         }
 
-        private static LocalMarketHours ReadCsvHours(string[] csv, int startIndex, DayOfWeek dayOfWeek)
+        private static LocalMarketHours ReadCsvHours(
+            string[] csv,
+            int startIndex,
+            DayOfWeek dayOfWeek
+        )
         {
             var ex_open = csv[startIndex];
             if (ex_open == "-")
@@ -366,15 +415,23 @@ namespace QuantConnect.Tests.Common.Util
             var close_time = ParseHoursToTimeSpan(close);
             var ex_close_time = ParseHoursToTimeSpan(ex_close);
 
-            if (ex_open_time == TimeSpan.Zero
+            if (
+                ex_open_time == TimeSpan.Zero
                 && open_time == TimeSpan.Zero
                 && close_time == TimeSpan.Zero
-                && ex_close_time == TimeSpan.Zero)
+                && ex_close_time == TimeSpan.Zero
+            )
             {
                 return LocalMarketHours.ClosedAllDay(dayOfWeek);
             }
 
-            return new LocalMarketHours(dayOfWeek, ex_open_time, open_time, close_time, ex_close_time);
+            return new LocalMarketHours(
+                dayOfWeek,
+                ex_open_time,
+                open_time,
+                close_time,
+                ex_close_time
+            );
         }
 
         private static TimeSpan ParseHoursToTimeSpan(string ex_open)

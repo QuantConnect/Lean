@@ -21,7 +21,5 @@ namespace QuantConnect.Data.Custom.AlphaStreams
     /// Static class for place holder
     /// </summary>
     [Obsolete("'QuantConnect.Data.Custom.Alphas' namespace is obsolete")]
-    public static class PlaceHolder
-    {
-    }
+    public static class PlaceHolder { }
 }

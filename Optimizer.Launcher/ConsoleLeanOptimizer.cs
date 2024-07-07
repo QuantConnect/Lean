@@ -13,13 +13,13 @@
  * limitations under the License.
 */
 
-using QuantConnect.Util;
 using System;
 using System.Collections.Concurrent;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using QuantConnect.Optimizer.Parameters;
+using QuantConnect.Util;
 using Log = QuantConnect.Logging.Log;
 
 namespace QuantConnect.Optimizer.Launcher
@@ -38,18 +38,29 @@ namespace QuantConnect.Optimizer.Launcher
         /// Creates a new instance
         /// </summary>
         /// <param name="nodePacket">The optimization node packet to handle</param>
-        public ConsoleLeanOptimizer(OptimizationNodePacket nodePacket) : base(nodePacket)
+        public ConsoleLeanOptimizer(OptimizationNodePacket nodePacket)
+            : base(nodePacket)
         {
             _processByBacktestId = new ConcurrentDictionary<string, Process>();
 
-            _rootResultDirectory = Configuration.Config.Get("results-destination-folder",
-                Path.Combine(Directory.GetCurrentDirectory(), $"opt-{nodePacket.OptimizationId}"));
+            _rootResultDirectory = Configuration.Config.Get(
+                "results-destination-folder",
+                Path.Combine(Directory.GetCurrentDirectory(), $"opt-{nodePacket.OptimizationId}")
+            );
             Directory.CreateDirectory(_rootResultDirectory);
 
-            _leanLocation = Configuration.Config.Get("lean-binaries-location",
-                Path.Combine(Directory.GetCurrentDirectory(), "../../../Launcher/bin/Debug/QuantConnect.Lean.Launcher"));
+            _leanLocation = Configuration.Config.Get(
+                "lean-binaries-location",
+                Path.Combine(
+                    Directory.GetCurrentDirectory(),
+                    "../../../Launcher/bin/Debug/QuantConnect.Lean.Launcher"
+                )
+            );
 
-            var closeLeanAutomatically = Configuration.Config.GetBool("optimizer-close-automatically", true);
+            var closeLeanAutomatically = Configuration.Config.GetBool(
+                "optimizer-close-automatically",
+                true
+            );
             _extraLeanArguments = $"--close-automatically {closeLeanAutomatically}";
 
             var algorithmTypeName = Configuration.Config.Get("algorithm-type-name");
@@ -90,15 +101,12 @@ namespace QuantConnect.Optimizer.Launcher
             {
                 FileName = _leanLocation,
                 WorkingDirectory = Directory.GetParent(_leanLocation).FullName,
-                Arguments = $"--results-destination-folder \"{resultDirectory}\" --algorithm-id \"{backtestId}\" --optimization-id \"{optimizationId}\" --parameters {parameterSet} --backtest-name \"{backtestName}\" {_extraLeanArguments}",
+                Arguments =
+                    $"--results-destination-folder \"{resultDirectory}\" --algorithm-id \"{backtestId}\" --optimization-id \"{optimizationId}\" --parameters {parameterSet} --backtest-name \"{backtestName}\" {_extraLeanArguments}",
                 WindowStyle = ProcessWindowStyle.Minimized
             };
 
-            var process = new Process
-            {
-                StartInfo = startInfo,
-                EnableRaisingEvents = true
-            };
+            var process = new Process { StartInfo = startInfo, EnableRaisingEvents = true };
             _processByBacktestId[backtestId] = process;
 
             process.Exited += (sender, args) =>
@@ -112,7 +120,10 @@ namespace QuantConnect.Optimizer.Launcher
                 _processByBacktestId.TryRemove(backtestId, out process);
                 var backtestResult = $"{backtestId}.json";
                 var resultJson = Path.Combine(_rootResultDirectory, backtestId, backtestResult);
-                NewResult(File.Exists(resultJson) ? File.ReadAllText(resultJson) : null, backtestId);
+                NewResult(
+                    File.Exists(resultJson) ? File.ReadAllText(resultJson) : null,
+                    backtestId
+                );
                 process.DisposeSafely();
             };
 
@@ -145,11 +156,13 @@ namespace QuantConnect.Optimizer.Launcher
             {
                 var currentEstimate = GetCurrentEstimate();
                 var stats = GetRuntimeStatistics();
-                var message = $"ConsoleLeanOptimizer.SendUpdate(): {currentEstimate} {string.Join(", ", stats.Select(pair => $"{pair.Key}:{pair.Value}"))}";
+                var message =
+                    $"ConsoleLeanOptimizer.SendUpdate(): {currentEstimate} {string.Join(", ", stats.Select(pair => $"{pair.Key}:{pair.Value}"))}";
                 var currentBestBacktest = Strategy.Solution;
                 if (currentBestBacktest != null)
                 {
-                    message += $". Best id:'{currentBestBacktest.BacktestId}'. {OptimizationTarget}. Parameters ({currentBestBacktest.ParameterSet})";
+                    message +=
+                        $". Best id:'{currentBestBacktest.BacktestId}'. {OptimizationTarget}. Parameters ({currentBestBacktest.ParameterSet})";
                 }
                 Log.Trace(message);
             }

@@ -27,7 +27,9 @@ namespace QuantConnect.Indicators
     /// ABS(CMOi) - is the absolute current value of CMO.
     /// VIDYAi-1 - is the value of the period immediately preceding the period being calculated.
     /// </summary>
-    public class VariableIndexDynamicAverage : WindowIndicator<IndicatorDataPoint>, IIndicatorWarmUpPeriodProvider
+    public class VariableIndexDynamicAverage
+        : WindowIndicator<IndicatorDataPoint>,
+            IIndicatorWarmUpPeriodProvider
     {
         private decimal _vidya;
         private ChandeMomentumOscillator _CMO;
@@ -35,16 +37,14 @@ namespace QuantConnect.Indicators
 
         /// <summary>
         /// Initializes a new instance of the <see cref="VariableIndexDynamicAverage"/> class using the specified period.
-        /// </summary> 
+        /// </summary>
         /// <param name="period">The period of the indicator</param>
         public VariableIndexDynamicAverage(int period)
-            : this($"VIDYA({period})", period)
-        {
-        }
+            : this($"VIDYA({period})", period) { }
 
         /// <summary>
         /// Initializes a new instance of the <see cref="VariableIndexDynamicAverage"/> class using the specified name and period.
-        /// </summary> 
+        /// </summary>
         /// <param name="name">The name of this indicator</param>
         /// <param name="period">The period of the indicator</param>
         public VariableIndexDynamicAverage(string name, int period)
@@ -70,7 +70,10 @@ namespace QuantConnect.Indicators
         /// <param name="input">The input given to the indicator</param>
         /// <param name="window">The window for the input history</param>
         /// <returns>A new value for this indicator</returns>
-        protected override decimal ComputeNextValue(IReadOnlyWindow<IndicatorDataPoint> window, IndicatorDataPoint input)
+        protected override decimal ComputeNextValue(
+            IReadOnlyWindow<IndicatorDataPoint> window,
+            IndicatorDataPoint input
+        )
         {
             _CMO.Update(input);
             if (!IsReady)
@@ -79,7 +82,9 @@ namespace QuantConnect.Indicators
                 return 0m;
             }
             var absCMO = Math.Abs(_CMO.Current.Value / 100);
-            _vidya = (input.Value * _smoothingFactor * absCMO) + (_vidya * (1 - _smoothingFactor * absCMO));
+            _vidya =
+                (input.Value * _smoothingFactor * absCMO)
+                + (_vidya * (1 - _smoothingFactor * absCMO));
 
             return _vidya;
         }

@@ -13,8 +13,8 @@
  * limitations under the License.
 */
 
-using System.IO;
 using System.Collections.Generic;
+using System.IO;
 
 namespace QuantConnect.Lean.Engine.Storage
 {
@@ -88,7 +88,12 @@ namespace QuantConnect.Lean.Engine.Storage
         /// <summary>
         /// Enumerate the files in the target path
         /// </summary>
-        public virtual IEnumerable<FileInfo> EnumerateFiles(string path, string pattern, SearchOption searchOption, out string rootfolder)
+        public virtual IEnumerable<FileInfo> EnumerateFiles(
+            string path,
+            string pattern,
+            SearchOption searchOption,
+            out string rootfolder
+        )
         {
             var directoryInfo = new DirectoryInfo(path);
             rootfolder = directoryInfo.FullName;

@@ -15,8 +15,8 @@
 */
 
 using QuantConnect.Orders;
-using QuantConnect.Securities;
 using QuantConnect.Orders.Fees;
+using QuantConnect.Securities;
 
 namespace QuantConnect.Brokerages
 {
@@ -29,9 +29,8 @@ namespace QuantConnect.Brokerages
         /// Constructor for Wolverine brokerage model
         /// </summary>
         /// <param name="accountType">Cash or Margin</param>
-        public WolverineBrokerageModel(AccountType accountType = AccountType.Margin) : base(accountType)
-        {
-        }
+        public WolverineBrokerageModel(AccountType accountType = AccountType.Margin)
+            : base(accountType) { }
 
         /// <summary>
         /// Returns true if the brokerage could accept this order. This takes into account
@@ -44,7 +43,11 @@ namespace QuantConnect.Brokerages
         /// <param name="order">The order to be processed</param>
         /// <param name="message">If this function returns false, a brokerage message detailing why the order may not be submitted</param>
         /// <returns>True if the brokerage could process the order, false otherwise</returns>
-        public override bool CanSubmitOrder(Security security, Order order, out BrokerageMessageEvent message)
+        public override bool CanSubmitOrder(
+            Security security,
+            Order order,
+            out BrokerageMessageEvent message
+        )
         {
             if (!IsValidOrderSize(security, order.Quantity, out message))
             {
@@ -54,16 +57,22 @@ namespace QuantConnect.Brokerages
             message = null;
             if (security.Type != SecurityType.Equity)
             {
-                message = new BrokerageMessageEvent(BrokerageMessageType.Warning, "NotSupported",
-                    Messages.DefaultBrokerageModel.UnsupportedSecurityType(this, security));
+                message = new BrokerageMessageEvent(
+                    BrokerageMessageType.Warning,
+                    "NotSupported",
+                    Messages.DefaultBrokerageModel.UnsupportedSecurityType(this, security)
+                );
 
                 return false;
             }
 
             if (order.Type != OrderType.Market)
             {
-                message = new BrokerageMessageEvent(BrokerageMessageType.Warning, "NotSupported",
-                    Messages.WolverineBrokerageModel.UnsupportedOrderType(order));
+                message = new BrokerageMessageEvent(
+                    BrokerageMessageType.Warning,
+                    "NotSupported",
+                    Messages.WolverineBrokerageModel.UnsupportedOrderType(order)
+                );
 
                 return false;
             }
@@ -79,9 +88,18 @@ namespace QuantConnect.Brokerages
         /// <param name="request">Update request</param>
         /// <param name="message">Outgoing message</param>
         /// <returns>Always false as Wolverine does not support update of orders</returns>
-        public override bool CanUpdateOrder(Security security, Order order, UpdateOrderRequest request, out BrokerageMessageEvent message)
+        public override bool CanUpdateOrder(
+            Security security,
+            Order order,
+            UpdateOrderRequest request,
+            out BrokerageMessageEvent message
+        )
         {
-            message = new BrokerageMessageEvent(BrokerageMessageType.Warning, 0, Messages.DefaultBrokerageModel.OrderUpdateNotSupported);
+            message = new BrokerageMessageEvent(
+                BrokerageMessageType.Warning,
+                0,
+                Messages.DefaultBrokerageModel.OrderUpdateNotSupported
+            );
             return false;
         }
 

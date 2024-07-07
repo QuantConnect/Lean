@@ -19,8 +19,8 @@ using System.Collections.Generic;
 using System.Linq;
 using NUnit.Framework;
 using QuantConnect.Data;
-using QuantConnect.Data.Custom.IconicTypes;
 using QuantConnect.Data.Auxiliary;
+using QuantConnect.Data.Custom.IconicTypes;
 using QuantConnect.Data.Market;
 using QuantConnect.Data.UniverseSelection;
 using QuantConnect.Lean.Engine.DataFeeds;
@@ -33,6 +33,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
     public class TimeSliceTests
     {
         private TimeSliceFactory _timeSliceFactory;
+
         [SetUp]
         public void SetUp()
         {
@@ -50,7 +51,8 @@ namespace QuantConnect.Tests.Engine.DataFeeds
                 TimeZones.Utc,
                 true,
                 true,
-                false);
+                false
+            );
 
             var security = new Security(
                 SecurityExchangeHours.AlwaysOpen(TimeZones.Utc),
@@ -69,13 +71,28 @@ namespace QuantConnect.Tests.Engine.DataFeeds
                 .Select(i => new Tick(refTime.AddSeconds(i), Symbols.EURUSD, 1.3465m, 1.34652m))
                 .ToArray();
 
-            IEnumerable<TimeSlice> timeSlices = rawTicks.Select(t => _timeSliceFactory.Create(
-                t.Time,
-                new List<DataFeedPacket> { new DataFeedPacket(security, subscriptionDataConfig, new List<BaseData>() { t }) },
-                SecurityChangesTests.CreateNonInternal(Enumerable.Empty<Security>(), Enumerable.Empty<Security>()),
-                new Dictionary<Universe, BaseDataCollection>()));
+            IEnumerable<TimeSlice> timeSlices = rawTicks.Select(t =>
+                _timeSliceFactory.Create(
+                    t.Time,
+                    new List<DataFeedPacket>
+                    {
+                        new DataFeedPacket(
+                            security,
+                            subscriptionDataConfig,
+                            new List<BaseData>() { t }
+                        )
+                    },
+                    SecurityChangesTests.CreateNonInternal(
+                        Enumerable.Empty<Security>(),
+                        Enumerable.Empty<Security>()
+                    ),
+                    new Dictionary<Universe, BaseDataCollection>()
+                )
+            );
 
-            Tick[] timeSliceTicks = timeSlices.SelectMany(ts => ts.Slice.Ticks.Values.SelectMany(x => x)).ToArray();
+            Tick[] timeSliceTicks = timeSlices
+                .SelectMany(ts => ts.Slice.Ticks.Values.SelectMany(x => x))
+                .ToArray();
 
             Assert.AreEqual(rawTicks.Length, timeSliceTicks.Length);
             for (int i = 0; i < rawTicks.Length; i++)
@@ -87,9 +104,9 @@ namespace QuantConnect.Tests.Engine.DataFeeds
         private bool Compare(Tick expected, Tick actual)
         {
             return expected.Time == actual.Time
-                   && expected.BidPrice == actual.BidPrice
-                   && expected.AskPrice == actual.AskPrice
-                   && expected.Quantity == actual.Quantity;
+                && expected.BidPrice == actual.BidPrice
+                && expected.AskPrice == actual.AskPrice
+                && expected.Quantity == actual.Quantity;
         }
 
         [Test]
@@ -99,9 +116,27 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             var symbol2 = Symbol.Create("SCF/CBOE_VX2_EW", SecurityType.Base, Market.USA);
 
             var subscriptionDataConfig1 = new SubscriptionDataConfig(
-                typeof(UnlinkedData), symbol1, Resolution.Daily, TimeZones.Utc, TimeZones.Utc, true, true, false, isCustom: true);
+                typeof(UnlinkedData),
+                symbol1,
+                Resolution.Daily,
+                TimeZones.Utc,
+                TimeZones.Utc,
+                true,
+                true,
+                false,
+                isCustom: true
+            );
             var subscriptionDataConfig2 = new SubscriptionDataConfig(
-                typeof(UnlinkedData), symbol2, Resolution.Daily, TimeZones.Utc, TimeZones.Utc, true, true, false, isCustom: true);
+                typeof(UnlinkedData),
+                symbol2,
+                Resolution.Daily,
+                TimeZones.Utc,
+                TimeZones.Utc,
+                true,
+                true,
+                false,
+                isCustom: true
+            );
 
             var security1 = new Security(
                 SecurityExchangeHours.AlwaysOpen(TimeZones.Utc),
@@ -123,14 +158,43 @@ namespace QuantConnect.Tests.Engine.DataFeeds
                 new SecurityCache()
             );
 
-            var timeSlice = _timeSliceFactory.Create(DateTime.UtcNow,
+            var timeSlice = _timeSliceFactory.Create(
+                DateTime.UtcNow,
                 new List<DataFeedPacket>
                 {
-                    new DataFeedPacket(security1, subscriptionDataConfig1, new List<BaseData> {new UnlinkedData { Symbol = symbol1, Time = DateTime.UtcNow.Date, Value = 15 } }),
-                    new DataFeedPacket(security2, subscriptionDataConfig2, new List<BaseData> {new UnlinkedData { Symbol = symbol2, Time = DateTime.UtcNow.Date, Value = 20 } }),
+                    new DataFeedPacket(
+                        security1,
+                        subscriptionDataConfig1,
+                        new List<BaseData>
+                        {
+                            new UnlinkedData
+                            {
+                                Symbol = symbol1,
+                                Time = DateTime.UtcNow.Date,
+                                Value = 15
+                            }
+                        }
+                    ),
+                    new DataFeedPacket(
+                        security2,
+                        subscriptionDataConfig2,
+                        new List<BaseData>
+                        {
+                            new UnlinkedData
+                            {
+                                Symbol = symbol2,
+                                Time = DateTime.UtcNow.Date,
+                                Value = 20
+                            }
+                        }
+                    ),
                 },
-                SecurityChangesTests.CreateNonInternal(Enumerable.Empty<Security>(), Enumerable.Empty<Security>()),
-                new Dictionary<Universe, BaseDataCollection>());
+                SecurityChangesTests.CreateNonInternal(
+                    Enumerable.Empty<Security>(),
+                    Enumerable.Empty<Security>()
+                ),
+                new Dictionary<Universe, BaseDataCollection>()
+            );
 
             Assert.AreEqual(2, timeSlice.CustomData.Count);
 
@@ -181,7 +245,15 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             var symbol = Symbols.SPY;
 
             var subscriptionDataConfig = new SubscriptionDataConfig(
-                typeof(Tick), symbol, Resolution.Tick, TimeZones.Utc, TimeZones.Utc, true, true, false);
+                typeof(Tick),
+                symbol,
+                Resolution.Tick,
+                TimeZones.Utc,
+                TimeZones.Utc,
+                true,
+                true,
+                false
+            );
 
             var security = new Security(
                 SecurityExchangeHours.AlwaysOpen(TimeZones.Utc),
@@ -193,18 +265,27 @@ namespace QuantConnect.Tests.Engine.DataFeeds
                 new SecurityCache()
             );
 
-            var timeSlice = _timeSliceFactory.Create(DateTime.UtcNow,
+            var timeSlice = _timeSliceFactory.Create(
+                DateTime.UtcNow,
                 new List<DataFeedPacket>
                 {
-                    new DataFeedPacket(security, subscriptionDataConfig, new List<BaseData>
-                    {
-                        new Tick(DateTime.UtcNow, symbol, 280, 0, 0),
-                        new Tick(DateTime.UtcNow, symbol, 500, 0, 0) { Suspicious = true },
-                        new Tick(DateTime.UtcNow, symbol, 281, 0, 0)
-                    })
+                    new DataFeedPacket(
+                        security,
+                        subscriptionDataConfig,
+                        new List<BaseData>
+                        {
+                            new Tick(DateTime.UtcNow, symbol, 280, 0, 0),
+                            new Tick(DateTime.UtcNow, symbol, 500, 0, 0) { Suspicious = true },
+                            new Tick(DateTime.UtcNow, symbol, 281, 0, 0)
+                        }
+                    )
                 },
-                SecurityChangesTests.CreateNonInternal(Enumerable.Empty<Security>(), Enumerable.Empty<Security>()),
-                new Dictionary<Universe, BaseDataCollection>());
+                SecurityChangesTests.CreateNonInternal(
+                    Enumerable.Empty<Security>(),
+                    Enumerable.Empty<Security>()
+                ),
+                new Dictionary<Universe, BaseDataCollection>()
+            );
 
             Assert.AreEqual(1, timeSlice.ConsolidatorUpdateData.Count);
 
@@ -216,7 +297,16 @@ namespace QuantConnect.Tests.Engine.DataFeeds
 
         private IEnumerable<Slice> GetSlices(Symbol symbol, int initialVolume)
         {
-            var subscriptionDataConfig = new SubscriptionDataConfig(typeof(ZipEntryName), symbol, Resolution.Second, TimeZones.Utc, TimeZones.Utc, true, true, false);
+            var subscriptionDataConfig = new SubscriptionDataConfig(
+                typeof(ZipEntryName),
+                symbol,
+                Resolution.Second,
+                TimeZones.Utc,
+                TimeZones.Utc,
+                true,
+                true,
+                false
+            );
             var security = new Security(
                 SecurityExchangeHours.AlwaysOpen(TimeZones.Utc),
                 subscriptionDataConfig,
@@ -237,18 +327,27 @@ namespace QuantConnect.Tests.Engine.DataFeeds
                     var ask = new Bar(110, 110, 110, 110);
                     var volume = (i + 1) * initialVolume;
 
-                    return _timeSliceFactory.Create(
-                        time,
-                        new List<DataFeedPacket>
-                        {
-                            new DataFeedPacket(security, subscriptionDataConfig, new List<BaseData>
+                    return _timeSliceFactory
+                        .Create(
+                            time,
+                            new List<DataFeedPacket>
                             {
-                                new QuoteBar(time, symbol, bid, i*10, ask, (i + 1) * 11),
-                                new TradeBar(time, symbol, 100, 100, 110, 106, volume)
-                            }),
-                        },
-                        SecurityChangesTests.CreateNonInternal(Enumerable.Empty<Security>(), Enumerable.Empty<Security>()),
-                        new Dictionary<Universe, BaseDataCollection>())
+                                new DataFeedPacket(
+                                    security,
+                                    subscriptionDataConfig,
+                                    new List<BaseData>
+                                    {
+                                        new QuoteBar(time, symbol, bid, i * 10, ask, (i + 1) * 11),
+                                        new TradeBar(time, symbol, 100, 100, 110, 106, volume)
+                                    }
+                                ),
+                            },
+                            SecurityChangesTests.CreateNonInternal(
+                                Enumerable.Empty<Security>(),
+                                Enumerable.Empty<Security>()
+                            ),
+                            new Dictionary<Universe, BaseDataCollection>()
+                        )
                         .Slice;
                 });
         }

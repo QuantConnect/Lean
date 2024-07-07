@@ -1,4 +1,4 @@
-/* 
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -14,8 +14,8 @@
 */
 
 using System;
-using System.Linq;
 using System.Collections.Generic;
+using System.Linq;
 using QuantConnect.Data;
 using QuantConnect.Orders;
 using QuantConnect.Securities.Option;
@@ -24,7 +24,8 @@ namespace QuantConnect.Algorithm.CSharp
 {
     public class IndexOptionPutButterflyAlgorithm : QCAlgorithm
     {
-        private Symbol _spxw, _vxz;
+        private Symbol _spxw,
+            _vxz;
         private decimal _multiplier;
         private IEnumerable<OrderTicket> _tickets = Enumerable.Empty<OrderTicket>();
 
@@ -51,33 +52,48 @@ namespace QuantConnect.Algorithm.CSharp
             {
                 MarketOrder(_vxz, 10000);
             }
-            
+
             // Return if any opening index option position
-            if (_tickets.Any(x => Portfolio[x.Symbol].Invested)) return;
+            if (_tickets.Any(x => Portfolio[x.Symbol].Invested))
+                return;
 
             // Get the OptionChain
-            if (!slice.OptionChains.TryGetValue(_spxw, out var chain)) return;
+            if (!slice.OptionChains.TryGetValue(_spxw, out var chain))
+                return;
 
             // Get nearest expiry date
             var expiry = chain.Min(x => x.Expiry);
-            
+
             // Select the put Option contracts with nearest expiry and sort by strike price
             var puts = chain.Where(x => x.Expiry == expiry && x.Right == OptionRight.Put).ToList();
-            if (puts.Count < 3) return;
+            if (puts.Count < 3)
+                return;
             var sortedPutStrikes = puts.Select(x => x.Strike).OrderBy(x => x).ToArray();
-            
+
             // Select ATM put
             var atmStrike = puts.MinBy(x => Math.Abs(x.Strike - chain.Underlying.Value)).Strike;
 
             // Get the strike prices for the ITM & OTM contracts, make sure they're in equidistance
-            var spread = Math.Min(atmStrike - sortedPutStrikes[0], sortedPutStrikes[^1] - atmStrike);
+            var spread = Math.Min(
+                atmStrike - sortedPutStrikes[0],
+                sortedPutStrikes[^1] - atmStrike
+            );
             var otmStrike = atmStrike - spread;
             var itmStrike = atmStrike + spread;
-            if (!sortedPutStrikes.Contains(otmStrike) || !sortedPutStrikes.Contains(itmStrike)) return;
+            if (!sortedPutStrikes.Contains(otmStrike) || !sortedPutStrikes.Contains(itmStrike))
+                return;
 
             // Buy the put butterfly
-            var putButterfly = OptionStrategies.PutButterfly(_spxw, itmStrike, atmStrike, otmStrike, expiry);
-            var price = putButterfly.UnderlyingLegs.Sum(x => Math.Abs(Securities[x.Symbol].Price * x.Quantity) * _multiplier);
+            var putButterfly = OptionStrategies.PutButterfly(
+                _spxw,
+                itmStrike,
+                atmStrike,
+                otmStrike,
+                expiry
+            );
+            var price = putButterfly.UnderlyingLegs.Sum(x =>
+                Math.Abs(Securities[x.Symbol].Price * x.Quantity) * _multiplier
+            );
             if (price > 0)
             {
                 var quantity = Portfolio.TotalPortfolioValue / price;

@@ -48,7 +48,12 @@ namespace QuantConnect.Tests.Common.Data
         {
             var value = 1234.567890m;
             var time = new DateTime(2000, 1, 2, 3, 4, 5, 6);
-            var symbol = Symbol.Create("ticker", SecurityType.Base, QuantConnect.Market.USA, baseDataType: typeof(DataType));
+            var symbol = Symbol.Create(
+                "ticker",
+                SecurityType.Base,
+                QuantConnect.Market.USA,
+                baseDataType: typeof(DataType)
+            );
             dynamic data = new DataType();
             data.Time = time;
             data.Value = value;
@@ -79,8 +84,6 @@ namespace QuantConnect.Tests.Common.Data
             });
         }
 
-        private class DataType : DynamicData
-        {
-        }
+        private class DataType : DynamicData { }
     }
 }

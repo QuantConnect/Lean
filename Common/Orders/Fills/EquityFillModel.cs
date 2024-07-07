@@ -16,7 +16,6 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-
 using QuantConnect.Data;
 using QuantConnect.Data.Auxiliary;
 using QuantConnect.Data.Market;
@@ -56,13 +55,18 @@ namespace QuantConnect.Orders.Fills
             var fill = new OrderEvent(order, utcTime, OrderFee.Zero);
 
             //If its cancelled don't need anymore checks:
-            if (order.Status == OrderStatus.Canceled) return fill;
+            if (order.Status == OrderStatus.Canceled)
+                return fill;
 
             // Fill only if open or extended
-            if (!IsExchangeOpen(asset,
-                Parameters.ConfigProvider
-                    .GetSubscriptionDataConfigs(asset.Symbol)
-                    .IsExtendedMarketHours()))
+            if (
+                !IsExchangeOpen(
+                    asset,
+                    Parameters
+                        .ConfigProvider.GetSubscriptionDataConfigs(asset.Symbol)
+                        .IsExtendedMarketHours()
+                )
+            )
             {
                 return fill;
             }
@@ -71,7 +75,8 @@ namespace QuantConnect.Orders.Fills
             var tradeBar = GetBestEffortTradeBar(asset, order.Time);
 
             // Do not fill on stale data
-            if (tradeBar == null) return fill;
+            if (tradeBar == null)
+                return fill;
 
             //Check if the limit if touched order was filled:
             switch (order.Direction)
@@ -81,7 +86,11 @@ namespace QuantConnect.Orders.Fills
                     if (tradeBar.Low <= order.TriggerPrice || order.TriggerTouched)
                     {
                         order.TriggerTouched = true;
-                        var askCurrent = GetBestEffortAskPrice(asset, order.Time, out var fillMessage);
+                        var askCurrent = GetBestEffortAskPrice(
+                            asset,
+                            order.Time,
+                            out var fillMessage
+                        );
 
                         if (askCurrent <= order.LimitPrice)
                         {
@@ -99,7 +108,11 @@ namespace QuantConnect.Orders.Fills
                     if (tradeBar.High >= order.TriggerPrice || order.TriggerTouched)
                     {
                         order.TriggerTouched = true;
-                        var bidCurrent = GetBestEffortBidPrice(asset, order.Time, out var fillMessage);
+                        var bidCurrent = GetBestEffortBidPrice(
+                            asset,
+                            order.Time,
+                            out var fillMessage
+                        );
 
                         if (bidCurrent >= order.LimitPrice)
                         {
@@ -127,10 +140,12 @@ namespace QuantConnect.Orders.Fills
             var utcTime = asset.LocalTime.ConvertToUtc(asset.Exchange.TimeZone);
             var fill = new OrderEvent(order, utcTime, OrderFee.Zero);
 
-            if (order.Status == OrderStatus.Canceled) return fill;
+            if (order.Status == OrderStatus.Canceled)
+                return fill;
 
             // Make sure the exchange is open/normal market hours before filling
-            if (!IsExchangeOpen(asset, false)) return fill;
+            if (!IsExchangeOpen(asset, false))
+                return fill;
 
             // Calculate the model slippage: e.g. 0.01c
             var slip = asset.SlippageModel.GetSlippageApproximation(asset, order);
@@ -141,11 +156,13 @@ namespace QuantConnect.Orders.Fills
             {
                 case OrderDirection.Buy:
                     //Order [fill]price for a buy market order model is the current security ask price
-                    fill.FillPrice = GetBestEffortAskPrice(asset, order.Time, out fillMessage) + slip;
+                    fill.FillPrice =
+                        GetBestEffortAskPrice(asset, order.Time, out fillMessage) + slip;
                     break;
                 case OrderDirection.Sell:
                     //Order [fill]price for a buy market order model is the current security bid price
-                    fill.FillPrice = GetBestEffortBidPrice(asset, order.Time, out fillMessage) - slip;
+                    fill.FillPrice =
+                        GetBestEffortBidPrice(asset, order.Time, out fillMessage) - slip;
                     break;
             }
 
@@ -184,16 +201,19 @@ namespace QuantConnect.Orders.Fills
             var fill = new OrderEvent(order, utcTime, OrderFee.Zero);
 
             // If cancelled, don't need anymore checks:
-            if (order.Status == OrderStatus.Canceled) return fill;
+            if (order.Status == OrderStatus.Canceled)
+                return fill;
 
             // Make sure the exchange is open/normal market hours before filling
-            if (!IsExchangeOpen(asset, false)) return fill;
+            if (!IsExchangeOpen(asset, false))
+                return fill;
 
             // Get the trade bar that closes after the order time
             var tradeBar = GetBestEffortTradeBar(asset, order.Time);
 
             // Do not fill on stale data
-            if (tradeBar == null) return fill;
+            if (tradeBar == null)
+                return fill;
 
             switch (order.Direction)
             {
@@ -209,7 +229,11 @@ namespace QuantConnect.Orders.Fills
                         if (tradeBar.Open <= order.StopPrice)
                         {
                             fill.FillPrice = tradeBar.Open - slip;
-                            fill.Message = Messages.EquityFillModel.FilledWithOpenDueToUnfavorableGap(asset, tradeBar);
+                            fill.Message =
+                                Messages.EquityFillModel.FilledWithOpenDueToUnfavorableGap(
+                                    asset,
+                                    tradeBar
+                                );
                             return fill;
                         }
 
@@ -229,7 +253,11 @@ namespace QuantConnect.Orders.Fills
                         if (tradeBar.Open >= order.StopPrice)
                         {
                             fill.FillPrice = tradeBar.Open + slip;
-                            fill.Message = Messages.EquityFillModel.FilledWithOpenDueToUnfavorableGap(asset, tradeBar);
+                            fill.Message =
+                                Messages.EquityFillModel.FilledWithOpenDueToUnfavorableGap(
+                                    asset,
+                                    tradeBar
+                                );
                             return fill;
                         }
 
@@ -262,14 +290,18 @@ namespace QuantConnect.Orders.Fills
             var fill = new OrderEvent(order, utcTime, OrderFee.Zero);
 
             //If its cancelled don't need anymore checks:
-            if (order.Status == OrderStatus.Canceled) return fill;
+            if (order.Status == OrderStatus.Canceled)
+                return fill;
 
             // make sure the exchange is open before filling -- allow pre/post market fills to occur
-            if (!IsExchangeOpen(
-                asset,
-                Parameters.ConfigProvider
-                    .GetSubscriptionDataConfigs(asset.Symbol)
-                    .IsExtendedMarketHours()))
+            if (
+                !IsExchangeOpen(
+                    asset,
+                    Parameters
+                        .ConfigProvider.GetSubscriptionDataConfigs(asset.Symbol)
+                        .IsExtendedMarketHours()
+                )
+            )
             {
                 return fill;
             }
@@ -279,7 +311,8 @@ namespace QuantConnect.Orders.Fills
             var pricesEndTime = prices.EndTime.ConvertToUtc(asset.Exchange.TimeZone);
 
             // do not fill on stale data
-            if (pricesEndTime <= order.Time) return fill;
+            if (pricesEndTime <= order.Time)
+                return fill;
 
             //Check if the Stop Order was filled: opposite to a limit order
             switch (order.Direction)
@@ -368,13 +401,18 @@ namespace QuantConnect.Orders.Fills
             var fill = new OrderEvent(order, utcTime, OrderFee.Zero);
 
             //If its cancelled don't need anymore checks:
-            if (order.Status == OrderStatus.Canceled) return fill;
+            if (order.Status == OrderStatus.Canceled)
+                return fill;
 
             // make sure the exchange is open before filling -- allow pre/post market fills to occur
-            if (!IsExchangeOpen(asset,
-                Parameters.ConfigProvider
-                    .GetSubscriptionDataConfigs(asset.Symbol)
-                    .IsExtendedMarketHours()))
+            if (
+                !IsExchangeOpen(
+                    asset,
+                    Parameters
+                        .ConfigProvider.GetSubscriptionDataConfigs(asset.Symbol)
+                        .IsExtendedMarketHours()
+                )
+            )
             {
                 return fill;
             }
@@ -383,7 +421,8 @@ namespace QuantConnect.Orders.Fills
             var tradeBar = GetBestEffortTradeBar(asset, order.Time);
 
             // Do not fill on stale data
-            if (tradeBar == null) return fill;
+            if (tradeBar == null)
+                return fill;
 
             //-> Valid Live/Model Order:
             switch (order.Direction)
@@ -402,7 +441,10 @@ namespace QuantConnect.Orders.Fills
                         if (tradeBar.Open < order.LimitPrice)
                         {
                             fill.FillPrice = tradeBar.Open;
-                            fill.Message = Messages.EquityFillModel.FilledWithOpenDueToFavorableGap(asset, tradeBar);
+                            fill.Message = Messages.EquityFillModel.FilledWithOpenDueToFavorableGap(
+                                asset,
+                                tradeBar
+                            );
                             return fill;
                         }
                     }
@@ -421,7 +463,10 @@ namespace QuantConnect.Orders.Fills
                         if (tradeBar.Open > order.LimitPrice)
                         {
                             fill.FillPrice = tradeBar.Open;
-                            fill.Message = Messages.EquityFillModel.FilledWithOpenDueToFavorableGap(asset, tradeBar);
+                            fill.Message = Messages.EquityFillModel.FilledWithOpenDueToFavorableGap(
+                                asset,
+                                tradeBar
+                            );
                             return fill;
                         }
                     }
@@ -442,7 +487,8 @@ namespace QuantConnect.Orders.Fills
             var utcTime = asset.LocalTime.ConvertToUtc(asset.Exchange.TimeZone);
             var fill = new OrderEvent(order, utcTime, OrderFee.Zero);
 
-            if (order.Status == OrderStatus.Canceled) return fill;
+            if (order.Status == OrderStatus.Canceled)
+                return fill;
 
             // MOO should never fill on the same bar or on stale data
             // Imagine the case where we have a thinly traded equity, ASUR, and another liquid
@@ -458,19 +504,25 @@ namespace QuantConnect.Orders.Fills
             if (subscribedTypes.Contains(typeof(Tick)))
             {
                 var primaryExchangeCode = ((Equity)asset).PrimaryExchange.Code;
-                var openTradeTickFlags = (uint)(TradeConditionFlags.OfficialOpen | TradeConditionFlags.OpeningPrints);
+                var openTradeTickFlags = (uint)(
+                    TradeConditionFlags.OfficialOpen | TradeConditionFlags.OpeningPrints
+                );
 
-                var trades = asset.Cache.GetAll<Tick>()
-                    .Where(x => x.TickType == TickType.Trade && asset.Exchange.DateTimeIsOpen(x.Time))
-                    .OrderBy(x => x.EndTime).ToList();
+                var trades = asset
+                    .Cache.GetAll<Tick>()
+                    .Where(x =>
+                        x.TickType == TickType.Trade && asset.Exchange.DateTimeIsOpen(x.Time)
+                    )
+                    .OrderBy(x => x.EndTime)
+                    .ToList();
 
                 // Get the first valid (non-zero) tick of trade type from an open market
-                var tick = trades
-                    .FirstOrDefault(x =>
-                        !string.IsNullOrWhiteSpace(x.SaleCondition) &&
-                        x.ExchangeCode == primaryExchangeCode &&
-                        (x.ParsedSaleCondition & openTradeTickFlags) != 0 &&
-                        asset.Exchange.DateTimeIsOpen(x.Time));
+                var tick = trades.FirstOrDefault(x =>
+                    !string.IsNullOrWhiteSpace(x.SaleCondition)
+                    && x.ExchangeCode == primaryExchangeCode
+                    && (x.ParsedSaleCondition & openTradeTickFlags) != 0
+                    && asset.Exchange.DateTimeIsOpen(x.Time)
+                );
 
                 // If there is no OfficialOpen or OpeningPrints in the current list of trades,
                 // we will wait for the next up to 1 minute before accepting the last trade without flags
@@ -478,11 +530,13 @@ namespace QuantConnect.Orders.Fills
                 // If there are only quotes, we will need to test for the tick type before we assign the fill price
                 if (tick == null)
                 {
-                    var previousOpen = asset.Exchange.Hours
-                        .GetMarketHours(asset.LocalTime)
+                    var previousOpen = asset
+                        .Exchange.Hours.GetMarketHours(asset.LocalTime)
                         .GetMarketOpen(TimeSpan.Zero, false);
 
-                    fill.Message = Messages.EquityFillModel.MarketOnOpenFillNoOfficialOpenOrOpeningPrintsWithinOneMinute;
+                    fill.Message = Messages
+                        .EquityFillModel
+                        .MarketOnOpenFillNoOfficialOpenOrOpeningPrintsWithinOneMinute;
 
                     tick = trades.LastOrDefault() ?? asset.Cache.GetAll<Tick>().LastOrDefault();
                     if ((tick?.EndTime.TimeOfDay - previousOpen)?.TotalMinutes < 1)
@@ -506,10 +560,14 @@ namespace QuantConnect.Orders.Fills
                 if (tradeBar != null)
                 {
                     // If the order was placed during the bar aggregation, we cannot use its open price
-                    if (tradeBar.Time < localOrderTime) return fill;
+                    if (tradeBar.Time < localOrderTime)
+                        return fill;
 
                     // We need to verify whether the trade data is from the open market.
-                    if (tradeBar.Period < Resolution.Hour.ToTimeSpan() && !asset.Exchange.DateTimeIsOpen(tradeBar.Time))
+                    if (
+                        tradeBar.Period < Resolution.Hour.ToTimeSpan()
+                        && !asset.Exchange.DateTimeIsOpen(tradeBar.Time)
+                    )
                     {
                         return fill;
                     }
@@ -523,19 +581,24 @@ namespace QuantConnect.Orders.Fills
                 fill.Message = Messages.EquityFillModel.FilledWithQuoteData(asset);
             }
 
-            if (localOrderTime >= endTime) return fill;
+            if (localOrderTime >= endTime)
+                return fill;
 
             // if the MOO was submitted during market the previous day, wait for a day to turn over
             // The date of the order and the trade data end time cannot be the same.
             // Note that the security local time can be ahead of the data end time.
-            if (asset.Exchange.DateTimeIsOpen(localOrderTime) && localOrderTime.Date == endTime.Date)
+            if (
+                asset.Exchange.DateTimeIsOpen(localOrderTime)
+                && localOrderTime.Date == endTime.Date
+            )
             {
                 return fill;
             }
 
             // wait until market open
             // make sure the exchange is open/normal market hours before filling
-            if (!IsExchangeOpen(asset, false)) return fill;
+            if (!IsExchangeOpen(asset, false))
+                return fill;
 
             // assume the order completely filled
             fill.FillQuantity = order.Quantity;
@@ -552,7 +615,11 @@ namespace QuantConnect.Orders.Fills
                 case OrderDirection.Buy:
                     if (fill.FillPrice == 0)
                     {
-                        fill.FillPrice = GetBestEffortAskPrice(asset, order.Time, out bestEffortMessage);
+                        fill.FillPrice = GetBestEffortAskPrice(
+                            asset,
+                            order.Time,
+                            out bestEffortMessage
+                        );
                         fill.Message += bestEffortMessage;
                     }
 
@@ -561,7 +628,11 @@ namespace QuantConnect.Orders.Fills
                 case OrderDirection.Sell:
                     if (fill.FillPrice == 0)
                     {
-                        fill.FillPrice = GetBestEffortBidPrice(asset, order.Time, out bestEffortMessage);
+                        fill.FillPrice = GetBestEffortBidPrice(
+                            asset,
+                            order.Time,
+                            out bestEffortMessage
+                        );
                         fill.Message += bestEffortMessage;
                     }
 
@@ -583,7 +654,8 @@ namespace QuantConnect.Orders.Fills
             var utcTime = asset.LocalTime.ConvertToUtc(asset.Exchange.TimeZone);
             var fill = new OrderEvent(order, utcTime, OrderFee.Zero);
 
-            if (order.Status == OrderStatus.Canceled) return fill;
+            if (order.Status == OrderStatus.Canceled)
+                return fill;
 
             var localOrderTime = order.Time.ConvertFromUtc(asset.Exchange.TimeZone);
             var nextMarketClose = asset.Exchange.Hours.GetNextMarketClose(localOrderTime, false);
@@ -599,18 +671,22 @@ namespace QuantConnect.Orders.Fills
             if (subscribedTypes.Contains(typeof(Tick)))
             {
                 var primaryExchangeCode = ((Equity)asset).PrimaryExchange.Code;
-                var closeTradeTickFlags = (uint)(TradeConditionFlags.OfficialClose | TradeConditionFlags.ClosingPrints);
+                var closeTradeTickFlags = (uint)(
+                    TradeConditionFlags.OfficialClose | TradeConditionFlags.ClosingPrints
+                );
 
-                var trades = asset.Cache.GetAll<Tick>()
+                var trades = asset
+                    .Cache.GetAll<Tick>()
                     .Where(x => x.TickType == TickType.Trade)
-                    .OrderBy(x => x.EndTime).ToList();
+                    .OrderBy(x => x.EndTime)
+                    .ToList();
 
                 // Get the last valid (non-zero) tick of trade type from an close market
-                var tick = trades
-                    .LastOrDefault(x =>
-                        !string.IsNullOrWhiteSpace(x.SaleCondition) &&
-                        x.ExchangeCode == primaryExchangeCode
-                        && (x.ParsedSaleCondition & closeTradeTickFlags) != 0);
+                var tick = trades.LastOrDefault(x =>
+                    !string.IsNullOrWhiteSpace(x.SaleCondition)
+                    && x.ExchangeCode == primaryExchangeCode
+                    && (x.ParsedSaleCondition & closeTradeTickFlags) != 0
+                );
 
                 // If there is no OfficialClose or ClosingPrints in the current list of trades,
                 // we will wait for the next up to 1 minute before accepting the last tick without flags
@@ -619,9 +695,15 @@ namespace QuantConnect.Orders.Fills
                 if (tick == null)
                 {
                     tick = trades.LastOrDefault() ?? asset.Cache.GetAll<Tick>().LastOrDefault();
-                    if (Parameters.ConfigProvider.GetSubscriptionDataConfigs(asset.Symbol).IsExtendedMarketHours())
+                    if (
+                        Parameters
+                            .ConfigProvider.GetSubscriptionDataConfigs(asset.Symbol)
+                            .IsExtendedMarketHours()
+                    )
                     {
-                        fill.Message = Messages.EquityFillModel.MarketOnCloseFillNoOfficialCloseOrClosingPrintsWithinOneMinute;
+                        fill.Message = Messages
+                            .EquityFillModel
+                            .MarketOnCloseFillNoOfficialCloseOrClosingPrintsWithinOneMinute;
 
                         if ((tick?.EndTime - nextMarketClose)?.TotalMinutes < 1)
                         {
@@ -630,7 +712,9 @@ namespace QuantConnect.Orders.Fills
                     }
                     else
                     {
-                        fill.Message = Messages.EquityFillModel.MarketOnCloseFillNoOfficialCloseOrClosingPrintsWithoutExtendedMarketHours;
+                        fill.Message = Messages
+                            .EquityFillModel
+                            .MarketOnCloseFillNoOfficialCloseOrClosingPrintsWithoutExtendedMarketHours;
                     }
 
                     fill.Message += " " + Messages.EquityFillModel.FilledWithLastTickTypeData(tick);
@@ -667,7 +751,11 @@ namespace QuantConnect.Orders.Fills
                 case OrderDirection.Buy:
                     if (fill.FillPrice == 0)
                     {
-                        fill.FillPrice = GetBestEffortAskPrice(asset, order.Time, out bestEffortMessage);
+                        fill.FillPrice = GetBestEffortAskPrice(
+                            asset,
+                            order.Time,
+                            out bestEffortMessage
+                        );
                         fill.Message += bestEffortMessage;
                     }
 
@@ -676,7 +764,11 @@ namespace QuantConnect.Orders.Fills
                 case OrderDirection.Sell:
                     if (fill.FillPrice == 0)
                     {
-                        fill.FillPrice = GetBestEffortBidPrice(asset, order.Time, out bestEffortMessage);
+                        fill.FillPrice = GetBestEffortBidPrice(
+                            asset,
+                            order.Time,
+                            out bestEffortMessage
+                        );
                         fill.Message += bestEffortMessage;
                     }
 
@@ -698,13 +790,14 @@ namespace QuantConnect.Orders.Fills
         protected override HashSet<Type> GetSubscribedTypes(Security asset)
         {
             var subscribedTypes = Parameters
-                .ConfigProvider
-                .GetSubscriptionDataConfigs(asset.Symbol)
+                .ConfigProvider.GetSubscriptionDataConfigs(asset.Symbol)
                 .ToHashSet(x => x.Type);
 
             if (subscribedTypes.Count == 0)
             {
-                throw new InvalidOperationException($"Cannot perform fill for {asset.Symbol} because no data subscription were found.");
+                throw new InvalidOperationException(
+                    $"Cannot perform fill for {asset.Symbol} because no data subscription were found."
+                );
             }
 
             return subscribedTypes;
@@ -718,7 +811,11 @@ namespace QuantConnect.Orders.Fills
         /// <param name="asset">Security which has subscribed data types</param>
         /// <param name="orderTime">Time the order was submitted</param>
         /// <param name="message">Information about the best effort, whether prices are stale or need to use trade information</param>
-        private decimal GetBestEffortAskPrice(Security asset, DateTime orderTime, out string message)
+        private decimal GetBestEffortAskPrice(
+            Security asset,
+            DateTime orderTime,
+            out string message
+        )
         {
             message = string.Empty;
             BaseData baseData = null;
@@ -737,7 +834,9 @@ namespace QuantConnect.Orders.Fills
             {
                 ticks = asset.Cache.GetAll<Tick>().ToList();
 
-                var quote = ticks.LastOrDefault(x => x.TickType == TickType.Quote && x.AskPrice > 0);
+                var quote = ticks.LastOrDefault(x =>
+                    x.TickType == TickType.Quote && x.AskPrice > 0
+                );
                 if (quote != null)
                 {
                     if (quote.EndTime >= cutOffTime)
@@ -806,7 +905,9 @@ namespace QuantConnect.Orders.Fills
                 return bestEffortAskPrice;
             }
 
-            throw new InvalidOperationException(Messages.FillModel.NoMarketDataToGetAskPriceForFilling(asset, subscribedTypes));
+            throw new InvalidOperationException(
+                Messages.FillModel.NoMarketDataToGetAskPriceForFilling(asset, subscribedTypes)
+            );
         }
 
         /// <summary>
@@ -817,7 +918,11 @@ namespace QuantConnect.Orders.Fills
         /// <param name="asset">Security which has subscribed data types</param>
         /// <param name="orderTime">Time the order was submitted</param>
         /// <param name="message">Information about the best effort, whether prices are stale or need to use trade information</param>
-        private decimal GetBestEffortBidPrice(Security asset, DateTime orderTime, out string message)
+        private decimal GetBestEffortBidPrice(
+            Security asset,
+            DateTime orderTime,
+            out string message
+        )
         {
             message = string.Empty;
             BaseData baseData = null;
@@ -836,7 +941,9 @@ namespace QuantConnect.Orders.Fills
             {
                 ticks = asset.Cache.GetAll<Tick>().ToList();
 
-                var quote = ticks.LastOrDefault(x => x.TickType == TickType.Quote && x.BidPrice > 0);
+                var quote = ticks.LastOrDefault(x =>
+                    x.TickType == TickType.Quote && x.BidPrice > 0
+                );
                 if (quote != null)
                 {
                     if (quote.EndTime >= cutOffTime)
@@ -905,7 +1012,9 @@ namespace QuantConnect.Orders.Fills
                 return bestEffortBidPrice;
             }
 
-            throw new InvalidOperationException(Messages.FillModel.NoMarketDataToGetBidPriceForFilling(asset, subscribedTypes));
+            throw new InvalidOperationException(
+                Messages.FillModel.NoMarketDataToGetBidPriceForFilling(asset, subscribedTypes)
+            );
         }
 
         /// <summary>
@@ -935,7 +1044,10 @@ namespace QuantConnect.Orders.Fills
                 var startTimeUtc = DateTime.MinValue;
                 var endTimeUtc = DateTime.MinValue;
 
-                var trades = asset.Cache.GetAll<Tick>().Where(x => x.TickType == TickType.Trade).ToList();
+                var trades = asset
+                    .Cache.GetAll<Tick>()
+                    .Where(x => x.TickType == TickType.Trade)
+                    .ToList();
                 if (trades.Any())
                 {
                     foreach (var trade in trades)
@@ -953,8 +1065,16 @@ namespace QuantConnect.Orders.Fills
                         endTimeUtc = trade.EndTime;
                     }
 
-                    bestEffortTradeBar = new TradeBar(startTimeUtc, asset.Symbol,
-                        tradeOpen, tradeHigh, tradeLow, tradeClose, tradeVolume, endTimeUtc - startTimeUtc);
+                    bestEffortTradeBar = new TradeBar(
+                        startTimeUtc,
+                        asset.Symbol,
+                        tradeOpen,
+                        tradeHigh,
+                        tradeLow,
+                        tradeClose,
+                        tradeVolume,
+                        endTimeUtc - startTimeUtc
+                    );
                 }
             }
             else if (subscribedTypes.Contains(typeof(TradeBar)))
@@ -963,8 +1083,10 @@ namespace QuantConnect.Orders.Fills
             }
 
             // Do not accept trade information older than the order
-            if (bestEffortTradeBar == null ||
-                bestEffortTradeBar.EndTime.ConvertToUtc(asset.Exchange.TimeZone) <= orderTime)
+            if (
+                bestEffortTradeBar == null
+                || bestEffortTradeBar.EndTime.ConvertToUtc(asset.Exchange.TimeZone) <= orderTime
+            )
             {
                 return null;
             }
@@ -976,12 +1098,22 @@ namespace QuantConnect.Orders.Fills
         /// This is required due to a limitation in PythonNet to resolved
         /// overriden methods. <see cref="GetPrices"/>
         /// </summary>
-        protected override Prices GetPricesCheckingPythonWrapper(Security asset, OrderDirection direction)
+        protected override Prices GetPricesCheckingPythonWrapper(
+            Security asset,
+            OrderDirection direction
+        )
         {
             if (PythonWrapper != null)
             {
                 var prices = PythonWrapper.GetPricesInternal(asset, direction);
-                return new Prices(prices.EndTime, prices.Current, prices.Open, prices.High, prices.Low, prices.Close);
+                return new Prices(
+                    prices.EndTime,
+                    prices.Current,
+                    prices.Open,
+                    prices.High,
+                    prices.Low,
+                    prices.Close
+                );
             }
             return GetPrices(asset, direction);
         }
@@ -1006,9 +1138,10 @@ namespace QuantConnect.Orders.Fills
             }
 
             // Only fill with data types we are subscribed to
-            var subscriptionTypes = Parameters.ConfigProvider
-                .GetSubscriptionDataConfigs(asset.Symbol)
-                .Select(x => x.Type).ToList();
+            var subscriptionTypes = Parameters
+                .ConfigProvider.GetSubscriptionDataConfigs(asset.Symbol)
+                .Select(x => x.Type)
+                .ToList();
             // Tick
             var tick = asset.Cache.GetData<Tick>();
             if (subscriptionTypes.Contains(typeof(Tick)) && tick != null)

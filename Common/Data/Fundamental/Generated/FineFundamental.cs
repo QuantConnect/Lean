@@ -29,27 +29,32 @@ namespace QuantConnect.Data.Fundamental
         /// <summary>
         /// The instance of the CompanyReference class
         /// </summary>
-        public CompanyReference CompanyReference => _fundamentalInstanceProvider.GetCompanyReference(Time);
+        public CompanyReference CompanyReference =>
+            _fundamentalInstanceProvider.GetCompanyReference(Time);
 
         /// <summary>
         /// The instance of the SecurityReference class
         /// </summary>
-        public SecurityReference SecurityReference => _fundamentalInstanceProvider.GetSecurityReference(Time);
+        public SecurityReference SecurityReference =>
+            _fundamentalInstanceProvider.GetSecurityReference(Time);
 
         /// <summary>
         /// The instance of the FinancialStatements class
         /// </summary>
-        public FinancialStatements FinancialStatements => _fundamentalInstanceProvider.GetFinancialStatements(Time);
+        public FinancialStatements FinancialStatements =>
+            _fundamentalInstanceProvider.GetFinancialStatements(Time);
 
         /// <summary>
         /// The instance of the EarningReports class
         /// </summary>
-        public EarningReports EarningReports => _fundamentalInstanceProvider.GetEarningReports(Time);
+        public EarningReports EarningReports =>
+            _fundamentalInstanceProvider.GetEarningReports(Time);
 
         /// <summary>
         /// The instance of the OperationRatios class
         /// </summary>
-        public OperationRatios OperationRatios => _fundamentalInstanceProvider.GetOperationRatios(Time);
+        public OperationRatios OperationRatios =>
+            _fundamentalInstanceProvider.GetOperationRatios(Time);
 
         /// <summary>
         /// The instance of the EarningRatios class
@@ -59,17 +64,20 @@ namespace QuantConnect.Data.Fundamental
         /// <summary>
         /// The instance of the ValuationRatios class
         /// </summary>
-        public ValuationRatios ValuationRatios => _fundamentalInstanceProvider.GetValuationRatios(Time);
+        public ValuationRatios ValuationRatios =>
+            _fundamentalInstanceProvider.GetValuationRatios(Time);
 
         /// <summary>
         /// The instance of the CompanyProfile class
         /// </summary>
-        public CompanyProfile CompanyProfile => _fundamentalInstanceProvider.GetCompanyProfile(Time);
+        public CompanyProfile CompanyProfile =>
+            _fundamentalInstanceProvider.GetCompanyProfile(Time);
 
         /// <summary>
         /// The instance of the AssetClassification class
         /// </summary>
-        public AssetClassification AssetClassification => _fundamentalInstanceProvider.GetAssetClassification(Time);
+        public AssetClassification AssetClassification =>
+            _fundamentalInstanceProvider.GetAssetClassification(Time);
 
         /// <summary>
         /// Creates a new empty instance
@@ -92,7 +100,11 @@ namespace QuantConnect.Data.Fundamental
         /// <summary>
         /// Creates a new instance for the given time and security
         /// </summary>
-        public FineFundamental(DateTime time, Symbol symbol, FundamentalInstanceProvider fundamentalInstanceProvider)
+        public FineFundamental(
+            DateTime time,
+            Symbol symbol,
+            FundamentalInstanceProvider fundamentalInstanceProvider
+        )
         {
             Time = time;
             Symbol = symbol;

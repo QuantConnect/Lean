@@ -1,11 +1,11 @@
 /*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
- * 
- * Licensed under the Apache License, Version 2.0 (the "License"); 
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -13,8 +13,8 @@
  * limitations under the License.
 */
 
-using QuantConnect.Data.Market;
 using System;
+using QuantConnect.Data.Market;
 
 namespace QuantConnect.Securities.Option
 {
@@ -34,20 +34,14 @@ namespace QuantConnect.Securities.Option
         /// <summary>
         /// Gets the theoretical price as computed by the <see cref="IOptionPriceModel"/>
         /// </summary>
-        public decimal TheoreticalPrice
-        {
-            get; private set;
-        }
+        public decimal TheoreticalPrice { get; private set; }
 
         /// <summary>
         /// Gets the implied volatility of the option contract
         /// </summary>
         public decimal ImpliedVolatility
         {
-            get
-            {
-                return _impliedVolatility.Value;
-            }
+            get { return _impliedVolatility.Value; }
         }
 
         /// <summary>
@@ -55,10 +49,7 @@ namespace QuantConnect.Securities.Option
         /// </summary>
         public Greeks Greeks
         {
-            get
-            {
-                return _greeks.Value;
-            }
+            get { return _greeks.Value; }
         }
 
         /// <summary>
@@ -79,7 +70,11 @@ namespace QuantConnect.Securities.Option
         /// <param name="theoreticalPrice">The theoretical price computed by the price model</param>
         /// <param name="impliedVolatility">The calculated implied volatility</param>
         /// <param name="greeks">The sensitivities (greeks) computed by the price model</param>
-        public OptionPriceModelResult(decimal theoreticalPrice, Func<decimal> impliedVolatility, Func<Greeks> greeks)
+        public OptionPriceModelResult(
+            decimal theoreticalPrice,
+            Func<decimal> impliedVolatility,
+            Func<Greeks> greeks
+        )
         {
             TheoreticalPrice = theoreticalPrice;
             _impliedVolatility = new Lazy<decimal>(impliedVolatility);

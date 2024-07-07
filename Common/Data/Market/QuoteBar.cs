@@ -225,14 +225,24 @@ namespace QuantConnect.Data.Market
         /// <param name="ask">Ask OLHC bar</param>
         /// <param name="lastAskSize">Average ask size over period</param>
         /// <param name="period">The period of this bar, specify null for default of 1 minute</param>
-        public QuoteBar(DateTime time, Symbol symbol, IBar bid, decimal lastBidSize, IBar ask, decimal lastAskSize, TimeSpan? period = null)
+        public QuoteBar(
+            DateTime time,
+            Symbol symbol,
+            IBar bid,
+            decimal lastBidSize,
+            IBar ask,
+            decimal lastAskSize,
+            TimeSpan? period = null
+        )
         {
             Symbol = symbol;
             Time = time;
             Bid = bid == null ? null : new Bar(bid.Open, bid.High, bid.Low, bid.Close);
             Ask = ask == null ? null : new Bar(ask.Open, ask.High, ask.Low, ask.Close);
-            if (Bid != null) LastBidSize = lastBidSize;
-            if (Ask != null) LastAskSize = lastAskSize;
+            if (Bid != null)
+                LastBidSize = lastBidSize;
+            if (Ask != null)
+                LastAskSize = lastAskSize;
             Value = Close;
             Period = period ?? QuantConnect.Time.OneMinute;
             DataType = MarketDataType.QuoteBar;
@@ -248,14 +258,25 @@ namespace QuantConnect.Data.Market
         /// <param name="bidSize">The size of the current bid, if available, if not, pass 0</param>
         /// <param name="askSize">The size of the current ask, if available, if not, pass 0</param>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public override void Update(decimal lastTrade, decimal bidPrice, decimal askPrice, decimal volume, decimal bidSize, decimal askSize)
+        public override void Update(
+            decimal lastTrade,
+            decimal bidPrice,
+            decimal askPrice,
+            decimal volume,
+            decimal bidSize,
+            decimal askSize
+        )
         {
             // update our bid and ask bars - handle null values, this is to give good values for midpoint OHLC
-            if (Bid == null && bidPrice != 0) Bid = new Bar(bidPrice, bidPrice, bidPrice, bidPrice);
-            else if (Bid != null) Bid.Update(ref bidPrice);
+            if (Bid == null && bidPrice != 0)
+                Bid = new Bar(bidPrice, bidPrice, bidPrice, bidPrice);
+            else if (Bid != null)
+                Bid.Update(ref bidPrice);
 
-            if (Ask == null && askPrice != 0) Ask = new Bar(askPrice, askPrice, askPrice, askPrice);
-            else if (Ask != null) Ask.Update(ref askPrice);
+            if (Ask == null && askPrice != 0)
+                Ask = new Bar(askPrice, askPrice, askPrice, askPrice);
+            else if (Ask != null)
+                Ask.Update(ref askPrice);
 
             if (bidSize > 0)
             {
@@ -268,9 +289,12 @@ namespace QuantConnect.Data.Market
             }
 
             // be prepared for updates without trades
-            if (lastTrade != 0) Value = lastTrade;
-            else if (askPrice != 0) Value = askPrice;
-            else if (bidPrice != 0) Value = bidPrice;
+            if (lastTrade != 0)
+                Value = lastTrade;
+            else if (askPrice != 0)
+                Value = askPrice;
+            else if (bidPrice != 0)
+                Value = bidPrice;
         }
 
         /// <summary>
@@ -281,7 +305,12 @@ namespace QuantConnect.Data.Market
         /// <param name="date">Date of this reader request</param>
         /// <param name="isLiveMode">true if we're in live mode, false for backtesting mode</param>
         /// <returns>Enumerable iterator for returning each line of the required data.</returns>
-        public override BaseData Reader(SubscriptionDataConfig config, StreamReader stream, DateTime date, bool isLiveMode)
+        public override BaseData Reader(
+            SubscriptionDataConfig config,
+            StreamReader stream,
+            DateTime date,
+            bool isLiveMode
+        )
         {
             try
             {
@@ -305,13 +334,17 @@ namespace QuantConnect.Data.Market
 
                     case SecurityType.Future:
                         return ParseFuture(config, stream, date);
-
                 }
             }
             catch (Exception err)
             {
-                Log.Error(Invariant($"QuoteBar.Reader(): Error parsing stream, Symbol: {config.Symbol.Value}, SecurityType: {config.SecurityType}, ") +
-                          Invariant($"Resolution: {config.Resolution}, Date: {date.ToStringInvariant("yyyy-MM-dd")}, Message: {err}")
+                Log.Error(
+                    Invariant(
+                        $"QuoteBar.Reader(): Error parsing stream, Symbol: {config.Symbol.Value}, SecurityType: {config.SecurityType}, "
+                    )
+                        + Invariant(
+                            $"Resolution: {config.Resolution}, Date: {date.ToStringInvariant("yyyy-MM-dd")}, Message: {err}"
+                        )
                 );
             }
 
@@ -330,7 +363,12 @@ namespace QuantConnect.Data.Market
         /// <param name="date">Date of this reader request</param>
         /// <param name="isLiveMode">true if we're in live mode, false for backtesting mode</param>
         /// <returns>Enumerable iterator for returning each line of the required data.</returns>
-        public override BaseData Reader(SubscriptionDataConfig config, string line, DateTime date, bool isLiveMode)
+        public override BaseData Reader(
+            SubscriptionDataConfig config,
+            string line,
+            DateTime date,
+            bool isLiveMode
+        )
         {
             try
             {
@@ -354,13 +392,17 @@ namespace QuantConnect.Data.Market
 
                     case SecurityType.Future:
                         return ParseFuture(config, line, date);
-
                 }
             }
             catch (Exception err)
             {
-                Log.Error(Invariant($"QuoteBar.Reader(): Error parsing line: '{line}', Symbol: {config.Symbol.Value}, SecurityType: {config.SecurityType}, ") +
-                    Invariant($"Resolution: {config.Resolution}, Date: {date.ToStringInvariant("yyyy-MM-dd")}, Message: {err}")
+                Log.Error(
+                    Invariant(
+                        $"QuoteBar.Reader(): Error parsing line: '{line}', Symbol: {config.Symbol.Value}, SecurityType: {config.SecurityType}, "
+                    )
+                        + Invariant(
+                            $"Resolution: {config.Resolution}, Date: {date.ToStringInvariant("yyyy-MM-dd")}, Message: {err}"
+                        )
                 );
             }
 
@@ -387,7 +429,11 @@ namespace QuantConnect.Data.Market
         /// <param name="streamReader">The data stream of the requested file</param>
         /// <param name="date">Date of this reader request</param>
         /// <returns><see cref="QuoteBar"/> with the bid/ask set to same values</returns>
-        public QuoteBar ParseFuture(SubscriptionDataConfig config, StreamReader streamReader, DateTime date)
+        public QuoteBar ParseFuture(
+            SubscriptionDataConfig config,
+            StreamReader streamReader,
+            DateTime date
+        )
         {
             return ParseQuote(config, date, streamReader, false);
         }
@@ -411,10 +457,19 @@ namespace QuantConnect.Data.Market
         /// <param name="streamReader">The data stream of the requested file</param>
         /// <param name="date">Date of this reader request</param>
         /// <returns><see cref="QuoteBar"/> with the bid/ask set to same values</returns>
-        public QuoteBar ParseOption(SubscriptionDataConfig config, StreamReader streamReader, DateTime date)
+        public QuoteBar ParseOption(
+            SubscriptionDataConfig config,
+            StreamReader streamReader,
+            DateTime date
+        )
         {
             // scale factor only applies for equity and index options
-            return ParseQuote(config, date, streamReader, useScaleFactor: LeanData.OptionUseScaleFactor(config.Symbol));
+            return ParseQuote(
+                config,
+                date,
+                streamReader,
+                useScaleFactor: LeanData.OptionUseScaleFactor(config.Symbol)
+            );
         }
 
         /// <summary>
@@ -436,7 +491,11 @@ namespace QuantConnect.Data.Market
         /// <param name="streamReader">The data stream of the requested file</param>
         /// <param name="date">Date of this reader request</param>
         /// <returns><see cref="QuoteBar"/> with the bid/ask set to same values</returns>
-        public QuoteBar ParseCfd(SubscriptionDataConfig config, StreamReader streamReader, DateTime date)
+        public QuoteBar ParseCfd(
+            SubscriptionDataConfig config,
+            StreamReader streamReader,
+            DateTime date
+        )
         {
             return ParseQuote(config, date, streamReader, false);
         }
@@ -460,7 +519,11 @@ namespace QuantConnect.Data.Market
         /// <param name="streamReader">The data stream of the requested file</param>
         /// <param name="date">Date of this reader request</param>
         /// <returns><see cref="QuoteBar"/> with the bid/ask set to same values</returns>
-        public QuoteBar ParseForex(SubscriptionDataConfig config, StreamReader streamReader, DateTime date)
+        public QuoteBar ParseForex(
+            SubscriptionDataConfig config,
+            StreamReader streamReader,
+            DateTime date
+        )
         {
             return ParseQuote(config, date, streamReader, false);
         }
@@ -484,7 +547,11 @@ namespace QuantConnect.Data.Market
         /// <param name="streamReader">The data stream of the requested file</param>
         /// <param name="date">Date of this reader request</param>
         /// <returns><see cref="QuoteBar"/> with the bid/ask set to same values</returns>
-        public QuoteBar ParseEquity(SubscriptionDataConfig config, StreamReader streamReader, DateTime date)
+        public QuoteBar ParseEquity(
+            SubscriptionDataConfig config,
+            StreamReader streamReader,
+            DateTime date
+        )
         {
             return ParseQuote(config, date, streamReader, true);
         }
@@ -497,28 +564,31 @@ namespace QuantConnect.Data.Market
         /// <param name="date">Date of this reader request</param>
         /// <param name="useScaleFactor">Whether the data has a scaling factor applied</param>
         /// <returns><see cref="QuoteBar"/> with the bid/ask prices set appropriately</returns>
-        private QuoteBar ParseQuote(SubscriptionDataConfig config, DateTime date, StreamReader streamReader, bool useScaleFactor)
+        private QuoteBar ParseQuote(
+            SubscriptionDataConfig config,
+            DateTime date,
+            StreamReader streamReader,
+            bool useScaleFactor
+        )
         {
             // Non-equity asset classes will not use scaling, including options that have a non-equity underlying asset class.
-            var scaleFactor = useScaleFactor
-                              ? _scaleFactor
-                              : 1;
+            var scaleFactor = useScaleFactor ? _scaleFactor : 1;
 
-            var quoteBar = new QuoteBar
-            {
-                Period = config.Increment,
-                Symbol = config.Symbol
-            };
+            var quoteBar = new QuoteBar { Period = config.Increment, Symbol = config.Symbol };
 
             if (config.Resolution == Resolution.Daily || config.Resolution == Resolution.Hour)
             {
                 // hourly and daily have different time format, and can use slow, robust c# parser.
-                quoteBar.Time = streamReader.GetDateTime().ConvertTo(config.DataTimeZone, config.ExchangeTimeZone);
+                quoteBar.Time = streamReader
+                    .GetDateTime()
+                    .ConvertTo(config.DataTimeZone, config.ExchangeTimeZone);
             }
             else
             {
                 // Using custom int conversion for speed on high resolution data.
-                quoteBar.Time = date.Date.AddMilliseconds(streamReader.GetInt32()).ConvertTo(config.DataTimeZone, config.ExchangeTimeZone);
+                quoteBar.Time = date
+                    .Date.AddMilliseconds(streamReader.GetInt32())
+                    .ConvertTo(config.DataTimeZone, config.ExchangeTimeZone);
             }
 
             var open = streamReader.GetDecimal();
@@ -574,32 +644,40 @@ namespace QuantConnect.Data.Market
         /// <param name="date">Date of this reader request</param>
         /// <param name="useScaleFactor">Whether the data has a scaling factor applied</param>
         /// <returns><see cref="QuoteBar"/> with the bid/ask prices set appropriately</returns>
-        private QuoteBar ParseQuote(SubscriptionDataConfig config, DateTime date, string line, bool useScaleFactor)
+        private QuoteBar ParseQuote(
+            SubscriptionDataConfig config,
+            DateTime date,
+            string line,
+            bool useScaleFactor
+        )
         {
-            var scaleFactor = useScaleFactor
-                              ? _scaleFactor
-                              : 1;
+            var scaleFactor = useScaleFactor ? _scaleFactor : 1;
 
-            var quoteBar = new QuoteBar
-            {
-                Period = config.Increment,
-                Symbol = config.Symbol
-            };
+            var quoteBar = new QuoteBar { Period = config.Increment, Symbol = config.Symbol };
 
             var csv = line.ToCsv(11);
             if (config.Resolution == Resolution.Daily || config.Resolution == Resolution.Hour)
             {
                 // hourly and daily have different time format, and can use slow, robust c# parser.
-                quoteBar.Time = DateTime.ParseExact(csv[0], DateFormat.TwelveCharacter, CultureInfo.InvariantCulture).ConvertTo(config.DataTimeZone, config.ExchangeTimeZone);
+                quoteBar.Time = DateTime
+                    .ParseExact(csv[0], DateFormat.TwelveCharacter, CultureInfo.InvariantCulture)
+                    .ConvertTo(config.DataTimeZone, config.ExchangeTimeZone);
             }
             else
             {
                 // Using custom "ToDecimal" conversion for speed on high resolution data.
-                quoteBar.Time = date.Date.AddMilliseconds((double)csv[0].ToDecimal()).ConvertTo(config.DataTimeZone, config.ExchangeTimeZone);
+                quoteBar.Time = date
+                    .Date.AddMilliseconds((double)csv[0].ToDecimal())
+                    .ConvertTo(config.DataTimeZone, config.ExchangeTimeZone);
             }
 
             // only create the bid if it exists in the file
-            if (csv[1].Length != 0 || csv[2].Length != 0 || csv[3].Length != 0 || csv[4].Length != 0)
+            if (
+                csv[1].Length != 0
+                || csv[2].Length != 0
+                || csv[3].Length != 0
+                || csv[4].Length != 0
+            )
             {
                 // the Bid/Ask bars were already create above, we don't need to recreate them but just set their values
                 quoteBar.Bid.Open = csv[1].ToDecimal() * scaleFactor;
@@ -614,7 +692,12 @@ namespace QuantConnect.Data.Market
             }
 
             // only create the ask if it exists in the file
-            if (csv[6].Length != 0 || csv[7].Length != 0 || csv[8].Length != 0 || csv[9].Length != 0)
+            if (
+                csv[6].Length != 0
+                || csv[7].Length != 0
+                || csv[8].Length != 0
+                || csv[9].Length != 0
+            )
             {
                 // the Bid/Ask bars were already create above, we don't need to recreate them but just set their values
                 quoteBar.Ask.Open = csv[6].ToDecimal() * scaleFactor;
@@ -640,20 +723,44 @@ namespace QuantConnect.Data.Market
         /// <param name="date">Date of this source request if source spread across multiple files</param>
         /// <param name="isLiveMode">true if we're in live mode, false for backtesting mode</param>
         /// <returns>String source location of the file</returns>
-        public override SubscriptionDataSource GetSource(SubscriptionDataConfig config, DateTime date, bool isLiveMode)
+        public override SubscriptionDataSource GetSource(
+            SubscriptionDataConfig config,
+            DateTime date,
+            bool isLiveMode
+        )
         {
             if (isLiveMode)
             {
                 // this data type is streamed in live mode
-                return new SubscriptionDataSource(string.Empty, SubscriptionTransportMedium.Streaming);
+                return new SubscriptionDataSource(
+                    string.Empty,
+                    SubscriptionTransportMedium.Streaming
+                );
             }
 
-            var source = LeanData.GenerateZipFilePath(Globals.DataFolder, config.Symbol, date, config.Resolution, config.TickType);
+            var source = LeanData.GenerateZipFilePath(
+                Globals.DataFolder,
+                config.Symbol,
+                date,
+                config.Resolution,
+                config.TickType
+            );
             if (config.SecurityType == SecurityType.Future || config.SecurityType.IsOption())
             {
-                source += "#" + LeanData.GenerateZipEntryName(config.Symbol, date, config.Resolution, config.TickType);
+                source +=
+                    "#"
+                    + LeanData.GenerateZipEntryName(
+                        config.Symbol,
+                        date,
+                        config.Resolution,
+                        config.TickType
+                    );
             }
-            return new SubscriptionDataSource(source, SubscriptionTransportMedium.LocalFile, FileFormat.Csv);
+            return new SubscriptionDataSource(
+                source,
+                SubscriptionTransportMedium.LocalFile,
+                FileFormat.Csv
+            );
         }
 
         /// <summary>
@@ -693,15 +800,15 @@ namespace QuantConnect.Data.Market
         /// <returns>String representation of the <see cref="QuoteBar"/></returns>
         public override string ToString()
         {
-            return $"{Symbol}: " +
-                   $"Bid: O: {Bid?.Open.SmartRounding()} " +
-                   $"Bid: H: {Bid?.High.SmartRounding()} " +
-                   $"Bid: L: {Bid?.Low.SmartRounding()} " +
-                   $"Bid: C: {Bid?.Close.SmartRounding()} " +
-                   $"Ask: O: {Ask?.Open.SmartRounding()} " +
-                   $"Ask: H: {Ask?.High.SmartRounding()} " +
-                   $"Ask: L: {Ask?.Low.SmartRounding()} " +
-                   $"Ask: C: {Ask?.Close.SmartRounding()} ";
+            return $"{Symbol}: "
+                + $"Bid: O: {Bid?.Open.SmartRounding()} "
+                + $"Bid: H: {Bid?.High.SmartRounding()} "
+                + $"Bid: L: {Bid?.Low.SmartRounding()} "
+                + $"Bid: C: {Bid?.Close.SmartRounding()} "
+                + $"Ask: O: {Ask?.Open.SmartRounding()} "
+                + $"Ask: H: {Ask?.High.SmartRounding()} "
+                + $"Ask: L: {Ask?.Low.SmartRounding()} "
+                + $"Ask: C: {Ask?.Close.SmartRounding()} ";
         }
     }
 }

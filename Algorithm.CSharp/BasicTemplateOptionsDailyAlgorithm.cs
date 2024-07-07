@@ -19,8 +19,8 @@ using System.Collections.Generic;
 using System.Linq;
 using QuantConnect.Data;
 using QuantConnect.Data.Market;
-using QuantConnect.Orders;
 using QuantConnect.Interfaces;
+using QuantConnect.Orders;
 
 namespace QuantConnect.Algorithm.CSharp
 {
@@ -66,7 +66,9 @@ namespace QuantConnect.Algorithm.CSharp
                 if (slice.OptionChains.TryGetValue(_optionSymbol, out chain))
                 {
                     // Grab us the contract nearest expiry that is not today
-                    var contractsByExpiration = chain.Where(x => x.Expiry != Time.Date).OrderBy(x => x.Expiry);
+                    var contractsByExpiration = chain
+                        .Where(x => x.Expiry != Time.Date)
+                        .OrderBy(x => x.Expiry);
                     var contract = contractsByExpiration.FirstOrDefault();
 
                     if (contract != null)
@@ -93,7 +95,9 @@ namespace QuantConnect.Algorithm.CSharp
                 // Assert it is at midnight (5AM UTC)
                 if (orderEvent.UtcTime != new DateTime(2016, 1, 16, 5, 0, 0))
                 {
-                    throw new ArgumentException($"Expiry event was not at the correct time, {orderEvent.UtcTime}");
+                    throw new ArgumentException(
+                        $"Expiry event was not at the correct time, {orderEvent.UtcTime}"
+                    );
                 }
 
                 _optionExpired = true;
@@ -105,7 +109,9 @@ namespace QuantConnect.Algorithm.CSharp
             // Assert we had our option expire and fill a liquidation order
             if (_optionExpired != true)
             {
-                throw new ArgumentException("Algorithm did not process the option expiration like expected");
+                throw new ArgumentException(
+                    "Algorithm did not process the option expiration like expected"
+                );
             }
         }
 
@@ -137,35 +143,36 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// This is used by the regression test system to indicate what the expected statistics are from running the algorithm
         /// </summary>
-        public Dictionary<string, string> ExpectedStatistics => new Dictionary<string, string>
-        {
-            {"Total Orders", "2"},
-            {"Average Win", "0%"},
-            {"Average Loss", "-1.31%"},
-            {"Compounding Annual Return", "-15.304%"},
-            {"Drawdown", "1.300%"},
-            {"Expectancy", "-1"},
-            {"Start Equity", "100000"},
-            {"End Equity", "98689"},
-            {"Net Profit", "-1.311%"},
-            {"Sharpe Ratio", "-3.607"},
-            {"Sortino Ratio", "-1.188"},
-            {"Probabilistic Sharpe Ratio", "0.035%"},
-            {"Loss Rate", "100%"},
-            {"Win Rate", "0%"},
-            {"Profit-Loss Ratio", "0"},
-            {"Alpha", "0"},
-            {"Beta", "0"},
-            {"Annual Standard Deviation", "0.034"},
-            {"Annual Variance", "0.001"},
-            {"Information Ratio", "-3.31"},
-            {"Tracking Error", "0.034"},
-            {"Treynor Ratio", "0"},
-            {"Total Fees", "$1.00"},
-            {"Estimated Strategy Capacity", "$0"},
-            {"Lowest Capacity Asset", "GOOCV W78ZFMML01JA|GOOCV VP83T1ZUHROL"},
-            {"Portfolio Turnover", "0.05%"},
-            {"OrderListHash", "e188868e048fab6b6a0481b4479e97f9"}
-        };
+        public Dictionary<string, string> ExpectedStatistics =>
+            new Dictionary<string, string>
+            {
+                { "Total Orders", "2" },
+                { "Average Win", "0%" },
+                { "Average Loss", "-1.31%" },
+                { "Compounding Annual Return", "-15.304%" },
+                { "Drawdown", "1.300%" },
+                { "Expectancy", "-1" },
+                { "Start Equity", "100000" },
+                { "End Equity", "98689" },
+                { "Net Profit", "-1.311%" },
+                { "Sharpe Ratio", "-3.607" },
+                { "Sortino Ratio", "-1.188" },
+                { "Probabilistic Sharpe Ratio", "0.035%" },
+                { "Loss Rate", "100%" },
+                { "Win Rate", "0%" },
+                { "Profit-Loss Ratio", "0" },
+                { "Alpha", "0" },
+                { "Beta", "0" },
+                { "Annual Standard Deviation", "0.034" },
+                { "Annual Variance", "0.001" },
+                { "Information Ratio", "-3.31" },
+                { "Tracking Error", "0.034" },
+                { "Treynor Ratio", "0" },
+                { "Total Fees", "$1.00" },
+                { "Estimated Strategy Capacity", "$0" },
+                { "Lowest Capacity Asset", "GOOCV W78ZFMML01JA|GOOCV VP83T1ZUHROL" },
+                { "Portfolio Turnover", "0.05%" },
+                { "OrderListHash", "e188868e048fab6b6a0481b4479e97f9" }
+            };
     }
 }

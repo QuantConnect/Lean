@@ -30,7 +30,11 @@ namespace QuantConnect.Interfaces
         /// <param name="includeExpired">Include expired contracts</param>
         /// <param name="securityCurrency">Expected security currency(if any)</param>
         /// <returns>Enumerable of Symbols, that are associated with the provided Symbol</returns>
-        IEnumerable<Symbol> LookupSymbols(Symbol symbol, bool includeExpired, string securityCurrency = null);
+        IEnumerable<Symbol> LookupSymbols(
+            Symbol symbol,
+            bool includeExpired,
+            string securityCurrency = null
+        );
 
         /// <summary>
         /// Returns whether selection can take place or not.

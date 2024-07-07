@@ -14,12 +14,12 @@
  *
 */
 
+using System.Linq;
 using QuantConnect.Data;
 using QuantConnect.Data.Consolidators;
 using QuantConnect.Data.UniverseSelection;
 using QuantConnect.Indicators;
 using QuantConnect.Securities;
-using System.Linq;
 
 namespace QuantConnect.Algorithm.CSharp
 {

@@ -27,7 +27,9 @@ namespace QuantConnect.Securities.Positions
         /// <returns>The position group resolver instance</returns>
         protected override IPositionGroupResolver GetPositionGroupResolver()
         {
-            return new CompositePositionGroupResolver(new SecurityPositionGroupResolver(PositionGroupBuyingPowerModel));
+            return new CompositePositionGroupResolver(
+                new SecurityPositionGroupResolver(PositionGroupBuyingPowerModel)
+            );
         }
     }
 }

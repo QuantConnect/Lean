@@ -1,17 +1,17 @@
- /*
- * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
- * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- *
+/*
+* QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
+* Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
+*
+* Licensed under the Apache License, Version 2.0 (the "License");
+* you may not use this file except in compliance with the License.
+* You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
+*
+* Unless required by applicable law or agreed to in writing, software
+* distributed under the License is distributed on an "AS IS" BASIS,
+* WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+* See the License for the specific language governing permissions and
+* limitations under the License.
+*
 */
 
 using System;
@@ -111,7 +111,8 @@ namespace QuantConnect.Lean.Engine
         /// <param name="dataPermissionsManager">The data permission manager to use</param>
         /// <param name="liveMode">True for live mode, false otherwise</param>
         /// <param name="researchMode">True for research mode, false otherwise. This has less priority than liveMode</param>
-        public LeanEngineAlgorithmHandlers(IResultHandler results,
+        public LeanEngineAlgorithmHandlers(
+            IResultHandler results,
             ISetupHandler setup,
             IDataFeed dataFeed,
             ITransactionHandler transactions,
@@ -123,7 +124,7 @@ namespace QuantConnect.Lean.Engine
             IDataPermissionManager dataPermissionsManager,
             bool liveMode,
             bool researchMode = false
-            )
+        )
         {
             if (results == null)
             {
@@ -192,42 +193,71 @@ namespace QuantConnect.Lean.Engine
         /// <param name="researchMode">True for research mode, false otherwise</param>
         /// <returns>A fully hydrates <see cref="LeanEngineSystemHandlers"/> instance.</returns>
         /// <exception cref="CompositionException">Throws a CompositionException during failure to load</exception>
-        public static LeanEngineAlgorithmHandlers FromConfiguration(Composer composer, bool researchMode = false)
+        public static LeanEngineAlgorithmHandlers FromConfiguration(
+            Composer composer,
+            bool researchMode = false
+        )
         {
             var setupHandlerTypeName = Config.Get("setup-handler", "ConsoleSetupHandler");
-            var transactionHandlerTypeName = Config.Get("transaction-handler", "BacktestingTransactionHandler");
-            var realTimeHandlerTypeName = Config.Get("real-time-handler", "BacktestingRealTimeHandler");
+            var transactionHandlerTypeName = Config.Get(
+                "transaction-handler",
+                "BacktestingTransactionHandler"
+            );
+            var realTimeHandlerTypeName = Config.Get(
+                "real-time-handler",
+                "BacktestingRealTimeHandler"
+            );
             var dataFeedHandlerTypeName = Config.Get("data-feed-handler", "FileSystemDataFeed");
             var resultHandlerTypeName = Config.Get("result-handler", "BacktestingResultHandler");
-            var mapFileProviderTypeName = Config.Get("map-file-provider", "LocalDiskMapFileProvider");
-            var factorFileProviderTypeName = Config.Get("factor-file-provider", "LocalDiskFactorFileProvider");
+            var mapFileProviderTypeName = Config.Get(
+                "map-file-provider",
+                "LocalDiskMapFileProvider"
+            );
+            var factorFileProviderTypeName = Config.Get(
+                "factor-file-provider",
+                "LocalDiskFactorFileProvider"
+            );
             var dataProviderTypeName = Config.Get("data-provider", "DefaultDataProvider");
             var objectStoreTypeName = Config.Get("object-store", "LocalObjectStore");
-            var dataPermissionManager = Config.Get("data-permission-manager", "DataPermissionManager");
+            var dataPermissionManager = Config.Get(
+                "data-permission-manager",
+                "DataPermissionManager"
+            );
 
             var result = new LeanEngineAlgorithmHandlers(
                 composer.GetExportedValueByTypeName<IResultHandler>(resultHandlerTypeName),
                 composer.GetExportedValueByTypeName<ISetupHandler>(setupHandlerTypeName),
                 composer.GetExportedValueByTypeName<IDataFeed>(dataFeedHandlerTypeName),
-                composer.GetExportedValueByTypeName<ITransactionHandler>(transactionHandlerTypeName),
+                composer.GetExportedValueByTypeName<ITransactionHandler>(
+                    transactionHandlerTypeName
+                ),
                 composer.GetExportedValueByTypeName<IRealTimeHandler>(realTimeHandlerTypeName),
                 composer.GetExportedValueByTypeName<IMapFileProvider>(mapFileProviderTypeName),
-                composer.GetExportedValueByTypeName<IFactorFileProvider>(factorFileProviderTypeName),
+                composer.GetExportedValueByTypeName<IFactorFileProvider>(
+                    factorFileProviderTypeName
+                ),
                 composer.GetExportedValueByTypeName<IDataProvider>(dataProviderTypeName),
                 composer.GetExportedValueByTypeName<IObjectStore>(objectStoreTypeName),
                 composer.GetExportedValueByTypeName<IDataPermissionManager>(dataPermissionManager),
                 Globals.LiveMode,
                 researchMode
-                );
+            );
 
             result.FactorFileProvider.Initialize(result.MapFileProvider, result.DataProvider);
             result.MapFileProvider.Initialize(result.DataProvider);
 
-            if (result.DataProvider is ApiDataProvider
-                && (result.FactorFileProvider is not LocalZipFactorFileProvider || result.MapFileProvider is not LocalZipMapFileProvider))
+            if (
+                result.DataProvider is ApiDataProvider
+                && (
+                    result.FactorFileProvider is not LocalZipFactorFileProvider
+                    || result.MapFileProvider is not LocalZipMapFileProvider
+                )
+            )
             {
-                throw new ArgumentException($"The {typeof(ApiDataProvider)} can only be used with {typeof(LocalZipFactorFileProvider)}" +
-                    $" and {typeof(LocalZipMapFileProvider)}, please update 'config.json'");
+                throw new ArgumentException(
+                    $"The {typeof(ApiDataProvider)} can only be used with {typeof(LocalZipFactorFileProvider)}"
+                        + $" and {typeof(LocalZipMapFileProvider)}, please update 'config.json'"
+                );
             }
 
             FundamentalService.Initialize(result.DataProvider, Globals.LiveMode);

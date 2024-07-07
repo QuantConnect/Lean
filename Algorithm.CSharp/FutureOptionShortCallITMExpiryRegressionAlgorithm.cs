@@ -35,7 +35,9 @@ namespace QuantConnect.Algorithm.CSharp
     /// Additionally, we test delistings for future options and assert that our
     /// portfolio holdings reflect the orders the algorithm has submitted.
     /// </summary>
-    public class FutureOptionShortCallITMExpiryRegressionAlgorithm : QCAlgorithm, IRegressionAlgorithmDefinition
+    public class FutureOptionShortCallITMExpiryRegressionAlgorithm
+        : QCAlgorithm,
+            IRegressionAlgorithmDefinition
     {
         private Symbol _es19m20;
         private Symbol _esOption;
@@ -50,26 +52,45 @@ namespace QuantConnect.Algorithm.CSharp
                 QuantConnect.Symbol.CreateFuture(
                     Futures.Indices.SP500EMini,
                     Market.CME,
-                    new DateTime(2020, 6, 19)),
-                Resolution.Minute).Symbol;
+                    new DateTime(2020, 6, 19)
+                ),
+                Resolution.Minute
+            ).Symbol;
 
             // Select a future option expiring ITM, and adds it to the algorithm.
-            _esOption = AddFutureOptionContract(OptionChainProvider.GetOptionContractList(_es19m20, Time)
-                .Where(x => x.ID.StrikePrice <= 3100m && x.ID.OptionRight == OptionRight.Call)
-                .OrderByDescending(x => x.ID.StrikePrice)
-                .Take(1)
-                .Single(), Resolution.Minute).Symbol;
+            _esOption = AddFutureOptionContract(
+                OptionChainProvider
+                    .GetOptionContractList(_es19m20, Time)
+                    .Where(x => x.ID.StrikePrice <= 3100m && x.ID.OptionRight == OptionRight.Call)
+                    .OrderByDescending(x => x.ID.StrikePrice)
+                    .Take(1)
+                    .Single(),
+                Resolution.Minute
+            ).Symbol;
 
-            _expectedContract = QuantConnect.Symbol.CreateOption(_es19m20, Market.CME, OptionStyle.American, OptionRight.Call, 3100m, new DateTime(2020, 6, 19));
+            _expectedContract = QuantConnect.Symbol.CreateOption(
+                _es19m20,
+                Market.CME,
+                OptionStyle.American,
+                OptionRight.Call,
+                3100m,
+                new DateTime(2020, 6, 19)
+            );
             if (_esOption != _expectedContract)
             {
-                throw new RegressionTestException($"Contract {_expectedContract} was not found in the chain");
+                throw new RegressionTestException(
+                    $"Contract {_expectedContract} was not found in the chain"
+                );
             }
 
-            Schedule.On(DateRules.Tomorrow, TimeRules.AfterMarketOpen(_es19m20, 1), () =>
-            {
-                MarketOrder(_esOption, -1);
-            });
+            Schedule.On(
+                DateRules.Tomorrow,
+                TimeRules.AfterMarketOpen(_es19m20, 1),
+                () =>
+                {
+                    MarketOrder(_esOption, -1);
+                }
+            );
         }
 
         public override void OnData(Slice slice)
@@ -82,14 +103,18 @@ namespace QuantConnect.Algorithm.CSharp
                 {
                     if (delisting.Time != new DateTime(2020, 6, 19))
                     {
-                        throw new RegressionTestException($"Delisting warning issued at unexpected date: {delisting.Time}");
+                        throw new RegressionTestException(
+                            $"Delisting warning issued at unexpected date: {delisting.Time}"
+                        );
                     }
                 }
                 if (delisting.Type == DelistingType.Delisted)
                 {
                     if (delisting.Time != new DateTime(2020, 6, 20))
                     {
-                        throw new RegressionTestException($"Delisting happened at unexpected date: {delisting.Time}");
+                        throw new RegressionTestException(
+                            $"Delisting happened at unexpected date: {delisting.Time}"
+                        );
                     }
                 }
             }
@@ -105,13 +130,19 @@ namespace QuantConnect.Algorithm.CSharp
 
             if (!Securities.ContainsKey(orderEvent.Symbol))
             {
-                throw new RegressionTestException($"Order event Symbol not found in Securities collection: {orderEvent.Symbol}");
+                throw new RegressionTestException(
+                    $"Order event Symbol not found in Securities collection: {orderEvent.Symbol}"
+                );
             }
 
             var security = Securities[orderEvent.Symbol];
             if (security.Symbol == _es19m20)
             {
-                AssertFutureOptionOrderExercise(orderEvent, security, Securities[_expectedContract]);
+                AssertFutureOptionOrderExercise(
+                    orderEvent,
+                    security,
+                    Securities[_expectedContract]
+                );
             }
             else if (security.Symbol == _expectedContract)
             {
@@ -119,23 +150,33 @@ namespace QuantConnect.Algorithm.CSharp
             }
             else
             {
-                throw new RegressionTestException($"Received order event for unknown Symbol: {orderEvent.Symbol}");
+                throw new RegressionTestException(
+                    $"Received order event for unknown Symbol: {orderEvent.Symbol}"
+                );
             }
 
             Log($"{orderEvent}");
         }
 
-        private void AssertFutureOptionOrderExercise(OrderEvent orderEvent, Security future, Security optionContract)
+        private void AssertFutureOptionOrderExercise(
+            OrderEvent orderEvent,
+            Security future,
+            Security optionContract
+        )
         {
             if (orderEvent.Message.Contains("Assignment"))
             {
                 if (orderEvent.FillPrice != 3100m)
                 {
-                    throw new RegressionTestException("Option was not assigned at expected strike price (3100)");
+                    throw new RegressionTestException(
+                        "Option was not assigned at expected strike price (3100)"
+                    );
                 }
                 if (orderEvent.Direction != OrderDirection.Sell || future.Holdings.Quantity != -1)
                 {
-                    throw new RegressionTestException($"Expected Qty: -1 futures holdings for assigned future {future.Symbol}, found {future.Holdings.Quantity}");
+                    throw new RegressionTestException(
+                        $"Expected Qty: -1 futures holdings for assigned future {future.Symbol}, found {future.Holdings.Quantity}"
+                    );
                 }
 
                 return;
@@ -144,7 +185,9 @@ namespace QuantConnect.Algorithm.CSharp
             if (orderEvent.Direction == OrderDirection.Buy && future.Holdings.Quantity != 0)
             {
                 // We buy back the underlying at expiration, so we expect a neutral position then
-                throw new RegressionTestException($"Expected no holdings when liquidating future contract {future.Symbol}");
+                throw new RegressionTestException(
+                    $"Expected no holdings when liquidating future contract {future.Symbol}"
+                );
             }
         }
 
@@ -152,11 +195,15 @@ namespace QuantConnect.Algorithm.CSharp
         {
             if (orderEvent.Direction == OrderDirection.Sell && option.Holdings.Quantity != -1)
             {
-                throw new RegressionTestException($"No holdings were created for option contract {option.Symbol}");
+                throw new RegressionTestException(
+                    $"No holdings were created for option contract {option.Symbol}"
+                );
             }
             if (orderEvent.IsAssignment && option.Holdings.Quantity != 0)
             {
-                throw new RegressionTestException($"Holdings were found after option contract was assigned: {option.Symbol}");
+                throw new RegressionTestException(
+                    $"Holdings were found after option contract was assigned: {option.Symbol}"
+                );
             }
         }
 
@@ -168,7 +215,9 @@ namespace QuantConnect.Algorithm.CSharp
         {
             if (Portfolio.Invested)
             {
-                throw new RegressionTestException($"Expected no holdings at end of algorithm, but are invested in: {string.Join(", ", Portfolio.Keys)}");
+                throw new RegressionTestException(
+                    $"Expected no holdings at end of algorithm, but are invested in: {string.Join(", ", Portfolio.Keys)}"
+                );
             }
         }
 
@@ -200,36 +249,36 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// This is used by the regression test system to indicate what the expected statistics are from running the algorithm
         /// </summary>
-        public Dictionary<string, string> ExpectedStatistics => new Dictionary<string, string>
-        {
-            {"Total Orders", "3"},
-            {"Average Win", "10.24%"},
-            {"Average Loss", "-6.46%"},
-            {"Compounding Annual Return", "6.498%"},
-            {"Drawdown", "0.900%"},
-            {"Expectancy", "0.292"},
-            {"Start Equity", "100000"},
-            {"End Equity", "103111.08"},
-            {"Net Profit", "3.111%"},
-            {"Sharpe Ratio", "0.726"},
-            {"Sortino Ratio", "0"},
-            {"Probabilistic Sharpe Ratio", "45.614%"},
-            {"Loss Rate", "50%"},
-            {"Win Rate", "50%"},
-            {"Profit-Loss Ratio", "1.58"},
-            {"Alpha", "0.036"},
-            {"Beta", "-0.003"},
-            {"Annual Standard Deviation", "0.049"},
-            {"Annual Variance", "0.002"},
-            {"Information Ratio", "0.064"},
-            {"Tracking Error", "0.378"},
-            {"Treynor Ratio", "-13.132"},
-            {"Total Fees", "$1.42"},
-            {"Estimated Strategy Capacity", "$13000000.00"},
-            {"Lowest Capacity Asset", "ES XFH59UP5K75W|ES XFH59UK0MYO1"},
-            {"Portfolio Turnover", "1.79%"},
-            {"OrderListHash", "67d74f57dc9cd489ade4db3740fb5687"}
-        };
+        public Dictionary<string, string> ExpectedStatistics =>
+            new Dictionary<string, string>
+            {
+                { "Total Orders", "3" },
+                { "Average Win", "10.24%" },
+                { "Average Loss", "-6.46%" },
+                { "Compounding Annual Return", "6.498%" },
+                { "Drawdown", "0.900%" },
+                { "Expectancy", "0.292" },
+                { "Start Equity", "100000" },
+                { "End Equity", "103111.08" },
+                { "Net Profit", "3.111%" },
+                { "Sharpe Ratio", "0.726" },
+                { "Sortino Ratio", "0" },
+                { "Probabilistic Sharpe Ratio", "45.614%" },
+                { "Loss Rate", "50%" },
+                { "Win Rate", "50%" },
+                { "Profit-Loss Ratio", "1.58" },
+                { "Alpha", "0.036" },
+                { "Beta", "-0.003" },
+                { "Annual Standard Deviation", "0.049" },
+                { "Annual Variance", "0.002" },
+                { "Information Ratio", "0.064" },
+                { "Tracking Error", "0.378" },
+                { "Treynor Ratio", "-13.132" },
+                { "Total Fees", "$1.42" },
+                { "Estimated Strategy Capacity", "$13000000.00" },
+                { "Lowest Capacity Asset", "ES XFH59UP5K75W|ES XFH59UK0MYO1" },
+                { "Portfolio Turnover", "1.79%" },
+                { "OrderListHash", "67d74f57dc9cd489ade4db3740fb5687" }
+            };
     }
 }
-

@@ -14,12 +14,12 @@
  *
 */
 
-using NUnit.Framework;
-using Python.Runtime;
-using QuantConnect.AlgorithmFactory.Python.Wrappers;
 using System;
 using System.Collections.Generic;
 using System.IO;
+using NUnit.Framework;
+using Python.Runtime;
+using QuantConnect.AlgorithmFactory.Python.Wrappers;
 using QuantConnect.Orders;
 
 namespace QuantConnect.Tests.Python
@@ -32,7 +32,9 @@ namespace QuantConnect.Tests.Python
         [SetUp]
         public void Setup()
         {
-            _baseCode = File.ReadAllText(Path.Combine("./RegressionAlgorithms", "Test_AlgorithmPythonWrapper.py"));
+            _baseCode = File.ReadAllText(
+                Path.Combine("./RegressionAlgorithms", "Test_AlgorithmPythonWrapper.py")
+            );
         }
 
         [TestCase("")]
@@ -55,8 +57,14 @@ namespace QuantConnect.Tests.Python
         }
 
         [Test]
-        [TestCase("def OnEndOfDay(self): self.Name = 'EOD'\r\n    def OnEndOfDay(self, symbol): self.Name = 'EODSymbol'", "EODSymbol")]
-        [TestCase("def OnEndOfDay(self, symbol): self.Name = 'EODSymbol'\r\n    def OnEndOfDay(self): self.Name = 'EOD'", "EOD")]
+        [TestCase(
+            "def OnEndOfDay(self): self.Name = 'EOD'\r\n    def OnEndOfDay(self, symbol): self.Name = 'EODSymbol'",
+            "EODSymbol"
+        )]
+        [TestCase(
+            "def OnEndOfDay(self, symbol): self.Name = 'EODSymbol'\r\n    def OnEndOfDay(self): self.Name = 'EOD'",
+            "EOD"
+        )]
         public void OnEndOfDayBothImplemented(string code, string expectedImplementation)
         {
             // If we implement both OnEndOfDay functions we expect it to not throw,
@@ -65,7 +73,7 @@ namespace QuantConnect.Tests.Python
             using (Py.GIL())
             {
                 var algorithm = GetAlgorithm(code);
-                
+
                 Assert.Null(algorithm.RunTimeError);
                 Assert.DoesNotThrow(() => algorithm.OnEndOfDay());
                 Assert.Null(algorithm.RunTimeError);
@@ -115,21 +123,27 @@ namespace QuantConnect.Tests.Python
                 var algorithm = GetAlgorithm(code);
                 Assert.Null(algorithm.RunTimeError);
 
-                var order = new SubmitOrderRequest(OrderType.Limit,
-                        SecurityType.Base,
-                        Symbol.Empty,
-                        1,
-                        1,
-                        1,
-                        DateTime.UtcNow,
-                        "");
+                var order = new SubmitOrderRequest(
+                    OrderType.Limit,
+                    SecurityType.Base,
+                    Symbol.Empty,
+                    1,
+                    1,
+                    1,
+                    DateTime.UtcNow,
+                    ""
+                );
                 if (throws)
                 {
-                    Assert.Throws<Exception>(() => algorithm.OnMarginCall(new List<SubmitOrderRequest> { order }));
+                    Assert.Throws<Exception>(
+                        () => algorithm.OnMarginCall(new List<SubmitOrderRequest> { order })
+                    );
                 }
                 else
                 {
-                    Assert.DoesNotThrow(() => algorithm.OnMarginCall(new List<SubmitOrderRequest> { order }));
+                    Assert.DoesNotThrow(
+                        () => algorithm.OnMarginCall(new List<SubmitOrderRequest> { order })
+                    );
                 }
             }
         }

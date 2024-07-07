@@ -13,13 +13,13 @@
  * limitations under the License.
 */
 
-using Deedle;
+using System;
+using System.Collections.Generic;
 using System.Linq;
+using Deedle;
 using Python.Runtime;
 using QuantConnect.Packets;
-using System;
 using QuantConnect.Util;
-using System.Collections.Generic;
 
 namespace QuantConnect.Report.ReportElements
 {
@@ -35,7 +35,12 @@ namespace QuantConnect.Report.ReportElements
         /// <param name="key">Location of injection</param>
         /// <param name="backtest">Backtest result object</param>
         /// <param name="live">Live result object</param>
-        public CumulativeReturnsReportElement(string name, string key, BacktestResult backtest, LiveResult live)
+        public CumulativeReturnsReportElement(
+            string name,
+            string key,
+            BacktestResult backtest,
+            LiveResult live
+        )
         {
             _live = live;
             _backtest = backtest;
@@ -72,8 +77,14 @@ namespace QuantConnect.Report.ReportElements
 
                 var backtestSeries = new Series<DateTime, double>(backtestTime, backtestStrategy);
                 var liveSeries = new Series<DateTime, double>(liveTime, liveStrategy);
-                var backtestBenchmarkSeries = new Series<DateTime, double>(benchmarkTime, benchmarkPoints);
-                var liveBenchmarkSeries = new Series<DateTime, double>(liveBenchmarkTime, liveBenchmarkStrategy);
+                var backtestBenchmarkSeries = new Series<DateTime, double>(
+                    benchmarkTime,
+                    benchmarkPoints
+                );
+                var liveBenchmarkSeries = new Series<DateTime, double>(
+                    liveBenchmarkTime,
+                    liveBenchmarkStrategy
+                );
 
                 // Equivalent in python using pandas for the following operations is:
                 // --------------------------------------------------
@@ -88,47 +99,74 @@ namespace QuantConnect.Report.ReportElements
                 // We multiply the final value of the backtest and benchmark to have a continuous graph showing the performance out of sample
                 // as a continuation of the cumulative returns graph. Otherwise, we start plotting from 0% and not the last value of the backtest data
 
-                var backtestLastValue = backtestSeries.ValueCount == 0 ? 0 : backtestSeries.LastValue();
-                var backtestBenchmarkLastValue = backtestBenchmarkSeries.ValueCount == 0 ? 0 : backtestBenchmarkSeries.LastValue();
+                var backtestLastValue =
+                    backtestSeries.ValueCount == 0 ? 0 : backtestSeries.LastValue();
+                var backtestBenchmarkLastValue =
+                    backtestBenchmarkSeries.ValueCount == 0
+                        ? 0
+                        : backtestBenchmarkSeries.LastValue();
 
                 var liveContinuousEquity = liveSeries;
                 var liveBenchContinuousEquity = liveBenchmarkSeries;
 
                 if (liveSeries.ValueCount != 0)
                 {
-                    liveContinuousEquity = (liveSeries * (backtestLastValue / liveSeries.FirstValue()))
+                    liveContinuousEquity = (
+                        liveSeries * (backtestLastValue / liveSeries.FirstValue())
+                    )
                         .FillMissing(Direction.Forward)
                         .DropMissing();
                 }
                 if (liveBenchmarkSeries.ValueCount != 0)
                 {
-                    liveBenchContinuousEquity = (liveBenchmarkSeries * (backtestBenchmarkLastValue / liveBenchmarkSeries.FirstValue()))
+                    liveBenchContinuousEquity = (
+                        liveBenchmarkSeries
+                        * (backtestBenchmarkLastValue / liveBenchmarkSeries.FirstValue())
+                    )
                         .FillMissing(Direction.Forward)
                         .DropMissing();
                 }
 
-                var liveStart = liveContinuousEquity.ValueCount == 0 ? DateTime.MaxValue : liveContinuousEquity.DropMissing().FirstKey();
-                var liveBenchStart = liveBenchContinuousEquity.ValueCount == 0 ? DateTime.MaxValue : liveBenchContinuousEquity.DropMissing().FirstKey();
+                var liveStart =
+                    liveContinuousEquity.ValueCount == 0
+                        ? DateTime.MaxValue
+                        : liveContinuousEquity.DropMissing().FirstKey();
+                var liveBenchStart =
+                    liveBenchContinuousEquity.ValueCount == 0
+                        ? DateTime.MaxValue
+                        : liveBenchContinuousEquity.DropMissing().FirstKey();
 
-                var finalEquity = backtestSeries.Where(kvp => kvp.Key < liveStart).Observations.ToList();
-                var finalBenchEquity = backtestBenchmarkSeries.Where(kvp => kvp.Key < liveBenchStart).Observations.ToList();
+                var finalEquity = backtestSeries
+                    .Where(kvp => kvp.Key < liveStart)
+                    .Observations.ToList();
+                var finalBenchEquity = backtestBenchmarkSeries
+                    .Where(kvp => kvp.Key < liveBenchStart)
+                    .Observations.ToList();
 
                 finalEquity.AddRange(liveContinuousEquity.Observations);
                 finalBenchEquity.AddRange(liveBenchContinuousEquity.Observations);
 
-                var finalSeries = (new Series<DateTime, double>(finalEquity).CumulativeReturns() * 100)
+                var finalSeries = (
+                    new Series<DateTime, double>(finalEquity).CumulativeReturns() * 100
+                )
                     .FillMissing(Direction.Forward)
                     .DropMissing();
 
-                var finalBenchSeries = (new Series<DateTime, double>(finalBenchEquity).CumulativeReturns() * 100)
+                var finalBenchSeries = (
+                    new Series<DateTime, double>(finalBenchEquity).CumulativeReturns() * 100
+                )
                     .FillMissing(Direction.Forward)
                     .DropMissing();
 
                 var backtestCumulativePercent = finalSeries.Where(kvp => kvp.Key < liveStart);
-                var backtestBenchmarkCumulativePercent = finalBenchSeries.Where(kvp => kvp.Key < liveBenchStart);
+                var backtestBenchmarkCumulativePercent = finalBenchSeries.Where(kvp =>
+                    kvp.Key < liveBenchStart
+                );
 
                 var liveCumulativePercent = finalSeries.Where(kvp => kvp.Key >= liveStart);
-                var liveBenchmarkCumulativePercent = finalBenchSeries.Where(kvp => kvp.Key >= liveBenchStart);
+                var liveBenchmarkCumulativePercent = finalBenchSeries.Where(kvp =>
+                    kvp.Key >= liveBenchStart
+                );
 
                 backtestList.Append(backtestCumulativePercent.Keys.ToList().ToPython());
                 backtestList.Append(backtestCumulativePercent.Values.ToList().ToPython());

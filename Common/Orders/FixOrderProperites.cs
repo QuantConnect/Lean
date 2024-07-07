@@ -18,7 +18,7 @@ namespace QuantConnect.Orders
     /// <summary>
     /// FIX (Financial Information Exchange) order properties
     /// </summary>
-    public class FixOrderProperites: OrderProperties
+    public class FixOrderProperites : OrderProperties
     {
         /// <summary>
         /// Instruction for order handling on Broker floor

@@ -69,7 +69,13 @@ namespace QuantConnect.Tests.Compression
         {
             var zip = Path.Combine("TestData", "multizip.zip");
             ZipFile zipFile;
-            using (var entryStream = QuantConnect.Compression.Unzip(zip, "multizip/two.txt", out zipFile))
+            using (
+                var entryStream = QuantConnect.Compression.Unzip(
+                    zip,
+                    "multizip/two.txt",
+                    out zipFile
+                )
+            )
             using (zipFile)
             {
                 var text = entryStream.ReadToEnd();
@@ -81,7 +87,9 @@ namespace QuantConnect.Tests.Compression
         public void ReadsZipEntryFileNames()
         {
             var zipFileName = Path.Combine("TestData", "20151224_quote_american.zip");
-            var entryFileNames = QuantConnect.Compression.GetZipEntryFileNames(zipFileName).ToList();
+            var entryFileNames = QuantConnect
+                .Compression.GetZipEntryFileNames(zipFileName)
+                .ToList();
 
             var expectedFileNames = new[]
             {
@@ -117,7 +125,10 @@ namespace QuantConnect.Tests.Compression
                 Directory.Delete(root.FullName, true);
 
                 var data = File.ReadAllBytes(zipFile);
-                files = QuantConnect.Compression.UnzipToFolder(data,  Directory.GetCurrentDirectory());
+                files = QuantConnect.Compression.UnzipToFolder(
+                    data,
+                    Directory.GetCurrentDirectory()
+                );
 
                 Assert.AreEqual(2, files.Count);
                 Assert.IsTrue(File.Exists(testPath));
@@ -180,8 +191,14 @@ namespace QuantConnect.Tests.Compression
                 Directory.Delete(root.FullName, true);
                 files = QuantConnect.Compression.UnzipToFolder(zipFile);
 
-                Assert.IsTrue(File.Exists(Path.Combine(root.Parent.FullName, "jo\\se", name, "test.txt")));
-                Assert.IsTrue(File.Exists(Path.Combine(root.Parent.FullName, "jo\\se", name, "sub", "test2.txt")));
+                Assert.IsTrue(
+                    File.Exists(Path.Combine(root.Parent.FullName, "jo\\se", name, "test.txt"))
+                );
+                Assert.IsTrue(
+                    File.Exists(
+                        Path.Combine(root.Parent.FullName, "jo\\se", name, "sub", "test2.txt")
+                    )
+                );
             }
             finally
             {
@@ -195,8 +212,8 @@ namespace QuantConnect.Tests.Compression
         {
             var data = new Dictionary<string, string>
             {
-                {"Ł", "The key is unicode"},
-                {"2", "something"}
+                { "Ł", "The key is unicode" },
+                { "2", "something" }
             };
 
             var fileName = Guid.NewGuid().ToString();
@@ -204,19 +221,24 @@ namespace QuantConnect.Tests.Compression
 
             Assert.IsTrue(compressed);
 
-            using var fileStream = new FileStream(fileName, FileMode.Open, FileAccess.Read, FileShare.Read);
+            using var fileStream = new FileStream(
+                fileName,
+                FileMode.Open,
+                FileAccess.Read,
+                FileShare.Read
+            );
             var result = QuantConnect.Compression.UnzipDataAsync(fileStream).Result;
 
-            CollectionAssert.AreEqual(data.OrderBy(kv => kv.Key).ToList(), result.OrderBy(kv => kv.Key).ToList());
+            CollectionAssert.AreEqual(
+                data.OrderBy(kv => kv.Key).ToList(),
+                result.OrderBy(kv => kv.Key).ToList()
+            );
         }
 
         [Test]
         public void UnzipDataSupportsEncoding()
         {
-            var data = new Dictionary<string, string>
-            {
-                {"Ł", "The key is unicode"}
-            };
+            var data = new Dictionary<string, string> { { "Ł", "The key is unicode" } };
 
             var encoding = Encoding.UTF8;
             var bytes = encoding.GetBytes(JsonConvert.SerializeObject(data));
@@ -235,10 +257,7 @@ namespace QuantConnect.Tests.Compression
         [Test]
         public void UnzipDataStream()
         {
-            var data = new Dictionary<string, string>
-            {
-                {"Ł", "The key is unicode"}
-            };
+            var data = new Dictionary<string, string> { { "Ł", "The key is unicode" } };
 
             var encoding = Encoding.UTF8;
             var bytes = encoding.GetBytes(JsonConvert.SerializeObject(data));
@@ -267,7 +286,10 @@ namespace QuantConnect.Tests.Compression
             }
             QuantConnect.Compression.Zip("Pinocho", name, "cow");
 
-            Assert.AreEqual(overrideEntry, QuantConnect.Compression.ZipCreateAppendData(name, "cow", "jiji", overrideEntry));
+            Assert.AreEqual(
+                overrideEntry,
+                QuantConnect.Compression.ZipCreateAppendData(name, "cow", "jiji", overrideEntry)
+            );
 
             var result = QuantConnect.Compression.Unzip(name).ToList();
             Assert.AreEqual(1, result.Count);

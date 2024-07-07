@@ -43,7 +43,7 @@ namespace QuantConnect
         /// <param name="zipEntry">The file name in the zip file</param>
         public ZipStreamWriter(string filename, string zipEntry)
         {
-            if(!File.Exists(filename))
+            if (!File.Exists(filename))
             {
                 _archive = ZipFile.Open(filename, ZipArchiveMode.Create);
                 var entry = _archive.CreateEntry(zipEntry);
@@ -52,12 +52,12 @@ namespace QuantConnect
             else
             {
                 _archive = ZipFile.Open(filename, ZipArchiveMode.Update);
-                 var entry = _archive.GetEntry(zipEntry);
-                 var nonExisting = entry == null;
-                 if (nonExisting)
-                 {
-                     entry = _archive.CreateEntry(zipEntry);
-                 }
+                var entry = _archive.GetEntry(zipEntry);
+                var nonExisting = entry == null;
+                if (nonExisting)
+                {
+                    entry = _archive.CreateEntry(zipEntry);
+                }
                 _writer = new StreamWriter(entry.Open());
 
                 if (!nonExisting)

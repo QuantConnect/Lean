@@ -23,7 +23,9 @@ namespace QuantConnect.Indicators
     /// E.g.DPO(20) equals price 11 days ago less the 20-day SMA.
     /// </summary>
     /// <seealso cref="IndicatorBase{IndicatorDataPoint}" />
-    public class DetrendedPriceOscillator : IndicatorBase<IndicatorDataPoint>, IIndicatorWarmUpPeriodProvider
+    public class DetrendedPriceOscillator
+        : IndicatorBase<IndicatorDataPoint>,
+            IIndicatorWarmUpPeriodProvider
     {
         private readonly Delay _priceLag;
         private readonly SimpleMovingAverage _sma;
@@ -57,9 +59,7 @@ namespace QuantConnect.Indicators
         /// </summary>
         /// <param name="period">The number of periods to calculate the DPO.</param>
         public DetrendedPriceOscillator(int period)
-            : this($"DPO({period})", period)
-        {
-        }
+            : this($"DPO({period})", period) { }
 
         /// <summary>
         /// Resets this indicator to its initial state

@@ -13,9 +13,9 @@
  * limitations under the License.
 */
 
-using Newtonsoft.Json;
-using System.Collections.Generic;
 using System;
+using System.Collections.Generic;
+using Newtonsoft.Json;
 
 namespace QuantConnect.Api
 {
@@ -43,7 +43,7 @@ namespace QuantConnect.Api
         /// Object store key
         /// </summary>
         [JsonProperty(PropertyName = "key")]
-        public string Key {  get; set; }
+        public string Key { get; set; }
 
         /// <summary>
         /// Last time it was modified
@@ -67,7 +67,7 @@ namespace QuantConnect.Api
     /// <summary>
     /// Summary information of the Object Store
     /// </summary>
-    public class SummaryObjectStore: BasicObjectStore
+    public class SummaryObjectStore : BasicObjectStore
     {
         /// <summary>
         /// File or folder name
@@ -85,7 +85,7 @@ namespace QuantConnect.Api
     /// <summary>
     /// Object Store file properties
     /// </summary>
-    public class PropertiesObjectStore: BasicObjectStore
+    public class PropertiesObjectStore : BasicObjectStore
     {
         /// <summary>
         /// Date this object was created

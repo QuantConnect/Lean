@@ -51,7 +51,8 @@ namespace QuantConnect.Api
         public override void WriteJson(JsonWriter writer, object value, JsonSerializer serializer)
         {
             var optimizationBacktest = value as OptimizationBacktest;
-            if (ReferenceEquals(optimizationBacktest, null)) return;
+            if (ReferenceEquals(optimizationBacktest, null))
+                return;
 
             writer.WriteStartObject();
 
@@ -88,7 +89,9 @@ namespace QuantConnect.Api
             if (optimizationBacktest.OutOfSampleMaxEndDate != null)
             {
                 writer.WritePropertyName("outOfSampleMaxEndDate");
-                writer.WriteValue(optimizationBacktest.OutOfSampleMaxEndDate.ToStringInvariant(DateFormat.UI));
+                writer.WriteValue(
+                    optimizationBacktest.OutOfSampleMaxEndDate.ToStringInvariant(DateFormat.UI)
+                );
 
                 writer.WritePropertyName("outOfSampleDays");
                 writer.WriteValue(optimizationBacktest.OutOfSampleDays);
@@ -98,7 +101,9 @@ namespace QuantConnect.Api
             {
                 writer.WritePropertyName("statistics");
                 writer.WriteStartArray();
-                foreach (var keyValuePair in optimizationBacktest.Statistics.OrderBy(pair => pair.Key))
+                foreach (
+                    var keyValuePair in optimizationBacktest.Statistics.OrderBy(pair => pair.Key)
+                )
                 {
                     switch (keyValuePair.Key)
                     {
@@ -144,7 +149,12 @@ namespace QuantConnect.Api
         /// <returns>
         /// The object value.
         /// </returns>
-        public override object ReadJson(JsonReader reader, Type objectType, object existingValue, JsonSerializer serializer)
+        public override object ReadJson(
+            JsonReader reader,
+            Type objectType,
+            object existingValue,
+            JsonSerializer serializer
+        )
         {
             var jObject = JObject.Load(reader);
 
@@ -173,12 +183,18 @@ namespace QuantConnect.Api
                     { PerformanceMetrics.Beta, jStatistics[5].Value<string>() },
                     { PerformanceMetrics.CompoundingAnnualReturn, jStatistics[6].Value<string>() },
                     { PerformanceMetrics.Drawdown, jStatistics[7].Value<string>() },
-                    { PerformanceMetrics.EstimatedStrategyCapacity, jStatistics[8].Value<string>() },
+                    {
+                        PerformanceMetrics.EstimatedStrategyCapacity,
+                        jStatistics[8].Value<string>()
+                    },
                     { PerformanceMetrics.Expectancy, jStatistics[9].Value<string>() },
                     { PerformanceMetrics.InformationRatio, jStatistics[10].Value<string>() },
                     { PerformanceMetrics.LossRate, jStatistics[11].Value<string>() },
                     { PerformanceMetrics.NetProfit, jStatistics[12].Value<string>() },
-                    { PerformanceMetrics.ProbabilisticSharpeRatio, jStatistics[13].Value<string>() },
+                    {
+                        PerformanceMetrics.ProbabilisticSharpeRatio,
+                        jStatistics[13].Value<string>()
+                    },
                     { PerformanceMetrics.ProfitLossRatio, jStatistics[14].Value<string>() },
                     { PerformanceMetrics.SharpeRatio, jStatistics[15].Value<string>() },
                     // TODO: Add SortinoRatio
@@ -192,12 +208,18 @@ namespace QuantConnect.Api
                 };
             }
 
-            var parameterSet = serializer.Deserialize<ParameterSet>(jObject["parameterSet"].CreateReader());
+            var parameterSet = serializer.Deserialize<ParameterSet>(
+                jObject["parameterSet"].CreateReader()
+            );
 
             var equity = new CandlestickSeries();
             if (jObject["equity"] != null)
             {
-                foreach (var point in JsonConvert.DeserializeObject<List<Candlestick>>(jObject["equity"].ToString()))
+                foreach (
+                    var point in JsonConvert.DeserializeObject<List<Candlestick>>(
+                        jObject["equity"].ToString()
+                    )
+                )
                 {
                     equity.AddPoint(point);
                 }

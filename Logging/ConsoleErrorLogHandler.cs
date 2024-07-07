@@ -24,16 +24,12 @@ namespace QuantConnect.Logging
         /// Hide debug messages from log
         /// </summary>
         /// <param name="text">The debug text to log</param>
-        public override void Debug(string text)
-        {
-        }
+        public override void Debug(string text) { }
 
         /// <summary>
         /// Hide trace messages from log
         /// </summary>
         /// <param name="text">The trace text to log</param>
-        public override void Trace(string text)
-        {
-        }
+        public override void Trace(string text) { }
     }
 }

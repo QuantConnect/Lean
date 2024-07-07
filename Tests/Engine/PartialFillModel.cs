@@ -13,12 +13,12 @@
  * limitations under the License.
 */
 
+using System;
+using System.Collections.Generic;
 using QuantConnect.Data;
 using QuantConnect.Orders;
 using QuantConnect.Orders.Fills;
 using QuantConnect.Securities;
-using System;
-using System.Collections.Generic;
 
 namespace QuantConnect.Algorithm.CSharp
 {
@@ -30,6 +30,7 @@ namespace QuantConnect.Algorithm.CSharp
         private readonly QCAlgorithm _algorithm;
         private readonly Dictionary<int, decimal> _absoluteRemainingByOrderId;
         private readonly decimal _rate;
+
         public PartialFillModel(QCAlgorithm algorithm, decimal rate = 1.0m)
         {
             _algorithm = algorithm;
@@ -50,7 +51,9 @@ namespace QuantConnect.Algorithm.CSharp
             var fill = base.MarketFill(asset, order);
 
             // Set this fill amount
-            var absoluteFillQuantity = (int)(Math.Min(absoluteRemaining, _rate * (int)order.AbsoluteQuantity));
+            var absoluteFillQuantity = (int)(
+                Math.Min(absoluteRemaining, _rate * (int)order.AbsoluteQuantity)
+            );
             fill.FillQuantity = Math.Sign(order.Quantity) * absoluteFillQuantity;
 
             if (absoluteRemaining == absoluteFillQuantity)
@@ -63,7 +66,9 @@ namespace QuantConnect.Algorithm.CSharp
                 fill.Status = OrderStatus.PartiallyFilled;
                 _absoluteRemainingByOrderId[order.Id] = absoluteRemaining - absoluteFillQuantity;
 
-                _algorithm.Debug($"{_algorithm.Time} - Partial Fill - Remaining {absoluteRemaining} Price - {fill.FillPrice}");
+                _algorithm.Debug(
+                    $"{_algorithm.Time} - Partial Fill - Remaining {absoluteRemaining} Price - {fill.FillPrice}"
+                );
             }
             return fill;
         }

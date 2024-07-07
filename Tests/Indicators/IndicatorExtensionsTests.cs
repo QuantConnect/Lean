@@ -15,12 +15,12 @@
 
 using System;
 using System.Collections.Generic;
-using NUnit.Framework;
-using QuantConnect.Indicators;
 using System.Linq;
+using NUnit.Framework;
 using Python.Runtime;
 using QuantConnect.Data;
 using QuantConnect.Data.Market;
+using QuantConnect.Indicators;
 
 namespace QuantConnect.Tests.Indicators
 {
@@ -336,7 +336,10 @@ namespace QuantConnect.Tests.Indicators
             var right = new Identity("right");
             var composite = left.Over(right);
             var updatedEventFired = false;
-            composite.Updated += delegate { updatedEventFired = true; };
+            composite.Updated += delegate
+            {
+                updatedEventFired = true;
+            };
 
             left.Update(DateTime.Today, 1m);
             Assert.IsFalse(updatedEventFired);
@@ -382,7 +385,6 @@ namespace QuantConnect.Tests.Indicators
 
             left.Update(DateTime.Today, 2m);
             Assert.AreEqual(20m, composite.Current.Value);
-
         }
 
         [Test, Parallelizable(ParallelScope.Self)]
@@ -409,13 +411,15 @@ namespace QuantConnect.Tests.Indicators
         protected static TestCaseData[] IndicatorOfDifferentBaseCases()
         {
             // Helper for getting all permutations of the indicators listed below
-            static IEnumerable<IEnumerable<T>>
-                GetPermutations<T>(IEnumerable<T> list, int length)
+            static IEnumerable<IEnumerable<T>> GetPermutations<T>(IEnumerable<T> list, int length)
             {
-                if (length == 1) return list.Select(t => new T[] { t });
+                if (length == 1)
+                    return list.Select(t => new T[] { t });
                 return GetPermutations(list, length - 1)
-                    .SelectMany(t => list.Where(o => !t.Contains(o)),
-                        (t1, t2) => t1.Concat(new T[] { t2 }));
+                    .SelectMany(
+                        t => list.Where(o => !t.Contains(o)),
+                        (t1, t2) => t1.Concat(new T[] { t2 })
+                    );
             }
 
             // Define our indicators to test on
@@ -428,10 +432,7 @@ namespace QuantConnect.Tests.Indicators
             };
 
             // Methods defined in CompositeTestRunner
-            var methods = new string[]
-            {
-                "minus", "plus", "over", "times"
-            };
+            var methods = new string[] { "minus", "plus", "over", "times" };
 
             // Create every combination of indicators
             var combinations = GetPermutations(testIndicators, 2);
@@ -455,13 +456,17 @@ namespace QuantConnect.Tests.Indicators
         {
             CompositeTestRunner(indicators.ElementAt(0), indicators.ElementAt(1), method);
         }
-        
+
         [TestCaseSource(nameof(IndicatorOfDifferentBaseCases))]
         public void DifferentBaseIndicatorsPy(IEnumerable<IIndicator> indicators, string method)
         {
             using (Py.GIL())
             {
-                CompositeTestRunner(indicators.ElementAt(0).ToPython(), indicators.ElementAt(1).ToPython(), method);
+                CompositeTestRunner(
+                    indicators.ElementAt(0).ToPython(),
+                    indicators.ElementAt(1).ToPython(),
+                    method
+                );
             }
         }
 
@@ -518,7 +523,7 @@ namespace QuantConnect.Tests.Indicators
             using (Py.GIL())
             {
                 var left = new Identity("left");
-                var composite = (IIndicator) IndicatorExtensions.Minus(left.ToPython(), 10);
+                var composite = (IIndicator)IndicatorExtensions.Minus(left.ToPython(), 10);
 
                 left.Update(DateTime.Today, 1);
                 Assert.AreEqual(-9, composite.Current.Value);
@@ -583,7 +588,8 @@ namespace QuantConnect.Tests.Indicators
             {
                 var left = new Identity("left");
                 var right = new Identity("right");
-                var composite = (IIndicator)IndicatorExtensions.Times(left.ToPython(), right.ToPython());
+                var composite = (IIndicator)
+                    IndicatorExtensions.Times(left.ToPython(), right.ToPython());
 
                 left.Update(DateTime.Today, 10);
                 right.Update(DateTime.Today, 10);
@@ -601,7 +607,8 @@ namespace QuantConnect.Tests.Indicators
             {
                 var left = new Identity("left");
                 var right = new Identity("right");
-                var composite = (IIndicator)IndicatorExtensions.Over(left.ToPython(), right.ToPython());
+                var composite = (IIndicator)
+                    IndicatorExtensions.Over(left.ToPython(), right.ToPython());
 
                 left.Update(DateTime.Today, 10);
                 right.Update(DateTime.Today, 10);
@@ -619,7 +626,8 @@ namespace QuantConnect.Tests.Indicators
             {
                 var left = new Identity("left");
                 var right = new Identity("right");
-                var composite = (IIndicator)IndicatorExtensions.Plus(left.ToPython(), right.ToPython());
+                var composite = (IIndicator)
+                    IndicatorExtensions.Plus(left.ToPython(), right.ToPython());
 
                 left.Update(DateTime.Today, 10);
                 right.Update(DateTime.Today, 10);
@@ -637,7 +645,8 @@ namespace QuantConnect.Tests.Indicators
             {
                 var left = new Identity("left");
                 var right = new Identity("right");
-                var composite = (IIndicator)IndicatorExtensions.Minus(left.ToPython(), right.ToPython());
+                var composite = (IIndicator)
+                    IndicatorExtensions.Minus(left.ToPython(), right.ToPython());
 
                 left.Update(DateTime.Today, 10);
                 right.Update(DateTime.Today, 10);
@@ -650,10 +659,11 @@ namespace QuantConnect.Tests.Indicators
 
         private class TestIndicatorA : IndicatorBase<IBaseData>
         {
-            public TestIndicatorA(string name) : base(name)
-            {
-            }
+            public TestIndicatorA(string name)
+                : base(name) { }
+
             public override bool IsReady { get; }
+
             protected override decimal ComputeNextValue(IBaseData input)
             {
                 throw new NotImplementedException();
@@ -662,16 +672,14 @@ namespace QuantConnect.Tests.Indicators
 
         private class TestIndicatorB : IndicatorBase<IndicatorDataPoint>
         {
-            public TestIndicatorB(string name) : base(name)
-            {
-            }
+            public TestIndicatorB(string name)
+                : base(name) { }
+
             public override bool IsReady
             {
-                get
-                {
-                    throw new NotImplementedException();
-                }
+                get { throw new NotImplementedException(); }
             }
+
             protected override decimal ComputeNextValue(IndicatorDataPoint input)
             {
                 throw new NotImplementedException();
@@ -682,17 +690,11 @@ namespace QuantConnect.Tests.Indicators
             where T : IBaseData
         {
             public TestIndicator(string name)
-                : base(name)
-            {
-
-            }
+                : base(name) { }
 
             public override bool IsReady
             {
-                get
-                {
-                    return true;
-                }
+                get { return true; }
             }
 
             public void UpdateValue(int value)

@@ -38,12 +38,15 @@ namespace QuantConnect.Data
         /// <param name="newDataAvailableHandler">handler to be fired on new data available</param>
         /// <returns>The new enumerator for this subscription request</returns>
         /// <returns></returns>
-        IEnumerator<BaseData> Add(SubscriptionDataConfig dataConfig, EventHandler newDataAvailableHandler);
+        IEnumerator<BaseData> Add(
+            SubscriptionDataConfig dataConfig,
+            EventHandler newDataAvailableHandler
+        );
 
         /// <summary>
         /// Remove the given subscription
         /// </summary>
-        /// <param name="dataConfig">defines the subscription configuration data.</param>        
+        /// <param name="dataConfig">defines the subscription configuration data.</param>
         /// <returns>Returns true if given <see cref="SubscriptionDataConfig"/> was found and succesfully removed; otherwise false.</returns>
         bool Remove(SubscriptionDataConfig dataConfig);
 

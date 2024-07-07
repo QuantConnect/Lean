@@ -25,7 +25,9 @@ namespace QuantConnect.Tests.Common.Securities
         [Test]
         public void AlwaysThrowsInvalidOperationException()
         {
-            Assert.Throws<InvalidOperationException>(() => ErrorCurrencyConverter.Instance.ConvertToAccountCurrency(default(CashAmount)));
+            Assert.Throws<InvalidOperationException>(
+                () => ErrorCurrencyConverter.Instance.ConvertToAccountCurrency(default(CashAmount))
+            );
         }
     }
 }

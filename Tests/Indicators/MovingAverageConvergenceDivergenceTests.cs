@@ -24,7 +24,11 @@ namespace QuantConnect.Tests.Indicators
     {
         protected override IndicatorBase<IndicatorDataPoint> CreateIndicator()
         {
-            return new MovingAverageConvergenceDivergence(fastPeriod: 12, slowPeriod: 26, signalPeriod: 9);
+            return new MovingAverageConvergenceDivergence(
+                fastPeriod: 12,
+                slowPeriod: 26,
+                signalPeriod: 9
+            );
         }
 
         protected override string TestFileName => "spy_with_macd.txt";
@@ -34,9 +38,27 @@ namespace QuantConnect.Tests.Indicators
         [Test]
         public void FastPeriodLessThanSlowPeriod()
         {
-            var a = new MovingAverageConvergenceDivergence(fastPeriod: 2, slowPeriod: 3, signalPeriod: 2);
-            Assert.Throws<ArgumentException>(() => new MovingAverageConvergenceDivergence(fastPeriod: 3, slowPeriod: 3, signalPeriod: 2));
-            Assert.Throws<ArgumentException>(() => new MovingAverageConvergenceDivergence(fastPeriod: 4, slowPeriod: 3, signalPeriod: 2));
+            var a = new MovingAverageConvergenceDivergence(
+                fastPeriod: 2,
+                slowPeriod: 3,
+                signalPeriod: 2
+            );
+            Assert.Throws<ArgumentException>(
+                () =>
+                    new MovingAverageConvergenceDivergence(
+                        fastPeriod: 3,
+                        slowPeriod: 3,
+                        signalPeriod: 2
+                    )
+            );
+            Assert.Throws<ArgumentException>(
+                () =>
+                    new MovingAverageConvergenceDivergence(
+                        fastPeriod: 4,
+                        slowPeriod: 3,
+                        signalPeriod: 2
+                    )
+            );
         }
 
         [Test]
@@ -47,11 +69,12 @@ namespace QuantConnect.Tests.Indicators
                 macd,
                 TestFileName,
                 "Histogram",
-                (ind, expected) => Assert.AreEqual(
-                    expected,
-                    (double) ((MovingAverageConvergenceDivergence) ind).Histogram.Current.Value,
-                    delta: 1e-4
-                )
+                (ind, expected) =>
+                    Assert.AreEqual(
+                        expected,
+                        (double)((MovingAverageConvergenceDivergence)ind).Histogram.Current.Value,
+                        delta: 1e-4
+                    )
             );
         }
 
@@ -63,11 +86,12 @@ namespace QuantConnect.Tests.Indicators
                 macd,
                 TestFileName,
                 "Signal",
-                (ind, expected) => Assert.AreEqual(
-                    expected,
-                    (double) ((MovingAverageConvergenceDivergence) ind).Signal.Current.Value,
-                    delta: 1e-4
-                )
+                (ind, expected) =>
+                    Assert.AreEqual(
+                        expected,
+                        (double)((MovingAverageConvergenceDivergence)ind).Signal.Current.Value,
+                        delta: 1e-4
+                    )
             );
         }
 
@@ -79,11 +103,12 @@ namespace QuantConnect.Tests.Indicators
                 macd,
                 TestFileName,
                 "MACD",
-                (ind, expected) => Assert.AreEqual(
-                    expected,
-                    (double)((MovingAverageConvergenceDivergence)ind).Current.Value,
-                    delta: 1e-4
-                )
+                (ind, expected) =>
+                    Assert.AreEqual(
+                        expected,
+                        (double)((MovingAverageConvergenceDivergence)ind).Current.Value,
+                        delta: 1e-4
+                    )
             );
         }
 
@@ -93,7 +118,11 @@ namespace QuantConnect.Tests.Indicators
             int fastPeriod = 3,
                 slowPeriod = 4,
                 signalPeriod = 2;
-            var macd = new MovingAverageConvergenceDivergence(fastPeriod: fastPeriod, slowPeriod: slowPeriod, signalPeriod: signalPeriod);
+            var macd = new MovingAverageConvergenceDivergence(
+                fastPeriod: fastPeriod,
+                slowPeriod: slowPeriod,
+                signalPeriod: signalPeriod
+            );
 
             Assert.IsFalse(macd.Signal.IsReady);
             Assert.IsFalse(macd.Histogram.IsReady);
@@ -106,14 +135,12 @@ namespace QuantConnect.Tests.Indicators
             }
             Assert.IsTrue(macd.Fast.IsReady);
 
-
             for (var i = fastPeriod; i < slowPeriod; i++)
             {
                 Assert.IsFalse(macd.Slow.IsReady);
                 macd.Update(new IndicatorDataPoint(DateTime.Today.AddSeconds(i), i));
             }
             Assert.IsTrue(macd.Slow.IsReady);
-
 
             for (var i = slowPeriod; i < macd.WarmUpPeriod; i++)
             {

@@ -33,18 +33,14 @@ namespace QuantConnect.Indicators
         /// </summary>
         /// <remarks>This overload allows inheritance for python classes with no arguments</remarks>
         public PythonIndicator()
-            : base("")
-        {
-        }
+            : base("") { }
 
         /// <summary>
         /// Initializes a new instance of the PythonIndicator class using the specified name.
         /// </summary>
         /// <remarks>This overload allows inheritance for python classes with multiple arguments</remarks>
         public PythonIndicator(params PyObject[] args)
-            : base(GetIndicatorName(args[0]))
-        {
-        }
+            : base(GetIndicatorName(args[0])) { }
 
         /// <summary>
         /// Initializes a new instance of the PythonIndicator class using the specified name.
@@ -62,20 +58,25 @@ namespace QuantConnect.Indicators
         /// <param name="indicator">The python implementation of <see cref="IndicatorBase{IBaseDataBar}"/></param>
         public void SetIndicator(PyObject indicator)
         {
-            _indicatorWrapper = new BasePythonWrapper<IIndicator>(indicator, validateInterface: false);
+            _indicatorWrapper = new BasePythonWrapper<IIndicator>(
+                indicator,
+                validateInterface: false
+            );
             foreach (var attributeName in new[] { "IsReady", "Update", "Value" })
             {
                 if (!_indicatorWrapper.HasAttr(attributeName))
                 {
                     var name = GetIndicatorName(indicator);
 
-                    var message = $"Indicator.{attributeName.ToSnakeCase()} must be implemented. " +
-                                    $"Please implement this missing method in {name}";
+                    var message =
+                        $"Indicator.{attributeName.ToSnakeCase()} must be implemented. "
+                        + $"Please implement this missing method in {name}";
 
                     if (attributeName == "IsReady")
                     {
-                        message += " or use PythonIndicator as base:" +
-                                    $"{Environment.NewLine}class {name}(PythonIndicator):";
+                        message +=
+                            " or use PythonIndicator as base:"
+                            + $"{Environment.NewLine}class {name}(PythonIndicator):";
                     }
 
                     throw new NotImplementedException(message);
@@ -102,7 +103,8 @@ namespace QuantConnect.Indicators
         /// <returns>A new value for this indicator</returns>
         protected override decimal ComputeNextValue(IBaseData input)
         {
-            _isReady = _indicatorWrapper.InvokeMethod<bool?>(nameof(Update), input)
+            _isReady =
+                _indicatorWrapper.InvokeMethod<bool?>(nameof(Update), input)
                 ?? _indicatorWrapper.GetProperty<bool>(nameof(IsReady));
             return _indicatorWrapper.GetProperty<decimal>("Value");
         }
@@ -113,7 +115,9 @@ namespace QuantConnect.Indicators
         /// <returns>The WarmUpPeriod of the indicator.</returns>
         private int GetIndicatorWarmUpPeriod()
         {
-            return _indicatorWrapper.HasAttr(nameof(WarmUpPeriod)) ? _indicatorWrapper.GetProperty<int>(nameof(WarmUpPeriod)) : 0;
+            return _indicatorWrapper.HasAttr(nameof(WarmUpPeriod))
+                ? _indicatorWrapper.GetProperty<int>(nameof(WarmUpPeriod))
+                : 0;
         }
 
         /// <summary>

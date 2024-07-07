@@ -13,19 +13,25 @@
  * limitations under the License.
 */
 
-using QuantConnect.Algorithm.Framework.Selection;
 using System.Collections.Generic;
+using QuantConnect.Algorithm.Framework.Selection;
 
 namespace QuantConnect.Algorithm.CSharp
 {
     /// <summary>
     /// Tests ETF constituents universe selection with the algorithm framework models (Alpha, PortfolioConstruction, Execution)
     /// </summary>
-    public class ETFConstituentUniverseFrameworkRegressionAlgorithmNewUniverseModel : ETFConstituentUniverseFrameworkRegressionAlgorithm
+    public class ETFConstituentUniverseFrameworkRegressionAlgorithmNewUniverseModel
+        : ETFConstituentUniverseFrameworkRegressionAlgorithm
     {
         protected override void AddUniverseWrapper(Symbol symbol)
         {
-            AddUniverseSelection(new ETFConstituentsUniverseSelectionModel(symbol, universeFilterFunc: FilterETFConstituents));
+            AddUniverseSelection(
+                new ETFConstituentsUniverseSelectionModel(
+                    symbol,
+                    universeFilterFunc: FilterETFConstituents
+                )
+            );
         }
 
         public override List<Language> Languages { get; } = new() { Language.CSharp };

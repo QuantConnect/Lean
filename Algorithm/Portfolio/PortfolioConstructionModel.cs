@@ -42,7 +42,7 @@ namespace QuantConnect.Algorithm.Framework.Portfolio
         /// True if should rebalance portfolio on new insights or expiration of insights. True by default
         /// </summary>
         public virtual bool RebalanceOnInsightChanges { get; set; } = true;
-        
+
         /// <summary>
         /// The algorithm instance
         /// </summary>
@@ -72,9 +72,11 @@ namespace QuantConnect.Algorithm.Framework.Portfolio
         /// <param name="rebalancingFunc">For a given algorithm UTC DateTime returns the next expected rebalance UTC time.
         /// Returning current time will trigger rebalance. If null will be ignored</param>
         public PortfolioConstructionModel(Func<DateTime, DateTime> rebalancingFunc = null)
-        : this(rebalancingFunc != null ? (Func<DateTime, DateTime?>)(timeUtc => rebalancingFunc(timeUtc)) : null)
-        {
-        }
+            : this(
+                rebalancingFunc != null
+                    ? (Func<DateTime, DateTime?>)(timeUtc => rebalancingFunc(timeUtc))
+                    : null
+            ) { }
 
         /// <summary>
         /// Used to set the <see cref="PortfolioConstructionModelPythonWrapper"/> instance if any
@@ -90,26 +92,33 @@ namespace QuantConnect.Algorithm.Framework.Portfolio
         /// <param name="algorithm">The algorithm instance</param>
         /// <param name="insights">The insights to create portfolio targets from</param>
         /// <returns>An enumerable of portfolio targets to be sent to the execution model</returns>
-        public virtual IEnumerable<IPortfolioTarget> CreateTargets(QCAlgorithm algorithm, Insight[] insights)
+        public virtual IEnumerable<IPortfolioTarget> CreateTargets(
+            QCAlgorithm algorithm,
+            Insight[] insights
+        )
         {
             Algorithm = algorithm;
-            
-            if (!(PythonWrapper?.IsRebalanceDue(insights, algorithm.UtcTime)
-                  ?? IsRebalanceDue(insights, algorithm.UtcTime)))
+
+            if (
+                !(
+                    PythonWrapper?.IsRebalanceDue(insights, algorithm.UtcTime)
+                    ?? IsRebalanceDue(insights, algorithm.UtcTime)
+                )
+            )
             {
                 return Enumerable.Empty<IPortfolioTarget>();
             }
 
             var targets = new List<IPortfolioTarget>();
 
-            var lastActiveInsights = PythonWrapper?.GetTargetInsights()
-                                                 ?? GetTargetInsights();
+            var lastActiveInsights = PythonWrapper?.GetTargetInsights() ?? GetTargetInsights();
 
             var errorSymbols = new HashSet<Symbol>();
 
             // Determine target percent for the given insights
-            var percents = PythonWrapper?.DetermineTargetPercent(lastActiveInsights)
-                           ?? DetermineTargetPercent(lastActiveInsights);
+            var percents =
+                PythonWrapper?.DetermineTargetPercent(lastActiveInsights)
+                ?? DetermineTargetPercent(lastActiveInsights);
 
             foreach (var insight in lastActiveInsights)
             {
@@ -132,10 +141,13 @@ namespace QuantConnect.Algorithm.Framework.Portfolio
             // Get expired insights and create flatten targets for each symbol
             var expiredInsights = Algorithm.Insights.RemoveExpiredInsights(algorithm.UtcTime);
 
-            var expiredTargets = from insight in expiredInsights
-                                                          group insight.Symbol by insight.Symbol into g
-                                                          where !Algorithm.Insights.HasActiveInsights(g.Key, algorithm.UtcTime) && !errorSymbols.Contains(g.Key)
-                                                          select new PortfolioTarget(g.Key, 0);
+            var expiredTargets =
+                from insight in expiredInsights
+                group insight.Symbol by insight.Symbol into g
+                where
+                    !Algorithm.Insights.HasActiveInsights(g.Key, algorithm.UtcTime)
+                    && !errorSymbols.Contains(g.Key)
+                select new PortfolioTarget(g.Key, 0);
 
             targets.AddRange(expiredTargets);
 
@@ -164,16 +176,21 @@ namespace QuantConnect.Algorithm.Framework.Portfolio
         protected virtual List<Insight> GetTargetInsights()
         {
             // Validate we should create a target for this insight
-            bool IsValidInsight(Insight insight) => PythonWrapper?.ShouldCreateTargetForInsight(insight)
+            bool IsValidInsight(Insight insight) =>
+                PythonWrapper?.ShouldCreateTargetForInsight(insight)
                 ?? ShouldCreateTargetForInsight(insight);
 
             // Get insight that haven't expired of each symbol that is still in the universe
-            var activeInsights = Algorithm.Insights.GetActiveInsights(Algorithm.UtcTime).Where(IsValidInsight);
-            
+            var activeInsights = Algorithm
+                .Insights.GetActiveInsights(Algorithm.UtcTime)
+                .Where(IsValidInsight);
+
             // Get the last generated active insight for each symbol
-            return (from insight in activeInsights
+            return (
+                from insight in activeInsights
                 group insight by insight.Symbol into g
-                select g.OrderBy(x => x.GeneratedTimeUtc).Last()).ToList();
+                select g.OrderBy(x => x.GeneratedTimeUtc).Last()
+            ).ToList();
         }
 
         /// <summary>
@@ -192,9 +209,13 @@ namespace QuantConnect.Algorithm.Framework.Portfolio
         /// </summary>
         /// <param name="activeInsights">The active insights to generate a target for</param>
         /// <returns>A target percent for each insight</returns>
-        protected virtual Dictionary<Insight, double> DetermineTargetPercent(List<Insight> activeInsights)
+        protected virtual Dictionary<Insight, double> DetermineTargetPercent(
+            List<Insight> activeInsights
+        )
         {
-            throw new NotImplementedException("Types deriving from 'PortfolioConstructionModel' must implement the 'Dictionary<Insight, double> DetermineTargetPercent(ICollection<Insight>)' method.");
+            throw new NotImplementedException(
+                "Types deriving from 'PortfolioConstructionModel' must implement the 'Dictionary<Insight, double> DetermineTargetPercent(ICollection<Insight>)' method."
+            );
         }
 
         /// <summary>
@@ -275,11 +296,15 @@ namespace QuantConnect.Algorithm.Framework.Portfolio
                 }
             }
 
-            if (_rebalancingTime != null && _rebalancingTime <= algorithmUtc
+            if (
+                _rebalancingTime != null && _rebalancingTime <= algorithmUtc
                 || RebalanceOnSecurityChanges && _securityChanges
                 || RebalanceOnInsightChanges
-                    && (insights.Length != 0
-                        || nextInsightExpiryTime != null && nextInsightExpiryTime < algorithmUtc))
+                    && (
+                        insights.Length != 0
+                        || nextInsightExpiryTime != null && nextInsightExpiryTime < algorithmUtc
+                    )
+            )
             {
                 RefreshRebalance(algorithmUtc);
                 return true;
@@ -308,7 +333,10 @@ namespace QuantConnect.Algorithm.Framework.Portfolio
         /// <param name="algorithm">The algorithm instance</param>
         /// <param name="insights">The insight collection to filter</param>
         /// <returns>Returns a new array of insights removing invalid ones</returns>
-        protected static Insight[] FilterInvalidInsightMagnitude(IAlgorithm algorithm, Insight[] insights)
+        protected static Insight[] FilterInvalidInsightMagnitude(
+            IAlgorithm algorithm,
+            Insight[] insights
+        )
         {
             var result = insights.Where(insight =>
             {
@@ -318,13 +346,18 @@ namespace QuantConnect.Algorithm.Framework.Portfolio
                 }
 
                 var absoluteMagnitude = Math.Abs(insight.Magnitude.Value);
-                if (absoluteMagnitude > (double)algorithm.Settings.MaxAbsolutePortfolioTargetPercentage
-                    || absoluteMagnitude < (double)algorithm.Settings.MinAbsolutePortfolioTargetPercentage)
+                if (
+                    absoluteMagnitude
+                        > (double)algorithm.Settings.MaxAbsolutePortfolioTargetPercentage
+                    || absoluteMagnitude
+                        < (double)algorithm.Settings.MinAbsolutePortfolioTargetPercentage
+                )
                 {
-                    algorithm.Error("PortfolioConstructionModel.FilterInvalidInsightMagnitude():" +
-                        $"The insight target Magnitude: {insight.Magnitude}, will not comply with the current " +
-                        $"'Algorithm.Settings' 'MaxAbsolutePortfolioTargetPercentage': {algorithm.Settings.MaxAbsolutePortfolioTargetPercentage}" +
-                        $" or 'MinAbsolutePortfolioTargetPercentage': {algorithm.Settings.MinAbsolutePortfolioTargetPercentage}. Skipping insight."
+                    algorithm.Error(
+                        "PortfolioConstructionModel.FilterInvalidInsightMagnitude():"
+                            + $"The insight target Magnitude: {insight.Magnitude}, will not comply with the current "
+                            + $"'Algorithm.Settings' 'MaxAbsolutePortfolioTargetPercentage': {algorithm.Settings.MaxAbsolutePortfolioTargetPercentage}"
+                            + $" or 'MinAbsolutePortfolioTargetPercentage': {algorithm.Settings.MinAbsolutePortfolioTargetPercentage}. Skipping insight."
                     );
                     return false;
                 }

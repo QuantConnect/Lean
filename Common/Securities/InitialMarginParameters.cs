@@ -51,7 +51,11 @@ namespace QuantConnect.Securities
             var derivative = Security as IDerivativeSecurity;
             if (derivative == null)
             {
-                throw new InvalidOperationException(Messages.InitialMarginParameters.ForUnderlyingOnlyInvokableForIDerivativeSecurity);
+                throw new InvalidOperationException(
+                    Messages
+                        .InitialMarginParameters
+                        .ForUnderlyingOnlyInvokableForIDerivativeSecurity
+                );
             }
 
             return new InitialMarginParameters(derivative.Underlying, Quantity);

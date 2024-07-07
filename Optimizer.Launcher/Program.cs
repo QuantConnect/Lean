@@ -13,6 +13,11 @@
  * limitations under the License.
 */
 
+using System;
+using System.Collections.Generic;
+using System.IO;
+using System.Linq;
+using System.Threading;
 using Newtonsoft.Json;
 using QuantConnect.Configuration;
 using QuantConnect.Logging;
@@ -20,11 +25,6 @@ using QuantConnect.Optimizer.Objectives;
 using QuantConnect.Optimizer.Parameters;
 using QuantConnect.Optimizer.Strategies;
 using QuantConnect.Util;
-using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
-using System.Threading;
 
 namespace QuantConnect.Optimizer.Launcher
 {
@@ -35,7 +35,9 @@ namespace QuantConnect.Optimizer.Launcher
             // Parse report arguments and merge with config to use in the optimizer
             if (args.Length > 0)
             {
-                Config.MergeCommandLineArgumentsWithConfiguration(OptimizerArgumentParser.ParseArguments(args));
+                Config.MergeCommandLineArgumentsWithConfiguration(
+                    OptimizerArgumentParser.ParseArguments(args)
+                );
             }
 
             using var endedEvent = new ManualResetEvent(false);
@@ -44,23 +46,44 @@ namespace QuantConnect.Optimizer.Launcher
             {
                 Log.DebuggingEnabled = Config.GetBool("debug-mode");
                 Log.FilePath = Path.Combine(Config.Get("results-destination-folder"), "log.txt");
-                Log.LogHandler = Composer.Instance.GetExportedValueByTypeName<ILogHandler>(Config.Get("log-handler", "CompositeLogHandler"));
+                Log.LogHandler = Composer.Instance.GetExportedValueByTypeName<ILogHandler>(
+                    Config.Get("log-handler", "CompositeLogHandler")
+                );
 
-                var optimizationStrategyName = Config.Get("optimization-strategy",
-                    "QuantConnect.Optimizer.GridSearchOptimizationStrategy");
+                var optimizationStrategyName = Config.Get(
+                    "optimization-strategy",
+                    "QuantConnect.Optimizer.GridSearchOptimizationStrategy"
+                );
                 var channel = Config.Get("data-channel");
                 var optimizationId = Config.Get("optimization-id", Guid.NewGuid().ToString());
                 var packet = new OptimizationNodePacket
                 {
                     OptimizationId = optimizationId,
                     OptimizationStrategy = optimizationStrategyName,
-                    OptimizationStrategySettings = (OptimizationStrategySettings)JsonConvert.DeserializeObject(Config.Get(
-                        "optimization-strategy-settings",
-                        "{\"$type\":\"QuantConnect.Optimizer.Strategies.OptimizationStrategySettings, QuantConnect.Optimizer\"}"), new JsonSerializerSettings(){TypeNameHandling = TypeNameHandling.All}),
-                    Criterion = JsonConvert.DeserializeObject<Target>(Config.Get("optimization-criterion", "{\"target\":\"Statistics.TotalProfit\", \"extremum\": \"max\"}")),
-                    Constraints = JsonConvert.DeserializeObject<List<Constraint>>(Config.Get("constraints", "[]")).AsReadOnly(),
-                    OptimizationParameters = JsonConvert.DeserializeObject<HashSet<OptimizationParameter>>(Config.Get("parameters", "[]")),
-                    MaximumConcurrentBacktests = Config.GetInt("maximum-concurrent-backtests", Math.Max(1, Environment.ProcessorCount / 2)),
+                    OptimizationStrategySettings = (OptimizationStrategySettings)
+                        JsonConvert.DeserializeObject(
+                            Config.Get(
+                                "optimization-strategy-settings",
+                                "{\"$type\":\"QuantConnect.Optimizer.Strategies.OptimizationStrategySettings, QuantConnect.Optimizer\"}"
+                            ),
+                            new JsonSerializerSettings() { TypeNameHandling = TypeNameHandling.All }
+                        ),
+                    Criterion = JsonConvert.DeserializeObject<Target>(
+                        Config.Get(
+                            "optimization-criterion",
+                            "{\"target\":\"Statistics.TotalProfit\", \"extremum\": \"max\"}"
+                        )
+                    ),
+                    Constraints = JsonConvert
+                        .DeserializeObject<List<Constraint>>(Config.Get("constraints", "[]"))
+                        .AsReadOnly(),
+                    OptimizationParameters = JsonConvert.DeserializeObject<
+                        HashSet<OptimizationParameter>
+                    >(Config.Get("parameters", "[]")),
+                    MaximumConcurrentBacktests = Config.GetInt(
+                        "maximum-concurrent-backtests",
+                        Math.Max(1, Environment.ProcessorCount / 2)
+                    ),
                     Channel = channel,
                 };
 
@@ -71,8 +94,17 @@ namespace QuantConnect.Optimizer.Launcher
                 }
                 packet.OutOfSampleDays = Config.GetInt("out-of-sample-days");
 
-                var optimizerType = Config.Get("optimization-launcher", typeof(ConsoleLeanOptimizer).Name);
-                var optimizer = (LeanOptimizer)Activator.CreateInstance(Composer.Instance.GetExportedTypes<LeanOptimizer>().Single(x => x.Name == optimizerType), packet);
+                var optimizerType = Config.Get(
+                    "optimization-launcher",
+                    typeof(ConsoleLeanOptimizer).Name
+                );
+                var optimizer = (LeanOptimizer)
+                    Activator.CreateInstance(
+                        Composer
+                            .Instance.GetExportedTypes<LeanOptimizer>()
+                            .Single(x => x.Name == optimizerType),
+                        packet
+                    );
 
                 if (Config.GetBool("estimate", false))
                 {

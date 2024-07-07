@@ -14,11 +14,11 @@
 */
 
 using System;
+using Python.Runtime;
 using QuantConnect.Data;
 using QuantConnect.Orders.Fees;
 using QuantConnect.Orders.Fills;
 using QuantConnect.Orders.Slippage;
-using Python.Runtime;
 using QuantConnect.Util;
 
 namespace QuantConnect.Securities.Future
@@ -42,10 +42,7 @@ namespace QuantConnect.Securities.Future
                 // once a future is removed it is no longer tradable
                 return _isTradable && !Symbol.IsCanonical();
             }
-            set
-            {
-                _isTradable = value;
-            }
+            set { _isTradable = value; }
         }
 
         /// <summary>
@@ -68,14 +65,16 @@ namespace QuantConnect.Securities.Future
         /// <param name="currencyConverter">Currency converter used to convert <see cref="CashAmount"/>
         /// instances into units of the account currency</param>
         /// <param name="registeredTypes">Provides all data types registered in the algorithm</param>
-        public Future(SecurityExchangeHours exchangeHours,
+        public Future(
+            SecurityExchangeHours exchangeHours,
             SubscriptionDataConfig config,
             Cash quoteCurrency,
             SymbolProperties symbolProperties,
             ICurrencyConverter currencyConverter,
             IRegisteredSecurityDataTypesProvider registeredTypes
-            )
-            : base(config,
+        )
+            : base(
+                config,
                 quoteCurrency,
                 symbolProperties,
                 new FutureExchange(exchangeHours),
@@ -92,7 +91,7 @@ namespace QuantConnect.Securities.Future
                 currencyConverter,
                 registeredTypes,
                 Securities.MarginInterestRateModel.Null
-                )
+            )
         {
             BuyingPowerModel = new FutureMarginModel(0, this);
             // for now all futures are cash settled as we don't allow underlying (Live Cattle?) to be posted on the account
@@ -113,7 +112,8 @@ namespace QuantConnect.Securities.Future
         /// <param name="registeredTypes">Provides all data types registered in the algorithm</param>
         /// <param name="securityCache">Cache to store security information</param>
         /// <param name="underlying">Future underlying security</param>
-        public Future(Symbol symbol,
+        public Future(
+            Symbol symbol,
             SecurityExchangeHours exchangeHours,
             Cash quoteCurrency,
             SymbolProperties symbolProperties,
@@ -121,8 +121,9 @@ namespace QuantConnect.Securities.Future
             IRegisteredSecurityDataTypesProvider registeredTypes,
             SecurityCache securityCache,
             Security underlying = null
-            )
-            : base(symbol,
+        )
+            : base(
+                symbol,
                 quoteCurrency,
                 symbolProperties,
                 new FutureExchange(exchangeHours),
@@ -139,7 +140,7 @@ namespace QuantConnect.Securities.Future
                 currencyConverter,
                 registeredTypes,
                 Securities.MarginInterestRateModel.Null
-                )
+            )
         {
             BuyingPowerModel = new FutureMarginModel(0, this);
             // for now all futures are cash settled as we don't allow underlying (Live Cattle?) to be posted on the account
@@ -170,34 +171,22 @@ namespace QuantConnect.Securities.Future
         /// <summary>
         /// Specifies if futures contract has physical or cash settlement on settlement
         /// </summary>
-        public SettlementType SettlementType
-        {
-            get; set;
-        }
+        public SettlementType SettlementType { get; set; }
 
         /// <summary>
         /// Gets or sets the underlying security object.
         /// </summary>
-        public Security Underlying
-        {
-            get; set;
-        }
+        public Security Underlying { get; set; }
 
         /// <summary>
         /// Gets or sets the currently mapped symbol for the security
         /// </summary>
-        public Symbol Mapped
-        {
-            get; set;
-        }
+        public Symbol Mapped { get; set; }
 
         /// <summary>
         /// Gets or sets the contract filter
         /// </summary>
-        public IDerivativeSecurityFilter ContractFilter
-        {
-            get; set;
-        }
+        public IDerivativeSecurityFilter ContractFilter { get; set; }
 
         /// <summary>
         /// Sets the <see cref="LocalTimeKeeper"/> to be used for this <see cref="Security"/>.
@@ -257,18 +246,21 @@ namespace QuantConnect.Securities.Future
         /// <param name="universeFunc">new universe selection function</param>
         public void SetFilter(PyObject universeFunc)
         {
-            var pyUniverseFunc = PythonUtil.ToFunc<FutureFilterUniverse, FutureFilterUniverse>(universeFunc);
+            var pyUniverseFunc = PythonUtil.ToFunc<FutureFilterUniverse, FutureFilterUniverse>(
+                universeFunc
+            );
             SetFilter(pyUniverseFunc);
         }
 
         private void SetFilterImp(Func<FutureFilterUniverse, FutureFilterUniverse> universeFunc)
         {
-            Func<IDerivativeSecurityFilterUniverse, IDerivativeSecurityFilterUniverse> func = universe =>
-            {
-                var futureUniverse = universe as FutureFilterUniverse;
-                var result = universeFunc(futureUniverse);
-                return result.ApplyTypesFilter();
-            };
+            Func<IDerivativeSecurityFilterUniverse, IDerivativeSecurityFilterUniverse> func =
+                universe =>
+                {
+                    var futureUniverse = universe as FutureFilterUniverse;
+                    var result = universeFunc(futureUniverse);
+                    return result.ApplyTypesFilter();
+                };
             ContractFilter = new FuncSecurityDerivativeFilter(func);
         }
     }

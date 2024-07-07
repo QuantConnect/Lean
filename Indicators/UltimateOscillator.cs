@@ -42,9 +42,7 @@ namespace QuantConnect.Indicators
         /// <param name="period2">The second period</param>
         /// <param name="period3">The third period</param>
         public UltimateOscillator(int period1, int period2, int period3)
-            : this($"ULTOSC({period1},{period2},{period3})", period1, period2, period3)
-        {
-        }
+            : this($"ULTOSC({period1},{period2},{period3})", period1, period2, period3) { }
 
         /// <summary>
         /// Initializes a new instance of the <see cref="UltimateOscillator"/> class using the specified parameters
@@ -91,7 +89,10 @@ namespace QuantConnect.Indicators
                 return 50m;
             }
 
-            var buyingPressure = new IndicatorDataPoint { Value = input.Close - Math.Min(input.Low, _previousInput.Close) };
+            var buyingPressure = new IndicatorDataPoint
+            {
+                Value = input.Close - Math.Min(input.Low, _previousInput.Close)
+            };
 
             _sumBuyingPressure1.Update(buyingPressure);
             _sumBuyingPressure2.Update(buyingPressure);
@@ -106,9 +107,11 @@ namespace QuantConnect.Indicators
             if (!IsReady)
                 return 50m;
 
-            if (_sumTrueRange1.Current.Value == 0
+            if (
+                _sumTrueRange1.Current.Value == 0
                 || _sumTrueRange2.Current.Value == 0
-                || _sumTrueRange3.Current.Value == 0)
+                || _sumTrueRange3.Current.Value == 0
+            )
             {
                 return Current.Value;
             }

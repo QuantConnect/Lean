@@ -29,8 +29,16 @@ namespace QuantConnect.Algorithm.CSharp
 
         public override void OnEndOfAlgorithm()
         {
-            AssertDataTime(new DateTime(2013, 10, 07, 0, 0, 0), new DateTime(2013, 10, 08, 0, 0, 0), ChainWarmupTimes);
-            AssertDataTime(new DateTime(2013, 10, 07, 0, 0, 0), new DateTime(2013, 10, 08, 0, 0, 0), ContinuousWarmupTimes);
+            AssertDataTime(
+                new DateTime(2013, 10, 07, 0, 0, 0),
+                new DateTime(2013, 10, 08, 0, 0, 0),
+                ChainWarmupTimes
+            );
+            AssertDataTime(
+                new DateTime(2013, 10, 07, 0, 0, 0),
+                new DateTime(2013, 10, 08, 0, 0, 0),
+                ContinuousWarmupTimes
+            );
         }
 
         /// <summary>

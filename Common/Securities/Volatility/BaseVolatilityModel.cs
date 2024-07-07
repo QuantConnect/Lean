@@ -16,7 +16,6 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-
 using QuantConnect.Data;
 using QuantConnect.Interfaces;
 using QuantConnect.Util;
@@ -43,7 +42,8 @@ namespace QuantConnect.Securities.Volatility
         /// </summary>
         /// <param name="subscriptionDataConfigProvider">Provides access to registered <see cref="SubscriptionDataConfig"/></param>
         public virtual void SetSubscriptionDataConfigProvider(
-            ISubscriptionDataConfigProvider subscriptionDataConfigProvider)
+            ISubscriptionDataConfigProvider subscriptionDataConfigProvider
+        )
         {
             SubscriptionDataConfigProvider = subscriptionDataConfigProvider;
         }
@@ -54,9 +54,7 @@ namespace QuantConnect.Securities.Volatility
         /// </summary>
         /// <param name="security">The security to calculate volatility for</param>
         /// <param name="data">The new data used to update the model</param>
-        public virtual void Update(Security security, BaseData data)
-        {
-        }
+        public virtual void Update(Security security, BaseData data) { }
 
         /// <summary>
         /// Returns history requirements for the volatility model expressed in the form of history request
@@ -64,7 +62,10 @@ namespace QuantConnect.Securities.Volatility
         /// <param name="security">The security of the request</param>
         /// <param name="utcTime">The date/time of the request</param>
         /// <returns>History request object list, or empty if no requirements</returns>
-        public virtual IEnumerable<HistoryRequest> GetHistoryRequirements(Security security, DateTime utcTime)
+        public virtual IEnumerable<HistoryRequest> GetHistoryRequirements(
+            Security security,
+            DateTime utcTime
+        )
         {
             return Enumerable.Empty<HistoryRequest>();
         }
@@ -82,13 +83,14 @@ namespace QuantConnect.Securities.Volatility
             Security security,
             DateTime utcTime,
             Resolution? resolution,
-            int barCount)
+            int barCount
+        )
         {
             if (SubscriptionDataConfigProvider == null)
             {
                 throw new InvalidOperationException(
-                    "BaseVolatilityModel.GetHistoryRequirements(): " +
-                    "SubscriptionDataConfigProvider was not set."
+                    "BaseVolatilityModel.GetHistoryRequirements(): "
+                        + "SubscriptionDataConfigProvider was not set."
                 );
             }
 
@@ -106,30 +108,34 @@ namespace QuantConnect.Securities.Volatility
             var periodSpan = historyResolution.ToTimeSpan();
 
             // hour resolution does no have extended market hours data
-            var extendedMarketHours = periodSpan != Time.OneHour && configurations.IsExtendedMarketHours();
+            var extendedMarketHours =
+                periodSpan != Time.OneHour && configurations.IsExtendedMarketHours();
             var localStartTime = Time.GetStartTimeForTradeBars(
                 security.Exchange.Hours,
                 utcTime.ConvertFromUtc(security.Exchange.TimeZone),
                 periodSpan,
                 barCount,
                 extendedMarketHours,
-                configuration.DataTimeZone);
+                configuration.DataTimeZone
+            );
             var utcStartTime = localStartTime.ConvertToUtc(security.Exchange.TimeZone);
 
             return new[]
             {
-                new HistoryRequest(utcStartTime,
-                                   utcTime,
-                                   configuration.Type,
-                                   configuration.Symbol,
-                                   historyResolution,
-                                   security.Exchange.Hours,
-                                   configuration.DataTimeZone,
-                                   historyResolution,
-                                   extendedMarketHours,
-                                   configurations.IsCustomData(),
-                                   configuration.DataNormalizationMode,
-                                   LeanData.GetCommonTickTypeForCommonDataTypes(configuration.Type, security.Type))
+                new HistoryRequest(
+                    utcStartTime,
+                    utcTime,
+                    configuration.Type,
+                    configuration.Symbol,
+                    historyResolution,
+                    security.Exchange.Hours,
+                    configuration.DataTimeZone,
+                    historyResolution,
+                    extendedMarketHours,
+                    configurations.IsCustomData(),
+                    configuration.DataNormalizationMode,
+                    LeanData.GetCommonTickTypeForCommonDataTypes(configuration.Type, security.Type)
+                )
             };
         }
     }

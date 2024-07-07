@@ -14,8 +14,8 @@
 */
 
 using System;
-using System.Linq;
 using System.Drawing;
+using System.Linq;
 using NUnit.Framework;
 
 namespace QuantConnect.Tests.Common
@@ -39,7 +39,19 @@ namespace QuantConnect.Tests.Common
         [TestCase("IndexName", null)]
         public void Clone(string indexName, string toolTip)
         {
-            var series = new Series("A", SeriesType.Line, "TT", Color.AliceBlue, ScatterMarkerSymbol.Circle) { ZIndex = 98, Index = 8, IndexName = indexName, Tooltip = toolTip };
+            var series = new Series(
+                "A",
+                SeriesType.Line,
+                "TT",
+                Color.AliceBlue,
+                ScatterMarkerSymbol.Circle
+            )
+            {
+                ZIndex = 98,
+                Index = 8,
+                IndexName = indexName,
+                Tooltip = toolTip
+            };
             var result = (Series)series.Clone();
 
             Assert.AreEqual(series.Name, result.Name);

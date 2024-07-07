@@ -20,7 +20,8 @@ namespace QuantConnect.Algorithm.CSharp
     /// <summary>
     /// Regression algorithm demonstrating the use of zipped custom data sourced from the object store
     /// </summary>
-    public class CustomDataZippedObjectStoreRegressionAlgorithm : CustomDataObjectStoreRegressionAlgorithm
+    public class CustomDataZippedObjectStoreRegressionAlgorithm
+        : CustomDataObjectStoreRegressionAlgorithm
     {
         protected override string CustomDataKey => "CustomData/ExampleCustomData.zip";
 

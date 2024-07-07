@@ -36,11 +36,21 @@ namespace QuantConnect.Tests.Engine
             algorithm.SubscriptionManager.SetDataManager(new DataManagerStub(algorithm));
             algorithm.AddSecurities(equities: new List<string> { "SPY" });
             algorithm.SetDateTime(referenceTime);
-            algorithm.Securities[Symbols.SPY].Exchange.SetMarketHours(Enumerable.Empty<MarketHoursSegment>(), referenceTime.ConvertFromUtc(TimeZones.NewYork).DayOfWeek);
+            algorithm
+                .Securities[Symbols.SPY]
+                .Exchange.SetMarketHours(
+                    Enumerable.Empty<MarketHoursSegment>(),
+                    referenceTime.ConvertFromUtc(TimeZones.NewYork).DayOfWeek
+                );
             var job = new LiveNodePacket();
-            var results = new TestResultHandler();//packet => Console.WriteLine(FieldsToString(packet)));
+            var results = new TestResultHandler(); //packet => Console.WriteLine(FieldsToString(packet)));
             using var api = new Api.Api();
-            var handler = new DefaultBrokerageMessageHandler(algorithm, job, api, TimeSpan.FromSeconds(2));
+            var handler = new DefaultBrokerageMessageHandler(
+                algorithm,
+                job,
+                api,
+                TimeSpan.FromSeconds(2)
+            );
 
             Assert.IsNull(algorithm.RunTimeError);
 
@@ -63,11 +73,19 @@ namespace QuantConnect.Tests.Engine
             var open = localReferencTime.AddSeconds(1).TimeOfDay;
             var closed = TimeSpan.FromDays(1);
             var marketHours = new MarketHoursSegment(MarketHoursState.Market, open, closed);
-            algorithm.Securities[Symbols.SPY].Exchange.SetMarketHours(new [] {marketHours}, localReferencTime.DayOfWeek);
+            algorithm
+                .Securities[Symbols.SPY]
+                .Exchange.SetMarketHours(new[] { marketHours }, localReferencTime.DayOfWeek);
             var job = new LiveNodePacket();
-            var results = new TestResultHandler();//packet => Console.WriteLine(FieldsToString(packet)));
+            var results = new TestResultHandler(); //packet => Console.WriteLine(FieldsToString(packet)));
             using var api = new Api.Api();
-            var handler = new DefaultBrokerageMessageHandler(algorithm, job, api, TimeSpan.FromSeconds(2), TimeSpan.FromSeconds(.25));
+            var handler = new DefaultBrokerageMessageHandler(
+                algorithm,
+                job,
+                api,
+                TimeSpan.FromSeconds(2),
+                TimeSpan.FromSeconds(.25)
+            );
 
             Assert.IsNull(algorithm.RunTimeError);
 

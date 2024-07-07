@@ -58,7 +58,11 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             var coarseSymbols = new List<Symbol> { Symbols.SPY, Symbols.AAPL, Symbols.MSFT };
 
             using var emitted = new AutoResetEvent(false);
-            using var dataQueueHandler = new FuncDataQueueHandler(fdqh => Enumerable.Empty<BaseData>(), timeProvider, new AlgorithmSettings());
+            using var dataQueueHandler = new FuncDataQueueHandler(
+                fdqh => Enumerable.Empty<BaseData>(),
+                timeProvider,
+                new AlgorithmSettings()
+            );
 
             var feed = new TestableLiveTradingDataFeed(new AlgorithmSettings(), dataQueueHandler);
 
@@ -66,29 +70,41 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             algorithm.SetLiveMode(true);
 
             var mock = new Mock<ITransactionHandler>();
-            mock.Setup(m => m.GetOpenOrders(It.IsAny<Func<Order, bool>>())).Returns(new List<Order>());
+            mock.Setup(m => m.GetOpenOrders(It.IsAny<Func<Order, bool>>()))
+                .Returns(new List<Order>());
             algorithm.Transactions.SetOrderProcessor(mock.Object);
 
             using var synchronizer = new TestableLiveSynchronizer(timeProvider);
             synchronizer.Initialize(algorithm, algorithm.DataManager);
 
-            feed.Initialize(algorithm, new LiveNodePacket(), new BacktestingResultHandler(),
-                TestGlobals.MapFileProvider, TestGlobals.FactorFileProvider, TestGlobals.DataProvider, algorithm.DataManager, synchronizer, new DataChannelProvider());
+            feed.Initialize(
+                algorithm,
+                new LiveNodePacket(),
+                new BacktestingResultHandler(),
+                TestGlobals.MapFileProvider,
+                TestGlobals.FactorFileProvider,
+                TestGlobals.DataProvider,
+                algorithm.DataManager,
+                synchronizer,
+                new DataChannelProvider()
+            );
 
             var symbolIndex = 0;
             var coarseUniverseSelectionCount = 0;
-            algorithm.AddUniverse(
-                coarse =>
-                {
-                    Log.Trace($"Emitted at {algorithm.Time}. Coarse {coarse.First().Time} to {coarse.First().EndTime}");
-                    Interlocked.Increment(ref coarseUniverseSelectionCount);
-                    emitted.Set();
+            algorithm.AddUniverse(coarse =>
+            {
+                Log.Trace(
+                    $"Emitted at {algorithm.Time}. Coarse {coarse.First().Time} to {coarse.First().EndTime}"
+                );
+                Interlocked.Increment(ref coarseUniverseSelectionCount);
+                emitted.Set();
 
-                    // rotate single symbol in universe
-                    if (symbolIndex == coarseSymbols.Count) symbolIndex = 0;
+                // rotate single symbol in universe
+                if (symbolIndex == coarseSymbols.Count)
+                    symbolIndex = 0;
 
-                    return new[] { coarseSymbols[symbolIndex++] };
-                });
+                return new[] { coarseSymbols[symbolIndex++] };
+            });
 
             algorithm.PostInitialize();
 
@@ -99,48 +115,56 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             // create a timer to advance time much faster than realtime
             var timerInterval = TimeSpan.FromMilliseconds(5);
             var timer = Ref.Create<Timer>(null);
-            timer.Value = new Timer(state =>
-            {
-                try
+            timer.Value = new Timer(
+                state =>
                 {
-                    var currentTime = timeProvider.GetUtcNow().ConvertFromUtc(TimeZones.NewYork);
-
-                    if (currentTime.Date > endDate.Date)
+                    try
                     {
+                        var currentTime = timeProvider
+                            .GetUtcNow()
+                            .ConvertFromUtc(TimeZones.NewYork);
+
+                        if (currentTime.Date > endDate.Date)
+                        {
+                            feed.Exit();
+                            cancellationTokenSource.Cancel();
+                            return;
+                        }
+
+                        timeProvider.Advance(TimeSpan.FromHours(1));
+
+                        var time = timeProvider.GetUtcNow().ConvertFromUtc(TimeZones.NewYork);
+                        algorithm.SetDateTime(timeProvider.GetUtcNow());
+                        if (coarseTimes.Contains(time))
+                        {
+                            // lets wait for coarse to emit
+                            if (!emitted.WaitOne(TimeSpan.FromMilliseconds(15000)))
+                            {
+                                throw new TimeoutException(
+                                    $"Timeout waiting for coarse to emit at {time}"
+                                );
+                            }
+                        }
+                        var activeSecuritiesCount = algorithm.ActiveSecurities.Count;
+
+                        Assert.That(activeSecuritiesCount <= 1);
+
+                        // restart the timer
+                        timer.Value.Change(timerInterval, Timeout.InfiniteTimeSpan);
+                    }
+                    catch (Exception exception)
+                    {
+                        Log.Error(exception);
+                        exceptionThrown = exception;
+
                         feed.Exit();
                         cancellationTokenSource.Cancel();
-                        return;
                     }
-
-                    timeProvider.Advance(TimeSpan.FromHours(1));
-
-                    var time = timeProvider.GetUtcNow().ConvertFromUtc(TimeZones.NewYork);
-                    algorithm.SetDateTime(timeProvider.GetUtcNow());
-                    if (coarseTimes.Contains(time))
-                    {
-                        // lets wait for coarse to emit
-                        if (!emitted.WaitOne(TimeSpan.FromMilliseconds(15000)))
-                        {
-                            throw new TimeoutException($"Timeout waiting for coarse to emit at {time}");
-                        }
-                    }
-                    var activeSecuritiesCount = algorithm.ActiveSecurities.Count;
-
-                    Assert.That(activeSecuritiesCount <= 1);
-
-                    // restart the timer
-                    timer.Value.Change(timerInterval, Timeout.InfiniteTimeSpan);
-                }
-                catch (Exception exception)
-                {
-                    Log.Error(exception);
-                    exceptionThrown = exception;
-
-                    feed.Exit();
-                    cancellationTokenSource.Cancel();
-                }
-
-            }, null, timerInterval, Timeout.InfiniteTimeSpan);
+                },
+                null,
+                timerInterval,
+                Timeout.InfiniteTimeSpan
+            );
 
             foreach (var _ in synchronizer.StreamData(cancellationTokenSource.Token)) { }
 
@@ -152,7 +176,11 @@ namespace QuantConnect.Tests.Engine.DataFeeds
                 throw new RegressionTestException("Exception in timer: ", exceptionThrown);
             }
 
-            Assert.AreEqual(coarseTimes.Count, coarseUniverseSelectionCount, message: "coarseUniverseSelectionCount");
+            Assert.AreEqual(
+                coarseTimes.Count,
+                coarseUniverseSelectionCount,
+                message: "coarseUniverseSelectionCount"
+            );
         }
     }
 }

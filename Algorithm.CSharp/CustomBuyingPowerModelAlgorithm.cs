@@ -14,10 +14,10 @@
 */
 
 using System;
-using QuantConnect.Interfaces;
-using QuantConnect.Securities;
 using System.Collections.Generic;
 using QuantConnect.Data;
+using QuantConnect.Interfaces;
+using QuantConnect.Securities;
 
 namespace QuantConnect.Algorithm.CSharp
 {
@@ -53,7 +53,9 @@ namespace QuantConnect.Algorithm.CSharp
             var quantity = CalculateOrderQuantity(_spy, 1m);
             if (quantity % 100 != 0)
             {
-                throw new RegressionTestException($"CustomBuyingPowerModel only allow quantity that is multiple of 100 and {quantity} was found");
+                throw new RegressionTestException(
+                    $"CustomBuyingPowerModel only allow quantity that is multiple of 100 and {quantity} was found"
+                );
             }
 
             // We normally get insufficient buying power model, but the
@@ -64,15 +66,19 @@ namespace QuantConnect.Algorithm.CSharp
         public class CustomBuyingPowerModel : BuyingPowerModel
         {
             public override GetMaximumOrderQuantityResult GetMaximumOrderQuantityForTargetBuyingPower(
-                GetMaximumOrderQuantityForTargetBuyingPowerParameters parameters)
+                GetMaximumOrderQuantityForTargetBuyingPowerParameters parameters
+            )
             {
-                var quantity = base.GetMaximumOrderQuantityForTargetBuyingPower(parameters).Quantity;
+                var quantity = base.GetMaximumOrderQuantityForTargetBuyingPower(
+                    parameters
+                ).Quantity;
                 quantity = Math.Floor(quantity / 100) * 100;
                 return new GetMaximumOrderQuantityResult(quantity);
             }
 
             public override HasSufficientBuyingPowerForOrderResult HasSufficientBuyingPowerForOrder(
-                HasSufficientBuyingPowerForOrderParameters parameters)
+                HasSufficientBuyingPowerForOrderParameters parameters
+            )
             {
                 // if portfolio doesn't have enough buying power:
                 //     parameters.Insufficient()
@@ -82,7 +88,9 @@ namespace QuantConnect.Algorithm.CSharp
             }
 
             // Let's always return 0 as the maintenance margin so we avoid margin call orders
-            public override MaintenanceMargin GetMaintenanceMargin(MaintenanceMarginParameters parameters)
+            public override MaintenanceMargin GetMaintenanceMargin(
+                MaintenanceMarginParameters parameters
+            )
             {
                 return new MaintenanceMargin(0);
             }
@@ -116,35 +124,36 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// This is used by the regression test system to indicate what the expected statistics are from running the algorithm
         /// </summary>
-        public Dictionary<string, string> ExpectedStatistics => new Dictionary<string, string>
-        {
-            {"Total Orders", "1"},
-            {"Average Win", "0%"},
-            {"Average Loss", "0%"},
-            {"Compounding Annual Return", "4775.196%"},
-            {"Drawdown", "21.600%"},
-            {"Expectancy", "0"},
-            {"Start Equity", "100000"},
-            {"End Equity", "138618.81"},
-            {"Net Profit", "38.619%"},
-            {"Sharpe Ratio", "14.322"},
-            {"Sortino Ratio", "26.701"},
-            {"Probabilistic Sharpe Ratio", "75.756%"},
-            {"Loss Rate", "0%"},
-            {"Win Rate", "0%"},
-            {"Profit-Loss Ratio", "0"},
-            {"Alpha", "10.447"},
-            {"Beta", "8.754"},
-            {"Annual Standard Deviation", "0.95"},
-            {"Annual Variance", "0.903"},
-            {"Information Ratio", "15.703"},
-            {"Tracking Error", "0.844"},
-            {"Treynor Ratio", "1.554"},
-            {"Total Fees", "$30.00"},
-            {"Estimated Strategy Capacity", "$150000000.00"},
-            {"Lowest Capacity Asset", "SPY R735QTJ8XC9X"},
-            {"Portfolio Turnover", "26.62%"},
-            {"OrderListHash", "c5ca1a8b0ce57cfeadd9eddf8abdd80c"}
-        };
+        public Dictionary<string, string> ExpectedStatistics =>
+            new Dictionary<string, string>
+            {
+                { "Total Orders", "1" },
+                { "Average Win", "0%" },
+                { "Average Loss", "0%" },
+                { "Compounding Annual Return", "4775.196%" },
+                { "Drawdown", "21.600%" },
+                { "Expectancy", "0" },
+                { "Start Equity", "100000" },
+                { "End Equity", "138618.81" },
+                { "Net Profit", "38.619%" },
+                { "Sharpe Ratio", "14.322" },
+                { "Sortino Ratio", "26.701" },
+                { "Probabilistic Sharpe Ratio", "75.756%" },
+                { "Loss Rate", "0%" },
+                { "Win Rate", "0%" },
+                { "Profit-Loss Ratio", "0" },
+                { "Alpha", "10.447" },
+                { "Beta", "8.754" },
+                { "Annual Standard Deviation", "0.95" },
+                { "Annual Variance", "0.903" },
+                { "Information Ratio", "15.703" },
+                { "Tracking Error", "0.844" },
+                { "Treynor Ratio", "1.554" },
+                { "Total Fees", "$30.00" },
+                { "Estimated Strategy Capacity", "$150000000.00" },
+                { "Lowest Capacity Asset", "SPY R735QTJ8XC9X" },
+                { "Portfolio Turnover", "26.62%" },
+                { "OrderListHash", "c5ca1a8b0ce57cfeadd9eddf8abdd80c" }
+            };
     }
 }

@@ -45,7 +45,15 @@ namespace QuantConnect.Algorithm.CSharp
 
             _spy = QuantConnect.Symbol.Create("SPY", SecurityType.Equity, Market.USA);
             SetUniverseSelection(new ManualUniverseSelectionModel(_spy));
-            SetAlpha(new ConstantAlphaModel(InsightType.Price, InsightDirection.Up, TimeSpan.FromMinutes(20), 0.025, null));
+            SetAlpha(
+                new ConstantAlphaModel(
+                    InsightType.Price,
+                    InsightDirection.Up,
+                    TimeSpan.FromMinutes(20),
+                    0.025,
+                    null
+                )
+            );
             SetPortfolioConstruction(new EqualWeightingPortfolioConstructionModel());
         }
 
@@ -63,7 +71,9 @@ namespace QuantConnect.Algorithm.CSharp
 
             if (Securities[_spy].Leverage != 10)
             {
-                throw new RegressionTestException($"Expecting leverage to be 10, was {Securities[_spy].Leverage}");
+                throw new RegressionTestException(
+                    $"Expecting leverage to be 10, was {Securities[_spy].Leverage}"
+                );
             }
         }
 
@@ -95,36 +105,37 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// This is used by the regression test system to indicate what the expected statistics are from running the algorithm
         /// </summary>
-        public Dictionary<string, string> ExpectedStatistics => new Dictionary<string, string>
-        {
-            {"Total Orders", "2"},
-            {"Average Win", "0%"},
-            {"Average Loss", "-0.12%"},
-            {"Compounding Annual Return", "239.838%"},
-            {"Drawdown", "2.200%"},
-            {"Expectancy", "-1"},
-            {"Start Equity", "100000"},
-            {"End Equity", "101576.33"},
-            {"Net Profit", "1.576%"},
-            {"Sharpe Ratio", "8.861"},
-            {"Sortino Ratio", "0"},
-            {"Probabilistic Sharpe Ratio", "67.609%"},
-            {"Loss Rate", "100%"},
-            {"Win Rate", "0%"},
-            {"Profit-Loss Ratio", "0"},
-            {"Alpha", "-0.003"},
-            {"Beta", "0.997"},
-            {"Annual Standard Deviation", "0.222"},
-            {"Annual Variance", "0.049"},
-            {"Information Ratio", "-14.544"},
-            {"Tracking Error", "0.001"},
-            {"Treynor Ratio", "1.972"},
-            {"Total Fees", "$65.43"},
-            {"Estimated Strategy Capacity", "$5600000.00"},
-            {"Lowest Capacity Asset", "SPY R735QTJ8XC9X"},
-            {"Portfolio Turnover", "379.43%"},
-            {"OrderListHash", "b339a5e17142fe5496d80ee26079d8d0"}
-        };
+        public Dictionary<string, string> ExpectedStatistics =>
+            new Dictionary<string, string>
+            {
+                { "Total Orders", "2" },
+                { "Average Win", "0%" },
+                { "Average Loss", "-0.12%" },
+                { "Compounding Annual Return", "239.838%" },
+                { "Drawdown", "2.200%" },
+                { "Expectancy", "-1" },
+                { "Start Equity", "100000" },
+                { "End Equity", "101576.33" },
+                { "Net Profit", "1.576%" },
+                { "Sharpe Ratio", "8.861" },
+                { "Sortino Ratio", "0" },
+                { "Probabilistic Sharpe Ratio", "67.609%" },
+                { "Loss Rate", "100%" },
+                { "Win Rate", "0%" },
+                { "Profit-Loss Ratio", "0" },
+                { "Alpha", "-0.003" },
+                { "Beta", "0.997" },
+                { "Annual Standard Deviation", "0.222" },
+                { "Annual Variance", "0.049" },
+                { "Information Ratio", "-14.544" },
+                { "Tracking Error", "0.001" },
+                { "Treynor Ratio", "1.972" },
+                { "Total Fees", "$65.43" },
+                { "Estimated Strategy Capacity", "$5600000.00" },
+                { "Lowest Capacity Asset", "SPY R735QTJ8XC9X" },
+                { "Portfolio Turnover", "379.43%" },
+                { "OrderListHash", "b339a5e17142fe5496d80ee26079d8d0" }
+            };
 
         private class TestBrokerageModel : DefaultBrokerageModel
         {

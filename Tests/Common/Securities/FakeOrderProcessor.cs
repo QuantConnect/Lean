@@ -27,11 +27,15 @@ namespace QuantConnect.Tests.Common.Securities
     /// </summary>
     public class FakeOrderProcessor : IOrderProcessor
     {
-        private readonly ConcurrentDictionary<int, Order> _orders = new ConcurrentDictionary<int, Order>();
-        private readonly ConcurrentDictionary<int, OrderTicket> _tickets = new ConcurrentDictionary<int, OrderTicket>();
-        public ConcurrentDictionary<int, OrderRequest> ProcessedOrdersRequests { get; init; } = new ConcurrentDictionary<int, OrderRequest>();
+        private readonly ConcurrentDictionary<int, Order> _orders =
+            new ConcurrentDictionary<int, Order>();
+        private readonly ConcurrentDictionary<int, OrderTicket> _tickets =
+            new ConcurrentDictionary<int, OrderTicket>();
+        public ConcurrentDictionary<int, OrderRequest> ProcessedOrdersRequests { get; init; } =
+            new ConcurrentDictionary<int, OrderRequest>();
 
         public SecurityTransactionManager TransactionManager { get; set; }
+
         public void AddOrder(Order order)
         {
             _orders[order.Id] = order;
@@ -41,7 +45,9 @@ namespace QuantConnect.Tests.Common.Securities
         {
             _tickets[ticket.OrderId] = ticket;
         }
+
         public int OrdersCount { get; private set; }
+
         public Order GetOrderById(int orderId)
         {
             Order order;
@@ -78,7 +84,9 @@ namespace QuantConnect.Tests.Common.Securities
 
         public List<Order> GetOpenOrders(Func<Order, bool> filter = null)
         {
-            return _orders.Values.Where(x => x.Status.IsOpen() && (filter == null || filter(x))).ToList();
+            return _orders
+                .Values.Where(x => x.Status.IsOpen() && (filter == null || filter(x)))
+                .ToList();
         }
 
         public OrderTicket Process(OrderRequest request)
@@ -88,7 +96,7 @@ namespace QuantConnect.Tests.Common.Securities
             switch (request.OrderRequestType)
             {
                 case OrderRequestType.Submit:
-                    ticket = new OrderTicket(TransactionManager, (SubmitOrderRequest) request);
+                    ticket = new OrderTicket(TransactionManager, (SubmitOrderRequest)request);
                     AddTicket(ticket);
                     return ticket;
                 case OrderRequestType.Cancel:

@@ -14,8 +14,8 @@
 */
 
 using System;
-using System.Linq;
 using System.Collections.Generic;
+using System.Linq;
 using NUnit.Framework;
 using QuantConnect.Securities;
 using QuantConnect.Securities.Crypto;
@@ -44,11 +44,18 @@ namespace QuantConnect.Tests.Common
 
             foreach (var symbol in symbols)
             {
-                string baseCurrency, quoteCurrency;
+                string baseCurrency,
+                    quoteCurrency;
                 Forex.DecomposeCurrencyPair(symbol, out baseCurrency, out quoteCurrency);
 
-                Assert.IsTrue(!string.IsNullOrWhiteSpace(Currencies.GetCurrencySymbol(baseCurrency)), "Missing currency symbol for: " + baseCurrency);
-                Assert.IsTrue(!string.IsNullOrWhiteSpace(Currencies.GetCurrencySymbol(quoteCurrency)), "Missing currency symbol for: " + quoteCurrency);
+                Assert.IsTrue(
+                    !string.IsNullOrWhiteSpace(Currencies.GetCurrencySymbol(baseCurrency)),
+                    "Missing currency symbol for: " + baseCurrency
+                );
+                Assert.IsTrue(
+                    !string.IsNullOrWhiteSpace(Currencies.GetCurrencySymbol(quoteCurrency)),
+                    "Missing currency symbol for: " + quoteCurrency
+                );
             }
         }
 
@@ -63,13 +70,27 @@ namespace QuantConnect.Tests.Common
 
             foreach (var symbol in symbols)
             {
-                var symbolProperties = SymbolPropertiesDatabase.FromDataFolder().GetSymbolProperties(market, symbol, securityType, Currencies.USD);
+                var symbolProperties = SymbolPropertiesDatabase
+                    .FromDataFolder()
+                    .GetSymbolProperties(market, symbol, securityType, Currencies.USD);
 
-                string baseCurrency, quoteCurrency;
-                Crypto.DecomposeCurrencyPair(symbol, symbolProperties, out baseCurrency, out quoteCurrency);
+                string baseCurrency,
+                    quoteCurrency;
+                Crypto.DecomposeCurrencyPair(
+                    symbol,
+                    symbolProperties,
+                    out baseCurrency,
+                    out quoteCurrency
+                );
 
-                Assert.IsTrue(!string.IsNullOrWhiteSpace(Currencies.GetCurrencySymbol(baseCurrency)), "Missing currency symbol for: " + baseCurrency);
-                Assert.IsTrue(!string.IsNullOrWhiteSpace(Currencies.GetCurrencySymbol(quoteCurrency)), "Missing currency symbol for: " + quoteCurrency);
+                Assert.IsTrue(
+                    !string.IsNullOrWhiteSpace(Currencies.GetCurrencySymbol(baseCurrency)),
+                    "Missing currency symbol for: " + baseCurrency
+                );
+                Assert.IsTrue(
+                    !string.IsNullOrWhiteSpace(Currencies.GetCurrencySymbol(quoteCurrency)),
+                    "Missing currency symbol for: " + quoteCurrency
+                );
             }
         }
 
@@ -93,7 +114,8 @@ namespace QuantConnect.Tests.Common
         [Test]
         public void ParsesValuesWithCurrency(
             [ValueSource(nameof(CurrencySymbols))] string currencySymbol,
-            [Values("10,000.1", "10000.1", "1.00001e4")] string value)
+            [Values("10,000.1", "10000.1", "1.00001e4")] string value
+        )
         {
             decimal result = 0;
             decimal result2;
@@ -107,7 +129,8 @@ namespace QuantConnect.Tests.Common
         [Test]
         public void CannotParseInvalidValuesWithCurrency(
             [ValueSource(nameof(CurrencySymbols))] string currencySymbol,
-            [Values("10.000.1", "10.000,1", "1.00001A4", "")] string value)
+            [Values("10.000.1", "10.000,1", "1.00001A4", "")] string value
+        )
         {
             string valueWithCurrency = currencySymbol + value;
             Assert.Throws<ArgumentException>(() => Currencies.Parse(valueWithCurrency));
@@ -116,8 +139,9 @@ namespace QuantConnect.Tests.Common
 
         static IEnumerable<string> CurrencySymbols =>
             // Currencies with known symbols
-            Currencies.CurrencySymbols.Values.Distinct()
-            // Currencies without known symbols
-            .Concat(new [] { "BUSD", "BNT", "ARS", "VES" });
+            Currencies
+                .CurrencySymbols.Values.Distinct()
+                // Currencies without known symbols
+                .Concat(new[] { "BUSD", "BNT", "ARS", "VES" });
     }
 }

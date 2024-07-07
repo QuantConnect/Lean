@@ -15,9 +15,7 @@
 
 using System;
 using System.Linq;
-
 using NUnit.Framework;
-
 using QuantConnect.Data;
 using QuantConnect.Data.Market;
 using QuantConnect.Securities;
@@ -31,8 +29,10 @@ namespace QuantConnect.Tests.Common.Securities
     {
         [Test]
         public void GetHistoryRequirementsWorks(
-            [ValueSource(nameof(GetDataNormalizationModes))] DataNormalizationMode dataNormalizationMode,
-            [Values] bool passResolution)
+            [ValueSource(nameof(GetDataNormalizationModes))]
+                DataNormalizationMode dataNormalizationMode,
+            [Values] bool passResolution
+        )
         {
             const int periods = 3;
             var reference = new DateTime(2016, 04, 06, 12, 0, 0);
@@ -47,7 +47,8 @@ namespace QuantConnect.Tests.Common.Securities
                 true,
                 false,
                 false,
-                dataNormalizationMode: dataNormalizationMode);
+                dataNormalizationMode: dataNormalizationMode
+            );
             var security = new Security(
                 SecurityExchangeHours.AlwaysOpen(TimeZones.NewYork),
                 config,
@@ -61,7 +62,14 @@ namespace QuantConnect.Tests.Common.Securities
 
             var model = new BaseVolatilityModel();
             model.SetSubscriptionDataConfigProvider(new MockSubscriptionDataConfigProvider(config));
-            var result = model.GetHistoryRequirements(security, DateTime.UtcNow, passResolution ? config.Resolution : null, periods).First();
+            var result = model
+                .GetHistoryRequirements(
+                    security,
+                    DateTime.UtcNow,
+                    passResolution ? config.Resolution : null,
+                    periods
+                )
+                .First();
 
             Assert.AreEqual(config.DataNormalizationMode, result.DataNormalizationMode);
             Assert.AreEqual(config.Symbol, result.Symbol);
@@ -70,13 +78,18 @@ namespace QuantConnect.Tests.Common.Securities
             Assert.AreEqual(config.FillDataForward, result.FillForwardResolution != null);
             Assert.AreEqual(config.ExtendedMarketHours, result.IncludeExtendedMarketHours);
             // Max resolution is used if no resolution is passed
-            Assert.AreEqual(passResolution ? config.Resolution : Resolution.Daily, result.Resolution);
+            Assert.AreEqual(
+                passResolution ? config.Resolution : Resolution.Daily,
+                result.Resolution
+            );
         }
 
         [Test]
         public void GetHistoryRequirementsWorksForTwoDifferentSubscriptions(
-            [ValueSource(nameof(GetDataNormalizationModes))] DataNormalizationMode dataNormalizationMode,
-            [Values] bool passResolution)
+            [ValueSource(nameof(GetDataNormalizationModes))]
+                DataNormalizationMode dataNormalizationMode,
+            [Values] bool passResolution
+        )
         {
             const int periods = 3;
             var reference = new DateTime(2016, 04, 06, 12, 0, 0);
@@ -91,7 +104,8 @@ namespace QuantConnect.Tests.Common.Securities
                 true,
                 false,
                 false,
-                dataNormalizationMode: dataNormalizationMode);
+                dataNormalizationMode: dataNormalizationMode
+            );
             var security = new Security(
                 SecurityExchangeHours.AlwaysOpen(TimeZones.NewYork),
                 config,
@@ -116,20 +130,34 @@ namespace QuantConnect.Tests.Common.Securities
                     true,
                     false,
                     true,
-                dataNormalizationMode: dataNormalizationMode));
+                    dataNormalizationMode: dataNormalizationMode
+                )
+            );
             model.SetSubscriptionDataConfigProvider(mock);
-            var result = model.GetHistoryRequirements(security, DateTime.UtcNow, passResolution ? config.Resolution : null, periods).First();
+            var result = model
+                .GetHistoryRequirements(
+                    security,
+                    DateTime.UtcNow,
+                    passResolution ? config.Resolution : null,
+                    periods
+                )
+                .First();
 
             Assert.AreEqual(config.DataNormalizationMode, result.DataNormalizationMode);
             Assert.AreEqual(config.Symbol, result.Symbol);
             Assert.AreEqual(config.DataTimeZone, result.DataTimeZone);
             Assert.AreEqual(true, result.IsCustomData);
             Assert.AreEqual(true, result.FillForwardResolution != null);
-            Assert.AreEqual(true, result.IncludeExtendedMarketHours); ;
+            Assert.AreEqual(true, result.IncludeExtendedMarketHours);
+            ;
             // Max resolution is used if no resolution is passed
-            Assert.AreEqual(passResolution ? config.Resolution : Resolution.Daily, result.Resolution);
+            Assert.AreEqual(
+                passResolution ? config.Resolution : Resolution.Daily,
+                result.Resolution
+            );
         }
 
-        private static DataNormalizationMode[] GetDataNormalizationModes => (DataNormalizationMode[])Enum.GetValues(typeof(DataNormalizationMode));
+        private static DataNormalizationMode[] GetDataNormalizationModes =>
+            (DataNormalizationMode[])Enum.GetValues(typeof(DataNormalizationMode));
     }
 }

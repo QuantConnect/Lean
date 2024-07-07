@@ -15,11 +15,11 @@
 */
 
 using System;
+using System.Collections;
+using System.Collections.Generic;
 using NUnit.Framework;
 using QuantConnect.Data;
-using System.Collections;
 using QuantConnect.Data.Market;
-using System.Collections.Generic;
 using QuantConnect.Lean.Engine.DataFeeds.Enumerators;
 
 namespace QuantConnect.Tests.Engine.DataFeeds.Enumerators
@@ -32,11 +32,14 @@ namespace QuantConnect.Tests.Engine.DataFeeds.Enumerators
         public void SkipsBasedOnEndTime(bool skipsBasedOnEndTime)
         {
             var time = new DateTime(2020, 1, 1);
-            var enumerator1 = new List<BaseData> { new Tick(time, Symbols.SPY, 10, 10) }.GetEnumerator();
+            var enumerator1 = new List<BaseData>
+            {
+                new Tick(time, Symbols.SPY, 10, 10)
+            }.GetEnumerator();
             var enumerator2 = new List<BaseData>
             {
                 new Tick(time.AddSeconds(-1), Symbols.SPY, 20, 20), //should be skipped because end time is before previous tick
-                new Tick(time.AddSeconds(1), Symbols.SPY, 30 , 30)
+                new Tick(time.AddSeconds(1), Symbols.SPY, 30, 30)
             }.GetEnumerator();
 
             var concat = new ConcatEnumerator(skipsBasedOnEndTime, enumerator1, enumerator2);
@@ -72,10 +75,16 @@ namespace QuantConnect.Tests.Engine.DataFeeds.Enumerators
             {
                 new Tick(time, Symbols.SPY, 10, 10),
                 new Tick(time.AddSeconds(-1), Symbols.SPY, 20, 20),
-                new Tick(time.AddSeconds(1), Symbols.SPY, 30 , 30)
+                new Tick(time.AddSeconds(1), Symbols.SPY, 30, 30)
             }.GetEnumerator();
 
-            var concat = new ConcatEnumerator(skipsBasedOnEndTime, enumerator1, null, enumerator2, enumerator3);
+            var concat = new ConcatEnumerator(
+                skipsBasedOnEndTime,
+                enumerator1,
+                null,
+                enumerator2,
+                enumerator3
+            );
 
             Assert.IsTrue(concat.MoveNext());
             Assert.AreEqual(10, (concat.Current as Tick).AskPrice);
@@ -138,9 +147,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds.Enumerators
                 return true;
             }
 
-            public void Reset()
-            {
-            }
+            public void Reset() { }
         }
     }
 }

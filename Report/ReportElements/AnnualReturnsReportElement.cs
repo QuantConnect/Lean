@@ -33,7 +33,12 @@ namespace QuantConnect.Report.ReportElements
         /// <param name="key">Location of injection</param>
         /// <param name="backtest">Backtest result object</param>
         /// <param name="live">Live result object</param>
-        public AnnualReturnsReportElement(string name, string key, BacktestResult backtest, LiveResult live)
+        public AnnualReturnsReportElement(
+            string name,
+            string key,
+            BacktestResult backtest,
+            LiveResult live
+        )
         {
             _live = live;
             _backtest = backtest;
@@ -71,7 +76,12 @@ namespace QuantConnect.Report.ReportElements
                 // Pandas equivalent:
                 //
                 // df.pct_change().resample('AS').sum().mul(100)
-                var backtestAnnualReturns = backtestSeries.ResampleEquivalence(date => new DateTime(date.Year, 1, 1), agg => agg.TotalReturns() * 100).DropMissing();
+                var backtestAnnualReturns = backtestSeries
+                    .ResampleEquivalence(
+                        date => new DateTime(date.Year, 1, 1),
+                        agg => agg.TotalReturns() * 100
+                    )
+                    .DropMissing();
 
                 // We need to set the datetime index first before we resample
                 var liveSeries = new Series<DateTime, double>(liveTime, liveStrategy);
@@ -80,10 +90,17 @@ namespace QuantConnect.Report.ReportElements
                 // Same as above, this is equivalent to:
                 //
                 // df.pct_change().resample('AS').sum().mul(100)
-                var liveAnnualReturns = liveSeries.ResampleEquivalence(date => new DateTime(date.Year, 1, 1), agg => agg.TotalReturns() * 100).DropMissing();
+                var liveAnnualReturns = liveSeries
+                    .ResampleEquivalence(
+                        date => new DateTime(date.Year, 1, 1),
+                        agg => agg.TotalReturns() * 100
+                    )
+                    .DropMissing();
 
                 // Select only the year number and pass it to the plotting library
-                backtestList.Append(backtestAnnualReturns.Keys.Select(x => x.Year).ToList().ToPython());
+                backtestList.Append(
+                    backtestAnnualReturns.Keys.Select(x => x.Year).ToList().ToPython()
+                );
                 backtestList.Append(backtestAnnualReturns.Values.ToList().ToPython());
                 liveList.Append(liveAnnualReturns.Keys.Select(x => x.Year).ToList().ToPython());
                 liveList.Append(liveAnnualReturns.Values.ToList().ToPython());

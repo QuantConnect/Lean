@@ -1,4 +1,3 @@
-
 /*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
@@ -16,11 +15,11 @@
 
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using QuantConnect.Data;
+using QuantConnect.Data.Market;
 using QuantConnect.Interfaces;
 using QuantConnect.Orders;
-using System.Linq;
-using QuantConnect.Data.Market;
 
 namespace QuantConnect.Algorithm.CSharp
 {
@@ -47,8 +46,7 @@ namespace QuantConnect.Algorithm.CSharp
             var option = AddOption(equity.Symbol, fillForward: true);
             _optionSymbol = option.Symbol;
 
-            option.SetFilter(u => u.Strikes(-2, +2)
-                  .Expiration(0, 180));
+            option.SetFilter(u => u.Strikes(-2, +2).Expiration(0, 180));
         }
 
         public override void OnData(Slice slice)
@@ -56,9 +54,13 @@ namespace QuantConnect.Algorithm.CSharp
             if (_orderLegs == null)
             {
                 OptionChain chain;
-                if (IsMarketOpen(_optionSymbol) && slice.OptionChains.TryGetValue(_optionSymbol, out chain))
+                if (
+                    IsMarketOpen(_optionSymbol)
+                    && slice.OptionChains.TryGetValue(_optionSymbol, out chain)
+                )
                 {
-                    var callContracts = chain.Where(contract => contract.Right == OptionRight.Call)
+                    var callContracts = chain
+                        .Where(contract => contract.Right == OptionRight.Call)
                         .GroupBy(x => x.Expiry)
                         .OrderBy(grouping => grouping.Key)
                         .First()
@@ -115,7 +117,10 @@ namespace QuantConnect.Algorithm.CSharp
                 var response = ticket.Cancel("Attempt to cancel combo market order");
                 if (response.IsSuccess)
                 {
-                    throw new RegressionTestException("Combo market orders should fill instantly, they should not be cancelable in backtest mode: " + response.OrderId);
+                    throw new RegressionTestException(
+                        "Combo market orders should fill instantly, they should not be cancelable in backtest mode: "
+                            + response.OrderId
+                    );
                 }
             }
         }
@@ -126,7 +131,9 @@ namespace QuantConnect.Algorithm.CSharp
             {
                 Log("Submitting ComboLimitOrder");
 
-                var currentPrice = _orderLegs.Sum(leg => leg.Quantity * Securities[leg.Symbol].Close);
+                var currentPrice = _orderLegs.Sum(leg =>
+                    leg.Quantity * Securities[leg.Symbol].Close
+                );
 
                 var tickets = ComboLimitOrder(_orderLegs, 2, currentPrice + 1.5m);
                 _openLimitOrders.AddRange(tickets);
@@ -138,7 +145,10 @@ namespace QuantConnect.Algorithm.CSharp
             else
             {
                 var combo1 = _openLimitOrders.Take(_orderLegs.Count).ToList();
-                var combo2 = _openLimitOrders.Skip(_orderLegs.Count).Take(_orderLegs.Count).ToList();
+                var combo2 = _openLimitOrders
+                    .Skip(_orderLegs.Count)
+                    .Take(_orderLegs.Count)
+                    .ToList();
 
                 // check if either is filled and cancel the other
                 if (CheckGroupOrdersForFills(combo1, combo2))
@@ -150,21 +160,29 @@ namespace QuantConnect.Algorithm.CSharp
 
                 var ticket = combo1[0];
                 var newLimit = Math.Round(ticket.Get(OrderField.LimitPrice) + 0.01m, 2);
-                Debug($"Updating limits - Combo 1 {ticket.OrderId}: {newLimit.ToStringInvariant("0.00")}");
-                ticket.Update(new UpdateOrderFields
-                {
-                    LimitPrice = newLimit,
-                    Tag = "Update #" + (ticket.UpdateRequests.Count + 1)
-                });
+                Debug(
+                    $"Updating limits - Combo 1 {ticket.OrderId}: {newLimit.ToStringInvariant("0.00")}"
+                );
+                ticket.Update(
+                    new UpdateOrderFields
+                    {
+                        LimitPrice = newLimit,
+                        Tag = "Update #" + (ticket.UpdateRequests.Count + 1)
+                    }
+                );
 
                 ticket = combo2[0];
                 newLimit = Math.Round(ticket.Get(OrderField.LimitPrice) - 0.01m, 2);
-                Debug($"Updating limits - Combo 2 {ticket.OrderId}: {newLimit.ToStringInvariant("0.00")}");
-                ticket.Update(new UpdateOrderFields
-                {
-                    LimitPrice = newLimit,
-                    Tag = "Update #" + (ticket.UpdateRequests.Count + 1)
-                });
+                Debug(
+                    $"Updating limits - Combo 2 {ticket.OrderId}: {newLimit.ToStringInvariant("0.00")}"
+                );
+                ticket.Update(
+                    new UpdateOrderFields
+                    {
+                        LimitPrice = newLimit,
+                        Tag = "Update #" + (ticket.UpdateRequests.Count + 1)
+                    }
+                );
             }
         }
 
@@ -197,7 +215,10 @@ namespace QuantConnect.Algorithm.CSharp
             else
             {
                 var combo1 = _openLegLimitOrders.Take(_orderLegs.Count).ToList();
-                var combo2 = _openLegLimitOrders.Skip(_orderLegs.Count).Take(_orderLegs.Count).ToList();
+                var combo2 = _openLegLimitOrders
+                    .Skip(_orderLegs.Count)
+                    .Take(_orderLegs.Count)
+                    .ToList();
 
                 // check if either is filled and cancel the other
                 if (CheckGroupOrdersForFills(combo1, combo2))
@@ -209,26 +230,38 @@ namespace QuantConnect.Algorithm.CSharp
 
                 foreach (var ticket in combo1)
                 {
-                    var newLimit = Math.Round(ticket.Get(OrderField.LimitPrice) + (ticket.Quantity > 0 ? 1m : -1m) * 0.01m, 2);
+                    var newLimit = Math.Round(
+                        ticket.Get(OrderField.LimitPrice)
+                            + (ticket.Quantity > 0 ? 1m : -1m) * 0.01m,
+                        2
+                    );
                     Debug($"Updating limits - Combo #1: {newLimit.ToStringInvariant("0.00")}");
 
-                    ticket.Update(new UpdateOrderFields
-                    {
-                        LimitPrice = newLimit,
-                        Tag = "Update #" + (ticket.UpdateRequests.Count + 1)
-                    });
+                    ticket.Update(
+                        new UpdateOrderFields
+                        {
+                            LimitPrice = newLimit,
+                            Tag = "Update #" + (ticket.UpdateRequests.Count + 1)
+                        }
+                    );
                 }
 
                 foreach (var ticket in combo2)
                 {
-                    var newLimit = Math.Round(ticket.Get(OrderField.LimitPrice) + (ticket.Quantity > 0 ? 1m : -1m) * 0.01m, 2);
+                    var newLimit = Math.Round(
+                        ticket.Get(OrderField.LimitPrice)
+                            + (ticket.Quantity > 0 ? 1m : -1m) * 0.01m,
+                        2
+                    );
                     Debug($"Updating limits - Combo #2: {newLimit.ToStringInvariant("0.00")}");
 
-                    ticket.Update(new UpdateOrderFields
-                    {
-                        LimitPrice = newLimit,
-                        Tag = "Update #" + (ticket.UpdateRequests.Count + 1)
-                    });
+                    ticket.Update(
+                        new UpdateOrderFields
+                        {
+                            LimitPrice = newLimit,
+                            Tag = "Update #" + (ticket.UpdateRequests.Count + 1)
+                        }
+                    );
                 }
             }
         }
@@ -239,16 +272,22 @@ namespace QuantConnect.Algorithm.CSharp
 
             if (orderEvent.Quantity == 0)
             {
-                throw new RegressionTestException("OrderEvent quantity is Not expected to be 0, it should hold the current order Quantity");
+                throw new RegressionTestException(
+                    "OrderEvent quantity is Not expected to be 0, it should hold the current order Quantity"
+                );
             }
             if (orderEvent.Quantity != order.Quantity)
             {
-                throw new RegressionTestException($@"OrderEvent quantity should hold the current order Quantity. Got {orderEvent.Quantity
-                    }, expected {order.Quantity}");
+                throw new RegressionTestException(
+                    $@"OrderEvent quantity should hold the current order Quantity. Got {orderEvent.Quantity
+                    }, expected {order.Quantity}"
+                );
             }
             if (order is ComboLegLimitOrder && orderEvent.LimitPrice == 0)
             {
-                throw new RegressionTestException("OrderEvent.LimitPrice is not expected to be 0 for ComboLegLimitOrder");
+                throw new RegressionTestException(
+                    "OrderEvent.LimitPrice is not expected to be 0 for ComboLegLimitOrder"
+                );
             }
         }
 
@@ -291,20 +330,36 @@ namespace QuantConnect.Algorithm.CSharp
             // Out of the 6 limit orders, 3 are expected to be canceled.
             var expectedOrdersCount = 18;
             var expectedFillsCount = 15;
-            if (filledOrders.Count != expectedFillsCount || orderTickets.Count != expectedOrdersCount)
-            {
-                throw new RegressionTestException($"There were expected {expectedFillsCount} filled orders and {expectedOrdersCount} order tickets, but there were {filledOrders.Count} filled orders and {orderTickets.Count} order tickets");
-            }
-
-            var filledComboMarketOrders = filledOrders.Where(x => x.Type == OrderType.ComboMarket).ToList();
-            var filledComboLimitOrders = filledOrders.Where(x => x.Type == OrderType.ComboLimit).ToList();
-            var filledComboLegLimitOrders = filledOrders.Where(x => x.Type == OrderType.ComboLegLimit).ToList();
-            if (filledComboMarketOrders.Count != 6 || filledComboLimitOrders.Count != 3 || filledComboLegLimitOrders.Count != 6)
+            if (
+                filledOrders.Count != expectedFillsCount
+                || orderTickets.Count != expectedOrdersCount
+            )
             {
                 throw new RegressionTestException(
-                    "There were expected 6 filled market orders, 3 filled combo limit orders and 6 filled combo leg limit orders, " +
-                    $@"but there were {filledComboMarketOrders.Count} filled market orders, {filledComboLimitOrders.Count
-                    } filled combo limit orders and {filledComboLegLimitOrders.Count} filled combo leg limit orders");
+                    $"There were expected {expectedFillsCount} filled orders and {expectedOrdersCount} order tickets, but there were {filledOrders.Count} filled orders and {orderTickets.Count} order tickets"
+                );
+            }
+
+            var filledComboMarketOrders = filledOrders
+                .Where(x => x.Type == OrderType.ComboMarket)
+                .ToList();
+            var filledComboLimitOrders = filledOrders
+                .Where(x => x.Type == OrderType.ComboLimit)
+                .ToList();
+            var filledComboLegLimitOrders = filledOrders
+                .Where(x => x.Type == OrderType.ComboLegLimit)
+                .ToList();
+            if (
+                filledComboMarketOrders.Count != 6
+                || filledComboLimitOrders.Count != 3
+                || filledComboLegLimitOrders.Count != 6
+            )
+            {
+                throw new RegressionTestException(
+                    "There were expected 6 filled market orders, 3 filled combo limit orders and 6 filled combo leg limit orders, "
+                        + $@"but there were {filledComboMarketOrders.Count} filled market orders, {filledComboLimitOrders.Count
+                    } filled combo limit orders and {filledComboLegLimitOrders.Count} filled combo leg limit orders"
+                );
             }
 
             if (openOrders.Count != 0 || openOrderTickets.Count != 0)
@@ -314,7 +369,9 @@ namespace QuantConnect.Algorithm.CSharp
 
             if (remainingOpenOrders != 0m)
             {
-                throw new RegressionTestException($"No remaining quantity to be filled from open orders was expected");
+                throw new RegressionTestException(
+                    $"No remaining quantity to be filled from open orders was expected"
+                );
             }
         }
 
@@ -346,35 +403,36 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// This is used by the regression test system to indicate what the expected statistics are from running the algorithm
         /// </summary>
-        public Dictionary<string, string> ExpectedStatistics => new Dictionary<string, string>
-        {
-            {"Total Orders", "18"},
-            {"Average Win", "0%"},
-            {"Average Loss", "0%"},
-            {"Compounding Annual Return", "0%"},
-            {"Drawdown", "0%"},
-            {"Expectancy", "0"},
-            {"Start Equity", "100000"},
-            {"End Equity", "98838"},
-            {"Net Profit", "0%"},
-            {"Sharpe Ratio", "0"},
-            {"Sortino Ratio", "0"},
-            {"Probabilistic Sharpe Ratio", "0%"},
-            {"Loss Rate", "0%"},
-            {"Win Rate", "0%"},
-            {"Profit-Loss Ratio", "0"},
-            {"Alpha", "0"},
-            {"Beta", "0"},
-            {"Annual Standard Deviation", "0"},
-            {"Annual Variance", "0"},
-            {"Information Ratio", "0"},
-            {"Tracking Error", "0"},
-            {"Treynor Ratio", "0"},
-            {"Total Fees", "$26.00"},
-            {"Estimated Strategy Capacity", "$2000.00"},
-            {"Lowest Capacity Asset", "GOOCV W78ZERHAOVVQ|GOOCV VP83T1ZUHROL"},
-            {"Portfolio Turnover", "58.98%"},
-            {"OrderListHash", "e69460f62d4c165fe4b4a9bff1f48962"}
-        };
+        public Dictionary<string, string> ExpectedStatistics =>
+            new Dictionary<string, string>
+            {
+                { "Total Orders", "18" },
+                { "Average Win", "0%" },
+                { "Average Loss", "0%" },
+                { "Compounding Annual Return", "0%" },
+                { "Drawdown", "0%" },
+                { "Expectancy", "0" },
+                { "Start Equity", "100000" },
+                { "End Equity", "98838" },
+                { "Net Profit", "0%" },
+                { "Sharpe Ratio", "0" },
+                { "Sortino Ratio", "0" },
+                { "Probabilistic Sharpe Ratio", "0%" },
+                { "Loss Rate", "0%" },
+                { "Win Rate", "0%" },
+                { "Profit-Loss Ratio", "0" },
+                { "Alpha", "0" },
+                { "Beta", "0" },
+                { "Annual Standard Deviation", "0" },
+                { "Annual Variance", "0" },
+                { "Information Ratio", "0" },
+                { "Tracking Error", "0" },
+                { "Treynor Ratio", "0" },
+                { "Total Fees", "$26.00" },
+                { "Estimated Strategy Capacity", "$2000.00" },
+                { "Lowest Capacity Asset", "GOOCV W78ZERHAOVVQ|GOOCV VP83T1ZUHROL" },
+                { "Portfolio Turnover", "58.98%" },
+                { "OrderListHash", "e69460f62d4c165fe4b4a9bff1f48962" }
+            };
     }
 }

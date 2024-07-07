@@ -43,19 +43,24 @@ namespace QuantConnect.Lean.Engine.Results
         /// <summary>
         /// Gets the current days the algorithm has been running for
         /// </summary>
-        public int ProcessedDays {
+        public int ProcessedDays
+        {
             get
             {
-                if (Interlocked.CompareExchange(ref _isProcessedDaysCountValid, ProcessedDaysCountValid, ProcessedDaysCountInvalid) == ProcessedDaysCountInvalid)
+                if (
+                    Interlocked.CompareExchange(
+                        ref _isProcessedDaysCountValid,
+                        ProcessedDaysCountValid,
+                        ProcessedDaysCountInvalid
+                    ) == ProcessedDaysCountInvalid
+                )
                 {
                     try
                     {
                         // We use 'int' so it's thread safe
                         _processedDays = (int)(_timeKeeper.UtcTime - _startUtcTime).TotalDays;
                     }
-                    catch (OverflowException)
-                    {
-                    }
+                    catch (OverflowException) { }
                 }
 
                 return _processedDays;

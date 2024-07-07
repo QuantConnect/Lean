@@ -13,8 +13,8 @@
  * limitations under the License.
 */
 
-using Python.Runtime;
 using System;
+using Python.Runtime;
 
 namespace QuantConnect.Python
 {
@@ -31,7 +31,7 @@ namespace QuantConnect.Python
         /// <summary>
         /// Method to return an instance of object
         /// </summary>
-        public Func<object[], object> Factory { get;  }
+        public Func<object[], object> Factory { get; }
 
         /// <summary>
         /// Creates a new instance of <see cref="PythonActivator"/>

@@ -54,8 +54,8 @@ namespace QuantConnect.Securities.Option.StrategyMatcher
         /// <summary>
         /// The definitions to be used for matching.
         /// </summary>
-        public IEnumerable<OptionStrategyDefinition> Definitions
-            => _definitionEnumerator.Enumerate(_definitions);
+        public IEnumerable<OptionStrategyDefinition> Definitions =>
+            _definitionEnumerator.Enumerate(_definitions);
 
         /// <summary>
         /// Objective function used to compare different match solutions for a given set of positions/definitions
@@ -78,7 +78,7 @@ namespace QuantConnect.Securities.Option.StrategyMatcher
             IOptionStrategyDefinitionEnumerator definitionEnumerator = null,
             IOptionStrategyMatchObjectiveFunction objectiveFunction = null,
             IOptionPositionCollectionEnumerator positionEnumerator = null
-            )
+        )
         {
             if (maximumDuration == default(TimeSpan))
             {
@@ -93,7 +93,8 @@ namespace QuantConnect.Securities.Option.StrategyMatcher
 
             if (objectiveFunction == null)
             {
-                objectiveFunction = new UnmatchedPositionCountOptionStrategyMatchObjectiveFunction();
+                objectiveFunction =
+                    new UnmatchedPositionCountOptionStrategyMatchObjectiveFunction();
             }
 
             if (positionEnumerator == null)
@@ -133,7 +134,9 @@ namespace QuantConnect.Securities.Option.StrategyMatcher
         /// Creates a new <see cref="OptionStrategyMatcherOptions"/> with the specified <paramref name="definitions"/>,
         /// with no limits of maximum matches per leg and default values for the remaining options
         /// </summary>
-        public static OptionStrategyMatcherOptions ForDefinitions(params OptionStrategyDefinition[] definitions)
+        public static OptionStrategyMatcherOptions ForDefinitions(
+            params OptionStrategyDefinition[] definitions
+        )
         {
             return ForDefinitions(definitions.AsEnumerable());
         }
@@ -142,9 +145,18 @@ namespace QuantConnect.Securities.Option.StrategyMatcher
         /// Creates a new <see cref="OptionStrategyMatcherOptions"/> with the specified <paramref name="definitions"/>,
         /// with no limits of maximum matches per leg and default values for the remaining options
         /// </summary>
-        public static OptionStrategyMatcherOptions ForDefinitions(IEnumerable<OptionStrategyDefinition> definitions)
+        public static OptionStrategyMatcherOptions ForDefinitions(
+            IEnumerable<OptionStrategyDefinition> definitions
+        )
         {
-            var maximumCountPerLeg = new[] {int.MaxValue, int.MaxValue, int.MaxValue, int.MaxValue, int.MaxValue};
+            var maximumCountPerLeg = new[]
+            {
+                int.MaxValue,
+                int.MaxValue,
+                int.MaxValue,
+                int.MaxValue,
+                int.MaxValue
+            };
             return new OptionStrategyMatcherOptions(definitions.ToList(), maximumCountPerLeg);
         }
 
@@ -207,7 +219,9 @@ namespace QuantConnect.Securities.Option.StrategyMatcher
         /// Specifies a function used to evaluate how desirable a particular solution is. A good implementation for
         /// this would be to minimize the total margin required to hold all of the positions.
         /// </summary>
-        public OptionStrategyMatcherOptions WithObjectiveFunction(IOptionStrategyMatchObjectiveFunction function)
+        public OptionStrategyMatcherOptions WithObjectiveFunction(
+            IOptionStrategyMatchObjectiveFunction function
+        )
         {
             return new OptionStrategyMatcherOptions(
                 _definitions,
@@ -224,7 +238,9 @@ namespace QuantConnect.Securities.Option.StrategyMatcher
         /// Specifies the order in which definitions are evaluated. Definitions evaluated sooner are more likely to
         /// find matches than ones evaluated later.
         /// </summary>
-        public OptionStrategyMatcherOptions WithDefinitionEnumerator(IOptionStrategyDefinitionEnumerator enumerator)
+        public OptionStrategyMatcherOptions WithDefinitionEnumerator(
+            IOptionStrategyDefinitionEnumerator enumerator
+        )
         {
             return new OptionStrategyMatcherOptions(
                 _definitions,
@@ -242,7 +258,9 @@ namespace QuantConnect.Securities.Option.StrategyMatcher
         /// find matches than ones evaluated later. A good implementation for this is its stand-alone margin required,
         /// which would encourage the algorithm to match higher margin positions before matching lower margin positiosn.
         /// </summary>
-        public OptionStrategyMatcherOptions WithPositionEnumerator(IOptionPositionCollectionEnumerator enumerator)
+        public OptionStrategyMatcherOptions WithPositionEnumerator(
+            IOptionPositionCollectionEnumerator enumerator
+        )
         {
             return new OptionStrategyMatcherOptions(
                 _definitions,

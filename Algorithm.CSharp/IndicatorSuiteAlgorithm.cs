@@ -82,7 +82,7 @@ namespace QuantConnect.Algorithm.CSharp
                 MOMP = MOMP(_symbol, 20, Resolution.Daily),
                 STD = STD(_symbol, 20, Resolution.Daily),
                 MIN = MIN(_symbol, 14, Resolution.Daily), // by default if the symbol is a tradebar type then it will be the min of the low property
-                MAX = MAX(_symbol, 14, Resolution.Daily),  // by default if the symbol is a tradebar type then it will be the max of the high property
+                MAX = MAX(_symbol, 14, Resolution.Daily), // by default if the symbol is a tradebar type then it will be the max of the high property
                 B = B(_symbol, _symbol2, 14),
             };
 
@@ -99,16 +99,30 @@ namespace QuantConnect.Algorithm.CSharp
                 RSI = RSI(_symbol, 14, MovingAverageType.Simple, Resolution.Daily, Field.Low),
                 EMA = EMA(_symbol, 14, Resolution.Daily, Field.Low),
                 SMA = SMA(_symbol, 14, Resolution.Daily, Field.Low),
-                MACD = MACD(_symbol, 12, 26, 9, MovingAverageType.Simple, Resolution.Daily, Field.Low),
+                MACD = MACD(
+                    _symbol,
+                    12,
+                    26,
+                    9,
+                    MovingAverageType.Simple,
+                    Resolution.Daily,
+                    Field.Low
+                ),
                 MOM = MOM(_symbol, 20, Resolution.Daily, Field.Low),
                 MOMP = MOMP(_symbol, 20, Resolution.Daily, Field.Low),
                 STD = STD(_symbol, 20, Resolution.Daily, Field.Low),
                 MIN = MIN(_symbol, 14, Resolution.Daily, Field.High), // this will find the 14 day min of the high property
-                MAX = MAX(_symbol, 14, Resolution.Daily, Field.Low),  // this will find the 14 day max of the low property
+                MAX = MAX(_symbol, 14, Resolution.Daily, Field.Low), // this will find the 14 day max of the low property
 
                 // ATR and AROON are special in that they accept a TradeBar instance instead of a decimal, we could easily project and/or transform the input TradeBar
                 // before it gets sent to the ATR/AROON indicator, here we use a function that will multiply the input trade bar by a factor of two
-                ATR = ATR(_symbol, 14, MovingAverageType.Simple, Resolution.Daily, SelectorDoubleTradeBar),
+                ATR = ATR(
+                    _symbol,
+                    14,
+                    MovingAverageType.Simple,
+                    Resolution.Daily,
+                    SelectorDoubleTradeBar
+                ),
                 AROON = AROON(_symbol, 20, Resolution.Daily, SelectorDoubleTradeBar)
             };
 
@@ -134,7 +148,8 @@ namespace QuantConnect.Algorithm.CSharp
         /// <param name="slice">TradeBars IDictionary object with your stock data</param>
         public override void OnData(Slice slice)
         {
-            if (!_indicators.BB.IsReady || !_indicators.RSI.IsReady) return;
+            if (!_indicators.BB.IsReady || !_indicators.RSI.IsReady)
+                return;
 
             _price = slice[_symbol].Close;
 
@@ -155,12 +170,19 @@ namespace QuantConnect.Algorithm.CSharp
         /// </summary>
         public override void OnEndOfDay(Symbol symbol)
         {
-            if (symbol != _symbol) return;
+            if (symbol != _symbol)
+                return;
 
-            if (!_indicators.BB.IsReady) return;
+            if (!_indicators.BB.IsReady)
+                return;
 
             Plot("BB", "Price", _price);
-            Plot("BB", _indicators.BB.UpperBand, _indicators.BB.MiddleBand, _indicators.BB.LowerBand);
+            Plot(
+                "BB",
+                _indicators.BB.UpperBand,
+                _indicators.BB.MiddleBand,
+                _indicators.BB.LowerBand
+            );
 
             Plot("RSI", _indicators.RSI);
 
@@ -252,35 +274,36 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// This is used by the regression test system to indicate what the expected statistics are from running the algorithm
         /// </summary>
-        public Dictionary<string, string> ExpectedStatistics => new Dictionary<string, string>
-        {
-            {"Total Orders", "1"},
-            {"Average Win", "0%"},
-            {"Average Loss", "0%"},
-            {"Compounding Annual Return", "19.058%"},
-            {"Drawdown", "7.300%"},
-            {"Expectancy", "0"},
-            {"Start Equity", "25000"},
-            {"End Equity", "35437.00"},
-            {"Net Profit", "41.748%"},
-            {"Sharpe Ratio", "1.366"},
-            {"Sortino Ratio", "1.503"},
-            {"Probabilistic Sharpe Ratio", "72.548%"},
-            {"Loss Rate", "0%"},
-            {"Win Rate", "0%"},
-            {"Profit-Loss Ratio", "0"},
-            {"Alpha", "-0.017"},
-            {"Beta", "0.963"},
-            {"Annual Standard Deviation", "0.092"},
-            {"Annual Variance", "0.008"},
-            {"Information Ratio", "-1.289"},
-            {"Tracking Error", "0.018"},
-            {"Treynor Ratio", "0.13"},
-            {"Total Fees", "$1.00"},
-            {"Estimated Strategy Capacity", "$580000000.00"},
-            {"Lowest Capacity Asset", "SPY R735QTJ8XC9X"},
-            {"Portfolio Turnover", "0.14%"},
-            {"OrderListHash", "9722ef0c832953df585b122a17f48fc7"}
-        };
+        public Dictionary<string, string> ExpectedStatistics =>
+            new Dictionary<string, string>
+            {
+                { "Total Orders", "1" },
+                { "Average Win", "0%" },
+                { "Average Loss", "0%" },
+                { "Compounding Annual Return", "19.058%" },
+                { "Drawdown", "7.300%" },
+                { "Expectancy", "0" },
+                { "Start Equity", "25000" },
+                { "End Equity", "35437.00" },
+                { "Net Profit", "41.748%" },
+                { "Sharpe Ratio", "1.366" },
+                { "Sortino Ratio", "1.503" },
+                { "Probabilistic Sharpe Ratio", "72.548%" },
+                { "Loss Rate", "0%" },
+                { "Win Rate", "0%" },
+                { "Profit-Loss Ratio", "0" },
+                { "Alpha", "-0.017" },
+                { "Beta", "0.963" },
+                { "Annual Standard Deviation", "0.092" },
+                { "Annual Variance", "0.008" },
+                { "Information Ratio", "-1.289" },
+                { "Tracking Error", "0.018" },
+                { "Treynor Ratio", "0.13" },
+                { "Total Fees", "$1.00" },
+                { "Estimated Strategy Capacity", "$580000000.00" },
+                { "Lowest Capacity Asset", "SPY R735QTJ8XC9X" },
+                { "Portfolio Turnover", "0.14%" },
+                { "OrderListHash", "9722ef0c832953df585b122a17f48fc7" }
+            };
     }
 }

@@ -30,27 +30,27 @@ namespace QuantConnect.Tests.Common.Securities.Options.StrategyMatcher
         public const decimal DefaultLegStrike = 100m;
         public const decimal DefaultPositionStrike = 95m;
 
-        private static readonly OptionPositionCollection Positions
-            = OptionPositionCollection.Create(Symbols.SPY, ContractMultiplier, Enumerable.Empty<SecurityHolding>())
-                .Add(new OptionPosition(Symbols.SPY, 1000))
-                .Add(new OptionPosition(Put[95m], 1))
-                .Add(new OptionPosition(Put[95m, 1], 1))
-                .Add(new OptionPosition(Put[95m, 2], 1))
-                .Add(new OptionPosition(Call[95m], 1))
-                .Add(new OptionPosition(Call[95m, 1], 1))
-                .Add(new OptionPosition(Call[95m, 2], 1))
-                .Add(new OptionPosition(Put[100m], 1))
-                .Add(new OptionPosition(Put[100m, 1], 1))
-                .Add(new OptionPosition(Put[100m, 2], 1))
-                .Add(new OptionPosition(Call[100m], 1))
-                .Add(new OptionPosition(Call[100m, 1], 1))
-                .Add(new OptionPosition(Call[100m, 2], 1))
-                .Add(new OptionPosition(Put[105m], 1))
-                .Add(new OptionPosition(Put[105m, 1], 1))
-                .Add(new OptionPosition(Put[105m, 2], 1))
-                .Add(new OptionPosition(Call[105m], 1))
-                .Add(new OptionPosition(Call[105m, 1], 1))
-                .Add(new OptionPosition(Call[105m, 2], 1));
+        private static readonly OptionPositionCollection Positions = OptionPositionCollection
+            .Create(Symbols.SPY, ContractMultiplier, Enumerable.Empty<SecurityHolding>())
+            .Add(new OptionPosition(Symbols.SPY, 1000))
+            .Add(new OptionPosition(Put[95m], 1))
+            .Add(new OptionPosition(Put[95m, 1], 1))
+            .Add(new OptionPosition(Put[95m, 2], 1))
+            .Add(new OptionPosition(Call[95m], 1))
+            .Add(new OptionPosition(Call[95m, 1], 1))
+            .Add(new OptionPosition(Call[95m, 2], 1))
+            .Add(new OptionPosition(Put[100m], 1))
+            .Add(new OptionPosition(Put[100m, 1], 1))
+            .Add(new OptionPosition(Put[100m, 2], 1))
+            .Add(new OptionPosition(Call[100m], 1))
+            .Add(new OptionPosition(Call[100m, 1], 1))
+            .Add(new OptionPosition(Call[100m, 2], 1))
+            .Add(new OptionPosition(Put[105m], 1))
+            .Add(new OptionPosition(Put[105m, 1], 1))
+            .Add(new OptionPosition(Put[105m, 2], 1))
+            .Add(new OptionPosition(Call[105m], 1))
+            .Add(new OptionPosition(Call[105m, 1], 1))
+            .Add(new OptionPosition(Call[105m, 2], 1));
 
         [Test]
         public void CreatesStrikePredicate()
@@ -83,10 +83,12 @@ namespace QuantConnect.Tests.Common.Securities.Options.StrategyMatcher
             // creates predicate and matches as expected
             var predicate = testCase.CreatePredicate();
             var testCaseMatch = predicate.Matches(testCase.Legs, testCase.Position);
-            Assert.AreEqual(testCase.Match, testCaseMatch,
-                $"Predicate: {predicate}{Environment.NewLine}" +
-                $"Position: {testCase.Position}{Environment.NewLine}" +
-                $"Legs: {string.Join(Environment.NewLine, testCase.Legs)}"
+            Assert.AreEqual(
+                testCase.Match,
+                testCaseMatch,
+                $"Predicate: {predicate}{Environment.NewLine}"
+                    + $"Position: {testCase.Position}{Environment.NewLine}"
+                    + $"Legs: {string.Join(Environment.NewLine, testCase.Legs)}"
             );
 
             // filters positions collection as expected
@@ -107,7 +109,10 @@ namespace QuantConnect.Tests.Common.Securities.Options.StrategyMatcher
         [Test]
         public void CreatesOptionRightPredicate()
         {
-            var definition = OptionStrategyDefinition.Create("CallsOnly", OptionStrategyDefinition.CallLeg(1));
+            var definition = OptionStrategyDefinition.Create(
+                "CallsOnly",
+                OptionStrategyDefinition.CallLeg(1)
+            );
             var onlyLeg = definition.Legs.Single();
             // put/call isn't phrased as a predicate since every one has it, also due to complexities w/ enums in expressions
             Assert.IsEmpty(onlyLeg);
@@ -123,59 +128,46 @@ namespace QuantConnect.Tests.Common.Securities.Options.StrategyMatcher
                 // this is done to verify that the underlying infrastructure is agnostic to where the positions/legs
                 // parameter expressions appear in the comparison expression.
                 return new[]
-                    {
-                        new TestCase((legs, position) => position.Strike < legs[0].Strike)
-                            .WithTarget(PredicateTargetValue.Strike, legs => legs[0].Strike)
-                            .ExpectMatch(),
-
-                        new TestCase((legs, position) => position.Strike > legs[0].Strike)
-                            .WithTarget(PredicateTargetValue.Strike, legs => legs[0].Strike)
-                            .ExpectNoMatch(),
-
-                        new TestCase((legs, position) => legs[0].Strike > position.Strike)
-                            .WithTarget(PredicateTargetValue.Strike, legs => legs[0].Strike)
-                            .ExpectMatch(),
-
-                        new TestCase((legs, position) => legs[0].Strike < position.Strike)
-                            .WithTarget(PredicateTargetValue.Strike, legs => legs[0].Strike)
-                            .ExpectNoMatch(),
-
-                        new TestCase((legs, position) => position.Expiration < legs[0].Expiration)
-                            .WithTarget(PredicateTargetValue.Expiration, legs => legs[0].Expiration)
-                            .ExpectNoMatch(),
-
-                        new TestCase((legs, position) => position.Expiration > legs[0].Expiration)
-                            .WithTarget(PredicateTargetValue.Expiration, legs => legs[0].Expiration)
-                            .ExpectNoMatch(),
-
-                        new TestCase((legs, position) => legs[0].Expiration > position.Expiration)
-                            .WithTarget(PredicateTargetValue.Expiration, legs => legs[0].Expiration)
-                            .ExpectNoMatch(),
-
-                        new TestCase((legs, position) => legs[0].Expiration < position.Expiration)
-                            .WithTarget(PredicateTargetValue.Expiration, legs => legs[0].Expiration)
-                            .ExpectNoMatch(),
-
-                        new TestCase((legs, position) => position.Expiration == legs[0].Expiration)
-                            .WithTarget(PredicateTargetValue.Expiration, legs => legs[0].Expiration)
-                            .ExpectMatch(),
-
-                        new TestCase((legs, position) => position.Expiration == legs[0].Expiration)
-                            .WithTarget(PredicateTargetValue.Expiration, legs => legs[0].Expiration)
-                            .ExpectMatch(),
-
-                        new TestCase((legs, position) => legs[0].Expiration == position.Expiration)
-                            .WithTarget(PredicateTargetValue.Expiration, legs => legs[0].Expiration)
-                            .ExpectMatch(),
-
-                        new TestCase((legs, position) => legs[0].Expiration == position.Expiration)
-                            .WithTarget(PredicateTargetValue.Expiration, legs => legs[0].Expiration)
-                            .ExpectMatch(),
-                    }
-                    .Select(x => x.WithDefaults());
+                {
+                    new TestCase((legs, position) => position.Strike < legs[0].Strike)
+                        .WithTarget(PredicateTargetValue.Strike, legs => legs[0].Strike)
+                        .ExpectMatch(),
+                    new TestCase((legs, position) => position.Strike > legs[0].Strike)
+                        .WithTarget(PredicateTargetValue.Strike, legs => legs[0].Strike)
+                        .ExpectNoMatch(),
+                    new TestCase((legs, position) => legs[0].Strike > position.Strike)
+                        .WithTarget(PredicateTargetValue.Strike, legs => legs[0].Strike)
+                        .ExpectMatch(),
+                    new TestCase((legs, position) => legs[0].Strike < position.Strike)
+                        .WithTarget(PredicateTargetValue.Strike, legs => legs[0].Strike)
+                        .ExpectNoMatch(),
+                    new TestCase((legs, position) => position.Expiration < legs[0].Expiration)
+                        .WithTarget(PredicateTargetValue.Expiration, legs => legs[0].Expiration)
+                        .ExpectNoMatch(),
+                    new TestCase((legs, position) => position.Expiration > legs[0].Expiration)
+                        .WithTarget(PredicateTargetValue.Expiration, legs => legs[0].Expiration)
+                        .ExpectNoMatch(),
+                    new TestCase((legs, position) => legs[0].Expiration > position.Expiration)
+                        .WithTarget(PredicateTargetValue.Expiration, legs => legs[0].Expiration)
+                        .ExpectNoMatch(),
+                    new TestCase((legs, position) => legs[0].Expiration < position.Expiration)
+                        .WithTarget(PredicateTargetValue.Expiration, legs => legs[0].Expiration)
+                        .ExpectNoMatch(),
+                    new TestCase((legs, position) => position.Expiration == legs[0].Expiration)
+                        .WithTarget(PredicateTargetValue.Expiration, legs => legs[0].Expiration)
+                        .ExpectMatch(),
+                    new TestCase((legs, position) => position.Expiration == legs[0].Expiration)
+                        .WithTarget(PredicateTargetValue.Expiration, legs => legs[0].Expiration)
+                        .ExpectMatch(),
+                    new TestCase((legs, position) => legs[0].Expiration == position.Expiration)
+                        .WithTarget(PredicateTargetValue.Expiration, legs => legs[0].Expiration)
+                        .ExpectMatch(),
+                    new TestCase((legs, position) => legs[0].Expiration == position.Expiration)
+                        .WithTarget(PredicateTargetValue.Expiration, legs => legs[0].Expiration)
+                        .ExpectMatch(),
+                }.Select(x => x.WithDefaults());
             }
         }
-
 
         public class TestCase
         {
@@ -186,20 +178,23 @@ namespace QuantConnect.Tests.Common.Securities.Options.StrategyMatcher
             public PredicateTargetValue Target { get; private set; }
             public Func<List<OptionPosition>, OptionPosition, bool> Predicate { get; }
             public Func<List<OptionPosition>, object> ReferenceValueProvider { get; private set; }
-            public Expression<Func<IReadOnlyList<OptionPosition>, OptionPosition, bool>> Expression { get; }
+            public Expression<
+                Func<IReadOnlyList<OptionPosition>, OptionPosition, bool>
+            > Expression { get; }
             public ParameterExpression LegsExpression => Expression.Parameters[0];
             public ParameterExpression PositionExpression => Expression.Parameters[1];
             public Expression BinaryComparisonExpression => Expression.Body;
 
             private readonly Lazy<OptionStrategyLegPredicate> _predicate;
 
-            public IOptionStrategyLegPredicateReferenceValue CreateReferenceValue()
-                => _predicate.Value.GetReferenceValue();
+            public IOptionStrategyLegPredicateReferenceValue CreateReferenceValue() =>
+                _predicate.Value.GetReferenceValue();
 
-            public OptionStrategyLegPredicate CreatePredicate()
-                => _predicate.Value;
+            public OptionStrategyLegPredicate CreatePredicate() => _predicate.Value;
 
-            public TestCase(Expression<Func<IReadOnlyList<OptionPosition>, OptionPosition, bool>> expression)
+            public TestCase(
+                Expression<Func<IReadOnlyList<OptionPosition>, OptionPosition, bool>> expression
+            )
             {
                 Expression = expression;
                 Name = expression.ToString();
@@ -213,7 +208,7 @@ namespace QuantConnect.Tests.Common.Securities.Options.StrategyMatcher
             public TestCase WithTarget(
                 PredicateTargetValue target,
                 Func<List<OptionPosition>, object> referenceValueProvider
-                )
+            )
             {
                 Target = target;
                 ReferenceValueProvider = referenceValueProvider;
@@ -236,7 +231,9 @@ namespace QuantConnect.Tests.Common.Securities.Options.StrategyMatcher
             {
                 if (Position != default(OptionPosition))
                 {
-                    throw new InvalidOperationException($"Position has already been initialized: {Position}");
+                    throw new InvalidOperationException(
+                        $"Position has already been initialized: {Position}"
+                    );
                 }
 
                 Position = new OptionPosition(symbol, quantity);

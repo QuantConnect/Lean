@@ -13,11 +13,11 @@
  * limitations under the License.
 */
 
+using System;
+using System.Collections.Generic;
 using Python.Runtime;
 using QuantConnect.Data;
 using QuantConnect.Data.UniverseSelection;
-using System;
-using System.Collections.Generic;
 using QuantConnect.Python;
 
 namespace QuantConnect.Algorithm.Framework.Alphas
@@ -45,7 +45,10 @@ namespace QuantConnect.Algorithm.Framework.Alphas
                     }
 
                     // if the model does not define a name property, use the python type name
-                    return _model.GetProperty(" __class__" ).GetAttr("__name__").GetAndDispose<string>();
+                    return _model
+                        .GetProperty(" __class__")
+                        .GetAttr("__name__")
+                        .GetAndDispose<string>();
                 }
             }
         }
@@ -61,7 +64,9 @@ namespace QuantConnect.Algorithm.Framework.Alphas
             {
                 if (!_model.HasAttr(attributeName))
                 {
-                    throw new NotImplementedException($"IAlphaModel.{attributeName} must be implemented. Please implement this missing method on {model.GetPythonType()}");
+                    throw new NotImplementedException(
+                        $"IAlphaModel.{attributeName} must be implemented. Please implement this missing method on {model.GetPythonType()}"
+                    );
                 }
             }
         }
@@ -77,7 +82,11 @@ namespace QuantConnect.Algorithm.Framework.Alphas
         {
             using (Py.GIL())
             {
-                var insights = _model.InvokeMethod(nameof(Update), algorithm, new PythonSlice(data));
+                var insights = _model.InvokeMethod(
+                    nameof(Update),
+                    algorithm,
+                    new PythonSlice(data)
+                );
                 var iterator = insights.GetIterator();
                 foreach (PyObject insight in iterator)
                 {

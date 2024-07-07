@@ -33,9 +33,7 @@ namespace QuantConnect.Brokerages
         /// </summary>
         /// <param name="accountType">Cash or Margin</param>
         public ExanteBrokerageModel(AccountType accountType = AccountType.Cash)
-            : base(accountType)
-        {
-        }
+            : base(accountType) { }
 
         /// <summary>
         /// Get the benchmark for this model
@@ -59,33 +57,50 @@ namespace QuantConnect.Brokerages
         /// <param name="order">The order to be processed</param>
         /// <param name="message">If this function returns false, a brokerage message detailing why the order may not be submitted</param>
         /// <returns>True if the brokerage could process the order, false otherwise</returns>
-        public override bool CanSubmitOrder(Security security, Order order, out BrokerageMessageEvent message)
+        public override bool CanSubmitOrder(
+            Security security,
+            Order order,
+            out BrokerageMessageEvent message
+        )
         {
             message = null;
 
             if (order == null)
             {
-                message = new BrokerageMessageEvent(BrokerageMessageType.Warning, "NotSupported", Messages.ExanteBrokerageModel.NullOrder);
+                message = new BrokerageMessageEvent(
+                    BrokerageMessageType.Warning,
+                    "NotSupported",
+                    Messages.ExanteBrokerageModel.NullOrder
+                );
                 return false;
             }
 
             if (order.Price == 0m)
             {
-                message = new BrokerageMessageEvent(BrokerageMessageType.Warning, "NotSupported", Messages.ExanteBrokerageModel.PriceNotSet);
+                message = new BrokerageMessageEvent(
+                    BrokerageMessageType.Warning,
+                    "NotSupported",
+                    Messages.ExanteBrokerageModel.PriceNotSet
+                );
                 return false;
             }
 
-            if (security.Type != SecurityType.Forex &&
-                security.Type != SecurityType.Equity &&
-                security.Type != SecurityType.Index &&
-                security.Type != SecurityType.Option &&
-                security.Type != SecurityType.Future &&
-                security.Type != SecurityType.Cfd &&
-                security.Type != SecurityType.Crypto &&
-                security.Type != SecurityType.Index)
+            if (
+                security.Type != SecurityType.Forex
+                && security.Type != SecurityType.Equity
+                && security.Type != SecurityType.Index
+                && security.Type != SecurityType.Option
+                && security.Type != SecurityType.Future
+                && security.Type != SecurityType.Cfd
+                && security.Type != SecurityType.Crypto
+                && security.Type != SecurityType.Index
+            )
             {
-                message = new BrokerageMessageEvent(BrokerageMessageType.Warning, "NotSupported",
-                    Messages.DefaultBrokerageModel.UnsupportedSecurityType(this, security));
+                message = new BrokerageMessageEvent(
+                    BrokerageMessageType.Warning,
+                    "NotSupported",
+                    Messages.DefaultBrokerageModel.UnsupportedSecurityType(this, security)
+                );
                 return false;
             }
 
@@ -106,7 +121,11 @@ namespace QuantConnect.Brokerages
         /// <returns>The leverage for the specified security</returns>
         public override decimal GetLeverage(Security security)
         {
-            if (AccountType == AccountType.Cash || security.IsInternalFeed() || security.Type == SecurityType.Base)
+            if (
+                AccountType == AccountType.Cash
+                || security.IsInternalFeed()
+                || security.Type == SecurityType.Base
+            )
             {
                 return 1m;
             }

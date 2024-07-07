@@ -69,7 +69,7 @@ namespace QuantConnect.Securities
             decimal quantity,
             decimal holdingsCost,
             decimal holdingsValue
-            )
+        )
         {
             Security = security;
             Quantity = quantity;
@@ -83,7 +83,8 @@ namespace QuantConnect.Securities
         /// </summary>
         public static MaintenanceMarginParameters ForCurrentHoldings(Security security)
         {
-            return new MaintenanceMarginParameters(security,
+            return new MaintenanceMarginParameters(
+                security,
                 security.Holdings.Quantity,
                 security.Holdings.HoldingsCost,
                 security.Holdings.HoldingsValue
@@ -94,7 +95,10 @@ namespace QuantConnect.Securities
         /// Creates a new instance of the <see cref="MaintenanceMarginParameters"/> class to compute the maintenance margin
         /// required to support the specified quantity of holdings at current market prices
         /// </summary>
-        public static MaintenanceMarginParameters ForQuantityAtCurrentPrice(Security security, decimal quantity)
+        public static MaintenanceMarginParameters ForQuantityAtCurrentPrice(
+            Security security,
+            decimal quantity
+        )
         {
             var value = security.Holdings.GetQuantityValue(quantity).InAccountCurrency;
             return new MaintenanceMarginParameters(security, quantity, value, value);
@@ -108,7 +112,11 @@ namespace QuantConnect.Securities
             var derivative = Security as IDerivativeSecurity;
             if (derivative == null)
             {
-                throw new InvalidOperationException(Messages.MaintenanceMarginParameters.ForUnderlyingOnlyInvokableForIDerivativeSecurity);
+                throw new InvalidOperationException(
+                    Messages
+                        .MaintenanceMarginParameters
+                        .ForUnderlyingOnlyInvokableForIDerivativeSecurity
+                );
             }
 
             return ForQuantityAtCurrentPrice(derivative.Underlying, quantity);

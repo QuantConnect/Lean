@@ -14,8 +14,8 @@
 */
 
 using System;
-using System.Linq;
 using System.Collections.Generic;
+using System.Linq;
 using QuantConnect.Data;
 using QuantConnect.Interfaces;
 using QuantConnect.Securities.Equity;
@@ -26,27 +26,47 @@ namespace QuantConnect.Algorithm.CSharp
     /// This regression algorithm has examples of how to add an equity indicating the <see cref="DataNormalizationMode"/>
     /// directly with the <see cref="QCAlgorithm.AddEquity"/> method instead of using the <see cref="Equity.SetDataNormalizationMode"/> method.
     /// </summary>
-    public class SetEquityDataNormalizationModeOnAddEquity : QCAlgorithm, IRegressionAlgorithmDefinition
+    public class SetEquityDataNormalizationModeOnAddEquity
+        : QCAlgorithm,
+            IRegressionAlgorithmDefinition
     {
         private readonly DataNormalizationMode _spyNormalizationMode = DataNormalizationMode.Raw;
-        private readonly DataNormalizationMode _ibmNormalizationMode = DataNormalizationMode.Adjusted;
-        private readonly DataNormalizationMode _aigNormalizationMode = DataNormalizationMode.TotalReturn;
-        private Dictionary<Equity, Tuple<decimal, decimal>> _priceRanges = new Dictionary<Equity, Tuple<decimal, decimal>>();
+        private readonly DataNormalizationMode _ibmNormalizationMode =
+            DataNormalizationMode.Adjusted;
+        private readonly DataNormalizationMode _aigNormalizationMode =
+            DataNormalizationMode.TotalReturn;
+        private Dictionary<Equity, Tuple<decimal, decimal>> _priceRanges =
+            new Dictionary<Equity, Tuple<decimal, decimal>>();
 
         public override void Initialize()
         {
             SetStartDate(2013, 10, 7);
             SetEndDate(2013, 10, 7);
 
-            var spyEquity = AddEquity("SPY", Resolution.Minute, dataNormalizationMode: _spyNormalizationMode);
+            var spyEquity = AddEquity(
+                "SPY",
+                Resolution.Minute,
+                dataNormalizationMode: _spyNormalizationMode
+            );
             CheckEquityDataNormalizationMode(spyEquity, _spyNormalizationMode);
             _priceRanges.Add(spyEquity, new Tuple<decimal, decimal>(167.28m, 168.37m));
 
-            var ibmEquity = AddEquity("IBM", Resolution.Minute, dataNormalizationMode: _ibmNormalizationMode);
+            var ibmEquity = AddEquity(
+                "IBM",
+                Resolution.Minute,
+                dataNormalizationMode: _ibmNormalizationMode
+            );
             CheckEquityDataNormalizationMode(ibmEquity, _ibmNormalizationMode);
-            _priceRanges.Add(ibmEquity, new Tuple<decimal, decimal>(135.864131052m, 136.819606508m));
+            _priceRanges.Add(
+                ibmEquity,
+                new Tuple<decimal, decimal>(135.864131052m, 136.819606508m)
+            );
 
-            var aigEquity = AddEquity("AIG", Resolution.Minute, dataNormalizationMode: _aigNormalizationMode);
+            var aigEquity = AddEquity(
+                "AIG",
+                Resolution.Minute,
+                dataNormalizationMode: _aigNormalizationMode
+            );
             CheckEquityDataNormalizationMode(aigEquity, _aigNormalizationMode);
             _priceRanges.Add(aigEquity, new Tuple<decimal, decimal>(48.73m, 49.10m));
         }
@@ -59,19 +79,31 @@ namespace QuantConnect.Algorithm.CSharp
                 var minExpectedPrice = kvp.Value.Item1;
                 var maxExpectedPrice = kvp.Value.Item2;
 
-                if (equity.HasData && (equity.Price < minExpectedPrice || equity.Price > maxExpectedPrice))
+                if (
+                    equity.HasData
+                    && (equity.Price < minExpectedPrice || equity.Price > maxExpectedPrice)
+                )
                 {
-                    throw new RegressionTestException($"{equity.Symbol}: Price {equity.Price} is  out of expected range [{minExpectedPrice}, {maxExpectedPrice}]");
+                    throw new RegressionTestException(
+                        $"{equity.Symbol}: Price {equity.Price} is  out of expected range [{minExpectedPrice}, {maxExpectedPrice}]"
+                    );
                 }
             }
         }
 
-        private void CheckEquityDataNormalizationMode(Equity equity, DataNormalizationMode expectedNormalizationMode)
+        private void CheckEquityDataNormalizationMode(
+            Equity equity,
+            DataNormalizationMode expectedNormalizationMode
+        )
         {
-            var subscriptions = SubscriptionManager.Subscriptions.Where(x => x.Symbol == equity.Symbol);
+            var subscriptions = SubscriptionManager.Subscriptions.Where(x =>
+                x.Symbol == equity.Symbol
+            );
             if (subscriptions.Any(x => x.DataNormalizationMode != expectedNormalizationMode))
             {
-                throw new RegressionTestException($"Expected {equity.Symbol} to have data normalization mode {expectedNormalizationMode} but was {subscriptions.First().DataNormalizationMode}");
+                throw new RegressionTestException(
+                    $"Expected {equity.Symbol} to have data normalization mode {expectedNormalizationMode} but was {subscriptions.First().DataNormalizationMode}"
+                );
             }
         }
 
@@ -103,35 +135,36 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// This is used by the regression test system to indicate what the expected statistics are from running the algorithm
         /// </summary>
-        public Dictionary<string, string> ExpectedStatistics => new Dictionary<string, string>
-        {
-            {"Total Orders", "0"},
-            {"Average Win", "0%"},
-            {"Average Loss", "0%"},
-            {"Compounding Annual Return", "0%"},
-            {"Drawdown", "0%"},
-            {"Expectancy", "0"},
-            {"Start Equity", "100000"},
-            {"End Equity", "100000"},
-            {"Net Profit", "0%"},
-            {"Sharpe Ratio", "0"},
-            {"Sortino Ratio", "0"},
-            {"Probabilistic Sharpe Ratio", "0%"},
-            {"Loss Rate", "0%"},
-            {"Win Rate", "0%"},
-            {"Profit-Loss Ratio", "0"},
-            {"Alpha", "0"},
-            {"Beta", "0"},
-            {"Annual Standard Deviation", "0"},
-            {"Annual Variance", "0"},
-            {"Information Ratio", "0"},
-            {"Tracking Error", "0"},
-            {"Treynor Ratio", "0"},
-            {"Total Fees", "$0.00"},
-            {"Estimated Strategy Capacity", "$0"},
-            {"Lowest Capacity Asset", ""},
-            {"Portfolio Turnover", "0%"},
-            {"OrderListHash", "d41d8cd98f00b204e9800998ecf8427e"}
-        };
+        public Dictionary<string, string> ExpectedStatistics =>
+            new Dictionary<string, string>
+            {
+                { "Total Orders", "0" },
+                { "Average Win", "0%" },
+                { "Average Loss", "0%" },
+                { "Compounding Annual Return", "0%" },
+                { "Drawdown", "0%" },
+                { "Expectancy", "0" },
+                { "Start Equity", "100000" },
+                { "End Equity", "100000" },
+                { "Net Profit", "0%" },
+                { "Sharpe Ratio", "0" },
+                { "Sortino Ratio", "0" },
+                { "Probabilistic Sharpe Ratio", "0%" },
+                { "Loss Rate", "0%" },
+                { "Win Rate", "0%" },
+                { "Profit-Loss Ratio", "0" },
+                { "Alpha", "0" },
+                { "Beta", "0" },
+                { "Annual Standard Deviation", "0" },
+                { "Annual Variance", "0" },
+                { "Information Ratio", "0" },
+                { "Tracking Error", "0" },
+                { "Treynor Ratio", "0" },
+                { "Total Fees", "$0.00" },
+                { "Estimated Strategy Capacity", "$0" },
+                { "Lowest Capacity Asset", "" },
+                { "Portfolio Turnover", "0%" },
+                { "OrderListHash", "d41d8cd98f00b204e9800998ecf8427e" }
+            };
     }
 }

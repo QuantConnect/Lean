@@ -33,14 +33,13 @@ namespace QuantConnect
         /// <summary>
         /// Creates a new empty instance
         /// </summary>
-        public ScatterChartPoint()
-        {
-        }
+        public ScatterChartPoint() { }
 
         /// <summary>
         /// Creates a new instance at the specified time and value
         /// </summary>
-        public ScatterChartPoint(long time, decimal? value, string tooltip = null) : base(time, value)
+        public ScatterChartPoint(long time, decimal? value, string tooltip = null)
+            : base(time, value)
         {
             Tooltip = tooltip;
         }
@@ -48,7 +47,8 @@ namespace QuantConnect
         /// <summary>
         /// Creates a new instance at the specified time and value
         /// </summary>
-        public ScatterChartPoint(DateTime time, decimal? value, string tooltip = null) : base(time, value)
+        public ScatterChartPoint(DateTime time, decimal? value, string tooltip = null)
+            : base(time, value)
         {
             Tooltip = tooltip;
         }
@@ -59,7 +59,12 @@ namespace QuantConnect
         /// <returns>Clone of this instance</returns>
         public override ISeriesPoint Clone()
         {
-            return new ScatterChartPoint { x = X, y = Y, Tooltip = Tooltip };
+            return new ScatterChartPoint
+            {
+                x = X,
+                y = Y,
+                Tooltip = Tooltip
+            };
         }
     }
 }

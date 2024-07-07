@@ -57,7 +57,11 @@ namespace QuantConnect.Python
                         _extendedVersion = false;
                     }
                 }
-                var fee =  _model.InvokeMethod<decimal>(nameof(GetOrderFee), parameters.Security, parameters.Order);
+                var fee = _model.InvokeMethod<decimal>(
+                    nameof(GetOrderFee),
+                    parameters.Security,
+                    parameters.Order
+                );
                 return new OrderFee(new CashAmount(fee, "USD"));
             }
         }

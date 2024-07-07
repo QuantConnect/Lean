@@ -68,7 +68,7 @@ namespace QuantConnect
         /// <summary>
         /// Resets global values with the Config data.
         /// </summary>
-        public static void Reset ()
+        public static void Reset()
         {
             CacheDataFolder = DataFolder = Config.Get("data-folder", @"../../../Data/");
 
@@ -91,7 +91,10 @@ namespace QuantConnect
             ProjectId = Config.GetInt("project-id");
             UserToken = Config.Get("api-access-token");
             OrganizationID = Config.Get("job-organization-id");
-            ResultsDestinationFolder = Config.Get("results-destination-folder", Directory.GetCurrentDirectory());
+            ResultsDestinationFolder = Config.Get(
+                "results-destination-folder",
+                Directory.GetCurrentDirectory()
+            );
         }
 
         /// <summary>

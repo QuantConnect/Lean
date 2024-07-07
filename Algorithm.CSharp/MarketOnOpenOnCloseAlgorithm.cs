@@ -35,11 +35,17 @@ namespace QuantConnect.Algorithm.CSharp
         /// </summary>
         public override void Initialize()
         {
-            SetStartDate(2013, 10, 07);  //Set Start Date
-            SetEndDate(2013, 10, 11);    //Set End Date
-            SetCash(100000);             //Set Strategy Cash
+            SetStartDate(2013, 10, 07); //Set Start Date
+            SetEndDate(2013, 10, 11); //Set End Date
+            SetCash(100000); //Set Strategy Cash
             // Find more symbols here: http://quantconnect.com/data
-            AddSecurity(SecurityType.Equity, "SPY", Resolution.Second, fillForward: true, extendedMarketHours: true);
+            AddSecurity(
+                SecurityType.Equity,
+                "SPY",
+                Resolution.Second,
+                fillForward: true,
+                extendedMarketHours: true
+            );
 
             _security = Securities["SPY"];
         }
@@ -68,7 +74,9 @@ namespace QuantConnect.Algorithm.CSharp
         public override void OnOrderEvent(OrderEvent orderEvent)
         {
             var order = Transactions.GetOrderById(orderEvent.OrderId);
-            Console.WriteLine(Time + " - " + order.Type + " - " + orderEvent.Status + ":: " + orderEvent);
+            Console.WriteLine(
+                Time + " - " + order.Type + " - " + orderEvent.Status + ":: " + orderEvent
+            );
         }
     }
 }

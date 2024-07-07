@@ -101,10 +101,15 @@ namespace QuantConnect.Brokerages
 
                 try
                 {
-                    while (!_cancellationTokenSource.IsCancellationRequested
-                        && !_cancellationTokenSource.Token.WaitHandle.WaitOne(Time.GetSecondUnevenWait(1000)))
+                    while (
+                        !_cancellationTokenSource.IsCancellationRequested
+                        && !_cancellationTokenSource.Token.WaitHandle.WaitOne(
+                            Time.GetSecondUnevenWait(1000)
+                        )
+                    )
                     {
-                        if (!_isEnabled) continue;
+                        if (!_isEnabled)
+                            continue;
 
                         try
                         {
@@ -117,7 +122,9 @@ namespace QuantConnect.Brokerages
                             if (!_connectionLost && elapsed > MaximumIdleTimeSpan)
                             {
                                 _connectionLost = true;
-                                nextReconnectionAttemptUtcTime = DateTime.UtcNow.AddSeconds(nextReconnectionAttemptSeconds);
+                                nextReconnectionAttemptUtcTime = DateTime.UtcNow.AddSeconds(
+                                    nextReconnectionAttemptSeconds
+                                );
 
                                 OnConnectionLost();
                             }
@@ -126,7 +133,8 @@ namespace QuantConnect.Brokerages
                                 if (elapsed <= MaximumIdleTimeSpan)
                                 {
                                     _connectionLost = false;
-                                    nextReconnectionAttemptSeconds = MinimumSecondsForNextReconnectionAttempt;
+                                    nextReconnectionAttemptSeconds =
+                                        MinimumSecondsForNextReconnectionAttempt;
 
                                     OnConnectionRestored();
                                 }
@@ -135,8 +143,13 @@ namespace QuantConnect.Brokerages
                                     if (DateTime.UtcNow > nextReconnectionAttemptUtcTime)
                                     {
                                         // double the interval between attempts (capped to 1 minute)
-                                        nextReconnectionAttemptSeconds = Math.Min(nextReconnectionAttemptSeconds * 2, MaximumSecondsForNextReconnectionAttempt);
-                                        nextReconnectionAttemptUtcTime = DateTime.UtcNow.AddSeconds(nextReconnectionAttemptSeconds);
+                                        nextReconnectionAttemptSeconds = Math.Min(
+                                            nextReconnectionAttemptSeconds * 2,
+                                            MaximumSecondsForNextReconnectionAttempt
+                                        );
+                                        nextReconnectionAttemptUtcTime = DateTime.UtcNow.AddSeconds(
+                                            nextReconnectionAttemptSeconds
+                                        );
 
                                         OnReconnectRequested();
                                     }
@@ -153,7 +166,10 @@ namespace QuantConnect.Brokerages
                 {
                     Log.Error(exception);
                 }
-            }) { IsBackground = true };
+            })
+            {
+                IsBackground = true
+            };
 
             _connectionMonitorThread.Start();
 
@@ -201,7 +217,9 @@ namespace QuantConnect.Brokerages
         /// </summary>
         protected virtual void OnConnectionRestored()
         {
-            Log.Trace("DefaultConnectionHandler.OnConnectionRestored(): WebSocket connection restored.");
+            Log.Trace(
+                "DefaultConnectionHandler.OnConnectionRestored(): WebSocket connection restored."
+            );
             ConnectionRestored?.Invoke(this, EventArgs.Empty);
         }
 

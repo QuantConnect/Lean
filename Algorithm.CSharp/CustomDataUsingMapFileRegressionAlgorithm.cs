@@ -32,7 +32,9 @@ namespace QuantConnect.Algorithm.CSharp
     /// <meta name="tag" content="map" />
     /// <meta name="tag" content="mapping" />
     /// <meta name="tag" content="map files" />
-    public class CustomDataUsingMapFileRegressionAlgorithm : QCAlgorithm, IRegressionAlgorithmDefinition
+    public class CustomDataUsingMapFileRegressionAlgorithm
+        : QCAlgorithm,
+            IRegressionAlgorithmDefinition
     {
         private Symbol _symbol;
         private bool _initialMapping;
@@ -49,7 +51,11 @@ namespace QuantConnect.Algorithm.CSharp
             var foxa = QuantConnect.Symbol.Create("FOXA", SecurityType.Equity, Market.USA);
             _symbol = AddData<CustomDataUsingMapping>(foxa).Symbol;
 
-            foreach (var config in SubscriptionManager.SubscriptionDataConfigService.GetSubscriptionDataConfigs(_symbol))
+            foreach (
+                var config in SubscriptionManager.SubscriptionDataConfigService.GetSubscriptionDataConfigs(
+                    _symbol
+                )
+            )
             {
                 if (config.Resolution != Resolution.Minute)
                 {
@@ -65,24 +71,30 @@ namespace QuantConnect.Algorithm.CSharp
         {
             if (slice.SymbolChangedEvents.ContainsKey(_symbol))
             {
-                var mappingEvent = slice.SymbolChangedEvents.Single(x => x.Key.SecurityType == SecurityType.Base).Value;
-                Log($"{Time} - Ticker changed from: {mappingEvent.OldSymbol} to {mappingEvent.NewSymbol}");
+                var mappingEvent = slice
+                    .SymbolChangedEvents.Single(x => x.Key.SecurityType == SecurityType.Base)
+                    .Value;
+                Log(
+                    $"{Time} - Ticker changed from: {mappingEvent.OldSymbol} to {mappingEvent.NewSymbol}"
+                );
                 if (Time.Date == new DateTime(2013, 06, 27))
                 {
                     // we should Not receive the initial mapping event
-                    if (mappingEvent.NewSymbol != "NWSA"
-                        || mappingEvent.OldSymbol != "FOXA")
+                    if (mappingEvent.NewSymbol != "NWSA" || mappingEvent.OldSymbol != "FOXA")
                     {
-                        throw new RegressionTestException($"Unexpected mapping event {mappingEvent}");
+                        throw new RegressionTestException(
+                            $"Unexpected mapping event {mappingEvent}"
+                        );
                     }
                     _initialMapping = true;
                 }
                 else if (Time.Date == new DateTime(2013, 06, 29))
                 {
-                    if (mappingEvent.NewSymbol != "FOXA"
-                        || mappingEvent.OldSymbol != "NWSA")
+                    if (mappingEvent.NewSymbol != "FOXA" || mappingEvent.OldSymbol != "NWSA")
                     {
-                        throw new RegressionTestException($"Unexpected mapping event {mappingEvent}");
+                        throw new RegressionTestException(
+                            $"Unexpected mapping event {mappingEvent}"
+                        );
                     }
 
                     _executionMapping = true;
@@ -102,7 +114,9 @@ namespace QuantConnect.Algorithm.CSharp
             }
             if (!_executionMapping)
             {
-                throw new RegressionTestException("The ticker did not rename throughout the course of its life even though it should have");
+                throw new RegressionTestException(
+                    "The ticker did not rename throughout the course of its life even though it should have"
+                );
             }
         }
 
@@ -134,36 +148,37 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// This is used by the regression test system to indicate what the expected statistics are from running the algorithm
         /// </summary>
-        public Dictionary<string, string> ExpectedStatistics => new Dictionary<string, string>
-        {
-            {"Total Orders", "1"},
-            {"Average Win", "0%"},
-            {"Average Loss", "0%"},
-            {"Compounding Annual Return", "-99.907%"},
-            {"Drawdown", "11.000%"},
-            {"Expectancy", "0"},
-            {"Start Equity", "100000"},
-            {"End Equity", "89657.2"},
-            {"Net Profit", "-10.343%"},
-            {"Sharpe Ratio", "-1.708"},
-            {"Sortino Ratio", "-1.361"},
-            {"Probabilistic Sharpe Ratio", "0.009%"},
-            {"Loss Rate", "0%"},
-            {"Win Rate", "0%"},
-            {"Profit-Loss Ratio", "0"},
-            {"Alpha", "-0.974"},
-            {"Beta", "-5.612"},
-            {"Annual Standard Deviation", "0.587"},
-            {"Annual Variance", "0.345"},
-            {"Information Ratio", "-1.517"},
-            {"Tracking Error", "0.664"},
-            {"Treynor Ratio", "0.179"},
-            {"Total Fees", "$0.00"},
-            {"Estimated Strategy Capacity", "$0"},
-            {"Lowest Capacity Asset", "NWSA.CustomDataUsingMapping T3MO1488O0H0"},
-            {"Portfolio Turnover", "16.62%"},
-            {"OrderListHash", "a605ae85beeb854fde8d7b7eff9040ac"}
-        };
+        public Dictionary<string, string> ExpectedStatistics =>
+            new Dictionary<string, string>
+            {
+                { "Total Orders", "1" },
+                { "Average Win", "0%" },
+                { "Average Loss", "0%" },
+                { "Compounding Annual Return", "-99.907%" },
+                { "Drawdown", "11.000%" },
+                { "Expectancy", "0" },
+                { "Start Equity", "100000" },
+                { "End Equity", "89657.2" },
+                { "Net Profit", "-10.343%" },
+                { "Sharpe Ratio", "-1.708" },
+                { "Sortino Ratio", "-1.361" },
+                { "Probabilistic Sharpe Ratio", "0.009%" },
+                { "Loss Rate", "0%" },
+                { "Win Rate", "0%" },
+                { "Profit-Loss Ratio", "0" },
+                { "Alpha", "-0.974" },
+                { "Beta", "-5.612" },
+                { "Annual Standard Deviation", "0.587" },
+                { "Annual Variance", "0.345" },
+                { "Information Ratio", "-1.517" },
+                { "Tracking Error", "0.664" },
+                { "Treynor Ratio", "0.179" },
+                { "Total Fees", "$0.00" },
+                { "Estimated Strategy Capacity", "$0" },
+                { "Lowest Capacity Asset", "NWSA.CustomDataUsingMapping T3MO1488O0H0" },
+                { "Portfolio Turnover", "16.62%" },
+                { "OrderListHash", "a605ae85beeb854fde8d7b7eff9040ac" }
+            };
 
         /// <summary>
         /// Test example custom data showing how to enable the use of mapping.
@@ -180,17 +195,30 @@ namespace QuantConnect.Algorithm.CSharp
                 return true;
             }
 
-            public override SubscriptionDataSource GetSource(SubscriptionDataConfig config, DateTime date, bool isLiveMode)
+            public override SubscriptionDataSource GetSource(
+                SubscriptionDataConfig config,
+                DateTime date,
+                bool isLiveMode
+            )
             {
-                return base.GetSource(new SubscriptionDataConfig(config,
+                return base.GetSource(
+                    new SubscriptionDataConfig(
+                        config,
                         typeof(CustomDataUsingMapping),
-                    // create a new symbol as equity so we find the existing data files
-                    Symbol.Create(config.MappedSymbol, SecurityType.Equity, config.Market)),
+                        // create a new symbol as equity so we find the existing data files
+                        Symbol.Create(config.MappedSymbol, SecurityType.Equity, config.Market)
+                    ),
                     date,
-                    isLiveMode);
+                    isLiveMode
+                );
             }
 
-            public override BaseData Reader(SubscriptionDataConfig config, string line, DateTime date, bool isLiveMode)
+            public override BaseData Reader(
+                SubscriptionDataConfig config,
+                string line,
+                DateTime date,
+                bool isLiveMode
+            )
             {
                 return ParseEquity(config, line, date);
             }

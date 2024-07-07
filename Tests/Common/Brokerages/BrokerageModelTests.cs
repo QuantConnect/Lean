@@ -14,23 +14,23 @@
 */
 
 using System;
+using System.Collections.Generic;
+using Moq;
 using NodaTime;
 using NUnit.Framework;
 using Python.Runtime;
-using QuantConnect.Orders;
+using QuantConnect.Benchmarks;
 using QuantConnect.Brokerages;
+using QuantConnect.Data;
+using QuantConnect.Data.Shortable;
+using QuantConnect.Interfaces;
+using QuantConnect.Orders;
+using QuantConnect.Orders.Fees;
+using QuantConnect.Orders.Fills;
+using QuantConnect.Orders.Slippage;
 using QuantConnect.Python;
 using QuantConnect.Securities;
-using Moq;
-using QuantConnect.Orders.Fills;
-using QuantConnect.Interfaces;
-using System.Collections.Generic;
-using QuantConnect.Benchmarks;
-using QuantConnect.Data;
 using QuantConnect.Tests.Engine.DataFeeds;
-using QuantConnect.Orders.Fees;
-using QuantConnect.Orders.Slippage;
-using QuantConnect.Data.Shortable;
 
 namespace QuantConnect.Tests.Common.Brokerages
 {
@@ -38,31 +38,49 @@ namespace QuantConnect.Tests.Common.Brokerages
     public class BrokerageModelTests
     {
         [TestCaseSource(nameof(GetBrokerageNameTestCases))]
-        public void GetsCorrectBrokerageNameFromBrokerageInstance(IBrokerageModel brokerage, BrokerageName brokerageName)
+        public void GetsCorrectBrokerageNameFromBrokerageInstance(
+            IBrokerageModel brokerage,
+            BrokerageName brokerageName
+        )
         {
             Assert.AreEqual(brokerageName, BrokerageModel.GetBrokerageName(brokerage));
         }
 
         [TestCaseSource(nameof(GetCustomBrokerageNameTestCases))]
-        public void GetsCorrectCustomBrokerageNameFromBrokerageInstance_CSharp(IBrokerageModel brokerage, BrokerageName brokerageName)
+        public void GetsCorrectCustomBrokerageNameFromBrokerageInstance_CSharp(
+            IBrokerageModel brokerage,
+            BrokerageName brokerageName
+        )
         {
             Assert.AreEqual(brokerageName, BrokerageModel.GetBrokerageName(brokerage));
         }
 
         [TestCaseSource(nameof(GetBrokerageNameTestCases))]
-        public void GetsCorrectCustomBrokerageNameFromBrokerageInstance_Python(IBrokerageModel brokerage, BrokerageName brokerageName)
+        public void GetsCorrectCustomBrokerageNameFromBrokerageInstance_Python(
+            IBrokerageModel brokerage,
+            BrokerageName brokerageName
+        )
         {
             using (Py.GIL())
             {
-                dynamic PyCustomBrokerageModel = PyModule.FromString("testModule",
-                    @$"
+                dynamic PyCustomBrokerageModel = PyModule
+                    .FromString(
+                        "testModule",
+                        @$"
 from AlgorithmImports import *
 
 class CustomBrokerageModel({brokerage.GetType().Name}):
     pass
-                ").GetAttr("CustomBrokerageModel");
+                "
+                    )
+                    .GetAttr("CustomBrokerageModel");
 
-                Assert.AreEqual(brokerageName, BrokerageModel.GetBrokerageName(new BrokerageModelPythonWrapper(PyCustomBrokerageModel())));
+                Assert.AreEqual(
+                    brokerageName,
+                    BrokerageModel.GetBrokerageName(
+                        new BrokerageModelPythonWrapper(PyCustomBrokerageModel())
+                    )
+                );
             }
         }
 
@@ -71,19 +89,25 @@ class CustomBrokerageModel({brokerage.GetType().Name}):
         {
             using (Py.GIL())
             {
-                dynamic PyCustomBrokerageModel = PyModule.FromString("testModule",
-                    @$"
+                dynamic PyCustomBrokerageModel = PyModule
+                    .FromString(
+                        "testModule",
+                        @$"
 from AlgorithmImports import *
 
 class CustomBrokerageModel(DefaultBrokerageModel):
     def CanSubmitOrder(self, security: SecurityType, order: Order, message: BrokerageMessageEvent):
         return True
-                ").GetAttr("CustomBrokerageModel");
+                "
+                    )
+                    .GetAttr("CustomBrokerageModel");
 
                 var security = GetSecurity(Symbols.SPY);
                 var model = new BrokerageModelPythonWrapper(PyCustomBrokerageModel());
                 var message = new BrokerageMessageEvent(BrokerageMessageType.Information, "", "");
-                Assert.Throws<ArgumentException>(() => model.CanSubmitOrder(security, _order.Object, out message));
+                Assert.Throws<ArgumentException>(
+                    () => model.CanSubmitOrder(security, _order.Object, out message)
+                );
             }
         }
 
@@ -92,21 +116,27 @@ class CustomBrokerageModel(DefaultBrokerageModel):
         {
             using (Py.GIL())
             {
-                dynamic PyCustomBrokerageModel = PyModule.FromString("testModule",
-                    @$"
+                dynamic PyCustomBrokerageModel = PyModule
+                    .FromString(
+                        "testModule",
+                        @$"
 from AlgorithmImports import *
 
 class CustomBrokerageModel(DefaultBrokerageModel):
     def CanSubmitOrder(self, security: SecurityType, order: Order, message: BrokerageMessageEvent):
         message = None
         return True, message
-                ").GetAttr("CustomBrokerageModel");
+                "
+                    )
+                    .GetAttr("CustomBrokerageModel");
 
                 var security = GetSecurity(Symbols.SPY);
                 var model = new BrokerageModelPythonWrapper(PyCustomBrokerageModel());
                 var message = new BrokerageMessageEvent(BrokerageMessageType.Information, "", "");
                 var result = false;
-                Assert.DoesNotThrow(() => result = model.CanSubmitOrder(security, _order.Object, out message));
+                Assert.DoesNotThrow(
+                    () => result = model.CanSubmitOrder(security, _order.Object, out message)
+                );
                 Assert.IsTrue(result);
                 Assert.IsNull(message);
             }
@@ -117,20 +147,30 @@ class CustomBrokerageModel(DefaultBrokerageModel):
         {
             using (Py.GIL())
             {
-                dynamic PyCustomBrokerageModel = PyModule.FromString("testModule",
-                    @$"
+                dynamic PyCustomBrokerageModel = PyModule
+                    .FromString(
+                        "testModule",
+                        @$"
 from AlgorithmImports import *
 
 class CustomBrokerageModel(DefaultBrokerageModel):
     def CanUpdateOrder(self, security: SecurityType, order: Order, request: UpdateOrderRequest, message: BrokerageMessageEvent):
         return False
-                ").GetAttr("CustomBrokerageModel");
+                "
+                    )
+                    .GetAttr("CustomBrokerageModel");
 
                 var security = GetSecurity(Symbols.SPY);
                 var model = new BrokerageModelPythonWrapper(PyCustomBrokerageModel());
-                var updateRequest = new UpdateOrderRequest(DateTime.Now, 1, new UpdateOrderFields());
+                var updateRequest = new UpdateOrderRequest(
+                    DateTime.Now,
+                    1,
+                    new UpdateOrderFields()
+                );
                 var message = new BrokerageMessageEvent(BrokerageMessageType.Information, "", "");
-                Assert.Throws<ArgumentException>(() => model.CanUpdateOrder(security, _order.Object, updateRequest, out message));
+                Assert.Throws<ArgumentException>(
+                    () => model.CanUpdateOrder(security, _order.Object, updateRequest, out message)
+                );
             }
         }
 
@@ -139,44 +179,73 @@ class CustomBrokerageModel(DefaultBrokerageModel):
         {
             using (Py.GIL())
             {
-                dynamic PyCustomBrokerageModel = PyModule.FromString("testModule",
-                    @$"
+                dynamic PyCustomBrokerageModel = PyModule
+                    .FromString(
+                        "testModule",
+                        @$"
 from AlgorithmImports import *
 
 class CustomBrokerageModel(DefaultBrokerageModel):
     def CanUpdateOrder(self, security: SecurityType, order: Order, request: UpdateOrderRequest, message: BrokerageMessageEvent):
         message = BrokerageMessageEvent(BrokerageMessageType.Information, """", ""Order can not be updated"")
         return False, message
-                ").GetAttr("CustomBrokerageModel");
+                "
+                    )
+                    .GetAttr("CustomBrokerageModel");
 
                 var security = GetSecurity(Symbols.SPY);
                 var model = new BrokerageModelPythonWrapper(PyCustomBrokerageModel());
-                var updateRequest = new UpdateOrderRequest(DateTime.Now, 1, new UpdateOrderFields());
+                var updateRequest = new UpdateOrderRequest(
+                    DateTime.Now,
+                    1,
+                    new UpdateOrderFields()
+                );
                 var result = true;
                 var message = new BrokerageMessageEvent(BrokerageMessageType.Information, "", "");
-                Assert.DoesNotThrow(() => result = model.CanUpdateOrder(security, _order.Object, updateRequest, out message));
+                Assert.DoesNotThrow(
+                    () =>
+                        result = model.CanUpdateOrder(
+                            security,
+                            _order.Object,
+                            updateRequest,
+                            out message
+                        )
+                );
                 Assert.IsFalse(result);
                 Assert.AreEqual("Order can not be updated", message.Message);
             }
         }
 
         [TestCaseSource(nameof(GetBrokerageNameTestCases))]
-        public void CustomPythonBrokerageCanSubmitOrderMethodDoesNotFailWhenIsNotOverriden(IBrokerageModel brokerage, BrokerageName brokerageName)
+        public void CustomPythonBrokerageCanSubmitOrderMethodDoesNotFailWhenIsNotOverriden(
+            IBrokerageModel brokerage,
+            BrokerageName brokerageName
+        )
         {
             using (Py.GIL())
             {
-                dynamic PyCustomBrokerageModel = PyModule.FromString("testModule",
-                    @$"
+                dynamic PyCustomBrokerageModel = PyModule
+                    .FromString(
+                        "testModule",
+                        @$"
 from AlgorithmImports import *
 
 class CustomBrokerageModel({brokerage.GetType().Name}):
     pass
-                ").GetAttr("CustomBrokerageModel");
+                "
+                    )
+                    .GetAttr("CustomBrokerageModel");
 
                 var security = GetSecurity(Symbols.SPY);
                 var model = new BrokerageModelPythonWrapper(PyCustomBrokerageModel());
-                var message = new BrokerageMessageEvent(BrokerageMessageType.Information, "", "Initial Message");
-                Assert.DoesNotThrow(() => model.CanSubmitOrder(security, _order.Object, out message));
+                var message = new BrokerageMessageEvent(
+                    BrokerageMessageType.Information,
+                    "",
+                    "Initial Message"
+                );
+                Assert.DoesNotThrow(
+                    () => model.CanSubmitOrder(security, _order.Object, out message)
+                );
 
                 if (message != null)
                 {
@@ -186,23 +255,40 @@ class CustomBrokerageModel({brokerage.GetType().Name}):
         }
 
         [TestCaseSource(nameof(GetBrokerageNameTestCases))]
-        public void CustomPythonBrokerageCanUpdateOrderMethodDoesNotFailWhenIsNotOverriden(IBrokerageModel brokerage, BrokerageName brokerageName)
+        public void CustomPythonBrokerageCanUpdateOrderMethodDoesNotFailWhenIsNotOverriden(
+            IBrokerageModel brokerage,
+            BrokerageName brokerageName
+        )
         {
             using (Py.GIL())
             {
-                dynamic PyCustomBrokerageModel = PyModule.FromString("testModule",
-                    @$"
+                dynamic PyCustomBrokerageModel = PyModule
+                    .FromString(
+                        "testModule",
+                        @$"
 from AlgorithmImports import *
 
 class CustomBrokerageModel({brokerage.GetType().Name}):
     pass
-                ").GetAttr("CustomBrokerageModel");
+                "
+                    )
+                    .GetAttr("CustomBrokerageModel");
 
                 var security = GetSecurity(Symbols.SPY);
                 var model = new BrokerageModelPythonWrapper(PyCustomBrokerageModel());
-                var updateRequest = new UpdateOrderRequest(DateTime.Now, 1, new UpdateOrderFields());
-                var message = new BrokerageMessageEvent(BrokerageMessageType.Information, "", "Initial Message");
-                Assert.DoesNotThrow(() => model.CanUpdateOrder(security, _order.Object, updateRequest, out message));
+                var updateRequest = new UpdateOrderRequest(
+                    DateTime.Now,
+                    1,
+                    new UpdateOrderFields()
+                );
+                var message = new BrokerageMessageEvent(
+                    BrokerageMessageType.Information,
+                    "",
+                    "Initial Message"
+                );
+                Assert.DoesNotThrow(
+                    () => model.CanUpdateOrder(security, _order.Object, updateRequest, out message)
+                );
 
                 if (message != null)
                 {
@@ -212,11 +298,17 @@ class CustomBrokerageModel({brokerage.GetType().Name}):
         }
 
         [TestCaseSource(nameof(GetBrokerageBuyingPowerModel))]
-        public void GetsCorrectBuyingPowerModelForSecurityAndAccountType(IBrokerageModel brokerage, AccountType accountType, SecurityType securityType, Type type)
+        public void GetsCorrectBuyingPowerModelForSecurityAndAccountType(
+            IBrokerageModel brokerage,
+            AccountType accountType,
+            SecurityType securityType,
+            Type type
+        )
         {
-            var security = securityType == SecurityType.Equity
-                ? GetSecurity(Symbols.SPY)
-                : GetSecurity(Symbols.EURUSD);
+            var security =
+                securityType == SecurityType.Equity
+                    ? GetSecurity(Symbols.SPY)
+                    : GetSecurity(Symbols.EURUSD);
 
             var buyingPowerModel = brokerage?.GetBuyingPowerModel(security);
 
@@ -228,8 +320,10 @@ class CustomBrokerageModel({brokerage.GetType().Name}):
         {
             using (Py.GIL())
             {
-                dynamic PyCustomBrokerageModel = PyModule.FromString("testModule",
-                    @$"
+                dynamic PyCustomBrokerageModel = PyModule
+                    .FromString(
+                        "testModule",
+                        @$"
 from AlgorithmImports import *
 
 class CustomFillModel(ImmediateFillModel):
@@ -242,13 +336,17 @@ class CustomFillModel(ImmediateFillModel):
 class CustomBrokerageModel(DefaultBrokerageModel):
     def GetFillModel(self, security):
         return CustomFillModel()
-                ").GetAttr("CustomBrokerageModel");
+                "
+                    )
+                    .GetAttr("CustomBrokerageModel");
 
                 var security = GetSecurity(Symbols.SPY);
                 var model = new BrokerageModelPythonWrapper(PyCustomBrokerageModel());
                 var fillModel = model.GetFillModel(security);
                 Assert.AreEqual(typeof(FillModelPythonWrapper), fillModel.GetType());
-                var ex = Assert.Throws<PythonException>(() => ((dynamic)fillModel).MarketFill(security, new Mock<MarketOrder>().Object));
+                var ex = Assert.Throws<PythonException>(
+                    () => ((dynamic)fillModel).MarketFill(security, new Mock<MarketOrder>().Object)
+                );
                 Assert.AreEqual("ValueError", ex.Type.Name);
                 Assert.AreEqual("Pepe", ex.Message);
             }
@@ -259,14 +357,18 @@ class CustomBrokerageModel(DefaultBrokerageModel):
         {
             using (Py.GIL())
             {
-                dynamic PyCustomBrokerageModel = PyModule.FromString("testModule",
-                    @$"
+                dynamic PyCustomBrokerageModel = PyModule
+                    .FromString(
+                        "testModule",
+                        @$"
 from AlgorithmImports import *
 
 class CustomBrokerageModel(DefaultBrokerageModel):
     def GetFillModel(self, security):
         return ImmediateFillModel()
-                ").GetAttr("CustomBrokerageModel");
+                "
+                    )
+                    .GetAttr("CustomBrokerageModel");
 
                 var security = GetSecurity(Symbols.SPY);
                 security.SetLocalTimeKeeper(new LocalTimeKeeper(DateTime.Now, DateTimeZone.Utc));
@@ -275,10 +377,19 @@ class CustomBrokerageModel(DefaultBrokerageModel):
                 Assert.AreEqual(typeof(ImmediateFillModel), fillModel.GetType());
                 var order = new Mock<MarketOrder>();
                 var subscriptionDataConfigProvider = new Mock<ISubscriptionDataConfigProvider>();
-                var securitiesForOrders = new Dictionary<Order, Security>() { { order.Object, security} };
-                var fillModelParameters = new FillModelParameters(security, order.Object, subscriptionDataConfigProvider.Object, TimeSpan.Zero, securitiesForOrders);
+                var securitiesForOrders = new Dictionary<Order, Security>()
+                {
+                    { order.Object, security }
+                };
+                var fillModelParameters = new FillModelParameters(
+                    security,
+                    order.Object,
+                    subscriptionDataConfigProvider.Object,
+                    TimeSpan.Zero,
+                    securitiesForOrders
+                );
                 var result = fillModel.Fill(fillModelParameters);
-                foreach( var entry in result)
+                foreach (var entry in result)
                 {
                     Assert.AreEqual(OrderStatus.Filled, entry.Status);
                 }
@@ -290,8 +401,10 @@ class CustomBrokerageModel(DefaultBrokerageModel):
         {
             using (Py.GIL())
             {
-                dynamic PyCustomBrokerageModel = PyModule.FromString("testModule",
-                    @$"
+                dynamic PyCustomBrokerageModel = PyModule
+                    .FromString(
+                        "testModule",
+                        @$"
 from AlgorithmImports import *
 
 class CustomBenchmarkModel:
@@ -301,13 +414,17 @@ class CustomBenchmarkModel:
 class CustomBrokerageModel(DefaultBrokerageModel):
     def GetBenchmark(self, securities):
         return CustomBenchmarkModel()
-                ").GetAttr("CustomBrokerageModel");
+                "
+                    )
+                    .GetAttr("CustomBrokerageModel");
                 var timeKeeper = new TimeKeeper(DateTime.Now);
                 var securityManager = new SecurityManager(timeKeeper);
                 var model = new BrokerageModelPythonWrapper(PyCustomBrokerageModel());
                 var benchmarkModel = model.GetBenchmark(securityManager);
                 Assert.AreEqual(typeof(BenchmarkPythonWrapper), benchmarkModel.GetType());
-                var ex = Assert.Throws<PythonException>(() => ((dynamic)benchmarkModel).Evaluate(DateTime.Now));
+                var ex = Assert.Throws<PythonException>(
+                    () => ((dynamic)benchmarkModel).Evaluate(DateTime.Now)
+                );
                 Assert.AreEqual("ValueError", ex.Type.Name);
                 Assert.AreEqual("Pepe", ex.Message);
             }
@@ -318,13 +435,17 @@ class CustomBrokerageModel(DefaultBrokerageModel):
         {
             using (Py.GIL())
             {
-                dynamic PyCustomBrokerageModel = PyModule.FromString("testModule",
-                    @$"
+                dynamic PyCustomBrokerageModel = PyModule
+                    .FromString(
+                        "testModule",
+                        @$"
 from AlgorithmImports import *
 class CustomBrokerageModel(DefaultBrokerageModel):
     def GetBenchmark(self, securities):
         return super().GetBenchmark(securities)
-                ").GetAttr("CustomBrokerageModel");
+                "
+                    )
+                    .GetAttr("CustomBrokerageModel");
                 var timeKeeper = new TimeKeeper(DateTime.Now);
                 var subscriptionManager = new SubscriptionManager(timeKeeper);
                 var dataManager = new DataManagerStub();
@@ -346,8 +467,10 @@ class CustomBrokerageModel(DefaultBrokerageModel):
         {
             using (Py.GIL())
             {
-                dynamic PyCustomBrokerageModel = PyModule.FromString("testModule",
-                    @$"
+                dynamic PyCustomBrokerageModel = PyModule
+                    .FromString(
+                        "testModule",
+                        @$"
 from AlgorithmImports import *
 
 class CustomFeeModel:
@@ -357,14 +480,18 @@ class CustomFeeModel:
 class CustomBrokerageModel(DefaultBrokerageModel):
     def GetFeeModel(self, securities):
         return CustomFeeModel()
-                ").GetAttr("CustomBrokerageModel");
+                "
+                    )
+                    .GetAttr("CustomBrokerageModel");
                 var security = GetSecurity(Symbols.SPY);
                 var model = new BrokerageModelPythonWrapper(PyCustomBrokerageModel());
                 var feeModel = model.GetFeeModel(security);
                 Assert.AreEqual(typeof(FeeModelPythonWrapper), feeModel.GetType());
                 var order = new Mock<Order>();
                 var orderParameters = new Mock<OrderFeeParameters>(security, order.Object);
-                var ex = Assert.Throws<PythonException>(() => ((dynamic)feeModel).GetOrderFee(orderParameters.Object));
+                var ex = Assert.Throws<PythonException>(
+                    () => ((dynamic)feeModel).GetOrderFee(orderParameters.Object)
+                );
                 Assert.AreEqual("ValueError", ex.Type.Name);
                 Assert.AreEqual("Pepe", ex.Message);
             }
@@ -375,13 +502,17 @@ class CustomBrokerageModel(DefaultBrokerageModel):
         {
             using (Py.GIL())
             {
-                dynamic PyCustomBrokerageModel = PyModule.FromString("testModule",
-                    @$"
+                dynamic PyCustomBrokerageModel = PyModule
+                    .FromString(
+                        "testModule",
+                        @$"
 from AlgorithmImports import *
 class CustomBrokerageModel(DefaultBrokerageModel):
     def GetFeeModel(self, securities):
         return FeeModel()
-                ").GetAttr("CustomBrokerageModel");
+                "
+                    )
+                    .GetAttr("CustomBrokerageModel");
                 var security = GetSecurity(Symbols.SPY);
                 var model = new BrokerageModelPythonWrapper(PyCustomBrokerageModel());
                 var feeModel = model.GetFeeModel(security);
@@ -399,8 +530,10 @@ class CustomBrokerageModel(DefaultBrokerageModel):
         {
             using (Py.GIL())
             {
-                dynamic PyCustomBrokerageModel = PyModule.FromString("testModule",
-                    @$"
+                dynamic PyCustomBrokerageModel = PyModule
+                    .FromString(
+                        "testModule",
+                        @$"
 from AlgorithmImports import *
 
 class CustomSettlementModel:
@@ -416,7 +549,9 @@ class CustomSettlementModel:
 class CustomBrokerageModel(DefaultBrokerageModel):
     def GetSettlementModel(self, securities):
         return CustomSettlementModel()
-                ").GetAttr("CustomBrokerageModel");
+                "
+                    )
+                    .GetAttr("CustomBrokerageModel");
                 var security = GetSecurity(Symbols.SPY);
                 var model = new BrokerageModelPythonWrapper(PyCustomBrokerageModel());
                 var settlementModel = model.GetSettlementModel(security);
@@ -424,15 +559,31 @@ class CustomBrokerageModel(DefaultBrokerageModel):
                 var algorithm = new AlgorithmStub();
                 algorithm.SetDateTime(DateTime.Now);
                 var portfolio = algorithm.Portfolio;
-                var appyFundsParameters = new ApplyFundsSettlementModelParameters(portfolio, security, DateTime.Now, new CashAmount(1000, Currencies.USD), null);
-                var ex = Assert.Throws<PythonException>(() => ((dynamic)settlementModel).ApplyFunds(appyFundsParameters));
+                var appyFundsParameters = new ApplyFundsSettlementModelParameters(
+                    portfolio,
+                    security,
+                    DateTime.Now,
+                    new CashAmount(1000, Currencies.USD),
+                    null
+                );
+                var ex = Assert.Throws<PythonException>(
+                    () => ((dynamic)settlementModel).ApplyFunds(appyFundsParameters)
+                );
                 Assert.AreEqual("ValueError", ex.Type.Name);
                 Assert.AreEqual("Pepe", ex.Message);
-                var scanParameters = new ScanSettlementModelParameters(portfolio, security, DateTime.UtcNow);
-                ex = Assert.Throws<PythonException>(() => ((dynamic)settlementModel).Scan(scanParameters));
+                var scanParameters = new ScanSettlementModelParameters(
+                    portfolio,
+                    security,
+                    DateTime.UtcNow
+                );
+                ex = Assert.Throws<PythonException>(
+                    () => ((dynamic)settlementModel).Scan(scanParameters)
+                );
                 Assert.AreEqual("ValueError", ex.Type.Name);
                 Assert.AreEqual("Pepe2", ex.Message);
-                ex = Assert.Throws<PythonException>(() => ((dynamic)settlementModel).GetUnsettledCash());
+                ex = Assert.Throws<PythonException>(
+                    () => ((dynamic)settlementModel).GetUnsettledCash()
+                );
                 Assert.AreEqual("ValueError", ex.Type.Name);
                 Assert.AreEqual("Pepe3", ex.Message);
             }
@@ -443,13 +594,17 @@ class CustomBrokerageModel(DefaultBrokerageModel):
         {
             using (Py.GIL())
             {
-                dynamic PyCustomBrokerageModel = PyModule.FromString("testModule",
-                    @$"
+                dynamic PyCustomBrokerageModel = PyModule
+                    .FromString(
+                        "testModule",
+                        @$"
 from AlgorithmImports import *
 class CustomBrokerageModel(DefaultBrokerageModel):
     def GetSettlementModel(self, security):
         return ImmediateSettlementModel()
-                ").GetAttr("CustomBrokerageModel");
+                "
+                    )
+                    .GetAttr("CustomBrokerageModel");
                 var security = GetSecurity(Symbols.SPY);
                 var model = new BrokerageModelPythonWrapper(PyCustomBrokerageModel());
                 var settlementModel = model.GetSettlementModel(security);
@@ -457,9 +612,21 @@ class CustomBrokerageModel(DefaultBrokerageModel):
                 var algorithm = new AlgorithmStub();
                 algorithm.SetDateTime(DateTime.Now);
                 var portfolio = algorithm.Portfolio;
-                var appyFundsParameters = new ApplyFundsSettlementModelParameters(portfolio, security, DateTime.Now, new CashAmount(1000, Currencies.USD), null);
-                Assert.DoesNotThrow(() => ((dynamic)settlementModel).ApplyFunds(appyFundsParameters));
-                var scanParameters = new ScanSettlementModelParameters(portfolio, security, DateTime.UtcNow);
+                var appyFundsParameters = new ApplyFundsSettlementModelParameters(
+                    portfolio,
+                    security,
+                    DateTime.Now,
+                    new CashAmount(1000, Currencies.USD),
+                    null
+                );
+                Assert.DoesNotThrow(
+                    () => ((dynamic)settlementModel).ApplyFunds(appyFundsParameters)
+                );
+                var scanParameters = new ScanSettlementModelParameters(
+                    portfolio,
+                    security,
+                    DateTime.UtcNow
+                );
                 Assert.DoesNotThrow(() => ((dynamic)settlementModel).Scan(scanParameters));
             }
         }
@@ -469,8 +636,10 @@ class CustomBrokerageModel(DefaultBrokerageModel):
         {
             using (Py.GIL())
             {
-                dynamic PyCustomBrokerageModel = PyModule.FromString("testModule",
-                    @$"
+                dynamic PyCustomBrokerageModel = PyModule
+                    .FromString(
+                        "testModule",
+                        @$"
 from AlgorithmImports import *
 
 class CustomSlippageModel:
@@ -480,13 +649,17 @@ class CustomSlippageModel:
 class CustomBrokerageModel(DefaultBrokerageModel):
     def GetSlippageModel(self, security):
         return CustomSlippageModel()
-                ").GetAttr("CustomBrokerageModel");
+                "
+                    )
+                    .GetAttr("CustomBrokerageModel");
                 var security = GetSecurity(Symbols.SPY);
                 var model = new BrokerageModelPythonWrapper(PyCustomBrokerageModel());
                 var slippageModel = model.GetSlippageModel(security);
                 Assert.AreEqual(typeof(SlippageModelPythonWrapper), slippageModel.GetType());
                 var order = new Mock<Order>();
-                var ex = Assert.Throws<PythonException>(() => ((dynamic)slippageModel).GetSlippageApproximation(security, order.Object));
+                var ex = Assert.Throws<PythonException>(
+                    () => ((dynamic)slippageModel).GetSlippageApproximation(security, order.Object)
+                );
                 Assert.AreEqual("ValueError", ex.Type.Name);
                 Assert.AreEqual("Pepe", ex.Message);
             }
@@ -497,19 +670,26 @@ class CustomBrokerageModel(DefaultBrokerageModel):
         {
             using (Py.GIL())
             {
-                dynamic PyCustomBrokerageModel = PyModule.FromString("testModule",
-                    @$"
+                dynamic PyCustomBrokerageModel = PyModule
+                    .FromString(
+                        "testModule",
+                        @$"
 from AlgorithmImports import *
 class CustomBrokerageModel(DefaultBrokerageModel):
     def GetSlippageModel(self, security):
         return NullSlippageModel()
-                ").GetAttr("CustomBrokerageModel");
+                "
+                    )
+                    .GetAttr("CustomBrokerageModel");
                 var security = GetSecurity(Symbols.SPY);
                 var model = new BrokerageModelPythonWrapper(PyCustomBrokerageModel());
                 var slippageModel = model.GetSlippageModel(security);
                 Assert.AreEqual(typeof(NullSlippageModel), slippageModel.GetType());
                 var order = new Mock<Order>();
-                var result = ((dynamic)slippageModel).GetSlippageApproximation(security, order.Object);
+                var result = ((dynamic)slippageModel).GetSlippageApproximation(
+                    security,
+                    order.Object
+                );
                 Assert.AreEqual(0m, result);
             }
         }
@@ -519,8 +699,10 @@ class CustomBrokerageModel(DefaultBrokerageModel):
         {
             using (Py.GIL())
             {
-                dynamic PyCustomBrokerageModel = PyModule.FromString("testModule",
-                    @$"
+                dynamic PyCustomBrokerageModel = PyModule
+                    .FromString(
+                        "testModule",
+                        @$"
 from AlgorithmImports import *
 
 class CustomBuyingPowerModel(BuyingPowerModel):
@@ -530,12 +712,16 @@ class CustomBuyingPowerModel(BuyingPowerModel):
 class CustomBrokerageModel(DefaultBrokerageModel):
     def GetBuyingPowerModel(self, security):
         return CustomBuyingPowerModel()
-                ").GetAttr("CustomBrokerageModel");
+                "
+                    )
+                    .GetAttr("CustomBrokerageModel");
                 var security = GetSecurity(Symbols.SPY);
                 var model = new BrokerageModelPythonWrapper(PyCustomBrokerageModel());
                 var buyingPowerModel = model.GetBuyingPowerModel(security);
                 Assert.AreEqual(typeof(BuyingPowerModelPythonWrapper), buyingPowerModel.GetType());
-                var ex = Assert.Throws<PythonException>(() => ((dynamic)buyingPowerModel).GetLeverage(security));
+                var ex = Assert.Throws<PythonException>(
+                    () => ((dynamic)buyingPowerModel).GetLeverage(security)
+                );
                 Assert.AreEqual("ValueError", ex.Type.Name);
                 Assert.AreEqual("Pepe", ex.Message);
             }
@@ -546,13 +732,17 @@ class CustomBrokerageModel(DefaultBrokerageModel):
         {
             using (Py.GIL())
             {
-                dynamic PyCustomBrokerageModel = PyModule.FromString("testModule",
-                    @$"
+                dynamic PyCustomBrokerageModel = PyModule
+                    .FromString(
+                        "testModule",
+                        @$"
 from AlgorithmImports import *
 class CustomBrokerageModel(DefaultBrokerageModel):
     def GetBuyingPowerModel(self, security):
         return BuyingPowerModel(1)
-                ").GetAttr("CustomBrokerageModel");
+                "
+                    )
+                    .GetAttr("CustomBrokerageModel");
                 var security = GetSecurity(Symbols.SPY);
                 var model = new BrokerageModelPythonWrapper(PyCustomBrokerageModel());
                 var buyingPowerModel = model.GetBuyingPowerModel(security);
@@ -567,8 +757,10 @@ class CustomBrokerageModel(DefaultBrokerageModel):
         {
             using (Py.GIL())
             {
-                dynamic PyCustomBrokerageModel = PyModule.FromString("testModule",
-                    @$"
+                dynamic PyCustomBrokerageModel = PyModule
+                    .FromString(
+                        "testModule",
+                        @$"
 from AlgorithmImports import *
 
 class CustomShortableProvider:
@@ -582,12 +774,23 @@ class CustomShortableProvider:
 class CustomBrokerageModel(DefaultBrokerageModel):
     def GetShortableProvider(self, security):
         return CustomShortableProvider()
-                ").GetAttr("CustomBrokerageModel");
+                "
+                    )
+                    .GetAttr("CustomBrokerageModel");
                 var security = GetSecurity(Symbols.SPY);
                 var model = new BrokerageModelPythonWrapper(PyCustomBrokerageModel());
                 var shortableProvider = model.GetShortableProvider(security);
-                Assert.AreEqual(typeof(ShortableProviderPythonWrapper), shortableProvider.GetType());
-                var ex = Assert.Throws<PythonException>(() => ((dynamic)shortableProvider).ShortableQuantity(security.Symbol, DateTime.Now));
+                Assert.AreEqual(
+                    typeof(ShortableProviderPythonWrapper),
+                    shortableProvider.GetType()
+                );
+                var ex = Assert.Throws<PythonException>(
+                    () =>
+                        ((dynamic)shortableProvider).ShortableQuantity(
+                            security.Symbol,
+                            DateTime.Now
+                        )
+                );
                 Assert.AreEqual("ValueError", ex.Type.Name);
                 Assert.AreEqual("Pepe", ex.Message);
             }
@@ -598,18 +801,25 @@ class CustomBrokerageModel(DefaultBrokerageModel):
         {
             using (Py.GIL())
             {
-                dynamic PyCustomBrokerageModel = PyModule.FromString("testModule",
-                    @$"
+                dynamic PyCustomBrokerageModel = PyModule
+                    .FromString(
+                        "testModule",
+                        @$"
 from AlgorithmImports import *
 class CustomBrokerageModel(DefaultBrokerageModel):
     def GetShortableProvider(self, security):
         return NullShortableProvider()
-                ").GetAttr("CustomBrokerageModel");
+                "
+                    )
+                    .GetAttr("CustomBrokerageModel");
                 var security = GetSecurity(Symbols.SPY);
                 var model = new BrokerageModelPythonWrapper(PyCustomBrokerageModel());
                 var shortableProvider = model.GetShortableProvider(security);
                 Assert.AreEqual(typeof(NullShortableProvider), shortableProvider.GetType());
-                var result = ((dynamic)shortableProvider).ShortableQuantity(security.Symbol, DateTime.Now);
+                var result = ((dynamic)shortableProvider).ShortableQuantity(
+                    security.Symbol,
+                    DateTime.Now
+                );
                 Assert.IsNull(result);
             }
         }
@@ -619,8 +829,10 @@ class CustomBrokerageModel(DefaultBrokerageModel):
         {
             using (Py.GIL())
             {
-                dynamic PyCustomBrokerageModel = PyModule.FromString("testModule",
-                    @$"
+                dynamic PyCustomBrokerageModel = PyModule
+                    .FromString(
+                        "testModule",
+                        @$"
 from AlgorithmImports import *
 
 class CustomMarginInterestRateModel:
@@ -630,13 +842,20 @@ class CustomMarginInterestRateModel:
 class CustomBrokerageModel(DefaultBrokerageModel):
     def GetMarginInterestRateModel(self, security):
         return CustomMarginInterestRateModel()
-                ").GetAttr("CustomBrokerageModel");
+                "
+                    )
+                    .GetAttr("CustomBrokerageModel");
                 var security = GetSecurity(Symbols.SPY);
                 var model = new BrokerageModelPythonWrapper(PyCustomBrokerageModel());
                 var marginInterestRateModel = model.GetMarginInterestRateModel(security);
-                Assert.AreEqual(typeof(MarginInterestRateModelPythonWrapper), marginInterestRateModel.GetType());
+                Assert.AreEqual(
+                    typeof(MarginInterestRateModelPythonWrapper),
+                    marginInterestRateModel.GetType()
+                );
                 var parameters = new MarginInterestRateParameters(security, DateTime.Now);
-                var ex = Assert.Throws<PythonException>(() => ((dynamic)marginInterestRateModel).ApplyMarginInterestRate(parameters));
+                var ex = Assert.Throws<PythonException>(
+                    () => ((dynamic)marginInterestRateModel).ApplyMarginInterestRate(parameters)
+                );
                 Assert.AreEqual("ValueError", ex.Type.Name);
                 Assert.AreEqual("Pepe", ex.Message);
             }
@@ -647,44 +866,58 @@ class CustomBrokerageModel(DefaultBrokerageModel):
         {
             using (Py.GIL())
             {
-                dynamic PyCustomBrokerageModel = PyModule.FromString("testModule",
-                    @$"
+                dynamic PyCustomBrokerageModel = PyModule
+                    .FromString(
+                        "testModule",
+                        @$"
 from AlgorithmImports import *
 class CustomBrokerageModel(DefaultBrokerageModel):
     def GetMarginInterestRateModel(self, security):
         return MarginInterestRateModel.Null
-                ").GetAttr("CustomBrokerageModel");
+                "
+                    )
+                    .GetAttr("CustomBrokerageModel");
                 var security = GetSecurity(Symbols.SPY);
                 var model = new BrokerageModelPythonWrapper(PyCustomBrokerageModel());
                 var marginInterestRate = model.GetMarginInterestRateModel(security);
-                Assert.AreEqual("QuantConnect.Securities.MarginInterestRateModel+NullMarginInterestRateModel", marginInterestRate.GetType().ToString());
+                Assert.AreEqual(
+                    "QuantConnect.Securities.MarginInterestRateModel+NullMarginInterestRateModel",
+                    marginInterestRate.GetType().ToString()
+                );
                 var parameters = new MarginInterestRateParameters(security, DateTime.Now);
-                Assert.DoesNotThrow(() => ((IMarginInterestRateModel)marginInterestRate).ApplyMarginInterestRate(parameters));
+                Assert.DoesNotThrow(
+                    () =>
+                        ((IMarginInterestRateModel)marginInterestRate).ApplyMarginInterestRate(
+                            parameters
+                        )
+                );
             }
         }
 
         private static Security GetSecurity(Symbol symbol) =>
-        new(symbol,
-            SecurityExchangeHours.AlwaysOpen(DateTimeZone.Utc),
-            new Cash(Currencies.USD, 0, 1),
-            SymbolProperties.GetDefault(Currencies.USD),
-            ErrorCurrencyConverter.Instance,
-            RegisteredSecurityDataTypesProvider.Null,
-        new SecurityCache());
+            new(
+                symbol,
+                SecurityExchangeHours.AlwaysOpen(DateTimeZone.Utc),
+                new Cash(Currencies.USD, 0, 1),
+                SymbolProperties.GetDefault(Currencies.USD),
+                ErrorCurrencyConverter.Instance,
+                RegisteredSecurityDataTypesProvider.Null,
+                new SecurityCache()
+            );
 
         private static Mock<MarketOrder> _order = new Mock<MarketOrder>
         {
-            Object =
-                {
-                    Quantity = 100
-                }
+            Object = { Quantity = 100 }
         };
 
         private static TestCaseData[] GetBrokerageNameTestCases()
         {
             return new[]
             {
-                new TestCaseData(new InteractiveBrokersBrokerageModel(), BrokerageName.InteractiveBrokersBrokerage),
+                new TestCaseData(
+                    new InteractiveBrokersBrokerageModel(),
+                    BrokerageName.InteractiveBrokersBrokerage
+                ),
                 new TestCaseData(new TradierBrokerageModel(), BrokerageName.TradierBrokerage),
                 new TestCaseData(new OandaBrokerageModel(), BrokerageName.OandaBrokerage),
                 new TestCaseData(new FxcmBrokerageModel(), BrokerageName.FxcmBrokerage),
@@ -695,7 +928,10 @@ class CustomBrokerageModel(DefaultBrokerageModel):
                 new TestCaseData(new AlphaStreamsBrokerageModel(), BrokerageName.AlphaStreams),
                 new TestCaseData(new ZerodhaBrokerageModel(), BrokerageName.Zerodha),
                 new TestCaseData(new AxosClearingBrokerageModel(), BrokerageName.Axos),
-                new TestCaseData(new TradingTechnologiesBrokerageModel(), BrokerageName.TradingTechnologies),
+                new TestCaseData(
+                    new TradingTechnologiesBrokerageModel(),
+                    BrokerageName.TradingTechnologies
+                ),
                 new TestCaseData(new SamcoBrokerageModel(), BrokerageName.Samco),
                 new TestCaseData(new KrakenBrokerageModel(), BrokerageName.Kraken),
                 new TestCaseData(new ExanteBrokerageModel(), BrokerageName.Exante),
@@ -706,31 +942,53 @@ class CustomBrokerageModel(DefaultBrokerageModel):
             };
         }
 
-        private class CustomInteractiveBrokersBrokerageModel : InteractiveBrokersBrokerageModel {}
-        private class CustomTradierBrokerageModel : TradierBrokerageModel {}
-        private class CustomOandaBrokerageModel : OandaBrokerageModel {}
-        private class CustomFxcmBrokerageModel : FxcmBrokerageModel {}
-        private class CustomBitfinexBrokerageModel : BitfinexBrokerageModel {}
-        private class CustomBinanceUSBrokerageModel : BinanceUSBrokerageModel {}
-        private class CustomBinanceBrokerageModel : BinanceBrokerageModel {}
-        private class CustomCoinbaseBrokerageModel : CoinbaseBrokerageModel {}
-        private class CustomAlphaStreamsBrokerageModel : AlphaStreamsBrokerageModel {}
-        private class CustomZerodhaBrokerageModel : ZerodhaBrokerageModel {}
-        private class CustomAxosBrokerageModel : AxosClearingBrokerageModel {}
-        private class CustomTradingTechnologiesBrokerageModel : TradingTechnologiesBrokerageModel {}
-        private class CustomSamcoBrokerageModel : SamcoBrokerageModel {}
-        private class CustomKrakenBrokerageModel : KrakenBrokerageModel {}
-        private class CustomExanteBrokerageModel : ExanteBrokerageModel {}
-        private class CustomFTXUSBrokerageModel : FTXUSBrokerageModel {}
-        private class CustomFTXBrokerageModel : FTXBrokerageModel {}
-        private  class CustomBybitBrokerageModel : BybitBrokerageModel { }
-        private class CustomDefaultBrokerageModel : DefaultBrokerageModel {}
+        private class CustomInteractiveBrokersBrokerageModel : InteractiveBrokersBrokerageModel { }
+
+        private class CustomTradierBrokerageModel : TradierBrokerageModel { }
+
+        private class CustomOandaBrokerageModel : OandaBrokerageModel { }
+
+        private class CustomFxcmBrokerageModel : FxcmBrokerageModel { }
+
+        private class CustomBitfinexBrokerageModel : BitfinexBrokerageModel { }
+
+        private class CustomBinanceUSBrokerageModel : BinanceUSBrokerageModel { }
+
+        private class CustomBinanceBrokerageModel : BinanceBrokerageModel { }
+
+        private class CustomCoinbaseBrokerageModel : CoinbaseBrokerageModel { }
+
+        private class CustomAlphaStreamsBrokerageModel : AlphaStreamsBrokerageModel { }
+
+        private class CustomZerodhaBrokerageModel : ZerodhaBrokerageModel { }
+
+        private class CustomAxosBrokerageModel : AxosClearingBrokerageModel { }
+
+        private class CustomTradingTechnologiesBrokerageModel
+            : TradingTechnologiesBrokerageModel { }
+
+        private class CustomSamcoBrokerageModel : SamcoBrokerageModel { }
+
+        private class CustomKrakenBrokerageModel : KrakenBrokerageModel { }
+
+        private class CustomExanteBrokerageModel : ExanteBrokerageModel { }
+
+        private class CustomFTXUSBrokerageModel : FTXUSBrokerageModel { }
+
+        private class CustomFTXBrokerageModel : FTXBrokerageModel { }
+
+        private class CustomBybitBrokerageModel : BybitBrokerageModel { }
+
+        private class CustomDefaultBrokerageModel : DefaultBrokerageModel { }
 
         private static TestCaseData[] GetCustomBrokerageNameTestCases()
         {
             return new[]
             {
-                new TestCaseData(new CustomInteractiveBrokersBrokerageModel(), BrokerageName.InteractiveBrokersBrokerage),
+                new TestCaseData(
+                    new CustomInteractiveBrokersBrokerageModel(),
+                    BrokerageName.InteractiveBrokersBrokerage
+                ),
                 new TestCaseData(new CustomTradierBrokerageModel(), BrokerageName.TradierBrokerage),
                 new TestCaseData(new CustomOandaBrokerageModel(), BrokerageName.OandaBrokerage),
                 new TestCaseData(new CustomFxcmBrokerageModel(), BrokerageName.FxcmBrokerage),
@@ -738,10 +996,16 @@ class CustomBrokerageModel(DefaultBrokerageModel):
                 new TestCaseData(new CustomBinanceUSBrokerageModel(), BrokerageName.BinanceUS),
                 new TestCaseData(new CustomBinanceBrokerageModel(), BrokerageName.Binance),
                 new TestCaseData(new CustomCoinbaseBrokerageModel(), BrokerageName.Coinbase),
-                new TestCaseData(new CustomAlphaStreamsBrokerageModel(), BrokerageName.AlphaStreams),
+                new TestCaseData(
+                    new CustomAlphaStreamsBrokerageModel(),
+                    BrokerageName.AlphaStreams
+                ),
                 new TestCaseData(new CustomZerodhaBrokerageModel(), BrokerageName.Zerodha),
                 new TestCaseData(new CustomAxosBrokerageModel(), BrokerageName.Axos),
-                new TestCaseData(new CustomTradingTechnologiesBrokerageModel(), BrokerageName.TradingTechnologies),
+                new TestCaseData(
+                    new CustomTradingTechnologiesBrokerageModel(),
+                    BrokerageName.TradingTechnologies
+                ),
                 new TestCaseData(new CustomSamcoBrokerageModel(), BrokerageName.Samco),
                 new TestCaseData(new CustomKrakenBrokerageModel(), BrokerageName.Kraken),
                 new TestCaseData(new CustomExanteBrokerageModel(), BrokerageName.Exante),
@@ -756,10 +1020,30 @@ class CustomBrokerageModel(DefaultBrokerageModel):
         {
             return new[]
             {
-                new TestCaseData(new InteractiveBrokersBrokerageModel(AccountType.Cash), AccountType.Cash, SecurityType.Equity, typeof(SecurityMarginModel)),
-                new TestCaseData(new InteractiveBrokersBrokerageModel(AccountType.Margin), AccountType.Margin, SecurityType.Equity, typeof(SecurityMarginModel)),
-                new TestCaseData(new InteractiveBrokersBrokerageModel(AccountType.Cash), AccountType.Cash, SecurityType.Forex, typeof(CashBuyingPowerModel)),
-                new TestCaseData(new InteractiveBrokersBrokerageModel(AccountType.Margin), AccountType.Margin, SecurityType.Forex, typeof(SecurityMarginModel)),
+                new TestCaseData(
+                    new InteractiveBrokersBrokerageModel(AccountType.Cash),
+                    AccountType.Cash,
+                    SecurityType.Equity,
+                    typeof(SecurityMarginModel)
+                ),
+                new TestCaseData(
+                    new InteractiveBrokersBrokerageModel(AccountType.Margin),
+                    AccountType.Margin,
+                    SecurityType.Equity,
+                    typeof(SecurityMarginModel)
+                ),
+                new TestCaseData(
+                    new InteractiveBrokersBrokerageModel(AccountType.Cash),
+                    AccountType.Cash,
+                    SecurityType.Forex,
+                    typeof(CashBuyingPowerModel)
+                ),
+                new TestCaseData(
+                    new InteractiveBrokersBrokerageModel(AccountType.Margin),
+                    AccountType.Margin,
+                    SecurityType.Forex,
+                    typeof(SecurityMarginModel)
+                ),
             };
         }
     }

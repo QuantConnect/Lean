@@ -16,10 +16,10 @@
 
 using System;
 using QuantConnect.Data;
-using QuantConnect.Util;
+using QuantConnect.Interfaces;
 using QuantConnect.Logging;
 using QuantConnect.Packets;
-using QuantConnect.Interfaces;
+using QuantConnect.Util;
 
 namespace QuantConnect.Lean.Engine.DataFeeds
 {
@@ -42,8 +42,13 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             var liveJob = job as LiveNodePacket;
             if (liveJob != null)
             {
-                Log.Trace($"LiveTradingDataFeed.GetDataChannelProvider(): will use {liveJob.DataChannelProvider}");
-                DataChannelProvider = Composer.Instance.GetExportedValueByTypeName<IDataChannelProvider>(liveJob.DataChannelProvider);
+                Log.Trace(
+                    $"LiveTradingDataFeed.GetDataChannelProvider(): will use {liveJob.DataChannelProvider}"
+                );
+                DataChannelProvider =
+                    Composer.Instance.GetExportedValueByTypeName<IDataChannelProvider>(
+                        liveJob.DataChannelProvider
+                    );
                 DataChannelProvider.Initialize(liveJob);
             }
         }
@@ -54,8 +59,10 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         /// <param name="subscriptionRequest">The data subscription configuration to assert</param>
         /// <param name="startTimeLocal">The start time of this request</param>
         /// <param name="endTimeLocal">The end time of this request</param>
-        public virtual void AssertConfiguration(SubscriptionDataConfig subscriptionRequest, DateTime startTimeLocal, DateTime endTimeLocal)
-        {
-        }
+        public virtual void AssertConfiguration(
+            SubscriptionDataConfig subscriptionRequest,
+            DateTime startTimeLocal,
+            DateTime endTimeLocal
+        ) { }
     }
 }

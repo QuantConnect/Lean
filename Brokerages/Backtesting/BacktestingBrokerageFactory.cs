@@ -41,7 +41,8 @@ namespace QuantConnect.Brokerages.Backtesting
         /// Gets a new instance of the <see cref="InteractiveBrokersBrokerageModel"/>
         /// </summary>
         /// <param name="orderProvider">The order provider</param>
-        public override IBrokerageModel GetBrokerageModel(IOrderProvider orderProvider) => new InteractiveBrokersBrokerageModel();
+        public override IBrokerageModel GetBrokerageModel(IOrderProvider orderProvider) =>
+            new InteractiveBrokersBrokerageModel();
 
         /// <summary>
         /// Creates a new IBrokerage instance
@@ -67,8 +68,6 @@ namespace QuantConnect.Brokerages.Backtesting
         ///Initializes a new instance of the <see cref="BacktestingBrokerageFactory"/> class
         /// </summary>
         public BacktestingBrokerageFactory()
-            : base(typeof(BacktestingBrokerage))
-        {
-        }
+            : base(typeof(BacktestingBrokerage)) { }
     }
 }

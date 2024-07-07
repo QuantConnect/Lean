@@ -36,7 +36,10 @@ namespace QuantConnect.Data.Fundamental
         /// <summary>
         /// Creates a new instance for the given time and security
         /// </summary>
-        public FundamentalTimeDependentProperty(ITimeProvider timeProvider, SecurityIdentifier securityIdentifier)
+        public FundamentalTimeDependentProperty(
+            ITimeProvider timeProvider,
+            SecurityIdentifier securityIdentifier
+        )
         {
             _timeProvider = timeProvider;
             _securityIdentifier = securityIdentifier;

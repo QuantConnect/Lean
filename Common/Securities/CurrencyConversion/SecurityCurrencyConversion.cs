@@ -1,4 +1,3 @@
-
 /*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
@@ -126,7 +125,6 @@ namespace QuantConnect.Securities.CurrencyConversion
                     _conversionRate = value;
                     _conversionRateNeedsUpdate = false;
                     ConversionRateUpdated?.Invoke(this, _conversionRate);
-
                 }
             }
         }
@@ -134,7 +132,8 @@ namespace QuantConnect.Securities.CurrencyConversion
         /// <summary>
         /// The securities which the conversion rate is based on
         /// </summary>
-        public IEnumerable<Security> ConversionRateSecurities => _steps.Select(step => step.RateSecurity);
+        public IEnumerable<Security> ConversionRateSecurities =>
+            _steps.Select(step => step.RateSecurity);
 
         /// <summary>
         /// Initializes a new instance of the <see cref="SecurityCurrencyConversion"/> class.
@@ -143,7 +142,11 @@ namespace QuantConnect.Securities.CurrencyConversion
         /// <param name="sourceCurrency">The currency this conversion converts from</param>
         /// <param name="destinationCurrency">The currency this conversion converts to</param>
         /// <param name="steps">The steps between sourceCurrency and destinationCurrency</param>
-        private SecurityCurrencyConversion(string sourceCurrency, string destinationCurrency, List<Step> steps)
+        private SecurityCurrencyConversion(
+            string sourceCurrency,
+            string destinationCurrency,
+            List<Step> steps
+        )
         {
             SourceCurrency = sourceCurrency;
             DestinationCurrency = destinationCurrency;
@@ -175,13 +178,17 @@ namespace QuantConnect.Securities.CurrencyConversion
             string destinationCurrency,
             IList<Security> existingSecurities,
             IEnumerable<Symbol> potentialSymbols,
-            Func<Symbol, Security> makeNewSecurity)
+            Func<Symbol, Security> makeNewSecurity
+        )
         {
-            var allSymbols = existingSecurities.Select(sec => sec.Symbol).Concat(potentialSymbols)
+            var allSymbols = existingSecurities
+                .Select(sec => sec.Symbol)
+                .Concat(potentialSymbols)
                 .Where(CurrencyPairUtil.IsDecomposable)
                 .ToList();
 
-            var securitiesBySymbol = existingSecurities.Aggregate(new Dictionary<Symbol, Security>(),
+            var securitiesBySymbol = existingSecurities.Aggregate(
+                new Dictionary<Symbol, Security>(),
                 (mapping, security) =>
                 {
                     if (!mapping.ContainsKey(security.Symbol))
@@ -190,28 +197,43 @@ namespace QuantConnect.Securities.CurrencyConversion
                     }
 
                     return mapping;
-                });
+                }
+            );
 
             // Search for 1 leg conversions
             foreach (var potentialConversionRateSymbol in allSymbols)
             {
-                var leg1Match = potentialConversionRateSymbol.ComparePair(sourceCurrency, destinationCurrency);
+                var leg1Match = potentialConversionRateSymbol.ComparePair(
+                    sourceCurrency,
+                    destinationCurrency
+                );
                 if (leg1Match == CurrencyPairUtil.Match.NoMatch)
                 {
                     continue;
                 }
                 var inverted = leg1Match == CurrencyPairUtil.Match.InverseMatch;
 
-                return new SecurityCurrencyConversion(sourceCurrency, destinationCurrency, new List<Step>(1)
-                {
-                    CreateStep(potentialConversionRateSymbol, inverted, securitiesBySymbol, makeNewSecurity)
-                });
+                return new SecurityCurrencyConversion(
+                    sourceCurrency,
+                    destinationCurrency,
+                    new List<Step>(1)
+                    {
+                        CreateStep(
+                            potentialConversionRateSymbol,
+                            inverted,
+                            securitiesBySymbol,
+                            makeNewSecurity
+                        )
+                    }
+                );
             }
 
             // Search for 2 leg conversions
             foreach (var potentialConversionRateSymbol1 in allSymbols)
             {
-                var middleCurrency = potentialConversionRateSymbol1.CurrencyPairDual(sourceCurrency);
+                var middleCurrency = potentialConversionRateSymbol1.CurrencyPairDual(
+                    sourceCurrency
+                );
                 if (middleCurrency == null)
                 {
                     continue;
@@ -219,7 +241,10 @@ namespace QuantConnect.Securities.CurrencyConversion
 
                 foreach (var potentialConversionRateSymbol2 in allSymbols)
                 {
-                    var leg2Match = potentialConversionRateSymbol2.ComparePair(middleCurrency, destinationCurrency);
+                    var leg2Match = potentialConversionRateSymbol2.ComparePair(
+                        middleCurrency,
+                        destinationCurrency
+                    );
                     if (leg2Match == CurrencyPairUtil.Match.NoMatch)
                     {
                         continue;
@@ -235,25 +260,39 @@ namespace QuantConnect.Securities.CurrencyConversion
                     CurrencyPairUtil.DecomposeCurrencyPair(
                         potentialConversionRateSymbol1,
                         out baseCurrency,
-                        out quoteCurrency);
+                        out quoteCurrency
+                    );
 
-                    steps.Add(CreateStep(potentialConversionRateSymbol1,
-                        sourceCurrency == quoteCurrency,
-                        securitiesBySymbol,
-                        makeNewSecurity));
+                    steps.Add(
+                        CreateStep(
+                            potentialConversionRateSymbol1,
+                            sourceCurrency == quoteCurrency,
+                            securitiesBySymbol,
+                            makeNewSecurity
+                        )
+                    );
 
                     // Step 2
-                    steps.Add(CreateStep(potentialConversionRateSymbol2,
-                        secondStepInverted,
-                        securitiesBySymbol,
-                        makeNewSecurity));
+                    steps.Add(
+                        CreateStep(
+                            potentialConversionRateSymbol2,
+                            secondStepInverted,
+                            securitiesBySymbol,
+                            makeNewSecurity
+                        )
+                    );
 
-                    return new SecurityCurrencyConversion(sourceCurrency, destinationCurrency, steps);
+                    return new SecurityCurrencyConversion(
+                        sourceCurrency,
+                        destinationCurrency,
+                        steps
+                    );
                 }
             }
 
             throw new ArgumentException(
-                $"No conversion path found between source currency {sourceCurrency} and destination currency {destinationCurrency}");
+                $"No conversion path found between source currency {sourceCurrency} and destination currency {destinationCurrency}"
+            );
         }
 
         /// <summary>
@@ -267,7 +306,8 @@ namespace QuantConnect.Securities.CurrencyConversion
             Symbol symbol,
             bool inverted,
             IDictionary<Symbol, Security> existingSecurities,
-            Func<Symbol, Security> makeNewSecurity)
+            Func<Symbol, Security> makeNewSecurity
+        )
         {
             Security security;
             if (existingSecurities.TryGetValue(symbol, out security))

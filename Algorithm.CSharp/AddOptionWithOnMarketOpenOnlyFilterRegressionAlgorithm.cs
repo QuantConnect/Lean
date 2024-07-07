@@ -26,7 +26,9 @@ namespace QuantConnect.Algorithm.CSharp
     /// Algorithm asserting that using OnlyApplyFilterAtMarketOpen along with other dynamic filters will make the filters be applied only on market
     /// open, regardless of the order of configuration of the filters
     /// </summary>
-    public class AddOptionWithOnMarketOpenOnlyFilterRegressionAlgorithm : QCAlgorithm, IRegressionAlgorithmDefinition
+    public class AddOptionWithOnMarketOpenOnlyFilterRegressionAlgorithm
+        : QCAlgorithm,
+            IRegressionAlgorithmDefinition
     {
         public override void Initialize()
         {
@@ -34,18 +36,22 @@ namespace QuantConnect.Algorithm.CSharp
             SetEndDate(2014, 6, 10);
 
             // OnlyApplyFilterAtMarketOpen as first filter
-            AddOption("AAPL", Resolution.Minute).SetFilter(u =>
-                u.OnlyApplyFilterAtMarketOpen()
-                 .Strikes(-5, 5)
-                 .Expiration(0, 100)
-                 .IncludeWeeklys());
+            AddOption("AAPL", Resolution.Minute)
+                .SetFilter(u =>
+                    u.OnlyApplyFilterAtMarketOpen()
+                        .Strikes(-5, 5)
+                        .Expiration(0, 100)
+                        .IncludeWeeklys()
+                );
 
             // OnlyApplyFilterAtMarketOpen as last filter
-            AddOption("TWX", Resolution.Minute).SetFilter(u =>
-                u.Strikes(-5, 5)
-                 .Expiration(0, 100)
-                 .IncludeWeeklys()
-                 .OnlyApplyFilterAtMarketOpen());
+            AddOption("TWX", Resolution.Minute)
+                .SetFilter(u =>
+                    u.Strikes(-5, 5)
+                        .Expiration(0, 100)
+                        .IncludeWeeklys()
+                        .OnlyApplyFilterAtMarketOpen()
+                );
         }
 
         public override void OnSecuritiesChanged(SecurityChanges changes)
@@ -56,22 +62,26 @@ namespace QuantConnect.Algorithm.CSharp
                 return;
             }
 
-            var changeOptions = changes.AddedSecurities.Concat(changes.RemovedSecurities)
-                                                                        .Where(s => s.Type == SecurityType.Option);
+            var changeOptions = changes
+                .AddedSecurities.Concat(changes.RemovedSecurities)
+                .Where(s => s.Type == SecurityType.Option);
 
             // Susbtract one minute to get the actual market open. If market open is at 9:30am, this will be invoked at 9:31am
             var expectedTime = Time.TimeOfDay - TimeSpan.FromMinutes(1);
             var allOptionsWereChangedOnMarketOpen = changeOptions.All(s =>
             {
-                var firstMarketSegment = s.Exchange.Hours.MarketHours[Time.DayOfWeek].Segments
-                                                         .First(segment => segment.State == MarketHoursState.Market);
+                var firstMarketSegment = s
+                    .Exchange.Hours.MarketHours[Time.DayOfWeek]
+                    .Segments.First(segment => segment.State == MarketHoursState.Market);
 
                 return firstMarketSegment.Start == expectedTime;
             });
 
             if (!allOptionsWereChangedOnMarketOpen)
             {
-                throw new RegressionTestException("Expected options filter to be run only on market open");
+                throw new RegressionTestException(
+                    "Expected options filter to be run only on market open"
+                );
             }
         }
 
@@ -103,35 +113,36 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// This is used by the regression test system to indicate what the expected statistics are from running the algorithm
         /// </summary>
-        public Dictionary<string, string> ExpectedStatistics => new Dictionary<string, string>
-        {
-            {"Total Orders", "0"},
-            {"Average Win", "0%"},
-            {"Average Loss", "0%"},
-            {"Compounding Annual Return", "0%"},
-            {"Drawdown", "0%"},
-            {"Expectancy", "0"},
-            {"Start Equity", "100000"},
-            {"End Equity", "100000"},
-            {"Net Profit", "0%"},
-            {"Sharpe Ratio", "0"},
-            {"Sortino Ratio", "0"},
-            {"Probabilistic Sharpe Ratio", "0%"},
-            {"Loss Rate", "0%"},
-            {"Win Rate", "0%"},
-            {"Profit-Loss Ratio", "0"},
-            {"Alpha", "0"},
-            {"Beta", "0"},
-            {"Annual Standard Deviation", "0"},
-            {"Annual Variance", "0"},
-            {"Information Ratio", "-10.144"},
-            {"Tracking Error", "0.033"},
-            {"Treynor Ratio", "0"},
-            {"Total Fees", "$0.00"},
-            {"Estimated Strategy Capacity", "$0"},
-            {"Lowest Capacity Asset", ""},
-            {"Portfolio Turnover", "0%"},
-            {"OrderListHash", "d41d8cd98f00b204e9800998ecf8427e"}
-        };
+        public Dictionary<string, string> ExpectedStatistics =>
+            new Dictionary<string, string>
+            {
+                { "Total Orders", "0" },
+                { "Average Win", "0%" },
+                { "Average Loss", "0%" },
+                { "Compounding Annual Return", "0%" },
+                { "Drawdown", "0%" },
+                { "Expectancy", "0" },
+                { "Start Equity", "100000" },
+                { "End Equity", "100000" },
+                { "Net Profit", "0%" },
+                { "Sharpe Ratio", "0" },
+                { "Sortino Ratio", "0" },
+                { "Probabilistic Sharpe Ratio", "0%" },
+                { "Loss Rate", "0%" },
+                { "Win Rate", "0%" },
+                { "Profit-Loss Ratio", "0" },
+                { "Alpha", "0" },
+                { "Beta", "0" },
+                { "Annual Standard Deviation", "0" },
+                { "Annual Variance", "0" },
+                { "Information Ratio", "-10.144" },
+                { "Tracking Error", "0.033" },
+                { "Treynor Ratio", "0" },
+                { "Total Fees", "$0.00" },
+                { "Estimated Strategy Capacity", "$0" },
+                { "Lowest Capacity Asset", "" },
+                { "Portfolio Turnover", "0%" },
+                { "OrderListHash", "d41d8cd98f00b204e9800998ecf8427e" }
+            };
     }
 }

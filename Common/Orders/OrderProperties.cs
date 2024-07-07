@@ -46,7 +46,8 @@ namespace QuantConnect.Orders
         /// Initializes a new instance of the <see cref="OrderProperties"/> class, with exchange param
         ///<param name="exchange">Exchange name for market</param>
         /// </summary>
-        public OrderProperties(Exchange exchange) : this()
+        public OrderProperties(Exchange exchange)
+            : this()
         {
             Exchange = exchange;
         }

@@ -14,8 +14,8 @@
 */
 
 using System;
-using QuantConnect.Securities;
 using System.Collections.Generic;
+using QuantConnect.Securities;
 
 namespace QuantConnect.Data
 {
@@ -35,7 +35,7 @@ namespace QuantConnect.Data
         /// <summary>
         /// Gets the end of the requested time interval in UTC
         /// </summary>
-        public DateTime EndTimeUtc { get; protected set;  }
+        public DateTime EndTimeUtc { get; protected set; }
 
         /// <summary>
         /// Gets the <see cref="StartTimeUtc"/> in the security's exchange time zone
@@ -64,10 +64,12 @@ namespace QuantConnect.Data
         /// <param name="endTimeUtc">The start time for this request</param>
         /// <param name="exchangeHours">The exchange hours for this request</param>
         /// <param name="tickType">The tick type of this request</param>
-        protected  BaseDataRequest(DateTime startTimeUtc,
+        protected BaseDataRequest(
+            DateTime startTimeUtc,
             DateTime endTimeUtc,
             SecurityExchangeHours exchangeHours,
-            TickType tickType)
+            TickType tickType
+        )
         {
             StartTimeUtc = startTimeUtc;
             EndTimeUtc = endTimeUtc;
@@ -80,8 +82,12 @@ namespace QuantConnect.Data
                 ExchangeHours = SecurityExchangeHours.AlwaysOpen(ExchangeHours.TimeZone);
             }
 
-            _localStartTime = new Lazy<DateTime>(() => StartTimeUtc.ConvertFromUtc(ExchangeHours.TimeZone));
-            _localEndTime = new Lazy<DateTime>(() => EndTimeUtc.ConvertFromUtc(ExchangeHours.TimeZone));
+            _localStartTime = new Lazy<DateTime>(
+                () => StartTimeUtc.ConvertFromUtc(ExchangeHours.TimeZone)
+            );
+            _localEndTime = new Lazy<DateTime>(
+                () => EndTimeUtc.ConvertFromUtc(ExchangeHours.TimeZone)
+            );
         }
     }
 }

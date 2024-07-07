@@ -13,10 +13,10 @@
  * limitations under the License.
 */
 
+using System;
 using NUnit.Framework;
 using QuantConnect.Data.Market;
 using QuantConnect.Indicators;
-using System;
 
 namespace QuantConnect.Tests.Indicators
 {
@@ -45,8 +45,8 @@ namespace QuantConnect.Tests.Indicators
         /// skip this test
         /// </summary>
         /// <param name="indicator"></param>
-        protected override void IndicatorValueIsNotZeroAfterReceiveRenkoBars(IndicatorBase indicator)
-        {
-        }
+        protected override void IndicatorValueIsNotZeroAfterReceiveRenkoBars(
+            IndicatorBase indicator
+        ) { }
     }
 }

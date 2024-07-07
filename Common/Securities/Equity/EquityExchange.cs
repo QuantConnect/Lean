@@ -34,9 +34,11 @@ namespace QuantConnect.Securities.Equity
         /// derived from the market-hours-database for the USA Equity market
         /// </summary>
         public EquityExchange()
-            : base(MarketHoursDatabase.FromDataFolder().GetExchangeHours(Market.USA, null, SecurityType.Equity))
-        {
-        }
+            : base(
+                MarketHoursDatabase
+                    .FromDataFolder()
+                    .GetExchangeHours(Market.USA, null, SecurityType.Equity)
+            ) { }
 
         /// <summary>
         /// Initializes a new instance of the <see cref="EquityExchange"/> class using the specified
@@ -44,8 +46,6 @@ namespace QuantConnect.Securities.Equity
         /// </summary>
         /// <param name="exchangeHours">Contains the weekly exchange schedule plus holidays</param>
         public EquityExchange(SecurityExchangeHours exchangeHours)
-            : base(exchangeHours)
-        {
-        }
+            : base(exchangeHours) { }
     }
 }

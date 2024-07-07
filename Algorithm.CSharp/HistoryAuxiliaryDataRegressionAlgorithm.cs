@@ -26,7 +26,9 @@ namespace QuantConnect.Algorithm.CSharp
     /// <summary>
     /// Regression algorithm asserting the behavior of auxiliary data history requests
     /// </summary>
-    public class HistoryAuxiliaryDataRegressionAlgorithm : QCAlgorithm, IRegressionAlgorithmDefinition
+    public class HistoryAuxiliaryDataRegressionAlgorithm
+        : QCAlgorithm,
+            IRegressionAlgorithmDefinition
     {
         /// <summary>
         /// Initialise the data and resolution required, as well as the cash and start-end dates for your algorithm. All algorithms must initialized.
@@ -40,28 +42,54 @@ namespace QuantConnect.Algorithm.CSharp
 
             // multi symbol request
             var spy = QuantConnect.Symbol.Create("SPY", SecurityType.Equity, Market.USA);
-            var multiSymbolRequest = History<Dividend>(new[] { aapl, spy }, 360, Resolution.Daily).ToList();
+            var multiSymbolRequest = History<Dividend>(new[] { aapl, spy }, 360, Resolution.Daily)
+                .ToList();
             if (multiSymbolRequest.Count != 12)
             {
-                throw new RegressionTestException($"Unexpected multi symbol dividend count: {multiSymbolRequest.Count}");
+                throw new RegressionTestException(
+                    $"Unexpected multi symbol dividend count: {multiSymbolRequest.Count}"
+                );
             }
 
             // continuous future mapping requests
-            var sp500 = QuantConnect.Symbol.Create(Futures.Indices.SP500EMini, SecurityType.Future, Market.CME);
-            var continuousFutureOpenInterestMapping = History<SymbolChangedEvent>(sp500, new DateTime(2007, 1, 1), new DateTime(2012, 1, 1),
-                dataMappingMode: DataMappingMode.OpenInterest).ToList();
+            var sp500 = QuantConnect.Symbol.Create(
+                Futures.Indices.SP500EMini,
+                SecurityType.Future,
+                Market.CME
+            );
+            var continuousFutureOpenInterestMapping = History<SymbolChangedEvent>(
+                    sp500,
+                    new DateTime(2007, 1, 1),
+                    new DateTime(2012, 1, 1),
+                    dataMappingMode: DataMappingMode.OpenInterest
+                )
+                .ToList();
             if (continuousFutureOpenInterestMapping.Count != 9)
             {
-                throw new RegressionTestException($"Unexpected continuous future mapping event count: {continuousFutureOpenInterestMapping.Count}");
+                throw new RegressionTestException(
+                    $"Unexpected continuous future mapping event count: {continuousFutureOpenInterestMapping.Count}"
+                );
             }
-            var continuousFutureLastTradingDayMapping = History<SymbolChangedEvent>(sp500, new DateTime(2007, 1, 1),new DateTime(2012, 1, 1),
-                dataMappingMode: DataMappingMode.LastTradingDay).ToList();
+            var continuousFutureLastTradingDayMapping = History<SymbolChangedEvent>(
+                    sp500,
+                    new DateTime(2007, 1, 1),
+                    new DateTime(2012, 1, 1),
+                    dataMappingMode: DataMappingMode.LastTradingDay
+                )
+                .ToList();
             if (continuousFutureLastTradingDayMapping.Count != 9)
             {
-                throw new RegressionTestException($"Unexpected continuous future mapping event count: {continuousFutureLastTradingDayMapping.Count}");
+                throw new RegressionTestException(
+                    $"Unexpected continuous future mapping event count: {continuousFutureLastTradingDayMapping.Count}"
+                );
             }
             // mapping dates should be different
-            if (Enumerable.SequenceEqual(continuousFutureOpenInterestMapping.Select(x => x.EndTime), continuousFutureLastTradingDayMapping.Select(x => x.EndTime)))
+            if (
+                Enumerable.SequenceEqual(
+                    continuousFutureOpenInterestMapping.Select(x => x.EndTime),
+                    continuousFutureLastTradingDayMapping.Select(x => x.EndTime)
+                )
+            )
             {
                 throw new RegressionTestException($"Unexpected continuous future mapping times");
             }
@@ -75,7 +103,9 @@ namespace QuantConnect.Algorithm.CSharp
             {
                 if (dividend.Distribution == 0)
                 {
-                    throw new RegressionTestException($"Unexpected Distribution: {dividend.Distribution}");
+                    throw new RegressionTestException(
+                        $"Unexpected Distribution: {dividend.Distribution}"
+                    );
                 }
             }
 
@@ -88,30 +118,52 @@ namespace QuantConnect.Algorithm.CSharp
             {
                 if (split.SplitFactor == 0)
                 {
-                    throw new RegressionTestException($"Unexpected SplitFactor: {split.SplitFactor}");
+                    throw new RegressionTestException(
+                        $"Unexpected SplitFactor: {split.SplitFactor}"
+                    );
                 }
             }
 
-            var cryptoFuture = QuantConnect.Symbol.Create("BTCUSD", SecurityType.CryptoFuture, Market.Binance);
-            var marginInterests = History<MarginInterestRate>(cryptoFuture, 24 * 3, Resolution.Hour).ToList();
+            var cryptoFuture = QuantConnect.Symbol.Create(
+                "BTCUSD",
+                SecurityType.CryptoFuture,
+                Market.Binance
+            );
+            var marginInterests = History<MarginInterestRate>(cryptoFuture, 24 * 3, Resolution.Hour)
+                .ToList();
             if (marginInterests.Count != 8)
             {
-                throw new RegressionTestException($"Unexpected margin interest count: {marginInterests.Count}");
+                throw new RegressionTestException(
+                    $"Unexpected margin interest count: {marginInterests.Count}"
+                );
             }
             foreach (var marginInterest in marginInterests)
             {
                 if (marginInterest.InterestRate == 0)
                 {
-                    throw new RegressionTestException($"Unexpected InterestRate: {marginInterest.InterestRate}");
+                    throw new RegressionTestException(
+                        $"Unexpected InterestRate: {marginInterest.InterestRate}"
+                    );
                 }
             }
 
             // last trading date on 2007-05-18
-            var delistedSymbol = QuantConnect.Symbol.Create("AAA.1", SecurityType.Equity, Market.USA);
-            var delistings = History<Delisting>(delistedSymbol, new DateTime(2007, 5, 15), new DateTime(2007, 5, 21)).ToList();
+            var delistedSymbol = QuantConnect.Symbol.Create(
+                "AAA.1",
+                SecurityType.Equity,
+                Market.USA
+            );
+            var delistings = History<Delisting>(
+                    delistedSymbol,
+                    new DateTime(2007, 5, 15),
+                    new DateTime(2007, 5, 21)
+                )
+                .ToList();
             if (delistings.Count != 2)
             {
-                throw new RegressionTestException($"Unexpected delistings count: {delistings.Count}");
+                throw new RegressionTestException(
+                    $"Unexpected delistings count: {delistings.Count}"
+                );
             }
             if (delistings[0].Type != DelistingType.Warning)
             {
@@ -125,19 +177,42 @@ namespace QuantConnect.Algorithm.CSharp
             // get's remapped:
             // 2008-09-30 spwr -> spwra
             // 2011-11-17 spwra -> spwr
-            var remappedSymbol = QuantConnect.Symbol.Create("SPWR", SecurityType.Equity, Market.USA);
-            var symbolChangedEvents = History<SymbolChangedEvent>(remappedSymbol, new DateTime(2007, 1, 1), new DateTime(2012, 1, 1)).ToList();
+            var remappedSymbol = QuantConnect.Symbol.Create(
+                "SPWR",
+                SecurityType.Equity,
+                Market.USA
+            );
+            var symbolChangedEvents = History<SymbolChangedEvent>(
+                    remappedSymbol,
+                    new DateTime(2007, 1, 1),
+                    new DateTime(2012, 1, 1)
+                )
+                .ToList();
             if (symbolChangedEvents.Count != 2)
             {
-                throw new RegressionTestException($"Unexpected SymbolChangedEvents count: {symbolChangedEvents.Count}");
+                throw new RegressionTestException(
+                    $"Unexpected SymbolChangedEvents count: {symbolChangedEvents.Count}"
+                );
             }
-            if (symbolChangedEvents[0].OldSymbol != "SPWR" || symbolChangedEvents[0].NewSymbol != "SPWRA" || symbolChangedEvents[0].EndTime != new DateTime(2008, 9, 30))
+            if (
+                symbolChangedEvents[0].OldSymbol != "SPWR"
+                || symbolChangedEvents[0].NewSymbol != "SPWRA"
+                || symbolChangedEvents[0].EndTime != new DateTime(2008, 9, 30)
+            )
             {
-                throw new RegressionTestException($"Unexpected SymbolChangedEvents: {symbolChangedEvents[0]}");
+                throw new RegressionTestException(
+                    $"Unexpected SymbolChangedEvents: {symbolChangedEvents[0]}"
+                );
             }
-            if (symbolChangedEvents[1].NewSymbol != "SPWR" || symbolChangedEvents[1].OldSymbol != "SPWRA" || symbolChangedEvents[1].EndTime != new DateTime(2011, 11, 17))
+            if (
+                symbolChangedEvents[1].NewSymbol != "SPWR"
+                || symbolChangedEvents[1].OldSymbol != "SPWRA"
+                || symbolChangedEvents[1].EndTime != new DateTime(2011, 11, 17)
+            )
             {
-                throw new RegressionTestException($"Unexpected SymbolChangedEvents: {symbolChangedEvents[1]}");
+                throw new RegressionTestException(
+                    $"Unexpected SymbolChangedEvents: {symbolChangedEvents[1]}"
+                );
             }
         }
 
@@ -181,35 +256,36 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// This is used by the regression test system to indicate what the expected statistics are from running the algorithm
         /// </summary>
-        public Dictionary<string, string> ExpectedStatistics => new Dictionary<string, string>
-        {
-            {"Total Orders", "1"},
-            {"Average Win", "0%"},
-            {"Average Loss", "0%"},
-            {"Compounding Annual Return", "-75.686%"},
-            {"Drawdown", "3.100%"},
-            {"Expectancy", "0"},
-            {"Start Equity", "100000"},
-            {"End Equity", "98081.50"},
-            {"Net Profit", "-1.918%"},
-            {"Sharpe Ratio", "-2.361"},
-            {"Sortino Ratio", "0"},
-            {"Probabilistic Sharpe Ratio", "25.305%"},
-            {"Loss Rate", "0%"},
-            {"Win Rate", "0%"},
-            {"Profit-Loss Ratio", "0"},
-            {"Alpha", "0.055"},
-            {"Beta", "2.161"},
-            {"Annual Standard Deviation", "0.295"},
-            {"Annual Variance", "0.087"},
-            {"Information Ratio", "-2.188"},
-            {"Tracking Error", "0.16"},
-            {"Treynor Ratio", "-0.323"},
-            {"Total Fees", "$3.76"},
-            {"Estimated Strategy Capacity", "$680000000.00"},
-            {"Lowest Capacity Asset", "AAPL R735QTJ8XC9X"},
-            {"Portfolio Turnover", "20.70%"},
-            {"OrderListHash", "a91397cd498dea863efb99017abdbeab"}
-        };
+        public Dictionary<string, string> ExpectedStatistics =>
+            new Dictionary<string, string>
+            {
+                { "Total Orders", "1" },
+                { "Average Win", "0%" },
+                { "Average Loss", "0%" },
+                { "Compounding Annual Return", "-75.686%" },
+                { "Drawdown", "3.100%" },
+                { "Expectancy", "0" },
+                { "Start Equity", "100000" },
+                { "End Equity", "98081.50" },
+                { "Net Profit", "-1.918%" },
+                { "Sharpe Ratio", "-2.361" },
+                { "Sortino Ratio", "0" },
+                { "Probabilistic Sharpe Ratio", "25.305%" },
+                { "Loss Rate", "0%" },
+                { "Win Rate", "0%" },
+                { "Profit-Loss Ratio", "0" },
+                { "Alpha", "0.055" },
+                { "Beta", "2.161" },
+                { "Annual Standard Deviation", "0.295" },
+                { "Annual Variance", "0.087" },
+                { "Information Ratio", "-2.188" },
+                { "Tracking Error", "0.16" },
+                { "Treynor Ratio", "-0.323" },
+                { "Total Fees", "$3.76" },
+                { "Estimated Strategy Capacity", "$680000000.00" },
+                { "Lowest Capacity Asset", "AAPL R735QTJ8XC9X" },
+                { "Portfolio Turnover", "20.70%" },
+                { "OrderListHash", "a91397cd498dea863efb99017abdbeab" }
+            };
     }
 }

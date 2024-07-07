@@ -69,19 +69,17 @@ namespace QuantConnect.Orders
             DateTime time,
             string tag = "",
             IOrderProperties properties = null
-            )
+        )
             : base(symbol, quantity, time, tag, properties)
         {
-            TriggerPrice = (decimal) triggerPrice;
+            TriggerPrice = (decimal)triggerPrice;
             LimitPrice = limitPrice;
         }
 
         /// <summary>
         /// Default constructor for JSON Deserialization:
         /// </summary>
-        public LimitIfTouchedOrder()
-        {
-        }
+        public LimitIfTouchedOrder() { }
 
         /// <summary>
         /// Gets the default tag for this order
@@ -117,7 +115,11 @@ namespace QuantConnect.Orders
         public override Order Clone()
         {
             var order = new LimitIfTouchedOrder
-                {TriggerPrice = TriggerPrice, LimitPrice = LimitPrice, TriggerTouched = TriggerTouched};
+            {
+                TriggerPrice = TriggerPrice,
+                LimitPrice = LimitPrice,
+                TriggerTouched = TriggerTouched
+            };
             CopyTo(order);
             return order;
         }

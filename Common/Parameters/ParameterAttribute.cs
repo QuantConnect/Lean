@@ -32,7 +32,11 @@ namespace QuantConnect.Parameters
         /// <summary>
         /// Specifies the binding flags used by this implementation to resolve parameter attributes
         /// </summary>
-        public const BindingFlags BindingFlags = System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Static | System.Reflection.BindingFlags.Instance;
+        public const BindingFlags BindingFlags =
+            System.Reflection.BindingFlags.Public
+            | System.Reflection.BindingFlags.NonPublic
+            | System.Reflection.BindingFlags.Static
+            | System.Reflection.BindingFlags.Instance;
 
         /// <summary>
         /// Gets the name of this parameter
@@ -57,12 +61,14 @@ namespace QuantConnect.Parameters
         /// <param name="instance">The instance to set parameters on</param>
         public static void ApplyAttributes(Dictionary<string, string> parameters, object instance)
         {
-            if (instance == null) throw new ArgumentNullException(nameof(instance));
+            if (instance == null)
+                throw new ArgumentNullException(nameof(instance));
 
             var type = instance.GetType();
 
             // get all fields/properties on the instance
-            var members = type.GetFields(BindingFlags).Concat<MemberInfo>(type.GetProperties(BindingFlags));
+            var members = type.GetFields(BindingFlags)
+                .Concat<MemberInfo>(type.GetProperties(BindingFlags));
             foreach (var memberInfo in members)
             {
                 var fieldInfo = memberInfo as FieldInfo;
@@ -71,35 +77,43 @@ namespace QuantConnect.Parameters
                 // this line make static analysis a little happier, but should never actually throw
                 if (fieldInfo == null && propertyInfo == null)
                 {
-                    throw new InvalidOperationException("Resolved member that is neither FieldInfo or PropertyInfo");
+                    throw new InvalidOperationException(
+                        "Resolved member that is neither FieldInfo or PropertyInfo"
+                    );
                 }
 
                 // check the member for our custom attribute
                 var attribute = memberInfo.GetCustomAttribute<ParameterAttribute>();
-                if (attribute == null) continue;
+                if (attribute == null)
+                    continue;
 
                 // if no name is specified in the attribute then use the member name
                 var parameterName = attribute.Name ?? memberInfo.Name;
 
                 // get the parameter string value to apply to the member
                 string parameterValue;
-                if (!parameters.TryGetValue(parameterName, out parameterValue)) continue;
+                if (!parameters.TryGetValue(parameterName, out parameterValue))
+                    continue;
 
                 if (string.IsNullOrEmpty(parameterValue))
                 {
-                    Log.Error($"ParameterAttribute.ApplyAttributes(): parameter '{parameterName}' provided value is null/empty, skipping");
+                    Log.Error(
+                        $"ParameterAttribute.ApplyAttributes(): parameter '{parameterName}' provided value is null/empty, skipping"
+                    );
                     continue;
                 }
 
                 // if it's a read-only property with a parameter value we can't really do anything, bail
                 if (propertyInfo != null && !propertyInfo.CanWrite)
                 {
-                    var message = $"The specified property is read only: {propertyInfo.DeclaringType}.{propertyInfo.Name}";
+                    var message =
+                        $"The specified property is read only: {propertyInfo.DeclaringType}.{propertyInfo.Name}";
                     throw new InvalidOperationException(message);
                 }
 
                 // resolve the member type
-                var memberType = fieldInfo != null ? fieldInfo.FieldType : propertyInfo.PropertyType;
+                var memberType =
+                    fieldInfo != null ? fieldInfo.FieldType : propertyInfo.PropertyType;
 
                 // convert the parameter string value to the member type
                 var value = parameterValue.ConvertTo(memberType);
@@ -147,19 +161,26 @@ namespace QuantConnect.Parameters
                 if (attribute != null)
                 {
                     var parameterName = attribute.Name ?? field.Name;
-                    yield return new KeyValuePair<string, string>(parameterName, field.FieldType.GetBetterTypeName());
+                    yield return new KeyValuePair<string, string>(
+                        parameterName,
+                        field.FieldType.GetBetterTypeName()
+                    );
                 }
             }
 
             foreach (var property in type.GetProperties(BindingFlags))
             {
                 // ignore non-writeable properties
-                if (!property.CanWrite) continue;
+                if (!property.CanWrite)
+                    continue;
                 var attribute = property.GetCustomAttribute<ParameterAttribute>();
                 if (attribute != null)
                 {
                     var parameterName = attribute.Name ?? property.Name;
-                    yield return new KeyValuePair<string, string>(parameterName, property.PropertyType.GetBetterTypeName());
+                    yield return new KeyValuePair<string, string>(
+                        parameterName,
+                        property.PropertyType.GetBetterTypeName()
+                    );
                 }
             }
         }

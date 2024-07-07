@@ -20,13 +20,20 @@ namespace QuantConnect.Algorithm.CSharp
     /// <summary>
     /// Example algorithm of using ETFConstituentsUniverseSelectionModel with simple ticker
     /// </summary>
-    public class ETFConstituentsFrameworkWithDifferentSelectionModelAlgorithm : ETFConstituentsFrameworkAlgorithm
+    public class ETFConstituentsFrameworkWithDifferentSelectionModelAlgorithm
+        : ETFConstituentsFrameworkAlgorithm
     {
         public override void Initialize()
         {
             base.Initialize();
 
-            SetUniverseSelection(new ETFConstituentsUniverseSelectionModel("SPY", UniverseSettings, ETFConstituentsFilter));
+            SetUniverseSelection(
+                new ETFConstituentsUniverseSelectionModel(
+                    "SPY",
+                    UniverseSettings,
+                    ETFConstituentsFilter
+                )
+            );
         }
     }
 }

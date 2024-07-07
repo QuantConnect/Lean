@@ -14,12 +14,12 @@
 */
 
 using System;
-using System.Linq;
-using QuantConnect.Util;
 using System.Collections;
 using System.Collections.Generic;
 using System.Collections.Immutable;
+using System.Linq;
 using QuantConnect.Securities.Positions;
+using QuantConnect.Util;
 
 namespace QuantConnect.Securities.Option.StrategyMatcher
 {
@@ -31,18 +31,19 @@ namespace QuantConnect.Securities.Option.StrategyMatcher
         /// <summary>
         /// Gets an empty instance of <see cref="OptionPositionCollection"/>
         /// </summary>
-        public static OptionPositionCollection Empty { get; } = new OptionPositionCollection(
-            ImmutableDictionary<Symbol, OptionPosition>.Empty,
-            ImmutableDictionary<OptionRight, ImmutableHashSet<Symbol>>.Empty,
-            ImmutableDictionary<PositionSide, ImmutableHashSet<Symbol>>.Empty,
-            ImmutableSortedDictionary<decimal, ImmutableHashSet<Symbol>>.Empty,
-            ImmutableSortedDictionary<DateTime, ImmutableHashSet<Symbol>>.Empty
-        );
+        public static OptionPositionCollection Empty { get; } =
+            new OptionPositionCollection(
+                ImmutableDictionary<Symbol, OptionPosition>.Empty,
+                ImmutableDictionary<OptionRight, ImmutableHashSet<Symbol>>.Empty,
+                ImmutableDictionary<PositionSide, ImmutableHashSet<Symbol>>.Empty,
+                ImmutableSortedDictionary<decimal, ImmutableHashSet<Symbol>>.Empty,
+                ImmutableSortedDictionary<DateTime, ImmutableHashSet<Symbol>>.Empty
+            );
 
         private readonly ImmutableDictionary<Symbol, OptionPosition> _positions;
         private readonly ImmutableDictionary<OptionRight, ImmutableHashSet<Symbol>> _rights;
         private readonly ImmutableDictionary<PositionSide, ImmutableHashSet<Symbol>> _sides;
-        private readonly ImmutableSortedDictionary<decimal,  ImmutableHashSet<Symbol>> _strikes;
+        private readonly ImmutableSortedDictionary<decimal, ImmutableHashSet<Symbol>> _strikes;
         private readonly ImmutableSortedDictionary<DateTime, ImmutableHashSet<Symbol>> _expirations;
 
         /// <summary>
@@ -115,7 +116,7 @@ namespace QuantConnect.Securities.Option.StrategyMatcher
             ImmutableDictionary<PositionSide, ImmutableHashSet<Symbol>> sides,
             ImmutableSortedDictionary<decimal, ImmutableHashSet<Symbol>> strikes,
             ImmutableSortedDictionary<DateTime, ImmutableHashSet<Symbol>> expirations
-            )
+        )
         {
             _sides = sides;
             _rights = rights;
@@ -174,8 +175,10 @@ namespace QuantConnect.Securities.Option.StrategyMatcher
             var errors = Validate().ToList();
             if (errors.Count > 0)
             {
-                throw new ArgumentException("OptionPositionCollection validation failed: "
-                    + Environment.NewLine + string.Join(Environment.NewLine, errors)
+                throw new ArgumentException(
+                    "OptionPositionCollection validation failed: "
+                        + Environment.NewLine
+                        + string.Join(Environment.NewLine, errors)
                 );
             }
 #endif
@@ -210,24 +213,33 @@ namespace QuantConnect.Securities.Option.StrategyMatcher
         /// <summary>
         /// Creates a new <see cref="OptionPositionCollection"/> from the specified enumerable of <paramref name="positions"/>
         /// </summary>
-        public static OptionPositionCollection FromPositions(IEnumerable<IPosition> positions, decimal contractMultiplier)
+        public static OptionPositionCollection FromPositions(
+            IEnumerable<IPosition> positions,
+            decimal contractMultiplier
+        )
         {
-            return Empty.AddRange(positions.Select(position =>
-            {
-                var quantity = (int)position.Quantity;
-                if (position.Symbol.SecurityType.HasOptions())
+            return Empty.AddRange(
+                positions.Select(position =>
                 {
-                    quantity = (int) (quantity / contractMultiplier);
-                }
-                return new OptionPosition(position.Symbol, quantity);
-            }));
+                    var quantity = (int)position.Quantity;
+                    if (position.Symbol.SecurityType.HasOptions())
+                    {
+                        quantity = (int)(quantity / contractMultiplier);
+                    }
+                    return new OptionPosition(position.Symbol, quantity);
+                })
+            );
         }
 
         /// <summary>
         /// Creates a new <see cref="OptionPositionCollection"/> from the specified <paramref name="holdings"/>,
         /// filtering based on the <paramref name="underlying"/>
         /// </summary>
-        public static OptionPositionCollection Create(Symbol underlying, decimal contractMultiplier, IEnumerable<SecurityHolding> holdings)
+        public static OptionPositionCollection Create(
+            Symbol underlying,
+            decimal contractMultiplier,
+            IEnumerable<SecurityHolding> holdings
+        )
         {
             var positions = Empty;
             foreach (var holding in holdings)
@@ -237,7 +249,7 @@ namespace QuantConnect.Securities.Option.StrategyMatcher
                 {
                     if (symbol == underlying)
                     {
-                        var underlyingLots = (int) (holding.Quantity / contractMultiplier);
+                        var underlyingLots = (int)(holding.Quantity / contractMultiplier);
                         positions = positions.Add(new OptionPosition(symbol, underlyingLots));
                     }
 
@@ -249,7 +261,7 @@ namespace QuantConnect.Securities.Option.StrategyMatcher
                     continue;
                 }
 
-                var position = new OptionPosition(symbol, (int) holding.Quantity);
+                var position = new OptionPosition(symbol, (int)holding.Quantity);
                 positions = positions.Add(position);
             }
 
@@ -313,14 +325,16 @@ namespace QuantConnect.Securities.Option.StrategyMatcher
                     sides = sides.SetItem(position.Side, sidesValue);
 
                     var strikesValue = strikes[position.Strike].Remove(symbol);
-                    strikes = strikesValue.Count > 0
-                        ? strikes.SetItem(position.Strike, strikesValue)
-                        : strikes.Remove(position.Strike);
+                    strikes =
+                        strikesValue.Count > 0
+                            ? strikes.SetItem(position.Strike, strikesValue)
+                            : strikes.Remove(position.Strike);
 
                     var expirationsValue = expirations[position.Expiration].Remove(symbol);
-                    expirations = expirationsValue.Count > 0
-                        ? expirations.SetItem(position.Expiration, expirationsValue)
-                        : expirations.Remove(position.Expiration);
+                    expirations =
+                        expirationsValue.Count > 0
+                            ? expirations.SetItem(position.Expiration, expirationsValue)
+                            : expirations.Remove(position.Expiration);
                 }
             }
 
@@ -340,7 +354,7 @@ namespace QuantConnect.Securities.Option.StrategyMatcher
         /// </summary>
         public OptionPositionCollection AddRange(params OptionPosition[] positions)
         {
-            return AddRange((IEnumerable<OptionPosition>) positions);
+            return AddRange((IEnumerable<OptionPosition>)positions);
         }
 
         /// <summary>
@@ -392,7 +406,7 @@ namespace QuantConnect.Securities.Option.StrategyMatcher
         /// Slices this collection, returning a new collection containing only
         /// positions with the specified <paramref name="side"/>
         /// </summary>
-        public OptionPositionCollection  Slice(PositionSide side, bool includeUnderlying = true)
+        public OptionPositionCollection Slice(PositionSide side, bool includeUnderlying = true)
         {
             var otherSides = GetOtherSides(side);
             var sides = _sides.Remove(otherSides[0]).Remove(otherSides[1]);
@@ -422,7 +436,11 @@ namespace QuantConnect.Securities.Option.StrategyMatcher
         /// Slices this collection, returning a new collection containing only
         /// positions matching the specified <paramref name="comparison"/> and <paramref name="strike"/>
         /// </summary>
-        public OptionPositionCollection Slice(BinaryComparison comparison, decimal strike, bool includeUnderlying = true)
+        public OptionPositionCollection Slice(
+            BinaryComparison comparison,
+            decimal strike,
+            bool includeUnderlying = true
+        )
         {
             var strikes = comparison.Filter(_strikes, strike);
             if (strikes.IsEmpty)
@@ -459,7 +477,11 @@ namespace QuantConnect.Securities.Option.StrategyMatcher
         /// Slices this collection, returning a new collection containing only
         /// positions matching the specified <paramref name="comparison"/> and <paramref name="expiration"/>
         /// </summary>
-        public OptionPositionCollection Slice(BinaryComparison comparison, DateTime expiration, bool includeUnderlying = true)
+        public OptionPositionCollection Slice(
+            BinaryComparison comparison,
+            DateTime expiration,
+            bool includeUnderlying = true
+        )
         {
             var expirations = comparison.Filter(_expirations, expiration);
             if (expirations.IsEmpty)
@@ -594,29 +616,50 @@ namespace QuantConnect.Securities.Option.StrategyMatcher
                 }
 
                 ImmutableHashSet<Symbol> strikes;
-                if (!_strikes.TryGetValue(position.Strike, out strikes) || !strikes.Contains(symbol))
+                if (
+                    !_strikes.TryGetValue(position.Strike, out strikes) || !strikes.Contains(symbol)
+                )
                 {
                     yield return $"{position}: Not indexed by strike price";
                 }
 
                 ImmutableHashSet<Symbol> expirations;
-                if (!_expirations.TryGetValue(position.Expiration, out expirations) || !expirations.Contains(symbol))
+                if (
+                    !_expirations.TryGetValue(position.Expiration, out expirations)
+                    || !expirations.Contains(symbol)
+                )
                 {
                     yield return $"{position}: Not indexed by expiration date";
                 }
             }
         }
 
-        private static readonly PositionSide[] OtherSidesForNone = {PositionSide.Short, PositionSide.Long};
-        private static readonly PositionSide[] OtherSidesForShort = {PositionSide.None, PositionSide.Long};
-        private static readonly PositionSide[] OtherSidesForLong = {PositionSide.Short, PositionSide.None};
+        private static readonly PositionSide[] OtherSidesForNone =
+        {
+            PositionSide.Short,
+            PositionSide.Long
+        };
+        private static readonly PositionSide[] OtherSidesForShort =
+        {
+            PositionSide.None,
+            PositionSide.Long
+        };
+        private static readonly PositionSide[] OtherSidesForLong =
+        {
+            PositionSide.Short,
+            PositionSide.None
+        };
+
         private static PositionSide[] GetOtherSides(PositionSide side)
         {
             switch (side)
             {
-                case PositionSide.Short: return OtherSidesForShort;
-                case PositionSide.None:  return OtherSidesForNone;
-                case PositionSide.Long:  return OtherSidesForLong;
+                case PositionSide.Short:
+                    return OtherSidesForShort;
+                case PositionSide.None:
+                    return OtherSidesForNone;
+                case PositionSide.Long:
+                    return OtherSidesForLong;
                 default:
                     throw new ArgumentOutOfRangeException(nameof(side), side, null);
             }
@@ -633,7 +676,10 @@ namespace QuantConnect.Securities.Option.StrategyMatcher
         /// <param name="positions">Collection to add to</param>
         /// <param name="position">OptionPosition to add</param>
         /// <returns>OptionPositionCollection with the new position added</returns>
-        public static OptionPositionCollection operator+(OptionPositionCollection positions, OptionPosition position)
+        public static OptionPositionCollection operator +(
+            OptionPositionCollection positions,
+            OptionPosition position
+        )
         {
             return positions.Add(position);
         }
@@ -644,7 +690,10 @@ namespace QuantConnect.Securities.Option.StrategyMatcher
         /// <param name="positions">Collection to remove from</param>
         /// <param name="position">OptionPosition to remove</param>
         /// <returns>OptionPositionCollection with the position removed</returns>
-        public static OptionPositionCollection operator-(OptionPositionCollection positions, OptionPosition position)
+        public static OptionPositionCollection operator -(
+            OptionPositionCollection positions,
+            OptionPosition position
+        )
         {
             return positions.Remove(position);
         }

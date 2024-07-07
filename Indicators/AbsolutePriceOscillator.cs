@@ -27,25 +27,30 @@ namespace QuantConnect.Indicators
     {
         /// <summary>
         /// Initializes a new instance of the <see cref="AbsolutePriceOscillator"/> class using the specified name and parameters.
-        /// </summary> 
+        /// </summary>
         /// <param name="name">The name of this indicator</param>
         /// <param name="fastPeriod">The fast moving average period</param>
         /// <param name="slowPeriod">The slow moving average period</param>
         /// <param name="movingAverageType">The type of moving average to use</param>
-        public AbsolutePriceOscillator(string name, int fastPeriod, int slowPeriod, MovingAverageType movingAverageType = MovingAverageType.Simple)
-            : base(name, fastPeriod, slowPeriod, slowPeriod, movingAverageType)
-        {
-        }
+        public AbsolutePriceOscillator(
+            string name,
+            int fastPeriod,
+            int slowPeriod,
+            MovingAverageType movingAverageType = MovingAverageType.Simple
+        )
+            : base(name, fastPeriod, slowPeriod, slowPeriod, movingAverageType) { }
 
         /// <summary>
         /// Initializes a new instance of the <see cref="AbsolutePriceOscillator"/> class using the specified parameters.
-        /// </summary> 
+        /// </summary>
         /// <param name="fastPeriod">The fast moving average period</param>
         /// <param name="slowPeriod">The slow moving average period</param>
         /// <param name="movingAverageType">The type of moving average to use</param>
-        public AbsolutePriceOscillator(int fastPeriod, int slowPeriod, MovingAverageType movingAverageType = MovingAverageType.Simple)
-            : this($"APO({fastPeriod},{slowPeriod})", fastPeriod, slowPeriod, movingAverageType)
-        {
-        }
+        public AbsolutePriceOscillator(
+            int fastPeriod,
+            int slowPeriod,
+            MovingAverageType movingAverageType = MovingAverageType.Simple
+        )
+            : this($"APO({fastPeriod},{slowPeriod})", fastPeriod, slowPeriod, movingAverageType) { }
     }
 }

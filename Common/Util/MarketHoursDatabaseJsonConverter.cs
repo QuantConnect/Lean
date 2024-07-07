@@ -29,7 +29,11 @@ namespace QuantConnect.Util
     /// <summary>
     /// Provides json conversion for the <see cref="MarketHoursDatabase"/> class
     /// </summary>
-    public class MarketHoursDatabaseJsonConverter : TypeChangeJsonConverter<MarketHoursDatabase, MarketHoursDatabaseJsonConverter.MarketHoursDatabaseJson>
+    public class MarketHoursDatabaseJsonConverter
+        : TypeChangeJsonConverter<
+            MarketHoursDatabase,
+            MarketHoursDatabaseJsonConverter.MarketHoursDatabaseJson
+        >
     {
         /// <summary>
         /// Convert the input value to a value to be serialzied
@@ -59,7 +63,7 @@ namespace QuantConnect.Util
         /// <returns>A new instance of T that is to be serialized using default rules</returns>
         protected override MarketHoursDatabase Create(Type type, JToken token)
         {
-            var jobject = (JObject) token;
+            var jobject = (JObject)token;
             var instance = jobject.ToObject<MarketHoursDatabaseJson>();
             return Convert(instance);
         }
@@ -82,7 +86,8 @@ namespace QuantConnect.Util
             /// <param name="database">The database instance to copy</param>
             public MarketHoursDatabaseJson(MarketHoursDatabase database)
             {
-                if (database == null) return;
+                if (database == null)
+                    return;
                 Entries = new Dictionary<string, MarketHoursDatabaseEntryJson>();
                 foreach (var kvp in database.ExchangeHoursListing)
                 {
@@ -99,7 +104,9 @@ namespace QuantConnect.Util
             public MarketHoursDatabase Convert()
             {
                 // first we parse the entries keys so that later we can sort by security type
-                var entries = new Dictionary<SecurityDatabaseKey, MarketHoursDatabaseEntryJson>(Entries.Count);
+                var entries = new Dictionary<SecurityDatabaseKey, MarketHoursDatabaseEntryJson>(
+                    Entries.Count
+                );
                 foreach (var entry in Entries)
                 {
                     try
@@ -116,9 +123,15 @@ namespace QuantConnect.Util
                     }
                 }
 
-                var result = new Dictionary<SecurityDatabaseKey, MarketHoursDatabase.Entry>(Entries.Count);
+                var result = new Dictionary<SecurityDatabaseKey, MarketHoursDatabase.Entry>(
+                    Entries.Count
+                );
                 // we sort so we process generic entries and non options first
-                foreach (var entry in entries.OrderBy(kvp => kvp.Key.Symbol != null ? 1 : 0).ThenBy(kvp => kvp.Key.SecurityType.IsOption() ? 1 : 0))
+                foreach (
+                    var entry in entries
+                        .OrderBy(kvp => kvp.Key.Symbol != null ? 1 : 0)
+                        .ThenBy(kvp => kvp.Key.SecurityType.IsOption() ? 1 : 0)
+                )
                 {
                     try
                     {
@@ -137,21 +150,36 @@ namespace QuantConnect.Util
             /// <summary>
             /// Helper method to get the already processed underlying entry for options
             /// </summary>
-            private static MarketHoursDatabase.Entry GetUnderlyingEntry(SecurityDatabaseKey key, Dictionary<SecurityDatabaseKey, MarketHoursDatabase.Entry> result)
+            private static MarketHoursDatabase.Entry GetUnderlyingEntry(
+                SecurityDatabaseKey key,
+                Dictionary<SecurityDatabaseKey, MarketHoursDatabase.Entry> result
+            )
             {
                 MarketHoursDatabase.Entry underlyingEntry = null;
                 if (key.SecurityType.IsOption())
                 {
                     // if option, let's get the underlyings entry
-                    var underlyingSecurityType = Symbol.GetUnderlyingFromOptionType(key.SecurityType);
+                    var underlyingSecurityType = Symbol.GetUnderlyingFromOptionType(
+                        key.SecurityType
+                    );
                     var underlying = OptionSymbol.MapToUnderlying(key.Symbol, key.SecurityType);
-                    var underlyingKey = new SecurityDatabaseKey(key.Market, underlying, underlyingSecurityType);
+                    var underlyingKey = new SecurityDatabaseKey(
+                        key.Market,
+                        underlying,
+                        underlyingSecurityType
+                    );
 
-                    if (!result.TryGetValue(underlyingKey, out underlyingEntry)
+                    if (
+                        !result.TryGetValue(underlyingKey, out underlyingEntry)
                         // let's retry with the wildcard
-                        && underlying != SecurityDatabaseKey.Wildcard)
+                        && underlying != SecurityDatabaseKey.Wildcard
+                    )
                     {
-                        var underlyingKeyWildCard = new SecurityDatabaseKey(key.Market, SecurityDatabaseKey.Wildcard, underlyingSecurityType);
+                        var underlyingKeyWildCard = new SecurityDatabaseKey(
+                            key.Market,
+                            SecurityDatabaseKey.Wildcard,
+                            underlyingSecurityType
+                        );
                         result.TryGetValue(underlyingKeyWildCard, out underlyingEntry);
                     }
                 }
@@ -229,13 +257,15 @@ namespace QuantConnect.Util
             /// Early closes by date
             /// </summary>
             [JsonProperty("earlyCloses")]
-            public Dictionary<string, TimeSpan> EarlyCloses { get; set; } = new Dictionary<string, TimeSpan>();
+            public Dictionary<string, TimeSpan> EarlyCloses { get; set; } =
+                new Dictionary<string, TimeSpan>();
 
             /// <summary>
             /// Late opens by date
             /// </summary>
             [JsonProperty("lateOpens")]
-            public Dictionary<string, TimeSpan> LateOpens { get; set; } = new Dictionary<string, TimeSpan>();
+            public Dictionary<string, TimeSpan> LateOpens { get; set; } =
+                new Dictionary<string, TimeSpan>();
 
             /// <summary>
             /// Initializes a new instance of the <see cref="MarketHoursDatabaseEntryJson"/> class
@@ -243,7 +273,8 @@ namespace QuantConnect.Util
             /// <param name="entry">The entry instance to copy</param>
             public MarketHoursDatabaseEntryJson(MarketHoursDatabase.Entry entry)
             {
-                if (entry == null) return;
+                if (entry == null)
+                    return;
                 DataTimeZone = entry.DataTimeZone.Id;
                 var hours = entry.ExchangeHours;
                 ExchangeTimeZone = hours.TimeZone.Id;
@@ -261,16 +292,27 @@ namespace QuantConnect.Util
                 Friday = friday;
                 SetSegmentsForDay(hours, DayOfWeek.Saturday, out var saturday);
                 Saturday = saturday;
-                Holidays = hours.Holidays.Select(x => x.ToString("M/d/yyyy", CultureInfo.InvariantCulture)).ToList();
-                EarlyCloses = entry.ExchangeHours.EarlyCloses.ToDictionary(pair => pair.Key.ToString("M/d/yyyy", CultureInfo.InvariantCulture), pair => pair.Value);
-                LateOpens = entry.ExchangeHours.LateOpens.ToDictionary(pair => pair.Key.ToString("M/d/yyyy", CultureInfo.InvariantCulture), pair => pair.Value);
+                Holidays = hours
+                    .Holidays.Select(x => x.ToString("M/d/yyyy", CultureInfo.InvariantCulture))
+                    .ToList();
+                EarlyCloses = entry.ExchangeHours.EarlyCloses.ToDictionary(
+                    pair => pair.Key.ToString("M/d/yyyy", CultureInfo.InvariantCulture),
+                    pair => pair.Value
+                );
+                LateOpens = entry.ExchangeHours.LateOpens.ToDictionary(
+                    pair => pair.Key.ToString("M/d/yyyy", CultureInfo.InvariantCulture),
+                    pair => pair.Value
+                );
             }
 
             /// <summary>
             /// Converts this json representation to the <see cref="MarketHoursDatabase.Entry"/> type
             /// </summary>
             /// <returns>A new instance of the <see cref="MarketHoursDatabase.Entry"/> class</returns>
-            public MarketHoursDatabase.Entry Convert(MarketHoursDatabase.Entry underlyingEntry, MarketHoursDatabase.Entry marketEntry)
+            public MarketHoursDatabase.Entry Convert(
+                MarketHoursDatabase.Entry underlyingEntry,
+                MarketHoursDatabase.Entry marketEntry
+            )
             {
                 var hours = new Dictionary<DayOfWeek, LocalMarketHours>
                 {
@@ -282,11 +324,19 @@ namespace QuantConnect.Util
                     { DayOfWeek.Friday, new LocalMarketHours(DayOfWeek.Friday, Friday) },
                     { DayOfWeek.Saturday, new LocalMarketHours(DayOfWeek.Saturday, Saturday) }
                 };
-                var holidayDates = Holidays.Select(x => DateTime.ParseExact(x, "M/d/yyyy", CultureInfo.InvariantCulture)).ToHashSet();
-                IReadOnlyDictionary<DateTime, TimeSpan> earlyCloses = EarlyCloses.ToDictionary(x => DateTime.ParseExact(x.Key, "M/d/yyyy", CultureInfo.InvariantCulture), x => x.Value);
-                IReadOnlyDictionary<DateTime, TimeSpan> lateOpens = LateOpens.ToDictionary(x => DateTime.ParseExact(x.Key, "M/d/yyyy", CultureInfo.InvariantCulture), x => x.Value);
+                var holidayDates = Holidays
+                    .Select(x => DateTime.ParseExact(x, "M/d/yyyy", CultureInfo.InvariantCulture))
+                    .ToHashSet();
+                IReadOnlyDictionary<DateTime, TimeSpan> earlyCloses = EarlyCloses.ToDictionary(
+                    x => DateTime.ParseExact(x.Key, "M/d/yyyy", CultureInfo.InvariantCulture),
+                    x => x.Value
+                );
+                IReadOnlyDictionary<DateTime, TimeSpan> lateOpens = LateOpens.ToDictionary(
+                    x => DateTime.ParseExact(x.Key, "M/d/yyyy", CultureInfo.InvariantCulture),
+                    x => x.Value
+                );
 
-                if(underlyingEntry != null)
+                if (underlyingEntry != null)
                 {
                     // If we have no entries but the underlying does, let's use the underlyings
                     if (holidayDates.Count == 0)
@@ -303,29 +353,48 @@ namespace QuantConnect.Util
                     }
                 }
 
-                if(marketEntry != null)
+                if (marketEntry != null)
                 {
                     if (marketEntry.ExchangeHours.Holidays.Count > 0)
                     {
                         holidayDates.UnionWith(marketEntry.ExchangeHours.Holidays);
                     }
 
-                    if (marketEntry.ExchangeHours.EarlyCloses.Count > 0 )
+                    if (marketEntry.ExchangeHours.EarlyCloses.Count > 0)
                     {
-                        earlyCloses = MergeLateOpensAndEarlyCloses(marketEntry.ExchangeHours.EarlyCloses, earlyCloses);
+                        earlyCloses = MergeLateOpensAndEarlyCloses(
+                            marketEntry.ExchangeHours.EarlyCloses,
+                            earlyCloses
+                        );
                     }
 
                     if (marketEntry.ExchangeHours.LateOpens.Count > 0)
                     {
-                        lateOpens = MergeLateOpensAndEarlyCloses(marketEntry.ExchangeHours.LateOpens, lateOpens);
+                        lateOpens = MergeLateOpensAndEarlyCloses(
+                            marketEntry.ExchangeHours.LateOpens,
+                            lateOpens
+                        );
                     }
                 }
 
-                var exchangeHours = new SecurityExchangeHours(DateTimeZoneProviders.Tzdb[ExchangeTimeZone], holidayDates, hours, earlyCloses, lateOpens);
-                return new MarketHoursDatabase.Entry(DateTimeZoneProviders.Tzdb[DataTimeZone], exchangeHours);
+                var exchangeHours = new SecurityExchangeHours(
+                    DateTimeZoneProviders.Tzdb[ExchangeTimeZone],
+                    holidayDates,
+                    hours,
+                    earlyCloses,
+                    lateOpens
+                );
+                return new MarketHoursDatabase.Entry(
+                    DateTimeZoneProviders.Tzdb[DataTimeZone],
+                    exchangeHours
+                );
             }
 
-            private void SetSegmentsForDay(SecurityExchangeHours hours, DayOfWeek day, out List<MarketHoursSegment> segments)
+            private void SetSegmentsForDay(
+                SecurityExchangeHours hours,
+                DayOfWeek day,
+                out List<MarketHoursSegment> segments
+            )
             {
                 LocalMarketHours local;
                 if (hours.MarketHours.TryGetValue(day, out local))
@@ -343,8 +412,10 @@ namespace QuantConnect.Util
             /// (e.g. Indices-usa-[*] with Indices-usa-VIX).
             /// The specific entry takes precedence.
             /// </summary>
-            private static Dictionary<DateTime, TimeSpan> MergeLateOpensAndEarlyCloses(IReadOnlyDictionary<DateTime, TimeSpan> common,
-                IReadOnlyDictionary<DateTime, TimeSpan> specific)
+            private static Dictionary<DateTime, TimeSpan> MergeLateOpensAndEarlyCloses(
+                IReadOnlyDictionary<DateTime, TimeSpan> common,
+                IReadOnlyDictionary<DateTime, TimeSpan> specific
+            )
             {
                 var result = common.ToDictionary();
                 foreach (var (key, value) in specific)

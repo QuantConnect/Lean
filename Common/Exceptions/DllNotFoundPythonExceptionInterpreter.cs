@@ -34,10 +34,10 @@ namespace QuantConnect.Exceptions
         /// <returns>True if the exception can be interpreted, false otherwise</returns>
         public bool CanInterpret(Exception exception)
         {
-            return
-                exception?.GetType() == typeof(DllNotFoundException) &&
-                exception.Message.Contains("python");
+            return exception?.GetType() == typeof(DllNotFoundException)
+                && exception.Message.Contains("python");
         }
+
         /// <summary>
         /// Interprets the specified exception into a new exception
         /// </summary>
@@ -59,7 +59,10 @@ namespace QuantConnect.Exceptions
             }
 
             var platform = Environment.OSVersion.Platform.ToString();
-            var message = Messages.DllNotFoundPythonExceptionInterpreter.DynamicLinkLibraryNotFound(dllName, platform);
+            var message = Messages.DllNotFoundPythonExceptionInterpreter.DynamicLinkLibraryNotFound(
+                dllName,
+                platform
+            );
             return new DllNotFoundException(message, dnfe);
         }
     }

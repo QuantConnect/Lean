@@ -28,8 +28,8 @@ namespace QuantConnect.Packets
     public class BacktestNodePacket : AlgorithmNodePacket
     {
         // default random id, static so its one per process
-        private static readonly string DefaultId
-            = Guid.NewGuid().ToString("N", CultureInfo.InvariantCulture);
+        private static readonly string DefaultId = Guid.NewGuid()
+            .ToString("N", CultureInfo.InvariantCulture);
 
         /// <summary>
         /// Name of the backtest as randomly defined in the IDE.
@@ -89,7 +89,9 @@ namespace QuantConnect.Packets
         {
             get
             {
-                return OptimizationId.IsNullOrEmpty() ? AlgorithmMode.Backtesting : AlgorithmMode.Optimization;
+                return OptimizationId.IsNullOrEmpty()
+                    ? AlgorithmMode.Backtesting
+                    : AlgorithmMode.Optimization;
             }
         }
 
@@ -110,15 +112,34 @@ namespace QuantConnect.Packets
         /// <summary>
         /// Initialize the backtest task packet.
         /// </summary>
-        public BacktestNodePacket(int userId, int projectId, string sessionId, byte[] algorithmData, decimal startingCapital, string name)
-            : this (userId, projectId, sessionId, algorithmData, name, new CashAmount(startingCapital, Currencies.USD))
-        {
-        }
+        public BacktestNodePacket(
+            int userId,
+            int projectId,
+            string sessionId,
+            byte[] algorithmData,
+            decimal startingCapital,
+            string name
+        )
+            : this(
+                userId,
+                projectId,
+                sessionId,
+                algorithmData,
+                name,
+                new CashAmount(startingCapital, Currencies.USD)
+            ) { }
 
         /// <summary>
         /// Initialize the backtest task packet.
         /// </summary>
-        public BacktestNodePacket(int userId, int projectId, string sessionId, byte[] algorithmData, string name, CashAmount? startingCapital = null)
+        public BacktestNodePacket(
+            int userId,
+            int projectId,
+            string sessionId,
+            byte[] algorithmData,
+            string name,
+            CashAmount? startingCapital = null
+        )
             : base(PacketType.BacktestNode)
         {
             UserId = userId;

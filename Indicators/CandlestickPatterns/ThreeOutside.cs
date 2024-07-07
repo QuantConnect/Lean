@@ -1,11 +1,11 @@
 ﻿/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
- * 
- * Licensed under the Apache License, Version 2.0 (the "License"); 
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -36,18 +36,14 @@ namespace QuantConnect.Indicators.CandlestickPatterns
         /// Initializes a new instance of the <see cref="ThreeOutside"/> class using the specified name.
         /// </summary>
         /// <param name="name">The name of this indicator</param>
-        public ThreeOutside(string name) 
-            : base(name, 3)
-        {
-        }
+        public ThreeOutside(string name)
+            : base(name, 3) { }
 
         /// <summary>
         /// Initializes a new instance of the <see cref="ThreeOutside"/> class.
         /// </summary>
         public ThreeOutside()
-            : this("THREEOUTSIDE")
-        {
-        }
+            : this("THREEOUTSIDE") { }
 
         /// <summary>
         /// Gets a flag indicating when this indicator is ready and fully initialized
@@ -63,7 +59,10 @@ namespace QuantConnect.Indicators.CandlestickPatterns
         /// <param name="window">The window of data held in this indicator</param>
         /// <param name="input">The input given to the indicator</param>
         /// <returns>A new value for this indicator</returns>
-        protected override decimal ComputeNextValue(IReadOnlyWindow<IBaseDataBar> window, IBaseDataBar input)
+        protected override decimal ComputeNextValue(
+            IReadOnlyWindow<IBaseDataBar> window,
+            IBaseDataBar input
+        )
         {
             if (!IsReady)
             {
@@ -72,22 +71,27 @@ namespace QuantConnect.Indicators.CandlestickPatterns
 
             decimal value;
             if (
-               (
-                  // white engulfs black
-                  GetCandleColor(window[1]) == CandleColor.White && GetCandleColor(window[2]) == CandleColor.Black &&
-                  window[1].Close > window[2].Open && window[1].Open < window[2].Close &&
-                  // third candle higher
-                  input.Close > window[1].Close
-                )
-                ||
                 (
-                  // black engulfs white
-                  GetCandleColor(window[1]) == CandleColor.Black && GetCandleColor(window[2]) == CandleColor.White &&
-                  window[1].Open > window[2].Close && window[1].Close < window[2].Open &&
-                  // third candle lower
-                  input.Close < window[1].Close
+                    // white engulfs black
+                    GetCandleColor(window[1]) == CandleColor.White
+                    && GetCandleColor(window[2]) == CandleColor.Black
+                    && window[1].Close > window[2].Open
+                    && window[1].Open < window[2].Close
+                    &&
+                    // third candle higher
+                    input.Close > window[1].Close
                 )
-              )
+                || (
+                    // black engulfs white
+                    GetCandleColor(window[1]) == CandleColor.Black
+                    && GetCandleColor(window[2]) == CandleColor.White
+                    && window[1].Open > window[2].Close
+                    && window[1].Close < window[2].Open
+                    &&
+                    // third candle lower
+                    input.Close < window[1].Close
+                )
+            )
                 value = (int)GetCandleColor(window[1]);
             else
                 value = 0;

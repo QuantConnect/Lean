@@ -29,11 +29,19 @@ namespace QuantConnect.Tests.Common.Securities.Forex
         {
             string symbol = "12345";
             Assert.AreEqual(5, symbol.Length);
-            string basec, quotec;
-            Assert.Throws<ArgumentException>(() =>
-            {
-                QuantConnect.Securities.Forex.Forex.DecomposeCurrencyPair(symbol, out basec, out quotec);
-            }, "Currency pairs must be exactly 6 characters");
+            string basec,
+                quotec;
+            Assert.Throws<ArgumentException>(
+                () =>
+                {
+                    QuantConnect.Securities.Forex.Forex.DecomposeCurrencyPair(
+                        symbol,
+                        out basec,
+                        out quotec
+                    );
+                },
+                "Currency pairs must be exactly 6 characters"
+            );
         }
 
         [Test]
@@ -41,29 +49,62 @@ namespace QuantConnect.Tests.Common.Securities.Forex
         {
             string symbol = "1234567";
             Assert.AreEqual(7, symbol.Length);
-            string basec, quotec;
-            Assert.Throws<ArgumentException>(() =>
-            {
-                QuantConnect.Securities.Forex.Forex.DecomposeCurrencyPair(symbol, out basec, out quotec);
-            }, "Currency pairs must be exactly 6 characters");
+            string basec,
+                quotec;
+            Assert.Throws<ArgumentException>(
+                () =>
+                {
+                    QuantConnect.Securities.Forex.Forex.DecomposeCurrencyPair(
+                        symbol,
+                        out basec,
+                        out quotec
+                    );
+                },
+                "Currency pairs must be exactly 6 characters"
+            );
         }
 
         [Test]
         public void DecomposeThrowsOnNullSymbol()
         {
             string symbol = null;
-            string basec, quotec;
-            Assert.Throws<ArgumentException>(() =>
-            {
-                QuantConnect.Securities.Forex.Forex.DecomposeCurrencyPair(symbol, out basec, out quotec);
-            }, "Currency pairs must be exactly 6 characters");
+            string basec,
+                quotec;
+            Assert.Throws<ArgumentException>(
+                () =>
+                {
+                    QuantConnect.Securities.Forex.Forex.DecomposeCurrencyPair(
+                        symbol,
+                        out basec,
+                        out quotec
+                    );
+                },
+                "Currency pairs must be exactly 6 characters"
+            );
         }
 
         [Test]
         public void ConstructorDecomposesBaseAndQuoteCurrencies()
         {
-            var config = new SubscriptionDataConfig(typeof(TradeBar), Symbols.EURUSD, Resolution.Minute, TimeZones.NewYork, TimeZones.NewYork, true, true, true);
-            var forex = new QuantConnect.Securities.Forex.Forex(SecurityExchangeHours.AlwaysOpen(config.DataTimeZone), new Cash(Currencies.USD, 0, 0), new Cash(Currencies.EUR, 0, 0), config, SymbolProperties.GetDefault(Currencies.USD), ErrorCurrencyConverter.Instance, RegisteredSecurityDataTypesProvider.Null);
+            var config = new SubscriptionDataConfig(
+                typeof(TradeBar),
+                Symbols.EURUSD,
+                Resolution.Minute,
+                TimeZones.NewYork,
+                TimeZones.NewYork,
+                true,
+                true,
+                true
+            );
+            var forex = new QuantConnect.Securities.Forex.Forex(
+                SecurityExchangeHours.AlwaysOpen(config.DataTimeZone),
+                new Cash(Currencies.USD, 0, 0),
+                new Cash(Currencies.EUR, 0, 0),
+                config,
+                SymbolProperties.GetDefault(Currencies.USD),
+                ErrorCurrencyConverter.Instance,
+                RegisteredSecurityDataTypesProvider.Null
+            );
             Assert.AreEqual("EUR", forex.BaseCurrency.Symbol);
             Assert.AreEqual(Currencies.USD, forex.QuoteCurrency.Symbol);
         }

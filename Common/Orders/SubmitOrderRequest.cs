@@ -34,90 +34,57 @@ namespace QuantConnect.Orders
         /// <summary>
         /// Gets the security type of the symbol
         /// </summary>
-        public SecurityType SecurityType
-        {
-            get; private set;
-        }
+        public SecurityType SecurityType { get; private set; }
 
         /// <summary>
         /// Gets the symbol to be traded
         /// </summary>
-        public Symbol Symbol
-        {
-            get; private set;
-        }
+        public Symbol Symbol { get; private set; }
 
         /// <summary>
         /// Gets the order type od the order
         /// </summary>
-        public OrderType OrderType
-        {
-            get; private set;
-        }
+        public OrderType OrderType { get; private set; }
 
         /// <summary>
         /// Gets the quantity of the order
         /// </summary>
-        public decimal Quantity
-        {
-            get; private set;
-        }
+        public decimal Quantity { get; private set; }
 
         /// <summary>
         /// Gets the limit price of the order, zero if not a limit order
         /// </summary>
-        public decimal LimitPrice
-        {
-            get; private set;
-        }
+        public decimal LimitPrice { get; private set; }
 
         /// <summary>
         /// Gets the stop price of the order, zero if not a stop order
         /// </summary>
-        public decimal StopPrice
-        {
-            get; private set;
-        }
+        public decimal StopPrice { get; private set; }
 
         /// <summary>
         /// Price which must first be reached before a limit order can be submitted.
         /// </summary>
-        public decimal TriggerPrice
-        {
-            get; private set;
-        }
+        public decimal TriggerPrice { get; private set; }
 
         /// <summary>
         /// Trailing amount for a trailing stop order
         /// </summary>
-        public decimal TrailingAmount
-        {
-            get; private set;
-        }
+        public decimal TrailingAmount { get; private set; }
 
         /// <summary>
         /// Determines whether the <see cref="TrailingAmount"/> is a percentage or an absolute currency value
         /// </summary>
-        public bool TrailingAsPercentage
-        {
-            get; private set;
-        }
+        public bool TrailingAsPercentage { get; private set; }
 
         /// <summary>
         /// Gets the order properties for this request
         /// </summary>
-        public IOrderProperties OrderProperties
-        {
-            get; private set;
-        }
+        public IOrderProperties OrderProperties { get; private set; }
 
         /// <summary>
         /// Gets the manager for the combo order. If null, the order is not a combo order.
         /// </summary>
-        public GroupOrderManager GroupOrderManager
-        {
-            get; private set;
-        }
+        public GroupOrderManager GroupOrderManager { get; private set; }
 
         /// <summary>
         /// Initializes a new instance of the <see cref="SubmitOrderRequest"/> class.
@@ -150,7 +117,7 @@ namespace QuantConnect.Orders
             string tag,
             IOrderProperties properties = null,
             GroupOrderManager groupOrderManager = null
-            )
+        )
             : base(time, (int)OrderResponseErrorCode.UnableToFindOrder, tag)
         {
             SecurityType = securityType;
@@ -193,11 +160,22 @@ namespace QuantConnect.Orders
             string tag,
             IOrderProperties properties = null,
             GroupOrderManager groupOrderManager = null
-            )
-            : this(orderType, securityType, symbol, quantity, stopPrice, limitPrice, triggerPrice, 0, false, time, tag, properties,
-                  groupOrderManager)
-        {
-        }
+        )
+            : this(
+                orderType,
+                securityType,
+                symbol,
+                quantity,
+                stopPrice,
+                limitPrice,
+                triggerPrice,
+                0,
+                false,
+                time,
+                tag,
+                properties,
+                groupOrderManager
+            ) { }
 
         /// <summary>
         /// Initializes a new instance of the <see cref="SubmitOrderRequest"/> class.
@@ -224,10 +202,20 @@ namespace QuantConnect.Orders
             string tag,
             IOrderProperties properties = null,
             GroupOrderManager groupOrderManager = null
-            )
-            : this(orderType, securityType, symbol, quantity, stopPrice, limitPrice, 0, time, tag, properties, groupOrderManager)
-        {
-        }
+        )
+            : this(
+                orderType,
+                securityType,
+                symbol,
+                quantity,
+                stopPrice,
+                limitPrice,
+                0,
+                time,
+                tag,
+                properties,
+                groupOrderManager
+            ) { }
 
         /// <summary>
         /// Sets the <see cref="OrderRequest.OrderId"/>

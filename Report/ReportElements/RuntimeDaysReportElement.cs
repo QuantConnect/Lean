@@ -31,7 +31,12 @@ namespace QuantConnect.Report.ReportElements
         /// <param name="key">Location of injection</param>
         /// <param name="backtest">Backtest result object</param>
         /// <param name="live">Live result object</param>
-        public RuntimeDaysReportElement(string name, string key, BacktestResult backtest, LiveResult live)
+        public RuntimeDaysReportElement(
+            string name,
+            string key,
+            BacktestResult backtest,
+            LiveResult live
+        )
         {
             _backtest = backtest;
             _live = live;
@@ -44,7 +49,7 @@ namespace QuantConnect.Report.ReportElements
         /// </summary>
         public override string Render()
         {
-            var result = (Result) _live ?? _backtest;
+            var result = (Result)_live ?? _backtest;
             if (result == null)
             {
                 return "-";

@@ -13,6 +13,9 @@
  * limitations under the License.
 */
 
+using System;
+using System.Collections.Generic;
+using System.Linq;
 using Accord.Math;
 using Accord.Statistics;
 using QuantConnect.Algorithm.Framework.Alphas;
@@ -25,9 +28,6 @@ using QuantConnect.Data.Consolidators;
 using QuantConnect.Data.UniverseSelection;
 using QuantConnect.Indicators;
 using QuantConnect.Orders.Fees;
-using System;
-using System.Collections.Generic;
-using System.Linq;
 
 namespace QuantConnect.Algorithm.CSharp.Alphas
 {
@@ -53,7 +53,8 @@ namespace QuantConnect.Algorithm.CSharp.Alphas
             // Set zero transaction fees
             SetSecurityInitializer(security => security.FeeModel = new ConstantFeeModel(0));
 
-            Func<string, Symbol> ToSymbol = x => QuantConnect.Symbol.Create(x, SecurityType.Equity, Market.USA);
+            Func<string, Symbol> ToSymbol = x =>
+                QuantConnect.Symbol.Create(x, SecurityType.Equity, Market.USA);
             var naturalGas = new[] { "UNG", "BOIL", "FCG" }.Select(ToSymbol).ToArray();
             var crudeOil = new[] { "USO", "UCO", "DBO" }.Select(ToSymbol).ToArray();
 
@@ -100,7 +101,8 @@ namespace QuantConnect.Algorithm.CSharp.Alphas
                 int historyDays = 90,
                 Resolution resolution = Resolution.Hour,
                 int lookback = 5,
-                decimal differenceTrigger = 0.75m)
+                decimal differenceTrigger = 0.75m
+            )
             {
                 _leading = naturalGas;
                 _following = crudeOil;
@@ -124,11 +126,21 @@ namespace QuantConnect.Algorithm.CSharp.Alphas
 
                 if (_pair.Item1.Return > _differenceTrigger)
                 {
-                    yield return Insight.Price(_pair.Item2.Symbol, _predictionInterval, InsightDirection.Up, magnitude);
+                    yield return Insight.Price(
+                        _pair.Item2.Symbol,
+                        _predictionInterval,
+                        InsightDirection.Up,
+                        magnitude
+                    );
                 }
                 if (_pair.Item1.Return < -_differenceTrigger)
                 {
-                    yield return Insight.Price(_pair.Item2.Symbol, _predictionInterval, InsightDirection.Down, magnitude);
+                    yield return Insight.Price(
+                        _pair.Item2.Symbol,
+                        _predictionInterval,
+                        InsightDirection.Down,
+                        magnitude
+                    );
                 }
             }
 
@@ -169,7 +181,8 @@ namespace QuantConnect.Algorithm.CSharp.Alphas
                         if (correlation > maxCorrelation)
                         {
                             var maxIndex = column.IndexOf(correlation) - 1;
-                            if (maxIndex < 0) continue;
+                            if (maxIndex < 0)
+                                continue;
                             var symbolData2 = _symbolDataBySymbol[_following[maxIndex]];
                             _pair = Tuple.Create(symbolData1, symbolData2);
                             maxCorrelation = correlation;
@@ -202,21 +215,29 @@ namespace QuantConnect.Algorithm.CSharp.Alphas
                     SymbolData symbolData;
                     if (!_symbolDataBySymbol.TryGetValue(bar.Symbol, out symbolData))
                     {
-                        symbolData = new SymbolData(algorithm, bar.Symbol, _historyDays, _lookback, _resolution);
+                        symbolData = new SymbolData(
+                            algorithm,
+                            bar.Symbol,
+                            _historyDays,
+                            _lookback,
+                            _resolution
+                        );
                         _symbolDataBySymbol.Add(bar.Symbol, symbolData);
                     }
                     // Update daily rate of change indicator
                     symbolData.UpdateDailyRateOfChange(bar);
                 });
 
-                algorithm.History(symbols, _lookback, _resolution).PushThrough(bar =>
-                {
-                    // Update rate of change indicator with given resolution
-                    if (_symbolDataBySymbol.ContainsKey(bar.Symbol))
+                algorithm
+                    .History(symbols, _lookback, _resolution)
+                    .PushThrough(bar =>
                     {
-                        _symbolDataBySymbol[bar.Symbol].UpdateRateOfChange(bar);
-                    }
-                });
+                        // Update rate of change indicator with given resolution
+                        if (_symbolDataBySymbol.ContainsKey(bar.Symbol))
+                        {
+                            _symbolDataBySymbol[bar.Symbol].UpdateRateOfChange(bar);
+                        }
+                    });
             }
 
             /// <summary>
@@ -233,11 +254,19 @@ namespace QuantConnect.Algorithm.CSharp.Alphas
 
                 public RateOfChangePercent Return { get; }
 
-                public double[] DailyReturnArray => _dailyReturnHistory
-                    .OrderBy(x => x.EndTime)
-                    .Select(x => (double)x.Value).ToArray();
+                public double[] DailyReturnArray =>
+                    _dailyReturnHistory
+                        .OrderBy(x => x.EndTime)
+                        .Select(x => (double)x.Value)
+                        .ToArray();
 
-                public SymbolData(QCAlgorithm algorithm, Symbol symbol, int dailyLookback, int lookback, Resolution resolution)
+                public SymbolData(
+                    QCAlgorithm algorithm,
+                    Symbol symbol,
+                    int dailyLookback,
+                    int lookback,
+                    Resolution resolution
+                )
                 {
                     Symbol = symbol;
 
@@ -277,7 +306,8 @@ namespace QuantConnect.Algorithm.CSharp.Alphas
         /// </summary>
         private class CustomExecutionModel : ExecutionModel
         {
-            private readonly PortfolioTargetCollection _targetsCollection = new PortfolioTargetCollection();
+            private readonly PortfolioTargetCollection _targetsCollection =
+                new PortfolioTargetCollection();
             private Symbol _previousSymbol;
 
             /// <summary>
@@ -291,9 +321,11 @@ namespace QuantConnect.Algorithm.CSharp.Alphas
 
                 foreach (var target in _targetsCollection.OrderByMarginImpact(algorithm))
                 {
-                    var openQuantity = algorithm.Transactions.GetOpenOrders(target.Symbol)
+                    var openQuantity = algorithm
+                        .Transactions.GetOpenOrders(target.Symbol)
                         .Sum(x => x.Quantity);
-                    var existing = algorithm.Securities[target.Symbol].Holdings.Quantity + openQuantity;
+                    var existing =
+                        algorithm.Securities[target.Symbol].Holdings.Quantity + openQuantity;
                     var quantity = target.Quantity - existing;
 
                     // Liquidate positions in Crude Oil ETF that is no longer part of the highest-correlation pair

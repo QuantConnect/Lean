@@ -47,7 +47,9 @@ namespace QuantConnect.Algorithm.Framework.Alphas
         /// <returns>The new insights generated</returns>
         public virtual IEnumerable<Insight> Update(QCAlgorithm algorithm, Slice data)
         {
-            throw new System.NotImplementedException("Types deriving from 'AlphaModel' must implement the 'IEnumerable<Insight> Update(QCAlgorithm, Slice) method.");
+            throw new System.NotImplementedException(
+                "Types deriving from 'AlphaModel' must implement the 'IEnumerable<Insight> Update(QCAlgorithm, Slice) method."
+            );
         }
 
         /// <summary>
@@ -55,8 +57,6 @@ namespace QuantConnect.Algorithm.Framework.Alphas
         /// </summary>
         /// <param name="algorithm">The algorithm instance that experienced the change in securities</param>
         /// <param name="changes">The security additions and removals from the algorithm</param>
-        public virtual void OnSecuritiesChanged(QCAlgorithm algorithm, SecurityChanges changes)
-        {
-        }
+        public virtual void OnSecuritiesChanged(QCAlgorithm algorithm, SecurityChanges changes) { }
     }
 }

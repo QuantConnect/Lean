@@ -14,11 +14,11 @@
 */
 
 using System;
+using System.Collections.Generic;
 using QuantConnect.Data;
+using QuantConnect.Data.Auxiliary;
 using QuantConnect.Interfaces;
 using QuantConnect.Securities;
-using System.Collections.Generic;
-using QuantConnect.Data.Auxiliary;
 
 namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
 {
@@ -41,13 +41,24 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
         /// <param name="startTime">Start date for the data request</param>
         /// <param name="timeProvider">The time provider to use</param>
         /// <param name="securityCache">The security cache</param>
-        public LiveAuxiliaryDataEnumerator(SubscriptionDataConfig config, IFactorFileProvider factorFileProvider,
-            IMapFileProvider mapFileProvider, ITradableDateEventProvider[] tradableDateEventProviders,
+        public LiveAuxiliaryDataEnumerator(
+            SubscriptionDataConfig config,
+            IFactorFileProvider factorFileProvider,
+            IMapFileProvider mapFileProvider,
+            ITradableDateEventProvider[] tradableDateEventProviders,
             DateTime startTime,
             ITimeProvider timeProvider,
-            SecurityCache securityCache)
+            SecurityCache securityCache
+        )
             // tradableDayNotifier: null -> we are going to trigger the new tradables events for the base implementation
-            : base(config, factorFileProvider, mapFileProvider, tradableDateEventProviders, tradableDayNotifier:null, startTime)
+            : base(
+                config,
+                factorFileProvider,
+                mapFileProvider,
+                tradableDateEventProviders,
+                tradableDayNotifier: null,
+                startTime
+            )
         {
             _securityCache = securityCache;
             _timeProvider = timeProvider;
@@ -58,11 +69,20 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
 
         public override bool MoveNext()
         {
-            var currentDate = _timeProvider.GetUtcNow().ConvertFromUtc(Config.ExchangeTimeZone).Add(-Time.LiveAuxiliaryDataOffset).Date;
+            var currentDate = _timeProvider
+                .GetUtcNow()
+                .ConvertFromUtc(Config.ExchangeTimeZone)
+                .Add(-Time.LiveAuxiliaryDataOffset)
+                .Date;
             if (currentDate != _lastTime)
             {
                 // when the date changes for the security we trigger a new tradable date event
-                var newDayEvent = new NewTradableDateEventArgs(currentDate, _securityCache.GetData(), Config.Symbol, null);
+                var newDayEvent = new NewTradableDateEventArgs(
+                    currentDate,
+                    _securityCache.GetData(),
+                    Config.Symbol,
+                    null
+                );
 
                 NewTradableDate(this, newDayEvent);
                 // update last time
@@ -76,13 +96,23 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
         /// Helper method to create a new instance.
         /// Knows which security types should create one and determines the appropriate delisting event provider to use
         /// </summary>
-        public static bool TryCreate(SubscriptionDataConfig dataConfig, ITimeProvider timeProvider,
-            SecurityCache securityCache, IMapFileProvider mapFileProvider, IFactorFileProvider fileProvider, DateTime startTime,
-            out IEnumerator<BaseData> enumerator)
+        public static bool TryCreate(
+            SubscriptionDataConfig dataConfig,
+            ITimeProvider timeProvider,
+            SecurityCache securityCache,
+            IMapFileProvider mapFileProvider,
+            IFactorFileProvider fileProvider,
+            DateTime startTime,
+            out IEnumerator<BaseData> enumerator
+        )
         {
             enumerator = null;
             var securityType = dataConfig.SecurityType;
-            if (securityType.IsOption() || securityType == SecurityType.Future || securityType == SecurityType.Equity)
+            if (
+                securityType.IsOption()
+                || securityType == SecurityType.Future
+                || securityType == SecurityType.Equity
+            )
             {
                 var providers = new List<ITradableDateEventProvider>
                 {
@@ -102,8 +132,15 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
                     providers.Add(new LiveSplitEventProvider());
                 }
 
-                enumerator = new LiveAuxiliaryDataEnumerator(dataConfig, fileProvider, mapFileProvider,
-                    providers.ToArray(), startTime, timeProvider, securityCache);
+                enumerator = new LiveAuxiliaryDataEnumerator(
+                    dataConfig,
+                    fileProvider,
+                    mapFileProvider,
+                    providers.ToArray(),
+                    startTime,
+                    timeProvider,
+                    securityCache
+                );
             }
             return enumerator != null;
         }

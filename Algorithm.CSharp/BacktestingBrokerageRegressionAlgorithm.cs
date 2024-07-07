@@ -13,6 +13,9 @@
  * limitations under the License.
 */
 
+using System;
+using System.Collections.Generic;
+using System.Linq;
 using QuantConnect.Data;
 using QuantConnect.Data.Market;
 using QuantConnect.Interfaces;
@@ -21,9 +24,6 @@ using QuantConnect.Orders.Fees;
 using QuantConnect.Orders.Fills;
 using QuantConnect.Securities;
 using QuantConnect.Securities.Option;
-using System;
-using System.Collections.Generic;
-using System.Linq;
 
 namespace QuantConnect.Algorithm.CSharp
 {
@@ -64,9 +64,9 @@ namespace QuantConnect.Algorithm.CSharp
 
             // Get our option
             _option = AddOption("GOOG");
-            _option.SetFilter(u => u.IncludeWeeklys()
-                                   .Strikes(-2, +2)
-                                   .Expiration(TimeSpan.Zero, TimeSpan.FromDays(10)));
+            _option.SetFilter(u =>
+                u.IncludeWeeklys().Strikes(-2, +2).Expiration(TimeSpan.Zero, TimeSpan.FromDays(10))
+            );
             _optionSymbol = _option.Symbol;
         }
 
@@ -98,7 +98,7 @@ namespace QuantConnect.Algorithm.CSharp
                         where optionContract.Expiry == Time.Date
                         where optionContract.Strike < chain.Underlying.Price
                         select optionContract
-                        ).Take(2);
+                    ).Take(2);
 
                     if (contracts.Any())
                     {
@@ -162,9 +162,14 @@ namespace QuantConnect.Algorithm.CSharp
 
                 // All filled equity orders should have filled after creation because of our fill model!
                 case OrderStatus.Filled:
-                    if (order.SecurityType == SecurityType.Equity && order.CreatedTime == order.LastFillTime)
+                    if (
+                        order.SecurityType == SecurityType.Equity
+                        && order.CreatedTime == order.LastFillTime
+                    )
                     {
-                        throw new RegressionTestException("Order should not finish during the CreatedTime bar");
+                        throw new RegressionTestException(
+                            "Order should not finish during the CreatedTime bar"
+                        );
                     }
                     break;
 
@@ -182,7 +187,9 @@ namespace QuantConnect.Algorithm.CSharp
             // If the option price isn't the same as the strike price, its incorrect
             if (order.Price != _optionStrikePrice)
             {
-                throw new RegressionTestException("OptionExercise order price should be strike price!!");
+                throw new RegressionTestException(
+                    "OptionExercise order price should be strike price!!"
+                );
             }
 
             if (orderEvent.Quantity != -1)
@@ -196,30 +203,48 @@ namespace QuantConnect.Algorithm.CSharp
         /// </summary>
         public override void OnEndOfAlgorithm()
         {
-            if (!Portfolio.ContainsKey(_optionBuy.Symbol) || !Portfolio.ContainsKey(_optionBuy.Symbol.Underlying) || !Portfolio.ContainsKey(_equityBuy.Symbol))
+            if (
+                !Portfolio.ContainsKey(_optionBuy.Symbol)
+                || !Portfolio.ContainsKey(_optionBuy.Symbol.Underlying)
+                || !Portfolio.ContainsKey(_equityBuy.Symbol)
+            )
             {
-                throw new RegressionTestException("Portfolio does not contain the Symbols we purchased");
+                throw new RegressionTestException(
+                    "Portfolio does not contain the Symbols we purchased"
+                );
             }
 
             //Check option holding, should not be invested since it expired, profit should be -400
             var optionHolding = Portfolio[_optionBuy.Symbol];
             if (optionHolding.Invested || optionHolding.Profit != -400)
             {
-                throw new RegressionTestException("Options holding does not match expected outcome");
+                throw new RegressionTestException(
+                    "Options holding does not match expected outcome"
+                );
             }
 
             //Check the option underlying symbol since we should have bought it at exercise
             //Quantity should be 100, AveragePrice should be option strike price
             var optionExerciseHolding = Portfolio[_optionBuy.Symbol.Underlying];
-            if (!optionExerciseHolding.Invested || optionExerciseHolding.Quantity != 100 || optionExerciseHolding.AveragePrice != _optionBuy.Symbol.ID.StrikePrice)
+            if (
+                !optionExerciseHolding.Invested
+                || optionExerciseHolding.Quantity != 100
+                || optionExerciseHolding.AveragePrice != _optionBuy.Symbol.ID.StrikePrice
+            )
             {
-                throw new RegressionTestException("Equity holding for exercised option does not match expected outcome");
+                throw new RegressionTestException(
+                    "Equity holding for exercised option does not match expected outcome"
+                );
             }
 
             //Check equity holding, should be invested, profit should be
             //Quantity should be 52, AveragePrice should be ticket AverageFillPrice
             var equityHolding = Portfolio[_equityBuy.Symbol];
-            if (!equityHolding.Invested || equityHolding.Quantity != 52 || equityHolding.AveragePrice != _equityBuy.AverageFillPrice)
+            if (
+                !equityHolding.Invested
+                || equityHolding.Quantity != 52
+                || equityHolding.AveragePrice != _equityBuy.AverageFillPrice
+            )
             {
                 throw new RegressionTestException("Equity holding does not match expected outcome");
             }
@@ -232,7 +257,8 @@ namespace QuantConnect.Algorithm.CSharp
         private class PartialMarketFillModel : ImmediateFillModel
         {
             private readonly decimal _percent;
-            private readonly Dictionary<long, decimal> _absoluteRemainingByOrderId = new Dictionary<long, decimal>();
+            private readonly Dictionary<long, decimal> _absoluteRemainingByOrderId =
+                new Dictionary<long, decimal>();
 
             /// <param name="numberOfFills"></param>
             public PartialMarketFillModel(int numberOfFills = 1)
@@ -264,7 +290,9 @@ namespace QuantConnect.Algorithm.CSharp
                 }
 
                 var fill = base.MarketFill(asset, order);
-                var absoluteFillQuantity = (int)(Math.Min(absoluteRemaining, (int)(_percent * order.Quantity)));
+                var absoluteFillQuantity = (int)(
+                    Math.Min(absoluteRemaining, (int)(_percent * order.Quantity))
+                );
                 fill.FillQuantity = Math.Sign(order.Quantity) * absoluteFillQuantity;
 
                 if (absoluteRemaining == absoluteFillQuantity)
@@ -311,35 +339,36 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// This is used by the regression test system to indicate what the expected statistics are from running the algorithm
         /// </summary>
-        public Dictionary<string, string> ExpectedStatistics => new Dictionary<string, string>
-        {
-            {"Total Orders", "3"},
-            {"Average Win", "0%"},
-            {"Average Loss", "-0.40%"},
-            {"Compounding Annual Return", "-22.717%"},
-            {"Drawdown", "0.400%"},
-            {"Expectancy", "-1"},
-            {"Start Equity", "100000"},
-            {"End Equity", "99671.06"},
-            {"Net Profit", "-0.329%"},
-            {"Sharpe Ratio", "-14.095"},
-            {"Sortino Ratio", "0"},
-            {"Probabilistic Sharpe Ratio", "1.216%"},
-            {"Loss Rate", "100%"},
-            {"Win Rate", "0%"},
-            {"Profit-Loss Ratio", "0"},
-            {"Alpha", "-0.01"},
-            {"Beta", "0.097"},
-            {"Annual Standard Deviation", "0.002"},
-            {"Annual Variance", "0"},
-            {"Information Ratio", "7.39"},
-            {"Tracking Error", "0.015"},
-            {"Treynor Ratio", "-0.234"},
-            {"Total Fees", "$2.00"},
-            {"Estimated Strategy Capacity", "$0"},
-            {"Lowest Capacity Asset", "GOOCV VP83T1ZUHROL"},
-            {"Portfolio Turnover", "17.02%"},
-            {"OrderListHash", "b1e5e72fb766ab894204bc4b1300912b"}
-        };
+        public Dictionary<string, string> ExpectedStatistics =>
+            new Dictionary<string, string>
+            {
+                { "Total Orders", "3" },
+                { "Average Win", "0%" },
+                { "Average Loss", "-0.40%" },
+                { "Compounding Annual Return", "-22.717%" },
+                { "Drawdown", "0.400%" },
+                { "Expectancy", "-1" },
+                { "Start Equity", "100000" },
+                { "End Equity", "99671.06" },
+                { "Net Profit", "-0.329%" },
+                { "Sharpe Ratio", "-14.095" },
+                { "Sortino Ratio", "0" },
+                { "Probabilistic Sharpe Ratio", "1.216%" },
+                { "Loss Rate", "100%" },
+                { "Win Rate", "0%" },
+                { "Profit-Loss Ratio", "0" },
+                { "Alpha", "-0.01" },
+                { "Beta", "0.097" },
+                { "Annual Standard Deviation", "0.002" },
+                { "Annual Variance", "0" },
+                { "Information Ratio", "7.39" },
+                { "Tracking Error", "0.015" },
+                { "Treynor Ratio", "-0.234" },
+                { "Total Fees", "$2.00" },
+                { "Estimated Strategy Capacity", "$0" },
+                { "Lowest Capacity Asset", "GOOCV VP83T1ZUHROL" },
+                { "Portfolio Turnover", "17.02%" },
+                { "OrderListHash", "b1e5e72fb766ab894204bc4b1300912b" }
+            };
     }
 }

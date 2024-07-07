@@ -39,13 +39,17 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             var success = true;
             try
             {
-                return new FileStream(FileExtension.ToNormalizedPath(key), FileMode.Open, FileAccess.Read, FileShare.Read);
+                return new FileStream(
+                    FileExtension.ToNormalizedPath(key),
+                    FileMode.Open,
+                    FileAccess.Read,
+                    FileShare.Read
+                );
             }
             catch (Exception exception)
             {
                 success = false;
-                if (exception is DirectoryNotFoundException
-                    || exception is FileNotFoundException)
+                if (exception is DirectoryNotFoundException || exception is FileNotFoundException)
                 {
                     return null;
                 }

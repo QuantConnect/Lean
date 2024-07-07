@@ -25,7 +25,9 @@ namespace QuantConnect.Algorithm.CSharp
     /// which will be ordered by margin impact before being executed, with the objective of avoiding any
     /// margin errors
     /// </summary>
-    public class SetHoldingsMultipleTargetsRegressionAlgorithm : QCAlgorithm, IRegressionAlgorithmDefinition
+    public class SetHoldingsMultipleTargetsRegressionAlgorithm
+        : QCAlgorithm,
+            IRegressionAlgorithmDefinition
     {
         private Symbol _spy;
         private Symbol _ibm;
@@ -55,11 +57,23 @@ namespace QuantConnect.Algorithm.CSharp
         {
             if (!Portfolio.Invested)
             {
-                SetHoldings(new List<PortfolioTarget> { new PortfolioTarget(_spy, 0.8m), new PortfolioTarget(_ibm, 0.2m) });
+                SetHoldings(
+                    new List<PortfolioTarget>
+                    {
+                        new PortfolioTarget(_spy, 0.8m),
+                        new PortfolioTarget(_ibm, 0.2m)
+                    }
+                );
             }
             else
             {
-                SetHoldings(new List<PortfolioTarget> { new PortfolioTarget(_ibm, 0.8m), new PortfolioTarget(_spy, 0.2m) });
+                SetHoldings(
+                    new List<PortfolioTarget>
+                    {
+                        new PortfolioTarget(_ibm, 0.8m),
+                        new PortfolioTarget(_spy, 0.2m)
+                    }
+                );
             }
         }
 
@@ -71,7 +85,8 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// This is used by the regression test system to indicate which languages this algorithm is written in.
         /// </summary>
-        public virtual List<Language> Languages { get; } = new() { Language.CSharp, Language.Python };
+        public virtual List<Language> Languages { get; } =
+            new() { Language.CSharp, Language.Python };
 
         /// <summary>
         /// Data Points count of all timeslices of algorithm
@@ -91,35 +106,36 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// This is used by the regression test system to indicate what the expected statistics are from running the algorithm
         /// </summary>
-        public virtual Dictionary<string, string> ExpectedStatistics => new Dictionary<string, string>
-        {
-            {"Total Orders", "11"},
-            {"Average Win", "0.00%"},
-            {"Average Loss", "-0.01%"},
-            {"Compounding Annual Return", "353.938%"},
-            {"Drawdown", "2.300%"},
-            {"Expectancy", "-0.749"},
-            {"Start Equity", "100000"},
-            {"End Equity", "101952.99"},
-            {"Net Profit", "1.953%"},
-            {"Sharpe Ratio", "11.757"},
-            {"Sortino Ratio", "0"},
-            {"Probabilistic Sharpe Ratio", "65.582%"},
-            {"Loss Rate", "75%"},
-            {"Win Rate", "25%"},
-            {"Profit-Loss Ratio", "0.00"},
-            {"Alpha", "0.96"},
-            {"Beta", "0.993"},
-            {"Annual Standard Deviation", "0.248"},
-            {"Annual Variance", "0.062"},
-            {"Information Ratio", "8.324"},
-            {"Tracking Error", "0.114"},
-            {"Treynor Ratio", "2.942"},
-            {"Total Fees", "$15.02"},
-            {"Estimated Strategy Capacity", "$2600000.00"},
-            {"Lowest Capacity Asset", "IBM R735QTJ8XC9X"},
-            {"Portfolio Turnover", "44.15%"},
-            {"OrderListHash", "14d509658aa542a210a3d6d41c05cd22"}
-        };
+        public virtual Dictionary<string, string> ExpectedStatistics =>
+            new Dictionary<string, string>
+            {
+                { "Total Orders", "11" },
+                { "Average Win", "0.00%" },
+                { "Average Loss", "-0.01%" },
+                { "Compounding Annual Return", "353.938%" },
+                { "Drawdown", "2.300%" },
+                { "Expectancy", "-0.749" },
+                { "Start Equity", "100000" },
+                { "End Equity", "101952.99" },
+                { "Net Profit", "1.953%" },
+                { "Sharpe Ratio", "11.757" },
+                { "Sortino Ratio", "0" },
+                { "Probabilistic Sharpe Ratio", "65.582%" },
+                { "Loss Rate", "75%" },
+                { "Win Rate", "25%" },
+                { "Profit-Loss Ratio", "0.00" },
+                { "Alpha", "0.96" },
+                { "Beta", "0.993" },
+                { "Annual Standard Deviation", "0.248" },
+                { "Annual Variance", "0.062" },
+                { "Information Ratio", "8.324" },
+                { "Tracking Error", "0.114" },
+                { "Treynor Ratio", "2.942" },
+                { "Total Fees", "$15.02" },
+                { "Estimated Strategy Capacity", "$2600000.00" },
+                { "Lowest Capacity Asset", "IBM R735QTJ8XC9X" },
+                { "Portfolio Turnover", "44.15%" },
+                { "OrderListHash", "14d509658aa542a210a3d6d41c05cd22" }
+            };
     }
 }

@@ -76,7 +76,15 @@ namespace QuantConnect.Commands
         /// <param name="algorithm">The algorithm to run this command against</param>
         public override CommandResultPacket Run(IAlgorithm algorithm)
         {
-            var security = algorithm.AddSecurity(SecurityType, Symbol, Resolution, Market, FillDataForward, Leverage, ExtendedMarketHours);
+            var security = algorithm.AddSecurity(
+                SecurityType,
+                Symbol,
+                Resolution,
+                Market,
+                FillDataForward,
+                Leverage,
+                ExtendedMarketHours
+            );
             return new Result(this, true, security.Symbol);
         }
 

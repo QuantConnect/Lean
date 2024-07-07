@@ -56,13 +56,19 @@ namespace QuantConnect.Commands
         /// <param name="algorithm">The algorithm to run this command against</param>
         public override CommandResultPacket Run(IAlgorithm algorithm)
         {
-            var ticket = algorithm.Transactions.UpdateOrder(new UpdateOrderRequest(algorithm.UtcTime, OrderId, new UpdateOrderFields
-            {
-                Quantity = Quantity,
-                LimitPrice = LimitPrice,
-                StopPrice = StopPrice,
-                Tag = Tag
-            }));
+            var ticket = algorithm.Transactions.UpdateOrder(
+                new UpdateOrderRequest(
+                    algorithm.UtcTime,
+                    OrderId,
+                    new UpdateOrderFields
+                    {
+                        Quantity = Quantity,
+                        LimitPrice = LimitPrice,
+                        StopPrice = StopPrice,
+                        Tag = Tag
+                    }
+                )
+            );
 
             var response = ticket.GetMostRecentOrderResponse();
             return new CommandResultPacket(this, response.IsSuccess);

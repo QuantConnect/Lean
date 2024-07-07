@@ -14,13 +14,13 @@
  *
 */
 
+using System;
+using System.Collections.Generic;
+using System.Threading;
 using NUnit.Framework;
 using QuantConnect.Data;
 using QuantConnect.Data.Market;
 using QuantConnect.Lean.Engine.DataFeeds;
-using System;
-using System.Collections.Generic;
-using System.Threading;
 using DateTime = System.DateTime;
 using Tick = QuantConnect.Data.Market.Tick;
 
@@ -37,18 +37,35 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             var config = GetSubscriptionDataConfig<Tick>(Symbols.SPY, Resolution.Tick);
 
             var count = 0;
-            aggregator.Add(config, (s, e) => { count++; });
+            aggregator.Add(
+                config,
+                (s, e) =>
+                {
+                    count++;
+                }
+            );
 
-            aggregator.Update(new Tick(reference.AddSeconds(1), Symbols.SPY, 30, 30) { TickType = TickType.Trade });
-            aggregator.Update(new Tick(reference.AddSeconds(2), Symbols.SPY, 20, 20) { TickType = TickType.Trade });
+            aggregator.Update(
+                new Tick(reference.AddSeconds(1), Symbols.SPY, 30, 30) { TickType = TickType.Trade }
+            );
+            aggregator.Update(
+                new Tick(reference.AddSeconds(2), Symbols.SPY, 20, 20) { TickType = TickType.Trade }
+            );
 
             Assert.AreEqual(count, 2);
 
-            aggregator.Update(new Tick(reference.AddSeconds(3), Symbols.AAPL, 200, 200) { TickType = TickType.Trade });
+            aggregator.Update(
+                new Tick(reference.AddSeconds(3), Symbols.AAPL, 200, 200)
+                {
+                    TickType = TickType.Trade
+                }
+            );
             Assert.AreEqual(count, 2);
 
             aggregator.Remove(config);
-            aggregator.Update(new Tick(reference.AddSeconds(4), Symbols.SPY, 20, 20) { TickType = TickType.Trade });
+            aggregator.Update(
+                new Tick(reference.AddSeconds(4), Symbols.SPY, 20, 20) { TickType = TickType.Trade }
+            );
             Assert.AreEqual(count, 2);
         }
 
@@ -60,7 +77,13 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             var config = GetSubscriptionDataConfig<Tick>(Symbols.SPY, Resolution.Tick);
 
             var count = 0;
-            aggregator.Add(config, (s, e) => { count++; });
+            aggregator.Add(
+                config,
+                (s, e) =>
+                {
+                    count++;
+                }
+            );
 
             aggregator.Update(new Tick(reference.AddSeconds(1), Symbols.AAPL, 200, 200));
             Assert.AreEqual(count, 0);
@@ -74,12 +97,25 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             var config = GetSubscriptionDataConfig<Tick>(Symbols.SPY, Resolution.Tick);
 
             var count = 0;
-            aggregator.Add(config, (s, e) => { count++; });
+            aggregator.Add(
+                config,
+                (s, e) =>
+                {
+                    count++;
+                }
+            );
 
-            aggregator.Update(new Tick(reference.AddSeconds(3), Symbols.SPY, 200, 200) { TickType = TickType.Trade });
+            aggregator.Update(
+                new Tick(reference.AddSeconds(3), Symbols.SPY, 200, 200)
+                {
+                    TickType = TickType.Trade
+                }
+            );
             Assert.AreEqual(count, 1);
 
-            aggregator.Update(new Tick(reference.AddSeconds(4), Symbols.SPY, 20, 20) { TickType = TickType.Quote });
+            aggregator.Update(
+                new Tick(reference.AddSeconds(4), Symbols.SPY, 20, 20) { TickType = TickType.Quote }
+            );
             Assert.AreEqual(count, 1);
         }
 
@@ -92,17 +128,34 @@ namespace QuantConnect.Tests.Engine.DataFeeds
 
             var count = 0;
 
-            aggregator.Update(new Tick(reference.AddSeconds(1), Symbols.SPY, 30, 30) { TickType = TickType.Trade });
-            aggregator.Update(new Tick(reference.AddSeconds(2), Symbols.SPY, 20, 20) { TickType = TickType.Trade });
+            aggregator.Update(
+                new Tick(reference.AddSeconds(1), Symbols.SPY, 30, 30) { TickType = TickType.Trade }
+            );
+            aggregator.Update(
+                new Tick(reference.AddSeconds(2), Symbols.SPY, 20, 20) { TickType = TickType.Trade }
+            );
             Assert.AreEqual(count, 0);
 
-            aggregator.Add(config, (s, e) => { count++; });
+            aggregator.Add(
+                config,
+                (s, e) =>
+                {
+                    count++;
+                }
+            );
 
-            aggregator.Update(new Tick(reference.AddSeconds(3), Symbols.SPY, 200, 200) { TickType = TickType.Trade });
+            aggregator.Update(
+                new Tick(reference.AddSeconds(3), Symbols.SPY, 200, 200)
+                {
+                    TickType = TickType.Trade
+                }
+            );
             Assert.AreEqual(count, 1);
 
             aggregator.Remove(config);
-            aggregator.Update(new Tick(reference.AddSeconds(4), Symbols.SPY, 20, 20) { TickType = TickType.Trade });
+            aggregator.Update(
+                new Tick(reference.AddSeconds(4), Symbols.SPY, 20, 20) { TickType = TickType.Trade }
+            );
             Assert.AreEqual(count, 1);
         }
 
@@ -120,7 +173,12 @@ namespace QuantConnect.Tests.Engine.DataFeeds
         [TestCase(3600, 1, typeof(TradeBar), Resolution.Hour)]
         [TestCase(3601, 1, typeof(QuoteBar), Resolution.Hour)]
         [TestCase(3601, 1, typeof(TradeBar), Resolution.Hour)]
-        public void CanHandleMultipleSubscriptions(int secondsToAdd, int expectedBars, Type dataType, Resolution resolution)
+        public void CanHandleMultipleSubscriptions(
+            int secondsToAdd,
+            int expectedBars,
+            Type dataType,
+            Resolution resolution
+        )
         {
             using var aggregator = GetDataAggregator();
             var reference = DateTime.Today;
@@ -129,14 +187,25 @@ namespace QuantConnect.Tests.Engine.DataFeeds
 
             foreach (var symbol in symbols)
             {
-                enumerators.Enqueue(aggregator.Add(GetSubscriptionDataConfig(dataType, symbol, resolution), (s, e) => { }));
+                enumerators.Enqueue(
+                    aggregator.Add(
+                        GetSubscriptionDataConfig(dataType, symbol, resolution),
+                        (s, e) => { }
+                    )
+                );
             }
 
             for (var i = 1; i <= secondsToAdd; i++)
             {
                 foreach (var symbol in symbols)
                 {
-                    aggregator.Update(new Tick(reference.AddSeconds(i), symbol, 20 + i, 20 + i) { TickType = dataType == typeof(TradeBar) ? TickType.Trade : TickType.Quote });
+                    aggregator.Update(
+                        new Tick(reference.AddSeconds(i), symbol, 20 + i, 20 + i)
+                        {
+                            TickType =
+                                dataType == typeof(TradeBar) ? TickType.Trade : TickType.Quote
+                        }
+                    );
                 }
             }
 
@@ -162,11 +231,19 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             using var aggregator = GetDataAggregator();
             var reference = DateTime.Today;
             var total = 0;
-            var enumerator = aggregator.Add(GetSubscriptionDataConfig(type, Symbols.EURUSD, resolution, tickType), (s, e) => { });
+            var enumerator = aggregator.Add(
+                GetSubscriptionDataConfig(type, Symbols.EURUSD, resolution, tickType),
+                (s, e) => { }
+            );
 
             for (int i = 0; i < 100; i++)
             {
-                aggregator.Update(new Tick(reference.AddSeconds(i), Symbols.EURUSD, 20 + i, 20 + i) { TickType = tickType });
+                aggregator.Update(
+                    new Tick(reference.AddSeconds(i), Symbols.EURUSD, 20 + i, 20 + i)
+                    {
+                        TickType = tickType
+                    }
+                );
             }
             Thread.Sleep(250);
 
@@ -201,7 +278,8 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             using var aggregator = GetDataAggregator(timeProvider);
             var symbol = Symbols.AAPL;
 
-            var configs = new[] {
+            var configs = new[]
+            {
                 GetSubscriptionDataConfig<TradeBar>(symbol, Resolution.Minute),
                 GetSubscriptionDataConfig<QuoteBar>(symbol, Resolution.Minute),
                 GetSubscriptionDataConfig<Tick>(symbol, Resolution.Tick, TickType.Trade),
@@ -216,19 +294,31 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             var expectedBars = new[] { 2, 2, 100, 100, 1, 1 };
             for (int i = 1; i <= 100; i++)
             {
-                aggregator.Update(new Tick(reference.AddSeconds(i), symbol, 20 + i, 20 + i)
-                {
-                    TickType = TickType.Trade
-                });
-                aggregator.Update(new Tick(reference.AddSeconds(i), symbol, 20 + i, 20 + i)
-                {
-                    TickType = TickType.Quote
-                });
+                aggregator.Update(
+                    new Tick(reference.AddSeconds(i), symbol, 20 + i, 20 + i)
+                    {
+                        TickType = TickType.Trade
+                    }
+                );
+                aggregator.Update(
+                    new Tick(reference.AddSeconds(i), symbol, 20 + i, 20 + i)
+                    {
+                        TickType = TickType.Quote
+                    }
+                );
             }
 
             aggregator.Update(new Dividend(symbol, reference.AddSeconds(1), 0.47m, 108.60m));
 
-            aggregator.Update(new Split(symbol, reference.AddSeconds(1), 645.57m, 0.142857m, SplitType.SplitOccurred));
+            aggregator.Update(
+                new Split(
+                    symbol,
+                    reference.AddSeconds(1),
+                    645.57m,
+                    0.142857m,
+                    SplitType.SplitOccurred
+                )
+            );
 
             timeProvider.SetCurrentTime(reference.AddMinutes(2));
 
@@ -271,12 +361,21 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             return new TestAggregationManager(timeProvider);
         }
 
-        private SubscriptionDataConfig GetSubscriptionDataConfig<T>(Symbol symbol, Resolution resolution, TickType? tickType = null)
+        private SubscriptionDataConfig GetSubscriptionDataConfig<T>(
+            Symbol symbol,
+            Resolution resolution,
+            TickType? tickType = null
+        )
         {
             return GetSubscriptionDataConfig(typeof(T), symbol, resolution, tickType);
         }
 
-        private SubscriptionDataConfig GetSubscriptionDataConfig(Type T, Symbol symbol, Resolution resolution, TickType? tickType = null)
+        private SubscriptionDataConfig GetSubscriptionDataConfig(
+            Type T,
+            Symbol symbol,
+            Resolution resolution,
+            TickType? tickType = null
+        )
         {
             return new SubscriptionDataConfig(
                 T,
@@ -287,7 +386,8 @@ namespace QuantConnect.Tests.Engine.DataFeeds
                 true,
                 true,
                 false,
-                tickType: tickType);
+                tickType: tickType
+            );
         }
 
         private class TestAggregationManager : AggregationManager

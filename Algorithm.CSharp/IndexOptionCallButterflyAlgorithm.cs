@@ -1,4 +1,4 @@
-/* 
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -14,8 +14,8 @@
 */
 
 using System;
-using System.Linq;
 using System.Collections.Generic;
+using System.Linq;
 using QuantConnect.Data;
 using QuantConnect.Orders;
 using QuantConnect.Securities.Option;
@@ -24,7 +24,8 @@ namespace QuantConnect.Algorithm.CSharp
 {
     public class IndexOptionCallButterflyAlgorithm : QCAlgorithm
     {
-        private Symbol _spxw, _vxz;
+        private Symbol _spxw,
+            _vxz;
         private decimal _multiplier;
         private IEnumerable<OrderTicket> _tickets = Enumerable.Empty<OrderTicket>();
 
@@ -51,33 +52,50 @@ namespace QuantConnect.Algorithm.CSharp
             {
                 MarketOrder(_vxz, 10000);
             }
-            
+
             // Return if any opening index option position
-            if (_tickets.Any(x => Portfolio[x.Symbol].Invested)) return;
+            if (_tickets.Any(x => Portfolio[x.Symbol].Invested))
+                return;
 
             // Get the OptionChain
-            if (!slice.OptionChains.TryGetValue(_spxw, out var chain)) return;
+            if (!slice.OptionChains.TryGetValue(_spxw, out var chain))
+                return;
 
             // Get nearest expiry date
             var expiry = chain.Min(x => x.Expiry);
-            
+
             // Select the call Option contracts with nearest expiry and sort by strike price
-            var calls = chain.Where(x => x.Expiry == expiry && x.Right == OptionRight.Call).ToList();
-            if (calls.Count < 3) return;
+            var calls = chain
+                .Where(x => x.Expiry == expiry && x.Right == OptionRight.Call)
+                .ToList();
+            if (calls.Count < 3)
+                return;
             var sortedCallStrikes = calls.Select(x => x.Strike).OrderBy(x => x).ToArray();
-            
+
             // Select ATM call
             var atmStrike = calls.MinBy(x => Math.Abs(x.Strike - chain.Underlying.Value)).Strike;
 
             // Get the strike prices for the ITM & OTM contracts, make sure they're in equidistance
-            var spread = Math.Min(atmStrike - sortedCallStrikes[0], sortedCallStrikes[^1] - atmStrike);
+            var spread = Math.Min(
+                atmStrike - sortedCallStrikes[0],
+                sortedCallStrikes[^1] - atmStrike
+            );
             var itmStrike = atmStrike - spread;
             var otmStrike = atmStrike + spread;
-            if (!sortedCallStrikes.Contains(otmStrike) || !sortedCallStrikes.Contains(itmStrike)) return;
+            if (!sortedCallStrikes.Contains(otmStrike) || !sortedCallStrikes.Contains(itmStrike))
+                return;
 
             // Buy the call butterfly
-            var callButterfly = OptionStrategies.CallButterfly(_spxw, otmStrike, atmStrike, itmStrike, expiry);
-            var price = callButterfly.UnderlyingLegs.Sum(x => Math.Abs(Securities[x.Symbol].Price * x.Quantity) * _multiplier);
+            var callButterfly = OptionStrategies.CallButterfly(
+                _spxw,
+                otmStrike,
+                atmStrike,
+                itmStrike,
+                expiry
+            );
+            var price = callButterfly.UnderlyingLegs.Sum(x =>
+                Math.Abs(Securities[x.Symbol].Price * x.Quantity) * _multiplier
+            );
             if (price > 0)
             {
                 var quantity = Portfolio.TotalPortfolioValue / price;

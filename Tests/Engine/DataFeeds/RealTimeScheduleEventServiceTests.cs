@@ -29,13 +29,16 @@ namespace QuantConnect.Tests.Engine.DataFeeds
         [Test]
         public void Accuracy()
         {
-            using var scheduledEventService = new RealTimeScheduleEventService(RealTimeProvider.Instance);
+            using var scheduledEventService = new RealTimeScheduleEventService(
+                RealTimeProvider.Instance
+            );
             EventHandler handler = (_, __) =>
             {
                 Log.Trace($"{DateTime.UtcNow:O}");
 
                 var now = DateTime.UtcNow;
-                var nextEventTime = now.RoundDown(TimeSpan.FromSeconds(1)).Add(TimeSpan.FromSeconds(1) + TimeSpan.FromMilliseconds(101));
+                var nextEventTime = now.RoundDown(TimeSpan.FromSeconds(1))
+                    .Add(TimeSpan.FromSeconds(1) + TimeSpan.FromMilliseconds(101));
                 scheduledEventService.ScheduleEvent(nextEventTime - now, now);
             };
             scheduledEventService.NewEvent += handler;

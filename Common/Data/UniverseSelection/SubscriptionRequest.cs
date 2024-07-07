@@ -47,21 +47,26 @@ namespace QuantConnect.Data.UniverseSelection
         /// <summary>
         /// Gets the tradable days specified by this request, in the security's data time zone
         /// </summary>
-        public override IEnumerable<DateTime> TradableDaysInDataTimeZone => Time.EachTradeableDayInTimeZone(Security.Exchange.Hours,
-            StartTimeLocal,
-            EndTimeLocal,
-            Configuration.DataTimeZone,
-            Configuration.ExtendedMarketHours);
+        public override IEnumerable<DateTime> TradableDaysInDataTimeZone =>
+            Time.EachTradeableDayInTimeZone(
+                Security.Exchange.Hours,
+                StartTimeLocal,
+                EndTimeLocal,
+                Configuration.DataTimeZone,
+                Configuration.ExtendedMarketHours
+            );
 
         /// <summary>
         /// Initializes a new instance of the <see cref="SubscriptionRequest"/> class
         /// </summary>
-        public SubscriptionRequest(bool isUniverseSubscription,
+        public SubscriptionRequest(
+            bool isUniverseSubscription,
             Universe universe,
             Security security,
             SubscriptionDataConfig configuration,
             DateTime startTimeUtc,
-            DateTime endTimeUtc)
+            DateTime endTimeUtc
+        )
             : base(startTimeUtc, endTimeUtc, security.Exchange.Hours, configuration.TickType)
         {
             IsUniverseSubscription = isUniverseSubscription;
@@ -73,29 +78,31 @@ namespace QuantConnect.Data.UniverseSelection
             // make the subscription start from midnight and use always open exchange
             if (Configuration.TickType == TickType.OpenInterest)
             {
-                StartTimeUtc = StartTimeUtc.ConvertFromUtc(ExchangeHours.TimeZone).Date.ConvertToUtc(ExchangeHours.TimeZone);
+                StartTimeUtc = StartTimeUtc
+                    .ConvertFromUtc(ExchangeHours.TimeZone)
+                    .Date.ConvertToUtc(ExchangeHours.TimeZone);
             }
         }
 
         /// <summary>
         /// Initializes a new instance of the <see cref="SubscriptionRequest"/> class
         /// </summary>
-        public SubscriptionRequest(SubscriptionRequest template,
+        public SubscriptionRequest(
+            SubscriptionRequest template,
             bool? isUniverseSubscription = null,
             Universe universe = null,
             Security security = null,
             SubscriptionDataConfig configuration = null,
             DateTime? startTimeUtc = null,
             DateTime? endTimeUtc = null
-            )
-            : this(isUniverseSubscription ?? template.IsUniverseSubscription,
-                  universe ?? template.Universe,
-                  security ?? template.Security,
-                  configuration ?? template.Configuration,
-                  startTimeUtc ?? template.StartTimeUtc,
-                  endTimeUtc ?? template.EndTimeUtc
-                  )
-        {
-        }
+        )
+            : this(
+                isUniverseSubscription ?? template.IsUniverseSubscription,
+                universe ?? template.Universe,
+                security ?? template.Security,
+                configuration ?? template.Configuration,
+                startTimeUtc ?? template.StartTimeUtc,
+                endTimeUtc ?? template.EndTimeUtc
+            ) { }
     }
 }

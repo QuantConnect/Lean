@@ -43,8 +43,7 @@ namespace QuantConnect.Util
         /// <returns>True if this instance can convert the specified object type</returns>
         public override bool CanConvert(Type objectType)
         {
-            return objectType == typeof(decimal)
-                || objectType == typeof(double);
+            return objectType == typeof(decimal) || objectType == typeof(double);
         }
 
         /// <summary>
@@ -54,7 +53,12 @@ namespace QuantConnect.Util
         /// <param name="objectType">Type of the object.</param>
         /// <param name="existingValue">The existing value of object being read.</param>
         /// <param name="serializer">The calling serializer.</param>
-        public override object ReadJson(JsonReader reader, Type objectType, object existingValue, JsonSerializer serializer)
+        public override object ReadJson(
+            JsonReader reader,
+            Type objectType,
+            object existingValue,
+            JsonSerializer serializer
+        )
         {
             throw new NotImplementedException();
         }

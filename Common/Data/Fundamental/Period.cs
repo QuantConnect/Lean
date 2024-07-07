@@ -119,7 +119,9 @@ namespace QuantConnect.Data.Fundamental
                 case 120:
                     return Period.TenYears;
                 default:
-                    throw new InvalidOperationException(Invariant($"{period} is not a valid period value"));
+                    throw new InvalidOperationException(
+                        Invariant($"{period} is not a valid period value")
+                    );
             }
         }
 

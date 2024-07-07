@@ -13,6 +13,8 @@
  * limitations under the License.
 */
 
+using System;
+using System.Collections.Generic;
 using NUnit.Framework;
 using QuantConnect.Algorithm;
 using QuantConnect.Algorithm.Framework.Alphas;
@@ -26,8 +28,6 @@ using QuantConnect.Orders.Slippage;
 using QuantConnect.Securities;
 using QuantConnect.Tests.Common.Data.Fundamental;
 using QuantConnect.Tests.Engine.DataFeeds;
-using System;
-using System.Collections.Generic;
 
 namespace QuantConnect.Tests.Common.Orders.Slippage
 {
@@ -45,28 +45,52 @@ namespace QuantConnect.Tests.Common.Orders.Slippage
             _algorithm.SubscriptionManager.SetDataManager(new DataManagerStub(_algorithm));
 
             var historyProvider = new SubscriptionDataReaderHistoryProvider();
-            historyProvider.Initialize(new HistoryProviderInitializeParameters(null, null,
-                TestGlobals.DataProvider, TestGlobals.DataCacheProvider, TestGlobals.MapFileProvider, TestGlobals.FactorFileProvider,
-                null, true, new DataPermissionManager(), _algorithm.ObjectStore, _algorithm.Settings));
+            historyProvider.Initialize(
+                new HistoryProviderInitializeParameters(
+                    null,
+                    null,
+                    TestGlobals.DataProvider,
+                    TestGlobals.DataCacheProvider,
+                    TestGlobals.MapFileProvider,
+                    TestGlobals.FactorFileProvider,
+                    null,
+                    true,
+                    new DataPermissionManager(),
+                    _algorithm.ObjectStore,
+                    _algorithm.Settings
+                )
+            );
             _algorithm.SetHistoryProvider(historyProvider);
 
-            FundamentalService.Initialize(TestGlobals.DataProvider, new TestFundamentalDataProvider(), false);
+            FundamentalService.Initialize(
+                TestGlobals.DataProvider,
+                new TestFundamentalDataProvider(),
+                false
+            );
 
-            var optionContract = Symbol.CreateOption(Symbols.AAPL, Market.USA,
-                OptionStyle.American, OptionRight.Call, 100, new DateTime(2016, 1, 15));
+            var optionContract = Symbol.CreateOption(
+                Symbols.AAPL,
+                Market.USA,
+                OptionStyle.American,
+                OptionRight.Call,
+                100,
+                new DateTime(2016, 1, 15)
+            );
 
             _algorithm.SetDateTime(new DateTime(2015, 6, 10, 15, 0, 0));
 
             _securities = new List<Security>
             {
-                _algorithm.AddEquity("SPY", Resolution.Daily),                      // liquid stock
-                _algorithm.AddEquity("AIG", Resolution.Daily),                      // illquid stock
-                _algorithm.AddCrypto("BTCUSD", Resolution.Daily, Market.Coinbase),      // crypto
-                _algorithm.AddOptionContract(optionContract, Resolution.Minute)     // equity options
+                _algorithm.AddEquity("SPY", Resolution.Daily), // liquid stock
+                _algorithm.AddEquity("AIG", Resolution.Daily), // illquid stock
+                _algorithm.AddCrypto("BTCUSD", Resolution.Daily, Market.Coinbase), // crypto
+                _algorithm.AddOptionContract(optionContract, Resolution.Minute) // equity options
             };
             foreach (var security in _securities)
             {
-                security.SetMarketPrice(new TradeBar(_algorithm.Time, security.Symbol, 100m, 100m, 100m, 100m, 1));
+                security.SetMarketPrice(
+                    new TradeBar(_algorithm.Time, security.Symbol, 100m, 100m, 100m, 100m, 1)
+                );
             }
 
             _algorithm.Settings.AutomaticIndicatorWarmUp = true;
@@ -83,11 +107,25 @@ namespace QuantConnect.Tests.Common.Orders.Slippage
             foreach (var asset in _securities)
             {
                 // A significantly large difference that noise cannot affect the result
-                var smallBuyOrder = new MarketOrder(asset.Symbol, 10 * (int)direction, new DateTime(2015, 6, 10, 14, 00, 0));
-                var largeBuyOrder = new MarketOrder(asset.Symbol, 10000000000 * (int)direction, new DateTime(2015, 6, 10, 14, 00, 0));
+                var smallBuyOrder = new MarketOrder(
+                    asset.Symbol,
+                    10 * (int)direction,
+                    new DateTime(2015, 6, 10, 14, 00, 0)
+                );
+                var largeBuyOrder = new MarketOrder(
+                    asset.Symbol,
+                    10000000000 * (int)direction,
+                    new DateTime(2015, 6, 10, 14, 00, 0)
+                );
 
-                var smallBuySlippage = _slippageModel.GetSlippageApproximation(asset, smallBuyOrder);
-                var largeBuySlippage = _slippageModel.GetSlippageApproximation(asset, largeBuyOrder);
+                var smallBuySlippage = _slippageModel.GetSlippageApproximation(
+                    asset,
+                    smallBuyOrder
+                );
+                var largeBuySlippage = _slippageModel.GetSlippageApproximation(
+                    asset,
+                    largeBuyOrder
+                );
 
                 // We expect small size order has less slippage than large size order on the same asset
                 Assert.Less(smallBuySlippage, largeBuySlippage);
@@ -103,10 +141,21 @@ namespace QuantConnect.Tests.Common.Orders.Slippage
             var highVolAsset = _securities[0];
             var lowVolAsset = _securities[1];
 
-            var highVolOrder = new MarketOrder(highVolAsset.Symbol, orderQuantity, new DateTime(2015, 6, 10, 14, 00, 0));
-            var lowVolOrder = new MarketOrder(lowVolAsset.Symbol, orderQuantity, new DateTime(2015, 6, 10, 14, 00, 0));
+            var highVolOrder = new MarketOrder(
+                highVolAsset.Symbol,
+                orderQuantity,
+                new DateTime(2015, 6, 10, 14, 00, 0)
+            );
+            var lowVolOrder = new MarketOrder(
+                lowVolAsset.Symbol,
+                orderQuantity,
+                new DateTime(2015, 6, 10, 14, 00, 0)
+            );
 
-            var highVolSlippage = _slippageModel.GetSlippageApproximation(highVolAsset, highVolOrder);
+            var highVolSlippage = _slippageModel.GetSlippageApproximation(
+                highVolAsset,
+                highVolOrder
+            );
             var lowVolSlippage = _slippageModel.GetSlippageApproximation(lowVolAsset, lowVolOrder);
 
             // We expect same size order on volatile asset has greater slippage than less volatile asset
@@ -126,7 +175,11 @@ namespace QuantConnect.Tests.Common.Orders.Slippage
             // Test on all liquid/illquid stocks/other asset classes
             foreach (var asset in _securities)
             {
-                var order = new MarketOrder(asset.Symbol, orderQuantity, new DateTime(2015, 6, 10, 14, 00, 0));
+                var order = new MarketOrder(
+                    asset.Symbol,
+                    orderQuantity,
+                    new DateTime(2015, 6, 10, 14, 00, 0)
+                );
                 var fastFilledSlippage = _slippageModel.GetSlippageApproximation(asset, order);
                 var slowFilledSlippage = slowSlippageModel.GetSlippageApproximation(asset, order);
 
@@ -155,8 +208,12 @@ namespace QuantConnect.Tests.Common.Orders.Slippage
         public void SlippageExpectationTests(decimal orderQuantity, int index, double expected)
         {
             var asset = _securities[index];
-            
-            var order = new MarketOrder(asset.Symbol, orderQuantity, new DateTime(2015, 6, 10, 14, 00, 0));
+
+            var order = new MarketOrder(
+                asset.Symbol,
+                orderQuantity,
+                new DateTime(2015, 6, 10, 14, 00, 0)
+            );
             var slippage = _slippageModel.GetSlippageApproximation(asset, order);
 
             Assert.AreEqual(expected, (double)slippage, 0.005d);
@@ -174,7 +231,11 @@ namespace QuantConnect.Tests.Common.Orders.Slippage
             // Test on all liquid/illquid stocks/other asset classes
             foreach (var asset in _securities)
             {
-                var order = new MarketOrder(asset.Symbol, orderQuantity, new DateTime(2015, 6, 10, 14, 00, 0));
+                var order = new MarketOrder(
+                    asset.Symbol,
+                    orderQuantity,
+                    new DateTime(2015, 6, 10, 14, 00, 0)
+                );
                 var slippage = _slippageModel.GetSlippageApproximation(asset, order);
 
                 Assert.GreaterOrEqual(slippage, 0m);
@@ -192,7 +253,11 @@ namespace QuantConnect.Tests.Common.Orders.Slippage
             // Test on all liquid/illquid stocks/other asset classes
             foreach (var asset in _securities)
             {
-                var order = new MarketOrder(asset.Symbol, orderQuantity, new DateTime(2015, 6, 10, 14, 00, 0));
+                var order = new MarketOrder(
+                    asset.Symbol,
+                    orderQuantity,
+                    new DateTime(2015, 6, 10, 14, 00, 0)
+                );
                 var slippage = _slippageModel.GetSlippageApproximation(asset, order);
 
                 // Slippage is at max the asset's price, no limit on negative slippage
@@ -213,9 +278,15 @@ namespace QuantConnect.Tests.Common.Orders.Slippage
         public void ForexExceptionTests()
         {
             var forex = _algorithm.AddForex("EURUSD", Resolution.Daily, Market.Oanda);
-            var forexOrder = new MarketOrder(forex.Symbol, 10, new DateTime(2013, 10, 10, 14, 00, 0));
+            var forexOrder = new MarketOrder(
+                forex.Symbol,
+                10,
+                new DateTime(2013, 10, 10, 14, 00, 0)
+            );
 
-            Assert.Throws<Exception>(() => _slippageModel.GetSlippageApproximation(forex, forexOrder));
+            Assert.Throws<Exception>(
+                () => _slippageModel.GetSlippageApproximation(forex, forexOrder)
+            );
         }
     }
 }

@@ -13,6 +13,11 @@
  * limitations under the License.
 */
 
+using System;
+using System.Collections.Generic;
+using System.IO;
+using System.Linq;
+using System.Reflection;
 using Fasterflect;
 using Newtonsoft.Json;
 using QuantConnect.Brokerages;
@@ -23,11 +28,6 @@ using QuantConnect.Logging;
 using QuantConnect.Packets;
 using QuantConnect.Python;
 using QuantConnect.Util;
-using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
-using System.Reflection;
 
 namespace QuantConnect.Queues
 {
@@ -69,12 +69,15 @@ namespace QuantConnect.Queues
                                 _language = Language.Python;
                                 break;
                             default:
-                                throw new ArgumentException($"Unknown extension, algorithm extension was {extension}");
+                                throw new ArgumentException(
+                                    $"Unknown extension, algorithm extension was {extension}"
+                                );
                         }
                     }
                     else
                     {
-                        _language = (Language)Enum.Parse(typeof(Language), algorithmLanguage, ignoreCase: true);
+                        _language = (Language)
+                            Enum.Parse(typeof(Language), algorithmLanguage, ignoreCase: true);
                     }
                 }
 
@@ -86,7 +89,8 @@ namespace QuantConnect.Queues
         /// Physical location of Algorithm DLL.
         /// </summary>
         /// <remarks>We expect this dll to be copied into the output directory</remarks>
-        private string AlgorithmLocation { get; } = Config.Get("algorithm-location", "QuantConnect.Algorithm.CSharp.dll");
+        private string AlgorithmLocation { get; } =
+            Config.Get("algorithm-location", "QuantConnect.Algorithm.CSharp.dll");
 
         /// <summary>
         /// Initialize the job queue:
@@ -104,15 +108,21 @@ namespace QuantConnect.Queues
         public static IBrokerageFactory GetFactoryFromDataQueueHandler(string dataQueueHandler)
         {
             IBrokerageFactory brokerageFactory = null;
-            var dataQueueHandlerType = Composer.Instance.GetExportedTypes<IBrokerage>()
+            var dataQueueHandlerType = Composer
+                .Instance.GetExportedTypes<IBrokerage>()
                 .FirstOrDefault(x =>
-                    x.FullName != null &&
-                    x.FullName.EndsWith(dataQueueHandler, StringComparison.InvariantCultureIgnoreCase) &&
-                    x.HasAttribute(typeof(BrokerageFactoryAttribute)));
+                    x.FullName != null
+                    && x.FullName.EndsWith(
+                        dataQueueHandler,
+                        StringComparison.InvariantCultureIgnoreCase
+                    )
+                    && x.HasAttribute(typeof(BrokerageFactoryAttribute))
+                );
 
             if (dataQueueHandlerType != null)
             {
-                var attribute = dataQueueHandlerType.GetCustomAttribute<BrokerageFactoryAttribute>();
+                var attribute =
+                    dataQueueHandlerType.GetCustomAttribute<BrokerageFactoryAttribute>();
                 brokerageFactory = (BrokerageFactory)Activator.CreateInstance(attribute.Type);
             }
             return brokerageFactory;
@@ -134,7 +144,9 @@ namespace QuantConnect.Queues
             var parametersConfigString = Config.Get("parameters");
             if (parametersConfigString != string.Empty)
             {
-                parameters = JsonConvert.DeserializeObject<Dictionary<string, string>>(parametersConfigString);
+                parameters = JsonConvert.DeserializeObject<Dictionary<string, string>>(
+                    parametersConfigString
+                );
             }
 
             var controls = new Controls()
@@ -143,11 +155,15 @@ namespace QuantConnect.Queues
                 SecondLimit = Config.GetInt("symbol-second-limit", 10000),
                 TickLimit = Config.GetInt("symbol-tick-limit", 10000),
                 RamAllocation = int.MaxValue,
-                MaximumDataPointsPerChartSeries = Config.GetInt("maximum-data-points-per-chart-series", 1000000),
+                MaximumDataPointsPerChartSeries = Config.GetInt(
+                    "maximum-data-points-per-chart-series",
+                    1000000
+                ),
                 MaximumChartSeries = Config.GetInt("maximum-chart-series", 30),
                 StorageLimit = Config.GetValue("storage-limit", 10737418240L),
                 StorageFileCount = Config.GetInt("storage-file-count", 10000),
-                StoragePermissions = (FileAccess)Config.GetInt("storage-permissions", (int)FileAccess.ReadWrite)
+                StoragePermissions = (FileAccess)
+                    Config.GetInt("storage-permissions", (int)FileAccess.ReadWrite)
             };
 
             var algorithmId = Config.Get("algorithm-id", AlgorithmTypeName);
@@ -163,7 +179,10 @@ namespace QuantConnect.Queues
                     Brokerage = Config.Get("live-mode-brokerage", PaperBrokerageTypeName),
                     HistoryProvider = Config.Get("history-provider", DefaultHistoryProvider),
                     DataQueueHandler = dataHandlers,
-                    DataChannelProvider = Config.Get("data-channel-provider", DefaultDataChannelProvider),
+                    DataChannelProvider = Config.Get(
+                        "data-channel-provider",
+                        DefaultDataChannelProvider
+                    ),
                     Channel = Channel,
                     UserToken = Globals.UserToken,
                     UserId = Globals.UserId,
@@ -182,27 +201,44 @@ namespace QuantConnect.Queues
                 try
                 {
                     // import the brokerage data for the configured brokerage
-                    var brokerageFactory = Composer.Instance.Single<IBrokerageFactory>(factory => factory.BrokerageType.MatchesTypeName(liveJob.Brokerage));
+                    var brokerageFactory = Composer.Instance.Single<IBrokerageFactory>(factory =>
+                        factory.BrokerageType.MatchesTypeName(liveJob.Brokerage)
+                    );
                     brokerageName = brokerageFactory.BrokerageType;
                     liveJob.BrokerageData = brokerageFactory.BrokerageData;
                 }
                 catch (Exception err)
                 {
-                    Log.Error(err, $"Error resolving BrokerageData for live job for brokerage {liveJob.Brokerage}");
+                    Log.Error(
+                        err,
+                        $"Error resolving BrokerageData for live job for brokerage {liveJob.Brokerage}"
+                    );
                 }
 
-                var brokerageBasedHistoryProvider = liveJob.HistoryProvider.DeserializeList().Select(x =>
-                {
-                    HistoryExtensions.TryGetBrokerageName(x, out var brokerageName);
-                    return brokerageName;
-                }).Where(x => x != null);
+                var brokerageBasedHistoryProvider = liveJob
+                    .HistoryProvider.DeserializeList()
+                    .Select(x =>
+                    {
+                        HistoryExtensions.TryGetBrokerageName(x, out var brokerageName);
+                        return brokerageName;
+                    })
+                    .Where(x => x != null);
 
-                foreach (var dataHandlerName in dataHandlers.DeserializeList().Concat(brokerageBasedHistoryProvider).Distinct())
+                foreach (
+                    var dataHandlerName in dataHandlers
+                        .DeserializeList()
+                        .Concat(brokerageBasedHistoryProvider)
+                        .Distinct()
+                )
                 {
-                    var brokerageFactoryForDataHandler = GetFactoryFromDataQueueHandler(dataHandlerName);
+                    var brokerageFactoryForDataHandler = GetFactoryFromDataQueueHandler(
+                        dataHandlerName
+                    );
                     if (brokerageFactoryForDataHandler == null)
                     {
-                        Log.Trace($"JobQueue.NextJob(): Not able to fetch brokerage factory with name: {dataHandlerName}");
+                        Log.Trace(
+                            $"JobQueue.NextJob(): Not able to fetch brokerage factory with name: {dataHandlerName}"
+                        );
                         continue;
                     }
                     if (brokerageFactoryForDataHandler.BrokerageType == brokerageName)
@@ -226,7 +262,13 @@ namespace QuantConnect.Queues
 
             var optimizationId = Config.Get("optimization-id");
             //Default run a backtesting job.
-            var backtestJob = new BacktestNodePacket(0, 0, "", new byte[] { }, Config.Get("backtest-name", "local"))
+            var backtestJob = new BacktestNodePacket(
+                0,
+                0,
+                "",
+                new byte[] { },
+                Config.Get("backtest-name", "local")
+            )
             {
                 Type = PacketType.BacktestNode,
                 Algorithm = File.ReadAllBytes(AlgorithmLocation),
@@ -271,7 +313,9 @@ namespace QuantConnect.Queues
             {
                 if (!File.Exists(AlgorithmLocation))
                 {
-                    throw new FileNotFoundException($"JobQueue.TryCreatePythonAlgorithm(): Unable to find py file: {AlgorithmLocation}");
+                    throw new FileNotFoundException(
+                        $"JobQueue.TryCreatePythonAlgorithm(): Unable to find py file: {AlgorithmLocation}"
+                    );
                 }
 
                 // Add this directory to our Python Path so it may be imported properly

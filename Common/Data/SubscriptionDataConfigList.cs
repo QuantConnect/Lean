@@ -58,7 +58,9 @@ namespace QuantConnect.Data
         {
             if (Symbol.SecurityType.IsOption() && normalizationMode != DataNormalizationMode.Raw)
             {
-                throw new ArgumentException($"DataNormalizationMode.Raw must be used with SecurityType {Symbol.SecurityType}");
+                throw new ArgumentException(
+                    $"DataNormalizationMode.Raw must be used with SecurityType {Symbol.SecurityType}"
+                );
             }
 
             foreach (var config in this)

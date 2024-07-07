@@ -24,9 +24,7 @@ namespace QuantConnect.Tests.Common
         public static ITimeKeeper Instance = new NullTimeKeeper();
         public DateTime UtcTime => throw new NotImplementedException();
 
-        private NullTimeKeeper()
-        {
-        }
+        private NullTimeKeeper() { }
 
         public void AddTimeZone(DateTimeZone timeZone)
         {

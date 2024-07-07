@@ -18,8 +18,8 @@ using System.Linq;
 namespace QuantConnect.Indicators
 {
     /// <summary>
-    /// The advance-decline ratio (ADR) compares the number of stocks 
-    /// that closed higher against the number of stocks 
+    /// The advance-decline ratio (ADR) compares the number of stocks
+    /// that closed higher against the number of stocks
     /// that closed lower than their previous day's closing prices.
     /// </summary>
     public class AdvanceDeclineRatio : AdvanceDeclineIndicator
@@ -28,6 +28,10 @@ namespace QuantConnect.Indicators
         /// Initializes a new instance of the <see cref="AdvanceDeclineRatio"/> class
         /// </summary>
         public AdvanceDeclineRatio(string name)
-            : base(name, (entries) => entries.Count(), (advance, decline) => decline == 0m ? advance : advance / decline) { }
+            : base(
+                name,
+                (entries) => entries.Count(),
+                (advance, decline) => decline == 0m ? advance : advance / decline
+            ) { }
     }
 }

@@ -14,20 +14,21 @@
 */
 
 using System;
-using System.Linq;
 using System.Collections.Generic;
-
+using System.Linq;
 using QuantConnect.Data;
 using QuantConnect.Interfaces;
-using QuantConnect.Util;
 using QuantConnect.Orders;
+using QuantConnect.Util;
 
 namespace QuantConnect.Algorithm.CSharp
 {
     /// <summary>
     /// Regression algorithm asserting that option orders are not allowed on split dates
     /// </summary>
-    public class OptionOrdersOnSplitRegressionAlgorithm : QCAlgorithm, IRegressionAlgorithmDefinition
+    public class OptionOrdersOnSplitRegressionAlgorithm
+        : QCAlgorithm,
+            IRegressionAlgorithmDefinition
     {
         private Symbol _aapl;
 
@@ -39,7 +40,12 @@ namespace QuantConnect.Algorithm.CSharp
             SetEndDate(2014, 6, 11);
             SetCash(100000);
 
-            _aapl = AddEquity("AAPL", Resolution.Minute, extendedMarketHours: true, dataNormalizationMode: DataNormalizationMode.Raw).Symbol;
+            _aapl = AddEquity(
+                "AAPL",
+                Resolution.Minute,
+                extendedMarketHours: true,
+                dataNormalizationMode: DataNormalizationMode.Raw
+            ).Symbol;
 
             var option = AddOption(_aapl, Resolution.Minute);
             option.SetFilter(-1, +1, 0, 365);
@@ -53,20 +59,25 @@ namespace QuantConnect.Algorithm.CSharp
 
                 if (split.Type == SplitType.SplitOccurred)
                 {
-                    var contract = Securities.Values
-                        .Where(x => x.Type.IsOption() && !x.Symbol.IsCanonical())
+                    var contract = Securities
+                        .Values.Where(x => x.Type.IsOption() && !x.Symbol.IsCanonical())
                         .OrderBy(x => x.Symbol.ID.StrikePrice)
                         .First();
                     _ticket = MarketOrder(contract.Symbol, 1);
 
-                    if (_ticket.Status != OrderStatus.Invalid ||
-                        _ticket.SubmitRequest.Response.IsSuccess ||
-                        _ticket.SubmitRequest.Response.ErrorCode != OrderResponseErrorCode.OptionOrderOnStockSplit ||
-                        _ticket.SubmitRequest.Response.ErrorMessage != "Options orders are not allowed when a split occurred for its underlying stock")
+                    if (
+                        _ticket.Status != OrderStatus.Invalid
+                        || _ticket.SubmitRequest.Response.IsSuccess
+                        || _ticket.SubmitRequest.Response.ErrorCode
+                            != OrderResponseErrorCode.OptionOrderOnStockSplit
+                        || _ticket.SubmitRequest.Response.ErrorMessage
+                            != "Options orders are not allowed when a split occurred for its underlying stock"
+                    )
                     {
                         throw new RegressionTestException(
-                            $"Expected invalid order ticket with error code {nameof(OrderResponseErrorCode.OptionOrderOnStockSplit)}, " +
-                            $"but received {_ticket.SubmitRequest.Response.ErrorCode} - {_ticket.SubmitRequest.Response.ErrorMessage}");
+                            $"Expected invalid order ticket with error code {nameof(OrderResponseErrorCode.OptionOrderOnStockSplit)}, "
+                                + $"but received {_ticket.SubmitRequest.Response.ErrorCode} - {_ticket.SubmitRequest.Response.ErrorMessage}"
+                        );
                     }
                 }
             }
@@ -76,7 +87,9 @@ namespace QuantConnect.Algorithm.CSharp
         {
             if (_ticket == null)
             {
-                throw new RegressionTestException("Expected invalid order ticket with error code OptionOrderOnStockSplit, but no order was submitted");
+                throw new RegressionTestException(
+                    "Expected invalid order ticket with error code OptionOrderOnStockSplit, but no order was submitted"
+                );
             }
         }
 
@@ -108,35 +121,36 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// This is used by the regression test system to indicate what the expected statistics are from running the algorithm
         /// </summary>
-        public Dictionary<string, string> ExpectedStatistics => new Dictionary<string, string>
-        {
-            {"Total Orders", "0"},
-            {"Average Win", "0%"},
-            {"Average Loss", "0%"},
-            {"Compounding Annual Return", "0%"},
-            {"Drawdown", "0%"},
-            {"Expectancy", "0"},
-            {"Start Equity", "100000"},
-            {"End Equity", "100000"},
-            {"Net Profit", "0%"},
-            {"Sharpe Ratio", "0"},
-            {"Sortino Ratio", "0"},
-            {"Probabilistic Sharpe Ratio", "0%"},
-            {"Loss Rate", "0%"},
-            {"Win Rate", "0%"},
-            {"Profit-Loss Ratio", "0"},
-            {"Alpha", "0"},
-            {"Beta", "0"},
-            {"Annual Standard Deviation", "0"},
-            {"Annual Variance", "0"},
-            {"Information Ratio", "-2.491"},
-            {"Tracking Error", "0.042"},
-            {"Treynor Ratio", "0"},
-            {"Total Fees", "$0.00"},
-            {"Estimated Strategy Capacity", "$0"},
-            {"Lowest Capacity Asset", ""},
-            {"Portfolio Turnover", "0%"},
-            {"OrderListHash", "d41d8cd98f00b204e9800998ecf8427e"}
-        };
+        public Dictionary<string, string> ExpectedStatistics =>
+            new Dictionary<string, string>
+            {
+                { "Total Orders", "0" },
+                { "Average Win", "0%" },
+                { "Average Loss", "0%" },
+                { "Compounding Annual Return", "0%" },
+                { "Drawdown", "0%" },
+                { "Expectancy", "0" },
+                { "Start Equity", "100000" },
+                { "End Equity", "100000" },
+                { "Net Profit", "0%" },
+                { "Sharpe Ratio", "0" },
+                { "Sortino Ratio", "0" },
+                { "Probabilistic Sharpe Ratio", "0%" },
+                { "Loss Rate", "0%" },
+                { "Win Rate", "0%" },
+                { "Profit-Loss Ratio", "0" },
+                { "Alpha", "0" },
+                { "Beta", "0" },
+                { "Annual Standard Deviation", "0" },
+                { "Annual Variance", "0" },
+                { "Information Ratio", "-2.491" },
+                { "Tracking Error", "0.042" },
+                { "Treynor Ratio", "0" },
+                { "Total Fees", "$0.00" },
+                { "Estimated Strategy Capacity", "$0" },
+                { "Lowest Capacity Asset", "" },
+                { "Portfolio Turnover", "0%" },
+                { "OrderListHash", "d41d8cd98f00b204e9800998ecf8427e" }
+            };
     }
 }

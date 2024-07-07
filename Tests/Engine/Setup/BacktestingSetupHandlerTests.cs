@@ -17,14 +17,14 @@
 using System;
 using System.Linq;
 using NUnit.Framework;
-using QuantConnect.Util;
-using QuantConnect.Packets;
-using QuantConnect.Interfaces;
-using QuantConnect.Lean.Engine.Setup;
-using QuantConnect.Lean.Engine.RealTime;
-using QuantConnect.Lean.Engine.DataFeeds;
-using QuantConnect.Tests.Engine.DataFeeds;
 using QuantConnect.Algorithm.Framework.Selection;
+using QuantConnect.Interfaces;
+using QuantConnect.Lean.Engine.DataFeeds;
+using QuantConnect.Lean.Engine.RealTime;
+using QuantConnect.Lean.Engine.Setup;
+using QuantConnect.Packets;
+using QuantConnect.Tests.Engine.DataFeeds;
+using QuantConnect.Util;
 
 namespace QuantConnect.Tests.Engine.Setup
 {
@@ -57,14 +57,34 @@ namespace QuantConnect.Tests.Engine.Setup
             packet.Controls.RamAllocation = 1024 * 4;
             var realTimeHandler = new BacktestingRealTimeHandler();
             var resultHandler = new TestResultHandler();
-            Assert.IsFalse(setupHandler.Setup(new SetupHandlerParameters(_dataManager.UniverseSelection, _algorithm, null, packet,
-                resultHandler, null, realTimeHandler, TestGlobals.DataCacheProvider, TestGlobals.MapFileProvider)));
+            Assert.IsFalse(
+                setupHandler.Setup(
+                    new SetupHandlerParameters(
+                        _dataManager.UniverseSelection,
+                        _algorithm,
+                        null,
+                        packet,
+                        resultHandler,
+                        null,
+                        realTimeHandler,
+                        TestGlobals.DataCacheProvider,
+                        TestGlobals.MapFileProvider
+                    )
+                )
+            );
 
             resultHandler.Exit();
             realTimeHandler.Exit();
             setupHandler.DisposeSafely();
             Assert.AreEqual(1, setupHandler.Errors.Count);
-            Assert.IsTrue(setupHandler.Errors[0].InnerException.Message.Equals("Some failure", StringComparison.OrdinalIgnoreCase));
+            Assert.IsTrue(
+                setupHandler
+                    .Errors[0]
+                    .InnerException.Message.Equals(
+                        "Some failure",
+                        StringComparison.OrdinalIgnoreCase
+                    )
+            );
         }
 
         internal class TestAlgorithmThrowsOnInitialize : AlgorithmStub
@@ -77,8 +97,17 @@ namespace QuantConnect.Tests.Engine.Setup
                 SetEndDate(2021, 11, 15);
 
                 // this will fail later because due to default crypto market being Coinbase there is no conversion rate route
-                var symbols = new[] { "ADAUSDT", "BNBUSDT", "BTCUSDT", "ETHUSDT", "LTCUSDT", "SOLUSDT" }
-                    .Select(ticker => QuantConnect.Symbol.Create(ticker, SecurityType.Crypto, Market.Binance));
+                var symbols = new[]
+                {
+                    "ADAUSDT",
+                    "BNBUSDT",
+                    "BTCUSDT",
+                    "ETHUSDT",
+                    "LTCUSDT",
+                    "SOLUSDT"
+                }.Select(ticker =>
+                    QuantConnect.Symbol.Create(ticker, SecurityType.Crypto, Market.Binance)
+                );
                 SetUniverseSelection(new ManualUniverseSelectionModel(symbols));
 
                 SetBenchmark("BTCUSDT");

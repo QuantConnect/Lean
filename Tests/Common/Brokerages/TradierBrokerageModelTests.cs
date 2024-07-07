@@ -13,15 +13,15 @@
  * limitations under the License.
 */
 
+using System;
 using Moq;
 using NUnit.Framework;
 using QuantConnect.Brokerages;
-using QuantConnect.Securities;
-using QuantConnect.Orders;
-using QuantConnect.Tests.Brokerages;
 using QuantConnect.Data.Market;
-using System;
+using QuantConnect.Orders;
 using QuantConnect.Orders.TimeInForces;
+using QuantConnect.Securities;
+using QuantConnect.Tests.Brokerages;
 
 namespace QuantConnect.Tests.Common.Brokerages
 {
@@ -29,7 +29,11 @@ namespace QuantConnect.Tests.Common.Brokerages
     public class TradierBrokerageModelTests
     {
         private TradierBrokerageModel _tradierBrokerageModel = new TradierBrokerageModel();
-        private Security _security = TestsHelpers.GetSecurity(securityType: SecurityType.Equity, symbol: "IBM", market: Market.USA);
+        private Security _security = TestsHelpers.GetSecurity(
+            securityType: SecurityType.Equity,
+            symbol: "IBM",
+            market: Market.USA
+        );
 
         [SetUp]
         public void Init()
@@ -42,8 +46,14 @@ namespace QuantConnect.Tests.Common.Brokerages
         {
             var order = GetOrder();
             order.Setup(x => x.Quantity).Returns(-101);
-            Assert.IsFalse(_tradierBrokerageModel.CanSubmitOrder(_security, order.Object, out var message));
-            var expectedMessage = new BrokerageMessageEvent(BrokerageMessageType.Warning, "ShortOrderIsGtc", "You cannot place short stock orders with GTC, only day orders are allowed");
+            Assert.IsFalse(
+                _tradierBrokerageModel.CanSubmitOrder(_security, order.Object, out var message)
+            );
+            var expectedMessage = new BrokerageMessageEvent(
+                BrokerageMessageType.Warning,
+                "ShortOrderIsGtc",
+                "You cannot place short stock orders with GTC, only day orders are allowed"
+            );
             Assert.AreEqual(expectedMessage.Message, message.Message);
         }
 
@@ -53,8 +63,14 @@ namespace QuantConnect.Tests.Common.Brokerages
             var order = GetOrder();
             order.Setup(x => x.Quantity).Returns(-101);
             order.Object.Properties.TimeInForce = TimeInForce.Day;
-            Assert.IsFalse(_tradierBrokerageModel.CanSubmitOrder(_security, order.Object, out var message));
-            var expectedMessage = new BrokerageMessageEvent(BrokerageMessageType.Warning, "SellShortOrderLastPriceBelow5", "Sell Short order cannot be placed for stock priced below $5");
+            Assert.IsFalse(
+                _tradierBrokerageModel.CanSubmitOrder(_security, order.Object, out var message)
+            );
+            var expectedMessage = new BrokerageMessageEvent(
+                BrokerageMessageType.Warning,
+                "SellShortOrderLastPriceBelow5",
+                "Sell Short order cannot be placed for stock priced below $5"
+            );
             Assert.AreEqual(expectedMessage.Message, message.Message);
         }
 
@@ -64,8 +80,14 @@ namespace QuantConnect.Tests.Common.Brokerages
             var order = GetOrder();
             order.Setup(x => x.Quantity).Returns(101);
             order.Object.Properties.TimeInForce = TimeInForce.GoodTilDate(new DateTime());
-            Assert.IsFalse(_tradierBrokerageModel.CanSubmitOrder(_security, order.Object, out var message));
-            var expectedMessage = new BrokerageMessageEvent(BrokerageMessageType.Warning, "NotSupported", $"This model only supports orders with the following time in force types: {typeof(DayTimeInForce)} and {typeof(GoodTilCanceledTimeInForce)}");
+            Assert.IsFalse(
+                _tradierBrokerageModel.CanSubmitOrder(_security, order.Object, out var message)
+            );
+            var expectedMessage = new BrokerageMessageEvent(
+                BrokerageMessageType.Warning,
+                "NotSupported",
+                $"This model only supports orders with the following time in force types: {typeof(DayTimeInForce)} and {typeof(GoodTilCanceledTimeInForce)}"
+            );
             Assert.AreEqual(expectedMessage.Message, message.Message);
         }
 
@@ -76,8 +98,14 @@ namespace QuantConnect.Tests.Common.Brokerages
             var order = GetOrder();
             order.Object.Properties.TimeInForce = TimeInForce.Day;
             order.Setup(x => x.Quantity).Returns(quantity);
-            Assert.IsFalse(_tradierBrokerageModel.CanSubmitOrder(_security, order.Object, out var message));
-            var expectedMessage = new BrokerageMessageEvent(BrokerageMessageType.Warning, "IncorrectOrderQuantity", "Quantity should be between 1 and 10,000,000");
+            Assert.IsFalse(
+                _tradierBrokerageModel.CanSubmitOrder(_security, order.Object, out var message)
+            );
+            var expectedMessage = new BrokerageMessageEvent(
+                BrokerageMessageType.Warning,
+                "IncorrectOrderQuantity",
+                "Quantity should be between 1 and 10,000,000"
+            );
             Assert.AreEqual(expectedMessage.Message, message.Message);
         }
 
@@ -87,7 +115,9 @@ namespace QuantConnect.Tests.Common.Brokerages
             var order = GetOrder();
             order.Setup(x => x.Quantity).Returns(-100);
             order.Object.Properties.TimeInForce = TimeInForce.Day;
-            Assert.IsTrue(_tradierBrokerageModel.CanSubmitOrder(_security, order.Object, out var message));
+            Assert.IsTrue(
+                _tradierBrokerageModel.CanSubmitOrder(_security, order.Object, out var message)
+            );
         }
 
         [Test]
@@ -96,11 +126,17 @@ namespace QuantConnect.Tests.Common.Brokerages
             var order = new Mock<Order>();
             order.Setup(x => x.Quantity).Returns(-100);
             order.Object.Properties.TimeInForce = TimeInForce.Day;
-            var security = TestsHelpers.GetSecurity(securityType: SecurityType.Equity, symbol: "IBM", market: Market.USA);
+            var security = TestsHelpers.GetSecurity(
+                securityType: SecurityType.Equity,
+                symbol: "IBM",
+                market: Market.USA
+            );
             security.SetMarketPrice(new Tick(DateTime.UtcNow, security.Symbol, 100, 1000));
             security.Holdings.SetHoldings(6, 100);
             order.Object.Symbol = security.Symbol;
-            Assert.IsTrue(_tradierBrokerageModel.CanSubmitOrder(security, order.Object, out var message));
+            Assert.IsTrue(
+                _tradierBrokerageModel.CanSubmitOrder(security, order.Object, out var message)
+            );
         }
 
         [Test]
@@ -108,11 +144,17 @@ namespace QuantConnect.Tests.Common.Brokerages
         {
             var order = new Mock<Order>();
             order.Setup(x => x.Quantity).Returns(-100);
-            var security = TestsHelpers.GetSecurity(securityType: SecurityType.Equity, symbol: "IBM", market: Market.USA);
+            var security = TestsHelpers.GetSecurity(
+                securityType: SecurityType.Equity,
+                symbol: "IBM",
+                market: Market.USA
+            );
             security.SetMarketPrice(new Tick(DateTime.UtcNow, security.Symbol, 100, 1000));
             security.Holdings.SetHoldings(6, 100);
             order.Object.Symbol = security.Symbol;
-            Assert.IsTrue(_tradierBrokerageModel.CanSubmitOrder(security, order.Object, out var message));
+            Assert.IsTrue(
+                _tradierBrokerageModel.CanSubmitOrder(security, order.Object, out var message)
+            );
         }
 
         private Mock<Order> GetOrder()

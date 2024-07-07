@@ -14,9 +14,9 @@
  *
 */
 
+using System.Collections.Generic;
 using System.Linq;
 using NUnit.Framework;
-using System.Collections.Generic;
 using QuantConnect.Securities.Positions;
 
 namespace QuantConnect.Tests.Common.Securities.Positions
@@ -29,8 +29,12 @@ namespace QuantConnect.Tests.Common.Securities.Positions
         {
             var collection = PositionGroupCollection.Empty;
             var positions = new IPosition[] { new Position(Symbols.SPY, 10, 1) };
-            var group = new PositionGroup(new PositionGroupKey(new SecurityPositionGroupBuyingPowerModel(), positions), positions[0].Quantity, positions);
-            var result = collection.CombineWith(new PositionGroupCollection(new []{ group }));
+            var group = new PositionGroup(
+                new PositionGroupKey(new SecurityPositionGroupBuyingPowerModel(), positions),
+                positions[0].Quantity,
+                positions
+            );
+            var result = collection.CombineWith(new PositionGroupCollection(new[] { group }));
 
             Assert.AreEqual(1, result.Count);
             Assert.IsTrue(result.IsOnlyDefaultGroups);
@@ -56,8 +60,12 @@ namespace QuantConnect.Tests.Common.Securities.Positions
         {
             var collection = PositionGroupCollection.Empty;
 
-            var positions = new IPosition[] {new Position(Symbols.SPY, 10, 1)};
-            var group = new PositionGroup(new PositionGroupKey(new SecurityPositionGroupBuyingPowerModel(), positions), positions[0].Quantity, positions);
+            var positions = new IPosition[] { new Position(Symbols.SPY, 10, 1) };
+            var group = new PositionGroup(
+                new PositionGroupKey(new SecurityPositionGroupBuyingPowerModel(), positions),
+                positions[0].Quantity,
+                positions
+            );
             var newCollection = collection.Add(group);
             var result = newCollection.Add(group);
 
@@ -77,11 +85,19 @@ namespace QuantConnect.Tests.Common.Securities.Positions
             var collection = PositionGroupCollection.Empty;
 
             var positions = new IPosition[] { new Position(Symbols.SPY, 10, 1) };
-            var group = new PositionGroup(new PositionGroupKey(new SecurityPositionGroupBuyingPowerModel(), positions), positions[0].Quantity, positions);
+            var group = new PositionGroup(
+                new PositionGroupKey(new SecurityPositionGroupBuyingPowerModel(), positions),
+                positions[0].Quantity,
+                positions
+            );
             var newCollection = collection.Add(group);
 
             var positions2 = new IPosition[] { new Position(Symbols.SPY, 20, 1) };
-            var group2 = new PositionGroup(new PositionGroupKey(new SecurityPositionGroupBuyingPowerModel(), positions2), positions2[0].Quantity, positions2);
+            var group2 = new PositionGroup(
+                new PositionGroupKey(new SecurityPositionGroupBuyingPowerModel(), positions2),
+                positions2[0].Quantity,
+                positions2
+            );
             var result = newCollection.Add(group2);
 
             Assert.AreEqual(1, result.Count);

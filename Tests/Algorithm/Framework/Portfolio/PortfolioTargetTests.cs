@@ -37,11 +37,16 @@ namespace QuantConnect.Tests.Algorithm.Framework.Portfolio
             algorithm.Initialize();
             algorithm.PostInitialize();
             var security = algorithm.Securities.Single().Value;
-            security.SetMarketPrice(new Tick{Value = 1m});
+            security.SetMarketPrice(new Tick { Value = 1m });
             security.Holdings.SetHoldings(1m, holdings);
 
             var buyingPowerMock = new Mock<IBuyingPowerModel>();
-            buyingPowerMock.Setup(bpm => bpm.GetMaximumOrderQuantityForTargetBuyingPower(It.IsAny<GetMaximumOrderQuantityForTargetBuyingPowerParameters>()))
+            buyingPowerMock
+                .Setup(bpm =>
+                    bpm.GetMaximumOrderQuantityForTargetBuyingPower(
+                        It.IsAny<GetMaximumOrderQuantityForTargetBuyingPowerParameters>()
+                    )
+                )
                 .Returns(new GetMaximumOrderQuantityResult(bpmQuantity, null, false));
             security.BuyingPowerModel = buyingPowerMock.Object;
             buyingPowerMock.Setup(bpm => bpm.GetLeverage(It.IsAny<Security>())).Returns(1);
@@ -84,8 +89,18 @@ namespace QuantConnect.Tests.Algorithm.Framework.Portfolio
             security.Holdings.SetHoldings(1m, holdings);
 
             var buyingPowerMock = new Mock<IBuyingPowerModel>();
-            buyingPowerMock.Setup(bpm => bpm.GetMaximumOrderQuantityForTargetBuyingPower(It.IsAny<GetMaximumOrderQuantityForTargetBuyingPowerParameters>()))
-                .Returns(new GetMaximumOrderQuantityResult(0, "The portfolio does not have enough margin available."));
+            buyingPowerMock
+                .Setup(bpm =>
+                    bpm.GetMaximumOrderQuantityForTargetBuyingPower(
+                        It.IsAny<GetMaximumOrderQuantityForTargetBuyingPowerParameters>()
+                    )
+                )
+                .Returns(
+                    new GetMaximumOrderQuantityResult(
+                        0,
+                        "The portfolio does not have enough margin available."
+                    )
+                );
             security.BuyingPowerModel = buyingPowerMock.Object;
             buyingPowerMock.Setup(bpm => bpm.GetLeverage(It.IsAny<Security>())).Returns(1);
 
@@ -114,7 +129,12 @@ namespace QuantConnect.Tests.Algorithm.Framework.Portfolio
             security.SetMarketPrice(new Tick { Value = 1m });
 
             var buyingPowerMock = new Mock<IBuyingPowerModel>();
-            buyingPowerMock.Setup(bpm => bpm.GetMaximumOrderQuantityForTargetBuyingPower(It.IsAny<GetMaximumOrderQuantityForTargetBuyingPowerParameters>()))
+            buyingPowerMock
+                .Setup(bpm =>
+                    bpm.GetMaximumOrderQuantityForTargetBuyingPower(
+                        It.IsAny<GetMaximumOrderQuantityForTargetBuyingPowerParameters>()
+                    )
+                )
                 .Returns(new GetMaximumOrderQuantityResult(1, null, false));
             buyingPowerMock.Setup(bpm => bpm.GetLeverage(It.IsAny<Security>())).Returns(1);
             security.BuyingPowerModel = buyingPowerMock.Object;

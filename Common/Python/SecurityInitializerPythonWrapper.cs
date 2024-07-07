@@ -21,16 +21,16 @@ namespace QuantConnect.Python
     /// <summary>
     /// Wraps a <see cref="PyObject"/> object that represents a type capable of initializing a new security
     /// </summary>
-    public class SecurityInitializerPythonWrapper : BasePythonWrapper<ISecurityInitializer>, ISecurityInitializer
+    public class SecurityInitializerPythonWrapper
+        : BasePythonWrapper<ISecurityInitializer>,
+            ISecurityInitializer
     {
         /// <summary>
         /// Constructor for initialising the <see cref="SecurityInitializerPythonWrapper"/> class with wrapped <see cref="PyObject"/> object
         /// </summary>
         /// <param name="model">Represents a type capable of initializing a new security</param>
         public SecurityInitializerPythonWrapper(PyObject model)
-            : base(model)
-        {
-        }
+            : base(model) { }
 
         /// <summary>
         /// Initializes the specified security

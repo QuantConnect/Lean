@@ -21,7 +21,7 @@ namespace QuantConnect.Api
     /// <summary>
     /// Class containing insights and the number of insights of the live algorithm in the request criteria
     /// </summary>
-    public class InsightResponse: RestResponse
+    public class InsightResponse : RestResponse
     {
         /// <summary>
         /// Collection of insights

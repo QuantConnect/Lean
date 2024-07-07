@@ -40,7 +40,9 @@ namespace QuantConnect.Securities.Positions
         /// </summary>
         /// <param name="parameters">An object containing the portfolio, the security and the order</param>
         /// <returns>The total margin in terms of the currency quoted in the order</returns>
-        InitialMargin GetInitialMarginRequiredForOrder(PositionGroupInitialMarginForOrderParameters parameters);
+        InitialMargin GetInitialMarginRequiredForOrder(
+            PositionGroupInitialMarginForOrderParameters parameters
+        );
 
         /// <summary>
         /// Computes the impact on the portfolio's buying power from adding the position group to the portfolio. This is
@@ -53,7 +55,7 @@ namespace QuantConnect.Securities.Positions
         /// <returns>Returns the portfolio's total portfolio value and margin used before and after the position changes are applied</returns>
         ReservedBuyingPowerImpact GetReservedBuyingPowerImpact(
             ReservedBuyingPowerImpactParameters parameters
-            );
+        );
 
         /// <summary>
         /// Check if there is sufficient buying power for the position group to execute this order.
@@ -62,14 +64,14 @@ namespace QuantConnect.Securities.Positions
         /// <returns>Returns buying power information for an order against a position group</returns>
         HasSufficientBuyingPowerForOrderResult HasSufficientBuyingPowerForOrder(
             HasSufficientPositionGroupBuyingPowerForOrderParameters parameters
-            );
+        );
 
         /// <summary>
         /// Computes the amount of buying power reserved by the provided position group
         /// </summary>
         ReservedBuyingPowerForPositionGroup GetReservedBuyingPowerForPositionGroup(
             ReservedBuyingPowerForPositionGroupParameters parameters
-            );
+        );
 
         /// <summary>
         /// Get the maximum position group order quantity to obtain a position with a given buying power
@@ -80,7 +82,7 @@ namespace QuantConnect.Securities.Positions
         /// <returns>Returns the maximum allowed market order quantity and if zero, also the reason</returns>
         GetMaximumLotsResult GetMaximumLotsForTargetBuyingPower(
             GetMaximumLotsForTargetBuyingPowerParameters parameters
-            );
+        );
 
         /// <summary>
         /// Get the maximum market position group order quantity to obtain a delta in the buying power used by a position group.
@@ -91,13 +93,15 @@ namespace QuantConnect.Securities.Positions
         /// <remarks>Used by the margin call model to reduce the position by a delta percent.</remarks>
         GetMaximumLotsResult GetMaximumLotsForDeltaBuyingPower(
             GetMaximumLotsForDeltaBuyingPowerParameters parameters
-            );
+        );
 
         /// <summary>
         /// Gets the buying power available for a position group trade
         /// </summary>
         /// <param name="parameters">A parameters object containing the algorithm's portfolio, security, and order direction</param>
         /// <returns>The buying power available for the trade</returns>
-        PositionGroupBuyingPower GetPositionGroupBuyingPower(PositionGroupBuyingPowerParameters parameters);
+        PositionGroupBuyingPower GetPositionGroupBuyingPower(
+            PositionGroupBuyingPowerParameters parameters
+        );
     }
 }

@@ -13,11 +13,11 @@
  * limitations under the License.
 */
 
+using System;
+using System.Collections.Generic;
 using QuantConnect.Data.UniverseSelection;
 using QuantConnect.Interfaces;
 using QuantConnect.Orders.Fees;
-using System;
-using System.Collections.Generic;
 
 namespace QuantConnect.Algorithm.CSharp
 {
@@ -39,8 +39,8 @@ namespace QuantConnect.Algorithm.CSharp
             // Use raw prices
             UniverseSettings.DataNormalizationMode = DataNormalizationMode.Raw;
 
-            SetStartDate(2014,3,24);
-            SetEndDate(2014,4,7);
+            SetStartDate(2014, 3, 24);
+            SetEndDate(2014, 4, 7);
             SetCash(50000);
 
             // Set the security initializer with zero fees
@@ -102,35 +102,36 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// This is used by the regression test system to indicate what the expected statistics are from running the algorithm
         /// </summary>
-        public Dictionary<string, string> ExpectedStatistics => new Dictionary<string, string>
-        {
-            {"Total Orders", "24"},
-            {"Average Win", "0.18%"},
-            {"Average Loss", "-0.18%"},
-            {"Compounding Annual Return", "-8.344%"},
-            {"Drawdown", "0.900%"},
-            {"Expectancy", "-0.161"},
-            {"Start Equity", "50000"},
-            {"End Equity", "49821.28"},
-            {"Net Profit", "-0.357%"},
-            {"Sharpe Ratio", "-1.8"},
-            {"Sortino Ratio", "-1.033"},
-            {"Probabilistic Sharpe Ratio", "24.427%"},
-            {"Loss Rate", "58%"},
-            {"Win Rate", "42%"},
-            {"Profit-Loss Ratio", "1.01"},
-            {"Alpha", "-0.06"},
-            {"Beta", "0.087"},
-            {"Annual Standard Deviation", "0.038"},
-            {"Annual Variance", "0.001"},
-            {"Information Ratio", "0.336"},
-            {"Tracking Error", "0.096"},
-            {"Treynor Ratio", "-0.798"},
-            {"Total Fees", "$0.00"},
-            {"Estimated Strategy Capacity", "$49000000.00"},
-            {"Lowest Capacity Asset", "AIG R735QTJ8XC9X"},
-            {"Portfolio Turnover", "31.92%"},
-            {"OrderListHash", "978f7804f369ace63ca96c0f1775cc6f"}
-        };
+        public Dictionary<string, string> ExpectedStatistics =>
+            new Dictionary<string, string>
+            {
+                { "Total Orders", "24" },
+                { "Average Win", "0.18%" },
+                { "Average Loss", "-0.18%" },
+                { "Compounding Annual Return", "-8.344%" },
+                { "Drawdown", "0.900%" },
+                { "Expectancy", "-0.161" },
+                { "Start Equity", "50000" },
+                { "End Equity", "49821.28" },
+                { "Net Profit", "-0.357%" },
+                { "Sharpe Ratio", "-1.8" },
+                { "Sortino Ratio", "-1.033" },
+                { "Probabilistic Sharpe Ratio", "24.427%" },
+                { "Loss Rate", "58%" },
+                { "Win Rate", "42%" },
+                { "Profit-Loss Ratio", "1.01" },
+                { "Alpha", "-0.06" },
+                { "Beta", "0.087" },
+                { "Annual Standard Deviation", "0.038" },
+                { "Annual Variance", "0.001" },
+                { "Information Ratio", "0.336" },
+                { "Tracking Error", "0.096" },
+                { "Treynor Ratio", "-0.798" },
+                { "Total Fees", "$0.00" },
+                { "Estimated Strategy Capacity", "$49000000.00" },
+                { "Lowest Capacity Asset", "AIG R735QTJ8XC9X" },
+                { "Portfolio Turnover", "31.92%" },
+                { "OrderListHash", "978f7804f369ace63ca96c0f1775cc6f" }
+            };
     }
 }

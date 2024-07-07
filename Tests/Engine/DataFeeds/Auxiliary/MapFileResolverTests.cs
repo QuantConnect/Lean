@@ -86,7 +86,10 @@ namespace QuantConnect.Tests.Engine.DataFeeds.Auxiliary
         {
             var spyMapFile = _resolver.ResolveMapFile("PEPE", new DateTime(2015, 08, 23));
             Assert.IsNotNull(spyMapFile);
-            Assert.AreEqual("Pepito", spyMapFile.GetMappedSymbol(new DateTime(2015, 08, 23), "Pepito"));
+            Assert.AreEqual(
+                "Pepito",
+                spyMapFile.GetMappedSymbol(new DateTime(2015, 08, 23), "Pepito")
+            );
         }
 
         [Test]
@@ -147,76 +150,141 @@ namespace QuantConnect.Tests.Engine.DataFeeds.Auxiliary
             var date = new DateTime(2018, 7, 23);
             var mapFile = _resolver.ResolveMapFile("NG", date);
             Assert.IsNotNull(mapFile);
-            Assert.AreEqual("NG UNT495KXTOLD", mapFile.GetMappedSymbol(new DateTime(2010, 6, 15), dataMappingMode: DataMappingMode.LastTradingDay));
-            Assert.AreEqual("NG UOMNNYK04BEP", mapFile.GetMappedSymbol(new DateTime(2010, 6, 15), dataMappingMode: DataMappingMode.FirstDayMonth));
-            Assert.AreEqual("NG UMWMI2IDASAP", mapFile.GetMappedSymbol(new DateTime(2010, 6, 15), dataMappingMode: DataMappingMode.OpenInterest));
+            Assert.AreEqual(
+                "NG UNT495KXTOLD",
+                mapFile.GetMappedSymbol(
+                    new DateTime(2010, 6, 15),
+                    dataMappingMode: DataMappingMode.LastTradingDay
+                )
+            );
+            Assert.AreEqual(
+                "NG UOMNNYK04BEP",
+                mapFile.GetMappedSymbol(
+                    new DateTime(2010, 6, 15),
+                    dataMappingMode: DataMappingMode.FirstDayMonth
+                )
+            );
+            Assert.AreEqual(
+                "NG UMWMI2IDASAP",
+                mapFile.GetMappedSymbol(
+                    new DateTime(2010, 6, 15),
+                    dataMappingMode: DataMappingMode.OpenInterest
+                )
+            );
         }
 
         private static MapFileResolver CreateMapFileResolver()
         {
-            return new MapFileResolver(new List<MapFile>
-            {
-                // remapped
-                new MapFile("goog", new List<MapFileRow>
+            return new MapFileResolver(
+                new List<MapFile>
                 {
-                    new MapFileRow(new DateTime(2014, 03, 27), "goocv"),
-                    new MapFileRow(new DateTime(2014, 04, 02), "goocv"),
-                    new MapFileRow(new DateTime(2050, 12, 31), "goog")
-                }),
-                new MapFile("googl", new List<MapFileRow>
-                {
-                    new MapFileRow(new DateTime(2004, 08, 19), "goog"),
-                    new MapFileRow(new DateTime(2014, 04, 02), "goog"),
-                    new MapFileRow(new DateTime(2050, 12, 31), "googl")
-                }),
-                // remapped (with both map files)
-                new MapFile("bgu", new List<MapFileRow>
-                {
-                    new MapFileRow(new DateTime(2008, 11, 05), "bgu"),
-                    new MapFileRow(new DateTime(2012, 06, 28), "bgu")
-                }),
-                new MapFile("spxl", new List<MapFileRow>
-                {
-                    new MapFileRow(new DateTime(2008, 11, 05), "bgu"),
-                    new MapFileRow(new DateTime(2012, 06, 28), "bgu"),
-                    new MapFileRow(new DateTime(2050, 12, 31), "spxl")
-                }),
-                // straight mapping
-                new MapFile("spy", new List<MapFileRow>
-                {
-                    new MapFileRow(new DateTime(1998, 01, 02), "spy"),
-                    new MapFileRow(new DateTime(2050, 12, 31), "spy")
-                }),
-                // new share class overtakes old share class same symbol
-                new MapFile("oih.1", new List<MapFileRow>
-                {
-                    new MapFileRow(new DateTime(2010, 02, 07), "oih"),
-                    new MapFileRow(new DateTime(2011, 12, 20), "oih")
-                }),
-                new MapFile("oih", new List<MapFileRow>
-                {
-                    new MapFileRow(new DateTime(2011, 12, 21), "oih"),
-                    new MapFileRow(new DateTime(2050, 12, 31), "oih")
-                }),
-                // remapped + delisted
-                new MapFile("twx.1", new List<MapFileRow>
-                {
-                    new MapFileRow(new DateTime(1998, 1, 2), "twx"),
-                    new MapFileRow(new DateTime(2001, 1, 11), "twx")
-                }),
-                new MapFile("twx", new List<MapFileRow>
-                {
-                    new MapFileRow(new DateTime(1998, 1, 2), "aol"),
-                    new MapFileRow(new DateTime(2003, 10, 15), "aol"),
-                    new MapFileRow(new DateTime(2018, 6, 15), "twx")
-                }),
-                new MapFile("ng", new List<MapFileRow>
-                {
-                    new MapFileRow(new DateTime(2010, 6, 15), "ng unt495kxtold", Exchange.NYMEX, DataMappingMode.LastTradingDay),
-                    new MapFileRow(new DateTime(2010, 6, 15), "ng uomnnyk04bep", Exchange.NYMEX, DataMappingMode.FirstDayMonth),
-                    new MapFileRow(new DateTime(2010, 6, 15), "ng umwmi2idasap", Exchange.NYMEX, DataMappingMode.OpenInterest),
-                }),
-            });
+                    // remapped
+                    new MapFile(
+                        "goog",
+                        new List<MapFileRow>
+                        {
+                            new MapFileRow(new DateTime(2014, 03, 27), "goocv"),
+                            new MapFileRow(new DateTime(2014, 04, 02), "goocv"),
+                            new MapFileRow(new DateTime(2050, 12, 31), "goog")
+                        }
+                    ),
+                    new MapFile(
+                        "googl",
+                        new List<MapFileRow>
+                        {
+                            new MapFileRow(new DateTime(2004, 08, 19), "goog"),
+                            new MapFileRow(new DateTime(2014, 04, 02), "goog"),
+                            new MapFileRow(new DateTime(2050, 12, 31), "googl")
+                        }
+                    ),
+                    // remapped (with both map files)
+                    new MapFile(
+                        "bgu",
+                        new List<MapFileRow>
+                        {
+                            new MapFileRow(new DateTime(2008, 11, 05), "bgu"),
+                            new MapFileRow(new DateTime(2012, 06, 28), "bgu")
+                        }
+                    ),
+                    new MapFile(
+                        "spxl",
+                        new List<MapFileRow>
+                        {
+                            new MapFileRow(new DateTime(2008, 11, 05), "bgu"),
+                            new MapFileRow(new DateTime(2012, 06, 28), "bgu"),
+                            new MapFileRow(new DateTime(2050, 12, 31), "spxl")
+                        }
+                    ),
+                    // straight mapping
+                    new MapFile(
+                        "spy",
+                        new List<MapFileRow>
+                        {
+                            new MapFileRow(new DateTime(1998, 01, 02), "spy"),
+                            new MapFileRow(new DateTime(2050, 12, 31), "spy")
+                        }
+                    ),
+                    // new share class overtakes old share class same symbol
+                    new MapFile(
+                        "oih.1",
+                        new List<MapFileRow>
+                        {
+                            new MapFileRow(new DateTime(2010, 02, 07), "oih"),
+                            new MapFileRow(new DateTime(2011, 12, 20), "oih")
+                        }
+                    ),
+                    new MapFile(
+                        "oih",
+                        new List<MapFileRow>
+                        {
+                            new MapFileRow(new DateTime(2011, 12, 21), "oih"),
+                            new MapFileRow(new DateTime(2050, 12, 31), "oih")
+                        }
+                    ),
+                    // remapped + delisted
+                    new MapFile(
+                        "twx.1",
+                        new List<MapFileRow>
+                        {
+                            new MapFileRow(new DateTime(1998, 1, 2), "twx"),
+                            new MapFileRow(new DateTime(2001, 1, 11), "twx")
+                        }
+                    ),
+                    new MapFile(
+                        "twx",
+                        new List<MapFileRow>
+                        {
+                            new MapFileRow(new DateTime(1998, 1, 2), "aol"),
+                            new MapFileRow(new DateTime(2003, 10, 15), "aol"),
+                            new MapFileRow(new DateTime(2018, 6, 15), "twx")
+                        }
+                    ),
+                    new MapFile(
+                        "ng",
+                        new List<MapFileRow>
+                        {
+                            new MapFileRow(
+                                new DateTime(2010, 6, 15),
+                                "ng unt495kxtold",
+                                Exchange.NYMEX,
+                                DataMappingMode.LastTradingDay
+                            ),
+                            new MapFileRow(
+                                new DateTime(2010, 6, 15),
+                                "ng uomnnyk04bep",
+                                Exchange.NYMEX,
+                                DataMappingMode.FirstDayMonth
+                            ),
+                            new MapFileRow(
+                                new DateTime(2010, 6, 15),
+                                "ng umwmi2idasap",
+                                Exchange.NYMEX,
+                                DataMappingMode.OpenInterest
+                            ),
+                        }
+                    ),
+                }
+            );
         }
     }
 }

@@ -44,7 +44,9 @@ namespace QuantConnect.Tests.Common.Securities
 
             // we test that options dont have leverage (100%) and it cannot be changed
             Assert.AreEqual(1m, buyingPowerModel.GetLeverage(option));
-            Assert.Throws<InvalidOperationException>(() => buyingPowerModel.SetLeverage(option, 10m));
+            Assert.Throws<InvalidOperationException>(
+                () => buyingPowerModel.SetLeverage(option, 10m)
+            );
             Assert.AreEqual(1m, buyingPowerModel.GetLeverage(option));
         }
 
@@ -70,8 +72,17 @@ namespace QuantConnect.Tests.Common.Securities
             var buyingPowerModel = new OptionMarginModel();
 
             // we expect long positions to be 100% charged.
-            Assert.AreEqual(optionPut.Holdings.AbsoluteHoldingsValue, buyingPowerModel.GetInitialMarginRequirement(optionPut, optionPut.Holdings.Quantity));
-            Assert.AreEqual(optionCall.Holdings.AbsoluteHoldingsValue, buyingPowerModel.GetInitialMarginRequirement(optionCall, optionCall.Holdings.Quantity));
+            Assert.AreEqual(
+                optionPut.Holdings.AbsoluteHoldingsValue,
+                buyingPowerModel.GetInitialMarginRequirement(optionPut, optionPut.Holdings.Quantity)
+            );
+            Assert.AreEqual(
+                optionCall.Holdings.AbsoluteHoldingsValue,
+                buyingPowerModel.GetInitialMarginRequirement(
+                    optionCall,
+                    optionCall.Holdings.Quantity
+                )
+            );
 
             // long option position have zero maintenance margin requirement
             Assert.AreEqual(0m, buyingPowerModel.GetMaintenanceMargin(optionPut));
@@ -227,8 +238,13 @@ namespace QuantConnect.Tests.Common.Securities
         [TestCase(OptionRight.Call, 430, 0.85, 415, 6800)] // IB: 6803
         // ITM
         [TestCase(OptionRight.Put, 430, 16.80, 415, 9900)] // IB: 9929
-        public void ShortOptionsMargin(OptionRight optionRight, decimal strikePrice, decimal optionPrice, decimal underlyingPrice,
-            double expectedUnitMargin)
+        public void ShortOptionsMargin(
+            OptionRight optionRight,
+            decimal strikePrice,
+            decimal optionPrice,
+            decimal underlyingPrice,
+            double expectedUnitMargin
+        )
         {
             var equity = CreateEquity();
             equity.SetMarketPrice(new Tick { Value = underlyingPrice });
@@ -239,10 +255,21 @@ namespace QuantConnect.Tests.Common.Securities
 
             var buyingPowerModel = new OptionMarginModel();
 
-            Assert.AreEqual(expectedUnitMargin, (double)buyingPowerModel.GetMaintenanceMargin(option), delta: 0.05 * expectedUnitMargin);
-            Assert.AreEqual(10 * expectedUnitMargin,
-                (double)buyingPowerModel.GetMaintenanceMargin(MaintenanceMarginParameters.ForQuantityAtCurrentPrice(option, -10)).Value,
-                delta: 0.05 * 10 * expectedUnitMargin);
+            Assert.AreEqual(
+                expectedUnitMargin,
+                (double)buyingPowerModel.GetMaintenanceMargin(option),
+                delta: 0.05 * expectedUnitMargin
+            );
+            Assert.AreEqual(
+                10 * expectedUnitMargin,
+                (double)
+                    buyingPowerModel
+                        .GetMaintenanceMargin(
+                            MaintenanceMarginParameters.ForQuantityAtCurrentPrice(option, -10)
+                        )
+                        .Value,
+                delta: 0.05 * 10 * expectedUnitMargin
+            );
         }
 
         // ITM
@@ -251,8 +278,13 @@ namespace QuantConnect.Tests.Common.Securities
         // OTM
         [TestCase(OptionRight.Call, 5000, 0.05, 4550, 45500)] // IB: 45537
         [TestCase(OptionRight.Put, 5000, 445, 4550, 112800)] // IB: 112876
-        public void ShortIndexOptionsMargin(OptionRight optionRight, decimal strikePrice, decimal optionPrice, decimal underlyingPrice,
-            double expectedUnitMargin)
+        public void ShortIndexOptionsMargin(
+            OptionRight optionRight,
+            decimal strikePrice,
+            decimal optionPrice,
+            decimal underlyingPrice,
+            double expectedUnitMargin
+        )
         {
             var index = CreateIndex();
             index.SetMarketPrice(new Tick { Value = underlyingPrice });
@@ -263,10 +295,21 @@ namespace QuantConnect.Tests.Common.Securities
 
             var buyingPowerModel = new OptionMarginModel();
 
-            Assert.AreEqual(expectedUnitMargin, (double)buyingPowerModel.GetMaintenanceMargin(indexOption), delta: 0.05 * expectedUnitMargin);
-            Assert.AreEqual(10 * expectedUnitMargin,
-                (double)buyingPowerModel.GetMaintenanceMargin(MaintenanceMarginParameters.ForQuantityAtCurrentPrice(indexOption, -10)).Value,
-                delta: 0.05 * 10 * expectedUnitMargin);
+            Assert.AreEqual(
+                expectedUnitMargin,
+                (double)buyingPowerModel.GetMaintenanceMargin(indexOption),
+                delta: 0.05 * expectedUnitMargin
+            );
+            Assert.AreEqual(
+                10 * expectedUnitMargin,
+                (double)
+                    buyingPowerModel
+                        .GetMaintenanceMargin(
+                            MaintenanceMarginParameters.ForQuantityAtCurrentPrice(indexOption, -10)
+                        )
+                        .Value,
+                delta: 0.05 * 10 * expectedUnitMargin
+            );
         }
 
         [TestCase(0)]
@@ -282,11 +325,14 @@ namespace QuantConnect.Tests.Common.Securities
             var option = algorithm.AddOption("SPY");
 
             var buyingPowerModel = new OptionMarginModel();
-            var quantity = buyingPowerModel.GetBuyingPower(new BuyingPowerParameters(
-                algorithm.Portfolio, option, OrderDirection.Buy));
+            var quantity = buyingPowerModel.GetBuyingPower(
+                new BuyingPowerParameters(algorithm.Portfolio, option, OrderDirection.Buy)
+            );
 
-            Assert.AreEqual(10000m + algorithm.Portfolio.CashBook[Currencies.USD].ValueInAccountCurrency,
-                quantity.Value);
+            Assert.AreEqual(
+                10000m + algorithm.Portfolio.CashBook[Currencies.USD].ValueInAccountCurrency,
+                quantity.Value
+            );
         }
 
         // For -1.5% target (15k), we can short -2 contracts for 478 margin requirement per unit
@@ -294,22 +340,23 @@ namespace QuantConnect.Tests.Common.Securities
         [TestCase(-1, -1, -.015)] // Short to Shorter (-1 + -1 = -2)
         [TestCase(-2, 0, -.015)] // No action
         [TestCase(2, -4, -.015)] // Long To Short (2 + -4 = -2)
-
         // -40% Target (~-400k), we can short -58 contracts for 478 margin requirement per unit
         [TestCase(0, -58, -0.40)] // Open Short (0 + -58 = -58)
         [TestCase(-2, -56, -0.40)] // Short to Shorter (-2 + -56 = -58)
         [TestCase(2, -60, -0.40)] // Long To Short (2 + -60 = -58)
-
         // 40% Target (~400k), we can buy 836 contracts
         [TestCase(0, 836, 0.40)] // Open Long (0 + 836 = 836)
         [TestCase(-2, 838, 0.40)] // Short to Long (-2 + 838 = 836)
         [TestCase(2, 834, 0.40)] // Long To Longer (2 + 834 = 836)
-
         // ~0.04% Target (~400). This is below the needed margin for one unit. We end up at 0 holdings for all cases.
         [TestCase(0, 0, 0.0004)] // Open Long (0 + 0 = 0)
         [TestCase(-2, 2, 0.0004)] // Short to Long (-2 + 2 = 0)
         [TestCase(2, -2, 0.0004)] // Long To Longer (2 + -2 = 0)
-        public void CallOTM_MarginRequirement(int startingHoldings, int expectedOrderSize, decimal targetPercentage)
+        public void CallOTM_MarginRequirement(
+            int startingHoldings,
+            int expectedOrderSize,
+            decimal targetPercentage
+        )
         {
             // Initialize algorithm
             var algorithm = new QCAlgorithm();
@@ -319,7 +366,12 @@ namespace QuantConnect.Tests.Common.Securities
             algorithm.SetCash(1000000);
             algorithm.SubscriptionManager.SetDataManager(new DataManagerStub(algorithm));
 
-            var optionSymbol = Symbols.CreateOptionSymbol("SPY", OptionRight.Call, 411m, DateTime.UtcNow);
+            var optionSymbol = Symbols.CreateOptionSymbol(
+                "SPY",
+                OptionRight.Call,
+                411m,
+                DateTime.UtcNow
+            );
             var option = algorithm.AddOptionContract(optionSymbol);
 
             option.Holdings.SetHoldings(4.74m, startingHoldings);
@@ -334,7 +386,12 @@ namespace QuantConnect.Tests.Common.Securities
             UpdatePrice(option.Underlying, 395.51m);
 
             var model = new OptionMarginModel();
-            var result = model.GetMaximumOrderQuantityForTargetBuyingPower(algorithm.Portfolio, option, targetPercentage, 0);
+            var result = model.GetMaximumOrderQuantityForTargetBuyingPower(
+                algorithm.Portfolio,
+                option,
+                targetPercentage,
+                0
+            );
             Assert.AreEqual(expectedOrderSize, result.Quantity);
 
             var initialPortfolioValue = algorithm.Portfolio.TotalPortfolioValue;
@@ -343,13 +400,18 @@ namespace QuantConnect.Tests.Common.Securities
 
             if (option.Holdings.Invested)
             {
-                Assert.LessOrEqual(Math.Abs(initialMarginUsed - algorithm.Portfolio.TotalMarginUsed), initialPortfolioValue * Math.Abs(targetPercentage));
+                Assert.LessOrEqual(
+                    Math.Abs(initialMarginUsed - algorithm.Portfolio.TotalMarginUsed),
+                    initialPortfolioValue * Math.Abs(targetPercentage)
+                );
             }
         }
 
         [TestCase(0)]
         [TestCase(-10)]
-        public void GetsMaintenanceMarginForAPotentialShortPositionWithoutInitialHoldings(decimal initialHoldings)
+        public void GetsMaintenanceMarginForAPotentialShortPositionWithoutInitialHoldings(
+            decimal initialHoldings
+        )
         {
             // Computing the maintenance margin for a potential position is useful because it will be used to check whether there is
             // enough available buying power to open said new position.
@@ -379,7 +441,14 @@ namespace QuantConnect.Tests.Common.Securities
 
             // Short option positions are very expensive in terms of margin.
             // Margin = 2 * 100 * (1.6 + 0.2 * 410) = 16720
-            Assert.AreEqual(16720m, buyingPowerModel.GetMaintenanceMargin(MaintenanceMarginParameters.ForQuantityAtCurrentPrice(optionCall, -2)).Value);
+            Assert.AreEqual(
+                16720m,
+                buyingPowerModel
+                    .GetMaintenanceMargin(
+                        MaintenanceMarginParameters.ForQuantityAtCurrentPrice(optionCall, -2)
+                    )
+                    .Value
+            );
         }
 
         // OTM
@@ -388,7 +457,11 @@ namespace QuantConnect.Tests.Common.Securities
         // ITM
         [TestCase(1, 3450, 140)] // IB: 0 (GetInitialMarginRequirement() returns the value with the premium)
         [TestCase(-1, 3450, -37340)] // IB: 36081
-        public void GetInitialMarginRequiredForOrderWithIndexOption(decimal quantity, decimal strikePrice, decimal expectedInitialMargin)
+        public void GetInitialMarginRequiredForOrderWithIndexOption(
+            decimal quantity,
+            decimal strikePrice,
+            decimal expectedInitialMargin
+        )
         {
             var price = 1.40m;
             var underlyingPrice = 17400m;
@@ -410,15 +483,17 @@ namespace QuantConnect.Tests.Common.Securities
 
         private static void UpdatePrice(Security security, decimal close)
         {
-            security.SetMarketPrice(new TradeBar
-            {
-                Time = DateTime.Now,
-                Symbol = security.Symbol,
-                Open = close,
-                High = close,
-                Low = close,
-                Close = close
-            });
+            security.SetMarketPrice(
+                new TradeBar
+                {
+                    Time = DateTime.Now,
+                    Symbol = security.Symbol,
+                    Open = close,
+                    High = close,
+                    Low = close,
+                    Close = close
+                }
+            );
         }
 
         private static QuantConnect.Securities.Equity.Equity CreateEquity()
@@ -426,7 +501,16 @@ namespace QuantConnect.Tests.Common.Securities
             var tz = TimeZones.NewYork;
             return new QuantConnect.Securities.Equity.Equity(
                 SecurityExchangeHours.AlwaysOpen(tz),
-                new SubscriptionDataConfig(typeof(TradeBar), Symbols.SPY, Resolution.Minute, tz, tz, true, false, false),
+                new SubscriptionDataConfig(
+                    typeof(TradeBar),
+                    Symbols.SPY,
+                    Resolution.Minute,
+                    tz,
+                    tz,
+                    true,
+                    false,
+                    false
+                ),
                 new Cash(Currencies.USD, 0, 1m),
                 SymbolProperties.GetDefault(Currencies.USD),
                 ErrorCurrencyConverter.Instance,
@@ -434,17 +518,55 @@ namespace QuantConnect.Tests.Common.Securities
             );
         }
 
-        private static Option CreateOption(Security underlying, OptionRight optionRight, decimal strikePrice, string targetOption = null)
+        private static Option CreateOption(
+            Security underlying,
+            OptionRight optionRight,
+            decimal strikePrice,
+            string targetOption = null
+        )
         {
             var tz = TimeZones.NewYork;
-            var optionSymbol = targetOption.IsNullOrEmpty() ? Symbol.CreateOption(underlying.Symbol, Market.USA, OptionStyle.American, optionRight, strikePrice,
-                new DateTime(2015, 02, 27)) : Symbol.CreateOption(underlying.Symbol, targetOption, Market.USA, OptionStyle.American, optionRight, strikePrice,
-                new DateTime(2015, 02, 27));
+            var optionSymbol = targetOption.IsNullOrEmpty()
+                ? Symbol.CreateOption(
+                    underlying.Symbol,
+                    Market.USA,
+                    OptionStyle.American,
+                    optionRight,
+                    strikePrice,
+                    new DateTime(2015, 02, 27)
+                )
+                : Symbol.CreateOption(
+                    underlying.Symbol,
+                    targetOption,
+                    Market.USA,
+                    OptionStyle.American,
+                    optionRight,
+                    strikePrice,
+                    new DateTime(2015, 02, 27)
+                );
             var option = new Option(
                 SecurityExchangeHours.AlwaysOpen(tz),
-                new SubscriptionDataConfig(typeof(TradeBar), optionSymbol, Resolution.Minute, tz, tz, true, false, false),
+                new SubscriptionDataConfig(
+                    typeof(TradeBar),
+                    optionSymbol,
+                    Resolution.Minute,
+                    tz,
+                    tz,
+                    true,
+                    false,
+                    false
+                ),
                 new Cash(Currencies.USD, 0, 1m),
-                new OptionSymbolProperties(SymbolPropertiesDatabase.FromDataFolder().GetSymbolProperties(Market.USA, optionSymbol, optionSymbol.SecurityType, "USD")),
+                new OptionSymbolProperties(
+                    SymbolPropertiesDatabase
+                        .FromDataFolder()
+                        .GetSymbolProperties(
+                            Market.USA,
+                            optionSymbol,
+                            optionSymbol.SecurityType,
+                            "USD"
+                        )
+                ),
                 ErrorCurrencyConverter.Instance,
                 RegisteredSecurityDataTypesProvider.Null
             );
@@ -458,7 +580,16 @@ namespace QuantConnect.Tests.Common.Securities
             var tz = TimeZones.NewYork;
             var option = new Option(
                 SecurityExchangeHours.AlwaysOpen(tz),
-                new SubscriptionDataConfig(typeof(TradeBar), symbol, Resolution.Minute, tz, tz, true, false, false),
+                new SubscriptionDataConfig(
+                    typeof(TradeBar),
+                    symbol,
+                    Resolution.Minute,
+                    tz,
+                    tz,
+                    true,
+                    false,
+                    false
+                ),
                 new Cash(Currencies.USD, 0, 1m),
                 new OptionSymbolProperties("", Currencies.USD, 100, 0.01m, 1),
                 ErrorCurrencyConverter.Instance,
@@ -474,7 +605,16 @@ namespace QuantConnect.Tests.Common.Securities
             return new QuantConnect.Securities.Index.Index(
                 SecurityExchangeHours.AlwaysOpen(tz),
                 new Cash(Currencies.USD, 0, 1m),
-                new SubscriptionDataConfig(typeof(TradeBar), symbol ?? Symbols.SPX, Resolution.Minute, tz, tz, true, false, false),
+                new SubscriptionDataConfig(
+                    typeof(TradeBar),
+                    symbol ?? Symbols.SPX,
+                    Resolution.Minute,
+                    tz,
+                    tz,
+                    true,
+                    false,
+                    false
+                ),
                 SymbolProperties.GetDefault(Currencies.USD),
                 ErrorCurrencyConverter.Instance,
                 RegisteredSecurityDataTypesProvider.Null

@@ -16,12 +16,12 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using QuantConnect.Algorithm.Framework.Portfolio;
 using QuantConnect.Data;
 using QuantConnect.Interfaces;
 using QuantConnect.Orders;
 using QuantConnect.Securities;
 using QuantConnect.Statistics;
-using QuantConnect.Algorithm.Framework.Portfolio;
 
 namespace QuantConnect.Algorithm.CSharp
 {
@@ -30,7 +30,9 @@ namespace QuantConnect.Algorithm.CSharp
     /// and trading a Security in quote currency different than account currency.
     /// Uses SecurityMarginModel as BuyingPowerModel.
     /// </summary>
-    public class SetAccountCurrencySecurityMarginModelRegressionAlgorithm : QCAlgorithm, IRegressionAlgorithmDefinition
+    public class SetAccountCurrencySecurityMarginModelRegressionAlgorithm
+        : QCAlgorithm,
+            IRegressionAlgorithmDefinition
     {
         private Security _spy;
         private int _step;
@@ -44,15 +46,17 @@ namespace QuantConnect.Algorithm.CSharp
         /// </summary>
         public override void Initialize()
         {
-            SetStartDate(2013, 10, 07);  //Set Start Date
-            SetEndDate(2013, 10, 15);    //Set End Date
-            SetAccountCurrency("EUR");   // Change account currency
+            SetStartDate(2013, 10, 07); //Set Start Date
+            SetEndDate(2013, 10, 15); //Set End Date
+            SetAccountCurrency("EUR"); // Change account currency
             _initialCapital = Portfolio.CashBook["EUR"].Amount;
 
             _spy = AddEquity("SPY", Resolution.Daily);
             if (!(_spy.BuyingPowerModel is SecurityMarginModel))
             {
-                throw new RegressionTestException("This regression algorithm is expected to test the SecurityMarginModel");
+                throw new RegressionTestException(
+                    "This regression algorithm is expected to test the SecurityMarginModel"
+                );
             }
         }
 
@@ -100,7 +104,8 @@ namespace QuantConnect.Algorithm.CSharp
 
         private void UpdateExpectedOrderQuantity(decimal target)
         {
-            _expectedOrderQuantity = (Portfolio.TotalPortfolioValueLessFreeBuffer * target - _spy.Holdings.HoldingsValue)
+            _expectedOrderQuantity =
+                (Portfolio.TotalPortfolioValueLessFreeBuffer * target - _spy.Holdings.HoldingsValue)
                 / (_spy.Price * _spy.QuoteCurrency.ConversionRate);
             _expectedOrderQuantity--; // minus 1 per fees
             _expectedOrderQuantity -= _expectedOrderQuantity % _spy.SymbolProperties.LotSize;
@@ -111,16 +116,21 @@ namespace QuantConnect.Algorithm.CSharp
         {
             if (Portfolio.CashBook["EUR"].Amount != _initialCapital)
             {
-                throw new RegressionTestException($"Unexpected EUR ending cash amount: {Portfolio.CashBook["EUR"].Amount}.");
+                throw new RegressionTestException(
+                    $"Unexpected EUR ending cash amount: {Portfolio.CashBook["EUR"].Amount}."
+                );
             }
-            var expectedAmount = Portfolio.CashBook.Convert(Portfolio.TotalProfit, "EUR", "USD")
+            var expectedAmount =
+                Portfolio.CashBook.Convert(Portfolio.TotalProfit, "EUR", "USD")
                 - Portfolio.CashBook.Convert(Portfolio.TotalFees, "EUR", "USD");
             var amount = Portfolio.CashBook["USD"].Amount;
             // there could be a small difference due to conversion rates
             // leave 1% for error
             if (Math.Abs(expectedAmount - amount) > Math.Abs(expectedAmount) * 0.01m)
             {
-                throw new RegressionTestException($"Unexpected USD ending cash amount: {amount}. Expected {expectedAmount}");
+                throw new RegressionTestException(
+                    $"Unexpected USD ending cash amount: {amount}. Expected {expectedAmount}"
+                );
             }
         }
 
@@ -132,33 +142,44 @@ namespace QuantConnect.Algorithm.CSharp
                 // leave 1 unit as error in expected value
                 if (Math.Abs(orderEvent.FillQuantity - _expectedOrderQuantity) > 2)
                 {
-                    throw new RegressionTestException($"Unexpected order event fill quantity: {orderEvent.FillQuantity}. " +
-                        $"Expected {_expectedOrderQuantity}");
+                    throw new RegressionTestException(
+                        $"Unexpected order event fill quantity: {orderEvent.FillQuantity}. "
+                            + $"Expected {_expectedOrderQuantity}"
+                    );
                 }
 
-                var orderFeeInAccountCurrency = Portfolio.CashBook.ConvertToAccountCurrency(orderEvent.OrderFee.Value).Amount;
+                var orderFeeInAccountCurrency = Portfolio
+                    .CashBook.ConvertToAccountCurrency(orderEvent.OrderFee.Value)
+                    .Amount;
                 var expectedOrderFee = _spy.Holdings.TotalFees - _previousHoldingsFees;
-                if (orderEvent.OrderFee.Value.Currency == AccountCurrency
+                if (
+                    orderEvent.OrderFee.Value.Currency == AccountCurrency
                     // leave 0.00001m as error in expected fee value
-                    || Math.Abs(expectedOrderFee - orderFeeInAccountCurrency) > 0.00001m)
+                    || Math.Abs(expectedOrderFee - orderFeeInAccountCurrency) > 0.00001m
+                )
                 {
-                    throw new RegressionTestException($"Unexpected order fee: {orderFeeInAccountCurrency}. " +
-                        $"Expected {expectedOrderFee}");
+                    throw new RegressionTestException(
+                        $"Unexpected order fee: {orderFeeInAccountCurrency}. "
+                            + $"Expected {expectedOrderFee}"
+                    );
                 }
 
                 if (!TradeBuilder.HasOpenPosition(_spy.Symbol))
                 {
                     var lastTrade = TradeBuilder.ClosedTrades.Last();
 
-                    var expectedProfitLoss = (lastTrade.ExitPrice - lastTrade.EntryPrice)
+                    var expectedProfitLoss =
+                        (lastTrade.ExitPrice - lastTrade.EntryPrice)
                         * lastTrade.Quantity
                         * _spy.QuoteCurrency.ConversionRate
                         * (lastTrade.Direction == TradeDirection.Long ? 1 : -1);
 
                     if (Math.Abs(expectedProfitLoss - lastTrade.ProfitLoss) > 1)
                     {
-                        throw new RegressionTestException($"Unexpected last trade ProfitLoss: {lastTrade.ProfitLoss}. " +
-                            $"Expected {expectedProfitLoss}");
+                        throw new RegressionTestException(
+                            $"Unexpected last trade ProfitLoss: {lastTrade.ProfitLoss}. "
+                                + $"Expected {expectedProfitLoss}"
+                        );
                     }
 
                     // There is a difference in what does Holdings and TradeBuilder consider LastTrade
@@ -170,8 +191,10 @@ namespace QuantConnect.Algorithm.CSharp
 
                     if (Math.Abs(_spy.Holdings.LastTradeProfit - expectedProfitLoss) > 1)
                     {
-                        throw new RegressionTestException($"Unexpected Holdings.NetProfit: {_spy.Holdings.LastTradeProfit}. " +
-                            $"Expected {expectedProfitLoss}");
+                        throw new RegressionTestException(
+                            $"Unexpected Holdings.NetProfit: {_spy.Holdings.LastTradeProfit}. "
+                                + $"Expected {expectedProfitLoss}"
+                        );
                     }
                 }
 
@@ -208,35 +231,36 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// This is used by the regression test system to indicate what the expected statistics are from running the algorithm
         /// </summary>
-        public Dictionary<string, string> ExpectedStatistics => new Dictionary<string, string>
-        {
-            {"Total Orders", "6"},
-            {"Average Win", "0.41%"},
-            {"Average Loss", "-0.85%"},
-            {"Compounding Annual Return", "-15.350%"},
-            {"Drawdown", "1.200%"},
-            {"Expectancy", "-0.260"},
-            {"Start Equity", "100000"},
-            {"End Equity", "99552.05"},
-            {"Net Profit", "-0.448%"},
-            {"Sharpe Ratio", "-1.457"},
-            {"Sortino Ratio", "-2.62"},
-            {"Probabilistic Sharpe Ratio", "33.743%"},
-            {"Loss Rate", "50%"},
-            {"Win Rate", "50%"},
-            {"Profit-Loss Ratio", "0.48"},
-            {"Alpha", "-0.349"},
-            {"Beta", "0.34"},
-            {"Annual Standard Deviation", "0.084"},
-            {"Annual Variance", "0.007"},
-            {"Information Ratio", "-6.6"},
-            {"Tracking Error", "0.119"},
-            {"Treynor Ratio", "-0.361"},
-            {"Total Fees", "€13.73"},
-            {"Estimated Strategy Capacity", "€310000000.00"},
-            {"Lowest Capacity Asset", "SPY R735QTJ8XC9X"},
-            {"Portfolio Turnover", "40.08%"},
-            {"OrderListHash", "3928dff130532ed7e110a40d447c71ad"}
-        };
+        public Dictionary<string, string> ExpectedStatistics =>
+            new Dictionary<string, string>
+            {
+                { "Total Orders", "6" },
+                { "Average Win", "0.41%" },
+                { "Average Loss", "-0.85%" },
+                { "Compounding Annual Return", "-15.350%" },
+                { "Drawdown", "1.200%" },
+                { "Expectancy", "-0.260" },
+                { "Start Equity", "100000" },
+                { "End Equity", "99552.05" },
+                { "Net Profit", "-0.448%" },
+                { "Sharpe Ratio", "-1.457" },
+                { "Sortino Ratio", "-2.62" },
+                { "Probabilistic Sharpe Ratio", "33.743%" },
+                { "Loss Rate", "50%" },
+                { "Win Rate", "50%" },
+                { "Profit-Loss Ratio", "0.48" },
+                { "Alpha", "-0.349" },
+                { "Beta", "0.34" },
+                { "Annual Standard Deviation", "0.084" },
+                { "Annual Variance", "0.007" },
+                { "Information Ratio", "-6.6" },
+                { "Tracking Error", "0.119" },
+                { "Treynor Ratio", "-0.361" },
+                { "Total Fees", "€13.73" },
+                { "Estimated Strategy Capacity", "€310000000.00" },
+                { "Lowest Capacity Asset", "SPY R735QTJ8XC9X" },
+                { "Portfolio Turnover", "40.08%" },
+                { "OrderListHash", "3928dff130532ed7e110a40d447c71ad" }
+            };
     }
 }

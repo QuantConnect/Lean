@@ -14,19 +14,21 @@
  *
 */
 
+using System;
+using System.Collections.Generic;
 using QuantConnect.Data;
 using QuantConnect.Interfaces;
 using QuantConnect.Orders;
 using QuantConnect.Securities;
-using System;
-using System.Collections.Generic;
 
 namespace QuantConnect.Algorithm.CSharp
 {
     /// <summary>
     /// Regression algorithm asserting we can specify a custom Shortable Provider
     /// </summary>
-    public class CustomShortableProviderRegressionAlgorithm : QCAlgorithm, IRegressionAlgorithmDefinition
+    public class CustomShortableProviderRegressionAlgorithm
+        : QCAlgorithm,
+            IRegressionAlgorithmDefinition
     {
         private Security _spy;
         private OrderTicket _orderId;
@@ -55,12 +57,16 @@ namespace QuantConnect.Algorithm.CSharp
             var transactions = Transactions.OrdersCount;
             if (transactions != 1)
             {
-                throw new RegressionTestException($"Algorithm should have just 1 order, but was {transactions}");
+                throw new RegressionTestException(
+                    $"Algorithm should have just 1 order, but was {transactions}"
+                );
             }
             var orderQuantity = Transactions.GetOrderById(_orderId).Quantity;
             if (orderQuantity != -1001)
             {
-                throw new RegressionTestException($"Quantity of order {_orderId} should be -1001, but was {orderQuantity}");
+                throw new RegressionTestException(
+                    $"Quantity of order {_orderId} should be -1001, but was {orderQuantity}"
+                );
             }
             var feeRate = _spy.ShortableProvider.FeeRate(_spy.Symbol, Time);
             if (feeRate != 0.0025m)
@@ -70,7 +76,9 @@ namespace QuantConnect.Algorithm.CSharp
             var rebateRate = _spy.ShortableProvider.RebateRate(_spy.Symbol, Time);
             if (rebateRate != 0.0507m)
             {
-                throw new RegressionTestException($"Fee rate should be 0.0507, but was {rebateRate}");
+                throw new RegressionTestException(
+                    $"Fee rate should be 0.0507, but was {rebateRate}"
+                );
             }
         }
 
@@ -121,35 +129,36 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// This is used by the regression test system to indicate what the expected statistics are from running the algorithm
         /// </summary>
-        public Dictionary<string, string> ExpectedStatistics => new Dictionary<string, string>
-        {
-            {"Total Orders", "1"},
-            {"Average Win", "0%"},
-            {"Average Loss", "0%"},
-            {"Compounding Annual Return", "0%"},
-            {"Drawdown", "0%"},
-            {"Expectancy", "0"},
-            {"Start Equity", "10000000"},
-            {"End Equity", "10000000"},
-            {"Net Profit", "0%"},
-            {"Sharpe Ratio", "0"},
-            {"Sortino Ratio", "0"},
-            {"Probabilistic Sharpe Ratio", "0%"},
-            {"Loss Rate", "0%"},
-            {"Win Rate", "0%"},
-            {"Profit-Loss Ratio", "0"},
-            {"Alpha", "0"},
-            {"Beta", "0"},
-            {"Annual Standard Deviation", "0"},
-            {"Annual Variance", "0"},
-            {"Information Ratio", "0"},
-            {"Tracking Error", "0"},
-            {"Treynor Ratio", "0"},
-            {"Total Fees", "$0.00"},
-            {"Estimated Strategy Capacity", "$0"},
-            {"Lowest Capacity Asset", ""},
-            {"Portfolio Turnover", "0%"},
-            {"OrderListHash", "65ce55aaad2f4a722858d84995fb7030"}
-        };
+        public Dictionary<string, string> ExpectedStatistics =>
+            new Dictionary<string, string>
+            {
+                { "Total Orders", "1" },
+                { "Average Win", "0%" },
+                { "Average Loss", "0%" },
+                { "Compounding Annual Return", "0%" },
+                { "Drawdown", "0%" },
+                { "Expectancy", "0" },
+                { "Start Equity", "10000000" },
+                { "End Equity", "10000000" },
+                { "Net Profit", "0%" },
+                { "Sharpe Ratio", "0" },
+                { "Sortino Ratio", "0" },
+                { "Probabilistic Sharpe Ratio", "0%" },
+                { "Loss Rate", "0%" },
+                { "Win Rate", "0%" },
+                { "Profit-Loss Ratio", "0" },
+                { "Alpha", "0" },
+                { "Beta", "0" },
+                { "Annual Standard Deviation", "0" },
+                { "Annual Variance", "0" },
+                { "Information Ratio", "0" },
+                { "Tracking Error", "0" },
+                { "Treynor Ratio", "0" },
+                { "Total Fees", "$0.00" },
+                { "Estimated Strategy Capacity", "$0" },
+                { "Lowest Capacity Asset", "" },
+                { "Portfolio Turnover", "0%" },
+                { "OrderListHash", "65ce55aaad2f4a722858d84995fb7030" }
+            };
     }
 }

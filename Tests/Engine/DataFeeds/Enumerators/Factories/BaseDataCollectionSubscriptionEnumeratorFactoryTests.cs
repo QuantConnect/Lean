@@ -36,7 +36,19 @@ namespace QuantConnect.Tests.Engine.DataFeeds.Enumerators.Factories
         {
             var symbolFactory = new FundamentalUniverse();
             var symbol = symbolFactory.UniverseSymbol();
-            var config = new SubscriptionDataConfig(typeof(FundamentalUniverse), symbol, Resolution.Daily, TimeZones.NewYork, TimeZones.NewYork, false, false, false, false, TickType.Trade, false);
+            var config = new SubscriptionDataConfig(
+                typeof(FundamentalUniverse),
+                symbol,
+                Resolution.Daily,
+                TimeZones.NewYork,
+                TimeZones.NewYork,
+                false,
+                false,
+                false,
+                false,
+                TickType.Trade,
+                false
+            );
             var security = new Security(
                 SecurityExchangeHours.AlwaysOpen(TimeZones.NewYork),
                 config,
@@ -47,9 +59,21 @@ namespace QuantConnect.Tests.Engine.DataFeeds.Enumerators.Factories
                 new SecurityCache()
             );
 
-            var universeSettings = new UniverseSettings(Resolution.Daily, 2m, true, false, TimeSpan.FromDays(1));
-            var securityInitializer = new BrokerageModelSecurityInitializer(new DefaultBrokerageModel(), SecuritySeeder.Null);
-            using var universe = new CoarseFundamentalUniverse(universeSettings, x => new List<Symbol>{ Symbols.AAPL });
+            var universeSettings = new UniverseSettings(
+                Resolution.Daily,
+                2m,
+                true,
+                false,
+                TimeSpan.FromDays(1)
+            );
+            var securityInitializer = new BrokerageModelSecurityInitializer(
+                new DefaultBrokerageModel(),
+                SecuritySeeder.Null
+            );
+            using var universe = new CoarseFundamentalUniverse(
+                universeSettings,
+                x => new List<Symbol> { Symbols.AAPL }
+            );
 
             var factory = new BaseDataCollectionSubscriptionEnumeratorFactory(null);
 
@@ -71,7 +95,9 @@ namespace QuantConnect.Tests.Engine.DataFeeds.Enumerators.Factories
             GC.Collect();
             var ramUsageAfterLoop = OS.TotalPhysicalMemoryUsed;
 
-            Log.Trace($"RAM usage - before: {ramUsageBeforeLoop} MB, after: {ramUsageAfterLoop} MB");
+            Log.Trace(
+                $"RAM usage - before: {ramUsageBeforeLoop} MB, after: {ramUsageAfterLoop} MB"
+            );
 
             Assert.IsTrue(ramUsageAfterLoop - ramUsageBeforeLoop < 10);
         }
@@ -81,7 +107,19 @@ namespace QuantConnect.Tests.Engine.DataFeeds.Enumerators.Factories
         {
             var symbolFactory = new FundamentalUniverse();
             var symbol = symbolFactory.UniverseSymbol();
-            var config = new SubscriptionDataConfig(typeof(FundamentalUniverse), symbol, Resolution.Daily, TimeZones.NewYork, TimeZones.NewYork, false, false, false, false, TickType.Trade, false);
+            var config = new SubscriptionDataConfig(
+                typeof(FundamentalUniverse),
+                symbol,
+                Resolution.Daily,
+                TimeZones.NewYork,
+                TimeZones.NewYork,
+                false,
+                false,
+                false,
+                false,
+                TickType.Trade,
+                false
+            );
             var security = new Security(
                 SecurityExchangeHours.AlwaysOpen(TimeZones.NewYork),
                 config,
@@ -92,9 +130,21 @@ namespace QuantConnect.Tests.Engine.DataFeeds.Enumerators.Factories
                 new SecurityCache()
             );
 
-            var universeSettings = new UniverseSettings(Resolution.Daily, 2m, true, false, TimeSpan.FromDays(1));
-            var securityInitializer = new BrokerageModelSecurityInitializer(new DefaultBrokerageModel(), SecuritySeeder.Null);
-            using var universe = new CoarseFundamentalUniverse(universeSettings, x => new List<Symbol> { Symbols.AAPL });
+            var universeSettings = new UniverseSettings(
+                Resolution.Daily,
+                2m,
+                true,
+                false,
+                TimeSpan.FromDays(1)
+            );
+            var securityInitializer = new BrokerageModelSecurityInitializer(
+                new DefaultBrokerageModel(),
+                SecuritySeeder.Null
+            );
+            using var universe = new CoarseFundamentalUniverse(
+                universeSettings,
+                x => new List<Symbol> { Symbols.AAPL }
+            );
 
             var factory = new BaseDataCollectionSubscriptionEnumeratorFactory(null);
 
@@ -102,7 +152,14 @@ namespace QuantConnect.Tests.Engine.DataFeeds.Enumerators.Factories
             var dateEnd = new DateTime(2014, 3, 27);
             var days = (dateEnd - dateStart).Days + 1;
 
-            var request = new SubscriptionRequest(true, universe, security, config, dateStart, dateEnd);
+            var request = new SubscriptionRequest(
+                true,
+                universe,
+                security,
+                config,
+                dateStart,
+                dateEnd
+            );
 
             using (var enumerator = factory.CreateEnumerator(request, TestGlobals.DataProvider))
             {
@@ -123,5 +180,4 @@ namespace QuantConnect.Tests.Engine.DataFeeds.Enumerators.Factories
             }
         }
     }
-}
-;
+};

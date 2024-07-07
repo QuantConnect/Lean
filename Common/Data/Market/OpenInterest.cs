@@ -14,9 +14,9 @@
  *
 */
 
-using QuantConnect.Util;
 using System;
 using ProtoBuf;
+using QuantConnect.Util;
 
 namespace QuantConnect.Data.Market
 {
@@ -73,21 +73,34 @@ namespace QuantConnect.Data.Market
         /// <param name="symbol">Symbol for underlying asset</param>
         /// <param name="line">CSV line of data from QC OI csv</param>
         /// <param name="baseDate">The base date of the OI</param>
-        public OpenInterest(SubscriptionDataConfig config, Symbol symbol, string line, DateTime baseDate)
+        public OpenInterest(
+            SubscriptionDataConfig config,
+            Symbol symbol,
+            string line,
+            DateTime baseDate
+        )
         {
             var csv = line.Split(',');
             DataType = MarketDataType.Tick;
             TickType = TickType.OpenInterest;
             Symbol = symbol;
 
-            Time = (config.Resolution == Resolution.Daily || config.Resolution == Resolution.Hour) ?
-                // hourly and daily have different time format, and can use slow, robust c# parser.
-                DateTime.ParseExact(csv[0], DateFormat.TwelveCharacter,
-                    System.Globalization.CultureInfo.InvariantCulture)
-                    .ConvertTo(config.DataTimeZone, config.ExchangeTimeZone)
-                :
-                // Using custom "ToDecimal" conversion for speed on high resolution data.
-                baseDate.Date.AddMilliseconds(csv[0].ToInt32()).ConvertTo(config.DataTimeZone, config.ExchangeTimeZone);
+            Time =
+                (config.Resolution == Resolution.Daily || config.Resolution == Resolution.Hour)
+                    ?
+                    // hourly and daily have different time format, and can use slow, robust c# parser.
+                    DateTime
+                        .ParseExact(
+                            csv[0],
+                            DateFormat.TwelveCharacter,
+                            System.Globalization.CultureInfo.InvariantCulture
+                        )
+                        .ConvertTo(config.DataTimeZone, config.ExchangeTimeZone)
+                    :
+                    // Using custom "ToDecimal" conversion for speed on high resolution data.
+                    baseDate
+                        .Date.AddMilliseconds(csv[0].ToInt32())
+                        .ConvertTo(config.DataTimeZone, config.ExchangeTimeZone);
 
             Value = csv[1].ToDecimal();
         }
@@ -98,10 +111,8 @@ namespace QuantConnect.Data.Market
         /// <param name="line">CSV source line of the compressed source</param>
         /// <param name="date">Base date for the open interest (date is stored as int milliseconds since midnight)</param>
         /// <param name="config">Subscription configuration object</param>
-        public OpenInterest(SubscriptionDataConfig config, string line, DateTime date):
-            this(config, config.Symbol, line, date)
-        {
-        }
+        public OpenInterest(SubscriptionDataConfig config, string line, DateTime date)
+            : this(config, config.Symbol, line, date) { }
 
         /// <summary>
         /// Tick implementation of reader method: read a line of data from the source and convert it to an open interest object.
@@ -111,7 +122,12 @@ namespace QuantConnect.Data.Market
         /// <param name="date">Date of this reader request</param>
         /// <param name="isLiveMode">true if we're in live mode, false for backtesting mode</param>
         /// <returns>New initialized open interest object</returns>
-        public override BaseData Reader(SubscriptionDataConfig config, string line, DateTime date, bool isLiveMode)
+        public override BaseData Reader(
+            SubscriptionDataConfig config,
+            string line,
+            DateTime date,
+            bool isLiveMode
+        )
         {
             if (isLiveMode)
             {
@@ -129,20 +145,44 @@ namespace QuantConnect.Data.Market
         /// <param name="date">Date of this source request if source spread across multiple files</param>
         /// <param name="isLiveMode">true if we're in live mode, false for backtesting mode</param>
         /// <returns>String source location of the file to be opened with a stream</returns>
-        public override SubscriptionDataSource GetSource(SubscriptionDataConfig config, DateTime date, bool isLiveMode)
+        public override SubscriptionDataSource GetSource(
+            SubscriptionDataConfig config,
+            DateTime date,
+            bool isLiveMode
+        )
         {
             if (isLiveMode)
             {
                 // this data type is streamed in live mode
-                return new SubscriptionDataSource(string.Empty, SubscriptionTransportMedium.Streaming);
+                return new SubscriptionDataSource(
+                    string.Empty,
+                    SubscriptionTransportMedium.Streaming
+                );
             }
 
-            var source = LeanData.GenerateZipFilePath(Globals.DataFolder, config.Symbol, date, config.Resolution, config.TickType);
+            var source = LeanData.GenerateZipFilePath(
+                Globals.DataFolder,
+                config.Symbol,
+                date,
+                config.Resolution,
+                config.TickType
+            );
             if (config.SecurityType == SecurityType.Future || config.SecurityType.IsOption())
             {
-                source += "#" + LeanData.GenerateZipEntryName(config.Symbol, date, config.Resolution, config.TickType);
+                source +=
+                    "#"
+                    + LeanData.GenerateZipEntryName(
+                        config.Symbol,
+                        date,
+                        config.Resolution,
+                        config.TickType
+                    );
             }
-            return new SubscriptionDataSource(source, SubscriptionTransportMedium.LocalFile, FileFormat.Csv);
+            return new SubscriptionDataSource(
+                source,
+                SubscriptionTransportMedium.LocalFile,
+                FileFormat.Csv
+            );
         }
 
         /// <summary>

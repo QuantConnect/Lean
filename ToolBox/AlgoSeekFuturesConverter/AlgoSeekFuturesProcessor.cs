@@ -30,7 +30,7 @@ namespace QuantConnect.ToolBox.AlgoSeekFuturesConverter
     /// </summary>
     public class AlgoSeekFuturesProcessor
     {
-        static private int _curFileCount = 0;
+        private static int _curFileCount = 0;
         private string _zipPath;
         private string _entryPath;
         private Symbol _symbol;
@@ -40,10 +40,7 @@ namespace QuantConnect.ToolBox.AlgoSeekFuturesConverter
         private string _dataDirectory;
         private IDataConsolidator _consolidator;
         private DateTime _referenceDate;
-        private static string[] _windowsRestrictedNames =
-        {
-            "con", "prn", "aux", "nul"
-        };
+        private static string[] _windowsRestrictedNames = { "con", "prn", "aux", "nul" };
 
         /// <summary>
         /// Zip entry name for the futures contract
@@ -54,7 +51,14 @@ namespace QuantConnect.ToolBox.AlgoSeekFuturesConverter
             {
                 if (_entryPath == null)
                 {
-                    _entryPath = SafeName(LeanData.GenerateZipEntryName(_symbol, _referenceDate, _resolution, _tickType));
+                    _entryPath = SafeName(
+                        LeanData.GenerateZipEntryName(
+                            _symbol,
+                            _referenceDate,
+                            _resolution,
+                            _tickType
+                        )
+                    );
                 }
                 return _entryPath;
             }
@@ -70,7 +74,20 @@ namespace QuantConnect.ToolBox.AlgoSeekFuturesConverter
             {
                 if (_zipPath == null)
                 {
-                    _zipPath = Path.Combine(_dataDirectory, SafeName(LeanData.GenerateRelativeZipFilePath(Safe(_symbol), _referenceDate, _resolution, _tickType).Replace(".zip", string.Empty))) + ".zip";
+                    _zipPath =
+                        Path.Combine(
+                            _dataDirectory,
+                            SafeName(
+                                LeanData
+                                    .GenerateRelativeZipFilePath(
+                                        Safe(_symbol),
+                                        _referenceDate,
+                                        _resolution,
+                                        _tickType
+                                    )
+                                    .Replace(".zip", string.Empty)
+                            )
+                        ) + ".zip";
                 }
                 return _zipPath;
             }
@@ -119,7 +136,13 @@ namespace QuantConnect.ToolBox.AlgoSeekFuturesConverter
         /// <param name="tickType">TradeBar or QuoteBar to generate</param>
         /// <param name="resolution">Resolution to consolidate</param>
         /// <param name="dataDirectory">Data directory for LEAN</param>
-        public AlgoSeekFuturesProcessor(Symbol symbol, DateTime date, TickType tickType, Resolution resolution, string dataDirectory)
+        public AlgoSeekFuturesProcessor(
+            Symbol symbol,
+            DateTime date,
+            TickType tickType,
+            Resolution resolution,
+            string dataDirectory
+        )
         {
             _symbol = Safe(symbol);
             _tickType = tickType;
@@ -160,8 +183,18 @@ namespace QuantConnect.ToolBox.AlgoSeekFuturesConverter
             catch (Exception err)
             {
                 // we are unable to open new file - it is already opened due to bug in algoseek data
-                Log.Error("File: {0} Err: {1} Source: {2} Stack: {3}", file, err.Message, err.Source, err.StackTrace);
-                var newRandomizedName = (file + "-" + Math.Abs(file.GetHashCode()).ToStringInvariant()).Replace(".csv", string.Empty) + ".csv";
+                Log.Error(
+                    "File: {0} Err: {1} Source: {2} Stack: {3}",
+                    file,
+                    err.Message,
+                    err.Source,
+                    err.StackTrace
+                );
+                var newRandomizedName =
+                    (file + "-" + Math.Abs(file.GetHashCode()).ToStringInvariant()).Replace(
+                        ".csv",
+                        string.Empty
+                    ) + ".csv";
 
                 // we store the information under different (randomized) name
                 Log.Trace("Changing name from {0} to {1}", file, newRandomizedName);
@@ -171,7 +204,9 @@ namespace QuantConnect.ToolBox.AlgoSeekFuturesConverter
             // On consolidating the bars put the bar into a queue in memory to be written to disk later.
             _consolidator.DataConsolidated += (sender, consolidated) =>
             {
-                _streamWriter.WriteLine(LeanData.GenerateLine(consolidated, SecurityType.Future, Resolution));
+                _streamWriter.WriteLine(
+                    LeanData.GenerateLine(consolidated, SecurityType.Future, Resolution)
+                );
             };
 
             Interlocked.Add(ref _curFileCount, 1);
@@ -210,7 +245,13 @@ namespace QuantConnect.ToolBox.AlgoSeekFuturesConverter
             {
                 if (_consolidator.WorkingData != null)
                 {
-                    _streamWriter.WriteLine(LeanData.GenerateLine(_consolidator.WorkingData, SecurityType.Future, Resolution));
+                    _streamWriter.WriteLine(
+                        LeanData.GenerateLine(
+                            _consolidator.WorkingData,
+                            SecurityType.Future,
+                            Resolution
+                        )
+                    );
                 }
 
                 _streamWriter.Flush();
@@ -236,11 +277,16 @@ namespace QuantConnect.ToolBox.AlgoSeekFuturesConverter
             {
                 if (_windowsRestrictedNames.Contains(symbol.Value.ToLowerInvariant()))
                 {
-                    symbol = Symbol.CreateFuture(SafeName(symbol.Underlying.Value), symbol.ID.Market, symbol.ID.Date);
+                    symbol = Symbol.CreateFuture(
+                        SafeName(symbol.Underlying.Value),
+                        symbol.ID.Market,
+                        symbol.ID.Date
+                    );
                 }
             }
             return symbol;
         }
+
         private static string SafeName(string fileName)
         {
             if (OS.IsWindows)

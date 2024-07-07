@@ -41,7 +41,7 @@ namespace QuantConnect.Tests.Common.Securities.Options.StrategyMatcher
         public void Initializes_OptionRight(PositionSide side)
         {
             // grab a random symbol and make it the correct right
-            var quantity = (int) side;
+            var quantity = (int)side;
             var position = new OptionPosition(Call[100], quantity);
             Assert.AreEqual(side, position.Side);
         }
@@ -62,9 +62,7 @@ namespace QuantConnect.Tests.Common.Securities.Options.StrategyMatcher
             OptionPosition sum;
             var left = new OptionPosition(Symbols.SPY, 42);
             var right = new OptionPosition(Symbols.SPY_P_192_Feb19_2016, 1);
-            Assert.Throws<InvalidOperationException>(
-                () => sum = left + right
-            );
+            Assert.Throws<InvalidOperationException>(() => sum = left + right);
         }
 
         [Test]
@@ -95,9 +93,7 @@ namespace QuantConnect.Tests.Common.Securities.Options.StrategyMatcher
             OptionPosition difference;
             var left = new OptionPosition(Symbols.SPY, 42);
             var right = new OptionPosition(Symbols.SPY_P_192_Feb19_2016, 1);
-            Assert.Throws<InvalidOperationException>(
-                () => difference = left - right
-            );
+            Assert.Throws<InvalidOperationException>(() => difference = left - right);
         }
 
         [Test]

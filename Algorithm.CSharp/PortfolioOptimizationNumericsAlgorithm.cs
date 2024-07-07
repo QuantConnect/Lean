@@ -13,12 +13,12 @@
  * limitations under the License.
 */
 
-using QuantConnect.Data;
-using MathNet.Numerics.LinearAlgebra;
-using MathNet.Numerics.Statistics;
+using System;
 using System.Collections.Generic;
 using System.Linq;
-using System;
+using MathNet.Numerics.LinearAlgebra;
+using MathNet.Numerics.Statistics;
+using QuantConnect.Data;
 using QuantConnect.Indicators;
 using static QuantConnect.StringExtensions;
 
@@ -47,21 +47,20 @@ namespace QuantConnect.Algorithm.CSharp
                     return null;
                 }
 
-                return
-                    Vector<double>.Build.DenseOfArray(SymbolDataList.Select(x => (double)x.Return).ToArray()) -
-                    Vector<double>.Build.Dense(SymbolDataList.Count, _riskFreeRate);
+                return Vector<double>.Build.DenseOfArray(
+                        SymbolDataList.Select(x => (double)x.Return).ToArray()
+                    ) - Vector<double>.Build.Dense(SymbolDataList.Count, _riskFreeRate);
             }
         }
-
 
         /// <summary>
         /// Initialise the data and resolution required, as well as the cash and start-end dates for your algorithm. All algorithms must initialized.
         /// </summary>
         public override void Initialize()
         {
-            SetStartDate(2013, 10, 07);  //Set Start Date
-            SetEndDate(2013, 10, 11);    //Set End Date
-            SetCash(100000);             //Set Strategy Cash
+            SetStartDate(2013, 10, 07); //Set Start Date
+            SetEndDate(2013, 10, 11); //Set End Date
+            SetCash(100000); //Set Strategy Cash
             // Find more symbols here: http://quantconnect.com/data
             AddEquity("SPY", Resolution.Daily);
             AddEquity("AIG", Resolution.Daily);
@@ -79,7 +78,9 @@ namespace QuantConnect.Algorithm.CSharp
             }
 
             // Diagonal Matrix with each security risk (standard deviation)
-            var S = Matrix<double>.Build.DenseOfDiagonalArray(SymbolDataList.Select(x => (double)x.Risk).ToArray());
+            var S = Matrix<double>.Build.DenseOfDiagonalArray(
+                SymbolDataList.Select(x => (double)x.Risk).ToArray()
+            );
 
             // Computes Correlation Matrix (using Math.NET Numerics Statistics)
             var R = MathNet.Numerics.Statistics.Correlation.PearsonMatrix(allHistoryBars);
@@ -116,9 +117,11 @@ namespace QuantConnect.Algorithm.CSharp
         /// </summary>
         private void ComputeLagrangeMultiplier()
         {
-            var denominatorMatrix = DiscountMeanVector * Sigma.Inverse() * DiscountMeanVector.ToColumnMatrix();
+            var denominatorMatrix =
+                DiscountMeanVector * Sigma.Inverse() * DiscountMeanVector.ToColumnMatrix();
 
-            _lagrangeMultiplier = (_targetReturn - _riskFreeRate) / denominatorMatrix.ToArray().First();
+            _lagrangeMultiplier =
+                (_targetReturn - _riskFreeRate) / denominatorMatrix.ToArray().First();
         }
 
         /// <summary>
@@ -126,7 +129,8 @@ namespace QuantConnect.Algorithm.CSharp
         /// </summary>
         private void ComputeWeights()
         {
-            var weights = _lagrangeMultiplier * Sigma.Inverse() * DiscountMeanVector.ToColumnMatrix();
+            var weights =
+                _lagrangeMultiplier * Sigma.Inverse() * DiscountMeanVector.ToColumnMatrix();
 
             for (var i = 0; i < weights.RowCount; i++)
             {
@@ -139,7 +143,9 @@ namespace QuantConnect.Algorithm.CSharp
         /// </summary>
         private void ComputePortfolioRisk()
         {
-            var weights = Vector<double>.Build.DenseOfArray(SymbolDataList.Select(x => (double)x.Return).ToArray());
+            var weights = Vector<double>.Build.DenseOfArray(
+                SymbolDataList.Select(x => (double)x.Return).ToArray()
+            );
             var portfolioVarianceMatrix = weights * Sigma * weights.ToColumnMatrix();
             _portfolioRisk = Math.Sqrt(portfolioVarianceMatrix.ToArray().First());
         }
@@ -153,8 +159,14 @@ namespace QuantConnect.Algorithm.CSharp
             private SimpleMovingAverage SMA;
             private StandardDeviation STD;
             public Symbol Symbol { get; private set; }
-            public decimal Return { get { return SMA.Current; }  }
-            public decimal Risk { get { return STD.Current; } }
+            public decimal Return
+            {
+                get { return SMA.Current; }
+            }
+            public decimal Risk
+            {
+                get { return STD.Current; }
+            }
             public decimal Weight { get; private set; }
 
             public SymbolData(Symbol symbol, IEnumerable<BaseData> history)
@@ -181,7 +193,9 @@ namespace QuantConnect.Algorithm.CSharp
 
             public override string ToString()
             {
-                return Invariant($"{Symbol.Value}: {Weight,10:P2}\t{Return,10:P2}\t{Risk,10:P2}");
+                return Invariant(
+                    $"{Symbol.Value}: {Weight, 10:P2}\t{Return, 10:P2}\t{Risk, 10:P2}"
+                );
             }
         }
     }

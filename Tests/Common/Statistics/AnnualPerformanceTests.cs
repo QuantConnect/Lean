@@ -12,14 +12,14 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
 */
-using System.Linq;
-using System.Collections.Generic;
-using NUnit.Framework;
-using QuantConnect.Util;
 using System;
-using QuantConnect.Data.Market;
+using System.Collections.Generic;
+using System.Linq;
+using NUnit.Framework;
 using QuantConnect.Algorithm;
+using QuantConnect.Data.Market;
 using QuantConnect.Lean.Engine.Setup;
+using QuantConnect.Util;
 
 namespace QuantConnect.Tests.Common.Statistics
 {
@@ -29,7 +29,7 @@ namespace QuantConnect.Tests.Common.Statistics
         private List<TradeBar> _spy = new List<TradeBar>();
 
         /// <summary>
-        /// Instance of QC Algorithm. 
+        /// Instance of QC Algorithm.
         /// Use to get <see cref="Interfaces.IAlgorithmSettings.TradingDaysPerYear"/> for clear calculation in <seealso cref="QuantConnect.Statistics.Statistics.AnnualPerformance"/>
         /// </summary>
         private QCAlgorithm _algorithm;
@@ -41,8 +41,23 @@ namespace QuantConnect.Tests.Common.Statistics
             BaseSetupHandler.SetBrokerageTradingDayPerYear(_algorithm);
 
             var symbol = Symbol.Create("SPY", SecurityType.Equity, Market.USA);
-            var path = LeanData.GenerateZipFilePath(Globals.DataFolder, symbol, new DateTime(2020, 3, 1), Resolution.Daily, TickType.Trade);
-            var config = new QuantConnect.Data.SubscriptionDataConfig(typeof(TradeBar), symbol, Resolution.Daily, TimeZones.NewYork, TimeZones.NewYork, false, false, false);
+            var path = LeanData.GenerateZipFilePath(
+                Globals.DataFolder,
+                symbol,
+                new DateTime(2020, 3, 1),
+                Resolution.Daily,
+                TickType.Trade
+            );
+            var config = new QuantConnect.Data.SubscriptionDataConfig(
+                typeof(TradeBar),
+                symbol,
+                Resolution.Daily,
+                TimeZones.NewYork,
+                TimeZones.NewYork,
+                false,
+                false,
+                false
+            );
 
             foreach (var line in QuantConnect.Compression.ReadLines(path))
             {
@@ -67,7 +82,10 @@ namespace QuantConnect.Tests.Common.Statistics
                 performance.Add((double)((_spy[i].Close / _spy[i - 1].Close) - 1));
             }
 
-            var result = QuantConnect.Statistics.Statistics.AnnualPerformance(performance, _algorithm.Settings.TradingDaysPerYear.Value);
+            var result = QuantConnect.Statistics.Statistics.AnnualPerformance(
+                performance,
+                _algorithm.Settings.TradingDaysPerYear.Value
+            );
 
             Assert.AreEqual(0.082859685889996371, result);
         }
@@ -87,7 +105,10 @@ namespace QuantConnect.Tests.Common.Statistics
                 performance.Add((double)((_spy[i].Close / _spy[i - 1].Close) - 1));
             }
 
-            var result = QuantConnect.Statistics.Statistics.AnnualPerformance(performance, _algorithm.Settings.TradingDaysPerYear.Value);
+            var result = QuantConnect.Statistics.Statistics.AnnualPerformance(
+                performance,
+                _algorithm.Settings.TradingDaysPerYear.Value
+            );
 
             Assert.AreEqual(-0.41546561808009674, result);
         }
@@ -107,7 +128,10 @@ namespace QuantConnect.Tests.Common.Statistics
                 performance.Add((double)((_spy[i].Close / _spy[i - 1].Close) - 1));
             }
 
-            var result = QuantConnect.Statistics.Statistics.AnnualPerformance(performance, _algorithm.Settings.TradingDaysPerYear.Value);
+            var result = QuantConnect.Statistics.Statistics.AnnualPerformance(
+                performance,
+                _algorithm.Settings.TradingDaysPerYear.Value
+            );
 
             Assert.AreEqual(0.19741738320179447, result);
         }
@@ -129,7 +153,10 @@ namespace QuantConnect.Tests.Common.Statistics
         {
             var performance = Enumerable.Repeat(0.0, 252).ToList();
 
-            var result = QuantConnect.Statistics.Statistics.AnnualPerformance(performance, _algorithm.Settings.TradingDaysPerYear.Value);
+            var result = QuantConnect.Statistics.Statistics.AnnualPerformance(
+                performance,
+                _algorithm.Settings.TradingDaysPerYear.Value
+            );
 
             Assert.AreEqual(0.0, result);
         }

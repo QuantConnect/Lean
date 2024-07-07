@@ -24,10 +24,12 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// The forex symbols.
         /// </summary>
-        public static HashSet<string> ForexSymbols = new HashSet<string>(SymbolPropertiesDatabase
-            .FromDataFolder()
-            .GetSymbolPropertiesList(Market.Oanda, SecurityType.Forex)
-            .Select(x => x.Key.Symbol));
+        public static HashSet<string> ForexSymbols = new HashSet<string>(
+            SymbolPropertiesDatabase
+                .FromDataFolder()
+                .GetSymbolPropertiesList(Market.Oanda, SecurityType.Forex)
+                .Select(x => x.Key.Symbol)
+        );
 
         /// <summary>
         /// The stock symbols.

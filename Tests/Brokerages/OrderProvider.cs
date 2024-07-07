@@ -67,7 +67,10 @@ namespace QuantConnect.Tests.Brokerages
         {
             lock (_lock)
             {
-                return _orders.Where(o => o.BrokerId.Contains(brokerageId)).Select(o => o.Clone()).ToList();
+                return _orders
+                    .Where(o => o.BrokerId.Contains(brokerageId))
+                    .Select(o => o.Clone())
+                    .ToList();
             }
         }
 
@@ -93,7 +96,10 @@ namespace QuantConnect.Tests.Brokerages
 
         public List<Order> GetOpenOrders(Func<Order, bool> filter = null)
         {
-            return _orders.Where(x => x.Status.IsOpen() && (filter == null || filter(x))).Select(x => x.Clone()).ToList();
+            return _orders
+                .Where(x => x.Status.IsOpen() && (filter == null || filter(x)))
+                .Select(x => x.Clone())
+                .ToList();
         }
     }
 }

@@ -56,7 +56,8 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
             SubscriptionDataConfig config,
             IFactorFileProvider factorFileProvider,
             IMapFileProvider mapFileProvider,
-            DateTime startTime)
+            DateTime startTime
+        )
         {
             Config = config;
             _factorFileProvider = factorFileProvider;
@@ -69,17 +70,21 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
         /// </summary>
         /// <param name="eventArgs">The new tradable day event arguments</param>
         /// <returns>New Dividend event if any</returns>
-        public  virtual IEnumerable<BaseData> GetEvents(NewTradableDateEventArgs eventArgs)
+        public virtual IEnumerable<BaseData> GetEvents(NewTradableDateEventArgs eventArgs)
         {
-            if (Config.Symbol == eventArgs.Symbol
+            if (
+                Config.Symbol == eventArgs.Symbol
                 && FactorFile != null
-                && _mapFile.HasData(eventArgs.Date))
+                && _mapFile.HasData(eventArgs.Date)
+            )
             {
                 if (_priceFactorRatio != null)
                 {
                     if (_referencePrice == 0)
                     {
-                        throw new InvalidOperationException($"Zero reference price for {Config.Symbol} dividend at {eventArgs.Date}");
+                        throw new InvalidOperationException(
+                            $"Zero reference price for {Config.Symbol} dividend at {eventArgs.Date}"
+                        );
                     }
 
                     var baseData = Dividend.Create(
@@ -99,7 +104,13 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
                 // check the factor file to see if we have a dividend event tomorrow
                 decimal priceFactorRatio;
                 decimal referencePrice;
-                if (FactorFile.HasDividendEventOnNextTradingDay(eventArgs.Date, out priceFactorRatio, out referencePrice))
+                if (
+                    FactorFile.HasDividendEventOnNextTradingDay(
+                        eventArgs.Date,
+                        out priceFactorRatio,
+                        out referencePrice
+                    )
+                )
                 {
                     _priceFactorRatio = priceFactorRatio;
                     _referencePrice = referencePrice;

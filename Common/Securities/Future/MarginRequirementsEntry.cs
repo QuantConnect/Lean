@@ -59,37 +59,53 @@ namespace QuantConnect.Securities.Future
             var line = csvLine.Split(',');
 
             DateTime date;
-            if (!DateTime.TryParseExact(line[0], DateFormat.EightCharacter, CultureInfo.InvariantCulture, DateTimeStyles.None, out date))
+            if (
+                !DateTime.TryParseExact(
+                    line[0],
+                    DateFormat.EightCharacter,
+                    CultureInfo.InvariantCulture,
+                    DateTimeStyles.None,
+                    out date
+                )
+            )
             {
-                Log.Trace($"Couldn't parse date/time while reading future margin requirement file. Line: {csvLine}");
+                Log.Trace(
+                    $"Couldn't parse date/time while reading future margin requirement file. Line: {csvLine}"
+                );
             }
 
             decimal initialOvernight;
             if (!decimal.TryParse(line[1], out initialOvernight))
             {
-                Log.Trace($"Couldn't parse Initial Overnight margin requirements while reading future margin requirement file. Line: {csvLine}");
+                Log.Trace(
+                    $"Couldn't parse Initial Overnight margin requirements while reading future margin requirement file. Line: {csvLine}"
+                );
             }
 
             decimal maintenanceOvernight;
             if (!decimal.TryParse(line[2], out maintenanceOvernight))
             {
-                Log.Trace($"Couldn't parse Maintenance Overnight margin requirements while reading future margin requirement file. Line: {csvLine}");
+                Log.Trace(
+                    $"Couldn't parse Maintenance Overnight margin requirements while reading future margin requirement file. Line: {csvLine}"
+                );
             }
 
             // default value, if present in file we try to parse
             decimal initialIntraday = initialOvernight * 0.4m;
-            if (line.Length >= 4
-                && !decimal.TryParse(line[3], out initialIntraday))
+            if (line.Length >= 4 && !decimal.TryParse(line[3], out initialIntraday))
             {
-                Log.Trace($"Couldn't parse Initial Intraday margin requirements while reading future margin requirement file. Line: {csvLine}");
+                Log.Trace(
+                    $"Couldn't parse Initial Intraday margin requirements while reading future margin requirement file. Line: {csvLine}"
+                );
             }
 
             // default value, if present in file we try to parse
             decimal maintenanceIntraday = maintenanceOvernight * 0.4m;
-            if (line.Length >= 5
-                && !decimal.TryParse(line[4], out maintenanceIntraday))
+            if (line.Length >= 5 && !decimal.TryParse(line[4], out maintenanceIntraday))
             {
-                Log.Trace($"Couldn't parse Maintenance Intraday margin requirements while reading future margin requirement file. Line: {csvLine}");
+                Log.Trace(
+                    $"Couldn't parse Maintenance Intraday margin requirements while reading future margin requirement file. Line: {csvLine}"
+                );
             }
 
             return new MarginRequirementsEntry

@@ -34,7 +34,10 @@ namespace QuantConnect.Tests.Common.Securities
         private static readonly DateTime Midnight = new DateTime(2016, 02, 16, 0, 0, 0);
         private static readonly DateTime NoonWeekend = new DateTime(2016, 02, 14, 12, 0, 0);
         private static readonly DateTime NoonHoliday = new DateTime(2016, 02, 15, 12, 0, 0);
-        private static readonly TimeKeeper TimeKeeper = new TimeKeeper(Noon.ConvertToUtc(TimeZones.NewYork), TimeZones.NewYork);
+        private static readonly TimeKeeper TimeKeeper = new TimeKeeper(
+            Noon.ConvertToUtc(TimeZones.NewYork),
+            TimeZones.NewYork
+        );
 
         private BuyingPowerModelComparator GetModel(decimal closed = 2m, decimal open = 4m)
         {
@@ -95,8 +98,20 @@ namespace QuantConnect.Tests.Common.Securities
             var order = new MarketOrder(security.Symbol, 100, security.LocalTime);
 
             Assert.AreEqual((double)leverage, (double)model.GetLeverage(security), 1e-3);
-            Assert.AreEqual((double)expected, (double)model.GetInitialMarginRequiredForOrder(
-                new InitialMarginRequiredForOrderParameters(new IdentityCurrencyConverter(Currencies.USD), security, order)).Value, 1e-3);
+            Assert.AreEqual(
+                (double)expected,
+                (double)
+                    model
+                        .GetInitialMarginRequiredForOrder(
+                            new InitialMarginRequiredForOrderParameters(
+                                new IdentityCurrencyConverter(Currencies.USD),
+                                security,
+                                order
+                            )
+                        )
+                        .Value,
+                1e-3
+            );
         }
 
         [Test]
@@ -112,8 +127,20 @@ namespace QuantConnect.Tests.Common.Securities
             var order = new MarketOrder(security.Symbol, 100, security.LocalTime);
 
             Assert.AreEqual((double)leverage, (double)model.GetLeverage(security), 1e-3);
-            Assert.AreEqual((double)expected, (double)model.GetInitialMarginRequiredForOrder(
-                new InitialMarginRequiredForOrderParameters(new IdentityCurrencyConverter(Currencies.USD), security, order)).Value, 1e-3);
+            Assert.AreEqual(
+                (double)expected,
+                (double)
+                    model
+                        .GetInitialMarginRequiredForOrder(
+                            new InitialMarginRequiredForOrderParameters(
+                                new IdentityCurrencyConverter(Currencies.USD),
+                                security,
+                                order
+                            )
+                        )
+                        .Value,
+                1e-3
+            );
         }
 
         [Test]
@@ -130,24 +157,60 @@ namespace QuantConnect.Tests.Common.Securities
             var order = new MarketOrder(security.Symbol, 100, security.LocalTime);
 
             Assert.AreEqual((double)leverage, (double)model.GetLeverage(security), 1e-3);
-            Assert.AreEqual((double)expected, (double)model.GetInitialMarginRequiredForOrder(
-                new InitialMarginRequiredForOrderParameters(new IdentityCurrencyConverter(Currencies.USD), security, order)).Value, 1e-3);
+            Assert.AreEqual(
+                (double)expected,
+                (double)
+                    model
+                        .GetInitialMarginRequiredForOrder(
+                            new InitialMarginRequiredForOrderParameters(
+                                new IdentityCurrencyConverter(Currencies.USD),
+                                security,
+                                order
+                            )
+                        )
+                        .Value,
+                1e-3
+            );
 
             // Market is Closed on Monday, Feb, 15th 2016 at Noon (US President Day)
             security = CreateSecurity(model.SecurityModel, NoonHoliday);
             order = new MarketOrder(security.Symbol, 100, security.LocalTime);
 
             Assert.AreEqual((double)leverage, (double)model.GetLeverage(security), 1e-3);
-            Assert.AreEqual((double)expected, (double)model.GetInitialMarginRequiredForOrder(
-                new InitialMarginRequiredForOrderParameters(new IdentityCurrencyConverter(Currencies.USD), security, order)).Value, 1e-3);
+            Assert.AreEqual(
+                (double)expected,
+                (double)
+                    model
+                        .GetInitialMarginRequiredForOrder(
+                            new InitialMarginRequiredForOrderParameters(
+                                new IdentityCurrencyConverter(Currencies.USD),
+                                security,
+                                order
+                            )
+                        )
+                        .Value,
+                1e-3
+            );
 
             // Market is Closed on Sunday, Feb, 14th 2016 at Noon
             security = CreateSecurity(model.SecurityModel, NoonWeekend);
             order = new MarketOrder(security.Symbol, 100, security.LocalTime);
 
             Assert.AreEqual((double)leverage, (double)model.GetLeverage(security), 1e-3);
-            Assert.AreEqual((double)expected, (double)model.GetInitialMarginRequiredForOrder(
-                new InitialMarginRequiredForOrderParameters(new IdentityCurrencyConverter(Currencies.USD), security, order)).Value, 1e-3);
+            Assert.AreEqual(
+                (double)expected,
+                (double)
+                    model
+                        .GetInitialMarginRequiredForOrder(
+                            new InitialMarginRequiredForOrderParameters(
+                                new IdentityCurrencyConverter(Currencies.USD),
+                                security,
+                                order
+                            )
+                        )
+                        .Value,
+                1e-3
+            );
         }
 
         [Test]
@@ -164,24 +227,60 @@ namespace QuantConnect.Tests.Common.Securities
             var order = new MarketOrder(security.Symbol, 100, security.LocalTime);
 
             Assert.AreEqual((double)leverage, (double)model.GetLeverage(security), 1e-3);
-            Assert.AreEqual((double)expected, (double)model.GetInitialMarginRequiredForOrder(
-                new InitialMarginRequiredForOrderParameters(new IdentityCurrencyConverter(Currencies.USD), security, order)).Value, 1e-3);
+            Assert.AreEqual(
+                (double)expected,
+                (double)
+                    model
+                        .GetInitialMarginRequiredForOrder(
+                            new InitialMarginRequiredForOrderParameters(
+                                new IdentityCurrencyConverter(Currencies.USD),
+                                security,
+                                order
+                            )
+                        )
+                        .Value,
+                1e-3
+            );
 
             // Market is Closed on Monday, Feb, 15th 2016 at Noon (US President Day)
             security = CreateSecurity(model.SecurityModel, NoonHoliday);
             order = new MarketOrder(security.Symbol, 100, security.LocalTime);
 
             Assert.AreEqual((double)leverage, (double)model.GetLeverage(security), 1e-3);
-            Assert.AreEqual((double)expected, (double)model.GetInitialMarginRequiredForOrder(
-                new InitialMarginRequiredForOrderParameters(new IdentityCurrencyConverter(Currencies.USD), security, order)).Value, 1e-3);
+            Assert.AreEqual(
+                (double)expected,
+                (double)
+                    model
+                        .GetInitialMarginRequiredForOrder(
+                            new InitialMarginRequiredForOrderParameters(
+                                new IdentityCurrencyConverter(Currencies.USD),
+                                security,
+                                order
+                            )
+                        )
+                        .Value,
+                1e-3
+            );
 
             // Market is Closed on Sunday, Feb, 14th 2016 at Noon
             security = CreateSecurity(model.SecurityModel, NoonWeekend);
             order = new MarketOrder(security.Symbol, 100, security.LocalTime);
 
             Assert.AreEqual((double)leverage, (double)model.GetLeverage(security), 1e-3);
-            Assert.AreEqual((double)expected, (double)model.GetInitialMarginRequiredForOrder(
-                new InitialMarginRequiredForOrderParameters(new IdentityCurrencyConverter(Currencies.USD), security, order)).Value, 1e-3);
+            Assert.AreEqual(
+                (double)expected,
+                (double)
+                    model
+                        .GetInitialMarginRequiredForOrder(
+                            new InitialMarginRequiredForOrderParameters(
+                                new IdentityCurrencyConverter(Currencies.USD),
+                                security,
+                                order
+                            )
+                        )
+                        .Value,
+                1e-3
+            );
         }
 
         [Test]
@@ -193,17 +292,24 @@ namespace QuantConnect.Tests.Common.Securities
             var model = GetModel(closedLeverage, openLeverage);
 
             // Market is Closed on Tuesday, Feb, 16th 2016 at 16
-            var security = CreateSecurity(model.SecurityModel, new DateTime(2016, 2, 16, 15, 49, 0));
+            var security = CreateSecurity(
+                model.SecurityModel,
+                new DateTime(2016, 2, 16, 15, 49, 0)
+            );
             Assert.AreEqual(openLeverage, model.GetLeverage(security));
             Assert.IsFalse(security.Exchange.ClosingSoon);
 
             var localTimeKeeper = TimeKeeper.GetLocalTimeKeeper(TimeZones.NewYork);
-            localTimeKeeper.UpdateTime(new DateTime(2016, 2, 16, 15, 50, 0).ConvertToUtc(TimeZones.NewYork));
+            localTimeKeeper.UpdateTime(
+                new DateTime(2016, 2, 16, 15, 50, 0).ConvertToUtc(TimeZones.NewYork)
+            );
             Assert.AreEqual(closedLeverage, model.GetLeverage(security));
             Assert.IsTrue(security.Exchange.ClosingSoon);
             Assert.IsTrue(security.Exchange.ExchangeOpen);
 
-            localTimeKeeper.UpdateTime(new DateTime(2016, 2, 16, 16, 0, 0).ConvertToUtc(TimeZones.NewYork));
+            localTimeKeeper.UpdateTime(
+                new DateTime(2016, 2, 16, 16, 0, 0).ConvertToUtc(TimeZones.NewYork)
+            );
             Assert.IsFalse(security.Exchange.ExchangeOpen);
         }
 
@@ -216,13 +322,21 @@ namespace QuantConnect.Tests.Common.Securities
             var security = CreateSecurity(model.SecurityModel, Noon);
             security.Holdings.SetHoldings(100m, 100);
 
-            Assert.AreEqual((double)100 * 100 / 4, (double)model.GetMaintenanceMargin(security), 1e-3);
+            Assert.AreEqual(
+                (double)100 * 100 / 4,
+                (double)model.GetMaintenanceMargin(security),
+                1e-3
+            );
 
             // Closed Market
             security = CreateSecurity(model.SecurityModel, Midnight);
             security.Holdings.SetHoldings(100m, 100);
 
-            Assert.AreEqual((double)100 * 100 / 2, (double)model.GetMaintenanceMargin(security), 1e-3);
+            Assert.AreEqual(
+                (double)100 * 100 / 2,
+                (double)model.GetMaintenanceMargin(security),
+                1e-3
+            );
         }
 
         [Test]
@@ -244,11 +358,27 @@ namespace QuantConnect.Tests.Common.Securities
             portfolio.InvalidateTotalPortfolioValue();
             var netLiquidationValue = portfolio.TotalPortfolioValue;
             var totalMargin = portfolio.TotalMarginUsed;
-            portfolio.MarginCallModel = new TestDefaultMarginCallModel(portfolio, new OrderProperties());
+            portfolio.MarginCallModel = new TestDefaultMarginCallModel(
+                portfolio,
+                new OrderProperties()
+            );
 
-            var expected = -(int)(Math.Round((totalMargin - netLiquidationValue) / securityPrice, MidpointRounding.AwayFromZero) * 4m);
-            var actual = (portfolio.MarginCallModel as TestDefaultMarginCallModel).GenerateMarginCallOrders(
-                new MarginCallOrdersParameters(portfolio.Positions.Groups.Single(), netLiquidationValue, totalMargin)).Single().Quantity;
+            var expected = -(int)(
+                Math.Round(
+                    (totalMargin - netLiquidationValue) / securityPrice,
+                    MidpointRounding.AwayFromZero
+                ) * 4m
+            );
+            var actual = (portfolio.MarginCallModel as TestDefaultMarginCallModel)
+                .GenerateMarginCallOrders(
+                    new MarginCallOrdersParameters(
+                        portfolio.Positions.Groups.Single(),
+                        netLiquidationValue,
+                        totalMargin
+                    )
+                )
+                .Single()
+                .Quantity;
 
             Assert.AreEqual(expected, actual);
         }
@@ -272,11 +402,27 @@ namespace QuantConnect.Tests.Common.Securities
             portfolio.InvalidateTotalPortfolioValue();
             var netLiquidationValue = portfolio.TotalPortfolioValue;
             var totalMargin = portfolio.TotalMarginUsed;
-            portfolio.MarginCallModel = new TestDefaultMarginCallModel(portfolio, new OrderProperties());
+            portfolio.MarginCallModel = new TestDefaultMarginCallModel(
+                portfolio,
+                new OrderProperties()
+            );
 
-            var expected = -(int)(Math.Round((totalMargin - netLiquidationValue) / securityPrice, MidpointRounding.AwayFromZero) * 2m);
-            var actual = (portfolio.MarginCallModel as TestDefaultMarginCallModel).GenerateMarginCallOrders(
-                new MarginCallOrdersParameters(portfolio.Positions.Groups.Single(), netLiquidationValue, totalMargin)).Single().Quantity;
+            var expected = -(int)(
+                Math.Round(
+                    (totalMargin - netLiquidationValue) / securityPrice,
+                    MidpointRounding.AwayFromZero
+                ) * 2m
+            );
+            var actual = (portfolio.MarginCallModel as TestDefaultMarginCallModel)
+                .GenerateMarginCallOrders(
+                    new MarginCallOrdersParameters(
+                        portfolio.Positions.Groups.Single(),
+                        netLiquidationValue,
+                        totalMargin
+                    )
+                )
+                .Single()
+                .Quantity;
 
             Assert.AreEqual(expected, actual);
         }
@@ -301,9 +447,22 @@ namespace QuantConnect.Tests.Common.Securities
             var netLiquidationValue = portfolio.TotalPortfolioValue;
             var totalMargin = portfolio.TotalMarginUsed;
 
-            var expected = (int)(Math.Round((totalMargin - netLiquidationValue) / securityPrice, MidpointRounding.AwayFromZero) * 4m);
-            var actual = (portfolio.MarginCallModel as TestDefaultMarginCallModel).GenerateMarginCallOrders(
-                new MarginCallOrdersParameters(portfolio.Positions.Groups.Single(), netLiquidationValue, totalMargin)).Single().Quantity;
+            var expected = (int)(
+                Math.Round(
+                    (totalMargin - netLiquidationValue) / securityPrice,
+                    MidpointRounding.AwayFromZero
+                ) * 4m
+            );
+            var actual = (portfolio.MarginCallModel as TestDefaultMarginCallModel)
+                .GenerateMarginCallOrders(
+                    new MarginCallOrdersParameters(
+                        portfolio.Positions.Groups.Single(),
+                        netLiquidationValue,
+                        totalMargin
+                    )
+                )
+                .Single()
+                .Quantity;
 
             Assert.AreEqual(expected, actual);
         }
@@ -328,27 +487,56 @@ namespace QuantConnect.Tests.Common.Securities
             var netLiquidationValue = portfolio.TotalPortfolioValue;
             var totalMargin = portfolio.TotalMarginUsed;
 
-            var expected = (int)(Math.Round((totalMargin - netLiquidationValue) / securityPrice, MidpointRounding.AwayFromZero) * 2m);
-            var actual = (portfolio.MarginCallModel as TestDefaultMarginCallModel).GenerateMarginCallOrders(
-                new MarginCallOrdersParameters(portfolio.Positions.Groups.Single(), netLiquidationValue, totalMargin)).Single().Quantity;
+            var expected = (int)(
+                Math.Round(
+                    (totalMargin - netLiquidationValue) / securityPrice,
+                    MidpointRounding.AwayFromZero
+                ) * 2m
+            );
+            var actual = (portfolio.MarginCallModel as TestDefaultMarginCallModel)
+                .GenerateMarginCallOrders(
+                    new MarginCallOrdersParameters(
+                        portfolio.Positions.Groups.Single(),
+                        netLiquidationValue,
+                        totalMargin
+                    )
+                )
+                .Single()
+                .Quantity;
 
             Assert.AreEqual(expected, actual);
         }
 
-        private SecurityPortfolioManager GetPortfolio(IOrderProcessor orderProcessor, int quantity, DateTime time)
+        private SecurityPortfolioManager GetPortfolio(
+            IOrderProcessor orderProcessor,
+            int quantity,
+            DateTime time
+        )
         {
-            var securities = new SecurityManager(new TimeKeeper(time.ConvertToUtc(TimeZones.NewYork), TimeZones.NewYork));
+            var securities = new SecurityManager(
+                new TimeKeeper(time.ConvertToUtc(TimeZones.NewYork), TimeZones.NewYork)
+            );
             var transactions = new SecurityTransactionManager(null, securities);
             transactions.SetOrderProcessor(orderProcessor);
 
-            var portfolio = new SecurityPortfolioManager(securities, transactions, new AlgorithmSettings());
+            var portfolio = new SecurityPortfolioManager(
+                securities,
+                transactions,
+                new AlgorithmSettings()
+            );
             portfolio.SetCash(quantity);
-            portfolio.MarginCallModel = new TestDefaultMarginCallModel(portfolio, new OrderProperties());
+            portfolio.MarginCallModel = new TestDefaultMarginCallModel(
+                portfolio,
+                new OrderProperties()
+            );
 
             return portfolio;
         }
 
-        private static Security CreateSecurity(IBuyingPowerModel buyingPowerModel, DateTime newLocalTime)
+        private static Security CreateSecurity(
+            IBuyingPowerModel buyingPowerModel,
+            DateTime newLocalTime
+        )
         {
             var security = new Security(
                 CreateUsEquitySecurityExchangeHours(),
@@ -370,29 +558,69 @@ namespace QuantConnect.Tests.Common.Securities
         private static SecurityExchangeHours CreateUsEquitySecurityExchangeHours()
         {
             var sunday = LocalMarketHours.ClosedAllDay(DayOfWeek.Sunday);
-            var monday = new LocalMarketHours(DayOfWeek.Monday, new TimeSpan(9, 30, 0), new TimeSpan(16, 0, 0));
-            var tuesday = new LocalMarketHours(DayOfWeek.Tuesday, new TimeSpan(9, 30, 0), new TimeSpan(16, 0, 0));
-            var wednesday = new LocalMarketHours(DayOfWeek.Wednesday, new TimeSpan(9, 30, 0), new TimeSpan(16, 0, 0));
-            var thursday = new LocalMarketHours(DayOfWeek.Thursday, new TimeSpan(9, 30, 0), new TimeSpan(16, 0, 0));
-            var friday = new LocalMarketHours(DayOfWeek.Friday, new TimeSpan(9, 30, 0), new TimeSpan(16, 0, 0));
+            var monday = new LocalMarketHours(
+                DayOfWeek.Monday,
+                new TimeSpan(9, 30, 0),
+                new TimeSpan(16, 0, 0)
+            );
+            var tuesday = new LocalMarketHours(
+                DayOfWeek.Tuesday,
+                new TimeSpan(9, 30, 0),
+                new TimeSpan(16, 0, 0)
+            );
+            var wednesday = new LocalMarketHours(
+                DayOfWeek.Wednesday,
+                new TimeSpan(9, 30, 0),
+                new TimeSpan(16, 0, 0)
+            );
+            var thursday = new LocalMarketHours(
+                DayOfWeek.Thursday,
+                new TimeSpan(9, 30, 0),
+                new TimeSpan(16, 0, 0)
+            );
+            var friday = new LocalMarketHours(
+                DayOfWeek.Friday,
+                new TimeSpan(9, 30, 0),
+                new TimeSpan(16, 0, 0)
+            );
             var saturday = LocalMarketHours.ClosedAllDay(DayOfWeek.Saturday);
 
             var earlyCloses = new Dictionary<DateTime, TimeSpan>();
             var lateOpens = new Dictionary<DateTime, TimeSpan>();
-            var holidays = MarketHoursDatabase.FromDataFolder()
-                        .GetEntry(Market.USA, (string)null, SecurityType.Equity)
-                        .ExchangeHours
-                        .Holidays;
-            return new SecurityExchangeHours(TimeZones.NewYork, holidays, new[]
-            {
-                sunday, monday, tuesday, wednesday, thursday, friday, saturday
-            }.ToDictionary(x => x.DayOfWeek), earlyCloses, lateOpens);
+            var holidays = MarketHoursDatabase
+                .FromDataFolder()
+                .GetEntry(Market.USA, (string)null, SecurityType.Equity)
+                .ExchangeHours.Holidays;
+            return new SecurityExchangeHours(
+                TimeZones.NewYork,
+                holidays,
+                new[]
+                {
+                    sunday,
+                    monday,
+                    tuesday,
+                    wednesday,
+                    thursday,
+                    friday,
+                    saturday
+                }.ToDictionary(x => x.DayOfWeek),
+                earlyCloses,
+                lateOpens
+            );
         }
 
         private static SubscriptionDataConfig CreateTradeBarConfig()
         {
-            return new SubscriptionDataConfig(typeof(TradeBar), Symbols.SPY, Resolution.Minute, TimeZones.NewYork,
-                TimeZones.NewYork, true, true, false);
+            return new SubscriptionDataConfig(
+                typeof(TradeBar),
+                Symbols.SPY,
+                Resolution.Minute,
+                TimeZones.NewYork,
+                TimeZones.NewYork,
+                true,
+                true,
+                false
+            );
         }
     }
 }

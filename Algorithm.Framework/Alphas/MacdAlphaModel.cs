@@ -57,7 +57,7 @@ namespace QuantConnect.Algorithm.Framework.Alphas
             int signalPeriod = 9,
             MovingAverageType movingAverageType = MovingAverageType.Exponential,
             Resolution resolution = Resolution.Daily
-            )
+        )
         {
             _fastPeriod = fastPeriod;
             _slowPeriod = slowPeriod;
@@ -65,7 +65,8 @@ namespace QuantConnect.Algorithm.Framework.Alphas
             _movingAverageType = movingAverageType;
             _resolution = resolution;
             _symbolData = new Dictionary<Symbol, SymbolData>();
-            Name = $"{nameof(MacdAlphaModel)}({fastPeriod},{slowPeriod},{signalPeriod},{movingAverageType},{resolution})";
+            Name =
+                $"{nameof(MacdAlphaModel)}({fastPeriod},{slowPeriod},{signalPeriod},{movingAverageType},{resolution})";
         }
 
         /// <summary>
@@ -130,7 +131,18 @@ namespace QuantConnect.Algorithm.Framework.Alphas
                 {
                     continue;
                 }
-                _symbolData.Add(added.Symbol, new SymbolData(algorithm, added, _fastPeriod, _slowPeriod, _signalPeriod, _movingAverageType, _resolution));
+                _symbolData.Add(
+                    added.Symbol,
+                    new SymbolData(
+                        algorithm,
+                        added,
+                        _fastPeriod,
+                        _slowPeriod,
+                        _signalPeriod,
+                        _movingAverageType,
+                        _resolution
+                    )
+                );
             }
 
             foreach (var removed in changes.RemovedSecurities)
@@ -167,13 +179,26 @@ namespace QuantConnect.Algorithm.Framework.Alphas
             public IDataConsolidator Consolidator { get; init; }
             public MovingAverageConvergenceDivergence MACD { get; init; }
 
-            public SymbolData(QCAlgorithm algorithm, Security security, int fastPeriod, int slowPeriod, int signalPeriod, MovingAverageType movingAverageType, Resolution resolution)
+            public SymbolData(
+                QCAlgorithm algorithm,
+                Security security,
+                int fastPeriod,
+                int slowPeriod,
+                int signalPeriod,
+                MovingAverageType movingAverageType,
+                Resolution resolution
+            )
             {
                 Security = security;
                 Consolidator = algorithm.ResolveConsolidator(security.Symbol, resolution);
                 algorithm.SubscriptionManager.AddConsolidator(security.Symbol, Consolidator);
 
-                MACD = new MovingAverageConvergenceDivergence(fastPeriod, slowPeriod, signalPeriod, movingAverageType);
+                MACD = new MovingAverageConvergenceDivergence(
+                    fastPeriod,
+                    slowPeriod,
+                    signalPeriod,
+                    movingAverageType
+                );
 
                 algorithm.RegisterIndicator(security.Symbol, MACD, Consolidator);
                 algorithm.WarmUpIndicator(security.Symbol, MACD, resolution);

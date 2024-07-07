@@ -27,7 +27,8 @@ namespace QuantConnect
         /// </summary>
         public static class OptimizerObjectivesCommon
         {
-            public static string NullOrEmptyBacktestResult = "Backtest result can not be null or empty.";
+            public static string NullOrEmptyBacktestResult =
+                "Backtest result can not be null or empty.";
         }
 
         /// <summary>
@@ -35,7 +36,8 @@ namespace QuantConnect
         /// </summary>
         public static class Constraint
         {
-            public static string ConstraintTargetValueNotSpecified = "Constraint target value is not specified";
+            public static string ConstraintTargetValueNotSpecified =
+                "Constraint target value is not specified";
         }
 
         /// <summary>
@@ -43,7 +45,8 @@ namespace QuantConnect
         /// </summary>
         public static class ExtremumJsonConverter
         {
-            public static string UnrecognizedTargetDirection = "Could not recognize target direction";
+            public static string UnrecognizedTargetDirection =
+                "Could not recognize target direction";
         }
 
         /// <summary>

@@ -49,7 +49,9 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         public ManualTimeProvider(DateTime currentTime, DateTimeZone setCurrentTimeTimeZone = null)
             : this(setCurrentTimeTimeZone)
         {
-            _currentTime = new ReferenceWrapper<DateTime>(currentTime.ConvertToUtc(_setCurrentTimeTimeZone));
+            _currentTime = new ReferenceWrapper<DateTime>(
+                currentTime.ConvertToUtc(_setCurrentTimeTimeZone)
+            );
         }
 
         /// <summary>

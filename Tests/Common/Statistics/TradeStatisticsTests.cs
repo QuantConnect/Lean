@@ -303,7 +303,10 @@ namespace QuantConnect.Tests.Common.Statistics
             Assert.AreEqual(0, statistics.SortinoRatio);
             Assert.AreEqual(-0.75m, statistics.ProfitToMaxDrawdownRatio);
             Assert.AreEqual(-50, statistics.MaximumEndTradeDrawdown);
-            Assert.AreEqual(-31.666666666666666666666666666667m, statistics.AverageEndTradeDrawdown);
+            Assert.AreEqual(
+                -31.666666666666666666666666666667m,
+                statistics.AverageEndTradeDrawdown
+            );
             Assert.AreEqual(TimeSpan.Zero, statistics.MaximumDrawdownDuration);
             Assert.AreEqual(6, statistics.TotalFees);
         }
@@ -399,7 +402,10 @@ namespace QuantConnect.Tests.Common.Statistics
             Assert.AreEqual(0, statistics.SortinoRatio);
             Assert.AreEqual(-0.75m, statistics.ProfitToMaxDrawdownRatio);
             Assert.AreEqual(-50, statistics.MaximumEndTradeDrawdown);
-            Assert.AreEqual(-31.666666666666666666666666666667m, statistics.AverageEndTradeDrawdown);
+            Assert.AreEqual(
+                -31.666666666666666666666666666667m,
+                statistics.AverageEndTradeDrawdown
+            );
             Assert.AreEqual(TimeSpan.Zero, statistics.MaximumDrawdownDuration);
             Assert.AreEqual(6, statistics.TotalFees);
         }

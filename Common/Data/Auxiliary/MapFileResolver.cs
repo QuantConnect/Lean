@@ -38,7 +38,9 @@ namespace QuantConnect.Data.Auxiliary
         /// Gets an empty <see cref="MapFileResolver"/>, that is an instance that contains
         /// zero mappings
         /// </summary>
-        public static readonly MapFileResolver Empty = new MapFileResolver(Enumerable.Empty<MapFile>());
+        public static readonly MapFileResolver Empty = new MapFileResolver(
+            Enumerable.Empty<MapFile>()
+        );
 
         /// <summary>
         /// Initializes a new instance of the <see cref="MapFileResolver"/> by reading
@@ -47,8 +49,12 @@ namespace QuantConnect.Data.Auxiliary
         /// <param name="mapFiles">The data used to initialize this resolver.</param>
         public MapFileResolver(IEnumerable<MapFile> mapFiles)
         {
-            _mapFilesByPermtick = new Dictionary<string, MapFile>(StringComparer.InvariantCultureIgnoreCase);
-            _bySymbol = new Dictionary<string, SortedList<DateTime, MapFileRowEntry>>(StringComparer.InvariantCultureIgnoreCase);
+            _mapFilesByPermtick = new Dictionary<string, MapFile>(
+                StringComparer.InvariantCultureIgnoreCase
+            );
+            _bySymbol = new Dictionary<string, SortedList<DateTime, MapFileRowEntry>>(
+                StringComparer.InvariantCultureIgnoreCase
+            );
 
             foreach (var mapFile in mapFiles)
             {
@@ -71,7 +77,9 @@ namespace QuantConnect.Data.Auxiliary
                         // check to verify it' the same data
                         if (!entries[mapFileRowEntry.MapFileRow.Date].Equals(mapFileRowEntry))
                         {
-                            throw new DuplicateNameException("Attempted to assign different history for symbol.");
+                            throw new DuplicateNameException(
+                                "Attempted to assign different history for symbol."
+                            );
                         }
                     }
                     else
@@ -138,8 +146,10 @@ namespace QuantConnect.Data.Auxiliary
             }
             // secondary search for exact mapping, find path than ends with symbol.csv
             MapFile mapFile;
-            if (!_mapFilesByPermtick.TryGetValue(symbol, out mapFile)
-                || mapFile.FirstDate > date && date != SecurityIdentifier.DefaultDate)
+            if (
+                !_mapFilesByPermtick.TryGetValue(symbol, out mapFile)
+                || mapFile.FirstDate > date && date != SecurityIdentifier.DefaultDate
+            )
             {
                 return new MapFile(symbol, Enumerable.Empty<MapFileRow>());
             }
@@ -181,7 +191,8 @@ namespace QuantConnect.Data.Auxiliary
             /// <param name="other">An object to compare with this object.</param>
             public bool Equals(MapFileRowEntry other)
             {
-                if (other == null) return false;
+                if (other == null)
+                    return false;
                 return other.MapFileRow.Date == MapFileRow.Date
                     && other.MapFileRow.MappedSymbol == MapFileRow.MappedSymbol;
             }

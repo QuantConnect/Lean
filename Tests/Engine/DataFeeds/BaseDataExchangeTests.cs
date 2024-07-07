@@ -14,14 +14,14 @@
  *
 */
 
-using NUnit.Framework;
-using QuantConnect.Data;
-using QuantConnect.Data.Market;
-using QuantConnect.Lean.Engine.DataFeeds;
 using System;
 using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
+using NUnit.Framework;
+using QuantConnect.Data;
+using QuantConnect.Data.Market;
+using QuantConnect.Lean.Engine.DataFeeds;
 using QuantConnect.Lean.Engine.DataFeeds.Enumerators;
 using QuantConnect.Util;
 
@@ -59,20 +59,28 @@ namespace QuantConnect.Tests.Engine.DataFeeds
                 while (!cancellationToken.IsCancellationRequested)
                 {
                     Thread.Sleep(10);
-                    enqueable.Enqueue(new Tick {Symbol = Symbols.SPY, Time = DateTime.UtcNow});
+                    enqueable.Enqueue(new Tick { Symbol = Symbols.SPY, Time = DateTime.UtcNow });
                 }
             });
 
             BaseData last = null;
             using var lastUpdated = new AutoResetEvent(false);
-            exchange.AddEnumerator(Symbols.SPY, enqueable, handleData: spy =>
-            {
-                last = spy;
-                lastUpdated.Set();
-            });
+            exchange.AddEnumerator(
+                Symbols.SPY,
+                enqueable,
+                handleData: spy =>
+                {
+                    last = spy;
+                    lastUpdated.Set();
+                }
+            );
 
             using var finishedRunning = new AutoResetEvent(false);
-            Task.Run(() => { exchange.Start(); finishedRunning.Set(); } );
+            Task.Run(() =>
+            {
+                exchange.Start();
+                finishedRunning.Set();
+            });
 
             Assert.IsTrue(lastUpdated.WaitOne(DefaultTimeout));
 
@@ -106,16 +114,22 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             var first = true;
             BaseData last = null;
             using var lastUpdated = new AutoResetEvent(false);
-            exchange.AddEnumerator(Symbols.SPY, enqueable, handleData: spy =>
-            {
-                if (first)
+            exchange.AddEnumerator(
+                Symbols.SPY,
+                enqueable,
+                handleData: spy =>
                 {
-                    first = false;
-                    throw new RegressionTestException("This exception should be swalloed by the exchange!");
+                    if (first)
+                    {
+                        first = false;
+                        throw new RegressionTestException(
+                            "This exception should be swalloed by the exchange!"
+                        );
+                    }
+                    last = spy;
+                    lastUpdated.Set();
                 }
-                last = spy;
-                lastUpdated.Set();
-            });
+            );
 
             Task.Run(() => exchange.Start());
 
@@ -152,15 +166,19 @@ namespace QuantConnect.Tests.Engine.DataFeeds
                 return true;
             });
 
-            exchange.AddEnumerator(Symbols.SPY, enqueable, handleData: spy =>
-            {
-                if (first)
+            exchange.AddEnumerator(
+                Symbols.SPY,
+                enqueable,
+                handleData: spy =>
                 {
-                    first = false;
-                    throw new RegressionTestException();
+                    if (first)
+                    {
+                        first = false;
+                        throw new RegressionTestException();
+                    }
+                    last = spy;
                 }
-                last = spy;
-            });
+            );
 
             Task.Run(() => exchange.Start());
 
@@ -179,15 +197,21 @@ namespace QuantConnect.Tests.Engine.DataFeeds
         {
             var exchange = new BaseDataExchange("test");
             exchange.SetErrorHandler(exception => true);
-            exchange.AddEnumerator(Symbol.Empty, new List<BaseData> {new Tick()}.GetEnumerator(), () => false);
+            exchange.AddEnumerator(
+                Symbol.Empty,
+                new List<BaseData> { new Tick() }.GetEnumerator(),
+                () => false
+            );
 
             using var isFaultedEvent = new ManualResetEvent(false);
             using var isCompletedEvent = new ManualResetEvent(false);
-            Task.Run(() => exchange.Start()).ContinueWith(task =>
-            {
-                if (task.IsFaulted) isFaultedEvent.Set();
-                isCompletedEvent.Set();
-            });
+            Task.Run(() => exchange.Start())
+                .ContinueWith(task =>
+                {
+                    if (task.IsFaulted)
+                        isFaultedEvent.Set();
+                    isCompletedEvent.Set();
+                });
 
             isCompletedEvent.WaitOne();
             Assert.IsFalse(isFaultedEvent.WaitOne(0));
@@ -202,7 +226,12 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             IEnumerator<BaseData> enumerator = new List<BaseData>().GetEnumerator();
 
             using var isCompletedEvent = new ManualResetEvent(false);
-            exchange.AddEnumerator(Symbol.Empty, enumerator, () => true, handler => isCompletedEvent.Set());
+            exchange.AddEnumerator(
+                Symbol.Empty,
+                enumerator,
+                () => true,
+                handler => isCompletedEvent.Set()
+            );
             Task.Run(() => exchange.Start());
 
             isCompletedEvent.WaitOne();
@@ -213,7 +242,10 @@ namespace QuantConnect.Tests.Engine.DataFeeds
         public void RemovesBySymbol()
         {
             var exchange = new BaseDataExchange("test");
-            var enumerator = new List<BaseData> {new Tick {Symbol = Symbols.SPY}}.GetEnumerator();
+            var enumerator = new List<BaseData>
+            {
+                new Tick { Symbol = Symbols.SPY }
+            }.GetEnumerator();
             exchange.AddEnumerator(Symbols.SPY, enumerator);
             var removed = exchange.RemoveEnumerator(Symbols.AAPL);
             Assert.IsNull(removed);

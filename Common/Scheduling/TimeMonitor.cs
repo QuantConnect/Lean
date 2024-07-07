@@ -27,10 +27,11 @@ namespace QuantConnect.Scheduling
     public class TimeMonitor : IDisposable
     {
         private readonly Timer _timer;
+
         /// <summary>
         /// List to store the coming TimeConsumer objects
         /// </summary>
-        /// <remarks>This field is protected because it's used in a test class 
+        /// <remarks>This field is protected because it's used in a test class
         /// in `IsolatorLimitResultProviderTests.cs</remarks>
         protected List<TimeConsumer> TimeConsumers { get; init; }
 
@@ -54,32 +55,40 @@ namespace QuantConnect.Scheduling
         public TimeMonitor(int monitorIntervalMs = 100)
         {
             TimeConsumers = new List<TimeConsumer>();
-            _timer = new Timer(state =>
-            {
-                try
-                {
-                    lock (TimeConsumers)
-                    {
-                        RemoveAll();
-
-                        foreach (var consumer in TimeConsumers)
-                        {
-                            ProcessConsumer(consumer);
-                        }
-                    }
-                }
-                finally
+            _timer = new Timer(
+                state =>
                 {
                     try
                     {
-                        _timer.Change(Time.GetSecondUnevenWait(monitorIntervalMs), Timeout.Infinite);
+                        lock (TimeConsumers)
+                        {
+                            RemoveAll();
+
+                            foreach (var consumer in TimeConsumers)
+                            {
+                                ProcessConsumer(consumer);
+                            }
+                        }
                     }
-                    catch (ObjectDisposedException)
+                    finally
                     {
-                        // ignored disposed
+                        try
+                        {
+                            _timer.Change(
+                                Time.GetSecondUnevenWait(monitorIntervalMs),
+                                Timeout.Infinite
+                            );
+                        }
+                        catch (ObjectDisposedException)
+                        {
+                            // ignored disposed
+                        }
                     }
-                }
-            }, null, monitorIntervalMs, Timeout.Infinite);
+                },
+                null,
+                monitorIntervalMs,
+                Timeout.Infinite
+            );
         }
 
         /// <summary>
@@ -114,7 +123,7 @@ namespace QuantConnect.Scheduling
         /// <summary>
         /// Remove all TimeConsumer objects where the `Finished` field is marked as true
         /// </summary>
-        /// <remarks>This method is protected because it's overrode by a test class in 
+        /// <remarks>This method is protected because it's overrode by a test class in
         /// `IsolatorLimitResultProviderTests.cs`</remarks>
         protected virtual void RemoveAll()
         {

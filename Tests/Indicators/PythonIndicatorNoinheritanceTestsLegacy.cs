@@ -24,7 +24,8 @@ using QuantConnect.Indicators;
 namespace QuantConnect.Tests.Indicators
 {
     [TestFixture]
-    public class PythonIndicatorNoinheritanceTestsSnakeCaseLegacy : PythonIndicatorNoinheritanceTestsLegacy
+    public class PythonIndicatorNoinheritanceTestsSnakeCaseLegacy
+        : PythonIndicatorNoinheritanceTestsLegacy
     {
         protected override bool SnakeCase => true;
     }
@@ -63,7 +64,8 @@ class CustomSimpleMovingAverage():
         self.{(SnakeCase ? "is_ready" : "IsReady")} = count == self.queue.maxlen
 "
                 );
-                var indicator = module.GetAttr("CustomSimpleMovingAverage")
+                var indicator = module
+                    .GetAttr("CustomSimpleMovingAverage")
                     .Invoke("custom".ToPython(), 14.ToPython());
 
                 return new PythonIndicator(indicator);
@@ -95,7 +97,10 @@ class CustomSimpleMovingAverage():
                     }
                     if (closeIndex * targetIndex < 0)
                     {
-                        Assert.Fail($"Didn't find one of 'Close' or '{line}' in the header: ", TestColumnName);
+                        Assert.Fail(
+                            $"Didn't find one of 'Close' or '{line}' in the header: ",
+                            TestColumnName
+                        );
                     }
 
                     continue;

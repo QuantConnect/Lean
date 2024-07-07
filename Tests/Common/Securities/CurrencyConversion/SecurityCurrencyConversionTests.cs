@@ -51,7 +51,8 @@ namespace QuantConnect.Tests.Common.Securities.CurrencyConversion
                 "USD",
                 existingSecurities,
                 potentialSymbols,
-                makeNewSecurity);
+                makeNewSecurity
+            );
 
             var securities = currencyConversion.ConversionRateSecurities.ToList();
             Assert.AreEqual(1, securities.Count);
@@ -82,7 +83,8 @@ namespace QuantConnect.Tests.Common.Securities.CurrencyConversion
                 "EUR",
                 existingSecurities,
                 potentialSymbols,
-                makeNewSecurity);
+                makeNewSecurity
+            );
 
             var securities = currencyConversion.ConversionRateSecurities.ToList();
             Assert.AreEqual(2, securities.Count);
@@ -114,7 +116,8 @@ namespace QuantConnect.Tests.Common.Securities.CurrencyConversion
                 "USD",
                 existingSecurities,
                 potentialSymbols,
-                makeNewSecurity);
+                makeNewSecurity
+            );
 
             var securities = currencyConversion.ConversionRateSecurities.ToList();
             Assert.AreEqual(1, securities.Count);
@@ -145,7 +148,8 @@ namespace QuantConnect.Tests.Common.Securities.CurrencyConversion
                 "EUR",
                 existingSecurities,
                 potentialSymbols,
-                makeNewSecurity);
+                makeNewSecurity
+            );
 
             var securities = currencyConversion.ConversionRateSecurities.ToList();
             Assert.AreEqual(2, securities.Count);
@@ -160,12 +164,16 @@ namespace QuantConnect.Tests.Common.Securities.CurrencyConversion
             var existingSecurities = new List<Security>(0);
             var potentialSymbols = new List<Symbol> { Symbols.EURGBP };
 
-            Assert.Throws<ArgumentException>(() => SecurityCurrencyConversion.LinearSearch(
-                "EUR",
-                "USD",
-                existingSecurities,
-                potentialSymbols,
-                CreateSecurity));
+            Assert.Throws<ArgumentException>(
+                () =>
+                    SecurityCurrencyConversion.LinearSearch(
+                        "EUR",
+                        "USD",
+                        existingSecurities,
+                        potentialSymbols,
+                        CreateSecurity
+                    )
+            );
         }
 
         [TestCaseSource(nameof(oneLegCases))]
@@ -173,7 +181,8 @@ namespace QuantConnect.Tests.Common.Securities.CurrencyConversion
             string sourceCurrency,
             string destinationCurrency,
             Symbol symbol,
-            decimal expectedRate)
+            decimal expectedRate
+        )
         {
             var existingSecurities = new List<Security> { CreateSecurity(symbol) };
 
@@ -182,7 +191,8 @@ namespace QuantConnect.Tests.Common.Securities.CurrencyConversion
                 destinationCurrency,
                 existingSecurities,
                 new List<Symbol>(0),
-                CreateSecurity);
+                CreateSecurity
+            );
 
             existingSecurities[0].SetMarketPrice(new Tick { Value = 10m });
 
@@ -196,7 +206,8 @@ namespace QuantConnect.Tests.Common.Securities.CurrencyConversion
             string destinationCurrency,
             Symbol symbol1,
             Symbol symbol2,
-            decimal expectedRate)
+            decimal expectedRate
+        )
         {
             var existingSecurities = new List<Security>
             {
@@ -209,7 +220,8 @@ namespace QuantConnect.Tests.Common.Securities.CurrencyConversion
                 destinationCurrency,
                 existingSecurities,
                 new List<Symbol>(0),
-                CreateSecurity);
+                CreateSecurity
+            );
 
             existingSecurities[0].SetMarketPrice(new Tick { Value = 15m });
             existingSecurities[1].SetMarketPrice(new Tick { Value = 25m });
@@ -228,7 +240,8 @@ namespace QuantConnect.Tests.Common.Securities.CurrencyConversion
                 "USD",
                 existingSecurities,
                 new List<Symbol>(0),
-                CreateSecurity);
+                CreateSecurity
+            );
 
             currencyConversion.Update();
             Assert.AreEqual(0m, currencyConversion.ConversionRate);
@@ -248,7 +261,8 @@ namespace QuantConnect.Tests.Common.Securities.CurrencyConversion
                 "USD",
                 existingSecurities,
                 new List<Symbol>(0),
-                CreateSecurity);
+                CreateSecurity
+            );
 
             existingSecurities[0].SetMarketPrice(new Tick { Value = 15m });
 
@@ -266,7 +280,8 @@ namespace QuantConnect.Tests.Common.Securities.CurrencyConversion
                 "USD",
                 existingSecurities,
                 new List<Symbol>(0),
-                CreateSecurity);
+                CreateSecurity
+            );
 
             Assert.AreEqual(0m, currencyConversion.ConversionRate);
 
@@ -290,7 +305,8 @@ namespace QuantConnect.Tests.Common.Securities.CurrencyConversion
                 "USD",
                 existingSecurities,
                 potentialSymbols,
-                CreateSecurity);
+                CreateSecurity
+            );
 
             Assert.AreEqual(0, currencyConversion.ConversionRate);
         }
@@ -306,7 +322,8 @@ namespace QuantConnect.Tests.Common.Securities.CurrencyConversion
                 "USD",
                 existingSecurities,
                 potentialSymbols,
-                CreateSecurity);
+                CreateSecurity
+            );
 
             Assert.AreEqual("EUR", currencyConversion.SourceCurrency);
         }
@@ -322,7 +339,8 @@ namespace QuantConnect.Tests.Common.Securities.CurrencyConversion
                 "USD",
                 existingSecurities,
                 potentialSymbols,
-                CreateSecurity);
+                CreateSecurity
+            );
 
             Assert.AreEqual("USD", currencyConversion.DestinationCurrency);
         }
@@ -339,7 +357,8 @@ namespace QuantConnect.Tests.Common.Securities.CurrencyConversion
                 timezone,
                 true,
                 false,
-                false);
+                false
+            );
 
             return new Security(
                 SecurityExchangeHours.AlwaysOpen(timezone),
@@ -361,7 +380,6 @@ namespace QuantConnect.Tests.Common.Securities.CurrencyConversion
         {
             // Not inverted
             new object[] { "BTC", "USD", Symbols.BTCUSD, 10m },
-
             // Inverted
             new object[] { "USD", "BTC", Symbols.BTCUSD, 0.1m }
         };
@@ -375,13 +393,10 @@ namespace QuantConnect.Tests.Common.Securities.CurrencyConversion
         {
             // Not inverted
             new object[] { "ETH", "USD", Symbols.ETHBTC, Symbols.BTCUSD, 15m * 25m },
-
             // First pair inverted
             new object[] { "USD", "BTC", Symbols.ETHUSD, Symbols.ETHBTC, (1m / 15m) * 25m },
-
             // Second pair inverted
             new object[] { "ETH", "BTC", Symbols.ETHUSD, Symbols.BTCUSD, 15m * (1m / 25m) },
-
             // Both pairs inverted
             new object[] { "USD", "ETH", Symbols.BTCUSD, Symbols.ETHBTC, (1m / 15m) * (1m / 25m) }
         };

@@ -14,17 +14,21 @@
 */
 
 using System;
-using System.Linq;
-using QuantConnect.Interfaces;
 using System.Collections.Generic;
-using QuantConnect.Data.Auxiliary;
+using System.Linq;
 using System.Text.RegularExpressions;
+using QuantConnect.Data.Auxiliary;
+using QuantConnect.Interfaces;
 
 namespace QuantConnect.Data
 {
     public static class HistoryExtensions
     {
-        private static readonly Regex _brokerageHistoryProvider = new("QuantConnect.Lean.Engine.HistoricalData.([a-zA-z]+)HistoryProvider", RegexOptions.Compiled);
+        private static readonly Regex _brokerageHistoryProvider =
+            new(
+                "QuantConnect.Lean.Engine.HistoricalData.([a-zA-z]+)HistoryProvider",
+                RegexOptions.Compiled
+            );
 
         /// <summary>
         /// Helper method to get the brokerage name
@@ -32,8 +36,12 @@ namespace QuantConnect.Data
         public static bool TryGetBrokerageName(string historyProviderName, out string brokerageName)
         {
             brokerageName = null;
-            if (historyProviderName != "QuantConnect.Lean.Engine.HistoricalData.BrokerageHistoryProvider"
-                && historyProviderName != "QuantConnect.Lean.Engine.HistoricalData.SubscriptionDataReaderHistoryProvider")
+            if (
+                historyProviderName
+                    != "QuantConnect.Lean.Engine.HistoricalData.BrokerageHistoryProvider"
+                && historyProviderName
+                    != "QuantConnect.Lean.Engine.HistoricalData.SubscriptionDataReaderHistoryProvider"
+            )
             {
                 var matches = _brokerageHistoryProvider.Match(historyProviderName);
                 if (matches.Success)
@@ -63,26 +71,42 @@ namespace QuantConnect.Data
         /// 2: request = { StartTimeUtc = 2014/04/**03**, EndTimeUtc = 2017/02/02, Symbol.Value = "GOOGL" }
         /// > GOOGLE: IPO: August 19, 2004 Name = GOOG then it was restructured: from "GOOG" to "GOOGL" on April 2, 2014
         /// </example>
-        public static IEnumerable<HistoryRequest> SplitHistoryRequestWithUpdatedMappedSymbol(this HistoryRequest request, IMapFileProvider mapFileProvider)
+        public static IEnumerable<HistoryRequest> SplitHistoryRequestWithUpdatedMappedSymbol(
+            this HistoryRequest request,
+            IMapFileProvider mapFileProvider
+        )
         {
             if (request == null)
             {
                 throw new ArgumentNullException(nameof(request));
             }
 
-            if (request.Symbol.SecurityType != SecurityType.Future && request.Symbol.RequiresMapping())
+            if (
+                request.Symbol.SecurityType != SecurityType.Future
+                && request.Symbol.RequiresMapping()
+            )
             {
                 var isReturnHistoryRequest = default(bool);
-                foreach (var tickerDateRange in mapFileProvider.RetrieveSymbolHistoricalDefinitionsInDateRange(request.Symbol, request.StartTimeLocal, request.EndTimeLocal))
+                foreach (
+                    var tickerDateRange in mapFileProvider.RetrieveSymbolHistoricalDefinitionsInDateRange(
+                        request.Symbol,
+                        request.StartTimeLocal,
+                        request.EndTimeLocal
+                    )
+                )
                 {
                     isReturnHistoryRequest = true;
                     var symbol = request.Symbol.UpdateMappedSymbol(tickerDateRange.Ticker);
                     yield return new HistoryRequest(
                         request,
                         symbol,
-                        tickerDateRange.StartDateTimeLocal.ConvertToUtc(request.ExchangeHours.TimeZone),
-                        tickerDateRange.EndDateTimeLocal.ConvertToUtc(request.ExchangeHours.TimeZone)
-                        );
+                        tickerDateRange.StartDateTimeLocal.ConvertToUtc(
+                            request.ExchangeHours.TimeZone
+                        ),
+                        tickerDateRange.EndDateTimeLocal.ConvertToUtc(
+                            request.ExchangeHours.TimeZone
+                        )
+                    );
                 }
 
                 if (!isReturnHistoryRequest)

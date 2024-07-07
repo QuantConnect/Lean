@@ -49,12 +49,14 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
         /// <param name="enumerator">The underlying data enumerator</param>
         /// <param name="isUniverse">The subscription is a universe subscription</param>
         /// <returns>A subscription data enumerator</returns>
-        public SubscriptionDataEnumerator(SubscriptionDataConfig configuration,
+        public SubscriptionDataEnumerator(
+            SubscriptionDataConfig configuration,
             SecurityExchangeHours exchangeHours,
             TimeZoneOffsetProvider offsetProvider,
             IEnumerator<BaseData> enumerator,
             bool isUniverse,
-            bool dailyStrictEndTimeEnabled)
+            bool dailyStrictEndTimeEnabled
+        )
         {
             _enumerator = enumerator;
             _offsetProvider = offsetProvider;
@@ -76,13 +78,23 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
             {
                 // Use our config filter to see if we should emit this
                 // This currently catches Auxiliary data that we don't want to emit
-                if (_enumerator.Current != null && !_configuration.ShouldEmitData(_enumerator.Current, _isUniverse))
+                if (
+                    _enumerator.Current != null
+                    && !_configuration.ShouldEmitData(_enumerator.Current, _isUniverse)
+                )
                 {
                     // We shouldn't emit this data, so we will MoveNext() again.
                     return MoveNext();
                 }
 
-                Current = SubscriptionData.Create(_dailyStrictEndTimeEnabled, _configuration, _exchangeHours, _offsetProvider, _enumerator.Current, _configuration.DataNormalizationMode);
+                Current = SubscriptionData.Create(
+                    _dailyStrictEndTimeEnabled,
+                    _configuration,
+                    _exchangeHours,
+                    _offsetProvider,
+                    _enumerator.Current,
+                    _configuration.DataNormalizationMode
+                );
             }
             return result;
         }

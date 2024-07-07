@@ -14,9 +14,9 @@
 */
 
 using System;
-using QuantConnect.Data;
 using System.Collections;
 using System.Collections.Generic;
+using QuantConnect.Data;
 using QuantConnect.Data.UniverseSelection;
 
 namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
@@ -42,7 +42,11 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
         /// <param name="enumerator">The underlying enumerator to aggregate</param>
         /// <param name="symbol">The symbol to place on the aggregated collection</param>
         /// <param name="liveMode">True if running in live mode</param>
-        public BaseDataCollectionAggregatorEnumerator(IEnumerator<BaseData> enumerator, Symbol symbol, bool liveMode = false)
+        public BaseDataCollectionAggregatorEnumerator(
+            IEnumerator<BaseData> enumerator,
+            Symbol symbol,
+            bool liveMode = false
+        )
         {
             _symbol = symbol;
             _enumerator = enumerator;
@@ -134,10 +138,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
         /// <returns>
         /// The element in the collection at the current position of the enumerator.
         /// </returns>
-        public BaseDataCollection Current
-        {
-            get; private set;
-        }
+        public BaseDataCollection Current { get; private set; }
 
         /// <summary>
         /// Gets the current element in the collection.
@@ -202,7 +203,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
                 if (baseDataCollection != null)
                 {
                     // datapoint is already aggregated, let's see if it's a single point or a collection we can use already
-                    if(baseDataCollection.Data.Count > 1)
+                    if (baseDataCollection.Data.Count > 1)
                     {
                         collection.Data = baseDataCollection.Data;
                     }

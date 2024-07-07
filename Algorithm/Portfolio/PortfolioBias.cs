@@ -16,7 +16,7 @@
 namespace QuantConnect.Algorithm.Framework.Portfolio
 {
     /// <summary>
-    /// Specifies the bias of the portfolio (Short, Long/Short, Long) 
+    /// Specifies the bias of the portfolio (Short, Long/Short, Long)
     /// </summary>
     public enum PortfolioBias
     {

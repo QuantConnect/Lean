@@ -18,7 +18,8 @@ namespace QuantConnect.Algorithm.CSharp
     /// <summary>
     /// Regression algorithm asserting warming up with a lower resolution for speed is respected
     /// </summary>
-    public class WarmupLowerResolutionBarCountSettingRegressionAlgorithm : WarmupLowerResolutionTimeSpanRegressionAlgorithm
+    public class WarmupLowerResolutionBarCountSettingRegressionAlgorithm
+        : WarmupLowerResolutionTimeSpanRegressionAlgorithm
     {
         public override void Initialize()
         {

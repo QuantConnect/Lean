@@ -15,11 +15,11 @@
 
 using System;
 using System.Collections.Generic;
-using QuantConnect.Data;
+using System.IO;
 using QuantConnect.Brokerages;
+using QuantConnect.Data;
 using QuantConnect.Indicators;
 using QuantConnect.Interfaces;
-using System.IO;
 using QuantConnect.Orders;
 
 namespace QuantConnect.Algorithm.CSharp
@@ -27,7 +27,9 @@ namespace QuantConnect.Algorithm.CSharp
     /// <summary>
     /// Algorithm demonstrating and ensuring that Bybit crypto brokerage model works as expected with custom data types
     /// </summary>
-    public class BybitCustomDataCryptoRegressionAlgorithm : QCAlgorithm, IRegressionAlgorithmDefinition
+    public class BybitCustomDataCryptoRegressionAlgorithm
+        : QCAlgorithm,
+            IRegressionAlgorithmDefinition
     {
         private Symbol _btcUsdt;
 
@@ -99,24 +101,45 @@ namespace QuantConnect.Algorithm.CSharp
                 get { return QuantConnect.Time.OneMinute; }
             }
 
-            public override SubscriptionDataSource GetSource(SubscriptionDataConfig config, DateTime date, bool isLiveMode)
+            public override SubscriptionDataSource GetSource(
+                SubscriptionDataConfig config,
+                DateTime date,
+                bool isLiveMode
+            )
             {
                 var tickTypeString = config.TickType.TickTypeToLower();
                 var formattedDate = date.ToStringInvariant(DateFormat.EightCharacter);
-                var source = Path.Combine(Globals.DataFolder, "crypto", "bybit", config.Resolution.ToString().ToLower(),
-                    config.Symbol.Value.ToLower(), $"{formattedDate}_{tickTypeString}.zip");
+                var source = Path.Combine(
+                    Globals.DataFolder,
+                    "crypto",
+                    "bybit",
+                    config.Resolution.ToString().ToLower(),
+                    config.Symbol.Value.ToLower(),
+                    $"{formattedDate}_{tickTypeString}.zip"
+                );
 
-                return new SubscriptionDataSource(source, SubscriptionTransportMedium.LocalFile, FileFormat.Csv);
+                return new SubscriptionDataSource(
+                    source,
+                    SubscriptionTransportMedium.LocalFile,
+                    FileFormat.Csv
+                );
             }
 
-            public override BaseData Reader(SubscriptionDataConfig config, string line, DateTime date, bool isLiveMode)
+            public override BaseData Reader(
+                SubscriptionDataConfig config,
+                string line,
+                DateTime date,
+                bool isLiveMode
+            )
             {
                 var csv = line.ToCsv(6);
 
                 var data = new CustomCryptoData
                 {
                     Symbol = config.Symbol,
-                    Time = date.Date.AddMilliseconds(csv[0].ToInt32()).ConvertTo(config.DataTimeZone, config.ExchangeTimeZone),
+                    Time = date
+                        .Date.AddMilliseconds(csv[0].ToInt32())
+                        .ConvertTo(config.DataTimeZone, config.ExchangeTimeZone),
                     Open = csv[1].ToDecimal(),
                     High = csv[2].ToDecimal(),
                     Low = csv[3].ToDecimal(),
@@ -157,35 +180,36 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// This is used by the regression test system to indicate what the expected statistics are from running the algorithm
         /// </summary>
-        public Dictionary<string, string> ExpectedStatistics => new Dictionary<string, string>
-        {
-            {"Total Orders", "2"},
-            {"Average Win", "0%"},
-            {"Average Loss", "0%"},
-            {"Compounding Annual Return", "0%"},
-            {"Drawdown", "0%"},
-            {"Expectancy", "0"},
-            {"Start Equity", "100000.00"},
-            {"End Equity", "99981.72"},
-            {"Net Profit", "0%"},
-            {"Sharpe Ratio", "0"},
-            {"Sortino Ratio", "0"},
-            {"Probabilistic Sharpe Ratio", "0%"},
-            {"Loss Rate", "0%"},
-            {"Win Rate", "0%"},
-            {"Profit-Loss Ratio", "0"},
-            {"Alpha", "0"},
-            {"Beta", "0"},
-            {"Annual Standard Deviation", "0"},
-            {"Annual Variance", "0"},
-            {"Information Ratio", "0"},
-            {"Tracking Error", "0"},
-            {"Treynor Ratio", "0"},
-            {"Total Fees", "₮0.00"},
-            {"Estimated Strategy Capacity", "₮0"},
-            {"Lowest Capacity Asset", "BTCUSDT.CustomCryptoData 2US"},
-            {"Portfolio Turnover", "34.30%"},
-            {"OrderListHash", "52ddb7dfcaaf1ea4f70cc614c49f0cd0"}
-        };
+        public Dictionary<string, string> ExpectedStatistics =>
+            new Dictionary<string, string>
+            {
+                { "Total Orders", "2" },
+                { "Average Win", "0%" },
+                { "Average Loss", "0%" },
+                { "Compounding Annual Return", "0%" },
+                { "Drawdown", "0%" },
+                { "Expectancy", "0" },
+                { "Start Equity", "100000.00" },
+                { "End Equity", "99981.72" },
+                { "Net Profit", "0%" },
+                { "Sharpe Ratio", "0" },
+                { "Sortino Ratio", "0" },
+                { "Probabilistic Sharpe Ratio", "0%" },
+                { "Loss Rate", "0%" },
+                { "Win Rate", "0%" },
+                { "Profit-Loss Ratio", "0" },
+                { "Alpha", "0" },
+                { "Beta", "0" },
+                { "Annual Standard Deviation", "0" },
+                { "Annual Variance", "0" },
+                { "Information Ratio", "0" },
+                { "Tracking Error", "0" },
+                { "Treynor Ratio", "0" },
+                { "Total Fees", "₮0.00" },
+                { "Estimated Strategy Capacity", "₮0" },
+                { "Lowest Capacity Asset", "BTCUSDT.CustomCryptoData 2US" },
+                { "Portfolio Turnover", "34.30%" },
+                { "OrderListHash", "52ddb7dfcaaf1ea4f70cc614c49f0cd0" }
+            };
     }
 }

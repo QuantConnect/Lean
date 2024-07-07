@@ -24,26 +24,31 @@ namespace QuantConnect.Indicators
     {
         /// <summary>
         /// Initializes a new instance of the <see cref="PercentagePriceOscillator"/> class using the specified name and parameters.
-        /// </summary> 
+        /// </summary>
         /// <param name="name">The name of this indicator</param>
         /// <param name="fastPeriod">The fast moving average period</param>
         /// <param name="slowPeriod">The slow moving average period</param>
         /// <param name="movingAverageType">The type of moving average to use</param>
-        public PercentagePriceOscillator(string name, int fastPeriod, int slowPeriod, MovingAverageType movingAverageType = MovingAverageType.Simple)
-            : base(name, fastPeriod, slowPeriod, movingAverageType)
-        {
-        }
+        public PercentagePriceOscillator(
+            string name,
+            int fastPeriod,
+            int slowPeriod,
+            MovingAverageType movingAverageType = MovingAverageType.Simple
+        )
+            : base(name, fastPeriod, slowPeriod, movingAverageType) { }
 
         /// <summary>
         /// Initializes a new instance of the <see cref="PercentagePriceOscillator"/> class using the specified parameters.
-        /// </summary> 
+        /// </summary>
         /// <param name="fastPeriod">The fast moving average period</param>
         /// <param name="slowPeriod">The slow moving average period</param>
         /// <param name="movingAverageType">The type of moving average to use</param>
-        public PercentagePriceOscillator(int fastPeriod, int slowPeriod, MovingAverageType movingAverageType = MovingAverageType.Simple)
-            : this($"PPO({fastPeriod},{slowPeriod})", fastPeriod, slowPeriod, movingAverageType)
-        {
-        }
+        public PercentagePriceOscillator(
+            int fastPeriod,
+            int slowPeriod,
+            MovingAverageType movingAverageType = MovingAverageType.Simple
+        )
+            : this($"PPO({fastPeriod},{slowPeriod})", fastPeriod, slowPeriod, movingAverageType) { }
 
         /// <summary>
         /// Computes the next value of this indicator from the given state

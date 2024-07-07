@@ -41,7 +41,11 @@ namespace QuantConnect.Util.RateLimit
         /// each time the provided <paramref name="refillInterval"/> has passed</param>
         /// <param name="refillInterval">The amount of time that must pass before adding the specified <paramref name="refillAmount"/>
         /// back to the bucket</param>
-        public FixedIntervalRefillStrategy(ITimeProvider timeProvider, long refillAmount, TimeSpan refillInterval)
+        public FixedIntervalRefillStrategy(
+            ITimeProvider timeProvider,
+            long refillAmount,
+            TimeSpan refillInterval
+        )
         {
             _timeProvider = timeProvider;
             _refillAmount = refillAmount;

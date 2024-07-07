@@ -32,7 +32,8 @@ namespace QuantConnect.Algorithm.CSharp
         private Theta _theta;
         private Rho _rho;
 
-        protected virtual string ExpectedGreeks { get; set; } = "Implied Volatility: 0.4284,Delta: -0.00965,Gamma: 0.00027,Vega: 0.02602,Theta: -0.02564,Rho: 0.00033";
+        protected virtual string ExpectedGreeks { get; set; } =
+            "Implied Volatility: 0.4284,Delta: -0.00965,Gamma: 0.00027,Vega: 0.02602,Theta: -0.02564,Rho: 0.00033";
 
         public override void Initialize()
         {
@@ -41,7 +42,14 @@ namespace QuantConnect.Algorithm.CSharp
             SetCash(100000);
 
             AddEquity("AAPL", Resolution.Minute);
-            var option = QuantConnect.Symbol.CreateOption("AAPL", Market.USA, OptionStyle.American, OptionRight.Put, 505m, new DateTime(2014, 6, 27));
+            var option = QuantConnect.Symbol.CreateOption(
+                "AAPL",
+                Market.USA,
+                OptionStyle.American,
+                OptionRight.Put,
+                505m,
+                new DateTime(2014, 6, 27)
+            );
             AddOptionContract(option, Resolution.Minute);
 
             InitializeIndicators(option);
@@ -50,25 +58,55 @@ namespace QuantConnect.Algorithm.CSharp
         protected void InitializeIndicators(Symbol option)
         {
             _impliedVolatility = IV(option, period: 2);
-            _delta = D(option, optionModel: OptionPricingModelType.BinomialCoxRossRubinstein, ivModel: OptionPricingModelType.BlackScholes);
-            _gamma = G(option, optionModel: OptionPricingModelType.ForwardTree, ivModel: OptionPricingModelType.BlackScholes);
-            _vega = V(option, optionModel: OptionPricingModelType.ForwardTree, ivModel: OptionPricingModelType.BlackScholes);
-            _theta = T(option, optionModel: OptionPricingModelType.ForwardTree, ivModel: OptionPricingModelType.BlackScholes);
-            _rho = R(option, optionModel: OptionPricingModelType.ForwardTree, ivModel: OptionPricingModelType.BlackScholes);
+            _delta = D(
+                option,
+                optionModel: OptionPricingModelType.BinomialCoxRossRubinstein,
+                ivModel: OptionPricingModelType.BlackScholes
+            );
+            _gamma = G(
+                option,
+                optionModel: OptionPricingModelType.ForwardTree,
+                ivModel: OptionPricingModelType.BlackScholes
+            );
+            _vega = V(
+                option,
+                optionModel: OptionPricingModelType.ForwardTree,
+                ivModel: OptionPricingModelType.BlackScholes
+            );
+            _theta = T(
+                option,
+                optionModel: OptionPricingModelType.ForwardTree,
+                ivModel: OptionPricingModelType.BlackScholes
+            );
+            _rho = R(
+                option,
+                optionModel: OptionPricingModelType.ForwardTree,
+                ivModel: OptionPricingModelType.BlackScholes
+            );
         }
 
         public override void OnEndOfAlgorithm()
         {
-            if (_impliedVolatility == 0m || _delta == 0m || _gamma == 0m || _vega == 0m || _theta == 0m || _rho == 0m)
+            if (
+                _impliedVolatility == 0m
+                || _delta == 0m
+                || _gamma == 0m
+                || _vega == 0m
+                || _theta == 0m
+                || _rho == 0m
+            )
             {
                 throw new RegressionTestException("Expected IV/greeks calculated");
             }
-            var result = @$"Implied Volatility: {_impliedVolatility},Delta: {_delta},Gamma: {_gamma},Vega: {_vega},Theta: {_theta},Rho: {_rho}";
+            var result =
+                @$"Implied Volatility: {_impliedVolatility},Delta: {_delta},Gamma: {_gamma},Vega: {_vega},Theta: {_theta},Rho: {_rho}";
 
             Debug(result);
             if (result != ExpectedGreeks)
             {
-                throw new RegressionTestException($"Unexpected greek values {result}. Expected {ExpectedGreeks}");
+                throw new RegressionTestException(
+                    $"Unexpected greek values {result}. Expected {ExpectedGreeks}"
+                );
             }
         }
 
@@ -80,7 +118,8 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// This is used by the regression test system to indicate which languages this algorithm is written in.
         /// </summary>
-        public virtual List<Language> Languages { get; } = new() { Language.CSharp, Language.Python };
+        public virtual List<Language> Languages { get; } =
+            new() { Language.CSharp, Language.Python };
 
         /// <summary>
         /// Data Points count of all timeslices of algorithm
@@ -100,35 +139,36 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// This is used by the regression test system to indicate what the expected statistics are from running the algorithm
         /// </summary>
-        public virtual Dictionary<string, string> ExpectedStatistics => new Dictionary<string, string>
-        {
-            {"Total Orders", "0"},
-            {"Average Win", "0%"},
-            {"Average Loss", "0%"},
-            {"Compounding Annual Return", "0%"},
-            {"Drawdown", "0%"},
-            {"Expectancy", "0"},
-            {"Start Equity", "100000"},
-            {"End Equity", "100000"},
-            {"Net Profit", "0%"},
-            {"Sharpe Ratio", "0"},
-            {"Sortino Ratio", "0"},
-            {"Probabilistic Sharpe Ratio", "0%"},
-            {"Loss Rate", "0%"},
-            {"Win Rate", "0%"},
-            {"Profit-Loss Ratio", "0"},
-            {"Alpha", "0"},
-            {"Beta", "0"},
-            {"Annual Standard Deviation", "0"},
-            {"Annual Variance", "0"},
-            {"Information Ratio", "0"},
-            {"Tracking Error", "0"},
-            {"Treynor Ratio", "0"},
-            {"Total Fees", "$0.00"},
-            {"Estimated Strategy Capacity", "$0"},
-            {"Lowest Capacity Asset", ""},
-            {"Portfolio Turnover", "0%"},
-            {"OrderListHash", "d41d8cd98f00b204e9800998ecf8427e"}
-        };
+        public virtual Dictionary<string, string> ExpectedStatistics =>
+            new Dictionary<string, string>
+            {
+                { "Total Orders", "0" },
+                { "Average Win", "0%" },
+                { "Average Loss", "0%" },
+                { "Compounding Annual Return", "0%" },
+                { "Drawdown", "0%" },
+                { "Expectancy", "0" },
+                { "Start Equity", "100000" },
+                { "End Equity", "100000" },
+                { "Net Profit", "0%" },
+                { "Sharpe Ratio", "0" },
+                { "Sortino Ratio", "0" },
+                { "Probabilistic Sharpe Ratio", "0%" },
+                { "Loss Rate", "0%" },
+                { "Win Rate", "0%" },
+                { "Profit-Loss Ratio", "0" },
+                { "Alpha", "0" },
+                { "Beta", "0" },
+                { "Annual Standard Deviation", "0" },
+                { "Annual Variance", "0" },
+                { "Information Ratio", "0" },
+                { "Tracking Error", "0" },
+                { "Treynor Ratio", "0" },
+                { "Total Fees", "$0.00" },
+                { "Estimated Strategy Capacity", "$0" },
+                { "Lowest Capacity Asset", "" },
+                { "Portfolio Turnover", "0%" },
+                { "OrderListHash", "d41d8cd98f00b204e9800998ecf8427e" }
+            };
     }
 }

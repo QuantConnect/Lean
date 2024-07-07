@@ -32,7 +32,7 @@ namespace QuantConnect.Algorithm.Framework.Alphas
         private readonly Resolution _resolution;
         private readonly TimeSpan _predictionInterval;
         private readonly Dictionary<Symbol, SymbolData> _symbolDataBySymbol;
-        private readonly  InsightCollection _insightCollection;
+        private readonly InsightCollection _insightCollection;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="HistoricalReturnsAlphaModel"/> class
@@ -42,7 +42,7 @@ namespace QuantConnect.Algorithm.Framework.Alphas
         public HistoricalReturnsAlphaModel(
             int lookback = 1,
             Resolution resolution = Resolution.Daily
-            )
+        )
         {
             _lookback = lookback;
             _resolution = resolution;
@@ -68,16 +68,26 @@ namespace QuantConnect.Algorithm.Framework.Alphas
                 {
                     var direction = InsightDirection.Flat;
                     var magnitude = (double)symbolData.ROC.Current.Value;
-                    if (magnitude > 0) direction = InsightDirection.Up;
-                    if (magnitude < 0) direction = InsightDirection.Down;
-                    
+                    if (magnitude > 0)
+                        direction = InsightDirection.Up;
+                    if (magnitude < 0)
+                        direction = InsightDirection.Down;
+
                     if (direction == InsightDirection.Flat)
                     {
                         CancelInsights(algorithm, symbol);
                         continue;
                     }
 
-                    insights.Add(Insight.Price(symbolData.Security.Symbol, _predictionInterval, direction, magnitude, null));
+                    insights.Add(
+                        Insight.Price(
+                            symbolData.Security.Symbol,
+                            _predictionInterval,
+                            direction,
+                            magnitude,
+                            null
+                        )
+                    );
                 }
             }
             _insightCollection.AddRange(insights);
@@ -98,7 +108,10 @@ namespace QuantConnect.Algorithm.Framework.Alphas
                 if (_symbolDataBySymbol.TryGetValue(removed.Symbol, out data))
                 {
                     _symbolDataBySymbol.Remove(removed.Symbol);
-                    algorithm.SubscriptionManager.RemoveConsolidator(removed.Symbol, data.Consolidator);
+                    algorithm.SubscriptionManager.RemoveConsolidator(
+                        removed.Symbol,
+                        data.Consolidator
+                    );
                 }
 
                 CancelInsights(algorithm, removed.Symbol);
@@ -119,15 +132,16 @@ namespace QuantConnect.Algorithm.Framework.Alphas
             if (addedSymbols.Count > 0)
             {
                 // warmup our indicators by pushing history through the consolidators
-                algorithm.History(addedSymbols, _lookback, _resolution)
-                .PushThrough(bar =>
-                {
-                    SymbolData symbolData;
-                    if (_symbolDataBySymbol.TryGetValue(bar.Symbol, out symbolData))
+                algorithm
+                    .History(addedSymbols, _lookback, _resolution)
+                    .PushThrough(bar =>
                     {
-                        symbolData.ROC.Update(bar.EndTime, bar.Value);
-                    }
-                });
+                        SymbolData symbolData;
+                        if (_symbolDataBySymbol.TryGetValue(bar.Symbol, out symbolData))
+                        {
+                            symbolData.ROC.Update(bar.EndTime, bar.Value);
+                        }
+                    });
             }
         }
 
@@ -150,7 +164,12 @@ namespace QuantConnect.Algorithm.Framework.Alphas
             public RateOfChange ROC;
             public long previous = 0;
 
-            public SymbolData(QCAlgorithm algorithm, Security security, int lookback, Resolution resolution)
+            public SymbolData(
+                QCAlgorithm algorithm,
+                Security security,
+                int lookback,
+                Resolution resolution
+            )
             {
                 Security = security;
                 Consolidator = algorithm.ResolveConsolidator(security.Symbol, resolution);
@@ -161,7 +180,8 @@ namespace QuantConnect.Algorithm.Framework.Alphas
 
             public bool CanEmit()
             {
-                if (previous == ROC.Samples) return false;
+                if (previous == ROC.Samples)
+                    return false;
                 previous = ROC.Samples;
                 return ROC.IsReady;
             }

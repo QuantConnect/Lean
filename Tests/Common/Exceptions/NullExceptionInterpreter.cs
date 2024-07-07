@@ -27,9 +27,7 @@ namespace QuantConnect.Tests.Common.Exceptions
 
         public int Order => int.MaxValue;
 
-        private NullExceptionInterpreter()
-        {
-        }
+        private NullExceptionInterpreter() { }
 
         public bool CanInterpret(Exception exception)
         {

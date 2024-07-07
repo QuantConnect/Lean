@@ -26,7 +26,10 @@ namespace QuantConnect.Securities.Future
         /// <summary>
         /// Defines Futures GLOBEX Ticker -> Futures Options GLOBEX Ticker
         /// </summary>
-        private static Dictionary<string, string> _futureToFutureOptionsGLOBEX = new Dictionary<string, string>
+        private static Dictionary<string, string> _futureToFutureOptionsGLOBEX = new Dictionary<
+            string,
+            string
+        >
         {
             { "EH", "OEH" },
             { "KE", "OKE" },
@@ -59,9 +62,9 @@ namespace QuantConnect.Securities.Future
             { "ZI", "OZI" }
         };
 
-        private static Dictionary<string, string> _futureOptionsToFutureGLOBEX = _futureToFutureOptionsGLOBEX
-            .ToDictionary(kvp => kvp.Value, kvp => kvp.Key); 
-        
+        private static Dictionary<string, string> _futureOptionsToFutureGLOBEX =
+            _futureToFutureOptionsGLOBEX.ToDictionary(kvp => kvp.Value, kvp => kvp.Key);
+
         /// <summary>
         /// Returns the futures options ticker for the given futures ticker.
         /// </summary>

@@ -45,10 +45,7 @@ namespace QuantConnect.Algorithm.CSharp
             SetUniverseSelection(new ManualUniverseSelectionModel());
 
             // define alpha model as a composite of the rsi and ema cross models
-            SetAlpha(new CompositeAlphaModel(
-                new RsiAlphaModel(),
-                new EmaCrossAlphaModel()
-            ));
+            SetAlpha(new CompositeAlphaModel(new RsiAlphaModel(), new EmaCrossAlphaModel()));
 
             // default models for the rest
             SetPortfolioConstruction(new EqualWeightingPortfolioConstructionModel());
@@ -84,35 +81,36 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// This is used by the regression test system to indicate what the expected statistics are from running the algorithm
         /// </summary>
-        public Dictionary<string, string> ExpectedStatistics => new Dictionary<string, string>
-        {
-            {"Total Orders", "14"},
-            {"Average Win", "0.00%"},
-            {"Average Loss", "-0.23%"},
-            {"Compounding Annual Return", "-36.885%"},
-            {"Drawdown", "1.800%"},
-            {"Expectancy", "-0.549"},
-            {"Start Equity", "100000"},
-            {"End Equity", "99413.33"},
-            {"Net Profit", "-0.587%"},
-            {"Sharpe Ratio", "-2.494"},
-            {"Sortino Ratio", "-3.393"},
-            {"Probabilistic Sharpe Ratio", "34.321%"},
-            {"Loss Rate", "56%"},
-            {"Win Rate", "44%"},
-            {"Profit-Loss Ratio", "0.01"},
-            {"Alpha", "-0.888"},
-            {"Beta", "0.349"},
-            {"Annual Standard Deviation", "0.08"},
-            {"Annual Variance", "0.006"},
-            {"Information Ratio", "-14.897"},
-            {"Tracking Error", "0.146"},
-            {"Treynor Ratio", "-0.568"},
-            {"Total Fees", "$37.79"},
-            {"Estimated Strategy Capacity", "$4700000.00"},
-            {"Lowest Capacity Asset", "AIG R735QTJ8XC9X"},
-            {"Portfolio Turnover", "60.65%"},
-            {"OrderListHash", "d84db24a398d074200c5ed979c4410f3"}
-        };
+        public Dictionary<string, string> ExpectedStatistics =>
+            new Dictionary<string, string>
+            {
+                { "Total Orders", "14" },
+                { "Average Win", "0.00%" },
+                { "Average Loss", "-0.23%" },
+                { "Compounding Annual Return", "-36.885%" },
+                { "Drawdown", "1.800%" },
+                { "Expectancy", "-0.549" },
+                { "Start Equity", "100000" },
+                { "End Equity", "99413.33" },
+                { "Net Profit", "-0.587%" },
+                { "Sharpe Ratio", "-2.494" },
+                { "Sortino Ratio", "-3.393" },
+                { "Probabilistic Sharpe Ratio", "34.321%" },
+                { "Loss Rate", "56%" },
+                { "Win Rate", "44%" },
+                { "Profit-Loss Ratio", "0.01" },
+                { "Alpha", "-0.888" },
+                { "Beta", "0.349" },
+                { "Annual Standard Deviation", "0.08" },
+                { "Annual Variance", "0.006" },
+                { "Information Ratio", "-14.897" },
+                { "Tracking Error", "0.146" },
+                { "Treynor Ratio", "-0.568" },
+                { "Total Fees", "$37.79" },
+                { "Estimated Strategy Capacity", "$4700000.00" },
+                { "Lowest Capacity Asset", "AIG R735QTJ8XC9X" },
+                { "Portfolio Turnover", "60.65%" },
+                { "OrderListHash", "d84db24a398d074200c5ed979c4410f3" }
+            };
     }
 }

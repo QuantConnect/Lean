@@ -15,9 +15,9 @@
 
 using System;
 using System.Globalization;
-using QuantConnect.Interfaces;
-using QuantConnect.Data.Fundamental;
 using System.Runtime.CompilerServices;
+using QuantConnect.Data.Fundamental;
+using QuantConnect.Interfaces;
 
 namespace QuantConnect.Data.UniverseSelection
 {
@@ -55,7 +55,11 @@ namespace QuantConnect.Data.UniverseSelection
         /// <param name="securityIdentifier">The security identifier</param>
         /// <param name="name">The name of the fundamental property</param>
         /// <returns>The fundamental information</returns>
-        public virtual T Get<T>(DateTime time, SecurityIdentifier securityIdentifier, FundamentalProperty name)
+        public virtual T Get<T>(
+            DateTime time,
+            SecurityIdentifier securityIdentifier,
+            FundamentalProperty name
+        )
         {
             throw new NotImplementedException();
         }
@@ -95,7 +99,7 @@ namespace QuantConnect.Data.UniverseSelection
             {
                 return true;
             }
-            else if(type == typeof(double))
+            else if (type == typeof(double))
             {
                 return ((double)value).IsNaNOrInfinity();
             }

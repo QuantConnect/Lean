@@ -32,9 +32,18 @@ namespace QuantConnect.Tests.Engine.DataFeeds.Enumerators
         public void SynchronizesData()
         {
             var time = new DateTime(2016, 03, 03, 12, 05, 00);
-            var stream1 = Enumerable.Range(0, 10).Select(x => new Tick {Time = time.AddSeconds(x * 1)}).GetEnumerator();
-            var stream2 = Enumerable.Range(0, 5).Select(x => new Tick {Time = time.AddSeconds(x * 2)}).GetEnumerator();
-            var stream3 = Enumerable.Range(0, 20).Select(x => new Tick {Time = time.AddSeconds(x * 0.5)}).GetEnumerator();
+            var stream1 = Enumerable
+                .Range(0, 10)
+                .Select(x => new Tick { Time = time.AddSeconds(x * 1) })
+                .GetEnumerator();
+            var stream2 = Enumerable
+                .Range(0, 5)
+                .Select(x => new Tick { Time = time.AddSeconds(x * 2) })
+                .GetEnumerator();
+            var stream3 = Enumerable
+                .Range(0, 20)
+                .Select(x => new Tick { Time = time.AddSeconds(x * 0.5) })
+                .GetEnumerator();
 
             var previous = DateTime.MinValue;
             var synchronizer = new SynchronizingBaseDataEnumerator(stream1, stream2, stream3);
@@ -51,18 +60,30 @@ namespace QuantConnect.Tests.Engine.DataFeeds.Enumerators
         public void WontRemoveEnumeratorsReturningTrueWithCurrentNull()
         {
             var time = new DateTime(2016, 03, 03, 12, 05, 00);
-            var stream1 = Enumerable.Range(0, 20)
+            var stream1 = Enumerable
+                .Range(0, 20)
                 // return null except the last value and check if its emitted
-                .Select(x => x == 19 ? new Tick {Time = time.AddSeconds(x * 100), Quantity = 998877} : null
-            ).GetEnumerator();
-            var stream2 = Enumerable.Range(0, 5).Select(x => new Tick { Time = time.AddSeconds(x * 2) }).GetEnumerator();
-            var stream3 = Enumerable.Range(0, 20).Select(x => new Tick { Time = time.AddSeconds(x * 0.5) }).GetEnumerator();
+                .Select(x =>
+                    x == 19 ? new Tick { Time = time.AddSeconds(x * 100), Quantity = 998877 } : null
+                )
+                .GetEnumerator();
+            var stream2 = Enumerable
+                .Range(0, 5)
+                .Select(x => new Tick { Time = time.AddSeconds(x * 2) })
+                .GetEnumerator();
+            var stream3 = Enumerable
+                .Range(0, 20)
+                .Select(x => new Tick { Time = time.AddSeconds(x * 0.5) })
+                .GetEnumerator();
 
             var previous = new Tick { Time = DateTime.MinValue };
             var synchronizer = new SynchronizingBaseDataEnumerator(stream1, stream2, stream3);
             while (synchronizer.MoveNext())
             {
-                Assert.That(synchronizer.Current.EndTime, Is.GreaterThanOrEqualTo(previous.EndTime));
+                Assert.That(
+                    synchronizer.Current.EndTime,
+                    Is.GreaterThanOrEqualTo(previous.EndTime)
+                );
                 previous = synchronizer.Current as Tick;
             }
             Assert.AreEqual(998877, previous.Quantity);
@@ -75,7 +96,10 @@ namespace QuantConnect.Tests.Engine.DataFeeds.Enumerators
         {
             var time = new DateTime(2016, 03, 03, 12, 05, 00);
             var stream1 = new TestEnumerator { MoveNextReturnValue = false };
-            var stream2 = Enumerable.Range(0, 10).Select(x => new Tick { Time = time.AddSeconds(x * 2) }).GetEnumerator();
+            var stream2 = Enumerable
+                .Range(0, 10)
+                .Select(x => new Tick { Time = time.AddSeconds(x * 2) })
+                .GetEnumerator();
             var synchronizer = new SynchronizingBaseDataEnumerator(stream1, stream2);
             var emitted = false;
             while (synchronizer.MoveNext())
@@ -140,7 +164,9 @@ namespace QuantConnect.Tests.Engine.DataFeeds.Enumerators
             public BaseData Current { get; }
 
             object IEnumerator.Current => Current;
+
             public void Dispose() { }
+
             public void Reset() { }
         }
     }

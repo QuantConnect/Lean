@@ -13,12 +13,12 @@
  * limitations under the License.
 */
 
-using NodaTime;
-using QuantConnect.Data;
 using System;
 using System.Collections.Generic;
 using System.IO;
+using NodaTime;
 using ProtoBuf;
+using QuantConnect.Data;
 
 namespace QuantConnect.Data.Custom.IconicTypes
 {
@@ -34,7 +34,7 @@ namespace QuantConnect.Data.Custom.IconicTypes
         /// </summary>
         [ProtoMember(55)]
         public int Count { get; set; }
-        
+
         /// <summary>
         /// Determines the actual source from an index contained within a ticker folder
         /// </summary>
@@ -43,10 +43,16 @@ namespace QuantConnect.Data.Custom.IconicTypes
         /// <param name="index">File to load data from</param>
         /// <param name="isLiveMode">Is live mode</param>
         /// <returns>SubscriptionDataSource pointing to the article</returns>
-        public override SubscriptionDataSource GetSourceForAnIndex(SubscriptionDataConfig config, DateTime date, string index, bool isLiveMode)
+        public override SubscriptionDataSource GetSourceForAnIndex(
+            SubscriptionDataConfig config,
+            DateTime date,
+            string index,
+            bool isLiveMode
+        )
         {
             return new SubscriptionDataSource(
-                Path.Combine("TestData",
+                Path.Combine(
+                    "TestData",
                     "indexlinked",
                     "content",
                     $"{date.ToStringInvariant(DateFormat.EightCharacter)}.zip#{index}"
@@ -63,7 +69,11 @@ namespace QuantConnect.Data.Custom.IconicTypes
         /// <param name="date">Date of this source file</param>
         /// <param name="isLiveMode">Is live mode</param>
         /// <returns>SubscriptionDataSource indicating where data is located and how it's stored</returns>
-        public override SubscriptionDataSource GetSource(SubscriptionDataConfig config, DateTime date, bool isLiveMode)
+        public override SubscriptionDataSource GetSource(
+            SubscriptionDataConfig config,
+            DateTime date,
+            bool isLiveMode
+        )
         {
             return new SubscriptionDataSource(
                 Path.Combine(
@@ -84,7 +94,12 @@ namespace QuantConnect.Data.Custom.IconicTypes
         /// <param name="line">Line of data</param>
         /// <param name="date">Date</param>
         /// <param name="isLiveMode">Is live mode</param>
-        public override BaseData Reader(SubscriptionDataConfig config, string line, DateTime date, bool isLiveMode)
+        public override BaseData Reader(
+            SubscriptionDataConfig config,
+            string line,
+            DateTime date,
+            bool isLiveMode
+        )
         {
             return new IndexedLinkedData
             {
@@ -139,6 +154,6 @@ namespace QuantConnect.Data.Custom.IconicTypes
         public override List<Resolution> SupportedResolutions()
         {
             return DailyResolution;
-        } 
+        }
     }
 }

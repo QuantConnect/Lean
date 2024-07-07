@@ -41,6 +41,10 @@ namespace QuantConnect.Interfaces
         /// <param name="currentTimeUtc">The current time (UTC)</param>
         /// <param name="getTimeSinceLastFill">A function which returns the time elapsed since the last fill</param>
         /// <returns>True if the cash sync was performed successfully</returns>
-        bool PerformCashSync(IAlgorithm algorithm, DateTime currentTimeUtc, Func<TimeSpan> getTimeSinceLastFill);
+        bool PerformCashSync(
+            IAlgorithm algorithm,
+            DateTime currentTimeUtc,
+            Func<TimeSpan> getTimeSinceLastFill
+        );
     }
 }

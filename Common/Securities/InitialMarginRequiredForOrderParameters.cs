@@ -47,7 +47,7 @@ namespace QuantConnect.Securities
             ICurrencyConverter currencyConverter,
             Security security,
             Order order
-            )
+        )
         {
             Order = order;
             Security = security;

@@ -1,11 +1,11 @@
 /*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
- * 
- * Licensed under the Apache License, Version 2.0 (the "License"); 
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -20,7 +20,7 @@ namespace QuantConnect.Data.Market
     /// <summary>
     /// Represents a bar sectioned not by time, but by some amount of movement in a value (for example, Closing price moving in $10 bar sizes)
     /// </summary>
-    public class RangeBar: TradeBar
+    public class RangeBar : TradeBar
     {
         /// <summary>
         /// Gets the range of the bar.
@@ -35,9 +35,7 @@ namespace QuantConnect.Data.Market
         /// <summary>
         /// Initialize a new default instance of <see cref="RangeBar"/> class.
         /// </summary>
-        public RangeBar()
-        {
-        }
+        public RangeBar() { }
 
         /// <summary>
         /// Initializes a new instance of the <see cref="RangeBar"/> class with the specified values
@@ -50,8 +48,16 @@ namespace QuantConnect.Data.Market
         /// <param name="low">The low price for the new bar</param>
         /// <param name="close">The closing price for the new bar</param>
         /// <param name="volume">The volume value for the new bar</param>
-        public RangeBar(Symbol symbol, DateTime endTime,
-            decimal rangeSize, decimal open, decimal? high = null, decimal? low = null, decimal? close = null, decimal volume = 0)
+        public RangeBar(
+            Symbol symbol,
+            DateTime endTime,
+            decimal rangeSize,
+            decimal open,
+            decimal? high = null,
+            decimal? low = null,
+            decimal? close = null,
+            decimal volume = 0
+        )
         {
             Symbol = symbol;
             EndTime = endTime;
@@ -86,7 +92,7 @@ namespace QuantConnect.Data.Market
                 {
                     Low = currentValue;
                 }
-            } 
+            }
             else if (currentValue > High)
             {
                 if ((currentValue - Low) > RangeSize)

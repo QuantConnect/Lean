@@ -40,7 +40,11 @@ namespace QuantConnect.Tests.Common.Util.RateLimit
 
             const int refillAmount = 1;
             var refillInterval = TimeSpan.FromMinutes(1);
-            var refillStrategy = new FixedIntervalRefillStrategy(timeProvider, refillAmount, refillInterval);
+            var refillStrategy = new FixedIntervalRefillStrategy(
+                timeProvider,
+                refillAmount,
+                refillInterval
+            );
 
             // using spin wait strategy to ensure we update AvailableTokens as quickly as possible
             var sleepStrategy = new BusyWaitSleepStrategy();
@@ -49,10 +53,10 @@ namespace QuantConnect.Tests.Common.Util.RateLimit
             var bucket = new LeakyBucket(capacity, sleepStrategy, refillStrategy, timeProvider);
 
             // first remove half the capacity
-            bucket.Consume(capacity/2);
+            bucket.Consume(capacity / 2);
 
             // we've consumed half of the available tokens
-            Assert.AreEqual(capacity/2, bucket.AvailableTokens);
+            Assert.AreEqual(capacity / 2, bucket.AvailableTokens);
 
             using var taskStarted = new ManualResetEvent(false);
             using var bucketConsumeCompleted = new ManualResetEvent(false);
@@ -79,13 +83,18 @@ namespace QuantConnect.Tests.Common.Util.RateLimit
                 if (i != 4)
                 {
                     var count = 0;
-                    while (++count < 100 && (initialAmount + (1 + i) * refillAmount) != bucket.AvailableTokens)
+                    while (
+                        ++count < 100
+                        && (initialAmount + (1 + i) * refillAmount) != bucket.AvailableTokens
+                    )
                     {
                         Thread.Sleep(1);
                     }
 
                     // each time we advance the number of available tokens will increment by the refill amount
-                    Assert.AreEqual(initialAmount + (1 + i) * refillAmount, bucket.AvailableTokens,
+                    Assert.AreEqual(
+                        initialAmount + (1 + i) * refillAmount,
+                        bucket.AvailableTokens,
                         $"CurrentTime: {timeProvider.GetUtcNow():O}: Iteration: {i}"
                     );
                 }
@@ -94,7 +103,11 @@ namespace QuantConnect.Tests.Common.Util.RateLimit
             // now that we've advanced, bucket consumption should have completed
             // we provide for a small timeout to support non-multi-threaded machines
             Assert.IsTrue(bucketConsumeCompleted.WaitOne(1000), "Timeout waiting for consumer");
-            Assert.AreEqual(0, bucket.AvailableTokens, $"There are still available tokens {bucket.AvailableTokens}");
+            Assert.AreEqual(
+                0,
+                bucket.AvailableTokens,
+                $"There are still available tokens {bucket.AvailableTokens}"
+            );
         }
     }
 }

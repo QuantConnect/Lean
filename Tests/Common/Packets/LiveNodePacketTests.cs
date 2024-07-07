@@ -28,15 +28,23 @@ namespace QuantConnect.Tests.Common.Packets
         [Test]
         public void NotificationRoundTrip()
         {
-            var expectedEmail = new NotificationEmail("pipi@google.com", "crypto", null,
-                null, new Dictionary<string, string> {{"header-key", "header-value"}});
+            var expectedEmail = new NotificationEmail(
+                "pipi@google.com",
+                "crypto",
+                null,
+                null,
+                new Dictionary<string, string> { { "header-key", "header-value" } }
+            );
             var packet = new LiveNodePacket
             {
                 NotificationTargets = new List<Notification>
                 {
                     expectedEmail,
                     new NotificationSms("123", null),
-                    new NotificationWeb("www.pupu.com", headers: new Dictionary<string, string> {{"header-key", "header-value"}})
+                    new NotificationWeb(
+                        "www.pupu.com",
+                        headers: new Dictionary<string, string> { { "header-key", "header-value" } }
+                    )
                 }
             };
 
@@ -61,7 +69,10 @@ namespace QuantConnect.Tests.Common.Packets
             Assert.IsNotNull(web);
             Assert.AreEqual("www.pupu.com", web.Address);
             Assert.AreEqual(null, web.Data);
-            Assert.AreEqual((packet.NotificationTargets[2] as NotificationWeb).Headers, web.Headers);
+            Assert.AreEqual(
+                (packet.NotificationTargets[2] as NotificationWeb).Headers,
+                web.Headers
+            );
         }
     }
 }

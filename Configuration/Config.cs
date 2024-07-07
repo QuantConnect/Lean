@@ -46,7 +46,11 @@ namespace QuantConnect.Configuration
             }
             else
             {
-                Log.Error(Invariant($"Configuration file {fileName} does not exist, using {ConfigurationFileName}"));
+                Log.Error(
+                    Invariant(
+                        $"Configuration file {fileName} does not exist, using {ConfigurationFileName}"
+                    )
+                );
             }
         }
 
@@ -54,7 +58,9 @@ namespace QuantConnect.Configuration
         /// Merge CLI arguments with configuration file + load custom config file via CLI arg
         /// </summary>
         /// <param name="cliArguments"></param>
-        public static void MergeCommandLineArgumentsWithConfiguration(Dictionary<string, object> cliArguments)
+        public static void MergeCommandLineArgumentsWithConfiguration(
+            Dictionary<string, object> cliArguments
+        )
         {
             if (cliArguments.ContainsKey("config"))
             {
@@ -62,12 +68,14 @@ namespace QuantConnect.Configuration
                 Reset();
             }
 
-            var jsonArguments = JsonConvert.DeserializeObject(JsonConvert.SerializeObject(cliArguments));
+            var jsonArguments = JsonConvert.DeserializeObject(
+                JsonConvert.SerializeObject(cliArguments)
+            );
 
-            Settings.Value.Merge(jsonArguments, new JsonMergeSettings
-            {
-                MergeArrayHandling = MergeArrayHandling.Union
-            });
+            Settings.Value.Merge(
+                jsonArguments,
+                new JsonMergeSettings { MergeArrayHandling = MergeArrayHandling.Union }
+            );
         }
 
         /// <summary>
@@ -89,17 +97,29 @@ namespace QuantConnect.Configuration
             {
                 return new JObject
                 {
-                    {"algorithm-type-name", "BasicTemplateAlgorithm"},
-                    {"live-mode", false},
-                    {"data-folder", "../../../Data/"},
-                    {"messaging-handler", "QuantConnect.Messaging.Messaging"},
-                    {"job-queue-handler", "QuantConnect.Queues.JobQueue"},
-                    {"api-handler", "QuantConnect.Api.Api"},
-                    {"setup-handler", "QuantConnect.Lean.Engine.Setup.ConsoleSetupHandler"},
-                    {"result-handler", "QuantConnect.Lean.Engine.Results.BacktestingResultHandler"},
-                    {"data-feed-handler", "QuantConnect.Lean.Engine.DataFeeds.FileSystemDataFeed"},
-                    {"real-time-handler", "QuantConnect.Lean.Engine.RealTime.BacktestingRealTimeHandler"},
-                    {"transaction-handler", "QuantConnect.Lean.Engine.TransactionHandlers.BacktestingTransactionHandler"}
+                    { "algorithm-type-name", "BasicTemplateAlgorithm" },
+                    { "live-mode", false },
+                    { "data-folder", "../../../Data/" },
+                    { "messaging-handler", "QuantConnect.Messaging.Messaging" },
+                    { "job-queue-handler", "QuantConnect.Queues.JobQueue" },
+                    { "api-handler", "QuantConnect.Api.Api" },
+                    { "setup-handler", "QuantConnect.Lean.Engine.Setup.ConsoleSetupHandler" },
+                    {
+                        "result-handler",
+                        "QuantConnect.Lean.Engine.Results.BacktestingResultHandler"
+                    },
+                    {
+                        "data-feed-handler",
+                        "QuantConnect.Lean.Engine.DataFeeds.FileSystemDataFeed"
+                    },
+                    {
+                        "real-time-handler",
+                        "QuantConnect.Lean.Engine.RealTime.BacktestingRealTimeHandler"
+                    },
+                    {
+                        "transaction-handler",
+                        "QuantConnect.Lean.Engine.TransactionHandlers.BacktestingTransactionHandler"
+                    }
                 };
             }
 
@@ -141,12 +161,17 @@ namespace QuantConnect.Configuration
         public static string Get(string key, string defaultValue = "")
         {
             // special case environment requests
-            if (key == "environment") return GetEnvironment();
+            if (key == "environment")
+                return GetEnvironment();
 
             var token = GetToken(Settings.Value, key);
             if (token == null)
             {
-                Log.Trace(Invariant($"Config.Get(): Configuration key not found. Key: {key} - Using default value: {defaultValue}"));
+                Log.Trace(
+                    Invariant(
+                        $"Config.Get(): Configuration key not found. Key: {key} - Using default value: {defaultValue}"
+                    )
+                );
                 return defaultValue;
             }
             return token.ToString();
@@ -227,18 +252,27 @@ namespace QuantConnect.Configuration
         public static T GetValue<T>(string key, T defaultValue = default(T))
         {
             // special case environment requests
-            if (key == "environment" && typeof (T) == typeof (string)) return (T) (object) GetEnvironment();
+            if (key == "environment" && typeof(T) == typeof(string))
+                return (T)(object)GetEnvironment();
 
             var token = GetToken(Settings.Value, key);
             if (token == null)
             {
-                var defaultValueString = defaultValue is IConvertible
-                    ? ((IConvertible) defaultValue).ToString(CultureInfo.InvariantCulture)
-                    : defaultValue is IFormattable
-                        ? ((IFormattable) defaultValue).ToString(null, CultureInfo.InvariantCulture)
-                        : Invariant($"{defaultValue}");
+                var defaultValueString =
+                    defaultValue is IConvertible
+                        ? ((IConvertible)defaultValue).ToString(CultureInfo.InvariantCulture)
+                        : defaultValue is IFormattable
+                            ? ((IFormattable)defaultValue).ToString(
+                                null,
+                                CultureInfo.InvariantCulture
+                            )
+                            : Invariant($"{defaultValue}");
 
-                Log.Trace(Invariant($"Config.GetValue(): {key} - Using default value: {defaultValueString}"));
+                Log.Trace(
+                    Invariant(
+                        $"Config.GetValue(): {key} - Using default value: {defaultValueString}"
+                    )
+                );
                 return defaultValue;
             }
 
@@ -255,27 +289,31 @@ namespace QuantConnect.Configuration
 
             if (type.IsEnum)
             {
-                return (T) Enum.Parse(type, value, true);
+                return (T)Enum.Parse(type, value, true);
             }
 
             if (typeof(IConvertible).IsAssignableFrom(type))
             {
-                return (T) Convert.ChangeType(value, type, CultureInfo.InvariantCulture);
+                return (T)Convert.ChangeType(value, type, CultureInfo.InvariantCulture);
             }
 
             // try and find a static parse method
             try
             {
-                var parse = type.GetMethod("Parse", new[]{typeof(string)});
+                var parse = type.GetMethod("Parse", new[] { typeof(string) });
                 if (parse != null)
                 {
-                    var result = parse.Invoke(null, new object[] {value});
-                    return (T) result;
+                    var result = parse.Invoke(null, new object[] { value });
+                    return (T)result;
                 }
             }
             catch (Exception err)
             {
-                Log.Trace(Invariant($"Config.GetValue<{typeof(T).Name}>({key},{defaultValue}): Failed to parse: {value}. Using default value."));
+                Log.Trace(
+                    Invariant(
+                        $"Config.GetValue<{typeof(T).Name}>({key},{defaultValue}): Failed to parse: {value}. Using default value."
+                    )
+                );
                 Log.Error(err);
                 return defaultValue;
             }
@@ -286,7 +324,11 @@ namespace QuantConnect.Configuration
             }
             catch (Exception err)
             {
-                Log.Trace(Invariant($"Config.GetValue<{typeof(T).Name}>({key},{defaultValue}): Failed to JSON deserialize: {value}. Using default value."));
+                Log.Trace(
+                    Invariant(
+                        $"Config.GetValue<{typeof(T).Name}>({key},{defaultValue}): Failed to JSON deserialize: {value}. Using default value."
+                    )
+                );
                 Log.Error(err);
                 return defaultValue;
             }
@@ -333,7 +375,8 @@ namespace QuantConnect.Configuration
         /// </summary>
         public static void Write(string targetPath = null)
         {
-            if (!Settings.IsValueCreated) return;
+            if (!Settings.IsValueCreated)
+                return;
             var serialized = JsonConvert.SerializeObject(Settings.Value, Formatting.Indented);
 
             var taget = ConfigurationFileName;
@@ -368,7 +411,8 @@ namespace QuantConnect.Configuration
 
             // remove the environment declaration
             var environmentProperty = clone.Property("environment");
-            if (environmentProperty != null) environmentProperty.Remove();
+            if (environmentProperty != null)
+                environmentProperty.Remove();
 
             if (!string.IsNullOrEmpty(overrideEnvironment))
             {
@@ -376,26 +420,35 @@ namespace QuantConnect.Configuration
 
                 for (int i = 0; i < environmentSections.Length; i++)
                 {
-                    var env = string.Join(".environments.", environmentSections.Where((x, j) => j <= i));
+                    var env = string.Join(
+                        ".environments.",
+                        environmentSections.Where((x, j) => j <= i)
+                    );
 
                     var environments = config["environments"];
-                    if (!(environments is JObject)) continue;
+                    if (!(environments is JObject))
+                        continue;
 
-                    var settings = ((JObject) environments).SelectToken(env);
-                    if (settings == null) continue;
+                    var settings = ((JObject)environments).SelectToken(env);
+                    if (settings == null)
+                        continue;
 
                     // copy values for the selected environment to the root
                     foreach (var token in settings)
                     {
                         var path = Path.GetExtension(token.Path);
                         var dot = path.IndexOf(".", StringComparison.InvariantCulture);
-                        if (dot != -1) path = path.Substring(dot + 1);
+                        if (dot != -1)
+                            path = path.Substring(dot + 1);
 
                         // remove if already exists on clone
                         var jProperty = clone.Property(path);
-                        if (jProperty != null) jProperty.Remove();
+                        if (jProperty != null)
+                            jProperty.Remove();
 
-                        var value = (token is JProperty ? ((JProperty) token).Value : token).ToString();
+                        var value = (
+                            token is JProperty ? ((JProperty)token).Value : token
+                        ).ToString();
                         clone.Add(path, value);
                     }
                 }
@@ -421,7 +474,9 @@ namespace QuantConnect.Configuration
                 var environmentSettingValue = environmentSetting.Value<string>();
                 if (!string.IsNullOrWhiteSpace(environmentSettingValue))
                 {
-                    var environment = settings.SelectToken("environments." + environmentSettingValue);
+                    var environment = settings.SelectToken(
+                        "environments." + environmentSettingValue
+                    );
                     if (environment != null)
                     {
                         var setting = environment.SelectToken(key);

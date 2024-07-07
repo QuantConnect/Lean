@@ -23,17 +23,22 @@ namespace QuantConnect.Algorithm.CSharp
     /// <summary>
     /// Regression algorithm reproduces GH issue #8023, where fill forward resolution will no get updated in some cases on security removals
     /// </summary>
-    public class FillForwardResolutionAdjustedOnRemovalRegressionAlgorithm : QCAlgorithm, IRegressionAlgorithmDefinition
+    public class FillForwardResolutionAdjustedOnRemovalRegressionAlgorithm
+        : QCAlgorithm,
+            IRegressionAlgorithmDefinition
     {
-        private readonly Queue<DateTime> _expectedDataTimes = new(new DateTime[]
-        {
-            new DateTime(2013, 10, 7, 9, 31, 0),
-            new DateTime(2013, 10, 8, 0, 0, 0),
-            new DateTime(2013, 10, 9, 0, 0, 0),
-            new DateTime(2013, 10, 9, 9, 31, 0),
-            new DateTime(2013, 10, 10, 0, 0, 0),
-            new DateTime(2013, 10, 11, 0, 0, 0)
-        });
+        private readonly Queue<DateTime> _expectedDataTimes =
+            new(
+                new DateTime[]
+                {
+                    new DateTime(2013, 10, 7, 9, 31, 0),
+                    new DateTime(2013, 10, 8, 0, 0, 0),
+                    new DateTime(2013, 10, 9, 0, 0, 0),
+                    new DateTime(2013, 10, 9, 9, 31, 0),
+                    new DateTime(2013, 10, 10, 0, 0, 0),
+                    new DateTime(2013, 10, 11, 0, 0, 0)
+                }
+            );
 
         public override void Initialize()
         {
@@ -105,35 +110,36 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// This is used by the regression test system to indicate what the expected statistics are from running the algorithm
         /// </summary>
-        public Dictionary<string, string> ExpectedStatistics => new Dictionary<string, string>
-        {
-            {"Total Orders", "0"},
-            {"Average Win", "0%"},
-            {"Average Loss", "0%"},
-            {"Compounding Annual Return", "0%"},
-            {"Drawdown", "0%"},
-            {"Expectancy", "0"},
-            {"Start Equity", "100000"},
-            {"End Equity", "100000"},
-            {"Net Profit", "0%"},
-            {"Sharpe Ratio", "0"},
-            {"Sortino Ratio", "0"},
-            {"Probabilistic Sharpe Ratio", "0%"},
-            {"Loss Rate", "0%"},
-            {"Win Rate", "0%"},
-            {"Profit-Loss Ratio", "0"},
-            {"Alpha", "0"},
-            {"Beta", "0"},
-            {"Annual Standard Deviation", "0"},
-            {"Annual Variance", "0"},
-            {"Information Ratio", "-5.677"},
-            {"Tracking Error", "0.271"},
-            {"Treynor Ratio", "0"},
-            {"Total Fees", "$0.00"},
-            {"Estimated Strategy Capacity", "$0"},
-            {"Lowest Capacity Asset", ""},
-            {"Portfolio Turnover", "0%"},
-            {"OrderListHash", "d41d8cd98f00b204e9800998ecf8427e"}
-        };
+        public Dictionary<string, string> ExpectedStatistics =>
+            new Dictionary<string, string>
+            {
+                { "Total Orders", "0" },
+                { "Average Win", "0%" },
+                { "Average Loss", "0%" },
+                { "Compounding Annual Return", "0%" },
+                { "Drawdown", "0%" },
+                { "Expectancy", "0" },
+                { "Start Equity", "100000" },
+                { "End Equity", "100000" },
+                { "Net Profit", "0%" },
+                { "Sharpe Ratio", "0" },
+                { "Sortino Ratio", "0" },
+                { "Probabilistic Sharpe Ratio", "0%" },
+                { "Loss Rate", "0%" },
+                { "Win Rate", "0%" },
+                { "Profit-Loss Ratio", "0" },
+                { "Alpha", "0" },
+                { "Beta", "0" },
+                { "Annual Standard Deviation", "0" },
+                { "Annual Variance", "0" },
+                { "Information Ratio", "-5.677" },
+                { "Tracking Error", "0.271" },
+                { "Treynor Ratio", "0" },
+                { "Total Fees", "$0.00" },
+                { "Estimated Strategy Capacity", "$0" },
+                { "Lowest Capacity Asset", "" },
+                { "Portfolio Turnover", "0%" },
+                { "OrderListHash", "d41d8cd98f00b204e9800998ecf8427e" }
+            };
     }
 }

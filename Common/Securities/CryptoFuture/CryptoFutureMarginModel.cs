@@ -33,8 +33,12 @@ namespace QuantConnect.Securities.CryptoFuture
         /// <param name="leverage">The leverage to use, used on initial margin requirements, default 25x</param>
         /// <param name="maintenanceMarginRate">The maintenance margin rate, default 5%</param>
         /// <param name="maintenanceAmount">The maintenance amount which will reduce maintenance margin requirements, default 0</param>
-        public CryptoFutureMarginModel(decimal leverage = 25, decimal maintenanceMarginRate = 0.05m, decimal maintenanceAmount = 0)
-             : base(leverage, 0)
+        public CryptoFutureMarginModel(
+            decimal leverage = 25,
+            decimal maintenanceMarginRate = 0.05m,
+            decimal maintenanceAmount = 0
+        )
+            : base(leverage, 0)
         {
             _maintenanceAmount = maintenanceAmount;
             _maintenanceMarginRate = maintenanceMarginRate;
@@ -45,7 +49,9 @@ namespace QuantConnect.Securities.CryptoFuture
         /// </summary>
         /// <param name="parameters">An object containing the security</param>
         /// <returns>The maintenance margin required for the option</returns>
-        public override MaintenanceMargin GetMaintenanceMargin(MaintenanceMarginParameters parameters)
+        public override MaintenanceMargin GetMaintenanceMargin(
+            MaintenanceMarginParameters parameters
+        )
         {
             var security = parameters.Security;
             var quantity = parameters.Quantity;
@@ -55,9 +61,12 @@ namespace QuantConnect.Securities.CryptoFuture
             }
 
             var positionValue = security.Holdings.GetQuantityValue(quantity, security.Price);
-            var marginRequirementInCollateral = Math.Abs(positionValue.Amount) * _maintenanceMarginRate - _maintenanceAmount;
+            var marginRequirementInCollateral =
+                Math.Abs(positionValue.Amount) * _maintenanceMarginRate - _maintenanceAmount;
 
-            return new MaintenanceMargin(marginRequirementInCollateral * positionValue.Cash.ConversionRate);
+            return new MaintenanceMargin(
+                marginRequirementInCollateral * positionValue.Cash.ConversionRate
+            );
         }
 
         /// <summary>
@@ -65,7 +74,9 @@ namespace QuantConnect.Securities.CryptoFuture
         /// </summary>
         /// <param name="parameters">An object containing the security and quantity of shares</param>
         /// <returns>The initial margin required for the option (i.e. the equity required to enter a position for this option)</returns>
-        public override InitialMargin GetInitialMarginRequirement(InitialMarginParameters parameters)
+        public override InitialMargin GetInitialMarginRequirement(
+            InitialMarginParameters parameters
+        )
         {
             var security = parameters.Security;
             var quantity = parameters.Quantity;
@@ -75,9 +86,12 @@ namespace QuantConnect.Securities.CryptoFuture
             }
 
             var positionValue = security.Holdings.GetQuantityValue(quantity, security.Price);
-            var marginRequirementInCollateral = Math.Abs(positionValue.Amount) / GetLeverage(security);
+            var marginRequirementInCollateral =
+                Math.Abs(positionValue.Amount) / GetLeverage(security);
 
-            return new InitialMargin(marginRequirementInCollateral * positionValue.Cash.ConversionRate);
+            return new InitialMargin(
+                marginRequirementInCollateral * positionValue.Cash.ConversionRate
+            );
         }
 
         /// <summary>
@@ -88,20 +102,32 @@ namespace QuantConnect.Securities.CryptoFuture
         /// <param name="direction">The direction of the trade</param>
         /// <returns>The margin available for the trade</returns>
         /// <remarks>What we do specially here is that instead of using the total portfolio value as potential margin remaining we only consider the collateral currency</remarks>
-        protected override decimal GetMarginRemaining(SecurityPortfolioManager portfolio, Security security, OrderDirection direction)
+        protected override decimal GetMarginRemaining(
+            SecurityPortfolioManager portfolio,
+            Security security,
+            OrderDirection direction
+        )
         {
             var collateralCurrency = GetCollateralCash(security);
             var totalCollateralCurrency = collateralCurrency.Amount;
             var result = totalCollateralCurrency;
 
-            foreach (var kvp in portfolio.Where(holdings => holdings.Value.Invested && holdings.Value.Type == SecurityType.CryptoFuture && holdings.Value.Symbol != security.Symbol))
+            foreach (
+                var kvp in portfolio.Where(holdings =>
+                    holdings.Value.Invested
+                    && holdings.Value.Type == SecurityType.CryptoFuture
+                    && holdings.Value.Symbol != security.Symbol
+                )
+            )
             {
                 var otherCryptoFuture = portfolio.Securities[kvp.Key];
                 // check if we share the collateral
                 if (collateralCurrency == GetCollateralCash(otherCryptoFuture))
                 {
                     // we reduce the available collateral based on total usage of all other positions too
-                    result -= otherCryptoFuture.BuyingPowerModel.GetMaintenanceMargin(MaintenanceMarginParameters.ForCurrentHoldings(otherCryptoFuture));
+                    result -= otherCryptoFuture.BuyingPowerModel.GetMaintenanceMargin(
+                        MaintenanceMarginParameters.ForCurrentHoldings(otherCryptoFuture)
+                    );
                 }
             }
 
@@ -117,9 +143,13 @@ namespace QuantConnect.Securities.CryptoFuture
                         case OrderDirection.Sell:
                             result +=
                                 // portion of margin to close the existing position
-                                this.GetMaintenanceMargin(security) +
+                                this.GetMaintenanceMargin(security)
+                                +
                                 // portion of margin to open the new position
-                                this.GetInitialMarginRequirement(security, security.Holdings.AbsoluteQuantity);
+                                this.GetInitialMarginRequirement(
+                                    security,
+                                    security.Holdings.AbsoluteQuantity
+                                );
                             break;
                     }
                 }
@@ -130,9 +160,13 @@ namespace QuantConnect.Securities.CryptoFuture
                         case OrderDirection.Buy:
                             result +=
                                 // portion of margin to close the existing position
-                                this.GetMaintenanceMargin(security) +
+                                this.GetMaintenanceMargin(security)
+                                +
                                 // portion of margin to open the new position
-                                this.GetInitialMarginRequirement(security, security.Holdings.AbsoluteQuantity);
+                                this.GetInitialMarginRequirement(
+                                    security,
+                                    security.Holdings.AbsoluteQuantity
+                                );
                             break;
                     }
                 }

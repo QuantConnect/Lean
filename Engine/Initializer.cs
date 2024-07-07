@@ -15,9 +15,9 @@
 
 using System;
 using System.IO;
-using QuantConnect.Util;
-using QuantConnect.Logging;
 using QuantConnect.Configuration;
+using QuantConnect.Logging;
+using QuantConnect.Util;
 
 namespace QuantConnect.Lean.Engine
 {
@@ -34,9 +34,9 @@ namespace QuantConnect.Lean.Engine
             try
             {
                 var mode = "RELEASE";
-                #if DEBUG
+#if DEBUG
                 mode = "DEBUG";
-                #endif
+#endif
 
                 Log.DebuggingEnabled = Config.GetBool("debug-mode");
                 var destinationDir = Globals.ResultsDestinationFolder;
@@ -45,9 +45,13 @@ namespace QuantConnect.Lean.Engine
                     Directory.CreateDirectory(destinationDir);
                     Log.FilePath = Path.Combine(destinationDir, "log.txt");
                 }
-                Log.LogHandler = Composer.Instance.GetExportedValueByTypeName<ILogHandler>(Config.Get("log-handler", "CompositeLogHandler"));
+                Log.LogHandler = Composer.Instance.GetExportedValueByTypeName<ILogHandler>(
+                    Config.Get("log-handler", "CompositeLogHandler")
+                );
 
-                Log.Trace($"Engine.Main(): LEAN ALGORITHMIC TRADING ENGINE v{Globals.Version} Mode: {mode} ({(Environment.Is64BitProcess ? "64" : "32")}bit) Host: {Environment.MachineName}");
+                Log.Trace(
+                    $"Engine.Main(): LEAN ALGORITHMIC TRADING ENGINE v{Globals.Version} Mode: {mode} ({(Environment.Is64BitProcess ? "64" : "32")}bit) Host: {Environment.MachineName}"
+                );
                 Log.Trace("Engine.Main(): Started " + DateTime.Now.ToShortTimeString());
             }
             catch (Exception e)

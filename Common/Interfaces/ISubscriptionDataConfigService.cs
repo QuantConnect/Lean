@@ -43,7 +43,7 @@ namespace QuantConnect.Interfaces
             DataNormalizationMode dataNormalizationMode = DataNormalizationMode.Adjusted,
             DataMappingMode dataMappingMode = DataMappingMode.OpenInterest,
             uint contractDepthOffset = 0
-            );
+        );
 
         /// <summary>
         /// Creates and adds a list of <see cref="SubscriptionDataConfig" /> for a given symbol and configuration.
@@ -62,7 +62,7 @@ namespace QuantConnect.Interfaces
             DataNormalizationMode dataNormalizationMode = DataNormalizationMode.Adjusted,
             DataMappingMode dataMappingMode = DataMappingMode.OpenInterest,
             uint contractDepthOffset = 0
-            );
+        );
 
         /// <summary>
         /// Get the data feed types for a given <see cref="SecurityType" /> <see cref="Resolution" />
@@ -75,7 +75,7 @@ namespace QuantConnect.Interfaces
             SecurityType symbolSecurityType,
             Resolution resolution,
             bool isCanonical
-            );
+        );
 
         /// <summary>
         /// Gets the available data types

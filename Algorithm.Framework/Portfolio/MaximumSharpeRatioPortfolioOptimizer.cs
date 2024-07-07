@@ -37,7 +37,11 @@ namespace QuantConnect.Algorithm.Framework.Portfolio
         /// <param name="lower">Lower constraint</param>
         /// <param name="upper">Upper constraint</param>
         /// <param name="riskFreeRate"></param>
-        public MaximumSharpeRatioPortfolioOptimizer(double lower = -1, double upper = 1, double riskFreeRate = 0.0)
+        public MaximumSharpeRatioPortfolioOptimizer(
+            double lower = -1,
+            double upper = 1,
+            double riskFreeRate = 0.0
+        )
         {
             _lower = lower;
             _upper = upper;
@@ -90,7 +94,11 @@ namespace QuantConnect.Algorithm.Framework.Portfolio
         /// <param name="expectedReturns">Array of double with the portfolio annualized expected returns (size: K x 1).</param>
         /// <param name="covariance">Multi-dimensional array of double with the portfolio covariance of annualized returns (size: K x K).</param>
         /// <returns>Array of double with the portfolio weights (size: K x 1)</returns>
-        public double[] Optimize(double[,] historicalReturns, double[] expectedReturns = null, double[,] covariance = null)
+        public double[] Optimize(
+            double[,] historicalReturns,
+            double[] expectedReturns = null,
+            double[,] covariance = null
+        )
         {
             covariance = covariance ?? historicalReturns.Covariance();
             var returns = (expectedReturns ?? historicalReturns.Mean(0)).Subtract(_riskFreeRate);

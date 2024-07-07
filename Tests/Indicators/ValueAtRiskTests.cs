@@ -13,9 +13,9 @@
  * limitations under the License.
 */
 
+using System;
 using NUnit.Framework;
 using QuantConnect.Indicators;
-using System;
 
 namespace QuantConnect.Tests.Indicators
 {
@@ -23,7 +23,7 @@ namespace QuantConnect.Tests.Indicators
     public class ValueAtRiskTests : CommonIndicatorTests<IndicatorDataPoint>
     {
         private const int _tradingDays = 252;
-        
+
         protected override string TestFileName => "spy_valueatrisk.csv";
 
         protected override string TestColumnName => "VaR_99";
@@ -35,7 +35,11 @@ namespace QuantConnect.Tests.Indicators
 
         protected override Action<IndicatorBase<IndicatorDataPoint>, double> Assertion
         {
-            get { return (indicator, expected) => Assert.AreEqual(expected, (double)indicator.Current.Value, 1e-3); }
+            get
+            {
+                return (indicator, expected) =>
+                    Assert.AreEqual(expected, (double)indicator.Current.Value, 1e-3);
+            }
         }
 
         [Test]
@@ -72,11 +76,15 @@ namespace QuantConnect.Tests.Indicators
         [Test]
         public void PeriodBelowMinimumThrows()
         {
-            var period = 2; 
+            var period = 2;
 
             var exception = Assert.Throws<ArgumentException>(() => new ValueAtRisk(period, 0.99d));
-            Assert.That(exception.Message, Is.EqualTo($"Period parameter for ValueAtRisk indicator must be greater than 2 but was {period}"));
+            Assert.That(
+                exception.Message,
+                Is.EqualTo(
+                    $"Period parameter for ValueAtRisk indicator must be greater than 2 but was {period}"
+                )
+            );
         }
     }
 }
-

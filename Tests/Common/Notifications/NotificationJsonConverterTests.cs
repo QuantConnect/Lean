@@ -65,9 +65,11 @@ namespace QuantConnect.Tests.Common.Notifications
         [TestCase(false)]
         public void WebRoundTrip(bool nullFields)
         {
-            var expected = new NotificationWeb("qc.com",
+            var expected = new NotificationWeb(
+                "qc.com",
                 nullFields ? null : "JijiData",
-                nullFields ? null : new Dictionary<string, string> { { "key", "value" } });
+                nullFields ? null : new Dictionary<string, string> { { "key", "value" } }
+            );
 
             var serialized = JsonConvert.SerializeObject(expected);
 
@@ -84,11 +86,16 @@ namespace QuantConnect.Tests.Common.Notifications
         [TestCase(false, false)]
         public void TelegramRoundTrip(bool nullMessage, bool nullToken)
         {
-            var expected = new NotificationTelegram("pepe", nullMessage ? null : "ImAMessage", nullToken ? null : "botToken");
+            var expected = new NotificationTelegram(
+                "pepe",
+                nullMessage ? null : "ImAMessage",
+                nullToken ? null : "botToken"
+            );
 
             var serialized = JsonConvert.SerializeObject(expected);
 
-            var result = (NotificationTelegram)JsonConvert.DeserializeObject<Notification>(serialized);
+            var result = (NotificationTelegram)
+                JsonConvert.DeserializeObject<Notification>(serialized);
 
             Assert.AreEqual(expected.Id, result.Id);
             Assert.AreEqual(expected.Message, result.Message);
@@ -105,7 +112,8 @@ namespace QuantConnect.Tests.Common.Notifications
                 "path/to/file.json",
                 Encoding.ASCII.GetBytes("{}"),
                 secure,
-                withPort ? 2121: null);
+                withPort ? 2121 : null
+            );
 
             var serialized = JsonConvert.SerializeObject(expected);
             var result = (NotificationFtp)JsonConvert.DeserializeObject<Notification>(serialized);
@@ -131,7 +139,8 @@ namespace QuantConnect.Tests.Common.Notifications
                 withPassphrase ? "passphrase" : null,
                 "path/to/file.json",
                 Encoding.ASCII.GetBytes("{}"),
-                withPort ? 2121 : null);
+                withPort ? 2121 : null
+            );
 
             var serialized = JsonConvert.SerializeObject(expected);
             var result = (NotificationFtp)JsonConvert.DeserializeObject<Notification>(serialized);
@@ -158,7 +167,8 @@ namespace QuantConnect.Tests.Common.Notifications
         [Test]
         public void CaseInsensitive()
         {
-            var serialized = @"[{
+            var serialized =
+                @"[{
 			""address"": ""p@p.com"",
 			""subject"": ""sdads""
 		}, {

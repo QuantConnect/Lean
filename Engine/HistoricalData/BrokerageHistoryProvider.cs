@@ -51,7 +51,9 @@ namespace QuantConnect.Lean.Engine.HistoricalData
             if (_initialized)
             {
                 // let's make sure no one tries to change our parameters values
-                throw new InvalidOperationException("BrokerageHistoryProvider can only be initialized once");
+                throw new InvalidOperationException(
+                    "BrokerageHistoryProvider can only be initialized once"
+                );
             }
             _initialized = true;
             _brokerage.Connect();
@@ -65,7 +67,10 @@ namespace QuantConnect.Lean.Engine.HistoricalData
         /// <param name="requests">The historical data requests</param>
         /// <param name="sliceTimeZone">The time zone used when time stamping the slice instances</param>
         /// <returns>An enumerable of the slices of data covering the span specified in each request</returns>
-        public override IEnumerable<Slice> GetHistory(IEnumerable<HistoryRequest> requests, DateTimeZone sliceTimeZone)
+        public override IEnumerable<Slice> GetHistory(
+            IEnumerable<HistoryRequest> requests,
+            DateTimeZone sliceTimeZone
+        )
         {
             // create subscription objects from the configs
             var subscriptions = new List<Subscription>();
@@ -79,7 +84,11 @@ namespace QuantConnect.Lean.Engine.HistoricalData
                 }
                 var subscription = CreateSubscription(request, history);
 
-                _dataPermissionManager.AssertConfiguration(subscription.Configuration, request.StartTimeLocal, request.EndTimeLocal);
+                _dataPermissionManager.AssertConfiguration(
+                    subscription.Configuration,
+                    request.StartTimeLocal,
+                    request.EndTimeLocal
+                );
 
                 subscriptions.Add(subscription);
             }

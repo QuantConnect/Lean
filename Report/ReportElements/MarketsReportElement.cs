@@ -13,10 +13,10 @@
  * limitations under the License.
 */
 
+using System.Collections.Generic;
 using System.Linq;
 using QuantConnect.Orders;
 using QuantConnect.Packets;
-using System.Collections.Generic;
 
 namespace QuantConnect.Report.ReportElements
 {
@@ -32,7 +32,12 @@ namespace QuantConnect.Report.ReportElements
         /// <param name="key">Location of injection</param>
         /// <param name="backtest">Backtest result object</param>
         /// <param name="live">Live result object</param>
-        public MarketsReportElement(string name, string key, BacktestResult backtest, LiveResult live)
+        public MarketsReportElement(
+            string name,
+            string key,
+            BacktestResult backtest,
+            LiveResult live
+        )
         {
             _live = live;
             _backtest = backtest;
@@ -60,7 +65,10 @@ namespace QuantConnect.Report.ReportElements
 
             orders = orders.Union(liveOrders).ToList();
 
-            var securityTypes = orders.DistinctBy(o => o.SecurityType).Select(s => s.SecurityType.ToString()).ToList();
+            var securityTypes = orders
+                .DistinctBy(o => o.SecurityType)
+                .Select(s => s.SecurityType.ToString())
+                .ToList();
             Result = securityTypes;
 
             return string.Join(",", securityTypes);

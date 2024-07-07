@@ -27,19 +27,21 @@ namespace QuantConnect.Optimizer.Objectives
 
         protected override string Convert(Extremum value)
         {
-            return value.GetType() == typeof(Maximization)
-                ? "max"
-                : "min";
+            return value.GetType() == typeof(Maximization) ? "max" : "min";
         }
 
         protected override Extremum Convert(string value)
         {
             switch (value.ToLowerInvariant())
             {
-                case "max": return new Maximization();
-                case "min": return new Minimization();
+                case "max":
+                    return new Maximization();
+                case "min":
+                    return new Minimization();
                 default:
-                    throw new InvalidOperationException($"ExtremumJsonConverter.Convert: {Messages.ExtremumJsonConverter.UnrecognizedTargetDirection}");
+                    throw new InvalidOperationException(
+                        $"ExtremumJsonConverter.Convert: {Messages.ExtremumJsonConverter.UnrecognizedTargetDirection}"
+                    );
             }
         }
     }

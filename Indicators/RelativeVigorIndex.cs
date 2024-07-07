@@ -32,7 +32,7 @@ namespace QuantConnect.Indicators
     /// Then let (a+2*(b+c)+d)/6 be NUM and (e+2*(f+g)+h)/6 be DENOM.
     /// <para>RVI = SMA(NUM)/SMA(DENOM)</para>
     /// for a specified period.
-    /// 
+    ///
     /// https://www.investopedia.com/terms/r/relative_vigor_index.asp
     /// </summary>
     public class RelativeVigorIndex : BarIndicator, IIndicatorWarmUpPeriodProvider
@@ -48,7 +48,7 @@ namespace QuantConnect.Indicators
         /// Gets the band of Ranges for the RVI.
         /// </summary>
         private IndicatorBase<IndicatorDataPoint> RangeBand { get; }
-        
+
         /// <summary>
         /// A signal line which behaves like a slowed version of the RVI.
         /// </summary>
@@ -70,9 +70,7 @@ namespace QuantConnect.Indicators
         /// <param name="period">The period for the RelativeVigorIndex.</param>
         /// <param name="type">The type of Moving Average to use</param>
         public RelativeVigorIndex(int period, MovingAverageType type)
-            : this($"RVI({period},{type})", period, type)
-        {
-        }
+            : this($"RVI({period},{type})", period, type) { }
 
         /// <summary>
         /// Initializes a new instance of the <see cref="RelativeVigorIndex"/> (RVI) class.
@@ -80,7 +78,11 @@ namespace QuantConnect.Indicators
         /// <param name="name">The name of this indicator.</param>
         /// <param name="period">The period for the RelativeVigorIndex.</param>
         /// <param name="type">The type of Moving Average to use</param>
-        public RelativeVigorIndex(string name, int period, MovingAverageType type = MovingAverageType.Simple)
+        public RelativeVigorIndex(
+            string name,
+            int period,
+            MovingAverageType type = MovingAverageType.Simple
+        )
             : base(name)
         {
             WarmUpPeriod = period + 3;
@@ -89,7 +91,7 @@ namespace QuantConnect.Indicators
             Signal = new RelativeVigorIndexSignal($"{name}_S");
             _previousInputs = new RollingWindow<IBaseDataBar>(3);
         }
-        
+
         /// <summary>
         /// Computes the next value of this indicator from the given state
         /// </summary>
@@ -109,7 +111,7 @@ namespace QuantConnect.Indicators
                 var h = _previousInputs[2].High - _previousInputs[2].Low;
                 CloseBand.Update(input.Time, (a + 2 * (b + c) + d) / 6);
                 RangeBand.Update(input.Time, (e + 2 * (f + g) + h) / 6);
-                
+
                 if (CloseBand.IsReady && RangeBand.IsReady && RangeBand != 0m)
                 {
                     _previousInputs.Add(input);
@@ -118,7 +120,7 @@ namespace QuantConnect.Indicators
                     return rvi;
                 }
             }
-            
+
             _previousInputs.Add(input);
             return 0m;
         }

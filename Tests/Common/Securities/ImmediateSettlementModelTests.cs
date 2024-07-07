@@ -25,14 +25,21 @@ namespace QuantConnect.Tests.Common.Securities
     public class ImmediateSettlementModelTests
     {
         private static readonly DateTime Noon = new DateTime(2014, 6, 24, 12, 0, 0);
-        private static readonly TimeKeeper TimeKeeper = new TimeKeeper(Noon.ConvertToUtc(TimeZones.NewYork), new[] { TimeZones.NewYork });
+        private static readonly TimeKeeper TimeKeeper = new TimeKeeper(
+            Noon.ConvertToUtc(TimeZones.NewYork),
+            new[] { TimeZones.NewYork }
+        );
 
         [Test]
         public void FundsAreSettledImmediately()
         {
             var securities = new SecurityManager(TimeKeeper);
             var transactions = new SecurityTransactionManager(null, securities);
-            var portfolio = new SecurityPortfolioManager(securities, transactions, new AlgorithmSettings());
+            var portfolio = new SecurityPortfolioManager(
+                securities,
+                transactions,
+                new AlgorithmSettings()
+            );
             var model = new ImmediateSettlementModel();
             var config = CreateTradeBarConfig();
             var security = new Security(
@@ -50,17 +57,41 @@ namespace QuantConnect.Tests.Common.Securities
             Assert.AreEqual(0, portfolio.UnsettledCash);
 
             var timeUtc = Noon.ConvertToUtc(TimeZones.NewYork);
-            model.ApplyFunds(new ApplyFundsSettlementModelParameters(portfolio, security, timeUtc, new CashAmount(1000, Currencies.USD), null));
+            model.ApplyFunds(
+                new ApplyFundsSettlementModelParameters(
+                    portfolio,
+                    security,
+                    timeUtc,
+                    new CashAmount(1000, Currencies.USD),
+                    null
+                )
+            );
 
             Assert.AreEqual(2000, portfolio.Cash);
             Assert.AreEqual(0, portfolio.UnsettledCash);
 
-            model.ApplyFunds(new ApplyFundsSettlementModelParameters(portfolio, security, timeUtc, new CashAmount(-500, Currencies.USD), null));
+            model.ApplyFunds(
+                new ApplyFundsSettlementModelParameters(
+                    portfolio,
+                    security,
+                    timeUtc,
+                    new CashAmount(-500, Currencies.USD),
+                    null
+                )
+            );
 
             Assert.AreEqual(1500, portfolio.Cash);
             Assert.AreEqual(0, portfolio.UnsettledCash);
 
-            model.ApplyFunds(new ApplyFundsSettlementModelParameters(portfolio, security, timeUtc, new CashAmount(1000, Currencies.USD), null));
+            model.ApplyFunds(
+                new ApplyFundsSettlementModelParameters(
+                    portfolio,
+                    security,
+                    timeUtc,
+                    new CashAmount(1000, Currencies.USD),
+                    null
+                )
+            );
 
             Assert.AreEqual(2500, portfolio.Cash);
             Assert.AreEqual(0, portfolio.UnsettledCash);
@@ -68,7 +99,16 @@ namespace QuantConnect.Tests.Common.Securities
 
         private SubscriptionDataConfig CreateTradeBarConfig()
         {
-            return new SubscriptionDataConfig(typeof(TradeBar), Symbols.SPY, Resolution.Minute, TimeZones.NewYork, TimeZones.NewYork, true, true, false);
+            return new SubscriptionDataConfig(
+                typeof(TradeBar),
+                Symbols.SPY,
+                Resolution.Minute,
+                TimeZones.NewYork,
+                TimeZones.NewYork,
+                true,
+                true,
+                false
+            );
         }
     }
 }

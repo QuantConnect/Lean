@@ -34,7 +34,7 @@ namespace QuantConnect.Util.RateLimit
         /// </summary>
         public static void Consume(this ITokenBucket bucket, long tokens, TimeSpan timeout)
         {
-            bucket.Consume(tokens, (long) timeout.TotalMilliseconds);
+            bucket.Consume(tokens, (long)timeout.TotalMilliseconds);
         }
 
         /// <summary>
@@ -44,7 +44,12 @@ namespace QuantConnect.Util.RateLimit
         {
             public long Capacity => long.MaxValue;
             public long AvailableTokens => long.MaxValue;
-            public bool TryConsume(long tokens) { return true; }
+
+            public bool TryConsume(long tokens)
+            {
+                return true;
+            }
+
             public void Consume(long tokens, long timeout = Timeout.Infinite) { }
         }
     }

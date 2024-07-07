@@ -30,7 +30,15 @@ namespace QuantConnect.Tests.Algorithm.Framework.Selection
             var symbols = new[]
             {
                 Symbols.SPY,
-                Symbol.CreateOption(Symbols.SPY, Market.USA, default(OptionStyle), default(OptionRight), 0m, SecurityIdentifier.DefaultDate, "?SPY")
+                Symbol.CreateOption(
+                    Symbols.SPY,
+                    Market.USA,
+                    default(OptionStyle),
+                    default(OptionRight),
+                    0m,
+                    SecurityIdentifier.DefaultDate,
+                    "?SPY"
+                )
             };
 
             var model = new ManualUniverseSelectionModel(symbols);

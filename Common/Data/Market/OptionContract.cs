@@ -13,10 +13,10 @@
  * limitations under the License.
 */
 
+using System;
 using QuantConnect.Interfaces;
 using QuantConnect.Securities;
 using QuantConnect.Securities.Option;
-using System;
 
 namespace QuantConnect.Data.Market
 {
@@ -25,23 +25,18 @@ namespace QuantConnect.Data.Market
     /// </summary>
     public class OptionContract
     {
-        private Lazy<OptionPriceModelResult> _optionPriceModelResult = new(() => OptionPriceModelResult.None);
+        private Lazy<OptionPriceModelResult> _optionPriceModelResult =
+            new(() => OptionPriceModelResult.None);
 
         /// <summary>
         /// Gets the option contract's symbol
         /// </summary>
-        public Symbol Symbol
-        {
-            get; private set;
-        }
+        public Symbol Symbol { get; private set; }
 
         /// <summary>
         /// Gets the underlying security's symbol
         /// </summary>
-        public Symbol UnderlyingSymbol
-        {
-            get; private set;
-        }
+        public Symbol UnderlyingSymbol { get; private set; }
 
         /// <summary>
         /// Gets the strike price
@@ -51,11 +46,7 @@ namespace QuantConnect.Data.Market
         /// <summary>
         /// Gets the strike price multiplied by the strike multiplier
         /// </summary>
-        public decimal ScaledStrike
-        {
-            get;
-            private set;
-        }
+        public decimal ScaledStrike { get; private set; }
 
         /// <summary>
         /// Gets the expiration date
@@ -90,74 +81,47 @@ namespace QuantConnect.Data.Market
         /// <summary>
         /// Gets the local date time this contract's data was last updated
         /// </summary>
-        public DateTime Time
-        {
-            get; set;
-        }
+        public DateTime Time { get; set; }
 
         /// <summary>
         /// Gets the open interest
         /// </summary>
-        public decimal OpenInterest
-        {
-            get; set;
-        }
+        public decimal OpenInterest { get; set; }
 
         /// <summary>
         /// Gets the last price this contract traded at
         /// </summary>
-        public decimal LastPrice
-        {
-            get; set;
-        }
+        public decimal LastPrice { get; set; }
 
         /// <summary>
         /// Gets the last volume this contract traded at
         /// </summary>
-        public long Volume
-        {
-            get; set;
-        }
+        public long Volume { get; set; }
 
         /// <summary>
         /// Gets the current bid price
         /// </summary>
-        public decimal BidPrice
-        {
-            get; set;
-        }
+        public decimal BidPrice { get; set; }
 
         /// <summary>
         /// Get the current bid size
         /// </summary>
-        public long BidSize
-        {
-            get; set;
-        }
+        public long BidSize { get; set; }
 
         /// <summary>
         /// Gets the ask price
         /// </summary>
-        public decimal AskPrice
-        {
-            get; set;
-        }
+        public decimal AskPrice { get; set; }
 
         /// <summary>
         /// Gets the current ask size
         /// </summary>
-        public long AskSize
-        {
-            get; set;
-        }
+        public long AskSize { get; set; }
 
         /// <summary>
         /// Gets the last price the underlying security traded at
         /// </summary>
-        public decimal UnderlyingLastPrice
-        {
-            get; set;
-        }
+        public decimal UnderlyingLastPrice { get; set; }
 
         /// <summary>
         /// Initializes a new instance of the <see cref="OptionContract"/> class
@@ -189,14 +153,17 @@ namespace QuantConnect.Data.Market
         public override string ToString() => Symbol.Value;
 
         /// <summary>
-        /// Creates a <see cref="OptionContract"/> 
+        /// Creates a <see cref="OptionContract"/>
         /// </summary>
         /// <param name="baseData"></param>
         /// <param name="security">provides price properties for a <see cref="Security"/></param>
         /// <param name="underlyingLastPrice">last price the underlying security traded at</param>
         /// <returns>Option contract</returns>
-        public static OptionContract Create(BaseData baseData, ISecurityPrice security, decimal underlyingLastPrice)
-            => Create(baseData.Symbol.Underlying, baseData.EndTime, security, underlyingLastPrice);
+        public static OptionContract Create(
+            BaseData baseData,
+            ISecurityPrice security,
+            decimal underlyingLastPrice
+        ) => Create(baseData.Symbol.Underlying, baseData.EndTime, security, underlyingLastPrice);
 
         /// <summary>
         /// Creates a <see cref="OptionContract"/>
@@ -206,7 +173,12 @@ namespace QuantConnect.Data.Market
         /// <param name="security">provides price properties for a <see cref="Security"/></param>
         /// <param name="underlyingLastPrice">last price the underlying security traded at</param>
         /// <returns>Option contract</returns>
-        public static OptionContract Create(Symbol underlyingSymbol, DateTime endTime, ISecurityPrice security, decimal underlyingLastPrice)
+        public static OptionContract Create(
+            Symbol underlyingSymbol,
+            DateTime endTime,
+            ISecurityPrice security,
+            decimal underlyingLastPrice
+        )
         {
             return new OptionContract(security, underlyingSymbol)
             {

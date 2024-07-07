@@ -15,13 +15,13 @@
 */
 
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using QuantConnect.Data;
-using QuantConnect.Orders;
-using QuantConnect.Securities;
 using QuantConnect.Data.UniverseSelection;
 using QuantConnect.Interfaces;
-using System.Collections.Generic;
+using QuantConnect.Orders;
+using QuantConnect.Securities;
 
 namespace QuantConnect.Algorithm.CSharp
 {
@@ -40,13 +40,10 @@ namespace QuantConnect.Algorithm.CSharp
         protected virtual int ExpectedHistoryCallCount => 42;
 
         // S&P 500 EMini futures
-        private string [] roots = new []
-        {
-            Futures.Indices.SP500EMini,
-            Futures.Metals.Gold,
-        };
+        private string[] roots = new[] { Futures.Indices.SP500EMini, Futures.Metals.Gold, };
 
         private int _successCount = 0;
+
         public override void Initialize()
         {
             SetStartDate(2013, 10, 8);
@@ -56,12 +53,17 @@ namespace QuantConnect.Algorithm.CSharp
             foreach (var root in roots)
             {
                 // set our expiry filter for this futures chain
-                AddFuture(root, Resolution.Minute, extendedMarketHours: ExtendedMarketHours).SetFilter(TimeSpan.Zero, TimeSpan.FromDays(182));
+                AddFuture(root, Resolution.Minute, extendedMarketHours: ExtendedMarketHours)
+                    .SetFilter(TimeSpan.Zero, TimeSpan.FromDays(182));
             }
 
             SetBenchmark(d => 1000000);
 
-            Schedule.On(DateRules.EveryDay(), TimeRules.Every(TimeSpan.FromHours(1)), MakeHistoryCall);
+            Schedule.On(
+                DateRules.EveryDay(),
+                TimeRules.Every(TimeSpan.FromHours(1)),
+                MakeHistoryCall
+            );
         }
 
         private void MakeHistoryCall()
@@ -78,7 +80,9 @@ namespace QuantConnect.Algorithm.CSharp
         {
             if (_successCount < ExpectedHistoryCallCount)
             {
-                throw new RegressionTestException($"Scheduled Event did not assert history call as many times as expected: {_successCount}/49");
+                throw new RegressionTestException(
+                    $"Scheduled Event did not assert history call as many times as expected: {_successCount}/49"
+                );
             }
         }
 
@@ -94,16 +98,18 @@ namespace QuantConnect.Algorithm.CSharp
                 {
                     foreach (var contract in chain.Value)
                     {
-                        Log($"{contract.Symbol.Value}," +
-                            $"Bid={contract.BidPrice.ToStringInvariant()} " +
-                            $"Ask={contract.AskPrice.ToStringInvariant()} " +
-                            $"Last={contract.LastPrice.ToStringInvariant()} " +
-                            $"OI={contract.OpenInterest.ToStringInvariant()}"
+                        Log(
+                            $"{contract.Symbol.Value},"
+                                + $"Bid={contract.BidPrice.ToStringInvariant()} "
+                                + $"Ask={contract.AskPrice.ToStringInvariant()} "
+                                + $"Last={contract.LastPrice.ToStringInvariant()} "
+                                + $"OI={contract.OpenInterest.ToStringInvariant()}"
                         );
                     }
                 }
             }
         }
+
         public override void OnSecuritiesChanged(SecurityChanges changes)
         {
             foreach (var change in changes.AddedSecurities)
@@ -135,7 +141,8 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// This is used by the regression test system to indicate which languages this algorithm is written in.
         /// </summary>
-        public virtual List<Language> Languages { get; } = new() { Language.CSharp, Language.Python };
+        public virtual List<Language> Languages { get; } =
+            new() { Language.CSharp, Language.Python };
 
         /// <summary>
         /// Data Points count of all timeslices of algorithm
@@ -155,35 +162,36 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// This is used by the regression test system to indicate what the expected statistics are from running the algorithm
         /// </summary>
-        public virtual Dictionary<string, string> ExpectedStatistics => new Dictionary<string, string>
-        {
-            {"Total Orders", "0"},
-            {"Average Win", "0%"},
-            {"Average Loss", "0%"},
-            {"Compounding Annual Return", "0%"},
-            {"Drawdown", "0%"},
-            {"Expectancy", "0"},
-            {"Start Equity", "1000000"},
-            {"End Equity", "1000000"},
-            {"Net Profit", "0%"},
-            {"Sharpe Ratio", "0"},
-            {"Sortino Ratio", "0"},
-            {"Probabilistic Sharpe Ratio", "0%"},
-            {"Loss Rate", "0%"},
-            {"Win Rate", "0%"},
-            {"Profit-Loss Ratio", "0"},
-            {"Alpha", "0"},
-            {"Beta", "0"},
-            {"Annual Standard Deviation", "0"},
-            {"Annual Variance", "0"},
-            {"Information Ratio", "0"},
-            {"Tracking Error", "0"},
-            {"Treynor Ratio", "0"},
-            {"Total Fees", "$0.00"},
-            {"Estimated Strategy Capacity", "$0"},
-            {"Lowest Capacity Asset", ""},
-            {"Portfolio Turnover", "0%"},
-            {"OrderListHash", "d41d8cd98f00b204e9800998ecf8427e"}
-        };
+        public virtual Dictionary<string, string> ExpectedStatistics =>
+            new Dictionary<string, string>
+            {
+                { "Total Orders", "0" },
+                { "Average Win", "0%" },
+                { "Average Loss", "0%" },
+                { "Compounding Annual Return", "0%" },
+                { "Drawdown", "0%" },
+                { "Expectancy", "0" },
+                { "Start Equity", "1000000" },
+                { "End Equity", "1000000" },
+                { "Net Profit", "0%" },
+                { "Sharpe Ratio", "0" },
+                { "Sortino Ratio", "0" },
+                { "Probabilistic Sharpe Ratio", "0%" },
+                { "Loss Rate", "0%" },
+                { "Win Rate", "0%" },
+                { "Profit-Loss Ratio", "0" },
+                { "Alpha", "0" },
+                { "Beta", "0" },
+                { "Annual Standard Deviation", "0" },
+                { "Annual Variance", "0" },
+                { "Information Ratio", "0" },
+                { "Tracking Error", "0" },
+                { "Treynor Ratio", "0" },
+                { "Total Fees", "$0.00" },
+                { "Estimated Strategy Capacity", "$0" },
+                { "Lowest Capacity Asset", "" },
+                { "Portfolio Turnover", "0%" },
+                { "OrderListHash", "d41d8cd98f00b204e9800998ecf8427e" }
+            };
     }
 }

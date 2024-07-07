@@ -38,7 +38,7 @@ namespace QuantConnect.Securities
         /// <summary>
         /// Creates a new instance
         /// </summary>
-        public ConvertibleCashAmount (decimal amount, Cash cash)
+        public ConvertibleCashAmount(decimal amount, Cash cash)
         {
             Amount = amount;
             Cash = cash;

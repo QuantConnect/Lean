@@ -80,7 +80,8 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         /// <summary>
         /// Initializes a new <see cref="TimeSlice"/> containing the specified data
         /// </summary>
-        public TimeSlice(DateTime time,
+        public TimeSlice(
+            DateTime time,
             int dataPointCount,
             Slice slice,
             List<DataFeedPacket> data,
@@ -89,7 +90,8 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             List<UpdateData<ISecurityPrice>> customData,
             SecurityChanges securityChanges,
             Dictionary<Universe, BaseDataCollection> universeData,
-            bool isTimePulse = false)
+            bool isTimePulse = false
+        )
         {
             Time = time;
             Data = data;

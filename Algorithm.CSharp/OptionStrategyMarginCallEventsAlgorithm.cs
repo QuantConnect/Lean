@@ -16,7 +16,6 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-
 using QuantConnect.Data;
 using QuantConnect.Orders;
 using QuantConnect.Securities;
@@ -47,19 +46,25 @@ namespace QuantConnect.Algorithm.CSharp
             var option = AddOption(equity.Symbol);
             _optionSymbol = option.Symbol;
 
-            option.SetFilter(u => u.Strikes(-2, +2)
-                .Expiration(0, 180));
+            option.SetFilter(u => u.Strikes(-2, +2).Expiration(0, 180));
 
-            Portfolio.MarginCallModel = new CustomMarginCallModel(Portfolio, DefaultOrderProperties);
+            Portfolio.MarginCallModel = new CustomMarginCallModel(
+                Portfolio,
+                DefaultOrderProperties
+            );
         }
 
         public override void OnData(Slice slice)
         {
             if (!Portfolio.Invested)
             {
-                if (IsMarketOpen(_optionSymbol) && slice.OptionChains.TryGetValue(_optionSymbol, out var chain))
+                if (
+                    IsMarketOpen(_optionSymbol)
+                    && slice.OptionChains.TryGetValue(_optionSymbol, out var chain)
+                )
                 {
-                    var callContracts = chain.Where(contract => contract.Right == OptionRight.Call)
+                    var callContracts = chain
+                        .Where(contract => contract.Right == OptionRight.Call)
                         .GroupBy(x => x.Expiry)
                         .OrderBy(grouping => grouping.Key)
                         .First()
@@ -87,7 +92,9 @@ namespace QuantConnect.Algorithm.CSharp
                 var expectedQuantity = -Math.Sign(position.Quantity) * 1;
                 if (request.Quantity != expectedQuantity)
                 {
-                    throw new RegressionTestException($"Expected margin call order quantity to be {expectedQuantity} but was {request.Quantity}");
+                    throw new RegressionTestException(
+                        $"Expected margin call order quantity to be {expectedQuantity} but was {request.Quantity}"
+                    );
                 }
             }
         }
@@ -120,32 +127,33 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// This is used by the regression test system to indicate what the expected statistics are from running the algorithm
         /// </summary>
-        public override Dictionary<string, string> ExpectedStatistics => new Dictionary<string, string>
-        {
-            {"Total Orders", "4"},
-            {"Average Win", "0%"},
-            {"Average Loss", "-0.01%"},
-            {"Compounding Annual Return", "-4.893%"},
-            {"Drawdown", "0.700%"},
-            {"Expectancy", "-1"},
-            {"Net Profit", "-0.092%"},
-            {"Sharpe Ratio", "0"},
-            {"Probabilistic Sharpe Ratio", "0%"},
-            {"Loss Rate", "100%"},
-            {"Win Rate", "0%"},
-            {"Profit-Loss Ratio", "0"},
-            {"Alpha", "0"},
-            {"Beta", "0"},
-            {"Annual Standard Deviation", "0"},
-            {"Annual Variance", "0"},
-            {"Information Ratio", "-0.681"},
-            {"Tracking Error", "0.092"},
-            {"Treynor Ratio", "0"},
-            {"Total Fees", "$1252.00"},
-            {"Estimated Strategy Capacity", "$130000.00"},
-            {"Lowest Capacity Asset", "GOOCV W78ZFMML01JA|GOOCV VP83T1ZUHROL"},
-            {"Portfolio Turnover", "1.17%"},
-            {"OrderListHash", "681be68373c2f38e51456d7f8010e7d3"}
-        };
+        public override Dictionary<string, string> ExpectedStatistics =>
+            new Dictionary<string, string>
+            {
+                { "Total Orders", "4" },
+                { "Average Win", "0%" },
+                { "Average Loss", "-0.01%" },
+                { "Compounding Annual Return", "-4.893%" },
+                { "Drawdown", "0.700%" },
+                { "Expectancy", "-1" },
+                { "Net Profit", "-0.092%" },
+                { "Sharpe Ratio", "0" },
+                { "Probabilistic Sharpe Ratio", "0%" },
+                { "Loss Rate", "100%" },
+                { "Win Rate", "0%" },
+                { "Profit-Loss Ratio", "0" },
+                { "Alpha", "0" },
+                { "Beta", "0" },
+                { "Annual Standard Deviation", "0" },
+                { "Annual Variance", "0" },
+                { "Information Ratio", "-0.681" },
+                { "Tracking Error", "0.092" },
+                { "Treynor Ratio", "0" },
+                { "Total Fees", "$1252.00" },
+                { "Estimated Strategy Capacity", "$130000.00" },
+                { "Lowest Capacity Asset", "GOOCV W78ZFMML01JA|GOOCV VP83T1ZUHROL" },
+                { "Portfolio Turnover", "1.17%" },
+                { "OrderListHash", "681be68373c2f38e51456d7f8010e7d3" }
+            };
     }
 }

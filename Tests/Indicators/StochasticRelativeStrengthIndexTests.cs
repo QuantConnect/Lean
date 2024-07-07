@@ -33,7 +33,11 @@ namespace QuantConnect.Tests.Indicators
 
         protected override Action<IndicatorBase<IndicatorDataPoint>, double> Assertion =>
             (indicator, expected) =>
-                Assert.AreEqual(expected, (double) ((StochasticRelativeStrengthIndex) indicator).k.Current.Value, 1e-3);
+                Assert.AreEqual(
+                    expected,
+                    (double)((StochasticRelativeStrengthIndex)indicator).k.Current.Value,
+                    1e-3
+                );
 
         [Test]
         public void ComparesWithExternalDataMiddleBand()
@@ -42,9 +46,8 @@ namespace QuantConnect.Tests.Indicators
                 CreateIndicator() as StochasticRelativeStrengthIndex,
                 TestFileName,
                 "d",
-                ind => (double) ind.d.Current.Value
+                ind => (double)ind.d.Current.Value
             );
         }
-
     }
 }

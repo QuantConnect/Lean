@@ -13,6 +13,9 @@
  * limitations under the License.
 */
 
+using System;
+using System.Collections.Generic;
+using System.Linq;
 using QuantConnect.Algorithm.Framework.Alphas;
 using QuantConnect.Algorithm.Framework.Execution;
 using QuantConnect.Algorithm.Framework.Portfolio;
@@ -20,9 +23,6 @@ using QuantConnect.Algorithm.Framework.Risk;
 using QuantConnect.Algorithm.Framework.Selection;
 using QuantConnect.Data;
 using QuantConnect.Orders.Fees;
-using System;
-using System.Collections.Generic;
-using System.Linq;
 
 namespace QuantConnect.Algorithm.CSharp.Alphas
 {
@@ -50,12 +50,41 @@ namespace QuantConnect.Algorithm.CSharp.Alphas
             SetSecurityInitializer(security => security.FeeModel = new ConstantFeeModel(0));
 
             // Global Equity ETF tickers
-            var symbols = new[] {
-                "ECH", "EEM", "EFA", "EPHE", "EPP", "EWA", "EWC", "EWG",
-                "EWH", "EWI", "EWJ", "EWL", "EWM", "EWM", "EWO", "EWP",
-                "EWQ", "EWS", "EWT", "EWU", "EWY", "EWZ", "EZA", "FXI",
-                "GXG", "IDX", "ILF", "EWM", "QQQ", "RSX", "SPY", "THD"}
-                .Select(x => QuantConnect.Symbol.Create(x, SecurityType.Equity, Market.USA));
+            var symbols = new[]
+            {
+                "ECH",
+                "EEM",
+                "EFA",
+                "EPHE",
+                "EPP",
+                "EWA",
+                "EWC",
+                "EWG",
+                "EWH",
+                "EWI",
+                "EWJ",
+                "EWL",
+                "EWM",
+                "EWM",
+                "EWO",
+                "EWP",
+                "EWQ",
+                "EWS",
+                "EWT",
+                "EWU",
+                "EWY",
+                "EWZ",
+                "EZA",
+                "FXI",
+                "GXG",
+                "IDX",
+                "ILF",
+                "EWM",
+                "QQQ",
+                "RSX",
+                "SPY",
+                "THD"
+            }.Select(x => QuantConnect.Symbol.Create(x, SecurityType.Equity, Market.USA));
 
             // Manually curated universe
             UniverseSettings.Resolution = Resolution.Daily;
@@ -85,7 +114,8 @@ namespace QuantConnect.Algorithm.CSharp.Alphas
             public MeanReversionIBSAlphaModel(
                 int lookback = 1,
                 int numberOfStocks = 2,
-                Resolution resolution = Resolution.Daily)
+                Resolution resolution = Resolution.Daily
+            )
             {
                 _numberOfStocks = numberOfStocks;
                 _predictionInterval = resolution.ToTimeSpan().Multiply(lookback);
@@ -125,22 +155,37 @@ namespace QuantConnect.Algorithm.CSharp.Alphas
                 }
 
                 // Rank securities with the highest IBS value
-                var ordered = from entry in symbolsIBS
-                              orderby Math.Round(entry.Value, 6) descending, entry.Key
-                              select entry;
-                var highIBS = ordered.Take(numberOfStocks);            // Get highest IBS
-                var lowIBS = ordered.Reverse().Take(numberOfStocks);   // Get lowest IBS
+                var ordered =
+                    from entry in symbolsIBS
+                    orderby Math.Round(entry.Value, 6) descending, entry.Key
+                    select entry;
+                var highIBS = ordered.Take(numberOfStocks); // Get highest IBS
+                var lowIBS = ordered.Reverse().Take(numberOfStocks); // Get lowest IBS
 
                 // Emit "down" insight for the securities with the highest IBS value
                 foreach (var kvp in highIBS)
                 {
-                    insights.Add(Insight.Price(kvp.Key, _predictionInterval, InsightDirection.Down, Math.Abs((double)returns[kvp.Key])));
+                    insights.Add(
+                        Insight.Price(
+                            kvp.Key,
+                            _predictionInterval,
+                            InsightDirection.Down,
+                            Math.Abs((double)returns[kvp.Key])
+                        )
+                    );
                 }
 
                 // Emit "up" insight for the securities with the highest IBS value
                 foreach (var kvp in lowIBS)
                 {
-                    insights.Add(Insight.Price(kvp.Key, _predictionInterval, InsightDirection.Up, Math.Abs((double)returns[kvp.Key])));
+                    insights.Add(
+                        Insight.Price(
+                            kvp.Key,
+                            _predictionInterval,
+                            InsightDirection.Up,
+                            Math.Abs((double)returns[kvp.Key])
+                        )
+                    );
                 }
 
                 return insights;

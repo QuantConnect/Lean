@@ -16,10 +16,10 @@
 
 using System;
 using System.IO;
-using QuantConnect.Data;
-using QuantConnect.Logging;
-using QuantConnect.Interfaces;
 using QuantConnect.Configuration;
+using QuantConnect.Data;
+using QuantConnect.Interfaces;
+using QuantConnect.Logging;
 
 namespace QuantConnect.Lean.Engine.DataFeeds
 {
@@ -28,7 +28,10 @@ namespace QuantConnect.Lean.Engine.DataFeeds
     /// </summary>
     public static class SubscriptionDataSourceReader
     {
-        private static readonly bool ShowMissingDataLogs = Config.GetBool("show-missing-data-logs", false);
+        private static readonly bool ShowMissingDataLogs = Config.GetBool(
+            "show-missing-data-logs",
+            false
+        );
 
         /// <summary>
         /// Creates a new <see cref="ISubscriptionDataSourceReader"/> capable of handling the specified <paramref name="source"/>
@@ -41,40 +44,89 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         /// <param name="factory">The base data instance factory</param>
         /// <param name="dataProvider">The data provider to use</param>
         /// <returns>A new <see cref="ISubscriptionDataSourceReader"/> that can read the specified <paramref name="source"/></returns>
-        public static ISubscriptionDataSourceReader ForSource(SubscriptionDataSource source, IDataCacheProvider dataCacheProvider, SubscriptionDataConfig config, DateTime date, bool isLiveMode, BaseData factory, IDataProvider dataProvider, IObjectStore objectStore)
+        public static ISubscriptionDataSourceReader ForSource(
+            SubscriptionDataSource source,
+            IDataCacheProvider dataCacheProvider,
+            SubscriptionDataConfig config,
+            DateTime date,
+            bool isLiveMode,
+            BaseData factory,
+            IDataProvider dataProvider,
+            IObjectStore objectStore
+        )
         {
             ISubscriptionDataSourceReader reader;
             switch (source.Format)
             {
                 case FileFormat.Csv:
-                    reader = new TextSubscriptionDataSourceReader(dataCacheProvider, config, date, isLiveMode, objectStore);
+                    reader = new TextSubscriptionDataSourceReader(
+                        dataCacheProvider,
+                        config,
+                        date,
+                        isLiveMode,
+                        objectStore
+                    );
                     break;
 
                 case FileFormat.UnfoldingCollection:
-                    reader = new CollectionSubscriptionDataSourceReader(dataCacheProvider, config, date, isLiveMode, objectStore);
+                    reader = new CollectionSubscriptionDataSourceReader(
+                        dataCacheProvider,
+                        config,
+                        date,
+                        isLiveMode,
+                        objectStore
+                    );
                     break;
 
                 case FileFormat.ZipEntryName:
-                    reader = new ZipEntryNameSubscriptionDataSourceReader(dataCacheProvider, config, date, isLiveMode);
+                    reader = new ZipEntryNameSubscriptionDataSourceReader(
+                        dataCacheProvider,
+                        config,
+                        date,
+                        isLiveMode
+                    );
                     break;
 
                 case FileFormat.Index:
-                    return new IndexSubscriptionDataSourceReader(dataCacheProvider, config, date, isLiveMode, dataProvider, objectStore);
+                    return new IndexSubscriptionDataSourceReader(
+                        dataCacheProvider,
+                        config,
+                        date,
+                        isLiveMode,
+                        dataProvider,
+                        objectStore
+                    );
 
                 case FileFormat.FoldingCollection:
-                    reader = new BaseDataCollectionAggregatorReader(dataCacheProvider, config, date, isLiveMode, objectStore);
+                    reader = new BaseDataCollectionAggregatorReader(
+                        dataCacheProvider,
+                        config,
+                        date,
+                        isLiveMode,
+                        objectStore
+                    );
                     break;
 
                 default:
-                    throw new NotImplementedException("SubscriptionFactory.ForSource(" + source + ") has not been implemented yet.");
+                    throw new NotImplementedException(
+                        "SubscriptionFactory.ForSource("
+                            + source
+                            + ") has not been implemented yet."
+                    );
             }
 
             // wire up event handlers for logging missing files
-            if (ShowMissingDataLogs && source.TransportMedium == SubscriptionTransportMedium.LocalFile)
+            if (
+                ShowMissingDataLogs
+                && source.TransportMedium == SubscriptionTransportMedium.LocalFile
+            )
             {
                 if (!factory.IsSparseData())
                 {
-                    reader.InvalidSource += (sender, args) => Log.Error($"SubscriptionDataSourceReader.InvalidSource(): File not found: {args.Source.Source}");
+                    reader.InvalidSource += (sender, args) =>
+                        Log.Error(
+                            $"SubscriptionDataSourceReader.InvalidSource(): File not found: {args.Source.Source}"
+                        );
                 }
             }
 
@@ -87,13 +139,15 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         public static void CheckRemoteFileCache()
         {
             // create cache directory if not existing
-            if (!Directory.Exists(Globals.Cache)) Directory.CreateDirectory(Globals.Cache);
+            if (!Directory.Exists(Globals.Cache))
+                Directory.CreateDirectory(Globals.Cache);
 
             var frontierToDelete = DateTime.Now.AddHours(-24);
             // clean old files out of the cache
             foreach (var file in Directory.EnumerateFiles(Globals.Cache))
             {
-                if (File.GetCreationTime(file) < frontierToDelete) File.Delete(file);
+                if (File.GetCreationTime(file) < frontierToDelete)
+                    File.Delete(file);
             }
         }
     }

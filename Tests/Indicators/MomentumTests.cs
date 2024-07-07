@@ -25,7 +25,7 @@ namespace QuantConnect.Tests.Indicators
         [Test]
         public void ComputesCorrectly()
         {
-            var mom =  new Momentum(5);
+            var mom = new Momentum(5);
             foreach (var data in TestHelper.GetDataStream(5))
             {
                 mom.Update(data);

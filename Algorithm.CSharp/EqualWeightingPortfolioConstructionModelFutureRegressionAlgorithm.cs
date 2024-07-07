@@ -28,7 +28,9 @@ namespace QuantConnect.Algorithm.CSharp
     /// <summary>
     /// Futures regression algorithm intended to test the behavior of the framework models. See GH issue 4027.
     /// </summary>
-    public class EqualWeightingPortfolioConstructionModelFutureRegressionAlgorithm : QCAlgorithm, IRegressionAlgorithmDefinition
+    public class EqualWeightingPortfolioConstructionModelFutureRegressionAlgorithm
+        : QCAlgorithm,
+            IRegressionAlgorithmDefinition
     {
         private int _fillCount;
 
@@ -37,8 +39,16 @@ namespace QuantConnect.Algorithm.CSharp
             SetStartDate(2013, 10, 07);
             SetEndDate(2013, 10, 11);
 
-            SetUniverseSelection(new FrontMonthFutureUniverseSelectionModel(SelectFutureChainSymbols));
-            SetAlpha(new ConstantFutureContractAlphaModel(InsightType.Price, InsightDirection.Up, TimeSpan.FromDays(1)));
+            SetUniverseSelection(
+                new FrontMonthFutureUniverseSelectionModel(SelectFutureChainSymbols)
+            );
+            SetAlpha(
+                new ConstantFutureContractAlphaModel(
+                    InsightType.Price,
+                    InsightDirection.Up,
+                    TimeSpan.FromDays(1)
+                )
+            );
             SetPortfolioConstruction(new EqualWeightingPortfolioConstructionModel());
             SetExecution(new ImmediateExecutionModel());
 
@@ -50,9 +60,13 @@ namespace QuantConnect.Algorithm.CSharp
         // future symbol universe selection function
         private static IEnumerable<Symbol> SelectFutureChainSymbols(DateTime utcTime)
         {
-            return new []
+            return new[]
             {
-                QuantConnect.Symbol.Create(Futures.Indices.SP500EMini, SecurityType.Future, Market.CME),
+                QuantConnect.Symbol.Create(
+                    Futures.Indices.SP500EMini,
+                    SecurityType.Future,
+                    Market.CME
+                ),
                 QuantConnect.Symbol.Create(Futures.Metals.Gold, SecurityType.Future, Market.COMEX)
             };
         }
@@ -63,19 +77,17 @@ namespace QuantConnect.Algorithm.CSharp
         /// </summary>
         class FrontMonthFutureUniverseSelectionModel : FutureUniverseSelectionModel
         {
-            public FrontMonthFutureUniverseSelectionModel(Func<DateTime, IEnumerable<Symbol>> futureChainSymbolSelector)
-                : base(TimeSpan.FromDays(1), futureChainSymbolSelector)
-            {
-            }
+            public FrontMonthFutureUniverseSelectionModel(
+                Func<DateTime, IEnumerable<Symbol>> futureChainSymbolSelector
+            )
+                : base(TimeSpan.FromDays(1), futureChainSymbolSelector) { }
 
             /// <summary>
             /// Defines the future chain universe filter
             /// </summary>
             protected override FutureFilterUniverse Filter(FutureFilterUniverse filter)
             {
-                return filter
-                    .FrontMonth()
-                    .OnlyApplyFilterAtMarketOpen();
+                return filter.FrontMonth().OnlyApplyFilterAtMarketOpen();
             }
         }
 
@@ -84,10 +96,12 @@ namespace QuantConnect.Algorithm.CSharp
         /// </summary>
         class ConstantFutureContractAlphaModel : ConstantAlphaModel
         {
-            public ConstantFutureContractAlphaModel(InsightType type, InsightDirection direction, TimeSpan period)
-                : base(type, direction, period)
-            {
-            }
+            public ConstantFutureContractAlphaModel(
+                InsightType type,
+                InsightDirection direction,
+                TimeSpan period
+            )
+                : base(type, direction, period) { }
 
             protected override bool ShouldEmitInsight(DateTime utcTime, Symbol symbol)
             {
@@ -111,7 +125,9 @@ namespace QuantConnect.Algorithm.CSharp
                 {
                     if (Portfolio.TotalHoldingsValue / Portfolio.TotalPortfolioValue < 10)
                     {
-                        throw new RegressionTestException("Expected to be trading using the futures margin leverage");
+                        throw new RegressionTestException(
+                            "Expected to be trading using the futures margin leverage"
+                        );
                     }
                 }
             }
@@ -145,35 +161,36 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// This is used by the regression test system to indicate what the expected statistics are from running the algorithm
         /// </summary>
-        public Dictionary<string, string> ExpectedStatistics => new Dictionary<string, string>
-        {
-            {"Total Orders", "8"},
-            {"Average Win", "0.69%"},
-            {"Average Loss", "-2.47%"},
-            {"Compounding Annual Return", "-99.966%"},
-            {"Drawdown", "28.600%"},
-            {"Expectancy", "-0.680"},
-            {"Start Equity", "100000"},
-            {"End Equity", "90213.76"},
-            {"Net Profit", "-9.786%"},
-            {"Sharpe Ratio", "-0.603"},
-            {"Sortino Ratio", "-0.892"},
-            {"Probabilistic Sharpe Ratio", "30.082%"},
-            {"Loss Rate", "75%"},
-            {"Win Rate", "25%"},
-            {"Profit-Loss Ratio", "0.28"},
-            {"Alpha", "-15.818"},
-            {"Beta", "7.498"},
-            {"Annual Standard Deviation", "1.669"},
-            {"Annual Variance", "2.787"},
-            {"Information Ratio", "-2.061"},
-            {"Tracking Error", "1.447"},
-            {"Treynor Ratio", "-0.134"},
-            {"Total Fees", "$52.01"},
-            {"Estimated Strategy Capacity", "$1800000.00"},
-            {"Lowest Capacity Asset", "GC VL5E74HP3EE5"},
-            {"Portfolio Turnover", "475.60%"},
-            {"OrderListHash", "91aeb0d6f6a18df9fd755fc473183395"}
-        };
+        public Dictionary<string, string> ExpectedStatistics =>
+            new Dictionary<string, string>
+            {
+                { "Total Orders", "8" },
+                { "Average Win", "0.69%" },
+                { "Average Loss", "-2.47%" },
+                { "Compounding Annual Return", "-99.966%" },
+                { "Drawdown", "28.600%" },
+                { "Expectancy", "-0.680" },
+                { "Start Equity", "100000" },
+                { "End Equity", "90213.76" },
+                { "Net Profit", "-9.786%" },
+                { "Sharpe Ratio", "-0.603" },
+                { "Sortino Ratio", "-0.892" },
+                { "Probabilistic Sharpe Ratio", "30.082%" },
+                { "Loss Rate", "75%" },
+                { "Win Rate", "25%" },
+                { "Profit-Loss Ratio", "0.28" },
+                { "Alpha", "-15.818" },
+                { "Beta", "7.498" },
+                { "Annual Standard Deviation", "1.669" },
+                { "Annual Variance", "2.787" },
+                { "Information Ratio", "-2.061" },
+                { "Tracking Error", "1.447" },
+                { "Treynor Ratio", "-0.134" },
+                { "Total Fees", "$52.01" },
+                { "Estimated Strategy Capacity", "$1800000.00" },
+                { "Lowest Capacity Asset", "GC VL5E74HP3EE5" },
+                { "Portfolio Turnover", "475.60%" },
+                { "OrderListHash", "91aeb0d6f6a18df9fd755fc473183395" }
+            };
     }
 }

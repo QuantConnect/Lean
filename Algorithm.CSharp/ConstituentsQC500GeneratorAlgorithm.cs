@@ -30,9 +30,9 @@ namespace QuantConnect.Algorithm.CSharp
         {
             UniverseSettings.Resolution = Resolution.Daily;
 
-            SetStartDate(2018, 1, 1);   // Set Start Date
-            SetEndDate(2019, 1, 1);     // Set End Date
-            SetCash(100000);            // Set Strategy Cash
+            SetStartDate(2018, 1, 1); // Set Start Date
+            SetEndDate(2019, 1, 1); // Set End Date
+            SetCash(100000); // Set Strategy Cash
 
             // Add QC500 Universe
             AddUniverse(Universe.QC500);

@@ -63,7 +63,10 @@ namespace QuantConnect.Securities.Option.StrategyMatcher
             {
                 if (multiplier > Multiplier)
                 {
-                    throw new ArgumentOutOfRangeException(nameof(multiplier), "Unable to create strategy leg with a larger multiplier than matched.");
+                    throw new ArgumentOutOfRangeException(
+                        nameof(multiplier),
+                        "Unable to create strategy leg with a larger multiplier than matched."
+                    );
                 }
 
                 // back out the unit quantity and scale it up to the requested multiplier
@@ -72,7 +75,8 @@ namespace QuantConnect.Securities.Option.StrategyMatcher
             }
 
             return Position.IsUnderlying
-                ? (OptionStrategy.LegData) OptionStrategy.UnderlyingLegData.Create(quantity, Position.Symbol)
+                ? (OptionStrategy.LegData)
+                    OptionStrategy.UnderlyingLegData.Create(quantity, Position.Symbol)
                 : OptionStrategy.OptionLegData.Create(quantity, Position.Symbol);
         }
 
@@ -90,7 +94,10 @@ namespace QuantConnect.Securities.Option.StrategyMatcher
             {
                 if (multiplier > Multiplier)
                 {
-                    throw new ArgumentOutOfRangeException(nameof(multiplier), "Unable to create strategy leg with a larger multiplier than matched.");
+                    throw new ArgumentOutOfRangeException(
+                        nameof(multiplier),
+                        "Unable to create strategy leg with a larger multiplier than matched."
+                    );
                 }
 
                 // back out the unit quantity and scale it up to the requested multiplier
@@ -119,7 +126,8 @@ namespace QuantConnect.Securities.Option.StrategyMatcher
                 return false;
             }
 
-            return obj is OptionStrategyLegDefinitionMatch && Equals((OptionStrategyLegDefinitionMatch) obj);
+            return obj is OptionStrategyLegDefinitionMatch
+                && Equals((OptionStrategyLegDefinitionMatch)obj);
         }
 
         /// <summary>Returns the hash code for this instance.</summary>
@@ -143,7 +151,10 @@ namespace QuantConnect.Securities.Option.StrategyMatcher
         /// OptionStrategyLegDefinitionMatch == Operator
         /// </summary>
         /// <returns>True if they are equal</returns>
-        public static bool operator ==(OptionStrategyLegDefinitionMatch left, OptionStrategyLegDefinitionMatch right)
+        public static bool operator ==(
+            OptionStrategyLegDefinitionMatch left,
+            OptionStrategyLegDefinitionMatch right
+        )
         {
             return left.Equals(right);
         }
@@ -152,7 +163,10 @@ namespace QuantConnect.Securities.Option.StrategyMatcher
         /// OptionStrategyLegDefinitionMatch != Operator
         /// </summary>
         /// <returns>True if they are not equal</returns>
-        public static bool operator !=(OptionStrategyLegDefinitionMatch left, OptionStrategyLegDefinitionMatch right)
+        public static bool operator !=(
+            OptionStrategyLegDefinitionMatch left,
+            OptionStrategyLegDefinitionMatch right
+        )
         {
             return !left.Equals(right);
         }

@@ -14,12 +14,12 @@
 */
 
 using System;
-using QuantConnect.Data;
-using System.ComponentModel;
-using QuantConnect.Interfaces;
 using System.Collections.Generic;
-using QuantConnect.Lean.Engine.DataFeeds.Transport;
+using System.ComponentModel;
 using QuantConnect.Algorithm;
+using QuantConnect.Data;
+using QuantConnect.Interfaces;
+using QuantConnect.Lean.Engine.DataFeeds.Transport;
 
 namespace QuantConnect.Lean.Engine.DataFeeds
 {
@@ -52,7 +52,11 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         /// <summary>
         /// Creates a new instance
         /// </summary>
-        protected BaseSubscriptionDataSourceReader(IDataCacheProvider dataCacheProvider, bool isLiveMode, IObjectStore objectStore)
+        protected BaseSubscriptionDataSourceReader(
+            IDataCacheProvider dataCacheProvider,
+            bool isLiveMode,
+            IObjectStore objectStore
+        )
         {
             DataCacheProvider = dataCacheProvider;
             IsLiveMode = isLiveMode;
@@ -79,7 +83,10 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                 switch (subscriptionDataSource.TransportMedium)
                 {
                     case SubscriptionTransportMedium.LocalFile:
-                        reader = new LocalFileSubscriptionStreamReader(DataCacheProvider, subscriptionDataSource.Source);
+                        reader = new LocalFileSubscriptionStreamReader(
+                            DataCacheProvider,
+                            subscriptionDataSource.Source
+                        );
                         break;
 
                     case SubscriptionTransportMedium.RemoteFile:
@@ -87,15 +94,25 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                         break;
 
                     case SubscriptionTransportMedium.Rest:
-                        reader = new RestSubscriptionStreamReader(subscriptionDataSource.Source, subscriptionDataSource.Headers, IsLiveMode);
+                        reader = new RestSubscriptionStreamReader(
+                            subscriptionDataSource.Source,
+                            subscriptionDataSource.Headers,
+                            IsLiveMode
+                        );
                         break;
 
                     case SubscriptionTransportMedium.ObjectStore:
-                        reader = new ObjectStoreSubscriptionStreamReader(ObjectStore, subscriptionDataSource.Source);
+                        reader = new ObjectStoreSubscriptionStreamReader(
+                            ObjectStore,
+                            subscriptionDataSource.Source
+                        );
                         break;
 
                     default:
-                        throw new InvalidEnumArgumentException("Unexpected SubscriptionTransportMedium specified: " + subscriptionDataSource.TransportMedium);
+                        throw new InvalidEnumArgumentException(
+                            "Unexpected SubscriptionTransportMedium specified: "
+                                + subscriptionDataSource.TransportMedium
+                        );
                 }
             }
             catch (Exception e)
@@ -106,7 +123,12 @@ namespace QuantConnect.Lean.Engine.DataFeeds
 
             if (reader == null || reader.EndOfStream)
             {
-                OnInvalidSource(subscriptionDataSource, new Exception($"The reader was empty for source: ${subscriptionDataSource.Source}"));
+                OnInvalidSource(
+                    subscriptionDataSource,
+                    new Exception(
+                        $"The reader was empty for source: ${subscriptionDataSource.Source}"
+                    )
+                );
                 return null;
             }
             return reader;
@@ -132,7 +154,12 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             try
             {
                 // this will fire up a web client in order to download the 'source' file to the cache
-                return new RemoteFileSubscriptionStreamReader(DataCacheProvider, source.Source, Globals.Cache, source.Headers);
+                return new RemoteFileSubscriptionStreamReader(
+                    DataCacheProvider,
+                    source.Source,
+                    Globals.Cache,
+                    source.Headers
+                );
             }
             catch (Exception)
             {

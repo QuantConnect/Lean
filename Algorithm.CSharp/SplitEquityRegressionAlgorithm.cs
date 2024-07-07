@@ -13,12 +13,12 @@
  * limitations under the License.
 */
 
+using System;
+using System.Collections.Generic;
 using QuantConnect.Data;
 using QuantConnect.Interfaces;
-using System.Collections.Generic;
 using QuantConnect.Orders;
 using QuantConnect.Util;
-using System;
 
 namespace QuantConnect.Algorithm.CSharp
 {
@@ -26,7 +26,7 @@ namespace QuantConnect.Algorithm.CSharp
     /// Simple regression algorithm asserting certain order fields update properly when a
     /// split in the data happens
     /// </summary>
-    public class SplitEquityRegressionAlgorithm: QCAlgorithm, IRegressionAlgorithmDefinition
+    public class SplitEquityRegressionAlgorithm : QCAlgorithm, IRegressionAlgorithmDefinition
     {
         private Symbol _aapl;
         private List<OrderTicket> _tickets = new();
@@ -40,7 +40,11 @@ namespace QuantConnect.Algorithm.CSharp
             SetEndDate(2014, 6, 11);
             SetCash(100000);
 
-            _aapl = AddEquity("AAPL", Resolution.Hour, dataNormalizationMode: DataNormalizationMode.Raw).Symbol;
+            _aapl = AddEquity(
+                "AAPL",
+                Resolution.Hour,
+                dataNormalizationMode: DataNormalizationMode.Raw
+            ).Symbol;
         }
 
         public override void OnData(Slice slice)
@@ -68,7 +72,9 @@ namespace QuantConnect.Algorithm.CSharp
             {
                 if (ticket.Quantity != 69.0m)
                 {
-                    throw new RegressionTestException($"The Quantity of order with ID: {ticket.OrderId} should be 69, but was {ticket.Quantity}");
+                    throw new RegressionTestException(
+                        $"The Quantity of order with ID: {ticket.OrderId} should be 69, but was {ticket.Quantity}"
+                    );
                 }
 
                 switch (ticket.OrderType)
@@ -76,26 +82,34 @@ namespace QuantConnect.Algorithm.CSharp
                     case OrderType.LimitIfTouched:
                         if (ticket.Get(OrderField.TriggerPrice) != 1.43m)
                         {
-                            throw new RegressionTestException($"Order with ID: {ticket.OrderId} should have a Trigger Price equal to 1.43, but was {ticket.Get(OrderField.TriggerPrice)}");
+                            throw new RegressionTestException(
+                                $"Order with ID: {ticket.OrderId} should have a Trigger Price equal to 1.43, but was {ticket.Get(OrderField.TriggerPrice)}"
+                            );
                         }
 
                         if (ticket.Get(OrderField.LimitPrice) != 1.43m)
                         {
-                            throw new RegressionTestException($"Order with ID: {ticket.OrderId} should have a Limit Price equal to 1.43, but was {ticket.Get(OrderField.LimitPrice)}");
+                            throw new RegressionTestException(
+                                $"Order with ID: {ticket.OrderId} should have a Limit Price equal to 1.43, but was {ticket.Get(OrderField.LimitPrice)}"
+                            );
                         }
                         break;
 
                     case OrderType.Limit:
                         if (ticket.Get(OrderField.LimitPrice) != 0.7143m)
                         {
-                            throw new RegressionTestException($"Order with ID: {ticket.OrderId} should have a Limit Price equal to 0.7143, but was {ticket.Get(OrderField.LimitPrice)}");
+                            throw new RegressionTestException(
+                                $"Order with ID: {ticket.OrderId} should have a Limit Price equal to 0.7143, but was {ticket.Get(OrderField.LimitPrice)}"
+                            );
                         }
                         break;
 
                     case OrderType.StopLimit:
                         if (ticket.Get(OrderField.StopPrice) != 2.14m)
                         {
-                            throw new RegressionTestException($"Order with ID: {ticket.OrderId} should have a Stop Price equal to 2.14, but was {ticket.Get(OrderField.StopPrice)}");
+                            throw new RegressionTestException(
+                                $"Order with ID: {ticket.OrderId} should have a Stop Price equal to 2.14, but was {ticket.Get(OrderField.StopPrice)}"
+                            );
                         }
                         break;
 
@@ -108,26 +122,37 @@ namespace QuantConnect.Algorithm.CSharp
                             // We only expect one stop price update in this algorithm
                             if (Math.Abs(stopPrice - _marketPriceAtLatestSplit) > 0.1m * stopPrice)
                             {
-                                throw new RegressionTestException($"Order with ID: {ticket.OrderId} should have a Stop Price equal to 2.14, but was {ticket.Get(OrderField.StopPrice)}");
+                                throw new RegressionTestException(
+                                    $"Order with ID: {ticket.OrderId} should have a Stop Price equal to 2.14, but was {ticket.Get(OrderField.StopPrice)}"
+                                );
                             }
 
                             // Trailing amount unchanged since it's a percentage
                             if (trailingAmount != 0.1m)
                             {
-                                throw new RegressionTestException($"Order with ID: {ticket.OrderId} should have a Trailing Amount equal to 0.214m, but was {trailingAmount}");
+                                throw new RegressionTestException(
+                                    $"Order with ID: {ticket.OrderId} should have a Trailing Amount equal to 0.214m, but was {trailingAmount}"
+                                );
                             }
                         }
                         else
                         {
                             // We only expect one stop price update in this algorithm
-                            if (Math.Abs(stopPrice - _marketPriceAtLatestSplit) > 60m * _splitFactor)
+                            if (
+                                Math.Abs(stopPrice - _marketPriceAtLatestSplit)
+                                > 60m * _splitFactor
+                            )
                             {
-                                throw new RegressionTestException($"Order with ID: {ticket.OrderId} should have a Stop Price equal to 2.14, but was {ticket.Get(OrderField.StopPrice)}");
+                                throw new RegressionTestException(
+                                    $"Order with ID: {ticket.OrderId} should have a Stop Price equal to 2.14, but was {ticket.Get(OrderField.StopPrice)}"
+                                );
                             }
 
                             if (trailingAmount != 8.57m)
                             {
-                                throw new RegressionTestException($"Order with ID: {ticket.OrderId} should have a Trailing Amount equal to 8.57m, but was {trailingAmount}");
+                                throw new RegressionTestException(
+                                    $"Order with ID: {ticket.OrderId} should have a Trailing Amount equal to 8.57m, but was {trailingAmount}"
+                                );
                             }
                         }
                         break;
@@ -163,35 +188,36 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// This is used by the regression test system to indicate what the expected statistics are from running the algorithm
         /// </summary>
-        public Dictionary<string, string> ExpectedStatistics => new Dictionary<string, string>
-        {
-            {"Total Orders", "5"},
-            {"Average Win", "0%"},
-            {"Average Loss", "0%"},
-            {"Compounding Annual Return", "0%"},
-            {"Drawdown", "0%"},
-            {"Expectancy", "0"},
-            {"Start Equity", "100000"},
-            {"End Equity", "100000"},
-            {"Net Profit", "0%"},
-            {"Sharpe Ratio", "0"},
-            {"Sortino Ratio", "0"},
-            {"Probabilistic Sharpe Ratio", "0%"},
-            {"Loss Rate", "0%"},
-            {"Win Rate", "0%"},
-            {"Profit-Loss Ratio", "0"},
-            {"Alpha", "0"},
-            {"Beta", "0"},
-            {"Annual Standard Deviation", "0"},
-            {"Annual Variance", "0"},
-            {"Information Ratio", "-2.491"},
-            {"Tracking Error", "0.042"},
-            {"Treynor Ratio", "0"},
-            {"Total Fees", "$0.00"},
-            {"Estimated Strategy Capacity", "$0"},
-            {"Lowest Capacity Asset", ""},
-            {"Portfolio Turnover", "0%"},
-            {"OrderListHash", "1433d839e97cd82fc9b051cfd98f166f"}
-        };
+        public Dictionary<string, string> ExpectedStatistics =>
+            new Dictionary<string, string>
+            {
+                { "Total Orders", "5" },
+                { "Average Win", "0%" },
+                { "Average Loss", "0%" },
+                { "Compounding Annual Return", "0%" },
+                { "Drawdown", "0%" },
+                { "Expectancy", "0" },
+                { "Start Equity", "100000" },
+                { "End Equity", "100000" },
+                { "Net Profit", "0%" },
+                { "Sharpe Ratio", "0" },
+                { "Sortino Ratio", "0" },
+                { "Probabilistic Sharpe Ratio", "0%" },
+                { "Loss Rate", "0%" },
+                { "Win Rate", "0%" },
+                { "Profit-Loss Ratio", "0" },
+                { "Alpha", "0" },
+                { "Beta", "0" },
+                { "Annual Standard Deviation", "0" },
+                { "Annual Variance", "0" },
+                { "Information Ratio", "-2.491" },
+                { "Tracking Error", "0.042" },
+                { "Treynor Ratio", "0" },
+                { "Total Fees", "$0.00" },
+                { "Estimated Strategy Capacity", "$0" },
+                { "Lowest Capacity Asset", "" },
+                { "Portfolio Turnover", "0%" },
+                { "OrderListHash", "1433d839e97cd82fc9b051cfd98f166f" }
+            };
     }
 }

@@ -1,11 +1,11 @@
 /*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
- * 
- * Licensed under the Apache License, Version 2.0 (the "License"); 
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -138,7 +138,10 @@ namespace QuantConnect.Tests.Common.Data
             Assert.AreEqual(bar2.Value, newTradeBar.High);
             Assert.AreEqual(bar3.Value, newTradeBar.Low);
             Assert.AreEqual(bar4.Value, newTradeBar.Close);
-            Assert.AreEqual(bar1.Volume + bar2.Volume + bar3.Volume + bar4.Volume, newTradeBar.Volume);
+            Assert.AreEqual(
+                bar1.Volume + bar2.Volume + bar3.Volume + bar4.Volume,
+                newTradeBar.Volume
+            );
         }
 
         [Test]
@@ -250,12 +253,21 @@ namespace QuantConnect.Tests.Common.Data
 
         private class CustomData : DynamicData
         {
-            public override BaseData Reader(SubscriptionDataConfig config, string line, DateTime date, bool isLiveMode)
+            public override BaseData Reader(
+                SubscriptionDataConfig config,
+                string line,
+                DateTime date,
+                bool isLiveMode
+            )
             {
                 throw new NotImplementedException();
             }
 
-            public override SubscriptionDataSource GetSource(SubscriptionDataConfig config, DateTime date, bool isLiveMode)
+            public override SubscriptionDataSource GetSource(
+                SubscriptionDataConfig config,
+                DateTime date,
+                bool isLiveMode
+            )
             {
                 throw new NotImplementedException();
             }

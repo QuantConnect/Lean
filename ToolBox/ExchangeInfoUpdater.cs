@@ -16,8 +16,8 @@
 using System;
 using System.IO;
 using System.Linq;
-using QuantConnect.Securities;
 using QuantConnect.Configuration;
+using QuantConnect.Securities;
 
 namespace QuantConnect.ToolBox
 {
@@ -41,7 +41,9 @@ namespace QuantConnect.ToolBox
             var directory = Path.Combine(Globals.DataFolder, "symbol-properties");
             var file = Path.Combine(directory, "symbol-properties-database.csv");
             var baseOutputDirectory = Config.Get("temp-output-directory", "/temp-output-directory");
-            var tempOutputDirectory = Directory.CreateDirectory(Path.Combine(baseOutputDirectory, "symbol-properties"));
+            var tempOutputDirectory = Directory.CreateDirectory(
+                Path.Combine(baseOutputDirectory, "symbol-properties")
+            );
             var tmp = Path.Combine(tempOutputDirectory.FullName, "symbol-properties-database.csv");
             if (File.Exists(tmp))
             {
@@ -84,21 +86,35 @@ namespace QuantConnect.ToolBox
         private void WriteData(StreamWriter writer)
         {
             var existingSymbolPropertiesDatabase = SymbolPropertiesDatabase.FromDataFolder();
-            var entryPerSymbol = _eidl.Get().ToDictionary(newLine => {
-                var splitted = newLine.Split(',');
-                return new SecurityDatabaseKey(splitted[0], splitted[1], (SecurityType)Enum.Parse(typeof(SecurityType), splitted[2], true));
-            });
+            var entryPerSymbol = _eidl
+                .Get()
+                .ToDictionary(newLine =>
+                {
+                    var splitted = newLine.Split(',');
+                    return new SecurityDatabaseKey(
+                        splitted[0],
+                        splitted[1],
+                        (SecurityType)Enum.Parse(typeof(SecurityType), splitted[2], true)
+                    );
+                });
 
-            foreach (var existingEntry in existingSymbolPropertiesDatabase.GetSymbolPropertiesList(_eidl.Market))
+            foreach (
+                var existingEntry in existingSymbolPropertiesDatabase.GetSymbolPropertiesList(
+                    _eidl.Market
+                )
+            )
             {
                 if (!entryPerSymbol.ContainsKey(existingEntry.Key))
                 {
                     // let's keep any existing which is no longer available, to take into account for delistings/removals
-                    entryPerSymbol[existingEntry.Key] = $"{existingEntry.Key.Market},{existingEntry.Key.Symbol},{existingEntry.Key.SecurityType.ToLower()},{existingEntry.Value}";
+                    entryPerSymbol[existingEntry.Key] =
+                        $"{existingEntry.Key.Market},{existingEntry.Key.Symbol},{existingEntry.Key.SecurityType.ToLower()},{existingEntry.Value}";
                 }
             }
 
-            foreach (var upd in entryPerSymbol.OrderBy(x => x.Key.SecurityType).ThenBy(x => x.Key.Symbol))
+            foreach (
+                var upd in entryPerSymbol.OrderBy(x => x.Key.SecurityType).ThenBy(x => x.Key.Symbol)
+            )
             {
                 writer.WriteLine(upd.Value);
             }

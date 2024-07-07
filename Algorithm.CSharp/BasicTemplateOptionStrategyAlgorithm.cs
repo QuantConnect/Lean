@@ -74,7 +74,14 @@ namespace QuantConnect.Algorithm.CSharp
 
                     if (atmStraddle != null)
                     {
-                        Sell(OptionStrategies.Straddle(_optionSymbol, atmStraddle.Strike, atmStraddle.Expiry), 2);
+                        Sell(
+                            OptionStrategies.Straddle(
+                                _optionSymbol,
+                                atmStraddle.Strike,
+                                atmStraddle.Expiry
+                            ),
+                            2
+                        );
                     }
                 }
             }
@@ -83,7 +90,7 @@ namespace QuantConnect.Algorithm.CSharp
                 Liquidate();
             }
 
-            foreach(var kpv in slice.Bars)
+            foreach (var kpv in slice.Bars)
             {
                 Log($"---> OnData: {Time}, {kpv.Key.Value}, {kpv.Value.Close:0.00}");
             }
@@ -127,35 +134,36 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// This is used by the regression test system to indicate what the expected statistics are from running the algorithm
         /// </summary>
-        public Dictionary<string, string> ExpectedStatistics => new Dictionary<string, string>
-        {
-            {"Total Orders", "420"},
-            {"Average Win", "0%"},
-            {"Average Loss", "0%"},
-            {"Compounding Annual Return", "0%"},
-            {"Drawdown", "0%"},
-            {"Expectancy", "0"},
-            {"Start Equity", "1000000"},
-            {"End Equity", "952636.6"},
-            {"Net Profit", "0%"},
-            {"Sharpe Ratio", "0"},
-            {"Sortino Ratio", "0"},
-            {"Probabilistic Sharpe Ratio", "0%"},
-            {"Loss Rate", "0%"},
-            {"Win Rate", "0%"},
-            {"Profit-Loss Ratio", "0"},
-            {"Alpha", "0"},
-            {"Beta", "0"},
-            {"Annual Standard Deviation", "0"},
-            {"Annual Variance", "0"},
-            {"Information Ratio", "0"},
-            {"Tracking Error", "0"},
-            {"Treynor Ratio", "0"},
-            {"Total Fees", "$543.40"},
-            {"Estimated Strategy Capacity", "$3000.00"},
-            {"Lowest Capacity Asset", "GOOCV W78ZFMEBBB2E|GOOCV VP83T1ZUHROL"},
-            {"Portfolio Turnover", "338.60%"},
-            {"OrderListHash", "301c15063f6e269023d144ca69a765da"}
-        };
+        public Dictionary<string, string> ExpectedStatistics =>
+            new Dictionary<string, string>
+            {
+                { "Total Orders", "420" },
+                { "Average Win", "0%" },
+                { "Average Loss", "0%" },
+                { "Compounding Annual Return", "0%" },
+                { "Drawdown", "0%" },
+                { "Expectancy", "0" },
+                { "Start Equity", "1000000" },
+                { "End Equity", "952636.6" },
+                { "Net Profit", "0%" },
+                { "Sharpe Ratio", "0" },
+                { "Sortino Ratio", "0" },
+                { "Probabilistic Sharpe Ratio", "0%" },
+                { "Loss Rate", "0%" },
+                { "Win Rate", "0%" },
+                { "Profit-Loss Ratio", "0" },
+                { "Alpha", "0" },
+                { "Beta", "0" },
+                { "Annual Standard Deviation", "0" },
+                { "Annual Variance", "0" },
+                { "Information Ratio", "0" },
+                { "Tracking Error", "0" },
+                { "Treynor Ratio", "0" },
+                { "Total Fees", "$543.40" },
+                { "Estimated Strategy Capacity", "$3000.00" },
+                { "Lowest Capacity Asset", "GOOCV W78ZFMEBBB2E|GOOCV VP83T1ZUHROL" },
+                { "Portfolio Turnover", "338.60%" },
+                { "OrderListHash", "301c15063f6e269023d144ca69a765da" }
+            };
     }
 }

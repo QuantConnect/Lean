@@ -19,8 +19,8 @@ using System.Collections.Generic;
 using System.Linq;
 using QuantConnect.Data;
 using QuantConnect.Data.Market;
-using QuantConnect.Orders;
 using QuantConnect.Interfaces;
+using QuantConnect.Orders;
 
 namespace QuantConnect.Algorithm.CSharp
 {
@@ -44,9 +44,11 @@ namespace QuantConnect.Algorithm.CSharp
             _optionSymbol = option.Symbol;
 
             // set our strike/expiry filter for this option chain
-            option.SetFilter(u => u.IncludeWeeklys()
-                       .Strikes(-2, +2)
-                       .Expiration(TimeSpan.Zero, TimeSpan.FromDays(365 * 2)));
+            option.SetFilter(u =>
+                u.IncludeWeeklys()
+                    .Strikes(-2, +2)
+                    .Expiration(TimeSpan.Zero, TimeSpan.FromDays(365 * 2))
+            );
 
             // use the underlying equity as the benchmark
             SetBenchmark("AAPL");
@@ -65,8 +67,8 @@ namespace QuantConnect.Algorithm.CSharp
                     OptionChain chain;
                     if (slice.OptionChains.TryGetValue(_optionSymbol, out chain))
                     {
-                        var contract =
-                            chain.OrderBy(x => x.Expiry)
+                        var contract = chain
+                            .OrderBy(x => x.Expiry)
                             .Where(x => x.Right == OptionRight.Call && x.Strike == 650)
                             .Skip(1)
                             .FirstOrDefault();
@@ -88,15 +90,22 @@ namespace QuantConnect.Algorithm.CSharp
 
             if (Portfolio.Invested)
             {
-                var holdings = Portfolio.Securities.Where(x => x.Value.Holdings.AbsoluteQuantity != 0).First().Value.Holdings.AbsoluteQuantity;
+                var holdings = Portfolio
+                    .Securities.Where(x => x.Value.Holdings.AbsoluteQuantity != 0)
+                    .First()
+                    .Value.Holdings.AbsoluteQuantity;
 
                 if (Time.Day == 6 && holdings != 1)
                 {
-                    throw new RegressionTestException($"Expected position quantity of 1 but was {holdings.ToStringInvariant()}");
+                    throw new RegressionTestException(
+                        $"Expected position quantity of 1 but was {holdings.ToStringInvariant()}"
+                    );
                 }
                 if (Time.Day == 9 && holdings != 7)
                 {
-                    throw new RegressionTestException($"Expected position quantity of 7 but was {holdings.ToStringInvariant()}");
+                    throw new RegressionTestException(
+                        $"Expected position quantity of 7 but was {holdings.ToStringInvariant()}"
+                    );
                 }
             }
         }
@@ -139,35 +148,36 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// This is used by the regression test system to indicate what the expected statistics are from running the algorithm
         /// </summary>
-        public Dictionary<string, string> ExpectedStatistics => new Dictionary<string, string>
-        {
-            {"Total Orders", "2"},
-            {"Average Win", "0%"},
-            {"Average Loss", "-0.02%"},
-            {"Compounding Annual Return", "-1.649%"},
-            {"Drawdown", "0.000%"},
-            {"Expectancy", "-1"},
-            {"Start Equity", "1000000"},
-            {"End Equity", "999833"},
-            {"Net Profit", "-0.017%"},
-            {"Sharpe Ratio", "0"},
-            {"Sortino Ratio", "0"},
-            {"Probabilistic Sharpe Ratio", "0%"},
-            {"Loss Rate", "100%"},
-            {"Win Rate", "0%"},
-            {"Profit-Loss Ratio", "0"},
-            {"Alpha", "0"},
-            {"Beta", "0"},
-            {"Annual Standard Deviation", "0"},
-            {"Annual Variance", "0"},
-            {"Information Ratio", "-19.236"},
-            {"Tracking Error", "0.147"},
-            {"Treynor Ratio", "0"},
-            {"Total Fees", "$2.00"},
-            {"Estimated Strategy Capacity", "$88000.00"},
-            {"Lowest Capacity Asset", "AAPL VRCWOCTRR37Q|AAPL R735QTJ8XC9X"},
-            {"Portfolio Turnover", "0.04%"},
-            {"OrderListHash", "75e0d3e5d72502421287925c55de3054"}
-        };
+        public Dictionary<string, string> ExpectedStatistics =>
+            new Dictionary<string, string>
+            {
+                { "Total Orders", "2" },
+                { "Average Win", "0%" },
+                { "Average Loss", "-0.02%" },
+                { "Compounding Annual Return", "-1.649%" },
+                { "Drawdown", "0.000%" },
+                { "Expectancy", "-1" },
+                { "Start Equity", "1000000" },
+                { "End Equity", "999833" },
+                { "Net Profit", "-0.017%" },
+                { "Sharpe Ratio", "0" },
+                { "Sortino Ratio", "0" },
+                { "Probabilistic Sharpe Ratio", "0%" },
+                { "Loss Rate", "100%" },
+                { "Win Rate", "0%" },
+                { "Profit-Loss Ratio", "0" },
+                { "Alpha", "0" },
+                { "Beta", "0" },
+                { "Annual Standard Deviation", "0" },
+                { "Annual Variance", "0" },
+                { "Information Ratio", "-19.236" },
+                { "Tracking Error", "0.147" },
+                { "Treynor Ratio", "0" },
+                { "Total Fees", "$2.00" },
+                { "Estimated Strategy Capacity", "$88000.00" },
+                { "Lowest Capacity Asset", "AAPL VRCWOCTRR37Q|AAPL R735QTJ8XC9X" },
+                { "Portfolio Turnover", "0.04%" },
+                { "OrderListHash", "75e0d3e5d72502421287925c55de3054" }
+            };
     }
 }

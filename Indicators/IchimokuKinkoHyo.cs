@@ -13,8 +13,8 @@
  * limitations under the License.
 */
 
-using QuantConnect.Data.Market;
 using System;
+using QuantConnect.Data.Market;
 
 namespace QuantConnect.Indicators
 {
@@ -111,8 +111,14 @@ namespace QuantConnect.Indicators
         /// <param name="senkouBPeriod">The Senkou B Span period</param>
         /// <param name="senkouADelayPeriod">The Senkou A Span delay</param>
         /// <param name="senkouBDelayPeriod">The Senkou B Span delay</param>
-        public IchimokuKinkoHyo(int tenkanPeriod = 9, int kijunPeriod = 26, int senkouAPeriod = 26,
-            int senkouBPeriod = 52, int senkouADelayPeriod = 26, int senkouBDelayPeriod = 26)
+        public IchimokuKinkoHyo(
+            int tenkanPeriod = 9,
+            int kijunPeriod = 26,
+            int senkouAPeriod = 26,
+            int senkouBPeriod = 52,
+            int senkouADelayPeriod = 26,
+            int senkouBDelayPeriod = 26
+        )
             : this(
                 $"ICHIMOKU({tenkanPeriod},{kijunPeriod},{senkouAPeriod},{senkouBPeriod},{senkouADelayPeriod},{senkouBDelayPeriod})",
                 tenkanPeriod,
@@ -121,9 +127,7 @@ namespace QuantConnect.Indicators
                 senkouBPeriod,
                 senkouADelayPeriod,
                 senkouBDelayPeriod
-            )
-        {
-        }
+            ) { }
 
         /// <summary>
         /// Creates a new IchimokuKinkoHyo indicator from the specific periods
@@ -135,10 +139,21 @@ namespace QuantConnect.Indicators
         /// <param name="senkouBPeriod">The Senkou B Span period</param>
         /// <param name="senkouADelayPeriod">The Senkou A Span delay</param>
         /// <param name="senkouBDelayPeriod">The Senkou B Span delay</param>
-        public IchimokuKinkoHyo(string name, int tenkanPeriod = 9, int kijunPeriod = 26, int senkouAPeriod = 26, int senkouBPeriod = 52, int senkouADelayPeriod = 26, int senkouBDelayPeriod = 26)
+        public IchimokuKinkoHyo(
+            string name,
+            int tenkanPeriod = 9,
+            int kijunPeriod = 26,
+            int senkouAPeriod = 26,
+            int senkouBPeriod = 52,
+            int senkouADelayPeriod = 26,
+            int senkouBDelayPeriod = 26
+        )
             : base(name)
         {
-            WarmUpPeriod = Math.Max(tenkanPeriod + senkouADelayPeriod, kijunPeriod + senkouADelayPeriod);
+            WarmUpPeriod = Math.Max(
+                tenkanPeriod + senkouADelayPeriod,
+                kijunPeriod + senkouADelayPeriod
+            );
             WarmUpPeriod = Math.Max(WarmUpPeriod, senkouBPeriod + senkouBDelayPeriod);
 
             TenkanMaximum = new Maximum(name + "_TenkanMax", tenkanPeriod);
@@ -155,49 +170,70 @@ namespace QuantConnect.Indicators
 
             SenkouA = new FunctionalIndicator<IndicatorDataPoint>(
                 name + "_SenkouA",
-                input => SenkouA.IsReady ? (DelayedTenkanSenkouA.Current.Value + DelayedKijunSenkouA.Current.Value) / 2 : decimal.Zero,
+                input =>
+                    SenkouA.IsReady
+                        ? (DelayedTenkanSenkouA.Current.Value + DelayedKijunSenkouA.Current.Value)
+                            / 2
+                        : decimal.Zero,
                 senkouA => DelayedTenkanSenkouA.IsReady && DelayedKijunSenkouA.IsReady,
                 () =>
                 {
                     Tenkan.Reset();
                     Kijun.Reset();
-                });
+                }
+            );
 
             SenkouB = new FunctionalIndicator<IndicatorDataPoint>(
                 name + "_SenkouB",
-                input => SenkouB.IsReady ? (DelayedMaximumSenkouB.Current.Value + DelayedMinimumSenkouB.Current.Value) / 2 : decimal.Zero,
+                input =>
+                    SenkouB.IsReady
+                        ? (
+                            DelayedMaximumSenkouB.Current.Value
+                            + DelayedMinimumSenkouB.Current.Value
+                        ) / 2
+                        : decimal.Zero,
                 senkouA => DelayedMaximumSenkouB.IsReady && DelayedMinimumSenkouB.IsReady,
                 () =>
                 {
                     Tenkan.Reset();
                     Kijun.Reset();
-                });
+                }
+            );
 
             Tenkan = new FunctionalIndicator<IndicatorDataPoint>(
                 name + "_Tenkan",
-                input => Tenkan.IsReady ? (TenkanMaximum.Current.Value + TenkanMinimum.Current.Value) / 2 : decimal.Zero,
+                input =>
+                    Tenkan.IsReady
+                        ? (TenkanMaximum.Current.Value + TenkanMinimum.Current.Value) / 2
+                        : decimal.Zero,
                 tenkan => TenkanMaximum.IsReady && TenkanMinimum.IsReady,
                 () =>
                 {
                     TenkanMaximum.Reset();
                     TenkanMinimum.Reset();
-                });
+                }
+            );
 
             Kijun = new FunctionalIndicator<IndicatorDataPoint>(
                 name + "_Kijun",
-                input => Kijun.IsReady ? (KijunMaximum.Current.Value + KijunMinimum.Current.Value) / 2 : decimal.Zero,
+                input =>
+                    Kijun.IsReady
+                        ? (KijunMaximum.Current.Value + KijunMinimum.Current.Value) / 2
+                        : decimal.Zero,
                 kijun => KijunMaximum.IsReady && KijunMinimum.IsReady,
                 () =>
                 {
                     KijunMaximum.Reset();
                     KijunMinimum.Reset();
-                });
+                }
+            );
         }
 
         /// <summary>
         /// Returns true if all of the sub-components of the Ichimoku indicator is ready
         /// </summary>
-        public override bool IsReady => Tenkan.IsReady && Kijun.IsReady && SenkouA.IsReady && SenkouB.IsReady;
+        public override bool IsReady =>
+            Tenkan.IsReady && Kijun.IsReady && SenkouA.IsReady && SenkouB.IsReady;
 
         /// <summary>
         /// Required period, in data points, for the indicator to be ready and fully initialized.
@@ -213,20 +249,24 @@ namespace QuantConnect.Indicators
             TenkanMaximum.Update(input.Time, input.High);
             TenkanMinimum.Update(input.Time, input.Low);
             Tenkan.Update(input.Time, input.Close);
-            if (Tenkan.IsReady) DelayedTenkanSenkouA.Update(input.Time, Tenkan.Current.Value);
+            if (Tenkan.IsReady)
+                DelayedTenkanSenkouA.Update(input.Time, Tenkan.Current.Value);
 
             KijunMaximum.Update(input.Time, input.High);
             KijunMinimum.Update(input.Time, input.Low);
             Kijun.Update(input.Time, input.Close);
-            if (Kijun.IsReady) DelayedKijunSenkouA.Update(input.Time, Kijun.Current.Value);
+            if (Kijun.IsReady)
+                DelayedKijunSenkouA.Update(input.Time, Kijun.Current.Value);
 
             SenkouA.Update(input.Time, input.Close);
 
             SenkouB.Update(input.Time, input.Close);
             SenkouBMaximum.Update(input.Time, input.High);
-            if (SenkouBMaximum.IsReady) DelayedMaximumSenkouB.Update(input.Time, SenkouBMaximum.Current.Value);
+            if (SenkouBMaximum.IsReady)
+                DelayedMaximumSenkouB.Update(input.Time, SenkouBMaximum.Current.Value);
             SenkouBMinimum.Update(input.Time, input.Low);
-            if (SenkouBMinimum.IsReady) DelayedMinimumSenkouB.Update(input.Time, SenkouBMinimum.Current.Value);
+            if (SenkouBMinimum.IsReady)
+                DelayedMinimumSenkouB.Update(input.Time, SenkouBMinimum.Current.Value);
 
             Chikou.Update(input.Time, input.Close);
 

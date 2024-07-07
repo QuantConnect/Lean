@@ -14,8 +14,8 @@
 */
 
 using System;
-using System.Linq;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace QuantConnect.Securities.Positions
 {
@@ -38,9 +38,7 @@ namespace QuantConnect.Securities.Positions
         /// </summary>
         /// <param name="resolvers">The position group resolvers to be invoked in order</param>
         public CompositePositionGroupResolver(params IPositionGroupResolver[] resolvers)
-            : this((IEnumerable<IPositionGroupResolver>)resolvers)
-        {
-        }
+            : this((IEnumerable<IPositionGroupResolver>)resolvers) { }
 
         /// <summary>
         /// Initializes a new instance of the <see cref="CompositePositionGroupResolver"/> class
@@ -116,7 +114,11 @@ namespace QuantConnect.Securities.Positions
         /// <param name="currentPositions">The currently grouped positions</param>
         /// <param name="group">The grouped positions when this resolver is able to, otherwise null</param>
         /// <returns>True if this resolver can group the specified positions, otherwise false</returns>
-        public bool TryGroup(IReadOnlyCollection<IPosition> newPositions, PositionGroupCollection currentPositions, out IPositionGroup group)
+        public bool TryGroup(
+            IReadOnlyCollection<IPosition> newPositions,
+            PositionGroupCollection currentPositions,
+            out IPositionGroup group
+        )
         {
             foreach (var resolver in _resolvers)
             {
@@ -141,7 +143,10 @@ namespace QuantConnect.Securities.Positions
         /// <param name="groups">The existing position groups</param>
         /// <param name="positions">The positions being changed</param>
         /// <returns>An enumerable containing the position groups that could be impacted by the specified position changes</returns>
-        public IEnumerable<IPositionGroup> GetImpactedGroups(PositionGroupCollection groups, IReadOnlyCollection<IPosition> positions)
+        public IEnumerable<IPositionGroup> GetImpactedGroups(
+            PositionGroupCollection groups,
+            IReadOnlyCollection<IPosition> positions
+        )
         {
             // we keep track of yielded groups for all resolvers
             var seen = new HashSet<PositionGroupKey>();

@@ -14,9 +14,9 @@
  *
 */
 
-using QuantConnect.Packets;
 using QuantConnect.Interfaces;
 using QuantConnect.Lean.Engine.TransactionHandlers;
+using QuantConnect.Packets;
 
 namespace QuantConnect.Lean.Engine.Results
 {
@@ -53,7 +53,13 @@ namespace QuantConnect.Lean.Engine.Results
         /// <summary>
         /// Creates a new instance
         /// </summary>
-        public ResultHandlerInitializeParameters(AlgorithmNodePacket job, IMessagingHandler messagingHandler, IApi api, ITransactionHandler transactionHandler, IMapFileProvider mapFileProvider)
+        public ResultHandlerInitializeParameters(
+            AlgorithmNodePacket job,
+            IMessagingHandler messagingHandler,
+            IApi api,
+            ITransactionHandler transactionHandler,
+            IMapFileProvider mapFileProvider
+        )
         {
             Job = job;
             Api = api;

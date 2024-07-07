@@ -1,4 +1,3 @@
-
 /*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
@@ -15,11 +14,11 @@
 */
 
 using System;
+using System.Collections.Generic;
+using System.Linq;
 using MathNet.Numerics.Statistics;
 using QuantConnect.Data;
 using QuantConnect.Indicators;
-using System.Collections.Generic;
-using System.Linq;
 using QuantConnect.Securities.Volatility;
 using QuantConnect.Util;
 
@@ -73,11 +72,13 @@ namespace QuantConnect.Securities
         /// </summary>
         /// <param name="periodSpan">The time span representing one 'period' length</param>
         /// <param name="periods">The number of 'period' lengths to wait until updating the value</param>
-        public RelativeStandardDeviationVolatilityModel(
-            TimeSpan periodSpan,
-            int periods)
+        public RelativeStandardDeviationVolatilityModel(TimeSpan periodSpan, int periods)
         {
-            if (periods < 2) throw new ArgumentOutOfRangeException(nameof(periods), "'periods' must be greater than or equal to 2.");
+            if (periods < 2)
+                throw new ArgumentOutOfRangeException(
+                    nameof(periods),
+                    "'periods' must be greater than or equal to 2."
+                );
             _periodSpan = periodSpan;
             _window = new RollingWindow<double>(periods);
             _lastUpdate = GetLastUpdateInitialValue(periodSpan, periods);
@@ -109,13 +110,16 @@ namespace QuantConnect.Securities
         /// <param name="security">The security of the request</param>
         /// <param name="utcTime">The date/time of the request</param>
         /// <returns>History request object list, or empty if no requirements</returns>
-        public override IEnumerable<HistoryRequest> GetHistoryRequirements(Security security, DateTime utcTime)
+        public override IEnumerable<HistoryRequest> GetHistoryRequirements(
+            Security security,
+            DateTime utcTime
+        )
         {
             if (SubscriptionDataConfigProvider == null)
             {
                 throw new InvalidOperationException(
-                    "RelativeStandardDeviationVolatilityModel.GetHistoryRequirements(): " +
-                    "SubscriptionDataConfigProvider was not set."
+                    "RelativeStandardDeviationVolatilityModel.GetHistoryRequirements(): "
+                        + "SubscriptionDataConfigProvider was not set."
                 );
             }
 
@@ -131,7 +135,8 @@ namespace QuantConnect.Securities
                 security,
                 utcTime,
                 configurations.GetHighestResolution(),
-                _window.Size + 1);
+                _window.Size + 1
+            );
         }
 
         /// <summary>
@@ -147,7 +152,8 @@ namespace QuantConnect.Securities
 
         private static DateTime GetLastUpdateInitialValue(TimeSpan periodSpan, int periods)
         {
-            return DateTime.MinValue + TimeSpan.FromMilliseconds(periodSpan.TotalMilliseconds * periods);
+            return DateTime.MinValue
+                + TimeSpan.FromMilliseconds(periodSpan.TotalMilliseconds * periods);
         }
     }
 }

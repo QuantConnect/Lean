@@ -15,7 +15,6 @@
 
 using System;
 using System.Collections.Generic;
-
 using QuantConnect.Interfaces;
 using QuantConnect.Util;
 
@@ -24,7 +23,9 @@ namespace QuantConnect.Algorithm.CSharp
     /// <summary>
     /// Algorithm illustrating how to get a security's industry-standard identifier from its <see cref="Symbol"/>
     /// </summary>
-    public class IndustryStandardSecurityIdentifiersRegressionAlgorithm : QCAlgorithm, IRegressionAlgorithmDefinition
+    public class IndustryStandardSecurityIdentifiersRegressionAlgorithm
+        : QCAlgorithm,
+            IRegressionAlgorithmDefinition
     {
         public override void Initialize()
         {
@@ -52,27 +53,37 @@ namespace QuantConnect.Algorithm.CSharp
             CheckAPIsSymbolRepresentations(isin, ISIN(equity), "ISIN");
             CheckAPIsSymbolRepresentations($"{cik}", $"{CIK(equity)}", "CIK");
 
-            Log($"\nAAPL CUSIP: {cusip}" +
-                $"\nAAPL Composite FIGI: {compositeFigi}" +
-                $"\nAAPL SEDOL: {sedol}" +
-                $"\nAAPL ISIN: {isin}" +
-                $"\nAAPL CIK: {cik}");
+            Log(
+                $"\nAAPL CUSIP: {cusip}"
+                    + $"\nAAPL Composite FIGI: {compositeFigi}"
+                    + $"\nAAPL SEDOL: {sedol}"
+                    + $"\nAAPL ISIN: {isin}"
+                    + $"\nAAPL CIK: {cik}"
+            );
         }
 
         private static void CheckSymbolRepresentation(string symbol, string standard)
         {
             if (symbol.IsNullOrEmpty())
             {
-                throw new RegressionTestException($"{standard} symbol representation is null or empty");
+                throw new RegressionTestException(
+                    $"{standard} symbol representation is null or empty"
+                );
             }
         }
 
-        private static void CheckAPIsSymbolRepresentations(string symbolApiSymbol, string algorithmApiSymbol, string standard)
+        private static void CheckAPIsSymbolRepresentations(
+            string symbolApiSymbol,
+            string algorithmApiSymbol,
+            string standard
+        )
         {
             if (symbolApiSymbol != algorithmApiSymbol)
             {
-                throw new RegressionTestException($@"Symbol API {standard} symbol representation ({symbolApiSymbol}) does not match QCAlgorithm API {
-                    standard} symbol representation ({algorithmApiSymbol})");
+                throw new RegressionTestException(
+                    $@"Symbol API {standard} symbol representation ({symbolApiSymbol}) does not match QCAlgorithm API {
+                    standard} symbol representation ({algorithmApiSymbol})"
+                );
             }
         }
 
@@ -104,35 +115,36 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// This is used by the regression test system to indicate what the expected statistics are from running the algorithm
         /// </summary>
-        public Dictionary<string, string> ExpectedStatistics => new Dictionary<string, string>
-        {
-            {"Total Orders", "0"},
-            {"Average Win", "0%"},
-            {"Average Loss", "0%"},
-            {"Compounding Annual Return", "0%"},
-            {"Drawdown", "0%"},
-            {"Expectancy", "0"},
-            {"Start Equity", "100000"},
-            {"End Equity", "100000"},
-            {"Net Profit", "0%"},
-            {"Sharpe Ratio", "0"},
-            {"Sortino Ratio", "0"},
-            {"Probabilistic Sharpe Ratio", "0%"},
-            {"Loss Rate", "0%"},
-            {"Win Rate", "0%"},
-            {"Profit-Loss Ratio", "0"},
-            {"Alpha", "0"},
-            {"Beta", "0"},
-            {"Annual Standard Deviation", "0"},
-            {"Annual Variance", "0"},
-            {"Information Ratio", "0"},
-            {"Tracking Error", "0"},
-            {"Treynor Ratio", "0"},
-            {"Total Fees", "$0.00"},
-            {"Estimated Strategy Capacity", "$0"},
-            {"Lowest Capacity Asset", ""},
-            {"Portfolio Turnover", "0%"},
-            {"OrderListHash", "d41d8cd98f00b204e9800998ecf8427e"}
-        };
+        public Dictionary<string, string> ExpectedStatistics =>
+            new Dictionary<string, string>
+            {
+                { "Total Orders", "0" },
+                { "Average Win", "0%" },
+                { "Average Loss", "0%" },
+                { "Compounding Annual Return", "0%" },
+                { "Drawdown", "0%" },
+                { "Expectancy", "0" },
+                { "Start Equity", "100000" },
+                { "End Equity", "100000" },
+                { "Net Profit", "0%" },
+                { "Sharpe Ratio", "0" },
+                { "Sortino Ratio", "0" },
+                { "Probabilistic Sharpe Ratio", "0%" },
+                { "Loss Rate", "0%" },
+                { "Win Rate", "0%" },
+                { "Profit-Loss Ratio", "0" },
+                { "Alpha", "0" },
+                { "Beta", "0" },
+                { "Annual Standard Deviation", "0" },
+                { "Annual Variance", "0" },
+                { "Information Ratio", "0" },
+                { "Tracking Error", "0" },
+                { "Treynor Ratio", "0" },
+                { "Total Fees", "$0.00" },
+                { "Estimated Strategy Capacity", "$0" },
+                { "Lowest Capacity Asset", "" },
+                { "Portfolio Turnover", "0%" },
+                { "OrderListHash", "d41d8cd98f00b204e9800998ecf8427e" }
+            };
     }
 }

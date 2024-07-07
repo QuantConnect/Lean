@@ -28,24 +28,30 @@ namespace QuantConnect.Tests.Common.Data.UniverseSelection
         [Test]
         public void WillNotFilterCustomSecuritiesByDefault()
         {
-            var security = new Security(Symbols.SPY,
+            var security = new Security(
+                Symbols.SPY,
                 SecurityExchangeHours.AlwaysOpen(TimeZones.Utc),
                 new Cash(Currencies.USD, 0, 0),
                 SymbolProperties.GetDefault(Currencies.USD),
                 new IdentityCurrencyConverter(Currencies.USD),
                 RegisteredSecurityDataTypesProvider.Null,
-                new SecurityCache());
+                new SecurityCache()
+            );
 
-            var customSecurity = new Security(Symbol.CreateBase(typeof(TradeBar), Symbols.SPY, QuantConnect.Market.USA),
+            var customSecurity = new Security(
+                Symbol.CreateBase(typeof(TradeBar), Symbols.SPY, QuantConnect.Market.USA),
                 SecurityExchangeHours.AlwaysOpen(TimeZones.Utc),
                 new Cash(Currencies.USD, 0, 0),
                 SymbolProperties.GetDefault(Currencies.USD),
                 new IdentityCurrencyConverter(Currencies.USD),
                 RegisteredSecurityDataTypesProvider.Null,
-                new SecurityCache());
+                new SecurityCache()
+            );
 
-            var changes = CreateNonInternal(new List<Security> { security, customSecurity },
-                new List<Security> { security, customSecurity });
+            var changes = CreateNonInternal(
+                new List<Security> { security, customSecurity },
+                new List<Security> { security, customSecurity }
+            );
 
             Assert.IsTrue(changes.AddedSecurities.Contains(customSecurity));
             Assert.IsTrue(changes.AddedSecurities.Contains(security));
@@ -57,24 +63,30 @@ namespace QuantConnect.Tests.Common.Data.UniverseSelection
         [Test]
         public void FilterCustomSecuritiesIfDesired()
         {
-            var security = new Security(Symbols.SPY,
+            var security = new Security(
+                Symbols.SPY,
                 SecurityExchangeHours.AlwaysOpen(TimeZones.Utc),
                 new Cash(Currencies.USD, 0, 0),
                 SymbolProperties.GetDefault(Currencies.USD),
                 new IdentityCurrencyConverter(Currencies.USD),
                 RegisteredSecurityDataTypesProvider.Null,
-                new SecurityCache());
+                new SecurityCache()
+            );
 
-            var customSecurity = new Security(Symbol.CreateBase(typeof(TradeBar), Symbols.SPY, QuantConnect.Market.USA),
+            var customSecurity = new Security(
+                Symbol.CreateBase(typeof(TradeBar), Symbols.SPY, QuantConnect.Market.USA),
                 SecurityExchangeHours.AlwaysOpen(TimeZones.Utc),
                 new Cash(Currencies.USD, 0, 0),
                 SymbolProperties.GetDefault(Currencies.USD),
                 new IdentityCurrencyConverter(Currencies.USD),
                 RegisteredSecurityDataTypesProvider.Null,
-                new SecurityCache());
+                new SecurityCache()
+            );
 
-            var changes = CreateNonInternal(new List<Security> { security, customSecurity },
-                new List<Security> { security, customSecurity });
+            var changes = CreateNonInternal(
+                new List<Security> { security, customSecurity },
+                new List<Security> { security, customSecurity }
+            );
 
             changes.FilterCustomSecurities = true;
             foreach (var addedSecurity in changes.AddedSecurities)
@@ -96,7 +108,8 @@ namespace QuantConnect.Tests.Common.Data.UniverseSelection
         /// <returns>A new security changes instance with the specified securities marked as added</returns>
         public static SecurityChanges AddedNonInternal(params Security[] securities)
         {
-            if (securities == null || securities.Length == 0) return SecurityChanges.None;
+            if (securities == null || securities.Length == 0)
+                return SecurityChanges.None;
             return CreateNonInternal(securities, Enumerable.Empty<Security>());
         }
 
@@ -108,7 +121,8 @@ namespace QuantConnect.Tests.Common.Data.UniverseSelection
         /// <returns>A new security changes instance with the specified securities marked as removed</returns>
         public static SecurityChanges RemovedNonInternal(params Security[] securities)
         {
-            if (securities == null || securities.Length == 0) return SecurityChanges.None;
+            if (securities == null || securities.Length == 0)
+                return SecurityChanges.None;
             return CreateNonInternal(Enumerable.Empty<Security>(), securities);
         }
 
@@ -118,9 +132,17 @@ namespace QuantConnect.Tests.Common.Data.UniverseSelection
         /// <param name="addedSecurities">Added symbols list</param>
         /// <param name="removedSecurities">Removed symbols list</param>
         /// <remarks>Useful for testing</remarks>
-        public static SecurityChanges CreateNonInternal(IEnumerable<Security> addedSecurities, IEnumerable<Security> removedSecurities)
+        public static SecurityChanges CreateNonInternal(
+            IEnumerable<Security> addedSecurities,
+            IEnumerable<Security> removedSecurities
+        )
         {
-            return SecurityChanges.Create(addedSecurities.ToList(), removedSecurities.ToList(), new List<Security>(), new List<Security>());
+            return SecurityChanges.Create(
+                addedSecurities.ToList(),
+                removedSecurities.ToList(),
+                new List<Security>(),
+                new List<Security>()
+            );
         }
     }
 }

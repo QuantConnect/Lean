@@ -13,6 +13,7 @@
  * limitations under the License.
 */
 
+using System;
 using NUnit.Framework;
 using QuantConnect.Brokerages;
 using QuantConnect.Data;
@@ -20,18 +21,16 @@ using QuantConnect.Data.Market;
 using QuantConnect.Orders;
 using QuantConnect.Orders.Fees;
 using QuantConnect.Securities;
-using System;
-using QuantConnect.Tests.Brokerages;
 using QuantConnect.Securities.Crypto;
+using QuantConnect.Tests.Brokerages;
 
 namespace QuantConnect.Tests.Common.Orders.Fees
 {
     [TestFixture]
     public class BybitFeeModelTests
     {
-        protected IFeeModel FeeModel => new BybitFeeModel(); 
-        
-        
+        protected IFeeModel FeeModel => new BybitFeeModel();
+
         [Test]
         public static void GetFeeModelTest()
         {
@@ -43,7 +42,7 @@ namespace QuantConnect.Tests.Common.Orders.Fees
         [TestCaseSource(nameof(MakerOrders))]
         public void ReturnShortOrderMakerFees(OrderTestParameters parameters)
         {
-           var feeModel = FeeModel;
+            var feeModel = FeeModel;
 
             var order = parameters.CreateShortOrder(Quantity);
             var price = order.Type == OrderType.Limit ? ((LimitOrder)order).LimitPrice : LowPrice;
@@ -51,7 +50,8 @@ namespace QuantConnect.Tests.Common.Orders.Fees
 
             Assert.AreEqual(
                 BybitFeeModel.MakerNonVIPFee * price * Math.Abs(Quantity),
-                fee.Value.Amount);
+                fee.Value.Amount
+            );
             Assert.AreEqual("USDT", fee.Value.Currency);
         }
 
@@ -67,7 +67,8 @@ namespace QuantConnect.Tests.Common.Orders.Fees
 
             Assert.AreEqual(
                 BybitFeeModel.TakerNonVIPFee * price * Math.Abs(Quantity),
-                fee.Value.Amount);
+                fee.Value.Amount
+            );
             Assert.AreEqual("USDT", fee.Value.Currency);
         }
 
@@ -80,9 +81,7 @@ namespace QuantConnect.Tests.Common.Orders.Fees
             var order = parameters.CreateLongOrder(Quantity);
             var fee = feeModel.GetOrderFee(new OrderFeeParameters(Security, order));
 
-            Assert.AreEqual(
-                BybitFeeModel.MakerNonVIPFee * Math.Abs(Quantity),
-                fee.Value.Amount);
+            Assert.AreEqual(BybitFeeModel.MakerNonVIPFee * Math.Abs(Quantity), fee.Value.Amount);
             Assert.AreEqual("ETH", fee.Value.Currency);
         }
 
@@ -95,15 +94,17 @@ namespace QuantConnect.Tests.Common.Orders.Fees
             var order = parameters.CreateLongOrder(Quantity);
             var fee = feeModel.GetOrderFee(new OrderFeeParameters(Security, order));
 
-            Assert.AreEqual(
-                BybitFeeModel.TakerNonVIPFee * Math.Abs(Quantity),
-                fee.Value.Amount);
+            Assert.AreEqual(BybitFeeModel.TakerNonVIPFee * Math.Abs(Quantity), fee.Value.Amount);
             Assert.AreEqual("ETH", fee.Value.Currency);
         }
 
         [Test]
         [TestCaseSource(nameof(CustomMakerOrders))]
-        public void ReturnShortOrderCustomMakerFees(decimal mFee, decimal tFee, OrderTestParameters parameters)
+        public void ReturnShortOrderCustomMakerFees(
+            decimal mFee,
+            decimal tFee,
+            OrderTestParameters parameters
+        )
         {
             IFeeModel feeModel = new BybitFeeModel(mFee, tFee);
 
@@ -111,15 +112,17 @@ namespace QuantConnect.Tests.Common.Orders.Fees
             var price = order.Type == OrderType.Limit ? ((LimitOrder)order).LimitPrice : LowPrice;
             var fee = feeModel.GetOrderFee(new OrderFeeParameters(Security, order));
 
-            Assert.AreEqual(
-                mFee * price * Math.Abs(Quantity),
-                fee.Value.Amount);
+            Assert.AreEqual(mFee * price * Math.Abs(Quantity), fee.Value.Amount);
             Assert.AreEqual("USDT", fee.Value.Currency);
         }
 
         [Test]
         [TestCaseSource(nameof(CustomTakerOrders))]
-        public void ReturnShortOrderCustomTakerFees(decimal mFee, decimal tFee, OrderTestParameters parameters)
+        public void ReturnShortOrderCustomTakerFees(
+            decimal mFee,
+            decimal tFee,
+            OrderTestParameters parameters
+        )
         {
             IFeeModel feeModel = new BybitFeeModel(mFee, tFee);
 
@@ -127,39 +130,41 @@ namespace QuantConnect.Tests.Common.Orders.Fees
             var price = order.Type == OrderType.Limit ? ((LimitOrder)order).LimitPrice : LowPrice;
             var fee = feeModel.GetOrderFee(new OrderFeeParameters(Security, order));
 
-            Assert.AreEqual(
-                tFee * price * Math.Abs(Quantity),
-                fee.Value.Amount);
+            Assert.AreEqual(tFee * price * Math.Abs(Quantity), fee.Value.Amount);
             Assert.AreEqual("USDT", fee.Value.Currency);
         }
 
         [Test]
         [TestCaseSource(nameof(CustomMakerOrders))]
-        public void ReturnLongOrderCustomMakerFees(decimal mFee, decimal tFee, OrderTestParameters parameters)
+        public void ReturnLongOrderCustomMakerFees(
+            decimal mFee,
+            decimal tFee,
+            OrderTestParameters parameters
+        )
         {
             IFeeModel feeModel = new BybitFeeModel(mFee, tFee);
 
             var order = parameters.CreateLongOrder(Quantity);
             var fee = feeModel.GetOrderFee(new OrderFeeParameters(Security, order));
 
-            Assert.AreEqual(
-                mFee * Math.Abs(Quantity),
-                fee.Value.Amount);
+            Assert.AreEqual(mFee * Math.Abs(Quantity), fee.Value.Amount);
             Assert.AreEqual("ETH", fee.Value.Currency);
         }
 
         [Test]
         [TestCaseSource(nameof(CustomTakerOrders))]
-        public void ReturnLongOrderCustomTakerFees(decimal mFee, decimal tFee, OrderTestParameters parameters)
+        public void ReturnLongOrderCustomTakerFees(
+            decimal mFee,
+            decimal tFee,
+            OrderTestParameters parameters
+        )
         {
             IFeeModel feeModel = new BybitFeeModel(mFee, tFee);
 
             var order = parameters.CreateLongOrder(Quantity);
             var fee = feeModel.GetOrderFee(new OrderFeeParameters(Security, order));
 
-            Assert.AreEqual(
-                tFee * Math.Abs(Quantity),
-                fee.Value.Amount);
+            Assert.AreEqual(tFee * Math.Abs(Quantity), fee.Value.Amount);
             Assert.AreEqual("ETH", fee.Value.Currency);
         }
 
@@ -175,7 +180,16 @@ namespace QuantConnect.Tests.Common.Orders.Fees
                 SecurityExchangeHours.AlwaysOpen(tz),
                 new Cash("USD", 0, 10),
                 new Cash("USDC", 0, 0),
-                new SubscriptionDataConfig(typeof(TradeBar), Symbol.Create("USDCUSD", SecurityType.Crypto, Market.Binance), Resolution.Minute, tz, tz, true, false, false),
+                new SubscriptionDataConfig(
+                    typeof(TradeBar),
+                    Symbol.Create("USDCUSD", SecurityType.Crypto, Market.Binance),
+                    Resolution.Minute,
+                    tz,
+                    tz,
+                    true,
+                    false,
+                    false
+                ),
                 new SymbolProperties("USDCUSD", "USD", 1, 0.01m, 0.00000001m, string.Empty),
                 ErrorCurrencyConverter.Instance,
                 RegisteredSecurityDataTypesProvider.Null
@@ -184,17 +198,11 @@ namespace QuantConnect.Tests.Common.Orders.Fees
 
             var time = new DateTime(2019, 2, 1);
             var stableCoinFee = feeModel.GetOrderFee(
-                new OrderFeeParameters(
-                    usdcusd,
-                    new MarketOrder(usdcusd.Symbol, 1, time)
-                )
+                new OrderFeeParameters(usdcusd, new MarketOrder(usdcusd.Symbol, 1, time))
             );
 
             var normalPairFee = feeModel.GetOrderFee(
-                new OrderFeeParameters(
-                    Security,
-                    new MarketOrder(Security.Symbol, 1, time)
-                )
+                new OrderFeeParameters(Security, new MarketOrder(Security.Symbol, 1, time))
             );
 
             Assert.AreEqual(normalPairFee.Value.Amount, stableCoinFee.Value.Amount);
@@ -230,43 +238,150 @@ namespace QuantConnect.Tests.Common.Orders.Fees
             }
         }
 
-        private static OrderSubmissionData OrderSubmissionData => new(Security.BidPrice, Security.AskPrice, (Security.BidPrice + Security.AskPrice) / 2);
+        private static OrderSubmissionData OrderSubmissionData =>
+            new(Security.BidPrice, Security.AskPrice, (Security.BidPrice + Security.AskPrice) / 2);
 
         private static decimal HighPrice => 1000m;
         private static decimal LowPrice => 100m;
 
         private static decimal Quantity => 1m;
 
-        private static TestCaseData[] MakerOrders => new[]
-        {
-            new TestCaseData(new LimitOrderTestParameters(Symbol, HighPrice, LowPrice)),
-            new TestCaseData(new LimitOrderTestParameters(Symbol, HighPrice, LowPrice, null, OrderSubmissionData)),
-            new TestCaseData(new LimitOrderTestParameters(Symbol, HighPrice, LowPrice, new BybitOrderProperties())),
-            new TestCaseData(new LimitOrderTestParameters(Symbol, LowPrice, HighPrice, new BybitOrderProperties() { PostOnly = true }, OrderSubmissionData)),
-            new TestCaseData(new LimitOrderTestParameters(Symbol, HighPrice, LowPrice, new BybitOrderProperties() { PostOnly = true }))
-        };
+        private static TestCaseData[] MakerOrders =>
+            new[]
+            {
+                new TestCaseData(new LimitOrderTestParameters(Symbol, HighPrice, LowPrice)),
+                new TestCaseData(
+                    new LimitOrderTestParameters(
+                        Symbol,
+                        HighPrice,
+                        LowPrice,
+                        null,
+                        OrderSubmissionData
+                    )
+                ),
+                new TestCaseData(
+                    new LimitOrderTestParameters(
+                        Symbol,
+                        HighPrice,
+                        LowPrice,
+                        new BybitOrderProperties()
+                    )
+                ),
+                new TestCaseData(
+                    new LimitOrderTestParameters(
+                        Symbol,
+                        LowPrice,
+                        HighPrice,
+                        new BybitOrderProperties() { PostOnly = true },
+                        OrderSubmissionData
+                    )
+                ),
+                new TestCaseData(
+                    new LimitOrderTestParameters(
+                        Symbol,
+                        HighPrice,
+                        LowPrice,
+                        new BybitOrderProperties() { PostOnly = true }
+                    )
+                )
+            };
 
-        private static TestCaseData[] TakerOrders => new[]
-        {
-            new TestCaseData(new MarketOrderTestParameters(Symbol)),
-            new TestCaseData(new MarketOrderTestParameters(Symbol, new BybitOrderProperties() { PostOnly = true })),
-            new TestCaseData(new LimitOrderTestParameters(Symbol, LowPrice, HighPrice, null, OrderSubmissionData))
-        };
+        private static TestCaseData[] TakerOrders =>
+            new[]
+            {
+                new TestCaseData(new MarketOrderTestParameters(Symbol)),
+                new TestCaseData(
+                    new MarketOrderTestParameters(
+                        Symbol,
+                        new BybitOrderProperties() { PostOnly = true }
+                    )
+                ),
+                new TestCaseData(
+                    new LimitOrderTestParameters(
+                        Symbol,
+                        LowPrice,
+                        HighPrice,
+                        null,
+                        OrderSubmissionData
+                    )
+                )
+            };
 
-        private static TestCaseData[] CustomMakerOrders => new[]
-        {
-            new TestCaseData(0.001m, 0.001m, new LimitOrderTestParameters(Symbol, HighPrice, LowPrice)),
-            new TestCaseData(0.0009m, 0.001m, new LimitOrderTestParameters(Symbol, HighPrice, LowPrice, null, OrderSubmissionData)),
-            new TestCaseData(0.0008m, 0.001m, new LimitOrderTestParameters(Symbol, HighPrice, LowPrice, new BybitOrderProperties())),
-            new TestCaseData(0.0007m, 0.0009m, new LimitOrderTestParameters(Symbol, LowPrice, HighPrice, new BybitOrderProperties() { PostOnly = true }, OrderSubmissionData)),
-            new TestCaseData(0.0006m, 0.0008m, new LimitOrderTestParameters(Symbol, HighPrice, LowPrice, new BybitOrderProperties() { PostOnly = true }))
-        };
+        private static TestCaseData[] CustomMakerOrders =>
+            new[]
+            {
+                new TestCaseData(
+                    0.001m,
+                    0.001m,
+                    new LimitOrderTestParameters(Symbol, HighPrice, LowPrice)
+                ),
+                new TestCaseData(
+                    0.0009m,
+                    0.001m,
+                    new LimitOrderTestParameters(
+                        Symbol,
+                        HighPrice,
+                        LowPrice,
+                        null,
+                        OrderSubmissionData
+                    )
+                ),
+                new TestCaseData(
+                    0.0008m,
+                    0.001m,
+                    new LimitOrderTestParameters(
+                        Symbol,
+                        HighPrice,
+                        LowPrice,
+                        new BybitOrderProperties()
+                    )
+                ),
+                new TestCaseData(
+                    0.0007m,
+                    0.0009m,
+                    new LimitOrderTestParameters(
+                        Symbol,
+                        LowPrice,
+                        HighPrice,
+                        new BybitOrderProperties() { PostOnly = true },
+                        OrderSubmissionData
+                    )
+                ),
+                new TestCaseData(
+                    0.0006m,
+                    0.0008m,
+                    new LimitOrderTestParameters(
+                        Symbol,
+                        HighPrice,
+                        LowPrice,
+                        new BybitOrderProperties() { PostOnly = true }
+                    )
+                )
+            };
 
-        private static TestCaseData[] CustomTakerOrders => new[]
-        {
-            new TestCaseData(0.0007m, 0.0009m, new MarketOrderTestParameters(Symbol)),
-            new TestCaseData(0.0006m, 0.0008m, new MarketOrderTestParameters(Symbol, new BybitOrderProperties { PostOnly = true })),
-            new TestCaseData(0.0005m, 0.0006m, new LimitOrderTestParameters(Symbol, LowPrice, HighPrice, null, OrderSubmissionData))
-        };
+        private static TestCaseData[] CustomTakerOrders =>
+            new[]
+            {
+                new TestCaseData(0.0007m, 0.0009m, new MarketOrderTestParameters(Symbol)),
+                new TestCaseData(
+                    0.0006m,
+                    0.0008m,
+                    new MarketOrderTestParameters(
+                        Symbol,
+                        new BybitOrderProperties { PostOnly = true }
+                    )
+                ),
+                new TestCaseData(
+                    0.0005m,
+                    0.0006m,
+                    new LimitOrderTestParameters(
+                        Symbol,
+                        LowPrice,
+                        HighPrice,
+                        null,
+                        OrderSubmissionData
+                    )
+                )
+            };
     }
 }

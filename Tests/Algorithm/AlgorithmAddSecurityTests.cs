@@ -14,6 +14,10 @@
  *
 */
 
+using System;
+using System.Collections.Generic;
+using System.IO;
+using System.Linq;
 using NUnit.Framework;
 using QuantConnect.Algorithm;
 using QuantConnect.Lean.Engine.DataFeeds;
@@ -28,10 +32,6 @@ using QuantConnect.Securities.IndexOption;
 using QuantConnect.Securities.Option;
 using QuantConnect.Securities.Positions;
 using QuantConnect.Tests.Engine.DataFeeds;
-using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
 using Index = QuantConnect.Securities.Index.Index;
 
 namespace QuantConnect.Tests.Algorithm
@@ -50,17 +50,15 @@ namespace QuantConnect.Tests.Algorithm
         public void Setup()
         {
             _algo = new QCAlgorithm();
-            _dataFeed = new NullDataFeed
-            {
-                ShouldThrow = false
-            };
+            _dataFeed = new NullDataFeed { ShouldThrow = false };
             _algo.SubscriptionManager.SetDataManager(new DataManagerStub(_dataFeed, _algo));
         }
 
         [Test, TestCaseSource(nameof(TestAddSecurityWithSymbol))]
         public void AddSecurityWithSymbol(Symbol symbol, Type type = null)
         {
-            var security = type != null ? _algo.AddData(type, symbol.Underlying) : _algo.AddSecurity(symbol);
+            var security =
+                type != null ? _algo.AddData(type, symbol.Underlying) : _algo.AddSecurity(symbol);
             Assert.AreEqual(security.Symbol, symbol);
             Assert.IsTrue(_algo.Securities.ContainsKey(symbol));
 
@@ -111,21 +109,36 @@ namespace QuantConnect.Tests.Algorithm
         }
 
         [TestCaseSource(nameof(GetDataNormalizationModes))]
-        public void AddsEquityWithExpectedDataNormalizationMode(DataNormalizationMode dataNormalizationMode)
+        public void AddsEquityWithExpectedDataNormalizationMode(
+            DataNormalizationMode dataNormalizationMode
+        )
         {
             var equity = _algo.AddEquity("AAPL", dataNormalizationMode: dataNormalizationMode);
-            Assert.That(_algo.SubscriptionManager.Subscriptions.Where(x => x.Symbol == equity.Symbol).Select(x => x.DataNormalizationMode),
-                Has.All.EqualTo(dataNormalizationMode));
+            Assert.That(
+                _algo
+                    .SubscriptionManager.Subscriptions.Where(x => x.Symbol == equity.Symbol)
+                    .Select(x => x.DataNormalizationMode),
+                Has.All.EqualTo(dataNormalizationMode)
+            );
         }
 
         [Test]
         public void ProperlyAddsFutureWithExtendedMarketHours(
             [Values(true, false)] bool extendedMarketHours,
-            [ValueSource(nameof(FuturesTestCases))] Func<QCAlgorithm, Security> getFuture)
+            [ValueSource(nameof(FuturesTestCases))] Func<QCAlgorithm, Security> getFuture
+        )
         {
-            var future = _algo.AddFuture(Futures.Indices.VIX, Resolution.Minute, extendedMarketHours: extendedMarketHours);
-            Assert.That(_algo.SubscriptionManager.Subscriptions.Where(x => x.Symbol == future.Symbol).Select(x => x.ExtendedMarketHours),
-                Has.All.EqualTo(extendedMarketHours));
+            var future = _algo.AddFuture(
+                Futures.Indices.VIX,
+                Resolution.Minute,
+                extendedMarketHours: extendedMarketHours
+            );
+            Assert.That(
+                _algo
+                    .SubscriptionManager.Subscriptions.Where(x => x.Symbol == future.Symbol)
+                    .Select(x => x.ExtendedMarketHours),
+                Has.All.EqualTo(extendedMarketHours)
+            );
         }
 
         [TestCaseSource(nameof(FuturesTestCases))]
@@ -139,7 +152,8 @@ namespace QuantConnect.Tests.Algorithm
                 SymbolPropertiesDatabase.FromDataFolder(),
                 _algo,
                 RegisteredSecurityDataTypesProvider.Null,
-                new SecurityCacheProvider(_algo.Portfolio));
+                new SecurityCacheProvider(_algo.Portfolio)
+            );
             _algo.Securities.SetSecurityService(securityService);
 
             var future = getFuture(_algo);
@@ -182,7 +196,10 @@ namespace QuantConnect.Tests.Algorithm
                     now = now.AddMinutes(1);
                 }
 
-                while (now.TimeOfDay >= firstExtendedMarketStartTime && now.TimeOfDay < firstExtendedMarketEndTime)
+                while (
+                    now.TimeOfDay >= firstExtendedMarketStartTime
+                    && now.TimeOfDay < firstExtendedMarketEndTime
+                )
                 {
                     checkExtendedHours(now);
                     now = now.AddMinutes(1);
@@ -231,11 +248,15 @@ namespace QuantConnect.Tests.Algorithm
                 OptionStyle.European,
                 OptionRight.Call,
                 3200m,
-                new DateTime(2021, 1, 15));
+                new DateTime(2021, 1, 15)
+            );
             _algo.AddIndexOptionContract(spxOption, Resolution.Minute);
 
             Assert.Greater(_algo.SubscriptionManager.Subscriptions.Count(), 1);
-            Assert.AreEqual(1, _algo.SubscriptionManager.Subscriptions.Count(x => x.Symbol == spx.Symbol));
+            Assert.AreEqual(
+                1,
+                _algo.SubscriptionManager.Subscriptions.Count(x => x.Symbol == spx.Symbol)
+            );
         }
 
         private static TestCaseData[] TestAddSecurityWithSymbol
@@ -253,19 +274,37 @@ namespace QuantConnect.Tests.Algorithm
                     new TestCaseData(Symbols.SPY_Option_Chain, null),
                     new TestCaseData(Symbols.SPY_C_192_Feb19_2016, null),
                     new TestCaseData(Symbols.SPY_P_192_Feb19_2016, null),
-                    new TestCaseData(Symbol.Create("CustomData", SecurityType.Base, Market.Binance), null),
-                    new TestCaseData(Symbol.Create("CustomData2", SecurityType.Base, Market.COMEX), null)
+                    new TestCaseData(
+                        Symbol.Create("CustomData", SecurityType.Base, Market.Binance),
+                        null
+                    ),
+                    new TestCaseData(
+                        Symbol.Create("CustomData2", SecurityType.Base, Market.COMEX),
+                        null
+                    )
                 };
 
                 foreach (var market in Market.SupportedMarkets())
                 {
-                    foreach (var kvp in SymbolPropertiesDatabase.FromDataFolder().GetSymbolPropertiesList(market))
+                    foreach (
+                        var kvp in SymbolPropertiesDatabase
+                            .FromDataFolder()
+                            .GetSymbolPropertiesList(market)
+                    )
                     {
                         var securityDatabaseKey = kvp.Key;
                         if (securityDatabaseKey.SecurityType != SecurityType.FutureOption)
                         {
-                            result.Add(new TestCaseData(Symbol.Create(securityDatabaseKey.Symbol, securityDatabaseKey.SecurityType,
-                                securityDatabaseKey.Market), null));
+                            result.Add(
+                                new TestCaseData(
+                                    Symbol.Create(
+                                        securityDatabaseKey.Symbol,
+                                        securityDatabaseKey.SecurityType,
+                                        securityDatabaseKey.Market
+                                    ),
+                                    null
+                                )
+                            );
                         }
                     }
                 }
@@ -277,7 +316,8 @@ namespace QuantConnect.Tests.Algorithm
         private static DataNormalizationMode[] GetDataNormalizationModes()
         {
             return ((DataNormalizationMode[])Enum.GetValues(typeof(DataNormalizationMode)))
-                .Where(x => x != DataNormalizationMode.ScaledRaw).ToArray();
+                .Where(x => x != DataNormalizationMode.ScaledRaw)
+                .ToArray();
         }
 
         private static Func<QCAlgorithm, Security>[] FuturesTestCases
@@ -286,9 +326,22 @@ namespace QuantConnect.Tests.Algorithm
             {
                 return new Func<QCAlgorithm, Security>[]
                 {
-                    (algo) => algo.AddFuture(Futures.Indices.VIX, Resolution.Minute, extendedMarketHours: true),
-                    (algo) => algo.AddFutureContract(Symbol.CreateFuture(Futures.Indices.VIX, Market.CFE, new DateTime(2022, 8, 1)),
-                        Resolution.Minute, extendedMarketHours: true)
+                    (algo) =>
+                        algo.AddFuture(
+                            Futures.Indices.VIX,
+                            Resolution.Minute,
+                            extendedMarketHours: true
+                        ),
+                    (algo) =>
+                        algo.AddFutureContract(
+                            Symbol.CreateFuture(
+                                Futures.Indices.VIX,
+                                Market.CFE,
+                                new DateTime(2022, 8, 1)
+                            ),
+                            Resolution.Minute,
+                            extendedMarketHours: true
+                        )
                 };
             }
         }

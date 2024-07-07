@@ -40,7 +40,7 @@ namespace QuantConnect.Data
             object value,
             MethodInfo setPropertyMethodInfo,
             MethodInfo getPropertyMethodInfo
-            )
+        )
             : base(expression, BindingRestrictions.Empty, value)
         {
             _setPropertyMethodInfo = setPropertyMethodInfo;
@@ -53,7 +53,10 @@ namespace QuantConnect.Data
         /// <param name="binder">An instance of the <see cref="T:System.Dynamic.SetMemberBinder" /> that represents the details of the dynamic operation.</param>
         /// <param name="value">The <see cref="T:System.Dynamic.DynamicMetaObject" /> representing the value for the set member operation.</param>
         /// <returns>The new <see cref="T:System.Dynamic.DynamicMetaObject" /> representing the result of the binding.</returns>
-        public override DynamicMetaObject BindSetMember(SetMemberBinder binder, DynamicMetaObject value)
+        public override DynamicMetaObject BindSetMember(
+            SetMemberBinder binder,
+            DynamicMetaObject value
+        )
         {
             // we need to build up an expression tree that represents accessing our instance
             var restrictions = BindingRestrictions.GetTypeRestriction(Expression, LimitType);
@@ -62,9 +65,8 @@ namespace QuantConnect.Data
             {
                 // this is the name of the property to set
                 Expression.Constant(binder.Name),
-
                 // this is the value
-                Expression.Convert(value.Expression, typeof (object))
+                Expression.Convert(value.Expression, typeof(object))
             };
 
             // set the 'this' reference

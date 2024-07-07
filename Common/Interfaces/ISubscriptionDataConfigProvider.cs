@@ -29,6 +29,9 @@ namespace QuantConnect.Interfaces
         /// else will return the whole list of subscriptions
         /// </summary>
         /// <remarks>Will not return internal subscriptions by default</remarks>
-        List<SubscriptionDataConfig> GetSubscriptionDataConfigs(Symbol symbol = null, bool includeInternalConfigs = false);
+        List<SubscriptionDataConfig> GetSubscriptionDataConfigs(
+            Symbol symbol = null,
+            bool includeInternalConfigs = false
+        );
     }
 }

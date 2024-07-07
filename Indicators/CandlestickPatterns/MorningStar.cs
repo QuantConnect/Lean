@@ -1,11 +1,11 @@
 ﻿/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
- * 
- * Licensed under the Apache License, Version 2.0 (the "License"); 
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -51,8 +51,16 @@ namespace QuantConnect.Indicators.CandlestickPatterns
         /// </summary>
         /// <param name="name">The name of this indicator</param>
         /// <param name="penetration">Percentage of penetration of a candle within another candle</param>
-        public MorningStar(string name, decimal penetration = 0.3m) 
-            : base(name, Math.Max(CandleSettings.Get(CandleSettingType.BodyShort).AveragePeriod, CandleSettings.Get(CandleSettingType.BodyLong).AveragePeriod) + 2 + 1)
+        public MorningStar(string name, decimal penetration = 0.3m)
+            : base(
+                name,
+                Math.Max(
+                    CandleSettings.Get(CandleSettingType.BodyShort).AveragePeriod,
+                    CandleSettings.Get(CandleSettingType.BodyLong).AveragePeriod
+                )
+                    + 2
+                    + 1
+            )
         {
             _penetration = penetration;
 
@@ -65,17 +73,13 @@ namespace QuantConnect.Indicators.CandlestickPatterns
         /// </summary>
         /// <param name="penetration">Percentage of penetration of a candle within another candle</param>
         public MorningStar(decimal penetration)
-            : this("MORNINGSTAR", penetration)
-        {
-        }
+            : this("MORNINGSTAR", penetration) { }
 
         /// <summary>
         /// Initializes a new instance of the <see cref="MorningStar"/> class.
         /// </summary>
         public MorningStar()
-            : this("MORNINGSTAR")
-        {
-        }
+            : this("MORNINGSTAR") { }
 
         /// <summary>
         /// Gets a flag indicating when this indicator is ready and fully initialized
@@ -91,7 +95,10 @@ namespace QuantConnect.Indicators.CandlestickPatterns
         /// <param name="window">The window of data held in this indicator</param>
         /// <param name="input">The input given to the indicator</param>
         /// <returns>A new value for this indicator</returns>
-        protected override decimal ComputeNextValue(IReadOnlyWindow<IBaseDataBar> window, IBaseDataBar input)
+        protected override decimal ComputeNextValue(
+            IReadOnlyWindow<IBaseDataBar> window,
+            IBaseDataBar input
+        )
         {
             if (!IsReady)
             {
@@ -103,7 +110,10 @@ namespace QuantConnect.Indicators.CandlestickPatterns
                 if (Samples >= Period - _bodyShortAveragePeriod - 1 && Samples < Period - 1)
                 {
                     _bodyShortPeriodTotal += GetCandleRange(CandleSettingType.BodyShort, input);
-                    _bodyShortPeriodTotal2 += GetCandleRange(CandleSettingType.BodyShort, window[1]);
+                    _bodyShortPeriodTotal2 += GetCandleRange(
+                        CandleSettingType.BodyShort,
+                        window[1]
+                    );
                 }
 
                 return 0m;
@@ -112,35 +122,52 @@ namespace QuantConnect.Indicators.CandlestickPatterns
             decimal value;
             if (
                 // 1st: long
-                GetRealBody(window[2]) > GetCandleAverage(CandleSettingType.BodyLong, _bodyLongPeriodTotal, window[2]) &&
+                GetRealBody(window[2])
+                    > GetCandleAverage(CandleSettingType.BodyLong, _bodyLongPeriodTotal, window[2])
+                &&
                 //      black
-                GetCandleColor(window[2]) == CandleColor.Black &&
+                GetCandleColor(window[2]) == CandleColor.Black
+                &&
                 // 2nd: short
-                GetRealBody(window[1]) <= GetCandleAverage(CandleSettingType.BodyShort, _bodyShortPeriodTotal, window[1]) &&
+                GetRealBody(window[1])
+                    <= GetCandleAverage(
+                        CandleSettingType.BodyShort,
+                        _bodyShortPeriodTotal,
+                        window[1]
+                    )
+                &&
                 //      gapping down
-                GetRealBodyGapDown(window[1], window[2]) &&
+                GetRealBodyGapDown(window[1], window[2])
+                &&
                 // 3rd: longer than short
-                GetRealBody(input) > GetCandleAverage(CandleSettingType.BodyShort, _bodyShortPeriodTotal2, input) &&
+                GetRealBody(input)
+                    > GetCandleAverage(CandleSettingType.BodyShort, _bodyShortPeriodTotal2, input)
+                &&
                 //      white real body
-                GetCandleColor(input) == CandleColor.White &&
+                GetCandleColor(input) == CandleColor.White
+                &&
                 //      closing well within 1st rb
-                input.Close > window[2].Close + GetRealBody(window[2]) * _penetration
-              )
+                input.Close
+                    > window[2].Close + GetRealBody(window[2]) * _penetration
+            )
                 value = 1m;
             else
                 value = 0m;
 
-            // add the current range and subtract the first range: this is done after the pattern recognition 
+            // add the current range and subtract the first range: this is done after the pattern recognition
             // when avgPeriod is not 0, that means "compare with the previous candles" (it excludes the current candle)
 
-            _bodyLongPeriodTotal += GetCandleRange(CandleSettingType.BodyLong, window[2]) -
-                                    GetCandleRange(CandleSettingType.BodyLong, window[_bodyLongAveragePeriod + 2]);
+            _bodyLongPeriodTotal +=
+                GetCandleRange(CandleSettingType.BodyLong, window[2])
+                - GetCandleRange(CandleSettingType.BodyLong, window[_bodyLongAveragePeriod + 2]);
 
-            _bodyShortPeriodTotal += GetCandleRange(CandleSettingType.BodyShort, window[1]) -
-                                     GetCandleRange(CandleSettingType.BodyShort, window[_bodyShortAveragePeriod + 1]);
+            _bodyShortPeriodTotal +=
+                GetCandleRange(CandleSettingType.BodyShort, window[1])
+                - GetCandleRange(CandleSettingType.BodyShort, window[_bodyShortAveragePeriod + 1]);
 
-            _bodyShortPeriodTotal2 += GetCandleRange(CandleSettingType.BodyShort, input) -
-                                      GetCandleRange(CandleSettingType.BodyShort, window[_bodyShortAveragePeriod]);
+            _bodyShortPeriodTotal2 +=
+                GetCandleRange(CandleSettingType.BodyShort, input)
+                - GetCandleRange(CandleSettingType.BodyShort, window[_bodyShortAveragePeriod]);
 
             return value;
         }

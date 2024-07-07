@@ -19,9 +19,9 @@ using System.Linq;
 namespace QuantConnect.Indicators
 {
     /// <summary>
-    /// Stochastic RSI, or simply StochRSI, is a technical analysis indicator used to determine whether 
+    /// Stochastic RSI, or simply StochRSI, is a technical analysis indicator used to determine whether
     /// an asset is overbought or oversold, as well as to identify current market trends.
-    /// As the name suggests, the StochRSI is a derivative of the standard Relative Strength Index (RSI) and, 
+    /// As the name suggests, the StochRSI is a derivative of the standard Relative Strength Index (RSI) and,
     /// as such, is considered an indicator of an indicator.
     /// It is a type of oscillator, meaning that it fluctuates above and below a center line.
     /// </summary>
@@ -46,7 +46,6 @@ namespace QuantConnect.Indicators
         private readonly RollingWindow<decimal> _recentRSIValues;
         private readonly int _stochPeriod;
 
-
         /// <summary>
         /// Initializes a new instance of the StochasticRelativeStrengthIndex class
         /// </summary>
@@ -55,10 +54,21 @@ namespace QuantConnect.Indicators
         /// <param name="kSmoothingPeriod">The smoothing period of k output (aka %K)</param>
         /// <param name="dSmoothingPeriod">The smoothing period of d output (aka %D)</param>
         /// <param name="movingAverageType">The type of moving average to be used</param>
-        public StochasticRelativeStrengthIndex(int rsiPeriod, int stochPeriod, int kSmoothingPeriod, int dSmoothingPeriod, MovingAverageType movingAverageType = MovingAverageType.Simple)
-            : this($"StochRSI({rsiPeriod},{stochPeriod},{kSmoothingPeriod},{dSmoothingPeriod},{movingAverageType})", rsiPeriod, stochPeriod, kSmoothingPeriod, dSmoothingPeriod, movingAverageType)
-        {
-        }
+        public StochasticRelativeStrengthIndex(
+            int rsiPeriod,
+            int stochPeriod,
+            int kSmoothingPeriod,
+            int dSmoothingPeriod,
+            MovingAverageType movingAverageType = MovingAverageType.Simple
+        )
+            : this(
+                $"StochRSI({rsiPeriod},{stochPeriod},{kSmoothingPeriod},{dSmoothingPeriod},{movingAverageType})",
+                rsiPeriod,
+                stochPeriod,
+                kSmoothingPeriod,
+                dSmoothingPeriod,
+                movingAverageType
+            ) { }
 
         /// <summary>
         /// Initializes a new instance of the StochasticRelativeStrengthIndex class
@@ -69,7 +79,14 @@ namespace QuantConnect.Indicators
         /// <param name="kSmoothingPeriod">The smoothing period of k output</param>
         /// <param name="dSmoothingPeriod">The smoothing period of d output</param>
         /// <param name="movingAverageType">The type of moving average to be used</param>
-        public StochasticRelativeStrengthIndex(string name, int rsiPeriod, int stochPeriod, int kSmoothingPeriod, int dSmoothingPeriod, MovingAverageType movingAverageType = MovingAverageType.Simple)
+        public StochasticRelativeStrengthIndex(
+            string name,
+            int rsiPeriod,
+            int stochPeriod,
+            int kSmoothingPeriod,
+            int dSmoothingPeriod,
+            MovingAverageType movingAverageType = MovingAverageType.Simple
+        )
             : base(name)
         {
             _stochPeriod = stochPeriod;

@@ -14,9 +14,9 @@
 */
 
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using NUnit.Framework;
-using System.Collections.Generic;
 using QuantConnect.Algorithm.Framework.Alphas;
 
 namespace QuantConnect.Tests.Algorithm.Framework.Alphas
@@ -31,11 +31,21 @@ namespace QuantConnect.Tests.Algorithm.Framework.Alphas
         {
             var insightCollection = new InsightCollection
             {
-                new Insight(Symbols.AAPL, new TimeSpan(1, 0, 0, 0), InsightType.Price, InsightDirection.Up)
+                new Insight(
+                    Symbols.AAPL,
+                    new TimeSpan(1, 0, 0, 0),
+                    InsightType.Price,
+                    InsightDirection.Up
+                )
                 {
                     CloseTimeUtc = new DateTime(2019, 1, 1),
                 },
-                new Insight(Symbols.AAPL, new TimeSpan(1, 0, 0, 0), InsightType.Volatility, InsightDirection.Up)
+                new Insight(
+                    Symbols.AAPL,
+                    new TimeSpan(1, 0, 0, 0),
+                    InsightType.Volatility,
+                    InsightDirection.Up
+                )
                 {
                     CloseTimeUtc = new DateTime(2019, 1, 2),
                 }
@@ -112,7 +122,12 @@ namespace QuantConnect.Tests.Algorithm.Framework.Alphas
             }
             Assert.IsFalse(collection.ContainsKey(Symbols.BTCEUR));
 
-            var anotherInsight = new Insight(Symbols.BTCEUR, new TimeSpan(1, 0, 0, 0), InsightType.Price, InsightDirection.Up);
+            var anotherInsight = new Insight(
+                Symbols.BTCEUR,
+                new TimeSpan(1, 0, 0, 0),
+                InsightType.Price,
+                InsightDirection.Up
+            );
             Assert.IsFalse(collection.Contains(anotherInsight));
         }
 
@@ -120,10 +135,38 @@ namespace QuantConnect.Tests.Algorithm.Framework.Alphas
         public void Addition()
         {
             var collection = new InsightCollection();
-            var insight = new Insight(Symbols.AAPL, new TimeSpan(1, 0, 0, 0), InsightType.Price, InsightDirection.Up) { CloseTimeUtc = _referenceTime };
+            var insight = new Insight(
+                Symbols.AAPL,
+                new TimeSpan(1, 0, 0, 0),
+                InsightType.Price,
+                InsightDirection.Up
+            )
+            {
+                CloseTimeUtc = _referenceTime
+            };
             collection.Add(insight);
-            collection.Add(new Insight(Symbols.SPY, new TimeSpan(1, 0, 0, 0), InsightType.Price, InsightDirection.Up) { CloseTimeUtc = _referenceTime });
-            collection.Add(new Insight(Symbols.IBM, new TimeSpan(1, 0, 0, 0), InsightType.Price, InsightDirection.Down) { CloseTimeUtc = _referenceTime.AddDays(-1) });
+            collection.Add(
+                new Insight(
+                    Symbols.SPY,
+                    new TimeSpan(1, 0, 0, 0),
+                    InsightType.Price,
+                    InsightDirection.Up
+                )
+                {
+                    CloseTimeUtc = _referenceTime
+                }
+            );
+            collection.Add(
+                new Insight(
+                    Symbols.IBM,
+                    new TimeSpan(1, 0, 0, 0),
+                    InsightType.Price,
+                    InsightDirection.Down
+                )
+                {
+                    CloseTimeUtc = _referenceTime.AddDays(-1)
+                }
+            );
 
             var beforeExpiration = insight.CloseTimeUtc.AddDays(-1);
 
@@ -191,7 +234,10 @@ namespace QuantConnect.Tests.Algorithm.Framework.Alphas
             Assert.AreEqual(0, collection.RemoveExpiredInsights(_referenceTime.AddDays(-1)).Count);
 
             // expire 1 insight
-            Assert.AreEqual(insights[0], collection.RemoveExpiredInsights(_referenceTime.AddDays(1)).Single());
+            Assert.AreEqual(
+                insights[0],
+                collection.RemoveExpiredInsights(_referenceTime.AddDays(1)).Single()
+            );
 
             // expire 2 insights
             Assert.AreEqual(2, collection.RemoveExpiredInsights(_referenceTime.AddDays(2)).Count);
@@ -208,8 +254,24 @@ namespace QuantConnect.Tests.Algorithm.Framework.Alphas
             collection[Symbols.AAPL] = null;
             Assert.AreEqual(3, collection.Count);
 
-            var insight = new Insight(Symbols.AAPL, new TimeSpan(1, 0, 0, 0), InsightType.Price, InsightDirection.Up) { CloseTimeUtc = new DateTime(2019, 1, 1) };
-            var insight2 = new Insight(Symbols.AAPL, new TimeSpan(1, 0, 0, 0), InsightType.Price, InsightDirection.Up) { CloseTimeUtc = new DateTime(2019, 1, 2) };
+            var insight = new Insight(
+                Symbols.AAPL,
+                new TimeSpan(1, 0, 0, 0),
+                InsightType.Price,
+                InsightDirection.Up
+            )
+            {
+                CloseTimeUtc = new DateTime(2019, 1, 1)
+            };
+            var insight2 = new Insight(
+                Symbols.AAPL,
+                new TimeSpan(1, 0, 0, 0),
+                InsightType.Price,
+                InsightDirection.Up
+            )
+            {
+                CloseTimeUtc = new DateTime(2019, 1, 2)
+            };
             collection[Symbols.AAPL] = new() { insight, insight2 };
             Assert.AreEqual(5, collection.Count);
 
@@ -253,16 +315,54 @@ namespace QuantConnect.Tests.Algorithm.Framework.Alphas
             Assert.AreEqual(5, collection.TotalCount);
         }
 
-
-
         private static List<Insight> GetTestInsight()
         {
-            var insight = new Insight(Symbols.AAPL, new TimeSpan(1, 0, 0, 0), InsightType.Price, InsightDirection.Up) { CloseTimeUtc = _referenceTime };
-            var insight2 = new Insight(Symbols.AAPL, new TimeSpan(1, 0, 0, 0), InsightType.Price, InsightDirection.Up) { CloseTimeUtc = _referenceTime.AddDays(1) };
-            var insight3 = new Insight(Symbols.SPY, new TimeSpan(1, 0, 0, 0), InsightType.Price, InsightDirection.Up) { CloseTimeUtc = _referenceTime.AddDays(1) };
+            var insight = new Insight(
+                Symbols.AAPL,
+                new TimeSpan(1, 0, 0, 0),
+                InsightType.Price,
+                InsightDirection.Up
+            )
+            {
+                CloseTimeUtc = _referenceTime
+            };
+            var insight2 = new Insight(
+                Symbols.AAPL,
+                new TimeSpan(1, 0, 0, 0),
+                InsightType.Price,
+                InsightDirection.Up
+            )
+            {
+                CloseTimeUtc = _referenceTime.AddDays(1)
+            };
+            var insight3 = new Insight(
+                Symbols.SPY,
+                new TimeSpan(1, 0, 0, 0),
+                InsightType.Price,
+                InsightDirection.Up
+            )
+            {
+                CloseTimeUtc = _referenceTime.AddDays(1)
+            };
 
-            var insight4 = new Insight(Symbols.SPY, new TimeSpan(1, 0, 0, 0), InsightType.Price, InsightDirection.Down) { CloseTimeUtc = _referenceTime.AddMonths(1) };
-            var insight5 = new Insight(Symbols.IBM, new TimeSpan(1, 0, 0, 0), InsightType.Price, InsightDirection.Down) { CloseTimeUtc = _referenceTime.AddMonths(1) };
+            var insight4 = new Insight(
+                Symbols.SPY,
+                new TimeSpan(1, 0, 0, 0),
+                InsightType.Price,
+                InsightDirection.Down
+            )
+            {
+                CloseTimeUtc = _referenceTime.AddMonths(1)
+            };
+            var insight5 = new Insight(
+                Symbols.IBM,
+                new TimeSpan(1, 0, 0, 0),
+                InsightType.Price,
+                InsightDirection.Down
+            )
+            {
+                CloseTimeUtc = _referenceTime.AddMonths(1)
+            };
 
             return new List<Insight> { insight, insight2, insight3, insight4, insight5 };
         }

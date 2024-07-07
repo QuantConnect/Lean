@@ -26,7 +26,9 @@ namespace QuantConnect.Algorithm.CSharp
     /// Regression algorithm asserting that the check for market on close orders time buffer
     /// is done properly regardless of the algorithm and exchange time zones.
     /// </summary>
-    public class MarketOnCloseOrderBufferCheckRegressionAlgorithm : QCAlgorithm, IRegressionAlgorithmDefinition
+    public class MarketOnCloseOrderBufferCheckRegressionAlgorithm
+        : QCAlgorithm,
+            IRegressionAlgorithmDefinition
     {
         private readonly TimeSpan _buffer = TimeSpan.FromMinutes(10);
 
@@ -55,19 +57,25 @@ namespace QuantConnect.Algorithm.CSharp
             }
 
             var security = Securities[_symbol];
-            var nextUtcMarketCloseTime = security.Exchange.Hours
-                .GetNextMarketClose(security.LocalTime, false)
+            var nextUtcMarketCloseTime = security
+                .Exchange.Hours.GetNextMarketClose(security.LocalTime, false)
                 .ConvertToUtc(security.Exchange.TimeZone);
 
             var latestSubmissionTime = nextUtcMarketCloseTime - _buffer;
             // Place an order when we are close to the latest allowed submission time
-            if (_validOrderTicket == null && UtcTime >= latestSubmissionTime - TimeSpan.FromMinutes(5) && UtcTime <= latestSubmissionTime)
+            if (
+                _validOrderTicket == null
+                && UtcTime >= latestSubmissionTime - TimeSpan.FromMinutes(5)
+                && UtcTime <= latestSubmissionTime
+            )
             {
                 _validOrderTicket = MarketOnCloseOrder(_symbol, 1);
 
                 if (_validOrderTicket.Status == OrderStatus.Invalid)
                 {
-                    throw new RegressionTestException("MOC order placed at the last minute was expected to be valid.");
+                    throw new RegressionTestException(
+                        "MOC order placed at the last minute was expected to be valid."
+                    );
                 }
             }
 
@@ -76,11 +84,15 @@ namespace QuantConnect.Algorithm.CSharp
             {
                 _invalidOrderTicket = MarketOnCloseOrder(_symbol, 1);
 
-                if (_invalidOrderTicket.Status != OrderStatus.Invalid ||
-                    _invalidOrderTicket.SubmitRequest.Response.ErrorCode != OrderResponseErrorCode.MarketOnCloseOrderTooLate)
+                if (
+                    _invalidOrderTicket.Status != OrderStatus.Invalid
+                    || _invalidOrderTicket.SubmitRequest.Response.ErrorCode
+                        != OrderResponseErrorCode.MarketOnCloseOrderTooLate
+                )
                 {
                     throw new RegressionTestException(
-                        "MOC order placed after the latest allowed submission time was not rejected or the reason was not the submission time");
+                        "MOC order placed after the latest allowed submission time was not rejected or the reason was not the submission time"
+                    );
                 }
             }
         }
@@ -88,7 +100,9 @@ namespace QuantConnect.Algorithm.CSharp
         public override void OnEndOfAlgorithm()
         {
             // Set it back to default for other regressions
-            Orders.MarketOnCloseOrder.SubmissionTimeBuffer = Orders.MarketOnCloseOrder.DefaultSubmissionTimeBuffer;
+            Orders.MarketOnCloseOrder.SubmissionTimeBuffer = Orders
+                .MarketOnCloseOrder
+                .DefaultSubmissionTimeBuffer;
 
             if (_validOrderTicket == null)
             {
@@ -135,35 +149,36 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// This is used by the regression test system to indicate what the expected statistics are from running the algorithm
         /// </summary>
-        public Dictionary<string, string> ExpectedStatistics => new()
-        {
-            {"Total Orders", "1"},
-            {"Average Win", "0%"},
-            {"Average Loss", "0%"},
-            {"Compounding Annual Return", "0%"},
-            {"Drawdown", "0%"},
-            {"Expectancy", "0"},
-            {"Start Equity", "100000"},
-            {"End Equity", "99999"},
-            {"Net Profit", "0%"},
-            {"Sharpe Ratio", "0"},
-            {"Sortino Ratio", "0"},
-            {"Probabilistic Sharpe Ratio", "0%"},
-            {"Loss Rate", "0%"},
-            {"Win Rate", "0%"},
-            {"Profit-Loss Ratio", "0"},
-            {"Alpha", "0"},
-            {"Beta", "0"},
-            {"Annual Standard Deviation", "0"},
-            {"Annual Variance", "0"},
-            {"Information Ratio", "0"},
-            {"Tracking Error", "0"},
-            {"Treynor Ratio", "0"},
-            {"Total Fees", "$1.00"},
-            {"Estimated Strategy Capacity", "$67000000000.00"},
-            {"Lowest Capacity Asset", "SPY R735QTJ8XC9X"},
-            {"Portfolio Turnover", "0.14%"},
-            {"OrderListHash", "e44ec9a38c118cc34a487dcfa645a658"}
-        };
+        public Dictionary<string, string> ExpectedStatistics =>
+            new()
+            {
+                { "Total Orders", "1" },
+                { "Average Win", "0%" },
+                { "Average Loss", "0%" },
+                { "Compounding Annual Return", "0%" },
+                { "Drawdown", "0%" },
+                { "Expectancy", "0" },
+                { "Start Equity", "100000" },
+                { "End Equity", "99999" },
+                { "Net Profit", "0%" },
+                { "Sharpe Ratio", "0" },
+                { "Sortino Ratio", "0" },
+                { "Probabilistic Sharpe Ratio", "0%" },
+                { "Loss Rate", "0%" },
+                { "Win Rate", "0%" },
+                { "Profit-Loss Ratio", "0" },
+                { "Alpha", "0" },
+                { "Beta", "0" },
+                { "Annual Standard Deviation", "0" },
+                { "Annual Variance", "0" },
+                { "Information Ratio", "0" },
+                { "Tracking Error", "0" },
+                { "Treynor Ratio", "0" },
+                { "Total Fees", "$1.00" },
+                { "Estimated Strategy Capacity", "$67000000000.00" },
+                { "Lowest Capacity Asset", "SPY R735QTJ8XC9X" },
+                { "Portfolio Turnover", "0.14%" },
+                { "OrderListHash", "e44ec9a38c118cc34a487dcfa645a658" }
+            };
     }
 }

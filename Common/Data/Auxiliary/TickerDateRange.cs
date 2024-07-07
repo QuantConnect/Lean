@@ -15,7 +15,6 @@
 
 using System;
 
-
 namespace QuantConnect.Data.Auxiliary
 {
     /// <summary>
@@ -45,7 +44,11 @@ namespace QuantConnect.Data.Auxiliary
         /// <param name="ticker">Name of ticker</param>
         /// <param name="startDateTimeLocal">Start Date Time Local</param>
         /// <param name="endDateTimeLocal">End Date Time Local</param>
-        public TickerDateRange(string ticker, DateTime startDateTimeLocal, DateTime endDateTimeLocal)
+        public TickerDateRange(
+            string ticker,
+            DateTime startDateTimeLocal,
+            DateTime endDateTimeLocal
+        )
         {
             Ticker = ticker;
             StartDateTimeLocal = startDateTimeLocal;

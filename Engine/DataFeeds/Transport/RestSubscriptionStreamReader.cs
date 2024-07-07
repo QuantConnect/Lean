@@ -49,7 +49,11 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Transport
         /// <param name="source">The source url to poll with a GET</param>
         /// <param name="headers">Defines header values to add to the request</param>
         /// <param name="isLiveMode">True for live mode, false otherwise</param>
-        public RestSubscriptionStreamReader(string source, IEnumerable<KeyValuePair<string, string>> headers, bool isLiveMode)
+        public RestSubscriptionStreamReader(
+            string source,
+            IEnumerable<KeyValuePair<string, string>> headers,
+            bool isLiveMode
+        )
         {
             _client = new RestClient(source);
             _request = new RestRequest(Method.GET);
@@ -106,8 +110,6 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Transport
         /// <summary>
         /// This stream reader doesn't require disposal
         /// </summary>
-        public void Dispose()
-        {
-        }
+        public void Dispose() { }
     }
 }

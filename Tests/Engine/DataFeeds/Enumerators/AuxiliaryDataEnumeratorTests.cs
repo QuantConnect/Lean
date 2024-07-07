@@ -39,7 +39,12 @@ namespace QuantConnect.Tests.Engine.DataFeeds.Enumerators
             _config = SecurityTests.CreateTradeBarConfig();
             _tradableDayNotifier = new TestTradableDayNotifier();
             _tradableDayNotifier.Symbol = _config.Symbol;
-            _delistingEvent = new Delisting(_config.Symbol, new DateTime(2009, 1, 1), 1, DelistingType.Delisted);
+            _delistingEvent = new Delisting(
+                _config.Symbol,
+                new DateTime(2009, 1, 1),
+                1,
+                DelistingType.Delisted
+            );
         }
 
         [Test]
@@ -83,9 +88,12 @@ namespace QuantConnect.Tests.Engine.DataFeeds.Enumerators
             yield return Data.Dequeue();
         }
 
-        public void Initialize(SubscriptionDataConfig config, IFactorFileProvider factorFileProvider, IMapFileProvider mapFileProvider, DateTime startTime)
-        {
-        }
+        public void Initialize(
+            SubscriptionDataConfig config,
+            IFactorFileProvider factorFileProvider,
+            IMapFileProvider mapFileProvider,
+            DateTime startTime
+        ) { }
     }
 
     class TestTradableDayNotifier : ITradableDatesNotifier
@@ -97,7 +105,10 @@ namespace QuantConnect.Tests.Engine.DataFeeds.Enumerators
 
         public void TriggerEvent()
         {
-            NewTradableDate?.Invoke(this, new NewTradableDateEventArgs(TradableDate, LastBaseData, Symbol, null));
+            NewTradableDate?.Invoke(
+                this,
+                new NewTradableDateEventArgs(TradableDate, LastBaseData, Symbol, null)
+            );
         }
     }
 }

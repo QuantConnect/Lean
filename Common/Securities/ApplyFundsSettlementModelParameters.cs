@@ -13,8 +13,8 @@
  * limitations under the License.
 */
 
-using QuantConnect.Orders;
 using System;
+using QuantConnect.Orders;
 
 namespace QuantConnect.Securities
 {
@@ -56,7 +56,13 @@ namespace QuantConnect.Securities
         /// <param name="applicationTimeUtc">The fill time (in UTC)</param>
         /// <param name="cashAmount">The amount to settle</param>
         /// <param name="fill">The associated fill</param>
-        public ApplyFundsSettlementModelParameters(SecurityPortfolioManager portfolio, Security security, DateTime applicationTimeUtc, CashAmount cashAmount, OrderEvent fill)
+        public ApplyFundsSettlementModelParameters(
+            SecurityPortfolioManager portfolio,
+            Security security,
+            DateTime applicationTimeUtc,
+            CashAmount cashAmount,
+            OrderEvent fill
+        )
         {
             Portfolio = portfolio;
             Security = security;

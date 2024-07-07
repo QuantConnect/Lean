@@ -26,9 +26,11 @@ namespace QuantConnect.Securities.CryptoFuture
         /// derived from the market-hours-database for the Crypto future market
         /// </summary>
         public CryptoFutureExchange(string market)
-            : base(MarketHoursDatabase.FromDataFolder().GetExchangeHours(market, null, SecurityType.CryptoFuture))
-        {
-        }
+            : base(
+                MarketHoursDatabase
+                    .FromDataFolder()
+                    .GetExchangeHours(market, null, SecurityType.CryptoFuture)
+            ) { }
 
         /// <summary>
         /// Initializes a new instance of the <see cref="CryptoFutureExchange"/> class using the specified
@@ -36,8 +38,6 @@ namespace QuantConnect.Securities.CryptoFuture
         /// </summary>
         /// <param name="exchangeHours">Contains the weekly exchange schedule plus holidays</param>
         public CryptoFutureExchange(SecurityExchangeHours exchangeHours)
-            : base(exchangeHours)
-        {
-        }
+            : base(exchangeHours) { }
     }
 }

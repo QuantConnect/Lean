@@ -47,10 +47,11 @@ namespace QuantConnect.Algorithm.CSharp
 
         public override void OnData(Slice slice)
         {
-            var contract = slice.FutureChains.Values.SelectMany(c => c.Contracts.Values)
+            var contract = slice
+                .FutureChains.Values.SelectMany(c => c.Contracts.Values)
                 .OrderBy(c => c.Symbol.ID.Date)
-                .FirstOrDefault()?
-                .Symbol;
+                .FirstOrDefault()
+                ?.Symbol;
 
             if (contract == null)
             {
@@ -69,17 +70,28 @@ namespace QuantConnect.Algorithm.CSharp
                 return;
             }
 
-            if (Time - _lastTrade <= TimeSpan.FromHours(1) || Time.TimeOfDay <= new TimeSpan(10, 50, 0) || Time.TimeOfDay >= new TimeSpan(12, 30, 0))
+            if (
+                Time - _lastTrade <= TimeSpan.FromHours(1)
+                || Time.TimeOfDay <= new TimeSpan(10, 50, 0)
+                || Time.TimeOfDay >= new TimeSpan(12, 30, 0)
+            )
             {
                 return;
             }
 
-            if (!Portfolio.ContainsKey(contract) || (Portfolio[contract].Quantity <= 0 && _fast > _slow))
+            if (
+                !Portfolio.ContainsKey(contract)
+                || (Portfolio[contract].Quantity <= 0 && _fast > _slow)
+            )
             {
                 SetHoldings(contract, 0.5);
                 _lastTrade = Time;
             }
-            else if (Portfolio.ContainsKey(contract) && Portfolio[contract].Quantity >= 0 && _fast < _slow)
+            else if (
+                Portfolio.ContainsKey(contract)
+                && Portfolio[contract].Quantity >= 0
+                && _fast < _slow
+            )
             {
                 SetHoldings(contract, -0.5);
                 _lastTrade = Time;
@@ -114,49 +126,50 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// This is used by the regression test system to indicate what the expected statistics are from running the algorithm
         /// </summary>
-        public Dictionary<string, string> ExpectedStatistics => new Dictionary<string, string>
-        {
-            {"Total Orders", "19"},
-            {"Average Win", "39.16%"},
-            {"Average Loss", "-8.81%"},
-            {"Compounding Annual Return", "-99.857%"},
-            {"Drawdown", "82.900%"},
-            {"Expectancy", "-0.359"},
-            {"Net Profit", "-57.725%"},
-            {"Sharpe Ratio", "-0.555"},
-            {"Probabilistic Sharpe Ratio", "10.606%"},
-            {"Loss Rate", "88%"},
-            {"Win Rate", "12%"},
-            {"Profit-Loss Ratio", "4.45"},
-            {"Alpha", "-1.188"},
-            {"Beta", "0.603"},
-            {"Annual Standard Deviation", "1.754"},
-            {"Annual Variance", "3.075"},
-            {"Information Ratio", "-0.759"},
-            {"Tracking Error", "1.753"},
-            {"Treynor Ratio", "-1.612"},
-            {"Total Fees", "$2558.55"},
-            {"Estimated Strategy Capacity", "$20000.00"},
-            {"Fitness Score", "0.351"},
-            {"Kelly Criterion Estimate", "0"},
-            {"Kelly Criterion Probability Value", "0"},
-            {"Sortino Ratio", "-0.602"},
-            {"Return Over Maximum Drawdown", "-1.415"},
-            {"Portfolio Turnover", "14.226"},
-            {"Total Insights Generated", "0"},
-            {"Total Insights Closed", "0"},
-            {"Total Insights Analysis Completed", "0"},
-            {"Long Insight Count", "0"},
-            {"Short Insight Count", "0"},
-            {"Long/Short Ratio", "100%"},
-            {"Estimated Monthly Alpha Value", "$0"},
-            {"Total Accumulated Estimated Alpha Value", "$0"},
-            {"Mean Population Estimated Insight Value", "$0"},
-            {"Mean Population Direction", "0%"},
-            {"Mean Population Magnitude", "0%"},
-            {"Rolling Averaged Population Direction", "0%"},
-            {"Rolling Averaged Population Magnitude", "0%"},
-            {"OrderListHash", "4f5fd2fb25e957bd0cb7cb6d275ddb97"}
-        };
+        public Dictionary<string, string> ExpectedStatistics =>
+            new Dictionary<string, string>
+            {
+                { "Total Orders", "19" },
+                { "Average Win", "39.16%" },
+                { "Average Loss", "-8.81%" },
+                { "Compounding Annual Return", "-99.857%" },
+                { "Drawdown", "82.900%" },
+                { "Expectancy", "-0.359" },
+                { "Net Profit", "-57.725%" },
+                { "Sharpe Ratio", "-0.555" },
+                { "Probabilistic Sharpe Ratio", "10.606%" },
+                { "Loss Rate", "88%" },
+                { "Win Rate", "12%" },
+                { "Profit-Loss Ratio", "4.45" },
+                { "Alpha", "-1.188" },
+                { "Beta", "0.603" },
+                { "Annual Standard Deviation", "1.754" },
+                { "Annual Variance", "3.075" },
+                { "Information Ratio", "-0.759" },
+                { "Tracking Error", "1.753" },
+                { "Treynor Ratio", "-1.612" },
+                { "Total Fees", "$2558.55" },
+                { "Estimated Strategy Capacity", "$20000.00" },
+                { "Fitness Score", "0.351" },
+                { "Kelly Criterion Estimate", "0" },
+                { "Kelly Criterion Probability Value", "0" },
+                { "Sortino Ratio", "-0.602" },
+                { "Return Over Maximum Drawdown", "-1.415" },
+                { "Portfolio Turnover", "14.226" },
+                { "Total Insights Generated", "0" },
+                { "Total Insights Closed", "0" },
+                { "Total Insights Analysis Completed", "0" },
+                { "Long Insight Count", "0" },
+                { "Short Insight Count", "0" },
+                { "Long/Short Ratio", "100%" },
+                { "Estimated Monthly Alpha Value", "$0" },
+                { "Total Accumulated Estimated Alpha Value", "$0" },
+                { "Mean Population Estimated Insight Value", "$0" },
+                { "Mean Population Direction", "0%" },
+                { "Mean Population Magnitude", "0%" },
+                { "Rolling Averaged Population Direction", "0%" },
+                { "Rolling Averaged Population Magnitude", "0%" },
+                { "OrderListHash", "4f5fd2fb25e957bd0cb7cb6d275ddb97" }
+            };
     }
 }

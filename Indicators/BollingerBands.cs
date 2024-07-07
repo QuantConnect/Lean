@@ -69,10 +69,12 @@ namespace QuantConnect.Indicators
         /// <param name="period">The period of the standard deviation and moving average (middle band)</param>
         /// <param name="k">The number of standard deviations specifying the distance between the middle band and upper or lower bands</param>
         /// <param name="movingAverageType">The type of moving average to be used</param>
-        public BollingerBands(int period, decimal k, MovingAverageType movingAverageType = MovingAverageType.Simple)
-            : this($"BB({period},{k})", period, k, movingAverageType)
-        {
-        }
+        public BollingerBands(
+            int period,
+            decimal k,
+            MovingAverageType movingAverageType = MovingAverageType.Simple
+        )
+            : this($"BB({period},{k})", period, k, movingAverageType) { }
 
         /// <summary>
         /// Initializes a new instance of the BollingerBands class
@@ -81,7 +83,12 @@ namespace QuantConnect.Indicators
         /// <param name="period">The period of the standard deviation and moving average (middle band)</param>
         /// <param name="k">The number of standard deviations specifying the distance between the middle band and upper or lower bands</param>
         /// <param name="movingAverageType">The type of moving average to be used</param>
-        public BollingerBands(string name, int period, decimal k, MovingAverageType movingAverageType = MovingAverageType.Simple)
+        public BollingerBands(
+            string name,
+            int period,
+            decimal k,
+            MovingAverageType movingAverageType = MovingAverageType.Simple
+        )
             : base(name)
         {
             WarmUpPeriod = period;
@@ -100,13 +107,19 @@ namespace QuantConnect.Indicators
             PercentB = IndicatorExtensions.Over(
                 Price.Minus(LowerBand),
                 UpperMinusLower,
-                name + "_%B");
+                name + "_%B"
+            );
         }
 
         /// <summary>
         /// Gets a flag indicating when this indicator is ready and fully initialized
         /// </summary>
-        public override bool IsReady => MiddleBand.IsReady && UpperBand.IsReady && LowerBand.IsReady && BandWidth.IsReady && PercentB.IsReady;
+        public override bool IsReady =>
+            MiddleBand.IsReady
+            && UpperBand.IsReady
+            && LowerBand.IsReady
+            && BandWidth.IsReady
+            && PercentB.IsReady;
 
         /// <summary>
         /// Required period, in data points, for the indicator to be ready and fully initialized.

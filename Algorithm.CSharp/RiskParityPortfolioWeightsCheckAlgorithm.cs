@@ -27,7 +27,9 @@ namespace QuantConnect.DataLibrary.Tests
     /// Example algorithm of using RiskParityPortfolioConstructionModel.
     /// Reproduces https://github.com/QuantConnect/Lean/issues/7476
     /// </summary>
-    public class RiskParityPortfolioWeightsCheckAlgorithm : QCAlgorithm, IRegressionAlgorithmDefinition
+    public class RiskParityPortfolioWeightsCheckAlgorithm
+        : QCAlgorithm,
+            IRegressionAlgorithmDefinition
     {
         private CustomRiskParityPortfolioConstructionModel _portfolioConstructionModel;
 
@@ -36,12 +38,16 @@ namespace QuantConnect.DataLibrary.Tests
             SetStartDate(2021, 2, 21);
             SetEndDate(2021, 3, 30);
             SetCash(100000);
-            SetSecurityInitializer(security => security.SetMarketPrice(GetLastKnownPrice(security)));
+            SetSecurityInitializer(security =>
+                security.SetMarketPrice(GetLastKnownPrice(security))
+            );
 
             AddEquity("SPY", Resolution.Daily);
             AddEquity("AAPL", Resolution.Daily);
 
-            AddAlpha(new ConstantAlphaModel(InsightType.Price, InsightDirection.Up, TimeSpan.FromDays(1)));
+            AddAlpha(
+                new ConstantAlphaModel(InsightType.Price, InsightDirection.Up, TimeSpan.FromDays(1))
+            );
 
             _portfolioConstructionModel = new CustomRiskParityPortfolioConstructionModel();
             SetPortfolioConstruction(_portfolioConstructionModel);
@@ -54,16 +60,21 @@ namespace QuantConnect.DataLibrary.Tests
                 var weights = kvp.Value;
                 if (weights.Count < 2)
                 {
-                    throw new RegressionTestException($"Expected multiple different weigths from the PCM for {kvp.Key}");
+                    throw new RegressionTestException(
+                        $"Expected multiple different weigths from the PCM for {kvp.Key}"
+                    );
                 }
             }
         }
 
-        private class CustomRiskParityPortfolioConstructionModel : RiskParityPortfolioConstructionModel
+        private class CustomRiskParityPortfolioConstructionModel
+            : RiskParityPortfolioConstructionModel
         {
             public Dictionary<Symbol, HashSet<double>> Weights { get; } = new();
 
-            protected override Dictionary<Insight, double> DetermineTargetPercent(List<Insight> activeInsights)
+            protected override Dictionary<Insight, double> DetermineTargetPercent(
+                List<Insight> activeInsights
+            )
             {
                 var result = base.DetermineTargetPercent(activeInsights);
                 foreach (var kvp in result)
@@ -109,36 +120,36 @@ namespace QuantConnect.DataLibrary.Tests
         /// <summary>
         /// This is used by the regression test system to indicate what the expected statistics are from running the algorithm
         /// </summary>
-        public Dictionary<string, string> ExpectedStatistics => new Dictionary<string, string>
-        {
-            {"Total Orders", "31"},
-            {"Average Win", "0.01%"},
-            {"Average Loss", "-0.01%"},
-            {"Compounding Annual Return", "5.011%"},
-            {"Drawdown", "4.900%"},
-            {"Expectancy", "-0.273"},
-            {"Start Equity", "100000"},
-            {"End Equity", "100509.82"},
-            {"Net Profit", "0.510%"},
-            {"Sharpe Ratio", "0.265"},
-            {"Sortino Ratio", "0.371"},
-            {"Probabilistic Sharpe Ratio", "39.108%"},
-            {"Loss Rate", "58%"},
-            {"Win Rate", "42%"},
-            {"Profit-Loss Ratio", "0.75"},
-            {"Alpha", "-0.092"},
-            {"Beta", "1.22"},
-            {"Annual Standard Deviation", "0.2"},
-            {"Annual Variance", "0.04"},
-            {"Information Ratio", "-0.748"},
-            {"Tracking Error", "0.088"},
-            {"Treynor Ratio", "0.043"},
-            {"Total Fees", "$31.65"},
-            {"Estimated Strategy Capacity", "$1300000000.00"},
-            {"Lowest Capacity Asset", "AAPL R735QTJ8XC9X"},
-            {"Portfolio Turnover", "3.08%"},
-            {"OrderListHash", "2766e0ba2ed0419a2db5240b41494390"}
-        };
-
+        public Dictionary<string, string> ExpectedStatistics =>
+            new Dictionary<string, string>
+            {
+                { "Total Orders", "31" },
+                { "Average Win", "0.01%" },
+                { "Average Loss", "-0.01%" },
+                { "Compounding Annual Return", "5.011%" },
+                { "Drawdown", "4.900%" },
+                { "Expectancy", "-0.273" },
+                { "Start Equity", "100000" },
+                { "End Equity", "100509.82" },
+                { "Net Profit", "0.510%" },
+                { "Sharpe Ratio", "0.265" },
+                { "Sortino Ratio", "0.371" },
+                { "Probabilistic Sharpe Ratio", "39.108%" },
+                { "Loss Rate", "58%" },
+                { "Win Rate", "42%" },
+                { "Profit-Loss Ratio", "0.75" },
+                { "Alpha", "-0.092" },
+                { "Beta", "1.22" },
+                { "Annual Standard Deviation", "0.2" },
+                { "Annual Variance", "0.04" },
+                { "Information Ratio", "-0.748" },
+                { "Tracking Error", "0.088" },
+                { "Treynor Ratio", "0.043" },
+                { "Total Fees", "$31.65" },
+                { "Estimated Strategy Capacity", "$1300000000.00" },
+                { "Lowest Capacity Asset", "AAPL R735QTJ8XC9X" },
+                { "Portfolio Turnover", "3.08%" },
+                { "OrderListHash", "2766e0ba2ed0419a2db5240b41494390" }
+            };
     }
 }

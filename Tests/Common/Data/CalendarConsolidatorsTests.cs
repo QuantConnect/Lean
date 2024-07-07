@@ -34,9 +34,18 @@ namespace QuantConnect.Tests.Common.Data
         [OneTimeSetUp]
         public void SetUp()
         {
-            _dailyFuncDictionary = new Dictionary<Language, dynamic> { { Language.CSharp, TimeSpan.FromDays(1) } };
-            _weeklyFuncDictionary = new Dictionary<Language, dynamic> { { Language.CSharp, Calendar.Weekly } };
-            _monthlyFuncDictionary = new Dictionary<Language, dynamic> { { Language.CSharp, Calendar.Monthly } };
+            _dailyFuncDictionary = new Dictionary<Language, dynamic>
+            {
+                { Language.CSharp, TimeSpan.FromDays(1) }
+            };
+            _weeklyFuncDictionary = new Dictionary<Language, dynamic>
+            {
+                { Language.CSharp, Calendar.Weekly }
+            };
+            _monthlyFuncDictionary = new Dictionary<Language, dynamic>
+            {
+                { Language.CSharp, Calendar.Monthly }
+            };
 
             using (Py.GIL())
             {
@@ -81,18 +90,17 @@ def Monthly(dt):
                 new TradeBar(reference.AddDays(14), Symbols.SPY, 11, 13, 9, 11, 100, Time.OneDay)
             };
 
-            using var weeklyConsolidator = new TradeBarConsolidator(_weeklyFuncDictionary[language]);
+            using var weeklyConsolidator = new TradeBarConsolidator(
+                _weeklyFuncDictionary[language]
+            );
             weeklyConsolidator.DataConsolidated += (s, e) =>
             {
-                AssertTradeBar(
-                    bars.Take(3),
-                    reference,
-                    reference.AddDays(7),
-                    Symbols.SPY,
-                    e);
+                AssertTradeBar(bars.Take(3), reference, reference.AddDays(7), Symbols.SPY, e);
             };
 
-            using var monthlyConsolidator = new TradeBarConsolidator(_monthlyFuncDictionary[language]);
+            using var monthlyConsolidator = new TradeBarConsolidator(
+                _monthlyFuncDictionary[language]
+            );
             monthlyConsolidator.DataConsolidated += (s, e) =>
             {
                 AssertTradeBar(
@@ -100,7 +108,8 @@ def Monthly(dt):
                     new DateTime(reference.Year, reference.Month, 1),
                     new DateTime(reference.Year, reference.Month + 1, 1),
                     Symbols.SPY,
-                    e);
+                    e
+                );
             };
 
             foreach (var bar in bars.Take(4))
@@ -114,7 +123,13 @@ def Monthly(dt):
             }
         }
 
-        private void AssertTradeBar(IEnumerable<TradeBar> tradeBars, DateTime openTime, DateTime closeTime, Symbol symbol, TradeBar consolidated)
+        private void AssertTradeBar(
+            IEnumerable<TradeBar> tradeBars,
+            DateTime openTime,
+            DateTime closeTime,
+            Symbol symbol,
+            TradeBar consolidated
+        )
         {
             Assert.IsNotNull(consolidated);
             Assert.AreEqual(openTime, consolidated.Time);
@@ -136,25 +151,64 @@ def Monthly(dt):
             var reference = new DateTime(2019, 3, 18);
             var bars = new List<QuoteBar>
             {
-                new QuoteBar(reference.AddDays(1), Symbols.EURUSD, new Bar(9, 11, 8, 10), 10, new Bar(9, 11, 8, 10), 10, Time.OneDay),
-                new QuoteBar(reference.AddDays(3), Symbols.EURUSD, new Bar(10, 12, 8, 11), 10, new Bar(10, 12, 8, 11), 10, Time.OneDay),
-                new QuoteBar(reference.AddDays(5), Symbols.EURUSD, new Bar(11, 13, 9, 10), 10, new Bar(11, 13, 9, 10), 10, Time.OneDay),
-                new QuoteBar(reference.AddDays(7), Symbols.EURUSD, new Bar(11, 13, 9, 11), 10, new Bar(11, 13, 9, 11), 10, Time.OneDay),
-                new QuoteBar(reference.AddDays(14), Symbols.EURUSD, new Bar(11, 13, 9, 11), 10, new Bar(11, 13, 9, 11), 10, Time.OneDay)
-            };
-
-            using var weeklyConsolidator = new QuoteBarConsolidator(_weeklyFuncDictionary[language]);
-            weeklyConsolidator.DataConsolidated += (s, e) =>
-            {
-                AssertQuoteBar(
-                    bars.Take(3),
-                    reference,
+                new QuoteBar(
+                    reference.AddDays(1),
+                    Symbols.EURUSD,
+                    new Bar(9, 11, 8, 10),
+                    10,
+                    new Bar(9, 11, 8, 10),
+                    10,
+                    Time.OneDay
+                ),
+                new QuoteBar(
+                    reference.AddDays(3),
+                    Symbols.EURUSD,
+                    new Bar(10, 12, 8, 11),
+                    10,
+                    new Bar(10, 12, 8, 11),
+                    10,
+                    Time.OneDay
+                ),
+                new QuoteBar(
+                    reference.AddDays(5),
+                    Symbols.EURUSD,
+                    new Bar(11, 13, 9, 10),
+                    10,
+                    new Bar(11, 13, 9, 10),
+                    10,
+                    Time.OneDay
+                ),
+                new QuoteBar(
                     reference.AddDays(7),
                     Symbols.EURUSD,
-                    e);
+                    new Bar(11, 13, 9, 11),
+                    10,
+                    new Bar(11, 13, 9, 11),
+                    10,
+                    Time.OneDay
+                ),
+                new QuoteBar(
+                    reference.AddDays(14),
+                    Symbols.EURUSD,
+                    new Bar(11, 13, 9, 11),
+                    10,
+                    new Bar(11, 13, 9, 11),
+                    10,
+                    Time.OneDay
+                )
             };
 
-            using var monthlyConsolidator = new QuoteBarConsolidator(_monthlyFuncDictionary[language]);
+            using var weeklyConsolidator = new QuoteBarConsolidator(
+                _weeklyFuncDictionary[language]
+            );
+            weeklyConsolidator.DataConsolidated += (s, e) =>
+            {
+                AssertQuoteBar(bars.Take(3), reference, reference.AddDays(7), Symbols.EURUSD, e);
+            };
+
+            using var monthlyConsolidator = new QuoteBarConsolidator(
+                _monthlyFuncDictionary[language]
+            );
             monthlyConsolidator.DataConsolidated += (s, e) =>
             {
                 AssertQuoteBar(
@@ -162,7 +216,8 @@ def Monthly(dt):
                     new DateTime(reference.Year, reference.Month, 1),
                     new DateTime(reference.Year, reference.Month + 1, 1),
                     Symbols.EURUSD,
-                    e);
+                    e
+                );
             };
 
             foreach (var bar in bars.Take(4))
@@ -175,7 +230,14 @@ def Monthly(dt):
                 monthlyConsolidator.Update(bar);
             }
         }
-        private void AssertQuoteBar(IEnumerable<QuoteBar> quoteBars, DateTime openTime, DateTime closeTime, Symbol symbol, QuoteBar consolidated)
+
+        private void AssertQuoteBar(
+            IEnumerable<QuoteBar> quoteBars,
+            DateTime openTime,
+            DateTime closeTime,
+            Symbol symbol,
+            QuoteBar consolidated
+        )
         {
             Assert.AreEqual(symbol, consolidated.Symbol);
             Assert.AreEqual(openTime, consolidated.Time);
@@ -203,22 +265,37 @@ def Monthly(dt):
             var reference = new DateTime(2019, 3, 18);
             var ticks = new List<Tick>
             {
-                new Tick(reference.AddDays(1), Symbols.SPY, 9, 11, 8){ TickType = TickType.Trade, Quantity = 10 },
-                new Tick(reference.AddDays(3), Symbols.SPY, 10, 12, 8){ TickType = TickType.Trade,  Quantity = 10 },
-                new Tick(reference.AddDays(5), Symbols.SPY, 11, 13, 9){ TickType = TickType.Trade,  Quantity = 10 },
-                new Tick(reference.AddDays(7), Symbols.SPY, 11, 13, 9){ TickType = TickType.Trade,  Quantity = 10 },
-                new Tick(reference.AddDays(14), Symbols.SPY, 11, 13, 9){ TickType = TickType.Trade,  Quantity = 10 }
+                new Tick(reference.AddDays(1), Symbols.SPY, 9, 11, 8)
+                {
+                    TickType = TickType.Trade,
+                    Quantity = 10
+                },
+                new Tick(reference.AddDays(3), Symbols.SPY, 10, 12, 8)
+                {
+                    TickType = TickType.Trade,
+                    Quantity = 10
+                },
+                new Tick(reference.AddDays(5), Symbols.SPY, 11, 13, 9)
+                {
+                    TickType = TickType.Trade,
+                    Quantity = 10
+                },
+                new Tick(reference.AddDays(7), Symbols.SPY, 11, 13, 9)
+                {
+                    TickType = TickType.Trade,
+                    Quantity = 10
+                },
+                new Tick(reference.AddDays(14), Symbols.SPY, 11, 13, 9)
+                {
+                    TickType = TickType.Trade,
+                    Quantity = 10
+                }
             };
 
             using var weeklyConsolidator = new TickConsolidator(_weeklyFuncDictionary[language]);
             weeklyConsolidator.DataConsolidated += (s, e) =>
             {
-                AssertTickTradeBar(
-                    ticks.Take(3),
-                    reference,
-                    reference.AddDays(7),
-                    Symbols.SPY,
-                    e);
+                AssertTickTradeBar(ticks.Take(3), reference, reference.AddDays(7), Symbols.SPY, e);
             };
 
             using var monthlyConsolidator = new TickConsolidator(_monthlyFuncDictionary[language]);
@@ -229,7 +306,8 @@ def Monthly(dt):
                     new DateTime(reference.Year, reference.Month, 1),
                     new DateTime(reference.Year, reference.Month + 1, 1),
                     Symbols.SPY,
-                    e);
+                    e
+                );
             };
 
             foreach (var tick in ticks.Take(4))
@@ -243,7 +321,13 @@ def Monthly(dt):
             }
         }
 
-        private void AssertTickTradeBar(IEnumerable<Tick> ticks, DateTime openTime, DateTime closeTime, Symbol symbol, TradeBar consolidated)
+        private void AssertTickTradeBar(
+            IEnumerable<Tick> ticks,
+            DateTime openTime,
+            DateTime closeTime,
+            Symbol symbol,
+            TradeBar consolidated
+        )
         {
             Assert.IsNotNull(consolidated);
             Assert.AreEqual(openTime, consolidated.Time);
@@ -265,14 +349,16 @@ def Monthly(dt):
             var reference = new DateTime(2019, 3, 18);
             var ticks = new List<Tick>
             {
-                new Tick(reference.AddDays(1), Symbols.EURUSD, 9, 11, 8){ Quantity = 10 },
-                new Tick(reference.AddDays(3), Symbols.EURUSD, 10, 12, 8){ Quantity = 10 },
-                new Tick(reference.AddDays(5), Symbols.EURUSD, 11, 13, 9){ Quantity = 10 },
-                new Tick(reference.AddDays(7), Symbols.EURUSD, 11, 13, 9){ Quantity = 10 },
-                new Tick(reference.AddDays(14), Symbols.EURUSD, 11, 13, 9){ Quantity = 10 }
+                new Tick(reference.AddDays(1), Symbols.EURUSD, 9, 11, 8) { Quantity = 10 },
+                new Tick(reference.AddDays(3), Symbols.EURUSD, 10, 12, 8) { Quantity = 10 },
+                new Tick(reference.AddDays(5), Symbols.EURUSD, 11, 13, 9) { Quantity = 10 },
+                new Tick(reference.AddDays(7), Symbols.EURUSD, 11, 13, 9) { Quantity = 10 },
+                new Tick(reference.AddDays(14), Symbols.EURUSD, 11, 13, 9) { Quantity = 10 }
             };
 
-            using var weeklyConsolidator = new TickQuoteBarConsolidator(_weeklyFuncDictionary[language]);
+            using var weeklyConsolidator = new TickQuoteBarConsolidator(
+                _weeklyFuncDictionary[language]
+            );
             weeklyConsolidator.DataConsolidated += (s, e) =>
             {
                 AssertTickQuoteBar(
@@ -280,10 +366,13 @@ def Monthly(dt):
                     reference,
                     reference.AddDays(7),
                     Symbols.EURUSD,
-                    e);
+                    e
+                );
             };
 
-            using var monthlyConsolidator = new TickQuoteBarConsolidator(_monthlyFuncDictionary[language]);
+            using var monthlyConsolidator = new TickQuoteBarConsolidator(
+                _monthlyFuncDictionary[language]
+            );
             monthlyConsolidator.DataConsolidated += (s, e) =>
             {
                 AssertTickQuoteBar(
@@ -291,7 +380,8 @@ def Monthly(dt):
                     new DateTime(reference.Year, reference.Month, 1),
                     new DateTime(reference.Year, reference.Month + 1, 1),
                     Symbols.EURUSD,
-                    e);
+                    e
+                );
             };
 
             foreach (var tick in ticks.Take(4))
@@ -305,9 +395,15 @@ def Monthly(dt):
             }
         }
 
-        private void AssertTickQuoteBar(IEnumerable<Tick> ticks, DateTime openTime, DateTime closeTime, Symbol symbol, QuoteBar consolidated)
+        private void AssertTickQuoteBar(
+            IEnumerable<Tick> ticks,
+            DateTime openTime,
+            DateTime closeTime,
+            Symbol symbol,
+            QuoteBar consolidated
+        )
         {
-            Assert.IsNotNull(consolidated);        
+            Assert.IsNotNull(consolidated);
             Assert.AreEqual(openTime, consolidated.Time);
             Assert.AreEqual(closeTime, consolidated.EndTime);
             Assert.AreEqual(symbol, consolidated.Symbol);
@@ -330,25 +426,24 @@ def Monthly(dt):
             var reference = new DateTime(2019, 3, 18);
             var ticks = new List<Tick>
             {
-                new Tick(reference.AddDays(1), Symbols.SPY, 9, 11, 8){ Quantity = 10 },
-                new Tick(reference.AddDays(3), Symbols.SPY, 10, 12, 8){ Quantity = 10 },
-                new Tick(reference.AddDays(5), Symbols.SPY, 11, 13, 9){ Quantity = 10 },
-                new Tick(reference.AddDays(7), Symbols.SPY, 11, 13, 9){ Quantity = 10 },
-                new Tick(reference.AddDays(14), Symbols.SPY, 11, 13, 9){ Quantity = 10 }
+                new Tick(reference.AddDays(1), Symbols.SPY, 9, 11, 8) { Quantity = 10 },
+                new Tick(reference.AddDays(3), Symbols.SPY, 10, 12, 8) { Quantity = 10 },
+                new Tick(reference.AddDays(5), Symbols.SPY, 11, 13, 9) { Quantity = 10 },
+                new Tick(reference.AddDays(7), Symbols.SPY, 11, 13, 9) { Quantity = 10 },
+                new Tick(reference.AddDays(14), Symbols.SPY, 11, 13, 9) { Quantity = 10 }
             };
 
-            using var weeklyConsolidator = new BaseDataConsolidator(_weeklyFuncDictionary[language]);
-            weeklyConsolidator.DataConsolidated += (s, e) => 
+            using var weeklyConsolidator = new BaseDataConsolidator(
+                _weeklyFuncDictionary[language]
+            );
+            weeklyConsolidator.DataConsolidated += (s, e) =>
             {
-                AssertBaseTradeBar(
-                    ticks.Take(3),
-                    reference,
-                    reference.AddDays(7),
-                    Symbols.SPY,
-                    e);
+                AssertBaseTradeBar(ticks.Take(3), reference, reference.AddDays(7), Symbols.SPY, e);
             };
 
-            using var monthlyConsolidator = new BaseDataConsolidator(_monthlyFuncDictionary[language]);
+            using var monthlyConsolidator = new BaseDataConsolidator(
+                _monthlyFuncDictionary[language]
+            );
             monthlyConsolidator.DataConsolidated += (s, e) =>
             {
                 AssertBaseTradeBar(
@@ -356,7 +451,8 @@ def Monthly(dt):
                     new DateTime(reference.Year, reference.Month, 1),
                     new DateTime(reference.Year, reference.Month + 1, 1),
                     Symbols.SPY,
-                    e);
+                    e
+                );
             };
 
             foreach (var tick in ticks.Take(4))
@@ -370,8 +466,13 @@ def Monthly(dt):
             }
         }
 
-
-        private void AssertBaseTradeBar(IEnumerable<Tick> ticks, DateTime openTime, DateTime closeTime, Symbol symbol, TradeBar consolidated)
+        private void AssertBaseTradeBar(
+            IEnumerable<Tick> ticks,
+            DateTime openTime,
+            DateTime closeTime,
+            Symbol symbol,
+            TradeBar consolidated
+        )
         {
             Assert.AreEqual(openTime, consolidated.Time);
             Assert.AreEqual(closeTime, consolidated.EndTime);
@@ -402,12 +503,7 @@ def Monthly(dt):
             using var dailyConsolidator = new TradeBarConsolidator(_dailyFuncDictionary[language]);
             dailyConsolidator.DataConsolidated += (s, e) =>
             {
-                AssertTradeBar(
-                    bars.Take(4),
-                    reference,
-                    reference.AddDays(1),
-                    Symbols.SPY,
-                    e);
+                AssertTradeBar(bars.Take(4), reference, reference.AddDays(1), Symbols.SPY, e);
             };
 
             foreach (var bar in bars)
@@ -416,7 +512,13 @@ def Monthly(dt):
             }
         }
 
-        private void AssertDailyTradeBar(IEnumerable<TradeBar> tradeBars, DateTime openTime, DateTime closeTime, Symbol symbol, TradeBar consolidated)
+        private void AssertDailyTradeBar(
+            IEnumerable<TradeBar> tradeBars,
+            DateTime openTime,
+            DateTime closeTime,
+            Symbol symbol,
+            TradeBar consolidated
+        )
         {
             Assert.IsNotNull(consolidated);
             Assert.AreEqual(openTime, consolidated.Time);
@@ -428,7 +530,6 @@ def Monthly(dt):
             Assert.AreEqual(tradeBars.Last().Close, consolidated.Close);
             Assert.AreEqual(tradeBars.Sum(x => x.Volume), consolidated.Volume);
         }
-
 
         private SimpleMovingAverage indicator;
 
@@ -511,7 +612,7 @@ def Monthly(dt):
             var calendarInfo = quarterly(new DateTime(2020, 5, 1));
 
             Assert.AreEqual(new DateTime(2020, 1, 1), calendarInfo.Start);
-            Assert.AreEqual(TimeSpan.FromDays(366), calendarInfo.Period);   // leap year
+            Assert.AreEqual(TimeSpan.FromDays(366), calendarInfo.Period); // leap year
 
             calendarInfo = quarterly(new DateTime(2021, 11, 1));
 
@@ -524,7 +625,8 @@ def Monthly(dt):
             using var consolidator = new TradeBarConsolidator(calendarType);
             consolidator.DataConsolidated += (s, e) =>
             {
-                if (!indicator.IsReady) return;
+                if (!indicator.IsReady)
+                    return;
 
                 var previous = e.Value - e.Period.Days;
                 var actual = (e.Value + previous) / indicator.Period;
@@ -547,7 +649,10 @@ def Monthly(dt):
         /// </summary>
         /// <param name="indicator">The indicator to receive data from the consolidator</param>
         /// <param name="consolidator">The consolidator to receive raw subscription data</param>
-        public void RegisterIndicator(IndicatorBase<IndicatorDataPoint> indicator, IDataConsolidator consolidator)
+        public void RegisterIndicator(
+            IndicatorBase<IndicatorDataPoint> indicator,
+            IDataConsolidator consolidator
+        )
         {
             consolidator.DataConsolidated += (sender, consolidated) =>
             {

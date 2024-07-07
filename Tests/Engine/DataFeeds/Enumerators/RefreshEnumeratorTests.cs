@@ -13,10 +13,10 @@
  * limitations under the License.
 */
 
-using Moq;
-using System.IO;
-using NUnit.Framework;
 using System.Collections.Generic;
+using System.IO;
+using Moq;
+using NUnit.Framework;
 using QuantConnect.Lean.Engine.DataFeeds.Enumerators;
 
 namespace QuantConnect.Tests.Engine.DataFeeds.Enumerators
@@ -123,7 +123,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds.Enumerators
         public void RefreshesAfterMoveNextReturnsFalse()
         {
             var refreshCount = 0;
-            var list = new List<int?> {1, 2};
+            var list = new List<int?> { 1, 2 };
             var refresher = new RefreshEnumerator<int?>(() =>
             {
                 refreshCount++;

@@ -14,9 +14,9 @@
 */
 
 using System;
+using System.Collections.Generic;
 using Python.Runtime;
 using QuantConnect.Util;
-using System.Collections.Generic;
 
 namespace QuantConnect.Exceptions
 {
@@ -45,17 +45,24 @@ namespace QuantConnect.Exceptions
 
             using (Py.GIL())
             {
-                return base.CanInterpret(exception) &&
-                    pythonException.Type.Name.Contains("KeyError", StringComparison.InvariantCultureIgnoreCase);
+                return base.CanInterpret(exception)
+                    && pythonException.Type.Name.Contains(
+                        "KeyError",
+                        StringComparison.InvariantCultureIgnoreCase
+                    );
             }
         }
+
         /// <summary>
         /// Interprets the specified exception into a new exception
         /// </summary>
         /// <param name="exception">The exception to be interpreted</param>
         /// <param name="innerInterpreter">An interpreter that should be applied to the inner exception.</param>
         /// <returns>The interpreted exception</returns>
-        public override Exception Interpret(Exception exception, IExceptionInterpreter innerInterpreter)
+        public override Exception Interpret(
+            Exception exception,
+            IExceptionInterpreter innerInterpreter
+        )
         {
             var pe = (PythonException)exception;
 

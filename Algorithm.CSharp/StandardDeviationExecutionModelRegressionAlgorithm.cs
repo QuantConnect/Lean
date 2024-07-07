@@ -19,8 +19,8 @@ using QuantConnect.Algorithm.Framework.Alphas;
 using QuantConnect.Algorithm.Framework.Execution;
 using QuantConnect.Algorithm.Framework.Portfolio;
 using QuantConnect.Algorithm.Framework.Selection;
-using QuantConnect.Orders;
 using QuantConnect.Interfaces;
+using QuantConnect.Orders;
 
 namespace QuantConnect.Algorithm.CSharp
 {
@@ -29,7 +29,9 @@ namespace QuantConnect.Algorithm.CSharp
     /// This algorithm shows how the execution model works to split up orders and submit them only when
     /// the price is 2 standard deviations from the 60min mean (default model settings).
     /// </summary>
-    public class StandardDeviationExecutionModelRegressionAlgorithm : QCAlgorithm, IRegressionAlgorithmDefinition
+    public class StandardDeviationExecutionModelRegressionAlgorithm
+        : QCAlgorithm,
+            IRegressionAlgorithmDefinition
     {
         public override void Initialize()
         {
@@ -39,12 +41,14 @@ namespace QuantConnect.Algorithm.CSharp
             SetEndDate(2013, 10, 11);
             SetCash(1000000);
 
-            SetUniverseSelection(new ManualUniverseSelectionModel(
-                QuantConnect.Symbol.Create("AIG", SecurityType.Equity, Market.USA),
-                QuantConnect.Symbol.Create("BAC", SecurityType.Equity, Market.USA),
-                QuantConnect.Symbol.Create("IBM", SecurityType.Equity, Market.USA),
-                QuantConnect.Symbol.Create("SPY", SecurityType.Equity, Market.USA)
-            ));
+            SetUniverseSelection(
+                new ManualUniverseSelectionModel(
+                    QuantConnect.Symbol.Create("AIG", SecurityType.Equity, Market.USA),
+                    QuantConnect.Symbol.Create("BAC", SecurityType.Equity, Market.USA),
+                    QuantConnect.Symbol.Create("IBM", SecurityType.Equity, Market.USA),
+                    QuantConnect.Symbol.Create("SPY", SecurityType.Equity, Market.USA)
+                )
+            );
 
             // using hourly rsi to generate more insights
             SetAlpha(new RsiAlphaModel(14, Resolution.Hour));
@@ -85,35 +89,36 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// This is used by the regression test system to indicate what the expected statistics are from running the algorithm
         /// </summary>
-        public Dictionary<string, string> ExpectedStatistics => new Dictionary<string, string>
-        {
-            {"Total Orders", "201"},
-            {"Average Win", "0.04%"},
-            {"Average Loss", "0.00%"},
-            {"Compounding Annual Return", "1331.217%"},
-            {"Drawdown", "0.600%"},
-            {"Expectancy", "132.060"},
-            {"Start Equity", "1000000"},
-            {"End Equity", "1034608.74"},
-            {"Net Profit", "3.461%"},
-            {"Sharpe Ratio", "38.665"},
-            {"Sortino Ratio", "0"},
-            {"Probabilistic Sharpe Ratio", "99.757%"},
-            {"Loss Rate", "1%"},
-            {"Win Rate", "99%"},
-            {"Profit-Loss Ratio", "133.61"},
-            {"Alpha", "6.068"},
-            {"Beta", "0.798"},
-            {"Annual Standard Deviation", "0.198"},
-            {"Annual Variance", "0.039"},
-            {"Information Ratio", "57.99"},
-            {"Tracking Error", "0.098"},
-            {"Treynor Ratio", "9.578"},
-            {"Total Fees", "$260.38"},
-            {"Estimated Strategy Capacity", "$400000.00"},
-            {"Lowest Capacity Asset", "AIG R735QTJ8XC9X"},
-            {"Portfolio Turnover", "76.30%"},
-            {"OrderListHash", "b9b3d15cb605213622465aacf0049703"}
-        };
+        public Dictionary<string, string> ExpectedStatistics =>
+            new Dictionary<string, string>
+            {
+                { "Total Orders", "201" },
+                { "Average Win", "0.04%" },
+                { "Average Loss", "0.00%" },
+                { "Compounding Annual Return", "1331.217%" },
+                { "Drawdown", "0.600%" },
+                { "Expectancy", "132.060" },
+                { "Start Equity", "1000000" },
+                { "End Equity", "1034608.74" },
+                { "Net Profit", "3.461%" },
+                { "Sharpe Ratio", "38.665" },
+                { "Sortino Ratio", "0" },
+                { "Probabilistic Sharpe Ratio", "99.757%" },
+                { "Loss Rate", "1%" },
+                { "Win Rate", "99%" },
+                { "Profit-Loss Ratio", "133.61" },
+                { "Alpha", "6.068" },
+                { "Beta", "0.798" },
+                { "Annual Standard Deviation", "0.198" },
+                { "Annual Variance", "0.039" },
+                { "Information Ratio", "57.99" },
+                { "Tracking Error", "0.098" },
+                { "Treynor Ratio", "9.578" },
+                { "Total Fees", "$260.38" },
+                { "Estimated Strategy Capacity", "$400000.00" },
+                { "Lowest Capacity Asset", "AIG R735QTJ8XC9X" },
+                { "Portfolio Turnover", "76.30%" },
+                { "OrderListHash", "b9b3d15cb605213622465aacf0049703" }
+            };
     }
 }

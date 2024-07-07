@@ -13,8 +13,8 @@
  * limitations under the License.
 */
 
-using NUnit.Framework;
 using System.Collections.Generic;
+using NUnit.Framework;
 
 namespace QuantConnect.Tests.Common
 {

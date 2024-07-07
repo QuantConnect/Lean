@@ -14,11 +14,11 @@
 */
 
 using System;
-using QuantConnect.Data;
-using QuantConnect.Orders;
-using QuantConnect.Interfaces;
-using QuantConnect.Securities;
 using System.Collections.Generic;
+using QuantConnect.Data;
+using QuantConnect.Interfaces;
+using QuantConnect.Orders;
+using QuantConnect.Securities;
 using QuantConnect.Securities.Future;
 
 namespace QuantConnect.Algorithm.CSharp
@@ -26,7 +26,9 @@ namespace QuantConnect.Algorithm.CSharp
     /// <summary>
     /// Continuous Futures Regression algorithm reproducing GH issue #6490 asserting limit if touched order works as expected
     /// </summary>
-    public class ContinuousFutureLimitIfTouchedOrderRegressionAlgorithm : QCAlgorithm, IRegressionAlgorithmDefinition
+    public class ContinuousFutureLimitIfTouchedOrderRegressionAlgorithm
+        : QCAlgorithm,
+            IRegressionAlgorithmDefinition
     {
         private OrderTicket _ticket;
         private Future _continuousContract;
@@ -39,7 +41,8 @@ namespace QuantConnect.Algorithm.CSharp
             SetStartDate(2013, 10, 6);
             SetEndDate(2013, 10, 10);
 
-            _continuousContract = AddFuture(Futures.Indices.SP500EMini,
+            _continuousContract = AddFuture(
+                Futures.Indices.SP500EMini,
                 dataNormalizationMode: DataNormalizationMode.BackwardsRatio,
                 dataMappingMode: DataMappingMode.LastTradingDay
             );
@@ -53,7 +56,12 @@ namespace QuantConnect.Algorithm.CSharp
         {
             if (_ticket == null)
             {
-                _ticket = LimitIfTouchedOrder(_continuousContract.Mapped, -1, _continuousContract.Price, _continuousContract.Price);
+                _ticket = LimitIfTouchedOrder(
+                    _continuousContract.Mapped,
+                    -1,
+                    _continuousContract.Price,
+                    _continuousContract.Price
+                );
             }
         }
 
@@ -93,35 +101,36 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// This is used by the regression test system to indicate what the expected statistics are from running the algorithm
         /// </summary>
-        public Dictionary<string, string> ExpectedStatistics => new Dictionary<string, string>
-        {
-            {"Total Orders", "1"},
-            {"Average Win", "0%"},
-            {"Average Loss", "0%"},
-            {"Compounding Annual Return", "-99.258%"},
-            {"Drawdown", "6.300%"},
-            {"Expectancy", "0"},
-            {"Start Equity", "100000"},
-            {"End Equity", "93870.7"},
-            {"Net Profit", "-6.129%"},
-            {"Sharpe Ratio", "-2.199"},
-            {"Sortino Ratio", "-2.305"},
-            {"Probabilistic Sharpe Ratio", "5.175%"},
-            {"Loss Rate", "0%"},
-            {"Win Rate", "0%"},
-            {"Profit-Loss Ratio", "0"},
-            {"Alpha", "-0.984"},
-            {"Beta", "-0.022"},
-            {"Annual Standard Deviation", "0.449"},
-            {"Annual Variance", "0.202"},
-            {"Information Ratio", "-2.231"},
-            {"Tracking Error", "0.513"},
-            {"Treynor Ratio", "43.96"},
-            {"Total Fees", "$2.15"},
-            {"Estimated Strategy Capacity", "$2600000000.00"},
-            {"Lowest Capacity Asset", "ES VMKLFZIH2MTD"},
-            {"Portfolio Turnover", "16.49%"},
-            {"OrderListHash", "d13f91ab95169699139d21685a5e346a"}
-        };
+        public Dictionary<string, string> ExpectedStatistics =>
+            new Dictionary<string, string>
+            {
+                { "Total Orders", "1" },
+                { "Average Win", "0%" },
+                { "Average Loss", "0%" },
+                { "Compounding Annual Return", "-99.258%" },
+                { "Drawdown", "6.300%" },
+                { "Expectancy", "0" },
+                { "Start Equity", "100000" },
+                { "End Equity", "93870.7" },
+                { "Net Profit", "-6.129%" },
+                { "Sharpe Ratio", "-2.199" },
+                { "Sortino Ratio", "-2.305" },
+                { "Probabilistic Sharpe Ratio", "5.175%" },
+                { "Loss Rate", "0%" },
+                { "Win Rate", "0%" },
+                { "Profit-Loss Ratio", "0" },
+                { "Alpha", "-0.984" },
+                { "Beta", "-0.022" },
+                { "Annual Standard Deviation", "0.449" },
+                { "Annual Variance", "0.202" },
+                { "Information Ratio", "-2.231" },
+                { "Tracking Error", "0.513" },
+                { "Treynor Ratio", "43.96" },
+                { "Total Fees", "$2.15" },
+                { "Estimated Strategy Capacity", "$2600000000.00" },
+                { "Lowest Capacity Asset", "ES VMKLFZIH2MTD" },
+                { "Portfolio Turnover", "16.49%" },
+                { "OrderListHash", "d13f91ab95169699139d21685a5e346a" }
+            };
     }
 }

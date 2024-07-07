@@ -27,6 +27,7 @@ namespace QuantConnect.Algorithm.Framework.Selection
     public class CoarseFundamentalUniverseSelectionModel : FundamentalUniverseSelectionModel
     {
         private readonly Func<IEnumerable<CoarseFundamental>, IEnumerable<Symbol>> _coarseSelector;
+
         /// <summary>
         /// Initializes a new instance of the <see cref="CoarseFundamentalUniverseSelectionModel"/> class
         /// </summary>
@@ -35,7 +36,7 @@ namespace QuantConnect.Algorithm.Framework.Selection
         public CoarseFundamentalUniverseSelectionModel(
             Func<IEnumerable<CoarseFundamental>, IEnumerable<Symbol>> coarseSelector,
             UniverseSettings universeSettings = null
-            )
+        )
             : base(false, universeSettings)
         {
             _coarseSelector = coarseSelector;
@@ -49,7 +50,7 @@ namespace QuantConnect.Algorithm.Framework.Selection
         public CoarseFundamentalUniverseSelectionModel(
             PyObject coarseSelector,
             UniverseSettings universeSettings = null
-            )
+        )
             : base(false, universeSettings)
         {
             Func<IEnumerable<CoarseFundamental>, object> func;
@@ -60,7 +61,10 @@ namespace QuantConnect.Algorithm.Framework.Selection
         }
 
         /// <inheritdoc />
-        public override IEnumerable<Symbol> SelectCoarse(QCAlgorithm algorithm, IEnumerable<CoarseFundamental> coarse)
+        public override IEnumerable<Symbol> SelectCoarse(
+            QCAlgorithm algorithm,
+            IEnumerable<CoarseFundamental> coarse
+        )
         {
             return _coarseSelector(coarse);
         }

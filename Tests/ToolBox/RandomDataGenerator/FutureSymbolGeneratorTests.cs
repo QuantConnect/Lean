@@ -13,12 +13,12 @@
  * limitations under the License.
 */
 
+using System;
+using System.Linq;
 using Moq;
 using NUnit.Framework;
 using QuantConnect.Securities;
 using QuantConnect.ToolBox.RandomDataGenerator;
-using System;
-using System.Linq;
 
 namespace QuantConnect.Tests.ToolBox.RandomDataGenerator
 {
@@ -26,7 +26,8 @@ namespace QuantConnect.Tests.ToolBox.RandomDataGenerator
     public class FutureSymbolGeneratorTests
     {
         private const int Seed = 123456789;
-        private static readonly IRandomValueGenerator _randomValueGenerator = new RandomValueGenerator(Seed);
+        private static readonly IRandomValueGenerator _randomValueGenerator =
+            new RandomValueGenerator(Seed);
 
         private BaseSymbolGenerator _symbolGenerator;
         private DateTime _minExpiry = new(2000, 01, 01);
@@ -43,17 +44,20 @@ namespace QuantConnect.Tests.ToolBox.RandomDataGenerator
                     Start = _minExpiry,
                     End = _maxExpiry
                 },
-                _randomValueGenerator);
+                _randomValueGenerator
+            );
         }
 
         [Test]
         [TestCase(SecurityType.Future)]
         public void ReturnsFutureSymbolGeneratorInstance(SecurityType securityType)
         {
-            Assert.IsInstanceOf<FutureSymbolGenerator>(BaseSymbolGenerator.Create(
-                new RandomDataGeneratorSettings { SecurityType = securityType },
-                Mock.Of<IRandomValueGenerator>()
-            ));
+            Assert.IsInstanceOf<FutureSymbolGenerator>(
+                BaseSymbolGenerator.Create(
+                    new RandomDataGeneratorSettings { SecurityType = securityType },
+                    Mock.Of<IRandomValueGenerator>()
+                )
+            );
         }
 
         [Test]
@@ -100,5 +104,4 @@ namespace QuantConnect.Tests.ToolBox.RandomDataGenerator
             Assert.IsTrue(db.ContainsKey(Market.CME, symbol, SecurityType.Future));
         }
     }
-
 }

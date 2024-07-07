@@ -21,7 +21,8 @@ namespace QuantConnect.Optimizer.Parameters
     /// <summary>
     /// Enumerates all possible values for specific optimization parameter
     /// </summary>
-    public abstract class OptimizationParameterEnumerator<T> : IEnumerator<string>  where T: OptimizationParameter
+    public abstract class OptimizationParameterEnumerator<T> : IEnumerator<string>
+        where T : OptimizationParameter
     {
         /// <summary>
         /// The target optimization parameter to enumerate

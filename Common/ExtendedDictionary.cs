@@ -13,12 +13,12 @@
  * limitations under the License.
 */
 
-using Python.Runtime;
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
+using Python.Runtime;
 using QuantConnect.Interfaces;
-using System.Collections;
 
 namespace QuantConnect
 {
@@ -35,9 +35,13 @@ namespace QuantConnect
         {
             if (IsReadOnly)
             {
-                throw new InvalidOperationException(Messages.ExtendedDictionary.ClearInvalidOperation(this));
+                throw new InvalidOperationException(
+                    Messages.ExtendedDictionary.ClearInvalidOperation(this)
+                );
             }
-            throw new NotImplementedException(Messages.ExtendedDictionary.ClearMethodNotImplemented);
+            throw new NotImplementedException(
+                Messages.ExtendedDictionary.ClearMethodNotImplemented
+            );
         }
 
         /// <summary>
@@ -80,9 +84,13 @@ namespace QuantConnect
         {
             if (IsReadOnly)
             {
-                throw new InvalidOperationException(Messages.ExtendedDictionary.RemoveInvalidOperation(this));
+                throw new InvalidOperationException(
+                    Messages.ExtendedDictionary.RemoveInvalidOperation(this)
+                );
             }
-            throw new NotImplementedException(Messages.ExtendedDictionary.RemoveMethodNotImplemented);
+            throw new NotImplementedException(
+                Messages.ExtendedDictionary.RemoveMethodNotImplemented
+            );
         }
 
         /// <summary>
@@ -95,11 +103,15 @@ namespace QuantConnect
         {
             get
             {
-                throw new NotImplementedException(Messages.ExtendedDictionary.IndexerBySymbolNotImplemented);
+                throw new NotImplementedException(
+                    Messages.ExtendedDictionary.IndexerBySymbolNotImplemented
+                );
             }
             set
             {
-                throw new NotImplementedException(Messages.ExtendedDictionary.IndexerBySymbolNotImplemented);
+                throw new NotImplementedException(
+                    Messages.ExtendedDictionary.IndexerBySymbolNotImplemented
+                );
             }
         }
 
@@ -116,7 +128,9 @@ namespace QuantConnect
                 Symbol symbol;
                 if (!SymbolCache.TryGetSymbol(ticker, out symbol))
                 {
-                    throw new KeyNotFoundException(Messages.ExtendedDictionary.TickerNotFoundInSymbolCache(ticker));
+                    throw new KeyNotFoundException(
+                        Messages.ExtendedDictionary.TickerNotFoundInSymbolCache(ticker)
+                    );
                 }
                 return this[symbol];
             }
@@ -125,7 +139,9 @@ namespace QuantConnect
                 Symbol symbol;
                 if (!SymbolCache.TryGetSymbol(ticker, out symbol))
                 {
-                    throw new KeyNotFoundException(Messages.ExtendedDictionary.TickerNotFoundInSymbolCache(ticker));
+                    throw new KeyNotFoundException(
+                        Messages.ExtendedDictionary.TickerNotFoundInSymbolCache(ticker)
+                    );
                 }
                 this[symbol] = value;
             }
@@ -243,7 +259,9 @@ namespace QuantConnect
         /// Note: Arbitrary elements and random elements are not same.The popitem() doesn't return a random element.</returns>
         public PyTuple popitem()
         {
-            throw new NotSupportedException(Messages.ExtendedDictionary.PopitemMethodNotSupported(this));
+            throw new NotSupportedException(
+                Messages.ExtendedDictionary.PopitemMethodNotSupported(this)
+            );
         }
 
         /// <summary>
@@ -274,7 +292,9 @@ namespace QuantConnect
 
             if (IsReadOnly)
             {
-                throw new KeyNotFoundException(Messages.ExtendedDictionary.SymbolNotFoundDueToNoData(this, symbol));
+                throw new KeyNotFoundException(
+                    Messages.ExtendedDictionary.SymbolNotFoundDueToNoData(this, symbol)
+                );
             }
 
             this[symbol] = default_value;
@@ -319,7 +339,9 @@ namespace QuantConnect
         {
             if (IsReadOnly)
             {
-                throw new InvalidOperationException(Messages.ExtendedDictionary.UpdateInvalidOperation(this));
+                throw new InvalidOperationException(
+                    Messages.ExtendedDictionary.UpdateInvalidOperation(this)
+                );
             }
 
             var dictionary = other.ConvertToDictionary<Symbol, T>();

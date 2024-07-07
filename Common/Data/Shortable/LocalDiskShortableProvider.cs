@@ -14,12 +14,12 @@
 */
 
 using System;
-using System.IO;
-using QuantConnect.Util;
-using System.Threading.Tasks;
-using QuantConnect.Interfaces;
 using System.Collections.Generic;
 using System.Globalization;
+using System.IO;
+using System.Threading.Tasks;
+using QuantConnect.Interfaces;
+using QuantConnect.Util;
 
 namespace QuantConnect.Data.Shortable
 {
@@ -124,8 +124,15 @@ namespace QuantConnect.Data.Shortable
             result = _shortableDataPerDate = new();
 
             // Implicitly trusts that Symbol.Value has been mapped and updated to the latest ticker
-            var shortableSymbolFile = Path.Combine(Globals.DataFolder, symbol.SecurityType.SecurityTypeToLower(), symbol.ID.Market,
-                "shortable", Brokerage, "symbols", $"{_ticker.ToLowerInvariant()}.csv");
+            var shortableSymbolFile = Path.Combine(
+                Globals.DataFolder,
+                symbol.SecurityType.SecurityTypeToLower(),
+                symbol.ID.Market,
+                "shortable",
+                Brokerage,
+                "symbols",
+                $"{_ticker.ToLowerInvariant()}.csv"
+            );
 
             foreach (var line in DataProvider.ReadLines(shortableSymbolFile))
             {
@@ -139,10 +146,29 @@ namespace QuantConnect.Data.Shortable
                 var csv = line.Split(',');
                 var date = Parse.DateTimeExact(csv[0], "yyyyMMdd");
                 var lenght = csv.Length;
-                var shortableQuantity = csv[1].IfNotNullOrEmpty(s => long.Parse(s, NumberStyles.Any, CultureInfo.InvariantCulture));
-                var rebateRate = csv.Length > 2 ? csv[2].IfNotNullOrEmpty(s => decimal.Parse(s, NumberStyles.Any, CultureInfo.InvariantCulture)) : 0;
-                var feeRate = csv.Length > 3 ? csv[3].IfNotNullOrEmpty(s => decimal.Parse(s, NumberStyles.Any, CultureInfo.InvariantCulture)) : 0;
-                result[date] = new ShortableData(shortableQuantity, rebateRate / 100, feeRate / 100);
+                var shortableQuantity = csv[1]
+                    .IfNotNullOrEmpty(s =>
+                        long.Parse(s, NumberStyles.Any, CultureInfo.InvariantCulture)
+                    );
+                var rebateRate =
+                    csv.Length > 2
+                        ? csv[2]
+                            .IfNotNullOrEmpty(s =>
+                                decimal.Parse(s, NumberStyles.Any, CultureInfo.InvariantCulture)
+                            )
+                        : 0;
+                var feeRate =
+                    csv.Length > 3
+                        ? csv[3]
+                            .IfNotNullOrEmpty(s =>
+                                decimal.Parse(s, NumberStyles.Any, CultureInfo.InvariantCulture)
+                            )
+                        : 0;
+                result[date] = new ShortableData(
+                    shortableQuantity,
+                    rebateRate / 100,
+                    feeRate / 100
+                );
             }
 
             return result;
@@ -157,14 +183,17 @@ namespace QuantConnect.Data.Shortable
             var tomorrowMidnight = now.Date.AddDays(1);
             var delayToClean = tomorrowMidnight - now;
 
-            Task.Delay(delayToClean).ContinueWith((_) =>
-            {
-                // create new instances so we don't need to worry about locks
-                _ticker = null;
-                _shortableDataPerDate = new();
+            Task.Delay(delayToClean)
+                .ContinueWith(
+                    (_) =>
+                    {
+                        // create new instances so we don't need to worry about locks
+                        _ticker = null;
+                        _shortableDataPerDate = new();
 
-                ClearCache();
-            });
+                        ClearCache();
+                    }
+                );
         }
 
         protected record ShortableData(long? ShortableQuantity, decimal RebateFee, decimal FeeRate);

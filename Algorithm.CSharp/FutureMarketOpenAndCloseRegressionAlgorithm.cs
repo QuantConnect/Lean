@@ -23,27 +23,32 @@ namespace QuantConnect.Algorithm.CSharp
     /// <summary>
     /// Regression algorithm to check we are getting the correct market open and close times
     /// </summary>
-    public class FutureMarketOpenAndCloseRegressionAlgorithm : QCAlgorithm, IRegressionAlgorithmDefinition
+    public class FutureMarketOpenAndCloseRegressionAlgorithm
+        : QCAlgorithm,
+            IRegressionAlgorithmDefinition
     {
         protected virtual bool ExtendedMarketHours => false;
 
-        protected virtual List<DateTime> AfterMarketOpen => new List<DateTime>() {
-            new DateTime(2020, 02, 04, 9, 30, 0),
-            new DateTime(2020, 02, 05, 9, 30, 0),
-            new DateTime(2020, 02, 06, 9, 30, 0),
-            new DateTime(2020, 02, 07, 9, 30, 0),
-            new DateTime(2020, 02, 10, 9, 30, 0),
-            new DateTime(2020, 02, 11, 9, 30, 0)
-        };
-        protected virtual List<DateTime> BeforeMarketClose => new List<DateTime>()
-        {
-            new DateTime(2020, 02, 04, 17, 0, 0),
-            new DateTime(2020, 02, 05, 17, 0, 0),
-            new DateTime(2020, 02, 06, 17, 0, 0),
-            new DateTime(2020, 02, 07, 17, 0, 0),
-            new DateTime(2020, 02, 10, 17, 0, 0),
-            new DateTime(2020, 02, 11, 17, 0, 0)
-        };
+        protected virtual List<DateTime> AfterMarketOpen =>
+            new List<DateTime>()
+            {
+                new DateTime(2020, 02, 04, 9, 30, 0),
+                new DateTime(2020, 02, 05, 9, 30, 0),
+                new DateTime(2020, 02, 06, 9, 30, 0),
+                new DateTime(2020, 02, 07, 9, 30, 0),
+                new DateTime(2020, 02, 10, 9, 30, 0),
+                new DateTime(2020, 02, 11, 9, 30, 0)
+            };
+        protected virtual List<DateTime> BeforeMarketClose =>
+            new List<DateTime>()
+            {
+                new DateTime(2020, 02, 04, 17, 0, 0),
+                new DateTime(2020, 02, 05, 17, 0, 0),
+                new DateTime(2020, 02, 06, 17, 0, 0),
+                new DateTime(2020, 02, 07, 17, 0, 0),
+                new DateTime(2020, 02, 10, 17, 0, 0),
+                new DateTime(2020, 02, 11, 17, 0, 0)
+            };
         private Queue<DateTime> _afterMarketOpenQueue;
         private Queue<DateTime> _beforeMarketCloseQueue;
 
@@ -56,13 +61,17 @@ namespace QuantConnect.Algorithm.CSharp
             _afterMarketOpenQueue = new Queue<DateTime>(AfterMarketOpen);
             _beforeMarketCloseQueue = new Queue<DateTime>(BeforeMarketClose);
 
-            Schedule.On(DateRules.EveryDay(esFuture),
+            Schedule.On(
+                DateRules.EveryDay(esFuture),
                 TimeRules.AfterMarketOpen(esFuture, extendedMarketOpen: ExtendedMarketHours),
-                EveryDayAfterMarketOpen);
+                EveryDayAfterMarketOpen
+            );
 
-            Schedule.On(DateRules.EveryDay(esFuture),
+            Schedule.On(
+                DateRules.EveryDay(esFuture),
                 TimeRules.BeforeMarketClose(esFuture, extendedMarketClose: ExtendedMarketHours),
-                EveryDayBeforeMarketClose);
+                EveryDayBeforeMarketClose
+            );
         }
 
         public void EveryDayBeforeMarketClose()
@@ -70,7 +79,9 @@ namespace QuantConnect.Algorithm.CSharp
             var expectedMarketClose = _beforeMarketCloseQueue.Dequeue();
             if (Time != expectedMarketClose)
             {
-                throw new RegressionTestException($"Expected market close date was {expectedMarketClose} but received {Time}");
+                throw new RegressionTestException(
+                    $"Expected market close date was {expectedMarketClose} but received {Time}"
+                );
             }
         }
 
@@ -79,7 +90,9 @@ namespace QuantConnect.Algorithm.CSharp
             var expectedMarketOpen = _afterMarketOpenQueue.Dequeue();
             if (Time != expectedMarketOpen)
             {
-                throw new RegressionTestException($"Expected market open date was {expectedMarketOpen} but received {Time}");
+                throw new RegressionTestException(
+                    $"Expected market open date was {expectedMarketOpen} but received {Time}"
+                );
             }
         }
 
@@ -87,9 +100,12 @@ namespace QuantConnect.Algorithm.CSharp
         {
             if (_afterMarketOpenQueue.Any() || _beforeMarketCloseQueue.Any())
             {
-                throw new RegressionTestException($"_afterMarketOpenQueue and _beforeMarketCloseQueue should be empty");
+                throw new RegressionTestException(
+                    $"_afterMarketOpenQueue and _beforeMarketCloseQueue should be empty"
+                );
             }
         }
+
         public bool CanRunLocally { get; } = true;
 
         /// <summary>
@@ -115,35 +131,36 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// This is used by the regression test system to indicate what the expected statistics are from running the algorithm
         /// </summary>
-        public virtual Dictionary<string, string> ExpectedStatistics => new Dictionary<string, string>
-        {
-            {"Total Orders", "0"},
-            {"Average Win", "0%"},
-            {"Average Loss", "0%"},
-            {"Compounding Annual Return", "0%"},
-            {"Drawdown", "0%"},
-            {"Expectancy", "0"},
-            {"Start Equity", "100000"},
-            {"End Equity", "100000"},
-            {"Net Profit", "0%"},
-            {"Sharpe Ratio", "0"},
-            {"Sortino Ratio", "0"},
-            {"Probabilistic Sharpe Ratio", "0%"},
-            {"Loss Rate", "0%"},
-            {"Win Rate", "0%"},
-            {"Profit-Loss Ratio", "0"},
-            {"Alpha", "0"},
-            {"Beta", "0"},
-            {"Annual Standard Deviation", "0"},
-            {"Annual Variance", "0"},
-            {"Information Ratio", "-11.049"},
-            {"Tracking Error", "0.087"},
-            {"Treynor Ratio", "0"},
-            {"Total Fees", "$0.00"},
-            {"Estimated Strategy Capacity", "$0"},
-            {"Lowest Capacity Asset", ""},
-            {"Portfolio Turnover", "0%"},
-            {"OrderListHash", "d41d8cd98f00b204e9800998ecf8427e"}
-        };
+        public virtual Dictionary<string, string> ExpectedStatistics =>
+            new Dictionary<string, string>
+            {
+                { "Total Orders", "0" },
+                { "Average Win", "0%" },
+                { "Average Loss", "0%" },
+                { "Compounding Annual Return", "0%" },
+                { "Drawdown", "0%" },
+                { "Expectancy", "0" },
+                { "Start Equity", "100000" },
+                { "End Equity", "100000" },
+                { "Net Profit", "0%" },
+                { "Sharpe Ratio", "0" },
+                { "Sortino Ratio", "0" },
+                { "Probabilistic Sharpe Ratio", "0%" },
+                { "Loss Rate", "0%" },
+                { "Win Rate", "0%" },
+                { "Profit-Loss Ratio", "0" },
+                { "Alpha", "0" },
+                { "Beta", "0" },
+                { "Annual Standard Deviation", "0" },
+                { "Annual Variance", "0" },
+                { "Information Ratio", "-11.049" },
+                { "Tracking Error", "0.087" },
+                { "Treynor Ratio", "0" },
+                { "Total Fees", "$0.00" },
+                { "Estimated Strategy Capacity", "$0" },
+                { "Lowest Capacity Asset", "" },
+                { "Portfolio Turnover", "0%" },
+                { "OrderListHash", "d41d8cd98f00b204e9800998ecf8427e" }
+            };
     }
 }

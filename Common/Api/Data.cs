@@ -13,10 +13,10 @@
  * limitations under the License.
 */
 
-using System.Linq;
-using Newtonsoft.Json;
 using System.Collections.Generic;
+using System.Linq;
 using System.Text.RegularExpressions;
+using Newtonsoft.Json;
 
 // Collection of response objects for Quantconnect Data/ endpoints
 namespace QuantConnect.Api
@@ -111,7 +111,10 @@ namespace QuantConnect.Api
             {
                 if (_regex == null && RawRegEx != null)
                 {
-                    _regex = new Regex(RawRegEx.TrimStart('/').TrimEnd('m').TrimEnd('/'), RegexOptions.Compiled);
+                    _regex = new Regex(
+                        RawRegEx.TrimStart('/').TrimEnd('m').TrimEnd('/'),
+                        RegexOptions.Compiled
+                    );
                 }
                 return _regex;
             }

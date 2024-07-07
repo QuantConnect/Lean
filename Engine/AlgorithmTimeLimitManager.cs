@@ -52,7 +52,10 @@ namespace QuantConnect.Lean.Engine
         /// <param name="timeLoopMaximum">Specifies the maximum amount of time the algorithm is permitted to
         /// spend in a single time loop. This value can be overriden if certain actions are taken by the
         /// algorithm, such as invoking the training methods.</param>
-        public AlgorithmTimeLimitManager(ITokenBucket additionalTimeBucket, TimeSpan timeLoopMaximum)
+        public AlgorithmTimeLimitManager(
+            ITokenBucket additionalTimeBucket,
+            TimeSpan timeLoopMaximum
+        )
         {
             _timeLoopMaximum = timeLoopMaximum;
             AdditionalTimeBucket = additionalTimeBucket;
@@ -71,7 +74,9 @@ namespace QuantConnect.Lean.Engine
         {
             if (_stopped)
             {
-                throw new InvalidOperationException("The AlgorithmTimeLimitManager may not be stopped and restarted.");
+                throw new InvalidOperationException(
+                    "The AlgorithmTimeLimitManager may not be stopped and restarted."
+                );
             }
 
             // maintains existing implementation behavior to reset the time to min value and then
@@ -98,7 +103,9 @@ namespace QuantConnect.Lean.Engine
         public IsolatorLimitResult IsWithinLimit()
         {
             TimeSpan currentTimeStepElapsed;
-            var message = IsOutOfTime(out currentTimeStepElapsed) ? GetErrorMessage(currentTimeStepElapsed) : string.Empty;
+            var message = IsOutOfTime(out currentTimeStepElapsed)
+                ? GetErrorMessage(currentTimeStepElapsed)
+                : string.Empty;
             return new IsolatorLimitResult(currentTimeStepElapsed, message);
         }
 
@@ -116,7 +123,9 @@ namespace QuantConnect.Lean.Engine
             if (!TryRequestAdditionalTime(minutes))
             {
                 _failed = true;
-                Log.Debug($"AlgorithmTimeLimitManager.RequestAdditionalTime({minutes}): Failed to acquire additional time. Marking failed.");
+                Log.Debug(
+                    $"AlgorithmTimeLimitManager.RequestAdditionalTime({minutes}): Failed to acquire additional time. Marking failed."
+                );
             }
         }
 
@@ -131,13 +140,17 @@ namespace QuantConnect.Lean.Engine
         /// </summary>
         public bool TryRequestAdditionalTime(int minutes)
         {
-            Log.Debug($"AlgorithmTimeLimitManager.TryRequestAdditionalTime({minutes}): Requesting additional time. Available: {AdditionalTimeBucket.AvailableTokens}");
+            Log.Debug(
+                $"AlgorithmTimeLimitManager.TryRequestAdditionalTime({minutes}): Requesting additional time. Available: {AdditionalTimeBucket.AvailableTokens}"
+            );
 
             // safely attempts to consume from the bucket, returning false if insufficient resources available
             if (AdditionalTimeBucket.TryConsume(minutes))
             {
                 var newValue = Interlocked.Add(ref _additionalMinutes, minutes);
-                Log.Debug($"AlgorithmTimeLimitManager.TryRequestAdditionalTime({minutes}): Success: AdditionalMinutes: {newValue}");
+                Log.Debug(
+                    $"AlgorithmTimeLimitManager.TryRequestAdditionalTime({minutes}): Success: AdditionalMinutes: {newValue}"
+                );
                 return true;
             }
 
@@ -183,15 +196,18 @@ namespace QuantConnect.Lean.Engine
 
         private string GetErrorMessage(TimeSpan currentTimeStepElapsed)
         {
-            var message = $"Algorithm took longer than {_timeLoopMaximum.TotalMinutes} minutes on a single time loop.";
+            var message =
+                $"Algorithm took longer than {_timeLoopMaximum.TotalMinutes} minutes on a single time loop.";
 
-            var minutesAboveStandardLimit = _additionalMinutes - (int) _timeLoopMaximum.TotalMinutes;
+            var minutesAboveStandardLimit = _additionalMinutes - (int)_timeLoopMaximum.TotalMinutes;
             if (minutesAboveStandardLimit > 0)
             {
-                message = $"{message} An additional {minutesAboveStandardLimit} minutes were also allocated and consumed.";
+                message =
+                    $"{message} An additional {minutesAboveStandardLimit} minutes were also allocated and consumed.";
             }
 
-            message = $"{message} CurrentTimeStepElapsed: {currentTimeStepElapsed.TotalMinutes:0.0} minutes";
+            message =
+                $"{message} CurrentTimeStepElapsed: {currentTimeStepElapsed.TotalMinutes:0.0} minutes";
 
             return message;
         }

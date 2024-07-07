@@ -24,7 +24,13 @@ namespace QuantConnect.Tests.Brokerages
         private readonly decimal _highLimit;
         private readonly decimal _lowLimit;
 
-        public StopMarketOrderTestParameters(Symbol symbol, decimal highLimit, decimal lowLimit, IOrderProperties properties = null, OrderSubmissionData orderSubmissionData = null)
+        public StopMarketOrderTestParameters(
+            Symbol symbol,
+            decimal highLimit,
+            decimal lowLimit,
+            IOrderProperties properties = null,
+            OrderSubmissionData orderSubmissionData = null
+        )
             : base(symbol, properties, orderSubmissionData)
         {
             _highLimit = highLimit;
@@ -33,7 +39,13 @@ namespace QuantConnect.Tests.Brokerages
 
         public override Order CreateShortOrder(decimal quantity)
         {
-            return new StopMarketOrder(Symbol, -Math.Abs(quantity), _lowLimit, DateTime.Now, properties: Properties)
+            return new StopMarketOrder(
+                Symbol,
+                -Math.Abs(quantity),
+                _lowLimit,
+                DateTime.Now,
+                properties: Properties
+            )
             {
                 OrderSubmissionData = OrderSubmissionData
             };
@@ -41,25 +53,41 @@ namespace QuantConnect.Tests.Brokerages
 
         public override Order CreateLongOrder(decimal quantity)
         {
-            return new StopMarketOrder(Symbol, Math.Abs(quantity), _highLimit, DateTime.Now, properties: Properties)
+            return new StopMarketOrder(
+                Symbol,
+                Math.Abs(quantity),
+                _highLimit,
+                DateTime.Now,
+                properties: Properties
+            )
             {
                 OrderSubmissionData = OrderSubmissionData
             };
         }
 
-        public override bool ModifyOrderToFill(IBrokerage brokerage, Order order, decimal lastMarketPrice)
+        public override bool ModifyOrderToFill(
+            IBrokerage brokerage,
+            Order order,
+            decimal lastMarketPrice
+        )
         {
             var stop = (StopMarketOrder)order;
             var previousStop = stop.StopPrice;
             if (order.Quantity > 0)
             {
                 // for stop buys we need to decrease the stop price
-                stop.StopPrice = Math.Min(stop.StopPrice, Math.Max(stop.StopPrice / 2, lastMarketPrice));
+                stop.StopPrice = Math.Min(
+                    stop.StopPrice,
+                    Math.Max(stop.StopPrice / 2, lastMarketPrice)
+                );
             }
             else
             {
                 // for stop sells we need to increase the stop price
-                stop.StopPrice = Math.Max(stop.StopPrice, Math.Min(stop.StopPrice * 2, lastMarketPrice));
+                stop.StopPrice = Math.Max(
+                    stop.StopPrice,
+                    Math.Min(stop.StopPrice * 2, lastMarketPrice)
+                );
             }
             return stop.StopPrice != previousStop;
         }
@@ -73,10 +101,13 @@ namespace QuantConnect.Tests.Brokerages
     // to be used with brokerages which do not support UpdateOrder
     public class NonUpdateableStopMarketOrderTestParameters : StopMarketOrderTestParameters
     {
-        public NonUpdateableStopMarketOrderTestParameters(Symbol symbol, decimal highLimit, decimal lowLimit, IOrderProperties properties = null)
-            : base(symbol, highLimit, lowLimit, properties)
-        {
-        }
+        public NonUpdateableStopMarketOrderTestParameters(
+            Symbol symbol,
+            decimal highLimit,
+            decimal lowLimit,
+            IOrderProperties properties = null
+        )
+            : base(symbol, highLimit, lowLimit, properties) { }
 
         public override bool ModifyUntilFilled => false;
     }

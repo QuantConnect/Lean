@@ -25,7 +25,9 @@ namespace QuantConnect.Algorithm.CSharp
     /// <summary>
     /// Assert that custom data universe selection happens right away after algorithm starts
     /// </summary>
-    public class CustomDataUniverseImmediateSelectionRegressionAlgorithm : QCAlgorithm, IRegressionAlgorithmDefinition
+    public class CustomDataUniverseImmediateSelectionRegressionAlgorithm
+        : QCAlgorithm,
+            IRegressionAlgorithmDefinition
     {
         private bool _selected;
         private bool _securitiesChanged;
@@ -39,11 +41,14 @@ namespace QuantConnect.Algorithm.CSharp
 
             UniverseSettings.Resolution = Resolution.Daily;
 
-            AddUniverse<StockDataSource>("my-stock-data-source", stockDataSource =>
-            {
-                _selected = true;
-                return stockDataSource.OfType<StockDataSource>().SelectMany(x => x.Symbols);
-            });
+            AddUniverse<StockDataSource>(
+                "my-stock-data-source",
+                stockDataSource =>
+                {
+                    _selected = true;
+                    return stockDataSource.OfType<StockDataSource>().SelectMany(x => x.Symbols);
+                }
+            );
         }
 
         public override void OnData(Slice slice)
@@ -52,8 +57,10 @@ namespace QuantConnect.Algorithm.CSharp
             {
                 if (!_selected)
                 {
-                    throw new RegressionTestException("Universe selection should have been triggered right away. " +
-                        "The first OnData call should have had happened after the universe selection");
+                    throw new RegressionTestException(
+                        "Universe selection should have been triggered right away. "
+                            + "The first OnData call should have had happened after the universe selection"
+                    );
                 }
 
                 _firstOnData = false;
@@ -64,7 +71,9 @@ namespace QuantConnect.Algorithm.CSharp
         {
             if (!_selected)
             {
-                throw new RegressionTestException("Universe selection should have been triggered right away");
+                throw new RegressionTestException(
+                    "Universe selection should have been triggered right away"
+                );
             }
 
             if (!_securitiesChanged)
@@ -72,13 +81,17 @@ namespace QuantConnect.Algorithm.CSharp
                 // Selection should be happening right on algorithm start
                 if (Time != StartDate)
                 {
-                    throw new RegressionTestException("Universe selection should have been triggered right away");
+                    throw new RegressionTestException(
+                        "Universe selection should have been triggered right away"
+                    );
                 }
 
                 if (changes.AddedSecurities.Count == 0)
                 {
-                    throw new RegressionTestException($"Expected multiple stocks to be added to the algorithm, " +
-                        $"but found {changes.AddedSecurities.Count}");
+                    throw new RegressionTestException(
+                        $"Expected multiple stocks to be added to the algorithm, "
+                            + $"but found {changes.AddedSecurities.Count}"
+                    );
                 }
 
                 _securitiesChanged = true;
@@ -98,7 +111,8 @@ namespace QuantConnect.Algorithm.CSharp
         /// </summary>
         class StockDataSource : BaseData
         {
-            private const string Url = @"https://www.dropbox.com/s/ae1couew5ir3z9y/daily-stock-picker-backtest.csv?dl=1";
+            private const string Url =
+                @"https://www.dropbox.com/s/ae1couew5ir3z9y/daily-stock-picker-backtest.csv?dl=1";
 
             public List<string> Symbols { get; set; }
 
@@ -107,12 +121,21 @@ namespace QuantConnect.Algorithm.CSharp
                 Symbols = new List<string>();
             }
 
-            public override SubscriptionDataSource GetSource(SubscriptionDataConfig config, DateTime date, bool isLiveMode)
+            public override SubscriptionDataSource GetSource(
+                SubscriptionDataConfig config,
+                DateTime date,
+                bool isLiveMode
+            )
             {
                 return new SubscriptionDataSource(Url, SubscriptionTransportMedium.RemoteFile);
             }
 
-            public override BaseData Reader(SubscriptionDataConfig config, string line, DateTime date, bool isLiveMode)
+            public override BaseData Reader(
+                SubscriptionDataConfig config,
+                string line,
+                DateTime date,
+                bool isLiveMode
+            )
             {
                 try
                 {
@@ -171,35 +194,36 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// This is used by the regression test system to indicate what the expected statistics are from running the algorithm
         /// </summary>
-        public Dictionary<string, string> ExpectedStatistics => new Dictionary<string, string>
-        {
-            {"Total Orders", "0"},
-            {"Average Win", "0%"},
-            {"Average Loss", "0%"},
-            {"Compounding Annual Return", "0%"},
-            {"Drawdown", "0%"},
-            {"Expectancy", "0"},
-            {"Start Equity", "100000"},
-            {"End Equity", "100000"},
-            {"Net Profit", "0%"},
-            {"Sharpe Ratio", "0"},
-            {"Sortino Ratio", "0"},
-            {"Probabilistic Sharpe Ratio", "0%"},
-            {"Loss Rate", "0%"},
-            {"Win Rate", "0%"},
-            {"Profit-Loss Ratio", "0"},
-            {"Alpha", "0"},
-            {"Beta", "0"},
-            {"Annual Standard Deviation", "0"},
-            {"Annual Variance", "0"},
-            {"Information Ratio", "-0.97"},
-            {"Tracking Error", "0.104"},
-            {"Treynor Ratio", "0"},
-            {"Total Fees", "$0.00"},
-            {"Estimated Strategy Capacity", "$0"},
-            {"Lowest Capacity Asset", ""},
-            {"Portfolio Turnover", "0%"},
-            {"OrderListHash", "d41d8cd98f00b204e9800998ecf8427e"}
-        };
+        public Dictionary<string, string> ExpectedStatistics =>
+            new Dictionary<string, string>
+            {
+                { "Total Orders", "0" },
+                { "Average Win", "0%" },
+                { "Average Loss", "0%" },
+                { "Compounding Annual Return", "0%" },
+                { "Drawdown", "0%" },
+                { "Expectancy", "0" },
+                { "Start Equity", "100000" },
+                { "End Equity", "100000" },
+                { "Net Profit", "0%" },
+                { "Sharpe Ratio", "0" },
+                { "Sortino Ratio", "0" },
+                { "Probabilistic Sharpe Ratio", "0%" },
+                { "Loss Rate", "0%" },
+                { "Win Rate", "0%" },
+                { "Profit-Loss Ratio", "0" },
+                { "Alpha", "0" },
+                { "Beta", "0" },
+                { "Annual Standard Deviation", "0" },
+                { "Annual Variance", "0" },
+                { "Information Ratio", "-0.97" },
+                { "Tracking Error", "0.104" },
+                { "Treynor Ratio", "0" },
+                { "Total Fees", "$0.00" },
+                { "Estimated Strategy Capacity", "$0" },
+                { "Lowest Capacity Asset", "" },
+                { "Portfolio Turnover", "0%" },
+                { "OrderListHash", "d41d8cd98f00b204e9800998ecf8427e" }
+            };
     }
 }

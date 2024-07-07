@@ -14,10 +14,10 @@
 */
 
 using System;
-using System.IO;
-using QuantConnect.Util;
 using System.Collections;
 using System.Collections.Generic;
+using System.IO;
+using QuantConnect.Util;
 
 namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
 {
@@ -65,7 +65,13 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
             catch (IOException exception)
             {
                 // we will ignore stale file handle exceptions and retry instead, enumerator will be refreshed
-                if (exception.Message == null || !exception.Message.Contains("Stale file handle", StringComparison.InvariantCultureIgnoreCase))
+                if (
+                    exception.Message == null
+                    || !exception.Message.Contains(
+                        "Stale file handle",
+                        StringComparison.InvariantCultureIgnoreCase
+                    )
+                )
                 {
                     throw;
                 }

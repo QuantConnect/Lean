@@ -25,22 +25,56 @@ namespace QuantConnect.Tests.Indicators
         protected override IndicatorBase<IndicatorDataPoint> CreateIndicator()
         {
             var tsf = new TimeSeriesForecast(5);
-            
+
             return tsf;
         }
 
         protected override string TestFileName => "spy_tsf.csv";
         protected override string TestColumnName => "tsf";
-        
+
         [Test]
         public void ComputesCorrectly()
         {
             var tsf = CreateIndicator();
             const int period = 5;
-            
+
             // Data source: https://tulipindicators.org/tsf
-            var data = new[] {81.59m, 81.06m, 82.87m, 83.00m, 83.61m, 83.15m, 82.84m, 83.99m, 84.55m, 84.36m, 85.53m, 86.54m, 86.89m, 87.77m, 87.29m};
-            var output = new [] {0m, 0m, 0m, 0m, 84.22m, 84.21m, 83.12m, 83.68m, 84.44m, 85.02m, 85.98m, 86.82m, 87.63m, 88.67m, 88.23m};
+            var data = new[]
+            {
+                81.59m,
+                81.06m,
+                82.87m,
+                83.00m,
+                83.61m,
+                83.15m,
+                82.84m,
+                83.99m,
+                84.55m,
+                84.36m,
+                85.53m,
+                86.54m,
+                86.89m,
+                87.77m,
+                87.29m
+            };
+            var output = new[]
+            {
+                0m,
+                0m,
+                0m,
+                0m,
+                84.22m,
+                84.21m,
+                83.12m,
+                83.68m,
+                84.44m,
+                85.02m,
+                85.98m,
+                86.82m,
+                87.63m,
+                88.67m,
+                88.23m
+            };
 
             var reference = DateTime.MinValue;
 
@@ -65,7 +99,7 @@ namespace QuantConnect.Tests.Indicators
             tsf.Update(reference.AddDays(1), 1m);
             tsf.Update(reference.AddDays(2), 1m);
             Assert.IsTrue(tsf.IsReady);
-            
+
             tsf.Reset();
             Assert.IsFalse(tsf.IsReady);
             TestHelper.AssertIndicatorIsInDefaultState(tsf);

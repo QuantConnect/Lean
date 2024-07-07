@@ -15,9 +15,9 @@
 */
 
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using Python.Runtime;
-using System.Collections.Generic;
 using QuantConnect.Data.Fundamental;
 using QuantConnect.Data.UniverseSelection;
 
@@ -62,9 +62,13 @@ namespace QuantConnect.Algorithm
             string etfTicker,
             string market,
             UniverseSettings universeSettings,
-            Func<IEnumerable<ETFConstituentUniverse>, IEnumerable<Symbol>> universeFilterFunc)
+            Func<IEnumerable<ETFConstituentUniverse>, IEnumerable<Symbol>> universeFilterFunc
+        )
         {
-            market ??= _algorithm.BrokerageModel.DefaultMarkets.TryGetValue(SecurityType.Equity, out var defaultMarket)
+            market ??= _algorithm.BrokerageModel.DefaultMarkets.TryGetValue(
+                SecurityType.Equity,
+                out var defaultMarket
+            )
                 ? defaultMarket
                 : throw new Exception("No default market set for security type: Equity");
 
@@ -73,8 +77,10 @@ namespace QuantConnect.Algorithm
                     etfTicker,
                     market,
                     true,
-                    mappingResolveDate: _algorithm.Time.Date),
-                etfTicker);
+                    mappingResolveDate: _algorithm.Time.Date
+                ),
+                etfTicker
+            );
 
             return ETF(etfSymbol, universeSettings, universeFilterFunc);
         }
@@ -86,7 +92,11 @@ namespace QuantConnect.Algorithm
         /// <param name="market">Market of the ETF</param>
         /// <param name="universeFilterFunc">Function to filter universe results</param>
         /// <returns>New ETF constituents Universe</returns>
-        public Universe ETF(string etfTicker, string market, Func<IEnumerable<ETFConstituentUniverse>, IEnumerable<Symbol>> universeFilterFunc)
+        public Universe ETF(
+            string etfTicker,
+            string market,
+            Func<IEnumerable<ETFConstituentUniverse>, IEnumerable<Symbol>> universeFilterFunc
+        )
         {
             return ETF(etfTicker, market, null, universeFilterFunc);
         }
@@ -97,7 +107,10 @@ namespace QuantConnect.Algorithm
         /// <param name="etfTicker">Ticker of the ETF to get constituents for</param>
         /// <param name="universeFilterFunc">Function to filter universe results</param>
         /// <returns>New ETF constituents Universe</returns>
-        public Universe ETF(string etfTicker, Func<IEnumerable<ETFConstituentUniverse>, IEnumerable<Symbol>> universeFilterFunc)
+        public Universe ETF(
+            string etfTicker,
+            Func<IEnumerable<ETFConstituentUniverse>, IEnumerable<Symbol>> universeFilterFunc
+        )
         {
             return ETF(etfTicker, null, null, universeFilterFunc);
         }
@@ -112,7 +125,8 @@ namespace QuantConnect.Algorithm
         public Universe ETF(
             string etfTicker,
             UniverseSettings universeSettings,
-            Func<IEnumerable<ETFConstituentUniverse>, IEnumerable<Symbol>> universeFilterFunc)
+            Func<IEnumerable<ETFConstituentUniverse>, IEnumerable<Symbol>> universeFilterFunc
+        )
         {
             return ETF(etfTicker, null, universeSettings, universeFilterFunc);
         }
@@ -129,9 +143,15 @@ namespace QuantConnect.Algorithm
             string etfTicker,
             string market = null,
             UniverseSettings universeSettings = null,
-            PyObject universeFilterFunc = null)
+            PyObject universeFilterFunc = null
+        )
         {
-            return ETF(etfTicker, market, universeSettings, universeFilterFunc?.ConvertPythonUniverseFilterFunction<ETFConstituentUniverse>());
+            return ETF(
+                etfTicker,
+                market,
+                universeSettings,
+                universeFilterFunc?.ConvertPythonUniverseFilterFunction<ETFConstituentUniverse>()
+            );
         }
 
         /// <summary>
@@ -144,7 +164,8 @@ namespace QuantConnect.Algorithm
         public Universe ETF(
             string etfTicker,
             UniverseSettings universeSettings,
-            PyObject universeFilterFunc)
+            PyObject universeFilterFunc
+        )
         {
             return ETF(etfTicker, null, universeSettings, universeFilterFunc);
         }
@@ -156,10 +177,17 @@ namespace QuantConnect.Algorithm
         /// <param name="universeSettings">Universe settings</param>
         /// <param name="universeFilterFunc">Function to filter universe results</param>
         /// <returns>New ETF constituents Universe</returns>
-        public Universe ETF(Symbol symbol, UniverseSettings universeSettings,
-            Func<IEnumerable<ETFConstituentUniverse>, IEnumerable<Symbol>> universeFilterFunc)
+        public Universe ETF(
+            Symbol symbol,
+            UniverseSettings universeSettings,
+            Func<IEnumerable<ETFConstituentUniverse>, IEnumerable<Symbol>> universeFilterFunc
+        )
         {
-            return new ETFConstituentsUniverseFactory(symbol, universeSettings ?? _algorithm.UniverseSettings, universeFilterFunc);
+            return new ETFConstituentsUniverseFactory(
+                symbol,
+                universeSettings ?? _algorithm.UniverseSettings,
+                universeFilterFunc
+            );
         }
 
         /// <summary>
@@ -168,7 +196,10 @@ namespace QuantConnect.Algorithm
         /// <param name="symbol">ETF Symbol to get constituents for</param>
         /// <param name="universeFilterFunc">Function to filter universe results</param>
         /// <returns>New ETF constituents Universe</returns>
-        public Universe ETF(Symbol symbol, Func<IEnumerable<ETFConstituentUniverse>, IEnumerable<Symbol>> universeFilterFunc)
+        public Universe ETF(
+            Symbol symbol,
+            Func<IEnumerable<ETFConstituentUniverse>, IEnumerable<Symbol>> universeFilterFunc
+        )
         {
             return ETF(symbol, null, universeFilterFunc);
         }
@@ -180,10 +211,17 @@ namespace QuantConnect.Algorithm
         /// <param name="universeSettings">Universe settings</param>
         /// <param name="universeFilterFunc">Function to filter universe results</param>
         /// <returns>New ETF constituents Universe</returns>
-        public Universe ETF(Symbol symbol, UniverseSettings universeSettings = null, PyObject universeFilterFunc = null)
+        public Universe ETF(
+            Symbol symbol,
+            UniverseSettings universeSettings = null,
+            PyObject universeFilterFunc = null
+        )
         {
-            return ETF(symbol, universeSettings ?? _algorithm.UniverseSettings,
-                universeFilterFunc?.ConvertPythonUniverseFilterFunction<ETFConstituentUniverse>());
+            return ETF(
+                symbol,
+                universeSettings ?? _algorithm.UniverseSettings,
+                universeFilterFunc?.ConvertPythonUniverseFilterFunction<ETFConstituentUniverse>()
+            );
         }
 
         /// <summary>
@@ -194,17 +232,25 @@ namespace QuantConnect.Algorithm
         /// <param name="universeSettings">Universe settings</param>
         /// <param name="universeFilterFunc">Function to filter universe results</param>
         /// <returns>New index constituents Universe</returns>
-        public Universe Index(string indexTicker, string market, UniverseSettings universeSettings,
-            Func<IEnumerable<ETFConstituentUniverse>, IEnumerable<Symbol>> universeFilterFunc)
+        public Universe Index(
+            string indexTicker,
+            string market,
+            UniverseSettings universeSettings,
+            Func<IEnumerable<ETFConstituentUniverse>, IEnumerable<Symbol>> universeFilterFunc
+        )
         {
-            market ??= _algorithm.BrokerageModel.DefaultMarkets.TryGetValue(SecurityType.Index, out var defaultMarket)
+            market ??= _algorithm.BrokerageModel.DefaultMarkets.TryGetValue(
+                SecurityType.Index,
+                out var defaultMarket
+            )
                 ? defaultMarket
                 : throw new Exception("No default market set for security type: Index");
 
             return Index(
                 Symbol.Create(indexTicker, SecurityType.Index, market),
                 universeSettings,
-                universeFilterFunc);
+                universeFilterFunc
+            );
         }
 
         /// <summary>
@@ -215,7 +261,11 @@ namespace QuantConnect.Algorithm
         /// <param name="universeSettings">Universe settings</param>
         /// <param name="universeFilterFunc">Function to filter universe results</param>
         /// <returns>New index constituents Universe</returns>
-        public Universe Index(string indexTicker, string market, Func<IEnumerable<ETFConstituentUniverse>, IEnumerable<Symbol>> universeFilterFunc)
+        public Universe Index(
+            string indexTicker,
+            string market,
+            Func<IEnumerable<ETFConstituentUniverse>, IEnumerable<Symbol>> universeFilterFunc
+        )
         {
             return Index(indexTicker, market, null, universeFilterFunc);
         }
@@ -226,7 +276,10 @@ namespace QuantConnect.Algorithm
         /// <param name="indexTicker">Ticker of the index to get constituents for</param>
         /// <param name="universeFilterFunc">Function to filter universe results</param>
         /// <returns>New index constituents Universe</returns>
-        public Universe Index(string indexTicker, Func<IEnumerable<ETFConstituentUniverse>, IEnumerable<Symbol>> universeFilterFunc)
+        public Universe Index(
+            string indexTicker,
+            Func<IEnumerable<ETFConstituentUniverse>, IEnumerable<Symbol>> universeFilterFunc
+        )
         {
             return Index(indexTicker, null, null, universeFilterFunc);
         }
@@ -239,8 +292,11 @@ namespace QuantConnect.Algorithm
         /// <param name="universeSettings">Universe settings</param>
         /// <param name="universeFilterFunc">Function to filter universe results</param>
         /// <returns>New index constituents Universe</returns>
-        public Universe Index(string indexTicker, UniverseSettings universeSettings,
-            Func<IEnumerable<ETFConstituentUniverse>, IEnumerable<Symbol>> universeFilterFunc)
+        public Universe Index(
+            string indexTicker,
+            UniverseSettings universeSettings,
+            Func<IEnumerable<ETFConstituentUniverse>, IEnumerable<Symbol>> universeFilterFunc
+        )
         {
             return Index(indexTicker, null, universeSettings, universeFilterFunc);
         }
@@ -257,9 +313,15 @@ namespace QuantConnect.Algorithm
             string indexTicker,
             string market = null,
             UniverseSettings universeSettings = null,
-            PyObject universeFilterFunc = null)
+            PyObject universeFilterFunc = null
+        )
         {
-            return Index(indexTicker, market, universeSettings, universeFilterFunc?.ConvertPythonUniverseFilterFunction<ETFConstituentUniverse>());
+            return Index(
+                indexTicker,
+                market,
+                universeSettings,
+                universeFilterFunc?.ConvertPythonUniverseFilterFunction<ETFConstituentUniverse>()
+            );
         }
 
         /// <summary>
@@ -272,7 +334,8 @@ namespace QuantConnect.Algorithm
         public Universe Index(
             string indexTicker,
             UniverseSettings universeSettings,
-            PyObject universeFilterFunc)
+            PyObject universeFilterFunc
+        )
         {
             return Index(indexTicker, null, universeSettings, universeFilterFunc);
         }
@@ -284,10 +347,17 @@ namespace QuantConnect.Algorithm
         /// <param name="universeSettings">Universe settings</param>
         /// <param name="universeFilterFunc">Function to filter universe results</param>
         /// <returns>New index constituents Universe</returns>
-        public Universe Index(Symbol indexSymbol, UniverseSettings universeSettings,
-            Func<IEnumerable<ETFConstituentUniverse>, IEnumerable<Symbol>> universeFilterFunc)
+        public Universe Index(
+            Symbol indexSymbol,
+            UniverseSettings universeSettings,
+            Func<IEnumerable<ETFConstituentUniverse>, IEnumerable<Symbol>> universeFilterFunc
+        )
         {
-            return new ETFConstituentsUniverseFactory(indexSymbol, universeSettings, universeFilterFunc);
+            return new ETFConstituentsUniverseFactory(
+                indexSymbol,
+                universeSettings,
+                universeFilterFunc
+            );
         }
 
         /// <summary>
@@ -296,7 +366,10 @@ namespace QuantConnect.Algorithm
         /// <param name="indexSymbol">Index Symbol to get constituents for</param>
         /// <param name="universeFilterFunc">Function to filter universe results</param>
         /// <returns>New index constituents Universe</returns>
-        public Universe Index(Symbol indexSymbol, Func<IEnumerable<ETFConstituentUniverse>, IEnumerable<Symbol>> universeFilterFunc)
+        public Universe Index(
+            Symbol indexSymbol,
+            Func<IEnumerable<ETFConstituentUniverse>, IEnumerable<Symbol>> universeFilterFunc
+        )
         {
             return Index(indexSymbol, null, universeFilterFunc);
         }
@@ -311,10 +384,14 @@ namespace QuantConnect.Algorithm
         public Universe Index(
             Symbol indexSymbol,
             UniverseSettings universeSettings = null,
-            PyObject universeFilterFunc = null)
+            PyObject universeFilterFunc = null
+        )
         {
-            return Index(indexSymbol, universeSettings ?? _algorithm.UniverseSettings,
-                universeFilterFunc?.ConvertPythonUniverseFilterFunction<ETFConstituentUniverse>());
+            return Index(
+                indexSymbol,
+                universeSettings ?? _algorithm.UniverseSettings,
+                universeFilterFunc?.ConvertPythonUniverseFilterFunction<ETFConstituentUniverse>()
+            );
         }
 
         /// <summary>
@@ -325,10 +402,7 @@ namespace QuantConnect.Algorithm
         /// <returns>A new coarse universe for the top count of stocks by dollar volume</returns>
         public Universe QC500
         {
-            get
-            {
-                return ETF(Symbol.Create("SPY", SecurityType.Equity, Market.USA));
-            }
+            get { return ETF(Symbol.Create("SPY", SecurityType.Equity, Market.USA)); }
         }
 
         /// <summary>
@@ -343,12 +417,20 @@ namespace QuantConnect.Algorithm
         {
             universeSettings ??= _algorithm.UniverseSettings;
 
-            var symbol = Symbol.Create("us-equity-dollar-volume-top-" + count, SecurityType.Equity, Market.USA);
-            return FundamentalUniverse.USA(selectionData => (
-                from c in selectionData
-                orderby c.DollarVolume descending
-                select c.Symbol).Take(count),
-                universeSettings);
+            var symbol = Symbol.Create(
+                "us-equity-dollar-volume-top-" + count,
+                SecurityType.Equity,
+                Market.USA
+            );
+            return FundamentalUniverse.USA(
+                selectionData =>
+                    (
+                        from c in selectionData
+                        orderby c.DollarVolume descending
+                        select c.Symbol
+                    ).Take(count),
+                universeSettings
+            );
         }
     }
 }

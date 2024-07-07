@@ -29,7 +29,8 @@ namespace QuantConnect.Algorithm.Framework.Risk
     /// </summary>
     public class CompositeRiskManagementModel : RiskManagementModel
     {
-        private readonly List<IRiskManagementModel> _riskManagementModels = new List<IRiskManagementModel>();
+        private readonly List<IRiskManagementModel> _riskManagementModels =
+            new List<IRiskManagementModel>();
 
         /// <summary>
         /// Initializes a new instance of the <see cref="CompositeRiskManagementModel"/> class
@@ -39,7 +40,9 @@ namespace QuantConnect.Algorithm.Framework.Risk
         {
             if (riskManagementModels.IsNullOrEmpty())
             {
-                throw new ArgumentException("Must specify at least 1 risk management model for the CompositeRiskManagementModel");
+                throw new ArgumentException(
+                    "Must specify at least 1 risk management model for the CompositeRiskManagementModel"
+                );
             }
 
             _riskManagementModels.AddRange(riskManagementModels);
@@ -49,7 +52,7 @@ namespace QuantConnect.Algorithm.Framework.Risk
         /// Initializes a new instance of the <see cref="CompositeRiskManagementModel"/> class
         /// </summary>
         /// <param name="riskManagementModels">The individual risk management models defining this composite model</param>
-        public CompositeRiskManagementModel(IEnumerable<IRiskManagementModel>riskManagementModels)
+        public CompositeRiskManagementModel(IEnumerable<IRiskManagementModel> riskManagementModels)
         {
             foreach (var riskManagementModel in riskManagementModels)
             {
@@ -58,7 +61,9 @@ namespace QuantConnect.Algorithm.Framework.Risk
 
             if (_riskManagementModels.IsNullOrEmpty())
             {
-                throw new ArgumentException("Must specify at least 1 risk management model for the CompositeRiskManagementModel");
+                throw new ArgumentException(
+                    "Must specify at least 1 risk management model for the CompositeRiskManagementModel"
+                );
             }
         }
 
@@ -70,7 +75,9 @@ namespace QuantConnect.Algorithm.Framework.Risk
         {
             if (riskManagementModels.IsNullOrEmpty())
             {
-                throw new ArgumentException("Must specify at least 1 risk management model for the CompositeRiskManagementModel");
+                throw new ArgumentException(
+                    "Must specify at least 1 risk management model for the CompositeRiskManagementModel"
+                );
             }
 
             foreach (var pyRiskManagementModel in riskManagementModels)
@@ -84,10 +91,7 @@ namespace QuantConnect.Algorithm.Framework.Risk
         /// </summary>
         /// <param name="riskManagementModel">The individual risk management model defining this composite model</param>
         public CompositeRiskManagementModel(PyObject riskManagementModel)
-            : this(new[] { riskManagementModel} )
-        {
-
-        }
+            : this(new[] { riskManagementModel }) { }
 
         /// <summary>
         /// Manages the algorithm's risk at each time step.
@@ -96,7 +100,10 @@ namespace QuantConnect.Algorithm.Framework.Risk
         /// <param name="algorithm">The algorithm instance</param>
         /// <param name="targets">The current portfolio targets to be assessed for risk</param>
         /// <returns>The new portfolio targets</returns>
-        public override IEnumerable<IPortfolioTarget> ManageRisk(QCAlgorithm algorithm, IPortfolioTarget[] targets)
+        public override IEnumerable<IPortfolioTarget> ManageRisk(
+            QCAlgorithm algorithm,
+            IPortfolioTarget[] targets
+        )
         {
             foreach (var model in _riskManagementModels)
             {

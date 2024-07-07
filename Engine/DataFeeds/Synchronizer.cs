@@ -66,12 +66,14 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         /// </summary>
         public virtual void Initialize(
             IAlgorithm algorithm,
-            IDataFeedSubscriptionManager dataFeedSubscriptionManager)
+            IDataFeedSubscriptionManager dataFeedSubscriptionManager
+        )
         {
             SubscriptionManager = dataFeedSubscriptionManager;
             Algorithm = algorithm;
             SubscriptionSynchronizer = new SubscriptionSynchronizer(
-                SubscriptionManager.UniverseSelection);
+                SubscriptionManager.UniverseSelection
+            );
         }
 
         /// <summary>
@@ -113,7 +115,8 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                 }
 
                 // check for cancellation
-                if (timeSlice == null || cancellationToken.IsCancellationRequested) break;
+                if (timeSlice == null || cancellationToken.IsCancellationRequested)
+                    break;
 
                 if (timeSlice.IsTimePulse && Algorithm.UtcTime == timeSlice.Time)
                 {
@@ -123,7 +126,11 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                 }
 
                 // SubscriptionFrontierTimeProvider will return twice the same time if there are no more subscriptions or if Subscription.Current is null
-                if (timeSlice.Time != previousEmitTime || previousWasTimePulse || timeSlice.UniverseData.Count != 0)
+                if (
+                    timeSlice.Time != previousEmitTime
+                    || previousWasTimePulse
+                    || timeSlice.UniverseData.Count != 0
+                )
                 {
                     previousEmitTime = timeSlice.Time;
                     previousWasTimePulse = timeSlice.IsTimePulse;
@@ -159,8 +166,10 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                 SubscriptionManager.RemoveSubscription(subscription.Configuration);
                 if (Log.DebuggingEnabled)
                 {
-                    Log.Debug("Synchronizer.SubscriptionFinished(): Finished subscription:" +
-                              $"{subscription.Configuration} at {FrontierTimeProvider.GetUtcNow()} UTC");
+                    Log.Debug(
+                        "Synchronizer.SubscriptionFinished(): Finished subscription:"
+                            + $"{subscription.Configuration} at {FrontierTimeProvider.GetUtcNow()} UTC"
+                    );
                 }
             };
 
@@ -177,7 +186,10 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         /// <returns>The <see cref="ITimeProvider"/> to use</returns>
         protected virtual ITimeProvider GetTimeProvider()
         {
-            return new SubscriptionFrontierTimeProvider(GetInitialFrontierTime(), SubscriptionManager);
+            return new SubscriptionFrontierTimeProvider(
+                GetInitialFrontierTime(),
+                SubscriptionManager
+            );
         }
 
         private DateTime GetInitialFrontierTime()
@@ -215,8 +227,6 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         /// <summary>
         /// Free resources
         /// </summary>
-        public virtual void Dispose()
-        {
-        }
+        public virtual void Dispose() { }
     }
 }

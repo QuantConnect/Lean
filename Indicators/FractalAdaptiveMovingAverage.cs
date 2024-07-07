@@ -13,9 +13,9 @@
  * limitations under the License.
 */
 
-using QuantConnect.Data.Market;
 using System;
 using System.Linq;
+using QuantConnect.Data.Market;
 
 namespace QuantConnect.Indicators
 {
@@ -54,19 +54,14 @@ namespace QuantConnect.Indicators
         /// <param name="n">The window period (must be even). Example value: 16</param>
         /// <param name="longPeriod">The average period. Example value: 198</param>
         public FractalAdaptiveMovingAverage(int n, int longPeriod)
-            : this($"FRAMA({n},{longPeriod})", n, longPeriod)
-        {
-
-        }
+            : this($"FRAMA({n},{longPeriod})", n, longPeriod) { }
 
         /// <summary>
         /// Initializes a new instance of the average class
         /// </summary>
         /// <param name="n">The window period (must be even). Example value: 16</param>
         public FractalAdaptiveMovingAverage(int n)
-            : this(n, 198)
-        {
-        }
+            : this(n, 198) { }
 
         /// <summary>
         /// Computes the average value

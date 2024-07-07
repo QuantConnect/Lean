@@ -15,14 +15,14 @@
 */
 
 using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using QuantConnect.Util;
-using QuantConnect.Logging;
-using QuantConnect.Interfaces;
 using QuantConnect.Configuration;
-using System.Collections.Generic;
 using QuantConnect.Data.Auxiliary;
+using QuantConnect.Interfaces;
+using QuantConnect.Logging;
+using QuantConnect.Util;
 
 namespace QuantConnect.Securities
 {
@@ -45,9 +45,17 @@ namespace QuantConnect.Securities
         /// </summary>
         /// <param name="dataProvider">Data provider used to obtain symbol mappings data</param>
         /// <param name="securitiesDefinitionKey">Location to read the securities definition data from</param>
-        private SecurityDefinitionSymbolResolver(IDataProvider dataProvider = null, string securitiesDefinitionKey = null)
+        private SecurityDefinitionSymbolResolver(
+            IDataProvider dataProvider = null,
+            string securitiesDefinitionKey = null
+        )
         {
-            _securitiesDefinitionKey = securitiesDefinitionKey ?? Path.Combine(Globals.GetDataFolderPath("symbol-properties"), "security-database.csv");
+            _securitiesDefinitionKey =
+                securitiesDefinitionKey
+                ?? Path.Combine(
+                    Globals.GetDataFolderPath("symbol-properties"),
+                    "security-database.csv"
+                );
 
             _dataProvider = dataProvider ?? Composer.Instance.GetPart<IDataProvider>();
 
@@ -74,8 +82,13 @@ namespace QuantConnect.Securities
             }
 
             return SecurityDefinitionToSymbol(
-                GetSecurityDefinitions().FirstOrDefault(x => x.CUSIP != null && x.CUSIP.Equals(cusip, StringComparison.InvariantCultureIgnoreCase)),
-                tradingDate);
+                GetSecurityDefinitions()
+                    .FirstOrDefault(x =>
+                        x.CUSIP != null
+                        && x.CUSIP.Equals(cusip, StringComparison.InvariantCultureIgnoreCase)
+                    ),
+                tradingDate
+            );
         }
 
         /// <summary>
@@ -107,8 +120,16 @@ namespace QuantConnect.Securities
             }
 
             return SecurityDefinitionToSymbol(
-                GetSecurityDefinitions().FirstOrDefault(x => x.CompositeFIGI != null && x.CompositeFIGI.Equals(compositeFigi, StringComparison.InvariantCultureIgnoreCase)),
-                tradingDate);
+                GetSecurityDefinitions()
+                    .FirstOrDefault(x =>
+                        x.CompositeFIGI != null
+                        && x.CompositeFIGI.Equals(
+                            compositeFigi,
+                            StringComparison.InvariantCultureIgnoreCase
+                        )
+                    ),
+                tradingDate
+            );
         }
 
         /// <summary>
@@ -140,8 +161,13 @@ namespace QuantConnect.Securities
             }
 
             return SecurityDefinitionToSymbol(
-                GetSecurityDefinitions().FirstOrDefault(x => x.SEDOL != null && x.SEDOL.Equals(sedol, StringComparison.InvariantCultureIgnoreCase)),
-                tradingDate);
+                GetSecurityDefinitions()
+                    .FirstOrDefault(x =>
+                        x.SEDOL != null
+                        && x.SEDOL.Equals(sedol, StringComparison.InvariantCultureIgnoreCase)
+                    ),
+                tradingDate
+            );
         }
 
         /// <summary>
@@ -173,8 +199,13 @@ namespace QuantConnect.Securities
             }
 
             return SecurityDefinitionToSymbol(
-                GetSecurityDefinitions().FirstOrDefault(x => x.ISIN != null && x.ISIN.Equals(isin, StringComparison.InvariantCultureIgnoreCase)),
-                tradingDate);
+                GetSecurityDefinitions()
+                    .FirstOrDefault(x =>
+                        x.ISIN != null
+                        && x.ISIN.Equals(isin, StringComparison.InvariantCultureIgnoreCase)
+                    ),
+                tradingDate
+            );
         }
 
         /// <summary>
@@ -217,7 +248,9 @@ namespace QuantConnect.Securities
 
             return GetSecurityDefinitions()
                 .Where(x => x.CIK != null && x.CIK == cik)
-                .Select(securityDefinition => SecurityDefinitionToSymbol(securityDefinition, tradingDate))
+                .Select(securityDefinition =>
+                    SecurityDefinitionToSymbol(securityDefinition, tradingDate)
+                )
                 .Where(x => x != null)
                 .ToArray();
         }
@@ -231,19 +264,26 @@ namespace QuantConnect.Securities
         /// the ticker that the stock was trading under on this date.
         /// </param>
         /// <returns>Symbol if matching Lean Symbol was found on the trading date, null otherwise</returns>
-        private Symbol SecurityDefinitionToSymbol(SecurityDefinition securityDefinition, DateTime tradingDate)
+        private Symbol SecurityDefinitionToSymbol(
+            SecurityDefinition securityDefinition,
+            DateTime tradingDate
+        )
         {
             if (securityDefinition == null)
             {
                 return null;
             }
 
-            var mapFileResolver = _mapFileProvider.Get(AuxiliaryDataKey.Create(securityDefinition.SecurityIdentifier));
+            var mapFileResolver = _mapFileProvider.Get(
+                AuxiliaryDataKey.Create(securityDefinition.SecurityIdentifier)
+            );
 
             // Get the first ticker the symbol traded under, and then lookup the
             // trading date to get the ticker on the trading date.
-            var mapFile = mapFileResolver
-                .ResolveMapFile(securityDefinition.SecurityIdentifier.Symbol, securityDefinition.SecurityIdentifier.Date);
+            var mapFile = mapFileResolver.ResolveMapFile(
+                securityDefinition.SecurityIdentifier.Symbol,
+                securityDefinition.SecurityIdentifier.Date
+            );
 
             // The mapped ticker will be null if the map file is null or there's
             // no entry found for the given trading date.
@@ -251,9 +291,7 @@ namespace QuantConnect.Securities
 
             // If we're null, then try again; get the last entry of the map file and use
             // it as the Symbol we return to the caller.
-            mappedTicker ??= mapFile?
-                .LastOrDefault()?
-                .MappedSymbol;
+            mappedTicker ??= mapFile?.LastOrDefault()?.MappedSymbol;
 
             return string.IsNullOrWhiteSpace(mappedTicker)
                 ? null
@@ -270,7 +308,8 @@ namespace QuantConnect.Securities
                 return null;
             }
 
-            return GetSecurityDefinitions().FirstOrDefault(x => x.SecurityIdentifier.Equals(symbol.ID));
+            return GetSecurityDefinitions()
+                .FirstOrDefault(x => x.SecurityIdentifier.Equals(symbol.ID));
         }
 
         /// <summary>
@@ -280,10 +319,19 @@ namespace QuantConnect.Securities
         {
             lock (_lock)
             {
-                if (_securityDefinitions == null && !SecurityDefinition.TryRead(_dataProvider, _securitiesDefinitionKey, out _securityDefinitions))
+                if (
+                    _securityDefinitions == null
+                    && !SecurityDefinition.TryRead(
+                        _dataProvider,
+                        _securitiesDefinitionKey,
+                        out _securityDefinitions
+                    )
+                )
                 {
                     _securityDefinitions = new List<SecurityDefinition>();
-                    Log.Error($"SecurityDefinitionSymbolResolver(): No security definitions data loaded from file: {_securitiesDefinitionKey}");
+                    Log.Error(
+                        $"SecurityDefinitionSymbolResolver(): No security definitions data loaded from file: {_securitiesDefinitionKey}"
+                    );
                 }
             }
 
@@ -296,13 +344,19 @@ namespace QuantConnect.Securities
         /// <param name="dataProvider">Data provider used to obtain symbol mappings data</param>
         /// <param name="securitiesDefinitionKey">Location to read the securities definition data from</param>
         /// <returns>The single instance of the symbol resolver</returns>
-        public static SecurityDefinitionSymbolResolver GetInstance(IDataProvider dataProvider = null, string securitiesDefinitionKey = null)
+        public static SecurityDefinitionSymbolResolver GetInstance(
+            IDataProvider dataProvider = null,
+            string securitiesDefinitionKey = null
+        )
         {
             lock (_lock)
             {
                 if (_securityDefinitionSymbolResolver == null)
                 {
-                    _securityDefinitionSymbolResolver = new SecurityDefinitionSymbolResolver(dataProvider, securitiesDefinitionKey);
+                    _securityDefinitionSymbolResolver = new SecurityDefinitionSymbolResolver(
+                        dataProvider,
+                        securitiesDefinitionKey
+                    );
                 }
             }
 

@@ -40,7 +40,13 @@ namespace QuantConnect.Tests.Common.Orders.Fills
             OrderTicket ticket;
             PartialMarketFillModel model;
             BasicTemplateAlgorithm algorithm;
-            var referenceTimeUtc = InitializeTest(out algorithm, out security, out model, out order, out ticket);
+            var referenceTimeUtc = InitializeTest(
+                out algorithm,
+                out security,
+                out model,
+                out order,
+                out ticket
+            );
 
             algorithm.SetDateTime(referenceTimeUtc.AddSeconds(1));
 
@@ -65,7 +71,13 @@ namespace QuantConnect.Tests.Common.Orders.Fills
             OrderTicket ticket;
             PartialMarketFillModel model;
             BasicTemplateAlgorithm algorithm;
-            var referenceTimeUtc = InitializeTest(out algorithm, out security, out model, out order, out ticket);
+            var referenceTimeUtc = InitializeTest(
+                out algorithm,
+                out security,
+                out model,
+                out order,
+                out ticket
+            );
 
             var fill1 = model.MarketFill(security, order);
             ticket.AddOrderEvent(fill1);
@@ -85,7 +97,13 @@ namespace QuantConnect.Tests.Common.Orders.Fills
             Assert.AreEqual(OrderStatus.Filled, fill3.Status);
         }
 
-        private static DateTime InitializeTest(out BasicTemplateAlgorithm algorithm, out Security security, out PartialMarketFillModel model, out MarketOrder order, out OrderTicket ticket)
+        private static DateTime InitializeTest(
+            out BasicTemplateAlgorithm algorithm,
+            out Security security,
+            out PartialMarketFillModel model,
+            out MarketOrder order,
+            out OrderTicket ticket
+        )
         {
             var referenceTimeNY = new DateTime(2015, 12, 21, 13, 0, 0);
             var referenceTimeUtc = referenceTimeNY.ConvertToUtc(TimeZones.NewYork);
@@ -93,14 +111,27 @@ namespace QuantConnect.Tests.Common.Orders.Fills
             algorithm.SetDateTime(referenceTimeUtc);
 
             var transactionHandler = new BacktestingTransactionHandler();
-            # pragma warning disable CA2000
+# pragma warning disable CA2000
             var backtestingBrokerage = new BacktestingBrokerage(algorithm);
-            #pragma warning restore CA2000
-            transactionHandler.Initialize(algorithm, backtestingBrokerage, new TestResultHandler(Console.WriteLine));
+#pragma warning restore CA2000
+            transactionHandler.Initialize(
+                algorithm,
+                backtestingBrokerage,
+                new TestResultHandler(Console.WriteLine)
+            );
 
             algorithm.Transactions.SetOrderProcessor(transactionHandler);
 
-            var config = new SubscriptionDataConfig(typeof(TradeBar), Symbols.SPY, Resolution.Second, TimeZones.NewYork, TimeZones.NewYork, false, false, false);
+            var config = new SubscriptionDataConfig(
+                typeof(TradeBar),
+                Symbols.SPY,
+                Resolution.Second,
+                TimeZones.NewYork,
+                TimeZones.NewYork,
+                false,
+                false,
+                false
+            );
             security = new Security(
                 SecurityExchangeHours.AlwaysOpen(TimeZones.NewYork),
                 config,
@@ -120,7 +151,16 @@ namespace QuantConnect.Tests.Common.Orders.Fills
 
             order = new MarketOrder(Symbols.SPY, 100, referenceTimeUtc) { Id = 1 };
 
-            var request = new SubmitOrderRequest(OrderType.Market, security.Type, security.Symbol, order.Quantity, 0, 0, algorithm.UtcTime, null);
+            var request = new SubmitOrderRequest(
+                OrderType.Market,
+                security.Type,
+                security.Symbol,
+                order.Quantity,
+                0,
+                0,
+                algorithm.UtcTime,
+                null
+            );
             ticket = algorithm.Transactions.ProcessRequest(request);
             return referenceTimeUtc;
         }
@@ -167,7 +207,9 @@ namespace QuantConnect.Tests.Common.Orders.Fills
             {
                 var currentUtcTime = asset.LocalTime.ConvertToUtc(asset.Exchange.TimeZone);
 
-                var ticket = _orderProvider.GetOrderTickets(x => x.OrderId == order.Id).FirstOrDefault();
+                var ticket = _orderProvider
+                    .GetOrderTickets(x => x.OrderId == order.Id)
+                    .FirstOrDefault();
                 if (ticket == null)
                 {
                     // if we can't find the ticket issue empty fills
@@ -176,7 +218,9 @@ namespace QuantConnect.Tests.Common.Orders.Fills
 
                 // make sure some time has passed
                 var lastOrderEvent = ticket.OrderEvents.LastOrDefault();
-                var increment = TimeSpan.FromTicks(Math.Max(asset.Resolution.ToTimeSpan().Ticks, 1));
+                var increment = TimeSpan.FromTicks(
+                    Math.Max(asset.Resolution.ToTimeSpan().Ticks, 1)
+                );
                 if (lastOrderEvent != null && currentUtcTime - lastOrderEvent.UtcTime < increment)
                 {
                     // wait a minute between fills
@@ -189,9 +233,8 @@ namespace QuantConnect.Tests.Common.Orders.Fills
                 fill.FillQuantity = filledThisTime;
 
                 // only mark it as filled if there is zero quantity remaining
-                fill.Status = remaining == filledThisTime
-                    ? OrderStatus.Filled
-                    : OrderStatus.PartiallyFilled;
+                fill.Status =
+                    remaining == filledThisTime ? OrderStatus.Filled : OrderStatus.PartiallyFilled;
 
                 return fill;
             }

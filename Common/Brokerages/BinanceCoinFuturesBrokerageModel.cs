@@ -27,9 +27,8 @@ namespace QuantConnect.Brokerages
         /// <summary>
         /// Creates a new instance
         /// </summary>
-        public BinanceCoinFuturesBrokerageModel(AccountType accountType) : base(accountType)
-        {
-        }
+        public BinanceCoinFuturesBrokerageModel(AccountType accountType)
+            : base(accountType) { }
 
         /// <summary>
         /// Get the benchmark for this model

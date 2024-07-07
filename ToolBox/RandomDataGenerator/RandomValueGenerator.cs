@@ -13,10 +13,10 @@
  * limitations under the License.
 */
 
-using QuantConnect.Securities;
-using QuantConnect.Util;
 using System;
 using System.Linq;
+using QuantConnect.Securities;
+using QuantConnect.Util;
 
 namespace QuantConnect.ToolBox.RandomDataGenerator
 {
@@ -31,28 +31,31 @@ namespace QuantConnect.ToolBox.RandomDataGenerator
         private readonly SymbolPropertiesDatabase _symbolPropertiesDatabase;
         private const decimal _maximumPriceAllowed = 1000000m;
 
-
         public RandomValueGenerator()
-            : this(new Random())
-        { }
+            : this(new Random()) { }
 
         public RandomValueGenerator(int seed)
-            : this(new Random(seed))
-        { }
+            : this(new Random(seed)) { }
 
         public RandomValueGenerator(Random random)
-            : this(random, MarketHoursDatabase.FromDataFolder(), SymbolPropertiesDatabase.FromDataFolder())
-        { }
+            : this(
+                random,
+                MarketHoursDatabase.FromDataFolder(),
+                SymbolPropertiesDatabase.FromDataFolder()
+            ) { }
 
         public RandomValueGenerator(
             int seed,
             MarketHoursDatabase marketHoursDatabase,
             SymbolPropertiesDatabase symbolPropertiesDatabase
-            )
-            : this(new Random(seed), marketHoursDatabase, symbolPropertiesDatabase)
-        { }
+        )
+            : this(new Random(seed), marketHoursDatabase, symbolPropertiesDatabase) { }
 
-        public RandomValueGenerator(Random random, MarketHoursDatabase marketHoursDatabase, SymbolPropertiesDatabase symbolPropertiesDatabase)
+        public RandomValueGenerator(
+            Random random,
+            MarketHoursDatabase marketHoursDatabase,
+            SymbolPropertiesDatabase symbolPropertiesDatabase
+        )
         {
             _random = random;
             _marketHoursDatabase = marketHoursDatabase;
@@ -64,7 +67,11 @@ namespace QuantConnect.ToolBox.RandomDataGenerator
             return _random.NextDouble() <= percentOddsForTrue / 100;
         }
 
-        public virtual DateTime NextDate(DateTime minDateTime, DateTime maxDateTime, DayOfWeek? dayOfWeek)
+        public virtual DateTime NextDate(
+            DateTime minDateTime,
+            DateTime maxDateTime,
+            DayOfWeek? dayOfWeek
+        )
         {
             if (maxDateTime < minDateTime)
             {
@@ -85,22 +92,23 @@ namespace QuantConnect.ToolBox.RandomDataGenerator
                 return dateTime;
             }
 
-            var nextDayOfWeek = Enumerable.Range(0, 7)
+            var nextDayOfWeek = Enumerable
+                .Range(0, 7)
                 .Select(i => dateTime.AddDays(i))
                 .First(dt => dt.DayOfWeek == dayOfWeek.Value);
 
-            var previousDayOfWeek = Enumerable.Range(0, 7)
+            var previousDayOfWeek = Enumerable
+                .Range(0, 7)
                 .Select(i => dateTime.AddDays(-i))
                 .First(dt => dt.DayOfWeek == dayOfWeek.Value);
 
             // both are valid dates, so chose one randomly
-            if (IsWithinRange(nextDayOfWeek, minDateTime, maxDateTime) &&
-                IsWithinRange(previousDayOfWeek, minDateTime, maxDateTime)
+            if (
+                IsWithinRange(nextDayOfWeek, minDateTime, maxDateTime)
+                && IsWithinRange(previousDayOfWeek, minDateTime, maxDateTime)
             )
             {
-                return _random.Next(0, 1) == 0
-                    ? previousDayOfWeek
-                    : nextDayOfWeek;
+                return _random.Next(0, 1) == 0 ? previousDayOfWeek : nextDayOfWeek;
             }
 
             if (IsWithinRange(nextDayOfWeek, minDateTime, maxDateTime))
@@ -113,7 +121,9 @@ namespace QuantConnect.ToolBox.RandomDataGenerator
                 return previousDayOfWeek;
             }
 
-            throw new ArgumentException("The provided min and max dates do not have the requested day of week between them");
+            throw new ArgumentException(
+                "The provided min and max dates do not have the requested day of week between them"
+            );
         }
 
         public double NextDouble() => _random.NextDouble();
@@ -135,7 +145,12 @@ namespace QuantConnect.ToolBox.RandomDataGenerator
         /// <param name="maximumPercentDeviation">The maximum percent deviation. This value is in percent space,
         ///     so a value of 1m is equal to 1%.</param>
         /// <returns>A new decimal suitable for usage as price within the specified deviation from the reference price</returns>
-        public virtual decimal NextPrice(SecurityType securityType, string market, decimal referencePrice, decimal maximumPercentDeviation)
+        public virtual decimal NextPrice(
+            SecurityType securityType,
+            string market,
+            decimal referencePrice,
+            decimal maximumPercentDeviation
+        )
         {
             if (referencePrice <= 0)
             {
@@ -143,18 +158,27 @@ namespace QuantConnect.ToolBox.RandomDataGenerator
                 {
                     return 0;
                 }
-                throw new ArgumentException("The provided reference price must be a positive number.");
+                throw new ArgumentException(
+                    "The provided reference price must be a positive number."
+                );
             }
 
             if (maximumPercentDeviation <= 0)
             {
-                throw new ArgumentException("The provided maximum percent deviation must be a positive number");
+                throw new ArgumentException(
+                    "The provided maximum percent deviation must be a positive number"
+                );
             }
 
             // convert from percent space to decimal space
             maximumPercentDeviation /= 100m;
 
-            var symbolProperties = _symbolPropertiesDatabase.GetSymbolProperties(market, null, securityType, "USD");
+            var symbolProperties = _symbolPropertiesDatabase.GetSymbolProperties(
+                market,
+                null,
+                securityType,
+                "USD"
+            );
             var minimumPriceVariation = symbolProperties.MinimumPriceVariation;
 
             decimal price;
@@ -165,8 +189,12 @@ namespace QuantConnect.ToolBox.RandomDataGenerator
                 // what follows is a simple model of browning motion that
                 // limits the walk to the specified percent deviation
 
-                var deviation = referencePrice * maximumPercentDeviation * (decimal)(NextDouble() - increaseProbabilityFactor);
-                deviation = Math.Sign(deviation) * Math.Max(Math.Abs(deviation), minimumPriceVariation);
+                var deviation =
+                    referencePrice
+                    * maximumPercentDeviation
+                    * (decimal)(NextDouble() - increaseProbabilityFactor);
+                deviation =
+                    Math.Sign(deviation) * Math.Max(Math.Abs(deviation), minimumPriceVariation);
                 price = referencePrice + deviation;
                 price = RoundPrice(price, minimumPriceVariation);
 
@@ -204,7 +232,8 @@ namespace QuantConnect.ToolBox.RandomDataGenerator
 
         private static decimal RoundPrice(decimal price, decimal minimumPriceVariation)
         {
-            if (minimumPriceVariation == 0) return minimumPriceVariation;
+            if (minimumPriceVariation == 0)
+                return minimumPriceVariation;
             return Math.Round(price / minimumPriceVariation) * minimumPriceVariation;
         }
 

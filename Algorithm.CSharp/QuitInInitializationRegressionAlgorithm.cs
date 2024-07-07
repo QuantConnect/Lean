@@ -14,16 +14,18 @@
 */
 
 using System;
+using System.Collections.Generic;
 using QuantConnect.Data;
 using QuantConnect.Interfaces;
-using System.Collections.Generic;
 
 namespace QuantConnect.Algorithm.CSharp
 {
     /// <summary>
     /// This regression algorithm is expected to stop executing after Initialization. Related to GH 6168 issue
     /// </summary>
-    public class QuitInInitializationRegressionAlgorithm : QCAlgorithm, IRegressionAlgorithmDefinition
+    public class QuitInInitializationRegressionAlgorithm
+        : QCAlgorithm,
+            IRegressionAlgorithmDefinition
     {
         public override void Initialize()
         {

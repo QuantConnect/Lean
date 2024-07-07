@@ -15,28 +15,28 @@
 */
 
 using System;
-using NUnit.Framework;
+using System.Collections.Generic;
+using System.Linq;
+using System.Reflection;
 using System.Threading;
+using Moq;
+using NUnit.Framework;
+using QuantConnect.Brokerages.Backtesting;
+using QuantConnect.Data.Market;
+using QuantConnect.Lean.Engine.DataFeeds;
+using QuantConnect.Lean.Engine.HistoricalData;
+using QuantConnect.Lean.Engine.RealTime;
+using QuantConnect.Lean.Engine.Results;
+using QuantConnect.Lean.Engine.TransactionHandlers;
+using QuantConnect.Orders;
 using QuantConnect.Packets;
 using QuantConnect.Scheduling;
-using QuantConnect.Lean.Engine.Results;
-using QuantConnect.Lean.Engine.RealTime;
-using QuantConnect.Tests.Engine.DataFeeds;
-using System.Linq;
 using QuantConnect.Securities;
-using System.Collections.Generic;
-using QuantConnect.Data.Market;
-using QuantConnect.Lean.Engine.TransactionHandlers;
-using Moq;
-using QuantConnect.Brokerages.Backtesting;
-using static QuantConnect.Tests.Engine.BrokerageTransactionHandlerTests.BrokerageTransactionHandlerTests;
-using QuantConnect.Orders;
-using System.Reflection;
-using QuantConnect.Lean.Engine.HistoricalData;
-using QuantConnect.Lean.Engine.DataFeeds;
-using QuantConnect.Util;
-using QuantConnect.Securities.Option;
 using QuantConnect.Securities.IndexOption;
+using QuantConnect.Securities.Option;
+using QuantConnect.Tests.Engine.DataFeeds;
+using QuantConnect.Util;
+using static QuantConnect.Tests.Engine.BrokerageTransactionHandlerTests.BrokerageTransactionHandlerTests;
 
 namespace QuantConnect.Tests.Engine.RealTime
 {
@@ -52,17 +52,27 @@ namespace QuantConnect.Tests.Engine.RealTime
             algo.SubscriptionManager.SetDataManager(new DataManagerStub(algo));
             algo.SetFinishedWarmingUp();
 
-            realTimeHandler.Setup(algo,
+            realTimeHandler.Setup(
+                algo,
                 new AlgorithmNodePacket(PacketType.AlgorithmNode),
                 new BacktestingResultHandler(),
                 null,
-                new TestTimeLimitManager());
+                new TestTimeLimitManager()
+            );
 
             realTimeHandler.SetTime(DateTime.UtcNow);
             // wait for the internal thread to start
             WaitUntilActive(realTimeHandler);
-            using var scheduledEvent = new ScheduledEvent("1", new []{ Time.EndOfTime }, (_, _) => { });
-            using var scheduledEvent2 = new ScheduledEvent("2", new []{ Time.EndOfTime }, (_, _) => { });
+            using var scheduledEvent = new ScheduledEvent(
+                "1",
+                new[] { Time.EndOfTime },
+                (_, _) => { }
+            );
+            using var scheduledEvent2 = new ScheduledEvent(
+                "2",
+                new[] { Time.EndOfTime },
+                (_, _) => { }
+            );
             Assert.DoesNotThrow(() =>
             {
                 for (var i = 0; i < 100000; i++)
@@ -80,22 +90,29 @@ namespace QuantConnect.Tests.Engine.RealTime
         }
 
         [TestCaseSource(typeof(ExchangeHoursDataClass), nameof(ExchangeHoursDataClass.TestCases))]
-        public void RefreshesMarketHoursCorrectly(SecurityExchangeHours securityExchangeHours, MarketHoursSegment expectedSegment)
+        public void RefreshesMarketHoursCorrectly(
+            SecurityExchangeHours securityExchangeHours,
+            MarketHoursSegment expectedSegment
+        )
         {
             var algorithm = new AlgorithmStub();
             var security = algorithm.AddEquity("SPY");
 
             var realTimeHandler = new TestLiveTradingRealTimeHandler();
-            realTimeHandler.Setup(algorithm,
+            realTimeHandler.Setup(
+                algorithm,
                 new AlgorithmNodePacket(PacketType.AlgorithmNode),
                 new BacktestingResultHandler(),
                 null,
-                new TestTimeLimitManager());
+                new TestTimeLimitManager()
+            );
 
             var time = new DateTime(2023, 5, 30).Date;
             var entry = new MarketHoursDatabase.Entry(TimeZones.NewYork, securityExchangeHours);
             var key = new SecurityDatabaseKey(Market.USA, null, SecurityType.Equity);
-            var mhdb = new MarketHoursDatabase(new Dictionary<SecurityDatabaseKey, MarketHoursDatabase.Entry>() { { key, entry} });
+            var mhdb = new MarketHoursDatabase(
+                new Dictionary<SecurityDatabaseKey, MarketHoursDatabase.Entry>() { { key, entry } }
+            );
             realTimeHandler.SetMarketHoursDatabase(mhdb);
             realTimeHandler.TestRefreshMarketHoursToday(security, time, expectedSegment);
         }
@@ -109,23 +126,41 @@ namespace QuantConnect.Tests.Engine.RealTime
             algorithm.SetStartDate(2023, 5, 30);
             algorithm.SetEndDate(2023, 5, 30);
             var security = algorithm.AddEquity("SPY");
-            security.Exchange = new SecurityExchange(SecurityExchangeHours.AlwaysOpen(TimeZones.NewYork));
+            security.Exchange = new SecurityExchange(
+                SecurityExchangeHours.AlwaysOpen(TimeZones.NewYork)
+            );
             var symbol = security.Symbol;
             algorithm.SetFinishedWarmingUp();
 
-            var handleOptionNotification = typeof(BrokerageTransactionHandler).GetMethod("HandleOptionNotification", BindingFlags.NonPublic | BindingFlags.Instance);
+            var handleOptionNotification = typeof(BrokerageTransactionHandler).GetMethod(
+                "HandleOptionNotification",
+                BindingFlags.NonPublic | BindingFlags.Instance
+            );
 
             var transactionHandler = new TestBrokerageTransactionHandler();
             using var broker = new BacktestingBrokerage(algorithm);
             transactionHandler.Initialize(algorithm, broker, new BacktestingResultHandler());
 
             // Creates a market order
-            security.SetMarketPrice(new TradeBar(new DateTime(2023, 5, 30), symbol, 280m, 280m, 280m, 280m, 100));
+            security.SetMarketPrice(
+                new TradeBar(new DateTime(2023, 5, 30), symbol, 280m, 280m, 280m, 280m, 100)
+            );
 
-            var orderRequest = new SubmitOrderRequest(OrderType.Market, security.Type, security.Symbol, 1, 0, 0, new DateTime(2023, 5, 30), "TestTag1");
+            var orderRequest = new SubmitOrderRequest(
+                OrderType.Market,
+                security.Type,
+                security.Symbol,
+                1,
+                0,
+                0,
+                new DateTime(2023, 5, 30),
+                "TestTag1"
+            );
 
             var orderProcessorMock = new Mock<IOrderProcessor>();
-            orderProcessorMock.Setup(m => m.GetOrderTicket(It.IsAny<int>())).Returns(new OrderTicket(algorithm.Transactions, orderRequest));
+            orderProcessorMock
+                .Setup(m => m.GetOrderTicket(It.IsAny<int>()))
+                .Returns(new OrderTicket(algorithm.Transactions, orderRequest));
             algorithm.Transactions.SetOrderProcessor(orderProcessorMock.Object);
             var orderTicket = transactionHandler.Process(orderRequest);
             transactionHandler.HandleOrderRequest(orderRequest);
@@ -134,14 +169,25 @@ namespace QuantConnect.Tests.Engine.RealTime
             Assert.IsTrue(orderTicket.Status == OrderStatus.Filled);
 
             var realTimeHandler = new TestLiveTradingRealTimeHandlerReset();
-            realTimeHandler.Setup(algorithm,
+            realTimeHandler.Setup(
+                algorithm,
                 new AlgorithmNodePacket(PacketType.AlgorithmNode),
                 new BacktestingResultHandler(),
                 null,
-                new TestTimeLimitManager());
+                new TestTimeLimitManager()
+            );
             realTimeHandler.AddRefreshHoursScheduledEvent();
 
-            orderRequest = new SubmitOrderRequest(OrderType.Market, security.Type, security.Symbol, 1, 0, 0, new DateTime(2023, 5, 30), "TestTag2");
+            orderRequest = new SubmitOrderRequest(
+                OrderType.Market,
+                security.Type,
+                security.Symbol,
+                1,
+                0,
+                0,
+                new DateTime(2023, 5, 30),
+                "TestTag2"
+            );
             orderRequest.SetOrderId(2);
             orderTicket = transactionHandler.Process(orderRequest);
             transactionHandler.HandleOrderRequest(orderRequest);
@@ -162,7 +208,9 @@ namespace QuantConnect.Tests.Engine.RealTime
         [TestCase("6:30:00")]
         public void RefreshesSymbolProperties(string refreshPeriodStr)
         {
-            var refreshPeriod = string.IsNullOrEmpty(refreshPeriodStr) ? TimeSpan.FromDays(1) : TimeSpan.Parse(refreshPeriodStr);
+            var refreshPeriod = string.IsNullOrEmpty(refreshPeriodStr)
+                ? TimeSpan.FromDays(1)
+                : TimeSpan.Parse(refreshPeriodStr);
             var step = refreshPeriod / 2;
 
             using var realTimeHandler = new SPDBTestLiveTradingRealTimeHandler();
@@ -175,11 +223,13 @@ namespace QuantConnect.Tests.Engine.RealTime
             algorithm.AddEquity("SPY");
             algorithm.AddForex("EURUSD");
 
-            realTimeHandler.Setup(algorithm,
+            realTimeHandler.Setup(
+                algorithm,
                 new AlgorithmNodePacket(PacketType.AlgorithmNode),
                 new BacktestingResultHandler(),
                 null,
-                new TestTimeLimitManager());
+                new TestTimeLimitManager()
+            );
 
             algorithm.SetFinishedWarmingUp();
             realTimeHandler.SetTime(timeProvider.GetUtcNow());
@@ -193,7 +243,11 @@ namespace QuantConnect.Tests.Engine.RealTime
             realTimeHandler.SpdbRefreshed.Reset();
             realTimeHandler.SecuritySymbolPropertiesUpdated.Reset();
 
-            var events = new[] { realTimeHandler.SpdbRefreshed.WaitHandle, realTimeHandler.SecuritySymbolPropertiesUpdated.WaitHandle };
+            var events = new[]
+            {
+                realTimeHandler.SpdbRefreshed.WaitHandle,
+                realTimeHandler.SecuritySymbolPropertiesUpdated.WaitHandle
+            };
             for (var i = 0; i < 10; i++)
             {
                 timeProvider.Advance(step);
@@ -222,7 +276,10 @@ namespace QuantConnect.Tests.Engine.RealTime
         [TestCase(SecurityType.Index, typeof(SymbolProperties))]
         [TestCase(SecurityType.Option, typeof(OptionSymbolProperties))]
         [TestCase(SecurityType.IndexOption, typeof(IndexOptionSymbolProperties))]
-        public void SecuritySymbolPropertiesTypeIsRespectedAfterRefresh(SecurityType securityType, Type expectedSymbolPropertiesType)
+        public void SecuritySymbolPropertiesTypeIsRespectedAfterRefresh(
+            SecurityType securityType,
+            Type expectedSymbolPropertiesType
+        )
         {
             using var realTimeHandler = new SPDBTestLiveTradingRealTimeHandler();
 
@@ -238,11 +295,13 @@ namespace QuantConnect.Tests.Engine.RealTime
 
             Assert.IsInstanceOf(expectedSymbolPropertiesType, security.SymbolProperties);
 
-            realTimeHandler.Setup(algorithm,
+            realTimeHandler.Setup(
+                algorithm,
                 new AlgorithmNodePacket(PacketType.AlgorithmNode),
                 new BacktestingResultHandler(),
                 null,
-                new TestTimeLimitManager());
+                new TestTimeLimitManager()
+            );
 
             algorithm.SetFinishedWarmingUp();
             realTimeHandler.SetTime(timeProvider.GetUtcNow());
@@ -276,13 +335,15 @@ namespace QuantConnect.Tests.Engine.RealTime
                 SecurityType.Equity => Symbols.SPY,
                 SecurityType.Forex => Symbols.USDJPY,
                 SecurityType.Future => Symbols.Future_ESZ18_Dec2018,
-                SecurityType.FutureOption => Symbol.CreateOption(
-                    Symbols.Future_ESZ18_Dec2018,
-                    Market.CME,
-                    OptionStyle.American,
-                    OptionRight.Call,
-                    4000m,
-                    new DateTime(2023, 6, 16)),
+                SecurityType.FutureOption
+                    => Symbol.CreateOption(
+                        Symbols.Future_ESZ18_Dec2018,
+                        Market.CME,
+                        OptionStyle.American,
+                        OptionRight.Call,
+                        4000m,
+                        new DateTime(2023, 6, 16)
+                    ),
                 SecurityType.Cfd => Symbols.DE10YBEUR,
                 SecurityType.Crypto => Symbols.BTCUSD,
                 SecurityType.CryptoFuture => Symbol.Create("BTCUSD", securityType, Market.Binance),
@@ -307,24 +368,28 @@ namespace QuantConnect.Tests.Engine.RealTime
             {
                 throw new NotImplementedException();
             }
+
             public void RequestAdditionalTime(int minutes)
             {
                 throw new NotImplementedException();
             }
+
             public bool TryRequestAdditionalTime(int minutes)
             {
                 throw new NotImplementedException();
             }
         }
 
-        public class TestLiveTradingRealTimeHandler: LiveTradingRealTimeHandler
+        public class TestLiveTradingRealTimeHandler : LiveTradingRealTimeHandler
         {
             private static AutoResetEvent OnSecurityUpdated = new AutoResetEvent(false);
             private MarketHoursDatabase newMarketHoursDatabase;
+
             public void SetMarketHoursDatabase(MarketHoursDatabase marketHoursDatabase)
             {
                 newMarketHoursDatabase = marketHoursDatabase;
             }
+
             protected override void ResetMarketHoursDatabase()
             {
                 if (newMarketHoursDatabase != null)
@@ -337,7 +402,11 @@ namespace QuantConnect.Tests.Engine.RealTime
                 }
             }
 
-            public void TestRefreshMarketHoursToday(Security security, DateTime time, MarketHoursSegment expectedSegment)
+            public void TestRefreshMarketHoursToday(
+                Security security,
+                DateTime time,
+                MarketHoursSegment expectedSegment
+            )
             {
                 OnSecurityUpdated.Reset();
                 RefreshMarketHours(time);
@@ -351,7 +420,11 @@ namespace QuantConnect.Tests.Engine.RealTime
                 OnSecurityUpdated.Set();
             }
 
-            public void AssertMarketHours(Security security, DateTime time, MarketHoursSegment expectedSegment)
+            public void AssertMarketHours(
+                Security security,
+                DateTime time,
+                MarketHoursSegment expectedSegment
+            )
             {
                 var marketHours = security.Exchange.Hours.GetMarketHours(time);
                 var segment = marketHours.Segments.SingleOrDefault();
@@ -364,12 +437,22 @@ namespace QuantConnect.Tests.Engine.RealTime
                 {
                     Assert.AreEqual(expectedSegment.Start, segment.Start);
                     Assert.AreEqual(expectedSegment.End, segment.End);
-                    for (var hour = segment.Start; hour < segment.End; hour = hour.Add(TimeSpan.FromHours(1)))
+                    for (
+                        var hour = segment.Start;
+                        hour < segment.End;
+                        hour = hour.Add(TimeSpan.FromHours(1))
+                    )
                     {
                         Assert.IsTrue(marketHours.IsOpen(hour, false));
                     }
-                    Assert.AreEqual(expectedSegment.End, security.Exchange.Hours.GetNextMarketClose(time.Date, false).TimeOfDay);
-                    Assert.AreEqual(expectedSegment.Start, security.Exchange.Hours.GetNextMarketOpen(time.Date, false).TimeOfDay);
+                    Assert.AreEqual(
+                        expectedSegment.End,
+                        security.Exchange.Hours.GetNextMarketClose(time.Date, false).TimeOfDay
+                    );
+                    Assert.AreEqual(
+                        expectedSegment.Start,
+                        security.Exchange.Hours.GetNextMarketOpen(time.Date, false).TimeOfDay
+                    );
                 }
 
                 Exit();
@@ -382,11 +465,15 @@ namespace QuantConnect.Tests.Engine.RealTime
 
             public void AddRefreshHoursScheduledEvent()
             {
-                using var scheduledEvent = new ScheduledEvent("RefreshHours", new[] { new DateTime(2023, 6, 29) }, (name, triggerTime) =>
-                {
-                    // refresh market hours from api every day
-                    RefreshMarketHours((new DateTime(2023, 5, 30)).Date);
-                });
+                using var scheduledEvent = new ScheduledEvent(
+                    "RefreshHours",
+                    new[] { new DateTime(2023, 6, 29) },
+                    (name, triggerTime) =>
+                    {
+                        // refresh market hours from api every day
+                        RefreshMarketHours((new DateTime(2023, 5, 30)).Date);
+                    }
+                );
                 Add(scheduledEvent);
                 OnSecurityUpdated.Reset();
                 SetTime(DateTime.UtcNow);
@@ -403,9 +490,17 @@ namespace QuantConnect.Tests.Engine.RealTime
 
             protected override void ResetMarketHoursDatabase()
             {
-                var entry = new MarketHoursDatabase.Entry(TimeZones.NewYork, ExchangeHoursDataClass.CreateExchangeHoursWithHolidays());
+                var entry = new MarketHoursDatabase.Entry(
+                    TimeZones.NewYork,
+                    ExchangeHoursDataClass.CreateExchangeHoursWithHolidays()
+                );
                 var key = new SecurityDatabaseKey(Market.USA, null, SecurityType.Equity);
-                var mhdb = new MarketHoursDatabase(new Dictionary<SecurityDatabaseKey, MarketHoursDatabase.Entry>() { { key, entry } });
+                var mhdb = new MarketHoursDatabase(
+                    new Dictionary<SecurityDatabaseKey, MarketHoursDatabase.Entry>()
+                    {
+                        { key, entry }
+                    }
+                );
                 MarketHoursDatabase = mhdb;
             }
         }
@@ -417,14 +512,20 @@ namespace QuantConnect.Tests.Engine.RealTime
 
             public ManualTimeProvider PublicTimeProvider = new ManualTimeProvider();
 
-            protected override ITimeProvider TimeProvider { get { return PublicTimeProvider; } }
+            protected override ITimeProvider TimeProvider
+            {
+                get { return PublicTimeProvider; }
+            }
 
             public ManualResetEventSlim SpdbRefreshed = new ManualResetEventSlim(false);
-            public ManualResetEventSlim SecuritySymbolPropertiesUpdated = new ManualResetEventSlim(false);
+            public ManualResetEventSlim SecuritySymbolPropertiesUpdated = new ManualResetEventSlim(
+                false
+            );
 
             protected override void RefreshSymbolProperties()
             {
-                if (_disposed) return;
+                if (_disposed)
+                    return;
 
                 base.RefreshSymbolProperties();
                 SpdbRefreshed.Set();
@@ -432,7 +533,8 @@ namespace QuantConnect.Tests.Engine.RealTime
 
             protected override void UpdateSymbolProperties(Security security)
             {
-                if (_disposed) return;
+                if (_disposed)
+                    return;
 
                 base.UpdateSymbolProperties(security);
                 Algorithm.Log($"{Algorithm.Securities.Count}");
@@ -446,7 +548,8 @@ namespace QuantConnect.Tests.Engine.RealTime
 
             public void Dispose()
             {
-                if (_disposed) return;
+                if (_disposed)
+                    return;
                 Exit();
                 SpdbRefreshed.Dispose();
                 SecuritySymbolPropertiesUpdated.Dispose();
@@ -456,55 +559,152 @@ namespace QuantConnect.Tests.Engine.RealTime
 
         public class ExchangeHoursDataClass
         {
-            private static LocalMarketHours _sunday = new LocalMarketHours(DayOfWeek.Sunday, new TimeSpan(9, 30, 0), new TimeSpan(16, 0, 0));
-            private static LocalMarketHours _monday = new LocalMarketHours(DayOfWeek.Monday, new TimeSpan(9, 30, 0), new TimeSpan(16, 0, 0));
-            private static LocalMarketHours _tuesday = new LocalMarketHours(DayOfWeek.Tuesday, new TimeSpan(9, 30, 0), new TimeSpan(16, 0, 0));
-            private static LocalMarketHours _wednesday = new LocalMarketHours(DayOfWeek.Wednesday, new TimeSpan(9, 30, 0), new TimeSpan(16, 0, 0));
-            private static LocalMarketHours _thursday = new LocalMarketHours(DayOfWeek.Thursday, new TimeSpan(9, 30, 0), new TimeSpan(16, 0, 0));
-            private static LocalMarketHours _friday = new LocalMarketHours(DayOfWeek.Friday, new TimeSpan(9, 30, 0), new TimeSpan(16, 0, 0));
-            private static LocalMarketHours _saturday = new LocalMarketHours(DayOfWeek.Saturday, new TimeSpan(9, 30, 0), new TimeSpan(16, 0, 0));
+            private static LocalMarketHours _sunday = new LocalMarketHours(
+                DayOfWeek.Sunday,
+                new TimeSpan(9, 30, 0),
+                new TimeSpan(16, 0, 0)
+            );
+            private static LocalMarketHours _monday = new LocalMarketHours(
+                DayOfWeek.Monday,
+                new TimeSpan(9, 30, 0),
+                new TimeSpan(16, 0, 0)
+            );
+            private static LocalMarketHours _tuesday = new LocalMarketHours(
+                DayOfWeek.Tuesday,
+                new TimeSpan(9, 30, 0),
+                new TimeSpan(16, 0, 0)
+            );
+            private static LocalMarketHours _wednesday = new LocalMarketHours(
+                DayOfWeek.Wednesday,
+                new TimeSpan(9, 30, 0),
+                new TimeSpan(16, 0, 0)
+            );
+            private static LocalMarketHours _thursday = new LocalMarketHours(
+                DayOfWeek.Thursday,
+                new TimeSpan(9, 30, 0),
+                new TimeSpan(16, 0, 0)
+            );
+            private static LocalMarketHours _friday = new LocalMarketHours(
+                DayOfWeek.Friday,
+                new TimeSpan(9, 30, 0),
+                new TimeSpan(16, 0, 0)
+            );
+            private static LocalMarketHours _saturday = new LocalMarketHours(
+                DayOfWeek.Saturday,
+                new TimeSpan(9, 30, 0),
+                new TimeSpan(16, 0, 0)
+            );
 
             public static IEnumerable<TestCaseData> TestCases
             {
                 get
                 {
-                    yield return new TestCaseData(CreateExchangeHoursWithEarlyCloseAndLateOpen(), new MarketHoursSegment(MarketHoursState.Market,new TimeSpan(10, 0, 0), new TimeSpan(13, 0, 0)));
-                    yield return new TestCaseData(CreateExchangeHoursWithEarlyClose(), new MarketHoursSegment(MarketHoursState.Market, new TimeSpan(9, 30, 0), new TimeSpan(13, 0, 0)));
-                    yield return new TestCaseData(CreateExchangeHoursWithLateOpen(), new MarketHoursSegment(MarketHoursState.Market, new TimeSpan(10, 0, 0), new TimeSpan(16, 0, 0)));
+                    yield return new TestCaseData(
+                        CreateExchangeHoursWithEarlyCloseAndLateOpen(),
+                        new MarketHoursSegment(
+                            MarketHoursState.Market,
+                            new TimeSpan(10, 0, 0),
+                            new TimeSpan(13, 0, 0)
+                        )
+                    );
+                    yield return new TestCaseData(
+                        CreateExchangeHoursWithEarlyClose(),
+                        new MarketHoursSegment(
+                            MarketHoursState.Market,
+                            new TimeSpan(9, 30, 0),
+                            new TimeSpan(13, 0, 0)
+                        )
+                    );
+                    yield return new TestCaseData(
+                        CreateExchangeHoursWithLateOpen(),
+                        new MarketHoursSegment(
+                            MarketHoursState.Market,
+                            new TimeSpan(10, 0, 0),
+                            new TimeSpan(16, 0, 0)
+                        )
+                    );
                     yield return new TestCaseData(CreateExchangeHoursWithHolidays(), null);
                 }
             }
 
             private static SecurityExchangeHours CreateExchangeHoursWithEarlyCloseAndLateOpen()
             {
-                var earlyCloses = new Dictionary<DateTime, TimeSpan> { { new DateTime(2023, 5, 30).Date, new TimeSpan(13, 0, 0) } };
-                var lateOpens = new Dictionary<DateTime, TimeSpan>() { { new DateTime(2023, 5, 30).Date, new TimeSpan(10, 0, 0) } };
-                var exchangeHours = new SecurityExchangeHours(TimeZones.NewYork, new List<DateTime>(), new[]
+                var earlyCloses = new Dictionary<DateTime, TimeSpan>
                 {
-                _sunday, _monday, _tuesday, _wednesday, _thursday, _friday, _saturday
-            }.ToDictionary(x => x.DayOfWeek), earlyCloses, lateOpens);
+                    { new DateTime(2023, 5, 30).Date, new TimeSpan(13, 0, 0) }
+                };
+                var lateOpens = new Dictionary<DateTime, TimeSpan>()
+                {
+                    { new DateTime(2023, 5, 30).Date, new TimeSpan(10, 0, 0) }
+                };
+                var exchangeHours = new SecurityExchangeHours(
+                    TimeZones.NewYork,
+                    new List<DateTime>(),
+                    new[]
+                    {
+                        _sunday,
+                        _monday,
+                        _tuesday,
+                        _wednesday,
+                        _thursday,
+                        _friday,
+                        _saturday
+                    }.ToDictionary(x => x.DayOfWeek),
+                    earlyCloses,
+                    lateOpens
+                );
                 return exchangeHours;
             }
 
             private static SecurityExchangeHours CreateExchangeHoursWithEarlyClose()
             {
-                var earlyCloses = new Dictionary<DateTime, TimeSpan> { { new DateTime(2023, 5, 30).Date, new TimeSpan(13, 0, 0) } };
-                var lateOpens = new Dictionary<DateTime, TimeSpan>();
-                var exchangeHours = new SecurityExchangeHours(TimeZones.NewYork, new List<DateTime>(), new[]
+                var earlyCloses = new Dictionary<DateTime, TimeSpan>
                 {
-                _sunday, _monday, _tuesday, _wednesday, _thursday, _friday, _saturday
-            }.ToDictionary(x => x.DayOfWeek), earlyCloses, lateOpens);
+                    { new DateTime(2023, 5, 30).Date, new TimeSpan(13, 0, 0) }
+                };
+                var lateOpens = new Dictionary<DateTime, TimeSpan>();
+                var exchangeHours = new SecurityExchangeHours(
+                    TimeZones.NewYork,
+                    new List<DateTime>(),
+                    new[]
+                    {
+                        _sunday,
+                        _monday,
+                        _tuesday,
+                        _wednesday,
+                        _thursday,
+                        _friday,
+                        _saturday
+                    }.ToDictionary(x => x.DayOfWeek),
+                    earlyCloses,
+                    lateOpens
+                );
                 return exchangeHours;
             }
 
             private static SecurityExchangeHours CreateExchangeHoursWithLateOpen()
             {
                 var earlyCloses = new Dictionary<DateTime, TimeSpan>();
-                var lateOpens = new Dictionary<DateTime, TimeSpan>() { { new DateTime(2023, 5, 30).Date, new TimeSpan(10, 0, 0) } };
-                var exchangeHours = new SecurityExchangeHours(TimeZones.NewYork, new List<DateTime>(), new[]
+                var lateOpens = new Dictionary<DateTime, TimeSpan>()
                 {
-                _sunday, _monday, _tuesday, _wednesday, _thursday, _friday, _saturday
-            }.ToDictionary(x => x.DayOfWeek), earlyCloses, lateOpens);
+                    { new DateTime(2023, 5, 30).Date, new TimeSpan(10, 0, 0) }
+                };
+                var exchangeHours = new SecurityExchangeHours(
+                    TimeZones.NewYork,
+                    new List<DateTime>(),
+                    new[]
+                    {
+                        _sunday,
+                        _monday,
+                        _tuesday,
+                        _wednesday,
+                        _thursday,
+                        _friday,
+                        _saturday
+                    }.ToDictionary(x => x.DayOfWeek),
+                    earlyCloses,
+                    lateOpens
+                );
                 return exchangeHours;
             }
 
@@ -513,13 +713,24 @@ namespace QuantConnect.Tests.Engine.RealTime
                 var earlyCloses = new Dictionary<DateTime, TimeSpan>();
                 var lateOpens = new Dictionary<DateTime, TimeSpan>();
                 var holidays = new List<DateTime>() { new DateTime(2023, 5, 30).Date };
-                var exchangeHours = new SecurityExchangeHours(TimeZones.NewYork, holidays, new[]
-                {
-                _sunday, _monday, _tuesday, _wednesday, _thursday, _friday, _saturday
-            }.ToDictionary(x => x.DayOfWeek), earlyCloses, lateOpens);
+                var exchangeHours = new SecurityExchangeHours(
+                    TimeZones.NewYork,
+                    holidays,
+                    new[]
+                    {
+                        _sunday,
+                        _monday,
+                        _tuesday,
+                        _wednesday,
+                        _thursday,
+                        _friday,
+                        _saturday
+                    }.ToDictionary(x => x.DayOfWeek),
+                    earlyCloses,
+                    lateOpens
+                );
                 return exchangeHours;
             }
-
         }
     }
 }

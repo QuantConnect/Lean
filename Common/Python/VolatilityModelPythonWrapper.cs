@@ -13,12 +13,12 @@
  * limitations under the License.
 */
 
-using Python.Runtime;
-using QuantConnect.Data;
-using QuantConnect.Securities;
 using System;
 using System.Collections.Generic;
+using Python.Runtime;
+using QuantConnect.Data;
 using QuantConnect.Interfaces;
+using QuantConnect.Securities;
 using QuantConnect.Securities.Volatility;
 
 namespace QuantConnect.Python
@@ -44,10 +44,7 @@ namespace QuantConnect.Python
         /// </summary>
         public override decimal Volatility
         {
-            get
-            {
-                return _model.GetProperty<decimal>(nameof(Volatility));
-            }
+            get { return _model.GetProperty<decimal>(nameof(Volatility)); }
         }
 
         /// <summary>
@@ -67,9 +64,16 @@ namespace QuantConnect.Python
         /// <param name="security">The security of the request</param>
         /// <param name="utcTime">The date/time of the request</param>
         /// <returns>History request object list, or empty if no requirements</returns>
-        public override IEnumerable<HistoryRequest> GetHistoryRequirements(Security security, DateTime utcTime)
+        public override IEnumerable<HistoryRequest> GetHistoryRequirements(
+            Security security,
+            DateTime utcTime
+        )
         {
-            return _model.InvokeMethod<IEnumerable<HistoryRequest>>(nameof(GetHistoryRequirements), security, utcTime);
+            return _model.InvokeMethod<IEnumerable<HistoryRequest>>(
+                nameof(GetHistoryRequirements),
+                security,
+                utcTime
+            );
         }
 
         /// <summary>
@@ -77,11 +81,17 @@ namespace QuantConnect.Python
         /// </summary>
         /// <param name="subscriptionDataConfigProvider">Provides access to registered <see cref="SubscriptionDataConfig"/></param>
         public override void SetSubscriptionDataConfigProvider(
-            ISubscriptionDataConfigProvider subscriptionDataConfigProvider)
+            ISubscriptionDataConfigProvider subscriptionDataConfigProvider
+        )
         {
             if (_model.HasAttr(nameof(SetSubscriptionDataConfigProvider)))
             {
-                _model.InvokeMethod(nameof(SetSubscriptionDataConfigProvider), subscriptionDataConfigProvider).Dispose();
+                _model
+                    .InvokeMethod(
+                        nameof(SetSubscriptionDataConfigProvider),
+                        subscriptionDataConfigProvider
+                    )
+                    .Dispose();
             }
         }
     }

@@ -46,7 +46,7 @@ namespace QuantConnect.Tests.Common.Orders
         {
             var algo = new AlgorithmStub();
             var security = algo.AddFutureContract(Symbols.Future_CLF19_Jan2019);
-            security.SetMarketPrice(new TradeBar { Value = 250, Volume = 10});
+            security.SetMarketPrice(new TradeBar { Value = 250, Volume = 10 });
 
             var result = OrderSizing.GetOrderSizeForPercentVolume(security, 0.5m, 100);
             Assert.AreEqual(5, result);
@@ -56,18 +56,30 @@ namespace QuantConnect.Tests.Common.Orders
         [TestCase(1000000, 100, 4)]
         [TestCase(1000000, 1, 1)]
         [TestCase(1000000, -1, -1)]
-        public void GetOrderSizeForMaximumValue(decimal maximumOrderValue, decimal target, decimal expected)
+        public void GetOrderSizeForMaximumValue(
+            decimal maximumOrderValue,
+            decimal target,
+            decimal expected
+        )
         {
             var algo = new AlgorithmStub();
             var security = algo.AddFutureContract(Symbols.Future_CLF19_Jan2019);
             security.SetMarketPrice(new TradeBar { Value = 250 });
 
-            var result = OrderSizing.GetOrderSizeForMaximumValue(security, maximumOrderValue, target);
+            var result = OrderSizing.GetOrderSizeForMaximumValue(
+                security,
+                maximumOrderValue,
+                target
+            );
 
-            var expectedCalculated = maximumOrderValue / (security.Price * security.SymbolProperties.ContractMultiplier);
+            var expectedCalculated =
+                maximumOrderValue / (security.Price * security.SymbolProperties.ContractMultiplier);
             expectedCalculated -= expectedCalculated % security.SymbolProperties.LotSize;
 
-            Assert.AreEqual(Math.Min(expectedCalculated, Math.Abs(target)) * Math.Sign(target), result);
+            Assert.AreEqual(
+                Math.Min(expectedCalculated, Math.Abs(target)) * Math.Sign(target),
+                result
+            );
             Assert.AreEqual(expected, result);
         }
 
@@ -81,7 +93,11 @@ namespace QuantConnect.Tests.Common.Orders
         [TestCase(-1, -2, -1)]
         [TestCase(0, -1, -1)]
         [TestCase(-1, -1, 0)]
-        public void GetUnorderedQuantityHoldingsNoOrders(decimal holdings, decimal target, decimal expected)
+        public void GetUnorderedQuantityHoldingsNoOrders(
+            decimal holdings,
+            decimal target,
+            decimal expected
+        )
         {
             var algo = new AlgorithmStub();
             algo.Transactions.SetOrderProcessor(new FakeOrderProcessor());
@@ -89,8 +105,10 @@ namespace QuantConnect.Tests.Common.Orders
             security.SetMarketPrice(new TradeBar { Value = 250 });
             security.Holdings.SetHoldings(250, holdings);
 
-            var result = OrderSizing.GetUnorderedQuantity(algo,
-                new PortfolioTarget(Symbols.Future_CLF19_Jan2019, target));
+            var result = OrderSizing.GetUnorderedQuantity(
+                algo,
+                new PortfolioTarget(Symbols.Future_CLF19_Jan2019, target)
+            );
 
             Assert.AreEqual(expected, result);
         }
@@ -101,33 +119,42 @@ namespace QuantConnect.Tests.Common.Orders
         [TestCase(2, 3, -1, 2)]
         [TestCase(2, 2, 1, -1)]
         [TestCase(-2, 3, 1, 4)]
-        public void GetUnorderedQuantityHoldingsOpenOrders(decimal holdings, decimal target, decimal filledQuantity, decimal expected)
+        public void GetUnorderedQuantityHoldingsOpenOrders(
+            decimal holdings,
+            decimal target,
+            decimal filledQuantity,
+            decimal expected
+        )
         {
             var algo = new AlgorithmStub();
             var orderProcessor = new FakeOrderProcessor();
             var orderRequest = new SubmitOrderRequest(
-                    OrderType.Market,
-                    SecurityType.Future,
-                    Symbols.Future_CLF19_Jan2019,
-                    filledQuantity * 2,
-                    250,
-                    250,
-                    new DateTime(2020, 1, 1),
-                    "Pepe"
-                );
+                OrderType.Market,
+                SecurityType.Future,
+                Symbols.Future_CLF19_Jan2019,
+                filledQuantity * 2,
+                250,
+                250,
+                new DateTime(2020, 1, 1),
+                "Pepe"
+            );
 
             var order = Order.CreateOrder(orderRequest);
             var ticket = new OrderTicket(algo.Transactions, orderRequest);
             ticket.SetOrder(order);
-           
-            ticket.AddOrderEvent(new OrderEvent(1,
-                Symbols.Future_CLF19_Jan2019,
-                new DateTime(2020, 1, 1),
-                OrderStatus.Filled,
-                filledQuantity > 0 ? OrderDirection.Buy : OrderDirection.Sell,
-                250,
-                filledQuantity,
-                OrderFee.Zero));
+
+            ticket.AddOrderEvent(
+                new OrderEvent(
+                    1,
+                    Symbols.Future_CLF19_Jan2019,
+                    new DateTime(2020, 1, 1),
+                    OrderStatus.Filled,
+                    filledQuantity > 0 ? OrderDirection.Buy : OrderDirection.Sell,
+                    250,
+                    filledQuantity,
+                    OrderFee.Zero
+                )
+            );
 
             orderProcessor.AddTicket(ticket);
             algo.Transactions.SetOrderProcessor(orderProcessor);
@@ -135,8 +162,10 @@ namespace QuantConnect.Tests.Common.Orders
             security.SetMarketPrice(new TradeBar { Value = 250 });
             security.Holdings.SetHoldings(250, holdings);
 
-            var result = OrderSizing.GetUnorderedQuantity(algo,
-                new PortfolioTarget(Symbols.Future_CLF19_Jan2019, target));
+            var result = OrderSizing.GetUnorderedQuantity(
+                algo,
+                new PortfolioTarget(Symbols.Future_CLF19_Jan2019, target)
+            );
 
             Assert.AreEqual(expected, result);
         }

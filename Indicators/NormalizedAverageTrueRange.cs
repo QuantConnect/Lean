@@ -31,11 +31,11 @@ namespace QuantConnect.Indicators
 
         /// <summary>
         /// Initializes a new instance of the <see cref="NormalizedAverageTrueRange"/> class using the specified name and period.
-        /// </summary> 
+        /// </summary>
         /// <param name="name">The name of this indicator</param>
         /// <param name="period">The period of the NATR</param>
-        public NormalizedAverageTrueRange(string name, int period) : 
-            base(name)
+        public NormalizedAverageTrueRange(string name, int period)
+            : base(name)
         {
             _period = period;
             _tr = new TrueRange(name + "_TR");
@@ -44,12 +44,10 @@ namespace QuantConnect.Indicators
 
         /// <summary>
         /// Initializes a new instance of the <see cref="NormalizedAverageTrueRange"/> class using the specified period.
-        /// </summary> 
+        /// </summary>
         /// <param name="period">The period of the NATR</param>
         public NormalizedAverageTrueRange(int period)
-            : this($"NATR({period})", period)
-        {
-        }
+            : this($"NATR({period})", period) { }
 
         /// <summary>
         /// Gets a flag indicating when this indicator is ready and fully initialized

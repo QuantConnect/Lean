@@ -54,27 +54,38 @@ namespace QuantConnect.Algorithm.CSharp
 
             if (!(Securities.ContainsKey(_optionContract) && Portfolio[_optionContract].Invested))
             {
-                var contracts = OptionChainProvider.GetOptionContractList(_equitySymbol, slice.Time);
+                var contracts = OptionChainProvider.GetOptionContractList(
+                    _equitySymbol,
+                    slice.Time
+                );
                 var underlyingPrice = Securities[_equitySymbol].Price;
                 // filter the out-of-money call options from the contract list which expire in 10 to 30 days from now on
-                var otmCalls = (from symbol in contracts
-                                where symbol.ID.OptionRight == OptionRight.Call
-                                where symbol.ID.StrikePrice - underlyingPrice > 0
-                                where ((symbol.ID.Date - slice.Time).TotalDays < 30 && (symbol.ID.Date - slice.Time).TotalDays > 10)
-                                select symbol);
+                var otmCalls = (
+                    from symbol in contracts
+                    where symbol.ID.OptionRight == OptionRight.Call
+                    where symbol.ID.StrikePrice - underlyingPrice > 0
+                    where
+                        (
+                            (symbol.ID.Date - slice.Time).TotalDays < 30
+                            && (symbol.ID.Date - slice.Time).TotalDays > 10
+                        )
+                    select symbol
+                );
 
                 if (otmCalls.Count() != 0)
                 {
-                    _optionContract = otmCalls.OrderBy(x => x.ID.Date)
-                                          .ThenBy(x => (x.ID.StrikePrice - underlyingPrice))
-                                          .FirstOrDefault();
+                    _optionContract = otmCalls
+                        .OrderBy(x => x.ID.Date)
+                        .ThenBy(x => (x.ID.StrikePrice - underlyingPrice))
+                        .FirstOrDefault();
                     if (_contractsAdded.Add(_optionContract))
                     {
                         // use AddOptionContract() to subscribe the data for specified contract
                         AddOptionContract(_optionContract, Resolution.Minute);
                     }
                 }
-                else _optionContract = string.Empty;
+                else
+                    _optionContract = string.Empty;
             }
             if (Securities.ContainsKey(_optionContract) && !Portfolio[_optionContract].Invested)
             {
@@ -110,35 +121,36 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// This is used by the regression test system to indicate what the expected statistics are from running the algorithm
         /// </summary>
-        public Dictionary<string, string> ExpectedStatistics => new Dictionary<string, string>
-        {
-            {"Total Orders", "2"},
-            {"Average Win", "0%"},
-            {"Average Loss", "0%"},
-            {"Compounding Annual Return", "0%"},
-            {"Drawdown", "0%"},
-            {"Expectancy", "0"},
-            {"Start Equity", "100000"},
-            {"End Equity", "99890"},
-            {"Net Profit", "0%"},
-            {"Sharpe Ratio", "0"},
-            {"Sortino Ratio", "0"},
-            {"Probabilistic Sharpe Ratio", "0%"},
-            {"Loss Rate", "0%"},
-            {"Win Rate", "0%"},
-            {"Profit-Loss Ratio", "0"},
-            {"Alpha", "0"},
-            {"Beta", "0"},
-            {"Annual Standard Deviation", "0"},
-            {"Annual Variance", "0"},
-            {"Information Ratio", "0"},
-            {"Tracking Error", "0"},
-            {"Treynor Ratio", "0"},
-            {"Total Fees", "$2.00"},
-            {"Estimated Strategy Capacity", "$6300000.00"},
-            {"Lowest Capacity Asset", "GOOCV W723A0UB7HTY|GOOCV VP83T1ZUHROL"},
-            {"Portfolio Turnover", "76.04%"},
-            {"OrderListHash", "d7290944d7fee84f232b47d658010730"}
-        };
+        public Dictionary<string, string> ExpectedStatistics =>
+            new Dictionary<string, string>
+            {
+                { "Total Orders", "2" },
+                { "Average Win", "0%" },
+                { "Average Loss", "0%" },
+                { "Compounding Annual Return", "0%" },
+                { "Drawdown", "0%" },
+                { "Expectancy", "0" },
+                { "Start Equity", "100000" },
+                { "End Equity", "99890" },
+                { "Net Profit", "0%" },
+                { "Sharpe Ratio", "0" },
+                { "Sortino Ratio", "0" },
+                { "Probabilistic Sharpe Ratio", "0%" },
+                { "Loss Rate", "0%" },
+                { "Win Rate", "0%" },
+                { "Profit-Loss Ratio", "0" },
+                { "Alpha", "0" },
+                { "Beta", "0" },
+                { "Annual Standard Deviation", "0" },
+                { "Annual Variance", "0" },
+                { "Information Ratio", "0" },
+                { "Tracking Error", "0" },
+                { "Treynor Ratio", "0" },
+                { "Total Fees", "$2.00" },
+                { "Estimated Strategy Capacity", "$6300000.00" },
+                { "Lowest Capacity Asset", "GOOCV W723A0UB7HTY|GOOCV VP83T1ZUHROL" },
+                { "Portfolio Turnover", "76.04%" },
+                { "OrderListHash", "d7290944d7fee84f232b47d658010730" }
+            };
     }
 }

@@ -35,9 +35,9 @@ namespace QuantConnect.Algorithm.CSharp
         /// </summary>
         public override void Initialize()
         {
-            SetStartDate(2013, 10, 01);  //Set Start Date
-            SetEndDate(2013, 12, 11);    //Set End Date
-            SetCash(100000);             //Set Strategy Cash
+            SetStartDate(2013, 10, 01); //Set Start Date
+            SetEndDate(2013, 12, 11); //Set End Date
+            SetCash(100000); //Set Strategy Cash
             // Find more symbols here: http://quantconnect.com/data
             AddSecurity(SecurityType.Equity, "SPY", Resolution.Second);
 
@@ -72,7 +72,18 @@ namespace QuantConnect.Algorithm.CSharp
                 // liquidate an extra 10% each time we get a margin call to give us more padding
                 var newQuantity = (int)(Math.Sign(order.Quantity) * order.Quantity * 1.1m);
                 requests.Remove(order);
-                requests.Add(new SubmitOrderRequest(order.OrderType, order.SecurityType, order.Symbol, newQuantity, order.StopPrice, order.LimitPrice, Time, "OnMarginCall"));
+                requests.Add(
+                    new SubmitOrderRequest(
+                        order.OrderType,
+                        order.SecurityType,
+                        order.Symbol,
+                        newQuantity,
+                        order.StopPrice,
+                        order.LimitPrice,
+                        Time,
+                        "OnMarginCall"
+                    )
+                );
             }
         }
 
@@ -87,7 +98,9 @@ namespace QuantConnect.Algorithm.CSharp
             // prevent margin calls by responding to the warning and increasing margin remaining
             var spyHoldings = Securities["SPY"].Holdings.Quantity;
             var shares = (int)(-spyHoldings * .005m);
-            Error($"{Time.ToStringInvariant()} - OnMarginCallWarning(): Liquidating {shares.ToStringInvariant()} shares of SPY to avoid margin call.");
+            Error(
+                $"{Time.ToStringInvariant()} - OnMarginCallWarning(): Liquidating {shares.ToStringInvariant()} shares of SPY to avoid margin call."
+            );
             MarketOrder("SPY", shares);
         }
     }

@@ -13,11 +13,11 @@
  * limitations under the License.
 */
 
-using Deedle;
-using QuantConnect.Packets;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using Deedle;
+using QuantConnect.Packets;
 
 namespace QuantConnect.Report
 {
@@ -69,9 +69,7 @@ namespace QuantConnect.Report
             Periods = periods;
             Start = strategySeries.IsEmpty ? DateTime.MinValue : strategySeries.FirstKey();
             End = strategySeries.IsEmpty ? DateTime.MaxValue : strategySeries.LastKey();
-            Drawdowns = drawdowns.OrderByDescending(x => x.PeakToTrough)
-                .Take(Periods)
-                .ToList();
+            Drawdowns = drawdowns.OrderByDescending(x => x.PeakToTrough).Take(Periods).ToList();
         }
 
         /// <summary>
@@ -81,7 +79,11 @@ namespace QuantConnect.Report
         /// <param name="liveResult">Live result packet</param>
         /// <param name="periods">Top N drawdown periods to get</param>
         /// <returns>DrawdownCollection instance</returns>
-        public static DrawdownCollection FromResult(BacktestResult backtestResult = null, LiveResult liveResult = null, int periods = 5)
+        public static DrawdownCollection FromResult(
+            BacktestResult backtestResult = null,
+            LiveResult liveResult = null,
+            int periods = 5
+        )
         {
             return new DrawdownCollection(NormalizeResults(backtestResult, liveResult), periods);
         }
@@ -92,7 +94,10 @@ namespace QuantConnect.Report
         /// <param name="backtestResult">Backtest result packet</param>
         /// <param name="liveResult">Live result packet</param>
         /// <returns></returns>
-        public static Series<DateTime, double> NormalizeResults(BacktestResult backtestResult, LiveResult liveResult)
+        public static Series<DateTime, double> NormalizeResults(
+            BacktestResult backtestResult,
+            LiveResult liveResult
+        )
         {
             var backtestPoints = ResultsUtil.EquityPoints(backtestResult);
             var livePoints = ResultsUtil.EquityPoints(liveResult);
@@ -102,16 +107,25 @@ namespace QuantConnect.Report
                 return new Series<DateTime, double>(new DateTime[] { }, new double[] { });
             }
 
-            var startingEquity = backtestPoints.Count == 0 ? livePoints.First().Value : backtestPoints.First().Value;
+            var startingEquity =
+                backtestPoints.Count == 0 ? livePoints.First().Value : backtestPoints.First().Value;
 
             // Note: these calculations are *incorrect* for getting the cumulative returns. However, since we're just
             // trying to normalize these two series with each other, it's a good candidate for it since the original
             // values can easily be recalculated from this point
-            var backtestSeries = new Series<DateTime, double>(backtestPoints).PercentChange().Where(kvp => !double.IsInfinity(kvp.Value)).CumulativeSum();
-            var liveSeries = new Series<DateTime, double>(livePoints).PercentChange().Where(kvp => !double.IsInfinity(kvp.Value)).CumulativeSum();
+            var backtestSeries = new Series<DateTime, double>(backtestPoints)
+                .PercentChange()
+                .Where(kvp => !double.IsInfinity(kvp.Value))
+                .CumulativeSum();
+            var liveSeries = new Series<DateTime, double>(livePoints)
+                .PercentChange()
+                .Where(kvp => !double.IsInfinity(kvp.Value))
+                .CumulativeSum();
 
             // Get the last key of the backtest series if our series is empty to avoid issues with empty frames
-            var firstLiveKey = liveSeries.IsEmpty ? backtestSeries.LastKey().AddDays(1) : liveSeries.FirstKey();
+            var firstLiveKey = liveSeries.IsEmpty
+                ? backtestSeries.LastKey().AddDays(1)
+                : liveSeries.FirstKey();
 
             // Add the final non-overlapping point of the backtest equity curve to the entire live series to keep continuity.
             if (!backtestSeries.IsEmpty)
@@ -130,7 +144,8 @@ namespace QuantConnect.Report
             // ```
             // pd.concat([backtestSeries, liveSeries], axis=1).fillna(method='ffill').dropna().diff().add(1).cumprod().mul(startingEquity)
             // ```
-            return backtestSeries.Merge(liveSeries, UnionBehavior.PreferRight)
+            return backtestSeries
+                .Merge(liveSeries, UnionBehavior.PreferRight)
                 .FillMissing(Direction.Forward)
                 .DropMissing()
                 .Diff(1)
@@ -191,7 +206,10 @@ namespace QuantConnect.Report
         /// <param name="curve">Equity curve</param>
         /// <param name="periods">Top N worst periods. If this is greater than the results, we retrieve all the items instead</param>
         /// <returns>Frame with the following keys: "duration", "cumulativeMax", "drawdown"</returns>
-        public static Frame<DateTime, string> GetTopWorstDrawdowns(Series<DateTime, double> curve, int periods)
+        public static Frame<DateTime, string> GetTopWorstDrawdowns(
+            Series<DateTime, double> curve,
+            int periods
+        )
         {
             var frame = Frame.CreateEmpty<DateTime, string>();
             if (curve.IsEmpty)
@@ -218,24 +236,45 @@ namespace QuantConnect.Report
 
                 var drawdownMax = drawdownGroup.Where(kvp => kvp.Value == drawdownGroupMax);
 
-                drawdownGroups.Add(new Tuple<DateTime, double, double, double>(
-                    drawdownMax.FirstKey(),
-                    group.ValueCount,
-                    cumulativeMaxGroup.FirstValue(),
-                    drawdownMax.FirstValue()
-                ));
+                drawdownGroups.Add(
+                    new Tuple<DateTime, double, double, double>(
+                        drawdownMax.FirstKey(),
+                        group.ValueCount,
+                        cumulativeMaxGroup.FirstValue(),
+                        drawdownMax.FirstValue()
+                    )
+                );
             }
 
-            var drawdowns = new Series<DateTime, double>(drawdownGroups.Select(x => x.Item1), drawdownGroups.Select(x => x.Item4));
+            var drawdowns = new Series<DateTime, double>(
+                drawdownGroups.Select(x => x.Item1),
+                drawdownGroups.Select(x => x.Item4)
+            );
             // Sort by negative drawdown value (in ascending order), which leaves it sorted in descending order 😮
             var sortedDrawdowns = drawdowns.SortBy(x => -x);
             // Only get the most we're allowed to take so that we don't overflow trying to get more drawdown items than exist
-            var periodsToTake = periods < sortedDrawdowns.ValueCount ? periods : sortedDrawdowns.ValueCount;
+            var periodsToTake =
+                periods < sortedDrawdowns.ValueCount ? periods : sortedDrawdowns.ValueCount;
 
             // Again, in order, the items are: date (Item1), duration (Item2), cumulative max (Item3), max drawdown (Item4).
-            var topDrawdowns = new Series<DateTime, double>(sortedDrawdowns.Keys.Take(periodsToTake), sortedDrawdowns.Values.Take(periodsToTake));
-            var topDurations = new Series<DateTime, double>(topDrawdowns.Keys.OrderBy(x => x), drawdownGroups.Where(t => topDrawdowns.Keys.Contains(t.Item1)).OrderBy(x => x.Item1).Select(x => x.Item2));
-            var topCumulativeMax = new Series<DateTime, double>(topDrawdowns.Keys.OrderBy(x => x), drawdownGroups.Where(t => topDrawdowns.Keys.Contains(t.Item1)).OrderBy(x => x.Item1).Select(x => x.Item3));
+            var topDrawdowns = new Series<DateTime, double>(
+                sortedDrawdowns.Keys.Take(periodsToTake),
+                sortedDrawdowns.Values.Take(periodsToTake)
+            );
+            var topDurations = new Series<DateTime, double>(
+                topDrawdowns.Keys.OrderBy(x => x),
+                drawdownGroups
+                    .Where(t => topDrawdowns.Keys.Contains(t.Item1))
+                    .OrderBy(x => x.Item1)
+                    .Select(x => x.Item2)
+            );
+            var topCumulativeMax = new Series<DateTime, double>(
+                topDrawdowns.Keys.OrderBy(x => x),
+                drawdownGroups
+                    .Where(t => topDrawdowns.Keys.Contains(t.Item1))
+                    .OrderBy(x => x.Item1)
+                    .Select(x => x.Item3)
+            );
 
             frame.AddColumn("duration", topDurations);
             frame.AddColumn("cumulativeMax", topCumulativeMax);
@@ -250,7 +289,10 @@ namespace QuantConnect.Report
         /// <param name="curve">Equity curve</param>
         /// <param name="periods">Top N drawdown periods to get</param>
         /// <returns>Enumerable of DrawdownPeriod</returns>
-        public static IEnumerable<DrawdownPeriod> GetDrawdownPeriods(Series<DateTime, double> curve, int periods = 5)
+        public static IEnumerable<DrawdownPeriod> GetDrawdownPeriods(
+            Series<DateTime, double> curve,
+            int periods = 5
+        )
         {
             var frame = GetUnderwaterFrame(curve);
             var topDrawdowns = GetTopWorstDrawdowns(curve, periods);
@@ -264,7 +306,10 @@ namespace QuantConnect.Report
             }
         }
 
-        private static Tuple<DateTime, DateTime, double> DrawdownGroup(Frame<DateTime, string> frame, double groupMax)
+        private static Tuple<DateTime, DateTime, double> DrawdownGroup(
+            Frame<DateTime, string> frame,
+            double groupMax
+        )
         {
             var drawdownAfter = frame["cumulativeMax"].Where(kvp => kvp.Value > groupMax);
             var drawdownGroup = frame["cumulativeMax"].Where(kvp => kvp.Value == groupMax);
@@ -273,7 +318,9 @@ namespace QuantConnect.Report
             var groupStart = drawdownGroup.FirstKey();
             // Get the start of the next period if it exists. That is when the drawdown period has officially ended.
             // We do this to extend the drawdown period enough so that missing values don't stop it early.
-            var groupEnd = drawdownAfter.IsEmpty ? drawdownGroup.LastKey() : drawdownAfter.FirstKey();
+            var groupEnd = drawdownAfter.IsEmpty
+                ? drawdownGroup.LastKey()
+                : drawdownAfter.FirstKey();
 
             return new Tuple<DateTime, DateTime, double>(groupStart, groupEnd, groupDrawdown);
         }

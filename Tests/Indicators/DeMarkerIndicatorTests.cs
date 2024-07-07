@@ -28,11 +28,11 @@ namespace QuantConnect.Tests.Indicators
             VolumeRenkoBarSize = 1000m;
             return new DeMarkerIndicator("DEM", 14);
         }
-        
+
         protected override string TestFileName => "eurusd60_dem.txt";
 
         protected override string TestColumnName => "dem";
-        
+
         [Test]
         public void TestDivByZero()
         {
@@ -48,10 +48,9 @@ namespace QuantConnect.Tests.Indicators
                     Low = 1,
                     Volume = 1
                 };
-                dem.Update(tradeBar); 
+                dem.Update(tradeBar);
             }
             Assert.AreEqual(dem.Current.Value, 0m);
         }
     }
 }
-      

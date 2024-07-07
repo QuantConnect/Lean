@@ -26,10 +26,13 @@ namespace QuantConnect.Tests.Indicators
         [Test]
         public void DelayZeroThrowsArgumentException()
         {
-            Assert.Throws<ArgumentException>(() =>
-            {
-                new Delay(0);
-            }, "size of at least 1");
+            Assert.Throws<ArgumentException>(
+                () =>
+                {
+                    new Delay(0);
+                },
+                "size of at least 1"
+            );
         }
 
         [Test]
@@ -55,7 +58,7 @@ namespace QuantConnect.Tests.Indicators
         {
             const int start = 1;
             const int count = 10;
-            for (var i = start; i < count+start; i++)
+            for (var i = start; i < count + start; i++)
             {
                 TestDelayTakesPeriodPlus2UpdatesToEmitNonInitialPoint(i);
             }
@@ -93,7 +96,7 @@ namespace QuantConnect.Tests.Indicators
         public void WarmsUpProperly()
         {
             var delay = new Delay(20);
-            var count = ((IIndicatorWarmUpPeriodProvider) delay).WarmUpPeriod;
+            var count = ((IIndicatorWarmUpPeriodProvider)delay).WarmUpPeriod;
             var dataArray = TestHelper.GetDataStream(count).ToArray();
 
             for (var i = 0; i < count; i++)

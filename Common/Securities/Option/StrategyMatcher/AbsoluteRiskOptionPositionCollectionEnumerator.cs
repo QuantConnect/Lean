@@ -22,7 +22,8 @@ namespace QuantConnect.Securities.Option.StrategyMatcher
     /// Stub class providing an idea towards an optimal <see cref="IOptionPositionCollectionEnumerator"/> implementation
     /// that still needs to be implemented.
     /// </summary>
-    public class AbsoluteRiskOptionPositionCollectionEnumerator : IOptionPositionCollectionEnumerator
+    public class AbsoluteRiskOptionPositionCollectionEnumerator
+        : IOptionPositionCollectionEnumerator
     {
         private readonly Func<Symbol, decimal> _marketPriceProvider;
 
@@ -30,7 +31,9 @@ namespace QuantConnect.Securities.Option.StrategyMatcher
         /// Intializes a new instance of the <see cref="AbsoluteRiskOptionPositionCollectionEnumerator"/> class
         /// </summary>
         /// <param name="marketPriceProvider">Function providing the current market price for a provided symbol</param>
-        public AbsoluteRiskOptionPositionCollectionEnumerator(Func<Symbol, decimal> marketPriceProvider)
+        public AbsoluteRiskOptionPositionCollectionEnumerator(
+            Func<Symbol, decimal> marketPriceProvider
+        )
         {
             _marketPriceProvider = marketPriceProvider;
         }

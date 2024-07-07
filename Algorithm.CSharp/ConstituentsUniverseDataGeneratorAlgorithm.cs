@@ -54,17 +54,19 @@ namespace QuantConnect.Algorithm.CSharp
         public override void Initialize()
         {
             // CHANGE ME
-            SetStartDate(2013, 10, 07);   // Set Start Date
-            SetEndDate(2013, 10, 11);     // Set End Date
-            SetCash(100000);            // Set Strategy Cash
+            SetStartDate(2013, 10, 07); // Set Start Date
+            SetEndDate(2013, 10, 11); // Set End Date
+            SetCash(100000); // Set Strategy Cash
 
             UniverseSettings.Resolution = Resolution.Daily;
-            _dataPath = Path.Combine(_rootDataPath,
+            _dataPath = Path.Combine(
+                _rootDataPath,
                 _securityType.SecurityTypeToLower(),
                 _market,
                 "universes",
                 _resolution.ResolutionToLower(),
-                _universeName);
+                _universeName
+            );
             Directory.CreateDirectory(_dataPath);
 
             // CHANGE ME
@@ -95,15 +97,18 @@ namespace QuantConnect.Algorithm.CSharp
                 }
             });
 
-            Schedule.On(DateRules.EveryDay(), TimeRules.At(23, 0), SaveConstituentsUniverseDataToDisk);
+            Schedule.On(
+                DateRules.EveryDay(),
+                TimeRules.At(23, 0),
+                SaveConstituentsUniverseDataToDisk
+            );
         }
 
         private void SaveConstituentsUniverseDataToDisk()
         {
             if (_skippedFirst && Time > _currentDateTime)
             {
-                if (Time.DayOfWeek == DayOfWeek.Sunday
-                    || Time.DayOfWeek == DayOfWeek.Monday)
+                if (Time.DayOfWeek == DayOfWeek.Sunday || Time.DayOfWeek == DayOfWeek.Monday)
                 {
                     // we generate files from Tue to Saturday using current selected securities
                     return;
@@ -115,19 +120,29 @@ namespace QuantConnect.Algorithm.CSharp
                 File.Delete(path);
                 if (_currentSelection.Count == 0)
                 {
-                    using (StreamWriter constituentsUniverseFile = new StreamWriter(path, append:true))
+                    using (
+                        StreamWriter constituentsUniverseFile = new StreamWriter(path, append: true)
+                    )
                     {
                         constituentsUniverseFile.WriteLine(
-                            $"{QuantConnect.Symbol.None.Value},{QuantConnect.Symbol.None.ID.ToString()}");
+                            $"{QuantConnect.Symbol.None.Value},{QuantConnect.Symbol.None.ID.ToString()}"
+                        );
                     }
                 }
                 else
                 {
                     foreach (var symbol in _currentSelection)
                     {
-                        using (StreamWriter constituentsUniverseFile = new StreamWriter(path, append: true))
+                        using (
+                            StreamWriter constituentsUniverseFile = new StreamWriter(
+                                path,
+                                append: true
+                            )
+                        )
                         {
-                            constituentsUniverseFile.WriteLine($"{symbol.Value},{symbol.ID.ToString()}");
+                            constituentsUniverseFile.WriteLine(
+                                $"{symbol.Value},{symbol.ID.ToString()}"
+                            );
                         }
                     }
                 }

@@ -34,22 +34,22 @@ namespace QuantConnect.Algorithm.Framework.Selection
         /// <summary>
         /// Creates a new instance of the <see cref="ManualUniverse"/>
         /// </summary>
-        public ManualUniverse(SubscriptionDataConfig configuration,
+        public ManualUniverse(
+            SubscriptionDataConfig configuration,
             UniverseSettings universeSettings,
-            IEnumerable<Symbol> symbols)
-            : base(configuration, universeSettings, Time.MaxTimeSpan, symbols)
-        {
-        }
+            IEnumerable<Symbol> symbols
+        )
+            : base(configuration, universeSettings, Time.MaxTimeSpan, symbols) { }
 
         /// <summary>
         /// Creates a new instance of the <see cref="ManualUniverse"/>
         /// </summary>
-        public ManualUniverse(SubscriptionDataConfig configuration,
+        public ManualUniverse(
+            SubscriptionDataConfig configuration,
             UniverseSettings universeSettings,
-            Symbol[] symbols)
-            : base(configuration, universeSettings, Time.MaxTimeSpan, symbols)
-        {
-        }
+            Symbol[] symbols
+        )
+            : base(configuration, universeSettings, Time.MaxTimeSpan, symbols) { }
 
         /// <summary>
         /// Gets the subscription requests to be added for the specified security
@@ -59,27 +59,39 @@ namespace QuantConnect.Algorithm.Framework.Selection
         /// <param name="maximumEndTimeUtc">The max end time</param>
         /// <param name="subscriptionService">Instance which implements <see cref="ISubscriptionDataConfigService"/> interface</param>
         /// <returns>All subscriptions required by this security</returns>
-        public override IEnumerable<SubscriptionRequest> GetSubscriptionRequests(Security security, DateTime currentTimeUtc, DateTime maximumEndTimeUtc,
-            ISubscriptionDataConfigService subscriptionService)
+        public override IEnumerable<SubscriptionRequest> GetSubscriptionRequests(
+            Security security,
+            DateTime currentTimeUtc,
+            DateTime maximumEndTimeUtc,
+            ISubscriptionDataConfigService subscriptionService
+        )
         {
             // ManualUniverse will return any existing SDC for the symbol, else will create new, using universe settings.
             // This is for maintaining existing behavior and preventing breaking changes: Specifically motivated
             // by usages of Algorithm.Securities.Keys as constructor parameter of the ManualUniverseSelectionModel.
             // Symbols at Algorithm.Securities.Keys added by Addxxx() calls will already be added by the UserDefinedUniverse.
 
-            var existingSubscriptionDataConfigs = subscriptionService.GetSubscriptionDataConfigs(security.Symbol);
+            var existingSubscriptionDataConfigs = subscriptionService.GetSubscriptionDataConfigs(
+                security.Symbol
+            );
 
             if (existingSubscriptionDataConfigs.Any())
             {
-                return existingSubscriptionDataConfigs.Select(
-                    config => new SubscriptionRequest(isUniverseSubscription: false,
-                        universe: this,
-                        security: security,
-                        configuration: config,
-                        startTimeUtc: currentTimeUtc,
-                        endTimeUtc: maximumEndTimeUtc));
+                return existingSubscriptionDataConfigs.Select(config => new SubscriptionRequest(
+                    isUniverseSubscription: false,
+                    universe: this,
+                    security: security,
+                    configuration: config,
+                    startTimeUtc: currentTimeUtc,
+                    endTimeUtc: maximumEndTimeUtc
+                ));
             }
-            return base.GetSubscriptionRequests(security, currentTimeUtc, maximumEndTimeUtc, subscriptionService);
+            return base.GetSubscriptionRequests(
+                security,
+                currentTimeUtc,
+                maximumEndTimeUtc,
+                subscriptionService
+            );
         }
     }
 }

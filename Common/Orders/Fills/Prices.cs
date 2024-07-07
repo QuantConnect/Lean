@@ -58,9 +58,7 @@ namespace QuantConnect.Orders.Fills
         /// </summary>
         /// <param name="bar">Data bar to use for prices</param>
         public Prices(IBaseDataBar bar)
-            : this(bar.EndTime, bar.Close, bar.Open, bar.High, bar.Low, bar.Close)
-        {
-        }
+            : this(bar.EndTime, bar.Close, bar.Open, bar.High, bar.Low, bar.Close) { }
 
         /// <summary>
         /// Create an instance of Prices class with a data bar and end time
@@ -68,9 +66,7 @@ namespace QuantConnect.Orders.Fills
         /// <param name="endTime">The end time for these prices</param>
         /// <param name="bar">Data bar to use for prices</param>
         public Prices(DateTime endTime, IBar bar)
-            : this(endTime, bar.Close, bar.Open, bar.High, bar.Low, bar.Close)
-        {
-        }
+            : this(endTime, bar.Close, bar.Open, bar.High, bar.Low, bar.Close) { }
 
         /// <summary>
         /// Create a instance of the Prices class with specific values for all prices
@@ -81,7 +77,14 @@ namespace QuantConnect.Orders.Fills
         /// <param name="high">High price</param>
         /// <param name="low">Low price</param>
         /// <param name="close">Close price</param>
-        public Prices(DateTime endTime, decimal current, decimal open, decimal high, decimal low, decimal close)
+        public Prices(
+            DateTime endTime,
+            decimal current,
+            decimal open,
+            decimal high,
+            decimal low,
+            decimal close
+        )
         {
             EndTime = endTime;
             Current = current;

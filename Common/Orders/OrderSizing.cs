@@ -33,7 +33,11 @@ namespace QuantConnect.Orders
         /// <param name="maximumPercentCurrentVolume">The maximum percentage of the current bar's volume</param>
         /// <param name="desiredOrderSize">The desired order size to adjust</param>
         /// <returns>The signed adjusted order size</returns>
-        public static decimal GetOrderSizeForPercentVolume(Security security, decimal maximumPercentCurrentVolume, decimal desiredOrderSize)
+        public static decimal GetOrderSizeForPercentVolume(
+            Security security,
+            decimal maximumPercentCurrentVolume,
+            decimal desiredOrderSize
+        )
         {
             var maxOrderSize = maximumPercentCurrentVolume * security.Volume;
             var orderSize = Math.Min(maxOrderSize, Math.Abs(desiredOrderSize));
@@ -48,18 +52,23 @@ namespace QuantConnect.Orders
         /// <param name="maximumOrderValueInAccountCurrency">The maximum order value in units of the account currency</param>
         /// <param name="desiredOrderSize">The desired order size to adjust</param>
         /// <returns>The signed adjusted order size</returns>
-        public static decimal GetOrderSizeForMaximumValue(Security security, decimal maximumOrderValueInAccountCurrency, decimal desiredOrderSize)
+        public static decimal GetOrderSizeForMaximumValue(
+            Security security,
+            decimal maximumOrderValueInAccountCurrency,
+            decimal desiredOrderSize
+        )
         {
-            var priceInAccountCurrency = security.Price
-                                         * security.QuoteCurrency.ConversionRate
-                                         * security.SymbolProperties.ContractMultiplier;
+            var priceInAccountCurrency =
+                security.Price
+                * security.QuoteCurrency.ConversionRate
+                * security.SymbolProperties.ContractMultiplier;
 
             if (priceInAccountCurrency == 0m)
             {
                 return 0m;
             }
 
-            var maxOrderSize =  maximumOrderValueInAccountCurrency / priceInAccountCurrency;
+            var maxOrderSize = maximumOrderValueInAccountCurrency / priceInAccountCurrency;
             var orderSize = Math.Min(maxOrderSize, Math.Abs(desiredOrderSize));
 
             return Math.Sign(desiredOrderSize) * AdjustByLotSize(security, orderSize);
@@ -85,10 +94,15 @@ namespace QuantConnect.Orders
         /// <param name="target">The portfolio target</param>
         /// <param name="security">The target security</param>
         /// <returns>The signed remaining quantity to be ordered</returns>
-        public static decimal GetUnorderedQuantity(IAlgorithm algorithm, IPortfolioTarget target, Security security)
+        public static decimal GetUnorderedQuantity(
+            IAlgorithm algorithm,
+            IPortfolioTarget target,
+            Security security
+        )
         {
             var holdings = security.Holdings.Quantity;
-            var openOrderQuantity = algorithm.Transactions.GetOpenOrderTickets(target.Symbol)
+            var openOrderQuantity = algorithm
+                .Transactions.GetOpenOrderTickets(target.Symbol)
                 .Aggregate(0m, (d, t) => d + t.Quantity - t.QuantityFilled);
             var quantity = target.Quantity - holdings - openOrderQuantity;
 

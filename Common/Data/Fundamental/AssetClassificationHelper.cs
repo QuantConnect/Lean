@@ -78,14 +78,14 @@ namespace QuantConnect.Data.Fundamental
     {
 #pragma warning disable 1591
         public readonly static int LargeValue = 1;
-        public readonly static int LargeCore = 2;
-        public readonly static int LargeGrowth = 3;
-        public readonly static int MidValue = 4;
-        public readonly static int MidCore = 5;
-        public readonly static int MidGrowth = 6;
-        public readonly static int SmallValue = 7;
-        public readonly static int SmallCore = 8;
-        public readonly static int SmallGrowth = 9;
+        public static readonly int LargeCore = 2;
+        public static readonly int LargeGrowth = 3;
+        public static readonly int MidValue = 4;
+        public static readonly int MidCore = 5;
+        public static readonly int MidGrowth = 6;
+        public static readonly int SmallValue = 7;
+        public static readonly int SmallCore = 8;
+        public static readonly int SmallGrowth = 9;
 #pragma warning restore 1591
     }
 
@@ -200,62 +200,62 @@ namespace QuantConnect.Data.Fundamental
     {
 #pragma warning disable CS1591 // Missing XML comment for publicly visible type or member
         public readonly static int Agriculture = 10110;
-        public readonly static int BuildingMaterials = 10120;
-        public readonly static int Chemicals = 10130;
-        public readonly static int ForestProducts = 10140;
-        public readonly static int MetalsAndMining = 10150;
-        public readonly static int Steel = 10160;
-        public readonly static int VehiclesAndParts = 10200;
-        public readonly static int Furnishings = 10220;
-        public readonly static int FixturesAndAppliances = 10220;
-        public readonly static int HomebuildingAndConstruction = 10230;
-        public readonly static int ManufacturingApparelAndAccessories = 10240;
-        public readonly static int PackagingAndContainers = 10250;
-        public readonly static int PersonalServices = 10260;
-        public readonly static int Restaurants = 10270;
-        public readonly static int RetailCyclical = 10280;
-        public readonly static int TravelAndLeisure = 10290;
-        public readonly static int AssetManagement = 10310;
-        public readonly static int Banks = 10320;
-        public readonly static int CapitalMarkets = 10330;
-        public readonly static int Insurance = 10340;
-        public readonly static int DiversifiedFinancialServices = 10350;
-        public readonly static int CreditServices = 10360;
-        public readonly static int RealEstate = 10410;
-        public readonly static int REITs = 10420;
-        public readonly static int BeveragesAlcoholic = 20510;
-        public readonly static int BeveragesNonAlcoholic = 20520;
-        public readonly static int ConsumerPackagedGoods = 20525;
-        public readonly static int Education = 20540;
-        public readonly static int RetailDefensive = 20550;
-        public readonly static int TobaccoProducts = 20560;
-        public readonly static int Biotechnology = 20610;
-        public readonly static int DrugManufacturers = 20620;
-        public readonly static int HealthcarePlans = 20630;
-        public readonly static int HealthcareProvidersAndServices = 20645;
-        public readonly static int MedicalDevicesAndInstruments = 20650;
-        public readonly static int MedicalDiagnosticsAndResearch = 20660;
-        public readonly static int MedicalDistribution = 20670;
-        public readonly static int UtilitiesIndependentPowerProducers = 20710;
-        public readonly static int UtilitiesRegulated = 20720;
-        public readonly static int TelecommunicationServices = 30810;
-        public readonly static int MediaDiversified = 30820;
-        public readonly static int InteractiveMedia = 30830;
-        public readonly static int OilAndGas = 30910;
-        public readonly static int OtherEnergySources = 30920;
-        public readonly static int AerospaceAndDefense = 31010;
-        public readonly static int BusinessServices = 31020;
-        public readonly static int Conglomerates = 31030;
-        public readonly static int Construction = 31040;
-        public readonly static int FarmAndHeavyConstructionMachinery = 31050;
-        public readonly static int IndustrialDistribution = 31060;
-        public readonly static int IndustrialProducts = 31070;
-        public readonly static int Transportation = 31080;
-        public readonly static int WasteManagement = 31090;
-        public readonly static int Software = 31110;
-        public readonly static int Hardware = 31120;
-        public readonly static int Semiconductors = 31130;
-#pragma warning restore CS1591 
+        public static readonly int BuildingMaterials = 10120;
+        public static readonly int Chemicals = 10130;
+        public static readonly int ForestProducts = 10140;
+        public static readonly int MetalsAndMining = 10150;
+        public static readonly int Steel = 10160;
+        public static readonly int VehiclesAndParts = 10200;
+        public static readonly int Furnishings = 10220;
+        public static readonly int FixturesAndAppliances = 10220;
+        public static readonly int HomebuildingAndConstruction = 10230;
+        public static readonly int ManufacturingApparelAndAccessories = 10240;
+        public static readonly int PackagingAndContainers = 10250;
+        public static readonly int PersonalServices = 10260;
+        public static readonly int Restaurants = 10270;
+        public static readonly int RetailCyclical = 10280;
+        public static readonly int TravelAndLeisure = 10290;
+        public static readonly int AssetManagement = 10310;
+        public static readonly int Banks = 10320;
+        public static readonly int CapitalMarkets = 10330;
+        public static readonly int Insurance = 10340;
+        public static readonly int DiversifiedFinancialServices = 10350;
+        public static readonly int CreditServices = 10360;
+        public static readonly int RealEstate = 10410;
+        public static readonly int REITs = 10420;
+        public static readonly int BeveragesAlcoholic = 20510;
+        public static readonly int BeveragesNonAlcoholic = 20520;
+        public static readonly int ConsumerPackagedGoods = 20525;
+        public static readonly int Education = 20540;
+        public static readonly int RetailDefensive = 20550;
+        public static readonly int TobaccoProducts = 20560;
+        public static readonly int Biotechnology = 20610;
+        public static readonly int DrugManufacturers = 20620;
+        public static readonly int HealthcarePlans = 20630;
+        public static readonly int HealthcareProvidersAndServices = 20645;
+        public static readonly int MedicalDevicesAndInstruments = 20650;
+        public static readonly int MedicalDiagnosticsAndResearch = 20660;
+        public static readonly int MedicalDistribution = 20670;
+        public static readonly int UtilitiesIndependentPowerProducers = 20710;
+        public static readonly int UtilitiesRegulated = 20720;
+        public static readonly int TelecommunicationServices = 30810;
+        public static readonly int MediaDiversified = 30820;
+        public static readonly int InteractiveMedia = 30830;
+        public static readonly int OilAndGas = 30910;
+        public static readonly int OtherEnergySources = 30920;
+        public static readonly int AerospaceAndDefense = 31010;
+        public static readonly int BusinessServices = 31020;
+        public static readonly int Conglomerates = 31030;
+        public static readonly int Construction = 31040;
+        public static readonly int FarmAndHeavyConstructionMachinery = 31050;
+        public static readonly int IndustrialDistribution = 31060;
+        public static readonly int IndustrialProducts = 31070;
+        public static readonly int Transportation = 31080;
+        public static readonly int WasteManagement = 31090;
+        public static readonly int Software = 31110;
+        public static readonly int Hardware = 31120;
+        public static readonly int Semiconductors = 31130;
+#pragma warning restore CS1591
     }
 
     /// <summary>

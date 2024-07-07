@@ -15,9 +15,9 @@
 
 using System;
 using System.Collections.Generic;
-using QuantConnect.Orders;
-using QuantConnect.Interfaces;
 using QuantConnect.Data;
+using QuantConnect.Interfaces;
+using QuantConnect.Orders;
 
 namespace QuantConnect.Algorithm.CSharp
 {
@@ -28,6 +28,7 @@ namespace QuantConnect.Algorithm.CSharp
     public class MinimumOrderSizeRegressionAlgorithm : QCAlgorithm, IRegressionAlgorithmDefinition
     {
         private bool _sentOrders;
+
         public override void Initialize()
         {
             SetStartDate(2013, 10, 1);
@@ -46,24 +47,32 @@ namespace QuantConnect.Algorithm.CSharp
                 var invalidOrder = MarketOrder("BTCUSD", 0.00002);
                 if (invalidOrder.Status != OrderStatus.Invalid)
                 {
-                    throw new RegressionTestException("Invalid order expected, order size is less than allowed");
+                    throw new RegressionTestException(
+                        "Invalid order expected, order size is less than allowed"
+                    );
                 }
 
                 // Update an order that fails because of the size
-                var validOrderOne = LimitOrder("BTCUSD", 0.0002, Securities["BTCUSD"].Price - 0.1m,  "NotUpdated");
-                validOrderOne.Update(new UpdateOrderFields()
-                {
-                    Quantity = 0.00002m,
-                    Tag = "Updated"
-                });
+                var validOrderOne = LimitOrder(
+                    "BTCUSD",
+                    0.0002,
+                    Securities["BTCUSD"].Price - 0.1m,
+                    "NotUpdated"
+                );
+                validOrderOne.Update(
+                    new UpdateOrderFields() { Quantity = 0.00002m, Tag = "Updated" }
+                );
 
                 // Place and update an order that will succeed
-                var validOrderTwo = LimitOrder("BTCUSD", 0.0002, Securities["BTCUSD"].Price - 0.1m, "NotUpdated");
-                validOrderTwo.Update(new UpdateOrderFields()
-                {
-                    Quantity = 0.002m,
-                    Tag = "Updated"
-                });
+                var validOrderTwo = LimitOrder(
+                    "BTCUSD",
+                    0.0002,
+                    Securities["BTCUSD"].Price - 0.1m,
+                    "NotUpdated"
+                );
+                validOrderTwo.Update(
+                    new UpdateOrderFields() { Quantity = 0.002m, Tag = "Updated" }
+                );
             }
         }
 
@@ -72,7 +81,7 @@ namespace QuantConnect.Algorithm.CSharp
             var order = Transactions.GetOrderById(orderEvent.OrderId);
 
             // Update of validOrderOne is expected to fail
-            if( (order.Id == 2) && (order.LastUpdateTime != null) && (order.Tag == "Updated"))
+            if ((order.Id == 2) && (order.LastUpdateTime != null) && (order.Tag == "Updated"))
             {
                 throw new RegressionTestException("Order update expected to fail");
             }
@@ -112,35 +121,36 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// This is used by the regression test system to indicate what the expected statistics are from running the algorithm
         /// </summary>
-        public Dictionary<string, string> ExpectedStatistics => new Dictionary<string, string>
-        {
-            {"Total Orders", "3"},
-            {"Average Win", "0%"},
-            {"Average Loss", "0%"},
-            {"Compounding Annual Return", "0%"},
-            {"Drawdown", "0%"},
-            {"Expectancy", "0"},
-            {"Start Equity", "100000.0"},
-            {"End Equity", "100000.00"},
-            {"Net Profit", "0%"},
-            {"Sharpe Ratio", "0"},
-            {"Sortino Ratio", "0"},
-            {"Probabilistic Sharpe Ratio", "0%"},
-            {"Loss Rate", "0%"},
-            {"Win Rate", "0%"},
-            {"Profit-Loss Ratio", "0"},
-            {"Alpha", "0"},
-            {"Beta", "0"},
-            {"Annual Standard Deviation", "0"},
-            {"Annual Variance", "0"},
-            {"Information Ratio", "0"},
-            {"Tracking Error", "0"},
-            {"Treynor Ratio", "0"},
-            {"Total Fees", "$0.00"},
-            {"Estimated Strategy Capacity", "$0"},
-            {"Lowest Capacity Asset", "BTCUSD E3"},
-            {"Portfolio Turnover", "0.00%"},
-            {"OrderListHash", "c4eb9c8722ee647ec2925cf7b936ce69"}
-        };
+        public Dictionary<string, string> ExpectedStatistics =>
+            new Dictionary<string, string>
+            {
+                { "Total Orders", "3" },
+                { "Average Win", "0%" },
+                { "Average Loss", "0%" },
+                { "Compounding Annual Return", "0%" },
+                { "Drawdown", "0%" },
+                { "Expectancy", "0" },
+                { "Start Equity", "100000.0" },
+                { "End Equity", "100000.00" },
+                { "Net Profit", "0%" },
+                { "Sharpe Ratio", "0" },
+                { "Sortino Ratio", "0" },
+                { "Probabilistic Sharpe Ratio", "0%" },
+                { "Loss Rate", "0%" },
+                { "Win Rate", "0%" },
+                { "Profit-Loss Ratio", "0" },
+                { "Alpha", "0" },
+                { "Beta", "0" },
+                { "Annual Standard Deviation", "0" },
+                { "Annual Variance", "0" },
+                { "Information Ratio", "0" },
+                { "Tracking Error", "0" },
+                { "Treynor Ratio", "0" },
+                { "Total Fees", "$0.00" },
+                { "Estimated Strategy Capacity", "$0" },
+                { "Lowest Capacity Asset", "BTCUSD E3" },
+                { "Portfolio Turnover", "0.00%" },
+                { "OrderListHash", "c4eb9c8722ee647ec2925cf7b936ce69" }
+            };
     }
 }

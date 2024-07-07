@@ -1,11 +1,11 @@
 /*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
- * 
- * Licensed under the Apache License, Version 2.0 (the "License"); 
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -43,9 +43,33 @@ namespace QuantConnect.Tests.Indicators
 
             for (int i = 1; i <= indicator.WarmUpPeriod; i++)
             {
-                indicator.Update(new TradeBar() { Symbol = Symbols.AAPL, Close = i, Volume = 1, Time = reference.AddMinutes(i) });
-                indicator.Update(new TradeBar() { Symbol = Symbols.MSFT, Close = i, Volume = 1, Time = reference.AddMinutes(i) });
-                indicator.Update(new TradeBar() { Symbol = Symbols.GOOG, Close = i, Volume = 1, Time = reference.AddMinutes(i) });
+                indicator.Update(
+                    new TradeBar()
+                    {
+                        Symbol = Symbols.AAPL,
+                        Close = i,
+                        Volume = 1,
+                        Time = reference.AddMinutes(i)
+                    }
+                );
+                indicator.Update(
+                    new TradeBar()
+                    {
+                        Symbol = Symbols.MSFT,
+                        Close = i,
+                        Volume = 1,
+                        Time = reference.AddMinutes(i)
+                    }
+                );
+                indicator.Update(
+                    new TradeBar()
+                    {
+                        Symbol = Symbols.GOOG,
+                        Close = i,
+                        Volume = 1,
+                        Time = reference.AddMinutes(i)
+                    }
+                );
             }
 
             Assert.AreEqual(0m, indicator.Current.Value);
@@ -61,9 +85,33 @@ namespace QuantConnect.Tests.Indicators
 
             for (int i = 1; i <= indicator.WarmUpPeriod; i++)
             {
-                indicator.Update(new TradeBar() { Symbol = Symbols.AAPL, Close = i, Volume = 1, Time = reference.AddMinutes(i) });
-                indicator.Update(new TradeBar() { Symbol = Symbols.MSFT, Close = i, Volume = 1, Time = reference.AddMinutes(i) });
-                indicator.Update(new TradeBar() { Symbol = Symbols.GOOG, Close = i, Volume = 1, Time = reference.AddMinutes(i) });
+                indicator.Update(
+                    new TradeBar()
+                    {
+                        Symbol = Symbols.AAPL,
+                        Close = i,
+                        Volume = 1,
+                        Time = reference.AddMinutes(i)
+                    }
+                );
+                indicator.Update(
+                    new TradeBar()
+                    {
+                        Symbol = Symbols.MSFT,
+                        Close = i,
+                        Volume = 1,
+                        Time = reference.AddMinutes(i)
+                    }
+                );
+                indicator.Update(
+                    new TradeBar()
+                    {
+                        Symbol = Symbols.GOOG,
+                        Close = i,
+                        Volume = 1,
+                        Time = reference.AddMinutes(i)
+                    }
+                );
             }
 
             Assert.IsTrue(indicator.IsReady);
@@ -114,7 +162,10 @@ namespace QuantConnect.Tests.Indicators
                 Assert.DoesNotThrow(() => indicator.Update(volumeRenkoBar));
             };
 
-            McClellanIndicatorTestHelper.UpdateRenkoConsolidator(volumeRenkoConsolidator, TestFileName);
+            McClellanIndicatorTestHelper.UpdateRenkoConsolidator(
+                volumeRenkoConsolidator,
+                TestFileName
+            );
             Assert.AreNotEqual(0, indicator.Samples);
             volumeRenkoConsolidator.Dispose();
         }
@@ -129,7 +180,8 @@ namespace QuantConnect.Tests.Indicators
         private Dictionary<Symbol, decimal> _symbols = new();
         private int _dateCount = 1;
 
-        public TestMcClellanOscillator() : base()
+        public TestMcClellanOscillator()
+            : base()
         {
             // Maximum A/D difference from the test set is 2527
             for (int i = 1; i <= 2530; i++)
@@ -147,22 +199,50 @@ namespace QuantConnect.Tests.Indicators
 
         public void TestUpdate(IndicatorDataPoint input)
         {
-            var isTotal2530 = McClellanIndicatorTestHelper.GetAdvanceDeclineNumber(input.Value, out var advance, out var decline);
+            var isTotal2530 = McClellanIndicatorTestHelper.GetAdvanceDeclineNumber(
+                input.Value,
+                out var advance,
+                out var decline
+            );
             var symbols = _symbols.Keys.ToList();
 
             for (int i = 0; i < advance; i++)
             {
-                Update(new TradeBar() { Symbol = symbols[i], Close = _dateCount, Volume = 1, Time = input.Time });
+                Update(
+                    new TradeBar()
+                    {
+                        Symbol = symbols[i],
+                        Close = _dateCount,
+                        Volume = 1,
+                        Time = input.Time
+                    }
+                );
                 _symbols[symbols[i]] = _dateCount;
             }
             for (int j = 1; j <= decline; j++)
             {
-                Update(new TradeBar() { Symbol = symbols[^j], Close = -_dateCount, Volume = 1, Time = input.Time });
+                Update(
+                    new TradeBar()
+                    {
+                        Symbol = symbols[^j],
+                        Close = -_dateCount,
+                        Volume = 1,
+                        Time = input.Time
+                    }
+                );
                 _symbols[symbols[^j]] = -_dateCount;
             }
             if (!isTotal2530)
             {
-                Update(new TradeBar() { Symbol = symbols[advance], Close = _symbols[symbols[advance]], Volume = 1, Time = input.Time });
+                Update(
+                    new TradeBar()
+                    {
+                        Symbol = symbols[advance],
+                        Close = _symbols[symbols[advance]],
+                        Volume = 1,
+                        Time = input.Time
+                    }
+                );
             }
 
             _dateCount += 1;

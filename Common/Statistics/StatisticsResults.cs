@@ -43,7 +43,11 @@ namespace QuantConnect.Statistics
         /// <param name="totalPerformance">The algorithm total performance</param>
         /// <param name="rollingPerformances">The algorithm rolling performances</param>
         /// <param name="summary">The summary performance dictionary</param>
-        public StatisticsResults(AlgorithmPerformance totalPerformance, Dictionary<string, AlgorithmPerformance> rollingPerformances, Dictionary<string, string> summary)
+        public StatisticsResults(
+            AlgorithmPerformance totalPerformance,
+            Dictionary<string, AlgorithmPerformance> rollingPerformances,
+            Dictionary<string, string> summary
+        )
         {
             TotalPerformance = totalPerformance;
             RollingPerformances = rollingPerformances;

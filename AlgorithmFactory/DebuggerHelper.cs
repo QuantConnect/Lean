@@ -14,13 +14,13 @@
 */
 
 using System;
-using Python.Runtime;
-using System.Threading;
-using System.Diagnostics;
-using QuantConnect.Python;
-using QuantConnect.Logging;
-using QuantConnect.Configuration;
 using System.Collections.Concurrent;
+using System.Diagnostics;
+using System.Threading;
+using Python.Runtime;
+using QuantConnect.Configuration;
+using QuantConnect.Logging;
+using QuantConnect.Python;
 
 namespace QuantConnect.AlgorithmFactory
 {
@@ -82,7 +82,11 @@ namespace QuantConnect.AlgorithmFactory
             if (language == Language.Python)
             {
                 DebuggingMethod debuggingType;
-                Enum.TryParse(Config.Get("debugging-method", DebuggingMethod.LocalCmdline.ToString()), true, out debuggingType);
+                Enum.TryParse(
+                    Config.Get("debugging-method", DebuggingMethod.LocalCmdline.ToString()),
+                    true,
+                    out debuggingType
+                );
 
                 Log.Trace("DebuggerHelper.Initialize(): initializing python...");
                 PythonInitializer.Initialize();
@@ -98,32 +102,45 @@ namespace QuantConnect.AlgorithmFactory
                             break;
 
                         case DebuggingMethod.VisualStudio:
-                            Log.Trace("DebuggerHelper.Initialize(): waiting for debugger to attach...");
-                            PythonEngine.RunSimpleString(@"import sys; import time;
+                            Log.Trace(
+                                "DebuggerHelper.Initialize(): waiting for debugger to attach..."
+                            );
+                            PythonEngine.RunSimpleString(
+                                @"import sys; import time;
 while not sys.gettrace():
-    time.sleep(0.25)");
+    time.sleep(0.25)"
+                            );
                             break;
 
                         case DebuggingMethod.PTVSD:
-                            Log.Trace("DebuggerHelper.Initialize(): waiting for PTVSD debugger to attach at localhost:5678...");
-                            PythonEngine.RunSimpleString("import ptvsd; ptvsd.enable_attach(); ptvsd.wait_for_attach()");
+                            Log.Trace(
+                                "DebuggerHelper.Initialize(): waiting for PTVSD debugger to attach at localhost:5678..."
+                            );
+                            PythonEngine.RunSimpleString(
+                                "import ptvsd; ptvsd.enable_attach(); ptvsd.wait_for_attach()"
+                            );
                             break;
 
                         case DebuggingMethod.DebugPy:
-                            PythonEngine.RunSimpleString(@"import debugpy
+                            PythonEngine.RunSimpleString(
+                                @"import debugpy
 from AlgorithmImports import *
 from QuantConnect.Logging import *
 
 Log.Trace(""DebuggerHelper.Initialize(): debugpy waiting for attach at port 5678..."");
 
 debugpy.listen(('0.0.0.0', 5678))
-debugpy.wait_for_client()");
+debugpy.wait_for_client()"
+                            );
                             workersInitializationCallback = DebugpyThreadInitialization;
                             break;
 
                         case DebuggingMethod.PyCharm:
-                            Log.Trace("DebuggerHelper.Initialize(): Attempting to connect to Pycharm PyDev debugger server...");
-                            PythonEngine.RunSimpleString(@"import pydevd_pycharm;  import time;
+                            Log.Trace(
+                                "DebuggerHelper.Initialize(): Attempting to connect to Pycharm PyDev debugger server..."
+                            );
+                            PythonEngine.RunSimpleString(
+                                @"import pydevd_pycharm;  import time;
 count = 1
 while count <= 10:
     try:
@@ -145,17 +162,20 @@ while count <= 10:
     print('Try ' + count.__str__() + ' out of 10')
     print('\n')
     count += 1
-    time.sleep(3)");
+    time.sleep(3)"
+                            );
                             break;
                     }
                     Log.Trace("DebuggerHelper.Initialize(): started");
                 }
             }
-            else if(language == Language.CSharp)
+            else if (language == Language.CSharp)
             {
                 if (Debugger.IsAttached)
                 {
-                    Log.Trace("DebuggerHelper.Initialize(): debugger is already attached, triggering initial break.");
+                    Log.Trace(
+                        "DebuggerHelper.Initialize(): debugger is already attached, triggering initial break."
+                    );
                 }
                 else
                 {
@@ -169,7 +189,9 @@ while count <= 10:
             }
             else
             {
-                throw new NotImplementedException($"DebuggerHelper.Initialize(): not implemented for {language}");
+                throw new NotImplementedException(
+                    $"DebuggerHelper.Initialize(): not implemented for {language}"
+                );
             }
         }
 
@@ -183,10 +205,14 @@ while count <= 10:
             _threadsState.Enqueue(Py.GIL());
             PythonEngine.BeginAllowThreads();
 
-            Log.Debug($"DebuggerHelper.Initialize({Thread.CurrentThread.Name}): initializing debugpy for thread...");
+            Log.Debug(
+                $"DebuggerHelper.Initialize({Thread.CurrentThread.Name}): initializing debugpy for thread..."
+            );
             using (Py.GIL())
             {
-                PythonEngine.RunSimpleString("import debugpy;debugpy.debug_this_thread();debugpy.trace_this_thread(True)");
+                PythonEngine.RunSimpleString(
+                    "import debugpy;debugpy.debug_this_thread();debugpy.trace_this_thread(True)"
+                );
             }
         }
     }

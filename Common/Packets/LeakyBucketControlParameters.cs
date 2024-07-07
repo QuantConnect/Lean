@@ -34,17 +34,23 @@ namespace QuantConnect.Packets
         /// <summary>
         /// Default capacity for leaky bucket
         /// </summary>
-        public static int DefaultCapacity { get; set; } = Config.GetInt("scheduled-event-leaky-bucket-capacity", 2 * 60);
+        public static int DefaultCapacity { get; set; } =
+            Config.GetInt("scheduled-event-leaky-bucket-capacity", 2 * 60);
 
         /// <summary>
         /// Default time interval
         /// </summary>
-        public static int DefaultTimeInterval { get; set; } = Config.GetInt("scheduled-event-leaky-bucket-time-interval-minutes", 1440);
+        public static int DefaultTimeInterval { get; set; } =
+            Config.GetInt("scheduled-event-leaky-bucket-time-interval-minutes", 1440);
 
         /// <summary>
         /// Default refill amount
         /// </summary>
-        public static int DefaultRefillAmount { get; set; } = Config.GetInt("scheduled-event-leaky-bucket-refill-amount", (int)Math.Ceiling(DefaultCapacity/7.0));
+        public static int DefaultRefillAmount { get; set; } =
+            Config.GetInt(
+                "scheduled-event-leaky-bucket-refill-amount",
+                (int)Math.Ceiling(DefaultCapacity / 7.0)
+            );
 
         /// <summary>
         /// Sets the total capacity of the bucket in a leaky bucket algorithm. This is the maximum

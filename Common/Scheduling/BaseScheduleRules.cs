@@ -45,7 +45,11 @@ namespace QuantConnect.Scheduling
         /// <param name="securities">The security manager</param>
         /// <param name="timeZone">The algorithm's default time zone</param>
         /// <param name="marketHoursDatabase">The market hours database instance to use</param>
-        public BaseScheduleRules(SecurityManager securities, DateTimeZone timeZone, MarketHoursDatabase marketHoursDatabase)
+        public BaseScheduleRules(
+            SecurityManager securities,
+            DateTimeZone timeZone,
+            MarketHoursDatabase marketHoursDatabase
+        )
         {
             Securities = securities;
             TimeZone = timeZone;
@@ -59,7 +63,9 @@ namespace QuantConnect.Scheduling
         {
             if (!Securities.TryGetValue(symbol, out var security))
             {
-                return MarketHoursDatabase.GetEntry(symbol.ID.Market, symbol, symbol.SecurityType).ExchangeHours;
+                return MarketHoursDatabase
+                    .GetEntry(symbol.ID.Market, symbol, symbol.SecurityType)
+                    .ExchangeHours;
             }
             return security.Exchange.Hours;
         }

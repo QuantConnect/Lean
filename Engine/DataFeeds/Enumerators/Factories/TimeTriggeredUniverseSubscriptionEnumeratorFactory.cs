@@ -44,7 +44,11 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators.Factories
         /// <param name="universe">The user defined universe</param>
         /// <param name="marketHoursDatabase">The market hours database</param>
         /// <param name="timeProvider">The time provider</param>
-        public TimeTriggeredUniverseSubscriptionEnumeratorFactory(ITimeTriggeredUniverse universe, MarketHoursDatabase marketHoursDatabase, ITimeProvider timeProvider)
+        public TimeTriggeredUniverseSubscriptionEnumeratorFactory(
+            ITimeTriggeredUniverse universe,
+            MarketHoursDatabase marketHoursDatabase,
+            ITimeProvider timeProvider
+        )
         {
             _universe = universe;
             _timeProvider = timeProvider;
@@ -57,11 +61,21 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators.Factories
         /// <param name="request">The subscription request to be read</param>
         /// <param name="dataProvider">Provider used to get data when it is not present on disk</param>
         /// <returns>An enumerator reading the subscription request</returns>
-        public IEnumerator<BaseData> CreateEnumerator(SubscriptionRequest request, IDataProvider dataProvider)
+        public IEnumerator<BaseData> CreateEnumerator(
+            SubscriptionRequest request,
+            IDataProvider dataProvider
+        )
         {
-            var enumerator = (IEnumerator<BaseData>) _universe.GetTriggerTimes(request.StartTimeUtc, request.EndTimeUtc, _marketHoursDatabase)
-                .Select(x => new Tick { Time = x, Symbol = request.Configuration.Symbol })
-                .GetEnumerator();
+            var enumerator =
+                (IEnumerator<BaseData>)
+                    _universe
+                        .GetTriggerTimes(
+                            request.StartTimeUtc,
+                            request.EndTimeUtc,
+                            _marketHoursDatabase
+                        )
+                        .Select(x => new Tick { Time = x, Symbol = request.Configuration.Symbol })
+                        .GetEnumerator();
 
             var universe = request.Universe as UserDefinedUniverse;
             if (universe != null)
@@ -93,17 +107,19 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators.Factories
                     }
 
                     // Check that we have our items and time
-                    if (items == null || time == DateTime.MinValue) return;
+                    if (items == null || time == DateTime.MinValue)
+                        return;
 
                     var symbol = items.OfType<Symbol>().FirstOrDefault();
 
-                    if(symbol == null) return;
+                    if (symbol == null)
+                        return;
 
                     // the data point time should always be in exchange timezone
                     time = time.ConvertFromUtc(request.Configuration.ExchangeTimeZone);
 
                     var collection = new BaseDataCollection(time, symbol);
-                    ((InjectionEnumerator) enumerator).InjectDataPoint(collection);
+                    ((InjectionEnumerator)enumerator).InjectDataPoint(collection);
                 };
             }
 

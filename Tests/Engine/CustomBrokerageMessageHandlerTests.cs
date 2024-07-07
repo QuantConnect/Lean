@@ -36,8 +36,10 @@ namespace QuantConnect.Tests.Engine
         {
             using (Py.GIL())
             {
-                dynamic CustomBrokerageMessageHandler = PyModule.FromString("testModule",
-                    @$"
+                dynamic CustomBrokerageMessageHandler = PyModule
+                    .FromString(
+                        "testModule",
+                        @$"
 from AlgorithmImports import *
 
 class CustomBrokerageMessageHandler(DefaultBrokerageMessageHandler):
@@ -52,98 +54,121 @@ class CustomBrokerageMessageHandler(DefaultBrokerageMessageHandler):
 
         # We will only process orders with even tags
         return int(order.tag) % 2 == 0
-                ").GetAttr("CustomBrokerageMessageHandler");
+                "
+                    )
+                    .GetAttr("CustomBrokerageMessageHandler");
 
                 var algorithm = new AlgorithmStub();
-                var model = new BrokerageMessageHandlerPythonWrapper(CustomBrokerageMessageHandler(algorithm));
-                Assert.DoesNotThrow(() => model.HandleMessage(new BrokerageMessageEvent(BrokerageMessageType.Warning, 1, "Event!")));
+                var model = new BrokerageMessageHandlerPythonWrapper(
+                    CustomBrokerageMessageHandler(algorithm)
+                );
+                Assert.DoesNotThrow(
+                    () =>
+                        model.HandleMessage(
+                            new BrokerageMessageEvent(BrokerageMessageType.Warning, 1, "Event!")
+                        )
+                );
             }
         }
 
         [Test]
-        public void RunPartialCustomBrokerageMessageHandlerRegressionAlgorithm([Values(Language.Python)] Language language)
+        public void RunPartialCustomBrokerageMessageHandlerRegressionAlgorithm(
+            [Values(Language.Python)] Language language
+        )
         {
             // We expect only half of the orders to be processed
             var expectedOrdersCount = (CustomBacktestingBrokerage.MaxOrderCount / 2) + 1;
 
-            var parameter = new RegressionTests.AlgorithmStatisticsTestParameters("CustomBrokerageSideOrderHandlingRegressionPartialAlgorithm",
-                new Dictionary<string, string> {
-                    {PerformanceMetrics.TotalOrders, expectedOrdersCount.ToStringInvariant()},
-                    {"Average Win", "0%"},
-                    {"Average Loss", "0%"},
-                    {"Compounding Annual Return", "-10.771%"},
-                    {"Drawdown", "0.200%"},
-                    {"Expectancy", "0"},
-                    {"Net Profit", "-0.146%"},
-                    {"Sharpe Ratio", "-5.186"},
-                    {"Sortino Ratio", "-6.53"},
-                    {"Probabilistic Sharpe Ratio", "24.692%"},
-                    {"Loss Rate", "0%"},
-                    {"Win Rate", "0%"},
-                    {"Profit-Loss Ratio", "0"},
-                    {"Alpha", "0.059"},
-                    {"Beta", "-0.072"},
-                    {"Annual Standard Deviation", "0.016"},
-                    {"Annual Variance", "0"},
-                    {"Information Ratio", "-8.629"},
-                    {"Tracking Error", "0.239"},
-                    {"Treynor Ratio", "1.154"},
-                    {"Total Fees", "$50.00"},
-                    {"Estimated Strategy Capacity", "$17000000.00"},
-                    {"Lowest Capacity Asset", "SPY R735QTJ8XC9X"},
-                    {"Portfolio Turnover", "1.45%"}
+            var parameter = new RegressionTests.AlgorithmStatisticsTestParameters(
+                "CustomBrokerageSideOrderHandlingRegressionPartialAlgorithm",
+                new Dictionary<string, string>
+                {
+                    { PerformanceMetrics.TotalOrders, expectedOrdersCount.ToStringInvariant() },
+                    { "Average Win", "0%" },
+                    { "Average Loss", "0%" },
+                    { "Compounding Annual Return", "-10.771%" },
+                    { "Drawdown", "0.200%" },
+                    { "Expectancy", "0" },
+                    { "Net Profit", "-0.146%" },
+                    { "Sharpe Ratio", "-5.186" },
+                    { "Sortino Ratio", "-6.53" },
+                    { "Probabilistic Sharpe Ratio", "24.692%" },
+                    { "Loss Rate", "0%" },
+                    { "Win Rate", "0%" },
+                    { "Profit-Loss Ratio", "0" },
+                    { "Alpha", "0.059" },
+                    { "Beta", "-0.072" },
+                    { "Annual Standard Deviation", "0.016" },
+                    { "Annual Variance", "0" },
+                    { "Information Ratio", "-8.629" },
+                    { "Tracking Error", "0.239" },
+                    { "Treynor Ratio", "1.154" },
+                    { "Total Fees", "$50.00" },
+                    { "Estimated Strategy Capacity", "$17000000.00" },
+                    { "Lowest Capacity Asset", "SPY R735QTJ8XC9X" },
+                    { "Portfolio Turnover", "1.45%" }
                 },
                 language,
-                AlgorithmStatus.Completed);
+                AlgorithmStatus.Completed
+            );
 
-            AlgorithmRunner.RunLocalBacktest(parameter.Algorithm,
+            AlgorithmRunner.RunLocalBacktest(
+                parameter.Algorithm,
                 parameter.Statistics,
                 parameter.Language,
                 parameter.ExpectedFinalStatus,
-                setupHandler: nameof(CustomBacktestingSetupHandler));
+                setupHandler: nameof(CustomBacktestingSetupHandler)
+            );
         }
 
         [Test]
-        public void RunCustomBrokerageMessageHandlerRegressionAlgorithm([Values(Language.CSharp, Language.Python)] Language language)
+        public void RunCustomBrokerageMessageHandlerRegressionAlgorithm(
+            [Values(Language.CSharp, Language.Python)] Language language
+        )
         {
             // We expect only half of the orders to be processed
             var expectedOrdersCount = (CustomBacktestingBrokerage.MaxOrderCount / 2) + 1;
 
-            var parameter = new RegressionTests.AlgorithmStatisticsTestParameters("CustomBrokerageSideOrderHandlingRegressionAlgorithm",
-                new Dictionary<string, string> {
-                    {PerformanceMetrics.TotalOrders, expectedOrdersCount.ToStringInvariant()},
-                    {"Average Win", "0%"},
-                    {"Average Loss", "0%"},
-                    {"Compounding Annual Return", "-10.771%"},
-                    {"Drawdown", "0.200%"},
-                    {"Expectancy", "0"},
-                    {"Net Profit", "-0.146%"},
-                    {"Sharpe Ratio", "-5.186"},
-                    {"Sortino Ratio", "-6.53"},
-                    {"Probabilistic Sharpe Ratio", "24.692%"},
-                    {"Loss Rate", "0%"},
-                    {"Win Rate", "0%"},
-                    {"Profit-Loss Ratio", "0"},
-                    {"Alpha", "0.059"},
-                    {"Beta", "-0.072"},
-                    {"Annual Standard Deviation", "0.016"},
-                    {"Annual Variance", "0"},
-                    {"Information Ratio", "-8.629"},
-                    {"Tracking Error", "0.239"},
-                    {"Treynor Ratio", "1.154"},
-                    {"Total Fees", "$50.00"},
-                    {"Estimated Strategy Capacity", "$17000000.00"},
-                    {"Lowest Capacity Asset", "SPY R735QTJ8XC9X"},
-                    {"Portfolio Turnover", "1.45%"}
+            var parameter = new RegressionTests.AlgorithmStatisticsTestParameters(
+                "CustomBrokerageSideOrderHandlingRegressionAlgorithm",
+                new Dictionary<string, string>
+                {
+                    { PerformanceMetrics.TotalOrders, expectedOrdersCount.ToStringInvariant() },
+                    { "Average Win", "0%" },
+                    { "Average Loss", "0%" },
+                    { "Compounding Annual Return", "-10.771%" },
+                    { "Drawdown", "0.200%" },
+                    { "Expectancy", "0" },
+                    { "Net Profit", "-0.146%" },
+                    { "Sharpe Ratio", "-5.186" },
+                    { "Sortino Ratio", "-6.53" },
+                    { "Probabilistic Sharpe Ratio", "24.692%" },
+                    { "Loss Rate", "0%" },
+                    { "Win Rate", "0%" },
+                    { "Profit-Loss Ratio", "0" },
+                    { "Alpha", "0.059" },
+                    { "Beta", "-0.072" },
+                    { "Annual Standard Deviation", "0.016" },
+                    { "Annual Variance", "0" },
+                    { "Information Ratio", "-8.629" },
+                    { "Tracking Error", "0.239" },
+                    { "Treynor Ratio", "1.154" },
+                    { "Total Fees", "$50.00" },
+                    { "Estimated Strategy Capacity", "$17000000.00" },
+                    { "Lowest Capacity Asset", "SPY R735QTJ8XC9X" },
+                    { "Portfolio Turnover", "1.45%" }
                 },
                 language,
-                AlgorithmStatus.Completed);
+                AlgorithmStatus.Completed
+            );
 
-            AlgorithmRunner.RunLocalBacktest(parameter.Algorithm,
+            AlgorithmRunner.RunLocalBacktest(
+                parameter.Algorithm,
                 parameter.Statistics,
                 parameter.Language,
                 parameter.ExpectedFinalStatus,
-                setupHandler: nameof(CustomBacktestingSetupHandler));
+                setupHandler: nameof(CustomBacktestingSetupHandler)
+            );
         }
 
         public class CustomBacktestingBrokerage : BacktestingBrokerage
@@ -154,9 +179,8 @@ class CustomBrokerageMessageHandler(DefaultBrokerageMessageHandler):
 
             private int _orderCount;
 
-            public CustomBacktestingBrokerage(IAlgorithm algorithm) : base(algorithm)
-            {
-            }
+            public CustomBacktestingBrokerage(IAlgorithm algorithm)
+                : base(algorithm) { }
 
             public override void Scan()
             {
@@ -171,9 +195,16 @@ class CustomBrokerageMessageHandler(DefaultBrokerageMessageHandler):
                         _direction = OrderDirection.Sell;
                     }
 
-                    var marketOrder = new MarketOrder(Symbols.SPY, quantity, Algorithm.UtcTime, tag: _orderCount.ToStringInvariant());
+                    var marketOrder = new MarketOrder(
+                        Symbols.SPY,
+                        quantity,
+                        Algorithm.UtcTime,
+                        tag: _orderCount.ToStringInvariant()
+                    );
                     marketOrder.Status = OrderStatus.New;
-                    OnNewBrokerageOrderNotification(new NewBrokerageOrderNotificationEventArgs(marketOrder));
+                    OnNewBrokerageOrderNotification(
+                        new NewBrokerageOrderNotificationEventArgs(marketOrder)
+                    );
                     _orderCount++;
                 }
 
@@ -183,14 +214,20 @@ class CustomBrokerageMessageHandler(DefaultBrokerageMessageHandler):
 
         public class CustomBacktestingSetupHandler : BacktestingSetupHandler
         {
-            public override IBrokerage CreateBrokerage(AlgorithmNodePacket algorithmNodePacket, IAlgorithm uninitializedAlgorithm, out IBrokerageFactory factory)
+            public override IBrokerage CreateBrokerage(
+                AlgorithmNodePacket algorithmNodePacket,
+                IAlgorithm uninitializedAlgorithm,
+                out IBrokerageFactory factory
+            )
             {
                 factory = new BacktestingBrokerageFactory();
                 var brokerage = new CustomBacktestingBrokerage(uninitializedAlgorithm);
                 brokerage.NewBrokerageOrderNotification += (sender, e) =>
                 {
-                    if (uninitializedAlgorithm.BrokerageMessageHandler.HandleOrder(e) &&
-                        uninitializedAlgorithm.GetOrAddUnrequestedSecurity(e.Order.Symbol, out _))
+                    if (
+                        uninitializedAlgorithm.BrokerageMessageHandler.HandleOrder(e)
+                        && uninitializedAlgorithm.GetOrAddUnrequestedSecurity(e.Order.Symbol, out _)
+                    )
                     {
                         brokerage.PlaceOrder(e.Order);
                     }

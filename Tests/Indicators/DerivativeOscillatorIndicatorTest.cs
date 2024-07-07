@@ -12,9 +12,9 @@
 * See the License for the specific language governing permissions and
 * limitations under the License.
 */
+using System;
 using NUnit.Framework;
 using QuantConnect.Indicators;
-using System;
 
 namespace QuantConnect.Tests.Indicators;
 
@@ -40,25 +40,25 @@ public class DerivativeOscillatorIndicatorTest : CommonIndicatorTests<IndicatorD
         var seed = 14;
         Random rand = new Random(seed);
         var reference = DateTime.Today;
-        for(int i = 0; i < period; i++) 
+        for (int i = 0; i < period; i++)
         {
             var data = new IndicatorDataPoint(reference.AddSeconds(i), rand.Next());
             derivativeOscillator.Update(data);
         }
 
         var expected = derivativeOscillator.Current.Value;
-        
+
         Assert.IsTrue(derivativeOscillator.IsReady);
         Assert.AreNotEqual(0m, derivativeOscillator.Current.Value);
         Assert.AreNotEqual(0, derivativeOscillator.Samples);
 
         // Now do some partial updates
-        for(int i = 0; i < 5; i++)
+        for (int i = 0; i < 5; i++)
         {
             var data = new IndicatorDataPoint(reference.AddSeconds(i), rand.Next());
             derivativeOscillator.Update(data);
         }
-        
+
         // Check if reset functionality works
         derivativeOscillator.Reset();
         TestHelper.AssertIndicatorIsInDefaultState(derivativeOscillator);
@@ -90,7 +90,8 @@ public class DerivativeOscillatorIndicatorTest : CommonIndicatorTests<IndicatorD
             CreateIndicator(),
             TestFileName,
             TestColumnName,
-            (ind, expected) => Assert.AreEqual(expected, (double)((DerivativeOscillator)ind).Current.Value, 1e-9)
+            (ind, expected) =>
+                Assert.AreEqual(expected, (double)((DerivativeOscillator)ind).Current.Value, 1e-9)
         );
     }
 }

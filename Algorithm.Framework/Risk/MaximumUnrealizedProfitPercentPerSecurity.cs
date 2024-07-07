@@ -35,7 +35,7 @@ namespace QuantConnect.Algorithm.Framework.Risk
         /// defaults to 5% drawdown per security</param>
         public MaximumUnrealizedProfitPercentPerSecurity(
             decimal maximumUnrealizedProfitPercent = 0.05m
-            )
+        )
         {
             _maximumUnrealizedProfitPercent = Math.Abs(maximumUnrealizedProfitPercent);
         }
@@ -45,7 +45,10 @@ namespace QuantConnect.Algorithm.Framework.Risk
         /// </summary>
         /// <param name="algorithm">The algorithm instance</param>
         /// <param name="targets">The current portfolio targets to be assessed for risk</param>
-        public override IEnumerable<IPortfolioTarget> ManageRisk(QCAlgorithm algorithm, IPortfolioTarget[] targets)
+        public override IEnumerable<IPortfolioTarget> ManageRisk(
+            QCAlgorithm algorithm,
+            IPortfolioTarget[] targets
+        )
         {
             foreach (var kvp in algorithm.Securities)
             {

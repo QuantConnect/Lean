@@ -13,13 +13,13 @@
  * limitations under the License.
 */
 
+using System;
+using System.Linq;
 using QuantConnect.Interfaces;
 using QuantConnect.Logging;
 using QuantConnect.Notifications;
 using QuantConnect.Packets;
 using QuantConnect.Util;
-using System;
-using System.Linq;
 
 namespace QuantConnect.Messaging
 {
@@ -32,11 +32,7 @@ namespace QuantConnect.Messaging
         /// This implementation ignores the <seealso cref="HasSubscribers"/> flag and
         /// instead will always write to the log.
         /// </summary>
-        public bool HasSubscribers
-        {
-            get;
-            set;
-        }
+        public bool HasSubscribers { get; set; }
 
         /// <summary>
         /// Initialize the messaging system
@@ -50,9 +46,7 @@ namespace QuantConnect.Messaging
         /// <summary>
         /// Set the messaging channel
         /// </summary>
-        public virtual void SetAuthentication(AlgorithmNodePacket job)
-        {
-        }
+        public virtual void SetAuthentication(AlgorithmNodePacket job) { }
 
         /// <summary>
         /// Send a generic base packet without processing
@@ -78,13 +72,21 @@ namespace QuantConnect.Messaging
 
                 case PacketType.RuntimeError:
                     var runtime = (RuntimeErrorPacket)packet;
-                    var rstack = (!string.IsNullOrEmpty(runtime.StackTrace) ? (Environment.NewLine + " " + runtime.StackTrace) : string.Empty);
+                    var rstack = (
+                        !string.IsNullOrEmpty(runtime.StackTrace)
+                            ? (Environment.NewLine + " " + runtime.StackTrace)
+                            : string.Empty
+                    );
                     Log.Error(runtime.Message + rstack);
                     break;
 
                 case PacketType.HandledError:
                     var handled = (HandledErrorPacket)packet;
-                    var hstack = (!string.IsNullOrEmpty(handled.StackTrace) ? (Environment.NewLine + " " + handled.StackTrace) : string.Empty);
+                    var hstack = (
+                        !string.IsNullOrEmpty(handled.StackTrace)
+                            ? (Environment.NewLine + " " + handled.StackTrace)
+                            : string.Empty
+                    );
                     Log.Error(handled.Message + hstack);
                     break;
 
@@ -99,8 +101,9 @@ namespace QuantConnect.Messaging
                         var orderHash = result.Results.Orders.GetHash();
                         result.Results.Statistics.Add("OrderListHash", orderHash);
 
-                        var statisticsStr = $"{Environment.NewLine}" +
-                            $"{string.Join(Environment.NewLine, result.Results.Statistics.Select(x => $"STATISTICS:: {x.Key} {x.Value}"))}";
+                        var statisticsStr =
+                            $"{Environment.NewLine}"
+                            + $"{string.Join(Environment.NewLine, result.Results.Statistics.Select(x => $"STATISTICS:: {x.Key} {x.Value}"))}";
                         Log.Trace(statisticsStr);
                     }
                     break;
@@ -114,7 +117,10 @@ namespace QuantConnect.Messaging
         {
             if (!notification.CanSend())
             {
-                Log.Error("Messaging.SendNotification(): Send not implemented for notification of type: " + notification.GetType().Name);
+                Log.Error(
+                    "Messaging.SendNotification(): Send not implemented for notification of type: "
+                        + notification.GetType().Name
+                );
                 return;
             }
             notification.Send();
@@ -123,8 +129,6 @@ namespace QuantConnect.Messaging
         /// <summary>
         /// Dispose of any resources
         /// </summary>
-        public void Dispose()
-        {
-        }
+        public void Dispose() { }
     }
 }

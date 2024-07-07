@@ -14,13 +14,13 @@
 */
 
 using System;
-using System.Linq;
-using QuantConnect.Util;
-using QuantConnect.Logging;
-using System.Threading.Tasks;
-using QuantConnect.Interfaces;
 using System.Collections.Generic;
+using System.Linq;
+using System.Threading.Tasks;
 using QuantConnect.Data.Auxiliary;
+using QuantConnect.Interfaces;
+using QuantConnect.Logging;
+using QuantConnect.Util;
 
 namespace QuantConnect.Data
 {
@@ -34,9 +34,13 @@ namespace QuantConnect.Data
         /// </summary>
         /// <remarks>This is useful for index and future options which do not have an underlying that yields dividends.
         /// Defaults to SPY</remarks>
-        public static Symbol DefaultSymbol { get; set; } = Symbol.Create("SPY", SecurityType.Equity, QuantConnect.Market.USA);
+        public static Symbol DefaultSymbol { get; set; } =
+            Symbol.Create("SPY", SecurityType.Equity, QuantConnect.Market.USA);
 
-        protected static Dictionary<Symbol, Dictionary<DateTime, decimal>> _dividendYieldRateProvider;
+        protected static Dictionary<
+            Symbol,
+            Dictionary<DateTime, decimal>
+        > _dividendYieldRateProvider;
         protected static Task _cacheClearTask;
         private static readonly object _lock = new();
 
@@ -70,9 +74,8 @@ namespace QuantConnect.Data
         /// <summary>
         /// Creates a new instance using the default symbol
         /// </summary>
-        public DividendYieldProvider() : this(DefaultSymbol)
-        {
-        }
+        public DividendYieldProvider()
+            : this(DefaultSymbol) { }
 
         /// <summary>
         /// Instantiates a <see cref="DividendYieldProvider"/> with the specified Symbol
@@ -104,7 +107,8 @@ namespace QuantConnect.Data
                 // we clear the dividend yield rate cache so they are reloaded
                 _dividendYieldRateProvider = new();
             }
-            _cacheClearTask = Task.Delay(cacheRefreshPeriod).ContinueWith(_ => StartExpirationTask(cacheRefreshPeriod));
+            _cacheClearTask = Task.Delay(cacheRefreshPeriod)
+                .ContinueWith(_ => StartExpirationTask(cacheRefreshPeriod));
         }
 
         /// <summary>
@@ -120,7 +124,8 @@ namespace QuantConnect.Data
                 if (!_dividendYieldRateProvider.TryGetValue(_symbol, out symbolDividend))
                 {
                     // load the symbol factor if it is the first encounter
-                    symbolDividend = _dividendYieldRateProvider[_symbol] = LoadDividendYieldProvider(_symbol);
+                    symbolDividend = _dividendYieldRateProvider[_symbol] =
+                        LoadDividendYieldProvider(_symbol);
                 }
             }
 
@@ -186,13 +191,20 @@ namespace QuantConnect.Data
         /// <param name="corporateFactors">The corporate factor rows containing factor data</param>
         /// <param name="symbol">The target symbol</param>
         /// <returns>Dictionary of historical annualized continuous dividend yield data</returns>
-        public static Dictionary<DateTime, decimal> FromCorporateFactorRow(IEnumerable<CorporateFactorRow> corporateFactors, Symbol symbol)
+        public static Dictionary<DateTime, decimal> FromCorporateFactorRow(
+            IEnumerable<CorporateFactorRow> corporateFactors,
+            Symbol symbol
+        )
         {
             var dividendYieldProvider = new Dictionary<DateTime, decimal>();
 
             // calculate the dividend rate from each payout
             var subsequentRate = 0m;
-            foreach (var row in corporateFactors.Where(x => x.Date != Time.EndOfTime).OrderByDescending(corporateFactor => corporateFactor.Date))
+            foreach (
+                var row in corporateFactors
+                    .Where(x => x.Date != Time.EndOfTime)
+                    .OrderByDescending(corporateFactor => corporateFactor.Date)
+            )
             {
                 var dividendYield = 1 / row.PriceFactor - 1 - subsequentRate;
                 dividendYieldProvider[row.Date] = dividendYield;
@@ -204,9 +216,13 @@ namespace QuantConnect.Data
             foreach (var date in dividendYieldProvider.Keys.OrderBy(x => x))
             {
                 // 15 days window from 1y to avoid overestimation from last year value
-                var yearlyDividend = dividendYieldProvider.Where(kvp => kvp.Key <= date && kvp.Key > date.AddDays(-350)).Sum(kvp => kvp.Value);
+                var yearlyDividend = dividendYieldProvider
+                    .Where(kvp => kvp.Key <= date && kvp.Key > date.AddDays(-350))
+                    .Sum(kvp => kvp.Value);
                 // discrete to continuous: LN(1 + i)
-                yearlyDividendYieldProvider[date] = Convert.ToDecimal(Math.Log(1d + (double)yearlyDividend));
+                yearlyDividendYieldProvider[date] = Convert.ToDecimal(
+                    Math.Log(1d + (double)yearlyDividend)
+                );
             }
 
             if (yearlyDividendYieldProvider.Count == 0)

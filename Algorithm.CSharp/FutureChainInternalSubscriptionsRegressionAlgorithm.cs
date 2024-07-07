@@ -15,18 +15,20 @@
 */
 
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using QuantConnect.Data;
 using QuantConnect.Interfaces;
 using QuantConnect.Securities;
-using System.Collections.Generic;
 
 namespace QuantConnect.Algorithm.CSharp
 {
     /// <summary>
     /// Regression algorithm reproducing GH issue #7158 where we would get future contracts which were internal
     /// </summary>
-    public class FutureChainInternalSubscriptionsRegressionAlgorithm : QCAlgorithm, IRegressionAlgorithmDefinition
+    public class FutureChainInternalSubscriptionsRegressionAlgorithm
+        : QCAlgorithm,
+            IRegressionAlgorithmDefinition
     {
         /// <summary>
         /// Initialize your algorithm and add desired assets.
@@ -66,16 +68,22 @@ namespace QuantConnect.Algorithm.CSharp
 
                 foreach (var contract in chain.Value)
                 {
-                    var subscriptions = SubscriptionManager.Subscriptions.Where(x => x.Symbol == contract.Symbol).ToList();
+                    var subscriptions = SubscriptionManager
+                        .Subscriptions.Where(x => x.Symbol == contract.Symbol)
+                        .ToList();
                     if (subscriptions.Count == 0)
                     {
-                        throw new RegressionTestException($"Failed to find valid subscription for {contract.Symbol} at {Time}");
+                        throw new RegressionTestException(
+                            $"Failed to find valid subscription for {contract.Symbol} at {Time}"
+                        );
                     }
 
                     var openInterest = Securities[contract.Symbol].OpenInterest;
-                    if(openInterest == 0)
+                    if (openInterest == 0)
                     {
-                        throw new RegressionTestException($"Open interest is 0 for {contract.Symbol} at {Time}");
+                        throw new RegressionTestException(
+                            $"Open interest is 0 for {contract.Symbol} at {Time}"
+                        );
                     }
                 }
             }
@@ -109,35 +117,36 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// This is used by the regression test system to indicate what the expected statistics are from running the algorithm
         /// </summary>
-        public Dictionary<string, string> ExpectedStatistics => new Dictionary<string, string>
-        {
-            {"Total Orders", "1"},
-            {"Average Win", "0%"},
-            {"Average Loss", "0%"},
-            {"Compounding Annual Return", "-99.310%"},
-            {"Drawdown", "4.400%"},
-            {"Expectancy", "0"},
-            {"Start Equity", "100000"},
-            {"End Equity", "96375.06"},
-            {"Net Profit", "-3.625%"},
-            {"Sharpe Ratio", "-16.733"},
-            {"Sortino Ratio", "-16.733"},
-            {"Probabilistic Sharpe Ratio", "0%"},
-            {"Loss Rate", "0%"},
-            {"Win Rate", "0%"},
-            {"Profit-Loss Ratio", "0"},
-            {"Alpha", "2.959"},
-            {"Beta", "-0.244"},
-            {"Annual Standard Deviation", "0.059"},
-            {"Annual Variance", "0.003"},
-            {"Information Ratio", "-56.943"},
-            {"Tracking Error", "0.302"},
-            {"Treynor Ratio", "4.061"},
-            {"Total Fees", "$2.47"},
-            {"Estimated Strategy Capacity", "$2200000.00"},
-            {"Lowest Capacity Asset", "GC VL5E74HP3EE5"},
-            {"Portfolio Turnover", "44.33%"},
-            {"OrderListHash", "6d4d3664d887d00b8222eb731f298cd8"}
-        };
+        public Dictionary<string, string> ExpectedStatistics =>
+            new Dictionary<string, string>
+            {
+                { "Total Orders", "1" },
+                { "Average Win", "0%" },
+                { "Average Loss", "0%" },
+                { "Compounding Annual Return", "-99.310%" },
+                { "Drawdown", "4.400%" },
+                { "Expectancy", "0" },
+                { "Start Equity", "100000" },
+                { "End Equity", "96375.06" },
+                { "Net Profit", "-3.625%" },
+                { "Sharpe Ratio", "-16.733" },
+                { "Sortino Ratio", "-16.733" },
+                { "Probabilistic Sharpe Ratio", "0%" },
+                { "Loss Rate", "0%" },
+                { "Win Rate", "0%" },
+                { "Profit-Loss Ratio", "0" },
+                { "Alpha", "2.959" },
+                { "Beta", "-0.244" },
+                { "Annual Standard Deviation", "0.059" },
+                { "Annual Variance", "0.003" },
+                { "Information Ratio", "-56.943" },
+                { "Tracking Error", "0.302" },
+                { "Treynor Ratio", "4.061" },
+                { "Total Fees", "$2.47" },
+                { "Estimated Strategy Capacity", "$2200000.00" },
+                { "Lowest Capacity Asset", "GC VL5E74HP3EE5" },
+                { "Portfolio Turnover", "44.33%" },
+                { "OrderListHash", "6d4d3664d887d00b8222eb731f298cd8" }
+            };
     }
 }

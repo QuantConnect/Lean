@@ -21,7 +21,8 @@ namespace QuantConnect.Algorithm.CSharp
     /// Regression algorithm exercising an index covered European style option, using an option price model
     /// that supports European style options and asserting that the option price model is used.
     /// </summary>
-    public class OptionPriceModelForSupportedEuropeanOptionTimeSpanWarmupRegressionAlgorithm : OptionPriceModelForSupportedEuropeanOptionRegressionAlgorithm
+    public class OptionPriceModelForSupportedEuropeanOptionTimeSpanWarmupRegressionAlgorithm
+        : OptionPriceModelForSupportedEuropeanOptionRegressionAlgorithm
     {
         public override void Initialize()
         {

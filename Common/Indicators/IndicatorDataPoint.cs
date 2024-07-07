@@ -14,7 +14,6 @@
 */
 
 using System;
-
 using QuantConnect.Data;
 
 namespace QuantConnect.Indicators
@@ -22,7 +21,11 @@ namespace QuantConnect.Indicators
     /// <summary>
     /// Represents a piece of data at a specific time
     /// </summary>
-    public class IndicatorDataPoint : BaseData, IEquatable<IndicatorDataPoint>, IComparable<IndicatorDataPoint>, IComparable
+    public class IndicatorDataPoint
+        : BaseData,
+            IEquatable<IndicatorDataPoint>,
+            IComparable<IndicatorDataPoint>,
+            IComparable
     {
         /// <summary>
         /// Initializes a new default instance of IndicatorDataPoint with a time of
@@ -103,7 +106,9 @@ namespace QuantConnect.Indicators
             var other = obj as IndicatorDataPoint;
             if (other == null)
             {
-                throw new ArgumentException(Messages.IndicatorDataPoint.InvalidObjectTypeToCompareTo(GetType()));
+                throw new ArgumentException(
+                    Messages.IndicatorDataPoint.InvalidObjectTypeToCompareTo(GetType())
+                );
             }
             return CompareTo(other);
         }
@@ -130,8 +135,9 @@ namespace QuantConnect.Indicators
         /// <filterpriority>2</filterpriority>
         public override bool Equals(object obj)
         {
-            if (ReferenceEquals(null, obj)) return false;
-            return obj is IndicatorDataPoint && Equals((IndicatorDataPoint) obj);
+            if (ReferenceEquals(null, obj))
+                return false;
+            return obj is IndicatorDataPoint && Equals((IndicatorDataPoint)obj);
         }
 
         /// <summary>
@@ -145,7 +151,7 @@ namespace QuantConnect.Indicators
         {
             unchecked
             {
-                return (Value.GetHashCode()*397) ^ Time.GetHashCode();
+                return (Value.GetHashCode() * 397) ^ Time.GetHashCode();
             }
         }
 
@@ -162,17 +168,30 @@ namespace QuantConnect.Indicators
         /// <summary>
         /// This function is purposefully not implemented.
         /// </summary>
-        public override BaseData Reader(SubscriptionDataConfig config, string line, DateTime date, bool isLiveMode)
+        public override BaseData Reader(
+            SubscriptionDataConfig config,
+            string line,
+            DateTime date,
+            bool isLiveMode
+        )
         {
-            throw new NotImplementedException(Messages.IndicatorDataPoint.UnsupportedMethod(nameof(Reader)));
+            throw new NotImplementedException(
+                Messages.IndicatorDataPoint.UnsupportedMethod(nameof(Reader))
+            );
         }
 
         /// <summary>
         /// This function is purposefully not implemented.
         /// </summary>
-        public override SubscriptionDataSource GetSource(SubscriptionDataConfig config, DateTime date, bool isLiveMode)
+        public override SubscriptionDataSource GetSource(
+            SubscriptionDataConfig config,
+            DateTime date,
+            bool isLiveMode
+        )
         {
-            throw new NotImplementedException(Messages.IndicatorDataPoint.UnsupportedMethod(nameof(GetSource)));
+            throw new NotImplementedException(
+                Messages.IndicatorDataPoint.UnsupportedMethod(nameof(GetSource))
+            );
         }
     }
 }

@@ -27,19 +27,13 @@ namespace QuantConnect.Data.Consolidators
         /// <summary>
         /// Gets the first consolidator to receive data
         /// </summary>
-        public IDataConsolidator First
-        {
-            get; private set;
-        }
+        public IDataConsolidator First { get; private set; }
 
         /// <summary>
         /// Gets the second consolidator that ends up receiving data produced
         /// by the first
         /// </summary>
-        public IDataConsolidator Second
-        {
-            get; private set;
-        }
+        public IDataConsolidator Second { get; private set; }
 
         /// <summary>
         /// Gets the most recently consolidated piece of data. This will be null if this consolidator
@@ -130,7 +124,8 @@ namespace QuantConnect.Data.Consolidators
         protected virtual void OnDataConsolidated(IBaseData consolidated)
         {
             var handler = DataConsolidated;
-            if (handler != null) handler(this, consolidated);
+            if (handler != null)
+                handler(this, consolidated);
         }
 
         /// <summary>Performs application-defined tasks associated with freeing, releasing, or resetting unmanaged resources.</summary>

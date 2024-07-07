@@ -13,11 +13,11 @@
  * limitations under the License.
 */
 
+using System;
+using System.Linq;
 using NUnit.Framework;
 using QuantConnect.Data;
 using QuantConnect.Data.Market;
-using System;
-using System.Linq;
 
 namespace QuantConnect.Tests.Common.Data
 {
@@ -29,13 +29,17 @@ namespace QuantConnect.Tests.Common.Data
         [SetUp]
         public void SetUp()
         {
-            _subscriptionManager = new FakeDataQueuehandlerSubscriptionManager((t) => "quote-trade");
+            _subscriptionManager = new FakeDataQueuehandlerSubscriptionManager(
+                (t) => "quote-trade"
+            );
         }
 
         [Test]
         public void SubscribeSingleSingleChannel()
         {
-            _subscriptionManager.Subscribe(GetSubscriptionDataConfig<TradeBar>(Symbols.AAPL, Resolution.Minute));
+            _subscriptionManager.Subscribe(
+                GetSubscriptionDataConfig<TradeBar>(Symbols.AAPL, Resolution.Minute)
+            );
 
             Assert.NotZero(_subscriptionManager.GetSubscribedSymbols().Count());
             Assert.Contains(Symbols.AAPL, _subscriptionManager.GetSubscribedSymbols().ToArray());
@@ -46,7 +50,9 @@ namespace QuantConnect.Tests.Common.Data
         {
             for (int i = 0; i < 10; i++)
             {
-                _subscriptionManager.Subscribe(GetSubscriptionDataConfig<TradeBar>(Symbols.AAPL, Resolution.Minute));
+                _subscriptionManager.Subscribe(
+                    GetSubscriptionDataConfig<TradeBar>(Symbols.AAPL, Resolution.Minute)
+                );
                 Assert.Contains(Symbols.AAPL, _subscriptionManager.GetSubscribedSymbols().ToList());
                 Assert.IsTrue(_subscriptionManager.IsSubscribed(Symbols.AAPL, TickType.Quote));
                 Assert.IsTrue(_subscriptionManager.IsSubscribed(Symbols.AAPL, TickType.Trade));
@@ -54,60 +60,84 @@ namespace QuantConnect.Tests.Common.Data
 
             for (int i = 9; i >= 0; i--)
             {
-                _subscriptionManager.Unsubscribe(GetSubscriptionDataConfig<QuoteBar>(Symbols.AAPL, Resolution.Minute));
+                _subscriptionManager.Unsubscribe(
+                    GetSubscriptionDataConfig<QuoteBar>(Symbols.AAPL, Resolution.Minute)
+                );
 
                 Assert.AreEqual(i > 0, _subscriptionManager.GetSubscribedSymbols().Count() == 1);
-                Assert.AreEqual(i > 0, _subscriptionManager.GetSubscribedSymbols().Contains(Symbols.AAPL));
-                Assert.AreEqual(i > 0, _subscriptionManager.IsSubscribed(Symbols.AAPL, TickType.Quote));
+                Assert.AreEqual(
+                    i > 0,
+                    _subscriptionManager.GetSubscribedSymbols().Contains(Symbols.AAPL)
+                );
+                Assert.AreEqual(
+                    i > 0,
+                    _subscriptionManager.IsSubscribed(Symbols.AAPL, TickType.Quote)
+                );
             }
         }
-
 
         [TestCase(typeof(TradeBar), TickType.Trade)]
         [TestCase(typeof(QuoteBar), TickType.Quote)]
         [TestCase(typeof(OpenInterest), TickType.OpenInterest)]
         public void SubscribeSinglePerChannel(Type type, TickType tickType)
         {
-            using var subscriptionManager = new FakeDataQueuehandlerSubscriptionManager((t) => t.ToString());
+            using var subscriptionManager = new FakeDataQueuehandlerSubscriptionManager(
+                (t) => t.ToString()
+            );
 
-            subscriptionManager.Subscribe(GetSubscriptionDataConfig(type, Symbols.AAPL, Resolution.Minute));
+            subscriptionManager.Subscribe(
+                GetSubscriptionDataConfig(type, Symbols.AAPL, Resolution.Minute)
+            );
 
             Assert.AreEqual(1, subscriptionManager.GetSubscribedSymbols().Count());
             Assert.Contains(Symbols.AAPL, subscriptionManager.GetSubscribedSymbols().ToArray());
 
             foreach (var value in Enum.GetValues(typeof(TickType)))
             {
-                Assert.AreEqual(tickType == (TickType)value, subscriptionManager.IsSubscribed(Symbols.AAPL, (TickType)value));
+                Assert.AreEqual(
+                    tickType == (TickType)value,
+                    subscriptionManager.IsSubscribed(Symbols.AAPL, (TickType)value)
+                );
             }
         }
 
         [Test]
         public void SubscribeManyPerChannel()
         {
-            using var subscriptionManager = new FakeDataQueuehandlerSubscriptionManager((t) => t.ToString());
+            using var subscriptionManager = new FakeDataQueuehandlerSubscriptionManager(
+                (t) => t.ToString()
+            );
 
             for (int i = 0; i < 5; i++)
             {
-                subscriptionManager.Subscribe(GetSubscriptionDataConfig<TradeBar>(Symbols.AAPL, Resolution.Minute));
+                subscriptionManager.Subscribe(
+                    GetSubscriptionDataConfig<TradeBar>(Symbols.AAPL, Resolution.Minute)
+                );
             }
 
             Assert.IsTrue(subscriptionManager.IsSubscribed(Symbols.AAPL, TickType.Trade));
             Assert.IsFalse(subscriptionManager.IsSubscribed(Symbols.AAPL, TickType.Quote));
 
-            subscriptionManager.Subscribe(GetSubscriptionDataConfig<QuoteBar>(Symbols.AAPL, Resolution.Minute));
+            subscriptionManager.Subscribe(
+                GetSubscriptionDataConfig<QuoteBar>(Symbols.AAPL, Resolution.Minute)
+            );
 
             Assert.IsTrue(subscriptionManager.IsSubscribed(Symbols.AAPL, TickType.Trade));
             Assert.IsTrue(subscriptionManager.IsSubscribed(Symbols.AAPL, TickType.Quote));
 
             for (int i = 0; i < 5; i++)
             {
-                subscriptionManager.Unsubscribe(GetSubscriptionDataConfig<TradeBar>(Symbols.AAPL, Resolution.Minute));
+                subscriptionManager.Unsubscribe(
+                    GetSubscriptionDataConfig<TradeBar>(Symbols.AAPL, Resolution.Minute)
+                );
             }
 
             Assert.IsFalse(subscriptionManager.IsSubscribed(Symbols.AAPL, TickType.Trade));
             Assert.IsTrue(subscriptionManager.IsSubscribed(Symbols.AAPL, TickType.Quote));
 
-            subscriptionManager.Unsubscribe(GetSubscriptionDataConfig<QuoteBar>(Symbols.AAPL, Resolution.Minute));
+            subscriptionManager.Unsubscribe(
+                GetSubscriptionDataConfig<QuoteBar>(Symbols.AAPL, Resolution.Minute)
+            );
 
             Assert.IsFalse(subscriptionManager.IsSubscribed(Symbols.AAPL, TickType.Trade));
             Assert.IsFalse(subscriptionManager.IsSubscribed(Symbols.AAPL, TickType.Quote));
@@ -115,7 +145,12 @@ namespace QuantConnect.Tests.Common.Data
 
         #region helper
 
-        private SubscriptionDataConfig GetSubscriptionDataConfig(Type T, Symbol symbol, Resolution resolution, TickType? tickType = null)
+        private SubscriptionDataConfig GetSubscriptionDataConfig(
+            Type T,
+            Symbol symbol,
+            Resolution resolution,
+            TickType? tickType = null
+        )
         {
             return new SubscriptionDataConfig(
                 T,
@@ -126,10 +161,14 @@ namespace QuantConnect.Tests.Common.Data
                 true,
                 true,
                 false,
-                tickType: tickType);
+                tickType: tickType
+            );
         }
 
-        protected SubscriptionDataConfig GetSubscriptionDataConfig<T>(Symbol symbol, Resolution resolution)
+        protected SubscriptionDataConfig GetSubscriptionDataConfig<T>(
+            Symbol symbol,
+            Resolution resolution
+        )
         {
             return new SubscriptionDataConfig(
                 typeof(T),
@@ -139,7 +178,8 @@ namespace QuantConnect.Tests.Common.Data
                 TimeZones.Utc,
                 true,
                 true,
-                false);
+                false
+            );
         }
 
         #endregion

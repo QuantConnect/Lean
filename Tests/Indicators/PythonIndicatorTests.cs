@@ -22,9 +22,9 @@ using NUnit.Framework;
 using Python.Runtime;
 using QuantConnect.Algorithm;
 using QuantConnect.Data;
+using QuantConnect.Data.Market;
 using QuantConnect.Indicators;
 using QuantConnect.Tests.Engine.DataFeeds;
-using QuantConnect.Data.Market;
 
 namespace QuantConnect.Tests.Indicators
 {
@@ -71,7 +71,8 @@ class CustomSimpleMovingAverage(PythonIndicator):
         return count == self.queue.maxlen
 "
                 );
-                var indicator = module.GetAttr("CustomSimpleMovingAverage")
+                var indicator = module
+                    .GetAttr("CustomSimpleMovingAverage")
                     .Invoke("custom".ToPython(), period.ToPython());
 
                 return indicator;
@@ -112,7 +113,10 @@ class CustomSimpleMovingAverage(PythonIndicator):
                     }
                     if (closeIndex * targetIndex < 0)
                     {
-                        Assert.Fail($"Didn't find one of 'Close' or '{line}' in the header: ", TestColumnName);
+                        Assert.Fail(
+                            $"Didn't find one of 'Close' or '{line}' in the header: ",
+                            TestColumnName
+                        );
                     }
 
                     continue;
@@ -134,14 +138,15 @@ class CustomSimpleMovingAverage(PythonIndicator):
             }
         }
 
-        protected override Action<IndicatorBase<IBaseData>, double> Assertion => (indicator, expected) =>
-            Assert.AreEqual(expected, (double) indicator.Current.Value, 1e-2);
+        protected override Action<IndicatorBase<IBaseData>, double> Assertion =>
+            (indicator, expected) =>
+                Assert.AreEqual(expected, (double)indicator.Current.Value, 1e-2);
 
         [Test]
         public void SmaComputesCorrectly()
         {
             var sma = new SimpleMovingAverage(4);
-            var data = new[] {1m, 10m, 100m, 1000m, 10000m, 1234m, 56789m};
+            var data = new[] { 1m, 10m, 100m, 1000m, 10000m, 1234m, 56789m };
 
             var seen = new List<decimal>();
             for (int i = 0; i < data.Length; i++)
@@ -149,7 +154,10 @@ class CustomSimpleMovingAverage(PythonIndicator):
                 var datum = data[i];
                 seen.Add(datum);
                 sma.Update(new IndicatorDataPoint(DateTime.Now.AddSeconds(i), datum));
-                Assert.AreEqual(Enumerable.Reverse(seen).Take(sma.Period).Average(), sma.Current.Value);
+                Assert.AreEqual(
+                    Enumerable.Reverse(seen).Take(sma.Period).Average(),
+                    sma.Current.Value
+                );
             }
         }
 
@@ -212,15 +220,21 @@ class BadCustomIndicator(PythonIndicator):
                 );
 
                 var goodIndicator = module.GetAttr("GoodCustomIndicator").Invoke();
-                Assert.DoesNotThrow(() => algorithm.RegisterIndicator(spy, goodIndicator, Resolution.Minute));
+                Assert.DoesNotThrow(
+                    () => algorithm.RegisterIndicator(spy, goodIndicator, Resolution.Minute)
+                );
 
-                var actual = algorithm.SubscriptionManager.Subscriptions
-                    .FirstOrDefault(config => config.TickType == TickType.Trade)
+                var actual = algorithm
+                    .SubscriptionManager.Subscriptions.FirstOrDefault(config =>
+                        config.TickType == TickType.Trade
+                    )
                     .Consolidators.Count;
                 Assert.AreEqual(1, actual);
 
                 var badIndicator = module.GetAttr("BadCustomIndicator").Invoke();
-                Assert.Throws<NotImplementedException>(() => algorithm.RegisterIndicator(spy, badIndicator, Resolution.Minute));
+                Assert.Throws<NotImplementedException>(
+                    () => algorithm.RegisterIndicator(spy, badIndicator, Resolution.Minute)
+                );
             }
         }
 
@@ -237,26 +251,27 @@ class BadCustomIndicator(PythonIndicator):
             //Setup Python Indicator and Consolidator
             using (Py.GIL())
             {
-                var module = PyModule.FromString(Guid.NewGuid().ToString(),
-                    "from AlgorithmImports import *\n" +
-                    "consolidator = QuoteBarConsolidator(timedelta(days = 5)) \n" +
-                    "timeDelta = timedelta(days=2)\n" +
-                    "class CustomIndicator(PythonIndicator):\n" +
-                    "   def __init__(self):\n" +
-                    "       self.value = 0\n" +
-                    "   def update(self, input):\n" +
-                    "       self.value = input.value\n" +
-                    "       return True\n" +
-                    "class CustomConsolidator(PythonConsolidator):\n" +
-                    "   def __init__(self):\n" +
-                    "       self.input_type = QuoteBar\n" +
-                    "       self.output_type = QuoteBar\n" +
-                    "       self.consolidated = None\n" +
-                    "       self.working_data = None\n" +
-                    "   def update(self, data):\n" +
-                    "       pass\n" +
-                    "   def scan(self, time):\n" +
-                    "       pass\n"
+                var module = PyModule.FromString(
+                    Guid.NewGuid().ToString(),
+                    "from AlgorithmImports import *\n"
+                        + "consolidator = QuoteBarConsolidator(timedelta(days = 5)) \n"
+                        + "timeDelta = timedelta(days=2)\n"
+                        + "class CustomIndicator(PythonIndicator):\n"
+                        + "   def __init__(self):\n"
+                        + "       self.value = 0\n"
+                        + "   def update(self, input):\n"
+                        + "       self.value = input.value\n"
+                        + "       return True\n"
+                        + "class CustomConsolidator(PythonConsolidator):\n"
+                        + "   def __init__(self):\n"
+                        + "       self.input_type = QuoteBar\n"
+                        + "       self.output_type = QuoteBar\n"
+                        + "       self.consolidated = None\n"
+                        + "       self.working_data = None\n"
+                        + "   def update(self, data):\n"
+                        + "       pass\n"
+                        + "   def scan(self, time):\n"
+                        + "       pass\n"
                 );
 
                 //Get our variables from Python
@@ -267,10 +282,14 @@ class BadCustomIndicator(PythonIndicator):
                 var TimeDelta = module.GetAttr("timeDelta");
 
                 //Test 1: Using a C# Consolidator; Should convert consolidator into IDataConsolidator
-                Assert.DoesNotThrow(() => algorithm.RegisterIndicator(spy, PyIndicator, Consolidator));
+                Assert.DoesNotThrow(
+                    () => algorithm.RegisterIndicator(spy, PyIndicator, Consolidator)
+                );
 
                 //Test 2: Using a Python Consolidator; Should wrap consolidator
-                Assert.DoesNotThrow(() => algorithm.RegisterIndicator(spy, PyIndicator, PyConsolidator));
+                Assert.DoesNotThrow(
+                    () => algorithm.RegisterIndicator(spy, PyIndicator, PyConsolidator)
+                );
 
                 //Test 3: Using a timedelta object; Should convert timedelta to timespan
                 Assert.DoesNotThrow(() => algorithm.RegisterIndicator(spy, PyIndicator, TimeDelta));
@@ -278,12 +297,28 @@ class BadCustomIndicator(PythonIndicator):
         }
 
         //Test 1: Using a C# Consolidator; Should convert consolidator into IDataConsolidator and fail because of the InputType
-        [TestCase("consolidator", false, "Type mismatch found between consolidator and symbol. Symbol: SPY does not support input type: QuoteBar. Supported types: TradeBar.")]
+        [TestCase(
+            "consolidator",
+            false,
+            "Type mismatch found between consolidator and symbol. Symbol: SPY does not support input type: QuoteBar. Supported types: TradeBar."
+        )]
         //Test 2: Using a Python Consolidator; Should wrap consolidator and fail because of the InputType
-        [TestCase("CustomConsolidator", true, "Type mismatch found between consolidator and symbol. Symbol: SPY does not support input type: QuoteBar. Supported types: TradeBar.")]
+        [TestCase(
+            "CustomConsolidator",
+            true,
+            "Type mismatch found between consolidator and symbol. Symbol: SPY does not support input type: QuoteBar. Supported types: TradeBar."
+        )]
         //Test 3: Using an invalid consolidator; Should try to convert into C#, Python Consolidator and timedelta and fail as the type is invalid
-        [TestCase("InvalidConsolidator", true, "Invalid third argument, should be either a valid consolidator or timedelta object. The following exception was thrown: ")]
-        public void AllPythonRegisterIndicatorBadCases(string consolidatorName, bool needsInvoke, string expectedMessage)
+        [TestCase(
+            "InvalidConsolidator",
+            true,
+            "Invalid third argument, should be either a valid consolidator or timedelta object. The following exception was thrown: "
+        )]
+        public void AllPythonRegisterIndicatorBadCases(
+            string consolidatorName,
+            bool needsInvoke,
+            string expectedMessage
+        )
         {
             //This test covers all three bad cases of registering a indicator through Python
 
@@ -296,27 +331,28 @@ class BadCustomIndicator(PythonIndicator):
             //Setup Python Indicator and Consolidator
             using (Py.GIL())
             {
-                var module = PyModule.FromString(Guid.NewGuid().ToString(),
-                    "from AlgorithmImports import *\n" +
-                    "consolidator = QuoteBarConsolidator(timedelta(days = 5)) \n" +
-                    "class CustomIndicator(PythonIndicator):\n" +
-                    "   def __init__(self):\n" +
-                    "       self.value = 0\n" +
-                    "   def update(self, input):\n" +
-                    "       self.value = input.value\n" +
-                    "       return True\n" +
-                    "class CustomConsolidator(PythonConsolidator):\n" +
-                    "   def __init__(self):\n" +
-                    "       self.input_type = QuoteBar\n" +
-                    "       self.output_type = QuoteBar\n" +
-                    "       self.consolidated = None\n" +
-                    "       self.working_data = None\n" +
-                    "   def update(self, data):\n" +
-                    "       pass\n" +
-                    "   def scan(self, time):\n" +
-                    "       pass\n" +
-                    "class InvalidConsolidator:\n" +
-                    "   pass\n"
+                var module = PyModule.FromString(
+                    Guid.NewGuid().ToString(),
+                    "from AlgorithmImports import *\n"
+                        + "consolidator = QuoteBarConsolidator(timedelta(days = 5)) \n"
+                        + "class CustomIndicator(PythonIndicator):\n"
+                        + "   def __init__(self):\n"
+                        + "       self.value = 0\n"
+                        + "   def update(self, input):\n"
+                        + "       self.value = input.value\n"
+                        + "       return True\n"
+                        + "class CustomConsolidator(PythonConsolidator):\n"
+                        + "   def __init__(self):\n"
+                        + "       self.input_type = QuoteBar\n"
+                        + "       self.output_type = QuoteBar\n"
+                        + "       self.consolidated = None\n"
+                        + "       self.working_data = None\n"
+                        + "   def update(self, data):\n"
+                        + "       pass\n"
+                        + "   def scan(self, time):\n"
+                        + "       pass\n"
+                        + "class InvalidConsolidator:\n"
+                        + "   pass\n"
                 );
 
                 //Get our variables from Python
@@ -327,9 +363,11 @@ class BadCustomIndicator(PythonIndicator):
                     Consolidator = Consolidator.Invoke();
                 }
 
-                #pragma warning disable CS0618
-                var exception = Assert.Throws<ArgumentException>(() => algorithm.RegisterIndicator(spy, PyIndicator, Consolidator));
-                #pragma warning restore CS0618
+#pragma warning disable CS0618
+                var exception = Assert.Throws<ArgumentException>(
+                    () => algorithm.RegisterIndicator(spy, PyIndicator, Consolidator)
+                );
+#pragma warning restore CS0618
                 Assert.That(exception.Message, Is.EqualTo(expectedMessage));
             }
         }
@@ -360,7 +398,8 @@ class CustomSimpleMovingAverage(PythonIndicator):
         return count == self.queue.maxlen
 "
                 );
-                var pythonIndicator = module.GetAttr("CustomSimpleMovingAverage")
+                var pythonIndicator = module
+                    .GetAttr("CustomSimpleMovingAverage")
                     .Invoke("custom".ToPython(), 14.ToPython());
                 var SMAWithWarmUpPeriod = new PythonIndicator(pythonIndicator);
                 var reference = new DateTime(2000, 1, 1, 0, 0, 0);
@@ -371,7 +410,16 @@ class CustomSimpleMovingAverage(PythonIndicator):
 
                 for (var i = 0; i < period; i++)
                 {
-                    SMAWithWarmUpPeriod.Update(new TradeBar() { Symbol = Symbols.AAPL, Low = 1, High = 2, Volume = 100, Time = reference.AddDays(1 + i) });
+                    SMAWithWarmUpPeriod.Update(
+                        new TradeBar()
+                        {
+                            Symbol = Symbols.AAPL,
+                            Low = 1,
+                            High = 2,
+                            Volume = 100,
+                            Time = reference.AddDays(1 + i)
+                        }
+                    );
                     Assert.AreEqual(i == period - 1, SMAWithWarmUpPeriod.IsReady);
                 }
             }
@@ -402,7 +450,8 @@ class CustomSimpleMovingAverage(PythonIndicator):
         return count == self.queue.maxlen
 "
                 );
-                var pythonIndicator = module.GetAttr("CustomSimpleMovingAverage")
+                var pythonIndicator = module
+                    .GetAttr("CustomSimpleMovingAverage")
                     .Invoke("custom".ToPython(), 14.ToPython());
                 var indicator = new PythonIndicator(pythonIndicator);
 
@@ -486,14 +535,17 @@ class CustomSimpleMovingAverage(PythonIndicator):
         {
             var parameter = new RegressionTests.AlgorithmStatisticsTestParameters(
                 "CustomIndicatorWithExtensionAlgorithm",
-                new (),
+                new(),
                 Language.Python,
-                AlgorithmStatus.Completed);
+                AlgorithmStatus.Completed
+            );
 
-            AlgorithmRunner.RunLocalBacktest(parameter.Algorithm,
+            AlgorithmRunner.RunLocalBacktest(
+                parameter.Algorithm,
                 parameter.Statistics,
                 parameter.Language,
-                parameter.ExpectedFinalStatus);
+                parameter.ExpectedFinalStatus
+            );
         }
 
         /// <summary>
@@ -501,17 +553,13 @@ class CustomSimpleMovingAverage(PythonIndicator):
         /// we skip the test
         /// </summary>
         [Test]
-        public override void AcceptsRenkoBarsAsInput()
-        {
-        }
+        public override void AcceptsRenkoBarsAsInput() { }
 
         /// <summary>
         /// The external test file of this indicator does not define market data. Therefore
         /// we skip the test
         /// </summary>
         [Test]
-        public override void AcceptsVolumeRenkoBarsAsInput()
-        {
-        }
+        public override void AcceptsVolumeRenkoBarsAsInput() { }
     }
 }

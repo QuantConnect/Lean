@@ -34,7 +34,9 @@ namespace QuantConnect
         public string Name { get; set; } = string.Empty;
 
         /// Type of the Chart, Overlayed or Stacked.
-        [Obsolete("ChartType is now obsolete. Please use Series indexes instead by setting index in the series constructor.")]
+        [Obsolete(
+            "ChartType is now obsolete. Please use Series indexes instead by setting index in the series constructor."
+        )]
         public ChartType ChartType { get; set; } = ChartType.Overlay;
 
         /// List of Series Objects for this Chart:
@@ -63,7 +65,9 @@ namespace QuantConnect
         /// </summary>
         /// <param name="name">Name of the Chart</param>
         /// <param name="type"> Type of the chart</param>
-        [Obsolete("ChartType is now obsolete and ignored in charting. Please use Series indexes instead by setting index in the series constructor.")]
+        [Obsolete(
+            "ChartType is now obsolete and ignored in charting. Please use Series indexes instead by setting index in the series constructor."
+        )]
         public Chart(string name, ChartType type = ChartType.Overlay)
         {
             Name = name;
@@ -75,9 +79,8 @@ namespace QuantConnect
         /// Constructor for a chart
         /// </summary>
         /// <param name="name">String name of the chart</param>
-        public Chart(string name) : this(name, null)
-        {
-        }
+        public Chart(string name)
+            : this(name, null) { }
 
         /// <summary>
         /// Constructor for a chart
@@ -104,7 +107,9 @@ namespace QuantConnect
             }
             else
             {
-                throw new DuplicateNameException($"Chart.AddSeries(): ${Messages.Chart.ChartSeriesAlreadyExists}");
+                throw new DuplicateNameException(
+                    $"Chart.AddSeries(): ${Messages.Chart.ChartSeriesAlreadyExists}"
+                );
             }
         }
 
@@ -118,8 +123,15 @@ namespace QuantConnect
         /// <param name="color">Color of the series</param>
         /// <param name="symbol">Symbol for the marker in a scatter plot series</param>
         /// <param name="forceAddNew">True will always add a new Series instance, stepping on existing if any</param>
-        public Series TryAddAndGetSeries(string name, SeriesType type, int index, string unit,
-                                      Color color, ScatterMarkerSymbol symbol, bool forceAddNew = false)
+        public Series TryAddAndGetSeries(
+            string name,
+            SeriesType type,
+            int index,
+            string unit,
+            Color color,
+            ScatterMarkerSymbol symbol,
+            bool forceAddNew = false
+        )
         {
             BaseSeries series;
             if (forceAddNew || !Series.TryGetValue(name, out series))
@@ -141,7 +153,11 @@ namespace QuantConnect
         /// <param name="name">Name of the series</param>
         /// <param name="templateSeries">Series to be used as a template. It will be clone without values if the series is added to the chart</param>
         /// <param name="forceAddNew">True will always add a new Series instance, stepping on existing if any</param>
-        public BaseSeries TryAddAndGetSeries(string name, BaseSeries templateSeries, bool forceAddNew = false)
+        public BaseSeries TryAddAndGetSeries(
+            string name,
+            BaseSeries templateSeries,
+            bool forceAddNew = false
+        )
         {
             BaseSeries chartSeries;
             if (forceAddNew || !Series.TryGetValue(name, out chartSeries))
@@ -206,6 +222,7 @@ namespace QuantConnect
     {
         /// Overlayed stacked (0)
         Overlay,
+
         /// Stacked series on top of each other. (1)
         Stacked
     }

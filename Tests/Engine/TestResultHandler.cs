@@ -40,7 +40,8 @@ namespace QuantConnect.Tests.Engine
         private AlgorithmNodePacket _job = new BacktestNodePacket();
 
         private readonly Action<Packet> _packetHandler;
-        private readonly CancellationTokenSource _cancellationTokenSource = new CancellationTokenSource();
+        private readonly CancellationTokenSource _cancellationTokenSource =
+            new CancellationTokenSource();
 
         public new ConcurrentQueue<Packet> Messages { get; set; }
         public new ConcurrentDictionary<string, Chart> Charts { get; set; }
@@ -81,24 +82,23 @@ namespace QuantConnect.Tests.Engine
             _job = parameters.Job;
         }
 
-        protected override void Run()
-        {
-        }
+        protected override void Run() { }
 
         public virtual void DebugMessage(string message)
         {
-            Messages.Enqueue(new DebugPacket(_job.ProjectId, _job.AlgorithmId, _job.CompileId, message));
+            Messages.Enqueue(
+                new DebugPacket(_job.ProjectId, _job.AlgorithmId, _job.CompileId, message)
+            );
         }
 
         public void SystemDebugMessage(string message)
         {
-            Messages.Enqueue(new SystemDebugPacket(_job.ProjectId, _job.AlgorithmId, _job.CompileId, message));
+            Messages.Enqueue(
+                new SystemDebugPacket(_job.ProjectId, _job.AlgorithmId, _job.CompileId, message)
+            );
         }
 
-
-        public void SecurityType(List<SecurityType> types)
-        {
-        }
+        public void SecurityType(List<SecurityType> types) { }
 
         public void LogMessage(string message)
         {
@@ -112,14 +112,21 @@ namespace QuantConnect.Tests.Engine
 
         public void RuntimeError(string message, string stacktrace = "")
         {
-            Messages.Enqueue(new RuntimeErrorPacket(_job.UserId, _job.AlgorithmId, message, stacktrace));
+            Messages.Enqueue(
+                new RuntimeErrorPacket(_job.UserId, _job.AlgorithmId, message, stacktrace)
+            );
         }
 
-        public void BrokerageMessage(BrokerageMessageEvent brokerageMessageEvent)
-        {
-        }
+        public void BrokerageMessage(BrokerageMessageEvent brokerageMessageEvent) { }
 
-        protected override void Sample(string chartName, string seriesName, int seriesIndex, SeriesType seriesType, ISeriesPoint value, string unit = "$")
+        protected override void Sample(
+            string chartName,
+            string seriesName,
+            int seriesIndex,
+            SeriesType seriesType,
+            ISeriesPoint value,
+            string unit = "$"
+        )
         {
             //Add a copy locally:
             if (!Charts.ContainsKey(chartName))
@@ -130,16 +137,15 @@ namespace QuantConnect.Tests.Engine
             //Add the sample to our chart:
             if (!Charts[chartName].Series.ContainsKey(seriesName))
             {
-                Charts[chartName].Series.Add(seriesName, new Series(seriesName, seriesType, seriesIndex, unit));
+                Charts[chartName]
+                    .Series.Add(seriesName, new Series(seriesName, seriesType, seriesIndex, unit));
             }
 
             //Add our value:
             Charts[chartName].Series[seriesName].Values.Add(value);
         }
 
-        protected override void AddToLogStore(string message)
-        {
-        }
+        protected override void AddToLogStore(string message) { }
 
         protected void SampleRange(List<Chart> updates)
         {
@@ -157,7 +163,16 @@ namespace QuantConnect.Tests.Engine
                     //If we don't already have this record, its the first packet
                     if (!Charts[update.Name].Series.ContainsKey(series.Name))
                     {
-                        Charts[update.Name].Series.Add(series.Name, new Series(series.Name, series.SeriesType, series.Index, series.Unit));
+                        Charts[update.Name]
+                            .Series.Add(
+                                series.Name,
+                                new Series(
+                                    series.Name,
+                                    series.SeriesType,
+                                    series.Index,
+                                    series.Unit
+                                )
+                            );
                     }
 
                     //We already have this record, so just the new samples to the end:
@@ -166,25 +181,15 @@ namespace QuantConnect.Tests.Engine
             }
         }
 
-        public void SetAlgorithm(IAlgorithm algorithm, decimal startingPortfolioValue)
-        {
-        }
+        public void SetAlgorithm(IAlgorithm algorithm, decimal startingPortfolioValue) { }
 
-        protected override void StoreResult(Packet packet)
-        {
-        }
+        protected override void StoreResult(Packet packet) { }
 
-        public void SendStatusUpdate(AlgorithmStatus status, string message = "")
-        {
-        }
+        public void SendStatusUpdate(AlgorithmStatus status, string message = "") { }
 
-        public void RuntimeStatistic(string key, string value)
-        {
-        }
+        public void RuntimeStatistic(string key, string value) { }
 
-        public override void OrderEvent(OrderEvent newEvent)
-        {
-        }
+        public override void OrderEvent(OrderEvent newEvent) { }
 
         public override void Exit()
         {
@@ -192,25 +197,17 @@ namespace QuantConnect.Tests.Engine
             _cancellationTokenSource.DisposeSafely();
         }
 
-        public void ProcessSynchronousEvents(bool forceProcess = false)
-        {
-        }
+        public void ProcessSynchronousEvents(bool forceProcess = false) { }
 
         public StatisticsResults StatisticsResults()
         {
             return new StatisticsResults();
         }
 
-        public void SetSummaryStatistic(string name, string value)
-        {
-        }
+        public void SetSummaryStatistic(string name, string value) { }
 
-        public void AlgorithmTagsUpdated(HashSet<string> tags)
-        {
-        }
+        public void AlgorithmTagsUpdated(HashSet<string> tags) { }
 
-        public void AlgorithmNameUpdated(string name)
-        {
-        }
+        public void AlgorithmNameUpdated(string name) { }
     }
 }

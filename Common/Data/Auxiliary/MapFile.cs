@@ -60,7 +60,10 @@ namespace QuantConnect.Data.Auxiliary
         {
             if (string.IsNullOrEmpty(permtick))
             {
-                throw new ArgumentNullException(nameof(permtick), "Provided ticker is null or empty");
+                throw new ArgumentNullException(
+                    nameof(permtick),
+                    "Provided ticker is null or empty"
+                );
             }
 
             Permtick = permtick.LazyToUpper();
@@ -103,14 +106,21 @@ namespace QuantConnect.Data.Auxiliary
         /// <param name="defaultReturnValue">Default return value if search was got no result.</param>
         /// <param name="dataMappingMode">The mapping mode to use if any.</param>
         /// <returns>Symbol on this date.</returns>
-        public string GetMappedSymbol(DateTime searchDate, string defaultReturnValue = "", DataMappingMode? dataMappingMode = null)
+        public string GetMappedSymbol(
+            DateTime searchDate,
+            string defaultReturnValue = "",
+            DataMappingMode? dataMappingMode = null
+        )
         {
             var mappedSymbol = defaultReturnValue;
             //Iterate backwards to find the most recent factor:
             for (var i = 0; i < _data.Count; i++)
             {
                 var row = _data[i];
-                if (row.Date < searchDate || row.DataMappingMode.HasValue && row.DataMappingMode != dataMappingMode)
+                if (
+                    row.Date < searchDate
+                    || row.DataMappingMode.HasValue && row.DataMappingMode != dataMappingMode
+                )
                 {
                     continue;
                 }
@@ -155,7 +165,11 @@ namespace QuantConnect.Data.Auxiliary
         /// <param name="securityType">The map file security type</param>
         public void WriteToCsv(string market, SecurityType securityType)
         {
-            var filePath = Path.Combine(Globals.DataFolder, GetRelativeMapFilePath(market, securityType), Permtick.ToLowerInvariant() + ".csv");
+            var filePath = Path.Combine(
+                Globals.DataFolder,
+                GetRelativeMapFilePath(market, securityType),
+                Permtick.ToLowerInvariant() + ".csv"
+            );
             var fileDir = Path.GetDirectoryName(filePath);
 
             if (!Directory.Exists(fileDir))
@@ -214,30 +228,43 @@ namespace QuantConnect.Data.Auxiliary
         /// <param name="securityType">The map file security type</param>
         /// <param name="dataProvider">The data provider instance to use</param>
         /// <returns>An enumerable of all map files</returns>
-        public static IEnumerable<MapFile> GetMapFiles(string mapFileDirectory, string market, SecurityType securityType, IDataProvider dataProvider)
+        public static IEnumerable<MapFile> GetMapFiles(
+            string mapFileDirectory,
+            string market,
+            SecurityType securityType,
+            IDataProvider dataProvider
+        )
         {
             var mapFiles = new List<MapFile>();
-            Parallel.ForEach(Directory.EnumerateFiles(mapFileDirectory), file =>
-            {
-                if (file.EndsWith(".csv"))
+            Parallel.ForEach(
+                Directory.EnumerateFiles(mapFileDirectory),
+                file =>
                 {
-                    var permtick = Path.GetFileNameWithoutExtension(file);
-                    var fileRead = SafeMapFileRowRead(file, market, securityType, dataProvider);
-                    var mapFile = new MapFile(permtick, fileRead);
-                    lock (mapFiles)
+                    if (file.EndsWith(".csv"))
                     {
-                        // just use a list + lock, not concurrent bag, avoid garbage it creates for features we don't need here. See https://github.com/dotnet/runtime/issues/23103
-                        mapFiles.Add(mapFile);
+                        var permtick = Path.GetFileNameWithoutExtension(file);
+                        var fileRead = SafeMapFileRowRead(file, market, securityType, dataProvider);
+                        var mapFile = new MapFile(permtick, fileRead);
+                        lock (mapFiles)
+                        {
+                            // just use a list + lock, not concurrent bag, avoid garbage it creates for features we don't need here. See https://github.com/dotnet/runtime/issues/23103
+                            mapFiles.Add(mapFile);
+                        }
                     }
                 }
-            });
+            );
             return mapFiles;
         }
 
         /// <summary>
         /// Reads in the map file at the specified path, returning null if any exceptions are encountered
         /// </summary>
-        private static List<MapFileRow> SafeMapFileRowRead(string file, string market, SecurityType securityType, IDataProvider dataProvider)
+        private static List<MapFileRow> SafeMapFileRowRead(
+            string file,
+            string market,
+            SecurityType securityType,
+            IDataProvider dataProvider
+        )
         {
             try
             {

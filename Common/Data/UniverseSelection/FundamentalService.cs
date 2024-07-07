@@ -14,10 +14,10 @@
 */
 
 using System;
-using QuantConnect.Util;
-using QuantConnect.Interfaces;
 using QuantConnect.Configuration;
 using QuantConnect.Data.Fundamental;
+using QuantConnect.Interfaces;
+using QuantConnect.Util;
 
 namespace QuantConnect.Data.UniverseSelection
 {
@@ -35,7 +35,11 @@ namespace QuantConnect.Data.UniverseSelection
         /// <param name="liveMode">True if running in live mode</param>
         public static void Initialize(IDataProvider dataProvider, bool liveMode)
         {
-            Initialize(dataProvider, Config.Get("fundamental-data-provider", nameof(CoarseFundamentalDataProvider)), liveMode);
+            Initialize(
+                dataProvider,
+                Config.Get("fundamental-data-provider", nameof(CoarseFundamentalDataProvider)),
+                liveMode
+            );
         }
 
         /// <summary>
@@ -44,9 +48,19 @@ namespace QuantConnect.Data.UniverseSelection
         /// <param name="dataProvider">The data provider instance to use</param>
         /// <param name="fundamentalDataProvider">The fundamental data provider</param>
         /// <param name="liveMode">True if running in live mode</param>
-        public static void Initialize(IDataProvider dataProvider, string fundamentalDataProvider, bool liveMode)
+        public static void Initialize(
+            IDataProvider dataProvider,
+            string fundamentalDataProvider,
+            bool liveMode
+        )
         {
-            Initialize(dataProvider, Composer.Instance.GetExportedValueByTypeName<IFundamentalDataProvider>(fundamentalDataProvider), liveMode);
+            Initialize(
+                dataProvider,
+                Composer.Instance.GetExportedValueByTypeName<IFundamentalDataProvider>(
+                    fundamentalDataProvider
+                ),
+                liveMode
+            );
         }
 
         /// <summary>
@@ -55,7 +69,11 @@ namespace QuantConnect.Data.UniverseSelection
         /// <param name="dataProvider">The data provider instance to use</param>
         /// <param name="fundamentalDataProvider">The fundamental data provider</param>
         /// <param name="liveMode">True if running in live mode</param>
-        public static void Initialize(IDataProvider dataProvider, IFundamentalDataProvider fundamentalDataProvider, bool liveMode)
+        public static void Initialize(
+            IDataProvider dataProvider,
+            IFundamentalDataProvider fundamentalDataProvider,
+            bool liveMode
+        )
         {
             _fundamentalDataProvider = fundamentalDataProvider;
             _fundamentalDataProvider.Initialize(dataProvider, liveMode);
@@ -69,7 +87,8 @@ namespace QuantConnect.Data.UniverseSelection
         /// <param name="symbol">The symbol instance</param>
         /// <param name="name">The name of the fundamental property</param>
         /// <returns>The fundamental information</returns>
-        public static T Get<T>(DateTime time, Symbol symbol, FundamentalProperty name) => Get<T>(time, symbol.ID, name);
+        public static T Get<T>(DateTime time, Symbol symbol, FundamentalProperty name) =>
+            Get<T>(time, symbol.ID, name);
 
         /// <summary>
         /// Will fetch the requested fundamental information for the requested time and symbol
@@ -79,7 +98,11 @@ namespace QuantConnect.Data.UniverseSelection
         /// <param name="securityIdentifier">The security identifier</param>
         /// <param name="name">The name of the fundamental property</param>
         /// <returns>The fundamental information</returns>
-        public static T Get<T>(DateTime time, SecurityIdentifier securityIdentifier, FundamentalProperty name)
+        public static T Get<T>(
+            DateTime time,
+            SecurityIdentifier securityIdentifier,
+            FundamentalProperty name
+        )
         {
             return _fundamentalDataProvider.Get<T>(time.Date, securityIdentifier, name);
         }

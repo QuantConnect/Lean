@@ -45,7 +45,11 @@ namespace QuantConnect.Securities
         /// <param name="portfolio">The algorithm's portfolio</param>
         /// <param name="security">The security</param>
         /// <param name="order">The order</param>
-        public HasSufficientBuyingPowerForOrderParameters(SecurityPortfolioManager portfolio, Security security, Order order)
+        public HasSufficientBuyingPowerForOrderParameters(
+            SecurityPortfolioManager portfolio,
+            Security security,
+            Order order
+        )
         {
             Portfolio = portfolio;
             Security = security;
@@ -62,8 +66,12 @@ namespace QuantConnect.Securities
         /// <returns>New parameters instance suitable for invoking the sufficient capital method for the underlying security</returns>
         public HasSufficientBuyingPowerForOrderParameters ForUnderlying(Order order)
         {
-            var derivative = (IDerivativeSecurity) Security;
-            return new HasSufficientBuyingPowerForOrderParameters(Portfolio, derivative.Underlying, order);
+            var derivative = (IDerivativeSecurity)Security;
+            return new HasSufficientBuyingPowerForOrderParameters(
+                Portfolio,
+                derivative.Underlying,
+                order
+            );
         }
 
         /// <summary>

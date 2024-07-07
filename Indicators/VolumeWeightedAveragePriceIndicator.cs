@@ -23,7 +23,9 @@ namespace QuantConnect.Indicators
     /// It is calculated by adding up the dollars traded for every transaction (price multiplied
     /// by number of shares traded) and then dividing by the total shares traded for the day.
     /// </summary>
-    public class VolumeWeightedAveragePriceIndicator : TradeBarIndicator, IIndicatorWarmUpPeriodProvider
+    public class VolumeWeightedAveragePriceIndicator
+        : TradeBarIndicator,
+            IIndicatorWarmUpPeriodProvider
     {
         /// <summary>
         /// In this VWAP calculation, typical price is defined by (O + H + L + C) / 4
@@ -50,9 +52,7 @@ namespace QuantConnect.Indicators
         /// </summary>
         /// <param name="period">The period of the VWAP</param>
         public VolumeWeightedAveragePriceIndicator(int period)
-            : this($"VWAP({period})", period)
-        {
-        }
+            : this($"VWAP({period})", period) { }
 
         /// <summary>
         /// Initializes a new instance of the VWAP class with a given name and period

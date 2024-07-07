@@ -14,13 +14,13 @@
 */
 
 using System;
-using QuantConnect.Data;
-using QuantConnect.Orders;
-using QuantConnect.Interfaces;
 using System.Collections.Generic;
 using System.Linq;
+using QuantConnect.Data;
 using QuantConnect.Data.UniverseSelection;
 using QuantConnect.Indicators;
+using QuantConnect.Interfaces;
+using QuantConnect.Orders;
 using QuantConnect.Securities;
 using QuantConnect.Securities.Future;
 using Futures = QuantConnect.Securities.Futures;
@@ -30,7 +30,9 @@ namespace QuantConnect.Algorithm.CSharp
     /// <summary>
     /// Basic Continuous Futures Template Algorithm
     /// </summary>
-    public class BasicTemplateContinuousFutureAlgorithm : QCAlgorithm, IRegressionAlgorithmDefinition
+    public class BasicTemplateContinuousFutureAlgorithm
+        : QCAlgorithm,
+            IRegressionAlgorithmDefinition
     {
         private Future _continuousContract;
         private Security _currentContract;
@@ -45,7 +47,8 @@ namespace QuantConnect.Algorithm.CSharp
             SetStartDate(2013, 7, 1);
             SetEndDate(2014, 1, 1);
 
-            _continuousContract = AddFuture(Futures.Indices.SP500EMini,
+            _continuousContract = AddFuture(
+                Futures.Indices.SP500EMini,
                 dataNormalizationMode: DataNormalizationMode.BackwardsRatio,
                 dataMappingMode: DataMappingMode.LastTradingDay,
                 contractDepthOffset: 0
@@ -66,27 +69,35 @@ namespace QuantConnect.Algorithm.CSharp
                 Debug($"{Time} - SymbolChanged event: {changedEvent}");
                 if (Time.TimeOfDay != TimeSpan.Zero)
                 {
-                    throw new RegressionTestException($"{Time} unexpected symbol changed event {changedEvent}!");
+                    throw new RegressionTestException(
+                        $"{Time} unexpected symbol changed event {changedEvent}!"
+                    );
                 }
             }
 
             if (!Portfolio.Invested)
             {
-                if(_fast > _slow)
+                if (_fast > _slow)
                 {
                     _currentContract = Securities[_continuousContract.Mapped];
                     Buy(_currentContract.Symbol, 1);
                 }
             }
-            else if(_fast < _slow)
+            else if (_fast < _slow)
             {
                 Liquidate();
             }
 
             // We check exchange hours because the contract mapping can call OnData outside of regular hours.
-            if (_currentContract != null && _currentContract.Symbol != _continuousContract.Mapped && _continuousContract.Exchange.ExchangeOpen)
+            if (
+                _currentContract != null
+                && _currentContract.Symbol != _continuousContract.Mapped
+                && _continuousContract.Exchange.ExchangeOpen
+            )
             {
-                Log($"{Time} - rolling position from {_currentContract.Symbol} to {_continuousContract.Mapped}");
+                Log(
+                    $"{Time} - rolling position from {_currentContract.Symbol} to {_continuousContract.Mapped}"
+                );
 
                 var currentPositionSize = _currentContract.Holdings.Quantity;
                 Liquidate(_currentContract.Symbol);
@@ -133,35 +144,36 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// This is used by the regression test system to indicate what the expected statistics are from running the algorithm
         /// </summary>
-        public Dictionary<string, string> ExpectedStatistics => new Dictionary<string, string>
-        {
-            {"Total Orders", "5"},
-            {"Average Win", "2.90%"},
-            {"Average Loss", "0%"},
-            {"Compounding Annual Return", "13.087%"},
-            {"Drawdown", "1.100%"},
-            {"Expectancy", "0"},
-            {"Start Equity", "100000"},
-            {"End Equity", "106387.1"},
-            {"Net Profit", "6.387%"},
-            {"Sharpe Ratio", "1.532"},
-            {"Sortino Ratio", "871.704"},
-            {"Probabilistic Sharpe Ratio", "90.613%"},
-            {"Loss Rate", "0%"},
-            {"Win Rate", "100%"},
-            {"Profit-Loss Ratio", "0"},
-            {"Alpha", "0.088"},
-            {"Beta", "-0.022"},
-            {"Annual Standard Deviation", "0.054"},
-            {"Annual Variance", "0.003"},
-            {"Information Ratio", "-1.35"},
-            {"Tracking Error", "0.1"},
-            {"Treynor Ratio", "-3.781"},
-            {"Total Fees", "$10.75"},
-            {"Estimated Strategy Capacity", "$1100000000.00"},
-            {"Lowest Capacity Asset", "ES VMKLFZIH2MTD"},
-            {"Portfolio Turnover", "2.32%"},
-            {"OrderListHash", "2f6afca6b20a56eea9dd327dcb401682"}
-        };
+        public Dictionary<string, string> ExpectedStatistics =>
+            new Dictionary<string, string>
+            {
+                { "Total Orders", "5" },
+                { "Average Win", "2.90%" },
+                { "Average Loss", "0%" },
+                { "Compounding Annual Return", "13.087%" },
+                { "Drawdown", "1.100%" },
+                { "Expectancy", "0" },
+                { "Start Equity", "100000" },
+                { "End Equity", "106387.1" },
+                { "Net Profit", "6.387%" },
+                { "Sharpe Ratio", "1.532" },
+                { "Sortino Ratio", "871.704" },
+                { "Probabilistic Sharpe Ratio", "90.613%" },
+                { "Loss Rate", "0%" },
+                { "Win Rate", "100%" },
+                { "Profit-Loss Ratio", "0" },
+                { "Alpha", "0.088" },
+                { "Beta", "-0.022" },
+                { "Annual Standard Deviation", "0.054" },
+                { "Annual Variance", "0.003" },
+                { "Information Ratio", "-1.35" },
+                { "Tracking Error", "0.1" },
+                { "Treynor Ratio", "-3.781" },
+                { "Total Fees", "$10.75" },
+                { "Estimated Strategy Capacity", "$1100000000.00" },
+                { "Lowest Capacity Asset", "ES VMKLFZIH2MTD" },
+                { "Portfolio Turnover", "2.32%" },
+                { "OrderListHash", "2f6afca6b20a56eea9dd327dcb401682" }
+            };
     }
 }

@@ -29,7 +29,12 @@ namespace QuantConnect.Interfaces
         /// <param name="userName">Username for basic authentication</param>
         /// <param name="password">Password for basic authentication</param>
         /// <returns>String contents of file</returns>
-        string Download(string address, IEnumerable<KeyValuePair<string, string>> headers, string userName, string password);
+        string Download(
+            string address,
+            IEnumerable<KeyValuePair<string, string>> headers,
+            string userName,
+            string password
+        );
 
         /// <summary>
         /// Method for downloading data for an algorithm that can be read from a stream
@@ -39,6 +44,11 @@ namespace QuantConnect.Interfaces
         /// <param name="userName">Username for basic authentication</param>
         /// <param name="password">Password for basic authentication</param>
         /// <returns>String contents of file</returns>
-        byte[] DownloadBytes(string address, IEnumerable<KeyValuePair<string, string>> headers, string userName, string password);
+        byte[] DownloadBytes(
+            string address,
+            IEnumerable<KeyValuePair<string, string>> headers,
+            string userName,
+            string password
+        );
     }
 }

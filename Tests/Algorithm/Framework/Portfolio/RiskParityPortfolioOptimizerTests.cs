@@ -32,22 +32,22 @@ namespace QuantConnect.Tests.Algorithm.Framework.Portfolio
         [SetUp]
         public virtual void SetUp()
         {
-            var riskBudget1 = new double[] {0.5d, 0.5d};                                // equal risk distribution
-            var riskBudget2 = new double[] {0.25d, 0.75d};                              // 25% risk assigned to A, 75% risk assigned to B
+            var riskBudget1 = new double[] { 0.5d, 0.5d }; // equal risk distribution
+            var riskBudget2 = new double[] { 0.25d, 0.75d }; // 25% risk assigned to A, 75% risk assigned to B
 
-            var covariance1 = new double[][] {new[]{0.25, -0.2}, new[]{-0.2, 0.25}};    // both 50% variance, -80% correlation
-            var covariance2 = new double[][] {new[]{0.01, 0}, new[]{0, 0.04}};          // sigma(A) 10%, sigma(B) 20%, 0% correlation
-            var covariance3 = new double[][] {new[]{1, 0.45}, new[]{0.45, 0.25}};       // sigma(A) 100%, sigma(B) 50%, 90% correlation
-            var covariance4 = new double[][] {new[]{0.25, 0.05}, new[]{0.05, 0.04}};    // sigma(A) 50%, sigma(B) 10%, 25% correlation
+            var covariance1 = new double[][] { new[] { 0.25, -0.2 }, new[] { -0.2, 0.25 } }; // both 50% variance, -80% correlation
+            var covariance2 = new double[][] { new[] { 0.01, 0 }, new[] { 0, 0.04 } }; // sigma(A) 10%, sigma(B) 20%, 0% correlation
+            var covariance3 = new double[][] { new[] { 1, 0.45 }, new[] { 0.45, 0.25 } }; // sigma(A) 100%, sigma(B) 50%, 90% correlation
+            var covariance4 = new double[][] { new[] { 0.25, 0.05 }, new[] { 0.05, 0.04 } }; // sigma(A) 50%, sigma(B) 10%, 25% correlation
 
-            var expectedResult1 = new double[] {3.162278d, 3.162278d};
-            var expectedResult2 = new double[] {7.071068d, 3.535534d};
-            var expectedResult3 = new double[] {0.512989d, 1.025978d};
-            var expectedResult4 = new double[] {1.154701d, 2.886751d};
-            var expectedResult5 = new double[] {2.965685d, 3.285618d};
-            var expectedResult6 = new double[] {5d, 4.330127d};
-            var expectedResult7 = new double[] {0.264749d, 1.510089d};
-            var expectedResult8 = new double[] {0.681774d, 3.924933d};
+            var expectedResult1 = new double[] { 3.162278d, 3.162278d };
+            var expectedResult2 = new double[] { 7.071068d, 3.535534d };
+            var expectedResult3 = new double[] { 0.512989d, 1.025978d };
+            var expectedResult4 = new double[] { 1.154701d, 2.886751d };
+            var expectedResult5 = new double[] { 2.965685d, 3.285618d };
+            var expectedResult6 = new double[] { 5d, 4.330127d };
+            var expectedResult7 = new double[] { 0.264749d, 1.510089d };
+            var expectedResult8 = new double[] { 0.681774d, 3.924933d };
 
             _covariances.TryAdd(1, covariance1);
             _covariances.TryAdd(2, covariance2);
@@ -80,19 +80,37 @@ namespace QuantConnect.Tests.Algorithm.Framework.Portfolio
         [TestCase(1)]
         [TestCase(0)]
         [TestCase(1001)]
-        public void TestForExtremeNumberOfVariablesRiskParityNewtonMethodOptimization(int numberOfVariables)
+        public void TestForExtremeNumberOfVariablesRiskParityNewtonMethodOptimization(
+            int numberOfVariables
+        )
         {
             var testOptimizer = new TestRiskParityPortfolioOptimizer();
 
             if (numberOfVariables < 1 || numberOfVariables > 1000)
             {
-                var exception = Assert.Throws<ArgumentException>(() => testOptimizer.TestOptimization(numberOfVariables, new double[,]{}, new double[]{}));
-                Assert.That(exception.Message, Is.EqualTo("Argument \"numberOfVariables\" must be a positive integer between 1 and 1000"));
+                var exception = Assert.Throws<ArgumentException>(
+                    () =>
+                        testOptimizer.TestOptimization(
+                            numberOfVariables,
+                            new double[,] { },
+                            new double[] { }
+                        )
+                );
+                Assert.That(
+                    exception.Message,
+                    Is.EqualTo(
+                        "Argument \"numberOfVariables\" must be a positive integer between 1 and 1000"
+                    )
+                );
                 return;
             }
 
-            var result = testOptimizer.TestOptimization(numberOfVariables, new double[,]{}, new double[]{});
-            Assert.AreEqual(new double[] {1d}, result);
+            var result = testOptimizer.TestOptimization(
+                numberOfVariables,
+                new double[,] { },
+                new double[] { }
+            );
+            Assert.AreEqual(new double[] { 1d }, result);
         }
 
         [TestCase(1)]
@@ -108,7 +126,11 @@ namespace QuantConnect.Tests.Algorithm.Framework.Portfolio
             var testOptimizer = new TestRiskParityPortfolioOptimizer();
             var covariance = JaggedArrayTo2DArray(_covariances[testCaseNumber]);
 
-            var result = testOptimizer.TestOptimization(2, covariance, _riskBudgets[testCaseNumber]);
+            var result = testOptimizer.TestOptimization(
+                2,
+                covariance,
+                _riskBudgets[testCaseNumber]
+            );
             result = result.Select(x => Math.Round(x, 6)).ToArray();
 
             Assert.AreEqual(_expectedResults[testCaseNumber], result);
@@ -126,13 +148,20 @@ namespace QuantConnect.Tests.Algorithm.Framework.Portfolio
         {
             var testOptimizer = new TestRiskParityPortfolioOptimizer();
             var covariance = JaggedArrayTo2DArray(_covariances[testCaseNumber]);
-            var result = testOptimizer.Optimize(new double[,]{}, _riskBudgets[testCaseNumber], covariance);
+            var result = testOptimizer.Optimize(
+                new double[,] { },
+                _riskBudgets[testCaseNumber],
+                covariance
+            );
             result = result.Select(x => Math.Round(x, 6)).ToArray();
 
             var expected = _expectedResults[testCaseNumber];
-            expected = Elementwise.Divide(expected, expected.Sum()).Select(x => Math.Clamp(x, 1e-05, double.MaxValue)).ToArray();
+            expected = Elementwise
+                .Divide(expected, expected.Sum())
+                .Select(x => Math.Clamp(x, 1e-05, double.MaxValue))
+                .ToArray();
             expected = expected.Select(x => Math.Round(x, 6)).ToArray();
-            
+
             Assert.AreEqual(expected, result);
         }
 
@@ -143,8 +172,8 @@ namespace QuantConnect.Tests.Algorithm.Framework.Portfolio
 
             var result = new T[FirstDim, SecondDim];
             for (int i = 0; i < FirstDim; ++i)
-                for (int j = 0; j < SecondDim; ++j)
-                    result[i, j] = source[i][j];
+            for (int j = 0; j < SecondDim; ++j)
+                result[i, j] = source[i][j];
 
             return result;
         }
@@ -152,9 +181,7 @@ namespace QuantConnect.Tests.Algorithm.Framework.Portfolio
         private class TestRiskParityPortfolioOptimizer : RiskParityPortfolioOptimizer
         {
             public TestRiskParityPortfolioOptimizer()
-                : base()
-            {
-            }
+                : base() { }
 
             public double[] TestOptimization(int numOfVar, double[,] covariance, double[] budget)
             {

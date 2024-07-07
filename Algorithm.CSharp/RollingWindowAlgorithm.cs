@@ -32,20 +32,21 @@ namespace QuantConnect.Algorithm.CSharp
     {
         private RollingWindow<TradeBar> _window;
         private RollingWindow<IndicatorDataPoint> _smaWin;
+
         /// <summary>
         /// Initialise the data and resolution required, as well as the cash and start-end dates for your algorithm. All algorithms must initialized.
         /// </summary>
         public override void Initialize()
         {
-            SetStartDate(2013,10,1);  // Set Start Date
-            SetEndDate(2013,11,1);    // Set End Date
-            SetCash(100000);          // Set Strategy Cash
+            SetStartDate(2013, 10, 1); // Set Start Date
+            SetEndDate(2013, 11, 1); // Set End Date
+            SetCash(100000); // Set Strategy Cash
 
             // Find more symbols here: http://quantconnect.com/data
             AddEquity("SPY", Resolution.Daily);
 
             // Creates a Rolling Window indicator to keep the 2 TradeBar
-            _window = new RollingWindow<TradeBar>(2);    // For other security types, use QuoteBar
+            _window = new RollingWindow<TradeBar>(2); // For other security types, use QuoteBar
 
             // Creates an indicator and adds to a rolling window when it is updated
             var sma = SMA("SPY", 5);
@@ -63,14 +64,15 @@ namespace QuantConnect.Algorithm.CSharp
             _window.Add(slice["SPY"]);
 
             // Wait for windows to be ready.
-            if (!_window.IsReady || !_smaWin.IsReady) return;
+            if (!_window.IsReady || !_smaWin.IsReady)
+                return;
 
-            var currBar = _window[0];                   // Current bar had index zero.
-            var pastBar = _window[1];                   // Past bar has index one.
+            var currBar = _window[0]; // Current bar had index zero.
+            var pastBar = _window[1]; // Past bar has index one.
             Log($"Price: {pastBar.Time} -> {pastBar.Close} ... {currBar.Time} -> {currBar.Close}");
 
-            var currSma = _smaWin[0];                   // Current SMA had index zero.
-            var pastSma = _smaWin[_smaWin.Count - 1];   // Oldest SMA has index of window count minus 1.
+            var currSma = _smaWin[0]; // Current SMA had index zero.
+            var pastSma = _smaWin[_smaWin.Count - 1]; // Oldest SMA has index of window count minus 1.
             Log($"SMA: {pastSma.Time} -> {pastSma.Value} ... {currSma.Time} -> {currSma.Value}");
 
             if (!Portfolio.Invested && currSma > pastSma)

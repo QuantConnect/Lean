@@ -138,8 +138,15 @@ namespace QuantConnect.Tests.Common.Orders.Fills
             public TestableLatestFillModel()
             {
                 // NOTE. GetPrices will no be called before SubscriptionDataConfigProvider is set by the system
-                Parameters = new FillModelParameters(null, null, new MockSubscriptionDataConfigProvider(), Time.OneHour, null);
+                Parameters = new FillModelParameters(
+                    null,
+                    null,
+                    new MockSubscriptionDataConfigProvider(),
+                    Time.OneHour,
+                    null
+                );
             }
+
             public new Prices GetPrices(Security asset, OrderDirection direction)
             {
                 return base.GetPrices(asset, direction);

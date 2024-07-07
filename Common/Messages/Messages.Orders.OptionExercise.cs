@@ -14,7 +14,6 @@
 */
 
 using System.Runtime.CompilerServices;
-
 using QuantConnect.Securities.Option;
 
 namespace QuantConnect
@@ -34,7 +33,11 @@ namespace QuantConnect
             public static string OptionExercise = "Option Exercise";
 
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            public static string ContractHoldingsAdjustmentFillTag(bool inTheMoney, bool isAssignment, Option option)
+            public static string ContractHoldingsAdjustmentFillTag(
+                bool inTheMoney,
+                bool isAssignment,
+                Option option
+            )
             {
                 var action = isAssignment ? "Assignment" : "Exercise";
                 var tag = inTheMoney ? $"Automatic {action}" : "OTM";

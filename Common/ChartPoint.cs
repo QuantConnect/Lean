@@ -35,10 +35,7 @@ namespace QuantConnect
         [JsonIgnore]
         public DateTime Time
         {
-            get
-            {
-                return _time;
-            }
+            get { return _time; }
             set
             {
                 _time = value;
@@ -52,10 +49,7 @@ namespace QuantConnect
         /// <remarks>Lower case for javascript encoding simplicity</remarks>
         public long x
         {
-            get
-            {
-                return _x;
-            }
+            get { return _x; }
             set
             {
                 _time = QuantConnect.Time.UnixTimeStampToDateTime(value);
@@ -69,14 +63,8 @@ namespace QuantConnect
         /// <remarks>Lower case for javascript encoding simplicity</remarks>
         public decimal? y
         {
-            get
-            {
-                return _y;
-            }
-            set
-            {
-                _y = value.SmartRounding();
-            }
+            get { return _y; }
+            set { _y = value.SmartRounding(); }
         }
 
         /// <summary>

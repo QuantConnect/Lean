@@ -27,17 +27,24 @@ namespace QuantConnect.Algorithm.CSharp
     /// fixed in PR https://github.com/QuantConnect/Lean/pull/4836
     /// Adjusted data of fill forward bars should use original scale factor
     /// </summary>
-    public class ScaledFillForwardDataRegressionAlgorithm : QCAlgorithm, IRegressionAlgorithmDefinition
+    public class ScaledFillForwardDataRegressionAlgorithm
+        : QCAlgorithm,
+            IRegressionAlgorithmDefinition
     {
         private TradeBar _lastRealBar;
         private Symbol _twx;
+
         public override void Initialize()
         {
             SetStartDate(2014, 6, 5);
             SetEndDate(2014, 6, 9);
 
             _twx = AddEquity("TWX", Resolution.Minute, extendedMarketHours: true).Symbol;
-            Schedule.On(DateRules.EveryDay(_twx), TimeRules.Every(TimeSpan.FromHours(1)), PlotPrice);
+            Schedule.On(
+                DateRules.EveryDay(_twx),
+                TimeRules.Every(TimeSpan.FromHours(1)),
+                PlotPrice
+            );
         }
 
         private void PlotPrice()
@@ -57,7 +64,9 @@ namespace QuantConnect.Algorithm.CSharp
                 {
                     if (!current.IsFillForward)
                     {
-                        throw new RegressionTestException($"Was expecting a first fill forward bar {Time}");
+                        throw new RegressionTestException(
+                            $"Was expecting a first fill forward bar {Time}"
+                        );
                     }
 
                     // trade on the first bar after a factor price scale change. +10 so we fill ASAP. Limit so it fills in extended market hours
@@ -70,7 +79,9 @@ namespace QuantConnect.Algorithm.CSharp
                 }
                 else if (_lastRealBar.Close != current.Close)
                 {
-                    throw new RegressionTestException($"FillForwarded data point at {Time} was scaled. Actual: {current.Close}; Expected: {_lastRealBar.Close}");
+                    throw new RegressionTestException(
+                        $"FillForwarded data point at {Time} was scaled. Actual: {current.Close}; Expected: {_lastRealBar.Close}"
+                    );
                 }
             }
         }
@@ -111,35 +122,36 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// This is used by the regression test system to indicate what the expected statistics are from running the algorithm
         /// </summary>
-        public Dictionary<string, string> ExpectedStatistics => new Dictionary<string, string>
-        {
-            {"Total Orders", "1"},
-            {"Average Win", "0%"},
-            {"Average Loss", "0%"},
-            {"Compounding Annual Return", "45.475%"},
-            {"Drawdown", "0.800%"},
-            {"Expectancy", "0"},
-            {"Start Equity", "100000"},
-            {"End Equity", "100497.59"},
-            {"Net Profit", "0.498%"},
-            {"Sharpe Ratio", "9.126"},
-            {"Sortino Ratio", "0"},
-            {"Probabilistic Sharpe Ratio", "95.977%"},
-            {"Loss Rate", "0%"},
-            {"Win Rate", "0%"},
-            {"Profit-Loss Ratio", "0"},
-            {"Alpha", "0.439"},
-            {"Beta", "-0.184"},
-            {"Annual Standard Deviation", "0.039"},
-            {"Annual Variance", "0.002"},
-            {"Information Ratio", "-1.093"},
-            {"Tracking Error", "0.059"},
-            {"Treynor Ratio", "-1.956"},
-            {"Total Fees", "$5.00"},
-            {"Estimated Strategy Capacity", "$26000.00"},
-            {"Lowest Capacity Asset", "AOL R735QTJ8XC9X"},
-            {"Portfolio Turnover", "12.68%"},
-            {"OrderListHash", "607f85b69d45d427242a614b9619c502"}
-        };
+        public Dictionary<string, string> ExpectedStatistics =>
+            new Dictionary<string, string>
+            {
+                { "Total Orders", "1" },
+                { "Average Win", "0%" },
+                { "Average Loss", "0%" },
+                { "Compounding Annual Return", "45.475%" },
+                { "Drawdown", "0.800%" },
+                { "Expectancy", "0" },
+                { "Start Equity", "100000" },
+                { "End Equity", "100497.59" },
+                { "Net Profit", "0.498%" },
+                { "Sharpe Ratio", "9.126" },
+                { "Sortino Ratio", "0" },
+                { "Probabilistic Sharpe Ratio", "95.977%" },
+                { "Loss Rate", "0%" },
+                { "Win Rate", "0%" },
+                { "Profit-Loss Ratio", "0" },
+                { "Alpha", "0.439" },
+                { "Beta", "-0.184" },
+                { "Annual Standard Deviation", "0.039" },
+                { "Annual Variance", "0.002" },
+                { "Information Ratio", "-1.093" },
+                { "Tracking Error", "0.059" },
+                { "Treynor Ratio", "-1.956" },
+                { "Total Fees", "$5.00" },
+                { "Estimated Strategy Capacity", "$26000.00" },
+                { "Lowest Capacity Asset", "AOL R735QTJ8XC9X" },
+                { "Portfolio Turnover", "12.68%" },
+                { "OrderListHash", "607f85b69d45d427242a614b9619c502" }
+            };
     }
 }

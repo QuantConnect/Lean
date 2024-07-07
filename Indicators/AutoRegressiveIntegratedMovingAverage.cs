@@ -109,7 +109,7 @@ namespace QuantConnect.Indicators
             int maOrder,
             int period,
             bool intercept = true
-            )
+        )
             : base(name)
         {
             if (arOrder < 0 || maOrder < 0)
@@ -119,8 +119,10 @@ namespace QuantConnect.Indicators
 
             if (arOrder == 0)
             {
-                throw new ArgumentException("arOrder (p) must be greater than zero for all " +
-                    "currently available fitting methods.");
+                throw new ArgumentException(
+                    "arOrder (p) must be greater than zero for all "
+                        + "currently available fitting methods."
+                );
             }
 
             if (period < Math.Max(arOrder, maOrder))
@@ -155,11 +157,15 @@ namespace QuantConnect.Indicators
             int maOrder,
             int period,
             bool intercept
-            )
-            : this($"ARIMA(({arOrder}, {diffOrder}, {maOrder}), {period}, {intercept})", arOrder, diffOrder, maOrder,
-                period, intercept)
-        {
-        }
+        )
+            : this(
+                $"ARIMA(({arOrder}, {diffOrder}, {maOrder}), {period}, {intercept})",
+                arOrder,
+                diffOrder,
+                maOrder,
+                period,
+                intercept
+            ) { }
 
         /// <summary>
         /// Resets this indicator to its initial state
@@ -182,7 +188,10 @@ namespace QuantConnect.Indicators
             {
                 var arrayData = _rollingData.ToArray();
                 double[] diffHeads = default;
-                arrayData = _diffOrder > 0 ? DifferenceSeries(_diffOrder, arrayData, out diffHeads) : arrayData;
+                arrayData =
+                    _diffOrder > 0
+                        ? DifferenceSeries(_diffOrder, arrayData, out diffHeads)
+                        : arrayData;
                 _diffHeads = diffHeads;
                 TwoStepFit(arrayData);
                 double summants = 0;
@@ -232,7 +241,7 @@ namespace QuantConnect.Indicators
             _residuals = new List<double>();
             double errorAr = 0;
             double errorMa = 0;
-            var lags = _arOrder > 0 ? LaggedSeries(_arOrder, series) : new[] {series};
+            var lags = _arOrder > 0 ? LaggedSeries(_arOrder, series) : new[] { series };
 
             AutoRegressiveStep(lags, series, errorAr);
 
@@ -261,14 +270,20 @@ namespace QuantConnect.Indicators
                 appendedData.Add(doubles.ToArray());
             }
 
-            var maFits = Fit.MultiDim(appendedData.ToArray(), data.Skip(_maOrder).ToArray(),
-                method: DirectRegressionMethod.NormalEquations, intercept: _intercept);
+            var maFits = Fit.MultiDim(
+                appendedData.ToArray(),
+                data.Skip(_maOrder).ToArray(),
+                method: DirectRegressionMethod.NormalEquations,
+                intercept: _intercept
+            );
             for (var i = _maOrder; i < data.Length; i++) // Calculate the error assoc. with model.
             {
                 var paramVector = _intercept
                     ? Vector.Build.Dense(maFits.Skip(1).ToArray())
                     : Vector.Build.Dense(maFits);
-                var residual = data[i] - Vector.Build.Dense(appendedData[i - _maOrder]).DotProduct(paramVector);
+                var residual =
+                    data[i]
+                    - Vector.Build.Dense(appendedData[i - _maOrder]).DotProduct(paramVector);
                 errorMa += Math.Pow(residual, 2);
             }
 
@@ -297,9 +312,12 @@ namespace QuantConnect.Indicators
         private void AutoRegressiveStep(double[][] lags, double[] data, double errorAr)
         {
             double[] arFits;
-            // The function (lags[time][lagged X]) |---> ΣᵢφᵢXₜ₋ᵢ 
-            arFits = Fit.MultiDim(lags, data.Skip(_arOrder).ToArray(),
-                method: DirectRegressionMethod.NormalEquations);
+            // The function (lags[time][lagged X]) |---> ΣᵢφᵢXₜ₋ᵢ
+            arFits = Fit.MultiDim(
+                lags,
+                data.Skip(_arOrder).ToArray(),
+                method: DirectRegressionMethod.NormalEquations
+            );
             var fittedVec = Vector.Build.Dense(arFits);
 
             for (var i = 0; i < data.Length; i++) // Calculate the error assoc. with model.
@@ -310,7 +328,8 @@ namespace QuantConnect.Indicators
                     continue;
                 }
 
-                var residual = data[i] - Vector.Build.Dense(lags[i - _arOrder]).DotProduct(fittedVec);
+                var residual =
+                    data[i] - Vector.Build.Dense(lags[i - _arOrder]).DotProduct(fittedVec);
                 errorAr += Math.Pow(residual, 2);
                 _residuals.Add(residual);
             }

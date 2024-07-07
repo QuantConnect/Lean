@@ -31,7 +31,7 @@ namespace QuantConnect.Securities.Option.StrategyMatcher
         /// <param name="enumerate"></param>
         public FunctionalOptionPositionCollectionEnumerator(
             Func<OptionPositionCollection, IEnumerable<OptionPosition>> enumerate
-            )
+        )
         {
             _enumerate = enumerate;
         }

@@ -44,7 +44,11 @@ namespace QuantConnect.Data.Auxiliary
         /// <param name="symbol">The unique security identifier</param>
         /// <param name="startDateTimeLocal">Start Date Time Local</param>
         /// <param name="endDateTimeLocal">End Date Time Local</param>
-        public SymbolDateRange(Symbol symbol, DateTime startDateTimeLocal, DateTime endDateTimeLocal)
+        public SymbolDateRange(
+            Symbol symbol,
+            DateTime startDateTimeLocal,
+            DateTime endDateTimeLocal
+        )
         {
             Symbol = symbol;
             StartDateTimeLocal = startDateTimeLocal;

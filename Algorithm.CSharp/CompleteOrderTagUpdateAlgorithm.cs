@@ -16,7 +16,6 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-
 using QuantConnect.Data;
 using QuantConnect.Interfaces;
 using QuantConnect.Orders;
@@ -72,18 +71,28 @@ namespace QuantConnect.Algorithm.CSharp
             {
                 if (orderEvent.OrderId != _limitOrderTicket.OrderId)
                 {
-                    throw new RegressionTestException("The only canceled order should have been the limit order.");
+                    throw new RegressionTestException(
+                        "The only canceled order should have been the limit order."
+                    );
                 }
 
                 // update canceled order tag
-                UpdateOrderTag(_limitOrderTicket, TagAfterCanceled, "Error updating order tag after canceled");
+                UpdateOrderTag(
+                    _limitOrderTicket,
+                    TagAfterCanceled,
+                    "Error updating order tag after canceled"
+                );
             }
             else if (orderEvent.Status == OrderStatus.Filled)
             {
-                _marketOrderTicket = Transactions.GetOrderTickets(x => x.OrderType == OrderType.Market).Single();
+                _marketOrderTicket = Transactions
+                    .GetOrderTickets(x => x.OrderType == OrderType.Market)
+                    .Single();
                 if (orderEvent.OrderId != _marketOrderTicket.OrderId)
                 {
-                    throw new RegressionTestException("The only filled order should have been the market order.");
+                    throw new RegressionTestException(
+                        "The only filled order should have been the market order."
+                    );
                 }
 
                 // try to update a field other than the tag
@@ -92,11 +101,17 @@ namespace QuantConnect.Algorithm.CSharp
                 var response = _marketOrderTicket.Update(updateFields);
                 if (response.IsSuccess)
                 {
-                    throw new RegressionTestException("The market order quantity should not have been updated.");
+                    throw new RegressionTestException(
+                        "The market order quantity should not have been updated."
+                    );
                 }
 
                 // update filled order tag
-                UpdateOrderTag(_marketOrderTicket, TagAfterFill, "Error updating order tag after fill");
+                UpdateOrderTag(
+                    _marketOrderTicket,
+                    TagAfterFill,
+                    "Error updating order tag after fill"
+                );
             }
         }
 
@@ -104,35 +119,54 @@ namespace QuantConnect.Algorithm.CSharp
         {
             // check the filled order
             AssertOrderTagUpdate(_marketOrderTicket, TagAfterFill, "filled");
-            if (_marketOrderTicket.Quantity != _quantity || _marketOrderTicket.QuantityFilled != _quantity)
+            if (
+                _marketOrderTicket.Quantity != _quantity
+                || _marketOrderTicket.QuantityFilled != _quantity
+            )
             {
-                throw new RegressionTestException("The market order quantity should not have been updated.");
+                throw new RegressionTestException(
+                    "The market order quantity should not have been updated."
+                );
             }
 
             // check the canceled order
             AssertOrderTagUpdate(_limitOrderTicket, TagAfterCanceled, "canceled");
         }
 
-        private void AssertOrderTagUpdate(OrderTicket ticket, string expectedTag, string orderAction)
+        private void AssertOrderTagUpdate(
+            OrderTicket ticket,
+            string expectedTag,
+            string orderAction
+        )
         {
             if (ticket == null)
             {
-                throw new RegressionTestException($"The order ticket was not set for the {orderAction} order");
+                throw new RegressionTestException(
+                    $"The order ticket was not set for the {orderAction} order"
+                );
             }
 
             if (ticket.Tag != expectedTag)
             {
-                throw new RegressionTestException($"Order ticket tag was not updated after order was {orderAction}");
+                throw new RegressionTestException(
+                    $"Order ticket tag was not updated after order was {orderAction}"
+                );
             }
 
             var order = Transactions.GetOrderById(ticket.OrderId);
             if (order.Tag != expectedTag)
             {
-                throw new RegressionTestException($"Order tag was not updated after order was {orderAction}");
+                throw new RegressionTestException(
+                    $"Order tag was not updated after order was {orderAction}"
+                );
             }
         }
 
-        private static void UpdateOrderTag(OrderTicket ticket, string tag, string errorMessagePrefix)
+        private static void UpdateOrderTag(
+            OrderTicket ticket,
+            string tag,
+            string errorMessagePrefix
+        )
         {
             var updateFields = new UpdateOrderFields();
             updateFields.Tag = tag;
@@ -172,35 +206,36 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// This is used by the regression test system to indicate what the expected statistics are from running the algorithm
         /// </summary>
-        public Dictionary<string, string> ExpectedStatistics => new Dictionary<string, string>
-        {
-            {"Total Orders", "2"},
-            {"Average Win", "0%"},
-            {"Average Loss", "0%"},
-            {"Compounding Annual Return", "21.706%"},
-            {"Drawdown", "0.300%"},
-            {"Expectancy", "0"},
-            {"Start Equity", "100000"},
-            {"End Equity", "100251.47"},
-            {"Net Profit", "0.251%"},
-            {"Sharpe Ratio", "5.078"},
-            {"Sortino Ratio", "0"},
-            {"Probabilistic Sharpe Ratio", "67.483%"},
-            {"Loss Rate", "0%"},
-            {"Win Rate", "0%"},
-            {"Profit-Loss Ratio", "0"},
-            {"Alpha", "-0.122"},
-            {"Beta", "0.144"},
-            {"Annual Standard Deviation", "0.032"},
-            {"Annual Variance", "0.001"},
-            {"Information Ratio", "-9.515"},
-            {"Tracking Error", "0.191"},
-            {"Treynor Ratio", "1.13"},
-            {"Total Fees", "$1.00"},
-            {"Estimated Strategy Capacity", "$210000000.00"},
-            {"Lowest Capacity Asset", "SPY R735QTJ8XC9X"},
-            {"Portfolio Turnover", "2.89%"},
-            {"OrderListHash", "8fba4f724843997ef421cf26ccabe51b"}
-        };
+        public Dictionary<string, string> ExpectedStatistics =>
+            new Dictionary<string, string>
+            {
+                { "Total Orders", "2" },
+                { "Average Win", "0%" },
+                { "Average Loss", "0%" },
+                { "Compounding Annual Return", "21.706%" },
+                { "Drawdown", "0.300%" },
+                { "Expectancy", "0" },
+                { "Start Equity", "100000" },
+                { "End Equity", "100251.47" },
+                { "Net Profit", "0.251%" },
+                { "Sharpe Ratio", "5.078" },
+                { "Sortino Ratio", "0" },
+                { "Probabilistic Sharpe Ratio", "67.483%" },
+                { "Loss Rate", "0%" },
+                { "Win Rate", "0%" },
+                { "Profit-Loss Ratio", "0" },
+                { "Alpha", "-0.122" },
+                { "Beta", "0.144" },
+                { "Annual Standard Deviation", "0.032" },
+                { "Annual Variance", "0.001" },
+                { "Information Ratio", "-9.515" },
+                { "Tracking Error", "0.191" },
+                { "Treynor Ratio", "1.13" },
+                { "Total Fees", "$1.00" },
+                { "Estimated Strategy Capacity", "$210000000.00" },
+                { "Lowest Capacity Asset", "SPY R735QTJ8XC9X" },
+                { "Portfolio Turnover", "2.89%" },
+                { "OrderListHash", "8fba4f724843997ef421cf26ccabe51b" }
+            };
     }
 }

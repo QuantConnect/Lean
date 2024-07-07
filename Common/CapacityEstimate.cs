@@ -15,12 +15,12 @@
 */
 
 using System;
+using System.Collections.Generic;
 using System.Linq;
-using QuantConnect.Util;
+using QuantConnect.Interfaces;
 using QuantConnect.Orders;
 using QuantConnect.Securities;
-using QuantConnect.Interfaces;
-using System.Collections.Generic;
+using QuantConnect.Util;
 
 namespace QuantConnect
 {
@@ -37,6 +37,7 @@ namespace QuantConnect
         private readonly IAlgorithm _algorithm;
         private readonly Dictionary<Symbol, SymbolCapacity> _capacityBySymbol;
         private List<SymbolCapacity> _monitoredSymbolCapacity;
+
         // We use multiple collections to avoid having to perform an O(n) lookup whenever
         // we're wanting to check whether a particular SymbolData instance is being "monitored",
         // but still want to preserve indexing via an integer index
@@ -66,7 +67,7 @@ namespace QuantConnect
         /// <summary>
         /// Provide a reference to the lowest capacity symbol used in scaling down the capacity for debugging.
         /// </summary>
-        public Symbol LowestCapacityAsset => _smallestAssetSymbol; 
+        public Symbol LowestCapacityAsset => _smallestAssetSymbol;
 
         /// <summary>
         /// Initializes an instance of the class.
@@ -79,7 +80,9 @@ namespace QuantConnect
             _monitoredSymbolCapacity = new List<SymbolCapacity>();
             _monitoredSymbolCapacitySet = new HashSet<SymbolCapacity>();
             // Set the minimum snapshot period to one day, but use algorithm start/end if the algo runtime is less than seven days
-            _snapshotPeriod = TimeSpan.FromDays(Math.Max(Math.Min((_algorithm.EndDate - _algorithm.StartDate).TotalDays - 1, 7), 1)); 
+            _snapshotPeriod = TimeSpan.FromDays(
+                Math.Max(Math.Min((_algorithm.EndDate - _algorithm.StartDate).TotalDays - 1, 7), 1)
+            );
             _nextSnapshotDate = _algorithm.StartDate + _snapshotPeriod;
             _capacity = new ReferenceWrapper<decimal>(0);
         }
@@ -90,7 +93,10 @@ namespace QuantConnect
         /// <param name="orderEvent">Order event to use to calculate capacity</param>
         public void OnOrderEvent(OrderEvent orderEvent)
         {
-            if (orderEvent.Status != OrderStatus.Filled && orderEvent.Status != OrderStatus.PartiallyFilled)
+            if (
+                orderEvent.Status != OrderStatus.Filled
+                && orderEvent.Status != OrderStatus.PartiallyFilled
+            )
             {
                 return;
             }
@@ -135,36 +141,40 @@ namespace QuantConnect
             if (forceProcess || utcDate >= _nextSnapshotDate && _capacityBySymbol.Count != 0)
             {
                 var totalPortfolioValue = _algorithm.Portfolio.TotalPortfolioValue;
-                var totalSaleVolume = _capacityBySymbol.Values
-                    .Sum(s => s.SaleVolume);
+                var totalSaleVolume = _capacityBySymbol.Values.Sum(s => s.SaleVolume);
 
                 if (totalPortfolioValue == 0 || _capacityBySymbol.Count == 0)
                 {
                     return;
                 }
 
-                var smallestAsset = _capacityBySymbol.Values
-                    .OrderBy(c => c.MarketCapacityDollarVolume)
+                var smallestAsset = _capacityBySymbol
+                    .Values.OrderBy(c => c.MarketCapacityDollarVolume)
                     .First();
 
                 _smallestAssetSymbol = smallestAsset.Security.Symbol;
 
                 // When there is no trading, rely on the portfolio holdings
-                var percentageOfSaleVolume = totalSaleVolume != 0
-                    ? smallestAsset.SaleVolume / totalSaleVolume
-                    : 0;
+                var percentageOfSaleVolume =
+                    totalSaleVolume != 0 ? smallestAsset.SaleVolume / totalSaleVolume : 0;
 
-                var buyingPowerUsed = smallestAsset.Security.MarginModel.GetReservedBuyingPowerForPosition(new ReservedBuyingPowerForPositionParameters(smallestAsset.Security))
-                    .AbsoluteUsedBuyingPower * smallestAsset.Security.Leverage;
+                var buyingPowerUsed =
+                    smallestAsset
+                        .Security.MarginModel.GetReservedBuyingPowerForPosition(
+                            new ReservedBuyingPowerForPositionParameters(smallestAsset.Security)
+                        )
+                        .AbsoluteUsedBuyingPower * smallestAsset.Security.Leverage;
 
                 var percentageOfHoldings = buyingPowerUsed / totalPortfolioValue;
 
                 var scalingFactor = Math.Max(percentageOfSaleVolume, percentageOfHoldings);
-                var dailyMarketCapacityDollarVolume = smallestAsset.MarketCapacityDollarVolume / smallestAsset.Trades;
+                var dailyMarketCapacityDollarVolume =
+                    smallestAsset.MarketCapacityDollarVolume / smallestAsset.Trades;
 
-                var newCapacity = scalingFactor == 0
-                    ? _capacity.Value
-                    : dailyMarketCapacityDollarVolume / scalingFactor;
+                var newCapacity =
+                    scalingFactor == 0
+                        ? _capacity.Value
+                        : dailyMarketCapacityDollarVolume / scalingFactor;
 
                 // Weight our capacity based on previous value if we have one
                 if (_capacity.Value != 0)

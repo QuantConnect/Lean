@@ -16,8 +16,8 @@
 using System;
 using System.Linq;
 using NUnit.Framework;
-using QuantConnect.Indicators;
 using QuantConnect.Data.Market;
+using QuantConnect.Indicators;
 
 namespace QuantConnect.Tests.Indicators
 {
@@ -77,7 +77,15 @@ namespace QuantConnect.Tests.Indicators
                     }
                 }
 
-                var bar = new TradeBar(DateTime.UtcNow.AddSeconds(i), Symbols.AAPL, i, high, low, i, i);
+                var bar = new TradeBar(
+                    DateTime.UtcNow.AddSeconds(i),
+                    Symbols.AAPL,
+                    i,
+                    high,
+                    low,
+                    i,
+                    i
+                );
                 pointsHighLow.Update(bar);
             }
 
@@ -119,15 +127,15 @@ namespace QuantConnect.Tests.Indicators
         /// The expected value for this indicator is always zero
         /// </summary>
         /// <param name="indicator"></param>
-        protected override void IndicatorValueIsNotZeroAfterReceiveRenkoBars(IndicatorBase indicator)
-        {
-        }
+        protected override void IndicatorValueIsNotZeroAfterReceiveRenkoBars(
+            IndicatorBase indicator
+        ) { }
 
         /// <summary>
         /// The expected value for this indicator is always zero
         /// </summary>
-        protected override void IndicatorValueIsNotZeroAfterReceiveVolumeRenkoBars(IndicatorBase indicator)
-        {
-        }
+        protected override void IndicatorValueIsNotZeroAfterReceiveVolumeRenkoBars(
+            IndicatorBase indicator
+        ) { }
     }
 }

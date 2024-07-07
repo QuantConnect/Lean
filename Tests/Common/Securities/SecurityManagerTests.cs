@@ -58,7 +58,9 @@ namespace QuantConnect.Tests.Common.Securities
             {
                 if (args.NewItems.OfType<object>().Single() != security)
                 {
-                    Assert.Fail("Expected args.NewItems to have exactly one element equal to security");
+                    Assert.Fail(
+                        "Expected args.NewItems to have exactly one element equal to security"
+                    );
                 }
                 else
                 {
@@ -89,7 +91,9 @@ namespace QuantConnect.Tests.Common.Securities
             {
                 if (args.NewItems.OfType<object>().Single() != security)
                 {
-                    Assert.Fail("Expected args.NewItems to have exactly one element equal to security");
+                    Assert.Fail(
+                        "Expected args.NewItems to have exactly one element equal to security"
+                    );
                 }
                 else
                 {
@@ -121,7 +125,9 @@ namespace QuantConnect.Tests.Common.Securities
             {
                 if (args.OldItems.OfType<object>().Single() != security)
                 {
-                    Assert.Fail("Expected args.NewItems to have exactly one element equal to security");
+                    Assert.Fail(
+                        "Expected args.NewItems to have exactly one element equal to security"
+                    );
                 }
                 else
                 {
@@ -133,25 +139,78 @@ namespace QuantConnect.Tests.Common.Securities
             manager.Remove(security.Symbol);
         }
 
-
         [Test]
         public void Option_SubscriptionDataConfigList_CanOnlyHave_RawDataNormalization()
         {
-            var option = new Symbol(SecurityIdentifier.GenerateOption(SecurityIdentifier.DefaultDate, Symbols.SPY.ID, Market.USA, 0, default(OptionRight), default(OptionStyle)), "?SPY");
+            var option = new Symbol(
+                SecurityIdentifier.GenerateOption(
+                    SecurityIdentifier.DefaultDate,
+                    Symbols.SPY.ID,
+                    Market.USA,
+                    0,
+                    default(OptionRight),
+                    default(OptionStyle)
+                ),
+                "?SPY"
+            );
 
             var subscriptionDataConfigList = new SubscriptionDataConfigList(option);
 
-            Assert.DoesNotThrow(() => { subscriptionDataConfigList.SetDataNormalizationMode(DataNormalizationMode.Raw); });
+            Assert.DoesNotThrow(() =>
+            {
+                subscriptionDataConfigList.SetDataNormalizationMode(DataNormalizationMode.Raw);
+            });
 
-            Assert.Throws(typeof(ArgumentException), () => { subscriptionDataConfigList.SetDataNormalizationMode(DataNormalizationMode.Adjusted); });
-            Assert.Throws(typeof(ArgumentException), () => { subscriptionDataConfigList.SetDataNormalizationMode(DataNormalizationMode.SplitAdjusted); });
-            Assert.Throws(typeof(ArgumentException), () => { subscriptionDataConfigList.SetDataNormalizationMode(DataNormalizationMode.Adjusted); });
-            Assert.Throws(typeof(ArgumentException), () => { subscriptionDataConfigList.SetDataNormalizationMode(DataNormalizationMode.TotalReturn); });
+            Assert.Throws(
+                typeof(ArgumentException),
+                () =>
+                {
+                    subscriptionDataConfigList.SetDataNormalizationMode(
+                        DataNormalizationMode.Adjusted
+                    );
+                }
+            );
+            Assert.Throws(
+                typeof(ArgumentException),
+                () =>
+                {
+                    subscriptionDataConfigList.SetDataNormalizationMode(
+                        DataNormalizationMode.SplitAdjusted
+                    );
+                }
+            );
+            Assert.Throws(
+                typeof(ArgumentException),
+                () =>
+                {
+                    subscriptionDataConfigList.SetDataNormalizationMode(
+                        DataNormalizationMode.Adjusted
+                    );
+                }
+            );
+            Assert.Throws(
+                typeof(ArgumentException),
+                () =>
+                {
+                    subscriptionDataConfigList.SetDataNormalizationMode(
+                        DataNormalizationMode.TotalReturn
+                    );
+                }
+            );
         }
 
         private SubscriptionDataConfig CreateTradeBarConfig()
         {
-            return new SubscriptionDataConfig(typeof(TradeBar), Symbols.SPY, Resolution.Minute, TimeZones.NewYork, TimeZones.NewYork, true, true, false);
+            return new SubscriptionDataConfig(
+                typeof(TradeBar),
+                Symbols.SPY,
+                Resolution.Minute,
+                TimeZones.NewYork,
+                TimeZones.NewYork,
+                true,
+                true,
+                false
+            );
         }
     }
 }

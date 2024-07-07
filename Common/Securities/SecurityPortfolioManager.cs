@@ -32,7 +32,10 @@ namespace QuantConnect.Securities
     /// Portfolio manager class groups popular properties and makes them accessible through one interface.
     /// It also provide indexing by the vehicle symbol to get the Security.Holding objects.
     /// </summary>
-    public class SecurityPortfolioManager : ExtendedDictionary<SecurityHolding>, IDictionary<Symbol, SecurityHolding>, ISecurityProvider
+    public class SecurityPortfolioManager
+        : ExtendedDictionary<SecurityHolding>,
+            IDictionary<Symbol, SecurityHolding>,
+            ISecurityProvider
     {
         private Cash _baseCurrencyCash;
         private bool _setCashWasCalled;
@@ -59,10 +62,7 @@ namespace QuantConnect.Securities
         /// </summary>
         public SecurityPositionGroupModel Positions
         {
-            get
-            {
-                return _positions;
-            }
+            get { return _positions; }
             set
             {
                 value?.Initialize(Securities);
@@ -83,7 +83,12 @@ namespace QuantConnect.Securities
         /// <summary>
         /// Initialise security portfolio manager.
         /// </summary>
-        public SecurityPortfolioManager(SecurityManager securityManager, SecurityTransactionManager transactions, IAlgorithmSettings algorithmSettings, IOrderProperties defaultOrderProperties = null)
+        public SecurityPortfolioManager(
+            SecurityManager securityManager,
+            SecurityTransactionManager transactions,
+            IAlgorithmSettings algorithmSettings,
+            IOrderProperties defaultOrderProperties = null
+        )
         {
             Securities = securityManager;
             Transactions = transactions;
@@ -111,7 +116,8 @@ namespace QuantConnect.Securities
                     cash.CurrencyConversionUpdated += (sender, args) =>
                     {
                         // Share the currency conversion instance between the settled and unsettled cash instances to synchronize the conversion rates
-                        UnsettledCashBook[((Cash)sender).Symbol].CurrencyConversion = cash.CurrencyConversion;
+                        UnsettledCashBook[((Cash)sender).Symbol].CurrencyConversion =
+                            cash.CurrencyConversion;
                     };
 
                     UnsettledCashBook.Add(cash.Symbol, unsettledCash);
@@ -131,7 +137,12 @@ namespace QuantConnect.Securities
         /// <param name="holding">SecurityHoldings object</param>
         /// <exception cref="NotImplementedException">Portfolio object is an adaptor for Security Manager. This method is not applicable for PortfolioManager class.</exception>
         /// <remarks>This method is not implemented and using it will throw an exception</remarks>
-        public void Add(Symbol symbol, SecurityHolding holding) { throw new NotImplementedException(Messages.SecurityPortfolioManager.DictionaryAddNotImplemented); }
+        public void Add(Symbol symbol, SecurityHolding holding)
+        {
+            throw new NotImplementedException(
+                Messages.SecurityPortfolioManager.DictionaryAddNotImplemented
+            );
+        }
 
         /// <summary>
         /// Add a new securities key value pair to the portfolio.
@@ -139,14 +150,24 @@ namespace QuantConnect.Securities
         /// <param name="pair">Key value pair of dictionary</param>
         /// <exception cref="NotImplementedException">Portfolio object is an adaptor for Security Manager. This method is not applicable for PortfolioManager class.</exception>
         /// <remarks>This method is not implemented and using it will throw an exception</remarks>
-        public void Add(KeyValuePair<Symbol, SecurityHolding> pair) { throw new NotImplementedException(Messages.SecurityPortfolioManager.DictionaryAddNotImplemented); }
+        public void Add(KeyValuePair<Symbol, SecurityHolding> pair)
+        {
+            throw new NotImplementedException(
+                Messages.SecurityPortfolioManager.DictionaryAddNotImplemented
+            );
+        }
 
         /// <summary>
         /// Clear the portfolio of securities objects.
         /// </summary>
         /// <exception cref="NotImplementedException">Portfolio object is an adaptor for Security Manager. This method is not applicable for PortfolioManager class.</exception>
         /// <remarks>This method is not implemented and using it will throw an exception</remarks>
-        public override void Clear() { throw new NotImplementedException(Messages.SecurityPortfolioManager.DictionaryClearNotImplemented); }
+        public override void Clear()
+        {
+            throw new NotImplementedException(
+                Messages.SecurityPortfolioManager.DictionaryClearNotImplemented
+            );
+        }
 
         /// <summary>
         /// Remove this keyvalue pair from the portfolio.
@@ -154,7 +175,12 @@ namespace QuantConnect.Securities
         /// <exception cref="NotImplementedException">Portfolio object is an adaptor for Security Manager. This method is not applicable for PortfolioManager class.</exception>
         /// <param name="pair">Key value pair of dictionary</param>
         /// <remarks>This method is not implemented and using it will throw an exception</remarks>
-        public bool Remove(KeyValuePair<Symbol, SecurityHolding> pair) { throw new NotImplementedException(Messages.SecurityPortfolioManager.DictionaryRemoveNotImplemented); }
+        public bool Remove(KeyValuePair<Symbol, SecurityHolding> pair)
+        {
+            throw new NotImplementedException(
+                Messages.SecurityPortfolioManager.DictionaryRemoveNotImplemented
+            );
+        }
 
         /// <summary>
         /// Remove this symbol from the portfolio.
@@ -162,7 +188,12 @@ namespace QuantConnect.Securities
         /// <exception cref="NotImplementedException">Portfolio object is an adaptor for Security Manager. This method is not applicable for PortfolioManager class.</exception>
         /// <param name="symbol">Symbol of dictionary</param>
         /// <remarks>This method is not implemented and using it will throw an exception</remarks>
-        public override bool Remove(Symbol symbol) { throw new NotImplementedException(Messages.SecurityPortfolioManager.DictionaryRemoveNotImplemented); }
+        public override bool Remove(Symbol symbol)
+        {
+            throw new NotImplementedException(
+                Messages.SecurityPortfolioManager.DictionaryRemoveNotImplemented
+            );
+        }
 
         /// <summary>
         /// Check if the portfolio contains this symbol string.
@@ -191,10 +222,7 @@ namespace QuantConnect.Securities
         /// <remarks>IDictionary implementation calling the underlying Securities collection</remarks>
         public int Count
         {
-            get
-            {
-                return Securities.Count;
-            }
+            get { return Securities.Count; }
         }
 
         /// <summary>
@@ -203,10 +231,7 @@ namespace QuantConnect.Securities
         /// <remarks>IDictionary implementation calling the underlying Securities collection</remarks>
         public override bool IsReadOnly
         {
-            get
-            {
-                return Securities.IsReadOnly;
-            }
+            get { return Securities.IsReadOnly; }
         }
 
         /// <summary>
@@ -223,7 +248,10 @@ namespace QuantConnect.Securities
             {
                 if (i >= index)
                 {
-                    array[i] = new KeyValuePair<Symbol, SecurityHolding>(asset.Symbol, asset.Holdings);
+                    array[i] = new KeyValuePair<Symbol, SecurityHolding>(
+                        asset.Symbol,
+                        asset.Holdings
+                    );
                 }
                 i++;
             }
@@ -243,7 +271,8 @@ namespace QuantConnect.Securities
         /// <returns>
         /// An <see cref="System.Collections.Generic.ICollection{T}"/> containing the values in the object that implements <see cref="System.Collections.Generic.IDictionary{TKey, TValue}"/>.
         /// </returns>
-        protected override IEnumerable<SecurityHolding> GetValues => Securities.Select(pair => pair.Value.Holdings);
+        protected override IEnumerable<SecurityHolding> GetValues =>
+            Securities.Select(pair => pair.Value.Holdings);
 
         /// <summary>
         /// Symbol keys collection of the underlying assets in the portfolio.
@@ -251,10 +280,7 @@ namespace QuantConnect.Securities
         /// <remarks>IDictionary implementation calling the underlying securities key symbols</remarks>
         public ICollection<Symbol> Keys
         {
-            get
-            {
-                return Securities.Keys;
-            }
+            get { return Securities.Keys; }
         }
 
         /// <summary>
@@ -263,10 +289,7 @@ namespace QuantConnect.Securities
         /// <remarks>IDictionary implementation calling the underlying securities values collection</remarks>
         public ICollection<SecurityHolding> Values
         {
-            get
-            {
-                return GetValues.ToList();
-            }
+            get { return GetValues.ToList(); }
         }
 
         /// <summary>
@@ -289,9 +312,13 @@ namespace QuantConnect.Securities
         /// </summary>
         /// <remarks>IDictionary implementation</remarks>
         /// <returns>Enumerable key value pair</returns>
-        IEnumerator<KeyValuePair<Symbol, SecurityHolding>> IEnumerable<KeyValuePair<Symbol, SecurityHolding>>.GetEnumerator()
+        IEnumerator<KeyValuePair<Symbol, SecurityHolding>> IEnumerable<
+            KeyValuePair<Symbol, SecurityHolding>
+        >.GetEnumerator()
         {
-            return Securities.Select(x => new KeyValuePair<Symbol, SecurityHolding>(x.Key, x.Value.Holdings)).GetEnumerator();
+            return Securities
+                .Select(x => new KeyValuePair<Symbol, SecurityHolding>(x.Key, x.Value.Holdings))
+                .GetEnumerator();
         }
 
         /// <summary>
@@ -301,7 +328,9 @@ namespace QuantConnect.Securities
         /// <returns>Enumerator</returns>
         IEnumerator IEnumerable.GetEnumerator()
         {
-            return Securities.Select(x => new KeyValuePair<Symbol, SecurityHolding>(x.Key, x.Value.Holdings)).GetEnumerator();
+            return Securities
+                .Select(x => new KeyValuePair<Symbol, SecurityHolding>(x.Key, x.Value.Holdings))
+                .GetEnumerator();
         }
 
         #endregion
@@ -338,7 +367,9 @@ namespace QuantConnect.Securities
         {
             get
             {
-                return Securities.Values.Sum(security => security.Holdings.UnleveredAbsoluteHoldingsCost);
+                return Securities.Values.Sum(security =>
+                    security.Holdings.UnleveredAbsoluteHoldingsCost
+                );
             }
         }
 
@@ -397,10 +428,7 @@ namespace QuantConnect.Securities
         /// </summary>
         public decimal TotalUnrealisedProfit
         {
-            get
-            {
-                return Securities.Values.Sum(security => security.Holdings.UnrealizedProfit);
-            }
+            get { return Securities.Values.Sum(security => security.Holdings.UnrealizedProfit); }
         }
 
         /// <summary>
@@ -429,7 +457,9 @@ namespace QuantConnect.Securities
                     {
                         decimal totalHoldingsValueWithoutForexCryptoFutureCfd = 0;
                         decimal totalFuturesAndCfdHoldingsValue = 0;
-                        foreach (var security in Securities.Values.Where((x) => x.Holdings.Invested))
+                        foreach (
+                            var security in Securities.Values.Where((x) => x.Holdings.Invested)
+                        )
                         {
                             var position = security;
                             var securityType = position.Type;
@@ -437,18 +467,29 @@ namespace QuantConnect.Securities
                             // We also exclude futures and CFD as they are calculated separately because they do not impact the account's cash.
                             // We include futures options as part of this calculation because IB chooses to change our account's cash balance
                             // when we buy or sell a futures options contract.
-                            if (securityType != SecurityType.Forex && securityType != SecurityType.Crypto
-                                && securityType != SecurityType.Future && securityType != SecurityType.Cfd
-                                && securityType != SecurityType.CryptoFuture)
+                            if (
+                                securityType != SecurityType.Forex
+                                && securityType != SecurityType.Crypto
+                                && securityType != SecurityType.Future
+                                && securityType != SecurityType.Cfd
+                                && securityType != SecurityType.CryptoFuture
+                            )
                             {
-                                totalHoldingsValueWithoutForexCryptoFutureCfd += position.Holdings.HoldingsValue;
+                                totalHoldingsValueWithoutForexCryptoFutureCfd += position
+                                    .Holdings
+                                    .HoldingsValue;
                             }
 
                             // CFDs don't impact account cash, so they must be calculated
                             // by applying the unrealized P&L to the cash balance.
-                            if (securityType == SecurityType.Cfd || securityType == SecurityType.CryptoFuture)
+                            if (
+                                securityType == SecurityType.Cfd
+                                || securityType == SecurityType.CryptoFuture
+                            )
                             {
-                                totalFuturesAndCfdHoldingsValue += position.Holdings.UnrealizedProfit;
+                                totalFuturesAndCfdHoldingsValue += position
+                                    .Holdings
+                                    .UnrealizedProfit;
                             }
                             // Futures P&L is settled daily into cash, here we take into account the current days unsettled profit
                             if (securityType == SecurityType.Future)
@@ -458,10 +499,11 @@ namespace QuantConnect.Securities
                             }
                         }
 
-                        _totalPortfolioValue = CashBook.TotalValueInAccountCurrency +
-                           UnsettledCashBook.TotalValueInAccountCurrency +
-                           totalHoldingsValueWithoutForexCryptoFutureCfd +
-                           totalFuturesAndCfdHoldingsValue;
+                        _totalPortfolioValue =
+                            CashBook.TotalValueInAccountCurrency
+                            + UnsettledCashBook.TotalValueInAccountCurrency
+                            + totalHoldingsValueWithoutForexCryptoFutureCfd
+                            + totalFuturesAndCfdHoldingsValue;
 
                         _isTotalPortfolioValueValid = true;
                     }
@@ -487,11 +529,11 @@ namespace QuantConnect.Securities
                 else
                 {
                     // keep the free portfolio value up to date every time we use it
-                    _freePortfolioValue = TotalPortfolioValue * _algorithmSettings.FreePortfolioValuePercentage;
+                    _freePortfolioValue =
+                        TotalPortfolioValue * _algorithmSettings.FreePortfolioValuePercentage;
                 }
 
                 return TotalPortfolioValue - _freePortfolioValue;
-
             }
         }
 
@@ -509,10 +551,7 @@ namespace QuantConnect.Securities
         /// </summary>
         public decimal TotalFees
         {
-            get
-            {
-                return Securities.Total.Sum(security => security.Holdings.TotalFees);
-            }
+            get { return Securities.Total.Sum(security => security.Holdings.TotalFees); }
         }
 
         /// <summary>
@@ -520,10 +559,7 @@ namespace QuantConnect.Securities
         /// </summary>
         public decimal TotalProfit
         {
-            get
-            {
-                return Securities.Total.Sum(security => security.Holdings.Profit);
-            }
+            get { return Securities.Total.Sum(security => security.Holdings.Profit); }
         }
 
         /// <summary>
@@ -531,10 +567,7 @@ namespace QuantConnect.Securities
         /// </summary>
         public decimal TotalNetProfit
         {
-            get
-            {
-                return Securities.Total.Sum(security => security.Holdings.NetProfit);
-            }
+            get { return Securities.Total.Sum(security => security.Holdings.NetProfit); }
         }
 
         /// <summary>
@@ -542,10 +575,7 @@ namespace QuantConnect.Securities
         /// </summary>
         public decimal TotalSaleVolume
         {
-            get
-            {
-                return Securities.Total.Sum(security => security.Holdings.TotalSaleVolume);
-            }
+            get { return Securities.Total.Sum(security => security.Holdings.TotalSaleVolume); }
         }
 
         /// <summary>
@@ -558,7 +588,10 @@ namespace QuantConnect.Securities
                 decimal sum = 0;
                 foreach (var group in Positions.Groups)
                 {
-                    sum += group.BuyingPowerModel.GetReservedBuyingPowerForPositionGroup(this, group);
+                    sum += group.BuyingPowerModel.GetReservedBuyingPowerForPositionGroup(
+                        this,
+                        group
+                    );
                 }
 
                 return sum;
@@ -581,7 +614,9 @@ namespace QuantConnect.Securities
         /// <param name="totalPortfolioValue">The total portfolio value <see cref="TotalPortfolioValue"/></param>
         public decimal GetMarginRemaining(decimal totalPortfolioValue)
         {
-            return totalPortfolioValue - UnsettledCashBook.TotalValueInAccountCurrency - TotalMarginUsed;
+            return totalPortfolioValue
+                - UnsettledCashBook.TotalValueInAccountCurrency
+                - TotalMarginUsed;
         }
 
         /// <summary>
@@ -619,8 +654,13 @@ namespace QuantConnect.Securities
             {
                 if (accountCurrency != CashBook.AccountCurrency)
                 {
-                    Log.Trace("SecurityPortfolioManager.SetAccountCurrency(): " +
-                        Messages.SecurityPortfolioManager.AccountCurrencyAlreadySet(CashBook, accountCurrency));
+                    Log.Trace(
+                        "SecurityPortfolioManager.SetAccountCurrency(): "
+                            + Messages.SecurityPortfolioManager.AccountCurrencyAlreadySet(
+                                CashBook,
+                                accountCurrency
+                            )
+                    );
                 }
                 return;
             }
@@ -628,18 +668,28 @@ namespace QuantConnect.Securities
 
             if (Securities.Count > 0)
             {
-                throw new InvalidOperationException("SecurityPortfolioManager.SetAccountCurrency(): " +
-                    Messages.SecurityPortfolioManager.CannotChangeAccountCurrencyAfterAddingSecurity);
+                throw new InvalidOperationException(
+                    "SecurityPortfolioManager.SetAccountCurrency(): "
+                        + Messages
+                            .SecurityPortfolioManager
+                            .CannotChangeAccountCurrencyAfterAddingSecurity
+                );
             }
 
             if (_setCashWasCalled)
             {
-                throw new InvalidOperationException("SecurityPortfolioManager.SetAccountCurrency(): " +
-                    Messages.SecurityPortfolioManager.CannotChangeAccountCurrencyAfterSettingCash);
+                throw new InvalidOperationException(
+                    "SecurityPortfolioManager.SetAccountCurrency(): "
+                        + Messages
+                            .SecurityPortfolioManager
+                            .CannotChangeAccountCurrencyAfterSettingCash
+                );
             }
 
-            Log.Trace("SecurityPortfolioManager.SetAccountCurrency(): " +
-                Messages.SecurityPortfolioManager.SettingAccountCurrency(accountCurrency));
+            Log.Trace(
+                "SecurityPortfolioManager.SetAccountCurrency(): "
+                    + Messages.SecurityPortfolioManager.SettingAccountCurrency(accountCurrency)
+            );
 
             UnsettledCashBook.AccountCurrency = accountCurrency;
             CashBook.AccountCurrency = accountCurrency;
@@ -691,7 +741,10 @@ namespace QuantConnect.Securities
         /// <param name="symbol">The symbol to compute margin remaining for</param>
         /// <param name="direction">The order/trading direction</param>
         /// <returns>The maximum order size that is currently executable in the specified direction</returns>
-        public decimal GetMarginRemaining(Symbol symbol, OrderDirection direction = OrderDirection.Buy)
+        public decimal GetMarginRemaining(
+            Symbol symbol,
+            OrderDirection direction = OrderDirection.Buy
+        )
         {
             var security = Securities[symbol];
 
@@ -702,10 +755,15 @@ namespace QuantConnect.Securities
             var positionGroupOrderDirection = direction;
             if (security.Holdings.IsShort)
             {
-                positionGroupOrderDirection = direction == OrderDirection.Buy ? OrderDirection.Sell : OrderDirection.Buy;
+                positionGroupOrderDirection =
+                    direction == OrderDirection.Buy ? OrderDirection.Sell : OrderDirection.Buy;
             }
 
-            var parameters = new PositionGroupBuyingPowerParameters(this, positionGroup, positionGroupOrderDirection);
+            var parameters = new PositionGroupBuyingPowerParameters(
+                this,
+                positionGroup,
+                positionGroupOrderDirection
+            );
             return positionGroup.BuyingPowerModel.GetPositionGroupBuyingPower(parameters);
         }
 
@@ -742,7 +800,6 @@ namespace QuantConnect.Securities
 
                 InvalidateTotalPortfolioValue();
             }
-
         }
 
         /// <summary>
@@ -766,7 +823,10 @@ namespace QuantConnect.Securities
                 var security = Securities[dividend.Symbol];
 
                 // longs get benefits, shorts get clubbed on dividends
-                var total = security.Holdings.Quantity * dividend.Distribution * security.QuoteCurrency.ConversionRate;
+                var total =
+                    security.Holdings.Quantity
+                    * dividend.Distribution
+                    * security.QuoteCurrency.ConversionRate;
 
                 // assuming USD, we still need to add Currency to the security object
                 _baseCurrencyCash.AddAmount(total);
@@ -781,7 +841,12 @@ namespace QuantConnect.Securities
         /// <param name="security">The security the split will be applied to</param>
         /// <param name="liveMode">True if live mode, false for backtest</param>
         /// <param name="mode">The <see cref="DataNormalizationMode"/> for this security</param>
-        public void ApplySplit(Split split, Security security, bool liveMode, DataNormalizationMode mode)
+        public void ApplySplit(
+            Split split,
+            Security security,
+            bool liveMode,
+            DataNormalizationMode mode
+        )
         {
             // only apply splits to equities
             if (security.Type != SecurityType.Equity)
@@ -860,24 +925,39 @@ namespace QuantConnect.Securities
         /// </summary>
         public void LogMarginInformation(OrderRequest orderRequest = null)
         {
-            Log.Trace(Messages.SecurityPortfolioManager.TotalMarginInformation(TotalMarginUsed, MarginRemaining));
+            Log.Trace(
+                Messages.SecurityPortfolioManager.TotalMarginInformation(
+                    TotalMarginUsed,
+                    MarginRemaining
+                )
+            );
 
             var orderSubmitRequest = orderRequest as SubmitOrderRequest;
             if (orderSubmitRequest != null)
             {
-                var direction = orderSubmitRequest.Quantity > 0 ? OrderDirection.Buy : OrderDirection.Sell;
+                var direction =
+                    orderSubmitRequest.Quantity > 0 ? OrderDirection.Buy : OrderDirection.Sell;
                 var security = Securities[orderSubmitRequest.Symbol];
 
                 var positionGroup = Positions.GetOrCreateDefaultGroup(security);
-                var marginUsed = positionGroup.BuyingPowerModel.GetReservedBuyingPowerForPositionGroup(
-                    this, positionGroup
-                );
+                var marginUsed =
+                    positionGroup.BuyingPowerModel.GetReservedBuyingPowerForPositionGroup(
+                        this,
+                        positionGroup
+                    );
 
                 var marginRemaining = positionGroup.BuyingPowerModel.GetPositionGroupBuyingPower(
-                    this, positionGroup, direction
+                    this,
+                    positionGroup,
+                    direction
                 );
 
-                Log.Trace(Messages.SecurityPortfolioManager.OrderRequestMarginInformation(marginUsed, marginRemaining.Value));
+                Log.Trace(
+                    Messages.SecurityPortfolioManager.OrderRequestMarginInformation(
+                        marginUsed,
+                        marginRemaining.Value
+                    )
+                );
             }
         }
 
@@ -904,18 +984,26 @@ namespace QuantConnect.Securities
         /// </summary>
         /// <param name="orders">The orders to check</param>
         /// <returns>True if the algorithm has enough buying power available</returns>
-        public HasSufficientBuyingPowerForOrderResult HasSufficientBuyingPowerForOrder(List<Order> orders)
+        public HasSufficientBuyingPowerForOrderResult HasSufficientBuyingPowerForOrder(
+            List<Order> orders
+        )
         {
             if (Positions.TryCreatePositionGroup(orders, out var group))
             {
-                return group.BuyingPowerModel.HasSufficientBuyingPowerForOrder(new HasSufficientPositionGroupBuyingPowerForOrderParameters(this, group, orders));
+                return group.BuyingPowerModel.HasSufficientBuyingPowerForOrder(
+                    new HasSufficientPositionGroupBuyingPowerForOrderParameters(this, group, orders)
+                );
             }
 
             for (var i = 0; i < orders.Count; i++)
             {
                 var order = orders[i];
                 var security = Securities[order.Symbol];
-                var result = security.BuyingPowerModel.HasSufficientBuyingPowerForOrder(this, security, order);
+                var result = security.BuyingPowerModel.HasSufficientBuyingPowerForOrder(
+                    this,
+                    security,
+                    order
+                );
                 if (!result.IsSufficient)
                 {
                     // if any fails, we fail all

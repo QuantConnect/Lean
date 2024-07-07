@@ -14,10 +14,10 @@
 */
 
 using System;
-using System.Linq;
-using Python.Runtime;
 using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
+using Python.Runtime;
 
 namespace QuantConnect.Algorithm.Framework.Alphas
 {
@@ -97,7 +97,7 @@ namespace QuantConnect.Algorithm.Framework.Alphas
         /// <param name="item">The object to locate in the <see cref="T:System.Collections.Generic.ICollection`1" />.</param>
         public bool Contains(Insight item)
         {
-            lock(_insights)
+            lock (_insights)
             {
                 return _insights.TryGetValue(item.Symbol, out var symbolInsights)
                     && symbolInsights.Contains(item);
@@ -154,7 +154,7 @@ namespace QuantConnect.Algorithm.Framework.Alphas
         {
             get
             {
-                lock(_insights)
+                lock (_insights)
                 {
                     return _insights[symbol]?.ToList();
                 }
@@ -240,7 +240,7 @@ namespace QuantConnect.Algorithm.Framework.Alphas
         /// </summary>
         public DateTime? GetNextExpiryTime()
         {
-            lock(_insights)
+            lock (_insights)
             {
                 if (_openInsightCount == 0)
                 {
@@ -285,7 +285,7 @@ namespace QuantConnect.Algorithm.Framework.Alphas
         {
             lock (_insights)
             {
-                if(_insights.TryGetValue(symbol, out var existingInsights))
+                if (_insights.TryGetValue(symbol, out var existingInsights))
                 {
                     return existingInsights.Any(i => i.IsActive(utcTime));
                 }
@@ -339,12 +339,12 @@ namespace QuantConnect.Algorithm.Framework.Alphas
                     {
                         if (filter(insight))
                         {
-                            insightsToRemove ??= new ();
+                            insightsToRemove ??= new();
                             insightsToRemove.Add(insight);
                         }
                     }
                 }
-                if(insightsToRemove != null)
+                if (insightsToRemove != null)
                 {
                     foreach (var insight in insightsToRemove)
                     {
@@ -363,7 +363,7 @@ namespace QuantConnect.Algorithm.Framework.Alphas
         {
             lock (_insights)
             {
-                if(filter == null)
+                if (filter == null)
                 {
                     return _insightsComplete.ToList();
                 }
@@ -387,7 +387,9 @@ namespace QuantConnect.Algorithm.Framework.Alphas
             {
                 using (Py.GIL())
                 {
-                    throw new ArgumentException($"InsightCollection.GetInsights: {filter.Repr()} is not a valid argument.");
+                    throw new ArgumentException(
+                        $"InsightCollection.GetInsights: {filter.Repr()} is not a valid argument."
+                    );
                 }
             }
         }

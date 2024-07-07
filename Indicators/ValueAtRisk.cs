@@ -13,9 +13,9 @@
  * limitations under the License.
 */
 
-using MathNet.Numerics.Statistics;
-using MathNet.Numerics.Distributions;
 using System;
+using MathNet.Numerics.Distributions;
+using MathNet.Numerics.Statistics;
 
 namespace QuantConnect.Indicators
 {
@@ -55,12 +55,14 @@ namespace QuantConnect.Indicators
         /// <param name="name">The name of this indicator</param>
         /// <param name="period">Historical lookback period in days</param>
         /// <param name="confidenceLevel">Confidence level for VaR calculation</param>
-        public ValueAtRisk(string name, int period, double confidenceLevel) 
+        public ValueAtRisk(string name, int period, double confidenceLevel)
             : base(name, period)
         {
             if (period < 3)
             {
-                throw new ArgumentException($"Period parameter for ValueAtRisk indicator must be greater than 2 but was {period}");
+                throw new ArgumentException(
+                    $"Period parameter for ValueAtRisk indicator must be greater than 2 but was {period}"
+                );
             }
 
             WarmUpPeriod = period;
@@ -76,9 +78,7 @@ namespace QuantConnect.Indicators
         /// <param name="period">Historical lookback period in days</param>
         /// <param name="confidenceLevel">Confidence level for VaR calculation</param>
         public ValueAtRisk(int period, double confidenceLevel)
-            : this($"VaR({period}, {confidenceLevel})", period, confidenceLevel)
-        {
-        }
+            : this($"VaR({period}, {confidenceLevel})", period, confidenceLevel) { }
 
         /// <summary>
         /// Computes the next value for this indicator from the given state.
@@ -86,7 +86,10 @@ namespace QuantConnect.Indicators
         /// <param name="window">The window of data held in this indicator</param>
         /// <param name="input">The input value to this indicator on this time step</param>
         /// <returns>A new value for this indicator</returns>
-        protected override decimal ComputeNextValue(IReadOnlyWindow<IndicatorDataPoint> window, IndicatorDataPoint input)
+        protected override decimal ComputeNextValue(
+            IReadOnlyWindow<IndicatorDataPoint> window,
+            IndicatorDataPoint input
+        )
         {
             _rateOfChange.Update(input);
             _returns.Add((double)_rateOfChange.Current.Value);
@@ -112,4 +115,3 @@ namespace QuantConnect.Indicators
         }
     }
 }
-

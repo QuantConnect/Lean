@@ -35,7 +35,9 @@ namespace QuantConnect.Scheduling
     /// 4. Specify additional where clause (optional)
     /// 5. Register event via call to Run
     /// </remarks>
-    public class FluentScheduledEventBuilder : IFluentSchedulingDateSpecifier, IFluentSchedulingRunnable
+    public class FluentScheduledEventBuilder
+        : IFluentSchedulingDateSpecifier,
+            IFluentSchedulingRunnable
     {
         private IDateRule _dateRule;
         private ITimeRule _timeRule;
@@ -51,7 +53,11 @@ namespace QuantConnect.Scheduling
         /// <param name="schedule">The schedule to send created events to</param>
         /// <param name="securities">The algorithm's security manager</param>
         /// <param name="name">A specific name for this event</param>
-        public FluentScheduledEventBuilder(ScheduleManager schedule, SecurityManager securities, string name = null)
+        public FluentScheduledEventBuilder(
+            ScheduleManager schedule,
+            SecurityManager securities,
+            string name = null
+        )
         {
             _name = name;
             _schedule = schedule;
@@ -132,11 +138,12 @@ namespace QuantConnect.Scheduling
         /// <summary>
         /// Filters the event times using the predicate
         /// </summary>
-        IFluentSchedulingTimeSpecifier IFluentSchedulingDateSpecifier.Where(Func<DateTime, bool> predicate)
+        IFluentSchedulingTimeSpecifier IFluentSchedulingDateSpecifier.Where(
+            Func<DateTime, bool> predicate
+        )
         {
-            _predicate = _predicate == null
-                ? predicate
-                : (time => _predicate(time) && predicate(time));
+            _predicate =
+                _predicate == null ? predicate : (time => _predicate(time) && predicate(time));
             return this;
         }
 
@@ -151,17 +158,33 @@ namespace QuantConnect.Scheduling
         /// <summary>
         /// Creates events that fire a specified number of minutes after market open
         /// </summary>
-        IFluentSchedulingRunnable IFluentSchedulingTimeSpecifier.AfterMarketOpen(Symbol symbol, double minutesAfterOpen, bool extendedMarketOpen)
+        IFluentSchedulingRunnable IFluentSchedulingTimeSpecifier.AfterMarketOpen(
+            Symbol symbol,
+            double minutesAfterOpen,
+            bool extendedMarketOpen
+        )
         {
-            return SetTimeRule(_schedule.TimeRules.AfterMarketOpen(symbol, minutesAfterOpen, extendedMarketOpen));
+            return SetTimeRule(
+                _schedule.TimeRules.AfterMarketOpen(symbol, minutesAfterOpen, extendedMarketOpen)
+            );
         }
 
         /// <summary>
         /// Creates events that fire a specified numer of minutes before market close
         /// </summary>
-        IFluentSchedulingRunnable IFluentSchedulingTimeSpecifier.BeforeMarketClose(Symbol symbol, double minuteBeforeClose, bool extendedMarketClose)
+        IFluentSchedulingRunnable IFluentSchedulingTimeSpecifier.BeforeMarketClose(
+            Symbol symbol,
+            double minuteBeforeClose,
+            bool extendedMarketClose
+        )
         {
-            return SetTimeRule(_schedule.TimeRules.BeforeMarketClose(symbol, minuteBeforeClose, extendedMarketClose));
+            return SetTimeRule(
+                _schedule.TimeRules.BeforeMarketClose(
+                    symbol,
+                    minuteBeforeClose,
+                    extendedMarketClose
+                )
+            );
         }
 
         /// <summary>
@@ -175,11 +198,12 @@ namespace QuantConnect.Scheduling
         /// <summary>
         /// Filters the event times using the predicate
         /// </summary>
-        IFluentSchedulingTimeSpecifier IFluentSchedulingTimeSpecifier.Where(Func<DateTime, bool> predicate)
+        IFluentSchedulingTimeSpecifier IFluentSchedulingTimeSpecifier.Where(
+            Func<DateTime, bool> predicate
+        )
         {
-            _predicate = _predicate == null
-                ? predicate
-                : (time => _predicate(time) && predicate(time));
+            _predicate =
+                _predicate == null ? predicate : (time => _predicate(time) && predicate(time));
             return this;
         }
 
@@ -222,16 +246,18 @@ namespace QuantConnect.Scheduling
         /// </summary>
         IFluentSchedulingRunnable IFluentSchedulingRunnable.Where(Func<DateTime, bool> predicate)
         {
-            _predicate = _predicate == null
-                ? predicate
-                : (time => _predicate(time) && predicate(time));
+            _predicate =
+                _predicate == null ? predicate : (time => _predicate(time) && predicate(time));
             return this;
         }
 
         /// <summary>
         /// Filters the event times to only include times where the symbol's market is considered open
         /// </summary>
-        IFluentSchedulingRunnable IFluentSchedulingRunnable.DuringMarketHours(Symbol symbol, bool extendedMarket)
+        IFluentSchedulingRunnable IFluentSchedulingRunnable.DuringMarketHours(
+            Symbol symbol,
+            bool extendedMarket
+        )
         {
             var security = GetSecurity(symbol);
             Func<DateTime, bool> predicate = time =>
@@ -239,13 +265,16 @@ namespace QuantConnect.Scheduling
                 var localTime = time.ConvertFromUtc(security.Exchange.TimeZone);
                 return security.Exchange.IsOpenDuringBar(localTime, localTime, extendedMarket);
             };
-            _predicate = _predicate == null
-                ? predicate
-                : (time => _predicate(time) && predicate(time));
+            _predicate =
+                _predicate == null ? predicate : (time => _predicate(time) && predicate(time));
             return this;
         }
 
-        IFluentSchedulingTimeSpecifier IFluentSchedulingDateSpecifier.On(int year, int month, int day)
+        IFluentSchedulingTimeSpecifier IFluentSchedulingDateSpecifier.On(
+            int year,
+            int month,
+            int day
+        )
         {
             _dateRule = _schedule.DateRules.On(year, month, day);
             return this;
@@ -257,22 +286,38 @@ namespace QuantConnect.Scheduling
             return this;
         }
 
-        IFluentSchedulingRunnable IFluentSchedulingTimeSpecifier.At(int hour, int minute, int second)
+        IFluentSchedulingRunnable IFluentSchedulingTimeSpecifier.At(
+            int hour,
+            int minute,
+            int second
+        )
         {
             return SetTimeRule(_schedule.TimeRules.At(hour, minute, second));
         }
 
-        IFluentSchedulingRunnable IFluentSchedulingTimeSpecifier.At(int hour, int minute, DateTimeZone timeZone)
+        IFluentSchedulingRunnable IFluentSchedulingTimeSpecifier.At(
+            int hour,
+            int minute,
+            DateTimeZone timeZone
+        )
         {
             return SetTimeRule(_schedule.TimeRules.At(hour, minute, 0, timeZone));
         }
 
-        IFluentSchedulingRunnable IFluentSchedulingTimeSpecifier.At(int hour, int minute, int second, DateTimeZone timeZone)
+        IFluentSchedulingRunnable IFluentSchedulingTimeSpecifier.At(
+            int hour,
+            int minute,
+            int second,
+            DateTimeZone timeZone
+        )
         {
             return SetTimeRule(_schedule.TimeRules.At(hour, minute, second, timeZone));
         }
 
-        IFluentSchedulingRunnable IFluentSchedulingTimeSpecifier.At(TimeSpan timeOfDay, DateTimeZone timeZone)
+        IFluentSchedulingRunnable IFluentSchedulingTimeSpecifier.At(
+            TimeSpan timeOfDay,
+            DateTimeZone timeZone
+        )
         {
             return SetTimeRule(_schedule.TimeRules.At(timeOfDay, timeZone));
         }
@@ -282,7 +327,9 @@ namespace QuantConnect.Scheduling
             Security security;
             if (!_securities.TryGetValue(symbol, out security))
             {
-                throw new KeyNotFoundException($"{symbol} not found in portfolio. Request this data when initializing the algorithm.");
+                throw new KeyNotFoundException(
+                    $"{symbol} not found in portfolio. Request this data when initializing the algorithm."
+                );
             }
 
             return security;
@@ -300,30 +347,37 @@ namespace QuantConnect.Scheduling
         /// Filters the event times using the predicate
         /// </summary>
         IFluentSchedulingTimeSpecifier Where(Func<DateTime, bool> predicate);
+
         /// <summary>
         /// Creates events only on the specified date
         /// </summary>
         IFluentSchedulingTimeSpecifier On(int year, int month, int day);
+
         /// <summary>
         /// Creates events only on the specified dates
         /// </summary>
         IFluentSchedulingTimeSpecifier On(params DateTime[] dates);
+
         /// <summary>
         /// Creates events on each of the specified day of week
         /// </summary>
         IFluentSchedulingTimeSpecifier Every(params DayOfWeek[] days);
+
         /// <summary>
         /// Creates events on every day of the year
         /// </summary>
         IFluentSchedulingTimeSpecifier EveryDay();
+
         /// <summary>
         /// Creates events on every trading day of the year for the symbol
         /// </summary>
         IFluentSchedulingTimeSpecifier EveryDay(Symbol symbol);
+
         /// <summary>
         /// Creates events on the first day of the month
         /// </summary>
         IFluentSchedulingTimeSpecifier MonthStart();
+
         /// <summary>
         /// Creates events on the first trading day of the month
         /// </summary>
@@ -339,38 +393,54 @@ namespace QuantConnect.Scheduling
         /// Filters the event times using the predicate
         /// </summary>
         IFluentSchedulingTimeSpecifier Where(Func<DateTime, bool> predicate);
+
         /// <summary>
         /// Creates events that fire at the specified time of day in the specified time zone
         /// </summary>
         IFluentSchedulingRunnable At(int hour, int minute, int second = 0);
+
         /// <summary>
         /// Creates events that fire at the specified time of day in the specified time zone
         /// </summary>
         IFluentSchedulingRunnable At(int hour, int minute, DateTimeZone timeZone);
+
         /// <summary>
         /// Creates events that fire at the specified time of day in the specified time zone
         /// </summary>
         IFluentSchedulingRunnable At(int hour, int minute, int second, DateTimeZone timeZone);
+
         /// <summary>
         /// Creates events that fire at the specified time of day in the specified time zone
         /// </summary>
         IFluentSchedulingRunnable At(TimeSpan timeOfDay, DateTimeZone timeZone);
+
         /// <summary>
         /// Creates events that fire at the specific time of day in the algorithm's time zone
         /// </summary>
         IFluentSchedulingRunnable At(TimeSpan timeOfDay);
+
         /// <summary>
         /// Creates events that fire on a period define by the specified interval
         /// </summary>
         IFluentSchedulingRunnable Every(TimeSpan interval);
+
         /// <summary>
         /// Creates events that fire a specified number of minutes after market open
         /// </summary>
-        IFluentSchedulingRunnable AfterMarketOpen(Symbol symbol, double minutesAfterOpen = 0, bool extendedMarketOpen = false);
+        IFluentSchedulingRunnable AfterMarketOpen(
+            Symbol symbol,
+            double minutesAfterOpen = 0,
+            bool extendedMarketOpen = false
+        );
+
         /// <summary>
         /// Creates events that fire a specified numer of minutes before market close
         /// </summary>
-        IFluentSchedulingRunnable BeforeMarketClose(Symbol symbol, double minuteBeforeClose = 0, bool extendedMarketClose = false);
+        IFluentSchedulingRunnable BeforeMarketClose(
+            Symbol symbol,
+            double minuteBeforeClose = 0,
+            bool extendedMarketClose = false
+        );
     }
 
     /// <summary>
@@ -382,18 +452,22 @@ namespace QuantConnect.Scheduling
         /// Filters the event times using the predicate
         /// </summary>
         new IFluentSchedulingRunnable Where(Func<DateTime, bool> predicate);
+
         /// <summary>
         /// Filters the event times to only include times where the symbol's market is considered open
         /// </summary>
         IFluentSchedulingRunnable DuringMarketHours(Symbol symbol, bool extendedMarket = false);
+
         /// <summary>
         /// Register the defined event with the callback
         /// </summary>
         ScheduledEvent Run(Action callback);
+
         /// <summary>
         /// Register the defined event with the callback
         /// </summary>
         ScheduledEvent Run(Action<DateTime> callback);
+
         /// <summary>
         /// Register the defined event with the callback
         /// </summary>

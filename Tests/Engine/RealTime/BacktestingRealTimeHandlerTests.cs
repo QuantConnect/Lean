@@ -66,22 +66,40 @@ namespace QuantConnect.Tests.Engine.RealTime
             var secondCalled = false;
             var events = new List<ScheduledEvent>
             {
-                new ScheduledEvent("1", new List<DateTime> { startDate.AddMinutes(-10), startDate.AddMinutes(5)},
-                    (s, time) => { firstCalled = true; }),
-                new ScheduledEvent("2", new List<DateTime> { startDate.AddMinutes(1)},
-                    (s, time) => { secondCalled = true; }),
-                new ScheduledEvent("3", new List<DateTime> { startDate.AddMinutes(10)}, (s, time) => { })
+                new ScheduledEvent(
+                    "1",
+                    new List<DateTime> { startDate.AddMinutes(-10), startDate.AddMinutes(5) },
+                    (s, time) =>
+                    {
+                        firstCalled = true;
+                    }
+                ),
+                new ScheduledEvent(
+                    "2",
+                    new List<DateTime> { startDate.AddMinutes(1) },
+                    (s, time) =>
+                    {
+                        secondCalled = true;
+                    }
+                ),
+                new ScheduledEvent(
+                    "3",
+                    new List<DateTime> { startDate.AddMinutes(10) },
+                    (s, time) => { }
+                )
             };
             foreach (var scheduledEvent in events)
             {
                 realTimeHandler.Add(scheduledEvent);
             }
 
-            realTimeHandler.Setup(algo,
+            realTimeHandler.Setup(
+                algo,
                 new AlgorithmNodePacket(PacketType.AlgorithmNode),
                 new BacktestingResultHandler(),
                 null,
-                null);
+                null
+            );
 
             realTimeHandler.SetTime(startDate.AddMinutes(1));
             realTimeHandler.Exit();
@@ -101,11 +119,13 @@ namespace QuantConnect.Tests.Engine.RealTime
             algo.SetStartDate(2019, 1, 1);
             algo.SetDateTime(new DateTime(2019, 1, 1));
             algo.SetEndDate(2020, 1, 1);
-            realTimeHandler.Setup(algo,
+            realTimeHandler.Setup(
+                algo,
                 new AlgorithmNodePacket(PacketType.AlgorithmNode),
                 new BacktestingResultHandler(),
                 null,
-                null);
+                null
+            );
 
             realTimeHandler.SetTime(DateTime.UtcNow);
             realTimeHandler.Exit();
@@ -122,11 +142,13 @@ namespace QuantConnect.Tests.Engine.RealTime
             algo.SetStartDate(2019, 1, 1);
             algo.SetDateTime(new DateTime(2019, 1, 1));
             algo.SetEndDate(2020, 1, 1);
-            realTimeHandler.Setup(algo,
+            realTimeHandler.Setup(
+                algo,
                 new AlgorithmNodePacket(PacketType.AlgorithmNode),
                 new BacktestingResultHandler(),
                 null,
-                null);
+                null
+            );
 
             realTimeHandler.ScanPastEvents(DateTime.UtcNow);
             realTimeHandler.Exit();
@@ -137,24 +159,29 @@ namespace QuantConnect.Tests.Engine.RealTime
         public void TriggersScheduledEventsSameTimeInOrder()
         {
             var realTimeHandler = new BacktestingRealTimeHandler();
-            realTimeHandler.Setup(new AlgorithmStub(new NullDataFeed()),
+            realTimeHandler.Setup(
+                new AlgorithmStub(new NullDataFeed()),
                 new AlgorithmNodePacket(PacketType.AlgorithmNode),
                 new BacktestingResultHandler(),
                 null,
-                null);
+                null
+            );
             var eventTime = DateTime.UtcNow;
 
             var count = 0;
             for (var i = 0; i < 100; i++)
             {
                 var id = i;
-                using var scheduleEvent = new ScheduledEvent($"{id}", eventTime,
+                using var scheduleEvent = new ScheduledEvent(
+                    $"{id}",
+                    eventTime,
                     (s, time) =>
                     {
                         Assert.AreEqual(id, count);
                         Assert.AreEqual(s, $"{id}");
                         count++;
-                    });
+                    }
+                );
                 realTimeHandler.Add(scheduleEvent);
             }
 
@@ -168,16 +195,19 @@ namespace QuantConnect.Tests.Engine.RealTime
         public void SetTime(bool oneStep)
         {
             var realTimeHandler = new BacktestingRealTimeHandler();
-            realTimeHandler.Setup(new AlgorithmStub(new NullDataFeed()),
+            realTimeHandler.Setup(
+                new AlgorithmStub(new NullDataFeed()),
                 new AlgorithmNodePacket(PacketType.AlgorithmNode),
                 new BacktestingResultHandler(),
                 null,
-                null);
+                null
+            );
             var date = new DateTime(2020, 1, 1);
 
             var count = 0;
             var asserts = 0;
-            using var scheduledEvent = new ScheduledEvent("1",
+            using var scheduledEvent = new ScheduledEvent(
+                "1",
                 new List<DateTime> { date, date.AddMinutes(10) },
                 (s, time) =>
                 {
@@ -192,10 +222,12 @@ namespace QuantConnect.Tests.Engine.RealTime
                         asserts++;
                         Assert.AreEqual(date.AddMinutes(10), time);
                     }
-                });
+                }
+            );
             realTimeHandler.Add(scheduledEvent);
 
-            using var scheduledEvent2 = new ScheduledEvent("2",
+            using var scheduledEvent2 = new ScheduledEvent(
+                "2",
                 new List<DateTime> { date.AddMinutes(1), date.AddMinutes(2) },
                 (s, time) =>
                 {
@@ -210,7 +242,8 @@ namespace QuantConnect.Tests.Engine.RealTime
                         asserts++;
                         Assert.AreEqual(date.AddMinutes(2), time);
                     }
-                });
+                }
+            );
             realTimeHandler.Add(scheduledEvent2);
 
             if (oneStep)
@@ -235,9 +268,21 @@ namespace QuantConnect.Tests.Engine.RealTime
             var date = new DateTime(2020, 1, 1);
             var events = new List<ScheduledEvent>
             {
-                new ScheduledEvent("1", new List<DateTime> {date.AddMinutes(10)}, (s, time) => { }),
-                new ScheduledEvent("2", new List<DateTime> {date.AddMinutes(1)}, (s, time) => { }),
-                new ScheduledEvent("3", new List<DateTime> {date.AddMinutes(10)}, (s, time) => { })
+                new ScheduledEvent(
+                    "1",
+                    new List<DateTime> { date.AddMinutes(10) },
+                    (s, time) => { }
+                ),
+                new ScheduledEvent(
+                    "2",
+                    new List<DateTime> { date.AddMinutes(1) },
+                    (s, time) => { }
+                ),
+                new ScheduledEvent(
+                    "3",
+                    new List<DateTime> { date.AddMinutes(10) },
+                    (s, time) => { }
+                )
             };
             BacktestingRealTimeHandler.SortFirstElement(events);
             Assert.AreEqual(date.AddMinutes(1), events[0].NextEventUtcTime);
@@ -249,11 +294,31 @@ namespace QuantConnect.Tests.Engine.RealTime
 
             events = new List<ScheduledEvent>
             {
-                new ScheduledEvent("1", new List<DateTime> {date.AddMinutes(10)}, (s, time) => { }),
-                new ScheduledEvent("2", new List<DateTime> {date.AddMinutes(1)}, (s, time) => { }),
-                new ScheduledEvent("3", new List<DateTime> {date.AddMinutes(3)}, (s, time) => { }),
-                new ScheduledEvent("4", new List<DateTime> {date.AddMinutes(10)}, (s, time) => { }),
-                new ScheduledEvent("5", new List<DateTime> {date.AddMinutes(50)}, (s, time) => { })
+                new ScheduledEvent(
+                    "1",
+                    new List<DateTime> { date.AddMinutes(10) },
+                    (s, time) => { }
+                ),
+                new ScheduledEvent(
+                    "2",
+                    new List<DateTime> { date.AddMinutes(1) },
+                    (s, time) => { }
+                ),
+                new ScheduledEvent(
+                    "3",
+                    new List<DateTime> { date.AddMinutes(3) },
+                    (s, time) => { }
+                ),
+                new ScheduledEvent(
+                    "4",
+                    new List<DateTime> { date.AddMinutes(10) },
+                    (s, time) => { }
+                ),
+                new ScheduledEvent(
+                    "5",
+                    new List<DateTime> { date.AddMinutes(50) },
+                    (s, time) => { }
+                )
             };
             BacktestingRealTimeHandler.SortFirstElement(events);
             Assert.AreEqual(date.AddMinutes(1), events[0].NextEventUtcTime);
@@ -272,8 +337,12 @@ namespace QuantConnect.Tests.Engine.RealTime
             var date = new DateTime(2020, 1, 1);
             var events = new List<ScheduledEvent>
             {
-                new ScheduledEvent("1", new List<DateTime> {date.AddMinutes(10)}, (s, time) => { }),
-                new ScheduledEvent("2", new List<DateTime> {date.AddMinutes(1)}, (s, time) => { })
+                new ScheduledEvent(
+                    "1",
+                    new List<DateTime> { date.AddMinutes(10) },
+                    (s, time) => { }
+                ),
+                new ScheduledEvent("2", new List<DateTime> { date.AddMinutes(1) }, (s, time) => { })
             };
             BacktestingRealTimeHandler.SortFirstElement(events);
             Assert.AreEqual(date.AddMinutes(1), events[0].NextEventUtcTime);
@@ -281,9 +350,17 @@ namespace QuantConnect.Tests.Engine.RealTime
 
             events = new List<ScheduledEvent>
             {
-                new ScheduledEvent("1", new List<DateTime> {date.AddMinutes(10)}, (s, time) => { }),
-                new ScheduledEvent("2", new List<DateTime> {date.AddMinutes(1)}, (s, time) => { }),
-                new ScheduledEvent("2", new List<DateTime> {date.AddMinutes(3)}, (s, time) => { })
+                new ScheduledEvent(
+                    "1",
+                    new List<DateTime> { date.AddMinutes(10) },
+                    (s, time) => { }
+                ),
+                new ScheduledEvent(
+                    "2",
+                    new List<DateTime> { date.AddMinutes(1) },
+                    (s, time) => { }
+                ),
+                new ScheduledEvent("2", new List<DateTime> { date.AddMinutes(3) }, (s, time) => { })
             };
             BacktestingRealTimeHandler.SortFirstElement(events);
             Assert.AreEqual(date.AddMinutes(1), events[0].NextEventUtcTime);
@@ -292,10 +369,26 @@ namespace QuantConnect.Tests.Engine.RealTime
 
             events = new List<ScheduledEvent>
             {
-                new ScheduledEvent("1", new List<DateTime> {date.AddMinutes(10)}, (s, time) => { }),
-                new ScheduledEvent("2", new List<DateTime> {date.AddMinutes(1)}, (s, time) => { }),
-                new ScheduledEvent("2", new List<DateTime> {date.AddMinutes(3)}, (s, time) => { }),
-                new ScheduledEvent("2", new List<DateTime> {date.AddMinutes(50)}, (s, time) => { })
+                new ScheduledEvent(
+                    "1",
+                    new List<DateTime> { date.AddMinutes(10) },
+                    (s, time) => { }
+                ),
+                new ScheduledEvent(
+                    "2",
+                    new List<DateTime> { date.AddMinutes(1) },
+                    (s, time) => { }
+                ),
+                new ScheduledEvent(
+                    "2",
+                    new List<DateTime> { date.AddMinutes(3) },
+                    (s, time) => { }
+                ),
+                new ScheduledEvent(
+                    "2",
+                    new List<DateTime> { date.AddMinutes(50) },
+                    (s, time) => { }
+                )
             };
             BacktestingRealTimeHandler.SortFirstElement(events);
             Assert.AreEqual(date.AddMinutes(1), events[0].NextEventUtcTime);
@@ -309,17 +402,20 @@ namespace QuantConnect.Tests.Engine.RealTime
         public void ScanPastEvents(bool oneStep)
         {
             var realTimeHandler = new BacktestingRealTimeHandler();
-            realTimeHandler.Setup(new AlgorithmStub(),
+            realTimeHandler.Setup(
+                new AlgorithmStub(),
                 new AlgorithmNodePacket(PacketType.AlgorithmNode) { Language = Language.CSharp },
                 _resultHandler,
                 null,
-                new TestTimeLimitManager());
+                new TestTimeLimitManager()
+            );
 
             var date = new DateTime(2020, 1, 1);
 
             var count = 0;
             var asserts = 0;
-            using var scheduledEvent = new ScheduledEvent("1",
+            using var scheduledEvent = new ScheduledEvent(
+                "1",
                 new List<DateTime> { date, date.AddMinutes(10) },
                 (s, time) =>
                 {
@@ -334,10 +430,12 @@ namespace QuantConnect.Tests.Engine.RealTime
                         asserts++;
                         Assert.AreEqual(date.AddMinutes(10), time);
                     }
-                });
+                }
+            );
             realTimeHandler.Add(scheduledEvent);
 
-            using var scheduledEvent2 = new ScheduledEvent("2",
+            using var scheduledEvent2 = new ScheduledEvent(
+                "2",
                 new List<DateTime> { date.AddMinutes(1), date.AddMinutes(2) },
                 (s, time) =>
                 {
@@ -352,7 +450,8 @@ namespace QuantConnect.Tests.Engine.RealTime
                         asserts++;
                         Assert.AreEqual(date.AddMinutes(2), time);
                     }
-                });
+                }
+            );
             realTimeHandler.Add(scheduledEvent2);
 
             if (oneStep)
@@ -386,26 +485,34 @@ namespace QuantConnect.Tests.Engine.RealTime
             {
                 algorithm = new AlgorithmPythonWrapper("Test_CustomDataAlgorithm");
                 algorithm.SubscriptionManager.SetDataManager(new DataManagerStub(algorithm));
-                security = algorithm.AddSecurity(SecurityType.Equity,
+                security = algorithm.AddSecurity(
+                    SecurityType.Equity,
                     "SPY",
                     Resolution.Daily,
                     Market.USA,
                     false,
                     1,
-                    false);
+                    false
+                );
             }
 
             var realTimeHandler = new TestBacktestingRealTimeHandler();
-            realTimeHandler.Setup(algorithm,
+            realTimeHandler.Setup(
+                algorithm,
                 new AlgorithmNodePacket(PacketType.AlgorithmNode) { Language = language },
                 _resultHandler,
                 null,
-                new TestTimeLimitManager());
+                new TestTimeLimitManager()
+            );
 
             Assert.AreEqual(0, realTimeHandler.GetScheduledEventsCount);
 
             realTimeHandler.OnSecuritiesChanged(
-                SecurityChangesTests.CreateNonInternal(new[] { security }, Enumerable.Empty<Security>()));
+                SecurityChangesTests.CreateNonInternal(
+                    new[] { security },
+                    Enumerable.Empty<Security>()
+                )
+            );
 
             Assert.AreEqual(0, realTimeHandler.GetScheduledEventsCount);
 
@@ -426,28 +533,38 @@ namespace QuantConnect.Tests.Engine.RealTime
             else
             {
                 algorithm = new AlgorithmPythonWrapper("OnEndOfDayRegressionAlgorithm");
-                algorithm.SubscriptionManager.SetDataManager(new DataManagerStub(new MockDataFeed(), algorithm));
-                security = algorithm.AddSecurity(SecurityType.Equity,
+                algorithm.SubscriptionManager.SetDataManager(
+                    new DataManagerStub(new MockDataFeed(), algorithm)
+                );
+                security = algorithm.AddSecurity(
+                    SecurityType.Equity,
                     "SPY",
                     Resolution.Daily,
                     Market.USA,
                     false,
                     1,
-                    false);
+                    false
+                );
             }
 
             var realTimeHandler = new TestBacktestingRealTimeHandler();
-            realTimeHandler.Setup(algorithm,
+            realTimeHandler.Setup(
+                algorithm,
                 new AlgorithmNodePacket(PacketType.AlgorithmNode) { Language = language },
                 _resultHandler,
                 null,
-                new TestTimeLimitManager());
-            
+                new TestTimeLimitManager()
+            );
+
             // Because neither implement EOD() deprecated it should be zero
             Assert.AreEqual(0, realTimeHandler.GetScheduledEventsCount);
 
             realTimeHandler.OnSecuritiesChanged(
-                SecurityChangesTests.CreateNonInternal(new[] { security }, Enumerable.Empty<Security>()));
+                SecurityChangesTests.CreateNonInternal(
+                    new[] { security },
+                    Enumerable.Empty<Security>()
+                )
+            );
 
             Assert.AreEqual(1, realTimeHandler.GetScheduledEventsCount);
             realTimeHandler.Exit();
@@ -479,15 +596,13 @@ namespace QuantConnect.Tests.Engine.RealTime
         private class TestAlgorithm : AlgorithmStub
         {
             public bool OnEndOfDayFired { get; set; }
+
             public override void OnEndOfDay()
             {
                 OnEndOfDayFired = true;
             }
 
-            public override void OnEndOfDay(Symbol symbol)
-            {
-
-            }
+            public override void OnEndOfDay(Symbol symbol) { }
         }
 
         /// <summary>
@@ -497,9 +612,7 @@ namespace QuantConnect.Tests.Engine.RealTime
         /// </summary>
         private class TestAlgorithmB : AlgorithmStub
         {
-            public override void OnEndOfDay(Symbol symbol)
-            {
-            }
+            public override void OnEndOfDay(Symbol symbol) { }
         }
     }
 }

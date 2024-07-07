@@ -1,11 +1,11 @@
 ﻿/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
- * 
- * Licensed under the Apache License, Version 2.0 (the "License"); 
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -41,7 +41,7 @@ namespace QuantConnect.Indicators.CandlestickPatterns
         /// Initializes a new instance of the <see cref="TwoCrows"/> class using the specified name.
         /// </summary>
         /// <param name="name">The name of this indicator</param>
-        public TwoCrows(string name) 
+        public TwoCrows(string name)
             : base(name, CandleSettings.Get(CandleSettingType.BodyLong).AveragePeriod + 2 + 1)
         {
             _bodyLongAveragePeriod = CandleSettings.Get(CandleSettingType.BodyLong).AveragePeriod;
@@ -51,9 +51,7 @@ namespace QuantConnect.Indicators.CandlestickPatterns
         /// Initializes a new instance of the <see cref="TwoCrows"/> class.
         /// </summary>
         public TwoCrows()
-            : this("TWOCROWS")
-        {
-        }
+            : this("TWOCROWS") { }
 
         /// <summary>
         /// Gets a flag indicating when this indicator is ready and fully initialized
@@ -69,7 +67,10 @@ namespace QuantConnect.Indicators.CandlestickPatterns
         /// <param name="window">The window of data held in this indicator</param>
         /// <param name="input">The input given to the indicator</param>
         /// <returns>A new value for this indicator</returns>
-        protected override decimal ComputeNextValue(IReadOnlyWindow<IBaseDataBar> window, IBaseDataBar input)
+        protected override decimal ComputeNextValue(
+            IReadOnlyWindow<IBaseDataBar> window,
+            IBaseDataBar input
+        )
         {
             if (!IsReady)
             {
@@ -83,29 +84,39 @@ namespace QuantConnect.Indicators.CandlestickPatterns
             decimal value;
             if (
                 // 1st: white
-                GetCandleColor(window[2]) == CandleColor.White &&
+                GetCandleColor(window[2]) == CandleColor.White
+                &&
                 //      long
-                GetRealBody(window[2]) > GetCandleAverage(CandleSettingType.BodyLong, _bodyLongPeriodTotal, window[2]) &&
+                GetRealBody(window[2])
+                    > GetCandleAverage(CandleSettingType.BodyLong, _bodyLongPeriodTotal, window[2])
+                &&
                 // 2nd: black
-                GetCandleColor(window[1]) == CandleColor.Black &&
+                GetCandleColor(window[1]) == CandleColor.Black
+                &&
                 //      gapping up
-                GetRealBodyGapUp(window[1], window[2]) &&
+                GetRealBodyGapUp(window[1], window[2])
+                &&
                 // 3rd: black
-                GetCandleColor(input) == CandleColor.Black &&
+                GetCandleColor(input) == CandleColor.Black
+                &&
                 //      opening within 2nd rb
-                input.Open < window[1].Open && input.Open > window[1].Close &&
+                input.Open < window[1].Open
+                && input.Open > window[1].Close
+                &&
                 //      closing within 1st rb
-                input.Close > window[2].Open && input.Close < window[2].Close
-              )
+                input.Close > window[2].Open
+                && input.Close < window[2].Close
+            )
                 value = -1m;
             else
                 value = 0m;
 
-            // add the current range and subtract the first range: this is done after the pattern recognition 
+            // add the current range and subtract the first range: this is done after the pattern recognition
             // when avgPeriod is not 0, that means "compare with the previous candles" (it excludes the current candle)
 
-            _bodyLongPeriodTotal += GetCandleRange(CandleSettingType.BodyLong, window[2]) -
-                                    GetCandleRange(CandleSettingType.BodyLong, window[2 + _bodyLongAveragePeriod]);
+            _bodyLongPeriodTotal +=
+                GetCandleRange(CandleSettingType.BodyLong, window[2])
+                - GetCandleRange(CandleSettingType.BodyLong, window[2 + _bodyLongAveragePeriod]);
 
             return value;
         }

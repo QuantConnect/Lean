@@ -69,7 +69,9 @@ namespace QuantConnect.Logging
             OnLogEvent(log);
 
             Console.ForegroundColor = ConsoleColor.Red;
-            _error.WriteLine(DateTime.Now.ToString(DateFormat, CultureInfo.InvariantCulture) + " Error:: " + text);
+            _error.WriteLine(
+                DateTime.Now.ToString(DateFormat, CultureInfo.InvariantCulture) + " Error:: " + text
+            );
             Console.ResetColor();
         }
 
@@ -83,7 +85,9 @@ namespace QuantConnect.Logging
             _logs.Enqueue(log);
             OnLogEvent(log);
 
-            _trace.WriteLine(DateTime.Now.ToString(DateFormat, CultureInfo.InvariantCulture) + " Debug:: " + text);
+            _trace.WriteLine(
+                DateTime.Now.ToString(DateFormat, CultureInfo.InvariantCulture) + " Debug:: " + text
+            );
         }
 
         /// <summary>
@@ -96,16 +100,16 @@ namespace QuantConnect.Logging
             _logs.Enqueue(log);
             OnLogEvent(log);
 
-            _trace.WriteLine(DateTime.Now.ToString(DateFormat, CultureInfo.InvariantCulture) + " Trace:: " + text);
+            _trace.WriteLine(
+                DateTime.Now.ToString(DateFormat, CultureInfo.InvariantCulture) + " Trace:: " + text
+            );
         }
 
         /// <summary>
         /// Performs application-defined tasks associated with freeing, releasing, or resetting unmanaged resources.
         /// </summary>
         /// <filterpriority>2</filterpriority>
-        public void Dispose()
-        {
-        }
+        public void Dispose() { }
 
         /// <summary>
         /// Raise a log event safely

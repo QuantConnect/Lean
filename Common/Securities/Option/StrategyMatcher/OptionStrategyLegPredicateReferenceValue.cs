@@ -22,7 +22,8 @@ namespace QuantConnect.Securities.Option.StrategyMatcher
     /// Provides an implementation of <see cref="IOptionStrategyLegPredicateReferenceValue"/> that references an option
     /// leg from the list of already matched legs by index. The property referenced is defined by <see cref="PredicateTargetValue"/>
     /// </summary>
-    public class OptionStrategyLegPredicateReferenceValue : IOptionStrategyLegPredicateReferenceValue
+    public class OptionStrategyLegPredicateReferenceValue
+        : IOptionStrategyLegPredicateReferenceValue
     {
         private readonly int _index;
 
@@ -60,9 +61,12 @@ namespace QuantConnect.Securities.Option.StrategyMatcher
             var leg = legs[_index];
             switch (Target)
             {
-                case PredicateTargetValue.Right:      return leg.Right;
-                case PredicateTargetValue.Strike:     return leg.Strike;
-                case PredicateTargetValue.Expiration: return leg.Expiration;
+                case PredicateTargetValue.Right:
+                    return leg.Right;
+                case PredicateTargetValue.Strike:
+                    return leg.Strike;
+                case PredicateTargetValue.Expiration:
+                    return leg.Expiration;
                 default:
                     throw new ArgumentOutOfRangeException();
             }

@@ -13,10 +13,10 @@
  * limitations under the License.
 */
 
+using QuantConnect.Algorithm.Framework.Portfolio;
+using QuantConnect.Data.UniverseSelection;
 using QuantConnect.Orders;
 using QuantConnect.Securities;
-using QuantConnect.Data.UniverseSelection;
-using QuantConnect.Algorithm.Framework.Portfolio;
 
 namespace QuantConnect.Algorithm.Framework.Execution
 {
@@ -26,7 +26,8 @@ namespace QuantConnect.Algorithm.Framework.Execution
     /// </summary>
     public class ImmediateExecutionModel : ExecutionModel
     {
-        private readonly PortfolioTargetCollection _targetsCollection = new PortfolioTargetCollection();
+        private readonly PortfolioTargetCollection _targetsCollection =
+            new PortfolioTargetCollection();
 
         /// <summary>
         /// Immediately submits orders for the specified portfolio targets.
@@ -47,8 +48,14 @@ namespace QuantConnect.Algorithm.Framework.Execution
                     var quantity = OrderSizing.GetUnorderedQuantity(algorithm, target, security);
                     if (quantity != 0)
                     {
-                        if (security.BuyingPowerModel.AboveMinimumOrderMarginPortfolioPercentage(security, quantity,
-                            algorithm.Portfolio, algorithm.Settings.MinimumOrderMarginPortfolioPercentage))
+                        if (
+                            security.BuyingPowerModel.AboveMinimumOrderMarginPortfolioPercentage(
+                                security,
+                                quantity,
+                                algorithm.Portfolio,
+                                algorithm.Settings.MinimumOrderMarginPortfolioPercentage
+                            )
+                        )
                         {
                             algorithm.MarketOrder(security, quantity);
                         }
@@ -69,8 +76,6 @@ namespace QuantConnect.Algorithm.Framework.Execution
         /// </summary>
         /// <param name="algorithm">The algorithm instance that experienced the change in securities</param>
         /// <param name="changes">The security additions and removals from the algorithm</param>
-        public override void OnSecuritiesChanged(QCAlgorithm algorithm, SecurityChanges changes)
-        {
-        }
+        public override void OnSecuritiesChanged(QCAlgorithm algorithm, SecurityChanges changes) { }
     }
 }

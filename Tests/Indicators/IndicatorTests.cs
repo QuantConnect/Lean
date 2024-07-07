@@ -68,10 +68,13 @@ namespace QuantConnect.Tests.Indicators
         public void ThrowsOnDifferentDataType()
         {
             var target = new TestIndicator();
-            Assert.Throws<ArgumentException>(() =>
-            {
-                target.Update(new Tick());
-            }, "expected to be of type");
+            Assert.Throws<ArgumentException>(
+                () =>
+                {
+                    target.Update(new Tick());
+                },
+                "expected to be of type"
+            );
         }
 
         [Test]
@@ -96,7 +99,8 @@ namespace QuantConnect.Tests.Indicators
         public void SortsTheSameAsDecimalDescending()
         {
             int count = 100;
-            var targets = Enumerable.Range(0, count)
+            var targets = Enumerable
+                .Range(0, count)
                 .Select(x => new TestIndicator(x.ToString(CultureInfo.InvariantCulture)))
                 .ToList();
 
@@ -105,13 +109,19 @@ namespace QuantConnect.Tests.Indicators
                 targets[i].Update(DateTime.Today, i);
             }
 
-            var expected = Enumerable.Range(0, count)
+            var expected = Enumerable
+                .Range(0, count)
                 .Select(x => (decimal)x)
                 .OrderByDescending(x => x)
                 .ToList();
 
             var actual = targets.OrderByDescending(x => x).ToList();
-            foreach (var pair in expected.Zip<decimal, TestIndicator, Tuple<decimal, TestIndicator>>(actual, Tuple.Create))
+            foreach (
+                var pair in expected.Zip<decimal, TestIndicator, Tuple<decimal, TestIndicator>>(
+                    actual,
+                    Tuple.Create
+                )
+            )
             {
                 Assert.AreEqual(pair.Item1, pair.Item2.Current.Value);
             }
@@ -121,15 +131,27 @@ namespace QuantConnect.Tests.Indicators
         public void SortsTheSameAsDecimalAsecending()
         {
             int count = 100;
-            var targets = Enumerable.Range(0, count).Select(x => new TestIndicator(x.ToString(CultureInfo.InvariantCulture))).ToList();
+            var targets = Enumerable
+                .Range(0, count)
+                .Select(x => new TestIndicator(x.ToString(CultureInfo.InvariantCulture)))
+                .ToList();
             for (int i = 0; i < targets.Count; i++)
             {
                 targets[i].Update(DateTime.Today, i);
             }
 
-            var expected = Enumerable.Range(0, count).Select(x => (decimal)x).OrderBy(x => x).ToList();
+            var expected = Enumerable
+                .Range(0, count)
+                .Select(x => (decimal)x)
+                .OrderBy(x => x)
+                .ToList();
             var actual = targets.OrderBy(x => x).ToList();
-            foreach (var pair in expected.Zip<decimal, TestIndicator, Tuple<decimal, TestIndicator>>(actual, Tuple.Create))
+            foreach (
+                var pair in expected.Zip<decimal, TestIndicator, Tuple<decimal, TestIndicator>>(
+                    actual,
+                    Tuple.Create
+                )
+            )
             {
                 Assert.AreEqual(pair.Item1, pair.Item2.Current.Value);
             }
@@ -163,7 +185,8 @@ namespace QuantConnect.Tests.Indicators
         [Test]
         public void IndicatorMustBeEqualToItself()
         {
-            var indicators = typeof(Indicator).Assembly.GetTypes()
+            var indicators = typeof(Indicator)
+                .Assembly.GetTypes()
                 .Where(t => t.BaseType.Name != "CandlestickPattern" && !t.Name.StartsWith("<"))
                 .OrderBy(t => t.Name)
                 .ToList();
@@ -174,7 +197,10 @@ namespace QuantConnect.Tests.Indicators
             {
                 try
                 {
-                    instantiatedIndicator = Activator.CreateInstance(indicator, new object[] {10});
+                    instantiatedIndicator = Activator.CreateInstance(
+                        indicator,
+                        new object[] { 10 }
+                    );
                     counter++;
                 }
                 catch (Exception)
@@ -184,7 +210,10 @@ namespace QuantConnect.Tests.Indicators
                 }
 
                 Assert.IsTrue(instantiatedIndicator.Equals(instantiatedIndicator));
-                var anotherInstantiatedIndicator = Activator.CreateInstance(indicator, new object[] { 10 });
+                var anotherInstantiatedIndicator = Activator.CreateInstance(
+                    indicator,
+                    new object[] { 10 }
+                );
                 Assert.IsFalse(instantiatedIndicator.Equals(anotherInstantiatedIndicator));
             }
             Log.Trace($"{counter} indicators out of {indicators.Count} were tested.");
@@ -201,16 +230,23 @@ namespace QuantConnect.Tests.Indicators
             // RSI is a DataPointIndicator
             algorithm.RSI(spy.Symbol, 14).Updated += (_, e) => indicatorTimeList.Add(e.EndTime);
             // STO is a BarIndicator
-            algorithm.STO(spy.Symbol, 14, 2, 2).Updated += (_, e) => indicatorTimeList.Add(e.EndTime);
+            algorithm.STO(spy.Symbol, 14, 2, 2).Updated += (_, e) =>
+                indicatorTimeList.Add(e.EndTime);
             // MFI is a TradeBarIndicator
             algorithm.MFI(spy.Symbol, 14).Updated += (_, e) => indicatorTimeList.Add(e.EndTime);
 
             var consolidators = spy.Subscriptions.SelectMany(x => x.Consolidators).ToList();
-            Assert.AreEqual(3, consolidators.Count);   // One consolidator for each indicator
+            Assert.AreEqual(3, consolidators.Count); // One consolidator for each indicator
 
-            var bars = new[] { 30, 31 }.Select(d =>
-                new TradeBar(new DateTime(2020, 03, 04, 9, d, 0),
-                             spy.Symbol, 100, 100, 100, 100, 1000));
+            var bars = new[] { 30, 31 }.Select(d => new TradeBar(
+                new DateTime(2020, 03, 04, 9, d, 0),
+                spy.Symbol,
+                100,
+                100,
+                100,
+                100,
+                1000
+            ));
 
             foreach (var bar in bars)
             {
@@ -349,12 +385,20 @@ namespace QuantConnect.Tests.Indicators
             TestOperator(indicator, default(TValue), "Inequality", false, false);
         }
 
-        private static void TestOperator<TIndicator, TValue>(TIndicator indicator, TValue value, string opName, bool tvalueIsFirstParm, bool expected)
+        private static void TestOperator<TIndicator, TValue>(
+            TIndicator indicator,
+            TValue value,
+            string opName,
+            bool tvalueIsFirstParm,
+            bool expected
+        )
         {
             var method = GetOperatorMethodInfo<TValue>(opName, tvalueIsFirstParm ? 0 : 1);
             var ctIndicator = Expression.Constant(indicator);
             var ctValue = Expression.Constant(value);
-            var call = tvalueIsFirstParm ? Expression.Call(method, ctValue, ctIndicator) : Expression.Call(method, ctIndicator, ctValue);
+            var call = tvalueIsFirstParm
+                ? Expression.Call(method, ctValue, ctIndicator)
+                : Expression.Call(method, ctIndicator, ctValue);
             var lamda = Expression.Lambda<Func<bool>>(call);
             var func = lamda.Compile();
             Assert.AreEqual(expected, func());
@@ -363,13 +407,22 @@ namespace QuantConnect.Tests.Indicators
         private static MethodInfo GetOperatorMethodInfo<T>(string @operator, int argIndex)
         {
             var methodName = "op_" + @operator;
-            var method =
-                typeof (IndicatorBase).GetMethods(BindingFlags.Static | BindingFlags.Public)
-                .SingleOrDefault(x => x.Name == methodName && x.GetParameters()[argIndex].ParameterType == typeof(T));
+            var method = typeof(IndicatorBase)
+                .GetMethods(BindingFlags.Static | BindingFlags.Public)
+                .SingleOrDefault(x =>
+                    x.Name == methodName && x.GetParameters()[argIndex].ParameterType == typeof(T)
+                );
 
             if (method == null)
             {
-                Assert.Fail("Failed to find method for " + @operator + " of type " + typeof(T).Name + " at index: " + argIndex);
+                Assert.Fail(
+                    "Failed to find method for "
+                        + @operator
+                        + " of type "
+                        + typeof(T).Name
+                        + " at index: "
+                        + argIndex
+                );
             }
 
             return method;
@@ -382,16 +435,13 @@ namespace QuantConnect.Tests.Indicators
             /// </summary>
             /// <param name="name">The name of this indicator</param>
             public TestIndicator(string name)
-                : base(name)
-            {
-            }
+                : base(name) { }
+
             /// <summary>
             ///     Initializes a new instance of the Indicator class using the name "test"
             /// </summary>
             public TestIndicator()
-                : base("test")
-            {
-            }
+                : base("test") { }
 
             /// <summary>
             ///     Gets a flag indicating when this indicator is ready and fully initialized

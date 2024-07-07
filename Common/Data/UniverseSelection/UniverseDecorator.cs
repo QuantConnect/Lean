@@ -27,7 +27,7 @@ namespace QuantConnect.Data.UniverseSelection
     /// wrapped (or decorated) universe. This provides scaffolding for other decorators who
     /// only need to override one or two methods.
     /// </summary>
-    /// <remarks> Requires special handling due to `this != this.Universe` 
+    /// <remarks> Requires special handling due to `this != this.Universe`
     /// <see cref="GetSubscriptionRequests(Security, DateTime, DateTime, ISubscriptionDataConfigService)"/></remarks>
     public abstract class UniverseDecorator : Universe
     {
@@ -41,14 +41,8 @@ namespace QuantConnect.Data.UniverseSelection
         /// </summary>
         public override UniverseSettings UniverseSettings
         {
-            get
-            {
-                return Universe.UniverseSettings;
-            }
-            set
-            {
-                Universe.UniverseSettings = value;
-            }
+            get { return Universe.UniverseSettings; }
+            set { Universe.UniverseSettings = value; }
         }
 
         /// <summary>
@@ -76,8 +70,14 @@ namespace QuantConnect.Data.UniverseSelection
         /// <param name="currentTimeUtc">The current time in utc. This is the frontier time of the algorithm</param>
         /// <param name="maximumEndTimeUtc">The max end time</param>
         /// <returns>All subscriptions required by this security</returns>
-        [Obsolete("This overload is obsolete and will not be called. It was not capable of creating new SubscriptionDataConfig due to lack of information")]
-        public override IEnumerable<SubscriptionRequest> GetSubscriptionRequests(Security security, DateTime currentTimeUtc, DateTime maximumEndTimeUtc)
+        [Obsolete(
+            "This overload is obsolete and will not be called. It was not capable of creating new SubscriptionDataConfig due to lack of information"
+        )]
+        public override IEnumerable<SubscriptionRequest> GetSubscriptionRequests(
+            Security security,
+            DateTime currentTimeUtc,
+            DateTime maximumEndTimeUtc
+        )
         {
             return Universe.GetSubscriptionRequests(security, currentTimeUtc, maximumEndTimeUtc);
         }
@@ -90,16 +90,21 @@ namespace QuantConnect.Data.UniverseSelection
         /// <param name="maximumEndTimeUtc">The max end time</param>
         /// <param name="subscriptionService">Instance which implements <see cref="ISubscriptionDataConfigService"/> interface</param>
         /// <returns>All subscriptions required by this security</returns>
-        public override IEnumerable<SubscriptionRequest> GetSubscriptionRequests(Security security,
+        public override IEnumerable<SubscriptionRequest> GetSubscriptionRequests(
+            Security security,
             DateTime currentTimeUtc,
             DateTime maximumEndTimeUtc,
-            ISubscriptionDataConfigService subscriptionService)
+            ISubscriptionDataConfigService subscriptionService
+        )
         {
-            var result = Universe.GetSubscriptionRequests(
-                security,
-                currentTimeUtc,
-                maximumEndTimeUtc,
-                subscriptionService).ToList();
+            var result = Universe
+                .GetSubscriptionRequests(
+                    security,
+                    currentTimeUtc,
+                    maximumEndTimeUtc,
+                    subscriptionService
+                )
+                .ToList();
 
             for (var i = 0; i < result.Count; i++)
             {
@@ -107,8 +112,7 @@ namespace QuantConnect.Data.UniverseSelection
                 // is requesting to add or remove each SubscriptionRequest.
                 // UniverseDecorator is a special case because
                 // `this != UniverseDecorator.Universe`
-                result[i] =
-                    new SubscriptionRequest(result[i], universe: this);
+                result[i] = new SubscriptionRequest(result[i], universe: this);
             }
 
             return result;
@@ -136,10 +140,22 @@ namespace QuantConnect.Data.UniverseSelection
         /// <param name="marketHoursDatabase">The market hours database</param>
         /// <param name="symbolPropertiesDatabase">The symbol properties database</param>
         /// <returns>The newly initialized security object</returns>
-        [Obsolete("CreateSecurity is obsolete and will not be called. The system will create the required Securities based on selected symbols")]
-        public override Security CreateSecurity(Symbol symbol, IAlgorithm algorithm, MarketHoursDatabase marketHoursDatabase, SymbolPropertiesDatabase symbolPropertiesDatabase)
+        [Obsolete(
+            "CreateSecurity is obsolete and will not be called. The system will create the required Securities based on selected symbols"
+        )]
+        public override Security CreateSecurity(
+            Symbol symbol,
+            IAlgorithm algorithm,
+            MarketHoursDatabase marketHoursDatabase,
+            SymbolPropertiesDatabase symbolPropertiesDatabase
+        )
         {
-            return Universe.CreateSecurity(symbol, algorithm, marketHoursDatabase, symbolPropertiesDatabase);
+            return Universe.CreateSecurity(
+                symbol,
+                algorithm,
+                marketHoursDatabase,
+                symbolPropertiesDatabase
+            );
         }
 
         /// <summary>

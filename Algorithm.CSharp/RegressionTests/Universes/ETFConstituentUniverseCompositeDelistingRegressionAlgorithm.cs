@@ -26,7 +26,9 @@ namespace QuantConnect.Algorithm.CSharp
     /// Tests the delisting of the composite Symbol (ETF symbol) and the removal of
     /// the universe and the symbol from the algorithm.
     /// </summary>
-    public class ETFConstituentUniverseCompositeDelistingRegressionAlgorithm : QCAlgorithm, IRegressionAlgorithmDefinition
+    public class ETFConstituentUniverseCompositeDelistingRegressionAlgorithm
+        : QCAlgorithm,
+            IRegressionAlgorithmDefinition
     {
         protected virtual bool AddETFSubscription { get; set; } = true;
 
@@ -72,7 +74,9 @@ namespace QuantConnect.Algorithm.CSharp
 
             if (UtcTime.Date > _delistingDate)
             {
-                throw new RegressionTestException($"Performing constituent universe selection on {UtcTime:yyyy-MM-dd HH:mm:ss.fff} after composite ETF has been delisted");
+                throw new RegressionTestException(
+                    $"Performing constituent universe selection on {UtcTime:yyyy-MM-dd HH:mm:ss.fff} after composite ETF has been delisted"
+                );
             }
 
             var constituentSymbols = constituents.Select(x => x.Symbol);
@@ -89,7 +93,9 @@ namespace QuantConnect.Algorithm.CSharp
         {
             if (UtcTime.Date > _delistingDate && slice.Keys.Any(x => x != _aapl))
             {
-                throw new RegressionTestException($"Received unexpected slice in OnData(...) after universe was deselected");
+                throw new RegressionTestException(
+                    $"Received unexpected slice in OnData(...) after universe was deselected"
+                );
             }
 
             if (!Portfolio.Invested)
@@ -102,7 +108,9 @@ namespace QuantConnect.Algorithm.CSharp
         {
             if (changes.AddedSecurities.Count != 0 && UtcTime > _delistingDate)
             {
-                throw new RegressionTestException("New securities added after ETF constituents were delisted");
+                throw new RegressionTestException(
+                    "New securities added after ETF constituents were delisted"
+                );
             }
 
             // if we added the etf subscription it will get added and delisted and send us a addition/removal event
@@ -117,24 +125,31 @@ namespace QuantConnect.Algorithm.CSharp
             }
 
             // TODO: shouldn't be sending AAPL as a removed security since it was added by another universe
-            _universeRemoved |= changes.RemovedSecurities.Count == expectedChangesCount &&
-                UtcTime.Date >= _delistingDate &&
-                UtcTime.Date < EndDate;
+            _universeRemoved |=
+                changes.RemovedSecurities.Count == expectedChangesCount
+                && UtcTime.Date >= _delistingDate
+                && UtcTime.Date < EndDate;
         }
 
         public override void OnEndOfAlgorithm()
         {
             if (!_universeAdded)
             {
-                throw new RegressionTestException("ETF constituent universe was never added to the algorithm");
+                throw new RegressionTestException(
+                    "ETF constituent universe was never added to the algorithm"
+                );
             }
             if (!_universeRemoved)
             {
-                throw new RegressionTestException("ETF constituent universe was not removed from the algorithm after delisting");
+                throw new RegressionTestException(
+                    "ETF constituent universe was not removed from the algorithm after delisting"
+                );
             }
             if (ActiveSecurities.Count > 2)
             {
-                throw new RegressionTestException($"Expected less than 2 securities after algorithm ended, found {Securities.Count}");
+                throw new RegressionTestException(
+                    $"Expected less than 2 securities after algorithm ended, found {Securities.Count}"
+                );
             }
         }
 
@@ -166,35 +181,36 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// This is used by the regression test system to indicate what the expected statistics are from running the algorithm
         /// </summary>
-        public Dictionary<string, string> ExpectedStatistics => new Dictionary<string, string>
-        {
-            {"Total Orders", "1"},
-            {"Average Win", "0%"},
-            {"Average Loss", "0%"},
-            {"Compounding Annual Return", "30.084%"},
-            {"Drawdown", "5.400%"},
-            {"Expectancy", "0"},
-            {"Start Equity", "100000"},
-            {"End Equity", "104393.19"},
-            {"Net Profit", "4.393%"},
-            {"Sharpe Ratio", "1.543"},
-            {"Sortino Ratio", "2.111"},
-            {"Probabilistic Sharpe Ratio", "58.028%"},
-            {"Loss Rate", "0%"},
-            {"Win Rate", "0%"},
-            {"Profit-Loss Ratio", "0"},
-            {"Alpha", "0.166"},
-            {"Beta", "0.717"},
-            {"Annual Standard Deviation", "0.136"},
-            {"Annual Variance", "0.019"},
-            {"Information Ratio", "1.254"},
-            {"Tracking Error", "0.118"},
-            {"Treynor Ratio", "0.293"},
-            {"Total Fees", "$2.06"},
-            {"Estimated Strategy Capacity", "$160000000.00"},
-            {"Lowest Capacity Asset", "AAPL R735QTJ8XC9X"},
-            {"Portfolio Turnover", "0.83%"},
-            {"OrderListHash", "d38318f2dd0a38f11ef4e4fd704706a7"}
-        };
+        public Dictionary<string, string> ExpectedStatistics =>
+            new Dictionary<string, string>
+            {
+                { "Total Orders", "1" },
+                { "Average Win", "0%" },
+                { "Average Loss", "0%" },
+                { "Compounding Annual Return", "30.084%" },
+                { "Drawdown", "5.400%" },
+                { "Expectancy", "0" },
+                { "Start Equity", "100000" },
+                { "End Equity", "104393.19" },
+                { "Net Profit", "4.393%" },
+                { "Sharpe Ratio", "1.543" },
+                { "Sortino Ratio", "2.111" },
+                { "Probabilistic Sharpe Ratio", "58.028%" },
+                { "Loss Rate", "0%" },
+                { "Win Rate", "0%" },
+                { "Profit-Loss Ratio", "0" },
+                { "Alpha", "0.166" },
+                { "Beta", "0.717" },
+                { "Annual Standard Deviation", "0.136" },
+                { "Annual Variance", "0.019" },
+                { "Information Ratio", "1.254" },
+                { "Tracking Error", "0.118" },
+                { "Treynor Ratio", "0.293" },
+                { "Total Fees", "$2.06" },
+                { "Estimated Strategy Capacity", "$160000000.00" },
+                { "Lowest Capacity Asset", "AAPL R735QTJ8XC9X" },
+                { "Portfolio Turnover", "0.83%" },
+                { "OrderListHash", "d38318f2dd0a38f11ef4e4fd704706a7" }
+            };
     }
 }

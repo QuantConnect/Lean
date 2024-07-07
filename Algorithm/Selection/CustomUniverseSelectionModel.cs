@@ -29,7 +29,8 @@ namespace QuantConnect.Algorithm.Framework.Selection
     /// </summary>
     public class CustomUniverseSelectionModel : UniverseSelectionModel
     {
-        private static readonly MarketHoursDatabase MarketHours = MarketHoursDatabase.FromDataFolder();
+        private static readonly MarketHoursDatabase MarketHours =
+            MarketHoursDatabase.FromDataFolder();
 
         private readonly Symbol _symbol;
         private readonly Func<DateTime, IEnumerable<string>> _selector;
@@ -43,10 +44,11 @@ namespace QuantConnect.Algorithm.Framework.Selection
         /// </summary>
         /// <param name="name">A unique name for this universe</param>
         /// <param name="selector">Function delegate that accepts a DateTime and returns a collection of string symbols</param>
-        public CustomUniverseSelectionModel(string name, Func<DateTime, IEnumerable<string>> selector)
-            : this(SecurityType.Equity, name, Market.USA, selector, null, Time.OneDay)
-        {
-        }
+        public CustomUniverseSelectionModel(
+            string name,
+            Func<DateTime, IEnumerable<string>> selector
+        )
+            : this(SecurityType.Equity, name, Market.USA, selector, null, Time.OneDay) { }
 
         /// <summary>
         /// Initializes a new instance of the <see cref="CustomUniverseSelectionModel"/> class
@@ -56,9 +58,7 @@ namespace QuantConnect.Algorithm.Framework.Selection
         /// <param name="name">A unique name for this universe</param>
         /// <param name="selector">Function delegate that accepts a DateTime and returns a collection of string symbols</param>
         public CustomUniverseSelectionModel(string name, PyObject selector)
-            : this(SecurityType.Equity, name, Market.USA, selector, null, Time.OneDay)
-        {
-        }
+            : this(SecurityType.Equity, name, Market.USA, selector, null, Time.OneDay) { }
 
         /// <summary>
         /// Initializes a new instance of the <see cref="CustomUniverseSelectionModel"/> class
@@ -69,7 +69,14 @@ namespace QuantConnect.Algorithm.Framework.Selection
         /// <param name="selector">Function delegate that accepts a DateTime and returns a collection of string symbols</param>
         /// <param name="universeSettings">The settings used when adding symbols to the algorithm, specify null to use algorithm.UniverseSettings</param>
         /// <param name="interval">The interval at which selection should be performed</param>
-        public CustomUniverseSelectionModel(SecurityType securityType, string name, string market, Func<DateTime, IEnumerable<string>> selector, UniverseSettings universeSettings, TimeSpan interval)
+        public CustomUniverseSelectionModel(
+            SecurityType securityType,
+            string name,
+            string market,
+            Func<DateTime, IEnumerable<string>> selector,
+            UniverseSettings universeSettings,
+            TimeSpan interval
+        )
         {
             _interval = interval;
             _selector = selector;
@@ -86,17 +93,24 @@ namespace QuantConnect.Algorithm.Framework.Selection
         /// <param name="selector">Function delegate that accepts a DateTime and returns a collection of string symbols</param>
         /// <param name="universeSettings">The settings used when adding symbols to the algorithm, specify null to use algorithm.UniverseSettings</param>
         /// <param name="interval">The interval at which selection should be performed</param>
-        public CustomUniverseSelectionModel(SecurityType securityType, string name, string market, PyObject selector, UniverseSettings universeSettings, TimeSpan interval)
+        public CustomUniverseSelectionModel(
+            SecurityType securityType,
+            string name,
+            string market,
+            PyObject selector,
+            UniverseSettings universeSettings,
+            TimeSpan interval
+        )
             : this(
                 securityType,
                 name,
                 market,
-                selector.ConvertToDelegate<Func<DateTime, object>>().ConvertToUniverseSelectionStringDelegate(),
+                selector
+                    .ConvertToDelegate<Func<DateTime, object>>()
+                    .ConvertToUniverseSelectionStringDelegate(),
                 universeSettings,
                 interval
-            )
-        {
-        }
+            ) { }
 
         /// <summary>
         /// Creates the universes for this algorithm. Called at algorithm start.
@@ -105,7 +119,7 @@ namespace QuantConnect.Algorithm.Framework.Selection
         public override IEnumerable<Universe> CreateUniverses(QCAlgorithm algorithm)
         {
             var universeSettings = _universeSettings ?? algorithm.UniverseSettings;
-            var entry = MarketHours.GetEntry(_symbol.ID.Market, (string) null, _symbol.SecurityType);
+            var entry = MarketHours.GetEntry(_symbol.ID.Market, (string)null, _symbol.SecurityType);
 
             var config = new SubscriptionDataConfig(
                 universeSettings.Resolution == Resolution.Tick ? typeof(Tick) : typeof(TradeBar),
@@ -118,11 +132,16 @@ namespace QuantConnect.Algorithm.Framework.Selection
                 true
             );
 
-            yield return new CustomUniverse(config, universeSettings, _interval, dt => Select(algorithm, dt));
+            yield return new CustomUniverse(
+                config,
+                universeSettings,
+                _interval,
+                dt => Select(algorithm, dt)
+            );
         }
 
         /// <summary>
-        /// 
+        ///
         /// </summary>
         /// <param name="algorithm"></param>
         /// <param name="date"></param>

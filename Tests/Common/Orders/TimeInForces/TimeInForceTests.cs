@@ -58,10 +58,28 @@ namespace QuantConnect.Tests.Common.Orders.TimeInForces
 
             Assert.IsFalse(timeInForce.IsOrderExpired(security, order));
 
-            var fill1 = new OrderEvent(order.Id, order.Symbol, DateTime.UtcNow, OrderStatus.PartiallyFilled, OrderDirection.Buy, order.LimitPrice, 3, OrderFee.Zero);
+            var fill1 = new OrderEvent(
+                order.Id,
+                order.Symbol,
+                DateTime.UtcNow,
+                OrderStatus.PartiallyFilled,
+                OrderDirection.Buy,
+                order.LimitPrice,
+                3,
+                OrderFee.Zero
+            );
             Assert.IsTrue(timeInForce.IsFillValid(security, order, fill1));
 
-            var fill2 = new OrderEvent(order.Id, order.Symbol, DateTime.UtcNow, OrderStatus.Filled, OrderDirection.Buy, order.LimitPrice, 7, OrderFee.Zero);
+            var fill2 = new OrderEvent(
+                order.Id,
+                order.Symbol,
+                DateTime.UtcNow,
+                OrderStatus.Filled,
+                OrderDirection.Buy,
+                order.LimitPrice,
+                7,
+                OrderFee.Zero
+            );
             Assert.IsTrue(timeInForce.IsFillValid(security, order, fill2));
         }
 
@@ -96,10 +114,28 @@ namespace QuantConnect.Tests.Common.Orders.TimeInForces
 
             Assert.IsFalse(timeInForce.IsOrderExpired(security, order));
 
-            var fill1 = new OrderEvent(order.Id, order.Symbol, utcTime, OrderStatus.PartiallyFilled, OrderDirection.Buy, order.LimitPrice, 3, OrderFee.Zero);
+            var fill1 = new OrderEvent(
+                order.Id,
+                order.Symbol,
+                utcTime,
+                OrderStatus.PartiallyFilled,
+                OrderDirection.Buy,
+                order.LimitPrice,
+                3,
+                OrderFee.Zero
+            );
             Assert.IsTrue(timeInForce.IsFillValid(security, order, fill1));
 
-            var fill2 = new OrderEvent(order.Id, order.Symbol, utcTime, OrderStatus.Filled, OrderDirection.Buy, order.LimitPrice, 7, OrderFee.Zero);
+            var fill2 = new OrderEvent(
+                order.Id,
+                order.Symbol,
+                utcTime,
+                OrderStatus.Filled,
+                OrderDirection.Buy,
+                order.LimitPrice,
+                7,
+                OrderFee.Zero
+            );
             Assert.IsTrue(timeInForce.IsFillValid(security, order, fill2));
 
             localTimeKeeper.UpdateTime(utcTime.AddHours(6).AddSeconds(-1));
@@ -145,10 +181,28 @@ namespace QuantConnect.Tests.Common.Orders.TimeInForces
 
             Assert.IsFalse(timeInForce.IsOrderExpired(security, order));
 
-            var fill1 = new OrderEvent(order.Id, order.Symbol, utcTime, OrderStatus.PartiallyFilled, OrderDirection.Buy, order.LimitPrice, 3, OrderFee.Zero);
+            var fill1 = new OrderEvent(
+                order.Id,
+                order.Symbol,
+                utcTime,
+                OrderStatus.PartiallyFilled,
+                OrderDirection.Buy,
+                order.LimitPrice,
+                3,
+                OrderFee.Zero
+            );
             Assert.IsTrue(timeInForce.IsFillValid(security, order, fill1));
 
-            var fill2 = new OrderEvent(order.Id, order.Symbol, utcTime, OrderStatus.Filled, OrderDirection.Buy, order.LimitPrice, 7, OrderFee.Zero);
+            var fill2 = new OrderEvent(
+                order.Id,
+                order.Symbol,
+                utcTime,
+                OrderStatus.Filled,
+                OrderDirection.Buy,
+                order.LimitPrice,
+                7,
+                OrderFee.Zero
+            );
             Assert.IsTrue(timeInForce.IsFillValid(security, order, fill2));
 
             // set time to 4:59:59 PM (NY time)
@@ -196,10 +250,28 @@ namespace QuantConnect.Tests.Common.Orders.TimeInForces
 
             Assert.IsFalse(timeInForce.IsOrderExpired(security, order));
 
-            var fill1 = new OrderEvent(order.Id, order.Symbol, utcTime, OrderStatus.PartiallyFilled, OrderDirection.Buy, order.LimitPrice, 3, OrderFee.Zero);
+            var fill1 = new OrderEvent(
+                order.Id,
+                order.Symbol,
+                utcTime,
+                OrderStatus.PartiallyFilled,
+                OrderDirection.Buy,
+                order.LimitPrice,
+                3,
+                OrderFee.Zero
+            );
             Assert.IsTrue(timeInForce.IsFillValid(security, order, fill1));
 
-            var fill2 = new OrderEvent(order.Id, order.Symbol, utcTime, OrderStatus.Filled, OrderDirection.Buy, order.LimitPrice, 7, OrderFee.Zero);
+            var fill2 = new OrderEvent(
+                order.Id,
+                order.Symbol,
+                utcTime,
+                OrderStatus.Filled,
+                OrderDirection.Buy,
+                order.LimitPrice,
+                7,
+                OrderFee.Zero
+            );
             Assert.IsTrue(timeInForce.IsFillValid(security, order, fill2));
 
             // set time to midnight (NY time)
@@ -218,37 +290,38 @@ namespace QuantConnect.Tests.Common.Orders.TimeInForces
             Assert.IsTrue(timeInForce.IsFillValid(security, order, fill2));
         }
 
-        private static Security[] CryptoSecurities => new Security[]
-        {
-            new Crypto(
-                SecurityExchangeHours.AlwaysOpen(TimeZones.Utc),
-                new Cash(Currencies.USD, 0, 1m),
-                new Cash("BTC", 0, 0),
-                new SubscriptionDataConfig(
-                    typeof(QuoteBar),
-                    Symbols.BTCUSD,
-                    Resolution.Minute,
-                    TimeZones.Utc,
-                    TimeZones.Utc,
-                    true,
-                    true,
-                    true
+        private static Security[] CryptoSecurities =>
+            new Security[]
+            {
+                new Crypto(
+                    SecurityExchangeHours.AlwaysOpen(TimeZones.Utc),
+                    new Cash(Currencies.USD, 0, 1m),
+                    new Cash("BTC", 0, 0),
+                    new SubscriptionDataConfig(
+                        typeof(QuoteBar),
+                        Symbols.BTCUSD,
+                        Resolution.Minute,
+                        TimeZones.Utc,
+                        TimeZones.Utc,
+                        true,
+                        true,
+                        true
+                    ),
+                    SymbolProperties.GetDefault(Currencies.USD),
+                    ErrorCurrencyConverter.Instance,
+                    RegisteredSecurityDataTypesProvider.Null
                 ),
-                SymbolProperties.GetDefault(Currencies.USD),
-                ErrorCurrencyConverter.Instance,
-                RegisteredSecurityDataTypesProvider.Null
-            ),
-            new CryptoFuture(
-                Symbol.Create("BTCUSDT", SecurityType.CryptoFuture, Market.Binance),
-                SecurityExchangeHours.AlwaysOpen(TimeZones.Utc),
-                new Cash("USDT", 0, 1m),
-                new Cash("BTC", 0, 0),
-                SymbolProperties.GetDefault("USDT"),
-                ErrorCurrencyConverter.Instance,
-                RegisteredSecurityDataTypesProvider.Null,
-                new SecurityCache()
-            )
-        };
+                new CryptoFuture(
+                    Symbol.Create("BTCUSDT", SecurityType.CryptoFuture, Market.Binance),
+                    SecurityExchangeHours.AlwaysOpen(TimeZones.Utc),
+                    new Cash("USDT", 0, 1m),
+                    new Cash("BTC", 0, 0),
+                    SymbolProperties.GetDefault("USDT"),
+                    ErrorCurrencyConverter.Instance,
+                    RegisteredSecurityDataTypesProvider.Null,
+                    new SecurityCache()
+                )
+            };
 
         [TestCaseSource(nameof(CryptoSecurities))]
         public void DayTimeInForceCryptoOrderExpiresAtMidnightUtc(Security security)
@@ -264,10 +337,28 @@ namespace QuantConnect.Tests.Common.Orders.TimeInForces
 
             Assert.IsFalse(timeInForce.IsOrderExpired(security, order));
 
-            var fill1 = new OrderEvent(order.Id, order.Symbol, utcTime, OrderStatus.PartiallyFilled, OrderDirection.Buy, order.LimitPrice, 3, OrderFee.Zero);
+            var fill1 = new OrderEvent(
+                order.Id,
+                order.Symbol,
+                utcTime,
+                OrderStatus.PartiallyFilled,
+                OrderDirection.Buy,
+                order.LimitPrice,
+                3,
+                OrderFee.Zero
+            );
             Assert.IsTrue(timeInForce.IsFillValid(security, order, fill1));
 
-            var fill2 = new OrderEvent(order.Id, order.Symbol, utcTime, OrderStatus.Filled, OrderDirection.Buy, order.LimitPrice, 7, OrderFee.Zero);
+            var fill2 = new OrderEvent(
+                order.Id,
+                order.Symbol,
+                utcTime,
+                OrderStatus.Filled,
+                OrderDirection.Buy,
+                order.LimitPrice,
+                7,
+                OrderFee.Zero
+            );
             Assert.IsTrue(timeInForce.IsFillValid(security, order, fill2));
 
             localTimeKeeper.UpdateTime(utcTime.AddHours(14).AddSeconds(-1));
@@ -311,10 +402,28 @@ namespace QuantConnect.Tests.Common.Orders.TimeInForces
 
             Assert.IsFalse(timeInForce.IsOrderExpired(security, order));
 
-            var fill1 = new OrderEvent(order.Id, order.Symbol, utcTime, OrderStatus.PartiallyFilled, OrderDirection.Buy, order.LimitPrice, 3, OrderFee.Zero);
+            var fill1 = new OrderEvent(
+                order.Id,
+                order.Symbol,
+                utcTime,
+                OrderStatus.PartiallyFilled,
+                OrderDirection.Buy,
+                order.LimitPrice,
+                3,
+                OrderFee.Zero
+            );
             Assert.IsTrue(timeInForce.IsFillValid(security, order, fill1));
 
-            var fill2 = new OrderEvent(order.Id, order.Symbol, utcTime, OrderStatus.Filled, OrderDirection.Buy, order.LimitPrice, 7, OrderFee.Zero);
+            var fill2 = new OrderEvent(
+                order.Id,
+                order.Symbol,
+                utcTime,
+                OrderStatus.Filled,
+                OrderDirection.Buy,
+                order.LimitPrice,
+                7,
+                OrderFee.Zero
+            );
             Assert.IsTrue(timeInForce.IsFillValid(security, order, fill2));
 
             // April 27th before market close
@@ -374,10 +483,28 @@ namespace QuantConnect.Tests.Common.Orders.TimeInForces
 
             Assert.IsFalse(timeInForce.IsOrderExpired(security, order));
 
-            var fill1 = new OrderEvent(order.Id, order.Symbol, utcTime, OrderStatus.PartiallyFilled, OrderDirection.Buy, order.LimitPrice, 3, OrderFee.Zero);
+            var fill1 = new OrderEvent(
+                order.Id,
+                order.Symbol,
+                utcTime,
+                OrderStatus.PartiallyFilled,
+                OrderDirection.Buy,
+                order.LimitPrice,
+                3,
+                OrderFee.Zero
+            );
             Assert.IsTrue(timeInForce.IsFillValid(security, order, fill1));
 
-            var fill2 = new OrderEvent(order.Id, order.Symbol, utcTime, OrderStatus.Filled, OrderDirection.Buy, order.LimitPrice, 7, OrderFee.Zero);
+            var fill2 = new OrderEvent(
+                order.Id,
+                order.Symbol,
+                utcTime,
+                OrderStatus.Filled,
+                OrderDirection.Buy,
+                order.LimitPrice,
+                7,
+                OrderFee.Zero
+            );
             Assert.IsTrue(timeInForce.IsFillValid(security, order, fill2));
 
             // April 27th 4:59:59 PM (NY time)
@@ -418,10 +545,28 @@ namespace QuantConnect.Tests.Common.Orders.TimeInForces
 
             Assert.IsFalse(timeInForce.IsOrderExpired(security, order));
 
-            var fill1 = new OrderEvent(order.Id, order.Symbol, utcTime, OrderStatus.PartiallyFilled, OrderDirection.Buy, order.LimitPrice, 3, OrderFee.Zero);
+            var fill1 = new OrderEvent(
+                order.Id,
+                order.Symbol,
+                utcTime,
+                OrderStatus.PartiallyFilled,
+                OrderDirection.Buy,
+                order.LimitPrice,
+                3,
+                OrderFee.Zero
+            );
             Assert.IsTrue(timeInForce.IsFillValid(security, order, fill1));
 
-            var fill2 = new OrderEvent(order.Id, order.Symbol, utcTime, OrderStatus.Filled, OrderDirection.Buy, order.LimitPrice, 7, OrderFee.Zero);
+            var fill2 = new OrderEvent(
+                order.Id,
+                order.Symbol,
+                utcTime,
+                OrderStatus.Filled,
+                OrderDirection.Buy,
+                order.LimitPrice,
+                7,
+                OrderFee.Zero
+            );
             Assert.IsTrue(timeInForce.IsFillValid(security, order, fill2));
 
             // April 27th before midnight
@@ -479,10 +624,28 @@ namespace QuantConnect.Tests.Common.Orders.TimeInForces
 
             Assert.IsFalse(timeInForce.IsOrderExpired(security, order));
 
-            var fill1 = new OrderEvent(order.Id, order.Symbol, utcTime, OrderStatus.PartiallyFilled, OrderDirection.Buy, order.LimitPrice, 3, OrderFee.Zero);
+            var fill1 = new OrderEvent(
+                order.Id,
+                order.Symbol,
+                utcTime,
+                OrderStatus.PartiallyFilled,
+                OrderDirection.Buy,
+                order.LimitPrice,
+                3,
+                OrderFee.Zero
+            );
             Assert.IsTrue(timeInForce.IsFillValid(security, order, fill1));
 
-            var fill2 = new OrderEvent(order.Id, order.Symbol, utcTime, OrderStatus.Filled, OrderDirection.Buy, order.LimitPrice, 7, OrderFee.Zero);
+            var fill2 = new OrderEvent(
+                order.Id,
+                order.Symbol,
+                utcTime,
+                OrderStatus.Filled,
+                OrderDirection.Buy,
+                order.LimitPrice,
+                7,
+                OrderFee.Zero
+            );
             Assert.IsTrue(timeInForce.IsFillValid(security, order, fill2));
 
             localTimeKeeper.UpdateTime(utcTime.AddHours(6).AddSeconds(-1));
@@ -528,10 +691,28 @@ namespace QuantConnect.Tests.Common.Orders.TimeInForces
 
             Assert.IsFalse(timeInForce.IsOrderExpired(security, order));
 
-            var fill1 = new OrderEvent(order.Id, order.Symbol, utcTime, OrderStatus.PartiallyFilled, OrderDirection.Buy, order.LimitPrice, 3, OrderFee.Zero);
+            var fill1 = new OrderEvent(
+                order.Id,
+                order.Symbol,
+                utcTime,
+                OrderStatus.PartiallyFilled,
+                OrderDirection.Buy,
+                order.LimitPrice,
+                3,
+                OrderFee.Zero
+            );
             Assert.IsTrue(timeInForce.IsFillValid(security, order, fill1));
 
-            var fill2 = new OrderEvent(order.Id, order.Symbol, utcTime, OrderStatus.Filled, OrderDirection.Buy, order.LimitPrice, 7, OrderFee.Zero);
+            var fill2 = new OrderEvent(
+                order.Id,
+                order.Symbol,
+                utcTime,
+                OrderStatus.Filled,
+                OrderDirection.Buy,
+                order.LimitPrice,
+                7,
+                OrderFee.Zero
+            );
             Assert.IsTrue(timeInForce.IsFillValid(security, order, fill2));
 
             // set time to 4:59:59 PM (NY time)
@@ -579,10 +760,28 @@ namespace QuantConnect.Tests.Common.Orders.TimeInForces
 
             Assert.IsFalse(timeInForce.IsOrderExpired(security, order));
 
-            var fill1 = new OrderEvent(order.Id, order.Symbol, utcTime, OrderStatus.PartiallyFilled, OrderDirection.Buy, order.LimitPrice, 3, OrderFee.Zero);
+            var fill1 = new OrderEvent(
+                order.Id,
+                order.Symbol,
+                utcTime,
+                OrderStatus.PartiallyFilled,
+                OrderDirection.Buy,
+                order.LimitPrice,
+                3,
+                OrderFee.Zero
+            );
             Assert.IsTrue(timeInForce.IsFillValid(security, order, fill1));
 
-            var fill2 = new OrderEvent(order.Id, order.Symbol, utcTime, OrderStatus.Filled, OrderDirection.Buy, order.LimitPrice, 7, OrderFee.Zero);
+            var fill2 = new OrderEvent(
+                order.Id,
+                order.Symbol,
+                utcTime,
+                OrderStatus.Filled,
+                OrderDirection.Buy,
+                order.LimitPrice,
+                7,
+                OrderFee.Zero
+            );
             Assert.IsTrue(timeInForce.IsFillValid(security, order, fill2));
 
             // set time to midnight (NY time)
@@ -615,10 +814,28 @@ namespace QuantConnect.Tests.Common.Orders.TimeInForces
 
             Assert.IsFalse(timeInForce.IsOrderExpired(security, order));
 
-            var fill1 = new OrderEvent(order.Id, order.Symbol, utcTime, OrderStatus.PartiallyFilled, OrderDirection.Buy, order.LimitPrice, 3, OrderFee.Zero);
+            var fill1 = new OrderEvent(
+                order.Id,
+                order.Symbol,
+                utcTime,
+                OrderStatus.PartiallyFilled,
+                OrderDirection.Buy,
+                order.LimitPrice,
+                3,
+                OrderFee.Zero
+            );
             Assert.IsTrue(timeInForce.IsFillValid(security, order, fill1));
 
-            var fill2 = new OrderEvent(order.Id, order.Symbol, utcTime, OrderStatus.Filled, OrderDirection.Buy, order.LimitPrice, 7, OrderFee.Zero);
+            var fill2 = new OrderEvent(
+                order.Id,
+                order.Symbol,
+                utcTime,
+                OrderStatus.Filled,
+                OrderDirection.Buy,
+                order.LimitPrice,
+                7,
+                OrderFee.Zero
+            );
             Assert.IsTrue(timeInForce.IsFillValid(security, order, fill2));
 
             localTimeKeeper.UpdateTime(utcTime.AddHours(14).AddSeconds(-1));

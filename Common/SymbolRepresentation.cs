@@ -14,14 +14,14 @@
 */
 
 using System;
+using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
 using QuantConnect.Logging;
-using System.Globalization;
 using QuantConnect.Securities;
-using System.Collections.Generic;
-using QuantConnect.Securities.Option;
 using QuantConnect.Securities.Future;
 using QuantConnect.Securities.FutureOption;
+using QuantConnect.Securities.Option;
 using static QuantConnect.StringExtensions;
 
 namespace QuantConnect
@@ -41,7 +41,7 @@ namespace QuantConnect
             /// <summary>
             /// Underlying name
             /// </summary>
-            public string Underlying { get; set;  }
+            public string Underlying { get; set; }
 
             /// <summary>
             /// Short expiration year
@@ -90,7 +90,6 @@ namespace QuantConnect
             public DateTime ExpirationDate { get; set; }
         }
 
-
         /// <summary>
         /// Function returns underlying name, expiration year, expiration month, expiration day for the future contract ticker. Function detects if
         /// the format used is either 1 or 2 digits year, and if day code is present (will default to 1rst day of month). Returns null, if parsing failed.
@@ -107,18 +106,32 @@ namespace QuantConnect
             var expirationDay = 1;
             if (ticker.Length > 4 + doubleDigitOffset)
             {
-                var potentialExpirationDay = ticker.Substring(ticker.Length - 4 - doubleDigitOffset, 2);
-                var containsExpirationDay = char.IsDigit(potentialExpirationDay[0]) && char.IsDigit(potentialExpirationDay[1]);
+                var potentialExpirationDay = ticker.Substring(
+                    ticker.Length - 4 - doubleDigitOffset,
+                    2
+                );
+                var containsExpirationDay =
+                    char.IsDigit(potentialExpirationDay[0])
+                    && char.IsDigit(potentialExpirationDay[1]);
                 expirationDayOffset = containsExpirationDay ? 2 : 0;
-                if (containsExpirationDay && !int.TryParse(potentialExpirationDay, out expirationDay))
+                if (
+                    containsExpirationDay
+                    && !int.TryParse(potentialExpirationDay, out expirationDay)
+                )
                 {
                     return null;
                 }
             }
 
-            var expirationYearString = ticker.Substring(ticker.Length - 1 - doubleDigitOffset, 1 + doubleDigitOffset);
+            var expirationYearString = ticker.Substring(
+                ticker.Length - 1 - doubleDigitOffset,
+                1 + doubleDigitOffset
+            );
             var expirationMonthString = ticker.Substring(ticker.Length - 2 - doubleDigitOffset, 1);
-            var underlyingString = ticker.Substring(0, ticker.Length - 2 - doubleDigitOffset - expirationDayOffset);
+            var underlyingString = ticker.Substring(
+                0,
+                ticker.Length - 2 - doubleDigitOffset - expirationDayOffset
+            );
 
             int expirationYearShort;
 
@@ -162,14 +175,22 @@ namespace QuantConnect
             var expirationMonth = parsed.ExpirationMonth;
             var expirationYear = GetExpirationYear(futureYear, parsed);
 
-            if (!SymbolPropertiesDatabase.FromDataFolder().TryGetMarket(underlying, SecurityType.Future, out var market))
+            if (
+                !SymbolPropertiesDatabase
+                    .FromDataFolder()
+                    .TryGetMarket(underlying, SecurityType.Future, out var market)
+            )
             {
-                Log.Debug($@"SymbolRepresentation.ParseFutureSymbol(): {
-                    Messages.SymbolRepresentation.FailedToGetMarketForTickerAndUnderlying(ticker, underlying)}");
+                Log.Debug(
+                    $@"SymbolRepresentation.ParseFutureSymbol(): {
+                    Messages.SymbolRepresentation.FailedToGetMarketForTickerAndUnderlying(ticker, underlying)}"
+                );
                 return null;
             }
 
-            var expiryFunc = FuturesExpiryFunctions.FuturesExpiryFunction(Symbol.Create(underlying, SecurityType.Future, market));
+            var expiryFunc = FuturesExpiryFunctions.FuturesExpiryFunction(
+                Symbol.Create(underlying, SecurityType.Future, market)
+            );
             var expiryDate = expiryFunc(new DateTime(expirationYear, expirationMonth, 1));
 
             return Symbol.CreateFuture(underlying, market, expiryDate);
@@ -221,24 +242,35 @@ namespace QuantConnect
             var strikePrice = decimal.Parse(strike, NumberStyles.Any, CultureInfo.InvariantCulture);
             var futureTicker = FuturesOptionsSymbolMappings.MapFromOption(ticker);
 
-            if (!SymbolPropertiesDatabase.FromDataFolder().TryGetMarket(futureTicker, SecurityType.Future, out var market))
+            if (
+                !SymbolPropertiesDatabase
+                    .FromDataFolder()
+                    .TryGetMarket(futureTicker, SecurityType.Future, out var market)
+            )
             {
-                Log.Debug($"SymbolRepresentation.ParseFutureOptionSymbol(): {Messages.SymbolRepresentation.NoMarketFound(futureTicker)}");
+                Log.Debug(
+                    $"SymbolRepresentation.ParseFutureOptionSymbol(): {Messages.SymbolRepresentation.NoMarketFound(futureTicker)}"
+                );
                 return null;
             }
 
             var canonicalFuture = Symbol.Create(futureTicker, SecurityType.Future, market);
-            var futureExpiry = FuturesExpiryFunctions.FuturesExpiryFunction(canonicalFuture)(expirationDate);
+            var futureExpiry = FuturesExpiryFunctions.FuturesExpiryFunction(canonicalFuture)(
+                expirationDate
+            );
             var future = Symbol.CreateFuture(futureTicker, market, futureExpiry);
 
-            var futureOptionExpiry = FuturesOptionsExpiryFunctions.GetFutureOptionExpiryFromFutureExpiry(future);
+            var futureOptionExpiry =
+                FuturesOptionsExpiryFunctions.GetFutureOptionExpiryFromFutureExpiry(future);
 
-            return Symbol.CreateOption(future,
+            return Symbol.CreateOption(
+                future,
                 market,
                 OptionStyle.American,
                 right,
                 strikePrice / strikeScale,
-                futureOptionExpiry);
+                futureOptionExpiry
+            );
         }
 
         /// <summary>
@@ -250,23 +282,34 @@ namespace QuantConnect
         /// <param name="doubleDigitsYear">True if year should represented by two digits; False - one digit</param>
         /// <param name="includeExpirationDate">True if expiration date should be included</param>
         /// <returns>The user friendly future ticker</returns>
-        public static string GenerateFutureTicker(string underlying, DateTime expiration, bool doubleDigitsYear = true, bool includeExpirationDate = true)
+        public static string GenerateFutureTicker(
+            string underlying,
+            DateTime expiration,
+            bool doubleDigitsYear = true,
+            bool includeExpirationDate = true
+        )
         {
             var year = doubleDigitsYear ? expiration.Year % 100 : expiration.Year % 10;
             var month = expiration.Month;
 
-            var contractMonthDelta = FuturesExpiryUtilityFunctions.GetDeltaBetweenContractMonthAndContractExpiry(underlying, expiration.Date);
+            var contractMonthDelta =
+                FuturesExpiryUtilityFunctions.GetDeltaBetweenContractMonthAndContractExpiry(
+                    underlying,
+                    expiration.Date
+                );
             if (contractMonthDelta < 0)
             {
                 // For futures that have an expiry after the contract month.
                 // This is for dairy contracts, which can and do expire after the contract month.
-                var expirationMonth = expiration.AddDays(-(expiration.Day - 1))
+                var expirationMonth = expiration
+                    .AddDays(-(expiration.Day - 1))
                     .AddMonths(contractMonthDelta);
 
                 month = expirationMonth.Month;
                 year = doubleDigitsYear ? expirationMonth.Year % 100 : expirationMonth.Year % 10;
             }
-            else {
+            else
+            {
                 // These futures expire in the month before or in the contract month
                 month += contractMonthDelta;
 
@@ -297,10 +340,19 @@ namespace QuantConnect
             if (!symbol.SecurityType.IsOption())
             {
                 throw new ArgumentException(
-                    Messages.SymbolRepresentation.UnexpectedSecurityTypeForMethod(nameof(GenerateOptionTickerOSI), symbol.SecurityType));
+                    Messages.SymbolRepresentation.UnexpectedSecurityTypeForMethod(
+                        nameof(GenerateOptionTickerOSI),
+                        symbol.SecurityType
+                    )
+                );
             }
 
-            return GenerateOptionTickerOSI(symbol.Underlying.Value, symbol.ID.OptionRight, symbol.ID.StrikePrice, symbol.ID.Date);
+            return GenerateOptionTickerOSI(
+                symbol.Underlying.Value,
+                symbol.ID.OptionRight,
+                symbol.ID.StrikePrice,
+                symbol.ID.Date
+            );
         }
 
         /// <summary>
@@ -312,10 +364,18 @@ namespace QuantConnect
         /// <param name="strikePrice">Option strike</param>
         /// <param name="expiration">Option expiration date</param>
         /// <returns>The OSI ticker representation</returns>
-        public static string GenerateOptionTickerOSI(string underlying, OptionRight right, decimal strikePrice, DateTime expiration)
+        public static string GenerateOptionTickerOSI(
+            string underlying,
+            OptionRight right,
+            decimal strikePrice,
+            DateTime expiration
+        )
         {
-            if (underlying.Length > 5) underlying += " ";
-            return Invariant($"{underlying,-6}{expiration.ToStringInvariant(DateFormat.SixCharacter)}{right.ToStringPerformance()[0]}{(strikePrice * 1000m):00000000}");
+            if (underlying.Length > 5)
+                underlying += " ";
+            return Invariant(
+                $"{underlying, -6}{expiration.ToStringInvariant(DateFormat.SixCharacter)}{right.ToStringPerformance()[0]}{(strikePrice * 1000m):00000000}"
+            );
         }
 
         /// <summary>
@@ -325,7 +385,11 @@ namespace QuantConnect
         /// <param name="securityType">The security type</param>
         /// <param name="market">The associated market</param>
         /// <returns>Symbol object for the specified OSI option ticker string</returns>
-        public static Symbol ParseOptionTickerOSI(string ticker, SecurityType securityType = SecurityType.Option, string market = Market.USA)
+        public static Symbol ParseOptionTickerOSI(
+            string ticker,
+            SecurityType securityType = SecurityType.Option,
+            string market = Market.USA
+        )
         {
             return ParseOptionTickerOSI(ticker, securityType, OptionStyle.American, market);
         }
@@ -338,10 +402,19 @@ namespace QuantConnect
         /// <param name="market">The associated market</param>
         /// <param name="optionStyle">The option style</param>
         /// <returns>Symbol object for the specified OSI option ticker string</returns>
-        public static Symbol ParseOptionTickerOSI(string ticker, SecurityType securityType, OptionStyle optionStyle, string market)
+        public static Symbol ParseOptionTickerOSI(
+            string ticker,
+            SecurityType securityType,
+            OptionStyle optionStyle,
+            string market
+        )
         {
             var optionTicker = ticker.Substring(0, 6).Trim();
-            var expiration = DateTime.ParseExact(ticker.Substring(6, 6), DateFormat.SixCharacter, null);
+            var expiration = DateTime.ParseExact(
+                ticker.Substring(6, 6),
+                DateFormat.SixCharacter,
+                null
+            );
             OptionRight right;
             if (ticker[12] == 'C' || ticker[12] == 'c')
             {
@@ -353,7 +426,11 @@ namespace QuantConnect
             }
             else
             {
-                throw new FormatException(Messages.SymbolRepresentation.UnexpectedOptionRightFormatForParseOptionTickerOSI(ticker));
+                throw new FormatException(
+                    Messages.SymbolRepresentation.UnexpectedOptionRightFormatForParseOptionTickerOSI(
+                        ticker
+                    )
+                );
             }
             var strike = Parse.Decimal(ticker.Substring(13, 8)) / 1000m;
             SecurityIdentifier underlyingSid;
@@ -363,15 +440,28 @@ namespace QuantConnect
                 // let it fallback to it's default handling, which include mapping
                 optionTicker = null;
             }
-            else if(securityType == SecurityType.IndexOption)
+            else if (securityType == SecurityType.IndexOption)
             {
-                underlyingSid = SecurityIdentifier.GenerateIndex(OptionSymbol.MapToUnderlying(optionTicker, securityType), market);
+                underlyingSid = SecurityIdentifier.GenerateIndex(
+                    OptionSymbol.MapToUnderlying(optionTicker, securityType),
+                    market
+                );
             }
             else
             {
-                throw new NotImplementedException($"ParseOptionTickerOSI(): {Messages.SymbolRepresentation.SecurityTypeNotImplemented(securityType)}");
+                throw new NotImplementedException(
+                    $"ParseOptionTickerOSI(): {Messages.SymbolRepresentation.SecurityTypeNotImplemented(securityType)}"
+                );
             }
-            var sid = SecurityIdentifier.GenerateOption(expiration, underlyingSid, optionTicker, market, strike, right, optionStyle);
+            var sid = SecurityIdentifier.GenerateOption(
+                expiration,
+                underlyingSid,
+                optionTicker,
+                market,
+                strike,
+                right,
+                optionStyle
+            );
             return new Symbol(sid, ticker, new Symbol(underlyingSid, underlyingSid.Symbol));
         }
 
@@ -384,7 +474,12 @@ namespace QuantConnect
         /// <returns>The option ticker</returns>
         public static string GenerateOptionTicker(Symbol symbol)
         {
-            var letter = _optionSymbology.Where(x => x.Value.Item2 == symbol.ID.OptionRight && x.Value.Item1 == symbol.ID.Date.Month).Select(x => x.Key).Single();
+            var letter = _optionSymbology
+                .Where(x =>
+                    x.Value.Item2 == symbol.ID.OptionRight && x.Value.Item1 == symbol.ID.Date.Month
+                )
+                .Select(x => x.Key)
+                .Single();
             var twoYearDigit = symbol.ID.Date.ToString("yy");
             return $"{SecurityIdentifier.Ticker(symbol.Underlying, symbol.ID.Date)}{twoYearDigit}{symbol.ID.Date.Day:00}{letter}{symbol.ID.StrikePrice.ToStringInvariant()}";
         }
@@ -397,11 +492,12 @@ namespace QuantConnect
         /// <returns>Results containing 1) underlying name, 2) option right, 3) option strike 4) expiration date</returns>
         public static OptionTickerProperties ParseOptionTickerIQFeed(string ticker)
         {
-            var letterRange = _optionSymbology.Keys
-                            .Select(x => x[0])
-                            .ToArray();
+            var letterRange = _optionSymbology.Keys.Select(x => x[0]).ToArray();
             var optionTypeDelimiter = ticker.LastIndexOfAny(letterRange);
-            var strikePriceString = ticker.Substring(optionTypeDelimiter + 1, ticker.Length - optionTypeDelimiter - 1);
+            var strikePriceString = ticker.Substring(
+                optionTypeDelimiter + 1,
+                ticker.Length - optionTypeDelimiter - 1
+            );
 
             var lookupResult = _optionSymbology[ticker[optionTypeDelimiter].ToStringInvariant()];
             var month = lookupResult.Item1;
@@ -413,7 +509,14 @@ namespace QuantConnect
 
             // if we cannot parse strike price, we ignore this contract, but log the information.
             Decimal strikePrice;
-            if (!Decimal.TryParse(strikePriceString, NumberStyles.Any, CultureInfo.InvariantCulture, out strikePrice))
+            if (
+                !Decimal.TryParse(
+                    strikePriceString,
+                    NumberStyles.Any,
+                    CultureInfo.InvariantCulture,
+                    out strikePrice
+                )
+            )
             {
                 return null;
             }
@@ -443,49 +546,61 @@ namespace QuantConnect
             };
         }
 
-
         // This table describes IQFeed option symbology
-        private static Dictionary<string, Tuple<int, OptionRight>> _optionSymbology = new Dictionary<string, Tuple<int, OptionRight>>
-                        {
-                            { "A", Tuple.Create(1, OptionRight.Call) }, { "M", Tuple.Create(1, OptionRight.Put) },
-                            { "B", Tuple.Create(2, OptionRight.Call) }, { "N", Tuple.Create(2, OptionRight.Put) },
-                            { "C", Tuple.Create(3, OptionRight.Call) }, { "O", Tuple.Create(3, OptionRight.Put) },
-                            { "D", Tuple.Create(4, OptionRight.Call) }, { "P", Tuple.Create(4, OptionRight.Put) },
-                            { "E", Tuple.Create(5, OptionRight.Call) }, { "Q", Tuple.Create(5, OptionRight.Put) },
-                            { "F", Tuple.Create(6, OptionRight.Call) }, { "R", Tuple.Create(6, OptionRight.Put) },
-                            { "G", Tuple.Create(7, OptionRight.Call) }, { "S", Tuple.Create(7, OptionRight.Put) },
-                            { "H", Tuple.Create(8, OptionRight.Call) }, { "T", Tuple.Create(8, OptionRight.Put) },
-                            { "I", Tuple.Create(9, OptionRight.Call) }, { "U", Tuple.Create(9, OptionRight.Put) },
-                            { "J", Tuple.Create(10, OptionRight.Call) }, { "V", Tuple.Create(10, OptionRight.Put) },
-                            { "K", Tuple.Create(11, OptionRight.Call) }, { "W", Tuple.Create(11, OptionRight.Put) },
-                            { "L", Tuple.Create(12, OptionRight.Call) }, { "X", Tuple.Create(12, OptionRight.Put) },
-
-                        };
-
+        private static Dictionary<string, Tuple<int, OptionRight>> _optionSymbology =
+            new Dictionary<string, Tuple<int, OptionRight>>
+            {
+                { "A", Tuple.Create(1, OptionRight.Call) },
+                { "M", Tuple.Create(1, OptionRight.Put) },
+                { "B", Tuple.Create(2, OptionRight.Call) },
+                { "N", Tuple.Create(2, OptionRight.Put) },
+                { "C", Tuple.Create(3, OptionRight.Call) },
+                { "O", Tuple.Create(3, OptionRight.Put) },
+                { "D", Tuple.Create(4, OptionRight.Call) },
+                { "P", Tuple.Create(4, OptionRight.Put) },
+                { "E", Tuple.Create(5, OptionRight.Call) },
+                { "Q", Tuple.Create(5, OptionRight.Put) },
+                { "F", Tuple.Create(6, OptionRight.Call) },
+                { "R", Tuple.Create(6, OptionRight.Put) },
+                { "G", Tuple.Create(7, OptionRight.Call) },
+                { "S", Tuple.Create(7, OptionRight.Put) },
+                { "H", Tuple.Create(8, OptionRight.Call) },
+                { "T", Tuple.Create(8, OptionRight.Put) },
+                { "I", Tuple.Create(9, OptionRight.Call) },
+                { "U", Tuple.Create(9, OptionRight.Put) },
+                { "J", Tuple.Create(10, OptionRight.Call) },
+                { "V", Tuple.Create(10, OptionRight.Put) },
+                { "K", Tuple.Create(11, OptionRight.Call) },
+                { "W", Tuple.Create(11, OptionRight.Put) },
+                { "L", Tuple.Create(12, OptionRight.Call) },
+                { "X", Tuple.Create(12, OptionRight.Put) },
+            };
 
         /// <summary>
         /// Provides a lookup dictionary for mapping futures month codes to their corresponding numeric values.
         /// </summary>
-        public static IReadOnlyDictionary<string, int> FuturesMonthCodeLookup { get; } = new Dictionary<string, int>
-        {
-            { "F", 1 }, // January
-            { "G", 2 }, // February
-            { "H", 3 }, // March
-            { "J", 4 }, // April
-            { "K", 5 }, // May
-            { "M", 6 }, // June
-            { "N", 7 }, // July
-            { "Q", 8 }, // August
-            { "U", 9 }, // September
-            { "V", 10 }, // October
-            { "X", 11 }, // November
-            { "Z", 12 } // December
-        };
+        public static IReadOnlyDictionary<string, int> FuturesMonthCodeLookup { get; } =
+            new Dictionary<string, int>
+            {
+                { "F", 1 }, // January
+                { "G", 2 }, // February
+                { "H", 3 }, // March
+                { "J", 4 }, // April
+                { "K", 5 }, // May
+                { "M", 6 }, // June
+                { "N", 7 }, // July
+                { "Q", 8 }, // August
+                { "U", 9 }, // September
+                { "V", 10 }, // October
+                { "X", 11 }, // November
+                { "Z", 12 } // December
+            };
 
         /// <summary>
         /// Provides a lookup dictionary for mapping numeric values to their corresponding futures month codes.
         /// </summary>
-        public static IReadOnlyDictionary<int, string> FuturesMonthLookup { get; } = FuturesMonthCodeLookup.ToDictionary(kv => kv.Value, kv => kv.Key);
+        public static IReadOnlyDictionary<int, string> FuturesMonthLookup { get; } =
+            FuturesMonthCodeLookup.ToDictionary(kv => kv.Value, kv => kv.Key);
 
         /// <summary>
         /// Get the expiration year from short year (two-digit integer).
@@ -496,10 +611,10 @@ namespace QuantConnect
         /// <returns>Tickers from live trading may not provide the four-digit year.</returns>
         private static int GetExpirationYear(int? futureYear, FutureTickerProperties parsed)
         {
-            if(futureYear.HasValue)
+            if (futureYear.HasValue)
             {
                 var referenceYear = 1900 + parsed.ExpirationYearShort;
-                while(referenceYear < futureYear.Value)
+                while (referenceYear < futureYear.Value)
                 {
                     referenceYear += 10;
                 }

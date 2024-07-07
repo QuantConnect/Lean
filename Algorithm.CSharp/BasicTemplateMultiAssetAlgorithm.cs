@@ -98,7 +98,7 @@ namespace QuantConnect.Algorithm.CSharp
                             from futuresContract in chain.Value.OrderBy(x => x.Expiry)
                             where futuresContract.Expiry > Time.Date.AddDays(90)
                             select futuresContract
-                            ).FirstOrDefault();
+                        ).FirstOrDefault();
 
                         // if found, trade it
                         if (contract != null)
@@ -137,25 +137,31 @@ namespace QuantConnect.Algorithm.CSharp
 
             if (_barCount % 20 == 1)
             {
-                Log($"P/L:{Portfolio.TotalUnrealisedProfit.ToStringInvariant("0.00")}, " +
-                    $"Fees:{Portfolio.TotalFees.ToStringInvariant("0.00")}, " +
-                    $"Profit:{Portfolio.TotalProfit.ToStringInvariant("0.00")}, " +
-                    $"Eq:{Portfolio.TotalPortfolioValue.ToStringInvariant("0.00")}, " +
-                    $"Holdings:{Portfolio.TotalHoldingsValue.ToStringInvariant("0.00")}, " +
-                    $"Vol: {Portfolio.TotalSaleVolume.ToStringInvariant("0.00")}, " +
-                    $"Margin: {Portfolio.TotalMarginUsed.ToStringInvariant("0.00")}"
+                Log(
+                    $"P/L:{Portfolio.TotalUnrealisedProfit.ToStringInvariant("0.00")}, "
+                        + $"Fees:{Portfolio.TotalFees.ToStringInvariant("0.00")}, "
+                        + $"Profit:{Portfolio.TotalProfit.ToStringInvariant("0.00")}, "
+                        + $"Eq:{Portfolio.TotalPortfolioValue.ToStringInvariant("0.00")}, "
+                        + $"Holdings:{Portfolio.TotalHoldingsValue.ToStringInvariant("0.00")}, "
+                        + $"Vol: {Portfolio.TotalSaleVolume.ToStringInvariant("0.00")}, "
+                        + $"Margin: {Portfolio.TotalMarginUsed.ToStringInvariant("0.00")}"
                 );
 
-                foreach (var holding in Securities.Values.OrderByDescending(x => x.Holdings.AbsoluteQuantity))
+                foreach (
+                    var holding in Securities.Values.OrderByDescending(x =>
+                        x.Holdings.AbsoluteQuantity
+                    )
+                )
                 {
-                    Log($" - {holding.Symbol.Value}, " +
-                        $"Avg Prc:{holding.Holdings.AveragePrice.ToStringInvariant("0.00")}, " +
-                        $"Qty:{holding.Holdings.Quantity.ToStringInvariant("0.00")}, " +
-                        $"Mkt Prc:{holding.Holdings.Price.ToStringInvariant("0.00")}, " +
-                        $"Mkt Val:{holding.Holdings.HoldingsValue.ToStringInvariant("0.00")}, " +
-                        $"Unreal P/L: {holding.Holdings.UnrealizedProfit.ToStringInvariant("0.00")}, " +
-                        $"Fees: {holding.Holdings.TotalFees.ToStringInvariant("0.00")}, " +
-                        $"Vol: {holding.Holdings.TotalSaleVolume.ToStringInvariant("0.00")}"
+                    Log(
+                        $" - {holding.Symbol.Value}, "
+                            + $"Avg Prc:{holding.Holdings.AveragePrice.ToStringInvariant("0.00")}, "
+                            + $"Qty:{holding.Holdings.Quantity.ToStringInvariant("0.00")}, "
+                            + $"Mkt Prc:{holding.Holdings.Price.ToStringInvariant("0.00")}, "
+                            + $"Mkt Val:{holding.Holdings.HoldingsValue.ToStringInvariant("0.00")}, "
+                            + $"Unreal P/L: {holding.Holdings.UnrealizedProfit.ToStringInvariant("0.00")}, "
+                            + $"Fees: {holding.Holdings.TotalFees.ToStringInvariant("0.00")}, "
+                            + $"Vol: {holding.Holdings.TotalSaleVolume.ToStringInvariant("0.00")}"
                     );
                 }
             }
@@ -167,19 +173,20 @@ namespace QuantConnect.Algorithm.CSharp
                     var underlying = Securities[chain.Key.Underlying];
                     foreach (var contract in chain.Value)
                     {
-                        Log($"{Time.ToStringInvariant()} {contract.Symbol.Value}," +
-                            $"B={contract.BidPrice.ToStringInvariant()} " +
-                            $"A={contract.AskPrice.ToStringInvariant()} " +
-                            $"L={contract.LastPrice.ToStringInvariant()} " +
-                            $"OI={contract.OpenInterest.ToStringInvariant()} " +
-                            $"σ={underlying.VolatilityModel.Volatility:0.00} " +
-                            $"NPV={contract.TheoreticalPrice.ToStringInvariant("0.00")} " +
-                            $"Δ={contract.Greeks.Delta.ToStringInvariant("0.00")} " +
-                            $"Γ={contract.Greeks.Gamma.ToStringInvariant("0.00")} " +
-                            $"ν={contract.Greeks.Vega.ToStringInvariant("0.00")} " +
-                            $"ρ={contract.Greeks.Rho.ToStringInvariant("0.00")} " +
-                            $"Θ={(contract.Greeks.Theta / 365.0m).ToStringInvariant("0.00")} " +
-                            $"IV={contract.ImpliedVolatility.ToStringInvariant("0.00")}"
+                        Log(
+                            $"{Time.ToStringInvariant()} {contract.Symbol.Value},"
+                                + $"B={contract.BidPrice.ToStringInvariant()} "
+                                + $"A={contract.AskPrice.ToStringInvariant()} "
+                                + $"L={contract.LastPrice.ToStringInvariant()} "
+                                + $"OI={contract.OpenInterest.ToStringInvariant()} "
+                                + $"σ={underlying.VolatilityModel.Volatility:0.00} "
+                                + $"NPV={contract.TheoreticalPrice.ToStringInvariant("0.00")} "
+                                + $"Δ={contract.Greeks.Delta.ToStringInvariant("0.00")} "
+                                + $"Γ={contract.Greeks.Gamma.ToStringInvariant("0.00")} "
+                                + $"ν={contract.Greeks.Vega.ToStringInvariant("0.00")} "
+                                + $"ρ={contract.Greeks.Rho.ToStringInvariant("0.00")} "
+                                + $"Θ={(contract.Greeks.Theta / 365.0m).ToStringInvariant("0.00")} "
+                                + $"IV={contract.ImpliedVolatility.ToStringInvariant("0.00")}"
                         );
                     }
                 }
@@ -188,11 +195,12 @@ namespace QuantConnect.Algorithm.CSharp
                 {
                     foreach (var contract in chain.Value)
                     {
-                        Log($"{contract.Symbol.Value}, {Time}, " +
-                            $"B={contract.BidPrice} " +
-                            $"A={contract.AskPrice} " +
-                            $"L={contract.LastPrice} " +
-                            $"OI={contract.OpenInterest}"
+                        Log(
+                            $"{contract.Symbol.Value}, {Time}, "
+                                + $"B={contract.BidPrice} "
+                                + $"A={contract.AskPrice} "
+                                + $"L={contract.LastPrice} "
+                                + $"OI={contract.OpenInterest}"
                         );
                     }
                 }
@@ -205,7 +213,9 @@ namespace QuantConnect.Algorithm.CSharp
 
             foreach (var kpv in slice.Bars)
             {
-                Log($"---> Bar: {Time}, {kpv.Key.Value}, {kpv.Value.Close.ToStringInvariant("0.0000")}");
+                Log(
+                    $"---> Bar: {Time}, {kpv.Key.Value}, {kpv.Value.Close.ToStringInvariant("0.0000")}"
+                );
             }
         }
 

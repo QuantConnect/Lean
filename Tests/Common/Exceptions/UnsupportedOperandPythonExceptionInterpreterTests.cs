@@ -13,12 +13,12 @@
  * limitations under the License.
 */
 
+using System;
+using System.Collections.Generic;
 using NUnit.Framework;
 using NUnit.Framework.Constraints;
 using Python.Runtime;
 using QuantConnect.Exceptions;
-using System;
-using System.Collections.Generic;
 
 namespace QuantConnect.Tests.Common.Exceptions
 {
@@ -53,7 +53,9 @@ namespace QuantConnect.Tests.Common.Exceptions
         [TestCase(typeof(DivideByZeroException), ExpectedResult = false)]
         [TestCase(typeof(InvalidOperationException), ExpectedResult = false)]
         [TestCase(typeof(PythonException), ExpectedResult = true)]
-        public bool CanInterpretReturnsTrueForOnlyUnsupportedOperandPythonExceptionType(Type exceptionType)
+        public bool CanInterpretReturnsTrueForOnlyUnsupportedOperandPythonExceptionType(
+            Type exceptionType
+        )
         {
             var exception = CreateExceptionFromType(exceptionType);
             return new UnsupportedOperandPythonExceptionInterpreter().CanInterpret(exception);
@@ -65,12 +67,18 @@ namespace QuantConnect.Tests.Common.Exceptions
         [TestCase(typeof(DivideByZeroException), true)]
         [TestCase(typeof(InvalidOperationException), true)]
         [TestCase(typeof(PythonException), false)]
-        public void InterpretThrowsForNonUnsupportedOperandPythonExceptionTypes(Type exceptionType, bool expectThrow)
+        public void InterpretThrowsForNonUnsupportedOperandPythonExceptionTypes(
+            Type exceptionType,
+            bool expectThrow
+        )
         {
             var exception = CreateExceptionFromType(exceptionType);
             var interpreter = new UnsupportedOperandPythonExceptionInterpreter();
             var constraint = expectThrow ? (IResolveConstraint)Throws.Exception : Throws.Nothing;
-            Assert.That(() => interpreter.Interpret(exception, NullExceptionInterpreter.Instance), constraint);
+            Assert.That(
+                () => interpreter.Interpret(exception, NullExceptionInterpreter.Instance),
+                constraint
+            );
         }
 
         [Test]
@@ -83,6 +91,9 @@ namespace QuantConnect.Tests.Common.Exceptions
             Assert.True(exception.Message.Contains("x = None + \"Pepe Grillo\""));
         }
 
-        private Exception CreateExceptionFromType(Type type) => type == typeof(PythonException) ? _pythonException : (Exception)Activator.CreateInstance(type);
+        private Exception CreateExceptionFromType(Type type) =>
+            type == typeof(PythonException)
+                ? _pythonException
+                : (Exception)Activator.CreateInstance(type);
     }
 }

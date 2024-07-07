@@ -22,19 +22,21 @@ namespace QuantConnect.Algorithm.CSharp
     /// <summary>
     /// Regression algorithm asserting the futures daily cash settlement behavior taking short positions
     /// </summary>
-    public class FuturesDailySettlementShortRegressionAlgorithm : FuturesDailySettlementLongRegressionAlgorithm
+    public class FuturesDailySettlementShortRegressionAlgorithm
+        : FuturesDailySettlementLongRegressionAlgorithm
     {
         /// <summary>
         /// Expected cash balance for each day
         /// </summary>
-        protected override Dictionary<DateTime, decimal> ExpectedCash { get; } = new()
-        {
-            { new DateTime(2013, 10, 07), 100000 },
-            { new DateTime(2013, 10, 08), 96701.95m },
-            { new DateTime(2013, 10, 09), 98718.55m },
-            { new DateTime(2013, 10, 10), 97937.10m },
-            { new DateTime(2013, 10, 10, 17, 0, 0), 98943.15m }
-        };
+        protected override Dictionary<DateTime, decimal> ExpectedCash { get; } =
+            new()
+            {
+                { new DateTime(2013, 10, 07), 100000 },
+                { new DateTime(2013, 10, 08), 96701.95m },
+                { new DateTime(2013, 10, 09), 98718.55m },
+                { new DateTime(2013, 10, 10), 97937.10m },
+                { new DateTime(2013, 10, 10, 17, 0, 0), 98943.15m }
+            };
 
         /// <summary>
         /// Order side factor
@@ -44,35 +46,36 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// This is used by the regression test system to indicate what the expected statistics are from running the algorithm
         /// </summary>
-        public override Dictionary<string, string> ExpectedStatistics => new Dictionary<string, string>
-        {
-            {"Total Orders", "6"},
-            {"Average Win", "0.83%"},
-            {"Average Loss", "-0.94%"},
-            {"Compounding Annual Return", "-64.858%"},
-            {"Drawdown", "47.200%"},
-            {"Expectancy", "-0.373"},
-            {"Start Equity", "100000"},
-            {"End Equity", "98943.15"},
-            {"Net Profit", "-1.057%"},
-            {"Sharpe Ratio", "26.42"},
-            {"Sortino Ratio", "0"},
-            {"Probabilistic Sharpe Ratio", "0%"},
-            {"Loss Rate", "67%"},
-            {"Win Rate", "33%"},
-            {"Profit-Loss Ratio", "0.88"},
-            {"Alpha", "6.391"},
-            {"Beta", "-0.176"},
-            {"Annual Standard Deviation", "0.232"},
-            {"Annual Variance", "0.054"},
-            {"Information Ratio", "11.718"},
-            {"Tracking Error", "0.392"},
-            {"Treynor Ratio", "-34.751"},
-            {"Total Fees", "$19.35"},
-            {"Estimated Strategy Capacity", "$100000000.00"},
-            {"Lowest Capacity Asset", "ES VMKLFZIH2MTD"},
-            {"Portfolio Turnover", "190.82%"},
-            {"OrderListHash", "0e022e93654b97f28728151455889a88"}
-        };
+        public override Dictionary<string, string> ExpectedStatistics =>
+            new Dictionary<string, string>
+            {
+                { "Total Orders", "6" },
+                { "Average Win", "0.83%" },
+                { "Average Loss", "-0.94%" },
+                { "Compounding Annual Return", "-64.858%" },
+                { "Drawdown", "47.200%" },
+                { "Expectancy", "-0.373" },
+                { "Start Equity", "100000" },
+                { "End Equity", "98943.15" },
+                { "Net Profit", "-1.057%" },
+                { "Sharpe Ratio", "26.42" },
+                { "Sortino Ratio", "0" },
+                { "Probabilistic Sharpe Ratio", "0%" },
+                { "Loss Rate", "67%" },
+                { "Win Rate", "33%" },
+                { "Profit-Loss Ratio", "0.88" },
+                { "Alpha", "6.391" },
+                { "Beta", "-0.176" },
+                { "Annual Standard Deviation", "0.232" },
+                { "Annual Variance", "0.054" },
+                { "Information Ratio", "11.718" },
+                { "Tracking Error", "0.392" },
+                { "Treynor Ratio", "-34.751" },
+                { "Total Fees", "$19.35" },
+                { "Estimated Strategy Capacity", "$100000000.00" },
+                { "Lowest Capacity Asset", "ES VMKLFZIH2MTD" },
+                { "Portfolio Turnover", "190.82%" },
+                { "OrderListHash", "0e022e93654b97f28728151455889a88" }
+            };
     }
 }

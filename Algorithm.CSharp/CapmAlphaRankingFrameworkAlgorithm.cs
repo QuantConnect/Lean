@@ -13,6 +13,9 @@
  * limitations under the License.
 */
 
+using System;
+using System.Collections.Generic;
+using System.Linq;
 using MathNet.Numerics;
 using QuantConnect.Algorithm.Framework.Alphas;
 using QuantConnect.Algorithm.Framework.Execution;
@@ -22,9 +25,6 @@ using QuantConnect.Algorithm.Framework.Selection;
 using QuantConnect.Data.UniverseSelection;
 using QuantConnect.Indicators;
 using QuantConnect.Securities;
-using System;
-using System.Collections.Generic;
-using System.Linq;
 
 namespace QuantConnect.Algorithm.CSharp
 {
@@ -42,13 +42,21 @@ namespace QuantConnect.Algorithm.CSharp
             // Set requested data resolution
             UniverseSettings.Resolution = Resolution.Daily;
 
-            SetStartDate(2016, 1, 1);   //Set Start Date
-            SetEndDate(2017, 1, 1);     //Set End Date
-            SetCash(100000);            //Set Strategy Cash
+            SetStartDate(2016, 1, 1); //Set Start Date
+            SetEndDate(2017, 1, 1); //Set End Date
+            SetCash(100000); //Set Strategy Cash
 
             // set algorithm framework models
             SetUniverseSelection(new CapmAlphaRankingUniverseSelectionModel());
-            SetAlpha(new ConstantAlphaModel(InsightType.Price, InsightDirection.Up, TimeSpan.FromDays(1), 0.025, null));
+            SetAlpha(
+                new ConstantAlphaModel(
+                    InsightType.Price,
+                    InsightDirection.Up,
+                    TimeSpan.FromDays(1),
+                    0.025,
+                    null
+                )
+            );
             SetPortfolioConstruction(new EqualWeightingPortfolioConstructionModel());
             SetExecution(new ImmediateExecutionModel());
             SetRiskManagement(new MaximumDrawdownPercentPerSecurity(0.01m));
@@ -65,9 +73,35 @@ namespace QuantConnect.Algorithm.CSharp
             // Symbols of Dow 30 companies.
             private readonly IEnumerable<Symbol> _symbols = new[]
             {
-                "AAPL", "AXP", "BA", "CAT", "CSCO", "CVX", "DD", "DIS", "GE", "GS",
-                "HD", "IBM", "INTC", "JPM", "KO", "MCD", "MMM", "MRK", "MSFT",
-                "NKE","PFE", "PG", "TRV", "UNH", "UTX", "V", "VZ", "WMT", "XOM"
+                "AAPL",
+                "AXP",
+                "BA",
+                "CAT",
+                "CSCO",
+                "CVX",
+                "DD",
+                "DIS",
+                "GE",
+                "GS",
+                "HD",
+                "IBM",
+                "INTC",
+                "JPM",
+                "KO",
+                "MCD",
+                "MMM",
+                "MRK",
+                "MSFT",
+                "NKE",
+                "PFE",
+                "PG",
+                "TRV",
+                "UNH",
+                "UTX",
+                "V",
+                "VZ",
+                "WMT",
+                "XOM"
             }.Select(x => QuantConnect.Symbol.Create(x, SecurityType.Equity, Market.USA));
 
             public override IEnumerable<Universe> CreateUniverses(QCAlgorithm algorithm)
@@ -81,7 +115,8 @@ namespace QuantConnect.Algorithm.CSharp
                     algorithm.DateRules.MonthStart(benchmark.Symbol),
                     algorithm.TimeRules.AfterMarketOpen(benchmark.Symbol),
                     datetime => SelectPair(algorithm, datetime),
-                    algorithm.UniverseSettings);
+                    algorithm.UniverseSettings
+                );
             }
 
             /// <summary>

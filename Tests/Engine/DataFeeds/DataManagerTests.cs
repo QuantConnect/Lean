@@ -43,51 +43,61 @@ namespace QuantConnect.Tests.Engine.DataFeeds
         public void SetUp()
         {
             _algorithm = new AlgorithmStub();
-            _securityService = new SecurityService(_algorithm.Portfolio.CashBook,
+            _securityService = new SecurityService(
+                _algorithm.Portfolio.CashBook,
                 MarketHoursDatabase.AlwaysOpen,
                 SymbolPropertiesDatabase.FromDataFolder(),
                 _algorithm,
                 new RegisteredSecurityDataTypesProvider(),
-                new SecurityCacheProvider(_algorithm.Portfolio));
+                new SecurityCacheProvider(_algorithm.Portfolio)
+            );
         }
 
         [Test]
         public void ReturnsExistingConfig()
         {
             var dataPermissionManager = new DataPermissionManager();
-            var dataManager = new DataManager(new NullDataFeed(),
-                new UniverseSelection(_algorithm,
+            var dataManager = new DataManager(
+                new NullDataFeed(),
+                new UniverseSelection(
+                    _algorithm,
                     _securityService,
                     dataPermissionManager,
-                    TestGlobals.DataProvider),
+                    TestGlobals.DataProvider
+                ),
                 _algorithm,
                 _algorithm.TimeKeeper,
                 MarketHoursDatabase.AlwaysOpen,
                 false,
                 new RegisteredSecurityDataTypesProvider(),
-                dataPermissionManager);
+                dataPermissionManager
+            );
 
-            var config = new SubscriptionDataConfig(typeof(TradeBar),
+            var config = new SubscriptionDataConfig(
+                typeof(TradeBar),
                 Symbols.SPY,
                 Resolution.Daily,
                 TimeZones.NewYork,
                 TimeZones.NewYork,
                 false,
                 false,
-                false);
+                false
+            );
 
             var sameConfig = dataManager.SubscriptionManagerGetOrAdd(config);
             Assert.IsTrue(ReferenceEquals(sameConfig, config));
             Assert.AreEqual(1, dataManager.GetSubscriptionDataConfigs(config.Symbol).Count);
 
-            var otherInstance = new SubscriptionDataConfig(config.Type,
+            var otherInstance = new SubscriptionDataConfig(
+                config.Type,
                 config.Symbol,
                 config.Resolution,
                 config.DataTimeZone,
                 config.ExchangeTimeZone,
                 config.FillDataForward,
                 config.ExtendedMarketHours,
-                config.IsInternalFeed);
+                config.IsInternalFeed
+            );
 
             sameConfig = dataManager.SubscriptionManagerGetOrAdd(otherInstance);
             Assert.IsTrue(ReferenceEquals(sameConfig, config));
@@ -101,26 +111,32 @@ namespace QuantConnect.Tests.Engine.DataFeeds
         {
             var dataPermissionManager = new DataPermissionManager();
             var dataFeed = new TestDataFeed();
-            var dataManager = new DataManager(dataFeed,
-                new UniverseSelection(_algorithm,
+            var dataManager = new DataManager(
+                dataFeed,
+                new UniverseSelection(
+                    _algorithm,
                     _securityService,
                     dataPermissionManager,
-                    TestGlobals.DataProvider),
+                    TestGlobals.DataProvider
+                ),
                 _algorithm,
                 _algorithm.TimeKeeper,
                 MarketHoursDatabase.AlwaysOpen,
                 false,
                 new RegisteredSecurityDataTypesProvider(),
-                dataPermissionManager);
+                dataPermissionManager
+            );
 
-            var config = new SubscriptionDataConfig(typeof(TradeBar),
+            var config = new SubscriptionDataConfig(
+                typeof(TradeBar),
                 Symbols.SPY,
                 Resolution.Daily,
                 TimeZones.NewYork,
                 TimeZones.NewYork,
                 false,
                 false,
-                false);
+                false
+            );
 
             Assert.IsTrue(ReferenceEquals(dataManager.SubscriptionManagerGetOrAdd(config), config));
             Assert.AreEqual(1, dataManager.GetSubscriptionDataConfigs(config.Symbol).Count);
@@ -128,23 +144,25 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             // we didn't add any subscription yet
             Assert.IsFalse(dataManager.RemoveSubscription(config));
 
-            var request = new SubscriptionRequest(false,
+            var request = new SubscriptionRequest(
+                false,
                 null,
-                new Security(Symbols.SPY,
+                new Security(
+                    Symbols.SPY,
                     SecurityExchangeHours.AlwaysOpen(DateTimeZone.Utc),
                     new Cash(Currencies.USD, 1, 1),
                     SymbolProperties.GetDefault(Currencies.USD),
                     new IdentityCurrencyConverter(Currencies.USD),
                     new RegisteredSecurityDataTypesProvider(),
-                    new SecurityCache()),
+                    new SecurityCache()
+                ),
                 config,
                 new DateTime(2019, 1, 1),
-                new DateTime(2019, 1, 1));
+                new DateTime(2019, 1, 1)
+            );
 
             using var enquableEnumerator = new EnqueueableEnumerator<SubscriptionData>();
-            dataFeed.Subscription = new Subscription(request,
-                enquableEnumerator,
-                null);
+            dataFeed.Subscription = new Subscription(request, enquableEnumerator, null);
 
             Assert.IsTrue(dataManager.AddSubscription(request));
             Assert.IsTrue(dataManager.RemoveSubscription(config));
@@ -159,47 +177,55 @@ namespace QuantConnect.Tests.Engine.DataFeeds
         {
             var dataPermissionManager = new DataPermissionManager();
             var dataFeed = new TestDataFeed();
-            var dataManager = new DataManager(dataFeed,
-                new UniverseSelection(_algorithm,
+            var dataManager = new DataManager(
+                dataFeed,
+                new UniverseSelection(
+                    _algorithm,
                     _securityService,
                     dataPermissionManager,
-                    TestGlobals.DataProvider),
+                    TestGlobals.DataProvider
+                ),
                 _algorithm,
                 _algorithm.TimeKeeper,
                 MarketHoursDatabase.AlwaysOpen,
                 false,
                 new RegisteredSecurityDataTypesProvider(),
-                dataPermissionManager);
+                dataPermissionManager
+            );
 
-            var config = new SubscriptionDataConfig(typeof(TradeBar),
+            var config = new SubscriptionDataConfig(
+                typeof(TradeBar),
                 Symbols.SPY,
                 Resolution.Daily,
                 TimeZones.NewYork,
                 TimeZones.NewYork,
                 false,
                 false,
-                false);
+                false
+            );
 
             // Universe A: adds the config
             dataManager.SubscriptionManagerGetOrAdd(config);
 
-            var request = new SubscriptionRequest(false,
+            var request = new SubscriptionRequest(
+                false,
                 null,
-                new Security(Symbols.SPY,
+                new Security(
+                    Symbols.SPY,
                     SecurityExchangeHours.AlwaysOpen(DateTimeZone.Utc),
                     new Cash(Currencies.USD, 1, 1),
                     SymbolProperties.GetDefault(Currencies.USD),
                     new IdentityCurrencyConverter(Currencies.USD),
                     new RegisteredSecurityDataTypesProvider(),
-                    new SecurityCache()),
+                    new SecurityCache()
+                ),
                 config,
                 new DateTime(2019, 1, 1),
-                new DateTime(2019, 1, 1));
+                new DateTime(2019, 1, 1)
+            );
 
             using var enquableEnumerator = new EnqueueableEnumerator<SubscriptionData>();
-            dataFeed.Subscription = new Subscription(request,
-                enquableEnumerator,
-                null);
+            dataFeed.Subscription = new Subscription(request, enquableEnumerator, null);
 
             // Universe A: adds the subscription
             dataManager.AddSubscription(request);
@@ -225,19 +251,24 @@ namespace QuantConnect.Tests.Engine.DataFeeds
         {
             var dataPermissionManager = new DataPermissionManager();
             var dataFeed = new TestDataFeed();
-            var dataManager = new DataManager(dataFeed,
-                new UniverseSelection(_algorithm,
+            var dataManager = new DataManager(
+                dataFeed,
+                new UniverseSelection(
+                    _algorithm,
                     _securityService,
                     dataPermissionManager,
-                    TestGlobals.DataProvider),
+                    TestGlobals.DataProvider
+                ),
                 _algorithm,
                 _algorithm.TimeKeeper,
                 MarketHoursDatabase.AlwaysOpen,
                 false,
                 new RegisteredSecurityDataTypesProvider(),
-                dataPermissionManager);
+                dataPermissionManager
+            );
 
-            var config = new SubscriptionDataConfig(typeof(TradeBar),
+            var config = new SubscriptionDataConfig(
+                typeof(TradeBar),
                 Symbols.SPY,
                 Resolution.Daily,
                 TimeZones.NewYork,
@@ -245,11 +276,13 @@ namespace QuantConnect.Tests.Engine.DataFeeds
                 false,
                 false,
                 false,
-                dataNormalizationMode: DataNormalizationMode.ScaledRaw);
+                dataNormalizationMode: DataNormalizationMode.ScaledRaw
+            );
 
             using var universe = new TestUniverse(
                 config,
-                new UniverseSettings(Resolution.Daily, 1, false, false, TimeSpan.FromDays(365)));
+                new UniverseSettings(Resolution.Daily, 1, false, false, TimeSpan.FromDays(365))
+            );
             var security = new Equity(
                 config.Symbol,
                 SecurityExchangeHours.AlwaysOpen(TimeZones.NewYork),
@@ -257,7 +290,8 @@ namespace QuantConnect.Tests.Engine.DataFeeds
                 SymbolProperties.GetDefault(Currencies.USD),
                 new IdentityCurrencyConverter(Currencies.USD),
                 new RegisteredSecurityDataTypesProvider(),
-                new SecurityCache());
+                new SecurityCache()
+            );
 
             var subscriptionRequest = new SubscriptionRequest(
                 false,
@@ -265,7 +299,8 @@ namespace QuantConnect.Tests.Engine.DataFeeds
                 security,
                 config,
                 new DateTime(2014, 10, 10),
-                new DateTime(2015, 10, 10));
+                new DateTime(2015, 10, 10)
+            );
 
             var exception = Assert.Throws<InvalidOperationException>(() =>
             {
@@ -280,25 +315,26 @@ namespace QuantConnect.Tests.Engine.DataFeeds
 
             public bool IsActive { get; }
 
-            public void Initialize(IAlgorithm algorithm, AlgorithmNodePacket job, IResultHandler resultHandler,
-                IMapFileProvider mapFileProvider, IFactorFileProvider factorFileProvider, IDataProvider dataProvider,
-                IDataFeedSubscriptionManager subscriptionManager, IDataFeedTimeProvider dataFeedTimeProvider,
-                IDataChannelProvider channelProvider)
-            {
-            }
+            public void Initialize(
+                IAlgorithm algorithm,
+                AlgorithmNodePacket job,
+                IResultHandler resultHandler,
+                IMapFileProvider mapFileProvider,
+                IFactorFileProvider factorFileProvider,
+                IDataProvider dataProvider,
+                IDataFeedSubscriptionManager subscriptionManager,
+                IDataFeedTimeProvider dataFeedTimeProvider,
+                IDataChannelProvider channelProvider
+            ) { }
 
             public Subscription CreateSubscription(SubscriptionRequest request)
             {
                 return Subscription;
             }
 
-            public void RemoveSubscription(Subscription subscription)
-            {
-            }
+            public void RemoveSubscription(Subscription subscription) { }
 
-            public void Exit()
-            {
-            }
+            public void Exit() { }
         }
 
         private class TestUniverse : Universe
@@ -308,7 +344,11 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             {
                 UniverseSettings = universeSettings;
             }
-            public override IEnumerable<Symbol> SelectSymbols(DateTime utcTime, BaseDataCollection data)
+
+            public override IEnumerable<Symbol> SelectSymbols(
+                DateTime utcTime,
+                BaseDataCollection data
+            )
             {
                 throw new NotImplementedException();
             }

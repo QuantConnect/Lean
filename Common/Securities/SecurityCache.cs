@@ -14,12 +14,12 @@
 */
 
 using System;
-using System.Linq;
-using QuantConnect.Data;
-using QuantConnect.Data.Market;
 using System.Collections.Generic;
+using System.Linq;
 using System.Runtime.CompilerServices;
+using QuantConnect.Data;
 using QuantConnect.Data.Fundamental;
+using QuantConnect.Data.Market;
 using QuantConnect.Data.UniverseSelection;
 using QuantConnect.Util;
 
@@ -120,7 +120,11 @@ namespace QuantConnect.Securities
         /// </summary>
         /// <remarks>Internally uses <see cref="AddData"/> using the last data point of the provided list
         /// and it stores by type the non fill forward points using <see cref="StoreData"/></remarks>
-        public void AddDataList(IReadOnlyList<BaseData> data, Type dataType, bool? containsFillForwardData = null)
+        public void AddDataList(
+            IReadOnlyList<BaseData> data,
+            Type dataType,
+            bool? containsFillForwardData = null
+        )
         {
             var nonFillForwardData = data;
             // maintaining regression requires us to NOT cache FF data
@@ -182,7 +186,8 @@ namespace QuantConnect.Securities
             }
 
             // Only cache non fill-forward data and non auxiliary
-            if (data.IsFillForward) return;
+            if (data.IsFillForward)
+                return;
 
             if (cacheByType)
             {
@@ -190,38 +195,49 @@ namespace QuantConnect.Securities
             }
 
             // we store auxiliary data by type but we don't use it to set 'lastData' nor price information
-            if (data.DataType == MarketDataType.Auxiliary) return;
+            if (data.DataType == MarketDataType.Auxiliary)
+                return;
 
             var isDefaultDataType = SubscriptionManager.IsDefaultDataType(data);
 
             // don't set _lastData if receive quotebar then tradebar w/ same end time. this
             // was implemented to grant preference towards using quote data in the fill
             // models and provide a level of determinism on the values exposed via the cache.
-            if ((_lastData == null
-              || _lastQuoteBarUpdate != data.EndTime
-              || data.DataType != MarketDataType.TradeBar)
+            if (
+                (
+                    _lastData == null
+                    || _lastQuoteBarUpdate != data.EndTime
+                    || data.DataType != MarketDataType.TradeBar
+                )
                 // we will only set the default data type to preserve determinism and backwards compatibility
-                && isDefaultDataType)
+                && isDefaultDataType
+            )
             {
                 _lastData = data;
             }
 
             if (tick != null)
             {
-                if (tick.Value != 0) Price = tick.Value;
+                if (tick.Value != 0)
+                    Price = tick.Value;
 
                 switch (tick.TickType)
                 {
                     case TickType.Trade:
-                        if (tick.Quantity != 0) Volume = tick.Quantity;
+                        if (tick.Quantity != 0)
+                            Volume = tick.Quantity;
                         break;
 
                     case TickType.Quote:
-                        if (tick.BidPrice != 0) BidPrice = tick.BidPrice;
-                        if (tick.BidSize != 0) BidSize = tick.BidSize;
+                        if (tick.BidPrice != 0)
+                            BidPrice = tick.BidPrice;
+                        if (tick.BidSize != 0)
+                            BidSize = tick.BidSize;
 
-                        if (tick.AskPrice != 0) AskPrice = tick.AskPrice;
-                        if (tick.AskSize != 0) AskSize = tick.AskSize;
+                        if (tick.AskPrice != 0)
+                            AskPrice = tick.AskPrice;
+                        if (tick.AskSize != 0)
+                            AskSize = tick.AskSize;
                         break;
                 }
                 return;
@@ -232,12 +248,18 @@ namespace QuantConnect.Securities
             {
                 // we will only set OHLC values using the default data type to preserve determinism and backwards compatibility.
                 // Gives priority to QuoteBar over TradeBar, to be removed when default data type completely addressed GH issue 4196
-                if ((_lastQuoteBarUpdate != data.EndTime || _lastOHLCUpdate != data.EndTime) && isDefaultDataType)
+                if (
+                    (_lastQuoteBarUpdate != data.EndTime || _lastOHLCUpdate != data.EndTime)
+                    && isDefaultDataType
+                )
                 {
                     _lastOHLCUpdate = data.EndTime;
-                    if (bar.Open != 0) Open = bar.Open;
-                    if (bar.High != 0) High = bar.High;
-                    if (bar.Low != 0) Low = bar.Low;
+                    if (bar.Open != 0)
+                        Open = bar.Open;
+                    if (bar.High != 0)
+                        High = bar.High;
+                    if (bar.Low != 0)
+                        Low = bar.Low;
                     if (bar.Close != 0)
                     {
                         Price = bar.Close;
@@ -248,17 +270,22 @@ namespace QuantConnect.Securities
                 var tradeBar = bar as TradeBar;
                 if (tradeBar != null)
                 {
-                    if (tradeBar.Volume != 0) Volume = tradeBar.Volume;
+                    if (tradeBar.Volume != 0)
+                        Volume = tradeBar.Volume;
                 }
 
                 var quoteBar = bar as QuoteBar;
                 if (quoteBar != null)
                 {
                     _lastQuoteBarUpdate = quoteBar.EndTime;
-                    if (quoteBar.Ask != null && quoteBar.Ask.Close != 0) AskPrice = quoteBar.Ask.Close;
-                    if (quoteBar.Bid != null && quoteBar.Bid.Close != 0) BidPrice = quoteBar.Bid.Close;
-                    if (quoteBar.LastBidSize != 0) BidSize = quoteBar.LastBidSize;
-                    if (quoteBar.LastAskSize != 0) AskSize = quoteBar.LastAskSize;
+                    if (quoteBar.Ask != null && quoteBar.Ask.Close != 0)
+                        AskPrice = quoteBar.Ask.Close;
+                    if (quoteBar.Bid != null && quoteBar.Bid.Close != 0)
+                        BidPrice = quoteBar.Bid.Close;
+                    if (quoteBar.LastBidSize != 0)
+                        BidSize = quoteBar.LastBidSize;
+                    if (quoteBar.LastAskSize != 0)
+                        AskSize = quoteBar.LastAskSize;
                 }
             }
             else if (data.DataType != MarketDataType.Auxiliary)
@@ -397,8 +424,10 @@ namespace QuantConnect.Securities
             {
                 var quote = _lastTickQuotes.LastOrDefault();
                 var trade = _lastTickTrades.LastOrDefault();
-                var isQuoteDefaultDataType = quote != null && SubscriptionManager.IsDefaultDataType(quote);
-                var isTradeDefaultDataType = trade != null && SubscriptionManager.IsDefaultDataType(trade);
+                var isQuoteDefaultDataType =
+                    quote != null && SubscriptionManager.IsDefaultDataType(quote);
+                var isTradeDefaultDataType =
+                    trade != null && SubscriptionManager.IsDefaultDataType(trade);
 
                 // Currently, IsDefaultDataType returns true for both cases,
                 // So we will return the list with the tick with the most recent timestamp
@@ -463,7 +492,10 @@ namespace QuantConnect.Securities
         /// will allow both securities to access the same data by type</remarks>
         /// <param name="sourceToShare">The source cache to use</param>
         /// <param name="targetToModify">The target security cache that will be modified</param>
-        public static void ShareTypeCacheInstance(SecurityCache sourceToShare, SecurityCache targetToModify)
+        public static void ShareTypeCacheInstance(
+            SecurityCache sourceToShare,
+            SecurityCache targetToModify
+        )
         {
             sourceToShare._dataByType ??= new();
             if (targetToModify._dataByType != null)
@@ -501,7 +533,13 @@ namespace QuantConnect.Securities
             BidSize /= split.SplitFactor;
 
             // Adjust values for the last data we have cached
-            Action<BaseData> scale = data => data.Scale((target, factor, _) => target * factor, 1 / split.SplitFactor, split.SplitFactor, decimal.Zero);
+            Action<BaseData> scale = data =>
+                data.Scale(
+                    (target, factor, _) => target * factor,
+                    1 / split.SplitFactor,
+                    split.SplitFactor,
+                    decimal.Zero
+                );
             _dataByType?.Values.DoForEach(x => x.DoForEach(scale));
             _lastTickQuotes.DoForEach(scale);
             _lastTickTrades.DoForEach(scale);

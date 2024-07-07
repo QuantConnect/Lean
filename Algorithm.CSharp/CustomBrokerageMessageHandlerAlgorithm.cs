@@ -41,7 +41,8 @@ namespace QuantConnect.Algorithm.CSharp
 
         public void OnData(TradeBars data)
         {
-            if (Portfolio.HoldStock) return;
+            if (Portfolio.HoldStock)
+                return;
             Order("SPY", 100);
             Debug("Purchased SPY on " + Time.ToShortDateString());
         }
@@ -53,7 +54,11 @@ namespace QuantConnect.Algorithm.CSharp
     public class CustomBrokerageMessageHandler : IBrokerageMessageHandler
     {
         private readonly IAlgorithm _algo;
-        public CustomBrokerageMessageHandler(IAlgorithm algo) { _algo = algo; }
+
+        public CustomBrokerageMessageHandler(IAlgorithm algo)
+        {
+            _algo = algo;
+        }
 
         /// <summary>
         /// Process the brokerage message event. Trigger any actions in the algorithm or notifications system required.

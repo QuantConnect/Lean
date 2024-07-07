@@ -14,13 +14,13 @@
  *
 */
 
-using NodaTime;
-using QuantConnect.Data;
-using QuantConnect.Data.Consolidators;
 using System;
 using System.Collections;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using NodaTime;
+using QuantConnect.Data;
+using QuantConnect.Data.Consolidators;
 
 namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
 {
@@ -28,7 +28,8 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
     /// An implementation of <see cref="IEnumerator{T}"/> that relies on "consolidated" data
     /// </summary>
     /// <typeparam name="T">The item type yielded by the enumerator</typeparam>
-    public class ScannableEnumerator<T> : IEnumerator<T> where T : class, IBaseData
+    public class ScannableEnumerator<T> : IEnumerator<T>
+        where T : class, IBaseData
     {
         private T _current;
         private bool _consolidated;
@@ -66,7 +67,13 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
         /// <param name="timeProvider">The time provider instance used to determine when bars are completed and can be emitted</param>
         /// <param name="newDataAvailableHandler">The event handler for a new available data point</param>
         /// <param name="isPeriodBased">The consolidator is period based, this will enable scanning on <see cref="MoveNext"/></param>
-        public ScannableEnumerator(IDataConsolidator consolidator, DateTimeZone timeZone, ITimeProvider timeProvider, EventHandler newDataAvailableHandler, bool isPeriodBased = true)
+        public ScannableEnumerator(
+            IDataConsolidator consolidator,
+            DateTimeZone timeZone,
+            ITimeProvider timeProvider,
+            EventHandler newDataAvailableHandler,
+            bool isPeriodBased = true
+        )
         {
             _timeZone = timeZone;
             _timeProvider = timeProvider;
@@ -150,9 +157,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
         /// Sets the enumerator to its initial position, which is before the first element in the collection.
         /// </summary>
         /// <exception cref="T:System.InvalidOperationException">The collection was modified after the enumerator was created. </exception><filterpriority>2</filterpriority>
-        public void Reset()
-        {
-        }
+        public void Reset() { }
 
         /// <summary>
         /// Performs application-defined tasks associated with freeing, releasing, or resetting unmanaged resources.
@@ -168,7 +173,10 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
             var dataPoint = data as T;
             _consolidated = true;
             Enqueue(dataPoint);
-            _newDataAvailableHandler(sender, new NewDataAvailableEventArgs { DataPoint = dataPoint });
+            _newDataAvailableHandler(
+                sender,
+                new NewDataAvailableEventArgs { DataPoint = dataPoint }
+            );
         }
     }
 }

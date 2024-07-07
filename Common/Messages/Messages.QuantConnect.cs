@@ -16,11 +16,8 @@
 using System;
 using System.Collections.Generic;
 using System.Runtime.CompilerServices;
-
 using Python.Runtime;
-
 using QuantConnect.Interfaces;
-
 using static QuantConnect.StringExtensions;
 
 namespace QuantConnect
@@ -58,7 +55,8 @@ namespace QuantConnect
             /// <summary>
             /// Returns a string message saying: Total Insights Analysis Completed
             /// </summary>
-            public static string TotalInsightsAnalysisCompletedKey = "Total Insights Analysis Completed";
+            public static string TotalInsightsAnalysisCompletedKey =
+                "Total Insights Analysis Completed";
 
             /// <summary>
             /// Returns a string message saying: Long Insight Count
@@ -113,8 +111,10 @@ namespace QuantConnect
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             public static string ToString(QuantConnect.Candlestick instance)
             {
-                return Invariant($@"{instance.Time:o} - (O:{instance.Open} H: {instance.High} L: {
-                    instance.Low} C: {instance.Close})");
+                return Invariant(
+                    $@"{instance.Time:o} - (O:{instance.Open} H: {instance.High} L: {
+                    instance.Low} C: {instance.Close})"
+                );
             }
         }
 
@@ -141,7 +141,8 @@ namespace QuantConnect
             /// <summary>
             /// Returns a string message saying the types deriving from ExtendedDictionary must implement the void Clear() method
             /// </summary>
-            public static string ClearMethodNotImplemented = "Types deriving from 'ExtendedDictionary' must implement the 'void Clear() method.";
+            public static string ClearMethodNotImplemented =
+                "Types deriving from 'ExtendedDictionary' must implement the 'void Clear() method.";
 
             /// <summary>
             /// Returns a string message saying the types deriving from ExtendedDictionary must implement the void Remove(Symbol) method
@@ -182,9 +183,9 @@ namespace QuantConnect
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             public static string TickerNotFoundInSymbolCache(string ticker)
             {
-                return $"The ticker {ticker} was not found in the SymbolCache. Use the Symbol object as key instead. " +
-                    "Accessing the securities collection/slice object by string ticker is only available for securities added with " +
-                    "the AddSecurity-family methods. For more details, please check out the documentation.";
+                return $"The ticker {ticker} was not found in the SymbolCache. Use the Symbol object as key instead. "
+                    + "Accessing the securities collection/slice object by string ticker is only available for securities added with "
+                    + "the AddSecurity-family methods. For more details, please check out the documentation.";
             }
 
             /// <summary>
@@ -201,11 +202,14 @@ namespace QuantConnect
             /// a recommendation for solving this problem
             /// </summary>
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            public static string SymbolNotFoundDueToNoData<T>(ExtendedDictionary<T> instance, QuantConnect.Symbol symbol)
+            public static string SymbolNotFoundDueToNoData<T>(
+                ExtendedDictionary<T> instance,
+                QuantConnect.Symbol symbol
+            )
             {
-                return $"'{symbol}' wasn't found in the {instance.GetType().Name} object, likely because there was no-data at this moment in " +
-                    "time and it wasn't possible to fillforward historical data. Please check the data exists before accessing it with " +
-                    $"data.ContainsKey(\"{symbol}\"). The collection is read-only, cannot set default.";
+                return $"'{symbol}' wasn't found in the {instance.GetType().Name} object, likely because there was no-data at this moment in "
+                    + "time and it wasn't possible to fillforward historical data. Please check the data exists before accessing it with "
+                    + $"data.ContainsKey(\"{symbol}\"). The collection is read-only, cannot set default.";
             }
 
             /// <summary>
@@ -239,22 +243,26 @@ namespace QuantConnect
             /// <summary>
             /// Returns a string message saying the source cannot be null or empty
             /// </summary>
-            public static string NullOrEmptySourceToConvertToHexString = "Source cannot be null or empty.";
+            public static string NullOrEmptySourceToConvertToHexString =
+                "Source cannot be null or empty.";
 
             /// <summary>
             /// Returns a string message saying the CreateOptionChain method requires an option symbol
             /// </summary>
-            public static string CreateOptionChainRequiresOptionSymbol = "CreateOptionChain requires an option symbol.";
+            public static string CreateOptionChainRequiresOptionSymbol =
+                "CreateOptionChain requires an option symbol.";
 
             /// <summary>
             /// Returns a string message saying the CreateFutureChain method requires a future symbol
             /// </summary>
-            public static string CreateFutureChainRequiresFutureSymbol = "CreateFutureChain requires a future symbol.";
+            public static string CreateFutureChainRequiresFutureSymbol =
+                "CreateFutureChain requires a future symbol.";
 
             /// <summary>
             /// Returns a string message saying the list of values cannot be empty
             /// </summary>
-            public static string GreatestCommonDivisorEmptyList = "The list of values cannot be empty";
+            public static string GreatestCommonDivisorEmptyList =
+                "The list of values cannot be empty";
 
             /// <summary>
             /// Returns a string message saying the process of downloading data from the given url failed
@@ -272,12 +280,12 @@ namespace QuantConnect
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             public static string ZeroPriceForSecurity(QuantConnect.Symbol symbol)
             {
-                return $"{symbol}: The security does not have an accurate price as it has not yet received a bar of data. " +
-                    "Before placing a trade (or using SetHoldings) warm up your algorithm with SetWarmup, or use slice.Contains(symbol) " +
-                    "to confirm the Slice object has price before using the data. Data does not necessarily all arrive at the same " +
-                    "time so your algorithm should confirm the data is ready before using it. In live trading this can mean you do " +
-                    "not have an active subscription to the asset class you're trying to trade. If using custom data make sure you've " +
-                    "set the 'Value' property.";
+                return $"{symbol}: The security does not have an accurate price as it has not yet received a bar of data. "
+                    + "Before placing a trade (or using SetHoldings) warm up your algorithm with SetWarmup, or use slice.Contains(symbol) "
+                    + "to confirm the Slice object has price before using the data. Data does not necessarily all arrive at the same "
+                    + "time so your algorithm should confirm the data is ready before using it. In live trading this can mean you do "
+                    + "not have an active subscription to the asset class you're trying to trade. If using custom data make sure you've "
+                    + "set the 'Value' property.";
             }
 
             /// <summary>
@@ -333,8 +341,10 @@ namespace QuantConnect
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             public static string CannotCastNonFiniteFloatingPointValueToDecimal(double input)
             {
-                return Invariant($@"It is not possible to cast a non-finite floating-point value ({
-                    input}) as decimal. Please review math operations and verify the result is valid.");
+                return Invariant(
+                    $@"It is not possible to cast a non-finite floating-point value ({
+                    input}) as decimal. Please review math operations and verify the result is valid."
+                );
             }
 
             /// <summary>
@@ -343,7 +353,9 @@ namespace QuantConnect
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             public static string UnableToConvertTimeSpanToResolution(TimeSpan timeSpan)
             {
-                return Invariant($"Unable to exactly convert time span ('{timeSpan}') to resolution.");
+                return Invariant(
+                    $"Unable to exactly convert time span ('{timeSpan}') to resolution."
+                );
             }
 
             /// <summary>
@@ -362,7 +374,9 @@ namespace QuantConnect
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             public static string NoDefaultOptionStyleForSecurityType(SecurityType securityType)
             {
-                return Invariant($"The SecurityType {securityType} has no default OptionStyle, because it has no options available for it");
+                return Invariant(
+                    $"The SecurityType {securityType} has no default OptionStyle, because it has no options available for it"
+                );
             }
 
             /// <summary>
@@ -414,7 +428,10 @@ namespace QuantConnect
             /// Returns a string message saying the given method cannot be used to convert a PyObject into the given type
             /// </summary>
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            public static string ConvertToDelegateCannotConverPyObjectToType(string methodName, Type type)
+            public static string ConvertToDelegateCannotConverPyObjectToType(
+                string methodName,
+                Type type
+            )
             {
                 return $"{methodName} cannot be used to convert a PyObject into {type}.";
             }
@@ -424,7 +441,11 @@ namespace QuantConnect
             /// type into another given target type. It also specifies the reason.
             /// </summary>
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            public static string ConvertToDictionaryFailed(string sourceType, string targetType, string reason)
+            public static string ConvertToDictionaryFailed(
+                string sourceType,
+                string targetType,
+                string reason
+            )
             {
                 return $"ConvertToDictionary cannot be used to convert a {sourceType} into {targetType}. Reason: {reason}";
             }
@@ -470,8 +491,10 @@ namespace QuantConnect
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             public static string ToString(QuantConnect.Holding instance)
             {
-                var value = Invariant($@"{instance.Symbol.Value}: {instance.Quantity} @ {
-                    instance.CurrencySymbol}{instance.AveragePrice} - Market: {instance.CurrencySymbol}{instance.MarketPrice}");
+                var value = Invariant(
+                    $@"{instance.Symbol.Value}: {instance.Quantity} @ {
+                    instance.CurrencySymbol}{instance.AveragePrice} - Market: {instance.CurrencySymbol}{instance.MarketPrice}"
+                );
 
                 if (instance.ConversionRate != 1m)
                 {
@@ -509,12 +532,14 @@ namespace QuantConnect
             }
 
             /// <summary>
-            /// Returns a string message saying: Execution Security Error: Memory usage over 80% capacity, and the last sample taken 
+            /// Returns a string message saying: Execution Security Error: Memory usage over 80% capacity, and the last sample taken
             /// </summary>
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             public static string MemoryUsageOver80Percent(double lastSample)
             {
-                return Invariant($"Execution Security Error: Memory usage over 80% capacity. Sampled at {lastSample}");
+                return Invariant(
+                    $"Execution Security Error: Memory usage over 80% capacity. Sampled at {lastSample}"
+                );
             }
 
             /// <summary>
@@ -522,11 +547,18 @@ namespace QuantConnect
             /// the current memory used by the given app and the CPU usage
             /// </summary>
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            public static string MemoryUsageInfo(string memoryUsed, string lastSample, string memoryUsedByApp, TimeSpan currentTimeStepElapsed,
-                int cpuUsage)
+            public static string MemoryUsageInfo(
+                string memoryUsed,
+                string lastSample,
+                string memoryUsedByApp,
+                TimeSpan currentTimeStepElapsed,
+                int cpuUsage
+            )
             {
-                return Invariant($@"Used: {memoryUsed}, Sample: {lastSample}, App: {memoryUsedByApp}, CurrentTimeStepElapsed: {
-                    currentTimeStepElapsed:mm':'ss'.'fff}. CPU: {cpuUsage}%");
+                return Invariant(
+                    $@"Used: {memoryUsed}, Sample: {lastSample}, App: {memoryUsedByApp}, CurrentTimeStepElapsed: {
+                    currentTimeStepElapsed:mm':'ss'.'fff}. CPU: {cpuUsage}%"
+                );
             }
 
             /// <summary>
@@ -569,7 +601,10 @@ namespace QuantConnect
             /// </summary>
             /// <returns></returns>
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            public static string TriedToAddExistingMarketIdentifier(string market, string existingMarket)
+            public static string TriedToAddExistingMarketIdentifier(
+                string market,
+                string existingMarket
+            )
             {
                 return $"Attempted to add a market identifier that is already in use. New Market: {market} Existing Market: {existingMarket}";
             }
@@ -659,27 +694,32 @@ namespace QuantConnect
             /// <summary>
             /// Returns a string message saying SecurityIdentifier requires a non-null string 'symbol'
             /// </summary>
-            public static string NullSymbol = "SecurityIdentifier requires a non-null string 'symbol'";
+            public static string NullSymbol =
+                "SecurityIdentifier requires a non-null string 'symbol'";
 
             /// <summary>
             /// Returns a string message saying Symbol must not contain the characters '|' or ' '
             /// </summary>
-            public static string SymbolWithInvalidCharacters = "Symbol must not contain the characters '|' or ' '.";
+            public static string SymbolWithInvalidCharacters =
+                "Symbol must not contain the characters '|' or ' '.";
 
             /// <summary>
             /// Returns a string message saying the provided properties do not match with a valid SecurityType
             /// </summary>
-            public static string PropertiesDoNotMatchAnySecurityType = $"The provided properties do not match with a valid {nameof(SecurityType)}";
+            public static string PropertiesDoNotMatchAnySecurityType =
+                $"The provided properties do not match with a valid {nameof(SecurityType)}";
 
             /// <summary>
             /// Returns a string message saying the string must be splittable on space into two parts
             /// </summary>
-            public static string StringIsNotSplittable = "The string must be splittable on space into two parts.";
+            public static string StringIsNotSplittable =
+                "The string must be splittable on space into two parts.";
 
             /// <summary>
             /// Returns a string message saying object must be of type SecurityIdentifier
             /// </summary>
-            public static string UnexpectedTypeToCompareTo = $"Object must be of type {nameof(SecurityIdentifier)}";
+            public static string UnexpectedTypeToCompareTo =
+                $"Object must be of type {nameof(SecurityIdentifier)}";
 
             /// <summary>
             /// Returns a string message saying the given parameter must be between 0 and 99
@@ -705,7 +745,9 @@ namespace QuantConnect
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             public static string InvalidStrikePrice(decimal strikePrice)
             {
-                return Invariant($"The specified strike price's precision is too high: {strikePrice}");
+                return Invariant(
+                    $"The specified strike price's precision is too high: {strikePrice}"
+                );
             }
 
             /// <summary>
@@ -714,7 +756,9 @@ namespace QuantConnect
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             public static string ErrorParsingSecurityIdentifier(string value, Exception exception)
             {
-                return Invariant($"Error parsing SecurityIdentifier: '{value}', Exception: {exception}");
+                return Invariant(
+                    $"Error parsing SecurityIdentifier: '{value}', Exception: {exception}"
+                );
             }
 
             /// <summary>
@@ -763,7 +807,8 @@ namespace QuantConnect
             /// <summary>
             /// Returns a string message saying certain object must be of type Symbol or string
             /// </summary>
-            public static string UnexpectedObjectTypeToCompareTo = "Object must be of type Symbol or string.";
+            public static string UnexpectedObjectTypeToCompareTo =
+                "Object must be of type Symbol or string.";
 
             /// <summary>
             /// Returns a string message saying the given security type has not been implemented yet
@@ -789,7 +834,9 @@ namespace QuantConnect
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             public static string NoOptionTypeForUnderlying(SecurityType securityType)
             {
-                return Invariant($"No option type exists for underlying SecurityType: {securityType}");
+                return Invariant(
+                    $"No option type exists for underlying SecurityType: {securityType}"
+                );
             }
 
             /// <summary>
@@ -798,7 +845,9 @@ namespace QuantConnect
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             public static string NoUnderlyingForOption(SecurityType securityType)
             {
-                return Invariant($"No underlying type exists for option SecurityType: {securityType}");
+                return Invariant(
+                    $"No underlying type exists for option SecurityType: {securityType}"
+                );
             }
         }
 
@@ -822,9 +871,9 @@ namespace QuantConnect
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             public static string MultipleMatchingTickersLocated(IEnumerable<string> tickers)
             {
-                return "We located multiple potentially matching tickers. " +
-                    "For custom data, be sure to append a dot followed by the custom data type name. " +
-                    $"For example: 'BTC.Bitcoin'. Potential Matches: {string.Join(", ", tickers)}";
+                return "We located multiple potentially matching tickers. "
+                    + "For custom data, be sure to append a dot followed by the custom data type name. "
+                    + $"For example: 'BTC.Bitcoin'. Potential Matches: {string.Join(", ", tickers)}";
             }
         }
 
@@ -837,7 +886,10 @@ namespace QuantConnect
             /// Returns a string message saying SymbolRepresentation failed to get market for the given ticker and underlying
             /// </summary>
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            public static string FailedToGetMarketForTickerAndUnderlying(string ticker, string underlying)
+            public static string FailedToGetMarketForTickerAndUnderlying(
+                string ticker,
+                string underlying
+            )
             {
                 return $"Failed to get market for future '{ticker}' and underlying '{underlying}'";
             }
@@ -855,9 +907,14 @@ namespace QuantConnect
             /// Returns a string message saying an unexpected security type was received by the given method name
             /// </summary>
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            public static string UnexpectedSecurityTypeForMethod(string methodName, SecurityType securityType)
+            public static string UnexpectedSecurityTypeForMethod(
+                string methodName,
+                SecurityType securityType
+            )
             {
-                return Invariant($"{methodName} expects symbol to be an option, received {securityType}.");
+                return Invariant(
+                    $"{methodName} expects symbol to be an option, received {securityType}."
+                );
             }
 
             /// <summary>
@@ -888,7 +945,8 @@ namespace QuantConnect
             /// <summary>
             /// String message saying converter is write only
             /// </summary>
-            public static string ConverterIsWriteOnly = "The SymbolValueJsonConverter is write-only.";
+            public static string ConverterIsWriteOnly =
+                "The SymbolValueJsonConverter is write-only.";
 
             /// <summary>
             /// String message saying converter is intended to be directly decorated in member
@@ -928,9 +986,11 @@ namespace QuantConnect
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             public static string InvalidTotalDays(int totalDays)
             {
-                return Invariant($@"Total days is negative ({
+                return Invariant(
+                    $@"Total days is negative ({
                     totalDays
-                    }), indicating reverse start and end times. Check your usage of TradingCalendar to ensure proper arrangement of variables");
+                    }), indicating reverse start and end times. Check your usage of TradingCalendar to ensure proper arrangement of variables"
+                );
             }
         }
     }

@@ -431,7 +431,8 @@ namespace QuantConnect.Data.Custom.Intrinio
             /// <remarks>
             ///     Source: https://fred.stlouisfed.org/series/AAA10Y
             /// </remarks>
-            public const string SeasonedAaaCorporateBondYieldRelativeTo10YearTreasuryConstantMaturity = "$AAA10Y";
+            public const string SeasonedAaaCorporateBondYieldRelativeTo10YearTreasuryConstantMaturity =
+                "$AAA10Y";
 
             /// <summary>
             ///     Moody's Seasoned Baa Corporate Bond© and 10-Year Treasury Constant Maturity.
@@ -448,7 +449,8 @@ namespace QuantConnect.Data.Custom.Intrinio
             /// <remarks>
             ///     Source: https://fred.stlouisfed.org/series/BAA10Y
             /// </remarks>
-            public const string SeasonedBaaCorporateBondYieldRelativeTo10YearTreasuryConstantMaturity = "$BAA10Y";
+            public const string SeasonedBaaCorporateBondYieldRelativeTo10YearTreasuryConstantMaturity =
+                "$BAA10Y";
         }
 
         /// <summary>

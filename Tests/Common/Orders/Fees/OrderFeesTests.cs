@@ -33,14 +33,18 @@ namespace QuantConnect.Tests.Common.Orders.Fees
             Assert.AreEqual(0, result.Amount);
             Assert.AreEqual(book.AccountCurrency, result.Currency);
 
-            var result2 = book.ConvertToAccountCurrency(OrderFee.Zero.Value.Amount,
-                OrderFee.Zero.Value.Currency);
+            var result2 = book.ConvertToAccountCurrency(
+                OrderFee.Zero.Value.Amount,
+                OrderFee.Zero.Value.Currency
+            );
 
             Assert.AreEqual(0, result2);
 
-            var result3 = book.Convert(OrderFee.Zero.Value.Amount,
+            var result3 = book.Convert(
+                OrderFee.Zero.Value.Amount,
                 OrderFee.Zero.Value.Currency,
-                book.AccountCurrency);
+                book.AccountCurrency
+            );
 
             Assert.AreEqual(0, result3);
         }

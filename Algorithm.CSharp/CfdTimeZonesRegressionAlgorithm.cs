@@ -48,7 +48,8 @@ namespace QuantConnect.Algorithm.CSharp
         /// <param name="data">Slice object keyed by symbol containing the stock data</param>
         public override void OnData(Slice slice)
         {
-            if (Time.Minute % 10 != 0) return;
+            if (Time.Minute % 10 != 0)
+                return;
 
             if (!Portfolio.Invested)
             {
@@ -88,35 +89,36 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// This is used by the regression test system to indicate what the expected statistics are from running the algorithm
         /// </summary>
-        public Dictionary<string, string> ExpectedStatistics => new Dictionary<string, string>
-        {
-            {"Total Orders", "279"},
-            {"Average Win", "0.01%"},
-            {"Average Loss", "-0.01%"},
-            {"Compounding Annual Return", "-33.650%"},
-            {"Drawdown", "0.300%"},
-            {"Expectancy", "-0.345"},
-            {"Start Equity", "100000"},
-            {"End Equity", "99663.4"},
-            {"Net Profit", "-0.337%"},
-            {"Sharpe Ratio", "-21.957"},
-            {"Sortino Ratio", "-21.957"},
-            {"Probabilistic Sharpe Ratio", "0%"},
-            {"Loss Rate", "68%"},
-            {"Win Rate", "32%"},
-            {"Profit-Loss Ratio", "1.07"},
-            {"Alpha", "0"},
-            {"Beta", "0"},
-            {"Annual Standard Deviation", "0.014"},
-            {"Annual Variance", "0"},
-            {"Information Ratio", "-19.772"},
-            {"Tracking Error", "0.014"},
-            {"Treynor Ratio", "0"},
-            {"Total Fees", "€0.00"},
-            {"Estimated Strategy Capacity", "€670000.00"},
-            {"Lowest Capacity Asset", "DE30EUR 8I"},
-            {"Portfolio Turnover", "1062.25%"},
-            {"OrderListHash", "d5d15485c8fc6d412e5e73d40d9afd60"}
-        };
+        public Dictionary<string, string> ExpectedStatistics =>
+            new Dictionary<string, string>
+            {
+                { "Total Orders", "279" },
+                { "Average Win", "0.01%" },
+                { "Average Loss", "-0.01%" },
+                { "Compounding Annual Return", "-33.650%" },
+                { "Drawdown", "0.300%" },
+                { "Expectancy", "-0.345" },
+                { "Start Equity", "100000" },
+                { "End Equity", "99663.4" },
+                { "Net Profit", "-0.337%" },
+                { "Sharpe Ratio", "-21.957" },
+                { "Sortino Ratio", "-21.957" },
+                { "Probabilistic Sharpe Ratio", "0%" },
+                { "Loss Rate", "68%" },
+                { "Win Rate", "32%" },
+                { "Profit-Loss Ratio", "1.07" },
+                { "Alpha", "0" },
+                { "Beta", "0" },
+                { "Annual Standard Deviation", "0.014" },
+                { "Annual Variance", "0" },
+                { "Information Ratio", "-19.772" },
+                { "Tracking Error", "0.014" },
+                { "Treynor Ratio", "0" },
+                { "Total Fees", "€0.00" },
+                { "Estimated Strategy Capacity", "€670000.00" },
+                { "Lowest Capacity Asset", "DE30EUR 8I" },
+                { "Portfolio Turnover", "1062.25%" },
+                { "OrderListHash", "d5d15485c8fc6d412e5e73d40d9afd60" }
+            };
     }
 }

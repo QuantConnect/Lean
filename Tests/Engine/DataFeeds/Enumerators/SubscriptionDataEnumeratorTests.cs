@@ -27,7 +27,6 @@ namespace QuantConnect.Tests.Engine.DataFeeds.Enumerators
     [TestFixture]
     public class SubscriptionDataEnumeratorTests
     {
-
         [TestCase(typeof(TradeBar), true)]
         [TestCase(typeof(OpenInterest), false)]
         [TestCase(typeof(QuoteBar), false)]
@@ -36,20 +35,36 @@ namespace QuantConnect.Tests.Engine.DataFeeds.Enumerators
             var config = CreateConfig(Resolution.Hour, typeOfConfig);
             var security = GetSecurity(config);
             var time = new DateTime(2010, 1, 1);
-            var tzOffsetProvider = new TimeZoneOffsetProvider(security.Exchange.TimeZone, time, time.AddDays(1));
-
+            var tzOffsetProvider = new TimeZoneOffsetProvider(
+                security.Exchange.TimeZone,
+                time,
+                time.AddDays(1)
+            );
 
             // Make a aux data stream; for this testing case we will just use delisting data points
             var totalPoints = 8;
-            var stream = Enumerable.Range(0, totalPoints).Select(x => new Delisting { Time = time.AddHours(x) }).GetEnumerator();
-            using var enumerator = new SubscriptionDataEnumerator(config, security.Exchange.Hours, tzOffsetProvider, stream, false, false);
+            var stream = Enumerable
+                .Range(0, totalPoints)
+                .Select(x => new Delisting { Time = time.AddHours(x) })
+                .GetEnumerator();
+            using var enumerator = new SubscriptionDataEnumerator(
+                config,
+                security.Exchange.Hours,
+                tzOffsetProvider,
+                stream,
+                false,
+                false
+            );
 
             // Test our SubscriptionDataEnumerator to see if it emits the aux data
             int dataReceivedCount = 0;
             while (enumerator.MoveNext())
             {
                 dataReceivedCount++;
-                if (enumerator.Current != null && enumerator.Current.Data.DataType == MarketDataType.Auxiliary)
+                if (
+                    enumerator.Current != null
+                    && enumerator.Current.Data.DataType == MarketDataType.Auxiliary
+                )
                 {
                     Assert.IsTrue(shouldReceiveAuxData);
                 }
@@ -67,7 +82,6 @@ namespace QuantConnect.Tests.Engine.DataFeeds.Enumerators
             }
         }
 
-
         private static Security GetSecurity(SubscriptionDataConfig config)
         {
             return new Security(
@@ -83,7 +97,16 @@ namespace QuantConnect.Tests.Engine.DataFeeds.Enumerators
 
         private static SubscriptionDataConfig CreateConfig(Resolution resolution, Type type)
         {
-            return new SubscriptionDataConfig(type, Symbols.SPY, resolution, TimeZones.NewYork, TimeZones.NewYork, true, true, false);
+            return new SubscriptionDataConfig(
+                type,
+                Symbols.SPY,
+                resolution,
+                TimeZones.NewYork,
+                TimeZones.NewYork,
+                true,
+                true,
+                false
+            );
         }
     }
 }

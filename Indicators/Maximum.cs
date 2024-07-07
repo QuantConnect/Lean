@@ -42,9 +42,7 @@ namespace QuantConnect.Indicators
         /// </summary>
         /// <param name="period">The period over which to look back</param>
         public Maximum(int period)
-            : base($"MAX({period})", period)
-        {
-        }
+            : base($"MAX({period})", period) { }
 
         /// <summary>
         /// Creates a new Maximum indicator with the specified period
@@ -52,12 +50,13 @@ namespace QuantConnect.Indicators
         /// <param name="name">The name of this indicator</param>
         /// <param name="period">The period over which to look back</param>
         public Maximum(string name, int period)
-            : base(name, period)
-        {
-        }
+            : base(name, period) { }
 
         /// <inheritdoc />
-        protected override decimal ComputeNextValue(IReadOnlyWindow<IndicatorDataPoint> window, IndicatorDataPoint input)
+        protected override decimal ComputeNextValue(
+            IReadOnlyWindow<IndicatorDataPoint> window,
+            IndicatorDataPoint input
+        )
         {
             if (Samples == 1 || input.Value >= Current.Value)
             {
@@ -74,14 +73,13 @@ namespace QuantConnect.Indicators
                 // so let's scour the window for the max and it's index
 
                 // this could be done more efficiently if we were to intelligently keep track of the 'next'
-                // maximum, so when one falls off, we have the other... but then we would also need the 'next, next' 
+                // maximum, so when one falls off, we have the other... but then we would also need the 'next, next'
                 // maximum, so on and so forth, for now this works.
 
-                var maximum = window.Select((v, i) => new
-                {
-                    Value = v,
-                    Index = i
-                }).OrderByDescending(x => x.Value.Value).First();
+                var maximum = window
+                    .Select((v, i) => new { Value = v, Index = i })
+                    .OrderByDescending(x => x.Value.Value)
+                    .First();
 
                 PeriodsSinceMaximum = maximum.Index;
                 return maximum.Value.Value;

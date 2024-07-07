@@ -29,12 +29,21 @@ namespace QuantConnect.Algorithm.CSharp.Benchmarks
             AddEquity("SPY");
             foreach (int period in Enumerable.Range(0, 300))
             {
-                Schedule.On(DateRules.EveryDay("SPY"), TimeRules.AfterMarketOpen("SPY", period), Rebalance);
-                Schedule.On(DateRules.EveryDay("SPY"), TimeRules.BeforeMarketClose("SPY", period), Rebalance);
+                Schedule.On(
+                    DateRules.EveryDay("SPY"),
+                    TimeRules.AfterMarketOpen("SPY", period),
+                    Rebalance
+                );
+                Schedule.On(
+                    DateRules.EveryDay("SPY"),
+                    TimeRules.BeforeMarketClose("SPY", period),
+                    Rebalance
+                );
             }
         }
 
         public override void OnData(Slice slice) { }
+
         private void Rebalance() { }
     }
 }

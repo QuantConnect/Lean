@@ -24,7 +24,9 @@ namespace QuantConnect.Algorithm.CSharp
     /// Regression algorithm which reproduces GH issue 3740.
     /// We assert the methods are triggered at the correct algorithm time
     /// </summary>
-    public class TimeRulesDefaultTimeZoneRegressionAlgorithm : QCAlgorithm, IRegressionAlgorithmDefinition
+    public class TimeRulesDefaultTimeZoneRegressionAlgorithm
+        : QCAlgorithm,
+            IRegressionAlgorithmDefinition
     {
         private int _scheduleEventEveryCallCount;
         private int _scheduleEventNoonCallCount;
@@ -36,41 +38,58 @@ namespace QuantConnect.Algorithm.CSharp
             SetStartDate(2017, 01, 01);
             SetEndDate(2017, 02, 01);
 
-            SetUniverseSelection(new ScheduledUniverseSelectionModel(
+            SetUniverseSelection(
+                new ScheduledUniverseSelectionModel(
+                    DateRules.EveryDay(),
+                    TimeRules.At(9, 31),
+                    SelectSymbolsAt
+                )
+            );
+
+            Schedule.On(
                 DateRules.EveryDay(),
-                TimeRules.At(9, 31),
-                SelectSymbolsAt
-            ));
-
-            Schedule.On(DateRules.EveryDay(), TimeRules.Every(TimeSpan.FromHours(6)), () =>
-            {
-                _scheduleEventEveryCallCount++;
-                if (Time.Hour != 0
-                    && Time.Hour != 6
-                    && Time.Hour != 12
-                    && Time.Hour != 18)
+                TimeRules.Every(TimeSpan.FromHours(6)),
+                () =>
                 {
-                    throw new RegressionTestException($"Unexpected every 6 hours scheduled event time: {Time}");
+                    _scheduleEventEveryCallCount++;
+                    if (Time.Hour != 0 && Time.Hour != 6 && Time.Hour != 12 && Time.Hour != 18)
+                    {
+                        throw new RegressionTestException(
+                            $"Unexpected every 6 hours scheduled event time: {Time}"
+                        );
+                    }
                 }
-            });
+            );
 
-            Schedule.On(DateRules.EveryDay(), TimeRules.Noon, () =>
-            {
-                _scheduleEventNoonCallCount++;
-                if (Time.Hour != 12)
+            Schedule.On(
+                DateRules.EveryDay(),
+                TimeRules.Noon,
+                () =>
                 {
-                    throw new RegressionTestException($"Unexpected Noon scheduled event time: {Time}");
+                    _scheduleEventNoonCallCount++;
+                    if (Time.Hour != 12)
+                    {
+                        throw new RegressionTestException(
+                            $"Unexpected Noon scheduled event time: {Time}"
+                        );
+                    }
                 }
-            });
+            );
 
-            Schedule.On(DateRules.EveryDay(), TimeRules.Midnight, () =>
-            {
-                _scheduleEventMidnightCallCount++;
-                if (Time.Hour != 0)
+            Schedule.On(
+                DateRules.EveryDay(),
+                TimeRules.Midnight,
+                () =>
                 {
-                    throw new RegressionTestException($"Unexpected Midnight scheduled event time: {Time}");
+                    _scheduleEventMidnightCallCount++;
+                    if (Time.Hour != 0)
+                    {
+                        throw new RegressionTestException(
+                            $"Unexpected Midnight scheduled event time: {Time}"
+                        );
+                    }
                 }
-            });
+            );
         }
 
         private IEnumerable<Symbol> SelectSymbolsAt(DateTime dateTime)
@@ -79,7 +98,9 @@ namespace QuantConnect.Algorithm.CSharp
             Log($"SelectSymbolsAt {Time}");
             if (Time.TimeOfDay != new TimeSpan(9, 31, 0))
             {
-                throw new RegressionTestException($"Expected 'SelectSymbolsAt' to be called at 9:31 algorithm time: {Time}");
+                throw new RegressionTestException(
+                    $"Expected 'SelectSymbolsAt' to be called at 9:31 algorithm time: {Time}"
+                );
             }
             yield break;
         }
@@ -88,19 +109,27 @@ namespace QuantConnect.Algorithm.CSharp
         {
             if (_selectionMethodCallCount != 32)
             {
-                throw new RegressionTestException($"Unexpected universe selection call count: {_selectionMethodCallCount}");
+                throw new RegressionTestException(
+                    $"Unexpected universe selection call count: {_selectionMethodCallCount}"
+                );
             }
             if (_scheduleEventEveryCallCount != 130)
             {
-                throw new RegressionTestException($"Unexpected scheduled event call count: {_scheduleEventEveryCallCount}");
+                throw new RegressionTestException(
+                    $"Unexpected scheduled event call count: {_scheduleEventEveryCallCount}"
+                );
             }
             if (_scheduleEventNoonCallCount != 32)
             {
-                throw new RegressionTestException($"Unexpected scheduled event call count: {_scheduleEventNoonCallCount}");
+                throw new RegressionTestException(
+                    $"Unexpected scheduled event call count: {_scheduleEventNoonCallCount}"
+                );
             }
             if (_scheduleEventMidnightCallCount != 33)
             {
-                throw new RegressionTestException($"Unexpected scheduled event call count: {_scheduleEventMidnightCallCount}");
+                throw new RegressionTestException(
+                    $"Unexpected scheduled event call count: {_scheduleEventMidnightCallCount}"
+                );
             }
         }
 
@@ -132,35 +161,36 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// This is used by the regression test system to indicate what the expected statistics are from running the algorithm
         /// </summary>
-        public Dictionary<string, string> ExpectedStatistics => new Dictionary<string, string>
-        {
-            {"Total Orders", "0"},
-            {"Average Win", "0%"},
-            {"Average Loss", "0%"},
-            {"Compounding Annual Return", "0%"},
-            {"Drawdown", "0%"},
-            {"Expectancy", "0"},
-            {"Start Equity", "100000"},
-            {"End Equity", "100000"},
-            {"Net Profit", "0%"},
-            {"Sharpe Ratio", "0"},
-            {"Sortino Ratio", "0"},
-            {"Probabilistic Sharpe Ratio", "0%"},
-            {"Loss Rate", "0%"},
-            {"Win Rate", "0%"},
-            {"Profit-Loss Ratio", "0"},
-            {"Alpha", "0"},
-            {"Beta", "0"},
-            {"Annual Standard Deviation", "0"},
-            {"Annual Variance", "0"},
-            {"Information Ratio", "-2.962"},
-            {"Tracking Error", "0.052"},
-            {"Treynor Ratio", "0"},
-            {"Total Fees", "$0.00"},
-            {"Estimated Strategy Capacity", "$0"},
-            {"Lowest Capacity Asset", ""},
-            {"Portfolio Turnover", "0%"},
-            {"OrderListHash", "d41d8cd98f00b204e9800998ecf8427e"}
-        };
+        public Dictionary<string, string> ExpectedStatistics =>
+            new Dictionary<string, string>
+            {
+                { "Total Orders", "0" },
+                { "Average Win", "0%" },
+                { "Average Loss", "0%" },
+                { "Compounding Annual Return", "0%" },
+                { "Drawdown", "0%" },
+                { "Expectancy", "0" },
+                { "Start Equity", "100000" },
+                { "End Equity", "100000" },
+                { "Net Profit", "0%" },
+                { "Sharpe Ratio", "0" },
+                { "Sortino Ratio", "0" },
+                { "Probabilistic Sharpe Ratio", "0%" },
+                { "Loss Rate", "0%" },
+                { "Win Rate", "0%" },
+                { "Profit-Loss Ratio", "0" },
+                { "Alpha", "0" },
+                { "Beta", "0" },
+                { "Annual Standard Deviation", "0" },
+                { "Annual Variance", "0" },
+                { "Information Ratio", "-2.962" },
+                { "Tracking Error", "0.052" },
+                { "Treynor Ratio", "0" },
+                { "Total Fees", "$0.00" },
+                { "Estimated Strategy Capacity", "$0" },
+                { "Lowest Capacity Asset", "" },
+                { "Portfolio Turnover", "0%" },
+                { "OrderListHash", "d41d8cd98f00b204e9800998ecf8427e" }
+            };
     }
 }

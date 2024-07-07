@@ -26,7 +26,9 @@ namespace QuantConnect.Algorithm.CSharp
     /// reproduces issue reported in GB issue GH issue https://github.com/QuantConnect/Lean/issues/4925
     /// related issues https://github.com/QuantConnect/Lean/issues/3707; https://github.com/QuantConnect/Lean/issues/4630
     /// </summary>
-    public class FillForwardEnumeratorOutOfOrderBarRegressionAlgorithm : QCAlgorithm, IRegressionAlgorithmDefinition
+    public class FillForwardEnumeratorOutOfOrderBarRegressionAlgorithm
+        : QCAlgorithm,
+            IRegressionAlgorithmDefinition
     {
         private decimal _exptectedClose = 84.09m;
         private DateTime _exptectedTime = new DateTime(2008, 3, 10, 9, 30, 0);
@@ -58,7 +60,8 @@ namespace QuantConnect.Algorithm.CSharp
                 if (trackingBar.Close != _exptectedClose)
                 {
                     throw new RegressionTestException(
-                        $"Bar at {_exptectedTime.ToStringInvariant()} closed at price {trackingBar.Close.ToStringInvariant()}; expected {_exptectedClose.ToStringInvariant()}");
+                        $"Bar at {_exptectedTime.ToStringInvariant()} closed at price {trackingBar.Close.ToStringInvariant()}; expected {_exptectedClose.ToStringInvariant()}"
+                    );
                 }
             }
         }
@@ -91,35 +94,36 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// This is used by the regression test system to indicate what the expected statistics are from running the algorithm
         /// </summary>
-        public Dictionary<string, string> ExpectedStatistics => new Dictionary<string, string>
-        {
-            {"Total Orders", "1"},
-            {"Average Win", "0%"},
-            {"Average Loss", "0%"},
-            {"Compounding Annual Return", "16.086%"},
-            {"Drawdown", "0.100%"},
-            {"Expectancy", "0"},
-            {"Start Equity", "100000"},
-            {"End Equity", "100148.25"},
-            {"Net Profit", "0.148%"},
-            {"Sharpe Ratio", "7.182"},
-            {"Sortino Ratio", "0"},
-            {"Probabilistic Sharpe Ratio", "0%"},
-            {"Loss Rate", "0%"},
-            {"Win Rate", "0%"},
-            {"Profit-Loss Ratio", "0"},
-            {"Alpha", "0"},
-            {"Beta", "0"},
-            {"Annual Standard Deviation", "0.014"},
-            {"Annual Variance", "0"},
-            {"Information Ratio", "9.758"},
-            {"Tracking Error", "0.014"},
-            {"Treynor Ratio", "0"},
-            {"Total Fees", "$5.93"},
-            {"Estimated Strategy Capacity", "$150000.00"},
-            {"Lowest Capacity Asset", "SHY 2T"},
-            {"Portfolio Turnover", "24.91%"},
-            {"OrderListHash", "9d00701591b363edda102536ec5e75e0"}
-        };
+        public Dictionary<string, string> ExpectedStatistics =>
+            new Dictionary<string, string>
+            {
+                { "Total Orders", "1" },
+                { "Average Win", "0%" },
+                { "Average Loss", "0%" },
+                { "Compounding Annual Return", "16.086%" },
+                { "Drawdown", "0.100%" },
+                { "Expectancy", "0" },
+                { "Start Equity", "100000" },
+                { "End Equity", "100148.25" },
+                { "Net Profit", "0.148%" },
+                { "Sharpe Ratio", "7.182" },
+                { "Sortino Ratio", "0" },
+                { "Probabilistic Sharpe Ratio", "0%" },
+                { "Loss Rate", "0%" },
+                { "Win Rate", "0%" },
+                { "Profit-Loss Ratio", "0" },
+                { "Alpha", "0" },
+                { "Beta", "0" },
+                { "Annual Standard Deviation", "0.014" },
+                { "Annual Variance", "0" },
+                { "Information Ratio", "9.758" },
+                { "Tracking Error", "0.014" },
+                { "Treynor Ratio", "0" },
+                { "Total Fees", "$5.93" },
+                { "Estimated Strategy Capacity", "$150000.00" },
+                { "Lowest Capacity Asset", "SHY 2T" },
+                { "Portfolio Turnover", "24.91%" },
+                { "OrderListHash", "9d00701591b363edda102536ec5e75e0" }
+            };
     }
 }

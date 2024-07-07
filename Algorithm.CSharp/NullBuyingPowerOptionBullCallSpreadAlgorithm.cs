@@ -30,7 +30,9 @@ namespace QuantConnect.Algorithm.CSharp
     /// See also: <see cref="OptionEquityBullCallSpreadRegressionAlgorithm"/>
     /// </summary>
     /// <meta name="tag" content="reality model" />
-    public class NullBuyingPowerOptionBullCallSpreadAlgorithm : QCAlgorithm, IRegressionAlgorithmDefinition
+    public class NullBuyingPowerOptionBullCallSpreadAlgorithm
+        : QCAlgorithm,
+            IRegressionAlgorithmDefinition
     {
         private Symbol _optionSymbol;
 
@@ -52,11 +54,15 @@ namespace QuantConnect.Algorithm.CSharp
 
         public override void OnData(Slice slice)
         {
-            if (!Portfolio.Invested && IsMarketOpen(_optionSymbol) &&
-                slice.OptionChains.TryGetValue(_optionSymbol, out var chain))
+            if (
+                !Portfolio.Invested
+                && IsMarketOpen(_optionSymbol)
+                && slice.OptionChains.TryGetValue(_optionSymbol, out var chain)
+            )
             {
                 var callContracts = chain
-                    .Where(contract => contract.Right == OptionRight.Call).ToList();
+                    .Where(contract => contract.Right == OptionRight.Call)
+                    .ToList();
 
                 var expiry = callContracts.Min(x => x.Expiry);
 
@@ -80,7 +86,9 @@ namespace QuantConnect.Algorithm.CSharp
                 {
                     if (ticket.Status != OrderStatus.Filled)
                     {
-                        throw new RegressionTestException($"There should be no restriction on buying {ticket.Quantity} of {ticket.Symbol} with BuyingPowerModel.Null");
+                        throw new RegressionTestException(
+                            $"There should be no restriction on buying {ticket.Quantity} of {ticket.Symbol} with BuyingPowerModel.Null"
+                        );
                     }
                 }
             }
@@ -90,7 +98,9 @@ namespace QuantConnect.Algorithm.CSharp
         {
             if (Portfolio.TotalMarginUsed != 0)
             {
-                throw new RegressionTestException("The TotalMarginUsed should be zero to avoid margin calls.");
+                throw new RegressionTestException(
+                    "The TotalMarginUsed should be zero to avoid margin calls."
+                );
             }
         }
 
@@ -122,35 +132,36 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// This is used by the regression test system to indicate what the expected statistics are from running the algorithm
         /// </summary>
-        public Dictionary<string, string> ExpectedStatistics => new()
-        {
-            {"Total Orders", "2"},
-            {"Average Win", "0%"},
-            {"Average Loss", "0%"},
-            {"Compounding Annual Return", "0%"},
-            {"Drawdown", "0%"},
-            {"Expectancy", "0"},
-            {"Start Equity", "200000"},
-            {"End Equity", "108700"},
-            {"Net Profit", "0%"},
-            {"Sharpe Ratio", "0"},
-            {"Sortino Ratio", "0"},
-            {"Probabilistic Sharpe Ratio", "0%"},
-            {"Loss Rate", "0%"},
-            {"Win Rate", "0%"},
-            {"Profit-Loss Ratio", "0"},
-            {"Alpha", "0"},
-            {"Beta", "0"},
-            {"Annual Standard Deviation", "0"},
-            {"Annual Variance", "0"},
-            {"Information Ratio", "0"},
-            {"Tracking Error", "0"},
-            {"Treynor Ratio", "0"},
-            {"Total Fees", "$1300.00"},
-            {"Estimated Strategy Capacity", "$36000.00"},
-            {"Lowest Capacity Asset", "GOOCV W78ZERHAOVVQ|GOOCV VP83T1ZUHROL"},
-            {"Portfolio Turnover", "2888.68%"},
-            {"OrderListHash", "ce2d1d95115c73052aa0268491ff2423"}
-        };
+        public Dictionary<string, string> ExpectedStatistics =>
+            new()
+            {
+                { "Total Orders", "2" },
+                { "Average Win", "0%" },
+                { "Average Loss", "0%" },
+                { "Compounding Annual Return", "0%" },
+                { "Drawdown", "0%" },
+                { "Expectancy", "0" },
+                { "Start Equity", "200000" },
+                { "End Equity", "108700" },
+                { "Net Profit", "0%" },
+                { "Sharpe Ratio", "0" },
+                { "Sortino Ratio", "0" },
+                { "Probabilistic Sharpe Ratio", "0%" },
+                { "Loss Rate", "0%" },
+                { "Win Rate", "0%" },
+                { "Profit-Loss Ratio", "0" },
+                { "Alpha", "0" },
+                { "Beta", "0" },
+                { "Annual Standard Deviation", "0" },
+                { "Annual Variance", "0" },
+                { "Information Ratio", "0" },
+                { "Tracking Error", "0" },
+                { "Treynor Ratio", "0" },
+                { "Total Fees", "$1300.00" },
+                { "Estimated Strategy Capacity", "$36000.00" },
+                { "Lowest Capacity Asset", "GOOCV W78ZERHAOVVQ|GOOCV VP83T1ZUHROL" },
+                { "Portfolio Turnover", "2888.68%" },
+                { "OrderListHash", "ce2d1d95115c73052aa0268491ff2423" }
+            };
     }
 }

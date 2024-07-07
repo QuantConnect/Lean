@@ -14,11 +14,11 @@
  *
 */
 
+using System.Collections.Generic;
 using System.Linq;
 using QuantConnect.Data;
-using QuantConnect.Logging;
 using QuantConnect.Data.Market;
-using System.Collections.Generic;
+using QuantConnect.Logging;
 
 namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
 {
@@ -40,11 +40,13 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
             InitializeFactorFile();
             var newInstance = FactorFile;
 
-            if(currentInstance?.Count() != newInstance?.Count())
+            if (currentInstance?.Count() != newInstance?.Count())
             {
-                Log.Trace($"LiveSplitEventProvider({Config}): new tradable date {eventArgs.Date:yyyyMMdd}. " +
-                    $"New FactorFile: {!ReferenceEquals(currentInstance, newInstance)}. " +
-                    $"FactorFile.Count Old: {currentInstance?.Count()} New: {newInstance?.Count()}");
+                Log.Trace(
+                    $"LiveSplitEventProvider({Config}): new tradable date {eventArgs.Date:yyyyMMdd}. "
+                        + $"New FactorFile: {!ReferenceEquals(currentInstance, newInstance)}. "
+                        + $"FactorFile.Count Old: {currentInstance?.Count()} New: {newInstance?.Count()}"
+                );
             }
 
             return base.GetEvents(eventArgs);

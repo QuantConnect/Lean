@@ -14,10 +14,10 @@
  *
 */
 
+using System;
 using Newtonsoft.Json;
 using NUnit.Framework;
 using QuantConnect.Optimizer.Objectives;
-using System;
 
 namespace QuantConnect.Tests.Optimizer.Objectives
 {
@@ -69,7 +69,7 @@ namespace QuantConnect.Tests.Optimizer.Objectives
                 Assert.AreEqual(profit, target.Current);
                 target.CheckCompliance();
             }
-            
+
             Assert.IsTrue(reached);
         }
 
@@ -89,7 +89,7 @@ namespace QuantConnect.Tests.Optimizer.Objectives
         public void IgnoreBadJson()
         {
             var target = new Target("Profit", new Maximization(), null);
-            
+
             Assert.IsFalse(target.MoveAhead("{\"Profit\":10}"));
             Assert.AreEqual(null, target.Current);
         }
@@ -108,7 +108,8 @@ namespace QuantConnect.Tests.Optimizer.Objectives
         [TestCase("11")]
         public void FromJson(string value)
         {
-            var json = $"{{\"extremum\": \"max\",\"target\": \"pin ocho.Gepetto\",\"targetValue\": {value}}}";
+            var json =
+                $"{{\"extremum\": \"max\",\"target\": \"pin ocho.Gepetto\",\"targetValue\": {value}}}";
 
             var target = (Target)JsonConvert.DeserializeObject(json, typeof(Target));
 

@@ -16,10 +16,10 @@
 using System;
 using System.Linq;
 using NUnit.Framework;
-using QuantConnect.Securities.Option.StrategyMatcher;
-using static QuantConnect.Tests.Common.Securities.Options.StrategyMatcher.Option;
-using static QuantConnect.Securities.Option.StrategyMatcher.OptionStrategyDefinitions;
 using QuantConnect.Logging;
+using QuantConnect.Securities.Option.StrategyMatcher;
+using static QuantConnect.Securities.Option.StrategyMatcher.OptionStrategyDefinitions;
+using static QuantConnect.Tests.Common.Securities.Options.StrategyMatcher.Option;
 
 namespace QuantConnect.Tests.Common.Securities.Options.StrategyMatcher
 {
@@ -27,7 +27,10 @@ namespace QuantConnect.Tests.Common.Securities.Options.StrategyMatcher
     public class OptionStrategyMatcherTests
     {
         [Test]
-        [TestCaseSource(typeof(OptionStrategyDefinitionTests), nameof(OptionStrategyDefinitionTests.TestCases))]
+        [TestCaseSource(
+            typeof(OptionStrategyDefinitionTests),
+            nameof(OptionStrategyDefinitionTests.TestCases)
+        )]
         public void RunSingleDefinition(OptionStrategyDefinitionTests.TestCase test)
         {
             var matcher = test.CreateMatcher();
@@ -52,7 +55,9 @@ namespace QuantConnect.Tests.Common.Securities.Options.StrategyMatcher
                 Position(Call[115])
             );
 
-            var matcher = new OptionStrategyMatcher(OptionStrategyMatcherOptions.ForDefinitions(BearCallSpread));
+            var matcher = new OptionStrategyMatcher(
+                OptionStrategyMatcherOptions.ForDefinitions(BearCallSpread)
+            );
             var matches = matcher.MatchOnce(positions);
             Assert.AreEqual(2, matches.Strategies.Count);
         }
@@ -61,17 +66,26 @@ namespace QuantConnect.Tests.Common.Securities.Options.StrategyMatcher
         public void MatchesAgainstFullPositionCollection()
         {
             // sort definitions by leg count so that we match more complex definitions first
-            var options = OptionStrategyMatcherOptions.ForDefinitions(OptionStrategyDefinitions.AllDefinitions
-                .OrderByDescending(definition => definition.LegCount)
+            var options = OptionStrategyMatcherOptions.ForDefinitions(
+                OptionStrategyDefinitions.AllDefinitions.OrderByDescending(definition =>
+                    definition.LegCount
+                )
             );
             var matcher = new OptionStrategyMatcher(options);
-            var positions = OptionPositionCollection.Empty.AddRange(Option.Position(Option.Underlying, +20),
-                Option.Position(Option.Call[100, -4]), Option.Position(Option.Put[105, -4]),
-                Option.Position(Option.Call[105, +4]), Option.Position(Option.Put[110, +4]),
-                Option.Position(Option.Call[110, -3]), Option.Position(Option.Put[115, -3]),
-                Option.Position(Option.Call[115, +3]), Option.Position(Option.Put[120, +3]),
-                Option.Position(Option.Call[120, -5]), Option.Position(Option.Put[125, -5]),
-                Option.Position(Option.Call[124, +5]), Option.Position(Option.Put[130, +5])
+            var positions = OptionPositionCollection.Empty.AddRange(
+                Option.Position(Option.Underlying, +20),
+                Option.Position(Option.Call[100, -4]),
+                Option.Position(Option.Put[105, -4]),
+                Option.Position(Option.Call[105, +4]),
+                Option.Position(Option.Put[110, +4]),
+                Option.Position(Option.Call[110, -3]),
+                Option.Position(Option.Put[115, -3]),
+                Option.Position(Option.Call[115, +3]),
+                Option.Position(Option.Put[120, +3]),
+                Option.Position(Option.Call[120, -5]),
+                Option.Position(Option.Put[125, -5]),
+                Option.Position(Option.Call[124, +5]),
+                Option.Position(Option.Put[130, +5])
             );
 
             var match = matcher.MatchOnce(positions);

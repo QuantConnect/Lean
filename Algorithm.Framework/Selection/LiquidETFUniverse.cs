@@ -13,8 +13,8 @@
  * limitations under the License.
 */
 
-using System.Linq;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace QuantConnect.Algorithm.Framework.Selection
 {
@@ -29,26 +29,37 @@ namespace QuantConnect.Algorithm.Framework.Selection
         public static readonly Grouping Energy = new Grouping(
             new[]
             {
-                "VDE", "USO", "XES", "XOP", "UNG", "ICLN", "ERX",
-                "UCO", "AMJ", "BNO", "AMLP", "UGAZ", "TAN"
+                "VDE",
+                "USO",
+                "XES",
+                "XOP",
+                "UNG",
+                "ICLN",
+                "ERX",
+                "UCO",
+                "AMJ",
+                "BNO",
+                "AMLP",
+                "UGAZ",
+                "TAN"
             },
-            new[] {"ERY", "SCO", "DGAZ" }
+            new[] { "ERY", "SCO", "DGAZ" }
         );
 
         /// <summary>
         /// Represents the Metals ETF Category which can be used to access the list of Long and Inverse symbols
         /// </summary>
         public static readonly Grouping Metals = new Grouping(
-            new[] {"GLD", "IAU", "SLV", "GDX", "AGQ", "PPLT", "NUGT", "USLV", "UGLD", "JNUG"},
-            new[] {"DUST", "JDST"}
+            new[] { "GLD", "IAU", "SLV", "GDX", "AGQ", "PPLT", "NUGT", "USLV", "UGLD", "JNUG" },
+            new[] { "DUST", "JDST" }
         );
 
         /// <summary>
         /// Represents the Technology ETF Category which can be used to access the list of Long and Inverse symbols
         /// </summary>
         public static readonly Grouping Technology = new Grouping(
-            new[] {"QQQ", "IGV", "QTEC", "FDN", "FXL", "TECL", "SOXL", "SKYY", "KWEB"},
-            new[] {"TECS", "SOXS"}
+            new[] { "QQQ", "IGV", "QTEC", "FDN", "FXL", "TECL", "SOXL", "SKYY", "KWEB" },
+            new[] { "TECS", "SOXS" }
         );
 
         /// <summary>
@@ -57,33 +68,43 @@ namespace QuantConnect.Algorithm.Framework.Selection
         public static readonly Grouping Treasuries = new Grouping(
             new[]
             {
-                "IEF", "SHY", "TLT", "IEI", "TLH", "BIL", "SPTL",
-                "TMF", "SCHO", "SCHR", "SPTS", "GOVT"
+                "IEF",
+                "SHY",
+                "TLT",
+                "IEI",
+                "TLH",
+                "BIL",
+                "SPTL",
+                "TMF",
+                "SCHO",
+                "SCHR",
+                "SPTS",
+                "GOVT"
             },
-            new[] {"SHV", "TBT", "TBF", "TMV"}
+            new[] { "SHV", "TBT", "TBF", "TMV" }
         );
 
         /// <summary>
         /// Represents the Volatility ETF Category which can be used to access the list of Long and Inverse symbols
         /// </summary>
         public static readonly Grouping Volatility = new Grouping(
-            new[] {"TVIX", "VIXY", "SPLV", "UVXY", "EEMV", "EFAV", "USMV"},
-            new[] {"SVXY"}
+            new[] { "TVIX", "VIXY", "SPLV", "UVXY", "EEMV", "EFAV", "USMV" },
+            new[] { "SVXY" }
         );
 
         /// <summary>
         /// Represents the SP500 Sectors ETF Category which can be used to access the list of Long and Inverse symbols
         /// </summary>
         public static readonly Grouping SP500Sectors = new Grouping(
-            new[] {"XLB", "XLE", "XLF", "XLI", "XLK", "XLP", "XLU", "XLV", "XLY"},
+            new[] { "XLB", "XLE", "XLF", "XLI", "XLK", "XLP", "XLU", "XLV", "XLY" },
             new string[0]
         );
 
         /// <summary>
         /// Initializes a new instance of the LiquidETFUniverse class
         /// </summary>
-        public LiquidETFUniverse() :
-            base(
+        public LiquidETFUniverse()
+            : base(
                 "qc-liquid-etf-basket",
                 SP500Sectors
                     .Concat(Energy)
@@ -94,10 +115,7 @@ namespace QuantConnect.Algorithm.Framework.Selection
                     // Convert the concatenated list of Symbol into a Dictionary of DateTime keyed by Symbol
                     // For equities, Symbol.ID is the first date the security is traded.
                     .ToDictionary(x => x.Value, x => x.ID.Date)
-            )
-        {
-
-        }
+            ) { }
 
         /// <summary>
         /// Represent a collection of ETF symbols that is grouped according to a given criteria
@@ -121,8 +139,12 @@ namespace QuantConnect.Algorithm.Framework.Selection
             /// <param name="inverseTickers">List of tickers of ETFs that follows the components inverse direction</param>
             public Grouping(IEnumerable<string> longTickers, IEnumerable<string> inverseTickers)
             {
-                Long = longTickers.Select(x => Symbol.Create(x, SecurityType.Equity, Market.USA)).ToList();
-                Inverse = inverseTickers.Select(x => Symbol.Create(x, SecurityType.Equity, Market.USA)).ToList();
+                Long = longTickers
+                    .Select(x => Symbol.Create(x, SecurityType.Equity, Market.USA))
+                    .ToList();
+                Inverse = inverseTickers
+                    .Select(x => Symbol.Create(x, SecurityType.Equity, Market.USA))
+                    .ToList();
                 AddRange(Long);
                 AddRange(Inverse);
             }
@@ -140,13 +162,15 @@ namespace QuantConnect.Algorithm.Framework.Selection
                     return "No Symbols";
                 }
 
-                var longSymbols = Long.Count == 0
-                    ? string.Empty
-                    : $" Long: {string.Join(",", Long.Select(x => x.Value))}";
+                var longSymbols =
+                    Long.Count == 0
+                        ? string.Empty
+                        : $" Long: {string.Join(",", Long.Select(x => x.Value))}";
 
-                var inverseSymbols = Inverse.Count == 0
-                    ? string.Empty
-                    : $" Inverse: {string.Join(",", Inverse.Select(x => x.Value))}";
+                var inverseSymbols =
+                    Inverse.Count == 0
+                        ? string.Empty
+                        : $" Inverse: {string.Join(",", Inverse.Select(x => x.Value))}";
 
                 return $"{Count} symbols:{longSymbols}{inverseSymbols}";
             }

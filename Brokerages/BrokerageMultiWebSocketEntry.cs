@@ -84,7 +84,10 @@ namespace QuantConnect.Brokerages
         /// </summary>
         /// <param name="symbolWeights">A dictionary of symbol weights</param>
         /// <param name="webSocket">The web socket instance</param>
-        public BrokerageMultiWebSocketEntry(Dictionary<Symbol, int> symbolWeights, IWebSocket webSocket)
+        public BrokerageMultiWebSocketEntry(
+            Dictionary<Symbol, int> symbolWeights,
+            IWebSocket webSocket
+        )
         {
             _symbolWeights = symbolWeights;
             _symbols = new List<Symbol>();
@@ -97,9 +100,7 @@ namespace QuantConnect.Brokerages
         /// </summary>
         /// <param name="webSocket">The web socket instance</param>
         public BrokerageMultiWebSocketEntry(IWebSocket webSocket)
-            : this(null, webSocket)
-        {
-        }
+            : this(null, webSocket) { }
 
         /// <summary>
         /// Adds a symbol to the entry

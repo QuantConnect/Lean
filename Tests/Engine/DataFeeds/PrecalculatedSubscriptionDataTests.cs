@@ -14,12 +14,12 @@
  *
 */
 
+using System;
 using NUnit.Framework;
 using QuantConnect.Data;
 using QuantConnect.Data.Market;
 using QuantConnect.Lean.Engine.DataFeeds;
 using QuantConnect.Securities;
-using System;
 
 namespace QuantConnect.Tests.Engine.DataFeeds
 {
@@ -31,14 +31,16 @@ namespace QuantConnect.Tests.Engine.DataFeeds
         [SetUp]
         public void Setup()
         {
-            _config = new SubscriptionDataConfig(typeof(TradeBar),
+            _config = new SubscriptionDataConfig(
+                typeof(TradeBar),
                 Symbols.SPY,
                 Resolution.Daily,
                 TimeZones.NewYork,
                 TimeZones.NewYork,
                 true,
                 true,
-                false);
+                false
+            );
         }
 
         [Test]
@@ -57,10 +59,15 @@ namespace QuantConnect.Tests.Engine.DataFeeds
 
             var factor = 0.5m;
             var sumOfDividends = 100m;
-            var adjustedTb = tb.Clone(tb.IsFillForward).Normalize(factor, DataNormalizationMode.Adjusted, 0);
+            var adjustedTb = tb.Clone(tb.IsFillForward)
+                .Normalize(factor, DataNormalizationMode.Adjusted, 0);
 
             var exchangeHours = SecurityExchangeHours.AlwaysOpen(TimeZones.Utc);
-            var offsetProvider = new TimeZoneOffsetProvider(TimeZones.Utc, new DateTime(2020, 5, 21), new DateTime(2020, 5, 22));
+            var offsetProvider = new TimeZoneOffsetProvider(
+                TimeZones.Utc,
+                new DateTime(2020, 5, 21),
+                new DateTime(2020, 5, 22)
+            );
 
             var emitTimeUtc = offsetProvider.ConvertToUtc(tb.EndTime);
             _config.SumOfDividends = sumOfDividends;
@@ -70,7 +77,8 @@ namespace QuantConnect.Tests.Engine.DataFeeds
                 tb,
                 adjustedTb,
                 DataNormalizationMode.Adjusted,
-                emitTimeUtc);
+                emitTimeUtc
+            );
 
             _config.DataNormalizationMode = DataNormalizationMode.Raw;
             Assert.AreEqual(tb.Open, (subscriptionData.Data as TradeBar).Open);
@@ -86,17 +94,15 @@ namespace QuantConnect.Tests.Engine.DataFeeds
 
             _config.DataNormalizationMode = DataNormalizationMode.TotalReturn;
             Assert.Throws<ArgumentException>(() =>
-                {
-                    var data = subscriptionData.Data;
-                }
-            );
+            {
+                var data = subscriptionData.Data;
+            });
 
             _config.DataNormalizationMode = DataNormalizationMode.SplitAdjusted;
             Assert.Throws<ArgumentException>(() =>
-                {
-                    var data = subscriptionData.Data;
-                }
-            );
+            {
+                var data = subscriptionData.Data;
+            });
         }
     }
 }

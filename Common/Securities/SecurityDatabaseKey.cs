@@ -95,11 +95,13 @@ namespace QuantConnect.Securities
         /// <param name="other">An object to compare with this object.</param>
         public bool Equals(SecurityDatabaseKey other)
         {
-            if (ReferenceEquals(null, other)) return false;
-            if (ReferenceEquals(this, other)) return true;
+            if (ReferenceEquals(null, other))
+                return false;
+            if (ReferenceEquals(this, other))
+                return true;
             return Market.Equals(other.Market, StringComparison.OrdinalIgnoreCase)
-                   && Symbol.Equals(other.Symbol, StringComparison.OrdinalIgnoreCase)
-                   && SecurityType == other.SecurityType;
+                && Symbol.Equals(other.Symbol, StringComparison.OrdinalIgnoreCase)
+                && SecurityType == other.SecurityType;
         }
 
         /// <summary>
@@ -111,10 +113,13 @@ namespace QuantConnect.Securities
         /// <param name="obj">The object to compare with the current object. </param>
         public override bool Equals(object obj)
         {
-            if (ReferenceEquals(null, obj)) return false;
-            if (ReferenceEquals(this, obj)) return true;
-            if (obj.GetType() != this.GetType()) return false;
-            return Equals((SecurityDatabaseKey) obj);
+            if (ReferenceEquals(null, obj))
+                return false;
+            if (ReferenceEquals(this, obj))
+                return true;
+            if (obj.GetType() != this.GetType())
+                return false;
+            return Equals((SecurityDatabaseKey)obj);
         }
 
         /// <summary>
@@ -128,8 +133,8 @@ namespace QuantConnect.Securities
             unchecked
             {
                 var hashCode = StringComparer.OrdinalIgnoreCase.GetHashCode(Market);
-                hashCode = (hashCode*397) ^ StringComparer.OrdinalIgnoreCase.GetHashCode(Symbol);
-                hashCode = (hashCode*397) ^ (int) SecurityType;
+                hashCode = (hashCode * 397) ^ StringComparer.OrdinalIgnoreCase.GetHashCode(Symbol);
+                hashCode = (hashCode * 397) ^ (int)SecurityType;
                 return hashCode;
             }
         }

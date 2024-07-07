@@ -19,7 +19,7 @@ using QuantConnect.Data.Market;
 namespace QuantConnect.Indicators
 {
     /// <summary>
-    /// Parabolic SAR Indicator 
+    /// Parabolic SAR Indicator
     /// Based on TA-Lib implementation
     /// </summary>
     public class ParabolicStopAndReverse : BarIndicator, IIndicatorWarmUpPeriodProvider
@@ -41,7 +41,12 @@ namespace QuantConnect.Indicators
         /// <param name="afStart">Acceleration factor start value</param>
         /// <param name="afIncrement">Acceleration factor increment value</param>
         /// <param name="afMax">Acceleration factor max value</param>
-        public ParabolicStopAndReverse(string name, decimal afStart = 0.02m, decimal afIncrement = 0.02m, decimal afMax = 0.2m)
+        public ParabolicStopAndReverse(
+            string name,
+            decimal afStart = 0.02m,
+            decimal afIncrement = 0.02m,
+            decimal afMax = 0.2m
+        )
             : base(name)
         {
             _afInit = afStart;
@@ -56,10 +61,12 @@ namespace QuantConnect.Indicators
         /// <param name="afStart">Acceleration factor start value</param>
         /// <param name="afIncrement">Acceleration factor increment value</param>
         /// <param name="afMax">Acceleration factor max value</param>
-        public ParabolicStopAndReverse(decimal afStart = 0.02m, decimal afIncrement = 0.02m, decimal afMax = 0.2m)
-            : this($"PSAR({afStart},{afIncrement},{afMax})", afStart, afIncrement, afMax)
-        {
-        }
+        public ParabolicStopAndReverse(
+            decimal afStart = 0.02m,
+            decimal afIncrement = 0.02m,
+            decimal afMax = 0.2m
+        )
+            : this($"PSAR({afStart},{afIncrement},{afMax})", afStart, afIncrement, afMax) { }
 
         /// <summary>
         /// Gets a flag indicating when this indicator is ready and fully initialized
@@ -119,13 +126,12 @@ namespace QuantConnect.Indicators
         }
 
         /// <summary>
-        /// Initialize the indicator values 
+        /// Initialize the indicator values
         /// </summary>
         private void Init(IBaseDataBar currentBar)
         {
             // init position
             _isLong = currentBar.Close >= _previousBar.Close;
-
 
             // init sar and Extreme price
             if (_isLong)
@@ -158,7 +164,7 @@ namespace QuantConnect.Indicators
                 if (_sar < currentBar.High)
                     _sar = currentBar.High;
 
-                // Output the overide SAR 
+                // Output the overide SAR
                 _outputSar = _sar;
 
                 // Adjust af and ep
@@ -173,13 +179,11 @@ namespace QuantConnect.Indicators
                     _sar = _previousBar.High;
                 if (_sar < currentBar.High)
                     _sar = currentBar.High;
-
             }
-
             // No switch
             else
             {
-                // Output the SAR (was calculated in the previous iteration) 
+                // Output the SAR (was calculated in the previous iteration)
                 _outputSar = _sar;
 
                 // Adjust af and ep.
@@ -220,7 +224,7 @@ namespace QuantConnect.Indicators
                 if (_sar > currentBar.Low)
                     _sar = currentBar.Low;
 
-                // Output the overide SAR 
+                // Output the overide SAR
                 _outputSar = _sar;
 
                 // Adjust af and ep
@@ -236,7 +240,6 @@ namespace QuantConnect.Indicators
                 if (_sar > currentBar.Low)
                     _sar = currentBar.Low;
             }
-
             //No switch
             else
             {

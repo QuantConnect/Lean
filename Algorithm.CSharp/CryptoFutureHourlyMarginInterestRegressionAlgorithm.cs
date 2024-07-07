@@ -14,12 +14,12 @@
 */
 
 using System;
-using QuantConnect.Data;
-using QuantConnect.Orders;
-using QuantConnect.Interfaces;
-using QuantConnect.Brokerages;
-using QuantConnect.Data.Market;
 using System.Collections.Generic;
+using QuantConnect.Brokerages;
+using QuantConnect.Data;
+using QuantConnect.Data.Market;
+using QuantConnect.Interfaces;
+using QuantConnect.Orders;
 using QuantConnect.Securities.CryptoFuture;
 
 namespace QuantConnect.Algorithm.CSharp
@@ -27,7 +27,9 @@ namespace QuantConnect.Algorithm.CSharp
     /// <summary>
     /// Daily regression algorithm trading ADAUSDT binance futures long and short asserting the behavior
     /// </summary>
-    public class CryptoFutureHourlyMarginInterestRegressionAlgorithm : QCAlgorithm, IRegressionAlgorithmDefinition
+    public class CryptoFutureHourlyMarginInterestRegressionAlgorithm
+        : QCAlgorithm,
+            IRegressionAlgorithmDefinition
     {
         private Dictionary<Symbol, int> _interestPerSymbol = new();
         private decimal _amountAfterTrade;
@@ -71,14 +73,17 @@ namespace QuantConnect.Algorithm.CSharp
                 _interestPerSymbol.TryGetValue(interestRate.Key, out var count);
                 _interestPerSymbol[interestRate.Key] = ++count;
 
-                var cachedInterestRate = Securities[interestRate.Key].Cache.GetData<MarginInterestRate>();
+                var cachedInterestRate = Securities[interestRate.Key]
+                    .Cache.GetData<MarginInterestRate>();
                 if (cachedInterestRate != interestRate.Value)
                 {
-                    throw new RegressionTestException($"Unexpected cached margin interest rate for {interestRate.Key}!");
+                    throw new RegressionTestException(
+                        $"Unexpected cached margin interest rate for {interestRate.Key}!"
+                    );
                 }
             }
 
-            if(interestRates.Count != slice.MarginInterestRates.Count)
+            if (interestRates.Count != slice.MarginInterestRates.Count)
             {
                 throw new RegressionTestException($"Unexpected cached margin interest rate data!");
             }
@@ -101,11 +106,16 @@ namespace QuantConnect.Algorithm.CSharp
             }
 
             // negative because we are long. Rate * Value * Application Count
-            var expectedFundingRateDifference = - (0.0001m * _adaUsdt.Holdings.HoldingsValue * 3);
+            var expectedFundingRateDifference = -(0.0001m * _adaUsdt.Holdings.HoldingsValue * 3);
             var finalCash = Portfolio.CashBook["USDT"].Amount;
-            if (Math.Abs(finalCash - (_amountAfterTrade + expectedFundingRateDifference)) > Math.Abs(expectedFundingRateDifference * 0.05m))
+            if (
+                Math.Abs(finalCash - (_amountAfterTrade + expectedFundingRateDifference))
+                > Math.Abs(expectedFundingRateDifference * 0.05m)
+            )
             {
-                throw new RegressionTestException($"Unexpected interest rate count {Portfolio.CashBook["USDT"].Amount}");
+                throw new RegressionTestException(
+                    $"Unexpected interest rate count {Portfolio.CashBook["USDT"].Amount}"
+                );
             }
         }
 
@@ -142,35 +152,36 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// This is used by the regression test system to indicate what the expected statistics are from running the algorithm
         /// </summary>
-        public virtual Dictionary<string, string> ExpectedStatistics => new Dictionary<string, string>
-        {
-            {"Total Orders", "1"},
-            {"Average Win", "0%"},
-            {"Average Loss", "0%"},
-            {"Compounding Annual Return", "0%"},
-            {"Drawdown", "0%"},
-            {"Expectancy", "0"},
-            {"Start Equity", "1000200"},
-            {"End Equity", "1000207.90"},
-            {"Net Profit", "0%"},
-            {"Sharpe Ratio", "0"},
-            {"Sortino Ratio", "0"},
-            {"Probabilistic Sharpe Ratio", "0%"},
-            {"Loss Rate", "0%"},
-            {"Win Rate", "0%"},
-            {"Profit-Loss Ratio", "0"},
-            {"Alpha", "0"},
-            {"Beta", "0"},
-            {"Annual Standard Deviation", "0"},
-            {"Annual Variance", "0"},
-            {"Information Ratio", "0"},
-            {"Tracking Error", "0"},
-            {"Treynor Ratio", "0"},
-            {"Total Fees", "$0.15"},
-            {"Estimated Strategy Capacity", "$330000000.00"},
-            {"Lowest Capacity Asset", "ADAUSDT 18R"},
-            {"Portfolio Turnover", "0.02%"},
-            {"OrderListHash", "f3d491f943932e64bc38b85d74eb5129"}
-        };
+        public virtual Dictionary<string, string> ExpectedStatistics =>
+            new Dictionary<string, string>
+            {
+                { "Total Orders", "1" },
+                { "Average Win", "0%" },
+                { "Average Loss", "0%" },
+                { "Compounding Annual Return", "0%" },
+                { "Drawdown", "0%" },
+                { "Expectancy", "0" },
+                { "Start Equity", "1000200" },
+                { "End Equity", "1000207.90" },
+                { "Net Profit", "0%" },
+                { "Sharpe Ratio", "0" },
+                { "Sortino Ratio", "0" },
+                { "Probabilistic Sharpe Ratio", "0%" },
+                { "Loss Rate", "0%" },
+                { "Win Rate", "0%" },
+                { "Profit-Loss Ratio", "0" },
+                { "Alpha", "0" },
+                { "Beta", "0" },
+                { "Annual Standard Deviation", "0" },
+                { "Annual Variance", "0" },
+                { "Information Ratio", "0" },
+                { "Tracking Error", "0" },
+                { "Treynor Ratio", "0" },
+                { "Total Fees", "$0.15" },
+                { "Estimated Strategy Capacity", "$330000000.00" },
+                { "Lowest Capacity Asset", "ADAUSDT 18R" },
+                { "Portfolio Turnover", "0.02%" },
+                { "OrderListHash", "f3d491f943932e64bc38b85d74eb5129" }
+            };
     }
 }

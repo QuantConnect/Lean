@@ -44,14 +44,17 @@ namespace QuantConnect.Algorithm.CSharp
             _bacSymbol = QuantConnect.Symbol.Create("BAC", SecurityType.Equity, Market.USA);
             _ibmSymbol = QuantConnect.Symbol.Create("IBM", SecurityType.Equity, Market.USA);
 
-            AddUniverse("my-universe-name", time =>
-            {
-                if (time.Day == 8)
+            AddUniverse(
+                "my-universe-name",
+                time =>
                 {
-                    return new List<string> { _spySymbol.Value, _ibmSymbol.Value };
+                    if (time.Day == 8)
+                    {
+                        return new List<string> { _spySymbol.Value, _ibmSymbol.Value };
+                    }
+                    return new List<string> { _spySymbol.Value };
                 }
-                return new List<string> { _spySymbol.Value };
-            });
+            );
         }
 
         /// <summary>
@@ -83,10 +86,12 @@ namespace QuantConnect.Algorithm.CSharp
             {
                 _onEndOfDayIbmCallCount++;
             }
-            Log($"OnEndOfDay({symbol}) called: {UtcTime}." +
-                $" SPY count: {_onEndOfDaySpyCallCount}." +
-                $" IBM count: {_onEndOfDayIbmCallCount}." +
-                $" BAC count: {_onEndOfDayBacCallCount}");
+            Log(
+                $"OnEndOfDay({symbol}) called: {UtcTime}."
+                    + $" SPY count: {_onEndOfDaySpyCallCount}."
+                    + $" IBM count: {_onEndOfDayIbmCallCount}."
+                    + $" BAC count: {_onEndOfDayBacCallCount}"
+            );
         }
 
         /// <summary>
@@ -96,15 +101,21 @@ namespace QuantConnect.Algorithm.CSharp
         {
             if (_onEndOfDaySpyCallCount != 5)
             {
-                throw new RegressionTestException($"OnEndOfDay(SPY) unexpected count call {_onEndOfDaySpyCallCount}");
+                throw new RegressionTestException(
+                    $"OnEndOfDay(SPY) unexpected count call {_onEndOfDaySpyCallCount}"
+                );
             }
             if (_onEndOfDayBacCallCount != 4)
             {
-                throw new RegressionTestException($"OnEndOfDay(BAC) unexpected count call {_onEndOfDayBacCallCount}");
+                throw new RegressionTestException(
+                    $"OnEndOfDay(BAC) unexpected count call {_onEndOfDayBacCallCount}"
+                );
             }
             if (_onEndOfDayIbmCallCount != 1)
             {
-                throw new RegressionTestException($"OnEndOfDay(IBM) unexpected count call {_onEndOfDayIbmCallCount}");
+                throw new RegressionTestException(
+                    $"OnEndOfDay(IBM) unexpected count call {_onEndOfDayIbmCallCount}"
+                );
             }
         }
 
@@ -136,35 +147,36 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// This is used by the regression test system to indicate what the expected statistics are from running the algorithm
         /// </summary>
-        public Dictionary<string, string> ExpectedStatistics => new Dictionary<string, string>
-        {
-            {"Total Orders", "2"},
-            {"Average Win", "0%"},
-            {"Average Loss", "0%"},
-            {"Compounding Annual Return", "489.968%"},
-            {"Drawdown", "1.200%"},
-            {"Expectancy", "0"},
-            {"Start Equity", "100000"},
-            {"End Equity", "102295.22"},
-            {"Net Profit", "2.295%"},
-            {"Sharpe Ratio", "15.661"},
-            {"Sortino Ratio", "0"},
-            {"Probabilistic Sharpe Ratio", "78.483%"},
-            {"Loss Rate", "0%"},
-            {"Win Rate", "0%"},
-            {"Profit-Loss Ratio", "0"},
-            {"Alpha", "1.604"},
-            {"Beta", "0.954"},
-            {"Annual Standard Deviation", "0.223"},
-            {"Annual Variance", "0.05"},
-            {"Information Ratio", "22.254"},
-            {"Tracking Error", "0.068"},
-            {"Treynor Ratio", "3.656"},
-            {"Total Fees", "$22.11"},
-            {"Estimated Strategy Capacity", "$5600000.00"},
-            {"Lowest Capacity Asset", "NB R735QTJ8XC9X"},
-            {"Portfolio Turnover", "19.96%"},
-            {"OrderListHash", "17eb374f011ccb57a28cef4b9a4585d8"}
-        };
+        public Dictionary<string, string> ExpectedStatistics =>
+            new Dictionary<string, string>
+            {
+                { "Total Orders", "2" },
+                { "Average Win", "0%" },
+                { "Average Loss", "0%" },
+                { "Compounding Annual Return", "489.968%" },
+                { "Drawdown", "1.200%" },
+                { "Expectancy", "0" },
+                { "Start Equity", "100000" },
+                { "End Equity", "102295.22" },
+                { "Net Profit", "2.295%" },
+                { "Sharpe Ratio", "15.661" },
+                { "Sortino Ratio", "0" },
+                { "Probabilistic Sharpe Ratio", "78.483%" },
+                { "Loss Rate", "0%" },
+                { "Win Rate", "0%" },
+                { "Profit-Loss Ratio", "0" },
+                { "Alpha", "1.604" },
+                { "Beta", "0.954" },
+                { "Annual Standard Deviation", "0.223" },
+                { "Annual Variance", "0.05" },
+                { "Information Ratio", "22.254" },
+                { "Tracking Error", "0.068" },
+                { "Treynor Ratio", "3.656" },
+                { "Total Fees", "$22.11" },
+                { "Estimated Strategy Capacity", "$5600000.00" },
+                { "Lowest Capacity Asset", "NB R735QTJ8XC9X" },
+                { "Portfolio Turnover", "19.96%" },
+                { "OrderListHash", "17eb374f011ccb57a28cef4b9a4585d8" }
+            };
     }
 }

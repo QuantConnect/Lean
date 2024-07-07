@@ -14,14 +14,14 @@
 */
 
 using System;
+using System.Collections.Generic;
 using System.Linq;
+using Python.Runtime;
+using QuantConnect.Algorithm.Framework.Selection;
+using QuantConnect.Data.UniverseSelection;
 using QuantConnect.Interfaces;
 using QuantConnect.Securities;
-using System.Collections.Generic;
-using QuantConnect.Data.UniverseSelection;
-using QuantConnect.Algorithm.Framework.Selection;
 using QuantConnect.Securities.Future;
-using Python.Runtime;
 
 namespace QuantConnect.Algorithm.Selection
 {
@@ -47,9 +47,11 @@ namespace QuantConnect.Algorithm.Selection
         /// <param name="universe">The universe we want to chain to</param>
         /// <param name="optionFilter">The option filter universe to use</param>
         /// <param name="universeSettings">Universe settings define attributes of created subscriptions, such as their resolution and the minimum time in universe before they can be removed</param>
-        public OptionChainedUniverseSelectionModel(Universe universe,
+        public OptionChainedUniverseSelectionModel(
+            Universe universe,
             Func<OptionFilterUniverse, OptionFilterUniverse> optionFilter,
-            UniverseSettings universeSettings = null)
+            UniverseSettings universeSettings = null
+        )
         {
             _optionFilter = optionFilter;
             _universeSettings = universeSettings;
@@ -64,14 +66,17 @@ namespace QuantConnect.Algorithm.Selection
                 // We must create the new option Symbol using the CreateOption(Symbol, ...) overload.
                 // Otherwise, we'll end up loading equity data for the selected Symbol, which won't
                 // work whenever we're loading options data for any non-equity underlying asset class.
-                _currentSymbols = ((Universe.SelectionEventArgs)args).CurrentSelection
-                    .Select(symbol => Symbol.CreateOption(
-                        symbol,
-                        symbol.ID.Market,
-                        symbol.SecurityType.DefaultOptionStyle(),
-                        default(OptionRight),
-                        0m,
-                        SecurityIdentifier.DefaultDate))
+                _currentSymbols = ((Universe.SelectionEventArgs)args)
+                    .CurrentSelection.Select(symbol =>
+                        Symbol.CreateOption(
+                            symbol,
+                            symbol.ID.Market,
+                            symbol.SecurityType.DefaultOptionStyle(),
+                            default(OptionRight),
+                            0m,
+                            SecurityIdentifier.DefaultDate
+                        )
+                    )
                     .ToList();
             };
         }
@@ -82,11 +87,12 @@ namespace QuantConnect.Algorithm.Selection
         /// <param name="universe">The universe we want to chain to</param>
         /// <param name="optionFilter">The python option filter universe to use</param>
         /// <param name="universeSettings">Universe settings define attributes of created subscriptions, such as their resolution and the minimum time in universe before they can be removed</param>
-        public OptionChainedUniverseSelectionModel(Universe universe,
+        public OptionChainedUniverseSelectionModel(
+            Universe universe,
             PyObject optionFilter,
-            UniverseSettings universeSettings = null): this(universe, ConvertOptionFilter(optionFilter), universeSettings)
-        {
-        }
+            UniverseSettings universeSettings = null
+        )
+            : this(universe, ConvertOptionFilter(optionFilter), universeSettings) { }
 
         /// <summary>
         /// Creates the universes for this algorithm. Called once after <see cref="IAlgorithm.Initialize"/>
@@ -99,15 +105,23 @@ namespace QuantConnect.Algorithm.Selection
 
             foreach (var optionSymbol in _currentSymbols)
             {
-                yield return algorithm.CreateOptionChain(optionSymbol, _optionFilter, _universeSettings);
+                yield return algorithm.CreateOptionChain(
+                    optionSymbol,
+                    _optionFilter,
+                    _universeSettings
+                );
             }
         }
 
-        private static Func<OptionFilterUniverse, OptionFilterUniverse> ConvertOptionFilter(PyObject optionFilter)
+        private static Func<OptionFilterUniverse, OptionFilterUniverse> ConvertOptionFilter(
+            PyObject optionFilter
+        )
         {
             using (Py.GIL())
             {
-                return optionFilter.ConvertToDelegate<Func<OptionFilterUniverse, OptionFilterUniverse>>();
+                return optionFilter.ConvertToDelegate<
+                    Func<OptionFilterUniverse, OptionFilterUniverse>
+                >();
             }
         }
     }

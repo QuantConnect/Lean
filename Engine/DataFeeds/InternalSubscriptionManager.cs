@@ -63,15 +63,28 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             {
                 var lowResolution = request.Configuration.Resolution > Resolution.Minute;
                 List<SubscriptionRequest> internalRequests;
-                var existing = _subscriptionRequests.TryGetValue(request.Configuration.Symbol, out internalRequests);
-                var alreadyInternal = existing && internalRequests.Any(internalRequest => internalRequest.Configuration.Type == request.Configuration.Type
-                    && request.Configuration.TickType == internalRequest.Configuration.TickType);
+                var existing = _subscriptionRequests.TryGetValue(
+                    request.Configuration.Symbol,
+                    out internalRequests
+                );
+                var alreadyInternal =
+                    existing
+                    && internalRequests.Any(internalRequest =>
+                        internalRequest.Configuration.Type == request.Configuration.Type
+                        && request.Configuration.TickType == internalRequest.Configuration.TickType
+                    );
 
                 if (lowResolution && !alreadyInternal)
                 {
                     // low resolution subscriptions we will add internal Resolution.Minute subscriptions
                     // if we don't already have this symbol added
-                    var config = new SubscriptionDataConfig(request.Configuration, resolution: _resolution, isInternalFeed: true, extendedHours: true, isFilteredSubscription: false);
+                    var config = new SubscriptionDataConfig(
+                        request.Configuration,
+                        resolution: _resolution,
+                        isInternalFeed: true,
+                        extendedHours: true,
+                        isFilteredSubscription: false
+                    );
                     var startTimeUtc = request.StartTimeUtc;
                     if (_algorithm.IsWarmingUp)
                     {
@@ -79,14 +92,22 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                         // these subscription are only added for realtime price in low resolution subscriptions which isn't required for warmup
                         startTimeUtc = DateTime.UtcNow;
                     }
-                    var internalRequest = new SubscriptionRequest(false, null, request.Security, config, startTimeUtc, request.EndTimeUtc);
+                    var internalRequest = new SubscriptionRequest(
+                        false,
+                        null,
+                        request.Security,
+                        config,
+                        startTimeUtc,
+                        request.EndTimeUtc
+                    );
                     if (existing)
                     {
                         _subscriptionRequests[request.Configuration.Symbol].Add(internalRequest);
                     }
                     else
                     {
-                        _subscriptionRequests[request.Configuration.Symbol] = new List<SubscriptionRequest>{ internalRequest };
+                        _subscriptionRequests[request.Configuration.Symbol] =
+                            new List<SubscriptionRequest> { internalRequest };
                     }
                     Added?.Invoke(this, internalRequest);
                 }
@@ -108,12 +129,21 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         /// <param name="request">The added subscription request</param>
         public void RemovedSubscriptionRequest(SubscriptionRequest request)
         {
-            if (PreFilter(request) && _subscriptionRequests.ContainsKey(request.Configuration.Symbol))
+            if (
+                PreFilter(request)
+                && _subscriptionRequests.ContainsKey(request.Configuration.Symbol)
+            )
             {
-                var userConfigs = _algorithm.SubscriptionManager.SubscriptionDataConfigService
-                    .GetSubscriptionDataConfigs(request.Configuration.Symbol).ToList();
+                var userConfigs = _algorithm
+                    .SubscriptionManager.SubscriptionDataConfigService.GetSubscriptionDataConfigs(
+                        request.Configuration.Symbol
+                    )
+                    .ToList();
 
-                if (userConfigs.Count == 0 || userConfigs.Any(config => config.Resolution <= Resolution.Minute))
+                if (
+                    userConfigs.Count == 0
+                    || userConfigs.Any(config => config.Resolution <= Resolution.Minute)
+                )
                 {
                     var requests = _subscriptionRequests[request.Configuration.Symbol];
                     _subscriptionRequests.Remove(request.Configuration.Symbol);
@@ -131,7 +161,10 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         /// </summary>
         private bool PreFilter(SubscriptionRequest request)
         {
-            return _algorithm.LiveMode && !request.Configuration.IsInternalFeed && !request.IsUniverseSubscription && !request.Configuration.IsCustomData;
+            return _algorithm.LiveMode
+                && !request.Configuration.IsInternalFeed
+                && !request.IsUniverseSubscription
+                && !request.Configuration.IsCustomData;
         }
     }
 }

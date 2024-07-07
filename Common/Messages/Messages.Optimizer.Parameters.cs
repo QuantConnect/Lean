@@ -27,9 +27,11 @@ namespace QuantConnect
         /// </summary>
         public static class OptimizationParameterJsonConverter
         {
-            public static string OptimizationParameterNotSpecified = "Optimization parameter name is not specified.";
+            public static string OptimizationParameterNotSpecified =
+                "Optimization parameter name is not specified.";
 
-            public static string OptimizationParameterNotSupported = "Optimization parameter is not currently supported.";
+            public static string OptimizationParameterNotSupported =
+                "Optimization parameter is not currently supported.";
         }
 
         /// <summary>
@@ -37,7 +39,8 @@ namespace QuantConnect
         /// </summary>
         public static class OptimizationStepParameter
         {
-            public static string StepLessThanMinStep = $"step should be great or equal than minStep";
+            public static string StepLessThanMinStep =
+                $"step should be great or equal than minStep";
 
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             public static string InvalidStepRange(decimal min, decimal max)

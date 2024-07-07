@@ -30,22 +30,26 @@ namespace QuantConnect.Interfaces
         /// </summary>
         /// <remarks>Following the obsoletion of Security.Subscriptions,
         /// both overloads will be merged removing <see cref="SubscriptionDataConfig"/> arguments</remarks>
-        Security CreateSecurity(Symbol symbol,
+        Security CreateSecurity(
+            Symbol symbol,
             List<SubscriptionDataConfig> subscriptionDataConfigList,
             decimal leverage = 0,
             bool addToSymbolCache = true,
-            Security underlying = null);
+            Security underlying = null
+        );
 
         /// <summary>
         /// Creates a new security
         /// </summary>
         /// <remarks>Following the obsoletion of Security.Subscriptions,
         /// both overloads will be merged removing <see cref="SubscriptionDataConfig"/> arguments</remarks>
-        Security CreateSecurity(Symbol symbol,
+        Security CreateSecurity(
+            Symbol symbol,
             SubscriptionDataConfig subscriptionDataConfig,
             decimal leverage = 0,
             bool addToSymbolCache = true,
-            Security underlying = null);
+            Security underlying = null
+        );
 
         /// <summary>
         /// Creates a new benchmark security

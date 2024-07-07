@@ -13,12 +13,12 @@
  * limitations under the License.
 */
 
-using MathNet.Numerics.Statistics;
-using QuantConnect.Data;
-using QuantConnect.Data.UniverseSelection;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using MathNet.Numerics.Statistics;
+using QuantConnect.Data;
+using QuantConnect.Data.UniverseSelection;
 
 namespace QuantConnect.Algorithm.Framework.Alphas
 {
@@ -41,7 +41,12 @@ namespace QuantConnect.Algorithm.Framework.Alphas
         /// <param name="resolution">Analysis resolution</param>
         /// <param name="threshold">The percent [0, 100] deviation of the ratio from the mean before emitting an insight</param>
         /// <param name="minimumCorrelation">The minimum correlation to consider a tradable pair</param>
-        public PearsonCorrelationPairsTradingAlphaModel(int lookback = 15, Resolution resolution = Resolution.Minute, decimal threshold = 1m, double minimumCorrelation = .5)
+        public PearsonCorrelationPairsTradingAlphaModel(
+            int lookback = 15,
+            Resolution resolution = Resolution.Minute,
+            decimal threshold = 1m,
+            double minimumCorrelation = .5
+        )
             : base(lookback, resolution, threshold)
         {
             _lookback = lookback;
@@ -66,7 +71,9 @@ namespace QuantConnect.Algorithm.Framework.Alphas
 
             if (vectors.LongLength == 0)
             {
-                algorithm.Debug($"PearsonCorrelationPairsTradingAlphaModel.OnSecuritiesChanged(): The requested historical data does not have series of prices with the same date/time. Please consider increasing the looback period. Current lookback: {_lookback}");
+                algorithm.Debug(
+                    $"PearsonCorrelationPairsTradingAlphaModel.OnSecuritiesChanged(): The requested historical data does not have series of prices with the same date/time. Please consider increasing the looback period. Current lookback: {_lookback}"
+                );
             }
             else
             {
@@ -101,26 +108,28 @@ namespace QuantConnect.Algorithm.Framework.Alphas
             var timeZones = Securities.ToDictionary(x => x.Symbol, y => y.Exchange.TimeZone);
 
             // Special case: daily data and securities from different timezone
-            var isDailyAndMultipleTimeZone = _resolution == Resolution.Daily && timeZones.Values.Distinct().Count() > 1;
+            var isDailyAndMultipleTimeZone =
+                _resolution == Resolution.Daily && timeZones.Values.Distinct().Count() > 1;
 
             var bars = new List<BaseData>();
 
             if (isDailyAndMultipleTimeZone)
             {
-                bars.AddRange(slices
-                    .GroupBy(x => x.Time.Date)
-                    .Where(x => x.Sum(k => k.Count) == symbols.Length)
-                    .SelectMany(x => x.SelectMany(y => y.Values)));
+                bars.AddRange(
+                    slices
+                        .GroupBy(x => x.Time.Date)
+                        .Where(x => x.Sum(k => k.Count) == symbols.Length)
+                        .SelectMany(x => x.SelectMany(y => y.Values))
+                );
             }
             else
             {
-                bars.AddRange(slices
-                    .Where(x => x.Count == symbols.Length)
-                    .SelectMany(x => x.Values));
+                bars.AddRange(
+                    slices.Where(x => x.Count == symbols.Length).SelectMany(x => x.Values)
+                );
             }
 
-            return bars
-                .GroupBy(x => x.Symbol)
+            return bars.GroupBy(x => x.Symbol)
                 .Select(x =>
                 {
                     var array = x.Select(b => Math.Log((double)b.Price)).ToArray();
@@ -137,7 +146,8 @@ namespace QuantConnect.Algorithm.Framework.Alphas
                     {
                         return new double[0];
                     }
-                }).ToArray();
+                })
+                .ToArray();
         }
     }
 }

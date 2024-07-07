@@ -26,22 +26,24 @@ namespace QuantConnect.Tests.Brokerages.Kraken
     [TestFixture]
     public class KrakenBrokerageModelTests
     {
-        private readonly KrakenBrokerageModel _brokerageModel = new KrakenBrokerageModel(AccountType.Margin);
-        
-        private static TestCaseData[] Symbols => new[]
-        {
-            new TestCaseData(Symbol.Create("BTCUSD", SecurityType.Crypto, Market.Kraken), 5m),
-            new TestCaseData(Symbol.Create("USDTUSD", SecurityType.Crypto, Market.Kraken), 2m),
-            new TestCaseData(Symbol.Create("ETHUSD", SecurityType.Crypto, Market.Kraken), 5m),
-            new TestCaseData(Symbol.Create("ADAETH", SecurityType.Crypto, Market.Kraken), 3m),
-            new TestCaseData(Symbol.Create("ADAEUR", SecurityType.Crypto, Market.Kraken), 3m),
-            new TestCaseData(Symbol.Create("XRPBTC", SecurityType.Crypto, Market.Kraken), 3m),
-            new TestCaseData(Symbol.Create("BTCETH", SecurityType.Crypto, Market.Kraken), 1m), // BTC available only with fiats
-            new TestCaseData(Symbol.Create("XRPETH", SecurityType.Crypto, Market.Kraken), 1m), // XRP not available with ETH
-            new TestCaseData(Symbol.Create("BTCUSDT", SecurityType.Crypto, Market.Kraken), 1m), // BTC available only with fiats
-        };
-        
-        
+        private readonly KrakenBrokerageModel _brokerageModel = new KrakenBrokerageModel(
+            AccountType.Margin
+        );
+
+        private static TestCaseData[] Symbols =>
+            new[]
+            {
+                new TestCaseData(Symbol.Create("BTCUSD", SecurityType.Crypto, Market.Kraken), 5m),
+                new TestCaseData(Symbol.Create("USDTUSD", SecurityType.Crypto, Market.Kraken), 2m),
+                new TestCaseData(Symbol.Create("ETHUSD", SecurityType.Crypto, Market.Kraken), 5m),
+                new TestCaseData(Symbol.Create("ADAETH", SecurityType.Crypto, Market.Kraken), 3m),
+                new TestCaseData(Symbol.Create("ADAEUR", SecurityType.Crypto, Market.Kraken), 3m),
+                new TestCaseData(Symbol.Create("XRPBTC", SecurityType.Crypto, Market.Kraken), 3m),
+                new TestCaseData(Symbol.Create("BTCETH", SecurityType.Crypto, Market.Kraken), 1m), // BTC available only with fiats
+                new TestCaseData(Symbol.Create("XRPETH", SecurityType.Crypto, Market.Kraken), 1m), // XRP not available with ETH
+                new TestCaseData(Symbol.Create("BTCUSDT", SecurityType.Crypto, Market.Kraken), 1m), // BTC available only with fiats
+            };
+
         [Test]
         [TestCaseSource(nameof(Symbols))]
         public void GetLeverageTest(Symbol symbol, decimal expectedLeverage)
@@ -66,8 +68,12 @@ namespace QuantConnect.Tests.Brokerages.Kraken
             );
 
             var leverage = _brokerageModel.GetLeverage(security);
-            
-            Assert.AreEqual(leverage, expectedLeverage, "Expected leverage doesn't match with returned");
+
+            Assert.AreEqual(
+                leverage,
+                expectedLeverage,
+                "Expected leverage doesn't match with returned"
+            );
         }
     }
 }

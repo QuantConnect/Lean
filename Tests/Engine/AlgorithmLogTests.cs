@@ -28,16 +28,20 @@ namespace QuantConnect.Tests.Engine
         [TestCase(typeof(TestAlgorithmWithLogOnInit))]
         public void AlgorithmCompletesWhenCallingErroLogOnInit(Type algorithmType)
         {
-            var parameters = new RegressionTests.AlgorithmStatisticsTestParameters("QuantConnect.Tests.Engine.AlgorithmLogTests+" + algorithmType.Name,
+            var parameters = new RegressionTests.AlgorithmStatisticsTestParameters(
+                "QuantConnect.Tests.Engine.AlgorithmLogTests+" + algorithmType.Name,
                 Activator.CreateInstance<BasicTemplateDailyAlgorithm>().ExpectedStatistics,
                 Language.CSharp,
-                AlgorithmStatus.Completed);
+                AlgorithmStatus.Completed
+            );
 
-            AlgorithmRunner.RunLocalBacktest(parameters.Algorithm,
+            AlgorithmRunner.RunLocalBacktest(
+                parameters.Algorithm,
                 parameters.Statistics,
                 parameters.Language,
                 parameters.ExpectedFinalStatus,
-                algorithmLocation: "QuantConnect.Tests.dll");
+                algorithmLocation: "QuantConnect.Tests.dll"
+            );
         }
 
         public class TestAlgorithmWithErrorLogOnInit : BasicTemplateDailyAlgorithm

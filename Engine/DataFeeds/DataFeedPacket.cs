@@ -32,18 +32,12 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         /// <summary>
         /// The security
         /// </summary>
-        public ISecurityPrice Security
-        {
-            get; private set;
-        }
+        public ISecurityPrice Security { get; private set; }
 
         /// <summary>
         /// The subscription configuration that produced this data
         /// </summary>
-        public SubscriptionDataConfig Configuration
-        {
-            get; private set;
-        }
+        public SubscriptionDataConfig Configuration { get; private set; }
 
         /// <summary>
         /// Gets the number of data points held within this packet
@@ -66,13 +60,17 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         /// <param name="security">The security whose data is held in this packet</param>
         /// <param name="configuration">The subscription configuration that produced this data</param>
         /// <param name="isSubscriptionRemoved">Reference to whether or not the subscription has since been removed, defaults to false</param>
-        public DataFeedPacket(ISecurityPrice security, SubscriptionDataConfig configuration, IReadOnlyRef<bool> isSubscriptionRemoved = null)
-            : this(security,
+        public DataFeedPacket(
+            ISecurityPrice security,
+            SubscriptionDataConfig configuration,
+            IReadOnlyRef<bool> isSubscriptionRemoved = null
+        )
+            : this(
+                security,
                 configuration,
                 new List<BaseData>(4), // performance: by default the list has 0 capacity, so lets initialize it with at least 4 (which is the default)
-                isSubscriptionRemoved)
-        {
-        }
+                isSubscriptionRemoved
+            ) { }
 
         /// <summary>
         /// Initializes a new instance of the <see cref="DataFeedPacket"/> class
@@ -82,7 +80,12 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         /// <param name="data">The data to add to this packet. The list reference is reused
         /// internally and NOT copied.</param>
         /// <param name="isSubscriptionRemoved">Reference to whether or not the subscription has since been removed, defaults to false</param>
-        public DataFeedPacket(ISecurityPrice security, SubscriptionDataConfig configuration, List<BaseData> data, IReadOnlyRef<bool> isSubscriptionRemoved = null)
+        public DataFeedPacket(
+            ISecurityPrice security,
+            SubscriptionDataConfig configuration,
+            List<BaseData> data,
+            IReadOnlyRef<bool> isSubscriptionRemoved = null
+        )
         {
             Security = security;
             Configuration = configuration;

@@ -40,7 +40,8 @@ namespace QuantConnect.Orders
         /// <summary>
         /// Gets a <see cref="GoodTilDateTimeInForce"/> instance
         /// </summary>
-        public static Func<DateTime, TimeInForce> GoodTilDate => (DateTime expiry) => new GoodTilDateTimeInForce(expiry);
+        public static Func<DateTime, TimeInForce> GoodTilDate =>
+            (DateTime expiry) => new GoodTilDateTimeInForce(expiry);
 
         /// <summary>
         /// Checks if an order is expired

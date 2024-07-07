@@ -26,7 +26,8 @@ namespace QuantConnect
         /// <summary>
         /// Provides access to a null implementation of <see cref="IIsolatorLimitResultProvider"/>
         /// </summary>
-        public static readonly IIsolatorLimitResultProvider Null = new NullIsolatorLimitResultProvider();
+        public static readonly IIsolatorLimitResultProvider Null =
+            new NullIsolatorLimitResultProvider();
 
         /// <summary>
         /// Convenience method for invoking a scheduled event's Scan method inside the <see cref="IsolatorLimitResultProvider"/>
@@ -36,7 +37,7 @@ namespace QuantConnect
             ScheduledEvent scheduledEvent,
             DateTime scanTimeUtc,
             TimeMonitor timeMonitor
-            )
+        )
         {
             // perform initial filtering to prevent starting a task when not necessary
             if (scheduledEvent.NextEventUtcTime > scanTimeUtc)
@@ -45,7 +46,11 @@ namespace QuantConnect
             }
 
             var timeProvider = RealTimeProvider.Instance;
-            isolatorLimitProvider.Consume(timeProvider, () => scheduledEvent.Scan(scanTimeUtc), timeMonitor);
+            isolatorLimitProvider.Consume(
+                timeProvider,
+                () => scheduledEvent.Scan(scanTimeUtc),
+                timeMonitor
+            );
         }
 
         /// <summary>
@@ -64,7 +69,7 @@ namespace QuantConnect
             ITimeProvider timeProvider,
             Action code,
             TimeMonitor timeMonitor
-            )
+        )
         {
             var consumer = new TimeConsumer
             {
@@ -76,14 +81,24 @@ namespace QuantConnect
             consumer.Finished = true;
         }
 
-
         private sealed class NullIsolatorLimitResultProvider : IIsolatorLimitResultProvider
         {
-            private static readonly IsolatorLimitResult OK = new IsolatorLimitResult(TimeSpan.Zero, string.Empty);
+            private static readonly IsolatorLimitResult OK = new IsolatorLimitResult(
+                TimeSpan.Zero,
+                string.Empty
+            );
 
             public void RequestAdditionalTime(int minutes) { }
-            public IsolatorLimitResult IsWithinLimit() { return OK; }
-            public bool TryRequestAdditionalTime(int minutes) { return true; }
+
+            public IsolatorLimitResult IsWithinLimit()
+            {
+                return OK;
+            }
+
+            public bool TryRequestAdditionalTime(int minutes)
+            {
+                return true;
+            }
         }
     }
 }

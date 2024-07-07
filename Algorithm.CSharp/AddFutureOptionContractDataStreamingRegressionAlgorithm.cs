@@ -27,7 +27,9 @@ namespace QuantConnect.Algorithm.CSharp
     /// This regression algorithm tests that we receive the expected data when
     /// we add future option contracts individually using <see cref="AddFutureOptionContract"/>
     /// </summary>
-    public class AddFutureOptionContractDataStreamingRegressionAlgorithm : QCAlgorithm, IRegressionAlgorithmDefinition
+    public class AddFutureOptionContractDataStreamingRegressionAlgorithm
+        : QCAlgorithm,
+            IRegressionAlgorithmDefinition
     {
         private bool _onDataReached;
         private bool _invested;
@@ -36,7 +38,8 @@ namespace QuantConnect.Algorithm.CSharp
 
         private readonly HashSet<Symbol> _symbolsReceived = new HashSet<Symbol>();
         private readonly HashSet<Symbol> _expectedSymbolsReceived = new HashSet<Symbol>();
-        private readonly Dictionary<Symbol, List<QuoteBar>> _dataReceived = new Dictionary<Symbol, List<QuoteBar>>();
+        private readonly Dictionary<Symbol, List<QuoteBar>> _dataReceived =
+            new Dictionary<Symbol, List<QuoteBar>>();
 
         public override void Initialize()
         {
@@ -44,25 +47,40 @@ namespace QuantConnect.Algorithm.CSharp
             SetEndDate(2020, 1, 8);
 
             _es20h20 = AddFutureContract(
-                QuantConnect.Symbol.CreateFuture(Futures.Indices.SP500EMini, Market.CME, new DateTime(2020, 3, 20)),
-                Resolution.Minute).Symbol;
+                QuantConnect.Symbol.CreateFuture(
+                    Futures.Indices.SP500EMini,
+                    Market.CME,
+                    new DateTime(2020, 3, 20)
+                ),
+                Resolution.Minute
+            ).Symbol;
 
             _es19m20 = AddFutureContract(
-                QuantConnect.Symbol.CreateFuture(Futures.Indices.SP500EMini, Market.CME, new DateTime(2020, 6, 19)),
-                Resolution.Minute).Symbol;
+                QuantConnect.Symbol.CreateFuture(
+                    Futures.Indices.SP500EMini,
+                    Market.CME,
+                    new DateTime(2020, 6, 19)
+                ),
+                Resolution.Minute
+            ).Symbol;
 
             // Get option contract lists for 2020/01/05 (Time.AddDays(1)) because Lean has local data for that date
-            var optionChains = OptionChainProvider.GetOptionContractList(_es20h20, Time.AddDays(1))
+            var optionChains = OptionChainProvider
+                .GetOptionContractList(_es20h20, Time.AddDays(1))
                 .Concat(OptionChainProvider.GetOptionContractList(_es19m20, Time.AddDays(1)));
 
             foreach (var optionContract in optionChains)
             {
-                _expectedSymbolsReceived.Add(AddFutureOptionContract(optionContract, Resolution.Minute).Symbol);
+                _expectedSymbolsReceived.Add(
+                    AddFutureOptionContract(optionContract, Resolution.Minute).Symbol
+                );
             }
 
             if (_expectedSymbolsReceived.Count == 0)
             {
-                throw new InvalidOperationException("Expected Symbols receive count is 0, expected >0");
+                throw new InvalidOperationException(
+                    "Expected Symbols receive count is 0, expected >0"
+                );
             }
         }
 
@@ -118,7 +136,9 @@ namespace QuantConnect.Algorithm.CSharp
             }
             if (_symbolsReceived.Count != _expectedSymbolsReceived.Count)
             {
-                throw new AggregateException($"Expected {_expectedSymbolsReceived.Count} option contracts Symbols, found {_symbolsReceived.Count}");
+                throw new AggregateException(
+                    $"Expected {_expectedSymbolsReceived.Count} option contracts Symbols, found {_symbolsReceived.Count}"
+                );
             }
 
             var missingSymbols = new List<Symbol>();
@@ -132,21 +152,27 @@ namespace QuantConnect.Algorithm.CSharp
 
             if (missingSymbols.Count > 0)
             {
-                throw new RegressionTestException($"Symbols: \"{string.Join(", ", missingSymbols)}\" were not found in OnData");
+                throw new RegressionTestException(
+                    $"Symbols: \"{string.Join(", ", missingSymbols)}\" were not found in OnData"
+                );
             }
 
             foreach (var expectedSymbol in _expectedSymbolsReceived)
             {
                 var data = _dataReceived[expectedSymbol];
                 var nonDupeDataCount = data.Select(x =>
-                {
-                    x.EndTime = default(DateTime);
-                    return x;
-                }).Distinct().Count();
+                    {
+                        x.EndTime = default(DateTime);
+                        return x;
+                    })
+                    .Distinct()
+                    .Count();
 
                 if (nonDupeDataCount < 1000)
                 {
-                    throw new RegressionTestException($"Received too few data points. Expected >=1000, found {nonDupeDataCount} for {expectedSymbol}");
+                    throw new RegressionTestException(
+                        $"Received too few data points. Expected >=1000, found {nonDupeDataCount} for {expectedSymbol}"
+                    );
                 }
             }
         }
@@ -179,35 +205,36 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// This is used by the regression test system to indicate what the expected statistics are from running the algorithm
         /// </summary>
-        public Dictionary<string, string> ExpectedStatistics => new Dictionary<string, string>
-        {
-            {"Total Orders", "2"},
-            {"Average Win", "0%"},
-            {"Average Loss", "0%"},
-            {"Compounding Annual Return", "5512.811%"},
-            {"Drawdown", "1.000%"},
-            {"Expectancy", "0"},
-            {"Start Equity", "100000"},
-            {"End Equity", "105332.8"},
-            {"Net Profit", "5.333%"},
-            {"Sharpe Ratio", "64.084"},
-            {"Sortino Ratio", "0"},
-            {"Probabilistic Sharpe Ratio", "95.977%"},
-            {"Loss Rate", "0%"},
-            {"Win Rate", "0%"},
-            {"Profit-Loss Ratio", "0"},
-            {"Alpha", "25.763"},
-            {"Beta", "2.914"},
-            {"Annual Standard Deviation", "0.423"},
-            {"Annual Variance", "0.179"},
-            {"Information Ratio", "66.11"},
-            {"Tracking Error", "0.403"},
-            {"Treynor Ratio", "9.308"},
-            {"Total Fees", "$8.60"},
-            {"Estimated Strategy Capacity", "$22000000.00"},
-            {"Lowest Capacity Asset", "ES XFH59UK0MYO1"},
-            {"Portfolio Turnover", "122.11%"},
-            {"OrderListHash", "d744fa8beaa60546c84924ed68d945d9"}
-        };
+        public Dictionary<string, string> ExpectedStatistics =>
+            new Dictionary<string, string>
+            {
+                { "Total Orders", "2" },
+                { "Average Win", "0%" },
+                { "Average Loss", "0%" },
+                { "Compounding Annual Return", "5512.811%" },
+                { "Drawdown", "1.000%" },
+                { "Expectancy", "0" },
+                { "Start Equity", "100000" },
+                { "End Equity", "105332.8" },
+                { "Net Profit", "5.333%" },
+                { "Sharpe Ratio", "64.084" },
+                { "Sortino Ratio", "0" },
+                { "Probabilistic Sharpe Ratio", "95.977%" },
+                { "Loss Rate", "0%" },
+                { "Win Rate", "0%" },
+                { "Profit-Loss Ratio", "0" },
+                { "Alpha", "25.763" },
+                { "Beta", "2.914" },
+                { "Annual Standard Deviation", "0.423" },
+                { "Annual Variance", "0.179" },
+                { "Information Ratio", "66.11" },
+                { "Tracking Error", "0.403" },
+                { "Treynor Ratio", "9.308" },
+                { "Total Fees", "$8.60" },
+                { "Estimated Strategy Capacity", "$22000000.00" },
+                { "Lowest Capacity Asset", "ES XFH59UK0MYO1" },
+                { "Portfolio Turnover", "122.11%" },
+                { "OrderListHash", "d744fa8beaa60546c84924ed68d945d9" }
+            };
     }
 }

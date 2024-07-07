@@ -16,11 +16,11 @@
 
 using NUnit.Framework;
 using QuantConnect.Data;
-using QuantConnect.Util;
 using QuantConnect.Data.Auxiliary;
-using QuantConnect.Lean.Engine.Setup;
 using QuantConnect.Lean.Engine.DataFeeds;
 using QuantConnect.Lean.Engine.HistoricalData;
+using QuantConnect.Lean.Engine.Setup;
+using QuantConnect.Util;
 
 namespace QuantConnect.Tests.Engine.Setup
 {
@@ -37,20 +37,26 @@ namespace QuantConnect.Tests.Engine.Setup
             // Setup history provider and algorithm
             var historyProvider = new SubscriptionDataReaderHistoryProvider();
 
-            var algorithm = new BrokerageSetupHandlerTests.TestAlgorithm { UniverseSettings = { Resolution = Resolution.Minute } };
+            var algorithm = new BrokerageSetupHandlerTests.TestAlgorithm
+            {
+                UniverseSettings = { Resolution = Resolution.Minute }
+            };
 
-            historyProvider.Initialize(new HistoryProviderInitializeParameters(
-                null,
-                null,
-                TestGlobals.DataProvider,
-                TestGlobals.DataCacheProvider,
-                TestGlobals.MapFileProvider,
-                TestGlobals.FactorFileProvider,
-                null,
-                false,
-                new DataPermissionManager(),
-                algorithm.ObjectStore,
-                algorithm.Settings));
+            historyProvider.Initialize(
+                new HistoryProviderInitializeParameters(
+                    null,
+                    null,
+                    TestGlobals.DataProvider,
+                    TestGlobals.DataCacheProvider,
+                    TestGlobals.MapFileProvider,
+                    TestGlobals.FactorFileProvider,
+                    null,
+                    false,
+                    new DataPermissionManager(),
+                    algorithm.ObjectStore,
+                    algorithm.Settings
+                )
+            );
             algorithm.SetHistoryProvider(historyProvider);
 
             // Pick a date range where we do NOT have BTCUSD minute data
@@ -59,7 +65,10 @@ namespace QuantConnect.Tests.Engine.Setup
             algorithm.SetCash("BTC", 10);
 
             // Have BaseSetupHandler resolve the currency conversion
-            BaseSetupHandler.SetupCurrencyConversions(algorithm, algorithm.DataManager.UniverseSelection);
+            BaseSetupHandler.SetupCurrencyConversions(
+                algorithm,
+                algorithm.DataManager.UniverseSelection
+            );
 
             // Assert that our portfolio has some value and that value is bitcoin
             Assert.IsTrue(algorithm.Portfolio.Cash > 0);
@@ -76,20 +85,26 @@ namespace QuantConnect.Tests.Engine.Setup
             // Setup history provider and algorithm
             var historyProvider = new SubscriptionDataReaderHistoryProvider();
 
-            var algorithm = new BrokerageSetupHandlerTests.TestAlgorithm { UniverseSettings = { Resolution = Resolution.Minute } };
+            var algorithm = new BrokerageSetupHandlerTests.TestAlgorithm
+            {
+                UniverseSettings = { Resolution = Resolution.Minute }
+            };
 
-            historyProvider.Initialize(new HistoryProviderInitializeParameters(
-                null,
-                null,
-                TestGlobals.DataProvider,
-                TestGlobals.DataCacheProvider,
-                TestGlobals.MapFileProvider,
-                TestGlobals.FactorFileProvider,
-                null,
-                false,
-                new DataPermissionManager(),
-                algorithm.ObjectStore,
-                algorithm.Settings));
+            historyProvider.Initialize(
+                new HistoryProviderInitializeParameters(
+                    null,
+                    null,
+                    TestGlobals.DataProvider,
+                    TestGlobals.DataCacheProvider,
+                    TestGlobals.MapFileProvider,
+                    TestGlobals.FactorFileProvider,
+                    null,
+                    false,
+                    new DataPermissionManager(),
+                    algorithm.ObjectStore,
+                    algorithm.Settings
+                )
+            );
             algorithm.SetHistoryProvider(historyProvider);
 
             // Pick a date range where we do NOT have BTCUSD minute data
@@ -100,7 +115,11 @@ namespace QuantConnect.Tests.Engine.Setup
             algorithm.SetCash("USDT", 1000);
 
             // Have BaseSetupHandler resolve the currency conversion
-            BaseSetupHandler.SetupCurrencyConversions(algorithm, algorithm.DataManager.UniverseSelection, new[] { "BTC" });
+            BaseSetupHandler.SetupCurrencyConversions(
+                algorithm,
+                algorithm.DataManager.UniverseSelection,
+                new[] { "BTC" }
+            );
 
             // Bitcoin's conversion rate should be set
             Assert.IsNotNull(algorithm.Portfolio.CashBook["BTC"].CurrencyConversion);

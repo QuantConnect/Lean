@@ -1,11 +1,11 @@
 /*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
- * 
- * Licensed under the Apache License, Version 2.0 (the "License"); 
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -27,7 +27,11 @@ namespace QuantConnect.Tests.Indicators
         {
             var left = new Delay(1);
             var right = new Delay(2);
-            var composite = CreateCompositeIndicator(left, right, (l, r) => l.Current.Value + r.Current.Value);
+            var composite = CreateCompositeIndicator(
+                left,
+                right,
+                (l, r) => l.Current.Value + r.Current.Value
+            );
 
             left.Update(DateTime.Today.AddSeconds(0), 1m);
             right.Update(DateTime.Today.AddSeconds(0), 1m);
@@ -59,12 +63,16 @@ namespace QuantConnect.Tests.Indicators
         {
             var left = new Identity("left");
             var right = new Identity("right");
-            var composite = CreateCompositeIndicator(left, right, (l, r) =>
-            {
-                Assert.AreEqual(left, l);
-                Assert.AreEqual(right, r);
-                return l.Current.Value + r.Current.Value;
-            });
+            var composite = CreateCompositeIndicator(
+                left,
+                right,
+                (l, r) =>
+                {
+                    Assert.AreEqual(left, l);
+                    Assert.AreEqual(right, r);
+                    return l.Current.Value + r.Current.Value;
+                }
+            );
 
             left.Update(DateTime.Today, 1m);
             right.Update(DateTime.Today, 1m);
@@ -72,13 +80,18 @@ namespace QuantConnect.Tests.Indicators
         }
 
         [Test]
-        public virtual void ResetsProperly() {
+        public virtual void ResetsProperly()
+        {
             var left = new Maximum("left", 2);
             var right = new Minimum("right", 2);
-            var composite = CreateCompositeIndicator(left, right, (l, r) => l.Current.Value + r.Current.Value);
+            var composite = CreateCompositeIndicator(
+                left,
+                right,
+                (l, r) => l.Current.Value + r.Current.Value
+            );
 
             left.Update(DateTime.Today, 1m);
-            right.Update(DateTime.Today,-1m);
+            right.Update(DateTime.Today, -1m);
 
             left.Update(DateTime.Today.AddDays(1), -1m);
             right.Update(DateTime.Today.AddDays(1), 1m);
@@ -94,7 +107,11 @@ namespace QuantConnect.Tests.Indicators
             Assert.AreEqual(right.PeriodsSinceMinimum, 0);
         }
 
-        protected virtual CompositeIndicator CreateCompositeIndicator(IndicatorBase left, IndicatorBase right, QuantConnect.Indicators.CompositeIndicator.IndicatorComposer composer)
+        protected virtual CompositeIndicator CreateCompositeIndicator(
+            IndicatorBase left,
+            IndicatorBase right,
+            QuantConnect.Indicators.CompositeIndicator.IndicatorComposer composer
+        )
         {
             return new CompositeIndicator(left, right, composer);
         }

@@ -14,9 +14,9 @@
  *
 */
 
-using Python.Runtime;
 using System;
 using System.Collections.Generic;
+using Python.Runtime;
 
 namespace QuantConnect.Scheduling
 {
@@ -32,7 +32,10 @@ namespace QuantConnect.Scheduling
         /// </summary>
         /// <param name="name">The name of this rule</param>
         /// <param name="getDatesFunction">The time applicator function</param>
-        public FuncDateRule(string name, Func<DateTime, DateTime, IEnumerable<DateTime>> getDatesFunction)
+        public FuncDateRule(
+            string name,
+            Func<DateTime, DateTime, IEnumerable<DateTime>> getDatesFunction
+        )
         {
             Name = name;
             _getDatesFunction = getDatesFunction;
@@ -55,10 +58,7 @@ namespace QuantConnect.Scheduling
         /// <summary>
         /// Gets a name for this rule
         /// </summary>
-        public string Name
-        {
-            get; private set;
-        }
+        public string Name { get; private set; }
 
         /// <summary>
         /// Gets the dates produced by this date rule between the specified times

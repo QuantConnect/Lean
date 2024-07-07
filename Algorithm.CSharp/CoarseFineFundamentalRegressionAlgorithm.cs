@@ -32,7 +32,9 @@ namespace QuantConnect.Algorithm.CSharp
     /// <meta name="tag" content="universes" />
     /// <meta name="tag" content="coarse universes" />
     /// <meta name="tag" content="regression test" />
-    public class CoarseFineFundamentalRegressionAlgorithm : QCAlgorithm, IRegressionAlgorithmDefinition
+    public class CoarseFineFundamentalRegressionAlgorithm
+        : QCAlgorithm,
+            IRegressionAlgorithmDefinition
     {
         private const int NumberOfSymbolsFine = 2;
 
@@ -94,19 +96,25 @@ namespace QuantConnect.Algorithm.CSharp
         public override void OnData(Slice slice)
         {
             // verify we don't receive data for inactive securities
-            var inactiveSymbols = slice.Keys
-                .Where(sym => !UniverseManager.ActiveSecurities.ContainsKey(sym))
+            var inactiveSymbols = slice
+                .Keys.Where(sym => !UniverseManager.ActiveSecurities.ContainsKey(sym))
                 // on daily data we'll get the last data point and the delisting at the same time
-                .Where(sym => !slice.Delistings.ContainsKey(sym) || slice.Delistings[sym].Type != DelistingType.Delisted)
+                .Where(sym =>
+                    !slice.Delistings.ContainsKey(sym)
+                    || slice.Delistings[sym].Type != DelistingType.Delisted
+                )
                 .ToList();
             if (inactiveSymbols.Any())
             {
                 var symbols = string.Join(", ", inactiveSymbols);
-                throw new RegressionTestException($"Received data for non-active security: {symbols}.");
+                throw new RegressionTestException(
+                    $"Received data for non-active security: {symbols}."
+                );
             }
 
             // if we have no changes, do nothing
-            if (_changes == SecurityChanges.None) return;
+            if (_changes == SecurityChanges.None)
+                return;
 
             // liquidate removed securities
             foreach (var security in _changes.RemovedSecurities)
@@ -138,11 +146,17 @@ namespace QuantConnect.Algorithm.CSharp
 
             if (changes.AddedSecurities.Count > 0)
             {
-                Debug("Securities added: " + string.Join(",", changes.AddedSecurities.Select(x => x.Symbol.Value)));
+                Debug(
+                    "Securities added: "
+                        + string.Join(",", changes.AddedSecurities.Select(x => x.Symbol.Value))
+                );
             }
             if (changes.RemovedSecurities.Count > 0)
             {
-                Debug("Securities removed: " + string.Join(",", changes.RemovedSecurities.Select(x => x.Symbol.Value)));
+                Debug(
+                    "Securities removed: "
+                        + string.Join(",", changes.RemovedSecurities.Select(x => x.Symbol.Value))
+                );
             }
         }
 
@@ -174,35 +188,36 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// This is used by the regression test system to indicate what the expected statistics are from running the algorithm
         /// </summary>
-        public Dictionary<string, string> ExpectedStatistics => new Dictionary<string, string>
-        {
-            {"Total Orders", "2"},
-            {"Average Win", "1.16%"},
-            {"Average Loss", "0%"},
-            {"Compounding Annual Return", "32.505%"},
-            {"Drawdown", "1.400%"},
-            {"Expectancy", "0"},
-            {"Start Equity", "50000"},
-            {"End Equity", "50581.67"},
-            {"Net Profit", "1.163%"},
-            {"Sharpe Ratio", "2.666"},
-            {"Sortino Ratio", "19.179"},
-            {"Probabilistic Sharpe Ratio", "64.748%"},
-            {"Loss Rate", "0%"},
-            {"Win Rate", "100%"},
-            {"Profit-Loss Ratio", "0"},
-            {"Alpha", "0.272"},
-            {"Beta", "0.436"},
-            {"Annual Standard Deviation", "0.086"},
-            {"Annual Variance", "0.007"},
-            {"Information Ratio", "3.572"},
-            {"Tracking Error", "0.092"},
-            {"Treynor Ratio", "0.523"},
-            {"Total Fees", "$2.00"},
-            {"Estimated Strategy Capacity", "$49000000.00"},
-            {"Lowest Capacity Asset", "IBM R735QTJ8XC9X"},
-            {"Portfolio Turnover", "6.64%"},
-            {"OrderListHash", "69614ad86028ebc190bff5fb42795a3f"}
-        };
+        public Dictionary<string, string> ExpectedStatistics =>
+            new Dictionary<string, string>
+            {
+                { "Total Orders", "2" },
+                { "Average Win", "1.16%" },
+                { "Average Loss", "0%" },
+                { "Compounding Annual Return", "32.505%" },
+                { "Drawdown", "1.400%" },
+                { "Expectancy", "0" },
+                { "Start Equity", "50000" },
+                { "End Equity", "50581.67" },
+                { "Net Profit", "1.163%" },
+                { "Sharpe Ratio", "2.666" },
+                { "Sortino Ratio", "19.179" },
+                { "Probabilistic Sharpe Ratio", "64.748%" },
+                { "Loss Rate", "0%" },
+                { "Win Rate", "100%" },
+                { "Profit-Loss Ratio", "0" },
+                { "Alpha", "0.272" },
+                { "Beta", "0.436" },
+                { "Annual Standard Deviation", "0.086" },
+                { "Annual Variance", "0.007" },
+                { "Information Ratio", "3.572" },
+                { "Tracking Error", "0.092" },
+                { "Treynor Ratio", "0.523" },
+                { "Total Fees", "$2.00" },
+                { "Estimated Strategy Capacity", "$49000000.00" },
+                { "Lowest Capacity Asset", "IBM R735QTJ8XC9X" },
+                { "Portfolio Turnover", "6.64%" },
+                { "OrderListHash", "69614ad86028ebc190bff5fb42795a3f" }
+            };
     }
 }

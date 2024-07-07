@@ -13,8 +13,8 @@
  * limitations under the License.
 */
 
-using Newtonsoft.Json;
 using System;
+using Newtonsoft.Json;
 
 namespace QuantConnect.Optimizer.Parameters
 {
@@ -59,7 +59,9 @@ namespace QuantConnect.Optimizer.Parameters
         {
             if (min > max)
             {
-                throw new ArgumentException(Messages.OptimizationStepParameter.InvalidStepRange(min, max));
+                throw new ArgumentException(
+                    Messages.OptimizationStepParameter.InvalidStepRange(min, max)
+                );
             }
 
             MinValue = min;
@@ -74,10 +76,7 @@ namespace QuantConnect.Optimizer.Parameters
         /// <param name="max">maximal value</param>
         /// <param name="step">movement</param>
         public OptimizationStepParameter(string name, decimal min, decimal max, decimal step)
-            : this(name, min, max, step, step)
-        {
-
-        }
+            : this(name, min, max, step, step) { }
 
         /// <summary>
         /// Create an instance of <see cref="OptimizationParameter"/> based on configuration
@@ -87,18 +86,32 @@ namespace QuantConnect.Optimizer.Parameters
         /// <param name="max">maximal value</param>
         /// <param name="step">movement</param>
         /// <param name="minStep">minimal possible movement</param>
-        public OptimizationStepParameter(string name, decimal min, decimal max, decimal step, decimal minStep) : this(name, min, max)
+        public OptimizationStepParameter(
+            string name,
+            decimal min,
+            decimal max,
+            decimal step,
+            decimal minStep
+        )
+            : this(name, min, max)
         {
             // with zero step algorithm can go to infinite loop, use default step value
             if (step <= 0)
             {
-                throw new ArgumentException(Messages.OptimizationStepParameter.NonPositiveStepValue(nameof(step), step));
+                throw new ArgumentException(
+                    Messages.OptimizationStepParameter.NonPositiveStepValue(nameof(step), step)
+                );
             }
 
             // EulerSearch algorithm can go to infinite range division if Min step is not provided, use Step as default
             if (minStep <= 0)
             {
-                throw new ArgumentException(Messages.OptimizationStepParameter.NonPositiveStepValue(nameof(minStep), minStep));
+                throw new ArgumentException(
+                    Messages.OptimizationStepParameter.NonPositiveStepValue(
+                        nameof(minStep),
+                        minStep
+                    )
+                );
             }
 
             if (step < minStep)

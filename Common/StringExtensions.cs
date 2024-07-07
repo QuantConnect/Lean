@@ -27,7 +27,8 @@ namespace QuantConnect
     {
         private static readonly CultureInfo CultureInfo = CultureInfo.InvariantCulture;
         private static readonly IFormatProvider FormatProvider = CultureInfo;
-        private static readonly StringComparison StringComparison = StringComparison.InvariantCulture;
+        private static readonly StringComparison StringComparison =
+            StringComparison.InvariantCulture;
 
         /// <summary>
         /// Converts the provided <paramref name="value"/> as <typeparamref name="T"/>
@@ -35,7 +36,7 @@ namespace QuantConnect
         /// </summary>
         public static T ConvertInvariant<T>(this object value)
         {
-            return (T) value.ConvertInvariant(typeof(T));
+            return (T)value.ConvertInvariant(typeof(T));
         }
 
         /// <summary>
@@ -54,7 +55,9 @@ namespace QuantConnect
             {
                 // these cases are purposefully ordered to ensure the compiler can generate a jump table vs a binary tree
                 case TypeCode.Empty:
-                    throw new ArgumentException(Messages.StringExtensions.ConvertInvariantCannotConvertTo(TypeCode.Empty));
+                    throw new ArgumentException(
+                        Messages.StringExtensions.ConvertInvariantCannotConvertTo(TypeCode.Empty)
+                    );
 
                 case TypeCode.Object:
                     var convertible = value as IConvertible;
@@ -66,7 +69,9 @@ namespace QuantConnect
                     return Convert.ChangeType(value, conversionType, FormatProvider);
 
                 case TypeCode.DBNull:
-                    throw new ArgumentException(Messages.StringExtensions.ConvertInvariantCannotConvertTo(TypeCode.DBNull));
+                    throw new ArgumentException(
+                        Messages.StringExtensions.ConvertInvariantCannotConvertTo(TypeCode.DBNull)
+                    );
 
                 case TypeCode.Boolean:
                     return Convert.ToBoolean(value, FormatProvider);
@@ -188,7 +193,11 @@ namespace QuantConnect
         /// Checks if the string starts with the provided <paramref name="beginning"/> using <see cref="CultureInfo"/>
         /// while optionally ignoring case.
         /// </summary>
-        public static bool StartsWithInvariant(this string value, string beginning, bool ignoreCase = false)
+        public static bool StartsWithInvariant(
+            this string value,
+            string beginning,
+            bool ignoreCase = false
+        )
         {
             return value.StartsWith(beginning, ignoreCase, CultureInfo);
         }
@@ -197,7 +206,11 @@ namespace QuantConnect
         /// Checks if the string ends with the provided <paramref name="ending"/> using <see cref="CultureInfo"/>
         /// while optionally ignoring case.
         /// </summary>
-        public static bool EndsWithInvariant(this string value, string ending, bool ignoreCase = false)
+        public static bool EndsWithInvariant(
+            this string value,
+            string ending,
+            bool ignoreCase = false
+        )
         {
             return value.EndsWith(ending, ignoreCase, CultureInfo);
         }
@@ -214,11 +227,15 @@ namespace QuantConnect
         /// Gets the index of the specified <paramref name="substring"/> using <see cref="StringComparison"/>
         /// or <see cref="System.StringComparison.InvariantCultureIgnoreCase"/> when <paramref name="ignoreCase"/> is true
         /// </summary>
-        public static int IndexOfInvariant(this string value, string substring, bool ignoreCase = false)
+        public static int IndexOfInvariant(
+            this string value,
+            string substring,
+            bool ignoreCase = false
+        )
         {
-            return value.IndexOf(substring, ignoreCase
-                ? StringComparison.InvariantCultureIgnoreCase
-                : StringComparison
+            return value.IndexOf(
+                substring,
+                ignoreCase ? StringComparison.InvariantCultureIgnoreCase : StringComparison
             );
         }
 
@@ -226,11 +243,15 @@ namespace QuantConnect
         /// Gets the index of the specified <paramref name="substring"/> using <see cref="StringComparison"/>
         /// or <see cref="System.StringComparison.InvariantCultureIgnoreCase"/> when <paramref name="ignoreCase"/> is true
         /// </summary>
-        public static int LastIndexOfInvariant(this string value, string substring, bool ignoreCase = false)
+        public static int LastIndexOfInvariant(
+            this string value,
+            string substring,
+            bool ignoreCase = false
+        )
         {
-            return value.LastIndexOf(substring, ignoreCase
-                ? StringComparison.InvariantCultureIgnoreCase
-                : StringComparison
+            return value.LastIndexOf(
+                substring,
+                ignoreCase ? StringComparison.InvariantCultureIgnoreCase : StringComparison
             );
         }
 
@@ -304,7 +325,7 @@ namespace QuantConnect
                 return string.Empty;
             }
 
-            if (startIndex < - 1)
+            if (startIndex < -1)
             {
                 startIndex = 0;
             }

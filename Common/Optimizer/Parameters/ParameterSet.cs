@@ -13,11 +13,11 @@
  * limitations under the License.
 */
 
+using System.Collections.Generic;
 using System.Linq;
 using Newtonsoft.Json;
 using QuantConnect.Api;
 using QuantConnect.Util;
-using System.Collections.Generic;
 
 namespace QuantConnect.Optimizer.Parameters
 {
@@ -57,7 +57,10 @@ namespace QuantConnect.Optimizer.Parameters
         /// </summary>
         public override string ToString()
         {
-            return string.Join(',', Value.OrderBy(kvp => kvp.Key).Select(arg => $"{arg.Key}:{arg.Value}"));
+            return string.Join(
+                ',',
+                Value.OrderBy(kvp => kvp.Key).Select(arg => $"{arg.Key}:{arg.Value}")
+            );
         }
     }
 }

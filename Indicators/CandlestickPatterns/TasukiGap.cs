@@ -1,11 +1,11 @@
 ﻿/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
- * 
- * Licensed under the Apache License, Version 2.0 (the "License"); 
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -30,7 +30,7 @@ namespace QuantConnect.Indicators.CandlestickPatterns
     /// - the size of two real bodies should be near the same
     /// The meaning of "near" is specified with SetCandleSettings
     /// The returned value is positive(+1) when bullish or negative(-1) when bearish;
-    /// The user should consider that tasuki gap is significant when it appears in a trend, while this function does 
+    /// The user should consider that tasuki gap is significant when it appears in a trend, while this function does
     /// not consider it
     /// </remarks>
     public class TasukiGap : CandlestickPattern
@@ -43,7 +43,7 @@ namespace QuantConnect.Indicators.CandlestickPatterns
         /// Initializes a new instance of the <see cref="TasukiGap"/> class using the specified name.
         /// </summary>
         /// <param name="name">The name of this indicator</param>
-        public TasukiGap(string name) 
+        public TasukiGap(string name)
             : base(name, CandleSettings.Get(CandleSettingType.Near).AveragePeriod + 2 + 1)
         {
             _nearAveragePeriod = CandleSettings.Get(CandleSettingType.Near).AveragePeriod;
@@ -53,9 +53,7 @@ namespace QuantConnect.Indicators.CandlestickPatterns
         /// Initializes a new instance of the <see cref="TasukiGap"/> class.
         /// </summary>
         public TasukiGap()
-            : this("TASUKIGAP")
-        {
-        }
+            : this("TASUKIGAP") { }
 
         /// <summary>
         /// Gets a flag indicating when this indicator is ready and fully initialized
@@ -71,7 +69,10 @@ namespace QuantConnect.Indicators.CandlestickPatterns
         /// <param name="window">The window of data held in this indicator</param>
         /// <param name="input">The input given to the indicator</param>
         /// <returns>A new value for this indicator</returns>
-        protected override decimal ComputeNextValue(IReadOnlyWindow<IBaseDataBar> window, IBaseDataBar input)
+        protected override decimal ComputeNextValue(
+            IReadOnlyWindow<IBaseDataBar> window,
+            IBaseDataBar input
+        )
         {
             if (!IsReady)
             {
@@ -86,47 +87,64 @@ namespace QuantConnect.Indicators.CandlestickPatterns
             decimal value;
             if (
                 (
-                    // upside gap    
-                    GetRealBodyGapUp(window[1], window[2]) &&
+                    // upside gap
+                    GetRealBodyGapUp(window[1], window[2])
+                    &&
                     // 1st: white
-                    GetCandleColor(window[1]) == CandleColor.White &&
+                    GetCandleColor(window[1]) == CandleColor.White
+                    &&
                     // 2nd: black
-                    GetCandleColor(input) == CandleColor.Black &&
+                    GetCandleColor(input) == CandleColor.Black
+                    &&
                     //      that opens within the white rb
-                    input.Open < window[1].Close && input.Open > window[1].Open &&
+                    input.Open < window[1].Close
+                    && input.Open > window[1].Open
+                    &&
                     //      and closes under the white rb
-                    input.Close < window[1].Open &&
+                    input.Close < window[1].Open
+                    &&
                     //      inside the gap
-                    input.Close > Math.Max(window[2].Close, window[2].Open) &&
+                    input.Close > Math.Max(window[2].Close, window[2].Open)
+                    &&
                     // size of 2 rb near the same
-                    Math.Abs(GetRealBody(window[1]) - GetRealBody(input)) < GetCandleAverage(CandleSettingType.Near, _nearPeriodTotal, window[1])
-                ) ||
-                (
-                    // downside gap
-                    GetRealBodyGapDown(window[1], window[2]) &&
-                    // 1st: black
-                    GetCandleColor(window[1]) == CandleColor.Black &&
-                    // 2nd: white
-                    GetCandleColor(input) == CandleColor.White &&
-                    //      that opens within the black rb
-                    input.Open < window[1].Open && input.Open > window[1].Close &&
-                    //      and closes above the black rb
-                    input.Close > window[1].Open &&
-                    //      inside the gap
-                    input.Close < Math.Min(window[2].Close, window[2].Open) &&
-                    // size of 2 rb near the same
-                    Math.Abs(GetRealBody(window[1]) - GetRealBody(input)) < GetCandleAverage(CandleSettingType.Near, _nearPeriodTotal, window[1])
+                    Math.Abs(GetRealBody(window[1]) - GetRealBody(input))
+                        < GetCandleAverage(CandleSettingType.Near, _nearPeriodTotal, window[1])
                 )
-              )
+                || (
+                    // downside gap
+                    GetRealBodyGapDown(window[1], window[2])
+                    &&
+                    // 1st: black
+                    GetCandleColor(window[1]) == CandleColor.Black
+                    &&
+                    // 2nd: white
+                    GetCandleColor(input) == CandleColor.White
+                    &&
+                    //      that opens within the black rb
+                    input.Open < window[1].Open
+                    && input.Open > window[1].Close
+                    &&
+                    //      and closes above the black rb
+                    input.Close > window[1].Open
+                    &&
+                    //      inside the gap
+                    input.Close < Math.Min(window[2].Close, window[2].Open)
+                    &&
+                    // size of 2 rb near the same
+                    Math.Abs(GetRealBody(window[1]) - GetRealBody(input))
+                        < GetCandleAverage(CandleSettingType.Near, _nearPeriodTotal, window[1])
+                )
+            )
                 value = (int)GetCandleColor(window[1]);
             else
                 value = 0m;
 
-            // add the current range and subtract the first range: this is done after the pattern recognition 
+            // add the current range and subtract the first range: this is done after the pattern recognition
             // when avgPeriod is not 0, that means "compare with the previous candles" (it excludes the current candle)
 
-            _nearPeriodTotal += GetCandleRange(CandleSettingType.Near, window[1]) -
-                                GetCandleRange(CandleSettingType.Near, window[_nearAveragePeriod + 1]);
+            _nearPeriodTotal +=
+                GetCandleRange(CandleSettingType.Near, window[1])
+                - GetCandleRange(CandleSettingType.Near, window[_nearAveragePeriod + 1]);
 
             return value;
         }

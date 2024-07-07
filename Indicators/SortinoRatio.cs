@@ -37,9 +37,11 @@ namespace QuantConnect.Indicators
         /// <param name="period">Period of historical observation for Sortino ratio calculation</param>
         /// <param name="minimumAcceptableReturn">Minimum acceptable return for Sortino ratio calculation</param>
         public SortinoRatio(string name, int period, double minimumAcceptableReturn = 0)
-             : base(name, period, minimumAcceptableReturn.SafeDecimalCast())
+            : base(name, period, minimumAcceptableReturn.SafeDecimalCast())
         {
-            var denominator = new TargetDownsideDeviation(period, minimumAcceptableReturn).Of(RateOfChange);
+            var denominator = new TargetDownsideDeviation(period, minimumAcceptableReturn).Of(
+                RateOfChange
+            );
             Ratio = Numerator.Over(denominator);
         }
 
@@ -50,7 +52,6 @@ namespace QuantConnect.Indicators
         /// <param name="minimumAcceptableReturn">Minimum acceptable return for Sortino ratio calculation</param>
         public SortinoRatio(int period, double minimumAcceptableReturn = 0)
             : this($"SORTINO({period},{minimumAcceptableReturn})", period, minimumAcceptableReturn)
-        {
-        }
+        { }
     }
 }

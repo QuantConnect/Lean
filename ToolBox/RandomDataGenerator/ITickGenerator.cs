@@ -14,8 +14,8 @@
 */
 
 using System;
-using QuantConnect.Data.Market;
 using System.Collections.Generic;
+using QuantConnect.Data.Market;
 
 namespace QuantConnect.ToolBox.RandomDataGenerator
 {
@@ -40,11 +40,7 @@ namespace QuantConnect.ToolBox.RandomDataGenerator
         /// previous price. For a previous price of 100, this would yield a price between 99 and 101 inclusive</param>
         /// <returns>A random <see cref="Tick"/> value that is within the specified <paramref name="maximumPercentDeviation"/>
         /// from the previous price</returns>
-        Tick NextTick(
-            DateTime dateTime,
-            TickType tickType,
-            decimal maximumPercentDeviation
-            );
+        Tick NextTick(DateTime dateTime, TickType tickType, decimal maximumPercentDeviation);
 
         /// <summary>
         /// Generates a random <see cref="DateTime"/> suitable for use as a tick's emit time.

@@ -42,9 +42,7 @@ namespace QuantConnect.Indicators
         /// Initializes a new instance of the <see cref="CoppockCurve" /> indicator with its default values.
         /// </summary>
         public CoppockCurve()
-            : this(11,14,10)
-        {
-        }
+            : this(11, 14, 10) { }
 
         /// <summary>
         /// Initializes a new instance of the <see cref="CoppockCurve"/> indicator
@@ -53,9 +51,12 @@ namespace QuantConnect.Indicators
         /// <param name="longRocPeriod">The period for the long ROC</param>
         /// <param name="lwmaPeriod">The period for the LWMA</param>
         public CoppockCurve(int shortRocPeriod, int longRocPeriod, int lwmaPeriod)
-            : this($"CC({shortRocPeriod},{longRocPeriod},{lwmaPeriod})", shortRocPeriod, longRocPeriod, lwmaPeriod)
-        {
-        }
+            : this(
+                $"CC({shortRocPeriod},{longRocPeriod},{lwmaPeriod})",
+                shortRocPeriod,
+                longRocPeriod,
+                lwmaPeriod
+            ) { }
 
         /// <summary>
         /// Initializes a new instance of the <see cref="CoppockCurve" /> indicator

@@ -13,6 +13,8 @@
  * limitations under the License.
 */
 
+using System;
+using System.Collections.Generic;
 using NUnit.Framework;
 using QuantConnect.Algorithm;
 using QuantConnect.Algorithm.Framework.Portfolio;
@@ -21,8 +23,6 @@ using QuantConnect.Data;
 using QuantConnect.Data.Market;
 using QuantConnect.Interfaces;
 using QuantConnect.Tests.Engine.DataFeeds;
-using System;
-using System.Collections.Generic;
 
 namespace QuantConnect.Tests.Algorithm.Framework.Portfolio
 {
@@ -54,9 +54,12 @@ namespace QuantConnect.Tests.Algorithm.Framework.Portfolio
 
             using var manager = new Collective2SignalExportHandler("", 0);
 
-            var message = manager.GetMessageSent(new SignalExportTargetParameters { Targets = targetList, Algorithm = algorithm });
+            var message = manager.GetMessageSent(
+                new SignalExportTargetParameters { Targets = targetList, Algorithm = algorithm }
+            );
 
-            var expectedMessage = @"{""StrategyId"":0,""Positions"":[{""C2Symbol"":{""FullSymbol"":""SPY"",""SymbolType"":""stock""},""Quantity"":99.0},{""C2Symbol"":{""FullSymbol"":""EURUSD"",""SymbolType"":""forex""},""Quantity"":149.0},{""C2Symbol"":{""FullSymbol"":""@ESZ8"",""SymbolType"":""future""},""Quantity"":2.0},{""C2Symbol"":{""FullSymbol"":""SPY1619B192"",""SymbolType"":""option""},""Quantity"":1.0}]}";
+            var expectedMessage =
+                @"{""StrategyId"":0,""Positions"":[{""C2Symbol"":{""FullSymbol"":""SPY"",""SymbolType"":""stock""},""Quantity"":99.0},{""C2Symbol"":{""FullSymbol"":""EURUSD"",""SymbolType"":""forex""},""Quantity"":149.0},{""C2Symbol"":{""FullSymbol"":""@ESZ8"",""SymbolType"":""future""},""Quantity"":2.0},{""C2Symbol"":{""FullSymbol"":""SPY1619B192"",""SymbolType"":""option""},""Quantity"":1.0}]}";
 
             Assert.AreEqual(expectedMessage, message);
         }
@@ -97,7 +100,7 @@ namespace QuantConnect.Tests.Algorithm.Framework.Portfolio
             var expectedQuantities = new Dictionary<string, int>()
             {
                 { "SPY", 4 },
-                { "EURUSD", 492},
+                { "EURUSD", 492 },
                 { "AAPL", -4 },
                 { "IBM", -492 },
                 { "GOOG", 0 },
@@ -115,12 +118,7 @@ namespace QuantConnect.Tests.Algorithm.Framework.Portfolio
         [Test]
         public void SendsTargetsToCrunchDAOAppropiately()
         {
-            var symbols = new List<Symbol>()
-            {
-                Symbols.SPY,
-                Symbols.AAPL,
-                Symbols.CAT
-            };
+            var symbols = new List<Symbol>() { Symbols.SPY, Symbols.AAPL, Symbols.CAT };
 
             var targetList = new List<PortfolioTarget>()
             {
@@ -133,8 +131,11 @@ namespace QuantConnect.Tests.Algorithm.Framework.Portfolio
             AddSymbols(symbols, algorithm);
             using var manager = new CrunchDAOSignalExportHandler("", "");
 
-            var message = manager.GetMessageSent(new SignalExportTargetParameters { Targets = targetList, Algorithm = algorithm });
-            var expectedMessage = "ticker,date,signal\nSPY,2016-02-16,0.2\nAAPL,2016-02-16,0.2\nCAT,2016-02-16,0.2\n";
+            var message = manager.GetMessageSent(
+                new SignalExportTargetParameters { Targets = targetList, Algorithm = algorithm }
+            );
+            var expectedMessage =
+                "ticker,date,signal\nSPY,2016-02-16,0.2\nAAPL,2016-02-16,0.2\nCAT,2016-02-16,0.2\n";
 
             Assert.AreEqual(expectedMessage, message);
         }
@@ -162,7 +163,9 @@ namespace QuantConnect.Tests.Algorithm.Framework.Portfolio
             algorithm.Portfolio.SetCash(50000);
             using var manager = new CrunchDAOSignalExport("", "");
 
-            var result = manager.Send(new SignalExportTargetParameters { Targets = targetList, Algorithm = algorithm });
+            var result = manager.Send(
+                new SignalExportTargetParameters { Targets = targetList, Algorithm = algorithm }
+            );
             Assert.IsFalse(result);
         }
 
@@ -173,7 +176,9 @@ namespace QuantConnect.Tests.Algorithm.Framework.Portfolio
             using var manager = new CrunchDAOSignalExport("", "");
             var algorithm = new QCAlgorithm();
 
-            var result = manager.Send(new SignalExportTargetParameters { Targets = targetList, Algorithm = algorithm });
+            var result = manager.Send(
+                new SignalExportTargetParameters { Targets = targetList, Algorithm = algorithm }
+            );
             Assert.IsFalse(result);
         }
 
@@ -198,8 +203,11 @@ namespace QuantConnect.Tests.Algorithm.Framework.Portfolio
             var algorithm = new QCAlgorithm();
             algorithm.SetDateTime(new DateTime(2023, 03, 03));
 
-            var message = manager.GetMessageSent(new SignalExportTargetParameters { Targets = targets, Algorithm = algorithm });
-            var expectedMessage = "numerai_ticker,signal\nSGX SP,0.05\nAAPL US,0.1\nMSFT US,0.1\nZNGA US,0.05\nFXE US,0.05\nLODE US,0.05\nIBM US,0.05\nGOOG US,0.1\nNFLX US,0.1\nCAT US,0.1\n";
+            var message = manager.GetMessageSent(
+                new SignalExportTargetParameters { Targets = targets, Algorithm = algorithm }
+            );
+            var expectedMessage =
+                "numerai_ticker,signal\nSGX SP,0.05\nAAPL US,0.1\nMSFT US,0.1\nZNGA US,0.05\nFXE US,0.05\nLODE US,0.05\nIBM US,0.05\nGOOG US,0.1\nNFLX US,0.1\nCAT US,0.1\n";
 
             Assert.AreEqual(expectedMessage, message);
         }
@@ -223,7 +231,9 @@ namespace QuantConnect.Tests.Algorithm.Framework.Portfolio
 
             using var manager = new NumeraiSignalExport("", "", "");
             var algorithm = new QCAlgorithm();
-            var result = manager.Send(new SignalExportTargetParameters { Targets = targets, Algorithm = algorithm });
+            var result = manager.Send(
+                new SignalExportTargetParameters { Targets = targets, Algorithm = algorithm }
+            );
             Assert.IsFalse(result);
         }
 
@@ -245,7 +255,9 @@ namespace QuantConnect.Tests.Algorithm.Framework.Portfolio
 
             using var manager = new NumeraiSignalExport("", "", "");
             var algorithm = new QCAlgorithm();
-            var result = manager.Send(new SignalExportTargetParameters { Targets = targets, Algorithm = algorithm });
+            var result = manager.Send(
+                new SignalExportTargetParameters { Targets = targets, Algorithm = algorithm }
+            );
             Assert.IsFalse(result);
         }
 
@@ -257,23 +269,31 @@ namespace QuantConnect.Tests.Algorithm.Framework.Portfolio
         [TestCase(SecurityType.Forex, "EURUSD", -90)]
         [TestCase(SecurityType.Future, "ES", 4)]
         [TestCase(SecurityType.Future, "ES", -4)]
-
-        public void SignalExportManagerGetsCorrectPortfolioTargetArray(SecurityType securityType, string ticker, int quantity)
+        public void SignalExportManagerGetsCorrectPortfolioTargetArray(
+            SecurityType securityType,
+            string ticker,
+            int quantity
+        )
         {
             var algorithm = new AlgorithmStub(true);
             algorithm.SetFinishedWarmingUp();
             algorithm.SetCash(100000);
 
             var security = algorithm.AddSecurity(securityType, ticker);
-            security.SetMarketPrice(new Tick(new DateTime(2022, 01, 04), security.Symbol, 144.80m, 144.82m));
+            security.SetMarketPrice(
+                new Tick(new DateTime(2022, 01, 04), security.Symbol, 144.80m, 144.82m)
+            );
             security.Holdings.SetHoldings(144.81m, quantity);
 
             var signalExportManagerHandler = new SignalExportManagerHandler(algorithm);
-            var result = signalExportManagerHandler.GetPortfolioTargets(out PortfolioTarget[] portfolioTargets);
+            var result = signalExportManagerHandler.GetPortfolioTargets(
+                out PortfolioTarget[] portfolioTargets
+            );
 
             Assert.IsTrue(result);
             var target = portfolioTargets[0];
-            var targetQuantity = (int)PortfolioTarget.Percent(algorithm, target.Symbol, target.Quantity).Quantity;
+            var targetQuantity = (int)
+                PortfolioTarget.Percent(algorithm, target.Symbol, target.Quantity).Quantity;
             // The quantites can differ by one because of the number of lots for certain securities
             Assert.AreEqual(quantity, targetQuantity, 1);
         }
@@ -307,7 +327,16 @@ namespace QuantConnect.Tests.Algorithm.Framework.Portfolio
         /// <returns>A new TradebarConfiguration for the given symbol</returns>
         private static SubscriptionDataConfig CreateTradeBarConfig(Symbol symbol)
         {
-            return new SubscriptionDataConfig(typeof(TradeBar), symbol, Resolution.Minute, TimeZones.NewYork, TimeZones.NewYork, true, true, false);
+            return new SubscriptionDataConfig(
+                typeof(TradeBar),
+                symbol,
+                Resolution.Minute,
+                TimeZones.NewYork,
+                TimeZones.NewYork,
+                true,
+                true,
+                false
+            );
         }
 
         /// <summary>
@@ -315,10 +344,8 @@ namespace QuantConnect.Tests.Algorithm.Framework.Portfolio
         /// </summary>
         private class SignalExportManagerHandler : SignalExportManager
         {
-            public SignalExportManagerHandler(IAlgorithm algorithm) : base(algorithm)
-            {
-
-            }
+            public SignalExportManagerHandler(IAlgorithm algorithm)
+                : base(algorithm) { }
 
             /// <summary>
             /// Handler method to obtain portfolio targets from algorithm's portfolio
@@ -337,9 +364,8 @@ namespace QuantConnect.Tests.Algorithm.Framework.Portfolio
         /// </summary>
         private class Collective2SignalExportHandler : Collective2SignalExport
         {
-            public Collective2SignalExportHandler(string apiKey, int systemId) : base(apiKey, systemId)
-            {
-            }
+            public Collective2SignalExportHandler(string apiKey, int systemId)
+                : base(apiKey, systemId) { }
 
             /// <summary>
             /// Handler method to test how Collective2SignalExport converts target percentage to number of shares
@@ -355,7 +381,7 @@ namespace QuantConnect.Tests.Algorithm.Framework.Portfolio
             /// <summary>
             /// Handler method to test the message sent to Collective2 API
             /// </summary>
-            /// <param name="parameters">A list of holdings from the portfolio 
+            /// <param name="parameters">A list of holdings from the portfolio
             /// expected to be sent to Collective2 API and the algorithm being ran</param>
             /// <returns>Message sent to Collective2 API</returns>
             public string GetMessageSent(SignalExportTargetParameters parameters)
@@ -372,14 +398,18 @@ namespace QuantConnect.Tests.Algorithm.Framework.Portfolio
         /// </summary>
         private class CrunchDAOSignalExportHandler : CrunchDAOSignalExport
         {
-            public CrunchDAOSignalExportHandler(string apiKey, string model, string submissionName = "", string comment = "") : base(apiKey, model, submissionName, comment)
-            {
-            }
+            public CrunchDAOSignalExportHandler(
+                string apiKey,
+                string model,
+                string submissionName = "",
+                string comment = ""
+            )
+                : base(apiKey, model, submissionName, comment) { }
 
             /// <summary>
             /// Handler method to test the message sent to CrunchDAO API
             /// </summary>
-            /// <param name="parameters">A list of holdings from the portfolio 
+            /// <param name="parameters">A list of holdings from the portfolio
             /// expected to be sent to CrunchDAO2 API and the algorithm being ran</param>
             /// <returns>Message sent to CrunchDAO API</returns>
             public string GetMessageSent(SignalExportTargetParameters parameters)
@@ -394,14 +424,18 @@ namespace QuantConnect.Tests.Algorithm.Framework.Portfolio
         /// </summary>
         private class NumeraiSignalExportHandler : NumeraiSignalExport
         {
-            public NumeraiSignalExportHandler(string publicId, string secretId, string modelId, string fileName = "predictions.csv") : base(publicId, secretId, modelId, fileName)
-            {
-            }
+            public NumeraiSignalExportHandler(
+                string publicId,
+                string secretId,
+                string modelId,
+                string fileName = "predictions.csv"
+            )
+                : base(publicId, secretId, modelId, fileName) { }
 
             /// <summary>
             /// Handler method to test the message sent to Numerai API
             /// </summary>
-            /// <param name="parameters">A list of holdings from the portfolio 
+            /// <param name="parameters">A list of holdings from the portfolio
             /// expected to be sent to Numerai API and the algorithm being ran</param>
             /// <returns>Message sent to Numerai API</returns>
             public string GetMessageSent(SignalExportTargetParameters parameters)

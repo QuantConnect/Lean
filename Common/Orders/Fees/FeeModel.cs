@@ -32,9 +32,7 @@ namespace QuantConnect.Orders.Fees
         /// <returns>The cost of the order in a <see cref="CashAmount"/> instance</returns>
         public virtual OrderFee GetOrderFee(OrderFeeParameters parameters)
         {
-            return new OrderFee(new CashAmount(
-                0,
-                "USD"));
+            return new OrderFee(new CashAmount(0, "USD"));
         }
     }
 }

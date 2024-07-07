@@ -14,9 +14,7 @@
 */
 
 using System.Runtime.CompilerServices;
-
 using QuantConnect.Data;
-
 using static QuantConnect.StringExtensions;
 
 namespace QuantConnect
@@ -46,8 +44,10 @@ namespace QuantConnect
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             public static string VolumeNotReportedForMarketDataType(SecurityType securityType)
             {
-                return Invariant($"VolumeShareSlippageModel.GetSlippageApproximation(): {securityType} security type often ") +
-                    "does not report volume. If you intend to model slippage beyond the spread, please consider another model.";
+                return Invariant(
+                        $"VolumeShareSlippageModel.GetSlippageApproximation(): {securityType} security type often "
+                    )
+                    + "does not report volume. If you intend to model slippage beyond the spread, please consider another model.";
             }
 
             /// <summary>
@@ -56,8 +56,10 @@ namespace QuantConnect
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             public static string NegativeOrZeroBarVolume(decimal barVolume, decimal slippagePercent)
             {
-                return Invariant($@"VolumeShareSlippageModel.GetSlippageApproximation: Bar volume cannot be zero or negative. Volume: {
-                    barVolume}. Using maximum slippage percentage of {slippagePercent}");
+                return Invariant(
+                    $@"VolumeShareSlippageModel.GetSlippageApproximation: Bar volume cannot be zero or negative. Volume: {
+                    barVolume}. Using maximum slippage percentage of {slippagePercent}"
+                );
             }
         }
     }

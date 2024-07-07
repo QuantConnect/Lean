@@ -25,15 +25,18 @@ namespace QuantConnect.Api.Serialization
     /// </summary>
     public class ProductJsonConverter : JsonConverter
     {
-        private Dictionary<string, ProductType> _productTypeMap = new Dictionary<string, ProductType>()
+        private Dictionary<string, ProductType> _productTypeMap = new Dictionary<
+            string,
+            ProductType
+        >()
         {
-            {"Professional Seats", ProductType.ProfessionalSeats},
-            {"Backtest Node", ProductType.BacktestNode},
-            {"Research Node", ProductType.ResearchNode},
-            {"Live Trading Node", ProductType.LiveNode},
-            {"Support", ProductType.Support},
-            {"Data", ProductType.Data},
-            {"Modules", ProductType.Modules}
+            { "Professional Seats", ProductType.ProfessionalSeats },
+            { "Backtest Node", ProductType.BacktestNode },
+            { "Research Node", ProductType.ResearchNode },
+            { "Live Trading Node", ProductType.LiveNode },
+            { "Support", ProductType.Support },
+            { "Data", ProductType.Data },
+            { "Modules", ProductType.Modules }
         };
 
         /// <summary>
@@ -62,7 +65,9 @@ namespace QuantConnect.Api.Serialization
         /// <param name="writer">The <see cref="JsonWriter"/> to write to.</param><param name="value">The value.</param><param name="serializer">The calling serializer.</param>
         public override void WriteJson(JsonWriter writer, object value, JsonSerializer serializer)
         {
-            throw new NotImplementedException("The OrderJsonConverter does not implement a WriteJson method;.");
+            throw new NotImplementedException(
+                "The OrderJsonConverter does not implement a WriteJson method;."
+            );
         }
 
         /// <summary>
@@ -72,7 +77,12 @@ namespace QuantConnect.Api.Serialization
         /// <returns>
         /// The object value.
         /// </returns>
-        public override object ReadJson(JsonReader reader, Type objectType, object existingValue, JsonSerializer serializer)
+        public override object ReadJson(
+            JsonReader reader,
+            Type objectType,
+            object existingValue,
+            JsonSerializer serializer
+        )
         {
             var jObject = JObject.Load(reader);
 

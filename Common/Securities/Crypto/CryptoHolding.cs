@@ -27,8 +27,6 @@ namespace QuantConnect.Securities.Crypto
         /// <param name="security">The Crypto security being held</param>
         /// <param name="currencyConverter">A currency converter instance</param>
         public CryptoHolding(Crypto security, ICurrencyConverter currencyConverter)
-            : base(security, currencyConverter)
-        {
-        }
+            : base(security, currencyConverter) { }
     }
 }

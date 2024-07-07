@@ -18,7 +18,5 @@ namespace QuantConnect.Orders.Fees
     /// <summary>
     /// Eze fee model implementation
     /// </summary>
-    public class EzeFeeModel : FeeModel
-    {
-    }
+    public class EzeFeeModel : FeeModel { }
 }

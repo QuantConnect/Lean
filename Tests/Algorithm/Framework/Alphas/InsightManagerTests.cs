@@ -16,16 +16,16 @@
 using System;
 using System.Linq;
 using NUnit.Framework;
-using QuantConnect.Tests.Engine.DataFeeds;
 using QuantConnect.Algorithm.Framework.Alphas;
 using QuantConnect.Algorithm.Framework.Alphas.Analysis;
+using QuantConnect.Tests.Engine.DataFeeds;
 
 namespace QuantConnect.Tests.Algorithm.Framework.Alphas
 {
     [TestFixture]
     public class InsightManagerTests
     {
-        private static readonly DateTime _utcNow = new (2019, 1, 1);
+        private static readonly DateTime _utcNow = new(2019, 1, 1);
 
         [TestCase(false)]
         [TestCase(true)]
@@ -47,9 +47,23 @@ namespace QuantConnect.Tests.Algorithm.Framework.Alphas
                 insightManager.Expire(new[] { Symbols.IBM, Symbols.SPY });
             }
 
-            Assert.IsTrue(insightManager[Symbols.IBM].All(insight => insight.IsExpired(algorithm.UtcTime) && insight.Period == TimeSpan.FromSeconds(-1)));
-            Assert.IsTrue(insightManager[Symbols.SPY].All(insight => insight.IsExpired(algorithm.UtcTime) && insight.Period == TimeSpan.FromSeconds(-1)));
-            Assert.IsTrue(insightManager[Symbols.AAPL].All(insight => insight.IsActive(algorithm.UtcTime)));
+            Assert.IsTrue(
+                insightManager[Symbols.IBM]
+                    .All(insight =>
+                        insight.IsExpired(algorithm.UtcTime)
+                        && insight.Period == TimeSpan.FromSeconds(-1)
+                    )
+            );
+            Assert.IsTrue(
+                insightManager[Symbols.SPY]
+                    .All(insight =>
+                        insight.IsExpired(algorithm.UtcTime)
+                        && insight.Period == TimeSpan.FromSeconds(-1)
+                    )
+            );
+            Assert.IsTrue(
+                insightManager[Symbols.AAPL].All(insight => insight.IsActive(algorithm.UtcTime))
+            );
         }
 
         [TestCase(false)]
@@ -74,9 +88,21 @@ namespace QuantConnect.Tests.Algorithm.Framework.Alphas
             }
 
             var expectedPeriod = Time.OneMinute.Subtract(Time.OneSecond);
-            Assert.IsTrue(insightManager[Symbols.IBM].All(insight => insight.IsExpired(algorithm.UtcTime) && insight.Period == expectedPeriod));
-            Assert.IsTrue(insightManager[Symbols.SPY].All(insight => insight.IsExpired(algorithm.UtcTime) && insight.Period == expectedPeriod));
-            Assert.IsTrue(insightManager[Symbols.AAPL].All(insight => insight.IsActive(algorithm.UtcTime)));
+            Assert.IsTrue(
+                insightManager[Symbols.IBM]
+                    .All(insight =>
+                        insight.IsExpired(algorithm.UtcTime) && insight.Period == expectedPeriod
+                    )
+            );
+            Assert.IsTrue(
+                insightManager[Symbols.SPY]
+                    .All(insight =>
+                        insight.IsExpired(algorithm.UtcTime) && insight.Period == expectedPeriod
+                    )
+            );
+            Assert.IsTrue(
+                insightManager[Symbols.AAPL].All(insight => insight.IsActive(algorithm.UtcTime))
+            );
         }
 
         [TestCase(false)]
@@ -102,35 +128,73 @@ namespace QuantConnect.Tests.Algorithm.Framework.Alphas
             }
 
             var expectedPeriod = Time.OneMinute.Subtract(Time.OneSecond);
-            Assert.IsTrue(insightManager[Symbols.IBM].All(insight => insight.IsExpired(algorithm.UtcTime) && insight.Period == expectedPeriod));
-            Assert.AreEqual(1, insightManager[Symbols.SPY].Count(insight => insight.IsExpired(algorithm.UtcTime) && insight.Period == expectedPeriod));
-            Assert.AreEqual(1, insightManager[Symbols.SPY].Count(insight => insight.IsActive(algorithm.UtcTime)));
-            Assert.IsTrue(insightManager[Symbols.AAPL].All(insight => insight.IsActive(algorithm.UtcTime)));
+            Assert.IsTrue(
+                insightManager[Symbols.IBM]
+                    .All(insight =>
+                        insight.IsExpired(algorithm.UtcTime) && insight.Period == expectedPeriod
+                    )
+            );
+            Assert.AreEqual(
+                1,
+                insightManager[Symbols.SPY]
+                    .Count(insight =>
+                        insight.IsExpired(algorithm.UtcTime) && insight.Period == expectedPeriod
+                    )
+            );
+            Assert.AreEqual(
+                1,
+                insightManager[Symbols.SPY].Count(insight => insight.IsActive(algorithm.UtcTime))
+            );
+            Assert.IsTrue(
+                insightManager[Symbols.AAPL].All(insight => insight.IsActive(algorithm.UtcTime))
+            );
         }
 
         private static Insight[] GetInsights()
         {
-            return new[] {
-                new Insight(Symbols.AAPL, new TimeSpan(1, 0, 0, 0), InsightType.Price, InsightDirection.Up)
+            return new[]
+            {
+                new Insight(
+                    Symbols.AAPL,
+                    new TimeSpan(1, 0, 0, 0),
+                    InsightType.Price,
+                    InsightDirection.Up
+                )
                 {
                     GeneratedTimeUtc = _utcNow,
                     CloseTimeUtc = _utcNow.AddDays(1),
                 },
-                new Insight(Symbols.SPY, new TimeSpan(2, 0, 0, 0), InsightType.Volatility, InsightDirection.Up)
+                new Insight(
+                    Symbols.SPY,
+                    new TimeSpan(2, 0, 0, 0),
+                    InsightType.Volatility,
+                    InsightDirection.Up
+                )
                 {
                     GeneratedTimeUtc = _utcNow,
                     CloseTimeUtc = _utcNow.AddDays(2),
                 },
-                new Insight(Symbols.SPY, new TimeSpan(3, 0, 0, 0), InsightType.Volatility, InsightDirection.Up)
+                new Insight(
+                    Symbols.SPY,
+                    new TimeSpan(3, 0, 0, 0),
+                    InsightType.Volatility,
+                    InsightDirection.Up
+                )
                 {
                     GeneratedTimeUtc = _utcNow,
                     CloseTimeUtc = _utcNow.AddDays(3),
                 },
-                new Insight(Symbols.IBM, new TimeSpan(4, 0, 0, 0), InsightType.Volatility, InsightDirection.Up)
+                new Insight(
+                    Symbols.IBM,
+                    new TimeSpan(4, 0, 0, 0),
+                    InsightType.Volatility,
+                    InsightDirection.Up
+                )
                 {
                     GeneratedTimeUtc = _utcNow,
                     CloseTimeUtc = _utcNow.AddDays(4),
-                } };
+                }
+            };
         }
     }
 }

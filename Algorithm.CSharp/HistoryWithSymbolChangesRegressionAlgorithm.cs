@@ -23,7 +23,9 @@ namespace QuantConnect.Algorithm.CSharp
     /// <summary>
     /// This algorithm is a test case for a history request including symbol changes during the requested period.
     /// </summary>
-    public class HistoryWithSymbolChangesRegressionAlgorithm : QCAlgorithm, IRegressionAlgorithmDefinition
+    public class HistoryWithSymbolChangesRegressionAlgorithm
+        : QCAlgorithm,
+            IRegressionAlgorithmDefinition
     {
         /// <summary>
         /// Initialise the data and resolution required, as well as the cash and start-end dates for your algorithm. All algorithms must initialized.
@@ -36,19 +38,26 @@ namespace QuantConnect.Algorithm.CSharp
 
             var symbol = AddEquity("WM", Resolution.Daily).Symbol;
 
-            var history = History(new [] {symbol}, TimeSpan.FromDays(5700), Resolution.Daily).ToList();
+            var history = History(new[] { symbol }, TimeSpan.FromDays(5700), Resolution.Daily)
+                .ToList();
             Debug($"{Time} - history.Count: {history.Count}");
 
             const int expectedSliceCount = 3926;
             if (history.Count != expectedSliceCount)
             {
-                throw new RegressionTestException($"History slices - expected: {expectedSliceCount}, actual: {history.Count}");
+                throw new RegressionTestException(
+                    $"History slices - expected: {expectedSliceCount}, actual: {history.Count}"
+                );
             }
 
-            var totalBars = history.Count(slice => slice.Bars.Count > 0 && slice.Bars.ContainsKey(symbol));
+            var totalBars = history.Count(slice =>
+                slice.Bars.Count > 0 && slice.Bars.ContainsKey(symbol)
+            );
             if (totalBars != expectedSliceCount)
             {
-                throw new RegressionTestException($"History bars - expected: {expectedSliceCount}, actual: {totalBars}");
+                throw new RegressionTestException(
+                    $"History bars - expected: {expectedSliceCount}, actual: {totalBars}"
+                );
             }
 
             var firstBar = history.First().Bars.GetValue(symbol);
@@ -86,35 +95,36 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// This is used by the regression test system to indicate what the expected statistics are from running the algorithm
         /// </summary>
-        public Dictionary<string, string> ExpectedStatistics => new Dictionary<string, string>
-        {
-            {"Total Orders", "0"},
-            {"Average Win", "0%"},
-            {"Average Loss", "0%"},
-            {"Compounding Annual Return", "0%"},
-            {"Drawdown", "0%"},
-            {"Expectancy", "0"},
-            {"Start Equity", "100000"},
-            {"End Equity", "100000"},
-            {"Net Profit", "0%"},
-            {"Sharpe Ratio", "0"},
-            {"Sortino Ratio", "0"},
-            {"Probabilistic Sharpe Ratio", "0%"},
-            {"Loss Rate", "0%"},
-            {"Win Rate", "0%"},
-            {"Profit-Loss Ratio", "0"},
-            {"Alpha", "0"},
-            {"Beta", "0"},
-            {"Annual Standard Deviation", "0"},
-            {"Annual Variance", "0"},
-            {"Information Ratio", "-8.91"},
-            {"Tracking Error", "0.223"},
-            {"Treynor Ratio", "0"},
-            {"Total Fees", "$0.00"},
-            {"Estimated Strategy Capacity", "$0"},
-            {"Lowest Capacity Asset", ""},
-            {"Portfolio Turnover", "0%"},
-            {"OrderListHash", "d41d8cd98f00b204e9800998ecf8427e"}
-        };
+        public Dictionary<string, string> ExpectedStatistics =>
+            new Dictionary<string, string>
+            {
+                { "Total Orders", "0" },
+                { "Average Win", "0%" },
+                { "Average Loss", "0%" },
+                { "Compounding Annual Return", "0%" },
+                { "Drawdown", "0%" },
+                { "Expectancy", "0" },
+                { "Start Equity", "100000" },
+                { "End Equity", "100000" },
+                { "Net Profit", "0%" },
+                { "Sharpe Ratio", "0" },
+                { "Sortino Ratio", "0" },
+                { "Probabilistic Sharpe Ratio", "0%" },
+                { "Loss Rate", "0%" },
+                { "Win Rate", "0%" },
+                { "Profit-Loss Ratio", "0" },
+                { "Alpha", "0" },
+                { "Beta", "0" },
+                { "Annual Standard Deviation", "0" },
+                { "Annual Variance", "0" },
+                { "Information Ratio", "-8.91" },
+                { "Tracking Error", "0.223" },
+                { "Treynor Ratio", "0" },
+                { "Total Fees", "$0.00" },
+                { "Estimated Strategy Capacity", "$0" },
+                { "Lowest Capacity Asset", "" },
+                { "Portfolio Turnover", "0%" },
+                { "OrderListHash", "d41d8cd98f00b204e9800998ecf8427e" }
+            };
     }
 }

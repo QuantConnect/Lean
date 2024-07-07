@@ -32,12 +32,17 @@ namespace QuantConnect.Optimizer.Strategies
         {
             if (!Initialized)
             {
-                throw new InvalidOperationException($"GridSearchOptimizationStrategy.PushNewResults: strategy has not been initialized yet.");
+                throw new InvalidOperationException(
+                    $"GridSearchOptimizationStrategy.PushNewResults: strategy has not been initialized yet."
+                );
             }
 
             lock (_locker)
             {
-                if (!ReferenceEquals(result, OptimizationResult.Initial) && string.IsNullOrEmpty(result?.JsonBacktestResult))
+                if (
+                    !ReferenceEquals(result, OptimizationResult.Initial)
+                    && string.IsNullOrEmpty(result?.JsonBacktestResult)
+                )
                 {
                     // one of the requested backtests failed
                     return;

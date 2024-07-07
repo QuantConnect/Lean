@@ -13,9 +13,9 @@
  * limitations under the License.
 */
 
+using System;
 using NUnit.Framework;
 using QuantConnect.Indicators;
-using System;
 
 namespace QuantConnect.Tests.Indicators
 {
@@ -33,7 +33,7 @@ namespace QuantConnect.Tests.Indicators
 
         protected override Action<IndicatorBase<IndicatorDataPoint>, double> Assertion =>
             (indicator, expected) =>
-                Assert.AreEqual(expected, (double) indicator.Current.Value * 100, 1e-3);
+                Assert.AreEqual(expected, (double)indicator.Current.Value * 100, 1e-3);
 
         /// <summary>
         /// Test for issue #5491

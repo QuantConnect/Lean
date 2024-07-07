@@ -42,6 +42,10 @@ namespace QuantConnect.Interfaces
         /// <param name="subscriptionRequest">The data subscription configuration to assert</param>
         /// <param name="startTimeLocal">The start time of this request</param>
         /// <param name="endTimeLocal">The end time of this request</param>
-        void AssertConfiguration(SubscriptionDataConfig subscriptionRequest, DateTime startTimeLocal, DateTime endTimeLocal);
+        void AssertConfiguration(
+            SubscriptionDataConfig subscriptionRequest,
+            DateTime startTimeLocal,
+            DateTime endTimeLocal
+        );
     }
 }

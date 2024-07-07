@@ -37,13 +37,20 @@ namespace QuantConnect.Optimizer.Strategies
         /// <param name="constraints">The optimization constraints to apply on backtest results</param>
         /// <param name="parameters">Optimization parameters</param>
         /// <param name="settings">Optimization strategy settings</param>
-        public override void Initialize(Target target, IReadOnlyList<Constraint> constraints, HashSet<OptimizationParameter> parameters, OptimizationStrategySettings settings)
+        public override void Initialize(
+            Target target,
+            IReadOnlyList<Constraint> constraints,
+            HashSet<OptimizationParameter> parameters,
+            OptimizationStrategySettings settings
+        )
         {
             var stepSettings = settings as StepBaseOptimizationStrategySettings;
             if (stepSettings == null)
             {
-                throw new ArgumentNullException(nameof(settings),
-                    "EulerSearchOptimizationStrategy.Initialize: Optimizations Strategy settings are required for this strategy");
+                throw new ArgumentNullException(
+                    nameof(settings),
+                    "EulerSearchOptimizationStrategy.Initialize: Optimizations Strategy settings are required for this strategy"
+                );
             }
 
             if (stepSettings.DefaultSegmentAmount != 0)
@@ -62,12 +69,17 @@ namespace QuantConnect.Optimizer.Strategies
         {
             if (!Initialized)
             {
-                throw new InvalidOperationException($"EulerSearchOptimizationStrategy.PushNewResults: strategy has not been initialized yet.");
+                throw new InvalidOperationException(
+                    $"EulerSearchOptimizationStrategy.PushNewResults: strategy has not been initialized yet."
+                );
             }
 
             lock (_locker)
             {
-                if (!ReferenceEquals(result, OptimizationResult.Initial) && string.IsNullOrEmpty(result?.JsonBacktestResult))
+                if (
+                    !ReferenceEquals(result, OptimizationResult.Initial)
+                    && string.IsNullOrEmpty(result?.JsonBacktestResult)
+                )
                 {
                     // one of the requested backtests failed
                     _runningParameterSet.Remove(result.ParameterSet);
@@ -89,24 +101,47 @@ namespace QuantConnect.Optimizer.Strategies
 
                 // Once all running backtests have ended, for the current collection of optimization parameters, for each parameter we determine if
                 // we can create a new smaller/finer optimization scope
-                if (Target.Current.HasValue && OptimizationParameters.OfType<OptimizationStepParameter>().Any(s => s.Step > s.MinStep))
+                if (
+                    Target.Current.HasValue
+                    && OptimizationParameters
+                        .OfType<OptimizationStepParameter>()
+                        .Any(s => s.Step > s.MinStep)
+                )
                 {
                     var boundaries = new HashSet<OptimizationParameter>();
                     var parameterSet = Solution.ParameterSet;
                     foreach (var optimizationParameter in OptimizationParameters)
                     {
-                        var optimizationStepParameter = optimizationParameter as OptimizationStepParameter;
-                        if (optimizationStepParameter != null && optimizationStepParameter.Step > optimizationStepParameter.MinStep)
+                        var optimizationStepParameter =
+                            optimizationParameter as OptimizationStepParameter;
+                        if (
+                            optimizationStepParameter != null
+                            && optimizationStepParameter.Step > optimizationStepParameter.MinStep
+                        )
                         {
-                            var newStep = Math.Max(optimizationStepParameter.MinStep.Value, optimizationStepParameter.Step.Value / _segmentsAmount);
+                            var newStep = Math.Max(
+                                optimizationStepParameter.MinStep.Value,
+                                optimizationStepParameter.Step.Value / _segmentsAmount
+                            );
                             var fractal = newStep * ((decimal)_segmentsAmount / 2);
-                            var parameter = parameterSet.Value.First(s => s.Key == optimizationParameter.Name);
-                            boundaries.Add(new OptimizationStepParameter(
-                                optimizationParameter.Name,
-                                Math.Max(optimizationStepParameter.MinValue, parameter.Value.ToDecimal() - fractal),
-                                Math.Min(optimizationStepParameter.MaxValue, parameter.Value.ToDecimal() + fractal),
-                                newStep,
-                                optimizationStepParameter.MinStep.Value));
+                            var parameter = parameterSet.Value.First(s =>
+                                s.Key == optimizationParameter.Name
+                            );
+                            boundaries.Add(
+                                new OptimizationStepParameter(
+                                    optimizationParameter.Name,
+                                    Math.Max(
+                                        optimizationStepParameter.MinValue,
+                                        parameter.Value.ToDecimal() - fractal
+                                    ),
+                                    Math.Min(
+                                        optimizationStepParameter.MaxValue,
+                                        parameter.Value.ToDecimal() + fractal
+                                    ),
+                                    newStep,
+                                    optimizationStepParameter.MinStep.Value
+                                )
+                            );
                         }
                         else
                         {
@@ -114,7 +149,9 @@ namespace QuantConnect.Optimizer.Strategies
                         }
                     }
 
-                    foreach (var staticParam in OptimizationParameters.OfType<StaticOptimizationParameter>())
+                    foreach (
+                        var staticParam in OptimizationParameters.OfType<StaticOptimizationParameter>()
+                    )
                     {
                         boundaries.Add(staticParam);
                     }

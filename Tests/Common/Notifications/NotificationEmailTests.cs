@@ -57,22 +57,20 @@ namespace QuantConnect.Tests.Common.Notifications
         [TestCase("js#internal@proseware.com", true)]
         [TestCase("j.s@server1.proseware.com", true)]
         [TestCase("\"j\\\"s\\\"\"@proseware.com", true)]
-
         [TestCase("js*@proseware.com", false)]
         [TestCase("js@proseware..com", false)]
         [TestCase("j..s@proseware.com", false)]
         [TestCase("j.@server1.proseware.com", false)]
-        public void Constructor_ThrowsArgumentException_WhenEmailAddressIsInvalid(string address, bool isValid)
+        public void Constructor_ThrowsArgumentException_WhenEmailAddressIsInvalid(
+            string address,
+            bool isValid
+        )
         {
             // Test cases sourced via msdn:
             // https://docs.microsoft.com/en-us/dotnet/standard/base-types/how-to-verify-that-strings-are-in-valid-email-format
 
-            TestDelegate ctor = () => new NotificationEmail(
-                address,
-                string.Empty,
-                string.Empty,
-                string.Empty
-            );
+            TestDelegate ctor = () =>
+                new NotificationEmail(address, string.Empty, string.Empty, string.Empty);
 
             if (isValid)
             {

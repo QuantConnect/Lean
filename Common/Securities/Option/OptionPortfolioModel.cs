@@ -31,12 +31,20 @@ namespace QuantConnect.Securities.Option
         /// <param name="portfolio">The algorithm's portfolio</param>
         /// <param name="security">Option security</param>
         /// <param name="fill">The order event fill object to be applied</param>
-        public override void ProcessFill(SecurityPortfolioManager portfolio, Security security, OrderEvent fill)
+        public override void ProcessFill(
+            SecurityPortfolioManager portfolio,
+            Security security,
+            OrderEvent fill
+        )
         {
             var order = portfolio.Transactions.GetOrderById(fill.OrderId);
             if (order == null)
             {
-                Log.Error(Invariant($"OptionPortfolioModel.ProcessFill(): Unable to locate Order with id {fill.OrderId}"));
+                Log.Error(
+                    Invariant(
+                        $"OptionPortfolioModel.ProcessFill(): Unable to locate Order with id {fill.OrderId}"
+                    )
+                );
                 return;
             }
 
@@ -58,7 +66,12 @@ namespace QuantConnect.Securities.Option
         /// <param name="security">Option security</param>
         /// <param name="order">The order object to be applied</param>
         /// <param name="fill">The order event fill object to be applied</param>
-        public void ProcessExerciseFill(SecurityPortfolioManager portfolio, Security security, Order order, OrderEvent fill)
+        public void ProcessExerciseFill(
+            SecurityPortfolioManager portfolio,
+            Security security,
+            Order order,
+            OrderEvent fill
+        )
         {
             var exerciseOrder = (OptionExerciseOrder)order;
             var option = (Option)portfolio.Securities[exerciseOrder.Symbol];
@@ -78,10 +91,21 @@ namespace QuantConnect.Securities.Option
 
                 case SettlementType.Cash:
 
-                    var cashQuantity = -option.GetIntrinsicValue(underlying.Close) * option.ContractUnitOfTrade * optionQuantity;
+                    var cashQuantity =
+                        -option.GetIntrinsicValue(underlying.Close)
+                        * option.ContractUnitOfTrade
+                        * optionQuantity;
 
                     // we add cash equivalent to portfolio
-                    option.SettlementModel.ApplyFunds(new ApplyFundsSettlementModelParameters(portfolio, option, fill.UtcTime, new CashAmount(cashQuantity, cashQuote.Symbol), fill));
+                    option.SettlementModel.ApplyFunds(
+                        new ApplyFundsSettlementModelParameters(
+                            portfolio,
+                            option,
+                            fill.UtcTime,
+                            new CashAmount(cashQuantity, cashQuote.Symbol),
+                            fill
+                        )
+                    );
 
                     base.ProcessFill(portfolio, processSecurity, fill);
                     break;

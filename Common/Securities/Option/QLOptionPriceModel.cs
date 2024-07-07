@@ -14,13 +14,13 @@
  *
 */
 
-using QLNet;
 using System;
-using System.Linq;
-using QuantConnect.Data;
-using QuantConnect.Logging;
-using QuantConnect.Data.Market;
 using System.Collections.Generic;
+using System.Linq;
+using QLNet;
+using QuantConnect.Data;
+using QuantConnect.Data.Market;
+using QuantConnect.Logging;
 
 namespace QuantConnect.Securities.Option
 {
@@ -32,10 +32,17 @@ namespace QuantConnect.Securities.Option
     /// </summary>
     public class QLOptionPriceModel : IOptionPriceModel
     {
-        private static readonly OptionStyle[] _defaultAllowedOptionStyles = { OptionStyle.European, OptionStyle.American };
-        private static readonly IQLUnderlyingVolatilityEstimator _defaultUnderlyingVolEstimator = new ConstantQLUnderlyingVolatilityEstimator();
-        private static readonly IQLRiskFreeRateEstimator _defaultRiskFreeRateEstimator = new FedRateQLRiskFreeRateEstimator();
-        private static readonly IQLDividendYieldEstimator _defaultDividendYieldEstimator = new ConstantQLDividendYieldEstimator();
+        private static readonly OptionStyle[] _defaultAllowedOptionStyles =
+        {
+            OptionStyle.European,
+            OptionStyle.American
+        };
+        private static readonly IQLUnderlyingVolatilityEstimator _defaultUnderlyingVolEstimator =
+            new ConstantQLUnderlyingVolatilityEstimator();
+        private static readonly IQLRiskFreeRateEstimator _defaultRiskFreeRateEstimator =
+            new FedRateQLRiskFreeRateEstimator();
+        private static readonly IQLDividendYieldEstimator _defaultDividendYieldEstimator =
+            new ConstantQLDividendYieldEstimator();
 
         private readonly IQLUnderlyingVolatilityEstimator _underlyingVolEstimator;
         private readonly IQLDividendYieldEstimator _dividendYieldEstimator;
@@ -67,13 +74,21 @@ namespace QuantConnect.Securities.Option
         /// <param name="riskFreeRateEstimator">The risk free rate estimator</param>
         /// <param name="dividendYieldEstimator">The underlying dividend yield estimator</param>
         /// <param name="allowedOptionStyles">List of option styles supported by the pricing model. It defaults to both American and European option styles</param>
-        public QLOptionPriceModel(PricingEngineFunc pricingEngineFunc, 
-                                  IQLUnderlyingVolatilityEstimator underlyingVolEstimator = null, 
-                                  IQLRiskFreeRateEstimator riskFreeRateEstimator = null, 
-                                  IQLDividendYieldEstimator dividendYieldEstimator = null, 
-                                  OptionStyle[] allowedOptionStyles = null)
-            : this((option, process) => pricingEngineFunc(process), underlyingVolEstimator, riskFreeRateEstimator, dividendYieldEstimator, allowedOptionStyles)
-        {}
+        public QLOptionPriceModel(
+            PricingEngineFunc pricingEngineFunc,
+            IQLUnderlyingVolatilityEstimator underlyingVolEstimator = null,
+            IQLRiskFreeRateEstimator riskFreeRateEstimator = null,
+            IQLDividendYieldEstimator dividendYieldEstimator = null,
+            OptionStyle[] allowedOptionStyles = null
+        )
+            : this(
+                (option, process) => pricingEngineFunc(process),
+                underlyingVolEstimator,
+                riskFreeRateEstimator,
+                dividendYieldEstimator,
+                allowedOptionStyles
+            ) { }
+
         /// <summary>
         /// Method constructs QuantLib option price model with necessary estimators of underlying volatility, risk free rate, and underlying dividend yield
         /// </summary>
@@ -82,11 +97,13 @@ namespace QuantConnect.Securities.Option
         /// <param name="riskFreeRateEstimator">The risk free rate estimator</param>
         /// <param name="dividendYieldEstimator">The underlying dividend yield estimator</param>
         /// <param name="allowedOptionStyles">List of option styles supported by the pricing model. It defaults to both American and European option styles</param>
-        public QLOptionPriceModel(PricingEngineFuncEx pricingEngineFunc, 
-                                  IQLUnderlyingVolatilityEstimator underlyingVolEstimator = null, 
-                                  IQLRiskFreeRateEstimator riskFreeRateEstimator = null, 
-                                  IQLDividendYieldEstimator dividendYieldEstimator = null, 
-                                  OptionStyle[] allowedOptionStyles = null)
+        public QLOptionPriceModel(
+            PricingEngineFuncEx pricingEngineFunc,
+            IQLUnderlyingVolatilityEstimator underlyingVolEstimator = null,
+            IQLRiskFreeRateEstimator riskFreeRateEstimator = null,
+            IQLDividendYieldEstimator dividendYieldEstimator = null,
+            OptionStyle[] allowedOptionStyles = null
+        )
         {
             _pricingEngineFunc = pricingEngineFunc;
             _underlyingVolEstimator = underlyingVolEstimator ?? _defaultUnderlyingVolEstimator;
@@ -105,11 +122,17 @@ namespace QuantConnect.Securities.Option
         /// <param name="contract">The option contract to evaluate</param>
         /// <returns>An instance of <see cref="OptionPriceModelResult"/> containing the theoretical
         /// price of the specified option contract</returns>
-        public OptionPriceModelResult Evaluate(Security security, Slice slice, OptionContract contract)
+        public OptionPriceModelResult Evaluate(
+            Security security,
+            Slice slice,
+            OptionContract contract
+        )
         {
             if (!AllowedOptionStyles.Contains(contract.Symbol.ID.OptionStyle))
             {
-               throw new ArgumentException($"{contract.Symbol.ID.OptionStyle} style options are not supported by option price model '{this.GetType().Name}'");
+                throw new ArgumentException(
+                    $"{contract.Symbol.ID.OptionStyle} style options are not supported by option price model '{this.GetType().Name}'"
+                );
             }
 
             try
@@ -119,14 +142,20 @@ namespace QuantConnect.Securities.Option
                 {
                     if (Log.DebuggingEnabled)
                     {
-                        Log.Debug($"QLOptionPriceModel.Evaluate(). Expired {contract.Symbol}. Time > Expiry: {contract.Time.Date} > {contract.Expiry.Date}");
+                        Log.Debug(
+                            $"QLOptionPriceModel.Evaluate(). Expired {contract.Symbol}. Time > Expiry: {contract.Time.Date} > {contract.Expiry.Date}"
+                        );
                     }
                     return OptionPriceModelResult.None;
                 }
 
                 var dayCounter = new Actual365Fixed();
                 var securityExchangeHours = security.Exchange.Hours;
-                var maturityDate = AddDays(contract.Expiry.Date, Option.DefaultSettlementDays, securityExchangeHours);
+                var maturityDate = AddDays(
+                    contract.Expiry.Date,
+                    Option.DefaultSettlementDays,
+                    securityExchangeHours
+                );
 
                 // Get time until maturity (in year)
                 var maturity = dayCounter.yearFraction(contract.Time.Date, maturityDate);
@@ -134,7 +163,9 @@ namespace QuantConnect.Securities.Option
                 {
                     if (Log.DebuggingEnabled)
                     {
-                        Log.Debug($"QLOptionPriceModel.Evaluate(). negative time ({maturity}) given for {contract.Symbol}. Time: {contract.Time.Date}. Maturity {maturityDate}");
+                        Log.Debug(
+                            $"QLOptionPriceModel.Evaluate(). negative time ({maturity}) given for {contract.Symbol}. Time: {contract.Time.Date}. Maturity {maturityDate}"
+                        );
                     }
                     return OptionPriceModelResult.None;
                 }
@@ -148,21 +179,35 @@ namespace QuantConnect.Securities.Option
                 {
                     if (Log.DebuggingEnabled)
                     {
-                        Log.Debug($"QLOptionPriceModel.Evaluate(). Non-positive prices for {contract.Symbol}. Premium: {premium}. Underlying price {spot}");
+                        Log.Debug(
+                            $"QLOptionPriceModel.Evaluate(). Non-positive prices for {contract.Symbol}. Premium: {premium}. Underlying price {spot}"
+                        );
                     }
 
                     return OptionPriceModelResult.None;
                 }
 
                 var calendar = new UnitedStates();
-                var settlementDate = AddDays(contract.Time.Date, Option.DefaultSettlementDays, securityExchangeHours);
+                var settlementDate = AddDays(
+                    contract.Time.Date,
+                    Option.DefaultSettlementDays,
+                    securityExchangeHours
+                );
                 var underlyingQuoteValue = new SimpleQuote(spot);
 
-                var dividendYieldValue = new SimpleQuote(_dividendYieldEstimator.Estimate(security, slice, contract));
-                var dividendYield = new Handle<YieldTermStructure>(new FlatForward(0, calendar, dividendYieldValue, dayCounter));
+                var dividendYieldValue = new SimpleQuote(
+                    _dividendYieldEstimator.Estimate(security, slice, contract)
+                );
+                var dividendYield = new Handle<YieldTermStructure>(
+                    new FlatForward(0, calendar, dividendYieldValue, dayCounter)
+                );
 
-                var riskFreeRateValue = new SimpleQuote((double)_riskFreeRateEstimator.Estimate(security, slice, contract));
-                var riskFreeRate = new Handle<YieldTermStructure>(new FlatForward(0, calendar, riskFreeRateValue, dayCounter));
+                var riskFreeRateValue = new SimpleQuote(
+                    (double)_riskFreeRateEstimator.Estimate(security, slice, contract)
+                );
+                var riskFreeRate = new Handle<YieldTermStructure>(
+                    new FlatForward(0, calendar, riskFreeRateValue, dayCounter)
+                );
 
                 // Get discount factor by dividend and risk free rate using the maturity
                 var dividendDiscount = dividendYield.link.discount(maturity);
@@ -172,8 +217,12 @@ namespace QuantConnect.Securities.Option
                 // Initial guess for volatility by Brenner and Subrahmanyam (1988)
                 var initialGuess = Math.Sqrt(2 * Math.PI / maturity) * premium / spot;
 
-                var underlyingVolEstimate = _underlyingVolEstimator.Estimate(security, slice, contract);
-                
+                var underlyingVolEstimate = _underlyingVolEstimator.Estimate(
+                    security,
+                    slice,
+                    contract
+                );
+
                 // If the volatility estimator is not ready, we will use initial guess
                 if (!_underlyingVolEstimator.IsReady)
                 {
@@ -181,16 +230,37 @@ namespace QuantConnect.Securities.Option
                 }
 
                 var underlyingVolValue = new SimpleQuote(underlyingVolEstimate);
-                var underlyingVol = new Handle<BlackVolTermStructure>(new BlackConstantVol(0, calendar, new Handle<Quote>(underlyingVolValue), dayCounter));
+                var underlyingVol = new Handle<BlackVolTermStructure>(
+                    new BlackConstantVol(
+                        0,
+                        calendar,
+                        new Handle<Quote>(underlyingVolValue),
+                        dayCounter
+                    )
+                );
 
                 // preparing stochastic process and payoff functions
-                var stochasticProcess = new BlackScholesMertonProcess(new Handle<Quote>(underlyingQuoteValue), dividendYield, riskFreeRate, underlyingVol);
-                var payoff = new PlainVanillaPayoff(contract.Right == OptionRight.Call ? QLNet.Option.Type.Call : QLNet.Option.Type.Put, (double)contract.Strike);
+                var stochasticProcess = new BlackScholesMertonProcess(
+                    new Handle<Quote>(underlyingQuoteValue),
+                    dividendYield,
+                    riskFreeRate,
+                    underlyingVol
+                );
+                var payoff = new PlainVanillaPayoff(
+                    contract.Right == OptionRight.Call
+                        ? QLNet.Option.Type.Call
+                        : QLNet.Option.Type.Put,
+                    (double)contract.Strike
+                );
 
                 // creating option QL object
-                var option = contract.Symbol.ID.OptionStyle == OptionStyle.American ?
-                            new VanillaOption(payoff, new AmericanExercise(settlementDate, maturityDate)) :
-                            new VanillaOption(payoff, new EuropeanExercise(maturityDate));
+                var option =
+                    contract.Symbol.ID.OptionStyle == OptionStyle.American
+                        ? new VanillaOption(
+                            payoff,
+                            new AmericanExercise(settlementDate, maturityDate)
+                        )
+                        : new VanillaOption(payoff, new EuropeanExercise(maturityDate));
 
                 // preparing pricing engine QL object
                 option.setPricingEngine(_pricingEngineFunc(contract.Symbol, stochasticProcess));
@@ -198,7 +268,7 @@ namespace QuantConnect.Securities.Option
                 // Setting the evaluation date before running the calculations
                 var evaluationDate = contract.Time.Date;
                 SetEvaluationDate(evaluationDate);
-                
+
                 // running calculations
                 var npv = EvaluateOption(option);
 
@@ -214,23 +284,36 @@ namespace QuantConnect.Securities.Option
                 catch (Exception e)
                 {
                     // A Newton-Raphson optimization estimate of the implied volatility
-                    impliedVol = ImpliedVolatilityEstimation(premium, initialGuess, maturity, riskFreeDiscount, forwardPrice, payoff, out blackCalculator);
+                    impliedVol = ImpliedVolatilityEstimation(
+                        premium,
+                        initialGuess,
+                        maturity,
+                        riskFreeDiscount,
+                        forwardPrice,
+                        payoff,
+                        out blackCalculator
+                    );
                     if (Log.DebuggingEnabled)
                     {
                         var referenceDate = underlyingVol.link.referenceDate();
-                        Log.Debug($"QLOptionPriceModel.Evaluate(). Cannot calculate Implied Volatility for {contract.Symbol}. Implied volatility from Newton-Raphson optimization: {impliedVol}. Premium: {premium}. Underlying price: {spot}. Initial guess volatility: {initialGuess}. Maturity: {maturity}. Risk Free: {riskFreeDiscount}. Forward price: {forwardPrice}. Data time: {evaluationDate}. Reference date: {referenceDate}. {e.Message} {e.StackTrace}");
+                        Log.Debug(
+                            $"QLOptionPriceModel.Evaluate(). Cannot calculate Implied Volatility for {contract.Symbol}. Implied volatility from Newton-Raphson optimization: {impliedVol}. Premium: {premium}. Underlying price: {spot}. Initial guess volatility: {initialGuess}. Maturity: {maturity}. Risk Free: {riskFreeDiscount}. Forward price: {forwardPrice}. Data time: {evaluationDate}. Reference date: {referenceDate}. {e.Message} {e.StackTrace}"
+                        );
                     }
                 }
 
                 // Update the Black Vol Term Structure with the Implied Volatility to improve Greek calculation
-                // We assume that the underlying volatility model does not yield a good estimate and 
+                // We assume that the underlying volatility model does not yield a good estimate and
                 // other sources, e.g. Interactive Brokers, use the implied volatility to calculate the Greeks
                 // After this operation, the Theoretical Price (NPV) will match the Premium, so we do not re-evalute
-                // it and let users compare NPV and the Premium if they wish. 
+                // it and let users compare NPV and the Premium if they wish.
                 underlyingVolValue.setValue(impliedVol);
 
                 // function extracts QL greeks catching exception if greek is not generated by the pricing engine and reevaluates option to get numerical estimate of the seisitivity
-                decimal tryGetGreekOrReevaluate(Func<double> greek, Func<BlackCalculator, double> black)
+                decimal tryGetGreekOrReevaluate(
+                    Func<double> greek,
+                    Func<BlackCalculator, double> black
+                )
                 {
                     double result;
                     var isApproximation = false;
@@ -255,8 +338,16 @@ namespace QuantConnect.Securities.Option
                             // Define Black Calculator to calculate Greeks that are not defined by the option object
                             // Some models do not evaluate all greeks under some circumstances (e.g. low dividend yield)
                             // We override this restriction to calculate the Greeks directly with the BlackCalculator
-                            var vol = underlyingVol.link.blackVol(maturityDate, (double)contract.Strike);
-                            blackCalculator = CreateBlackCalculator(forwardPrice, riskFreeDiscount, vol, payoff);
+                            var vol = underlyingVol.link.blackVol(
+                                maturityDate,
+                                (double)contract.Strike
+                            );
+                            blackCalculator = CreateBlackCalculator(
+                                forwardPrice,
+                                riskFreeDiscount,
+                                vol,
+                                payoff
+                            );
                         }
 
                         isApproximation = true;
@@ -268,7 +359,9 @@ namespace QuantConnect.Securities.Option
                         if (Log.DebuggingEnabled)
                         {
                             var referenceDate = underlyingVol.link.referenceDate();
-                            Log.Debug($"QLOptionPriceModel.Evaluate(). NaN or Infinity greek for {contract.Symbol}. Premium: {premium}. Underlying price: {spot}. Initial guess volatility: {initialGuess}. Maturity: {maturity}. Risk Free: {riskFreeDiscount}. Forward price: {forwardPrice}. Implied Volatility: {impliedVol}. Is Approximation? {isApproximation}. Data time: {evaluationDate}. Reference date: {referenceDate}. {exception?.Message} {exception?.StackTrace}");
+                            Log.Debug(
+                                $"QLOptionPriceModel.Evaluate(). NaN or Infinity greek for {contract.Symbol}. Premium: {premium}. Underlying price: {spot}. Initial guess volatility: {initialGuess}. Maturity: {maturity}. Risk Free: {riskFreeDiscount}. Forward price: {forwardPrice}. Implied Volatility: {impliedVol}. Is Approximation? {isApproximation}. Data time: {evaluationDate}. Reference date: {referenceDate}. {exception?.Message} {exception?.StackTrace}"
+                            );
                         }
 
                         return 0m;
@@ -279,7 +372,9 @@ namespace QuantConnect.Securities.Option
                     if (value == decimal.Zero && Log.DebuggingEnabled)
                     {
                         var referenceDate = underlyingVol.link.referenceDate();
-                        Log.Debug($"QLOptionPriceModel.Evaluate(). Zero-value greek for {contract.Symbol}. Premium: {premium}. Underlying price: {spot}. Initial guess volatility: {initialGuess}. Maturity: {maturity}. Risk Free: {riskFreeDiscount}. Forward price: {forwardPrice}. Implied Volatility: {impliedVol}. Is Approximation? {isApproximation}. Data time: {evaluationDate}. Reference date: {referenceDate}. {exception?.Message} {exception?.StackTrace}");
+                        Log.Debug(
+                            $"QLOptionPriceModel.Evaluate(). Zero-value greek for {contract.Symbol}. Premium: {premium}. Underlying price: {spot}. Initial guess volatility: {initialGuess}. Maturity: {maturity}. Risk Free: {riskFreeDiscount}. Forward price: {forwardPrice}. Implied Volatility: {impliedVol}. Is Approximation? {isApproximation}. Data time: {evaluationDate}. Reference date: {referenceDate}. {exception?.Message} {exception?.StackTrace}"
+                        );
                         return value;
                     }
 
@@ -287,18 +382,49 @@ namespace QuantConnect.Securities.Option
                 }
 
                 // producing output with lazy calculations of greeks
-                return new OptionPriceModelResult(npv,  // EvaluateOption ensure it is not NaN or Infinity
-                            () => impliedVol.IsNaNOrInfinity() ? 0m : impliedVol.SafeDecimalCast(),
-                            () => new Greeks(() => tryGetGreekOrReevaluate(() => option.delta(), (black) => black.delta(spot)),
-                                            () => tryGetGreekOrReevaluate(() => option.gamma(), (black) => black.gamma(spot)),
-                                            () => tryGetGreekOrReevaluate(() => option.vega(), (black) => black.vega(maturity)) / 100,   // per cent
-                                            () => tryGetGreekOrReevaluate(() => option.theta(), (black) => black.theta(spot, maturity)),
-                                            () => tryGetGreekOrReevaluate(() => option.rho(), (black) => black.rho(maturity)) / 100,        // per cent
-                                            () => tryGetGreekOrReevaluate(() => option.elasticity(), (black) => black.elasticity(spot))));
+                return new OptionPriceModelResult(
+                    npv, // EvaluateOption ensure it is not NaN or Infinity
+                    () => impliedVol.IsNaNOrInfinity() ? 0m : impliedVol.SafeDecimalCast(),
+                    () =>
+                        new Greeks(
+                            () =>
+                                tryGetGreekOrReevaluate(
+                                    () => option.delta(),
+                                    (black) => black.delta(spot)
+                                ),
+                            () =>
+                                tryGetGreekOrReevaluate(
+                                    () => option.gamma(),
+                                    (black) => black.gamma(spot)
+                                ),
+                            () =>
+                                tryGetGreekOrReevaluate(
+                                    () => option.vega(),
+                                    (black) => black.vega(maturity)
+                                ) / 100, // per cent
+                            () =>
+                                tryGetGreekOrReevaluate(
+                                    () => option.theta(),
+                                    (black) => black.theta(spot, maturity)
+                                ),
+                            () =>
+                                tryGetGreekOrReevaluate(
+                                    () => option.rho(),
+                                    (black) => black.rho(maturity)
+                                ) / 100, // per cent
+                            () =>
+                                tryGetGreekOrReevaluate(
+                                    () => option.elasticity(),
+                                    (black) => black.elasticity(spot)
+                                )
+                        )
+                );
             }
             catch (Exception err)
             {
-                Log.Debug($"QLOptionPriceModel.Evaluate() error: {err.Message} {(Log.DebuggingEnabled ? err.StackTrace : string.Empty)} for {contract.Symbol}");
+                Log.Debug(
+                    $"QLOptionPriceModel.Evaluate() error: {err.Message} {(Log.DebuggingEnabled ? err.StackTrace : string.Empty)} for {contract.Symbol}"
+                );
                 return OptionPriceModelResult.None;
             }
         }
@@ -314,8 +440,7 @@ namespace QuantConnect.Securities.Option
             {
                 var npv = option.NPV();
 
-                if (double.IsNaN(npv) ||
-                    double.IsInfinity(npv))
+                if (double.IsNaN(npv) || double.IsInfinity(npv))
                     return 0;
 
                 // can return negative value in neighborhood of 0
@@ -343,8 +468,15 @@ namespace QuantConnect.Securities.Option
         /// <param name="payoff">payoff structure of the option contract</param>
         /// <param name="black">black calculator instance</param>
         /// <returns>implied volatility estimation</returns>
-        protected double ImpliedVolatilityEstimation(double price, double initialGuess, double timeTillExpiry, double riskFreeDiscount, 
-                                                     double forwardPrice, PlainVanillaPayoff payoff, out BlackCalculator black)
+        protected double ImpliedVolatilityEstimation(
+            double price,
+            double initialGuess,
+            double timeTillExpiry,
+            double riskFreeDiscount,
+            double forwardPrice,
+            PlainVanillaPayoff payoff,
+            out BlackCalculator black
+        )
         {
             // Set up the optimizer
             const double tolerance = 1e-3d;
@@ -360,9 +492,14 @@ namespace QuantConnect.Securities.Option
             while (error > tolerance && iterRemain > 0)
             {
                 var oldImpliedVol = impliedVolEstimate;
-                
+
                 // Set up calculator by previous IV estimate to get new theoretical price, vega and IV
-                black = CreateBlackCalculator(forwardPrice, riskFreeDiscount, oldImpliedVol, payoff);
+                black = CreateBlackCalculator(
+                    forwardPrice,
+                    riskFreeDiscount,
+                    oldImpliedVol,
+                    payoff
+                );
                 impliedVolEstimate -= (black.value() - price) / black.vega(timeTillExpiry);
 
                 if (impliedVolEstimate < lowerBound)
@@ -382,7 +519,9 @@ namespace QuantConnect.Securities.Option
             {
                 if (Log.DebuggingEnabled)
                 {
-                    Log.Debug("QLOptionPriceModel.ImpliedVolatilityEstimation() error: Implied Volatility approxiation did not converge, returning 0.");
+                    Log.Debug(
+                        "QLOptionPriceModel.ImpliedVolatilityEstimation() error: Implied Volatility approxiation did not converge, returning 0."
+                    );
                 }
                 return 0d;
             }
@@ -395,7 +534,12 @@ namespace QuantConnect.Securities.Option
         /// Some models do not evaluate all greeks under some circumstances (e.g. low dividend yield)
         /// We override this restriction to calculate the Greeks directly with the BlackCalculator
         /// </summary>
-        private BlackCalculator CreateBlackCalculator(double forwardPrice, double riskFreeDiscount, double stdDev, PlainVanillaPayoff payoff)
+        private BlackCalculator CreateBlackCalculator(
+            double forwardPrice,
+            double riskFreeDiscount,
+            double stdDev,
+            PlainVanillaPayoff payoff
+        )
         {
             return new BlackCalculator(payoff, forwardPrice, stdDev, riskFreeDiscount);
         }

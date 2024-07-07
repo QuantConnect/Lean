@@ -28,7 +28,9 @@ namespace QuantConnect.Algorithm.CSharp
     /// margin calls being triggered when the market is about to close, GH issue 4064.
     /// Brother too <see cref="NoMarginCallExpectedRegressionAlgorithm"/>
     /// </summary>
-    public class MarginCallClosedMarketRegressionAlgorithm : QCAlgorithm, IRegressionAlgorithmDefinition
+    public class MarginCallClosedMarketRegressionAlgorithm
+        : QCAlgorithm,
+            IRegressionAlgorithmDefinition
     {
         private int _marginCall;
         private Symbol _spy;
@@ -48,7 +50,10 @@ namespace QuantConnect.Algorithm.CSharp
 
             _closedMarketLeverage = 2;
             _openMarketLeverage = 5;
-            security.BuyingPowerModel = new PatternDayTradingMarginModel(_closedMarketLeverage, _openMarketLeverage);
+            security.BuyingPowerModel = new PatternDayTradingMarginModel(
+                _closedMarketLeverage,
+                _openMarketLeverage
+            );
         }
 
         /// <summary>
@@ -74,20 +79,27 @@ namespace QuantConnect.Algorithm.CSharp
             {
                 var quantityHold = Securities[_spy].Holdings.Quantity;
                 // we should reduce our position by the same relation between the open and closed market leverage
-                var expectedFinalQuantity = quantityHold * _closedMarketLeverage / _openMarketLeverage;
+                var expectedFinalQuantity =
+                    quantityHold * _closedMarketLeverage / _openMarketLeverage;
 
                 var actualFinalQuantity = quantityHold + order.Quantity;
 
                 // leave a 1% margin for are expected calculations
                 if (Math.Abs(expectedFinalQuantity - actualFinalQuantity) > (quantityHold * 0.01m))
                 {
-                    throw new RegressionTestException($"Expected {expectedFinalQuantity} final quantity but was {actualFinalQuantity}");
+                    throw new RegressionTestException(
+                        $"Expected {expectedFinalQuantity} final quantity but was {actualFinalQuantity}"
+                    );
                 }
 
-                if (!Securities[_spy].Exchange.ExchangeOpen
-                    || !Securities[_spy].Exchange.ClosingSoon)
+                if (
+                    !Securities[_spy].Exchange.ExchangeOpen
+                    || !Securities[_spy].Exchange.ClosingSoon
+                )
                 {
-                    throw new RegressionTestException($"Expected exchange to be open: {Securities[_spy].Exchange.ExchangeOpen} and to be closing soon: {Securities[_spy].Exchange.ClosingSoon}");
+                    throw new RegressionTestException(
+                        $"Expected exchange to be open: {Securities[_spy].Exchange.ExchangeOpen} and to be closing soon: {Securities[_spy].Exchange.ClosingSoon}"
+                    );
                 }
             }
         }
@@ -96,7 +108,9 @@ namespace QuantConnect.Algorithm.CSharp
         {
             if (_marginCall != 1)
             {
-                throw new RegressionTestException($"We expected a single margin call to happen, {_marginCall} occurred");
+                throw new RegressionTestException(
+                    $"We expected a single margin call to happen, {_marginCall} occurred"
+                );
             }
         }
 
@@ -128,35 +142,36 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// This is used by the regression test system to indicate what the expected statistics are from running the algorithm
         /// </summary>
-        public Dictionary<string, string> ExpectedStatistics => new Dictionary<string, string>
-        {
-            {"Total Orders", "2"},
-            {"Average Win", "0.39%"},
-            {"Average Loss", "0%"},
-            {"Compounding Annual Return", "1750.998%"},
-            {"Drawdown", "5.500%"},
-            {"Expectancy", "0"},
-            {"Start Equity", "100000"},
-            {"End Equity", "103801.65"},
-            {"Net Profit", "3.802%"},
-            {"Sharpe Ratio", "18.012"},
-            {"Sortino Ratio", "0"},
-            {"Probabilistic Sharpe Ratio", "67.762%"},
-            {"Loss Rate", "0%"},
-            {"Win Rate", "100%"},
-            {"Profit-Loss Ratio", "0"},
-            {"Alpha", "4.101"},
-            {"Beta", "2.017"},
-            {"Annual Standard Deviation", "0.449"},
-            {"Annual Variance", "0.201"},
-            {"Information Ratio", "26.993"},
-            {"Tracking Error", "0.226"},
-            {"Treynor Ratio", "4.008"},
-            {"Total Fees", "$27.50"},
-            {"Estimated Strategy Capacity", "$22000000.00"},
-            {"Lowest Capacity Asset", "SPY R735QTJ8XC9X"},
-            {"Portfolio Turnover", "158.79%"},
-            {"OrderListHash", "a6d4b7e1b4255477e693d6773996b6fe"}
-        };
+        public Dictionary<string, string> ExpectedStatistics =>
+            new Dictionary<string, string>
+            {
+                { "Total Orders", "2" },
+                { "Average Win", "0.39%" },
+                { "Average Loss", "0%" },
+                { "Compounding Annual Return", "1750.998%" },
+                { "Drawdown", "5.500%" },
+                { "Expectancy", "0" },
+                { "Start Equity", "100000" },
+                { "End Equity", "103801.65" },
+                { "Net Profit", "3.802%" },
+                { "Sharpe Ratio", "18.012" },
+                { "Sortino Ratio", "0" },
+                { "Probabilistic Sharpe Ratio", "67.762%" },
+                { "Loss Rate", "0%" },
+                { "Win Rate", "100%" },
+                { "Profit-Loss Ratio", "0" },
+                { "Alpha", "4.101" },
+                { "Beta", "2.017" },
+                { "Annual Standard Deviation", "0.449" },
+                { "Annual Variance", "0.201" },
+                { "Information Ratio", "26.993" },
+                { "Tracking Error", "0.226" },
+                { "Treynor Ratio", "4.008" },
+                { "Total Fees", "$27.50" },
+                { "Estimated Strategy Capacity", "$22000000.00" },
+                { "Lowest Capacity Asset", "SPY R735QTJ8XC9X" },
+                { "Portfolio Turnover", "158.79%" },
+                { "OrderListHash", "a6d4b7e1b4255477e693d6773996b6fe" }
+            };
     }
 }

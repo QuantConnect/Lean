@@ -22,7 +22,6 @@ using QuantConnect.Orders.TimeInForces;
 using QuantConnect.Securities;
 using QuantConnect.Util;
 
-
 namespace QuantConnect.Brokerages
 {
     /// <summary>
@@ -52,9 +51,8 @@ namespace QuantConnect.Brokerages
         /// </summary>
         /// <param name="accountType">The type of account to be modelled, defaults to
         /// <see cref="AccountType.Margin"/></param>
-        public ZerodhaBrokerageModel(AccountType accountType = AccountType.Margin) : base(accountType)
-        {
-        }
+        public ZerodhaBrokerageModel(AccountType accountType = AccountType.Margin)
+            : base(accountType) { }
 
         /// <summary>
         /// Returns true if the brokerage would be able to execute this order at this time assuming
@@ -68,13 +66,11 @@ namespace QuantConnect.Brokerages
         /// <returns>True if the brokerage would be able to perform the execution, false otherwise</returns>
         public override bool CanExecuteOrder(Security security, Order order)
         {
-
             // validate security type
             if (security.Type != SecurityType.Equity)
             {
                 return false;
             }
-
 
             // validate time in force
             if (!_supportedTimeInForces.Contains(order.TimeInForce.GetType()))
@@ -96,35 +92,50 @@ namespace QuantConnect.Brokerages
         /// <param name="order">The order to be processed</param>
         /// <param name="message">If this function returns false, a brokerage message detailing why the order may not be submitted</param>
         /// <returns>True if the brokerage could process the order, false otherwise</returns>
-        public override bool CanSubmitOrder(Security security, Order order, out BrokerageMessageEvent message)
+        public override bool CanSubmitOrder(
+            Security security,
+            Order order,
+            out BrokerageMessageEvent message
+        )
         {
             message = null;
 
             // validate security type
             if (security.Type != SecurityType.Equity)
             {
-                message = new BrokerageMessageEvent(BrokerageMessageType.Warning, "NotSupported",
-                    Messages.DefaultBrokerageModel.UnsupportedSecurityType(this, security));
+                message = new BrokerageMessageEvent(
+                    BrokerageMessageType.Warning,
+                    "NotSupported",
+                    Messages.DefaultBrokerageModel.UnsupportedSecurityType(this, security)
+                );
 
                 return false;
             }
-
 
             // validate order type
             if (!_supportedOrderTypes.Contains(order.Type))
             {
-                message = new BrokerageMessageEvent(BrokerageMessageType.Warning, "NotSupported",
-                    Messages.DefaultBrokerageModel.UnsupportedOrderType(this, order, _supportedOrderTypes));
+                message = new BrokerageMessageEvent(
+                    BrokerageMessageType.Warning,
+                    "NotSupported",
+                    Messages.DefaultBrokerageModel.UnsupportedOrderType(
+                        this,
+                        order,
+                        _supportedOrderTypes
+                    )
+                );
 
                 return false;
             }
 
-
             // validate time in force
             if (!_supportedTimeInForces.Contains(order.TimeInForce.GetType()))
             {
-                message = new BrokerageMessageEvent(BrokerageMessageType.Warning, "NotSupported",
-                    Messages.DefaultBrokerageModel.UnsupportedTimeInForce(this, order));
+                message = new BrokerageMessageEvent(
+                    BrokerageMessageType.Warning,
+                    "NotSupported",
+                    Messages.DefaultBrokerageModel.UnsupportedTimeInForce(this, order)
+                );
 
                 return false;
             }
@@ -140,16 +151,22 @@ namespace QuantConnect.Brokerages
         /// <param name="request">The requested update to be made to the order</param>
         /// <param name="message">If this function returns false, a brokerage message detailing why the order may not be updated</param>
         /// <returns>True if the brokerage would allow updating the order, false otherwise</returns>
-        public override bool CanUpdateOrder(Security security, Order order, UpdateOrderRequest request, out BrokerageMessageEvent message)
+        public override bool CanUpdateOrder(
+            Security security,
+            Order order,
+            UpdateOrderRequest request,
+            out BrokerageMessageEvent message
+        )
         {
             message = null;
-             return true;
+            return true;
         }
 
         /// <summary>
         /// Gets a map of the default markets to be used for each security type
         /// </summary>
-        public override IReadOnlyDictionary<SecurityType, string> DefaultMarkets { get; } = GetDefaultMarkets();
+        public override IReadOnlyDictionary<SecurityType, string> DefaultMarkets { get; } =
+            GetDefaultMarkets();
 
         /// <summary>
         /// Zerodha global leverage rule
@@ -158,17 +175,29 @@ namespace QuantConnect.Brokerages
         /// <returns></returns>
         public override decimal GetLeverage(Security security)
         {
-            if (AccountType == AccountType.Cash || security.IsInternalFeed() || security.Type == SecurityType.Base)
+            if (
+                AccountType == AccountType.Cash
+                || security.IsInternalFeed()
+                || security.Type == SecurityType.Base
+            )
             {
                 return 1m;
             }
 
-            if (security.Type == SecurityType.Equity || security.Type == SecurityType.Future || security.Type == SecurityType.Option || security.Type == SecurityType.Index)
+            if (
+                security.Type == SecurityType.Equity
+                || security.Type == SecurityType.Future
+                || security.Type == SecurityType.Option
+                || security.Type == SecurityType.Index
+            )
             {
                 return _maxLeverage;
             }
 
-            throw new ArgumentException(Messages.DefaultBrokerageModel.InvalidSecurityTypeForLeverage(security), nameof(security));
+            throw new ArgumentException(
+                Messages.DefaultBrokerageModel.InvalidSecurityTypeForLeverage(security),
+                nameof(security)
+            );
         }
 
         /// <summary>

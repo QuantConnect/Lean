@@ -14,11 +14,11 @@
  *
 */
 
+using System.Collections.Generic;
 using System.Linq;
 using QuantConnect.Data;
-using QuantConnect.Logging;
 using QuantConnect.Data.Market;
-using System.Collections.Generic;
+using QuantConnect.Logging;
 
 namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
 {
@@ -35,9 +35,11 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
             InitializeMapFile();
             var newInstance = MapFile;
 
-            Log.Trace($"LiveMappingEventProvider({Config}): new tradable date {eventArgs.Date:yyyyMMdd}. " +
-                $"New MapFile: {!ReferenceEquals(currentInstance, newInstance)}. " +
-                $"MapFile.Count Old: {currentInstance?.Count()} New: {newInstance?.Count()}");
+            Log.Trace(
+                $"LiveMappingEventProvider({Config}): new tradable date {eventArgs.Date:yyyyMMdd}. "
+                    + $"New MapFile: {!ReferenceEquals(currentInstance, newInstance)}. "
+                    + $"MapFile.Count Old: {currentInstance?.Count()} New: {newInstance?.Count()}"
+            );
 
             return base.GetEvents(eventArgs);
         }

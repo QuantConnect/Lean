@@ -13,8 +13,8 @@
  * limitations under the License.
 */
 
-using QuantConnect.Interfaces;
 using System.Collections.Generic;
+using QuantConnect.Interfaces;
 
 namespace QuantConnect.Algorithm.Framework.Portfolio.SignalExports
 {

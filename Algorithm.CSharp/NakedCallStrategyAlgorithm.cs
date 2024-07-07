@@ -17,7 +17,6 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-
 using QuantConnect.Data.Market;
 using QuantConnect.Securities.Option;
 using QuantConnect.Securities.Positions;
@@ -43,7 +42,11 @@ namespace QuantConnect.Algorithm.CSharp
 
             if (contract != null)
             {
-                _nakedCall = OptionStrategies.NakedCall(_optionSymbol, contract.Strike, contract.Expiry);
+                _nakedCall = OptionStrategies.NakedCall(
+                    _optionSymbol,
+                    contract.Strike,
+                    contract.Expiry
+                );
                 Buy(_nakedCall, 2);
             }
         }
@@ -52,20 +55,28 @@ namespace QuantConnect.Algorithm.CSharp
         {
             if (positionGroup.Positions.Count() != 1)
             {
-                throw new RegressionTestException($"Expected position group to have 1 position. Actual: {positionGroup.Positions.Count()}");
+                throw new RegressionTestException(
+                    $"Expected position group to have 1 position. Actual: {positionGroup.Positions.Count()}"
+                );
             }
 
-            var optionPosition = positionGroup.Positions.Single(x => x.Symbol.SecurityType == SecurityType.Option);
+            var optionPosition = positionGroup.Positions.Single(x =>
+                x.Symbol.SecurityType == SecurityType.Option
+            );
             if (optionPosition.Symbol.ID.OptionRight != OptionRight.Call)
             {
-                throw new RegressionTestException($"Expected option position to be a call. Actual: {optionPosition.Symbol.ID.OptionRight}");
+                throw new RegressionTestException(
+                    $"Expected option position to be a call. Actual: {optionPosition.Symbol.ID.OptionRight}"
+                );
             }
 
             var expectedOptionPositionQuantity = -2;
 
             if (optionPosition.Quantity != expectedOptionPositionQuantity)
             {
-                throw new RegressionTestException($@"Expected option position quantity to be {expectedOptionPositionQuantity}. Actual: {optionPosition.Quantity}");
+                throw new RegressionTestException(
+                    $@"Expected option position quantity to be {expectedOptionPositionQuantity}. Actual: {optionPosition.Quantity}"
+                );
             }
         }
 
@@ -83,7 +94,8 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// This is used by the regression test system to indicate which languages this algorithm is written in.
         /// </summary>
-        public override List<Language> Languages { get; } = new() { Language.CSharp, Language.Python };
+        public override List<Language> Languages { get; } =
+            new() { Language.CSharp, Language.Python };
 
         /// <summary>
         /// Data Points count of all timeslices of algorithm
@@ -103,35 +115,36 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// This is used by the regression test system to indicate what the expected statistics are from running the algorithm
         /// </summary>
-        public override Dictionary<string, string> ExpectedStatistics => new Dictionary<string, string>
-        {
-            {"Total Orders", "2"},
-            {"Average Win", "0%"},
-            {"Average Loss", "0%"},
-            {"Compounding Annual Return", "0%"},
-            {"Drawdown", "0%"},
-            {"Expectancy", "0"},
-            {"Start Equity", "1000000"},
-            {"End Equity", "999657.4"},
-            {"Net Profit", "0%"},
-            {"Sharpe Ratio", "0"},
-            {"Sortino Ratio", "0"},
-            {"Probabilistic Sharpe Ratio", "0%"},
-            {"Loss Rate", "0%"},
-            {"Win Rate", "0%"},
-            {"Profit-Loss Ratio", "0"},
-            {"Alpha", "0"},
-            {"Beta", "0"},
-            {"Annual Standard Deviation", "0"},
-            {"Annual Variance", "0"},
-            {"Information Ratio", "0"},
-            {"Tracking Error", "0"},
-            {"Treynor Ratio", "0"},
-            {"Total Fees", "$2.60"},
-            {"Estimated Strategy Capacity", "$8000.00"},
-            {"Lowest Capacity Asset", "GOOCV WBGM92QHIYO6|GOOCV VP83T1ZUHROL"},
-            {"Portfolio Turnover", "2.19%"},
-            {"OrderListHash", "56c4d8b527d4a8f8d1cc659f8b2d4fc7"}
-        };
+        public override Dictionary<string, string> ExpectedStatistics =>
+            new Dictionary<string, string>
+            {
+                { "Total Orders", "2" },
+                { "Average Win", "0%" },
+                { "Average Loss", "0%" },
+                { "Compounding Annual Return", "0%" },
+                { "Drawdown", "0%" },
+                { "Expectancy", "0" },
+                { "Start Equity", "1000000" },
+                { "End Equity", "999657.4" },
+                { "Net Profit", "0%" },
+                { "Sharpe Ratio", "0" },
+                { "Sortino Ratio", "0" },
+                { "Probabilistic Sharpe Ratio", "0%" },
+                { "Loss Rate", "0%" },
+                { "Win Rate", "0%" },
+                { "Profit-Loss Ratio", "0" },
+                { "Alpha", "0" },
+                { "Beta", "0" },
+                { "Annual Standard Deviation", "0" },
+                { "Annual Variance", "0" },
+                { "Information Ratio", "0" },
+                { "Tracking Error", "0" },
+                { "Treynor Ratio", "0" },
+                { "Total Fees", "$2.60" },
+                { "Estimated Strategy Capacity", "$8000.00" },
+                { "Lowest Capacity Asset", "GOOCV WBGM92QHIYO6|GOOCV VP83T1ZUHROL" },
+                { "Portfolio Turnover", "2.19%" },
+                { "OrderListHash", "56c4d8b527d4a8f8d1cc659f8b2d4fc7" }
+            };
     }
 }

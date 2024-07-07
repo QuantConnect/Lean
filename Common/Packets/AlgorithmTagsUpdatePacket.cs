@@ -37,8 +37,7 @@ namespace QuantConnect.Packets
         /// Default constructor for JSON
         /// </summary>
         public AlgorithmTagsUpdatePacket()
-            : base(PacketType.AlgorithmTagsUpdate)
-        { }
+            : base(PacketType.AlgorithmTagsUpdate) { }
 
         /// <summary>
         /// Create a new instance of the algorithm tags up[date packet
@@ -49,6 +48,5 @@ namespace QuantConnect.Packets
             AlgorithmId = algorithmId;
             Tags = tags;
         }
-
     }
 }

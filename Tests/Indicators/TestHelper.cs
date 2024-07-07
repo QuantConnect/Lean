@@ -39,13 +39,19 @@ namespace QuantConnect.Tests.Indicators
         /// <param name="count">The number of data points to stream</param>
         /// <param name="valueProducer">Function to produce the value of the data, null to use the index</param>
         /// <returns>A stream of IndicatorDataPoints</returns>
-        public static IEnumerable<IndicatorDataPoint> GetDataStream(int count, Func<int, decimal> valueProducer = null)
+        public static IEnumerable<IndicatorDataPoint> GetDataStream(
+            int count,
+            Func<int, decimal> valueProducer = null
+        )
         {
             var reference = DateTime.Today;
             valueProducer = valueProducer ?? (x => x);
             for (int i = 0; i < count; i++)
             {
-                yield return new IndicatorDataPoint(reference.AddSeconds(i), valueProducer.Invoke(i));
+                yield return new IndicatorDataPoint(
+                    reference.AddSeconds(i),
+                    valueProducer.Invoke(i)
+                );
             }
         }
 
@@ -56,9 +62,18 @@ namespace QuantConnect.Tests.Indicators
         /// <param name="indicator">The indicator under test</param>
         /// <param name="targetColumn">The column with the correct answers</param>
         /// <param name="epsilon">The maximum delta between expected and actual</param>
-        public static void TestIndicator(IndicatorBase<IndicatorDataPoint> indicator, string targetColumn, double epsilon = 1e-3)
+        public static void TestIndicator(
+            IndicatorBase<IndicatorDataPoint> indicator,
+            string targetColumn,
+            double epsilon = 1e-3
+        )
         {
-            TestIndicator(indicator, "spy_with_indicators.txt", targetColumn, (i, expected) => Assert.AreEqual(expected, (double) i.Current.Value, epsilon));
+            TestIndicator(
+                indicator,
+                "spy_with_indicators.txt",
+                targetColumn,
+                (i, expected) => Assert.AreEqual(expected, (double)i.Current.Value, epsilon)
+            );
         }
 
         /// <summary>
@@ -69,7 +84,12 @@ namespace QuantConnect.Tests.Indicators
         /// <param name="externalDataFilename"></param>
         /// <param name="targetColumn">The column with the correct answers</param>
         /// <param name="customAssertion">Sets custom assertion logic, parameter is the indicator, expected value from the file</param>
-        public static void TestIndicator(IndicatorBase<IndicatorDataPoint> indicator, string externalDataFilename, string targetColumn, Action<IndicatorBase<IndicatorDataPoint>, double> customAssertion)
+        public static void TestIndicator(
+            IndicatorBase<IndicatorDataPoint> indicator,
+            string externalDataFilename,
+            string targetColumn,
+            Action<IndicatorBase<IndicatorDataPoint>, double> customAssertion
+        )
         {
             foreach (var parts in GetCsvFileStream(externalDataFilename))
             {
@@ -94,7 +114,6 @@ namespace QuantConnect.Tests.Indicators
             }
         }
 
-
         /// <summary>
         /// Compare the specified indicator against external data using the specificied comma delimited text file.
         /// The 'Close' column will be fed to the indicator as input
@@ -103,15 +122,27 @@ namespace QuantConnect.Tests.Indicators
         /// <param name="externalDataFilename"></param>
         /// <param name="targetColumn">The column with the correct answers</param>
         /// <param name="epsilon">The maximum delta between expected and actual</param>
-        public static void TestIndicator(IndicatorBase<IBaseDataBar> indicator, string externalDataFilename, string targetColumn, double epsilon = 1e-3)
+        public static void TestIndicator(
+            IndicatorBase<IBaseDataBar> indicator,
+            string externalDataFilename,
+            string targetColumn,
+            double epsilon = 1e-3
+        )
         {
-            TestIndicator(indicator, externalDataFilename, targetColumn,
-                (i, expected) => Assert.AreEqual(expected, (double)i.Current.Value, epsilon,
-                    "Failed at " + i.Current.Time.ToStringInvariant("o")
-                ));
+            TestIndicator(
+                indicator,
+                externalDataFilename,
+                targetColumn,
+                (i, expected) =>
+                    Assert.AreEqual(
+                        expected,
+                        (double)i.Current.Value,
+                        epsilon,
+                        "Failed at " + i.Current.Time.ToStringInvariant("o")
+                    )
+            );
         }
 
-
         /// <summary>
         /// Compare the specified indicator against external data using the specificied comma delimited text file.
         /// The 'Close' column will be fed to the indicator as input
@@ -120,12 +151,25 @@ namespace QuantConnect.Tests.Indicators
         /// <param name="externalDataFilename"></param>
         /// <param name="targetColumn">The column with the correct answers</param>
         /// <param name="epsilon">The maximum delta between expected and actual</param>
-        public static void TestIndicator(IndicatorBase<TradeBar> indicator, string externalDataFilename, string targetColumn, double epsilon = 1e-3)
+        public static void TestIndicator(
+            IndicatorBase<TradeBar> indicator,
+            string externalDataFilename,
+            string targetColumn,
+            double epsilon = 1e-3
+        )
         {
-            TestIndicator(indicator, externalDataFilename, targetColumn,
-                (i, expected) => Assert.AreEqual(expected, (double)i.Current.Value, epsilon,
-                    "Failed at " + i.Current.Time.ToStringInvariant("o")
-                ));
+            TestIndicator(
+                indicator,
+                externalDataFilename,
+                targetColumn,
+                (i, expected) =>
+                    Assert.AreEqual(
+                        expected,
+                        (double)i.Current.Value,
+                        epsilon,
+                        "Failed at " + i.Current.Time.ToStringInvariant("o")
+                    )
+            );
         }
 
         /// <summary>
@@ -137,13 +181,27 @@ namespace QuantConnect.Tests.Indicators
         /// <param name="targetColumn">The column with the correct answers</param>
         /// <param name="selector">A function that receives the indicator as input and outputs a value to match the target column</param>
         /// <param name="epsilon">The maximum delta between expected and actual</param>
-        public static void TestIndicator<T>(T indicator, string externalDataFilename, string targetColumn, Func<T, double> selector, double epsilon = 1e-3)
+        public static void TestIndicator<T>(
+            T indicator,
+            string externalDataFilename,
+            string targetColumn,
+            Func<T, double> selector,
+            double epsilon = 1e-3
+        )
             where T : Indicator
         {
-            TestIndicator(indicator, externalDataFilename, targetColumn,
-                (i, expected) => Assert.AreEqual(expected, selector(indicator), epsilon,
-                    "Failed at " + i.Current.Time.ToStringInvariant("o")
-                ));
+            TestIndicator(
+                indicator,
+                externalDataFilename,
+                targetColumn,
+                (i, expected) =>
+                    Assert.AreEqual(
+                        expected,
+                        selector(indicator),
+                        epsilon,
+                        "Failed at " + i.Current.Time.ToStringInvariant("o")
+                    )
+            );
         }
 
         /// <summary>
@@ -154,7 +212,12 @@ namespace QuantConnect.Tests.Indicators
         /// <param name="externalDataFilename">The external CSV file name</param>
         /// <param name="targetColumn">The column with the correct answers</param>
         /// <param name="customAssertion">Sets custom assertion logic, parameter is the indicator, expected value from the file</param>
-        public static void TestIndicator(IndicatorBase<IBaseDataBar> indicator, string externalDataFilename, string targetColumn, Action<IndicatorBase<IBaseDataBar>, double> customAssertion)
+        public static void TestIndicator(
+            IndicatorBase<IBaseDataBar> indicator,
+            string externalDataFilename,
+            string targetColumn,
+            Action<IndicatorBase<IBaseDataBar>, double> customAssertion
+        )
         {
             // TODO : Collapse duplicate implementations -- type constraint shenanigans and after 4am
 
@@ -182,7 +245,12 @@ namespace QuantConnect.Tests.Indicators
         /// <param name="externalDataFilename">The external CSV file name</param>
         /// <param name="targetColumn">The column with the correct answers</param>
         /// <param name="customAssertion">Sets custom assertion logic, parameter is the indicator, expected value from the file</param>
-        public static void TestIndicator(IndicatorBase<TradeBar> indicator, string externalDataFilename, string targetColumn, Action<IndicatorBase<TradeBar>, double> customAssertion)
+        public static void TestIndicator(
+            IndicatorBase<TradeBar> indicator,
+            string externalDataFilename,
+            string targetColumn,
+            Action<IndicatorBase<TradeBar>, double> customAssertion
+        )
         {
             foreach (var parts in GetCsvFileStream(externalDataFilename))
             {
@@ -205,7 +273,10 @@ namespace QuantConnect.Tests.Indicators
         /// </summary>
         /// <param name="renkoConsolidator">RenkoConsolidator instance to update</param>
         /// <param name="externalDataFilename">The external CSV file name</param>
-        public static void UpdateRenkoConsolidator(IDataConsolidator renkoConsolidator, string externalDataFilename)
+        public static void UpdateRenkoConsolidator(
+            IDataConsolidator renkoConsolidator,
+            string externalDataFilename
+        )
         {
             foreach (var parts in GetCsvFileStream(externalDataFilename))
             {
@@ -224,7 +295,10 @@ namespace QuantConnect.Tests.Indicators
         /// </summary>
         /// <param name="indicator">The indicator under test</param>
         /// <param name="externalDataFilename">The external CSV file name</param>
-        public static void TestIndicatorReset(IndicatorBase<IBaseDataBar> indicator, string externalDataFilename)
+        public static void TestIndicatorReset(
+            IndicatorBase<IBaseDataBar> indicator,
+            string externalDataFilename
+        )
         {
             foreach (var data in GetTradeBarStream(externalDataFilename, false))
             {
@@ -244,7 +318,10 @@ namespace QuantConnect.Tests.Indicators
         /// </summary>
         /// <param name="indicator">The indicator under test</param>
         /// <param name="externalDataFilename">The external CSV file name</param>
-        public static void TestIndicatorReset(IndicatorBase<TradeBar> indicator, string externalDataFilename)
+        public static void TestIndicatorReset(
+            IndicatorBase<TradeBar> indicator,
+            string externalDataFilename
+        )
         {
             foreach (var data in GetTradeBarStream(externalDataFilename, false))
             {
@@ -264,7 +341,10 @@ namespace QuantConnect.Tests.Indicators
         /// </summary>
         /// <param name="indicator">The indicator under test</param>
         /// <param name="externalDataFilename">The external CSV file name</param>
-        public static void TestIndicatorReset(IndicatorBase<IndicatorDataPoint> indicator, string externalDataFilename)
+        public static void TestIndicatorReset(
+            IndicatorBase<IndicatorDataPoint> indicator,
+            string externalDataFilename
+        )
         {
             var date = DateTime.Today;
 
@@ -284,9 +364,14 @@ namespace QuantConnect.Tests.Indicators
         /// Gets a stream of lines from the specified file
         /// </summary>
         /// <param name="externalDataFilename">The external CSV file name</param>
-        public static IEnumerable<IReadOnlyDictionary<string, string>> GetCsvFileStream(string externalDataFilename)
+        public static IEnumerable<IReadOnlyDictionary<string, string>> GetCsvFileStream(
+            string externalDataFilename
+        )
         {
-            var enumerator = File.ReadLines(Path.Combine("TestData", FileExtension.ToNormalizedPath(externalDataFilename))).GetEnumerator();
+            var enumerator = File.ReadLines(
+                    Path.Combine("TestData", FileExtension.ToNormalizedPath(externalDataFilename))
+                )
+                .GetEnumerator();
             if (!enumerator.MoveNext())
             {
                 yield break;
@@ -296,8 +381,12 @@ namespace QuantConnect.Tests.Indicators
             while (enumerator.MoveNext())
             {
                 var values = enumerator.Current.Split(',');
-                var headerAndValues = header.Zip(values, (h, v) => new {h, v});
-                var dictionary = headerAndValues.ToDictionary(x => x.h.Trim(), x => x.v.Trim(), StringComparer.OrdinalIgnoreCase);
+                var headerAndValues = header.Zip(values, (h, v) => new { h, v });
+                var dictionary = headerAndValues.ToDictionary(
+                    x => x.h.Trim(),
+                    x => x.v.Trim(),
+                    StringComparer.OrdinalIgnoreCase
+                );
                 yield return new ReadOnlyDictionary<string, string>(dictionary);
             }
         }
@@ -305,9 +394,13 @@ namespace QuantConnect.Tests.Indicators
         /// <summary>
         /// Gets a stream of trade bars from the specified file
         /// </summary>
-        public static IEnumerable<TradeBar> GetTradeBarStream(string externalDataFilename, bool fileHasVolume = true)
+        public static IEnumerable<TradeBar> GetTradeBarStream(
+            string externalDataFilename,
+            bool fileHasVolume = true
+        )
         {
-            return GetCsvFileStream(externalDataFilename).Select(values => GetTradeBar(values, fileHasVolume));
+            return GetCsvFileStream(externalDataFilename)
+                .Select(values => GetTradeBar(values, fileHasVolume));
         }
 
         /// <summary>
@@ -322,21 +415,27 @@ namespace QuantConnect.Tests.Indicators
             Assert.AreEqual(0, indicator.Samples);
             Assert.IsFalse(indicator.IsReady);
 
-            var fields = indicator.GetType().GetProperties()
-                .Where(x => x.PropertyType.IsSubclassOfGeneric(typeof(IndicatorBase<T>)) ||
-                            x.PropertyType.IsSubclassOfGeneric(typeof(IndicatorBase<TradeBar>)) ||
-                            x.PropertyType.IsSubclassOfGeneric(typeof(IndicatorBase<IndicatorDataPoint>)));
+            var fields = indicator
+                .GetType()
+                .GetProperties()
+                .Where(x =>
+                    x.PropertyType.IsSubclassOfGeneric(typeof(IndicatorBase<T>))
+                    || x.PropertyType.IsSubclassOfGeneric(typeof(IndicatorBase<TradeBar>))
+                    || x.PropertyType.IsSubclassOfGeneric(typeof(IndicatorBase<IndicatorDataPoint>))
+                );
             foreach (var field in fields)
             {
                 var subIndicator = field.GetValue(indicator);
 
-                if (subIndicator == null ||
-                    subIndicator is ConstantIndicator<T> ||
-                    subIndicator is ConstantIndicator<TradeBar> ||
-                    subIndicator is ConstantIndicator<IndicatorDataPoint>)
+                if (
+                    subIndicator == null
+                    || subIndicator is ConstantIndicator<T>
+                    || subIndicator is ConstantIndicator<TradeBar>
+                    || subIndicator is ConstantIndicator<IndicatorDataPoint>
+                )
                     continue;
 
-                if (field.PropertyType.IsSubclassOfGeneric(typeof (IndicatorBase<T>)))
+                if (field.PropertyType.IsSubclassOfGeneric(typeof(IndicatorBase<T>)))
                 {
                     AssertIndicatorIsInDefaultState(subIndicator as IndicatorBase<T>);
                 }
@@ -344,9 +443,15 @@ namespace QuantConnect.Tests.Indicators
                 {
                     AssertIndicatorIsInDefaultState(subIndicator as IndicatorBase<TradeBar>);
                 }
-                else if (field.PropertyType.IsSubclassOfGeneric(typeof(IndicatorBase<IndicatorDataPoint>)))
+                else if (
+                    field.PropertyType.IsSubclassOfGeneric(
+                        typeof(IndicatorBase<IndicatorDataPoint>)
+                    )
+                )
                 {
-                    AssertIndicatorIsInDefaultState(subIndicator as IndicatorBase<IndicatorDataPoint>);
+                    AssertIndicatorIsInDefaultState(
+                        subIndicator as IndicatorBase<IndicatorDataPoint>
+                    );
                 }
             }
         }
@@ -354,7 +459,10 @@ namespace QuantConnect.Tests.Indicators
         /// <summary>
         /// Grabs the first value from the set of keys
         /// </summary>
-        private static string GetCsvValue(this IReadOnlyDictionary<string, string> dictionary, params string[] keys)
+        private static string GetCsvValue(
+            this IReadOnlyDictionary<string, string> dictionary,
+            params string[] keys
+        )
         {
             string value = null;
             if (keys.Any(key => dictionary.TryGetValue(key, out value)))
@@ -368,23 +476,37 @@ namespace QuantConnect.Tests.Indicators
         /// <summary>
         /// Grabs the TradeBar values from the set of keys
         /// </summary>
-        public static TradeBar GetTradeBar(this IReadOnlyDictionary<string, string> dictionary, bool forceVolumeColumn = false)
+        public static TradeBar GetTradeBar(
+            this IReadOnlyDictionary<string, string> dictionary,
+            bool forceVolumeColumn = false
+        )
         {
-            var sid = (dictionary.ContainsKey("symbol") || dictionary.ContainsKey("ticker"))
-                ? SecurityIdentifier.GenerateEquity(dictionary.GetCsvValue("symbol", "ticker"), Market.USA)
-                : SecurityIdentifier.Empty;
+            var sid =
+                (dictionary.ContainsKey("symbol") || dictionary.ContainsKey("ticker"))
+                    ? SecurityIdentifier.GenerateEquity(
+                        dictionary.GetCsvValue("symbol", "ticker"),
+                        Market.USA
+                    )
+                    : SecurityIdentifier.Empty;
 
             return new TradeBar
             {
-                Symbol = sid != SecurityIdentifier.Empty
-                    ? new Symbol(sid, dictionary.GetCsvValue("symbol", "ticker"))
-                    : Symbol.Empty,
+                Symbol =
+                    sid != SecurityIdentifier.Empty
+                        ? new Symbol(sid, dictionary.GetCsvValue("symbol", "ticker"))
+                        : Symbol.Empty,
                 Time = Time.ParseDate(dictionary.GetCsvValue("date", "time")),
                 Open = dictionary.GetCsvValue("open").ToDecimal(),
                 High = dictionary.GetCsvValue("high").ToDecimal(),
                 Low = dictionary.GetCsvValue("low").ToDecimal(),
                 Close = dictionary.GetCsvValue("close").ToDecimal(),
-                Volume = forceVolumeColumn || dictionary.ContainsKey("volume") ? Parse.Long(dictionary.GetCsvValue("volume"), NumberStyles.AllowExponent | NumberStyles.AllowDecimalPoint) : 0
+                Volume =
+                    forceVolumeColumn || dictionary.ContainsKey("volume")
+                        ? Parse.Long(
+                            dictionary.GetCsvValue("volume"),
+                            NumberStyles.AllowExponent | NumberStyles.AllowDecimalPoint
+                        )
+                        : 0
             };
         }
     }

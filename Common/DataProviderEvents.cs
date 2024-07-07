@@ -193,7 +193,12 @@ namespace QuantConnect
         /// <see cref="Security"/> for which we are enumerating</param>
         /// <param name="symbol">The <see cref="Symbol"/> of the new tradable date</param>
         /// <param name="lastRawPrice">The last raw security price we have</param>
-        public NewTradableDateEventArgs(DateTime date, BaseData lastBaseData, Symbol symbol, decimal? lastRawPrice)
+        public NewTradableDateEventArgs(
+            DateTime date,
+            BaseData lastBaseData,
+            Symbol symbol,
+            decimal? lastRawPrice
+        )
             : base(symbol)
         {
             Date = date;

@@ -25,7 +25,8 @@ namespace QuantConnect.Data.Fundamental
     /// </summary>
     public class FundamentalInstanceProvider
     {
-        private static readonly Dictionary<SecurityIdentifier, FundamentalInstanceProvider> _cache = new();
+        private static readonly Dictionary<SecurityIdentifier, FundamentalInstanceProvider> _cache =
+            new();
 
         private readonly FundamentalTimeProvider _timeProvider;
         private readonly FinancialStatements _financialStatements;

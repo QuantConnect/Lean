@@ -19,8 +19,8 @@ using System.Collections.Generic;
 using System.Linq;
 using QuantConnect.Data;
 using QuantConnect.Data.Market;
-using QuantConnect.Orders;
 using QuantConnect.Interfaces;
+using QuantConnect.Orders;
 
 namespace QuantConnect.Algorithm.CSharp
 {
@@ -30,10 +30,16 @@ namespace QuantConnect.Algorithm.CSharp
     /// </summary>
     /// <meta name="tag" content="regression test" />
     /// <meta name="tag" content="options" />
-    public class OptionExerciseAssignRegressionAlgorithm : QCAlgorithm, IRegressionAlgorithmDefinition
+    public class OptionExerciseAssignRegressionAlgorithm
+        : QCAlgorithm,
+            IRegressionAlgorithmDefinition
     {
         private const string UnderlyingTicker = "GOOG";
-        private readonly Symbol _optionSymbol = QuantConnect.Symbol.Create(UnderlyingTicker, SecurityType.Option, Market.USA);
+        private readonly Symbol _optionSymbol = QuantConnect.Symbol.Create(
+            UnderlyingTicker,
+            SecurityType.Option,
+            Market.USA
+        );
         private bool _assignedOption = false;
 
         public override void Initialize()
@@ -46,9 +52,9 @@ namespace QuantConnect.Algorithm.CSharp
             var option = AddOption(UnderlyingTicker);
 
             // set our strike/expiry filter for this option chain
-            option.SetFilter(u => u.IncludeWeeklys()
-                                   .Strikes(-2, +2)
-                                   .Expiration(TimeSpan.Zero, TimeSpan.FromDays(10)));
+            option.SetFilter(u =>
+                u.IncludeWeeklys().Strikes(-2, +2).Expiration(TimeSpan.Zero, TimeSpan.FromDays(10))
+            );
 
             // use the underlying equity as the benchmark
             SetBenchmark(equity.Symbol);
@@ -58,7 +64,9 @@ namespace QuantConnect.Algorithm.CSharp
         {
             if (!_assignedOption)
             {
-                throw new RegressionTestException("In the end, short ITM option position was not assigned.");
+                throw new RegressionTestException(
+                    "In the end, short ITM option position was not assigned."
+                );
             }
         }
 
@@ -80,7 +88,7 @@ namespace QuantConnect.Algorithm.CSharp
                         where optionContract.Expiry == Time.Date
                         where optionContract.Strike < chain.Underlying.Price
                         select optionContract
-                        ).Take(2);
+                    ).Take(2);
 
                     if (contracts.Any())
                     {
@@ -100,6 +108,7 @@ namespace QuantConnect.Algorithm.CSharp
         {
             Log(orderEvent.ToString());
         }
+
         public override void OnAssignmentOrderEvent(OrderEvent assignmentEvent)
         {
             Log(assignmentEvent.ToString());
@@ -134,35 +143,36 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// This is used by the regression test system to indicate what the expected statistics are from running the algorithm
         /// </summary>
-        public Dictionary<string, string> ExpectedStatistics => new Dictionary<string, string>
-        {
-            {"Total Orders", "4"},
-            {"Average Win", "0.30%"},
-            {"Average Loss", "-0.32%"},
-            {"Compounding Annual Return", "-24.104%"},
-            {"Drawdown", "0.400%"},
-            {"Expectancy", "-1"},
-            {"Start Equity", "100000"},
-            {"End Equity", "99648"},
-            {"Net Profit", "-0.352%"},
-            {"Sharpe Ratio", "0"},
-            {"Sortino Ratio", "0"},
-            {"Probabilistic Sharpe Ratio", "0%"},
-            {"Loss Rate", "100%"},
-            {"Win Rate", "0%"},
-            {"Profit-Loss Ratio", "0.92"},
-            {"Alpha", "0"},
-            {"Beta", "0"},
-            {"Annual Standard Deviation", "0"},
-            {"Annual Variance", "0"},
-            {"Information Ratio", "0"},
-            {"Tracking Error", "0"},
-            {"Treynor Ratio", "0"},
-            {"Total Fees", "$2.00"},
-            {"Estimated Strategy Capacity", "$0"},
-            {"Lowest Capacity Asset", "GOOCV VP83T1ZUHROL"},
-            {"Portfolio Turnover", "30.10%"},
-            {"OrderListHash", "a152bbda350acd1f7a219ea799634392"}
-        };
+        public Dictionary<string, string> ExpectedStatistics =>
+            new Dictionary<string, string>
+            {
+                { "Total Orders", "4" },
+                { "Average Win", "0.30%" },
+                { "Average Loss", "-0.32%" },
+                { "Compounding Annual Return", "-24.104%" },
+                { "Drawdown", "0.400%" },
+                { "Expectancy", "-1" },
+                { "Start Equity", "100000" },
+                { "End Equity", "99648" },
+                { "Net Profit", "-0.352%" },
+                { "Sharpe Ratio", "0" },
+                { "Sortino Ratio", "0" },
+                { "Probabilistic Sharpe Ratio", "0%" },
+                { "Loss Rate", "100%" },
+                { "Win Rate", "0%" },
+                { "Profit-Loss Ratio", "0.92" },
+                { "Alpha", "0" },
+                { "Beta", "0" },
+                { "Annual Standard Deviation", "0" },
+                { "Annual Variance", "0" },
+                { "Information Ratio", "0" },
+                { "Tracking Error", "0" },
+                { "Treynor Ratio", "0" },
+                { "Total Fees", "$2.00" },
+                { "Estimated Strategy Capacity", "$0" },
+                { "Lowest Capacity Asset", "GOOCV VP83T1ZUHROL" },
+                { "Portfolio Turnover", "30.10%" },
+                { "OrderListHash", "a152bbda350acd1f7a219ea799634392" }
+            };
     }
 }

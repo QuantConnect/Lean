@@ -32,7 +32,8 @@ namespace QuantConnect.Algorithm.Framework.Portfolio
     /// percent holdings proportionally so the sum is 1.
     /// It will ignore <see cref="Insight"/> that have no <see cref="Insight.Weight"/> value.
     /// </summary>
-    public class InsightWeightingPortfolioConstructionModel : EqualWeightingPortfolioConstructionModel
+    public class InsightWeightingPortfolioConstructionModel
+        : EqualWeightingPortfolioConstructionModel
     {
         /// <summary>
         /// Initialize a new instance of <see cref="InsightWeightingPortfolioConstructionModel"/>
@@ -40,11 +41,11 @@ namespace QuantConnect.Algorithm.Framework.Portfolio
         /// <param name="rebalancingDateRules">The date rules used to define the next expected rebalance time
         /// in UTC</param>
         /// <param name="portfolioBias">Specifies the bias of the portfolio (Short, Long/Short, Long)</param>
-        public InsightWeightingPortfolioConstructionModel(IDateRule rebalancingDateRules,
-            PortfolioBias portfolioBias = PortfolioBias.LongShort)
-            : base(rebalancingDateRules, portfolioBias)
-        {
-        }
+        public InsightWeightingPortfolioConstructionModel(
+            IDateRule rebalancingDateRules,
+            PortfolioBias portfolioBias = PortfolioBias.LongShort
+        )
+            : base(rebalancingDateRules, portfolioBias) { }
 
         /// <summary>
         /// Initialize a new instance of <see cref="InsightWeightingPortfolioConstructionModel"/>
@@ -57,11 +58,11 @@ namespace QuantConnect.Algorithm.Framework.Portfolio
         /// <remarks>This is required since python net can not convert python methods into func nor resolve the correct
         /// constructor for the date rules parameter.
         /// For performance we prefer python algorithms using the C# implementation</remarks>
-        public InsightWeightingPortfolioConstructionModel(PyObject rebalance,
-            PortfolioBias portfolioBias = PortfolioBias.LongShort)
-            : base(rebalance, portfolioBias)
-        {
-        }
+        public InsightWeightingPortfolioConstructionModel(
+            PyObject rebalance,
+            PortfolioBias portfolioBias = PortfolioBias.LongShort
+        )
+            : base(rebalance, portfolioBias) { }
 
         /// <summary>
         /// Initialize a new instance of <see cref="InsightWeightingPortfolioConstructionModel"/>
@@ -70,11 +71,11 @@ namespace QuantConnect.Algorithm.Framework.Portfolio
         /// or null if unknown, in which case the function will be called again in the next loop. Returning current time
         /// will trigger rebalance.</param>
         /// <param name="portfolioBias">Specifies the bias of the portfolio (Short, Long/Short, Long)</param>
-        public InsightWeightingPortfolioConstructionModel(Func<DateTime, DateTime?> rebalancingFunc,
-            PortfolioBias portfolioBias = PortfolioBias.LongShort)
-            : base(rebalancingFunc, portfolioBias)
-        {
-        }
+        public InsightWeightingPortfolioConstructionModel(
+            Func<DateTime, DateTime?> rebalancingFunc,
+            PortfolioBias portfolioBias = PortfolioBias.LongShort
+        )
+            : base(rebalancingFunc, portfolioBias) { }
 
         /// <summary>
         /// Initialize a new instance of <see cref="InsightWeightingPortfolioConstructionModel"/>
@@ -82,33 +83,33 @@ namespace QuantConnect.Algorithm.Framework.Portfolio
         /// <param name="rebalancingFunc">For a given algorithm UTC DateTime returns the next expected rebalance UTC time.
         /// Returning current time will trigger rebalance. If null will be ignored</param>
         /// <param name="portfolioBias">Specifies the bias of the portfolio (Short, Long/Short, Long)</param>
-        public InsightWeightingPortfolioConstructionModel(Func<DateTime, DateTime> rebalancingFunc,
-            PortfolioBias portfolioBias = PortfolioBias.LongShort)
-            : base(rebalancingFunc, portfolioBias)
-        {
-        }
+        public InsightWeightingPortfolioConstructionModel(
+            Func<DateTime, DateTime> rebalancingFunc,
+            PortfolioBias portfolioBias = PortfolioBias.LongShort
+        )
+            : base(rebalancingFunc, portfolioBias) { }
 
         /// <summary>
         /// Initialize a new instance of <see cref="InsightWeightingPortfolioConstructionModel"/>
         /// </summary>
         /// <param name="timeSpan">Rebalancing frequency</param>
         /// <param name="portfolioBias">Specifies the bias of the portfolio (Short, Long/Short, Long)</param>
-        public InsightWeightingPortfolioConstructionModel(TimeSpan timeSpan,
-            PortfolioBias portfolioBias = PortfolioBias.LongShort)
-            : base(timeSpan, portfolioBias)
-        {
-        }
+        public InsightWeightingPortfolioConstructionModel(
+            TimeSpan timeSpan,
+            PortfolioBias portfolioBias = PortfolioBias.LongShort
+        )
+            : base(timeSpan, portfolioBias) { }
 
         /// <summary>
         /// Initialize a new instance of <see cref="InsightWeightingPortfolioConstructionModel"/>
         /// </summary>
         /// <param name="resolution">Rebalancing frequency</param>
         /// <param name="portfolioBias">Specifies the bias of the portfolio (Short, Long/Short, Long)</param>
-        public InsightWeightingPortfolioConstructionModel(Resolution resolution = Resolution.Daily,
-            PortfolioBias portfolioBias = PortfolioBias.LongShort)
-            : base(resolution, portfolioBias)
-        {
-        }
+        public InsightWeightingPortfolioConstructionModel(
+            Resolution resolution = Resolution.Daily,
+            PortfolioBias portfolioBias = PortfolioBias.LongShort
+        )
+            : base(resolution, portfolioBias) { }
 
         /// <summary>
         /// Method that will determine if the portfolio construction model should create a
@@ -126,11 +127,15 @@ namespace QuantConnect.Algorithm.Framework.Portfolio
         /// </summary>
         /// <param name="activeInsights">The active insights to generate a target for</param>
         /// <returns>A target percent for each insight</returns>
-        protected override Dictionary<Insight, double> DetermineTargetPercent(List<Insight> activeInsights)
+        protected override Dictionary<Insight, double> DetermineTargetPercent(
+            List<Insight> activeInsights
+        )
         {
             var result = new Dictionary<Insight, double>();
             // We will adjust weights proportionally in case the sum is > 1 so it sums to 1.
-            var weightSums = activeInsights.Where(RespectPortfolioBias).Sum(insight => GetValue(insight));
+            var weightSums = activeInsights
+                .Where(RespectPortfolioBias)
+                .Sum(insight => GetValue(insight));
             var weightFactor = 1.0;
             if (weightSums > 1)
             {
@@ -138,9 +143,10 @@ namespace QuantConnect.Algorithm.Framework.Portfolio
             }
             foreach (var insight in activeInsights)
             {
-                result[insight] = (int)(RespectPortfolioBias(insight) ? insight.Direction : InsightDirection.Flat)
-                                  * GetValue(insight)
-                                  * weightFactor;
+                result[insight] =
+                    (int)(RespectPortfolioBias(insight) ? insight.Direction : InsightDirection.Flat)
+                    * GetValue(insight)
+                    * weightFactor;
             }
             return result;
         }
@@ -150,6 +156,7 @@ namespace QuantConnect.Algorithm.Framework.Portfolio
         /// </summary>
         /// <param name="insight">The insight to create a target for</param>
         /// <returns>The value of the selected insight member</returns>
-        protected virtual double GetValue(Insight insight) => insight.Weight != null ? Math.Abs((double)insight.Weight) : 0;
+        protected virtual double GetValue(Insight insight) =>
+            insight.Weight != null ? Math.Abs((double)insight.Weight) : 0;
     }
 }

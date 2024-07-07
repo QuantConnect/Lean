@@ -71,7 +71,10 @@ namespace QuantConnect.Tests.Algorithm.Framework.Portfolio
         {
             SetPortfolioConstruction(language, _algorithm);
 
-            var actualTargets = _algorithm.PortfolioConstruction.CreateTargets(_algorithm, new Insight[0]);
+            var actualTargets = _algorithm.PortfolioConstruction.CreateTargets(
+                _algorithm,
+                new Insight[0]
+            );
 
             Assert.AreEqual(0, actualTargets.Count());
         }
@@ -83,18 +86,31 @@ namespace QuantConnect.Tests.Algorithm.Framework.Portfolio
         [TestCase(Language.Python, InsightDirection.Up)]
         [TestCase(Language.Python, InsightDirection.Down)]
         [TestCase(Language.Python, InsightDirection.Flat)]
-        public void InsightsReturnsTargetsConsistentWithDirection(Language language, InsightDirection direction)
+        public void InsightsReturnsTargetsConsistentWithDirection(
+            Language language,
+            InsightDirection direction
+        )
         {
             SetPortfolioConstruction(language, _algorithm);
 
             var amount = _algorithm.Portfolio.TotalPortfolioValue * (decimal)Confidence;
-            var expectedTargets = _algorithm.Securities
-                .Select(x => new PortfolioTarget(x.Key, (int)direction
-                                                        * Math.Floor(amount * (1 - _algorithm.Settings.FreePortfolioValuePercentage)
-                                                                     / x.Value.Price)));
+            var expectedTargets = _algorithm.Securities.Select(x => new PortfolioTarget(
+                x.Key,
+                (int)direction
+                    * Math.Floor(
+                        amount
+                            * (1 - _algorithm.Settings.FreePortfolioValuePercentage)
+                            / x.Value.Price
+                    )
+            ));
 
-            var insights = _algorithm.Securities.Keys.Select(x => GetInsight(x, direction, _algorithm.UtcTime));
-            var actualTargets = _algorithm.PortfolioConstruction.CreateTargets(_algorithm, insights.ToArray());
+            var insights = _algorithm.Securities.Keys.Select(x =>
+                GetInsight(x, direction, _algorithm.UtcTime)
+            );
+            var actualTargets = _algorithm.PortfolioConstruction.CreateTargets(
+                _algorithm,
+                insights.ToArray()
+            );
 
             AssertTargets(expectedTargets, actualTargets);
         }
@@ -105,7 +121,10 @@ namespace QuantConnect.Tests.Algorithm.Framework.Portfolio
         [TestCase(Language.Python, InsightDirection.Up)]
         [TestCase(Language.Python, InsightDirection.Down)]
         [TestCase(Language.Python, InsightDirection.Flat)]
-        public void FlatDirectionNotAccountedToAllocation(Language language, InsightDirection direction)
+        public void FlatDirectionNotAccountedToAllocation(
+            Language language,
+            InsightDirection direction
+        )
         {
             SetPortfolioConstruction(language, _algorithm);
 
@@ -116,13 +135,21 @@ namespace QuantConnect.Tests.Algorithm.Framework.Portfolio
             }
 
             // Equity, minus $1 for fees
-            var amount = (_algorithm.Portfolio.TotalPortfolioValue - 1 * (_algorithm.Securities.Count - 1)) * (decimal)Confidence;
+            var amount =
+                (_algorithm.Portfolio.TotalPortfolioValue - 1 * (_algorithm.Securities.Count - 1))
+                * (decimal)Confidence;
             var expectedTargets = _algorithm.Securities.Select(x =>
             {
                 // Expected target quantity for SPY is zero, since its insight will have flat direction
-                var quantity = x.Key.Value == "SPY" ? 0 : (int)direction
-                                                          * Math.Floor(amount * (1 - _algorithm.Settings.FreePortfolioValuePercentage)
-                                                                       / x.Value.Price);
+                var quantity =
+                    x.Key.Value == "SPY"
+                        ? 0
+                        : (int)direction
+                            * Math.Floor(
+                                amount
+                                    * (1 - _algorithm.Settings.FreePortfolioValuePercentage)
+                                    / x.Value.Price
+                            );
                 return new PortfolioTarget(x.Key, quantity);
             });
 
@@ -132,7 +159,10 @@ namespace QuantConnect.Tests.Algorithm.Framework.Portfolio
                 var actualDirection = x.Value == "SPY" ? InsightDirection.Flat : direction;
                 return GetInsight(x, actualDirection, _algorithm.UtcTime);
             });
-            var actualTargets = _algorithm.PortfolioConstruction.CreateTargets(_algorithm, insights.ToArray());
+            var actualTargets = _algorithm.PortfolioConstruction.CreateTargets(
+                _algorithm,
+                insights.ToArray()
+            );
 
             AssertTargets(expectedTargets, actualTargets);
         }
@@ -144,14 +174,19 @@ namespace QuantConnect.Tests.Algorithm.Framework.Portfolio
         [TestCase(Language.Python, InsightDirection.Up)]
         [TestCase(Language.Python, InsightDirection.Down)]
         [TestCase(Language.Python, InsightDirection.Flat)]
-        public void AutomaticallyRemoveInvestedWithNewInsights(Language language, InsightDirection direction)
+        public void AutomaticallyRemoveInvestedWithNewInsights(
+            Language language,
+            InsightDirection direction
+        )
         {
             SetPortfolioConstruction(language, _algorithm);
 
             // Let's create a position for SPY
             var insights = new[] { GetInsight(Symbols.SPY, direction, _algorithm.UtcTime) };
 
-            foreach (var target in _algorithm.PortfolioConstruction.CreateTargets(_algorithm, insights))
+            foreach (
+                var target in _algorithm.PortfolioConstruction.CreateTargets(_algorithm, insights)
+            )
             {
                 var holding = _algorithm.Portfolio[target.Symbol];
                 holding.SetHoldings(holding.Price, target.Quantity);
@@ -164,17 +199,28 @@ namespace QuantConnect.Tests.Algorithm.Framework.Portfolio
             var expectedTargets = _algorithm.Securities.Select(x =>
             {
                 // Expected target quantity for SPY is zero, since it will be removed
-                var quantity = x.Key.Value == "SPY" ? 0 : (int)direction
-                                                          * Math.Floor(amount * (1 - _algorithm.Settings.FreePortfolioValuePercentage)
-                                                                       / x.Value.Price);
+                var quantity =
+                    x.Key.Value == "SPY"
+                        ? 0
+                        : (int)direction
+                            * Math.Floor(
+                                amount
+                                    * (1 - _algorithm.Settings.FreePortfolioValuePercentage)
+                                    / x.Value.Price
+                            );
                 return new PortfolioTarget(x.Key, quantity);
             });
 
             // Do no include SPY in the insights
-            insights = _algorithm.Securities.Keys.Where(x => x.Value != "SPY")
-                .Select(x => GetInsight(x, direction, _algorithm.UtcTime)).ToArray();
+            insights = _algorithm
+                .Securities.Keys.Where(x => x.Value != "SPY")
+                .Select(x => GetInsight(x, direction, _algorithm.UtcTime))
+                .ToArray();
 
-            var actualTargets = _algorithm.PortfolioConstruction.CreateTargets(_algorithm, insights);
+            var actualTargets = _algorithm.PortfolioConstruction.CreateTargets(
+                _algorithm,
+                insights
+            );
 
             AssertTargets(expectedTargets, actualTargets);
         }
@@ -187,9 +233,14 @@ namespace QuantConnect.Tests.Algorithm.Framework.Portfolio
             SetPortfolioConstruction(language, _algorithm);
 
             // Let's create a position for SPY
-            var insights = new[] { GetInsight(Symbols.SPY, InsightDirection.Up, _algorithm.UtcTime) };
+            var insights = new[]
+            {
+                GetInsight(Symbols.SPY, InsightDirection.Up, _algorithm.UtcTime)
+            };
 
-            foreach (var target in _algorithm.PortfolioConstruction.CreateTargets(_algorithm, insights))
+            foreach (
+                var target in _algorithm.PortfolioConstruction.CreateTargets(_algorithm, insights)
+            )
             {
                 var holding = _algorithm.Portfolio[target.Symbol];
                 holding.SetHoldings(holding.Price, target.Quantity);
@@ -198,10 +249,16 @@ namespace QuantConnect.Tests.Algorithm.Framework.Portfolio
 
             SetUtcTime(_algorithm.UtcTime.AddDays(2));
 
-            var expectedTargets = new List<IPortfolioTarget> { new PortfolioTarget(Symbols.SPY, 0) };
+            var expectedTargets = new List<IPortfolioTarget>
+            {
+                new PortfolioTarget(Symbols.SPY, 0)
+            };
 
             // Create target from an empty insights array
-            var actualTargets = _algorithm.PortfolioConstruction.CreateTargets(_algorithm, new Insight[0]);
+            var actualTargets = _algorithm.PortfolioConstruction.CreateTargets(
+                _algorithm,
+                new Insight[0]
+            );
 
             AssertTargets(expectedTargets, actualTargets);
         }
@@ -214,23 +271,37 @@ namespace QuantConnect.Tests.Algorithm.Framework.Portfolio
             SetPortfolioConstruction(language, _algorithm);
 
             // First emit long term insight
-            var insights = new[] { GetInsight(Symbols.SPY, InsightDirection.Down, _algorithm.UtcTime) };
-            var targets = _algorithm.PortfolioConstruction.CreateTargets(_algorithm, insights).ToList();
+            var insights = new[]
+            {
+                GetInsight(Symbols.SPY, InsightDirection.Down, _algorithm.UtcTime)
+            };
+            var targets = _algorithm
+                .PortfolioConstruction.CreateTargets(_algorithm, insights)
+                .ToList();
             Assert.AreEqual(1, targets.Count);
 
             // One minute later, emits short term insight
             SetUtcTime(_algorithm.UtcTime.AddMinutes(1));
-            insights = new[] { GetInsight(Symbols.SPY, InsightDirection.Up, _algorithm.UtcTime, Time.OneMinute) };
+            insights = new[]
+            {
+                GetInsight(Symbols.SPY, InsightDirection.Up, _algorithm.UtcTime, Time.OneMinute)
+            };
             targets = _algorithm.PortfolioConstruction.CreateTargets(_algorithm, insights).ToList();
             Assert.AreEqual(1, targets.Count);
 
             // One minute later, emit empty insights array
             SetUtcTime(_algorithm.UtcTime.AddMinutes(1.1));
 
-            var expectedTargets = new List<IPortfolioTarget> { PortfolioTarget.Percent(_algorithm, Symbols.SPY, -1m * (decimal)Confidence) };
+            var expectedTargets = new List<IPortfolioTarget>
+            {
+                PortfolioTarget.Percent(_algorithm, Symbols.SPY, -1m * (decimal)Confidence)
+            };
 
             // Create target from an empty insights array
-            var actualTargets = _algorithm.PortfolioConstruction.CreateTargets(_algorithm, new Insight[0]);
+            var actualTargets = _algorithm.PortfolioConstruction.CreateTargets(
+                _algorithm,
+                new Insight[0]
+            );
 
             AssertTargets(expectedTargets, actualTargets);
         }
@@ -242,17 +313,30 @@ namespace QuantConnect.Tests.Algorithm.Framework.Portfolio
         {
             SetPortfolioConstruction(language, _algorithm);
 
-            var insights = new[] { GetInsight(Symbols.SPY, InsightDirection.Down, _algorithm.UtcTime) };
-            var targets = _algorithm.PortfolioConstruction.CreateTargets(_algorithm, insights).ToList();
+            var insights = new[]
+            {
+                GetInsight(Symbols.SPY, InsightDirection.Down, _algorithm.UtcTime)
+            };
+            var targets = _algorithm
+                .PortfolioConstruction.CreateTargets(_algorithm, insights)
+                .ToList();
             Assert.AreEqual(1, targets.Count);
 
-            var changes = SecurityChangesTests.RemovedNonInternal(_algorithm.Securities[Symbols.SPY]);
+            var changes = SecurityChangesTests.RemovedNonInternal(
+                _algorithm.Securities[Symbols.SPY]
+            );
             _algorithm.PortfolioConstruction.OnSecuritiesChanged(_algorithm, changes);
 
-            var expectedTargets = new List<IPortfolioTarget> { new PortfolioTarget(Symbols.SPY, 0) };
+            var expectedTargets = new List<IPortfolioTarget>
+            {
+                new PortfolioTarget(Symbols.SPY, 0)
+            };
 
             // Create target from an empty insights array
-            var actualTargets = _algorithm.PortfolioConstruction.CreateTargets(_algorithm, new Insight[0]);
+            var actualTargets = _algorithm.PortfolioConstruction.CreateTargets(
+                _algorithm,
+                new Insight[0]
+            );
 
             AssertTargets(expectedTargets, actualTargets);
         }
@@ -264,34 +348,55 @@ namespace QuantConnect.Tests.Algorithm.Framework.Portfolio
         [TestCase(Language.Python, InsightDirection.Up)]
         [TestCase(Language.Python, InsightDirection.Down)]
         [TestCase(Language.Python, InsightDirection.Flat)]
-        public void DelistedSecurityEmitsFlatTargetWithNewInsights(Language language, InsightDirection direction)
+        public void DelistedSecurityEmitsFlatTargetWithNewInsights(
+            Language language,
+            InsightDirection direction
+        )
         {
             SetPortfolioConstruction(language, _algorithm);
 
-            var insights = new[] { GetInsight(Symbols.SPY, InsightDirection.Down, _algorithm.UtcTime) };
-            var targets = _algorithm.PortfolioConstruction.CreateTargets(_algorithm, insights).ToList();
+            var insights = new[]
+            {
+                GetInsight(Symbols.SPY, InsightDirection.Down, _algorithm.UtcTime)
+            };
+            var targets = _algorithm
+                .PortfolioConstruction.CreateTargets(_algorithm, insights)
+                .ToList();
             Assert.AreEqual(1, targets.Count);
 
             // Removing SPY should clear the key in the insight collection
-            var changes = SecurityChangesTests.RemovedNonInternal(_algorithm.Securities[Symbols.SPY]);
+            var changes = SecurityChangesTests.RemovedNonInternal(
+                _algorithm.Securities[Symbols.SPY]
+            );
             _algorithm.PortfolioConstruction.OnSecuritiesChanged(_algorithm, changes);
 
             var amount = _algorithm.Portfolio.TotalPortfolioValue * (decimal)Confidence;
             var expectedTargets = _algorithm.Securities.Select(x =>
             {
                 // Expected target quantity for SPY is zero, since it will be removed
-                var quantity = x.Key.Value == "SPY" ? 0 : (int)direction
-                                                          * Math.Floor(amount * (1 - _algorithm.Settings.FreePortfolioValuePercentage)
-                                                                       / x.Value.Price);
+                var quantity =
+                    x.Key.Value == "SPY"
+                        ? 0
+                        : (int)direction
+                            * Math.Floor(
+                                amount
+                                    * (1 - _algorithm.Settings.FreePortfolioValuePercentage)
+                                    / x.Value.Price
+                            );
                 return new PortfolioTarget(x.Key, quantity);
             });
 
             // Do no include SPY in the insights
-            insights = _algorithm.Securities.Keys.Where(x => x.Value != "SPY")
-                .Select(x => GetInsight(x, direction, _algorithm.UtcTime)).ToArray();
+            insights = _algorithm
+                .Securities.Keys.Where(x => x.Value != "SPY")
+                .Select(x => GetInsight(x, direction, _algorithm.UtcTime))
+                .ToArray();
 
             // Create target from an empty insights array
-            var actualTargets = _algorithm.PortfolioConstruction.CreateTargets(_algorithm, insights);
+            var actualTargets = _algorithm.PortfolioConstruction.CreateTargets(
+                _algorithm,
+                insights
+            );
 
             AssertTargets(expectedTargets, actualTargets);
         }
@@ -306,19 +411,32 @@ namespace QuantConnect.Tests.Algorithm.Framework.Portfolio
             // create two insights whose confidences sums up to 2
             var insights = new[]
             {
-                GetInsight(Symbols.SPY, InsightDirection.Down, _algorithm.UtcTime, confidence:1),
-                GetInsight(Symbol.Create("IBM", SecurityType.Equity, Market.USA),
-                    InsightDirection.Down, _algorithm.UtcTime, confidence:1)
+                GetInsight(Symbols.SPY, InsightDirection.Down, _algorithm.UtcTime, confidence: 1),
+                GetInsight(
+                    Symbol.Create("IBM", SecurityType.Equity, Market.USA),
+                    InsightDirection.Down,
+                    _algorithm.UtcTime,
+                    confidence: 1
+                )
             };
 
             // they will each share, proportionally, the total portfolio value
             var amount = _algorithm.Portfolio.TotalPortfolioValue * (decimal)0.5;
-            var expectedTargets = _algorithm.Securities.Where(pair => insights.Any(insight => pair.Key == insight.Symbol))
-                .Select(x => new PortfolioTarget(x.Key, (int)InsightDirection.Down
-                    * Math.Floor(amount * (1 - _algorithm.Settings.FreePortfolioValuePercentage)
-                        / x.Value.Price)));
+            var expectedTargets = _algorithm
+                .Securities.Where(pair => insights.Any(insight => pair.Key == insight.Symbol))
+                .Select(x => new PortfolioTarget(
+                    x.Key,
+                    (int)InsightDirection.Down
+                        * Math.Floor(
+                            amount
+                                * (1 - _algorithm.Settings.FreePortfolioValuePercentage)
+                                / x.Value.Price
+                        )
+                ));
 
-            var actualTargets = _algorithm.PortfolioConstruction.CreateTargets(_algorithm, insights).ToList();
+            var actualTargets = _algorithm
+                .PortfolioConstruction.CreateTargets(_algorithm, insights)
+                .ToList();
             Assert.AreEqual(2, actualTargets.Count);
 
             AssertTargets(expectedTargets, actualTargets);
@@ -333,10 +451,12 @@ namespace QuantConnect.Tests.Algorithm.Framework.Portfolio
 
             var insights = new[]
             {
-                GetInsight(Symbols.SPY, InsightDirection.Down, _algorithm.UtcTime, confidence:null)
+                GetInsight(Symbols.SPY, InsightDirection.Down, _algorithm.UtcTime, confidence: null)
             };
 
-            var actualTargets = _algorithm.PortfolioConstruction.CreateTargets(_algorithm, insights).ToList();
+            var actualTargets = _algorithm
+                .PortfolioConstruction.CreateTargets(_algorithm, insights)
+                .ToList();
             Assert.AreEqual(0, actualTargets.Count);
         }
 
@@ -349,12 +469,14 @@ namespace QuantConnect.Tests.Algorithm.Framework.Portfolio
 
             var insights = new[]
             {
-                GetInsight(Symbols.SPY, InsightDirection.Down, _algorithm.UtcTime, confidence:0)
+                GetInsight(Symbols.SPY, InsightDirection.Down, _algorithm.UtcTime, confidence: 0)
             };
 
-            var actualTargets = _algorithm.PortfolioConstruction.CreateTargets(_algorithm, insights).ToList();
+            var actualTargets = _algorithm
+                .PortfolioConstruction.CreateTargets(_algorithm, insights)
+                .ToList();
             Assert.AreEqual(1, actualTargets.Count);
-            AssertTargets(actualTargets, new[] {new PortfolioTarget(Symbols.SPY, 0)});
+            AssertTargets(actualTargets, new[] { new PortfolioTarget(Symbols.SPY, 0) });
         }
 
         [Test]
@@ -362,9 +484,15 @@ namespace QuantConnect.Tests.Algorithm.Framework.Portfolio
         [TestCase(Language.Python)]
         public void DoesNotThrowWithAlternativeOverloads(Language language)
         {
-            Assert.DoesNotThrow(() => SetPortfolioConstruction(language, _algorithm, Resolution.Minute));
-            Assert.DoesNotThrow(() => SetPortfolioConstruction(language, _algorithm, TimeSpan.FromDays(1)));
-            Assert.DoesNotThrow(() => SetPortfolioConstruction(language, _algorithm, Expiry.EndOfWeek));
+            Assert.DoesNotThrow(
+                () => SetPortfolioConstruction(language, _algorithm, Resolution.Minute)
+            );
+            Assert.DoesNotThrow(
+                () => SetPortfolioConstruction(language, _algorithm, TimeSpan.FromDays(1))
+            );
+            Assert.DoesNotThrow(
+                () => SetPortfolioConstruction(language, _algorithm, Expiry.EndOfWeek)
+            );
         }
 
         private Security GetSecurity(Symbol symbol)
@@ -381,7 +509,13 @@ namespace QuantConnect.Tests.Algorithm.Framework.Portfolio
             );
         }
 
-        private Insight GetInsight(Symbol symbol, InsightDirection direction, DateTime generatedTimeUtc, TimeSpan? period = null, double? confidence = Confidence)
+        private Insight GetInsight(
+            Symbol symbol,
+            InsightDirection direction,
+            DateTime generatedTimeUtc,
+            TimeSpan? period = null,
+            double? confidence = Confidence
+        )
         {
             period ??= TimeSpan.FromDays(1);
             var insight = Insight.Price(symbol, period.Value, direction, confidence: confidence);
@@ -391,16 +525,24 @@ namespace QuantConnect.Tests.Algorithm.Framework.Portfolio
             return insight;
         }
 
-        private void SetPortfolioConstruction(Language language, QCAlgorithm algorithm, dynamic paramenter = null)
+        private void SetPortfolioConstruction(
+            Language language,
+            QCAlgorithm algorithm,
+            dynamic paramenter = null
+        )
         {
             paramenter = paramenter ?? Resolution.Daily;
-            algorithm.SetPortfolioConstruction(new ConfidenceWeightedPortfolioConstructionModel(paramenter));
+            algorithm.SetPortfolioConstruction(
+                new ConfidenceWeightedPortfolioConstructionModel(paramenter)
+            );
             if (language == Language.Python)
             {
                 using (Py.GIL())
                 {
                     var name = nameof(ConfidenceWeightedPortfolioConstructionModel);
-                    var instance = Py.Import(name).GetAttr(name).Invoke(((object)paramenter).ToPython());
+                    var instance = Py.Import(name)
+                        .GetAttr(name)
+                        .Invoke(((object)paramenter).ToPython());
                     var model = new PortfolioConstructionModelPythonWrapper(instance);
                     algorithm.SetPortfolioConstruction(model);
                 }
@@ -413,7 +555,9 @@ namespace QuantConnect.Tests.Algorithm.Framework.Portfolio
             _algorithm.Portfolio.SetCash(_startingCash);
             SetUtcTime(new DateTime(2018, 7, 31));
 
-            var changes = SecurityChangesTests.AddedNonInternal(_algorithm.Securities.Values.ToArray());
+            var changes = SecurityChangesTests.AddedNonInternal(
+                _algorithm.Securities.Values.ToArray()
+            );
             algorithm.PortfolioConstruction.OnSecuritiesChanged(_algorithm, changes);
         }
 
@@ -422,7 +566,10 @@ namespace QuantConnect.Tests.Algorithm.Framework.Portfolio
             _algorithm.SetDateTime(dateTime.ConvertToUtc(_algorithm.TimeZone));
         }
 
-        private void AssertTargets(IEnumerable<IPortfolioTarget> expectedTargets, IEnumerable<IPortfolioTarget> actualTargets)
+        private void AssertTargets(
+            IEnumerable<IPortfolioTarget> expectedTargets,
+            IEnumerable<IPortfolioTarget> actualTargets
+        )
         {
             var list = actualTargets.ToList();
             Assert.AreEqual(expectedTargets.Count(), list.Count);

@@ -15,8 +15,8 @@
 */
 
 using System;
-using QuantConnect.Data;
 using System.Collections.Generic;
+using QuantConnect.Data;
 using QuantConnect.Indicators;
 using QuantConnect.Interfaces;
 using QuantConnect.Orders;
@@ -42,9 +42,9 @@ namespace QuantConnect.Algorithm.CSharp
         public override void Initialize()
         {
             SetAccountCurrency("INR"); //Set Account Currency
-            SetStartDate(2019, 1, 1);  //Set End Date
-            SetEndDate(2019, 1, 5);    //Set End Date
-            SetCash(1000000);          //Set Strategy Cash
+            SetStartDate(2019, 1, 1); //Set End Date
+            SetEndDate(2019, 1, 5); //Set End Date
+            SetCash(1000000); //Set Strategy Cash
 
             // Use indicator for signal; but it cannot be traded
             Nifty = AddIndex("NIFTY50", Resolution.Minute, Market.India).Symbol;
@@ -104,7 +104,8 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// This is used by the regression test system to indicate which languages this algorithm is written in.
         /// </summary>
-        public virtual List<Language> Languages { get; } = new() { Language.CSharp, Language.Python };
+        public virtual List<Language> Languages { get; } =
+            new() { Language.CSharp, Language.Python };
 
         /// <summary>
         /// Data Points count of all timeslices of algorithm
@@ -124,35 +125,36 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// This is used by the regression test system to indicate what the expected statistics are from running the algorithm
         /// </summary>
-        public virtual Dictionary<string, string> ExpectedStatistics => new Dictionary<string, string>
-        {
-            {"Total Orders", "6"},
-            {"Average Win", "0%"},
-            {"Average Loss", "0.00%"},
-            {"Compounding Annual Return", "-0.386%"},
-            {"Drawdown", "0.000%"},
-            {"Expectancy", "-1"},
-            {"Start Equity", "1000000"},
-            {"End Equity", "999961.17"},
-            {"Net Profit", "-0.004%"},
-            {"Sharpe Ratio", "-328.371"},
-            {"Sortino Ratio", "-328.371"},
-            {"Probabilistic Sharpe Ratio", "0%"},
-            {"Loss Rate", "100%"},
-            {"Win Rate", "0%"},
-            {"Profit-Loss Ratio", "0"},
-            {"Alpha", "0"},
-            {"Beta", "0"},
-            {"Annual Standard Deviation", "0"},
-            {"Annual Variance", "0"},
-            {"Information Ratio", "-23.595"},
-            {"Tracking Error", "0"},
-            {"Treynor Ratio", "0"},
-            {"Total Fees", "₹36.00"},
-            {"Estimated Strategy Capacity", "₹84000.00"},
-            {"Lowest Capacity Asset", "JUNIORBEES UL"},
-            {"Portfolio Turnover", "0.04%"},
-            {"OrderListHash", "79ab9ec506959c562be8b3cdbb174c39"}
-        };
+        public virtual Dictionary<string, string> ExpectedStatistics =>
+            new Dictionary<string, string>
+            {
+                { "Total Orders", "6" },
+                { "Average Win", "0%" },
+                { "Average Loss", "0.00%" },
+                { "Compounding Annual Return", "-0.386%" },
+                { "Drawdown", "0.000%" },
+                { "Expectancy", "-1" },
+                { "Start Equity", "1000000" },
+                { "End Equity", "999961.17" },
+                { "Net Profit", "-0.004%" },
+                { "Sharpe Ratio", "-328.371" },
+                { "Sortino Ratio", "-328.371" },
+                { "Probabilistic Sharpe Ratio", "0%" },
+                { "Loss Rate", "100%" },
+                { "Win Rate", "0%" },
+                { "Profit-Loss Ratio", "0" },
+                { "Alpha", "0" },
+                { "Beta", "0" },
+                { "Annual Standard Deviation", "0" },
+                { "Annual Variance", "0" },
+                { "Information Ratio", "-23.595" },
+                { "Tracking Error", "0" },
+                { "Treynor Ratio", "0" },
+                { "Total Fees", "₹36.00" },
+                { "Estimated Strategy Capacity", "₹84000.00" },
+                { "Lowest Capacity Asset", "JUNIORBEES UL" },
+                { "Portfolio Turnover", "0.04%" },
+                { "OrderListHash", "79ab9ec506959c562be8b3cdbb174c39" }
+            };
     }
 }

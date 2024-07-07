@@ -46,7 +46,7 @@ namespace QuantConnect.Statistics
         /// The transaction manager to get number of winning and losing transactions
         /// </param>
         /// <param name="riskFreeInterestRateModel">The risk free interest rate model to use</param>
-        /// <param name="tradingDaysPerYear">The number of trading days per year</param>       
+        /// <param name="tradingDaysPerYear">The number of trading days per year</param>
         /// <returns>Returns a <see cref="StatisticsResults"/> object</returns>
         public static StatisticsResults Generate(
             List<Trade> trades,
@@ -62,18 +62,49 @@ namespace QuantConnect.Statistics
             string accountCurrencySymbol,
             SecurityTransactionManager transactions,
             IRiskFreeInterestRateModel riskFreeInterestRateModel,
-            int tradingDaysPerYear)
+            int tradingDaysPerYear
+        )
         {
             var equity = ChartPointToDictionary(pointsEquity);
 
             var firstDate = equity.Keys.FirstOrDefault().Date;
             var lastDate = equity.Keys.LastOrDefault().Date;
 
-            var totalPerformance = GetAlgorithmPerformance(firstDate, lastDate, trades, profitLoss, equity, pointsPerformance, pointsBenchmark,
-                pointsPortfolioTurnover, startingCapital, transactions, riskFreeInterestRateModel, tradingDaysPerYear);
-            var rollingPerformances = GetRollingPerformances(firstDate, lastDate, trades, profitLoss, equity, pointsPerformance, pointsBenchmark,
-                pointsPortfolioTurnover, startingCapital, transactions, riskFreeInterestRateModel, tradingDaysPerYear);
-            var summary = GetSummary(totalPerformance, estimatedStrategyCapacity, totalFees, totalOrders, accountCurrencySymbol);
+            var totalPerformance = GetAlgorithmPerformance(
+                firstDate,
+                lastDate,
+                trades,
+                profitLoss,
+                equity,
+                pointsPerformance,
+                pointsBenchmark,
+                pointsPortfolioTurnover,
+                startingCapital,
+                transactions,
+                riskFreeInterestRateModel,
+                tradingDaysPerYear
+            );
+            var rollingPerformances = GetRollingPerformances(
+                firstDate,
+                lastDate,
+                trades,
+                profitLoss,
+                equity,
+                pointsPerformance,
+                pointsBenchmark,
+                pointsPortfolioTurnover,
+                startingCapital,
+                transactions,
+                riskFreeInterestRateModel,
+                tradingDaysPerYear
+            );
+            var summary = GetSummary(
+                totalPerformance,
+                estimatedStrategyCapacity,
+                totalFees,
+                totalOrders,
+                accountCurrencySymbol
+            );
 
             return new StatisticsResults(totalPerformance, rollingPerformances, summary);
         }
@@ -108,9 +139,14 @@ namespace QuantConnect.Statistics
             decimal startingCapital,
             SecurityTransactionManager transactions,
             IRiskFreeInterestRateModel riskFreeInterestRateModel,
-            int tradingDaysPerYear)
+            int tradingDaysPerYear
+        )
         {
-            var periodEquity = new SortedDictionary<DateTime, decimal>(equity.Where(x => x.Key.Date >= fromDate && x.Key.Date < toDate.AddDays(1)).ToDictionary(x => x.Key, y => y.Value));
+            var periodEquity = new SortedDictionary<DateTime, decimal>(
+                equity
+                    .Where(x => x.Key.Date >= fromDate && x.Key.Date < toDate.AddDays(1))
+                    .ToDictionary(x => x.Key, y => y.Value)
+            );
 
             // No portfolio equity for the period means that there is no performance to be computed
             if (periodEquity.IsNullOrEmpty())
@@ -118,21 +154,37 @@ namespace QuantConnect.Statistics
                 return new AlgorithmPerformance();
             }
 
-            var periodTrades = trades.Where(x => x.ExitTime.Date >= fromDate && x.ExitTime < toDate.AddDays(1)).ToList();
-            var periodProfitLoss = new SortedDictionary<DateTime, decimal>(profitLoss.Where(x => x.Key >= fromDate && x.Key.Date < toDate.AddDays(1)).ToDictionary(x => x.Key, y => y.Value));
-            var periodWinCount = transactions.WinningTransactions.Count(x => x.Key >= fromDate && x.Key.Date < toDate.AddDays(1));
-            var periodLossCount = transactions.LosingTransactions.Count(x => x.Key >= fromDate && x.Key.Date < toDate.AddDays(1));
+            var periodTrades = trades
+                .Where(x => x.ExitTime.Date >= fromDate && x.ExitTime < toDate.AddDays(1))
+                .ToList();
+            var periodProfitLoss = new SortedDictionary<DateTime, decimal>(
+                profitLoss
+                    .Where(x => x.Key >= fromDate && x.Key.Date < toDate.AddDays(1))
+                    .ToDictionary(x => x.Key, y => y.Value)
+            );
+            var periodWinCount = transactions.WinningTransactions.Count(x =>
+                x.Key >= fromDate && x.Key.Date < toDate.AddDays(1)
+            );
+            var periodLossCount = transactions.LosingTransactions.Count(x =>
+                x.Key >= fromDate && x.Key.Date < toDate.AddDays(1)
+            );
 
             // Convert our charts to dictionaries
             // NOTE: Day 0 refers to sample taken at 12AM on StartDate, performance[0] always = 0, benchmark[0] is benchmark value preceding start date.
             var benchmark = ChartPointToDictionary(pointsBenchmark, fromDate, toDate);
             var performance = ChartPointToDictionary(pointsPerformance, fromDate, toDate);
-            var portfolioTurnover = ChartPointToDictionary(pointsPortfolioTurnover, fromDate, toDate);
+            var portfolioTurnover = ChartPointToDictionary(
+                pointsPortfolioTurnover,
+                fromDate,
+                toDate
+            );
 
             // Ensure our series are aligned
             if (benchmark.Count != performance.Count)
             {
-                throw new ArgumentException($"Benchmark and performance series has {Math.Abs(benchmark.Count - performance.Count)} misaligned values.");
+                throw new ArgumentException(
+                    $"Benchmark and performance series has {Math.Abs(benchmark.Count - performance.Count)} misaligned values."
+                );
             }
 
             // Convert our benchmark values into a percentage daily performance of the benchmark, this will shorten the series by one since
@@ -140,12 +192,28 @@ namespace QuantConnect.Statistics
             var benchmarkEnumerable = CreateBenchmarkDifferences(benchmark, fromDate, toDate);
 
             var listBenchmark = benchmarkEnumerable.Select(x => x.Value).ToList();
-            var listPerformance = PreprocessPerformanceValues(performance).Select(x => x.Value).ToList();
+            var listPerformance = PreprocessPerformanceValues(performance)
+                .Select(x => x.Value)
+                .ToList();
 
-            var runningCapital = equity.Count == periodEquity.Count ? startingCapital : periodEquity.Values.FirstOrDefault();
+            var runningCapital =
+                equity.Count == periodEquity.Count
+                    ? startingCapital
+                    : periodEquity.Values.FirstOrDefault();
 
-            return new AlgorithmPerformance(periodTrades, periodProfitLoss, periodEquity, portfolioTurnover, listPerformance, listBenchmark,
-                runningCapital, periodWinCount, periodLossCount, riskFreeInterestRateModel, tradingDaysPerYear);
+            return new AlgorithmPerformance(
+                periodTrades,
+                periodProfitLoss,
+                periodEquity,
+                portfolioTurnover,
+                listPerformance,
+                listBenchmark,
+                runningCapital,
+                periodWinCount,
+                periodLossCount,
+                riskFreeInterestRateModel,
+                tradingDaysPerYear
+            );
         }
 
         /// <summary>
@@ -178,7 +246,8 @@ namespace QuantConnect.Statistics
             decimal startingCapital,
             SecurityTransactionManager transactions,
             IRiskFreeInterestRateModel riskFreeInterestRateModel,
-            int tradingDaysPerYear)
+            int tradingDaysPerYear
+        )
         {
             var rollingPerformances = new Dictionary<string, AlgorithmPerformance>();
 
@@ -190,8 +259,20 @@ namespace QuantConnect.Statistics
                 foreach (var period in ranges)
                 {
                     var key = $"M{monthPeriod}_{period.EndDate.ToStringInvariant("yyyyMMdd")}";
-                    var periodPerformance = GetAlgorithmPerformance(period.StartDate, period.EndDate, trades, profitLoss, equity, pointsPerformance,
-                        pointsBenchmark, pointsPortfolioTurnover, startingCapital, transactions, riskFreeInterestRateModel, tradingDaysPerYear);
+                    var periodPerformance = GetAlgorithmPerformance(
+                        period.StartDate,
+                        period.EndDate,
+                        trades,
+                        profitLoss,
+                        equity,
+                        pointsPerformance,
+                        pointsBenchmark,
+                        pointsPortfolioTurnover,
+                        startingCapital,
+                        transactions,
+                        riskFreeInterestRateModel,
+                        tradingDaysPerYear
+                    );
                     rollingPerformances[key] = periodPerformance;
                 }
             }
@@ -202,45 +283,169 @@ namespace QuantConnect.Statistics
         /// <summary>
         /// Returns a summary of the algorithm performance as a dictionary
         /// </summary>
-        private static Dictionary<string, string> GetSummary(AlgorithmPerformance totalPerformance, CapacityEstimate estimatedStrategyCapacity,
-            decimal totalFees, int totalOrders, string accountCurrencySymbol)
+        private static Dictionary<string, string> GetSummary(
+            AlgorithmPerformance totalPerformance,
+            CapacityEstimate estimatedStrategyCapacity,
+            decimal totalFees,
+            int totalOrders,
+            string accountCurrencySymbol
+        )
         {
             var capacity = 0m;
             var lowestCapacitySymbol = Symbol.Empty;
             if (estimatedStrategyCapacity != null)
             {
                 capacity = estimatedStrategyCapacity.Capacity;
-                lowestCapacitySymbol = estimatedStrategyCapacity.LowestCapacityAsset ?? Symbol.Empty;
+                lowestCapacitySymbol =
+                    estimatedStrategyCapacity.LowestCapacityAsset ?? Symbol.Empty;
             }
 
             return new Dictionary<string, string>
             {
                 { PerformanceMetrics.TotalOrders, totalOrders.ToStringInvariant() },
-                { PerformanceMetrics.AverageWin, Math.Round(totalPerformance.PortfolioStatistics.AverageWinRate.SafeMultiply100(), 2).ToStringInvariant() + "%"  },
-                { PerformanceMetrics.AverageLoss, Math.Round(totalPerformance.PortfolioStatistics.AverageLossRate.SafeMultiply100(), 2).ToStringInvariant() + "%" },
-                { PerformanceMetrics.CompoundingAnnualReturn, Math.Round(totalPerformance.PortfolioStatistics.CompoundingAnnualReturn.SafeMultiply100(), 3).ToStringInvariant() + "%" },
-                { PerformanceMetrics.Drawdown, Math.Round(totalPerformance.PortfolioStatistics.Drawdown.SafeMultiply100(), 3).ToStringInvariant() + "%" },
-                { PerformanceMetrics.Expectancy, Math.Round(totalPerformance.PortfolioStatistics.Expectancy, 3).ToStringInvariant() },
-                { PerformanceMetrics.StartEquity, Math.Round(totalPerformance.PortfolioStatistics.StartEquity, 2).ToStringInvariant() },
-                { PerformanceMetrics.EndEquity, Math.Round(totalPerformance.PortfolioStatistics.EndEquity, 2).ToStringInvariant() },
-                { PerformanceMetrics.NetProfit, Math.Round(totalPerformance.PortfolioStatistics.TotalNetProfit.SafeMultiply100(), 3).ToStringInvariant() + "%"},
-                { PerformanceMetrics.SharpeRatio, Math.Round((double)totalPerformance.PortfolioStatistics.SharpeRatio, 3).ToStringInvariant() },
-                { PerformanceMetrics.SortinoRatio, Math.Round((double)totalPerformance.PortfolioStatistics.SortinoRatio, 3).ToStringInvariant() },
-                { PerformanceMetrics.ProbabilisticSharpeRatio, Math.Round(totalPerformance.PortfolioStatistics.ProbabilisticSharpeRatio.SafeMultiply100(), 3).ToStringInvariant() + "%"},
-                { PerformanceMetrics.LossRate, Math.Round(totalPerformance.PortfolioStatistics.LossRate.SafeMultiply100()).ToStringInvariant() + "%" },
-                { PerformanceMetrics.WinRate, Math.Round(totalPerformance.PortfolioStatistics.WinRate.SafeMultiply100()).ToStringInvariant() + "%" },
-                { PerformanceMetrics.ProfitLossRatio, Math.Round(totalPerformance.PortfolioStatistics.ProfitLossRatio, 2).ToStringInvariant() },
-                { PerformanceMetrics.Alpha, Math.Round((double)totalPerformance.PortfolioStatistics.Alpha, 3).ToStringInvariant() },
-                { PerformanceMetrics.Beta, Math.Round((double)totalPerformance.PortfolioStatistics.Beta, 3).ToStringInvariant() },
-                { PerformanceMetrics.AnnualStandardDeviation, Math.Round((double)totalPerformance.PortfolioStatistics.AnnualStandardDeviation, 3).ToStringInvariant() },
-                { PerformanceMetrics.AnnualVariance, Math.Round((double)totalPerformance.PortfolioStatistics.AnnualVariance, 3).ToStringInvariant() },
-                { PerformanceMetrics.InformationRatio, Math.Round((double)totalPerformance.PortfolioStatistics.InformationRatio, 3).ToStringInvariant() },
-                { PerformanceMetrics.TrackingError, Math.Round((double)totalPerformance.PortfolioStatistics.TrackingError, 3).ToStringInvariant() },
-                { PerformanceMetrics.TreynorRatio, Math.Round((double)totalPerformance.PortfolioStatistics.TreynorRatio, 3).ToStringInvariant() },
-                { PerformanceMetrics.TotalFees, accountCurrencySymbol + totalFees.ToStringInvariant("0.00") },
-                { PerformanceMetrics.EstimatedStrategyCapacity, accountCurrencySymbol + capacity.RoundToSignificantDigits(2).ToStringInvariant() },
-                { PerformanceMetrics.LowestCapacityAsset, lowestCapacitySymbol != Symbol.Empty ? lowestCapacitySymbol.ID.ToString() : "" },
-                { PerformanceMetrics.PortfolioTurnover, Math.Round(totalPerformance.PortfolioStatistics.PortfolioTurnover.SafeMultiply100(), 2).ToStringInvariant() + "%" }
+                {
+                    PerformanceMetrics.AverageWin,
+                    Math.Round(
+                            totalPerformance.PortfolioStatistics.AverageWinRate.SafeMultiply100(),
+                            2
+                        )
+                        .ToStringInvariant() + "%"
+                },
+                {
+                    PerformanceMetrics.AverageLoss,
+                    Math.Round(
+                            totalPerformance.PortfolioStatistics.AverageLossRate.SafeMultiply100(),
+                            2
+                        )
+                        .ToStringInvariant() + "%"
+                },
+                {
+                    PerformanceMetrics.CompoundingAnnualReturn,
+                    Math.Round(
+                            totalPerformance.PortfolioStatistics.CompoundingAnnualReturn.SafeMultiply100(),
+                            3
+                        )
+                        .ToStringInvariant() + "%"
+                },
+                {
+                    PerformanceMetrics.Drawdown,
+                    Math.Round(totalPerformance.PortfolioStatistics.Drawdown.SafeMultiply100(), 3)
+                        .ToStringInvariant() + "%"
+                },
+                {
+                    PerformanceMetrics.Expectancy,
+                    Math.Round(totalPerformance.PortfolioStatistics.Expectancy, 3)
+                        .ToStringInvariant()
+                },
+                {
+                    PerformanceMetrics.StartEquity,
+                    Math.Round(totalPerformance.PortfolioStatistics.StartEquity, 2)
+                        .ToStringInvariant()
+                },
+                {
+                    PerformanceMetrics.EndEquity,
+                    Math.Round(totalPerformance.PortfolioStatistics.EndEquity, 2)
+                        .ToStringInvariant()
+                },
+                {
+                    PerformanceMetrics.NetProfit,
+                    Math.Round(
+                            totalPerformance.PortfolioStatistics.TotalNetProfit.SafeMultiply100(),
+                            3
+                        )
+                        .ToStringInvariant() + "%"
+                },
+                {
+                    PerformanceMetrics.SharpeRatio,
+                    Math.Round((double)totalPerformance.PortfolioStatistics.SharpeRatio, 3)
+                        .ToStringInvariant()
+                },
+                {
+                    PerformanceMetrics.SortinoRatio,
+                    Math.Round((double)totalPerformance.PortfolioStatistics.SortinoRatio, 3)
+                        .ToStringInvariant()
+                },
+                {
+                    PerformanceMetrics.ProbabilisticSharpeRatio,
+                    Math.Round(
+                            totalPerformance.PortfolioStatistics.ProbabilisticSharpeRatio.SafeMultiply100(),
+                            3
+                        )
+                        .ToStringInvariant() + "%"
+                },
+                {
+                    PerformanceMetrics.LossRate,
+                    Math.Round(totalPerformance.PortfolioStatistics.LossRate.SafeMultiply100())
+                        .ToStringInvariant() + "%"
+                },
+                {
+                    PerformanceMetrics.WinRate,
+                    Math.Round(totalPerformance.PortfolioStatistics.WinRate.SafeMultiply100())
+                        .ToStringInvariant() + "%"
+                },
+                {
+                    PerformanceMetrics.ProfitLossRatio,
+                    Math.Round(totalPerformance.PortfolioStatistics.ProfitLossRatio, 2)
+                        .ToStringInvariant()
+                },
+                {
+                    PerformanceMetrics.Alpha,
+                    Math.Round((double)totalPerformance.PortfolioStatistics.Alpha, 3)
+                        .ToStringInvariant()
+                },
+                {
+                    PerformanceMetrics.Beta,
+                    Math.Round((double)totalPerformance.PortfolioStatistics.Beta, 3)
+                        .ToStringInvariant()
+                },
+                {
+                    PerformanceMetrics.AnnualStandardDeviation,
+                    Math.Round(
+                            (double)totalPerformance.PortfolioStatistics.AnnualStandardDeviation,
+                            3
+                        )
+                        .ToStringInvariant()
+                },
+                {
+                    PerformanceMetrics.AnnualVariance,
+                    Math.Round((double)totalPerformance.PortfolioStatistics.AnnualVariance, 3)
+                        .ToStringInvariant()
+                },
+                {
+                    PerformanceMetrics.InformationRatio,
+                    Math.Round((double)totalPerformance.PortfolioStatistics.InformationRatio, 3)
+                        .ToStringInvariant()
+                },
+                {
+                    PerformanceMetrics.TrackingError,
+                    Math.Round((double)totalPerformance.PortfolioStatistics.TrackingError, 3)
+                        .ToStringInvariant()
+                },
+                {
+                    PerformanceMetrics.TreynorRatio,
+                    Math.Round((double)totalPerformance.PortfolioStatistics.TreynorRatio, 3)
+                        .ToStringInvariant()
+                },
+                {
+                    PerformanceMetrics.TotalFees,
+                    accountCurrencySymbol + totalFees.ToStringInvariant("0.00")
+                },
+                {
+                    PerformanceMetrics.EstimatedStrategyCapacity,
+                    accountCurrencySymbol + capacity.RoundToSignificantDigits(2).ToStringInvariant()
+                },
+                {
+                    PerformanceMetrics.LowestCapacityAsset,
+                    lowestCapacitySymbol != Symbol.Empty ? lowestCapacitySymbol.ID.ToString() : ""
+                },
+                {
+                    PerformanceMetrics.PortfolioTurnover,
+                    Math.Round(
+                            totalPerformance.PortfolioStatistics.PortfolioTurnover.SafeMultiply100(),
+                            2
+                        )
+                        .ToStringInvariant() + "%"
+                }
             };
         }
 
@@ -261,7 +466,11 @@ namespace QuantConnect.Statistics
         /// <param name="firstDate">The first date of the total period</param>
         /// <param name="lastDate">The last date of the total period</param>
         /// <returns>The list of date ranges</returns>
-        private static IEnumerable<PeriodRange> GetPeriodRanges(int periodMonths, DateTime firstDate, DateTime lastDate)
+        private static IEnumerable<PeriodRange> GetPeriodRanges(
+            int periodMonths,
+            DateTime firstDate,
+            DateTime lastDate
+        )
         {
             // get end dates
             var date = lastDate.Date;
@@ -273,17 +482,19 @@ namespace QuantConnect.Statistics
             } while (date >= firstDate);
 
             // build period ranges
-            var ranges = new List<PeriodRange> { new PeriodRange { StartDate = firstDate, EndDate = endDates[endDates.Count - 1] } };
+            var ranges = new List<PeriodRange>
+            {
+                new PeriodRange { StartDate = firstDate, EndDate = endDates[endDates.Count - 1] }
+            };
             for (var i = endDates.Count - 2; i >= 0; i--)
             {
-                var startDate = ranges[ranges.Count - 1].EndDate.AddDays(1).AddMonths(1 - periodMonths);
-                if (startDate < firstDate) startDate = firstDate;
+                var startDate = ranges[ranges.Count - 1]
+                    .EndDate.AddDays(1)
+                    .AddMonths(1 - periodMonths);
+                if (startDate < firstDate)
+                    startDate = firstDate;
 
-                ranges.Add(new PeriodRange
-                {
-                    StartDate = startDate,
-                    EndDate = endDates[i]
-                });
+                ranges.Add(new PeriodRange { StartDate = startDate, EndDate = endDates[i] });
             }
 
             return ranges;
@@ -297,14 +508,20 @@ namespace QuantConnect.Statistics
         /// <param name="fromDate">An optional starting date</param>
         /// <param name="toDate">An optional ending date</param>
         /// <returns>SortedDictionary of the equity decimal values ordered in time</returns>
-        private static SortedDictionary<DateTime, decimal> ChartPointToDictionary(IEnumerable<ISeriesPoint> points, DateTime? fromDate = null, DateTime? toDate = null)
+        private static SortedDictionary<DateTime, decimal> ChartPointToDictionary(
+            IEnumerable<ISeriesPoint> points,
+            DateTime? fromDate = null,
+            DateTime? toDate = null
+        )
         {
             var dictionary = new SortedDictionary<DateTime, decimal>();
 
             foreach (var point in points)
             {
-                if (fromDate != null && point.Time.Date < fromDate) continue;
-                if (toDate != null && point.Time.Date >= ((DateTime)toDate).AddDays(1)) break;
+                if (fromDate != null && point.Time.Date < fromDate)
+                    continue;
+                if (toDate != null && point.Time.Date >= ((DateTime)toDate).AddDays(1))
+                    break;
 
                 dictionary[point.Time] = GetPointValue(point);
             }
@@ -333,7 +550,11 @@ namespace QuantConnect.Statistics
         /// <param name="fromDate">Starting date (inclusive)</param>
         /// <param name="toDate">Ending date (inclusive)</param>
         /// <returns>Pairs of date and percentage change</returns>
-        public static IEnumerable<KeyValuePair<DateTime, double>> CreateBenchmarkDifferences(IEnumerable<KeyValuePair<DateTime, decimal>> points, DateTime fromDate, DateTime toDate)
+        public static IEnumerable<KeyValuePair<DateTime, double>> CreateBenchmarkDifferences(
+            IEnumerable<KeyValuePair<DateTime, decimal>> points,
+            DateTime fromDate,
+            DateTime toDate
+        )
         {
             DateTime dtPrevious = default;
             var previous = 0m;
@@ -341,7 +562,9 @@ namespace QuantConnect.Statistics
             double deltaPercentage;
 
             // Get points performance array for the given period:
-            foreach (var kvp in points.Where(kvp => kvp.Key >= fromDate.Date && kvp.Key.Date <= toDate))
+            foreach (
+                var kvp in points.Where(kvp => kvp.Key >= fromDate.Date && kvp.Key.Date <= toDate)
+            )
             {
                 var dt = kvp.Key;
                 var value = kvp.Value;
@@ -376,7 +599,9 @@ namespace QuantConnect.Statistics
         /// </summary>
         /// <param name="points">The values to divide by 100</param>
         /// <returns>Pairs of date and performance value divided by 100</returns>
-        public static IEnumerable<KeyValuePair<DateTime, double>> PreprocessPerformanceValues(IEnumerable<KeyValuePair<DateTime, decimal>> points)
+        public static IEnumerable<KeyValuePair<DateTime, double>> PreprocessPerformanceValues(
+            IEnumerable<KeyValuePair<DateTime, decimal>> points
+        )
         {
             // We will skip past day 1 of performance values to deal with the OnOpen orders causing misalignment between benchmark and
             // algorithm performance. So we drop two values from performance (Day 0, Day 1)

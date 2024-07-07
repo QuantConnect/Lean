@@ -45,9 +45,12 @@ namespace QuantConnect.Tests.Algorithm.Framework.Execution
             var actualOrdersSubmitted = new List<SubmitOrderRequest>();
 
             var orderProcessor = new Mock<IOrderProcessor>();
-            orderProcessor.Setup(m => m.Process(It.IsAny<SubmitOrderRequest>()))
+            orderProcessor
+                .Setup(m => m.Process(It.IsAny<SubmitOrderRequest>()))
                 .Returns((OrderTicket)null)
-                .Callback((OrderRequest request) => actualOrdersSubmitted.Add((SubmitOrderRequest)request));
+                .Callback(
+                    (OrderRequest request) => actualOrdersSubmitted.Add((SubmitOrderRequest)request)
+                );
 
             var algorithm = new QCAlgorithm();
             algorithm.SetPandasConverter();
@@ -56,7 +59,10 @@ namespace QuantConnect.Tests.Algorithm.Framework.Execution
             var model = GetExecutionModel(language);
             algorithm.SetExecution(model);
 
-            var changes = SecurityChangesTests.CreateNonInternal(Enumerable.Empty<Security>(), Enumerable.Empty<Security>());
+            var changes = SecurityChangesTests.CreateNonInternal(
+                Enumerable.Empty<Security>(),
+                Enumerable.Empty<Security>()
+            );
             model.OnSecuritiesChanged(algorithm, changes);
 
             model.Execute(algorithm, new IPortfolioTarget[0]);
@@ -77,28 +83,39 @@ namespace QuantConnect.Tests.Algorithm.Framework.Execution
             double[] historicalPrices,
             decimal lastVolume,
             int expectedOrdersSubmitted,
-            decimal expectedTotalQuantity)
+            decimal expectedTotalQuantity
+        )
         {
             var actualOrdersSubmitted = new List<SubmitOrderRequest>();
 
             var time = new DateTime(2018, 8, 2, 16, 0, 0);
             var historyProvider = new Mock<IHistoryProvider>();
-            historyProvider.Setup(m => m.GetHistory(It.IsAny<IEnumerable<HistoryRequest>>(), It.IsAny<DateTimeZone>()))
-                .Returns(historicalPrices.Select((x, i) =>
-                    new Slice(time.AddMinutes(i),
-                        new List<BaseData>
-                        {
-                            new TradeBar
-                            {
-                                Time = time.AddMinutes(i),
-                                Symbol = Symbols.AAPL,
-                                Open = Convert.ToDecimal(x),
-                                High = Convert.ToDecimal(x),
-                                Low = Convert.ToDecimal(x),
-                                Close = Convert.ToDecimal(x),
-                                Volume = 100m
-                            }
-                        }, time.AddMinutes(i))));
+            historyProvider
+                .Setup(m =>
+                    m.GetHistory(It.IsAny<IEnumerable<HistoryRequest>>(), It.IsAny<DateTimeZone>())
+                )
+                .Returns(
+                    historicalPrices.Select(
+                        (x, i) =>
+                            new Slice(
+                                time.AddMinutes(i),
+                                new List<BaseData>
+                                {
+                                    new TradeBar
+                                    {
+                                        Time = time.AddMinutes(i),
+                                        Symbol = Symbols.AAPL,
+                                        Open = Convert.ToDecimal(x),
+                                        High = Convert.ToDecimal(x),
+                                        Low = Convert.ToDecimal(x),
+                                        Close = Convert.ToDecimal(x),
+                                        Volume = 100m
+                                    }
+                                },
+                                time.AddMinutes(i)
+                            )
+                    )
+                );
 
             var algorithm = new QCAlgorithm();
             algorithm.SubscriptionManager.SetDataManager(new DataManagerStub(algorithm));
@@ -112,21 +129,42 @@ namespace QuantConnect.Tests.Algorithm.Framework.Execution
             algorithm.SetFinishedWarmingUp();
 
             var orderProcessor = new Mock<IOrderProcessor>();
-            orderProcessor.Setup(m => m.Process(It.IsAny<SubmitOrderRequest>()))
-                .Returns((SubmitOrderRequest request) => new OrderTicket(algorithm.Transactions, request))
-                .Callback((OrderRequest request) => actualOrdersSubmitted.Add((SubmitOrderRequest)request));
-            orderProcessor.Setup(m => m.GetOpenOrders(It.IsAny<Func<Order, bool>>()))
+            orderProcessor
+                .Setup(m => m.Process(It.IsAny<SubmitOrderRequest>()))
+                .Returns(
+                    (SubmitOrderRequest request) => new OrderTicket(algorithm.Transactions, request)
+                )
+                .Callback(
+                    (OrderRequest request) => actualOrdersSubmitted.Add((SubmitOrderRequest)request)
+                );
+            orderProcessor
+                .Setup(m => m.GetOpenOrders(It.IsAny<Func<Order, bool>>()))
                 .Returns(new List<Order>());
             algorithm.Transactions.SetOrderProcessor(orderProcessor.Object);
 
             var model = GetExecutionModel(language);
             algorithm.SetExecution(model);
 
-            var changes = SecurityChangesTests.CreateNonInternal(new[] { security }, Enumerable.Empty<Security>());
+            var changes = SecurityChangesTests.CreateNonInternal(
+                new[] { security },
+                Enumerable.Empty<Security>()
+            );
             model.OnSecuritiesChanged(algorithm, changes);
 
-            algorithm.History(new List<Symbol> { security.Symbol }, historicalPrices.Length, Resolution.Minute)
-                .PushThroughConsolidators(symbol => algorithm.Securities[symbol].Subscriptions.Single(s=>s.TickType==LeanData.GetCommonTickType(SecurityType.Equity)).Consolidators.First());
+            algorithm
+                .History(
+                    new List<Symbol> { security.Symbol },
+                    historicalPrices.Length,
+                    Resolution.Minute
+                )
+                .PushThroughConsolidators(symbol =>
+                    algorithm
+                        .Securities[symbol]
+                        .Subscriptions.Single(s =>
+                            s.TickType == LeanData.GetCommonTickType(SecurityType.Equity)
+                        )
+                        .Consolidators.First()
+                );
 
             var targets = new IPortfolioTarget[] { new PortfolioTarget(security.Symbol, 10) };
             model.Execute(algorithm, targets);

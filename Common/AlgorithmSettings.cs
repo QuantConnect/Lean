@@ -14,10 +14,10 @@
 */
 
 using System;
-using QuantConnect.Interfaces;
-using QuantConnect.Securities;
-using QuantConnect.Orders.Fills;
 using QuantConnect.Configuration;
+using QuantConnect.Interfaces;
+using QuantConnect.Orders.Fills;
+using QuantConnect.Securities;
 
 namespace QuantConnect
 {
@@ -26,8 +26,12 @@ namespace QuantConnect
     /// </summary>
     public class AlgorithmSettings : IAlgorithmSettings
     {
-        private static TimeSpan _defaultDatabasesRefreshPeriod =
-            TimeSpan.TryParse(Config.Get("databases-refresh-period", "1.00:00:00"), out var refreshPeriod) ? refreshPeriod : Time.OneDay;
+        private static TimeSpan _defaultDatabasesRefreshPeriod = TimeSpan.TryParse(
+            Config.Get("databases-refresh-period", "1.00:00:00"),
+            out var refreshPeriod
+        )
+            ? refreshPeriod
+            : Time.OneDay;
 
         /// <summary>
         /// Gets whether or not WarmUpIndicator is allowed to warm up indicators
@@ -73,7 +77,9 @@ namespace QuantConnect
         /// All securities added with <see cref="IAlgorithm.AddSecurity"/> are counted as one,
         /// with the exception of options and futures where every single contract in a chain counts as one.
         /// </remarks>
-        [Obsolete("This property is deprecated. Please observe data subscription limits set by your brokerage to avoid runtime errors.")]
+        [Obsolete(
+            "This property is deprecated. Please observe data subscription limits set by your brokerage to avoid runtime errors."
+        )]
         public int DataSubscriptionLimit { get; set; } = int.MaxValue;
 
         /// <summary>
@@ -118,14 +124,8 @@ namespace QuantConnect
         /// Pass through version to be user friendly</remarks>
         public Resolution? WarmUpResolution
         {
-            get
-            {
-                return WarmupResolution;
-            }
-            set
-            {
-                WarmupResolution = value;
-            }
+            get { return WarmupResolution; }
+            set { WarmupResolution = value; }
         }
 
         /// <summary>

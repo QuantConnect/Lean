@@ -44,22 +44,24 @@ namespace QuantConnect.Report.ReportElements
         /// </summary>
         public override string Render()
         {
-            var equityCurve = _live == null
-                ? new Series<DateTime, double>(ResultsUtil.EquityPoints(_backtest))
-                : DrawdownCollection.NormalizeResults(_backtest, _live);
+            var equityCurve =
+                _live == null
+                    ? new Series<DateTime, double>(ResultsUtil.EquityPoints(_backtest))
+                    : DrawdownCollection.NormalizeResults(_backtest, _live);
 
             if (equityCurve.IsEmpty)
             {
                 return "-";
             }
-            
+
             var years = (decimal)(equityCurve.LastKey() - equityCurve.FirstKey()).TotalDays / 365m;
-            
+
             Result = Statistics.Statistics.CompoundingAnnualPerformance(
                 equityCurve.FirstValue().SafeDecimalCast(),
                 equityCurve.LastValue().SafeDecimalCast(),
-                years);
-            
+                years
+            );
+
             return ((decimal?)Result)?.ToString("P1") ?? "-";
         }
     }

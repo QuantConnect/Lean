@@ -13,22 +13,22 @@
  * limitations under the License.
 */
 
+using System;
+using System.Collections.Generic;
+using System.Linq;
 using Accord.Math;
 using NUnit.Framework;
 using Python.Runtime;
+using QuantConnect.Algorithm;
 using QuantConnect.Algorithm.Framework.Alphas;
 using QuantConnect.Algorithm.Framework.Portfolio;
 using QuantConnect.Data;
 using QuantConnect.Data.Market;
 using QuantConnect.Data.UniverseSelection;
-using QuantConnect.Securities;
-using System;
-using System.Linq;
-using QuantConnect.Algorithm;
-using QuantConnect.Tests.Engine.DataFeeds;
-using System.Collections.Generic;
-using QuantConnect.Tests.Common.Data.UniverseSelection;
 using QuantConnect.Interfaces;
+using QuantConnect.Securities;
+using QuantConnect.Tests.Common.Data.UniverseSelection;
+using QuantConnect.Tests.Engine.DataFeeds;
 
 namespace QuantConnect.Tests.Algorithm.Framework.Portfolio
 {
@@ -50,24 +50,24 @@ namespace QuantConnect.Tests.Algorithm.Framework.Portfolio
             // Germany will outperform the other European markets by 5%
             _view1Insights = new[]
             {
-                GetInsight("View 1", "AUS",  0),
-                GetInsight("View 1", "CAN",  0),
+                GetInsight("View 1", "AUS", 0),
+                GetInsight("View 1", "CAN", 0),
                 GetInsight("View 1", "FRA", -0.01475),
-                GetInsight("View 1", "GER",  0.05000),
-                GetInsight("View 1", "JAP",  0),
-                GetInsight("View 1", "UK" , -0.03525),
-                GetInsight("View 1", "USA",  0)
+                GetInsight("View 1", "GER", 0.05000),
+                GetInsight("View 1", "JAP", 0),
+                GetInsight("View 1", "UK", -0.03525),
+                GetInsight("View 1", "USA", 0)
             };
 
             // Canadian Equities will outperform US equities by 3 %
             _view2Insights = new[]
             {
-                GetInsight("View 2", "AUS",  0),
-                GetInsight("View 2", "CAN",  0.03),
-                GetInsight("View 2", "FRA",  0),
-                GetInsight("View 2", "GER",  0),
-                GetInsight("View 2", "JAP",  0),
-                GetInsight("View 2", "UK" ,  0),
+                GetInsight("View 2", "AUS", 0),
+                GetInsight("View 2", "CAN", 0.03),
+                GetInsight("View 2", "FRA", 0),
+                GetInsight("View 2", "GER", 0),
+                GetInsight("View 2", "JAP", 0),
+                GetInsight("View 2", "UK", 0),
                 GetInsight("View 2", "USA", -0.03)
             };
 
@@ -87,7 +87,10 @@ namespace QuantConnect.Tests.Algorithm.Framework.Portfolio
             SetPortfolioConstruction(language);
 
             var insights = new Insight[0];
-            var actualTargets = _algorithm.PortfolioConstruction.CreateTargets(_algorithm, insights);
+            var actualTargets = _algorithm.PortfolioConstruction.CreateTargets(
+                _algorithm,
+                insights
+            );
 
             Assert.AreEqual(0, actualTargets.Count());
         }
@@ -119,7 +122,10 @@ namespace QuantConnect.Tests.Algorithm.Framework.Portfolio
             var insights = _view1Insights.Concat(new[] { outdatedInsight }).ToArray();
             Clear();
             _algorithm.Insights.AddRange(insights);
-            var actualTargets = _algorithm.PortfolioConstruction.CreateTargets(_algorithm, insights);
+            var actualTargets = _algorithm.PortfolioConstruction.CreateTargets(
+                _algorithm,
+                insights
+            );
 
             Assert.AreEqual(expectedTargets.Count(), actualTargets.Count());
 
@@ -155,8 +161,11 @@ namespace QuantConnect.Tests.Algorithm.Framework.Portfolio
             outdatedInsight.GeneratedTimeUtc -= TimeSpan.FromHours(1);
             outdatedInsight.CloseTimeUtc -= TimeSpan.FromHours(1);
 
-            var insights = _view1Insights.Concat(_view2Insights).Concat(new[] {outdatedInsight});
-            var actualTargets = _algorithm.PortfolioConstruction.CreateTargets(_algorithm, insights.ToArray());
+            var insights = _view1Insights.Concat(_view2Insights).Concat(new[] { outdatedInsight });
+            var actualTargets = _algorithm.PortfolioConstruction.CreateTargets(
+                _algorithm,
+                insights.ToArray()
+            );
 
             Assert.AreEqual(expectedTargets.Count(), actualTargets.Count());
 
@@ -179,7 +188,11 @@ namespace QuantConnect.Tests.Algorithm.Framework.Portfolio
             {
                 double[,] P;
                 double[] Q;
-                ((BLOPCM)_algorithm.PortfolioConstruction).TestTryGetViews(_view1Insights, out P, out Q);
+                ((BLOPCM)_algorithm.PortfolioConstruction).TestTryGetViews(
+                    _view1Insights,
+                    out P,
+                    out Q
+                );
 
                 Assert.AreEqual(P.GetLength(0), 1);
                 Assert.AreEqual(P.GetLength(1), 7);
@@ -187,12 +200,17 @@ namespace QuantConnect.Tests.Algorithm.Framework.Portfolio
 
                 return;
             }
-            
+
             using (Py.GIL())
             {
                 var name = nameof(BLOPCM);
-                var instance = PyModule.FromString(name, GetPythonBLOPCM()).GetAttr(name).Invoke(((int)PortfolioBias.LongShort).ToPython());
-                var result = PyList.AsList(instance.InvokeMethod("get_views", _view1Insights.ToPython()));
+                var instance = PyModule
+                    .FromString(name, GetPythonBLOPCM())
+                    .GetAttr(name)
+                    .Invoke(((int)PortfolioBias.LongShort).ToPython());
+                var result = PyList.AsList(
+                    instance.InvokeMethod("get_views", _view1Insights.ToPython())
+                );
                 Assert.AreEqual(result[0].Length(), 1);
                 Assert.AreEqual(result[0][0].Length(), 7);
                 Assert.AreEqual(result[1].Length(), 1);
@@ -221,11 +239,14 @@ namespace QuantConnect.Tests.Algorithm.Framework.Portfolio
 
                 return;
             }
-            
+
             using (Py.GIL())
             {
                 var name = nameof(BLOPCM);
-                var instance = PyModule.FromString(name, GetPythonBLOPCM()).GetAttr(name).Invoke(((int)PortfolioBias.LongShort).ToPython());
+                var instance = PyModule
+                    .FromString(name, GetPythonBLOPCM())
+                    .GetAttr(name)
+                    .Invoke(((int)PortfolioBias.LongShort).ToPython());
                 var result = PyList.AsList(instance.InvokeMethod("get_views", insights.ToPython()));
                 Assert.AreEqual(result[0].Length(), 2);
                 Assert.AreEqual(result[0][0].Length(), 7);
@@ -252,7 +273,11 @@ namespace QuantConnect.Tests.Algorithm.Framework.Portfolio
         [TestCase(Language.Python, -0.1, false)]
         [TestCase(Language.Python, 0.011d, false)]
         [TestCase(Language.Python, -0.011d, false)]
-        public void IgnoresInsightsWithInvalidMagnitudeValue(Language language, double magnitude, bool expectZero)
+        public void IgnoresInsightsWithInvalidMagnitudeValue(
+            Language language,
+            double magnitude,
+            bool expectZero
+        )
         {
             SetPortfolioConstruction(language);
             _algorithm.Settings.MaxAbsolutePortfolioTargetPercentage = 10;
@@ -266,11 +291,14 @@ namespace QuantConnect.Tests.Algorithm.Framework.Portfolio
                 GetInsight("View 1", "FRA", magnitude),
                 GetInsight("View 1", "GER", magnitude),
                 GetInsight("View 1", "JAP", magnitude),
-                GetInsight("View 1", "UK" , magnitude),
+                GetInsight("View 1", "UK", magnitude),
                 GetInsight("View 1", "USA", magnitude)
             };
-            
-            var actualTargets = _algorithm.PortfolioConstruction.CreateTargets(_algorithm, insights);
+
+            var actualTargets = _algorithm.PortfolioConstruction.CreateTargets(
+                _algorithm,
+                insights
+            );
 
             if (expectZero)
             {
@@ -297,12 +325,14 @@ namespace QuantConnect.Tests.Algorithm.Framework.Portfolio
                 GetInsight("View 1", "FRA", 0.1),
                 GetInsight("View 1", "GER", -0.1),
                 GetInsight("View 1", "JAP", -0.1),
-                GetInsight("View 1", "UK" , 0.1),
+                GetInsight("View 1", "UK", 0.1),
                 GetInsight("View 1", "USA", -0.1)
             };
 
             var createdValidTarget = false;
-            foreach (var target in _algorithm.PortfolioConstruction.CreateTargets(_algorithm, insights))
+            foreach (
+                var target in _algorithm.PortfolioConstruction.CreateTargets(_algorithm, insights)
+            )
             {
                 QuantConnect.Logging.Log.Trace($"{target.Symbol}: {target.Quantity}");
                 if (target.Quantity == 0)
@@ -331,11 +361,19 @@ namespace QuantConnect.Tests.Algorithm.Framework.Portfolio
             spy.SetMarketPrice(new Tick(algorithm.Time, spySymbol, 1m, 1m));
             algorithm.Securities.Add(spySymbol, spy);
 
-            algorithm.PortfolioConstruction.OnSecuritiesChanged(algorithm, SecurityChangesTests.AddedNonInternal(spy));
+            algorithm.PortfolioConstruction.OnSecuritiesChanged(
+                algorithm,
+                SecurityChangesTests.AddedNonInternal(spy)
+            );
 
-            var insights = new[] { Insight.Price(spySymbol, Time.OneMinute, InsightDirection.Up, .1) };
+            var insights = new[]
+            {
+                Insight.Price(spySymbol, Time.OneMinute, InsightDirection.Up, .1)
+            };
 
-            Assert.DoesNotThrow(() => algorithm.PortfolioConstruction.CreateTargets(algorithm, insights));
+            Assert.DoesNotThrow(
+                () => algorithm.PortfolioConstruction.CreateTargets(algorithm, insights)
+            );
 
             algorithm.SetDateTime(algorithm.Time.AddDays(1));
 
@@ -345,19 +383,34 @@ namespace QuantConnect.Tests.Algorithm.Framework.Portfolio
             aapl.SetMarketPrice(new Tick(algorithm.Time, aaplSymbol, 1m, 1m));
             algorithm.Securities.Add(aaplSymbol, aapl);
 
-            algorithm.PortfolioConstruction.OnSecuritiesChanged(algorithm, SecurityChangesTests.AddedNonInternal(aapl));
+            algorithm.PortfolioConstruction.OnSecuritiesChanged(
+                algorithm,
+                SecurityChangesTests.AddedNonInternal(aapl)
+            );
 
             insights = new[] { spySymbol, aaplSymbol }
-                .Select(x => Insight.Price(x, Time.OneMinute, InsightDirection.Up, .1)).ToArray();
+                .Select(x => Insight.Price(x, Time.OneMinute, InsightDirection.Up, .1))
+                .ToArray();
 
-            Assert.DoesNotThrow(() => algorithm.PortfolioConstruction.CreateTargets(algorithm, insights));
+            Assert.DoesNotThrow(
+                () => algorithm.PortfolioConstruction.CreateTargets(algorithm, insights)
+            );
         }
 
         private Security GetSecurity(Symbol symbol, Resolution resolution)
         {
             var timezone = _algorithm.TimeZone;
             var exchangeHours = SecurityExchangeHours.AlwaysOpen(timezone);
-            var config = new SubscriptionDataConfig(typeof(TradeBar), symbol, resolution, timezone, timezone, true, false, false);
+            var config = new SubscriptionDataConfig(
+                typeof(TradeBar),
+                symbol,
+                resolution,
+                timezone,
+                timezone,
+                true,
+                false,
+                false
+            );
             return new Security(
                 exchangeHours,
                 config,
@@ -369,22 +422,34 @@ namespace QuantConnect.Tests.Algorithm.Framework.Portfolio
             );
         }
 
-        private Symbol GetSymbol(string ticker) => Symbol.Create(ticker, SecurityType.Equity, Market.USA);
+        private Symbol GetSymbol(string ticker) =>
+            Symbol.Create(ticker, SecurityType.Equity, Market.USA);
 
         private Insight GetInsight(string SourceModel, string ticker, double magnitude)
         {
             var period = Time.OneDay;
             var direction = (InsightDirection)Math.Sign(magnitude);
-            var insight = Insight.Price(GetSymbol(ticker), period, direction, magnitude, sourceModel: SourceModel);
+            var insight = Insight.Price(
+                GetSymbol(ticker),
+                period,
+                direction,
+                magnitude,
+                sourceModel: SourceModel
+            );
             insight.GeneratedTimeUtc = _algorithm.UtcTime;
             insight.CloseTimeUtc = _algorithm.UtcTime.Add(insight.Period);
             _algorithm.Insights.Add(insight);
             return insight;
         }
 
-        private void SetPortfolioConstruction(Language language, PortfolioBias portfolioBias = PortfolioBias.LongShort)
+        private void SetPortfolioConstruction(
+            Language language,
+            PortfolioBias portfolioBias = PortfolioBias.LongShort
+        )
         {
-            _algorithm.SetPortfolioConstruction(new BLOPCM(new UnconstrainedMeanVariancePortfolioOptimizer(), portfolioBias));
+            _algorithm.SetPortfolioConstruction(
+                new BLOPCM(new UnconstrainedMeanVariancePortfolioOptimizer(), portfolioBias)
+            );
             if (language == Language.Python)
             {
                 try
@@ -392,7 +457,10 @@ namespace QuantConnect.Tests.Algorithm.Framework.Portfolio
                     using (Py.GIL())
                     {
                         var name = nameof(BLOPCM);
-                        var instance = PyModule.FromString(name, GetPythonBLOPCM()).GetAttr(name).Invoke(((int)portfolioBias).ToPython());
+                        var instance = PyModule
+                            .FromString(name, GetPythonBLOPCM())
+                            .GetAttr(name)
+                            .Invoke(((int)portfolioBias).ToPython());
                         var model = new PortfolioConstructionModelPythonWrapper(instance);
                         _algorithm.SetPortfolioConstruction(model);
                     }
@@ -403,7 +471,9 @@ namespace QuantConnect.Tests.Algorithm.Framework.Portfolio
                 }
             }
 
-            var changes = SecurityChangesTests.AddedNonInternal(_algorithm.Securities.Values.ToList().ToArray());
+            var changes = SecurityChangesTests.AddedNonInternal(
+                _algorithm.Securities.Values.ToList().ToArray()
+            );
             _algorithm.PortfolioConstruction.OnSecuritiesChanged(_algorithm, changes);
         }
 
@@ -415,9 +485,7 @@ namespace QuantConnect.Tests.Algorithm.Framework.Portfolio
         private class BLOPCM : BlackLittermanOptimizationPortfolioConstructionModel
         {
             public BLOPCM(IPortfolioOptimizer optimizer, PortfolioBias portfolioBias)
-                : base(optimizer: optimizer, portfolioBias: portfolioBias)
-            {
-            }
+                : base(optimizer: optimizer, portfolioBias: portfolioBias) { }
 
             public override double[] GetEquilibriumReturns(double[,] returns, out double[,] Σ)
             {
@@ -441,15 +509,19 @@ namespace QuantConnect.Tests.Algorithm.Framework.Portfolio
                 return w.Dot(Σ.Multiply(delta));
             }
 
-            public bool TestTryGetViews(ICollection<Insight> insights, out double[,] P, out double[] Q)
+            public bool TestTryGetViews(
+                ICollection<Insight> insights,
+                out double[,] P,
+                out double[] Q
+            )
             {
                 return base.TryGetViews(insights, out P, out Q);
             }
 
-            public override void OnSecuritiesChanged(QCAlgorithm algorithm, SecurityChanges changes)
-            {
-
-            }
+            public override void OnSecuritiesChanged(
+                QCAlgorithm algorithm,
+                SecurityChanges changes
+            ) { }
         }
 
         private string GetPythonBLOPCM()
@@ -495,11 +567,16 @@ class BLOPCM(BlackLittermanOptimizationPortfolioConstructionModel):
 
         private void Clear() => _algorithm.Insights.Clear(_algorithm.Securities.Keys.ToArray());
 
-        private class NewSymbolPortfolioConstructionModel : BlackLittermanOptimizationPortfolioConstructionModel
+        private class NewSymbolPortfolioConstructionModel
+            : BlackLittermanOptimizationPortfolioConstructionModel
         {
-            private readonly Dictionary<Symbol, ReturnsSymbolData> _symbolDataDict = new Dictionary<Symbol, ReturnsSymbolData>();
+            private readonly Dictionary<Symbol, ReturnsSymbolData> _symbolDataDict =
+                new Dictionary<Symbol, ReturnsSymbolData>();
 
-            public override IEnumerable<IPortfolioTarget> CreateTargets(QCAlgorithm algorithm, Insight[] insights)
+            public override IEnumerable<IPortfolioTarget> CreateTargets(
+                QCAlgorithm algorithm,
+                Insight[] insights
+            )
             {
                 // Updates the ReturnsSymbolData with insights
                 foreach (var insight in insights)
@@ -512,7 +589,10 @@ class BLOPCM(BlackLittermanOptimizationPortfolioConstructionModel):
                 }
 
                 double[,] returns = null;
-                Assert.DoesNotThrow(() => returns = _symbolDataDict.FormReturnsMatrix(insights.Select(x => x.Symbol)));
+                Assert.DoesNotThrow(
+                    () =>
+                        returns = _symbolDataDict.FormReturnsMatrix(insights.Select(x => x.Symbol))
+                );
 
                 // Calculate posterior estimate of the mean and uncertainty in the mean
                 double[,] Σ;

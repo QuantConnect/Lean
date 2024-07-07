@@ -29,7 +29,7 @@ namespace QuantConnect.Data.Market
         /// original implementation; Specifically:
         /// - It only returns a single bar, at most, irrespective of tick movement
         /// - It will emit consecutive bars side by side
-        /// - By default even bars are created 
+        /// - By default even bars are created
         /// (0)
         /// </summary>
         /// <remarks>the Classic mode has only been retained for
@@ -41,7 +41,7 @@ namespace QuantConnect.Data.Market
         /// Specifically:
         /// - returns zero or more bars per tick, as appropriate.
         /// - Will not emit consecutive bars side by side
-        /// - Creates 
+        /// - Creates
         /// (1)
         /// </summary>
         Wicked

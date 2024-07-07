@@ -29,7 +29,11 @@ namespace QuantConnect.Util
         /// <param name="strike">The strike price of the option</param>
         /// <param name="right">The option right of the option, call or put</param>
         /// <returns>The intrinsic value remains for the option at expiry</returns>
-        public static decimal GetIntrinsicValue(decimal underlyingPrice, decimal strike, OptionRight right)
+        public static decimal GetIntrinsicValue(
+            decimal underlyingPrice,
+            decimal strike,
+            OptionRight right
+        )
         {
             return Math.Max(0.0m, GetPayOff(underlyingPrice, strike, right));
         }

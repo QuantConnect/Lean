@@ -14,19 +14,19 @@
 */
 
 using System;
+using System.Collections.Generic;
 using System.Linq;
-using Python.Runtime;
 using NUnit.Framework;
+using Python.Runtime;
+using QuantConnect.Configuration;
+using QuantConnect.Data.Fundamental;
+using QuantConnect.Data.Market;
+using QuantConnect.Data.UniverseSelection;
+using QuantConnect.Interfaces;
 using QuantConnect.Logging;
 using QuantConnect.Research;
 using QuantConnect.Securities;
-using QuantConnect.Interfaces;
-using QuantConnect.Data.Market;
-using System.Collections.Generic;
-using QuantConnect.Data.Fundamental;
-using QuantConnect.Data.UniverseSelection;
 using QuantConnect.Tests.Common.Data.Fundamental;
-using QuantConnect.Configuration;
 
 namespace QuantConnect.Tests.Research
 {
@@ -78,7 +78,9 @@ namespace QuantConnect.Tests.Research
             // Expected end date should be either today if tradable, or last tradable day
             var aapl = _qb.AddEquity("AAPL");
             var now = DateTime.UtcNow.Date;
-            var expectedEndDate = aapl.Exchange.Hours.IsDateOpen(now) ? now : aapl.Exchange.Hours.GetPreviousTradingDay(now);
+            var expectedEndDate = aapl.Exchange.Hours.IsDateOpen(now)
+                ? now
+                : aapl.Exchange.Hours.GetPreviousTradingDay(now);
             expectedEndDate = expectedEndDate.AddDays(1);
 
             IEnumerable<DataDictionary<dynamic>> data = _qb.GetFundamental("AAPL", "", startDate);
@@ -95,8 +97,17 @@ namespace QuantConnect.Tests.Research
             using (Py.GIL())
             {
                 var testModule = _module.FundamentalHistoryTest();
-                FundamentalService.Initialize(TestGlobals.DataProvider, new TestFundamentalDataProvider(), false);
-                var dataFrame = testModule.getFundamentals(input[0], input[1], _startDate, _endDate);
+                FundamentalService.Initialize(
+                    TestGlobals.DataProvider,
+                    new TestFundamentalDataProvider(),
+                    false
+                );
+                var dataFrame = testModule.getFundamentals(
+                    input[0],
+                    input[1],
+                    _startDate,
+                    _endDate
+                );
 
                 // Should not be empty
                 Assert.IsFalse(dataFrame.empty.AsManagedObject(typeof(bool)));
@@ -127,7 +138,11 @@ namespace QuantConnect.Tests.Research
         [TestCaseSource(nameof(DataTestCases))]
         public void CSharpFundamentalData(dynamic input)
         {
-            FundamentalService.Initialize(TestGlobals.DataProvider, new TestFundamentalDataProvider(), false);
+            FundamentalService.Initialize(
+                TestGlobals.DataProvider,
+                new TestFundamentalDataProvider(),
+                false
+            );
             var data = _qb.GetFundamental(input[0], input[1], _startDate, _endDate);
             var currentDate = _startDate;
 
@@ -159,7 +174,12 @@ namespace QuantConnect.Tests.Research
                 var start = new DateTime(2023, 10, 10);
                 var symbol = Symbol.Create("AIG", SecurityType.Equity, Market.USA);
                 var testModule = _module.FundamentalHistoryTest();
-                var data = testModule.getFundamentals(symbol, "ValuationRatios.PERatio", start, start.AddDays(5));
+                var data = testModule.getFundamentals(
+                    symbol,
+                    "ValuationRatios.PERatio",
+                    start,
+                    start.AddDays(5)
+                );
                 Assert.AreNotEqual(true, (bool)data.empty);
 
                 var subdataframe = data.loc[start.AddDays(1).ToPython()];
@@ -197,11 +217,16 @@ namespace QuantConnect.Tests.Research
             var history = _qb.History(Symbols.AAPL, startDate, endDate, Resolution.Daily).ToList();
             Assert.IsNotEmpty(history);
 
-            var fundamental = (_qb.GetFundamental("AAPL", "", startDate, endDate) as IEnumerable<DataDictionary<dynamic>>).ToList();
+            var fundamental = (
+                _qb.GetFundamental("AAPL", "", startDate, endDate)
+                as IEnumerable<DataDictionary<dynamic>>
+            ).ToList();
 
             var isEndDateOpen = security.Exchange.Hours.IsDateOpen(endDate);
             var expectedFundamentalCount = 10;
-            var expectedHistoryCount = isEndDateOpen ? expectedFundamentalCount - 1 : expectedFundamentalCount;
+            var expectedHistoryCount = isEndDateOpen
+                ? expectedFundamentalCount - 1
+                : expectedFundamentalCount;
 
             Assert.AreEqual(expectedFundamentalCount, fundamental.Count);
             Assert.AreEqual(expectedHistoryCount, history.Count);
@@ -211,7 +236,9 @@ namespace QuantConnect.Tests.Research
 
             CollectionAssert.AreEqual(historyTimes, fundamentalTimes);
 
-            Assert.IsTrue(fundamental.All(x => x.Time == x.Values.Cast<FineFundamental>().Single().EndTime));
+            Assert.IsTrue(
+                fundamental.All(x => x.Time == x.Values.Cast<FineFundamental>().Single().EndTime)
+            );
 
             _qb.RemoveSecurity(security.Symbol);
             _qb.SetEndDate(originalQBEndDate);
@@ -220,18 +247,53 @@ namespace QuantConnect.Tests.Research
         // Different requests and their expected values
         private static readonly object[] DataTestCases =
         {
-            new object[] {new List<string> {"AAPL"}, null, 13.2725m, new Func<FineFundamental, double>(fundamental => fundamental.ValuationRatios.PERatio) },
-            new object[] {new List<string> {"AAPL"}, "ValuationRatios.PERatio", 13.2725m},
-            new object[] {Symbol.Create("IBM", SecurityType.Equity, Market.USA), "ValuationRatios.BookValuePerShare", 22.5177},
-            new object[] {new List<Symbol> {Symbol.Create("AIG", SecurityType.Equity, Market.USA)}, "FinancialStatements.NumberOfShareHolders.Value", 36319}
+            new object[]
+            {
+                new List<string> { "AAPL" },
+                null,
+                13.2725m,
+                new Func<FineFundamental, double>(fundamental =>
+                    fundamental.ValuationRatios.PERatio
+                )
+            },
+            new object[]
+            {
+                new List<string> { "AAPL" },
+                "ValuationRatios.PERatio",
+                13.2725m
+            },
+            new object[]
+            {
+                Symbol.Create("IBM", SecurityType.Equity, Market.USA),
+                "ValuationRatios.BookValuePerShare",
+                22.5177
+            },
+            new object[]
+            {
+                new List<Symbol> { Symbol.Create("AIG", SecurityType.Equity, Market.USA) },
+                "FinancialStatements.NumberOfShareHolders.Value",
+                36319
+            }
         };
 
         // Different requests that should return null
         // Nonexistent data; start date after end date;
         private static readonly object[] NullRequestTestCases =
         {
-            new object[] {Symbol.Create("AIG", SecurityType.Equity, Market.USA), "ValuationRatios.PERatio", new DateTime(1972, 4, 1),  new DateTime(1972, 4, 1)},
-            new object[] {Symbol.Create("IBM", SecurityType.Equity, Market.USA), "ValuationRatios.BookValuePerShare", new DateTime(2014, 4, 1), new DateTime(2014, 3, 31)},
+            new object[]
+            {
+                Symbol.Create("AIG", SecurityType.Equity, Market.USA),
+                "ValuationRatios.PERatio",
+                new DateTime(1972, 4, 1),
+                new DateTime(1972, 4, 1)
+            },
+            new object[]
+            {
+                Symbol.Create("IBM", SecurityType.Equity, Market.USA),
+                "ValuationRatios.BookValuePerShare",
+                new DateTime(2014, 4, 1),
+                new DateTime(2014, 3, 31)
+            },
         };
 
         private static readonly TestCaseData[] FundamentalEndTimeTestCases =
@@ -244,7 +306,11 @@ namespace QuantConnect.Tests.Research
 
         private class TestFundamentalDataProvider : IFundamentalDataProvider
         {
-            public T Get<T>(DateTime time, SecurityIdentifier securityIdentifier, FundamentalProperty name)
+            public T Get<T>(
+                DateTime time,
+                SecurityIdentifier securityIdentifier,
+                FundamentalProperty name
+            )
             {
                 if (securityIdentifier == SecurityIdentifier.Empty)
                 {
@@ -253,7 +319,11 @@ namespace QuantConnect.Tests.Research
                 return Get(time, securityIdentifier, name);
             }
 
-            private dynamic Get(DateTime time, SecurityIdentifier securityIdentifier, FundamentalProperty enumName)
+            private dynamic Get(
+                DateTime time,
+                SecurityIdentifier securityIdentifier,
+                FundamentalProperty enumName
+            )
             {
                 var name = Enum.GetName(enumName);
                 switch (name)
@@ -267,10 +337,8 @@ namespace QuantConnect.Tests.Research
                 }
                 return null;
             }
-            public void Initialize(IDataProvider dataProvider, bool liveMode)
-            {
-            }
+
+            public void Initialize(IDataProvider dataProvider, bool liveMode) { }
         }
     }
 }
-

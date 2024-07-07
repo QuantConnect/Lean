@@ -15,10 +15,10 @@
 
 using System;
 using System.Collections.Generic;
-using QuantConnect.Data.Market;
-using QuantConnect.Orders;
-using QuantConnect.Interfaces;
 using QuantConnect.Data;
+using QuantConnect.Data.Market;
+using QuantConnect.Interfaces;
+using QuantConnect.Orders;
 
 namespace QuantConnect.Algorithm.CSharp
 {
@@ -28,7 +28,9 @@ namespace QuantConnect.Algorithm.CSharp
     /// <meta name="tag" content="using data" />
     /// <meta name="tag" content="assets" />
     /// <meta name="tag" content="regression test" />
-    public class ExtendedMarketTradingRegressionAlgorithm : QCAlgorithm, IRegressionAlgorithmDefinition
+    public class ExtendedMarketTradingRegressionAlgorithm
+        : QCAlgorithm,
+            IRegressionAlgorithmDefinition
     {
         private DateTime _lastAction;
         private Symbol _spy;
@@ -38,9 +40,9 @@ namespace QuantConnect.Algorithm.CSharp
         /// </summary>
         public override void Initialize()
         {
-            SetStartDate(2013, 10, 07);  //Set Start Date
-            SetEndDate(2013, 10, 11);    //Set End Date
-            SetCash(100000);             //Set Strategy Cash
+            SetStartDate(2013, 10, 07); //Set Start Date
+            SetEndDate(2013, 10, 11); //Set End Date
+            SetCash(100000); //Set Strategy Cash
             _spy = AddEquity("SPY", Resolution.Minute, Market.USA, true, 0m, true).Symbol;
         }
 
@@ -51,7 +53,8 @@ namespace QuantConnect.Algorithm.CSharp
         public override void OnData(Slice slice)
         {
             //Only take an action once a day.
-            if (_lastAction.Date == Time.Date) return;
+            if (_lastAction.Date == Time.Date)
+                return;
             TradeBar spyBar = slice["SPY"];
 
             //If it isnt during market hours, go ahead and buy ten!
@@ -116,35 +119,36 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// This is used by the regression test system to indicate what the expected statistics are from running the algorithm
         /// </summary>
-        public Dictionary<string, string> ExpectedStatistics => new Dictionary<string, string>
-        {
-            {"Total Orders", "5"},
-            {"Average Win", "0%"},
-            {"Average Loss", "0%"},
-            {"Compounding Annual Return", "10.774%"},
-            {"Drawdown", "0.100%"},
-            {"Expectancy", "0"},
-            {"Start Equity", "100000"},
-            {"End Equity", "100135.59"},
-            {"Net Profit", "0.136%"},
-            {"Sharpe Ratio", "8.723"},
-            {"Sortino Ratio", "41.728"},
-            {"Probabilistic Sharpe Ratio", "90.001%"},
-            {"Loss Rate", "0%"},
-            {"Win Rate", "0%"},
-            {"Profit-Loss Ratio", "0"},
-            {"Alpha", "0.005"},
-            {"Beta", "0.039"},
-            {"Annual Standard Deviation", "0.009"},
-            {"Annual Variance", "0"},
-            {"Information Ratio", "-8.852"},
-            {"Tracking Error", "0.214"},
-            {"Treynor Ratio", "2.102"},
-            {"Total Fees", "$5.00"},
-            {"Estimated Strategy Capacity", "$14000000.00"},
-            {"Lowest Capacity Asset", "SPY R735QTJ8XC9X"},
-            {"Portfolio Turnover", "1.44%"},
-            {"OrderListHash", "ee17a1434ec69d64c82c0953b0a50a71"}
-        };
+        public Dictionary<string, string> ExpectedStatistics =>
+            new Dictionary<string, string>
+            {
+                { "Total Orders", "5" },
+                { "Average Win", "0%" },
+                { "Average Loss", "0%" },
+                { "Compounding Annual Return", "10.774%" },
+                { "Drawdown", "0.100%" },
+                { "Expectancy", "0" },
+                { "Start Equity", "100000" },
+                { "End Equity", "100135.59" },
+                { "Net Profit", "0.136%" },
+                { "Sharpe Ratio", "8.723" },
+                { "Sortino Ratio", "41.728" },
+                { "Probabilistic Sharpe Ratio", "90.001%" },
+                { "Loss Rate", "0%" },
+                { "Win Rate", "0%" },
+                { "Profit-Loss Ratio", "0" },
+                { "Alpha", "0.005" },
+                { "Beta", "0.039" },
+                { "Annual Standard Deviation", "0.009" },
+                { "Annual Variance", "0" },
+                { "Information Ratio", "-8.852" },
+                { "Tracking Error", "0.214" },
+                { "Treynor Ratio", "2.102" },
+                { "Total Fees", "$5.00" },
+                { "Estimated Strategy Capacity", "$14000000.00" },
+                { "Lowest Capacity Asset", "SPY R735QTJ8XC9X" },
+                { "Portfolio Turnover", "1.44%" },
+                { "OrderListHash", "ee17a1434ec69d64c82c0953b0a50a71" }
+            };
     }
 }

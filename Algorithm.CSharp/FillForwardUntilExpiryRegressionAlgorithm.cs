@@ -13,15 +13,15 @@
  * limitations under the License.
 */
 
-using QuantConnect.Data;
-using QuantConnect.Data.UniverseSelection;
-using QuantConnect.Interfaces;
-using QuantConnect.Securities.Option;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using QuantConnect.Data;
 using QuantConnect.Data.Market;
+using QuantConnect.Data.UniverseSelection;
+using QuantConnect.Interfaces;
 using QuantConnect.Securities;
+using QuantConnect.Securities.Option;
 
 namespace QuantConnect.Algorithm.CSharp
 {
@@ -29,7 +29,9 @@ namespace QuantConnect.Algorithm.CSharp
     /// Regression algorithm checks FillForwardEnumerator should FF the data until it reaches the delisting date
     /// replicates GH issue https://github.com/QuantConnect/Lean/issues/4872
     /// </summary>
-    public class FillForwardUntilExpiryRegressionAlgorithm : QCAlgorithm, IRegressionAlgorithmDefinition
+    public class FillForwardUntilExpiryRegressionAlgorithm
+        : QCAlgorithm,
+            IRegressionAlgorithmDefinition
     {
         private DateTime _realEndDate = new DateTime(2014, 06, 07);
         private SecurityExchange _exchange;
@@ -51,8 +53,9 @@ namespace QuantConnect.Algorithm.CSharp
             _options = new Dictionary<Symbol, HashSet<DateTime>>();
             var _twxOption = AddOption("TWX", Resolution.Minute);
             _exchange = _twxOption.Exchange;
-            _twxOption.SetFilter((x) => x
-                .Contracts(c => c.Where(s => _contracts.Contains(s.Value))));
+            _twxOption.SetFilter(
+                (x) => x.Contracts(c => c.Where(s => _contracts.Contains(s.Value)))
+            );
             SetBenchmark(t => 1);
         }
 
@@ -93,17 +96,24 @@ namespace QuantConnect.Algorithm.CSharp
         {
             if (_options.Count != _contracts.Length)
             {
-                throw new RegressionTestException($"Options weren't setup properly. Expected: {_contracts.Length}");
+                throw new RegressionTestException(
+                    $"Options weren't setup properly. Expected: {_contracts.Length}"
+                );
             }
 
             foreach (var option in _options)
             {
-                for (DateTime date = _realEndDate; date < option.Key.ID.Date; date = date.AddDays(1))
+                for (
+                    DateTime date = _realEndDate;
+                    date < option.Key.ID.Date;
+                    date = date.AddDays(1)
+                )
                 {
-                    if (_exchange.Hours.IsDateOpen(date) &&
-                        !option.Value.Contains(date))
+                    if (_exchange.Hours.IsDateOpen(date) && !option.Value.Contains(date))
                     {
-                        throw new RegressionTestException("Delisted security should be FF until expiry date");
+                        throw new RegressionTestException(
+                            "Delisted security should be FF until expiry date"
+                        );
                     }
                 }
             }
@@ -137,35 +147,36 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// This is used by the regression test system to indicate what the expected statistics are from running the algorithm
         /// </summary>
-        public Dictionary<string, string> ExpectedStatistics => new Dictionary<string, string>
-        {
-            {"Total Orders", "0"},
-            {"Average Win", "0%"},
-            {"Average Loss", "0%"},
-            {"Compounding Annual Return", "0%"},
-            {"Drawdown", "0%"},
-            {"Expectancy", "0"},
-            {"Start Equity", "100000"},
-            {"End Equity", "100000"},
-            {"Net Profit", "0%"},
-            {"Sharpe Ratio", "0"},
-            {"Sortino Ratio", "0"},
-            {"Probabilistic Sharpe Ratio", "0%"},
-            {"Loss Rate", "0%"},
-            {"Win Rate", "0%"},
-            {"Profit-Loss Ratio", "0"},
-            {"Alpha", "0"},
-            {"Beta", "0"},
-            {"Annual Standard Deviation", "0"},
-            {"Annual Variance", "0"},
-            {"Information Ratio", "0"},
-            {"Tracking Error", "0"},
-            {"Treynor Ratio", "0"},
-            {"Total Fees", "$0.00"},
-            {"Estimated Strategy Capacity", "$0"},
-            {"Lowest Capacity Asset", ""},
-            {"Portfolio Turnover", "0%"},
-            {"OrderListHash", "d41d8cd98f00b204e9800998ecf8427e"}
-        };
+        public Dictionary<string, string> ExpectedStatistics =>
+            new Dictionary<string, string>
+            {
+                { "Total Orders", "0" },
+                { "Average Win", "0%" },
+                { "Average Loss", "0%" },
+                { "Compounding Annual Return", "0%" },
+                { "Drawdown", "0%" },
+                { "Expectancy", "0" },
+                { "Start Equity", "100000" },
+                { "End Equity", "100000" },
+                { "Net Profit", "0%" },
+                { "Sharpe Ratio", "0" },
+                { "Sortino Ratio", "0" },
+                { "Probabilistic Sharpe Ratio", "0%" },
+                { "Loss Rate", "0%" },
+                { "Win Rate", "0%" },
+                { "Profit-Loss Ratio", "0" },
+                { "Alpha", "0" },
+                { "Beta", "0" },
+                { "Annual Standard Deviation", "0" },
+                { "Annual Variance", "0" },
+                { "Information Ratio", "0" },
+                { "Tracking Error", "0" },
+                { "Treynor Ratio", "0" },
+                { "Total Fees", "$0.00" },
+                { "Estimated Strategy Capacity", "$0" },
+                { "Lowest Capacity Asset", "" },
+                { "Portfolio Turnover", "0%" },
+                { "OrderListHash", "d41d8cd98f00b204e9800998ecf8427e" }
+            };
     }
 }

@@ -42,7 +42,7 @@ namespace QuantConnect.Securities
             Security security,
             decimal previousAveragePrice,
             decimal previousQuantity
-            )
+        )
             : base(security)
         {
             PreviousQuantity = previousQuantity;

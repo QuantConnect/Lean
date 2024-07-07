@@ -33,9 +33,9 @@ namespace QuantConnect.Algorithm.CSharp
         /// </summary>
         public override void Initialize()
         {
-            SetStartDate(1998, 01, 01);  //Set Start Date
-            SetEndDate(2006, 01, 01);    //Set End Date
-            SetCash(100000);             //Set Strategy Cash
+            SetStartDate(1998, 01, 01); //Set Start Date
+            SetEndDate(2006, 01, 01); //Set End Date
+            SetCash(100000); //Set Strategy Cash
             // Find more symbols here: http://quantconnect.com/data
             AddSecurity(SecurityType.Equity, "MSFT", Resolution.Daily);
             Securities["MSFT"].SetDataNormalizationMode(DataNormalizationMode.Raw);
@@ -57,8 +57,8 @@ namespace QuantConnect.Algorithm.CSharp
                 SetHoldings("MSFT", .5);
                 // place some orders that won't fill, when the split comes in they'll get modified to reflect the split
                 Debug("Purchased Stock: " + Securities["MSFT"].Price);
-                StopMarketOrder("MSFT", -CalculateOrderQuantity("MSFT", .25), data["MSFT"].Low/2);
-                LimitOrder("MSFT", -CalculateOrderQuantity("MSFT", .25), data["MSFT"].High*2);
+                StopMarketOrder("MSFT", -CalculateOrderQuantity("MSFT", .25), data["MSFT"].Low / 2);
+                LimitOrder("MSFT", -CalculateOrderQuantity("MSFT", .25), data["MSFT"].High * 2);
             }
         }
 
@@ -69,9 +69,10 @@ namespace QuantConnect.Algorithm.CSharp
         public void OnData(Dividends data) // update this to Dividends dictionary
         {
             var dividend = data["MSFT"];
-            Debug($"{dividend.Time.ToStringInvariant("o")} >> DIVIDEND >> {dividend.Symbol} - " +
-                $"{dividend.Distribution.ToStringInvariant("C")} - {Portfolio.Cash} - " +
-                $"{Portfolio["MSFT"].Price.ToStringInvariant("C")}"
+            Debug(
+                $"{dividend.Time.ToStringInvariant("o")} >> DIVIDEND >> {dividend.Symbol} - "
+                    + $"{dividend.Distribution.ToStringInvariant("C")} - {Portfolio.Cash} - "
+                    + $"{Portfolio["MSFT"].Price.ToStringInvariant("C")}"
             );
         }
 
@@ -83,10 +84,11 @@ namespace QuantConnect.Algorithm.CSharp
         {
             Debug("MSFT: " + Securities["MSFT"].Price);
             var split = data["MSFT"];
-            Debug($"{split.Time.ToIso8601Invariant()} >> SPLIT >> {split.Symbol} - " +
-                $"{split.SplitFactor.ToStringInvariant()} - " +
-                $"{Portfolio.Cash.ToStringInvariant()} - " +
-                $"{Portfolio["MSFT"].Quantity.ToStringInvariant()}"
+            Debug(
+                $"{split.Time.ToIso8601Invariant()} >> SPLIT >> {split.Symbol} - "
+                    + $"{split.SplitFactor.ToStringInvariant()} - "
+                    + $"{Portfolio.Cash.ToStringInvariant()} - "
+                    + $"{Portfolio["MSFT"].Quantity.ToStringInvariant()}"
             );
         }
 

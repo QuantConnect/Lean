@@ -33,7 +33,9 @@ namespace QuantConnect.Algorithm.CSharp
     /// <meta name="tag" content="using data" />
     /// <meta name="tag" content="benchmarks" />
     /// <meta name="tag" content="futures" />
-    public class BasicTemplateFuturesWithExtendedMarketAlgorithm : QCAlgorithm, IRegressionAlgorithmDefinition
+    public class BasicTemplateFuturesWithExtendedMarketAlgorithm
+        : QCAlgorithm,
+            IRegressionAlgorithmDefinition
     {
         private Symbol _contractSymbol;
 
@@ -79,13 +81,15 @@ namespace QuantConnect.Algorithm.CSharp
                 Debug($"{Time} - SymbolChanged event: {changedEvent}");
                 if (Time.TimeOfDay != TimeSpan.Zero)
                 {
-                    throw new RegressionTestException($"{Time} unexpected symbol changed event {changedEvent}!");
+                    throw new RegressionTestException(
+                        $"{Time} unexpected symbol changed event {changedEvent}!"
+                    );
                 }
             }
 
             if (!Portfolio.Invested)
             {
-                foreach(var chain in slice.FutureChains)
+                foreach (var chain in slice.FutureChains)
                 {
                     // find the front contract expiring no earlier than in 90 days
                     var contract = (
@@ -115,7 +119,9 @@ namespace QuantConnect.Algorithm.CSharp
             var futureMarginModel = buyingPowerModel as FutureMarginModel;
             if (buyingPowerModel == null)
             {
-                throw new RegressionTestException($"Invalid buying power model. Found: {buyingPowerModel.GetType().Name}. Expected: {nameof(FutureMarginModel)}");
+                throw new RegressionTestException(
+                    $"Invalid buying power model. Found: {buyingPowerModel.GetType().Name}. Expected: {nameof(FutureMarginModel)}"
+                );
             }
             var initialOvernight = futureMarginModel.InitialOvernightMarginRequirement;
             var maintenanceOvernight = futureMarginModel.MaintenanceOvernightMarginRequirement;
@@ -127,11 +133,15 @@ namespace QuantConnect.Algorithm.CSharp
         {
             foreach (var addedSecurity in changes.AddedSecurities)
             {
-                if (addedSecurity.Symbol.SecurityType == SecurityType.Future
+                if (
+                    addedSecurity.Symbol.SecurityType == SecurityType.Future
                     && !addedSecurity.Symbol.IsCanonical()
-                    && !addedSecurity.HasData)
+                    && !addedSecurity.HasData
+                )
                 {
-                    throw new RegressionTestException($"Future contracts did not work up as expected: {addedSecurity.Symbol}");
+                    throw new RegressionTestException(
+                        $"Future contracts did not work up as expected: {addedSecurity.Symbol}"
+                    );
                 }
             }
         }
@@ -164,35 +174,36 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// This is used by the regression test system to indicate what the expected statistics are from running the algorithm
         /// </summary>
-        public Dictionary<string, string> ExpectedStatistics => new Dictionary<string, string>
-        {
-            {"Total Orders", "8282"},
-            {"Average Win", "0.00%"},
-            {"Average Loss", "0.00%"},
-            {"Compounding Annual Return", "-100.000%"},
-            {"Drawdown", "13.900%"},
-            {"Expectancy", "-0.824"},
-            {"Start Equity", "1000000"},
-            {"End Equity", "861260.7"},
-            {"Net Profit", "-13.874%"},
-            {"Sharpe Ratio", "-19.346"},
-            {"Sortino Ratio", "-19.346"},
-            {"Probabilistic Sharpe Ratio", "0%"},
-            {"Loss Rate", "89%"},
-            {"Win Rate", "11%"},
-            {"Profit-Loss Ratio", "0.64"},
-            {"Alpha", "2.468"},
-            {"Beta", "-0.215"},
-            {"Annual Standard Deviation", "0.052"},
-            {"Annual Variance", "0.003"},
-            {"Information Ratio", "-58.37"},
-            {"Tracking Error", "0.295"},
-            {"Treynor Ratio", "4.695"},
-            {"Total Fees", "$19131.42"},
-            {"Estimated Strategy Capacity", "$130000.00"},
-            {"Lowest Capacity Asset", "GC VOFJUCDY9XNH"},
-            {"Portfolio Turnover", "32523.20%"},
-            {"OrderListHash", "0664a72652a19956ea3c4915269cc4b9"}
-        };
+        public Dictionary<string, string> ExpectedStatistics =>
+            new Dictionary<string, string>
+            {
+                { "Total Orders", "8282" },
+                { "Average Win", "0.00%" },
+                { "Average Loss", "0.00%" },
+                { "Compounding Annual Return", "-100.000%" },
+                { "Drawdown", "13.900%" },
+                { "Expectancy", "-0.824" },
+                { "Start Equity", "1000000" },
+                { "End Equity", "861260.7" },
+                { "Net Profit", "-13.874%" },
+                { "Sharpe Ratio", "-19.346" },
+                { "Sortino Ratio", "-19.346" },
+                { "Probabilistic Sharpe Ratio", "0%" },
+                { "Loss Rate", "89%" },
+                { "Win Rate", "11%" },
+                { "Profit-Loss Ratio", "0.64" },
+                { "Alpha", "2.468" },
+                { "Beta", "-0.215" },
+                { "Annual Standard Deviation", "0.052" },
+                { "Annual Variance", "0.003" },
+                { "Information Ratio", "-58.37" },
+                { "Tracking Error", "0.295" },
+                { "Treynor Ratio", "4.695" },
+                { "Total Fees", "$19131.42" },
+                { "Estimated Strategy Capacity", "$130000.00" },
+                { "Lowest Capacity Asset", "GC VOFJUCDY9XNH" },
+                { "Portfolio Turnover", "32523.20%" },
+                { "OrderListHash", "0664a72652a19956ea3c4915269cc4b9" }
+            };
     }
 }

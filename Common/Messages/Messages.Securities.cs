@@ -18,11 +18,9 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Text;
-
 using QuantConnect.Data;
 using QuantConnect.Securities;
 using QuantConnect.Securities.Positions;
-
 using static QuantConnect.StringExtensions;
 
 namespace QuantConnect
@@ -40,7 +38,9 @@ namespace QuantConnect
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             public static string ToString(Securities.AccountEvent accountEvent)
             {
-                return Invariant($"Account {accountEvent.CurrencySymbol} Balance: {accountEvent.CashBalance:0.00}");
+                return Invariant(
+                    $"Account {accountEvent.CurrencySymbol} Balance: {accountEvent.CashBalance:0.00}"
+                );
             }
         }
 
@@ -49,11 +49,14 @@ namespace QuantConnect
         /// </summary>
         public static class BuyingPowerModel
         {
-            public static string InvalidInitialMarginRequirement = "Initial margin requirement must be between 0 and 1";
+            public static string InvalidInitialMarginRequirement =
+                "Initial margin requirement must be between 0 and 1";
 
-            public static string InvalidMaintenanceMarginRequirement = "Maintenance margin requirement must be between 0 and 1";
+            public static string InvalidMaintenanceMarginRequirement =
+                "Maintenance margin requirement must be between 0 and 1";
 
-            public static string InvalidFreeBuyingPowerPercentRequirement = "Free Buying Power Percent requirement must be between 0 and 1";
+            public static string InvalidFreeBuyingPowerPercentRequirement =
+                "Free Buying Power Percent requirement must be between 0 and 1";
 
             public static string InvalidLeverage = "Leverage must be greater than or equal to 1.";
 
@@ -64,67 +67,100 @@ namespace QuantConnect
             }
 
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            public static string InsufficientBuyingPowerDueToUnsufficientMargin(Orders.Order order,
-                decimal initialMarginRequiredForRemainderOfOrder, decimal freeMargin)
+            public static string InsufficientBuyingPowerDueToUnsufficientMargin(
+                Orders.Order order,
+                decimal initialMarginRequiredForRemainderOfOrder,
+                decimal freeMargin
+            )
             {
-                return Invariant($@"Id: {order.Id}, Initial Margin: {
-                    initialMarginRequiredForRemainderOfOrder.Normalize()}, Free Margin: {freeMargin.Normalize()}");
+                return Invariant(
+                    $@"Id: {order.Id}, Initial Margin: {
+                    initialMarginRequiredForRemainderOfOrder.Normalize()}, Free Margin: {freeMargin.Normalize()}"
+                );
             }
 
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            public static string TargetOrderMarginNotAboveMinimum(decimal absDifferenceOfMargin, decimal minimumValue)
+            public static string TargetOrderMarginNotAboveMinimum(
+                decimal absDifferenceOfMargin,
+                decimal minimumValue
+            )
             {
-                return Invariant($"The target order margin {absDifferenceOfMargin} is less than the minimum {minimumValue}.");
+                return Invariant(
+                    $"The target order margin {absDifferenceOfMargin} is less than the minimum {minimumValue}."
+                );
             }
 
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             public static string TargetOrderMarginNotAboveMinimum()
             {
-                return "Warning: Portfolio rebalance result ignored as it resulted in a single share trade recommendation which can generate high fees." +
-                    " To disable minimum order size checks please set Settings.MinimumOrderMarginPortfolioPercentage = 0.";
+                return "Warning: Portfolio rebalance result ignored as it resulted in a single share trade recommendation which can generate high fees."
+                    + " To disable minimum order size checks please set Settings.MinimumOrderMarginPortfolioPercentage = 0.";
             }
 
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            public static string OrderQuantityLessThanLotSize(Securities.Security security, decimal targetOrderMargin)
+            public static string OrderQuantityLessThanLotSize(
+                Securities.Security security,
+                decimal targetOrderMargin
+            )
             {
-                return Invariant($@"The order quantity is less than the lot size of {
-                    security.SymbolProperties.LotSize} and has been rounded to zero. Target order margin {targetOrderMargin}. ");
+                return Invariant(
+                    $@"The order quantity is less than the lot size of {
+                    security.SymbolProperties.LotSize} and has been rounded to zero. Target order margin {targetOrderMargin}. "
+                );
             }
 
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            public static string FailedToConvergeOnTheTargetMargin(GetMaximumOrderQuantityForTargetBuyingPowerParameters parameters,
-                decimal signedTargetFinalMarginValue, decimal orderFees)
+            public static string FailedToConvergeOnTheTargetMargin(
+                GetMaximumOrderQuantityForTargetBuyingPowerParameters parameters,
+                decimal signedTargetFinalMarginValue,
+                decimal orderFees
+            )
             {
-                return Invariant($@"GetMaximumOrderQuantityForTargetBuyingPower failed to converge on the target margin: {
+                return Invariant(
+                    $@"GetMaximumOrderQuantityForTargetBuyingPower failed to converge on the target margin: {
                     signedTargetFinalMarginValue}; the following information can be used to reproduce the issue. Total Portfolio Cash: {
                     parameters.Portfolio.Cash}; Security : {parameters.Security.Symbol.ID}; Price : {parameters.Security.Close}; Leverage: {
                     parameters.Security.Leverage}; Order Fee: {orderFees}; Lot Size: {
                     parameters.Security.SymbolProperties.LotSize}; Current Holdings: {parameters.Security.Holdings.Quantity} @ {
-                    parameters.Security.Holdings.AveragePrice}; Target Percentage: %{parameters.TargetBuyingPower * 100};");
+                    parameters.Security.Holdings.AveragePrice}; Target Percentage: %{parameters.TargetBuyingPower * 100};"
+                );
             }
 
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            public static string FailedToConvergeOnTheTargetMarginUnderlyingSecurityInfo(Securities.Security underlying)
+            public static string FailedToConvergeOnTheTargetMarginUnderlyingSecurityInfo(
+                Securities.Security underlying
+            )
             {
-                return Invariant($@"Underlying Security: {underlying.Symbol.ID}; Underlying Price: {
-                    underlying.Close}; Underlying Holdings: {underlying.Holdings.Quantity} @ {underlying.Holdings.AveragePrice};");
+                return Invariant(
+                    $@"Underlying Security: {underlying.Symbol.ID}; Underlying Price: {
+                    underlying.Close}; Underlying Holdings: {underlying.Holdings.Quantity} @ {underlying.Holdings.AveragePrice};"
+                );
             }
 
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            public static string MarginBeingAdjustedInTheWrongDirection(decimal targetMargin, decimal marginForOneUnit, Securities.Security security)
+            public static string MarginBeingAdjustedInTheWrongDirection(
+                decimal targetMargin,
+                decimal marginForOneUnit,
+                Securities.Security security
+            )
             {
                 return Invariant(
                     $@"Margin is being adjusted in the wrong direction. Reproduce this issue with the following variables, Target Margin: {
                         targetMargin}; MarginForOneUnit: {marginForOneUnit}; Security Holdings: {security.Holdings.Quantity} @ {
                         security.Holdings.AveragePrice}; LotSize: {security.SymbolProperties.LotSize}; Price: {security.Close}; Leverage: {
-                        security.Leverage}");
+                        security.Leverage}"
+                );
             }
 
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            public static string MarginBeingAdjustedInTheWrongDirectionUnderlyingSecurityInfo(Securities.Security underlying)
+            public static string MarginBeingAdjustedInTheWrongDirectionUnderlyingSecurityInfo(
+                Securities.Security underlying
+            )
             {
-                return Invariant($@"Underlying Security: {underlying.Symbol.ID}; Underlying Price: {
-                    underlying.Close}; Underlying Holdings: {underlying.Holdings.Quantity} @ {underlying.Holdings.AveragePrice};");
+                return Invariant(
+                    $@"Underlying Security: {underlying.Symbol.ID}; Underlying Price: {
+                    underlying.Close}; Underlying Holdings: {underlying.Holdings.Quantity} @ {underlying.Holdings.AveragePrice};"
+                );
             }
         }
 
@@ -133,26 +169,36 @@ namespace QuantConnect
         /// </summary>
         public static class PositionGroupBuyingPowerModel
         {
-
-            public static string DeltaCannotBeApplied = "No buying power used, delta cannot be applied";
+            public static string DeltaCannotBeApplied =
+                "No buying power used, delta cannot be applied";
 
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             public static string ComputedZeroInitialMargin(IPositionGroup positionGroup)
             {
-                return Invariant($"Computed zero initial margin requirement for {positionGroup.GetUserFriendlyName()}.");
+                return Invariant(
+                    $"Computed zero initial margin requirement for {positionGroup.GetUserFriendlyName()}."
+                );
             }
 
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             public static string PositionGroupQuantityRoundedToZero(decimal targetOrderMargin)
             {
-                return Invariant($"The position group order quantity has been rounded to zero. Target order margin {targetOrderMargin}.");
+                return Invariant(
+                    $"The position group order quantity has been rounded to zero. Target order margin {targetOrderMargin}."
+                );
             }
 
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            public static string FailedToConvergeOnTargetMargin(decimal targetMargin, decimal positionGroupQuantity, decimal orderFees,
-                GetMaximumLotsForTargetBuyingPowerParameters parameters)
+            public static string FailedToConvergeOnTargetMargin(
+                decimal targetMargin,
+                decimal positionGroupQuantity,
+                decimal orderFees,
+                GetMaximumLotsForTargetBuyingPowerParameters parameters
+            )
             {
-                return Invariant($@"Failed to converge on the target margin: {targetMargin}; the following information can be used to reproduce the issue. Total Portfolio Cash: {parameters.Portfolio.Cash}; Position group: {parameters.PositionGroup.GetUserFriendlyName()}; Position group order quantity: {positionGroupQuantity} Order Fee: {orderFees}; Current Holdings: {parameters.PositionGroup.Quantity}; Target Percentage: %{parameters.TargetBuyingPower * 100};");
+                return Invariant(
+                    $@"Failed to converge on the target margin: {targetMargin}; the following information can be used to reproduce the issue. Total Portfolio Cash: {parameters.Portfolio.Cash}; Position group: {parameters.PositionGroup.GetUserFriendlyName()}; Position group order quantity: {positionGroupQuantity} Order Fee: {orderFees}; Current Holdings: {parameters.PositionGroup.Quantity}; Target Percentage: %{parameters.TargetBuyingPower * 100};"
+                );
             }
         }
 
@@ -164,17 +210,27 @@ namespace QuantConnect
             public static string NullOrEmptyCashSymbol = "Cash symbols cannot be null or empty.";
 
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            public static string NoTradablePairFoundForCurrencyConversion(string cashCurrencySymbol, string accountCurrency,
-                IEnumerable<KeyValuePair<SecurityType, string>> marketMap)
+            public static string NoTradablePairFoundForCurrencyConversion(
+                string cashCurrencySymbol,
+                string accountCurrency,
+                IEnumerable<KeyValuePair<SecurityType, string>> marketMap
+            )
             {
-                return Invariant($@"No tradeable pair was found for currency {cashCurrencySymbol}, conversion rate to account currency ({
-                    accountCurrency}) will be set to zero. Markets: [{string.Join(",", marketMap.Select(x => $"{x.Key}:{x.Value}"))}]");
+                return Invariant(
+                    $@"No tradeable pair was found for currency {cashCurrencySymbol}, conversion rate to account currency ({
+                    accountCurrency}) will be set to zero. Markets: [{string.Join(",", marketMap.Select(x => $"{x.Key}:{x.Value}"))}]"
+                );
             }
 
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            public static string AddingSecuritySymbolForCashCurrencyFeed(QuantConnect.Symbol symbol, string cashCurrencySymbol)
+            public static string AddingSecuritySymbolForCashCurrencyFeed(
+                QuantConnect.Symbol symbol,
+                string cashCurrencySymbol
+            )
             {
-                return Invariant($"Adding {symbol.Value} {symbol.ID.Market} for cash {cashCurrencySymbol} currency feed");
+                return Invariant(
+                    $"Adding {symbol.Value} {symbol.ID.Market} for cash {cashCurrencySymbol} currency feed"
+                );
             }
 
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -183,8 +239,10 @@ namespace QuantConnect
                 // round the conversion rate for output
                 var rate = cash.ConversionRate;
                 rate = rate < 1000 ? rate.RoundToSignificantDigits(5) : Math.Round(rate, 2);
-                return Invariant($@"{cash.Symbol}: {cash.CurrencySymbol}{cash.Amount,15:0.00} @ {rate,10:0.00####} = {
-                    QuantConnect.Currencies.GetCurrencySymbol(accountCurrency)}{Math.Round(cash.ValueInAccountCurrency, 2)}");
+                return Invariant(
+                    $@"{cash.Symbol}: {cash.CurrencySymbol}{cash.Amount,15:0.00} @ {rate,10:0.00####} = {
+                    QuantConnect.Currencies.GetCurrencySymbol(accountCurrency)}{Math.Round(cash.ValueInAccountCurrency, 2)}"
+                );
             }
         }
 
@@ -193,7 +251,8 @@ namespace QuantConnect
         /// </summary>
         public static class CashBook
         {
-            public static string UnexpectedRequestForNullCurrency = "Unexpected request for NullCurrency Cash instance";
+            public static string UnexpectedRequestForNullCurrency =
+                "Unexpected request for NullCurrency Cash instance";
 
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             public static string ConversionRateNotFound(string currency)
@@ -205,15 +264,23 @@ namespace QuantConnect
             public static string ToString(Securities.CashBook cashBook)
             {
                 var sb = new StringBuilder();
-                sb.AppendLine(Invariant($"Symbol {"Quantity",13}    {"Conversion",10} = Value in {cashBook.AccountCurrency}"));
+                sb.AppendLine(
+                    Invariant(
+                        $"Symbol {"Quantity", 13}    {"Conversion", 10} = Value in {cashBook.AccountCurrency}"
+                    )
+                );
                 foreach (var value in cashBook.Values)
                 {
                     sb.AppendLine(value.ToString(cashBook.AccountCurrency));
                 }
                 sb.AppendLine("-------------------------------------------------");
-                sb.AppendLine(Invariant($@"CashBook Total Value:                {
+                sb.AppendLine(
+                    Invariant(
+                        $@"CashBook Total Value:                {
                     QuantConnect.Currencies.GetCurrencySymbol(cashBook.AccountCurrency)}{
-                    Math.Round(cashBook.TotalValueInAccountCurrency, 2).ToStringInvariant()}"));
+                    Math.Round(cashBook.TotalValueInAccountCurrency, 2).ToStringInvariant()}"
+                    )
+                );
 
                 return sb.ToString();
             }
@@ -236,7 +303,8 @@ namespace QuantConnect
         /// </summary>
         public static class CashBuyingPowerModel
         {
-            public static string UnsupportedLeverage = "CashBuyingPowerModel does not allow setting leverage. Cash accounts have no leverage.";
+            public static string UnsupportedLeverage =
+                "CashBuyingPowerModel does not allow setting leverage. Cash accounts have no leverage.";
 
             public static string GetMaximumOrderQuantityForDeltaBuyingPowerNotImplemented =
                 $@"The {nameof(CashBuyingPowerModel)} does not require '{
@@ -244,7 +312,8 @@ namespace QuantConnect
 
             public static string ShortingNotSupported = "The cash model does not allow shorting.";
 
-            public static string InvalidSecurity = $"The security type must be {nameof(SecurityType.Crypto)}or {nameof(SecurityType.Forex)}.";
+            public static string InvalidSecurity =
+                $"The security type must be {nameof(SecurityType.Crypto)}or {nameof(SecurityType.Forex)}.";
 
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             public static string UnsupportedSecurity(Securities.Security security)
@@ -254,34 +323,53 @@ namespace QuantConnect
             }
 
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            public static string SellOrderShortHoldingsNotSupported(decimal totalQuantity, decimal openOrdersReservedQuantity, decimal orderQuantity,
-                IBaseCurrencySymbol baseCurrency)
+            public static string SellOrderShortHoldingsNotSupported(
+                decimal totalQuantity,
+                decimal openOrdersReservedQuantity,
+                decimal orderQuantity,
+                IBaseCurrencySymbol baseCurrency
+            )
             {
-                return Invariant($@"Your portfolio holds {totalQuantity.Normalize()} {
+                return Invariant(
+                    $@"Your portfolio holds {totalQuantity.Normalize()} {
                     baseCurrency.BaseCurrency.Symbol}, {openOrdersReservedQuantity.Normalize()} {
                     baseCurrency.BaseCurrency.Symbol} of which are reserved for open orders, but your Sell order is for {
                     orderQuantity.Normalize()} {baseCurrency.BaseCurrency.Symbol
-                    }. Cash Modeling trading does not permit short holdings so ensure you only sell what you have, including any additional open orders.");
+                    }. Cash Modeling trading does not permit short holdings so ensure you only sell what you have, including any additional open orders."
+                );
             }
 
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            public static string BuyOrderQuantityGreaterThanMaxForBuyingPower(decimal totalQuantity, decimal maximumQuantity,
-                decimal openOrdersReservedQuantity, decimal orderQuantity, IBaseCurrencySymbol baseCurrency, Securities.Security security,
-                Orders.Order order)
+            public static string BuyOrderQuantityGreaterThanMaxForBuyingPower(
+                decimal totalQuantity,
+                decimal maximumQuantity,
+                decimal openOrdersReservedQuantity,
+                decimal orderQuantity,
+                IBaseCurrencySymbol baseCurrency,
+                Securities.Security security,
+                Orders.Order order
+            )
             {
-                return Invariant($@"Your portfolio holds {totalQuantity.Normalize()} {
+                return Invariant(
+                    $@"Your portfolio holds {totalQuantity.Normalize()} {
                     security.QuoteCurrency.Symbol}, {openOrdersReservedQuantity.Normalize()} {
                     security.QuoteCurrency.Symbol} of which are reserved for open orders, but your Buy order is for {
                     order.AbsoluteQuantity.Normalize()} {baseCurrency.BaseCurrency.Symbol}. Your order requires a total value of {
                     orderQuantity.Normalize()} {security.QuoteCurrency.Symbol}, but only a total value of {
-                    Math.Abs(maximumQuantity).Normalize()} {security.QuoteCurrency.Symbol} is available.");
+                    Math.Abs(maximumQuantity).Normalize()} {security.QuoteCurrency.Symbol} is available."
+                );
             }
 
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            public static string NoDataInInternalCashFeedYet(Securities.Security security, Securities.SecurityPortfolioManager portfolio)
+            public static string NoDataInInternalCashFeedYet(
+                Securities.Security security,
+                Securities.SecurityPortfolioManager portfolio
+            )
             {
-                return Invariant($@"The internal cash feed required for converting {security.QuoteCurrency.Symbol} to {
-                    portfolio.CashBook.AccountCurrency} does not have any data yet (or market may be closed).");
+                return Invariant(
+                    $@"The internal cash feed required for converting {security.QuoteCurrency.Symbol} to {
+                    portfolio.CashBook.AccountCurrency} does not have any data yet (or market may be closed)."
+                );
             }
 
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -294,23 +382,38 @@ namespace QuantConnect
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             public static string OrderQuantityLessThanLotSize(Securities.Security security)
             {
-                return Invariant($@"The order quantity is less than the lot size of {
-                    security.SymbolProperties.LotSize} and has been rounded to zero.");
+                return Invariant(
+                    $@"The order quantity is less than the lot size of {
+                    security.SymbolProperties.LotSize} and has been rounded to zero."
+                );
             }
 
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            public static string OrderQuantityLessThanLotSizeOrderDetails(decimal targetOrderValue, decimal orderQuantity, decimal orderFees)
+            public static string OrderQuantityLessThanLotSizeOrderDetails(
+                decimal targetOrderValue,
+                decimal orderQuantity,
+                decimal orderFees
+            )
             {
-                return Invariant($"Target order value {targetOrderValue}. Order fees {orderFees}. Order quantity {orderQuantity}.");
+                return Invariant(
+                    $"Target order value {targetOrderValue}. Order fees {orderFees}. Order quantity {orderQuantity}."
+                );
             }
 
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            public static string FailedToConvergeOnTargetOrderValue(decimal targetOrderValue, decimal currentOrderValue, decimal orderQuantity,
-                decimal orderFees, Securities.Security security)
+            public static string FailedToConvergeOnTargetOrderValue(
+                decimal targetOrderValue,
+                decimal currentOrderValue,
+                decimal orderQuantity,
+                decimal orderFees,
+                Securities.Security security
+            )
             {
-                return Invariant($@"GetMaximumOrderQuantityForTargetBuyingPower failed to converge to target order value {
+                return Invariant(
+                    $@"GetMaximumOrderQuantityForTargetBuyingPower failed to converge to target order value {
                     targetOrderValue}. Current order value is {currentOrderValue}. Order quantity {orderQuantity}. Lot size is {
-                    security.SymbolProperties.LotSize}. Order fees {orderFees}. Security symbol {security.Symbol}");
+                    security.SymbolProperties.LotSize}. Order fees {orderFees}. Security symbol {security.Symbol}"
+                );
             }
         }
 
@@ -360,7 +463,8 @@ namespace QuantConnect
         /// </summary>
         public static class ErrorCurrencyConverter
         {
-            public static string AccountCurrencyUnexpectedUsage = "Unexpected usage of ErrorCurrencyConverter.AccountCurrency";
+            public static string AccountCurrencyUnexpectedUsage =
+                "Unexpected usage of ErrorCurrencyConverter.AccountCurrency";
 
             public static string ConvertToAccountCurrencyPurposefullyThrow =
                 $@"This method purposefully throws as a proof that a test does not depend on {
@@ -447,12 +551,14 @@ namespace QuantConnect
         public static class MarketHoursDatabase
         {
             public static string FutureUsaMarketTypeNoLongerSupported =
-                "Future.Usa market type is no longer supported as we mapped each ticker to its actual exchange. " +
-                "Please find your specific market in the symbol-properties database.";
+                "Future.Usa market type is no longer supported as we mapped each ticker to its actual exchange. "
+                + "Please find your specific market in the symbol-properties database.";
 
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            public static string ExchangeHoursNotFound(Securities.SecurityDatabaseKey key,
-                IEnumerable<Securities.SecurityDatabaseKey> availableKeys = null)
+            public static string ExchangeHoursNotFound(
+                Securities.SecurityDatabaseKey key,
+                IEnumerable<Securities.SecurityDatabaseKey> availableKeys = null
+            )
             {
                 var keys = "";
                 if (availableKeys != null)
@@ -475,11 +581,14 @@ namespace QuantConnect
         /// </summary>
         public static class MarketHoursSegment
         {
-            public static string InvalidExtendedMarketOpenTime = "Extended market open time must be less than or equal to market open time.";
+            public static string InvalidExtendedMarketOpenTime =
+                "Extended market open time must be less than or equal to market open time.";
 
-            public static string InvalidMarketCloseTime = "Market close time must be after market open time.";
+            public static string InvalidMarketCloseTime =
+                "Market close time must be after market open time.";
 
-            public static string InvalidExtendedMarketCloseTime = "Extended market close time must be greater than or equal to market close time.";
+            public static string InvalidExtendedMarketCloseTime =
+                "Extended market close time must be greater than or equal to market close time.";
 
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             public static string ToString(Securities.MarketHoursSegment instance)
@@ -494,7 +603,10 @@ namespace QuantConnect
         public static class RegisteredSecurityDataTypesProvider
         {
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            public static string TwoDifferentTypesDetectedForTheSameTypeName(Type type, Type existingType)
+            public static string TwoDifferentTypesDetectedForTheSameTypeName(
+                Type type,
+                Type existingType
+            )
             {
                 return $"Two different types were detected trying to register the same type name: {existingType} - {type}";
             }
@@ -505,9 +617,11 @@ namespace QuantConnect
         /// </summary>
         public static class Security
         {
-            public static string ValidSymbolPropertiesInstanceRequired = "Security requires a valid SymbolProperties instance.";
+            public static string ValidSymbolPropertiesInstanceRequired =
+                "Security requires a valid SymbolProperties instance.";
 
-            public static string UnmatchingQuoteCurrencies = "symbolProperties.QuoteCurrency must match the quoteCurrency.Symbol";
+            public static string UnmatchingQuoteCurrencies =
+                "symbolProperties.QuoteCurrency must match the quoteCurrency.Symbol";
 
             public static string SetLocalTimeKeeperMustBeCalledBeforeUsingLocalTime =
                 "Security.SetLocalTimeKeeper(LocalTimeKeeper) must be called in order to use the LocalTime property.";
@@ -552,12 +666,17 @@ namespace QuantConnect
         /// </summary>
         public static class SecurityExchangeHours
         {
-            public static string UnableToLocateNextMarketOpenInTwoWeeks = "Unable to locate next market open within two weeks.";
+            public static string UnableToLocateNextMarketOpenInTwoWeeks =
+                "Unable to locate next market open within two weeks.";
 
-            public static string UnableToLocateNextMarketCloseInTwoWeeks = "Unable to locate next market close within two weeks.";
+            public static string UnableToLocateNextMarketCloseInTwoWeeks =
+                "Unable to locate next market close within two weeks.";
 
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            public static string LastMarketOpenNotFound(DateTime localDateTime, bool isMarketAlwaysOpen)
+            public static string LastMarketOpenNotFound(
+                DateTime localDateTime,
+                bool isMarketAlwaysOpen
+            )
             {
                 return $"Did not find last market open for {localDateTime}. IsMarketAlwaysOpen: {isMarketAlwaysOpen}";
             }
@@ -571,7 +690,9 @@ namespace QuantConnect
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             public static string ToString(Securities.SecurityHolding instance)
             {
-                return Invariant($"{instance.Symbol.Value}: {instance.Quantity} @ {instance.AveragePrice}");
+                return Invariant(
+                    $"{instance.Symbol.Value}: {instance.Quantity} @ {instance.AveragePrice}"
+                );
             }
         }
 
@@ -586,9 +707,11 @@ namespace QuantConnect
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             public static string SymbolNotFoundInSecurities(QuantConnect.Symbol symbol)
             {
-                return Invariant($@"This asset symbol ({
+                return Invariant(
+                    $@"This asset symbol ({
                     symbol}) was not found in your security list. Please add this security or check it exists before using it with 'Securities.ContainsKey(""{
-                    QuantConnect.SymbolCache.GetTicker(symbol)}"")'");
+                    QuantConnect.SymbolCache.GetTicker(symbol)}"")'"
+                );
             }
 
             /// <summary>
@@ -616,12 +739,14 @@ namespace QuantConnect
             /// <summary>
             /// Returns a string message saying the Portfolio object object is an adaptor for Security Manager and cannot be cleared
             /// </summary>
-            public static string DictionaryClearNotImplemented = "Portfolio object is an adaptor for Security Manager and cannot be cleared.";
+            public static string DictionaryClearNotImplemented =
+                "Portfolio object is an adaptor for Security Manager and cannot be cleared.";
 
             /// <summary>
             /// Returns a string message saying the Portfolio object is an adaptor for Security Manager and objects cannot be removed
             /// </summary>
-            public static string DictionaryRemoveNotImplemented = "Portfolio object is an adaptor for Security Manager and objects cannot be removed.";
+            public static string DictionaryRemoveNotImplemented =
+                "Portfolio object is an adaptor for Security Manager and objects cannot be removed.";
 
             /// <summary>
             /// Returns a string message saying the AccountCurrency cannot be changed after adding a Security and that the method
@@ -642,7 +767,10 @@ namespace QuantConnect
             /// will be ignored
             /// </summary>
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            public static string AccountCurrencyAlreadySet(Securities.CashBook cashBook, string newAccountCurrency)
+            public static string AccountCurrencyAlreadySet(
+                Securities.CashBook cashBook,
+                string newAccountCurrency
+            )
             {
                 return $"account currency has already been set to {cashBook.AccountCurrency}. Will ignore new value {newAccountCurrency}";
             }
@@ -661,18 +789,28 @@ namespace QuantConnect
             /// margin remaining
             /// </summary>
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            public static string TotalMarginInformation(decimal totalMarginUsed, decimal marginRemaining)
+            public static string TotalMarginInformation(
+                decimal totalMarginUsed,
+                decimal marginRemaining
+            )
             {
-                return Invariant($"Total margin information: TotalMarginUsed: {totalMarginUsed:F2}, MarginRemaining: {marginRemaining:F2}");
+                return Invariant(
+                    $"Total margin information: TotalMarginUsed: {totalMarginUsed:F2}, MarginRemaining: {marginRemaining:F2}"
+                );
             }
 
             /// <summary>
             /// Returns a string message saying the order request margin information, this is, the margin used and the margin remaining
             /// </summary>
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            public static string OrderRequestMarginInformation(decimal marginUsed, decimal marginRemaining)
+            public static string OrderRequestMarginInformation(
+                decimal marginUsed,
+                decimal marginRemaining
+            )
             {
-                return Invariant($"Order request margin information: MarginUsed: {marginUsed:F2}, MarginRemaining: {marginRemaining:F2}");
+                return Invariant(
+                    $"Order request margin information: MarginUsed: {marginUsed:F2}, MarginRemaining: {marginRemaining:F2}"
+                );
             }
         }
 
@@ -685,7 +823,9 @@ namespace QuantConnect
             /// Returns a string message saying the given Symbol could not be found in the Symbol Properties Database
             /// </summary>
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            public static string SymbolNotFoundInSymbolPropertiesDatabase(QuantConnect.Symbol symbol)
+            public static string SymbolNotFoundInSymbolPropertiesDatabase(
+                QuantConnect.Symbol symbol
+            )
             {
                 return $"Symbol could not be found in the Symbol Properties Database: {symbol.Value}";
             }
@@ -738,17 +878,20 @@ namespace QuantConnect
             /// <summary>
             /// String message saying the SymbolProperties LotSize can not be less than or equal to 0
             /// </summary>
-            public static string InvalidLotSize = "SymbolProperties LotSize can not be less than or equal to 0";
+            public static string InvalidLotSize =
+                "SymbolProperties LotSize can not be less than or equal to 0";
 
             /// <summary>
             /// String message saying the SymbolProperties PriceMagnifier can not be less than or equal to 0
             /// </summary>
-            public static string InvalidPriceMagnifier = "SymbolProprties PriceMagnifier can not be less than or equal to 0";
+            public static string InvalidPriceMagnifier =
+                "SymbolProprties PriceMagnifier can not be less than or equal to 0";
 
             /// <summary>
             /// String message saying the SymbolProperties StrikeMultiplier can not be less than or equal to 0
             /// </summary>
-            public static string InvalidStrikeMultiplier = "SymbolProperties StrikeMultiplier can not be less than or equal to 0";
+            public static string InvalidStrikeMultiplier =
+                "SymbolProperties StrikeMultiplier can not be less than or equal to 0";
 
             /// <summary>
             /// Parses a given SymbolProperties object into a string message
@@ -772,8 +915,10 @@ namespace QuantConnect
                     priceMagnifier = Invariant($",{instance.PriceMagnifier}");
                 }
 
-                return Invariant($@"{instance.Description},{instance.QuoteCurrency},{instance.ContractMultiplier},{
-                    instance.MinimumPriceVariation},{instance.LotSize}{marketTicker}{minimumOrderSize}{priceMagnifier}");
+                return Invariant(
+                    $@"{instance.Description},{instance.QuoteCurrency},{instance.ContractMultiplier},{
+                    instance.MinimumPriceVariation},{instance.LotSize}{marketTicker}{minimumOrderSize}{priceMagnifier}"
+                );
             }
         }
 

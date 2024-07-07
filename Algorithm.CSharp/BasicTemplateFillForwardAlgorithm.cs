@@ -31,9 +31,9 @@ namespace QuantConnect.Algorithm.CSharp
         /// </summary>
         public override void Initialize()
         {
-            SetStartDate(2013, 10, 01);  //Set Start Date
-            SetEndDate(2013, 11, 30);    //Set End Date
-            SetCash(100000);             //Set Strategy Cash
+            SetStartDate(2013, 10, 01); //Set Start Date
+            SetEndDate(2013, 11, 30); //Set End Date
+            SetCash(100000); //Set Strategy Cash
             // Find more symbols here: http://quantconnect.com/data
             AddSecurity(SecurityType.Equity, "ASUR", Resolution.Second);
         }

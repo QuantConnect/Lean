@@ -33,7 +33,12 @@ namespace QuantConnect.Report.ReportElements
         /// <param name="key">Location of injection</param>
         /// <param name="backtest">Backtest result object</param>
         /// <param name="live">Live result object</param>
-        public DailyReturnsReportElement(string name, string key, BacktestResult backtest, LiveResult live)
+        public DailyReturnsReportElement(
+            string name,
+            string key,
+            BacktestResult backtest,
+            LiveResult live
+        )
         {
             _live = live;
             _backtest = backtest;
@@ -49,12 +54,23 @@ namespace QuantConnect.Report.ReportElements
             var backtestReturns = ResultsUtil.EquityPoints(_backtest);
             var liveReturns = ResultsUtil.EquityPoints(_live);
 
-            var backtestSeries = new Series<DateTime, double>(backtestReturns.Keys, backtestReturns.Values);
+            var backtestSeries = new Series<DateTime, double>(
+                backtestReturns.Keys,
+                backtestReturns.Values
+            );
             var liveSeries = new Series<DateTime, double>(liveReturns.Keys, liveReturns.Values);
 
             // The following two operations are equivalent to the Pandas `DataFrame.resample(...)` method
-            var backtestResampled = backtestSeries.ResampleEquivalence(date => date.Date, s => s.LastValue()).PercentChange().DropMissing() * 100;
-            var liveResampled = liveSeries.ResampleEquivalence(date => date.Date, s => s.LastValue()).PercentChange().DropMissing() * 100;
+            var backtestResampled =
+                backtestSeries
+                    .ResampleEquivalence(date => date.Date, s => s.LastValue())
+                    .PercentChange()
+                    .DropMissing() * 100;
+            var liveResampled =
+                liveSeries
+                    .ResampleEquivalence(date => date.Date, s => s.LastValue())
+                    .PercentChange()
+                    .DropMissing() * 100;
 
             var base64 = "";
             using (Py.GIL())

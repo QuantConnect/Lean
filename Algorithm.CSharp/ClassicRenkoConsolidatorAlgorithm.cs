@@ -13,10 +13,10 @@
  * limitations under the License.
 */
 
-using QuantConnect.Interfaces;
 using System.Collections.Generic;
 using QuantConnect.Data.Consolidators;
 using QuantConnect.Data.Market;
+using QuantConnect.Interfaces;
 
 namespace QuantConnect.Algorithm.CSharp
 {
@@ -53,12 +53,15 @@ namespace QuantConnect.Algorithm.CSharp
             // register the consolidator for updates
             SubscriptionManager.AddConsolidator("SPY", renkoClose);
 
-
             // this is the full constructor that can accept a value selector and a volume selector
             // this allows us to perform the renko logic on values other than Close, even computed values!
 
             // break SPY into (2*o + h + l + 3*c)/7
-            var renko7bar = new ClassicRenkoConsolidator<TradeBar>(2.5m, x => (2 * x.Open + x.High + x.Low + 3 * x.Close) / 7m, x => x.Volume);
+            var renko7bar = new ClassicRenkoConsolidator<TradeBar>(
+                2.5m,
+                x => (2 * x.Open + x.High + x.Low + 3 * x.Close) / 7m,
+                x => x.Volume
+            );
             renko7bar.DataConsolidated += (sender, consolidated) =>
             {
                 HandleRenko7Bar(consolidated);
@@ -71,9 +74,7 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// We're doing our analysis in the OnRenkoBar method, but the framework verifies that this method exists, so we define it.
         /// </summary>
-        public void OnData(TradeBars data)
-        {
-        }
+        public void OnData(TradeBars data) { }
 
         /// <summary>
         /// This function is called by our renkoClose consolidator defined in Initialize()
@@ -129,35 +130,36 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// This is used by the regression test system to indicate what the expected statistics are from running the algorithm
         /// </summary>
-        public Dictionary<string, string> ExpectedStatistics => new Dictionary<string, string>
-        {
-            {"Total Orders", "29"},
-            {"Average Win", "1.85%"},
-            {"Average Loss", "-1.49%"},
-            {"Compounding Annual Return", "7.817%"},
-            {"Drawdown", "6.800%"},
-            {"Expectancy", "0.281"},
-            {"Start Equity", "100000"},
-            {"End Equity", "107838.74"},
-            {"Net Profit", "7.839%"},
-            {"Sharpe Ratio", "0.692"},
-            {"Sortino Ratio", "0.636"},
-            {"Probabilistic Sharpe Ratio", "39.336%"},
-            {"Loss Rate", "43%"},
-            {"Win Rate", "57%"},
-            {"Profit-Loss Ratio", "1.24"},
-            {"Alpha", "0.004"},
-            {"Beta", "0.411"},
-            {"Annual Standard Deviation", "0.07"},
-            {"Annual Variance", "0.005"},
-            {"Information Ratio", "-0.704"},
-            {"Tracking Error", "0.083"},
-            {"Treynor Ratio", "0.118"},
-            {"Total Fees", "$129.34"},
-            {"Estimated Strategy Capacity", "$1000000000.00"},
-            {"Lowest Capacity Asset", "SPY R735QTJ8XC9X"},
-            {"Portfolio Turnover", "7.91%"},
-            {"OrderListHash", "cb118f22e33089e9ab4af8514e4f2b5f"}
-        };
+        public Dictionary<string, string> ExpectedStatistics =>
+            new Dictionary<string, string>
+            {
+                { "Total Orders", "29" },
+                { "Average Win", "1.85%" },
+                { "Average Loss", "-1.49%" },
+                { "Compounding Annual Return", "7.817%" },
+                { "Drawdown", "6.800%" },
+                { "Expectancy", "0.281" },
+                { "Start Equity", "100000" },
+                { "End Equity", "107838.74" },
+                { "Net Profit", "7.839%" },
+                { "Sharpe Ratio", "0.692" },
+                { "Sortino Ratio", "0.636" },
+                { "Probabilistic Sharpe Ratio", "39.336%" },
+                { "Loss Rate", "43%" },
+                { "Win Rate", "57%" },
+                { "Profit-Loss Ratio", "1.24" },
+                { "Alpha", "0.004" },
+                { "Beta", "0.411" },
+                { "Annual Standard Deviation", "0.07" },
+                { "Annual Variance", "0.005" },
+                { "Information Ratio", "-0.704" },
+                { "Tracking Error", "0.083" },
+                { "Treynor Ratio", "0.118" },
+                { "Total Fees", "$129.34" },
+                { "Estimated Strategy Capacity", "$1000000000.00" },
+                { "Lowest Capacity Asset", "SPY R735QTJ8XC9X" },
+                { "Portfolio Turnover", "7.91%" },
+                { "OrderListHash", "cb118f22e33089e9ab4af8514e4f2b5f" }
+            };
     }
 }

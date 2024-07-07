@@ -71,7 +71,8 @@ namespace QuantConnect.Orders.Fills
             ISubscriptionDataConfigProvider configProvider,
             TimeSpan stalePriceTimeSpan,
             Dictionary<Order, Security> securitiesForOrders,
-            Action<Order> onOrderUpdated = null)
+            Action<Order> onOrderUpdated = null
+        )
         {
             Security = security;
             Order = order;

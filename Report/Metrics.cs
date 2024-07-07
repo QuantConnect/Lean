@@ -13,11 +13,11 @@
  * limitations under the License.
 */
 
-using Deedle;
-using QuantConnect.Orders;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using Deedle;
+using QuantConnect.Orders;
 
 namespace QuantConnect.Report
 {
@@ -33,15 +33,17 @@ namespace QuantConnect.Report
         /// <param name="equityCurve">Equity curve series</param>
         /// <param name="orders">Orders associated with the equity curve</param>
         /// <returns>Leverage utilization over time</returns>
-        public static Series<DateTime, double> LeverageUtilization(Series<DateTime, double> equityCurve, List<Order> orders)
+        public static Series<DateTime, double> LeverageUtilization(
+            Series<DateTime, double> equityCurve,
+            List<Order> orders
+        )
         {
             if (equityCurve.IsEmpty || orders.Count == 0)
             {
                 return new Series<DateTime, double>(new DateTime[] { }, new double[] { });
             }
 
-            var pointInTimePortfolios = PortfolioLooper.FromOrders(equityCurve, orders)
-                .ToList(); // Required because for some reason our AbsoluteHoldingsValue is multiplied by two whenever we GroupBy on the raw IEnumerable
+            var pointInTimePortfolios = PortfolioLooper.FromOrders(equityCurve, orders).ToList(); // Required because for some reason our AbsoluteHoldingsValue is multiplied by two whenever we GroupBy on the raw IEnumerable
 
             return LeverageUtilization(pointInTimePortfolios);
         }
@@ -51,10 +53,16 @@ namespace QuantConnect.Report
         /// </summary>
         /// <param name="portfolios">Point in time portfolios</param>
         /// <returns>Series of leverage utilization</returns>
-        public static Series<DateTime, double> LeverageUtilization(List<PointInTimePortfolio> portfolios)
+        public static Series<DateTime, double> LeverageUtilization(
+            List<PointInTimePortfolio> portfolios
+        )
         {
-            var leverage = portfolios.GroupBy(portfolio => portfolio.Time)
-                .Select(group => new KeyValuePair<DateTime, double>(group.Key, (double)group.Last().Leverage))
+            var leverage = portfolios
+                .GroupBy(portfolio => portfolio.Time)
+                .Select(group => new KeyValuePair<DateTime, double>(
+                    group.Key,
+                    (double)group.Last().Leverage
+                ))
                 .ToList();
 
             // Drop missing because we don't care about the missing values
@@ -68,7 +76,10 @@ namespace QuantConnect.Report
         /// <param name="equityCurve">Equity curve series</param>
         /// <param name="orders">Orders associated with the equity curve</param>
         /// <returns></returns>
-        public static Series<Symbol, double> AssetAllocations(Series<DateTime, double> equityCurve, List<Order> orders)
+        public static Series<Symbol, double> AssetAllocations(
+            Series<DateTime, double> equityCurve,
+            List<Order> orders
+        )
         {
             if (equityCurve.IsEmpty || orders.Count == 0)
             {
@@ -86,11 +97,13 @@ namespace QuantConnect.Report
         /// <returns>Series keyed by Symbol containing the percentage allocated to that asset over time</returns>
         public static Series<Symbol, double> AssetAllocations(List<PointInTimePortfolio> portfolios)
         {
-            var portfolioHoldings = portfolios.GroupBy(x => x.Time)
+            var portfolioHoldings = portfolios
+                .GroupBy(x => x.Time)
                 .Select(kvp => kvp.Last())
                 .ToList();
 
-            var totalPortfolioValueOverTime = (double)portfolioHoldings.Sum(x => x.Holdings.Sum(y => y.AbsoluteHoldingsValue));
+            var totalPortfolioValueOverTime = (double)
+                portfolioHoldings.Sum(x => x.Holdings.Sum(y => y.AbsoluteHoldingsValue));
             var holdingsBySymbolOverTime = new Dictionary<Symbol, double>();
 
             foreach (var portfolio in portfolioHoldings)
@@ -99,17 +112,22 @@ namespace QuantConnect.Report
                 {
                     if (!holdingsBySymbolOverTime.ContainsKey(holding.Symbol))
                     {
-                        holdingsBySymbolOverTime[holding.Symbol] = (double)holding.AbsoluteHoldingsValue;
+                        holdingsBySymbolOverTime[holding.Symbol] = (double)
+                            holding.AbsoluteHoldingsValue;
                         continue;
                     }
 
-                    holdingsBySymbolOverTime[holding.Symbol] = holdingsBySymbolOverTime[holding.Symbol] + (double)holding.AbsoluteHoldingsValue;
+                    holdingsBySymbolOverTime[holding.Symbol] =
+                        holdingsBySymbolOverTime[holding.Symbol]
+                        + (double)holding.AbsoluteHoldingsValue;
                 }
             }
 
             return new Series<Symbol, double>(
                 holdingsBySymbolOverTime.Keys,
-                holdingsBySymbolOverTime.Values.Select(x => x / totalPortfolioValueOverTime).ToList()
+                holdingsBySymbolOverTime
+                    .Values.Select(x => x / totalPortfolioValueOverTime)
+                    .ToList()
             ).DropMissing();
         }
 
@@ -123,7 +141,11 @@ namespace QuantConnect.Report
         /// Frame keyed by <see cref="SecurityType"/> and <see cref="OrderDirection"/>.
         /// Returns a Frame of exposure per asset per direction over time
         /// </returns>
-        public static Frame<DateTime, Tuple<SecurityType, OrderDirection>> Exposure(Series<DateTime, double> equityCurve, List<Order> orders, OrderDirection direction)
+        public static Frame<DateTime, Tuple<SecurityType, OrderDirection>> Exposure(
+            Series<DateTime, double> equityCurve,
+            List<Order> orders,
+            OrderDirection direction
+        )
         {
             if (equityCurve.IsEmpty || orders.Count == 0)
             {
@@ -142,11 +164,15 @@ namespace QuantConnect.Report
         /// Frame keyed by <see cref="SecurityType"/> and <see cref="OrderDirection"/>.
         /// Returns a Frame of exposure per asset per direction over time
         /// </returns>
-        public static Frame<DateTime, Tuple<SecurityType, OrderDirection>> Exposure(List<PointInTimePortfolio> portfolios, OrderDirection direction)
+        public static Frame<DateTime, Tuple<SecurityType, OrderDirection>> Exposure(
+            List<PointInTimePortfolio> portfolios,
+            OrderDirection direction
+        )
         {
             // We want to add all of the holdings by asset class to a mock dataframe that is column keyed by SecurityType with
             // rows being DateTime and values being the exposure at that given time (as double)
-            var holdingsByAssetClass = new Dictionary<SecurityType, List<KeyValuePair<DateTime, double>>>();
+            var holdingsByAssetClass =
+                new Dictionary<SecurityType, List<KeyValuePair<DateTime, double>>>();
             var multiplier = direction == OrderDirection.Sell ? -1 : 1;
 
             foreach (var portfolio in portfolios)
@@ -158,18 +184,31 @@ namespace QuantConnect.Report
                     holdingsByAssetClass[portfolio.Order.SecurityType] = holdings;
                 }
 
-                var assets = portfolio.Holdings
-                   .Where(pointInTimeHoldings => pointInTimeHoldings.Symbol.SecurityType == portfolio.Order.SecurityType)
-                   .ToList();
+                var assets = portfolio
+                    .Holdings.Where(pointInTimeHoldings =>
+                        pointInTimeHoldings.Symbol.SecurityType == portfolio.Order.SecurityType
+                    )
+                    .ToList();
 
                 if (assets.Count > 0)
                 {
                     // Use the multiplier to flip the holdings value around
-                    var sum = (double)assets.Where(pointInTimeHoldings => multiplier * pointInTimeHoldings.HoldingsValue > 0)
-                        .Select(pointInTimeHoldings => pointInTimeHoldings.AbsoluteHoldingsValue)
-                        .Sum();
+                    var sum = (double)
+                        assets
+                            .Where(pointInTimeHoldings =>
+                                multiplier * pointInTimeHoldings.HoldingsValue > 0
+                            )
+                            .Select(pointInTimeHoldings =>
+                                pointInTimeHoldings.AbsoluteHoldingsValue
+                            )
+                            .Sum();
 
-                    holdings.Add(new KeyValuePair<DateTime, double>(portfolio.Time, sum / (double)portfolio.TotalPortfolioValue));
+                    holdings.Add(
+                        new KeyValuePair<DateTime, double>(
+                            portfolio.Time,
+                            sum / (double)portfolio.TotalPortfolioValue
+                        )
+                    );
                 }
             }
 
@@ -188,16 +227,16 @@ namespace QuantConnect.Report
                 // Then, select only the long or short holdings.
                 frame = frame.Join(
                     new Tuple<SecurityType, OrderDirection>(kvp.Key, direction),
-                    new Series<DateTime, double>(kvp.Value.GroupBy(x => x.Key).Select(x => x.Last())) * multiplier
+                    new Series<DateTime, double>(
+                        kvp.Value.GroupBy(x => x.Key).Select(x => x.Last())
+                    ) * multiplier
                 );
             }
 
             // Equivalent to `pd.fillna(method='ffill').dropna(axis=1, how='all').dropna(how='all')`
             // First drops any missing SecurityTypes, then drops the rows with missing values
             // to get rid of any empty data prior to the first value.
-            return frame.FillMissing(Direction.Forward)
-                .DropSparseColumnsAll()
-                .DropSparseRowsAll();
+            return frame.FillMissing(Direction.Forward).DropSparseColumnsAll().DropSparseRowsAll();
         }
     }
 }

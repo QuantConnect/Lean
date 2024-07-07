@@ -40,7 +40,11 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
         /// <param name="enumerator">The underlying enumerator to place rate limits on</param>
         /// <param name="timeProvider">Time provider used for determing the time between calls</param>
         /// <param name="minimumTimeBetweenCalls">The minimum time allowed between calls to the underlying enumerator</param>
-        public RateLimitEnumerator(IEnumerator<T> enumerator, ITimeProvider timeProvider, TimeSpan minimumTimeBetweenCalls)
+        public RateLimitEnumerator(
+            IEnumerator<T> enumerator,
+            ITimeProvider timeProvider,
+            TimeSpan minimumTimeBetweenCalls
+        )
         {
             _enumerator = enumerator;
             _timeProvider = timeProvider;

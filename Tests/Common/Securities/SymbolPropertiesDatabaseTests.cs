@@ -34,7 +34,12 @@ namespace QuantConnect.Tests.Common.Securities
         {
             var db = SymbolPropertiesDatabase.FromDataFolder();
             var symbol = Symbol.Create("EURGBP", SecurityType.Forex, Market.FXCM);
-            var symbolProperties = db.GetSymbolProperties(symbol.ID.Market, symbol, symbol.SecurityType, "GBP");
+            var symbolProperties = db.GetSymbolProperties(
+                symbol.ID.Market,
+                symbol,
+                symbol.SecurityType,
+                "GBP"
+            );
 
             Assert.AreEqual(symbolProperties.LotSize, 1000);
         }
@@ -44,7 +49,12 @@ namespace QuantConnect.Tests.Common.Securities
         {
             var db = SymbolPropertiesDatabase.FromDataFolder();
             var symbol = Symbol.Create("EURGBP", SecurityType.Forex, Market.FXCM);
-            var symbolProperties = db.GetSymbolProperties(symbol.ID.Market, symbol, symbol.SecurityType, "GBP");
+            var symbolProperties = db.GetSymbolProperties(
+                symbol.ID.Market,
+                symbol,
+                symbol.SecurityType,
+                "GBP"
+            );
 
             Assert.AreEqual(symbolProperties.QuoteCurrency, "GBP");
         }
@@ -55,16 +65,36 @@ namespace QuantConnect.Tests.Common.Securities
             var db = SymbolPropertiesDatabase.FromDataFolder();
 
             var bitfinexSymbol = Symbol.Create("BTCUSD", SecurityType.Crypto, Market.Bitfinex);
-            var bitfinexSymbolProperties = db.GetSymbolProperties(bitfinexSymbol.ID.Market, bitfinexSymbol, bitfinexSymbol.SecurityType, "USD");
+            var bitfinexSymbolProperties = db.GetSymbolProperties(
+                bitfinexSymbol.ID.Market,
+                bitfinexSymbol,
+                bitfinexSymbol.SecurityType,
+                "USD"
+            );
 
             var binanceSymbol = Symbol.Create("BTCEUR", SecurityType.Crypto, Market.Binance);
-            var binanceSymbolProperties = db.GetSymbolProperties(binanceSymbol.ID.Market, binanceSymbol, binanceSymbol.SecurityType, "EUR");
+            var binanceSymbolProperties = db.GetSymbolProperties(
+                binanceSymbol.ID.Market,
+                binanceSymbol,
+                binanceSymbol.SecurityType,
+                "EUR"
+            );
 
             var coinbaseSymbol = Symbol.Create("BTCGBP", SecurityType.Crypto, Market.Coinbase);
-            var coinbaseSymbolProperties = db.GetSymbolProperties(coinbaseSymbol.ID.Market, coinbaseSymbol, coinbaseSymbol.SecurityType, "GBP");
+            var coinbaseSymbolProperties = db.GetSymbolProperties(
+                coinbaseSymbol.ID.Market,
+                coinbaseSymbol,
+                coinbaseSymbol.SecurityType,
+                "GBP"
+            );
 
             var krakenSymbol = Symbol.Create("BTCCAD", SecurityType.Crypto, Market.Kraken);
-            var krakenSymbolProperties = db.GetSymbolProperties(krakenSymbol.ID.Market, krakenSymbol, krakenSymbol.SecurityType, "CAD");
+            var krakenSymbolProperties = db.GetSymbolProperties(
+                krakenSymbol.ID.Market,
+                krakenSymbol,
+                krakenSymbol.SecurityType,
+                "CAD"
+            );
 
             Assert.AreEqual(bitfinexSymbolProperties.MinimumOrderSize, 0.00006m);
             Assert.AreEqual(binanceSymbolProperties.MinimumOrderSize, 5m); // in quote currency, MIN_NOTIONAL
@@ -78,26 +108,40 @@ namespace QuantConnect.Tests.Common.Securities
         [TestCase("ZO", Market.CBOT, 100)]
         [TestCase("ZS", Market.CBOT, 100)]
         [TestCase("ZW", Market.CBOT, 100)]
-
         [TestCase("CB", Market.CME, 100)]
         [TestCase("DY", Market.CME, 100)]
         [TestCase("GF", Market.CME, 100)]
         [TestCase("GNF", Market.CME, 100)]
         [TestCase("HE", Market.CME, 100)]
         [TestCase("LE", Market.CME, 100)]
-
         [TestCase("CSC", Market.CME, 1)]
         public void LoadsPriceMagnifier(string ticker, string market, int expectedPriceMagnifier)
         {
             var db = SymbolPropertiesDatabase.FromDataFolder();
             var symbol = Symbol.Create(ticker, SecurityType.Future, market);
 
-            var symbolProperties = db.GetSymbolProperties(symbol.ID.Market, symbol, symbol.SecurityType, "USD");
+            var symbolProperties = db.GetSymbolProperties(
+                symbol.ID.Market,
+                symbol,
+                symbol.SecurityType,
+                "USD"
+            );
             Assert.AreEqual(expectedPriceMagnifier, symbolProperties.PriceMagnifier);
 
-            var futureOption = Symbol.CreateOption(symbol, symbol.ID.Market, OptionStyle.American,
-                OptionRight.Call, 1, new DateTime(2021, 10, 14));
-            var symbolPropertiesFop = db.GetSymbolProperties(futureOption.ID.Market, futureOption, futureOption.SecurityType, "USD");
+            var futureOption = Symbol.CreateOption(
+                symbol,
+                symbol.ID.Market,
+                OptionStyle.American,
+                OptionRight.Call,
+                1,
+                new DateTime(2021, 10, 14)
+            );
+            var symbolPropertiesFop = db.GetSymbolProperties(
+                futureOption.ID.Market,
+                futureOption,
+                futureOption.SecurityType,
+                "USD"
+            );
             Assert.AreEqual(expectedPriceMagnifier, symbolPropertiesFop.PriceMagnifier);
         }
 
@@ -123,7 +167,10 @@ namespace QuantConnect.Tests.Common.Securities
             foreach (var kvp in spList)
             {
                 var quoteCurrency = kvp.Value.QuoteCurrency;
-                var baseCurrency = kvp.Key.Symbol.Substring(0, kvp.Key.Symbol.Length - quoteCurrency.Length);
+                var baseCurrency = kvp.Key.Symbol.Substring(
+                    0,
+                    kvp.Key.Symbol.Length - quoteCurrency.Length
+                );
 
                 Assert.AreNotEqual(baseCurrency, quoteCurrency);
             }
@@ -140,9 +187,14 @@ namespace QuantConnect.Tests.Common.Securities
             Assert.IsTrue(database.SetEntry(Market.USA, ticker, SecurityType.Base, properties));
 
             // Fetch the entry to ensure we can access it with the ticker
-            #pragma warning disable CS0618
-            var fetchedProperties = database.GetSymbolProperties(Market.USA, ticker, SecurityType.Base, "USD");
-            #pragma warning restore CS0618
+#pragma warning disable CS0618
+            var fetchedProperties = database.GetSymbolProperties(
+                Market.USA,
+                ticker,
+                SecurityType.Base,
+                "USD"
+            );
+#pragma warning restore CS0618
             Assert.AreSame(properties, fetchedProperties);
         }
 
@@ -158,14 +210,24 @@ namespace QuantConnect.Tests.Common.Securities
 
             // Fetch the custom entry to ensure we can access it with the ticker
             var symbol = Symbol.Create(ticker, SecurityType.Base, Market.USA);
-            var fetchedProperties = database.GetSymbolProperties(Market.USA, symbol, SecurityType.Base, "USD");
+            var fetchedProperties = database.GetSymbolProperties(
+                Market.USA,
+                symbol,
+                SecurityType.Base,
+                "USD"
+            );
             Assert.AreSame(properties, fetchedProperties);
 
             // Refresh the database
             database.ReloadEntries();
 
             // Fetch the custom entry again to make sure it was not overridden
-            fetchedProperties = database.GetSymbolProperties(Market.USA, symbol, SecurityType.Base, "USD");
+            fetchedProperties = database.GetSymbolProperties(
+                Market.USA,
+                symbol,
+                SecurityType.Base,
+                "USD"
+            );
             Assert.AreSame(properties, fetchedProperties);
         }
 
@@ -240,15 +302,20 @@ namespace QuantConnect.Tests.Common.Securities
             using (var wc = new WebClient())
             {
                 var jsonCurrencies = wc.DownloadString(urlCurrencies);
-                var rowsCurrencies = JsonConvert.DeserializeObject<List<CoinbaseCurrency>>(jsonCurrencies);
+                var rowsCurrencies = JsonConvert.DeserializeObject<List<CoinbaseCurrency>>(
+                    jsonCurrencies
+                );
                 var currencyDescriptions = rowsCurrencies.ToDictionary(x => x.Id, x => x.Name);
 
                 var jsonProducts = wc.DownloadString(urlProducts);
 
-                var rowsProducts = JsonConvert.DeserializeObject<List<CoinbaseProduct>>(jsonProducts);
+                var rowsProducts = JsonConvert.DeserializeObject<List<CoinbaseProduct>>(
+                    jsonProducts
+                );
                 foreach (var row in rowsProducts.OrderBy(x => x.Id))
                 {
-                    string baseDescription, quoteDescription;
+                    string baseDescription,
+                        quoteDescription;
                     if (!currencyDescriptions.TryGetValue(row.BaseCurrency, out baseDescription))
                     {
                         baseDescription = row.BaseCurrency;
@@ -258,15 +325,17 @@ namespace QuantConnect.Tests.Common.Securities
                         quoteDescription = row.QuoteCurrency;
                     }
 
-                    sb.AppendLine("coinbase," +
-                                  $"{row.BaseCurrency}{row.QuoteCurrency}," +
-                                  "crypto," +
-                                  $"{baseDescription}-{quoteDescription}," +
-                                  $"{row.QuoteCurrency}," +
-                                  "1," +
-                                  $"{row.QuoteIncrement.NormalizeToStr()}," +
-                                  $"{row.BaseIncrement.NormalizeToStr()}," +
-                                  $"{row.Id}");
+                    sb.AppendLine(
+                        "coinbase,"
+                            + $"{row.BaseCurrency}{row.QuoteCurrency},"
+                            + "crypto,"
+                            + $"{baseDescription}-{quoteDescription},"
+                            + $"{row.QuoteCurrency},"
+                            + "1,"
+                            + $"{row.QuoteIncrement.NormalizeToStr()},"
+                            + $"{row.BaseIncrement.NormalizeToStr()},"
+                            + $"{row.Id}"
+                    );
                 }
             }
 
@@ -346,10 +415,14 @@ namespace QuantConnect.Tests.Common.Securities
         [Test, Explicit]
         public void FetchSymbolPropertiesFromBitfinex()
         {
-            const string urlExchangePairs = "https://api-pub.bitfinex.com/v2/conf/pub:list:pair:exchange";
-            const string urlMarginPairs = "https://api-pub.bitfinex.com/v2/conf/pub:list:pair:margin";
-            const string urlCurrencyMap = "https://api-pub.bitfinex.com/v2/conf/pub:map:currency:sym";
-            const string urlCurrencyLabels = "https://api-pub.bitfinex.com/v2/conf/pub:map:currency:label";
+            const string urlExchangePairs =
+                "https://api-pub.bitfinex.com/v2/conf/pub:list:pair:exchange";
+            const string urlMarginPairs =
+                "https://api-pub.bitfinex.com/v2/conf/pub:list:pair:margin";
+            const string urlCurrencyMap =
+                "https://api-pub.bitfinex.com/v2/conf/pub:map:currency:sym";
+            const string urlCurrencyLabels =
+                "https://api-pub.bitfinex.com/v2/conf/pub:map:currency:label";
             const string urlSymbolDetails = "https://api.bitfinex.com/v1/symbols_details";
 
             var sb = new StringBuilder();
@@ -357,29 +430,43 @@ namespace QuantConnect.Tests.Common.Securities
             using (var wc = new WebClient())
             {
                 var jsonExchangePairs = wc.DownloadString(urlExchangePairs);
-                var exchangePairs = JsonConvert.DeserializeObject<List<List<string>>>(jsonExchangePairs)[0];
+                var exchangePairs = JsonConvert.DeserializeObject<List<List<string>>>(
+                    jsonExchangePairs
+                )[0];
 
                 var jsonMarginPairs = wc.DownloadString(urlMarginPairs);
-                var marginPairs = JsonConvert.DeserializeObject<List<List<string>>>(jsonMarginPairs)[0];
+                var marginPairs = JsonConvert.DeserializeObject<List<List<string>>>(
+                    jsonMarginPairs
+                )[0];
 
                 var jsonCurrencyMap = wc.DownloadString(urlCurrencyMap);
-                var rowsCurrencyMap = JsonConvert.DeserializeObject<List<List<List<string>>>>(jsonCurrencyMap)[0];
-                var currencyMap = rowsCurrencyMap
-                    .ToDictionary(row => row[0], row => row[1].ToUpperInvariant());
+                var rowsCurrencyMap = JsonConvert.DeserializeObject<List<List<List<string>>>>(
+                    jsonCurrencyMap
+                )[0];
+                var currencyMap = rowsCurrencyMap.ToDictionary(
+                    row => row[0],
+                    row => row[1].ToUpperInvariant()
+                );
 
                 var jsonCurrencyLabels = wc.DownloadString(urlCurrencyLabels);
-                var rowsCurrencyLabels = JsonConvert.DeserializeObject<List<List<List<string>>>>(jsonCurrencyLabels)[0];
-                var currencyLabels = rowsCurrencyLabels
-                    .ToDictionary(row => row[0], row => row[1]);
+                var rowsCurrencyLabels = JsonConvert.DeserializeObject<List<List<List<string>>>>(
+                    jsonCurrencyLabels
+                )[0];
+                var currencyLabels = rowsCurrencyLabels.ToDictionary(row => row[0], row => row[1]);
 
                 var jsonSymbolDetails = wc.DownloadString(urlSymbolDetails);
-                var symbolDetails = JsonConvert.DeserializeObject<List<BitfinexSymbolDetails>>(jsonSymbolDetails);
-                var minimumPriceIncrements = symbolDetails
-                    .ToDictionary(x => x.Pair.ToUpperInvariant(), x => (decimal)Math.Pow(10, -x.PricePrecision));
+                var symbolDetails = JsonConvert.DeserializeObject<List<BitfinexSymbolDetails>>(
+                    jsonSymbolDetails
+                );
+                var minimumPriceIncrements = symbolDetails.ToDictionary(
+                    x => x.Pair.ToUpperInvariant(),
+                    x => (decimal)Math.Pow(10, -x.PricePrecision)
+                );
 
                 foreach (var pair in exchangePairs.Union(marginPairs).OrderBy(x => x))
                 {
-                    string baseCurrency, quoteCurrency;
+                    string baseCurrency,
+                        quoteCurrency;
                     if (pair.Contains(":"))
                     {
                         var parts = pair.Split(':');
@@ -398,7 +485,8 @@ namespace QuantConnect.Tests.Common.Securities
                         continue;
                     }
 
-                    string baseDescription, quoteDescription;
+                    string baseDescription,
+                        quoteDescription;
                     if (!currencyLabels.TryGetValue(baseCurrency, out baseDescription))
                     {
                         Log.Trace($"Base currency description not found: {baseCurrency}");
@@ -412,7 +500,8 @@ namespace QuantConnect.Tests.Common.Securities
 
                     var description = baseDescription + "-" + quoteDescription;
 
-                    string newBaseCurrency, newQuoteCurrency;
+                    string newBaseCurrency,
+                        newQuoteCurrency;
                     if (currencyMap.TryGetValue(baseCurrency, out newBaseCurrency))
                     {
                         baseCurrency = newBaseCurrency;
@@ -438,15 +527,17 @@ namespace QuantConnect.Tests.Common.Securities
 
                     const decimal lotSize = 0.00000001m;
 
-                    sb.AppendLine("bitfinex," +
-                                  $"{leanTicker}," +
-                                  "crypto," +
-                                  $"{description}," +
-                                  $"{quoteCurrency}," +
-                                  "1," +
-                                  $"{minimumPriceIncrement.NormalizeToStr()}," +
-                                  $"{lotSize.NormalizeToStr()}," +
-                                  $"t{pair}");
+                    sb.AppendLine(
+                        "bitfinex,"
+                            + $"{leanTicker},"
+                            + "crypto,"
+                            + $"{description},"
+                            + $"{quoteCurrency},"
+                            + "1,"
+                            + $"{minimumPriceIncrement.NormalizeToStr()},"
+                            + $"{lotSize.NormalizeToStr()},"
+                            + $"t{pair}"
+                    );
                 }
             }
 
@@ -483,7 +574,12 @@ namespace QuantConnect.Tests.Common.Securities
         [TestCase("ZB", Market.CBOT, 1000, 0.015625)]
         [TestCase("ZW", Market.CBOT, 5000, 0.00125)]
         [TestCase("SI", Market.COMEX, 5000, 0.001)]
-        public void ReadsFuturesOptionsEntries(string ticker, string market, int expectedMultiplier, double expectedMinimumPriceFluctuation)
+        public void ReadsFuturesOptionsEntries(
+            string ticker,
+            string market,
+            int expectedMultiplier,
+            double expectedMinimumPriceFluctuation
+        )
         {
             var future = Symbol.CreateFuture(ticker, market, SecurityIdentifier.DefaultDate);
             var option = Symbol.CreateOption(
@@ -492,13 +588,17 @@ namespace QuantConnect.Tests.Common.Securities
                 default(OptionStyle),
                 default(OptionRight),
                 default(decimal),
-                SecurityIdentifier.DefaultDate);
+                SecurityIdentifier.DefaultDate
+            );
 
             var db = SymbolPropertiesDatabase.FromDataFolder();
             var results = db.GetSymbolProperties(market, option, SecurityType.FutureOption, "USD");
 
             Assert.AreEqual((decimal)expectedMultiplier, results.ContractMultiplier);
-            Assert.AreEqual((decimal)expectedMinimumPriceFluctuation, results.MinimumPriceVariation);
+            Assert.AreEqual(
+                (decimal)expectedMinimumPriceFluctuation,
+                results.MinimumPriceVariation
+            );
         }
 
         [TestCase("index")]
@@ -507,7 +607,8 @@ namespace QuantConnect.Tests.Common.Securities
         [TestCase("swap")]
         public void HandlesUnknownSecurityType(string securityType)
         {
-            var line = string.Join(",",
+            var line = string.Join(
+                ",",
                 "usa",
                 "ABCXYZ",
                 securityType,
@@ -515,16 +616,20 @@ namespace QuantConnect.Tests.Common.Securities
                 "USD",
                 "100",
                 "0.01",
-                "1");
+                "1"
+            );
 
             SecurityDatabaseKey key;
-            Assert.DoesNotThrow(() => TestingSymbolPropertiesDatabase.TestFromCsvLine(line, out key));
+            Assert.DoesNotThrow(
+                () => TestingSymbolPropertiesDatabase.TestFromCsvLine(line, out key)
+            );
         }
 
         [Test]
         public void HandlesEmptyOrderSizePriceMagnifierCorrectly()
         {
-            var line = string.Join(",",
+            var line = string.Join(
+                ",",
                 "usa",
                 "ABC",
                 "equity",
@@ -534,7 +639,8 @@ namespace QuantConnect.Tests.Common.Securities
                 "0.01",
                 "1",
                 "",
-                "");
+                ""
+            );
 
             var result = TestingSymbolPropertiesDatabase.TestFromCsvLine(line, out _);
 
@@ -545,9 +651,7 @@ namespace QuantConnect.Tests.Common.Securities
         private class TestingSymbolPropertiesDatabase : SymbolPropertiesDatabase
         {
             public TestingSymbolPropertiesDatabase(string file)
-                : base(file)
-            {
-            }
+                : base(file) { }
 
             public static SymbolProperties TestFromCsvLine(string line, out SecurityDatabaseKey key)
             {

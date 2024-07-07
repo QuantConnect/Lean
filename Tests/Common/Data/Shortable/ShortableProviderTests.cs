@@ -25,9 +25,12 @@ namespace QuantConnect.Tests.Common.Data.Shortable
     [TestFixture]
     public class ShortableProviderTests
     {
-        private readonly Dictionary<string, Dictionary<Symbol, ShortableData>[]> _resultsByBrokerage = new();
+        private readonly Dictionary<
+            string,
+            Dictionary<Symbol, ShortableData>[]
+        > _resultsByBrokerage = new();
         private Symbol[] _symbols;
-        
+
         [SetUp]
         public void SetupConfig()
         {
@@ -35,8 +38,15 @@ namespace QuantConnect.Tests.Common.Data.Shortable
             Globals.Reset();
 
             _symbols = new[] { "AAPL", "GOOG", "BAC" }
-               .Select(x => new Symbol(SecurityIdentifier.GenerateEquity(x, QuantConnect.Market.USA, mappingResolveDate: new DateTime(2021, 1, 4)), x))
-               .ToArray();
+                .Select(x => new Symbol(
+                    SecurityIdentifier.GenerateEquity(
+                        x,
+                        QuantConnect.Market.USA,
+                        mappingResolveDate: new DateTime(2021, 1, 4)
+                    ),
+                    x
+                ))
+                .ToArray();
 
             _resultsByBrokerage["testinteractivebrokers"] = new[]
             {
@@ -55,7 +65,7 @@ namespace QuantConnect.Tests.Common.Data.Shortable
             };
 
             _resultsByBrokerage["testbrokerage"] = new[]
-{
+            {
                 new Dictionary<Symbol, ShortableData>
                 {
                     { _symbols[0], new(2000, 0, 0) },
@@ -77,7 +87,7 @@ namespace QuantConnect.Tests.Common.Data.Shortable
             Config.Reset();
             Globals.Reset();
         }
-        
+
         [TestCase("testbrokerage")]
         [TestCase("testinteractivebrokers")]
         public void LocalDiskShortableProviderGetsDataBySymbol(string brokerage)
@@ -85,11 +95,7 @@ namespace QuantConnect.Tests.Common.Data.Shortable
             var shortableProvider = new LocalDiskShortableProvider(brokerage);
             var results = _resultsByBrokerage[brokerage];
 
-            var dates = new[]
-            {
-                new DateTime(2020, 12, 21),
-                new DateTime(2020, 12, 22)
-            };
+            var dates = new[] { new DateTime(2020, 12, 21), new DateTime(2020, 12, 22) };
 
             foreach (var symbol in _symbols)
             {
@@ -109,11 +115,21 @@ namespace QuantConnect.Tests.Common.Data.Shortable
 
         [TestCase("AAPL", "nobrokerage")]
         [TestCase("SPY", "testbrokerage")]
-        public void LocalDiskShortableProviderDefaultsToNullForMissingData(string ticker, string brokerage)
+        public void LocalDiskShortableProviderDefaultsToNullForMissingData(
+            string ticker,
+            string brokerage
+        )
         {
             var provider = new LocalDiskShortableProvider(brokerage);
             var date = new DateTime(2020, 12, 21);
-            var symbol = new Symbol(SecurityIdentifier.GenerateEquity(ticker, QuantConnect.Market.USA, mappingResolveDate: date), ticker);
+            var symbol = new Symbol(
+                SecurityIdentifier.GenerateEquity(
+                    ticker,
+                    QuantConnect.Market.USA,
+                    mappingResolveDate: date
+                ),
+                ticker
+            );
 
             Assert.IsFalse(provider.ShortableQuantity(symbol, date).HasValue);
             Assert.AreEqual(0, provider.RebateRate(symbol, date));

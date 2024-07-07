@@ -1,11 +1,11 @@
 ﻿/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
- * 
- * Licensed under the Apache License, Version 2.0 (the "License"); 
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -42,20 +42,26 @@ namespace QuantConnect.Indicators.CandlestickPatterns
         /// Initializes a new instance of the <see cref="GravestoneDoji"/> class using the specified name.
         /// </summary>
         /// <param name="name">The name of this indicator</param>
-        public GravestoneDoji(string name) 
-            : base(name, Math.Max(CandleSettings.Get(CandleSettingType.BodyDoji).AveragePeriod, CandleSettings.Get(CandleSettingType.ShadowVeryShort).AveragePeriod) + 1)
+        public GravestoneDoji(string name)
+            : base(
+                name,
+                Math.Max(
+                    CandleSettings.Get(CandleSettingType.BodyDoji).AveragePeriod,
+                    CandleSettings.Get(CandleSettingType.ShadowVeryShort).AveragePeriod
+                ) + 1
+            )
         {
             _bodyDojiAveragePeriod = CandleSettings.Get(CandleSettingType.BodyDoji).AveragePeriod;
-            _shadowVeryShortAveragePeriod = CandleSettings.Get(CandleSettingType.ShadowVeryShort).AveragePeriod;
+            _shadowVeryShortAveragePeriod = CandleSettings
+                .Get(CandleSettingType.ShadowVeryShort)
+                .AveragePeriod;
         }
 
         /// <summary>
         /// Initializes a new instance of the <see cref="GravestoneDoji"/> class.
         /// </summary>
         public GravestoneDoji()
-            : this("GRAVESTONEDOJI")
-        {
-        }
+            : this("GRAVESTONEDOJI") { }
 
         /// <summary>
         /// Gets a flag indicating when this indicator is ready and fully initialized
@@ -71,7 +77,10 @@ namespace QuantConnect.Indicators.CandlestickPatterns
         /// <param name="window">The window of data held in this indicator</param>
         /// <param name="input">The input given to the indicator</param>
         /// <returns>A new value for this indicator</returns>
-        protected override decimal ComputeNextValue(IReadOnlyWindow<IBaseDataBar> window, IBaseDataBar input)
+        protected override decimal ComputeNextValue(
+            IReadOnlyWindow<IBaseDataBar> window,
+            IBaseDataBar input
+        )
         {
             if (!IsReady)
             {
@@ -82,29 +91,49 @@ namespace QuantConnect.Indicators.CandlestickPatterns
 
                 if (Samples >= Period - _shadowVeryShortAveragePeriod)
                 {
-                    _shadowVeryShortPeriodTotal += GetCandleRange(CandleSettingType.ShadowVeryShort, input);
+                    _shadowVeryShortPeriodTotal += GetCandleRange(
+                        CandleSettingType.ShadowVeryShort,
+                        input
+                    );
                 }
 
                 return 0m;
             }
 
             decimal value;
-            if (GetRealBody(input) <= GetCandleAverage(CandleSettingType.BodyDoji, _bodyDojiPeriodTotal, input) &&
-                GetLowerShadow(input) < GetCandleAverage(CandleSettingType.ShadowVeryShort, _shadowVeryShortPeriodTotal, input) &&
-                GetUpperShadow(input) > GetCandleAverage(CandleSettingType.ShadowVeryShort, _shadowVeryShortPeriodTotal, input)
-              )
+            if (
+                GetRealBody(input)
+                    <= GetCandleAverage(CandleSettingType.BodyDoji, _bodyDojiPeriodTotal, input)
+                && GetLowerShadow(input)
+                    < GetCandleAverage(
+                        CandleSettingType.ShadowVeryShort,
+                        _shadowVeryShortPeriodTotal,
+                        input
+                    )
+                && GetUpperShadow(input)
+                    > GetCandleAverage(
+                        CandleSettingType.ShadowVeryShort,
+                        _shadowVeryShortPeriodTotal,
+                        input
+                    )
+            )
                 value = 1m;
             else
                 value = 0m;
 
-            // add the current range and subtract the first range: this is done after the pattern recognition 
+            // add the current range and subtract the first range: this is done after the pattern recognition
             // when avgPeriod is not 0, that means "compare with the previous candles" (it excludes the current candle)
 
-            _bodyDojiPeriodTotal += GetCandleRange(CandleSettingType.BodyDoji, input) -
-                                    GetCandleRange(CandleSettingType.BodyDoji, window[_bodyDojiAveragePeriod]);
+            _bodyDojiPeriodTotal +=
+                GetCandleRange(CandleSettingType.BodyDoji, input)
+                - GetCandleRange(CandleSettingType.BodyDoji, window[_bodyDojiAveragePeriod]);
 
-            _shadowVeryShortPeriodTotal += GetCandleRange(CandleSettingType.ShadowVeryShort, input) -
-                                           GetCandleRange(CandleSettingType.ShadowVeryShort, window[_shadowVeryShortAveragePeriod]);
+            _shadowVeryShortPeriodTotal +=
+                GetCandleRange(CandleSettingType.ShadowVeryShort, input)
+                - GetCandleRange(
+                    CandleSettingType.ShadowVeryShort,
+                    window[_shadowVeryShortAveragePeriod]
+                );
 
             return value;
         }

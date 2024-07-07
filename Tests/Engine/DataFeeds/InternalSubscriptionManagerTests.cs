@@ -64,7 +64,12 @@ namespace QuantConnect.Tests.Engine.DataFeeds
         }
 
         [TestCaseSource(nameof(DataTypeTestCases))]
-        public void CreatesSubscriptions(SubscriptionRequest subscriptionRequest, bool liveMode, bool expectNewSubscription, bool isWarmup)
+        public void CreatesSubscriptions(
+            SubscriptionRequest subscriptionRequest,
+            bool liveMode,
+            bool expectNewSubscription,
+            bool isWarmup
+        )
         {
             _algorithm.SetLiveMode(liveMode);
             if (isWarmup)
@@ -80,20 +85,30 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             {
                 if (!added)
                 {
-                    _algorithm.AddSecurity(subscriptionRequest.Security.Symbol, subscriptionRequest.Configuration.Resolution);
+                    _algorithm.AddSecurity(
+                        subscriptionRequest.Security.Symbol,
+                        subscriptionRequest.Configuration.Resolution
+                    );
                 }
                 else if (!timeSlice.IsTimePulse)
                 {
                     Assert.AreEqual(
                         expectNewSubscription,
-                        _algorithm.SubscriptionManager.SubscriptionDataConfigService
-                            .GetSubscriptionDataConfigs(Symbols.BTCUSD, includeInternalConfigs: true).Any(config => config.IsInternalFeed)
+                        _algorithm
+                            .SubscriptionManager.SubscriptionDataConfigService.GetSubscriptionDataConfigs(
+                                Symbols.BTCUSD,
+                                includeInternalConfigs: true
+                            )
+                            .Any(config => config.IsInternalFeed)
                     );
 
                     if (expectNewSubscription)
                     {
-                        var utcStartTime = _dataManager.DataFeedSubscriptions
-                            .Where(subscription => subscription.Configuration.IsInternalFeed && subscription.Configuration.Symbol == Symbols.BTCUSD)
+                        var utcStartTime = _dataManager
+                            .DataFeedSubscriptions.Where(subscription =>
+                                subscription.Configuration.IsInternalFeed
+                                && subscription.Configuration.Symbol == Symbols.BTCUSD
+                            )
                             .Select(subscription => subscription.UtcStartTime)
                             .First();
                         Assert.Greater(utcStartTime.Ticks, start.Ticks);
@@ -132,7 +147,12 @@ namespace QuantConnect.Tests.Engine.DataFeeds
         }
 
         [TestCaseSource(nameof(DataTypeTestCases))]
-        public void RemoveSubscriptions(SubscriptionRequest subscriptionRequest, bool liveMode, bool expectNewSubscription, bool isWarmup)
+        public void RemoveSubscriptions(
+            SubscriptionRequest subscriptionRequest,
+            bool liveMode,
+            bool expectNewSubscription,
+            bool isWarmup
+        )
         {
             if (!expectNewSubscription)
             {
@@ -153,20 +173,33 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             {
                 if (!added)
                 {
-                    _algorithm.AddSecurity(subscriptionRequest.Security.Symbol, subscriptionRequest.Configuration.Resolution);
+                    _algorithm.AddSecurity(
+                        subscriptionRequest.Security.Symbol,
+                        subscriptionRequest.Configuration.Resolution
+                    );
                 }
                 else if (!timeSlice.IsTimePulse && !shouldRemoved)
                 {
-                    Assert.IsTrue(_algorithm.SubscriptionManager.SubscriptionDataConfigService
-                            .GetSubscriptionDataConfigs(Symbols.BTCUSD, includeInternalConfigs: true).Any());
+                    Assert.IsTrue(
+                        _algorithm
+                            .SubscriptionManager.SubscriptionDataConfigService.GetSubscriptionDataConfigs(
+                                Symbols.BTCUSD,
+                                includeInternalConfigs: true
+                            )
+                            .Any()
+                    );
 
                     _algorithm.RemoveSecurity(subscriptionRequest.Security.Symbol);
                     shouldRemoved = true;
                 }
                 else if (!timeSlice.IsTimePulse && shouldRemoved)
                 {
-                    var result = _algorithm.SubscriptionManager.SubscriptionDataConfigService
-                        .GetSubscriptionDataConfigs(Symbols.BTCUSD, includeInternalConfigs: true).Any(config => config.IsInternalFeed);
+                    var result = _algorithm
+                        .SubscriptionManager.SubscriptionDataConfigService.GetSubscriptionDataConfigs(
+                            Symbols.BTCUSD,
+                            includeInternalConfigs: true
+                        )
+                        .Any(config => config.IsInternalFeed);
                     // can take some extra loop till the base exchange thread picks up the data point that will trigger the universe selection
                     if (!result || count++ > 5)
                     {
@@ -194,7 +227,9 @@ namespace QuantConnect.Tests.Engine.DataFeeds
         public void PreMarketDataSetsCache()
         {
             var dataQueueTest = new FakeDataQueueTest();
-            dataQueueTest.ManualTimeProvider.SetCurrentTimeUtc(new DateTime(2020, 09, 03, 10, 0, 0));
+            dataQueueTest.ManualTimeProvider.SetCurrentTimeUtc(
+                new DateTime(2020, 09, 03, 10, 0, 0)
+            );
             TearDown();
             var liveSynchronizer = new TestableLiveSynchronizer(dataQueueTest.ManualTimeProvider);
             using var dataAggregator = new TestAggregationManager(dataQueueTest.ManualTimeProvider);
@@ -211,7 +246,10 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             {
                 dataQueueTest.ManualTimeProvider.AdvanceSeconds(60);
                 _algorithm.SetDateTime(dataQueueTest.ManualTimeProvider.GetUtcNow());
-                if (dataQueueTest.ManualTimeProvider.GetUtcNow() >= new DateTime(2020, 09, 03, 13, 0, 0))
+                if (
+                    dataQueueTest.ManualTimeProvider.GetUtcNow()
+                    >= new DateTime(2020, 09, 03, 13, 0, 0)
+                )
                 {
                     Assert.Fail("Timeout expect pre market data to set security prices");
                 }
@@ -224,21 +262,38 @@ namespace QuantConnect.Tests.Engine.DataFeeds
                 {
                     if (timeSlice.SecuritiesUpdateData.Count > 0)
                     {
-                        internalDataCount += timeSlice.SecuritiesUpdateData.Count(
-                            data => data.IsInternalConfig && data.Target.Symbol == Symbols.AAPL
+                        internalDataCount += timeSlice.SecuritiesUpdateData.Count(data =>
+                            data.IsInternalConfig && data.Target.Symbol == Symbols.AAPL
                         );
                     }
                     if (first)
                     {
-                        Assert.IsTrue(_algorithm.SubscriptionManager.SubscriptionDataConfigService
-                            .GetSubscriptionDataConfigs(Symbols.AAPL, includeInternalConfigs: true).Any(config => config.Resolution == Resolution.Second));
-                        Assert.IsFalse(_algorithm.SubscriptionManager.SubscriptionDataConfigService.GetSubscriptionDataConfigs(Symbols.IBM, includeInternalConfigs: true)
-                            .Any(config => config.IsInternalFeed && config.Resolution == Resolution.Second));
+                        Assert.IsTrue(
+                            _algorithm
+                                .SubscriptionManager.SubscriptionDataConfigService.GetSubscriptionDataConfigs(
+                                    Symbols.AAPL,
+                                    includeInternalConfigs: true
+                                )
+                                .Any(config => config.Resolution == Resolution.Second)
+                        );
+                        Assert.IsFalse(
+                            _algorithm
+                                .SubscriptionManager.SubscriptionDataConfigService.GetSubscriptionDataConfigs(
+                                    Symbols.IBM,
+                                    includeInternalConfigs: true
+                                )
+                                .Any(config =>
+                                    config.IsInternalFeed && config.Resolution == Resolution.Second
+                                )
+                        );
                         first = false;
                     }
-                    else if(_algorithm.Securities["AAPL"].Price != 0 && _algorithm.Securities["IBM"].Price != 0)
+                    else if (
+                        _algorithm.Securities["AAPL"].Price != 0
+                        && _algorithm.Securities["IBM"].Price != 0
+                    )
                     {
-                        #pragma warning disable CS0618
+#pragma warning disable CS0618
                         _algorithm.SetHoldings("AAPL", 0.01);
                         _algorithm.SetHoldings("IBM", 0.01);
 
@@ -248,7 +303,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
                         Assert.AreEqual(OrderStatus.Submitted, orders[0].Status);
 
                         orders = _algorithm.Transactions.GetOpenOrders("IBM");
-                        #pragma warning restore CS0618
+#pragma warning restore CS0618
                         Assert.AreEqual(1, orders.Count);
                         Assert.AreEqual(Symbols.IBM, orders[0].Symbol);
                         Assert.AreEqual(OrderStatus.Submitted, orders[0].Status);
@@ -284,35 +339,62 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             {
                 if (!added)
                 {
-                    _algorithm.AddUniverse(SecurityType.Equity,
-                            "AUniverse",
-                            Resolution.Second,
-                            Market.USA,
-                            _algorithm.UniverseSettings,
-                            time =>
-                            {
-                                return !manualEvent.WaitOne(0) ? new[] { "IBM" } : new[] { "AAPL" };
-                            }
+                    _algorithm.AddUniverse(
+                        SecurityType.Equity,
+                        "AUniverse",
+                        Resolution.Second,
+                        Market.USA,
+                        _algorithm.UniverseSettings,
+                        time =>
+                        {
+                            return !manualEvent.WaitOne(0) ? new[] { "IBM" } : new[] { "AAPL" };
+                        }
                     );
                 }
                 else if (!timeSlice.IsTimePulse)
                 {
                     if (!manualEvent.WaitOne(0))
                     {
-                        Assert.IsTrue(_algorithm.SubscriptionManager.SubscriptionDataConfigService
-                            .GetSubscriptionDataConfigs(Symbols.IBM, includeInternalConfigs: true).Any(config => config.Resolution == Resolution.Second),
-                            "IBM subscription was not found");
-                        Assert.IsFalse(_algorithm.SubscriptionManager.SubscriptionDataConfigService.GetSubscriptionDataConfigs(Symbols.AAPL, includeInternalConfigs: true).Any(),
-                            "Unexpected AAPL subscription was found");
+                        Assert.IsTrue(
+                            _algorithm
+                                .SubscriptionManager.SubscriptionDataConfigService.GetSubscriptionDataConfigs(
+                                    Symbols.IBM,
+                                    includeInternalConfigs: true
+                                )
+                                .Any(config => config.Resolution == Resolution.Second),
+                            "IBM subscription was not found"
+                        );
+                        Assert.IsFalse(
+                            _algorithm
+                                .SubscriptionManager.SubscriptionDataConfigService.GetSubscriptionDataConfigs(
+                                    Symbols.AAPL,
+                                    includeInternalConfigs: true
+                                )
+                                .Any(),
+                            "Unexpected AAPL subscription was found"
+                        );
                         manualEvent.Set();
                     }
                     else
                     {
-                        Assert.IsTrue(_algorithm.SubscriptionManager.SubscriptionDataConfigService
-                            .GetSubscriptionDataConfigs(Symbols.AAPL, includeInternalConfigs: true).Any(config => config.Resolution == Resolution.Second),
-                            "AAPL subscription was not found");
-                        Assert.IsFalse(_algorithm.SubscriptionManager.SubscriptionDataConfigService.GetSubscriptionDataConfigs(Symbols.IBM, includeInternalConfigs: true).Any(),
-                            "Unexpected IBM subscription was found");
+                        Assert.IsTrue(
+                            _algorithm
+                                .SubscriptionManager.SubscriptionDataConfigService.GetSubscriptionDataConfigs(
+                                    Symbols.AAPL,
+                                    includeInternalConfigs: true
+                                )
+                                .Any(config => config.Resolution == Resolution.Second),
+                            "AAPL subscription was not found"
+                        );
+                        Assert.IsFalse(
+                            _algorithm
+                                .SubscriptionManager.SubscriptionDataConfigService.GetSubscriptionDataConfigs(
+                                    Symbols.IBM,
+                                    includeInternalConfigs: true
+                                )
+                                .Any(),
+                            "Unexpected IBM subscription was found"
+                        );
                         break;
                     }
                 }
@@ -337,21 +419,105 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             {
                 var result = new List<TestCaseData>();
                 var config = GetConfig(Symbols.BTCUSD, Resolution.Second);
-                result.Add(new TestCaseData(new SubscriptionRequest(false, null, CreateSecurity(config), config, DateTime.UtcNow, DateTime.UtcNow), true, false, false));
+                result.Add(
+                    new TestCaseData(
+                        new SubscriptionRequest(
+                            false,
+                            null,
+                            CreateSecurity(config),
+                            config,
+                            DateTime.UtcNow,
+                            DateTime.UtcNow
+                        ),
+                        true,
+                        false,
+                        false
+                    )
+                );
 
                 config = GetConfig(Symbols.BTCUSD, Resolution.Minute);
-                result.Add(new TestCaseData(new SubscriptionRequest(false, null, CreateSecurity(config), config, DateTime.UtcNow, DateTime.UtcNow), true, false, false));
+                result.Add(
+                    new TestCaseData(
+                        new SubscriptionRequest(
+                            false,
+                            null,
+                            CreateSecurity(config),
+                            config,
+                            DateTime.UtcNow,
+                            DateTime.UtcNow
+                        ),
+                        true,
+                        false,
+                        false
+                    )
+                );
 
                 config = GetConfig(Symbols.BTCUSD, Resolution.Hour);
-                result.Add(new TestCaseData(new SubscriptionRequest(false, null, CreateSecurity(config), config, DateTime.UtcNow, DateTime.UtcNow), true, true, false));
+                result.Add(
+                    new TestCaseData(
+                        new SubscriptionRequest(
+                            false,
+                            null,
+                            CreateSecurity(config),
+                            config,
+                            DateTime.UtcNow,
+                            DateTime.UtcNow
+                        ),
+                        true,
+                        true,
+                        false
+                    )
+                );
 
                 config = GetConfig(Symbols.BTCUSD, Resolution.Daily);
-                result.Add(new TestCaseData(new SubscriptionRequest(false, null, CreateSecurity(config), config, DateTime.UtcNow, DateTime.UtcNow), true, true, false));
+                result.Add(
+                    new TestCaseData(
+                        new SubscriptionRequest(
+                            false,
+                            null,
+                            CreateSecurity(config),
+                            config,
+                            DateTime.UtcNow,
+                            DateTime.UtcNow
+                        ),
+                        true,
+                        true,
+                        false
+                    )
+                );
 
                 config = GetConfig(Symbols.BTCUSD, Resolution.Daily);
-                result.Add(new TestCaseData(new SubscriptionRequest(false, null, CreateSecurity(config), config, DateTime.UtcNow, DateTime.UtcNow), true, true, true));
+                result.Add(
+                    new TestCaseData(
+                        new SubscriptionRequest(
+                            false,
+                            null,
+                            CreateSecurity(config),
+                            config,
+                            DateTime.UtcNow,
+                            DateTime.UtcNow
+                        ),
+                        true,
+                        true,
+                        true
+                    )
+                );
 
-                result.Add(new TestCaseData(new SubscriptionRequest(false, null, CreateSecurity(config), config, DateTime.UtcNow, DateTime.UtcNow), false, false, false));
+                result.Add(
+                    new TestCaseData(
+                        new SubscriptionRequest(
+                            false,
+                            null,
+                            CreateSecurity(config),
+                            config,
+                            DateTime.UtcNow,
+                            DateTime.UtcNow
+                        ),
+                        false,
+                        false,
+                        false
+                    )
+                );
 
                 return result.ToArray();
             }
@@ -359,7 +525,8 @@ namespace QuantConnect.Tests.Engine.DataFeeds
 
         private static Security CreateSecurity(SubscriptionDataConfig config)
         {
-            return new Security(SecurityExchangeHours.AlwaysOpen(TimeZones.Utc),
+            return new Security(
+                SecurityExchangeHours.AlwaysOpen(TimeZones.Utc),
                 config,
                 new Cash(Currencies.USD, 0, 1m),
                 SymbolProperties.GetDefault(Currencies.USD),
@@ -371,7 +538,16 @@ namespace QuantConnect.Tests.Engine.DataFeeds
 
         private static SubscriptionDataConfig GetConfig(Symbol symbol, Resolution resolution)
         {
-            return new SubscriptionDataConfig(typeof(TradeBar), symbol, resolution, TimeZones.Utc, TimeZones.Utc, false, false, false);
+            return new SubscriptionDataConfig(
+                typeof(TradeBar),
+                symbol,
+                resolution,
+                TimeZones.Utc,
+                TimeZones.Utc,
+                false,
+                false,
+                false
+            );
         }
 
         private class FakeDataQueueTest : FakeDataQueue
@@ -381,35 +557,51 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             protected override ITimeProvider TimeProvider => ManualTimeProvider;
         }
 
-        private void SetupImpl(IDataQueueHandler dataQueueHandler, Synchronizer synchronizer, IDataAggregator dataAggregator)
+        private void SetupImpl(
+            IDataQueueHandler dataQueueHandler,
+            Synchronizer synchronizer,
+            IDataAggregator dataAggregator
+        )
         {
             _algorithm = new AlgorithmStub(createDataManager: false);
             _aggregationManager = new AggregationManager();
-            _dataFeed = new TestableLiveTradingDataFeed(_algorithm.Settings, dataQueueHandler ?? new FakeDataQueue(dataAggregator ?? _aggregationManager));
+            _dataFeed = new TestableLiveTradingDataFeed(
+                _algorithm.Settings,
+                dataQueueHandler ?? new FakeDataQueue(dataAggregator ?? _aggregationManager)
+            );
             _synchronizer = synchronizer ?? new LiveSynchronizer();
             _algorithm.SetStartDate(new DateTime(2022, 04, 13));
 
             var registeredTypesProvider = new RegisteredSecurityDataTypesProvider();
-            var securityService = new SecurityService(_algorithm.Portfolio.CashBook,
+            var securityService = new SecurityService(
+                _algorithm.Portfolio.CashBook,
                 MarketHoursDatabase.FromDataFolder(),
                 SymbolPropertiesDatabase.FromDataFolder(),
                 _algorithm,
                 registeredTypesProvider,
-                new SecurityCacheProvider(_algorithm.Portfolio));
+                new SecurityCacheProvider(_algorithm.Portfolio)
+            );
             var universeSelection = new UniverseSelection(
                 _algorithm,
                 securityService,
                 new DataPermissionManager(),
                 TestGlobals.DataProvider,
-                Resolution.Second);
-            _dataManager = new DataManager(_dataFeed, universeSelection, _algorithm, new TimeKeeper(DateTime.UtcNow, TimeZones.NewYork),
+                Resolution.Second
+            );
+            _dataManager = new DataManager(
+                _dataFeed,
+                universeSelection,
+                _algorithm,
+                new TimeKeeper(DateTime.UtcNow, TimeZones.NewYork),
                 MarketHoursDatabase.FromDataFolder(),
                 true,
                 new RegisteredSecurityDataTypesProvider(),
-                new DataPermissionManager());
+                new DataPermissionManager()
+            );
             _resultHandler = new TestResultHandler();
             _synchronizer.Initialize(_algorithm, _dataManager);
-            _dataFeed.Initialize(_algorithm,
+            _dataFeed.Initialize(
+                _algorithm,
                 new LiveNodePacket(),
                 _resultHandler,
                 TestGlobals.MapFileProvider,
@@ -417,7 +609,8 @@ namespace QuantConnect.Tests.Engine.DataFeeds
                 TestGlobals.DataProvider,
                 _dataManager,
                 _synchronizer,
-                new DataChannelProvider());
+                new DataChannelProvider()
+            );
             _algorithm.SubscriptionManager.SetDataManager(_dataManager);
             _algorithm.Securities.SetSecurityService(securityService);
             var backtestingTransactionHandler = new BacktestingTransactionHandler();
@@ -425,6 +618,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             backtestingTransactionHandler.Initialize(_algorithm, _paperBrokerage, _resultHandler);
             _algorithm.Transactions.SetOrderProcessor(backtestingTransactionHandler);
         }
+
         private class TestAggregationManager : AggregationManager
         {
             public TestAggregationManager(ITimeProvider timeProvider)

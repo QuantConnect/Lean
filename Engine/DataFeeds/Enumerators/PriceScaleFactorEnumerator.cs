@@ -46,11 +46,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
         /// <summary>
         /// Last read <see cref="BaseData"/> object from this type and source
         /// </summary>
-        public BaseData Current
-        {
-            get;
-            private set;
-        }
+        public BaseData Current { get; private set; }
 
         /// <summary>
         /// Creates a new instance of the <see cref="PriceScaleFactorEnumerator"/>.
@@ -70,7 +66,8 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
             SubscriptionDataConfig config,
             IFactorFileProvider factorFileProvider,
             bool liveMode = false,
-            DateTime? endDate = null)
+            DateTime? endDate = null
+        )
         {
             _config = config;
             _liveMode = liveMode;
@@ -100,16 +97,24 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
             var underlyingReturnValue = _rawDataEnumerator.MoveNext();
             Current = _rawDataEnumerator.Current;
 
-            if (underlyingReturnValue
+            if (
+                underlyingReturnValue
                 && Current != null
                 && _factorFileProvider != null
-                && _config.DataNormalizationMode != DataNormalizationMode.Raw)
+                && _config.DataNormalizationMode != DataNormalizationMode.Raw
+            )
             {
                 var priceScaleFrontier = Current.GetUpdatePriceScaleFrontier();
                 if (priceScaleFrontier >= _nextTradableDate)
                 {
                     _factorFile = _factorFileProvider.Get(_config.Symbol);
-                    _config.PriceScaleFactor = _factorFile.GetPriceScale(priceScaleFrontier.Date, _config.DataNormalizationMode, _config.ContractDepthOffset, _config.DataMappingMode, _endDate);
+                    _config.PriceScaleFactor = _factorFile.GetPriceScale(
+                        priceScaleFrontier.Date,
+                        _config.DataNormalizationMode,
+                        _config.ContractDepthOffset,
+                        _config.DataMappingMode,
+                        _endDate
+                    );
 
                     // update factor files every day
                     _nextTradableDate = priceScaleFrontier.Date.AddDays(1);
@@ -120,7 +125,11 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
                     }
                 }
 
-                Current = Current.Normalize(_config.PriceScaleFactor, _config.DataNormalizationMode, _config.SumOfDividends);
+                Current = Current.Normalize(
+                    _config.PriceScaleFactor,
+                    _config.DataNormalizationMode,
+                    _config.SumOfDividends
+                );
             }
 
             return underlyingReturnValue;
@@ -132,7 +141,9 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
         /// <remarks>Not used</remarks>
         public void Reset()
         {
-            throw new NotImplementedException("Reset method not implemented. Assumes loop will only be used once.");
+            throw new NotImplementedException(
+                "Reset method not implemented. Assumes loop will only be used once."
+            );
         }
     }
 }

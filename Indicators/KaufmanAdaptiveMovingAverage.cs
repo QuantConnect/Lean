@@ -33,7 +33,12 @@ namespace QuantConnect.Indicators
         /// <param name="period">The period of the Efficiency Ratio (ER)</param>
         /// <param name="fastEmaPeriod">The period of the fast EMA used to calculate the Smoothing Constant (SC)</param>
         /// <param name="slowEmaPeriod">The period of the slow EMA used to calculate the Smoothing Constant (SC)</param>
-        public KaufmanAdaptiveMovingAverage(string name, int period, int fastEmaPeriod = 2, int slowEmaPeriod = 30)
+        public KaufmanAdaptiveMovingAverage(
+            string name,
+            int period,
+            int fastEmaPeriod = 2,
+            int slowEmaPeriod = 30
+        )
             : base(name, period)
         {
             // Smoothing factor of the slow EMA
@@ -48,10 +53,17 @@ namespace QuantConnect.Indicators
         /// <param name="period">The period of the Efficiency Ratio (ER)</param>
         /// <param name="fastEmaPeriod">The period of the fast EMA used to calculate the Smoothing Constant (SC)</param>
         /// <param name="slowEmaPeriod">The period of the slow EMA used to calculate the Smoothing Constant (SC)</param>
-        public KaufmanAdaptiveMovingAverage(int period, int fastEmaPeriod = 2, int slowEmaPeriod = 30)
-            : this($"KAMA({period},{fastEmaPeriod},{slowEmaPeriod})", period, fastEmaPeriod, slowEmaPeriod)
-        {
-        }
+        public KaufmanAdaptiveMovingAverage(
+            int period,
+            int fastEmaPeriod = 2,
+            int slowEmaPeriod = 30
+        )
+            : this(
+                $"KAMA({period},{fastEmaPeriod},{slowEmaPeriod})",
+                period,
+                fastEmaPeriod,
+                slowEmaPeriod
+            ) { }
 
         /// <summary>
         /// Computes the next value of this indicator from the given state
@@ -59,7 +71,10 @@ namespace QuantConnect.Indicators
         /// <param name="input">The input given to the indicator</param>
         /// <param name="window">The window for the input history</param>
         /// <returns>A new value for this indicator</returns>
-        protected override decimal ComputeNextValue(IReadOnlyWindow<IndicatorDataPoint> window, IndicatorDataPoint input)
+        protected override decimal ComputeNextValue(
+            IReadOnlyWindow<IndicatorDataPoint> window,
+            IndicatorDataPoint input
+        )
         {
             // Calculate the efficiency ratio
             var efficiencyRatio = base.ComputeNextValue(window, input);

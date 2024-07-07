@@ -28,6 +28,7 @@ namespace QuantConnect.Algorithm.CSharp
     public class ZeroFeeRegressionAlgorithm : QCAlgorithm, IRegressionAlgorithmDefinition
     {
         private Security _security;
+
         // Adding this so we only trade once, so math is easier and clear
         private bool _alreadyTraded;
 
@@ -36,9 +37,9 @@ namespace QuantConnect.Algorithm.CSharp
         /// </summary>
         public override void Initialize()
         {
-            SetStartDate(2013, 10, 07);  //Set Start Date
-            SetEndDate(2013, 10, 11);    //Set End Date
-            SetCash(100000);             //Set Strategy Cash
+            SetStartDate(2013, 10, 07); //Set Start Date
+            SetEndDate(2013, 10, 11); //Set End Date
+            SetCash(100000); //Set Strategy Cash
 
             _security = AddEquity("SPY", Resolution.Minute);
             _security.FeeModel = new ZeroFeeModel();
@@ -70,8 +71,9 @@ namespace QuantConnect.Algorithm.CSharp
 
             if (Portfolio.CashBook["USD"].Amount - _security.Holdings.LastTradeProfit != 100000)
             {
-                throw new RegressionTestException("Unexpected USD cash amount: " +
-                    $"{Portfolio.CashBook["USD"].Amount}");
+                throw new RegressionTestException(
+                    "Unexpected USD cash amount: " + $"{Portfolio.CashBook["USD"].Amount}"
+                );
             }
             if (Portfolio.CashBook.ContainsKey(Currencies.NullCurrency))
             {
@@ -81,11 +83,15 @@ namespace QuantConnect.Algorithm.CSharp
             var closedTrade = TradeBuilder.ClosedTrades[0];
             if (closedTrade.TotalFees != 0)
             {
-                throw new RegressionTestException($"Unexpected closed trades total fees {closedTrade.TotalFees}");
+                throw new RegressionTestException(
+                    $"Unexpected closed trades total fees {closedTrade.TotalFees}"
+                );
             }
             if (_security.Holdings.TotalFees != 0)
             {
-                throw new RegressionTestException($"Unexpected closed trades total fees {closedTrade.TotalFees}");
+                throw new RegressionTestException(
+                    $"Unexpected closed trades total fees {closedTrade.TotalFees}"
+                );
             }
         }
 
@@ -125,35 +131,36 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// This is used by the regression test system to indicate what the expected statistics are from running the algorithm
         /// </summary>
-        public Dictionary<string, string> ExpectedStatistics => new Dictionary<string, string>
-        {
-            {"Total Orders", "2"},
-            {"Average Win", "0%"},
-            {"Average Loss", "-0.05%"},
-            {"Compounding Annual Return", "-3.660%"},
-            {"Drawdown", "0.000%"},
-            {"Expectancy", "-1"},
-            {"Start Equity", "100000"},
-            {"End Equity", "99952.34"},
-            {"Net Profit", "-0.048%"},
-            {"Sharpe Ratio", "0"},
-            {"Sortino Ratio", "0"},
-            {"Probabilistic Sharpe Ratio", "0%"},
-            {"Loss Rate", "100%"},
-            {"Win Rate", "0%"},
-            {"Profit-Loss Ratio", "0"},
-            {"Alpha", "0"},
-            {"Beta", "0"},
-            {"Annual Standard Deviation", "0"},
-            {"Annual Variance", "0"},
-            {"Information Ratio", "-8.91"},
-            {"Tracking Error", "0.223"},
-            {"Treynor Ratio", "0"},
-            {"Total Fees", "$0.00"},
-            {"Estimated Strategy Capacity", "$18000000.00"},
-            {"Lowest Capacity Asset", "SPY R735QTJ8XC9X"},
-            {"Portfolio Turnover", "39.91%"},
-            {"OrderListHash", "5bd6d98c36a3344f7383557bc375cf83"}
-        };
+        public Dictionary<string, string> ExpectedStatistics =>
+            new Dictionary<string, string>
+            {
+                { "Total Orders", "2" },
+                { "Average Win", "0%" },
+                { "Average Loss", "-0.05%" },
+                { "Compounding Annual Return", "-3.660%" },
+                { "Drawdown", "0.000%" },
+                { "Expectancy", "-1" },
+                { "Start Equity", "100000" },
+                { "End Equity", "99952.34" },
+                { "Net Profit", "-0.048%" },
+                { "Sharpe Ratio", "0" },
+                { "Sortino Ratio", "0" },
+                { "Probabilistic Sharpe Ratio", "0%" },
+                { "Loss Rate", "100%" },
+                { "Win Rate", "0%" },
+                { "Profit-Loss Ratio", "0" },
+                { "Alpha", "0" },
+                { "Beta", "0" },
+                { "Annual Standard Deviation", "0" },
+                { "Annual Variance", "0" },
+                { "Information Ratio", "-8.91" },
+                { "Tracking Error", "0.223" },
+                { "Treynor Ratio", "0" },
+                { "Total Fees", "$0.00" },
+                { "Estimated Strategy Capacity", "$18000000.00" },
+                { "Lowest Capacity Asset", "SPY R735QTJ8XC9X" },
+                { "Portfolio Turnover", "39.91%" },
+                { "OrderListHash", "5bd6d98c36a3344f7383557bc375cf83" }
+            };
     }
 }

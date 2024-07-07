@@ -14,9 +14,9 @@
 */
 
 using System;
+using System.Collections.Generic;
 using System.Globalization;
 using QuantConnect.Packets;
-using System.Collections.Generic;
 
 namespace QuantConnect.Report.ReportElements
 {
@@ -25,7 +25,8 @@ namespace QuantConnect.Report.ReportElements
         /// <summary>
         /// Sortino ratio from a backtest
         /// </summary>
-        public override decimal? BacktestResultValue => BacktestResult?.TotalPerformance?.PortfolioStatistics?.SortinoRatio;
+        public override decimal? BacktestResultValue =>
+            BacktestResult?.TotalPerformance?.PortfolioStatistics?.SortinoRatio;
 
         /// <summary>
         /// Estimate the Sortino ratio of the strategy.
@@ -35,10 +36,14 @@ namespace QuantConnect.Report.ReportElements
         /// <param name="backtest">Backtest result object</param>
         /// <param name="live">Live result object</param>
         /// <param name="tradingDaysPerYear">The number of trading days per year to get better result of statistics</param>
-        public SortinoRatioReportElement(string name, string key, BacktestResult backtest, LiveResult live, int tradingDaysPerYear)
-            : base(name, key, backtest, live, tradingDaysPerYear)
-        {
-        }
+        public SortinoRatioReportElement(
+            string name,
+            string key,
+            BacktestResult backtest,
+            LiveResult live,
+            int tradingDaysPerYear
+        )
+            : base(name, key, backtest, live, tradingDaysPerYear) { }
 
         /// <summary>
         /// Get annual standard deviation
@@ -46,9 +51,15 @@ namespace QuantConnect.Report.ReportElements
         /// <param name="trailingPerformance">The performance for the last period</param>
         /// <param name="tradingDaysPerYear">The number of trading days per year to get better result of statistics</param>
         /// <returns>Annual downside standard deviation.</returns>
-        public override double GetAnnualStandardDeviation(List<double> trailingPerformance, double tradingDaysPerYear)
+        public override double GetAnnualStandardDeviation(
+            List<double> trailingPerformance,
+            double tradingDaysPerYear
+        )
         {
-            return Statistics.Statistics.AnnualDownsideStandardDeviation(trailingPerformance, tradingDaysPerYear);
+            return Statistics.Statistics.AnnualDownsideStandardDeviation(
+                trailingPerformance,
+                tradingDaysPerYear
+            );
         }
     }
 }

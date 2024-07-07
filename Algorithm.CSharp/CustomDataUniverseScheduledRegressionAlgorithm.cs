@@ -14,24 +14,30 @@
 */
 
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using QuantConnect.Data;
-using QuantConnect.Interfaces;
-using System.Collections.Generic;
 using QuantConnect.Data.UniverseSelection;
+using QuantConnect.Interfaces;
 
 namespace QuantConnect.Algorithm.CSharp
 {
     /// <summary>
     /// Custom data universe selection regression algorithm asserting it's behavior. Similar to CustomDataUniverseRegressionAlgorithm but with a custom schedule
     /// </summary>
-    public class CustomDataUniverseScheduledRegressionAlgorithm : QCAlgorithm, IRegressionAlgorithmDefinition
+    public class CustomDataUniverseScheduledRegressionAlgorithm
+        : QCAlgorithm,
+            IRegressionAlgorithmDefinition
     {
-        private readonly Queue<DateTime> _selectionTime = new(new[] {
-            new DateTime(2014, 03, 25, 0, 0, 0),
-            new DateTime(2014, 03, 27, 0, 0, 0),
-            new DateTime(2014, 03, 29, 0, 0, 0)
-        });
+        private readonly Queue<DateTime> _selectionTime =
+            new(
+                new[]
+                {
+                    new DateTime(2014, 03, 25, 0, 0, 0),
+                    new DateTime(2014, 03, 27, 0, 0, 0),
+                    new DateTime(2014, 03, 29, 0, 0, 0)
+                }
+            );
 
         /// <summary>
         /// Initialise the data and resolution required, as well as the cash and start-end dates for your algorithm. All algorithms must initialized.
@@ -43,21 +49,33 @@ namespace QuantConnect.Algorithm.CSharp
 
             UniverseSettings.Resolution = Resolution.Daily;
             UniverseSettings.Schedule.On(DateRules.On(_selectionTime.ToArray()));
-            AddUniverse<CoarseFundamental>("custom-data-universe", UniverseSettings, (coarse) =>
-            {
-                Debug($"Universe selection called: {Time} Count: {coarse.Count()}");
-
-                var expectedTime = _selectionTime.Dequeue();
-                if (expectedTime != Time)
+            AddUniverse<CoarseFundamental>(
+                "custom-data-universe",
+                UniverseSettings,
+                (coarse) =>
                 {
-                    throw new RegressionTestException($"Unexpected selection time {Time} expected {expectedTime}");
+                    Debug($"Universe selection called: {Time} Count: {coarse.Count()}");
+
+                    var expectedTime = _selectionTime.Dequeue();
+                    if (expectedTime != Time)
+                    {
+                        throw new RegressionTestException(
+                            $"Unexpected selection time {Time} expected {expectedTime}"
+                        );
+                    }
+                    return coarse
+                        .OfType<CoarseFundamental>()
+                        .OrderByDescending(x => x.DollarVolume)
+                        .SelectMany(x =>
+                            new[]
+                            {
+                                x.Symbol,
+                                QuantConnect.Symbol.CreateBase(typeof(CustomData), x.Symbol)
+                            }
+                        )
+                        .Take(20);
                 }
-                return coarse.OfType<CoarseFundamental>().OrderByDescending(x => x.DollarVolume)
-                    .SelectMany(x => new[] {
-                        x.Symbol,
-                        QuantConnect.Symbol.CreateBase(typeof(CustomData), x.Symbol)})
-                    .Take(20);
-            });
+            );
 
             // This use case is also valid/same because it will use the algorithm settings by default
             // AddUniverse<CoarseFundamental>("custom-data-universe", (coarse) => {});
@@ -72,14 +90,18 @@ namespace QuantConnect.Algorithm.CSharp
             if (!Portfolio.Invested)
             {
                 var customData = slice.Get<CustomData>();
-                var symbols = slice.Keys.Where(symbol => symbol.SecurityType != SecurityType.Base).ToList();
+                var symbols = slice
+                    .Keys.Where(symbol => symbol.SecurityType != SecurityType.Base)
+                    .ToList();
                 foreach (var symbol in symbols)
                 {
                     SetHoldings(symbol, 1m / symbols.Count);
 
                     if (!customData.Any(custom => custom.Key.Underlying == symbol))
                     {
-                        throw new RegressionTestException($"Custom data was not found for underlying symbol {symbol}");
+                        throw new RegressionTestException(
+                            $"Custom data was not found for underlying symbol {symbol}"
+                        );
                     }
                 }
             }
@@ -89,7 +111,9 @@ namespace QuantConnect.Algorithm.CSharp
         {
             if (_selectionTime.Count != 0)
             {
-                throw new RegressionTestException($"Unexpected selection times, missing {_selectionTime.Count}");
+                throw new RegressionTestException(
+                    $"Unexpected selection times, missing {_selectionTime.Count}"
+                );
             }
         }
 
@@ -121,35 +145,36 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// This is used by the regression test system to indicate what the expected statistics are from running the algorithm
         /// </summary>
-        public Dictionary<string, string> ExpectedStatistics => new Dictionary<string, string>
-        {
-            {"Total Orders", "7"},
-            {"Average Win", "0%"},
-            {"Average Loss", "0%"},
-            {"Compounding Annual Return", "-65.130%"},
-            {"Drawdown", "2.900%"},
-            {"Expectancy", "0"},
-            {"Start Equity", "100000"},
-            {"End Equity", "97717.31"},
-            {"Net Profit", "-2.283%"},
-            {"Sharpe Ratio", "-4.298"},
-            {"Sortino Ratio", "-4.067"},
-            {"Probabilistic Sharpe Ratio", "5.388%"},
-            {"Loss Rate", "0%"},
-            {"Win Rate", "0%"},
-            {"Profit-Loss Ratio", "0"},
-            {"Alpha", "-1.062"},
-            {"Beta", "1.336"},
-            {"Annual Standard Deviation", "0.132"},
-            {"Annual Variance", "0.018"},
-            {"Information Ratio", "-12.03"},
-            {"Tracking Error", "0.078"},
-            {"Treynor Ratio", "-0.426"},
-            {"Total Fees", "$13.87"},
-            {"Estimated Strategy Capacity", "$430000000.00"},
-            {"Lowest Capacity Asset", "NB R735QTJ8XC9X"},
-            {"Portfolio Turnover", "12.54%"},
-            {"OrderListHash", "fae1a7c34d640dfa020330f24378bcf7"}
-        };
+        public Dictionary<string, string> ExpectedStatistics =>
+            new Dictionary<string, string>
+            {
+                { "Total Orders", "7" },
+                { "Average Win", "0%" },
+                { "Average Loss", "0%" },
+                { "Compounding Annual Return", "-65.130%" },
+                { "Drawdown", "2.900%" },
+                { "Expectancy", "0" },
+                { "Start Equity", "100000" },
+                { "End Equity", "97717.31" },
+                { "Net Profit", "-2.283%" },
+                { "Sharpe Ratio", "-4.298" },
+                { "Sortino Ratio", "-4.067" },
+                { "Probabilistic Sharpe Ratio", "5.388%" },
+                { "Loss Rate", "0%" },
+                { "Win Rate", "0%" },
+                { "Profit-Loss Ratio", "0" },
+                { "Alpha", "-1.062" },
+                { "Beta", "1.336" },
+                { "Annual Standard Deviation", "0.132" },
+                { "Annual Variance", "0.018" },
+                { "Information Ratio", "-12.03" },
+                { "Tracking Error", "0.078" },
+                { "Treynor Ratio", "-0.426" },
+                { "Total Fees", "$13.87" },
+                { "Estimated Strategy Capacity", "$430000000.00" },
+                { "Lowest Capacity Asset", "NB R735QTJ8XC9X" },
+                { "Portfolio Turnover", "12.54%" },
+                { "OrderListHash", "fae1a7c34d640dfa020330f24378bcf7" }
+            };
     }
 }

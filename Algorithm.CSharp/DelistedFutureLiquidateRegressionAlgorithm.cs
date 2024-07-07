@@ -27,7 +27,9 @@ namespace QuantConnect.Algorithm.CSharp
     /// <summary>
     /// Regression algorithm which reproduces GH issue 4446
     /// </summary>
-    public class DelistedFutureLiquidateRegressionAlgorithm : QCAlgorithm, IRegressionAlgorithmDefinition
+    public class DelistedFutureLiquidateRegressionAlgorithm
+        : QCAlgorithm,
+            IRegressionAlgorithmDefinition
     {
         private Symbol _contractSymbol;
         protected virtual Resolution Resolution => Resolution.Minute;
@@ -70,7 +72,9 @@ namespace QuantConnect.Algorithm.CSharp
             Log($"{_contractSymbol}: {Securities[_contractSymbol].Invested}");
             if (Securities[_contractSymbol].Invested)
             {
-                throw new RegressionTestException($"Position should be closed when {_contractSymbol} got delisted {_contractSymbol.ID.Date}");
+                throw new RegressionTestException(
+                    $"Position should be closed when {_contractSymbol} got delisted {_contractSymbol.ID.Date}"
+                );
             }
         }
 
@@ -107,35 +111,36 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// This is used by the regression test system to indicate what the expected statistics are from running the algorithm
         /// </summary>
-        public virtual Dictionary<string, string> ExpectedStatistics => new Dictionary<string, string>
-        {
-            {"Total Orders", "2"},
-            {"Average Win", "7.02%"},
-            {"Average Loss", "0%"},
-            {"Compounding Annual Return", "34.386%"},
-            {"Drawdown", "1.500%"},
-            {"Expectancy", "0"},
-            {"Start Equity", "100000"},
-            {"End Equity", "107016.6"},
-            {"Net Profit", "7.017%"},
-            {"Sharpe Ratio", "3.217"},
-            {"Sortino Ratio", "0"},
-            {"Probabilistic Sharpe Ratio", "99.828%"},
-            {"Loss Rate", "0%"},
-            {"Win Rate", "100%"},
-            {"Profit-Loss Ratio", "0"},
-            {"Alpha", "0.228"},
-            {"Beta", "0.108"},
-            {"Annual Standard Deviation", "0.084"},
-            {"Annual Variance", "0.007"},
-            {"Information Ratio", "-1.122"},
-            {"Tracking Error", "0.112"},
-            {"Treynor Ratio", "2.501"},
-            {"Total Fees", "$2.15"},
-            {"Estimated Strategy Capacity", "$1700000000.00"},
-            {"Lowest Capacity Asset", "ES VMKLFZIH2MTD"},
-            {"Portfolio Turnover", "2.01%"},
-            {"OrderListHash", "640ce720644ff0b580687e80105d0a92"}
-        };
+        public virtual Dictionary<string, string> ExpectedStatistics =>
+            new Dictionary<string, string>
+            {
+                { "Total Orders", "2" },
+                { "Average Win", "7.02%" },
+                { "Average Loss", "0%" },
+                { "Compounding Annual Return", "34.386%" },
+                { "Drawdown", "1.500%" },
+                { "Expectancy", "0" },
+                { "Start Equity", "100000" },
+                { "End Equity", "107016.6" },
+                { "Net Profit", "7.017%" },
+                { "Sharpe Ratio", "3.217" },
+                { "Sortino Ratio", "0" },
+                { "Probabilistic Sharpe Ratio", "99.828%" },
+                { "Loss Rate", "0%" },
+                { "Win Rate", "100%" },
+                { "Profit-Loss Ratio", "0" },
+                { "Alpha", "0.228" },
+                { "Beta", "0.108" },
+                { "Annual Standard Deviation", "0.084" },
+                { "Annual Variance", "0.007" },
+                { "Information Ratio", "-1.122" },
+                { "Tracking Error", "0.112" },
+                { "Treynor Ratio", "2.501" },
+                { "Total Fees", "$2.15" },
+                { "Estimated Strategy Capacity", "$1700000000.00" },
+                { "Lowest Capacity Asset", "ES VMKLFZIH2MTD" },
+                { "Portfolio Turnover", "2.01%" },
+                { "OrderListHash", "640ce720644ff0b580687e80105d0a92" }
+            };
     }
 }
