@@ -2505,47 +2505,6 @@ namespace QuantConnect.Algorithm
         }
 
         /// <summary>
-        /// Creates a new Stochastic RSI indicator which will compute the %K and %D
-        /// </summary>
-        /// <param name="symbol">The symbol whose Stochastic RSI we seek</param>
-        /// <param name="rsiPeriod">The period of the relative strength index</param>
-        /// <param name="stochPeriod">The period of the stochastic indicator</param>
-        /// <param name="kSmoothingPeriod">The smoothing period of k output</param>
-        /// <param name="dSmoothingPeriod">The smoothing period of d output</param>
-        /// <param name="movingAverageType">The type of moving average to be used</param>
-        /// <param name="resolution">The resolution</param>
-        /// <param name="selector">Selects a value from the BaseData to send into the indicator, if null defaults to the Value property of BaseData (x => x.Value)</param>
-        /// <returns>A StochRSI configured with the specified period</returns>
-        [DocumentationAttribute(Indicators)]
-        public StochasticRelativeStrengthIndex StochRSI(
-            Symbol symbol,
-            int rsiPeriod,
-            int stochPeriod,
-            int kSmoothingPeriod,
-            int dSmoothingPeriod,
-            MovingAverageType movingAverageType = MovingAverageType.Simple,
-            Resolution? resolution = null,
-            Func<IBaseData, decimal> selector = null
-        )
-        {
-            var name = CreateIndicatorName(
-                symbol,
-                $"StochRSI({rsiPeriod},{stochPeriod},{kSmoothingPeriod},{dSmoothingPeriod})",
-                resolution
-            );
-            var indicator = new StochasticRelativeStrengthIndex(
-                name,
-                rsiPeriod,
-                stochPeriod,
-                kSmoothingPeriod,
-                dSmoothingPeriod,
-                movingAverageType
-            );
-            InitializeIndicator(symbol, indicator, resolution, selector);
-            return indicator;
-        }
-
-        /// <summary>
         /// Creates a new SuperTrend indicator.
         /// </summary>
         /// <param name="symbol">The symbol whose SuperTrend indicator we want.</param>
