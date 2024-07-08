@@ -37,9 +37,6 @@ namespace QuantConnect.Data.UniverseSelection
         private decimal? _impliedVolatility;
         private Greeks _greeks;
 
-        private Symbol _underlyingSymbol;
-        private string _underlyingSid;
-
         /// <summary>
         /// Price of the option/underlying
         /// </summary>
@@ -216,17 +213,7 @@ namespace QuantConnect.Data.UniverseSelection
         public OptionUniverse(DateTime date, Symbol symbol, string[] csv)
             : base(date, symbol)
         {
-            Initialize(symbol, csv);
-        }
-
-        private void Initialize(Symbol symbol, string[] csv)
-        {
             _csvLine = csv;
-            if (!symbol.HasUnderlying)
-            {
-                _underlyingSymbol = symbol;
-                _underlyingSid = symbol.ID.ToString();
-            }
         }
 
         /// <summary>
@@ -258,7 +245,7 @@ namespace QuantConnect.Data.UniverseSelection
         public OptionUniverse(OptionUniverse other)
             : base(other)
         {
-            Initialize(other.Symbol, other._csvLine);
+            _csvLine = other._csvLine;
             Initialize(other._open, other._high, other._low, other._close, other._volume, other._openInterest, other._impliedVolatility, other._greeks);
         }
 
