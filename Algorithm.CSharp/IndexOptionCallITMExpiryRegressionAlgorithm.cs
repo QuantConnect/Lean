@@ -44,6 +44,8 @@ namespace QuantConnect.Algorithm.CSharp
 
         public override void Initialize()
         {
+            Settings.DailyPreciseEndTime = true;
+
             SetStartDate(2021, 1, 4);
             SetEndDate(2021, 1, 31);
             SetCash(100000);
@@ -175,7 +177,7 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// Data Points count of the algorithm history
         /// </summary>
-        public int AlgorithmHistoryDataPoints => 0;
+        public int AlgorithmHistoryDataPoints => 13;
 
         /// <summary>
         /// Final status of the algorithm
