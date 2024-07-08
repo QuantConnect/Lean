@@ -364,6 +364,7 @@
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
     <None Update="TestData\spy_with_ForceIndex.csv">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
     <None Update="TestData\spy_with_zlema.csv">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
