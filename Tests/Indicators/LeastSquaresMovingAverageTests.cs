@@ -23,7 +23,7 @@ namespace QuantConnect.Tests.Indicators
     /// Result tested vs. Python available at: http://tinyurl.com/o7redso
     /// </summary>
     [TestFixture]
-    public class LeastSquaresMovingAverageTest : CommonIndicatorTests<IndicatorDataPoint>
+    public class LeastSquaresMovingAverageTests : CommonIndicatorTests<IndicatorDataPoint>
     {
         protected override IndicatorBase<IndicatorDataPoint> CreateIndicator()
         {
