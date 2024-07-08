@@ -161,11 +161,6 @@ namespace QuantConnect.Securities
         /// <returns>True if the exchange is considered open at the specified time, false otherwise</returns>
         public bool IsOpen(DateTime localDateTime, bool extendedMarketHours)
         {
-            if (_holidays.Contains(localDateTime.Date.Ticks))
-            {
-                return false;
-            }
-
             return GetMarketHours(localDateTime).IsOpen(localDateTime.TimeOfDay, extendedMarketHours);
         }
 
@@ -212,8 +207,9 @@ namespace QuantConnect.Securities
         /// Determines if the exchange will be open on the date specified by the local date time
         /// </summary>
         /// <param name="localDateTime">The date time to check if the day is open</param>
+        /// <param name="extendedMarketHours">True to consider days with extended market hours only as open</param>
         /// <returns>True if the exchange will be open on the specified date, false otherwise</returns>
-        public bool IsDateOpen(DateTime localDateTime)
+        public bool IsDateOpen(DateTime localDateTime, bool extendedMarketHours = false)
         {
             var marketHours = GetMarketHours(localDateTime);
             if (marketHours.IsClosedAllDay)
@@ -222,8 +218,12 @@ namespace QuantConnect.Securities
                 return false;
             }
 
-            // if we don't have a holiday then we're open
-            return !_holidays.Contains(localDateTime.Date.Ticks);
+            if (marketHours.MarketDuration == TimeSpan.Zero)
+            {
+                // this date only has extended market hours, like sunday for futures, so we only return true if 'extendedMarketHours'
+                return extendedMarketHours;
+            }
+            return true;
         }
 
         /// <summary>
@@ -446,7 +446,7 @@ namespace QuantConnect.Securities
         /// </remarks>
         public LocalMarketHours GetMarketHours(DateTime localDateTime)
         {
-            if (_holidays.Contains(localDateTime.Ticks))
+            if (_holidays.Contains(localDateTime.Date.Ticks))
             {
                 return new LocalMarketHours(localDateTime.DayOfWeek);
             }

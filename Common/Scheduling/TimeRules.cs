@@ -171,7 +171,7 @@ namespace QuantConnect.Scheduling
                 from date in dates
                 let marketOpen = exchangeHours.GetNextMarketOpen(date, extendedMarketOpen)
                 // make sure the market open is of this date
-                where exchangeHours.IsDateOpen(date) && marketOpen.Date == date.Date
+                where exchangeHours.IsDateOpen(date, extendedMarketOpen) && marketOpen.Date == date.Date
                 let localEventTime = marketOpen + timeAfterOpen
                 let utcEventTime = localEventTime.ConvertToUtc(exchangeHours.TimeZone)
                 select utcEventTime;
@@ -197,7 +197,7 @@ namespace QuantConnect.Scheduling
                 from date in dates
                 let marketClose = exchangeHours.GetNextMarketClose(date, extendedMarketClose)
                 // make sure the market open is of this date
-                where exchangeHours.IsDateOpen(date) && marketClose.Date == date.Date
+                where exchangeHours.IsDateOpen(date, extendedMarketClose) && marketClose.Date == date.Date
                 let localEventTime = marketClose - timeBeforeClose
                 let utcEventTime = localEventTime.ConvertToUtc(exchangeHours.TimeZone)
                 select utcEventTime;

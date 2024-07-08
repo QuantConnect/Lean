@@ -20,7 +20,7 @@ using QuantConnect.Indicators;
 namespace QuantConnect.Tests.Indicators
 {
     [TestFixture]
-    public class DonchianChannelTest : CommonIndicatorTests<IBaseDataBar>
+    public class DonchianChannelTests : CommonIndicatorTests<IBaseDataBar>
     {
         protected override IndicatorBase<IBaseDataBar> CreateIndicator()
         {

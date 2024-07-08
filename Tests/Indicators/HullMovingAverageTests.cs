@@ -19,7 +19,7 @@ using QuantConnect.Indicators;
 namespace QuantConnect.Tests.Indicators
 {
     [TestFixture]
-    public class HullMovingAverageTest : CommonIndicatorTests<IndicatorDataPoint>
+    public class HullMovingAverageTests : CommonIndicatorTests<IndicatorDataPoint>
     {
         protected override IndicatorBase<IndicatorDataPoint> CreateIndicator()
         {
