@@ -56,11 +56,11 @@ namespace QuantConnect.Algorithm.CSharp
             _afterMarketOpenQueue = new Queue<DateTime>(AfterMarketOpen);
             _beforeMarketCloseQueue = new Queue<DateTime>(BeforeMarketClose);
 
-            Schedule.On(DateRules.EveryDay(esFuture),
+            Schedule.On(DateRules.EveryDay(esFuture, extendedMarketHours: ExtendedMarketHours),
                 TimeRules.AfterMarketOpen(esFuture, extendedMarketOpen: ExtendedMarketHours),
                 EveryDayAfterMarketOpen);
 
-            Schedule.On(DateRules.EveryDay(esFuture),
+            Schedule.On(DateRules.EveryDay(esFuture, extendedMarketHours: ExtendedMarketHours),
                 TimeRules.BeforeMarketClose(esFuture, extendedMarketClose: ExtendedMarketHours),
                 EveryDayBeforeMarketClose);
         }
@@ -100,7 +100,7 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// Data Points count of all timeslices of algorithm
         /// </summary>
-        public virtual long DataPoints => 13587;
+        public virtual long DataPoints => 13586;
 
         /// </summary>
         /// Data Points count of the algorithm history

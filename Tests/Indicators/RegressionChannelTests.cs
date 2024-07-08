@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -23,7 +23,7 @@ namespace QuantConnect.Tests.Indicators
     /// Result tested vs. Python available at: http://tinyurl.com/o7redso
     /// </summary>
     [TestFixture]
-    public class RegressionChannelTest
+    public class RegressionChannelTests
     {
         [Test]
         public void ComputesCorrectly()
@@ -33,8 +33,8 @@ namespace QuantConnect.Tests.Indicators
             var stdDev = new StandardDeviation(period);
             var time = DateTime.Now;
 
-            var prices = LeastSquaresMovingAverageTest.Prices;
-            var expected = LeastSquaresMovingAverageTest.Expected;
+            var prices = LeastSquaresMovingAverageTests.Prices;
+            var expected = LeastSquaresMovingAverageTests.Expected;
 
             var actual = new decimal[prices.Length];
 
@@ -73,7 +73,7 @@ namespace QuantConnect.Tests.Indicators
         {
             var indicator = new RegressionChannel(20, 2);
             var period = ((IIndicatorWarmUpPeriodProvider)indicator).WarmUpPeriod;
-            var prices = LeastSquaresMovingAverageTest.Prices;
+            var prices = LeastSquaresMovingAverageTests.Prices;
             var time = DateTime.Now;
 
             for (var i = 0; i < period; i++)
