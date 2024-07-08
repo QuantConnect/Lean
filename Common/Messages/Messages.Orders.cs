@@ -50,6 +50,9 @@ namespace QuantConnect
         /// </summary>
         public static class GroupOrderExtensions
         {
+            /// <summary>
+            /// Returns a string message saying there is insufficient buying power to complete the given orders
+            /// </summary>
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             public static string InsufficientBuyingPowerForOrders(Dictionary<Orders.Order, Securities.Security> securities,
                 HasSufficientBuyingPowerForOrderResult hasSufficientBuyingPowerResult)
@@ -66,6 +69,9 @@ namespace QuantConnect
         /// </summary>
         public static class LimitIfTouchedOrder
         {
+            /// <summary>
+            /// Returns an empty string tag
+            /// </summary>
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             public static string Tag(Orders.LimitIfTouchedOrder order)
             {
@@ -73,6 +79,10 @@ namespace QuantConnect
                 return string.Empty;
             }
 
+            /// <summary>
+            /// Parses the given LimitIfTouched order to a string message containing basic information
+            /// about it
+            /// </summary>
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             public static string ToString(Orders.LimitIfTouchedOrder order)
             {
@@ -87,6 +97,9 @@ namespace QuantConnect
         /// </summary>
         public static class LimitOrder
         {
+            /// <summary>
+            /// Returns an empty string tag
+            /// </summary>
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             public static string Tag(Orders.LimitOrder order)
             {
@@ -94,6 +107,9 @@ namespace QuantConnect
                 return string.Empty;
             }
 
+            /// <summary>
+            /// Parses a Limit order to a string message with basic information about it
+            /// </summary>
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             public static string ToString(Orders.LimitOrder order)
             {
@@ -107,6 +123,9 @@ namespace QuantConnect
         /// </summary>
         public static class Order
         {
+            /// <summary>
+            /// Parses the given order into a string message with basic information about it
+            /// </summary>
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             public static string ToString(Orders.Order order)
             {
@@ -121,6 +140,9 @@ namespace QuantConnect
         /// </summary>
         public static class OrderEvent
         {
+            /// <summary>
+            /// Parses the given order event into a string message containing basic information about it
+            /// </summary>
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             public static string ToString(Orders.OrderEvent orderEvent)
             {
@@ -176,6 +198,9 @@ namespace QuantConnect
                 return message;
             }
 
+            /// <summary>
+            /// Parses the given order event into a string message which summarizes the basic information about it
+            /// </summary>
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             public static string ShortToString(Orders.OrderEvent orderEvent)
             {
@@ -235,6 +260,9 @@ namespace QuantConnect
         /// </summary>
         public static class OrderRequest
         {
+            /// <summary>
+            /// Parses the given order request into a string message containing basic information about it
+            /// </summary>
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             public static string ToString(Orders.OrderRequest request)
             {
@@ -247,10 +275,19 @@ namespace QuantConnect
         /// </summary>
         public static class OrderResponse
         {
+            /// <summary>
+            /// String message saying: An unexpected error occurred
+            /// </summary>
             public static string DefaultErrorMessage = "An unexpected error occurred.";
 
+            /// <summary>
+            /// String message saying: The request has not yet been processed
+            /// </summary>
             public static string UnprocessedOrderResponseErrorMessage = "The request has not yet been processed.";
 
+            /// <summary>
+            /// Parses the given order response into a string message containing basic information about it 
+            /// </summary>
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             public static string ToString(Orders.OrderResponse response)
             {
@@ -267,12 +304,20 @@ namespace QuantConnect
                 return "Success";
             }
 
+            /// <summary>
+            /// Returns a string message saying it was impossible to udpate the order with the id
+            /// from the given request because it already had the status of the given order
+            /// </summary>
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             public static string InvalidStatus(Orders.OrderRequest request, Orders.Order order)
             {
                 return Invariant($"Unable to update order with id {request.OrderId} because it already has {order.Status} status.");
             }
 
+            /// <summary>
+            /// Returns a string message saying it was impossible to update or cancel the order with the
+            /// id from the given request because the submit confirmation had not been received yet
+            /// </summary>
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             public static string InvalidNewStatus(Orders.OrderRequest request, Orders.Order order)
             {
@@ -280,24 +325,43 @@ namespace QuantConnect
                     request.OrderId} and status {order.Status} because the submit confirmation has not been received yet.");
             }
 
+            /// <summary>
+            /// Returns a string message saying it was impossible to locate the order with the id from the
+            /// given request
+            /// </summary>
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             public static string UnableToFindOrder(Orders.OrderRequest request)
             {
                 return Invariant($"Unable to locate order with id {request.OrderId}.");
             }
 
+            /// <summary>
+            /// Returns a string message saying it was impossible to process the given order request
+            /// that has zero quantity
+            /// </summary>
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             public static string ZeroQuantity(Orders.OrderRequest request)
             {
                 return Invariant($"Unable to {request.OrderRequestType.ToLower()} order with id {request.OrderId} that has zero quantity.");
             }
 
+            /// <summary>
+            /// Returns a string message saying the user has not requested data for the symbol of the given
+            /// request. It also advises the user on how to add this data
+            /// </summary>
+            /// <param name="request"></param>
+            /// <returns></returns>
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             public static string MissingSecurity(Orders.SubmitOrderRequest request)
             {
                 return Invariant($"You haven't requested {request.Symbol} data. Add this with AddSecurity() in the Initialize() Method.");
             }
 
+            /// <summary>
+            /// Returns a string message saying the given order request operation is not allowed
+            /// in Initialize or during warm up. It also advises the user on where it is allowed
+            /// to make it
+            /// </summary>
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             public static string WarmingUp(Orders.OrderRequest request)
             {
@@ -311,18 +375,29 @@ namespace QuantConnect
         /// </summary>
         public static class OrderTicket
         {
+            /// <summary>
+            /// Returns a string message saying it was impossible to get the given field on the order type from the given
+            /// ticket
+            /// </summary>
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             public static string GetFieldError(Orders.OrderTicket ticket, OrderField field)
             {
                 return Invariant($"Unable to get field {field} on order of type {ticket.SubmitRequest.OrderType}");
             }
 
+            /// <summary>
+            /// Returns a string message saying the order associated with the given ticket has already received a
+            /// cancellation request
+            /// </summary>
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             public static string CancelRequestAlreadySubmitted(Orders.OrderTicket ticket)
             {
                 return Invariant($"Order {ticket.OrderId} has already received a cancellation request.");
             }
 
+            /// <summary>
+            /// Parses the given order ticket into a string message containing basic information about it
+            /// </summary>
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             public static string ToString(Orders.OrderTicket ticket, Orders.Order order, int requestCount, int responseCount)
             {

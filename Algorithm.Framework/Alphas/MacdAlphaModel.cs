@@ -159,14 +159,34 @@ namespace QuantConnect.Algorithm.Framework.Alphas
             }
         }
 
+        /// <summary>
+        /// Class representing basic data of a symbol
+        /// </summary>
         public class SymbolData
         {
+            /// <summary>
+            /// Previous direction property
+            /// </summary>
             public InsightDirection? PreviousDirection { get; set; }
 
+            /// <summary>
+            /// Security of the Symbol Data
+            /// </summary>
             public Security Security { get; init; }
+
+            /// <summary>
+            /// Consolidator property
+            /// </summary>
             public IDataConsolidator Consolidator { get; init; }
+
+            /// <summary>
+            /// Moving Average Convergence Divergence indicator
+            /// </summary>
             public MovingAverageConvergenceDivergence MACD { get; init; }
 
+            /// <summary>
+            /// Initializes an instance of the SymbolData class with the given arguments
+            /// </summary>
             public SymbolData(QCAlgorithm algorithm, Security security, int fastPeriod, int slowPeriod, int signalPeriod, MovingAverageType movingAverageType, Resolution resolution)
             {
                 Security = security;

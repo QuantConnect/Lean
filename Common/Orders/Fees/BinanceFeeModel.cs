@@ -99,6 +99,9 @@ namespace QuantConnect.Orders.Fees
             return GetFee(order, _makerFee, _takerFee);
         }
 
+        /// <summary>
+        /// Gets the fee factor for the given order taking into account the maker and the taker fee
+        /// </summary>
         protected static decimal GetFee(Order order, decimal makerFee, decimal takerFee)
         {
             // apply fee factor, currently we do not model 30-day volume, so we use the first tier

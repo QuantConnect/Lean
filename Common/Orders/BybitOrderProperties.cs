@@ -15,6 +15,9 @@
 
 namespace QuantConnect.Orders;
 
+/// <summary>
+/// Class containing Bybit OrderProperties
+/// </summary>
 public class BybitOrderProperties : OrderProperties
 {
     

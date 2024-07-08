@@ -50,6 +50,9 @@ namespace QuantConnect
         /// </summary>
         public static class ReadOnlySecurityValuesCollection
         {
+            /// <summary>
+            /// Returns a string message saying no SecurityValues were found for the given symbol
+            /// </summary>
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             public static string SecurityValuesForSymbolNotFound(QuantConnect.Symbol symbol)
             {

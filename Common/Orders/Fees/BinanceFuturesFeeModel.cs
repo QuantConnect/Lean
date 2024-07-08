@@ -68,6 +68,9 @@ namespace QuantConnect.Orders.Fees
             _takerBusdFee = tBusdFee;
         }
 
+        /// <summary>
+        /// Gets the fee for the given order
+        /// </summary>
         protected override decimal GetFee(Order order)
         {
             CurrencyPairUtil.DecomposeCurrencyPair(order.Symbol, out var _, out var quoteCurrency);

@@ -140,6 +140,9 @@ namespace QuantConnect.Data
             Exit();
         }
 
+        /// <summary>
+        /// Strips the given data folder path
+        /// </summary>
         protected virtual string StripDataFolder(string path)
         {
             if (path.StartsWith(Globals.DataFolder, StringComparison.OrdinalIgnoreCase))

@@ -47,10 +47,20 @@ namespace QuantConnect
         /// </summary>
         public static class InvalidTokenPythonExceptionInterpreter
         {
+            /// <summary>
+            /// String message saying: invalid token
+            /// </summary>
             public static string InvalidTokenExpectedSubstring = "invalid token";
 
+            /// <summary>
+            /// String message saying: are not permitted
+            /// </summary>
             public static string NotPermittedExpectedSubstring = "are not permitted;";
 
+            /// <summary>
+            /// Returns a string message saying: Tring to include an invalid token/character in any statement throws s SyntaxError
+            /// exception. It also contains an advice to prevent that exception
+            /// </summary>
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             public static string InterpretException(PythonException exception)
             {
@@ -67,6 +77,10 @@ namespace QuantConnect
         /// </summary>
         public static class KeyErrorPythonExceptionInterpreter
         {
+            /// <summary>
+            /// Returns a string message saying the given key does not exists in the collection and the exception that is thrown
+            /// in this case. It also advises the user on how to prevent this exception
+            /// </summary>
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             public static string KeyNotFoundInCollection(string key)
             {
@@ -81,8 +95,15 @@ namespace QuantConnect
         /// </summary>
         public static class NoMethodMatchPythonExceptionInterpreter
         {
+            /// <summary>
+            /// String message saying: No method match
+            /// </summary>
             public static string NoMethodMatchExpectedSubstring = "No method match";
 
+            /// <summary>
+            /// Returns a string message saying the given method does not exists. It also contains the exception
+            /// thrown is this case and an advice on how to prevent it
+            /// </summary>
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             public static string AttemptedToAccessMethodThatDoesNotExist(string methodName)
             {
@@ -97,6 +118,9 @@ namespace QuantConnect
         /// </summary>
         public static class ScheduledEventExceptionInterpreter
         {
+            /// <summary>
+            /// Returns a string message with the given event name
+            /// </summary>
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             public static string ScheduledEventName(string eventName)
             {

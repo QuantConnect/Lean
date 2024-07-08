@@ -238,6 +238,9 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Queues
             }
         }
 
+        /// <summary>
+        /// Checks if the FakeDataQueue can perform selection
+        /// </summary>
         public bool CanPerformSelection()
         {
             return true;

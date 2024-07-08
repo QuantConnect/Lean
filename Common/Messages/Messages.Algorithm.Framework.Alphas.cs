@@ -133,6 +133,9 @@ namespace QuantConnect
         /// </summary>
         public static class InsightScore
         {
+            /// <summary>
+            /// Parses an InsightScore object into a string message containing basic information about it
+            /// </summary>
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             public static string ToString(Algorithm.Framework.Alphas.InsightScore insightScore)
             {
