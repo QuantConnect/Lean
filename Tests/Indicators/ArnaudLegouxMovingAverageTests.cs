@@ -19,7 +19,7 @@ using QuantConnect.Indicators;
 namespace QuantConnect.Tests.Indicators
 {
     [TestFixture]
-    public class ArnaudLegouxMovingAverageTest : CommonIndicatorTests<IndicatorDataPoint>
+    public class ArnaudLegouxMovingAverageTests : CommonIndicatorTests<IndicatorDataPoint>
     {
         protected override IndicatorBase<IndicatorDataPoint> CreateIndicator()
         {

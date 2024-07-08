@@ -421,7 +421,7 @@ namespace QuantConnect.Research
                 var allSymbols = new List<Symbol>();
                 for (var date = start; date < end; date = date.AddDays(1))
                 {
-                    if (option.Exchange.DateIsOpen(date))
+                    if (option.Exchange.DateIsOpen(date, extendedMarketHours: extendedMarketHours))
                     {
                         allSymbols.AddRange(OptionChainProvider.GetOptionContractList(symbol, date));
                     }
@@ -490,7 +490,7 @@ namespace QuantConnect.Research
 
                 for (var date = start; date < end; date = date.AddDays(1))
                 {
-                    if (future.Exchange.DateIsOpen(date))
+                    if (future.Exchange.DateIsOpen(date, extendedMarketHours))
                     {
                         var allList = FutureChainProvider.GetFutureContractList(future.Symbol, date);
 

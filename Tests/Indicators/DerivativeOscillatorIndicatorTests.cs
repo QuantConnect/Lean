@@ -19,7 +19,7 @@ using System;
 namespace QuantConnect.Tests.Indicators;
 
 [TestFixture]
-public class DerivativeOscillatorIndicatorTest : CommonIndicatorTests<IndicatorDataPoint>
+public class DerivativeOscillatorIndicatorTests : CommonIndicatorTests<IndicatorDataPoint>
 {
     protected override IndicatorBase<IndicatorDataPoint> CreateIndicator()
     {

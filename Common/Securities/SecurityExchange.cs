@@ -83,10 +83,11 @@ namespace QuantConnect.Securities
         /// </summary>
         /// <remarks>This is useful for first checking the date list, and then the market hours to save CPU cycles</remarks>
         /// <param name="dateToCheck">Date to check</param>
+        /// <param name="extendedMarketHours">True to consider days with extended market hours only as open</param>
         /// <returns>Return true if the exchange is open for this date</returns>
-        public bool DateIsOpen(DateTime dateToCheck)
+        public bool DateIsOpen(DateTime dateToCheck, bool extendedMarketHours = false)
         {
-            return Hours.IsDateOpen(dateToCheck);
+            return Hours.IsDateOpen(dateToCheck, extendedMarketHours);
         }
 
         /// <summary>
