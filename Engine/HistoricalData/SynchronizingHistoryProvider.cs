@@ -82,16 +82,6 @@ namespace QuantConnect.Lean.Engine.HistoricalData
                             data.Add(packet);
                         }
 
-                        // TODO: How to get rid of this especial case? Options selection is not performed during history requests
-                        // but the time slice factory needs the FilteredContracts
-                        if ((subscription.Configuration.Symbol.SecurityType == SecurityType.Option ||
-                            subscription.Configuration.Symbol.SecurityType == SecurityType.IndexOption) &&
-                            subscription.Configuration.Symbol.IsCanonical() &&
-                            subscription.Current.Data is BaseDataCollection baseData)
-                        {
-                            baseData.FilteredContracts = baseData.Select(x => x.Symbol).ToHashSet();
-                        }
-
                         packet.Add(subscription.Current.Data);
                         Interlocked.Increment(ref _dataPointCount);
                         if (!subscription.MoveNext())
