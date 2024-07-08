@@ -122,11 +122,12 @@ namespace QuantConnect.Scheduling
         /// Specifies an event should fire every day the symbol is trading
         /// </summary>
         /// <param name="symbol">The symbol whose exchange is used to determine tradable dates</param>
+        /// <param name="extendedMarketHours">True to include days with extended market hours only, like sunday for futures</param>
         /// <returns>A date rule that fires every day the specified symbol trades</returns>
-        public IDateRule EveryDay(Symbol symbol)
+        public IDateRule EveryDay(Symbol symbol, bool extendedMarketHours = false)
         {
             var securitySchedule = GetSecurityExchangeHours(symbol);
-            return new FuncDateRule($"{symbol.Value}: EveryDay", (start, end) => Time.EachTradeableDay(securitySchedule, start, end));
+            return new FuncDateRule($"{symbol.Value}: EveryDay", (start, end) => Time.EachTradeableDay(securitySchedule, start, end, extendedMarketHours));
         }
 
         /// <summary>
@@ -372,7 +373,7 @@ namespace QuantConnect.Scheduling
             var scheduledDate = baseDay;
 
             // If its not open on this day find the next trading day by searching in the given direction
-            if (!securityExchangeHours.IsDateOpen(scheduledDate))
+            if (!securityExchangeHours.IsDateOpen(scheduledDate, extendedMarketHours: true))
             {
                 scheduledDate = searchForward
                     ? securityExchangeHours.GetNextTradingDay(scheduledDate)
