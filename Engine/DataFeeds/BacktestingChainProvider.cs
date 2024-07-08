@@ -128,8 +128,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                 return Enumerable.Empty<Symbol>();
             }
 
-            //return history[0].AllData.Select(x => x.Symbol);
-            return history.GetUniverseData().SelectMany(x => x.Values.Single().Skip(1)).Select(x => x.Symbol);
+            return history.GetUniverseData().SelectMany(x => x.Values.Single().Where(x => x.Symbol.SecurityType.IsOption())).Select(x => x.Symbol);
         }
 
         /// <summary>

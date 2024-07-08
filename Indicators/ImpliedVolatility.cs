@@ -306,7 +306,7 @@ namespace QuantConnect.Indicators
             }
             catch
             {
-                Log.Error("ImpliedVolatility.CalculateIV(): Fail to converge, returning 0.");
+                Log.Error($"ImpliedVolatility.CalculateIV({_optionSymbol.ID}): Fail to converge at {Price.Current.Time:yyyyMMdd}, returning 0.");
             }
 
             if (UseMirrorContract)
@@ -326,7 +326,7 @@ namespace QuantConnect.Indicators
                 }
                 catch
                 {
-                    Log.Error("ImpliedVolatility.CalculateIV(): Fail to converge, returning 0.");
+                    Log.Error($"ImpliedVolatility.CalculateIV({_oppositeOptionSymbol.ID}): Mirror fail to converge at {Price.Current.Time:yyyyMMdd}, returning 0.");
                 }
             }
 
