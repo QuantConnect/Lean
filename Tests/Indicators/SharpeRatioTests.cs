@@ -31,7 +31,7 @@ namespace QuantConnect.Tests.Indicators
             return new SharpeRatio("SR", 10);
     	}
 
-        protected override string TestFileName => "spy_sr.txt";
+        protected override string TestFileName => "spy_sr.csv";
 
         protected override string TestColumnName => "SR_10";
 

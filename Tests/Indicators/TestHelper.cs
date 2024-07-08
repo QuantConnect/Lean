@@ -50,7 +50,7 @@ namespace QuantConnect.Tests.Indicators
         }
 
         /// <summary>
-        /// Compare the specified indicator against external data using the spy_with_indicators.txt file.
+        /// Compare the specified indicator against external data using the spy_with_indicators.csv file.
         /// The 'Close' column will be fed to the indicator as input
         /// </summary>
         /// <param name="indicator">The indicator under test</param>
@@ -58,7 +58,7 @@ namespace QuantConnect.Tests.Indicators
         /// <param name="epsilon">The maximum delta between expected and actual</param>
         public static void TestIndicator(IndicatorBase<IndicatorDataPoint> indicator, string targetColumn, double epsilon = 1e-3)
         {
-            TestIndicator(indicator, "spy_with_indicators.txt", targetColumn, (i, expected) => Assert.AreEqual(expected, (double) i.Current.Value, epsilon));
+            TestIndicator(indicator, "spy_with_indicators.csv", targetColumn, (i, expected) => Assert.AreEqual(expected, (double) i.Current.Value, epsilon));
         }
 
         /// <summary>

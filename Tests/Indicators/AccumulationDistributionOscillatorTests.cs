@@ -29,7 +29,7 @@ namespace QuantConnect.Tests.Indicators
 
         protected override string TestFileName
         {
-            get { return "spy_ad_osc.txt"; }
+            get { return "spy_ad_osc.csv"; }
         }
 
         protected override string TestColumnName

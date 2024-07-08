@@ -194,7 +194,7 @@
     <Content Include="TestData\aapl_chain.csv">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <Content Include="TestData\arms_data.txt">
+    <Content Include="TestData\arms_data.csv">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Include="TestData\equity\usa\shortable\testbrokerage\dates\20201221.csv">
@@ -209,17 +209,17 @@
     <Content Include="TestData\equity\usa\shortable\testbrokerage\symbols\goog.csv">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <Content Include="TestData\eurusd60_dem.txt">
+    <Content Include="TestData\eurusd60_dem.csv">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Include="TestData\FuturesExpiryFunctionsTestData.xml">
       <SubType>Designer</SubType>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <Content Include="TestData\eurusd_candle_patterns.txt">
+    <Content Include="TestData\eurusd_candle_patterns.csv">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <Content Include="TestData\ewz_candle_patterns.txt">
+    <Content Include="TestData\ewz_candle_patterns.csv">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Include="TestData\tp_datatest.csv">
@@ -231,7 +231,7 @@
     <Content Include="TestData\SampleMarketHoursDatabase.json">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <Content Include="TestData\frama.txt">
+    <Content Include="TestData\frama.csv">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <None Include="TestData\daily-stock-picker-backtest.csv">
@@ -255,49 +255,49 @@
     <None Include="TestData\multizip.zip">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
-    <Content Include="TestData\spy_acceleration_bands_20_4.txt">
+    <Content Include="TestData\spy_acceleration_bands_20_4.csv">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Include="TestData\mcclellan_data.csv">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <Content Include="TestData\spy_alma.txt">
+    <Content Include="TestData\spy_alma.csv">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <Content Include="TestData\spy_ao.txt">
+    <Content Include="TestData\spy_ao.csv">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <Content Include="TestData\spy_atr_wilder.txt">
+    <Content Include="TestData\spy_atr_wilder.csv">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <Content Include="TestData\spy_cmf.txt">
+    <Content Include="TestData\spy_cmf.csv">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <Content Include="TestData\spy_sr.txt">
+    <Content Include="TestData\spy_sr.csv">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <Content Include="TestData\spy_pivot_pnt_hl.txt">
+    <Content Include="TestData\spy_pivot_pnt_hl.csv">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <Content Include="TestData\spy_hma.txt">
+    <Content Include="TestData\spy_hma.csv">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <Content Include="TestData\spy_mass_index_25.txt">
+    <Content Include="TestData\spy_mass_index_25.csv">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Include="TestData\spy_coppock_curve.csv">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <Content Include="TestData\spy_rvi.txt">
+    <Content Include="TestData\spy_rvi.csv">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <Content Include="TestData\spy_rdv.txt">
+    <Content Include="TestData\spy_rdv.csv">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <Content Include="TestData\dwac_supertrend.txt">
+    <Content Include="TestData\dwac_supertrend.csv">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <Content Include="TestData\spy_stc.txt">
+    <Content Include="TestData\spy_stc.csv">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Include="TestData\stock_prices.csv">
@@ -393,118 +393,118 @@
     <Content Include="TestData\spx_lwma.csv">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <Content Include="TestData\spy_10_min.txt">
+    <Content Include="TestData\spy_10_min.csv">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <Content Include="TestData\spy_ad.txt">
+    <Content Include="TestData\spy_ad.csv">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <Content Include="TestData\spy_ad_osc.txt">
+    <Content Include="TestData\spy_ad_osc.csv">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <Content Include="TestData\spy_apo.txt">
+    <Content Include="TestData\spy_apo.csv">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <Content Include="TestData\spy_aps.txt">
+    <Content Include="TestData\spy_aps.csv">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <Content Include="TestData\spy_aroon_oscillator.txt">
+    <Content Include="TestData\spy_aroon_oscillator.csv">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <Content Include="TestData\spy_atr.txt">
+    <Content Include="TestData\spy_atr.csv">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <Content Include="TestData\spy_bollinger_bands.txt">
+    <Content Include="TestData\spy_bollinger_bands.csv">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <Content Include="TestData\spy_bop.txt">
+    <Content Include="TestData\spy_bop.csv">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <Content Include="TestData\spy_candle_patterns.txt">
+    <Content Include="TestData\spy_candle_patterns.csv">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <Content Include="TestData\spy_cmo.txt">
+    <Content Include="TestData\spy_cmo.csv">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <Content Include="TestData\spy_dema.txt">
+    <Content Include="TestData\spy_dema.csv">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <Content Include="TestData\spy_heikin_ashi.txt">
+    <Content Include="TestData\spy_heikin_ashi.csv">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <Content Include="TestData\spy_kama.txt">
+    <Content Include="TestData\spy_kama.csv">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <Content Include="TestData\spy_logr14.txt">
+    <Content Include="TestData\spy_logr14.csv">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <Content Include="TestData\spy_max.txt">
+    <Content Include="TestData\spy_max.csv">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <Content Include="TestData\spy_mfi.txt">
+    <Content Include="TestData\spy_mfi.csv">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <Content Include="TestData\spy_midpoint.txt">
+    <Content Include="TestData\spy_midpoint.csv">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <Content Include="TestData\spy_midprice.txt">
+    <Content Include="TestData\spy_midprice.csv">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <Content Include="TestData\spy_min.txt">
+    <Content Include="TestData\spy_min.csv">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <Content Include="TestData\spy_natr.txt">
+    <Content Include="TestData\spy_natr.csv">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <Content Include="TestData\spy_ohlcv.txt">
+    <Content Include="TestData\spy_ohlcv.csv">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <Content Include="TestData\spy_parabolic_SAR.txt">
+    <Content Include="TestData\spy_parabolic_SAR.csv">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <Content Include="TestData\spy_ppo.txt">
+    <Content Include="TestData\spy_ppo.csv">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <Content Include="TestData\spy_swiss.txt">
+    <Content Include="TestData\spy_swiss.csv">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <Content Include="TestData\spy_t3.txt">
+    <Content Include="TestData\spy_t3.csv">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Include="TestData\spy_tsf.csv">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <Content Include="TestData\spy_rocr.txt">
+    <Content Include="TestData\spy_rocr.csv">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <Content Include="TestData\spy_emv.txt">
+    <Content Include="TestData\spy_emv.csv">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <Content Include="TestData\spy_ker.txt">
+    <Content Include="TestData\spy_ker.csv">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <Content Include="TestData\spy_vidya.txt">
+    <Content Include="TestData\spy_vidya.csv">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <Content Include="TestData\spy_tr.txt">
+    <Content Include="TestData\spy_tr.csv">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <Content Include="TestData\spy_tema.txt">
+    <Content Include="TestData\spy_tema.csv">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Include="TestData\spy_tsi.csv">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <Content Include="TestData\spy_trima.txt">
+    <Content Include="TestData\spy_trima.csv">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <Content Include="TestData\spy_ultosc.txt">
+    <Content Include="TestData\spy_ultosc.csv">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <Content Include="TestData\spy_trix.txt">
+    <Content Include="TestData\spy_trix.csv">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <Content Include="TestData\spy_var.txt">
+    <Content Include="TestData\spy_var.csv">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Include="TestData\spy_do.csv">
@@ -513,43 +513,43 @@
     <Content Include="TestData\spy_ema.csv">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <Content Include="TestData\spy_with_adx.txt">
+    <Content Include="TestData\spy_with_adx.csv">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <Content Include="TestData\spy_with_cci.txt">
+    <Content Include="TestData\spy_with_cci.csv">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <Content Include="TestData\spy_with_don50.txt">
+    <Content Include="TestData\spy_with_don50.csv">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <Content Include="TestData\spy_with_fisher.txt">
+    <Content Include="TestData\spy_with_fisher.csv">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <Content Include="TestData\spy_with_indicators.txt">
+    <Content Include="TestData\spy_with_indicators.csv">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <Content Include="TestData\spy_with_macd.txt">
+    <Content Include="TestData\spy_with_macd.csv">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <Content Include="TestData\spy_with_obv.txt">
+    <Content Include="TestData\spy_with_obv.csv">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Include="TestData\spy_with_rma.csv">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <Content Include="TestData\spy_with_roc50.txt">
+    <Content Include="TestData\spy_with_roc50.csv">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <Content Include="TestData\spy_with_rocp50.txt">
+    <Content Include="TestData\spy_with_rocp50.csv">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <Content Include="TestData\spy_with_stoch12k3.txt">
+    <Content Include="TestData\spy_with_stoch12k3.csv">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <Content Include="TestData\spy_with_vwap.txt">
+    <Content Include="TestData\spy_with_vwap.csv">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <Content Include="TestData\spy_with_williamsR14.txt">
+    <Content Include="TestData\spy_with_williamsR14.csv">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Include="TestData\test_cash_equity.xml">

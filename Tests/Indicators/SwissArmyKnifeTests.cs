@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -27,7 +27,7 @@ namespace QuantConnect.Tests.Indicators
             return new SwissArmyKnife(20, 0.1, SwissArmyKnifeTool.Gauss);
         }
 
-        protected override string TestFileName => "spy_swiss.txt";
+        protected override string TestFileName => "spy_swiss.csv";
 
         protected override string TestColumnName => "Gauss";
 

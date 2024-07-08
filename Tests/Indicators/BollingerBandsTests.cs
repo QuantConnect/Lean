@@ -27,7 +27,7 @@ namespace QuantConnect.Tests.Indicators
             return new BollingerBands(20, 2.0m);
         }
 
-        protected override string TestFileName => "spy_bollinger_bands.txt";
+        protected override string TestFileName => "spy_bollinger_bands.csv";
 
         protected override string TestColumnName => "Bollinger Bands® 20 2 Bottom";
 

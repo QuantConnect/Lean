@@ -31,7 +31,7 @@ namespace QuantConnect.Tests.Indicators
             return new VolumeWeightedAveragePriceIndicator(50);
         }
 
-        protected override string TestFileName => "spy_with_vwap.txt";
+        protected override string TestFileName => "spy_with_vwap.csv";
 
         protected override string TestColumnName => "Moving VWAP 50";
 

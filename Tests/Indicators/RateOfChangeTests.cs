@@ -27,7 +27,7 @@ namespace QuantConnect.Tests.Indicators
             return new RateOfChange(50);
         }
 
-        protected override string TestFileName => "spy_with_rocp50.txt";
+        protected override string TestFileName => "spy_with_rocp50.csv";
 
         protected override string TestColumnName => "Rate of Change % 50";
 

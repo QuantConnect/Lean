@@ -29,7 +29,7 @@ namespace QuantConnect.Tests.Indicators
 
         protected override string TestFileName
         {
-            get { return "spy_midprice.txt"; }
+            get { return "spy_midprice.csv"; }
         }
 
         protected override string TestColumnName

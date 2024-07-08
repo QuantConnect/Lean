@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -30,7 +30,7 @@ namespace QuantConnect.Tests.Indicators
             return new FractalAdaptiveMovingAverage(16);
         }
 
-        protected override string TestFileName => "frama.txt";
+        protected override string TestFileName => "frama.csv";
 
         protected override string TestColumnName => "Filt";
 

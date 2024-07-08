@@ -27,7 +27,7 @@ namespace QuantConnect.Tests.Indicators
             return new NormalizedAverageTrueRange(5);
         }
 
-        protected override string TestFileName => "spy_natr.txt";
+        protected override string TestFileName => "spy_natr.csv";
 
         protected override string TestColumnName => "NATR_5";
     }

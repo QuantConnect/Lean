@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -30,7 +30,7 @@ namespace QuantConnect.Tests.Indicators
             return new Stochastic(12, 3, 5);
         }
 
-        protected override string TestFileName => "spy_with_stoch12k3.txt";
+        protected override string TestFileName => "spy_with_stoch12k3.csv";
 
         protected override string TestColumnName => "%D 5";
 

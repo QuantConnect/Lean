@@ -258,7 +258,7 @@ namespace QuantConnect.Tests.Indicators
             }
         }
 
-        protected override string TestFileName => "arms_data.txt";
+        protected override string TestFileName => "arms_data.csv";
 
         protected override string TestColumnName => "A/D Difference";
     }

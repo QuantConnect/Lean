@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -29,7 +29,7 @@ namespace QuantConnect.Tests.Indicators
             return new MassIndex();
         }
 
-        protected override string TestFileName => "spy_mass_index_25.txt";
+        protected override string TestFileName => "spy_mass_index_25.csv";
 
         protected override string TestColumnName => "MassIndex";
     }

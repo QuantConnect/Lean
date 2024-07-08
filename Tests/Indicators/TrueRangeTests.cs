@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -27,7 +27,7 @@ namespace QuantConnect.Tests.Indicators
             return new TrueRange();
         }
 
-        protected override string TestFileName => "spy_tr.txt";
+        protected override string TestFileName => "spy_tr.csv";
 
         protected override string TestColumnName => "TR";
     }

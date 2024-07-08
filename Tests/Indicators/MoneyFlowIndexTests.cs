@@ -28,7 +28,7 @@ namespace QuantConnect.Tests.Indicators
             return new MoneyFlowIndex(20);
         }
 
-        protected override string TestFileName => "spy_mfi.txt";
+        protected override string TestFileName => "spy_mfi.csv";
 
         protected override string TestColumnName => "Money Flow Index 20";
 

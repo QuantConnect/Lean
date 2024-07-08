@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using NUnit.Framework;
 using QuantConnect.Data;
 using QuantConnect.Data.Market;
@@ -16,7 +16,7 @@ namespace QuantConnect.Tests.Indicators
 
         protected override string TestFileName
         {
-            get { return "spy_stc.txt"; }
+            get { return "spy_stc.csv"; }
         }
 
         protected override string TestColumnName

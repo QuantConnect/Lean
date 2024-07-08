@@ -26,7 +26,7 @@ namespace QuantConnect.Tests.Indicators
             return new VariableIndexDynamicAverage(9);
         }
 
-        protected override string TestFileName => "spy_vidya.txt";
+        protected override string TestFileName => "spy_vidya.csv";
 
         protected override string TestColumnName => "VIDYA_9";
     }

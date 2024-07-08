@@ -29,7 +29,7 @@ namespace QuantConnect.Tests.Indicators
             return new RelativeDailyVolume(2);
         }
 
-        protected override string TestFileName => "spy_rdv.txt";
+        protected override string TestFileName => "spy_rdv.csv";
 
         protected override string TestColumnName => "RDV";
 

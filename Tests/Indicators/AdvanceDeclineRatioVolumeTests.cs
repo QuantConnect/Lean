@@ -156,7 +156,7 @@ namespace QuantConnect.Tests.Indicators
             Assert.AreEqual(6m, indicator.Current.Value);
         }
 
-        protected override string TestFileName => "arms_data.txt";
+        protected override string TestFileName => "arms_data.csv";
 
         protected override string TestColumnName => "A/D Volume Ratio";
 

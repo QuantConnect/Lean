@@ -10,7 +10,7 @@ from talipp.indicators import ChandeKrollStop, SFX, TTM, VTX, ZigZag  # MIMO
 
 
 def main():
-    fname = "spy_ppo.txt"
+    fname = "spy_ppo.csv"
     datetime_fmt = "%m/%d/%Y %I:%M:%S %p"
 
     df = pd.read_csv(fname)

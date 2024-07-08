@@ -27,7 +27,7 @@ namespace QuantConnect.Tests.Indicators
             return new ChaikinMoneyFlow("CMF", 20);
         }
 
-        protected override string TestFileName => "spy_cmf.txt";
+        protected override string TestFileName => "spy_cmf.csv";
 
         protected override string TestColumnName => "CMF_20";
         
@@ -81,4 +81,3 @@ namespace QuantConnect.Tests.Indicators
         }
     }
 }
-      

@@ -29,7 +29,7 @@ namespace QuantConnect.Tests.Indicators
             return new DeMarkerIndicator("DEM", 14);
         }
         
-        protected override string TestFileName => "eurusd60_dem.txt";
+        protected override string TestFileName => "eurusd60_dem.csv";
 
         protected override string TestColumnName => "dem";
         

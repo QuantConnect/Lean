@@ -28,7 +28,7 @@ namespace QuantConnect.Tests.Indicators
             return new AugenPriceSpike(20);
         }
 
-        protected override string TestFileName => "spy_aps.txt";
+        protected override string TestFileName => "spy_aps.csv";
 
         protected override string TestColumnName => "APS";
 

@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  * 
@@ -27,7 +27,7 @@ namespace QuantConnect.Tests.Indicators.CandlestickPatterns
     {
         private static readonly string[] _testFileNames =
         {
-            "spy_candle_patterns.txt", "ewz_candle_patterns.txt", "eurusd_candle_patterns.txt"
+            "spy_candle_patterns.csv", "ewz_candle_patterns.csv", "eurusd_candle_patterns.csv"
         };
 
         private static TestCaseData[] PatternTestParameters

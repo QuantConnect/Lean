@@ -27,7 +27,7 @@ namespace QuantConnect.Tests.Indicators
             return new HeikinAshi();
         }
 
-        protected override string TestFileName => "spy_heikin_ashi.txt";
+        protected override string TestFileName => "spy_heikin_ashi.csv";
 
         protected override string TestColumnName => "";
 

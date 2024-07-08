@@ -28,7 +28,7 @@ namespace QuantConnect.Tests.Indicators
             return new OnBalanceVolume();
         }
 
-        protected override string TestFileName => "spy_with_obv.txt";
+        protected override string TestFileName => "spy_with_obv.csv";
 
         protected override string TestColumnName => "OBV";
 

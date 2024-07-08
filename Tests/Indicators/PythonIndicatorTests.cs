@@ -83,7 +83,7 @@ class CustomSimpleMovingAverage(PythonIndicator):
             return new PythonIndicator(CreatePythonIndicator());
         }
 
-        protected override string TestFileName => "spy_with_indicators.txt";
+        protected override string TestFileName => "spy_with_indicators.csv";
 
         protected override string TestColumnName => "SMA14";
 

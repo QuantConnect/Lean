@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  * 
@@ -30,7 +30,7 @@ namespace QuantConnect.Tests.Indicators
             return new AverageTrueRange(14);
         }
 
-        protected override string TestFileName => "spy_atr_wilder.txt";
+        protected override string TestFileName => "spy_atr_wilder.csv";
 
         protected override string TestColumnName => "Average True Range 14";
 
@@ -38,7 +38,7 @@ namespace QuantConnect.Tests.Indicators
         public override void ComparesAgainstExternalData()
         {
             var atrSimple = new AverageTrueRange(14, MovingAverageType.Simple);
-            TestHelper.TestIndicator(atrSimple, "spy_atr.txt", "Average True Range 14");
+            TestHelper.TestIndicator(atrSimple, "spy_atr.csv", "Average True Range 14");
         }
 
         [Test]

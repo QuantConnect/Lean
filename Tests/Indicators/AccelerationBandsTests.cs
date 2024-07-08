@@ -31,7 +31,7 @@ namespace QuantConnect.Tests.Indicators
             return new AccelerationBands(period: 20, width: 4m);
         }
 
-        protected override string TestFileName => "spy_acceleration_bands_20_4.txt";
+        protected override string TestFileName => "spy_acceleration_bands_20_4.csv";
 
         protected override string TestColumnName => "MiddleBand";
 
@@ -41,7 +41,7 @@ namespace QuantConnect.Tests.Indicators
             var abands = CreateIndicator();
             TestHelper.TestIndicator(
                 abands,
-                "spy_acceleration_bands_20_4.txt",
+                "spy_acceleration_bands_20_4.csv",
                 "LowerBand",
                 (ind, expected) => Assert.AreEqual(expected, (double) ((AccelerationBands) ind).LowerBand.Current.Value,
                     delta: 1e-4, message: "Lower band test fail.")
@@ -54,7 +54,7 @@ namespace QuantConnect.Tests.Indicators
             var abands = CreateIndicator();
             TestHelper.TestIndicator(
                 abands,
-                "spy_acceleration_bands_20_4.txt",
+                "spy_acceleration_bands_20_4.csv",
                 "UpperBand",
                 (ind, expected) => Assert.AreEqual(expected, (double) ((AccelerationBands) ind).UpperBand.Current.Value,
                     delta: 1e-4, message: "Upper band test fail.")

@@ -26,7 +26,7 @@ namespace QuantConnect.Tests.Indicators
             return new KaufmanEfficiencyRatio(10);
         }
 
-        protected override string TestFileName => "spy_ker.txt";
+        protected override string TestFileName => "spy_ker.csv";
 
         protected override string TestColumnName => "KER";
     }

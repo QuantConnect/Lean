@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -26,7 +26,7 @@ namespace QuantConnect.Tests.Indicators
             return new KaufmanAdaptiveMovingAverage(5);
         }
 
-        protected override string TestFileName => "spy_kama.txt";
+        protected override string TestFileName => "spy_kama.csv";
 
         protected override string TestColumnName => "KAMA_5";
     }

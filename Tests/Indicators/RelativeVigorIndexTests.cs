@@ -29,7 +29,7 @@ namespace QuantConnect.Tests.Indicators
             return new RelativeVigorIndex("RVI", 10);
         }
 
-        protected override string TestFileName => "spy_rvi.txt";
+        protected override string TestFileName => "spy_rvi.csv";
         protected override string TestColumnName => "RVI";
 
         [Test]

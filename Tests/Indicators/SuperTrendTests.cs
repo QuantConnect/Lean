@@ -30,7 +30,7 @@ namespace QuantConnect.Tests.Indicators
             return new SuperTrend(10,3);
         }
 
-        protected override string TestFileName => "dwac_supertrend.txt";
+        protected override string TestFileName => "dwac_supertrend.csv";
 
         protected override string TestColumnName => "Super";
 
