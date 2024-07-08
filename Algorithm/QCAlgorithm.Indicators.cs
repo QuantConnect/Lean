@@ -904,7 +904,7 @@ namespace QuantConnect.Algorithm
         /// <param name="symbol">The symbol whose IBS we want</param>
         /// <param name="resolution">The resolution</param>
         /// <param name="selector">Selects a value from the BaseData to send into the indicator, if null defaults to casting the input value to a TradeBar</param>
-        /// <returns>A new InternalBarStrength indicator with the specified smoothing type and period</returns>
+        /// <returns>A new InternalBarStrength indicator</returns>
         [DocumentationAttribute(Indicators)]
         public InternalBarStrength IBS(Symbol symbol, Resolution? resolution = null, Func<IBaseData, TradeBar> selector = null)
         {
