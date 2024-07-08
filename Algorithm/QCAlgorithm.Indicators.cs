@@ -2514,6 +2514,25 @@ namespace QuantConnect.Algorithm
         }
 
         /// <summary>
+        /// Creates a ZeroLagExponentialMovingAverage indicator for the symbol. The indicator will be automatically
+        /// updated on the given resolution.
+        /// </summary>
+        /// <param name="symbol">The symbol whose ZLEMA we want</param>
+        /// <param name="period">The period of the ZLEMA</param>
+        /// <param name="resolution">The resolution</param>
+        /// <param name="selector">Selects a value from the BaseData to send into the indicator, if null defaults to the Value property of BaseData (x => x.Value)</param>
+        /// <returns>The ZeroLagExponentialMovingAverage for the given parameters</returns>
+        [DocumentationAttribute(Indicators)]
+        public ZeroLagExponentialMovingAverage ZLEMA(Symbol symbol, int period, Resolution? resolution = null, Func<IBaseData, decimal> selector = null)
+        {
+            var name = CreateIndicatorName(symbol, $"ZLEMA({period})", resolution);
+            var zeroLagExponentialMovingAverage = new ZeroLagExponentialMovingAverage(name, period);
+            InitializeIndicator(symbol, zeroLagExponentialMovingAverage, resolution, selector);
+
+            return zeroLagExponentialMovingAverage;
+        }
+
+        /// <summary>
         /// Creates a new name for an indicator created with the convenience functions (SMA, EMA, ect...)
         /// </summary>
         /// <param name="symbol">The symbol this indicator is registered to</param>
