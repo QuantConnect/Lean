@@ -25,9 +25,9 @@ namespace QuantConnect.Tests.Indicators
     {
         protected override IndicatorBase<IBaseDataBar> CreateIndicator()
         {
-            //RenkoBarSize = 1m;
-            //VolumeRenkoBarSize = 0.5m;
-            return new SmoothedOnBalanceVolume(14);
+            RenkoBarSize = 1m;
+            // VolumeRenkoBarSize = 0.5m;  // uncomment this and AcceptsVolumeRenkoBarsAsInput hangle infinitely
+            return new SmoothedOnBalanceVolume(20);
         }
 
         protected override string TestFileName => "spy_with_sobv.csv";

@@ -83,7 +83,16 @@ namespace QuantConnect.Indicators
             // Send true range to our smoother
             _smoother.Update(input.Time, OnBalanceVolume.Current.Value);
 
-            return _smoother.Current.Value;
+            
+            if (_smoother.IsReady)
+            {
+                return _smoother.Current.Value;
+            }
+            else
+            {
+                return 0m;
+            }
+            
         }
 
         /// <summary>
