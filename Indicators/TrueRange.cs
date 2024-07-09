@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -49,12 +49,12 @@ namespace QuantConnect.Indicators
         /// <summary>
         /// Gets a flag indicating when this indicator is ready and fully initialized
         /// </summary>
-        public override bool IsReady => Samples > 1;
+        public override bool IsReady => Samples >= 1;
 
         /// <summary>
         /// Required period, in data points, for the indicator to be ready and fully initialized.
         /// </summary>
-        public int WarmUpPeriod => 2;
+        public int WarmUpPeriod => 1;
 
         /// <summary>
         /// Computes the next value of this indicator from the given state
@@ -63,10 +63,10 @@ namespace QuantConnect.Indicators
         /// <returns>A new value for this indicator</returns>
         protected override decimal ComputeNextValue(IBaseDataBar input)
         {
-            if (!IsReady)
+            if (Samples == 1)
             {
                 _previousInput = input;
-                return 0m;
+                return input.High - input.Low;
             }
 
             var greatest = input.High - input.Low;
