@@ -109,7 +109,11 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             var marketHoursDataBase = MarketHoursDatabase.FromDataFolder();
             var marketHoursEntry = marketHoursDataBase.GetEntry(canonicalSymbol.ID.Market, canonicalSymbol, canonicalSymbol.SecurityType);
 
-            var request = new HistoryRequest(date.AddDays(-1),
+            date = date.Date;
+            var previousTradingDate = Time.GetStartTimeForTradeBars(marketHoursEntry.ExchangeHours, date, Time.OneDay, 1,
+                extendedMarketHours: false, marketHoursEntry.DataTimeZone);
+            var request = new HistoryRequest(
+                previousTradingDate,
                 date.AddDays(1),
                 typeof(OptionUniverse),
                 canonicalSymbol,
