@@ -36,7 +36,14 @@ namespace QuantConnect.Data
         /// Defaults to SPY</remarks>
         public static Symbol DefaultSymbol { get; set; } = Symbol.Create("SPY", SecurityType.Equity, QuantConnect.Market.USA);
 
+        /// <summary>
+        /// The dividend yield rate provider
+        /// </summary>
         protected static Dictionary<Symbol, Dictionary<DateTime, decimal>> _dividendYieldRateProvider;
+
+        /// <summary>
+        /// Task to clear the cache
+        /// </summary>
         protected static Task _cacheClearTask;
         private static readonly object _lock = new();
 

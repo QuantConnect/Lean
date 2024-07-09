@@ -382,6 +382,9 @@ namespace QuantConnect.Lean.Engine.Setup
             return true;
         }
 
+        /// <summary>
+        /// Loads existing holdings and orders
+        /// </summary>
         protected bool LoadExistingHoldingsAndOrders(IBrokerage brokerage, IAlgorithm algorithm, SetupHandlerParameters parameters)
         {
             Log.Trace("BrokerageSetupHandler.Setup(): Fetching open orders from brokerage...");

@@ -22,6 +22,9 @@ using QuantConnect.Util;
 
 namespace QuantConnect.Data.UniverseSelection
 {
+    /// <summary>
+    /// ETF Constituent data
+    /// </summary>
     [Obsolete("'ETFConstituentData' was renamed to 'ETFConstituentUniverse'")]
     public class ETFConstituentData : ETFConstituentUniverse { }
 

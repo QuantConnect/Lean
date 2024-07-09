@@ -38,7 +38,8 @@ namespace QuantConnect.Algorithm.CSharp
             var equity = AddEquity("GOOG");
 
             _optionSymbol = OptionChainProvider.GetOptionContractList(equity.Symbol, Time)
-                .OrderByDescending(symbol => symbol.ID.Date)
+                .OrderBy(symbol => symbol.ID.StrikePrice)
+                .ThenByDescending(symbol => symbol.ID.Date)
                 .First(optionContract => optionContract.ID.OptionRight == OptionRight.Call);
             var option = AddOptionContract(_optionSymbol);
 
@@ -123,13 +124,13 @@ namespace QuantConnect.Algorithm.CSharp
         {
             {"Total Orders", "2"},
             {"Average Win", "0%"},
-            {"Average Loss", "-0.36%"},
-            {"Compounding Annual Return", "-15.857%"},
-            {"Drawdown", "0.400%"},
+            {"Average Loss", "-0.73%"},
+            {"Compounding Annual Return", "-29.516%"},
+            {"Drawdown", "0.700%"},
             {"Expectancy", "-1"},
             {"Start Equity", "100000"},
-            {"End Equity", "99638"},
-            {"Net Profit", "-0.362%"},
+            {"End Equity", "99268"},
+            {"Net Profit", "-0.732%"},
             {"Sharpe Ratio", "0"},
             {"Sortino Ratio", "0"},
             {"Probabilistic Sharpe Ratio", "0%"},
@@ -144,10 +145,10 @@ namespace QuantConnect.Algorithm.CSharp
             {"Tracking Error", "0.104"},
             {"Treynor Ratio", "0"},
             {"Total Fees", "$2.00"},
-            {"Estimated Strategy Capacity", "$150000.00"},
-            {"Lowest Capacity Asset", "GOOCV WRCOZDXBITL2|GOOCV VP83T1ZUHROL"},
-            {"Portfolio Turnover", "1.06%"},
-            {"OrderListHash", "cc1d97925eae534f47bdb95eea4e604c"}
+            {"Estimated Strategy Capacity", "$720000.00"},
+            {"Lowest Capacity Asset", "GOOCV WHEA9CWI9A86|GOOCV VP83T1ZUHROL"},
+            {"Portfolio Turnover", "11.63%"},
+            {"OrderListHash", "0a3ff33e46a1ca590b9163b07fcd7e0c"}
         };
     }
 }

@@ -31,6 +31,9 @@ namespace QuantConnect
         /// </summary>
         public static class PythonCommon
         {
+            /// <summary>
+            /// Returns a string message saying the given attribute must be implemented on the given Python type
+            /// </summary>
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             public static string AttributeNotImplemented(string attribute, PyType pythonType)
             {
@@ -43,6 +46,9 @@ namespace QuantConnect
         /// </summary>
         public static class MarginCallModelPythonWrapper
         {
+            /// <summary>
+            /// String message saying: Must return a tuple, where the first item is a list and the second a boolean
+            /// </summary>
             public static string GetMarginCallOrdersMustReturnTuple = "Must return a tuple, where the first item is a list and the second a boolean";
         }
 
@@ -51,8 +57,15 @@ namespace QuantConnect
         /// </summary>
         public static class PandasConverter
         {
+            /// <summary>
+            /// String message saying: Pandas module was not imported
+            /// </summary>
             public static string PandasModuleNotImported = "pandas module was not imported.";
 
+            /// <summary>
+            /// Returns a string message saying ConvertToDictionary() method cannot be used to convert the given source
+            /// type into the given target type. It also contains the reason why this method cannot be used
+            /// </summary>
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             public static string ConvertToDictionaryFailed(string sourceType, string targetType, string reason)
             {
@@ -65,12 +78,19 @@ namespace QuantConnect
         /// </summary>
         public static class PandasData
         {
+            /// <summary>
+            /// Returns a string message saying the given key was duplicated in the given
+            /// type class
+            /// </summary>
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             public static string DuplicateKey(string duplicateKey, string type)
             {
                 return $"More than one '{duplicateKey}' member was found in '{type}' class.";
             }
 
+            /// <summary>
+            /// Returns a string message saying the given key does not exist in series dictionary
+            /// </summary>
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             public static string KeyNotFoundInSeries(string key)
             {
@@ -83,22 +103,37 @@ namespace QuantConnect
         /// </summary>
         public static class PythonInitializer
         {
+            /// <summary>
+            /// String message saying: start
+            /// </summary>
             public static string Start = "start";
 
+            /// <summary>
+            /// String message saying: ended
+            /// </summary>
             public static string Ended = "ended";
 
+            /// <summary>
+            /// Returns a string message saying it was impossible to find algorithm location path
+            /// </summary>
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             public static string UnableToLocateAlgorithm(string algorithmLocation)
             {
                 return $"Unable to find algorithm location path: {algorithmLocation}.";
             }
 
+            /// <summary>
+            /// Returns a string message saying the given path to virtual environment does not exist
+            /// </summary>
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             public static string VirutalEnvironmentNotFound(string virtualEnvPath)
             {
                 return $"Path {virtualEnvPath} to virtual environment does not exist.";
             }
 
+            /// <summary>
+            /// Returns a string message saying it was impossible to find system package configuration
+            /// </summary>
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             public static string FailedToFindSystemPackagesConfiguration(string virtualEnvPath, FileInfo configFile)
             {
@@ -106,12 +141,19 @@ namespace QuantConnect
                     configFile.Exists}. Will default to true.";
             }
 
+            /// <summary>
+            /// Returns a string message saying the Python Initializer will use the system packages found
+            /// in the virtual environment path
+            /// </summary>
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             public static string SystemPackagesConfigurationFound(string virtualEnvPath, bool includeSystemPackages)
             {
                 return $"virtual env '{virtualEnvPath}'. Will use system packages: {includeSystemPackages}";
             }
 
+            /// <summary>
+            /// Returns a string message saying it was impossible to find the given python path
+            /// </summary>
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             public static string PythonPathNotFound(string pythonPath)
             {
@@ -124,8 +166,15 @@ namespace QuantConnect
         /// </summary>
         public static class PythonWrapper
         {
+            /// <summary>
+            /// String message saying: expected and interface type parameter
+            /// </summary>
             public static string ExpectedInterfaceTypeParameter = "expected an interface type parameter.";
 
+            /// <summary>
+            /// Returns a string message saying the given interface must be fully implemented. It also advises the user
+            /// on the missing methods in its interface
+            /// </summary>
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             public static string InterfaceNotFullyImplemented(string interfaceName, string pythonTypeName, IEnumerable<string> missingMembers)
             {

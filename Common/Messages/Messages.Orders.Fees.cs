@@ -31,6 +31,9 @@ namespace QuantConnect
         /// </summary>
         public static class FeeModel
         {
+            /// <summary>
+            /// Returns a string message saying the type of the given security is unsupported
+            /// </summary>
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             public static string UnsupportedSecurityType(Securities.Security security)
             {
@@ -43,6 +46,9 @@ namespace QuantConnect
         /// </summary>
         public static class AlphaStreamsFeeModel
         {
+            /// <summary>
+            /// Returns a string message saying the given market is unexpected
+            /// </summary>
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             public static string UnexpectedEquityMarket(string market)
             {
@@ -55,6 +61,9 @@ namespace QuantConnect
         /// </summary>
         public static class ExanteFeeModel
         {
+            /// <summary>
+            /// Returns a string message saying the market associated with the given order symbol is unsupported
+            /// </summary>
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             public static string UnsupportedExchange(Orders.Order order)
             {
@@ -67,30 +76,46 @@ namespace QuantConnect
         /// </summary>
         public static class InteractiveBrokersFeeModel
         {
+            /// <summary>
+            /// Returns a string message saying the given option market was unexpected
+            /// </summary>
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             public static string UnexpectedOptionMarket(string market)
             {
                 return Invariant($"InteractiveBrokersFeeModel(): unexpected option Market {market}");
             }
 
+            /// <summary>
+            /// Returns a string message saying the given future market was unexpected
+            /// </summary>
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             public static string UnexpectedFutureMarket(string market)
             {
                 return Invariant($"InteractiveBrokersFeeModel(): unexpected future Market {market}");
             }
 
+            /// <summary>
+            /// Returns a string message saying the given equity market was unexpected
+            /// </summary>
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             public static string UnexpectedEquityMarket(string market)
             {
                 return Invariant($"InteractiveBrokersFeeModel(): unexpected equity Market {market}");
             }
 
+            /// <summary>
+            /// Returns a string message saying the type of the given security was unsupported
+            /// </summary>
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             public static string UnitedStatesFutureFeesUnsupportedSecurityType(Securities.Security security)
             {
                 return Invariant($"InteractiveBrokersFeeModel.UnitedStatesFutureFees(): Unsupported security type: {security.Type}");
             }
 
+            /// <summary>
+            /// Returns a string message saying the quote currency of the given security was 
+            /// unexpected for Hong Kong futures exchange
+            /// </summary>
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             public static string HongKongFutureFeesUnexpectedQuoteCurrency(Securities.Security security)
             {

@@ -42,7 +42,7 @@ namespace QuantConnect.Algorithm.CSharp
             var aapl = QuantConnect.Symbol.Create("AAPL", SecurityType.Equity, Market.USA);
 
             var contracts = OptionChainProvider.GetOptionContractList(aapl, Time)
-                .OrderBy(symbol => symbol.ID.Symbol)
+                .OrderBy(symbol => symbol.ID.StrikePrice)
                 .Where(optionContract => optionContract.ID.OptionRight == OptionRight.Call
                     && optionContract.ID.OptionStyle == OptionStyle.American)
                 .Take(2)
@@ -125,7 +125,7 @@ namespace QuantConnect.Algorithm.CSharp
             {"Drawdown", "0%"},
             {"Expectancy", "0"},
             {"Start Equity", "100000"},
-            {"End Equity", "99930"},
+            {"End Equity", "99238"},
             {"Net Profit", "0%"},
             {"Sharpe Ratio", "0"},
             {"Sortino Ratio", "0"},
@@ -141,10 +141,10 @@ namespace QuantConnect.Algorithm.CSharp
             {"Tracking Error", "0"},
             {"Treynor Ratio", "0"},
             {"Total Fees", "$2.00"},
-            {"Estimated Strategy Capacity", "$230000.00"},
-            {"Lowest Capacity Asset", "AAPL VXBK4QQIRLZA|AAPL R735QTJ8XC9X"},
-            {"Portfolio Turnover", "0.25%"},
-            {"OrderListHash", "5906f39bc46c238374cb8c7245dd66f8"}
+            {"Estimated Strategy Capacity", "$6200000.00"},
+            {"Lowest Capacity Asset", "AAPL VXBK4QA5EM92|AAPL R735QTJ8XC9X"},
+            {"Portfolio Turnover", "90.27%"},
+            {"OrderListHash", "a111609c2c64554268539b5798e5b31f"}
         };
     }
 }

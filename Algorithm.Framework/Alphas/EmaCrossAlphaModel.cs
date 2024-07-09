@@ -140,8 +140,19 @@ namespace QuantConnect.Algorithm.Framework.Alphas
             private readonly ExponentialMovingAverage _slow;
             private readonly Security _security;
 
+            /// <summary>
+            /// Symbol associated with the data
+            /// </summary>
             public Symbol Symbol => _security.Symbol;
+
+            /// <summary>
+            /// Fast Exponential Moving Average (EMA)
+            /// </summary>
             public ExponentialMovingAverage Fast => _fast;
+
+            /// <summary>
+            /// Slow Exponential Moving Average (EMA)
+            /// </summary>
             public ExponentialMovingAverage Slow => _slow;
 
             /// <summary>
@@ -149,8 +160,15 @@ namespace QuantConnect.Algorithm.Framework.Alphas
             /// This is used to prevent emitting the same signal repeatedly
             /// </summary>
             public bool FastIsOverSlow { get; set; }
+
+            /// <summary>
+            /// Flag indicating if the Slow EMA is over the Fast one
+            /// </summary>
             public bool SlowIsOverFast => !FastIsOverSlow;
 
+            /// <summary>
+            /// Initializes an instance of the class SymbolData with the given arguments
+            /// </summary>
             public SymbolData(
                 Security security,
                 int fastPeriod,
