@@ -46,7 +46,7 @@ namespace QuantConnect
         }
 
         /// <summary>
-        /// Provides user-facing messages for the <see cref="Algorithm.Framework.Alphas.Analysis.ReadOnlySecurityValuesCollection"/> class and its consumers or related classes
+        /// Provides user-facing messages for the <see cref="ReadOnlySecurityValuesCollection"/> class and its consumers or related classes
         /// </summary>
         public static class ReadOnlySecurityValuesCollection
         {

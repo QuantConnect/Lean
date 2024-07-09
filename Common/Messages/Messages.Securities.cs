@@ -178,7 +178,7 @@ namespace QuantConnect
         }
 
         /// <summary>
-        /// Provides user-facing messages for the <see cref="Securities.PositionGroupBuyingPowerModel"/> class and its consumers or related classes
+        /// Provides user-facing messages for the <see cref="Securities.Positions.PositionGroupBuyingPowerModel"/> class and its consumers or related classes
         /// </summary>
         public static class PositionGroupBuyingPowerModel
         {
