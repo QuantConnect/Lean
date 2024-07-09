@@ -325,6 +325,10 @@ namespace QuantConnect.Tests.Algorithm
             Assert.AreEqual(0.994298416889621m, indicator.Current.Value);
             Assert.AreEqual(0.351654399192164m, indicator.ImpliedVolatility.Current.Value);
             Assert.AreEqual(389, indicatorValues.Count);
+
+            var lastData = indicatorValues.Current.Last();
+            Assert.AreEqual(new DateTime(2014, 6, 6, 16, 0, 0), lastData.EndTime);
+            Assert.AreEqual(lastData.EndTime, indicatorValues.Last().EndTime);
         }
 
         [TestCase(1)]
