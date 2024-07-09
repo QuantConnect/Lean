@@ -93,7 +93,7 @@ namespace QuantConnect.Indicators
             }           
             if (!IsReady)
             {
-                return 0;
+                return 0m;
             }
 
             // calculate max high and min low
@@ -116,7 +116,7 @@ namespace QuantConnect.Indicators
             else
             {
                 // return 0 when indicator is not ready
-                return 0;
+                return 0m;
             }
         }
 
