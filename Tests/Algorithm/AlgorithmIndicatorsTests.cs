@@ -156,6 +156,7 @@ namespace QuantConnect.Tests.Algorithm
 
             var lastData = indicatorValues.Current.Last();
             Assert.AreEqual(new DateTime(2013, 10, 10, 16, 0, 0), lastData.EndTime);
+            Assert.AreEqual(lastData.EndTime, indicatorValues.Last().EndTime);
         }
 
         [TestCase("Span", Language.CSharp)]
@@ -221,6 +222,7 @@ namespace QuantConnect.Tests.Algorithm
 
             var lastData = indicatorValues.Current.Last();
             Assert.AreEqual(new DateTime(2013, 10, 10, 16, 0, 0), lastData.EndTime);
+            Assert.AreEqual(lastData.EndTime, indicatorValues.Last().EndTime);
         }
 
         [TestCase(Language.Python)]
