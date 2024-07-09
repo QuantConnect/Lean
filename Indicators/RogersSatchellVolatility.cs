@@ -31,7 +31,7 @@ namespace QuantConnect.Indicators
         /// </summary> 
         /// <param name="period">The period of moving window</param>
         public RogersSatchellVolatility(int period)
-            : this($"RSVol({period})", period)
+            : this($"RSVolat({period})", period)
         {
         }
 
