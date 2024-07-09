@@ -56,6 +56,9 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
             Initialize();
         }
 
+        /// <summary>
+        /// Moves the LiveAuxiliaryDataEnumerator to the next item
+        /// </summary>
         public override bool MoveNext()
         {
             var currentDate = _timeProvider.GetUtcNow().ConvertFromUtc(Config.ExchangeTimeZone).Add(-Time.LiveAuxiliaryDataOffset).Date;

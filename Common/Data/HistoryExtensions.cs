@@ -22,6 +22,9 @@ using System.Text.RegularExpressions;
 
 namespace QuantConnect.Data
 {
+    /// <summary>
+    /// Helper extension methods for objects related with Histotical data
+    /// </summary>
     public static class HistoryExtensions
     {
         private static readonly Regex _brokerageHistoryProvider = new("QuantConnect.Lean.Engine.HistoricalData.([a-zA-z]+)HistoryProvider", RegexOptions.Compiled);

@@ -30,8 +30,14 @@ namespace QuantConnect
         /// </summary>
         public static class InsightManager
         {
+            /// <summary>
+            /// String message saying extraAnalysisPeriodRatio must be greater than or equal to zero
+            /// </summary>
             public static string InvalidExtraAnalysisPeriodRatio = "extraAnalysisPeriodRatio must be greater than or equal to zero.";
 
+            /// <summary>
+            /// Returns a string message warning the user of an insight with zero initial price
+            /// </summary>
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             public static string ZeroInitialPriceValue(DateTime frontierTimeUtc, Algorithm.Framework.Alphas.Insight insight)
             {
@@ -44,6 +50,9 @@ namespace QuantConnect
         /// </summary>
         public static class ReadOnlySecurityValuesCollection
         {
+            /// <summary>
+            /// Returns a string message saying no SecurityValues were found for the given symbol
+            /// </summary>
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             public static string SecurityValuesForSymbolNotFound(QuantConnect.Symbol symbol)
             {

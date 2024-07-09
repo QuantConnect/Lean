@@ -20,6 +20,9 @@ using System.Collections.Generic;
 
 namespace QuantConnect
 {
+    /// <summary>
+    /// Convert a Chart Series to and from JSON
+    /// </summary>
     public class ChartSeriesJsonConverter : JsonConverter
     {
         /// <summary>
@@ -27,11 +30,17 @@ namespace QuantConnect
         /// </summary>
         public override bool CanRead => false;
 
+        /// <summary>
+        /// Indicates whether the given object type can be converted into Chart Series
+        /// </summary>
         public override bool CanConvert(Type objectType)
         {
             return typeof(Dictionary<string, BaseSeries>).IsAssignableFrom(objectType);
         }
 
+        /// <summary>
+        /// Converts a Chart Series object into a JSON file
+        /// </summary>
         public override void WriteJson(JsonWriter writer, object value, JsonSerializer serializer)
         {
             var series = value as Dictionary<string, BaseSeries>;
@@ -53,6 +62,10 @@ namespace QuantConnect
             writer.WriteEndObject();
         }
 
+        /// <summary>
+        /// Converts a JSON file into a Chart Series object
+        /// </summary>
+        /// <remarks>Throws NotImplementedException</remarks>
         public override object ReadJson(JsonReader reader, Type objectType, object existingValue, JsonSerializer serializer)
         {
             throw new NotImplementedException();

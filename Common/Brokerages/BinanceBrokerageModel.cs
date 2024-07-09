@@ -192,6 +192,9 @@ namespace QuantConnect.Brokerages
                 !security.SymbolProperties.MinimumOrderSize.HasValue || order.AbsoluteQuantity * price > security.SymbolProperties.MinimumOrderSize;
         }
 
+        /// <summary>
+        /// Returns a readonly dictionary of binance default markets
+        /// </summary>
         protected static IReadOnlyDictionary<SecurityType, string> GetDefaultMarkets(string marketName)
         {
             var map = DefaultMarketMap.ToDictionary();

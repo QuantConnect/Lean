@@ -32,6 +32,10 @@ namespace QuantConnect
         /// </summary>
         public static class PositionGroup
         {
+            /// <summary>
+            /// Returns a string message saying the given quantity is invalid. It also contains the quantities from the
+            /// given positions as well as the unit quantities
+            /// </summary>
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             public static string InvalidQuantity(decimal quantity, IEnumerable<IPosition> positions)
             {
