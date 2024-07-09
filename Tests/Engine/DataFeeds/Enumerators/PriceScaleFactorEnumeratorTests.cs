@@ -305,7 +305,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds.Enumerators
                 Assert.AreEqual(expectedFactorBeforeSplit, expectedFactorAtSplit);
 
                 // after split
-                var dateAfterSplit = factorFileDate.AddDays(1);
+                var dateAfterSplit = factorFileDate.AddDays(2);
                 _rawDataEnumerator.CurrentValue = new TradeBar(dateAfterSplit, config.Symbol, price, price, price, price, price);
                 Assert.IsTrue(enumerator.MoveNext());
                 var expectedFactorAfterSplit = performAssertions(dateAfterSplit);
