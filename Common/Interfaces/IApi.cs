@@ -362,6 +362,7 @@ namespace QuantConnect.Interfaces
 
         /// <summary>
         /// Returns a requested chart object from a backtest
+        /// </summary>
         /// <param name="projectId">Project ID of the request</param>
         /// <param name="name">The requested chart name</param>
         /// <param name="start">The Utc start seconds timestamp of the request</param>

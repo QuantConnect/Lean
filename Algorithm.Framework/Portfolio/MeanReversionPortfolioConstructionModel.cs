@@ -118,8 +118,8 @@ namespace QuantConnect.Algorithm.Framework.Portfolio
         /// Initializes a new instance of the <see cref="MeanReversionPortfolioConstructionModel"/> class
         /// </summary>
         /// <param name="rebalancingFunc">For a given algorithm UTC DateTime returns the next expected rebalance UTC time.
-        /// Returning current time will trigger rebalance. If null will be ignored</param>
-        /// will trigger rebalance. If null will be ignored</param>
+        /// Returning current time will trigger rebalance, if null will be ignored.
+        /// Will trigger rebalance, if null will be ignored</param>
         /// <param name="portfolioBias">Specifies the bias of the portfolio (Short, Long/Short, Long)</param>
         /// <param name="reversionThreshold">Reversion threshold</param>
         /// <param name="windowSize">Window size of mean price</param>

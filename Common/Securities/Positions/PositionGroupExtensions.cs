@@ -75,7 +75,7 @@ namespace QuantConnect.Securities.Positions
         /// Determines whether the position group is empty
         /// </summary>
         /// <param name="positionGroup">The position group</param>
-        /// <returns>True if the position group is empty, that is, it has no positions, false otherwise</returns></returns>
+        /// <returns>True if the position group is empty, that is, it has no positions, false otherwise</returns>
         public static bool IsEmpty(this IPositionGroup positionGroup)
         {
             return positionGroup.Count == 0;
