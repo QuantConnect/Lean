@@ -186,6 +186,9 @@ namespace QuantConnect.Brokerages
             return false;
         }
 
+        /// <summary>
+        /// Returns a readonly dictionary of FTX default markets
+        /// </summary>
         protected static IReadOnlyDictionary<SecurityType, string> GetDefaultMarkets(string market)
         {
             var map = DefaultMarketMap.ToDictionary();

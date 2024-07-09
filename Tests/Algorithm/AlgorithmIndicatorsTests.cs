@@ -298,8 +298,9 @@ namespace QuantConnect.Tests.Algorithm
             Assert.IsTrue(indicator.IsReady);
         }
 
-        [Test]
-        public void IndicatorUpdatedWithSymbol()
+        [TestCase("count")]
+        [TestCase("StartAndEndDate")]
+        public void IndicatorUpdatedWithSymbol(string testCase)
         {
             var time = new DateTime(2014, 06, 07);
 
@@ -308,9 +309,19 @@ namespace QuantConnect.Tests.Algorithm
             var indicator = new Delta(option: put, mirrorOption: call);
             _algorithm.SetDateTime(time);
 
-            var indicatorValues = _algorithm.IndicatorHistory(indicator, new[] { put, call, put.Underlying }, 60 * 10, resolution: Resolution.Minute);
+            IndicatorHistory indicatorValues;
+            if (testCase == "count")
+            {
+                indicatorValues = _algorithm.IndicatorHistory(indicator, new[] { put, call, put.Underlying }, 60 * 10, resolution: Resolution.Minute);
+            }
+            else
+            {
+                indicatorValues = _algorithm.IndicatorHistory(indicator, new[] { put, call, put.Underlying }, TimeSpan.FromMinutes(60 * (10 + 2)), resolution: Resolution.Minute);
+            }
 
             Assert.IsTrue(indicator.IsReady);
+            Assert.AreEqual(0.994298416889621m, indicator.Current.Value);
+            Assert.AreEqual(0.351654399192164m, indicator.ImpliedVolatility.Current.Value);
             Assert.AreEqual(389, indicatorValues.Count);
         }
 

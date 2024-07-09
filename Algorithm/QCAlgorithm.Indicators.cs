@@ -3352,7 +3352,7 @@ namespace QuantConnect.Algorithm
         public IndicatorHistory IndicatorHistory(IndicatorBase<IndicatorDataPoint> indicator, IEnumerable<Symbol> symbols, int period, Resolution? resolution = null, Func<IBaseData, decimal> selector = null)
         {
             var warmupPeriod = (indicator as IIndicatorWarmUpPeriodProvider)?.WarmUpPeriod ?? 0;
-            var history = History(symbols, period + warmupPeriod, resolution);
+            var history = History(symbols, period + warmupPeriod, resolution, dataNormalizationMode: GetIndicatorHistoryDataNormalizationMode(indicator));
             return IndicatorHistory(indicator, history, selector);
         }
 
@@ -3386,7 +3386,7 @@ namespace QuantConnect.Algorithm
             where T : IBaseData
         {
             var warmupPeriod = (indicator as IIndicatorWarmUpPeriodProvider)?.WarmUpPeriod ?? 0;
-            var history = History(symbols, period + warmupPeriod, resolution);
+            var history = History(symbols, period + warmupPeriod, resolution, dataNormalizationMode: GetIndicatorHistoryDataNormalizationMode(indicator));
             return IndicatorHistory(indicator, history, selector);
         }
 
@@ -3465,7 +3465,7 @@ namespace QuantConnect.Algorithm
         /// <returns>pandas.DataFrame of historical data of an indicator</returns>
         public IndicatorHistory IndicatorHistory(IndicatorBase<IndicatorDataPoint> indicator, IEnumerable<Symbol> symbols, DateTime start, DateTime end, Resolution? resolution = null, Func<IBaseData, decimal> selector = null)
         {
-            var history = History(symbols, GetIndicatorAdjustedHistoryStart(indicator, symbols, start, end, resolution), end, resolution);
+            var history = History(symbols, GetIndicatorAdjustedHistoryStart(indicator, symbols, start, end, resolution), end, resolution, dataNormalizationMode: GetIndicatorHistoryDataNormalizationMode(indicator));
             return IndicatorHistory(indicator, history, selector);
         }
 
@@ -3516,7 +3516,7 @@ namespace QuantConnect.Algorithm
         public IndicatorHistory IndicatorHistory<T>(IndicatorBase<T> indicator, IEnumerable<Symbol> symbols, DateTime start, DateTime end, Resolution? resolution = null, Func<IBaseData, T> selector = null)
             where T : IBaseData
         {
-            var history = History(symbols, GetIndicatorAdjustedHistoryStart(indicator, symbols, start, end, resolution), end, resolution);
+            var history = History(symbols, GetIndicatorAdjustedHistoryStart(indicator, symbols, start, end, resolution), end, resolution, dataNormalizationMode: GetIndicatorHistoryDataNormalizationMode(indicator));
             return IndicatorHistory(indicator, history, selector);
         }
 
@@ -3691,6 +3691,17 @@ namespace QuantConnect.Algorithm
                 }
             }
             return start;
+        }
+
+        private DataNormalizationMode? GetIndicatorHistoryDataNormalizationMode(IndicatorBase indicator)
+        {
+            DataNormalizationMode? dataNormalizationMode = null;
+            if (indicator is OptionIndicatorBase optionIndicator && optionIndicator.OptionSymbol.Underlying.SecurityType == SecurityType.Equity)
+            {
+                // we use point in time raw data to warmup option indicators which use underlying prices and strikes
+                dataNormalizationMode = DataNormalizationMode.ScaledRaw;
+            }
+            return dataNormalizationMode;
         }
 
         private IndicatorHistory IndicatorHistory(IndicatorBase indicator, IEnumerable<Slice> history, Action<IBaseData> updateIndicator)
