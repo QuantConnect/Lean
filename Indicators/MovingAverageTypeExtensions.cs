@@ -66,6 +66,9 @@ namespace QuantConnect.Indicators
                 case MovingAverageType.Alma:
                     return new ArnaudLegouxMovingAverage(period);
 
+                case MovingAverageType.Zlema:
+                    return new ZeroLagExponentialMovingAverage(period);
+
                 default:
                     throw new ArgumentOutOfRangeException(nameof(movingAverageType));
             }
@@ -115,6 +118,9 @@ namespace QuantConnect.Indicators
                 
                 case MovingAverageType.Alma:
                     return new ArnaudLegouxMovingAverage(name, period);
+
+                case MovingAverageType.Zlema:
+                    return new ZeroLagExponentialMovingAverage(name, period);
 
                 default:
                     throw new ArgumentOutOfRangeException(nameof(movingAverageType));
