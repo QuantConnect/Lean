@@ -55,12 +55,39 @@ namespace QuantConnect.Lean.Engine.Results
 
         private Bar _currentAlgorithmEquity;
 
+        /// <summary>
+        /// String message saying: Strategy Equity
+        /// </summary>
         public const string StrategyEquityKey = "Strategy Equity";
+
+        /// <summary>
+        /// String message saying: Equity
+        /// </summary>
         public const string EquityKey = "Equity";
+
+        /// <summary>
+        /// String message saying: Return
+        /// </summary>
         public const string ReturnKey = "Return";
+
+        /// <summary>
+        /// String message saying: Benchmark
+        /// </summary>
         public const string BenchmarkKey = "Benchmark";
+
+        /// <summary>
+        /// String message saying: Drawdown
+        /// </summary>
         public const string DrawdownKey = "Drawdown";
+
+        /// <summary>
+        /// String message saying: PortfolioTurnover
+        /// </summary>
         public const string PortfolioTurnoverKey = "Portfolio Turnover";
+
+        /// <summary>
+        /// String message saying: Portfolio Margin
+        /// </summary>
         public const string PortfolioMarginKey = "Portfolio Margin";
 
         /// <summary>

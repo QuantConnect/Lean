@@ -96,6 +96,10 @@ namespace QuantConnect.Orders
             return true;
         }
 
+        /// <summary>
+        /// Returns an error string message saying there is insufficient buying power for the given orders associated with their respective
+        /// securities
+        /// </summary>
         public static string GetErrorMessage(this Dictionary<Order, Security> securities, HasSufficientBuyingPowerForOrderResult hasSufficientBuyingPowerResult)
         {
             return Messages.GroupOrderExtensions.InsufficientBuyingPowerForOrders(securities, hasSufficientBuyingPowerResult);

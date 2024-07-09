@@ -30,18 +30,27 @@ namespace QuantConnect
         /// </summary>
         public static class IndicatorDataPoint
         {
+            /// <summary>
+            /// Returns a string message saying the given type is invalid for certain object
+            /// </summary>
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             public static string InvalidObjectTypeToCompareTo(Type type)
             {
                 return $"Object must be of type {type.GetBetterTypeName()}";
             }
 
+            /// <summary>
+            /// Parses a IndicatorDataPoint instance into a string message containing basic information about it
+            /// </summary>
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             public static string ToString(Indicators.IndicatorDataPoint instance)
             {
                 return Invariant($"{instance.Time.ToStringInvariant("s")} - {instance.Value}");
             }
 
+            /// <summary>
+            /// Returns a string message saying the given method cannot be called on this type
+            /// </summary>
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             public static string UnsupportedMethod(string methodName)
             {
@@ -54,10 +63,19 @@ namespace QuantConnect
         /// </summary>
         public static class RollingWindow
         {
+            /// <summary>
+            /// String message saying the rolling windows must have size of at least 1
+            /// </summary>
             public static string InvalidSize = "RollingWindow must have size of at least 1.";
 
+            /// <summary>
+            /// String message saying no items have been removed yet from the rolling window
+            /// </summary>
             public static string NoItemsRemovedYet = "No items have been removed yet!";
 
+            /// <summary>
+            /// String message saying the index must be a non-negative integer
+            /// </summary>
             public static string IndexOutOfSizeRange = "Index must be a non-negative integer";
         }
     }
