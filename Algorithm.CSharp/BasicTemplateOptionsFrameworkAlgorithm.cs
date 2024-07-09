@@ -139,7 +139,7 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// Data Points count of all timeslices of algorithm
         /// </summary>
-        public long DataPoints => 17483;
+        public long DataPoints => 17486;
 
         /// <summary>
         /// Data Points count of the algorithm history
@@ -157,32 +157,32 @@ namespace QuantConnect.Algorithm.CSharp
         public Dictionary<string, string> ExpectedStatistics => new Dictionary<string, string>
         {
             {"Total Orders", "5"},
-            {"Average Win", "0.10%"},
-            {"Average Loss", "-0.18%"},
-            {"Compounding Annual Return", "-52.004%"},
-            {"Drawdown", "1.500%"},
-            {"Expectancy", "0.560"},
+            {"Average Win", "0.13%"},
+            {"Average Loss", "-0.30%"},
+            {"Compounding Annual Return", "-46.395%"},
+            {"Drawdown", "1.600%"},
+            {"Expectancy", "0.429"},
             {"Start Equity", "100000"},
-            {"End Equity", "98999.50"},
-            {"Net Profit", "-1.000%"},
-            {"Sharpe Ratio", "-5.196"},
+            {"End Equity", "99149.50"},
+            {"Net Profit", "-0.850%"},
+            {"Sharpe Ratio", "-4.298"},
             {"Sortino Ratio", "0"},
-            {"Probabilistic Sharpe Ratio", "5.456%"},
+            {"Probabilistic Sharpe Ratio", "15.319%"},
             {"Loss Rate", "0%"},
             {"Win Rate", "100%"},
-            {"Profit-Loss Ratio", "0.56"},
-            {"Alpha", "-0.749"},
-            {"Beta", "0.645"},
-            {"Annual Standard Deviation", "0.091"},
-            {"Annual Variance", "0.008"},
-            {"Information Ratio", "-10.083"},
-            {"Tracking Error", "0.089"},
-            {"Treynor Ratio", "-0.736"},
+            {"Profit-Loss Ratio", "0.43"},
+            {"Alpha", "-0.84"},
+            {"Beta", "0.986"},
+            {"Annual Standard Deviation", "0.098"},
+            {"Annual Variance", "0.01"},
+            {"Information Ratio", "-9.299"},
+            {"Tracking Error", "0.091"},
+            {"Treynor Ratio", "-0.428"},
             {"Total Fees", "$4.00"},
             {"Estimated Strategy Capacity", "$0"},
             {"Lowest Capacity Asset", "AAPL R735QTJ8XC9X"},
-            {"Portfolio Turnover", "13.39%"},
-            {"OrderListHash", "c4307c30c2058ecf38d87476b785be3d"}
+            {"Portfolio Turnover", "13.50%"},
+            {"OrderListHash", "cf14a7ce9c86e6844051820fd4c9394c"}
         };
     }
 }
