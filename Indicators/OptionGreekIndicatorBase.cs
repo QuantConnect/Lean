@@ -146,7 +146,7 @@ namespace QuantConnect.Indicators
         /// </summary>
         /// <param name="input">The input given to the indicator</param>
         /// <returns>The input is returned unmodified.</returns>
-        protected override decimal ComputeNextValue(IndicatorDataPoint input)
+        protected override decimal Calculate(IndicatorDataPoint input)
         {
             var time = input.EndTime;
             var inputSymbol = input.Symbol;
@@ -201,10 +201,7 @@ namespace QuantConnect.Indicators
         /// <summary>
         /// Calculate the greek of the option
         /// </summary>
-        protected virtual decimal CalculateGreek(decimal timeTillExpiry)
-        {
-            throw new NotImplementedException("'CalculateGreek' method must be implemented");
-        }
+        protected abstract decimal CalculateGreek(decimal timeTillExpiry);
 
         /// <summary>
         /// Resets this indicator and all sub-indicators
