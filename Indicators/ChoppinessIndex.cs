@@ -76,33 +76,48 @@ namespace QuantConnect.Indicators
         /// <returns>A new value for this indicator</returns>
         protected override decimal ComputeNextValue(IBaseDataBar input)
         {
-            Console.WriteLine(input);
             // compute the true range
             _trueRange.Update(input);
-            _trueRangeHistory.Add((float) _trueRange.Current.Value);
+
+            // store candle high and low
+            _highs.Add((float)input.High);
+            _lows.Add((float)input.Low);
+
+            // store true range in rolling window
+            if (_trueRange.IsReady) {
+                _trueRangeHistory.Add((float)_trueRange.Current.Value);
+            }
+            else
+            {
+                _trueRangeHistory.Add((float)(input.High - input.Low));
+            }           
             if (!IsReady)
             {
-                Console.WriteLine(0);
                 return 0;
             }
 
-            _highs.Add((float) input.High);
-            _lows.Add((float) input.Low);
-
+            // calculate max high and min low
             var max_high = _highs.Max();
             var min_low = _lows.Min();
 
-            Console.WriteLine("{0} {1} {2}", max_high, min_low, _trueRangeHistory.Sum());
-
-            var chop = 0.0;
             if (IsReady)
             {
-                chop = 100.0 * Math.Log10(_trueRangeHistory.Sum() / (max_high - min_low)) / Math.Log10(_period);
+                if (max_high != min_low)
+                {
+                    // return CHOP index
+                    return (decimal)(100.0 * Math.Log10(_trueRangeHistory.Sum() / (max_high - min_low)) / Math.Log10(_period));
+                }
+                else
+                {
+                    // return a sentinel value when max_high == min_low
+                    return decimal.MinValue;
+                }
             }
-            
-            Console.WriteLine(chop);
-            Console.WriteLine("next");
-            return 0;
+            else
+            {
+                // return 0 when indicator is not ready
+                return 0;
+            }
         }
 
         /// <summary>
