@@ -232,7 +232,7 @@ namespace QuantConnect.Indicators
         /// </summary>
         /// <param name="input">The input given to the indicator</param>
         /// <returns>The input is returned unmodified.</returns>
-        protected override decimal ComputeNextValue(IndicatorDataPoint input)
+        protected override decimal Calculate(IndicatorDataPoint input)
         {
             if (input.Symbol == OptionSymbol)
             {
