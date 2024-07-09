@@ -41,11 +41,13 @@ namespace QuantConnect.Optimizer.Parameters
         [JsonProperty("step")]
         public decimal? Step { get; set; }
 
+        #pragma warning disable CS1574
         /// <summary>
         /// Minimal possible movement for current parameter, should be positive
         /// </summary>
         /// <remarks>Used by <see cref="Strategies.EulerSearchOptimizationStrategy"/> to determine when this parameter can no longer be optimized</remarks>
         [JsonProperty("minStep")]
+        #pragma warning restore CS1574
         public decimal? MinStep { get; set; }
 
         /// <summary>

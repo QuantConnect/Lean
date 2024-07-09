@@ -188,7 +188,7 @@ namespace QuantConnect.Algorithm
         /// <param name="tag">Place a custom order property or tag (e.g. indicator data).</param>
         /// <param name="orderProperties">The order properties to use. Defaults to <see cref="DefaultOrderProperties"/></param>
         /// <returns>The order ticket instance.</returns>
-        /// <seealso cref="MarketOrder(Symbol, decimal, bool, string)"/>
+        /// <seealso cref="MarketOrder(QuantConnect.Symbol, decimal, bool, string, IOrderProperties)"/>
         [DocumentationAttribute(TradingAndOrders)]
         public OrderTicket Order(Symbol symbol, decimal quantity, bool asynchronous = false, string tag = "", IOrderProperties orderProperties = null)
         {
@@ -1203,7 +1203,7 @@ namespace QuantConnect.Algorithm
         /// <param name="symbolToLiquidate">Symbols we wish to liquidate</param>
         /// <param name="tag">Custom tag to know who is calling this.</param>
         /// <returns>Array of order ids for liquidated symbols</returns>
-        /// <seealso cref="MarketOrder(QuantConnect.Symbol,decimal,bool,string)"/>
+        /// <seealso cref="MarketOrder(QuantConnect.Symbol, decimal, bool, string, IOrderProperties)"/>
         [DocumentationAttribute(TradingAndOrders)]
         public List<int> Liquidate(Symbol symbolToLiquidate = null, string tag = "Liquidated")
         {
@@ -1295,7 +1295,7 @@ namespace QuantConnect.Algorithm
         /// <param name="liquidateExistingHoldings">True will liquidate existing holdings</param>
         /// <param name="tag">Tag the order with a short string.</param>
         /// <param name="orderProperties">The order properties to use. Defaults to <see cref="DefaultOrderProperties"/></param>
-        /// <seealso cref="MarketOrder(QuantConnect.Symbol,decimal,bool,string)"/>
+        /// <seealso cref="MarketOrder(QuantConnect.Symbol, decimal, bool, string, IOrderProperties)"/>
         [DocumentationAttribute(TradingAndOrders)]
         public void SetHoldings(List<PortfolioTarget> targets, bool liquidateExistingHoldings = false, string tag = "", IOrderProperties orderProperties = null)
         {
@@ -1322,7 +1322,7 @@ namespace QuantConnect.Algorithm
         /// <param name="liquidateExistingHoldings">liquidate existing holdings if necessary to hold this stock</param>
         /// <param name="tag">Tag the order with a short string.</param>
         /// <param name="orderProperties">The order properties to use. Defaults to <see cref="DefaultOrderProperties"/></param>
-        /// <seealso cref="MarketOrder(QuantConnect.Symbol,decimal,bool,string)"/>
+        /// <seealso cref="MarketOrder(QuantConnect.Symbol, decimal, bool, string, IOrderProperties)"/>
         [DocumentationAttribute(TradingAndOrders)]
         public void SetHoldings(Symbol symbol, double percentage, bool liquidateExistingHoldings = false, string tag = "", IOrderProperties orderProperties = null)
         {
@@ -1337,7 +1337,7 @@ namespace QuantConnect.Algorithm
         /// <param name="liquidateExistingHoldings">bool liquidate existing holdings if necessary to hold this stock</param>
         /// <param name="tag">Tag the order with a short string.</param>
         /// <param name="orderProperties">The order properties to use. Defaults to <see cref="DefaultOrderProperties"/></param>
-        /// <seealso cref="MarketOrder(QuantConnect.Symbol,decimal,bool,string)"/>
+        /// <seealso cref="MarketOrder(QuantConnect.Symbol, decimal, bool, string, IOrderProperties)"/>
         [DocumentationAttribute(TradingAndOrders)]
         public void SetHoldings(Symbol symbol, float percentage, bool liquidateExistingHoldings = false, string tag = "", IOrderProperties orderProperties = null)
         {
@@ -1352,7 +1352,7 @@ namespace QuantConnect.Algorithm
         /// <param name="liquidateExistingHoldings">bool liquidate existing holdings if necessary to hold this stock</param>
         /// <param name="tag">Tag the order with a short string.</param>
         /// <param name="orderProperties">The order properties to use. Defaults to <see cref="DefaultOrderProperties"/></param>
-        /// <seealso cref="MarketOrder(QuantConnect.Symbol,decimal,bool,string)"/>
+        /// <seealso cref="MarketOrder(QuantConnect.Symbol, decimal, bool, string, IOrderProperties)"/>
         [DocumentationAttribute(TradingAndOrders)]
         public void SetHoldings(Symbol symbol, int percentage, bool liquidateExistingHoldings = false, string tag = "", IOrderProperties orderProperties = null)
         {
@@ -1370,7 +1370,7 @@ namespace QuantConnect.Algorithm
         /// <param name="liquidateExistingHoldings">bool flag to clean all existing holdings before setting new faction.</param>
         /// <param name="tag">Tag the order with a short string.</param>
         /// <param name="orderProperties">The order properties to use. Defaults to <see cref="DefaultOrderProperties"/></param>
-        /// <seealso cref="MarketOrder(QuantConnect.Symbol,decimal,bool,string)"/>
+        /// <seealso cref="MarketOrder(QuantConnect.Symbol, decimal, bool, string, IOrderProperties)"/>
         [DocumentationAttribute(TradingAndOrders)]
         public void SetHoldings(Symbol symbol, decimal percentage, bool liquidateExistingHoldings = false, string tag = "", IOrderProperties orderProperties = null)
         {
