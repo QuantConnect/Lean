@@ -786,7 +786,9 @@ def Test(slice):
                 new Tick{Time = DateTime.Now, Symbol = Symbols.AAPL, Value = 1.1m, Quantity = 2.1m}
             }, DateTime.Now);
 
-            Assert.AreEqual(4, slice.Count);
+            #pragma warning disable CA1829
+            Assert.AreEqual(4, slice.Count());
+            #pragma warning restore CA1829
         }
 
         [Test]
