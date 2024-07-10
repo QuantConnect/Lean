@@ -62,7 +62,7 @@ namespace QuantConnect.Report
             var backtest = JsonConvert.DeserializeObject<BacktestResult>(File.ReadAllText(backtestDataFile), backtestSettings);
             LiveResult live = null;
 
-            if (liveDataFile != string.Empty)
+            if (!string.IsNullOrEmpty(liveDataFile))
             {
                 var settings = new JsonSerializerSettings
                 {
@@ -111,7 +111,7 @@ namespace QuantConnect.Report
             report.Compile(out html, out _);
 
             //Write it to target destination.
-            if (destination != string.Empty)
+            if (!string.IsNullOrEmpty(destination))
             {
                 Log.Trace($"QuantConnect.Report.Main(): Writing content to file {destination}");
                 File.WriteAllText(destination, html);

@@ -132,7 +132,7 @@ namespace QuantConnect.Queues
             var parameters = new Dictionary<string, string>();
 
             var parametersConfigString = Config.Get("parameters");
-            if (parametersConfigString != string.Empty)
+            if (!string.IsNullOrEmpty(parametersConfigString))
             {
                 parameters = JsonConvert.DeserializeObject<Dictionary<string, string>>(parametersConfigString);
             }

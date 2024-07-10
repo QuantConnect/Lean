@@ -97,7 +97,7 @@ namespace QuantConnect.ToolBox.KaikoDataConverter
 
             foreach (var line in rawDataLines.Skip(1))
             {
-                if (line == null || line == string.Empty) continue;
+                if (line == null || string.IsNullOrEmpty(line)) continue;
 
                 var lineParts = line.Split(',');
 
@@ -201,7 +201,7 @@ namespace QuantConnect.ToolBox.KaikoDataConverter
 
             foreach (var line in rawDataLines.Skip(1))
             {
-                if (line == null || line == string.Empty) continue;
+                if (line == null || string.IsNullOrEmpty(line)) continue;
 
                 var lineParts = line.Split(',');
 

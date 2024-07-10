@@ -2682,7 +2682,7 @@ namespace QuantConnect.Algorithm
         [DocumentationAttribute(Logging)]
         public void Debug(string message)
         {
-            if (!_liveMode && (message == "" || _previousDebugMessage == message)) return;
+            if (!_liveMode && (string.IsNullOrEmpty(message) || _previousDebugMessage == message)) return;
             _debugMessages.Enqueue(message);
             _previousDebugMessage = message;
         }
@@ -2732,7 +2732,7 @@ namespace QuantConnect.Algorithm
         [DocumentationAttribute(Logging)]
         public void Log(string message)
         {
-            if (!_liveMode && message == "") return;
+            if (!_liveMode && string.IsNullOrEmpty(message)) return;
             _logMessages.Enqueue(message);
         }
 
@@ -2781,7 +2781,7 @@ namespace QuantConnect.Algorithm
         [DocumentationAttribute(Logging)]
         public void Error(string message)
         {
-            if (!_liveMode && (message == "" || _previousErrorMessage == message)) return;
+            if (!_liveMode && (string.IsNullOrEmpty(message) || _previousErrorMessage == message)) return;
             _errorMessages.Enqueue(message);
             _previousErrorMessage = message;
         }
@@ -2832,7 +2832,7 @@ namespace QuantConnect.Algorithm
         public void Error(Exception error)
         {
             var message = error.Message;
-            if (!_liveMode && (message == "" || _previousErrorMessage == message)) return;
+            if (!_liveMode && (string.IsNullOrEmpty(message) || _previousErrorMessage == message)) return;
             _errorMessages.Enqueue(message);
             _previousErrorMessage = message;
         }

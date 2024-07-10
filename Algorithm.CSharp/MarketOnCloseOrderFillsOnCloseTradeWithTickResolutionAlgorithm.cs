@@ -48,13 +48,13 @@ namespace QuantConnect.Algorithm.CSharp
             {
                 Debug(orderEvent.ToString());
 
-                if (orderEvent.Message != "")
+                if (!string.IsNullOrEmpty(orderEvent.Message))
                 {
                     throw new RegressionTestException($"OrderEvent.Message should be empty, but is '{orderEvent.Message}'");
                 }
 
                 var order = Transactions.GetOrderById(orderEvent.OrderId);
-                if (order.Tag != "")
+                if (!string.IsNullOrEmpty(order.Tag))
                 {
                     throw new RegressionTestException($"Order.Tag should be empty, but is '{order.Tag}'");
                 }
