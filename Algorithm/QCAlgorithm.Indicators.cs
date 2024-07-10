@@ -2456,6 +2456,23 @@ namespace QuantConnect.Algorithm
         }
 
         /// <summary>
+        /// Creates a new McGinley Dynamic indicator
+        /// </summary>
+        /// <param name="symbol">The symbol whose McGinley Dynamic indicator value we want</param>
+        /// <param name="period">The period of the McGinley Dynamic indicator</param>
+        /// <param name="resolution">The resolution</param>
+        /// <param name="selector">Selects a value from the BaseData to send into the indicator, if null defaults to casting the input value to a TradeBar</param>
+        /// <returns>The McGinley Dynamic indicator for the requested symbol over the specified period</returns>
+        [DocumentationAttribute(Indicators)]
+        public McGinleyDynamic MGD(Symbol symbol, int period, Resolution? resolution = null, Func<IBaseData, decimal> selector = null)
+        {
+            var name = CreateIndicatorName(symbol, $"MGD({period})", resolution);
+            var indicator = new McGinleyDynamic(name, period);
+            InitializeIndicator(symbol, indicator, resolution, selector);
+            return indicator;
+        }
+
+        /// <summary>
         /// Creates a new McClellan Oscillator indicator
         /// </summary>
         /// <param name="symbols">The symbols whose McClellan Oscillator we want</param>

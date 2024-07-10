@@ -55,7 +55,6 @@ namespace QuantConnect.Tests.Common.Securities.Futures
         private const string TwoThirtyPM = "14:30:00";
         private const string OneFortyFivePM = "13:45:00";
         private const string ThreeThirtyPM = "15:30:00";
-        private const string FourPM = "16:00:00";
         private const string FourFifteenPM = "16:15:00";
         private readonly SymbolPropertiesDatabase _symbolPropertiesDatabase = SymbolPropertiesDatabase.FromDataFolder();
 

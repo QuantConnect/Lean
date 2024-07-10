@@ -113,7 +113,7 @@ namespace QuantConnect.Algorithm.CSharp
             var positions = Portfolio.Positions.Groups.Single().Positions.ToList();
             if (positions.Count != 1)
             {
-                throw new RegressionTestException($"Expected 1 position in the position group, found {positions.Count()}");
+                throw new RegressionTestException($"Expected 1 position in the position group, found {positions.Count}");
             }
 
             // The position should correspond to the far expiry contract
