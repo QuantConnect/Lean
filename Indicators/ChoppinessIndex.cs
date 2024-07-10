@@ -46,7 +46,7 @@ namespace QuantConnect.Indicators
         /// Creates a new ChoppinessIndex indicator using the specified period and moving average type
         /// </summary>
         /// <param name="name">The name of this indicator</param>
-        /// <param name="period">The smoothing period used to smooth the true range values</param>
+        /// <param name="period">The period used for rolling windows for highs and lows</param>
         public ChoppinessIndex(string name, int period)
             : base(name)
         {
@@ -63,7 +63,7 @@ namespace QuantConnect.Indicators
         /// <summary>
         /// Creates a new ChoppinessIndex indicator using the specified period
         /// </summary>
-        /// <param name="period">The smoothing period used to smooth the true range values</param>
+        /// <param name="period">The period used for rolling windows for highs and lows</param>
         public ChoppinessIndex(int period)
             : this($"CHOP({period})", period)
         {
