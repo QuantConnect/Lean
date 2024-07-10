@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -13,6 +13,7 @@
  * limitations under the License.
 */
 
+using System;
 using NUnit.Framework;
 using QuantConnect.Data.Market;
 using QuantConnect.Indicators;
@@ -30,5 +31,35 @@ namespace QuantConnect.Tests.Indicators
         protected override string TestFileName => "spy_tr.txt";
 
         protected override string TestColumnName => "TR";
+
+        [Test]
+        public void StateChangesWhenNewDataOccurs()
+        {
+            var tr = new TrueRange();
+            Assert.AreEqual(tr.State, IndicatorState.Cold);
+            Assert.IsFalse(tr.IsReady);
+            tr.Update(new TradeBar
+            {
+                Time = new DateTime(2024, 7, 10, 12, 0, 0),
+                Open = 1m,
+                High = 3m,
+                Low = .5m,
+                Close = 2.75m,
+                Volume = 1234567890
+            });
+            Assert.AreEqual(tr.State, IndicatorState.WarmingUp);
+            Assert.IsFalse(tr.IsReady);
+            tr.Update(new TradeBar
+            {
+                Time = new DateTime(2024, 7, 10, 12, 1, 0),
+                Open = 1m,
+                High = 3m,
+                Low = .5m,
+                Close = 2.75m,
+                Volume = 1234567890
+            });
+            Assert.AreEqual(tr.State, IndicatorState.Ready);
+            Assert.IsTrue(tr.IsReady);
+        }
     }
 }
