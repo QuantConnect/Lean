@@ -26,7 +26,7 @@ namespace QuantConnect.Indicators
         /// <summary>
         /// Option's symbol object
         /// </summary>
-        protected Symbol _optionSymbol { get; init; }
+        public Symbol OptionSymbol { get; init; }
 
         /// <summary>
         /// Mirror option symbol (by option right), for implied volatility
@@ -36,7 +36,7 @@ namespace QuantConnect.Indicators
         /// <summary>
         /// Underlying security's symbol object
         /// </summary>
-        protected Symbol _underlyingSymbol => _optionSymbol.Underlying;
+        protected Symbol _underlyingSymbol => OptionSymbol.Underlying;
 
         /// <summary>
         /// Option pricing model used to calculate indicator
@@ -56,22 +56,22 @@ namespace QuantConnect.Indicators
         /// <summary>
         /// Gets the expiration time of the option
         /// </summary>
-        public DateTime Expiry => _optionSymbol.ID.Date;
+        public DateTime Expiry => OptionSymbol.ID.Date;
 
         /// <summary>
         /// Gets the option right (call/put) of the option
         /// </summary>
-        public OptionRight Right => _optionSymbol.ID.OptionRight;
+        public OptionRight Right => OptionSymbol.ID.OptionRight;
 
         /// <summary>
         /// Gets the strike price of the option
         /// </summary>
-        public decimal Strike => _optionSymbol.ID.StrikePrice;
+        public decimal Strike => OptionSymbol.ID.StrikePrice;
 
         /// <summary>
         /// Gets the option style (European/American) of the option
         /// </summary>
-        public OptionStyle Style => _optionSymbol.ID.OptionStyle;
+        public OptionStyle Style => OptionSymbol.ID.OptionStyle;
 
         /// <summary>
         /// Risk Free Rate
@@ -123,7 +123,7 @@ namespace QuantConnect.Indicators
                 throw new ArgumentException("OptionIndicatorBase only support SecurityType.Option.");
             }
 
-            _optionSymbol = option;
+            OptionSymbol = option;
             _riskFreeInterestRateModel = riskFreeRateModel;
             _dividendYieldModel = dividendYieldModel;
             _optionModel = optionModel;

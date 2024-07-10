@@ -22,7 +22,7 @@ namespace QuantConnect.Optimizer.Parameters
 {
     /// <summary>
     /// Override <see cref="OptimizationParameter"/> deserialization method.
-    /// Can handle <see cref="OptimizationArrayParameter"/> and <see cref="OptimizationStepParameter"/> instances
+    /// Can handle <see cref="OptimizationStepParameter"/> instances
     /// </summary>
     public class OptimizationParameterJsonConverter : JsonConverter
     {

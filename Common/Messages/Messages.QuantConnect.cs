@@ -31,7 +31,7 @@ namespace QuantConnect
     public static partial class Messages
     {
         /// <summary>
-        /// Provides user-facing messages for the <see cref="QuantConnect.AlphaRuntimeStatistics"/> class and its consumers or related classes
+        /// Provides user-facing messages for the <see cref="AlphaRuntimeStatistics"/> class and its consumers or related classes
         /// </summary>
         public static class AlphaRuntimeStatistics
         {

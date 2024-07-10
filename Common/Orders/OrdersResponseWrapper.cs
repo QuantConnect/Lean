@@ -59,10 +59,16 @@ namespace QuantConnect.Orders
         /// </summary>
         public List<SerializedOrderEvent> Events { get; set; }
 
+        /// <summary>
+        /// ApiOrderResponse empty constructor
+        /// </summary>
         public ApiOrderResponse()
         {
         }
 
+        /// <summary>
+        /// Creates an instance of an ApiOrderResponse class using the given arguments
+        /// </summary>
         public ApiOrderResponse(Order order, List<SerializedOrderEvent> events, Symbol symbol)
         {
             Order = order;

@@ -72,6 +72,9 @@ namespace QuantConnect.Data.UniverseSelection
             }
         }
 
+        /// <summary>
+        /// Reads the given line and returns a CoarseFundamentalSource with the information within it
+        /// </summary>
         public static CoarseFundamentalSource Read(string line, DateTime date)
         {
             try

@@ -414,6 +414,9 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             _currencySubscriptionDataConfigManager.EnsureCurrencySubscriptionDataConfigs(securityChanges, _algorithm.BrokerageModel);
         }
 
+        /// <summary>
+        /// Handles the delisting process of the given data symbol from the algorithm securities
+        /// </summary>
         public SecurityChanges HandleDelisting(BaseData data, bool isInternalFeed)
         {
             if (_algorithm.Securities.TryGetValue(data.Symbol, out var security))

@@ -119,11 +119,18 @@ namespace QuantConnect.Data.Consolidators
             Period = period;
         }
 
+        /// <summary>
+        /// Returns a string containing the Calendar start and the consolidation period
+        /// </summary>
         public override string ToString()
         {
             return $"{Start} {Period}";
         }
 
+        /// <summary>
+        /// Indicates whether the given object is equal to this object, this is, the Calendar start
+        /// and consolidation period is the same for both
+        /// </summary>
         public override bool Equals(object obj)
         {
             if (obj is not CalendarInfo other)
@@ -133,6 +140,9 @@ namespace QuantConnect.Data.Consolidators
             return Start == other.Start && Period == other.Period;
         }
 
+        /// <summary>
+        /// Returns the hash code for this object as an integer
+        /// </summary>
         public override int GetHashCode()
         {
             unchecked
@@ -142,11 +152,19 @@ namespace QuantConnect.Data.Consolidators
             }
         }
 
+        /// <summary>
+        /// Indicates whether the given object is equal to this object, this is, the Calendar start
+        /// and consolidation period is the same for both
+        /// </summary>
         public static bool operator ==(CalendarInfo left, CalendarInfo right)
         {
             return left.Equals(right);
         }
 
+        /// <summary>
+        /// Indicates whether the given object is equal to this object, this is, the Calendar start
+        /// and consolidation period is the same for both
+        /// </summary>
         public static bool operator !=(CalendarInfo left, CalendarInfo right)
         {
             return !(left == right);

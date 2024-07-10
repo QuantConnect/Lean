@@ -103,8 +103,9 @@ namespace QuantConnect.Indicators
         {
             var deltaTime = timeToExpiration / steps;
             var discount = DecimalMath(Math.Exp, (riskFreeRate - dividendYield) * deltaTime);
-            var upFactor = DecimalMath(Math.Exp, volatility * DecimalMath(Math.Sqrt, deltaTime)) * discount;
-            var downFactor = DecimalMath(Math.Exp, -volatility * DecimalMath(Math.Sqrt, deltaTime)) * discount;
+            var volatilityTimeSqrtDeltaTime = volatility * DecimalMath(Math.Sqrt, deltaTime);
+            var upFactor = DecimalMath(Math.Exp, volatilityTimeSqrtDeltaTime) * discount;
+            var downFactor = DecimalMath(Math.Exp, -volatilityTimeSqrtDeltaTime) * discount;
             if (upFactor - downFactor == 0m)
             {
                 // Introduce a very small factor

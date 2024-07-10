@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  * 
@@ -90,6 +90,10 @@ namespace QuantConnect.Tests.Indicators
 
             indicator = MovingAverageType.Alma.AsIndicator(name, 9);
             Assert.IsInstanceOf(typeof(ArnaudLegouxMovingAverage), indicator);
+
+            indicator = MovingAverageType.Zlema.AsIndicator(name, 9);
+            Assert.IsInstanceOf(typeof(ZeroLagExponentialMovingAverage), indicator);
+
         }
     }
 }

@@ -71,6 +71,9 @@ namespace QuantConnect.Data
             return builder.ToString();
         }
 
+        /// <summary>
+        /// Returns an enumerator for the data
+        /// </summary>
         public IEnumerator<T> GetEnumerator()
         {
             return Data.GetEnumerator();

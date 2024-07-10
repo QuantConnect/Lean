@@ -28,7 +28,14 @@ namespace QuantConnect.Orders.Fees
     /// </summary>
     public class ExanteFeeModel : FeeModel
     {
+        /// <summary>
+        /// Market USA rate
+        /// </summary>
         public const decimal MarketUsaRate = 0.02m;
+
+        /// <summary>
+        /// Default rate
+        /// </summary>
         public const decimal DefaultRate = 0.02m;
 
         private readonly decimal _forexCommissionRate;

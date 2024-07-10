@@ -23,19 +23,35 @@ namespace QuantConnect
     /// </summary>
     public class DefaultConverter : JsonConverter
     {
+        /// <summary>
+        /// Indicates if this object can be read
+        /// </summary>
         public override bool CanRead => false;
+
+        /// <summary>
+        /// Indicates if this object can be written
+        /// </summary>
         public override bool CanWrite => false;
 
+        /// <summary>
+        /// Writes a JSON file from the given object and the other arguments
+        /// </summary>
         public override void WriteJson(JsonWriter writer, object value, JsonSerializer serializer)
         {
             throw new NotImplementedException();
         }
 
+        /// <summary>
+        /// Creates an object from a given JSON reader and other arguments
+        /// </summary>
         public override object ReadJson(JsonReader reader, Type objectType, object existingValue, JsonSerializer serializer)
         {
             throw new NotImplementedException();
         }
 
+        /// <summary>
+        /// Indicates if the given type can be assigned to this object
+        /// </summary>
         public override bool CanConvert(Type objectType)
         {
             throw new NotImplementedException();
