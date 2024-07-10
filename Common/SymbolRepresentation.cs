@@ -492,7 +492,8 @@ namespace QuantConnect
         /// Examples: NQZ23 and NQZ3 for Dec 2023
         /// </summary>
         /// <param name="futureYear">Clarifies the year for the current future</param>
-        /// <returns>Tickers from live trading may not provide the four-digit year.</returns>
+        /// <param name="parsed">Contains useful information about the future expiration year</param>
+        /// <remarks>Tickers from live trading may not provide the four-digit year.</remarks>
         private static int GetExpirationYear(int? futureYear, FutureTickerProperties parsed)
         {
             if(futureYear.HasValue)
