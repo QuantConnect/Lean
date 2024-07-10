@@ -57,7 +57,7 @@ namespace QuantConnect.Tests.Common.Statistics
                 }
             }
 
-            for (var i = 1; i < _spy.Count(); i++)
+            for (var i = 1; i < _spy.Count; i++)
             {
                 _spyPerformance.Add((double)((_spy[i].Close / _spy[i - 1].Close) - 1));
             }
@@ -75,7 +75,7 @@ namespace QuantConnect.Tests.Common.Statistics
                 }
             }
 
-            for (var i = 1; i < _aapl.Count(); i++)
+            for (var i = 1; i < _aapl.Count; i++)
             {
                 _aaplPerformance.Add((double)((_aapl[i].Close / _aapl[i - 1].Close) - 1));
             }
