@@ -184,6 +184,9 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         {
         }
 
+        /// <summary>
+        /// Creates a universe enumerator from the Subscription request, the underlying enumerator func and the fill forward resolution (in some cases)
+        /// </summary>
         protected IEnumerator<BaseData> CreateUniverseEnumerator(SubscriptionRequest request, Func<SubscriptionRequest, Resolution?, IEnumerator<BaseData>> createUnderlyingEnumerator, Resolution? fillForwardResolution = null)
         {
             ISubscriptionEnumeratorFactory factory = _subscriptionFactory;
@@ -226,6 +229,9 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             return enumerator;
         }
 
+        /// <summary>
+        /// Returns a scheduled enumerator from the given arguments. It can also return the given underlying enumerator
+        /// </summary>
         protected IEnumerator<BaseData> AddScheduleWrapper(SubscriptionRequest request, IEnumerator<BaseData> underlying, ITimeProvider timeProvider)
         {
             if (!request.IsUniverseSubscription || !request.Universe.UniverseSettings.Schedule.Initialized)

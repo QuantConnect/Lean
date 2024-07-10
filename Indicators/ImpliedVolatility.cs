@@ -266,7 +266,7 @@ namespace QuantConnect.Indicators
         /// <returns>The input is returned unmodified.</returns>
         protected override decimal ComputeNextValue(IndicatorDataPoint input)
         {
-            if (input.Symbol == _optionSymbol)
+            if (input.Symbol == OptionSymbol)
             {
                 Price.Update(input.EndTime, input.Price);
             }
@@ -330,12 +330,12 @@ namespace QuantConnect.Indicators
         /// <returns>Smoothened IV of the option</returns>
         protected virtual decimal CalculateIV(decimal timeTillExpiry)
         {
-            var impliedVol = 0m;
+            decimal? impliedVol = null;
             try
             {
                 Func<double, double> f = (vol) => (double)(TheoreticalPrice(
                     Convert.ToDecimal(vol), UnderlyingPrice, Strike, timeTillExpiry, RiskFreeRate, DividendYield, Right, _optionModel) - Price);
-                impliedVol = Convert.ToDecimal(Brent.FindRoot(f, 1e-7d, 2.0d, 1e-4d, 100));
+                impliedVol = Convert.ToDecimal(Brent.FindRoot(f, 1e-7d, 4.0d, 1e-4d, 100));
             }
             catch
             {
@@ -344,22 +344,26 @@ namespace QuantConnect.Indicators
 
             if (UseMirrorContract)
             {
-                var mirrorImpliedVol = 0m;
+                decimal? mirrorImpliedVol = null;
                 try
                 {
                     Func<double, double> f = (vol) => (double)(TheoreticalPrice(
                         Convert.ToDecimal(vol), UnderlyingPrice, Strike, timeTillExpiry, RiskFreeRate, DividendYield, _oppositeOptionSymbol.ID.OptionRight, _optionModel) - OppositePrice);
-                    mirrorImpliedVol = Convert.ToDecimal(Brent.FindRoot(f, 1e-7d, 2.0d, 1e-4d, 100));
+                    mirrorImpliedVol = Convert.ToDecimal(Brent.FindRoot(f, 1e-7d, 4.0d, 1e-4d, 100));
+                    if (impliedVol.HasValue)
+                    {
+                        // use 'SmoothingFunction' if both calculations succeeded
+                        return SmoothingFunction(impliedVol.Value, mirrorImpliedVol.Value);
+                    }
+                    return mirrorImpliedVol.Value;
                 }
                 catch
                 {
                     Log.Error("ImpliedVolatility.CalculateIV(): Fail to converge, returning 0.");
                 }
-
-                return SmoothingFunction(impliedVol, mirrorImpliedVol);
             }
 
-            return impliedVol;
+            return impliedVol ?? 0;
         }
 
         /// <summary>

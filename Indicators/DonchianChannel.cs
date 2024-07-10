@@ -27,8 +27,6 @@ namespace QuantConnect.Indicators
     /// </summary>
     public class DonchianChannel : BarIndicator, IIndicatorWarmUpPeriodProvider
     {
-        private IBaseDataBar _previousInput;
-
         /// <summary>
         /// Gets the upper band of the Donchian Channel.
         /// </summary>

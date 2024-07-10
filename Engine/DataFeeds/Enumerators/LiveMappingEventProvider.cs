@@ -28,6 +28,9 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
     /// <remarks>Only special behavior is that it will refresh map file on each new tradable date event</remarks>
     public class LiveMappingEventProvider : MappingEventProvider
     {
+        /// <summary>
+        /// Check for new mappings
+        /// </summary>
         public override IEnumerable<BaseData> GetEvents(NewTradableDateEventArgs eventArgs)
         {
             var currentInstance = MapFile;

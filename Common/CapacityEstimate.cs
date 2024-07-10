@@ -112,6 +112,7 @@ namespace QuantConnect
             _monitoredSymbolCapacitySet.Add(symbolCapacity);
         }
 
+        #pragma warning disable CS1574
         /// <summary>
         /// Updates the market capacity for any Symbols that require a market update.
         /// Sometimes, after the specified <seealso cref="_snapshotPeriod"/>, we
@@ -119,6 +120,7 @@ namespace QuantConnect
         ///
         /// This result will be written into the Algorithm Statistics via the <see cref="BacktestingResultHandler"/>
         /// </summary>
+        #pragma warning restore CS1574
         public void UpdateMarketCapacity(bool forceProcess)
         {
             for (var i = _monitoredSymbolCapacity.Count - 1; i >= 0; --i)

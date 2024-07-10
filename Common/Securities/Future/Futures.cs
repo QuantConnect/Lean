@@ -1407,71 +1407,75 @@ namespace QuantConnect.Securities
             public const string Nikkei225YenCME = "NIY";
 
 
-            // <summary>
+            /// <summary>
             /// E-mini Nikkei 225 Yen denominated Futures on CME
             /// </summary>
             /// <returns>The symbol</returns>
             public const string Nikkei225YenEMini = "ENY";
 
-            // <summary>
+            /// <summary>
             /// E-MINI FTSE China 50 Index Futures on CME
             /// </summary>
             /// <returns>The symbol</returns>
             public const string FTSEChina50EMini = "FT5";
 
-            // <summary>
+            /// <summary>
             /// E-mini FTSE 100 Index (GBP) Futures on CME
             /// </summary>
             /// <returns>The symbol</returns>
             public const string FTSE100EMini = "FT1";
 
-            // <summary>
+            #pragma warning disable CS1570
+            /// <summary>
             /// E-MINI S&P EUROPE 350 ESG Index Futures on CME
             /// </summary>
             /// <returns>The symbol</returns>
             public const string SPEurop350ESGEMini = "E3G";
+            #pragma warning restore CS1570
 
-            // <summary>
+            /// <summary>
             /// E-MINI USD Denominated FTSE 100 Index Futures on CME
             /// </summary>
             /// <returns>The symbol</returns>
             public const string FTSE100USDEMini = "FTU";
 
-            // <summary>
+            /// <summary>
             /// USD Denominated Topix Index Futures on CME
             /// </summary>
             /// <returns>The symbol</returns>
             public const string TOPIXUSD = "TPD";
 
-            // <summary>
+            /// <summary>
             /// YEN Denominated Topix Index Futures on CME
             /// </summary>
             /// <returns>The symbol</returns>
             public const string TOPIXYEN = "TPY";
 
-            // <summary>
+            /// <summary>
             /// Dow Jones Real Estate futures on CME
             /// </summary>
             /// <returns>The symbol</returns>
             public const string DowJonesRealEstate = "RX";
 
-            // <summary>
+            /// <summary>
             /// E-mini SP500 ESG futures on CME
             /// </summary>
             /// <returns>The symbol</returns>
             public const string SP500EMiniESG = "ESG";
 
-            // <summary>
+            /// <summary>
             /// E-mini Russell 1000 futures on CME
             /// </summary>
             /// <returns>The symbol</returns>
             public const string Russell1000EMini = "RS1";
 
+            #pragma warning disable CS1570
             /// <summary>
             /// S&P 500 Annual dividend index futures on CME
             /// </summary>
             /// <returns>The symbol</returns>
             public const string SP500AnnualDividendIndex = "SDA";
+            #pragma warning restore CS1570
 
             /// <summary>
             /// Bloomberg Commodity Index Futures

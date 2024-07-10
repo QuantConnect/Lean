@@ -418,7 +418,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                 }
 
                 // check if we should create a new subscription factory
-                var sourceChanged = _source != newSource && newSource.Source != "";
+                var sourceChanged = _source != newSource && !string.IsNullOrEmpty(newSource.Source);
                 if (sourceChanged)
                 {
                     // dispose of the current enumerator before creating a new one

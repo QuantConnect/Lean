@@ -138,6 +138,9 @@ namespace QuantConnect.Indicators
             return $"{Name} {Values.Count} indicator values";
         }
 
+        /// <summary>
+        /// Returns an enumerator for the indicator values
+        /// </summary>
         public IEnumerator<IndicatorDataPoint> GetEnumerator()
         {
             return ((IEnumerable<IndicatorDataPoint>)Values).GetEnumerator();

@@ -2438,6 +2438,23 @@ namespace QuantConnect.Algorithm
         }
 
         /// <summary>
+        /// Creates a new McGinley Dynamic indicator
+        /// </summary>
+        /// <param name="symbol">The symbol whose McGinley Dynamic indicator value we want</param>
+        /// <param name="period">The period of the McGinley Dynamic indicator</param>
+        /// <param name="resolution">The resolution</param>
+        /// <param name="selector">Selects a value from the BaseData to send into the indicator, if null defaults to casting the input value to a TradeBar</param>
+        /// <returns>The McGinley Dynamic indicator for the requested symbol over the specified period</returns>
+        [DocumentationAttribute(Indicators)]
+        public McGinleyDynamic MGD(Symbol symbol, int period, Resolution? resolution = null, Func<IBaseData, decimal> selector = null)
+        {
+            var name = CreateIndicatorName(symbol, $"MGD({period})", resolution);
+            var indicator = new McGinleyDynamic(name, period);
+            InitializeIndicator(symbol, indicator, resolution, selector);
+            return indicator;
+        }
+
+        /// <summary>
         /// Creates a new McClellan Oscillator indicator
         /// </summary>
         /// <param name="symbols">The symbols whose McClellan Oscillator we want</param>
@@ -3351,7 +3368,7 @@ namespace QuantConnect.Algorithm
         public IndicatorHistory IndicatorHistory(IndicatorBase<IndicatorDataPoint> indicator, IEnumerable<Symbol> symbols, int period, Resolution? resolution = null, Func<IBaseData, decimal> selector = null)
         {
             var warmupPeriod = (indicator as IIndicatorWarmUpPeriodProvider)?.WarmUpPeriod ?? 0;
-            var history = History(symbols, period + warmupPeriod, resolution);
+            var history = History(symbols, period + warmupPeriod, resolution, dataNormalizationMode: GetIndicatorHistoryDataNormalizationMode(indicator));
             return IndicatorHistory(indicator, history, selector);
         }
 
@@ -3385,7 +3402,7 @@ namespace QuantConnect.Algorithm
             where T : IBaseData
         {
             var warmupPeriod = (indicator as IIndicatorWarmUpPeriodProvider)?.WarmUpPeriod ?? 0;
-            var history = History(symbols, period + warmupPeriod, resolution);
+            var history = History(symbols, period + warmupPeriod, resolution, dataNormalizationMode: GetIndicatorHistoryDataNormalizationMode(indicator));
             return IndicatorHistory(indicator, history, selector);
         }
 
@@ -3464,7 +3481,7 @@ namespace QuantConnect.Algorithm
         /// <returns>pandas.DataFrame of historical data of an indicator</returns>
         public IndicatorHistory IndicatorHistory(IndicatorBase<IndicatorDataPoint> indicator, IEnumerable<Symbol> symbols, DateTime start, DateTime end, Resolution? resolution = null, Func<IBaseData, decimal> selector = null)
         {
-            var history = History(symbols, GetIndicatorAdjustedHistoryStart(indicator, symbols, start, end, resolution), end, resolution);
+            var history = History(symbols, GetIndicatorAdjustedHistoryStart(indicator, symbols, start, end, resolution), end, resolution, dataNormalizationMode: GetIndicatorHistoryDataNormalizationMode(indicator));
             return IndicatorHistory(indicator, history, selector);
         }
 
@@ -3515,7 +3532,7 @@ namespace QuantConnect.Algorithm
         public IndicatorHistory IndicatorHistory<T>(IndicatorBase<T> indicator, IEnumerable<Symbol> symbols, DateTime start, DateTime end, Resolution? resolution = null, Func<IBaseData, T> selector = null)
             where T : IBaseData
         {
-            var history = History(symbols, GetIndicatorAdjustedHistoryStart(indicator, symbols, start, end, resolution), end, resolution);
+            var history = History(symbols, GetIndicatorAdjustedHistoryStart(indicator, symbols, start, end, resolution), end, resolution, dataNormalizationMode: GetIndicatorHistoryDataNormalizationMode(indicator));
             return IndicatorHistory(indicator, history, selector);
         }
 
@@ -3692,6 +3709,17 @@ namespace QuantConnect.Algorithm
             return start;
         }
 
+        private DataNormalizationMode? GetIndicatorHistoryDataNormalizationMode(IndicatorBase indicator)
+        {
+            DataNormalizationMode? dataNormalizationMode = null;
+            if (indicator is OptionIndicatorBase optionIndicator && optionIndicator.OptionSymbol.Underlying.SecurityType == SecurityType.Equity)
+            {
+                // we use point in time raw data to warmup option indicators which use underlying prices and strikes
+                dataNormalizationMode = DataNormalizationMode.ScaledRaw;
+            }
+            return dataNormalizationMode;
+        }
+
         private IndicatorHistory IndicatorHistory(IndicatorBase indicator, IEnumerable<Slice> history, Action<IBaseData> updateIndicator)
         {
             // Reset the indicator
@@ -3707,14 +3735,14 @@ namespace QuantConnect.Algorithm
 
             var indicatorsDataPointsByTime = new List<IndicatorDataPoints>();
             IndicatorDataPoint lastPoint = null;
-            void consumeLastPoint()
+            void consumeLastPoint(IndicatorDataPoint newInputPoint)
             {
                 if (lastPoint == null)
                 {
                     return;
                 }
 
-                var IndicatorDataPoints = new IndicatorDataPoints { Time = lastPoint.Time, EndTime = lastPoint.EndTime };
+                var IndicatorDataPoints = new IndicatorDataPoints { Time = newInputPoint.Time, EndTime = newInputPoint.EndTime };
                 indicatorsDataPointsByTime.Add(IndicatorDataPoints);
                 for (var i = 0; i < indicatorsDataPointPerProperty.Count; i++)
                 {
@@ -3724,23 +3752,23 @@ namespace QuantConnect.Algorithm
                 lastPoint = null;
             }
 
-            IndicatorUpdatedHandler callback = (object _, IndicatorDataPoint point) =>
+            IndicatorUpdatedHandler callback = (object _, IndicatorDataPoint newInputPoint) =>
             {
                 if (!indicator.IsReady)
                 {
                     return;
                 }
 
-                if (lastPoint != null && lastPoint.Time != point.Time)
+                if (lastPoint != null && lastPoint.Time != newInputPoint.Time)
                 {
                     // when the time changes we let through the previous point, some indicators which consume data from multiple symbols might trigger the Updated event
                     // even if their value has not changed yet
-                    consumeLastPoint();
+                    consumeLastPoint(newInputPoint);
                 }
-                lastPoint = point;
+                lastPoint = newInputPoint;
             };
             // flush the last point
-            consumeLastPoint();
+            consumeLastPoint(lastPoint);
 
             // register the callback, update the indicator and unregister finally
             indicator.Updated += callback;

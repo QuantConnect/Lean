@@ -29,6 +29,9 @@ namespace QuantConnect
         /// </summary>
         public static class NotificationEmail
         {
+            /// <summary>
+            /// Returns a string message saying the given email is invalid
+            /// </summary>
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             public static string InvalidEmailAddress(string email)
             {
@@ -41,8 +44,14 @@ namespace QuantConnect
         /// </summary>
         public static class NotificationFtp
         {
+            /// <summary>
+            /// String message saying the SSH key is missing
+            /// </summary>
             public static string MissingSSHKey = "FTP SSH key missing for SFTP notification.";
 
+            /// <summary>
+            /// String message saying the password is missing
+            /// </summary>
             public static string MissingPassword = "FTP password is missing for unsecure FTP notification.";
         }
 
@@ -51,8 +60,14 @@ namespace QuantConnect
         /// </summary>
         public static class NotificationJsonConverter
         {
+            /// <summary>
+            /// String message saying the write method has not been implemented and should not be called
+            /// </summary>
             public static string WriteNotImplemented = "Not implemented, should not be called";
 
+            /// <summary>
+            /// String message saying the given object is unexpected
+            /// </summary>
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             public static string UnexpectedJsonObject(JObject jObject)
             {

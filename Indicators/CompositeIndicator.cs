@@ -115,7 +115,7 @@ namespace QuantConnect.Indicators
         /// <remarks>
         /// Since this class overrides <see cref="ValidateAndComputeNextValue"/>, this method is a no-op
         /// </remarks>
-        /// <param name="input">The input given to the indicator</param>
+        /// <param name="_">The input given to the indicator</param>
         /// <returns>A new value for this indicator</returns>
         protected override decimal ComputeNextValue(IndicatorDataPoint _)
         {

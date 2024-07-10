@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -42,6 +42,9 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
 
         #region Implementation of IDisposable
 
+        /// <summary>
+        /// Disposes the FilterEnumerator
+        /// </summary>
         public void Dispose()
         {
             _enumerator.Dispose();
@@ -51,6 +54,9 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
 
         #region Implementation of IEnumerator
 
+        /// <summary>
+        /// Moves the FilterEnumerator to the next item
+        /// </summary>
         public bool MoveNext()
         {
             // run the enumerator until it passes the specified filter
@@ -64,11 +70,17 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
             return false;
         }
 
+        /// <summary>
+        /// Resets the FilterEnumerator
+        /// </summary>
         public void Reset()
         {
             _enumerator.Reset();
         }
 
+        /// <summary>
+        /// Gets the current item in the FilterEnumerator
+        /// </summary>
         public T Current
         {
             get { return _enumerator.Current; }

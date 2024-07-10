@@ -107,7 +107,7 @@ class CustomSimpleMovingAverage():
                 var data = new IndicatorDataPoint(date, close);
                 indicator.Update(data);
 
-                if (!indicator.IsReady || parts[targetIndex].Trim() == string.Empty)
+                if (!indicator.IsReady || string.IsNullOrEmpty(parts[targetIndex].Trim()))
                 {
                     continue;
                 }

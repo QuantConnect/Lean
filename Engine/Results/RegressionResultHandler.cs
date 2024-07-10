@@ -42,7 +42,6 @@ namespace QuantConnect.Lean.Engine.Results
 
         private DateTime _testStartTime;
         private DateTime _lastRuntimeStatisticsDate;
-        private DateTime _lastAlphaRuntimeStatisticsDate;
 
         private TextWriter _writer;
         private readonly object _sync = new object();

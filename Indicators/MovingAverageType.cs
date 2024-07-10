@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  * 
@@ -63,6 +63,14 @@ namespace QuantConnect.Indicators
         /// <summary>
         /// The Arnaud Legoux Moving Average (10)
         /// </summary>
-        Alma
+        Alma,
+        /// <summary>
+        /// The Zero Lag Exponential Moving Average (11)
+        /// </summary>
+        Zlema,
+        /// <summary>
+        /// The McGinley Dynamic moving average (12)
+        /// </summary>
+        MGD
     }
 }

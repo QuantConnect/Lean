@@ -54,7 +54,6 @@ namespace QuantConnect.Data
         /// Gets the data dictionaries or points of the requested type in each slice
         /// </summary>
         /// <param name="slices">The enumerable of slice</param>
-        /// <param name="type">Data type of the data that will be fetched</param>
         /// <returns>An enumerable of data dictionary or data point of the requested type</returns>
         public static IEnumerable<DataDictionary<BaseDataCollection>> GetUniverseData(this IEnumerable<Slice> slices)
         {

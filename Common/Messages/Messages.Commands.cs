@@ -31,6 +31,9 @@ namespace QuantConnect
         /// </summary>
         public static class BaseCommand
         {
+            /// <summary>
+            /// Returns a string message saying: Please provide values for: Ticker, Market and SecurityType
+            /// </summary>
             public static string MissingValuesToGetSymbol = "Please provide values for: Ticker, Market & SecurityType";
         }
 
@@ -39,6 +42,9 @@ namespace QuantConnect
         /// </summary>
         public static class BaseCommandHandler
         {
+            /// <summary>
+            /// Returns a string with the given command
+            /// </summary>
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             public static string ExecutingCommand(ICommand command)
             {
@@ -51,14 +57,23 @@ namespace QuantConnect
         /// </summary>
         public static class FileCommandHandler
         {
+            /// <summary>
+            /// Returns a string message saying: Command Id is null or empty, will skip writing result file
+            /// </summary>
             public static string NullOrEmptyCommandId = "Command Id is null or empty, will skip writing result file";
 
+            /// <summary>
+            /// Returns a string message saying the given commandFilePath is being read
+            /// </summary>
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             public static string ReadingCommandFile(string commandFilePath)
             {
                 return $"Reading command file {commandFilePath}";
             }
 
+            /// <summary>
+            /// Returns a string message saying the given commandFilePath does not exists
+            /// </summary>
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             public static string CommandFileDoesNotExist(string commandFilePath)
             {
@@ -71,6 +86,10 @@ namespace QuantConnect
         /// </summary>
         public static class OrderCommand
         {
+            /// <summary>
+            /// Returns a string message with basic information about a command, such us:
+            /// order type, symbol, quantity and response
+            /// </summary>
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             public static string CommandInfo(OrderType orderType, QuantConnect.Symbol symbol, decimal quantity, Orders.OrderResponse response)
             {

@@ -35,7 +35,6 @@ namespace QuantConnect.Tests.Common.Storage
         private static readonly string TestStorageRoot = $"{Directory.GetCurrentDirectory()}/{nameof(LocalObjectStoreTests)}";
         private static readonly string StorageRootConfigurationValue = Config.Get("object-store-root");
 
-        private TestLocalObjectStore _testLocalObjectStore;
         private ObjectStore _store;
         private ILogHandler _logHandler;
 

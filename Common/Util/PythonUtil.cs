@@ -171,7 +171,7 @@ namespace QuantConnect.Util
         }
 
         /// <summary>
-        /// Parsers <see cref="PythonException.Message"/> into a readable message
+        /// Parsers <see cref="Exception.Message"/> into a readable message
         /// </summary>
         /// <param name="message">The python exception message</param>
         /// <returns>String with relevant part of the stacktrace</returns>

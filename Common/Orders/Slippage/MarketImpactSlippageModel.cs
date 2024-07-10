@@ -30,7 +30,7 @@ namespace QuantConnect.Orders.Slippage
     /// Slippage model that mimic the effect brought by market impact,
     /// i.e. consume the volume listed in the order book
     /// </summary>
-    /// <remark>Almgren, R., Thum, C., Hauptmann, E., & Li, H. (2005). 
+    /// <remark>Almgren, R., Thum, C., Hauptmann, E., and Li, H. (2005). 
     /// Direct estimation of equity market impact. Risk, 18(7), 58-62.
     /// Available from: https://www.ram-ai.com/sites/default/files/2022-06/costestim.pdf</remark>
     /// <remark>The default parameters are calibrated around 2 decades ago,

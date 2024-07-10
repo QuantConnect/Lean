@@ -141,7 +141,7 @@ namespace QuantConnect.Indicators
             var time = input.EndTime;
             var inputSymbol = input.Symbol;
 
-            if (inputSymbol == _optionSymbol)
+            if (inputSymbol == OptionSymbol)
             {
                 ImpliedVolatility.Update(input);
                 Price.Update(time, input.Price);
