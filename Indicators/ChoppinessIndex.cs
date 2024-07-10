@@ -29,7 +29,7 @@ namespace QuantConnect.Indicators
         private readonly int _period;
         private readonly RollingWindow<float> _highs;
         private readonly RollingWindow<float> _lows;
-        private IndicatorBase<IBaseDataBar> _trueRange;
+        private readonly IndicatorBase<IBaseDataBar> _trueRange;
         private readonly RollingWindow<float> _trueRangeHistory;
 
         /// <summary>
