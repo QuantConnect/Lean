@@ -239,7 +239,7 @@ namespace QuantConnect.ToolBox.KaikoDataConverter
         private static decimal ParseScientificNotationToDecimal(string[] lineParts, int column)
         {
             var value = lineParts[column];
-            if (value.Contains('e', StringComparison.CurrentCulture))
+            if (value.Contains('e', StringComparison.InvariantCulture))
             {
                 return Parse.Decimal(value, NumberStyles.Float);
             }

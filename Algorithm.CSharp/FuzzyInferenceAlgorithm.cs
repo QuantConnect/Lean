@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -41,6 +41,9 @@ namespace QuantConnect.Algorithm.CSharp
         // Without this, consuming projects would need to hard reference the Accord dlls,
         // which is less than perfect. This seems to be the better of two evils
         //
+#pragma warning disable 0414, CA1823
+        Accord.Math.Matrix3x3 _matrix = new Accord.Math.Matrix3x3();
+#pragma warning restore 0414, CA1823
 
         //Fuzzy Engine
         private FuzzyEngine _engine;

@@ -66,7 +66,7 @@ namespace QuantConnect.Optimizer.Objectives
             }
 
             var objective = target;
-            if (!objective.Contains('.', StringComparison.CurrentCulture))
+            if (!objective.Contains('.', StringComparison.InvariantCulture))
             {
                 // default path
                 objective = $"Statistics.{objective}";

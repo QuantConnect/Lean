@@ -60,11 +60,11 @@ namespace QuantConnect.Exceptions
             var pe = (PythonException)exception;
 
             var key = string.Empty;
-            if (pe.Message.Contains('[', StringComparison.CurrentCulture))
+            if (pe.Message.Contains('[', StringComparison.InvariantCulture))
             {
                 key = pe.Message.GetStringBetweenChars('[', ']');
             }
-            else if (pe.Message.Contains('\'', StringComparison.CurrentCulture))
+            else if (pe.Message.Contains('\'', StringComparison.InvariantCulture))
             {
                 key = pe.Message.GetStringBetweenChars('\'', '\'');
             }
