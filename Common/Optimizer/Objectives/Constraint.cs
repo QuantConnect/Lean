@@ -34,6 +34,9 @@ namespace QuantConnect.Optimizer.Objectives
         [JsonConverter(typeof(StringEnumConverter))]
         public ComparisonOperatorTypes Operator { get; set; }
 
+        /// <summary>
+        /// Empty Constraint constructor
+        /// </summary>
         public Constraint()
         {
 

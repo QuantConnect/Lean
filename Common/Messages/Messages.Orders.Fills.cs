@@ -37,18 +37,28 @@ namespace QuantConnect
         /// </summary>
         public static class FillModel
         {
+            /// <summary>
+            /// Returns a string message warning saying the order was filled at stale price
+            /// </summary>
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             public static string FilledAtStalePrice(Securities.Security security, Prices prices)
             {
                 return Invariant($"Warning: fill at stale price ({prices.EndTime.ToStringInvariant()} {security.Exchange.TimeZone})");
             }
 
+            /// <summary>
+            /// Returns a string message saying the market never closes for the given symbol, and that an order of the given
+            /// type cannot be submitted
+            /// </summary>
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             public static string MarketNeverCloses(Securities.Security security, OrderType orderType)
             {
                 return Invariant($"Market never closes for this symbol {security.Symbol}, can no submit a {nameof(orderType)} order.");
             }
 
+            /// <summary>
+            /// Returns a string message containing the given subscribedTypes
+            /// </summary>
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             private static string SubscribedTypesToString(HashSet<Type> subscribedTypes)
             {
@@ -57,6 +67,10 @@ namespace QuantConnect
                     : Invariant($" SubscribedTypes: [{string.Join(",", subscribedTypes.Select(type => type.Name))}]");
             }
 
+            /// <summary>
+            /// Returns a string message saying it was impossible to get ask price to perform the fill for the given security symbol because
+            /// no market data was found
+            /// </summary>
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             public static string NoMarketDataToGetAskPriceForFilling(Securities.Security security, HashSet<Type> subscribedTypes = null)
             {
@@ -64,6 +78,10 @@ namespace QuantConnect
                     SubscribedTypesToString(subscribedTypes);
             }
 
+            /// <summary>
+            /// Returns a string message saying it was impossible to get bid price to perform the fill for the given security symbol because
+            /// no market data was found
+            /// </summary>
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             public static string NoMarketDataToGetBidPriceForFilling(Securities.Security security, HashSet<Type> subscribedTypes = null)
             {
@@ -71,6 +89,10 @@ namespace QuantConnect
                     SubscribedTypesToString(subscribedTypes);
             }
 
+            /// <summary>
+            /// Returns a string message saying it was impossible to perform a fill for the given security symbol because
+            /// no data subscription was found
+            /// </summary>
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             public static string NoDataSubscriptionFoundForFilling(Securities.Security security)
             {
@@ -83,21 +105,38 @@ namespace QuantConnect
         /// </summary>
         public static class EquityFillModel
         {
+            /// <summary>
+            /// String message saying: No trade with the OfficialOpen or OpeningPrints flag within the 1-minute timeout
+            /// </summary>
             public static string MarketOnOpenFillNoOfficialOpenOrOpeningPrintsWithinOneMinute =
                 "No trade with the OfficialOpen or OpeningPrints flag within the 1-minute timeout.";
 
+            /// <summary>
+            /// String message saying: No trade with the OfficialClose or ClosingPrints flag within the 1-minute timeout
+            /// </summary>
             public static string MarketOnCloseFillNoOfficialCloseOrClosingPrintsWithinOneMinute =
                 "No trade with the OfficialClose or ClosingPrints flag within the 1-minute timeout.";
 
+            /// <summary>
+            /// String message saying: No trade with the OfficialClose or ClosingPrints flag for data that does not include
+            /// extended market hours
+            /// </summary>
             public static string MarketOnCloseFillNoOfficialCloseOrClosingPrintsWithoutExtendedMarketHours =
                 "No trade with the OfficialClose or ClosingPrints flag for data that does not include extended market hours.";
 
+            /// <summary>
+            /// Returns a string message saying the last data (of the given tick type) has been used to fill
+            /// </summary>
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             public static string FilledWithLastTickTypeData(Tick tick)
             {
                 return Invariant($"Fill with last {tick.TickType} data.");
             }
 
+            /// <summary>
+            /// Returns a string message warnning the user that no trade information was available, so the order was filled
+            /// using quote data
+            /// </summary>
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             public static string FilledWithQuoteData(Securities.Security security)
             {
@@ -105,6 +144,10 @@ namespace QuantConnect
                     security.Exchange.TimeZone}, order filled using Quote data");
             }
 
+            /// <summary>
+            /// Returns a string message warning the user that the fill is at stale price and that the order will
+            /// be filled using quote tick data
+            /// </summary>
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             public static string FilledWithQuoteTickData(Securities.Security security, Tick quoteTick)
             {
@@ -112,6 +155,10 @@ namespace QuantConnect
                     security.Exchange.TimeZone}), using Quote Tick data.");
             }
 
+            /// <summary>
+            /// Returns a string message warning the user that no quote information was available, so the order
+            /// was filled using trade tick data
+            /// </summary>
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             public static string FilledWithTradeTickData(Securities.Security security, Tick tradeTick)
             {
@@ -119,6 +166,10 @@ namespace QuantConnect
                     security.Exchange.TimeZone}, order filled using Trade Tick data");
             }
 
+            /// <summary>
+            /// Returns a string message warning the user that the fill was at stale price, so quote bar data
+            /// was used to fill the order
+            /// </summary>
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             public static string FilledWithQuoteBarData(Securities.Security security, QuoteBar quoteBar)
             {
@@ -126,6 +177,10 @@ namespace QuantConnect
                     security.Exchange.TimeZone}), using QuoteBar data.");
             }
 
+            /// <summary>
+            /// Returns a string message warning the user that no quote information was available, so that trade bar
+            /// data was used to fill the order
+            /// </summary>
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             public static string FilledWithTradeBarData(Securities.Security security, TradeBar tradeBar)
             {
@@ -133,12 +188,18 @@ namespace QuantConnect
                     security.Exchange.TimeZone}, order filled using TradeBar data");
             }
 
+            /// <summary>
+            /// Returns a string message saying that the order was filled using the open price due to a favorable gap
+            /// </summary>
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             public static string FilledWithOpenDueToFavorableGap(Securities.Security security, TradeBar tradeBar)
             {
                 return Invariant($@"Due to a favorable gap at {tradeBar.EndTime.ToStringInvariant()} {security.Exchange.TimeZone}, order filled using the open price ({tradeBar.Open})");
             }
 
+            /// <summary>
+            /// Returns a string message saying that the order was filled using the open price due to an unfavorable gap
+            /// </summary>
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             public static string FilledWithOpenDueToUnfavorableGap(Securities.Security security, TradeBar tradeBar)
             {

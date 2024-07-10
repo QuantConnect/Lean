@@ -18,6 +18,9 @@ using Newtonsoft.Json;
 
 namespace QuantConnect.Api
 {
+    /// <summary>
+    /// Class representing the REST response from QC API when creating or reading a live algorithm
+    /// </summary>
     public class BaseLiveAlgorithm : RestResponse
     {
         /// <summary>
@@ -31,6 +34,9 @@ namespace QuantConnect.Api
         public string DeployId { get; set; }
     }
 
+    /// <summary>
+    /// Class representing the REST response from QC API when creating a live algorithm
+    /// </summary>
     public class CreateLiveAlgorithmResponse : BaseLiveAlgorithm
     {
         /// <summary>

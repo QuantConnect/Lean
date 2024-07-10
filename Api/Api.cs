@@ -1517,7 +1517,7 @@ namespace QuantConnect.Api
         /// <param name="target">Target of the optimization, see examples in <see cref="PortfolioStatistics"/></param>
         /// <param name="targetTo">Target extremum of the optimization, for example "max" or "min"</param>
         /// <param name="targetValue">Optimization target value</param>
-        /// <param name="strategy">Optimization strategy, <see cref="GridSearchOptimizationStrategy"/></param>
+        /// <param name="strategy">Optimization strategy, <see cref="QuantConnect.Optimizer.Strategies.GridSearchOptimizationStrategy"/></param>
         /// <param name="compileId">Optimization compile ID</param>
         /// <param name="parameters">Optimization parameters</param>
         /// <param name="constraints">Optimization constraints</param>
@@ -1563,7 +1563,7 @@ namespace QuantConnect.Api
         /// <param name="target">Target of the optimization, see examples in <see cref="PortfolioStatistics"/></param>
         /// <param name="targetTo">Target extremum of the optimization, for example "max" or "min"</param>
         /// <param name="targetValue">Optimization target value</param>
-        /// <param name="strategy">Optimization strategy, <see cref="GridSearchOptimizationStrategy"/></param>
+        /// <param name="strategy">Optimization strategy, <see cref="QuantConnect.Optimizer.Strategies.GridSearchOptimizationStrategy"/></param>
         /// <param name="compileId">Optimization compile ID</param>
         /// <param name="parameters">Optimization parameters</param>
         /// <param name="constraints">Optimization constraints</param>

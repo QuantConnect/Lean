@@ -201,6 +201,7 @@ namespace QuantConnect.Interfaces
         /// <exception cref="ArgumentException"></exception>
         public InsightResponse ReadBacktestInsights(int projectId, string backtestId, int start = 0, int end = 0);
 
+        #pragma warning disable CS1574
         /// <summary>
         /// Estimate optimization with the specified parameters via QuantConnect.com API
         /// </summary>
@@ -214,6 +215,7 @@ namespace QuantConnect.Interfaces
         /// <param name="parameters">Optimization parameters</param>
         /// <param name="constraints">Optimization constraints</param>
         /// <returns>Estimate object from the API.</returns>
+        #pragma warning restore CS1574
         public Estimate EstimateOptimization(
             int projectId,
             string name,
@@ -225,6 +227,7 @@ namespace QuantConnect.Interfaces
             HashSet<OptimizationParameter> parameters,
             IReadOnlyList<Constraint> constraints);
 
+        #pragma warning disable CS1574
         /// <summary>
         /// Create an optimization with the specified parameters via QuantConnect.com API
         /// </summary>
@@ -241,6 +244,7 @@ namespace QuantConnect.Interfaces
         /// <param name="nodeType">Optimization node type</param>
         /// <param name="parallelNodes">Number of parallel nodes for optimization</param>
         /// <returns>BaseOptimization object from the API.</returns>
+        #pragma warning restore CS1574
         public OptimizationSummary CreateOptimization(
             int projectId,
             string name,

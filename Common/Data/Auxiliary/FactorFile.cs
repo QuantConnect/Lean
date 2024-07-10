@@ -63,7 +63,7 @@ namespace QuantConnect.Data.Auxiliary
         public string Permtick { get; }
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="FactorFile"/> class.
+        /// Initializes a new instance of the <see cref="FactorFile{T}"/> class.
         /// </summary>
         protected FactorFile(string permtick, IEnumerable<T> data, DateTime? factorFileMinimumDate = null)
         {

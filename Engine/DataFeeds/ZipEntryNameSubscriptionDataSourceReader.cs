@@ -89,7 +89,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         }
 
         /// <summary>
-        /// Event invocator for the <see cref="InvalidSource"/> event
+        /// Event invocator for the <see cref="BaseSubscriptionDataSourceReader.InvalidSource"/> event
         /// </summary>
         /// <param name="source">The <see cref="SubscriptionDataSource"/> that was invalid</param>
         /// <param name="exception">The exception if one was raised, otherwise null</param>
