@@ -1249,7 +1249,7 @@ namespace QuantConnect.Algorithm
         /// <remarks>
         /// This method is only used for Python algorithms, specially for those requesting custom data type history.
         /// The reason for using this method is that custom data type Python history calls to
-        /// <see cref="History{T}(QuantConnect.Symbol, int, Resolution?)"/> will always use <see cref="PythonData"/> (the custom data base class)
+        /// <see cref="History{T}(QuantConnect.Symbol, int, Resolution?, bool?, bool?, DataMappingMode?, DataNormalizationMode?, int?)"/> will always use <see cref="PythonData"/> (the custom data base class)
         /// as the T argument, because the custom data class is a Python type, which will cause the history data in the slices to not be matched
         /// to the actual requested type, resulting in an empty list of slices.
         /// </remarks>

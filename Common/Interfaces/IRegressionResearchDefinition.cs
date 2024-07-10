@@ -20,11 +20,13 @@ namespace QuantConnect.Interfaces
     /// </summary>
     public interface IRegressionResearchDefinition
     {
+        #pragma warning disable CS1574
         /// <summary>
         /// This is used by the research regression test system to validate the output
         /// </summary>
         /// <remarks>Requires to be implemented last in the file <see cref="ResearchRegressionTests.UpdateResearchRegressionOutputInSourceFile"/>
         /// get should start from next line</remarks>
+        #pragma warning restore CS1574
         string ExpectedOutput { get; }
     }
 }

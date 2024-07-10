@@ -20,7 +20,7 @@ using QuantConnect.Data.Auxiliary;
 namespace QuantConnect.Interfaces
 {
     /// <summary>
-    /// Provides instances of <see cref="FactorFile"/> at run time
+    /// Provides instances of <see cref="FactorFile{T}"/> at run time
     /// </summary>
     [InheritedExport(typeof(IFactorFileProvider))]
     public interface IFactorFileProvider
@@ -34,7 +34,7 @@ namespace QuantConnect.Interfaces
         void Initialize(IMapFileProvider mapFileProvider, IDataProvider dataProvider);
 
         /// <summary>
-        /// Gets a <see cref="FactorFile"/> instance for the specified symbol, or null if not found
+        /// Gets a <see cref="FactorFile{T}"/> instance for the specified symbol, or null if not found
         /// </summary>
         /// <param name="symbol">The security's symbol whose factor file we seek</param>
         /// <returns>The resolved factor file, or null if not found</returns>

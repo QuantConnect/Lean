@@ -51,7 +51,7 @@ namespace QuantConnect.Data.Auxiliary
         }
 
         /// <summary>
-        /// Gets a <see cref="FactorFile"/> instance for the specified symbol, or null if not found
+        /// Gets a <see cref="FactorFile{T}"/> instance for the specified symbol, or null if not found
         /// </summary>
         /// <param name="symbol">The security's symbol whose factor file we seek</param>
         /// <returns>The resolved factor file, or null if not found</returns>

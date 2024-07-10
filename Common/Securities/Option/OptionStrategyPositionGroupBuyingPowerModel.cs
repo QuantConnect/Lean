@@ -445,7 +445,7 @@ namespace QuantConnect.Securities.Option
 
         /// <summary>
         /// Gets the initial margin required for the specified contemplated position group.
-        /// Used by <see cref="GetReservedBuyingPowerImpact"/> to get the contemplated groups margin.
+        /// Used by <see cref="QuantConnect.Securities.Positions.PositionGroupBuyingPowerModel.GetReservedBuyingPowerImpact"/> to get the contemplated groups margin.
         /// </summary>
         protected override decimal GetContemplatedGroupsInitialMargin(SecurityPortfolioManager portfolio, PositionGroupCollection contemplatedGroups,
             List<IPosition> ordersPositions)
