@@ -27,7 +27,7 @@ using QuantConnect.Logging;
 namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
 {
     /// <summary>
-    /// Enumerates live options symbol universe data into <see cref="OptionChainUniverseDataCollection"/> instances
+    /// Enumerates live options symbol universe data into <see cref="BaseDataCollection"/> instances
     /// </summary>
     public class DataQueueOptionChainUniverseDataCollectionEnumerator : IEnumerator<BaseDataCollection>
     {

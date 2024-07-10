@@ -593,8 +593,8 @@ namespace QuantConnect
         }
 
         /// <summary>
-        /// Returns if the specified <see cref="Chart"/> instance  holds no <see cref="Series"/>
-        /// or they are all empty <see cref="IsEmpty(Series)"/>
+        /// Returns if the specified <see cref="Chart"/> instance holds no <see cref="Series"/>
+        /// or they are all empty <see cref="Extensions.IsEmpty(BaseSeries)"/>
         /// </summary>
         public static bool IsEmpty(this Chart chart)
         {
