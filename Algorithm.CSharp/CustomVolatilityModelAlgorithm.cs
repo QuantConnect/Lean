@@ -81,7 +81,7 @@ namespace QuantConnect.Algorithm.CSharp
                 _lastPrice = data.Price;
             }
 
-            if (_window.Count() < 2)
+            if (_window.Count < 2)
             {
                 Volatility = 0;
                 return;
@@ -91,7 +91,7 @@ namespace QuantConnect.Algorithm.CSharp
             {
                 _needsUpdate = false;
                 var mean = _window.Average();
-                var std = Math.Sqrt((double)_window.Sum(x => (x - mean)*(x - mean)) / _window.Count());
+                var std = Math.Sqrt((double)_window.Sum(x => (x - mean)*(x - mean)) / _window.Count);
                 Volatility = (std * Math.Sqrt(252d)).SafeDecimalCast();
             }
         }

@@ -260,7 +260,7 @@ namespace QuantConnect.Tests.Optimizer.Strategies
                                             Assert.IsNotNull(parameterSet);
                                             Assert.IsTrue(parameterSet.Value.All(s =>
                                                 args.Any(arg => arg.Name == s.Key)));
-                                            Assert.AreEqual(4, parameterSet.Value.Count());
+                                            Assert.AreEqual(4, parameterSet.Value.Count);
                                             Assert.AreEqual(fast, parameterSet.Value["ema-fast"]);
                                             Assert.AreEqual(slow, parameterSet.Value["ema-slow"]);
                                             Assert.AreEqual(custom, parameterSet.Value["ema-custom"]);
