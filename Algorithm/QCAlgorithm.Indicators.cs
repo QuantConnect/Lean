@@ -3719,14 +3719,14 @@ namespace QuantConnect.Algorithm
 
             var indicatorsDataPointsByTime = new List<IndicatorDataPoints>();
             IndicatorDataPoint lastPoint = null;
-            void consumeLastPoint()
+            void consumeLastPoint(IndicatorDataPoint newInputPoint)
             {
                 if (lastPoint == null)
                 {
                     return;
                 }
 
-                var IndicatorDataPoints = new IndicatorDataPoints { Time = lastPoint.Time, EndTime = lastPoint.EndTime };
+                var IndicatorDataPoints = new IndicatorDataPoints { Time = newInputPoint.Time, EndTime = newInputPoint.EndTime };
                 indicatorsDataPointsByTime.Add(IndicatorDataPoints);
                 for (var i = 0; i < indicatorsDataPointPerProperty.Count; i++)
                 {
@@ -3736,23 +3736,23 @@ namespace QuantConnect.Algorithm
                 lastPoint = null;
             }
 
-            IndicatorUpdatedHandler callback = (object _, IndicatorDataPoint point) =>
+            IndicatorUpdatedHandler callback = (object _, IndicatorDataPoint newInputPoint) =>
             {
                 if (!indicator.IsReady)
                 {
                     return;
                 }
 
-                if (lastPoint != null && lastPoint.Time != point.Time)
+                if (lastPoint != null && lastPoint.Time != newInputPoint.Time)
                 {
                     // when the time changes we let through the previous point, some indicators which consume data from multiple symbols might trigger the Updated event
                     // even if their value has not changed yet
-                    consumeLastPoint();
+                    consumeLastPoint(newInputPoint);
                 }
-                lastPoint = point;
+                lastPoint = newInputPoint;
             };
             // flush the last point
-            consumeLastPoint();
+            consumeLastPoint(lastPoint);
 
             // register the callback, update the indicator and unregister finally
             indicator.Updated += callback;

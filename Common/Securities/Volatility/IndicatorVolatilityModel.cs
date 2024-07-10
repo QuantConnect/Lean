@@ -24,7 +24,6 @@ namespace QuantConnect.Securities
     /// Provides an implementation of <see cref="IVolatilityModel"/> that uses an indicator
     /// to compute its value
     /// </summary>
-    /// <typeparam name="T">The indicator's input type</typeparam>
     public class IndicatorVolatilityModel : BaseVolatilityModel
     {
         private readonly IIndicator _indicator;
