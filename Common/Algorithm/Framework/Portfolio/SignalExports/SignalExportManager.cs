@@ -80,7 +80,7 @@ namespace QuantConnect.Algorithm.Framework.Portfolio.SignalExports
 
         /// <summary>
         /// Obtains an array of portfolio targets from algorithm's Portfolio and returns them.
-        /// See  <see cref="PortfolioTarget.Percent(IAlgorithm, Symbol, decimal, bool)"/> for more
+        /// See  <see cref="PortfolioTarget.Percent(IAlgorithm, Symbol, decimal, bool, string)"/> for more
         /// information about how each symbol quantity was calculated
         /// </summary>
         /// <param name="targets">An array of portfolio targets from the algorithm's Portfolio</param>

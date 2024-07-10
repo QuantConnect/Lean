@@ -30,6 +30,9 @@ namespace QuantConnect.Lean.Engine.DataFeeds
     /// </summary>
     public class LiveSynchronizer : Synchronizer
     {
+        /// <summary>
+        /// Consumer batching timeout in ms
+        /// </summary>
         public static readonly int BatchingDelay = Config.GetInt("consumer-batching-timeout-ms");
 
         private ITimeProvider _timeProvider;

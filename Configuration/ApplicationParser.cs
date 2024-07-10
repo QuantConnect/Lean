@@ -94,6 +94,9 @@ namespace QuantConnect.Configuration
             return optionsObject;
         }
 
+        /// <summary>
+        /// Prints a message advising the user to use the --help parameter for more information
+        /// </summary>
         public static void PrintMessageAndExit(int exitCode = 0, string message = "")
         {
             if (!string.IsNullOrEmpty(message))
@@ -106,6 +109,9 @@ namespace QuantConnect.Configuration
             Environment.Exit(exitCode);
         }
 
+        /// <summary>
+        /// Gets the parameter object from the given parameter (if it exists)
+        /// </summary>
         public static string GetParameterOrExit(IReadOnlyDictionary<string, object> optionsObject, string parameter)
         {
             if (!optionsObject.ContainsKey(parameter))
@@ -115,6 +121,9 @@ namespace QuantConnect.Configuration
             return optionsObject[parameter].ToString();
         }
 
+        /// <summary>
+        /// Gets the parameter object from the given parameter. If it does not exists, it returns a default parameter object
+        /// </summary>
         public static string GetParameterOrDefault(IReadOnlyDictionary<string, object> optionsObject, string parameter, string defaultValue)
         {
             object value;

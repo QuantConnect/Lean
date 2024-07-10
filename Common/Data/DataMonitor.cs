@@ -132,11 +132,17 @@ namespace QuantConnect.Data
             _cancellationTokenSource.DisposeSafely();
         }
 
+        /// <summary>
+        /// Disposes this object
+        /// </summary>
         public void Dispose()
         {
             Exit();
         }
 
+        /// <summary>
+        /// Strips the given data folder path
+        /// </summary>
         protected virtual string StripDataFolder(string path)
         {
             if (path.StartsWith(Globals.DataFolder, StringComparison.OrdinalIgnoreCase))

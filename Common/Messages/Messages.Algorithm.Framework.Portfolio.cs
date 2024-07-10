@@ -32,6 +32,9 @@ namespace QuantConnect
         /// </summary>
         public static class PortfolioTarget
         {
+            /// <summary>
+            /// Returns a string message saying the portfolio target percent is invalid
+            /// </summary>
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             public static string InvalidTargetPercent(IAlgorithm algorithm, decimal percent)
             {
@@ -41,18 +44,28 @@ namespace QuantConnect
                     algorithm.Settings.MinAbsolutePortfolioTargetPercentage}. Skipping");
             }
 
+            /// <summary>
+            /// Returns a string message saying the given symbol was not found in the portfolio
+            /// </summary>
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             public static string SymbolNotFound(QuantConnect.Symbol symbol)
             {
                 return Invariant($"{symbol} not found in portfolio. Request this data when initializing the algorithm.");
             }
 
+            /// <summary>
+            /// Returns a string message saying it was impossible to compute the order quantity of the given symbol. It also
+            /// explains the reason why it was impossible
+            /// </summary>
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             public static string UnableToComputeOrderQuantityDueToNullResult(QuantConnect.Symbol symbol, GetMaximumLotsResult result)
             {
                 return Invariant($"Unable to compute order quantity of {symbol}. Reason: {result.Reason} Returning null.");
             }
 
+            /// <summary>
+            /// Parses the given portfolio target into a string message containing basic information about it
+            /// </summary>
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             public static string ToString(Algorithm.Framework.Portfolio.PortfolioTarget portfolioTarget)
             {
