@@ -20,9 +20,9 @@ namespace QuantConnect.Indicators
     /// <summary>
     /// The InternalBarStrenght indicator is a measure of the relative position of a period's closing price 
     /// to the same period's high and low.
-    //  The IBS can be interpreted to predict a bullish signal when displaying a low value and a bearish signal when presenting a high value.
+    /// The IBS can be interpreted to predict a bullish signal when displaying a low value and a bearish signal when presenting a high value.
     /// </summary>
-    public class InternalBarStrength : TradeBarIndicator, IIndicatorWarmUpPeriodProvider
+    public class InternalBarStrength : BarIndicator, IIndicatorWarmUpPeriodProvider
     {
 
         /// <summary>
@@ -57,18 +57,11 @@ namespace QuantConnect.Indicators
         /// </summary>
         /// <param name="input">The input given to the indicator</param>
         /// <returns>A new value for this indicator</returns>
-        protected override decimal ComputeNextValue(TradeBar input)
+        protected override decimal ComputeNextValue(IBaseDataBar input)
         {
             if (input.High == input.Low)
             {
-                if (input.Close > input.Low)
-                {
-                    return decimal.MaxValue;
-                }
-                else
-                {
-                    return decimal.MinValue;
-                }
+                return 1m;
             }
             else
             {

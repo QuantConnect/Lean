@@ -20,9 +20,9 @@ using QuantConnect.Indicators;
 namespace QuantConnect.Tests.Indicators
 {
     [TestFixture]
-    public class InternalBarStrengthTests : CommonIndicatorTests<TradeBar>
+    public class InternalBarStrengthTests : CommonIndicatorTests<IBaseDataBar>
     {
-        protected override IndicatorBase<TradeBar> CreateIndicator()
+        protected override IndicatorBase<IBaseDataBar> CreateIndicator()
         {
             return new InternalBarStrength("IBS");
         }
