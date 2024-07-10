@@ -67,6 +67,10 @@ namespace QuantConnect.Indicators
         /// <summary>
         /// The Zero Lag Exponential Moving Average (11)
         /// </summary>
-        Zlema
+        Zlema,
+        /// <summary>
+        /// The McGinley Dynamic moving average (12)
+        /// </summary>
+        MGD
     }
 }

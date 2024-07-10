@@ -69,6 +69,9 @@ namespace QuantConnect.Indicators
                 case MovingAverageType.Zlema:
                     return new ZeroLagExponentialMovingAverage(period);
 
+                case MovingAverageType.MGD:
+                    return new McGinleyDynamic(period);
+
                 default:
                     throw new ArgumentOutOfRangeException(nameof(movingAverageType));
             }
@@ -121,6 +124,9 @@ namespace QuantConnect.Indicators
 
                 case MovingAverageType.Zlema:
                     return new ZeroLagExponentialMovingAverage(name, period);
+
+                case MovingAverageType.MGD:
+                    return new McGinleyDynamic(name, period);
 
                 default:
                     throw new ArgumentOutOfRangeException(nameof(movingAverageType));

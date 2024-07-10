@@ -27,9 +27,6 @@ namespace QuantConnect.Tests.ToolBox.RandomDataGenerator
     [TestFixture]
     public class TickGeneratorTests
     {
-        private Dictionary<SecurityType, List<TickType>> _tickTypesPerSecurityType =
-            SubscriptionManager.DefaultDataTypes();
-
         private Symbol _symbol = Symbol.Create("AAPL", SecurityType.Equity, Market.USA);
         private Security _security;
         private ITickGenerator _tickGenerator;

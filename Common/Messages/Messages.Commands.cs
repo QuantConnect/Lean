@@ -32,7 +32,7 @@ namespace QuantConnect
         public static class BaseCommand
         {
             /// <summary>
-            /// Returns a string message saying: Please provide values for: Ticker, Market & SecurityType
+            /// Returns a string message saying: Please provide values for: Ticker, Market and SecurityType
             /// </summary>
             public static string MissingValuesToGetSymbol = "Please provide values for: Ticker, Market & SecurityType";
         }

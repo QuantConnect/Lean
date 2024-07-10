@@ -181,6 +181,7 @@ namespace QuantConnect
         ///
         /// We use this to allow setting cash amounts for these stablecoins without needing a conversion
         /// security.
+        /// </summary>
         private static readonly HashSet<string> _stableCoinsWithoutPairsCoinbase = new HashSet<string>
         {
             "USDCUSD"

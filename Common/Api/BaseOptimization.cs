@@ -43,7 +43,6 @@ namespace QuantConnect.Api
         public string Name { get; set; }
 
         /// <summary>
-        /// <summary>
         /// Status of the optimization
         /// </summary>
         public OptimizationStatus Status { get; set; }

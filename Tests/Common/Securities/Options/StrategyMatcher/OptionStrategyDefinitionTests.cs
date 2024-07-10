@@ -223,9 +223,6 @@ namespace QuantConnect.Tests.Common.Securities.Options.StrategyMatcher
         // aim for perfect match, extra quantity in position, extra symbol position, no match/missing leg
         public class TestCase
         {
-            private static readonly Dictionary<string, int> NameCounts
-                = new Dictionary<string, int>();
-
             public string Name { get; }
             public OptionStrategyDefinition Definition { get; }
             public OptionPositionCollection Positions { get; }

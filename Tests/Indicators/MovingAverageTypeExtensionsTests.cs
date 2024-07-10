@@ -94,6 +94,8 @@ namespace QuantConnect.Tests.Indicators
             indicator = MovingAverageType.Zlema.AsIndicator(name, 9);
             Assert.IsInstanceOf(typeof(ZeroLagExponentialMovingAverage), indicator);
 
+            indicator = MovingAverageType.MGD.AsIndicator(name, 9);
+            Assert.IsInstanceOf(typeof(McGinleyDynamic), indicator);
         }
     }
 }
