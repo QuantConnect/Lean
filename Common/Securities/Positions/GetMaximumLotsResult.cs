@@ -46,7 +46,7 @@ namespace QuantConnect.Securities.Positions
         {
             NumberOfLots = numberOfLots;
             Reason = reason ?? string.Empty;
-            IsError = Reason != string.Empty;
+            IsError = !string.IsNullOrEmpty(Reason);
         }
 
         /// <summary>

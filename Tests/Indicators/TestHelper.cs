@@ -84,7 +84,7 @@ namespace QuantConnect.Tests.Indicators
 
                 indicator.Update(date, close);
 
-                if (!indicator.IsReady || parts.GetCsvValue(targetColumn).Trim() == string.Empty)
+                if (!indicator.IsReady || string.IsNullOrEmpty(parts.GetCsvValue(targetColumn).Trim()))
                 {
                     continue;
                 }
@@ -164,7 +164,7 @@ namespace QuantConnect.Tests.Indicators
 
                 indicator.Update(tradebar);
 
-                if (!indicator.IsReady || parts.GetCsvValue(targetColumn).Trim() == string.Empty)
+                if (!indicator.IsReady || string.IsNullOrEmpty(parts.GetCsvValue(targetColumn).Trim()))
                 {
                     continue;
                 }
@@ -190,7 +190,7 @@ namespace QuantConnect.Tests.Indicators
 
                 indicator.Update(tradebar);
 
-                if (!indicator.IsReady || parts.GetCsvValue(targetColumn).Trim() == string.Empty)
+                if (!indicator.IsReady || string.IsNullOrEmpty(parts.GetCsvValue(targetColumn).Trim()))
                 {
                     continue;
                 }

@@ -77,9 +77,6 @@ namespace QuantConnect.Data.Custom.Intrinio
     /// <seealso cref="QuantConnect.Data.BaseData" />
     public class IntrinioEconomicData : BaseData
     {
-        private static DateTime _lastApiCall = DateTime.MinValue;
-        private static TimeSpan _msSinceLastCall = TimeSpan.MaxValue;
-
         private readonly string _baseUrl = @"https://api.intrinio.com/historical_data.csv?";
 
         private readonly IntrinioDataTransformation _dataTransformation;
