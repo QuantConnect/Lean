@@ -153,7 +153,7 @@ namespace QuantConnect.Algorithm.Framework.Portfolio
                 var insights = kvp.Value;
 
                 // give equal weighting to each security
-                var count = insights.Count();
+                var count = insights.Count;
                 var percent = count == 0 ? 0 : sectorPercent / count;
 
                 foreach (var insight in insights)

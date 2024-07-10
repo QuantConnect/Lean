@@ -45,7 +45,6 @@ namespace QuantConnect.ToolBox.CoarseUniverseGenerator
         /// </summary>
         public const FundamentalProperty HasFundamentalSource = FundamentalProperty.CompanyReference_CompanyId;
 
-        private static readonly object _lock = new object();
         private readonly DirectoryInfo _dailyDataFolder;
         private readonly DirectoryInfo _destinationFolder;
         private readonly IMapFileProvider _mapFileProvider;

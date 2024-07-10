@@ -23,8 +23,6 @@ namespace QuantConnect.Data.Shortable
         /// <summary>
         /// Creates a new instance
         /// </summary>
-        /// <param name="securityType">SecurityType to read the short availability data</param>
-        /// <param name="market">Market to read the short availability data</param>
         public InteractiveBrokersShortableProvider()
             : base("interactivebrokers")
         {

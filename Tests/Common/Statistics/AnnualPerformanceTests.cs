@@ -62,7 +62,7 @@ namespace QuantConnect.Tests.Common.Statistics
         {
             var performance = new List<double>();
 
-            for (var i = 1; i < _spy.Count(); i++)
+            for (var i = 1; i < _spy.Count; i++)
             {
                 performance.Add((double)((_spy[i].Close / _spy[i - 1].Close) - 1));
             }
@@ -78,7 +78,7 @@ namespace QuantConnect.Tests.Common.Statistics
             var performance = new List<double>();
             var start = new DateTime(2008, 5, 1);
             var end = new DateTime(2009, 1, 1);
-            for (var i = 1; i < _spy.Count(); i++)
+            for (var i = 1; i < _spy.Count; i++)
             {
                 if ((_spy[i].EndTime < start) || (_spy[i].EndTime > end))
                 {
@@ -98,7 +98,7 @@ namespace QuantConnect.Tests.Common.Statistics
             var performance = new List<double>();
             var start = new DateTime(2017, 1, 1);
             var end = new DateTime(2018, 1, 1);
-            for (var i = 1; i < _spy.Count(); i++)
+            for (var i = 1; i < _spy.Count; i++)
             {
                 if ((_spy[i].EndTime < start) || (_spy[i].EndTime > end))
                 {

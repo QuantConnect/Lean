@@ -69,7 +69,7 @@ namespace QuantConnect.ToolBox
             Resolution resolution;
             string zipEntry = null;
 
-            var isFutureOrOption = filepath.Contains("#");
+            var isFutureOrOption = filepath.Contains('#', StringComparison.InvariantCulture);
 
             if (isFutureOrOption)
             {

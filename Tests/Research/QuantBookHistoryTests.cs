@@ -435,7 +435,7 @@ namespace QuantConnect.Tests.Research
             {
                 if (language == Language.CSharp)
                 {
-                    Assert.AreEqual(780, history.Count());
+                    Assert.AreEqual(780, history.Count);
                 }
                 else
                 {
@@ -474,7 +474,7 @@ def getHistoryCount(history):
             {
                 if (language == Language.CSharp)
                 {
-                    Assert.AreEqual(2700, history.Count());
+                    Assert.AreEqual(2700, history.Count);
                 }
                 else
                 {

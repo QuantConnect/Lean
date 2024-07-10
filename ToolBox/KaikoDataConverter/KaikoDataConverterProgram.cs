@@ -48,13 +48,13 @@ namespace QuantConnect.ToolBox.KaikoDataConverter
                 throw new ArgumentException($"Source folder {folderPath.FullName} not found");
             }
 
-            exchange = exchange != string.Empty && exchange.ToLowerInvariant() == "gdax" ? "coinbase" : exchange;
+            exchange = !string.IsNullOrEmpty(exchange) && exchange.ToLowerInvariant() == "gdax" ? "coinbase" : exchange;
 
             var processingDate = Parse.DateTimeExact(date, DateFormat.EightCharacter);
             foreach (var filePath in folderPath.EnumerateFiles("*.zip"))
             {
                 // Do not process exchanges other than the one defined.
-                if (exchange != string.Empty && !filePath.Name.ToLowerInvariant().Contains(exchange.ToLowerInvariant())) continue;
+                if (!string.IsNullOrEmpty(exchange) && !filePath.Name.ToLowerInvariant().Contains(exchange.ToLowerInvariant())) continue;
 
                 Log.Trace($"KaikoDataConverter(): Starting data conversion from source {filePath.Name} for date {processingDate:yyyy_MM_dd}... ");
                 using (var zip = new ZipFile(filePath.FullName))
