@@ -96,7 +96,7 @@ namespace QuantConnect.Data.Consolidators
         /// null following the event firing
         /// </summary>
         /// <param name="workingBar">The bar we're building, null if the event was just fired and we're starting a new OI bar</param>
-        /// <param name="tick">The new data</param>
+        /// <param name="data">The new data</param>
         protected override void AggregateBar(ref OpenInterest workingBar, Tick data)
         {
             if (workingBar == null)

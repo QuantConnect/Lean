@@ -167,7 +167,7 @@ namespace QuantConnect.Tests.Common.Securities
                 new MarketHoursSegment(MarketHoursState.Market, new TimeSpan(19, 0, 0), TimeSpan.FromTicks(Time.OneDay.Ticks - 1))
             };
 
-            for (int i = 0 ; i <= marketHoursSegments.Count() - 1; i++)
+            for (int i = 0 ; i <= marketHoursSegments.Count - 1; i++)
             {
                 var marketHoursSegment = marketHoursSegments.ElementAt(i);
                 var expectedMarketHoursSegment = expectedMarketHoursSegments.ElementAt(i);

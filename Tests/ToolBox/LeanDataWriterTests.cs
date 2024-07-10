@@ -97,7 +97,7 @@ namespace QuantConnect.Tests.ToolBox
 
                 var data = QuantConnect.Compression.Unzip(filePath).Single();
 
-                Assert.AreEqual(1, data.Value.Count());
+                Assert.AreEqual(1, data.Value.Count);
                 Assert.IsTrue(data.Key.Contains(bar.Time.ToStringInvariant(DateFormat.EightCharacter)), $"Key {data.Key} BarTime: {bar.Time}");
             }
         }
@@ -149,7 +149,7 @@ namespace QuantConnect.Tests.ToolBox
 
             var data = QuantConnect.Compression.Unzip(filePath);
 
-            Assert.AreEqual(data.First().Value.Count(), 3);
+            Assert.AreEqual(data.First().Value.Count, 3);
         }
 
         [TestCase(SecurityType.FutureOption, Resolution.Second)]
@@ -213,7 +213,7 @@ namespace QuantConnect.Tests.ToolBox
 
             var data = QuantConnect.Compression.Unzip(filePath);
 
-            Assert.AreEqual(data.First().Value.Count(), 3);
+            Assert.AreEqual(data.First().Value.Count, 3);
         }
 
         [Test]
@@ -229,7 +229,7 @@ namespace QuantConnect.Tests.ToolBox
 
             var data = QuantConnect.Compression.Unzip(filePath);
 
-            Assert.AreEqual(data.First().Value.Count(), 3);
+            Assert.AreEqual(data.First().Value.Count, 3);
         }
 
         [TestCase("CON")]
@@ -270,7 +270,7 @@ namespace QuantConnect.Tests.ToolBox
 
             var data = QuantConnect.Compression.Unzip(filePath);
 
-            Assert.AreEqual(data.First().Value.Count(), 3);
+            Assert.AreEqual(data.First().Value.Count, 3);
         }
 
         [TestCase(null, Resolution.Daily)]
@@ -346,7 +346,7 @@ namespace QuantConnect.Tests.ToolBox
 
             var data = QuantConnect.Compression.Unzip(filePath);
 
-            Assert.AreEqual(data.First().Value.Count(), 3);
+            Assert.AreEqual(data.First().Value.Count, 3);
         }
 
         [TestCase(SecurityType.Equity, TickType.Quote, Resolution.Minute)]

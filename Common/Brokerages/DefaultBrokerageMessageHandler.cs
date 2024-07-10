@@ -48,8 +48,6 @@ namespace QuantConnect.Brokerages
         /// Initializes a new instance of the <see cref="DefaultBrokerageMessageHandler"/> class
         /// </summary>
         /// <param name="algorithm">The running algorithm</param>
-        /// <param name="job">The job that produced the algorithm</param>
-        /// <param name="api">The api for the algorithm</param>
         /// <param name="initialDelay"></param>
         /// <param name="openThreshold">Defines how long before market open to re-check for brokerage reconnect message</param>
         public DefaultBrokerageMessageHandler(IAlgorithm algorithm, TimeSpan? initialDelay = null, TimeSpan? openThreshold = null)

@@ -24,6 +24,7 @@ namespace QuantConnect.Python
     /// </summary>
     public class SettlementModelPythonWrapper : BasePythonWrapper<ISettlementModel>, ISettlementModel
     {
+        /// <summary>
         /// Constructor for initialising the <see cref="SettlementModelPythonWrapper"/> class with wrapped <see cref="PyObject"/> object
         /// </summary>
         /// <param name="model">Settlement Python Model</param>

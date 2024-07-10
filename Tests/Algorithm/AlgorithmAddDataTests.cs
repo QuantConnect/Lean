@@ -55,7 +55,7 @@ namespace QuantConnect.Tests.Algorithm
             Config.Set("security-data-feeds", "{ Forex: [\"Trade\"] }");
             var dataFeedsConfigString = Config.Get("security-data-feeds");
             Dictionary<SecurityType, List<TickType>> dataFeeds = new Dictionary<SecurityType, List<TickType>>();
-            if (dataFeedsConfigString != string.Empty)
+            if (!string.IsNullOrEmpty(dataFeedsConfigString))
             {
                 dataFeeds = JsonConvert.DeserializeObject<Dictionary<SecurityType, List<TickType>>>(dataFeedsConfigString);
             }

@@ -360,10 +360,13 @@
     <None Update="TestData\vix_contango.csv">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
+    <None Update="TestData\spy_with_chop.csv">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
     <None Update="TestData\spy_with_hilbert.csv">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
-    <None Update="TestData\spy_with_chop.csv">
+    <None Update="TestData\spy_with_McGinleyDynamic.csv">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
     <None Update="TestData\spy_with_zlema.csv">
