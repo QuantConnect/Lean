@@ -73,11 +73,11 @@ namespace QuantConnect.ToolBox.AlgoSeekFuturesConverter
                 .Select(remote => remote.CopyTo(Path.Combine(Path.GetTempPath(), remote.Name), true))
                 .ToList();
 
-            Log.Trace("AlgoSeekFuturesConverter.Convert(): Loading {0} AlgoSeekFuturesReader for {1} ", files.Count(), _referenceDate);
+            Log.Trace("AlgoSeekFuturesConverter.Convert(): Loading {0} AlgoSeekFuturesReader for {1} ", files.Count, _referenceDate);
 
             //Initialize parameters
             var totalLinesProcessed = 0L;
-            var totalFiles = files.Count();
+            var totalFiles = files.Count;
             var totalFilesProcessed = 0;
             var start = DateTime.MinValue;
 
@@ -151,7 +151,7 @@ namespace QuantConnect.ToolBox.AlgoSeekFuturesConverter
                             if (Interlocked.Increment(ref totalLinesProcessed) % 1000000m == 0)
                             {
                                 var pro = (double)processors.Values.SelectMany(p => p.SelectMany(x => x)).Count();
-                                var symbols = (double)processors.Keys.Count();
+                                var symbols = (double)processors.Keys.Count;
                                 Log.Trace("AlgoSeekFuturesConverter.Convert(): Processed {0,3}M ticks( {1}k / sec); Memory in use: {2} MB; Total progress: {3}%, Processor per symbol {4}", Math.Round(totalLinesProcessed / 1000000m, 2), Math.Round(totalLinesProcessed / 1000L / (DateTime.Now - start).TotalSeconds), Process.GetCurrentProcess().WorkingSet64 / (1024 * 1024), 100 * totalFilesProcessed / totalFiles, pro / symbols);
                             }
 
