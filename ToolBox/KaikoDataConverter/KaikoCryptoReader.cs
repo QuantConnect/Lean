@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -239,7 +239,7 @@ namespace QuantConnect.ToolBox.KaikoDataConverter
         private static decimal ParseScientificNotationToDecimal(string[] lineParts, int column)
         {
             var value = lineParts[column];
-            if (value.Contains("e"))
+            if (value.Contains('e', StringComparison.CurrentCulture))
             {
                 return Parse.Decimal(value, NumberStyles.Float);
             }

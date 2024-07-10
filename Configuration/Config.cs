@@ -169,7 +169,7 @@ namespace QuantConnect.Configuration
         public static void Set(string key, dynamic value)
         {
             JToken environment = Settings.Value;
-            while (key.Contains("."))
+            while (key.Contains('.', StringComparison.CurrentCulture))
             {
                 var envName = key.Substring(0, key.IndexOf(".", StringComparison.InvariantCulture));
                 key = key.Substring(key.IndexOf(".", StringComparison.InvariantCulture) + 1);

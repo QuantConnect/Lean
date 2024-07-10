@@ -224,7 +224,7 @@ namespace QuantConnect.Tests.Common.Securities
             var spList = db.GetSymbolPropertiesList(market, securityType).ToList();
 
             Assert.AreEqual(1, spList.Count);
-            Assert.IsTrue(spList[0].Key.Symbol.Contains("*"));
+            Assert.IsTrue(spList[0].Key.Symbol.Contains('*', StringComparison.CurrentCulture));
         }
 
         #region Coinbase brokerage
@@ -380,7 +380,7 @@ namespace QuantConnect.Tests.Common.Securities
                 foreach (var pair in exchangePairs.Union(marginPairs).OrderBy(x => x))
                 {
                     string baseCurrency, quoteCurrency;
-                    if (pair.Contains(":"))
+                    if (pair.Contains(':', StringComparison.CurrentCulture))
                     {
                         var parts = pair.Split(':');
                         baseCurrency = parts[0];
