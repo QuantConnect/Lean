@@ -31,7 +31,6 @@ namespace QuantConnect.Algorithm.CSharp
     /// </summary>
     public class AddFutureContractWithContinuousRegressionAlgorithm : QCAlgorithm, IRegressionAlgorithmDefinition
     {
-        private Symbol _currentMappedSymbol;
         private Future _continuousContract;
         private Future _futureContract;
         private bool _ended;

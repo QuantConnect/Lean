@@ -31,8 +31,6 @@ namespace QuantConnect
     /// </summary>
     public static class SymbolRepresentation
     {
-        private static DateTime TodayUtc = DateTime.UtcNow;
-
         /// <summary>
         /// Class contains future ticker properties returned by ParseFutureTicker()
         /// </summary>

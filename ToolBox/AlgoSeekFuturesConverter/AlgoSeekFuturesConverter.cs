@@ -33,7 +33,6 @@ namespace QuantConnect.ToolBox.AlgoSeekFuturesConverter
     /// </summary>
     public class AlgoSeekFuturesConverter
     {
-        private const int ExecTimeout = 60;// sec
         private readonly DirectoryInfo _source;
         private readonly DirectoryInfo _remote;
         private readonly string _destination;

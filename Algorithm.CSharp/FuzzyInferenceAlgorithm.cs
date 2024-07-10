@@ -41,9 +41,6 @@ namespace QuantConnect.Algorithm.CSharp
         // Without this, consuming projects would need to hard reference the Accord dlls,
         // which is less than perfect. This seems to be the better of two evils
         //
-#pragma warning disable 0414
-        Accord.Math.Matrix3x3 _matrix = new Accord.Math.Matrix3x3();
-#pragma warning restore 0414
 
         //Fuzzy Engine
         private FuzzyEngine _engine;
