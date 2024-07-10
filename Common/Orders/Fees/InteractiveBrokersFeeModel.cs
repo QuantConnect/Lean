@@ -32,9 +32,11 @@ namespace QuantConnect.Orders.Fees
         private readonly Dictionary<string, Func<decimal, decimal, CashAmount>> _optionFee =
             new Dictionary<string, Func<decimal, decimal, CashAmount>>();
 
+        #pragma warning disable CS1570
         /// <summary>
         /// Reference at https://www.interactivebrokers.com/en/index.php?f=commission&p=futures1
         /// </summary>
+        #pragma warning restore CS1570
         private readonly Dictionary<string, Func<Security, CashAmount>> _futureFee =
             //                                                               IB fee + exchange fee
             new()

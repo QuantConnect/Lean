@@ -3026,7 +3026,6 @@ namespace QuantConnect.Algorithm
         /// Event invocator for the <see cref="InsightsGenerated"/> event
         /// </summary>
         /// <param name="insights">The collection of insights generaed at the current time step</param>
-        /// <param name="clone">Will emit a clone of the generated insights</param>
         [DocumentationAttribute(AlgorithmFramework)]
         private void OnInsightsGenerated(Insight[] insights)
         {

@@ -203,7 +203,7 @@ namespace QuantConnect.Algorithm.Framework.Portfolio.SignalExports
         /// </summary>
         /// <param name="algorithm">Algorithm being ran</param>
         /// <param name="target">Desired position to be sent to the Collective2 API</param>
-        /// <returns>Number of shares hold of the given position/returns>
+        /// <returns>Number of shares hold of the given position</returns>
         protected int ConvertPercentageToQuantity(IAlgorithm algorithm, PortfolioTarget target)
         {
             var numberShares = PortfolioTarget.Percent(algorithm, target.Symbol, target.Quantity);

@@ -120,7 +120,7 @@ namespace QuantConnect.Securities.Option.StrategyMatcher
         /// Hold 1 lot of the underlying, sell 1 call contract and buy 1 put contract.
         /// The strike price of the call and put are the same, with the same expiration.
         /// </summary>
-        /// <remarks>A special case of <see cref="ProtectiveCollar"/>
+        /// <remarks>A special case of <see cref="ProtectiveCollar"/></remarks>
         public static OptionStrategyDefinition Conversion { get; }
             = OptionStrategyDefinition.Create("Conversion", 1,
                 OptionStrategyDefinition.CallLeg(-1),
@@ -132,7 +132,7 @@ namespace QuantConnect.Securities.Option.StrategyMatcher
         /// Hold 1 lot of the underlying, sell 1 call contract and buy 1 put contract.
         /// The strike price of the call and put are the same, with the same expiration.
         /// </summary>
-        /// <remarks>Inverse of <see cref="Conversion"/>
+        /// <remarks>Inverse of <see cref="Conversion"/></remarks>
         public static OptionStrategyDefinition ReverseConversion { get; }
             = OptionStrategyDefinition.Create("Reverse Conversion", -1,
                 OptionStrategyDefinition.CallLeg(1),
@@ -472,6 +472,7 @@ namespace QuantConnect.Securities.Option.StrategyMatcher
                                                     (legs, p) => p.Expiration == legs[1].Expiration)
             );
 
+        /// <summary>
         /// Bear Call Ladder strategy is short 1 call and long 2 calls, with ascending strike prices in order,
         /// All options have the same expiry.
         /// </summary>
