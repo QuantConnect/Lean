@@ -18,15 +18,16 @@ using QuantConnect.Data.Market;
 namespace QuantConnect.Indicators
 {
     /// <summary>
-    ///The Force Index is calculated by comparing the current market price with the previous market price 
-    ///and multiplying its difference with the traded volume during a specific time period.
-    ///
+    /// The Force Index is calculated by comparing the current market price with the previous market price 
+    /// and multiplying its difference with the traded volume during a specific time period.
     /// </summary>
     public class ForceIndex : TradeBarIndicator, IIndicatorWarmUpPeriodProvider
     {
         private TradeBar _previousInput;
 
-        /// <summary>This indicator is used to smooth the ForceIndex computation</summary>
+        /// <summary>
+        /// This indicator is used to smooth the ForceIndex computation
+        /// </summary>
         /// <remarks>This is not exposed publicly since it is the same value as this indicator, meaning
         /// that this '_smoother' computers the ForceIndex directly, so exposing it publicly would be duplication</remarks>
         private readonly IndicatorBase<IndicatorDataPoint> _smoother;
@@ -80,7 +81,7 @@ namespace QuantConnect.Indicators
             }
             // compute the instantaneous force index and then send it to our smoother
             
-            _smoother.Update(input.Time, (input.Close - _previousInput.Close) * input.Volume);
+            _smoother.Update(input.EndTime, (input.Close - _previousInput.Close) * input.Volume);
 
             _previousInput = input;
 
