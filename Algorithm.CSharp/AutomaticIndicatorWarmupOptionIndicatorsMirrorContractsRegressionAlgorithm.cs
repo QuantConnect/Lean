@@ -14,83 +14,75 @@
 */
 
 using System;
-using System.Collections.Generic;
 using QuantConnect.Indicators;
 using QuantConnect.Interfaces;
+using System.Collections.Generic;
 
 namespace QuantConnect.Algorithm.CSharp
 {
     /// <summary>
-    /// Algorithm illustrating the usage of the <see cref="OptionIndicatorBase"/> indicators
+    /// Regression algorithm asserting the behavior of the AutomaticIndicatorWarmUp on option greeks
     /// </summary>
-    public class OptionIndicatorsRegressionAlgorithm : QCAlgorithm, IRegressionAlgorithmDefinition
+    public class AutomaticIndicatorWarmupOptionIndicatorsMirrorContractsRegressionAlgorithm : QCAlgorithm, IRegressionAlgorithmDefinition
     {
-        private ImpliedVolatility _impliedVolatility;
-        private Delta _delta;
-        private Gamma _gamma;
-        private Vega _vega;
-        private Theta _theta;
-        private Rho _rho;
-
-        protected virtual string ExpectedGreeks { get; set; } = "Implied Volatility: 0.4284,Delta: -0.00965,Gamma: 0.00027,Vega: 0.02602,Theta: -0.02564,Rho: 0.00033";
-
         public override void Initialize()
         {
-            SetStartDate(2014, 6, 5);
-            SetEndDate(2014, 6, 7);
-            SetCash(100000);
+            SetStartDate(2015, 12, 24);
+            SetEndDate(2015, 12, 24);
 
-            AddEquity("AAPL", Resolution.Minute);
-            var option = QuantConnect.Symbol.CreateOption("AAPL", Market.USA, OptionStyle.American, OptionRight.Put, 505m, new DateTime(2014, 6, 27));
-            AddOptionContract(option, Resolution.Minute);
+            Settings.AutomaticIndicatorWarmUp = true;
 
-            InitializeIndicators(option);
-        }
+            var underlying = "GOOG";
+            var resolution = Resolution.Minute;
 
-        protected void InitializeIndicators(Symbol option)
-        {
-            _impliedVolatility = IV(option);
-            _delta = D(option, optionModel: OptionPricingModelType.BinomialCoxRossRubinstein, ivModel: OptionPricingModelType.BlackScholes);
-            _gamma = G(option, optionModel: OptionPricingModelType.ForwardTree, ivModel: OptionPricingModelType.BlackScholes);
-            _vega = V(option, optionModel: OptionPricingModelType.ForwardTree, ivModel: OptionPricingModelType.BlackScholes);
-            _theta = T(option, optionModel: OptionPricingModelType.ForwardTree, ivModel: OptionPricingModelType.BlackScholes);
-            _rho = R(option, optionModel: OptionPricingModelType.ForwardTree, ivModel: OptionPricingModelType.BlackScholes);
-        }
+            var expiration = new DateTime(2015, 12, 24);
+            var strike = 650m;
 
-        public override void OnEndOfAlgorithm()
-        {
-            if (_impliedVolatility == 0m || _delta == 0m || _gamma == 0m || _vega == 0m || _theta == 0m || _rho == 0m)
+            var equity = AddEquity(underlying, resolution).Symbol;
+            var option = QuantConnect.Symbol.CreateOption(underlying, Market.USA, OptionStyle.American, OptionRight.Put, strike, expiration);
+            AddOptionContract(option, resolution);
+            // add the call counter side of the mirrored pair
+            var mirrorOption = QuantConnect.Symbol.CreateOption(underlying, Market.USA, OptionStyle.American, OptionRight.Call, strike, expiration);
+            AddOptionContract(mirrorOption, resolution);
+
+            var impliedVolatility = IV(option, mirrorOption);
+            var delta = D(option, mirrorOption, optionModel: OptionPricingModelType.BinomialCoxRossRubinstein, ivModel: OptionPricingModelType.BlackScholes);
+            var gamma = G(option, mirrorOption, optionModel: OptionPricingModelType.ForwardTree, ivModel: OptionPricingModelType.BlackScholes);
+            var vega = V(option, mirrorOption, optionModel: OptionPricingModelType.ForwardTree, ivModel: OptionPricingModelType.BlackScholes);
+            var theta = T(option, mirrorOption, optionModel: OptionPricingModelType.ForwardTree, ivModel: OptionPricingModelType.BlackScholes);
+            var rho = R(option, mirrorOption, optionModel: OptionPricingModelType.ForwardTree, ivModel: OptionPricingModelType.BlackScholes);
+
+            if (impliedVolatility == 0m || delta == 0m || gamma == 0m || vega == 0m || theta == 0m || rho == 0m)
             {
                 throw new RegressionTestException("Expected IV/greeks calculated");
             }
-            var result = @$"Implied Volatility: {_impliedVolatility},Delta: {_delta},Gamma: {_gamma},Vega: {_vega},Theta: {_theta},Rho: {_rho}";
-
-            Debug(result);
-            if (result != ExpectedGreeks)
+            if (!impliedVolatility.IsReady || !delta.IsReady || !gamma.IsReady || !vega.IsReady || !theta.IsReady || !rho.IsReady)
             {
-                throw new RegressionTestException($"Unexpected greek values {result}. Expected {ExpectedGreeks}");
+                throw new RegressionTestException("Expected IV/greeks to be ready");
             }
+
+            Quit($"Implied Volatility: {impliedVolatility}, Delta: {delta}, Gamma: {gamma}, Vega: {vega}, Theta: {theta}, Rho: {rho}");
         }
 
         /// <summary>
         /// This is used by the regression test system to indicate if the open source Lean repository has the required data to run this algorithm.
         /// </summary>
-        public bool CanRunLocally { get; } = true;
+        public bool CanRunLocally => true;
 
         /// <summary>
         /// This is used by the regression test system to indicate which languages this algorithm is written in.
         /// </summary>
-        public virtual List<Language> Languages { get; } = new() { Language.CSharp, Language.Python };
+        public List<Language> Languages { get; } = new() { Language.CSharp };
 
         /// <summary>
         /// Data Points count of all timeslices of algorithm
         /// </summary>
-        public virtual long DataPoints => 1974;
+        public long DataPoints => 0;
 
         /// <summary>
         /// Data Points count of the algorithm history
         /// </summary>
-        public int AlgorithmHistoryDataPoints => 0;
+        public int AlgorithmHistoryDataPoints => 21;
 
         /// <summary>
         /// Final status of the algorithm
@@ -100,7 +92,7 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// This is used by the regression test system to indicate what the expected statistics are from running the algorithm
         /// </summary>
-        public virtual Dictionary<string, string> ExpectedStatistics => new Dictionary<string, string>
+        public Dictionary<string, string> ExpectedStatistics => new Dictionary<string, string>
         {
             {"Total Orders", "0"},
             {"Average Win", "0%"},
