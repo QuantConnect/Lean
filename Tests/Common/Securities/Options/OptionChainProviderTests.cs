@@ -109,8 +109,7 @@ namespace QuantConnect.Tests.Common.Securities.Options
             {
                 var provider = new BacktestingOptionChainProvider(TestGlobals.DataCacheProvider, TestGlobals.MapFileProvider);
 
-                // TODO: Mondays! Original date was 2021/01/04
-                var optionChain = provider.GetOptionContractList(option, new DateTime(2021, 01, 01)).ToList();
+                var optionChain = provider.GetOptionContractList(option, new DateTime(2021, 01, 04)).ToList();
 
                 Assert.AreEqual(6, optionChain.Count);
                 Assert.AreEqual(3200, optionChain.OrderBy(s => s.ID.StrikePrice).First().ID.StrikePrice);
@@ -132,8 +131,7 @@ namespace QuantConnect.Tests.Common.Securities.Options
             {
                 var provider = new BacktestingOptionChainProvider(TestGlobals.DataCacheProvider, TestGlobals.MapFileProvider);
 
-                // TODO: Mondays! Original date was 2021/01/04
-                var optionChain = provider.GetOptionContractList(option, new DateTime(2021, 01, 01)).ToList();
+                var optionChain = provider.GetOptionContractList(option, new DateTime(2021, 01, 04)).ToList();
 
                 Assert.AreEqual(12, optionChain.Count);
                 Assert.AreEqual(3700, optionChain.OrderBy(s => s.ID.StrikePrice).First().ID.StrikePrice);
