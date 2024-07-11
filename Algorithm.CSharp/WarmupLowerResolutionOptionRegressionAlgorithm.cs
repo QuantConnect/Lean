@@ -98,8 +98,8 @@ namespace QuantConnect.Algorithm.CSharp
 
         public override void OnEndOfAlgorithm()
         {
-            var start = new DateTime(2014, 06, 07, 0, 0, 0);
-            var end = new DateTime(2014, 06, 07, 0, 0, 0);
+            var start = new DateTime(2014, 06, 06, 0, 0, 0);
+            var end = new DateTime(2014, 06, 06, 0, 0, 0);
             var count = 0;
             do
             {
@@ -126,7 +126,7 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// Data Points count of all timeslices of algorithm
         /// </summary>
-        public long DataPoints => 942365;
+        public long DataPoints => 95785;
 
         /// <summary>
         /// Data Points count of the algorithm history
