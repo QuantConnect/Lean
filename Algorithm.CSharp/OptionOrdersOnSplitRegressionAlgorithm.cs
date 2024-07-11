@@ -27,14 +27,6 @@ namespace QuantConnect.Algorithm.CSharp
     /// <summary>
     /// Regression algorithm asserting that option orders are not allowed on split dates
     /// </summary>
-    ///
-    ///
-    ///
-    /// TODO: This does not apply anymore. Options are properly selected now selection is file-based,
-    /// and the right strike is in the options universe data.
-    ///
-    ///
-    ///
     public class OptionOrdersOnSplitRegressionAlgorithm : QCAlgorithm, IRegressionAlgorithmDefinition
     {
         private Symbol _aapl;
@@ -66,16 +58,6 @@ namespace QuantConnect.Algorithm.CSharp
                         .OrderBy(x => x.Symbol.ID.StrikePrice)
                         .First();
                     _ticket = MarketOrder(contract.Symbol, 1);
-
-                    //if (_ticket.Status != OrderStatus.Invalid ||
-                    //    _ticket.SubmitRequest.Response.IsSuccess ||
-                    //    _ticket.SubmitRequest.Response.ErrorCode != OrderResponseErrorCode.OptionOrderOnStockSplit ||
-                    //    _ticket.SubmitRequest.Response.ErrorMessage != "Options orders are not allowed when a split occurred for its underlying stock")
-                    //{
-                    //    throw new Exception(
-                    //        $"Expected invalid order ticket with error code {nameof(OrderResponseErrorCode.OptionOrderOnStockSplit)}, " +
-                    //        $"but received {_ticket.SubmitRequest.Response.ErrorCode} - {_ticket.SubmitRequest.Response.ErrorMessage}");
-                    //}
 
                     // The actual error received now is "zero price" since it's midnight and the selection options have not been updated yet
                     if (_ticket.Status != OrderStatus.Invalid ||
