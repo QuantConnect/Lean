@@ -141,7 +141,7 @@ namespace QuantConnect.Algorithm.CSharp
 
                 // Options can be selected/deselected on this day, but the equity should be removed
 
-                if (changes.RemovedSecurities.Count == 0 || !changes.RemovedSecurities.Any(x => x.Symbol != _aapl))
+                if (changes.RemovedSecurities.Count == 0 || !changes.RemovedSecurities.Any(x => x.Symbol == _aapl))
                 {
                     throw new RegressionTestException($"Unexpected SecurityChanges: {changes}");
                 }
@@ -204,7 +204,7 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// Data Points count of all timeslices of algorithm
         /// </summary>
-        public long DataPoints => 17966;
+        public long DataPoints => 17956;
 
         /// <summary>
         /// Data Points count of the algorithm history
