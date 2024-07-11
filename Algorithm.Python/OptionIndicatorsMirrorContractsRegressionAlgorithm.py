@@ -65,7 +65,7 @@ Rho: {self.rho.current.value}""")
 
 class CustomImpliedVolatility(ImpliedVolatility):
     def __init__(self, option, mirror_option, risk_free_rate_model, dividend_yield_model):
-        super().__init__(option, risk_free_rate_model, dividend_yield_model, mirror_option, period=2)
+        super().__init__(option, risk_free_rate_model, dividend_yield_model, mirror_option)
         self.set_smoothing_function(lambda iv, mirror_iv: iv)
 
     def calculate_iv(self, time_till_expiry: float) -> float:
