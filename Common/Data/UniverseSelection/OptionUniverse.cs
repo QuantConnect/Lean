@@ -195,7 +195,6 @@ namespace QuantConnect.Data.UniverseSelection
         /// </summary>
         public override DateTime EndTime
         {
-            // TODO: Should EndTime be midnight of next tradable date and Time = EndTime - Period?
             get { return Time + Period; }
             set { Time = value - Period; }
         }
