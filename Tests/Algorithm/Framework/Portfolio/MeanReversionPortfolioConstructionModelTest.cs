@@ -75,7 +75,7 @@ namespace QuantConnect.Tests.Algorithm.Framework.Portfolio
         public void DoesNotReturnTargetsIfSecurityPriceIsZero(Language language)
         {
             _algorithm.AddEquity(Symbols.SPY.Value);
-            _algorithm.SetDateTime(DateTime.MinValue.ConvertToUtc(_algorithm.TimeZone));
+            _algorithm.SetDateTime(_nowUtc.ConvertToUtc(_algorithm.TimeZone));
 
             SetPortfolioConstruction(language, PortfolioBias.Long);
 
