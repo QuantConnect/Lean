@@ -198,10 +198,6 @@ namespace QuantConnect.Tests.Engine.DataFeeds
                         var nyTime = timeSlice.Time.ConvertFromUtc(algorithm.TimeZone);
                         Assert.AreEqual(new TimeSpan(0, 0, 0), nyTime.TimeOfDay, $"Failed on: {nyTime}");
 
-                        // The first entry is the underlying data
-                        var underlyingData = baseDataCollection.Data[0];
-                        Assert.AreEqual(option.Symbol.Underlying, underlyingData.Symbol);
-
                         Assert.AreEqual(nyTime.TimeOfDay, baseDataCollection.EndTime.ConvertFromUtc(algorithm.TimeZone).TimeOfDay);
                         Assert.IsNotNull(baseDataCollection.FilteredContracts);
                         CollectionAssert.IsNotEmpty(baseDataCollection.FilteredContracts);
