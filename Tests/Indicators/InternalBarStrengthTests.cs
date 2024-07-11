@@ -1,11 +1,11 @@
 /*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
+ * 
+ * Licensed under the Apache License, Version 2.0 (the "License"); 
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
- *
+ * 
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -13,19 +13,23 @@
  * limitations under the License.
 */
 
-namespace QuantConnect.Data.Shortable
+using NUnit.Framework;
+using QuantConnect.Data.Market;
+using QuantConnect.Indicators;
+
+namespace QuantConnect.Tests.Indicators
 {
-    /// <summary>
-    /// Sources the InteractiveBrokers short availability data from the local disk for the given brokerage
-    /// </summary>
-    public class InteractiveBrokersShortableProvider : LocalDiskShortableProvider
+    [TestFixture]
+    public class InternalBarStrengthTests : CommonIndicatorTests<IBaseDataBar>
     {
-        /// <summary>
-        /// Creates a new instance
-        /// </summary>
-        public InteractiveBrokersShortableProvider()
-            : base("interactivebrokers")
+        protected override IndicatorBase<IBaseDataBar> CreateIndicator()
         {
+            return new InternalBarStrength("IBS");
         }
+
+        protected override string TestFileName => "spy_with_ibs.csv";
+
+        protected override string TestColumnName => "IBS";
+
     }
 }

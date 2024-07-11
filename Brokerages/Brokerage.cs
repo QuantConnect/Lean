@@ -47,6 +47,7 @@ namespace QuantConnect.Brokerages
         /// </summary>
         public event EventHandler<BrokerageOrderIdChangedEvent> OrderIdChanged;
 
+        /// <summary>
         /// Event that fires each time the status for a list of orders change
         /// </summary>
         public event EventHandler<List<OrderEvent>> OrdersStatusChanged;

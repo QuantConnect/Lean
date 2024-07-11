@@ -153,13 +153,13 @@ namespace QuantConnect.Statistics
         public static double TrackingError(List<double> algoPerformance, List<double> benchmarkPerformance, double tradingDaysPerYear)
         {
             // Un-equal lengths will blow up other statistics, but this will handle the case here
-            if (algoPerformance.Count() != benchmarkPerformance.Count())
+            if (algoPerformance.Count != benchmarkPerformance.Count)
             {
                 return 0.0;
             }
 
             var performanceDifference = new List<double>();
-            for (var i = 0; i < algoPerformance.Count(); i++)
+            for (var i = 0; i < algoPerformance.Count; i++)
             {
                 performanceDifference.Add(algoPerformance[i] - benchmarkPerformance[i]);
             }

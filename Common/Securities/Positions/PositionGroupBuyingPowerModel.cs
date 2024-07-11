@@ -578,7 +578,7 @@ namespace QuantConnect.Securities.Positions
         /// <param name="targetFinalMargin">The target margin</param>
         /// <param name="groupUnit">Unit position group corresponding to the <paramref name="currentPositionGroup"/></param>
         /// <param name="unitMargin">Margin required for the <paramref name="groupUnit"/></param>
-        /// <param name="finalMargin">Output the final margin allocated for the position group</param
+        /// <param name="finalMargin">Output the final margin allocated for the position group</param>
         /// <returns>The size of the order to get safely to our target</returns>
         public decimal GetPositionGroupOrderQuantity(SecurityPortfolioManager portfolio, IPositionGroup currentPositionGroup,
             decimal currentUsedMargin, decimal targetFinalMargin, IPositionGroup groupUnit, decimal unitMargin,

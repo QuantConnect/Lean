@@ -121,7 +121,7 @@ namespace QuantConnect.Tests.Algorithm.Framework.Portfolio
             _algorithm.Insights.AddRange(insights);
             var actualTargets = _algorithm.PortfolioConstruction.CreateTargets(_algorithm, insights);
 
-            Assert.AreEqual(expectedTargets.Count(), actualTargets.Count());
+            Assert.AreEqual(expectedTargets.Length, actualTargets.Count());
 
             foreach (var expected in expectedTargets)
             {
@@ -158,7 +158,7 @@ namespace QuantConnect.Tests.Algorithm.Framework.Portfolio
             var insights = _view1Insights.Concat(_view2Insights).Concat(new[] {outdatedInsight});
             var actualTargets = _algorithm.PortfolioConstruction.CreateTargets(_algorithm, insights.ToArray());
 
-            Assert.AreEqual(expectedTargets.Count(), actualTargets.Count());
+            Assert.AreEqual(expectedTargets.Length, actualTargets.Count());
 
             foreach (var expected in expectedTargets)
             {

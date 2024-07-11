@@ -232,7 +232,7 @@ namespace QuantConnect.Data
         /// <summary>
         /// Stores the data monitor report
         /// </summary>
-        /// <param name="report">The data monitor report to be stored<param>
+        /// <param name="report">The data monitor report to be stored</param>
         private void StoreDataMonitorReport(DataMonitorReport report)
         {
             if (report == null)

@@ -165,7 +165,6 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         }
 
         /// <summary> Entry point for queue consumption </summary>
-        /// <param name="token">A cancellation token used to signal to stop</param>
         /// <remarks> This function only returns after <see cref="Stop"/> is called or the token is cancelled</remarks>
         private void ConsumeEnumerators()
         {

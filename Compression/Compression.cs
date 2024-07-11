@@ -481,7 +481,7 @@ namespace QuantConnect
                         foreach (var file in archive.Entries)
                         {
                             // skip directories
-                            if (file.Name == "") continue;
+                            if (string.IsNullOrEmpty(file.Name)) continue;
                             var filepath = Path.Combine(directory, file.FullName);
                             if (IsLinux) filepath = filepath.Replace(@"\", "/");
                             var outputFile = new FileInfo(filepath);

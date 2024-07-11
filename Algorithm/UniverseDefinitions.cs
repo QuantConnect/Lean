@@ -212,7 +212,6 @@ namespace QuantConnect.Algorithm
         /// </summary>
         /// <param name="indexTicker">Ticker of the index to get constituents for</param>
         /// <param name="market">Market of the index</param>
-        /// <param name="universeSettings">Universe settings</param>
         /// <param name="universeFilterFunc">Function to filter universe results</param>
         /// <returns>New index constituents Universe</returns>
         public Universe Index(string indexTicker, string market, Func<IEnumerable<ETFConstituentUniverse>, IEnumerable<Symbol>> universeFilterFunc)
@@ -235,7 +234,6 @@ namespace QuantConnect.Algorithm
         /// Creates a universe for the constituents of the provided <paramref name="indexTicker"/>
         /// </summary>
         /// <param name="indexTicker">Ticker of the index to get constituents for</param>
-        /// <param name="market">Market of the index</param>
         /// <param name="universeSettings">Universe settings</param>
         /// <param name="universeFilterFunc">Function to filter universe results</param>
         /// <returns>New index constituents Universe</returns>
