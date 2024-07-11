@@ -13,6 +13,9 @@
  * limitations under the License.
 */
 
+using System;
+using QuantConnect.Indicators;
+using QuantConnect.Interfaces;
 using System.Collections.Generic;
 
 namespace QuantConnect.Algorithm.CSharp
@@ -20,51 +23,76 @@ namespace QuantConnect.Algorithm.CSharp
     /// <summary>
     /// Regression algorithm asserting the behavior of the AutomaticIndicatorWarmUp on option greeks
     /// </summary>
-    public class AutomaticIndicatorWarmupOptionIndicatorsMirrorContractsRegressionAlgorithm : OptionIndicatorsMirrorContractsRegressionAlgorithm
+    public class AutomaticIndicatorWarmupOptionIndicatorsMirrorContractsRegressionAlgorithm : QCAlgorithm, IRegressionAlgorithmDefinition
     {
-        /// <summary>
-        /// The resolution to use
-        /// </summary>
-        protected override Resolution Resolution => Resolution.Minute;
-
-        /// <summary>
-        /// The start date
-        /// </summary>
-        protected override int StartDateInit => 7;
-
-        /// <summary>
-        /// The end date
-        /// </summary>
-        protected override int EndDateInit => 9;
-
         public override void Initialize()
         {
+            SetStartDate(2015, 12, 24);
+            SetEndDate(2015, 12, 24);
+
             Settings.AutomaticIndicatorWarmUp = true;
 
-            base.Initialize();
+            var underlying = "GOOG";
+            var resolution = Resolution.Minute;
 
-            Quit();
+            var expiration = new DateTime(2015, 12, 24);
+            var strike = 650m;
+
+            var equity = AddEquity(underlying, resolution).Symbol;
+            var option = QuantConnect.Symbol.CreateOption(underlying, Market.USA, OptionStyle.American, OptionRight.Put, strike, expiration);
+            AddOptionContract(option, resolution);
+            // add the call counter side of the mirrored pair
+            var mirrorOption = QuantConnect.Symbol.CreateOption(underlying, Market.USA, OptionStyle.American, OptionRight.Call, strike, expiration);
+            AddOptionContract(mirrorOption, resolution);
+
+            var impliedVolatility = IV(option, mirrorOption);
+            var delta = D(option, mirrorOption, optionModel: OptionPricingModelType.BinomialCoxRossRubinstein, ivModel: OptionPricingModelType.BlackScholes);
+            var gamma = G(option, mirrorOption, optionModel: OptionPricingModelType.ForwardTree, ivModel: OptionPricingModelType.BlackScholes);
+            var vega = V(option, mirrorOption, optionModel: OptionPricingModelType.ForwardTree, ivModel: OptionPricingModelType.BlackScholes);
+            var theta = T(option, mirrorOption, optionModel: OptionPricingModelType.ForwardTree, ivModel: OptionPricingModelType.BlackScholes);
+            var rho = R(option, mirrorOption, optionModel: OptionPricingModelType.ForwardTree, ivModel: OptionPricingModelType.BlackScholes);
+
+            if (impliedVolatility == 0m || delta == 0m || gamma == 0m || vega == 0m || theta == 0m || rho == 0m)
+            {
+                throw new RegressionTestException("Expected IV/greeks calculated");
+            }
+            if (!impliedVolatility.IsReady || !delta.IsReady || !gamma.IsReady || !vega.IsReady || !theta.IsReady || !rho.IsReady)
+            {
+                throw new RegressionTestException("Expected IV/greeks to be ready");
+            }
+
+            Quit($"Implied Volatility: {impliedVolatility}, Delta: {delta}, Gamma: {gamma}, Vega: {vega}, Theta: {theta}, Rho: {rho}");
         }
+
+        /// <summary>
+        /// This is used by the regression test system to indicate if the open source Lean repository has the required data to run this algorithm.
+        /// </summary>
+        public bool CanRunLocally => true;
 
         /// <summary>
         /// This is used by the regression test system to indicate which languages this algorithm is written in.
         /// </summary>
-        public override List<Language> Languages { get; } = new() { Language.CSharp };
+        public List<Language> Languages { get; } = new() { Language.CSharp };
 
         /// <summary>
         /// Data Points count of all timeslices of algorithm
         /// </summary>
-        public override long DataPoints => 0;
+        public long DataPoints => 0;
 
         /// <summary>
         /// Data Points count of the algorithm history
         /// </summary>
-        public override int AlgorithmHistoryDataPoints => 42;
+        public int AlgorithmHistoryDataPoints => 21;
+
+        /// <summary>
+        /// Final status of the algorithm
+        /// </summary>
+        public AlgorithmStatus AlgorithmStatus => AlgorithmStatus.Completed;
 
         /// <summary>
         /// This is used by the regression test system to indicate what the expected statistics are from running the algorithm
         /// </summary>
-        public override Dictionary<string, string> ExpectedStatistics => new Dictionary<string, string>
+        public Dictionary<string, string> ExpectedStatistics => new Dictionary<string, string>
         {
             {"Total Orders", "0"},
             {"Average Win", "0%"},

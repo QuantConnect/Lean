@@ -53,12 +53,7 @@ namespace QuantConnect.Data.Auxiliary
                 var factorDate = ReversedFactorFileDates[i];
                 if (factorDate.Date < searchDate.Date)
                 {
-                    if (factorDate.Date.DayOfWeek != DayOfWeek.Friday || (searchDate - factorDate).Days > 1)
-                    {
-                        // so 'factorDate.Date' is the last date a factor is applied, but if 'searchDate.Date' is saturday there hasn't been any new data actually, we can use previous factor
-                        // why? well for option greeks we compare strikes and underlying prices, so we use raw or scaled raw mode, but scaled raw mode will be affected if on monday there's a split
-                        break;
-                    }
+                    break;
                 }
 
                 var factorFileRow = SortedFactorFileData[factorDate];

@@ -36,33 +36,18 @@ namespace QuantConnect.Algorithm.CSharp
         private Theta _theta;
         private Rho _rho;
 
-        /// <summary>
-        /// The resolution to use
-        /// </summary>
-        protected virtual Resolution Resolution => Resolution.Daily;
-
-        /// <summary>
-        /// The start date
-        /// </summary>
-        protected virtual int StartDateInit => 5;
-
-        /// <summary>
-        /// The end date
-        /// </summary>
-        protected virtual int EndDateInit => 7;
-
         public override void Initialize()
         {
-            SetStartDate(2014, 6, StartDateInit);
-            SetEndDate(2014, 6, EndDateInit);
+            SetStartDate(2014, 6, 5);
+            SetEndDate(2014, 6, 7);
             SetCash(100000);
 
-            var equity = AddEquity("AAPL", Resolution).Symbol;
+            var equity = AddEquity("AAPL", Resolution.Daily).Symbol;
             var option = QuantConnect.Symbol.CreateOption("AAPL", Market.USA, OptionStyle.American, OptionRight.Put, 650m, new DateTime(2014, 6, 21));
-            AddOptionContract(option, Resolution);
+            AddOptionContract(option, Resolution.Daily);
             // add the call counter side of the mirrored pair
             var mirrorOption = QuantConnect.Symbol.CreateOption("AAPL", Market.USA, OptionStyle.American, OptionRight.Call, 650m, new DateTime(2014, 6, 21));
-            AddOptionContract(mirrorOption, Resolution);
+            AddOptionContract(mirrorOption, Resolution.Daily);
 
             _delta = D(option, mirrorOption, optionModel: OptionPricingModelType.BinomialCoxRossRubinstein, ivModel: OptionPricingModelType.BlackScholes);
             _gamma = G(option, mirrorOption, optionModel: OptionPricingModelType.ForwardTree, ivModel: OptionPricingModelType.BlackScholes);
@@ -77,10 +62,6 @@ namespace QuantConnect.Algorithm.CSharp
             RegisterIndicator(option, _impliedVolatility, new QuoteBarConsolidator(TimeSpan.FromDays(1)));
             RegisterIndicator(mirrorOption, _impliedVolatility, new QuoteBarConsolidator(TimeSpan.FromDays(1)));
             RegisterIndicator(equity, _impliedVolatility, new TradeBarConsolidator(TimeSpan.FromDays(1)));
-            if (Settings.AutomaticIndicatorWarmUp)
-            {
-                WarmUpIndicator(new[] { option, mirrorOption, equity }, _impliedVolatility, Resolution);
-            }
 
             // custom IV smoothing function: assume the lower IV is more "fair"
             Func<decimal, decimal, decimal> smoothingFunc = (iv, mirrorIv) => Math.Min(iv, mirrorIv);
@@ -94,21 +75,16 @@ namespace QuantConnect.Algorithm.CSharp
 
         public override void OnEndOfAlgorithm()
         {
+            if (_impliedVolatility == 0m || _delta == 0m || _gamma == 0m || _vega == 0m || _theta == 0m || _rho == 0m)
+            {
+                throw new RegressionTestException("Expected IV/greeks calculated");
+            }
             Debug(@$"Implied Volatility: {_impliedVolatility},
 Delta: {_delta},
 Gamma: {_gamma},
 Vega: {_vega},
 Theta: {_theta},
 Rho: {_rho}");
-            if (_impliedVolatility == 0m || _delta == 0m || _gamma == 0m || _vega == 0m || _theta == 0m || _rho == 0m)
-            {
-                throw new RegressionTestException("Expected IV/greeks calculated");
-            }
-
-            if (!_impliedVolatility.IsReady || !_delta.IsReady || !_gamma.IsReady || !_vega.IsReady || !_theta.IsReady || !_rho.IsReady)
-            {
-                throw new RegressionTestException("Expected IV/greeks to be ready");
-            }
         }
 
         /// <summary>
@@ -119,17 +95,17 @@ Rho: {_rho}");
         /// <summary>
         /// This is used by the regression test system to indicate which languages this algorithm is written in.
         /// </summary>
-        public virtual List<Language> Languages { get; } = new() { Language.CSharp, Language.Python };
+        public List<Language> Languages { get; } = new() { Language.CSharp, Language.Python };
 
         /// <summary>
         /// Data Points count of all timeslices of algorithm
         /// </summary>
-        public virtual long DataPoints => 34;
+        public long DataPoints => 34;
 
         /// <summary>
         /// Data Points count of the algorithm history
         /// </summary>
-        public virtual int AlgorithmHistoryDataPoints => 0;
+        public int AlgorithmHistoryDataPoints => 0;
 
         /// <summary>
         /// Final status of the algorithm
@@ -139,7 +115,7 @@ Rho: {_rho}");
         /// <summary>
         /// This is used by the regression test system to indicate what the expected statistics are from running the algorithm
         /// </summary>
-        public virtual Dictionary<string, string> ExpectedStatistics => new Dictionary<string, string>
+        public Dictionary<string, string> ExpectedStatistics => new Dictionary<string, string>
         {
             {"Total Orders", "0"},
             {"Average Win", "0%"},

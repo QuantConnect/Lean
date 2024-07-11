@@ -897,7 +897,7 @@ namespace QuantConnect.Algorithm
         {
             var name = CreateIndicatorName(symbol, "IBS", resolution);
             var indicator = new InternalBarStrength(name);
-            InitializeIndicator(symbol, indicator, resolution, selector);
+            InitializeIndicator(indicator, resolution, selector, symbol);
 
             return indicator;
         }
