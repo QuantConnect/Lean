@@ -1113,7 +1113,9 @@ namespace QuantConnect.Algorithm
                         false,
                         x.Item2,
                         true,
-                        UniverseSettings.GetUniverseNormalizationModeOrDefault(symbol.SecurityType)));
+                        UniverseSettings.GetUniverseNormalizationModeOrDefault(symbol.SecurityType)))
+                    // lets make sure to respect the order of the data types, if used on a history request will affect outcome when using pushthrough for example
+                    .OrderByDescending(config => GetTickTypeOrder(config.SecurityType, config.TickType));
             }
         }
 

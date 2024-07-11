@@ -150,7 +150,7 @@ Rho: {_rho}");
     public class CustomImpliedVolatility : ImpliedVolatility
     {
         public CustomImpliedVolatility(Symbol option, Symbol mirrorOption, IRiskFreeInterestRateModel riskFreeRateModel, IDividendYieldModel dividendYieldModel)
-            : base(option, riskFreeRateModel, dividendYieldModel, mirrorOption, period: 2)
+            : base(option, riskFreeRateModel, dividendYieldModel, mirrorOption)
         {
             SetSmoothingFunction((iv, mirrorIV) => iv);
         }

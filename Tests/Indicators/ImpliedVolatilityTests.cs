@@ -186,8 +186,7 @@ def TestSmoothingFunction(iv: float, mirror_iv: float) -> float:
         [Test]
         public override void WarmsUpProperly()
         {
-            var period = 5;
-            var indicator = new ImpliedVolatility("testImpliedVolatilityIndicator", _symbol, 0.053m, 0.0153m, period: period);
+            var indicator = new ImpliedVolatility("testImpliedVolatilityIndicator", _symbol, 0.053m, 0.0153m);
             var warmUpPeriod = (indicator as IIndicatorWarmUpPeriodProvider)?.WarmUpPeriod;
 
             if (!warmUpPeriod.HasValue)
