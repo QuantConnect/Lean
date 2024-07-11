@@ -61,7 +61,7 @@ namespace QuantConnect.Indicators
         {
             if (input.High == input.Low)
             {
-                return 1m;
+                return 0.5m;
             }
             else
             {
