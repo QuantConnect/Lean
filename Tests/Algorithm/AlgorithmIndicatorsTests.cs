@@ -373,5 +373,31 @@ class GoodCustomIndicator:
                 Assert.AreEqual(1559, dataCount);
             }
         }
+
+        [Test]
+        public void SpecificTTypeIndicator()
+        {
+            _algorithm.SetDateTime(new DateTime(2013, 10, 11));
+            var referenceSymbol = Symbol.Create("IBM", SecurityType.Equity, Market.USA);
+            var indicator = new CustomIndicator();
+            var result = _algorithm.IndicatorHistory(indicator, referenceSymbol, TimeSpan.FromDays(1), Resolution.Minute).ToList();
+            Assert.AreEqual(390, result.Count);
+            Assert.IsTrue(indicator.IsReady);
+        }
+
+
+        private class CustomIndicator : IndicatorBase<QuoteBar>, IIndicatorWarmUpPeriodProvider
+        {
+            private bool _isReady;
+            public int WarmUpPeriod => 1;
+            public override bool IsReady => _isReady;
+            public CustomIndicator() : base("Pepe")
+            { }
+            protected override decimal ComputeNextValue(QuoteBar input)
+            {
+                _isReady = true;
+                return input.Ask.High;
+            }
+        }
     }
 }
