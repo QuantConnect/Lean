@@ -13,7 +13,6 @@
  * limitations under the License.
 */
 
-using System;
 using System.Collections.Generic;
 using System.Linq;
 using QuantConnect.Data.UniverseSelection;
@@ -26,14 +25,6 @@ namespace QuantConnect.Algorithm.CSharp
     /// Algorithm asserting that using OnlyApplyFilterAtMarketOpen along with other dynamic filters will make the filters be applied only on market
     /// open, regardless of the order of configuration of the filters
     /// </summary>
-    /// <remarks>
-    /// This algorithm is outdated. Options selection happens daily at midnight. The OnlyApplyFilterAtMarketOpen method is not obsolete.
-    ///
-    ///
-    /// TODO: Remove algorithm!
-    ///
-    ///
-    /// </remarks>
     public class AddOptionWithOnMarketOpenOnlyFilterRegressionAlgorithm : QCAlgorithm, IRegressionAlgorithmDefinition
     {
         public override void Initialize()
