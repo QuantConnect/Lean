@@ -2256,7 +2256,7 @@ namespace QuantConnect.Algorithm
         {
             var name = CreateIndicatorName(symbol, $"VWMA({period})", resolution);
             var indicator = new VolumeWeightedMovingAverage(name, period);
-            InitializeIndicator(symbol, indicator, resolution, selector);
+            InitializeIndicator(indicator, resolution, selector);
             return indicator;
         }
 
