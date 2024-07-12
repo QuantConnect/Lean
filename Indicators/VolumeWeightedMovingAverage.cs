@@ -45,6 +45,15 @@ namespace QuantConnect.Indicators
         }
 
         /// <summary>
+        /// Initializes a new instance of the <see cref="VolumeWeightedMovingAverage"/> class using the specified name.
+        /// </summary>
+        /// <param name="period">The period of the SMA</param>
+        public VolumeWeightedMovingAverage(int period)
+            : this($"VWMA({period})", period)
+        {
+        }
+
+        /// <summary>
         /// Gets a flag indicating when this indicator is ready and fully initialized
         /// </summary>
         public override bool IsReady => _rollingSumS.IsReady && _rollingSumV.IsReady;
