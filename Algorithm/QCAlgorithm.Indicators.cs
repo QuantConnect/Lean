@@ -1742,7 +1742,7 @@ namespace QuantConnect.Algorithm
         {
             var name = CreateIndicatorName(symbol, $"StochRSI({rsiPeriod},{stochPeriod},{kSmoothingPeriod},{dSmoothingPeriod})", resolution);
             var indicator = new StochasticRelativeStrengthIndex(name, rsiPeriod, stochPeriod, kSmoothingPeriod, dSmoothingPeriod, movingAverageType);
-            InitializeIndicator(symbol, indicator, resolution, selector);
+            InitializeIndicator(indicator, resolution, selector);
             return indicator;
         }
 
