@@ -16,6 +16,7 @@
 using System;
 using System.Linq;
 using QuantConnect.Data.Market;
+using static QLNet.Callability;
 
 namespace QuantConnect.Indicators
 {
@@ -109,8 +110,10 @@ namespace QuantConnect.Indicators
                 }
                 else
                 {
-                    // return a sentinel value when max_high == min_low
-                    return decimal.MinValue;
+                    // situation of max_high = min_low represents a totally "choppy" or stagnant market,
+                    // with no price movement at all.
+                    // It's the extreme case of consolidation, hence the maximum value of 100 for the index
+                    return 100m;
                 }
             }
             else
