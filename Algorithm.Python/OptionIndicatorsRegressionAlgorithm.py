@@ -24,7 +24,7 @@ class OptionIndicatorsRegressionAlgorithm(QCAlgorithm):
         option = Symbol.create_option("AAPL", Market.USA, OptionStyle.AMERICAN, OptionRight.PUT, 505, datetime(2014, 6, 27))
         self.add_option_contract(option, Resolution.MINUTE)
 
-        self.implied_volatility = self.iv(option, option_model = OptionPricingModelType.BLACK_SCHOLES, period = 2)
+        self.implied_volatility = self.iv(option, option_model = OptionPricingModelType.BLACK_SCHOLES)
         self.delta = self.d(option, option_model = OptionPricingModelType.BINOMIAL_COX_ROSS_RUBINSTEIN, iv_model = OptionPricingModelType.BLACK_SCHOLES)
         self.gamma = self.g(option, option_model = OptionPricingModelType.FORWARD_TREE, iv_model = OptionPricingModelType.BLACK_SCHOLES)
         self.vega = self.v(option, option_model = OptionPricingModelType.FORWARD_TREE, iv_model = OptionPricingModelType.BLACK_SCHOLES)
