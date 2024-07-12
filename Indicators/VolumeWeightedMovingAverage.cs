@@ -67,7 +67,10 @@ namespace QuantConnect.Indicators
         {
             _rollingSumS.Update(input.Time, input.Close * input.Volume);
             _rollingSumV.Update(input.Time, input.Volume);
-            return _rollingSumS.Current.Value / _rollingSumV.Current.Value;
+            var _sumV = _rollingSumV.Current.Value;
+            if (_sumV != 0)
+                return _rollingSumS.Current.Value / _sumV;
+            return input.Close;
         }
 
         /// <summary>
