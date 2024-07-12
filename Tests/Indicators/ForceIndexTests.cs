@@ -25,8 +25,8 @@ namespace QuantConnect.Tests.Indicators
     {
         protected override IndicatorBase<TradeBar> CreateIndicator()
         {
-            //RenkoBarSize = 1m;
-            //VolumeRenkoBarSize = 0.5m;
+            RenkoBarSize = 1m;
+            // VolumeRenkoBarSize = 0.5m; // when uncommented test AcceptsVolumeRenkoBarsAsInput in hanging
             return new ForceIndex(20);
         }
 
@@ -34,5 +34,14 @@ namespace QuantConnect.Tests.Indicators
 
         protected override string TestColumnName => "ForceIndex20";
 
+        /// <summary>
+        /// The final value of this indicator is zero because it uses the Volume of the bars it receives.
+        /// Since RenkoBar's don't always have Volume, the final current value is zero. Therefore we
+        /// skip this test
+        /// </summary>
+        /// <param name="indicator"></param>
+        protected override void IndicatorValueIsNotZeroAfterReceiveRenkoBars(IndicatorBase indicator)
+        {
+        }
     }
 }
