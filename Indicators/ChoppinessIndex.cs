@@ -16,7 +16,6 @@
 using System;
 using System.Linq;
 using QuantConnect.Data.Market;
-using static QLNet.Callability;
 
 namespace QuantConnect.Indicators
 {
