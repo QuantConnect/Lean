@@ -15,7 +15,6 @@
 */
 
 using System.Collections.Generic;
-using System;
 using System.Linq;
 using QuantConnect.Interfaces;
 using QuantConnect.Data.UniverseSelection;
@@ -25,15 +24,6 @@ namespace QuantConnect.Algorithm.CSharp
     /// <summary>
     /// Regression algorithm asserting that universe selection is not dynamic by default, that is, selection happens only on market open by default.
     /// </summary>
-    ///
-    ///
-    ///
-    ///
-    /// TODO: Remove this algorithm since options universe selection is now file-based and happens only once a day
-    ///
-    ///
-    ///
-    ///
     public class NonDynamicOptionsFilterRegressionAlgorithm : QCAlgorithm, IRegressionAlgorithmDefinition
     {
         private const string UnderlyingTicker = "AAPL";
@@ -85,7 +75,7 @@ namespace QuantConnect.Algorithm.CSharp
                         .Any(security => !security.Symbol.HasCanonical() || security.Symbol.Canonical != _optionSymbol))
                 {
                     throw new RegressionTestException("Unexpected security added: " +
-                        $"on second and second OnSecuritiesChanged callbacks we expect only {UnderlyingTicker} options to be added");
+                        $"on first and second OnSecuritiesChanged callbacks we expect only {UnderlyingTicker} options to be added");
                 }
 
                 if (_securitiesChangedCount == 2)
@@ -93,7 +83,7 @@ namespace QuantConnect.Algorithm.CSharp
                     // The options added the previous day should be removed
                     if (changes.RemovedSecurities.Count != _previouslyAddedOptionsCount)
                     {
-                        throw new Exception("Unexpected security changes count: " +
+                        throw new RegressionTestException("Unexpected security changes count: " +
                             "on the second OnSecuritiesChanged callback we expect the previous day selection to be removed.");
                     }
                 }
