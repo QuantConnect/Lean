@@ -446,6 +446,27 @@ namespace QuantConnect.Algorithm
         }
 
         /// <summary>
+        /// Creates a new Chande Kroll Stop indicator which will compute the short and lower stop.
+        /// The indicator will be automatically updated on the given resolution.
+        /// </summary>
+        /// <param name="symbol">The symbol whose Chande Kroll Stop we seek.</param>
+        /// <param name="atrPeriod">The period over which to compute the average true range.</param>
+        /// <param name="atrMult">The ATR multiplier to be used to compute stops distance.</param>
+        /// <param name="period">The period over which to compute the max of high stop and min of low stop.</param>
+        /// <param name="resolution">The resolution.</param>
+        /// <param name="selector">Selects a value from the BaseData to send into the indicator, if null defaults to casting the input value to a TradeBar</param>
+        /// <returns>The Donchian Channel indicator for the requested symbol.</returns>
+        [DocumentationAttribute(Indicators)]
+        public ChandeKrollStop CKS(Symbol symbol, int atrPeriod, decimal atrMult, int period, Resolution? resolution = null, Func<IBaseData, IBaseDataBar> selector = null)
+        {
+            var name = CreateIndicatorName(symbol, $"CKS({atrPeriod},{atrMult},{period})", resolution);
+            var indicator = new ChandeKrollStop(name, atrPeriod, atrMult, period);
+            InitializeIndicator(indicator, resolution, selector, symbol);
+
+            return indicator;
+        }
+
+        /// <summary>
         /// Creates a new ChaikinMoneyFlow indicator.
         /// </summary>
         /// <param name="symbol">The symbol whose CMF we want</param>
