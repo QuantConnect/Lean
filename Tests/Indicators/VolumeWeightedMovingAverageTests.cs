@@ -32,13 +32,11 @@ namespace QuantConnect.Tests.Indicators
 
         protected override string TestColumnName => "VWMA20";
 
+
         /// <summary>
-        /// The final value of this indicator is zero because it uses the Volume of the bars it receives.
-        /// Since RenkoBar's don't always have Volume, the final current value is zero. Therefore we
-        /// skip this test
+        /// This indicator doesn't accept Renko Bars as input. Skip this test.
         /// </summary>
-        /// <param name="indicator"></param>
-        protected override void IndicatorValueIsNotZeroAfterReceiveRenkoBars(IndicatorBase indicator)
+        public override void AcceptsRenkoBarsAsInput()
         {
         }
     }
