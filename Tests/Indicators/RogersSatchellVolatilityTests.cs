@@ -24,11 +24,11 @@ namespace QuantConnect.Tests.Indicators
     {
         protected override IndicatorBase<TradeBar> CreateIndicator()
         {
+            RenkoBarSize = 1m;
             return new RogersSatchellVolatility(9);
         }
 
         protected override string TestFileName => "spy_with_rsvolat.csv";
         protected override string TestColumnName => "RSVolat9";
-
     }
 }
