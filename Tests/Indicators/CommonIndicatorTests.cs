@@ -78,7 +78,6 @@ namespace QuantConnect.Tests.Indicators
                 Console.WriteLine("{0} {1} {2} {3}", i, period.Value - 1, i == period.Value - 1, indicator.IsReady);
                 Assert.AreEqual(i == period.Value - 1, indicator.IsReady);
             }
-            Console.WriteLine("ok");
             Assert.AreEqual(period.Value, indicator.Samples);
         }
 
