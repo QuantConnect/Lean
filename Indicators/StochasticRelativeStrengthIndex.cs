@@ -27,11 +27,6 @@ namespace QuantConnect.Indicators
     public class StochasticRelativeStrengthIndex : Indicator, IIndicatorWarmUpPeriodProvider
     {
         /// <summary>
-        /// Gets the type of moving average
-        /// </summary>
-        public MovingAverageType MovingAverageType { get; }
-
-        /// <summary>
         /// Gets the %K output
         /// </summary>
         public readonly IndicatorBase<IndicatorDataPoint> k;
@@ -44,7 +39,6 @@ namespace QuantConnect.Indicators
         private RelativeStrengthIndex _rsi;
         private readonly RollingWindow<decimal> _recentRSIValues;
         private readonly int _stochPeriod;
-
 
         /// <summary>
         /// Initializes a new instance of the StochasticRelativeStrengthIndex class
@@ -79,13 +73,12 @@ namespace QuantConnect.Indicators
             d = movingAverageType.AsIndicator($"{name}_d_{movingAverageType}", dSmoothingPeriod);
 
             WarmUpPeriod = stochPeriod;
-            MovingAverageType = movingAverageType;
         }
 
         /// <summary>
         /// Gets a flag indicating when this indicator is ready and fully initialized
         /// </summary>
-        public override bool IsReady => _rsi.IsReady && _recentRSIValues.IsReady && k.IsReady && d.IsReady;
+        public override bool IsReady => Samples >= WarmUpPeriod;
 
         /// <summary>
         /// Required period, in data points, for the indicator to be ready and fully initialized.
@@ -102,9 +95,9 @@ namespace QuantConnect.Indicators
         {
             _rsi.Update(input);
 
-            if (Samples < _stochPeriod)
+            if (!IsReady)
             {
-                return 0;
+                return 0m;
             }
 
             _recentRSIValues.Add(_rsi.Current.Value);
