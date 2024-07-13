@@ -77,8 +77,8 @@ namespace QuantConnect.Tests.Indicators
                 indicator.Update(input);
                 Assert.AreEqual(i == period.Value - 1, indicator.IsReady);
             }
-            Assert.AreEqual(period.Value, indicator.Samples);
 
+            Assert.AreEqual(period.Value, indicator.Samples);
         }
 
         [Test]
