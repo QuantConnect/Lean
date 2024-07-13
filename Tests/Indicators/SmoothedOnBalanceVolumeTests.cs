@@ -33,5 +33,15 @@ namespace QuantConnect.Tests.Indicators
         protected override string TestFileName => "spy_with_sobv.csv";
 
         protected override string TestColumnName => "SOBV20";
+
+        /// <summary>
+        /// The final value of this indicator is zero because it uses the Volume of the bars it receives.
+        /// Since RenkoBar's don't always have Volume, the final current value is zero. Therefore we
+        /// skip this test
+        /// </summary>
+        /// <param name="indicator"></param>
+        protected override void IndicatorValueIsNotZeroAfterReceiveRenkoBars(IndicatorBase indicator)
+        {
+        }
     }
 }
