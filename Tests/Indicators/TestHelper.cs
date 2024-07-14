@@ -268,9 +268,14 @@ namespace QuantConnect.Tests.Indicators
         {
             var date = DateTime.Today;
 
-            foreach (var data in GetTradeBarStream(externalDataFilename, false))
+            foreach (var parts in GetCsvFileStream(externalDataFilename))
             {
-                indicator.Update(date, data.Close);
+                if (!(parts.ContainsKey("Close")))
+                {
+                    Assert.Fail("Didn't find column 'Close'");
+                    break;
+                }
+                indicator.Update(date, parts.GetCsvValue("close").ToDecimal());
             }
 
             Assert.IsTrue(indicator.IsReady);
@@ -374,18 +379,16 @@ namespace QuantConnect.Tests.Indicators
                 ? SecurityIdentifier.GenerateEquity(dictionary.GetCsvValue("symbol", "ticker"), Market.USA)
                 : SecurityIdentifier.Empty;
 
-            var close = dictionary.GetCsvValue("close").ToDecimal();
-
             return new TradeBar
             {
                 Symbol = sid != SecurityIdentifier.Empty
                     ? new Symbol(sid, dictionary.GetCsvValue("symbol", "ticker"))
                     : Symbol.Empty,
                 Time = Time.ParseDate(dictionary.GetCsvValue("date", "time")),
-                Open = dictionary.ContainsKey("open") ? dictionary.GetCsvValue("open").ToDecimal() : close,
-                High = dictionary.ContainsKey("high") ? dictionary.GetCsvValue("high").ToDecimal() : close,
-                Low = dictionary.ContainsKey("low") ? dictionary.GetCsvValue("low").ToDecimal() : close,
-                Close = close,
+                Open = dictionary.GetCsvValue("open").ToDecimal(),
+                High = dictionary.GetCsvValue("high").ToDecimal(),
+                Low = dictionary.GetCsvValue("low").ToDecimal(),
+                Close = dictionary.GetCsvValue("close").ToDecimal(),
                 Volume = forceVolumeColumn || dictionary.ContainsKey("volume") ? Parse.Long(dictionary.GetCsvValue("volume"), NumberStyles.AllowExponent | NumberStyles.AllowDecimalPoint) : 0
             };
         }
