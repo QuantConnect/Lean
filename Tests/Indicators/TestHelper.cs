@@ -374,16 +374,33 @@ namespace QuantConnect.Tests.Indicators
                 ? SecurityIdentifier.GenerateEquity(dictionary.GetCsvValue("symbol", "ticker"), Market.USA)
                 : SecurityIdentifier.Empty;
 
+            var close = dictionary.GetCsvValue("close").ToDecimal();
+            var open = close;
+            if (dictionary.ContainsKey("open"))
+            {
+                open = dictionary.GetCsvValue("open").ToDecimal();
+            }
+            var high = close;
+            if (dictionary.ContainsKey("high"))
+            {
+                high = dictionary.GetCsvValue("high").ToDecimal();
+            }
+            var low = close;
+            if (dictionary.ContainsKey("low"))
+            {
+                low = dictionary.GetCsvValue("low").ToDecimal();
+            }
+
             return new TradeBar
             {
                 Symbol = sid != SecurityIdentifier.Empty
                     ? new Symbol(sid, dictionary.GetCsvValue("symbol", "ticker"))
                     : Symbol.Empty,
                 Time = Time.ParseDate(dictionary.GetCsvValue("date", "time")),
-                Open = dictionary.GetCsvValue("open").ToDecimal(),
-                High = dictionary.GetCsvValue("high").ToDecimal(),
-                Low = dictionary.GetCsvValue("low").ToDecimal(),
-                Close = dictionary.GetCsvValue("close").ToDecimal(),
+                Open = open,
+                High = high,
+                Low = low,
+                Close = close,
                 Volume = forceVolumeColumn || dictionary.ContainsKey("volume") ? Parse.Long(dictionary.GetCsvValue("volume"), NumberStyles.AllowExponent | NumberStyles.AllowDecimalPoint) : 0
             };
         }
