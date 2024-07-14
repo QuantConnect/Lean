@@ -375,21 +375,6 @@ namespace QuantConnect.Tests.Indicators
                 : SecurityIdentifier.Empty;
 
             var close = dictionary.GetCsvValue("close").ToDecimal();
-            var open = close;
-            if (dictionary.ContainsKey("open"))
-            {
-                open = dictionary.GetCsvValue("open").ToDecimal();
-            }
-            var high = close;
-            if (dictionary.ContainsKey("high"))
-            {
-                high = dictionary.GetCsvValue("high").ToDecimal();
-            }
-            var low = close;
-            if (dictionary.ContainsKey("low"))
-            {
-                low = dictionary.GetCsvValue("low").ToDecimal();
-            }
 
             return new TradeBar
             {
@@ -397,9 +382,9 @@ namespace QuantConnect.Tests.Indicators
                     ? new Symbol(sid, dictionary.GetCsvValue("symbol", "ticker"))
                     : Symbol.Empty,
                 Time = Time.ParseDate(dictionary.GetCsvValue("date", "time")),
-                Open = open,
-                High = high,
-                Low = low,
+                Open = dictionary.ContainsKey("open") ? dictionary.GetCsvValue("open").ToDecimal() : close,
+                High = dictionary.ContainsKey("high") ? dictionary.GetCsvValue("high").ToDecimal() : close,
+                Low = dictionary.ContainsKey("low") ? dictionary.GetCsvValue("low").ToDecimal() : close,
                 Close = close,
                 Volume = forceVolumeColumn || dictionary.ContainsKey("volume") ? Parse.Long(dictionary.GetCsvValue("volume"), NumberStyles.AllowExponent | NumberStyles.AllowDecimalPoint) : 0
             };
