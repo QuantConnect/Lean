@@ -1075,6 +1075,38 @@ namespace QuantConnect.Algorithm
         }
 
         /// <summary>
+        /// Creates a new KnowSureThing indicator for the symbol. The indicator will be automatically
+        /// updated on the given resolution.
+        /// </summary>
+        /// <param name="symbol">The symbol whose VWMA we want</param>
+        /// <param name="roc1Period">The period over which to compute ROC1</param>
+        /// <param name="roc1MaPeriod">The smoothing period used to smooth the computed ROC1 values</param>
+        /// <param name="roc2Period">The period over which to compute ROC2</param>
+        /// <param name="roc2MaPeriod">The smoothing period used to smooth the computed ROC2 values</param>
+        /// <param name="roc3Period">The period over which to compute ROC3</param>
+        /// <param name="roc3MaPeriod">The smoothing period used to smooth the computed ROC3 values</param>
+        /// <param name="roc4Period">The period over which to compute ROC4</param>
+        /// <param name="roc4MaPeriod">The smoothing period used to smooth the computed ROC4 values</param>
+        /// <param name="signalPeriod">The smoothing period used to smooth the signal values</param>
+        /// <param name="movingAverageType">Specifies the type of moving average to be used as smoother for KnowSureThing values</param>
+        /// <param name="resolution">The resolution</param>
+        /// <param name="selector">Selects a value from the BaseData to send into the indicator, if null defaults to casting the input value to a TradeBar</param>
+        /// <returns>A new AverageTrueRange indicator with the specified smoothing type and period</returns>
+        [DocumentationAttribute(Indicators)]
+        public KnowSureThing KST(Symbol symbol,
+            int roc1Period, int roc1MaPeriod, int roc2Period, int roc2MaPeriod,
+            int roc3Period, int roc3MaPeriod, int roc4Period, int roc4MaPeriod, int signalPeriod,
+            MovingAverageType movingAverageType = MovingAverageType.Simple,
+            Resolution? resolution = null, Func<IBaseData, decimal> selector = null)
+        {
+            var name = CreateIndicatorName(symbol, $"KST({roc1Period},{roc1MaPeriod},{roc2Period},{roc2MaPeriod},{roc3Period},{roc3MaPeriod},{roc4Period},{roc4MaPeriod},{signalPeriod},{movingAverageType})", resolution);
+            var indicator = new KnowSureThing(name, roc1Period, roc1MaPeriod, roc2Period, roc2MaPeriod, roc3Period, roc3MaPeriod, roc4Period, roc4MaPeriod, signalPeriod, movingAverageType);
+            InitializeIndicator(indicator, resolution, selector);
+            return indicator;
+        }
+
+
+        /// <summary>
         /// Creates a new LogReturn indicator.
         /// </summary>
         /// <param name="symbol">The symbol whose log return we seek</param>

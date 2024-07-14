@@ -267,7 +267,6 @@ namespace QuantConnect.Tests.Indicators
         public static void TestIndicatorReset(IndicatorBase<IndicatorDataPoint> indicator, string externalDataFilename)
         {
             var date = DateTime.Today;
-
             foreach (var data in GetTradeBarStream(externalDataFilename, false))
             {
                 indicator.Update(date, data.Close);
@@ -374,16 +373,18 @@ namespace QuantConnect.Tests.Indicators
                 ? SecurityIdentifier.GenerateEquity(dictionary.GetCsvValue("symbol", "ticker"), Market.USA)
                 : SecurityIdentifier.Empty;
 
+            var close = dictionary.GetCsvValue("close").ToDecimal();
+
             return new TradeBar
             {
                 Symbol = sid != SecurityIdentifier.Empty
                     ? new Symbol(sid, dictionary.GetCsvValue("symbol", "ticker"))
                     : Symbol.Empty,
                 Time = Time.ParseDate(dictionary.GetCsvValue("date", "time")),
-                Open = dictionary.GetCsvValue("open").ToDecimal(),
-                High = dictionary.GetCsvValue("high").ToDecimal(),
-                Low = dictionary.GetCsvValue("low").ToDecimal(),
-                Close = dictionary.GetCsvValue("close").ToDecimal(),
+                Open = dictionary.ContainsKey("open") ? dictionary.GetCsvValue("open").ToDecimal() : close,
+                High = dictionary.ContainsKey("high") ? dictionary.GetCsvValue("high").ToDecimal() : close,
+                Low = dictionary.ContainsKey("low") ? dictionary.GetCsvValue("low").ToDecimal() : close,
+                Close = close,
                 Volume = forceVolumeColumn || dictionary.ContainsKey("volume") ? Parse.Long(dictionary.GetCsvValue("volume"), NumberStyles.AllowExponent | NumberStyles.AllowDecimalPoint) : 0
             };
         }
