@@ -1101,7 +1101,7 @@ namespace QuantConnect.Algorithm
         {
             var name = CreateIndicatorName(symbol, $"KST({roc1Period},{roc1MaPeriod},{roc2Period},{roc2MaPeriod},{roc3Period},{roc3MaPeriod},{roc4Period},{roc4MaPeriod},{signalPeriod},{movingAverageType})", resolution);
             var indicator = new KnowSureThing(name, roc1Period, roc1MaPeriod, roc2Period, roc2MaPeriod, roc3Period, roc3MaPeriod, roc4Period, roc4MaPeriod, signalPeriod, movingAverageType);
-            InitializeIndicator(indicator, resolution, selector);
+            InitializeIndicator(indicator, resolution, selector, symbol);
             return indicator;
         }
 
