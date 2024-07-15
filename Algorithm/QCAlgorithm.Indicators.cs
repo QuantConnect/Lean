@@ -778,7 +778,7 @@ namespace QuantConnect.Algorithm
         {
             var name = CreateIndicatorName(symbol, $"FI({period})", resolution);
             var indicator = new ForceIndex(name, period, type);
-            InitializeIndicator(indicator, resolution, selector);
+            InitializeIndicator(indicator, resolution, selector, symbol);
 
             return indicator;
         }
