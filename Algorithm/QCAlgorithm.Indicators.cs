@@ -745,25 +745,6 @@ namespace QuantConnect.Algorithm
         }
 
         /// <summary>
-        /// Creates an FisherTransform indicator for the symbol.
-        /// The indicator will be automatically updated on the given resolution.
-        /// </summary>
-        /// <param name="symbol">The symbol whose FisherTransform we want</param>
-        /// <param name="period">The period of the FisherTransform</param>
-        /// <param name="resolution">The resolution</param>
-        /// <param name="selector">Selects a value from the BaseData to send into the indicator, if null defaults to casting the input value to a TradeBar</param>
-        /// <returns>The FisherTransform for the given parameters</returns>
-        [DocumentationAttribute(Indicators)]
-        public FisherTransform FISH(Symbol symbol, int period, Resolution? resolution = null, Func<IBaseData, TradeBar> selector = null)
-        {
-            var name = CreateIndicatorName(symbol, $"FISH({period})", resolution);
-            var fisherTransform = new FisherTransform(name, period);
-            InitializeIndicator(fisherTransform, resolution, selector, symbol);
-
-            return fisherTransform;
-        }
-
-        /// <summary>
         /// Creates a new ForceIndex indicator for the symbol. The indicator will be automatically
         /// updated on the given resolution.
         /// </summary>
@@ -781,6 +762,25 @@ namespace QuantConnect.Algorithm
             InitializeIndicator(indicator, resolution, selector, symbol);
 
             return indicator;
+        }
+
+        /// <summary>
+        /// Creates an FisherTransform indicator for the symbol.
+        /// The indicator will be automatically updated on the given resolution.
+        /// </summary>
+        /// <param name="symbol">The symbol whose FisherTransform we want</param>
+        /// <param name="period">The period of the FisherTransform</param>
+        /// <param name="resolution">The resolution</param>
+        /// <param name="selector">Selects a value from the BaseData to send into the indicator, if null defaults to casting the input value to a TradeBar</param>
+        /// <returns>The FisherTransform for the given parameters</returns>
+        [DocumentationAttribute(Indicators)]
+        public FisherTransform FISH(Symbol symbol, int period, Resolution? resolution = null, Func<IBaseData, TradeBar> selector = null)
+        {
+            var name = CreateIndicatorName(symbol, $"FISH({period})", resolution);
+            var fisherTransform = new FisherTransform(name, period);
+            InitializeIndicator(fisherTransform, resolution, selector, symbol);
+
+            return fisherTransform;
         }
 
 
