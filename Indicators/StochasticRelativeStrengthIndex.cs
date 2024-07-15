@@ -26,27 +26,26 @@ namespace QuantConnect.Indicators
     /// </summary>
     public class StochasticRelativeStrengthIndex : Indicator, IIndicatorWarmUpPeriodProvider
     {
+        private readonly RelativeStrengthIndex _rsi;
+        private readonly RollingWindow<decimal> _recentRSIValues;
+
         /// <summary>
         /// Gets the %K output
         /// </summary>
-        public readonly IndicatorBase<IndicatorDataPoint> k;
+        public IndicatorBase<IndicatorDataPoint> K { get; }
 
         /// <summary>
         /// Gets the %D output
         /// </summary>
-        public readonly IndicatorBase<IndicatorDataPoint> d;
-
-        private RelativeStrengthIndex _rsi;
-        private readonly RollingWindow<decimal> _recentRSIValues;
-        private readonly int _stochPeriod;
+        public IndicatorBase<IndicatorDataPoint> D { get; }
 
         /// <summary>
         /// Initializes a new instance of the StochasticRelativeStrengthIndex class
         /// </summary>
         /// <param name="rsiPeriod">The period of the relative strength index</param>
         /// <param name="stochPeriod">The period of the stochastic indicator</param>
-        /// <param name="kSmoothingPeriod">The smoothing period of k output (aka %K)</param>
-        /// <param name="dSmoothingPeriod">The smoothing period of d output (aka %D)</param>
+        /// <param name="kSmoothingPeriod">The smoothing period of K output (aka %K)</param>
+        /// <param name="dSmoothingPeriod">The smoothing period of D output (aka %D)</param>
         /// <param name="movingAverageType">The type of moving average to be used for k and d</param>
         public StochasticRelativeStrengthIndex(int rsiPeriod, int stochPeriod, int kSmoothingPeriod, int dSmoothingPeriod, MovingAverageType movingAverageType = MovingAverageType.Simple)
             : this($"StochRSI({rsiPeriod},{stochPeriod},{kSmoothingPeriod},{dSmoothingPeriod},{movingAverageType})", rsiPeriod, stochPeriod, kSmoothingPeriod, dSmoothingPeriod, movingAverageType)
@@ -59,18 +58,17 @@ namespace QuantConnect.Indicators
         /// <param name="name">The name of this indicator</param>
         /// <param name="rsiPeriod">The period of the relative strength index</param>
         /// <param name="stochPeriod">The period of the stochastic indicator</param>
-        /// <param name="kSmoothingPeriod">The smoothing period of k output</param>
-        /// <param name="dSmoothingPeriod">The smoothing period of d output</param>
+        /// <param name="kSmoothingPeriod">The smoothing period of K output</param>
+        /// <param name="dSmoothingPeriod">The smoothing period of D output</param>
         /// <param name="movingAverageType">The type of moving average to be used</param>
         public StochasticRelativeStrengthIndex(string name, int rsiPeriod, int stochPeriod, int kSmoothingPeriod, int dSmoothingPeriod, MovingAverageType movingAverageType = MovingAverageType.Simple)
             : base(name)
         {
-            _stochPeriod = stochPeriod;
             _rsi = new RelativeStrengthIndex(rsiPeriod);
             _recentRSIValues = new RollingWindow<decimal>(stochPeriod);
 
-            k = movingAverageType.AsIndicator($"{name}_k_{movingAverageType}", kSmoothingPeriod);
-            d = movingAverageType.AsIndicator($"{name}_d_{movingAverageType}", dSmoothingPeriod);
+            K = movingAverageType.AsIndicator($"{name}_K_{movingAverageType}", kSmoothingPeriod);
+            D = movingAverageType.AsIndicator($"{name}_D_{movingAverageType}", dSmoothingPeriod);
 
             WarmUpPeriod = stochPeriod;
         }
@@ -87,7 +85,7 @@ namespace QuantConnect.Indicators
 
         /// <summary>
         /// Computes the next value of the following sub-indicators from the given state:
-        /// k (%K) and d (%D)
+        /// K (%K) and D (%D)
         /// </summary>
         /// <param name="input">The input given to the indicator</param>
         /// <returns>The input is returned unmodified.</returns>
@@ -105,12 +103,12 @@ namespace QuantConnect.Indicators
             var max_high = _recentRSIValues.Max();
             var min_low = _recentRSIValues.Min();
 
-            decimal _k = 100;
+            decimal k = 100;
             if (max_high != min_low)
-                _k = 100 * (_rsi.Current.Value - min_low) / (max_high - min_low);
+                k = 100 * (_rsi.Current.Value - min_low) / (max_high - min_low);
 
-            k.Update(input.Time, _k);
-            d.Update(input.Time, k.Current.Value);
+            K.Update(input.EndTime, k);
+            D.Update(input.EndTime, K.Current.Value);
 
             return input.Value;
         }
@@ -122,8 +120,8 @@ namespace QuantConnect.Indicators
         {
             _rsi.Reset();
             _recentRSIValues.Reset();
-            k.Reset();
-            d.Reset();
+            K.Reset();
+            D.Reset();
             base.Reset();
         }
     }

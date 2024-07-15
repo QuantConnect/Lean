@@ -1730,8 +1730,8 @@ namespace QuantConnect.Algorithm
         /// <param name="symbol">The symbol whose Stochastic RSI we seek</param>
         /// <param name="rsiPeriod">The period of the relative strength index</param>
         /// <param name="stochPeriod">The period of the stochastic indicator</param>
-        /// <param name="kSmoothingPeriod">The smoothing period of k output</param>
-        /// <param name="dSmoothingPeriod">The smoothing period of d output</param>
+        /// <param name="kSmoothingPeriod">The smoothing period of K output</param>
+        /// <param name="dSmoothingPeriod">The smoothing period of D output</param>
         /// <param name="movingAverageType">The type of moving average to be used</param>
         /// <param name="resolution">The resolution</param>
         /// <param name="selector">Selects a value from the BaseData to send into the indicator, if null defaults to the Value property of BaseData (x => x.Value)</param>
@@ -1742,7 +1742,7 @@ namespace QuantConnect.Algorithm
         {
             var name = CreateIndicatorName(symbol, $"StochRSI({rsiPeriod},{stochPeriod},{kSmoothingPeriod},{dSmoothingPeriod})", resolution);
             var indicator = new StochasticRelativeStrengthIndex(name, rsiPeriod, stochPeriod, kSmoothingPeriod, dSmoothingPeriod, movingAverageType);
-            InitializeIndicator(indicator, resolution, selector);
+            InitializeIndicator(indicator, resolution, selector, symbol);
             return indicator;
         }
 
