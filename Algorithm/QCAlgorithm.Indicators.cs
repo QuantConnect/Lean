@@ -2529,7 +2529,7 @@ namespace QuantConnect.Algorithm
         {
             var name = CreateIndicatorName(symbol, $"RSVolat({period})", resolution);
             var indicator = new RogersSatchellVolatility(name, period);
-            InitializeIndicator(indicator, resolution, selector);
+            InitializeIndicator(indicator, resolution, selector, symbol);
 
             return indicator;
         }
