@@ -2250,13 +2250,13 @@ namespace QuantConnect.Algorithm
         /// <param name="period">The smoothing period used to smooth the computed VWMA values</param>
         /// <param name="resolution">The resolution</param>
         /// <param name="selector">Selects a value from the BaseData to send into the indicator, if null defaults to casting the input value to a TradeBar</param>
-        /// <returns>A new AverageTrueRange indicator with the specified smoothing type and period</returns>
+        /// <returns>A new VolumeWeightedMovingAverage indicator with the specified smoothing period</returns>
         [DocumentationAttribute(Indicators)]
         public VolumeWeightedMovingAverage VWMA(Symbol symbol, int period, Resolution? resolution = null, Func<IBaseData, TradeBar> selector = null)
         {
             var name = CreateIndicatorName(symbol, $"VWMA({period})", resolution);
             var indicator = new VolumeWeightedMovingAverage(name, period);
-            InitializeIndicator(indicator, resolution, selector);
+            InitializeIndicator(indicator, resolution, selector, symbol);
             return indicator;
         }
 

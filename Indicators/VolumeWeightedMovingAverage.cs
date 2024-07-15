@@ -19,18 +19,24 @@ namespace QuantConnect.Indicators
 {
     /// <summary>
     /// This indicator computes the Volume Weighted Moving Average (VWMA)
+    /// It is a technical analysis indicator used by traders to determine the average price of an asset over a given period of time,
+    /// taking into account both price and volume.
     /// </summary>
     public class VolumeWeightedMovingAverage : TradeBarIndicator, IIndicatorWarmUpPeriodProvider
     {
 
-        private IndicatorBase<IndicatorDataPoint> _rollingSumS { get; }
-        private IndicatorBase<IndicatorDataPoint> _rollingSumV { get; }
+        private readonly IndicatorBase<IndicatorDataPoint> _rollingSumPriceMultipliedByVolume;
+        private readonly IndicatorBase<IndicatorDataPoint> _rollingSumVolume;
 
         /// <summary>
         /// Required period, in data points, for the indicator to be ready and fully initialized.
         /// </summary>
         public int WarmUpPeriod { get; }
 
+        /// <summary>
+        /// Gets a flag indicating when this indicator is ready and fully initialized
+        /// </summary>
+        public override bool IsReady => _rollingSumPriceMultipliedByVolume.IsReady && _rollingSumVolume.IsReady;
         /// <summary>
         /// Initializes a new instance of the <see cref="VolumeWeightedMovingAverage"/> class using the specified name.
         /// </summary>
@@ -40,8 +46,8 @@ namespace QuantConnect.Indicators
             : base(name)
         {
             WarmUpPeriod = period;
-            _rollingSumS = new Sum(name + "_SumS", period);
-            _rollingSumV = new Sum(name + "_SumV", period);
+            _rollingSumPriceMultipliedByVolume = new Sum(name + "_SumPxV", period);
+            _rollingSumVolume = new Sum(name + "_SumVolume", period);
         }
 
         /// <summary>
@@ -54,22 +60,19 @@ namespace QuantConnect.Indicators
         }
 
         /// <summary>
-        /// Gets a flag indicating when this indicator is ready and fully initialized
-        /// </summary>
-        public override bool IsReady => _rollingSumS.IsReady && _rollingSumV.IsReady;
-
-        /// <summary>
         /// Computes the next value of this indicator from the given state
         /// </summary>
         /// <param name="input">The input given to the indicator</param>
         /// <returns>A new value for this indicator</returns>
         protected override decimal ComputeNextValue(TradeBar input)
         {
-            _rollingSumS.Update(input.Time, input.Close * input.Volume);
-            _rollingSumV.Update(input.Time, input.Volume);
-            var _sumV = _rollingSumV.Current.Value;
-            if (_sumV != 0)
-                return _rollingSumS.Current.Value / _sumV;
+            _rollingSumPriceMultipliedByVolume.Update(input.Time, input.Close * input.Volume);
+            _rollingSumVolume.Update(input.Time, input.Volume);
+            var sumVolume = _rollingSumVolume.Current.Value;
+            if (sumVolume != 0)
+            {
+                return _rollingSumPriceMultipliedByVolume.Current.Value / sumVolume;
+            }                
             return input.Close;
         }
 
@@ -78,8 +81,8 @@ namespace QuantConnect.Indicators
         /// </summary>
         public override void Reset()
         {
-            _rollingSumS.Reset();
-            _rollingSumV.Reset();
+            _rollingSumPriceMultipliedByVolume.Reset();
+            _rollingSumVolume.Reset();
             base.Reset();
         }
 
