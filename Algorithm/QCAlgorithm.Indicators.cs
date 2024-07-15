@@ -459,7 +459,7 @@ namespace QuantConnect.Algorithm
         {
             var name = CreateIndicatorName(symbol, $"CHOP({period})", resolution);
             var indicator = new ChoppinessIndex(name, period);
-            InitializeIndicator(indicator, resolution, selector);
+            InitializeIndicator(indicator, resolution, selector, symbol);
 
             return indicator;
         }
