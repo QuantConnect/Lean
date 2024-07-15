@@ -1888,7 +1888,7 @@ namespace QuantConnect.Algorithm
         {
             var name = CreateIndicatorName(symbol, $"SOBV({period})", resolution);
             var indicator = new SmoothedOnBalanceVolume(name, period, type);
-            InitializeIndicator(indicator, resolution, selector);
+            InitializeIndicator(indicator, resolution, selector, symbol);
             return indicator;
         }
 
