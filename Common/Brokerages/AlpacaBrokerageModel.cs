@@ -13,7 +13,6 @@
 * limitations under the License.
 */
 
-using System;
 using QuantConnect.Orders;
 using QuantConnect.Securities;
 using QuantConnect.Orders.Fees;
@@ -37,48 +36,44 @@ namespace QuantConnect.Brokerages
         };
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="AlpacaBrokerageModel"/> class with the specified account type.
+        /// Initializes a new instance of the <see cref="AlpacaBrokerageModel"/> class
         /// </summary>
-        /// <param name="accountType">The type of account, which can be either Cash or Margin. Defaults to Cash if not specified.</param>
-        public AlpacaBrokerageModel(AccountType accountType = AccountType.Cash) : base(accountType)
-        { }
-
-        /// <inheritdoc cref="IBrokerageModel.GetFeeModel(Security)" />
-        public override IFeeModel GetFeeModel(Security security)
+        /// <remarks>All Alpaca accounts are set up as margin accounts</remarks>
+        public AlpacaBrokerageModel() : base(AccountType.Margin)
         {
-            if (security == null)
-            {
-                throw new ArgumentNullException(nameof(security), "The security parameter cannot be null.");
-            }
-
-            return security.Type switch
-            {
-                SecurityType.Crypto => new AlpacaFeeModel(),
-                SecurityType.Base => base.GetFeeModel(security),
-                _ => throw new ArgumentOutOfRangeException(nameof(security), security, $"Not supported security type {security.Type}")
-            };
         }
 
-        /// <inheritdoc cref="IBrokerageModel.CanSubmitOrder(Security, Order, out BrokerageMessageEvent)"/>
+        /// <summary>
+        /// Gets a new fee model that represents this brokerage's fee structure
+        /// </summary>
+        /// <param name="security">The security to get a fee model for</param>
+        /// <returns>The new fee model for this brokerage</returns>
+        public override IFeeModel GetFeeModel(Security security)
+        {
+            return new AlpacaFeeModel();
+        }
+
+        /// <summary>
+        /// Returns true if the brokerage could accept this order. This takes into account
+        /// order type, security type, and order size limits.
+        /// </summary>
+        /// <remarks>
+        /// For example, a brokerage may have no connectivity at certain times, or an order rate/size limit
+        /// </remarks>
+        /// <param name="security">The security being ordered</param>
+        /// <param name="order">The order to be processed</param>
+        /// <param name="message">If this function returns false, a brokerage message detailing why the order may not be submitted</param>
+        /// <returns>True if the brokerage could process the order, false otherwise</returns>
         public override bool CanSubmitOrder(Security security, Order order, out BrokerageMessageEvent message)
         {
-            if (security == null)
-            {
-                throw new ArgumentNullException(nameof(security), "The security cannot be null. Please provide a valid security.");
-            }
-            else if (order == null)
-            {
-                throw new ArgumentNullException(nameof(order), "The order cannot be null. Please provide a valid order.");
-            }
-
-            if (!_supportOrderTypeBySecurityType.ContainsKey(security.Type))
+            if (!_supportOrderTypeBySecurityType.TryGetValue(security.Type, out var supportOrderTypes))
             {
                 message = new BrokerageMessageEvent(BrokerageMessageType.Warning, "NotSupported",
                     Messages.DefaultBrokerageModel.UnsupportedSecurityType(this, security));
                 return false;
             }
 
-            if (!_supportOrderTypeBySecurityType.TryGetValue(security.Type, out var supportOrderTypes) && supportOrderTypes.Contains(order.Type))
+            if (!supportOrderTypes.Contains(order.Type))
             {
                 message = new BrokerageMessageEvent(BrokerageMessageType.Warning, "NotSupported",
                     Messages.DefaultBrokerageModel.UnsupportedOrderType(this, order, supportOrderTypes));
@@ -88,7 +83,14 @@ namespace QuantConnect.Brokerages
             return base.CanSubmitOrder(security, order, out message);
         }
 
-        /// <inheritdoc cref="IBrokerageModel.CanUpdateOrder(Security, Order, UpdateOrderRequest, out BrokerageMessageEvent)"/>
+        /// <summary>
+        /// Returns true if the brokerage would allow updating the order as specified by the request
+        /// </summary>
+        /// <param name="security">The security of the order</param>
+        /// <param name="order">The order to be updated</param>
+        /// <param name="request">The requested updated to be made to the order</param>
+        /// <param name="message">If this function returns false, a brokerage message detailing why the order may not be updated</param>
+        /// <returns>True if the brokerage would allow updating the order, false otherwise</returns>
         public override bool CanUpdateOrder(Security security, Order order, UpdateOrderRequest request, out BrokerageMessageEvent message)
         {
             message = null;

@@ -14,7 +14,6 @@
  *
 */
 
-using System;
 using QuantConnect.Securities;
 
 namespace QuantConnect.Orders.Fees
@@ -30,21 +29,21 @@ namespace QuantConnect.Orders.Fees
         /// The fee percentage for a maker transaction in cryptocurrency.
         /// </summary>
         /// <see href="https://docs.alpaca.markets/docs/crypto-fees"/>
-        public const decimal MakerCryptoFee = 0.15m;
+        public const decimal MakerCryptoFee = 0.0015m;
 
         /// <summary>
         /// The fee percentage for a taker transaction in cryptocurrency.
         /// </summary>
-        public const decimal TakerCryptoFee = 0.25m;
+        public const decimal TakerCryptoFee = 0.0025m;
 
-        /// <inheritdoc cref="IFeeModel.GetOrderFee(OrderFeeParameters)"/>
+        /// <summary>
+        /// Gets the order fee associated with the specified order.
+        /// </summary>
+        /// <param name="parameters">A <see cref="OrderFeeParameters"/> object
+        /// containing the security and order</param>
+        /// <returns>The cost of the order in a <see cref="CashAmount"/> instance</returns>
         public override OrderFee GetOrderFee(OrderFeeParameters parameters)
         {
-            if (parameters == null)
-            {
-                throw new ArgumentNullException(nameof(parameters), "The order fee parameters cannot be null. Please provide valid parameters to calculate the order fee.");
-            }
-
             var security = parameters.Security;
             if (security.Symbol.ID.SecurityType == SecurityType.Crypto)
             {
@@ -53,8 +52,7 @@ namespace QuantConnect.Orders.Fees
                 var positionValue = security.Holdings.GetQuantityValue(order.AbsoluteQuantity, security.Price);
                 return new OrderFee(new CashAmount(positionValue.Amount * fee, positionValue.Cash.Symbol));
             }
-
-            return base.GetOrderFee(parameters);
+            return new OrderFee(new CashAmount(0, Currencies.USD));
         }
 
         /// <summary>
@@ -66,13 +64,11 @@ namespace QuantConnect.Orders.Fees
         /// <returns>The calculated fee for the given order.</returns>
         private static decimal GetFee(Order order, decimal makerFee, decimal takerFee)
         {
-            var fee = takerFee;
             if (order.Type == OrderType.Limit && !order.IsMarketable)
             {
-                fee = makerFee;
+                return makerFee;
             }
-
-            return fee;
+            return takerFee;
         }
     }
 }
