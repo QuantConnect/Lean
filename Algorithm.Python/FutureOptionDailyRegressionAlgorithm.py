@@ -58,7 +58,7 @@ class FutureOptionDailyRegressionAlgorithm(QCAlgorithm):
             raise AssertionError(f"Expected data at 7PM each day; instead was {slice.time}")
 
     def schedule_callback_liquidate(self):
-        self.liquidate(self.securities.keys())
+        self.liquidate()
 
     def on_end_of_algorithm(self):
         if self.portfolio.invested:

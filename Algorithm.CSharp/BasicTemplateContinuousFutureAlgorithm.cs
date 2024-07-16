@@ -79,8 +79,7 @@ namespace QuantConnect.Algorithm.CSharp
                 }
             }
             else if(_fast < _slow)
-            {
-                
+            {   
                 Liquidate();
             }
 

@@ -56,7 +56,7 @@ class ConstituentsUniverseRegressionAlgorithm(QCAlgorithm):
                 raise ValueError("Unexpected data count, step: " + str(self._step))
             # AAPL should now be released
             # note: takes one extra loop because the order is executed on market open
-            self.liquidate(self.securities.keys())
+            self.liquidate()
         elif self._step == 3:
             if not data.contains_key(self._fb) or not data.contains_key(self._spy) or not data.contains_key(self._appl):
                 raise ValueError("Unexpected symbols found, step: " + str(self._step))

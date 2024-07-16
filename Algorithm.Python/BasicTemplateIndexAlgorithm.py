@@ -47,7 +47,7 @@ class BasicTemplateIndexAlgorithm(QCAlgorithm):
         if self.ema_fast > self.ema_slow:
             self.set_holdings(self.spx_option, 1)
         else:
-            self.liquidate(self.securities.keys())
+            self.liquidate()
 
     def on_end_of_algorithm(self) -> None:
         if self.portfolio[self.spx].total_sale_volume > 0:

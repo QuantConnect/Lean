@@ -55,7 +55,7 @@ class BasicTemplateFuturesDailyAlgorithm(QCAlgorithm):
                     self.market_order(contract.symbol, 1)
         # Same as above, check for cases like trading on a friday night.
         elif all(x.exchange.hours.is_open(self.time, True) for x in self.securities.values() if x.invested):
-            self.liquidate(self.securities.keys())
+            self.liquidate()
 
     def get_resolution(self):
         return Resolution.DAILY

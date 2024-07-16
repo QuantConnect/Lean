@@ -53,7 +53,7 @@ class BasicTemplateContinuousFutureWithExtendedMarketAlgorithm(QCAlgorithm):
                 self._current_contract = self.securities[self._continuous_contract.mapped]
                 self.buy(self._current_contract.symbol, 1)
         elif self._fast.current.value < self._slow.current.value:
-            self.liquidate(self.securities.keys())
+            self.liquidate()
 
         if self._current_contract is not None and self._current_contract.symbol != self._continuous_contract.mapped:
             self.log(f"{Time} - rolling position from {self._current_contract.symbol} to {self._continuous_contract.mapped}")

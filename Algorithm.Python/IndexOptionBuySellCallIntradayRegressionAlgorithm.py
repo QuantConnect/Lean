@@ -71,7 +71,7 @@ class IndexOptionBuySellCallIntradayRegressionAlgorithm(QCAlgorithm):
             raise Exception(f"Contract {expectedContract3800} was not found in the chain, found instead: {spx_options[1]}")
 
         self.schedule.on(self.date_rules.tomorrow, self.time_rules.after_market_open(spx, 1), lambda: self.after_market_open_trade(spx_options))
-        self.schedule.on(self.date_rules.tomorrow, self.time_rules.noon, lambda: self.liquidate(self.securities.keys()))
+        self.schedule.on(self.date_rules.tomorrow, self.time_rules.noon, lambda: self.liquidate())
 
     def after_market_open_trade(self, spx_options):
         self.market_order(spx_options[0], 1)
