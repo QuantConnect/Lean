@@ -772,8 +772,7 @@ namespace QuantConnect.Data
         /// of the generic types instances and there add methods.</remarks>
         private class GenericDataDictionary
         {
-            private static readonly Dictionary<Type, GenericDataDictionary> _genericCache = new Dictionary<Type, GenericDataDictionary>();
-            private static readonly object _lock = new object();
+            private static Dictionary<Type, GenericDataDictionary> _genericCache = new Dictionary<Type, GenericDataDictionary>();
 
             /// <summary>
             /// The <see cref="DataDictionary{T}.Add(KeyValuePair{QuantConnect.Symbol,T})"/> method
@@ -799,21 +798,21 @@ namespace QuantConnect.Data
             /// <returns>A new instance or retrieved from the cache</returns>
             public static GenericDataDictionary Get(Type type, bool isPythonData)
             {
-                GenericDataDictionary dataDictionaryCache;
-                lock (_lock)
+                if (!_genericCache.TryGetValue(type, out var dataDictionaryCache))
                 {
-                    if (!_genericCache.TryGetValue(type, out dataDictionaryCache))
+                    var dictionaryType = type;
+                    if (isPythonData)
                     {
-                        var dictionaryType = type;
-                        if (isPythonData)
-                        {
-                            // let's create a python data dictionary because the data itself will be a PythonData type in C#
-                            dictionaryType = typeof(PythonData);
-                        }
-                        var generic = typeof(DataDictionary<>).MakeGenericType(dictionaryType);
-                        var method = generic.GetMethod("Add", new[] { typeof(Symbol), dictionaryType });
-                        _genericCache[type] = dataDictionaryCache = new GenericDataDictionary(generic, method);
+                        // let's create a python data dictionary because the data itself will be a PythonData type in C#
+                        dictionaryType = typeof(PythonData);
                     }
+                    var generic = typeof(DataDictionary<>).MakeGenericType(dictionaryType);
+                    var method = generic.GetMethod("Add", new[] { typeof(Symbol), dictionaryType });
+
+                    // Replace the cache instance with a new one instead of locking in order to avoid the overhead
+                    var temp = new Dictionary<Type, GenericDataDictionary>(_genericCache);
+                    temp[type] = dataDictionaryCache = new GenericDataDictionary(generic, method);
+                    _genericCache = temp;
                 }
 
                 return dataDictionaryCache;
