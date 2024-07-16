@@ -238,7 +238,7 @@ namespace QuantConnect.Data
                 CreateCollection<Dividends, Dividend>(time, data),
                 CreateCollection<Delistings, Delisting>(time, data),
                 CreateCollection<SymbolChangedEvents, SymbolChangedEvent>(time, data),
-                CreateCollection<MarginInterestRates, MarginInterestRate> (time, data),
+                CreateCollection<MarginInterestRates, MarginInterestRate>(time, data),
                 utcTime: utcTime)
         {
         }
@@ -773,6 +773,7 @@ namespace QuantConnect.Data
         private class GenericDataDictionary
         {
             private static readonly Dictionary<Type, GenericDataDictionary> _genericCache = new Dictionary<Type, GenericDataDictionary>();
+            private static readonly object _lock = new object();
 
             /// <summary>
             /// The <see cref="DataDictionary{T}.Add(KeyValuePair{QuantConnect.Symbol,T})"/> method
@@ -799,17 +800,20 @@ namespace QuantConnect.Data
             public static GenericDataDictionary Get(Type type, bool isPythonData)
             {
                 GenericDataDictionary dataDictionaryCache;
-                if (!_genericCache.TryGetValue(type, out dataDictionaryCache))
+                lock (_lock)
                 {
-                    var dictionaryType = type;
-                    if (isPythonData)
+                    if (!_genericCache.TryGetValue(type, out dataDictionaryCache))
                     {
-                        // let's create a python data dictionary because the data itself will be a PythonData type in C#
-                        dictionaryType = typeof(PythonData);
+                        var dictionaryType = type;
+                        if (isPythonData)
+                        {
+                            // let's create a python data dictionary because the data itself will be a PythonData type in C#
+                            dictionaryType = typeof(PythonData);
+                        }
+                        var generic = typeof(DataDictionary<>).MakeGenericType(dictionaryType);
+                        var method = generic.GetMethod("Add", new[] { typeof(Symbol), dictionaryType });
+                        _genericCache[type] = dataDictionaryCache = new GenericDataDictionary(generic, method);
                     }
-                    var generic = typeof(DataDictionary<>).MakeGenericType(dictionaryType);
-                    var method = generic.GetMethod("Add", new[] { typeof(Symbol), dictionaryType });
-                    _genericCache[type] = dataDictionaryCache = new GenericDataDictionary(generic, method);
                 }
 
                 return dataDictionaryCache;
