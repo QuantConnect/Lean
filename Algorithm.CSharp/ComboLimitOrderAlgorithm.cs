@@ -78,7 +78,7 @@ namespace QuantConnect.Algorithm.CSharp
                 _fillCount++;
                 if (_fillCount == OrderLegs.Count)
                 {
-                    Liquidate(Securities.Keys.OrderBy(x => x.Value));
+                    Liquidate();
                 }
                 else if (_fillCount < 2 * OrderLegs.Count)
                 {

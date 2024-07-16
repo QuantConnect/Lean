@@ -88,7 +88,7 @@ namespace QuantConnect.Algorithm.CSharp
 
             if (Portfolio.Invested && IsDownTrend)
             {
-                Liquidate(Securities.Keys.OrderBy(x => x.Value));
+                Liquidate();
             }
         }
 

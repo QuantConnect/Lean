@@ -86,7 +86,7 @@ namespace QuantConnect.Algorithm.CSharp
             }
             else if(_fast < _slow)
             {
-                Liquidate(Securities.Keys.OrderBy(x => x.Value));
+                Liquidate();
             }
 
             if (_currentContract != null && _currentContract.Symbol != _continuousContract.Mapped)

@@ -135,7 +135,7 @@ namespace QuantConnect.Algorithm.CSharp
                     var quantity = _algorithm.Portfolio[oldSymbol].Quantity;
 
                     // Rolling over: to liquidate any position of the old mapped contract and switch to the newly mapped contract
-                    _algorithm.Liquidate(oldSymbol, tag: tag);
+                    _algorithm.Liquidate(symbol: oldSymbol, tag: tag);
                     _algorithm.MarketOrder(newSymbol, quantity, tag: tag);
 
                     Reset();

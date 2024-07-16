@@ -82,7 +82,7 @@ namespace QuantConnect.Algorithm.CSharp
             {
                 if (Time.Day > 6 && Time.Hour > 14 && Time.Minute > 0)
                 {
-                    Liquidate(Securities.Keys.OrderBy(x => x.Value));
+                    Liquidate();
                 }
             }
 

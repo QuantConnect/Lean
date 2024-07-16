@@ -76,7 +76,7 @@ namespace QuantConnect.Algorithm.CSharp
             // Schedule liquidation tomorrow at 2PM when the market is open
             Schedule.On(DateRules.Tomorrow, TimeRules.At(14,0,0), () =>
             {
-                Liquidate(Securities.Keys.OrderBy(x => x.Value));
+                Liquidate();
             });
         }
 

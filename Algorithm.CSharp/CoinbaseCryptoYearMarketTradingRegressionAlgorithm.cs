@@ -19,7 +19,6 @@ using QuantConnect.Brokerages;
 using QuantConnect.Interfaces;
 using System.Collections.Generic;
 using QuantConnect.Securities.Crypto;
-using System.Linq;
 
 namespace QuantConnect.Algorithm.CSharp
 {
@@ -71,7 +70,7 @@ namespace QuantConnect.Algorithm.CSharp
             }
             else
             {
-                Liquidate(Securities.Keys.OrderBy(x => x.Value));
+                Liquidate();
                 _isBuy = false;
             }
         }

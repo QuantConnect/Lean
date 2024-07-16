@@ -46,7 +46,7 @@ namespace QuantConnect.Algorithm.CSharp
             }
             else
             {
-                Liquidate(Securities.Keys.OrderBy(x => x.Value));
+                Liquidate();
             }
 
             // Count how many slices we receive with SPX data in it to assert later

@@ -92,7 +92,7 @@ namespace QuantConnect.Algorithm.CSharp
             // Same as above, check for cases like trading on a friday night.
             else if (Securities.Values.Where(x => x.Invested).All(x => x.Exchange.Hours.IsOpen(Time, true)))
             {
-                Liquidate(Securities.Keys.OrderBy(x => x.Value));
+                Liquidate();
             }
 
             foreach (var changedEvent in slice.SymbolChangedEvents.Values)

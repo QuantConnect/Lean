@@ -91,7 +91,7 @@ namespace QuantConnect.Algorithm.CSharp
                 Log($"{Time}- {Securities[_continuousContract.Symbol].GetLastData()}");
                 if (Portfolio.Invested)
                 {
-                    Liquidate(Securities.Keys.OrderBy(x => x.Value));
+                    Liquidate();
                 }
                 else
                 {

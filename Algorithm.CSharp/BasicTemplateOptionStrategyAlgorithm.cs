@@ -80,7 +80,7 @@ namespace QuantConnect.Algorithm.CSharp
             }
             else
             {
-                Liquidate(Securities.Keys.OrderBy(x => x.Value));
+                Liquidate();
             }
 
             foreach(var kpv in slice.Bars)

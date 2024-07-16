@@ -91,7 +91,7 @@ namespace QuantConnect.Algorithm.CSharp
 
             if (Time.Minute % 15 == 0)
             {
-                Liquidate(Securities.Keys.OrderBy(x => x.Value));
+                Liquidate();
             }
         }
 

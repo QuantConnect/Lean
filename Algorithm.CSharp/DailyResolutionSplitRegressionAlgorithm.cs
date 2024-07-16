@@ -18,7 +18,6 @@ using System.Collections.Generic;
 using QuantConnect.Data;
 using QuantConnect.Interfaces;
 using QuantConnect.Orders;
-using System.Linq;
 
 namespace QuantConnect.Algorithm.CSharp
 {
@@ -62,7 +61,7 @@ namespace QuantConnect.Algorithm.CSharp
 
             if (Time.Date == new DateTime(2018, 05, 29).Date)
             {
-                Liquidate(Securities.Keys.OrderBy(x => x.Value));
+                Liquidate();
             }
         }
 

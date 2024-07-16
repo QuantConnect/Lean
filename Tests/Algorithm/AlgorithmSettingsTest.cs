@@ -21,7 +21,6 @@ using QuantConnect.Data.Market;
 using QuantConnect.Tests.Engine.DataFeeds;
 using QuantConnect.Tests.Common.Securities;
 using QuantConnect.Lean.Engine.Setup;
-using System.Linq;
 
 namespace QuantConnect.Tests.Algorithm
 {
@@ -34,7 +33,7 @@ namespace QuantConnect.Tests.Algorithm
             var algo = new QCAlgorithm();
             var fakeOrderProcessor = InitializeAndGetFakeOrderProcessor(algo);
 
-            algo.Liquidate(algo.Securities.Keys.OrderBy(x => x.Value), true);
+            algo.Liquidate(asynchronous: true);
 
             // It should send a order to set us flat
             Assert.IsFalse(fakeOrderProcessor.ProcessedOrdersRequests.IsNullOrEmpty());
@@ -47,7 +46,7 @@ namespace QuantConnect.Tests.Algorithm
             algo.Settings.LiquidateEnabled = false;
             var fakeOrderProcessor = InitializeAndGetFakeOrderProcessor(algo);
 
-            algo.Liquidate(algo.Securities.Keys.OrderBy(x => x.Value));
+            algo.Liquidate();
 
             // It should NOT send a order to set us flat
             Assert.IsTrue(fakeOrderProcessor.ProcessedOrdersRequests.IsNullOrEmpty());

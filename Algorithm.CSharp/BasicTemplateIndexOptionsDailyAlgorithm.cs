@@ -45,7 +45,7 @@ namespace QuantConnect.Algorithm.CSharp
                 
                 if (Portfolio.Invested)
                 {
-                    Liquidate(Securities.Keys.OrderBy(x => x.Value));
+                    Liquidate();
                 }
                 else
                 {

@@ -23,7 +23,6 @@ using QuantConnect.Brokerages;
 using QuantConnect.Data.Market;
 using System.Collections.Generic;
 using QuantConnect.Securities.CryptoFuture;
-using System.Linq;
 
 namespace QuantConnect.Algorithm.CSharp
 {
@@ -166,7 +165,7 @@ namespace QuantConnect.Algorithm.CSharp
 
                 if (Time.Hour >= 22 && Transactions.OrdersCount == 3)
                 {
-                    Liquidate(Securities.Keys.OrderBy(x => x.Value));
+                    Liquidate();
                 }
             }
         }

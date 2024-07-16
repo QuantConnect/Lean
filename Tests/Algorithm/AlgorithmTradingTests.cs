@@ -1397,6 +1397,55 @@ namespace QuantConnect.Tests.Algorithm
         }
 
         [Test]
+        public void LiquidateWorksAsExpected()
+        {
+            Security msft;
+            var algo = GetAlgorithm(out msft, 1, 0);
+            algo.AddEquity("AAPL");
+            algo.Securities[Symbols.AAPL].FeeModel = new ConstantFeeModel(0);
+            var aapl = algo.Securities[Symbols.AAPL];
+            aapl.SetLeverage(1);
+            msft.Holdings.SetHoldings(25, 3);
+            aapl.Holdings.SetHoldings(25, 7);
+
+            //Set price to $25
+            Update(msft, 25);
+            Update(aapl, 25);
+
+            algo.Portfolio.SetCash(15000000);
+
+            var mock = new Mock<ITransactionHandler>();
+            var request = new Mock<SubmitOrderRequest>(null, null, null, null, null, null, null, null, null, null);
+            mock.Setup(m => m.Process(It.IsAny<OrderRequest>())).Returns<SubmitOrderRequest>(s =>
+            {
+                var orderRequest = new SubmitOrderRequest(OrderType.Market, SecurityType.Equity, s.Symbol, s.Quantity, 0, 0, DateTime.UtcNow, "");
+                orderRequest.SetOrderId((int)s.Quantity);
+                return new OrderTicket(null, orderRequest);
+            });
+            algo.Transactions.SetOrderProcessor(mock.Object);
+
+            var orders = new Dictionary<int, OrderTicket>();
+            var order1 = algo.MarketOrder(Symbols.MSFT, 1);
+            orders[order1.OrderId] = order1;
+            var order2 = algo.MarketOrder(Symbols.MSFT, 2);
+            orders[order2.OrderId] = order2;
+            var order3 = algo.MarketOrder(Symbols.AAPL, 3);
+            orders[order3.OrderId] = order3;
+            var order4 = algo.MarketOrder(Symbols.AAPL, 4);
+            orders[order4.OrderId] = order4;
+
+            mock.Setup(m => m.GetOpenOrders(It.IsAny<Func<Order, bool>>())).Returns<Func<Order, bool>>(filter => orders.Values.Select(x => Order.CreateOrder(x.SubmitRequest)).Where(x => filter(x)).ToList());
+            mock.Setup(m => m.GetOrderTicket(It.IsAny<int>())).Returns<int>(s => orders[s]);
+
+            Assert.AreEqual(4, algo.Transactions.LastOrderId);
+            var tickets = algo.Liquidate(asynchronous: true);
+            var aaplTicket = tickets.Where(x => x.Symbol == Symbols.AAPL).Single();
+            var msftTicket = tickets.Where(x => x.Symbol == Symbols.MSFT).Single();
+            Assert.AreEqual(aapl.Holdings.Quantity * (-2), aaplTicket.Quantity);
+            Assert.AreEqual(msft.Holdings.Quantity * (-2), msftTicket.Quantity);
+        }
+
+        [Test]
         public void MarketOrdersAreSupportedForFuturesOnExtendedMarketHours()
         {
             var algo = GetAlgorithm(out _, 1, 0);

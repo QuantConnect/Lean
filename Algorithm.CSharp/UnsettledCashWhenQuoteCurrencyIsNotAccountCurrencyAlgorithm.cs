@@ -20,7 +20,6 @@ using QuantConnect.Data;
 using QuantConnect.Interfaces;
 using QuantConnect.Orders;
 using QuantConnect.Securities.CurrencyConversion;
-using System.Linq;
 
 namespace QuantConnect.Algorithm.CSharp
 {
@@ -64,7 +63,7 @@ namespace QuantConnect.Algorithm.CSharp
             }
             else
             {
-                Liquidate(Securities.Keys.OrderBy(x => x.Value));
+                Liquidate();
             }
         }
 

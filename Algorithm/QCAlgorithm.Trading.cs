@@ -1207,9 +1207,10 @@ namespace QuantConnect.Algorithm
             }
         }
 
-        public List<OrderTicket> Liquidate(Symbol symbol, bool asynchronous = false, string tag = "Liquidated", IOrderProperties orderProperties = null)
+        public List<OrderTicket> Liquidate(Symbol symbol = null, bool asynchronous = false, string tag = "Liquidated", IOrderProperties orderProperties = null)
         {
-            return Liquidate(Securities.ContainsKey(symbol) ? new[] { symbol } : Enumerable.Empty<Symbol>(), asynchronous, tag, orderProperties);
+            var defaultSymbols = Securities.Keys.OrderBy(x => x.Value);
+            return Liquidate(symbol != null ? (Securities.ContainsKey(symbol) ? new[] { symbol } : Enumerable.Empty<Symbol>()) : defaultSymbols, asynchronous, tag, orderProperties);
         }
 
         public List<OrderTicket> Liquidate (IEnumerable<Symbol> symbols, bool asynchronous = false, string tag = "Liquidated", IOrderProperties orderProperties = null)
@@ -1285,7 +1286,7 @@ namespace QuantConnect.Algorithm
         /// <returns>Array of order ids for liquidated symbols</returns>
         /// <seealso cref="MarketOrder(QuantConnect.Symbol, decimal, bool, string, IOrderProperties)"/>
         [DocumentationAttribute(TradingAndOrders)]
-        [Obsolete]
+        [Obsolete($"This method is obsolete, please use Liquidate(symbol: symbolToLiquidate, tag: tag) method")]
         public List<int> Liquidate(Symbol symbolToLiquidate, string tag)
         {
             var orderIdList = new List<int>();

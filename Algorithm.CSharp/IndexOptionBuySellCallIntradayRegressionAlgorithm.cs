@@ -89,7 +89,7 @@ namespace QuantConnect.Algorithm.CSharp
             });
             Schedule.On(DateRules.Tomorrow, TimeRules.Noon, () =>
             {
-                Liquidate(Securities.Keys.OrderBy(x => x.Value));
+                Liquidate();
             });
         }
 
