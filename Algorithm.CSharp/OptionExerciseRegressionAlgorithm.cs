@@ -48,7 +48,7 @@ namespace QuantConnect.Algorithm.CSharp
                                 .WeeklysOnly()
                                 .Strikes(-5, +5)
                                 .Expiration(TimeSpan.Zero, TimeSpan.FromDays(29))
-                                         select symbol);
+                                         select symbol.Symbol);
         }
 
         public override void OnOrderEvent(OrderEvent orderEvent)

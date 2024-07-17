@@ -17,7 +17,9 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using Python.Runtime;
 using QuantConnect.Data;
+using QuantConnect.Data.UniverseSelection;
 using QuantConnect.Securities.FutureOption;
 using QuantConnect.Securities.IndexOption;
 using QuantConnect.Securities.Option;
@@ -27,7 +29,7 @@ namespace QuantConnect.Securities
     /// <summary>
     /// Represents options symbols universe used in filtering.
     /// </summary>
-    public class OptionFilterUniverse : ContractSecurityFilterUniverse<OptionFilterUniverse>
+    public class OptionFilterUniverse : ContractSecurityFilterUniverse<OptionFilterUniverse, OptionUniverse>
     {
         // Fields used in relative strikes filter
         private List<decimal> _uniqueStrikes;
@@ -64,8 +66,8 @@ namespace QuantConnect.Securities
         /// Constructs OptionFilterUniverse
         /// </summary>
         /// <remarks>Used for testing only</remarks>
-        public OptionFilterUniverse(IEnumerable<Symbol> allSymbols, BaseData underlying, decimal underlyingScaleFactor = 1)
-            : base(allSymbols, underlying.EndTime)
+        public OptionFilterUniverse(IEnumerable<OptionUniverse> allData, BaseData underlying, decimal underlyingScaleFactor = 1)
+            : base(allData, underlying.EndTime)
         {
             UnderlyingInternal = underlying;
             _refreshUniqueStrikes = true;
@@ -75,12 +77,12 @@ namespace QuantConnect.Securities
         /// <summary>
         /// Refreshes this option filter universe and allows specifying if the exchange date changed from last call
         /// </summary>
-        /// <param name="allSymbols">All the options contract symbols</param>
+        /// <param name="allContractsData">All data for the option contracts</param>
         /// <param name="underlying">The current underlying last data point</param>
         /// <param name="localTime">The current local time</param>
-        public void Refresh(IEnumerable<Symbol> allSymbols, BaseData underlying, DateTime localTime)
+        public void Refresh(IEnumerable<OptionUniverse> allContractsData, BaseData underlying, DateTime localTime)
         {
-            base.Refresh(allSymbols, localTime);
+            base.Refresh(allContractsData, localTime);
 
             UnderlyingInternal = underlying;
             _refreshUniqueStrikes = _lastExchangeDate != localTime.Date;
@@ -213,7 +215,7 @@ namespace QuantConnect.Securities
         /// <returns>Universe with filter applied</returns>
         public OptionFilterUniverse CallsOnly()
         {
-            return Contracts(contracts => contracts.Where(x => x.ID.OptionRight == OptionRight.Call));
+            return Contracts(contracts => contracts.Select(x => x.Symbol).Where(x => x.ID.OptionRight == OptionRight.Call));
         }
 
         /// <summary>
@@ -222,7 +224,7 @@ namespace QuantConnect.Securities
         /// <returns>Universe with filter applied</returns>
         public OptionFilterUniverse PutsOnly()
         {
-            return Contracts(contracts => contracts.Where(x => x.ID.OptionRight == OptionRight.Put));
+            return Contracts(contracts => contracts.Select(x => x.Symbol).Where(x => x.ID.OptionRight == OptionRight.Put));
         }
 
         /// <summary>
@@ -597,7 +599,7 @@ namespace QuantConnect.Securities
         }
 
         /// <summary>
-        /// Sets universe of a far-OTM call, a near-OTM call, a near-OTM put, and a far-OTM put with the same expiry 
+        /// Sets universe of a far-OTM call, a near-OTM call, a near-OTM put, and a far-OTM put with the same expiry
         /// and equal strike price distance between both calls and both puts, with closest match to the criteria given
         /// </summary>
         /// <param name="minDaysTillExpiry">The minimum days till expiry from the current time, closest expiry will be selected</param>
@@ -769,6 +771,167 @@ namespace QuantConnect.Securities
             return Ladder(OptionRight.Put, minDaysTillExpiry, higherStrikeFromAtm, middleStrikeFromAtm, lowerStrikeFromAtm);
         }
 
+        /// <summary>
+        /// Applies the filter to the universe selecting the contracts with Delta between the given range
+        /// </summary>
+        /// <param name="min">The minimum Delta value</param>
+        /// <param name="max">The maximum Delta value</param>
+        /// <returns>Universe with filter applied</returns>
+        public OptionFilterUniverse Delta(decimal min, decimal max)
+        {
+            return this.Where(contractData => contractData.Greeks.Delta >= min && contractData.Greeks.Delta <= max);
+        }
+
+        /// <summary>
+        /// Applies the filter to the universe selecting the contracts with Delta between the given range.
+        /// Alias for <see cref="Delta(decimal, decimal)"/>
+        /// </summary>
+        /// <param name="min">The minimum Delta value</param>
+        /// <param name="max">The maximum Delta value</param>
+        /// <returns>Universe with filter applied</returns>
+        public OptionFilterUniverse D(decimal min, decimal max)
+        {
+            return Delta(min, max);
+        }
+
+        /// <summary>
+        /// Applies the filter to the universe selecting the contracts with Gamma between the given range
+        /// </summary>
+        /// <param name="min">The minimum Gamma value</param>
+        /// <param name="max">The maximum Gamma value</param>
+        /// <returns>Universe with filter applied</returns>
+        public OptionFilterUniverse Gamma(decimal min, decimal max)
+        {
+            return this.Where(contractData => contractData.Greeks.Gamma >= min && contractData.Greeks.Gamma <= max);
+        }
+
+        /// <summary>
+        /// Applies the filter to the universe selecting the contracts with Gamma between the given range.
+        /// Alias for <see cref="Gamma(decimal, decimal)"/>
+        /// </summary>
+        /// <param name="min">The minimum Gamma value</param>
+        /// <param name="max">The maximum Gamma value</param>
+        /// <returns>Universe with filter applied</returns>
+        public OptionFilterUniverse G(decimal min, decimal max)
+        {
+            return Gamma(min, max);
+        }
+
+        /// <summary>
+        /// Applies the filter to the universe selecting the contracts with Theta between the given range
+        /// </summary>
+        /// <param name="min">The minimum Theta value</param>
+        /// <param name="max">The maximum Theta value</param>
+        /// <returns>Universe with filter applied</returns>
+        public OptionFilterUniverse Theta(decimal min, decimal max)
+        {
+            return this.Where(contractData => contractData.Greeks.Theta >= min && contractData.Greeks.Theta <= max);
+        }
+
+        /// <summary>
+        /// Applies the filter to the universe selecting the contracts with Theta between the given range.
+        /// Alias for <see cref="Theta(decimal, decimal)"/>
+        /// </summary>
+        /// <param name="min">The minimum Theta value</param>
+        /// <param name="max">The maximum Theta value</param>
+        /// <returns>Universe with filter applied</returns>
+        public OptionFilterUniverse T(decimal min, decimal max)
+        {
+            return Theta(min, max);
+        }
+
+        /// <summary>
+        /// Applies the filter to the universe selecting the contracts with Vega between the given range
+        /// </summary>
+        /// <param name="min">The minimum Vega value</param>
+        /// <param name="max">The maximum Vega value</param>
+        /// <returns>Universe with filter applied</returns>
+        public OptionFilterUniverse Vega(decimal min, decimal max)
+        {
+            return this.Where(contractData => contractData.Greeks.Vega >= min && contractData.Greeks.Vega <= max);
+        }
+
+        /// <summary>
+        /// Applies the filter to the universe selecting the contracts with Vega between the given range.
+        /// Alias for <see cref="Vega(decimal, decimal)"/>
+        /// </summary>
+        /// <param name="min">The minimum Vega value</param>
+        /// <param name="max">The maximum Vega value</param>
+        /// <returns>Universe with filter applied</returns>
+        public OptionFilterUniverse V(decimal min, decimal max)
+        {
+            return Vega(min, max);
+        }
+
+        /// <summary>
+        /// Applies the filter to the universe selecting the contracts with Rho between the given range
+        /// </summary>
+        /// <param name="min">The minimum Rho value</param>
+        /// <param name="max">The maximum Rho value</param>
+        /// <returns>Universe with filter applied</returns>
+        public OptionFilterUniverse Rho(decimal min, decimal max)
+        {
+            return this.Where(contractData => contractData.Greeks.Rho >= min && contractData.Greeks.Rho <= max);
+        }
+
+        /// <summary>
+        /// Applies the filter to the universe selecting the contracts with Rho between the given range.
+        /// Alias for <see cref="Rho(decimal, decimal)"/>
+        /// </summary>
+        /// <param name="min">The minimum Rho value</param>
+        /// <param name="max">The maximum Rho value</param>
+        /// <returns>Universe with filter applied</returns>
+        public OptionFilterUniverse R(decimal min, decimal max)
+        {
+            return Rho(min, max);
+        }
+
+        /// <summary>
+        /// Applies the filter to the universe selecting the contracts with implied volatility between the given range
+        /// </summary>
+        /// <param name="min">The minimum implied volatility value</param>
+        /// <param name="max">The maximum implied volatility value</param>
+        /// <returns>Universe with filter applied</returns>
+        public OptionFilterUniverse ImpliedVolatility(decimal min, decimal max)
+        {
+            return this.Where(contractData => contractData.ImpliedVolatility >= min && contractData.ImpliedVolatility <= max);
+        }
+
+        /// <summary>
+        /// Applies the filter to the universe selecting the contracts with implied volatility between the given range.
+        /// Alias for <see cref="ImpliedVolatility(decimal, decimal)"/>
+        /// </summary>
+        /// <param name="min">The minimum implied volatility value</param>
+        /// <param name="max">The maximum implied volatility value</param>
+        /// <returns>Universe with filter applied</returns>
+        public OptionFilterUniverse IV(decimal min, decimal max)
+        {
+            return ImpliedVolatility(min, max);
+        }
+
+        /// <summary>
+        /// Applies the filter to the universe selecting the contracts with open interest between the given range
+        /// </summary>
+        /// <param name="min">The minimum open interest value</param>
+        /// <param name="max">The maximum open interest value</param>
+        /// <returns>Universe with filter applied</returns>
+        public OptionFilterUniverse OpenInterest(long min, long max)
+        {
+            return this.Where(contractData => contractData.OpenInterest >= min && contractData.OpenInterest <= max);
+        }
+
+        /// <summary>
+        /// Applies the filter to the universe selecting the contracts with open interest between the given range.
+        /// Alias for <see cref="OpenInterest(long, long)"/>
+        /// </summary>
+        /// <param name="min">The minimum open interest value</param>
+        /// <param name="max">The maximum open interest value</param>
+        /// <returns>Universe with filter applied</returns>
+        public OptionFilterUniverse OI(long min, long max)
+        {
+            return OpenInterest(min, max);
+        }
+
         private OptionFilterUniverse Ladder(OptionRight right, int minDaysTillExpiry, decimal higherStrikeFromAtm, decimal middleStrikeFromAtm, decimal lowerStrikeFromAtm)
         {
             if (higherStrikeFromAtm <= lowerStrikeFromAtm || higherStrikeFromAtm <= middleStrikeFromAtm || middleStrikeFromAtm <= lowerStrikeFromAtm)
@@ -853,9 +1016,22 @@ namespace QuantConnect.Securities
         /// <param name="universe">Universe to apply the filter too</param>
         /// <param name="predicate">Bool function to determine which Symbol are filtered</param>
         /// <returns>Universe with filter applied</returns>
-        public static OptionFilterUniverse Where(this OptionFilterUniverse universe, Func<Symbol, bool> predicate)
+        public static OptionFilterUniverse Where(this OptionFilterUniverse universe, Func<OptionUniverse, bool> predicate)
         {
-            universe.AllSymbols = universe.AllSymbols.Where(predicate).ToList();
+            universe.AllSymbols = universe.Data.Where(predicate).Select(x => x.Symbol).ToList();
+            return universe;
+        }
+
+        /// <summary>
+        /// Filters universe
+        /// </summary>
+        /// <param name="universe">Universe to apply the filter too</param>
+        /// <param name="predicate">Bool function to determine which Symbol are filtered</param>
+        /// <returns>Universe with filter applied</returns>
+        public static OptionFilterUniverse Where(this OptionFilterUniverse universe, PyObject predicate)
+        {
+            using var _ = Py.GIL();
+            universe.AllSymbols = universe.AllSymbols.Where(predicate.ConvertToDelegate<Func<Symbol, bool>>()).ToList();
             return universe;
         }
 
@@ -865,9 +1041,9 @@ namespace QuantConnect.Securities
         /// <param name="universe">Universe to apply the filter too</param>
         /// <param name="mapFunc">Symbol function to determine which Symbols are filtered</param>
         /// <returns>Universe with filter applied</returns>
-        public static OptionFilterUniverse Select(this OptionFilterUniverse universe, Func<Symbol, Symbol> mapFunc)
+        public static OptionFilterUniverse Select(this OptionFilterUniverse universe, Func<OptionUniverse, Symbol> mapFunc)
         {
-            universe.AllSymbols = universe.AllSymbols.Select(mapFunc).ToList();
+            universe.AllSymbols = universe.Data.Select(mapFunc).ToList();
             return universe;
         }
 
@@ -877,9 +1053,9 @@ namespace QuantConnect.Securities
         /// <param name="universe">Universe to apply the filter too</param>
         /// <param name="mapFunc">Symbol function to determine which Symbols are filtered</param>
         /// <returns>Universe with filter applied</returns>
-        public static OptionFilterUniverse SelectMany(this OptionFilterUniverse universe, Func<Symbol, IEnumerable<Symbol>> mapFunc)
+        public static OptionFilterUniverse SelectMany(this OptionFilterUniverse universe, Func<OptionUniverse, IEnumerable<Symbol>> mapFunc)
         {
-            universe.AllSymbols = universe.AllSymbols.SelectMany(mapFunc).ToList();
+            universe.AllSymbols = universe.Data.SelectMany(mapFunc).ToList();
             return universe;
         }
 

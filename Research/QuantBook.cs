@@ -428,13 +428,13 @@ namespace QuantConnect.Research
                 }
 
                 var optionFilterUniverse = new OptionFilterUniverse(option);
-                var distinctSymbols = allSymbols.Distinct();
+                var distinctSymbols = allSymbols.Distinct().Select(x => new OptionUniverse() { Symbol = x, Time = start});
                 symbols = base.History(symbol.Underlying, start, end.Value, resolution)
                     .SelectMany(x =>
                     {
                         // the option chain symbols wont change so we can set 'exchangeDateChange' to false always
                         optionFilterUniverse.Refresh(distinctSymbols, x, x.EndTime);
-                        return option.ContractFilter.Filter(optionFilterUniverse);
+                        return option.ContractFilter.Filter(optionFilterUniverse).GetSymbols();
                     })
                     .Distinct().Concat(new[] { symbol.Underlying });
             }
@@ -494,7 +494,7 @@ namespace QuantConnect.Research
                     {
                         var allList = FutureChainProvider.GetFutureContractList(future.Symbol, date);
 
-                        allSymbols.UnionWith(future.ContractFilter.Filter(new FutureFilterUniverse(allList, date)));
+                        allSymbols.UnionWith(future.ContractFilter.Filter(new FutureFilterUniverse(allList, date)).Cast<Symbol>());
                     }
                 }
             }
