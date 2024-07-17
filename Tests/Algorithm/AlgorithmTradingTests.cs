@@ -1422,7 +1422,7 @@ namespace QuantConnect.Tests.Algorithm
             var request = new Mock<SubmitOrderRequest>(null, null, null, null, null, null, null, null, null, null);
             mock.Setup(m => m.Process(It.IsAny<OrderRequest>())).Returns<SubmitOrderRequest>(s =>
             {
-                var orderRequest = new SubmitOrderRequest(OrderType.Market, SecurityType.Equity, s.Symbol, s.Quantity, 0, 0, DateTime.UtcNow, "");
+                var orderRequest = new SubmitOrderRequest(OrderType.Market, SecurityType.Equity, s.Symbol, s.Quantity, 0, 0, DateTime.UtcNow, "", s.OrderProperties);
                 orderRequest.SetOrderId((int)s.Quantity);
                 var ticket = new OrderTicket(null, orderRequest);
                 tickets[ticket.OrderId] = ticket;
@@ -1453,11 +1453,15 @@ namespace QuantConnect.Tests.Algorithm
             });
 
             Assert.AreEqual(4, algo.Transactions.LastOrderId);
-            var liquidatedTickets = algo.Liquidate(asynchronous: true);
+
+            var orderProperties = new OrderProperties() { TimeInForce = TimeInForce.Day };
+            var liquidatedTickets = algo.Liquidate(asynchronous: true, orderProperties: orderProperties);
             var aaplTicket = liquidatedTickets.Where(x => x.Symbol == Symbols.AAPL).Single();
             var msftTicket = liquidatedTickets.Where(x => x.Symbol == Symbols.MSFT).Single();
             Assert.AreEqual(aapl.Holdings.Quantity * (-2), aaplTicket.Quantity);
             Assert.AreEqual(msft.Holdings.Quantity * (-2), msftTicket.Quantity);
+            Assert.AreEqual(TimeInForce.Day, aaplTicket.SubmitRequest.OrderProperties.TimeInForce);
+            Assert.AreEqual(TimeInForce.Day, msftTicket.SubmitRequest.OrderProperties.TimeInForce);
         }
 
         [Test]
