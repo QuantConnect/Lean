@@ -315,8 +315,14 @@ namespace QuantConnect.Securities
         /// <returns>Universe with filter applied</returns>
         public T Contracts(PyObject contracts)
         {
-            AllSymbols = contracts.ConvertToSymbolEnumerable();
-            return (T) this;
+            // Let's first check if the object is a selector:
+            if (contracts.TryConvertToDelegate(out Func<IEnumerable<TData>, IEnumerable<Symbol>> contractSelector))
+            {
+                return Contracts(contractSelector);
+            }
+
+            // Else, it should be a list of symbols:
+            return Contracts(contracts.ConvertToSymbolEnumerable());
         }
 
         /// <summary>

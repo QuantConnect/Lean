@@ -17,6 +17,7 @@
 using System;
 using System.Linq;
 using NUnit.Framework;
+using Python.Runtime;
 using QuantConnect.Data.Market;
 using QuantConnect.Data.UniverseSelection;
 using QuantConnect.Securities;
@@ -518,6 +519,58 @@ namespace QuantConnect.Tests.Common.Securities
             var filterUniverse = new OptionFilterUniverse(data, underlying);
             var filtered = filter.Filter(filterUniverse).Cast<OptionUniverse>().ToList();
             Assert.AreEqual(3, filtered.Count);
+        }
+
+        [TestCase("[data.symbol for data in universe][:5]")]
+        [TestCase("lambda contracts_data: [data.symbol for data in contracts_data][:5]")]
+        public void SetsContractsPython(string code)
+        {
+            var expiry1 = new DateTime(2016, 12, 02);
+            var expiry2 = new DateTime(2016, 12, 09);
+            var expiry3 = new DateTime(2016, 12, 16); // standard
+            var expiry4 = new DateTime(2016, 12, 23);
+
+            var underlying = new Tick { Value = 10m, Time = new DateTime(2016, 02, 26) };
+
+            using var _ = Py.GIL();
+            var module = PyModule.FromString("SetsContractsPython",
+                        @$"
+from AlgorithmImports import *
+
+def set_filter(universe: OptionFilterUniverse) -> OptionFilterUniverse:
+    return universe.Contracts({code})
+        ");
+            var setFilter = module.GetAttr("set_filter");
+
+            Func<OptionFilterUniverse, OptionFilterUniverse> universeFunc = universe =>
+            {
+                using var _ = Py.GIL();
+                using var pyUniverse = universe.ToPython();
+                return setFilter.Invoke(pyUniverse).GetAndDispose<OptionFilterUniverse>();
+            };
+
+            Func<IDerivativeSecurityFilterUniverse, IDerivativeSecurityFilterUniverse> func =
+                universe => universeFunc(universe as OptionFilterUniverse);
+
+            var filter = new FuncSecurityDerivativeFilter(func);
+            var symbols = new[]
+            {
+                Symbol.CreateOption("SPY", Market.USA, OptionStyle.American, OptionRight.Put, 2, expiry1),  // 0
+                Symbol.CreateOption("SPY", Market.USA, OptionStyle.American, OptionRight.Put, 5, expiry1),  // 1
+                Symbol.CreateOption("SPY", Market.USA, OptionStyle.American, OptionRight.Put, 7, expiry1),  // 2
+                Symbol.CreateOption("SPY", Market.USA, OptionStyle.American, OptionRight.Put, 8, expiry1),  // 3
+                Symbol.CreateOption("SPY", Market.USA, OptionStyle.American, OptionRight.Put, 9, expiry2),  // 4
+                Symbol.CreateOption("SPY", Market.USA, OptionStyle.American, OptionRight.Put, 10, expiry2), // 5
+                Symbol.CreateOption("SPY", Market.USA, OptionStyle.American, OptionRight.Put, 11, expiry2), // 6
+                Symbol.CreateOption("SPY", Market.USA, OptionStyle.American, OptionRight.Put, 12, expiry3), // 7
+                Symbol.CreateOption("SPY", Market.USA, OptionStyle.American, OptionRight.Put, 15, expiry4), // 8
+                Symbol.CreateOption("SPY", Market.USA, OptionStyle.American, OptionRight.Put, 20, expiry4), // 9
+            };
+
+            var data = symbols.Select(x => new OptionUniverse() { Symbol = x });
+            var filterUniverse = new OptionFilterUniverse(data, underlying);
+            var filtered = filter.Filter(filterUniverse).Cast<OptionUniverse>().ToList();
+            Assert.AreEqual(5, filtered.Count);
         }
 
         static Symbol[] CreateOptions(string ticker, string targetOption = null)
