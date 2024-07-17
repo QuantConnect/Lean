@@ -932,6 +932,19 @@ namespace QuantConnect.Securities
             return OpenInterest(min, max);
         }
 
+        /// <summary>
+        /// Implicitly convert the universe to a list of symbols
+        /// </summary>
+        /// <param name="universe"></param>
+#pragma warning disable CA1002 // Do not expose generic lists
+#pragma warning disable CA2225 // Operator overloads have named alternates
+        public static implicit operator List<Symbol>(OptionFilterUniverse universe)
+        {
+            return universe.AllSymbols.ToList();
+        }
+#pragma warning restore CA2225 // Operator overloads have named alternates
+#pragma warning restore CA1002 // Do not expose generic lists
+
         private OptionFilterUniverse Ladder(OptionRight right, int minDaysTillExpiry, decimal higherStrikeFromAtm, decimal middleStrikeFromAtm, decimal lowerStrikeFromAtm)
         {
             if (higherStrikeFromAtm <= lowerStrikeFromAtm || higherStrikeFromAtm <= middleStrikeFromAtm || middleStrikeFromAtm <= lowerStrikeFromAtm)

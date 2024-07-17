@@ -54,11 +54,6 @@ namespace QuantConnect.Securities
             {
                 return Enumerable.Empty<Symbol>().GetEnumerator();
             }
-
-            public IEnumerable<Symbol> GetSymbols()
-            {
-                return Enumerable.Empty<Symbol>();
-            }
         }
     }
 }

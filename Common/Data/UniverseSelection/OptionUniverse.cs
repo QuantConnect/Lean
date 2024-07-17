@@ -44,11 +44,6 @@ namespace QuantConnect.Data.UniverseSelection
         public SecurityIdentifier ID => Symbol.ID;
 
         /// <summary>
-        /// The underlying symbol of the option
-        /// </summary>
-        public Symbol Underlying => Symbol.Underlying;
-
-        /// <summary>
         /// Price of the option/underlying
         /// </summary>
         public override decimal Value => Close;
@@ -314,13 +309,21 @@ namespace QuantConnect.Data.UniverseSelection
         /// <param name="newDataPoint">The new data point to add</param>
         public override void Add(BaseData newDataPoint)
         {
-            if (newDataPoint.Symbol.HasUnderlying)
+            if (newDataPoint is OptionUniverse optionUniverseDataPoint)
             {
-                base.Add(newDataPoint);
-            }
-            else
-            {
-                ((BaseDataCollection)this).Underlying = newDataPoint;
+                if (optionUniverseDataPoint.Symbol.HasUnderlying)
+                {
+                    optionUniverseDataPoint.Underlying = Underlying;
+                    base.Add(optionUniverseDataPoint);
+                }
+                else
+                {
+                    Underlying = optionUniverseDataPoint;
+                    foreach (OptionUniverse data in Data)
+                    {
+                        data.Underlying = optionUniverseDataPoint;
+                    }
+                }
             }
         }
 
