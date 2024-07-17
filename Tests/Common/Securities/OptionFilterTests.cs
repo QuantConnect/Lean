@@ -15,10 +15,10 @@
 */
 
 using System;
-using System.Collections.Generic;
 using System.Linq;
 using NUnit.Framework;
 using QuantConnect.Data.Market;
+using QuantConnect.Data.UniverseSelection;
 using QuantConnect.Securities;
 
 namespace QuantConnect.Tests.Common.Securities
@@ -43,8 +43,9 @@ namespace QuantConnect.Tests.Common.Securities
             var filter = new FuncSecurityDerivativeFilter(func);
 
             var underlyingScaleFactor = SymbolPropertiesDatabase.FromDataFolder().GetSymbolProperties(Market.USA, symbols.First(), symbols.First().SecurityType, "USD").StrikeMultiplier;
-            var filterUniverse = new OptionFilterUniverse(symbols, underlying, underlyingScaleFactor);
-            var filtered = filter.Filter(filterUniverse).ToList();
+            var data = symbols.Select(x => new OptionUniverse() { Symbol = x });
+            var filterUniverse = new OptionFilterUniverse(data, underlying, underlyingScaleFactor);
+            var filtered = filter.Filter(filterUniverse).Cast<OptionUniverse>().ToList();
             Assert.AreEqual(filteredNumber, filtered.Count);
             Assert.AreEqual(symbols[3], filtered[0]);
             Assert.AreEqual(symbols[4], filtered[1]);
@@ -87,8 +88,9 @@ namespace QuantConnect.Tests.Common.Securities
                 Symbol.CreateOption("SPY", Market.USA, OptionStyle.American, OptionRight.Put, 20, expiry), // 9
             };
 
-            var filterUniverse = new OptionFilterUniverse(symbols, underlying);
-            var filtered = filter.Filter(filterUniverse).ToList();
+            var data = symbols.Select(x => new OptionUniverse() { Symbol = x });
+            var filterUniverse = new OptionFilterUniverse(data, underlying);
+            var filtered = filter.Filter(filterUniverse).Cast<OptionUniverse>().ToList();
             Assert.AreEqual(underlyingPrice == 8 ? 5 : 4, filtered.Count);
             Assert.AreEqual(symbols[1], filtered[0]);
             Assert.AreEqual(symbols[2], filtered[1]);
@@ -130,8 +132,9 @@ namespace QuantConnect.Tests.Common.Securities
                 Symbol.CreateOption("SPY", Market.USA, OptionStyle.American, OptionRight.Put, 20, expiry), // 9
             };
 
-            var filterUniverse = new OptionFilterUniverse(symbols, underlying);
-            var filtered = filter.Filter(filterUniverse).ToList();
+            var data = symbols.Select(x => new OptionUniverse() { Symbol = x });
+            var filterUniverse = new OptionFilterUniverse(data, underlying);
+            var filtered = filter.Filter(filterUniverse).Cast<OptionUniverse>().ToList();
             Assert.AreEqual(3, filtered.Count);
             Assert.AreEqual(symbols[5], filtered[0]);
             Assert.AreEqual(symbols[6], filtered[1]);
@@ -160,8 +163,9 @@ namespace QuantConnect.Tests.Common.Securities
                 Symbol.CreateOption("SPY", Market.USA, OptionStyle.American, OptionRight.Put, 20, expiry), // 1
             };
 
-            var filterUniverse = new OptionFilterUniverse(symbols, underlying);
-            var filtered = filter.Filter(filterUniverse).ToList();
+            var data = symbols.Select(x => new OptionUniverse() { Symbol = x });
+            var filterUniverse = new OptionFilterUniverse(data, underlying);
+            var filtered = filter.Filter(filterUniverse).Cast<OptionUniverse>().ToList();
             Assert.AreEqual(0, filtered.Count);
         }
 
@@ -195,8 +199,9 @@ namespace QuantConnect.Tests.Common.Securities
                 Symbol.CreateOption("SPY", Market.USA, OptionStyle.American, OptionRight.Put, 20, expiry), // 9
             };
 
-            var filterUniverse = new OptionFilterUniverse(symbols, underlying);
-            var filtered = filter.Filter(filterUniverse).ToList();
+            var data = symbols.Select(x => new OptionUniverse() { Symbol = x });
+            var filterUniverse = new OptionFilterUniverse(data, underlying);
+            var filtered = filter.Filter(filterUniverse).Cast<OptionUniverse>().ToList();
             Assert.AreEqual(3, filtered.Count);
             Assert.AreEqual(symbols[2], filtered[0]);
             Assert.AreEqual(symbols[3], filtered[1]);
@@ -225,8 +230,9 @@ namespace QuantConnect.Tests.Common.Securities
                 Symbol.CreateOption("SPY", Market.USA, OptionStyle.American, OptionRight.Put, 20, expiry), // 1
             };
 
-            var filterUniverse = new OptionFilterUniverse(symbols, underlying);
-            var filtered = filter.Filter(filterUniverse).ToList();
+            var data = symbols.Select(x => new OptionUniverse() { Symbol = x });
+            var filterUniverse = new OptionFilterUniverse(data, underlying);
+            var filtered = filter.Filter(filterUniverse).Cast<OptionUniverse>().ToList();
             Assert.AreEqual(0, filtered.Count);
         }
 
@@ -245,8 +251,9 @@ namespace QuantConnect.Tests.Common.Securities
             var filter = new FuncSecurityDerivativeFilter(func);
             var symbols = new Symbol[] { };
 
-            var filterUniverse = new OptionFilterUniverse(symbols, underlying);
-            var filtered = filter.Filter(filterUniverse).ToList();
+            var data = symbols.Select(x => new OptionUniverse() { Symbol = x });
+            var filterUniverse = new OptionFilterUniverse(data, underlying);
+            var filtered = filter.Filter(filterUniverse).Cast<OptionUniverse>().ToList();
             Assert.AreEqual(0, filtered.Count);
         }
 
@@ -277,8 +284,9 @@ namespace QuantConnect.Tests.Common.Securities
                 Symbol.CreateOption("SPY", Market.USA, OptionStyle.American, OptionRight.Put, 10, time.AddDays(8)), // 8
                 Symbol.CreateOption("SPY", Market.USA, OptionStyle.American, OptionRight.Put, 10, time.AddDays(9)), // 9
             };
-            var filterUniverse = new OptionFilterUniverse(symbols, underlying);
-            var filtered = filter.Filter(filterUniverse).ToList();
+            var data = symbols.Select(x => new OptionUniverse() { Symbol = x });
+            var filterUniverse = new OptionFilterUniverse(data, underlying);
+            var filtered = filter.Filter(filterUniverse).Cast<OptionUniverse>().ToList();
             Assert.AreEqual(5, filtered.Count);
             Assert.AreEqual(symbols[3], filtered[0]);
             Assert.AreEqual(symbols[4], filtered[1]);
@@ -321,7 +329,8 @@ namespace QuantConnect.Tests.Common.Securities
                 Symbol.CreateOption("SPY", Market.USA, OptionStyle.American, OptionRight.Put, 20, expiry8), // 9
             };
 
-            var filtered = filter.Filter(new OptionFilterUniverse(symbols, underlying)).ToList();
+            var data = symbols.Select(x => new OptionUniverse() { Symbol = x });
+            var filtered = filter.Filter(new OptionFilterUniverse(data, underlying)).Cast<Symbol>().ToList();
             Assert.AreEqual(3, filtered.Count);
             Assert.AreEqual(symbols[5], filtered[0]);
             Assert.AreEqual(symbols[6], filtered[1]);
@@ -362,7 +371,8 @@ namespace QuantConnect.Tests.Common.Securities
                 Symbol.CreateOption("SPY", Market.USA, OptionStyle.American, OptionRight.Put, 20, expiry8), // 9
             };
 
-            var filtered = filter.Filter(new OptionFilterUniverse(symbols, underlying)).ToList();
+            var data = symbols.Select(x => new OptionUniverse() { Symbol = x });
+            var filtered = filter.Filter(new OptionFilterUniverse(data, underlying)).Cast<Symbol>().ToList();
             Assert.AreEqual(3, filtered.Count);
             Assert.AreEqual(symbols[5], filtered[0]);
             Assert.AreEqual(symbols[6], filtered[1]);
@@ -399,7 +409,8 @@ namespace QuantConnect.Tests.Common.Securities
                 Symbol.CreateOption("SPY", Market.USA, OptionStyle.American, OptionRight.Put, 20, expiry4), // 9
             };
 
-            var filtered = filter.Filter(new OptionFilterUniverse(symbols, underlying)).ToList();
+            var data = symbols.Select(x => new OptionUniverse() { Symbol = x });
+            var filtered = filter.Filter(new OptionFilterUniverse(data, underlying)).Cast<Symbol>().ToList();
             Assert.AreEqual(8, filtered.Count);
         }
 
@@ -432,8 +443,9 @@ namespace QuantConnect.Tests.Common.Securities
                 Symbol.CreateOption("SPY", Market.USA, OptionStyle.American, OptionRight.Put, 15, expiry4), // 8
                 Symbol.CreateOption("SPY", Market.USA, OptionStyle.American, OptionRight.Put, 20, expiry4), // 9
             };
-            var filterUniverse = new OptionFilterUniverse(symbols, underlying);
-            var filtered = filter.Filter(filterUniverse).ToList();
+            var data = symbols.Select(x => new OptionUniverse() { Symbol = x });
+            var filterUniverse = new OptionFilterUniverse(data, underlying);
+            var filtered = filter.Filter(filterUniverse).Cast<OptionUniverse>().ToList();
             Assert.AreEqual(10, filtered.Count);
         }
 
@@ -467,7 +479,8 @@ namespace QuantConnect.Tests.Common.Securities
                 Symbol.CreateOption("SPY", Market.USA, OptionStyle.American, OptionRight.Put, 20, expiry4), // 9
             };
 
-            var filtered = filter.Filter(new OptionFilterUniverse(symbols, underlying)).ToList();
+            var data = symbols.Select(x => new OptionUniverse() { Symbol = x });
+            var filtered = filter.Filter(new OptionFilterUniverse(data, underlying)).Cast<Symbol>().ToList();
             Assert.AreEqual(4, filtered.Count);
         }
 
@@ -501,8 +514,9 @@ namespace QuantConnect.Tests.Common.Securities
                 Symbol.CreateOption("SPY", Market.USA, OptionStyle.American, OptionRight.Put, 20, expiry4), // 9
             };
 
-            var filterUniverse = new OptionFilterUniverse(symbols, underlying);
-            var filtered = filter.Filter(filterUniverse).ToList();
+            var data = symbols.Select(x => new OptionUniverse() { Symbol = x });
+            var filterUniverse = new OptionFilterUniverse(data, underlying);
+            var filtered = filter.Filter(filterUniverse).Cast<OptionUniverse>().ToList();
             Assert.AreEqual(3, filtered.Count);
         }
 

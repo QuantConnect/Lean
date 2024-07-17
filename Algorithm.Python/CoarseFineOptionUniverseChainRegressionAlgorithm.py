@@ -46,7 +46,7 @@ class CoarseFineOptionUniverseChainRegressionAlgorithm(QCAlgorithm):
         universe.include_weeklys().front_month()
 
         contracts = list()
-        for symbol in universe:
+        for symbol in universe.get_symbols():
             if len(contracts) == 5:
                 break
             contracts.append(symbol)

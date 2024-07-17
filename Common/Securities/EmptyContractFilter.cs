@@ -41,7 +41,7 @@ namespace QuantConnect.Securities
             return new NoneIDerivativeSecurityFilterUniverse();
         }
 
-        private class NoneIDerivativeSecurityFilterUniverse : IDerivativeSecurityFilterUniverse
+        private class NoneIDerivativeSecurityFilterUniverse : IDerivativeSecurityFilterUniverse<Symbol>
         {
             public DateTime LocalTime => default;
 
@@ -53,6 +53,11 @@ namespace QuantConnect.Securities
             IEnumerator IEnumerable.GetEnumerator()
             {
                 return Enumerable.Empty<Symbol>().GetEnumerator();
+            }
+
+            public IEnumerable<Symbol> GetSymbols()
+            {
+                return Enumerable.Empty<Symbol>();
             }
         }
     }

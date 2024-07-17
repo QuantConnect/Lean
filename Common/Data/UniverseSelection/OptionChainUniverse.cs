@@ -99,16 +99,19 @@ namespace QuantConnect.Data.UniverseSelection
                 return Unchanged;
             }
 
-            var availableContracts = data.Data.Select(x => x.Symbol);
+            // Temporary: this can be removed when future options universe selection is also file-based
+            var availableContractsData = data.Symbol.SecurityType != SecurityType.FutureOption
+                ? data.Data.Cast<OptionUniverse>()
+                : data.Data.Select(x => new OptionUniverse() { Symbol = x.Symbol, Time = x.Time });
 
             // we will only update unique strikes when there is an exchange date change
-            _optionFilterUniverse.Refresh(availableContracts, data.Underlying, localEndTime);
+            _optionFilterUniverse.Refresh(availableContractsData, data.Underlying, localEndTime);
 
             var results = Option.ContractFilter.Filter(_optionFilterUniverse);
             _cacheDate = exchangeDate;
 
             // always prepend the underlying symbol
-            return _underlyingSymbol.Concat(results);
+            return _underlyingSymbol.Concat(results.GetSymbols());
         }
 
         /// <summary>

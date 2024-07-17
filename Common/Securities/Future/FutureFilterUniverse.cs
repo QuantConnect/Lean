@@ -16,7 +16,6 @@
 
 using System;
 using System.Collections.Generic;
-using QuantConnect.Data;
 using System.Linq;
 using QuantConnect.Securities.Future;
 using QuantConnect.Util;
@@ -26,7 +25,7 @@ namespace QuantConnect.Securities
     /// <summary>
     /// Represents futures symbols universe used in filtering.
     /// </summary>
-    public class FutureFilterUniverse : ContractSecurityFilterUniverse<FutureFilterUniverse>
+    public class FutureFilterUniverse : ContractSecurityFilterUniverse<FutureFilterUniverse, Symbol>
     {
         /// <summary>
         /// Constructs FutureFilterUniverse

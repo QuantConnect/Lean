@@ -29,7 +29,7 @@ namespace QuantConnect
     /// </summary>
     [JsonConverter(typeof(SymbolJsonConverter))]
     [ProtoContract(SkipConstructor = true)]
-    public sealed class Symbol : IEquatable<Symbol>, IComparable
+    public sealed class Symbol : IEquatable<Symbol>, IComparable, ISymbol
     {
         private static readonly Lazy<SecurityDefinitionSymbolResolver> _securityDefinitionSymbolResolver = new (() => SecurityDefinitionSymbolResolver.GetInstance());
 
@@ -375,6 +375,14 @@ namespace QuantConnect
             }
 
             return false;
+        }
+
+        /// <summary>
+        /// Gets the symbol. Only here to implement the <see cref="ISymbol"/> interface
+        /// </summary>
+        public Symbol GetSymbol()
+        {
+            return this;
         }
 
         #region Properties

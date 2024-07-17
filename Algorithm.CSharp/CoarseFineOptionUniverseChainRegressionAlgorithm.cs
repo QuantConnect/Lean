@@ -67,7 +67,7 @@ namespace QuantConnect.Algorithm.CSharp
                 }
                 return universe.IncludeWeeklys()
                     .FrontMonth()
-                    .Contracts(universe.Take(5));
+                    .Contracts(universe.GetSymbols().Take(5));
             });
         }
 
