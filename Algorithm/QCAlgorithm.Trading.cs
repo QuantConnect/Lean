@@ -1198,13 +1198,9 @@ namespace QuantConnect.Algorithm
             return OrderResponse.Success(request);
         }
 
-        public List<OrderTicket> Liquidate(PyObject symbols, bool asynchronous = false, string tag = "Liquidated", PyObject orderProperties = null)
+        public List<OrderTicket> Liquidate(PyObject symbols, bool asynchronous = false, string tag = "Liquidated", IOrderProperties orderProperties = null)
         {
-            using (Py.GIL())
-            {
-                var parsedOrderProperties = orderProperties != null ? orderProperties.GetAndDispose<OrderProperties>() : null;
-                return Liquidate(symbols.ConvertToSymbolEnumerable(), asynchronous, tag, parsedOrderProperties);
-            }
+            return Liquidate(symbols.ConvertToSymbolEnumerable(), asynchronous, tag, orderProperties);
         }
 
 
