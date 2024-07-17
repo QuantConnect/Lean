@@ -1198,19 +1198,30 @@ namespace QuantConnect.Algorithm
             return OrderResponse.Success(request);
         }
 
-        public List<OrderTicket> Liquidate(PyObject symbols, bool asynchronous = false, string tag = "Liquidated", IOrderProperties orderProperties = null)
+        public List<OrderTicket> Liquidate(PyObject symbols, bool asynchronous = false, string tag = "Liquidated", PyObject orderProperties = null)
         {
             using (Py.GIL())
             {
-
-                return Liquidate(symbols.ConvertToSymbolEnumerable(), asynchronous, tag, orderProperties);
+                var parsedOrderProperties = orderProperties != null ? orderProperties.GetAndDispose<OrderProperties>() : null;
+                return Liquidate(symbols.ConvertToSymbolEnumerable(), asynchronous, tag, parsedOrderProperties);
             }
         }
 
+
         public List<OrderTicket> Liquidate(Symbol symbol = null, bool asynchronous = false, string tag = "Liquidated", IOrderProperties orderProperties = null)
         {
-            var defaultSymbols = Securities.Keys.OrderBy(x => x.Value);
-            return Liquidate(symbol != null ? (Securities.ContainsKey(symbol) ? new[] { symbol } : Enumerable.Empty<Symbol>()) : defaultSymbols, asynchronous, tag, orderProperties);
+            IEnumerable<Symbol> toLiquidate;
+            if (symbol != null)
+            {
+                toLiquidate = Securities.ContainsKey(symbol)
+                    ? new[] { symbol } : Enumerable.Empty<Symbol>();
+            }
+            else
+            {
+                toLiquidate = Securities.Keys.OrderBy(x => x.Value);
+            }
+
+            return Liquidate(toLiquidate, asynchronous, tag, orderProperties);
         }
 
         public List<OrderTicket> Liquidate (IEnumerable<Symbol> symbols, bool asynchronous = false, string tag = "Liquidated", IOrderProperties orderProperties = null)
@@ -1258,7 +1269,7 @@ namespace QuantConnect.Algorithm
                 if (quantity != 0)
                 {
                     // calculate quantity for closing market order
-                    var ticket = Order(symbolToLiquidate, -quantity - marketOrdersQuantity, tag: tag);
+                    var ticket = Order(symbolToLiquidate, -quantity - marketOrdersQuantity, asynchronous: asynchronous, tag: tag, orderProperties: orderProperties);
                     orderTickets.Add(ticket);
                 }
             }
@@ -1289,70 +1300,7 @@ namespace QuantConnect.Algorithm
         [Obsolete($"This method is obsolete, please use Liquidate(symbol: symbolToLiquidate, tag: tag) method")]
         public List<int> Liquidate(Symbol symbolToLiquidate, string tag)
         {
-            var orderIdList = new List<int>();
-            if (!Settings.LiquidateEnabled)
-            {
-                Debug("Liquidate() is currently disabled by settings. To re-enable please set 'Settings.LiquidateEnabled' to true");
-                return orderIdList;
-            }
-
-            IEnumerable<Symbol> toLiquidate;
-            if (symbolToLiquidate != null)
-            {
-                toLiquidate = Securities.ContainsKey(symbolToLiquidate)
-                    ? new[] { symbolToLiquidate } : Enumerable.Empty<Symbol>();
-            }
-            else
-            {
-                toLiquidate = Securities.Keys.OrderBy(x => x.Value);
-            }
-
-
-            foreach (var symbol in toLiquidate)
-            {
-                // get open orders
-                var orders = Transactions.GetOpenOrders(symbol);
-
-                // get quantity in portfolio
-                var quantity = Portfolio[symbol].Quantity;
-
-                // if there is only one open market order that would close the position, do nothing
-                if (orders.Count == 1 && quantity != 0 && orders[0].Quantity == -quantity && orders[0].Type == OrderType.Market)
-                    continue;
-
-                // cancel all open orders
-                var marketOrdersQuantity = 0m;
-                foreach (var order in orders)
-                {
-                    if (order.Type == OrderType.Market)
-                    {
-                        // pending market order
-                        var ticket = Transactions.GetOrderTicket(order.Id);
-                        if (ticket != null)
-                        {
-                            // get remaining quantity
-                            marketOrdersQuantity += ticket.Quantity - ticket.QuantityFilled;
-                        }
-                    }
-                    else
-                    {
-                        Transactions.CancelOrder(order.Id, tag);
-                    }
-                }
-
-                // Liquidate at market price
-                if (quantity != 0)
-                {
-                    // calculate quantity for closing market order
-                    var ticket = Order(symbol, -quantity - marketOrdersQuantity, tag: tag);
-                    if (ticket.Status == OrderStatus.Filled)
-                    {
-                        orderIdList.Add(ticket.OrderId);
-                    }
-                }
-            }
-
-            return orderIdList;
+            return Liquidate(symbol: symbolToLiquidate, tag:tag).Select(x => x.OrderId).ToList();
         }
 
         /// <summary>

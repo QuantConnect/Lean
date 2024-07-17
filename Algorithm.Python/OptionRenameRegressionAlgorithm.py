@@ -57,7 +57,7 @@ class OptionRenameRegressionAlgorithm(QCAlgorithm):
         elif self.time.day == 2 and self.time.hour > 14 and self.time.minute > 0:
             for kvp in slice.option_chains:
                 chain = kvp.value
-                self.liquidate(sorted(self.securities.keys()))
+                self.liquidate()
                 contracts = [i for i in sorted(chain, key=lambda x:x.expiry) 
                                         if i.right ==  OptionRight.CALL and 
                                            i.strike == 33 and

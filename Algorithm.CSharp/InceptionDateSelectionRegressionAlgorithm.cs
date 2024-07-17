@@ -75,7 +75,7 @@ namespace QuantConnect.Algorithm.CSharp
             // liquidate securities removed from our universe
             foreach (var security in changes.RemovedSecurities)
             {
-                Liquidate(symbol: security.Symbol, tag: "Removed from Universe");
+                Liquidate(security.Symbol, "Removed from Universe");
             }
 
             _changes = changes;
