@@ -1198,12 +1198,25 @@ namespace QuantConnect.Algorithm
             return OrderResponse.Success(request);
         }
 
+        /// <summary>
+        /// Liquidate your portfolio holdings
+        /// </summary>
+        /// <param name="symbols">List of symbols to liquidate in Python</param>
+        /// <param name="asynchronous">Flag to indicate if the symbols should be liquidated asynchronously</param>
+        /// <param name="tag">Custom tag to know who is calling this</param>
+        /// <param name="orderProperties">Order properties to use</param>
         public List<OrderTicket> Liquidate(PyObject symbols, bool asynchronous = false, string tag = "Liquidated", IOrderProperties orderProperties = null)
         {
             return Liquidate(symbols.ConvertToSymbolEnumerable(), asynchronous, tag, orderProperties);
         }
 
-
+        /// <summary>
+        /// Liquidate your portfolio holdings
+        /// </summary>
+        /// <param name="symbol">Specific asset to liquidate, defaults to all.</param>
+        /// <param name="asynchronous">Flag to indicate if the symbols should be liquidated asynchronously</param>
+        /// <param name="tag">Custom tag to know who is calling this</param>
+        /// <param name="orderProperties">Order properties to use</param>
         public List<OrderTicket> Liquidate(Symbol symbol = null, bool asynchronous = false, string tag = "Liquidated", IOrderProperties orderProperties = null)
         {
             IEnumerable<Symbol> toLiquidate;
@@ -1220,6 +1233,13 @@ namespace QuantConnect.Algorithm
             return Liquidate(toLiquidate, asynchronous, tag, orderProperties);
         }
 
+        /// <summary>
+        /// Liquidate your portfolio holdings
+        /// </summary>
+        /// <param name="symbols">List of symbols to liquidate, defaults to all.</param>
+        /// <param name="asynchronous">Flag to indicate if the symbols should be liquidated asynchronously</param>
+        /// <param name="tag">Custom tag to know who is calling this</param>
+        /// <param name="orderProperties">Order properties to use</param>
         public List<OrderTicket> Liquidate (IEnumerable<Symbol> symbols, bool asynchronous = false, string tag = "Liquidated", IOrderProperties orderProperties = null)
         {
             var orderTickets = new List<OrderTicket>();

@@ -709,12 +709,12 @@ namespace QuantConnect.AlgorithmFactory.Python.Wrappers
         }
 
         /// <summary>
-        /// Liquidate your portfolio holdings:
+        /// Liquidate your portfolio holdings
         /// </summary>
         /// <param name="symbol">Specific asset to liquidate, defaults to all.</param>
         /// <param name="asynchronous">Flag to indicate if the symbols should be liquidated asynchronously</param>
         /// <param name="tag">Custom tag to know who is calling this</param>
-        /// <param name="orderProperties"></param>
+        /// <param name="orderProperties">Order properties to use</param>
         public List<OrderTicket> Liquidate(Symbol symbol = null, bool asynchronous = false, string tag = "Liquidated", IOrderProperties orderProperties = null) => _baseAlgorithm.Liquidate(symbol:symbol, tag: tag);
 
         /// <summary>
