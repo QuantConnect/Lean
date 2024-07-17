@@ -1044,7 +1044,7 @@ namespace QuantConnect.Securities
         public static OptionFilterUniverse Where(this OptionFilterUniverse universe, PyObject predicate)
         {
             using var _ = Py.GIL();
-            universe.AllSymbols = universe.AllSymbols.Where(predicate.ConvertToDelegate<Func<Symbol, bool>>()).ToList();
+            universe.Data = universe.Data.Where(predicate.ConvertToDelegate<Func<OptionUniverse, bool>>()).ToList();
             return universe;
         }
 
@@ -1061,6 +1061,18 @@ namespace QuantConnect.Securities
         }
 
         /// <summary>
+        /// Maps universe
+        /// </summary>
+        /// <param name="universe">Universe to apply the filter too</param>
+        /// <param name="mapFunc">Symbol function to determine which Symbols are filtered</param>
+        /// <returns>Universe with filter applied</returns>
+        public static OptionFilterUniverse Select(this OptionFilterUniverse universe, PyObject mapFunc)
+        {
+            using var _ = Py.GIL();
+            return universe.Select(mapFunc.ConvertToDelegate<Func<OptionUniverse, Symbol>>());
+        }
+
+        /// <summary>
         /// Binds universe
         /// </summary>
         /// <param name="universe">Universe to apply the filter too</param>
@@ -1073,6 +1085,18 @@ namespace QuantConnect.Securities
         }
 
         /// <summary>
+        /// Binds universe
+        /// </summary>
+        /// <param name="universe">Universe to apply the filter too</param>
+        /// <param name="mapFunc">Symbol function to determine which Symbols are filtered</param>
+        /// <returns>Universe with filter applied</returns>
+        public static OptionFilterUniverse SelectMany(this OptionFilterUniverse universe, PyObject mapFunc)
+        {
+            using var _ = Py.GIL();
+            return universe.SelectMany(mapFunc.ConvertToDelegate<Func<OptionUniverse, IEnumerable<Symbol>>>());
+        }
+
+        /// <summary>
         /// Updates universe to only contain the symbols in the list
         /// </summary>
         /// <param name="universe">Universe to apply the filter too</param>
@@ -1082,6 +1106,18 @@ namespace QuantConnect.Securities
         {
             universe.AllSymbols = universe.AllSymbols.Where(filterList.Contains).ToList();
             return universe;
+        }
+
+        /// <summary>
+        /// Updates universe to only contain the symbols in the list
+        /// </summary>
+        /// <param name="universe">Universe to apply the filter too</param>
+        /// <param name="filterList">List of Symbols to keep in the Universe</param>
+        /// <returns>Universe with filter applied</returns>
+        public static OptionFilterUniverse WhereContains(this OptionFilterUniverse universe, PyObject filterList)
+        {
+            using var _ = Py.GIL();
+            return universe.WhereContains(filterList.ConvertToSymbolEnumerable().ToList());
         }
     }
 }
