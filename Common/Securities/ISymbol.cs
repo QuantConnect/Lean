@@ -14,9 +14,6 @@
  *
 */
 
-using System.Collections;
-using System.Collections.Generic;
-
 namespace QuantConnect.Securities
 {
     /// <summary>

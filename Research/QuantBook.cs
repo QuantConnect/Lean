@@ -434,7 +434,7 @@ namespace QuantConnect.Research
                     {
                         // the option chain symbols wont change so we can set 'exchangeDateChange' to false always
                         optionFilterUniverse.Refresh(distinctSymbols, x, x.EndTime);
-                        return option.ContractFilter.Filter(optionFilterUniverse).GetSymbols();
+                        return option.ContractFilter.Filter(optionFilterUniverse).Cast<OptionUniverse>().Select(x => x.Symbol);
                     })
                     .Distinct().Concat(new[] { symbol.Underlying });
             }

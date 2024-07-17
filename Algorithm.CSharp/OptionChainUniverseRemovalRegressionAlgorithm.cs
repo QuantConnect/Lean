@@ -63,7 +63,7 @@ namespace QuantConnect.Algorithm.CSharp
                 }
                 return universe.IncludeWeeklys()
                     .BackMonth() // back month so that they don't get removed because of being delisted
-                    .Contracts(universe.GetSymbols().Take(5));
+                    .Contracts(universe.Take(5).Select(x => x.Symbol));
             });
         }
 

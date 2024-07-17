@@ -47,14 +47,14 @@ namespace QuantConnect.Tests.Common.Securities
             var filterUniverse = new OptionFilterUniverse(data, underlying, underlyingScaleFactor);
             var filtered = filter.Filter(filterUniverse).Cast<OptionUniverse>().ToList();
             Assert.AreEqual(filteredNumber, filtered.Count);
-            Assert.AreEqual(symbols[3], filtered[0]);
-            Assert.AreEqual(symbols[4], filtered[1]);
-            Assert.AreEqual(symbols[5], filtered[2]);
-            Assert.AreEqual(symbols[6], filtered[3]);
-            Assert.AreEqual(symbols[7], filtered[4]);
+            Assert.AreEqual(symbols[3], filtered[0].Symbol);
+            Assert.AreEqual(symbols[4], filtered[1].Symbol);
+            Assert.AreEqual(symbols[5], filtered[2].Symbol);
+            Assert.AreEqual(symbols[6], filtered[3].Symbol);
+            Assert.AreEqual(symbols[7], filtered[4].Symbol);
             if (underlyingPrice == 10)
             {
-                Assert.AreEqual(symbols[8], filtered[5]);
+                Assert.AreEqual(symbols[8], filtered[5].Symbol);
             }
         }
 
@@ -92,13 +92,13 @@ namespace QuantConnect.Tests.Common.Securities
             var filterUniverse = new OptionFilterUniverse(data, underlying);
             var filtered = filter.Filter(filterUniverse).Cast<OptionUniverse>().ToList();
             Assert.AreEqual(underlyingPrice == 8 ? 5 : 4, filtered.Count);
-            Assert.AreEqual(symbols[1], filtered[0]);
-            Assert.AreEqual(symbols[2], filtered[1]);
-            Assert.AreEqual(symbols[3], filtered[2]);
-            Assert.AreEqual(symbols[4], filtered[3]);
+            Assert.AreEqual(symbols[1], filtered[0].Symbol);
+            Assert.AreEqual(symbols[2], filtered[1].Symbol);
+            Assert.AreEqual(symbols[3], filtered[2].Symbol);
+            Assert.AreEqual(symbols[4], filtered[3].Symbol);
             if (underlyingPrice == 8)
             {
-                Assert.AreEqual(symbols[5], filtered[4]);
+                Assert.AreEqual(symbols[5], filtered[4].Symbol);
             }
         }
 
@@ -136,9 +136,9 @@ namespace QuantConnect.Tests.Common.Securities
             var filterUniverse = new OptionFilterUniverse(data, underlying);
             var filtered = filter.Filter(filterUniverse).Cast<OptionUniverse>().ToList();
             Assert.AreEqual(3, filtered.Count);
-            Assert.AreEqual(symbols[5], filtered[0]);
-            Assert.AreEqual(symbols[6], filtered[1]);
-            Assert.AreEqual(symbols[7], filtered[2]);
+            Assert.AreEqual(symbols[5], filtered[0].Symbol);
+            Assert.AreEqual(symbols[6], filtered[1].Symbol);
+            Assert.AreEqual(symbols[7], filtered[2].Symbol);
         }
 
         [Test]
@@ -203,9 +203,9 @@ namespace QuantConnect.Tests.Common.Securities
             var filterUniverse = new OptionFilterUniverse(data, underlying);
             var filtered = filter.Filter(filterUniverse).Cast<OptionUniverse>().ToList();
             Assert.AreEqual(3, filtered.Count);
-            Assert.AreEqual(symbols[2], filtered[0]);
-            Assert.AreEqual(symbols[3], filtered[1]);
-            Assert.AreEqual(symbols[4], filtered[2]);
+            Assert.AreEqual(symbols[2], filtered[0].Symbol);
+            Assert.AreEqual(symbols[3], filtered[1].Symbol);
+            Assert.AreEqual(symbols[4], filtered[2].Symbol);
         }
 
         [Test]
@@ -288,11 +288,11 @@ namespace QuantConnect.Tests.Common.Securities
             var filterUniverse = new OptionFilterUniverse(data, underlying);
             var filtered = filter.Filter(filterUniverse).Cast<OptionUniverse>().ToList();
             Assert.AreEqual(5, filtered.Count);
-            Assert.AreEqual(symbols[3], filtered[0]);
-            Assert.AreEqual(symbols[4], filtered[1]);
-            Assert.AreEqual(symbols[5], filtered[2]);
-            Assert.AreEqual(symbols[6], filtered[3]);
-            Assert.AreEqual(symbols[7], filtered[4]);
+            Assert.AreEqual(symbols[3], filtered[0].Symbol);
+            Assert.AreEqual(symbols[4], filtered[1].Symbol);
+            Assert.AreEqual(symbols[5], filtered[2].Symbol);
+            Assert.AreEqual(symbols[6], filtered[3].Symbol);
+            Assert.AreEqual(symbols[7], filtered[4].Symbol);
         }
 
         [Test]
@@ -330,11 +330,11 @@ namespace QuantConnect.Tests.Common.Securities
             };
 
             var data = symbols.Select(x => new OptionUniverse() { Symbol = x });
-            var filtered = filter.Filter(new OptionFilterUniverse(data, underlying)).Cast<Symbol>().ToList();
+            var filtered = filter.Filter(new OptionFilterUniverse(data, underlying)).Cast<OptionUniverse>().ToList();
             Assert.AreEqual(3, filtered.Count);
-            Assert.AreEqual(symbols[5], filtered[0]);
-            Assert.AreEqual(symbols[6], filtered[1]);
-            Assert.AreEqual(symbols[7], filtered[2]);
+            Assert.AreEqual(symbols[5], filtered[0].Symbol);
+            Assert.AreEqual(symbols[6], filtered[1].Symbol);
+            Assert.AreEqual(symbols[7], filtered[2].Symbol);
         }
 
         [Test]
@@ -372,11 +372,11 @@ namespace QuantConnect.Tests.Common.Securities
             };
 
             var data = symbols.Select(x => new OptionUniverse() { Symbol = x });
-            var filtered = filter.Filter(new OptionFilterUniverse(data, underlying)).Cast<Symbol>().ToList();
+            var filtered = filter.Filter(new OptionFilterUniverse(data, underlying)).Cast<OptionUniverse>().ToList();
             Assert.AreEqual(3, filtered.Count);
-            Assert.AreEqual(symbols[5], filtered[0]);
-            Assert.AreEqual(symbols[6], filtered[1]);
-            Assert.AreEqual(symbols[7], filtered[2]);
+            Assert.AreEqual(symbols[5], filtered[0].Symbol);
+            Assert.AreEqual(symbols[6], filtered[1].Symbol);
+            Assert.AreEqual(symbols[7], filtered[2].Symbol);
         }
 
         [Test]
@@ -410,7 +410,7 @@ namespace QuantConnect.Tests.Common.Securities
             };
 
             var data = symbols.Select(x => new OptionUniverse() { Symbol = x });
-            var filtered = filter.Filter(new OptionFilterUniverse(data, underlying)).Cast<Symbol>().ToList();
+            var filtered = filter.Filter(new OptionFilterUniverse(data, underlying)).Cast<OptionUniverse>().ToList();
             Assert.AreEqual(8, filtered.Count);
         }
 
@@ -480,7 +480,7 @@ namespace QuantConnect.Tests.Common.Securities
             };
 
             var data = symbols.Select(x => new OptionUniverse() { Symbol = x });
-            var filtered = filter.Filter(new OptionFilterUniverse(data, underlying)).Cast<Symbol>().ToList();
+            var filtered = filter.Filter(new OptionFilterUniverse(data, underlying)).Cast<OptionUniverse>().ToList();
             Assert.AreEqual(4, filtered.Count);
         }
 

@@ -27,11 +27,6 @@ namespace QuantConnect.Securities
     /// </summary>
     public interface IDerivativeSecurityFilterUniverse : IEnumerable
     {
-        /// <summary>
-        /// Gets the current symbols in the universe.
-        /// </summary>
-        /// <returns>The current symbols in the universe</returns>
-        IEnumerable<Symbol> GetSymbols();
     }
 
 #pragma warning restore CA1710 // Identifiers should have correct suffix
