@@ -119,7 +119,7 @@ namespace QuantConnect.Algorithm.CSharp
                     return u.IncludeWeeklys()
                         .Strikes(+1, +3)
                         .Expiration(TimeSpan.Zero, TimeSpan.FromDays(1))
-                        .Contracts(c => c.Where(s => s.ID.OptionRight == OptionRight.Put));
+                        .Contracts(c => c.Select(x => x.Symbol).Where(s => s.ID.OptionRight == OptionRight.Put));
                 });
 
                 _expectedSecurities.Add(OptionChainSymbol);

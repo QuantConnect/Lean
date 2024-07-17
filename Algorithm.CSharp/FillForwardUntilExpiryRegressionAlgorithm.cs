@@ -52,7 +52,7 @@ namespace QuantConnect.Algorithm.CSharp
             var _twxOption = AddOption("TWX", Resolution.Minute);
             _exchange = _twxOption.Exchange;
             _twxOption.SetFilter((x) => x
-                .Contracts(c => c.Where(s => _contracts.Contains(s.Value))));
+                .Contracts(c => c.Select(x => x.Symbol).Where(s => _contracts.Contains(s.Value))));
             SetBenchmark(t => 1);
         }
 

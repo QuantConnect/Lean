@@ -26,10 +26,14 @@ namespace QuantConnect.Securities
     /// Base class for contract symbols filtering universes.
     /// Used by OptionFilterUniverse and FutureFilterUniverse
     /// </summary>
-    public abstract class ContractSecurityFilterUniverse<T> : IDerivativeSecurityFilterUniverse
-        where T: ContractSecurityFilterUniverse<T>
+    public abstract class ContractSecurityFilterUniverse<T, TData> : IDerivativeSecurityFilterUniverse<TData>
+        where T: ContractSecurityFilterUniverse<T, TData>
+        where TData: ISymbol
     {
         private bool _alreadyAppliedTypeFilters;
+
+        private IEnumerable<TData> _data;
+        private IEnumerable<Symbol> _allSymbols;
 
         /// <summary>
         /// Defines listed contract types with Flags attribute
@@ -60,10 +64,44 @@ namespace QuantConnect.Securities
         public DateTime LocalTime { get; private set; }
 
         /// <summary>
+        /// All data in this filter
+        /// Marked internal for use by extensions
+        /// </summary>
+        /// <remarks>
+        /// Setting it will also set AllSymbols
+        /// </remarks>
+        internal IEnumerable<TData> Data
+        {
+            get
+            {
+                return _data;
+            }
+            set
+            {
+                _data = value;
+                _allSymbols = _data.Select(x => x.GetSymbol());
+            }
+        }
+
+        /// <summary>
         /// All Symbols in this filter
         /// Marked internal for use by extensions
         /// </summary>
-        internal IEnumerable<Symbol> AllSymbols;
+        /// <remarks>
+        /// Setting it will remove any data that doesn't have a symbol in AllSymbols
+        /// </remarks>
+        internal IEnumerable<Symbol> AllSymbols
+        {
+            get
+            {
+                return _allSymbols;
+            }
+            set
+            {
+                _allSymbols = value;
+                _data = _data.Where(x => _allSymbols.Contains(x.GetSymbol()));
+            }
+        }
 
         /// <summary>
         /// Constructs ContractSecurityFilterUniverse
@@ -75,9 +113,9 @@ namespace QuantConnect.Securities
         /// <summary>
         /// Constructs ContractSecurityFilterUniverse
         /// </summary>
-        protected ContractSecurityFilterUniverse(IEnumerable<Symbol> allSymbols, DateTime localTime)
+        protected ContractSecurityFilterUniverse(IEnumerable<TData> allData, DateTime localTime)
         {
-            AllSymbols = allSymbols;
+            Data = allData;
             LocalTime = localTime;
             Type = ContractExpirationType.Standard;
         }
@@ -135,13 +173,22 @@ namespace QuantConnect.Securities
         }
 
         /// <summary>
+        /// Returns the symbols in the universe
+        /// </summary>
+        /// <returns>The symbols in the universe</returns>
+        public IEnumerable<Symbol> GetSymbols()
+        {
+            return AllSymbols;
+        }
+
+        /// <summary>
         /// Refreshes this filter universe
         /// </summary>
-        /// <param name="allSymbols">All the contract symbols for the Universe</param>
+        /// <param name="allData">All data for contracts in the Universe</param>
         /// <param name="localTime">The local exchange current time</param>
-        public virtual void Refresh(IEnumerable<Symbol> allSymbols, DateTime localTime)
+        public virtual void Refresh(IEnumerable<TData> allData, DateTime localTime)
         {
-            AllSymbols = allSymbols;
+            Data = allData;
             LocalTime = localTime;
             Type = ContractExpirationType.Standard;
             _alreadyAppliedTypeFilters = false;
@@ -197,7 +244,7 @@ namespace QuantConnect.Securities
         public virtual T FrontMonth()
         {
             ApplyTypesFilter();
-            var ordered = this.OrderBy(x => x.ID.Date).ToList();
+            var ordered = AllSymbols.OrderBy(x => x.ID.Date).ToList();
             if (ordered.Count == 0) return (T) this;
             var frontMonth = ordered.TakeWhile(x => ordered[0].ID.Date == x.ID.Date);
 
@@ -212,7 +259,7 @@ namespace QuantConnect.Securities
         public virtual T BackMonths()
         {
             ApplyTypesFilter();
-            var ordered = this.OrderBy(x => x.ID.Date).ToList();
+            var ordered = AllSymbols.OrderBy(x => x.ID.Date).ToList();
             if (ordered.Count == 0) return (T) this;
             var backMonths = ordered.SkipWhile(x => ordered[0].ID.Date == x.ID.Date);
 
@@ -299,10 +346,10 @@ namespace QuantConnect.Securities
         /// </summary>
         /// <param name="contractSelector">The option contract symbol objects to select</param>
         /// <returns>Universe with filter applied</returns>
-        public T Contracts(Func<IEnumerable<Symbol>, IEnumerable<Symbol>> contractSelector)
+        public T Contracts(Func<IEnumerable<TData>, IEnumerable<Symbol>> contractSelector)
         {
             // force materialization using ToList
-            AllSymbols = contractSelector(AllSymbols).ToList();
+            AllSymbols = contractSelector(Data).ToList();
             return (T) this;
         }
 
@@ -321,9 +368,9 @@ namespace QuantConnect.Securities
         /// IEnumerable interface method implementation
         /// </summary>
         /// <returns>IEnumerator of Symbols in Universe</returns>
-        public IEnumerator<Symbol> GetEnumerator()
+        public IEnumerator<TData> GetEnumerator()
         {
-            return AllSymbols.GetEnumerator();
+            return Data.GetEnumerator();
         }
 
         /// <summary>
@@ -331,7 +378,7 @@ namespace QuantConnect.Securities
         /// </summary>
         IEnumerator IEnumerable.GetEnumerator()
         {
-            return AllSymbols.GetEnumerator();
+            return Data.GetEnumerator();
         }
     }
 }

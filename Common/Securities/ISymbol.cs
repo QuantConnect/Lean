@@ -19,29 +19,20 @@ using System.Collections.Generic;
 
 namespace QuantConnect.Securities
 {
-#pragma warning disable CA1010, CA1710 // Generic interface should also be implemented
-#pragma warning disable CA1710 // Identifiers should have correct suffix
-
     /// <summary>
-    /// Represents derivative symbols universe used in filtering.
+    /// Base interface intended for universe data to have some of their symbol properties accessible directly.
     /// </summary>
-    public interface IDerivativeSecurityFilterUniverse : IEnumerable
+    public interface ISymbol
     {
         /// <summary>
-        /// Gets the current symbols in the universe.
+        /// Gets the security identifier.
         /// </summary>
-        /// <returns>The current symbols in the universe</returns>
-        IEnumerable<Symbol> GetSymbols();
-    }
+        SecurityIdentifier ID { get; }
 
-#pragma warning restore CA1710 // Identifiers should have correct suffix
-#pragma warning restore CA1010 // Generic interface should also be implemented
-
-    /// <summary>
-    /// Represents derivative symbols universe used in filtering.
-    /// </summary>
-    public interface IDerivativeSecurityFilterUniverse<T> : IDerivativeSecurityFilterUniverse, IEnumerable<T>
-        where T : ISymbol
-    {
+        /// <summary>
+        /// Gets the symbol.
+        /// </summary>
+        /// <returns>The symbol</returns>
+        Symbol GetSymbol();
     }
 }

@@ -17,6 +17,7 @@ using System;
 using System.IO;
 using System.Runtime.CompilerServices;
 using QuantConnect.Data.Market;
+using QuantConnect.Securities;
 using QuantConnect.Util;
 
 namespace QuantConnect.Data.UniverseSelection
@@ -24,7 +25,7 @@ namespace QuantConnect.Data.UniverseSelection
     /// <summary>
     /// Represents a universe of options data
     /// </summary>
-    public class OptionUniverse : BaseDataCollection
+    public class OptionUniverse : BaseDataCollection, ISymbol
     {
         private string[] _csvLine;
 
@@ -36,6 +37,16 @@ namespace QuantConnect.Data.UniverseSelection
         private decimal? _openInterest;
         private decimal? _impliedVolatility;
         private Greeks _greeks;
+
+        /// <summary>
+        /// The security identifier of the option symbol
+        /// </summary>
+        public SecurityIdentifier ID => Symbol.ID;
+
+        /// <summary>
+        /// The underlying symbol of the option
+        /// </summary>
+        public Symbol Underlying => Symbol.Underlying;
 
         /// <summary>
         /// Price of the option/underlying
@@ -309,7 +320,7 @@ namespace QuantConnect.Data.UniverseSelection
             }
             else
             {
-                Underlying = newDataPoint;
+                ((BaseDataCollection)this).Underlying = newDataPoint;
             }
         }
 
@@ -329,6 +340,33 @@ namespace QuantConnect.Data.UniverseSelection
         {
             return $"{Symbol.ID},{Symbol.Value},{Open},{High},{Low},{Close},{Volume}," +
                 $"{_openInterest},{_impliedVolatility},{_greeks?.Delta},{_greeks?.Gamma},{_greeks?.Vega},{_greeks?.Theta},{_greeks?.Rho}";
+        }
+
+        /// <summary>
+        /// Gets the symbol of the option
+        /// </summary>
+#pragma warning disable CA1721 // Property names should not match get methods
+        public Symbol GetSymbol()
+        {
+            return Symbol;
+        }
+#pragma warning restore CA1721 // Property names should not match get methods
+
+        /// <summary>
+        /// Implicit conversion into <see cref="Symbol"/>
+        /// </summary>
+        /// <param name="data">The option universe data to be converted</param>
+        public static implicit operator Symbol(OptionUniverse data)
+        {
+            return data.Symbol;
+        }
+
+        /// <summary>
+        /// Gets the symbol of the option
+        /// </summary>
+        public Symbol ToSymbol()
+        {
+            return (Symbol)this;
         }
 
         /// <summary>
