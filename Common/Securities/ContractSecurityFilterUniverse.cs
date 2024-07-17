@@ -173,15 +173,6 @@ namespace QuantConnect.Securities
         }
 
         /// <summary>
-        /// Returns the symbols in the universe
-        /// </summary>
-        /// <returns>The symbols in the universe</returns>
-        public IEnumerable<Symbol> GetSymbols()
-        {
-            return AllSymbols;
-        }
-
-        /// <summary>
         /// Refreshes this filter universe
         /// </summary>
         /// <param name="allData">All data for contracts in the Universe</param>

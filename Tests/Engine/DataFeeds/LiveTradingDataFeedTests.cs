@@ -598,7 +598,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             option.SetFilter(universe =>
             {
                 selectionDone = true;
-                selectedSymbols = universe.GetSymbols().ToList();
+                selectedSymbols = (List<Symbol>)universe;
 
                 return universe;
             });

@@ -96,7 +96,7 @@ namespace QuantConnect.Algorithm.CSharp
 
             protected override OptionFilterUniverse Filter(OptionFilterUniverse filter)
             {
-                return filter.BackMonth().Contracts(filter.GetSymbols().Take(15));
+                return filter.BackMonth().Contracts(filter.Take(15).Select(x => x.Symbol));
             }
         }
 
