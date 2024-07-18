@@ -745,6 +745,26 @@ namespace QuantConnect.Algorithm
         }
 
         /// <summary>
+        /// Creates a new ForceIndex indicator for the symbol. The indicator will be automatically
+        /// updated on the given resolution.
+        /// </summary>
+        /// <param name="symbol">The symbol whose ForceIndex we want</param>
+        /// <param name="period">The smoothing period used to smooth the computed ForceIndex values</param>
+        /// <param name="type">The type of smoothing to use</param>
+        /// <param name="resolution">The resolution</param>
+        /// <param name="selector">Selects a value from the BaseData to send into the indicator, if null defaults to casting the input value to a TradeBar</param>
+        /// <returns>A new ForceIndex indicator with the specified smoothing type and period</returns>
+        [DocumentationAttribute(Indicators)]
+        public ForceIndex FI(Symbol symbol, int period, MovingAverageType type = MovingAverageType.Exponential, Resolution? resolution = null, Func<IBaseData, TradeBar> selector = null)
+        {
+            var name = CreateIndicatorName(symbol, $"FI({period})", resolution);
+            var indicator = new ForceIndex(name, period, type);
+            InitializeIndicator(indicator, resolution, selector, symbol);
+
+            return indicator;
+        }
+
+        /// <summary>
         /// Creates an FisherTransform indicator for the symbol.
         /// The indicator will be automatically updated on the given resolution.
         /// </summary>
@@ -762,6 +782,7 @@ namespace QuantConnect.Algorithm
 
             return fisherTransform;
         }
+
 
         /// <summary>
         /// Creates an FractalAdaptiveMovingAverage (FRAMA) indicator for the symbol. The indicator will be automatically
@@ -2272,6 +2293,24 @@ namespace QuantConnect.Algorithm
             var intradayVwap = new IntradayVwap(name);
             RegisterIndicator(symbol, intradayVwap);
             return intradayVwap;
+        }
+
+        /// <summary>
+        /// Creates a new VolumeWeightedMovingAverage indicator for the symbol. The indicator will be automatically
+        /// updated on the given resolution.
+        /// </summary>
+        /// <param name="symbol">The symbol whose VWMA we want</param>
+        /// <param name="period">The smoothing period used to smooth the computed VWMA values</param>
+        /// <param name="resolution">The resolution</param>
+        /// <param name="selector">Selects a value from the BaseData to send into the indicator, if null defaults to casting the input value to a TradeBar</param>
+        /// <returns>A new VolumeWeightedMovingAverage indicator with the specified smoothing period</returns>
+        [DocumentationAttribute(Indicators)]
+        public VolumeWeightedMovingAverage VWMA(Symbol symbol, int period, Resolution? resolution = null, Func<IBaseData, TradeBar> selector = null)
+        {
+            var name = CreateIndicatorName(symbol, $"VWMA({period})", resolution);
+            var indicator = new VolumeWeightedMovingAverage(name, period);
+            InitializeIndicator(indicator, resolution, selector, symbol);
+            return indicator;
         }
 
         /// <summary>
