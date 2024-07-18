@@ -35,31 +35,29 @@ class OptionUniverseFilterGreeksRegressionAlgorithm(QCAlgorithm):
     def set_option_filter(self, security: Option) -> None:
         # Contracts can be filtered by greeks, implied volatility, open interest:
         security.set_filter(lambda u: u
-            .strikes(-3, +3)
-            .expiration(0, 180)
-            .delta(0.64, 0.65)
-            .gamma(0.0008, 0.0010)
-            .vega(7.5, 10.5)
-            .theta(-1.10, -0.50)
-            .rho(4, 10)
-            .implied_volatility(0.10, 0.20)
-            .open_interest(100, 1000))
+                            .delta(0.5, 1.5)
+                            .gamma(0.0001, 0.0006)
+                            .vega(0.01, 1.5)
+                            .theta(-2.0, -0.5)
+                            .rho(0.5, 3.0)
+                            .implied_volatility(1.0, 3.0)
+                            .open_interest(100, 500))
 
         # Note: there are also shortcuts for these filter methods:
         '''
-        security.SetFilter(u => u
-            .d(0.64, 0.65)
-            .g(0.0008, 0.0010)
-            .v(7.5, 10.5)
-            .t(-1.10, -0.50)
-            .r(4, 10)
-            .iv(0.10, 0.20)
-            .oi(100, 1000))
+        security.set_filter(lambda u: u
+                            .d(0.5, 1.5)
+                            .g(0.0001, 0.0006)
+                            .v(0.01, 1.5)
+                            .t(-2.0, -0.5)
+                            .r(0.5, 3.0)
+                            .iv(1.0, 3.0)
+                            .oi(100, 500))
         '''
 
     def on_data(self, slice: Slice) -> None:
         chain = slice.option_chains.get(self.option_symbol)
-        if chain and len(chain) > 0:
+        if chain and len(chain.contracts) > 0:
             self.option_chain_received = True
 
     def on_end_of_algorithm(self) -> None:

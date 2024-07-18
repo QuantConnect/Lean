@@ -32,43 +32,38 @@ namespace QuantConnect.Algorithm.CSharp
             // but it is more flexible and allows for more complex filtering:
 
             //security.SetFilter(u => u
-            //   .Strikes(-3, +3)
-            //   .Expiration(0, 180)
-            //   .Delta(0.64m, 0.65m)
-            //   .Gamma(0.0008m, 0.0010m)
-            //   .Vega(7.5m, 10.5m)
-            //   .Theta(-1.10m, -0.50m)
-            //   .Rho(4m, 10m)
-            //   .ImpliedVolatility(0.10m, 0.20m)
-            //   .OpenInterest(100, 1000));
+            //    .Delta(0.5m, 1.5m)
+            //    .Gamma(0.0001m, 0.0006m)
+            //    .Vega(0.01m, 1.5m)
+            //    .Theta(-2.0m, -0.5m)
+            //    .Rho(0.5m, 3.0m)
+            //    .ImpliedVolatility(1.0m, 3.0m)
+            //    .OpenInterest(100, 500));
 
-            security.SetFilter(u => u
-                .Strikes(-3, +3)
-                .Expiration(0, 180)
-                .Contracts(contracts =>
-                {
-                    // These contracts list will already be filtered by the strikes and expirations,
-                    // since those filters where applied before this one.
+            security.SetFilter(u => u.Contracts(contracts =>
+            {
+                // These contracts list will already be filtered by the strikes and expirations,
+                // since those filters where applied before this one.
 
-                    return contracts
-                        .Where(contract =>
-                        {
-                            // Can access the contract data here and do some filtering based on it is needed:
-                            var greeks = contract.Greeks;
-                            var iv = contract.ImpliedVolatility;
-                            var openInterest = contract.OpenInterest;
+                return contracts
+                    .Where(contract =>
+                    {
+                        // Can access the contract data here and do some filtering based on it is needed:
+                        var greeks = contract.Greeks;
+                        var iv = contract.ImpliedVolatility;
+                        var openInterest = contract.OpenInterest;
 
-                            // More complex math can be done here for filtering, but will be simple here for demonstration sake:
-                            return greeks.Delta > 0.64m && greeks.Delta < 0.65m
-                                && greeks.Gamma > 0.0008m && greeks.Gamma < 0.0010m
-                                && greeks.Vega > 7.5m && greeks.Vega < 10.5m
-                                && greeks.Theta > -1.10m && greeks.Theta < -0.50m
-                                && greeks.Rho > 4m && greeks.Rho < 10m
-                                && iv > 0.10m && iv < 0.20m
-                                && openInterest > 100 && openInterest < 1000;
-                        })
-                        .Select(contract => contract.Symbol);
-                }));
+                        // More complex math can be done here for filtering, but will be simple here for demonstration sake:
+                        return greeks.Delta > 0.5m && greeks.Delta < 1.5m &&
+                               greeks.Gamma > 0.0001m && greeks.Gamma < 0.0006m &&
+                               greeks.Vega > 0.01m && greeks.Vega < 1.5m &&
+                               greeks.Theta > -2.0m && greeks.Theta < -0.5m &&
+                               greeks.Rho > 0.5m && greeks.Rho < 3.0m &&
+                               iv > 1.0m && iv < 3.0m &&
+                               openInterest > 100 && openInterest < 500;
+                    })
+                    .Select(contract => contract.Symbol);
+            }));
         }
 
     }

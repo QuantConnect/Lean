@@ -28,15 +28,13 @@ namespace QuantConnect.Algorithm.CSharp
         {
             // Contracts can be filtered by greeks, implied volatility, open interest:
             security.SetFilter(u => u
-                .Strikes(-3, +3)
-                .Expiration(0, 180)
-                .D(0.64m, 0.65m)
-                .G(0.0008m, 0.0010m)
-                .V(7.5m, 10.5m)
-                .T(-1.10m, -0.50m)
-                .R(4m, 10m)
-                .IV(0.10m, 0.20m)
-                .OI(100, 1000));
+                .D(0.5m, 1.5m)
+                .G(0.0001m, 0.0006m)
+                .V(0.01m, 1.5m)
+                .T(-2.0m, -0.5m)
+                .R(0.5m, 3.0m)
+                .IV(1.0m, 3.0m)
+                .OI(100, 500));
         }
 
         /// <summary>
@@ -52,12 +50,12 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// Data Points count of all timeslices of algorithm
         /// </summary>
-        public long DataPoints => 2021;
+        public long DataPoints => 7113;
 
         /// <summary>
         /// Data Points count of the algorithm history
         /// </summary>
-        public int AlgorithmHistoryDataPoints => 6;
+        public int AlgorithmHistoryDataPoints => 0;
 
         /// <summary>
         /// Final status of the algorithm

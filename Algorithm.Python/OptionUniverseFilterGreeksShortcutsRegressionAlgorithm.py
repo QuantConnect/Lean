@@ -23,12 +23,10 @@ class OptionUniverseFilterGreeksShortcutsRegressionAlgorithm(OptionUniverseFilte
     def set_option_filter(self, security: Option) -> None:
         # Contracts can be filtered by greeks, implied volatility, open interest:
         security.set_filter(lambda u: u
-            .strikes(-3, +3)
-            .expiration(0, 180)
-            .d(0.64, 0.65)
-            .g(0.0008, 0.0010)
-            .v(7.5, 10.5)
-            .t(-1.10, -0.50)
-            .r(4, 10)
-            .iv(0.10, 0.20)
-            .oi(100, 1000))
+                            .d(0.5, 1.5)
+                            .g(0.0001, 0.0006)
+                            .v(0.01, 1.5)
+                            .t(-2.0, -0.5)
+                            .r(0.5, 3.0)
+                            .iv(1.0, 3.0)
+                            .oi(100, 500))
