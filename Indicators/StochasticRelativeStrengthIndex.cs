@@ -13,6 +13,7 @@
  * limitations under the License.
 */
 
+using System;
 using System.Linq;
 
 namespace QuantConnect.Indicators
@@ -40,6 +41,16 @@ namespace QuantConnect.Indicators
         public IndicatorBase<IndicatorDataPoint> D { get; }
 
         /// <summary>
+        /// Gets a flag indicating when this indicator is ready and fully initialized
+        /// </summary>
+        public override bool IsReady => Samples >= WarmUpPeriod;
+
+        /// <summary>
+        /// Required period, in data points, for the indicator to be ready and fully initialized.
+        /// </summary>
+        public int WarmUpPeriod { get; }
+
+        /// <summary>
         /// Initializes a new instance of the StochasticRelativeStrengthIndex class
         /// </summary>
         /// <param name="rsiPeriod">The period of the relative strength index</param>
@@ -48,7 +59,7 @@ namespace QuantConnect.Indicators
         /// <param name="dSmoothingPeriod">The smoothing period of D output (aka %D)</param>
         /// <param name="movingAverageType">The type of moving average to be used for k and d</param>
         public StochasticRelativeStrengthIndex(int rsiPeriod, int stochPeriod, int kSmoothingPeriod, int dSmoothingPeriod, MovingAverageType movingAverageType = MovingAverageType.Simple)
-            : this($"StochRSI({rsiPeriod},{stochPeriod},{kSmoothingPeriod},{dSmoothingPeriod},{movingAverageType})", rsiPeriod, stochPeriod, kSmoothingPeriod, dSmoothingPeriod, movingAverageType)
+            : this($"SRSI({rsiPeriod},{stochPeriod},{kSmoothingPeriod},{dSmoothingPeriod},{movingAverageType})", rsiPeriod, stochPeriod, kSmoothingPeriod, dSmoothingPeriod, movingAverageType)
         {
         }
 
@@ -70,18 +81,8 @@ namespace QuantConnect.Indicators
             K = movingAverageType.AsIndicator($"{name}_K_{movingAverageType}", kSmoothingPeriod);
             D = movingAverageType.AsIndicator($"{name}_D_{movingAverageType}", dSmoothingPeriod);
 
-            WarmUpPeriod = stochPeriod;
+            WarmUpPeriod = rsiPeriod + stochPeriod + Math.Max(kSmoothingPeriod, dSmoothingPeriod);
         }
-
-        /// <summary>
-        /// Gets a flag indicating when this indicator is ready and fully initialized
-        /// </summary>
-        public override bool IsReady => Samples >= WarmUpPeriod;
-
-        /// <summary>
-        /// Required period, in data points, for the indicator to be ready and fully initialized.
-        /// </summary>
-        public int WarmUpPeriod { get; }
 
         /// <summary>
         /// Computes the next value of the following sub-indicators from the given state:
@@ -92,20 +93,20 @@ namespace QuantConnect.Indicators
         protected override decimal ComputeNextValue(IndicatorDataPoint input)
         {
             _rsi.Update(input);
+            _recentRSIValues.Add(_rsi.Current.Value);
 
-            if (!IsReady)
+            if (!_recentRSIValues.IsReady)
             {
                 return 0m;
             }
 
-            _recentRSIValues.Add(_rsi.Current.Value);
-
-            var max_high = _recentRSIValues.Max();
-            var min_low = _recentRSIValues.Min();
+            var maxHigh = _recentRSIValues.Max();
+            var minLow = _recentRSIValues.Min();
 
             decimal k = 100;
-            if (max_high != min_low)
-                k = 100 * (_rsi.Current.Value - min_low) / (max_high - min_low);
+            if (maxHigh != minLow) {
+                k = 100 * (_rsi.Current.Value - minLow) / (maxHigh - minLow);
+            }
 
             K.Update(input.EndTime, k);
             D.Update(input.EndTime, K.Current.Value);
