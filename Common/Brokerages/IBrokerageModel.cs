@@ -198,6 +198,9 @@ namespace QuantConnect.Brokerages
                 case BrokerageName.TerminalLink:
                     return new DefaultBrokerageModel(accountType);
 
+                case BrokerageName.Alpaca:
+                    return new AlpacaBrokerageModel();
+
                 case BrokerageName.InteractiveBrokersBrokerage:
                     return new InteractiveBrokersBrokerageModel(accountType);
 
@@ -298,6 +301,9 @@ namespace QuantConnect.Brokerages
             // Case order matters to ensure we get the correct brokerage name from the inheritance chain
             switch (model)
             {
+                case AlpacaBrokerageModel:
+                    return BrokerageName.Alpaca;
+
                 case InteractiveBrokersBrokerageModel _:
                     return BrokerageName.InteractiveBrokersBrokerage;
 
