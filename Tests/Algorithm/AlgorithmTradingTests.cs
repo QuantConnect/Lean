@@ -30,6 +30,7 @@ using QuantConnect.Tests.Engine.DataFeeds;
 using System.Linq;
 using QuantConnect.Data;
 using QuantConnect.Indicators;
+using Python.Runtime;
 
 namespace QuantConnect.Tests.Algorithm
 {
@@ -1396,8 +1397,15 @@ namespace QuantConnect.Tests.Algorithm
             Assert.AreEqual(expected, algo.Transactions.LastOrderId);
         }
 
-        [Test]
-        public void LiquidateWorksAsExpected()
+        [TestCase(Language.CSharp, true, true)]
+        [TestCase(Language.CSharp, false, true)]
+        [TestCase(Language.CSharp, null, true)]
+        [TestCase(Language.Python, null, true)]
+        [TestCase(Language.CSharp, true, false)]
+        [TestCase(Language.CSharp, false, false)]
+        [TestCase(Language.CSharp, null, false)]
+        [TestCase(Language.Python, null, false)]
+        public void LiquidateWorksAsExpected(Language language, bool? multipleSymbols, bool isAsynchronous)
         {
             Security msft;
             var algo = GetAlgorithm(out msft, 1, 0);
@@ -1416,29 +1424,40 @@ namespace QuantConnect.Tests.Algorithm
             Update(aapl, 25);
 
             algo.Portfolio.SetCash(15000000);
+            var limitOrderCanceled = false;
 
+            // Setup the transaction handler
             var tickets = new Dictionary<int, OrderTicket>();
             var mock = new Mock<ITransactionHandler>();
             var request = new Mock<SubmitOrderRequest>(null, null, null, null, null, null, null, null, null, null);
-            mock.Setup(m => m.Process(It.IsAny<OrderRequest>())).Returns<SubmitOrderRequest>(s =>
+            mock.Setup(m => m.Process(It.IsAny<OrderRequest>())).Returns<OrderRequest>(s =>
             {
-                var orderRequest = new SubmitOrderRequest(OrderType.Market, SecurityType.Equity, s.Symbol, s.Quantity, 0, 0, DateTime.UtcNow, "", s.OrderProperties);
-                orderRequest.SetOrderId((int)s.Quantity);
-                var ticket = new OrderTicket(null, orderRequest);
+                if (s.OrderRequestType == OrderRequestType.Cancel)
+                {
+                    limitOrderCanceled = true;
+                    return new OrderTicket(null, request.Object);
+                }
+                var orderRequest = s as SubmitOrderRequest;
+                var submitOrderRequest = new SubmitOrderRequest(orderRequest.OrderType, SecurityType.Equity, orderRequest.Symbol, orderRequest.Quantity, 0, 0, DateTime.UtcNow, "", orderRequest.OrderProperties);
+                submitOrderRequest.SetOrderId((int)orderRequest.Quantity);
+                var ticket = new OrderTicket(null, submitOrderRequest);
                 tickets[ticket.OrderId] = ticket;
                 return ticket;
             });
             algo.Transactions.SetOrderProcessor(mock.Object);
 
+            // Make the initial orders
             var order1 = algo.MarketOrder(Symbols.MSFT, 1);
             var order2 = algo.MarketOrder(Symbols.MSFT, 2);
             var order3 = algo.MarketOrder(Symbols.AAPL, 3);
             var order4 = algo.MarketOrder(Symbols.AAPL, 4);
+            var order5 = algo.LimitOrder(Symbols.AAPL, 5, 10);
 
+            // Setup the transaction handler to get the open orders as well as the order tickets
             mock.Setup(m => m.GetOpenOrders(It.IsAny<Func<Order, bool>>())).Returns<Func<Order, bool>>(filter => tickets.Values.Select(x => Order.CreateOrder(x.SubmitRequest)).Where(x => filter(x)).ToList());
             mock.Setup(m => m.GetOrderTicket(It.IsAny<int>())).Returns<int>(s =>
             {
-                if (s < 0)
+                if (s < 0 && isAsynchronous)
                 {
                     // This means that the method `Transactions.WaitForOrder()` was called, since the
                     // negative ID's, in these case, come from the cancel orders, this is, from the
@@ -1452,16 +1471,41 @@ namespace QuantConnect.Tests.Algorithm
                 }
             });
 
-            Assert.AreEqual(4, algo.Transactions.LastOrderId);
-
+            // Test different Liquidate() constructors
             var orderProperties = new OrderProperties() { TimeInForce = TimeInForce.Day };
-            var liquidatedTickets = algo.Liquidate(asynchronous: true, orderProperties: orderProperties);
+            List<OrderTicket> liquidatedTickets;
+            if (language == Language.CSharp)
+            {
+                if (multipleSymbols == true)
+                {
+                    liquidatedTickets = algo.Liquidate(new List<Symbol>() { Symbols.AAPL, Symbols.MSFT }, asynchronous: isAsynchronous, orderProperties: orderProperties);
+                }
+                else if (multipleSymbols == false)
+                {
+                    liquidatedTickets = algo.Liquidate(Symbols.AAPL, asynchronous: isAsynchronous, orderProperties: orderProperties);
+                    liquidatedTickets.AddRange(algo.Liquidate(Symbols.MSFT, asynchronous: isAsynchronous, orderProperties: orderProperties));
+                }
+                else
+                {
+                    liquidatedTickets = algo.Liquidate(asynchronous: isAsynchronous, orderProperties: orderProperties);
+                }
+            }
+            else
+            {
+                using (Py.GIL())
+                {
+                    liquidatedTickets = algo.Liquidate((new List<Symbol>() { Symbols.AAPL, Symbols.MSFT }).ToPython(), asynchronous: isAsynchronous, orderProperties: orderProperties);
+                }
+            }
+
+            // Assert the symbols were liquidated asynchronously
             var aaplTicket = liquidatedTickets.Where(x => x.Symbol == Symbols.AAPL).Single();
             var msftTicket = liquidatedTickets.Where(x => x.Symbol == Symbols.MSFT).Single();
             Assert.AreEqual(aapl.Holdings.Quantity * (-2), aaplTicket.Quantity);
             Assert.AreEqual(msft.Holdings.Quantity * (-2), msftTicket.Quantity);
             Assert.AreEqual(TimeInForce.Day, aaplTicket.SubmitRequest.OrderProperties.TimeInForce);
             Assert.AreEqual(TimeInForce.Day, msftTicket.SubmitRequest.OrderProperties.TimeInForce);
+            Assert.IsTrue(limitOrderCanceled);
         }
 
         [Test]

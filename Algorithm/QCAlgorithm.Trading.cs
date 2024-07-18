@@ -1290,18 +1290,6 @@ namespace QuantConnect.Algorithm
                 }
             }
 
-            // Wait for the order event to process, only if the exchange is open
-            if (!asynchronous)
-            {
-                foreach (var ticket in orderTickets)
-                {
-                    if (ticket.Status.IsOpen())
-                    {
-                        Transactions.WaitForOrder(ticket.OrderId);
-                    }
-                }
-            }
-
             return orderTickets;
         }
 

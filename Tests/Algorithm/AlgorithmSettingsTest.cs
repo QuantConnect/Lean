@@ -33,7 +33,7 @@ namespace QuantConnect.Tests.Algorithm
             var algo = new QCAlgorithm();
             var fakeOrderProcessor = InitializeAndGetFakeOrderProcessor(algo);
 
-            algo.Liquidate(asynchronous: true);
+            algo.Liquidate();
 
             // It should send a order to set us flat
             Assert.IsFalse(fakeOrderProcessor.ProcessedOrdersRequests.IsNullOrEmpty());
