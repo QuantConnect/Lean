@@ -1397,15 +1397,8 @@ namespace QuantConnect.Tests.Algorithm
             Assert.AreEqual(expected, algo.Transactions.LastOrderId);
         }
 
-        [TestCase(Language.CSharp, true, true)]
-        [TestCase(Language.CSharp, false, true)]
-        [TestCase(Language.CSharp, null, true)]
-        [TestCase(Language.Python, null, true)]
-        [TestCase(Language.CSharp, true, false)]
-        [TestCase(Language.CSharp, false, false)]
-        [TestCase(Language.CSharp, null, false)]
-        [TestCase(Language.Python, null, false)]
-        public void LiquidateWorksAsExpected(Language language, bool? multipleSymbols, bool isAsynchronous)
+        [TestCaseSource(nameof(LiquidateWorksAsExpectedTestCases))]
+        public void LiquidateWorksAsExpected(Language language, bool? multipleSymbols, bool isAsynchronous, TimeInForce timeInForce)
         {
             Security msft;
             var algo = GetAlgorithm(out msft, 1, 0);
@@ -1472,7 +1465,7 @@ namespace QuantConnect.Tests.Algorithm
             });
 
             // Test different Liquidate() constructors
-            var orderProperties = new OrderProperties() { TimeInForce = TimeInForce.Day };
+            var orderProperties = timeInForce != null ? new OrderProperties() { TimeInForce = timeInForce } : null;
             List<OrderTicket> liquidatedTickets;
             if (language == Language.CSharp)
             {
@@ -1503,8 +1496,8 @@ namespace QuantConnect.Tests.Algorithm
             var msftTicket = liquidatedTickets.Where(x => x.Symbol == Symbols.MSFT).Single();
             Assert.AreEqual(aapl.Holdings.Quantity * (-2), aaplTicket.Quantity);
             Assert.AreEqual(msft.Holdings.Quantity * (-2), msftTicket.Quantity);
-            Assert.AreEqual(TimeInForce.Day, aaplTicket.SubmitRequest.OrderProperties.TimeInForce);
-            Assert.AreEqual(TimeInForce.Day, msftTicket.SubmitRequest.OrderProperties.TimeInForce);
+            Assert.AreEqual(timeInForce ?? TimeInForce.GoodTilCanceled, aaplTicket.SubmitRequest.OrderProperties.TimeInForce);
+            Assert.AreEqual(timeInForce ?? TimeInForce.GoodTilCanceled, msftTicket.SubmitRequest.OrderProperties.TimeInForce);
             Assert.IsTrue(limitOrderCanceled);
         }
 
@@ -1808,5 +1801,25 @@ namespace QuantConnect.Tests.Algorithm
                 security, new MarketOrder(security.Symbol, orderQuantity, DateTime.UtcNow));
             return hashSufficientBuyingPower.IsSufficient;
         }
+
+        private static object[] LiquidateWorksAsExpectedTestCases =
+        {
+            new object[] { Language.CSharp, true, true, TimeInForce.Day },
+            new object[] { Language.CSharp, false, true, TimeInForce.Day },
+            new object[] { Language.CSharp, null, true, TimeInForce.Day },
+            new object[] { Language.Python, null, true, TimeInForce.Day },
+            new object[] { Language.CSharp, true, false, TimeInForce.Day },
+            new object[] { Language.CSharp, false, false, TimeInForce.Day },
+            new object[] { Language.CSharp, null, false, TimeInForce.Day },
+            new object[] { Language.Python, null, false, TimeInForce.Day },
+            new object[] { Language.CSharp, true, true, null },
+            new object[] { Language.CSharp, false, true, null },
+            new object[] { Language.CSharp, null, true, null },
+            new object[] { Language.Python, null, true, null },
+            new object[] { Language.CSharp, true, false, null },
+            new object[] { Language.CSharp, false, false, null },
+            new object[] { Language.CSharp, null, false, null },
+            new object[] { Language.Python, null, false, null }
+        };
     }
 }
