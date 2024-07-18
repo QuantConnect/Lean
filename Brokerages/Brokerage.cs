@@ -816,7 +816,7 @@ namespace QuantConnect.Brokerages
                     catch (Exception err)
                     {
                         Log.Error(err);
-                        OnMessage(new BrokerageMessageEvent(BrokerageMessageType.Warning, "CrossZeroOrderError", "An error occurred while trying to submit an cross zero order: " + err));
+                        OnMessage(new BrokerageMessageEvent(BrokerageMessageType.Warning, "CrossZeroOrderError", "Error occurred submitting cross zero order: " + err.Message));
                         OnOrderEvent(new OrderEvent(leanOrder, DateTime.UtcNow, OrderFee.Zero) { Status = OrderStatus.Canceled });
                     }
 #pragma warning restore CA1031 // Do not catch general exception types

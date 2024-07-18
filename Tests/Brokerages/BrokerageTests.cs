@@ -168,7 +168,7 @@ namespace QuantConnect.Tests.Brokerages
                     _securityProvider[orderEvent.Symbol].Holdings.SetHoldings(orderEvent.FillPrice, orderEvent.FillQuantity);
                 }
 
-                Log.Trace("--HOLDINGS: " + _securityProvider[orderEvent.Symbol]);
+                Log.Trace("--HOLDINGS: " + _securityProvider[orderEvent.Symbol].Holdings);
 
                 // update order mapping
                 var order = _orderProvider.GetOrderById(orderEvent.OrderId);
@@ -314,6 +314,7 @@ namespace QuantConnect.Tests.Brokerages
             using var canceledOrderStatusEvent = new ManualResetEvent(false);
             EventHandler<List<OrderEvent>> orderStatusCallback = (sender, fills) =>
             {
+                order.Status = fills.First().Status;
                 if (fills[0].Status == OrderStatus.Canceled)
                 {
                     canceledOrderStatusEvent.Set();

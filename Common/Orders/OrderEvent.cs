@@ -288,6 +288,7 @@ namespace QuantConnect.Orders
             OrderId = order.Id;
             Symbol = order.Symbol;
             Status = order.Status;
+            Quantity = order.Quantity;
             Direction = order.Direction;
 
             //Initialize to zero, manually set fill quantity
