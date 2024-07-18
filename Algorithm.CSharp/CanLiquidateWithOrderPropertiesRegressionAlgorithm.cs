@@ -19,9 +19,6 @@ using QuantConnect.Interfaces;
 using QuantConnect.Orders;
 using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace QuantConnect.Algorithm.CSharp
 {
@@ -37,7 +34,6 @@ namespace QuantConnect.Algorithm.CSharp
         {
             SetStartDate(2014, 6, 5);
             SetEndDate(2014, 6, 6);
-            SetCash(1000000);
 
             AddEquity("AAPL", Resolution.Minute);
         }
@@ -101,8 +97,8 @@ namespace QuantConnect.Algorithm.CSharp
             {"Compounding Annual Return", "0%"},
             {"Drawdown", "0%"},
             {"Expectancy", "0"},
-            {"Start Equity", "1000000"},
-            {"End Equity", "999637.08"},
+            {"Start Equity", "100000"},
+            {"End Equity", "99637.08"},
             {"Net Profit", "0%"},
             {"Sharpe Ratio", "0"},
             {"Sortino Ratio", "0"},
@@ -118,9 +114,9 @@ namespace QuantConnect.Algorithm.CSharp
             {"Tracking Error", "0"},
             {"Treynor Ratio", "0"},
             {"Total Fees", "$359.00"},
-            {"Estimated Strategy Capacity", "$1300000000.00"},
+            {"Estimated Strategy Capacity", "$130000000.00"},
             {"Lowest Capacity Asset", "AAPL R735QTJ8XC9X"},
-            {"Portfolio Turnover", "3.74%"},
+            {"Portfolio Turnover", "37.56%"},
             {"OrderListHash", "e9e8a07dc58bff7198181f9fafb58834"}
         };
     }

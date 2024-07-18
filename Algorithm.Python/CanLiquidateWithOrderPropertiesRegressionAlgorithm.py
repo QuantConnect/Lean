@@ -20,7 +20,7 @@ class CanLiquidateWithOrderPropertiesRegressionAlgorithm(QCAlgorithm):
     def initialize(self):
         self.set_start_date(2014, 6, 5)
         self.set_end_date(2014, 6, 6)
-        self.set_cash(1000000)
+        self.set_cash(100000)
         
         self.open_exchange = datetime(2014, 6, 6, 10, 0, 0)
         self.close_exchange = datetime(2014, 6, 6, 16, 0, 0)

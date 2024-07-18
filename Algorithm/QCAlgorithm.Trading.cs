@@ -1213,7 +1213,7 @@ namespace QuantConnect.Algorithm
         /// <summary>
         /// Liquidate your portfolio holdings
         /// </summary>
-        /// <param name="symbol">Specific asset to liquidate, defaults to all.</param>
+        /// <param name="symbol">Specific asset to liquidate, defaults to all</param>
         /// <param name="asynchronous">Flag to indicate if the symbols should be liquidated asynchronously</param>
         /// <param name="tag">Custom tag to know who is calling this</param>
         /// <param name="orderProperties">Order properties to use</param>
@@ -1236,7 +1236,7 @@ namespace QuantConnect.Algorithm
         /// <summary>
         /// Liquidate your portfolio holdings
         /// </summary>
-        /// <param name="symbols">List of symbols to liquidate, defaults to all.</param>
+        /// <param name="symbols">List of symbols to liquidate, defaults to all</param>
         /// <param name="asynchronous">Flag to indicate if the symbols should be liquidated asynchronously</param>
         /// <param name="tag">Custom tag to know who is calling this</param>
         /// <param name="orderProperties">Order properties to use</param>
@@ -1296,7 +1296,7 @@ namespace QuantConnect.Algorithm
         /// <summary>
         /// Liquidate all holdings and cancel open orders. Called at the end of day for tick-strategies.
         /// </summary>
-        /// <param name="symbolToLiquidate">Symbols we wish to liquidate</param>
+        /// <param name="symbolToLiquidate">Symbol we wish to liquidate</param>
         /// <param name="tag">Custom tag to know who is calling this.</param>
         /// <returns>Array of order ids for liquidated symbols</returns>
         /// <seealso cref="MarketOrder(QuantConnect.Symbol, decimal, bool, string, IOrderProperties)"/>
