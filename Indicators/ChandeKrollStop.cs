@@ -25,6 +25,13 @@ namespace QuantConnect.Indicators
     /// </summary>
     public class ChandeKrollStop : BarIndicator, IIndicatorWarmUpPeriodProvider
     {
+        private readonly int _period;
+        private readonly AverageTrueRange _atr;
+        private readonly decimal _atrMult;
+        private readonly RollingWindow<IBaseDataBar> _inputValues;
+        private readonly RollingWindow<decimal> _high_stop_list;
+        private readonly RollingWindow<decimal> _low_stop_list;
+
         /// <summary>
         /// Gets the short stop of ChandeKrollStop.
         /// </summary>
@@ -34,15 +41,6 @@ namespace QuantConnect.Indicators
         /// Gets the long stop of ChandeKrollStop.
         /// </summary>
         public IndicatorBase<IndicatorDataPoint> LongStop { get; }
-
-
-        private int _period;
-        private AverageTrueRange _atr;
-        private decimal _atrMult;
-        private RollingWindow<IBaseDataBar> _inputValues;
-        private RollingWindow<decimal> _high_stop_list;
-        private RollingWindow<decimal> _low_stop_list;
-
 
         /// <summary>
         /// Initializes a new instance of the <see cref="ChandeKrollStop"/> class.
