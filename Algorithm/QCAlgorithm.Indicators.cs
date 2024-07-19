@@ -1744,6 +1744,29 @@ namespace QuantConnect.Algorithm
             return R(symbol, mirrorOption, riskFreeRate, dividendYield, optionModel, ivModel, resolution);
         }
 
+
+        /// <summary>
+        /// Creates a new Stochastic RSI indicator which will compute the %K and %D
+        /// </summary>
+        /// <param name="symbol">The symbol whose Stochastic RSI we seek</param>
+        /// <param name="rsiPeriod">The period of the relative strength index</param>
+        /// <param name="stochPeriod">The period of the stochastic indicator</param>
+        /// <param name="kSmoothingPeriod">The smoothing period of K output</param>
+        /// <param name="dSmoothingPeriod">The smoothing period of D output</param>
+        /// <param name="movingAverageType">The type of moving average to be used</param>
+        /// <param name="resolution">The resolution</param>
+        /// <param name="selector">Selects a value from the BaseData to send into the indicator, if null defaults to the Value property of BaseData (x => x.Value)</param>
+        /// <returns>A StochasticRelativeStrengthIndex configured with the specified periods and moving average type</returns>
+        [DocumentationAttribute(Indicators)]
+        public StochasticRelativeStrengthIndex SRSI(Symbol symbol, int rsiPeriod, int stochPeriod, int kSmoothingPeriod, int dSmoothingPeriod, MovingAverageType movingAverageType = MovingAverageType.Simple,
+            Resolution? resolution = null, Func<IBaseData, decimal> selector = null)
+        {
+            var name = CreateIndicatorName(symbol, $"SRSI({rsiPeriod},{stochPeriod},{kSmoothingPeriod},{dSmoothingPeriod})", resolution);
+            var indicator = new StochasticRelativeStrengthIndex(name, rsiPeriod, stochPeriod, kSmoothingPeriod, dSmoothingPeriod, movingAverageType);
+            InitializeIndicator(indicator, resolution, selector, symbol);
+            return indicator;
+        }
+
         /// <summary>
         /// Creates a new SuperTrend indicator.
         /// </summary>
