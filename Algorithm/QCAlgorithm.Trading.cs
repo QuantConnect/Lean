@@ -23,7 +23,6 @@ using QuantConnect.Securities.Option;
 using static QuantConnect.StringExtensions;
 using QuantConnect.Algorithm.Framework.Portfolio;
 using QuantConnect.Orders.TimeInForces;
-using Python.Runtime;
 
 namespace QuantConnect.Algorithm
 {
@@ -1201,22 +1200,11 @@ namespace QuantConnect.Algorithm
         /// <summary>
         /// Liquidate your portfolio holdings
         /// </summary>
-        /// <param name="symbols">List of symbols to liquidate in Python</param>
-        /// <param name="asynchronous">Flag to indicate if the symbols should be liquidated asynchronously</param>
-        /// <param name="tag">Custom tag to know who is calling this</param>
-        /// <param name="orderProperties">Order properties to use</param>
-        public List<OrderTicket> Liquidate(PyObject symbols, bool asynchronous = false, string tag = "Liquidated", IOrderProperties orderProperties = null)
-        {
-            return Liquidate(symbols.ConvertToSymbolEnumerable(), asynchronous, tag, orderProperties);
-        }
-
-        /// <summary>
-        /// Liquidate your portfolio holdings
-        /// </summary>
         /// <param name="symbol">Specific asset to liquidate, defaults to all</param>
         /// <param name="asynchronous">Flag to indicate if the symbols should be liquidated asynchronously</param>
         /// <param name="tag">Custom tag to know who is calling this</param>
         /// <param name="orderProperties">Order properties to use</param>
+        [DocumentationAttribute(TradingAndOrders)]
         public List<OrderTicket> Liquidate(Symbol symbol = null, bool asynchronous = false, string tag = "Liquidated", IOrderProperties orderProperties = null)
         {
             IEnumerable<Symbol> toLiquidate;
@@ -1240,7 +1228,8 @@ namespace QuantConnect.Algorithm
         /// <param name="asynchronous">Flag to indicate if the symbols should be liquidated asynchronously</param>
         /// <param name="tag">Custom tag to know who is calling this</param>
         /// <param name="orderProperties">Order properties to use</param>
-        public List<OrderTicket> Liquidate (IEnumerable<Symbol> symbols, bool asynchronous = false, string tag = "Liquidated", IOrderProperties orderProperties = null)
+        [DocumentationAttribute(TradingAndOrders)]
+        public List<OrderTicket> Liquidate(IEnumerable<Symbol> symbols, bool asynchronous = false, string tag = "Liquidated", IOrderProperties orderProperties = null)
         {
             var orderTickets = new List<OrderTicket>();
             if (!Settings.LiquidateEnabled)
@@ -1300,7 +1289,6 @@ namespace QuantConnect.Algorithm
         /// <param name="tag">Custom tag to know who is calling this.</param>
         /// <returns>Array of order ids for liquidated symbols</returns>
         /// <seealso cref="MarketOrder(QuantConnect.Symbol, decimal, bool, string, IOrderProperties)"/>
-        [DocumentationAttribute(TradingAndOrders)]
         [Obsolete($"This method is obsolete, please use Liquidate(symbol: symbolToLiquidate, tag: tag) method")]
         public List<int> Liquidate(Symbol symbolToLiquidate, string tag)
         {

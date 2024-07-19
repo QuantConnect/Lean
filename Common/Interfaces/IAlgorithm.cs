@@ -778,7 +778,7 @@ namespace QuantConnect.Interfaces
         /// <param name="asynchronous">Flag to indicate if the symbols should be liquidated asynchronously</param>
         /// <param name="tag">Custom tag to know who is calling this</param>
         /// <param name="orderProperties">Order properties to use</param>
-        public List<OrderTicket> Liquidate(Symbol symbol = null, bool asynchronous = false, string tag = "Liquidated", IOrderProperties orderProperties = null);
+        List<OrderTicket> Liquidate(Symbol symbol = null, bool asynchronous = false, string tag = "Liquidated", IOrderProperties orderProperties = null);
 
         /// <summary>
         /// Set live mode state of the algorithm run: Public setter for the algorithm property LiveMode.
