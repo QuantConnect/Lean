@@ -23,7 +23,7 @@ namespace QuantConnect.Orders
     public class BrokerageOrderIdChangedEvent
     {
         /// <summary>
-        /// The order ID.
+        /// The lean order ID.
         /// </summary>
         public int OrderId { get; set; }
 
