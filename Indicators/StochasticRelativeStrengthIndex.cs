@@ -104,7 +104,8 @@ namespace QuantConnect.Indicators
             var minLow = _recentRSIValues.Min();
 
             decimal k = 100;
-            if (maxHigh != minLow) {
+            if (maxHigh != minLow)
+            {
                 k = 100 * (_rsi.Current.Value - minLow) / (maxHigh - minLow);
             }
 
