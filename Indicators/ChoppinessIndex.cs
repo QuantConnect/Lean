@@ -84,7 +84,8 @@ namespace QuantConnect.Indicators
             _lows.Add((float)input.Low);
 
             // store true range in rolling window
-            if (_trueRange.IsReady) {
+            if (_trueRange.IsReady)
+            {
                 _trueRangeHistory.Add((float)_trueRange.Current.Value);
             }
             else
