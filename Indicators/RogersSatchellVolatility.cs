@@ -67,14 +67,18 @@ namespace QuantConnect.Indicators
             _inputWindow.Add(input);
 
             if (!IsReady)
+            {
                 return 0m;
+            }
 
             var s = 0.0;
             foreach (var bar in _inputWindow)
             {
                 if ((bar.Open == 0) || (bar.High == 0) || (bar.Low == 0) || (bar.Close == 0))
+                {
                     // return a sentinel value
                     return decimal.MinValue;
+                }
 
                 s += Math.Log((double)bar.High / (double)bar.Close) * Math.Log((double)bar.High / (double)bar.Open) +
                      Math.Log((double)bar.Low / (double)bar.Close) * Math.Log((double)bar.Low / (double)bar.Open);
