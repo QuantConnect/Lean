@@ -98,19 +98,19 @@ namespace QuantConnect.Indicators
             }
 
             // calculate max high and min low
-            var max_high = _highs.Max();
-            var min_low = _lows.Min();
+            var maxHigh = _highs.Max();
+            var minLow = _lows.Min();
 
             if (IsReady)
             {
-                if (max_high != min_low)
+                if (maxHigh != minLow)
                 {
                     // return CHOP index
-                    return (decimal)(100.0 * Math.Log10(_trueRangeHistory.Sum() / (max_high - min_low)) / Math.Log10(_period));
+                    return (decimal)(100.0 * Math.Log10(_trueRangeHistory.Sum() / (maxHigh - minLow)) / Math.Log10(_period));
                 }
                 else
                 {
-                    // situation of max_high = min_low represents a totally "choppy" or stagnant market,
+                    // situation of maxHigh = minLow represents a totally "choppy" or stagnant market,
                     // with no price movement at all.
                     // It's the extreme case of consolidation, hence the maximum value of 100 for the index
                     return 100m;
