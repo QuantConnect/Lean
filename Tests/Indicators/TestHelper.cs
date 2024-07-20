@@ -58,7 +58,7 @@ namespace QuantConnect.Tests.Indicators
         /// <param name="epsilon">The maximum delta between expected and actual</param>
         public static void TestIndicator(IndicatorBase<IndicatorDataPoint> indicator, string targetColumn, double epsilon = 1e-3)
         {
-            TestIndicator(indicator, "spy_with_indicators.txt", targetColumn, (i, expected) => Assert.AreEqual(expected, (double) i.Current.Value, epsilon));
+            TestIndicator(indicator, "spy_with_indicators.txt", targetColumn, (i, expected) => Assert.AreEqual(expected, (double)i.Current.Value, epsilon));
         }
 
         /// <summary>
@@ -267,9 +267,15 @@ namespace QuantConnect.Tests.Indicators
         public static void TestIndicatorReset(IndicatorBase<IndicatorDataPoint> indicator, string externalDataFilename)
         {
             var date = DateTime.Today;
-            foreach (var data in GetTradeBarStream(externalDataFilename, false))
+
+            foreach (var parts in GetCsvFileStream(externalDataFilename))
             {
-                indicator.Update(date, data.Close);
+                if (!(parts.ContainsKey("Close")))
+                {
+                    Assert.Fail("Didn't find column 'Close'");
+                    break;
+                }
+                indicator.Update(date, parts.GetCsvValue("close").ToDecimal());
             }
 
             Assert.IsTrue(indicator.IsReady);
@@ -295,7 +301,7 @@ namespace QuantConnect.Tests.Indicators
             while (enumerator.MoveNext())
             {
                 var values = enumerator.Current.Split(',');
-                var headerAndValues = header.Zip(values, (h, v) => new {h, v});
+                var headerAndValues = header.Zip(values, (h, v) => new { h, v });
                 var dictionary = headerAndValues.ToDictionary(x => x.h.Trim(), x => x.v.Trim(), StringComparer.OrdinalIgnoreCase);
                 yield return new ReadOnlyDictionary<string, string>(dictionary);
             }
@@ -335,7 +341,7 @@ namespace QuantConnect.Tests.Indicators
                     subIndicator is ConstantIndicator<IndicatorDataPoint>)
                     continue;
 
-                if (field.PropertyType.IsSubclassOfGeneric(typeof (IndicatorBase<T>)))
+                if (field.PropertyType.IsSubclassOfGeneric(typeof(IndicatorBase<T>)))
                 {
                     AssertIndicatorIsInDefaultState(subIndicator as IndicatorBase<T>);
                 }
@@ -373,18 +379,16 @@ namespace QuantConnect.Tests.Indicators
                 ? SecurityIdentifier.GenerateEquity(dictionary.GetCsvValue("symbol", "ticker"), Market.USA)
                 : SecurityIdentifier.Empty;
 
-            var close = dictionary.GetCsvValue("close").ToDecimal();
-
             return new TradeBar
             {
                 Symbol = sid != SecurityIdentifier.Empty
                     ? new Symbol(sid, dictionary.GetCsvValue("symbol", "ticker"))
                     : Symbol.Empty,
                 Time = Time.ParseDate(dictionary.GetCsvValue("date", "time")),
-                Open = dictionary.ContainsKey("open") ? dictionary.GetCsvValue("open").ToDecimal() : close,
-                High = dictionary.ContainsKey("high") ? dictionary.GetCsvValue("high").ToDecimal() : close,
-                Low = dictionary.ContainsKey("low") ? dictionary.GetCsvValue("low").ToDecimal() : close,
-                Close = close,
+                Open = dictionary.GetCsvValue("open").ToDecimal(),
+                High = dictionary.GetCsvValue("high").ToDecimal(),
+                Low = dictionary.GetCsvValue("low").ToDecimal(),
+                Close = dictionary.GetCsvValue("close").ToDecimal(),
                 Volume = forceVolumeColumn || dictionary.ContainsKey("volume") ? Parse.Long(dictionary.GetCsvValue("volume"), NumberStyles.AllowExponent | NumberStyles.AllowDecimalPoint) : 0
             };
         }
