@@ -92,17 +92,13 @@ namespace QuantConnect.Indicators
             {
                 _trueRangeHistory.Add(input.High - input.Low);
             }           
-            if (!IsReady)
-            {
-                return 0m;
-            }
-
-            // calculate max high and min low
-            var maxHigh = _highs.Max();
-            var minLow = _lows.Min();
 
             if (IsReady)
             {
+                // calculate max high and min low
+                var maxHigh = _highs.Max();
+                var minLow = _lows.Min();
+
                 if (maxHigh != minLow)
                 {
                     // return CHOP index
