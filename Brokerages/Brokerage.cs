@@ -660,7 +660,11 @@ namespace QuantConnect.Brokerages
                     response = PlaceCrossZeroOrder(firstOrderPartRequest);
                     if (response.IsOrderPlacedSuccessfully)
                     {
-                        order.BrokerId.Add(response.BrokerageOrderId.ToStringInvariant());
+                        var orderId = response.BrokerageOrderId;
+                        if (!order.BrokerId.Contains(orderId))
+                        {
+                            order.BrokerId.Add(orderId);
+                        }
                     }
                 }
 
@@ -796,8 +800,15 @@ namespace QuantConnect.Brokerages
                             if (response.IsOrderPlacedSuccessfully)
                             {
                                 // add the new brokerage id for retrieval later
-                                leanOrder.BrokerId.Add(response.BrokerageOrderId);
-                                LeanOrderByZeroCrossBrokerageOrderId.AddOrUpdate(response.BrokerageOrderId, leanOrder);
+                                var orderId = response.BrokerageOrderId;
+                                if (!leanOrder.BrokerId.Contains(orderId))
+                                {
+                                    leanOrder.BrokerId.Add(orderId);
+                                }
+
+                                // leanOrder is a clone, here we can add the new brokerage order Id for the second part of the cross zero
+                                OnOrderIdChangedEvent(new BrokerageOrderIdChangedEvent { OrderId = leanOrder.Id, BrokerId = leanOrder.BrokerId });
+                                LeanOrderByZeroCrossBrokerageOrderId.AddOrUpdate(orderId, leanOrder);
                             }
                         }
 
@@ -816,7 +827,7 @@ namespace QuantConnect.Brokerages
                     catch (Exception err)
                     {
                         Log.Error(err);
-                        OnMessage(new BrokerageMessageEvent(BrokerageMessageType.Warning, "CrossZeroOrderError", "An error occurred while trying to submit an cross zero order: " + err));
+                        OnMessage(new BrokerageMessageEvent(BrokerageMessageType.Warning, "CrossZeroOrderError", "Error occurred submitting cross zero order: " + err.Message));
                         OnOrderEvent(new OrderEvent(leanOrder, DateTime.UtcNow, OrderFee.Zero) { Status = OrderStatus.Canceled });
                     }
 #pragma warning restore CA1031 // Do not catch general exception types
