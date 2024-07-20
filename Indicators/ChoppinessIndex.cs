@@ -51,13 +51,14 @@ namespace QuantConnect.Indicators
             : base(name)
         {
             _period = period;
-            WarmUpPeriod = period;
 
             _trueRange = new TrueRange();
             _trueRangeHistory = new RollingWindow<decimal>(period);
 
             _highs = new RollingWindow<decimal>(period);
             _lows = new RollingWindow<decimal>(period);
+
+            WarmUpPeriod = period;
         }
 
         /// <summary>
