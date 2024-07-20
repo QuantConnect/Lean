@@ -27,10 +27,10 @@ namespace QuantConnect.Indicators
     {
 
         private readonly int _period;
-        private readonly RollingWindow<float> _highs;
-        private readonly RollingWindow<float> _lows;
+        private readonly RollingWindow<decimal> _highs;
+        private readonly RollingWindow<decimal> _lows;
         private readonly IndicatorBase<IBaseDataBar> _trueRange;
-        private readonly RollingWindow<float> _trueRangeHistory;
+        private readonly RollingWindow<decimal> _trueRangeHistory;
 
         /// <summary>
         /// Gets a flag indicating when this indicator is ready and fully initialized
@@ -54,10 +54,10 @@ namespace QuantConnect.Indicators
             WarmUpPeriod = period;
 
             _trueRange = new TrueRange();
-            _trueRangeHistory = new RollingWindow<float>(period);
+            _trueRangeHistory = new RollingWindow<decimal>(period);
 
-            _highs = new RollingWindow<float>(period);
-            _lows = new RollingWindow<float>(period);
+            _highs = new RollingWindow<decimal>(period);
+            _lows = new RollingWindow<decimal>(period);
         }
 
         /// <summary>
@@ -80,17 +80,17 @@ namespace QuantConnect.Indicators
             _trueRange.Update(input);
 
             // store candle high and low
-            _highs.Add((float)input.High);
-            _lows.Add((float)input.Low);
+            _highs.Add(input.High);
+            _lows.Add(input.Low);
 
             // store true range in rolling window
             if (_trueRange.IsReady)
             {
-                _trueRangeHistory.Add((float)_trueRange.Current.Value);
+                _trueRangeHistory.Add(_trueRange.Current.Value);
             }
             else
             {
-                _trueRangeHistory.Add((float)(input.High - input.Low));
+                _trueRangeHistory.Add(input.High - input.Low);
             }           
             if (!IsReady)
             {
@@ -106,7 +106,7 @@ namespace QuantConnect.Indicators
                 if (maxHigh != minLow)
                 {
                     // return CHOP index
-                    return (decimal)(100.0 * Math.Log10(_trueRangeHistory.Sum() / (maxHigh - minLow)) / Math.Log10(_period));
+                    return (decimal)(100.0 * Math.Log10(((double) _trueRangeHistory.Sum()) / ((double) (maxHigh - minLow))) / Math.Log10(_period));
                 }
                 else
                 {
