@@ -34,6 +34,9 @@ namespace QuantConnect.Tests.Common
 
         [TestCase("SPXW  230111C02400000", SecurityType.IndexOption, OptionStyle.European, "SPXW", "SPX")]
         [TestCase("SPY   230111C02400000", SecurityType.Option, OptionStyle.American, "SPY", "SPY")]
+        [TestCase("AAPL240614C00100000", SecurityType.Option, OptionStyle.American, "AAPL", "AAPL")]
+        [TestCase("MSFT240614C00150000", SecurityType.Option, OptionStyle.American, "MSFT", "MSFT")]
+
         public void ParseOptionTickerOSI(string optionStr, SecurityType securityType, OptionStyle optionStyle,
             string expectedTargetOptionTicker, string expectedUnderlyingTicker)
         {
