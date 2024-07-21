@@ -66,8 +66,7 @@ namespace QuantConnect.Indicators
         /// <summary>
         /// Gets the smoothed value Rate Of Change 4
         /// </summary>
-        public IndicatorBase<IndicatorDataPoint> ROC4MA { get; }
-
+        public IndicatorBase<IndicatorDataPoint> ROC4MA { get; } 
 
         /// <summary>
         /// Gets the signal line
@@ -123,7 +122,7 @@ namespace QuantConnect.Indicators
             MovingAverageType movingAverageType = MovingAverageType.Simple)
             : base(name)
         {
-            WarmUpPeriod = 0;
+            WarmUpPeriod = 0;  // should be fixed
             MovingAverageType = movingAverageType;
 
             ROC1 = new RateOfChange(roc1Period);
@@ -178,7 +177,7 @@ namespace QuantConnect.Indicators
             }
             if (ROC4.IsReady)
             {
-                ROC4MA.Update(input.EndTime, 100 *ROC4.Current.Value);
+                ROC4MA.Update(input.EndTime, 100 * ROC4.Current.Value);
             }
 
             var kst = ROC1MA.Current.Value + 2 * ROC2MA.Current.Value + 3 * ROC3MA.Current.Value + 4 * ROC4MA.Current.Value;
@@ -187,7 +186,7 @@ namespace QuantConnect.Indicators
 
             if (!SignalLine.IsReady)
             {
-                return 0;
+                return 0m;
             }
 
             KST.Update(input.EndTime, kst);
