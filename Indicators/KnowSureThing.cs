@@ -165,13 +165,21 @@ namespace QuantConnect.Indicators
             ROC4.Update(input);
 
             if (ROC1.IsReady)
+            {
                 ROC1MA.Update(input.EndTime, 100 * ROC1.Current.Value);
+            }
             if (ROC2.IsReady)
+            {
                 ROC2MA.Update(input.EndTime, 100 * ROC2.Current.Value);
+            }
             if (ROC3.IsReady)
+            {
                 ROC3MA.Update(input.EndTime, 100 * ROC3.Current.Value);
+            }
             if (ROC4.IsReady)
+            {
                 ROC4MA.Update(input.EndTime, 100 *ROC4.Current.Value);
+            }
 
             var kst = ROC1MA.Current.Value + 2 * ROC2MA.Current.Value + 3 * ROC3MA.Current.Value + 4 * ROC4MA.Current.Value;
 
