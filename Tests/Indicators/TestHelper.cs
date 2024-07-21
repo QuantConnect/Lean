@@ -58,7 +58,7 @@ namespace QuantConnect.Tests.Indicators
         /// <param name="epsilon">The maximum delta between expected and actual</param>
         public static void TestIndicator(IndicatorBase<IndicatorDataPoint> indicator, string targetColumn, double epsilon = 1e-3)
         {
-            TestIndicator(indicator, "spy_with_indicators.txt", targetColumn, (i, expected) => Assert.AreEqual(expected, (double)i.Current.Value, epsilon));
+            TestIndicator(indicator, "spy_with_indicators.txt", targetColumn, (i, expected) => Assert.AreEqual(expected, (double) i.Current.Value, epsilon));
         }
 
         /// <summary>
@@ -301,7 +301,7 @@ namespace QuantConnect.Tests.Indicators
             while (enumerator.MoveNext())
             {
                 var values = enumerator.Current.Split(',');
-                var headerAndValues = header.Zip(values, (h, v) => new { h, v });
+                var headerAndValues = header.Zip(values, (h, v) => new {h, v});
                 var dictionary = headerAndValues.ToDictionary(x => x.h.Trim(), x => x.v.Trim(), StringComparer.OrdinalIgnoreCase);
                 yield return new ReadOnlyDictionary<string, string>(dictionary);
             }
@@ -341,7 +341,7 @@ namespace QuantConnect.Tests.Indicators
                     subIndicator is ConstantIndicator<IndicatorDataPoint>)
                     continue;
 
-                if (field.PropertyType.IsSubclassOfGeneric(typeof(IndicatorBase<T>)))
+                if (field.PropertyType.IsSubclassOfGeneric(typeof (IndicatorBase<T>)))
                 {
                     AssertIndicatorIsInDefaultState(subIndicator as IndicatorBase<T>);
                 }
