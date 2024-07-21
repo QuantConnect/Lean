@@ -14,6 +14,7 @@
 */
 
 using System;
+using System.Linq;
 
 namespace QuantConnect.Indicators
 {
@@ -122,7 +123,8 @@ namespace QuantConnect.Indicators
             MovingAverageType movingAverageType = MovingAverageType.Simple)
             : base(name)
         {
-            WarmUpPeriod = 0;  // should be fixed
+            WarmUpPeriod = 0;    // should be fixed
+            //WarmUpPeriod = (new int[]{roc1Period, roc1MaPeriod, roc2Period, roc2MaPeriod, roc3Period, roc3MaPeriod, roc4Period, roc4MaPeriod }).Max();
             MovingAverageType = movingAverageType;
 
             ROC1 = new RateOfChange(roc1Period);
