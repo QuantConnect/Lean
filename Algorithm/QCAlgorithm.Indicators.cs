@@ -1099,7 +1099,7 @@ namespace QuantConnect.Algorithm
         /// Creates a new KnowSureThing indicator for the symbol. The indicator will be automatically
         /// updated on the given resolution.
         /// </summary>
-        /// <param name="symbol">The symbol whose VWMA we want</param>
+        /// <param name="symbol">The symbol whose KST we want</param>
         /// <param name="roc1Period">The period over which to compute ROC1</param>
         /// <param name="roc1MaPeriod">The smoothing period used to smooth the computed ROC1 values</param>
         /// <param name="roc2Period">The period over which to compute ROC2</param>
@@ -1112,7 +1112,7 @@ namespace QuantConnect.Algorithm
         /// <param name="movingAverageType">Specifies the type of moving average to be used as smoother for KnowSureThing values</param>
         /// <param name="resolution">The resolution</param>
         /// <param name="selector">Selects a value from the BaseData to send into the indicator, if null defaults to casting the input value to a TradeBar</param>
-        /// <returns>A new AverageTrueRange indicator with the specified smoothing type and period</returns>
+        /// <returns>A new KnowSureThing indicator with the specified smoothing type and period</returns>
         [DocumentationAttribute(Indicators)]
         public KnowSureThing KST(Symbol symbol,
             int roc1Period, int roc1MaPeriod, int roc2Period, int roc2MaPeriod,
