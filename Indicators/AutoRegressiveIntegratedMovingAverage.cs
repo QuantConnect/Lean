@@ -35,6 +35,7 @@ namespace QuantConnect.Indicators
     {
         private List<double> _residuals;
         private readonly bool _intercept;
+        private readonly bool _handleExceptions;
         private readonly RollingWindow<double> _rollingData;
 
         /// <summary>
@@ -101,14 +102,17 @@ namespace QuantConnect.Indicators
         /// <param name="diffOrder">Difference order (d) -- defines how many times to difference the model before fitting parameters.</param>
         /// <param name="maOrder">MA order -- defines the number of past values to consider in the MA component of the model.</param>
         /// <param name="period">Size of the rolling series to fit onto</param>
-        /// <param name="intercept">Whether ot not to include the intercept term</param>
+        /// <param name="intercept">Whether or not to include the intercept term</param>
+        /// <param name="handleExceptions">Whether or not to handle potential exceptions, returning a zero value. I.e, the values
+        /// provided as input are not valid by the Normal Equations direct regression method</param>
         public AutoRegressiveIntegratedMovingAverage(
             string name,
             int arOrder,
             int diffOrder,
             int maOrder,
             int period,
-            bool intercept = true
+            bool intercept = true,
+            bool handleExceptions = true
             )
             : base(name)
         {
@@ -134,6 +138,7 @@ namespace QuantConnect.Indicators
             WarmUpPeriod = period;
             _rollingData = new RollingWindow<double>(period);
             _intercept = intercept;
+            _handleExceptions = handleExceptions;
         }
 
         /// <summary>
@@ -149,15 +154,18 @@ namespace QuantConnect.Indicators
         /// <param name="maOrder">MA order (q) -- defines the number of past values to consider in the MA component of the model.</param>
         /// <param name="period">Size of the rolling series to fit onto</param>
         /// <param name="intercept">Whether to include an intercept term (c)</param>
+        /// <param name="handleExceptions">Whether or not to handle potential exceptions, returning a zero value. I.e, the values
+        /// provided as input are not valid by the Normal Equations direct regression method</param>
         public AutoRegressiveIntegratedMovingAverage(
             int arOrder,
             int diffOrder,
             int maOrder,
             int period,
-            bool intercept
+            bool intercept,
+            bool handleExceptions
             )
             : this($"ARIMA(({arOrder}, {diffOrder}, {maOrder}), {period}, {intercept})", arOrder, diffOrder, maOrder,
-                period, intercept)
+                period, intercept, handleExceptions)
         {
         }
 
@@ -261,8 +269,27 @@ namespace QuantConnect.Indicators
                 appendedData.Add(doubles.ToArray());
             }
 
-            var maFits = Fit.MultiDim(appendedData.ToArray(), data.Skip(_maOrder).ToArray(),
+            double[] maFits = default;
+            if (_handleExceptions)
+            {
+                try
+                {
+                    maFits = Fit.MultiDim(appendedData.ToArray(), data.Skip(_maOrder).ToArray(),
                 method: DirectRegressionMethod.NormalEquations, intercept: _intercept);
+                }
+                catch (Exception ex)
+                {
+                    Logging.Log.Error($"AutoRegressiveIntegratedMovingAverage.MovingAverageStep(): {ex.Message}");
+                    var size = appendedData.ToArray()[0].Length + (_intercept ? 1 : 0);
+                    maFits = new double[size];
+                }
+            }
+            else
+            {
+                maFits = Fit.MultiDim(appendedData.ToArray(), data.Skip(_maOrder).ToArray(),
+                method: DirectRegressionMethod.NormalEquations, intercept: _intercept);
+            }
+
             for (var i = _maOrder; i < data.Length; i++) // Calculate the error assoc. with model.
             {
                 var paramVector = _intercept
@@ -297,9 +324,28 @@ namespace QuantConnect.Indicators
         private void AutoRegressiveStep(double[][] lags, double[] data, double errorAr)
         {
             double[] arFits;
-            // The function (lags[time][lagged X]) |---> ΣᵢφᵢXₜ₋ᵢ 
-            arFits = Fit.MultiDim(lags, data.Skip(_arOrder).ToArray(),
-                method: DirectRegressionMethod.NormalEquations);
+            if (_handleExceptions)
+            {
+                try
+                {
+                    // The function (lags[time][lagged X]) |---> ΣᵢφᵢXₜ₋ᵢ
+                    arFits = Fit.MultiDim(lags, data.Skip(_maOrder).ToArray(),
+                        method: DirectRegressionMethod.NormalEquations);
+                }
+                catch (Exception ex)
+                {
+                    Logging.Log.Error($"AutoRegressiveIntegratedMovingAverage.MovingAverageStep(): {ex.Message}");
+                    var size = lags.ToArray()[0].Length;
+                    arFits = new double[size];
+                }
+            }
+            else
+            {
+                // The function (lags[time][lagged X]) |---> ΣᵢφᵢXₜ₋ᵢ
+                arFits = Fit.MultiDim(lags, data.Skip(_arOrder).ToArray(),
+                    method: DirectRegressionMethod.NormalEquations);
+            }
+
             var fittedVec = Vector.Build.Dense(arFits);
 
             for (var i = 0; i < data.Length; i++) // Calculate the error assoc. with model.
