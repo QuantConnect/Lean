@@ -35,7 +35,8 @@ namespace QuantConnect.Indicators
     {
         private List<double> _residuals;
         private readonly bool _intercept;
-        private readonly bool _handleExceptions;
+        private bool _loggedOnceInMovingAverageStep;
+        private bool _loggedOnceInAutoRegressiveStep;
         private readonly RollingWindow<double> _rollingData;
 
         /// <summary>
@@ -53,6 +54,12 @@ namespace QuantConnect.Indicators
         /// MA Coefficient -- q
         /// </summary>
         private readonly int _maOrder;
+
+        /// <summary>
+        /// Whether or not to handle potential exceptions, returning a zero value. I.e, the values
+        /// provided as input are not valid by the Normal Equations direct regression method
+        /// </summary>
+        public bool HandleExceptions { get; set; } = true;
 
         /// <summary>
         /// Fitted AR parameters (φ terms).
@@ -103,16 +110,13 @@ namespace QuantConnect.Indicators
         /// <param name="maOrder">MA order -- defines the number of past values to consider in the MA component of the model.</param>
         /// <param name="period">Size of the rolling series to fit onto</param>
         /// <param name="intercept">Whether or not to include the intercept term</param>
-        /// <param name="handleExceptions">Whether or not to handle potential exceptions, returning a zero value. I.e, the values
-        /// provided as input are not valid by the Normal Equations direct regression method</param>
         public AutoRegressiveIntegratedMovingAverage(
             string name,
             int arOrder,
             int diffOrder,
             int maOrder,
             int period,
-            bool intercept = true,
-            bool handleExceptions = true
+            bool intercept = true
             )
             : base(name)
         {
@@ -138,7 +142,6 @@ namespace QuantConnect.Indicators
             WarmUpPeriod = period;
             _rollingData = new RollingWindow<double>(period);
             _intercept = intercept;
-            _handleExceptions = handleExceptions;
         }
 
         /// <summary>
@@ -154,18 +157,15 @@ namespace QuantConnect.Indicators
         /// <param name="maOrder">MA order (q) -- defines the number of past values to consider in the MA component of the model.</param>
         /// <param name="period">Size of the rolling series to fit onto</param>
         /// <param name="intercept">Whether to include an intercept term (c)</param>
-        /// <param name="handleExceptions">Whether or not to handle potential exceptions, returning a zero value. I.e, the values
-        /// provided as input are not valid by the Normal Equations direct regression method</param>
         public AutoRegressiveIntegratedMovingAverage(
             int arOrder,
             int diffOrder,
             int maOrder,
             int period,
-            bool intercept,
-            bool handleExceptions
+            bool intercept
             )
             : this($"ARIMA(({arOrder}, {diffOrder}, {maOrder}), {period}, {intercept})", arOrder, diffOrder, maOrder,
-                period, intercept, handleExceptions)
+                period, intercept)
         {
         }
 
@@ -270,7 +270,7 @@ namespace QuantConnect.Indicators
             }
 
             double[] maFits = default;
-            if (_handleExceptions)
+            if (HandleExceptions)
             {
                 try
                 {
@@ -279,7 +279,12 @@ namespace QuantConnect.Indicators
                 }
                 catch (Exception ex)
                 {
-                    Logging.Log.Error($"AutoRegressiveIntegratedMovingAverage.MovingAverageStep(): {ex.Message}");
+                    if (!_loggedOnceInMovingAverageStep)
+                    {
+                        Logging.Log.Error($"AutoRegressiveIntegratedMovingAverage.MovingAverageStep(): {ex.Message}");
+                        _loggedOnceInMovingAverageStep = true;
+                    }
+
                     // The method Fit.MultiDim takes the appendedData array of mxn(m rows, n columns), computes its
                     // transpose of size nxm, and then multiplies the tranpose with the original matrix, so the
                     // resultant matrix is of size nxn. Then a linear system Ax=b is solved where A is the
@@ -332,7 +337,7 @@ namespace QuantConnect.Indicators
         private void AutoRegressiveStep(double[][] lags, double[] data, double errorAr)
         {
             double[] arFits;
-            if (_handleExceptions)
+            if (HandleExceptions)
             {
                 try
                 {
@@ -342,7 +347,12 @@ namespace QuantConnect.Indicators
                 }
                 catch (Exception ex)
                 {
-                    Logging.Log.Error($"AutoRegressiveIntegratedMovingAverage.MovingAverageStep(): {ex.Message}");
+                    if (!_loggedOnceInAutoRegressiveStep)
+                    {
+                        Logging.Log.Error($"AutoRegressiveIntegratedMovingAverage.MovingAverageStep(): {ex.Message}");
+                        _loggedOnceInAutoRegressiveStep = true;
+                    }
+
                     // The method Fit.MultiDim takes the lags array of mxn(m rows, n columns), computes its
                     // transpose of size nxm, and then multiplies the tranpose with the original matrix, so the
                     // resultant matrix is of size nxn. Then a linear system Ax=b is solved where A is the
