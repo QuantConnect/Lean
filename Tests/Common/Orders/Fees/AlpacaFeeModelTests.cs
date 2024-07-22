@@ -48,37 +48,57 @@ namespace QuantConnect.Tests.Common.Orders.Fees
             Assert.AreEqual(0m, fee.Value.Amount);
         }
 
-        [Test]
-        public void CryptoTakerFee()
+        [TestCase(OrderDirection.Buy)]
+        [TestCase(OrderDirection.Sell)]
+        public void CryptoTakerFee(OrderDirection orderDirection)
         {
             var btcusd = GetCryptoSecurity();
             var fee = _feeModel.GetOrderFee(
                 new OrderFeeParameters(
                     btcusd,
-                    new MarketOrder(btcusd.Symbol, 2, DateTime.UtcNow)
+                    new MarketOrder(btcusd.Symbol, orderDirection == OrderDirection.Sell ? -2 : 2, DateTime.UtcNow)
                 )
             );
 
-            Assert.AreEqual(Currencies.USD, fee.Value.Currency);
-            Assert.AreEqual(100m * 2, fee.Value.Amount);
+            if (orderDirection == OrderDirection.Buy)
+            {
+                Assert.AreEqual(btcusd.BaseCurrency.Symbol, fee.Value.Currency);
+                Assert.AreEqual(0.005m, fee.Value.Amount);
+            }
+            else
+            {
+                Assert.AreEqual(btcusd.QuoteCurrency.Symbol, fee.Value.Currency);
+                Assert.AreEqual(Currencies.USD, fee.Value.Currency);
+                Assert.AreEqual(200m, fee.Value.Amount);
+            }
         }
 
-        [Test]
-        public void CryptoMakerFee()
+        [TestCase(OrderDirection.Buy)]
+        [TestCase(OrderDirection.Sell)]
+        public void CryptoMakerFee(OrderDirection orderDirection)
         {
             var btcusd = GetCryptoSecurity();
             var fee = _feeModel.GetOrderFee(
                 new OrderFeeParameters(
                     btcusd,
-                    new LimitOrder(btcusd.Symbol, 2, 50000, DateTime.UtcNow)
+                    new LimitOrder(btcusd.Symbol, orderDirection == OrderDirection.Sell ? -2 : 2, 50000, DateTime.UtcNow)
                 )
             );
 
-            Assert.AreEqual(Currencies.USD, fee.Value.Currency);
-            Assert.AreEqual(120m, fee.Value.Amount);
+            if (orderDirection == OrderDirection.Buy)
+            {
+                Assert.AreEqual(btcusd.BaseCurrency.Symbol, fee.Value.Currency);
+                Assert.AreEqual(0.003m, fee.Value.Amount);
+            }
+            else
+            {
+                Assert.AreEqual(btcusd.QuoteCurrency.Symbol, fee.Value.Currency);
+                Assert.AreEqual(Currencies.USD, fee.Value.Currency);
+                Assert.AreEqual(120m, fee.Value.Amount);
+            }
         }
 
-        private static Security GetCryptoSecurity()
+        private static Crypto GetCryptoSecurity()
         {
             var btcusd = new Crypto(
                 SecurityExchangeHours.AlwaysOpen(TimeZones.Utc),
