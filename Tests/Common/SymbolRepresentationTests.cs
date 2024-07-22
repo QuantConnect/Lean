@@ -36,7 +36,18 @@ namespace QuantConnect.Tests.Common
         [TestCase("SPY   230111C02400000", SecurityType.Option, OptionStyle.American, "SPY", "SPY")]
         [TestCase("AAPL240614C00100000", SecurityType.Option, OptionStyle.American, "AAPL", "AAPL")]
         [TestCase("MSFT240614C00150000", SecurityType.Option, OptionStyle.American, "MSFT", "MSFT")]
-
+        [TestCase("AMZN  220630C01000000", SecurityType.Option, OptionStyle.American, "AMZN", "AMZN")]
+        [TestCase("NFLX  230122P00250000", SecurityType.Option, OptionStyle.American, "NFLX", "NFLX")]
+        [TestCase("TSLA  240815C00775000", SecurityType.Option, OptionStyle.American, "TSLA", "TSLA")]
+        [TestCase("V     231211P00220000", SecurityType.Option, OptionStyle.American, "V", "V")]
+        [TestCase("JPM   240501C00130750", SecurityType.Option, OptionStyle.American, "JPM", "JPM")]
+        [TestCase("IBM   250212P00145000", SecurityType.Option, OptionStyle.American, "IBM", "IBM")]
+        [TestCase("BABA  240508C00088880", SecurityType.Option, OptionStyle.American, "BABA", "BABA")]
+        [TestCase("DIS   230630C00075000", SecurityType.Option, OptionStyle.American, "DIS", "DIS")]
+        [TestCase("ORCL  231030C00065000", SecurityType.Option, OptionStyle.American, "ORCL", "ORCL")]
+        [TestCase("CSCO  230501P00045000", SecurityType.Option, OptionStyle.American, "CSCO", "CSCO")]
+        [TestCase("DAX   250715C01000000", SecurityType.IndexOption, OptionStyle.European, "DAX", "DAX")]
+        [TestCase("FTSE  230122C00750000", SecurityType.IndexOption, OptionStyle.European, "FTSE", "FTSE")]
         public void ParseOptionTickerOSI(string optionStr, SecurityType securityType, OptionStyle optionStyle,
             string expectedTargetOptionTicker, string expectedUnderlyingTicker)
         {
@@ -54,6 +65,25 @@ namespace QuantConnect.Tests.Common
             const string expected = @"ABCDEF 060318C00047500";
             var symbol = SymbolRepresentation.GenerateOptionTickerOSI("ABCDEF", OptionRight.Call, 47.50m, new DateTime(2006, 03, 18));
             Assert.AreEqual(expected, symbol);
+        }
+
+        [TestCase("SPXW", OptionRight.Call, 2400.00, "230111", "SPXW230111C02400000")]
+        [TestCase("SPY", OptionRight.Put, 250.00, "230615", "SPY230615P00250000")]
+        [TestCase("AAPL", OptionRight.Call, 100.00, "240614", "AAPL240614C00100000")]
+        [TestCase("MSFT", OptionRight.Put, 150.00, "240614", "MSFT240614P00150000")]
+        [TestCase("GOOG", OptionRight.Call, 2000.00, "211231", "GOOG211231C02000000")]
+        [TestCase("AMZN", OptionRight.Put, 3500.50, "250101", "AMZN250101P03500500")]
+        [TestCase("NFLX", OptionRight.Call, 500.25, "221201", "NFLX221201C00500250")]
+        [TestCase("TSLA", OptionRight.Put, 725.00, "241231", "TSLA241231P00725000")]
+        [TestCase("V", OptionRight.Call, 220.00, "230420", "V230420C00220000")]
+        [TestCase("JPM", OptionRight.Put, 130.75, "230710", "JPM230710P00130750")]
+        [TestCase("IBM", OptionRight.Call, 145.00, "250212", "IBM250212C00145000")]
+        [TestCase("BABA", OptionRight.Put, 88.88, "240508", "BABA240508P00088880")]
+        public void GenerateOptionTickerOSICompact_ValidInputs(string underlying, OptionRight right, decimal strikePrice, string date, string expected)
+        {
+            DateTime expiration = DateTime.ParseExact(date, "yyMMdd", System.Globalization.CultureInfo.InvariantCulture);
+            string result = SymbolRepresentation.GenerateOptionTickerOSICompact(underlying, right, strikePrice, expiration);
+            Assert.AreEqual(expected, result);
         }
 
         [Test]
