@@ -349,7 +349,7 @@ namespace QuantConnect.Indicators
                 {
                     if (!_loggedOnceInAutoRegressiveStep)
                     {
-                        Logging.Log.Error($"AutoRegressiveIntegratedMovingAverage.MovingAverageStep(): {ex.Message}");
+                        Logging.Log.Error($"AutoRegressiveIntegratedMovingAverage.AutoRegressiveStep(): {ex.Message}");
                         _loggedOnceInAutoRegressiveStep = true;
                     }
 
