@@ -30,6 +30,7 @@ using QuantConnect.Tests.Engine.DataFeeds;
 using System.Linq;
 using QuantConnect.Data;
 using QuantConnect.Indicators;
+using Python.Runtime;
 
 namespace QuantConnect.Tests.Algorithm
 {
@@ -1396,6 +1397,110 @@ namespace QuantConnect.Tests.Algorithm
             Assert.AreEqual(expected, algo.Transactions.LastOrderId);
         }
 
+        [TestCaseSource(nameof(LiquidateWorksAsExpectedTestCases))]
+        public void LiquidateWorksAsExpected(Language language, bool? multipleSymbols, bool isAsynchronous, TimeInForce timeInForce)
+        {
+            Security msft;
+            var algo = GetAlgorithm(out msft, 1, 0);
+            algo.AddEquity("AAPL");
+            algo.Securities[Symbols.AAPL].FeeModel = new ConstantFeeModel(0);
+            var aapl = algo.Securities[Symbols.AAPL];
+            aapl.SetLeverage(1);
+            msft.Holdings.SetHoldings(25, 3);
+            aapl.Holdings.SetHoldings(25, 7);
+
+            msft.Exchange.SetMarketHours(new List<MarketHoursSegment>() { MarketHoursSegment.OpenAllDay() });
+            aapl.Exchange.SetMarketHours(new List<MarketHoursSegment>() { MarketHoursSegment.OpenAllDay() });
+
+            //Set price to $25
+            Update(msft, 25);
+            Update(aapl, 25);
+
+            algo.Portfolio.SetCash(15000000);
+            var limitOrderCanceled = false;
+
+            // Setup the transaction handler
+            var tickets = new Dictionary<int, OrderTicket>();
+            var mock = new Mock<ITransactionHandler>();
+            var request = new Mock<SubmitOrderRequest>(null, null, null, null, null, null, null, null, null, null);
+            mock.Setup(m => m.Process(It.IsAny<OrderRequest>())).Returns<OrderRequest>(s =>
+            {
+                if (s.OrderRequestType == OrderRequestType.Cancel)
+                {
+                    limitOrderCanceled = true;
+                    return new OrderTicket(null, request.Object);
+                }
+                var orderRequest = s as SubmitOrderRequest;
+                var submitOrderRequest = new SubmitOrderRequest(orderRequest.OrderType, SecurityType.Equity, orderRequest.Symbol, orderRequest.Quantity, 0, 0, DateTime.UtcNow, "", orderRequest.OrderProperties);
+                submitOrderRequest.SetOrderId((int)orderRequest.Quantity);
+                var ticket = new OrderTicket(null, submitOrderRequest);
+                tickets[ticket.OrderId] = ticket;
+                return ticket;
+            });
+            algo.Transactions.SetOrderProcessor(mock.Object);
+
+            // Make the initial orders
+            var order1 = algo.MarketOrder(Symbols.MSFT, 1);
+            var order2 = algo.MarketOrder(Symbols.MSFT, 2);
+            var order3 = algo.MarketOrder(Symbols.AAPL, 3);
+            var order4 = algo.MarketOrder(Symbols.AAPL, 4);
+            var order5 = algo.LimitOrder(Symbols.AAPL, 5, 10);
+
+            // Setup the transaction handler to get the open orders as well as the order tickets
+            mock.Setup(m => m.GetOpenOrders(It.IsAny<Func<Order, bool>>())).Returns<Func<Order, bool>>(filter => tickets.Values.Select(x => Order.CreateOrder(x.SubmitRequest)).Where(x => filter(x)).ToList());
+            mock.Setup(m => m.GetOrderTicket(It.IsAny<int>())).Returns<int>(s =>
+            {
+                if (s < 0 && isAsynchronous)
+                {
+                    // This means that the method `Transactions.WaitForOrder()` was called, since the
+                    // negative ID's, in these case, come from the cancel orders, this is, from the
+                    // liquidate method
+                    throw new RegressionTestException("The orders were supposed to be liquidated asynchronously, but instead" +
+                        "they were liquidated synchronously");
+                }
+                else
+                {
+                    return tickets[s];
+                }
+            });
+
+            // Test different Liquidate() constructors
+            var orderProperties = timeInForce != null ? new OrderProperties() { TimeInForce = timeInForce } : null;
+            List<OrderTicket> liquidatedTickets;
+            if (language == Language.CSharp)
+            {
+                if (multipleSymbols == true)
+                {
+                    liquidatedTickets = algo.Liquidate(new List<Symbol>() { Symbols.AAPL, Symbols.MSFT }, asynchronous: isAsynchronous, orderProperties: orderProperties);
+                }
+                else if (multipleSymbols == false)
+                {
+                    liquidatedTickets = algo.Liquidate(Symbols.AAPL, asynchronous: isAsynchronous, orderProperties: orderProperties);
+                    liquidatedTickets.AddRange(algo.Liquidate(Symbols.MSFT, asynchronous: isAsynchronous, orderProperties: orderProperties));
+                }
+                else
+                {
+                    liquidatedTickets = algo.Liquidate(asynchronous: isAsynchronous, orderProperties: orderProperties);
+                }
+            }
+            else
+            {
+                using (Py.GIL())
+                {
+                    liquidatedTickets = algo.Liquidate((new List<Symbol>() { Symbols.AAPL, Symbols.MSFT }).ToPython(), asynchronous: isAsynchronous, orderProperties: orderProperties);
+                }
+            }
+
+            // Assert the symbols were liquidated asynchronously
+            var aaplTicket = liquidatedTickets.Where(x => x.Symbol == Symbols.AAPL).Single();
+            var msftTicket = liquidatedTickets.Where(x => x.Symbol == Symbols.MSFT).Single();
+            Assert.AreEqual(aapl.Holdings.Quantity * (-2), aaplTicket.Quantity);
+            Assert.AreEqual(msft.Holdings.Quantity * (-2), msftTicket.Quantity);
+            Assert.AreEqual(timeInForce ?? TimeInForce.GoodTilCanceled, aaplTicket.SubmitRequest.OrderProperties.TimeInForce);
+            Assert.AreEqual(timeInForce ?? TimeInForce.GoodTilCanceled, msftTicket.SubmitRequest.OrderProperties.TimeInForce);
+            Assert.IsTrue(limitOrderCanceled);
+        }
+
         [Test]
         public void MarketOrdersAreSupportedForFuturesOnExtendedMarketHours()
         {
@@ -1696,5 +1801,25 @@ namespace QuantConnect.Tests.Algorithm
                 security, new MarketOrder(security.Symbol, orderQuantity, DateTime.UtcNow));
             return hashSufficientBuyingPower.IsSufficient;
         }
+
+        private static object[] LiquidateWorksAsExpectedTestCases =
+        {
+            new object[] { Language.CSharp, true, true, TimeInForce.Day },
+            new object[] { Language.CSharp, false, true, TimeInForce.Day },
+            new object[] { Language.CSharp, null, true, TimeInForce.Day },
+            new object[] { Language.Python, null, true, TimeInForce.Day },
+            new object[] { Language.CSharp, true, false, TimeInForce.Day },
+            new object[] { Language.CSharp, false, false, TimeInForce.Day },
+            new object[] { Language.CSharp, null, false, TimeInForce.Day },
+            new object[] { Language.Python, null, false, TimeInForce.Day },
+            new object[] { Language.CSharp, true, true, null },
+            new object[] { Language.CSharp, false, true, null },
+            new object[] { Language.CSharp, null, true, null },
+            new object[] { Language.Python, null, true, null },
+            new object[] { Language.CSharp, true, false, null },
+            new object[] { Language.CSharp, false, false, null },
+            new object[] { Language.CSharp, null, false, null },
+            new object[] { Language.Python, null, false, null }
+        };
     }
 }
