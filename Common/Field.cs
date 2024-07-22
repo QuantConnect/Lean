@@ -24,6 +24,10 @@ namespace QuantConnect
     /// </summary>
     public static partial class Field
     {
+        private readonly static Func<IBaseData, decimal> _high = BaseDataBarPropertyOrValue(x => x.High);
+        private readonly static Func<IBaseData, decimal> _bidPrice = BaseDataBarPropertyOrValue(x => ((QuoteBar)x).Bid.Close);
+        private readonly static Func<IBaseData, decimal> _askPrice = BaseDataBarPropertyOrValue(x => ((QuoteBar)x).Ask.Close);
+
         /// <summary>
         /// Gets a selector that selects the Open value
         /// </summary>
@@ -33,11 +37,27 @@ namespace QuantConnect
         }
 
         /// <summary>
+        /// Gets a selector that selectes the Bid price
+        /// </summary>
+        public static Func<IBaseData, decimal> BidPrice
+        {
+            get { return _bidPrice; }
+        }
+
+        /// <summary>
+        /// Gets a selector that selectes the Ask price
+        /// </summary>
+        public static Func<IBaseData, decimal> AskPrice
+        {
+            get { return _askPrice; }
+        }
+
+        /// <summary>
         /// Gets a selector that selects the High value
         /// </summary>
         public static Func<IBaseData, decimal> High
         {
-            get { return BaseDataBarPropertyOrValue(x => x.High); }
+            get { return _high; }
         }
 
         /// <summary>
