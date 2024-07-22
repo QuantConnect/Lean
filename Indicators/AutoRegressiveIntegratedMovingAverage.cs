@@ -342,7 +342,7 @@ namespace QuantConnect.Indicators
                 try
                 {
                     // The function (lags[time][lagged X]) |---> ΣᵢφᵢXₜ₋ᵢ
-                    arFits = Fit.MultiDim(lags, data.Skip(_maOrder).ToArray(),
+                    arFits = Fit.MultiDim(lags, data.Skip(_arOrder).ToArray(),
                         method: DirectRegressionMethod.NormalEquations);
                 }
                 catch (Exception ex)
