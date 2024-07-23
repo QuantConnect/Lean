@@ -207,7 +207,14 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         {
             foreach (var dataHandler in GetUniverseProviders())
             {
-                var result = dataHandler.LookupSymbols(symbol, includeExpired, securityCurrency).ToList();
+                var symbols = dataHandler.LookupSymbols(symbol, includeExpired, securityCurrency);
+                if (symbols == null)
+                {
+                    // the universe provider does not support it
+                    continue;
+                }
+
+                var result = symbols.ToList();
                 if (result.Any())
                 {
                     return result;
