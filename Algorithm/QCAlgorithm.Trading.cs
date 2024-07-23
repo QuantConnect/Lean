@@ -1244,11 +1244,19 @@ namespace QuantConnect.Algorithm
                 var orders = Transactions.GetOpenOrders(symbolToLiquidate);
 
                 // get quantity in portfolio
-                var quantity = Portfolio[symbolToLiquidate].Quantity;
+                var quantity = 0m;
+                var holdings = Portfolio[symbolToLiquidate];
+                if (holdings.Invested)
+                {
+                    // invested flag might filter some quantity that's less than lot size
+                    quantity = holdings.Quantity;
+                }
 
                 // if there is only one open market order that would close the position, do nothing
                 if (orders.Count == 1 && quantity != 0 && orders[0].Quantity == -quantity && orders[0].Type == OrderType.Market)
+                {
                     continue;
+                }
 
                 // cancel all open orders
                 var marketOrdersQuantity = 0m;

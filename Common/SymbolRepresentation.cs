@@ -373,15 +373,14 @@ namespace QuantConnect
         /// <returns>Symbol object for the specified OSI option ticker string</returns>
         public static Symbol ParseOptionTickerOSI(string ticker, SecurityType securityType, OptionStyle optionStyle, string market)
         {
-            
             var match = _optionTickerRegex.Match(ticker);
             if (!match.Success)
             {
-                throw new FormatException("Invalid ticker format.");
+                throw new FormatException($"Invalid ticker format {ticker}");
             }
 
             var optionTicker = match.Groups[1].Value;
-            var expiration = DateTime.ParseExact(match.Groups[2].Value, "yyMMdd", null);
+            var expiration = DateTime.ParseExact(match.Groups[2].Value, DateFormat.SixCharacter, null);
             OptionRight right = match.Groups[3].Value.ToUpper() == "C" ? OptionRight.Call : OptionRight.Put;
             var strike = decimal.Parse(match.Groups[4].Value) / 1000m;
 
