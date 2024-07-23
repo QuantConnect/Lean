@@ -20,15 +20,15 @@ using QuantConnect.Indicators;
 namespace QuantConnect.Tests.Indicators
 {
     [TestFixture, Parallelizable(ParallelScope.Fixtures)]
-    public class RogersSatchellVolatilityTests : CommonIndicatorTests<TradeBar>
+    public class RogersSatchellVolatilityTests : CommonIndicatorTests<IBaseDataBar>
     {
-        protected override IndicatorBase<TradeBar> CreateIndicator()
+        protected override IndicatorBase<IBaseDataBar> CreateIndicator()
         {
             RenkoBarSize = 1m;
             return new RogersSatchellVolatility(9);
         }
 
-        protected override string TestFileName => "spy_with_rsvolat.csv";
-        protected override string TestColumnName => "RSVolat9";
+        protected override string TestFileName => "spy_with_rsv.csv";
+        protected override string TestColumnName => "RSV9";
     }
 }

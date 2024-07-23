@@ -375,7 +375,7 @@
     <None Update="TestData\spy_with_McGinleyDynamic.csv">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
-    <None Update="TestData\spy_with_rsvolat.csv">
+    <None Update="TestData\spy_with_rsv.csv">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
     <None Update="TestData\spy_with_sobv.csv">
