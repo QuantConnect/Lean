@@ -428,13 +428,17 @@ namespace QuantConnect.Research
                 }
 
                 var optionFilterUniverse = new OptionFilterUniverse(option);
+                // TODO: Once we tackle FOPs to work as equity and index options, we can clean this up:
+                //   - Instead of calling OptionChainProvider.GetOptionContractList above to get allSymbol,
+                //     we can directly make a history request for the new option universe type like History<OptionUniverse>(...)
+                //     instead of creating them below, given that the option chain provider does this history request internally.
                 var distinctSymbols = allSymbols.Distinct().Select(x => new OptionUniverse() { Symbol = x, Time = start});
                 symbols = base.History(symbol.Underlying, start, end.Value, resolution)
                     .SelectMany(x =>
                     {
                         // the option chain symbols wont change so we can set 'exchangeDateChange' to false always
                         optionFilterUniverse.Refresh(distinctSymbols, x, x.EndTime);
-                        return option.ContractFilter.Filter(optionFilterUniverse).Cast<OptionUniverse>().Select(x => x.Symbol);
+                        return option.ContractFilter.Filter(optionFilterUniverse).Select(x => x.Symbol);
                     })
                     .Distinct().Concat(new[] { symbol.Underlying });
             }
