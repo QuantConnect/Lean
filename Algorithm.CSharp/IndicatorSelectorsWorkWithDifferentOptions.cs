@@ -23,6 +23,10 @@ using System.Linq;
 
 namespace QuantConnect.Algorithm.CSharp
 {
+    /// <summary>
+    /// This regression algorithm tests that we can use selectors in the indicators
+    /// that need quote data
+    /// </summary>
     public class IndicatorSelectorsWorkWithDifferentOptions: QCAlgorithm, IRegressionAlgorithmDefinition
     {
         private Indicator _bidCloseIndicator;
