@@ -328,13 +328,13 @@ namespace QuantConnect
         /// <returns>The OSI ticker representation</returns>
         public static string GenerateOptionTickerOSICompact(this Symbol symbol)
         {
-        // First, validate that the symbol is of the correct security type
-        if (!symbol.SecurityType.IsOption())
-        {
-            throw new ArgumentException(
-                Messages.SymbolRepresentation.UnexpectedSecurityTypeForMethod(nameof(GenerateOptionTickerOSICompact), symbol.SecurityType));
-        }
-        return GenerateOptionTickerOSICompact(symbol.Underlying.Value, symbol.ID.OptionRight, symbol.ID.StrikePrice, symbol.ID.Date);
+            // First, validate that the symbol is of the correct security type
+            if (!symbol.SecurityType.IsOption())
+            {
+                throw new ArgumentException(
+                    Messages.SymbolRepresentation.UnexpectedSecurityTypeForMethod(nameof(GenerateOptionTickerOSICompact), symbol.SecurityType));
+            }
+            return GenerateOptionTickerOSICompact(symbol.Underlying.Value, symbol.ID.OptionRight, symbol.ID.StrikePrice, symbol.ID.Date);
         }
 
         /// <summary>
@@ -348,7 +348,7 @@ namespace QuantConnect
         /// <returns>The OSI ticker representation</returns>
         public static string GenerateOptionTickerOSICompact(string underlying, OptionRight right, decimal strikePrice, DateTime expiration)
         {
-        return Invariant($"{underlying}{expiration.ToStringInvariant(DateFormat.SixCharacter)}{right.ToStringPerformance()[0]}{(strikePrice * 1000m):00000000}");
+            return Invariant($"{underlying}{expiration.ToStringInvariant(DateFormat.SixCharacter)}{right.ToStringPerformance()[0]}{(strikePrice * 1000m):00000000}");
         }
 
         /// <summary>

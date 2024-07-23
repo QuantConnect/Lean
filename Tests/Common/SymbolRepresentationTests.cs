@@ -32,24 +32,22 @@ namespace QuantConnect.Tests.Common
             Assert.AreEqual(expected, result);
         }
 
-        [TestCase("SPXW  230111C02400000", SecurityType.IndexOption, OptionStyle.European, "SPXW", "SPX")]
-        [TestCase("SPY   230111C02400000", SecurityType.Option, OptionStyle.American, "SPY", "SPY")]
-        [TestCase("AAPL240614C00100000", SecurityType.Option, OptionStyle.American, "AAPL", "AAPL")]
-        [TestCase("MSFT240614C00150000", SecurityType.Option, OptionStyle.American, "MSFT", "MSFT")]
-        [TestCase("AMZN  220630C01000000", SecurityType.Option, OptionStyle.American, "AMZN", "AMZN")]
-        [TestCase("NFLX  230122P00250000", SecurityType.Option, OptionStyle.American, "NFLX", "NFLX")]
-        [TestCase("TSLA  240815C00775000", SecurityType.Option, OptionStyle.American, "TSLA", "TSLA")]
-        [TestCase("V     231211P00220000", SecurityType.Option, OptionStyle.American, "V", "V")]
-        [TestCase("JPM   240501C00130750", SecurityType.Option, OptionStyle.American, "JPM", "JPM")]
-        [TestCase("IBM   250212P00145000", SecurityType.Option, OptionStyle.American, "IBM", "IBM")]
-        [TestCase("BABA  240508C00088880", SecurityType.Option, OptionStyle.American, "BABA", "BABA")]
-        [TestCase("DIS   230630C00075000", SecurityType.Option, OptionStyle.American, "DIS", "DIS")]
-        [TestCase("ORCL  231030C00065000", SecurityType.Option, OptionStyle.American, "ORCL", "ORCL")]
-        [TestCase("CSCO  230501P00045000", SecurityType.Option, OptionStyle.American, "CSCO", "CSCO")]
-        [TestCase("DAX   250715C01000000", SecurityType.IndexOption, OptionStyle.European, "DAX", "DAX")]
-        [TestCase("FTSE  230122C00750000", SecurityType.IndexOption, OptionStyle.European, "FTSE", "FTSE")]
-        public void ParseOptionTickerOSI(string optionStr, SecurityType securityType, OptionStyle optionStyle,
-            string expectedTargetOptionTicker, string expectedUnderlyingTicker)
+        [TestCase("SPXW  230111C02400000", SecurityType.IndexOption, OptionStyle.European, "SPXW", "SPX", 2400.00, "2023-01-11")]
+        [TestCase("SPY   230111C02400000", SecurityType.Option, OptionStyle.American, "SPY", "SPY", 2400.00, "2023-01-11")]
+        [TestCase("AAPL240614C00100000", SecurityType.Option, OptionStyle.American, "AAPL", "AAPL", 100.00, "2024-06-14")]
+        [TestCase("MSFT240614C00150000", SecurityType.Option, OptionStyle.American, "MSFT", "MSFT", 150.00, "2024-06-14")]
+        [TestCase("AMZN  220630C01000000", SecurityType.Option, OptionStyle.American, "AMZN", "AMZN", 1000.00, "2022-06-30")]
+        [TestCase("NFLX  230122P00250000", SecurityType.Option, OptionStyle.American, "NFLX", "NFLX", 250.00, "2023-01-22")]
+        [TestCase("TSLA  240815C00775000", SecurityType.Option, OptionStyle.American, "TSLA", "TSLA", 775.00, "2024-08-15")]
+        [TestCase("V     231211P00220000", SecurityType.Option, OptionStyle.American, "V", "V", 220.00, "2023-12-11")]
+        [TestCase("JPM   240501C00130750", SecurityType.Option, OptionStyle.American, "JPM", "JPM", 130.75, "2024-05-01")]
+        [TestCase("IBM   250212P00145000", SecurityType.Option, OptionStyle.American, "IBM", "IBM", 145.00, "2025-02-12")]
+        [TestCase("DIS   230630C00075000", SecurityType.Option, OptionStyle.American, "DIS", "DIS", 75.00, "2023-06-30")]
+        [TestCase("ORCL  231030C00065000", SecurityType.Option, OptionStyle.American, "ORCL", "ORCL", 65.00, "2023-10-30")]
+        [TestCase("CSCO  230501P00045000", SecurityType.Option, OptionStyle.American, "CSCO", "CSCO", 45.00, "2023-05-01")]
+        [TestCase("DAX   250715C01000000", SecurityType.IndexOption, OptionStyle.European, "DAX", "DAX", 1000.00, "2025-07-15")]
+        [TestCase("FTSE  230122C00750000", SecurityType.IndexOption, OptionStyle.European, "FTSE", "FTSE", 750.00, "2023-01-22")]
+        public void ParseOptionTickerOSI(string optionStr, SecurityType securityType, OptionStyle optionStyle,string expectedTargetOptionTicker, string expectedUnderlyingTicker, decimal expectedStrikePrice, string expectedDate)
         {
             var result = SymbolRepresentation.ParseOptionTickerOSI(optionStr, securityType, optionStyle, Market.USA);
 
@@ -57,6 +55,8 @@ namespace QuantConnect.Tests.Common
             Assert.AreEqual(expectedUnderlyingTicker, result.Underlying.ID.Symbol);
             Assert.AreEqual(securityType, result.ID.SecurityType);
             Assert.AreEqual(optionStyle, result.ID.OptionStyle);
+            Assert.AreEqual(expectedStrikePrice, result.ID.StrikePrice);
+            Assert.AreEqual(DateTime.Parse(expectedDate), result.ID.Date);
         }
 
         [Test]
