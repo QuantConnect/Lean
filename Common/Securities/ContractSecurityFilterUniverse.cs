@@ -33,7 +33,6 @@ namespace QuantConnect.Securities
         private bool _alreadyAppliedTypeFilters;
 
         private IEnumerable<TData> _data;
-        private IEnumerable<Symbol> _allSymbols;
 
         /// <summary>
         /// Defines listed contract types with Flags attribute
@@ -79,7 +78,6 @@ namespace QuantConnect.Securities
             set
             {
                 _data = value;
-                _allSymbols = _data.Select(x => x.GetSymbol());
             }
         }
 
@@ -94,12 +92,13 @@ namespace QuantConnect.Securities
         {
             get
             {
-                return _allSymbols;
+                return _data.Select(GetSymbol);
             }
             set
             {
-                _allSymbols = value;
-                _data = _data.Where(x => _allSymbols.Contains(x.GetSymbol()));
+                // We create a "fake" data instance for each symbol that is not in the data,
+                // so we are polite to the user and keep backwards compatibility
+                _data = value.Select(symbol => _data.FirstOrDefault(x => GetSymbol(x) == symbol) ?? GetDataInstance(symbol)).ToList();
             }
         }
 
@@ -127,6 +126,18 @@ namespace QuantConnect.Securities
         protected abstract bool IsStandard(Symbol symbol);
 
         /// <summary>
+        /// Gets the symbol from the data
+        /// </summary>
+        /// <returns>The symbol that represents the datum</returns>
+        protected abstract Symbol GetSymbol(TData data);
+
+        /// <summary>
+        /// Creates a new instance of the data type for the given symbol
+        /// </summary>
+        /// <returns>A data instance for the given symbol</returns>
+        protected abstract TData GetDataInstance(Symbol symbol);
+
+        /// <summary>
         /// Returns universe, filtered by contract type
         /// </summary>
         /// <returns>Universe with filter applied</returns>
@@ -140,20 +151,20 @@ namespace QuantConnect.Securities
             // memoization map for ApplyTypesFilter()
             var memoizedMap = new Dictionary<DateTime, bool>();
 
-            Func<Symbol, bool> memoizedIsStandardType = symbol =>
+            Func<TData, bool> memoizedIsStandardType = data =>
             {
-                var dt = symbol.ID.Date;
+                var dt = data.ID.Date;
 
                 bool result;
                 if (memoizedMap.TryGetValue(dt, out result))
                     return result;
-                var res = IsStandard(symbol);
+                var res = IsStandard(GetSymbol(data));
                 memoizedMap[dt] = res;
 
                 return res;
             };
 
-            AllSymbols = AllSymbols.Where(x =>
+            Data = Data.Where(x =>
             {
                 switch (Type)
                 {
@@ -235,11 +246,11 @@ namespace QuantConnect.Securities
         public virtual T FrontMonth()
         {
             ApplyTypesFilter();
-            var ordered = AllSymbols.OrderBy(x => x.ID.Date).ToList();
+            var ordered = Data.OrderBy(x => x.ID.Date).ToList();
             if (ordered.Count == 0) return (T) this;
             var frontMonth = ordered.TakeWhile(x => ordered[0].ID.Date == x.ID.Date);
 
-            AllSymbols = frontMonth.ToList();
+            Data = frontMonth.ToList();
             return (T) this;
         }
 
@@ -250,11 +261,11 @@ namespace QuantConnect.Securities
         public virtual T BackMonths()
         {
             ApplyTypesFilter();
-            var ordered = AllSymbols.OrderBy(x => x.ID.Date).ToList();
+            var ordered = Data.OrderBy(x => x.ID.Date).ToList();
             if (ordered.Count == 0) return (T) this;
             var backMonths = ordered.SkipWhile(x => ordered[0].ID.Date == x.ID.Date);
 
-            AllSymbols = backMonths.ToList();
+            Data = backMonths.ToList();
             return (T) this;
         }
 
@@ -287,7 +298,7 @@ namespace QuantConnect.Securities
             var minExpiryToDate = LocalTime.Date + minExpiry;
             var maxExpiryToDate = LocalTime.Date + maxExpiry;
 
-            AllSymbols = AllSymbols
+            Data = Data
                 .Where(symbol => symbol.ID.Date.Date >= minExpiryToDate && symbol.ID.Date.Date <= maxExpiryToDate)
                 .ToList();
 
@@ -338,6 +349,18 @@ namespace QuantConnect.Securities
         }
 
         /// <summary>
+        /// Explicitly sets the selected contract symbols for this universe.
+        /// This overrides and and all other methods of selecting symbols assuming it is called last.
+        /// </summary>
+        /// <param name="contracts">The option contract symbol objects to select</param>
+        /// <returns>Universe with filter applied</returns>
+        public T Contracts(IEnumerable<TData> contracts)
+        {
+            Data = contracts.ToList();
+            return (T)this;
+        }
+
+        /// <summary>
         /// Sets a function used to filter the set of available contract filters. The input to the 'contractSelector'
         /// function will be the already filtered list if any other filters have already been applied.
         /// </summary>
@@ -348,6 +371,19 @@ namespace QuantConnect.Securities
             // force materialization using ToList
             AllSymbols = contractSelector(Data).ToList();
             return (T) this;
+        }
+
+        /// <summary>
+        /// Sets a function used to filter the set of available contract filters. The input to the 'contractSelector'
+        /// function will be the already filtered list if any other filters have already been applied.
+        /// </summary>
+        /// <param name="contractSelector">The option contract symbol objects to select</param>
+        /// <returns>Universe with filter applied</returns>
+        public T Contracts(Func<IEnumerable<TData>, IEnumerable<TData>> contractSelector)
+        {
+            // force materialization using ToList
+            Data = contractSelector(Data).ToList();
+            return (T)this;
         }
 
         /// <summary>

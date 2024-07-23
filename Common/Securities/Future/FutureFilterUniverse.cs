@@ -45,6 +45,24 @@ namespace QuantConnect.Securities
         }
 
         /// <summary>
+        /// Gets the symbol from the data
+        /// </summary>
+        /// <returns>The symbol that represents the datum</returns>
+        protected override Symbol GetSymbol(Symbol data)
+        {
+            return data;
+        }
+
+        /// <summary>
+        /// Creates a new instance of the data type for the given symbol
+        /// </summary>
+        /// <returns>A data instance for the given symbol, which is just the symbol itself</returns>
+        protected override Symbol GetDataInstance(Symbol symbol)
+        {
+            return symbol;
+        }
+
+        /// <summary>
         /// Applies filter selecting futures contracts based on expiration cycles. See <see cref="FutureExpirationCycles"/> for details
         /// </summary>
         /// <param name="months">Months to select contracts from</param>
@@ -69,7 +87,7 @@ namespace QuantConnect.Securities
         /// <returns><see cref="FutureFilterUniverse"/> with filter applied</returns>
         public static FutureFilterUniverse Where(this FutureFilterUniverse universe, Func<Symbol, bool> predicate)
         {
-            universe.AllSymbols = universe.AllSymbols.Where(predicate).ToList();
+            universe.Data = universe.Data.Where(predicate).ToList();
             return universe;
         }
 
@@ -81,7 +99,7 @@ namespace QuantConnect.Securities
         /// <returns><see cref="FutureFilterUniverse"/> with filter applied</returns>
         public static FutureFilterUniverse Select(this FutureFilterUniverse universe, Func<Symbol, Symbol> mapFunc)
         {
-            universe.AllSymbols = universe.AllSymbols.Select(mapFunc).ToList();
+            universe.Data = universe.Data.Select(mapFunc).ToList();
             return universe;
         }
 
@@ -93,7 +111,7 @@ namespace QuantConnect.Securities
         /// <returns><see cref="FutureFilterUniverse"/> with filter applied</returns>
         public static FutureFilterUniverse SelectMany(this FutureFilterUniverse universe, Func<Symbol, IEnumerable<Symbol>> mapFunc)
         {
-            universe.AllSymbols = universe.AllSymbols.SelectMany(mapFunc).ToList();
+            universe.Data = universe.Data.SelectMany(mapFunc).ToList();
             return universe;
         }
     }

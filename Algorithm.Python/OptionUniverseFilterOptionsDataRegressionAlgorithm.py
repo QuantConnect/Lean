@@ -41,7 +41,7 @@ class OptionUniverseFilterOptionsDataRegressionAlgorithm(OptionUniverseFilterGre
             # These contracts list will already be filtered by the strikes and expirations,
             # since those filters where applied before this one.
             .contracts(lambda contracts: [
-                    contract.Symbol for contract in contracts
+                    contract for contract in contracts
                     # Can access the contract data here and do some filtering based on it is needed.
                     # More complex math can be done here for filtering, but will be simple here for demonstration sake:
                     if (contract.Greeks.Delta > 0.5 and contract.Greeks.Delta < 1.5 and
