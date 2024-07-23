@@ -446,6 +446,25 @@ namespace QuantConnect.Algorithm
         }
 
         /// <summary>
+        /// Creates a new ChoppinessIndex indicator for the symbol. The indicator will be automatically
+        /// updated on the given resolution.
+        /// </summary>
+        /// <param name="symbol">The symbol whose CHOP we want</param>
+        /// <param name="period">The input window period used to calculate max high and min low</param>
+        /// <param name="resolution">The resolution</param>
+        /// <param name="selector">Selects a value from the BaseData to send into the indicator, if null defaults to casting the input value to a TradeBar</param>
+        /// <returns>A new ChoppinessIndex indicator with the window period</returns>
+        [DocumentationAttribute(Indicators)]
+        public ChoppinessIndex CHOP(Symbol symbol, int period, Resolution? resolution = null, Func<IBaseData, IBaseDataBar> selector = null)
+        {
+            var name = CreateIndicatorName(symbol, $"CHOP({period})", resolution);
+            var indicator = new ChoppinessIndex(name, period);
+            InitializeIndicator(indicator, resolution, selector, symbol);
+
+            return indicator;
+        }
+
+        /// <summary>
         /// Creates a new ChaikinMoneyFlow indicator.
         /// </summary>
         /// <param name="symbol">The symbol whose CMF we want</param>
@@ -1871,6 +1890,25 @@ namespace QuantConnect.Algorithm
             InitializeIndicator(schaffTrendCycle, resolution, selector, symbol);
 
             return schaffTrendCycle;
+        }
+
+        /// <summary>
+        /// Creates a new SmoothedOnBalanceVolume indicator for the symbol. The indicator will be automatically
+        /// updated on the given resolution.
+        /// </summary>
+        /// <param name="symbol">The symbol whose SmoothedOnBalanceVolume we want</param>
+        /// <param name="period">The smoothing period used to smooth the computed OnBalanceVolume values</param>
+        /// <param name="type">The type of smoothing to use</param>
+        /// <param name="resolution">The resolution</param>
+        /// <param name="selector">Selects a value from the BaseData to send into the indicator, if null defaults to casting the input value to a TradeBar</param>
+        /// <returns>A new SmoothedOnBalanceVolume indicator with the specified smoothing type and period</returns>
+        [DocumentationAttribute(Indicators)]
+        public SmoothedOnBalanceVolume SOBV(Symbol symbol, int period, MovingAverageType type = MovingAverageType.Simple, Resolution? resolution = null, Func<IBaseData, IBaseDataBar> selector = null)
+        {
+            var name = CreateIndicatorName(symbol, $"SOBV({period})", resolution);
+            var indicator = new SmoothedOnBalanceVolume(name, period, type);
+            InitializeIndicator(indicator, resolution, selector, symbol);
+            return indicator;
         }
 
         /// <summary>

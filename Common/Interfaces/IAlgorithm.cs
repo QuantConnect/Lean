@@ -772,12 +772,13 @@ namespace QuantConnect.Interfaces
         void SetCash(string symbol, decimal startingCash, decimal conversionRate = 0);
 
         /// <summary>
-        /// Liquidate your portfolio holdings:
+        /// Liquidate your portfolio holdings
         /// </summary>
-        /// <param name="symbolToLiquidate">Specific asset to liquidate, defaults to all.</param>
-        /// <param name="tag">Custom tag to know who is calling this.</param>
-        /// <returns>list of order ids</returns>
-        List<int> Liquidate(Symbol symbolToLiquidate = null, string tag = "Liquidated");
+        /// <param name="symbol">Specific asset to liquidate, defaults to all.</param>
+        /// <param name="asynchronous">Flag to indicate if the symbols should be liquidated asynchronously</param>
+        /// <param name="tag">Custom tag to know who is calling this</param>
+        /// <param name="orderProperties">Order properties to use</param>
+        List<OrderTicket> Liquidate(Symbol symbol = null, bool asynchronous = false, string tag = "Liquidated", IOrderProperties orderProperties = null);
 
         /// <summary>
         /// Set live mode state of the algorithm run: Public setter for the algorithm property LiveMode.
