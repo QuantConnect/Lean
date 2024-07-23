@@ -955,10 +955,10 @@ namespace QuantConnect.Tests.Common.Securities
         {
             var underlying = new Tick { Value = underlyingPrice, Time = new DateTime(2016, 02, 26) };
 
-            Func<IDerivativeSecurityFilterUniverse, IDerivativeSecurityFilterUniverse> func =
+            Func<IDerivativeSecurityFilterUniverse<OptionUniverse>, IDerivativeSecurityFilterUniverse<OptionUniverse>> func =
                 universe => universeFunc(universe as OptionFilterUniverse);
 
-            var filter = new FuncSecurityDerivativeFilter(func);
+            var filter = new FuncSecurityDerivativeFilter<OptionUniverse>(func);
             var symbols = CreateOptionUniverse();
 
             var data = symbols.Select(x => new OptionUniverse() { Symbol = x });
@@ -970,7 +970,7 @@ namespace QuantConnect.Tests.Common.Securities
                 Assert.Throws<ArgumentException>(() => filter.Filter(filterUniverse));
                 return null;
             }
-            return filter.Filter(filterUniverse).Cast<OptionUniverse>().Select(x => x.Symbol).ToList();
+            return filter.Filter(filterUniverse).Select(x => x.Symbol).ToList();
         }
 
         static Symbol[] CreateOptionUniverse()

@@ -377,14 +377,6 @@ namespace QuantConnect
             return false;
         }
 
-        /// <summary>
-        /// Gets the symbol. Only here to implement the <see cref="ISymbol"/> interface
-        /// </summary>
-        public Symbol GetSymbol()
-        {
-            return this;
-        }
-
         #region Properties
 
         /// <summary>

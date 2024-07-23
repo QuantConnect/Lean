@@ -80,47 +80,52 @@ namespace QuantConnect.Tests.Algorithm
 
             // forex
             var forex = algo.AddSecurity(SecurityType.Forex, "eurusd");
-            Assert.AreEqual(1, forex.Subscriptions.Count());
-            Assert.IsNotNull(GetMatchingSubscription(algo, forex.Symbol, typeof(QuoteBar)));
+            Assert.IsTrue(forex.Subscriptions.Count() == 1);
+            Assert.IsTrue(GetMatchingSubscription(algo, forex.Symbol, typeof(QuoteBar)) != null);
 
             // equity high resolution
             var equityMinute = algo.AddSecurity(SecurityType.Equity, "goog");
-            Assert.AreEqual(2, equityMinute.Subscriptions.Count());
-            Assert.IsNotNull(GetMatchingSubscription(algo, equityMinute.Symbol, typeof(TradeBar)));
-            Assert.IsNotNull(GetMatchingSubscription(algo, equityMinute.Symbol, typeof(QuoteBar)));
+            Assert.IsTrue(equityMinute.Subscriptions.Count() == 2);
+            Assert.IsTrue(GetMatchingSubscription(algo, equityMinute.Symbol, typeof(TradeBar)) != null);
+            Assert.IsTrue(GetMatchingSubscription(algo, equityMinute.Symbol, typeof(QuoteBar)) != null);
 
             // equity low resolution
             var equityDaily = algo.AddSecurity(SecurityType.Equity, "goog", Resolution.Daily);
-            Assert.AreEqual(2, equityDaily.Subscriptions.Count());
-            Assert.IsNotNull(GetMatchingSubscription(algo, equityDaily.Symbol, typeof(TradeBar)));
+            Assert.IsTrue(equityDaily.Subscriptions.Count() == 2);
+            Assert.IsTrue(GetMatchingSubscription(algo, equityDaily.Symbol, typeof(TradeBar)) != null);
 
 
             // option
             var option = algo.AddSecurity(SecurityType.Option, "goog");
-            Assert.AreEqual(1, option.Subscriptions.Count());
-            Assert.IsNotNull(GetMatchingSubscription(algo, option.Symbol, typeof(OptionUniverse)));
+            Assert.IsTrue(option.Subscriptions.Count() == 1);
+            Assert.IsTrue(GetMatchingSubscription(algo, option.Symbol, typeof(OptionUniverse)) != null);
+
+            // index option
+            var indexOption = algo.AddSecurity(SecurityType.Option, "spx");
+            Assert.IsTrue(indexOption.Subscriptions.Count() == 1);
+            Assert.IsTrue(GetMatchingSubscription(algo, indexOption.Symbol, typeof(OptionUniverse)) != null);
 
             // cfd
             var cfd = algo.AddSecurity(SecurityType.Cfd, "abc");
-            Assert.AreEqual(1, cfd.Subscriptions.Count());
-            Assert.IsNotNull(GetMatchingSubscription(algo, cfd.Symbol, typeof(QuoteBar)));
+            Assert.IsTrue(cfd.Subscriptions.Count() == 1);
+            Assert.IsTrue(GetMatchingSubscription(algo, cfd.Symbol, typeof(QuoteBar)) != null);
 
             // future
             var future = algo.AddSecurity(SecurityType.Future, "ES");
-            Assert.AreEqual(1, future.Subscriptions.Count());
-            Assert.IsNotNull(future.Subscriptions.FirstOrDefault(x => typeof(ZipEntryName).IsAssignableFrom(x.Type)));
+            Assert.IsTrue(future.Subscriptions.Count() == 1);
+            Assert.IsTrue(future.Subscriptions.FirstOrDefault(x => typeof(ZipEntryName).IsAssignableFrom(x.Type)) != null);
 
             // Crypto high resolution
             var cryptoMinute = algo.AddSecurity(SecurityType.Equity, "goog");
-            Assert.AreEqual(2, cryptoMinute.Subscriptions.Count());
-            Assert.IsNotNull(GetMatchingSubscription(algo, cryptoMinute.Symbol, typeof(TradeBar)));
-            Assert.IsNotNull(GetMatchingSubscription(algo, cryptoMinute.Symbol, typeof(QuoteBar)));
+            Assert.IsTrue(cryptoMinute.Subscriptions.Count() == 2);
+            Assert.IsTrue(GetMatchingSubscription(algo, cryptoMinute.Symbol, typeof(TradeBar)) != null);
+            Assert.IsTrue(GetMatchingSubscription(algo, cryptoMinute.Symbol, typeof(QuoteBar)) != null);
 
             // Crypto low resolution
             var cryptoHourly = algo.AddSecurity(SecurityType.Crypto, "btcusd", Resolution.Hour);
-            Assert.AreEqual(2, cryptoHourly.Subscriptions.Count());
-            Assert.IsNotNull(GetMatchingSubscription(algo, cryptoHourly.Symbol, typeof(TradeBar)));
-            Assert.IsNotNull(GetMatchingSubscription(algo, cryptoHourly.Symbol, typeof(QuoteBar)));
+            Assert.IsTrue(cryptoHourly.Subscriptions.Count() == 2);
+            Assert.IsTrue(GetMatchingSubscription(algo, cryptoHourly.Symbol, typeof(TradeBar)) != null);
+            Assert.IsTrue(GetMatchingSubscription(algo, cryptoHourly.Symbol, typeof(QuoteBar)) != null);
         }
 
 

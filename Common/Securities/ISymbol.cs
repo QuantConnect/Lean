@@ -25,11 +25,5 @@ namespace QuantConnect.Securities
         /// Gets the security identifier.
         /// </summary>
         SecurityIdentifier ID { get; }
-
-        /// <summary>
-        /// Gets the symbol.
-        /// </summary>
-        /// <returns>The symbol</returns>
-        Symbol GetSymbol();
     }
 }

@@ -107,6 +107,28 @@ namespace QuantConnect.Securities
         }
 
         /// <summary>
+        /// Gets the symbol from the data
+        /// </summary>
+        /// <returns>The symbol that represents the datum</returns>
+        protected override Symbol GetSymbol(OptionUniverse data)
+        {
+            return data.Symbol;
+        }
+
+        /// <summary>
+        /// Creates a new instance of the data type for the given symbol
+        /// </summary>
+        /// <returns>A data instance for the given symbol</returns>
+        protected override OptionUniverse GetDataInstance(Symbol symbol)
+        {
+            return new OptionUniverse()
+            {
+                Symbol = symbol,
+                Time = LocalTime
+            };
+        }
+
+        /// <summary>
         /// Applies filter selecting options contracts based on a range of strikes in relative terms
         /// </summary>
         /// <param name="minStrike">The minimum strike relative to the underlying price, for example, -1 would filter out contracts further than 1 strike below market price</param>
@@ -150,8 +172,7 @@ namespace QuantConnect.Securities
                 if (index == ~_uniqueStrikes.Count)
                 {
                     // there is no greater price, return empty
-                    AllSymbols = Enumerable.Empty<Symbol>();
-                    return this;
+                    return Empty();
                 }
 
                 index = ~index;
@@ -180,15 +201,13 @@ namespace QuantConnect.Securities
             else if (indexMinPrice >= _uniqueStrikes.Count)
             {
                 // price out of range: return empty
-                AllSymbols = Enumerable.Empty<Symbol>();
-                return this;
+                return Empty();
             }
 
             if (indexMaxPrice < 0)
             {
                 // price out of range: return empty
-                AllSymbols = Enumerable.Empty<Symbol>();
-                return this;
+                return Empty();
             }
             if (indexMaxPrice >= _uniqueStrikes.Count)
             {
@@ -198,10 +217,10 @@ namespace QuantConnect.Securities
             var minPrice = _uniqueStrikes[indexMinPrice];
             var maxPrice = _uniqueStrikes[indexMaxPrice];
 
-            AllSymbols = AllSymbols
-                .Where(symbol =>
+            Data = Data
+                .Where(data =>
                     {
-                        var price = symbol.ID.StrikePrice;
+                        var price = data.ID.StrikePrice;
                         return price >= minPrice && price <= maxPrice;
                     }
                 ).ToList();
@@ -996,7 +1015,7 @@ namespace QuantConnect.Securities
         /// </summary>
         private OptionFilterUniverse Empty()
         {
-            AllSymbols = Enumerable.Empty<Symbol>();
+            Data = Enumerable.Empty<OptionUniverse>();
             return this;
         }
 
@@ -1031,7 +1050,7 @@ namespace QuantConnect.Securities
         /// <returns>Universe with filter applied</returns>
         public static OptionFilterUniverse Where(this OptionFilterUniverse universe, Func<OptionUniverse, bool> predicate)
         {
-            universe.AllSymbols = universe.Data.Where(predicate).Select(x => x.Symbol).ToList();
+            universe.Data = universe.Data.Where(predicate).ToList();
             return universe;
         }
 
@@ -1043,7 +1062,6 @@ namespace QuantConnect.Securities
         /// <returns>Universe with filter applied</returns>
         public static OptionFilterUniverse Where(this OptionFilterUniverse universe, PyObject predicate)
         {
-            using var _ = Py.GIL();
             universe.Data = universe.Data.Where(predicate.ConvertToDelegate<Func<OptionUniverse, bool>>()).ToList();
             return universe;
         }
@@ -1068,7 +1086,6 @@ namespace QuantConnect.Securities
         /// <returns>Universe with filter applied</returns>
         public static OptionFilterUniverse Select(this OptionFilterUniverse universe, PyObject mapFunc)
         {
-            using var _ = Py.GIL();
             return universe.Select(mapFunc.ConvertToDelegate<Func<OptionUniverse, Symbol>>());
         }
 
@@ -1092,7 +1109,6 @@ namespace QuantConnect.Securities
         /// <returns>Universe with filter applied</returns>
         public static OptionFilterUniverse SelectMany(this OptionFilterUniverse universe, PyObject mapFunc)
         {
-            using var _ = Py.GIL();
             return universe.SelectMany(mapFunc.ConvertToDelegate<Func<OptionUniverse, IEnumerable<Symbol>>>());
         }
 
@@ -1104,7 +1120,7 @@ namespace QuantConnect.Securities
         /// <returns>Universe with filter applied</returns>
         public static OptionFilterUniverse WhereContains(this OptionFilterUniverse universe, List<Symbol> filterList)
         {
-            universe.AllSymbols = universe.AllSymbols.Where(filterList.Contains).ToList();
+            universe.Data = universe.Data.Where(x => filterList.Contains(x)).ToList();
             return universe;
         }
 
@@ -1116,7 +1132,6 @@ namespace QuantConnect.Securities
         /// <returns>Universe with filter applied</returns>
         public static OptionFilterUniverse WhereContains(this OptionFilterUniverse universe, PyObject filterList)
         {
-            using var _ = Py.GIL();
             return universe.WhereContains(filterList.ConvertToSymbolEnumerable().ToList());
         }
     }

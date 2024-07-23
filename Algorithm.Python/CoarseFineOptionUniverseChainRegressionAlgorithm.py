@@ -49,7 +49,7 @@ class CoarseFineOptionUniverseChainRegressionAlgorithm(QCAlgorithm):
         for contract in universe:
             if len(contracts) == 5:
                 break
-            contracts.append(contract.symbol)
+            contracts.append(contract)
         return universe.contracts(contracts)
 
     def coarse_selection_function(self, coarse):

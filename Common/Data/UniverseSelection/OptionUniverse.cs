@@ -346,16 +346,6 @@ namespace QuantConnect.Data.UniverseSelection
         }
 
         /// <summary>
-        /// Gets the symbol of the option
-        /// </summary>
-#pragma warning disable CA1721 // Property names should not match get methods
-        public Symbol GetSymbol()
-        {
-            return Symbol;
-        }
-#pragma warning restore CA1721 // Property names should not match get methods
-
-        /// <summary>
         /// Implicit conversion into <see cref="Symbol"/>
         /// </summary>
         /// <param name="data">The option universe data to be converted</param>
