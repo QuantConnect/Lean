@@ -988,7 +988,7 @@ namespace QuantConnect.Algorithm
         {
             var name = CreateIndicatorName(symbol, fieldName ?? "close", resolution);
             var identity = new Identity(name);
-            RegisterIndicator(symbol, identity, resolution, selector);
+            InitializeIndicator(identity, resolution, selector, symbol);
             return identity;
         }
 
