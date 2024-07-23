@@ -14,28 +14,14 @@
  *
 */
 
-using System.Collections;
 using System.Collections.Generic;
 
 namespace QuantConnect.Securities
 {
-#pragma warning disable CA1010, CA1710 // Generic interface should also be implemented
-#pragma warning disable CA1710 // Identifiers should have correct suffix
-
     /// <summary>
     /// Represents derivative symbols universe used in filtering.
     /// </summary>
-    public interface IDerivativeSecurityFilterUniverse : IEnumerable
-    {
-    }
-
-#pragma warning restore CA1710 // Identifiers should have correct suffix
-#pragma warning restore CA1010 // Generic interface should also be implemented
-
-    /// <summary>
-    /// Represents derivative symbols universe used in filtering.
-    /// </summary>
-    public interface IDerivativeSecurityFilterUniverse<T> : IDerivativeSecurityFilterUniverse, IEnumerable<T>
+    public interface IDerivativeSecurityFilterUniverse<T> : IEnumerable<T>
         where T : ISymbol
     {
     }

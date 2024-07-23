@@ -38,15 +38,15 @@ namespace QuantConnect.Tests.Common.Securities
                                 .Strikes(-2, 3)
                                 .Expiration(TimeSpan.Zero, TimeSpan.MaxValue);
 
-            Func<IDerivativeSecurityFilterUniverse, IDerivativeSecurityFilterUniverse> func =
+            Func<IDerivativeSecurityFilterUniverse<OptionUniverse>, IDerivativeSecurityFilterUniverse<OptionUniverse>> func =
                 universe => universeFunc(universe as OptionFilterUniverse);
 
-            var filter = new FuncSecurityDerivativeFilter(func);
+            var filter = new FuncSecurityDerivativeFilter<OptionUniverse>(func);
 
             var underlyingScaleFactor = SymbolPropertiesDatabase.FromDataFolder().GetSymbolProperties(Market.USA, symbols.First(), symbols.First().SecurityType, "USD").StrikeMultiplier;
             var data = symbols.Select(x => new OptionUniverse() { Symbol = x });
             var filterUniverse = new OptionFilterUniverse(data, underlying, underlyingScaleFactor);
-            var filtered = filter.Filter(filterUniverse).Cast<OptionUniverse>().ToList();
+            var filtered = filter.Filter(filterUniverse).ToList();
             Assert.AreEqual(filteredNumber, filtered.Count);
             Assert.AreEqual(symbols[3], filtered[0].Symbol);
             Assert.AreEqual(symbols[4], filtered[1].Symbol);
@@ -71,10 +71,10 @@ namespace QuantConnect.Tests.Common.Securities
                                 .Strikes(-2, 2)
                                 .Expiration(TimeSpan.Zero, TimeSpan.MaxValue);
 
-            Func<IDerivativeSecurityFilterUniverse, IDerivativeSecurityFilterUniverse> func =
+            Func<IDerivativeSecurityFilterUniverse<OptionUniverse>, IDerivativeSecurityFilterUniverse<OptionUniverse>> func =
                 universe => universeFunc(universe as OptionFilterUniverse);
 
-            var filter = new FuncSecurityDerivativeFilter(func);
+            var filter = new FuncSecurityDerivativeFilter<OptionUniverse>(func);
             var symbols = new[]
             {
                 Symbol.CreateOption("SPY", Market.USA, OptionStyle.American, OptionRight.Put, 2, expiry),  // 0
@@ -91,7 +91,7 @@ namespace QuantConnect.Tests.Common.Securities
 
             var data = symbols.Select(x => new OptionUniverse() { Symbol = x });
             var filterUniverse = new OptionFilterUniverse(data, underlying);
-            var filtered = filter.Filter(filterUniverse).Cast<OptionUniverse>().ToList();
+            var filtered = filter.Filter(filterUniverse).ToList();
             Assert.AreEqual(underlyingPrice == 8 ? 5 : 4, filtered.Count);
             Assert.AreEqual(symbols[1], filtered[0].Symbol);
             Assert.AreEqual(symbols[2], filtered[1].Symbol);
@@ -115,10 +115,10 @@ namespace QuantConnect.Tests.Common.Securities
                 .Strikes(-3, -1)
                 .Expiration(TimeSpan.Zero, TimeSpan.MaxValue);
 
-            Func<IDerivativeSecurityFilterUniverse, IDerivativeSecurityFilterUniverse> func =
+            Func<IDerivativeSecurityFilterUniverse<OptionUniverse>, IDerivativeSecurityFilterUniverse<OptionUniverse>> func =
                 universe => universeFunc(universe as OptionFilterUniverse);
 
-            var filter = new FuncSecurityDerivativeFilter(func);
+            var filter = new FuncSecurityDerivativeFilter<OptionUniverse>(func);
             var symbols = new[]
             {
                 Symbol.CreateOption("SPY", Market.USA, OptionStyle.American, OptionRight.Put, 2, expiry),  // 0
@@ -135,7 +135,7 @@ namespace QuantConnect.Tests.Common.Securities
 
             var data = symbols.Select(x => new OptionUniverse() { Symbol = x });
             var filterUniverse = new OptionFilterUniverse(data, underlying);
-            var filtered = filter.Filter(filterUniverse).Cast<OptionUniverse>().ToList();
+            var filtered = filter.Filter(filterUniverse).ToList();
             Assert.AreEqual(3, filtered.Count);
             Assert.AreEqual(symbols[5], filtered[0].Symbol);
             Assert.AreEqual(symbols[6], filtered[1].Symbol);
@@ -154,10 +154,10 @@ namespace QuantConnect.Tests.Common.Securities
                 .Strikes(-3, -1)
                 .Expiration(TimeSpan.Zero, TimeSpan.MaxValue);
 
-            Func<IDerivativeSecurityFilterUniverse, IDerivativeSecurityFilterUniverse> func =
+            Func<IDerivativeSecurityFilterUniverse<OptionUniverse>, IDerivativeSecurityFilterUniverse<OptionUniverse>> func =
                 universe => universeFunc(universe as OptionFilterUniverse);
 
-            var filter = new FuncSecurityDerivativeFilter(func);
+            var filter = new FuncSecurityDerivativeFilter<OptionUniverse>(func);
             var symbols = new[]
             {
                 Symbol.CreateOption("SPY", Market.USA, OptionStyle.American, OptionRight.Put, 15, expiry), // 0
@@ -166,7 +166,7 @@ namespace QuantConnect.Tests.Common.Securities
 
             var data = symbols.Select(x => new OptionUniverse() { Symbol = x });
             var filterUniverse = new OptionFilterUniverse(data, underlying);
-            var filtered = filter.Filter(filterUniverse).Cast<OptionUniverse>().ToList();
+            var filtered = filter.Filter(filterUniverse).ToList();
             Assert.AreEqual(0, filtered.Count);
         }
 
@@ -182,10 +182,10 @@ namespace QuantConnect.Tests.Common.Securities
                 .Strikes(1, 3)
                 .Expiration(TimeSpan.Zero, TimeSpan.MaxValue);
 
-            Func<IDerivativeSecurityFilterUniverse, IDerivativeSecurityFilterUniverse> func =
+            Func<IDerivativeSecurityFilterUniverse<OptionUniverse>, IDerivativeSecurityFilterUniverse<OptionUniverse>> func =
                 universe => universeFunc(universe as OptionFilterUniverse);
 
-            var filter = new FuncSecurityDerivativeFilter(func);
+            var filter = new FuncSecurityDerivativeFilter<OptionUniverse>(func);
             var symbols = new[]
             {
                 Symbol.CreateOption("SPY", Market.USA, OptionStyle.American, OptionRight.Put, 2, expiry),  // 0
@@ -202,7 +202,7 @@ namespace QuantConnect.Tests.Common.Securities
 
             var data = symbols.Select(x => new OptionUniverse() { Symbol = x });
             var filterUniverse = new OptionFilterUniverse(data, underlying);
-            var filtered = filter.Filter(filterUniverse).Cast<OptionUniverse>().ToList();
+            var filtered = filter.Filter(filterUniverse).ToList();
             Assert.AreEqual(3, filtered.Count);
             Assert.AreEqual(symbols[2], filtered[0].Symbol);
             Assert.AreEqual(symbols[3], filtered[1].Symbol);
@@ -221,10 +221,10 @@ namespace QuantConnect.Tests.Common.Securities
                 .Strikes(1, 3)
                 .Expiration(TimeSpan.Zero, TimeSpan.MaxValue);
 
-            Func<IDerivativeSecurityFilterUniverse, IDerivativeSecurityFilterUniverse> func =
+            Func<IDerivativeSecurityFilterUniverse<OptionUniverse>, IDerivativeSecurityFilterUniverse<OptionUniverse>> func =
                 universe => universeFunc(universe as OptionFilterUniverse);
 
-            var filter = new FuncSecurityDerivativeFilter(func);
+            var filter = new FuncSecurityDerivativeFilter<OptionUniverse>(func);
             var symbols = new[]
             {
                 Symbol.CreateOption("SPY", Market.USA, OptionStyle.American, OptionRight.Put, 15, expiry), // 0
@@ -233,7 +233,7 @@ namespace QuantConnect.Tests.Common.Securities
 
             var data = symbols.Select(x => new OptionUniverse() { Symbol = x });
             var filterUniverse = new OptionFilterUniverse(data, underlying);
-            var filtered = filter.Filter(filterUniverse).Cast<OptionUniverse>().ToList();
+            var filtered = filter.Filter(filterUniverse).ToList();
             Assert.AreEqual(0, filtered.Count);
         }
 
@@ -246,15 +246,15 @@ namespace QuantConnect.Tests.Common.Securities
                 .Strikes(-2, 2)
                 .Expiration(TimeSpan.Zero, TimeSpan.MaxValue);
 
-            Func<IDerivativeSecurityFilterUniverse, IDerivativeSecurityFilterUniverse> func =
+            Func<IDerivativeSecurityFilterUniverse<OptionUniverse>, IDerivativeSecurityFilterUniverse<OptionUniverse>> func =
                 universe => universeFunc(universe as OptionFilterUniverse);
 
-            var filter = new FuncSecurityDerivativeFilter(func);
+            var filter = new FuncSecurityDerivativeFilter<OptionUniverse>(func);
             var symbols = new Symbol[] { };
 
             var data = symbols.Select(x => new OptionUniverse() { Symbol = x });
             var filterUniverse = new OptionFilterUniverse(data, underlying);
-            var filtered = filter.Filter(filterUniverse).Cast<OptionUniverse>().ToList();
+            var filtered = filter.Filter(filterUniverse).ToList();
             Assert.AreEqual(0, filtered.Count);
         }
 
@@ -268,10 +268,10 @@ namespace QuantConnect.Tests.Common.Securities
                     .Strikes(-10, 10)
                     .Expiration(TimeSpan.FromDays(3), TimeSpan.FromDays(7));
 
-            Func<IDerivativeSecurityFilterUniverse, IDerivativeSecurityFilterUniverse> func =
+            Func<IDerivativeSecurityFilterUniverse<OptionUniverse>, IDerivativeSecurityFilterUniverse<OptionUniverse>> func =
                 universe => universeFunc(universe as OptionFilterUniverse);
 
-            var filter = new FuncSecurityDerivativeFilter(func);
+            var filter = new FuncSecurityDerivativeFilter<OptionUniverse>(func);
             var symbols = new[]
             {
                 Symbol.CreateOption("SPY", Market.USA, OptionStyle.American, OptionRight.Put, 10, time.AddDays(0)), // 0
@@ -287,7 +287,7 @@ namespace QuantConnect.Tests.Common.Securities
             };
             var data = symbols.Select(x => new OptionUniverse() { Symbol = x });
             var filterUniverse = new OptionFilterUniverse(data, underlying);
-            var filtered = filter.Filter(filterUniverse).Cast<OptionUniverse>().ToList();
+            var filtered = filter.Filter(filterUniverse).ToList();
             Assert.AreEqual(5, filtered.Count);
             Assert.AreEqual(symbols[3], filtered[0].Symbol);
             Assert.AreEqual(symbols[4], filtered[1].Symbol);
@@ -312,10 +312,10 @@ namespace QuantConnect.Tests.Common.Securities
 
             Func<OptionFilterUniverse, OptionFilterUniverse> universeFunc = universe => universe;
 
-            Func<IDerivativeSecurityFilterUniverse, IDerivativeSecurityFilterUniverse> func =
+            Func<IDerivativeSecurityFilterUniverse<OptionUniverse>, IDerivativeSecurityFilterUniverse<OptionUniverse>> func =
                 universe => universeFunc(universe as OptionFilterUniverse).ApplyTypesFilter();
 
-            var filter = new FuncSecurityDerivativeFilter(func);
+            var filter = new FuncSecurityDerivativeFilter<OptionUniverse>(func);
             var symbols = new[]
             {
                 Symbol.CreateOption("SPY", Market.USA, OptionStyle.American, OptionRight.Put, 2, expiry1),  // 0
@@ -331,7 +331,7 @@ namespace QuantConnect.Tests.Common.Securities
             };
 
             var data = symbols.Select(x => new OptionUniverse() { Symbol = x });
-            var filtered = filter.Filter(new OptionFilterUniverse(data, underlying)).Cast<OptionUniverse>().ToList();
+            var filtered = filter.Filter(new OptionFilterUniverse(data, underlying)).ToList();
             Assert.AreEqual(3, filtered.Count);
             Assert.AreEqual(symbols[5], filtered[0].Symbol);
             Assert.AreEqual(symbols[6], filtered[1].Symbol);
@@ -354,10 +354,10 @@ namespace QuantConnect.Tests.Common.Securities
 
             Func<OptionFilterUniverse, OptionFilterUniverse> universeFunc = universe => universe;
 
-            Func<IDerivativeSecurityFilterUniverse, IDerivativeSecurityFilterUniverse> func =
+            Func<IDerivativeSecurityFilterUniverse<OptionUniverse>, IDerivativeSecurityFilterUniverse<OptionUniverse>> func =
                 universe => universeFunc(universe as OptionFilterUniverse).ApplyTypesFilter();
 
-            var filter = new FuncSecurityDerivativeFilter(func);
+            var filter = new FuncSecurityDerivativeFilter<OptionUniverse>(func);
             var symbols = new[]
             {
                 Symbol.CreateOption("SPY", Market.USA, OptionStyle.American, OptionRight.Put, 2, expiry1),  // 0
@@ -373,7 +373,7 @@ namespace QuantConnect.Tests.Common.Securities
             };
 
             var data = symbols.Select(x => new OptionUniverse() { Symbol = x });
-            var filtered = filter.Filter(new OptionFilterUniverse(data, underlying)).Cast<OptionUniverse>().ToList();
+            var filtered = filter.Filter(new OptionFilterUniverse(data, underlying)).ToList();
             Assert.AreEqual(3, filtered.Count);
             Assert.AreEqual(symbols[5], filtered[0].Symbol);
             Assert.AreEqual(symbols[6], filtered[1].Symbol);
@@ -392,10 +392,10 @@ namespace QuantConnect.Tests.Common.Securities
 
             Func<OptionFilterUniverse, OptionFilterUniverse> universeFunc = universe => universe.WeeklysOnly();
 
-            Func<IDerivativeSecurityFilterUniverse, IDerivativeSecurityFilterUniverse> func =
+            Func<IDerivativeSecurityFilterUniverse<OptionUniverse>, IDerivativeSecurityFilterUniverse<OptionUniverse>> func =
                 universe => universeFunc(universe as OptionFilterUniverse).ApplyTypesFilter();
 
-            var filter = new FuncSecurityDerivativeFilter(func);
+            var filter = new FuncSecurityDerivativeFilter<OptionUniverse>(func);
             var symbols = new[]
             {
                 Symbol.CreateOption("SPY", Market.USA, OptionStyle.American, OptionRight.Put, 2, expiry1),  // 0
@@ -411,7 +411,7 @@ namespace QuantConnect.Tests.Common.Securities
             };
 
             var data = symbols.Select(x => new OptionUniverse() { Symbol = x });
-            var filtered = filter.Filter(new OptionFilterUniverse(data, underlying)).Cast<OptionUniverse>().ToList();
+            var filtered = filter.Filter(new OptionFilterUniverse(data, underlying)).ToList();
             Assert.AreEqual(8, filtered.Count);
         }
 
@@ -427,10 +427,10 @@ namespace QuantConnect.Tests.Common.Securities
 
             Func<OptionFilterUniverse, OptionFilterUniverse> universeFunc = universe => universe.IncludeWeeklys();
 
-            Func<IDerivativeSecurityFilterUniverse, IDerivativeSecurityFilterUniverse> func =
+            Func<IDerivativeSecurityFilterUniverse<OptionUniverse>, IDerivativeSecurityFilterUniverse<OptionUniverse>> func =
                 universe => universeFunc(universe as OptionFilterUniverse).ApplyTypesFilter();
 
-            var filter = new FuncSecurityDerivativeFilter(func);
+            var filter = new FuncSecurityDerivativeFilter<OptionUniverse>(func);
             var symbols = new[]
             {
                 Symbol.CreateOption("SPY", Market.USA, OptionStyle.American, OptionRight.Put, 2, expiry1),  // 0
@@ -446,7 +446,7 @@ namespace QuantConnect.Tests.Common.Securities
             };
             var data = symbols.Select(x => new OptionUniverse() { Symbol = x });
             var filterUniverse = new OptionFilterUniverse(data, underlying);
-            var filtered = filter.Filter(filterUniverse).Cast<OptionUniverse>().ToList();
+            var filtered = filter.Filter(filterUniverse).ToList();
             Assert.AreEqual(10, filtered.Count);
         }
 
@@ -462,10 +462,10 @@ namespace QuantConnect.Tests.Common.Securities
 
             Func<OptionFilterUniverse, OptionFilterUniverse> universeFunc = universe => universe.IncludeWeeklys().FrontMonth();
 
-            Func<IDerivativeSecurityFilterUniverse, IDerivativeSecurityFilterUniverse> func =
+            Func<IDerivativeSecurityFilterUniverse<OptionUniverse>, IDerivativeSecurityFilterUniverse<OptionUniverse>> func =
                 universe => universeFunc(universe as OptionFilterUniverse);
 
-            var filter = new FuncSecurityDerivativeFilter(func);
+            var filter = new FuncSecurityDerivativeFilter<OptionUniverse>(func);
             var symbols = new[]
             {
                 Symbol.CreateOption("SPY", Market.USA, OptionStyle.American, OptionRight.Put, 2, expiry1),  // 0
@@ -481,7 +481,7 @@ namespace QuantConnect.Tests.Common.Securities
             };
 
             var data = symbols.Select(x => new OptionUniverse() { Symbol = x });
-            var filtered = filter.Filter(new OptionFilterUniverse(data, underlying)).Cast<OptionUniverse>().ToList();
+            var filtered = filter.Filter(new OptionFilterUniverse(data, underlying)).ToList();
             Assert.AreEqual(4, filtered.Count);
         }
 
@@ -497,10 +497,10 @@ namespace QuantConnect.Tests.Common.Securities
 
             Func<OptionFilterUniverse, OptionFilterUniverse> universeFunc = universe => universe.IncludeWeeklys().BackMonth();
 
-            Func<IDerivativeSecurityFilterUniverse, IDerivativeSecurityFilterUniverse> func =
+            Func<IDerivativeSecurityFilterUniverse<OptionUniverse>, IDerivativeSecurityFilterUniverse<OptionUniverse>> func =
                 universe => universeFunc(universe as OptionFilterUniverse);
 
-            var filter = new FuncSecurityDerivativeFilter(func);
+            var filter = new FuncSecurityDerivativeFilter<OptionUniverse>(func);
             var symbols = new[]
             {
                 Symbol.CreateOption("SPY", Market.USA, OptionStyle.American, OptionRight.Put, 2, expiry1),  // 0
@@ -517,7 +517,7 @@ namespace QuantConnect.Tests.Common.Securities
 
             var data = symbols.Select(x => new OptionUniverse() { Symbol = x });
             var filterUniverse = new OptionFilterUniverse(data, underlying);
-            var filtered = filter.Filter(filterUniverse).Cast<OptionUniverse>().ToList();
+            var filtered = filter.Filter(filterUniverse).ToList();
             Assert.AreEqual(3, filtered.Count);
         }
 
@@ -549,10 +549,10 @@ def set_filter(universe: OptionFilterUniverse) -> OptionFilterUniverse:
                 return setFilter.Invoke(pyUniverse).GetAndDispose<OptionFilterUniverse>();
             };
 
-            Func<IDerivativeSecurityFilterUniverse, IDerivativeSecurityFilterUniverse> func =
+            Func<IDerivativeSecurityFilterUniverse<OptionUniverse>, IDerivativeSecurityFilterUniverse<OptionUniverse>> func =
                 universe => universeFunc(universe as OptionFilterUniverse);
 
-            var filter = new FuncSecurityDerivativeFilter(func);
+            var filter = new FuncSecurityDerivativeFilter<OptionUniverse>(func);
             var symbols = new[]
             {
                 Symbol.CreateOption("SPY", Market.USA, OptionStyle.American, OptionRight.Put, 2, expiry1),  // 0
@@ -569,7 +569,7 @@ def set_filter(universe: OptionFilterUniverse) -> OptionFilterUniverse:
 
             var data = symbols.Select(x => new OptionUniverse() { Symbol = x });
             var filterUniverse = new OptionFilterUniverse(data, underlying);
-            var filtered = filter.Filter(filterUniverse).Cast<OptionUniverse>().ToList();
+            var filtered = filter.Filter(filterUniverse).ToList();
             Assert.AreEqual(5, filtered.Count);
         }
 

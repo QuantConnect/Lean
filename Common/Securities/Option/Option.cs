@@ -16,6 +16,7 @@
 using Python.Runtime;
 using QuantConnect.Data;
 using QuantConnect.Data.Market;
+using QuantConnect.Data.UniverseSelection;
 using QuantConnect.Interfaces;
 using QuantConnect.Orders;
 using QuantConnect.Orders.Fees;
@@ -450,7 +451,7 @@ namespace QuantConnect.Securities.Option
         /// <summary>
         /// Gets or sets the contract filter
         /// </summary>
-        public IDerivativeSecurityFilter ContractFilter
+        public IDerivativeSecurityFilter<OptionUniverse> ContractFilter
         {
             get; set;
         }
@@ -598,7 +599,7 @@ namespace QuantConnect.Securities.Option
         /// <param name="universeFunc">new universe selection function</param>
         public void SetFilter(Func<OptionFilterUniverse, OptionFilterUniverse> universeFunc)
         {
-            ContractFilter = new FuncSecurityDerivativeFilter(universe =>
+            ContractFilter = new FuncSecurityDerivativeFilter<OptionUniverse>(universe =>
             {
                 var optionUniverse = universe as OptionFilterUniverse;
                 var result = universeFunc(optionUniverse);
@@ -613,7 +614,7 @@ namespace QuantConnect.Securities.Option
         /// <param name="universeFunc">new universe selection function</param>
         public void SetFilter(PyObject universeFunc)
         {
-            ContractFilter = new FuncSecurityDerivativeFilter(universe =>
+            ContractFilter = new FuncSecurityDerivativeFilter<OptionUniverse>(universe =>
             {
                 var optionUniverse = universe as OptionFilterUniverse;
                 using (Py.GIL())
@@ -661,7 +662,7 @@ namespace QuantConnect.Securities.Option
 
         private void SetFilterImp(Func<OptionFilterUniverse, OptionFilterUniverse> universeFunc)
         {
-            ContractFilter = new FuncSecurityDerivativeFilter(universe =>
+            ContractFilter = new FuncSecurityDerivativeFilter<OptionUniverse>(universe =>
             {
                 var optionUniverse = universe as OptionFilterUniverse;
                 var result = universeFunc(optionUniverse);
