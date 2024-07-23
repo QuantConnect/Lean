@@ -25,6 +25,8 @@ namespace QuantConnect
     public static partial class Field
     {
         private readonly static Func<IBaseData, decimal> _high = BaseDataBarPropertyOrValue(x => x.High);
+        private readonly static Func<IBaseData, decimal> _low = BaseDataBarPropertyOrValue(x => x.Low);
+        private readonly static Func<IBaseData, decimal> _open = BaseDataBarPropertyOrValue(x => x.Open);
         private readonly static Func<IBaseData, decimal> _bidClose = BaseDataBarPropertyOrValue(x => ((QuoteBar)x).Bid.Close);
         private readonly static Func<IBaseData, decimal> _bidOpen = BaseDataBarPropertyOrValue(x => ((QuoteBar)x).Bid.Open);
         private readonly static Func<IBaseData, decimal> _bidLow = BaseDataBarPropertyOrValue(x => ((QuoteBar)x).Bid.Low);
@@ -33,13 +35,21 @@ namespace QuantConnect
         private readonly static Func<IBaseData, decimal> _askOpen = BaseDataBarPropertyOrValue(x => ((QuoteBar)x).Ask.Open);
         private readonly static Func<IBaseData, decimal> _askLow = BaseDataBarPropertyOrValue(x => ((QuoteBar)x).Ask.Low);
         private readonly static Func<IBaseData, decimal> _askHigh = BaseDataBarPropertyOrValue(x => ((QuoteBar)x).Ask.High);
+        private readonly static Func<IBaseData, decimal> _bidPrice = TickPropertyOrValue(x => ((Tick)x).BidPrice);
+        private readonly static Func<IBaseData, decimal> _askPrice = TickPropertyOrValue(x => ((Tick)x).AskPrice);
+        private readonly static Func<IBaseData, decimal> _volume = BaseDataBarPropertyOrValue(x => ((TradeBar)x).Volume);
+        private readonly static Func<IBaseData, decimal> _average = BaseDataBarPropertyOrValue(x => (x.Open + x.High + x.Low + x.Close) / 4m);
+        private readonly static Func<IBaseData, decimal> _median = BaseDataBarPropertyOrValue(x => (x.High + x.Low) / 2m);
+        private readonly static Func<IBaseData, decimal> _typical = BaseDataBarPropertyOrValue(x => (x.High + x.Low + x.Close) / 3m);
+        private readonly static Func<IBaseData, decimal> _weighted = BaseDataBarPropertyOrValue(x => (x.High + x.Low + 2 * x.Close) / 4m);
+        private readonly static Func<IBaseData, decimal> _sevenBar = BaseDataBarPropertyOrValue(x => (2 * x.Open + x.High + x.Low + 3 * x.Close) / 7m);
 
         /// <summary>
         /// Gets a selector that selects the Open value
         /// </summary>
         public static Func<IBaseData, decimal> Open
         {
-            get { return BaseDataBarPropertyOrValue(x => x.Open); }
+            get { return _open; }
         }
 
         /// <summary>
@@ -107,6 +117,22 @@ namespace QuantConnect
         }
 
         /// <summary>
+        /// Gets a selector that selectes the Ask price
+        /// </summary>
+        public static Func<IBaseData, decimal> AskPrice
+        {
+            get { return _askPrice; }
+        }
+
+        /// <summary>
+        /// Gets a selector that selectes the Bid price
+        /// </summary>
+        public static Func<IBaseData, decimal> BidPrice
+        {
+            get { return _bidPrice; }
+        }
+
+        /// <summary>
         /// Gets a selector that selects the High value
         /// </summary>
         public static Func<IBaseData, decimal> High
@@ -119,7 +145,7 @@ namespace QuantConnect
         /// </summary>
         public static Func<IBaseData, decimal> Low
         {
-            get { return BaseDataBarPropertyOrValue(x => x.Low); }
+            get { return _low; }
         }
 
         /// <summary>
@@ -135,7 +161,7 @@ namespace QuantConnect
         /// </summary>
         public static Func<IBaseData, decimal> Average
         {
-            get { return BaseDataBarPropertyOrValue(x => (x.Open + x.High + x.Low + x.Close) / 4m); }
+            get { return _average; }
         }
 
         /// <summary>
@@ -143,7 +169,7 @@ namespace QuantConnect
         /// </summary>
         public static Func<IBaseData, decimal> Median
         {
-            get { return BaseDataBarPropertyOrValue(x => (x.High + x.Low) / 2m); }
+            get { return _median; }
         }
 
         /// <summary>
@@ -151,7 +177,7 @@ namespace QuantConnect
         /// </summary>
         public static Func<IBaseData, decimal> Typical
         {
-            get { return BaseDataBarPropertyOrValue(x => (x.High + x.Low + x.Close) / 3m); }
+            get { return _typical; }
         }
 
         /// <summary>
@@ -159,7 +185,7 @@ namespace QuantConnect
         /// </summary>
         public static Func<IBaseData, decimal> Weighted
         {
-            get { return BaseDataBarPropertyOrValue(x => (x.High + x.Low + 2 * x.Close) / 4m); }
+            get { return _weighted; }
         }
 
         /// <summary>
@@ -167,7 +193,7 @@ namespace QuantConnect
         /// </summary>
         public static Func<IBaseData, decimal> SevenBar
         {
-            get { return BaseDataBarPropertyOrValue(x => (2*x.Open + x.High + x.Low + 3*x.Close)/7m); }
+            get { return _sevenBar; }
         }
 
         /// <summary>
@@ -175,7 +201,7 @@ namespace QuantConnect
         /// </summary>
         public static Func<IBaseData, decimal> Volume
         {
-            get { return BaseDataBarPropertyOrValue(x => x is TradeBar ? ((TradeBar)x).Volume : 0m, x => 0m); }
+            get { return _volume; }
         }
 
         private static Func<IBaseData, decimal> BaseDataBarPropertyOrValue(Func<IBaseDataBar, decimal> selector, Func<IBaseData, decimal> defaultSelector = null)
@@ -187,6 +213,21 @@ namespace QuantConnect
                 {
                     return selector(bar);
                 }
+                defaultSelector = defaultSelector ?? (data => data.Value);
+                return defaultSelector(x);
+            };
+        }
+
+        private static Func<IBaseData, decimal> TickPropertyOrValue(Func<Tick, decimal> selector, Func<IBaseData, decimal> defaultSelector = null)
+        {
+            return x =>
+            {
+                var bar = x as Tick;
+                if (bar != null)
+                {
+                    return selector(bar);
+                }
+
                 defaultSelector = defaultSelector ?? (data => data.Value);
                 return defaultSelector(x);
             };

@@ -221,5 +221,49 @@ algo.RegisterIndicator(forex.Symbol, indicator, Resolution.Daily)";
                 Assert.DoesNotThrow(() => PyModule.FromString("RegistersIndicatorProperlyPythonScript", code));
             }
         }
+
+        [Test]
+        public void IndicatorsCanBeRegisteredWithTickDataSelectors()
+        {
+            var ibm = _algorithm.AddEquity("IBM", Resolution.Tick).Symbol;
+            var indicator = _algorithm.Identity(ibm, Resolution.Tick, Field.BidPrice);
+
+            var consolidator = indicator.Consolidators.Single();
+            consolidator.Update(new Tick() { BidPrice = 101 });
+            Assert.AreEqual(101, indicator.Current.Value);
+        }
+
+        [Test]
+        public void IndicatorUseDefaultSelectorWhenDataTypeDoesNotMatchWithSelectorDataType()
+        {
+            var ibm = _algorithm.AddEquity("IBM", Resolution.Tick).Symbol;
+            var indicator = _algorithm.Identity(ibm, Resolution.Tick, Field.BidClose);
+
+            var consolidator = indicator.Consolidators.Single();
+            consolidator.Update(new Tick() { BidPrice = 101, Value = 102 });
+            Assert.AreEqual(102, indicator.Current.Value);
+        }
+
+        [Test]
+        public void IndicatorsCanBeRegisteredWithQuoteDataSelectors()
+        {
+            var ibm = _algorithm.AddEquity("IBM", Resolution.Minute).Symbol;
+            var indicator = _algorithm.Identity(ibm, Resolution.Minute, Field.BidClose);
+
+            var consolidator = indicator.Consolidators.Single();
+            consolidator.Update(new QuoteBar() { Bid = new Bar() { Close = 101 }});
+            Assert.AreEqual(101, indicator.Current.Value);
+        }
+
+        [Test]
+        public void IndicatorsCanBeRegisteredWithTradeDataSelectors()
+        {
+            var ibm = _algorithm.AddEquity("IBM", Resolution.Minute).Symbol;
+            var indicator = _algorithm.Identity(ibm, Resolution.Minute, Field.Volume);
+
+            var consolidator = indicator.Consolidators.Single();
+            consolidator.Update(new TradeBar() { Volume = 101 });
+            Assert.AreEqual(101, indicator.Current.Value);
+        }
     }
 }

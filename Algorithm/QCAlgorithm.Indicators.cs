@@ -39,6 +39,11 @@ namespace QuantConnect.Algorithm
             Field.AskHigh,
         };
 
+        private readonly List<Func<IBaseData, decimal>> _tickRequiredFields = new() {
+            Field.BidPrice,
+            Field.AskPrice
+        };
+
         /// <summary>
         /// Gets whether or not WarmUpIndicator is allowed to warm up indicators
         /// </summary>
@@ -3707,6 +3712,14 @@ namespace QuantConnect.Algorithm
             if (_quoteRequiredFields.Any(x => ReferenceEquals(selector, x)))
             {
                 dataType = typeof(QuoteBar);
+            }
+            else if (_tickRequiredFields.Any(x => ReferenceEquals(selector, x)))
+            {
+                dataType = typeof(Tick);
+            }
+            else if (ReferenceEquals(selector, Field.Volume))
+            {
+                dataType = typeof(TradeBar);
             }
 
             foreach (var symbol in symbols)
