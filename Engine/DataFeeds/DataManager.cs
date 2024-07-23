@@ -224,6 +224,8 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                             // with next timeslice, avoid emitting now twice.
                             // We do the same in the 'TimeTriggeredUniverseSubscriptionEnumeratorFactory' when handling changes
                             var startUtc = algorithm.UtcTime;
+                            // If the algorithm is not initialized (locked) the request start time can be even before the algorithm start time,
+                            // like in the case of universe requests that are scheduled to run at a specific time in the past for immediate selection.
                             if (!algorithm.GetLocked() && request.StartTimeUtc < startUtc)
                             {
                                 startUtc = request.StartTimeUtc;
