@@ -28,6 +28,17 @@ namespace QuantConnect.Algorithm
 {
     public partial class QCAlgorithm
     {
+        private readonly List<Func<IBaseData, decimal>> _quoteRequiredFields = new() {
+            Field.BidClose,
+            Field.BidOpen,
+            Field.BidLow,
+            Field.BidHigh,
+            Field.AskClose,
+            Field.AskOpen,
+            Field.AskLow,
+            Field.AskHigh,
+        };
+
         /// <summary>
         /// Gets whether or not WarmUpIndicator is allowed to warm up indicators
         /// </summary>
@@ -1264,7 +1275,6 @@ namespace QuantConnect.Algorithm
             var name = CreateIndicatorName(symbol, $"MAX({period})", resolution);
             var maximum = new Maximum(name, period);
 
-            Type dataType = null;
             // assign a default value for the selector function
             if (selector == null)
             {
@@ -1275,19 +1285,8 @@ namespace QuantConnect.Algorithm
                     selector = x => ((TradeBar)x).High;
                 }
             }
-            else if (ReferenceEquals(selector, Field.BidPrice) &&
-                ReferenceEquals(selector, Field.AskPrice))
-            {
-                dataType = typeof(QuoteBar);
-            }
 
-            RegisterIndicator(symbol, maximum, ResolveConsolidator(symbol, resolution, dataType), selector);
-
-            if (Settings.AutomaticIndicatorWarmUp)
-            {
-                WarmUpIndicator(symbol, maximum, resolution, selector);
-            }
-
+            InitializeIndicator(maximum, resolution, selector, symbol);
             return maximum;
         }
 
@@ -1381,7 +1380,6 @@ namespace QuantConnect.Algorithm
             var name = CreateIndicatorName(symbol, $"MIN({period})", resolution);
             var minimum = new Minimum(name, period);
 
-            Type dataType = default;
             // assign a default value for the selector function
             if (selector == null)
             {
@@ -1392,19 +1390,8 @@ namespace QuantConnect.Algorithm
                     selector = x => ((TradeBar)x).Low;
                 }
             }
-            else if (ReferenceEquals(selector, Field.BidPrice) ||
-                ReferenceEquals(selector, Field.AskPrice))
-            {
-                dataType = typeof(QuoteBar);
-            }
 
-            RegisterIndicator(symbol, minimum, ResolveConsolidator(symbol, resolution, dataType), selector);
-
-            if (Settings.AutomaticIndicatorWarmUp)
-            {
-                WarmUpIndicator(symbol, minimum, resolution, selector);
-            }
-
+            InitializeIndicator(minimum, resolution, selector, symbol);
             return minimum;
         }
 
@@ -3716,16 +3703,15 @@ namespace QuantConnect.Algorithm
         private void InitializeIndicator(IndicatorBase<IndicatorDataPoint> indicator, Resolution? resolution = null,
             Func<IBaseData, decimal> selector = null, params Symbol[] symbols)
         {
-            Type dataType = default;
-            if (ReferenceEquals(selector, Field.BidPrice) ||
-                ReferenceEquals(selector, Field.AskPrice))
+            Type dataType = null;
+            if (_quoteRequiredFields.Any(x => ReferenceEquals(selector, x)))
             {
                 dataType = typeof(QuoteBar);
             }
 
             foreach (var symbol in symbols)
             {
-                RegisterIndicator(symbol, indicator, resolution, selector);
+                RegisterIndicator(symbol, indicator, ResolveConsolidator(symbol, resolution, dataType), selector);
             }
 
             if (Settings.AutomaticIndicatorWarmUp)
@@ -3738,15 +3724,9 @@ namespace QuantConnect.Algorithm
             Func<IBaseData, T> selector = null, params Symbol[] symbols)
             where T : class, IBaseData
         {
-            Type dataType = default;
-            if (ReferenceEquals(selector, Field.BidPrice))
-            {
-                dataType = typeof(QuoteBar);
-            }
-
             foreach (var symbol in symbols)
             {
-                RegisterIndicator(symbol, indicator, ResolveConsolidator(symbol, resolution, dataType), selector);
+                RegisterIndicator(symbol, indicator, resolution, selector);
             }
 
             if (Settings.AutomaticIndicatorWarmUp)
