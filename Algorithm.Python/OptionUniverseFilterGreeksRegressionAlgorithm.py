@@ -28,37 +28,72 @@ class OptionUniverseFilterGreeksRegressionAlgorithm(QCAlgorithm):
         option = self.add_option(underlying_ticker)
         self.option_symbol = option.symbol
 
+        self._min_delta = 0.5
+        self._max_delta = 1.5
+        self._min_gamma = 0.0001
+        self._max_gamma = 0.0006
+        self._min_vega = 0.01
+        self._max_vega = 1.5
+        self._min_theta = -2.0
+        self._max_theta = -0.5
+        self._min_rho = 0.5
+        self._max_rho = 3.0
+        self._min_iv = 1.0
+        self._max_iv = 3.0
+        self._min_open_interest = 100
+        self._max_open_interest = 500
+
         self.set_option_filter(option)
 
         self.option_chain_received = False
 
     def set_option_filter(self, security: Option) -> None:
+
         # Contracts can be filtered by greeks, implied volatility, open interest:
         security.set_filter(lambda u: u
-                            .delta(0.5, 1.5)
-                            .gamma(0.0001, 0.0006)
-                            .vega(0.01, 1.5)
-                            .theta(-2.0, -0.5)
-                            .rho(0.5, 3.0)
-                            .implied_volatility(1.0, 3.0)
-                            .open_interest(100, 500))
+                            .delta(self._min_delta, self._max_delta)
+                            .gamma(self._min_gamma, self._max_gamma)
+                            .vega(self._min_vega, self._max_vega)
+                            .theta(self._min_theta, self._max_theta)
+                            .rho(self._min_rho, self._max_rho)
+                            .implied_volatility(self._min_iv, self._max_iv)
+                            .open_interest(self._min_open_interest, self._max_open_interest))
 
         # Note: there are also shortcuts for these filter methods:
         '''
         security.set_filter(lambda u: u
-                            .d(0.5, 1.5)
-                            .g(0.0001, 0.0006)
-                            .v(0.01, 1.5)
-                            .t(-2.0, -0.5)
-                            .r(0.5, 3.0)
-                            .iv(1.0, 3.0)
-                            .oi(100, 500))
+                            .d(self._min_delta, self._max_delta)
+                            .g(self._min_gamma, self._max_gamma)
+                            .v(self._min_vega, self._max_vega)
+                            .t(self._min_theta, self._max_theta)
+                            .r(self._min_rho, self._max_rho)
+                            .iv(self._min_iv, self._max_iv)
+                            .oi(self._min_open_interest, self._max_open_interest))
         '''
 
     def on_data(self, slice: Slice) -> None:
         chain = slice.option_chains.get(self.option_symbol)
         if chain and len(chain.contracts) > 0:
             self.option_chain_received = True
+
+            for contract in chain:
+                if contract.Greeks.Delta < self._min_delta or contract.Greeks.Delta > self._max_delta:
+                    raise RegressionTestException(f"Delta {contract.Greeks.Delta} is not within {self._min_delta} and {self._max_delta}")
+
+                if contract.Greeks.Gamma < self._min_gamma or contract.Greeks.Gamma > self._max_gamma:
+                    raise RegressionTestException(f"Gamma {contract.Greeks.Gamma} is not within {self._min_gamma} and {self._max_gamma}")
+
+                if contract.Greeks.Vega < self._min_vega or contract.Greeks.Vega > self._max_vega:
+                    raise RegressionTestException(f"Vega {contract.Greeks.Vega} is not within {self._min_vega} and {self._max_vega}")
+
+                if contract.Greeks.Theta < self._min_theta or contract.Greeks.Theta > self._max_theta:
+                    raise RegressionTestException(f"Theta {contract.Greeks.Theta} is not within {self._min_theta} and {self._max_theta}")
+
+                if contract.Greeks.Rho < self._min_rho or contract.Greeks.Rho > self._max_rho:
+                    raise RegressionTestException(f"Rho {contract.Greeks.Rho} is not within {self._min_rho} and {self._max_rho}")
+
+                if contract.ImpliedVolatility < self._min_iv or contract.ImpliedVolatility > self._max_iv:
+                    raise RegressionTestException(f"Implied volatility {contract.ImpliedVolatility} is not within {self._min_iv} and {self._max_iv}")
 
     def on_end_of_algorithm(self) -> None:
         if not self.option_chain_received:
