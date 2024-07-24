@@ -27,13 +27,13 @@ class OptionUniverseFilterOptionsDataRegressionAlgorithm(OptionUniverseFilterGre
 
         '''
         security.set_filter(lambda u: u
-                            .delta(0.5, 1.5)
-                            .gamma(0.0001, 0.0006)
-                            .vega(0.01, 1.5)
-                            .theta(-2.0, -0.5)
-                            .rho(0.5, 3.0)
-                            .implied_volatility(1.0, 3.0)
-                            .open_interest(100, 500))
+                            .delta(self._min_delta, self._max_delta)
+                            .gamma(self._min_gamma, self._max_gamma)
+                            .vega(self._min_vega, self._max_vega)
+                            .theta(self._min_theta, self._max_theta)
+                            .rho(self._min_rho, self._max_rho)
+                            .implied_volatility(self._min_iv, self._max_iv)
+                            .open_interest(self._min_open_interest, self._max_open_interest))
         '''
 
         security.set_filter(
@@ -44,11 +44,11 @@ class OptionUniverseFilterOptionsDataRegressionAlgorithm(OptionUniverseFilterGre
                     contract for contract in contracts
                     # Can access the contract data here and do some filtering based on it is needed.
                     # More complex math can be done here for filtering, but will be simple here for demonstration sake:
-                    if (contract.Greeks.Delta > 0.5 and contract.Greeks.Delta < 1.5 and
-                        contract.Greeks.Gamma > 0.0001 and contract.Greeks.Gamma < 0.0006 and
-                        contract.Greeks.Vega > 0.01 and contract.Greeks.Vega < 1.5 and
-                        contract.Greeks.Theta > -2.0 and contract.Greeks.Theta < -0.5 and
-                        contract.Greeks.Rho > 0.5 and contract.Greeks.Rho < 3.0 and
-                        contract.ImpliedVolatility > 1.0 and contract.ImpliedVolatility < 3.0 and
-                        contract.OpenInterest > 100 and contract.OpenInterest < 500)
+                    if (contract.Greeks.Delta > self._min_delta and contract.Greeks.Delta < self._max_delta and
+                        contract.Greeks.Gamma > self._min_gamma and contract.Greeks.Gamma < self._max_gamma and
+                        contract.Greeks.Vega > self._min_vega and contract.Greeks.Vega < self._max_vega and
+                        contract.Greeks.Theta > self._min_theta and contract.Greeks.Theta < self._max_theta and
+                        contract.Greeks.Rho > self._min_rho and contract.Greeks.Rho < self._max_rho and
+                        contract.ImpliedVolatility > self._min_iv and contract.ImpliedVolatility < self._max_iv and
+                        contract.OpenInterest > self._min_open_interest and contract.OpenInterest < self._max_open_interest)
                     ]))

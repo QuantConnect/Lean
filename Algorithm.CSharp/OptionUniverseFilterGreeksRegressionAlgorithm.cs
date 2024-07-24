@@ -15,7 +15,6 @@
 */
 
 using System.Collections.Generic;
-using System.Linq;
 using QuantConnect.Data;
 using QuantConnect.Interfaces;
 using QuantConnect.Securities.Option;
@@ -31,6 +30,21 @@ namespace QuantConnect.Algorithm.CSharp
         private Symbol _optionSymbol;
         private bool _optionChainReceived;
 
+        protected decimal MinDelta { get; set; }
+        protected decimal MaxDelta { get; set; }
+        protected decimal MinGamma { get; set; }
+        protected decimal MaxGamma { get; set; }
+        protected decimal MinVega { get; set; }
+        protected decimal MaxVega { get; set; }
+        protected decimal MinTheta { get; set; }
+        protected decimal MaxTheta { get; set; }
+        protected decimal MinRho { get; set; }
+        protected decimal MaxRho { get; set; }
+        protected decimal MinIv { get; set; }
+        protected decimal MaxIv { get; set; }
+        protected long MinOpenInterest { get; set; }
+        protected long MaxOpenInterest { get; set; }
+
         public override void Initialize()
         {
             SetStartDate(2015, 12, 24);
@@ -41,6 +55,21 @@ namespace QuantConnect.Algorithm.CSharp
             var option = AddOption(UnderlyingTicker);
             _optionSymbol = option.Symbol;
 
+            MinDelta = 0.5m;
+            MaxDelta = 1.5m;
+            MinGamma = 0.0001m;
+            MaxGamma = 0.0006m;
+            MinVega = 0.01m;
+            MaxVega = 1.5m;
+            MinTheta = -2.0m;
+            MaxTheta = -0.5m;
+            MinRho = 0.5m;
+            MaxRho = 3.0m;
+            MinIv = 1.0m;
+            MaxIv = 3.0m;
+            MinOpenInterest = 100;
+            MaxOpenInterest = 500;
+
             SetOptionFilter(option);
         }
 
@@ -48,24 +77,24 @@ namespace QuantConnect.Algorithm.CSharp
         {
             // Contracts can be filtered by greeks, implied volatility, open interest:
             security.SetFilter(u => u
-                .Delta(0.5m, 1.5m)
-                .Gamma(0.0001m, 0.0006m)
-                .Vega(0.01m, 1.5m)
-                .Theta(-2.0m, -0.5m)
-                .Rho(0.5m, 3.0m)
-                .ImpliedVolatility(1.0m, 3.0m)
-                .OpenInterest(100, 500));
+                .Delta(MinDelta, MaxDelta)
+                .Gamma(MinGamma, MaxGamma)
+                .Vega(MinVega, MaxVega)
+                .Theta(MinTheta, MaxTheta)
+                .Rho(MinRho, MaxRho)
+                .ImpliedVolatility(MinIv, MaxIv)
+                .OpenInterest(MinOpenInterest, MaxOpenInterest));
 
             // Note: there are also shortcuts for these filter methods:
             /*
             security.SetFilter(u => u
-                .D(0.5m, 1.5m)
-                .G(0.0001m, 0.0006m)
-                .V(0.01m, 1.5m)
-                .T(-2.0m, -0.5m)
-                .R(0.5m, 3.0m)
-                .IV(1.0m, 3.0m)
-                .OI(100, 500));
+                .D(MinDelta, MaxDelta)
+                .G(MinGamma, MaxGamma)
+                .V(MinVega, MaxVega)
+                .T(MinTheta, MaxTheta)
+                .R(MinRho, MaxRho)
+                .IV(MinIv, MaxIv)
+                .OI(MinOpenInterest, MaxOpenInterest));
             */
         }
 
@@ -73,8 +102,46 @@ namespace QuantConnect.Algorithm.CSharp
         {
             if (slice.OptionChains.TryGetValue(_optionSymbol, out var chain) && chain.Contracts.Count > 0)
             {
-                Log($"[{Time}] :: Recieved option chain with {chain.Contracts.Count} contracts");
+                Log($"[{Time}] :: Received option chain with {chain.Contracts.Count} contracts");
                 _optionChainReceived = true;
+
+                foreach (var contract in chain)
+                {
+                    if (contract.Greeks.Delta < MinDelta || contract.Greeks.Delta > MaxDelta)
+                    {
+                        throw new RegressionTestException($"Delta {contract.Greeks.Delta} is not within {MinDelta} and {MaxDelta}");
+                    }
+
+                    if (contract.Greeks.Gamma < MinGamma || contract.Greeks.Gamma > MaxGamma)
+                    {
+                        throw new RegressionTestException($"Gamma {contract.Greeks.Gamma} is not within {MinGamma} and {MaxGamma}");
+                    }
+
+                    if (contract.Greeks.Vega < MinVega || contract.Greeks.Vega > MaxVega)
+                    {
+                        throw new RegressionTestException($"Vega {contract.Greeks.Vega} is not within {MinVega} and {MaxVega}");
+                    }
+
+                    if (contract.Greeks.Theta < MinTheta || contract.Greeks.Theta > MaxTheta)
+                    {
+                        throw new RegressionTestException($"Theta {contract.Greeks.Theta} is not within {MinTheta} and {MaxTheta}");
+                    }
+
+                    if (contract.Greeks.Rho < MinRho || contract.Greeks.Rho > MaxRho)
+                    {
+                        throw new RegressionTestException($"Rho {contract.Greeks.Rho} is not within {MinRho} and {MaxRho}");
+                    }
+
+                    if (contract.ImpliedVolatility < MinIv || contract.ImpliedVolatility > MaxIv)
+                    {
+                        throw new RegressionTestException($"Implied volatility {contract.ImpliedVolatility} is not within {MinIv} and {MaxIv}");
+                    }
+
+                    if (contract.OpenInterest < MinOpenInterest || contract.OpenInterest > MaxOpenInterest)
+                    {
+                        throw new RegressionTestException($"Open interest {contract.OpenInterest} is not within {MinOpenInterest} and {MaxOpenInterest}");
+                    }
+                }
             }
         }
 

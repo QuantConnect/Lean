@@ -32,13 +32,13 @@ namespace QuantConnect.Algorithm.CSharp
             // but it is more flexible and allows for more complex filtering:
 
             //security.SetFilter(u => u
-            //    .Delta(0.5m, 1.5m)
-            //    .Gamma(0.0001m, 0.0006m)
-            //    .Vega(0.01m, 1.5m)
-            //    .Theta(-2.0m, -0.5m)
-            //    .Rho(0.5m, 3.0m)
-            //    .ImpliedVolatility(1.0m, 3.0m)
-            //    .OpenInterest(100, 500));
+            //    .Delta(MinDelta, MaxDelta)
+            //    .Gamma(MinGamma, MaxGamma)
+            //    .Vega(MinVega, MaxVega)
+            //    .Theta(MinTheta, MaxTheta)
+            //    .Rho(MinRho, MaxRho)
+            //    .ImpliedVolatility(MinIv, MaxIv)
+            //    .OpenInterest(MinOpenInterest, MaxOpenInterest));
 
             security.SetFilter(u => u.Contracts(contracts =>
             {
@@ -54,13 +54,13 @@ namespace QuantConnect.Algorithm.CSharp
                         var openInterest = contract.OpenInterest;
 
                         // More complex math can be done here for filtering, but will be simple here for demonstration sake:
-                        return greeks.Delta > 0.5m && greeks.Delta < 1.5m &&
-                               greeks.Gamma > 0.0001m && greeks.Gamma < 0.0006m &&
-                               greeks.Vega > 0.01m && greeks.Vega < 1.5m &&
-                               greeks.Theta > -2.0m && greeks.Theta < -0.5m &&
-                               greeks.Rho > 0.5m && greeks.Rho < 3.0m &&
-                               iv > 1.0m && iv < 3.0m &&
-                               openInterest > 100 && openInterest < 500;
+                        return greeks.Delta > MinDelta && greeks.Delta < MaxDelta &&
+                            greeks.Gamma > MinGamma && greeks.Gamma < MaxGamma &&
+                            greeks.Vega > MinVega && greeks.Vega < MaxVega &&
+                            greeks.Theta > MinTheta && greeks.Theta < MaxTheta &&
+                            greeks.Rho > MinRho && greeks.Rho < MaxRho &&
+                            iv > MinIv && iv < MaxIv &&
+                            openInterest > MinOpenInterest && openInterest < MaxOpenInterest;
                     })
                     .Select(contract => contract.Symbol);
             }));
