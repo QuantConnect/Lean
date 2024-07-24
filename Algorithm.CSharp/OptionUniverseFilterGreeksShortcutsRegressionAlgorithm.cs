@@ -28,13 +28,13 @@ namespace QuantConnect.Algorithm.CSharp
         {
             // Contracts can be filtered by greeks, implied volatility, open interest:
             security.SetFilter(u => u
-                .D(0.5m, 1.5m)
-                .G(0.0001m, 0.0006m)
-                .V(0.01m, 1.5m)
-                .T(-2.0m, -0.5m)
-                .R(0.5m, 3.0m)
-                .IV(1.0m, 3.0m)
-                .OI(100, 500));
+                .D(MinDelta, MaxDelta)
+                .G(MinGamma, MaxGamma)
+                .V(MinVega, MaxVega)
+                .T(MinTheta, MaxTheta)
+                .R(MinRho, MaxRho)
+                .IV(MinIv, MaxIv)
+                .OI(MinOpenInterest, MaxOpenInterest));
         }
 
         /// <summary>
