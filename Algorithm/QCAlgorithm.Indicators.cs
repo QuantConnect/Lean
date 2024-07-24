@@ -3713,10 +3713,6 @@ namespace QuantConnect.Algorithm
             {
                 dataType = typeof(QuoteBar);
             }
-            else if (_tickRequiredFields.Any(x => ReferenceEquals(selector, x)))
-            {
-                dataType = typeof(Tick);
-            }
             else if (ReferenceEquals(selector, Field.Volume))
             {
                 dataType = typeof(TradeBar);

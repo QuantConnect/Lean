@@ -13,12 +13,12 @@
  * limitations under the License.
 */
 
-using Fasterflect;
 using QuantConnect.Data;
-using QuantConnect.Data.Market;
 using QuantConnect.Indicators;
 using QuantConnect.Interfaces;
+using System;
 using System.Collections.Generic;
+using System.Data;
 using System.Linq;
 
 namespace QuantConnect.Algorithm.CSharp
@@ -29,61 +29,62 @@ namespace QuantConnect.Algorithm.CSharp
     /// </summary>
     public class IndicatorSelectorsWorkWithDifferentOptions: QCAlgorithm, IRegressionAlgorithmDefinition
     {
-        private Indicator _bidCloseIndicator;
-        private Indicator _bidOpenIndicator;
-        private Indicator _bidLowIndicator;
-        private Indicator _bidHighIndicator;
-        private Indicator _askCloseIndicator;
-        private Indicator _askOpenIndicator;
-        private Indicator _askLowIndicator;
-        private Indicator _askHighIndicator;
-        private List<Indicator> _indicators;
+        private List<Indicator> _equityIndicators;
+        private Indicator _optionIndicator;
+        private Symbol _equity;
+        private Symbol _option;
         private bool _quoteBarsFound;
+        private bool _tradeBarsFound;
 
         public override void Initialize()
         {
-            SetStartDate(2013, 10, 07);
-            SetEndDate(2013, 10, 08);
+            SetStartDate(2013, 06, 07);
+            SetEndDate(2013, 11, 08);
 
-            var symbol = AddEquity("SPY", Resolution.Minute).Symbol;
-            _bidCloseIndicator = Identity(symbol, Resolution.Minute, Field.BidClose, "Bid.Close.");
-            _bidOpenIndicator = Identity(symbol, Resolution.Minute, Field.BidOpen, "Bid.Open.");
-            _bidLowIndicator = Identity(symbol, Resolution.Minute, Field.BidLow, "Bid.Low.");
-            _bidHighIndicator = Identity(symbol, Resolution.Minute, Field.BidHigh, "Bid.High.");
+            _equity = AddEquity("SPY", Resolution.Minute).Symbol;
+            _option = AddOption("NWSA", Resolution.Minute).Symbol;
+            _option = QuantConnect.Symbol.CreateOption("NWSA", Market.USA, OptionStyle.American, OptionRight.Put, 33, new DateTime(2013, 07, 20));
+            AddOptionContract(_option, Resolution.Minute);
 
-            _askCloseIndicator = Identity(symbol, Resolution.Minute, Field.AskClose, "Ask.Close.");
-            _askOpenIndicator = Identity(symbol, Resolution.Minute, Field.AskOpen, "Ask.Open.");
-            _askLowIndicator = Identity(symbol, Resolution.Minute, Field.AskLow, "Ask.Low.");
-            _askHighIndicator = Identity(symbol, Resolution.Minute, Field.AskHigh, "Ask.High.");
-
-            _indicators = new List<Indicator>()
+            _equityIndicators = new List<Indicator>()
             {
-                _bidCloseIndicator,
-                _bidOpenIndicator,
-                _bidLowIndicator,
-                _bidHighIndicator,
-                _askCloseIndicator,
-                _askOpenIndicator,
-                _askLowIndicator,
-                _askHighIndicator,
+                Identity(_equity, Resolution.Minute, Field.BidClose, "Bid.Close."),
+                Identity(_equity, Resolution.Minute, Field.BidOpen, "Bid.Open."),
+                Identity(_equity, Resolution.Minute, Field.BidLow, "Bid.Low."),
+                Identity(_equity, Resolution.Minute, Field.BidHigh, "Bid.High."),
+                Identity(_equity, Resolution.Minute, Field.AskClose, "Ask.Close."),
+                Identity(_equity, Resolution.Minute, Field.AskOpen, "Ask.Open."),
+                Identity(_equity, Resolution.Minute, Field.AskLow, "Ask.Low."),
+                Identity(_equity, Resolution.Minute, Field.AskHigh, "Ask.High."),
             };
+
+            _optionIndicator = Identity(_option, Resolution.Minute, Field.Volume, "Volume.");
         }
 
         public override void OnData(Slice slice)
         {
-            if (slice.QuoteBars.Any())
+            if (slice.QuoteBars.ContainsKey(_equity))
             {
                 _quoteBarsFound = true;
-                var wrongIndicators = _indicators.Where(x =>
+                var wrongEquityIndicators = _equityIndicators.Where(x =>
                 {
                     var propertyName = x.Name.Split(".")[0]; // This could be Ask/Bid
                     var secondPropertyName = x.Name.Split(".")[1]; // This could be Open/Close/High/Low
-                    var property = slice.QuoteBars["SPY"].GetType().GetProperty(propertyName).GetValue(slice.QuoteBars["SPY"], null);
+                    var property = slice.QuoteBars[_equity].GetType().GetProperty(propertyName).GetValue(slice.QuoteBars[_equity], null);
                     var value = (decimal)property.GetType().GetProperty(secondPropertyName).GetValue(property, null);
                     return x.Current.Value != value;
                 });
 
-                if (wrongIndicators.Any())
+                if (wrongEquityIndicators.Any())
+                {
+                    throw new RegressionTestException();
+                }
+            }
+
+            if (slice.OptionChains.ContainsKey(_option.Canonical) && slice.OptionChains[_option.Canonical].TradeBars.ContainsKey(_option))
+            {
+                _tradeBarsFound = true;
+                if (_optionIndicator.Current.Value != slice.OptionChains[_option.Canonical].TradeBars[_option].Volume)
                 {
                     throw new RegressionTestException();
                 }
@@ -95,6 +96,11 @@ namespace QuantConnect.Algorithm.CSharp
             if (!_quoteBarsFound)
             {
                 throw new RegressionTestException("At least one quote bar should have been found, but none was found");
+            }
+
+            if (!_tradeBarsFound)
+            {
+                throw new RegressionTestException("At least one trade bar should have been found, but none was found");
             }
         }
 
@@ -111,7 +117,7 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// Data Points count of all timeslices of algorithm
         /// </summary>
-        public long DataPoints => 1582;
+        public long DataPoints => 4536849;
 
         /// <summary>
         /// Data Points count of the algorithm history
@@ -147,8 +153,8 @@ namespace QuantConnect.Algorithm.CSharp
             {"Beta", "0"},
             {"Annual Standard Deviation", "0"},
             {"Annual Variance", "0"},
-            {"Information Ratio", "0"},
-            {"Tracking Error", "0"},
+            {"Information Ratio", "-1.543"},
+            {"Tracking Error", "0.098"},
             {"Treynor Ratio", "0"},
             {"Total Fees", "$0.00"},
             {"Estimated Strategy Capacity", "$0"},

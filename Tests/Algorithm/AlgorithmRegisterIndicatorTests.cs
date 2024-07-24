@@ -24,6 +24,7 @@ using System.Collections.Generic;
 using System.Linq;
 using QuantConnect.Tests.Engine.DataFeeds;
 using QuantConnect.Util;
+using QuantConnect.Data;
 
 namespace QuantConnect.Tests.Algorithm
 {
@@ -233,15 +234,21 @@ algo.RegisterIndicator(forex.Symbol, indicator, Resolution.Daily)";
             Assert.AreEqual(101, indicator.Current.Value);
         }
 
-        [Test]
-        public void IndicatorUseDefaultSelectorWhenDataTypeDoesNotMatchWithSelectorDataType()
+        [TestCaseSource(nameof(IndicatorUseDefaultSelectorWhenResolutionDoesNotMatchWithSelectorDataTypeTestCases))]
+        public void IndicatorUseDefaultSelectorWhenDataTypeDoesNotMatchWithSelectorDataType(
+            Symbol symbol,
+            SecurityType securityType,
+            Resolution resolution,
+            Func<IBaseData, decimal> selector,
+            IBaseData input,
+            decimal expectedValue)
         {
-            var ibm = _algorithm.AddEquity("IBM", Resolution.Tick).Symbol;
-            var indicator = _algorithm.Identity(ibm, Resolution.Tick, Field.BidClose);
+            _algorithm.AddSecurity(symbol, resolution);
+            var indicator = _algorithm.Identity(symbol, resolution, selector);
 
             var consolidator = indicator.Consolidators.Single();
-            consolidator.Update(new Tick() { BidPrice = 101, Value = 102 });
-            Assert.AreEqual(102, indicator.Current.Value);
+            consolidator.Update(input);
+            Assert.AreEqual(expectedValue, indicator.Current.Value);
         }
 
         [Test]
@@ -265,5 +272,12 @@ algo.RegisterIndicator(forex.Symbol, indicator, Resolution.Daily)";
             consolidator.Update(new TradeBar() { Volume = 101 });
             Assert.AreEqual(101, indicator.Current.Value);
         }
+
+        public static object[] IndicatorUseDefaultSelectorWhenResolutionDoesNotMatchWithSelectorDataTypeTestCases =
+        {
+            new object[] {Symbols.IBM, SecurityType.Equity, Resolution.Tick, Field.BidClose, new Tick() { BidPrice = 101, Value = 102 }, 102m },
+            new object[] {Symbols.IBM, SecurityType.Equity, Resolution.Minute, Field.BidPrice, new TradeBar() { Value = 102 }, 102m },
+            new object[] {Symbols.SPY_C_192_Feb19_2016, SecurityType.Option, Resolution.Minute, Field.BidPrice, new TradeBar() { Value = 102 }, 102m }
+        };
     }
 }
