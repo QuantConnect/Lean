@@ -14,6 +14,8 @@
 */
 
 using System;
+using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using NUnit.Framework;
@@ -214,6 +216,119 @@ def TestSmoothingFunction(iv: float, mirror_iv: float) -> float:
             }
 
             Assert.AreEqual(2 * warmUpPeriod.Value, indicator.Samples);
+        }
+
+        [TestCase(OptionPricingModelType.BinomialCoxRossRubinstein, 3.0, 380.0, OptionRight.Call, 60)]
+        [TestCase(OptionPricingModelType.BinomialCoxRossRubinstein, 23.0, 400.0, OptionRight.Call, 60, true)]
+        [TestCase(OptionPricingModelType.BinomialCoxRossRubinstein, 33.0, 420.0, OptionRight.Call, 60, true)]
+        [TestCase(OptionPricingModelType.BinomialCoxRossRubinstein, 50.0, 380.0, OptionRight.Put, 60, true)]
+        [TestCase(OptionPricingModelType.BinomialCoxRossRubinstein, 35.0, 400.0, OptionRight.Put, 60, true)]
+        [TestCase(OptionPricingModelType.BinomialCoxRossRubinstein, 6.0, 420.0, OptionRight.Put, 60)]
+        [TestCase(OptionPricingModelType.BinomialCoxRossRubinstein, 3.0, 380.0, OptionRight.Call, 180)]
+        [TestCase(OptionPricingModelType.BinomialCoxRossRubinstein, 15.0, 400.0, OptionRight.Call, 180, true)]
+        [TestCase(OptionPricingModelType.BinomialCoxRossRubinstein, 35.0, 420.0, OptionRight.Call, 180, true)]
+        [TestCase(OptionPricingModelType.BinomialCoxRossRubinstein, 30.0, 380.0, OptionRight.Put, 180, true)]
+        [TestCase(OptionPricingModelType.BinomialCoxRossRubinstein, 20.0, 400.0, OptionRight.Put, 180, true)]
+        [TestCase(OptionPricingModelType.BinomialCoxRossRubinstein, 1.0, 420.0, OptionRight.Put, 180)]
+        [TestCase(OptionPricingModelType.ForwardTree, 3.0, 380.0, OptionRight.Call, 60)]
+        [TestCase(OptionPricingModelType.ForwardTree, 23.0, 400.0, OptionRight.Call, 60)]
+        [TestCase(OptionPricingModelType.ForwardTree, 33.0, 420.0, OptionRight.Call, 60)]
+        [TestCase(OptionPricingModelType.ForwardTree, 50.0, 380.0, OptionRight.Put, 60)]
+        [TestCase(OptionPricingModelType.ForwardTree, 35.0, 400.0, OptionRight.Put, 60)]
+        [TestCase(OptionPricingModelType.ForwardTree, 6.0, 420.0, OptionRight.Put, 60)]
+        [TestCase(OptionPricingModelType.ForwardTree, 3.0, 380.0, OptionRight.Call, 180)]
+        [TestCase(OptionPricingModelType.ForwardTree, 15.0, 400.0, OptionRight.Call, 180)]
+        [TestCase(OptionPricingModelType.ForwardTree, 35.0, 420.0, OptionRight.Call, 180)]
+        [TestCase(OptionPricingModelType.ForwardTree, 30.0, 380.0, OptionRight.Put, 180)]
+        [TestCase(OptionPricingModelType.ForwardTree, 20.0, 400.0, OptionRight.Put, 180)]
+        [TestCase(OptionPricingModelType.ForwardTree, 1.0, 420.0, OptionRight.Put, 180)]
+        public void LessStepsGiveSameResultAtBetterTimes(OptionPricingModelType model, double price, double spotPrice, OptionRight right, int expiry, bool fails = false)
+        {
+            var symbol = Symbol.CreateOption("SPY", Market.USA, OptionStyle.American, right, 400m, _reference.AddDays(expiry));
+            var stopWatch = new Stopwatch();
+
+            var stepsList = new int[] { 50, 100, 200 };
+            var times = new List<long>();
+            var results = new List<decimal>();
+
+            var csvLine = $"{model},{right},{symbol.ID.StrikePrice},{spotPrice},{expiry}";
+
+            for (var i = 0; i < stepsList.Length; i++)
+        {
+                var steps = stepsList[i];
+
+                stopWatch.Restart();
+
+                var result = 0m;
+                for (var j = 0; j < 30; j++)
+                {
+                    var indicator = new TestableImpliedVolatility(symbol, 0.0530m, 0.0153m, optionModel: model);
+                    indicator.SetSteps(steps);
+
+                    var optionDataPoint = new IndicatorDataPoint(symbol, _reference.AddDays(1), (decimal)price);
+                    var spotDataPoint = new IndicatorDataPoint(symbol.Underlying, _reference.AddDays(1), (decimal)spotPrice);
+
+            indicator.Update(optionDataPoint);
+            indicator.Update(spotDataPoint);
+
+                    result = indicator.Current.Value;
+                }
+
+                var elapsed = stopWatch.ElapsedMilliseconds;
+                times.Add(elapsed);
+                results.Add(result);
+
+                csvLine += $",{steps},{result},{elapsed}";
+            }
+
+            Console.WriteLine(csvLine);
+
+            if (fails)
+            {
+                // TODO: Especial cases for the BinomialCoxRossRubinstein model, where the model is not converging
+                //       or the result is zero. Check the model if necessary to make sure it is working as expected,
+                //       since ForwardTree is able to calculate the IV in all cases.
+                foreach (var result in results)
+                {
+                    Assert.AreEqual(result, 0);
+                }
+            }
+            else
+            {
+                for (var i = 0; i < stepsList.Length; i++)
+                {
+                    for (var j = i + 1; j < stepsList.Length; j++)
+                    {
+                        var diff = Math.Abs(results[i] - results[j]);
+                        var percentDiff = diff / results[i] * 100;
+                        Assert.Less(percentDiff, 3);
+                    }
+                }
+            }
+
+            for (var i = 0; i < times.Count - 1; i++)
+            {
+                Assert.Less(times[i], times[i + 1]);
+            }
+        }
+
+        private class TestableImpliedVolatility : ImpliedVolatility
+        {
+            private int _steps;
+
+            protected override int Steps => _steps;
+
+            public TestableImpliedVolatility(Symbol option, decimal riskFreeRate = 0.05m, decimal dividendYield = 0.0m, Symbol mirrorOption = null,
+                OptionPricingModelType optionModel = OptionPricingModelType.ForwardTree)
+                : base(option, riskFreeRate, dividendYield, mirrorOption, optionModel)
+            {
+
+            }
+
+            public void SetSteps(int steps)
+            {
+                _steps = steps;
+            }
         }
     }
 }

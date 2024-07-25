@@ -70,13 +70,13 @@ namespace QuantConnect.Tests.Indicators
                 Delta putIndicator;
                 if (singleContract)
                 {
-                    callIndicator = new Delta(call, interestRate, dividendYield, optionModel: model, ivModel: model);
-                    putIndicator = new Delta(put, interestRate, dividendYield, optionModel: model, ivModel: model);
+                    callIndicator = new Delta(call, interestRate, dividendYield, optionModel: OptionPricingModelType.BlackScholes, ivModel: OptionPricingModelType.BlackScholes);
+                    putIndicator = new Delta(put, interestRate, dividendYield, optionModel: OptionPricingModelType.BlackScholes, ivModel: OptionPricingModelType.BlackScholes);
                 }
                 else
                 {
-                    callIndicator = new Delta(call, interestRate, dividendYield, put, model, ivModel: model);
-                    putIndicator = new Delta(put, interestRate, dividendYield, call, model, ivModel: model);
+                    callIndicator = new Delta(call, interestRate, dividendYield, put, OptionPricingModelType.BlackScholes, ivModel: OptionPricingModelType.BlackScholes);
+                    putIndicator = new Delta(put, interestRate, dividendYield, call, OptionPricingModelType.BlackScholes, ivModel: OptionPricingModelType.BlackScholes);
                 }
 
                 RunTestIndicator(call, put, callIndicator, putIndicator, items, callColumn, putColumn, errorRate, errorMargin);

@@ -27,8 +27,8 @@ namespace QuantConnect.Indicators
         /// <summary>
         /// Number of steps in binomial tree simulation to obtain Greeks/IV
         /// </summary>
-        public const int Steps = 200;
-     
+        public const int Steps = 100;
+
         /// <summary>
         /// Returns the Black theoretical price for the given arguments
         /// </summary>
