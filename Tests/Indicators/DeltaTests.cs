@@ -26,16 +26,19 @@ namespace QuantConnect.Tests.Indicators
     public class DeltaTests : OptionBaseIndicatorTests<Delta>
     {
         protected override IndicatorBase<IndicatorDataPoint> CreateIndicator()
-            => new Delta("testDeltaIndicator", _symbol, 0.0403m, 0.0m);
+            => new Delta("testDeltaIndicator", _symbol, 0.0403m, 0.0m, optionModel: OptionPricingModelType.BlackScholes,
+                ivModel: OptionPricingModelType.BlackScholes);
 
         protected override OptionIndicatorBase CreateIndicator(IRiskFreeInterestRateModel riskFreeRateModel)
-            => new Delta("testDeltaIndicator", _symbol, riskFreeRateModel);
+            => new Delta("testDeltaIndicator", _symbol, riskFreeRateModel, optionModel: OptionPricingModelType.BlackScholes,
+                ivModel: OptionPricingModelType.BlackScholes);
 
         protected override OptionIndicatorBase CreateIndicator(IRiskFreeInterestRateModel riskFreeRateModel, IDividendYieldModel dividendYieldModel)
-            => new Delta("testDeltaIndicator", _symbol, riskFreeRateModel, dividendYieldModel);
+            => new Delta("testDeltaIndicator", _symbol, riskFreeRateModel, dividendYieldModel, optionModel: OptionPricingModelType.BlackScholes,
+                ivModel: OptionPricingModelType.BlackScholes);
 
         protected override OptionIndicatorBase CreateIndicator(QCAlgorithm algorithm)
-            => algorithm.D(_symbol);
+            => algorithm.D(_symbol, optionModel: OptionPricingModelType.BlackScholes, ivModel: OptionPricingModelType.BlackScholes);
 
         [SetUp]
         public void SetUp()
@@ -67,13 +70,13 @@ namespace QuantConnect.Tests.Indicators
                 Delta putIndicator;
                 if (singleContract)
                 {
-                    callIndicator = new Delta(call, interestRate, dividendYield, optionModel: model);
-                    putIndicator = new Delta(put, interestRate, dividendYield, optionModel: model);
+                    callIndicator = new Delta(call, interestRate, dividendYield, optionModel: model, ivModel: model);
+                    putIndicator = new Delta(put, interestRate, dividendYield, optionModel: model, ivModel: model);
                 }
                 else
                 {
-                    callIndicator = new Delta(call, interestRate, dividendYield, put, model);
-                    putIndicator = new Delta(put, interestRate, dividendYield, call, model);
+                    callIndicator = new Delta(call, interestRate, dividendYield, put, model, ivModel: model);
+                    putIndicator = new Delta(put, interestRate, dividendYield, call, model, ivModel: model);
                 }
 
                 RunTestIndicator(call, put, callIndicator, putIndicator, items, callColumn, putColumn, errorRate, errorMargin);

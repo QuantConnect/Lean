@@ -89,7 +89,7 @@ namespace QuantConnect.Tests.Indicators
             {
                 callIndicator.Update(putDataPoint);
             }
-            
+
             var expected = double.Parse(items[callColumn], NumberStyles.Any, CultureInfo.InvariantCulture);
             var acceptance = Math.Max(errorRate * Math.Abs(expected), errorMargin);     // percentage error
             Assert.AreEqual(expected, (double)callIndicator.Current.Value, acceptance);
@@ -245,7 +245,8 @@ class TestRiskFreeInterestRateModel:
         return 0.5
 
 def getOptionIndicatorBaseIndicator(symbol: Symbol) -> OptionIndicatorBase:
-    return {typeof(T).Name}(symbol, TestRiskFreeInterestRateModel())
+    return {typeof(T).Name}(symbol, TestRiskFreeInterestRateModel(), 
+        optionModel=OptionPricingModelType.BlackScholes{(typeof(T) != typeof(ImpliedVolatility) ? ", ivModel=OptionPricingModelType.BlackScholes" : "")})
             ");
 
             var iv = module.GetAttr("getOptionIndicatorBaseIndicator").Invoke(_symbol.ToPython()).GetAndDispose<T>();
@@ -351,7 +352,8 @@ class TestDividendYieldModel:
         return 0.5
 
 def getOptionIndicatorBaseIndicator(symbol: Symbol) -> OptionIndicatorBase:
-    return {typeof(T).Name}(symbol, InterestRateProvider(), TestDividendYieldModel())
+    return {typeof(T).Name}(symbol, InterestRateProvider(), TestDividendYieldModel(), 
+        optionModel=OptionPricingModelType.BlackScholes{(typeof(T) != typeof(ImpliedVolatility) ? ", ivModel=OptionPricingModelType.BlackScholes" : "")})
             ");
 
             var indicator = module.GetAttr("getOptionIndicatorBaseIndicator").Invoke(_symbol.ToPython()).GetAndDispose<T>();

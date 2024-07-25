@@ -28,16 +28,17 @@ namespace QuantConnect.Tests.Indicators
     public class ImpliedVolatilityTests : OptionBaseIndicatorTests<ImpliedVolatility>
     {
         protected override IndicatorBase<IndicatorDataPoint> CreateIndicator()
-           => new ImpliedVolatility("testImpliedVolatilityIndicator", _symbol, 0.053m, 0.0153m);
+           => new ImpliedVolatility("testImpliedVolatilityIndicator", _symbol, 0.053m, 0.0153m, optionModel: OptionPricingModelType.BlackScholes);
 
         protected override OptionIndicatorBase CreateIndicator(IRiskFreeInterestRateModel riskFreeRateModel)
-            => new ImpliedVolatility("testImpliedVolatilityIndicator", _symbol, riskFreeRateModel);
+            => new ImpliedVolatility("testImpliedVolatilityIndicator", _symbol, riskFreeRateModel, optionModel: OptionPricingModelType.BlackScholes);
 
         protected override OptionIndicatorBase CreateIndicator(IRiskFreeInterestRateModel riskFreeRateModel, IDividendYieldModel dividendYieldModel)
-            => new ImpliedVolatility("testImpliedVolatilityIndicator", _symbol, riskFreeRateModel, dividendYieldModel);
+            => new ImpliedVolatility("testImpliedVolatilityIndicator", _symbol, riskFreeRateModel, dividendYieldModel,
+                optionModel: OptionPricingModelType.BlackScholes);
 
         protected override OptionIndicatorBase CreateIndicator(QCAlgorithm algorithm)
-            => algorithm.IV(_symbol);
+            => algorithm.IV(_symbol, optionModel: OptionPricingModelType.BlackScholes);
 
         [SetUp]
         public void SetUp()
@@ -186,7 +187,8 @@ def TestSmoothingFunction(iv: float, mirror_iv: float) -> float:
         [Test]
         public override void WarmsUpProperly()
         {
-            var indicator = new ImpliedVolatility("testImpliedVolatilityIndicator", _symbol, 0.053m, 0.0153m);
+            var indicator = new ImpliedVolatility("testImpliedVolatilityIndicator", _symbol, 0.053m, 0.0153m,
+                optionModel: OptionPricingModelType.BlackScholes);
             var warmUpPeriod = (indicator as IIndicatorWarmUpPeriodProvider)?.WarmUpPeriod;
 
             if (!warmUpPeriod.HasValue)

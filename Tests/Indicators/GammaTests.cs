@@ -26,16 +26,19 @@ namespace QuantConnect.Tests.Indicators
     public class GammaTests : OptionBaseIndicatorTests<Gamma>
     {
         protected override IndicatorBase<IndicatorDataPoint> CreateIndicator()
-            => new Gamma("testGammaIndicator", _symbol, 0.0403m, 0.0m);
+            => new Gamma("testGammaIndicator", _symbol, 0.0403m, 0.0m, optionModel: OptionPricingModelType.BlackScholes,
+                ivModel: OptionPricingModelType.BlackScholes);
 
         protected override OptionIndicatorBase CreateIndicator(IRiskFreeInterestRateModel riskFreeRateModel)
-            => new Gamma("testGammaIndicator", _symbol, riskFreeRateModel);
+            => new Gamma("testGammaIndicator", _symbol, riskFreeRateModel, optionModel: OptionPricingModelType.BlackScholes,
+                ivModel: OptionPricingModelType.BlackScholes);
 
         protected override OptionIndicatorBase CreateIndicator(IRiskFreeInterestRateModel riskFreeRateModel, IDividendYieldModel dividendYieldModel)
-            => new Gamma("testGammaIndicator", _symbol, riskFreeRateModel, dividendYieldModel);
+            => new Gamma("testGammaIndicator", _symbol, riskFreeRateModel, dividendYieldModel, optionModel: OptionPricingModelType.BlackScholes,
+                ivModel: OptionPricingModelType.BlackScholes);
 
         protected override OptionIndicatorBase CreateIndicator(QCAlgorithm algorithm)
-            => algorithm.G(_symbol);
+            => algorithm.G(_symbol, optionModel: OptionPricingModelType.BlackScholes, ivModel: OptionPricingModelType.BlackScholes);
 
         [SetUp]
         public void SetUp()
@@ -67,13 +70,13 @@ namespace QuantConnect.Tests.Indicators
                 Gamma putIndicator;
                 if (singleContract)
                 {
-                    callIndicator = new Gamma(call, interestRate, dividendYield, optionModel: model);
-                    putIndicator = new Gamma(put, interestRate, dividendYield, optionModel: model);
+                    callIndicator = new Gamma(call, interestRate, dividendYield, optionModel: model, ivModel: model);
+                    putIndicator = new Gamma(put, interestRate, dividendYield, optionModel: model, ivModel: model);
                 }
                 else
                 {
-                    callIndicator = new Gamma(call, interestRate, dividendYield, put, model);
-                    putIndicator = new Gamma(put, interestRate, dividendYield, call, model);
+                    callIndicator = new Gamma(call, interestRate, dividendYield, put, model, ivModel: model);
+                    putIndicator = new Gamma(put, interestRate, dividendYield, call, model, ivModel: model);
                 }
 
                 RunTestIndicator(call, put, callIndicator, putIndicator, items, callColumn, putColumn, errorRate, errorMargin);

@@ -26,16 +26,19 @@ namespace QuantConnect.Tests.Indicators
     public class VegaTests : OptionBaseIndicatorTests<Vega>
     {
         protected override IndicatorBase<IndicatorDataPoint> CreateIndicator()
-            => new Vega("testVegaIndicator", _symbol, 0.0403m, 0.0m);
+            => new Vega("testVegaIndicator", _symbol, 0.0403m, 0.0m, optionModel: OptionPricingModelType.BlackScholes,
+                ivModel: OptionPricingModelType.BlackScholes);
 
         protected override OptionIndicatorBase CreateIndicator(IRiskFreeInterestRateModel riskFreeRateModel)
-            => new Vega("testVegaIndicator", _symbol, riskFreeRateModel);
+            => new Vega("testVegaIndicator", _symbol, riskFreeRateModel, optionModel: OptionPricingModelType.BlackScholes,
+                ivModel: OptionPricingModelType.BlackScholes);
 
         protected override OptionIndicatorBase CreateIndicator(IRiskFreeInterestRateModel riskFreeRateModel, IDividendYieldModel dividendYieldModel)
-            => new Vega("testVegaIndicator", _symbol, riskFreeRateModel, dividendYieldModel);
+            => new Vega("testVegaIndicator", _symbol, riskFreeRateModel, dividendYieldModel, optionModel: OptionPricingModelType.BlackScholes,
+                ivModel: OptionPricingModelType.BlackScholes);
 
         protected override OptionIndicatorBase CreateIndicator(QCAlgorithm algorithm)
-            => algorithm.V(_symbol);
+            => algorithm.V(_symbol, optionModel: OptionPricingModelType.BlackScholes, ivModel: OptionPricingModelType.BlackScholes);
 
         [SetUp]
         public void SetUp()
@@ -49,7 +52,7 @@ namespace QuantConnect.Tests.Indicators
         [TestCase("american/third_party_1_greeks.csv", false, false, 0.2, 2e-4)]
         // Just placing the test and data here, we are unsure about the smoothing function and not going to reverse engineer
         [TestCase("american/third_party_2_greeks.csv", false, true, 10000)]
-        public void ComparesAgainstExternalData(string subPath, bool reset, bool singleContract, double errorRate, double errorMargin = 1e-4, 
+        public void ComparesAgainstExternalData(string subPath, bool reset, bool singleContract, double errorRate, double errorMargin = 1e-4,
             int callColumn = 13, int putColumn = 12)
         {
             var path = Path.Combine("TestData", "greeksindicator", subPath);
@@ -67,13 +70,13 @@ namespace QuantConnect.Tests.Indicators
                 Vega putIndicator;
                 if (singleContract)
                 {
-                    callIndicator = new Vega(call, interestRate, dividendYield, optionModel: model);
-                    putIndicator = new Vega(put, interestRate, dividendYield, optionModel: model);
+                    callIndicator = new Vega(call, interestRate, dividendYield, optionModel: model, ivModel:model);
+                    putIndicator = new Vega(put, interestRate, dividendYield, optionModel: model, ivModel: model);
                 }
                 else
                 {
-                    callIndicator = new Vega(call, interestRate, dividendYield, put, model);
-                    putIndicator = new Vega(put, interestRate, dividendYield, call, model);
+                    callIndicator = new Vega(call, interestRate, dividendYield, put, model, model);
+                    putIndicator = new Vega(put, interestRate, dividendYield, call, model, model);
                 }
 
                 RunTestIndicator(call, put, callIndicator, putIndicator, items, callColumn, putColumn, errorRate, errorMargin);
