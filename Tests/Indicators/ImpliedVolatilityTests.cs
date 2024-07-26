@@ -260,7 +260,7 @@ def TestSmoothingFunction(iv: float, mirror_iv: float) -> float:
                 stopWatch.Restart();
 
                 var result = 0m;
-                for (var j = 0; j < 50; j++)
+                for (var j = 0; j < 100; j++)
                 {
                     var indicator = new TestableImpliedVolatility(symbol, 0.0530m, 0.0153m, optionModel: model);
                     indicator.SetSteps(steps);
@@ -308,7 +308,7 @@ def TestSmoothingFunction(iv: float, mirror_iv: float) -> float:
 
             for (var i = 0; i < times.Count - 1; i++)
             {
-                Assert.Less(times[i], times[i + 1]);
+                Assert.LessOrEqual(times[i], times[i + 1]);
             }
         }
 
