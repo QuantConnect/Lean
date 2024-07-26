@@ -27,7 +27,7 @@ namespace QuantConnect.Indicators
         /// <summary>
         /// Number of steps in binomial tree simulation to obtain Greeks/IV
         /// </summary>
-        public const int Steps = 100;
+        public const int Steps = 150;
 
         /// <summary>
         /// Returns the Black theoretical price for the given arguments
@@ -130,11 +130,12 @@ namespace QuantConnect.Indicators
                 values[i] = OptionPayoff.GetIntrinsicValue(nextPrice, strikePrice, optionType);
             }
 
+            var factor = DecimalMath(Math.Exp, -riskFreeRate * deltaTime);
             for (int period = steps - 1; period >= 0; period--)
             {
                 for (int i = 0; i <= period; i++)
                 {
-                    var binomialValue = DecimalMath(Math.Exp, -riskFreeRate * deltaTime) * (values[i] * probDown + values[i + 1] * probUp);
+                    var binomialValue = factor * (values[i] * probDown + values[i + 1] * probUp);
                     // No advantage for American put option to exercise early in risk-neutral setting
                     if (optionType == OptionRight.Put)
                     {

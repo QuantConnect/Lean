@@ -247,7 +247,7 @@ def TestSmoothingFunction(iv: float, mirror_iv: float) -> float:
             var symbol = Symbol.CreateOption("SPY", Market.USA, OptionStyle.American, right, 400m, _reference.AddDays(expiry));
             var stopWatch = new Stopwatch();
 
-            var stepsList = new int[] { 50, 100, 200 };
+            var stepsList = new int[] { 100, 150, 200 };
             var times = new List<long>();
             var results = new List<decimal>();
 

@@ -49,7 +49,7 @@ namespace QuantConnect.Indicators
             Symbol mirrorOption = null, OptionPricingModelType? optionModel = null, OptionPricingModelType? ivModel = null)
             : base(name, option, riskFreeRateModel, dividendYieldModel, mirrorOption, optionModel)
         {
-            ivModel ??= OptionPricingModelType.ForwardTree;
+            ivModel = GetOptionModel(ivModel, option.ID.OptionStyle);
             WarmUpPeriod = 1;
             ImpliedVolatility = new ImpliedVolatility(name + "_IV", option, riskFreeRateModel, dividendYieldModel, mirrorOption, ivModel.Value);
         }
