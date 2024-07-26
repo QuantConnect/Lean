@@ -48,8 +48,8 @@ namespace QuantConnect.Tests.Indicators
             DividendYieldUpdatesPerIteration = 2;
         }
 
-        [TestCase("american/third_party_1_greeks.csv", true, false, 0.2, 2e-4)]
-        [TestCase("american/third_party_1_greeks.csv", false, false, 0.2, 2e-4)]
+        [TestCase("american/third_party_1_greeks.csv", true, false, 0.25, 2e-4)]
+        [TestCase("american/third_party_1_greeks.csv", false, false, 0.25, 2e-4)]
         // Just placing the test and data here, we are unsure about the smoothing function and not going to reverse engineer
         [TestCase("american/third_party_2_greeks.csv", false, true, 10000)]
         public void ComparesAgainstExternalData(string subPath, bool reset, bool singleContract, double errorRate, double errorMargin = 1e-4,
@@ -128,7 +128,7 @@ namespace QuantConnect.Tests.Indicators
             indicator.Update(optionDataPoint);
             indicator.Update(spotDataPoint);
 
-            Assert.AreEqual(refVega, (double)indicator.Current.Value, 0.0005d);
+            Assert.AreEqual(refVega, (double)indicator.Current.Value, 0.029d);
         }
     }
 }

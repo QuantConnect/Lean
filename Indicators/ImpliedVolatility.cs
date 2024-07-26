@@ -35,7 +35,7 @@ namespace QuantConnect.Indicators
         /// Number of steps in binomial tree simulation to obtain IV
         /// </summary>
         /// <remarks>Made protected for testing purposes</remarks>
-        protected virtual int Steps => 100;
+        protected virtual int Steps => OptionGreekIndicatorsHelper.Steps;
 
         /// <summary>
         /// Initializes a new instance of the ImpliedVolatility class
