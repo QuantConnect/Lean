@@ -32,12 +32,6 @@ namespace QuantConnect.Indicators
         private Func<decimal, decimal, decimal> SmoothingFunction;
 
         /// <summary>
-        /// Number of steps in binomial tree simulation to obtain IV
-        /// </summary>
-        /// <remarks>Made protected for testing purposes</remarks>
-        protected virtual int Steps => OptionGreekIndicatorsHelper.Steps;
-
-        /// <summary>
         /// Initializes a new instance of the ImpliedVolatility class
         /// </summary>
         /// <param name="name">The name of this indicator</param>
@@ -290,12 +284,9 @@ namespace QuantConnect.Indicators
             return optionModel switch
             {
                 // Binomial model also follows BSM process (log-normal)
-                OptionPricingModelType.BinomialCoxRossRubinstein => OptionGreekIndicatorsHelper.CRRTheoreticalPrice(volatility, spotPrice,
-                    strikePrice, timeTillExpiry, riskFreeRate, dividendYield, optionType, Steps),
-                OptionPricingModelType.ForwardTree => OptionGreekIndicatorsHelper.ForwardTreeTheoreticalPrice(volatility, spotPrice, strikePrice,
-                    timeTillExpiry, riskFreeRate, dividendYield, optionType, Steps),
-                _ => OptionGreekIndicatorsHelper.BlackTheoreticalPrice(volatility, spotPrice, strikePrice, timeTillExpiry, riskFreeRate,
-                    dividendYield, optionType),
+                OptionPricingModelType.BinomialCoxRossRubinstein => OptionGreekIndicatorsHelper.CRRTheoreticalPrice(volatility, spotPrice, strikePrice, timeTillExpiry, riskFreeRate, dividendYield, optionType),
+                OptionPricingModelType.ForwardTree => OptionGreekIndicatorsHelper.ForwardTreeTheoreticalPrice(volatility, spotPrice, strikePrice, timeTillExpiry, riskFreeRate, dividendYield, optionType),
+                _ => OptionGreekIndicatorsHelper.BlackTheoreticalPrice(volatility, spotPrice, strikePrice, timeTillExpiry, riskFreeRate, dividendYield, optionType),
             };
         }
 

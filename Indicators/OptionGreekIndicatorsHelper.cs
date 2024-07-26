@@ -14,6 +14,7 @@
 */
 
 using System;
+using System.Runtime.CompilerServices;
 using MathNet.Numerics.Distributions;
 using QuantConnect.Util;
 
@@ -27,7 +28,7 @@ namespace QuantConnect.Indicators
         /// <summary>
         /// Number of steps in binomial tree simulation to obtain Greeks/IV
         /// </summary>
-        public const int Steps = 150;
+        public const int Steps = 200;
 
         /// <summary>
         /// Returns the Black theoretical price for the given arguments
@@ -151,6 +152,7 @@ namespace QuantConnect.Indicators
             return values[0];
         }
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         internal static decimal DecimalMath(Func<double, double> function, decimal input)
         {
             return Convert.ToDecimal(function((double)input));
