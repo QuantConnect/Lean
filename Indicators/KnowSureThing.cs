@@ -85,6 +85,16 @@ namespace QuantConnect.Indicators
         public IndicatorBase<IndicatorDataPoint> Signal { get; }
 
         /// <summary>
+        /// Gets a flag indicating when this indicator is ready and fully initialized
+        /// </summary>
+        public override bool IsReady => ROC1MA.IsReady && ROC2MA.IsReady && ROC3MA.IsReady && ROC4MA.IsReady && SignalLine.IsReady;
+
+        /// <summary>
+        /// Required period, in data points, for the indicator to be ready and fully initialized.
+        /// </summary>
+        public int WarmUpPeriod { get; }
+
+        /// <summary>
         /// Initializes a new instance of the KnowSureThing class
         /// </summary>
         /// <param name="roc1Period">The period over which to compute ROC1</param>
@@ -142,16 +152,6 @@ namespace QuantConnect.Indicators
             KST = new Identity(name + "_KST");
             Signal = new Identity(name + "_Signal");
         }
-
-        /// <summary>
-        /// Gets a flag indicating when this indicator is ready and fully initialized
-        /// </summary>
-        public override bool IsReady => ROC1MA.IsReady && ROC2MA.IsReady && ROC3MA.IsReady && ROC4MA.IsReady && SignalLine.IsReady;
-
-        /// <summary>
-        /// Required period, in data points, for the indicator to be ready and fully initialized.
-        /// </summary>
-        public int WarmUpPeriod { get; }
 
         /// <summary>
         /// Computes the next value of this indicator from the given state
