@@ -20,8 +20,8 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using NUnit.Framework;
+using QuantConnect.Brokerages;
 using QuantConnect.Data;
-using QuantConnect.Data.Market;
 using QuantConnect.Interfaces;
 using QuantConnect.Logging;
 using QuantConnect.Orders;
@@ -130,8 +130,8 @@ namespace QuantConnect.Tests.Brokerages
             {
                 // these securities don't need to be real, just used for the ISecurityProvider impl, required
                 // by brokerages to track holdings
-                SecurityProvider[accountHolding.Symbol] = CreateSecurity(accountHolding.Symbol);
-                SecurityProvider[accountHolding.Symbol].Holdings.SetHoldings(accountHolding.AveragePrice, accountHolding.Quantity);
+                var security = SecurityProvider.GetSecurity(accountHolding.Symbol);
+                security.Holdings.SetHoldings(accountHolding.AveragePrice, accountHolding.Quantity);
             }
             brokerage.OrdersStatusChanged += HandleFillEvents;
 
@@ -156,17 +156,8 @@ namespace QuantConnect.Tests.Brokerages
                     OrderFillEvent.Set();
                 }
 
-                Security security;
-                if (_securityProvider.TryGetValue(orderEvent.Symbol, out security))
-                {
-                    var holding = _securityProvider[orderEvent.Symbol].Holdings;
-                    holding.SetHoldings(orderEvent.FillPrice, holding.Quantity + orderEvent.FillQuantity);
-                }
-                else
-                {
-                    _securityProvider[orderEvent.Symbol] = CreateSecurity(orderEvent.Symbol);
-                    _securityProvider[orderEvent.Symbol].Holdings.SetHoldings(orderEvent.FillPrice, orderEvent.FillQuantity);
-                }
+                var holding = SecurityProvider.GetSecurity(orderEvent.Symbol).Holdings;
+                holding.SetHoldings(orderEvent.FillPrice, holding.Quantity + orderEvent.FillQuantity);
 
                 Log.Trace("--HOLDINGS: " + _securityProvider[orderEvent.Symbol].Holdings);
 
@@ -176,27 +167,7 @@ namespace QuantConnect.Tests.Brokerages
             }
         }
 
-        public static Security CreateSecurity(Symbol symbol)
-        {
-            return new Security(
-                SecurityExchangeHours.AlwaysOpen(TimeZones.NewYork),
-                new SubscriptionDataConfig(
-                    typeof(TradeBar),
-                    symbol,
-                    Resolution.Minute,
-                    TimeZones.NewYork,
-                    TimeZones.NewYork,
-                    false,
-                    false,
-                    false
-                ),
-                new Cash(Currencies.USD, 0, 1m),
-                SymbolProperties.GetDefault(Currencies.USD),
-                ErrorCurrencyConverter.Instance,
-                RegisteredSecurityDataTypesProvider.Null,
-                new SecurityCache()
-            );
-        }
+        protected virtual BrokerageName BrokerageName { get; set; } = BrokerageName.Default;
 
         public OrderProvider OrderProvider
         {
@@ -205,7 +176,7 @@ namespace QuantConnect.Tests.Brokerages
 
         public SecurityProvider SecurityProvider
         {
-            get { return _securityProvider ?? (_securityProvider = new SecurityProvider()); }
+            get { return _securityProvider ?? (_securityProvider = new SecurityProvider(new(), BrokerageName, OrderProvider)); }
         }
 
         /// <summary>

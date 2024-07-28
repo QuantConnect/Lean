@@ -31,7 +31,8 @@ namespace QuantConnect.Brokerages
         private readonly Dictionary<SecurityType, HashSet<OrderType>> _supportOrderTypeBySecurityType = new()
         {
             { SecurityType.Equity, new HashSet<OrderType> { OrderType.Market, OrderType.Limit, OrderType.StopMarket, OrderType.StopLimit, OrderType.TrailingStop } },
-            { SecurityType.Option, new HashSet<OrderType> { OrderType.Market, OrderType.Limit, OrderType.StopMarket, OrderType.StopLimit, OrderType.TrailingStop } },
+            // Market and limit order types see https://docs.alpaca.markets/docs/options-trading-overview
+            { SecurityType.Option, new HashSet<OrderType> { OrderType.Market, OrderType.Limit } },
             { SecurityType.Crypto, new HashSet<OrderType> { OrderType.Market, OrderType.Limit, OrderType.StopLimit }}
         };
 
