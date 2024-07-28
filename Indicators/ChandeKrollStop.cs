@@ -43,6 +43,16 @@ namespace QuantConnect.Indicators
         public IndicatorBase<IndicatorDataPoint> LongStop { get; }
 
         /// <summary>
+        /// Gets a flag indicating when this indicator is ready and fully initialized
+        /// </summary>
+        public override bool IsReady => Samples > 0;
+
+        /// <summary>
+        /// Required period, in data points, for the indicator to be ready and fully initialized.
+        /// </summary>
+        public int WarmUpPeriod { get; }
+
+        /// <summary>
         /// Initializes a new instance of the <see cref="ChandeKrollStop"/> class.
         /// </summary>
         /// <param name="atrPeriod">The period over which to compute the average true range.</param>
@@ -77,16 +87,6 @@ namespace QuantConnect.Indicators
             LongStop = new Identity(name + "_LongStop");
             ShortStop = new Identity(name + "_ShortStop");
         }
-
-        /// <summary>
-        /// Gets a flag indicating when this indicator is ready and fully initialized
-        /// </summary>
-        public override bool IsReady => Samples > 0;
-
-        /// <summary>
-        /// Required period, in data points, for the indicator to be ready and fully initialized.
-        /// </summary>
-        public int WarmUpPeriod { get; }
 
         /// <summary>
         /// Computes the next value of this indicator from the given state
