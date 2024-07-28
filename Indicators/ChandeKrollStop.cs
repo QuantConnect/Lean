@@ -25,7 +25,6 @@ namespace QuantConnect.Indicators
     /// </summary>
     public class ChandeKrollStop : BarIndicator, IIndicatorWarmUpPeriodProvider
     {
-        private readonly int _period;
         private readonly AverageTrueRange _atr;
         private readonly decimal _atrMult;
         private readonly RollingWindow<IBaseDataBar> _inputValues;
@@ -75,8 +74,6 @@ namespace QuantConnect.Indicators
         {
             WarmUpPeriod = 1;
 
-            _period = period;
-
             _high_stop_list = new RollingWindow<decimal>(period);
             _low_stop_list = new RollingWindow<decimal>(period);
 
@@ -96,12 +93,6 @@ namespace QuantConnect.Indicators
         protected override decimal ComputeNextValue(IBaseDataBar input)
         {
             _atr.Update(input);
-
-            if (!IsReady)
-            {
-                return 0m;
-            }
-
             _inputValues.Add(input);
 
             var highs = _inputValues.Select(input => input.High).ToList();
