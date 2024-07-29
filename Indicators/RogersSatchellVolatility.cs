@@ -69,7 +69,7 @@ namespace QuantConnect.Indicators
             if ((input.Open == 0) || (input.High == 0) || (input.Low == 0) || (input.Close == 0))
             {
                 // return a sentinel value
-                return decimal.MinValue;
+                return 0m;
             }
 
             _rollingSum.Update(input.EndTime, (decimal)
