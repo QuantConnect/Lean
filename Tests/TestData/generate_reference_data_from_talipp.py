@@ -4,7 +4,7 @@ from pathlib import Path
 import talipp
 from talipp.indicators import ZLEMA, McGinleyDynamic  # SISO
 from talipp.ohlcv import OHLCVFactory
-from talipp.indicators import VWMA, ChaikinOsc, CHOP, ForceIndex, IBS, KVO, SOBV  # MISO
+from talipp.indicators import VWMA, ChaikinOsc, CHOP, ForceIndex, IBS, KVO, SOBV, RogersSatchell  # MISO
 from talipp.indicators import StochRSI, KST  # SIMO
 from talipp.indicators import ChandeKrollStop, SFX, TTM, VTX, ZigZag  # MIMO
 
@@ -159,6 +159,9 @@ def main():
     )
     generate_reference_data_for_miso_indicator(
         SOBV, {"period": 20}, "SOBV20", "spy_with_sobv"
+    )
+    generate_reference_data_for_miso_indicator(
+        RogersSatchell, {"period": 9}, "RSVolat9", "spy_with_rsvolat"
     )
 
     # SIMO
