@@ -49,7 +49,7 @@ namespace QuantConnect.Algorithm.CSharp
 
         protected void InitializeIndicators(Symbol option)
         {
-            _impliedVolatility = IV(option);
+            _impliedVolatility = IV(option, optionModel: OptionPricingModelType.BlackScholes);
             _delta = D(option, optionModel: OptionPricingModelType.BinomialCoxRossRubinstein, ivModel: OptionPricingModelType.BlackScholes);
             _gamma = G(option, optionModel: OptionPricingModelType.ForwardTree, ivModel: OptionPricingModelType.BlackScholes);
             _vega = V(option, optionModel: OptionPricingModelType.ForwardTree, ivModel: OptionPricingModelType.BlackScholes);
