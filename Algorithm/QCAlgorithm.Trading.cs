@@ -650,6 +650,156 @@ namespace QuantConnect.Algorithm
         }
 
         /// <summary>
+        /// Send a trailing stop limit order to the transaction handler. The newly created order id will be negative if the order is invalid.
+        /// It will calculate the stop price and limit price using the trailing amount, the limit offset and the current market price.
+        /// </summary>
+        /// <param name="symbol">Trading asset symbol</param>
+        /// <param name="quantity">Quantity to be traded</param>
+        /// <param name="trailingAmount">The trailing amount to be used to update the stop price</param>
+        /// <param name="trailingAsPercentage">Whether the <paramref name="trailingAmount"/> is a percentage or an absolute currency value</param>
+        /// <param name="limitOffset">The offset to be used to update the limit price</param>
+        /// <param name="tag">Optional string data tag for the order</param>
+        /// <param name="orderProperties">The order properties to use. Defaults to <see cref="DefaultOrderProperties"/></param>
+        /// <returns>The order ticket instance.</returns>
+        [DocumentationAttribute(TradingAndOrders)]
+        public OrderTicket TrailingStopLimitOrder(Symbol symbol, int quantity, decimal trailingAmount, bool trailingAsPercentage,
+            decimal limitOffset, string tag = "", IOrderProperties orderProperties = null)
+        {
+            return TrailingStopLimitOrder(symbol, (decimal)quantity, trailingAmount, trailingAsPercentage,
+                limitOffset, tag, orderProperties);
+        }
+
+        /// <summary>
+        /// Send a trailing stop limit order to the transaction handler. The newly created order id will be negative if the order is invalid.
+        /// It will calculate the stop price and limit price using the trailing amount, the limit offset and the current market price.
+        /// </summary>
+        /// <param name="symbol">Trading asset symbol</param>
+        /// <param name="quantity">Quantity to be traded</param>
+        /// <param name="trailingAmount">The trailing amount to be used to update the stop price</param>
+        /// <param name="trailingAsPercentage">Whether the <paramref name="trailingAmount"/> is a percentage or an absolute currency value</param>
+        /// <param name="limitOffset">The offset to be used to update the limit price</param>
+        /// <param name="tag">Optional string data tag for the order</param>
+        /// <param name="orderProperties">The order properties to use. Defaults to <see cref="DefaultOrderProperties"/></param>
+        /// <returns>The order ticket instance.</returns>
+        [DocumentationAttribute(TradingAndOrders)]
+        public OrderTicket TrailingStopLimitOrder(Symbol symbol, double quantity, decimal trailingAmount, bool trailingAsPercentage,
+            decimal limitOffset, string tag = "", IOrderProperties orderProperties = null)
+        {
+            return TrailingStopLimitOrder(symbol, quantity.SafeDecimalCast(), trailingAmount, trailingAsPercentage,
+                limitOffset, tag, orderProperties);
+        }
+
+        /// <summary>
+        /// Send a trailing stop limit order to the transaction handler. The newly created order id will be negative if the order is invalid.
+        /// It will calculate the stop price and limit price using the trailing amount, the limit offset and the current market price.
+        /// </summary>
+        /// <param name="symbol">Trading asset symbol</param>
+        /// <param name="quantity">Quantity to be traded</param>
+        /// <param name="trailingAmount">The trailing amount to be used to update the stop price</param>
+        /// <param name="trailingAsPercentage">Whether the <paramref name="trailingAmount"/> is a percentage or an absolute currency value</param>
+        /// <param name="limitOffset">The offset to be used to update the limit price</param>
+        /// <param name="tag">Optional string data tag for the order</param>
+        /// <param name="orderProperties">The order properties to use. Defaults to <see cref="DefaultOrderProperties"/></param>
+        /// <returns>The order ticket instance.</returns>
+        [DocumentationAttribute(TradingAndOrders)]
+        public OrderTicket TrailingStopLimitOrder(Symbol symbol, decimal quantity, decimal trailingAmount, bool trailingAsPercentage,
+            decimal limitOffset, string tag = "", IOrderProperties orderProperties = null)
+        {
+            var security = Securities[symbol];
+            var direction = quantity > 0 ? OrderDirection.Buy : OrderDirection.Sell;
+            var stopPrice = Orders.TrailingStopLimitOrder.CalculateStopPrice(security.Price, trailingAmount, trailingAsPercentage, direction);
+            var limitPrice = Orders.TrailingStopLimitOrder.CalculateLimitPrice(stopPrice, limitOffset, direction);   
+            
+            return TrailingStopLimitOrder(symbol, quantity, stopPrice, limitPrice, trailingAmount, trailingAsPercentage,
+                limitOffset, tag, orderProperties);
+        }
+
+        /// <summary>
+        /// Send a trailing stop limit order to the transaction handler. The newly created order id will be negative if the order is invalid.
+        /// </summary>
+        /// <param name="symbol">Trading asset symbol</param>
+        /// <param name="quantity">Quantity to be traded</param>
+        /// <param name="stopPrice"></param>
+        /// <param name="limitPrice"></param>
+        /// <param name="trailingAmount">The trailing amount to be used to update the stop price</param>
+        /// <param name="trailingAsPercentage">Whether the <paramref name="trailingAmount"/> is a percentage or an absolute currency value</param>
+        /// <param name="limitOffset">The offset to be used to update the limit price</param>
+        /// <param name="tag">Optional string data tag for the order</param>
+        /// <param name="orderProperties">The order properties to use. Defaults to <see cref="DefaultOrderProperties"/></param>
+        /// <returns>The order ticket instance.</returns>
+        [DocumentationAttribute(TradingAndOrders)]
+        public OrderTicket TrailingStopLimitOrder(Symbol symbol, int quantity, decimal stopPrice, decimal limitPrice, decimal trailingAmount,
+            bool trailingAsPercentage, decimal limitOffset, string tag = "", IOrderProperties orderProperties = null)
+        {
+            return TrailingStopLimitOrder(symbol, (decimal)quantity, stopPrice, limitPrice, trailingAmount, trailingAsPercentage, limitOffset,
+                tag, orderProperties);
+        }
+
+        /// <summary>
+        /// Send a trailing stop limit order to the transaction handler. The newly created order id will be negative if the order is invalid.
+        /// </summary>
+        /// <param name="symbol">Trading asset symbol</param>
+        /// <param name="quantity">Quantity to be traded</param>
+        /// <param name="stopPrice"></param>
+        /// <param name="limitPrice"></param>
+        /// <param name="trailingAmount">The trailing amount to be used to update the stop price</param>
+        /// <param name="trailingAsPercentage">Whether the <paramref name="trailingAmount"/> is a percentage or an absolute currency value</param>
+        /// <param name="limitOffset">The offset to be used to update the limit price</param>
+        /// <param name="tag">Optional string data tag for the order</param>
+        /// <param name="orderProperties">The order properties to use. Defaults to <see cref="DefaultOrderProperties"/></param>
+        /// <returns>The order ticket instance.</returns>
+        [DocumentationAttribute(TradingAndOrders)]
+        public OrderTicket TrailingStopLimitOrder(Symbol symbol, double quantity, decimal stopPrice, decimal limitPrice, decimal trailingAmount,
+            bool trailingAsPercentage, decimal limitOffset, string tag = "", IOrderProperties orderProperties = null)
+        {
+            return TrailingStopLimitOrder(symbol, quantity.SafeDecimalCast(), stopPrice, limitPrice, trailingAmount, trailingAsPercentage,
+                limitOffset, tag, orderProperties);
+        }
+
+        /// <summary>
+        /// Send a trailing stop limit order to the transaction handler. The newly created order id will be negative if the order is invalid.
+        /// </summary>
+        /// <param name="symbol">Trading asset symbol</param>
+        /// <param name="quantity">Quantity to be traded</param>
+        /// <param name="stopPrice"></param>
+        /// <param name="limitPrice"></param>
+        /// <param name="trailingAmount">The trailing amount to be used to update the stop price</param>
+        /// <param name="trailingAsPercentage">Whether the <paramref name="trailingAmount"/> is a percentage or an absolute currency value</param>
+        /// <param name="limitOffset">The offset to be used to update the limit price</param>
+        /// <param name="tag">Optional string data tag for the order</param>
+        /// <param name="orderProperties">The order properties to use. Defaults to <see cref="DefaultOrderProperties"/></param>
+        /// <returns>The order ticket instance.</returns>
+        [DocumentationAttribute(TradingAndOrders)]
+        public OrderTicket TrailingStopLimitOrder(Symbol symbol, decimal quantity, decimal stopPrice, decimal limitPrice, decimal trailingAmount,
+            bool trailingAsPercentage, decimal limitOffset, string tag = "", IOrderProperties orderProperties = null)
+        {
+            var security = Securities[symbol];
+            var request = CreateSubmitOrderRequest(
+                orderType: OrderType.TrailingStopLimit,
+                security: security,
+                quantity: quantity,
+                tag: tag,
+                properties: orderProperties,
+                stopPrice: stopPrice,
+                limitPrice: limitPrice,
+                trailingAmount: trailingAmount,
+                trailingAsPercentage: trailingAsPercentage);
+
+            return SubmitOrderRequest(request);
+        }
+
+
+
+
+
+
+
+
+
+
+
+
+        /// <summary>
         /// Send a limit if touched order to the transaction handler:
         /// </summary>
         /// <param name="symbol">String symbol for the asset</param>

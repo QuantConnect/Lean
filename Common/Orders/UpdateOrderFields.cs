@@ -46,6 +46,11 @@ namespace QuantConnect.Orders
         public decimal? TrailingAmount { get; set; }
 
         /// <summary>
+        /// The trailing stop limit order limit offset
+        /// </summary>
+        public decimal? LimitOffset { get; set; }
+
+        /// <summary>
         /// Specify to update the order's tag
         /// </summary>
         public string Tag { get; set; }

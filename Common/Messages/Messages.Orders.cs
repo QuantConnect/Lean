@@ -173,6 +173,12 @@ namespace QuantConnect
                     message += $" TrailingAmount: {trailingAmountString}";
                 }
 
+                if (orderEvent.LimitOffset.HasValue)
+                {
+                    var limitOffsetString = TrailingStopLimitOrder.LimitOffset(orderEvent.LimitOffset.Value, currencySymbol);
+                    message += $" LimitOffset: {limitOffsetString}";
+                }
+
                 if (orderEvent.TriggerPrice.HasValue)
                 {
                     message += Invariant($" TriggerPrice: {currencySymbol}{orderEvent.TriggerPrice.Value.SmartRounding()}");
@@ -227,6 +233,12 @@ namespace QuantConnect
                     var trailingAmountString = TrailingStopOrder.TrailingAmount(orderEvent.TrailingAmount.Value,
                         orderEvent.TrailingAsPercentage ?? false, currencySymbol);
                     message += $" TA: {trailingAmountString}";
+                }
+
+                if (orderEvent.LimitOffset.HasValue)
+                {
+                    var limitOffsetString = TrailingStopLimitOrder.LimitOffset(orderEvent.LimitOffset.Value, currencySymbol);
+                    message += $" LimitOffset: {limitOffsetString}";
                 }
 
                 if (orderEvent.TriggerPrice.HasValue)
@@ -515,6 +527,89 @@ namespace QuantConnect
         }
 
         /// <summary>
+        /// Provides user-facing messages for the <see cref="Orders.TrailingStopLimitOrder"/> class and its consumers or related classes
+        /// </summary>
+        public static class TrailingStopLimitOrder
+        {
+            /// <summary>
+            /// Returns a tag message for the given TrailingStopLimitOrder
+            /// </summary>
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            public static string Tag(Orders.TrailingStopLimitOrder order)
+            {
+                return Invariant($"Trailing Amount: {TrailingAmount(order)}. Limit Offset: {LimitOffset(order)}.");
+            }
+
+            /// <summary>
+            /// Parses a TrailingStopLimitOrder into a string
+            /// </summary>
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            public static string ToString(Orders.TrailingStopLimitOrder order)
+            {
+                var currencySymbol = QuantConnect.Currencies.GetCurrencySymbol(order.PriceCurrency);
+                return Invariant($@"{Order.ToString(order)} at stop {currencySymbol}{order.StopPrice.SmartRounding()} and limit {
+                    currencySymbol}{order.LimitPrice.SmartRounding()}. Trailing amount: {
+                    TrailingAmount(order, currencySymbol)}. Limit offset: {LimitOffset(order, currencySymbol)}.");
+            }
+
+            /// <summary>
+            /// Returns a TrailingAmount string representation for the given TrailingStopLimitOrder
+            /// </summary>
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            public static string TrailingAmount(Orders.TrailingStopLimitOrder order)
+            {
+                var currencySymbol = QuantConnect.Currencies.GetCurrencySymbol(order.PriceCurrency);
+                return TrailingAmount(order.TrailingAmount, order.TrailingAsPercentage, currencySymbol);
+            }
+
+            /// <summary>
+            /// Returns a TrailingAmount string representation for the given TrailingStopLimitOrder
+            /// </summary>
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            public static string TrailingAmount(Orders.TrailingStopLimitOrder order, string priceCurrency)
+            {
+                return TrailingAmount(order.TrailingAmount, order.TrailingAsPercentage, priceCurrency);
+            }
+
+            /// <summary>
+            /// Returns a message for the given TrailingAmount and PriceCurrency values taking into account if the trailing is as percentage
+            /// </summary>
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            public static string TrailingAmount(decimal trailingAmount, bool trailingAsPercentage, string priceCurrency)
+            {
+                return trailingAsPercentage ? Invariant($"{trailingAmount * 100}%") : Invariant($"{priceCurrency}{trailingAmount}");
+            }
+
+            /// <summary>
+            /// Returns a LimitOffset string representation for the given TrailingStopLimitOrder
+            /// </summary>
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            public static string LimitOffset(Orders.TrailingStopLimitOrder order)
+            {
+                var currencySymbol = QuantConnect.Currencies.GetCurrencySymbol(order.PriceCurrency);
+                return LimitOffset(order, currencySymbol);
+            }
+
+            /// <summary>
+            /// Returns a LimitOffset string representation for the given TrailingStopLimitOrder
+            /// </summary>
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            public static string LimitOffset(Orders.TrailingStopLimitOrder order, string priceCurrency)
+            {
+                return LimitOffset(order.LimitOffset, priceCurrency);
+            }
+
+            /// <summary>
+            /// Returns a LimitOffset string representation for the given TrailingStopLimitOrder
+            /// </summary>
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            public static string LimitOffset(decimal limitOffset, string priceCurrency)
+            {
+                return Invariant($"{priceCurrency}{limitOffset}");
+            }
+        }
+
+        /// <summary>
         /// Provides user-facing messages for the <see cref="Orders.SubmitOrderRequest"/> class and its consumers or related classes
         /// </summary>
         public static class SubmitOrderRequest
@@ -530,7 +625,7 @@ namespace QuantConnect
                 return Invariant($"{request.Time} UTC: Submit Order: ({request.OrderId}) - {proxy} {request.Tag} Status: {request.Status}");
             }
         }
-
+        
         /// <summary>
         /// Provides user-facing messages for the <see cref="Orders.UpdateOrderRequest"/> class and its consumers or related classes
         /// </summary>
@@ -562,6 +657,10 @@ namespace QuantConnect
                 if (request.TriggerPrice.HasValue)
                 {
                     updates.Add(Invariant($"TriggerPrice: {request.TriggerPrice.Value.SmartRounding()}"));
+                }
+                if (request.LimitOffset.HasValue)
+                {
+                    updates.Add(Invariant($"LimitOffset: {request.LimitOffset.Value.SmartRounding()}"));
                 }
 
                 return Invariant($@"{request.Time} UTC: Update Order: ({request.OrderId}) - {string.Join(", ", updates)} {

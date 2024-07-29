@@ -80,6 +80,52 @@ namespace QuantConnect.Tests.Common.Orders
             }
         }
 
+        [TestCase(OrderDirection.Sell, 300, 0.1, true, 270)]
+        [TestCase(OrderDirection.Sell, 300, 30, false, 270)]
+        [TestCase(OrderDirection.Buy, 300, 0.1, true, 330)]
+        [TestCase(OrderDirection.Buy, 300, 30, false, 330)]
+        public void TrailingStopLimitorder_CalculatesStopPrice(OrderDirection direction, decimal marketPrice, decimal trailingAmount,
+            bool trailingAsPercentage, decimal expectedStopPrice)
+        {
+            var stopPrice = TrailingStopLimitOrder.CalculateStopPrice(marketPrice, trailingAmount, trailingAsPercentage, direction);
+            Assert.AreEqual(expectedStopPrice, stopPrice);
+        }
+
+        [TestCase(OrderDirection.Sell, 300, 10, 290)]
+        [TestCase(OrderDirection.Buy, 300, 10, 310)]
+        public void TrailingStopLimitOrder_CalculatesLimitPrice(OrderDirection direction, decimal stopPrice, decimal limitOffset,
+            decimal expectedLimitPrice)
+        {
+            var limitPrice = TrailingStopLimitOrder.CalculateLimitPrice(stopPrice, limitOffset, direction);
+            Assert.AreEqual(expectedLimitPrice, limitPrice);
+        }
+
+        [TestCase(OrderDirection.Sell, 269, 300, 0.1, true, 10, 270, 260)]
+        [TestCase(OrderDirection.Sell, 270, 300, 0.1, true, 10, null, null)]
+        [TestCase(OrderDirection.Sell, 269, 300, 30, false, 10, 270, 260)]
+        [TestCase(OrderDirection.Sell, 270, 300, 30, false, 10, null, null)]
+        [TestCase(OrderDirection.Buy, 331, 300, 0.1, true, 10, 330, 340)]
+        [TestCase(OrderDirection.Buy, 330, 300, 0.1, true, 10, null, null)]
+        [TestCase(OrderDirection.Buy, 331, 300, 30, false, 10, 330, 340)]
+        [TestCase(OrderDirection.Buy, 330, 300, 30, false, 10, null, null)]
+        public void TrailingStopLimitOrder_UpdatesStopAndLimitPricesIfNecessary(OrderDirection direction, decimal currentStopPrice, decimal marketPrice,
+            decimal trailingAmount, bool trailingAsPercentage, decimal limitOffset, decimal? expectedStopPrice, decimal? expectedLimitPrice)
+        {
+            var updated = TrailingStopLimitOrder.TryUpdateStopAndLimitPrices(marketPrice, currentStopPrice, trailingAmount, trailingAsPercentage,
+                limitOffset, direction, out var updatedStopPrice, out var updatedLimitPrice);
+
+            if (expectedStopPrice.HasValue)
+            {
+                Assert.IsTrue(updated);
+                Assert.AreEqual(expectedStopPrice, updatedStopPrice);
+                Assert.AreEqual(expectedLimitPrice, updatedLimitPrice);
+            }
+            else
+            {
+                Assert.IsFalse(updated);
+            }
+        }
+
         private static TestCaseData[] GetValueTestParameters()
         {
             const decimal delta = 1m;
@@ -165,6 +211,10 @@ namespace QuantConnect.Tests.Common.Orders
                 new ValueTestParameters("EquityShortTrailingStopOrderPriceMinusDelta", equity, new TrailingStopOrder(Symbols.SPY, -quantity, priceMinusDelta, 0.1m, true, time), -quantity*price),
                 new ValueTestParameters("EquityLongLimitIfTouchedOrder", equity, new LimitIfTouchedOrder(Symbols.SPY, quantity, 1.5m*pricePlusDelta, priceMinusDelta, time), quantity*priceMinusDelta),
                 new ValueTestParameters("EquityShortLimitIfTouchedOrder", equity, new LimitIfTouchedOrder(Symbols.SPY, -quantity, .5m*priceMinusDelta, pricePlusDelta, time), -quantity*pricePlusDelta),
+                new ValueTestParameters("EquityLongTrailingStopLimitOrderPriceMinusDelta", equity, new TrailingStopLimitOrder(Symbols.SPY, quantity, .5m*priceMinusDelta, priceMinusDelta, 0.1m, true, 0.1m, time), quantity*priceMinusDelta),
+                new ValueTestParameters("EquityLongTrailingStopLimitOrderPricePlusDelta", equity, new TrailingStopLimitOrder(Symbols.SPY, quantity, .5m*pricePlusDelta, pricePlusDelta, 0.1m, true, 0.1m, time), quantity*price),
+                new ValueTestParameters("EquityShortTrailingStopLimitOrderPricePlusDelta", equity, new TrailingStopLimitOrder(Symbols.SPY, -quantity, 1.5m*pricePlusDelta, pricePlusDelta, 0.1m, true, 0.1m, time), -quantity*pricePlusDelta),
+                new ValueTestParameters("EquityShortTrailingStopLimitOrderPriceMinusDelta", equity, new TrailingStopLimitOrder(Symbols.SPY, -quantity, 1.5m*priceMinusDelta, priceMinusDelta, 0.1m, true, 0.1m, time), -quantity*price),
 
                 // forex orders
                 new ValueTestParameters("ForexLongMarketOrder", forex, new MarketOrder(Symbols.EURGBP, quantity, time), quantity*price*forex.QuoteCurrency.ConversionRate),
@@ -183,6 +233,10 @@ namespace QuantConnect.Tests.Common.Orders
                 new ValueTestParameters("ForexShortTrailingStopOrderPriceMinusDelta", forex, new TrailingStopOrder(Symbols.EURGBP, -quantity, priceMinusDelta, 0.1m, true, time), -quantity*price*forex.QuoteCurrency.ConversionRate),
                 new ValueTestParameters("ForexLongLimitIfTouchedOrder", forex, new LimitIfTouchedOrder(Symbols.EURGBP, quantity,1.5m*priceMinusDelta, priceMinusDelta, time), quantity*priceMinusDelta*forex.QuoteCurrency.ConversionRate),
                 new ValueTestParameters("ForexShortLimitIfTouchedOrder", forex, new LimitIfTouchedOrder(Symbols.EURGBP, -quantity, .5m*pricePlusDelta, pricePlusDelta, time), -quantity*pricePlusDelta*forex.QuoteCurrency.ConversionRate),
+                new ValueTestParameters("ForexLongTrailingStopLimitOrderPriceMinusDelta", forex, new TrailingStopLimitOrder(Symbols.EURGBP, quantity, .5m*priceMinusDelta, priceMinusDelta, 0.1m, true, 0.1m, time), quantity*priceMinusDelta*forex.QuoteCurrency.ConversionRate),
+                new ValueTestParameters("ForexLongTrailingStopLimitOrderPricePlusDelta", forex, new TrailingStopLimitOrder(Symbols.EURGBP, quantity, .5m*pricePlusDelta, pricePlusDelta, 0.1m, true, 0.1m, time), quantity*price*forex.QuoteCurrency.ConversionRate),
+                new ValueTestParameters("ForexShortTrailingStopLimitOrderPricePlusDelta", forex, new TrailingStopLimitOrder(Symbols.EURGBP, -quantity, 1.5m*pricePlusDelta, pricePlusDelta, 0.1m, true, 0.1m, time), -quantity*pricePlusDelta*forex.QuoteCurrency.ConversionRate),
+                new ValueTestParameters("ForexShortTrailingStopLimitOrderPriceMinusDelta", forex, new TrailingStopLimitOrder(Symbols.EURGBP, -quantity, 1.5m*priceMinusDelta, priceMinusDelta, 0.1m, true, 0.1m, time), -quantity*price*forex.QuoteCurrency.ConversionRate),
 
                 // cfd orders
                 new ValueTestParameters("CfdLongMarketOrder", cfd, new MarketOrder(Symbols.DE10YBEUR, quantity, time), quantity*price*multiplierTimesConversionRate),
@@ -201,7 +255,10 @@ namespace QuantConnect.Tests.Common.Orders
                 new ValueTestParameters("CfdShortTrailingStopOrderPriceMinusDelta", cfd, new TrailingStopOrder(Symbols.DE10YBEUR, -quantity, priceMinusDelta, 0.1m, true, time), -quantity*price*multiplierTimesConversionRate),
                 new ValueTestParameters("CfdShortLimitIfTouchedOrder", cfd, new LimitIfTouchedOrder(Symbols.DE10YBEUR, -quantity, 1.5m*pricePlusDelta, pricePlusDelta, time), -quantity*pricePlusDelta*multiplierTimesConversionRate),
                 new ValueTestParameters("CfdLongLimitIfTouchedOrder", cfd, new LimitIfTouchedOrder(Symbols.DE10YBEUR, quantity,.5m*priceMinusDelta, priceMinusDelta, time), quantity*priceMinusDelta*multiplierTimesConversionRate),
-
+                new ValueTestParameters("CfdLongTrailingStopLimitOrderPriceMinusDelta", cfd, new TrailingStopLimitOrder(Symbols.SPY, quantity, .5m*priceMinusDelta, priceMinusDelta, 0.1m, true, 0.1m, time), quantity*priceMinusDelta*multiplierTimesConversionRate),
+                new ValueTestParameters("CfdLongTrailingStopLimitOrderPricePlusDelta", cfd, new TrailingStopLimitOrder(Symbols.SPY, quantity, .5m*pricePlusDelta, pricePlusDelta, 0.1m, true, 0.1m, time), quantity*price*multiplierTimesConversionRate),
+                new ValueTestParameters("CfdShortTrailingStopLimitOrderPricePlusDelta", cfd, new TrailingStopLimitOrder(Symbols.SPY, -quantity, 1.5m*pricePlusDelta, pricePlusDelta, 0.1m, true, 0.1m, time), -quantity*pricePlusDelta*multiplierTimesConversionRate),
+                new ValueTestParameters("CfdShortTrailingStopLimitOrderPriceMinusDelta", cfd, new TrailingStopLimitOrder(Symbols.SPY, -quantity, 1.5m*priceMinusDelta, priceMinusDelta, 0.1m, true, 0.1m, time), -quantity*price*multiplierTimesConversionRate),
 
                 // equity/index option orders
                 new ValueTestParameters("OptionLongMarketOrder", option, new MarketOrder(Symbols.SPY_P_192_Feb19_2016, quantity, time), quantity*price),
@@ -220,6 +277,10 @@ namespace QuantConnect.Tests.Common.Orders
                 new ValueTestParameters("OptionShortTrailingStopOrderPriceMinusDelta", option, new TrailingStopOrder(Symbols.SPY_P_192_Feb19_2016, -quantity, priceMinusDelta, 0.1m, true, time), -quantity*price),
                 new ValueTestParameters("OptionShortLimitIfTouchedOrder", option, new LimitIfTouchedOrder(Symbols.SPY_P_192_Feb19_2016, -quantity, 1.5m*pricePlusDelta, pricePlusDelta, time),  -quantity*pricePlusDelta),
                 new ValueTestParameters("OptionLongLimitIfTouchedOrder", option, new LimitIfTouchedOrder(Symbols.SPY_P_192_Feb19_2016, quantity,.5m*priceMinusDelta, priceMinusDelta, time), quantity*priceMinusDelta),
+                new ValueTestParameters("OptionLongTrailingStopLimitOrderPriceMinusDelta", option, new TrailingStopLimitOrder(Symbols.SPY_P_192_Feb19_2016, quantity, .5m*priceMinusDelta, priceMinusDelta, 0.1m, true, 0.1m, time), quantity*priceMinusDelta),
+                new ValueTestParameters("OptionLongTrailingStopLimitOrderPricePlusDelta", option, new TrailingStopLimitOrder(Symbols.SPY_P_192_Feb19_2016, quantity, .5m*pricePlusDelta, pricePlusDelta, 0.1m, true, 0.1m, time), quantity*price),
+                new ValueTestParameters("OptionShortTrailingStopLimitOrderPricePlusDelta", option, new TrailingStopLimitOrder(Symbols.SPY_P_192_Feb19_2016, -quantity, 1.5m*pricePlusDelta, pricePlusDelta, 0.1m, true, 0.1m, time), -quantity*pricePlusDelta),
+                new ValueTestParameters("OptionShortTrailingStopLimitOrderPriceMinusDelta", option, new TrailingStopLimitOrder(Symbols.SPY_P_192_Feb19_2016, -quantity, 1.5m*priceMinusDelta, priceMinusDelta, 0.1m, true, 0.1m, time), -quantity*price),
 
                 new ValueTestParameters("OptionExerciseOrderPut", option, new OptionExerciseOrder(Symbols.SPY_P_192_Feb19_2016, quantity, time), quantity*option.Symbol.ID.StrikePrice),
                 new ValueTestParameters("OptionAssignmentOrderPut", option, new OptionExerciseOrder(Symbols.SPY_P_192_Feb19_2016, -quantity, time), -quantity*option.Symbol.ID.StrikePrice),

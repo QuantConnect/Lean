@@ -399,12 +399,12 @@ namespace QuantConnect.Orders
         {
             return CreateOrder(request.OrderId, request.OrderType, request.Symbol, request.Quantity, request.Time,
                  request.Tag, request.OrderProperties, request.LimitPrice, request.StopPrice, request.TriggerPrice, request.TrailingAmount,
-                 request.TrailingAsPercentage, request.GroupOrderManager);
+                 request.TrailingAsPercentage, request.LimitOffset, request.GroupOrderManager);
         }
 
         private static Order CreateOrder(int orderId, OrderType type, Symbol symbol, decimal quantity, DateTime time,
             string tag, IOrderProperties properties, decimal limitPrice, decimal stopPrice, decimal triggerPrice, decimal trailingAmount,
-            bool trailingAsPercentage, GroupOrderManager groupOrderManager)
+            bool trailingAsPercentage, decimal limitOffset, GroupOrderManager groupOrderManager)
         {
             Order order;
             switch (type)
@@ -427,6 +427,11 @@ namespace QuantConnect.Orders
 
                 case OrderType.TrailingStop:
                     order = new TrailingStopOrder(symbol, quantity, stopPrice, trailingAmount, trailingAsPercentage, time, tag, properties);
+                    break;
+
+                case OrderType.TrailingStopLimit:
+                    order = new TrailingStopLimitOrder(symbol, quantity, stopPrice, limitPrice, trailingAmount, trailingAsPercentage,
+                        limitOffset, time, tag, properties);
                     break;
 
                 case OrderType.LimitIfTouched:
