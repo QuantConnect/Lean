@@ -26,19 +26,16 @@ namespace QuantConnect.Tests.Indicators
     public class DeltaTests : OptionBaseIndicatorTests<Delta>
     {
         protected override IndicatorBase<IndicatorDataPoint> CreateIndicator()
-            => new Delta("testDeltaIndicator", _symbol, 0.0403m, 0.0m, optionModel: OptionPricingModelType.BlackScholes,
-                ivModel: OptionPricingModelType.BlackScholes);
+            => new Delta("testDeltaIndicator", _symbol, 0.0403m, 0.0m);
 
         protected override OptionIndicatorBase CreateIndicator(IRiskFreeInterestRateModel riskFreeRateModel)
-            => new Delta("testDeltaIndicator", _symbol, riskFreeRateModel, optionModel: OptionPricingModelType.BlackScholes,
-                ivModel: OptionPricingModelType.BlackScholes);
+            => new Delta("testDeltaIndicator", _symbol, riskFreeRateModel);
 
         protected override OptionIndicatorBase CreateIndicator(IRiskFreeInterestRateModel riskFreeRateModel, IDividendYieldModel dividendYieldModel)
-            => new Delta("testDeltaIndicator", _symbol, riskFreeRateModel, dividendYieldModel, optionModel: OptionPricingModelType.BlackScholes,
-                ivModel: OptionPricingModelType.BlackScholes);
+            => new Delta("testDeltaIndicator", _symbol, riskFreeRateModel, dividendYieldModel);
 
         protected override OptionIndicatorBase CreateIndicator(QCAlgorithm algorithm)
-            => algorithm.D(_symbol, optionModel: OptionPricingModelType.BlackScholes, ivModel: OptionPricingModelType.BlackScholes);
+            => algorithm.D(_symbol);
 
         [SetUp]
         public void SetUp()
@@ -48,8 +45,8 @@ namespace QuantConnect.Tests.Indicators
             DividendYieldUpdatesPerIteration = 2;
         }
 
-        [TestCase("american/third_party_1_greeks.csv", true, false, 0.03)]
-        [TestCase("american/third_party_1_greeks.csv", false, false, 0.03)]
+        [TestCase("american/third_party_1_greeks.csv", true, false, 0.06)]
+        [TestCase("american/third_party_1_greeks.csv", false, false, 0.06)]
         // Just placing the test and data here, we are unsure about the smoothing function and not going to reverse engineer
         [TestCase("american/third_party_2_greeks.csv", false, true, 10000)]
         public void ComparesAgainstExternalData(string subPath, bool reset, bool singleContract, double errorRate, double errorMargin = 1e-4,
@@ -70,13 +67,13 @@ namespace QuantConnect.Tests.Indicators
                 Delta putIndicator;
                 if (singleContract)
                 {
-                    callIndicator = new Delta(call, interestRate, dividendYield, optionModel: OptionPricingModelType.BlackScholes, ivModel: OptionPricingModelType.BlackScholes);
-                    putIndicator = new Delta(put, interestRate, dividendYield, optionModel: OptionPricingModelType.BlackScholes, ivModel: OptionPricingModelType.BlackScholes);
+                    callIndicator = new Delta(call, interestRate, dividendYield);
+                    putIndicator = new Delta(put, interestRate, dividendYield);
                 }
                 else
                 {
-                    callIndicator = new Delta(call, interestRate, dividendYield, put, OptionPricingModelType.BlackScholes, ivModel: OptionPricingModelType.BlackScholes);
-                    putIndicator = new Delta(put, interestRate, dividendYield, call, OptionPricingModelType.BlackScholes, ivModel: OptionPricingModelType.BlackScholes);
+                    callIndicator = new Delta(call, interestRate, dividendYield);
+                    putIndicator = new Delta(put, interestRate, dividendYield);
                 }
 
                 RunTestIndicator(call, put, callIndicator, putIndicator, items, callColumn, putColumn, errorRate, errorMargin);

@@ -26,19 +26,16 @@ namespace QuantConnect.Tests.Indicators
     public class VegaTests : OptionBaseIndicatorTests<Vega>
     {
         protected override IndicatorBase<IndicatorDataPoint> CreateIndicator()
-            => new Vega("testVegaIndicator", _symbol, 0.0403m, 0.0m, optionModel: OptionPricingModelType.BlackScholes,
-                ivModel: OptionPricingModelType.BlackScholes);
+            => new Vega("testVegaIndicator", _symbol, 0.0403m, 0.0m);
 
         protected override OptionIndicatorBase CreateIndicator(IRiskFreeInterestRateModel riskFreeRateModel)
-            => new Vega("testVegaIndicator", _symbol, riskFreeRateModel, optionModel: OptionPricingModelType.BlackScholes,
-                ivModel: OptionPricingModelType.BlackScholes);
+            => new Vega("testVegaIndicator", _symbol, riskFreeRateModel);
 
         protected override OptionIndicatorBase CreateIndicator(IRiskFreeInterestRateModel riskFreeRateModel, IDividendYieldModel dividendYieldModel)
-            => new Vega("testVegaIndicator", _symbol, riskFreeRateModel, dividendYieldModel, optionModel: OptionPricingModelType.BlackScholes,
-                ivModel: OptionPricingModelType.BlackScholes);
+            => new Vega("testVegaIndicator", _symbol, riskFreeRateModel, dividendYieldModel);
 
         protected override OptionIndicatorBase CreateIndicator(QCAlgorithm algorithm)
-            => algorithm.V(_symbol, optionModel: OptionPricingModelType.BlackScholes, ivModel: OptionPricingModelType.BlackScholes);
+            => algorithm.V(_symbol);
 
         [SetUp]
         public void SetUp()
@@ -70,13 +67,13 @@ namespace QuantConnect.Tests.Indicators
                 Vega putIndicator;
                 if (singleContract)
                 {
-                    callIndicator = new Vega(call, interestRate, dividendYield, optionModel: model, ivModel:model);
-                    putIndicator = new Vega(put, interestRate, dividendYield, optionModel: model, ivModel: model);
+                    callIndicator = new Vega(call, interestRate, dividendYield, optionModel: model);
+                    putIndicator = new Vega(put, interestRate, dividendYield, optionModel: model);
                 }
                 else
                 {
-                    callIndicator = new Vega(call, interestRate, dividendYield, put, model, model);
-                    putIndicator = new Vega(put, interestRate, dividendYield, call, model, model);
+                    callIndicator = new Vega(call, interestRate, dividendYield, put, model);
+                    putIndicator = new Vega(put, interestRate, dividendYield, call, model);
                 }
 
                 RunTestIndicator(call, put, callIndicator, putIndicator, items, callColumn, putColumn, errorRate, errorMargin);

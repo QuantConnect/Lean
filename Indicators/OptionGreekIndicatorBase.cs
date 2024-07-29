@@ -43,7 +43,7 @@ namespace QuantConnect.Indicators
             {
                 return _iv;
             }
-            protected set
+            set
             {
                 _iv = value;
                 _userProvidedIv = true;

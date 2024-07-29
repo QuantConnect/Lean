@@ -28,17 +28,16 @@ namespace QuantConnect.Tests.Indicators
     public class ImpliedVolatilityTests : OptionBaseIndicatorTests<ImpliedVolatility>
     {
         protected override IndicatorBase<IndicatorDataPoint> CreateIndicator()
-           => new ImpliedVolatility("testImpliedVolatilityIndicator", _symbol, 0.053m, 0.0153m, optionModel: OptionPricingModelType.BlackScholes);
+           => new ImpliedVolatility("testImpliedVolatilityIndicator", _symbol, 0.053m, 0.0153m);
 
         protected override OptionIndicatorBase CreateIndicator(IRiskFreeInterestRateModel riskFreeRateModel)
-            => new ImpliedVolatility("testImpliedVolatilityIndicator", _symbol, riskFreeRateModel, optionModel: OptionPricingModelType.BlackScholes);
+            => new ImpliedVolatility("testImpliedVolatilityIndicator", _symbol, riskFreeRateModel);
 
         protected override OptionIndicatorBase CreateIndicator(IRiskFreeInterestRateModel riskFreeRateModel, IDividendYieldModel dividendYieldModel)
-            => new ImpliedVolatility("testImpliedVolatilityIndicator", _symbol, riskFreeRateModel, dividendYieldModel,
-                optionModel: OptionPricingModelType.BlackScholes);
+            => new ImpliedVolatility("testImpliedVolatilityIndicator", _symbol, riskFreeRateModel, dividendYieldModel);
 
         protected override OptionIndicatorBase CreateIndicator(QCAlgorithm algorithm)
-            => algorithm.IV(_symbol, optionModel: OptionPricingModelType.BlackScholes);
+            => algorithm.IV(_symbol);
 
         [SetUp]
         public void SetUp()
@@ -174,12 +173,12 @@ def TestSmoothingFunction(iv: float, mirror_iv: float) -> float:
         public void ComparesAgainstExternalData2(decimal price, decimal spotPrice, OptionRight right, int expiry, double refIV)
         {
             var symbol = Symbol.CreateOption("SPY", Market.USA, OptionStyle.American, right, 450m, _reference.AddDays(expiry));
-            var indicator = new ImpliedVolatility(symbol, 0.0530m, 0.0153m, optionModel: OptionPricingModelType.BlackScholes);
+                var indicator = new ImpliedVolatility(symbol, 0.0530m, 0.0153m, optionModel: OptionPricingModelType.BlackScholes);
 
-            var optionDataPoint = new IndicatorDataPoint(symbol, _reference, price);
-            var spotDataPoint = new IndicatorDataPoint(symbol.Underlying, _reference, spotPrice);
-            indicator.Update(optionDataPoint);
-            indicator.Update(spotDataPoint);
+                var optionDataPoint = new IndicatorDataPoint(symbol, _reference, price);
+                var spotDataPoint = new IndicatorDataPoint(symbol.Underlying, _reference, spotPrice);
+                indicator.Update(optionDataPoint);
+                indicator.Update(spotDataPoint);
 
             Assert.AreEqual(refIV, (double)indicator.Current.Value, 0.001d);
         }
@@ -187,8 +186,7 @@ def TestSmoothingFunction(iv: float, mirror_iv: float) -> float:
         [Test]
         public override void WarmsUpProperly()
         {
-            var indicator = new ImpliedVolatility("testImpliedVolatilityIndicator", _symbol, 0.053m, 0.0153m,
-                optionModel: OptionPricingModelType.BlackScholes);
+            var indicator = new ImpliedVolatility("testImpliedVolatilityIndicator", _symbol, 0.053m, 0.0153m);
             var warmUpPeriod = (indicator as IIndicatorWarmUpPeriodProvider)?.WarmUpPeriod;
 
             if (!warmUpPeriod.HasValue)

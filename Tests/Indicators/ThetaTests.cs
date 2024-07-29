@@ -26,19 +26,16 @@ namespace QuantConnect.Tests.Indicators
     public class ThetaTests : OptionBaseIndicatorTests<Theta>
     {
         protected override IndicatorBase<IndicatorDataPoint> CreateIndicator()
-            => new Theta("testThetaIndicator", _symbol, 0.0403m, 0.0m, optionModel: OptionPricingModelType.BlackScholes,
-                ivModel: OptionPricingModelType.BlackScholes);
+            => new Theta("testThetaIndicator", _symbol, 0.0403m, 0.0m);
 
         protected override OptionIndicatorBase CreateIndicator(IRiskFreeInterestRateModel riskFreeRateModel)
-            => new Theta("testThetaIndicator", _symbol, riskFreeRateModel, optionModel: OptionPricingModelType.BlackScholes,
-                ivModel: OptionPricingModelType.BlackScholes);
+            => new Theta("testThetaIndicator", _symbol, riskFreeRateModel);
 
         protected override OptionIndicatorBase CreateIndicator(IRiskFreeInterestRateModel riskFreeRateModel, IDividendYieldModel dividendYieldModel)
-            => new Theta("testThetaIndicator", _symbol, riskFreeRateModel, dividendYieldModel, optionModel: OptionPricingModelType.BlackScholes,
-                ivModel: OptionPricingModelType.BlackScholes);
+            => new Theta("testThetaIndicator", _symbol, riskFreeRateModel, dividendYieldModel);
 
         protected override OptionIndicatorBase CreateIndicator(QCAlgorithm algorithm)
-            => algorithm.T(_symbol, optionModel: OptionPricingModelType.BlackScholes, ivModel: OptionPricingModelType.BlackScholes);
+            => algorithm.T(_symbol);
 
         [SetUp]
         public void SetUp()
@@ -71,13 +68,13 @@ namespace QuantConnect.Tests.Indicators
                 Theta putIndicator;
                 if (singleContract)
                 {
-                    callIndicator = new Theta(call, interestRate, dividendYield, optionModel: model, ivModel: model);
-                    putIndicator = new Theta(put, interestRate, dividendYield, optionModel: model, ivModel: model);
+                    callIndicator = new Theta(call, interestRate, dividendYield, optionModel: model);
+                    putIndicator = new Theta(put, interestRate, dividendYield, optionModel: model);
                 }
                 else
                 {
-                    callIndicator = new Theta(call, interestRate, dividendYield, put, model, ivModel: model);
-                    putIndicator = new Theta(put, interestRate, dividendYield, call, model, ivModel: model);
+                    callIndicator = new Theta(call, interestRate, dividendYield, put, model);
+                    putIndicator = new Theta(put, interestRate, dividendYield, call, model);
                 }
 
                 RunTestIndicator(call, put, callIndicator, putIndicator, items, callColumn, putColumn, errorRate, errorMargin);

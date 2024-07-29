@@ -24,19 +24,16 @@ namespace QuantConnect.Tests.Indicators
     public class RhoTests : OptionBaseIndicatorTests<Rho>
     {
         protected override IndicatorBase<IndicatorDataPoint> CreateIndicator()
-            => new Rho("testRhoIndicator", _symbol, 0.0403m, 0.0m, optionModel: OptionPricingModelType.BlackScholes,
-                ivModel: OptionPricingModelType.BlackScholes);
+            => new Rho("testRhoIndicator", _symbol, 0.0403m, 0.0m);
 
         protected override OptionIndicatorBase CreateIndicator(IRiskFreeInterestRateModel riskFreeRateModel)
-            => new Rho("testRhoIndicator", _symbol, riskFreeRateModel, optionModel: OptionPricingModelType.BlackScholes,
-                ivModel: OptionPricingModelType.BlackScholes);
+            => new Rho("testRhoIndicator", _symbol, riskFreeRateModel);
 
         protected override OptionIndicatorBase CreateIndicator(IRiskFreeInterestRateModel riskFreeRateModel, IDividendYieldModel dividendYieldModel)
-            => new Rho("testRhoIndicator", _symbol, riskFreeRateModel, dividendYieldModel, optionModel: OptionPricingModelType.BlackScholes,
-                ivModel: OptionPricingModelType.BlackScholes);
+            => new Rho("testRhoIndicator", _symbol, riskFreeRateModel, dividendYieldModel);
 
         protected override OptionIndicatorBase CreateIndicator(QCAlgorithm algorithm)
-            => algorithm.R(_symbol, optionModel: OptionPricingModelType.BlackScholes, ivModel: OptionPricingModelType.BlackScholes);
+            => algorithm.R(_symbol);
 
         [SetUp]
         public void SetUp()

@@ -245,8 +245,7 @@ class TestRiskFreeInterestRateModel:
         return 0.5
 
 def getOptionIndicatorBaseIndicator(symbol: Symbol) -> OptionIndicatorBase:
-    return {typeof(T).Name}(symbol, TestRiskFreeInterestRateModel(), 
-        optionModel=OptionPricingModelType.BlackScholes{(typeof(T) != typeof(ImpliedVolatility) ? ", ivModel=OptionPricingModelType.BlackScholes" : "")})
+    return {typeof(T).Name}(symbol, TestRiskFreeInterestRateModel())
             ");
 
             var iv = module.GetAttr("getOptionIndicatorBaseIndicator").Invoke(_symbol.ToPython()).GetAndDispose<T>();
@@ -352,8 +351,7 @@ class TestDividendYieldModel:
         return 0.5
 
 def getOptionIndicatorBaseIndicator(symbol: Symbol) -> OptionIndicatorBase:
-    return {typeof(T).Name}(symbol, InterestRateProvider(), TestDividendYieldModel(), 
-        optionModel=OptionPricingModelType.BlackScholes{(typeof(T) != typeof(ImpliedVolatility) ? ", ivModel=OptionPricingModelType.BlackScholes" : "")})
+    return {typeof(T).Name}(symbol, InterestRateProvider(), TestDividendYieldModel())
             ");
 
             var indicator = module.GetAttr("getOptionIndicatorBaseIndicator").Invoke(_symbol.ToPython()).GetAndDispose<T>();
