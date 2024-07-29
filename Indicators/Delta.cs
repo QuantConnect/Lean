@@ -211,7 +211,7 @@ namespace QuantConnect.Indicators
                     var fD = OptionGreekIndicatorsHelper.CRRTheoreticalPrice(
                         ImpliedVolatility, sD, Strike, timeTillExpiry, RiskFreeRate, DividendYield, Right);
 
-                    return (fU - fD) / (sU - sD);
+                    return OptionGreekIndicatorsHelper.Divide(fU - fD, sU - sD);
 
                 case OptionPricingModelType.ForwardTree:
                     var discount = math(Math.Exp, (RiskFreeRate - DividendYield) * timeTillExpiry / OptionGreekIndicatorsHelper.Steps);
@@ -236,7 +236,7 @@ namespace QuantConnect.Indicators
                     fD = OptionGreekIndicatorsHelper.ForwardTreeTheoreticalPrice(
                         ImpliedVolatility, sD, Strike, timeTillExpiry, RiskFreeRate, DividendYield, Right);
 
-                    return (fU - fD) / (sU - sD);
+                    return OptionGreekIndicatorsHelper.Divide(fU - fD, sU - sD);
 
                 case OptionPricingModelType.BlackScholes:
                 default:

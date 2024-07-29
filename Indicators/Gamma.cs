@@ -234,7 +234,7 @@ namespace QuantConnect.Indicators
                     var gammaU = (fU - fM) / (sU - UnderlyingPrice);
                     var gammaD = (fM - fD) / (UnderlyingPrice - sD);
 
-                    return (gammaU - gammaD) * 2 / (sU - sD);
+                    return OptionGreekIndicatorsHelper.Divide((gammaU - gammaD) * 2, sU - sD);
 
                 default:
                     throw new Exception("Unrecognized Option Pricing Model");

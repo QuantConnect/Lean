@@ -157,5 +157,11 @@ namespace QuantConnect.Indicators
         {
             return Convert.ToDecimal(function((double)input));
         }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        internal static decimal Divide(decimal numerator, decimal denominator)
+        {
+            return denominator != 0m ? numerator / denominator : 0m;
+        }
     }
 }
