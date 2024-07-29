@@ -16,6 +16,7 @@
 using System;
 using Python.Runtime;
 using QuantConnect.Data;
+using QuantConnect.Logging;
 using QuantConnect.Python;
 
 namespace QuantConnect.Indicators
@@ -25,6 +26,9 @@ namespace QuantConnect.Indicators
     /// </summary>
     public abstract class OptionGreeksIndicatorBase : OptionIndicatorBase
     {
+        private ImpliedVolatility _iv;
+        private bool _userProvidedIv;
+
         /// <summary>
         /// Cache of the current value of the greek
         /// </summary>
@@ -33,7 +37,18 @@ namespace QuantConnect.Indicators
         /// <summary>
         /// Gets the implied volatility of the option
         /// </summary>
-        public ImpliedVolatility ImpliedVolatility { get; set; }
+        public ImpliedVolatility ImpliedVolatility
+        {
+            get
+            {
+                return _iv;
+            }
+            protected set
+            {
+                _iv = value;
+                _userProvidedIv = true;
+            }
+        }
 
         /// <summary>
         /// Initializes a new instance of the OptionGreeksIndicatorBase class
@@ -51,7 +66,7 @@ namespace QuantConnect.Indicators
         {
             ivModel = GetOptionModel(ivModel, option.ID.OptionStyle);
             WarmUpPeriod = 1;
-            ImpliedVolatility = new ImpliedVolatility(name + "_IV", option, riskFreeRateModel, dividendYieldModel, mirrorOption, ivModel.Value);
+            _iv = new ImpliedVolatility(name + "_IV", option, riskFreeRateModel, dividendYieldModel, mirrorOption, ivModel.Value);
         }
 
         /// <summary>
@@ -138,17 +153,17 @@ namespace QuantConnect.Indicators
 
             if (inputSymbol == OptionSymbol)
             {
-                ImpliedVolatility.Update(input);
+                if (!_userProvidedIv) ImpliedVolatility.Update(input);
                 Price.Update(time, input.Price);
             }
             else if (inputSymbol == _oppositeOptionSymbol)
             {
-                ImpliedVolatility.Update(input);
+                if (!_userProvidedIv) ImpliedVolatility.Update(input);
                 OppositePrice.Update(time, input.Price);
             }
             else if (inputSymbol == _underlyingSymbol)
             {
-                ImpliedVolatility.Update(input);
+                if (!_userProvidedIv) ImpliedVolatility.Update(input);
                 UnderlyingPrice.Update(time, input.Price);
             }
             else
@@ -170,7 +185,14 @@ namespace QuantConnect.Indicators
                 DividendYield.Update(time, _dividendYieldModel.GetDividendYield(time));
 
                 var timeTillExpiry = Convert.ToDecimal((Expiry - time).TotalDays / 365);
-                _greekValue = timeTillExpiry < 0 ? 0 : CalculateGreek(timeTillExpiry);
+                try
+                {
+                    _greekValue = timeTillExpiry < 0 ? 0 : CalculateGreek(timeTillExpiry);
+                }
+                catch (OverflowException)
+                {
+                    Log.Error($"OptionGreeksIndicatorBase.Calculate: Decimal overflow detected. The previous greek value will be used.");
+                }
             }
 
             return _greekValue;
