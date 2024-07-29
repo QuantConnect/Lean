@@ -2625,7 +2625,7 @@ namespace QuantConnect.Algorithm
         /// <param name="selector">Selects a value from the BaseData to send into the indicator, if null defaults to casting the input value to a TradeBar</param>
         /// <returns>A new RogersSatchellVolatility indicator with the specified smoothing type and period</returns>
         [DocumentationAttribute(Indicators)]
-        public RogersSatchellVolatility RSV(Symbol symbol, int period, Resolution? resolution = null, Func<IBaseData, TradeBar> selector = null)
+        public RogersSatchellVolatility RSV(Symbol symbol, int period, Resolution? resolution = null, Func<IBaseData, IBaseDataBar> selector = null)
         {
             var name = CreateIndicatorName(symbol, $"RSV({period})", resolution);
             var indicator = new RogersSatchellVolatility(name, period);
