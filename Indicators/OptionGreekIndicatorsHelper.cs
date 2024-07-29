@@ -16,6 +16,7 @@
 using System;
 using System.Runtime.CompilerServices;
 using MathNet.Numerics.Distributions;
+using QuantConnect.Logging;
 using QuantConnect.Util;
 
 namespace QuantConnect.Indicators
@@ -161,7 +162,13 @@ namespace QuantConnect.Indicators
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         internal static decimal Divide(decimal numerator, decimal denominator)
         {
-            return denominator != 0m ? numerator / denominator : 0m;
+            if (denominator != 0)
+            {
+                return numerator / denominator;
+            }
+
+            Log.Error("OptionGreekIndicatorsHelper.Divide(): Division by zero detected. Returning 0.");
+            return 0;
         }
     }
 }
