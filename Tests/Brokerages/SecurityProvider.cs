@@ -49,7 +49,7 @@ namespace QuantConnect.Tests.Brokerages
 
         public Security this[Symbol symbol]
         {
-            get { return _securities[symbol]; }
+            get { return GetSecurity(symbol); }
             set { _securities[symbol] = value; }
         }
 
@@ -114,6 +114,8 @@ namespace QuantConnect.Tests.Brokerages
                 // shouldn't happen
                 QuantConnect.Logging.Log.Error(ex);
             }
+
+            _securities[symbol] = security;
             return security;
         }
     }
