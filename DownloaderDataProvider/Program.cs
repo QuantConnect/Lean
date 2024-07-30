@@ -15,7 +15,6 @@
 */
 
 using NodaTime;
-using System.Timers;
 using QuantConnect.Util;
 using QuantConnect.Data;
 using QuantConnect.Logging;
