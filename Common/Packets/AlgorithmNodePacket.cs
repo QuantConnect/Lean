@@ -35,6 +35,33 @@ namespace QuantConnect.Packets
         { }
 
         /// <summary>
+        /// Initializes a new instance of the <see cref="AlgorithmNodePacket"/> class by copying another <see cref="AlgorithmNodePacket"/> instance.
+        /// </summary>
+        /// <param name="type">The type of the packet.</param>
+        /// <param name="algorithmNodePacket">The <see cref="AlgorithmNodePacket"/> instance to copy.</param>
+        public AlgorithmNodePacket(PacketType type, AlgorithmNodePacket algorithmNodePacket) : base (type)
+        {
+            HostName = algorithmNodePacket.HostName;
+            UserId = algorithmNodePacket.UserId;
+            UserToken = algorithmNodePacket.UserToken;
+            OrganizationId = algorithmNodePacket.OrganizationId;
+            ProjectId = algorithmNodePacket.ProjectId;
+            ProjectName = algorithmNodePacket.ProjectName;
+            SessionId = algorithmNodePacket.SessionId;
+            Language = algorithmNodePacket.Language;
+            ServerType = algorithmNodePacket.ServerType;
+            CompileId = algorithmNodePacket.CompileId;
+            Version = algorithmNodePacket.Version;
+            Redelivered = algorithmNodePacket.Redelivered;
+            Algorithm = algorithmNodePacket.Algorithm;
+            RequestSource = algorithmNodePacket.RequestSource;
+            Controls = algorithmNodePacket.Controls;
+            Parameters = algorithmNodePacket.Parameters;
+            HistoryProvider = algorithmNodePacket.HistoryProvider;
+            DeploymentTarget = algorithmNodePacket.DeploymentTarget;
+        }
+
+        /// <summary>
         /// The host name to use if any
         /// </summary>
         public string HostName { get; set; }

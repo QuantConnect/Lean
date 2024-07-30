@@ -96,5 +96,11 @@ namespace QuantConnect.Packets
                 RamAllocation = 512
             };
         }
+        
+        /// <summary>
+        /// Initializes a new instance of the <see cref="LiveNodePacket"/> class by copying another <see cref="AlgorithmNodePacket"/> instance.
+        /// </summary>
+        /// <param name="algorithmNodePacket">The <see cref="AlgorithmNodePacket"/> instance to copy.</param>
+        public LiveNodePacket(AlgorithmNodePacket algorithmNodePacket): base (PacketType.LiveNode, algorithmNodePacket) { }
     }
 }
