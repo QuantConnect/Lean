@@ -81,10 +81,10 @@ namespace QuantConnect.Algorithm.CSharp
                 }
             }
 
-            if (slice.OptionChains.ContainsKey(_option.Canonical) && slice.OptionChains[_option.Canonical].TradeBars.ContainsKey(_option))
+            if (slice.OptionChains.TryGetValue(_option.Canonical, out var optionChain) && optionChain.TradeBars.TryGetValue(_option, out var optionChainTradeBar))
             {
                 _tradeBarsFound = true;
-                if (_optionIndicator.Current.Value != slice.OptionChains[_option.Canonical].TradeBars[_option].Volume)
+                if (_optionIndicator.Current.Value != optionChainTradeBar.Volume)
                 {
                     throw new RegressionTestException();
                 }

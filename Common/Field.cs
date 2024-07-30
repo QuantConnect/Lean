@@ -24,33 +24,25 @@ namespace QuantConnect
     /// </summary>
     public static partial class Field
     {
-        private readonly static Func<IBaseData, decimal> _high = BaseDataBarPropertyOrValue(x => x.High);
-        private readonly static Func<IBaseData, decimal> _low = BaseDataBarPropertyOrValue(x => x.Low);
-        private readonly static Func<IBaseData, decimal> _open = BaseDataBarPropertyOrValue(x => x.Open);
-        private readonly static Func<IBaseData, decimal> _bidClose = BaseDataBarPropertyOrValue(x => ((QuoteBar)x).Bid.Close);
-        private readonly static Func<IBaseData, decimal> _bidOpen = BaseDataBarPropertyOrValue(x => ((QuoteBar)x).Bid.Open);
-        private readonly static Func<IBaseData, decimal> _bidLow = BaseDataBarPropertyOrValue(x => ((QuoteBar)x).Bid.Low);
-        private readonly static Func<IBaseData, decimal> _bidHigh = BaseDataBarPropertyOrValue(x => ((QuoteBar)x).Bid.High);
-        private readonly static Func<IBaseData, decimal> _askClose = BaseDataBarPropertyOrValue(x => ((QuoteBar)x).Ask.Close);
-        private readonly static Func<IBaseData, decimal> _askOpen = BaseDataBarPropertyOrValue(x => ((QuoteBar)x).Ask.Open);
-        private readonly static Func<IBaseData, decimal> _askLow = BaseDataBarPropertyOrValue(x => ((QuoteBar)x).Ask.Low);
-        private readonly static Func<IBaseData, decimal> _askHigh = BaseDataBarPropertyOrValue(x => ((QuoteBar)x).Ask.High);
-        private readonly static Func<IBaseData, decimal> _bidPrice = TickPropertyOrValue(x => ((Tick)x).BidPrice);
-        private readonly static Func<IBaseData, decimal> _askPrice = TickPropertyOrValue(x => ((Tick)x).AskPrice);
-        private readonly static Func<IBaseData, decimal> _volume = BaseDataBarPropertyOrValue(x => ((TradeBar)x).Volume);
-        private readonly static Func<IBaseData, decimal> _average = BaseDataBarPropertyOrValue(x => (x.Open + x.High + x.Low + x.Close) / 4m);
-        private readonly static Func<IBaseData, decimal> _median = BaseDataBarPropertyOrValue(x => (x.High + x.Low) / 2m);
-        private readonly static Func<IBaseData, decimal> _typical = BaseDataBarPropertyOrValue(x => (x.High + x.Low + x.Close) / 3m);
-        private readonly static Func<IBaseData, decimal> _weighted = BaseDataBarPropertyOrValue(x => (x.High + x.Low + 2 * x.Close) / 4m);
-        private readonly static Func<IBaseData, decimal> _sevenBar = BaseDataBarPropertyOrValue(x => (2 * x.Open + x.High + x.Low + 3 * x.Close) / 7m);
-
-        /// <summary>
-        /// Gets a selector that selects the Open value
-        /// </summary>
-        public static Func<IBaseData, decimal> Open
-        {
-            get { return _open; }
-        }
+        private readonly static Func<IBaseData, decimal> _high = DataTypePropertyOrValue<IBaseDataBar>(x => x.High);
+        private readonly static Func<IBaseData, decimal> _low = DataTypePropertyOrValue<IBaseDataBar>(x => x.Low);
+        private readonly static Func<IBaseData, decimal> _open = DataTypePropertyOrValue<IBaseDataBar>(x => x.Open);
+        private readonly static Func<IBaseData, decimal> _bidClose = DataTypePropertyOrValue<QuoteBar>(x => ((QuoteBar)x).Bid.Close);
+        private readonly static Func<IBaseData, decimal> _bidOpen = DataTypePropertyOrValue<QuoteBar>(x => ((QuoteBar)x).Bid.Open);
+        private readonly static Func<IBaseData, decimal> _bidLow = DataTypePropertyOrValue<QuoteBar>(x => ((QuoteBar)x).Bid.Low);
+        private readonly static Func<IBaseData, decimal> _bidHigh = DataTypePropertyOrValue<QuoteBar>(x => ((QuoteBar)x).Bid.High);
+        private readonly static Func<IBaseData, decimal> _askClose = DataTypePropertyOrValue<QuoteBar>(x => ((QuoteBar)x).Ask.Close);
+        private readonly static Func<IBaseData, decimal> _askOpen = DataTypePropertyOrValue<QuoteBar>(x => ((QuoteBar)x).Ask.Open);
+        private readonly static Func<IBaseData, decimal> _askLow = DataTypePropertyOrValue<QuoteBar>(x => ((QuoteBar)x).Ask.Low);
+        private readonly static Func<IBaseData, decimal> _askHigh = DataTypePropertyOrValue<QuoteBar>(x => ((QuoteBar)x).Ask.High);
+        private readonly static Func<IBaseData, decimal> _bidPrice = DataTypePropertyOrValue<Tick>(x => ((Tick)x).BidPrice);
+        private readonly static Func<IBaseData, decimal> _askPrice = DataTypePropertyOrValue<Tick>(x => ((Tick)x).AskPrice);
+        private readonly static Func<IBaseData, decimal> _volume = DataTypePropertyOrValue<TradeBar>(x => ((TradeBar)x).Volume);
+        private readonly static Func<IBaseData, decimal> _average = DataTypePropertyOrValue<IBaseDataBar>(x => (x.Open + x.High + x.Low + x.Close) / 4m);
+        private readonly static Func<IBaseData, decimal> _median = DataTypePropertyOrValue<IBaseDataBar>(x => (x.High + x.Low) / 2m);
+        private readonly static Func<IBaseData, decimal> _typical = DataTypePropertyOrValue<IBaseDataBar>(x => (x.High + x.Low + x.Close) / 3m);
+        private readonly static Func<IBaseData, decimal> _weighted = DataTypePropertyOrValue<IBaseDataBar>(x => (x.High + x.Low + 2 * x.Close) / 4m);
+        private readonly static Func<IBaseData, decimal> _sevenBar = DataTypePropertyOrValue<IBaseDataBar>(x => (2 * x.Open + x.High + x.Low + 3 * x.Close) / 7m);
 
         /// <summary>
         /// Gets a selector that selectes the Bid close price
@@ -133,6 +125,14 @@ namespace QuantConnect
         }
 
         /// <summary>
+        /// Gets a selector that selects the Open value
+        /// </summary>
+        public static Func<IBaseData, decimal> Open
+        {
+            get { return _open; }
+        }
+
+        /// <summary>
         /// Gets a selector that selects the High value
         /// </summary>
         public static Func<IBaseData, decimal> High
@@ -204,31 +204,18 @@ namespace QuantConnect
             get { return _volume; }
         }
 
-        private static Func<IBaseData, decimal> BaseDataBarPropertyOrValue(Func<IBaseDataBar, decimal> selector, Func<IBaseData, decimal> defaultSelector = null)
+        private static Func<IBaseData, decimal> DataTypePropertyOrValue<T>(Func<T, decimal> selector, Func<IBaseData, decimal> defaultSelector = null)
+            where T: class, IBaseData
         {
             return x =>
             {
-                var bar = x as IBaseDataBar;
-                if (bar != null)
-                {
-                    return selector(bar);
-                }
-                defaultSelector = defaultSelector ?? (data => data.Value);
-                return defaultSelector(x);
-            };
-        }
-
-        private static Func<IBaseData, decimal> TickPropertyOrValue(Func<Tick, decimal> selector, Func<IBaseData, decimal> defaultSelector = null)
-        {
-            return x =>
-            {
-                var bar = x as Tick;
+                var bar = x as T;
                 if (bar != null)
                 {
                     return selector(bar);
                 }
 
-                defaultSelector = defaultSelector ?? (data => data.Value);
+                defaultSelector ??= (data => data.Value);
                 return defaultSelector(x);
             };
         }
