@@ -173,12 +173,12 @@ def TestSmoothingFunction(iv: float, mirror_iv: float) -> float:
         public void ComparesAgainstExternalData2(decimal price, decimal spotPrice, OptionRight right, int expiry, double refIV)
         {
             var symbol = Symbol.CreateOption("SPY", Market.USA, OptionStyle.American, right, 450m, _reference.AddDays(expiry));
-                var indicator = new ImpliedVolatility(symbol, 0.0530m, 0.0153m, optionModel: OptionPricingModelType.BlackScholes);
+            var indicator = new ImpliedVolatility(symbol, 0.0530m, 0.0153m, optionModel: OptionPricingModelType.BlackScholes);
 
-                var optionDataPoint = new IndicatorDataPoint(symbol, _reference, price);
-                var spotDataPoint = new IndicatorDataPoint(symbol.Underlying, _reference, spotPrice);
-                indicator.Update(optionDataPoint);
-                indicator.Update(spotDataPoint);
+            var optionDataPoint = new IndicatorDataPoint(symbol, _reference, price);
+            var spotDataPoint = new IndicatorDataPoint(symbol.Underlying, _reference, spotPrice);
+            indicator.Update(optionDataPoint);
+            indicator.Update(spotDataPoint);
 
             Assert.AreEqual(refIV, (double)indicator.Current.Value, 0.001d);
         }

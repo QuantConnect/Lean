@@ -89,7 +89,7 @@ namespace QuantConnect.Tests.Indicators
             {
                 callIndicator.Update(putDataPoint);
             }
-
+            
             var expected = double.Parse(items[callColumn], NumberStyles.Any, CultureInfo.InvariantCulture);
             var acceptance = Math.Max(errorRate * Math.Abs(expected), errorMargin);     // percentage error
             Assert.AreEqual(expected, (double)callIndicator.Current.Value, acceptance);
