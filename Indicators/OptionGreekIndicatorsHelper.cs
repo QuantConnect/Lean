@@ -29,7 +29,7 @@ namespace QuantConnect.Indicators
         /// <summary>
         /// Number of steps in binomial tree simulation to obtain Greeks/IV
         /// </summary>
-        public const int Steps = 200;
+        public const int Steps = 140;
 
         /// <summary>
         /// Returns the Black theoretical price for the given arguments
@@ -167,7 +167,7 @@ namespace QuantConnect.Indicators
                 return numerator / denominator;
             }
 
-            Log.Error("OptionGreekIndicatorsHelper.Divide(): Division by zero detected. Returning 0.");
+            //Log.Error("OptionGreekIndicatorsHelper.Divide(): Division by zero detected. Returning 0.");
             return 0;
         }
     }
