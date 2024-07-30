@@ -32,7 +32,7 @@ namespace QuantConnect.Algorithm.CSharp
         private Theta _theta;
         private Rho _rho;
 
-        protected virtual string ExpectedGreeks { get; set; } = "Implied Volatility: 0.4284,Delta: -0.00965,Gamma: 0.00027,Vega: 0.02602,Theta: -0.02564,Rho: 0.00033";
+        protected virtual string ExpectedGreeks { get; set; } = "Implied Volatility: 0.45666,Delta: -0.00965,Gamma: 0.00027,Vega: 0.02602,Theta: -0.02564,Rho: 0.00033";
 
         public override void Initialize()
         {
@@ -49,7 +49,7 @@ namespace QuantConnect.Algorithm.CSharp
 
         protected void InitializeIndicators(Symbol option)
         {
-            _impliedVolatility = IV(option, optionModel: OptionPricingModelType.BlackScholes);
+            _impliedVolatility = IV(option);
             _delta = D(option, optionModel: OptionPricingModelType.BinomialCoxRossRubinstein, ivModel: OptionPricingModelType.BlackScholes);
             _gamma = G(option, optionModel: OptionPricingModelType.ForwardTree, ivModel: OptionPricingModelType.BlackScholes);
             _vega = V(option, optionModel: OptionPricingModelType.ForwardTree, ivModel: OptionPricingModelType.BlackScholes);
