@@ -37,7 +37,7 @@ namespace QuantConnect.Indicators
         /// <param name="optionModel">The option pricing model used to estimate Theta</param>
         /// <param name="ivModel">The option pricing model used to estimate IV</param>
         public Theta(string name, Symbol option, IRiskFreeInterestRateModel riskFreeRateModel, IDividendYieldModel dividendYieldModel, Symbol mirrorOption = null,
-                OptionPricingModelType optionModel = OptionPricingModelType.BlackScholes, OptionPricingModelType? ivModel = null)
+                OptionPricingModelType? optionModel = null, OptionPricingModelType? ivModel = null)
             : base(name, option, riskFreeRateModel, dividendYieldModel, mirrorOption, optionModel, ivModel)
         {
         }
@@ -52,8 +52,9 @@ namespace QuantConnect.Indicators
         /// <param name="optionModel">The option pricing model used to estimate Theta</param>
         /// <param name="ivModel">The option pricing model used to estimate IV</param>
         public Theta(Symbol option, IRiskFreeInterestRateModel riskFreeRateModel, IDividendYieldModel dividendYieldModel, Symbol mirrorOption = null,
-            OptionPricingModelType optionModel = OptionPricingModelType.BlackScholes, OptionPricingModelType? ivModel = null)
-            : this($"Theta({option},{mirrorOption},{optionModel})", option, riskFreeRateModel, dividendYieldModel, mirrorOption, optionModel, ivModel)
+            OptionPricingModelType? optionModel = null, OptionPricingModelType? ivModel = null)
+            : this($"Theta({option},{mirrorOption},{GetOptionModel(optionModel, option.ID.OptionStyle)})", option, riskFreeRateModel,
+                  dividendYieldModel, mirrorOption, optionModel, ivModel)
         {
         }
 
@@ -68,7 +69,7 @@ namespace QuantConnect.Indicators
         /// <param name="optionModel">The option pricing model used to estimate Theta</param>
         /// <param name="ivModel">The option pricing model used to estimate IV</param>
         public Theta(string name, Symbol option, PyObject riskFreeRateModel, PyObject dividendYieldModel, Symbol mirrorOption = null,
-            OptionPricingModelType optionModel = OptionPricingModelType.BlackScholes, OptionPricingModelType? ivModel = null)
+            OptionPricingModelType? optionModel = null, OptionPricingModelType? ivModel = null)
             : base(name, option, riskFreeRateModel, dividendYieldModel, mirrorOption, optionModel, ivModel)
         {
         }
@@ -83,8 +84,9 @@ namespace QuantConnect.Indicators
         /// <param name="optionModel">The option pricing model used to estimate Theta</param>
         /// <param name="ivModel">The option pricing model used to estimate IV</param>
         public Theta(Symbol option, PyObject riskFreeRateModel, PyObject dividendYieldModel, Symbol mirrorOption = null,
-            OptionPricingModelType optionModel = OptionPricingModelType.BlackScholes, OptionPricingModelType? ivModel = null)
-            : this($"Theta({option},{mirrorOption},{optionModel})", option, riskFreeRateModel, dividendYieldModel, mirrorOption, optionModel, ivModel)
+            OptionPricingModelType? optionModel = null, OptionPricingModelType? ivModel = null)
+            : this($"Theta({option},{mirrorOption},{GetOptionModel(optionModel, option.ID.OptionStyle)})", option, riskFreeRateModel,
+                  dividendYieldModel, mirrorOption, optionModel, ivModel)
         {
         }
 
@@ -99,7 +101,7 @@ namespace QuantConnect.Indicators
         /// <param name="optionModel">The option pricing model used to estimate Theta</param>
         /// <param name="ivModel">The option pricing model used to estimate IV</param>
         public Theta(string name, Symbol option, IRiskFreeInterestRateModel riskFreeRateModel, decimal dividendYield = 0.0m, Symbol mirrorOption = null,
-                OptionPricingModelType optionModel = OptionPricingModelType.BlackScholes, OptionPricingModelType? ivModel = null)
+                OptionPricingModelType? optionModel = null, OptionPricingModelType? ivModel = null)
             : base(name, option, riskFreeRateModel, dividendYield, mirrorOption, optionModel, ivModel)
         {
         }
@@ -114,8 +116,9 @@ namespace QuantConnect.Indicators
         /// <param name="optionModel">The option pricing model used to estimate Theta</param>
         /// <param name="ivModel">The option pricing model used to estimate IV</param>
         public Theta(Symbol option, IRiskFreeInterestRateModel riskFreeRateModel, decimal dividendYield = 0.0m, Symbol mirrorOption = null,
-            OptionPricingModelType optionModel = OptionPricingModelType.BlackScholes, OptionPricingModelType? ivModel = null)
-            : this($"Theta({option},{mirrorOption},{optionModel})", option, riskFreeRateModel, dividendYield, mirrorOption, optionModel, ivModel)
+            OptionPricingModelType? optionModel = null, OptionPricingModelType? ivModel = null)
+            : this($"Theta({option},{mirrorOption},{GetOptionModel(optionModel, option.ID.OptionStyle)})", option, riskFreeRateModel,
+                  dividendYield, mirrorOption, optionModel, ivModel)
         {
         }
 
@@ -130,7 +133,7 @@ namespace QuantConnect.Indicators
         /// <param name="optionModel">The option pricing model used to estimate Theta</param>
         /// <param name="ivModel">The option pricing model used to estimate IV</param>
         public Theta(string name, Symbol option, PyObject riskFreeRateModel, decimal dividendYield = 0.0m, Symbol mirrorOption = null,
-            OptionPricingModelType optionModel = OptionPricingModelType.BlackScholes, OptionPricingModelType? ivModel = null)
+            OptionPricingModelType? optionModel = null, OptionPricingModelType? ivModel = null)
             : base(name, option, riskFreeRateModel, dividendYield, mirrorOption, optionModel, ivModel)
         {
         }
@@ -145,8 +148,9 @@ namespace QuantConnect.Indicators
         /// <param name="optionModel">The option pricing model used to estimate Theta</param>
         /// <param name="ivModel">The option pricing model used to estimate IV</param>
         public Theta(Symbol option, PyObject riskFreeRateModel, decimal dividendYield = 0.0m, Symbol mirrorOption = null,
-            OptionPricingModelType optionModel = OptionPricingModelType.BlackScholes, OptionPricingModelType? ivModel = null)
-            : this($"Theta({option},{mirrorOption},{optionModel})", option, riskFreeRateModel, dividendYield, mirrorOption, optionModel, ivModel)
+            OptionPricingModelType? optionModel = null, OptionPricingModelType? ivModel = null)
+            : this($"Theta({option},{mirrorOption},{GetOptionModel(optionModel, option.ID.OptionStyle)})", option, riskFreeRateModel,
+                  dividendYield, mirrorOption, optionModel, ivModel)
         {
         }
 
@@ -161,7 +165,7 @@ namespace QuantConnect.Indicators
         /// <param name="optionModel">The option pricing model used to estimate Theta</param>
         /// <param name="ivModel">The option pricing model used to estimate IV</param>
         public Theta(string name, Symbol option, decimal riskFreeRate = 0.05m, decimal dividendYield = 0.0m, Symbol mirrorOption = null,
-            OptionPricingModelType optionModel = OptionPricingModelType.BlackScholes, OptionPricingModelType? ivModel = null)
+            OptionPricingModelType? optionModel = null, OptionPricingModelType? ivModel = null)
             : base(name, option, riskFreeRate, dividendYield, mirrorOption, optionModel, ivModel)
         {
         }
@@ -176,8 +180,9 @@ namespace QuantConnect.Indicators
         /// <param name="optionModel">The option pricing model used to estimate Theta</param>
         /// <param name="ivModel">The option pricing model used to estimate IV</param>
         public Theta(Symbol option, decimal riskFreeRate = 0.05m, decimal dividendYield = 0.0m, Symbol mirrorOption = null,
-            OptionPricingModelType optionModel = OptionPricingModelType.BlackScholes, OptionPricingModelType? ivModel = null)
-            : this($"Theta({option},{mirrorOption},{optionModel})", option, riskFreeRate, dividendYield, mirrorOption, optionModel, ivModel)
+            OptionPricingModelType? optionModel = null, OptionPricingModelType? ivModel = null)
+            : this($"Theta({option},{mirrorOption},{GetOptionModel(optionModel, option.ID.OptionStyle)})", option, riskFreeRate, dividendYield,
+                  mirrorOption, optionModel, ivModel)
         {
         }
 

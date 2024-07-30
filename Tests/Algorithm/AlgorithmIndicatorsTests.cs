@@ -308,7 +308,7 @@ namespace QuantConnect.Tests.Algorithm
 
             var put = Symbols.CreateOptionSymbol("AAPL", OptionRight.Call, 250m, new DateTime(2016, 01, 15));
             var call = Symbols.CreateOptionSymbol("AAPL", OptionRight.Put, 250m, new DateTime(2016, 01, 15));
-            var indicator = new Delta(option: put, mirrorOption: call);
+            var indicator = new Delta(option: put, mirrorOption: call, optionModel: OptionPricingModelType.BlackScholes, ivModel: OptionPricingModelType.BlackScholes);
             _algorithm.SetDateTime(time);
 
             IndicatorHistory indicatorValues;

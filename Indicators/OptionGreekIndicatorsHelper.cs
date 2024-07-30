@@ -14,7 +14,9 @@
 */
 
 using System;
+using System.Runtime.CompilerServices;
 using MathNet.Numerics.Distributions;
+using QuantConnect.Logging;
 using QuantConnect.Util;
 
 namespace QuantConnect.Indicators
@@ -28,7 +30,7 @@ namespace QuantConnect.Indicators
         /// Number of steps in binomial tree simulation to obtain Greeks/IV
         /// </summary>
         public const int Steps = 200;
-     
+
         /// <summary>
         /// Returns the Black theoretical price for the given arguments
         /// </summary>
@@ -130,11 +132,12 @@ namespace QuantConnect.Indicators
                 values[i] = OptionPayoff.GetIntrinsicValue(nextPrice, strikePrice, optionType);
             }
 
+            var factor = DecimalMath(Math.Exp, -riskFreeRate * deltaTime);
             for (int period = steps - 1; period >= 0; period--)
             {
                 for (int i = 0; i <= period; i++)
                 {
-                    var binomialValue = DecimalMath(Math.Exp, -riskFreeRate * deltaTime) * (values[i] * probDown + values[i + 1] * probUp);
+                    var binomialValue = factor * (values[i] * probDown + values[i + 1] * probUp);
                     // No advantage for American put option to exercise early in risk-neutral setting
                     if (optionType == OptionRight.Put)
                     {
@@ -150,9 +153,22 @@ namespace QuantConnect.Indicators
             return values[0];
         }
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         internal static decimal DecimalMath(Func<double, double> function, decimal input)
         {
             return Convert.ToDecimal(function((double)input));
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        internal static decimal Divide(decimal numerator, decimal denominator)
+        {
+            if (denominator != 0)
+            {
+                return numerator / denominator;
+            }
+
+            Log.Error("OptionGreekIndicatorsHelper.Divide(): Division by zero detected. Returning 0.");
+            return 0;
         }
     }
 }
