@@ -108,13 +108,6 @@ namespace QuantConnect.Packets
         }
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="BacktestNodePacket"/> class by copying another <see cref="AlgorithmNodePacket"/> instance.
-        /// </summary>
-        /// <param name="algorithmNodePacket">The <see cref="AlgorithmNodePacket"/> instance to copy.</param>
-        public BacktestNodePacket(AlgorithmNodePacket algorithmNodePacket) : base(PacketType.BacktestNode, algorithmNodePacket)
-        { }
-
-        /// <summary>
         /// Initialize the backtest task packet.
         /// </summary>
         public BacktestNodePacket(int userId, int projectId, string sessionId, byte[] algorithmData, decimal startingCapital, string name)
