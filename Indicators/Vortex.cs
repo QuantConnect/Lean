@@ -1,18 +1,3 @@
-/*
- * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
- * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
-*/
-
 using System;
 using QuantConnect.Data.Market;
 using QuantConnect.Indicators;
@@ -20,92 +5,133 @@ using QuantConnect.Indicators;
 namespace QuantConnect.Indicators
 {
     /// <summary>
-    /// Computes the Vortex Indicator (VI), which is designed to identify the start of a new trend or the continuation of an existing trend within financial markets.
-    /// The Vortex Indicator involves calculations of upward and downward movements (VM+ and VM-), normalized by the True Range.
+    /// The Vortex Indicator (VI) measures the strength of a trend and its potential continuation or reversal.
+    /// It is calculated using the highs, lows, and closing prices over a specified period.
     /// </summary>
-    public class VortexIndicator : TradeBarIndicator, IIndicatorWarmUpPeriodProvider
+    public class VortexIndicator : BarIndicator, IIndicatorWarmUpPeriodProvider
     {
-        /// <summary>
-        /// Indicates whether this indicator is ready and fully initialized.
-        /// </summary>
-        public override bool IsReady => _window.IsReady && _tr.IsReady;
-
-        private readonly RollingWindow<TradeBar> _window;
         private readonly int _period;
-        private readonly TrueRange _tr; // TrueRange indicator
+        private readonly RollingWindow<IBaseDataBar> _window;
+        private IndicatorBase<IndicatorDataPoint> _positiveVortexIndicator;
+        private IndicatorBase<IndicatorDataPoint> _negativeVortexIndicator;
 
         /// <summary>
-        /// Indicator representing the positive trend movement (+VI).
+        /// Indicates when the indicator is fully initialized.
         /// </summary>
-        public IndicatorBase<IndicatorDataPoint> PlusVI { get; private set; }
+        public override bool IsReady => _window.IsReady;
 
         /// <summary>
-        /// Indicator representing the negative trend movement (-VI).
+        /// Gets the Positive Vortex Indicator (+VI).
         /// </summary>
-        public IndicatorBase<IndicatorDataPoint> MinusVI { get; private set; }
+        public IndicatorBase<IndicatorDataPoint> PositiveVortexIndicator => _positiveVortexIndicator;
 
         /// <summary>
-        /// The period over which the indicator is calculated.
+        /// Gets the Negative Vortex Indicator (-VI).
+        /// </summary>
+        public IndicatorBase<IndicatorDataPoint> NegativeVortexIndicator => _negativeVortexIndicator;
+
+        /// <summary>
+        /// The number of bars required for the indicator to be ready.
         /// </summary>
         public int WarmUpPeriod => _period;
 
         /// <summary>
-        /// Initializes a new instance of the VortexIndicator class with the specified name and period.
-        /// Constructs a VortexIndicator with an internal rolling window of trade bars used to calculate the +VI and -VI based on the given period.
+        /// Initializes a new instance of the VortexIndicator class.
         /// </summary>
-        /// <param name="name">The name of this indicator</param>
-        /// <param name="period">The period over which to calculate the indicator</param>
-        public VortexIndicator(string name, int period) : base(name)
+        /// <param name="period">The lookback period over which the indicator will compute.</param>
+        public VortexIndicator(int period)
+            : this($"VI({period})", period)
+        {
+        }
+
+        /// <summary>
+        /// Initializes a new instance of the VortexIndicator class with a name.
+        /// </summary>
+        /// <param name="name">The name of the indicator.</param>
+        /// <param name="period">The lookback period over which the indicator will compute.</param>
+        public VortexIndicator(string name, int period)
+            : base(name)
         {
             _period = period;
-            PlusVI = new Identity($"{name}_PlusVI");
-            MinusVI = new Identity($"{name}_MinusVI");
-            _window = new RollingWindow<TradeBar>(period);
-            _tr = new TrueRange(); // Instantiate TrueRange
+            _window = new RollingWindow<IBaseDataBar>(period);
+
+            _positiveVortexIndicator = new FunctionalIndicator<IndicatorDataPoint>(name + "_PositiveVortexIndicator",
+                input => ComputeVortexIndicator(true),
+                isReady => IsReady);
+
+            _negativeVortexIndicator = new FunctionalIndicator<IndicatorDataPoint>(name + "_NegativeVortexIndicator",
+                input => ComputeVortexIndicator(false),
+                isReady => IsReady);
         }
 
         /// <summary>
-        /// Computes the next value of the Vortex Indicator using the specified TradeBar input.
-        /// This method is responsible for updating the PlusVI and MinusVI values based on the current and historical trade bar data.
+        /// Calculates the Vortex Indicator for the given direction.
         /// </summary>
-        /// <param name="input">The input TradeBar data used to calculate the indicator</param>
-        /// <returns>The difference between the PlusVI and MinusVI values</returns>
-        protected override decimal ComputeNextValue(TradeBar input)
+        /// <param name="isPositive">Determines whether to compute the positive or negative Vortex Indicator.</param>
+        /// <returns>The computed Vortex Indicator value.</returns>
+        private decimal ComputeVortexIndicator(bool isPositive)
+        {
+            if (_window.Count < _period) return 0;
+
+            decimal sumVM = 0;
+            decimal sumTR = 0;
+            for (int i = 0; i < _period - 1; i++)
+            {
+                var currentBar = _window[i];
+                var previousBar = _window[i + 1];
+                if (isPositive)
+                {
+                    sumVM += Math.Abs(currentBar.High - previousBar.Low);
+                }
+                else
+                {
+                    sumVM += Math.Abs(currentBar.Low - previousBar.High);
+                }
+                sumTR += ComputeTrueRange(currentBar, previousBar);
+            }
+
+            return sumTR != 0 ? sumVM / sumTR : 0;
+        }
+
+        /// <summary>
+        /// Computes the True Range.
+        /// </summary>
+        /// <param name="currentBar">The current bar data.</param>
+        /// <param name="previousBar">The previous bar data.</param>
+        /// <returns>The True Range value.</returns>
+        private decimal ComputeTrueRange(IBaseDataBar currentBar, IBaseDataBar previousBar)
+        {
+            return Math.Max(currentBar.High - currentBar.Low, Math.Max(
+                Math.Abs(currentBar.High - previousBar.Close),
+                Math.Abs(currentBar.Low - previousBar.Close)));
+        }
+
+        /// <summary>
+        /// Updates the indicators with the next data point.
+        /// </summary>
+        /// <param name="input">The input data for the indicators.</param>
+        /// <returns>The indicator value after the update.</returns>
+        protected override decimal ComputeNextValue(IBaseDataBar input)
         {
             _window.Add(input);
-            _tr.Update(input);
 
-            if (_window.IsReady)
-            {
-                decimal sumPlusVM = 0m, sumMinusVM = 0m, sumTR = _tr.Current.Value;
-                for (int i = 1; i < _window.Count; i++)
-                {
-                    var currentBar = _window[i];
-                    var previousBar = _window[i - 1];
-                    sumPlusVM += Math.Abs(currentBar.High - previousBar.Low);
-                    sumMinusVM += Math.Abs(currentBar.Low - previousBar.High);
-                }
+            if (!IsReady) return 0;
 
-                if (sumTR != 0m) // Avoid division by zero
-                {
-                    PlusVI.Update(input.Time, sumPlusVM / sumTR);
-                    MinusVI.Update(input.Time, sumMinusVM / sumTR);
-                }
-            }
-            return (PlusVI.Current.Value - MinusVI.Current.Value);
+            _positiveVortexIndicator.Update(new IndicatorDataPoint(input.EndTime, ComputeVortexIndicator(true)));
+            _negativeVortexIndicator.Update(new IndicatorDataPoint(input.EndTime, ComputeVortexIndicator(false)));
+
+            return (_positiveVortexIndicator.Current.Value + _negativeVortexIndicator.Current.Value) / 2;
         }
 
         /// <summary>
-        /// Resets this indicator to its initial state, clearing any internal state and calculations.
-        /// This method is crucial for ensuring that the indicator can be reused without residual data from previous calculations.
+        /// Resets this indicator and all sub-indicators to their initial state.
         /// </summary>
         public override void Reset()
         {
             base.Reset();
-            PlusVI.Reset();
-            MinusVI.Reset();
-            _tr.Reset();
             _window.Reset();
+            _positiveVortexIndicator.Reset();
+            _negativeVortexIndicator.Reset();
         }
     }
 }
