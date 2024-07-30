@@ -34,7 +34,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
         [TestCase("BacktestingBrokerage")]
         public void GetFactoryFromDataQueueHandler(string dataQueueHandler)
         {
-            var factory = JobQueueExtensions.GetFactoryFromDataQueueHandler(dataQueueHandler);
+            var factory = JobQueue.GetFactoryFromDataQueueHandler(dataQueueHandler);
             Assert.NotNull(factory);
         }
 
