@@ -191,7 +191,7 @@ namespace QuantConnect.Indicators
                 }
                 catch (OverflowException)
                 {
-                    Log.Error($"OptionGreeksIndicatorBase.Calculate: Decimal overflow detected. The previous greek value will be used.");
+                    //Log.Error($"OptionGreeksIndicatorBase.Calculate: Decimal overflow detected. The previous greek value will be used.");
                 }
             }
 
