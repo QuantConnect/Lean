@@ -76,17 +76,46 @@ namespace QuantConnect.DownloaderDataProvider.Launcher.Models
             var exchangeHours = _marketHoursDatabase.GetExchangeHours(symbol.ID.Market, symbol, symbol.SecurityType);
             var dataTimeZone = _marketHoursDatabase.GetDataTimeZone(symbol.ID.Market, symbol, symbol.SecurityType);
 
-            var historyRequest = new Data.HistoryRequest(startUtc, endUtc, dataType, symbol, resolution, exchangeHours, dataTimeZone, resolution,
-                true, false, DataNormalizationMode.Raw, tickType);
-
-            var historyData = _brokerage.GetHistory(historyRequest);
-
-            if (historyData == null)
+            var symbols = new List<Symbol> { symbol };
+            if (symbol.IsCanonical())
             {
-                return null;
+                symbols = GetChainSymbols(symbol, true).ToList();
             }
 
-            return historyData;
+            return symbols
+                .Select(symbol =>
+                {
+                    var request = new Data.HistoryRequest(startUtc, endUtc, dataType, symbol, resolution, exchangeHours: exchangeHours, dataTimeZone: dataTimeZone, resolution,
+                        includeExtendedMarketHours: true, false, DataNormalizationMode.Raw, tickType);
+
+                    var history = _brokerage.GetHistory(request);
+
+                    if (history == null)
+                    {
+                        Logging.Log.Trace($"{nameof(BrokerageDataDownloader)}.{nameof(Get)}: Ignoring history request for unsupported symbol {symbol}");
+                    }
+
+                    return history;
+                })
+                .Where(history => history != null)
+                .SelectMany(history => history);
+        }
+
+        /// <summary>
+        /// Returns an IEnumerable of Future/Option contract symbols for the given root ticker
+        /// </summary>
+        /// <param name="symbol">The Symbol to get futures/options chain for</param>
+        /// <param name="includeExpired">Include expired contracts</param>
+        private IEnumerable<Symbol> GetChainSymbols(Symbol symbol, bool includeExpired)
+        {
+            if (_brokerage is IDataQueueUniverseProvider universeProvider)
+            {
+                return universeProvider.LookupSymbols(symbol, includeExpired);
+            }
+            else
+            {
+                throw new InvalidOperationException($"{nameof(BrokerageDataDownloader)}.{nameof(GetChainSymbols)}: The current brokerage does not support fetching canonical symbols. Please ensure your brokerage instance supports this feature.");
+            }
         }
     }
 }
