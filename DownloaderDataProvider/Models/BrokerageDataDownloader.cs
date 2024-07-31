@@ -56,6 +56,19 @@ namespace QuantConnect.DownloaderDataProvider.Launcher.Models
             }
 
             _brokerage = Composer.Instance.GetExportedValueByTypeName<IBrokerage>(liveNodeConfiguration.Brokerage);
+
+            _brokerage.Message += (object _, Brokerages.BrokerageMessageEvent e) =>
+            {
+                if (e.Type == Brokerages.BrokerageMessageType.Error)
+                {
+                    Logging.Log.Error(e.Message);
+                }
+                else
+                {
+                    Logging.Log.Trace(e.Message);
+                }
+            };
+
             ((IDataQueueHandler)_brokerage).SetJob(liveNodeConfiguration);
         }
 
