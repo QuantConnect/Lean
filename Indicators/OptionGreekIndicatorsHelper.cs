@@ -14,6 +14,7 @@
 */
 
 using System;
+using System.Buffers;
 using System.Runtime.CompilerServices;
 using MathNet.Numerics.Distributions;
 using QuantConnect.Util;
@@ -123,22 +124,22 @@ namespace QuantConnect.Indicators
            decimal spotPrice, decimal strikePrice, OptionRight optionType, int steps = Steps)
         {
             var probDown = 1m - probUp;
-            var values = new decimal[steps + 1];
+            using var values = new SharedDecimalArray(steps + 1);
             // Cache for exercise values for Call options to avoid recalculating them
-            var exerciseValues = optionType == OptionRight.Call ? new decimal[2 * steps] : null;
+            using var exerciseValues = optionType == OptionRight.Call ? new SharedDecimalArray(2 * steps) : null;
 
             for (int i = 0; i < (exerciseValues?.Length ?? values.Length); i++)
             {
                 if (i < values.Length)
                 {
                     var nextPrice = spotPrice * Convert.ToDecimal(Math.Pow((double)upFactor, 2 * i - steps));
-                    values[i] = OptionPayoff.GetIntrinsicValue(nextPrice, strikePrice, optionType);
+                    values.Array[i] = OptionPayoff.GetIntrinsicValue(nextPrice, strikePrice, optionType);
                 }
 
                 if (optionType == OptionRight.Call)
                 {
                     var nextPrice = spotPrice * Convert.ToDecimal(Math.Pow((double)upFactor, i - steps));
-                    exerciseValues[i] = OptionPayoff.GetIntrinsicValue(nextPrice, strikePrice, optionType);
+                    exerciseValues.Array[i] = OptionPayoff.GetIntrinsicValue(nextPrice, strikePrice, optionType);
                 }
             }
 
@@ -150,18 +151,18 @@ namespace QuantConnect.Indicators
             {
                 for (int i = 0; i <= period; i++)
                 {
-                    var binomialValue = values[i] * factorA + values[i + 1] * factorB;
+                    var binomialValue = values.Array[i] * factorA + values.Array[i + 1] * factorB;
                     // No advantage for American put option to exercise early in risk-neutral setting
                     if (optionType == OptionRight.Put)
                     {
-                        values[i] = binomialValue;
+                        values.Array[i] = binomialValue;
                         continue;
                     }
-                    values[i] = Math.Max(binomialValue, exerciseValues[2 * i - period + steps]);
+                    values.Array[i] = Math.Max(binomialValue, exerciseValues.Array[2 * i - period + steps]);
                 }
             }
 
-            return values[0];
+            return values.Array[0];
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -180,6 +181,33 @@ namespace QuantConnect.Indicators
 
             //Log.Error("OptionGreekIndicatorsHelper.Divide(): Division by zero detected. Returning 0.");
             return 0;
+        }
+
+        /// <summary>
+        /// Private class to manage decimal array pooling for performance
+        /// </summary>
+        private class SharedDecimalArray : IDisposable
+        {
+            private static readonly ArrayPool<decimal> _arrayPool = ArrayPool<decimal>.Shared;
+
+            public decimal[] Array { get; private set; }
+
+            public int Length { get; private set; }
+
+            public SharedDecimalArray(int size)
+            {
+                Array = _arrayPool.Rent(size);
+                Length = size;
+            }
+
+            public void Dispose()
+            {
+                if (Array != null)
+                {
+                    _arrayPool.Return(Array);
+                    Array = null;
+                }
+            }
         }
     }
 }
