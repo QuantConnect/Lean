@@ -33,7 +33,5 @@ namespace QuantConnect.DownloaderDataProvider.Launcher.Models.Constants
         public const string CommandStartDate = "start-date";
 
         public const string CommandEndDate = "end-date";
-
-        public const string CommandDataDownloaderBrokerage = "data-downloader-brokerage";
     }
 }
