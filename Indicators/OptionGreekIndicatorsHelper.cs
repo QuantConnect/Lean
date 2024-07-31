@@ -16,7 +16,6 @@
 using System;
 using System.Runtime.CompilerServices;
 using MathNet.Numerics.Distributions;
-using QuantConnect.Logging;
 using QuantConnect.Util;
 
 namespace QuantConnect.Indicators
@@ -29,7 +28,7 @@ namespace QuantConnect.Indicators
         /// <summary>
         /// Number of steps in binomial tree simulation to obtain Greeks/IV
         /// </summary>
-        public const int Steps = 140;
+        public const int Steps = 200;
 
         /// <summary>
         /// Returns the Black theoretical price for the given arguments
@@ -121,32 +120,44 @@ namespace QuantConnect.Indicators
         }
 
         private static decimal BinomialTheoreticalPrice(decimal deltaTime, decimal probUp, decimal upFactor, decimal riskFreeRate,
-            decimal spotPrice, decimal strikePrice, OptionRight optionType, int steps = Steps)
+           decimal spotPrice, decimal strikePrice, OptionRight optionType, int steps = Steps)
         {
             var probDown = 1m - probUp;
             var values = new decimal[steps + 1];
+            // Cache for exercise values for Call options to avoid recalculating them
+            var exerciseValues = optionType == OptionRight.Call ? new decimal[2 * steps] : null;
 
-            for (int i = 0; i <= steps; i++)
+            for (int i = 0; i < (exerciseValues?.Length ?? values.Length); i++)
             {
-                var nextPrice = spotPrice * Convert.ToDecimal(Math.Pow((double)upFactor, 2 * i - steps));
-                values[i] = OptionPayoff.GetIntrinsicValue(nextPrice, strikePrice, optionType);
+                if (i < values.Length)
+                {
+                    var nextPrice = spotPrice * Convert.ToDecimal(Math.Pow((double)upFactor, 2 * i - steps));
+                    values[i] = OptionPayoff.GetIntrinsicValue(nextPrice, strikePrice, optionType);
+                }
+
+                if (optionType == OptionRight.Call)
+                {
+                    var nextPrice = spotPrice * Convert.ToDecimal(Math.Pow((double)upFactor, i - steps));
+                    exerciseValues[i] = OptionPayoff.GetIntrinsicValue(nextPrice, strikePrice, optionType);
+                }
             }
 
             var factor = DecimalMath(Math.Exp, -riskFreeRate * deltaTime);
+            var factorA = factor * probDown;
+            var factorB = factor * probUp;
+
             for (int period = steps - 1; period >= 0; period--)
             {
                 for (int i = 0; i <= period; i++)
                 {
-                    var binomialValue = factor * (values[i] * probDown + values[i + 1] * probUp);
+                    var binomialValue = values[i] * factorA + values[i + 1] * factorB;
                     // No advantage for American put option to exercise early in risk-neutral setting
                     if (optionType == OptionRight.Put)
                     {
                         values[i] = binomialValue;
                         continue;
                     }
-                    var nextPrice = spotPrice * Convert.ToDecimal(Math.Pow((double)upFactor, 2 * i - period));
-                    var exerciseValue = OptionPayoff.GetIntrinsicValue(nextPrice, strikePrice, optionType);
-                    values[i] = Math.Max(binomialValue, exerciseValue);
+                    values[i] = Math.Max(binomialValue, exerciseValues[2 * i - period + steps]);
                 }
             }
 
