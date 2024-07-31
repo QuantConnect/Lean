@@ -13,5 +13,8 @@
   "job-organization-id": "",
 
   // Data downloader provider
-  "data-downloader": ""
+  "data-downloader": "",
+
+  // Specifies the name of the brokerage service used for data downloading (optional).
+  "data-downloader-brokerage": ""
 }
