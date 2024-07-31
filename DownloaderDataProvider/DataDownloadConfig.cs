@@ -15,6 +15,7 @@
 */
 
 using System.Globalization;
+using QuantConnect.Logging;
 using QuantConnect.Brokerages;
 using QuantConnect.Configuration;
 using QuantConnect.DownloaderDataProvider.Launcher.Models.Constants;
@@ -81,8 +82,10 @@ namespace QuantConnect.DownloaderDataProvider.Launcher
             if (string.IsNullOrEmpty(MarketName))
             {
                 MarketName = DefaultBrokerageModel.DefaultMarketMap[SecurityType];
+                Log.Trace($"{nameof(DataDownloadConfig)}: Default market '{MarketName}' applied for SecurityType '{SecurityType}'");
             }
-            else if (!Market.SupportedMarkets().Contains(MarketName))
+
+            if (!Market.SupportedMarkets().Contains(MarketName))
             {
                 throw new ArgumentException($"The specified market '{MarketName}' is not supported. Supported markets are: {string.Join(", ", Market.SupportedMarkets())}.");
             }
