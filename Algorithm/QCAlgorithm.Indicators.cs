@@ -500,7 +500,7 @@ namespace QuantConnect.Algorithm
             return chaikinMoneyFlow;
 
         }
-                
+
         /// <summary>
         /// Creates a new ChandeMomentumOscillator indicator.
         /// </summary>
@@ -586,8 +586,8 @@ namespace QuantConnect.Algorithm
         /// <param name="resolution">The desired resolution of the data</param>
         /// <returns>A new Delta indicator for the specified symbol</returns>
         [DocumentationAttribute(Indicators)]
-        public Delta D(Symbol symbol, Symbol mirrorOption = null, decimal? riskFreeRate = null, decimal? dividendYield = null, OptionPricingModelType optionModel = OptionPricingModelType.BlackScholes, 
-            OptionPricingModelType? ivModel = null, Resolution? resolution = null)
+        public Delta D(Symbol symbol, Symbol mirrorOption = null, decimal? riskFreeRate = null, decimal? dividendYield = null,
+            OptionPricingModelType? optionModel = null, OptionPricingModelType? ivModel = null, Resolution? resolution = null)
         {
             var name = InitializeOptionIndicator<Delta>(symbol, out var riskFreeRateModel, out var dividendYieldModel, riskFreeRate, dividendYield, optionModel, resolution);
 
@@ -632,7 +632,7 @@ namespace QuantConnect.Algorithm
 
             return doubleExponentialMovingAverage;
         }
-        
+
         /// <summary>
         /// Creates a new DerivativeOscillator indicator.
         /// </summary>
@@ -854,8 +854,8 @@ namespace QuantConnect.Algorithm
         /// <param name="resolution">The desired resolution of the data</param>
         /// <returns>A new Gamma indicator for the specified symbol</returns>
         [DocumentationAttribute(Indicators)]
-        public Gamma G(Symbol symbol, Symbol mirrorOption = null, decimal? riskFreeRate = null, decimal? dividendYield = null, OptionPricingModelType optionModel = OptionPricingModelType.BlackScholes,
-            OptionPricingModelType? ivModel = null, Resolution? resolution = null)
+        public Gamma G(Symbol symbol, Symbol mirrorOption = null, decimal? riskFreeRate = null, decimal? dividendYield = null,
+            OptionPricingModelType? optionModel = null, OptionPricingModelType? ivModel = null, Resolution? resolution = null)
         {
             var name = InitializeOptionIndicator<Gamma>(symbol, out var riskFreeRateModel, out var dividendYieldModel, riskFreeRate, dividendYield, optionModel, resolution);
 
@@ -1049,7 +1049,7 @@ namespace QuantConnect.Algorithm
         /// <returns>A new ImpliedVolatility indicator for the specified symbol</returns>
         [DocumentationAttribute(Indicators)]
         public ImpliedVolatility IV(Symbol symbol, Symbol mirrorOption = null, decimal? riskFreeRate = null, decimal? dividendYield = null,
-            OptionPricingModelType optionModel = OptionPricingModelType.BlackScholes, Resolution? resolution = null)
+            OptionPricingModelType? optionModel = null, Resolution? resolution = null)
         {
             var name = InitializeOptionIndicator<ImpliedVolatility>(symbol, out var riskFreeRateModel, out var dividendYieldModel, riskFreeRate, dividendYield, optionModel, resolution);
 
@@ -1700,7 +1700,7 @@ namespace QuantConnect.Algorithm
 
             return relativeStrengthIndex;
         }
-        
+
         /// <summary>
         /// Creates a new RelativeVigorIndex indicator.
         /// </summary>
@@ -1752,8 +1752,8 @@ namespace QuantConnect.Algorithm
         /// <param name="resolution">The desired resolution of the data</param>
         /// <returns>A new Rho indicator for the specified symbol</returns>
         [DocumentationAttribute(Indicators)]
-        public Rho R(Symbol symbol, Symbol mirrorOption = null, decimal? riskFreeRate = null, decimal? dividendYield = null, OptionPricingModelType optionModel = OptionPricingModelType.BlackScholes,
-            OptionPricingModelType? ivModel = null, Resolution? resolution = null)
+        public Rho R(Symbol symbol, Symbol mirrorOption = null, decimal? riskFreeRate = null, decimal? dividendYield = null,
+            OptionPricingModelType? optionModel = null, OptionPricingModelType? ivModel = null, Resolution? resolution = null)
         {
             var name = InitializeOptionIndicator<Rho>(symbol, out var riskFreeRateModel, out var dividendYieldModel, riskFreeRate, dividendYield, optionModel, resolution);
 
@@ -2054,8 +2054,8 @@ namespace QuantConnect.Algorithm
         /// <param name="resolution">The desired resolution of the data</param>
         /// <returns>A new Theta indicator for the specified symbol</returns>
         [DocumentationAttribute(Indicators)]
-        public Theta T(Symbol symbol, Symbol mirrorOption = null, decimal? riskFreeRate = null, decimal? dividendYield = null, OptionPricingModelType optionModel = OptionPricingModelType.BlackScholes,
-            OptionPricingModelType? ivModel = null, Resolution? resolution = null)
+        public Theta T(Symbol symbol, Symbol mirrorOption = null, decimal? riskFreeRate = null, decimal? dividendYield = null,
+            OptionPricingModelType? optionModel = null, OptionPricingModelType? ivModel = null, Resolution? resolution = null)
         {
             var name = InitializeOptionIndicator<Theta>(symbol, out var riskFreeRateModel, out var dividendYieldModel, riskFreeRate, dividendYield, optionModel, resolution);
 
@@ -2229,8 +2229,8 @@ namespace QuantConnect.Algorithm
         /// <param name="resolution">The desired resolution of the data</param>
         /// <returns>A new Vega indicator for the specified symbol</returns>
         [DocumentationAttribute(Indicators)]
-        public Vega V(Symbol symbol, Symbol mirrorOption = null, decimal? riskFreeRate = null, decimal? dividendYield = null, OptionPricingModelType optionModel = OptionPricingModelType.BlackScholes,
-            OptionPricingModelType? ivModel = null, Resolution? resolution = null)
+        public Vega V(Symbol symbol, Symbol mirrorOption = null, decimal? riskFreeRate = null, decimal? dividendYield = null,
+            OptionPricingModelType? optionModel = null, OptionPricingModelType? ivModel = null, Resolution? resolution = null)
         {
             var name = InitializeOptionIndicator<Vega>(symbol, out var riskFreeRateModel, out var dividendYieldModel, riskFreeRate, dividendYield, optionModel, resolution);
 
@@ -2630,6 +2630,26 @@ namespace QuantConnect.Algorithm
             InitializeIndicator(msi, resolution, selector, symbols);
 
             return msi;
+        }
+
+
+        /// <summary>
+        /// Creates a new RogersSatchellVolatility indicator for the symbol. The indicator will be automatically
+        /// updated on the given resolution.
+        /// </summary>
+        /// <param name="symbol">The symbol whose RogersSatchellVolatility we want</param>
+        /// <param name="period">The period of the rolling window used to compute volatility</param>
+        /// <param name="resolution">The resolution</param>
+        /// <param name="selector">Selects a value from the BaseData to send into the indicator, if null defaults to casting the input value to a TradeBar</param>
+        /// <returns>A new RogersSatchellVolatility indicator with the specified smoothing type and period</returns>
+        [DocumentationAttribute(Indicators)]
+        public RogersSatchellVolatility RSV(Symbol symbol, int period, Resolution? resolution = null, Func<IBaseData, IBaseDataBar> selector = null)
+        {
+            var name = CreateIndicatorName(symbol, $"RSV({period})", resolution);
+            var indicator = new RogersSatchellVolatility(name, period);
+            InitializeIndicator(indicator, resolution, selector, symbol);
+
+            return indicator;
         }
 
         /// <summary>
@@ -3803,11 +3823,13 @@ namespace QuantConnect.Algorithm
             }
         }
 
-        private string InitializeOptionIndicator<T>(Symbol symbol, out IRiskFreeInterestRateModel riskFreeRateModel, out IDividendYieldModel dividendYieldModel, 
-            decimal? riskFreeRate = null, decimal? dividendYield = null, OptionPricingModelType optionModel = OptionPricingModelType.BlackScholes, Resolution? resolution = null)
+        private string InitializeOptionIndicator<T>(Symbol symbol, out IRiskFreeInterestRateModel riskFreeRateModel, out IDividendYieldModel dividendYieldModel,
+            decimal? riskFreeRate = null, decimal? dividendYield = null, OptionPricingModelType? optionModel = null, Resolution? resolution = null)
             where T : OptionIndicatorBase
         {
-            var name = CreateIndicatorName(symbol, $"{typeof(T).Name}({riskFreeRate},{dividendYield},{optionModel})", resolution);
+            var name = CreateIndicatorName(symbol,
+                $"{typeof(T).Name}({riskFreeRate},{dividendYield},{OptionIndicatorBase.GetOptionModel(optionModel, symbol.ID.OptionStyle)})",
+                resolution);
 
             riskFreeRateModel = riskFreeRate.HasValue
                 ? new ConstantRiskFreeRateInterestRateModel(riskFreeRate.Value)
