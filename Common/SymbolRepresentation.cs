@@ -23,6 +23,7 @@ using QuantConnect.Securities.Option;
 using QuantConnect.Securities.Future;
 using QuantConnect.Securities.FutureOption;
 using static QuantConnect.StringExtensions;
+using System.Text.RegularExpressions;
 
 namespace QuantConnect
 {
@@ -31,6 +32,9 @@ namespace QuantConnect
     /// </summary>
     public static class SymbolRepresentation
     {
+        // Define the regex as a private readonly static field and compile it
+        private static readonly Regex _optionTickerRegex = new Regex(@"^([A-Z]+)\s*(\d{6})([CP])(\d{8})$", RegexOptions.IgnoreCase | RegexOptions.Compiled);
+
         /// <summary>
         /// Class contains future ticker properties returned by ParseFutureTicker()
         /// </summary>
@@ -317,6 +321,37 @@ namespace QuantConnect
         }
 
         /// <summary>
+        /// Returns option symbol ticker in accordance with OSI symbology
+        /// More information can be found at http://www.optionsclearing.com/components/docs/initiatives/symbology/symbology_initiative_v1_8.pdf
+        /// </summary>
+        /// <param name="symbol">Symbol object to create OSI ticker from</param>
+        /// <returns>The OSI ticker representation</returns>
+        public static string GenerateOptionTickerOSICompact(this Symbol symbol)
+        {
+            // First, validate that the symbol is of the correct security type
+            if (!symbol.SecurityType.IsOption())
+            {
+                throw new ArgumentException(
+                    Messages.SymbolRepresentation.UnexpectedSecurityTypeForMethod(nameof(GenerateOptionTickerOSICompact), symbol.SecurityType));
+            }
+            return GenerateOptionTickerOSICompact(symbol.Underlying.Value, symbol.ID.OptionRight, symbol.ID.StrikePrice, symbol.ID.Date);
+        }
+
+        /// <summary>
+        /// Returns option symbol ticker in accordance with OSI symbology
+        /// More information can be found at http://www.optionsclearing.com/components/docs/initiatives/symbology/symbology_initiative_v1_8.pdf
+        /// </summary>
+        /// <param name="underlying">Underlying string</param>
+        /// <param name="right">Option right</param>
+        /// <param name="strikePrice">Option strike</param>
+        /// <param name="expiration">Option expiration date</param>
+        /// <returns>The OSI ticker representation</returns>
+        public static string GenerateOptionTickerOSICompact(string underlying, OptionRight right, decimal strikePrice, DateTime expiration)
+        {
+            return Invariant($"{underlying}{expiration.ToStringInvariant(DateFormat.SixCharacter)}{right.ToStringPerformance()[0]}{(strikePrice * 1000m):00000000}");
+        }
+
+        /// <summary>
         /// Parses the specified OSI options ticker into a Symbol object
         /// </summary>
         /// <param name="ticker">The OSI compliant option ticker string</param>
@@ -338,30 +373,25 @@ namespace QuantConnect
         /// <returns>Symbol object for the specified OSI option ticker string</returns>
         public static Symbol ParseOptionTickerOSI(string ticker, SecurityType securityType, OptionStyle optionStyle, string market)
         {
-            var optionTicker = ticker.Substring(0, 6).Trim();
-            var expiration = DateTime.ParseExact(ticker.Substring(6, 6), DateFormat.SixCharacter, null);
-            OptionRight right;
-            if (ticker[12] == 'C' || ticker[12] == 'c')
+            var match = _optionTickerRegex.Match(ticker);
+            if (!match.Success)
             {
-                right = OptionRight.Call;
+                throw new FormatException($"Invalid ticker format {ticker}");
             }
-            else if (ticker[12] == 'P' || ticker[12] == 'p')
-            {
-                right = OptionRight.Put;
-            }
-            else
-            {
-                throw new FormatException(Messages.SymbolRepresentation.UnexpectedOptionRightFormatForParseOptionTickerOSI(ticker));
-            }
-            var strike = Parse.Decimal(ticker.Substring(13, 8)) / 1000m;
+
+            var optionTicker = match.Groups[1].Value;
+            var expiration = DateTime.ParseExact(match.Groups[2].Value, DateFormat.SixCharacter, null);
+            OptionRight right = match.Groups[3].Value.ToUpper() == "C" ? OptionRight.Call : OptionRight.Put;
+            var strike = decimal.Parse(match.Groups[4].Value) / 1000m;
+
             SecurityIdentifier underlyingSid;
             if (securityType == SecurityType.Option)
             {
                 underlyingSid = SecurityIdentifier.GenerateEquity(optionTicker, market);
-                // let it fallback to it's default handling, which include mapping
+                // Reset optionTicker for default handling
                 optionTicker = null;
             }
-            else if(securityType == SecurityType.IndexOption)
+            else if (securityType == SecurityType.IndexOption)
             {
                 underlyingSid = SecurityIdentifier.GenerateIndex(OptionSymbol.MapToUnderlying(optionTicker, securityType), market);
             }
@@ -369,10 +399,11 @@ namespace QuantConnect
             {
                 throw new NotImplementedException($"ParseOptionTickerOSI(): {Messages.SymbolRepresentation.SecurityTypeNotImplemented(securityType)}");
             }
+
             var sid = SecurityIdentifier.GenerateOption(expiration, underlyingSid, optionTicker, market, strike, right, optionStyle);
             return new Symbol(sid, ticker, new Symbol(underlyingSid, underlyingSid.Symbol));
         }
-
+    
         /// <summary>
         /// Function returns option ticker from IQFeed option ticker
         /// For example CSCO1220V19 Cisco October Put at 19.00 Expiring on 10/20/12

@@ -15,6 +15,7 @@
 */
 
 using QuantConnect.Securities;
+using QuantConnect.Securities.Crypto;
 
 namespace QuantConnect.Orders.Fees
 {
@@ -49,8 +50,20 @@ namespace QuantConnect.Orders.Fees
             {
                 var order = parameters.Order;
                 var fee = GetFee(order, MakerCryptoFee, TakerCryptoFee);
-                var positionValue = security.Holdings.GetQuantityValue(order.AbsoluteQuantity, security.Price);
-                return new OrderFee(new CashAmount(positionValue.Amount * fee, positionValue.Cash.Symbol));
+                CashAmount cashAmount;
+                Crypto.DecomposeCurrencyPair(security.Symbol, security.SymbolProperties, out var baseCurrency, out var quoteCurrency);
+                if (order.Direction == OrderDirection.Buy)
+                {
+                    // base currency, deducted from what we bought
+                    cashAmount = new CashAmount(order.AbsoluteQuantity * fee, baseCurrency);
+                }
+                else
+                {
+                    // quote currency
+                    var positionValue = order.AbsoluteQuantity * security.Price;
+                    cashAmount = new CashAmount(positionValue * fee, quoteCurrency);
+                }
+                return new OrderFee(cashAmount);
             }
             return new OrderFee(new CashAmount(0, Currencies.USD));
         }
