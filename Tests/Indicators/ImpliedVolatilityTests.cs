@@ -17,10 +17,17 @@ using System;
 using System.IO;
 using System.Linq;
 using NUnit.Framework;
+using NUnit.Framework.Constraints;
 using Python.Runtime;
 using QuantConnect.Algorithm;
 using QuantConnect.Data;
+using QuantConnect.Data.UniverseSelection;
 using QuantConnect.Indicators;
+using QuantConnect.Interfaces;
+using QuantConnect.Lean.Engine.DataFeeds;
+using QuantConnect.Lean.Engine.HistoricalData;
+using QuantConnect.Tests.Common.Data.Fundamental;
+using QuantConnect.Tests.Engine.DataFeeds;
 
 namespace QuantConnect.Tests.Indicators
 {
@@ -212,6 +219,61 @@ def TestSmoothingFunction(iv: float, mirror_iv: float) -> float:
             }
 
             Assert.AreEqual(2 * warmUpPeriod.Value, indicator.Samples);
+        }
+
+
+
+
+        [Test]
+        public void Test()
+        {
+            var algorithm = new QCAlgorithm();
+            algorithm.SubscriptionManager.SetDataManager(new DataManagerStub(algorithm));
+            algorithm.HistoryProvider = new SubscriptionDataReaderHistoryProvider();
+            algorithm.SetDateTime(new DateTime(2024, 02, 10));
+
+            algorithm.HistoryProvider.Initialize(new HistoryProviderInitializeParameters(
+                null,
+                null,
+                TestGlobals.DataProvider,
+                TestGlobals.DataCacheProvider,
+                TestGlobals.MapFileProvider,
+                TestGlobals.FactorFileProvider,
+                null,
+                false,
+                new DataPermissionManager(),
+                algorithm.ObjectStore,
+                algorithm.Settings));
+
+            var spy = algorithm.AddOption("SPY").Symbol;
+            var universeData = algorithm.History<OptionUniverse>(spy, new DateTime(2024, 02, 07), new DateTime(2024, 02, 08)).Single();
+
+            // To test IV indicator, for instance:
+            var ivIndicators = universeData.Data.Where(x => x.Symbol.SecurityType.IsOption()).Select(x =>
+            {
+                var data = x as OptionUniverse;
+                var mirrorOption = Symbol.CreateOption(data.Symbol.Underlying,
+                    data.Symbol.ID.Symbol,
+                    data.Symbol.ID.Market,
+                    data.Symbol.ID.OptionStyle,
+                    data.Symbol.ID.OptionRight == OptionRight.Call ? OptionRight.Put : OptionRight.Call,
+                    data.Symbol.ID.StrikePrice,
+                    data.Symbol.ID.Date);
+                var mirrorData = universeData.Data.Single(y => y.Symbol == mirrorOption) as OptionUniverse;
+
+                var iv = new ImpliedVolatility(data.Symbol, new InterestRateProvider(), DividendYieldProvider.CreateForOption(data.Symbol), mirrorOption, optionModel: OptionPricingModelType.ForwardTree);
+
+                iv.Update(new IndicatorDataPoint(x.Symbol, data.Time, data.Close));
+                iv.Update(new IndicatorDataPoint(mirrorOption, mirrorData.Time, mirrorData.Close));
+                iv.Update(new IndicatorDataPoint(data.Symbol.Underlying, data.Underlying.Time, (data.Underlying as OptionUniverse).Close));
+
+                return iv;
+            }).ToList();
+
+            foreach (var iv in ivIndicators)
+            {
+                Console.WriteLine(iv.Current.Value);
+            }
         }
     }
 }
