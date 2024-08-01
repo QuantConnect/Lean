@@ -282,14 +282,28 @@ namespace QuantConnect.Data
         /// </summary>
         /// <param name="slices">The data to send into the consolidators, likely result of a history request</param>
         /// <param name="handler">Delegate handles each data piece from the slice</param>
-        public static void PushThrough(this IEnumerable<Slice> slices, Action<BaseData> handler)
+        public static void PushThrough(this IEnumerable<Slice> slices, Action<BaseData> handler, Type dataType = null)
         {
             foreach (var slice in slices)
             {
-                foreach (var symbol in slice.Keys)
+                dynamic newSlice = slice;
+                if (dataType != null && dataType == typeof(QuoteBar))
+                {
+                    newSlice = slice.QuoteBars;
+                }
+                else if (dataType != null && dataType == typeof(Ticks))
+                {
+                    newSlice = slice.Ticks;
+                }
+
+                foreach (var symbol in newSlice.Keys)
                 {
                     dynamic value;
-                    if (!slice.TryGetValue(symbol, out value))
+                    try
+                    {
+                        value = newSlice[symbol];
+                    }
+                    catch(Exception e)
                     {
                         continue;
                     }

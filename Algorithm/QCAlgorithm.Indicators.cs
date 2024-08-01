@@ -29,6 +29,8 @@ namespace QuantConnect.Algorithm
     public partial class QCAlgorithm
     {
         private readonly List<Func<IBaseData, decimal>> _quoteRequiredFields = new() {
+            Field.BidPrice,
+            Field.AskPrice,
             Field.BidClose,
             Field.BidOpen,
             Field.BidLow,
@@ -2895,13 +2897,14 @@ namespace QuantConnect.Algorithm
         /// <param name="indicator">The indicator we want to warm up</param>
         /// <param name="resolution">The resolution</param>
         /// <param name="selector">Selects a value from the BaseData to send into the indicator, if null defaults to the Value property of BaseData (x => x.Value)</param>
+        /// <param name="dataType">DataType the indicator will use</param>
         [DocumentationAttribute(HistoricalData)]
         [DocumentationAttribute(Indicators)]
-        public void WarmUpIndicator(IEnumerable<Symbol> symbols, IndicatorBase<IndicatorDataPoint> indicator, Resolution? resolution = null, Func<IBaseData, decimal> selector = null)
+        public void WarmUpIndicator(IEnumerable<Symbol> symbols, IndicatorBase<IndicatorDataPoint> indicator, Resolution? resolution = null, Func<IBaseData, decimal> selector = null, Type dataType = null)
         {
             if (AssertIndicatorHasWarmupPeriod(indicator))
             {
-                IndicatorHistory(indicator, symbols, 0, resolution, selector);
+                IndicatorHistory(indicator, symbols, 0, resolution, selector, dataType);
             }
         }
 
@@ -3432,12 +3435,13 @@ namespace QuantConnect.Algorithm
         /// <param name="period">The number of bars to request</param>
         /// <param name="resolution">The resolution to request</param>
         /// <param name="selector">Selects a value from the BaseData to send into the indicator, if null defaults to the Value property of BaseData (x => x.Value)</param>
+        /// <param name="dataType">DataType the indicator will use</param>
         /// <returns>pandas.DataFrame of historical data of an indicator</returns>
-        public IndicatorHistory IndicatorHistory(IndicatorBase<IndicatorDataPoint> indicator, IEnumerable<Symbol> symbols, int period, Resolution? resolution = null, Func<IBaseData, decimal> selector = null)
+        public IndicatorHistory IndicatorHistory(IndicatorBase<IndicatorDataPoint> indicator, IEnumerable<Symbol> symbols, int period, Resolution? resolution = null, Func<IBaseData, decimal> selector = null, Type dataType = null)
         {
             var warmupPeriod = (indicator as IIndicatorWarmUpPeriodProvider)?.WarmUpPeriod ?? 0;
             var history = History(symbols, period + warmupPeriod, resolution, dataNormalizationMode: GetIndicatorHistoryDataNormalizationMode(indicator));
-            return IndicatorHistory(indicator, history, selector);
+            return IndicatorHistory(indicator, history, selector, dataType);
         }
 
         /// <summary>
@@ -3610,11 +3614,12 @@ namespace QuantConnect.Algorithm
         /// <param name="indicator">The target indicator</param>
         /// <param name="history">Historical data used to calculate the indicator</param>
         /// <param name="selector">Selects a value from the BaseData to send into the indicator, if null defaults to the Value property of BaseData (x => x.Value)</param>
+        /// <param name="dataType">DataType the indicator will use</param>
         /// <returns>pandas.DataFrame containing the historical data of <paramref name="indicator"/></returns>
-        public IndicatorHistory IndicatorHistory(IndicatorBase<IndicatorDataPoint> indicator, IEnumerable<Slice> history, Func<IBaseData, decimal> selector = null)
+        public IndicatorHistory IndicatorHistory(IndicatorBase<IndicatorDataPoint> indicator, IEnumerable<Slice> history, Func<IBaseData, decimal> selector = null, Type dataType = null)
         {
             selector ??= (x => x.Value);
-            return IndicatorHistory(indicator, history, (bar) => indicator.Update(new IndicatorDataPoint(bar.Symbol, bar.EndTime, selector(bar))));
+            return IndicatorHistory(indicator, history, (bar) => indicator.Update(new IndicatorDataPoint(bar.Symbol, bar.EndTime, selector(bar))), dataType);
         }
 
         /// <summary>
@@ -3720,7 +3725,7 @@ namespace QuantConnect.Algorithm
 
             if (Settings.AutomaticIndicatorWarmUp)
             {
-                WarmUpIndicator(symbols, indicator, resolution, selector);
+                WarmUpIndicator(symbols, indicator, resolution, selector, dataType);
             }
         }
 
@@ -3752,7 +3757,7 @@ namespace QuantConnect.Algorithm
 
             if (Settings.AutomaticIndicatorWarmUp)
             {
-                WarmUpIndicator(symbols, indicator, resolution);
+                WarmUpIndicator(symbols, indicator, resolution, dataType: typeof(QuoteBar));
             }
         }
 
@@ -3821,7 +3826,7 @@ namespace QuantConnect.Algorithm
             return dataNormalizationMode;
         }
 
-        private IndicatorHistory IndicatorHistory<T>(IndicatorBase<T> indicator, IEnumerable<Slice> history, Action<IBaseData> updateIndicator)
+        private IndicatorHistory IndicatorHistory<T>(IndicatorBase<T> indicator, IEnumerable<Slice> history, Action<IBaseData> updateIndicator, Type dataType = null)
             where T : IBaseData
         {
             // Reset the indicator
@@ -3877,7 +3882,7 @@ namespace QuantConnect.Algorithm
 
             if (typeof(T) == typeof(IndicatorDataPoint) || typeof(T).IsAbstract)
             {
-                history.PushThrough(bar => updateIndicator(bar));
+                history.PushThrough(bar => updateIndicator(bar), dataType);
             }
             else
             {
