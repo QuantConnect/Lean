@@ -35,9 +35,9 @@ namespace QuantConnect
         private readonly static Func<IBaseData, decimal> _askOpen = DataTypePropertyOrValue<QuoteBar>(x => ((QuoteBar)x).Ask.Open);
         private readonly static Func<IBaseData, decimal> _askLow = DataTypePropertyOrValue<QuoteBar>(x => ((QuoteBar)x).Ask.Low);
         private readonly static Func<IBaseData, decimal> _askHigh = DataTypePropertyOrValue<QuoteBar>(x => ((QuoteBar)x).Ask.High);
-        private readonly static Func<IBaseData, decimal> _bidPrice = DataTypePropertyOrValue<Tick>(x => ((Tick)x).BidPrice);
-        private readonly static Func<IBaseData, decimal> _askPrice = DataTypePropertyOrValue<Tick>(x => ((Tick)x).AskPrice);
-        private readonly static Func<IBaseData, decimal> _volume = DataTypePropertyOrValue<TradeBar>(x => ((TradeBar)x).Volume);
+        private readonly static Func<IBaseData, decimal> _bidPrice = DataTypePropertyOrValue<Tick>(x => ((Tick)x).BidPrice, defaultQuoteSelector: x => ((QuoteBar)x).Bid.Close);
+        private readonly static Func<IBaseData, decimal> _askPrice = DataTypePropertyOrValue<Tick>(x => ((Tick)x).AskPrice, defaultQuoteSelector: x => ((QuoteBar)x).Ask.Close);
+        private readonly static Func<IBaseData, decimal> _volume = DataTypePropertyOrValue<TradeBar>(x => ((TradeBar)x).Volume, x => ((Tick)x).Quantity);
         private readonly static Func<IBaseData, decimal> _average = DataTypePropertyOrValue<IBaseDataBar>(x => (x.Open + x.High + x.Low + x.Close) / 4m);
         private readonly static Func<IBaseData, decimal> _median = DataTypePropertyOrValue<IBaseDataBar>(x => (x.High + x.Low) / 2m);
         private readonly static Func<IBaseData, decimal> _typical = DataTypePropertyOrValue<IBaseDataBar>(x => (x.High + x.Low + x.Close) / 3m);
@@ -204,18 +204,32 @@ namespace QuantConnect
             get { return _volume; }
         }
 
-        private static Func<IBaseData, decimal> DataTypePropertyOrValue<T>(Func<T, decimal> selector, Func<IBaseData, decimal> defaultSelector = null)
+        private static Func<IBaseData, decimal> DataTypePropertyOrValue<T>(Func<T, decimal> selector,
+            Func<IBaseData, decimal> defaultTickSelector = null,
+            Func<IBaseData, decimal> defaultQuoteSelector = null)
             where T: class, IBaseData
         {
             return x =>
             {
-                var bar = x as T;
-                if (bar != null)
+                var dataType = x as T;
+                if (dataType != null)
                 {
-                    return selector(bar);
+                    return selector(dataType);
                 }
 
-                defaultSelector ??= (data => data.Value);
+                var tick = x as Tick;
+                if (tick != null && defaultTickSelector != null)
+                {
+                    return defaultTickSelector(x as Tick);
+                }
+
+                var quoteBar = x as QuoteBar;
+                if (quoteBar != null && defaultQuoteSelector != null)
+                {
+                    return defaultQuoteSelector(x as QuoteBar);
+                }
+
+                var defaultSelector = new Func<IBaseData, decimal>(data => data.Value);
                 return defaultSelector(x);
             };
         }

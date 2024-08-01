@@ -39,11 +39,6 @@ namespace QuantConnect.Algorithm
             Field.AskHigh,
         };
 
-        private readonly List<Func<IBaseData, decimal>> _tickRequiredFields = new() {
-            Field.BidPrice,
-            Field.AskPrice
-        };
-
         /// <summary>
         /// Gets whether or not WarmUpIndicator is allowed to warm up indicators
         /// </summary>

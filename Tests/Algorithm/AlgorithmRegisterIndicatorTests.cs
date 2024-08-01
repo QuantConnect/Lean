@@ -276,7 +276,10 @@ algo.RegisterIndicator(forex.Symbol, indicator, Resolution.Daily)";
         public static object[] IndicatorUseDefaultSelectorWhenResolutionDoesNotMatchWithSelectorDataTypeTestCases =
         {
             new object[] {Symbols.IBM, SecurityType.Equity, Resolution.Tick, Field.BidClose, new Tick() { BidPrice = 101, Value = 102 }, 102m },
+            new object[] {Symbols.IBM, SecurityType.Equity, Resolution.Tick, Field.Volume, new Tick() { Quantity = 101, Value = 102 }, 101m },
             new object[] {Symbols.IBM, SecurityType.Equity, Resolution.Minute, Field.BidPrice, new TradeBar() { Value = 102 }, 102m },
+            new object[] {Symbols.EURGBP, SecurityType.Forex, Resolution.Minute, Field.BidPrice, new QuoteBar() { Value = 102, Bid = new Bar() { Close = 103} }, 103m },
+            new object[] {Symbols.EURGBP, SecurityType.Forex, Resolution.Minute, Field.AskPrice, new QuoteBar() { Value = 102, Ask = new Bar() { Close = 103} }, 103m },
             new object[] {Symbols.SPY_C_192_Feb19_2016, SecurityType.Option, Resolution.Minute, Field.BidPrice, new TradeBar() { Value = 102 }, 102m }
         };
     }
