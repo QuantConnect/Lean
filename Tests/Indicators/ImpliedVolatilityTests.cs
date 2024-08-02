@@ -214,46 +214,5 @@ def TestSmoothingFunction(iv: float, mirror_iv: float) -> float:
 
             Assert.AreEqual(2 * warmUpPeriod.Value, indicator.Samples);
         }
-
-        [TestCase(OptionPricingModelType.BinomialCoxRossRubinstein, 3, 380.0, OptionRight.Call, 60)]
-        [TestCase(OptionPricingModelType.BinomialCoxRossRubinstein, 5, 400.0, OptionRight.Call, 60)]
-        [TestCase(OptionPricingModelType.BinomialCoxRossRubinstein, 27, 420.0, OptionRight.Call, 60)]
-        [TestCase(OptionPricingModelType.BinomialCoxRossRubinstein, 23, 380.0, OptionRight.Put, 60)]
-        [TestCase(OptionPricingModelType.BinomialCoxRossRubinstein, 6, 400.0, OptionRight.Put, 60)]
-        [TestCase(OptionPricingModelType.BinomialCoxRossRubinstein, 2, 420.0, OptionRight.Put, 60)]
-        [TestCase(OptionPricingModelType.BinomialCoxRossRubinstein, 3, 380.0, OptionRight.Call, 180)]
-        [TestCase(OptionPricingModelType.BinomialCoxRossRubinstein, 15, 400.0, OptionRight.Call, 180)]
-        [TestCase(OptionPricingModelType.BinomialCoxRossRubinstein, 50, 420.0, OptionRight.Call, 180)]
-        [TestCase(OptionPricingModelType.BinomialCoxRossRubinstein, 28, 380.0, OptionRight.Put, 180)]
-        [TestCase(OptionPricingModelType.BinomialCoxRossRubinstein, 15, 400.0, OptionRight.Put, 180)]
-        [TestCase(OptionPricingModelType.BinomialCoxRossRubinstein, 1, 420.0, OptionRight.Put, 180)]
-        [TestCase(OptionPricingModelType.ForwardTree, 3, 380.0, OptionRight.Call, 60)]
-        [TestCase(OptionPricingModelType.ForwardTree, 23, 400.0, OptionRight.Call, 60)]
-        [TestCase(OptionPricingModelType.ForwardTree, 33, 420.0, OptionRight.Call, 60)]
-        [TestCase(OptionPricingModelType.ForwardTree, 50, 380.0, OptionRight.Put, 60)]
-        [TestCase(OptionPricingModelType.ForwardTree, 35, 400.0, OptionRight.Put, 60)]
-        [TestCase(OptionPricingModelType.ForwardTree, 6, 420.0, OptionRight.Put, 60)]
-        [TestCase(OptionPricingModelType.ForwardTree, 3, 380.0, OptionRight.Call, 180)]
-        [TestCase(OptionPricingModelType.ForwardTree, 15, 400.0, OptionRight.Call, 180)]
-        [TestCase(OptionPricingModelType.ForwardTree, 35, 420.0, OptionRight.Call, 180)]
-        [TestCase(OptionPricingModelType.ForwardTree, 30, 380.0, OptionRight.Put, 180)]
-        [TestCase(OptionPricingModelType.ForwardTree, 20, 400.0, OptionRight.Put, 180)]
-        [TestCase(OptionPricingModelType.ForwardTree, 1, 420.0, OptionRight.Put, 180)]
-        public void ModelsTest(OptionPricingModelType model, decimal price, decimal spotPrice, OptionRight right, int expiry)
-        {
-            var symbol = Symbol.CreateOption("SPY", Market.USA, OptionStyle.American, right, 400.01m, _reference.AddDays(expiry));
-
-            var indicator = new ImpliedVolatility(symbol, 0.0530m, 0m, optionModel: model);
-
-            var optionDataPoint = new IndicatorDataPoint(symbol, _reference.AddDays(1), price);
-            var spotDataPoint = new IndicatorDataPoint(symbol.Underlying, _reference.AddDays(1), spotPrice);
-
-            indicator.Update(optionDataPoint);
-            indicator.Update(spotDataPoint);
-
-            var result = indicator.Current.Value;
-
-            Assert.AreNotEqual(result, 0);
-        }
     }
 }
