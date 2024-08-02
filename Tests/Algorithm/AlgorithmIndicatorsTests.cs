@@ -314,7 +314,7 @@ namespace QuantConnect.Tests.Algorithm
             IndicatorHistory indicatorValues;
             if (testCase == "count")
             {
-                indicatorValues = _algorithm.IndicatorHistory(indicator, new[] { put, call, put.Underlying }, 60 * 10, Resolution.Minute);
+                indicatorValues = _algorithm.IndicatorHistory(indicator, new[] { put, call, put.Underlying }, 60 * 10, resolution: Resolution.Minute);
             }
             else
             {
