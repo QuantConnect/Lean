@@ -2897,14 +2897,13 @@ namespace QuantConnect.Algorithm
         /// <param name="indicator">The indicator we want to warm up</param>
         /// <param name="resolution">The resolution</param>
         /// <param name="selector">Selects a value from the BaseData to send into the indicator, if null defaults to the Value property of BaseData (x => x.Value)</param>
-        /// <param name="dataType">DataType the indicator will use</param>
         [DocumentationAttribute(HistoricalData)]
         [DocumentationAttribute(Indicators)]
-        public void WarmUpIndicator(IEnumerable<Symbol> symbols, IndicatorBase<IndicatorDataPoint> indicator, Resolution? resolution = null, Func<IBaseData, decimal> selector = null, Type dataType = null)
+        public void WarmUpIndicator(IEnumerable<Symbol> symbols, IndicatorBase<IndicatorDataPoint> indicator, Resolution? resolution = null, Func<IBaseData, decimal> selector = null)
         {
             if (AssertIndicatorHasWarmupPeriod(indicator))
             {
-                IndicatorHistory(indicator, symbols, 0, resolution, selector, dataType);
+                IndicatorHistory(indicator, symbols, 0, resolution, selector);
             }
         }
 
@@ -3435,13 +3434,12 @@ namespace QuantConnect.Algorithm
         /// <param name="period">The number of bars to request</param>
         /// <param name="resolution">The resolution to request</param>
         /// <param name="selector">Selects a value from the BaseData to send into the indicator, if null defaults to the Value property of BaseData (x => x.Value)</param>
-        /// <param name="dataType">DataType the indicator will use</param>
         /// <returns>pandas.DataFrame of historical data of an indicator</returns>
-        public IndicatorHistory IndicatorHistory(IndicatorBase<IndicatorDataPoint> indicator, IEnumerable<Symbol> symbols, int period, Resolution? resolution = null, Func<IBaseData, decimal> selector = null, Type dataType = null)
+        public IndicatorHistory IndicatorHistory(IndicatorBase<IndicatorDataPoint> indicator, IEnumerable<Symbol> symbols, int period, Resolution? resolution = null, Func<IBaseData, decimal> selector = null)
         {
             var warmupPeriod = (indicator as IIndicatorWarmUpPeriodProvider)?.WarmUpPeriod ?? 0;
             var history = History(symbols, period + warmupPeriod, resolution, dataNormalizationMode: GetIndicatorHistoryDataNormalizationMode(indicator));
-            return IndicatorHistory(indicator, history, selector, dataType);
+            return IndicatorHistory(indicator, history, selector);
         }
 
         /// <summary>
@@ -3614,12 +3612,11 @@ namespace QuantConnect.Algorithm
         /// <param name="indicator">The target indicator</param>
         /// <param name="history">Historical data used to calculate the indicator</param>
         /// <param name="selector">Selects a value from the BaseData to send into the indicator, if null defaults to the Value property of BaseData (x => x.Value)</param>
-        /// <param name="dataType">DataType the indicator will use</param>
         /// <returns>pandas.DataFrame containing the historical data of <paramref name="indicator"/></returns>
-        public IndicatorHistory IndicatorHistory(IndicatorBase<IndicatorDataPoint> indicator, IEnumerable<Slice> history, Func<IBaseData, decimal> selector = null, Type dataType = null)
+        public IndicatorHistory IndicatorHistory(IndicatorBase<IndicatorDataPoint> indicator, IEnumerable<Slice> history, Func<IBaseData, decimal> selector = null)
         {
             selector ??= (x => x.Value);
-            return IndicatorHistory(indicator, history, (bar) => indicator.Update(new IndicatorDataPoint(bar.Symbol, bar.EndTime, selector(bar))), dataType);
+            return IndicatorHistory(indicator, history, (bar) => indicator.Update(new IndicatorDataPoint(bar.Symbol, bar.EndTime, selector(bar))), GetDataTypeFromSelector(selector));
         }
 
         /// <summary>
@@ -3708,16 +3705,7 @@ namespace QuantConnect.Algorithm
         private void InitializeIndicator(IndicatorBase<IndicatorDataPoint> indicator, Resolution? resolution = null,
             Func<IBaseData, decimal> selector = null, params Symbol[] symbols)
         {
-            Type dataType = null;
-            if (_quoteRequiredFields.Any(x => ReferenceEquals(selector, x)))
-            {
-                dataType = typeof(QuoteBar);
-            }
-            else if (ReferenceEquals(selector, Field.Volume))
-            {
-                dataType = typeof(TradeBar);
-            }
-
+            var dataType = GetDataTypeFromSelector(selector);
             foreach (var symbol in symbols)
             {
                 RegisterIndicator(symbol, indicator, ResolveConsolidator(symbol, resolution, dataType), selector);
@@ -3725,7 +3713,7 @@ namespace QuantConnect.Algorithm
 
             if (Settings.AutomaticIndicatorWarmUp)
             {
-                WarmUpIndicator(symbols, indicator, resolution, selector, dataType);
+                WarmUpIndicator(symbols, indicator, resolution, selector);
             }
         }
 
@@ -3757,7 +3745,7 @@ namespace QuantConnect.Algorithm
 
             if (Settings.AutomaticIndicatorWarmUp)
             {
-                WarmUpIndicator(symbols, indicator, resolution, dataType: typeof(QuoteBar));
+                WarmUpIndicator(symbols, indicator, resolution);
             }
         }
 
@@ -3899,6 +3887,21 @@ namespace QuantConnect.Algorithm
 
             return new IndicatorHistory(indicatorsDataPointsByTime, indicatorsDataPointPerProperty,
                 new Lazy<PyObject>(() => PandasConverter.GetIndicatorDataFrame(indicatorsDataPointPerProperty.Select(x => new KeyValuePair<string, List<IndicatorDataPoint>>(x.Name, x.Values)))));
+        }
+
+        private Type GetDataTypeFromSelector(Func<IBaseData, decimal> selector)
+        {
+            Type dataType = null;
+            if (_quoteRequiredFields.Any(x => ReferenceEquals(selector, x)))
+            {
+                dataType = typeof(QuoteBar);
+            }
+            else if (ReferenceEquals(selector, Field.Volume))
+            {
+                dataType = typeof(TradeBar);
+            }
+
+            return dataType;
         }
     }
 }
