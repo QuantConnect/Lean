@@ -10,7 +10,8 @@ namespace QuantConnect.Tests.Indicators
     {
         protected override IndicatorBase<IBaseDataBar> CreateIndicator()
         {
-            
+            RenkoBarSize = 1m;
+            VolumeRenkoBarSize = 0.5m;
             return new VortexIndicator(14);  // Assuming a 14-day period for the Vortex calculations
         }
 
