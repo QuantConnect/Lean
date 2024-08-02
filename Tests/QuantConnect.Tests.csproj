@@ -67,6 +67,9 @@
     <None Include="TestData\greeksindicator\american\third_party_2_greeks.csv">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
+    <None Include="TestData\greeksindicator\european\third_party_1_greeks.csv">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
     <None Include="TestData\greeks\SPY230811C00430000.csv">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
