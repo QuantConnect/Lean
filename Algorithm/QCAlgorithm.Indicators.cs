@@ -2352,10 +2352,10 @@ namespace QuantConnect.Algorithm
         /// <param name="selector">Selects a value from the BaseData to send into the indicator, if null defaults to casting the input value to a TradeBar</param>
         /// <returns>A new Vortex indicator with the specified smoothing period</returns>
         [DocumentationAttribute(Indicators)]
-        public VortexIndicator VI(Symbol symbol, int period, Resolution? resolution = null, Func<IBaseData, IBaseDataBar> selector = null)
+        public VortexIndicator VTX(Symbol symbol, int period, Resolution? resolution = null, Func<IBaseData, IBaseDataBar> selector = null)
         {
-            var name = CreateIndicatorName(symbol, $"VI({period})", resolution);
-            var indicator = new VortexIndicator(name, period);
+            var name = CreateIndicatorName(symbol, $"VTX({period})", resolution);
+            var indicator = new VortexIndicator(period);
             InitializeIndicator(indicator, resolution, selector, symbol);
             return indicator;
         }

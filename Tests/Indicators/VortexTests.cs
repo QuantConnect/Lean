@@ -10,7 +10,8 @@ namespace QuantConnect.Tests.Indicators
     {
         protected override IndicatorBase<IBaseDataBar> CreateIndicator()
         {
-            return new VortexIndicator("Vortex_14",14);  // Assuming a 14-day period for the Vortex calculations
+            
+            return new VortexIndicator(14);  // Assuming a 14-day period for the Vortex calculations
         }
 
         protected override string TestFileName => "spy_with_vtx.csv";
@@ -38,3 +39,4 @@ namespace QuantConnect.Tests.Indicators
         }
     }
 }
+    
