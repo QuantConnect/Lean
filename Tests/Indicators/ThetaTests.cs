@@ -48,6 +48,7 @@ namespace QuantConnect.Tests.Indicators
         // close to expiry prone to vary
         [TestCase("american/third_party_1_greeks.csv", true, false, 0.6, 1.5e-3)]
         [TestCase("american/third_party_1_greeks.csv", false, false, 0.6, 1.5e-3)]
+        [TestCase("european/third_party_1_greeks.csv", false, false, 0.07)]
         // Just placing the test and data here, we are unsure about the smoothing function and not going to reverse engineer
         [TestCase("american/third_party_2_greeks.csv", false, true, 10000, 0.03)]
         public void ComparesAgainstExternalData(string subPath, bool reset, bool singleContract, double errorRate, double errorMargin = 1e-4,
