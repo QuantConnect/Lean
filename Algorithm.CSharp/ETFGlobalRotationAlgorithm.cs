@@ -16,6 +16,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using QuantConnect.Data;
 using QuantConnect.Data.Market;
 using QuantConnect.Indicators;
 
@@ -82,8 +83,8 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// OnData event is the primary entry point for your algorithm. Each new data point will be pumped in here.
         /// </summary>
-        /// <param name="data">TradeBars IDictionary object with your stock data</param>
-        public void OnData(TradeBars data)
+        /// <param name="slice">Slice object keyed by symbol containing the stock data</param>
+        public override void OnData(Slice slice)
         {
             try
             {
@@ -130,7 +131,7 @@ namespace QuantConnect.Algorithm.CSharp
             }
             catch (RegressionTestException ex)
             {
-                Error("OnTradeBar: " + ex.Message + "\r\n\r\n" + ex.StackTrace);
+                Error("OnData: " + ex.Message + "\r\n\r\n" + ex.StackTrace);
             }
         }
     }

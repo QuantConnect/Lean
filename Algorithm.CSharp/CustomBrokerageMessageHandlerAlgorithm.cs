@@ -15,6 +15,7 @@
 
 using System;
 using QuantConnect.Brokerages;
+using QuantConnect.Data;
 using QuantConnect.Data.Market;
 using QuantConnect.Interfaces;
 
@@ -39,7 +40,7 @@ namespace QuantConnect.Algorithm.CSharp
             SetBrokerageMessageHandler(new CustomBrokerageMessageHandler(this));
         }
 
-        public void OnData(TradeBars data)
+        public override void OnData(Slice slice)
         {
             if (Portfolio.HoldStock) return;
             Order("SPY", 100);
